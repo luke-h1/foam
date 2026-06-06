@@ -1,5 +1,6 @@
+import { memo } from 'react';
+import type { ReactNode } from 'react';
 import { createHitslop } from '@app/utils/string/createHitSlop';
-import { memo, type ReactNode } from 'react';
 import {
   Pressable,
   View,

@@ -126,7 +126,6 @@ export function useListRefresh(callback?: () => Promise<void>) {
 }
 
 type ListProps = ScrollViewProps & {
-  /** Set the React Navigation screen title when mounted. */
   navigationTitle?: string;
   listStyle?: ListStyle;
 };
@@ -276,16 +275,12 @@ type SystemImageCustomProps = {
 
 type SystemImageProps = SymbolViewProps['name'] | SystemImageCustomProps;
 
-/** Text but with iOS default color and sizes. */
 export function Text({
   bold,
   ...props
 }: TextProps & {
-  /** Value displayed on the right side of the form item. */
   hint?: ReactNode;
-  /** A true/false value for the hint. */
   hintBoolean?: ReactNode;
-  /** Adds a prefix SF Symbol image to the left of the text */
   systemImage?: SystemImageProps;
 
   bold?: boolean;
@@ -318,13 +313,9 @@ export function Link({
   onPress,
   ...props
 }: {
-  /** Value displayed on the right side of the form item. */
   hint?: ReactNode;
-  /** Adds a prefix SF Symbol image to the left of the text. */
   systemImage?: SystemImageProps | ReactNode;
-  /** Changes the right icon. */
   hintImage?: SystemImageProps | ReactNode;
-  /** Is the link inside a header. */
   headerRight?: boolean;
   bold?: boolean;
   onPress?: () => void;
@@ -381,7 +372,21 @@ export function Link({
         </Pressable>
       );
     }
-    return children;
+    const wrappedTextChildren = Children.map(children, child => {
+      if (!child) {
+        return null;
+      }
+      if (typeof child === 'string') {
+        return (
+          <RNText style={mergedStyleProp<TextStyle>(font, props.style)}>
+            {child}
+          </RNText>
+        );
+      }
+      return child;
+    });
+
+    return wrappedTextChildren;
   })();
 
   return (

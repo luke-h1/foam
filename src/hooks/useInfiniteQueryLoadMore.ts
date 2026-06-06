@@ -1,5 +1,3 @@
-import { useCallback } from 'react';
-
 interface InfiniteQueryLoadMoreOptions {
   fetchNextPage: () => Promise<unknown>;
   hasNextPage: boolean;
@@ -11,11 +9,11 @@ export function useInfiniteQueryLoadMore({
   hasNextPage,
   isFetchingNextPage = false,
 }: InfiniteQueryLoadMoreOptions) {
-  return useCallback(async () => {
+  return async () => {
     if (!hasNextPage || isFetchingNextPage) {
       return;
     }
 
     await fetchNextPage();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  };
 }

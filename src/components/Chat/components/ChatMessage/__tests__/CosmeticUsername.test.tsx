@@ -1,20 +1,16 @@
 import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import { render } from '@testing-library/react-native';
-import { Image } from 'react-native';
 import { PaintedUsername } from '../CosmeticUsername/CosmeticUsername';
+import { Image } from 'expo-image';
 
-jest.mock('react-native', () => {
+jest.mock('expo-image', () => {
   const React = jest.requireActual('react');
-  const actual = jest.requireActual('react-native');
-  const NativeImage = (props: object) =>
-    React.createElement(actual.View, props);
+  const { View } = jest.requireActual('react-native');
 
-  return Object.setPrototypeOf(
-    {
-      Image: NativeImage,
-    },
-    actual,
-  );
+  return {
+    Image: (props: object) =>
+      React.createElement(View, { testID: 'expo-image', ...props }),
+  };
 });
 
 jest.mock('@app/store/chatStore/state', () => ({
@@ -41,9 +37,9 @@ const createPaintData = (overrides: Partial<PaintData> = {}): PaintData => ({
   id: 'paint-1',
   name: 'Test Paint',
   color: null,
-  gradients: { length: 0 },
+  layers: { length: 0 },
   shadows: { length: 0 },
-  text: null,
+  textStyle: null,
   function: 'LINEAR_GRADIENT',
   repeat: false,
   angle: 90,
@@ -162,7 +158,7 @@ describe('PaintedUsername', () => {
       expect(paintImage.props.source).toEqual({
         uri: 'https://cdn.7tv.app/paint/test/2x.webp',
       });
-      expect(paintImage.props.resizeMode).toBe('repeat');
+      expect(paintImage.props.contentFit).toBe('none');
     });
 
     test('should render URL paint as a covered asset image', () => {
@@ -177,7 +173,7 @@ describe('PaintedUsername', () => {
       );
 
       const paintImage = UNSAFE_getByType(Image);
-      expect(paintImage.props.resizeMode).toBe('cover');
+      expect(paintImage.props.contentFit).toBe('cover');
     });
 
     test('should handle single stop gradient by duplicating color', () => {

@@ -95,8 +95,8 @@ describe('Moderator action sheets', () => {
     );
 
     expect(queryByText('Delete Message')).toBeNull();
-    expect(queryByText('Timeout for 10m')).toBeTruthy();
-    expect(queryByText('Ban User')).toBeTruthy();
+    expect(queryByText('Timeout for 10m')).toBeOnTheScreen();
+    expect(queryByText('Ban User')).toBeOnTheScreen();
   });
 
   test('shows pinned message actions for moderators with a message id', () => {
@@ -153,7 +153,12 @@ describe('Moderator action sheets', () => {
 
     const { rerender, queryByText, getByText } = render(
       <UserActionSheet
-        visible
+        visibility={{
+          visible: true,
+          isHidden: false,
+          isHighlighted: false,
+        }}
+        moderation={{ canModerateChat: false, canModerateUser: true }}
         onClose={jest.fn()}
         username='viewer'
         login='viewer'
@@ -163,10 +168,6 @@ describe('Moderator action sheets', () => {
         onHighlightUser={jest.fn()}
         onTimeoutUser={onTimeoutUser}
         onBanUser={onBanUser}
-        isHidden={false}
-        isHighlighted={false}
-        canModerateChat={false}
-        canModerateUser
       />,
     );
 
@@ -175,7 +176,12 @@ describe('Moderator action sheets', () => {
 
     rerender(
       <UserActionSheet
-        visible
+        visibility={{
+          visible: true,
+          isHidden: false,
+          isHighlighted: false,
+        }}
+        moderation={{ canModerateChat: true, canModerateUser: true }}
         onClose={jest.fn()}
         username='viewer'
         login='viewer'
@@ -185,10 +191,6 @@ describe('Moderator action sheets', () => {
         onHighlightUser={jest.fn()}
         onTimeoutUser={onTimeoutUser}
         onBanUser={onBanUser}
-        isHidden={false}
-        isHighlighted={false}
-        canModerateChat
-        canModerateUser
       />,
     );
 
@@ -202,7 +204,12 @@ describe('Moderator action sheets', () => {
   test('hides moderator user actions when the target user cannot be moderated', () => {
     const { queryByText } = render(
       <UserActionSheet
-        visible
+        visibility={{
+          visible: true,
+          isHidden: false,
+          isHighlighted: false,
+        }}
+        moderation={{ canModerateChat: true, canModerateUser: false }}
         onClose={jest.fn()}
         username='viewer'
         login='viewer'
@@ -212,10 +219,6 @@ describe('Moderator action sheets', () => {
         onHighlightUser={jest.fn()}
         onTimeoutUser={jest.fn()}
         onBanUser={jest.fn()}
-        isHidden={false}
-        isHighlighted={false}
-        canModerateChat
-        canModerateUser={false}
       />,
     );
 

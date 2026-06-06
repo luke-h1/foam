@@ -1,0 +1,17 @@
+{
+  "$schema": "https://react.doctor/schema/config.json",
+  "ignore": {
+    "files": [
+      "__mocks__/**",
+      "**/__tests__/**",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/*.spec.ts",
+      "**/*.spec.tsx"
+    ]
+  },
+  "rules": {
+    "react-doctor/react-compiler-no-manual-memoization": "off",
+    "react-doctor/rn-no-raw-text": "warn"
+  }
+}

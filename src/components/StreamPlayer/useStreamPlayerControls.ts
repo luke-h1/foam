@@ -1,7 +1,12 @@
+import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
 import { impact } from '@app/lib/haptics';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { Platform } from 'react-native';
-import { Directions, Gesture } from 'react-native-gesture-handler';
+import {
+  Directions,
+  Gesture,
+  type GestureType,
+} from 'react-native-gesture-handler';
 import { scheduleOnRN } from 'react-native-worklets';
 
 const SINGLE_TAP_DELAY_MS = 400;
@@ -22,39 +27,45 @@ export function useStreamPlayerControls({
   playerIsPaused,
 }: UseStreamPlayerControlsOptions) {
   const [controlsVisible, setControlsVisible] = useState(false);
-  const controlsVisibleRef = useRef(false);
+  const [videoTapGesture, setVideoTapGesture] = useState<GestureType>(() =>
+    Gesture.Tap().numberOfTaps(1),
+  );
   const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const singleTapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
 
   const showControls = useCallback(() => {
-    controlsVisibleRef.current = true;
     setControlsVisible(true);
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
     }
     controlsTimeoutRef.current = setTimeout(() => {
-      controlsVisibleRef.current = false;
+      controlsTimeoutRef.current = null;
       setControlsVisible(false);
     }, 5000);
   }, []);
 
-  const dismissControls = useCallback(() => {
-    if (controlsTimeoutRef.current) {
-      clearTimeout(controlsTimeoutRef.current);
-    }
-    controlsVisibleRef.current = false;
-    setControlsVisible(false);
-  }, []);
-
   const toggleControls = useCallback(() => {
-    if (controlsVisibleRef.current) {
-      dismissControls();
-    } else {
-      showControls();
-    }
-  }, [dismissControls, showControls]);
+    setControlsVisible(prev => {
+      if (prev) {
+        if (controlsTimeoutRef.current) {
+          clearTimeout(controlsTimeoutRef.current);
+          controlsTimeoutRef.current = null;
+        }
+        return false;
+      }
+
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
+      controlsTimeoutRef.current = setTimeout(() => {
+        controlsTimeoutRef.current = null;
+        setControlsVisible(false);
+      }, 5000);
+      return true;
+    });
+  }, []);
 
   const cancelPendingSingleTap = useCallback(() => {
     if (singleTapTimeoutRef.current) {
@@ -63,46 +74,61 @@ export function useStreamPlayerControls({
     }
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (controlsTimeoutRef.current) {
-        clearTimeout(controlsTimeoutRef.current);
-      }
-      cancelPendingSingleTap();
-    };
-  }, [cancelPendingSingleTap]);
-
-  const handleVideoAreaDoubleTap = useCallback(() => {
-    cancelPendingSingleTap();
-    if (Platform.OS !== 'web') {
-      void impact('light');
+  useUnmountCallback(() => {
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
     }
-    onVideoAreaPress?.();
-  }, [cancelPendingSingleTap, onVideoAreaPress]);
-
-  const handleVideoAreaSwipeDown = useCallback(() => {
-    cancelPendingSingleTap();
-    if (Platform.OS !== 'web') {
-      void impact('medium');
+    if (singleTapTimeoutRef.current) {
+      clearTimeout(singleTapTimeoutRef.current);
+      singleTapTimeoutRef.current = null;
     }
-    onVideoAreaSwipeDown?.();
-  }, [cancelPendingSingleTap, onVideoAreaSwipeDown]);
+  });
+
+  const gestureHandlersRef = useRef({
+    onVideoAreaPress,
+    onVideoAreaSwipeDown,
+    toggleControls,
+  });
+  gestureHandlersRef.current = {
+    onVideoAreaPress,
+    onVideoAreaSwipeDown,
+    toggleControls,
+  };
 
   const handleSingleTapDelayed = useCallback(() => {
     singleTapTimeoutRef.current = setTimeout(() => {
       singleTapTimeoutRef.current = null;
-      toggleControls();
+      gestureHandlersRef.current.toggleControls();
     }, SINGLE_TAP_DELAY_MS);
-  }, [toggleControls]);
+  }, []);
 
-  const videoTapGesture = useMemo(() => {
+  useLayoutEffect(() => {
+    const handleVideoAreaDoubleTap = () => {
+      cancelPendingSingleTap();
+      if (Platform.OS !== 'web') {
+        void impact('light');
+      }
+      gestureHandlersRef.current.onVideoAreaPress?.();
+    };
+
+    const handleVideoAreaSwipeDown = () => {
+      cancelPendingSingleTap();
+      if (Platform.OS !== 'web') {
+        void impact('medium');
+      }
+      gestureHandlersRef.current.onVideoAreaSwipeDown?.();
+    };
+
     const singleTap = Gesture.Tap()
       .numberOfTaps(1)
       .onEnd(() => {
+        'worklet';
+
         scheduleOnRN(handleSingleTapDelayed);
       });
     if (!onVideoAreaPress && !onVideoAreaSwipeDown) {
-      return singleTap;
+      setVideoTapGesture(singleTap);
+      return;
     }
     const gestures = [];
     if (onVideoAreaPress) {
@@ -110,6 +136,8 @@ export function useStreamPlayerControls({
         Gesture.Tap()
           .numberOfTaps(2)
           .onEnd(() => {
+            'worklet';
+
             scheduleOnRN(handleVideoAreaDoubleTap);
           }),
       );
@@ -119,18 +147,21 @@ export function useStreamPlayerControls({
         Gesture.Fling()
           .direction(Directions.DOWN)
           .onEnd(() => {
+            'worklet';
+
             scheduleOnRN(handleVideoAreaSwipeDown);
           }),
       );
     }
     gestures.push(singleTap);
-    return Gesture.Exclusive(...gestures);
+    setVideoTapGesture(
+      Gesture.Exclusive(...gestures) as unknown as GestureType,
+    );
   }, [
+    cancelPendingSingleTap,
+    handleSingleTapDelayed,
     onVideoAreaPress,
     onVideoAreaSwipeDown,
-    handleVideoAreaDoubleTap,
-    handleVideoAreaSwipeDown,
-    handleSingleTapDelayed,
   ]);
 
   const handlePlayPause = useCallback(() => {

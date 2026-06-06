@@ -1,6 +1,7 @@
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import type { ChatUser } from '@app/store/chatStore/constants';
 import { getUserBadge } from '@app/store/chatStore/cosmetics';
+import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 
 interface FindBadgesParams {
@@ -25,8 +26,13 @@ const addBadgeIfMissing = (
   badges: SanitisedBadgeSet[],
   badge: SanitisedBadgeSet,
 ): void => {
-  if (!hasBadge(badges, badge)) {
-    badges.push(badge);
+  const normalizedBadge = normalizeSevenTvBadge(badge);
+  if (!normalizedBadge.url?.trim()) {
+    return;
+  }
+
+  if (!hasBadge(badges, normalizedBadge)) {
+    badges.push(normalizedBadge);
   }
 };
 
@@ -47,6 +53,7 @@ const addBadge = (
     id: badge.id,
     color: badge.color,
     owner_username: badge.owner_username,
+    ...(badge.provider ? { provider: badge.provider } : {}),
   });
 };
 

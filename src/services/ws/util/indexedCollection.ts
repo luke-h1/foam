@@ -36,17 +36,6 @@ export interface IndexedCollection<T> {
  * }
  * ```
  */
-export function isIndexedCollection<T>(
-  value: unknown,
-): value is IndexedCollection<T> {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'length' in value &&
-    typeof (value as IndexedCollection<T>).length === 'number'
-  );
-}
-
 /**
  * Converts an IndexedCollection to a standard TypeScript array.
  *

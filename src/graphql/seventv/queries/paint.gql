@@ -1,3 +1,6 @@
+#import "../fragments/image.gql"
+#import "../fragments/paintData.gql"
+
 query PaintQuery($id: Id!) {
   paints {
     paint(id: $id) {
@@ -6,22 +9,7 @@ query PaintQuery($id: Id!) {
       description
       tags
       data {
-        layers {
-          id
-          opacity
-        }
-        shadows {
-          color {
-            hex
-            r
-            g
-            b
-            a
-          }
-          offsetX
-          offsetY
-          blur
-        }
+        ...PaintDataFragment
       }
       createdById
       updatedAt

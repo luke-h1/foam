@@ -1,6 +1,12 @@
 import type { ChatUser } from '@app/store/chatStore/constants';
-import { useTtvUsers } from '@app/store/chatStore/hooks';
-import { useMemo } from 'react';
+import { chatStore$ } from '@app/store/chatStore/state';
+import { queueMentionLoginSearch } from '@app/utils/chat/mentionLoginResolver';
+import {
+  searchMentionChatters,
+  type MentionChatter,
+} from '@app/utils/chat/resolveMentionLogin';
+import { useSelector } from '@legendapp/state/react';
+import { useEffect, useMemo } from 'react';
 
 interface UseUserSuggestionsProps {
   searchTerm: string;
@@ -8,43 +14,42 @@ interface UseUserSuggestionsProps {
   maxSuggestions?: number;
 }
 
+function toChatUser(chatter: MentionChatter): ChatUser {
+  return {
+    avatar: null,
+    color: chatter.color,
+    name: `@${chatter.login}`,
+    userId: chatter.userId,
+  };
+}
+
 export function useUserSuggestions({
   searchTerm,
   enabled,
   maxSuggestions = 20,
 }: UseUserSuggestionsProps) {
-  const ttvUsers = useTtvUsers();
+  const mentionLoginRevision = useSelector(chatStore$.mentionLoginRevision);
+  const cleanSearch = searchTerm.slice(1).toLowerCase().trim();
+
+  useEffect(() => {
+    if (!enabled || cleanSearch.length < 2) {
+      return;
+    }
+
+    queueMentionLoginSearch(cleanSearch);
+  }, [cleanSearch, enabled]);
 
   const filteredUsers = useMemo(() => {
-    if (!enabled || !searchTerm.trim()) {
+    if (!enabled || !searchTerm.trim() || cleanSearch.length < 1) {
       return [];
     }
 
-    // Remove @ prefix for search
-    const cleanSearch = searchTerm.slice(1).toLowerCase().trim();
-
-    if (cleanSearch.length < 1) {
-      return [];
-    }
-
-    const results: ChatUser[] = [];
-
-    for (const user of ttvUsers) {
-      if (results.length >= maxSuggestions) {
-        break;
-      }
-      if (!user?.name) {
-        continue;
-      }
-
-      const userName = user.name.toLowerCase();
-      if (userName.includes(cleanSearch)) {
-        results.push(user);
-      }
-    }
-
-    return results;
-  }, [ttvUsers, searchTerm, enabled, maxSuggestions]);
+    return searchMentionChatters(
+      cleanSearch,
+      maxSuggestions,
+      mentionLoginRevision,
+    ).map(toChatUser);
+  }, [cleanSearch, enabled, maxSuggestions, mentionLoginRevision, searchTerm]);
 
   return {
     filteredUsers,

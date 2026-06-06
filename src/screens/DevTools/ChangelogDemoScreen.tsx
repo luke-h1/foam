@@ -10,7 +10,7 @@ import {
   resetSeenChangelogVersions,
   type ChangelogPresentOptions,
 } from '@modules/changelog';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
 type ChangelogState = {
@@ -91,14 +91,11 @@ export function ChangelogDemoScreen() {
     readChangelogState(),
   );
 
-  const stateRows = useMemo(
-    () => [
-      ['Current app version', state.currentVersion],
-      ['Latest seen app version', state.latestSeenAppVersion ?? 'none'],
-      ['Latest seen OTA version', state.latestSeenOTAVersion ?? 'none'],
-    ],
-    [state],
-  );
+  const stateRows = [
+    ['Current app version', state.currentVersion],
+    ['Latest seen app version', state.latestSeenAppVersion ?? 'none'],
+    ['Latest seen OTA version', state.latestSeenOTAVersion ?? 'none'],
+  ];
 
   const refreshState = () => {
     setState(readChangelogState());

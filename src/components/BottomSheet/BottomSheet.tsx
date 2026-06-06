@@ -1,4 +1,5 @@
-import { memo, type PropsWithChildren } from 'react';
+import { memo } from 'react';
+import type { PropsWithChildren } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 export type SnapPoint = { fraction: number } | { height: number } | 'full';
@@ -24,24 +25,34 @@ function BottomSheetComponent({
 
   return (
     <View testID={testID} style={styles.fallback}>
-      {showDragIndicator ? <View style={styles.dragIndicator} /> : null}
+      {showDragIndicator ? (
+        <View style={styles.dragHandleRow}>
+          <View style={styles.dragIndicator} />
+        </View>
+      ) : null}
       {children}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  dragHandleRow: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 6,
+    paddingTop: 10,
+    width: '100%',
+  },
   dragIndicator: {
-    alignSelf: 'center',
     backgroundColor: 'rgba(255,255,255,0.38)',
     borderRadius: 999,
     height: 4,
-    marginBottom: 8,
-    marginTop: 8,
     width: 36,
   },
   fallback: {
-    alignItems: 'center',
+    alignItems: 'stretch',
+    alignSelf: 'stretch',
+    width: '100%',
   },
 });
 

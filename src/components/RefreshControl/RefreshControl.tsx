@@ -1,7 +1,7 @@
+import { useCallback } from 'react';
 import { impact, notification } from '@app/lib/haptics';
 import { theme } from '@app/styles/themes';
 import { useObservable, useSelector } from '@legendapp/state/react';
-import { useCallback } from 'react';
 import { Platform, RefreshControl as RNRefreshControl } from 'react-native';
 
 interface Props {

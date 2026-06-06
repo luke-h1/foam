@@ -6,7 +6,8 @@ import {
 } from '@app/store/chatStore/channelLoad';
 import { fetchAndCacheUserCosmetics } from '@app/store/chatStore/cosmetics';
 import { logger } from '@app/utils/logger';
-import { useEffect, type MutableRefObject } from 'react';
+import { useEffect, useRef } from 'react';
+import type { MutableRefObject } from 'react';
 
 import { useChatSevenTvCallbacks } from './useChatSevenTvCallbacks';
 import type { AnyChatMessageType } from '../util/messageHandlers';
@@ -51,12 +52,17 @@ export function useSevenTvChatRuntime({
     onEvent: eventType => logger.stvWs.debug(`SevenTV event: ${eventType}`),
   });
   const wsConnected = readyState === ReadyState.OPEN && isConnected();
+  const subscribeToChannelRef = useRef(subscribeToChannel);
+  const unsubscribeFromChannelRef = useRef(unsubscribeFromChannel);
+  subscribeToChannelRef.current = subscribeToChannel;
+  unsubscribeFromChannelRef.current = unsubscribeFromChannel;
 
   useEffect(() => {
-    if (!wsConnected || !channelId) {
+    if (!wsConnected || !channelId || emoteLoadStatus !== 'success') {
       return;
     }
 
+    const emoteSetIdRef = currentEmoteSetIdRef;
     const emoteSetId = getSevenTvEmoteSetId(channelId);
     if (!emoteSetId) {
       logger.stvWs.info(
@@ -65,45 +71,18 @@ export function useSevenTvChatRuntime({
       return;
     }
 
-    if (
-      currentEmoteSetIdRef.current &&
-      currentEmoteSetIdRef.current !== emoteSetId
-    ) {
-      unsubscribeFromChannel();
+    if (emoteSetIdRef.current && emoteSetIdRef.current !== emoteSetId) {
+      unsubscribeFromChannelRef.current();
     }
 
-    if (currentEmoteSetIdRef.current !== emoteSetId) {
-      currentEmoteSetIdRef.current = emoteSetId;
-      subscribeToChannel(emoteSetId);
+    if (emoteSetIdRef.current !== emoteSetId) {
+      emoteSetIdRef.current = emoteSetId;
+      subscribeToChannelRef.current(emoteSetId);
     }
 
     return () => {
-      unsubscribeFromChannel();
-      currentEmoteSetIdRef.current = null;
+      unsubscribeFromChannelRef.current();
+      emoteSetIdRef.current = null;
     };
-  }, [
-    channelId,
-    subscribeToChannel,
-    unsubscribeFromChannel,
-    wsConnected,
-    currentEmoteSetIdRef,
-  ]);
-
-  useEffect(() => {
-    if (!wsConnected || !channelId || emoteLoadStatus !== 'success') {
-      return;
-    }
-
-    const emoteSetId = getSevenTvEmoteSetId(channelId);
-    if (emoteSetId && currentEmoteSetIdRef.current !== emoteSetId) {
-      currentEmoteSetIdRef.current = emoteSetId;
-      subscribeToChannel(emoteSetId);
-    }
-  }, [
-    wsConnected,
-    channelId,
-    emoteLoadStatus,
-    subscribeToChannel,
-    currentEmoteSetIdRef,
-  ]);
+  }, [channelId, currentEmoteSetIdRef, emoteLoadStatus, wsConnected]);
 }

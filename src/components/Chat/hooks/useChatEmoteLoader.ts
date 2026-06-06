@@ -11,7 +11,13 @@ import {
   preloadGlobalEmotes,
 } from '@app/utils/image/preloadEmotes';
 import { logger } from '@app/utils/logger';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useCallback,
+} from 'react';
 
 export type EmoteLoadingStatus =
   | 'idle'
@@ -40,6 +46,14 @@ export const useChatEmoteLoader = ({
   const [status, setStatus] = useState<EmoteLoadingStatus>('idle');
   const isMountedRef = useRef(true);
   const currentChannelRef = useRef<string | null>(null);
+  const lastChannelIdRef = useRef(channelId);
+
+  useLayoutEffect(() => {
+    if (lastChannelIdRef.current !== channelId) {
+      lastChannelIdRef.current = channelId;
+      setStatus('idle');
+    }
+  }, [channelId]);
 
   const cancel = useCallback(() => {
     abortCurrentLoad();
@@ -126,24 +140,21 @@ export const useChatEmoteLoader = ({
     await loadEmotes(true);
   }, [loadEmotes]);
 
+  const loadEmotesRef = useRef(loadEmotes);
+  loadEmotesRef.current = loadEmotes;
+
   useEffect(() => {
     isMountedRef.current = true;
 
     if (enabled && channelId && currentChannelRef.current !== channelId) {
-      void loadEmotes(false);
+      void loadEmotesRef.current(false);
     }
 
     return () => {
       isMountedRef.current = false;
-      cancel();
+      abortCurrentLoad();
     };
-  }, [channelId, enabled, loadEmotes, cancel]);
-
-  useEffect(() => {
-    if (channelId !== currentChannelRef.current) {
-      setStatus('idle');
-    }
-  }, [channelId]);
+  }, [channelId, enabled]);
 
   const sevenTvEmoteSetId = getSevenTvEmoteSetId(channelId) ?? undefined;
 

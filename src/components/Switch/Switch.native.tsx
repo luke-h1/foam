@@ -1,6 +1,6 @@
 import { Host, Switch as ExpoSwitch } from '@expo/ui';
 import { useObservable, useSelector } from '@legendapp/state/react';
-import { memo, useCallback, useEffect } from 'react';
+import { useEffect, memo } from 'react';
 import {
   StyleSheet,
   View,
@@ -23,13 +23,10 @@ export const Switch = memo(function Switch({
     displayValue$.set(Boolean(value));
   }, [displayValue$, value]);
 
-  const handleValueChange = useCallback(
-    (nextValue: boolean) => {
-      displayValue$.set(nextValue);
-      void onValueChange?.(nextValue);
-    },
-    [displayValue$, onValueChange],
-  );
+  const handleValueChange = (nextValue: boolean) => {
+    displayValue$.set(nextValue);
+    void onValueChange?.(nextValue);
+  };
 
   return (
     <View

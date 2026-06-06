@@ -1,10 +1,11 @@
+import { useCallback, memo } from 'react';
 import { Button } from '@app/components/Button/Button';
 import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
 import { Switch } from '@app/components/Switch/Switch';
 import { Text } from '@app/components/ui/Text/Text';
+import type { SettingsSheetPreferenceFlags } from '@app/components/Chat/types/chatUiFlags';
 import { theme } from '@app/styles/themes';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { memo, useCallback, useMemo } from 'react';
 import {
   ScrollView,
   View,
@@ -12,6 +13,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
 import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from '../chatSheetSurface';
 
 function ToggleMenuItemComponent({
@@ -42,12 +44,11 @@ function ToggleMenuItemComponent({
   );
 }
 
-const ToggleMenuItem = memo(ToggleMenuItemComponent);
+const ToggleMenuItem = ToggleMenuItemComponent;
 
 export interface SettingsSheetProps {
-  chatDensity?: 'comfortable' | 'compact';
-  highlightOwnMentions?: boolean;
   isPresented: boolean;
+  preferenceFlags?: SettingsSheetPreferenceFlags;
   onClearChatCache?: () => void;
   onClearImageCache?: () => void;
   onClearSevenTvCosmeticsCache?: () => void;
@@ -62,9 +63,6 @@ export interface SettingsSheetProps {
   onToggleShowUnreadJumpPill?: (value: boolean) => void;
   latency?: number | null;
   reconnectionAttempts?: number;
-  showInlineReplyContext?: boolean;
-  showTimestamps?: boolean;
-  showUnreadJumpPill?: boolean;
 }
 
 const SettingsSheetComponent = ({
@@ -83,26 +81,18 @@ const SettingsSheetComponent = ({
   onToggleShowUnreadJumpPill,
   latency,
   reconnectionAttempts,
-  chatDensity = 'comfortable',
-  highlightOwnMentions = true,
-  showInlineReplyContext = true,
-  showTimestamps = true,
-  showUnreadJumpPill = true,
+  preferenceFlags,
 }: SettingsSheetProps) => {
+  const {
+    chatDensity = 'comfortable',
+    highlightOwnMentions = true,
+    showInlineReplyContext = true,
+    showTimestamps = true,
+    showUnreadJumpPill = true,
+  } = preferenceFlags ?? {};
   const { bottom: bottomInset } = useSafeAreaInsets();
-  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
-  const sheetHeight = Math.round(windowHeight * 0.58);
-  const containerStyle = useMemo(
-    () => [
-      styles.container,
-      {
-        flex: 0,
-        height: sheetHeight,
-        width: Math.max(280, windowWidth - theme.space16 * 2),
-      },
-    ],
-    [sheetHeight, windowWidth],
-  );
+  const { height: windowHeight } = useWindowDimensions();
+  const sheetHeight = Math.round(windowHeight * CHAT_SETTINGS_SHEET_DETENT);
 
   const dismissSheet = useCallback(() => {
     onDismiss();
@@ -140,12 +130,14 @@ const SettingsSheetComponent = ({
 
   return (
     <BottomSheet
+      enableFixedSnapPoints
       isPresented={isPresented}
       onDismiss={onDismiss}
       showDragIndicator
+      snapPoints={[{ fraction: CHAT_SETTINGS_SHEET_DETENT }]}
       testID='chat-settings-sheet'
     >
-      <View style={containerStyle}>
+      <View style={[styles.container, { height: sheetHeight }]}>
         <View style={styles.header}>
           <Text style={styles.headerEyebrow} weight='semibold'>
             CHAT
@@ -161,6 +153,7 @@ const SettingsSheetComponent = ({
             styles.menuContainer,
             { paddingBottom: bottomInset + theme.space20 },
           ]}
+          nestedScrollEnabled
           showsVerticalScrollIndicator={false}
         >
           {onRefetchEmotes ? (
@@ -328,14 +321,16 @@ const SettingsSheetComponent = ({
   );
 };
 
-SettingsSheetComponent.displayName = 'SettingsSheet';
-
 export const SettingsSheet = memo(SettingsSheetComponent);
 
 const styles = StyleSheet.create({
   container: {
     ...chatSheetSurface,
+    alignSelf: 'stretch',
     backgroundColor: CHAT_SHEET_BACKGROUND,
+    flexDirection: 'column',
+    minHeight: 0,
+    width: '100%',
   },
   header: {
     borderBottomColor: theme.color.border.dark,
@@ -387,5 +382,6 @@ const styles = StyleSheet.create({
   },
   menuScroll: {
     flex: 1,
+    minHeight: 0,
   },
 });

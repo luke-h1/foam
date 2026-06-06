@@ -9,7 +9,7 @@ import {
   reloadAsync,
   setExtraParamAsync,
 } from 'expo-updates';
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { Alert, AppState, AppStateStatus, Platform } from 'react-native';
 import { theme } from '@app/styles/themes';
 import { countOtaMetric, recordError, recordInfo } from '@app/lib/sentry';
@@ -206,6 +206,13 @@ export function useOTAUpdates() {
     );
   }, [applyUpdate, isProduction]);
 
+  const checkForUpdatesRef = useRef(checkForUpdates);
+  checkForUpdatesRef.current = checkForUpdates;
+  const promptAndReloadRef = useRef(promptAndReload);
+  promptAndReloadRef.current = promptAndReload;
+  const applyUpdateRef = useRef(applyUpdate);
+  applyUpdateRef.current = applyUpdate;
+
   useEffect(() => {
     if (!shouldReceiveUpdates || ranInitialCheck.current) {
       return;
@@ -215,7 +222,7 @@ export function useOTAUpdates() {
 
     timeout.current = setTimeout(
       () => {
-        void checkForUpdates();
+        void checkForUpdatesRef.current();
       },
       isProduction ? MINIMUM_MINIMIZE_TIME : INITIAL_CHECK_DELAY,
     );
@@ -223,7 +230,7 @@ export function useOTAUpdates() {
     return () => {
       clearTimeout(timeout.current);
     };
-  }, [checkForUpdates, isProduction, shouldReceiveUpdates]);
+  }, [isProduction, shouldReceiveUpdates]);
 
   useEffect(() => {
     const handlePendingUpdate = () => {
@@ -257,7 +264,7 @@ export function useOTAUpdates() {
       });
 
       if (!isProduction) {
-        promptAndReload();
+        promptAndReloadRef.current();
       }
     };
 
@@ -270,7 +277,7 @@ export function useOTAUpdates() {
     return () => {
       subscription.remove();
     };
-  }, [isProduction, promptAndReload]);
+  }, [isProduction]);
 
   useEffect(() => {
     if (!isEnabled) {
@@ -310,9 +317,9 @@ export function useOTAUpdates() {
                   channel: Updates.channel || 'unknown',
                 });
 
-                await applyUpdate();
+                await applyUpdateRef.current();
               } else {
-                promptAndReload();
+                promptAndReloadRef.current();
               }
             } else {
               recordInfo({
@@ -326,7 +333,7 @@ export function useOTAUpdates() {
                 },
               });
 
-              void checkForUpdates();
+              void checkForUpdatesRef.current();
             }
           }
         }
@@ -342,5 +349,5 @@ export function useOTAUpdates() {
     return () => {
       subscription.remove();
     };
-  }, [applyUpdate, checkForUpdates, isProduction, promptAndReload]);
+  }, [isProduction]);
 }

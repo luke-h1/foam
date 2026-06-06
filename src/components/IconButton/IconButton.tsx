@@ -1,14 +1,9 @@
 import { resolveSpacingValue, Spacing } from '@app/styles/spacing';
 import { theme } from '@app/styles/themes';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import {
-  ActivityIndicator,
-  Insets,
-  StyleProp,
-  ViewStyle,
-  StyleSheet,
-} from 'react-native';
+import { type SymbolViewProps } from 'expo-symbols';
+import { Insets, StyleProp, ViewStyle, StyleSheet } from 'react-native';
 import { Button } from '../Button/Button';
+import { IconButtonIcon } from './IconButtonIcon';
 
 type IconType =
   | {
@@ -40,33 +35,6 @@ export function IconButton({
   size = 'md',
   style,
 }: IconButtonProps) {
-  const renderIcon = () => {
-    if (loading) {
-      return <ActivityIndicator color={theme.color.text.dark} />;
-    }
-
-    if (typeof icon === 'string' || !('type' in icon)) {
-      return (
-        <SymbolView
-          name={icon}
-          size={resolveSpacingValue(theme, size)}
-          tintColor={theme.colorGrey}
-        />
-      );
-    }
-
-    if (icon.type === 'symbol') {
-      return (
-        <SymbolView
-          name={icon.name}
-          size={icon.size ?? resolveSpacingValue(theme, size)}
-          tintColor={icon.color ?? theme.colorGrey}
-        />
-      );
-    }
-    return null;
-  };
-
   return (
     <Button
       disabled={loading}
@@ -76,7 +44,7 @@ export function IconButton({
       onLongPress={onLongPress}
       onPress={onPress}
     >
-      {renderIcon()}
+      <IconButtonIcon icon={icon} loading={loading} size={size} />
     </Button>
   );
 }

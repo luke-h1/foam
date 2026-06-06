@@ -161,6 +161,89 @@ export interface ModiversaryTags extends BaseUserNoticeTags {
   'msg-param-months'?: string;
 }
 
+export interface AnnouncementTags extends BaseUserNoticeTags {
+  'msg-id': 'announcement';
+  'msg-param-color'?: string;
+}
+
+export interface HighlightedMessageTags extends BaseUserNoticeTags {
+  'msg-id': 'highlighted-message';
+}
+
+export interface CharityDonationTags extends BaseUserNoticeTags {
+  'msg-id': 'charitydonation';
+  'msg-param-charity-name'?: string;
+  'msg-param-donation-amount'?: string;
+  'msg-param-donation-currency'?: string;
+  'msg-param-exponent'?: string;
+}
+
+export interface RitualTags extends BaseUserNoticeTags {
+  'msg-id': 'ritual';
+  'msg-param-ritual-name'?: string;
+}
+
+export interface PrimePaidUpgradeTags extends BaseUserNoticeTags {
+  'msg-id': 'primepaidupgrade';
+  'msg-param-sub-plan'?: MsgParamSubPlan;
+  'msg-param-sub-plan-name'?: string;
+  'msg-param-cumulative-months'?: string;
+}
+
+export interface ExtendSubTags extends BaseUserNoticeTags {
+  'msg-id': 'extendsub';
+  'msg-param-sub-plan'?: MsgParamSubPlan;
+  'msg-param-sub-plan-name'?: string;
+  'msg-param-cumulative-months'?: string;
+  'msg-param-streak-months'?: string;
+  'msg-param-should-share-streak'?: '1' | '0';
+}
+
+export interface PayForwardTags extends BaseUserNoticeTags {
+  'msg-id': 'standardpayforward' | 'communitypayforward';
+  'msg-param-sub-plan'?: MsgParamSubPlan;
+  'msg-param-sub-plan-name'?: string;
+  'msg-param-recipient-display-name'?: string;
+  'msg-param-recipient-user-name'?: string;
+  'msg-param-months'?: string;
+}
+
+export interface PrimeCommunityGiftReceivedTags extends BaseUserNoticeTags {
+  'msg-id': 'primecommunitygiftreceived';
+  'msg-param-sub-plan'?: MsgParamSubPlan;
+  'msg-param-sub-plan-name'?: string;
+  'msg-param-sender-name'?: string;
+  'msg-param-months'?: string;
+}
+
+export interface AnonSubGiftTags extends BaseUserNoticeTags {
+  'msg-id': 'anonsubgift';
+  'msg-param-sub-plan'?: MsgParamSubPlan;
+  'msg-param-recipient-display-name'?: string;
+  'msg-param-recipient-user-name'?: string;
+  'msg-param-months'?: string;
+}
+
+export interface AnonSubMysteryGiftTags extends BaseUserNoticeTags {
+  'msg-id': 'anonsubmysterygift';
+  'msg-param-mass-gift-count'?: string;
+  'msg-param-sub-plan'?: MsgParamSubPlan;
+  'msg-param-sub-plan-name'?: string;
+}
+
+export interface SkipSubsModeMessageTags extends BaseUserNoticeTags {
+  'msg-id': 'skip-subs-mode-message';
+}
+
+export interface MidnightSquidTags extends BaseUserNoticeTags {
+  'msg-id': 'midnightsquid';
+}
+
+export interface SharedChatSourceTags {
+  'source-room-id'?: string;
+  'source-msg-id'?: string;
+}
+
 /**
  * Type mapping from msg-id values to their corresponding tag types
  */
@@ -178,6 +261,19 @@ export type UserNoticeVariantMap = {
   bitsbadgetier: BitsBadgeTierTags;
   sharedchatnotice: SharedChatNoticeTags;
   modiversary: ModiversaryTags;
+  announcement: AnnouncementTags;
+  'highlighted-message': HighlightedMessageTags;
+  charitydonation: CharityDonationTags;
+  ritual: RitualTags;
+  primepaidupgrade: PrimePaidUpgradeTags;
+  extendsub: ExtendSubTags;
+  standardpayforward: PayForwardTags;
+  communitypayforward: PayForwardTags;
+  primecommunitygiftreceived: PrimeCommunityGiftReceivedTags;
+  anonsubgift: AnonSubGiftTags;
+  anonsubmysterygift: AnonSubMysteryGiftTags;
+  'skip-subs-mode-message': SkipSubsModeMessageTags;
+  midnightsquid: MidnightSquidTags;
 };
 
 /**
@@ -198,4 +294,16 @@ export type UserNoticeTags =
   | UnraidTags
   | BitsBadgeTierTags
   | SharedChatNoticeTags
-  | ModiversaryTags;
+  | ModiversaryTags
+  | AnnouncementTags
+  | HighlightedMessageTags
+  | CharityDonationTags
+  | RitualTags
+  | PrimePaidUpgradeTags
+  | ExtendSubTags
+  | PayForwardTags
+  | PrimeCommunityGiftReceivedTags
+  | AnonSubGiftTags
+  | AnonSubMysteryGiftTags
+  | SkipSubsModeMessageTags
+  | MidnightSquidTags;

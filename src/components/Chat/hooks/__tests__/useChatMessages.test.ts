@@ -7,7 +7,7 @@ jest.mock('@app/store/chatStore/messages', () => ({
   addMessages: jest.fn(),
 }));
 
-const mockAddMessages = addMessages as jest.MockedFunction<typeof addMessages>;
+const mockAddMessages = jest.mocked(addMessages);
 
 function getLastFlushedMessages(): ChatMessageType<never>[] {
   const lastCall = mockAddMessages.mock.calls.at(-1);
@@ -429,8 +429,7 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(50);
       });
 
-      const firstCall = (mockAddMessages as jest.Mock).mock
-        .calls[0] as unknown[];
+      const firstCall = mockAddMessages.mock.calls[0] as unknown[];
       const flushedMessages = firstCall[0] as ChatMessageType<never>[];
 
       expect(flushedMessages).toHaveLength(600);

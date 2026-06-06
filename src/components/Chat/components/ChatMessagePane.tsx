@@ -1,24 +1,20 @@
 import { Text } from '@app/components/ui/Text/Text';
 import { useMessages } from '@app/store/chatStore/hooks';
 import { logger } from '@app/utils/logger';
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type RefObject,
-} from 'react';
+import { useCallback, useEffect, useRef, useState, memo } from 'react';
+import type { RefObject } from 'react';
+
 import {
   type LayoutChangeEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   type StyleProp,
+  useWindowDimensions,
   View,
   type ViewStyle,
 } from 'react-native';
 
+import type { ChatPaneFlags } from '../types/chatUiFlags';
 import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
 import { styles } from '../styles';
 import type { AnyChatMessageType } from '../util/messageHandlers';
@@ -34,21 +30,19 @@ import { PinnedMessageBanner } from './PinnedMessageBanner';
 
 const CHAT_ESTIMATED_COMFORTABLE_ROW_HEIGHT = 34;
 const CHAT_ESTIMATED_COMPACT_ROW_HEIGHT = 24;
+const CHAT_LIST_HORIZONTAL_INSET = 32;
+const CHAT_MIN_PRETEXT_WIDTH = 80;
 
 export interface ChatMessagePaneProps {
-  canModerateChat: boolean;
   channelId: string;
   channelName: string;
-  connected: boolean;
   currentUsername?: string;
   hiddenUsers: string[];
   hiddenPhrases: string[];
   highlightedUsers: string[];
-  showOnlyMentions: boolean;
+  paneFlags: ChatPaneFlags;
   chatDensity: 'comfortable' | 'compact';
-  showTimestamps: boolean;
   listRef: RefObject<ChatListRef | null>;
-  shouldMaintainScrollAtEnd: boolean;
   handleScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   handleScrollBeginDrag: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   handleScrollEndDrag: () => void;
@@ -71,19 +65,15 @@ export interface ChatMessagePaneProps {
 
 export const ChatMessagePane = memo(
   ({
-    canModerateChat,
     channelId,
     channelName,
-    connected,
     currentUsername,
     hiddenUsers,
     hiddenPhrases,
     highlightedUsers,
-    showOnlyMentions,
+    paneFlags,
     chatDensity,
-    showTimestamps,
     listRef,
-    shouldMaintainScrollAtEnd,
     handleScroll,
     handleScrollBeginDrag,
     handleScrollEndDrag,
@@ -103,41 +93,45 @@ export const ChatMessagePane = memo(
     pinnedMessage,
     pinnedMessageBusy,
   }: ChatMessagePaneProps) => {
+    const {
+      canModerateChat,
+      connected,
+      shouldMaintainScrollAtEnd,
+      showOnlyMentions,
+      showTimestamps,
+    } = paneFlags;
     const storedMessages = useMessages() as AnyChatMessageType[];
     const rawMessages = storedMessages;
     const hasMessages = rawMessages.length > 0;
+    const { width: windowWidth } = useWindowDimensions();
     const [messagePaneWidth, setMessagePaneWidth] = useState(0);
+    const pretextMeasureWidth = Math.max(
+      CHAT_MIN_PRETEXT_WIDTH,
+      messagePaneWidth > CHAT_MIN_PRETEXT_WIDTH
+        ? messagePaneWidth
+        : Math.round(windowWidth - CHAT_LIST_HORIZONTAL_INSET),
+    );
     const hasEverHadMessagesRef = useRef(false);
     const lastEmptyLogAtRef = useRef<number>(0);
 
-    const visibleMessageOptions = useMemo(
-      () => ({
-        currentUsername,
-        hiddenUsers,
-        hiddenPhrases,
-        showOnlyMentions,
-      }),
-      [currentUsername, hiddenUsers, hiddenPhrases, showOnlyMentions],
-    );
-
-    const visibleMessages = useMemo(
-      () => getVisibleMessages(rawMessages, visibleMessageOptions),
-      [rawMessages, visibleMessageOptions],
-    );
-
-    const hasActiveFilters = useMemo(() => {
-      return Boolean(
-        hiddenUsers.length ||
-        hiddenPhrases.length ||
-        highlightedUsers.length ||
-        showOnlyMentions,
-      );
-    }, [
-      hiddenUsers.length,
-      hiddenPhrases.length,
-      highlightedUsers.length,
+    const visibleMessageOptions = {
+      currentUsername,
+      hiddenUsers,
+      hiddenPhrases,
       showOnlyMentions,
-    ]);
+    };
+
+    const visibleMessages = getVisibleMessages(
+      rawMessages,
+      visibleMessageOptions,
+    );
+
+    const hasActiveFilters = Boolean(
+      hiddenUsers.length ||
+      hiddenPhrases.length ||
+      highlightedUsers.length ||
+      showOnlyMentions,
+    );
 
     const listData = visibleMessages;
     const handleMessagePaneLayout = useCallback((event: LayoutChangeEvent) => {
@@ -146,17 +140,18 @@ export const ChatMessagePane = memo(
         Math.abs(currentWidth - nextWidth) > 1 ? nextWidth : currentWidth,
       );
     }, []);
+
     const getEstimatedItemSize = useCallback(
       (_index: number, item?: AnyChatMessageType, _type?: string) =>
         estimateChatMessageHeightWithPretext(item, {
-          containerWidth: messagePaneWidth,
+          containerWidth: pretextMeasureWidth,
           density: chatDensity,
           showTimestamp: showTimestamps,
         }) ??
         (chatDensity === 'compact'
           ? CHAT_ESTIMATED_COMPACT_ROW_HEIGHT
           : CHAT_ESTIMATED_COMFORTABLE_ROW_HEIGHT),
-      [chatDensity, messagePaneWidth, showTimestamps],
+      [chatDensity, pretextMeasureWidth, showTimestamps],
     );
 
     useEffect(() => {
@@ -243,5 +238,3 @@ export const ChatMessagePane = memo(
     );
   },
 );
-
-ChatMessagePane.displayName = 'ChatMessagePane';

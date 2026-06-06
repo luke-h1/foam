@@ -4,7 +4,8 @@ import { chatStore$ } from '@app/store/chatStore/state';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { findBadges } from '@app/utils/chat/findBadges';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { type MutableRefObject, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import type { MutableRefObject } from 'react';
 
 import type { AnyChatMessageType } from '../util/messageHandlers';
 
@@ -21,7 +22,7 @@ export function useEmoteReprocessing({
 }: {
   channelId: string;
   channelEmoteData: unknown;
-  messages$: { peek: () => unknown[] };
+  messages$: { peek: () => AnyChatMessageType[] };
   emoteLoadStatus: string;
   processedMessageIdsRef: MutableRefObject<Set<string>>;
   reprocessKey?: string;
@@ -71,11 +72,24 @@ export function useEmoteReprocessing({
         return;
       }
 
-      if (msg.sender === 'System' || 'notice_tags' in msg) {
+      if (
+        msg.sender === 'System' ||
+        ('notice_tags' in msg &&
+          msg.notice_tags &&
+          !msg.isAnnouncement &&
+          !msg.isHighlightedMessage)
+      ) {
         return;
       }
 
-      if (processedMessageIdsRef.current.has(msg.message_id)) {
+      const hasUnparsedMention = msg.message.some(
+        part => part.type === 'text' && /(?:^|\s)@[\w-]+/.test(part.content),
+      );
+
+      if (
+        processedMessageIdsRef.current.has(msg.message_id) &&
+        !hasUnparsedMention
+      ) {
         return;
       }
 
@@ -142,7 +156,7 @@ export function useEmoteReprocessing({
         index < currentMessages.length &&
         processedInBatch < EMOTE_REPROCESS_BATCH_SIZE
       ) {
-        processMessage(currentMessages[index] as AnyChatMessageType);
+        processMessage(currentMessages[index]);
         index += 1;
         processedInBatch += 1;
       }
@@ -305,7 +319,7 @@ function getReprocessableText(parts: ParsedPart[]): string | null {
     }
 
     if (part.type === 'emote') {
-      textContent += part.original_name || part.name || part.content;
+      textContent += part.content || part.name || part.original_name;
       continue;
     }
 

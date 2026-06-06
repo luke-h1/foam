@@ -110,13 +110,7 @@ function messageHiddenByPhrase(
 
   const { body } = getNormalisedMessageFields(message);
 
-  for (const phrase of hiddenPhrases) {
-    if (body.includes(phrase)) {
-      return true;
-    }
-  }
-
-  return false;
+  return hiddenPhrases.some(phrase => body.includes(phrase));
 }
 
 function messageHiddenByUser(

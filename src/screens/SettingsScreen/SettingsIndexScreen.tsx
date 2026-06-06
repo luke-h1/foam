@@ -18,6 +18,10 @@ import { useRef } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BuildStatus } from './components/BuildStatus';
 
+function handleSendFeedback() {
+  showFeedbackWidget();
+}
+
 export function SettingsIndexScreen() {
   const { user } = useAuthContext();
   const { config } = useRemoteConfig();
@@ -31,10 +35,6 @@ export function SettingsIndexScreen() {
   useScrollToTop(scrollRef);
 
   const { statusPageUrl, websiteUrl } = config;
-  const handleSendFeedback = () => {
-    showFeedbackWidget();
-  };
-
   if (Platform.OS === 'ios') {
     return (
       <View style={styles.container}>
@@ -50,19 +50,19 @@ export function SettingsIndexScreen() {
               systemImage='bubble.left.and.bubble.right'
               onPress={() => router.push('/tabs/settings/chat-preferences')}
             >
-              Chat
+              <Form.Text>Chat</Form.Text>
             </Form.Link>
             <Form.Link
               systemImage='externaldrive'
               onPress={() => router.push('/tabs/settings/cache')}
             >
-              Cache
+              <Form.Text>Cache</Form.Text>
             </Form.Link>
             <Form.Link
               systemImage='paintpalette'
               onPress={() => router.push('/tabs/settings/appearance')}
             >
-              Appearance
+              <Form.Text>Appearance</Form.Text>
             </Form.Link>
           </Form.Section>
 
@@ -78,7 +78,7 @@ export function SettingsIndexScreen() {
                 router.push('/auth-sheet');
               }}
             >
-              {user ? 'Profile' : 'Sign In'}
+              <Form.Text>{user ? 'Profile' : 'Sign In'}</Form.Text>
             </Form.Link>
           </Form.Section>
 
@@ -87,28 +87,28 @@ export function SettingsIndexScreen() {
               systemImage='info.circle'
               onPress={() => router.push('/tabs/settings/about')}
             >
-              About Foam
+              <Form.Text>About Foam</Form.Text>
             </Form.Link>
             <Form.Link
               systemImage='questionmark.circle'
               onPress={() => router.push('/tabs/settings/faq')}
             >
-              FAQ
+              <Form.Text>FAQ</Form.Text>
             </Form.Link>
             <Form.Link systemImage='paperplane' onPress={handleSendFeedback}>
-              Send Feedback
+              <Form.Text>Send Feedback</Form.Text>
             </Form.Link>
             <Form.Link
               systemImage='checkmark.shield'
               onPress={() => openLinkInBrowser(statusPageUrl.value)}
             >
-              Status
+              <Form.Text>Status</Form.Text>
             </Form.Link>
             <Form.Link
               systemImage='globe'
               onPress={() => openLinkInBrowser(websiteUrl.value)}
             >
-              Website
+              <Form.Text>Website</Form.Text>
             </Form.Link>
           </Form.Section>
 
@@ -118,14 +118,14 @@ export function SettingsIndexScreen() {
                 systemImage='hammer'
                 onPress={() => router.push('/tabs/settings/dev-tools')}
               >
-                Dev Tools
+                <Form.Text>Dev Tools</Form.Text>
               </Form.Link>
             ) : null}
             <Form.Link
               systemImage='ellipsis.circle'
               onPress={() => router.push('/tabs/settings/other')}
             >
-              Other
+              <Form.Text>Other</Form.Text>
             </Form.Link>
           </Form.Section>
         </BodyScrollView>

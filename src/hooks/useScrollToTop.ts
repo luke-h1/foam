@@ -1,5 +1,5 @@
 import { useScrollToTop as useNavigationScrollToTop } from 'expo-router';
-import { Ref, RefObject, useMemo, useRef } from 'react';
+import { Ref, RefObject, useRef } from 'react';
 
 type ScrollOptions = { x?: number; y?: number; animated?: boolean };
 type WebScrollable = { injectJavaScript: (script: string) => void };
@@ -97,22 +97,19 @@ function scrollToOffset(
 }
 
 export function useScrollToTop(ref: ScrollableRef, offset: number = 0) {
-  const scrollToTopRef = useMemo<RefObject<ScrollableView | null>>(
-    () => ({
-      get current() {
-        const scrollable = getScrollableNode(ref);
+  const scrollToTopRef = {
+    get current() {
+      const scrollable = getScrollableNode(ref);
 
-        if (!scrollable) {
-          return null;
-        }
+      if (!scrollable) {
+        return null;
+      }
 
-        return {
-          scrollToTop: () => scrollToOffset(scrollable, offset),
-        };
-      },
-    }),
-    [ref, offset],
-  );
+      return {
+        scrollToTop: () => scrollToOffset(scrollable, offset),
+      };
+    },
+  };
 
   useNavigationScrollToTop(scrollToTopRef);
 }

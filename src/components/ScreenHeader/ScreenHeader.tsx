@@ -313,10 +313,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius20,
     borderWidth: 1,
     height: 134,
-    shadowColor: theme.colorBlackAlpha,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 18,
+    boxShadow: '0 4px 18px rgba(0, 0, 0, 0.4)',
     width: 100,
   },
   heroBackground: {

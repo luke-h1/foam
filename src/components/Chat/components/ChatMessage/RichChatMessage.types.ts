@@ -1,3 +1,4 @@
+import type { ChatMessageDisplayFlags } from '@app/components/Chat/types/chatUiFlags';
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import type { ChatMessageType } from '@app/store/chatStore/constants';
 import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
@@ -6,12 +7,17 @@ import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 
 export type EmotePressData = ParsedPart<'emote'>;
 export type BadgePressData = SanitisedBadgeSet;
-export type MessageActionData<TNoticeType extends NoticeVariants> = {
+export type MessageActionData<
+  TNoticeType extends NoticeVariants,
+  TVariant extends TNoticeType extends 'usernotice'
+    ? keyof UserNoticeVariantMap
+    : never = never,
+> = {
   message: ParsedPart[];
   username?: string;
   login?: string;
   userId?: string;
-  messageData: ChatMessageType<TNoticeType>;
+  messageData: ChatMessageType<TNoticeType, TVariant>;
 };
 
 export interface UsernamePressData {
@@ -27,10 +33,13 @@ export type RichChatMessageProps<
     ? keyof UserNoticeVariantMap
     : never = never,
 > = ChatMessageType<TNoticeType, TVariant> & {
+  broadcasterId?: string;
   style?: unknown;
-  onReply?: (args: ChatMessageType<TNoticeType>) => void;
+  onReply?: (args: ChatMessageType<TNoticeType, TVariant>) => void;
   onBadgePress?: (data: BadgePressData) => void;
-  onMessageLongPress?: (data: MessageActionData<TNoticeType>) => void;
+  onMessageLongPress?: (
+    data: MessageActionData<TNoticeType, TVariant>,
+  ) => void;
   onEmotePress?: (data: EmotePressData) => void;
   getMentionColor?: (username: string) => string;
   parseTextForEmotes?: (text: string) => ParsedPart[];
@@ -38,12 +47,13 @@ export type RichChatMessageProps<
   currentUsername?: string;
   currentUsernameNormalized?: string;
   density?: 'comfortable' | 'compact';
+  messageDisplay?: ChatMessageDisplayFlags;
   disableEmoteAnimations?: boolean;
   showTimestamp?: boolean;
-  highlightedUserSet?: ReadonlySet<string>;
-  highlightedUsers?: string[];
   showInlineReplyContext?: boolean;
   isAlternatingRow?: boolean;
-  onReplyContextPress?: (replyParentMessageId: string) => void;
   isHighlightedMessageTarget?: boolean;
+  highlightedUserSet?: ReadonlySet<string>;
+  highlightedUsers?: string[];
+  onReplyContextPress?: (replyParentMessageId: string) => void;
 };

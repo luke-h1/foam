@@ -1,5 +1,5 @@
 import { logger } from '@app/utils/logger';
-import { useCallback, useMemo, useState } from 'react';
+import { useState, useCallback } from 'react';
 
 export interface RemoteConfigSchema {
   splash: { '7tvUnavailable': boolean; app: boolean };
@@ -94,7 +94,7 @@ export type UseRemoteConfigResult = {
 };
 
 export function useRemoteConfig(): UseRemoteConfigResult {
-  const config = useMemo(buildConfigFromDefaults, []);
+  const config = buildConfigFromDefaults();
   const [isRefetching, setIsRefetching] = useState(false);
 
   const refetch = useCallback(async (): Promise<boolean> => {

@@ -76,6 +76,9 @@ export interface ChatMessageType<
   replyBody: string;
   parentColor?: string;
   isChannelPointRedemption?: boolean;
+  isAnnouncement?: boolean;
+  isHighlightedMessage?: boolean;
+  isSharedChatDuplicated?: boolean;
   isTwitchSystemNotice?: boolean;
   notice_tags?: TNoticeType extends 'userstate'
     ? UserStateTags
@@ -95,6 +98,22 @@ export interface ChatMessageType<
                 ? NoticeTags
                 : never;
 }
+
+export type AnyChatMessageType =
+  | ChatMessageType<'usernotice', 'viewermilestone'>
+  | ChatMessageType<'usernotice', 'sub'>
+  | ChatMessageType<'usernotice', 'resub'>
+  | ChatMessageType<'usernotice', 'subgift'>
+  | ChatMessageType<'usernotice', 'submysterygift'>
+  | ChatMessageType<'usernotice', 'giftpaidupgrade'>
+  | ChatMessageType<'usernotice', 'anongiftpaidupgrade'>
+  | ChatMessageType<'usernotice', 'rewardgift'>
+  | ChatMessageType<'usernotice', 'raid'>
+  | ChatMessageType<'usernotice', 'unraid'>
+  | ChatMessageType<'usernotice', 'bitsbadgetier'>
+  | ChatMessageType<'usernotice', 'sharedchatnotice'>
+  | ChatMessageType<'usernotice', 'modiversary'>
+  | ChatMessageType<'usernotice'>;
 
 export type ChatLoadingState =
   | 'IDLE'

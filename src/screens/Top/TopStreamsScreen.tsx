@@ -1,14 +1,11 @@
 import { Button } from '@app/components/Button/Button';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
-import {
-  AnimatedFlashList,
-  FlashListRef,
-} from '@app/components/FlashList/FlashList';
+import { AnimatedFlashList } from '@app/components/FlashList/AnimatedFlashList';
+import { FlashListRef } from '@app/components/FlashList/FlashList';
 import { Image } from '@app/components/Image/Image';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
-import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
 import { Text } from '@app/components/ui/Text/Text';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
@@ -34,11 +31,11 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { LinearGradient } from 'expo-linear-gradient';
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
-import { Platform, View, StyleSheet } from 'react-native';
+import { useRef, useState, useCallback } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 
-const FeaturedStreamHero = memo(function FeaturedStreamHero({
+const FeaturedStreamHero = function FeaturedStreamHero({
   stream,
 }: {
   stream: TwitchStream;
@@ -149,9 +146,7 @@ const FeaturedStreamHero = memo(function FeaturedStreamHero({
       </View>
     </Button>
   );
-});
-
-FeaturedStreamHero.displayName = 'FeaturedStreamHero';
+};
 
 type StreamListLayout = Preferences['streamListLayout'];
 
@@ -165,7 +160,7 @@ const STREAM_LIST_LAYOUT_OPTIONS: {
   { icon: 'text.alignleft', label: 'Text First', value: 'text' },
 ];
 
-const StreamLayoutToggle = memo(function StreamLayoutToggle({
+const StreamLayoutToggle = function StreamLayoutToggle({
   value,
   onChange,
 }: {
@@ -208,9 +203,7 @@ const StreamLayoutToggle = memo(function StreamLayoutToggle({
       })}
     </View>
   );
-});
-
-StreamLayoutToggle.displayName = 'StreamLayoutToggle';
+};
 
 interface TopStreamsListHeaderProps {
   featuredStream?: TwitchStream;
@@ -218,7 +211,7 @@ interface TopStreamsListHeaderProps {
   onChangeLayout: (layout: StreamListLayout) => void;
 }
 
-const TopStreamsListHeader = memo(function TopStreamsListHeader({
+const TopStreamsListHeader = function TopStreamsListHeader({
   featuredStream,
   streamListLayout,
   onChangeLayout,
@@ -229,9 +222,7 @@ const TopStreamsListHeader = memo(function TopStreamsListHeader({
       <StreamLayoutToggle value={streamListLayout} onChange={onChangeLayout} />
     </>
   );
-});
-
-TopStreamsListHeader.displayName = 'TopStreamsListHeader';
+};
 
 interface TopStreamsScreenProps {
   contentTopInset?: number;
@@ -263,6 +254,7 @@ export function TopStreamsScreen({
     refetch,
     hasNextPage,
     isLoading,
+    isFetching,
     isFetchingNextPage,
   } = useInfiniteQuery({
     initialPageParam: undefined,
@@ -292,39 +284,30 @@ export function TopStreamsScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const renderItem: ListRenderItem<TwitchStream> = useCallback(
-    ({ item }) => {
-      return <MemoizedLiveStreamCard stream={item} layout={streamListLayout} />;
-    },
-    [streamListLayout],
-  );
+  const renderItem: ListRenderItem<TwitchStream> = ({ item }) => {
+    return <MemoizedLiveStreamCard stream={item} layout={streamListLayout} />;
+  };
 
-  const allStreams = useMemo(
-    () => flattenInfiniteQueryPages(streams?.pages),
-    [streams],
-  );
+  const allStreams = flattenInfiniteQueryPages(streams?.pages);
   const featuredStream = allStreams[0];
-  const remainingStreams = useMemo(() => allStreams.slice(1), [allStreams]);
+  const remainingStreams = allStreams.slice(1);
 
-  const handleLayoutChange = useCallback(
-    (layout: StreamListLayout) => {
-      updatePreferences({ streamListLayout: layout });
-    },
-    [updatePreferences],
+  const handleLayoutChange = (layout: StreamListLayout) => {
+    updatePreferences({ streamListLayout: layout });
+  };
+
+  const listHeader = (
+    <TopStreamsListHeader
+      featuredStream={featuredStream}
+      streamListLayout={streamListLayout}
+      onChangeLayout={handleLayoutChange}
+    />
   );
 
-  const listHeader = useMemo(
-    () => (
-      <TopStreamsListHeader
-        featuredStream={featuredStream}
-        streamListLayout={streamListLayout}
-        onChangeLayout={handleLayoutChange}
-      />
-    ),
-    [featuredStream, streamListLayout, handleLayoutChange],
-  );
+  const showSkeleton =
+    refreshing || isLoading || (isFetching && allStreams.length === 0);
 
-  if (refreshing || isLoading) {
+  if (showSkeleton) {
     return (
       <View style={[styles.container, { paddingTop: contentTopInset }]}>
         {Array.from({ length: 5 }).map((_, index) => (
@@ -353,11 +336,42 @@ export function TopStreamsScreen({
     );
   }
 
-  const refreshControl =
-    Platform.OS === 'android' ? undefined : (
-      <RefreshControl onRefresh={onRefresh} />
-    );
+  return (
+    <TopStreamsList
+      contentTopInset={contentTopInset}
+      debouncedHandleLoadMore={debouncedHandleLoadMore}
+      listHeader={listHeader}
+      listRef={listRef}
+      onRefresh={onRefresh}
+      refreshing={refreshing}
+      remainingStreams={remainingStreams}
+      renderItem={renderItem}
+      scrollHandler={scrollHandler}
+    />
+  );
+}
 
+function TopStreamsList({
+  contentTopInset,
+  debouncedHandleLoadMore,
+  listHeader,
+  listRef,
+  onRefresh,
+  refreshing,
+  remainingStreams,
+  renderItem,
+  scrollHandler,
+}: {
+  contentTopInset: number;
+  debouncedHandleLoadMore: () => void;
+  listHeader: React.ReactNode;
+  listRef: React.RefObject<FlashListRef<TwitchStream> | null>;
+  onRefresh: () => void;
+  refreshing: boolean;
+  remainingStreams: TwitchStream[];
+  renderItem: ListRenderItem<TwitchStream>;
+  scrollHandler: ReturnType<typeof useAnimatedScrollHandler>;
+}) {
   return (
     <View style={styles.container}>
       <AnimatedFlashList
@@ -373,13 +387,13 @@ export function TopStreamsScreen({
           styles.listContent,
           { paddingTop: contentTopInset },
         ]}
-        ListHeaderComponent={listHeader}
+        ListHeaderComponent={() => listHeader}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={debouncedHandleLoadMore}
         onScroll={scrollHandler}
         refreshing={refreshing}
         onEndReachedThreshold={0.3}
-        refreshControl={refreshControl}
+        onRefresh={onRefresh}
       />
     </View>
   );

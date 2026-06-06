@@ -9,7 +9,7 @@ import {
   RADIUS_VALUES,
 } from '@app/styles/ui';
 import { SFSymbol, SymbolView } from 'expo-symbols';
-import React, { useMemo } from 'react';
+import React from 'react';
 import { StyleSheet, useColorScheme, View, ViewStyle } from 'react-native';
 import { Text } from '@app/components/ui/Text/Text';
 
@@ -215,36 +215,29 @@ export function Badge({
   const scheme = colorScheme === 'dark' ? 'dark' : 'light';
   const { accentHex } = useAccentColor();
 
-  const variantConfig = useMemo(() => {
-    if (color) {
-      const variants = generateVariantConfig(color, scheme);
-      return variants[variant];
-    }
-    const baseHex = accentHex || colors[scheme].tint;
-    const variants = generateVariantConfigFromBase(baseHex, scheme);
-    return variants[variant];
-  }, [accentHex, color, scheme, variant]);
+  const variantConfig = color
+    ? generateVariantConfig(color, scheme)[variant]
+    : generateVariantConfigFromBase(accentHex || colors[scheme].tint, scheme)[
+        variant
+      ];
 
-  const badgeStyles = useMemo(() => {
-    const baseStyles: ViewStyle = {
+  const badgeStyles = [
+    {
       ...styles.badge,
       ...SIZE_STYLES[size],
       backgroundColor: variantConfig.backgroundColor,
       borderColor: variantConfig.borderColor,
       borderWidth: variantConfig.borderWidth,
       borderRadius: RADIUS_VALUES[radius],
-    };
+    },
+    style,
+  ];
 
-    return [baseStyles, style];
-  }, [size, variantConfig, style, radius]);
-
-  const textStyles = useMemo(() => {
-    return [
-      styles.badgeText,
-      TEXT_SIZE_STYLES[size],
-      { color: variantConfig.textColor },
-    ];
-  }, [size, variantConfig]);
+  const textStyles = [
+    styles.badgeText,
+    TEXT_SIZE_STYLES[size],
+    { color: variantConfig.textColor },
+  ];
 
   const iconColor = variantConfig.textColor;
   const shouldCenterIcon = !children && symbol;

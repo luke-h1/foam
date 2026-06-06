@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import Svg, { G, Path, SvgProps } from 'react-native-svg';
 
 interface TwitchIconProps extends SvgProps {

@@ -1,11 +1,46 @@
 import { useAuthContext } from '@app/context/AuthContext';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { logger } from '@app/utils/logger';
-import { useEffect, useRef, useMemo, useCallback } from 'react';
-import { ReadyState } from '../hooks/ws/constants';
+import { useLazyRef } from '@app/hooks/useLazyRef';
+import { useEffect, useRef, useCallback } from 'react';
 import { useWebsocket } from '../hooks/ws/useWebsocket';
 
 const TWITCH_CHAT_URL = 'wss://irc-ws.chat.twitch.tv:443';
+
+function parseIrcTags(tagString: string): Record<string, string> {
+  const tags: Record<string, string> = {};
+  if (!tagString) {
+    return tags;
+  }
+
+  let start = 0;
+  while (start <= tagString.length) {
+    const separatorIndex = tagString.indexOf(';', start);
+    const endIndex = separatorIndex === -1 ? tagString.length : separatorIndex;
+    const part = tagString.slice(start, endIndex);
+    const keyValue = part.split('=');
+    const key = keyValue[0] ?? '';
+
+    if (key) {
+      tags[key] = keyValue.length > 1 ? keyValue.slice(1).join('=') : '';
+    }
+
+    if (separatorIndex === -1) {
+      break;
+    }
+    start = separatorIndex + 1;
+  }
+
+  return tags;
+}
+
+function formatIrcChannelName(channelName: string): string {
+  return channelName.startsWith('#') ? channelName : `#${channelName}`;
+}
+
+function handleTwitchChatWebSocketError(error: Event) {
+  logger.chat.error('💬 Twitch IRC WebSocket error:', error);
+}
 
 interface IrcMessage {
   tags?: Record<string, string>;
@@ -58,30 +93,17 @@ interface UseTwitchChatOptions {
 }
 
 export function useTwitchChat(options: UseTwitchChatOptions = {}) {
+  const optionsRef = useRef<UseTwitchChatOptions>({});
+  optionsRef.current = options;
   const { authState, user } = useAuthContext();
-  const {
-    channel,
-    onMessage,
-    onJoin,
-    onPart,
-    onNotice,
-    onReconnect,
-    onUserNotice,
-    onClearChat,
-    onClearMessage,
-    onRoomState,
-    onUserState,
-    onGlobalUserState,
-    onWelcome,
-    blockedUsers = [],
-    mutedWords = [],
-    matchWholeWord = false,
-    onUserStateAfterSend,
-  } = options;
+  const channel = optionsRef.current.channel;
+  const blockedUsers = optionsRef.current.blockedUsers ?? [];
+  const mutedWords = optionsRef.current.mutedWords ?? [];
+  const matchWholeWord = optionsRef.current.matchWholeWord ?? false;
 
   const isAuthenticatedRef = useRef(false);
-  const joinedChannelsRef = useRef<Set<string>>(new Set());
-  const pendingJoinChannelsRef = useRef<Set<string>>(new Set());
+  const joinedChannelsRef = useLazyRef(() => new Set<string>());
+  const pendingJoinChannelsRef = useLazyRef(() => new Set<string>());
   const anonymousNickRef = useRef(
     `justinfan${Math.floor(Math.random() * 90000) + 10000}`,
   );
@@ -97,143 +119,101 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     replyParentMsgBody?: string;
   } | null>(null);
 
-  const shouldConnect = useMemo(() => {
-    return Boolean(channel?.trim());
-  }, [channel]);
+  const shouldConnect = Boolean(channel?.trim());
 
   const previousTokenRef = useRef<string | undefined>(undefined);
 
-  /**
-   * Parse IRC message tags (format: @key=value;key2=value2)
-   */
-  const parseTags = useCallback((tagString: string): Record<string, string> => {
-    const tags: Record<string, string> = {};
-    if (!tagString) {
-      return tags;
-    }
-
-    let start = 0;
-    while (start <= tagString.length) {
-      const separatorIndex = tagString.indexOf(';', start);
-      const endIndex =
-        separatorIndex === -1 ? tagString.length : separatorIndex;
-      const part = tagString.slice(start, endIndex);
-      const valueSeparatorIndex = part.indexOf('=');
-      const key =
-        valueSeparatorIndex === -1 ? part : part.slice(0, valueSeparatorIndex);
-
-      if (key) {
-        tags[key] =
-          valueSeparatorIndex === -1 ? '' : part.slice(valueSeparatorIndex + 1);
-      }
-
-      if (separatorIndex === -1) {
-        break;
-      }
-      start = separatorIndex + 1;
-    }
-
-    return tags;
-  }, []);
+  const parseTags = parseIrcTags;
 
   /**
    * Parse IRC message (format: [@tags] :prefix COMMAND params)
    */
-  const parseIrcMessage = useCallback(
-    (line: string): IrcMessage | null => {
-      if (!line.trim()) {
+  const parseIrcMessage = (line: string): IrcMessage | null => {
+    if (!line.trim()) {
+      return null;
+    }
+
+    let remaining = line.trim();
+    let tags: Record<string, string> | undefined;
+    let prefix: string | undefined;
+
+    // Parse tags
+    if (remaining.startsWith('@')) {
+      const tagEnd = remaining.indexOf(' ');
+      if (tagEnd === -1) {
         return null;
       }
+      const tagString = remaining.substring(1, tagEnd);
+      tags = parseTags(tagString);
+      remaining = remaining.substring(tagEnd + 1).trim();
+    }
 
-      let remaining = line.trim();
-      let tags: Record<string, string> | undefined;
-      let prefix: string | undefined;
-
-      // Parse tags
-      if (remaining.startsWith('@')) {
-        const tagEnd = remaining.indexOf(' ');
-        if (tagEnd === -1) {
-          return null;
-        }
-        const tagString = remaining.substring(1, tagEnd);
-        tags = parseTags(tagString);
-        remaining = remaining.substring(tagEnd + 1).trim();
-      }
-
-      // Parse prefix
-      if (remaining.startsWith(':')) {
-        const prefixEnd = remaining.indexOf(' ');
-        if (prefixEnd === -1) {
-          return null;
-        }
-        prefix = remaining.substring(1, prefixEnd);
-        remaining = remaining.substring(prefixEnd + 1).trim();
-      }
-
-      const commandEnd = remaining.indexOf(' ');
-      const command =
-        commandEnd === -1 ? remaining : remaining.slice(0, commandEnd);
-      if (!command) {
+    // Parse prefix
+    if (remaining.startsWith(':')) {
+      const prefixEnd = remaining.indexOf(' ');
+      if (prefixEnd === -1) {
         return null;
       }
+      prefix = remaining.substring(1, prefixEnd);
+      remaining = remaining.substring(prefixEnd + 1).trim();
+    }
 
-      const params: string[] = [];
-      const paramString =
-        commandEnd === -1 ? '' : remaining.slice(commandEnd + 1);
-      const trailingIndex = paramString.indexOf(' :');
+    const commandEnd = remaining.indexOf(' ');
+    const command =
+      commandEnd === -1 ? remaining : remaining.slice(0, commandEnd);
+    if (!command) {
+      return null;
+    }
 
-      if (trailingIndex >= 0) {
-        const leading = paramString.slice(0, trailingIndex);
-        if (leading) {
-          params.push(...leading.split(' '));
-        }
-        params.push(paramString.slice(trailingIndex + 2));
-      } else if (paramString.startsWith(':')) {
-        params.push(paramString.slice(1));
-      } else if (paramString) {
-        params.push(...paramString.split(' '));
+    const params: string[] = [];
+    const paramString =
+      commandEnd === -1 ? '' : remaining.slice(commandEnd + 1);
+    const trailingIndex = paramString.indexOf(' :');
+
+    if (trailingIndex >= 0) {
+      const leading = paramString.slice(0, trailingIndex);
+      if (leading) {
+        params.push(...leading.split(' '));
       }
+      params.push(paramString.slice(trailingIndex + 2));
+    } else if (paramString.startsWith(':')) {
+      params.push(paramString.slice(1));
+    } else if (paramString) {
+      params.push(...paramString.split(' '));
+    }
 
-      return { tags, prefix, command, params };
-    },
-    [parseTags],
-  );
+    return { tags, prefix, command, params };
+  };
 
   /**
    * Check if a user is blocked
    */
-  const isUserBlocked = useCallback(
-    (username?: string): boolean => {
-      if (!username || blockedUsers.length === 0) {
-        return false;
-      }
-      return blockedUsers.some(
-        blockedUser =>
-          blockedUser.userLogin.toLowerCase() === username.toLowerCase(),
-      );
-    },
-    [blockedUsers],
-  );
+  const isUserBlocked = (username?: string): boolean => {
+    if (!username || blockedUsers.length === 0) {
+      return false;
+    }
+    return blockedUsers.some(
+      blockedUser =>
+        blockedUser.userLogin.toLowerCase() === username.toLowerCase(),
+    );
+  };
 
   /**
    * Check if message contains muted words
    */
-  const containsMutedWords = useCallback(
-    (message: string): boolean => {
-      if (mutedWords.length === 0) {
-        return false;
-      }
+  const containsMutedWords = (message: string): boolean => {
+    if (mutedWords.length === 0) {
+      return false;
+    }
 
-      const messageLower = message.toLowerCase();
-      const words = matchWholeWord ? messageLower.split(' ') : [messageLower];
+    const messageLower = message.toLowerCase();
+    const words = matchWholeWord ? messageLower.split(' ') : [messageLower];
 
-      return mutedWords.some(mutedWord => {
-        const mutedWordLower = mutedWord.toLowerCase();
-        return words.some(word => word === mutedWordLower);
-      });
-    },
-    [mutedWords, matchWholeWord],
-  );
+    return mutedWords.some(mutedWord => {
+      const mutedWordLower = mutedWord.toLowerCase();
+      return words.some(word => word === mutedWordLower);
+    });
+  };
 
   /**
    * Send IRC command
@@ -272,19 +252,12 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     sendMessageFn(payload);
   }, []);
 
-  const formatChannelName = useCallback((channelName: string): string => {
-    return channelName.startsWith('#') ? channelName : `#${channelName}`;
-  }, []);
-
-  const markChannelJoined = useCallback(
-    (channelName: string) => {
-      const channelFormatted = formatChannelName(channelName);
-      pendingJoinChannelsRef.current.delete(channelFormatted);
-      joinedChannelsRef.current.add(channelFormatted);
-      return channelFormatted;
-    },
-    [formatChannelName],
-  );
+  const markChannelJoined = (channelName: string) => {
+    const channelFormatted = formatIrcChannelName(channelName);
+    pendingJoinChannelsRef.current.delete(channelFormatted);
+    joinedChannelsRef.current.add(channelFormatted);
+    return channelFormatted;
+  };
 
   // Join a channel
   const joinChannel = useCallback(
@@ -293,7 +266,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         return;
       }
 
-      const channelFormatted = formatChannelName(channelName);
+      const channelFormatted = formatIrcChannelName(channelName);
 
       if (joinedChannelsRef.current.has(channelFormatted)) {
         logger.chat.debug(`Already joined channel: ${channelFormatted}`);
@@ -310,7 +283,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       pendingJoinChannelsRef.current.add(channelFormatted);
       sendIrcCommand('JOIN', channelFormatted);
     },
-    [formatChannelName, sendIrcCommand],
+    [joinedChannelsRef, pendingJoinChannelsRef, sendIrcCommand],
   );
 
   /**
@@ -356,335 +329,316 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   /**
    * Part from a channel
    */
-  const partChannel = useCallback(
-    (channelName: string) => {
-      if (!channelName) {
-        return;
+  const partChannel = (channelName: string) => {
+    if (!channelName) {
+      return;
+    }
+
+    const channelFormatted = formatIrcChannelName(channelName);
+
+    if (
+      !joinedChannelsRef.current.has(channelFormatted) &&
+      !pendingJoinChannelsRef.current.has(channelFormatted)
+    ) {
+      return;
+    }
+
+    logger.chat.info(`Parting from channel: ${channelFormatted}`);
+    sendIrcCommand('PART', channelFormatted);
+    joinedChannelsRef.current.delete(channelFormatted);
+    pendingJoinChannelsRef.current.delete(channelFormatted);
+    optionsRef.current.onPart?.(channelFormatted);
+  };
+
+  const handleIrcMessage = (message: IrcMessage) => {
+    const { command, tags, params } = message;
+    const tagsRecord = tags ?? {};
+
+    switch (command) {
+      case '001': // RPL_WELCOME - server welcome message
+      case '002': // RPL_YOURHOST
+      case '003': // RPL_CREATED
+      case '004': // RPL_MYINFO
+      case '375': // RPL_MOTDSTART
+      case '372': // RPL_MOTD
+      case '376': // RPL_ENDOFMOTD
+        logger.chat.debug(`IRC ${command}: ${params.join(' ')}`);
+        if (command === '001') {
+          isAuthenticatedRef.current = true;
+          logger.chat.info('✅ Authenticated with Twitch IRC');
+
+          if (channel) {
+            joinChannel(channel);
+          }
+        }
+        break;
+
+      case 'PING': {
+        const server = params[0] || 'tmi.twitch.tv';
+        logger.chat.debug(`Received PING, sending PONG to ${server}`);
+        sendIrcCommand('PONG', server);
+        break;
       }
 
-      const channelFormatted = formatChannelName(channelName);
+      case 'PRIVMSG': {
+        // Chat message received
+        if (params.length >= 2 && tags) {
+          const channelName = params[0];
+          const messageText = params[1];
+          const username = tagsRecord['display-name'] || tagsRecord.login;
 
-      if (
-        !joinedChannelsRef.current.has(channelFormatted) &&
-        !pendingJoinChannelsRef.current.has(channelFormatted)
-      ) {
-        return;
-      }
+          if (channelName && messageText) {
+            // Filter blocked users (unless moderator or channel owner)
+            const isMod = tagsRecord.mod === '1';
+            const isChannelOwner =
+              channelName.slice(1).toLowerCase() === user?.login?.toLowerCase();
 
-      logger.chat.info(`Parting from channel: ${channelFormatted}`);
-      sendIrcCommand('PART', channelFormatted);
-      joinedChannelsRef.current.delete(channelFormatted);
-      pendingJoinChannelsRef.current.delete(channelFormatted);
-      onPart?.(channelFormatted);
-    },
-    [formatChannelName, sendIrcCommand, onPart],
-  );
-
-  const handleIrcMessage = useCallback(
-    (message: IrcMessage) => {
-      const { command, tags, params } = message;
-      const tagsRecord = tags ?? {};
-
-      switch (command) {
-        case '001': // RPL_WELCOME - server welcome message
-        case '002': // RPL_YOURHOST
-        case '003': // RPL_CREATED
-        case '004': // RPL_MYINFO
-        case '375': // RPL_MOTDSTART
-        case '372': // RPL_MOTD
-        case '376': // RPL_ENDOFMOTD
-          logger.chat.debug(`IRC ${command}: ${params.join(' ')}`);
-          if (command === '001') {
-            isAuthenticatedRef.current = true;
-            logger.chat.info('✅ Authenticated with Twitch IRC');
-
-            if (channel) {
-              joinChannel(channel);
-            }
-          }
-          break;
-
-        case 'PING': {
-          const server = params[0] || 'tmi.twitch.tv';
-          logger.chat.debug(`Received PING, sending PONG to ${server}`);
-          sendIrcCommand('PONG', server);
-          break;
-        }
-
-        case 'PRIVMSG': {
-          // Chat message received
-          if (params.length >= 2 && tags) {
-            const channelName = params[0];
-            const messageText = params[1];
-            const username = tagsRecord['display-name'] || tagsRecord.login;
-
-            if (channelName && messageText) {
-              // Filter blocked users (unless moderator or channel owner)
-              const isMod = tagsRecord.mod === '1';
-              const isChannelOwner =
-                channelName.slice(1).toLowerCase() ===
-                user?.login?.toLowerCase();
-
-              if (!isMod && !isChannelOwner && isUserBlocked(username)) {
-                logger.chat.debug(
-                  `Filtered message from blocked user: ${username}`,
-                );
-                return;
-              }
-
-              // Filter muted words
-              if (containsMutedWords(messageText)) {
-                logger.chat.debug(`Filtered message containing muted words`);
-                return;
-              }
-
-              // logger.chat.debug(
-              //   `PRIVMSG in ${channelName}: ${messageText.substring(0, 50)}...`,
-              // );
-              onMessage?.(channelName, tagsRecord, messageText);
-            }
-          }
-          break;
-        }
-
-        case 'RECONNECT': {
-          logger.chat.warn('Received Twitch IRC RECONNECT request');
-          onReconnect?.();
-          break;
-        }
-
-        case 'NOTICE': {
-          // Server notices (e.g., connection messages, errors)
-          if (params.length >= 2 && tags) {
-            const channelName = params[0];
-            const messageText = params[1];
-
-            // Check for welcome message
-            if (messageText && messageText.includes('Welcome, GLHF!')) {
-              logger.chat.info('✅ Welcome message received');
-              onWelcome?.();
-            }
-
-            if (channelName && messageText) {
-              logger.chat.info(`NOTICE in ${channelName}: ${messageText}`);
-              onNotice?.(channelName, tagsRecord, messageText);
-            }
-          } else if (params.length > 0) {
-            // Some notices don't have channel name
-            const messageText = params.join(' ');
-            if (messageText.includes('Welcome, GLHF!')) {
-              logger.chat.info('✅ Welcome message received');
-              onWelcome?.();
-            }
-            logger.chat.info(`NOTICE: ${messageText}`);
-          }
-          break;
-        }
-
-        case 'USERNOTICE': {
-          // User notices (subs, raids, hosts, etc.)
-          if (params.length >= 2 && tags) {
-            const channelName = params[0];
-            const messageText = params[1];
-
-            if (channelName) {
+            if (!isMod && !isChannelOwner && isUserBlocked(username)) {
               logger.chat.debug(
-                `USERNOTICE in ${channelName}: ${tagsRecord['msg-id'] || 'unknown event'}`,
+                `Filtered message from blocked user: ${username}`,
               );
-              onUserNotice?.(
-                channelName,
-                tagsRecord as UserNoticeTags,
-                messageText || '',
-              );
+              return;
             }
-          }
-          break;
-        }
 
-        case 'CLEARCHAT': {
-          // User timeout/ban
-          if (params.length >= 1 && tags) {
-            const channelName = params[0];
-            const username = params[1]; // May be empty for full chat clear
-            const banDuration = tagsRecord['ban-duration']
-              ? parseInt(tagsRecord['ban-duration'], 10)
-              : undefined;
-
-            if (channelName) {
-              logger.chat.info(
-                `CLEARCHAT in ${channelName}: ${username || 'all messages cleared'}`,
-              );
-              onClearChat?.(channelName, tagsRecord, username, banDuration);
+            // Filter muted words
+            if (containsMutedWords(messageText)) {
+              logger.chat.debug(`Filtered message containing muted words`);
+              return;
             }
+
+            // logger.chat.debug(
+            //   `PRIVMSG in ${channelName}: ${messageText.substring(0, 50)}...`,
+            // );
+            optionsRef.current.onMessage?.(
+              channelName,
+              tagsRecord,
+              messageText,
+            );
           }
-          break;
         }
-
-        case 'CLEARMSG':
-        case 'CLEARMESSAGE': {
-          if (params.length >= 2 && tags) {
-            const channelName = params[0];
-            const targetMsgId = tagsRecord['target-msg-id'];
-
-            if (channelName && targetMsgId) {
-              logger.chat.info(
-                `CLEARMESSAGE in ${channelName}: message ${targetMsgId} deleted`,
-              );
-              onClearMessage?.(channelName, tagsRecord, targetMsgId);
-            }
-          }
-          break;
-        }
-
-        case 'ROOMSTATE': {
-          // Room state changes (slow mode, followers-only, etc.)
-          if (params.length >= 1 && tags) {
-            const channelName = params[0];
-
-            if (channelName) {
-              markChannelJoined(channelName);
-              logger.chat.debug(`ROOMSTATE in ${channelName}`);
-              onRoomState?.(channelName, tagsRecord);
-            }
-          }
-          break;
-        }
-
-        case 'USERSTATE': {
-          // User's state in the channel (sent after JOIN or after sending a message)
-          if (params.length >= 1 && tags) {
-            const channelName = params[0];
-
-            if (channelName) {
-              markChannelJoined(channelName);
-              logger.chat.debug(`USERSTATE in ${channelName}`);
-              userStateRef.current = tagsRecord;
-
-              // If we have a pending message, this USERSTATE might be for it
-              if (pendingMessageRef.current && tagsRecord['msg-id']) {
-                logger.chat.debug(
-                  `Received USERSTATE after sending message: ${tagsRecord['msg-id']}`,
-                );
-                onUserStateAfterSend?.(tagsRecord);
-                pendingMessageRef.current = null;
-              }
-
-              onUserState?.(channelName, tagsRecord);
-            }
-          }
-          break;
-        }
-
-        case 'GLOBALUSERSTATE': {
-          // Global user state (includes emote sets)
-          logger.chat.debug('GLOBALUSERSTATE received');
-          userStateRef.current = tagsRecord;
-          onGlobalUserState?.(tagsRecord);
-          break;
-        }
-
-        case 'JOIN': {
-          if (params.length > 0) {
-            const channelName = params[0];
-            if (channelName) {
-              markChannelJoined(channelName);
-              logger.chat.info(`✅ Joined channel: ${channelName}`);
-              onJoin?.(channelName);
-            }
-          }
-          break;
-        }
-
-        case 'PART': {
-          if (params.length > 0) {
-            const channelName = params[0];
-            if (channelName) {
-              logger.chat.info(`Left channel: ${channelName}`);
-              pendingJoinChannelsRef.current.delete(channelName);
-              joinedChannelsRef.current.delete(channelName);
-              onPart?.(channelName);
-            }
-          }
-          break;
-        }
-
-        case '353': // RPL_NAMREPLY - user list
-        case '366': {
-          // RPL_ENDOFNAMES - end of user list
-          const roomName = params.find(param => param.startsWith('#'));
-          if (roomName) {
-            markChannelJoined(roomName);
-          }
-          break;
-        }
-
-        default:
-          logger.chat.debug(
-            `Unhandled IRC command: ${command} ${params.join(' ')}`,
-          );
+        break;
       }
-    },
-    [
-      channel,
-      joinChannel,
-      sendIrcCommand,
-      onMessage,
-      onJoin,
-      onPart,
-      onNotice,
-      onReconnect,
-      onUserNotice,
-      onClearChat,
-      onClearMessage,
-      onRoomState,
-      onUserState,
-      onGlobalUserState,
-      onWelcome,
-      onUserStateAfterSend,
-      isUserBlocked,
-      containsMutedWords,
-      markChannelJoined,
-      user?.login,
-    ],
-  );
 
-  const handleMessage = useCallback(
-    (event: MessageEvent) => {
-      try {
-        const text = `${messageBufferRef.current}${event.data as string}`;
-        let cursor = 0;
+      case 'RECONNECT': {
+        logger.chat.warn('Received Twitch IRC RECONNECT request');
+        optionsRef.current.onReconnect?.();
+        break;
+      }
 
-        while (cursor < text.length) {
-          const lineEnd = text.indexOf('\r\n', cursor);
-          if (lineEnd === -1) {
-            break;
+      case 'NOTICE': {
+        // Server notices (e.g., connection messages, errors)
+        if (params.length >= 2 && tags) {
+          const channelName = params[0];
+          const messageText = params[1];
+
+          // Check for welcome message
+          if (messageText && messageText.includes('Welcome, GLHF!')) {
+            logger.chat.info('✅ Welcome message received');
+            optionsRef.current.onWelcome?.();
           }
 
-          const line = text.slice(cursor, lineEnd);
-          cursor = lineEnd + 2;
-
-          if (!line) {
-            continue;
+          if (channelName && messageText) {
+            logger.chat.info(`NOTICE in ${channelName}: ${messageText}`);
+            optionsRef.current.onNotice?.(channelName, tagsRecord, messageText);
           }
-
-          if (line === 'PING :tmi.twitch.tv') {
-            sendIrcCommand('PONG', 'tmi.twitch.tv');
-            continue;
+        } else if (params.length > 0) {
+          // Some notices don't have channel name
+          const messageText = params.join(' ');
+          if (messageText.includes('Welcome, GLHF!')) {
+            logger.chat.info('✅ Welcome message received');
+            optionsRef.current.onWelcome?.();
           }
+          logger.chat.info(`NOTICE: ${messageText}`);
+        }
+        break;
+      }
 
-          const ircMessage = parseIrcMessage(line);
-          if (ircMessage) {
-            handleIrcMessage(ircMessage);
+      case 'USERNOTICE': {
+        if (params.length >= 1 && tags) {
+          const channelName = params[0];
+          const messageText = params[1] ?? '';
+
+          if (channelName) {
+            logger.chat.debug(
+              `USERNOTICE in ${channelName}: ${tagsRecord['msg-id'] || 'unknown event'}`,
+            );
+            optionsRef.current.onUserNotice?.(
+              channelName,
+              tagsRecord as UserNoticeTags,
+              messageText,
+            );
           }
         }
-
-        messageBufferRef.current = text.slice(cursor);
-      } catch (e) {
-        logger.chat.error('Failed to parse IRC message:', e);
+        break;
       }
-    },
-    [parseIrcMessage, handleIrcMessage, sendIrcCommand],
-  );
+
+      case 'CLEARCHAT': {
+        // User timeout/ban
+        if (params.length >= 1 && tags) {
+          const channelName = params[0];
+          const username = params[1]; // May be empty for full chat clear
+          const banDuration = tagsRecord['ban-duration']
+            ? parseInt(tagsRecord['ban-duration'], 10)
+            : undefined;
+
+          if (channelName) {
+            logger.chat.info(
+              `CLEARCHAT in ${channelName}: ${username || 'all messages cleared'}`,
+            );
+            optionsRef.current.onClearChat?.(
+              channelName,
+              tagsRecord,
+              username,
+              banDuration,
+            );
+          }
+        }
+        break;
+      }
+
+      case 'CLEARMSG':
+      case 'CLEARMESSAGE': {
+        if (params.length >= 2 && tags) {
+          const channelName = params[0];
+          const targetMsgId = tagsRecord['target-msg-id'];
+
+          if (channelName && targetMsgId) {
+            logger.chat.info(
+              `CLEARMESSAGE in ${channelName}: message ${targetMsgId} deleted`,
+            );
+            optionsRef.current.onClearMessage?.(
+              channelName,
+              tagsRecord,
+              targetMsgId,
+            );
+          }
+        }
+        break;
+      }
+
+      case 'ROOMSTATE': {
+        // Room state changes (slow mode, followers-only, etc.)
+        if (params.length >= 1 && tags) {
+          const channelName = params[0];
+
+          if (channelName) {
+            markChannelJoined(channelName);
+            logger.chat.debug(`ROOMSTATE in ${channelName}`);
+            optionsRef.current.onRoomState?.(channelName, tagsRecord);
+          }
+        }
+        break;
+      }
+
+      case 'USERSTATE': {
+        // User's state in the channel (sent after JOIN or after sending a message)
+        if (params.length >= 1 && tags) {
+          const channelName = params[0];
+
+          if (channelName) {
+            markChannelJoined(channelName);
+            logger.chat.debug(`USERSTATE in ${channelName}`);
+            userStateRef.current = tagsRecord;
+
+            // If we have a pending message, this USERSTATE might be for it
+            if (pendingMessageRef.current && tagsRecord['msg-id']) {
+              logger.chat.debug(
+                `Received USERSTATE after sending message: ${tagsRecord['msg-id']}`,
+              );
+              optionsRef.current.onUserStateAfterSend?.(tagsRecord);
+              pendingMessageRef.current = null;
+            }
+
+            optionsRef.current.onUserState?.(channelName, tagsRecord);
+          }
+        }
+        break;
+      }
+
+      case 'GLOBALUSERSTATE': {
+        // Global user state (includes emote sets)
+        logger.chat.debug('GLOBALUSERSTATE received');
+        userStateRef.current = tagsRecord;
+        optionsRef.current.onGlobalUserState?.(tagsRecord);
+        break;
+      }
+
+      case 'JOIN': {
+        if (params.length > 0) {
+          const channelName = params[0];
+          if (channelName) {
+            markChannelJoined(channelName);
+            logger.chat.info(`✅ Joined channel: ${channelName}`);
+            optionsRef.current.onJoin?.(channelName);
+          }
+        }
+        break;
+      }
+
+      case 'PART': {
+        if (params.length > 0) {
+          const channelName = params[0];
+          if (channelName) {
+            logger.chat.info(`Left channel: ${channelName}`);
+            pendingJoinChannelsRef.current.delete(channelName);
+            joinedChannelsRef.current.delete(channelName);
+            optionsRef.current.onPart?.(channelName);
+          }
+        }
+        break;
+      }
+
+      case '353': // RPL_NAMREPLY - user list
+      case '366': {
+        // RPL_ENDOFNAMES - end of user list
+        const roomName = params.find(param => param.startsWith('#'));
+        if (roomName) {
+          markChannelJoined(roomName);
+        }
+        break;
+      }
+
+      default:
+        logger.chat.debug(
+          `Unhandled IRC command: ${command} ${params.join(' ')}`,
+        );
+    }
+  };
+
+  const handleMessage = (event: MessageEvent) => {
+    try {
+      const text = `${messageBufferRef.current}${event.data as string}`;
+      let cursor = 0;
+
+      while (cursor < text.length) {
+        const lineEnd = text.indexOf('\r\n', cursor);
+        if (lineEnd === -1) {
+          break;
+        }
+
+        const line = text.slice(cursor, lineEnd);
+        cursor = lineEnd + 2;
+
+        if (!line) {
+          continue;
+        }
+
+        if (line === 'PING :tmi.twitch.tv') {
+          sendIrcCommand('PONG', 'tmi.twitch.tv');
+          continue;
+        }
+
+        const ircMessage = parseIrcMessage(line);
+        if (ircMessage) {
+          handleIrcMessage(ircMessage);
+        }
+      }
+
+      messageBufferRef.current = text.slice(cursor);
+    } catch (e) {
+      logger.chat.error('Failed to parse IRC message:', e);
+    }
+  };
 
   const handleWebSocketOpen = useCallback(() => {
     logger.chat.info('💬 Twitch IRC WebSocket connected');
@@ -692,30 +646,28 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     joinedChannelsRef.current.clear();
 
     authenticate();
-  }, [authenticate]);
+  }, [authenticate, joinedChannelsRef]);
 
-  const handleWebSocketClose = useCallback((event: CloseEvent) => {
-    logger.chat.warn(
-      `💬 Twitch IRC WebSocket closed: ${event.code} - ${event.reason}`,
-    );
-    isAuthenticatedRef.current = false;
-    joinedChannelsRef.current.clear();
-    messageBufferRef.current = '';
-  }, []);
-
-  const handleWebSocketError = useCallback((error: Event) => {
-    logger.chat.error('💬 Twitch IRC WebSocket error:', error);
-  }, []);
-
-  const shouldReconnect = useCallback(
+  const handleWebSocketClose = useCallback(
     (event: CloseEvent) => {
-      if (event.code === 1000) {
-        return false;
-      }
-      return shouldConnect;
+      logger.chat.warn(
+        `💬 Twitch IRC WebSocket closed: ${event.code} - ${event.reason}`,
+      );
+      isAuthenticatedRef.current = false;
+      joinedChannelsRef.current.clear();
+      messageBufferRef.current = '';
     },
-    [shouldConnect],
+    [joinedChannelsRef],
   );
+
+  const handleWebSocketError = handleTwitchChatWebSocketError;
+
+  const shouldReconnect = (event: CloseEvent) => {
+    if (event.code === 1000) {
+      return false;
+    }
+    return shouldConnect;
+  };
 
   const {
     getWebSocket,
@@ -736,6 +688,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   );
 
   // Reconnect chat when token changes (e.g. after 401 refresh) so we authenticate with the new token.
+  const getWebSocketRef = useRef(getWebSocket);
+  getWebSocketRef.current = getWebSocket;
+
   useEffect(() => {
     const currentToken = authState?.token?.accessToken;
     if (currentToken == null || !shouldConnect) {
@@ -748,9 +703,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       logger.chat.info(
         '[useTwitchChat] Token updated, reconnecting IRC with new token',
       );
-      getWebSocket().close(4001, 'auth token refreshed');
+      getWebSocketRef.current().close(4001, 'auth token refreshed');
     }
-  }, [authState?.token?.accessToken, getWebSocket, shouldConnect]);
+  }, [authState?.token?.accessToken, shouldConnect]);
 
   useEffect(() => {
     sendIrcMessageRef.current = sendWebSocketMessage;
@@ -763,6 +718,11 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       }
     };
   }, [sendWebSocketMessage]);
+
+  const joinChannelRef = useRef(joinChannel);
+  joinChannelRef.current = joinChannel;
+  const partChannelRef = useRef(partChannel);
+  partChannelRef.current = partChannel;
 
   // Join/part channel when it changes
   useEffect(() => {
@@ -778,112 +738,105 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         : `#${channel}`;
 
       if (previousChannel && previousChannel !== channelFormatted) {
-        partChannel(previousChannel);
+        partChannelRef.current(previousChannel);
       }
 
       if (!joinedChannelsRef.current.has(channelFormatted)) {
-        joinChannel(channel);
+        joinChannelRef.current(channel);
       }
     } else if (previousChannel) {
-      partChannel(previousChannel);
+      partChannelRef.current(previousChannel);
     }
-  }, [channel, shouldConnect, joinChannel, partChannel]);
+  }, [channel, joinedChannelsRef, shouldConnect]);
 
   useEffect(() => {
     const joinedChannels = joinedChannelsRef.current;
     const pendingJoinChannels = pendingJoinChannelsRef.current;
+    const messageBuffer = messageBufferRef;
+
     return () => {
       logger.chat.info('[useTwitchChat] Cleaning up Twitch IRC client');
       joinedChannels.clear();
       pendingJoinChannels.clear();
-      messageBufferRef.current = '';
+      messageBuffer.current = '';
       isAuthenticatedRef.current = false;
       userStateRef.current = {};
       pendingMessageRef.current = null;
     };
-  }, []);
+  }, [joinedChannelsRef, pendingJoinChannelsRef]);
 
   /**
    * Send a chat message
    */
-  const sendMessage = useCallback(
-    (
-      channelName: string,
-      message: string,
-      replyParentMsgId?: string,
-      replyParentDisplayName?: string,
-      replyParentMsgBody?: string,
-    ) => {
-      if (message.trim().length === 0) {
-        logger.chat.warn('Cannot send empty message');
-        return;
+  const sendMessage = (
+    channelName: string,
+    message: string,
+    replyParentMsgId?: string,
+    replyParentDisplayName?: string,
+    replyParentMsgBody?: string,
+  ) => {
+    if (message.trim().length === 0) {
+      logger.chat.warn('Cannot send empty message');
+      return;
+    }
+
+    const channelFormatted = formatIrcChannelName(channelName);
+
+    pendingMessageRef.current = {
+      channel: channelFormatted,
+      message,
+      replyParentMsgId,
+      replyParentDisplayName,
+      replyParentMsgBody,
+    };
+
+    // Build PRIVMSG command with optional reply tags
+    // Twitch IRC format: @reply-parent-msg-id=<id>;reply-parent-display-name=<name>;reply-parent-msg-body=<body> PRIVMSG #channel :message
+    let privmsgCommand = 'PRIVMSG';
+    if (replyParentMsgId) {
+      const tags: string[] = [`reply-parent-msg-id=${replyParentMsgId}`];
+
+      if (replyParentDisplayName) {
+        tags.push(`reply-parent-display-name=${replyParentDisplayName}`);
       }
 
-      const channelFormatted = formatChannelName(channelName);
-
-      pendingMessageRef.current = {
-        channel: channelFormatted,
-        message,
-        replyParentMsgId,
-        replyParentDisplayName,
-        replyParentMsgBody,
-      };
-
-      // Build PRIVMSG command with optional reply tags
-      // Twitch IRC format: @reply-parent-msg-id=<id>;reply-parent-display-name=<name>;reply-parent-msg-body=<body> PRIVMSG #channel :message
-      let privmsgCommand = 'PRIVMSG';
-      if (replyParentMsgId) {
-        const tags: string[] = [`reply-parent-msg-id=${replyParentMsgId}`];
-
-        if (replyParentDisplayName) {
-          tags.push(`reply-parent-display-name=${replyParentDisplayName}`);
-        }
-
-        if (replyParentMsgBody) {
-          tags.push(`reply-parent-msg-body=${replyParentMsgBody}`);
-        }
-
-        privmsgCommand = `@${tags.join(';')} ${privmsgCommand}`;
+      if (replyParentMsgBody) {
+        tags.push(`reply-parent-msg-body=${replyParentMsgBody}`);
       }
 
-      const fullMessage = `${privmsgCommand} ${channelFormatted} :${message}`;
-      logger.chat.debug(`Sending PRIVMSG: ${fullMessage.substring(0, 100)}...`);
-      sendWebSocketMessage(`${fullMessage}\r\n`);
-    },
-    [formatChannelName, sendWebSocketMessage],
-  );
+      privmsgCommand = `@${tags.join(';')} ${privmsgCommand}`;
+    }
 
-  const sendChatCommand = useCallback(
-    (channelName: string, command: string) => {
-      const trimmedCommand = command.trim();
-      if (trimmedCommand.length === 0) {
-        logger.chat.warn('Cannot send empty chat command');
-        return;
-      }
+    const fullMessage = `${privmsgCommand} ${channelFormatted} :${message}`;
+    logger.chat.debug(`Sending PRIVMSG: ${fullMessage.substring(0, 100)}...`);
+    sendWebSocketMessage(`${fullMessage}\r\n`);
+  };
 
-      const channelFormatted = formatChannelName(channelName);
-      const fullMessage = `PRIVMSG ${channelFormatted} :${trimmedCommand}`;
-      logger.chat.debug(
-        `Sending chat command: ${fullMessage.substring(0, 100)}...`,
-      );
-      sendWebSocketMessage(`${fullMessage}\r\n`);
-    },
-    [formatChannelName, sendWebSocketMessage],
-  );
+  const sendChatCommand = (channelName: string, command: string) => {
+    const trimmedCommand = command.trim();
+    if (trimmedCommand.length === 0) {
+      logger.chat.warn('Cannot send empty chat command');
+      return;
+    }
+
+    const channelFormatted = formatIrcChannelName(channelName);
+    const fullMessage = `PRIVMSG ${channelFormatted} :${trimmedCommand}`;
+    logger.chat.debug(
+      `Sending chat command: ${fullMessage.substring(0, 100)}...`,
+    );
+    sendWebSocketMessage(`${fullMessage}\r\n`);
+  };
 
   /**
    * Send an action message (/me)
    */
-  const sendAction = useCallback(
-    (channelName: string, action: string) => {
-      const channelFormatted = formatChannelName(channelName);
+  const sendAction = (channelName: string, action: string) => {
+    const channelFormatted = formatIrcChannelName(channelName);
 
-      // ACTION format: PRIVMSG #channel :\x01ACTION <message>\x01
-      const actionMessage = `\x01ACTION ${action}\x01`;
-      sendMessage(channelFormatted, actionMessage);
-    },
-    [formatChannelName, sendMessage],
-  );
+    // ACTION format: PRIVMSG #channel :\x01ACTION <message>\x01
+    const actionMessage = `\x01ACTION ${action}\x01`;
+    sendMessage(channelFormatted, actionMessage);
+  };
 
   /**
    * Get current user state
@@ -892,7 +845,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     return { ...userStateRef.current };
   }, []);
 
-  const isConnected = useCallback((): boolean => {
+  const isConnected = (): boolean => {
     const ws = getWebSocket();
     if (ws.readyState !== WebSocket.OPEN || !isAuthenticatedRef.current) {
       return false;
@@ -902,39 +855,20 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       return true;
     }
 
-    return joinedChannelsRef.current.has(formatChannelName(channel));
-  }, [channel, formatChannelName, getWebSocket]);
+    return joinedChannelsRef.current.has(formatIrcChannelName(channel));
+  };
 
-  const connectionState = useMemo(() => {
-    if (!shouldConnect) {
-      return ReadyState.UNINSTANTIATED;
-    }
+  const connectionState = readyState;
 
-    return readyState;
-  }, [readyState, shouldConnect]);
-
-  return useMemo(
-    () => ({
-      connectionState,
-      getWebSocket,
-      isConnected,
-      joinChannel,
-      partChannel,
-      sendMessage,
-      sendChatCommand,
-      sendAction,
-      getUserState,
-    }),
-    [
-      connectionState,
-      getWebSocket,
-      isConnected,
-      joinChannel,
-      partChannel,
-      sendMessage,
-      sendChatCommand,
-      sendAction,
-      getUserState,
-    ],
-  );
+  return {
+    connectionState,
+    getWebSocket,
+    isConnected,
+    joinChannel,
+    partChannel,
+    sendMessage,
+    sendChatCommand,
+    sendAction,
+    getUserState,
+  };
 }

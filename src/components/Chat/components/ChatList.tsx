@@ -4,14 +4,8 @@ import {
   type LegendListRef,
   type LegendListRenderItemProps,
 } from '@legendapp/list';
-import {
-  memo,
-  RefObject,
-  useCallback,
-  useEffect,
-  useRef,
-  type ReactElement,
-} from 'react';
+import { RefObject, useCallback, useEffect, useRef, memo } from 'react';
+import type { ReactElement } from 'react';
 import {
   NativeSyntheticEvent,
   NativeScrollEvent,
@@ -26,7 +20,7 @@ import { getChatMessageListKey } from '../util/chatMessages';
 import {
   getViewableChatMessages,
   type ViewableMessageToken,
-} from './ChatList/utils';
+} from './ChatList/getViewableChatMessages';
 
 const CHAT_DRAW_DISTANCE = 96;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
@@ -115,13 +109,15 @@ export const ChatList = memo(
   }: ChatListProps) => {
     const onViewableMessagesChangeRef = useRef(onViewableMessagesChange);
     const lastViewableMessageKeysRef = useRef('');
+    onViewableMessagesChangeRef.current = onViewableMessagesChange;
 
     useEffect(() => {
-      onViewableMessagesChangeRef.current = onViewableMessagesChange;
       lastViewableMessageKeysRef.current = '';
     }, [onViewableMessagesChange]);
 
-    const onViewableItemsChangedRef = useRef(
+    // Stable identity required: LegendList re-runs setupViewability whenever
+    // onViewableItemsChanged identity changes, tearing down viewability state.
+    const onViewableItemsChanged = useCallback(
       ({ viewableItems }: { viewableItems: ViewableMessageToken[] }) => {
         const callback = onViewableMessagesChangeRef.current;
         if (!callback) {
@@ -137,10 +133,9 @@ export const ChatList = memo(
         }
         lastViewableMessageKeysRef.current = viewableMessageKeys;
 
-        if (messages.length > 0) {
-          callback(messages);
-        }
+        callback(messages);
       },
+      [],
     );
 
     const renderLegendItem = useCallback(
@@ -190,7 +185,7 @@ export const ChatList = memo(
         contentContainerStyle={contentContainerStyle}
         scrollEventThrottle={16}
         viewabilityConfig={CHAT_VIEWABILITY_CONFIG}
-        onViewableItemsChanged={onViewableItemsChangedRef.current}
+        onViewableItemsChanged={onViewableItemsChanged}
       />
     );
   },

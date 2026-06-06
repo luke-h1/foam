@@ -11,12 +11,12 @@ import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import * as Clipboard from 'expo-clipboard';
 import {
   ReactNode,
-  useCallback,
-  useMemo,
   useState,
   cloneElement,
   isValidElement,
   ReactElement,
+  useCallback,
+  useMemo,
   memo,
 } from 'react';
 import {
@@ -40,6 +40,20 @@ const COPY_IMAGE_VARIANT_ACTIONS = [
   { id: 'copy-url-2x', label: 'Copy 2x image URL', scale: '2x' },
   { id: 'copy-url-4x', label: 'Copy 4x image URL', scale: '4x' },
 ] as const;
+
+function getEmoteActionSFSymbolName(actionId: ActionId) {
+  switch (actionId) {
+    case 'copy-name':
+    case 'copy-url':
+    case 'copy-url-2x':
+    case 'copy-url-4x':
+      return 'doc.on.doc' as const;
+    case 'preview':
+      return 'arrow.up.right.square' as const;
+    default:
+      return 'doc.on.doc' as const;
+  }
+}
 
 interface EmoteActionSheetProps {
   children?: ReactNode;
@@ -66,26 +80,19 @@ function EmoteActionSheetComponent({
     280,
     Math.min(windowWidth - theme.space16 * 2, 520),
   );
-  const wrapperStyle = useMemo(
-    () => [
-      styles.wrapper,
-      {
-        maxHeight: Math.round(windowHeight * 0.72),
-        width: sheetWidth,
-      },
-    ],
-    [sheetWidth, windowHeight],
-  );
-  const displayUrl = useMemo(
-    () =>
-      getDisplayEmoteUrl({
-        image_variants: part.image_variants,
-        url: part.url,
-        static_url: part.static_url,
-        disableAnimations,
-      }),
-    [disableAnimations, part.image_variants, part.static_url, part.url],
-  );
+  const wrapperStyle = [
+    styles.wrapper,
+    {
+      maxHeight: Math.round(windowHeight * 0.72),
+      width: sheetWidth,
+    },
+  ];
+  const displayUrl = getDisplayEmoteUrl({
+    image_variants: part.image_variants,
+    url: part.url,
+    static_url: part.static_url,
+    disableAnimations,
+  });
   const previewPart = useMemo(
     () =>
       displayUrl === part.url
@@ -161,75 +168,34 @@ function EmoteActionSheetComponent({
     onPress?.(previewPart);
   }, [closeSheet, onPress, previewPart]);
 
-  const actions = useMemo(
-    () =>
-      [
-        {
-          id: 'copy-name' as const,
-          label: 'Copy name',
-          onPress: copyName,
-          visible: true,
-        },
-        {
-          id: 'copy-url' as const,
-          label: 'Copy image URL',
-          onPress: copyImageUrl,
-          visible: Boolean(displayUrl),
-        },
-        ...COPY_IMAGE_VARIANT_ACTIONS.map(action => ({
-          id: action.id,
-          label: action.label,
-          onPress: () => copyScaledImageUrl(action.scale),
-          visible: Boolean(part.image_variants),
-        })),
-        {
-          id: 'preview' as const,
-          label: 'Preview',
-          onPress: handlePreview,
-          visible: Boolean(onPress),
-        },
-      ].filter(action => action.visible),
-    [
-      copyImageUrl,
-      copyName,
-      copyScaledImageUrl,
-      displayUrl,
-      handlePreview,
-      onPress,
-      part.image_variants,
-    ],
-  );
+  const actions = [
+    {
+      id: 'copy-name' as const,
+      label: 'Copy name',
+      onPress: copyName,
+      visible: true,
+    },
+    {
+      id: 'copy-url' as const,
+      label: 'Copy image URL',
+      onPress: copyImageUrl,
+      visible: Boolean(displayUrl),
+    },
+    ...COPY_IMAGE_VARIANT_ACTIONS.map(action => ({
+      id: action.id,
+      label: action.label,
+      onPress: () => copyScaledImageUrl(action.scale),
+      visible: Boolean(part.image_variants),
+    })),
+    {
+      id: 'preview' as const,
+      label: 'Preview',
+      onPress: handlePreview,
+      visible: Boolean(onPress),
+    },
+  ].filter(action => action.visible);
 
-  const previewSubtitle = useMemo(() => {
-    const meta: string[] = [];
-    if (part.creator) {
-      meta.push(part.creator);
-    }
-    if (part.site) {
-      meta.push(part.site);
-    }
-
-    if (meta.length > 0) {
-      return meta.join(' / ');
-    }
-
-    return 'Emote actions';
-  }, [part.creator, part.site]);
-
-  const getSFSymbolName = useCallback((actionId: ActionId) => {
-    switch (actionId) {
-      case 'copy-name':
-      case 'copy-url':
-      case 'copy-url-2x':
-      case 'copy-url-4x':
-        return 'doc.on.doc' as const;
-      case 'preview':
-        return 'arrow.up.right.square' as const;
-
-      default:
-        return 'doc.on.doc' as const;
-    }
-  }, []);
+  const previewSubtitle = 'Emote actions';
 
   const triggerChild =
     children && isValidElement(children)
@@ -312,7 +278,7 @@ function EmoteActionSheetComponent({
                 >
                   <View style={styles.actionIconFrame}>
                     <SymbolView
-                      name={getSFSymbolName(action.id)}
+                      name={getEmoteActionSFSymbolName(action.id)}
                       size={18}
                       tintColor={theme.color.textSecondary.dark}
                       weight='regular'
@@ -360,10 +326,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius16,
     borderWidth: 1,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { height: 10, width: 0 },
-    shadowOpacity: 0.22,
-    shadowRadius: 18,
+    boxShadow: '0 10px 18px rgba(0, 0, 0, 0.22)',
   },
   actionIcon: {
     opacity: 0.9,

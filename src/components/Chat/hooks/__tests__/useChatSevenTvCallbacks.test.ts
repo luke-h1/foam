@@ -16,6 +16,7 @@ import { countMetric } from '@app/lib/sentry';
 import type { SanitisedEmote } from '@app/types/emote';
 import { renderHook, act } from '@testing-library/react-native';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
+import { toPaintWithId } from '../../util/normalizeSevenTvCosmetics';
 import { useChatSevenTvCallbacks } from '../useChatSevenTvCallbacks';
 
 jest.mock('@app/store/chatStore/cosmetics', () => ({
@@ -64,6 +65,13 @@ jest.mock('@app/utils/emote/stv/generateSevenTvEmoteNotice', () => ({
   })),
 }));
 
+const mockGetBadge = jest.mocked(getBadge);
+const mockGetPaint = jest.mocked(getPaint);
+const mockAddBadge = jest.mocked(addBadge);
+const mockAddPaint = jest.mocked(addPaint);
+const mockUpdateBadge = jest.mocked(updateBadge);
+const mockCountMetric = jest.mocked(countMetric);
+
 const mockUpdateSevenTvEmotes = jest.fn();
 const mockFetchAndCacheUserCosmetics = jest.fn().mockResolvedValue(undefined);
 const mockCanFetchCosmetics = jest.fn().mockReturnValue(true);
@@ -82,8 +90,8 @@ const defaultProps = {
 describe('useChatSevenTvCallbacks', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (getBadge as jest.Mock).mockReturnValue(undefined);
-    (getPaint as jest.Mock).mockReturnValue(undefined);
+    mockGetBadge.mockReturnValue(undefined);
+    mockGetPaint.mockReturnValue(undefined);
   });
 
   describe('return shape', () => {
@@ -213,18 +221,18 @@ describe('useChatSevenTvCallbacks', () => {
       });
 
       expect(getBadge).toHaveBeenCalled();
-      expect((addBadge as jest.Mock).mock.calls[0]?.[0]).toEqual({
+      expect(mockAddBadge.mock.calls[0]?.[0]).toEqual({
         id: 'badge-id',
         provider: '7tv',
         set: 'badge-id',
         title: 'Tip',
         type: '7TV Badge',
-        url: 'https://cdn.7tv.app/4x',
+        url: 'https://cdn.7tv.app/badge/badge-id/4x.webp',
       });
     });
 
     test('does not add badge when getBadge already returns truthy', () => {
-      (getBadge as jest.Mock).mockReturnValue({ id: 'badge-id' });
+      mockGetBadge.mockReturnValue({ id: 'badge-id' });
       const { result } = renderHook(() =>
         useChatSevenTvCallbacks(defaultProps),
       );
@@ -262,11 +270,9 @@ describe('useChatSevenTvCallbacks', () => {
       });
 
       expect(getPaint).toHaveBeenCalled();
-      expect((addPaint as jest.Mock).mock.calls[0]?.[0]).toEqual({
-        color: 0xff0000ff,
-        id: 'paint-id',
-        name: 'Paint',
-      });
+      expect(mockAddPaint.mock.calls[0]?.[0]).toEqual(
+        toPaintWithId(paintData),
+      );
     });
   });
 
@@ -298,15 +304,13 @@ describe('useChatSevenTvCallbacks', () => {
         } as never);
       });
 
-      expect(updatePaint).toHaveBeenCalledWith({
-        id: 'paint-1',
-        name: 'Updated Paint',
-      });
-      expect(addPaint).toHaveBeenCalledWith({
-        id: 'paint-2',
-        name: 'Added Paint',
-      });
-      expect((countMetric as jest.Mock).mock.calls[0]).toEqual([
+      expect(updatePaint).toHaveBeenCalledWith(
+        toPaintWithId({ id: 'paint-1', name: 'Updated Paint' }),
+      );
+      expect(addPaint).toHaveBeenCalledWith(
+        toPaintWithId({ id: 'paint-2', name: 'Added Paint' }),
+      );
+      expect(mockCountMetric.mock.calls[0]).toEqual([
         'seven_tv.cosmetic_update.applied',
         {
           action: 'paint_update_applied',
@@ -366,23 +370,23 @@ describe('useChatSevenTvCallbacks', () => {
         } as never);
       });
 
-      expect((updateBadge as jest.Mock).mock.calls[0]?.[0]).toEqual({
+      expect(mockUpdateBadge.mock.calls[0]?.[0]).toEqual({
         id: 'badge-1',
         provider: '7tv',
         set: 'badge-1',
         title: 'Updated Badge',
         type: '7TV Badge',
-        url: 'https://cdn.7tv.app/badge-1/4x',
+        url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
       });
-      expect((addBadge as jest.Mock).mock.calls[0]?.[0]).toEqual({
+      expect(mockAddBadge.mock.calls[0]?.[0]).toEqual({
         id: 'badge-2',
         provider: '7tv',
         set: 'badge-2',
         title: 'Added Badge',
         type: '7TV Badge',
-        url: 'https://cdn.7tv.app/badge-2/4x',
+        url: 'https://cdn.7tv.app/badge/badge-2/4x.webp',
       });
-      expect((countMetric as jest.Mock).mock.calls[0]).toEqual([
+      expect(mockCountMetric.mock.calls[0]).toEqual([
         'seven_tv.cosmetic_update.applied',
         {
           action: 'badge_update_applied',

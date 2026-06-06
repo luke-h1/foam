@@ -13,76 +13,76 @@ import { clearUserCosmeticsCache } from '@app/store/chatStore/cosmetics';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
-import { queryClient } from '@app/utils/react-query/reacy-query';
+import { queryClient } from '@app/utils/react-query/queryClient';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { Platform, ScrollView, StyleSheet, View, Alert } from 'react-native';
 import { useRef } from 'react';
 import { toast } from 'sonner-native';
 import { clearEmoteImageCache } from '@app/store/chatStore/emoteImages';
 
+function handleClearData() {
+  Alert.alert(
+    'Clear Local Data',
+    'This clears cached app data and forces fresh fetches the next time screens load.',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Clear',
+        style: 'destructive',
+        onPress: () => {
+          storageService.clear();
+          queryClient.clear();
+          toast.success('Local data cleared');
+        },
+      },
+    ],
+  );
+}
+
+function handleClearChatCache() {
+  Alert.alert(
+    'Clear Chat Cache',
+    'This removes cached emotes, badges, and other downloaded media from this device.',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Clear',
+        style: 'destructive',
+        onPress: () => {
+          clearChatCosmeticsCache();
+          clearEmoteImageCache();
+          storageService.clearImageCache();
+          void clearImageCache().then(() => {
+            toast.success('Chat cache cleared');
+          });
+        },
+      },
+    ],
+  );
+}
+
+function handleClearSevenTvCosmeticsCache() {
+  Alert.alert(
+    'Clear 7TV Cosmetic Cache',
+    'This removes cached 7TV user paints and badges. They will be fetched again as users appear in chat.',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Clear',
+        style: 'destructive',
+        onPress: () => {
+          clearUserCosmeticsCache();
+          toast.success('7TV cosmetic cache cleared');
+        },
+      },
+    ],
+  );
+}
+
 export function SettingsCacheScreen() {
   const scrollRef = useRef<ScrollView>(null);
 
   useScrollToTop(scrollRef);
-
-  const handleClearData = () => {
-    Alert.alert(
-      'Clear Local Data',
-      'This clears cached app data and forces fresh fetches the next time screens load.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear',
-          style: 'destructive',
-          onPress: () => {
-            storageService.clear();
-            queryClient.clear();
-            toast.success('Local data cleared');
-          },
-        },
-      ],
-    );
-  };
-
-  const handleClearChatCache = () => {
-    Alert.alert(
-      'Clear Chat Cache',
-      'This removes cached emotes, badges, and other downloaded media from this device.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear',
-          style: 'destructive',
-          onPress: () => {
-            clearChatCosmeticsCache();
-            clearEmoteImageCache();
-            storageService.clearImageCache();
-            void clearImageCache().then(() => {
-              toast.success('Chat cache cleared');
-            });
-          },
-        },
-      ],
-    );
-  };
-
-  const handleClearSevenTvCosmeticsCache = () => {
-    Alert.alert(
-      'Clear 7TV Cosmetic Cache',
-      'This removes cached 7TV user paints and badges. They will be fetched again as users appear in chat.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear',
-          style: 'destructive',
-          onPress: () => {
-            clearUserCosmeticsCache();
-            toast.success('7TV cosmetic cache cleared');
-          },
-        },
-      ],
-    );
-  };
 
   if (Platform.OS === 'ios') {
     return (

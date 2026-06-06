@@ -7,7 +7,6 @@ import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { isUpdateRequired } from '@app/utils/version/compareVersions';
 import * as Application from 'expo-application';
-import { useCallback } from 'react';
 import { Modal as RNModal, Platform, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Variant } from '../../../app.config';
@@ -33,6 +32,13 @@ function getMinimumVersion(variant: Variant, remoteConfig: RemoteConfigType) {
   }
 }
 
+async function handleUpdatePress() {
+  const storeUrl = await getStoreUrlAsync();
+  if (storeUrl) {
+    openLinkInBrowser(storeUrl);
+  }
+}
+
 export function ForceUpdateModal() {
   const { config: remoteConfig } = useRemoteConfig();
   const insets = useSafeAreaInsets();
@@ -46,13 +52,6 @@ export function ForceUpdateModal() {
     minimumVersion && currentVersion && currentVersion !== 'Unknown'
       ? (isUpdateRequired(currentVersion, minimumVersion) ?? false)
       : false;
-
-  const handleUpdatePress = useCallback(async () => {
-    const storeUrl = await getStoreUrlAsync();
-    if (storeUrl) {
-      openLinkInBrowser(storeUrl);
-    }
-  }, []);
 
   return (
     <RNModal

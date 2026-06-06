@@ -4,40 +4,25 @@ import { DocumentNode } from 'graphql';
 import * as Apollo from '@apollo/client';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = {
-  [K in keyof T]: T[K];
-};
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
-  [SubKey in K]?: Maybe<T[SubKey]>;
-};
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
-  [SubKey in K]: Maybe<T[SubKey]>;
-};
-export type MakeEmpty<
-  T extends { [key: string]: unknown },
-  K extends keyof T,
-> = { [_ in K]?: never };
-export type Incremental<T> =
-  | T
-  | {
-      [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never;
-    };
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string; output: string };
-  String: { input: string; output: string };
-  Boolean: { input: boolean; output: boolean };
-  Int: { input: number; output: number };
-  Float: { input: number; output: number };
-  CustomerId: { input: string; output: string };
-  DateTime: { input: string; output: string };
-  Id: { input: string; output: string };
-  InvoiceId: { input: string; output: string };
-  JSONObject: {
-    input: Record<string, unknown>;
-    output: Record<string, unknown>;
-  };
-  StripeProductId: { input: string; output: string };
+  ID: { input: string; output: string; }
+  String: { input: string; output: string; }
+  Boolean: { input: boolean; output: boolean; }
+  Int: { input: number; output: number; }
+  Float: { input: number; output: number; }
+  CustomerId: { input: string; output: string; }
+  DateTime: { input: string; output: string; }
+  Id: { input: string; output: string; }
+  InvoiceId: { input: string; output: string; }
+  JSON: { input: any; output: any; }
+  JSONObject: { input: Record<string, unknown>; output: Record<string, unknown>; }
+  StripeProductId: { input: string; output: string; }
 };
 
 export type AdminPermission = {
@@ -56,6 +41,7 @@ export type BackdoorQuery = {
   executeSql: Scalars['String']['output'];
 };
 
+
 export type BackdoorQueryExecuteSqlArgs = {
   sql: Scalars['String']['input'];
 };
@@ -65,10 +51,10 @@ export type Badge = {
   createdById: Scalars['Id']['output'];
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['Id']['output'];
-  images: Image[];
+  images: Array<Image>;
   name: Scalars['String']['output'];
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  tags: Scalars['String']['output'][];
+  tags: Array<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
 };
 
@@ -97,8 +83,9 @@ export type BadgeProgressNextBadge = {
 export type BadgeQuery = {
   __typename?: 'BadgeQuery';
   badge?: Maybe<Badge>;
-  badges: Badge[];
+  badges: Array<Badge>;
 };
+
 
 export type BadgeQueryBadgeArgs = {
   id: Scalars['Id']['input'];
@@ -112,6 +99,7 @@ export type Billing = {
 
 export type BillingMutation = {
   __typename?: 'BillingMutation';
+  buyShopItems: SubscribeResponse;
   cancelSubscription: SubscriptionInfo;
   getPickems: SubscribeResponse;
   reactivateSubscription: SubscriptionInfo;
@@ -119,22 +107,33 @@ export type BillingMutation = {
   subscribe: SubscribeResponse;
 };
 
+
+export type BillingMutationBuyShopItemsArgs = {
+  itemIds: Array<Scalars['Id']['input']>;
+};
+
+
 export type BillingMutationCancelSubscriptionArgs = {
   productId: Scalars['Id']['input'];
 };
+
 
 export type BillingMutationGetPickemsArgs = {
   pickemsId: Scalars['Id']['input'];
   subscriptionPriceId?: InputMaybe<Scalars['StripeProductId']['input']>;
 };
 
+
 export type BillingMutationReactivateSubscriptionArgs = {
   productId: Scalars['Id']['input'];
 };
 
+
 export type BillingMutationRedeemCodeArgs = {
+  captchaToken: Scalars['String']['input'];
   code: Scalars['String']['input'];
 };
+
 
 export type BillingMutationSubscribeArgs = {
   variantId: Scalars['StripeProductId']['input'];
@@ -144,7 +143,7 @@ export type CodeEffect = CodeEffectDirectEntitlement | CodeEffectSpecialEvent;
 
 export type CodeEffectDirectEntitlement = {
   __typename?: 'CodeEffectDirectEntitlement';
-  entitlements: EntitlementNodeAny[];
+  entitlements: Array<EntitlementNodeAny>;
 };
 
 export type CodeEffectSpecialEvent = {
@@ -177,7 +176,7 @@ export type CreateRedeemCodeBatchInput = {
   number: Scalars['Int']['input'];
   specialEventId: Scalars['Id']['input'];
   subscriptionEffect?: InputMaybe<RedeemCodeSubscriptionEffectInput>;
-  tags: Scalars['String']['input'][];
+  tags: Array<Scalars['String']['input']>;
   uses: Scalars['Int']['input'];
 };
 
@@ -188,14 +187,14 @@ export type CreateRedeemCodeInput = {
   name: Scalars['String']['input'];
   specialEventId: Scalars['Id']['input'];
   subscriptionEffect?: InputMaybe<RedeemCodeSubscriptionEffectInput>;
-  tags: Scalars['String']['input'][];
+  tags: Array<Scalars['String']['input']>;
   uses: Scalars['Int']['input'];
 };
 
 export type CreateSpecialEventInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
-  tags: Scalars['String']['input'][];
+  tags: Array<Scalars['String']['input']>;
 };
 
 export type EditorEmotePermission = {
@@ -246,38 +245,42 @@ export type EditorUserPermissionInput = {
 export type Emote = {
   __typename?: 'Emote';
   aspectRatio: Scalars['Float']['output'];
-  attribution: EmoteAttribution[];
+  attribution: Array<EmoteAttribution>;
   channels: UserSearchResult;
   defaultName: Scalars['String']['output'];
   deleted: Scalars['Boolean']['output'];
-  events: EmoteEvent[];
+  events: Array<EmoteEvent>;
   flags: EmoteFlags;
   id: Scalars['Id']['output'];
-  images: Image[];
+  images: Array<Image>;
   imagesPending: Scalars['Boolean']['output'];
-  inEmoteSets: EmoteInEmoteSetResponse[];
+  inEmoteSets: Array<EmoteInEmoteSetResponse>;
   owner?: Maybe<User>;
   ownerId: Scalars['Id']['output'];
   ranking?: Maybe<Scalars['Int']['output']>;
   scores: EmoteScores;
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  tags: Scalars['String']['output'][];
+  tags: Array<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
 };
+
 
 export type EmoteChannelsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   perPage?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type EmoteEventsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   perPage?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type EmoteInEmoteSetsArgs = {
-  emoteSetIds: Scalars['Id']['input'][];
+  emoteSetIds: Array<Scalars['Id']['input']>;
 };
+
 
 export type EmoteRankingArgs = {
   ranking: Ranking;
@@ -292,36 +295,42 @@ export type EmoteAttribution = {
 
 export type EmoteBatchOperation = {
   __typename?: 'EmoteBatchOperation';
-  delete: Emote[];
-  flags: Emote[];
-  merge: Emote[];
-  name: Emote[];
-  owner: Emote[];
-  tags: Emote[];
+  delete: Array<Emote>;
+  flags: Array<Emote>;
+  merge: Array<Emote>;
+  name: Array<Emote>;
+  owner: Array<Emote>;
+  tags: Array<Emote>;
 };
+
 
 export type EmoteBatchOperationDeleteArgs = {
   reason?: InputMaybe<Scalars['String']['input']>;
 };
 
+
 export type EmoteBatchOperationFlagsArgs = {
   flags: EmoteFlagsInput;
 };
+
 
 export type EmoteBatchOperationMergeArgs = {
   with: Scalars['Id']['input'];
 };
 
+
 export type EmoteBatchOperationNameArgs = {
   name: Scalars['String']['input'];
 };
+
 
 export type EmoteBatchOperationOwnerArgs = {
   ownerId: Scalars['Id']['input'];
 };
 
+
 export type EmoteBatchOperationTagsArgs = {
-  tags: Scalars['String']['input'][];
+  tags: Array<Scalars['String']['input']>;
 };
 
 export type EmoteEvent = {
@@ -376,12 +385,14 @@ export type EmoteMutation = {
   emotes: EmoteBatchOperation;
 };
 
+
 export type EmoteMutationEmoteArgs = {
   id: Scalars['Id']['input'];
 };
 
+
 export type EmoteMutationEmotesArgs = {
-  ids: Scalars['Id']['input'][];
+  ids: Array<Scalars['Id']['input']>;
 };
 
 export type EmoteOperation = {
@@ -394,24 +405,29 @@ export type EmoteOperation = {
   tags: Emote;
 };
 
+
 export type EmoteOperationFlagsArgs = {
   flags: EmoteFlagsInput;
 };
+
 
 export type EmoteOperationMergeArgs = {
   targetId: Scalars['Id']['input'];
 };
 
+
 export type EmoteOperationNameArgs = {
   name: Scalars['String']['input'];
 };
+
 
 export type EmoteOperationOwnerArgs = {
   ownerId: Scalars['Id']['input'];
 };
 
+
 export type EmoteOperationTagsArgs = {
-  tags: Scalars['String']['input'][];
+  tags: Array<Scalars['String']['input']>;
 };
 
 export type EmotePermission = {
@@ -431,9 +447,11 @@ export type EmoteQuery = {
   search: EmoteSearchResult;
 };
 
+
 export type EmoteQueryEmoteArgs = {
   id: Scalars['Id']['input'];
 };
+
 
 export type EmoteQuerySearchArgs = {
   filters?: InputMaybe<Filters>;
@@ -457,7 +475,7 @@ export type EmoteScores = {
 
 export type EmoteSearchResult = {
   __typename?: 'EmoteSearchResult';
-  items: Emote[];
+  items: Array<Emote>;
   pageCount: Scalars['Int']['output'];
   totalCount: Scalars['Int']['output'];
 };
@@ -473,9 +491,10 @@ export type EmoteSet = {
   owner?: Maybe<User>;
   ownerId?: Maybe<Scalars['Id']['output']>;
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  tags: Scalars['String']['output'][];
+  tags: Array<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
 };
+
 
 export type EmoteSetEmotesArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
@@ -512,7 +531,7 @@ export type EmoteSetEmoteId = {
 
 export type EmoteSetEmoteSearchResult = {
   __typename?: 'EmoteSetEmoteSearchResult';
-  items: EmoteSetEmote[];
+  items: Array<EmoteSetEmote>;
   pageCount: Scalars['Int']['output'];
   totalCount: Scalars['Int']['output'];
 };
@@ -534,7 +553,7 @@ export enum EmoteSetKind {
   Global = 'GLOBAL',
   Normal = 'NORMAL',
   Personal = 'PERSONAL',
-  Special = 'SPECIAL',
+  Special = 'SPECIAL'
 }
 
 export type EmoteSetMutation = {
@@ -543,11 +562,13 @@ export type EmoteSetMutation = {
   emoteSet: EmoteSetOperation;
 };
 
+
 export type EmoteSetMutationCreateArgs = {
   name: Scalars['String']['input'];
   ownerId?: InputMaybe<Scalars['Id']['input']>;
-  tags: Scalars['String']['input'][];
+  tags: Array<Scalars['String']['input']>;
 };
+
 
 export type EmoteSetMutationEmoteSetArgs = {
   id: Scalars['Id']['input'];
@@ -565,32 +586,39 @@ export type EmoteSetOperation = {
   updateEmoteFlags: EmoteSetEmote;
 };
 
+
 export type EmoteSetOperationAddEmoteArgs = {
   id: EmoteSetEmoteId;
   overrideConflicts?: InputMaybe<Scalars['Boolean']['input']>;
   zeroWidth?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+
 export type EmoteSetOperationCapacityArgs = {
   capacity: Scalars['Int']['input'];
 };
+
 
 export type EmoteSetOperationNameArgs = {
   name: Scalars['String']['input'];
 };
 
+
 export type EmoteSetOperationRemoveEmoteArgs = {
   id: EmoteSetEmoteId;
 };
 
+
 export type EmoteSetOperationTagsArgs = {
-  tags: Scalars['String']['input'][];
+  tags: Array<Scalars['String']['input']>;
 };
+
 
 export type EmoteSetOperationUpdateEmoteAliasArgs = {
   alias: Scalars['String']['input'];
   id: EmoteSetEmoteId;
 };
+
 
 export type EmoteSetOperationUpdateEmoteFlagsArgs = {
   flags: EmoteSetEmoteFlagsInput;
@@ -611,16 +639,18 @@ export type EmoteSetPermission = {
 export type EmoteSetQuery = {
   __typename?: 'EmoteSetQuery';
   emoteSet?: Maybe<EmoteSet>;
-  emoteSets: EmoteSet[];
+  emoteSets: Array<EmoteSet>;
   global: EmoteSet;
 };
+
 
 export type EmoteSetQueryEmoteSetArgs = {
   id: Scalars['Id']['input'];
 };
 
+
 export type EmoteSetQueryEmoteSetsArgs = {
-  ids: Scalars['Id']['input'][];
+  ids: Array<Scalars['Id']['input']>;
 };
 
 export type EntitlementEdgeAnyAny = {
@@ -635,10 +665,12 @@ export type EntitlementEdgeMutation = {
   entitlementEdge: EntitlementEdgeOperation;
 };
 
+
 export type EntitlementEdgeMutationCreateArgs = {
   from: EntitlementNodeInput;
   to: EntitlementNodeInput;
 };
+
 
 export type EntitlementEdgeMutationEntitlementEdgeArgs = {
   from: EntitlementNodeInput;
@@ -650,17 +682,7 @@ export type EntitlementEdgeOperation = {
   delete: Scalars['Boolean']['output'];
 };
 
-export type EntitlementNodeAny =
-  | EntitlementNodeBadge
-  | EntitlementNodeEmoteSet
-  | EntitlementNodeGlobalDefaultEntitlementGroup
-  | EntitlementNodePaint
-  | EntitlementNodeProduct
-  | EntitlementNodeRole
-  | EntitlementNodeSpecialEvent
-  | EntitlementNodeSubscription
-  | EntitlementNodeSubscriptionBenefit
-  | EntitlementNodeUser;
+export type EntitlementNodeAny = EntitlementNodeBadge | EntitlementNodeEmoteSet | EntitlementNodeGlobalDefaultEntitlementGroup | EntitlementNodePaint | EntitlementNodeProduct | EntitlementNodeRole | EntitlementNodeShopItem | EntitlementNodeSpecialEvent | EntitlementNodeSubscription | EntitlementNodeSubscriptionBenefit | EntitlementNodeUser;
 
 export type EntitlementNodeBadge = {
   __typename?: 'EntitlementNodeBadge';
@@ -701,6 +723,11 @@ export type EntitlementNodeRole = {
   roleId: Scalars['Id']['output'];
 };
 
+export type EntitlementNodeShopItem = {
+  __typename?: 'EntitlementNodeShopItem';
+  shopItemId: Scalars['Id']['output'];
+};
+
 export type EntitlementNodeSpecialEvent = {
   __typename?: 'EntitlementNodeSpecialEvent';
   specialEvent?: Maybe<SpecialEvent>;
@@ -727,7 +754,7 @@ export enum EntitlementNodeTypeInput {
   SpecialEvent = 'SPECIAL_EVENT',
   Subscription = 'SUBSCRIPTION',
   SubscriptionBenefit = 'SUBSCRIPTION_BENEFIT',
-  User = 'USER',
+  User = 'USER'
 }
 
 export type EntitlementNodeUser = {
@@ -741,19 +768,12 @@ export type EntitlementQuery = {
   traverse: RawEntitlements;
 };
 
+
 export type EntitlementQueryTraverseArgs = {
   from: EntitlementNodeInput;
 };
 
-export type EventEmoteData =
-  | EventEmoteDataChangeFlags
-  | EventEmoteDataChangeName
-  | EventEmoteDataChangeOwner
-  | EventEmoteDataChangeTags
-  | EventEmoteDataDelete
-  | EventEmoteDataMerge
-  | EventEmoteDataProcess
-  | EventEmoteDataUpload;
+export type EventEmoteData = EventEmoteDataChangeFlags | EventEmoteDataChangeName | EventEmoteDataChangeOwner | EventEmoteDataChangeTags | EventEmoteDataDelete | EventEmoteDataMerge | EventEmoteDataProcess | EventEmoteDataUpload;
 
 export type EventEmoteDataChangeFlags = {
   __typename?: 'EventEmoteDataChangeFlags';
@@ -777,8 +797,8 @@ export type EventEmoteDataChangeOwner = {
 
 export type EventEmoteDataChangeTags = {
   __typename?: 'EventEmoteDataChangeTags';
-  newTags: Scalars['String']['output'][];
-  oldTags: Scalars['String']['output'][];
+  newTags: Array<Scalars['String']['output']>;
+  oldTags: Array<Scalars['String']['output']>;
 };
 
 export type EventEmoteDataDelete = {
@@ -804,15 +824,7 @@ export type EventEmoteDataUpload = {
   noop: Scalars['Boolean']['output'];
 };
 
-export type EventEmoteSetData =
-  | EventEmoteSetDataAddEmote
-  | EventEmoteSetDataChangeCapacity
-  | EventEmoteSetDataChangeName
-  | EventEmoteSetDataChangeTags
-  | EventEmoteSetDataCreate
-  | EventEmoteSetDataDelete
-  | EventEmoteSetDataRemoveEmote
-  | EventEmoteSetDataRenameEmote;
+export type EventEmoteSetData = EventEmoteSetDataAddEmote | EventEmoteSetDataChangeCapacity | EventEmoteSetDataChangeName | EventEmoteSetDataChangeTags | EventEmoteSetDataCreate | EventEmoteSetDataDelete | EventEmoteSetDataRemoveEmote | EventEmoteSetDataRenameEmote;
 
 export type EventEmoteSetDataAddEmote = {
   __typename?: 'EventEmoteSetDataAddEmote';
@@ -835,8 +847,8 @@ export type EventEmoteSetDataChangeName = {
 
 export type EventEmoteSetDataChangeTags = {
   __typename?: 'EventEmoteSetDataChangeTags';
-  newTags: Scalars['String']['output'][];
-  oldTags: Scalars['String']['output'][];
+  newTags: Array<Scalars['String']['output']>;
+  oldTags: Array<Scalars['String']['output']>;
 };
 
 export type EventEmoteSetDataCreate = {
@@ -865,14 +877,7 @@ export type EventEmoteSetDataRenameEmote = {
   renamedEmoteId: Scalars['Id']['output'];
 };
 
-export type EventUserData =
-  | EventUserDataAddConnection
-  | EventUserDataChangeActiveBadge
-  | EventUserDataChangeActiveEmoteSet
-  | EventUserDataChangeActivePaint
-  | EventUserDataCreate
-  | EventUserDataDelete
-  | EventUserDataRemoveConnection;
+export type EventUserData = EventUserDataAddConnection | EventUserDataChangeActiveBadge | EventUserDataChangeActiveEmoteSet | EventUserDataChangeActivePaint | EventUserDataCreate | EventUserDataDelete | EventUserDataRemoveConnection;
 
 export type EventUserDataAddConnection = {
   __typename?: 'EventUserDataAddConnection';
@@ -949,7 +954,7 @@ export enum ImageProcessorEvent {
   Cancel = 'CANCEL',
   Fail = 'FAIL',
   Start = 'START',
-  Success = 'SUCCESS',
+  Success = 'SUCCESS'
 }
 
 export type InventoryEntitlementEdgeAnyBadge = {
@@ -1004,6 +1009,7 @@ export type Mutation = {
   users: UserMutation;
 };
 
+
 export type MutationBillingArgs = {
   userId: Scalars['Id']['input'];
 };
@@ -1016,14 +1022,14 @@ export type Paint = {
   id: Scalars['Id']['output'];
   name: Scalars['String']['output'];
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  tags: Scalars['String']['output'][];
+  tags: Array<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
 };
 
 export type PaintData = {
   __typename?: 'PaintData';
-  layers: PaintLayer[];
-  shadows: PaintShadow[];
+  layers: Array<PaintLayer>;
+  shadows: Array<PaintShadow>;
 };
 
 export type PaintGradientStop = {
@@ -1039,29 +1045,25 @@ export type PaintLayer = {
   ty: PaintLayerType;
 };
 
-export type PaintLayerType =
-  | PaintLayerTypeImage
-  | PaintLayerTypeLinearGradient
-  | PaintLayerTypeRadialGradient
-  | PaintLayerTypeSingleColor;
+export type PaintLayerType = PaintLayerTypeImage | PaintLayerTypeLinearGradient | PaintLayerTypeRadialGradient | PaintLayerTypeSingleColor;
 
 export type PaintLayerTypeImage = {
   __typename?: 'PaintLayerTypeImage';
-  images: Image[];
+  images: Array<Image>;
 };
 
 export type PaintLayerTypeLinearGradient = {
   __typename?: 'PaintLayerTypeLinearGradient';
   angle: Scalars['Int']['output'];
   repeating: Scalars['Boolean']['output'];
-  stops: PaintGradientStop[];
+  stops: Array<PaintGradientStop>;
 };
 
 export type PaintLayerTypeRadialGradient = {
   __typename?: 'PaintLayerTypeRadialGradient';
   repeating: Scalars['Boolean']['output'];
   shape: PaintRadialGradientShape;
-  stops: PaintGradientStop[];
+  stops: Array<PaintGradientStop>;
 };
 
 export type PaintLayerTypeSingleColor = {
@@ -1079,8 +1081,9 @@ export type PaintPermission = {
 export type PaintQuery = {
   __typename?: 'PaintQuery';
   paint?: Maybe<Paint>;
-  paints: Paint[];
+  paints: Array<Paint>;
 };
+
 
 export type PaintQueryPaintArgs = {
   id: Scalars['Id']['input'];
@@ -1088,7 +1091,7 @@ export type PaintQueryPaintArgs = {
 
 export enum PaintRadialGradientShape {
   Circle = 'CIRCLE',
-  Ellipse = 'ELLIPSE',
+  Ellipse = 'ELLIPSE'
 }
 
 export type PaintShadow = {
@@ -1123,7 +1126,7 @@ export enum Platform {
   Discord = 'DISCORD',
   Google = 'GOOGLE',
   Kick = 'KICK',
-  Twitch = 'TWITCH',
+  Twitch = 'TWITCH'
 }
 
 export type Price = {
@@ -1148,6 +1151,7 @@ export type ProductMutation = {
   create: Product;
 };
 
+
 export type ProductMutationCreateArgs = {
   data: CreateProductInput;
 };
@@ -1155,8 +1159,9 @@ export type ProductMutationCreateArgs = {
 export type ProductQuery = {
   __typename?: 'ProductQuery';
   subscriptionProduct?: Maybe<SubscriptionProduct>;
-  subscriptionProducts: SubscriptionProduct[];
+  subscriptionProducts: Array<SubscriptionProduct>;
 };
+
 
 export type ProductQuerySubscriptionProductArgs = {
   id: Scalars['Id']['input'];
@@ -1181,6 +1186,7 @@ export type Query = {
   redeemCodes: RedeemCodeQuery;
   roles: RoleQuery;
   search: SearchQuery;
+  shop: ShopQuery;
   specialEvents: SpecialEventQuery;
   store: StoreQuery;
   users: UserQuery;
@@ -1193,13 +1199,13 @@ export enum Ranking {
   TopWeekly = 'TOP_WEEKLY',
   TrendingDaily = 'TRENDING_DAILY',
   TrendingMonthly = 'TRENDING_MONTHLY',
-  TrendingWeekly = 'TRENDING_WEEKLY',
+  TrendingWeekly = 'TRENDING_WEEKLY'
 }
 
 export type RawEntitlements = {
   __typename?: 'RawEntitlements';
-  edges: EntitlementEdgeAnyAny[];
-  nodes: EntitlementNodeAny[];
+  edges: Array<EntitlementEdgeAnyAny>;
+  nodes: Array<EntitlementNodeAny>;
 };
 
 export type RedeemCode = {
@@ -1216,24 +1222,27 @@ export type RedeemCode = {
   remainingUses: Scalars['Int']['output'];
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
   subscriptionEffect?: Maybe<RedeemCodeSubscriptionEffect>;
-  tags: Scalars['String']['output'][];
+  tags: Array<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
 };
 
 export type RedeemCodeMutation = {
   __typename?: 'RedeemCodeMutation';
   create: RedeemCode;
-  createBatch: RedeemCode[];
+  createBatch: Array<RedeemCode>;
   redeemCode: RedeemCodeOperation;
 };
+
 
 export type RedeemCodeMutationCreateArgs = {
   data: CreateRedeemCodeInput;
 };
 
+
 export type RedeemCodeMutationCreateBatchArgs = {
   data: CreateRedeemCodeBatchInput;
 };
+
 
 export type RedeemCodeMutationRedeemCodeArgs = {
   id: Scalars['Id']['input'];
@@ -1250,9 +1259,11 @@ export type RedeemCodeQuery = {
   redeemCodes: RedeemCodeSearchResult;
 };
 
+
 export type RedeemCodeQueryRedeemCodeArgs = {
   id: Scalars['Id']['input'];
 };
+
 
 export type RedeemCodeQueryRedeemCodesArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
@@ -1263,7 +1274,7 @@ export type RedeemCodeQueryRedeemCodesArgs = {
 
 export type RedeemCodeSearchResult = {
   __typename?: 'RedeemCodeSearchResult';
-  items: RedeemCode[];
+  items: Array<RedeemCode>;
   pageCount: Scalars['Int']['output'];
   totalCount: Scalars['Int']['output'];
 };
@@ -1296,7 +1307,7 @@ export type Role = {
   id: Scalars['Id']['output'];
   name: Scalars['String']['output'];
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  tags: Scalars['String']['output'][];
+  tags: Array<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
 };
 
@@ -1309,13 +1320,14 @@ export type RolePermission = {
 
 export type RoleQuery = {
   __typename?: 'RoleQuery';
-  roles: Role[];
+  roles: Array<Role>;
 };
 
 export type SearchQuery = {
   __typename?: 'SearchQuery';
   all: SearchResultAll;
 };
+
 
 export type SearchQueryAllArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
@@ -1327,6 +1339,45 @@ export type SearchResultAll = {
   __typename?: 'SearchResultAll';
   emotes: EmoteSearchResult;
   users: UserSearchResult;
+};
+
+export type ShopItem = {
+  __typename?: 'ShopItem';
+  id: Scalars['Id']['output'];
+  type: Scalars['String']['output'];
+};
+
+export enum ShopItemType {
+  Badge = 'BADGE',
+  Bundle = 'BUNDLE',
+  Paint = 'PAINT'
+}
+
+export type ShopProduct = {
+  __typename?: 'ShopProduct';
+  createdAt: Scalars['DateTime']['output'];
+  currencyPrices: Scalars['JSON']['output'];
+  defaultCurrency: Scalars['String']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  discount?: Maybe<Scalars['JSON']['output']>;
+  id: Scalars['Id']['output'];
+  items: Array<ShopItem>;
+  name: Scalars['String']['output'];
+  searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
+  type: ShopItemType;
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type ShopProductsResult = {
+  __typename?: 'ShopProductsResult';
+  badges: Array<ShopProduct>;
+  bundles: Array<ShopProduct>;
+  paints: Array<ShopProduct>;
+};
+
+export type ShopQuery = {
+  __typename?: 'ShopQuery';
+  shopProducts: ShopProductsResult;
 };
 
 export type Sort = {
@@ -1343,12 +1394,12 @@ export enum SortBy {
   TrendingDaily = 'TRENDING_DAILY',
   TrendingMonthly = 'TRENDING_MONTHLY',
   TrendingWeekly = 'TRENDING_WEEKLY',
-  UploadDate = 'UPLOAD_DATE',
+  UploadDate = 'UPLOAD_DATE'
 }
 
 export enum SortOrder {
   Ascending = 'ASCENDING',
-  Descending = 'DESCENDING',
+  Descending = 'DESCENDING'
 }
 
 export type SpecialEvent = {
@@ -1360,7 +1411,7 @@ export type SpecialEvent = {
   id: Scalars['Id']['output'];
   name: Scalars['String']['output'];
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  tags: Scalars['String']['output'][];
+  tags: Array<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
 };
 
@@ -1369,18 +1420,19 @@ export type SpecialEventMutation = {
   create: SpecialEvent;
 };
 
+
 export type SpecialEventMutationCreateArgs = {
   data: CreateSpecialEventInput;
 };
 
 export type SpecialEventQuery = {
   __typename?: 'SpecialEventQuery';
-  specialEvents: SpecialEvent[];
+  specialEvents: Array<SpecialEvent>;
 };
 
 export type StoreQuery = {
   __typename?: 'StoreQuery';
-  monthlyPaints: Paint[];
+  monthlyPaints: Array<Paint>;
 };
 
 export type SubscribeResponse = {
@@ -1414,7 +1466,7 @@ export type SubscriptionInfo = {
   __typename?: 'SubscriptionInfo';
   activePeriod?: Maybe<SubscriptionPeriod>;
   endDate?: Maybe<Scalars['DateTime']['output']>;
-  periods: SubscriptionPeriod[];
+  periods: Array<SubscriptionPeriod>;
   totalDays: Scalars['Int']['output'];
 };
 
@@ -1438,10 +1490,7 @@ export type SubscriptionPeriod = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
-export type SubscriptionPeriodCreatedBy =
-  | SubscriptionPeriodCreatedByInvoice
-  | SubscriptionPeriodCreatedByRedeemCode
-  | SubscriptionPeriodCreatedBySystem;
+export type SubscriptionPeriodCreatedBy = SubscriptionPeriodCreatedByInvoice | SubscriptionPeriodCreatedByRedeemCode | SubscriptionPeriodCreatedBySystem;
 
 export type SubscriptionPeriodCreatedByInvoice = {
   __typename?: 'SubscriptionPeriodCreatedByInvoice';
@@ -1460,7 +1509,7 @@ export type SubscriptionPeriodCreatedBySystem = {
 
 export type SubscriptionProduct = {
   __typename?: 'SubscriptionProduct';
-  benefits: SubscriptionBenefit[];
+  benefits: Array<SubscriptionBenefit>;
   defaultVariant: SubscriptionProductVariant;
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['Id']['output'];
@@ -1468,12 +1517,12 @@ export type SubscriptionProduct = {
   providerId: Scalars['String']['output'];
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
   updatedAt: Scalars['DateTime']['output'];
-  variants: SubscriptionProductVariant[];
+  variants: Array<SubscriptionProductVariant>;
 };
 
 export enum SubscriptionProductKind {
   Monthly = 'MONTHLY',
-  Yearly = 'YEARLY',
+  Yearly = 'YEARLY'
 }
 
 export type SubscriptionProductVariant = {
@@ -1484,29 +1533,30 @@ export type SubscriptionProductVariant = {
   price: Price;
 };
 
+
 export type SubscriptionProductVariantPriceArgs = {
   preferredCurrency?: InputMaybe<Scalars['String']['input']>;
 };
 
 export enum SubscriptionProvider {
   PayPal = 'PAY_PAL',
-  Stripe = 'STRIPE',
+  Stripe = 'STRIPE'
 }
 
 export enum SubscriptionState {
   Active = 'ACTIVE',
   CancelAtEnd = 'CANCEL_AT_END',
-  Ended = 'ENDED',
+  Ended = 'ENDED'
 }
 
 export type Tags = {
   match: TagsMatch;
-  tags: Scalars['String']['input'][];
+  tags: Array<Scalars['String']['input']>;
 };
 
 export enum TagsMatch {
   All = 'ALL',
-  Any = 'ANY',
+  Any = 'ANY'
 }
 
 export type Ticket = {
@@ -1516,12 +1566,12 @@ export type Ticket = {
   id: Scalars['Id']['output'];
   kind: TicketKind;
   locked: Scalars['Boolean']['output'];
-  members: TicketMember[];
+  members: Array<TicketMember>;
   open: Scalars['Boolean']['output'];
   priority: TicketPriority;
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  tags: Scalars['String']['output'][];
-  targets: TicketTarget[];
+  tags: Array<Scalars['String']['output']>;
+  targets: Array<TicketTarget>;
   title: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
 };
@@ -1529,7 +1579,7 @@ export type Ticket = {
 export enum TicketKind {
   Abuse = 'ABUSE',
   Billing = 'BILLING',
-  Generic = 'GENERIC',
+  Generic = 'GENERIC'
 }
 
 export type TicketMember = {
@@ -1543,13 +1593,14 @@ export type TicketMember = {
 export enum TicketMemberKind {
   Assigned = 'ASSIGNED',
   Member = 'MEMBER',
-  Watcher = 'WATCHER',
+  Watcher = 'WATCHER'
 }
 
 export type TicketMutation = {
   __typename?: 'TicketMutation';
   createAbuseTicket: Ticket;
 };
+
 
 export type TicketMutationCreateAbuseTicketArgs = {
   content?: InputMaybe<Scalars['String']['input']>;
@@ -1571,7 +1622,7 @@ export enum TicketPriority {
   High = 'HIGH',
   Low = 'LOW',
   Medium = 'MEDIUM',
-  Urgent = 'URGENT',
+  Urgent = 'URGENT'
 }
 
 export type TicketTarget = {
@@ -1588,7 +1639,7 @@ export type TicketTargetInput = {
 export enum TicketTargetType {
   Emote = 'EMOTE',
   EmoteSet = 'EMOTE_SET',
-  User = 'USER',
+  User = 'USER'
 }
 
 export type TimePeriod = {
@@ -1605,45 +1656,49 @@ export type TimePeriodInput = {
 export type User = {
   __typename?: 'User';
   billing: Billing;
-  connections: UserConnection[];
+  connections: Array<UserConnection>;
   createdAt: Scalars['DateTime']['output'];
-  editableEmoteSetIds: Scalars['Id']['output'][];
-  editorFor: UserEditor[];
-  editors: UserEditor[];
-  emoteSets: EmoteSet[];
-  events: UserEvent[];
+  editableEmoteSetIds: Array<Scalars['Id']['output']>;
+  editorFor: Array<UserEditor>;
+  editors: Array<UserEditor>;
+  emoteSets: Array<EmoteSet>;
+  events: Array<UserEvent>;
   highestRoleColor?: Maybe<Color>;
   highestRoleRank: Scalars['Int']['output'];
   id: Scalars['Id']['output'];
   inventory: UserInventory;
   mainConnection?: Maybe<UserConnection>;
-  ownedEmoteSets: EmoteSet[];
-  ownedEmotes: Emote[];
+  ownedEmoteSets: Array<EmoteSet>;
+  ownedEmotes: Array<Emote>;
   permissions: Permissions;
   personalEmoteSet?: Maybe<EmoteSet>;
   rawEntitlements: RawEntitlements;
-  relatedEvents: AnyEvent[];
-  roleIds: Scalars['Id']['output'][];
-  roles: Role[];
+  relatedEvents: Array<AnyEvent>;
+  roleIds: Array<Scalars['Id']['output']>;
+  roles: Array<Role>;
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
-  specialEmoteSets: EmoteSet[];
+  specialEmoteSets: Array<EmoteSet>;
   stripeCustomerId?: Maybe<Scalars['CustomerId']['output']>;
   style: UserStyle;
   updatedAt: Scalars['DateTime']['output'];
 };
 
+
 export type UserBillingArgs = {
   productId: Scalars['Id']['input'];
 };
+
 
 export type UserEventsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   perPage?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
 export type UserInventoryArgs = {
   includeInaccessible?: Scalars['Boolean']['input'];
 };
+
 
 export type UserRelatedEventsArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
@@ -1683,11 +1738,13 @@ export type UserEditorMutation = {
   editor: UserEditorOperation;
 };
 
+
 export type UserEditorMutationCreateArgs = {
   editorId: Scalars['Id']['input'];
   permissions: UserEditorPermissionsInput;
   userId: Scalars['Id']['input'];
 };
+
 
 export type UserEditorMutationEditorArgs = {
   editorId: Scalars['Id']['input'];
@@ -1701,9 +1758,11 @@ export type UserEditorOperation = {
   updateState: UserEditor;
 };
 
+
 export type UserEditorOperationUpdatePermissionsArgs = {
   permissions: UserEditorPermissionsInput;
 };
+
 
 export type UserEditorOperationUpdateStateArgs = {
   state: UserEditorUpdateState;
@@ -1727,12 +1786,12 @@ export type UserEditorPermissionsInput = {
 export enum UserEditorState {
   Accepted = 'ACCEPTED',
   Pending = 'PENDING',
-  Rejected = 'REJECTED',
+  Rejected = 'REJECTED'
 }
 
 export enum UserEditorUpdateState {
   Accept = 'ACCEPT',
-  Reject = 'REJECT',
+  Reject = 'REJECT'
 }
 
 export type UserEvent = {
@@ -1750,15 +1809,16 @@ export type UserEvent = {
 
 export type UserInventory = {
   __typename?: 'UserInventory';
-  badges: InventoryEntitlementEdgeAnyBadge[];
-  paints: InventoryEntitlementEdgeAnyPaint[];
-  products: InventoryEntitlementEdgeAnyProduct[];
+  badges: Array<InventoryEntitlementEdgeAnyBadge>;
+  paints: Array<InventoryEntitlementEdgeAnyPaint>;
+  products: Array<InventoryEntitlementEdgeAnyProduct>;
 };
 
 export type UserMutation = {
   __typename?: 'UserMutation';
   user: UserOperation;
 };
+
 
 export type UserMutationUserArgs = {
   id: Scalars['Id']['input'];
@@ -1776,26 +1836,32 @@ export type UserOperation = {
   removeProfilePicture: User;
 };
 
+
 export type UserOperationActiveBadgeArgs = {
   badgeId?: InputMaybe<Scalars['Id']['input']>;
 };
+
 
 export type UserOperationActiveEmoteSetArgs = {
   emoteSetId?: InputMaybe<Scalars['Id']['input']>;
 };
 
+
 export type UserOperationActivePaintArgs = {
   paintId?: InputMaybe<Scalars['Id']['input']>;
 };
+
 
 export type UserOperationMainConnectionArgs = {
   platform: Platform;
   platformId: Scalars['String']['input'];
 };
 
+
 export type UserOperationManuallyLinkKickArgs = {
   kickChannel: KickLinkInput;
 };
+
 
 export type UserOperationRemoveConnectionArgs = {
   platform: Platform;
@@ -1822,7 +1888,7 @@ export type UserPermission = {
 export type UserProfilePicture = {
   __typename?: 'UserProfilePicture';
   id: Scalars['Id']['output'];
-  images: Image[];
+  images: Array<Image>;
   updatedAt: Scalars['DateTime']['output'];
   userId: Scalars['Id']['output'];
 };
@@ -1835,15 +1901,18 @@ export type UserQuery = {
   userByConnection?: Maybe<User>;
 };
 
+
 export type UserQuerySearchArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
   perPage?: InputMaybe<Scalars['Int']['input']>;
   query: Scalars['String']['input'];
 };
 
+
 export type UserQueryUserArgs = {
   id: Scalars['Id']['input'];
 };
+
 
 export type UserQueryUserByConnectionArgs = {
   platform: Platform;
@@ -1852,7 +1921,7 @@ export type UserQueryUserByConnectionArgs = {
 
 export type UserSearchResult = {
   __typename?: 'UserSearchResult';
-  items: User[];
+  items: Array<User>;
   pageCount: Scalars['Int']['output'];
   totalCount: Scalars['Int']['output'];
 };
@@ -1861,6 +1930,7 @@ export type UserSessionMutation = {
   __typename?: 'UserSessionMutation';
   create: Scalars['String']['output'];
 };
+
 
 export type UserSessionMutationCreateArgs = {
   expiresAt: Scalars['DateTime']['input'];
@@ -1885,2214 +1955,106 @@ export type _Service = {
   sdl?: Maybe<Scalars['String']['output']>;
 };
 
-export type ImageFragmentFragment = {
-  __typename?: 'Image';
-  url: string;
-  mime: string;
-  size: number;
-  scale: number;
-  width: number;
-  height: number;
-  frameCount: number;
-};
+export type ImageFragmentFragment = { __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number };
+
+export type PaintDataFragmentFragment = { __typename?: 'PaintData', layers: Array<{ __typename?: 'PaintLayer', id: string, opacity: number, ty:
+      | { __typename?: 'PaintLayerTypeImage', images: Array<{ __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number }> }
+      | { __typename?: 'PaintLayerTypeLinearGradient', angle: number, repeating: boolean, stops: Array<{ __typename?: 'PaintGradientStop', at: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> }
+      | { __typename?: 'PaintLayerTypeRadialGradient', repeating: boolean, shape: PaintRadialGradientShape, stops: Array<{ __typename?: 'PaintGradientStop', at: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> }
+      | { __typename?: 'PaintLayerTypeSingleColor', color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }
+     }>, shadows: Array<{ __typename?: 'PaintShadow', offsetX: number, offsetY: number, blur: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> };
 
 export type BadgeQueryQueryVariables = Exact<{
   id: Scalars['Id']['input'];
 }>;
 
-export type BadgeQueryQuery = {
-  __typename?: 'Query';
-  badges: {
-    __typename?: 'BadgeQuery';
-    badge?: {
-      __typename?: 'Badge';
-      id: string;
-      name: string;
-      description?: string | null;
-      tags: string[];
-      createdById: string;
-      updatedAt: string;
-      searchUpdatedAt?: string | null;
-      images: {
-        __typename?: 'Image';
-        url: string;
-        mime: string;
-        size: number;
-        scale: number;
-        width: number;
-        height: number;
-        frameCount: number;
-      }[];
-    } | null;
-  };
-};
 
-export type BadgesQueryQueryVariables = Exact<{ [key: string]: never }>;
+export type BadgeQueryQuery = { __typename?: 'Query', badges: { __typename?: 'BadgeQuery', badge?: { __typename?: 'Badge', id: string, name: string, description?: string | null, tags: Array<string>, createdById: string, updatedAt: string, searchUpdatedAt?: string | null, images: Array<{ __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number }> } | null } };
 
-export type BadgesQueryQuery = {
-  __typename?: 'Query';
-  badges: {
-    __typename?: 'BadgeQuery';
-    badges: {
-      __typename?: 'Badge';
-      id: string;
-      name: string;
-      description?: string | null;
-      tags: string[];
-      createdById: string;
-      updatedAt: string;
-      searchUpdatedAt?: string | null;
-      images: {
-        __typename?: 'Image';
-        url: string;
-        mime: string;
-        size: number;
-        scale: number;
-        width: number;
-        height: number;
-        frameCount: number;
-      }[];
-    }[];
-  };
-};
+export type BadgesQueryQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type BadgesQueryQuery = { __typename?: 'Query', badges: { __typename?: 'BadgeQuery', badges: Array<{ __typename?: 'Badge', id: string, name: string, description?: string | null, tags: Array<string>, createdById: string, updatedAt: string, searchUpdatedAt?: string | null, images: Array<{ __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number }> }> } };
 
 export type EmoteQueryQueryVariables = Exact<{
   id: Scalars['Id']['input'];
 }>;
 
-export type EmoteQueryQuery = {
-  __typename?: 'Query';
-  emotes: {
-    __typename?: 'EmoteQuery';
-    emote?: {
-      __typename?: 'Emote';
-      id: string;
-      defaultName: string;
-      tags: string[];
-      flags: {
-        __typename?: 'EmoteFlags';
-        animated: boolean;
-        defaultZeroWidth: boolean;
-        publicListed: boolean;
-      };
-      images: {
-        __typename?: 'Image';
-        url: string;
-        mime: string;
-        size: number;
-        scale: number;
-        width: number;
-        height: number;
-        frameCount: number;
-      }[];
-      owner?: {
-        __typename?: 'User';
-        id: string;
-        mainConnection?: {
-          __typename?: 'UserConnection';
-          platformDisplayName: string;
-        } | null;
-      } | null;
-    } | null;
-  };
-};
+
+export type EmoteQueryQuery = { __typename?: 'Query', emotes: { __typename?: 'EmoteQuery', emote?: { __typename?: 'Emote', id: string, defaultName: string, tags: Array<string>, flags: { __typename?: 'EmoteFlags', animated: boolean, defaultZeroWidth: boolean, publicListed: boolean }, images: Array<{ __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number }>, owner?: { __typename?: 'User', id: string, mainConnection?: { __typename?: 'UserConnection', platformDisplayName: string } | null } | null } | null } };
 
 export type EmoteSetCustomQueryVariables = Exact<{
   id: Scalars['Id']['input'];
 }>;
 
-export type EmoteSetCustomQuery = {
-  __typename?: 'Query';
-  emoteSets: {
-    __typename?: 'EmoteSetQuery';
-    emoteSet?: {
-      __typename?: 'EmoteSet';
-      id: string;
-      name: string;
-      capacity?: number | null;
-      ownerId?: string | null;
-      kind: EmoteSetKind;
-      updatedAt: string;
-      emotes: {
-        __typename?: 'EmoteSetEmoteSearchResult';
-        totalCount: number;
-        items: {
-          __typename?: 'EmoteSetEmote';
-          id: string;
-          alias: string;
-          addedById?: string | null;
-          emote: {
-            __typename?: 'Emote';
-            id: string;
-            tags: string[];
-            aspectRatio: number;
-            images: {
-              __typename?: 'Image';
-              url: string;
-              mime: string;
-              size: number;
-              scale: number;
-              width: number;
-              height: number;
-              frameCount: number;
-            }[];
-          };
-          flags: { __typename?: 'EmoteSetEmoteFlags'; zeroWidth: boolean };
-        }[];
-      };
-    } | null;
-  };
-};
+
+export type EmoteSetCustomQuery = { __typename?: 'Query', emoteSets: { __typename?: 'EmoteSetQuery', emoteSet?: { __typename?: 'EmoteSet', id: string, name: string, capacity?: number | null, ownerId?: string | null, kind: EmoteSetKind, updatedAt: string, emotes: { __typename?: 'EmoteSetEmoteSearchResult', totalCount: number, items: Array<{ __typename?: 'EmoteSetEmote', id: string, alias: string, addedById?: string | null, emote: { __typename?: 'Emote', id: string, tags: Array<string>, aspectRatio: number, images: Array<{ __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number }> }, flags: { __typename?: 'EmoteSetEmoteFlags', zeroWidth: boolean } }> } } | null } };
 
 export type PaintQueryQueryVariables = Exact<{
   id: Scalars['Id']['input'];
 }>;
 
-export type PaintQueryQuery = {
-  __typename?: 'Query';
-  paints: {
-    __typename?: 'PaintQuery';
-    paint?: {
-      __typename?: 'Paint';
-      id: string;
-      name: string;
-      description?: string | null;
-      tags: string[];
-      createdById: string;
-      updatedAt: string;
-      data: {
-        __typename?: 'PaintData';
-        layers: {
-          __typename?: 'PaintLayer';
-          id: string;
-          opacity: number;
-        }[];
-        shadows: {
-          __typename?: 'PaintShadow';
-          offsetX: number;
-          offsetY: number;
-          blur: number;
-          color: {
-            __typename?: 'Color';
-            hex: string;
-            r: number;
-            g: number;
-            b: number;
-            a: number;
-          };
-        }[];
-      };
-    } | null;
-  };
-};
 
-export type PaintsQueryQueryVariables = Exact<{ [key: string]: never }>;
+export type PaintQueryQuery = { __typename?: 'Query', paints: { __typename?: 'PaintQuery', paint?: { __typename?: 'Paint', id: string, name: string, description?: string | null, tags: Array<string>, createdById: string, updatedAt: string, data: { __typename?: 'PaintData', layers: Array<{ __typename?: 'PaintLayer', id: string, opacity: number, ty:
+            | { __typename?: 'PaintLayerTypeImage', images: Array<{ __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number }> }
+            | { __typename?: 'PaintLayerTypeLinearGradient', angle: number, repeating: boolean, stops: Array<{ __typename?: 'PaintGradientStop', at: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> }
+            | { __typename?: 'PaintLayerTypeRadialGradient', repeating: boolean, shape: PaintRadialGradientShape, stops: Array<{ __typename?: 'PaintGradientStop', at: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> }
+            | { __typename?: 'PaintLayerTypeSingleColor', color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }
+           }>, shadows: Array<{ __typename?: 'PaintShadow', offsetX: number, offsetY: number, blur: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> } } | null } };
 
-export type PaintsQueryQuery = {
-  __typename?: 'Query';
-  paints: {
-    __typename?: 'PaintQuery';
-    paints: {
-      __typename?: 'Paint';
-      id: string;
-      name: string;
-      description?: string | null;
-      tags: string[];
-      createdById: string;
-      updatedAt: string;
-      data: {
-        __typename?: 'PaintData';
-        layers: {
-          __typename?: 'PaintLayer';
-          id: string;
-          opacity: number;
-        }[];
-        shadows: {
-          __typename?: 'PaintShadow';
-          offsetX: number;
-          offsetY: number;
-          blur: number;
-          color: {
-            __typename?: 'Color';
-            hex: string;
-            r: number;
-            g: number;
-            b: number;
-            a: number;
-          };
-        }[];
-      };
-    }[];
-  };
-};
+export type PaintsQueryQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type PaintsQueryQuery = { __typename?: 'Query', paints: { __typename?: 'PaintQuery', paints: Array<{ __typename?: 'Paint', id: string, name: string, description?: string | null, tags: Array<string>, createdById: string, updatedAt: string, data: { __typename?: 'PaintData', layers: Array<{ __typename?: 'PaintLayer', id: string, opacity: number, ty:
+            | { __typename?: 'PaintLayerTypeImage', images: Array<{ __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number }> }
+            | { __typename?: 'PaintLayerTypeLinearGradient', angle: number, repeating: boolean, stops: Array<{ __typename?: 'PaintGradientStop', at: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> }
+            | { __typename?: 'PaintLayerTypeRadialGradient', repeating: boolean, shape: PaintRadialGradientShape, stops: Array<{ __typename?: 'PaintGradientStop', at: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> }
+            | { __typename?: 'PaintLayerTypeSingleColor', color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }
+           }>, shadows: Array<{ __typename?: 'PaintShadow', offsetX: number, offsetY: number, blur: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> } }> } };
 
 export type UserByConnectionQueryVariables = Exact<{
   platformId: Scalars['String']['input'];
 }>;
 
-export type UserByConnectionQuery = {
-  __typename?: 'Query';
-  users: {
-    __typename?: 'UserQuery';
-    userByConnection?: {
-      __typename?: 'User';
-      id: string;
-      emoteSets: {
-        __typename?: 'EmoteSet';
-        id: string;
-        name: string;
-        kind: EmoteSetKind;
-      }[];
-    } | null;
-  };
-};
+
+export type UserByConnectionQuery = { __typename?: 'Query', users: { __typename?: 'UserQuery', userByConnection?: { __typename?: 'User', id: string, emoteSets: Array<{ __typename?: 'EmoteSet', id: string, name: string, kind: EmoteSetKind }> } | null } };
 
 export type UserCosmeticsQueryVariables = Exact<{
   id: Scalars['Id']['input'];
 }>;
 
-export type UserCosmeticsQuery = {
-  __typename?: 'Query';
-  users: {
-    __typename?: 'UserQuery';
-    user?: {
-      __typename?: 'User';
-      id: string;
-      connections: {
-        __typename?: 'UserConnection';
-        platform: Platform;
-        platformId: string;
-        platformDisplayName: string;
-      }[];
-      style: {
-        __typename?: 'UserStyle';
-        activePaintId?: string | null;
-        activeBadgeId?: string | null;
-        activePaint?: {
-          __typename?: 'Paint';
-          id: string;
-          name: string;
-          data: {
-            __typename?: 'PaintData';
-            layers: {
-              __typename?: 'PaintLayer';
-              id: string;
-              opacity: number;
-              ty:
-                | {
-                    __typename?: 'PaintLayerTypeImage';
-                    images: {
-                      __typename?: 'Image';
-                      url: string;
-                      mime: string;
-                      size: number;
-                      scale: number;
-                      width: number;
-                      height: number;
-                      frameCount: number;
-                    }[];
-                  }
-                | {
-                    __typename?: 'PaintLayerTypeLinearGradient';
-                    angle: number;
-                    repeating: boolean;
-                    stops: {
-                      __typename?: 'PaintGradientStop';
-                      at: number;
-                      color: {
-                        __typename?: 'Color';
-                        r: number;
-                        g: number;
-                        b: number;
-                        a: number;
-                      };
-                    }[];
-                  }
-                | {
-                    __typename?: 'PaintLayerTypeRadialGradient';
-                    repeating: boolean;
-                    shape: PaintRadialGradientShape;
-                    stops: {
-                      __typename?: 'PaintGradientStop';
-                      at: number;
-                      color: {
-                        __typename?: 'Color';
-                        r: number;
-                        g: number;
-                        b: number;
-                        a: number;
-                      };
-                    }[];
-                  }
-                | {
-                    __typename?: 'PaintLayerTypeSingleColor';
-                    color: {
-                      __typename?: 'Color';
-                      r: number;
-                      g: number;
-                      b: number;
-                      a: number;
-                    };
-                  };
-            }[];
-            shadows: {
-              __typename?: 'PaintShadow';
-              offsetX: number;
-              offsetY: number;
-              blur: number;
-              color: {
-                __typename?: 'Color';
-                r: number;
-                g: number;
-                b: number;
-                a: number;
-              };
-            }[];
-          };
-        } | null;
-        activeBadge?: {
-          __typename?: 'Badge';
-          id: string;
-          name: string;
-          description?: string | null;
-          images: {
-            __typename?: 'Image';
-            url: string;
-            mime: string;
-            size: number;
-            scale: number;
-            width: number;
-            height: number;
-            frameCount: number;
-          }[];
-        } | null;
-      };
-    } | null;
-  };
-};
+
+export type UserCosmeticsQuery = { __typename?: 'Query', users: { __typename?: 'UserQuery', user?: { __typename?: 'User', id: string, connections: Array<{ __typename?: 'UserConnection', platform: Platform, platformId: string, platformDisplayName: string }>, style: { __typename?: 'UserStyle', activePaintId?: string | null, activeBadgeId?: string | null, activePaint?: { __typename?: 'Paint', id: string, name: string, data: { __typename?: 'PaintData', layers: Array<{ __typename?: 'PaintLayer', id: string, opacity: number, ty:
+                | { __typename?: 'PaintLayerTypeImage', images: Array<{ __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number }> }
+                | { __typename?: 'PaintLayerTypeLinearGradient', angle: number, repeating: boolean, stops: Array<{ __typename?: 'PaintGradientStop', at: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> }
+                | { __typename?: 'PaintLayerTypeRadialGradient', repeating: boolean, shape: PaintRadialGradientShape, stops: Array<{ __typename?: 'PaintGradientStop', at: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> }
+                | { __typename?: 'PaintLayerTypeSingleColor', color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }
+               }>, shadows: Array<{ __typename?: 'PaintShadow', offsetX: number, offsetY: number, blur: number, color: { __typename?: 'Color', r: number, g: number, b: number, a: number } }> } } | null, activeBadge?: { __typename?: 'Badge', id: string, name: string, description?: string | null, images: Array<{ __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number }> } | null } } | null } };
 
 export type UserPersonalEmotesQueryQueryVariables = Exact<{
   platformId: Scalars['String']['input'];
 }>;
 
-export type UserPersonalEmotesQueryQuery = {
-  __typename?: 'Query';
-  users: {
-    __typename?: 'UserQuery';
-    userByConnection?: {
-      __typename?: 'User';
-      id: string;
-      personalEmoteSet?: {
-        __typename?: 'EmoteSet';
-        id: string;
-        name: string;
-        emotes: {
-          __typename?: 'EmoteSetEmoteSearchResult';
-          items: {
-            __typename?: 'EmoteSetEmote';
-            id: string;
-            alias: string;
-            emote: {
-              __typename?: 'Emote';
-              id: string;
-              defaultName: string;
-              flags: {
-                __typename?: 'EmoteFlags';
-                animated: boolean;
-                approvedPersonal: boolean;
-                defaultZeroWidth: boolean;
-              };
-              images: {
-                __typename?: 'Image';
-                url: string;
-                mime: string;
-                size: number;
-                scale: number;
-                width: number;
-                height: number;
-                frameCount: number;
-              }[];
-              owner?: {
-                __typename?: 'User';
-                id: string;
-                mainConnection?: {
-                  __typename?: 'UserConnection';
-                  platformDisplayName: string;
-                } | null;
-              } | null;
-            };
-          }[];
-        };
-      } | null;
-    } | null;
-  };
-};
 
-export const ImageFragmentFragmentDoc = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'ImageFragment' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'Image' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'mime' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'size' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'scale' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'width' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'height' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'frameCount' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode;
-export const BadgeQueryDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'BadgeQuery' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Id' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'badges' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'badge' },
-                  arguments: [
-                    {
-                      kind: 'Argument',
-                      name: { kind: 'Name', value: 'id' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'id' },
-                      },
-                    },
-                  ],
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'description' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'tags' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'images' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'FragmentSpread',
-                              name: { kind: 'Name', value: 'ImageFragment' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'createdById' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'updatedAt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'searchUpdatedAt' },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'ImageFragment' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'Image' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'mime' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'size' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'scale' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'width' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'height' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'frameCount' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode;
-export type BadgeQueryQueryResult = Apollo.QueryResult<
-  BadgeQueryQuery,
-  BadgeQueryQueryVariables
->;
-export const BadgesQueryDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'BadgesQuery' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'badges' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'badges' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'description' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'tags' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'images' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'FragmentSpread',
-                              name: { kind: 'Name', value: 'ImageFragment' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'createdById' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'updatedAt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'searchUpdatedAt' },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'ImageFragment' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'Image' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'mime' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'size' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'scale' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'width' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'height' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'frameCount' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode;
-export type BadgesQueryQueryResult = Apollo.QueryResult<
-  BadgesQueryQuery,
-  BadgesQueryQueryVariables
->;
-export const EmoteQueryDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'EmoteQuery' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Id' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'emotes' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'emote' },
-                  arguments: [
-                    {
-                      kind: 'Argument',
-                      name: { kind: 'Name', value: 'id' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'id' },
-                      },
-                    },
-                  ],
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'defaultName' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'tags' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'flags' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'animated' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'defaultZeroWidth' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'publicListed' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'images' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'FragmentSpread',
-                              name: { kind: 'Name', value: 'ImageFragment' },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'owner' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'mainConnection' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: {
-                                      kind: 'Name',
-                                      value: 'platformDisplayName',
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'ImageFragment' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'Image' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'mime' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'size' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'scale' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'width' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'height' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'frameCount' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode;
-export type EmoteQueryQueryResult = Apollo.QueryResult<
-  EmoteQueryQuery,
-  EmoteQueryQueryVariables
->;
-export const EmoteSetCustomDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'emoteSetCustom' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Id' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'emoteSets' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'emoteSet' },
-                  arguments: [
-                    {
-                      kind: 'Argument',
-                      name: { kind: 'Name', value: 'id' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'id' },
-                      },
-                    },
-                  ],
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'capacity' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'ownerId' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'kind' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'updatedAt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'emotes' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'totalCount' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'items' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'alias' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'addedById' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'emote' },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'tags' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'aspectRatio',
-                                          },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'images',
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'FragmentSpread',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'ImageFragment',
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'flags' },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'zeroWidth',
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'ImageFragment' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'Image' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'mime' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'size' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'scale' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'width' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'height' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'frameCount' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode;
-export type EmoteSetCustomQueryResult = Apollo.QueryResult<
-  EmoteSetCustomQuery,
-  EmoteSetCustomQueryVariables
->;
-export const PaintQueryDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'PaintQuery' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Id' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'paints' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'paint' },
-                  arguments: [
-                    {
-                      kind: 'Argument',
-                      name: { kind: 'Name', value: 'id' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'id' },
-                      },
-                    },
-                  ],
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'description' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'tags' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'data' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'layers' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'opacity' },
-                                  },
-                                ],
-                              },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'shadows' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'color' },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'hex' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'r' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'g' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'b' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'a' },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'offsetX' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'offsetY' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'blur' },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'createdById' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'updatedAt' },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode;
-export type PaintQueryQueryResult = Apollo.QueryResult<
-  PaintQueryQuery,
-  PaintQueryQueryVariables
->;
-export const PaintsQueryDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'PaintsQuery' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'paints' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'paints' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'description' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'tags' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'data' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'layers' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'opacity' },
-                                  },
-                                ],
-                              },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'shadows' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'color' },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'hex' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'r' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'g' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'b' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'a' },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'offsetX' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'offsetY' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'blur' },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'createdById' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'updatedAt' },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode;
-export type PaintsQueryQueryResult = Apollo.QueryResult<
-  PaintsQueryQuery,
-  PaintsQueryQueryVariables
->;
-export const UserByConnectionDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'UserByConnection' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'platformId' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'users' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'userByConnection' },
-                  arguments: [
-                    {
-                      kind: 'Argument',
-                      name: { kind: 'Name', value: 'platform' },
-                      value: { kind: 'EnumValue', value: 'TWITCH' },
-                    },
-                    {
-                      kind: 'Argument',
-                      name: { kind: 'Name', value: 'platformId' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'platformId' },
-                      },
-                    },
-                  ],
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'emoteSets' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'kind' },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode;
-export type UserByConnectionQueryResult = Apollo.QueryResult<
-  UserByConnectionQuery,
-  UserByConnectionQueryVariables
->;
-export const UserCosmeticsDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'UserCosmetics' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'Id' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'users' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'user' },
-                  arguments: [
-                    {
-                      kind: 'Argument',
-                      name: { kind: 'Name', value: 'id' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'id' },
-                      },
-                    },
-                  ],
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'connections' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'platform' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'platformId' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: {
-                                kind: 'Name',
-                                value: 'platformDisplayName',
-                              },
-                            },
-                          ],
-                        },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'style' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'activePaintId' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'activeBadgeId' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'activePaint' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'data' },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'layers',
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'opacity',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'ty',
-                                                },
-                                                selectionSet: {
-                                                  kind: 'SelectionSet',
-                                                  selections: [
-                                                    {
-                                                      kind: 'InlineFragment',
-                                                      typeCondition: {
-                                                        kind: 'NamedType',
-                                                        name: {
-                                                          kind: 'Name',
-                                                          value:
-                                                            'PaintLayerTypeLinearGradient',
-                                                        },
-                                                      },
-                                                      selectionSet: {
-                                                        kind: 'SelectionSet',
-                                                        selections: [
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'angle',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value:
-                                                                'repeating',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'stops',
-                                                            },
-                                                            selectionSet: {
-                                                              kind: 'SelectionSet',
-                                                              selections: [
-                                                                {
-                                                                  kind: 'Field',
-                                                                  name: {
-                                                                    kind: 'Name',
-                                                                    value: 'at',
-                                                                  },
-                                                                },
-                                                                {
-                                                                  kind: 'Field',
-                                                                  name: {
-                                                                    kind: 'Name',
-                                                                    value:
-                                                                      'color',
-                                                                  },
-                                                                  selectionSet:
-                                                                    {
-                                                                      kind: 'SelectionSet',
-                                                                      selections:
-                                                                        [
-                                                                          {
-                                                                            kind: 'Field',
-                                                                            name: {
-                                                                              kind: 'Name',
-                                                                              value:
-                                                                                'r',
-                                                                            },
-                                                                          },
-                                                                          {
-                                                                            kind: 'Field',
-                                                                            name: {
-                                                                              kind: 'Name',
-                                                                              value:
-                                                                                'g',
-                                                                            },
-                                                                          },
-                                                                          {
-                                                                            kind: 'Field',
-                                                                            name: {
-                                                                              kind: 'Name',
-                                                                              value:
-                                                                                'b',
-                                                                            },
-                                                                          },
-                                                                          {
-                                                                            kind: 'Field',
-                                                                            name: {
-                                                                              kind: 'Name',
-                                                                              value:
-                                                                                'a',
-                                                                            },
-                                                                          },
-                                                                        ],
-                                                                    },
-                                                                },
-                                                              ],
-                                                            },
-                                                          },
-                                                        ],
-                                                      },
-                                                    },
-                                                    {
-                                                      kind: 'InlineFragment',
-                                                      typeCondition: {
-                                                        kind: 'NamedType',
-                                                        name: {
-                                                          kind: 'Name',
-                                                          value:
-                                                            'PaintLayerTypeRadialGradient',
-                                                        },
-                                                      },
-                                                      selectionSet: {
-                                                        kind: 'SelectionSet',
-                                                        selections: [
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value:
-                                                                'repeating',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'shape',
-                                                            },
-                                                          },
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'stops',
-                                                            },
-                                                            selectionSet: {
-                                                              kind: 'SelectionSet',
-                                                              selections: [
-                                                                {
-                                                                  kind: 'Field',
-                                                                  name: {
-                                                                    kind: 'Name',
-                                                                    value: 'at',
-                                                                  },
-                                                                },
-                                                                {
-                                                                  kind: 'Field',
-                                                                  name: {
-                                                                    kind: 'Name',
-                                                                    value:
-                                                                      'color',
-                                                                  },
-                                                                  selectionSet:
-                                                                    {
-                                                                      kind: 'SelectionSet',
-                                                                      selections:
-                                                                        [
-                                                                          {
-                                                                            kind: 'Field',
-                                                                            name: {
-                                                                              kind: 'Name',
-                                                                              value:
-                                                                                'r',
-                                                                            },
-                                                                          },
-                                                                          {
-                                                                            kind: 'Field',
-                                                                            name: {
-                                                                              kind: 'Name',
-                                                                              value:
-                                                                                'g',
-                                                                            },
-                                                                          },
-                                                                          {
-                                                                            kind: 'Field',
-                                                                            name: {
-                                                                              kind: 'Name',
-                                                                              value:
-                                                                                'b',
-                                                                            },
-                                                                          },
-                                                                          {
-                                                                            kind: 'Field',
-                                                                            name: {
-                                                                              kind: 'Name',
-                                                                              value:
-                                                                                'a',
-                                                                            },
-                                                                          },
-                                                                        ],
-                                                                    },
-                                                                },
-                                                              ],
-                                                            },
-                                                          },
-                                                        ],
-                                                      },
-                                                    },
-                                                    {
-                                                      kind: 'InlineFragment',
-                                                      typeCondition: {
-                                                        kind: 'NamedType',
-                                                        name: {
-                                                          kind: 'Name',
-                                                          value:
-                                                            'PaintLayerTypeSingleColor',
-                                                        },
-                                                      },
-                                                      selectionSet: {
-                                                        kind: 'SelectionSet',
-                                                        selections: [
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'color',
-                                                            },
-                                                            selectionSet: {
-                                                              kind: 'SelectionSet',
-                                                              selections: [
-                                                                {
-                                                                  kind: 'Field',
-                                                                  name: {
-                                                                    kind: 'Name',
-                                                                    value: 'r',
-                                                                  },
-                                                                },
-                                                                {
-                                                                  kind: 'Field',
-                                                                  name: {
-                                                                    kind: 'Name',
-                                                                    value: 'g',
-                                                                  },
-                                                                },
-                                                                {
-                                                                  kind: 'Field',
-                                                                  name: {
-                                                                    kind: 'Name',
-                                                                    value: 'b',
-                                                                  },
-                                                                },
-                                                                {
-                                                                  kind: 'Field',
-                                                                  name: {
-                                                                    kind: 'Name',
-                                                                    value: 'a',
-                                                                  },
-                                                                },
-                                                              ],
-                                                            },
-                                                          },
-                                                        ],
-                                                      },
-                                                    },
-                                                    {
-                                                      kind: 'InlineFragment',
-                                                      typeCondition: {
-                                                        kind: 'NamedType',
-                                                        name: {
-                                                          kind: 'Name',
-                                                          value:
-                                                            'PaintLayerTypeImage',
-                                                        },
-                                                      },
-                                                      selectionSet: {
-                                                        kind: 'SelectionSet',
-                                                        selections: [
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value: 'images',
-                                                            },
-                                                            selectionSet: {
-                                                              kind: 'SelectionSet',
-                                                              selections: [
-                                                                {
-                                                                  kind: 'FragmentSpread',
-                                                                  name: {
-                                                                    kind: 'Name',
-                                                                    value:
-                                                                      'ImageFragment',
-                                                                  },
-                                                                },
-                                                              ],
-                                                            },
-                                                          },
-                                                        ],
-                                                      },
-                                                    },
-                                                  ],
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'shadows',
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'offsetX',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'offsetY',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'blur',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'color',
-                                                },
-                                                selectionSet: {
-                                                  kind: 'SelectionSet',
-                                                  selections: [
-                                                    {
-                                                      kind: 'Field',
-                                                      name: {
-                                                        kind: 'Name',
-                                                        value: 'r',
-                                                      },
-                                                    },
-                                                    {
-                                                      kind: 'Field',
-                                                      name: {
-                                                        kind: 'Name',
-                                                        value: 'g',
-                                                      },
-                                                    },
-                                                    {
-                                                      kind: 'Field',
-                                                      name: {
-                                                        kind: 'Name',
-                                                        value: 'b',
-                                                      },
-                                                    },
-                                                    {
-                                                      kind: 'Field',
-                                                      name: {
-                                                        kind: 'Name',
-                                                        value: 'a',
-                                                      },
-                                                    },
-                                                  ],
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'activeBadge' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'name' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: {
-                                      kind: 'Name',
-                                      value: 'description',
-                                    },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'images' },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'FragmentSpread',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'ImageFragment',
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'ImageFragment' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'Image' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'mime' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'size' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'scale' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'width' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'height' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'frameCount' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode;
-export type UserCosmeticsQueryResult = Apollo.QueryResult<
-  UserCosmeticsQuery,
-  UserCosmeticsQueryVariables
->;
-export const UserPersonalEmotesQueryDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'UserPersonalEmotesQuery' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'platformId' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'users' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'userByConnection' },
-                  arguments: [
-                    {
-                      kind: 'Argument',
-                      name: { kind: 'Name', value: 'platform' },
-                      value: { kind: 'EnumValue', value: 'TWITCH' },
-                    },
-                    {
-                      kind: 'Argument',
-                      name: { kind: 'Name', value: 'platformId' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'platformId' },
-                      },
-                    },
-                  ],
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'personalEmoteSet' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'emotes' },
-                              arguments: [
-                                {
-                                  kind: 'Argument',
-                                  name: { kind: 'Name', value: 'page' },
-                                  value: { kind: 'IntValue', value: '1' },
-                                },
-                                {
-                                  kind: 'Argument',
-                                  name: { kind: 'Name', value: 'perPage' },
-                                  value: { kind: 'IntValue', value: '100' },
-                                },
-                              ],
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'items' },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'alias',
-                                          },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'emote',
-                                          },
-                                          selectionSet: {
-                                            kind: 'SelectionSet',
-                                            selections: [
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'id',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'defaultName',
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'flags',
-                                                },
-                                                selectionSet: {
-                                                  kind: 'SelectionSet',
-                                                  selections: [
-                                                    {
-                                                      kind: 'Field',
-                                                      name: {
-                                                        kind: 'Name',
-                                                        value: 'animated',
-                                                      },
-                                                    },
-                                                    {
-                                                      kind: 'Field',
-                                                      name: {
-                                                        kind: 'Name',
-                                                        value:
-                                                          'approvedPersonal',
-                                                      },
-                                                    },
-                                                    {
-                                                      kind: 'Field',
-                                                      name: {
-                                                        kind: 'Name',
-                                                        value:
-                                                          'defaultZeroWidth',
-                                                      },
-                                                    },
-                                                  ],
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'images',
-                                                },
-                                                selectionSet: {
-                                                  kind: 'SelectionSet',
-                                                  selections: [
-                                                    {
-                                                      kind: 'FragmentSpread',
-                                                      name: {
-                                                        kind: 'Name',
-                                                        value: 'ImageFragment',
-                                                      },
-                                                    },
-                                                  ],
-                                                },
-                                              },
-                                              {
-                                                kind: 'Field',
-                                                name: {
-                                                  kind: 'Name',
-                                                  value: 'owner',
-                                                },
-                                                selectionSet: {
-                                                  kind: 'SelectionSet',
-                                                  selections: [
-                                                    {
-                                                      kind: 'Field',
-                                                      name: {
-                                                        kind: 'Name',
-                                                        value: 'id',
-                                                      },
-                                                    },
-                                                    {
-                                                      kind: 'Field',
-                                                      name: {
-                                                        kind: 'Name',
-                                                        value: 'mainConnection',
-                                                      },
-                                                      selectionSet: {
-                                                        kind: 'SelectionSet',
-                                                        selections: [
-                                                          {
-                                                            kind: 'Field',
-                                                            name: {
-                                                              kind: 'Name',
-                                                              value:
-                                                                'platformDisplayName',
-                                                            },
-                                                          },
-                                                        ],
-                                                      },
-                                                    },
-                                                  ],
-                                                },
-                                              },
-                                            ],
-                                          },
-                                        },
-                                      ],
-                                    },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-    {
-      kind: 'FragmentDefinition',
-      name: { kind: 'Name', value: 'ImageFragment' },
-      typeCondition: {
-        kind: 'NamedType',
-        name: { kind: 'Name', value: 'Image' },
-      },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          { kind: 'Field', name: { kind: 'Name', value: 'url' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'mime' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'size' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'scale' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'width' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'height' } },
-          { kind: 'Field', name: { kind: 'Name', value: 'frameCount' } },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode;
-export type UserPersonalEmotesQueryQueryResult = Apollo.QueryResult<
-  UserPersonalEmotesQueryQuery,
-  UserPersonalEmotesQueryQueryVariables
->;
+export type UserPersonalEmotesQueryQuery = { __typename?: 'Query', users: { __typename?: 'UserQuery', userByConnection?: { __typename?: 'User', id: string, personalEmoteSet?: { __typename?: 'EmoteSet', id: string, name: string, emotes: { __typename?: 'EmoteSetEmoteSearchResult', items: Array<{ __typename?: 'EmoteSetEmote', id: string, alias: string, emote: { __typename?: 'Emote', id: string, defaultName: string, flags: { __typename?: 'EmoteFlags', animated: boolean, approvedPersonal: boolean, defaultZeroWidth: boolean }, images: Array<{ __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number }>, owner?: { __typename?: 'User', id: string, mainConnection?: { __typename?: 'UserConnection', platformDisplayName: string } | null } | null } }> } } | null } | null } };
+
+export const ImageFragmentFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ImageFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Image"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"mime"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"scale"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}},{"kind":"Field","name":{"kind":"Name","value":"frameCount"}}]}}]} as unknown as DocumentNode;
+export const PaintDataFragmentFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PaintDataFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintData"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"layers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"opacity"}},{"kind":"Field","name":{"kind":"Name","value":"ty"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintLayerTypeLinearGradient"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"angle"}},{"kind":"Field","name":{"kind":"Name","value":"repeating"}},{"kind":"Field","name":{"kind":"Name","value":"stops"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"at"}},{"kind":"Field","name":{"kind":"Name","value":"color"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"r"}},{"kind":"Field","name":{"kind":"Name","value":"g"}},{"kind":"Field","name":{"kind":"Name","value":"b"}},{"kind":"Field","name":{"kind":"Name","value":"a"}}]}}]}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintLayerTypeRadialGradient"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"repeating"}},{"kind":"Field","name":{"kind":"Name","value":"shape"}},{"kind":"Field","name":{"kind":"Name","value":"stops"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"at"}},{"kind":"Field","name":{"kind":"Name","value":"color"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"r"}},{"kind":"Field","name":{"kind":"Name","value":"g"}},{"kind":"Field","name":{"kind":"Name","value":"b"}},{"kind":"Field","name":{"kind":"Name","value":"a"}}]}}]}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintLayerTypeSingleColor"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"color"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"r"}},{"kind":"Field","name":{"kind":"Name","value":"g"}},{"kind":"Field","name":{"kind":"Name","value":"b"}},{"kind":"Field","name":{"kind":"Name","value":"a"}}]}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintLayerTypeImage"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"images"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"ImageFragment"}}]}}]}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"shadows"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"offsetX"}},{"kind":"Field","name":{"kind":"Name","value":"offsetY"}},{"kind":"Field","name":{"kind":"Name","value":"blur"}},{"kind":"Field","name":{"kind":"Name","value":"color"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"r"}},{"kind":"Field","name":{"kind":"Name","value":"g"}},{"kind":"Field","name":{"kind":"Name","value":"b"}},{"kind":"Field","name":{"kind":"Name","value":"a"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ImageFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Image"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"mime"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"scale"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}},{"kind":"Field","name":{"kind":"Name","value":"frameCount"}}]}}]} as unknown as DocumentNode;
+export const BadgeQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"BadgeQuery"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Id"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"badges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"badge"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"tags"}},{"kind":"Field","name":{"kind":"Name","value":"images"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"ImageFragment"}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdById"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"searchUpdatedAt"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ImageFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Image"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"mime"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"scale"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}},{"kind":"Field","name":{"kind":"Name","value":"frameCount"}}]}}]} as unknown as DocumentNode;
+export type BadgeQueryQueryResult = Apollo.QueryResult<BadgeQueryQuery, BadgeQueryQueryVariables>;
+export const BadgesQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"BadgesQuery"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"badges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"badges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"tags"}},{"kind":"Field","name":{"kind":"Name","value":"images"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"ImageFragment"}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdById"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"searchUpdatedAt"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ImageFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Image"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"mime"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"scale"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}},{"kind":"Field","name":{"kind":"Name","value":"frameCount"}}]}}]} as unknown as DocumentNode;
+export type BadgesQueryQueryResult = Apollo.QueryResult<BadgesQueryQuery, BadgesQueryQueryVariables>;
+export const EmoteQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"EmoteQuery"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Id"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"emotes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"emote"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"defaultName"}},{"kind":"Field","name":{"kind":"Name","value":"tags"}},{"kind":"Field","name":{"kind":"Name","value":"flags"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"animated"}},{"kind":"Field","name":{"kind":"Name","value":"defaultZeroWidth"}},{"kind":"Field","name":{"kind":"Name","value":"publicListed"}}]}},{"kind":"Field","name":{"kind":"Name","value":"images"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"ImageFragment"}}]}},{"kind":"Field","name":{"kind":"Name","value":"owner"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"mainConnection"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"platformDisplayName"}}]}}]}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ImageFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Image"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"mime"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"scale"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}},{"kind":"Field","name":{"kind":"Name","value":"frameCount"}}]}}]} as unknown as DocumentNode;
+export type EmoteQueryQueryResult = Apollo.QueryResult<EmoteQueryQuery, EmoteQueryQueryVariables>;
+export const EmoteSetCustomDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"emoteSetCustom"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Id"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"emoteSets"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"emoteSet"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"capacity"}},{"kind":"Field","name":{"kind":"Name","value":"ownerId"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"emotes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"totalCount"}},{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"alias"}},{"kind":"Field","name":{"kind":"Name","value":"addedById"}},{"kind":"Field","name":{"kind":"Name","value":"emote"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"tags"}},{"kind":"Field","name":{"kind":"Name","value":"aspectRatio"}},{"kind":"Field","name":{"kind":"Name","value":"images"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"ImageFragment"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"flags"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"zeroWidth"}}]}}]}}]}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ImageFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Image"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"mime"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"scale"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}},{"kind":"Field","name":{"kind":"Name","value":"frameCount"}}]}}]} as unknown as DocumentNode;
+export type EmoteSetCustomQueryResult = Apollo.QueryResult<EmoteSetCustomQuery, EmoteSetCustomQueryVariables>;
+export const PaintQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PaintQuery"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Id"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"paints"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"paint"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"tags"}},{"kind":"Field","name":{"kind":"Name","value":"data"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"PaintDataFragment"}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdById"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ImageFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Image"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"mime"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"scale"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}},{"kind":"Field","name":{"kind":"Name","value":"frameCount"}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PaintDataFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintData"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"layers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"opacity"}},{"kind":"Field","name":{"kind":"Name","value":"ty"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintLayerTypeLinearGradient"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"angle"}},{"kind":"Field","name":{"kind":"Name","value":"repeating"}},{"kind":"Field","name":{"kind":"Name","value":"stops"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"at"}},{"kind":"Field","name":{"kind":"Name","value":"color"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"r"}},{"kind":"Field","name":{"kind":"Name","value":"g"}},{"kind":"Field","name":{"kind":"Name","value":"b"}},{"kind":"Field","name":{"kind":"Name","value":"a"}}]}}]}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintLayerTypeRadialGradient"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"repeating"}},{"kind":"Field","name":{"kind":"Name","value":"shape"}},{"kind":"Field","name":{"kind":"Name","value":"stops"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"at"}},{"kind":"Field","name":{"kind":"Name","value":"color"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"r"}},{"kind":"Field","name":{"kind":"Name","value":"g"}},{"kind":"Field","name":{"kind":"Name","value":"b"}},{"kind":"Field","name":{"kind":"Name","value":"a"}}]}}]}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintLayerTypeSingleColor"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"color"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"r"}},{"kind":"Field","name":{"kind":"Name","value":"g"}},{"kind":"Field","name":{"kind":"Name","value":"b"}},{"kind":"Field","name":{"kind":"Name","value":"a"}}]}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintLayerTypeImage"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"images"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"ImageFragment"}}]}}]}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"shadows"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"offsetX"}},{"kind":"Field","name":{"kind":"Name","value":"offsetY"}},{"kind":"Field","name":{"kind":"Name","value":"blur"}},{"kind":"Field","name":{"kind":"Name","value":"color"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"r"}},{"kind":"Field","name":{"kind":"Name","value":"g"}},{"kind":"Field","name":{"kind":"Name","value":"b"}},{"kind":"Field","name":{"kind":"Name","value":"a"}}]}}]}}]}}]} as unknown as DocumentNode;
+export type PaintQueryQueryResult = Apollo.QueryResult<PaintQueryQuery, PaintQueryQueryVariables>;
+export const PaintsQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PaintsQuery"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"paints"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"paints"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"tags"}},{"kind":"Field","name":{"kind":"Name","value":"data"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"PaintDataFragment"}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdById"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ImageFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Image"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"mime"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"scale"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}},{"kind":"Field","name":{"kind":"Name","value":"frameCount"}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"PaintDataFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintData"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"layers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"opacity"}},{"kind":"Field","name":{"kind":"Name","value":"ty"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintLayerTypeLinearGradient"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"angle"}},{"kind":"Field","name":{"kind":"Name","value":"repeating"}},{"kind":"Field","name":{"kind":"Name","value":"stops"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"at"}},{"kind":"Field","name":{"kind":"Name","value":"color"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"r"}},{"kind":"Field","name":{"kind":"Name","value":"g"}},{"kind":"Field","name":{"kind":"Name","value":"b"}},{"kind":"Field","name":{"kind":"Name","value":"a"}}]}}]}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintLayerTypeRadialGradient"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"repeating"}},{"kind":"Field","name":{"kind":"Name","value":"shape"}},{"kind":"Field","name":{"kind":"Name","value":"stops"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"at"}},{"kind":"Field","name":{"kind":"Name","value":"color"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"r"}},{"kind":"Field","name":{"kind":"Name","value":"g"}},{"kind":"Field","name":{"kind":"Name","value":"b"}},{"kind":"Field","name":{"kind":"Name","value":"a"}}]}}]}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintLayerTypeSingleColor"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"color"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"r"}},{"kind":"Field","name":{"kind":"Name","value":"g"}},{"kind":"Field","name":{"kind":"Name","value":"b"}},{"kind":"Field","name":{"kind":"Name","value":"a"}}]}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintLayerTypeImage"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"images"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"ImageFragment"}}]}}]}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"shadows"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"offsetX"}},{"kind":"Field","name":{"kind":"Name","value":"offsetY"}},{"kind":"Field","name":{"kind":"Name","value":"blur"}},{"kind":"Field","name":{"kind":"Name","value":"color"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"r"}},{"kind":"Field","name":{"kind":"Name","value":"g"}},{"kind":"Field","name":{"kind":"Name","value":"b"}},{"kind":"Field","name":{"kind":"Name","value":"a"}}]}}]}}]}}]} as unknown as DocumentNode;
+export type PaintsQueryQueryResult = Apollo.QueryResult<PaintsQueryQuery, PaintsQueryQueryVariables>;
+export const UserByConnectionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"UserByConnection"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"platformId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"users"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userByConnection"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"platform"},"value":{"kind":"EnumValue","value":"TWITCH"}},{"kind":"Argument","name":{"kind":"Name","value":"platformId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"platformId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"emoteSets"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"kind"}}]}}]}}]}}]}}]} as unknown as DocumentNode;
+export type UserByConnectionQueryResult = Apollo.QueryResult<UserByConnectionQuery, UserByConnectionQueryVariables>;
+export const UserCosmeticsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"UserCosmetics"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Id"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"users"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"connections"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"platform"}},{"kind":"Field","name":{"kind":"Name","value":"platformId"}},{"kind":"Field","name":{"kind":"Name","value":"platformDisplayName"}}]}},{"kind":"Field","name":{"kind":"Name","value":"style"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"activePaintId"}},{"kind":"Field","name":{"kind":"Name","value":"activeBadgeId"}},{"kind":"Field","name":{"kind":"Name","value":"activePaint"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"data"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"layers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"opacity"}},{"kind":"Field","name":{"kind":"Name","value":"ty"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintLayerTypeLinearGradient"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"angle"}},{"kind":"Field","name":{"kind":"Name","value":"repeating"}},{"kind":"Field","name":{"kind":"Name","value":"stops"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"at"}},{"kind":"Field","name":{"kind":"Name","value":"color"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"r"}},{"kind":"Field","name":{"kind":"Name","value":"g"}},{"kind":"Field","name":{"kind":"Name","value":"b"}},{"kind":"Field","name":{"kind":"Name","value":"a"}}]}}]}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintLayerTypeRadialGradient"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"repeating"}},{"kind":"Field","name":{"kind":"Name","value":"shape"}},{"kind":"Field","name":{"kind":"Name","value":"stops"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"at"}},{"kind":"Field","name":{"kind":"Name","value":"color"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"r"}},{"kind":"Field","name":{"kind":"Name","value":"g"}},{"kind":"Field","name":{"kind":"Name","value":"b"}},{"kind":"Field","name":{"kind":"Name","value":"a"}}]}}]}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintLayerTypeSingleColor"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"color"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"r"}},{"kind":"Field","name":{"kind":"Name","value":"g"}},{"kind":"Field","name":{"kind":"Name","value":"b"}},{"kind":"Field","name":{"kind":"Name","value":"a"}}]}}]}},{"kind":"InlineFragment","typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"PaintLayerTypeImage"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"images"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"ImageFragment"}}]}}]}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"shadows"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"offsetX"}},{"kind":"Field","name":{"kind":"Name","value":"offsetY"}},{"kind":"Field","name":{"kind":"Name","value":"blur"}},{"kind":"Field","name":{"kind":"Name","value":"color"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"r"}},{"kind":"Field","name":{"kind":"Name","value":"g"}},{"kind":"Field","name":{"kind":"Name","value":"b"}},{"kind":"Field","name":{"kind":"Name","value":"a"}}]}}]}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"activeBadge"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"images"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"ImageFragment"}}]}}]}}]}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ImageFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Image"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"mime"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"scale"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}},{"kind":"Field","name":{"kind":"Name","value":"frameCount"}}]}}]} as unknown as DocumentNode;
+export type UserCosmeticsQueryResult = Apollo.QueryResult<UserCosmeticsQuery, UserCosmeticsQueryVariables>;
+export const UserPersonalEmotesQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"UserPersonalEmotesQuery"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"platformId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"users"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userByConnection"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"platform"},"value":{"kind":"EnumValue","value":"TWITCH"}},{"kind":"Argument","name":{"kind":"Name","value":"platformId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"platformId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"personalEmoteSet"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"emotes"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"page"},"value":{"kind":"IntValue","value":"1"}},{"kind":"Argument","name":{"kind":"Name","value":"perPage"},"value":{"kind":"IntValue","value":"100"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"items"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"alias"}},{"kind":"Field","name":{"kind":"Name","value":"emote"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"defaultName"}},{"kind":"Field","name":{"kind":"Name","value":"flags"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"animated"}},{"kind":"Field","name":{"kind":"Name","value":"approvedPersonal"}},{"kind":"Field","name":{"kind":"Name","value":"defaultZeroWidth"}}]}},{"kind":"Field","name":{"kind":"Name","value":"images"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"ImageFragment"}}]}},{"kind":"Field","name":{"kind":"Name","value":"owner"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"mainConnection"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"platformDisplayName"}}]}}]}}]}}]}}]}}]}}]}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"ImageFragment"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"Image"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"mime"}},{"kind":"Field","name":{"kind":"Name","value":"size"}},{"kind":"Field","name":{"kind":"Name","value":"scale"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}},{"kind":"Field","name":{"kind":"Name","value":"frameCount"}}]}}]} as unknown as DocumentNode;
+export type UserPersonalEmotesQueryQueryResult = Apollo.QueryResult<UserPersonalEmotesQueryQuery, UserPersonalEmotesQueryQueryVariables>;

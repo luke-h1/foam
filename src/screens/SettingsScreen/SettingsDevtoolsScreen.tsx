@@ -65,13 +65,13 @@ export function SettingsDevtoolsScreen() {
               systemImage='stethoscope'
               onPress={() => router.push('/tabs/settings/diagnostics')}
             >
-              App Diagnostics
+              <Form.Text>App Diagnostics</Form.Text>
             </Form.Link>
             <Form.Link
               systemImage='cloud'
               onPress={() => router.push('/tabs/settings/remote-config')}
             >
-              Remote Config
+              <Form.Text>Remote Config</Form.Text>
             </Form.Link>
           </Form.Section>
           <Form.Section title='Stream Diagnostics'>
@@ -97,25 +97,31 @@ export function SettingsDevtoolsScreen() {
               systemImage='ladybug'
               onPress={() => router.push('/tabs/settings/debug')}
             >
-              Debug
+              <Form.Text>Debug</Form.Text>
             </Form.Link>
             <Form.Link
               systemImage='photo.stack'
               onPress={() => router.push('/tabs/settings/cached-images')}
             >
-              Cached Images
+              <Form.Text>Cached Images</Form.Text>
             </Form.Link>
             <Form.Link
               systemImage='list.bullet.rectangle'
               onPress={() => router.push('/dev-tools/changelog')}
             >
-              Changelog Demo
+              <Form.Text>Changelog Demo</Form.Text>
+            </Form.Link>
+            <Form.Link
+              systemImage='antenna.radiowaves.left.and.right'
+              onPress={() => router.push('/tabs/settings/channel-surfing')}
+            >
+              <Form.Text>Channel Surfing</Form.Text>
             </Form.Link>
             <Form.Link
               systemImage='book.closed'
               onPress={() => router.push('/tabs/settings/storybook')}
             >
-              Storybook
+              <Form.Text>Storybook</Form.Text>
             </Form.Link>
           </Form.Section>
         </BodyScrollView>
@@ -187,6 +193,12 @@ export function SettingsDevtoolsScreen() {
             subtitle='Present sample native changelog payloads'
             icon={{ icon: 'list.bullet.rectangle', color: theme.colorBlue }}
             onPress={() => router.push('/dev-tools/changelog')}
+          />
+          <SettingsLinkRow
+            title='Channel Surfing'
+            subtitle='Load an EAS Update from a different channel or PR branch'
+            icon={{ icon: 'antenna.radiowaves.left.and.right', color: theme.colorPlum }}
+            onPress={() => router.push('/tabs/settings/channel-surfing')}
           />
           <SettingsLinkRow
             title='Storybook'

@@ -148,9 +148,14 @@ export const ChatOverlayLayer = memo(
 
         {shouldRenderSettingsSheet ? (
           <SettingsSheet
-            chatDensity={chatDensity}
-            highlightOwnMentions={highlightOwnMentions}
             isPresented={shouldRenderSettingsSheet}
+            preferenceFlags={{
+              chatDensity,
+              highlightOwnMentions,
+              showInlineReplyContext,
+              showTimestamps,
+              showUnreadJumpPill,
+            }}
             onClearChatCache={onClearChatCache}
             onClearImageCache={onClearImageCache}
             onClearSevenTvCosmeticsCache={onClearSevenTvCosmeticsCache}
@@ -162,9 +167,6 @@ export const ChatOverlayLayer = memo(
             onToggleInlineReplyContext={onToggleInlineReplyContext}
             onToggleShowTimestamps={onToggleShowTimestamps}
             onToggleShowUnreadJumpPill={onToggleShowUnreadJumpPill}
-            showInlineReplyContext={showInlineReplyContext}
-            showTimestamps={showTimestamps}
-            showUnreadJumpPill={showUnreadJumpPill}
           />
         ) : null}
 
@@ -231,7 +233,19 @@ export const ChatOverlayLayer = memo(
 
         {selectedUser ? (
           <UserActionSheet
-            visible
+            visibility={{
+              visible: true,
+              isHidden: hiddenUsers.includes(
+                selectedUser.username.toLowerCase(),
+              ),
+              isHighlighted: highlightedUsers.includes(
+                selectedUser.username.toLowerCase(),
+              ),
+            }}
+            moderation={{
+              canModerateChat,
+              canModerateUser: canModerateSelectedUser,
+            }}
             onClose={onCloseSelectedUser}
             username={selectedUser.username}
             login={selectedUser.login}
@@ -241,12 +255,6 @@ export const ChatOverlayLayer = memo(
             onHighlightUser={onHighlightSelectedUser}
             onTimeoutUser={onTimeoutSelectedUser}
             onBanUser={onBanSelectedUser}
-            isHidden={hiddenUsers.includes(selectedUser.username.toLowerCase())}
-            isHighlighted={highlightedUsers.includes(
-              selectedUser.username.toLowerCase(),
-            )}
-            canModerateChat={canModerateChat}
-            canModerateUser={canModerateSelectedUser}
           />
         ) : null}
       </>

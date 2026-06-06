@@ -44,7 +44,20 @@ const MAX_EMOTE_WARMUPS_PER_PASS = 36;
 const MAX_BADGE_WARMUPS_PER_PASS = 18;
 
 function canHydrateMessage(message: AnyChatMessageType): boolean {
-  return message.sender !== 'System' && !('notice_tags' in message);
+  if (message.sender === 'System') {
+    return false;
+  }
+
+  if (
+    'notice_tags' in message &&
+    message.notice_tags &&
+    !message.isAnnouncement &&
+    !message.isHighlightedMessage
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 function isMissingSharedChatSourceBadge(message: AnyChatMessageType): boolean {

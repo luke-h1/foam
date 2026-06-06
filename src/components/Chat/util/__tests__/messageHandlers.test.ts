@@ -1,14 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-import type { SanitisedEmote } from '@app/types/emote';
+import { getCachedChannelPointRewardTitle } from '@app/utils/chat/channelPointRewardTitleStore';
 import {
   createUserStateFromTags,
   createBaseMessage,
   createUserNoticeMessage,
   createSystemMessage,
-  hasEmoteData,
 } from '../messageHandlers';
 
 jest.mock('@app/store/chatStore/channelLoad', () => ({
@@ -18,35 +16,6 @@ jest.mock('@app/store/chatStore/channelLoad', () => ({
 jest.mock('@app/utils/string/generateNonce', () => ({
   generateNonce: jest.fn().mockReturnValue('test-nonce-123'),
 }));
-
-const mockGetCurrentEmoteData = getCurrentEmoteData as jest.MockedFunction<
-  typeof getCurrentEmoteData
->;
-
-interface MockEmoteData {
-  twitchGlobalEmotes: SanitisedEmote[];
-  sevenTvGlobalEmotes: SanitisedEmote[];
-  bttvGlobalEmotes: SanitisedEmote[];
-  ffzGlobalEmotes: SanitisedEmote[];
-  twitchChannelEmotes: SanitisedEmote[];
-  sevenTvChannelEmotes: SanitisedEmote[];
-  bttvChannelEmotes: SanitisedEmote[];
-  ffzChannelEmotes: SanitisedEmote[];
-}
-
-const createMockEmoteData = (
-  overrides: Partial<MockEmoteData> = {},
-): MockEmoteData => ({
-  twitchGlobalEmotes: [],
-  sevenTvGlobalEmotes: [],
-  bttvGlobalEmotes: [],
-  ffzGlobalEmotes: [],
-  twitchChannelEmotes: [],
-  sevenTvChannelEmotes: [],
-  bttvChannelEmotes: [],
-  ffzChannelEmotes: [],
-  ...overrides,
-});
 
 describe('messageHandlers', () => {
   beforeEach(() => {
@@ -167,6 +136,26 @@ describe('messageHandlers', () => {
       expect(
         firstMessage && 'content' in firstMessage && firstMessage.content,
       ).toBe('Hello world!');
+    });
+
+    test('should mark Highlight My Message PRIVMSG tags as highlighted', () => {
+      const params = {
+        tags: {
+          'display-name': 'Rexdain',
+          login: 'rexdain',
+          id: 'msg-highlight-123',
+          'msg-id': 'highlighted-message',
+          'custom-reward-id': 'reward-highlight',
+        },
+        channelName: 'testchannel',
+        text: 'Kappa',
+      };
+
+      const result = createBaseMessage(params);
+
+      expect(result.isHighlightedMessage).toBe(true);
+      expect(result.isChannelPointRedemption).toBe(true);
+      expect(result.userstate['msg-id']).toBe('highlighted-message');
     });
 
     test('should use the Twitch message id for message_nonce when present', () => {
@@ -460,11 +449,17 @@ describe('messageHandlers', () => {
       });
 
       expect(result.notice_tags?.['msg-id']).toBe('rewardgift');
-      expect(result.isChannelPointRedemption).toBe(true);
-      expect(result.isTwitchSystemNotice).not.toBe(true);
-      expect(result.message).toEqual([]);
-      expect(result.userstate['custom-reward-id']).toBe('reward-123');
-      expect(result.userstate['msg-param-reward-title']).toBe('Hydrate');
+      expect(result.isChannelPointRedemption).not.toBe(true);
+      expect(result.isTwitchSystemNotice).toBe(true);
+      expect(result.message[0]?.type).toBe('text');
+      expect(
+        result.message[0] && 'content' in result.message[0]
+          ? result.message[0].content
+          : '',
+      ).toBe('RewardUser redeemed Hydrate');
+      expect(getCachedChannelPointRewardTitle('67890', 'reward-123')).toBe(
+        'Hydrate',
+      );
     });
 
     test('should create bitsbadgetier as a twitch system notice', () => {
@@ -625,6 +620,188 @@ describe('messageHandlers', () => {
       ]);
     });
 
+    test('should handle announcement notices with user metadata', () => {
+      const tags = {
+        'msg-id': 'announcement',
+        id: '55d90904-e515-47d0-ac1d-879f7f1d7b01',
+        'tmi-sent-ts': '1648758023469',
+        'msg-param-color': 'PRIMARY',
+        'display-name': 'Gekon',
+        login: 'gekon',
+        color: '#FF5500',
+        badges: 'broadcaster/1',
+        'badge-info': '',
+        emotes: '',
+        flags: '',
+        mod: '1',
+        'user-id': '12345',
+        'user-type': 'mod',
+      } as unknown as UserNoticeTags;
+
+      const result = createUserNoticeMessage({
+        tags,
+        channelName: 'testchannel',
+        text: 'this is an announcement to bait him',
+      });
+
+      expect(result.notice_tags?.['msg-id']).toBe('announcement');
+      expect(result.message_id).toBe('55d90904-e515-47d0-ac1d-879f7f1d7b01');
+      expect(result.isAnnouncement).toBe(true);
+      expect(result.isTwitchSystemNotice).toBeUndefined();
+      expect(result.sender).toBe('Gekon');
+      expect(result.userstate.username).toBe('Gekon');
+      expect(result.message).toEqual([
+        {
+          type: 'text',
+          content: 'this is an announcement to bait him',
+        },
+      ]);
+    });
+
+    test('should handle highlighted-message notices with user metadata', () => {
+      const tags = {
+        'msg-id': 'highlighted-message',
+        id: 'highlight-id',
+        'display-name': 'HighlightedUser',
+        login: 'highlighteduser',
+        color: '#FF5500',
+        badges: 'subscriber/12',
+        'badge-info': '',
+        emotes: '',
+        flags: '',
+        mod: '0',
+        'user-id': '12345',
+        'user-type': '',
+      } as unknown as UserNoticeTags;
+
+      const result = createUserNoticeMessage({
+        tags,
+        channelName: 'testchannel',
+        text: 'this message is highlighted',
+      });
+
+      expect(result.isHighlightedMessage).toBe(true);
+      expect(result.isChannelPointRedemption).toBe(true);
+      expect(result.isTwitchSystemNotice).toBeUndefined();
+      expect(result.sender).toBe('HighlightedUser');
+      expect(result.message).toEqual([
+        { type: 'text', content: 'this message is highlighted' },
+      ]);
+    });
+
+    test('should handle charitydonation notices', () => {
+      const tags = {
+        'msg-id': 'charitydonation',
+        'display-name': 'Donor',
+        login: 'donor',
+        'msg-param-charity-name': 'St. Jude',
+        'msg-param-donation-amount': '500',
+        'msg-param-exponent': '2',
+        'msg-param-donation-currency': 'USD',
+        'system-msg': 'Donor donated $5.00 to St. Jude',
+        color: '#9146FF',
+        badges: '',
+        'badge-info': '',
+        emotes: '',
+        flags: '',
+        mod: '',
+        'user-id': '12345',
+        'user-type': '',
+      } as unknown as UserNoticeTags;
+
+      const result = createUserNoticeMessage({
+        tags,
+        channelName: 'testchannel',
+        text: '',
+      });
+
+      expect(result.message[0]?.type).toBe('charitydonation');
+      if (result.message[0]?.type === 'charitydonation') {
+        expect(result.message[0].charityName).toBe('St. Jude');
+        expect(result.message[0].amount).toMatch(/5\.00/);
+      }
+    });
+
+    test('should handle ritual notices for new chatters', () => {
+      const tags = {
+        'msg-id': 'ritual',
+        'display-name': 'NewChatter',
+        login: 'newchatter',
+        'msg-param-ritual-name': 'new_chatter',
+        'system-msg': 'NewChatter is new here.',
+        color: '#9146FF',
+        badges: '',
+        'badge-info': '',
+        emotes: '',
+        flags: '',
+        mod: '',
+        'user-id': '12345',
+        'user-type': '',
+      } as unknown as UserNoticeTags;
+
+      const result = createUserNoticeMessage({
+        tags,
+        channelName: 'testchannel',
+        text: '',
+      });
+
+      expect(result.message[0]?.type).toBe('ritual');
+      if (result.message[0]?.type === 'ritual') {
+        expect(result.message[0].ritualName).toBe('new_chatter');
+      }
+    });
+
+    test('should handle primepaidupgrade as subscription notice', () => {
+      const tags = {
+        'msg-id': 'primepaidupgrade',
+        'display-name': 'PrimeUser',
+        login: 'primeuser',
+        'msg-param-sub-plan': '1000',
+        'msg-param-cumulative-months': '3',
+        color: '#9146FF',
+        badges: '',
+        'badge-info': '',
+        emotes: '',
+        flags: '',
+        mod: '',
+        'user-id': '12345',
+        'user-type': '',
+      } as unknown as UserNoticeTags;
+
+      const result = createUserNoticeMessage({
+        tags,
+        channelName: 'testchannel',
+        text: '',
+      });
+
+      expect(result.message[0]?.type).toBe('primepaidupgrade');
+    });
+
+    test('should flag shared chat duplicated notices', () => {
+      const tags = {
+        'msg-id': 'raid',
+        'room-id': '123',
+        'source-room-id': '456',
+        'system-msg': 'Raid from another channel',
+        color: '#9146FF',
+        badges: '',
+        'badge-info': '',
+        emotes: '',
+        flags: '',
+        mod: '',
+        'user-id': '12345',
+        'user-type': '',
+      } as unknown as UserNoticeTags;
+
+      const result = createUserNoticeMessage({
+        tags,
+        channelName: 'testchannel',
+        text: '',
+      });
+
+      expect(result.isSharedChatDuplicated).toBe(true);
+    });
+
     test('should handle unknown msg-id with default case', () => {
       const tags = {
         'msg-id': 'unknown_type',
@@ -690,82 +867,6 @@ describe('messageHandlers', () => {
       const result = createSystemMessage('testchannel', 'Test');
 
       expect(result.badges).toEqual([]);
-    });
-  });
-
-  describe('hasEmoteData', () => {
-    test('should return true when twitch global emotes exist', () => {
-      mockGetCurrentEmoteData.mockReturnValue(
-        createMockEmoteData({
-          twitchGlobalEmotes: [{ id: '1', name: 'Kappa' } as SanitisedEmote],
-        }) as any,
-      );
-
-      expect(hasEmoteData('channel-123')).toBe(true);
-    });
-
-    test('should return true when 7TV global emotes exist', () => {
-      mockGetCurrentEmoteData.mockReturnValue(
-        createMockEmoteData({
-          sevenTvGlobalEmotes: [
-            { id: '1', name: 'OMEGALUL' } as SanitisedEmote,
-          ],
-        }) as any,
-      );
-
-      expect(hasEmoteData('channel-123')).toBe(true);
-    });
-
-    test('should return true when BTTV global emotes exist', () => {
-      mockGetCurrentEmoteData.mockReturnValue(
-        createMockEmoteData({
-          bttvGlobalEmotes: [{ id: '1', name: 'LULW' } as SanitisedEmote],
-        }) as any,
-      );
-
-      expect(hasEmoteData('channel-123')).toBe(true);
-    });
-
-    test('should return true when FFZ global emotes exist', () => {
-      mockGetCurrentEmoteData.mockReturnValue(
-        createMockEmoteData({
-          ffzGlobalEmotes: [{ id: '1', name: 'KEKW' } as SanitisedEmote],
-        }) as any,
-      );
-
-      expect(hasEmoteData('channel-123')).toBe(true);
-    });
-
-    test('should return false when no global emotes exist', () => {
-      mockGetCurrentEmoteData.mockReturnValue(createMockEmoteData() as any);
-
-      expect(hasEmoteData('channel-123')).toBe(false);
-    });
-
-    test('should return false when emote data is null', () => {
-      mockGetCurrentEmoteData.mockReturnValue(null as any);
-
-      expect(hasEmoteData('channel-123')).toBe(false);
-    });
-
-    test('should ignore channel-only emotes for hasEmoteData check', () => {
-      mockGetCurrentEmoteData.mockReturnValue(
-        createMockEmoteData({
-          twitchChannelEmotes: [
-            { id: '1', name: 'ChannelEmote' } as SanitisedEmote,
-          ],
-          sevenTvChannelEmotes: [
-            { id: '2', name: 'ChannelSTV' } as SanitisedEmote,
-          ],
-          bttvChannelEmotes: [
-            { id: '3', name: 'ChannelBTTV' } as SanitisedEmote,
-          ],
-          ffzChannelEmotes: [{ id: '4', name: 'ChannelFFZ' } as SanitisedEmote],
-        }) as any,
-      );
-
-      // hasEmoteData only checks global emotes
-      expect(hasEmoteData('channel-123')).toBe(false);
     });
   });
 });

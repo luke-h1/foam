@@ -1,6 +1,6 @@
+import { memo } from 'react';
 import { createHitslop } from '@app/utils/string/createHitSlop';
 import { PressableScale, type CustomPressableProps } from 'pressto';
-import { memo } from 'react';
 
 export type ButtonProps = CustomPressableProps & {
   label?: string;

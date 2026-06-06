@@ -5,10 +5,11 @@ import {
   parse,
   toDate,
 } from 'date-fns';
+import { useMemo } from 'react';
 import { Text } from '@app/components/ui/Text/Text';
 
 interface Props {
-  children: Date | number | string;
+  value: Date | number | string;
   format?: string;
   formatRelativeToNow?: boolean;
   testId?: string;
@@ -16,20 +17,22 @@ interface Props {
 }
 
 export const FormattedDate = ({
-  children,
+  value,
   format = 'd MMMM yyyy',
   formatRelativeToNow = false,
   testId,
   parseFormat,
 }: Props) => {
+  const now = useMemo(() => new Date(), []);
+
   let parsedDate: Date;
 
-  if (typeof children === 'string') {
+  if (typeof value === 'string') {
     parsedDate = parseFormat
-      ? parse(children, parseFormat, new Date())
-      : new Date(children);
+      ? parse(value, parseFormat, new Date())
+      : new Date(value);
   } else {
-    parsedDate = toDate(children);
+    parsedDate = toDate(value);
   }
 
   if (!isValid(parsedDate)) {
@@ -39,7 +42,7 @@ export const FormattedDate = ({
   return (
     <Text data-testid={testId}>
       {formatRelativeToNow
-        ? formatRelative(parsedDate, new Date())
+        ? formatRelative(parsedDate, now)
         : formatter(parsedDate, format)}
     </Text>
   );

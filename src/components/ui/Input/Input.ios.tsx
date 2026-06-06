@@ -8,6 +8,7 @@ import {
   UIRadius,
   UISize,
 } from '@app/styles/ui';
+import { useLayoutEffect } from 'react';
 import {
   GlassEffectContainer,
   Host,
@@ -45,15 +46,8 @@ import {
   type ViewModifier,
 } from '@expo/ui/swift-ui/modifiers';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useImperativeHandle, useRef, useState, type Ref } from 'react';
+
 import {
   StyleSheet,
   type ColorValue,
@@ -243,86 +237,81 @@ export type ThemedInputProps = Omit<
   onSubmitEditing?: (text: string) => void;
   radius?: UIRadius;
   style?: StyleProp<TextStyle & ViewStyle>;
+  ref?: Ref<InputRef>;
 };
 
-export const Input = forwardRef<InputRef, ThemedInputProps>(
-  (
-    {
-      autoCapitalize,
-      autoComplete,
-      autoCorrect,
-      autoFocus,
-      blurOnSubmit,
-      cursorColor,
-      defaultValue,
-      editable,
-      enterKeyHint,
-      inputMode,
-      keyboardType,
-      maxLength,
-      multiline,
-      numberOfLines,
-      onBlur,
-      onChange,
-      onChangeText,
-      onContentSizeChange,
-      onEndEditing,
-      onFocus,
-      onSelectionChange,
-      onSubmitEditing,
-      placeholder,
-      placeholderTextColor,
-      readOnly,
-      returnKeyType,
-      secureTextEntry,
-      selection,
-      selectionColor,
-      style,
-      submitBehavior,
-      textAlign,
-      textContentType,
-      value,
-      size = 'md',
-      variant = 'outline',
-      color,
-      radius = 'default',
-    },
-    ref,
-  ) => {
-    const colorScheme = useColorScheme();
-    const { accentHex } = useAccentColor();
-    const scheme = colorScheme === 'light' ? 'light' : 'dark';
-    const textFieldRef = useRef<TextFieldRef>(null);
-    const secureFieldRef = useRef<SecureFieldRef>(null);
-    const initialText = useRef(valueOrDefault(value, defaultValue));
-    const latestText = useRef(initialText.current);
-    const nativeText = useNativeState(initialText.current);
-    const nativeSelection = useNativeState<InputSelection>({
-      start: selection?.start ?? 0,
-      end: selection?.end ?? selection?.start ?? 0,
-    });
-    const [hasText, setHasText] = useState(initialText.current.length > 0);
+export function Input({
+  autoCapitalize,
+  autoComplete,
+  autoCorrect,
+  autoFocus,
+  blurOnSubmit,
+  cursorColor,
+  defaultValue,
+  editable,
+  enterKeyHint,
+  inputMode,
+  keyboardType,
+  maxLength,
+  multiline,
+  numberOfLines,
+  onBlur,
+  onChange,
+  onChangeText,
+  onContentSizeChange,
+  onEndEditing,
+  onFocus,
+  onSelectionChange,
+  onSubmitEditing,
+  placeholder,
+  placeholderTextColor,
+  readOnly,
+  returnKeyType,
+  secureTextEntry,
+  selection,
+  selectionColor,
+  style,
+  submitBehavior,
+  textAlign,
+  textContentType,
+  value,
+  size = 'md',
+  variant = 'outline',
+  color,
+  radius = 'default',
+  ref,
+}: ThemedInputProps) {
+  'use no memo';
+  const colorScheme = useColorScheme();
+  const { accentHex } = useAccentColor();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const textFieldRef = useRef<TextFieldRef>(null);
+  const secureFieldRef = useRef<SecureFieldRef>(null);
+  const [initial] = useState(() => valueOrDefault(value, defaultValue));
+  const latestText = useRef(initial);
+  const nativeText = useNativeState(initial);
+  const nativeSelection = useNativeState<InputSelection>({
+    start: selection?.start ?? 0,
+    end: selection?.end ?? selection?.start ?? 0,
+  });
+  const [typedHasText, setTypedHasText] = useState(initial.length > 0);
+  const hasText = value !== undefined ? value.length > 0 : typedHasText;
 
-    const variantConfig = useMemo(() => {
-      if (color) {
-        const variants = generateVariantConfig(color, scheme);
-        return variants[variant];
-      }
-      const baseHex = accentHex || colors[scheme].tint;
-      const variants = generateVariantConfigFromBase(baseHex, scheme);
-      return variants[variant];
-    }, [color, scheme, variant, accentHex]);
+  const variants = color
+    ? generateVariantConfig(color, scheme)
+    : generateVariantConfigFromBase(accentHex || colors[scheme].tint, scheme);
+  const variantConfig = variants[variant];
 
-    const inputStyles = useMemo(() => {
-      const baseStyles = {
-        backgroundColor: variantConfig.backgroundColor,
-        color: variantConfig.textColor,
-        borderColor: variantConfig.borderColor,
-        fontSize: FONT_SIZE_STYLES[size].fontSize,
-      };
+  const baseStyles = {
+    backgroundColor: variantConfig.backgroundColor,
+    color: variantConfig.textColor,
+    borderColor: variantConfig.borderColor,
+    fontSize: FONT_SIZE_STYLES[size].fontSize,
+  };
 
-      if (variant === 'underline') {
-        return [
+  const inputStyles =
+    variant === 'underline'
+      ? [
           styles.input,
           SIZE_STYLES[size],
           {
@@ -334,302 +323,237 @@ export const Input = forwardRef<InputRef, ThemedInputProps>(
             borderRadius: 0,
           },
           style,
+        ]
+      : [
+          styles.input,
+          SIZE_STYLES[size],
+          {
+            ...baseStyles,
+            borderWidth: variantConfig.borderWidth,
+            borderRadius: RADIUS_VALUES[radius],
+          },
+          style,
         ];
-      }
 
-      return [
-        styles.input,
-        SIZE_STYLES[size],
-        {
-          ...baseStyles,
-          borderWidth: variantConfig.borderWidth,
-          borderRadius: RADIUS_VALUES[radius],
-        },
-        style,
-      ];
-    }, [size, variantConfig, radius, variant, style]);
-
-    const flattenedStyle = useMemo(
-      () => (StyleSheet.flatten(inputStyles) ?? {}) as TextStyle & ViewStyle,
-      [inputStyles],
-    );
-    const liquidGlassAvailable = isLiquidGlassAvailable();
-    const textColor = colorValue(
-      flattenedStyle.color ?? variantConfig.textColor,
-    );
-    const resolvedPlaceholderColor = colorValue(
-      placeholderTextColor ?? variantConfig.placeholderColor,
-    );
-    const resolvedBackgroundColor = colorValue(
-      flattenedStyle.backgroundColor ?? variantConfig.backgroundColor,
-    );
-    const resolvedBorderColor = colorValue(
-      flattenedStyle.borderColor ?? variantConfig.borderColor,
-    );
-    const resolvedCursorColor = colorValue(
-      cursorColor ?? selectionColor ?? variantConfig.textColor,
-    );
-    const disabled = editable === false || readOnly === true;
-    const textFieldModifiers = useMemo(
-      () =>
-        buildTextFieldModifiers({
-          autoCapitalize,
-          autoComplete,
-          autoCorrect,
-          disabled,
-          enterKeyHint,
-          inputMode,
-          keyboardType,
-          multiline,
-          numberOfLines,
-          onSubmit: onSubmitEditing
-            ? () => {
-                const submittedText = nativeText.value;
-                latestText.current = submittedText;
-                onSubmitEditing(submittedText);
-                if (
-                  shouldBlurOnSubmit({
-                    blurOnSubmit,
-                    multiline,
-                    submitBehavior,
-                  })
-                ) {
-                  void currentInputRef({
-                    secureTextEntry,
-                    secureFieldRef,
-                    textFieldRef,
-                  })?.blur();
-                }
-              }
-            : undefined,
-          returnKeyType,
-          style: flattenedStyle,
-          textAlign,
-          textColor,
-          textContentType,
-          tintColor: resolvedCursorColor,
-        }),
-      [
-        autoCapitalize,
-        autoComplete,
-        autoCorrect,
-        blurOnSubmit,
-        disabled,
-        enterKeyHint,
-        flattenedStyle,
-        inputMode,
-        keyboardType,
-        multiline,
-        nativeText,
-        numberOfLines,
-        onSubmitEditing,
-        resolvedCursorColor,
-        returnKeyType,
+  const flattenedStyle = (StyleSheet.flatten(inputStyles) ?? {}) as TextStyle &
+    ViewStyle;
+  const liquidGlassAvailable = isLiquidGlassAvailable();
+  const textColor = colorValue(flattenedStyle.color ?? variantConfig.textColor);
+  const resolvedPlaceholderColor = colorValue(
+    placeholderTextColor ?? variantConfig.placeholderColor,
+  );
+  const resolvedBackgroundColor = colorValue(
+    flattenedStyle.backgroundColor ?? variantConfig.backgroundColor,
+  );
+  const resolvedBorderColor = colorValue(
+    flattenedStyle.borderColor ?? variantConfig.borderColor,
+  );
+  const resolvedCursorColor = colorValue(
+    cursorColor ?? selectionColor ?? variantConfig.textColor,
+  );
+  const disabled = editable === false || readOnly === true;
+  const handleSubmit = () => {
+    const submittedText = nativeText.value;
+    latestText.current = submittedText;
+    onSubmitEditing!(submittedText);
+    if (shouldBlurOnSubmit({ blurOnSubmit, multiline, submitBehavior })) {
+      void currentInputRef({
         secureTextEntry,
-        submitBehavior,
-        textAlign,
-        textColor,
-        textContentType,
-      ],
-    );
-    const containerModifiers = useMemo(
-      () =>
-        buildContainerModifiers({
-          backgroundColor: resolvedBackgroundColor,
-          borderColor: resolvedBorderColor,
-          borderWidth: borderWidthForStyle(flattenedStyle),
-          hasText,
-          liquidGlassAvailable,
-          multiline: Boolean(multiline),
-          radius: radiusForStyle(flattenedStyle),
-          style: flattenedStyle,
-        }),
-      [
-        flattenedStyle,
-        hasText,
-        liquidGlassAvailable,
-        multiline,
-        resolvedBackgroundColor,
-        resolvedBorderColor,
-      ],
-    );
-    const hostStyle = useMemo(
-      () => [styles.host, pickHostStyle(flattenedStyle)],
-      [flattenedStyle],
-    );
-    const autoFocusProps = autoFocus ? { autoFocus } : undefined;
-    const placeholderNode = placeholder ? (
-      <TextField.Placeholder>
-        <SwiftUIText
-          modifiers={[
-            foregroundStyle(resolvedPlaceholderColor),
-            ...fontModifiersForStyle(flattenedStyle),
-          ]}
-        >
-          {placeholder}
-        </SwiftUIText>
-      </TextField.Placeholder>
-    ) : null;
-    const securePlaceholderNode = placeholder ? (
-      <SecureField.Placeholder>
-        <SwiftUIText
-          modifiers={[
-            foregroundStyle(resolvedPlaceholderColor),
-            ...fontModifiersForStyle(flattenedStyle),
-          ]}
-        >
-          {placeholder}
-        </SwiftUIText>
-      </SecureField.Placeholder>
-    ) : null;
-
-    const commitTextChange = useCallback(
-      (nextText: string) => {
-        latestText.current = nextText;
-        setHasText(nextText.length > 0);
-        onChangeText?.(nextText);
-        onChange?.(textChangeEvent(nextText));
-      },
-      [onChange, onChangeText],
-    );
-
-    const handleTextChange = useCallback(
-      (nextText: string) => {
-        'worklet';
-
-        scheduleOnRN(commitTextChange, nextText);
-      },
-      [commitTextChange],
-    );
-
-    const handleFocusChange = useCallback(
-      (focused: boolean) => {
-        if (focused) {
-          onFocus?.();
-          return;
-        }
-        onBlur?.();
-        const currentText = nativeText.value;
-        latestText.current = currentText;
-        onEndEditing?.(endEditingEvent(currentText));
-      },
-      [nativeText, onBlur, onEndEditing, onFocus],
-    );
-
-    useImperativeHandle(
-      ref,
-      () =>
-        ({
-          blur: () =>
-            currentInputRef({
-              secureTextEntry,
-              secureFieldRef,
-              textFieldRef,
-            })?.blur() ?? Promise.resolve(),
-          clear: () => {
-            latestText.current = '';
-            nativeText.value = '';
-            setHasText(false);
-            return Promise.resolve();
-          },
-          focus: () =>
-            currentInputRef({
-              secureTextEntry,
-              secureFieldRef,
-              textFieldRef,
-            })?.focus() ?? Promise.resolve(),
-          setSelection: (start: number, end: number) =>
-            secureTextEntry
-              ? Promise.resolve()
-              : (textFieldRef.current?.setSelection(start, end) ??
-                Promise.resolve()),
-          setText: (nextText: string) => {
-            latestText.current = nextText;
-            nativeText.value = nextText;
-            setHasText(nextText.length > 0);
-            return Promise.resolve();
-          },
-        }) satisfies InputRef,
-      [nativeText, secureTextEntry],
-    );
-
-    useEffect(() => {
-      if (value === undefined) {
-        return;
-      }
-
-      const nextText = value;
-      if (nextText === latestText.current) {
-        return;
-      }
-
-      latestText.current = nextText;
-      nativeText.value = nextText;
-      setHasText(nextText.length > 0);
-    }, [nativeText, value]);
-
-    useEffect(() => {
-      if (!selection || secureTextEntry) {
-        return;
-      }
-
-      void textFieldRef.current?.setSelection(
-        selection.start,
-        selection.end ?? selection.start,
-      );
-    }, [secureTextEntry, selection]);
-
-    return (
-      <Host
-        colorScheme={scheme}
-        matchContents={{ vertical: true }}
-        onLayoutContent={
-          onContentSizeChange
-            ? event => onContentSizeChange(event.nativeEvent)
-            : undefined
-        }
-        style={hostStyle}
+        secureFieldRef,
+        textFieldRef,
+      })?.blur();
+    }
+  };
+  const textFieldModifiers = buildTextFieldModifiers({
+    autoCapitalize,
+    autoComplete,
+    autoCorrect,
+    disabled,
+    enterKeyHint,
+    inputMode,
+    keyboardType,
+    multiline,
+    numberOfLines,
+    returnKeyType,
+    style: flattenedStyle,
+    textAlign,
+    textColor,
+    textContentType,
+    tintColor: resolvedCursorColor,
+  });
+  if (onSubmitEditing) {
+    textFieldModifiers.push(onSubmit(handleSubmit));
+  }
+  const containerModifiers = buildContainerModifiers({
+    backgroundColor: resolvedBackgroundColor,
+    borderColor: resolvedBorderColor,
+    borderWidth: borderWidthForStyle(flattenedStyle),
+    hasText,
+    liquidGlassAvailable,
+    multiline: Boolean(multiline),
+    radius: radiusForStyle(flattenedStyle),
+    style: flattenedStyle,
+  });
+  const hostStyle = [styles.host, pickHostStyle(flattenedStyle)];
+  const autoFocusProps = autoFocus ? { autoFocus } : undefined;
+  const placeholderNode = placeholder ? (
+    <TextField.Placeholder>
+      <SwiftUIText
+        modifiers={[
+          foregroundStyle(resolvedPlaceholderColor),
+          ...fontModifiersForStyle(flattenedStyle),
+        ]}
       >
-        <GlassEffectContainer>
-          <VStack alignment='leading' modifiers={containerModifiers}>
-            {secureTextEntry ? (
-              <SecureField
-                {...autoFocusProps}
-                maxLength={maxLength}
-                modifiers={textFieldModifiers}
-                onFocusChange={handleFocusChange}
-                onTextChange={handleTextChange}
-                placeholder={placeholder}
-                ref={secureFieldRef}
-                text={nativeText}
-              >
-                {securePlaceholderNode}
-              </SecureField>
-            ) : (
-              <TextField
-                {...autoFocusProps}
-                axis={multiline ? 'vertical' : 'horizontal'}
-                maxLength={maxLength}
-                modifiers={textFieldModifiers}
-                onFocusChange={handleFocusChange}
-                onSelectionChange={onSelectionChange}
-                onTextChange={handleTextChange}
-                placeholder={placeholder}
-                ref={textFieldRef}
-                selection={nativeSelection}
-                text={nativeText}
-              >
-                {placeholderNode}
-              </TextField>
-            )}
-          </VStack>
-        </GlassEffectContainer>
-      </Host>
-    );
-  },
-);
+        {placeholder}
+      </SwiftUIText>
+    </TextField.Placeholder>
+  ) : null;
+  const securePlaceholderNode = placeholder ? (
+    <SecureField.Placeholder>
+      <SwiftUIText
+        modifiers={[
+          foregroundStyle(resolvedPlaceholderColor),
+          ...fontModifiersForStyle(flattenedStyle),
+        ]}
+      >
+        {placeholder}
+      </SwiftUIText>
+    </SecureField.Placeholder>
+  ) : null;
 
-Input.displayName = 'Input';
+  const commitTextChange = (nextText: string) => {
+    latestText.current = nextText;
+    setTypedHasText(nextText.length > 0);
+    onChangeText?.(nextText);
+    onChange?.(textChangeEvent(nextText));
+  };
+
+  const handleTextChange = (nextText: string) => {
+    'worklet';
+
+    scheduleOnRN(commitTextChange, nextText);
+  };
+
+  const handleFocusChange = (focused: boolean) => {
+    if (focused) {
+      onFocus?.();
+      return;
+    }
+    onBlur?.();
+    const currentText = nativeText.value;
+    latestText.current = currentText;
+    onEndEditing?.(endEditingEvent(currentText));
+  };
+
+  useImperativeHandle(
+    ref,
+    () =>
+      ({
+        blur: () =>
+          currentInputRef({
+            secureTextEntry,
+            secureFieldRef,
+            textFieldRef,
+          })?.blur() ?? Promise.resolve(),
+        clear: () => {
+          latestText.current = '';
+          nativeText.value = '';
+          setTypedHasText(false);
+          return Promise.resolve();
+        },
+        focus: () =>
+          currentInputRef({
+            secureTextEntry,
+            secureFieldRef,
+            textFieldRef,
+          })?.focus() ?? Promise.resolve(),
+        setSelection: (start: number, end: number) =>
+          secureTextEntry
+            ? Promise.resolve()
+            : (textFieldRef.current?.setSelection(start, end) ??
+              Promise.resolve()),
+        setText: (nextText: string) => {
+          latestText.current = nextText;
+          nativeText.value = nextText;
+          setTypedHasText(nextText.length > 0);
+          return Promise.resolve();
+        },
+      }) satisfies InputRef,
+    [nativeText, secureTextEntry],
+  );
+
+  useLayoutEffect(() => {
+    if (value === undefined) {
+      return;
+    }
+
+    if (value === latestText.current) {
+      return;
+    }
+
+    latestText.current = value;
+    setNativeText(nativeText, value);
+  }, [nativeText, value]);
+
+  useLayoutEffect(() => {
+    if (!selection || secureTextEntry) {
+      return;
+    }
+
+    void textFieldRef.current?.setSelection(
+      selection.start,
+      selection.end ?? selection.start,
+    );
+  }, [selection, secureTextEntry]);
+
+  return (
+    <Host
+      colorScheme={scheme}
+      matchContents={{ vertical: true }}
+      onLayoutContent={
+        onContentSizeChange
+          ? event => onContentSizeChange(event.nativeEvent)
+          : undefined
+      }
+      style={hostStyle}
+    >
+      <GlassEffectContainer>
+        <VStack alignment='leading' modifiers={containerModifiers}>
+          {secureTextEntry ? (
+            <SecureField
+              {...autoFocusProps}
+              maxLength={maxLength}
+              modifiers={textFieldModifiers}
+              onFocusChange={handleFocusChange}
+              onTextChange={handleTextChange}
+              placeholder={placeholder}
+              ref={secureFieldRef}
+              text={nativeText}
+            >
+              {securePlaceholderNode}
+            </SecureField>
+          ) : (
+            <TextField
+              {...autoFocusProps}
+              axis={multiline ? 'vertical' : 'horizontal'}
+              maxLength={maxLength}
+              modifiers={textFieldModifiers}
+              onFocusChange={handleFocusChange}
+              onSelectionChange={onSelectionChange}
+              onTextChange={handleTextChange}
+              placeholder={placeholder}
+              ref={textFieldRef}
+              selection={nativeSelection}
+              text={nativeText}
+            >
+              {placeholderNode}
+            </TextField>
+          )}
+        </VStack>
+      </GlassEffectContainer>
+    </Host>
+  );
+}
 
 type BuildTextFieldModifierOptions = {
   autoCapitalize?: TextInputProps['autoCapitalize'];
@@ -803,6 +727,10 @@ function currentInputRef({
   textFieldRef: React.RefObject<TextFieldRef | null>;
 }) {
   return secureTextEntry ? secureFieldRef.current : textFieldRef.current;
+}
+
+function setNativeText(nativeText: { value: string }, text: string): void {
+  nativeText.value = text;
 }
 
 function colorValue(color: ColorValue | null | undefined): ColorValue {

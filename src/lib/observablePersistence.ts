@@ -31,9 +31,11 @@ function clearLegacyWebLocalStorageCaches(): void {
     globalThis.localStorage.removeItem(CHAT_STORE_PERSISTENCE_KEY);
     globalThis.localStorage.removeItem(`${CHAT_STORE_PERSISTENCE_KEY}__m`);
 
-    Object.keys(globalThis.localStorage)
-      .filter(key => key.startsWith('query-cache-'))
-      .forEach(key => globalThis.localStorage.removeItem(key));
+    for (const key of Object.keys(globalThis.localStorage)) {
+      if (key.startsWith('query-cache-')) {
+        globalThis.localStorage.removeItem(key);
+      }
+    }
   } catch {
     // localStorage can be unavailable or already over quota in private modes.
   }

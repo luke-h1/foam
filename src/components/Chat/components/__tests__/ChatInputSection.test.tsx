@@ -27,7 +27,11 @@ describe('ChatInputSection', () => {
     mockChatComposer.mockClear();
   });
 
-  test('configures chat submit to blur and dismiss the keyboard', () => {
+  test('passes composer API (onSubmit, onPressAdd, onChangeText)', () => {
+    const onSubmit = jest.fn();
+    const onChangeText = jest.fn();
+    const onOpenEmoteSheet = jest.fn();
+
     render(
       <SafeAreaProvider
         initialMetrics={{
@@ -37,32 +41,41 @@ describe('ChatInputSection', () => {
       >
         <ChatInputSection
           messageInput='hello'
-          onChangeText={jest.fn()}
+          onChangeText={onChangeText}
           onEmoteSelect={jest.fn()}
-          onSubmit={jest.fn()}
-          onOpenEmoteSheet={jest.fn()}
+          onSubmit={onSubmit}
+          onOpenEmoteSheet={onOpenEmoteSheet}
           onOpenSettingsSheet={jest.fn()}
           replyTo={null}
           onClearReply={jest.fn()}
-          isConnected
-          isAuthenticated
+          connection={{
+            isConnected: true,
+            isAuthenticated: true,
+            isSending: false,
+          }}
         />
       </SafeAreaProvider>,
     );
 
     const props = mockChatComposer.mock.calls[0]?.[0] as {
-      blurOnSubmit?: boolean;
-      returnKeyType?: string;
-      submitBehavior?: string;
+      onSubmit?: () => void;
+      onPressAdd?: () => void;
+      onChangeText?: (text: string) => void;
+      canSend?: boolean;
+      editable?: boolean;
     };
     expect({
-      blurOnSubmit: props.blurOnSubmit,
-      returnKeyType: props.returnKeyType,
-      submitBehavior: props.submitBehavior,
+      onSubmit: props.onSubmit,
+      onPressAdd: props.onPressAdd,
+      onChangeText: props.onChangeText,
+      canSend: props.canSend,
+      editable: props.editable,
     }).toEqual({
-      blurOnSubmit: true,
-      returnKeyType: 'send',
-      submitBehavior: 'blurAndSubmit',
+      onSubmit,
+      onPressAdd: onOpenEmoteSheet,
+      onChangeText,
+      canSend: true,
+      editable: true,
     });
   });
 });

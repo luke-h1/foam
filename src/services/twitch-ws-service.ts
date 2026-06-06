@@ -622,34 +622,36 @@ class TwitchWsService {
       }, 5000); // 5 second timeout
     });
 
-    const cleanupPromises = subscriptionIds.map(async subscriptionId => {
-      try {
-        const deletePromise =
-          twitchService.deleteEventSubscription(subscriptionId);
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Timeout')), 2000);
-        });
+    const cleanupPromises = subscriptionIds.map(subscriptionId =>
+      (async () => {
+        try {
+          const deletePromise =
+            twitchService.deleteEventSubscription(subscriptionId);
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Timeout')), 2000);
+          });
 
-        await Promise.race([deletePromise, timeoutPromise]);
-        logger.twitchWs.info(`💜 Cleaned up subscription: ${subscriptionId}`);
-      } catch (error) {
-        logger.twitchWs.warn(
-          `💜 Failed to cleanup subscription ${subscriptionId}:`,
-          error,
-        );
-        recordWarning({
-          name: 'twitch_ws_warning',
-          message: 'Failed to clean up Twitch EventSub subscription',
-          params: {
-            action: 'subscription_cleanup_failed',
-            provider: 'twitch',
-            source: 'twitch_ws_service',
-            subscription_id: subscriptionId,
-          },
-          warningCause: error,
-        });
-      }
-    });
+          await Promise.race([deletePromise, timeoutPromise]);
+          logger.twitchWs.info(`💜 Cleaned up subscription: ${subscriptionId}`);
+        } catch (error) {
+          logger.twitchWs.warn(
+            `💜 Failed to cleanup subscription ${subscriptionId}:`,
+            error,
+          );
+          recordWarning({
+            name: 'twitch_ws_warning',
+            message: 'Failed to clean up Twitch EventSub subscription',
+            params: {
+              action: 'subscription_cleanup_failed',
+              provider: 'twitch',
+              source: 'twitch_ws_service',
+              subscription_id: subscriptionId,
+            },
+            warningCause: error,
+          });
+        }
+      })(),
+    );
 
     // Race between cleanup and timeout
     await Promise.race([Promise.allSettled(cleanupPromises), cleanupTimeout]);

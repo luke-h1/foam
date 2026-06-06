@@ -18,6 +18,9 @@ export type TwitchNotices =
   | 'giftpaidupgrade'
   | 'rewardgift'
   | 'anongiftpaidupgrade'
+  | 'primepaidupgrade'
+  | 'charitydonation'
+  | 'ritual'
   | 'raid'
   | 'unraid'
   | 'sharedchatnotice';
@@ -43,6 +46,10 @@ export type PartVariant =
    * Twitch clip
    */
   | 'twitchClip'
+  /**
+   * Generic http(s) URL
+   */
+  | 'link'
   /**
    * Notice event
    */
@@ -84,7 +91,7 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
       ? {
           type: TType;
           subscriptionEvent: {
-            msgId: 'resub';
+            msgId: 'resub' | 'extendsub' | 'standardpayforward';
             displayName: string;
             message?: string;
             plan: string; // 1000, 2000, 3000 for Prime, Tier 1, Tier 2, Tier 3
@@ -98,7 +105,11 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
         ? {
             type: TType;
             subscriptionEvent: {
-              msgId: 'subgift';
+              msgId:
+                | 'subgift'
+                | 'anonsubgift'
+                | 'communitypayforward'
+                | 'primecommunitygiftreceived';
               displayName: string;
               message?: string;
               plan: string; // 1000, 2000, 3000 for Prime, Tier 1, Tier 2, Tier 3
@@ -113,7 +124,7 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
           ? {
               type: TType;
               subscriptionEvent: {
-                msgId: 'submysterygift';
+                msgId: 'submysterygift' | 'anonsubmysterygift';
                 displayName: string;
                 message?: string;
                 plan?: string;
@@ -142,50 +153,80 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
                     msgId: 'anongiftpaidupgrade';
                     displayName: string;
                     message?: string;
-                    promoName: string; // promo-name
-                    promoGiftTotal: string; // promo-gift-total
+                    promoName: string;
+                    promoGiftTotal: string;
                   };
                 }
-              : TType extends 'viewermilestone'
+              : TType extends 'primepaidupgrade'
                 ? {
                     type: TType;
-                    category: string;
-                    reward: string;
-                    value: string;
-                    content: string;
-                    systemMsg: string; //"LimeTitanTV\\swatched\\s20\\sconsecutive\\sstreams\\sand\\ssparked\\sa\\swatch\\sstreak!",
-                    login: string;
-                    displayName: string;
+                    subscriptionEvent: {
+                      msgId: 'primepaidupgrade';
+                      displayName: string;
+                      message?: string;
+                      plan: string;
+                      planName?: string;
+                      months?: number;
+                    };
                   }
-                : /**
-                   * Normal message
-                   */
-                  Pick<
-                    Partial<SanitisedEmote>,
-                    | 'creator'
-                    | 'emote_link'
-                    | 'image_variants'
-                    | 'original_name'
-                    | 'site'
-                    | 'static_url'
-                    | 'url'
-                  > & {
-                    id?: string;
-                    name?: string;
-                    flags?: number;
-                    type: TType;
-                    content: string;
-                    color?: string;
-                    width?: number;
-                    height?: number;
-                    aspect_ratio?: number;
-                    zero_width?: boolean;
+                : TType extends 'charitydonation'
+                  ? {
+                      type: TType;
+                      displayName: string;
+                      charityName: string;
+                      amount: string;
+                      currency: string;
+                      systemMsg: string;
+                      message?: string;
+                    }
+                  : TType extends 'ritual'
+                    ? {
+                        type: TType;
+                        displayName: string;
+                        ritualName: string;
+                        systemMsg: string;
+                        message?: string;
+                      }
+                    : TType extends 'viewermilestone'
+                      ? {
+                          type: TType;
+                          category: string;
+                          reward: string;
+                          value: string;
+                          content: string;
+                          systemMsg: string; //"LimeTitanTV\\swatched\\s20\\sconsecutive\\sstreams\\sand\\ssparked\\sa\\swatch\\sstreak!",
+                          login: string;
+                          displayName: string;
+                        }
+                      : /**
+                         * Normal message
+                         */
+                        Pick<
+                          Partial<SanitisedEmote>,
+                          | 'creator'
+                          | 'emote_link'
+                          | 'image_variants'
+                          | 'original_name'
+                          | 'site'
+                          | 'static_url'
+                          | 'url'
+                        > & {
+                          id?: string;
+                          name?: string;
+                          flags?: number;
+                          type: TType;
+                          content: string;
+                          color?: string;
+                          width?: number;
+                          height?: number;
+                          aspect_ratio?: number;
+                          zero_width?: boolean;
 
-                    /**
-                     * Used for emote and twitch clip previews
-                     */
-                    thumbnail?: string;
-                  };
+                          /**
+                           * Used for emote and twitch clip previews
+                           */
+                          thumbnail?: string;
+                        };
 
 function decodeEmojiToUnified(emoji: string): string {
   return [...emoji]
@@ -339,10 +380,10 @@ function getSortedEmoteNames(emoteMap: Map<string, SanitisedEmote>): string[] {
 
 export const SEVENTV_EMOTE_LINK_REGEX =
   /https?:\/\/(?:www\.)?7tv\.app\/emotes\/([a-zA-Z0-9]+)/i;
-export const TWITCH_CLIP_REGEX =
+const TWITCH_CLIP_REGEX =
   /https?:\/\/(?:www\.)?clips\.twitch\.tv\/([a-zA-Z0-9_-]+)/i;
 
-export const TWITCH_CHANNEL_CLIP_REGEX =
+const TWITCH_CHANNEL_CLIP_REGEX =
   /https?:\/\/(?:www\.)?twitch\.tv\/(?:[a-zA-Z0-9_]+\/)?clip\/([a-zA-Z0-9_-]+)/i;
 
 export function getTwitchClipIdFromUrl(url: string): string | null {
@@ -352,27 +393,85 @@ export function getTwitchClipIdFromUrl(url: string): string | null {
   return twitchClipMatch?.[1] ?? twitchChannelClipMatch?.[1] ?? null;
 }
 
-function parseLink(url: string): ParsedPart | null {
-  const sevenTvMatch = url.match(SEVENTV_EMOTE_LINK_REGEX);
+const GENERIC_HTTP_URL_REGEX = /^https?:\/\//i;
+
+export function parseWordLinkParts(word: string): ParsedPart[] | null {
+  if (!word || /\s+/.test(word)) {
+    return null;
+  }
+
+  const punctMatch = word.match(/^(https?:\/\/[^\s]+?)([.,!?;:'")\]}>]*)$/i);
+  const urlCandidate = punctMatch?.[1] ?? word;
+  const trailing = punctMatch?.[2] ?? '';
+
+  if (!GENERIC_HTTP_URL_REGEX.test(urlCandidate)) {
+    return null;
+  }
+
+  const trailingTextPart: ParsedPart[] = trailing
+    ? [{ type: 'text', content: trailing }]
+    : [];
+
+  const sevenTvMatch = urlCandidate.match(SEVENTV_EMOTE_LINK_REGEX);
   if (sevenTvMatch) {
-    return {
-      type: 'stvEmote',
-      content: url,
-      url,
-    };
+    return [
+      {
+        type: 'stvEmote',
+        content: urlCandidate,
+        url: urlCandidate,
+      },
+      ...trailingTextPart,
+    ];
   }
 
-  const clipId = getTwitchClipIdFromUrl(url);
-
+  const clipId = getTwitchClipIdFromUrl(urlCandidate);
   if (clipId) {
-    return {
-      type: 'twitchClip',
-      content: url,
-      url,
-    };
+    return [
+      {
+        type: 'twitchClip',
+        content: urlCandidate,
+        url: urlCandidate,
+      },
+      ...trailingTextPart,
+    ];
   }
 
-  return null;
+  return [
+    {
+      type: 'link',
+      content: urlCandidate,
+      url: urlCandidate,
+    },
+    ...trailingTextPart,
+  ];
+}
+
+export function findEmoteMatchingMention(
+  mentionText: string,
+  emotes: Iterable<SanitisedEmote>,
+): SanitisedEmote | undefined {
+  if (!mentionText.startsWith('@')) {
+    return undefined;
+  }
+
+  const mentionTarget = mentionText.slice(1).trimEnd().toLowerCase();
+  if (!mentionTarget) {
+    return undefined;
+  }
+
+  for (const emote of emotes) {
+    const emoteName = emote.name.trimEnd();
+    if (emoteName.toLowerCase() === mentionTarget) {
+      return emote;
+    }
+
+    const alternateName = emote.original_name?.trim();
+    if (alternateName && alternateName.toLowerCase() === mentionTarget) {
+      return emote;
+    }
+  }
+
+  return undefined;
 }
 
 /**
@@ -395,7 +494,7 @@ export function replaceTextWithEmotes({
   ffzChannelEmotes,
   ffzGlobalEmotes,
   twitchChannelEmotes,
-  userstate,
+  userstate: _userstate,
 }: {
   inputString: string;
   userstate: UserStateTags | null;
@@ -433,21 +532,28 @@ export function replaceTextWithEmotes({
     ...bttvGlobalEmotes,
   ] as const;
 
-  // Add sender-scoped emotes first (highest priority).
-  sevenTvPersonalEmotes.forEach(emote => {
-    emoteMap.set(emote.name, withResolvedEmoteImageVariants(emote));
-  });
+  const registerEmoteLookup = (emote: SanitisedEmote) => {
+    const resolved = withResolvedEmoteImageVariants(emote);
+    if (!emoteMap.has(emote.name)) {
+      emoteMap.set(emote.name, resolved);
+    }
+    const alternateName = emote.original_name?.trim();
+    if (
+      alternateName &&
+      alternateName !== emote.name &&
+      !emoteMap.has(alternateName)
+    ) {
+      emoteMap.set(alternateName, resolved);
+    }
+  };
 
-  twitchSubscriberEmotes.forEach(emote => {
-    emoteMap.set(emote.name, withResolvedEmoteImageVariants(emote));
-  });
+  // Add sender-scoped emotes first (highest priority).
+  sevenTvPersonalEmotes.forEach(registerEmoteLookup);
+
+  twitchSubscriberEmotes.forEach(registerEmoteLookup);
 
   // Add channel emotes, only if not already set by personal emotes
-  channelEmotes.forEach(emote => {
-    if (!emoteMap.has(emote.name)) {
-      emoteMap.set(emote.name, withResolvedEmoteImageVariants(emote));
-    }
-  });
+  channelEmotes.forEach(registerEmoteLookup);
 
   // add global emotes, only if not already set by personal or channel emotes
   globalEmotes.forEach(emote => {
@@ -514,8 +620,9 @@ export function replaceTextWithEmotes({
         words.forEach(word => {
           if (word.startsWith('@')) {
             const mentionText = word.endsWith(' ') ? word.trimEnd() : word;
-            const emoteInMention = Array.from(emoteMap.values()).find(emote =>
-              mentionText.includes(emote.name.trimEnd()),
+            const emoteInMention = findEmoteMatchingMention(
+              mentionText,
+              emoteMap.values(),
             );
 
             if (emoteInMention) {
@@ -539,7 +646,6 @@ export function replaceTextWithEmotes({
             replacedParts.push({
               type: 'mention',
               content: mentionText,
-              color: userstate?.color,
               ...emoteInMention,
             });
           } else if (/\s+/.test(word)) {
@@ -549,16 +655,9 @@ export function replaceTextWithEmotes({
               content: word,
             });
           } else {
-            /**
-             * Our custom link parser
-             */
-            const linkMetadata = parseLink(word);
-            if (linkMetadata) {
-              replacedParts.push({
-                ...linkMetadata,
-                // @ts-expect-error - ts struggling to narrow the type of our @see ParsedPart type
-                content: word,
-              });
+            const linkParts = parseWordLinkParts(word);
+            if (linkParts) {
+              replacedParts.push(...linkParts);
             } else {
               // Fast path: direct Map lookup for standalone emote words
               const directEmote = emoteMap.get(word);
@@ -566,7 +665,7 @@ export function replaceTextWithEmotes({
               if (directEmote) {
                 replacedParts.push({
                   type: 'emote',
-                  content: directEmote.name,
+                  content: word,
                   ...directEmote,
                 });
               } else {
@@ -586,7 +685,7 @@ export function replaceTextWithEmotes({
                     }
                     replacedParts.push({
                       type: 'emote',
-                      content: emote.name,
+                      content: word.slice(start, end),
                       ...emote,
                     });
                     lastIndex = end;

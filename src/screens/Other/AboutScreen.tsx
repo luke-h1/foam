@@ -8,9 +8,11 @@ import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import * as Application from 'expo-application';
 import * as Updates from 'expo-updates';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { type ReactNode, useRef } from 'react';
+import { useRef } from 'react';
+import type { ReactNode } from 'react';
+
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import appIconProduction from '../../../assets/app-icon/app-icon-production.png';
+const appIconProduction = require('../../../assets/app-icon/app-icon-production.png');
 
 interface AboutSectionProps {
   title?: string;

@@ -42,7 +42,7 @@ describe('useChatLifecycle', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (defaultNavigation.addListener as jest.Mock).mockImplementation(
+    defaultNavigation.addListener.mockImplementation(
       (_event: string, cb: () => void) => {
         (defaultNavigation as { beforeRemoveCb?: () => void }).beforeRemoveCb =
           cb;

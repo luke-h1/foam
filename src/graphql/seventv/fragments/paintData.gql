@@ -1,0 +1,58 @@
+fragment PaintDataFragment on PaintData {
+  layers {
+    id
+    opacity
+    ty {
+      ... on PaintLayerTypeLinearGradient {
+        angle
+        repeating
+        stops {
+          at
+          color {
+            r
+            g
+            b
+            a
+          }
+        }
+      }
+      ... on PaintLayerTypeRadialGradient {
+        repeating
+        shape
+        stops {
+          at
+          color {
+            r
+            g
+            b
+            a
+          }
+        }
+      }
+      ... on PaintLayerTypeSingleColor {
+        color {
+          r
+          g
+          b
+          a
+        }
+      }
+      ... on PaintLayerTypeImage {
+        images {
+          ...ImageFragment
+        }
+      }
+    }
+  }
+  shadows {
+    offsetX
+    offsetY
+    blur
+    color {
+      r
+      g
+      b
+      a
+    }
+  }
+}

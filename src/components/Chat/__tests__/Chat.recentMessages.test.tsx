@@ -303,12 +303,8 @@ const mockedUseChatMessages = jest.mocked(useChatMessages);
 const mockedRestoreRecentMessagesForChannel = jest.mocked(
   restoreRecentMessagesForChannel,
 );
-const mockedChatStore = chatStore$ as unknown as {
-  messages: {
-    get: jest.MockedFunction<() => unknown[]>;
-    peek: jest.MockedFunction<() => unknown[]>;
-  };
-};
+const mockMessagesGet = jest.mocked(chatStore$.messages.get);
+const mockMessagesPeek = jest.mocked(chatStore$.messages.peek);
 
 const handleNewMessage = jest.fn();
 const forceFlush = jest.fn();
@@ -356,8 +352,8 @@ describe('Chat recent messages', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockedRestoreRecentMessagesForChannel.mockReturnValue(0);
-    mockedChatStore.messages.get.mockReturnValue([]);
-    mockedChatStore.messages.peek.mockReturnValue([]);
+    mockMessagesGet.mockReturnValue([]);
+    mockMessagesPeek.mockReturnValue([]);
     setPreferences();
     const chatMessages = {
       handleNewMessage,

@@ -56,7 +56,7 @@ export type ClientResponse<TValue> = Omit<
   'config'
 >;
 
-export class FetchHttpError<TValue = unknown> extends Error {
+class FetchHttpError<TValue = unknown> extends Error {
   public readonly config: InternalRequestConfig;
   public readonly response?: FetchClientResponse<TValue>;
   public readonly status?: number;

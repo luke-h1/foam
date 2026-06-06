@@ -1,6 +1,6 @@
 import { type ErrorBoundaryProps, Stack, router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { Button } from '@app/components/Button/Button';
 import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import { SymbolView } from 'expo-symbols';
@@ -9,14 +9,12 @@ import { Text } from '@app/components/ui/Text/Text';
 import { recordError, showFeedbackWidget } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 
-export default function AppError({ error, retry }: ErrorBoundaryProps) {
-  const errorMessage = useMemo(() => {
-    if (error.message && error.message.trim().length > 0) {
-      return error.message;
-    }
+function handleReportBug() {
+  showFeedbackWidget();
+}
 
-    return 'An unexpected issue interrupted the app.';
-  }, [error.message]);
+export default function AppError({ error, retry }: ErrorBoundaryProps) {
+  const errorMessage = 'An unexpected issue interrupted the app.';
 
   useEffect(() => {
     recordError({
@@ -30,10 +28,6 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
       errorCause: error,
     });
   }, [errorMessage, error]);
-
-  const handleReportBug = () => {
-    showFeedbackWidget();
-  };
 
   return (
     <>

@@ -1,5 +1,5 @@
 import { BlurView } from 'expo-blur';
-import { memo, useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 import {
   StyleSheet,
   View,
@@ -199,15 +199,17 @@ export const AnimatedInputBar = memo(function AnimatedInputBar({
       return;
     }
 
-    blurProgress.value = withSequence(
-      withTiming(1, {
-        duration: blurAnimationDuration,
-        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-      }),
-      withTiming(0, {
-        duration: blurAnimationDuration,
-        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-      }),
+    blurProgress.set(
+      withSequence(
+        withTiming(1, {
+          duration: blurAnimationDuration,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        }),
+        withTiming(0, {
+          duration: blurAnimationDuration,
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        }),
+      ),
     );
   }, [
     blurAnimationDuration,
@@ -242,7 +244,7 @@ export const AnimatedInputBar = memo(function AnimatedInputBar({
 
   const blurOverlayStyle = useAnimatedStyle(() => ({
     opacity: withSpring(
-      interpolate(blurProgress.value, [0, 0.2, 1], [0, 0.2, 0.45]),
+      interpolate(blurProgress.get(), [0, 0.2, 1], [0, 0.2, 0.45]),
     ),
   }));
 

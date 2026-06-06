@@ -39,7 +39,7 @@ export function isAuthCallbackUrl(url: string | null): boolean {
   return result;
 }
 
-export function parseAuthCallbackUrl(url: string | null) {
+function parseAuthCallbackUrl(url: string | null) {
   log('parseAuthCallbackUrl: in', { urlSafe: url?.slice(0, 80) ?? null });
   if (!url || !isAuthCallbackUrl(url)) {
     log('parseAuthCallbackUrl: out null (no url or not callback)');

@@ -41,6 +41,7 @@ const twitchWsState = TwitchWsService as unknown as TwitchWsPrivateState;
 const mockCreateEventSubscription = jest.mocked(
   twitchService.createEventSubscription,
 );
+const mockRecordWarning = jest.mocked(recordWarning);
 
 describe('TwitchWsService EventSub response handling', () => {
   beforeEach(() => {
@@ -75,7 +76,7 @@ describe('TwitchWsService EventSub response handling', () => {
       twitchWsState.eventCallbacks.get('channel.prediction.begin'),
     ).toEqual([]);
     expect(mockCreateEventSubscription).toHaveBeenCalledTimes(1);
-    const warningPayload = jest.mocked(recordWarning).mock.calls[0]?.[0];
+    const warningPayload = mockRecordWarning.mock.calls[0]?.[0];
     expect({
       action: warningPayload?.params?.action,
       event_type: warningPayload?.params?.event_type,

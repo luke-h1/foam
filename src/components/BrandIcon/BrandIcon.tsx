@@ -1,24 +1,11 @@
-import { typedObjectKeys } from '@app/utils/typescript/typedObjectKeys';
 import { memo } from 'react';
 import { DimensionValue, ViewStyle } from 'react-native';
-import { BttvIcon } from './svg/BttvIcon';
-import { StvIcon } from './svg/StvIcon';
-import { TwitchIcon } from './svg/TwitchIcon';
-
-export type BrandIconName = keyof typeof BrandIcons;
-
-const ICON_SIZES = {
-  xs: { height: 12, width: 12 },
-  sm: { height: 16, width: 16 },
-  md: { height: 20, width: 20 },
-  lg: { height: 24, width: 24 },
-} as const;
-
-export type IconSize =
-  | keyof typeof ICON_SIZES
-  | { height: DimensionValue; width: DimensionValue };
-
-export const IconSizes = typedObjectKeys(ICON_SIZES);
+import {
+  BrandIconName,
+  BrandIcons,
+  IconSize,
+  resolveBrandIconSize,
+} from './brandIconRegistry';
 
 interface IconProps {
   name: BrandIconName;
@@ -26,43 +13,6 @@ interface IconProps {
   color?: string;
   style?: ViewStyle;
 }
-
-export const BrandIcons = {
-  /**
-   * Companies
-   */
-  stv: StvIcon,
-  twitch: TwitchIcon,
-  bttv: BttvIcon,
-} as const;
-
-function resolveSize(size: IconSize) {
-  if (typeof size === 'string') {
-    return ICON_SIZES[size];
-  }
-
-  return {
-    height: size.height,
-    width: size.width,
-  };
-}
-
-export const BrandIcon = memo(
-  ({ name, color, size = 'md', style, ...props }: IconProps) => {
-    const { height, width } = resolveSize(size);
-    const IconComponent = BrandIcons[name];
-
-    return (
-      <IconComponent
-        color={color}
-        style={[getIconImageStyle({ height, width }), style]}
-        {...props}
-      />
-    );
-  },
-);
-
-BrandIcon.displayName = 'BrandIcon';
 
 function getIconImageStyle({
   height,
@@ -76,3 +26,18 @@ function getIconImageStyle({
     width,
   };
 }
+
+export const BrandIcon = memo(
+  ({ name, color, size = 'md', style, ...props }: IconProps) => {
+    const { height, width } = resolveBrandIconSize(size);
+    const IconComponent = BrandIcons[name];
+
+    return (
+      <IconComponent
+        color={color}
+        style={[getIconImageStyle({ height, width }), style]}
+        {...props}
+      />
+    );
+  },
+);

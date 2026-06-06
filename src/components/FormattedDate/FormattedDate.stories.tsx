@@ -20,27 +20,27 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    children: new Date(),
+    value: new Date(),
   },
 };
 
 export const CustomFormat: Story = {
   args: {
-    children: new Date(),
+    value: new Date(),
     format: 'yyyy-MM-dd',
   },
 };
 
 export const RelativeToNow: Story = {
   args: {
-    children: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
+    value: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
     formatRelativeToNow: true,
   },
 };
 
 export const WithParseFormat: Story = {
   args: {
-    children: '2023-10-01',
+    value: '2023-10-01',
     parseFormat: 'yyyy-MM-dd',
   },
 };

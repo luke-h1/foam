@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { RichChatMessage } from '@app/components/Chat/components/ChatMessage/RichChatMessage';
 import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
@@ -15,7 +16,8 @@ import {
   type ParsedPart,
 } from '@app/utils/chat/replaceTextWithEmotes';
 import { useSelector } from '@legendapp/state/react';
-import { memo, type ReactNode, useMemo } from 'react';
+import type { ReactNode } from 'react';
+
 import { StyleSheet, View } from 'react-native';
 import { chatPreferencePreviewFixtures } from './chatPreferencePreviewFixtures';
 
@@ -254,9 +256,7 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
   }
 });
 
-ChatPreferencePreview.displayName = 'ChatPreferencePreview';
-
-const ChatPreviewSurface = memo(function ChatPreviewSurface({
+const ChatPreviewSurface = function ChatPreviewSurface({
   label,
   messages,
   settings,
@@ -333,11 +333,9 @@ const ChatPreviewSurface = memo(function ChatPreviewSurface({
       </View>
     </PreviewCard>
   );
-});
+};
 
-ChatPreviewSurface.displayName = 'ChatPreviewSurface';
-
-const ProviderAssetPreview = memo(function ProviderAssetPreview({
+const ProviderAssetPreview = function ProviderAssetPreview({
   enabled,
   provider,
   testID,
@@ -349,30 +347,27 @@ const ProviderAssetPreview = memo(function ProviderAssetPreview({
   variant: 'badges' | 'emotes';
 }) {
   const sample = useSelector(() => getProviderPreviewSample(provider, variant));
-  const message = useMemo(
-    () =>
-      variant === 'emotes'
-        ? createPreviewMessage({
-            color: getProviderPreviewColor(provider),
-            displayName: 'username',
-            id: `preview-${provider}-emotes-${enabled ? 'on' : 'off'}`,
-            login: `${provider}-preview`,
-            message: enabled
-              ? buildProviderEmoteParts(provider, sample.emotes)
-              : [textPart(buildProviderEmoteFallbackText(sample.emotes))],
-            userId: `preview-${provider}-emotes`,
-          })
-        : createPreviewMessage({
-            badges: enabled ? sample.badges : [],
-            color: getProviderPreviewColor(provider),
-            displayName: 'username',
-            id: `preview-${provider}-badges-${enabled ? 'on' : 'off'}`,
-            login: `${provider}-preview`,
-            text: ' hello world',
-            userId: `preview-${provider}-badges`,
-          }),
-    [enabled, provider, sample.badges, sample.emotes, variant],
-  );
+  const message =
+    variant === 'emotes'
+      ? createPreviewMessage({
+          color: getProviderPreviewColor(provider),
+          displayName: 'username',
+          id: `preview-${provider}-emotes-${enabled ? 'on' : 'off'}`,
+          login: `${provider}-preview`,
+          message: enabled
+            ? buildProviderEmoteParts(provider, sample.emotes)
+            : [textPart(buildProviderEmoteFallbackText(sample.emotes))],
+          userId: `preview-${provider}-emotes`,
+        })
+      : createPreviewMessage({
+          badges: enabled ? sample.badges : [],
+          color: getProviderPreviewColor(provider),
+          displayName: 'username',
+          id: `preview-${provider}-badges-${enabled ? 'on' : 'off'}`,
+          login: `${provider}-preview`,
+          text: ' hello world',
+          userId: `preview-${provider}-badges`,
+        });
 
   return (
     <PreviewCard testID={testID}>
@@ -389,11 +384,9 @@ const ProviderAssetPreview = memo(function ProviderAssetPreview({
       </View>
     </PreviewCard>
   );
-});
+};
 
-ProviderAssetPreview.displayName = 'ProviderAssetPreview';
-
-const PreviewCard = memo(function PreviewCard({
+const PreviewCard = function PreviewCard({
   children,
   testID,
 }: {
@@ -405,9 +398,7 @@ const PreviewCard = memo(function PreviewCard({
       {children}
     </View>
   );
-});
-
-PreviewCard.displayName = 'PreviewCard';
+};
 
 function createPreviewMessage({
   badges = [],
@@ -714,14 +705,10 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colorBlackOverlay,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius28,
-    elevation: 5,
+    boxShadow: '0 2px 3.84px rgba(0, 0, 0, 0.25)',
     flexDirection: 'row',
     paddingHorizontal: theme.space20,
     paddingVertical: theme.space12,
-    shadowColor: theme.colorBlackAlpha,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
   },
   jumpPillCount: {
     fontSize: theme.fontSize12,

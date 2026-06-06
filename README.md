@@ -158,6 +158,23 @@ In order to run the `development` variant of the app locally you will need to ru
    - this will start the JS server that bundles and serves a hot-reloaded version of the JS app
    - JS server will start automatically when running `bun run ios` or `bun run android`
 
+## Remote build cache
+
+This project enables Expo's [remote build cache](https://docs.expo.dev/guides/cache-builds-remotely/) via the EAS provider. When running `bun run ios` / `bun run android` (or `expo run:*`), Expo will look up a matching fingerprint on EAS and download a previously built binary if the native code hasn't changed — skipping a full local native build.
+
+Config lives in [`app.config.ts`](app.config.ts) under `expo.experiments.buildCacheProvider`, with `eas-build-cache-provider` declared as a devDependency. Make sure you're logged in with `eas login` and have an EAS project linked (already configured in `app.config.ts` via `extra.eas.projectId`).
+
+## PR previews & channel surfing
+
+Every pull request gets an EAS Update published to a `pr-<N>` branch on the `development` channel (see [`.github/workflows/preview-ota-pr.yml`](.github/workflows/preview-ota-pr.yml)). The workflow posts a QR code as a comment on the PR.
+
+To preview a PR on a device that already has the internal/dev client installed:
+
+1. **Scan the QR** posted on the PR — it opens the dev client directly into that PR's JS bundle.
+2. **Or surf in the launcher:** open the dev client → Extensions → EAS Update → pick branch `pr-<N>`. Any branch in the project is loadable as long as the runtime version matches the installed build (we use `policy: 'appVersion'`).
+
+Fork PRs are skipped (no access to `EXPO_TOKEN`).
+
 ## Storybook
 
 Storybook is currently configured to preview UI components on app. Eventually the plan is to deploy this storybook somewhere on web

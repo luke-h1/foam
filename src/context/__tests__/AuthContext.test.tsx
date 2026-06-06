@@ -12,7 +12,9 @@ import {
 } from '@testing-library/react-native';
 import { TokenResponse, type AuthSessionResult } from 'expo-auth-session';
 import * as _SecureStore from '@app/utils/authentication/secureStore';
-import { act, type FC, type PropsWithChildren } from 'react';
+import { act } from 'react';
+import type { PropsWithChildren, FC } from 'react';
+
 import {
   AuthContextProvider,
   type AuthContextProviderProps,
@@ -41,15 +43,15 @@ const twitchApi = jest.mocked(_twitchApi);
 describe('AuthContext', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (twitchService.getTopStreams as jest.Mock).mockResolvedValue({
+    twitchService.getTopStreams.mockResolvedValue({
       data: [],
       pagination: { cursor: null },
     });
-    (twitchService.getTopCategories as jest.Mock).mockResolvedValue({
+    twitchService.getTopCategories.mockResolvedValue({
       data: [],
       pagination: { cursor: null },
     });
-    (twitchService.getFollowedStreams as jest.Mock).mockResolvedValue([]);
+    twitchService.getFollowedStreams.mockResolvedValue([]);
   });
 
   const initialProps: AuthContextState = {
@@ -514,7 +516,7 @@ describe('AuthContext', () => {
         expect(twitchApi.setAuthToken).toHaveBeenCalledWith(
           'new_auth_access_token',
         );
-        expect(screen.getByText('Anon')).toBeTruthy();
+        expect(screen.getByText('Anon')).toBeOnTheScreen();
       });
     });
   });

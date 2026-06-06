@@ -1,5 +1,7 @@
-import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
-import type { ChatMessageType } from '@app/store/chatStore/constants';
+import type {
+  AnyChatMessageType,
+  ChatMessageType,
+} from '@app/store/chatStore/constants';
 import {
   UserNoticeTags,
   UserNoticeTagsByVariant,
@@ -7,39 +9,71 @@ import {
 } from '@app/types/chat/irc-tags/usernotice';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import {
+  createCharityDonationPart,
+  createRitualPart,
   createSubscriptionPart,
   createViewerMilestonePart,
 } from '@app/utils/chat/formatSubscriptionNotice';
 import { parseBadges } from '@app/utils/chat/parseBadges';
+import {
+  isSharedChatDuplicatedNotice,
+  isSubscriptionUserNotice,
+} from '@app/utils/chat/userNoticeMsgIds';
+import {
+  isHighlightMyMessageTags,
+} from '@app/utils/chat/channelPointsRewardTitle';
+import {
+  enrichChannelPointPrivmsgTags,
+  ingestChannelPointRewardTags,
+} from '@app/utils/chat/channelPointRewardTitleStore';
 import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 import { formatDate } from '@app/utils/date-time/date';
 import { generateNonce } from '@app/utils/string/generateNonce';
 import omit from 'lodash/omit';
 
-export type AnyChatMessageType =
-  | ChatMessageType<'usernotice', 'viewermilestone'>
-  | ChatMessageType<'usernotice', 'sub'>
-  | ChatMessageType<'usernotice', 'resub'>
-  | ChatMessageType<'usernotice', 'subgift'>
-  | ChatMessageType<'usernotice', 'submysterygift'>
-  | ChatMessageType<'usernotice', 'giftpaidupgrade'>
-  | ChatMessageType<'usernotice', 'anongiftpaidupgrade'>
-  | ChatMessageType<'usernotice', 'rewardgift'>
-  | ChatMessageType<'usernotice', 'raid'>
-  | ChatMessageType<'usernotice', 'unraid'>
-  | ChatMessageType<'usernotice', 'bitsbadgetier'>
-  | ChatMessageType<'usernotice', 'sharedchatnotice'>
-  | ChatMessageType<'usernotice', 'modiversary'>
-  | ChatMessageType<'usernotice'>;
+export type { AnyChatMessageType };
+
+export function coerceUserNoticeTags(
+  tags: Record<string, string>,
+): UserNoticeTags {
+  return tags as UserNoticeTags;
+}
+
+function toStringTagRecord(tags: UserNoticeTags): Record<string, string> {
+  const result: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(tags)) {
+    if (typeof value === 'string') {
+      result[key] = value;
+    }
+  }
+
+  return result;
+}
 
 interface CreateBaseMessageParams {
   tags: Record<string, string>;
   channelName: string;
   text: string;
+  broadcasterId?: string;
 }
 
 function createChatTimestamp(date: Date | number = Date.now()): string {
   return formatDate(date, 'HH:mm');
+}
+
+function createChatTimestampFromTags(tags: {
+  'tmi-sent-ts'?: string;
+}): string {
+  const sentTs = tags['tmi-sent-ts'];
+  if (sentTs) {
+    const parsed = Number.parseInt(sentTs, 10);
+    if (Number.isFinite(parsed)) {
+      return createChatTimestamp(parsed);
+    }
+  }
+
+  return createChatTimestamp();
 }
 
 export const createUserStateFromTags = (
@@ -65,10 +99,13 @@ export const createBaseMessage = ({
   tags,
   channelName,
   text,
+  broadcasterId,
 }: CreateBaseMessageParams): ChatMessageType<'usernotice'> => {
-  const userstate = createUserStateFromTags(tags);
+  const enrichedTags = enrichChannelPointPrivmsgTags(tags, broadcasterId);
+  const userstate = createUserStateFromTags(enrichedTags);
   const messageId = userstate.id || '0';
   const messageNonce = messageId !== '0' ? messageId : generateNonce();
+  const isHighlightedMessage = isHighlightMyMessageTags(enrichedTags);
 
   return {
     id: `${messageId}_${messageNonce}`,
@@ -78,25 +115,16 @@ export const createBaseMessage = ({
     channel: channelName,
     message_id: messageId,
     message_nonce: messageNonce,
-    timestamp: createChatTimestamp(),
+    timestamp: createChatTimestampFromTags(tags),
     sender: userstate.username || '',
     parentDisplayName: tags['reply-parent-display-name'] || '',
     replyDisplayName: tags['reply-parent-user-login'] || '',
     replyBody: unescapeIrcTag(tags['reply-parent-msg-body'] || ''),
     parentColor: undefined,
-    isChannelPointRedemption: Boolean(tags['custom-reward-id']),
+    isChannelPointRedemption:
+      Boolean(enrichedTags['custom-reward-id']) || isHighlightedMessage,
+    ...(isHighlightedMessage ? { isHighlightedMessage: true } : {}),
   };
-};
-
-export const hasEmoteData = (channelId: string): boolean => {
-  const emoteData = getCurrentEmoteData(channelId);
-  return !!(
-    emoteData &&
-    (emoteData.twitchGlobalEmotes.length > 0 ||
-      emoteData.sevenTvGlobalEmotes.length > 0 ||
-      emoteData.bttvGlobalEmotes.length > 0 ||
-      emoteData.ffzGlobalEmotes.length > 0)
-  );
 };
 
 const createSystemNoticeText = (tags: UserNoticeTags, text: string): string => {
@@ -133,12 +161,14 @@ interface CreateUserNoticeParams {
   tags: UserNoticeTags;
   channelName: string;
   text: string;
+  broadcasterId?: string;
 }
 
 export const createUserNoticeMessage = ({
   tags,
   channelName,
   text,
+  broadcasterId,
 }: CreateUserNoticeParams): AnyChatMessageType => {
   const messageNonce = generateNonce();
 
@@ -154,7 +184,7 @@ export const createUserNoticeMessage = ({
   } as UserStateTags;
 
   const tagId = 'id' in tags ? (tags as { id?: string }).id : undefined;
-  const messageId = tags['msg-id'] || tagId || generateNonce();
+  const messageId = tagId || generateNonce();
 
   const baseMessage = {
     id: `${messageId}_${messageNonce}`,
@@ -163,7 +193,7 @@ export const createUserNoticeMessage = ({
     channel: channelName,
     message_id: messageId,
     message_nonce: messageNonce,
-    timestamp: createChatTimestamp(),
+    timestamp: createChatTimestampFromTags(tags),
     sender: userstate.username || '',
     parentDisplayName:
       typeof tags['reply-parent-display-name'] === 'string'
@@ -184,6 +214,65 @@ export const createUserNoticeMessage = ({
     replyBody: '',
     channel: '',
     parentDisplayName: '',
+  };
+
+  const sharedChatDuplicated = isSharedChatDuplicatedNotice(tags);
+  const sharedChatFields = sharedChatDuplicated
+    ? { isSharedChatDuplicated: true as const }
+    : {};
+
+  const createSubscriptionNoticeMessage = (): AnyChatMessageType =>
+    ({
+      ...baseMessage,
+      badges: [],
+      message: [createSubscriptionPart(tags, text)],
+      userstate,
+      notice_tags: { ...tags, ...emptyFields } as UserNoticeTags,
+      isSpecialNotice: true,
+      ...sharedChatFields,
+      ...emptyFields,
+    }) as AnyChatMessageType;
+
+  const createMetadataUserNoticeMessage = (options: {
+    isAnnouncement?: boolean;
+    isChannelPointRedemption?: boolean;
+    isHighlightedMessage?: boolean;
+  }): AnyChatMessageType => {
+    const metadataUserstate = createUserStateFromTags(toStringTagRecord(tags));
+    const trimmedText = text.trimEnd();
+
+    return {
+      ...baseMessage,
+      userstate: metadataUserstate,
+      sender: metadataUserstate.username || metadataUserstate.login || '',
+      badges: [],
+      message: trimmedText
+        ? [{ type: 'text' as const, content: trimmedText }]
+        : [],
+      notice_tags: { ...tags, ...emptyFields } as UserNoticeTags,
+      isSpecialNotice: true,
+      ...options,
+      ...sharedChatFields,
+      replyDisplayName: '',
+      replyBody: '',
+      parentDisplayName: '',
+    } as AnyChatMessageType;
+  };
+
+  const createSystemUserNoticeMessage = (): AnyChatMessageType => {
+    const combined = createSystemNoticeText(tags, text);
+
+    return {
+      ...baseMessage,
+      userstate,
+      badges: [],
+      message: combined ? [{ type: 'text' as const, content: combined }] : [],
+      notice_tags: { ...tags, ...emptyFields } as UserNoticeTags,
+      isSpecialNotice: true,
+      isTwitchSystemNotice: true,
+      ...sharedChatFields,
+      ...emptyFields,
+    } as AnyChatMessageType;
   };
 
   switch (tags['msg-id']) {
@@ -233,107 +322,75 @@ export const createUserNoticeMessage = ({
       };
     }
 
-    case 'resub': {
-      return {
-        ...baseMessage,
-        badges: [],
-        message: [createSubscriptionPart(tags, text)],
-        userstate,
-        notice_tags: { ...tags, ...emptyFields },
-        isSpecialNotice: true,
-        ...emptyFields,
-      };
+    case 'resub':
+    case 'sub':
+    case 'subgift':
+    case 'submysterygift':
+    case 'giftpaidupgrade':
+    case 'anongiftpaidupgrade':
+    case 'primepaidupgrade':
+    case 'extendsub':
+    case 'standardpayforward':
+    case 'communitypayforward':
+    case 'primecommunitygiftreceived':
+    case 'anonsubgift':
+    case 'anonsubmysterygift': {
+      return createSubscriptionNoticeMessage();
     }
 
-    case 'sub': {
+    case 'charitydonation': {
       return {
         ...baseMessage,
-        notice_tags: tags,
-        message_nonce: generateNonce(),
         badges: [],
-        message: [createSubscriptionPart(tags, text)],
+        message: [createCharityDonationPart(tags, text)],
         userstate,
+        notice_tags: { ...tags, ...emptyFields } as UserNoticeTags,
         isSpecialNotice: true,
+        ...sharedChatFields,
         ...emptyFields,
-      };
+      } as AnyChatMessageType;
     }
 
-    case 'subgift': {
+    case 'ritual': {
       return {
         ...baseMessage,
         badges: [],
-        message: [createSubscriptionPart(tags, text)],
+        message: [createRitualPart(tags, text)],
         userstate,
-        notice_tags: { ...tags, ...emptyFields },
+        notice_tags: { ...tags, ...emptyFields } as UserNoticeTags,
         isSpecialNotice: true,
+        ...sharedChatFields,
         ...emptyFields,
-      };
+      } as AnyChatMessageType;
     }
 
-    case 'submysterygift': {
-      return {
-        ...baseMessage,
-        badges: [],
-        message: [createSubscriptionPart(tags, text)],
-        userstate,
-        notice_tags: { ...tags, ...emptyFields },
-        isSpecialNotice: true,
-        ...emptyFields,
-      };
-    }
-
-    case 'giftpaidupgrade': {
-      return {
-        ...baseMessage,
-        badges: [],
-        message: [createSubscriptionPart(tags, text)],
-        userstate,
-        notice_tags: { ...tags, ...emptyFields },
-        isSpecialNotice: true,
-        ...emptyFields,
-      };
-    }
-
-    case 'anongiftpaidupgrade': {
-      return {
-        ...baseMessage,
-        badges: [],
-        message: [createSubscriptionPart(tags, text)],
-        userstate,
-        notice_tags: { ...tags, ...emptyFields },
-        isSpecialNotice: true,
-        ...emptyFields,
-      };
+    case 'highlighted-message': {
+      return createMetadataUserNoticeMessage({
+        isHighlightedMessage: true,
+        isChannelPointRedemption: true,
+      });
     }
 
     case 'rewardgift': {
+      ingestChannelPointRewardTags(tags, broadcasterId);
       const trimmedText = text.trimEnd();
+
+      if (!trimmedText) {
+        return createSystemUserNoticeMessage();
+      }
 
       return {
         ...baseMessage,
         badges: [],
-        message: trimmedText
-          ? [{ type: 'text' as const, content: trimmedText }]
-          : [],
+        message: [{ type: 'text' as const, content: trimmedText }],
         userstate,
-        notice_tags: { ...tags, ...emptyFields },
+        notice_tags: { ...tags, ...emptyFields } as UserNoticeTags,
         isChannelPointRedemption: true,
       } as ChatMessageType<'usernotice', 'rewardgift'>;
     }
 
     case 'raid': {
-      const combined = createSystemNoticeText(tags, text);
-
-      return {
-        ...baseMessage,
-        badges: [],
-        message: combined ? [{ type: 'text' as const, content: combined }] : [],
-        userstate,
-        notice_tags: { ...tags, ...emptyFields },
-        isSpecialNotice: true,
-        isTwitchSystemNotice: true,
-        ...emptyFields,
-      };
+      return createSystemUserNoticeMessage();
     }
 
     case 'modiversary': {
@@ -344,31 +401,34 @@ export const createUserNoticeMessage = ({
         userstate,
         badges: [],
         message: combined ? [{ type: 'text' as const, content: combined }] : [],
-        notice_tags: { ...tags, ...emptyFields },
+        notice_tags: {
+          ...tags,
+          ...emptyFields,
+        } as UserNoticeTagsByVariant<'modiversary'>,
         isSpecialNotice: true,
         isTwitchSystemNotice: true,
+        ...sharedChatFields,
         ...emptyFields,
-      };
+      } as AnyChatMessageType;
     }
 
+    case 'announcement': {
+      return createMetadataUserNoticeMessage({ isAnnouncement: true });
+    }
+
+    case 'skip-subs-mode-message':
+    case 'midnightsquid':
     case 'unraid':
     case 'bitsbadgetier':
     case 'sharedchatnotice': {
-      const combined = createSystemNoticeText(tags, text);
-
-      return {
-        ...baseMessage,
-        userstate,
-        badges: [],
-        message: combined ? [{ type: 'text' as const, content: combined }] : [],
-        notice_tags: { ...tags, ...emptyFields },
-        isSpecialNotice: true,
-        isTwitchSystemNotice: true,
-        ...emptyFields,
-      };
+      return createSystemUserNoticeMessage();
     }
 
     default: {
+      if (isSubscriptionUserNotice(tags['msg-id'])) {
+        return createSubscriptionNoticeMessage();
+      }
+
       const combined = createSystemNoticeText(tags, text);
 
       if (!combined) {
@@ -389,6 +449,7 @@ export const createUserNoticeMessage = ({
         message: [{ type: 'text' as const, content: combined }],
         isSpecialNotice: true,
         isTwitchSystemNotice: true,
+        ...sharedChatFields,
         ...emptyFields,
       };
     }

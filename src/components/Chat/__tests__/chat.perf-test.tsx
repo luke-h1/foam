@@ -2,7 +2,9 @@ import type { ChatMessageType } from '@app/store/chatStore/constants';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { render } from '@testing-library/react-native';
-import { Profiler, useEffect, type ProfilerOnRenderCallback } from 'react';
+import { Profiler, useEffect } from 'react';
+import type { ProfilerOnRenderCallback } from 'react';
+
 import { View } from 'react-native';
 import { measureFunction, measureRenders } from 'reassure';
 import { ChatList } from '../components/ChatList';

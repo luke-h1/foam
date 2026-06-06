@@ -5,20 +5,21 @@ type DebugOptions = {
   [key in AllowedKey]?: { enabled: boolean };
 };
 
+function fetchDebugOptions(): DebugOptions {
+  const keys: AllowedKey[] = ['ReactQueryDebug'];
+  const options: DebugOptions = {};
+
+  keys.forEach(key => {
+    const value = storageService.getString<boolean>(key);
+    options[key] = { enabled: value === true };
+  });
+  return options;
+}
+
 export function useDebugOptions() {
-  const fetchDebugOptions = () => {
-    const keys: AllowedKey[] = ['ReactQueryDebug'];
-    const options: DebugOptions = {};
-
-    keys.forEach(key => {
-      const value = storageService.getString<boolean>(key);
-      options[key] = { enabled: value === true };
-    });
-    return options;
-  };
-
-  const [debugOptions, setDebugOptions] =
-    useState<DebugOptions>(fetchDebugOptions());
+  const [debugOptions, setDebugOptions] = useState<DebugOptions>(() =>
+    fetchDebugOptions(),
+  );
 
   useEffect(() => {
     storageService.clearExpired();

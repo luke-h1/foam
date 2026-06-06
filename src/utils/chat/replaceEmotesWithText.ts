@@ -50,7 +50,9 @@ export function replaceEmotesWithText(parts: ParsedPart[]): string {
           return part;
 
         default:
-          return part.content;
+          return 'content' in part && typeof part.content === 'string'
+            ? part.content
+            : '';
       }
     })
     .join('');

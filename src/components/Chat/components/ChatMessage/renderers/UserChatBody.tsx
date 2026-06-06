@@ -1,135 +1,169 @@
 import { Text } from '@app/components/ui/Text/Text';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { SymbolView } from 'expo-symbols';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { ChatMessagePressable } from '../ChatMessagePressable';
+import { CHAT_NOTICE_ACCENTS } from '../../util/chatNoticeAccents';
 import { styles } from '../RichChatMessage.styles';
-import { renderParts } from '../richChatMessageUtils';
+import { normaliseUsername } from '../richChatMessageHelpers';
+import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
+import { RichChatMessageUsername } from '../RichChatMessageUsername';
+import { ChatMessageBadges } from './ChatMessageBadges';
+import { ChatMessageBody } from './ChatMessageBody';
+import { ReplyingToHeader } from './ReplyingToHeader';
+import type { BadgePressData } from '../RichChatMessage.types';
+import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 
-interface UserChatBodyProps {
-  canJumpToReplyTarget: boolean;
+import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
+
+interface UserChatBodyProps extends UseChatMessagePartRendererArgs {
+  badgeList: SanitisedBadgeSet[];
+  cachedSenderColor?: string;
+  getMappingKey: (id: string, index: number) => string;
+  onBadgePress?: (badge: BadgePressData) => void;
   compact: boolean;
-  isFirstMessage: boolean;
-  message: ParsedPart[];
-  moderationNotice?: unknown;
+  isChannelPointRedemption?: boolean;
+  isHighlightedMessage?: boolean;
   onReplyContextPress?: (replyParentMessageId: string) => void;
+  onUsernamePress?: () => void;
   parentDisplayName?: string;
-  renderBadges: () => ReactNode;
-  renderMessagePart: (part: ParsedPart, index: number) => ReactNode;
   replyBody?: string;
+  replyFlags: {
+    canJumpToReplyTarget: boolean;
+    isFirstMessage: boolean;
+    isReplyingToCurrentUser: boolean;
+    shouldRenderInlineReply: boolean;
+    showChannelPointsRewardChrome: boolean;
+    showTimestamp: boolean;
+  };
   replyParentMessageId?: string;
   rewardSummaryTitle: string;
-  shouldRenderInlineReply: boolean;
-  showChannelPointsRewardChrome: boolean;
-  showTimestamp: boolean;
   timestamp?: string;
+  userId?: string;
+  userstateColor?: string;
   username?: string;
-  usernameElement: ReactNode;
 }
 
 export function UserChatBody({
-  canJumpToReplyTarget,
+  badgeList,
+  getMappingKey,
+  onBadgePress,
+  cachedSenderColor,
   compact,
-  isFirstMessage,
+  isChannelPointRedemption,
+  isHighlightedMessage,
   message,
   moderationNotice,
   onReplyContextPress,
+  onUsernamePress,
   parentDisplayName,
-  renderBadges,
-  renderMessagePart,
   replyBody,
+  replyFlags,
   replyParentMessageId,
   rewardSummaryTitle,
-  shouldRenderInlineReply,
-  showChannelPointsRewardChrome,
-  showTimestamp,
   timestamp,
+  userId,
+  userstateColor,
   username,
-  usernameElement,
+  ...rendererArgs
 }: UserChatBodyProps): ReactNode {
-  const replyPreviewText = parentDisplayName
-    ? `Replying to @${parentDisplayName}${replyBody ? `: ${replyBody}` : ''}`
+  const {
+    canJumpToReplyTarget,
+    isFirstMessage,
+    isReplyingToCurrentUser,
+    shouldRenderInlineReply,
+    showChannelPointsRewardChrome,
+    showTimestamp,
+  } = replyFlags;
+  const replyPlainMentionTarget = shouldRenderInlineReply
+    ? normaliseUsername(parentDisplayName)
     : undefined;
 
   return (
     <View style={styles.messageColumn}>
-      {shouldRenderInlineReply && replyPreviewText ? (
-        canJumpToReplyTarget && replyParentMessageId ? (
-          <ChatMessagePressable
-            hitSlop={undefined}
-            onPress={() => onReplyContextPress?.(replyParentMessageId)}
-            style={[styles.replyContextRow, styles.replyContextRowInteractive]}
-            testID='chat-reply-context-button'
-          >
-            <SymbolView
-              name='bubble.left.fill'
-              size={12}
-              tintColor='rgba(255,255,255,0.5)'
-              style={styles.replyContextIcon}
-            />
-            <Text
-              ellipsizeMode='tail'
-              numberOfLines={1}
-              style={[
-                styles.replyContextText,
-                compact && styles.replyContextTextCompact,
-              ]}
-            >
-              {replyPreviewText}
-            </Text>
-          </ChatMessagePressable>
-        ) : (
-          <View style={styles.replyContextRow}>
-            <SymbolView
-              name='bubble.left.fill'
-              size={12}
-              tintColor='rgba(255,255,255,0.5)'
-              style={styles.replyContextIcon}
-            />
-            <Text
-              ellipsizeMode='tail'
-              numberOfLines={1}
-              style={[
-                styles.replyContextText,
-                compact && styles.replyContextTextCompact,
-              ]}
-            >
-              {replyPreviewText}
-            </Text>
-          </View>
-        )
+      {shouldRenderInlineReply && parentDisplayName ? (
+        <ReplyingToHeader
+          canJumpToReplyTarget={canJumpToReplyTarget}
+          compact={compact}
+          isReplyingToCurrentUser={isReplyingToCurrentUser}
+          onReplyContextPress={onReplyContextPress}
+          parentDisplayName={parentDisplayName}
+          replyBody={replyBody}
+          replyParentMessageId={replyParentMessageId}
+          rendererArgs={{ ...rendererArgs, compact, message }}
+        />
       ) : isFirstMessage ? (
-        <View style={styles.messageMetaRow}>
-          <SymbolView
-            name='sparkles'
-            size={12}
-            tintColor='rgba(255,255,255,0.5)'
-            style={styles.replyContextIcon}
-          />
+        <ChatNoticeMetaRow
+          compact={compact}
+          icon='sparkles'
+          label='First message'
+          labelColor={CHAT_NOTICE_ACCENTS.firstMessage}
+          labelStyle={styles.firstMessageMetaText}
+        />
+      ) : null}
+      {showChannelPointsRewardChrome && isHighlightedMessage ? (
+        <ChatNoticeMetaRow
+          compact={compact}
+          icon='sparkles'
+          label={rewardSummaryTitle}
+          labelColor={CHAT_NOTICE_ACCENTS.highlight}
+          labelStyle={styles.highlightMyMessageMetaText}
+        />
+      ) : showChannelPointsRewardChrome ? (
+        <ChatNoticeMetaRow
+          compact={compact}
+          icon='gift.fill'
+          labelColor={CHAT_NOTICE_ACCENTS.channelPoints}
+        >
           <Text
             style={[
               styles.messageMetaText,
               styles.messageMetaTextStrong,
+              styles.channelPointsMetaText,
               compact && styles.messageMetaTextCompact,
             ]}
           >
-            First message
-          </Text>
-        </View>
-      ) : null}
-      {showChannelPointsRewardChrome ? (
-        <View style={styles.rewardSummaryRow}>
-          <Text style={styles.rewardSummaryText}>
-            <Text style={styles.rewardSummaryName}>{username}</Text>
-            <Text style={styles.rewardSummaryMuted}> redeemed </Text>
-            <Text style={styles.rewardSummaryRewardTitle}>
+            <Text
+              style={
+                moderationNotice
+                  ? [styles.channelPointsMetaName, styles.moderatedMessageText]
+                  : styles.channelPointsMetaName
+              }
+            >
+              {username}
+            </Text>
+            <Text
+              style={
+                moderationNotice
+                  ? [styles.channelPointsMetaMuted, styles.moderatedMessageText]
+                  : styles.channelPointsMetaMuted
+              }
+            >
+              {' '}
+              redeemed{' '}
+            </Text>
+            <Text
+              style={
+                moderationNotice
+                  ? [
+                      styles.channelPointsMetaReward,
+                      styles.moderatedMessageText,
+                    ]
+                  : styles.channelPointsMetaReward
+              }
+            >
               {rewardSummaryTitle}
             </Text>
           </Text>
-        </View>
+        </ChatNoticeMetaRow>
       ) : null}
-      <View style={styles.messageLine}>
+      <View
+        style={[
+          styles.messageLine,
+          moderationNotice ? styles.messageLineModerated : null,
+        ]}
+      >
+        {moderationNotice ? (
+          <View style={styles.moderatedStrikeOverlay} />
+        ) : null}
         {showTimestamp && timestamp ? (
           <Text
             tabular
@@ -140,15 +174,35 @@ export function UserChatBody({
             {timestamp}
           </Text>
         ) : null}
-        {renderBadges()}
-        {usernameElement ? (
+        <ChatMessageBadges
+          badges={badgeList}
+          compact={compact}
+          getMappingKey={getMappingKey}
+          moderationNotice={moderationNotice}
+          onBadgePress={onBadgePress}
+        />
+        {username ? (
           <View
             style={moderationNotice ? styles.moderatedUsernameContainer : null}
           >
-            {usernameElement}
+            <RichChatMessageUsername
+              cachedSenderColor={cachedSenderColor}
+              compact={compact}
+              isModerated={Boolean(moderationNotice)}
+              onUsernamePress={onUsernamePress}
+              userId={userId}
+              userstateColor={userstateColor}
+              username={username}
+            />
           </View>
         ) : null}
-        {renderParts(message, renderMessagePart)}
+        <ChatMessageBody
+          compact={compact}
+          mode='message'
+          message={message}
+          replyPlainMentionTarget={replyPlainMentionTarget}
+          {...rendererArgs}
+        />
       </View>
     </View>
   );

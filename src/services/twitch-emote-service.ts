@@ -88,15 +88,17 @@ export const twitchEmoteService = {
   getChannelEmotes: async (
     channelId: string,
   ): Promise<TwitchSanitisedEmote[]> => {
-    const result = await twitchApi.get<
-      PaginatedList<TwitchEmote & { template: string }>
-    >('/chat/emotes', {
-      params: {
-        broadcaster_id: channelId,
-      },
-    });
-
-    const broadcaster = await twitchService.getUser(undefined, channelId);
+    const [result, broadcaster] = await Promise.all([
+      twitchApi.get<PaginatedList<TwitchEmote & { template: string }>>(
+        '/chat/emotes',
+        {
+          params: {
+            broadcaster_id: channelId,
+          },
+        },
+      ),
+      twitchService.getUser(undefined, channelId),
+    ]);
 
     const sanitisedSet = result.data.map<TwitchSanitisedEmote>(emote =>
       sanitiseTwitchEmote(emote, 'Twitch Channel', broadcaster.display_name),

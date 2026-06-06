@@ -1,4 +1,4 @@
-import { RefObject, useCallback, useRef, useState } from 'react';
+import { RefObject, useRef, useState, useCallback } from 'react';
 import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 
 const RETURN_TO_BOTTOM_THRESHOLD = 80;
@@ -99,18 +99,17 @@ export const useChatScroll = ({
     });
   }, [getMessagesLength, listRef]);
 
-  const handleScrollBeginDrag = useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      clearScrollToBottomTimers();
-      clearBottomContentAnchor();
-      isDraggingRef.current = true;
-      isScrollingToBottomRef.current = false;
-      setIsScrollingToBottom(false);
-      setShouldMaintainScrollAtEnd(false);
-      lastOffsetYRef.current = e.nativeEvent.contentOffset.y;
-    },
-    [clearBottomContentAnchor, clearScrollToBottomTimers],
-  );
+  const handleScrollBeginDrag = (
+    e: NativeSyntheticEvent<NativeScrollEvent>,
+  ) => {
+    clearScrollToBottomTimers();
+    clearBottomContentAnchor();
+    isDraggingRef.current = true;
+    isScrollingToBottomRef.current = false;
+    setIsScrollingToBottom(false);
+    setShouldMaintainScrollAtEnd(false);
+    lastOffsetYRef.current = e.nativeEvent.contentOffset.y;
+  };
 
   const handleScrollEndDrag = useCallback(() => {
     isDraggingRef.current = false;

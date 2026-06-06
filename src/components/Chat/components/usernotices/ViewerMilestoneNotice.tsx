@@ -1,76 +1,63 @@
+import { memo } from 'react';
 import { Text } from '@app/components/ui/Text/Text';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
-import { memo, useMemo } from 'react';
-import { StyleSheet } from 'react-native';
+import { View } from 'react-native';
+
+import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
+import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';
+import { styles } from '../ChatMessage/RichChatMessage.styles';
+import {
+  resolveViewerMilestoneBody,
+  splitViewerMilestoneLead,
+} from './util/viewerMilestoneBody';
 
 interface ViewerMilestoneNoticeProps {
   part: ParsedPart<'viewermilestone'>;
 }
 
+function getMilestoneMetaLabel(category: string): string {
+  switch (category) {
+    case 'watch-streak':
+      return 'Watch streak';
+    case 'follow':
+      return 'Follow milestone';
+    default:
+      return 'Milestone';
+  }
+}
+
 function ViewerMileStoneNotice({ part }: ViewerMilestoneNoticeProps) {
-  const unescapedSystemMsg = useMemo(() => {
-    if (!part.systemMsg) {
-      return '';
-    }
-    return unescapeIrcTag(part.systemMsg);
-  }, [part.systemMsg]);
   const displayName = part.displayName?.trim() || '';
+  const messageBody = resolveViewerMilestoneBody({
+    content: part.content,
+    displayName,
+    systemMsg: part.systemMsg,
+  });
 
-  const messageBody = useMemo(() => {
-    if (part.category === 'watch-streak' && part.value) {
-      const streamCount = parseInt(part.value, 10);
-      const streamText = streamCount === 1 ? 'stream' : 'streams';
-      return `watched ${part.value} consecutive ${streamText} and sparked a watch streak!`;
-    }
-
-    if (!unescapedSystemMsg) {
-      return '';
-    }
-
-    if (
-      displayName &&
-      unescapedSystemMsg
-        .toLowerCase()
-        .startsWith(`${displayName.toLowerCase()} `)
-    ) {
-      return unescapedSystemMsg.slice(displayName.length).trimStart();
-    }
-
-    return unescapedSystemMsg;
-  }, [displayName, part.category, part.value, unescapedSystemMsg]);
-
-  if (!displayName && !messageBody) {
+  if (!messageBody) {
     return null;
   }
 
+  const { lead, rest } = splitViewerMilestoneLead(messageBody, displayName);
+
   return (
-    <Text color='gray.text' style={styles.messageText}>
-      {displayName ? (
-        <Text color='gray.text' style={styles.displayNameText}>
-          {displayName}
-        </Text>
-      ) : null}
-      {messageBody ? (
-        <Text color='gray.textLow' style={styles.eventBodyText}>
-          {displayName ? ` ${messageBody}` : messageBody}
-        </Text>
-      ) : null}
-    </Text>
+    <View style={styles.messageColumn}>
+      <ChatNoticeMetaRow
+        icon='trophy.fill'
+        label={getMilestoneMetaLabel(part.category)}
+        labelColor={CHAT_NOTICE_ACCENTS.viewerMilestone}
+        labelStyle={styles.viewerMilestoneMetaText}
+      />
+      <Text style={styles.messageMetaText}>
+        {lead ? <Text style={styles.channelPointsMetaName}>{lead}</Text> : null}
+        {rest ? (
+          <Text style={styles.channelPointsMetaMuted}>
+            {lead ? ` ${rest}` : rest}
+          </Text>
+        ) : null}
+      </Text>
+    </View>
   );
 }
 
 export const ViewerMileStoneNoticeComponent = memo(ViewerMileStoneNotice);
-
-const styles = StyleSheet.create({
-  displayNameText: {
-    fontWeight: '700',
-  },
-  eventBodyText: {
-    fontWeight: '500',
-  },
-  messageText: {
-    flexShrink: 1,
-    lineHeight: 22,
-  },
-});

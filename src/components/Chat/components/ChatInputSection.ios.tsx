@@ -1,7 +1,7 @@
 import { Button as PressableButton } from '@app/components/Button/Button';
 import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/CosmeticUsername';
 import { Text } from '@app/components/ui/Text/Text';
-import type { InputRef } from '@app/components/ui/Input/Input';
+import type { ChatComposerHandle } from './ChatComposer/ChatComposer';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import { lightenColor } from '@app/utils/color/lightenColor';
@@ -25,7 +25,11 @@ import {
 import { BlurView } from 'expo-blur';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { SymbolView } from 'expo-symbols';
-import { memo, RefObject, useCallback, useMemo } from 'react';
+import type {
+  ChatConnectionFlags,
+  ChatPinFlags,
+} from '@app/components/Chat/types/chatUiFlags';
+import { RefObject, memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -40,7 +44,12 @@ import {
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
+
+function dismissComposer() {
+  void KeyboardController.dismiss();
+}
 import type { SFSymbol } from 'sf-symbols-typescript';
+import { COMPOSER_CONTROL_SIZE, COMPOSER_ROW_GAP } from './composerSizing';
 import { ChatComposer } from './ChatComposer/ChatComposer';
 
 const COMPOSER_DISMISS_DRAG_DISTANCE = 34;
@@ -58,8 +67,7 @@ export interface ReplyToData {
 }
 
 interface ChatInputSectionProps {
-  canPinNextMessage?: boolean;
-  isSending?: boolean;
+  connection: ChatConnectionFlags;
   messageInput: string;
   onChangeText: (text: string) => void;
   onEmoteSelect: (emote: SanitisedEmote) => void;
@@ -68,11 +76,8 @@ interface ChatInputSectionProps {
   onOpenSettingsSheet: () => void;
   replyTo: ReplyToData | null;
   onClearReply: () => void;
-  onTogglePinNextMessage?: () => void;
-  pinNextMessage?: boolean;
-  isConnected: boolean;
-  isAuthenticated: boolean;
-  inputRef?: RefObject<InputRef | null>;
+  pin?: ChatPinFlags;
+  inputRef?: RefObject<ChatComposerHandle | null>;
 }
 
 interface ActionIconButtonProps {
@@ -154,12 +159,11 @@ function ActionIconButtonComponent({
   );
 }
 
-const ActionIconButton = memo(ActionIconButtonComponent);
+const ActionIconButton = ActionIconButtonComponent;
 
 export const ChatInputSection = memo(
   ({
-    canPinNextMessage,
-    isSending,
+    connection,
     messageInput,
     onChangeText,
     onEmoteSelect,
@@ -168,21 +172,18 @@ export const ChatInputSection = memo(
     onOpenSettingsSheet,
     replyTo,
     onClearReply,
-    onTogglePinNextMessage,
-    pinNextMessage,
-    isConnected,
-    isAuthenticated,
+    pin,
     inputRef,
   }: ChatInputSectionProps) => {
+    const { isAuthenticated, isConnected, isSending } = connection;
+    const { canPinNextMessage, onTogglePinNextMessage, pinNextMessage } =
+      pin ?? {};
     const insets = useSafeAreaInsets();
     const composerDragOffset = useSharedValue(0);
 
-    const handleEmoteSelect = useCallback(
-      (emote: SanitisedEmote) => {
-        onEmoteSelect(emote);
-      },
-      [onEmoteSelect],
-    );
+    const handleEmoteSelect = (emote: SanitisedEmote) => {
+      onEmoteSelect(emote);
+    };
 
     const canSend =
       messageInput.trim().length > 0 &&
@@ -196,61 +197,48 @@ export const ChatInputSection = memo(
         : 'Send a message...';
 
     const composerAnimatedStyle = useAnimatedStyle(() => ({
-      transform: [{ translateY: composerDragOffset.value }],
+      transform: [{ translateY: composerDragOffset.get() }],
     }));
 
-    const dismissComposer = useCallback(() => {
-      void KeyboardController.dismiss();
-    }, []);
+    const composerPanGesture = Gesture.Pan()
+      .activeOffsetY(4)
+      .failOffsetX([-40, 40])
+      .onUpdate(event => {
+        composerDragOffset.set(
+          Math.max(0, Math.min(event.translationY, COMPOSER_DRAG_LIMIT)),
+        );
+      })
+      .onEnd(event => {
+        const shouldDismiss =
+          event.translationY > COMPOSER_DISMISS_DRAG_DISTANCE ||
+          event.velocityY > COMPOSER_DISMISS_VELOCITY;
 
-    const composerPanGesture = useMemo(
-      () =>
-        Gesture.Pan()
-          .activeOffsetY(4)
-          .failOffsetX([-40, 40])
-          .onUpdate(event => {
-            composerDragOffset.value = Math.max(
-              0,
-              Math.min(event.translationY, COMPOSER_DRAG_LIMIT),
-            );
-          })
-          .onEnd(event => {
-            const shouldDismiss =
-              event.translationY > COMPOSER_DISMISS_DRAG_DISTANCE ||
-              event.velocityY > COMPOSER_DISMISS_VELOCITY;
-
-            if (shouldDismiss) {
-              scheduleOnRN(dismissComposer);
-            }
-          })
-          .onFinalize(() => {
-            composerDragOffset.value = withSpring(0, {
-              damping: 18,
-              stiffness: 220,
-            });
+        if (shouldDismiss) {
+          scheduleOnRN(dismissComposer);
+        }
+      })
+      .onFinalize(() => {
+        composerDragOffset.set(
+          withSpring(0, {
+            damping: 18,
+            stiffness: 220,
           }),
-      [composerDragOffset, dismissComposer],
-    );
+        );
+      });
 
-    const composerFlingGesture = useMemo(
-      () =>
-        Gesture.Fling()
-          .direction(Directions.DOWN)
-          .onEnd(() => {
-            scheduleOnRN(dismissComposer);
-          }),
-      [dismissComposer],
-    );
+    const composerFlingGesture = Gesture.Fling()
+      .direction(Directions.DOWN)
+      .onEnd(() => {
+        scheduleOnRN(dismissComposer);
+      });
 
-    const composerGesture = useMemo(
-      () => Gesture.Simultaneous(composerPanGesture, composerFlingGesture),
-      [composerFlingGesture, composerPanGesture],
+    const composerGesture = Gesture.Simultaneous(
+      composerPanGesture,
+      composerFlingGesture,
     );
 
     return (
-      <View
-        style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 8) }]}
-      >
+      <View style={styles.wrapper}>
         {replyTo ? (
           <View style={styles.replyShell}>
             <BlurView
@@ -288,35 +276,25 @@ export const ChatInputSection = memo(
         ) : null}
 
         <GestureDetector gesture={composerGesture}>
-          <Animated.View style={[styles.composerShell, composerAnimatedStyle]}>
+          <Animated.View
+            style={[
+              styles.composerShell,
+              { paddingBottom: Math.max(insets.bottom, theme.space8) },
+              composerAnimatedStyle,
+            ]}
+          >
             <View style={styles.inputRow}>
-              <ActionIconButton
-                icon='face.smiling'
-                label='Open emote picker'
-                onPress={onOpenEmoteSheet}
-              />
-
               <View style={styles.inputContainer}>
                 <ChatComposer
                   ref={inputRef}
-                  autoCapitalize='none'
-                  autoComplete='off'
-                  autoCorrect={false}
-                  blurOnSubmit
-                  color='white'
-                  editable={isAuthenticated}
                   onChangeText={onChangeText}
+                  onSubmit={onSubmit}
+                  onPressAdd={onOpenEmoteSheet}
                   onEmoteSelect={handleEmoteSelect}
-                  onSubmitEditing={onSubmit}
                   placeholder={inputPlaceholder}
-                  placeholderTextColor='rgba(255,255,255,0.46)'
+                  editable={isAuthenticated}
+                  canSend={canSend}
                   prioritizeChannelEmotes
-                  radius='xl'
-                  returnKeyType='send'
-                  submitBehavior='blurAndSubmit'
-                  style={styles.nativeInput}
-                  value={messageInput}
-                  variant='soft'
                 />
               </View>
 
@@ -335,13 +313,6 @@ export const ChatInputSection = memo(
                   onPress={onTogglePinNextMessage ?? (() => undefined)}
                 />
               ) : null}
-              <ActionIconButton
-                disabled={!canSend}
-                icon='arrow.up'
-                label='Send message'
-                onPress={onSubmit}
-                prominent={canSend}
-              />
             </View>
           </Animated.View>
         </GestureDetector>
@@ -350,15 +321,14 @@ export const ChatInputSection = memo(
   },
 );
 
-ChatInputSection.displayName = 'ChatInputSection';
-
 const styles = StyleSheet.create({
   actionButtonHost: {
     flexShrink: 0,
-    height: 48,
-    width: 48,
+    height: COMPOSER_CONTROL_SIZE,
+    width: COMPOSER_CONTROL_SIZE,
   },
   composerShell: {
+    backgroundColor: '#222222',
     overflow: 'visible',
     paddingHorizontal: theme.space16,
   },
@@ -366,21 +336,10 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  nativeInput: {
-    backgroundColor: theme.darkActiveContent,
-    borderRadius: 20,
-    borderWidth: 0,
-    maxHeight: 120,
-    minHeight: 48,
-    paddingBottom: 12,
-    paddingHorizontal: 10,
-    paddingTop: 12,
-  },
   inputRow: {
     alignItems: 'flex-end',
     flexDirection: 'row',
-    gap: 8,
-    paddingBottom: 8,
+    gap: COMPOSER_ROW_GAP,
     paddingHorizontal: 0,
     paddingTop: 4,
     width: '100%',
@@ -435,10 +394,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.18,
-    shadowRadius: 20,
+    boxShadow: '0 10px 20px rgba(0, 0, 0, 0.18)',
   },
   wrapper: {
     gap: theme.space8,

@@ -6,7 +6,7 @@ const FONT_SCALE = 1.2;
 
 const isIpad = Device.osName === 'iPadOS';
 
-export const spaceScale = (value: number) =>
+const spaceScale = (value: number) =>
   isIpad ? Math.round(value * SPACE_SCALE) : value;
 
 const fontScale = (value: number) =>

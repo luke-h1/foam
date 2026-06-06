@@ -247,7 +247,6 @@ const loggingConfig = {
 type LoggingMethods = Record<defLvlType, (...args: unknown[]) => void>;
 
 export type AllowedPrefix = keyof typeof loggingConfig;
-export const allowedPrefixes = Object.keys(loggingConfig) as AllowedPrefix[];
 
 const baseLogger = rnlogger.createLogger({
   transport: [consoleTransport, genericTransport],
@@ -265,9 +264,9 @@ const baseLogger = rnlogger.createLogger({
       ),
     },
   },
-  enabledExtensions: Object.entries(loggingConfig)
-    .filter(([, s]) => s.enabled)
-    .map(([k]) => k),
+  enabledExtensions: Object.entries(loggingConfig).flatMap(([k, s]) =>
+    s.enabled ? [k] : [],
+  ),
 });
 
 const createExtendedLogger = (prefix: AllowedPrefix): LoggingMethods =>

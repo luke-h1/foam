@@ -1,3 +1,9 @@
+import {
+  buildSevenTvBadgeImageUrl,
+  normalizeSevenTvBadge,
+  normalizeSevenTvPaint,
+  type PaintGradientLayer,
+} from '@app/components/Chat/util/normalizeSevenTvCosmetics';
 import { PaintRadialGradientShape } from '@app/graphql/generated/gql';
 import { storageService } from '@app/lib/storage';
 import {
@@ -9,16 +15,13 @@ import {
 } from '@app/services/seventv-service';
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { IndexedCollection } from '@app/services/ws/util/indexedCollection';
-import {
-  type PaintData,
-  type PaintFunction,
-  type PaintShape,
-  type PaintShadow,
+import type {
+  PaintData,
+  PaintShadow,
 } from '@app/utils/color/seventv-ws-service';
 import { logger } from '@app/utils/logger';
 import { batch } from '@legendapp/state';
 
-import type { UserPaint } from './constants';
 import { MAX_COSMETIC_ENTRIES } from './constants';
 import { chatStore$ } from './state';
 
@@ -51,53 +54,79 @@ const packRgba = (color: {
   // eslint-disable-next-line no-bitwise
   ((color.r << 24) | (color.g << 16) | (color.b << 8) | color.a) >>> 0;
 
-const convertV4PaintToPaintData = (paint: V4Paint): PaintData => {
-  const firstLayer = paint.data.layers[0];
-  const ty = firstLayer?.ty;
-  let paintFunction: PaintFunction = 'LINEAR_GRADIENT';
-  let angle = 0;
-  let shape: PaintShape = 'circle';
-  let repeat = false;
-  let color: number | null = null;
-  let imageUrl = '';
-
-  const stopsIndexed: IndexedCollection<{ at: number; color: number }> = {
-    length: 0,
-  };
+const convertV4Layer = (
+  layer: V4Paint['data']['layers'][number],
+): PaintGradientLayer | null => {
+  const { ty } = layer;
   // eslint-disable-next-line no-underscore-dangle
-  switch (ty?.__typename) {
+  switch (ty.__typename) {
     case 'PaintLayerTypeLinearGradient':
-      angle = ty.angle;
-      repeat = ty.repeating;
-      ty.stops.forEach((stop, index) => {
-        stopsIndexed[index] = { at: stop.at, color: packRgba(stop.color) };
-      });
-      stopsIndexed.length = ty.stops.length;
-      break;
-
+      return {
+        function: 'LINEAR_GRADIENT',
+        angle: ty.angle,
+        repeat: ty.repeating,
+        stops: ty.stops.map(stop => ({
+          at: stop.at,
+          color: packRgba(stop.color),
+        })),
+        canvas_repeat: '',
+        size: [1, 1],
+      };
     case 'PaintLayerTypeRadialGradient':
-      paintFunction = 'RADIAL_GRADIENT';
-      repeat = ty.repeating;
-      shape =
-        ty.shape === PaintRadialGradientShape.Ellipse ? 'ellipse' : 'circle';
-      ty.stops.forEach((stop, index) => {
-        stopsIndexed[index] = { at: stop.at, color: packRgba(stop.color) };
-      });
-      stopsIndexed.length = ty.stops.length;
-      break;
-
-    case 'PaintLayerTypeSingleColor':
-      color = packRgba(ty.color);
-      break;
-
+      return {
+        function: 'RADIAL_GRADIENT',
+        repeat: ty.repeating,
+        shape:
+          ty.shape === PaintRadialGradientShape.Ellipse ? 'ellipse' : 'circle',
+        stops: ty.stops.map(stop => ({
+          at: stop.at,
+          color: packRgba(stop.color),
+        })),
+        canvas_repeat: '',
+        size: [1, 1],
+      };
+    case 'PaintLayerTypeSingleColor': {
+      const packed = packRgba(ty.color);
+      return {
+        function: 'LINEAR_GRADIENT',
+        stops: [
+          { at: 0, color: packed },
+          { at: 1, color: packed },
+        ],
+        canvas_repeat: '',
+        size: [1, 1],
+      };
+    }
     case 'PaintLayerTypeImage':
-      paintFunction = 'URL';
-      imageUrl = pickBestImage(ty.images)?.url ?? '';
-      break;
-
+      return {
+        function: 'URL',
+        image_url: pickBestImage(ty.images)?.url ?? '',
+        stops: [],
+        canvas_repeat: '',
+        size: [1, 1],
+      };
     default:
-      break;
+      return null;
   }
+};
+
+export type SevenTvPaintSource = Pick<V4Paint, 'id' | 'name' | 'data'>;
+
+export const convertV4PaintToPaintData = (
+  paint: SevenTvPaintSource,
+): PaintData => {
+  const gradients = paint.data.layers
+    .map(convertV4Layer)
+    .filter((layer): layer is PaintGradientLayer => layer !== null);
+
+  const singleColorLayer = paint.data.layers.find(
+    layer => layer.ty.__typename === 'PaintLayerTypeSingleColor',
+  );
+  const color =
+    singleColorLayer?.ty.__typename === 'PaintLayerTypeSingleColor'
+      ? packRgba(singleColorLayer.ty.color)
+      : null;
+
   const shadowsIndexed: IndexedCollection<PaintShadow> = {
     length: paint.data.shadows.length,
   };
@@ -111,20 +140,13 @@ const convertV4PaintToPaintData = (paint: V4Paint): PaintData => {
     };
   });
 
-  return {
+  return normalizeSevenTvPaint({
     id: paint.id,
     name: paint.name,
     color,
-    function: paintFunction,
-    repeat,
-    angle,
-    shape,
-    image_url: imageUrl,
-    stops: stopsIndexed,
+    gradients,
     shadows: shadowsIndexed,
-    gradients: { length: 0 },
-    text: null,
-  };
+  });
 };
 
 const convertV4BadgeToSanitised = (badge: V4Badge): SanitisedBadgeSet => {
@@ -133,14 +155,14 @@ const convertV4BadgeToSanitised = (badge: V4Badge): SanitisedBadgeSet => {
     badge.images.find(img => img.scale === 3) ??
     badge.images[0];
 
-  return {
+  return normalizeSevenTvBadge({
     id: badge.id,
-    url: bestImage?.url ?? `https://cdn.7tv.app/badge/${badge.id}/4x.webp`,
+    url: bestImage?.url ?? buildSevenTvBadgeImageUrl(badge.id),
     type: '7TV Badge',
     title: badge.description || badge.name,
     set: badge.id,
     provider: '7tv',
-  };
+  });
 };
 
 function applyCachedUserCosmetics(cosmetics: CachedUserCosmetics) {
@@ -155,11 +177,11 @@ function applyCachedUserCosmetics(cosmetics: CachedUserCosmetics) {
 
     if (cosmetics.ttvUserId) {
       if (cosmetics.paintId) {
-        chatStore$.userPaintIds[cosmetics.ttvUserId]?.set(cosmetics.paintId);
+        setUserPaint(cosmetics.ttvUserId, cosmetics.paintId);
       }
 
       if (cosmetics.badgeId) {
-        chatStore$.userBadgeIds[cosmetics.ttvUserId]?.set(cosmetics.badgeId);
+        setUserBadge(cosmetics.ttvUserId, cosmetics.badgeId);
       }
     }
   });
@@ -274,18 +296,6 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
   }
 };
 
-export const getUserPaint = (ttvUserId: string): UserPaint | undefined => {
-  const paintId = chatStore$.userPaintIds[ttvUserId]?.peek();
-  if (!paintId) {
-    return undefined;
-  }
-  const paint = chatStore$.paints[paintId]?.peek();
-  if (!paint) {
-    return undefined;
-  }
-  return { ...paint, ttv_user_id: ttvUserId };
-};
-
 export const addPaint = (paint: PaintData) => {
   if (paint.id) {
     const cell = chatStore$.paints[paint.id];
@@ -303,8 +313,13 @@ export const addBadge = (badge: SanitisedBadgeSet) => {
   }
 };
 
-export const getBadge = (badgeId: string): SanitisedBadgeSet | undefined =>
-  chatStore$.badges[badgeId]?.peek();
+export const getBadge = (badgeId: string): SanitisedBadgeSet | undefined => {
+  const badge = chatStore$.badges[badgeId]?.peek();
+  if (!badge) {
+    return undefined;
+  }
+  return normalizeSevenTvBadge(badge);
+};
 
 export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
   const current = chatStore$.userBadgeIds.peek();
@@ -329,7 +344,7 @@ export const getUserBadge = (
   if (!badgeId) {
     return undefined;
   }
-  return chatStore$.badges[badgeId]?.peek();
+  return getBadge(badgeId);
 };
 
 export const updateBadge = (badge: SanitisedBadgeSet) => {
@@ -400,7 +415,7 @@ export const clearSevenTvBadges = () => {
   });
 };
 
-export const clearPaintsAndBadges = () => {
+const clearPaintsAndBadges = () => {
   batch(() => {
     chatStore$.paints.set({});
     chatStore$.userPaintIds.set({});

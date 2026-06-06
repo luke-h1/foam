@@ -7,7 +7,6 @@ import { Theme } from '@app/styles/themes';
 import { observable } from '@legendapp/state';
 import { persistObservable } from '@legendapp/state/persist';
 import { useSelector } from '@legendapp/state/react';
-import { useCallback } from 'react';
 
 export interface Preferences {
   updatedAt: number;
@@ -168,12 +167,12 @@ export function usePreference<K extends keyof Preferences>(
 export function useUpdatePreferences(): (
   payload: Partial<Preferences>,
 ) => void {
-  return useCallback((payload: Partial<Preferences>) => {
+  return (payload: Partial<Preferences>) => {
     preferences$.assign({
       ...payload,
       updatedAt: Date.now(),
     });
-  }, []);
+  };
 }
 
 export function replacePreferences(preferences: Preferences): void {

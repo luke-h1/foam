@@ -12,9 +12,24 @@ import { theme } from '@app/styles/themes';
 import { useObservable, useSelector } from '@legendapp/state/react';
 import { router } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { Alert, Platform, ScrollView, View, StyleSheet } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+
+function handleClearDebugStorage() {
+  Alert.alert('Clear storage?', `This will wipe ${NAMESPACE}`, [
+    { text: 'Cancel', style: 'cancel' },
+    {
+      text: 'Clear',
+      style: 'destructive',
+      onPress: () => storageService.clear(),
+    },
+  ]);
+}
+
+function handleToggleReactQueryDebug(val: boolean) {
+  storageService.set('ReactQueryDebug', val);
+}
 
 export function DebugScreen() {
   const debugOptions = useDebugOptions();
@@ -40,21 +55,6 @@ export function DebugScreen() {
     }, 400);
     return () => clearTimeout(t);
   }, [channelId$, channelName]);
-
-  const handleClearStorage = () => {
-    Alert.alert('Clear storage?', `This will wipe ${NAMESPACE}`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Clear',
-        style: 'destructive',
-        onPress: () => storageService.clear(),
-      },
-    ]);
-  };
-
-  const handleToggleRQ = (val: boolean) => {
-    storageService.set('ReactQueryDebug', val);
-  };
 
   const handleUsernameChange = useCallback(
     (value: string) => username$.set(value),
@@ -122,7 +122,10 @@ export function DebugScreen() {
                 Wipe {NAMESPACE}
               </Text>
             </View>
-            <Button onPress={handleClearStorage} style={styles.destructiveBtn}>
+            <Button
+              onPress={handleClearDebugStorage}
+              style={styles.destructiveBtn}
+            >
               <Text type='sm' weight='semibold' color='red.accent'>
                 Clear
               </Text>
@@ -136,7 +139,10 @@ export function DebugScreen() {
                 Shows React Query debugger
               </Text>
             </View>
-            <Switch value={reactQueryEnabled} onValueChange={handleToggleRQ} />
+            <Switch
+              value={reactQueryEnabled}
+              onValueChange={handleToggleReactQueryDebug}
+            />
           </View>
 
           <View style={styles.divider} />

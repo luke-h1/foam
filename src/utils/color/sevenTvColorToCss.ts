@@ -17,5 +17,5 @@ import { SevenTvColor } from './seventv-ws-service';
  */
 export function sevenTvColorToCss(color: SevenTvColor): string {
   const { r, g, b, a } = sevenTvColorToRgba(color);
-  return `rgba(${r}, ${g}, ${b}, ${(a / 255).toFixed(2)})`;
+  return `rgba(${r}, ${g}, ${b}, ${(a / 255).toFixed(3)})`;
 }

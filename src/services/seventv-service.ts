@@ -1,7 +1,11 @@
+import { convertV4PaintToPaintData } from '@app/store/chatStore/cosmetics';
+import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import {
   EmoteSetKind,
   type Image,
   Platform,
+  PaintsQueryDocument,
+  type PaintsQueryQuery,
   UserCosmeticsDocument,
   UserCosmeticsQuery,
   UserCosmeticsQueryVariables,
@@ -660,5 +664,22 @@ export const sevenTvService = {
       });
       return null;
     }
+  },
+
+  fetchAllPaints: async (): Promise<PaintData[]> => {
+    const { data, error } = await sevenTvV4Client.query<PaintsQueryQuery>({
+      query: PaintsQueryDocument,
+      fetchPolicy: 'network-only',
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    const paints = data?.paints?.paints ?? [];
+
+    return paints
+      .map(convertV4PaintToPaintData)
+      .sort((a, b) => a.name.localeCompare(b.name));
   },
 } as const;

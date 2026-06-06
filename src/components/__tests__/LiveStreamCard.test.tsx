@@ -5,7 +5,7 @@ import {
 import render from '@app/test/render';
 import { NavigationContainer } from 'expo-router/react-navigation';
 import { screen } from '@testing-library/react-native';
-import { LiveStreamCard } from '../LiveStreamCard/LiveStreamCard';
+import { MemoizedLiveStreamCard as LiveStreamCard } from '../LiveStreamCard/LiveStreamCard';
 
 const mockStream: TwitchStream = {
   id: '1',

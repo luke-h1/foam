@@ -28,19 +28,19 @@ export function SettingsOtherScreen() {
               systemImage='info.circle'
               onPress={() => router.push('/tabs/settings/about')}
             >
-              About Foam
+              <Form.Text>About Foam</Form.Text>
             </Form.Link>
             <Form.Link
               systemImage='questionmark.circle'
               onPress={() => router.push('/tabs/settings/faq')}
             >
-              FAQ
+              <Form.Text>FAQ</Form.Text>
             </Form.Link>
             <Form.Link
               systemImage='clock'
               onPress={() => router.push('/tabs/settings/changelog')}
             >
-              Changelog
+              <Form.Text>Changelog</Form.Text>
             </Form.Link>
           </Form.Section>
           <Form.Section title='Legal'>
@@ -48,7 +48,7 @@ export function SettingsOtherScreen() {
               systemImage='doc.text'
               onPress={() => router.push('/tabs/settings/licenses')}
             >
-              OSS Licenses
+              <Form.Text>OSS Licenses</Form.Text>
             </Form.Link>
           </Form.Section>
         </BodyScrollView>

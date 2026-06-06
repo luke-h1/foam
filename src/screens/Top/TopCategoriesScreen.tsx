@@ -3,12 +3,8 @@ import {
   MemoizedCategoryCard,
 } from '@app/components/CategoryCard/CategoryCard';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
-import {
-  AnimatedFlashList,
-  FlashList,
-  FlashListRef,
-} from '@app/components/FlashList/FlashList';
-import { RefreshControl } from '@app/components/RefreshControl/RefreshControl';
+import { AnimatedFlashList } from '@app/components/FlashList/AnimatedFlashList';
+import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
@@ -19,8 +15,8 @@ import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfinite
 import { useObservable, useSelector } from '@legendapp/state/react';
 import type { ListRenderItem } from '@shopify/flash-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useCallback, useMemo, useRef } from 'react';
-import { Platform, View, StyleSheet } from 'react-native';
+import { useRef, type RefObject, useCallback } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 
 const SKELETON_COUNT = 9;
@@ -48,10 +44,7 @@ export function TopCategoriesScreen({
   const refreshing$ = useObservable(false);
   const refreshing = useSelector(refreshing$);
   const listRef = useRef<FlashListRef<Category>>(null);
-  const skeletonData = useMemo(
-    () => Array.from({ length: SKELETON_COUNT }),
-    [],
-  );
+  const skeletonData = Array.from({ length: SKELETON_COUNT });
 
   useScrollToTop(listRef);
 
@@ -69,6 +62,7 @@ export function TopCategoriesScreen({
     refetch,
     hasNextPage,
     isLoading,
+    isFetching,
     isError,
     isFetchingNextPage,
   } = useInfiniteQuery({
@@ -92,30 +86,17 @@ export function TopCategoriesScreen({
     isFetchingNextPage,
   });
 
-  const renderItem: ListRenderItem<Category> = useCallback(({ item }) => {
-    return (
-      <View style={styles.cardContainer}>
-        <MemoizedCategoryCard category={item} />
-      </View>
-    );
-  }, []);
-
-  const loadingRenderItem: ListRenderItem<unknown> = useCallback(() => {
-    return <CategoryCardSkeleton />;
-  }, []);
-
   const onRefresh = useCallback(async () => {
     refreshing$.set(true);
     await refetch();
     refreshing$.set(false);
   }, [refetch, refreshing$]);
 
-  const allCategories = useMemo(
-    () => flattenInfiniteQueryPages(categories?.pages),
-    [categories],
-  );
+  const allCategories = flattenInfiniteQueryPages(categories?.pages);
+  const showSkeleton =
+    isLoading || refreshing || (isFetching && allCategories.length === 0);
 
-  if (isLoading || refreshing) {
+  if (showSkeleton) {
     return (
       <View style={styles.wrapper}>
         <FlashList
@@ -124,7 +105,7 @@ export function TopCategoriesScreen({
           data={skeletonData}
           keyExtractor={(_, idx) => `${TOP_CATEGORY_SKELETON_KEY_PREFIX}${idx}`}
           numColumns={SKELETON_COLUMNS}
-          renderItem={loadingRenderItem}
+          renderItem={renderTopCategorySkeletonItem}
           contentContainerStyle={[
             styles.listContent,
             { paddingTop: contentTopInset },
@@ -134,7 +115,7 @@ export function TopCategoriesScreen({
     );
   }
 
-  if (!isLoading && !refreshing && isError) {
+  if (!showSkeleton && isError) {
     return (
       <View style={styles.wrapper}>
         <EmptyState
@@ -156,11 +137,36 @@ export function TopCategoriesScreen({
     );
   }
 
-  const refreshControl =
-    Platform.OS === 'android' ? undefined : (
-      <RefreshControl onRefresh={onRefresh} />
-    );
+  return (
+    <TopCategoriesList
+      allCategories={allCategories}
+      contentTopInset={contentTopInset}
+      listRef={listRef}
+      onEndReached={handleLoadMore}
+      onRefresh={onRefresh}
+      renderTopCategoryItem={renderTopCategoryItem}
+      scrollHandler={scrollHandler}
+    />
+  );
+}
 
+function TopCategoriesList({
+  allCategories,
+  contentTopInset,
+  listRef,
+  onEndReached,
+  onRefresh,
+  renderTopCategoryItem,
+  scrollHandler,
+}: {
+  allCategories: Category[];
+  contentTopInset: number;
+  listRef: RefObject<FlashListRef<Category> | null>;
+  onEndReached: () => void;
+  onRefresh: () => void;
+  renderTopCategoryItem: ListRenderItem<Category>;
+  scrollHandler: ReturnType<typeof useAnimatedScrollHandler>;
+}) {
   return (
     <View style={styles.wrapper}>
       <AnimatedFlashList<Category>
@@ -173,13 +179,13 @@ export function TopCategoriesScreen({
           styles.listContent,
           { paddingTop: contentTopInset },
         ]}
-        renderItem={renderItem}
+        renderItem={renderTopCategoryItem}
         keyExtractor={item => item.id}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        onEndReached={handleLoadMore}
+        onEndReached={onEndReached}
         onEndReachedThreshold={0.4}
         onScroll={scrollHandler}
-        refreshControl={refreshControl}
+        onRefresh={onRefresh}
       />
     </View>
   );
@@ -215,3 +221,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+
+const renderTopCategoryItem: ListRenderItem<Category> = ({ item }) => (
+  <View style={styles.cardContainer}>
+    <MemoizedCategoryCard category={item} />
+  </View>
+);
+
+const renderTopCategorySkeletonItem: ListRenderItem<unknown> = () => (
+  <CategoryCardSkeleton />
+);

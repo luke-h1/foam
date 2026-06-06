@@ -2,7 +2,6 @@ import { batch } from '@legendapp/state';
 import { useCallback, useRef, type RefObject } from 'react';
 
 import { parseIrcMessage } from '@app/services/recent-messages-service';
-import type { ChatMessageType } from '@app/store/chatStore/constants';
 import {
   addMessage,
   clearMessages,
@@ -18,10 +17,15 @@ import { logger } from '@app/utils/logger';
 
 import { formatNoticeMessage } from '../util/formatNoticeMessage';
 import {
+  ingestChannelPointRewardTags,
+  registerDeferredRewardgiftStandalone,
+} from '@app/utils/chat/channelPointRewardTitleStore';
+import {
   createBaseMessage,
   createSystemMessage,
   createUserNoticeMessage,
   createUserStateFromTags,
+  coerceUserNoticeTags,
   type AnyChatMessageType,
 } from '../util/messageHandlers';
 import type { ChatListRef } from '../components/ChatList';
@@ -43,7 +47,7 @@ interface UseChatIrcHandlersOptions {
   ) => void;
   listRef: RefObject<ChatListRef | null>;
   isLoadingRecentMessagesRef?: RefObject<boolean>;
-  messages$: { peek: () => unknown[] };
+  messages$: { peek: () => AnyChatMessageType[] };
   moderateBufferedMessageById: (messageId: string, notice: string) => void;
   moderateBufferedMessagesByLogin: (login: string, notice: string) => void;
   processMessageEmotes: (
@@ -73,9 +77,7 @@ export function useChatIrcHandlers({
 
   const appendSystemMessage = useCallback(
     (content: string) => {
-      addMessage(
-        createSystemMessage(channelName, content) as ChatMessageType<never>,
-      );
+      addMessage(createSystemMessage(channelName, content));
     },
     [channelName],
   );
@@ -99,7 +101,12 @@ export function useChatIrcHandlers({
         }
       }
 
-      const baseMessage = createBaseMessage({ tags, channelName, text });
+      const baseMessage = createBaseMessage({
+        tags,
+        channelName,
+        text,
+        broadcasterId: channelId,
+      });
       const messageWithParentColor = { ...baseMessage, parentColor };
 
       processMessageEmotes(
@@ -110,7 +117,7 @@ export function useChatIrcHandlers({
         countUnread,
       );
     },
-    [channelName, processMessageEmotes],
+    [channelId, channelName, processMessageEmotes],
   );
 
   const onMessage = useCallback(
@@ -120,12 +127,62 @@ export function useChatIrcHandlers({
     [handlePrivmsgMessage],
   );
 
+  const handleUserNoticeMessage = useCallback(
+    (tags: UserNoticeTags, text: string, countUnread = true) => {
+      if (tags['msg-id'] === 'rewardgift' && !text.trimEnd()) {
+        ingestChannelPointRewardTags(tags, channelId);
+        const login = tags.login;
+        const rewardId = tags['custom-reward-id'];
+
+        if (login && rewardId) {
+          registerDeferredRewardgiftStandalone({
+            login,
+            rewardId,
+            publish: () => {
+              const redemptionNotice = createUserNoticeMessage({
+                tags,
+                channelName,
+                text,
+                broadcasterId: channelId,
+              });
+              handleNewMessage(redemptionNotice, { countUnread });
+            },
+          });
+          return;
+        }
+      }
+
+      const message = createUserNoticeMessage({
+        tags,
+        channelName,
+        text,
+        broadcasterId: channelId,
+      });
+
+      if (message.isAnnouncement || message.isHighlightedMessage) {
+        const trimmedText = text.trimEnd();
+        if (trimmedText) {
+          processMessageEmotes(
+            trimmedText,
+            message.userstate,
+            message,
+            tags['user-id'],
+            countUnread,
+          );
+          return;
+        }
+      }
+
+      handleNewMessage(message, { countUnread });
+    },
+    [channelId, channelName, handleNewMessage, processMessageEmotes],
+  );
+
   const onUserNotice = useCallback(
     (_channel: string, tags: UserNoticeTags, text: string) => {
-      const message = createUserNoticeMessage({ tags, channelName, text });
-      handleNewMessage(message);
+      handleUserNoticeMessage(tags, text);
     },
-    [channelName, handleNewMessage],
+    [handleUserNoticeMessage],
   );
 
   const onClearChat = useCallback(
@@ -165,7 +222,7 @@ export function useChatIrcHandlers({
 
       batch(() => {
         clearMessages();
-        addMessage(systemMessage as ChatMessageType<never>);
+        addMessage(systemMessage);
       });
       setTimeout(() => {
         listRef.current?.scrollToEnd({ animated: false });
@@ -295,12 +352,7 @@ export function useChatIrcHandlers({
         }
         case 'USERNOTICE': {
           const text = params[1] ?? '';
-          const message = createUserNoticeMessage({
-            tags: tags as UserNoticeTags,
-            channelName,
-            text,
-          });
-          handleNewMessage(message, { countUnread: false });
+          handleUserNoticeMessage(coerceUserNoticeTags(tags), text, false);
           break;
         }
         case 'CLEARCHAT': {
@@ -333,9 +385,8 @@ export function useChatIrcHandlers({
       }
     },
     [
-      channelName,
-      handleNewMessage,
       handlePrivmsgMessage,
+      handleUserNoticeMessage,
       onClearChat,
       onClearMessage,
       onNotice,

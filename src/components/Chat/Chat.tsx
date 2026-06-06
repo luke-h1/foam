@@ -1,9 +1,143 @@
 import { memo } from 'react';
+import { View } from 'react-native';
+import { KeyboardStickyView } from 'react-native-keyboard-controller';
+import { ChatEmoteReprocessor } from './components/ChatEmoteReprocessor';
+import { ChatInputShell } from './components/ChatInputShell';
+import { ChatMessagePane } from './components/ChatMessagePane';
+import { ChatOverlayController } from './components/ChatOverlayController';
+import { ResumeScroll } from './components/ResumeScroll';
+import { useChat } from './hooks/useChat';
+import { styles } from './styles';
 
-import { ChatView, type ChatProps } from './ChatView';
+export interface ChatProps {
+  applyTopInset?: boolean;
+  channelId: string;
+  channelName: string;
+  transparent?: boolean;
+}
 
-export const Chat = memo((props: ChatProps) => {
-  return <ChatView {...props} />;
-});
+export const Chat = memo(
+  ({
+    applyTopInset = true,
+    channelName,
+    channelId,
+    transparent = false,
+  }: ChatProps) => {
+    const vm = useChat(channelId, channelName);
 
-Chat.displayName = 'Chat';
+    return (
+      <View
+        style={[
+          styles.wrapper,
+          transparent && styles.wrapperTransparent,
+          applyTopInset && { paddingTop: vm.insets.top },
+        ]}
+      >
+        <ChatEmoteReprocessor
+          channelId={channelId}
+          emoteLoadStatus={vm.emoteLoadStatus}
+          messages$={vm.messages$}
+          processedMessageIdsRef={vm.processedMessageIdsRef}
+          reprocessKey={vm.chatAssetPreferenceKey}
+        />
+        <View style={styles.keyboardAvoidingView}>
+          <View style={styles.chatContainer}>
+            <ChatMessagePane
+              channelId={channelId}
+              channelName={channelName}
+              currentUsername={vm.currentUsername}
+              hiddenUsers={vm.hiddenUsers}
+              hiddenPhrases={vm.hiddenPhrases}
+              highlightedUsers={vm.highlightedUsers}
+              paneFlags={vm.paneFlags}
+              chatDensity={vm.preferences.chatDensity}
+              listRef={vm.listRef}
+              handleScroll={vm.handleScroll}
+              handleScrollBeginDrag={vm.handleScrollBeginDrag}
+              handleScrollEndDrag={vm.handleScrollEndDrag}
+              handleMomentumScrollEnd={vm.handleMomentumScrollEnd}
+              handleEndReached={vm.handleEndReached}
+              handleContentSizeChange={vm.handleContentSizeChange}
+              renderItem={vm.renderItem}
+              keyExtractor={vm.keyExtractor}
+              getItemType={vm.getItemType}
+              listContentStyle={vm.listContentStyle}
+              messageListExtraData={vm.messageListExtraData}
+              onClearFilters={vm.handleClearFilters}
+              onRefreshPinnedMessage={vm.handleRefreshPinnedMessage}
+              onToggleShowOnlyMentions={vm.handleToggleShowOnlyMentions}
+              onUnpinPinnedMessage={vm.handleUnpinPinnedMessage}
+              onViewableMessagesChange={vm.handleViewableMessagesChange}
+              pinnedMessage={vm.pinnedMessage}
+              pinnedMessageBusy={vm.pinnedMessageBusy}
+            />
+
+            {vm.preferences.showUnreadJumpPill &&
+            !vm.isAtBottom &&
+            !vm.isScrollingToBottom ? (
+              <ResumeScroll
+                unreadCount={vm.unreadCount}
+                onScrollToBottom={vm.handleResumeScrollToBottom}
+              />
+            ) : null}
+          </View>
+
+          <KeyboardStickyView style={styles.inputStickyView}>
+            <ChatInputShell
+              ref={vm.inputShellRef}
+              canPinNextMessage={vm.canModerateChat}
+              channelId={channelId}
+              channelName={channelName}
+              connected={vm.connected}
+              getUserState={vm.getUserState}
+              isChatConnected={vm.isChatConnected}
+              onOpenEmoteSheet={vm.handleOpenEmoteSheet}
+              onOpenSettingsSheet={vm.handleOpenSettingsSheet}
+              onPinnedMessageChanged={vm.handlePinnedMessageChanged}
+              processMessageEmotes={vm.processMessageEmotes}
+              sendMessage={vm.sendMessage}
+              user={vm.user}
+            />
+          </KeyboardStickyView>
+
+          <ChatOverlayController
+            ref={vm.overlayControllerRef}
+            canModerateChat={vm.canModerateChat}
+            channelId={channelId}
+            channelName={channelName}
+            disableEmoteAnimations={vm.preferences.disableEmoteAnimations}
+            highlightOwnMentions={vm.preferences.highlightOwnMentions}
+            showInlineReplyContext={vm.preferences.showInlineReplyContext}
+            showTimestamps={vm.preferences.chatTimestamps}
+            showUnreadJumpPill={vm.preferences.showUnreadJumpPill}
+            chatDensity={vm.preferences.chatDensity}
+            handleReply={vm.handleReply}
+            highlightedUsers={vm.highlightedUsers}
+            hiddenUsers={vm.hiddenUsers}
+            hidePhraseFromView={vm.hidePhraseFromView}
+            hideUserFromView={vm.hideUserFromView}
+            appendMentionToComposer={vm.appendMentionToComposer}
+            onClearChatCache={vm.handleClearChatCache}
+            onClearImageCache={vm.handleDebugClearImageCache}
+            onClearSevenTvCosmeticsCache={vm.handleClearSevenTvCosmeticsCache}
+            onInsertEmote={vm.handleEmoteSelect}
+            onPinMessage={vm.handlePinMessage}
+            onRefreshPinnedMessage={vm.handleRefreshPinnedMessage}
+            onSettingsReconnect={vm.handleSettingsReconnect}
+            onSettingsRefetchEmotes={vm.handleSettingsRefetchEmotes}
+            onToggleChatDensity={vm.handleToggleChatDensity}
+            onToggleHighlightOwnMentions={vm.handleToggleHighlightOwnMentions}
+            onToggleInlineReplyContext={vm.handleToggleInlineReplyContext}
+            onToggleShowTimestamps={vm.handleToggleShowTimestamps}
+            onToggleShowUnreadJumpPill={vm.handleToggleShowUnreadJumpPill}
+            onUnpinPinnedMessage={vm.handleUnpinPinnedMessage}
+            pinnedMessageBusy={vm.pinnedMessageBusy}
+            pinnedMessageId={vm.pinnedMessageId}
+            sendChatCommand={vm.sendChatCommand}
+            toggleHighlightedUser={vm.toggleHighlightedUser}
+          />
+        </View>
+      </View>
+    );
+  },
+);

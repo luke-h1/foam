@@ -20,10 +20,11 @@ import {
 } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
+import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 import { formatViewCount } from '@app/utils/string/formatViewCount';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { useCallback, useMemo, useRef } from 'react';
+import { useRef, useCallback } from 'react';
 import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
@@ -84,6 +85,19 @@ function StreamerProfileHeader({
   return (
     <View style={[styles.header, { paddingTop: insets.top + theme.space16 }]}>
       <View style={styles.navRow}>
+        <IconButton
+          icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}
+          label={`Share ${user.display_name}`}
+          onPress={() => {
+            void shareDeepLink({
+              kind: 'streamer',
+              login: user.login,
+              displayName: user.display_name,
+            });
+          }}
+          size='2xl'
+          style={styles.closeButton}
+        />
         <IconButton
           icon={{ type: 'symbol', name: 'xmark', size: 18 }}
           label='Close streamer profile'
@@ -230,10 +244,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
     getNextPageParam: lastPage => lastPage?.pagination?.cursor || undefined,
   });
 
-  const clips = useMemo(
-    () => flattenInfiniteQueryPages(clipPages?.pages),
-    [clipPages],
-  );
+  const clips = flattenInfiniteQueryPages(clipPages?.pages);
 
   const cardWidth =
     Platform.OS === 'web' && windowWidth >= 820
@@ -247,38 +258,28 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
     isFetchingNextPage,
   });
 
-  const handleDownload = useCallback(
-    (clip: TwitchClip) => {
-      download(
-        { clip },
-        {
-          onError: error => toast.error(error.message),
-          onSuccess: () => toast.success('Clip saved'),
-        },
-      );
-    },
-    [download],
+  const handleDownload = (clip: TwitchClip) => {
+    download(
+      { clip },
+      {
+        onError: error => toast.error(error.message),
+        onSuccess: () => toast.success('Clip saved'),
+      },
+    );
+  };
+
+  const renderItem: ListRenderItem<ClipListItem> = ({ item }) => (
+    <ClipCard
+      clip={item}
+      downloading={downloadingClipId === item.id}
+      onDownload={handleDownload}
+      width={cardWidth}
+    />
   );
 
-  const renderItem: ListRenderItem<ClipListItem> = useCallback(
-    ({ item }) => (
-      <ClipCard
-        clip={item}
-        downloading={downloadingClipId === item.id}
-        onDownload={handleDownload}
-        width={cardWidth}
-      />
-    ),
-    [cardWidth, downloadingClipId, handleDownload],
-  );
-
-  const listHeader = useMemo(
-    () =>
-      user ? (
-        <StreamerProfileHeader user={user} clipCount={clips.length} />
-      ) : null,
-    [clips.length, user],
-  );
+  const listHeader = user ? (
+    <StreamerProfileHeader user={user} clipCount={clips.length} />
+  ) : null;
 
   if (isUserLoading) {
     return <LoadingState />;
@@ -433,6 +434,7 @@ const styles = StyleSheet.create({
   navRow: {
     alignItems: 'center',
     flexDirection: 'row',
+    gap: theme.space12,
     justifyContent: 'flex-end',
     marginBottom: theme.space12,
   },

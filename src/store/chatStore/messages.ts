@@ -1,6 +1,13 @@
-import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
-import type { Bit, ChatMessageType, ChatUser } from './constants';
+import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
+import {
+  clearMentionLoginIndex,
+  registerMentionChatter,
+  registerMentionLogin,
+  registerMentionLoginsFromParts,
+  registerMentionLoginsFromSender,
+} from '@app/utils/chat/resolveMentionLogin';
+import type { AnyChatMessageType } from './constants';
 import { chatStore$ } from './state';
 
 const messageKeySet = new Set<string>();
@@ -16,21 +23,21 @@ const RECENT_MESSAGES_SYNC_DELAY_MS = 1000;
 
 let recentMessagesSyncTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingRecentMessagesChannelId: string | null = null;
-let pendingRecentMessages: ChatMessageType<never>[] | null = null;
+let pendingRecentMessages: AnyChatMessageType[] | null = null;
 
 const getMessageKey = (messageId: string, messageNonce: string): string =>
   `${messageId}_${messageNonce}`;
 
-const getMessageStoreId = (message: ChatMessageType<never>): string =>
+const getMessageStoreId = (message: AnyChatMessageType): string =>
   message.id?.trim() ||
   getMessageKey(message.message_id, message.message_nonce);
 
 const dedupeMessagesForStore = (
-  messages: (ChatMessageType<never> | undefined)[],
-): ChatMessageType<never>[] => {
+  messages: (AnyChatMessageType | undefined)[],
+): AnyChatMessageType[] => {
   const seenKeys = new Set<string>();
   const seenIds = new Set<string>();
-  const uniqueMessages: ChatMessageType<never>[] = [];
+  const uniqueMessages: AnyChatMessageType[] = [];
 
   messages.forEach(message => {
     if (!isValidChatMessage(message)) {
@@ -54,8 +61,8 @@ const dedupeMessagesForStore = (
 const prepareMessagePartsForStore = (
   messageId: string,
   messageNonce: string,
-  messageParts: ChatMessageType<never>['message'],
-): ChatMessageType<never>['message'] => {
+  messageParts: AnyChatMessageType['message'],
+): AnyChatMessageType['message'] => {
   const messageKey = getMessageKey(messageId, messageNonce);
   return messageParts.map((part, index) => {
     const storedPart = { ...part };
@@ -70,12 +77,14 @@ const prepareMessagePartsForStore = (
 };
 
 const prepareMessageForStore = (
-  message: ChatMessageType<never>,
-): ChatMessageType<never> => {
+  message: AnyChatMessageType,
+): AnyChatMessageType => {
   const messageKey = getMessageKey(message.message_id, message.message_nonce);
+  const cachedSenderColor = resolveCachedSenderColor(message);
   return {
     ...message,
     id: messageKey,
+    ...(cachedSenderColor ? { cachedSenderColor } : {}),
     message: prepareMessagePartsForStore(
       message.message_id,
       message.message_nonce,
@@ -88,7 +97,7 @@ const prepareMessageUpdates = (
   messageId: string,
   messageNonce: string,
   updates: Partial<
-    Pick<ChatMessageType<never>, 'message' | 'badges' | 'moderationNotice'>
+    Pick<AnyChatMessageType, 'message' | 'badges' | 'moderationNotice'>
   >,
 ) =>
   updates.message
@@ -102,9 +111,9 @@ const prepareMessageUpdates = (
       }
     : updates;
 
-const isValidChatMessage = <TNoticeType extends NoticeVariants>(
-  message?: ChatMessageType<TNoticeType>,
-): message is ChatMessageType<TNoticeType> => {
+const isValidChatMessage = (
+  message?: AnyChatMessageType,
+): message is AnyChatMessageType => {
   return Boolean(message?.message_id && message.message_nonce);
 };
 
@@ -113,7 +122,7 @@ const normaliseIndexKey = (value?: string): string | null => {
   return normalised || null;
 };
 
-const indexMessage = (message: ChatMessageType<never>, index: number) => {
+const indexMessage = (message: AnyChatMessageType, index: number) => {
   const key = getMessageKey(message.message_id, message.message_nonce);
   messageKeyToIndex.set(key, index);
 
@@ -134,6 +143,11 @@ const indexMessage = (message: ChatMessageType<never>, index: number) => {
     normaliseIndexKey(message.sender),
     normaliseIndexKey(message.userstate?.username),
     normaliseIndexKey(message.userstate?.login),
+    normaliseIndexKey(
+      typeof message.userstate?.['display-name'] === 'string'
+        ? message.userstate['display-name']
+        : undefined,
+    ),
   ];
 
   senderKeys.forEach(senderKey => {
@@ -141,10 +155,22 @@ const indexMessage = (message: ChatMessageType<never>, index: number) => {
       senderColorIndex.set(senderKey, color);
     }
   });
+
+  registerMentionChatter({
+    login: message.userstate?.login ?? message.sender,
+    userId: message.userstate?.['user-id'],
+    color: message.userstate?.color,
+  });
+  registerMentionLoginsFromSender(
+    message.userstate?.login,
+    message.userstate?.username ?? message.sender,
+  );
+  registerMentionLogin(message.replyDisplayName);
+  registerMentionLoginsFromParts(message.message);
 };
 
 const rebuildMessageIndexes = (
-  messages: ChatMessageType<never>[] = chatStore$.messages.peek(),
+  messages: AnyChatMessageType[] = chatStore$.messages.peek(),
 ) => {
   messageIdToIndex.clear();
   messageKeyToIndex.clear();
@@ -192,7 +218,7 @@ const trimRecentMessageChannels = () => {
 
 const persistRecentMessagesForChannel = (
   channelId: string,
-  nextMessages: ChatMessageType<never>[],
+  nextMessages: AnyChatMessageType[],
 ) => {
   const recentMessagesByChannel =
     chatStore$.persisted.recentMessagesByChannel.peek() ?? {};
@@ -239,7 +265,7 @@ const flushPendingRecentMessagesSync = () => {
 };
 
 const syncRecentMessagesForCurrentChannel = (
-  nextMessages: ChatMessageType<never>[],
+  nextMessages: AnyChatMessageType[],
   mode: 'defer' | 'immediate' = 'immediate',
 ) => {
   const currentChannelId = chatStore$.currentChannelId.peek();
@@ -281,11 +307,11 @@ const trimMessageIndexes = (): boolean => {
 };
 
 const appendToMessageWindow = (
-  currentMessages: ChatMessageType<never>[],
-  storedMessages: ChatMessageType<never>[],
+  currentMessages: AnyChatMessageType[],
+  storedMessages: AnyChatMessageType[],
 ): {
   didTrimMessages: boolean;
-  nextMessages: ChatMessageType<never>[];
+  nextMessages: AnyChatMessageType[];
 } => {
   const nextMessages = [...currentMessages, ...storedMessages];
   const extraMessageCount = nextMessages.length - MAX_CHAT_MESSAGES;
@@ -302,7 +328,7 @@ const appendToMessageWindow = (
 
 const publishMessageAtIndex = (
   index: number,
-  message: ChatMessageType<never>,
+  message: AnyChatMessageType,
   mode: 'defer' | 'immediate' = 'defer',
 ) => {
   const currentMessages = chatStore$.messages.peek();
@@ -320,14 +346,14 @@ type MessageUpdateInput = {
   messageId: string;
   messageNonce: string;
   updates: Partial<
-    Pick<ChatMessageType<never>, 'message' | 'badges' | 'moderationNotice'>
+    Pick<AnyChatMessageType, 'message' | 'badges' | 'moderationNotice'>
   >;
 };
 
 const getMessageUpdatesFromInputs = (
-  currentMessages: ChatMessageType<never>[],
+  currentMessages: AnyChatMessageType[],
   updates: MessageUpdateInput[],
-): ChatMessageType<never>[] | null => {
+): AnyChatMessageType[] | null => {
   let nextMessages = currentMessages;
   let didUpdate = false;
 
@@ -382,9 +408,7 @@ export const updateMessages = (
   syncRecentMessagesForCurrentChannel(nextMessages, mode);
 };
 
-export const addMessage = <TNoticeType extends NoticeVariants>(
-  message?: ChatMessageType<TNoticeType>,
-) => {
+export const addMessage = (message?: AnyChatMessageType) => {
   if (!isValidChatMessage(message)) {
     return;
   }
@@ -416,12 +440,12 @@ export const addMessage = <TNoticeType extends NoticeVariants>(
 };
 
 export const addMessages = (
-  messages: (ChatMessageType<never> | undefined)[],
+  messages: (AnyChatMessageType | undefined)[],
 ) => {
   if (messages.length === 0) {
     return;
   }
-  const newMessages = messages.filter((msg): msg is ChatMessageType<never> => {
+  const newMessages = messages.filter((msg): msg is AnyChatMessageType => {
     if (!isValidChatMessage(msg)) {
       return false;
     }
@@ -460,22 +484,12 @@ export const addMessages = (
   syncRecentMessagesForCurrentChannel(nextMessages, 'defer');
 };
 
-export const updateMessage = (
-  messageId: string,
-  messageNonce: string,
-  updates: Partial<
-    Pick<ChatMessageType<never>, 'message' | 'badges' | 'moderationNotice'>
-  >,
-) => {
-  updateMessages([{ messageId, messageNonce, updates }]);
-};
-
 function normaliseLogin(value?: string): string {
   return value?.trim().toLowerCase() ?? '';
 }
 
 function createModeratedText(
-  message: ChatMessageType<never>,
+  message: AnyChatMessageType,
   moderationNotice: string,
 ): string {
   const plainText = replaceEmotesWithText(message.message).trim();
@@ -579,7 +593,7 @@ export const moderateMessagesByLogin = (
 
 export const getMessageById = (
   messageId: string,
-): ChatMessageType<never> | undefined => {
+): AnyChatMessageType | undefined => {
   const index = messageIdToIndex.get(messageId);
   if (typeof index !== 'number') {
     return undefined;
@@ -629,6 +643,7 @@ export const clearMessages = () => {
   messageKeyToIndex.clear();
   messageColorIndex.clear();
   senderColorIndex.clear();
+  clearMentionLoginIndex();
   chatStore$.messages.set([]);
 };
 
@@ -648,6 +663,7 @@ export const restoreRecentMessagesForChannel = (channelId: string): number => {
   messageKeyToIndex.clear();
   messageColorIndex.clear();
   senderColorIndex.clear();
+  clearMentionLoginIndex();
 
   recentMessages.forEach(message => {
     const key = getMessageKey(message.message_id, message.message_nonce);
@@ -670,17 +686,6 @@ export const getUserMessageColor = (username: string): string | undefined => {
   return key ? senderColorIndex.get(key) : undefined;
 };
 
-export const addTtvUser = (user: ChatUser) => {
-  const existingUsers = chatStore$.ttvUsers.peek();
-  if (!existingUsers.some(u => u.userId === user.userId)) {
-    chatStore$.ttvUsers.push(user);
-  }
-};
-
 export const clearTtvUsers = () => {
   chatStore$.ttvUsers.set([]);
-};
-
-export const setBits = (bits: Bit[]) => {
-  chatStore$.bits.set(bits);
 };

@@ -2,7 +2,7 @@ import { clearCache } from '@app/store/chatStore/channelLoad';
 import { clearUserCosmeticsCache } from '@app/store/chatStore/cosmetics';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
-import { useCallback, useRef } from 'react';
+import { useRef, useCallback } from 'react';
 
 interface UseChatSettingsActionsOptions {
   channelId: string;
@@ -15,6 +15,15 @@ interface UseChatSettingsActionsOptions {
   reprocessAllMessages: () => void;
   scrollToBottom: () => void;
   updatePreferences: (patch: Record<string, unknown>) => void;
+}
+
+function handleClearSevenTvCosmeticsCache() {
+  try {
+    clearUserCosmeticsCache();
+    logger.chat.info('7TV cosmetic cache cleared successfully');
+  } catch (error) {
+    logger.chat.error('Failed to clear 7TV cosmetic cache:', error);
+  }
 }
 
 export function useChatSettingsActions({
@@ -67,15 +76,6 @@ export function useChatSettingsActions({
       logger.chat.error('Failed to clear image cache:', error);
     }
   }, [channelId]);
-
-  const handleClearSevenTvCosmeticsCache = useCallback(() => {
-    try {
-      clearUserCosmeticsCache();
-      logger.chat.info('7TV cosmetic cache cleared successfully');
-    } catch (error) {
-      logger.chat.error('Failed to clear 7TV cosmetic cache:', error);
-    }
-  }, []);
 
   const handleDebugClearImageCache = useCallback(() => {
     void handleClearImageCache();

@@ -4,16 +4,13 @@ import {
   listenNetworkLost,
 } from '@app/utils/network/network-events';
 import { createQueryPersister } from '@app/utils/react-query/queryPersister';
-import {
-  focusManager,
-  onlineManager,
-  QueryClient,
-} from '@tanstack/react-query';
+import { focusManager, onlineManager } from '@tanstack/react-query';
+import { queryClient } from './queryClient';
 import {
   PersistQueryClientProvider,
   type PersistQueryClientProviderProps,
 } from '@tanstack/react-query-persist-client';
-import { PropsWithChildren, useRef, useState } from 'react';
+import { PropsWithChildren, useState } from 'react';
 import { AppState, Platform, type AppStateStatus } from 'react-native';
 
 const WEB_QUERY_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
@@ -137,26 +134,6 @@ focusManager.setEventListener(onFocus => {
   }
 });
 
-const createQueryClient = () => {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        gcTime: Platform.OS === 'web' ? WEB_QUERY_CACHE_MAX_AGE : undefined,
-        refetchOnWindowFocus: false,
-        structuralSharing: false,
-        retry: 3,
-        retryDelay: 3000,
-      },
-    },
-  });
-};
-
-/**
- * Shared queryClient instance for use outside of React components
- * (e.g., in AuthContext for prefetching and cache invalidation)
- */
-export const queryClient = createQueryClient();
-
 const dehydrateOptions: PersistQueryClientProviderProps['persistOptions']['dehydrateOptions'] =
   {
     shouldDehydrateMutation: _ => false,
@@ -183,14 +160,6 @@ export function QueryProvider({ children, currentUserId }: QueryProviderProps) {
 }
 
 function QueryProviderInner({ children, currentUserId }: QueryProviderProps) {
-  const initialUserId = useRef(currentUserId);
-
-  if (currentUserId !== initialUserId.current) {
-    throw new Error(
-      'Something is very wrong - expected userId to be stable due to key prop above',
-    );
-  }
-
   const [persistOptions] = useState(() => {
     const persister = createQueryPersister(
       `query-cache-${currentUserId ?? 'logged-out'}`,

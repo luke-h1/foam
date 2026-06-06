@@ -1,7 +1,7 @@
+import { useCallback, memo } from 'react';
 import { Category } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { router } from 'expo-router';
-import { memo, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button } from '../Button/Button';
 import { Image } from '../Image/Image';
@@ -51,7 +51,6 @@ export function CategoryCard({ category }: Props) {
 }
 
 export const MemoizedCategoryCard = memo(CategoryCard);
-MemoizedCategoryCard.displayName = 'MemoizedCategoryCard';
 
 const styles = StyleSheet.create({
   container: {

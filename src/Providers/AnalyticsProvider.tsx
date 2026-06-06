@@ -1,12 +1,11 @@
 import { useAuthContext } from '@app/context/AuthContext';
 import { logger } from '@app/utils/logger';
-import type { StatsigUser } from '@statsig/client-core';
 import {
   StatsigProviderRN,
   useStatsigClient,
 } from '@statsig/react-native-bindings';
 import { usePathname } from 'expo-router';
-import { PropsWithChildren, useEffect, useMemo, useRef } from 'react';
+import { PropsWithChildren, useEffect, useRef } from 'react';
 
 const statsigClientKey = process.env.EXPO_PUBLIC_STATSIG_CLIENT_KEY;
 
@@ -38,27 +37,19 @@ function ScreenAnalytics() {
 export function AnalyticsProvider({ children }: PropsWithChildren) {
   const { user } = useAuthContext();
 
-  const statsigUser = useMemo<StatsigUser>(() => {
-    if (!user) {
-      return {
-        customIDs: {
-          stableID: 'anonymous',
-        },
-      };
-    }
-
-    return {
-      userID: user.id,
-      custom: {
-        twitchLogin: user.login,
-        twitchDisplayName: user.display_name,
-      },
-    };
-  }, [user]);
-
   if (!statsigClientKey) {
     return <>{children}</>;
   }
+
+  const statsigUser = {
+    userID: user?.id ?? 'anonymous',
+    custom: user
+      ? {
+          twitchLogin: user.login,
+          twitchDisplayName: user.display_name,
+        }
+      : {},
+  };
 
   return (
     <StatsigProviderRN sdkKey={statsigClientKey} user={statsigUser}>

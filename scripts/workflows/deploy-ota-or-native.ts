@@ -6,7 +6,7 @@ import {
   getFinalReleaseTag,
   getPreliminaryReleaseTag,
   parsePublishedUpdateJson,
-} from './deploy-ota-or-native-utils';
+} from './otaOrNativeDeployDecision';
 import { getRequiredArg, writeGithubOutput } from './github-actions';
 
 function getCommandErrorMessage(error: unknown): string {

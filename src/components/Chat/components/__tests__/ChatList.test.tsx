@@ -212,7 +212,7 @@ describe('ChatList', () => {
       props.renderItem({ item: undefined, index: 2, extraData: undefined }),
     );
 
-    expect(getByTestId('chat-row-skeleton')).toBeTruthy();
+    expect(getByTestId('chat-row-skeleton')).toBeOnTheScreen();
   });
 
   test('lets LegendList maintain the end without imperative growth scrolling', () => {

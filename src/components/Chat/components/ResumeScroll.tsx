@@ -1,9 +1,9 @@
+import { memo } from 'react';
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { View, StyleSheet } from 'react-native';
-import { memo } from 'react';
 
 export interface ResumeScrollProps {
   unreadCount: number;
@@ -41,18 +41,11 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius28,
     borderWidth: 1,
-    elevation: 5,
+    boxShadow: '0 2px 3.84px rgba(0, 0, 0, 0.25)',
     flexDirection: 'row',
     gap: theme.space8,
     paddingHorizontal: theme.space20,
     paddingVertical: theme.space12,
-    shadowColor: theme.colorBlackAlpha,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
   },
   resumeButtonContainer: {
     alignSelf: 'center',

@@ -165,9 +165,6 @@ export const getUserPersonalEmotes = (
   return cache?.sevenTvPersonalEmotes?.[twitchUserId] || [];
 };
 
-export const hasCheckedPersonalEmotes = (twitchUserId: string): boolean =>
-  checkedUsersForPersonalEmotes.has(twitchUserId);
-
 export const clearPersonalEmotesCache = () => {
   checkedUsersForPersonalEmotes.clear();
   personalEmoteFetchPromises.clear();
@@ -1214,49 +1211,6 @@ export const loadChannelResources = async (
   );
 };
 
-export const getCacheAge = (channelId: string): number | null => {
-  const caches = chatStore$.persisted.channelCaches.peek();
-  const cache = caches?.[channelId];
-  if (!cache) {
-    return null;
-  }
-  return Date.now() - cache.lastUpdated;
-};
-
-export const isCacheExpired = (
-  channelId: string,
-  maxAge = CACHE_DURATION,
-): boolean => {
-  const cacheAge = getCacheAge(channelId);
-  if (cacheAge === null) {
-    return true;
-  }
-  return cacheAge > maxAge;
-};
-
-export const expireCache = (channelId?: string) => {
-  if (channelId) {
-    const caches = chatStore$.persisted.channelCaches.peek();
-    if (caches?.[channelId]) {
-      const channelCache = chatStore$.persisted.channelCaches[channelId];
-      if (channelCache) {
-        channelCache.lastUpdated.set(0);
-        channelCache.badgesLastUpdated.set(0);
-      }
-    }
-  } else {
-    const caches = chatStore$.persisted.channelCaches.peek() ?? {};
-    Object.keys(caches).forEach(id => {
-      const cache = chatStore$.persisted.channelCaches[id];
-      if (cache) {
-        cache.lastUpdated.set(0);
-        cache.badgesLastUpdated.set(0);
-      }
-    });
-    chatStore$.persisted.lastGlobalUpdate.set(0);
-  }
-};
-
 export const clearCache = (channelId?: string) => {
   if (channelId) {
     batch(() => {
@@ -1278,20 +1232,6 @@ export const clearCache = (channelId?: string) => {
   }
 };
 
-export const clearAllCache = () => {
-  batch(() => {
-    chatStore$.persisted.channelCaches.set({});
-    chatStore$.persisted.lastGlobalUpdate.set(0);
-    chatStore$.currentChannelId.set(null);
-    chatStore$.loadingState.set('IDLE');
-    chatStore$.emojis.set(getEmojiEmotes(getPreferences().emojiStyle));
-    chatStore$.bits.set([]);
-    chatStore$.ttvUsers.set([]);
-    chatStore$.messages.set([]);
-  });
-  clearEmoteImageCache();
-};
-
 export const clearChatCosmeticsCache = (): void => {
   batch(() => {
     chatStore$.persisted.channelCaches.set({});
@@ -1308,17 +1248,6 @@ export const clearChatCosmeticsCache = (): void => {
   clearPersonalEmotesCache();
   clearEmoteImageCache();
   void clearChatStorePersistence();
-};
-
-export const refreshChannelResources = async (
-  channelId: string,
-  forceRefresh = false,
-  twitchUserId?: string,
-): Promise<boolean> => {
-  if (forceRefresh) {
-    clearCache(channelId);
-  }
-  return loadChannelResources({ channelId, forceRefresh, twitchUserId });
 };
 
 export const getCurrentEmoteData = (channelId?: string) => {
@@ -1421,16 +1350,4 @@ export const updateSevenTvEmotes = (
       channelCache.lastUpdated.set(Date.now());
     }
   });
-};
-
-export const getCachedEmotes = (channelId: string): SanitisedEmote[] => {
-  const caches = chatStore$.persisted.channelCaches.peek();
-  const cache = caches?.[channelId];
-  return cache?.emotes ?? [];
-};
-
-export const getCachedBadges = (channelId: string): SanitisedBadgeSet[] => {
-  const caches = chatStore$.persisted.channelCaches.peek();
-  const cache = caches?.[channelId];
-  return cache?.badges ?? [];
 };

@@ -2,7 +2,7 @@ import { Button } from '@app/components/Button/Button';
 import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/CosmeticUsername';
 import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
-import type { InputRef } from '@app/components/ui/Input/Input';
+import type { ChatComposerHandle } from './ChatComposer/ChatComposer';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import { lightenColor } from '@app/utils/color/lightenColor';
@@ -11,7 +11,11 @@ import {
   createHorizontalHitslop,
 } from '@app/utils/string/createHitSlop';
 import { truncate } from '@app/utils/string/truncate';
-import { memo, RefObject, useCallback, useMemo } from 'react';
+import type {
+  ChatConnectionFlags,
+  ChatPinFlags,
+} from '@app/components/Chat/types/chatUiFlags';
+import { RefObject, memo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import {
   Directions,
@@ -26,6 +30,15 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
+
+function dismissComposer() {
+  void KeyboardController.dismiss();
+}
+import {
+  COMPOSER_CONTROL_RADIUS,
+  COMPOSER_CONTROL_SIZE,
+  COMPOSER_ROW_GAP,
+} from './composerSizing';
 import { ChatComposer } from './ChatComposer/ChatComposer';
 
 const COMPOSER_DISMISS_DRAG_DISTANCE = 34;
@@ -46,8 +59,7 @@ export interface ReplyToData {
 }
 
 interface ChatInputSectionProps {
-  canPinNextMessage?: boolean;
-  isSending?: boolean;
+  connection: ChatConnectionFlags;
   messageInput: string;
   onChangeText: (text: string) => void;
   onEmoteSelect: (emote: SanitisedEmote) => void;
@@ -56,17 +68,13 @@ interface ChatInputSectionProps {
   onOpenSettingsSheet: () => void;
   replyTo: ReplyToData | null;
   onClearReply: () => void;
-  onTogglePinNextMessage?: () => void;
-  pinNextMessage?: boolean;
-  isConnected: boolean;
-  isAuthenticated: boolean;
-  inputRef?: RefObject<InputRef | null>;
+  pin?: ChatPinFlags;
+  inputRef?: RefObject<ChatComposerHandle | null>;
 }
 
 export const ChatInputSection = memo(
   ({
-    canPinNextMessage,
-    isSending,
+    connection,
     messageInput,
     onChangeText,
     onEmoteSelect,
@@ -75,21 +83,18 @@ export const ChatInputSection = memo(
     onOpenSettingsSheet,
     replyTo,
     onClearReply,
-    onTogglePinNextMessage,
-    pinNextMessage,
-    isConnected,
-    isAuthenticated,
+    pin,
     inputRef,
   }: ChatInputSectionProps) => {
+    const { isAuthenticated, isConnected, isSending } = connection;
+    const { canPinNextMessage, onTogglePinNextMessage, pinNextMessage } =
+      pin ?? {};
     const insets = useSafeAreaInsets();
     const composerDragOffset = useSharedValue(0);
 
-    const handleEmoteSelect = useCallback(
-      (emote: SanitisedEmote) => {
-        onEmoteSelect(emote);
-      },
-      [onEmoteSelect],
-    );
+    const handleEmoteSelect = (emote: SanitisedEmote) => {
+      onEmoteSelect(emote);
+    };
 
     const canSend = Boolean(
       messageInput.trim() && isConnected && isAuthenticated && !isSending,
@@ -102,59 +107,48 @@ export const ChatInputSection = memo(
         : 'Send a message...';
 
     const composerAnimatedStyle = useAnimatedStyle(() => ({
-      transform: [{ translateY: composerDragOffset.value }],
+      transform: [{ translateY: composerDragOffset.get() }],
     }));
 
-    const dismissComposer = useCallback(() => {
-      void KeyboardController.dismiss();
-    }, []);
+    const composerPanGesture = Gesture.Pan()
+      .activeOffsetY(4)
+      .failOffsetX([-40, 40])
+      .onUpdate(event => {
+        composerDragOffset.set(
+          Math.max(0, Math.min(event.translationY, COMPOSER_DRAG_LIMIT)),
+        );
+      })
+      .onEnd(event => {
+        const shouldDismiss =
+          event.translationY > COMPOSER_DISMISS_DRAG_DISTANCE ||
+          event.velocityY > COMPOSER_DISMISS_VELOCITY;
 
-    const composerPanGesture = useMemo(
-      () =>
-        Gesture.Pan()
-          .activeOffsetY(4)
-          .failOffsetX([-40, 40])
-          .onUpdate(event => {
-            composerDragOffset.value = Math.max(
-              0,
-              Math.min(event.translationY, COMPOSER_DRAG_LIMIT),
-            );
-          })
-          .onEnd(event => {
-            const shouldDismiss =
-              event.translationY > COMPOSER_DISMISS_DRAG_DISTANCE ||
-              event.velocityY > COMPOSER_DISMISS_VELOCITY;
-
-            if (shouldDismiss) {
-              scheduleOnRN(dismissComposer);
-            }
-          })
-          .onFinalize(() => {
-            composerDragOffset.value = withSpring(0, {
-              damping: 18,
-              stiffness: 220,
-            });
+        if (shouldDismiss) {
+          scheduleOnRN(dismissComposer);
+        }
+      })
+      .onFinalize(() => {
+        composerDragOffset.set(
+          withSpring(0, {
+            damping: 18,
+            stiffness: 220,
           }),
-      [composerDragOffset, dismissComposer],
-    );
+        );
+      });
 
-    const composerFlingGesture = useMemo(
-      () =>
-        Gesture.Fling()
-          .direction(Directions.DOWN)
-          .onEnd(() => {
-            scheduleOnRN(dismissComposer);
-          }),
-      [dismissComposer],
-    );
+    const composerFlingGesture = Gesture.Fling()
+      .direction(Directions.DOWN)
+      .onEnd(() => {
+        scheduleOnRN(dismissComposer);
+      });
 
-    const composerGesture = useMemo(
-      () => Gesture.Simultaneous(composerPanGesture, composerFlingGesture),
-      [composerFlingGesture, composerPanGesture],
+    const composerGesture = Gesture.Simultaneous(
+      composerPanGesture,
+      composerFlingGesture,
     );
 
     return (
-      <View style={[styles.wrapper, { paddingBottom: insets.bottom }]}>
+      <View style={styles.wrapper}>
         {replyTo && (
           <View style={styles.replyPreview}>
             <View style={styles.replyIndicator} />
@@ -192,37 +186,25 @@ export const ChatInputSection = memo(
         )}
 
         <GestureDetector gesture={composerGesture}>
-          <Animated.View style={[styles.composerShell, composerAnimatedStyle]}>
+          <Animated.View
+            style={[
+              styles.composerShell,
+              { paddingBottom: insets.bottom + theme.space8 },
+              composerAnimatedStyle,
+            ]}
+          >
             <View style={styles.swipeHandle} />
             <View style={styles.inputRow}>
-              <Button
-                style={styles.actionButton}
-                onPress={onOpenEmoteSheet}
-                hitSlop={createHorizontalHitslop(44)}
-              >
-                <SymbolView
-                  name='face.smiling'
-                  size={22}
-                  tintColor={theme.colorGreyHoverAlpha}
-                />
-              </Button>
-
               <View style={styles.inputContainer}>
                 <ChatComposer
                   ref={inputRef}
-                  value={messageInput}
                   onChangeText={onChangeText}
+                  onSubmit={onSubmit}
+                  onPressAdd={onOpenEmoteSheet}
                   onEmoteSelect={handleEmoteSelect}
                   placeholder={inputPlaceholder}
                   editable={isAuthenticated}
-                  autoComplete='off'
-                  autoCapitalize='none'
-                  autoCorrect={false}
-                  blurOnSubmit
-                  placeholderTextColor='#8E8E93'
-                  onSubmitEditing={onSubmit}
-                  returnKeyType='send'
-                  submitBehavior='blurAndSubmit'
+                  canSend={canSend}
                   prioritizeChannelEmotes
                 />
               </View>
@@ -237,7 +219,7 @@ export const ChatInputSection = memo(
                     pinNextMessage && styles.actionButtonActive,
                   ]}
                   onPress={onTogglePinNextMessage}
-                  hitSlop={createHorizontalHitslop(44)}
+                  hitSlop={createHorizontalHitslop(COMPOSER_CONTROL_SIZE)}
                 >
                   <SymbolView
                     name='mappin'
@@ -252,28 +234,12 @@ export const ChatInputSection = memo(
               <Button
                 style={styles.actionButton}
                 onPress={onOpenSettingsSheet}
-                hitSlop={createHorizontalHitslop(44)}
+                hitSlop={createHorizontalHitslop(COMPOSER_CONTROL_SIZE)}
               >
                 <SymbolView
                   name='gearshape'
                   size={22}
                   tintColor={theme.colorGreyHoverAlpha}
-                />
-              </Button>
-
-              <Button
-                style={[
-                  styles.sendButton,
-                  !canSend && styles.sendButtonDisabled,
-                ]}
-                onPress={onSubmit}
-                disabled={!canSend}
-                hitSlop={createHitslop(20)}
-              >
-                <SymbolView
-                  name='arrow.up'
-                  size={20}
-                  tintColor={canSend ? '#fff' : theme.colorGreyHoverAlpha}
                 />
               </Button>
             </View>
@@ -284,40 +250,32 @@ export const ChatInputSection = memo(
   },
 );
 
-ChatInputSection.displayName = 'ChatInputSection';
-
 const styles = StyleSheet.create({
   actionButton: {
     alignItems: 'center',
     backgroundColor: theme.darkActiveContent,
     borderColor: theme.colorBorderSecondary,
-    borderRadius: 22,
+    borderRadius: COMPOSER_CONTROL_RADIUS,
     borderWidth: 1,
-    height: 44,
+    height: COMPOSER_CONTROL_SIZE,
     justifyContent: 'center',
-    width: 44,
+    width: COMPOSER_CONTROL_SIZE,
   },
   actionButtonActive: {
     backgroundColor: 'rgba(255,255,255,0.16)',
   },
   composerShell: {
+    backgroundColor: '#222222',
     paddingHorizontal: theme.space16,
   },
   inputContainer: {
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
-    borderRadius: 20,
-    borderWidth: 1,
     flex: 1,
-    minHeight: 48,
     minWidth: 0,
-    overflow: 'hidden',
   },
   inputRow: {
     alignItems: 'flex-end',
     flexDirection: 'row',
-    gap: theme.space8,
-    paddingBottom: theme.space8,
+    gap: COMPOSER_ROW_GAP,
     paddingTop: 4,
   },
   replyContent: {
@@ -368,20 +326,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space12,
-  },
-  sendButton: {
-    alignItems: 'center',
-    backgroundColor: theme.colorViolet,
-    borderColor: 'rgba(255,255,255,0.18)',
-    borderRadius: 22,
-    borderWidth: 1,
-    height: 44,
-    justifyContent: 'center',
-    width: 44,
-  },
-  sendButtonDisabled: {
-    backgroundColor: theme.darkActiveContent,
-    opacity: 0.6,
   },
   swipeHandle: {
     alignSelf: 'center',

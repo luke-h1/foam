@@ -1,5 +1,5 @@
+import { memo } from 'react';
 import { recordError } from '@app/lib/sentry';
-import { memo, useCallback } from 'react';
 import type { ComponentProps, RefObject } from 'react';
 import { StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -62,114 +62,99 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
   webViewKey,
   webViewRef,
 }: StreamPlayerWebViewProps) {
-  const handleLoadEnd = useCallback(
-    (url: string) => {
-      onWebViewLoaded?.();
-      if (isTwitchPassportCallbackUrl(url)) {
-        scheduleAuthCompletionReload();
-        return;
+  const handleLoadEnd = (url: string) => {
+    onWebViewLoaded?.();
+    if (isTwitchPassportCallbackUrl(url)) {
+      scheduleAuthCompletionReload();
+      return;
+    }
+    onLoadEnd?.(url);
+    if (needsInitRef.current) {
+      needsInitRef.current = false;
+    }
+  };
+
+  const handleShouldStartLoadWithRequest: OnShouldStartLoadWithRequest =
+    request => {
+      if (isAppUrl(request.url)) {
+        return false;
       }
-      onLoadEnd?.(url);
-      if (needsInitRef.current) {
-        needsInitRef.current = false;
+
+      if (!restrictWebViewNavigationToTwitchPlayer) {
+        return true;
       }
-    },
-    [needsInitRef, onLoadEnd, onWebViewLoaded, scheduleAuthCompletionReload],
-  );
 
-  const handleShouldStartLoadWithRequest =
-    useCallback<OnShouldStartLoadWithRequest>(
-      request => {
-        if (isAppUrl(request.url)) {
-          return false;
-        }
+      if (request.isTopFrame === false) {
+        return true;
+      }
 
-        if (!restrictWebViewNavigationToTwitchPlayer) {
-          return true;
-        }
+      return isAllowedTwitchPlayerNavigation(request.url, parent);
+    };
 
-        if (request.isTopFrame === false) {
-          return true;
-        }
+  const handleWebViewError = (event: { nativeEvent: WebViewError }) => {
+    const { nativeEvent } = event;
+    console.warn('[StreamPlayer:WebView ERROR]', {
+      code: nativeEvent.code,
+      description: nativeEvent.description,
+      url: nativeEvent.url,
+    });
 
-        return isAllowedTwitchPlayerNavigation(request.url, parent);
-      },
-      [parent, restrictWebViewNavigationToTwitchPlayer],
-    );
-
-  const handleWebViewError = useCallback(
-    (event: { nativeEvent: WebViewError }) => {
-      const { nativeEvent } = event;
-      console.warn('[StreamPlayer:WebView ERROR]', {
+    recordError({
+      name: 'stream_error',
+      message: `StreamPlayer WebView error: ${nativeEvent.description}`,
+      params: {
+        category: 'Stream',
+        action: 'webview_error',
         code: nativeEvent.code,
         description: nativeEvent.description,
         url: nativeEvent.url,
-      });
+        channel,
+      },
+      errorCause: nativeEvent,
+    });
 
-      recordError({
-        name: 'stream_error',
-        message: `StreamPlayer WebView error: ${nativeEvent.description}`,
-        params: {
-          category: 'Stream',
-          action: 'webview_error',
-          code: nativeEvent.code,
-          description: nativeEvent.description,
-          url: nativeEvent.url,
-          channel,
-        },
-        errorCause: nativeEvent,
-      });
+    onError?.(nativeEvent.description);
+  };
 
-      onError?.(nativeEvent.description);
-    },
-    [channel, onError],
-  );
+  const handleWebViewHttpError = (event: { nativeEvent: WebViewHttpError }) => {
+    const { nativeEvent } = event;
+    console.warn('[StreamPlayer:HTTP ERROR]', {
+      statusCode: nativeEvent.statusCode,
+      url: nativeEvent.url,
+      description: nativeEvent.description,
+    });
 
-  const handleWebViewHttpError = useCallback(
-    (event: { nativeEvent: WebViewHttpError }) => {
-      const { nativeEvent } = event;
-      console.warn('[StreamPlayer:HTTP ERROR]', {
+    onHttpError({
+      url: nativeEvent.url,
+      statusCode: nativeEvent.statusCode,
+    });
+
+    recordError({
+      name: 'stream_error',
+      message: `StreamPlayer HTTP error: ${nativeEvent.statusCode} ${nativeEvent.description}`,
+      params: {
+        category: 'Stream',
+        action: 'webview_http_error',
         statusCode: nativeEvent.statusCode,
-        url: nativeEvent.url,
         description: nativeEvent.description,
-      });
-
-      onHttpError({
         url: nativeEvent.url,
-        statusCode: nativeEvent.statusCode,
+        channel,
+      },
+      errorCause: nativeEvent,
+    });
+
+    onError?.(`HTTP ${nativeEvent.statusCode}: ${nativeEvent.description}`);
+  };
+
+  const handleLoadStart = (renderer: 'WebView') => {
+    if (__DEV__) {
+      console.warn(`[StreamPlayer:${renderer}] onLoadStart`, {
+        channel,
+        hasClip: !!clip,
+        hasVideo: !!video,
       });
-
-      recordError({
-        name: 'stream_error',
-        message: `StreamPlayer HTTP error: ${nativeEvent.statusCode} ${nativeEvent.description}`,
-        params: {
-          category: 'Stream',
-          action: 'webview_http_error',
-          statusCode: nativeEvent.statusCode,
-          description: nativeEvent.description,
-          url: nativeEvent.url,
-          channel,
-        },
-        errorCause: nativeEvent,
-      });
-
-      onError?.(`HTTP ${nativeEvent.statusCode}: ${nativeEvent.description}`);
-    },
-    [channel, onError, onHttpError],
-  );
-
-  const handleLoadStart = useCallback(
-    (renderer: 'WebView') => {
-      if (__DEV__) {
-        console.warn(`[StreamPlayer:${renderer}] onLoadStart`, {
-          channel,
-          hasClip: !!clip,
-          hasVideo: !!video,
-        });
-      }
-    },
-    [channel, clip, video],
-  );
+    }
+  };
 
   return (
     <WebView

@@ -8,6 +8,11 @@ import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { ENV_SUPPORTS_OTA } from '../utils/envSupportsOta';
 import { theme } from '@app/styles/themes';
 
+const otaLoadingTitleHint = <ActivityIndicator animating />;
+const otaReloadHint = (
+  <SymbolView name='arrow.clockwise' tintColor={AC.secondaryLabel} />
+);
+
 const OTA_RELOAD_SCREEN_OPTIONS = {
   backgroundColor: theme.color.background.dark,
   fade: true,
@@ -17,13 +22,14 @@ const OTA_RELOAD_SCREEN_OPTIONS = {
   },
 };
 
+async function reloadOtaWithScreen() {
+  await Updates.reloadAsync({
+    reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
+  });
+}
+
 export function OTADynamicSection() {
   const updates = Updates.useUpdates();
-  const reloadWithScreen = async () => {
-    await Updates.reloadAsync({
-      reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
-    });
-  };
 
   const fetchingTitle = (() => {
     if (updates.isDownloading) {
@@ -70,7 +76,7 @@ export function OTADynamicSection() {
           ? 'Synchronized ✓'
           : 'Needs synchronization'
       }
-      titleHint={isLoading ? <ActivityIndicator animating /> : lastCheckTime}
+      titleHint={isLoading ? otaLoadingTitleHint : lastCheckTime}
     >
       <Form.Text
         style={{ color: textColor }}
@@ -92,7 +98,7 @@ export function OTADynamicSection() {
                   updateState: 'pending',
                 },
               });
-              await reloadWithScreen();
+              await reloadOtaWithScreen();
             } else if (updates.isUpdateAvailable) {
               recordInfo({
                 name: 'ota_updates_service_info',
@@ -107,7 +113,7 @@ export function OTADynamicSection() {
               const result = await Updates.checkForUpdateAsync();
               if (result.isAvailable) {
                 await Updates.fetchUpdateAsync();
-                await reloadWithScreen();
+                await reloadOtaWithScreen();
               }
             } else {
               recordInfo({
@@ -123,18 +129,12 @@ export function OTADynamicSection() {
               const result = await Updates.checkForUpdateAsync();
               if (result.isAvailable) {
                 await Updates.fetchUpdateAsync();
-                await reloadWithScreen();
+                await reloadOtaWithScreen();
               }
             }
           })();
         }}
-        hint={
-          isLoading ? (
-            <ActivityIndicator animating />
-          ) : (
-            <SymbolView name='arrow.clockwise' tintColor={AC.secondaryLabel} />
-          )
-        }
+        hint={isLoading ? otaLoadingTitleHint : otaReloadHint}
       >
         {fetchingTitle}
       </Form.Text>

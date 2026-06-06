@@ -1,11 +1,16 @@
 import { chatStore$ } from '@app/store/chatStore/state';
+import {
+  getSessionCacheString,
+  setSessionCacheString,
+} from '@app/store/chatStore/chatColorCaches';
+import { useSelector } from '@legendapp/state/react';
 import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
-import { getUserMessageColor } from '@app/store/chatStore/messages';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
+import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { lightenColor } from '@app/utils/color/lightenColor';
-import { memo, useCallback, useMemo, useRef, type RefObject } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
+import type { RefObject } from 'react';
 
 import type { ChatListRef } from '../components/ChatList';
 import type { ChatListRenderItemInfo } from '../components/ChatList';
@@ -18,9 +23,16 @@ import {
 } from '../components/ChatMessage/RichChatMessage';
 import { styles } from '../styles';
 import { isRenderableChatMessage } from '../util/chatMessages';
+import { getChatRowItemType } from '../util/chatRowItemType';
 import { normaliseChatUsername } from '../util/chatUsernames';
 import type { AnyChatMessageType } from '../util/messageHandlers';
+import type { ChatRowDisplayFlags } from '../types/chatUiFlags';
 import { useIsHighlightedReplyTargetMessage } from './useChatTransientState';
+
+const chatRowKeyExtractor = (item: AnyChatMessageType, index: number) =>
+  isRenderableChatMessage(item)
+    ? `${item.message_id}_${item.message_nonce}`
+    : `invalid-message-${index}`;
 
 interface ChatRowPreferences {
   chatDensity: 'comfortable' | 'compact';
@@ -38,7 +50,7 @@ interface UseChatRowRendererOptions {
   > | null>;
   highlightedUsers: string[];
   listRef: RefObject<ChatListRef | null>;
-  messages$: { peek: () => unknown[] };
+  messages$: { peek: () => AnyChatMessageType[] };
   onBadgePress: (badge: BadgePressData) => void;
   onEmotePress: (emote: EmotePressData) => void;
   onMessageLongPress: (data: MessageActionData<'usernotice'>) => void;
@@ -58,7 +70,7 @@ interface ChatMessageRowProps {
   channelId: string;
   currentUsername?: string;
   currentUsernameNormalized: string;
-  disableEmoteAnimations: boolean;
+  displayFlags: ChatRowDisplayFlags;
   getMentionColor: (username: string) => string;
   highlightedUserSet: ReadonlySet<string>;
   index: number;
@@ -69,17 +81,14 @@ interface ChatMessageRowProps {
   onReplyContextPress: (replyParentMessageId: string) => void;
   onUsernamePress: (data: UsernamePressData) => void;
   parseTextForEmotes: (text: string) => ParsedPart[];
-  showAlternatingChatRows: boolean;
-  showInlineReplyContext: boolean;
-  showTimestamps: boolean;
 }
 
-const ChatMessageRow = memo(function ChatMessageRow({
+const ChatMessageRow = function ChatMessageRow({
   chatDensity,
   channelId,
   currentUsername,
   currentUsernameNormalized,
-  disableEmoteAnimations,
+  displayFlags,
   getMentionColor,
   highlightedUserSet,
   index,
@@ -90,10 +99,13 @@ const ChatMessageRow = memo(function ChatMessageRow({
   onReplyContextPress,
   onUsernamePress,
   parseTextForEmotes,
-  showAlternatingChatRows,
-  showInlineReplyContext,
-  showTimestamps,
 }: ChatMessageRowProps) {
+  const {
+    disableEmoteAnimations,
+    showAlternatingChatRows,
+    showInlineReplyContext,
+    showTimestamps,
+  } = displayFlags;
   const isHighlightedMessageTarget = useIsHighlightedReplyTargetMessage(
     channelId,
     msg.message_id,
@@ -102,11 +114,12 @@ const ChatMessageRow = memo(function ChatMessageRow({
   return (
     <RichChatMessage
       id={msg.id}
+      broadcasterId={channelId}
       channel={msg.channel}
       message={msg.message}
       userstate={msg.userstate}
       badges={msg.badges}
-      cachedSenderColor={msg.cachedSenderColor}
+      cachedSenderColor={msg.cachedSenderColor ?? resolveCachedSenderColor(msg)}
       message_id={msg.message_id}
       message_nonce={msg.message_nonce}
       sender={msg.sender}
@@ -121,25 +134,30 @@ const ChatMessageRow = memo(function ChatMessageRow({
       onUsernamePress={onUsernamePress}
       getMentionColor={getMentionColor}
       parseTextForEmotes={parseTextForEmotes}
-      isChannelPointRedemption={msg.isChannelPointRedemption}
-      isTwitchSystemNotice={msg.isTwitchSystemNotice}
       currentUsername={currentUsername}
       currentUsernameNormalized={currentUsernameNormalized}
       density={chatDensity}
-      disableEmoteAnimations={disableEmoteAnimations}
-      showTimestamp={showTimestamps}
       highlightedUserSet={highlightedUserSet}
-      showInlineReplyContext={showInlineReplyContext}
-      isAlternatingRow={showAlternatingChatRows && index % 2 === 1}
+      messageDisplay={{
+        disableEmoteAnimations,
+        isAlternatingRow: showAlternatingChatRows && index % 2 === 1,
+        isChannelPointRedemption: msg.isChannelPointRedemption,
+        isAnnouncement: msg.isAnnouncement,
+        isHighlightedMessage: msg.isHighlightedMessage,
+        isSharedChatDuplicated: msg.isSharedChatDuplicated,
+        isHighlightedMessageTarget,
+        isTwitchSystemNotice: msg.isTwitchSystemNotice,
+        showInlineReplyContext,
+        showTimestamp: showTimestamps,
+      }}
       onReplyContextPress={onReplyContextPress}
-      isHighlightedMessageTarget={isHighlightedMessageTarget}
       // @ts-expect-error - notice_tags union type not narrowing correctly
       notice_tags={
         'notice_tags' in msg && msg.notice_tags ? msg.notice_tags : undefined
       }
     />
   );
-});
+};
 
 export function useChatRowRenderer({
   channelId,
@@ -155,85 +173,97 @@ export function useChatRowRenderer({
   setHighlightedReplyTargetMessageId,
   user,
 }: UseChatRowRendererOptions) {
-  const mentionColorCache = useRef<Map<string, string>>(new Map());
+  const mentionLoginRevision = useSelector(chatStore$.mentionLoginRevision);
 
   const getMentionColor = useCallback((username: string): string => {
-    const lowerUsername = username.toLowerCase();
-    const cached = mentionColorCache.current.get(lowerUsername);
-    if (cached) {
+    const cacheKey = username.replace(/^@/, '').trim().toLowerCase();
+    const cached = getSessionCacheString('mentionColors', cacheKey);
+    if (cached !== undefined) {
       return cached;
     }
 
-    const color =
-      getUserMessageColor(lowerUsername) || generateRandomTwitchColor(username);
-    const displayColor = lightenColor(color);
-    mentionColorCache.current.set(lowerUsername, displayColor);
+    const displayColor = resolveMentionColor(username);
+    setSessionCacheString('mentionColors', cacheKey, displayColor);
 
     return displayColor;
   }, []);
 
-  const parseTextForEmotes = useCallback(
-    (text: string): ParsedPart[] => {
-      if (!text.trim()) {
-        return [];
-      }
+  const parseTextForEmotes = (text: string): ParsedPart[] => {
+    if (!text.trim()) {
+      return [];
+    }
 
-      const emoteData = getCurrentEmoteData(channelId);
-      if (!emoteData) {
-        return [{ type: 'text', content: text }];
-      }
+    const emoteData = getCurrentEmoteData(channelId);
+    if (!emoteData) {
+      return [{ type: 'text', content: text }];
+    }
 
-      const hasEmotes =
-        chatStore$.emojis.peek().length > 0 ||
-        emoteData.twitchGlobalEmotes.length > 0 ||
-        emoteData.twitchSubscriberEmotes.length > 0 ||
-        emoteData.sevenTvGlobalEmotes.length > 0 ||
-        emoteData.bttvGlobalEmotes.length > 0 ||
-        emoteData.ffzGlobalEmotes.length > 0;
+    const hasEmotes =
+      chatStore$.emojis.peek().length > 0 ||
+      emoteData.twitchGlobalEmotes.length > 0 ||
+      emoteData.twitchSubscriberEmotes.length > 0 ||
+      emoteData.sevenTvGlobalEmotes.length > 0 ||
+      emoteData.bttvGlobalEmotes.length > 0 ||
+      emoteData.ffzGlobalEmotes.length > 0;
 
-      if (!hasEmotes) {
-        return [{ type: 'text', content: text }];
-      }
+    if (!hasEmotes) {
+      return [{ type: 'text', content: text }];
+    }
 
-      return processEmotesWorklet({
-        inputString: text.trimEnd(),
-        userstate: null,
-        emojiEmotes: chatStore$.emojis.peek(),
-        sevenTvGlobalEmotes: emoteData.sevenTvGlobalEmotes,
-        sevenTvChannelEmotes: emoteData.sevenTvChannelEmotes,
-        twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
-        twitchChannelEmotes: emoteData.twitchChannelEmotes,
-        twitchSubscriberEmotes: emoteData.twitchSubscriberEmotes,
-        ffzChannelEmotes: emoteData.ffzChannelEmotes,
-        ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
-        bttvChannelEmotes: emoteData.bttvChannelEmotes,
-        bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
-      });
-    },
-    [channelId],
-  );
+    return processEmotesWorklet({
+      inputString: text.trimEnd(),
+      userstate: null,
+      emojiEmotes: chatStore$.emojis.peek(),
+      sevenTvGlobalEmotes: emoteData.sevenTvGlobalEmotes,
+      sevenTvChannelEmotes: emoteData.sevenTvChannelEmotes,
+      twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
+      twitchChannelEmotes: emoteData.twitchChannelEmotes,
+      twitchSubscriberEmotes: emoteData.twitchSubscriberEmotes,
+      ffzChannelEmotes: emoteData.ffzChannelEmotes,
+      ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
+      bttvChannelEmotes: emoteData.bttvChannelEmotes,
+      bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
+    });
+  };
 
   const onBadgePressRef = useRef(onBadgePress);
   const onEmotePressRef = useRef(onEmotePress);
   const onMessageLongPressRef = useRef(onMessageLongPress);
-  const getMentionColorRef = useRef(getMentionColor);
   const parseTextForEmotesRef = useRef(parseTextForEmotes);
   onBadgePressRef.current = onBadgePress;
   onEmotePressRef.current = onEmotePress;
   onMessageLongPressRef.current = onMessageLongPress;
-  getMentionColorRef.current = getMentionColor;
   parseTextForEmotesRef.current = parseTextForEmotes;
 
   const highlightedUserSet = useMemo(
-    () => new Set(highlightedUsers.map(normaliseChatUsername).filter(Boolean)),
+    () =>
+      new Set(
+        highlightedUsers.flatMap(user => {
+          const normalized = normaliseChatUsername(user);
+          return normalized ? [normalized] : [];
+        }),
+      ),
     [highlightedUsers],
   );
   const currentUsernameForMentions = preferences.highlightOwnMentions
     ? (user?.login ?? user?.display_name ?? undefined)
     : undefined;
-  const currentUsernameNormalized = useMemo(
-    () => normaliseChatUsername(currentUsernameForMentions),
-    [currentUsernameForMentions],
+  const currentUsernameNormalized = normaliseChatUsername(
+    currentUsernameForMentions,
+  );
+  const displayFlags = useMemo(
+    (): ChatRowDisplayFlags => ({
+      disableEmoteAnimations: preferences.disableEmoteAnimations,
+      showAlternatingChatRows: preferences.showAlternatingChatRows,
+      showInlineReplyContext: preferences.showInlineReplyContext,
+      showTimestamps: preferences.chatTimestamps,
+    }),
+    [
+      preferences.disableEmoteAnimations,
+      preferences.showAlternatingChatRows,
+      preferences.showInlineReplyContext,
+      preferences.chatTimestamps,
+    ],
   );
   const messageListExtraData = useMemo(
     () => ({
@@ -241,6 +271,7 @@ export function useChatRowRenderer({
       currentUsernameNormalized,
       disableEmoteAnimations: preferences.disableEmoteAnimations,
       highlightedUsersKey: highlightedUsers.join('\u001f'),
+      mentionLoginRevision,
       showAlternatingChatRows: preferences.showAlternatingChatRows,
       showInlineReplyContext: preferences.showInlineReplyContext,
       showTimestamps: preferences.chatTimestamps,
@@ -248,6 +279,7 @@ export function useChatRowRenderer({
     [
       currentUsernameNormalized,
       highlightedUsers,
+      mentionLoginRevision,
       preferences.chatDensity,
       preferences.disableEmoteAnimations,
       preferences.showAlternatingChatRows,
@@ -255,11 +287,11 @@ export function useChatRowRenderer({
       preferences.chatTimestamps,
     ],
   );
-  const listContentStyle = useMemo(() => styles.listContent, []);
+  const listContentStyle = styles.listContent;
 
   const handleReplyContextPress = useCallback(
     (replyParentMessageId: string) => {
-      const messages = messages$.peek() as AnyChatMessageType[];
+      const messages = messages$.peek();
       const targetIndex = messages.findIndex(
         message => message.message_id === replyParentMessageId,
       );
@@ -292,6 +324,16 @@ export function useChatRowRenderer({
       setHighlightedReplyTargetMessageId,
     ],
   );
+  const handleReplyContextPressRef = useRef(handleReplyContextPress);
+  handleReplyContextPressRef.current = handleReplyContextPress;
+
+  const getItemType = useCallback(
+    (item: AnyChatMessageType) =>
+      getChatRowItemType(item, {
+        showInlineReplyContext: preferences.showInlineReplyContext,
+      }),
+    [preferences.showInlineReplyContext],
+  );
 
   const renderItem = useCallback(
     ({ item: msg, index }: ChatListRenderItemInfo) => {
@@ -305,20 +347,17 @@ export function useChatRowRenderer({
           channelId={channelId}
           currentUsername={currentUsernameForMentions}
           currentUsernameNormalized={currentUsernameNormalized}
-          disableEmoteAnimations={preferences.disableEmoteAnimations}
-          getMentionColor={getMentionColorRef.current}
+          displayFlags={displayFlags}
+          getMentionColor={getMentionColor}
           highlightedUserSet={highlightedUserSet}
           index={index}
           message={msg}
           onBadgePress={onBadgePressRef.current}
           onEmotePress={onEmotePressRef.current}
           onMessageLongPress={onMessageLongPressRef.current}
-          onReplyContextPress={handleReplyContextPress}
+          onReplyContextPress={handleReplyContextPressRef.current}
           onUsernamePress={onUsernamePress}
           parseTextForEmotes={parseTextForEmotesRef.current}
-          showAlternatingChatRows={preferences.showAlternatingChatRows}
-          showInlineReplyContext={preferences.showInlineReplyContext}
-          showTimestamps={preferences.chatTimestamps}
         />
       );
     },
@@ -326,45 +365,17 @@ export function useChatRowRenderer({
       channelId,
       currentUsernameForMentions,
       currentUsernameNormalized,
-      handleReplyContextPress,
+      displayFlags,
+      getMentionColor,
       highlightedUserSet,
-      getMentionColorRef,
-      onBadgePressRef,
-      onEmotePressRef,
-      onMessageLongPressRef,
       onUsernamePress,
-      parseTextForEmotesRef,
       preferences.chatDensity,
-      preferences.chatTimestamps,
-      preferences.disableEmoteAnimations,
-      preferences.showAlternatingChatRows,
-      preferences.showInlineReplyContext,
     ],
   );
 
-  const keyExtractor = useCallback(
-    (item: AnyChatMessageType, index: number) =>
-      isRenderableChatMessage(item)
-        ? `${item.message_id}_${item.message_nonce}`
-        : `invalid-message-${index}`,
-    [],
-  );
-
-  const getItemType = useCallback((item: AnyChatMessageType) => {
-    if (!isRenderableChatMessage(item)) {
-      return 'invalid';
-    }
-
-    if (item.sender?.toLowerCase() === 'system') {
-      return 'system-notice';
-    }
-
-    return item.isSpecialNotice ? 'notice' : 'regular';
-  }, []);
-
   return {
     getItemType,
-    keyExtractor,
+    keyExtractor: chatRowKeyExtractor,
     listContentStyle,
     messageListExtraData,
     renderItem,

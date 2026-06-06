@@ -1,12 +1,9 @@
+import { memo } from 'react';
 import { Button } from '@app/components/Button/Button';
-import {
-  BottomSheet,
-  type SnapPoint,
-} from '@app/components/BottomSheet/BottomSheet';
+import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
 import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { memo, useCallback, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -16,6 +13,48 @@ import {
 import { PortalHost } from 'react-native-teleport';
 import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from '../chatSheetSurface';
 import { MESSAGE_ACTION_PREVIEW_PORTAL_NAME } from './MessageActionPreview';
+
+type MessageActionId =
+  | 'copy'
+  | 'reply'
+  | 'hide-user'
+  | 'highlight-user'
+  | 'hide-phrase'
+  | 'pin-message'
+  | 'update-pin'
+  | 'unpin-message'
+  | 'delete-message'
+  | 'timeout-user'
+  | 'ban-user';
+
+function getMessageActionSFSymbolName(actionId: MessageActionId) {
+  switch (actionId) {
+    case 'copy':
+      return 'doc.on.doc' as const;
+    case 'reply':
+      return 'arrowshape.turn.up.left' as const;
+    case 'hide-user':
+      return 'person.crop.circle.badge.xmark' as const;
+    case 'highlight-user':
+      return 'star' as const;
+    case 'hide-phrase':
+      return 'nosign' as const;
+    case 'pin-message':
+      return 'pin' as const;
+    case 'update-pin':
+      return 'pin.fill' as const;
+    case 'unpin-message':
+      return 'pin.slash' as const;
+    case 'delete-message':
+      return 'trash' as const;
+    case 'timeout-user':
+      return 'clock' as const;
+    case 'ban-user':
+      return 'slash.circle' as const;
+    default:
+      return 'questionmark.circle' as const;
+  }
+}
 
 interface Props {
   visible: boolean;
@@ -85,7 +124,7 @@ function ActionSheetComponent(props: Props) {
     canModerateUser,
   } = props;
 
-  const actions = useMemo<ActionItem[]>(() => {
+  const actions: ActionItem[] = (() => {
     const items: ActionItem[] = [
       {
         id: 'copy',
@@ -218,28 +257,7 @@ function ActionSheetComponent(props: Props) {
     }
 
     return items;
-  }, [
-    canDeleteMessage,
-    canModerateChat,
-    canModerateUser,
-    canPinMessage,
-    handleBanUser,
-    handleCopy,
-    handleDeleteMessage,
-    handleReply,
-    handlePinMessage,
-    handleTimeoutUser,
-    handleUnpinMessage,
-    handleUpdatePinnedMessage,
-    username,
-    handleHideUser,
-    handleHighlightUser,
-    isUserHighlighted,
-    isPinnedMessage,
-    isPinnedMessageBusy,
-    handleHidePhrase,
-    onClose,
-  ]);
+  })();
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const sheetWidth = Math.max(
     280,
@@ -253,69 +271,15 @@ function ActionSheetComponent(props: Props) {
     Math.round(windowHeight * 0.82),
     Math.max(360, actions.length * 52 + 224),
   );
-  const snapPoints = useMemo<SnapPoint[]>(
-    () => [{ height: sheetHeight }],
-    [sheetHeight],
-  );
-  const wrapperStyle = useMemo(
-    () => [
-      styles.wrapper,
-      {
-        maxHeight: sheetHeight - theme.space16,
-        width: sheetWidth,
-      },
-    ],
-    [sheetHeight, sheetWidth],
-  );
-  const scrollStyle = useMemo(
-    () => [styles.scroll, { maxHeight: maxScrollHeight }],
-    [maxScrollHeight],
-  );
-
-  const getSFSymbolName = useCallback(
-    (
-      actionId:
-        | 'copy'
-        | 'reply'
-        | 'hide-user'
-        | 'highlight-user'
-        | 'hide-phrase'
-        | 'pin-message'
-        | 'update-pin'
-        | 'unpin-message'
-        | 'delete-message'
-        | 'timeout-user'
-        | 'ban-user',
-    ) => {
-      switch (actionId) {
-        case 'copy':
-          return 'doc.on.doc' as const;
-        case 'reply':
-          return 'arrowshape.turn.up.left' as const;
-        case 'hide-user':
-          return 'person.crop.circle.badge.xmark' as const;
-        case 'highlight-user':
-          return 'star' as const;
-        case 'hide-phrase':
-          return 'nosign' as const;
-        case 'pin-message':
-          return 'pin' as const;
-        case 'update-pin':
-          return 'pin.fill' as const;
-        case 'unpin-message':
-          return 'pin.slash' as const;
-        case 'delete-message':
-          return 'trash' as const;
-        case 'timeout-user':
-          return 'clock' as const;
-        case 'ban-user':
-          return 'slash.circle' as const;
-        default:
-          return 'questionmark.circle' as const;
-      }
+  const snapPoints = [{ height: sheetHeight }];
+  const wrapperStyle = [
+    styles.wrapper,
+    {
+      maxHeight: sheetHeight - theme.space16,
+      width: sheetWidth,
     },
-    [],
-  );
+  ];
+  const scrollStyle = [styles.scroll, { maxHeight: maxScrollHeight }];
 
   return (
     <BottomSheet
@@ -371,7 +335,7 @@ function ActionSheetComponent(props: Props) {
                     ]}
                   >
                     <SymbolView
-                      name={getSFSymbolName(action.id)}
+                      name={getMessageActionSFSymbolName(action.id)}
                       size={18}
                       tintColor={
                         action.tone === 'danger'
@@ -527,5 +491,3 @@ const styles = StyleSheet.create({
     paddingBottom: theme.space16,
   },
 });
-
-ActionSheet.displayName = 'ActionSheet';

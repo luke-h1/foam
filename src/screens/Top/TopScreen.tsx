@@ -1,7 +1,7 @@
-import { TopTabSwitcher } from '@app/components/TopTabSwitcher/TopTabSwitcher';
+import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { useWindowDimensions, View, StyleSheet } from 'react-native';
 import Animated, {
   Extrapolation,
@@ -20,7 +20,7 @@ import { TopStreamsScreen } from './TopStreamsScreen';
 type Route = { key: string; title: string };
 
 const TOP_COPY_HEIGHT = 96;
-const TOP_TAB_HEIGHT = 58;
+const TOP_TAB_HEIGHT = 44;
 
 const ROUTES: Route[] = [
   { key: 'streams', title: 'Streams' },
@@ -58,30 +58,26 @@ export function TopScreen() {
     ),
   }));
 
-  const renderScene = useCallback(
-    // eslint-disable-next-line react/no-unused-prop-types
-    ({ route }: SceneRendererProps & { route: Route }) => {
-      switch (route.key) {
-        case 'streams':
-          return (
-            <TopStreamsScreen
-              contentTopInset={contentTopInset}
-              scrollY={scrollY}
-            />
-          );
-        case 'categories':
-          return (
-            <TopCategoriesScreen
-              contentTopInset={contentTopInset}
-              scrollY={scrollY}
-            />
-          );
-        default:
-          return null;
-      }
-    },
-    [contentTopInset, scrollY],
-  );
+  const renderScene = ({ route }: SceneRendererProps & { route: Route }) => {
+    switch (route.key) {
+      case 'streams':
+        return (
+          <TopStreamsScreen
+            contentTopInset={contentTopInset}
+            scrollY={scrollY}
+          />
+        );
+      case 'categories':
+        return (
+          <TopCategoriesScreen
+            contentTopInset={contentTopInset}
+            scrollY={scrollY}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -98,9 +94,9 @@ export function TopScreen() {
           </Text>
         </Animated.View>
         <Animated.View style={[styles.tabsFrame, tabsStyle]}>
-          <TopTabSwitcher
+          <SegmentedControl
             currentIndex={index}
-            items={ROUTES.map(route => route.title)}
+            items={ROUTES.map(route => ({ label: route.title }))}
             onChange={setIndex}
           />
         </Animated.View>

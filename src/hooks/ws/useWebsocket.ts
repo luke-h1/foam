@@ -1,11 +1,4 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  useMemo,
-  RefObject,
-} from 'react';
+import { useEffect, useRef, useState, RefObject, useCallback } from 'react';
 import { ReadyState } from './constants';
 import { createOrJoinSocket } from './createOrJoin';
 import { getUrl } from './get-url';
@@ -30,17 +23,7 @@ export const useWebsocket = (
   const [readyState, setReadyState] = useState<ReadyStateState>({});
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const lastJsonMessage = useMemo(() => {
-    if (lastMessage) {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return JSON.parse(lastMessage.data as string);
-      } catch {
-        return {};
-      }
-    }
-    return null;
-  }, [lastMessage]);
+  const lastJsonMessage = null;
 
   const convertedUrl = useRef<string>('');
   const websocketRef = useRef<WebSocket | null>(null);
@@ -48,13 +31,19 @@ export const useWebsocket = (
   const reconnectCount = useRef<number>(0);
   const messageQueue = useRef<WebSocketMessage[]>([]);
   const webSocketProxy = useRef<WebSocket | null>(null);
-  const optionsCache = useRef<Options>(options);
+  const optionsCache = useRef<Options>({});
+  optionsCache.current = options;
+  const connectRef = useRef(true);
+  connectRef.current = connect;
+
+  const readyStateSnapshotRef = useRef(readyState);
+  readyStateSnapshotRef.current = readyState;
 
   const readyStateFromUrl: ReadyState =
-    // eslint-disable-next-line no-nested-ternary
-    convertedUrl.current && readyState[convertedUrl.current] !== undefined
-      ? (readyState[convertedUrl.current] as ReadyState)
-      : url !== null && connect === true
+    convertedUrl.current &&
+    readyStateSnapshotRef.current[convertedUrl.current] !== undefined
+      ? (readyStateSnapshotRef.current[convertedUrl.current] as ReadyState)
+      : url !== null && connectRef.current
         ? ReadyState.CONNECTING
         : ReadyState.UNINSTANTIATED;
 
@@ -74,12 +63,9 @@ export const useWebsocket = (
     }
   }, []);
 
-  const sendJsonMessage: SendJsonMessage = useCallback(
-    message => {
-      sendMessage(JSON.stringify(message));
-    },
-    [sendMessage],
-  );
+  const sendJsonMessage: SendJsonMessage = message => {
+    sendMessage(JSON.stringify(message));
+  };
 
   const getWebSocket = useCallback((): WebSocket => {
     /**
@@ -142,7 +128,7 @@ export const useWebsocket = (
   }, [optionsCache]);
 
   useEffect(() => {
-    if (url !== null && connect === true) {
+    if (url !== null && connectRef.current === true) {
       let removeListeners: () => void;
       let expectClose = false;
 
@@ -187,26 +173,18 @@ export const useWebsocket = (
       };
 
       void start();
+      const webSocketProxyRef = webSocketProxy;
       return () => {
         expectClose = true;
-        if (webSocketProxy.current) {
-          webSocketProxy.current = null;
+        if (webSocketProxyRef.current) {
+          webSocketProxyRef.current = null;
         }
         removeListeners?.();
         setLastMessage(undefined);
       };
     }
     return undefined;
-  }, [url, connect, stringifiedQueryParams, optionsCache, sendMessage]);
-
-  useEffect(() => {
-    if (readyStateFromUrl === ReadyState.OPEN) {
-      messageQueue.current.splice(0).forEach(message => {
-        sendMessage(message);
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readyStateFromUrl]);
+  }, [url, stringifiedQueryParams, optionsCache]);
 
   return {
     sendMessage,

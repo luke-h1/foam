@@ -8,10 +8,8 @@ import {
   EmptyLayoutMedia,
   EmptyLayoutTitle,
 } from '@app/components/EmptyLayout/EmptyLayout';
-import {
-  Image,
-  type ImageProps as AppImageProps,
-} from '@app/components/Image/Image';
+import { Image } from '@app/components/Image/Image';
+import type { ImageProps as AppImageProps } from '@app/components/Image/Image.types';
 import { theme } from '@app/styles/themes';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import type {
@@ -22,7 +20,7 @@ import type {
   ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import categoryApexImage from '../../../../assets/data/category_apex.jpg';
+const categoryApexImage = require('../../../../assets/data/category_apex.jpg');
 
 interface EmptyStatePresetItem {
   imageSource: AppImageProps['source'];
@@ -148,12 +146,11 @@ export function EmptyState({
 
         {resolvedButton ? (
           <EmptyLayoutButton
+            title={resolvedButton}
             onPress={buttonOnPress}
             style={[styles.buttonWrap, buttonStyle]}
             variant='default'
-          >
-            {resolvedButton}
-          </EmptyLayoutButton>
+          />
         ) : null}
       </EmptyLayout>
     </SafeAreaView>

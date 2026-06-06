@@ -1,3 +1,4 @@
+import { memo } from 'react';
 /* eslint-disable react-native/sort-styles */
 import { Button } from '@app/components/Button/Button';
 import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
@@ -9,7 +10,6 @@ import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import * as Clipboard from 'expo-clipboard';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { useMemo, useCallback, memo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -24,11 +24,6 @@ interface Props {
   onClose: () => void;
   selectedEmote: ParsedPart<'emote'>;
 }
-
-type MetadataRow = {
-  label: string;
-  value?: string | null;
-};
 
 type PreviewAction = {
   icon: SymbolViewProps['name'];
@@ -50,37 +45,30 @@ function EmotePreviewSheetComponent(props: Props) {
     280,
     Math.min(screenWidth - theme.space16 * 2, 520),
   );
-  const displayUrl = useMemo(
-    () =>
-      getDisplayEmoteUrl({
-        url: selectedEmote.url,
-        static_url: selectedEmote.static_url,
-        disableAnimations,
-      }),
-    [disableAnimations, selectedEmote.static_url, selectedEmote.url],
-  );
+  const displayUrl = getDisplayEmoteUrl({
+    url: selectedEmote.url,
+    static_url: selectedEmote.static_url,
+    disableAnimations,
+  });
   const emoteName = getEmoteName(selectedEmote);
   const emoteLink =
     typeof selectedEmote.emote_link === 'string'
       ? selectedEmote.emote_link
       : undefined;
   const maxEmoteSize = Math.min(Math.max(screenWidth * 0.36, 96), 156);
-  const scrollStyle = useMemo(
-    () => [styles.scroll, { maxHeight: Math.round(screenHeight * 0.58) }],
-    [screenHeight],
-  );
-  const containerStyle = useMemo(
-    () => [
-      styles.container,
-      {
-        maxHeight: Math.round(screenHeight * 0.82),
-        width: sheetWidth,
-      },
-    ],
-    [screenHeight, sheetWidth],
-  );
+  const scrollStyle = [
+    styles.scroll,
+    { maxHeight: Math.round(screenHeight * 0.58) },
+  ];
+  const containerStyle = [
+    styles.container,
+    {
+      maxHeight: Math.round(screenHeight * 0.82),
+      width: sheetWidth,
+    },
+  ];
 
-  const emoteSize = useMemo(() => {
+  const emoteSize = (() => {
     const originalWidth = selectedEmote.width || 28;
     const originalHeight = selectedEmote.height || 28;
     const aspectRatio = originalWidth / originalHeight;
@@ -111,44 +99,31 @@ function EmotePreviewSheetComponent(props: Props) {
       height: Math.round(targetHeight),
       width: Math.round(targetWidth),
     };
-  }, [maxEmoteSize, selectedEmote.height, selectedEmote.width]);
+  })();
 
-  const handleCopy = useCallback(
-    (field: 'name' | 'url') => {
-      void Clipboard.setStringAsync(
-        field === 'name' ? emoteName : displayUrl,
-      ).then(() =>
-        toast.success(
-          field === 'name' ? 'Emote name copied' : 'Emote URL copied',
-        ),
-      );
+  const handleCopy = (field: 'name' | 'url') => {
+    void Clipboard.setStringAsync(
+      field === 'name' ? emoteName : displayUrl,
+    ).then(() =>
+      toast.success(
+        field === 'name' ? 'Emote name copied' : 'Emote URL copied',
+      ),
+    );
+  };
+
+  const metadataRows = [
+    { label: 'Provider', value: selectedEmote.site },
+    { label: 'Creator', value: selectedEmote.creator },
+    {
+      label: 'Original',
+      value:
+        selectedEmote.original_name && selectedEmote.original_name !== emoteName
+          ? selectedEmote.original_name
+          : undefined,
     },
-    [displayUrl, emoteName],
-  );
+  ].filter(row => Boolean(row.value));
 
-  const metadataRows = useMemo<MetadataRow[]>(
-    () =>
-      [
-        { label: 'Provider', value: selectedEmote.site },
-        { label: 'Creator', value: selectedEmote.creator },
-        {
-          label: 'Original',
-          value:
-            selectedEmote.original_name &&
-            selectedEmote.original_name !== emoteName
-              ? selectedEmote.original_name
-              : undefined,
-        },
-      ].filter(row => Boolean(row.value)),
-    [
-      emoteName,
-      selectedEmote.creator,
-      selectedEmote.original_name,
-      selectedEmote.site,
-    ],
-  );
-
-  const actions = useMemo<PreviewAction[]>(() => {
+  const actions: PreviewAction[] = (() => {
     const items: PreviewAction[] = [
       {
         icon: 'doc.on.doc',
@@ -174,7 +149,7 @@ function EmotePreviewSheetComponent(props: Props) {
     }
 
     return items;
-  }, [emoteLink, emoteName, handleCopy]);
+  })();
 
   return (
     <BottomSheet

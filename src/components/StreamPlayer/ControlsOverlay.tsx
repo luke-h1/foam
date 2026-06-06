@@ -3,9 +3,14 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SymbolView } from 'expo-symbols';
-import { useEffect, useMemo, useState } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useEffect, useState } from 'react';
+import {
+  Platform,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -13,8 +18,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { scheduleOnRN } from 'react-native-worklets';
-
 import type { StreamInfo } from './types';
 
 interface ControlsOverlayProps {
@@ -24,6 +27,7 @@ interface ControlsOverlayProps {
   onPipPress?: () => void;
   onPlayPausePress: () => void;
   onRefresh?: () => void;
+  onSharePress?: () => void;
   onToggleControls: () => void;
   paused: boolean;
   showPip?: boolean;
@@ -34,23 +38,7 @@ interface OverlayMetricsState {
   duration: string;
 }
 
-export function formatDuration(startedAt?: string): string {
-  if (!startedAt) {
-    return '0:00';
-  }
-  const start = new Date(startedAt).getTime();
-  const now = Date.now();
-  const seconds = Math.floor((now - start) / 1000);
-
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-
-  if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-  return `${minutes}:${secs.toString().padStart(2, '0')}`;
-}
+import { formatDuration } from './formatStreamDuration';
 
 function formatViewerCount(count?: number): string {
   if (!count) {
@@ -66,20 +54,22 @@ export function ControlsOverlay({
   onPipPress,
   onPlayPausePress,
   onRefresh,
+  onSharePress,
   onToggleControls,
   paused,
-  showPip = Platform.OS === 'ios',
+  showPip,
   streamInfo,
 }: ControlsOverlayProps) {
+  const showPipButton = showPip ?? Platform.OS === 'ios';
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isPortrait = windowHeight >= windowWidth;
   const headerTopOffset = isPortrait ? theme.space12 : insets.top + 8;
   const bottomOffset = isPortrait ? theme.space8 : insets.bottom + 12;
   const opacity = useSharedValue(0);
-  const [metrics, setMetrics] = useState<OverlayMetricsState>(() => ({
-    duration: formatDuration(streamInfo?.startedAt),
-  }));
+  const [metrics, setMetrics] = useState<OverlayMetricsState>({
+    duration: '0:00',
+  });
 
   useEffect(() => {
     if (!isVisible || !streamInfo?.startedAt) {
@@ -104,48 +94,29 @@ export function ControlsOverlay({
     return () => clearInterval(interval);
   }, [isVisible, streamInfo?.startedAt]);
 
-  useEffect(() => {
-    if (streamInfo?.startedAt) {
-      return;
-    }
+  const durationLabel = streamInfo?.startedAt ? metrics.duration : '0:00';
 
-    setMetrics(previous =>
-      previous.duration === '0:00'
-        ? previous
-        : {
-            ...previous,
-            duration: '0:00',
-          },
+  useEffect(() => {
+    opacity.set(
+      withTiming(isVisible ? 1 : 0, {
+        duration: 200,
+        easing: Easing.ease,
+      }),
     );
-  }, [streamInfo?.startedAt]);
-
-  useEffect(() => {
-    opacity.value = withTiming(isVisible ? 1 : 0, {
-      duration: 200,
-      easing: Easing.ease,
-    });
   }, [isVisible, opacity]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    pointerEvents: opacity.value > 0.5 ? 'auto' : 'none',
+    opacity: opacity.get(),
+    pointerEvents: opacity.get() > 0.5 ? 'auto' : 'none',
   }));
-
-  const overlayTapGesture = useMemo(
-    () =>
-      Gesture.Tap().onEnd(() => {
-        'worklet';
-
-        scheduleOnRN(onToggleControls);
-      }),
-    [onToggleControls],
-  );
 
   return (
     <Animated.View style={[styles.controlsOverlay, animatedStyle]}>
-      <GestureDetector gesture={overlayTapGesture}>
-        <View style={styles.overlayTapTarget} />
-      </GestureDetector>
+      <Pressable
+        accessibilityRole='button'
+        onPress={onToggleControls}
+        style={styles.overlayTapTarget}
+      />
 
       <LinearGradient
         colors={['rgba(0,0,0,0.86)', 'rgba(0,0,0,0.42)', 'transparent']}
@@ -255,7 +226,7 @@ export function ControlsOverlay({
                 isPortrait && styles.durationTextPortrait,
               ]}
             >
-              {metrics.duration}
+              {durationLabel}
             </Text>
             <View
               style={[
@@ -298,7 +269,23 @@ export function ControlsOverlay({
           </View>
         )}
 
-        {showPip && onPipPress && (
+        {onSharePress && (
+          <View style={styles.controlButtonContainer}>
+            <Button
+              label='Share'
+              style={styles.controlButton}
+              onPress={onSharePress}
+            >
+              <SymbolView
+                name='square.and.arrow.up'
+                size={18}
+                tintColor={theme.colorWhite}
+              />
+            </Button>
+          </View>
+        )}
+
+        {showPipButton && onPipPress && (
           <View style={styles.controlButtonContainer}>
             <Button
               label='Picture in Picture'
@@ -372,10 +359,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     height: 44,
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.28,
-    shadowRadius: 18,
+    boxShadow: '0 8px 18px rgba(0, 0, 0, 0.28)',
     width: 44,
   },
   controlsOverlay: {
@@ -424,10 +408,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     height: 44,
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.28,
-    shadowRadius: 18,
+    boxShadow: '0 8px 18px rgba(0, 0, 0, 0.28)',
     width: 44,
   },
   latencyBadge: {
@@ -506,10 +487,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     height: 96,
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 18 },
-    shadowOpacity: 0.42,
-    shadowRadius: 30,
+    boxShadow: '0 18px 30px rgba(0, 0, 0, 0.42)',
     width: 96,
   },
   playPauseButtonPortrait: {

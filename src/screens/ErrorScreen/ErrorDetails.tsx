@@ -1,3 +1,4 @@
+import type { ErrorInfo } from 'react';
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
@@ -5,13 +6,16 @@ import { showFeedbackWidget } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { useObservable, useSelector } from '@legendapp/state/react';
-import { type ErrorInfo } from 'react';
 import { ScrollView, View, StyleSheet } from 'react-native';
 
 export interface ErrorDetailsProps {
   error: Error | null;
   errorInfo: ErrorInfo | null;
   onReset: () => void;
+}
+
+function handleShowFeedback() {
+  showFeedbackWidget();
 }
 
 export function ErrorDetails(props: ErrorDetailsProps) {
@@ -29,10 +33,6 @@ export function ErrorDetails(props: ErrorDetailsProps) {
   const githubURL = encodeURI(
     `https://github.com/luke-h1/foam/issues/new?title=(CRASH) ${errorTitle}&body=What were you doing when the app crashed?\n\n\nTruncated Stacktrace:\n\`\`\`${stackTrace}\`\`\``,
   );
-
-  const handleShowFeedback = () => {
-    showFeedbackWidget();
-  };
 
   return (
     <ScrollView

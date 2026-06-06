@@ -4,7 +4,6 @@ import * as Form from '@app/components/Form/Form';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Image } from '@app/components/Image/Image';
 import {
-  SettingsRow,
   SettingsSection,
   SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
@@ -19,10 +18,12 @@ import {
   getEmojiEmotes,
 } from '@app/utils/emoji/emojiEmotes';
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
-import { SegmentedControl } from '@expo/ui/community/segmented-control';
+import { ChatPreferenceSegmentedTrailing } from './ChatPreferenceSegmentedTrailing';
+import { ChatProviderPreferenceSections } from './ChatProviderPreferenceSections';
+import { ChatPreferenceSegmentedSettingsRow } from './ChatPreferenceSettingsRows';
 import type { SymbolViewProps } from 'expo-symbols';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 const DENSITY_OPTIONS = [
   { label: 'Comfortable', value: 'comfortable' as const },
@@ -265,18 +266,19 @@ export function ChatPreferenceScreen() {
     0,
     EMOJI_STYLE_OPTIONS.findIndex(option => option.value === previewEmojiStyle),
   );
-  const emojiPreviewEmotes = useMemo(() => {
+  const emojiPreviewEmotes = (() => {
     const emotes = getEmojiEmotes(previewEmojiStyle);
-    const preview = EMOJI_PREVIEW_SHORTCODES.map(shortcode =>
-      emotes.find(emote => emote.name === shortcode),
-    ).filter(Boolean) as SanitisedEmote[];
+    const preview = EMOJI_PREVIEW_SHORTCODES.flatMap(shortcode => {
+      const emote = emotes.find(item => item.name === shortcode);
+      return emote ? [emote] : [];
+    });
 
     if (preview.length > 0) {
       return preview;
     }
 
     return emotes.slice(0, 3);
-  }, [previewEmojiStyle]);
+  })();
 
   useEffect(() => {
     previewDensity$.set(chatDensity);
@@ -342,117 +344,91 @@ export function ChatPreferenceScreen() {
     previewProviders$,
   ]);
 
-  const handleContextToggle = useCallback(
-    (key: ContextPreviewKey, value: boolean) => {
-      previewContext$.set(previous =>
-        previous[key] === value
-          ? previous
-          : {
-              ...previous,
-              [key]: value,
-            },
-      );
-      update({ [key]: value });
-    },
-    [previewContext$, update],
-  );
+  const handleContextToggle = (key: ContextPreviewKey, value: boolean) => {
+    previewContext$.set(previous =>
+      previous[key] === value
+        ? previous
+        : {
+            ...previous,
+            [key]: value,
+          },
+    );
+    update({ [key]: value });
+  };
 
-  const handleProviderToggle = useCallback(
-    (key: ProviderPreviewKey, value: boolean) => {
-      previewProviders$.set(previous =>
-        previous[key] === value
-          ? previous
-          : {
-              ...previous,
-              [key]: value,
-            },
-      );
-      update({ [key]: value });
-    },
-    [previewProviders$, update],
-  );
+  const handleProviderToggle = (key: ProviderPreviewKey, value: boolean) => {
+    previewProviders$.set(previous =>
+      previous[key] === value
+        ? previous
+        : {
+            ...previous,
+            [key]: value,
+          },
+    );
+    update({ [key]: value });
+  };
 
-  const handleDisableEmoteAnimationsToggle = useCallback(
-    (value: boolean) => {
-      previewDisableEmoteAnimations$.set(value);
-      update({ disableEmoteAnimations: value });
-    },
-    [previewDisableEmoteAnimations$, update],
-  );
+  const handleDisableEmoteAnimationsToggle = (value: boolean) => {
+    previewDisableEmoteAnimations$.set(value);
+    update({ disableEmoteAnimations: value });
+  };
 
-  const handleDensitySelect = useCallback(
-    (nextDensity: 'comfortable' | 'compact') => {
-      previewDensity$.set(nextDensity);
-      update({
-        chatDensity: nextDensity,
-      });
-    },
-    [previewDensity$, update],
-  );
+  const handleDensitySelect = (nextDensity: 'comfortable' | 'compact') => {
+    previewDensity$.set(nextDensity);
+    update({
+      chatDensity: nextDensity,
+    });
+  };
 
-  const handleDensityChange = useCallback(
-    (event: SegmentedControlChangeEvent) => {
-      const nextDensity =
-        DENSITY_OPTIONS[event.nativeEvent.selectedSegmentIndex]?.value;
+  const handleDensityChange = (event: SegmentedControlChangeEvent) => {
+    const nextDensity =
+      DENSITY_OPTIONS[event.nativeEvent.selectedSegmentIndex]?.value;
 
-      if (!nextDensity) {
-        return;
-      }
+    if (!nextDensity) {
+      return;
+    }
 
-      handleDensitySelect(nextDensity);
-    },
-    [handleDensitySelect],
-  );
+    handleDensitySelect(nextDensity);
+  };
 
-  const handleDensityValueChange = useCallback(
-    (value: string) => {
-      const selected = DENSITY_OPTIONS.find(option => option.label === value);
+  const handleDensityValueChange = (value: string) => {
+    const selected = DENSITY_OPTIONS.find(option => option.label === value);
 
-      if (!selected) {
-        return;
-      }
+    if (!selected) {
+      return;
+    }
 
-      handleDensitySelect(selected.value);
-    },
-    [handleDensitySelect],
-  );
+    handleDensitySelect(selected.value);
+  };
 
-  const handleAlternatingRowsToggle = useCallback(
-    (value: boolean) => {
-      previewAlternatingRows$.set(value);
-      update({ showAlternatingChatRows: value });
-    },
-    [previewAlternatingRows$, update],
-  );
+  const handleAlternatingRowsToggle = (value: boolean) => {
+    previewAlternatingRows$.set(value);
+    update({ showAlternatingChatRows: value });
+  };
 
-  const handleEmojiStyleChange = useCallback(
-    (value: string) => {
-      const option = EMOJI_STYLE_OPTIONS.find(option => option.label === value);
+  const handleEmojiStyleChange = (value: string) => {
+    const option = EMOJI_STYLE_OPTIONS.find(option => option.label === value);
 
-      if (!option) {
-        return;
-      }
+    if (!option) {
+      return;
+    }
 
-      previewEmojiStyle$.set(option.value);
-      update({ emojiStyle: option.value });
-    },
-    [previewEmojiStyle$, update],
-  );
+    previewEmojiStyle$.set(option.value);
+    update({ emojiStyle: option.value });
+  };
 
-  const handleEmojiStyleChangeByIndex = useCallback(
-    (event: SegmentedControlChangeEvent) => {
-      const option =
-        EMOJI_STYLE_OPTIONS[event.nativeEvent.selectedSegmentIndex];
+  const handleEmojiStyleChangeByIndex = (
+    event: SegmentedControlChangeEvent,
+  ) => {
+    const option = EMOJI_STYLE_OPTIONS[event.nativeEvent.selectedSegmentIndex];
 
-      if (!option) {
-        return;
-      }
+    if (!option) {
+      return;
+    }
 
-      previewEmojiStyle$.set(option.value);
-      update({ emojiStyle: option.value });
-    },
-    [previewEmojiStyle$, update],
-  );
+    previewEmojiStyle$.set(option.value);
+    update({ emojiStyle: option.value });
+  };
 
   useScrollToTop(scrollRef);
 
@@ -476,14 +452,12 @@ export function ChatPreferenceScreen() {
                       : 'Comfy rows with more breathing space'}
                   </Text>
                 </View>
-                <SegmentedControl
-                  appearance='dark'
+                <ChatPreferenceSegmentedTrailing
                   onChange={handleDensityChange}
                   onValueChange={handleDensityValueChange}
                   selectedIndex={densityIndex}
-                  style={styles.iosSegmentedControl}
-                  tintColor={theme.colorDarkGreen}
                   values={DENSITY_LABELS}
+                  variant='ios'
                 />
                 <DensityPreview density={previewDensity} />
               </View>
@@ -515,14 +489,12 @@ export function ChatPreferenceScreen() {
                     Changes emoji images in existing chat messages
                   </Text>
                 </View>
-                <SegmentedControl
-                  appearance='dark'
+                <ChatPreferenceSegmentedTrailing
                   onChange={handleEmojiStyleChangeByIndex}
                   onValueChange={handleEmojiStyleChange}
                   selectedIndex={emojiIndex}
-                  style={styles.iosSegmentedControl}
-                  tintColor={theme.colorDarkGreen}
                   values={emojiLabels}
+                  variant='ios'
                 />
                 <EmojiStylePreview emotes={emojiPreviewEmotes} />
               </View>
@@ -607,25 +579,18 @@ export function ChatPreferenceScreen() {
         <ScreenHeader title='Chat' subtitle='Message controls' size='medium' />
 
         <SettingsSection title='Layout'>
-          <SettingsRow
-            title='Message Density'
+          <ChatPreferenceSegmentedSettingsRow
+            icon={{ icon: 'list.bullet', color: theme.colorGrey }}
+            onChange={handleDensityChange}
+            onValueChange={handleDensityValueChange}
+            selectedIndex={densityIndex}
             subtitle={
               previewDensity === 'compact'
                 ? 'Tighter rows for faster scanning'
                 : 'Roomier rows with more breathing space'
             }
-            icon={{ icon: 'list.bullet', color: theme.colorGrey }}
-            trailing={
-              <SegmentedControl
-                appearance='dark'
-                onChange={handleDensityChange}
-                onValueChange={handleDensityValueChange}
-                selectedIndex={densityIndex}
-                style={styles.segmentedControl}
-                tintColor={theme.colorDarkGreen}
-                values={DENSITY_LABELS}
-              />
-            }
+            title='Message Density'
+            values={DENSITY_LABELS}
           />
           <View style={styles.settingsPreviewItem}>
             <DensityPreview density={previewDensity} />
@@ -646,21 +611,14 @@ export function ChatPreferenceScreen() {
         </SettingsSection>
 
         <SettingsSection title='Emoji Style'>
-          <SettingsRow
-            title='Emoji Set'
-            subtitle='Changes emoji images in existing chat messages'
+          <ChatPreferenceSegmentedSettingsRow
             icon={{ icon: 'face.smiling', color: theme.colorAmber }}
-            trailing={
-              <SegmentedControl
-                appearance='dark'
-                onChange={handleEmojiStyleChangeByIndex}
-                onValueChange={handleEmojiStyleChange}
-                selectedIndex={emojiIndex}
-                style={styles.segmentedControl}
-                tintColor={theme.colorDarkGreen}
-                values={emojiLabels}
-              />
-            }
+            onChange={handleEmojiStyleChangeByIndex}
+            onValueChange={handleEmojiStyleChange}
+            selectedIndex={emojiIndex}
+            subtitle='Changes emoji images in existing chat messages'
+            title='Emoji Set'
+            values={emojiLabels}
           />
           <View style={styles.settingsPreviewItem}>
             <EmojiStylePreview emotes={emojiPreviewEmotes} />
@@ -696,36 +654,11 @@ export function ChatPreferenceScreen() {
           </View>
         </SettingsSection>
 
-        {PROVIDER_PREFERENCE_SECTIONS.map(section => (
-          <SettingsSection key={section.title} title={section.title}>
-            <SettingsToggleRow
-              title='Emotes'
-              subtitle={section.emotes.subtitle}
-              value={previewProviders[section.emotes.key]}
-              onValueChange={value =>
-                handleProviderToggle(section.emotes.key, value)
-              }
-            />
-            <ProviderPreviewItem
-              enabled={previewProviders[section.emotes.key]}
-              provider={section.provider}
-              variant='emotes'
-            />
-            <SettingsToggleRow
-              title='Badges'
-              subtitle={section.badges.subtitle}
-              value={previewProviders[section.badges.key]}
-              onValueChange={value =>
-                handleProviderToggle(section.badges.key, value)
-              }
-            />
-            <ProviderPreviewItem
-              enabled={previewProviders[section.badges.key]}
-              provider={section.provider}
-              variant='badges'
-            />
-          </SettingsSection>
-        ))}
+        <ChatProviderPreferenceSections
+          previewProviders={previewProviders}
+          onProviderToggle={handleProviderToggle}
+          ProviderPreviewItem={ProviderPreviewItem}
+        />
 
         <SettingsSection
           title='Media'
@@ -755,7 +688,7 @@ export function ChatPreferenceScreen() {
   );
 }
 
-const DensityPreview = memo(function DensityPreview({
+const DensityPreview = function DensityPreview({
   density,
 }: {
   density: 'comfortable' | 'compact';
@@ -778,11 +711,9 @@ const DensityPreview = memo(function DensityPreview({
       />
     </View>
   );
-});
+};
 
-DensityPreview.displayName = 'DensityPreview';
-
-const PreviewMessage = memo(function PreviewMessage({
+const PreviewMessage = function PreviewMessage({
   compact,
   message,
   time,
@@ -815,11 +746,9 @@ const PreviewMessage = memo(function PreviewMessage({
       </Text>
     </View>
   );
-});
+};
 
-PreviewMessage.displayName = 'PreviewMessage';
-
-const EmojiStylePreview = memo(function EmojiStylePreview({
+const EmojiStylePreview = function EmojiStylePreview({
   emotes,
 }: {
   emotes: SanitisedEmote[];
@@ -841,9 +770,7 @@ const EmojiStylePreview = memo(function EmojiStylePreview({
       </View>
     </View>
   );
-});
-
-EmojiStylePreview.displayName = 'EmojiStylePreview';
+};
 
 function PreviewLabel() {
   return (
@@ -895,7 +822,7 @@ function ProviderTogglePreviewItem({
   );
 }
 
-const ProviderPreviewItem = memo(function ProviderPreviewItem({
+const ProviderPreviewItem = function ProviderPreviewItem({
   enabled,
   provider,
   variant,
@@ -913,9 +840,7 @@ const ProviderPreviewItem = memo(function ProviderPreviewItem({
       />
     </View>
   );
-});
-
-ProviderPreviewItem.displayName = 'ProviderPreviewItem';
+};
 
 const styles = StyleSheet.create({
   container: {

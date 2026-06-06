@@ -1,8 +1,8 @@
+import { memo } from 'react';
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 interface ChatViewControlsProps {
@@ -56,8 +56,6 @@ export const ChatViewControls = memo(
     );
   },
 );
-
-ChatViewControls.displayName = 'ChatViewControls';
 
 const styles = StyleSheet.create({
   clearChip: {

@@ -5,7 +5,7 @@ import {
 } from '@app/services/twitch-service';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { logger } from '@app/utils/logger';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner-native';
 import type { MessageActionData } from '../components/ChatMessage/RichChatMessage';
 
@@ -69,6 +69,7 @@ export function usePinnedChatMessage({
     pinnedMessageFetchIdRef.current = fetchId;
 
     try {
+      // eslint-disable-next-line react-doctor/async-defer-await -- stale-fetch guard runs after network call
       const nextPinnedMessage = await twitchService.getPinnedChatMessage({
         broadcasterId: channelId,
         moderatorId,
@@ -93,9 +94,12 @@ export function usePinnedChatMessage({
     }
   }, [canModerateChat, channelId, moderatorId]);
 
+  const loadPinnedMessageRef = useRef(loadPinnedMessage);
+  loadPinnedMessageRef.current = loadPinnedMessage;
+
   useEffect(() => {
-    void loadPinnedMessage();
-  }, [loadPinnedMessage]);
+    void loadPinnedMessageRef.current();
+  }, [canModerateChat, channelId, moderatorId]);
 
   const handlePinnedMessageChanged = useCallback(
     (message: PinnedChatMessageViewModel) => {
@@ -198,20 +202,23 @@ export function usePinnedChatMessage({
     [refreshPinnedMessage],
   );
 
+  const refreshPinnedMessageRef = useRef(refreshPinnedMessage);
+  refreshPinnedMessageRef.current = refreshPinnedMessage;
+
   useEffect(() => {
     if (!canModerateChat || !moderatorId || !pinnedMessageId) {
       return;
     }
 
     const refreshIntervalId = setInterval(() => {
-      void refreshPinnedMessage({
+      void refreshPinnedMessageRef.current({
         messageId: pinnedMessageId,
         silent: true,
       });
     }, PINNED_MESSAGE_REFRESH_INTERVAL_MS);
 
     return () => clearInterval(refreshIntervalId);
-  }, [canModerateChat, moderatorId, pinnedMessageId, refreshPinnedMessage]);
+  }, [canModerateChat, moderatorId, pinnedMessageId]);
 
   const handleUnpinPinnedMessage = useCallback(() => {
     if (!canModerateChat || !moderatorId) {

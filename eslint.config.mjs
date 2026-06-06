@@ -4,6 +4,7 @@ import importPlugin from 'eslint-plugin-import';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import promise from 'eslint-plugin-promise';
 import react from 'eslint-plugin-react';
+import reactDoctor from 'eslint-plugin-react-doctor';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactNative from 'eslint-plugin-react-native';
 import globals from 'globals';
@@ -90,6 +91,7 @@ export default tseslint.config(
       },
       promise,
       react,
+      'react-doctor': reactDoctor,
       'react-hooks': reactHooks,
       'react-native': reactNative,
       '@typescript-eslint': tseslint.plugin,
@@ -104,6 +106,13 @@ export default tseslint.config(
       ...react.configs.flat['jsx-runtime'].rules,
       ...jsxA11y.configs.recommended.rules,
       ...promise.configs.recommended.rules,
+      ...reactDoctor.configs.recommended.rules,
+      ...reactDoctor.configs['react-native'].rules,
+      ...reactDoctor.configs['tanstack-query'].rules,
+      'react-doctor/rn-no-raw-text': 'warn',
+      'react-doctor/react-compiler-no-manual-memoization': 'off',
+      'react-doctor/no-effect-with-fresh-deps': 'off',
+      'react-doctor/exhaustive-deps': 'off',
       '@typescript-eslint/array-type': ['error', { default: 'array' }],
       '@typescript-eslint/no-misused-spread': 'off',
       '@typescript-eslint/no-require-imports': 'off',
@@ -175,6 +184,20 @@ export default tseslint.config(
     files: ['src/screens/**/*.{ts,tsx}'],
     rules: {
       'local/require-memoized-component-export': 'off',
+    },
+  },
+  {
+    files: [
+      'src/context/AuthContext.tsx',
+      'src/components/Chat/components/ChatOverlayController.tsx',
+      'src/components/Chat/components/ChatOverlayLayer.tsx',
+      'src/components/ui/Input/Input.ios.tsx',
+      'src/screens/Preferences/ChatPreferenceScreen.tsx',
+      'src/screens/Stream/LiveStreamScreen.tsx',
+    ],
+    rules: {
+      'react-doctor/no-giant-component': 'off',
+      'react-doctor/no-many-boolean-props': 'off',
     },
   },
   prettierConfig,

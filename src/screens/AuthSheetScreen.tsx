@@ -8,22 +8,21 @@ import { theme } from '@app/styles/themes';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+function handleAuthSuccess() {
+  if (router.canDismiss()) {
+    router.dismiss();
+    return;
+  }
+
+  router.replace('/tabs/following');
+}
+
 export function AuthSheetScreen() {
-  const handleSuccess = useCallback(() => {
-    if (router.canDismiss()) {
-      router.dismiss();
-      return;
-    }
-
-    router.replace('/tabs/following');
-  }, []);
-
   const { isPromptingAuth, isSignInReady, startSignIn } = useTwitchSignIn({
-    onSuccess: handleSuccess,
+    onSuccess: handleAuthSuccess,
   });
   const isDisabled = !isSignInReady || isPromptingAuth;
 

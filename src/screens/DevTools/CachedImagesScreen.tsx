@@ -1,5 +1,9 @@
 import { Button } from '@app/components/Button/Button';
-import { FlashList, ListRenderItem } from '@app/components/FlashList/FlashList';
+import {
+  FlashList,
+  FlashListRef,
+  ListRenderItem,
+} from '@app/components/FlashList/FlashList';
 import { Image } from '@app/components/Image/Image';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Text } from '@app/components/ui/Text/Text';
@@ -18,7 +22,7 @@ import {
   listCachedImages,
 } from '@app/utils/image/image-cache';
 import { useSelector } from '@legendapp/state/react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRef, useState, useCallback, type RefObject } from 'react';
 import { Alert, Platform, View, StyleSheet } from 'react-native';
 
 type TabType = 'images' | 'badges' | 'paints';
@@ -50,42 +54,32 @@ interface PaintInfo {
 
 export function CachedImagesScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('images');
-  const [images, setImages] = useState<CachedImageInfo[]>([]);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const listRef = useRef(null);
+  const [, setRefreshKey] = useState(0);
+  const listRef = useRef<FlashListRef<CachedImageInfo>>(null);
 
   useScrollToTop(listRef);
 
   const badges = useSelector(chatStore$.badges);
   const paints = usePaints();
 
-  useEffect(() => {
-    const cachedImages = listCachedImages();
-    setImages(cachedImages);
-  }, [refreshKey]);
+  const images = listCachedImages();
 
   const totalSize = images.reduce((acc, img) => acc + img.size, 0);
 
-  const badgeList = useMemo<BadgeInfo[]>(() => {
-    return Object.values(badges).map(badge => ({
-      id: badge.id,
-      url: badge.url,
-      title: badge.title,
-      type: badge.type,
-      provider: badge.provider,
-    }));
-  }, [badges]);
+  const badgeList = Object.values(badges).map(badge => ({
+    id: badge.id,
+    url: badge.url,
+    title: badge.title,
+    type: badge.type,
+    provider: badge.provider,
+  }));
 
-  const paintList = useMemo<PaintInfo[]>(() => {
-    return Object.values(paints).map(paint => ({
-      id: paint.id,
-      name: paint.name,
-      function: paint.function,
-      color: paint.color
-        ? `#${paint.color.toString(16).padStart(8, '0')}`
-        : null,
-    }));
-  }, [paints]);
+  const paintList = Object.values(paints).map(paint => ({
+    id: paint.id,
+    name: paint.name,
+    function: paint.function,
+    color: paint.color ? `#${paint.color.toString(16).padStart(8, '0')}` : null,
+  }));
 
   const handleClearCache = useCallback(() => {
     Alert.alert(
@@ -147,110 +141,6 @@ export function CachedImagesScreen() {
     );
   }, [paintList.length]);
 
-  const renderImageItem: ListRenderItem<CachedImageInfo> = useCallback(
-    ({ item }) => {
-      const fileName = item.uri.split('/').pop() ?? item.name;
-      return (
-        <View style={styles.item}>
-          <View style={styles.thumbnailContainer}>
-            <Image
-              source={{ uri: item.uri }}
-              style={styles.thumbnail}
-              contentFit='contain'
-            />
-          </View>
-          <View style={styles.itemInfo}>
-            <View style={styles.itemHeader}>
-              <Text style={styles.itemName} numberOfLines={1}>
-                {fileName}
-              </Text>
-              <View style={styles.sizeBadge}>
-                <Text style={styles.sizeBadgeText}>
-                  {formatBytes(item.size)}
-                </Text>
-              </View>
-            </View>
-            <Text style={styles.itemPath} selectable numberOfLines={1}>
-              {item.uri}
-            </Text>
-          </View>
-        </View>
-      );
-    },
-    [],
-  );
-
-  const renderBadgeItem: ListRenderItem<BadgeInfo> = useCallback(
-    ({ item }) => (
-      <View style={styles.item}>
-        <View style={styles.thumbnailContainer}>
-          <Image
-            source={{ uri: item.url }}
-            style={styles.thumbnail}
-            contentFit='contain'
-          />
-        </View>
-        <View style={styles.itemInfo}>
-          <View style={styles.itemHeader}>
-            <Text style={styles.itemName} numberOfLines={1}>
-              {item.title}
-            </Text>
-          </View>
-          <View style={styles.badgeMeta}>
-            <Text style={styles.itemMeta}>{item.type}</Text>
-            {item.provider && (
-              <View style={styles.providerBadge}>
-                <Text style={styles.providerBadgeText}>
-                  {item.provider.toUpperCase()}
-                </Text>
-              </View>
-            )}
-          </View>
-          <Text style={styles.itemPath} selectable numberOfLines={1}>
-            {item.id}
-          </Text>
-        </View>
-      </View>
-    ),
-    [],
-  );
-
-  const renderPaintItem: ListRenderItem<PaintInfo> = useCallback(
-    ({ item }) => (
-      <View style={styles.item}>
-        <View style={styles.thumbnailContainer}>
-          <View
-            style={[
-              styles.paintPreview,
-              item.color
-                ? { backgroundColor: item.color }
-                : { backgroundColor: theme.color.backgroundSecondary.dark },
-            ]}
-          />
-        </View>
-        <View style={styles.itemInfo}>
-          <View style={styles.itemHeader}>
-            <Text style={styles.itemName} numberOfLines={1}>
-              {item.name || 'Unnamed Paint'}
-            </Text>
-            {item.color && (
-              <View
-                style={[styles.colorBadge, { backgroundColor: item.color }]}
-              />
-            )}
-          </View>
-          <Text style={styles.itemMeta}>
-            {item.function.replace(/_/g, ' ').toLowerCase()}
-          </Text>
-          <Text style={styles.itemPath} selectable numberOfLines={1}>
-            {item.id}
-          </Text>
-        </View>
-      </View>
-    ),
-    [],
-  );
-
   const getSubtitle = () => {
     switch (activeTab) {
       case 'images':
@@ -264,18 +154,66 @@ export function CachedImagesScreen() {
     }
   };
 
-  const renderEmptyState = (message: string, submessage: string) => (
-    <View style={styles.emptyState}>
-      <Text style={styles.emptyText}>{message}</Text>
-      <Text style={styles.emptySubtext}>{submessage}</Text>
+  return (
+    <View style={styles.screenContainer}>
+      <View style={styles.container}>
+        {Platform.OS === 'ios' ? null : (
+          <ScreenHeader
+            title='Cache Manager'
+            subtitle={getSubtitle()}
+            size='medium'
+          />
+        )}
+
+        <CachedImagesListHeader
+          activeTab={activeTab}
+          badgeList={badgeList}
+          images={images}
+          onClearBadges={handleClearBadges}
+          onClearCache={handleClearCache}
+          onClearPaints={handleClearPaints}
+          onRefresh={handleRefresh}
+          onSelectTab={setActiveTab}
+          paintList={paintList}
+        />
+        <CachedImagesTabContent
+          activeTab={activeTab}
+          badgeList={badgeList}
+          images={images}
+          listRef={listRef}
+          paintList={paintList}
+        />
+      </View>
     </View>
   );
+}
 
-  const renderListHeader = () => (
+function CachedImagesListHeader({
+  activeTab,
+  badgeList,
+  images,
+  onClearBadges,
+  onClearCache,
+  onClearPaints,
+  onRefresh,
+  onSelectTab,
+  paintList,
+}: {
+  activeTab: TabType;
+  badgeList: BadgeInfo[];
+  images: CachedImageInfo[];
+  onClearBadges: () => void;
+  onClearCache: () => void;
+  onClearPaints: () => void;
+  onRefresh: () => void;
+  onSelectTab: (tab: TabType) => void;
+  paintList: PaintInfo[];
+}) {
+  return (
     <View style={styles.headerContainer}>
       <View style={styles.tabContainer}>
         <Button
-          onPress={() => setActiveTab('images')}
+          onPress={() => onSelectTab('images')}
           style={[
             styles.tabButton,
             activeTab === 'images' && styles.tabButtonActive,
@@ -294,7 +232,7 @@ export function CachedImagesScreen() {
           </Text>
         </Button>
         <Button
-          onPress={() => setActiveTab('badges')}
+          onPress={() => onSelectTab('badges')}
           style={[
             styles.tabButton,
             activeTab === 'badges' && styles.tabButtonActive,
@@ -313,7 +251,7 @@ export function CachedImagesScreen() {
           </Text>
         </Button>
         <Button
-          onPress={() => setActiveTab('paints')}
+          onPress={() => onSelectTab('paints')}
           style={[
             styles.tabButton,
             activeTab === 'paints' && styles.tabButtonActive,
@@ -345,12 +283,12 @@ export function CachedImagesScreen() {
 
       {/* Action Buttons */}
       <View style={styles.actions}>
-        <Button onPress={handleRefresh} style={styles.button}>
+        <Button onPress={onRefresh} style={styles.button}>
           <Text style={styles.buttonText}>Refresh</Text>
         </Button>
         {activeTab === 'images' && (
           <Button
-            onPress={handleClearCache}
+            onPress={onClearCache}
             style={styles.button}
             disabled={images.length === 0}
           >
@@ -366,7 +304,7 @@ export function CachedImagesScreen() {
         )}
         {activeTab === 'badges' && (
           <Button
-            onPress={handleClearBadges}
+            onPress={onClearBadges}
             style={styles.button}
             disabled={badgeList.length === 0}
           >
@@ -382,7 +320,7 @@ export function CachedImagesScreen() {
         )}
         {activeTab === 'paints' && (
           <Button
-            onPress={handleClearPaints}
+            onPress={onClearPaints}
             style={styles.button}
             disabled={paintList.length === 0}
           >
@@ -396,84 +334,6 @@ export function CachedImagesScreen() {
             </Text>
           </Button>
         )}
-      </View>
-    </View>
-  );
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'images':
-        return (
-          <FlashList
-            ref={listRef}
-            data={images}
-            contentInsetAdjustmentBehavior='automatic'
-            renderItem={renderImageItem}
-            keyExtractor={item => item.uri}
-            contentContainerStyle={styles.listContent}
-            ListHeaderComponent={renderListHeader}
-            ListEmptyComponent={() =>
-              renderEmptyState(
-                'No cached images found',
-                'Emote images will appear here after visiting a chat',
-              )
-            }
-          />
-        );
-      case 'badges':
-        return (
-          <FlashList
-            ref={listRef}
-            data={badgeList}
-            contentInsetAdjustmentBehavior='automatic'
-            renderItem={renderBadgeItem}
-            keyExtractor={item => item.id}
-            contentContainerStyle={styles.listContent}
-            ListHeaderComponent={renderListHeader}
-            ListEmptyComponent={() =>
-              renderEmptyState(
-                'No cached badges found',
-                '7TV badges will appear here after viewing users with badges in chat',
-              )
-            }
-          />
-        );
-      case 'paints':
-        return (
-          <FlashList
-            ref={listRef}
-            data={paintList}
-            contentInsetAdjustmentBehavior='automatic'
-            renderItem={renderPaintItem}
-            keyExtractor={item => item.id}
-            contentContainerStyle={styles.listContent}
-            ListHeaderComponent={renderListHeader}
-            ListEmptyComponent={() =>
-              renderEmptyState(
-                'No cached paints found',
-                '7TV paints will appear here after viewing users with paints in chat',
-              )
-            }
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <View style={styles.screenContainer}>
-      <View style={styles.container}>
-        {Platform.OS === 'ios' ? null : (
-          <ScreenHeader
-            title='Cache Manager'
-            subtitle={getSubtitle()}
-            size='medium'
-          />
-        )}
-
-        {/* Content List with Header */}
-        {renderContent()}
       </View>
     </View>
   );
@@ -707,3 +567,182 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 });
+
+const renderCachedImageItem: ListRenderItem<CachedImageInfo> = ({ item }) => {
+  const fileName = item.uri.split('/').pop() ?? item.name;
+  return (
+    <View style={styles.item}>
+      <View style={styles.thumbnailContainer}>
+        <Image
+          source={{ uri: item.uri }}
+          style={styles.thumbnail}
+          contentFit='contain'
+        />
+      </View>
+      <View style={styles.itemInfo}>
+        <View style={styles.itemHeader}>
+          <Text style={styles.itemName} numberOfLines={1}>
+            {fileName}
+          </Text>
+          <View style={styles.sizeBadge}>
+            <Text style={styles.sizeBadgeText}>{formatBytes(item.size)}</Text>
+          </View>
+        </View>
+        <Text style={styles.itemPath} selectable numberOfLines={1}>
+          {item.uri}
+        </Text>
+      </View>
+    </View>
+  );
+};
+
+const renderCachedBadgeItem: ListRenderItem<BadgeInfo> = ({ item }) => (
+  <View style={styles.item}>
+    <View style={styles.thumbnailContainer}>
+      <Image
+        source={{ uri: item.url }}
+        style={styles.thumbnail}
+        contentFit='contain'
+      />
+    </View>
+    <View style={styles.itemInfo}>
+      <View style={styles.itemHeader}>
+        <Text style={styles.itemName} numberOfLines={1}>
+          {item.title}
+        </Text>
+      </View>
+      <View style={styles.badgeMeta}>
+        <Text style={styles.itemMeta}>{item.type}</Text>
+        {item.provider ? (
+          <View style={styles.providerBadge}>
+            <Text style={styles.providerBadgeText}>
+              {item.provider.toUpperCase()}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+      <Text style={styles.itemPath} selectable numberOfLines={1}>
+        {item.id}
+      </Text>
+    </View>
+  </View>
+);
+
+const renderCachedPaintItem: ListRenderItem<PaintInfo> = ({ item }) => (
+  <View style={styles.item}>
+    <View style={styles.thumbnailContainer}>
+      <View
+        style={[
+          styles.paintPreview,
+          item.color
+            ? { backgroundColor: item.color }
+            : { backgroundColor: theme.color.backgroundSecondary.dark },
+        ]}
+      />
+    </View>
+    <View style={styles.itemInfo}>
+      <View style={styles.itemHeader}>
+        <Text style={styles.itemName} numberOfLines={1}>
+          {item.name || 'Unnamed Paint'}
+        </Text>
+        {item.color ? (
+          <View style={[styles.colorBadge, { backgroundColor: item.color }]} />
+        ) : null}
+      </View>
+      <Text style={styles.itemMeta}>
+        {item.function.replace(/_/g, ' ').toLowerCase()}
+      </Text>
+      <Text style={styles.itemPath} selectable numberOfLines={1}>
+        {item.id}
+      </Text>
+    </View>
+  </View>
+);
+
+function CachedImagesEmptyState({
+  message,
+  submessage,
+}: {
+  message: string;
+  submessage: string;
+}) {
+  return (
+    <View style={styles.emptyState}>
+      <Text style={styles.emptyText}>{message}</Text>
+      <Text style={styles.emptySubtext}>{submessage}</Text>
+    </View>
+  );
+}
+
+function CachedImagesTabContent({
+  activeTab,
+  badgeList,
+  images,
+  listRef,
+  paintList,
+}: {
+  activeTab: TabType;
+  badgeList: BadgeInfo[];
+  images: CachedImageInfo[];
+  listRef: RefObject<FlashListRef<CachedImageInfo> | null>;
+  paintList: PaintInfo[];
+}) {
+  if (activeTab === 'images') {
+    return (
+      <FlashList
+        ref={listRef}
+        data={images}
+        contentInsetAdjustmentBehavior='automatic'
+        renderItem={renderCachedImageItem}
+        keyExtractor={item => item.uri}
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          <CachedImagesEmptyState
+            message='No cached images found'
+            submessage='Emote images will appear here after visiting a chat'
+          />
+        }
+      />
+    );
+  }
+
+  if (activeTab === 'badges') {
+    return (
+      <FlashList
+        ref={listRef as RefObject<FlashListRef<BadgeInfo> | null>}
+        data={badgeList}
+        contentInsetAdjustmentBehavior='automatic'
+        renderItem={renderCachedBadgeItem}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          <CachedImagesEmptyState
+            message='No cached badges found'
+            submessage='7TV badges will appear here after viewing users with badges in chat'
+          />
+        }
+      />
+    );
+  }
+
+  if (activeTab === 'paints') {
+    return (
+      <FlashList
+        ref={listRef as RefObject<FlashListRef<PaintInfo> | null>}
+        data={paintList}
+        contentInsetAdjustmentBehavior='automatic'
+        renderItem={renderCachedPaintItem}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          <CachedImagesEmptyState
+            message='No cached paints found'
+            submessage='7TV paints will appear here after viewing users with paints in chat'
+          />
+        }
+      />
+    );
+  }
+
+  return null;
+}

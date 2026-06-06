@@ -34,7 +34,7 @@ export function SettingsAppearanceScreen() {
               hint='Foam Dark'
               onPress={() => update({ theme: 'foam-dark' })}
             >
-              Theme
+              <Form.Text>Theme</Form.Text>
             </Form.Link>
           </Form.Section>
         </BodyScrollView>

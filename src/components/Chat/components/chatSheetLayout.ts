@@ -1,0 +1,1 @@
+export const CHAT_SETTINGS_SHEET_DETENT = 0.9;

@@ -1,6 +1,6 @@
 import { useAuthContext } from '@app/context/AuthContext';
 import { createId } from '@paralleldrive/cuid2';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Directory, File, Paths } from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import { Platform } from 'react-native';
@@ -14,6 +14,7 @@ interface DownloadTwitchClipVariables {
 
 export function useDownloadTwitchClip() {
   const { user } = useAuthContext();
+  const queryClient = useQueryClient();
 
   const { isPending, mutate, variables } = useMutation<
     unknown,
@@ -61,6 +62,9 @@ export function useDownloadTwitchClip() {
 
       await saveFilesToAppAlbum(file.uri);
       directory.delete();
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ['clips'] });
     },
   });
 

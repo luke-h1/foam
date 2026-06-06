@@ -8,32 +8,41 @@ export function useRecentChatMessages({
   channelId,
   channelName,
   forceFlush,
-  handleRecentIrcMessage,
+  processRecentIrcLine,
   isLoadingRecentMessagesRef,
-  scrollToBottom,
+  scrollChatToEnd,
   showRecentMessages,
 }: {
   channelId: string;
   channelName: string;
   forceFlush: () => void;
-  handleRecentIrcMessage: (line: string) => Promise<void>;
+  processRecentIrcLine: (line: string) => Promise<void>;
   isLoadingRecentMessagesRef: MutableRefObject<boolean>;
-  scrollToBottom: () => void;
+  scrollChatToEnd: () => void;
   showRecentMessages: boolean;
 }) {
   const restoredRecentCountRef = useRef(0);
+  const scrollChatToEndRef = useRef(scrollChatToEnd);
+  const processRecentIrcLineRef = useRef(processRecentIrcLine);
+  const forceFlushRef = useRef(forceFlush);
+  const showRecentMessagesRef = useRef(showRecentMessages);
+
+  scrollChatToEndRef.current = scrollChatToEnd;
+  processRecentIrcLineRef.current = processRecentIrcLine;
+  forceFlushRef.current = forceFlush;
+  showRecentMessagesRef.current = showRecentMessages;
 
   useEffect(() => {
     chatStore$.currentChannelId.set(channelId);
     const restoredCount = restoreRecentMessagesForChannel(channelId);
     restoredRecentCountRef.current = restoredCount;
-    if (restoredCount > 0 && !showRecentMessages) {
-      scrollToBottom();
+    if (restoredCount > 0 && !showRecentMessagesRef.current) {
+      scrollChatToEndRef.current();
     }
-  }, [channelId, scrollToBottom, showRecentMessages]);
+  }, [channelId]);
 
   useEffect(() => {
-    if (!showRecentMessages) {
+    if (!showRecentMessagesRef.current) {
       isLoadingRecentMessagesRef.current = false;
       return;
     }
@@ -52,17 +61,18 @@ export function useRecentChatMessages({
           if (abortController.signal.aborted) {
             return;
           }
-          // oxlint-disable-next-line no-await-in-loop -- Recent messages must replay in server order.
-          await handleRecentIrcMessage(message);
+          // Recent messages must replay in server order.
+          // eslint-disable-next-line react-doctor/async-await-in-loop -- IRC replay order is required
+          await processRecentIrcLineRef.current(message);
         }
 
-        forceFlush();
-        scrollToBottom();
+        forceFlushRef.current();
+        scrollChatToEndRef.current();
       } catch (error) {
         if (!abortController.signal.aborted) {
           logger.chat.debug('Failed to load recent messages:', error);
           if (restoredRecentCountRef.current > 0) {
-            scrollToBottom();
+            scrollChatToEndRef.current();
           }
         }
       } finally {
@@ -78,12 +88,5 @@ export function useRecentChatMessages({
       abortController.abort();
       isLoadingRecentMessagesRef.current = false;
     };
-  }, [
-    channelName,
-    forceFlush,
-    handleRecentIrcMessage,
-    isLoadingRecentMessagesRef,
-    scrollToBottom,
-    showRecentMessages,
-  ]);
+  }, [channelName, isLoadingRecentMessagesRef]);
 }

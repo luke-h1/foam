@@ -1,11 +1,14 @@
+import { memo } from 'react';
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
-import { memo } from 'react';
 import { View, StyleSheet } from 'react-native';
+
+import { CHAT_NOTICE_ACCENTS } from './util/chatNoticeAccents';
+import { ChatNoticeMetaRow } from './ChatMessage/renderers/ChatNoticeMetaRow';
+import { styles as chatStyles } from './ChatMessage/RichChatMessage.styles';
 
 interface StvEmoteEventProps {
   disableAnimations?: boolean;
@@ -30,26 +33,37 @@ function StvEmoteEventComponent({
   });
 
   const status = removed ? 'Removed' : 'Added';
+  const accentColor = removed
+    ? CHAT_NOTICE_ACCENTS.stvRemoved
+    : CHAT_NOTICE_ACCENTS.stvAdded;
   const actorName = content.actor?.display_name;
 
   return (
     <View
       style={[
-        styles.container,
-        added && styles.addedContainer,
-        removed && styles.removedContainer,
+        chatStyles.messageColumn,
+        chatStyles.stvEmoteNoticeSurface,
+        added && chatStyles.stvEmoteAddedSurface,
+        removed && chatStyles.stvEmoteRemovedSurface,
       ]}
     >
-      <View style={styles.notice}>
-        <View style={styles.noticeHeader}>
-          <BrandIcon name='stv' size='lg' />
-          <Text style={styles.status}>
-            <Text color={removed ? 'red' : 'green'}>{status}</Text>
-            <Text> Emote</Text>
+      <ChatNoticeMetaRow icon='sparkles' labelColor={accentColor}>
+        <View style={styles.metaContent}>
+          <BrandIcon name='stv' size='sm' />
+          <Text
+            style={[
+              chatStyles.messageMetaText,
+              chatStyles.messageMetaTextStrong,
+              { color: accentColor },
+            ]}
+          >
+            {status} emote
           </Text>
-          {actorName ? <Text style={styles.userText}>{actorName}</Text> : null}
+          {actorName ? (
+            <Text style={styles.actorText}> · {actorName}</Text>
+          ) : null}
         </View>
-      </View>
+      </ChatNoticeMetaRow>
       <View style={styles.content}>
         <Image
           useNitro
@@ -63,11 +77,11 @@ function StvEmoteEventComponent({
         />
         <View style={styles.textContainer}>
           <Text style={styles.emoteName}>{content.name}</Text>
-          {content.creator && (
+          {content.creator ? (
             <Text type='xs' color='gray.accentHover'>
               By {content.creator}
             </Text>
-          )}
+          ) : null}
         </View>
       </View>
     </View>
@@ -77,60 +91,34 @@ function StvEmoteEventComponent({
 export const StvEmoteEvent = memo(StvEmoteEventComponent);
 
 const styles = StyleSheet.create({
-  addedContainer: {
-    borderLeftColor: theme.colorGreen,
-    borderRightColor: theme.colorGreen,
-  },
-  container: {
-    backgroundColor: theme.color.backgroundElement.dark,
-    borderCurve: 'continuous',
-    borderLeftColor: theme.colorDarkGreen,
-    borderLeftWidth: 3,
-    borderRightColor: theme.colorDarkGreen,
-    borderRightWidth: 3,
-    padding: theme.space8,
-    width: '100%',
+  actorText: {
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: 12,
+    lineHeight: 15,
   },
   content: {
     alignItems: 'center',
     flexDirection: 'row',
-    marginTop: theme.space12,
+    gap: 8,
   },
   emoteImage: {
-    height: 50,
-    marginRight: theme.space16,
-    width: 140,
+    height: 28,
+    width: 56,
   },
   emoteName: {
-    fontSize: theme.fontSize14,
-    marginTop: theme.space8,
+    fontSize: 12,
+    lineHeight: 15,
   },
-  notice: {
+  metaContent: {
     alignItems: 'center',
     flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  noticeHeader: {
-    alignItems: 'center',
-    backgroundColor: theme.color.backgroundElement.dark,
-    flexDirection: 'row',
-    paddingInline: theme.space12,
-    paddingVertical: theme.space8,
-    width: '100%',
-  },
-  removedContainer: {
-    borderLeftColor: theme.colorRed,
-    borderRightColor: theme.colorRed,
-  },
-  status: {
-    marginLeft: theme.space16,
+    flex: 1,
+    flexWrap: 'wrap',
+    gap: 4,
+    minWidth: 0,
   },
   textContainer: {
     flex: 1,
-  },
-  userText: {
-    color: theme.colorGreyHover,
-    fontSize: theme.fontSize12,
-    marginLeft: 'auto',
+    minWidth: 0,
   },
 });
