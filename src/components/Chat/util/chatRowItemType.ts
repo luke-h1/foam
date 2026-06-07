@@ -1,5 +1,5 @@
 import { chatStore$ } from '@app/store/chatStore/state';
-import { hasSharedChannelPointsMessage } from '@app/components/Chat/util/channelPointsSharedMessage';
+import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
 import {
   getChatBodyInfo,
   type ChatBodyVariant,

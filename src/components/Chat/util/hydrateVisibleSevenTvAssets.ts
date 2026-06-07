@@ -68,7 +68,7 @@ function isMissingSharedChatSourceBadge(message: AnyChatMessageType): boolean {
 }
 
 function getMessageKey(message: AnyChatMessageType): string {
-  return `${message.message_id}_${message.message_nonce}`;
+  return `${message.message_id.trim()}_${message.message_nonce.trim()}`;
 }
 
 function getHydrationKey({

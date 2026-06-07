@@ -299,6 +299,7 @@ describe('chat performance', () => {
         estimateChatMessageHeightWithPretext(message, {
           containerWidth: 390,
           density: 'compact',
+          showInlineReplyContext: true,
           showTimestamp: true,
         });
       }

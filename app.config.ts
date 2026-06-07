@@ -212,6 +212,7 @@ const config: ExpoConfig = {
     'expo-image',
     '@rnrepo/expo-config-plugin',
     'react-native-compressor',
+    'expo-status-bar',
     [
       '@sentry/react-native/expo',
       {

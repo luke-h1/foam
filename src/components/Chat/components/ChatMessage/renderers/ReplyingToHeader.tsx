@@ -55,8 +55,13 @@ export function ReplyingToHeader({
   const replyContextIconColor = isReplyingToCurrentUser
     ? CHAT_NOTICE_ACCENTS.replyToYou
     : 'rgba(255, 255, 255, 0.5)';
-  const replyContextTextStyle = [
-    styles.replyContextText,
+  const replyContextPrefixTextStyle = [
+    styles.replyContextPrefixText,
+    compact && styles.replyContextTextCompact,
+    isReplyingToCurrentUser && styles.replyContextTextReplyToYou,
+  ];
+  const replyContextBodyTextStyle = [
+    styles.replyContextBodyText,
     compact && styles.replyContextTextCompact,
     isReplyingToCurrentUser && styles.replyContextTextReplyToYou,
   ];
@@ -73,12 +78,14 @@ export function ReplyingToHeader({
         ]}
       />
       <View style={styles.replyContextContent}>
-        <Text numberOfLines={1} style={replyContextTextStyle}>
+        <Text numberOfLines={1} style={replyContextPrefixTextStyle}>
           {prefix}
         </Text>
         {parsedReplyBody.length > 0 ? (
-          <>
-            <Text style={replyContextTextStyle}>: </Text>
+          <View style={styles.replyContextBody}>
+            <Text numberOfLines={1} style={replyContextBodyTextStyle}>
+              :{' '}
+            </Text>
             <View style={styles.replyContextBodyParts}>
               <ChatMessageBody
                 {...partRendererArgs}
@@ -93,7 +100,7 @@ export function ReplyingToHeader({
                 replyPlainMentionTarget={replyPlainMentionTarget}
               />
             </View>
-          </>
+          </View>
         ) : null}
       </View>
     </>

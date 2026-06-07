@@ -29,11 +29,18 @@ let recentMessagesSyncTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingRecentMessagesChannelId: string | null = null;
 let pendingRecentMessages: AnyChatMessageType[] | null = null;
 
+const normaliseMessageIdentifier = (value: string): string => value.trim();
+
 const getMessageKey = (messageId: string, messageNonce: string): string =>
-  `${messageId}_${messageNonce}`;
+  `${normaliseMessageIdentifier(messageId)}_${normaliseMessageIdentifier(
+    messageNonce,
+  )}`;
+
+const getNormalisedMessageId = (message: AnyChatMessageType): string =>
+  message.id?.trim() ? message.id.trim() : '';
 
 const getMessageStoreId = (message: AnyChatMessageType): string =>
-  message.id?.trim() ||
+  getNormalisedMessageId(message) ||
   getMessageKey(message.message_id, message.message_nonce);
 
 const dedupeMessagesForStore = (
@@ -121,15 +128,23 @@ const prepareMessageUpdates = (
 const isValidChatMessage = (
   message?: AnyChatMessageType,
 ): message is AnyChatMessageType => {
-  return Boolean(message?.message_id && message.message_nonce);
+  if (!message) {
+    return false;
+  }
+
+  return Boolean(
+    normaliseMessageIdentifier(message.message_id) &&
+    normaliseMessageIdentifier(message.message_nonce),
+  );
 };
 
 const indexMessage = (message: AnyChatMessageType, index: number) => {
   const key = getMessageKey(message.message_id, message.message_nonce);
   messageKeyToIndex.set(key, index);
 
-  if (message.message_id) {
-    messageIdToIndex.set(message.message_id, index);
+  const normalisedMessageId = normaliseMessageIdentifier(message.message_id);
+  if (normalisedMessageId) {
+    messageIdToIndex.set(normalisedMessageId, index);
   }
 
   indexMessageColor(message);
@@ -569,7 +584,7 @@ export const moderateMessagesByLogin = (
 export const getMessageById = (
   messageId: string,
 ): AnyChatMessageType | undefined => {
-  const index = messageIdToIndex.get(messageId);
+  const index = messageIdToIndex.get(normaliseMessageIdentifier(messageId));
   if (typeof index !== 'number') {
     return undefined;
   }
@@ -578,13 +593,16 @@ export const getMessageById = (
 };
 
 export const removeMessageById = (messageId: string) => {
-  if (!messageId.trim()) {
+  const normalisedMessageId = normaliseMessageIdentifier(messageId);
+  if (!normalisedMessageId) {
     return;
   }
 
   const currentMessages = chatStore$.messages.peek();
   const removedMessages = currentMessages.filter(
-    message => isValidChatMessage(message) && message.message_id === messageId,
+    message =>
+      isValidChatMessage(message) &&
+      normaliseMessageIdentifier(message.message_id) === normalisedMessageId,
   );
 
   if (removedMessages.length === 0) {
@@ -602,7 +620,9 @@ export const removeMessageById = (messageId: string) => {
   });
 
   const nextMessages = currentMessages.filter(
-    message => !isValidChatMessage(message) || message.message_id !== messageId,
+    message =>
+      !isValidChatMessage(message) ||
+      normaliseMessageIdentifier(message.message_id) !== normalisedMessageId,
   );
 
   rebuildMessageIndexes(nextMessages);

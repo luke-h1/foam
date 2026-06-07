@@ -3,6 +3,7 @@ import type { Key } from 'react';
 
 import { Text } from '@app/components/ui/Text/Text';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin';
@@ -49,6 +50,11 @@ export function useChatMessagePartRenderer({
   const renderMessagePart = (part: ParsedPart, index: number): ReactNode => {
     switch (part.type) {
       case 'text': {
+        const content = getParsedPartStringContent(part);
+        if (!content.trim()) {
+          return null;
+        }
+
         return (
           <Text
             key={getPartKey(part, index)}
@@ -59,33 +65,50 @@ export function useChatMessagePartRenderer({
               Boolean(moderationNotice) && styles.moderatedMessageText,
             ]}
           >
-            {part.content}
+            {content}
           </Text>
         );
       }
 
       case 'stvEmote': {
+        const content = getParsedPartStringContent(part);
+        if (!content.trim()) {
+          return null;
+        }
+
         return (
           <MediaLinkCard
             key={getPartKey(part, index)}
             layout='inline'
+            thumbnail={part.thumbnail}
             type='stvEmote'
-            url={part.content}
+            url={content}
           />
         );
       }
 
       case 'twitchClip': {
+        const content = getParsedPartStringContent(part);
+        if (!content.trim()) {
+          return null;
+        }
+
         return (
           <MediaLinkCard
             key={getPartKey(part, index)}
+            thumbnail={part.thumbnail}
             type='twitchClip'
-            url={part.content}
+            url={content}
           />
         );
       }
 
       case 'link': {
+        const content = getParsedPartStringContent(part);
+        if (!content.trim()) {
+          return null;
+        }
+
         return (
           <Text
             key={getPartKey(part, index)}
@@ -95,7 +118,7 @@ export function useChatMessagePartRenderer({
               Boolean(moderationNotice) && styles.moderatedMessageText,
             ]}
           >
-            {part.content}
+            {content}
           </Text>
         );
       }
@@ -118,7 +141,9 @@ export function useChatMessagePartRenderer({
       }
 
       case 'mention': {
-        const mentionContent = formatMentionContent(part.content);
+        const mentionContent = formatMentionContent(
+          getParsedPartStringContent(part),
+        );
         const mentionedUsername = mentionContent.replace(/^@/, '').trim();
         const normalisedMentionedUsername =
           normaliseUsername(mentionedUsername);
@@ -230,6 +255,11 @@ export function useChatMessagePartRenderer({
     index: number,
   ): ReactNode => {
     if (part.type === 'text') {
+      const content = getParsedPartStringContent(part);
+      if (!content.trim()) {
+        return null;
+      }
+
       return (
         <Text
           key={getPartKey(part, index)}
@@ -238,7 +268,7 @@ export function useChatMessagePartRenderer({
             compact && isRaidNotice && styles.messageMetaTextCompact,
           ]}
         >
-          {part.content}
+          {content}
         </Text>
       );
     }

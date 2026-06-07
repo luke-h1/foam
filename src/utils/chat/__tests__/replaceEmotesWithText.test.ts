@@ -115,4 +115,31 @@ describe('replaceEmotesWithText', () => {
     ]);
     expect(result).toBe('Hello @user  World');
   });
+
+  test('does not stringify custom object parts', () => {
+    const result = replaceEmotesWithText([
+      { type: 'text', content: 'Added ' },
+      {
+        type: 'stv_emote_added',
+        stvEvents: {
+          type: 'added',
+          data: {
+            id: '123',
+            name: 'Dance',
+            url: 'https://example.com/dance.png',
+            original_name: 'Dance',
+            site: 'BTTV',
+            creator: null,
+            emote_link: '',
+            height: 32,
+            width: 32,
+          },
+        },
+      },
+      { type: 'text', content: 'event' },
+    ]);
+
+    expect(result).toEqual('Added event');
+    expect(result).not.toContain('[object Object]');
+  });
 });

@@ -11,9 +11,9 @@
     "atlas:analyze": "expo-atlas",
     "export": "bunx expo export",
     "atlas:analyze:file": "expo-atlas .expo/atlas.jsonl",
-    "ios": "EXPO_PUBLIC_APP_VARIANT=development expo run:ios",
+    "ios": "EXPO_PUBLIC_APP_VARIANT=development expo-internal run:ios",
     "ios:sourcekit:changelog": "cd modules/changelog/ios && xcode-build-server config -workspace ../../../ios/Foamdev.xcworkspace -scheme Changelog",
-    "ios:production": "EXPO_PUBLIC_APP_VARIANT=production expo run:ios --configuration Release",
+    "ios:production": "EXPO_PUBLIC_APP_VARIANT=production expo-internal run:ios --configuration Release",
     "android:production": "EXPO_PUBLIC_APP_VARIANT=production expo run:android --variant release",
     "icons:optimize": "svgo -f ./assets/icons",
     "android": "EXPO_PUBLIC_APP_VARIANT=development expo run:android",
@@ -27,7 +27,7 @@
     "build:production": "eas build --profile production --platform ios --auto-submit --non-interactive --no-wait",
     "build:production:android": "eas build --profile production --platform android --auto-submit --non-interactive --no-wait",
     "build:production:ios": "eas build --profile production --platform ios --auto-submit --non-interactive --no-wait",
-    "build:local:production:ios": "EXPO_PUBLIC_APP_VARIANT=production expo prebuild && EXPO_PUBLIC_APP_VARIANT=production expo run:ios",
+    "build:local:production:ios": "EXPO_PUBLIC_APP_VARIANT=production expo prebuild && EXPO_PUBLIC_APP_VARIANT=production expo-internal run:ios",
     "alphabetize": "node scripts/alphabetizePackageJson.js",
     "clean": "rm -rf ios android .expo node_modules",
     "commit": "cz",
@@ -79,7 +79,7 @@
     "e2e:build:ios": "eas build --profile e2e --platform ios --local",
     "e2e:build:android": "eas build --profile e2e --platform android --local",
     "e2e:ios:test": "bun run detox:test",
-    "e2e:dev:ios": "EXPO_PUBLIC_APP_VARIANT=e2e expo run:ios",
+    "e2e:dev:ios": "EXPO_PUBLIC_APP_VARIANT=e2e expo-internal run:ios",
     "e2e:dev:android": "EXPO_PUBLIC_APP_VARIANT=e2e expo run:android",
     "e2e:prebuild": "EXPO_PUBLIC_APP_VARIANT=e2e expo prebuild",
     "e2e:prebuild:clean": "EXPO_PUBLIC_APP_VARIANT=e2e expo prebuild --clean",
@@ -144,6 +144,7 @@
     "expo-router": "~56.2.5",
     "expo-screen-orientation": "~56.0.5",
     "expo-secure-store": "~56.0.4",
+    "expo-status-bar": "~56.0.4",
     "expo-symbols": "~56.0.5",
     "expo-system-ui": "~56.0.5",
     "expo-updates": "~56.0.15",
@@ -290,6 +291,7 @@
     }
   },
   "patchedDependencies": {
+    "@expo/cli@56.1.10": "patches/@expo%2Fcli@56.1.10.patch",
     "@legendapp/state@2.1.15": "patches/@legendapp%2Fstate@2.1.15.patch"
   },
   "reanimated": {

@@ -1,7 +1,7 @@
 import { Text } from '@app/components/ui/Text/Text';
 import { useMessages } from '@app/store/chatStore/hooks';
 import { logger } from '@app/utils/logger';
-import { useCallback, useEffect, useRef, useState, memo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
 import type { RefObject } from 'react';
 
 import {
@@ -27,6 +27,7 @@ import {
 } from './ChatList';
 import { ChatViewControls } from './ChatViewControls';
 import { PinnedMessageBanner } from './PinnedMessageBanner';
+import { getChatMessageListKey } from '../util/chatMessages';
 
 const CHAT_ESTIMATED_COMFORTABLE_ROW_HEIGHT = 34;
 const CHAT_ESTIMATED_COMPACT_ROW_HEIGHT = 24;
@@ -38,11 +39,11 @@ export interface ChatMessagePaneProps {
   channelId: string;
   channelName: string;
   currentUsername?: string;
+  chatDensity: 'comfortable' | 'compact';
   hiddenUsers: string[];
   hiddenPhrases: string[];
   highlightedUsers: string[];
   paneFlags: ChatPaneFlags;
-  chatDensity: 'comfortable' | 'compact';
   listRef: RefObject<ChatListRef | null>;
   handleScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   handleScrollBeginDrag: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
@@ -62,6 +63,7 @@ export interface ChatMessagePaneProps {
   onViewableMessagesChange?: (messages: AnyChatMessageType[]) => void;
   pinnedMessage: PinnedChatMessageViewModel | null;
   pinnedMessageBusy: boolean;
+  showInlineReplyContext: boolean;
 }
 
 export const ChatMessagePane = memo(
@@ -93,6 +95,7 @@ export const ChatMessagePane = memo(
     onViewableMessagesChange,
     pinnedMessage,
     pinnedMessageBusy,
+    showInlineReplyContext,
   }: ChatMessagePaneProps) => {
     const {
       canModerateChat,
@@ -126,6 +129,19 @@ export const ChatMessagePane = memo(
       rawMessages,
       visibleMessageOptions,
     );
+    const dedupedVisibleMessages = useMemo(() => {
+      const seen = new Set<string>();
+
+      return visibleMessages.filter(message => {
+        const key = getChatMessageListKey(message);
+        if (seen.has(key)) {
+          return false;
+        }
+
+        seen.add(key);
+        return true;
+      });
+    }, [visibleMessages]);
 
     const hasActiveFilters = Boolean(
       hiddenUsers.length ||
@@ -134,7 +150,7 @@ export const ChatMessagePane = memo(
       showOnlyMentions,
     );
 
-    const listData = visibleMessages;
+    const listData = dedupedVisibleMessages;
     const handleMessagePaneLayout = useCallback((event: LayoutChangeEvent) => {
       const nextWidth = Math.round(event.nativeEvent.layout.width);
       setMessagePaneWidth(currentWidth =>
@@ -147,12 +163,18 @@ export const ChatMessagePane = memo(
         estimateChatMessageHeightWithPretext(item, {
           containerWidth: pretextMeasureWidth,
           density: chatDensity,
+          showInlineReplyContext,
           showTimestamp: showTimestamps,
         }) ??
         (chatDensity === 'compact'
           ? CHAT_ESTIMATED_COMPACT_ROW_HEIGHT
           : CHAT_ESTIMATED_COMFORTABLE_ROW_HEIGHT),
-      [chatDensity, pretextMeasureWidth, showTimestamps],
+      [
+        chatDensity,
+        pretextMeasureWidth,
+        showInlineReplyContext,
+        showTimestamps,
+      ],
     );
 
     useEffect(() => {

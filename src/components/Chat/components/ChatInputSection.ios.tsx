@@ -28,7 +28,6 @@ import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { GestureDetector } from 'react-native-gesture-handler';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { SFSymbol } from 'sf-symbols-typescript';
 import { COMPOSER_CONTROL_SIZE, COMPOSER_ROW_GAP } from './composerSizing';
 import { ChatComposer } from './ChatComposer/ChatComposer';
@@ -135,7 +134,6 @@ export const ChatInputSection = memo(
     const { isAuthenticated, isConnected, isSending } = connection;
     const { canPinNextMessage, onTogglePinNextMessage, pinNextMessage } =
       pin ?? {};
-    const insets = useSafeAreaInsets();
     const { composerAnimatedStyle, composerGesture } =
       useComposerDismissGesture();
 
@@ -193,13 +191,7 @@ export const ChatInputSection = memo(
         ) : null}
 
         <GestureDetector gesture={composerGesture}>
-          <Animated.View
-            style={[
-              styles.composerShell,
-              { paddingBottom: Math.max(insets.bottom, theme.space8) },
-              composerAnimatedStyle,
-            ]}
-          >
+          <Animated.View style={[styles.composerShell, composerAnimatedStyle]}>
             <View style={styles.inputRow}>
               <View style={styles.inputContainer}>
                 <ChatComposer
@@ -245,20 +237,21 @@ const styles = StyleSheet.create({
     width: COMPOSER_CONTROL_SIZE,
   },
   composerShell: {
-    backgroundColor: '#222222',
+    backgroundColor: '#000000',
     overflow: 'visible',
-    paddingHorizontal: theme.space16,
+    paddingHorizontal: theme.space12,
+    paddingTop: theme.space4,
   },
   inputContainer: {
     flex: 1,
     minWidth: 0,
   },
   inputRow: {
-    alignItems: 'flex-end',
+    alignItems: 'center',
     flexDirection: 'row',
     gap: COMPOSER_ROW_GAP,
     paddingHorizontal: 0,
-    paddingTop: 4,
+    paddingTop: 0,
     width: '100%',
   },
   replyContent: {

@@ -23,17 +23,18 @@ import {
   type UsernamePressData,
 } from '../components/ChatMessage/RichChatMessage';
 import { styles } from '../styles';
-import { isRenderableChatMessage } from '../util/chatMessages';
+import {
+  getChatMessageListKey,
+  isRenderableChatMessage,
+} from '../util/chatMessages';
 import { getChatRowItemType } from '../util/chatRowItemType';
 import { normaliseChatUsername } from '../util/chatUsernames';
 import type { AnyChatMessageType } from '../util/messageHandlers';
 import type { ChatRowDisplayFlags } from '../types/chatUiFlags';
 import { useIsHighlightedReplyTargetMessage } from './useChatTransientState';
 
-const chatRowKeyExtractor = (item: AnyChatMessageType, index: number) =>
-  isRenderableChatMessage(item)
-    ? `${item.message_id}_${item.message_nonce}`
-    : `invalid-message-${index}`;
+const chatRowKeyExtractor = (item: AnyChatMessageType) =>
+  getChatMessageListKey(item);
 
 interface ChatRowPreferences {
   chatDensity: 'comfortable' | 'compact';
@@ -380,9 +381,14 @@ export function useChatRowRenderer({
     ],
   );
 
+  const keyExtractor = useCallback(
+    (item: AnyChatMessageType) => chatRowKeyExtractor(item),
+    [],
+  );
+
   return {
     getItemType,
-    keyExtractor: chatRowKeyExtractor,
+    keyExtractor,
     listContentStyle,
     messageListExtraData,
     renderItem,

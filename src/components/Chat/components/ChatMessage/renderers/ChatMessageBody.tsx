@@ -1,4 +1,5 @@
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 import { ChatMessagePart } from './ChatMessagePart';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 
@@ -40,13 +41,14 @@ export function ChatMessageBody({
     }
 
     if (part.type === 'text') {
+      const content = getParsedPartStringContent(part);
       if (currentTextPart) {
         currentTextPart = {
           type: 'text',
-          content: currentTextPart.content + part.content,
+          content: currentTextPart.content + content,
         };
       } else {
-        currentTextPart = part;
+        currentTextPart = { type: 'text', content };
         currentTextIndex = index;
       }
       continue;
