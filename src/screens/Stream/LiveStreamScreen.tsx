@@ -1,4 +1,5 @@
 import { BlurView } from 'expo-blur';
+import { StatusBar } from 'expo-status-bar';
 import { Button } from '@app/components/Button/Button';
 import { Chat } from '@app/components/Chat/Chat';
 import { ChannelPredictionCard } from '@app/components/ChannelPredictionCard/ChannelPredictionCard';
@@ -69,22 +70,6 @@ const CHAT_REVEAL_ANIMATION_CONFIG = {
   easing: Easing.out(Easing.cubic),
 };
 
-function VideoDelayIndicator({
-  latencySeconds,
-}: {
-  latencySeconds: number | null;
-}) {
-  const delayLabel =
-    latencySeconds == null ? '--' : `${latencySeconds.toFixed(1)}s`;
-
-  return (
-    <View style={styles.delayIndicator}>
-      <Text style={styles.delayIndicatorTitle}>Broadcaster latency</Text>
-      <Text style={styles.delayIndicatorValue}>{delayLabel}</Text>
-    </View>
-  );
-}
-
 export const LiveStreamScreen = memo(function LiveStreamScreen({
   id,
 }: LiveStreamScreenProps) {
@@ -113,7 +98,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     isChatVisible,
     landscapeChatCycleAction,
     landscapeChatWidth,
-    videoLatencySeconds,
   } = uiState;
   const isChatVisibleForLayout = isChatVisible || !isStreamEnabled;
   const shouldRenderChat =
@@ -571,6 +555,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   return (
     <View style={contentContainerStyle}>
+      <StatusBar style='light' />
       <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
         {shouldRenderStreamPlayer ? (
           <StreamPlayer
@@ -618,9 +603,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
                   style={styles.overlayChatBlur}
                   tint='dark'
                 />
-              ) : null}
-              {isStreamEnabled ? (
-                <VideoDelayIndicator latencySeconds={videoLatencySeconds} />
               ) : null}
               {isStreamEnabled && prediction && resolvedChannelLogin ? (
                 <ChannelPredictionCard
@@ -786,26 +768,6 @@ const styles = StyleSheet.create({
     flex: 1,
     overflow: 'hidden',
     position: 'relative',
-  },
-  delayIndicator: {
-    alignItems: 'center',
-    backgroundColor: theme.colorBlackOverlayStrong,
-    borderBottomColor: theme.colorBorderSecondary,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: theme.space12,
-    paddingVertical: theme.space8,
-  },
-  delayIndicatorTitle: {
-    color: theme.colorGrey,
-    fontSize: theme.fontSize12,
-    fontWeight: '600',
-  },
-  delayIndicatorValue: {
-    color: theme.colorWhite,
-    fontSize: theme.fontSize14,
-    fontWeight: '700',
   },
   fullscreenChatControlButton: {
     alignItems: 'center',

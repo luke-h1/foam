@@ -167,8 +167,13 @@ export const useChatScroll = ({
         isDraggingRef.current &&
         distanceFromEnd > USER_SCROLL_AWAY_THRESHOLD &&
         (!hasPreviousOffset || scrolledUp);
+      const userMovedAwayFromBottom =
+        contentHeight > viewHeight &&
+        isDraggingRef.current &&
+        !atBottom &&
+        (!hasPreviousOffset || scrolledUp);
 
-      if (userDraggedAway) {
+      if (userDraggedAway || userMovedAwayFromBottom) {
         hasUserScrollIntentRef.current = true;
       }
 
@@ -177,16 +182,16 @@ export const useChatScroll = ({
         return;
       }
 
-      if (!hasUserScrollIntentRef.current && !userDraggedAway && !atBottom) {
-        markAtBottom();
-        return;
-      }
+      const shouldStayAnchoredToBottom =
+        !hasUserScrollIntentRef.current && !isDraggingRef.current;
 
       const resolved = userDraggedAway
         ? false
-        : hasUserScrollIntentRef.current
-          ? atBottom || reachedPreviousEndDuringGrowth
-          : true;
+        : shouldStayAnchoredToBottom
+          ? true
+          : hasUserScrollIntentRef.current
+            ? atBottom || reachedPreviousEndDuringGrowth
+            : true;
 
       isAtBottomRef.current = resolved;
 
@@ -259,12 +264,6 @@ export const useChatScroll = ({
     if (getMessagesLength() === 0 || !isAtBottomRef.current) {
       return;
     }
-    if (
-      shouldMaintainScrollAtEndRef.current &&
-      !isScrollingToBottomRef.current
-    ) {
-      return;
-    }
     if (shouldAnchorBottomOnContentChangeRef.current) {
       return;
     }
@@ -290,16 +289,16 @@ export const useChatScroll = ({
   }, [getMessagesLength, markAtBottom, scrollToLatestOnce]);
 
   const handleContentSizeChange = useCallback(() => {
-    if (
-      (shouldMaintainScrollAtEndRef.current &&
-        !isScrollingToBottomRef.current) ||
-      !shouldAnchorBottomOnContentChangeRef.current
-    ) {
+    if (getMessagesLength() === 0 || isDraggingRef.current) {
+      return;
+    }
+
+    if (!shouldAnchorBottomOnContentChangeRef.current) {
       return;
     }
 
     scrollToLatestOnce();
-  }, [scrollToLatestOnce]);
+  }, [getMessagesLength, scrollToLatestOnce]);
 
   const incrementUnread = useCallback((count: number) => {
     setUnreadCount(prev => prev + count);

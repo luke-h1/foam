@@ -3,8 +3,8 @@ import { OTAUpdates } from '@app/components/OTAUpdates/OTAUpdates';
 import { Providers } from '@app/Providers/Providers';
 import { theme } from '@app/styles/themes';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
+import { StatusBar } from 'expo-status-bar';
 import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
-import { SystemBars } from 'react-native-edge-to-edge';
 import { RouterEffects } from './RouterEffects';
 
 const rootStackScreens = [
@@ -36,7 +36,7 @@ export function RootLayoutNav() {
       }}
     >
       <Providers>
-        <SystemBars style='light' />
+        <StatusBar style='light' />
         <RouterEffects />
         <ForceUpdateModal />
         <Stack

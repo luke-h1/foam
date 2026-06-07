@@ -701,7 +701,7 @@ describe('useChatScroll', () => {
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(2);
     });
 
-    test('should defer to LegendList maintain-scroll-at-end while pinned to bottom', () => {
+    test('should keep bottom pinned when hydrated content changes while already at bottom', () => {
       const { ref: listRef, mocks } = createMockListRef();
 
       const { result } = renderHook(() =>
@@ -717,7 +717,7 @@ describe('useChatScroll', () => {
         jest.advanceTimersByTime(0);
       });
 
-      expect(mocks.scrollToEnd).not.toHaveBeenCalled();
+      expect(mocks.scrollToEnd).toHaveBeenCalledTimes(2);
     });
 
     test('should cancel hydrated content anchoring when the user drags away', () => {

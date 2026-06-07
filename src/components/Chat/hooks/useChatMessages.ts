@@ -21,7 +21,18 @@ type HandleNewMessageOptions = {
 };
 
 function getBufferedMessageKey(message: AnyMessage): string {
-  return `${message.message_id}_${message.message_nonce}`;
+  const id = message.id?.trim();
+  if (id) {
+    return id;
+  }
+
+  return `${normaliseMessageId(message.message_id)}_${normaliseMessageId(
+    message.message_nonce,
+  )}`;
+}
+
+function normaliseMessageId(value: string): string {
+  return value.trim();
 }
 
 function normaliseLogin(value?: string): string {
@@ -253,12 +264,15 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   }, [resetBuffer]);
 
   const removeBufferedMessageById = (messageId: string) => {
-    if (!messageId.trim()) {
+    const normalisedMessageId = messageId.trim();
+    if (!normalisedMessageId) {
       return;
     }
 
     const nextBuffer = messageBufferRef.current.filter(
-      message => message.message_id !== messageId,
+      message =>
+        message.message_id.trim() !== normalisedMessageId &&
+        message.id?.trim() !== normalisedMessageId,
     );
     if (nextBuffer.length === messageBufferRef.current.length) {
       return;
@@ -271,14 +285,15 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     messageId: string,
     moderationNotice: string,
   ) => {
-    if (!messageId.trim()) {
+    const normalisedMessageId = normaliseMessageId(messageId);
+    if (!normalisedMessageId) {
       return;
     }
 
     let nextBuffer: AnyMessage[] | null = null;
 
     messageBufferRef.current.forEach((message, index) => {
-      if (message.message_id !== messageId) {
+      if (message.message_id !== normalisedMessageId) {
         return;
       }
 

@@ -1,4 +1,5 @@
 import { Text } from '@app/components/ui/Text/Text';
+import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin';
@@ -39,10 +40,11 @@ export function ChatMessagePart({
   part,
 }: ChatMessagePartProps) {
   if (mode === 'system' && part.type === 'text') {
+    const content = getParsedPartStringContent(part);
     const isRaidNotice =
       noticeTags?.['msg-id'] === 'raid' || noticeTags?.['msg-id'] === 'unraid';
 
-    if (!part.content.trim()) {
+    if (!content.trim()) {
       return null;
     }
 
@@ -54,14 +56,15 @@ export function ChatMessagePart({
           compact && isRaidNotice && styles.messageMetaTextCompact,
         ]}
       >
-        {part.content}
+        {content}
       </Text>
     );
   }
 
   switch (part.type) {
-    case 'text':
-      if (!part.content.trim()) {
+    case 'text': {
+      const content = getParsedPartStringContent(part);
+      if (!content.trim()) {
         return null;
       }
 
@@ -75,12 +78,14 @@ export function ChatMessagePart({
             Boolean(moderationNotice) && styles.moderatedMessageText,
           ]}
         >
-          {part.content}
+          {content}
         </Text>
       );
+    }
 
-    case 'stvEmote':
-      if (!part.content.trim()) {
+    case 'stvEmote': {
+      const content = getParsedPartStringContent(part);
+      if (!content.trim()) {
         return null;
       }
 
@@ -88,26 +93,32 @@ export function ChatMessagePart({
         <MediaLinkCard
           key={getPartKey(part, index)}
           layout='inline'
+          thumbnail={part.thumbnail}
           type='stvEmote'
-          url={part.content}
+          url={content}
         />
       );
+    }
 
-    case 'twitchClip':
-      if (!part.content.trim()) {
+    case 'twitchClip': {
+      const content = getParsedPartStringContent(part);
+      if (!content.trim()) {
         return null;
       }
 
       return (
         <MediaLinkCard
           key={getPartKey(part, index)}
+          thumbnail={part.thumbnail}
           type='twitchClip'
-          url={part.content}
+          url={content}
         />
       );
+    }
 
-    case 'link':
-      if (!part.content.trim()) {
+    case 'link': {
+      const content = getParsedPartStringContent(part);
+      if (!content.trim()) {
         return null;
       }
 
@@ -120,9 +131,10 @@ export function ChatMessagePart({
             Boolean(moderationNotice) && styles.moderatedMessageText,
           ]}
         >
-          {part.content}
+          {content}
         </Text>
       );
+    }
 
     case 'emote': {
       const previousPart = message[index - 1];
@@ -142,7 +154,9 @@ export function ChatMessagePart({
     }
 
     case 'mention': {
-      const mentionContent = formatMentionContent(part.content);
+      const mentionContent = formatMentionContent(
+        getParsedPartStringContent(part),
+      );
       if (!mentionContent.trim()) {
         return null;
       }

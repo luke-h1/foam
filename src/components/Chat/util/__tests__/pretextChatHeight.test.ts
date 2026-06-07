@@ -59,6 +59,7 @@ describe('estimateChatMessageHeightWithPretext', () => {
       {
         containerWidth: 320,
         density: 'compact',
+        showInlineReplyContext: true,
         showTimestamp: true,
       },
     );
@@ -70,6 +71,7 @@ describe('estimateChatMessageHeightWithPretext', () => {
     const plainHeight = estimateChatMessageHeightWithPretext(createMessage(), {
       containerWidth: 320,
       density: 'compact',
+      showInlineReplyContext: true,
       showTimestamp: true,
     });
     const replyHeight = estimateChatMessageHeightWithPretext(
@@ -81,6 +83,7 @@ describe('estimateChatMessageHeightWithPretext', () => {
       {
         containerWidth: 320,
         density: 'compact',
+        showInlineReplyContext: true,
         showTimestamp: true,
       },
     );

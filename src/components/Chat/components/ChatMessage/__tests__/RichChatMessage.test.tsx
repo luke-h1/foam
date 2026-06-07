@@ -107,6 +107,17 @@ describe('RichChatMessage', () => {
     expect(queryByText('world')).toBeNull();
   });
 
+  test('does not render object placeholders for malformed text parts', () => {
+    const malformedMessage = [
+      { type: 'text', content: { text: 'bad payload' } },
+    ] as unknown as ParsedPart[];
+    const message = createMockMessage(malformedMessage);
+
+    const { queryByText } = render(<RichChatMessage {...message} />);
+
+    expect(queryByText('[object Object]')).toBeNull();
+  });
+
   test('reserves blank badge slots without rendering blank text bars', () => {
     const message = createMockMessage(
       [{ type: 'text', content: '' }],

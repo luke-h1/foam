@@ -63,6 +63,7 @@ export const Chat = memo(
               getItemType={vm.getItemType}
               listContentStyle={vm.listContentStyle}
               messageListExtraData={vm.messageListExtraData}
+              showInlineReplyContext={vm.preferences.showInlineReplyContext}
               onClearFilters={vm.handleClearFilters}
               onRefreshPinnedMessage={vm.handleRefreshPinnedMessage}
               onToggleShowOnlyMentions={vm.handleToggleShowOnlyMentions}

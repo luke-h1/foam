@@ -5,12 +5,12 @@ import {
   type LegendListRenderItemProps,
 } from '@legendapp/list';
 import {
+  memo,
   RefObject,
   useCallback,
-  useEffect,
   useLayoutEffect,
+  useEffect,
   useRef,
-  memo,
 } from 'react';
 import type { ReactElement } from 'react';
 import {
@@ -30,16 +30,17 @@ import {
 } from './ChatList/getViewableChatMessages';
 
 const CHAT_DRAW_DISTANCE = 96;
-const CHAT_END_REACHED_THRESHOLD = 0.02;
 const CHAT_ESTIMATED_ITEM_SIZE = 34;
 const CHAT_INITIAL_CONTAINER_POOL_RATIO = 1;
-const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
+const CHAT_END_REACHED_THRESHOLD = 0.02;
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
 };
 const CHAT_MAINTAIN_SCROLL_AT_END = {
   onDataChange: true,
 };
+const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
+const CHAT_RECYCLE_ITEMS = false;
 
 function ChatListRowSkeleton({ index }: { index: number }) {
   return (
@@ -118,13 +119,13 @@ export const ChatList = memo(
     const onViewableMessagesChangeRef = useRef(onViewableMessagesChange);
     const lastViewableMessageKeysRef = useRef('');
 
-    useLayoutEffect(() => {
-      onViewableMessagesChangeRef.current = onViewableMessagesChange;
-    });
-
     useEffect(() => {
       lastViewableMessageKeysRef.current = '';
     }, [onViewableMessagesChange]);
+
+    useLayoutEffect(() => {
+      onViewableMessagesChangeRef.current = onViewableMessagesChange;
+    });
 
     // Stable identity required: LegendList re-runs setupViewability whenever
     // onViewableItemsChanged identity changes, tearing down viewability state.
@@ -137,7 +138,7 @@ export const ChatList = memo(
 
         const messages = getViewableChatMessages(viewableItems);
         const viewableMessageKeys = messages
-          .map(getChatMessageListKey)
+          .map((message, index) => `${getChatMessageListKey(message)}:${index}`)
           .join('\u001f');
         if (viewableMessageKeys === lastViewableMessageKeysRef.current) {
           return;
@@ -171,10 +172,12 @@ export const ChatList = memo(
       <LegendList
         data={data}
         ref={listRef}
-        recycleItems
-        estimatedItemSize={CHAT_ESTIMATED_ITEM_SIZE}
         drawDistance={CHAT_DRAW_DISTANCE}
+        estimatedItemSize={CHAT_ESTIMATED_ITEM_SIZE}
         initialContainerPoolRatio={CHAT_INITIAL_CONTAINER_POOL_RATIO}
+        // Disabled due repeated iOS crashes ("attempt to recycle mounted view")
+        // when rows are updated while actively scrolled.
+        recycleItems={CHAT_RECYCLE_ITEMS}
         keyExtractor={keyExtractor}
         getItemType={getItemType}
         getEstimatedItemSize={getEstimatedItemSize}

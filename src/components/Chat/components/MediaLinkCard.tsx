@@ -14,16 +14,24 @@ import {
 } from '@app/utils/chat/replaceTextWithEmotes';
 import { useQueries } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { Pressable, View, StyleSheet } from 'react-native';
 
 type MediaLinkCardProps = {
   layout?: 'card' | 'inline';
+  thumbnail?: string;
   type: TwitchAnd7TVVariant;
   url: string;
 };
 
+const COMPACT_NUMBER_FORMATTER = new Intl.NumberFormat('en', {
+  maximumFractionDigits: 1,
+  notation: 'compact',
+});
+
 function MediaLinkCardComponent({
   layout = 'card',
+  thumbnail: fallbackThumbnail,
   type,
   url,
 }: MediaLinkCardProps) {
@@ -64,8 +72,10 @@ function MediaLinkCardComponent({
 
   const thumbnail =
     type === 'stvEmote'
-      ? `https://cdn.7tv.app/emote/${sevenTvEmote.data?.id}/4x`
-      : twitchClip.data?.thumbnail_url;
+      ? sevenTvEmote.data?.id
+        ? `https://cdn.7tv.app/emote/${sevenTvEmote.data.id}/4x`
+        : fallbackThumbnail
+      : (twitchClip.data?.thumbnail_url ?? fallbackThumbnail);
 
   const title =
     type === 'stvEmote'
@@ -77,6 +87,24 @@ function MediaLinkCardComponent({
       ? sevenTvEmote.data?.owner?.display_name ||
         sevenTvEmote.data?.owner?.username
       : twitchClip.data?.creator_name;
+
+  const viewCount = twitchClip.data?.view_count;
+  const isTwitchClip = type === 'twitchClip';
+  const mediaMeta = isTwitchClip
+    ? [
+        createdBy ? `Clipped by ${createdBy}` : null,
+        typeof viewCount === 'number' && viewCount > 0
+          ? `${formatCompactNumber(viewCount)} views`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(' - ') || 'Open Twitch clip'
+    : createdBy
+      ? `By ${createdBy}`
+      : '7TV emote';
+  const mediaLabel = isTwitchClip ? 'Twitch clip' : '7TV emote';
+  const mediaIcon = isTwitchClip ? 'twitch' : 'stv';
+  const mediaImageFit = isTwitchClip ? 'cover' : 'contain';
 
   if (layout === 'inline' && type === 'stvEmote') {
     if (isPending) {
@@ -112,28 +140,14 @@ function MediaLinkCardComponent({
     );
   }
 
-  const getBrandIcon = () => {
-    switch (type) {
-      case 'stvEmote':
-        return <BrandIcon name='stv' size='md' />;
-      case 'twitchClip':
-        return <BrandIcon name='twitch' size='sm' />;
-      default:
-        return null;
-    }
-  };
-
-  if (isPending) {
+  if (isPending && !thumbnail) {
     return (
-      <View style={styles.container}>
-        <View style={styles.card}>
-          <Skeleton shimmer={false} style={styles.thumbnail} />
-          <View style={styles.info}>
-            <View style={styles.titleRow}>
-              <Skeleton shimmer={false} style={styles.brandIconSkeleton} />
-              <Skeleton shimmer={false} style={styles.titleSkeleton} />
-            </View>
-            <Skeleton shimmer={false} style={styles.createdBySkeleton} />
+      <View style={styles.mediaContainer}>
+        <View style={styles.mediaCard}>
+          <Skeleton shimmer={false} style={styles.mediaThumbnailFrame} />
+          <View style={styles.mediaInfo}>
+            <Skeleton shimmer={false} style={styles.mediaTitleSkeleton} />
+            <Skeleton shimmer={false} style={styles.mediaMetaSkeleton} />
           </View>
         </View>
       </View>
@@ -141,24 +155,53 @@ function MediaLinkCardComponent({
   }
 
   return (
-    <Button style={styles.container} onPress={handlePress}>
-      <View style={styles.card}>
-        {thumbnail ? (
-          <Image
-            useNitro
-            trackLoadTime
-            trackLoadContext='chat.media-link-card'
-            source={thumbnail}
-            style={styles.thumbnail}
-            contentFit='contain'
-          />
-        ) : null}
-        <View style={styles.info}>
-          <View style={styles.titleRow}>
-            {getBrandIcon()}
-            <Text style={styles.iconName}>{title}</Text>
+    <Button
+      accessibilityRole='button'
+      label={title}
+      style={styles.mediaContainer}
+      onPress={handlePress}
+    >
+      <View style={styles.mediaCard}>
+        <View style={styles.mediaThumbnailFrame}>
+          {thumbnail ? (
+            <Image
+              useNitro
+              trackLoadTime
+              trackLoadContext='chat.media-link-card'
+              source={thumbnail}
+              style={styles.mediaThumbnail}
+              contentFit={mediaImageFit}
+            />
+          ) : (
+            <View style={[styles.mediaThumbnail, styles.mediaThumbnailEmpty]}>
+              <BrandIcon name={mediaIcon} size='md' />
+            </View>
+          )}
+          {isTwitchClip ? (
+            <View style={styles.playBadge}>
+              <SymbolView
+                name='play.fill'
+                size={13}
+                tintColor={theme.colorWhite}
+              />
+            </View>
+          ) : null}
+        </View>
+        <View style={styles.mediaInfo}>
+          <View style={styles.mediaEyebrowRow}>
+            <BrandIcon name={mediaIcon} size='xs' />
+            <Text style={styles.mediaEyebrow}>{mediaLabel}</Text>
           </View>
-          {createdBy ? <Text>By {createdBy}</Text> : null}
+          <Text
+            ellipsizeMode='tail'
+            numberOfLines={1}
+            style={styles.mediaTitle}
+          >
+            {title}
+          </Text>
+          <Text ellipsizeMode='tail' numberOfLines={1} style={styles.mediaMeta}>
+            {mediaMeta}
+          </Text>
         </View>
       </View>
     </Button>
@@ -167,38 +210,102 @@ function MediaLinkCardComponent({
 
 export const MediaLinkCard = memo(MediaLinkCardComponent);
 
+function formatCompactNumber(value: number): string {
+  return COMPACT_NUMBER_FORMATTER.format(value);
+}
+
 const styles = StyleSheet.create({
-  brandIconSkeleton: {
+  mediaCard: {
+    alignItems: 'stretch',
+    backgroundColor: 'rgba(12, 12, 14, 0.94)',
+    borderColor: 'rgba(255, 255, 255, 0.10)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
-    height: 20,
-    width: 20,
-  },
-  card: {
-    alignItems: 'center',
-    backgroundColor: theme.colorBlackAlpha,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
-    flexDirection: 'row',
-    padding: theme.space16,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    maxWidth: 300,
+    overflow: 'hidden',
     width: '100%',
   },
-  container: {
-    marginVertical: theme.space8,
+  mediaContainer: {
+    flexBasis: '100%',
+    marginVertical: 5,
+    maxWidth: 300,
   },
-  createdBySkeleton: {
+  mediaEyebrow: {
+    color: '#BF94FF',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0,
+    lineHeight: 13,
+  },
+  mediaEyebrowRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 4,
+    minHeight: 14,
+  },
+  mediaInfo: {
+    gap: 3,
+    justifyContent: 'center',
+    minWidth: 0,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  mediaMeta: {
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize12,
+    lineHeight: 15,
+  },
+  mediaMetaSkeleton: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
-    height: 13,
-    marginTop: 2,
-    width: '40%',
+    borderRadius: theme.borderRadius6,
+    height: 12,
+    width: '48%',
   },
-  iconName: {
-    flex: 1,
-    flexShrink: 1,
+  mediaThumbnail: {
+    height: '100%',
+    width: '100%',
   },
-  info: {
-    flex: 1,
+  mediaThumbnailEmpty: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(145, 71, 255, 0.18)',
+    justifyContent: 'center',
+  },
+  mediaThumbnailFrame: {
+    alignItems: 'center',
+    backgroundColor: theme.colorBlack,
+    aspectRatio: 16 / 9,
+    justifyContent: 'center',
+    overflow: 'hidden',
+    position: 'relative',
+    width: '100%',
+  },
+  mediaTitle: {
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize14,
+    fontWeight: '700',
+    lineHeight: 17,
+  },
+  mediaTitleSkeleton: {
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius6,
+    height: 16,
+    width: '82%',
+  },
+  playBadge: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.72)',
+    borderColor: 'rgba(255, 255, 255, 0.28)',
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+    height: 28,
+    justifyContent: 'center',
+    left: '50%',
+    marginLeft: -14,
+    marginTop: -14,
+    position: 'absolute',
+    top: '50%',
+    width: 28,
   },
   inlineChip: {
     alignItems: 'center',
@@ -230,22 +337,5 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     height: 12,
     width: 72,
-  },
-  thumbnail: {
-    height: 50,
-    marginRight: theme.space16,
-    width: 50,
-  },
-  titleRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.space16,
-  },
-  titleSkeleton: {
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
-    height: 16,
-    width: '60%',
   },
 });

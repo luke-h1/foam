@@ -22,12 +22,17 @@ const COMPACT_EMOTE_SIZE = 26;
 const COMFORTABLE_EMOTE_SIZE = 30;
 const REPLY_CONTEXT_GAP = 2;
 const ZERO_WIDTH_EMOTE_REMAINING_WIDTH_RATIO = 0.28;
+const SHARED_CHAT_LABEL_HEIGHT = 18;
+const SURFACE_VERTICAL_PADDING = 8;
+const ESTIMATE_HEIGHT_GUARD = 4;
+const REPLY_PREFIX = 'Replying to @';
 
 const heightCache = new Map<string, number>();
 
 export interface PretextChatHeightOptions {
   containerWidth: number;
   density: 'comfortable' | 'compact';
+  showInlineReplyContext: boolean;
   showTimestamp: boolean;
 }
 
@@ -92,8 +97,27 @@ function measureChatMessageHeight(
   let minimumInlineHeight = lineHeight;
   let prelineHeight = 0;
 
-  if (message.parentDisplayName || message.replyBody) {
-    prelineHeight += lineHeight + REPLY_CONTEXT_GAP;
+  if (
+    options.showInlineReplyContext &&
+    (message.parentDisplayName || message.replyBody)
+  ) {
+    const replyBodyText = message.replyBody?.trim();
+    const replyLabel = message.parentDisplayName
+      ? `${REPLY_PREFIX}${message.parentDisplayName}`
+      : 'Replying';
+
+    const replyText = replyBodyText
+      ? `${replyLabel}: ${replyBodyText}`
+      : replyLabel;
+
+    prelineHeight +=
+      measureReplyContextHeight(
+        replyText,
+        lineHeight,
+        auxiliaryStyle,
+        compact,
+        options.containerWidth,
+      ) + REPLY_CONTEXT_GAP;
   }
 
   if (message.userstate['first-msg'] === '1') {
@@ -110,6 +134,14 @@ function measureChatMessageHeight(
       hasSharedChannelPointsMessage(message.message))
   ) {
     prelineHeight += lineHeight + REPLY_CONTEXT_GAP;
+  }
+
+  if (message.isSharedChatDuplicated) {
+    prelineHeight += SHARED_CHAT_LABEL_HEIGHT;
+  }
+
+  if (message.isSharedChatDuplicated || message.moderationNotice) {
+    prelineHeight += SURFACE_VERTICAL_PADDING;
   }
 
   if (showTimestamp && message.timestamp) {
@@ -214,8 +246,31 @@ function measureChatMessageHeight(
   return (
     prelineHeight +
     Math.max(minimumHeight, measured.height) +
-    ROW_VERTICAL_PADDING
+    ROW_VERTICAL_PADDING +
+    ESTIMATE_HEIGHT_GUARD
   );
+}
+
+function measureReplyContextHeight(
+  replyText: string,
+  lineHeight: number,
+  style: TextStyle,
+  compact: boolean,
+  containerWidth: number,
+): number {
+  const maxWidth = Math.max(MIN_MEASURE_WIDTH, Math.floor(containerWidth));
+
+  const items = [
+    {
+      text: replyText,
+      style,
+      atomic: compact,
+    },
+  ];
+
+  const prepared = prepareInlineFlow(items);
+  const measured = measureInlineFlow(prepared, maxWidth, lineHeight);
+  return measured.height;
 }
 
 function isEstimableChatMessage(message: AnyChatMessageType): boolean {
@@ -278,7 +333,7 @@ function getMessagePartsFingerprint(
         case 'emote':
           return `e${part.zero_width ? 'z' : 'n'}${part.width ?? 0}x${part.height ?? 0}`;
         case 'stvEmote':
-          return `s${part.zero_width ? 'z' : 'n'}`;
+          return `s${part.zero_width ? 'z' : 'n'}${part.width ?? 0}x${part.height ?? 0}`;
         case 'twitchClip':
           return 'c';
         default:
@@ -297,12 +352,16 @@ function getCacheKey(
     message.id,
     widthBucket,
     options.density,
+    options.showInlineReplyContext ? 'reply-context' : 'no-reply-context',
     options.showTimestamp ? 'ts' : 'no-ts',
     getMessagePartsFingerprint(message.message),
-    message.parentDisplayName ? 'reply' : '',
-    message.moderationNotice ? 'mod' : '',
+    `badges:${message.badges?.length ?? 0}`,
+    options.showInlineReplyContext && message.parentDisplayName ? 'reply' : '',
+    message.moderationNotice ? `mod:${message.moderationNotice.length}` : '',
     message.isAnnouncement ? 'ann' : '',
     message.isHighlightedMessage ? 'hl' : '',
+    message.isSharedChatDuplicated ? 'shared' : '',
     message.isChannelPointRedemption ? 'cp' : '',
+    message.userstate['first-msg'] || '',
   ].join('|');
 }

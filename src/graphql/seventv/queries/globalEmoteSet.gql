@@ -1,6 +1,6 @@
-query emoteSetCustom($id: Id!) {
+query GlobalEmoteSet {
   emoteSets {
-    emoteSet(id: $id) {
+    global {
       id
       name
       capacity

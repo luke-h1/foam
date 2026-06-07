@@ -1,4 +1,5 @@
 import { ParsedPart } from './replaceTextWithEmotes';
+import { getParsedPartStringContent } from './parsedPartContent';
 
 /**
  * Converts a parsed chat message (with emotes) back to plain text (used for copying messages)
@@ -18,20 +19,20 @@ export function replaceEmotesWithText(parts: ParsedPart[]): string {
           /**
            * For emotes - use the original name
            */
-          return part.original_name || part.content;
+          return part.original_name || getParsedPartStringContent(part);
 
         case 'mention':
           /**
            * For mentions, preserve @ symbol, username &
            * add a space at the end
            */
-          return `${part.content} `;
+          return part.content ? `${part.content} ` : '';
 
         case 'text':
           /**
            * Return content as is
            */
-          return part.content;
+          return getParsedPartStringContent(part);
 
         /**
          * Our custom types
@@ -47,12 +48,10 @@ export function replaceEmotesWithText(parts: ParsedPart[]): string {
         case 'giftpaidupgrade':
         case 'anongiftpaidupgrade':
         case 'anongift':
-          return part;
+          return getParsedPartStringContent(part);
 
         default:
-          return 'content' in part && typeof part.content === 'string'
-            ? part.content
-            : '';
+          return getParsedPartStringContent(part);
       }
     })
     .join('');

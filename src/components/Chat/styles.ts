@@ -111,7 +111,7 @@ export const styles = StyleSheet.create({
     lineHeight: 16,
   },
   wrapper: {
-    backgroundColor: '#222222',
+    backgroundColor: '#000',
     flex: 1,
   },
   wrapperTransparent: {

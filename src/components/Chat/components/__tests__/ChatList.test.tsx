@@ -16,9 +16,8 @@ describe('ChatList', () => {
     mockLegendList.mockClear();
   });
 
-  test('passes streaming chat tuning props to LegendList', () => {
+  test('passes chat-tuned props to LegendList', () => {
     const listRef = { current: null };
-    const getEstimatedItemSize = jest.fn();
 
     render(
       <ChatList
@@ -35,7 +34,6 @@ describe('ChatList', () => {
         renderItem={jest.fn()}
         keyExtractor={jest.fn()}
         getItemType={jest.fn()}
-        getEstimatedItemSize={getEstimatedItemSize}
         contentContainerStyle={undefined}
       />,
     );
@@ -46,11 +44,11 @@ describe('ChatList', () => {
       extraData?: unknown;
       getEstimatedItemSize?: unknown;
       initialContainerPoolRatio?: number;
-      maintainScrollAtEnd?: unknown;
+      maintainScrollAtEnd?: boolean | { onDataChange: boolean };
       maintainScrollAtEndThreshold?: number;
-      maintainVisibleContentPosition?: boolean;
       onEndReachedThreshold?: number;
       recycleItems?: boolean;
+      maintainVisibleContentPosition?: boolean;
       viewabilityConfig?: unknown;
     };
     expect({
@@ -62,22 +60,20 @@ describe('ChatList', () => {
       maintainScrollAtEnd: props.maintainScrollAtEnd,
       maintainScrollAtEndThreshold: props.maintainScrollAtEndThreshold,
       maintainVisibleContentPosition: props.maintainVisibleContentPosition,
-      onEndReachedThreshold: props.onEndReachedThreshold,
       recycleItems: props.recycleItems,
+      onEndReachedThreshold: props.onEndReachedThreshold,
       viewabilityConfig: props.viewabilityConfig,
     }).toEqual({
       drawDistance: 96,
       estimatedItemSize: 34,
       extraData: { showTimestamps: false },
-      getEstimatedItemSize,
+      getEstimatedItemSize: undefined,
       initialContainerPoolRatio: 1,
-      maintainScrollAtEnd: {
-        onDataChange: true,
-      },
+      maintainScrollAtEnd: { onDataChange: true },
       maintainScrollAtEndThreshold: 0.1,
       maintainVisibleContentPosition: false,
+      recycleItems: false,
       onEndReachedThreshold: 0.02,
-      recycleItems: true,
       viewabilityConfig: {
         itemVisiblePercentThreshold: 1,
       },
@@ -215,43 +211,7 @@ describe('ChatList', () => {
     expect(getByTestId('chat-row-skeleton')).toBeOnTheScreen();
   });
 
-  test('lets LegendList maintain the end without imperative growth scrolling', () => {
-    const scrollToEnd = jest.fn();
-    const listRef = { current: { scrollToEnd } };
-    const message = {
-      id: '1',
-      message_id: '1',
-      message_nonce: 'nonce',
-      message: [{ type: 'text', content: 'hello' }],
-      badges: [],
-      channel: 'channel',
-      sender: 'sender',
-      timestamp: '00:00',
-      userstate: {},
-    };
-
-    render(
-      <ChatList
-        data={[message] as never}
-        listRef={listRef as never}
-        shouldMaintainScrollAtEnd
-        handleScroll={jest.fn()}
-        handleScrollBeginDrag={jest.fn()}
-        handleScrollEndDrag={jest.fn()}
-        handleMomentumScrollEnd={jest.fn()}
-        handleEndReached={jest.fn()}
-        handleContentSizeChange={jest.fn()}
-        renderItem={jest.fn()}
-        keyExtractor={jest.fn()}
-        getItemType={jest.fn()}
-        contentContainerStyle={undefined}
-      />,
-    );
-
-    expect(scrollToEnd).not.toHaveBeenCalled();
-  });
-
-  test('enables visible-content anchoring when the user has left the bottom', () => {
+  test('disables autoscroll-to-bottom when the user has scrolled away', () => {
     const listRef = { current: null };
     render(
       <ChatList
@@ -272,69 +232,23 @@ describe('ChatList', () => {
     );
 
     const props = mockLegendList.mock.calls[0]?.[0] as {
-      maintainScrollAtEnd?: unknown;
+      maintainScrollAtEnd?: boolean;
+      maintainScrollAtEndThreshold?: number;
       maintainVisibleContentPosition?: boolean;
     };
-    expect(props.maintainScrollAtEnd).toEqual(false);
+    expect(props.maintainScrollAtEnd).toBe(false);
+    expect(props.maintainScrollAtEndThreshold).toBe(0.1);
     expect(props.maintainVisibleContentPosition).toBe(true);
   });
 
-  test('updates maintain-scroll-at-end when anchoring is disabled after mount', () => {
+  test('passes content-size change handler through to LegendList', () => {
     const listRef = { current: null };
-
-    const { rerender } = render(
-      <ChatList
-        data={[]}
-        listRef={listRef}
-        shouldMaintainScrollAtEnd
-        handleScroll={jest.fn()}
-        handleScrollBeginDrag={jest.fn()}
-        handleScrollEndDrag={jest.fn()}
-        handleMomentumScrollEnd={jest.fn()}
-        handleEndReached={jest.fn()}
-        handleContentSizeChange={jest.fn()}
-        renderItem={jest.fn()}
-        keyExtractor={jest.fn()}
-        getItemType={jest.fn()}
-        contentContainerStyle={undefined}
-      />,
-    );
-
-    rerender(
-      <ChatList
-        data={[]}
-        listRef={listRef}
-        shouldMaintainScrollAtEnd={false}
-        handleScroll={jest.fn()}
-        handleScrollBeginDrag={jest.fn()}
-        handleScrollEndDrag={jest.fn()}
-        handleMomentumScrollEnd={jest.fn()}
-        handleEndReached={jest.fn()}
-        handleContentSizeChange={jest.fn()}
-        renderItem={jest.fn()}
-        keyExtractor={jest.fn()}
-        getItemType={jest.fn()}
-        contentContainerStyle={undefined}
-      />,
-    );
-
-    const props = mockLegendList.mock.calls.at(-1)?.[0] as {
-      maintainScrollAtEnd?: unknown;
-      maintainVisibleContentPosition?: boolean;
-    };
-    expect(props.maintainScrollAtEnd).toEqual(false);
-    expect(props.maintainVisibleContentPosition).toBe(true);
-  });
-
-  test('passes bounded content-size anchoring through to LegendList', () => {
-    const scrollToEnd = jest.fn();
-    const listRef = { current: { scrollToEnd } };
     const handleContentSizeChange = jest.fn();
 
     render(
       <ChatList
         data={[]}
-        listRef={listRef as never}
+        listRef={listRef}
         shouldMaintainScrollAtEnd
         handleScroll={jest.fn()}
         handleScrollBeginDrag={jest.fn()}
@@ -354,6 +268,5 @@ describe('ChatList', () => {
     };
 
     expect(props.onContentSizeChange).toBe(handleContentSizeChange);
-    expect(scrollToEnd).not.toHaveBeenCalled();
   });
 });
