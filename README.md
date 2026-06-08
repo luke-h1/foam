@@ -437,7 +437,7 @@ flowchart TD
 ```
 
 The native-vs-OTA decision stores fingerprints in a private S3 bucket so the
-same cache is available to GitHub Actions and local deploy scripts. Configure
+same cache is available to GitHub Actions and local deploy scripts (also to avoid recent reliability issues with GHA). Configure
 these fields in the `op://ci-cd/foam-staging` 1Password item, and export the
 same values locally before running `bun run deploy -- ...` or
 `bun run ota -- ...`:
@@ -455,7 +455,7 @@ The IAM user only needs read/write access to these object prefixes:
 - `s3://<FOAM_AWS_FINGERPRINT_BUCKET_NAME>/ota-update-ids/*`
 
 Use [`infrastructure/iam-fp-policy.json`](infrastructure/iam-fp-policy.json)
-for the IAM user policy.
+for an example IAM policy
 
 ### Manual EAS Deploy
 
