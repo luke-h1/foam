@@ -1,0 +1,14 @@
+name: 'Setup Bun and Install'
+description: 'Install Bun from the repo version file and install dependencies.'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+      with:
+        bun-version-file: '.bun-version'
+
+    - name: Install dependencies
+      shell: bash
+      run: bun install --frozen-lockfile

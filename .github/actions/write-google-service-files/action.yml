@@ -1,0 +1,58 @@
+name: 'Write Google Service Files'
+description: 'Decode Google service files for the selected release variant.'
+
+inputs:
+  variant:
+    description: 'Release variant'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Decode and write Google service files
+      shell: bash
+      env:
+        VARIANT: ${{ inputs.variant }}
+      run: |
+        set -euo pipefail
+
+        if [ -z "${GOOGLE_SERVICES_ANDROID_PROD_BS4:-}" ]; then
+          echo "Error: GOOGLE_SERVICES_ANDROID_PROD_BS4 is not set"
+          exit 1
+        fi
+        if [ -z "${GOOGLE_SERVICES_IOS_PROD_BS4:-}" ]; then
+          echo "Error: GOOGLE_SERVICES_IOS_PROD_BS4 is not set"
+          exit 1
+        fi
+
+        case "$VARIANT" in
+          production)
+            ios_file="GoogleService-Info-prod.plist"
+            android_file="google-services-prod.json"
+            ;;
+          internal)
+            ios_file="GoogleService-Info-internal.plist"
+            android_file="google-services-internal.json"
+            ;;
+          testflight)
+            ios_file="GoogleService-Info-testflight.plist"
+            android_file="google-services-testflight.json"
+            ;;
+          *)
+            echo "Error: unsupported Google services variant '$VARIANT'"
+            exit 1
+            ;;
+        esac
+
+        echo "Decoding Android Google Services JSON to $android_file..."
+        echo "$GOOGLE_SERVICES_ANDROID_PROD_BS4" | base64 -d > "$android_file"
+
+        echo "Decoding iOS Google Services plist to $ios_file..."
+        echo "$GOOGLE_SERVICES_IOS_PROD_BS4" | base64 -d > "$ios_file"
+
+        if [ ! -f "$android_file" ] || [ ! -f "$ios_file" ]; then
+          echo "Failed to create Google service files for $VARIANT"
+          exit 1
+        fi
+
+        echo "Google service files written for $VARIANT"

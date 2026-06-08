@@ -1,0 +1,31 @@
+name: 'Load Native Deploy Secrets'
+description: 'Load secrets required by local native EAS build and submit.'
+
+inputs:
+  op_service_account_token:
+    description: '1Password service account token'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Load secrets
+      id: load_secrets
+      uses: 1password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259 # v4.0.0
+      with:
+        export-env: true
+        version: 2.34.0
+      env:
+        OP_SERVICE_ACCOUNT_TOKEN: ${{ inputs.op_service_account_token }}
+        TWITCH_CLIENT_ID: op://ci-cd/foam-staging/TWITCH_CLIENT_ID
+        TWITCH_CLIENT_SECRET: op://ci-cd/foam-staging/TWITCH_CLIENT_SECRET
+        AUTH_PROXY_API_BASE_URL: op://ci-cd/foam-staging/AUTH_PROXY_API_BASE_URL
+        AUTH_PROXY_API_KEY: op://ci-cd/foam-staging/AUTH_PROXY_API_KEY
+        SENTRY_AUTH_TOKEN: op://ci-cd/foam-staging/SENTRY_AUTH_TOKEN
+        FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID
+        FOAM_AWS_FINGERPRINT_SECRET_KEY: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_SECRET_KEY
+        FOAM_AWS_FINGERPRINT_BUCKET_NAME: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_BUCKET_NAME
+        GOOGLE_SERVICES_IOS_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_IOS_PROD_BS4
+        GOOGLE_SERVICES_ANDROID_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_ANDROID_PROD_BS4
+        SLACK_WEBHOOK_URL: op://ci-cd/foam-staging/SLACK_WEBHOOK_URL
+        OP_ENV_FILE: '.env'

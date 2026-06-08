@@ -1,0 +1,22 @@
+name: 'Load OTA Deploy Secrets'
+description: 'Load secrets required by EAS updates and OTA cache writes.'
+
+inputs:
+  op_service_account_token:
+    description: '1Password service account token'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Load OTA deploy secrets
+      uses: 1password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259 # v4.0.0
+      with:
+        export-env: true
+        version: 2.34.0
+      env:
+        OP_SERVICE_ACCOUNT_TOKEN: ${{ inputs.op_service_account_token }}
+        FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID
+        FOAM_AWS_FINGERPRINT_SECRET_KEY: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_SECRET_KEY
+        FOAM_AWS_FINGERPRINT_BUCKET_NAME: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_BUCKET_NAME
+        SENTRY_AUTH_TOKEN: op://ci-cd/foam-staging/SENTRY_AUTH_TOKEN

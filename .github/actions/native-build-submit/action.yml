@@ -1,0 +1,154 @@
+name: 'Native Build and Submit'
+description: 'Run local EAS native builds, upload iOS dSYMs, and submit artifacts.'
+
+inputs:
+  variant:
+    description: 'Release variant'
+    required: true
+  platform:
+    description: 'Platform to build'
+    required: true
+  sentry_release:
+    description: 'Sentry release name'
+    required: true
+  sentry_dist:
+    description: 'Sentry dist'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Prepare build artifacts dir
+      shell: bash
+      run: mkdir -p build-artifacts
+
+    - name: Build and submit
+      shell: bash
+      env:
+        VARIANT: ${{ inputs.variant }}
+        PLATFORM: ${{ inputs.platform }}
+        EXPO_PUBLIC_APP_VARIANT: ${{ inputs.variant }}
+        EXPO_PUBLIC_SENTRY_RELEASE: ${{ inputs.sentry_release }}
+        EXPO_PUBLIC_SENTRY_DIST: ${{ inputs.sentry_dist }}
+        SENTRY_RELEASE: ${{ inputs.sentry_release }}
+        SENTRY_DIST: ${{ inputs.sentry_dist }}
+        SENTRY_LOAD_DOTENV: 0
+      run: |
+        set -euo pipefail
+
+        build_ios() {
+          echo "Building iOS ($VARIANT)..."
+          local ipa_path="./build-artifacts/app.ipa"
+          local extracted_dir="./build-artifacts/ios-$VARIANT"
+          local build_marker="./build-artifacts/ios-$VARIANT-build-start.marker"
+
+          rm -f "$ipa_path"
+          rm -rf "$extracted_dir"
+          mkdir -p "$extracted_dir"
+          : > "$build_marker"
+
+          SENTRY_AUTH_TOKEN="${SENTRY_AUTH_TOKEN:-}" \
+            SENTRY_RELEASE="${EXPO_PUBLIC_SENTRY_RELEASE}" \
+            SENTRY_DIST="${EXPO_PUBLIC_SENTRY_DIST}" \
+            SENTRY_LOAD_DOTENV=0 \
+            EXPO_PUBLIC_ENABLE_TREESHACKING=1 \
+            EXPO_APPLE_TEAM_ID="XJA7HDCMMY" \
+            EXPO_PUBLIC_APP_VARIANT="$VARIANT" \
+            EXPO_PUBLIC_SENTRY_RELEASE="${EXPO_PUBLIC_SENTRY_RELEASE}" \
+            EXPO_PUBLIC_SENTRY_DIST="${EXPO_PUBLIC_SENTRY_DIST}" \
+            bun run eas build \
+              --platform ios \
+              --profile "$VARIANT" \
+              --non-interactive \
+              --local \
+              --output="$ipa_path"
+
+          if [ ! -f "$ipa_path" ]; then
+            echo "Unable to find an IPA at $ipa_path"
+            exit 1
+          fi
+
+          unzip -q "$ipa_path" -d "$extracted_dir"
+
+          dsym_search_paths=("$extracted_dir")
+          xcode_archive_root="${IOS_ARCHIVE_ROOT:-$HOME/Library/Developer/Xcode/Archives}"
+
+          if [ -d "$xcode_archive_root" ]; then
+            while IFS= read -r -d '' archive_dsyms_dir; do
+              dsym_search_paths+=("$archive_dsyms_dir")
+            done < <(
+              find "$xcode_archive_root" \
+                -type d \
+                -name dSYMs \
+                -newer "$build_marker" \
+                -print0 2>/dev/null || true
+            )
+          fi
+
+          dsym_paths=()
+          while IFS= read -r -d '' dsym_path; do
+            dsym_paths+=("$dsym_path")
+          done < <(find "${dsym_search_paths[@]}" -name '*.app.dSYM.zip' -print0 2>/dev/null || true)
+
+          if [ "${#dsym_paths[@]}" -eq 0 ]; then
+            while IFS= read -r -d '' dsym_path; do
+              dsym_paths+=("$dsym_path")
+            done < <(find "${dsym_search_paths[@]}" -name '*.dSYM.zip' -print0 2>/dev/null || true)
+          fi
+
+          if [ "${#dsym_paths[@]}" -eq 0 ]; then
+            while IFS= read -r -d '' dsym_path; do
+              dsym_paths+=("$dsym_path")
+            done < <(find "${dsym_search_paths[@]}" -name '*.dSYM' -print0 2>/dev/null || true)
+          fi
+
+          if [ -n "${SENTRY_AUTH_TOKEN:-}" ] && [ "${#dsym_paths[@]}" -gt 0 ]; then
+            ./node_modules/.bin/sentry-cli debug-files upload \
+              --org "${SENTRY_ORG:-luke-howsam}" \
+              --project "${SENTRY_PROJECT:-foam}" \
+              --include-sources \
+              --type dsym \
+              "${dsym_paths[@]}"
+          elif [ "${#dsym_paths[@]}" -eq 0 ]; then
+            echo "Skipping Sentry dSYM upload because no dSYM files were found"
+          else
+            echo "Skipping Sentry dSYM upload because SENTRY_AUTH_TOKEN is not set"
+          fi
+
+          bun run eas submit -p ios --profile "$VARIANT" --non-interactive --path ./build-artifacts/app.ipa
+        }
+
+        build_android() {
+          echo "Building Android ($VARIANT)..."
+          SENTRY_AUTH_TOKEN="${SENTRY_AUTH_TOKEN:-}" \
+            SENTRY_RELEASE="${EXPO_PUBLIC_SENTRY_RELEASE}" \
+            SENTRY_DIST="${EXPO_PUBLIC_SENTRY_DIST}" \
+            SENTRY_LOAD_DOTENV=0 \
+            EXPO_PUBLIC_APP_VARIANT="$VARIANT" \
+            EXPO_PUBLIC_SENTRY_RELEASE="${EXPO_PUBLIC_SENTRY_RELEASE}" \
+            EXPO_PUBLIC_SENTRY_DIST="${EXPO_PUBLIC_SENTRY_DIST}" \
+            bun run eas build --platform android --profile "$VARIANT" --non-interactive --local --output=./build-artifacts/app.aab
+          bun run eas submit -p android --profile "$VARIANT" --non-interactive --path ./build-artifacts/app.aab
+        }
+
+        if [ "$VARIANT" = "testflight" ] && [ "$PLATFORM" = "android" ]; then
+          echo "TestFlight variant is not valid for Android platform"
+          exit 1
+        fi
+
+        if [ "$PLATFORM" = "ios" ]; then
+          build_ios
+        fi
+
+        if [ "$PLATFORM" = "android" ]; then
+          build_android
+        fi
+
+        if [ "$PLATFORM" = "all" ]; then
+          build_ios
+          if [ "$VARIANT" != "testflight" ]; then
+            build_android
+          else
+            echo "Skipping Android for TestFlight variant"
+          fi
+        fi

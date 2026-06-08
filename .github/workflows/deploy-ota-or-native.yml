@@ -80,13 +80,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: 🥟 Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
-        with:
-          bun-version-file: '.bun-version'
-
-      - name: 📦 Install dependencies
-        run: bun install --frozen-lockfile
+      - name: 🥟 Setup Bun and install dependencies
+        uses: ./.github/actions/setup-bun-install
 
       - name: 🧪 Run tests
         run: bun run test:ci
@@ -113,24 +108,13 @@ jobs:
           fetch-depth: 0 # Need history for comparison
           persist-credentials: false
 
-      - name: 🥟 Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
-        with:
-          bun-version-file: '.bun-version'
-
-      - name: 📦 Install dependencies
-        run: bun install --frozen-lockfile
+      - name: 🥟 Setup Bun and install dependencies
+        uses: ./.github/actions/setup-bun-install
 
       - name: Load fingerprint cache secrets
-        uses: 1password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259 # v4.0.0
+        uses: ./.github/actions/load-fingerprint-cache-secrets
         with:
-          export-env: true
-          version: 2.34.0
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID
-          FOAM_AWS_FINGERPRINT_SECRET_KEY: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_SECRET_KEY
-          FOAM_AWS_FINGERPRINT_BUCKET_NAME: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_BUCKET_NAME
+          op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
       - name: 🔍 Calculate current fingerprints
         id: fingerprint
@@ -212,79 +196,18 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: 🥟 Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
-        with:
-          bun-version-file: '.bun-version'
-
-      - name: 📦 Install dependencies
-        run: bun install --frozen-lockfile
+      - name: 🥟 Setup Bun and install dependencies
+        uses: ./.github/actions/setup-bun-install
 
       - name: Load secrets
-        id: load_secrets
-        uses: 1password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259 # v4.0.0
+        uses: ./.github/actions/load-native-deploy-secrets
         with:
-          export-env: true
-          version: 2.34.0
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          TWITCH_CLIENT_ID: op://ci-cd/foam-staging/TWITCH_CLIENT_ID
-          TWITCH_CLIENT_SECRET: op://ci-cd/foam-staging/TWITCH_CLIENT_SECRET
-          AUTH_PROXY_API_BASE_URL: op://ci-cd/foam-staging/AUTH_PROXY_API_BASE_URL
-          AUTH_PROXY_API_KEY: op://ci-cd/foam-staging/AUTH_PROXY_API_KEY
-          SENTRY_AUTH_TOKEN: op://ci-cd/foam-staging/SENTRY_AUTH_TOKEN
-          FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID
-          FOAM_AWS_FINGERPRINT_SECRET_KEY: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_SECRET_KEY
-          FOAM_AWS_FINGERPRINT_BUCKET_NAME: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_BUCKET_NAME
-          GOOGLE_SERVICES_IOS_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_IOS_PROD_BS4
-          GOOGLE_SERVICES_ANDROID_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_ANDROID_PROD_BS4
-          SLACK_WEBHOOK_URL: op://ci-cd/foam-staging/SLACK_WEBHOOK_URL
-          OP_ENV_FILE: '.env'
+          op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
       - name: 📄 Decode and write Google service files
-        run: |
-          VARIANT="${{ inputs.variant || 'production' }}"
-
-          if [ -z "$GOOGLE_SERVICES_ANDROID_PROD_BS4" ]; then
-            echo "Error: GOOGLE_SERVICES_ANDROID_PROD_BS4 is not set"
-            exit 1
-          fi
-          if [ -z "$GOOGLE_SERVICES_IOS_PROD_BS4" ]; then
-            echo "Error: GOOGLE_SERVICES_IOS_PROD_BS4 is not set"
-            exit 1
-          fi
-
-          case "$VARIANT" in
-            production)
-              ios_file="GoogleService-Info-prod.plist"
-              android_file="google-services-prod.json"
-              ;;
-            internal)
-              ios_file="GoogleService-Info-internal.plist"
-              android_file="google-services-internal.json"
-              ;;
-            testflight)
-              ios_file="GoogleService-Info-testflight.plist"
-              android_file="google-services-testflight.json"
-              ;;
-            *)
-              echo "Error: unsupported Google services variant '$VARIANT'"
-              exit 1
-              ;;
-          esac
-
-          echo "Decoding Android Google Services JSON to $android_file..."
-          echo "$GOOGLE_SERVICES_ANDROID_PROD_BS4" | base64 -d > "$android_file"
-
-          echo "Decoding iOS Google Services plist to $ios_file..."
-          echo "$GOOGLE_SERVICES_IOS_PROD_BS4" | base64 -d > "$ios_file"
-
-          if [ ! -f "$android_file" ] || [ ! -f "$ios_file" ]; then
-            echo "❌ Failed to create Google service files for $VARIANT"
-            exit 1
-          fi
-
-          echo "✅ Google service files written for $VARIANT"
+        uses: ./.github/actions/write-google-service-files
+        with:
+          variant: ${{ inputs.variant || 'production' }}
 
       - name: Λ Setup EAS
         uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e
@@ -293,155 +216,20 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
           packager: bun
 
-      - name: 📁 Prepare build artifacts dir
-        run: mkdir -p build-artifacts
-
       - name: 🔨 Build & Submit
-        run: |
-          VARIANT="${{ inputs.variant || 'production' }}"
-          PLATFORM="${{ inputs.platform || 'ios' }}"
-          export SENTRY_RELEASE="${EXPO_PUBLIC_SENTRY_RELEASE}"
-          export SENTRY_DIST="${EXPO_PUBLIC_SENTRY_DIST}"
-          export SENTRY_LOAD_DOTENV=0
-
-          build_ios() {
-            echo "Building iOS ($VARIANT)..."
-            local ipa_path="./build-artifacts/app.ipa"
-            local extracted_dir="./build-artifacts/ios-$VARIANT"
-            local build_marker="./build-artifacts/ios-$VARIANT-build-start.marker"
-
-            rm -f "$ipa_path"
-            rm -rf "$extracted_dir"
-            mkdir -p "$extracted_dir"
-            : > "$build_marker"
-
-            SENTRY_AUTH_TOKEN="${SENTRY_AUTH_TOKEN}" \
-              SENTRY_RELEASE="${EXPO_PUBLIC_SENTRY_RELEASE}" \
-              SENTRY_DIST="${EXPO_PUBLIC_SENTRY_DIST}" \
-              SENTRY_LOAD_DOTENV=0 \
-              EXPO_PUBLIC_ENABLE_TREESHACKING=1 \
-              EXPO_APPLE_TEAM_ID="XJA7HDCMMY" \
-              EXPO_PUBLIC_APP_VARIANT="$VARIANT" \
-              EXPO_PUBLIC_SENTRY_RELEASE="${EXPO_PUBLIC_SENTRY_RELEASE}" \
-              EXPO_PUBLIC_SENTRY_DIST="${EXPO_PUBLIC_SENTRY_DIST}" \
-              bun run eas build \
-                --platform ios \
-                --profile "$VARIANT" \
-                --non-interactive \
-                --local \
-                --output="$ipa_path"
-
-            if [ ! -f "$ipa_path" ]; then
-              echo "Unable to find an IPA at $ipa_path"
-              exit 1
-            fi
-
-            unzip -q "$ipa_path" -d "$extracted_dir"
-
-            dsym_search_paths=("$extracted_dir")
-            xcode_archive_root="${IOS_ARCHIVE_ROOT:-$HOME/Library/Developer/Xcode/Archives}"
-
-            if [ -d "$xcode_archive_root" ]; then
-              while IFS= read -r -d '' archive_dsyms_dir; do
-                dsym_search_paths+=("$archive_dsyms_dir")
-              done < <(
-                find "$xcode_archive_root" \
-                  -type d \
-                  -name dSYMs \
-                  -newer "$build_marker" \
-                  -print0 2>/dev/null || true
-              )
-            fi
-
-            dsym_paths=()
-            while IFS= read -r -d '' dsym_path; do
-              dsym_paths+=("$dsym_path")
-            done < <(find "${dsym_search_paths[@]}" -name '*.app.dSYM.zip' -print0 2>/dev/null || true)
-
-            if [ "${#dsym_paths[@]}" -eq 0 ]; then
-              while IFS= read -r -d '' dsym_path; do
-                dsym_paths+=("$dsym_path")
-              done < <(find "${dsym_search_paths[@]}" -name '*.dSYM.zip' -print0 2>/dev/null || true)
-            fi
-
-            if [ "${#dsym_paths[@]}" -eq 0 ]; then
-              while IFS= read -r -d '' dsym_path; do
-                dsym_paths+=("$dsym_path")
-              done < <(find "${dsym_search_paths[@]}" -name '*.dSYM' -print0 2>/dev/null || true)
-            fi
-
-            if [ -n "${SENTRY_AUTH_TOKEN}" ] && [ "${#dsym_paths[@]}" -gt 0 ]; then
-              ./node_modules/.bin/sentry-cli debug-files upload \
-                --org "${SENTRY_ORG:-luke-howsam}" \
-                --project "${SENTRY_PROJECT:-foam}" \
-                --include-sources \
-                --type dsym \
-                "${dsym_paths[@]}"
-            elif [ "${#dsym_paths[@]}" -eq 0 ]; then
-              echo "Skipping Sentry dSYM upload because no dSYM files were found"
-            else
-              echo "Skipping Sentry dSYM upload because SENTRY_AUTH_TOKEN is not set"
-            fi
-
-            bun run eas submit -p ios --profile "$VARIANT" --non-interactive --path ./build-artifacts/app.ipa
-          }
-
-          build_android() {
-            echo "Building Android ($VARIANT)..."
-            SENTRY_AUTH_TOKEN="${SENTRY_AUTH_TOKEN}" \
-              SENTRY_RELEASE="${EXPO_PUBLIC_SENTRY_RELEASE}" \
-              SENTRY_DIST="${EXPO_PUBLIC_SENTRY_DIST}" \
-              SENTRY_LOAD_DOTENV=0 \
-              EXPO_PUBLIC_APP_VARIANT="$VARIANT" \
-              EXPO_PUBLIC_SENTRY_RELEASE="${EXPO_PUBLIC_SENTRY_RELEASE}" \
-              EXPO_PUBLIC_SENTRY_DIST="${EXPO_PUBLIC_SENTRY_DIST}" \
-              bun run eas build --platform android --profile "$VARIANT" --non-interactive --local --output=./build-artifacts/app.aab
-            bun run eas submit -p android --profile "$VARIANT" --non-interactive --path ./build-artifacts/app.aab
-          }
-
-          if [ "$VARIANT" = "testflight" ] && [ "$PLATFORM" = "android" ]; then
-            echo "❌ TestFlight variant is not valid for Android platform"
-            exit 1
-          fi
-
-          if [ "$PLATFORM" == "ios" ]; then
-            build_ios
-          fi
-
-          if [ "$PLATFORM" == "android" ]; then
-            build_android
-          fi
-
-          if [ "$PLATFORM" == "all" ]; then
-            build_ios
-            if [ "$VARIANT" != "testflight" ]; then
-              build_android
-            else
-              echo "Skipping Android for TestFlight variant"
-            fi
-          fi
-
-        env:
-          EXPO_PUBLIC_APP_VARIANT: ${{ inputs.variant || 'production' }}
-          EXPO_PUBLIC_SENTRY_RELEASE: ${{ needs.prepare.outputs.version }}
-          EXPO_PUBLIC_SENTRY_DIST: ${{ github.sha }}
-          TWITCH_CLIENT_ID: ${{ env.TWITCH_CLIENT_ID }}
-          TWITCH_CLIENT_SECRET: ${{ env.TWITCH_CLIENT_SECRET }}
-          AUTH_PROXY_API_BASE_URL: ${{ env.AUTH_PROXY_API_BASE_URL }}
-          AUTH_PROXY_API_KEY: ${{ env.AUTH_PROXY_API_KEY }}
+        uses: ./.github/actions/native-build-submit
+        with:
+          variant: ${{ inputs.variant || 'production' }}
+          platform: ${{ inputs.platform || 'ios' }}
+          sentry_release: ${{ needs.prepare.outputs.version }}
+          sentry_dist: ${{ github.sha }}
 
       - name: 💾 Save fingerprints for next run
-        run: >
-          bunx tsx scripts/workflows/deploy-ota-or-native.ts save-fingerprint-cache
-          --cache-dir .fingerprint-cache
-          --bucket "${FOAM_AWS_FINGERPRINT_BUCKET_NAME}"
-          --branch "${GITHUB_REF_NAME}"
-          --variant "${{ inputs.variant || 'production' }}"
-          --current-ios "${NEEDS_DETECT_CHANGES_OUTPUTS_IOS_FINGERPRINT}"
-          --current-android "${NEEDS_DETECT_CHANGES_OUTPUTS_ANDROID_FINGERPRINT}"
-        env:
-          NEEDS_DETECT_CHANGES_OUTPUTS_IOS_FINGERPRINT: ${{ needs['detect-changes'].outputs['ios-fingerprint'] }}
-          NEEDS_DETECT_CHANGES_OUTPUTS_ANDROID_FINGERPRINT: ${{ needs['detect-changes'].outputs['android-fingerprint'] }}
+        uses: ./.github/actions/save-fingerprint-cache
+        with:
+          variant: ${{ inputs.variant || 'production' }}
+          ios_fingerprint: ${{ needs['detect-changes'].outputs['ios-fingerprint'] }}
+          android_fingerprint: ${{ needs['detect-changes'].outputs['android-fingerprint'] }}
 
       - name: 📊 Summary
         run: |
@@ -470,25 +258,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: 🥟 Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
-        with:
-          bun-version-file: '.bun-version'
+      - name: 🥟 Setup Bun and install dependencies
+        uses: ./.github/actions/setup-bun-install
 
-      - name: 📦 Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Load fingerprint cache secrets
-        uses: 1password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259 # v4.0.0
+      - name: Load OTA deploy secrets
+        uses: ./.github/actions/load-ota-deploy-secrets
         with:
-          export-env: true
-          version: 2.34.0
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID
-          FOAM_AWS_FINGERPRINT_SECRET_KEY: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_SECRET_KEY
-          FOAM_AWS_FINGERPRINT_BUCKET_NAME: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_BUCKET_NAME
-          SENTRY_AUTH_TOKEN: op://ci-cd/foam-staging/SENTRY_AUTH_TOKEN
+          op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
       - name: Λ Setup EAS
         uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e
@@ -506,35 +282,10 @@ jobs:
 
       - name: Determine critical OTA metadata
         id: critical_metadata
-        shell: bash
-        run: |
-          mkdir -p .ota-critical-cache
-          CURRENT_INDEX=0
-          if [ -f .ota-critical-cache/index ]; then
-            CURRENT_INDEX=$(cat .ota-critical-cache/index)
-          fi
-
-          IS_CRITICAL=false
-          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] && [ "${INPUTS_CRITICAL_UPDATE}" = "true" ]; then
-            IS_CRITICAL=true
-          fi
-
-          if printf '%s' "${GITHUB_EVENT_HEAD_COMMIT_MESSAGE}" | grep -qi '\[critical-ota\]'; then
-            IS_CRITICAL=true
-          fi
-
-          NEXT_INDEX=$CURRENT_INDEX
-          if [ "$IS_CRITICAL" = "true" ]; then
-            NEXT_INDEX=$((CURRENT_INDEX + 1))
-          fi
-
-          echo "$NEXT_INDEX" > .ota-critical-cache/index
-          echo "current_index=$CURRENT_INDEX" >> "$GITHUB_OUTPUT"
-          echo "next_index=$NEXT_INDEX" >> "$GITHUB_OUTPUT"
-          echo "is_critical=$IS_CRITICAL" >> "$GITHUB_OUTPUT"
-        env:
-          INPUTS_CRITICAL_UPDATE: ${{ inputs.critical_update }}
-          GITHUB_EVENT_HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message || '' }}
+        uses: ./.github/actions/determine-critical-ota-metadata
+        with:
+          critical_update: ${{ inputs.critical_update }}
+          head_commit_message: ${{ github.event.head_commit.message || '' }}
 
       - name: 📦 Publish OTA Update
         id: publish
@@ -554,17 +305,11 @@ jobs:
           OTA_CRITICAL_INDEX: ${{ steps.critical_metadata.outputs.next_index }}
 
       - name: 💾 Save fingerprints for next run
-        run: >
-          bunx tsx scripts/workflows/deploy-ota-or-native.ts save-fingerprint-cache
-          --cache-dir .fingerprint-cache
-          --bucket "${FOAM_AWS_FINGERPRINT_BUCKET_NAME}"
-          --branch "${GITHUB_REF_NAME}"
-          --variant "${{ inputs.variant || 'production' }}"
-          --current-ios "${NEEDS_DETECT_CHANGES_OUTPUTS_IOS_FINGERPRINT}"
-          --current-android "${NEEDS_DETECT_CHANGES_OUTPUTS_ANDROID_FINGERPRINT}"
-        env:
-          NEEDS_DETECT_CHANGES_OUTPUTS_IOS_FINGERPRINT: ${{ needs['detect-changes'].outputs['ios-fingerprint'] }}
-          NEEDS_DETECT_CHANGES_OUTPUTS_ANDROID_FINGERPRINT: ${{ needs['detect-changes'].outputs['android-fingerprint'] }}
+        uses: ./.github/actions/save-fingerprint-cache
+        with:
+          variant: ${{ inputs.variant || 'production' }}
+          ios_fingerprint: ${{ needs['detect-changes'].outputs['ios-fingerprint'] }}
+          android_fingerprint: ${{ needs['detect-changes'].outputs['android-fingerprint'] }}
 
       - name: 💾 Save critical OTA index
         run: >
@@ -617,13 +362,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           persist-credentials: false
 
-      - name: 🥟 Setup Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
-        with:
-          bun-version-file: '.bun-version'
-
-      - name: 📦 Install dependencies
-        run: bun install --frozen-lockfile
+      - name: 🥟 Setup Bun and install dependencies
+        uses: ./.github/actions/setup-bun-install
 
       - name: 🏷️ Determine release tag
         id: release_tag
@@ -647,13 +387,6 @@ jobs:
           version: ${{ needs.prepare.outputs.version }}
           tag: ${{ steps.release_tag.outputs.tag }}
           deployment_type: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && 'ota' || 'native' }}
-          ios_fingerprint: ${{ needs['detect-changes'].outputs['ios-fingerprint'] || '' }}
-          android_fingerprint: ${{ needs['detect-changes'].outputs['android-fingerprint'] || '' }}
-          ios_update_id: ${{ needs.ota.outputs.ios_update_id || '' }}
-          android_update_id: ${{ needs.ota.outputs.android_update_id || '' }}
-          update_group_id: ${{ needs.ota.outputs.update_group_id || '' }}
-          create_tag: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && 'false' || 'true' }}
-          create_release: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && 'false' || 'true' }}
           commit_changelog: 'true'
 
       - name: Check for release notes file
@@ -708,15 +441,12 @@ jobs:
           persist-credentials: false
 
       - name: Load fingerprint cache secrets
-        uses: 1password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259 # v4.0.0
+        uses: ./.github/actions/load-fingerprint-cache-secrets
         with:
-          export-env: true
-          version: 2.34.0
-        env:
-          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID
-          FOAM_AWS_FINGERPRINT_SECRET_KEY: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_SECRET_KEY
-          FOAM_AWS_FINGERPRINT_BUCKET_NAME: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_BUCKET_NAME
+          op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
+      - name: 🥟 Setup Bun and install dependencies
+        uses: ./.github/actions/setup-bun-install
 
       - name: Restore previous OTA update IDs
         run: >

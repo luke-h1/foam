@@ -1,0 +1,31 @@
+name: 'Save Fingerprint Cache'
+description: 'Persist current native fingerprints for future deployment decisions.'
+
+inputs:
+  variant:
+    description: 'Release variant'
+    required: true
+  ios_fingerprint:
+    description: 'Current iOS fingerprint'
+    required: true
+  android_fingerprint:
+    description: 'Current Android fingerprint'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Save fingerprints for next run
+      shell: bash
+      env:
+        VARIANT: ${{ inputs.variant }}
+        IOS_FINGERPRINT: ${{ inputs.ios_fingerprint }}
+        ANDROID_FINGERPRINT: ${{ inputs.android_fingerprint }}
+      run: >
+        bunx tsx scripts/workflows/deploy-ota-or-native.ts save-fingerprint-cache
+        --cache-dir .fingerprint-cache
+        --bucket "${FOAM_AWS_FINGERPRINT_BUCKET_NAME}"
+        --branch "${GITHUB_REF_NAME}"
+        --variant "$VARIANT"
+        --current-ios "$IOS_FINGERPRINT"
+        --current-android "$ANDROID_FINGERPRINT"

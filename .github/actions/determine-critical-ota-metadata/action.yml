@@ -1,0 +1,59 @@
+name: 'Determine Critical OTA Metadata'
+description: 'Determine whether an OTA is critical and update the critical index cache.'
+
+inputs:
+  critical_update:
+    description: 'Manual workflow critical update input'
+    required: true
+  head_commit_message:
+    description: 'Head commit message'
+    required: false
+    default: ''
+
+outputs:
+  current_index:
+    description: 'Current critical OTA index'
+    value: ${{ steps.metadata.outputs.current_index }}
+  next_index:
+    description: 'Next critical OTA index'
+    value: ${{ steps.metadata.outputs.next_index }}
+  is_critical:
+    description: 'Whether this OTA is critical'
+    value: ${{ steps.metadata.outputs.is_critical }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Determine critical OTA metadata
+      id: metadata
+      shell: bash
+      env:
+        INPUTS_CRITICAL_UPDATE: ${{ inputs.critical_update }}
+        GITHUB_EVENT_HEAD_COMMIT_MESSAGE: ${{ inputs.head_commit_message }}
+      run: |
+        set -euo pipefail
+
+        mkdir -p .ota-critical-cache
+        CURRENT_INDEX=0
+        if [ -f .ota-critical-cache/index ]; then
+          CURRENT_INDEX=$(cat .ota-critical-cache/index)
+        fi
+
+        IS_CRITICAL=false
+        if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] && [ "$INPUTS_CRITICAL_UPDATE" = "true" ]; then
+          IS_CRITICAL=true
+        fi
+
+        if printf '%s' "$GITHUB_EVENT_HEAD_COMMIT_MESSAGE" | grep -qi '\[critical-ota\]'; then
+          IS_CRITICAL=true
+        fi
+
+        NEXT_INDEX=$CURRENT_INDEX
+        if [ "$IS_CRITICAL" = "true" ]; then
+          NEXT_INDEX=$((CURRENT_INDEX + 1))
+        fi
+
+        echo "$NEXT_INDEX" > .ota-critical-cache/index
+        echo "current_index=$CURRENT_INDEX" >> "$GITHUB_OUTPUT"
+        echo "next_index=$NEXT_INDEX" >> "$GITHUB_OUTPUT"
+        echo "is_critical=$IS_CRITICAL" >> "$GITHUB_OUTPUT"
