@@ -77,20 +77,26 @@ export function decideDeployType(
 export function getPreliminaryReleaseTag(
   version: string,
   deployType: DeployType,
+  variant = 'production',
 ): string {
-  return deployType === 'ota' ? 'ota-pending' : version;
+  return deployType === 'ota' ? 'ota-pending' : appendVariant(version, variant);
 }
 
 export function getFinalReleaseTag(input: {
   deployType: DeployType;
+  variant: string;
   version: string;
   runNumber: number;
 }): string {
-  if (input.deployType !== 'ota') {
-    return input.version;
+  if (input.deployType === 'ota') {
+    return 'ota-pending';
   }
 
-  return `ota-${input.version}-${input.runNumber}`;
+  return appendVariant(input.version, input.variant);
+}
+
+function appendVariant(value: string, variant: string): string {
+  return variant === 'production' ? value : `${value}-${variant}`;
 }
 
 export function parsePublishedUpdateJson(updateJson: string): {

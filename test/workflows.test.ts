@@ -128,28 +128,60 @@ describe('otaOrNativeDeployDecision', () => {
       expect(getPreliminaryReleaseTag('1.2.3', 'ota')).toBe('ota-pending');
     });
 
-    test('uses the app version as the preliminary native tag', () => {
-      expect(getPreliminaryReleaseTag('1.2.3', 'build')).toBe('1.2.3');
+    test('uses the app version as the preliminary production native tag', () => {
+      expect(getPreliminaryReleaseTag('1.2.3', 'build', 'production')).toBe(
+        '1.2.3',
+      );
     });
 
-    test('uses app version and workflow run for final ota tags', () => {
+    test('uses variant scoped preliminary native tags for non-production variants', () => {
+      expect(getPreliminaryReleaseTag('1.2.3', 'build', 'internal')).toBe(
+        '1.2.3-internal',
+      );
+    });
+
+    test('uses ota-pending for final ota releases because ota tags are not tracked', () => {
       expect(
         getFinalReleaseTag({
           deployType: 'ota',
+          variant: 'production',
           version: '1.2.3',
           runNumber: 45,
         }),
-      ).toBe('ota-1.2.3-45');
+      ).toBe('ota-pending');
     });
 
-    test('uses the app version for final native tags', () => {
+    test('does not variant scope final ota tags because ota tags are not tracked', () => {
+      expect(
+        getFinalReleaseTag({
+          deployType: 'ota',
+          variant: 'internal',
+          version: '1.2.3',
+          runNumber: 45,
+        }),
+      ).toBe('ota-pending');
+    });
+
+    test('uses the app version for final production native tags', () => {
       expect(
         getFinalReleaseTag({
           deployType: 'build',
+          variant: 'production',
           version: '1.2.3',
           runNumber: 45,
         }),
       ).toBe('1.2.3');
+    });
+
+    test('uses variant scoped final native tags for non-production variants', () => {
+      expect(
+        getFinalReleaseTag({
+          deployType: 'build',
+          variant: 'testflight',
+          version: '1.2.3',
+          runNumber: 45,
+        }),
+      ).toBe('1.2.3-testflight');
     });
   });
 

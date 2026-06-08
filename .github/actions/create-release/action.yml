@@ -35,6 +35,10 @@ inputs:
     description: 'Whether to create a GitHub release'
     required: false
     default: 'true'
+  commit_changelog:
+    description: 'Whether to commit CHANGELOG.md'
+    required: false
+    default: 'true'
   ios_fingerprint:
     description: 'iOS fingerprint (for OTA releases)'
     required: false
@@ -63,7 +67,7 @@ inputs:
 outputs:
   tag:
     description: 'The created git tag'
-    value: ${{ inputs.tag }}
+    value: ${{ steps.check_tag.outputs.tag }}
   previous_tag:
     description: 'The previous git tag'
     value: ${{ steps.get_previous_tag.outputs.previous_tag }}
@@ -113,7 +117,7 @@ runs:
         INPUTS_ANDROID_UPDATE_ID: ${{ inputs.android_update_id }}
         INPUTS_RUNTIME_VERSION: ${{ inputs.runtime_version }}
 
-    - name: Check tag exists for early exit
+    - name: Resolve release tag
       id: check_tag
       shell: bash
       run: |
@@ -121,14 +125,16 @@ runs:
         # Ensure we have all tags locally
         git fetch --tags origin 2>/dev/null || true
 
-        # Check the tags
         TAG_EXISTS=$(git tag -l "${TAG}" | wc -l)
         if [ "$TAG_EXISTS" -gt 0 ]; then
-          echo "Tag $TAG already exists, skipping release creation..."
-          echo "tag_exists=true" >> $GITHUB_OUTPUT
+          echo "Tag $TAG already exists; will reuse it"
         else
-          echo "tag_exists=false" >> $GITHUB_OUTPUT
+          echo "Tag $TAG does not exist; will create it if requested"
         fi
+
+        echo "tag=$TAG" >> $GITHUB_OUTPUT
+        echo "tag_already_exists=$([ "$TAG_EXISTS" -gt 0 ] && echo true || echo false)" >> $GITHUB_OUTPUT
+        echo "tag_exists=false" >> $GITHUB_OUTPUT
       env:
         INPUTS_TAG: ${{ inputs.tag }}
 
@@ -145,69 +151,20 @@ runs:
           FOUND_PREVIOUS_TAG="${INPUTS_PREVIOUS_TAG}"
         else
           CURRENT_TAG="${INPUTS_TAG}"
+          NATIVE_TAG_PATTERN='^v?[0-9]+\.[0-9]+\.[0-9]+$'
 
-          if [ "${INPUTS_DEPLOYMENT_TYPE}" = "ota" ]; then
-            # For OTA releases, find the most recent tag (either OTA or native)
-            # OTA tags: ota-{version}-{runNumber}; legacy tags may be ota-{updateGroupId}
-            # Native tags: {version} or {version}-preview
-
-            if [ "${INPUTS_VARIANT}" = "preview" ]; then
-              # Find latest OTA tag for preview
-              OTA_TAGS=$(git tag -l "ota-*" 2>/dev/null | grep -v "^${CURRENT_TAG}$" || true)
-              if [ -n "$OTA_TAGS" ]; then
-                OTA_TAG=$(echo "$OTA_TAGS" | while read tag; do
-                  echo "$(git log -1 --format=%ct "$tag" 2>/dev/null || echo 0) $tag"
-                done | sort -rn | head -1 | awk '{print $2}')
-              else
-                OTA_TAG=""
-              fi
-
-              # Find latest native tag for preview
-              NATIVE_TAG=$(git tag -l 2>/dev/null | grep -E "preview$" | grep -vE "^ota-" | sort -V --reverse | head -1 || true)
-            else
-              # Find latest OTA tag for production
-              OTA_TAGS=$(git tag -l "ota-*" 2>/dev/null | grep -v "^${CURRENT_TAG}$" || true)
-              if [ -n "$OTA_TAGS" ]; then
-                OTA_TAG=$(echo "$OTA_TAGS" | while read tag; do
-                  echo "$(git log -1 --format=%ct "$tag" 2>/dev/null || echo 0) $tag"
-                done | sort -rn | head -1 | awk '{print $2}')
-              else
-                OTA_TAG=""
-              fi
-
-              # Find latest native tag for production (exclude preview tags)
-              NATIVE_TAG=$(git tag -l 2>/dev/null | grep -v "preview" | grep -vE "^ota-" | sort -V --reverse | head -1 || true)
-            fi
-
-            # Compare commit dates: use whichever is newer
-            if [ -n "$NATIVE_TAG" ] && [ -n "$OTA_TAG" ]; then
-              NATIVE_DATE=$(git log -1 --format=%ct "$NATIVE_TAG" 2>/dev/null || echo 0)
-              OTA_DATE=$(git log -1 --format=%ct "$OTA_TAG" 2>/dev/null || echo 0)
-
-              if [ "$NATIVE_DATE" -gt "$OTA_DATE" ]; then
-                FOUND_PREVIOUS_TAG="$NATIVE_TAG"
-                echo "Using native build tag (newer): ${NATIVE_TAG}"
-              else
-                FOUND_PREVIOUS_TAG="$OTA_TAG"
-                echo "Using previous OTA tag (newer): ${OTA_TAG}"
-              fi
-            elif [ -n "$NATIVE_TAG" ]; then
-              FOUND_PREVIOUS_TAG="$NATIVE_TAG"
-              echo "Using native build tag: ${NATIVE_TAG}"
-            elif [ -n "$OTA_TAG" ]; then
-              FOUND_PREVIOUS_TAG="$OTA_TAG"
-              echo "Using previous OTA tag: ${OTA_TAG}"
-            else
-              echo "No previous tag found"
-            fi
-          else
-            # For native builds, use the original logic
-            if [ "${INPUTS_VARIANT}" = "preview" ]; then
-              FOUND_PREVIOUS_TAG=$(git tag -l 2>/dev/null | grep -E "preview$" | grep -vE "^ota-" | sort -V --reverse | head -1 || true)
-            else
-              FOUND_PREVIOUS_TAG=$(git tag -l 2>/dev/null | grep -v "preview" | grep -vE "^ota-" | sort -V --reverse | head -1 || true)
-            fi
+          if [ "${INPUTS_VARIANT}" != "production" ]; then
+            NATIVE_TAG_PATTERN="^v?[0-9]+\\.[0-9]+\\.[0-9]+-${INPUTS_VARIANT}$"
           fi
+
+          FOUND_PREVIOUS_TAG=$(
+            git tag -l 2>/dev/null |
+              grep -E "$NATIVE_TAG_PATTERN" |
+              grep -vE "^ota-" |
+              grep -v "^${CURRENT_TAG}$" |
+              sort -V --reverse |
+              head -1 || true
+          )
         fi
 
         if [ -z "$FOUND_PREVIOUS_TAG" ]; then
@@ -219,7 +176,7 @@ runs:
         echo "previous_tag=$FOUND_PREVIOUS_TAG" >> $GITHUB_OUTPUT
       env:
         INPUTS_PREVIOUS_TAG: ${{ inputs.previous_tag }}
-        INPUTS_TAG: ${{ inputs.tag }}
+        INPUTS_TAG: ${{ steps.check_tag.outputs.tag }}
         INPUTS_DEPLOYMENT_TYPE: ${{ inputs.deployment_type }}
         INPUTS_VARIANT: ${{ inputs.variant }}
 
@@ -286,11 +243,11 @@ runs:
         echo "$RELEASE_NOTES" > .release-notes-body.md
       env:
         STEPS_GET_PREVIOUS_TAG_OUTPUTS_PREVIOUS_TAG: ${{ steps.get_previous_tag.outputs.previous_tag }}
-        INPUTS_TAG: ${{ inputs.tag }}
+        INPUTS_TAG: ${{ steps.check_tag.outputs.tag }}
 
     - name: Update CHANGELOG.md
       id: update_changelog
-      if: ${{ inputs.dry == 'false' && steps.check_tag.outputs.tag_exists == 'false' }}
+      if: ${{ inputs.dry == 'false' && steps.check_tag.outputs.tag_exists == 'false' && inputs.deployment_type != 'ota' && inputs.commit_changelog != 'false' }}
       shell: bash
       run: |
         # Generate the full changelog
@@ -318,7 +275,7 @@ runs:
           echo "CHANGELOG.md committed and pushed to main"
         fi
       env:
-        INPUTS_TAG: ${{ inputs.tag }}
+        INPUTS_TAG: ${{ steps.check_tag.outputs.tag }}
         INPUTS_GITHUB_TOKEN: ${{ inputs.github_token }}
 
     - name: Get variant-specific app info
@@ -351,13 +308,13 @@ runs:
 
     - name: Create a new tag
       id: tag
-      if: ${{ inputs.dry == 'false' && steps.check_tag.outputs.tag_exists == 'false' && inputs.create_tag != 'false' }}
+      if: ${{ inputs.dry == 'false' && steps.check_tag.outputs.tag_already_exists != 'true' && inputs.create_tag != 'false' }}
       uses: anothrNick/github-tag-action@a2c70ae13a881faf2b4953baaa9e49731997ab36
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
-        CUSTOM_TAG: ${{ inputs.tag }}
+        CUSTOM_TAG: ${{ steps.check_tag.outputs.tag }}
         TAG_MESSAGE: |
-          ${{ steps.get_app_info.outputs.variant_type }} ${{ steps.get_app_info.outputs.deployment_label }}: ${{ inputs.tag }}
+          ${{ steps.get_app_info.outputs.variant_type }} ${{ steps.get_app_info.outputs.deployment_label }}: ${{ steps.check_tag.outputs.tag }}
 
           ${{ github.event.head_commit.message }}
 
@@ -436,7 +393,7 @@ runs:
       env:
         STEPS_GET_APP_INFO_OUTPUTS_VARIANT_TYPE: ${{ steps.get_app_info.outputs.variant_type }}
         STEPS_GET_APP_INFO_OUTPUTS_DEPLOYMENT_LABEL: ${{ steps.get_app_info.outputs.deployment_label }}
-        INPUTS_TAG: ${{ inputs.tag }}
+        INPUTS_TAG: ${{ steps.check_tag.outputs.tag }}
         INPUTS_VERSION: ${{ inputs.version }}
         PREVIOUS_TAG: ${{ steps.get_previous_tag.outputs.previous_tag || 'N/A (initial release)' }}
         INPUTS_DEPLOYMENT_TYPE: ${{ inputs.deployment_type }}
@@ -458,15 +415,23 @@ runs:
           latest_args=(--latest)
         fi
 
-        gh release create "$INPUTS_TAG" \
-          --repo "$GITHUB_REPOSITORY" \
-          --verify-tag \
-          --title "$INPUTS_TAG" \
-          --notes-file .release-body.md \
-          "${latest_args[@]}"
+        if gh release view "$INPUTS_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+          gh release edit "$INPUTS_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$INPUTS_TAG" \
+            --notes-file .release-body.md \
+            "${latest_args[@]}"
+        else
+          gh release create "$INPUTS_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "$INPUTS_TAG" \
+            --notes-file .release-body.md \
+            "${latest_args[@]}"
+        fi
       env:
         GH_TOKEN: ${{ inputs.github_token }}
-        INPUTS_TAG: ${{ inputs.tag }}
+        INPUTS_TAG: ${{ steps.check_tag.outputs.tag }}
         INPUTS_VARIANT: ${{ inputs.variant }}
         RELEASE_BODY: ${{ steps.build_release_body.outputs.body }}
 
@@ -501,7 +466,7 @@ runs:
         echo "${STEPS_GENERATE_RELEASE_NOTES_OUTPUTS_RELEASE_NOTES}"
         echo "============================="
       env:
-        INPUTS_TAG: ${{ inputs.tag }}
+        INPUTS_TAG: ${{ steps.check_tag.outputs.tag }}
         INPUTS_VERSION: ${{ inputs.version }}
         INPUTS_VARIANT: ${{ inputs.variant }}
         STEPS_GET_APP_INFO_OUTPUTS_DEPLOYMENT_LABEL: ${{ steps.get_app_info.outputs.deployment_label }}

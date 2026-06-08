@@ -332,12 +332,11 @@ function decideDeployTypeCommand(args: string[]): void {
 function preliminaryTagCommand(args: string[]): void {
   const version = getRequiredArg(args, 'version');
   const deployType = getRequiredArg(args, 'deploy-type') as 'ota' | 'build';
-  const tag = getPreliminaryReleaseTag(version, deployType);
+  const variant = getRequiredArg(args, 'variant', 'production');
+  const tag = getPreliminaryReleaseTag(version, deployType, variant);
 
   if (deployType === 'ota') {
-    console.log(
-      '🏷️ OTA release - final tag will be determined after update (ota-{version}-{runNumber})',
-    );
+    console.log('🏷️ OTA release - no git tag will be created');
   }
 
   if (deployType === 'build') {
@@ -405,6 +404,7 @@ function publishOtaCommand(args: string[]): void {
 function finalTagCommand(args: string[]): void {
   const tag = getFinalReleaseTag({
     deployType: getRequiredArg(args, 'deploy-type') as 'ota' | 'build',
+    variant: getRequiredArg(args, 'variant', 'production'),
     version: getRequiredArg(args, 'version'),
     runNumber: Number.parseInt(getRequiredArg(args, 'run-number'), 10),
   });

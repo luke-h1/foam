@@ -180,6 +180,7 @@ jobs:
           bunx tsx scripts/workflows/deploy-ota-or-native.ts preliminary-tag
           --version "${NEEDS_PREPARE_OUTPUTS_VERSION}"
           --deploy-type "${STEPS_DECIDE_OUTPUTS_DEPLOY_TYPE}"
+          --variant "${{ inputs.variant || 'production' }}"
         env:
           NEEDS_PREPARE_OUTPUTS_VERSION: ${{ needs.prepare.outputs.version }}
           STEPS_DECIDE_OUTPUTS_DEPLOY_TYPE: ${{ steps.decide.outputs.deploy-type }}
@@ -600,14 +601,14 @@ jobs:
       pull-requests: write
     outputs:
       version: ${{ needs.prepare.outputs.version }}
-      tag: ${{ steps.release_tag.outputs.tag }}
+      tag: ${{ steps.create_release.outputs.tag }}
       deployment_type: ${{ needs['detect-changes'].outputs['deploy-type'] }}
       release_notes: ${{ steps.create_release.outputs.release_notes }}
       has_release_notes_file: ${{ steps.check_release_notes.outputs.has_file }}
       ios_update_id: ${{ needs.ota.outputs.ios_update_id || '' }}
       android_update_id: ${{ needs.ota.outputs.android_update_id || '' }}
       update_group_id: ${{ needs.ota.outputs.update_group_id || '' }}
-      release_url: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && '' || format('https://github.com/{0}/releases/tag/{1}', github.repository, steps.release_tag.outputs.tag) }}
+      release_url: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && '' || format('https://github.com/{0}/releases/tag/{1}', github.repository, steps.create_release.outputs.tag) }}
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -631,6 +632,7 @@ jobs:
           --deploy-type "${NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE}"
           --version "${NEEDS_PREPARE_OUTPUTS_VERSION}"
           --run-number "${{ github.run_number }}"
+          --variant "${{ inputs.variant || 'production' }}"
         env:
           NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE: ${{ needs['detect-changes'].outputs['deploy-type'] }}
           NEEDS_PREPARE_OUTPUTS_VERSION: ${{ needs.prepare.outputs.version }}
@@ -650,6 +652,7 @@ jobs:
           ios_update_id: ${{ needs.ota.outputs.ios_update_id || '' }}
           android_update_id: ${{ needs.ota.outputs.android_update_id || '' }}
           update_group_id: ${{ needs.ota.outputs.update_group_id || '' }}
+          create_tag: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && 'false' || 'true' }}
           create_release: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && 'false' || 'true' }}
           commit_changelog: 'true'
 
@@ -672,23 +675,25 @@ jobs:
       - name: 📊 Summary
         run: |
           if [ "${NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE}" = "ota" ]; then
-            echo "## Changelog Updated" >> $GITHUB_STEP_SUMMARY
+            echo "## Release Notes Generated" >> $GITHUB_STEP_SUMMARY
           else
             echo "## Release Created" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Tag:** \`${STEPS_RELEASE_TAG_OUTPUTS_TAG}\`" >> $GITHUB_STEP_SUMMARY
+          if [ "${NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE}" != "ota" ]; then
+            echo "- **Tag:** \`${STEPS_CREATE_RELEASE_OUTPUTS_TAG}\`" >> $GITHUB_STEP_SUMMARY
+          fi
           echo "- **Version:** \`${NEEDS_PREPARE_OUTPUTS_VERSION}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Type:** ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && '📦 OTA Update' || '🔨 Native Build' }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE}" = "ota" ]; then
-            echo "✅ CHANGELOG.md updated; GitHub release skipped for OTA." >> $GITHUB_STEP_SUMMARY
+            echo "✅ Release notes generated; GitHub release, git tag, and CHANGELOG.md update skipped for OTA." >> $GITHUB_STEP_SUMMARY
           else
             echo "✅ GitHub release and CHANGELOG.md updated!" >> $GITHUB_STEP_SUMMARY
           fi
         env:
           NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE: ${{ needs['detect-changes'].outputs['deploy-type'] }}
-          STEPS_RELEASE_TAG_OUTPUTS_TAG: ${{ steps.release_tag.outputs.tag }}
+          STEPS_CREATE_RELEASE_OUTPUTS_TAG: ${{ steps.create_release.outputs.tag }}
           NEEDS_PREPARE_OUTPUTS_VERSION: ${{ needs.prepare.outputs.version }}
 
   slack-notify:
