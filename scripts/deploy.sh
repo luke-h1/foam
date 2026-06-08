@@ -22,3 +22,5 @@ case "$platform" in
     ./scripts/submit.sh "$variant" android
     ;;
 esac
+
+./scripts/save-fingerprint-cache.sh "$variant"

@@ -6,11 +6,47 @@ export type Fingerprints = {
   android: string | null;
 };
 
+export type FingerprintCacheInput = {
+  bucket: string;
+  branch: string;
+  variant: string;
+};
+
 type PublishedUpdate = {
   id?: string;
   group?: string;
   platform?: string;
 };
+
+export function getFingerprintCachePrefix(
+  input: FingerprintCacheInput,
+): string {
+  const baseUri = `s3://${input.bucket}`;
+  const branch = encodeURIComponent(input.branch);
+  const variant = encodeURIComponent(input.variant);
+
+  return `${baseUri}/fingerprints/${branch}/${variant}`;
+}
+
+export function getCriticalOtaIndexCachePath(input: {
+  bucket: string;
+  variant: string;
+}): string {
+  const baseUri = `s3://${input.bucket}`;
+  const variant = encodeURIComponent(input.variant);
+
+  return `${baseUri}/ota-critical-index/${variant}/index`;
+}
+
+export function getOtaUpdateIdsCachePrefix(input: {
+  bucket: string;
+  variant: string;
+}): string {
+  const baseUri = `s3://${input.bucket}`;
+  const variant = encodeURIComponent(input.variant);
+
+  return `${baseUri}/ota-update-ids/${variant}`;
+}
 
 export function compareFingerprints(
   previous: Fingerprints,

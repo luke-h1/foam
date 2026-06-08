@@ -95,3 +95,5 @@ echo "Publishing OTA to $variant ($platform) using local dotenv cascade"
 run_with_variant_env eas "${args[@]}"
 
 run_with_sentry_upload_env bash -c 'source ./scripts/sentry-upload.sh; sentry_upload_ota_sourcemaps "$1"' _ "$ota_output_dir"
+
+./scripts/save-fingerprint-cache.sh "$variant"
