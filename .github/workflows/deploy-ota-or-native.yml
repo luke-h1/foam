@@ -60,7 +60,7 @@ jobs:
       tag: ${{ steps.get_version.outputs.tag }}
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
 
@@ -76,7 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
 
@@ -108,7 +108,7 @@ jobs:
       tag: ${{ steps.tag.outputs.tag }}
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 0 # Need history for comparison
           persist-credentials: false
@@ -122,7 +122,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Load fingerprint cache secrets
-        uses: 1password/load-secrets-action@14f2fed3712a25f8ad8916ddcca3c4ed737810f6
+        uses: 1password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259 # v4.0.0
         with:
           export-env: true
           version: 2.34.0
@@ -207,7 +207,7 @@ jobs:
     concurrency: eas-build-${{ inputs.variant || 'production' }}-${{ inputs.platform || 'ios' }}
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
 
@@ -221,7 +221,7 @@ jobs:
 
       - name: Load secrets
         id: load_secrets
-        uses: 1password/load-secrets-action@14f2fed3712a25f8ad8916ddcca3c4ed737810f6
+        uses: 1password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259 # v4.0.0
         with:
           export-env: true
           version: 2.34.0
@@ -242,6 +242,8 @@ jobs:
 
       - name: 📄 Decode and write Google service files
         run: |
+          VARIANT="${{ inputs.variant || 'production' }}"
+
           if [ -z "$GOOGLE_SERVICES_ANDROID_PROD_BS4" ]; then
             echo "Error: GOOGLE_SERVICES_ANDROID_PROD_BS4 is not set"
             exit 1
@@ -251,27 +253,37 @@ jobs:
             exit 1
           fi
 
-          echo "Decoding Android Google Services JSON..."
-          echo "$GOOGLE_SERVICES_ANDROID_PROD_BS4" | base64 -d > google-services-prod.json
+          case "$VARIANT" in
+            production)
+              ios_file="GoogleService-Info-prod.plist"
+              android_file="google-services-prod.json"
+              ;;
+            internal)
+              ios_file="GoogleService-Info-internal.plist"
+              android_file="google-services-internal.json"
+              ;;
+            testflight)
+              ios_file="GoogleService-Info-testflight.plist"
+              android_file="google-services-testflight.json"
+              ;;
+            *)
+              echo "Error: unsupported Google services variant '$VARIANT'"
+              exit 1
+              ;;
+          esac
 
-          echo "Decoding iOS Google Services plist..."
-          echo "$GOOGLE_SERVICES_IOS_PROD_BS4" | base64 -d > GoogleService-Info-prod.plist
+          echo "Decoding Android Google Services JSON to $android_file..."
+          echo "$GOOGLE_SERVICES_ANDROID_PROD_BS4" | base64 -d > "$android_file"
 
-          echo "✅ Google service files written successfully"
+          echo "Decoding iOS Google Services plist to $ios_file..."
+          echo "$GOOGLE_SERVICES_IOS_PROD_BS4" | base64 -d > "$ios_file"
 
-      - name: 📝 Generate GoogleService-Info.plist
-        run: |
-          # Decode base64 and write directly to file
-          echo "$GOOGLE_SERVICES_IOS_PROD_BS4" | base64 -d > GoogleService-Info-prod.plist
-
-          # Verify the file was created
-          if [ -f "GoogleService-Info-prod.plist" ]; then
-            echo "✅ GoogleService-Info-prod.plist created successfully"
-            head -5 GoogleService-Info-prod.plist || true
-          else
-            echo "❌ Failed to create GoogleService-Info-prod.plist"
+          if [ ! -f "$android_file" ] || [ ! -f "$ios_file" ]; then
+            echo "❌ Failed to create Google service files for $VARIANT"
             exit 1
           fi
+
+          echo "✅ Google service files written for $VARIANT"
 
       - name: Λ Setup EAS
         uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e
@@ -453,7 +465,7 @@ jobs:
       update_group_id: ${{ steps.publish.outputs.update_group_id }}
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
 
@@ -466,7 +478,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Load fingerprint cache secrets
-        uses: 1password/load-secrets-action@14f2fed3712a25f8ad8916ddcca3c4ed737810f6
+        uses: 1password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259 # v4.0.0
         with:
           export-env: true
           version: 2.34.0
@@ -534,7 +546,6 @@ jobs:
           EXPO_PUBLIC_APP_VARIANT: ${{ inputs.variant || 'production' }}
           EXPO_PUBLIC_SENTRY_RELEASE: ${{ needs.prepare.outputs.version }}
           EXPO_PUBLIC_SENTRY_DIST: ${{ github.sha }}
-          SENTRY_AUTH_TOKEN: ${{ env.SENTRY_AUTH_TOKEN }}
           SENTRY_RELEASE: ${{ needs.prepare.outputs.version }}
           SENTRY_DIST: ${{ github.sha }}
           SENTRY_LOAD_DOTENV: 0
@@ -599,7 +610,7 @@ jobs:
       release_url: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && '' || format('https://github.com/{0}/releases/tag/{1}', github.repository, steps.release_tag.outputs.tag) }}
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -679,12 +690,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
 
       - name: Load fingerprint cache secrets
-        uses: 1password/load-secrets-action@14f2fed3712a25f8ad8916ddcca3c4ed737810f6
+        uses: 1password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259 # v4.0.0
         with:
           export-env: true
           version: 2.34.0
@@ -724,7 +735,7 @@ jobs:
 
       - name: Load secrets
         id: secrets
-        uses: 1password/load-secrets-action@14f2fed3712a25f8ad8916ddcca3c4ed737810f6
+        uses: 1password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259 # v4.0.0
         with:
           export-env: false
           version: 2.34.0

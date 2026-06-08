@@ -21,6 +21,7 @@ The native Twitch app experience doesn't quite line up with the desktop experien
 - [Project structure](#project-structure)
 - [Store links](#store-links)
 - [Features](#features)
+- [Architecture and performance](#architecture-and-performance)
 - [Getting started](#getting-started)
 - [Contributing](#contributing)
 - [CI/CD](#cicd)
@@ -53,6 +54,43 @@ TBA
 ## Features
 
 TBA
+
+# Architecture and performance
+
+Foam is built around the high-churn parts of Twitch: live playback, fast chat, third-party emotes, badges, and cosmetics. The app keeps that path responsive by keeping chat state local, windowed, cached, and measurable.
+
+## Performance
+
+Chat uses [`@legendapp/list`](https://github.com/LegendApp/legend-list) for virtualized chat rows, bounded message windows, buffered message flushing, memoized row rendering, cached visible-message filtering, and precomputed chat text height where possible.
+
+Performance checks live in a few layers:
+
+- `bun run test:perf` runs the Reassure suite for CI-friendly regression checks.
+- `bun run perf:chat:rn` captures React DevTools profiles for chat.
+- `bun run perf:chat:rn:diff` compares React DevTools profiles.
+- `bun run perf:chat:ios` captures native iOS Instruments traces.
+- `bun run perf:chat:ios:export` exports Instruments traces for inspection.
+
+When changing chat rendering, parsing, scrolling, or scheduling, prefer measuring the real path over simplified mocks. The chat perf tests should model `LegendList` virtualization behavior closely enough that regressions reflect the behavior in the real world
+
+## Legend State
+
+Chat state uses [Legend State](https://legendapp.com/open-source/state/) so frequent message, emote, badge, and cosmetic updates can avoid broad React re-renders. The chat store is split by responsibility under [`src/store/chat`](src/store/chat):
+
+- [`observables`](src/store/chat/observables) contains module-level observables such as `chatStore$`.
+- [`actions`](src/store/chat/actions) contains write helpers and pure transforms that read or mutate observables.
+- [`react`](src/store/chat/react) contains selector hooks for components.
+- [`types`](src/store/chat/types) contains shared chat contracts and constants.
+
+Components should import those modules directly instead of importing `@legendapp/state` primitives themselves. Session-scoped render caches, such as mention colors and lightened colors, live on `chatStore$.sessionCaches`; persisted channel data, such as emotes, badges, recent messages, and provider fallback data, lives under `chatStore$.persisted`.
+
+## Image caching
+
+Chat renders many repeated remote images: Twitch badges, third-party emotes, 7TV cosmetics, thumbnails, and preview assets. The shared [`Image`](src/components/Image/Image.tsx) wrapper and chat inline image renderer route those URLs through [`src/utils/image/image-cache.ts`](src/utils/image/image-cache.ts) before handing them to `expo-image` or `react-native-nitro-image`.
+
+The native cache stores files in Expo's cache directory under `chat-img-cache` and keeps an MMKV manifest keyed by source URL plus cache variant. Variants such as `emote`, `badge`, and `image` keep different asset classes from colliding. Downloads are deduplicated, priority queued (`visible`, `interactive`, `background`), capped at four concurrent downloads, and evicted by least-recent access when the cache exceeds 100 MB or 5000 records.
+
+Visible chat assets are warmed aggressively. Incoming visible badge and emote URLs are cached with `visible` priority, emote sheets warm uncached emote variants with `interactive` priority, and cached file URLs are prefetched once they resolve. On web, the same wrapper uses cacheable object URLs and revokes unused downloads when a component unmounts.
 
 # Getting started
 
@@ -348,7 +386,7 @@ Pull requests run checks in [`.github/workflows/`](.github/workflows/):
 | [`anti-slop.yml`](.github/workflows/anti-slop.yml)                   | Pull requests via `pull_request_target`                                               | Runs `peakoss/anti-slop`, exempts draft PRs, and adds the `slop` label on failure.                                        |
 | [`self-hosted-runner.yml`](.github/workflows/self-hosted-runner.yml) | Pull requests with the `self-hosted-test` label, or manual dispatch in `luke-h1/foam` | Runs `bun run lint` on the self-hosted `foam` runner.                                                                     |
 | [`zizmor.yml`](.github/workflows/zizmor.yml)                         | Pull requests targeting `main`, and pushes to `main`                                  | Audits GitHub Actions workflows for security issues with [zizmor](https://github.com/zizmorcore/zizmor).                  |
-| [`sonarqube.yml`](.github/workflows/sonarqube.yml)                   | Pull requests targeting `main`, and pushes to `main`                                  | Runs Jest coverage and uploads a SonarQube analysis using [`sonar-project.properties`](sonar-project.properties).         |
+| [`sonarqube.yml`](.github/workflows/sonarqube.yml)                   | Pull requests targeting `main`                                                        | Runs Jest coverage and uploads a SonarQube analysis using [`sonar-project.properties`](sonar-project.properties).         |
 
 Scheduled [CodeQL](.github/workflows/codeql.yml) runs weekly on the default branch.
 
@@ -366,7 +404,6 @@ flowchart LR
   PR --> Sonar[sonarqube.yml]
   PR -->|label self-hosted-test| SH[self-hosted-runner.yml]
   Main[main] --> Zizmor
-  Main --> Sonar
   Schedule[Weekly schedule] --> CodeQL[codeql.yml]
 ```
 
@@ -377,7 +414,7 @@ Static analysis and GitHub Actions security are checked in three places:
 | Workflow                                           | Trigger                                           | Purpose                                                                                               |
 | -------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | [`zizmor.yml`](.github/workflows/zizmor.yml)       | Pull requests targeting `main`, and `main` pushes | Scans workflow YAML for unsafe permissions, injection risks, unpinned actions, and related CI issues. |
-| [`sonarqube.yml`](.github/workflows/sonarqube.yml) | Pull requests targeting `main`, and `main` pushes | Runs SonarQube static analysis with Jest coverage. Requires a `SONAR_TOKEN` repository secret.        |
+| [`sonarqube.yml`](.github/workflows/sonarqube.yml) | Pull requests targeting `main`                    | Runs SonarQube static analysis with Jest coverage. Requires a `SONAR_TOKEN` repository secret.        |
 | [`codeql.yml`](.github/workflows/codeql.yml)       | Weekly schedule on the default branch             | Runs GitHub's static analysis and uploads results to code scanning.                                   |
 
 Keep workflow permissions scoped to the smallest set each job needs, keep `persist-credentials: false` on checkout unless a job must push, and pin third-party actions to full 40-character commit SHAs instead of floating tags like `@v4`.
