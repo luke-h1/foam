@@ -6,8 +6,8 @@ import { type SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import {
   type ChannelCacheType,
   type ChatMessageType,
-} from '@app/store/chatStore/constants';
-import { chatStore$ } from '@app/store/chatStore/state';
+} from '@app/store/chat/types/constants';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { theme } from '@app/styles/themes';
 import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { type SanitisedEmote } from '@app/types/emote';

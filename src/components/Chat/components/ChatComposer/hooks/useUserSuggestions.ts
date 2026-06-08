@@ -1,5 +1,5 @@
-import type { ChatUser } from '@app/store/chatStore/constants';
-import { chatStore$ } from '@app/store/chatStore/state';
+import type { ChatUser } from '@app/store/chat/types/constants';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { queueMentionLoginSearch } from '@app/utils/chat/mentionLoginResolver';
 import {
   searchMentionChatters,

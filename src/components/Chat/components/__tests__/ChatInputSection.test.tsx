@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import type { ChatComposerProps } from '../ChatComposer/ChatComposer';
 import { ChatInputSection } from '../ChatInputSection';
 
 const mockChatComposer = jest.fn();
@@ -9,15 +10,9 @@ jest.mock('../ChatComposer/ChatComposer', () => {
   const { TextInput: MockTextInput } = require('react-native');
 
   return {
-    ChatComposer: React.forwardRef((props: unknown, ref: unknown) => {
+    ChatComposer: React.forwardRef((props: ChatComposerProps, ref: unknown) => {
       mockChatComposer(props);
-      return (
-        <MockTextInput
-          ref={ref}
-          testID='chat-composer'
-          {...(props as object)}
-        />
-      );
+      return <MockTextInput ref={ref} testID='chat-composer' />;
     }),
   };
 });

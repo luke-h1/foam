@@ -1,4 +1,8 @@
 import { useAuthContext } from '@app/context/AuthContext';
+import {
+  createLoggedInAuthContextValue,
+  createTestUser,
+} from '@app/context/__tests__/__fixtures__/authContext.fixture';
 import { useChannelPoll } from '@app/hooks/useChannelPoll';
 import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
 import TwitchWsService from '@app/services/twitch-ws-service';
@@ -44,20 +48,19 @@ const mockGetPolls = jest.mocked(twitchService.getPolls);
 const mockGetPredictions = jest.mocked(twitchService.getPredictions);
 
 function mockLoggedInViewer(userId: string) {
-  mockUseAuthContext.mockReturnValue({
-    authState: {
-      isLoggedIn: true,
-    },
-    user: {
-      id: userId,
-    },
-  } as ReturnType<typeof useAuthContext>);
+  mockUseAuthContext.mockReturnValue(
+    createLoggedInAuthContextValue({
+      user: createTestUser({ id: userId }),
+    }),
+  );
 }
 
 describe('channel poll and prediction EventSub subscriptions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockTwitchWsService.getInstance.mockReturnValue({} as WebSocket);
+    mockTwitchWsService.getInstance.mockReturnValue(
+      null as unknown as WebSocket,
+    );
     mockTwitchWsService.subscribeToEvent.mockResolvedValue(undefined);
     mockGetPolls.mockResolvedValue({ data: [] });
     mockGetPredictions.mockResolvedValue({ data: [] });

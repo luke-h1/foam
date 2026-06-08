@@ -4,10 +4,10 @@ import {
   fetchUserPersonalEmotes,
   getCurrentEmoteData,
   getUserPersonalEmotes,
-} from '@app/store/chatStore/channelLoad';
-import { getUserBadge } from '@app/store/chatStore/cosmetics';
-import { updateMessages } from '@app/store/chatStore/messages';
-import { chatStore$ } from '@app/store/chatStore/state';
+} from '@app/store/chat/actions/channelLoad';
+import { getUserBadge } from '@app/store/chat/actions/cosmetics';
+import { updateMessages } from '@app/store/chat/actions/messages';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { prefetchImage } from '@app/components/Image/imagePrefetch';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes';
@@ -114,10 +114,14 @@ export function useChatMessageProcessing({
       const hasEmotes =
         chatStore$.emojis.peek().length > 0 ||
         emoteData.twitchGlobalEmotes.length > 0 ||
+        emoteData.twitchChannelEmotes.length > 0 ||
         emoteData.twitchSubscriberEmotes.length > 0 ||
         emoteData.sevenTvGlobalEmotes.length > 0 ||
+        emoteData.sevenTvChannelEmotes.length > 0 ||
         emoteData.bttvGlobalEmotes.length > 0 ||
-        emoteData.ffzGlobalEmotes.length > 0;
+        emoteData.bttvChannelEmotes.length > 0 ||
+        emoteData.ffzGlobalEmotes.length > 0 ||
+        emoteData.ffzChannelEmotes.length > 0;
 
       if (!hasEmotes) {
         handleNewMessage(baseMessage, { countUnread });

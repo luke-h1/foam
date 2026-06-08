@@ -1,6 +1,6 @@
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import type { ChatUser } from '@app/store/chatStore/constants';
-import { getUserBadge } from '@app/store/chatStore/cosmetics';
+import type { ChatUser } from '@app/store/chat/types/constants';
+import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 

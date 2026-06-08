@@ -4,7 +4,6 @@ import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { ChatEmoteReprocessor } from './components/ChatEmoteReprocessor';
 import { ChatInputShell } from './components/ChatInputShell';
 import { ChatMessagePane } from './components/ChatMessagePane';
-import { ChatOverlayController } from './components/ChatOverlayController';
 import { ResumeScroll } from './components/ResumeScroll';
 import { useChat } from './hooks/useChat';
 import { styles } from './styles';
@@ -101,42 +100,7 @@ export const Chat = memo(
             />
           </KeyboardStickyView>
 
-          <ChatOverlayController
-            ref={vm.overlayControllerRef}
-            canModerateChat={vm.canModerateChat}
-            channelId={channelId}
-            channelName={channelName}
-            disableEmoteAnimations={vm.preferences.disableEmoteAnimations}
-            highlightOwnMentions={vm.preferences.highlightOwnMentions}
-            showInlineReplyContext={vm.preferences.showInlineReplyContext}
-            showTimestamps={vm.preferences.chatTimestamps}
-            showUnreadJumpPill={vm.preferences.showUnreadJumpPill}
-            chatDensity={vm.preferences.chatDensity}
-            handleReply={vm.handleReply}
-            highlightedUsers={vm.highlightedUsers}
-            hiddenUsers={vm.hiddenUsers}
-            hidePhraseFromView={vm.hidePhraseFromView}
-            hideUserFromView={vm.hideUserFromView}
-            appendMentionToComposer={vm.appendMentionToComposer}
-            onClearChatCache={vm.handleClearChatCache}
-            onClearImageCache={vm.handleDebugClearImageCache}
-            onClearSevenTvCosmeticsCache={vm.handleClearSevenTvCosmeticsCache}
-            onInsertEmote={vm.handleEmoteSelect}
-            onPinMessage={vm.handlePinMessage}
-            onRefreshPinnedMessage={vm.handleRefreshPinnedMessage}
-            onSettingsReconnect={vm.handleSettingsReconnect}
-            onSettingsRefetchEmotes={vm.handleSettingsRefetchEmotes}
-            onToggleChatDensity={vm.handleToggleChatDensity}
-            onToggleHighlightOwnMentions={vm.handleToggleHighlightOwnMentions}
-            onToggleInlineReplyContext={vm.handleToggleInlineReplyContext}
-            onToggleShowTimestamps={vm.handleToggleShowTimestamps}
-            onToggleShowUnreadJumpPill={vm.handleToggleShowUnreadJumpPill}
-            onUnpinPinnedMessage={vm.handleUnpinPinnedMessage}
-            pinnedMessageBusy={vm.pinnedMessageBusy}
-            pinnedMessageId={vm.pinnedMessageId}
-            sendChatCommand={vm.sendChatCommand}
-            toggleHighlightedUser={vm.toggleHighlightedUser}
-          />
+          {vm.overlaysElement}
         </View>
       </View>
     );

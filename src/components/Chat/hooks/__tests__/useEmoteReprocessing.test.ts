@@ -1,18 +1,24 @@
-import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
-import { updateMessages } from '@app/store/chatStore/messages';
-import { chatStore$ } from '@app/store/chatStore/state';
+import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
+import { updateMessages } from '@app/store/chat/actions/messages';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { act, renderHook } from '@testing-library/react-native';
+import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
+import { createEmotePart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
 import type { AnyChatMessageType } from '../../util/messageHandlers';
+import {
+  createEmoteData,
+  createSevenTvEmote,
+} from './__fixtures__/useChat.fixture';
 import { useEmoteReprocessing } from '../useEmoteReprocessing';
 
-jest.mock('@app/store/chatStore/channelLoad', () => ({
+jest.mock('@app/store/chat/actions/channelLoad', () => ({
   getCurrentEmoteData: jest.fn(),
 }));
-jest.mock('@app/store/chatStore/messages', () => ({
+jest.mock('@app/store/chat/actions/messages', () => ({
   updateMessages: jest.fn(),
 }));
 
-jest.mock('@app/store/chatStore/state', () => ({
+jest.mock('@app/store/chat/observables/chatStore', () => ({
   chatStore$: {
     emojis: {
       peek: jest.fn(() => []),
@@ -20,11 +26,17 @@ jest.mock('@app/store/chatStore/state', () => ({
   },
 }));
 
-jest.mock('@app/utils/chat/emoteProcessor', () => ({
-  processEmotesWorklet: jest.fn((x: { inputString: string }) => [
-    { type: 'emote' as const, content: x.inputString, id: 'e1', url: '' },
-  ]),
-}));
+jest.mock('@app/utils/chat/emoteProcessor', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest mock factory runs before module imports
+  const {
+    createEmotePart,
+  } = require('@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture');
+  return {
+    processEmotesWorklet: jest.fn((x: { inputString: string }) => [
+      createEmotePart(x.inputString, { id: 'e1', url: '' }),
+    ]),
+  };
+});
 
 jest.mock('@app/utils/chat/findBadges', () => ({
   findBadges: jest.fn(() => []),
@@ -47,25 +59,14 @@ function createTextOnlyMessage(
     channel: 'test',
     sender: 'user',
     badges: [],
-    userstate: {
+    userstate: createUserStateTags({
       'display-name': 'user',
       login: 'user',
       username: 'user',
       'user-id': '1',
       id: messageId,
       color: '#fff',
-      badges: {},
-      'badges-raw': '',
-      'user-type': '',
-      mod: '0',
-      subscriber: '0',
-      turbo: '0',
-      'emote-sets': '',
-      'reply-parent-msg-id': '',
-      'reply-parent-msg-body': '',
-      'reply-parent-display-name': '',
-      'reply-parent-user-login': '',
-    },
+    }),
     parentDisplayName: '',
     replyDisplayName: '',
     replyBody: '',
@@ -86,21 +87,11 @@ describe('useEmoteReprocessing', () => {
   const channelId = 'channel-1';
   const processedMessageIdsRef = { current: new Set<string>() };
 
-  const emoteDataWithEmotes = {
-    sevenTvGlobalEmotes: [{ id: 'e1', name: 'Kappa', url: '' }],
-    sevenTvChannelEmotes: [],
-    twitchGlobalEmotes: [],
-    twitchChannelEmotes: [],
-    bttvGlobalEmotes: [],
-    bttvChannelEmotes: [],
-    ffzGlobalEmotes: [],
-    ffzChannelEmotes: [],
-    chatterinoBadges: [],
-    ffzChannelBadges: [],
-    ffzGlobalBadges: [],
-    twitchChannelBadges: [],
-    twitchGlobalBadges: [],
-  };
+  const emoteDataWithEmotes = createEmoteData({
+    sevenTvGlobalEmotes: [
+      createSevenTvEmote({ id: 'e1', name: 'Kappa', url: '' }),
+    ],
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -109,7 +100,7 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('does nothing when emoteLoadStatus is not success', () => {
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     const peek = jest
       .fn()
       .mockReturnValue([createTextOnlyMessage('1', 'n1', 'hello')]);
@@ -128,7 +119,9 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('does nothing when getCurrentEmoteData returns null', () => {
-    mockGetCurrentEmoteData.mockReturnValue(null as never);
+    mockGetCurrentEmoteData.mockReturnValue(
+      null as unknown as ReturnType<typeof getCurrentEmoteData>,
+    );
     const peek = jest
       .fn()
       .mockReturnValue([createTextOnlyMessage('1', 'n1', 'hello')]);
@@ -147,17 +140,19 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('does nothing when emote data has no emotes', () => {
-    mockGetCurrentEmoteData.mockReturnValue({
-      ...emoteDataWithEmotes,
-      sevenTvGlobalEmotes: [],
-      sevenTvChannelEmotes: [],
-      twitchGlobalEmotes: [],
-      twitchChannelEmotes: [],
-      bttvGlobalEmotes: [],
-      bttvChannelEmotes: [],
-      ffzGlobalEmotes: [],
-      ffzChannelEmotes: [],
-    } as never);
+    mockGetCurrentEmoteData.mockReturnValue(
+      createEmoteData({
+        ...emoteDataWithEmotes,
+        sevenTvGlobalEmotes: [],
+        sevenTvChannelEmotes: [],
+        twitchGlobalEmotes: [],
+        twitchChannelEmotes: [],
+        bttvGlobalEmotes: [],
+        bttvChannelEmotes: [],
+        ffzGlobalEmotes: [],
+        ffzChannelEmotes: [],
+      }),
+    );
     const peek = jest
       .fn()
       .mockReturnValue([createTextOnlyMessage('1', 'n1', 'hello')]);
@@ -175,7 +170,7 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('reprocesses text-only unprocessed messages and calls updateMessages', () => {
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     const msg1 = createTextOnlyMessage('msg-1', 'nonce-1', 'hello world');
     const peek = jest.fn().mockReturnValue([msg1]);
 
@@ -198,7 +193,7 @@ describe('useEmoteReprocessing', () => {
 
   test('yields between large reprocessing batches', () => {
     jest.useFakeTimers();
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     const messages = Array.from({ length: 30 }, (_, index) =>
       createTextOnlyMessage(`msg-${index}`, `nonce-${index}`, 'hello world'),
     );
@@ -227,13 +222,11 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('skips equivalent reprocessed message parts and badges', () => {
-    const existingParts = [
-      { type: 'emote' as const, content: 'Kappa', id: 'e1', url: '' },
-    ];
+    const existingParts = [createEmotePart('Kappa', { id: 'e1', url: '' })];
     jest
       .requireMock('@app/utils/chat/emoteProcessor')
       .processEmotesWorklet.mockReturnValueOnce(existingParts);
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     const msg1 = {
       ...createTextOnlyMessage('msg-1', 'nonce-1', 'Kappa'),
       message: existingParts,
@@ -255,7 +248,7 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('skips sparse or incomplete message entries', () => {
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     const validMessage = createTextOnlyMessage('msg-1', 'nonce-1', 'hello');
     const peek = jest
       .fn()
@@ -283,7 +276,7 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('skips messages already in processedMessageIdsRef', () => {
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     processedMessageIdsRef.current.add('msg-1');
     const msg1 = createTextOnlyMessage('msg-1', 'nonce-1', 'hello');
     const peek = jest.fn().mockReturnValue([msg1]);
@@ -302,7 +295,7 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('skips system messages and usernotice', () => {
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     const systemMsg = {
       ...createTextOnlyMessage('sys-1', 'n1', 'hi'),
       sender: 'System',
@@ -327,7 +320,7 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('reprocesses existing emote parts when reprocessKey changes', () => {
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     processedMessageIdsRef.current.add('1');
     const withEmote = {
       ...createTextOnlyMessage('1', 'n1', 'hello'),
@@ -371,7 +364,7 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('skips messages with non-chat content parts', () => {
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     const withMedia = {
       ...createTextOnlyMessage('1', 'n1', 'hello'),
       message: [{ type: 'twitchClip', content: 'https://example.com' }],

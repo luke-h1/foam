@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
-import type { ChatUser } from '@app/store/chatStore/constants';
+import type { ChatUser } from '@app/store/chat/types/constants';
 import { theme } from '@app/styles/themes';
 import { LegendList, type LegendListRenderItemProps } from '@legendapp/list';
 import { StyleSheet, View } from 'react-native';

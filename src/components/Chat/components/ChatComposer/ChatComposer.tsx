@@ -14,7 +14,7 @@ import {
 } from './useChatComposerController';
 
 export type { ChatComposerHandle };
-export type SuggestionType = 'emote' | 'user';
+export type { SuggestionType } from './chatComposerTypes';
 
 export interface ChatComposerProps {
   onChangeText?: (text: string) => void;

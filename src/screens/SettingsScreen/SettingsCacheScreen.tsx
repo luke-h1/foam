@@ -4,8 +4,8 @@ import {
   SettingsSection,
 } from '@app/components/SettingsSection/SettingsSection';
 import { storageService } from '@app/lib/storage';
-import { clearChatCosmeticsCache } from '@app/store/chatStore/channelLoad';
-import { clearUserCosmeticsCache } from '@app/store/chatStore/cosmetics';
+import { clearChatCosmeticsCache } from '@app/store/chat/actions/channelLoad';
+import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
@@ -21,7 +21,7 @@ import { tint } from '@expo/ui/swift-ui/modifiers';
 import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useRef } from 'react';
 import { toast } from 'sonner-native';
-import { clearEmoteImageCache } from '@app/store/chatStore/emoteImages';
+import { clearEmoteImageCache } from '@app/store/chat/actions/emoteImages';
 
 function handleClearData() {
   Alert.alert(

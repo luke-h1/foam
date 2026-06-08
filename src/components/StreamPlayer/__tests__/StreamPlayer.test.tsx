@@ -1,23 +1,22 @@
 import { createRef } from 'react';
 import { act, render } from '@testing-library/react-native';
+import type { WebViewProps } from 'react-native-webview';
 
 const mockInjectJavaScript = jest.fn();
-const mockWebViewProps: Record<string, unknown>[] = [];
+const mockWebViewProps: WebViewProps[] = [];
 
 jest.mock('react-native-webview', () => {
   const React = require('react');
   const { View } = require('react-native');
 
   return {
-    WebView: React.forwardRef(
-      (props: Record<string, unknown>, ref: unknown) => {
-        mockWebViewProps.push(props);
-        React.useImperativeHandle(ref, () => ({
-          injectJavaScript: mockInjectJavaScript,
-        }));
-        return React.createElement(View, { testID: 'stream-webview' });
-      },
-    ),
+    WebView: React.forwardRef((props: WebViewProps, ref: unknown) => {
+      mockWebViewProps.push(props);
+      React.useImperativeHandle(ref, () => ({
+        injectJavaScript: mockInjectJavaScript,
+      }));
+      return React.createElement(View, { testID: 'stream-webview' });
+    }),
   };
 });
 
@@ -267,8 +266,10 @@ describe('StreamPlayer component messaging', () => {
     expect(latestWebViewProps().source).toEqual({
       uri: 'https://player.twitch.tv/?channel=cohhcarnage&muted=false&parent=www.twitch.tv',
     });
-    const injectedJavaScript = latestWebViewProps()
-      .injectedJavaScript as string;
+    const injectedJavaScript = latestWebViewProps().injectedJavaScript;
+    if (typeof injectedJavaScript !== 'string') {
+      throw new Error('Expected injectedJavaScript to be a string');
+    }
     expect(injectedJavaScript.includes('.player-controls')).toEqual(true);
     expect(injectedJavaScript.includes('window.playerControls')).toEqual(true);
     expect(

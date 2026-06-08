@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { chatStore$ } from '@app/store/chatStore/state';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import { useSelector } from '@legendapp/state/react';

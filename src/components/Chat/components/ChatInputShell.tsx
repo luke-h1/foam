@@ -1,7 +1,7 @@
 import type { ChatComposerHandle } from './ChatComposer/ChatComposer';
 import type { useAuthContext } from '@app/context/AuthContext';
 import { twitchService } from '@app/services/twitch-service';
-import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
+import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import type { SanitisedEmote } from '@app/types/emote';
 import { formatDate } from '@app/utils/date-time/date';
 import { findBadges } from '@app/utils/chat/findBadges';

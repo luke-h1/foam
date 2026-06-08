@@ -1,5 +1,5 @@
-import { cacheEmoteImages } from '@app/store/chatStore/emoteImages';
-import { useCurrentEmoteData } from '@app/store/chatStore/hooks';
+import { cacheEmoteImages } from '@app/store/chat/actions/emoteImages';
+import { useCurrentEmoteData } from '@app/store/chat/react/selectors';
 import type { SanitisedEmote } from '@app/types/emote';
 import React, {
   startTransition,

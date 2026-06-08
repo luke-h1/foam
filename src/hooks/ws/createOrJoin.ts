@@ -10,7 +10,7 @@ import {
 import { Options, sharedWebSockets, type WebSocketEventMap } from './types';
 
 export const createOrJoinSocket = (
-  webSocketRef: RefObject<WebSocket>,
+  webSocketRef: RefObject<WebSocket | null>,
   url: string,
   setReadyState: (readyState: ReadyState) => void,
   optionsRef: RefObject<Options>,

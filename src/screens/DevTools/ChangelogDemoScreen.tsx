@@ -1,14 +1,8 @@
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import {
-  getCurrentAppVersion,
-  getLatestSeenAppVersion,
-  getLatestSeenOTAVersion,
-  presentChangelog,
-  resetSeenChangelogVersions,
-  type ChangelogPresentOptions,
-} from '@modules/changelog';
+import ChangelogModule from '@modules/changelog/src/ChangelogModule';
+import type { ChangelogPresentOptions } from '@modules/changelog/src/Changelog.types';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -79,9 +73,9 @@ const demoOptions: ChangelogPresentOptions = {
 
 function readChangelogState(): ChangelogState {
   return {
-    currentVersion: getCurrentAppVersion(),
-    latestSeenAppVersion: getLatestSeenAppVersion(),
-    latestSeenOTAVersion: getLatestSeenOTAVersion(),
+    currentVersion: ChangelogModule.getCurrentAppVersion(),
+    latestSeenAppVersion: ChangelogModule.getLatestSeenAppVersion(),
+    latestSeenOTAVersion: ChangelogModule.getLatestSeenOTAVersion(),
   };
 }
 
@@ -102,7 +96,7 @@ export function ChangelogDemoScreen() {
 
   const handlePresentCurrent = async () => {
     try {
-      await presentChangelog(demoOptions);
+      await ChangelogModule.present(demoOptions);
       refreshState();
     } catch (error) {
       Alert.alert('Changelog failed', String(error));
@@ -111,7 +105,7 @@ export function ChangelogDemoScreen() {
 
   const handlePresentOTA = async () => {
     try {
-      await presentChangelog({
+      await ChangelogModule.present({
         ...demoOptions,
         otaVersion: 'demo-ota',
         version: undefined,
@@ -123,7 +117,7 @@ export function ChangelogDemoScreen() {
   };
 
   const handleReset = () => {
-    resetSeenChangelogVersions();
+    ChangelogModule.resetSeenVersions();
     refreshState();
   };
 

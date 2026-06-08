@@ -1,5 +1,5 @@
 import { Text } from '@app/components/ui/Text/Text';
-import { useMessages } from '@app/store/chatStore/hooks';
+import { useMessages } from '@app/store/chat/react/selectors';
 import { logger } from '@app/utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
 import type { RefObject } from 'react';

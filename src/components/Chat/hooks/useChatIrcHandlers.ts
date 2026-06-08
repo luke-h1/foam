@@ -10,7 +10,7 @@ import {
   moderateMessageById,
   moderateMessagesByLogin,
   removeMessageById,
-} from '@app/store/chatStore/messages';
+} from '@app/store/chat/actions/messages';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { logger } from '@app/utils/logger';

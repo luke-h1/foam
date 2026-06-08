@@ -4,10 +4,10 @@ import {
   abortCurrentLoad,
   clearChannelResources,
   clearPersonalEmotesCache,
-} from '@app/store/chatStore/channelLoad';
-import { clearPaints } from '@app/store/chatStore/cosmetics';
-import { clearMessages, clearTtvUsers } from '@app/store/chatStore/messages';
-import { clearMentionSessionCaches } from '@app/store/chatStore/chatColorCaches';
+} from '@app/store/chat/actions/channelLoad';
+import { clearPaints } from '@app/store/chat/actions/cosmetics';
+import { clearMessages, clearTtvUsers } from '@app/store/chat/actions/messages';
+import { clearMentionSessionCaches } from '@app/store/chat/actions/chatColorCaches';
 import { resetMentionLoginResolver } from '@app/utils/chat/mentionLoginResolver';
 import { MutableRefObject, useEffect, useRef } from 'react';
 

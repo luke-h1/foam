@@ -1,4 +1,10 @@
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
+import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import {
+  createEmotePart,
+  createMentionPart,
+  createTextPart,
+} from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
 import { AnyChatMessageType } from '../messageHandlers';
 import {
   shouldReprocessMessage,
@@ -18,25 +24,15 @@ jest.mock('@app/utils/logger', () => ({
 
 const createMockUserstate = (
   displayName = 'TestUser',
-): AnyChatMessageType['userstate'] => ({
-  'display-name': displayName,
-  login: displayName.toLowerCase(),
-  username: displayName,
-  'user-id': '123456',
-  id: 'msg-123',
-  color: '#FF0000',
-  badges: {},
-  'badges-raw': '',
-  'user-type': '',
-  mod: '0',
-  subscriber: '0',
-  turbo: '0',
-  'emote-sets': '',
-  'reply-parent-msg-id': '',
-  'reply-parent-msg-body': '',
-  'reply-parent-display-name': '',
-  'reply-parent-user-login': '',
-});
+): AnyChatMessageType['userstate'] =>
+  createUserStateTags({
+    'display-name': displayName,
+    login: displayName.toLowerCase(),
+    username: displayName,
+    'user-id': '123456',
+    id: 'msg-123',
+    color: '#FF0000',
+  });
 
 const createMockMessage = (
   overrides: Partial<AnyChatMessageType> = {},
@@ -44,7 +40,7 @@ const createMockMessage = (
   id: 'msg-123_nonce-123',
   message_id: 'msg-123',
   message_nonce: 'nonce-123',
-  message: [{ type: 'text', content: 'Hello world' }] as ParsedPart[],
+  message: [createTextPart('Hello world')],
   channel: 'testchannel',
   sender: 'TestUser',
   badges: [],
@@ -58,7 +54,7 @@ const createMockMessage = (
 const createSystemMessage = (): AnyChatMessageType =>
   createMockMessage({
     sender: 'System',
-    message: [{ type: 'text', content: 'System message' }] as ParsedPart[],
+    message: [createTextPart('System message')],
     userstate: {
       ...createMockUserstate('System'),
       login: 'system',
@@ -81,30 +77,24 @@ const createNoticeMessage = (): AnyChatMessageType => ({
 const createMessageWithEmotes = (): AnyChatMessageType =>
   createMockMessage({
     message: [
-      { type: 'text', content: 'Hello ' },
-      {
-        type: 'emote',
-        content: 'Kappa',
+      createTextPart('Hello '),
+      createEmotePart('Kappa', {
         name: 'Kappa',
         original_name: 'Kappa',
         id: 'emote-1',
         url: 'https://example.com/kappa.png',
-      },
-      { type: 'text', content: ' World' },
-    ] as ParsedPart[],
+      }),
+      createTextPart(' World'),
+    ],
   });
 
 const createMessageWithMention = (): AnyChatMessageType =>
   createMockMessage({
     message: [
-      { type: 'text', content: 'Hello ' },
-      {
-        type: 'mention',
-        content: '@username',
-        color: '#FF0000',
-      },
-      { type: 'text', content: ' how are you?' },
-    ] as ParsedPart[],
+      createTextPart('Hello '),
+      createMentionPart('@username', { color: '#FF0000' }),
+      createTextPart(' how are you?'),
+    ],
   });
 
 describe('reprocessMessages', () => {
@@ -305,7 +295,7 @@ describe('reprocessMessages', () => {
 
     test('should skip messages with empty text content', () => {
       const message = createMockMessage({
-        message: [{ type: 'text', content: '   ' }] as ParsedPart[],
+        message: [createTextPart('   ')],
       });
       const processMessageEmotes = jest.fn();
 
@@ -346,16 +336,14 @@ describe('reprocessMessages', () => {
     test('should extract original emote names when reprocessing', () => {
       const message = createMockMessage({
         message: [
-          { type: 'text', content: 'Check this ' },
-          {
-            type: 'emote',
-            content: 'OMEGALUL',
+          createTextPart('Check this '),
+          createEmotePart('OMEGALUL', {
             name: 'OMEGALUL',
             original_name: 'OMEGALUL',
             id: 'emote-7tv',
             url: 'https://cdn.7tv.app/emote/123.webp',
-          },
-        ] as ParsedPart[],
+          }),
+        ],
       });
       const processMessageEmotes = jest.fn();
 

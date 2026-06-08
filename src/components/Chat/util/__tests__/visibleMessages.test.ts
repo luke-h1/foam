@@ -1,4 +1,5 @@
-import type { ChatMessageType } from '@app/store/chatStore/constants';
+import type { ChatMessageType } from '@app/store/chat/types/constants';
+import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { getVisibleMessages } from '../visibleMessages';
@@ -21,14 +22,14 @@ function createMessage(
     message,
     replyBody: '',
     replyDisplayName: '',
-    userstate: {
+    userstate: createUserStateTags({
       username: sender,
       login: sender.toLowerCase(),
       color: '#ff00ff',
       'display-name': sender,
       'user-id': `${id}-user`,
       ...userstateOverrides,
-    } as UserStateTags,
+    }),
   };
 }
 

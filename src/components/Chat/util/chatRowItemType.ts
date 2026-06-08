@@ -1,4 +1,4 @@
-import { chatStore$ } from '@app/store/chatStore/state';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
 import {
   getChatBodyInfo,

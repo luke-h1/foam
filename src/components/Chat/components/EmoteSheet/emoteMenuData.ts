@@ -1,5 +1,5 @@
 import { BrandIconName } from '@app/components/BrandIcon/brandIconRegistry';
-import { emptyEmoteData } from '@app/store/chatStore/constants';
+import { emptyEmoteData } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 
 import type { EmotePickerItem } from './EmoteSheet';

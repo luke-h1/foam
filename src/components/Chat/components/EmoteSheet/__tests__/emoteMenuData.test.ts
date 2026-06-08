@@ -1,55 +1,17 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
-import type { SanitisedEmote } from '@app/types/emote';
 
 import {
   buildEmoteMenuProviders,
   filterProviderSets,
   flattenProviderSets,
 } from '../emoteMenuData';
-
-function createEmote(
-  id: string,
-  name: string,
-  site: SanitisedEmote['site'],
-  overrides: Partial<SanitisedEmote> = {},
-): SanitisedEmote {
-  return {
-    id,
-    name,
-    original_name: name,
-    url: `https://cdn.example.com/${id}.webp`,
-    creator: null,
-    emote_link: '',
-    site,
-    ...((site === '7TV Channel' || site === '7TV Global'
-      ? {
-          frame_count: 1,
-          format: 'webp',
-          flags: 0,
-          aspect_ratio: 1,
-          zero_width: false,
-          width: 32,
-          height: 32,
-          set_metadata: {
-            setId: 'set-default',
-            setName: 'Default Set',
-            capacity: null,
-            ownerId: null,
-            kind: EmoteSetKind.Normal,
-            updatedAt: '',
-            totalCount: 2,
-          },
-        }
-      : {}) as Partial<SanitisedEmote>),
-    ...overrides,
-  } as SanitisedEmote;
-}
+import { createMenuEmote } from './__fixtures__/emoteMenuData.fixture';
 
 describe('emoteMenuData', () => {
   test('builds providers and groups 7TV emotes by set metadata', () => {
     const providers = buildEmoteMenuProviders({
       sevenTvChannelEmotes: [
-        createEmote('1', 'Smile', '7TV Channel', {
+        createMenuEmote('1', 'Smile', '7TV Channel', {
           set_metadata: {
             setId: 'set-a',
             setName: 'Channel Prime',
@@ -60,7 +22,7 @@ describe('emoteMenuData', () => {
             totalCount: 1,
           },
         }),
-        createEmote('2', 'Wave', '7TV Channel', {
+        createMenuEmote('2', 'Wave', '7TV Channel', {
           set_metadata: {
             setId: 'set-b',
             setName: 'Mods',
@@ -72,7 +34,7 @@ describe('emoteMenuData', () => {
           },
         }),
       ],
-      twitchGlobalEmotes: [createEmote('3', 'Kappa', 'Twitch Global')],
+      twitchGlobalEmotes: [createMenuEmote('3', 'Kappa', 'Twitch Global')],
       emojis: ['😀', '😂', '😍'],
     });
 
@@ -90,7 +52,7 @@ describe('emoteMenuData', () => {
   test('filters sets by emote name within a provider', () => {
     const provider = buildEmoteMenuProviders({
       sevenTvChannelEmotes: [
-        createEmote('1', 'Smile', '7TV Channel', {
+        createMenuEmote('1', 'Smile', '7TV Channel', {
           set_metadata: {
             setId: 'set-a',
             setName: 'Channel',
@@ -101,7 +63,7 @@ describe('emoteMenuData', () => {
             totalCount: 2,
           },
         }),
-        createEmote('2', 'Wave', '7TV Channel', {
+        createMenuEmote('2', 'Wave', '7TV Channel', {
           set_metadata: {
             setId: 'set-a',
             setName: 'Channel',
@@ -129,9 +91,9 @@ describe('emoteMenuData', () => {
   test('flattens sets into header and row items for virtualization', () => {
     const provider = buildEmoteMenuProviders({
       twitchChannelEmotes: [
-        createEmote('1', 'A', 'Twitch Channel'),
-        createEmote('2', 'B', 'Twitch Channel'),
-        createEmote('3', 'C', 'Twitch Channel'),
+        createMenuEmote('1', 'A', 'Twitch Channel'),
+        createMenuEmote('2', 'B', 'Twitch Channel'),
+        createMenuEmote('3', 'C', 'Twitch Channel'),
       ],
     })[0];
 

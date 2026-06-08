@@ -13,7 +13,7 @@ jest.mock('expo-image', () => {
   };
 });
 
-jest.mock('@app/store/chatStore/state', () => ({
+jest.mock('@app/store/chat/observables/chatStore', () => ({
   chatStore$: {
     userPaintIds: {},
     paints: {},

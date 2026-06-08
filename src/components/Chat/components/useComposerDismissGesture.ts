@@ -6,12 +6,13 @@ import {
   withSpring,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
+import {
+  COMPOSER_DISMISS_DRAG_DISTANCE,
+  COMPOSER_DISMISS_VELOCITY,
+  COMPOSER_DRAG_LIMIT,
+} from './composerDismissConstants';
 
-export const COMPOSER_DISMISS_DRAG_DISTANCE = 34;
-export const COMPOSER_DISMISS_VELOCITY = 520;
-export const COMPOSER_DRAG_LIMIT = 64;
-
-export function dismissComposer() {
+function dismissComposer() {
   void KeyboardController.dismiss();
 }
 

@@ -1,5 +1,5 @@
-import { clearCache } from '@app/store/chatStore/channelLoad';
-import { clearUserCosmeticsCache } from '@app/store/chatStore/cosmetics';
+import { clearCache } from '@app/store/chat/actions/channelLoad';
+import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 import { useRef, useCallback } from 'react';

@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
 import { View } from 'react-native';
+import { createChatMessageFixture } from '../../util/__tests__/__fixtures__/chatMessage.fixture';
 import { ChatList } from '../ChatList';
 
 const mockLegendList = jest.fn((_props: unknown) => (
@@ -83,21 +84,16 @@ describe('ChatList', () => {
   test('forwards visible messages from LegendList viewability', () => {
     const listRef = { current: null };
     const onViewableMessagesChange = jest.fn();
-    const visibleMessage = {
-      id: '1',
+    const visibleMessage = createChatMessageFixture({
+      id: '1_nonce',
       message_id: '1',
       message_nonce: 'nonce',
-      message: [{ type: 'text', content: 'hello' }],
-      badges: [],
-      channel: 'channel',
-      sender: 'sender',
       timestamp: '00:00',
-      userstate: {},
-    };
+    });
 
     render(
       <ChatList
-        data={[visibleMessage] as never}
+        data={[visibleMessage]}
         listRef={listRef}
         shouldMaintainScrollAtEnd
         handleScroll={jest.fn()}
@@ -131,21 +127,16 @@ describe('ChatList', () => {
   test('does not refire visible-message hydration for the same visible rows', () => {
     const listRef = { current: null };
     const onViewableMessagesChange = jest.fn();
-    const visibleMessage = {
-      id: '1',
+    const visibleMessage = createChatMessageFixture({
+      id: '1_nonce',
       message_id: '1',
       message_nonce: 'nonce',
-      message: [{ type: 'text', content: 'hello' }],
-      badges: [],
-      channel: 'channel',
-      sender: 'sender',
       timestamp: '00:00',
-      userstate: {},
-    };
+    });
 
     render(
       <ChatList
-        data={[visibleMessage] as never}
+        data={[visibleMessage]}
         listRef={listRef}
         shouldMaintainScrollAtEnd
         handleScroll={jest.fn()}

@@ -1,4 +1,4 @@
-import type { ChatUser } from '@app/store/chatStore/constants';
+import type { ChatUser } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import { useCallback, useImperativeHandle, useState, type Ref } from 'react';
 import { useWordInfo } from './hooks/useWordInfo';

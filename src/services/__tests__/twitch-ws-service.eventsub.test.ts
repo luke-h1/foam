@@ -25,19 +25,12 @@ jest.mock('@app/utils/logger', () => ({
   },
 }));
 
-type EventCallback = (data: unknown) => void;
-type TwitchWsPrivateState = {
-  activeSubscriptions: Map<string, string>;
-  eventCallbacks: Map<string, EventCallback[]>;
-  instance: WebSocket | null;
-  sessionId: string;
-  subscriptionConfigs: Map<
-    string,
-    { condition: Record<string, string>; version: string }
-  >;
-};
+import {
+  getTwitchWsTestState,
+  resetTwitchWsTestState,
+} from './__fixtures__/twitchWsService.fixture';
 
-const twitchWsState = TwitchWsService as unknown as TwitchWsPrivateState;
+const twitchWsState = getTwitchWsTestState();
 const mockCreateEventSubscription = jest.mocked(
   twitchService.createEventSubscription,
 );
@@ -46,11 +39,7 @@ const mockRecordWarning = jest.mocked(recordWarning);
 describe('TwitchWsService EventSub response handling', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    twitchWsState.activeSubscriptions = new Map();
-    twitchWsState.eventCallbacks = new Map();
-    twitchWsState.instance = null;
-    twitchWsState.sessionId = 'session-id';
-    twitchWsState.subscriptionConfigs = new Map();
+    resetTwitchWsTestState(twitchWsState);
   });
 
   test('does not treat Twitch API error bodies as subscription responses', async () => {
@@ -58,9 +47,7 @@ describe('TwitchWsService EventSub response handling', () => {
     mockCreateEventSubscription.mockResolvedValue({
       message: 'Forbidden',
       status: 403,
-    } as unknown as Awaited<
-      ReturnType<typeof twitchService.createEventSubscription>
-    >);
+    } as unknown as Awaited<ReturnType<typeof mockCreateEventSubscription>>);
 
     await TwitchWsService.subscribeToEvent(
       'channel.prediction.begin',

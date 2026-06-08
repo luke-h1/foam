@@ -1,4 +1,4 @@
-import type { ChatMessageType } from '@app/store/chatStore/constants';
+import type { ChatMessageType } from '@app/store/chat/types/constants';
 import type { Meta, StoryObj } from '@storybook/react';
 import { View } from 'react-native';
 import { RichChatMessage } from './RichChatMessage';

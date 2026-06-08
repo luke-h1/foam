@@ -3,8 +3,8 @@ import { ReadyState } from '@app/hooks/ws/constants';
 import {
   getSevenTvEmoteSetId,
   updateSevenTvEmotes,
-} from '@app/store/chatStore/channelLoad';
-import { fetchAndCacheUserCosmetics } from '@app/store/chatStore/cosmetics';
+} from '@app/store/chat/actions/channelLoad';
+import { fetchAndCacheUserCosmetics } from '@app/store/chat/actions/cosmetics';
 import { logger } from '@app/utils/logger';
 import { useEffect, useRef } from 'react';
 import type { MutableRefObject } from 'react';

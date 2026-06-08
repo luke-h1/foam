@@ -1,11 +1,11 @@
-import { chatStore$ } from '@app/store/chatStore/state';
-import { getUserMessageColor } from '@app/store/chatStore/messages';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { getUserMessageColor } from '@app/store/chat/actions/messages';
 import {
   getSessionCacheString,
   setSessionCacheString,
-} from '@app/store/chatStore/chatColorCaches';
+} from '@app/store/chat/actions/chatColorCaches';
 import { useSelector } from '@legendapp/state/react';
-import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
+import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
@@ -206,10 +206,14 @@ export function useChatRowRenderer({
     const hasEmotes =
       chatStore$.emojis.peek().length > 0 ||
       emoteData.twitchGlobalEmotes.length > 0 ||
+      emoteData.twitchChannelEmotes.length > 0 ||
       emoteData.twitchSubscriberEmotes.length > 0 ||
       emoteData.sevenTvGlobalEmotes.length > 0 ||
+      emoteData.sevenTvChannelEmotes.length > 0 ||
       emoteData.bttvGlobalEmotes.length > 0 ||
-      emoteData.ffzGlobalEmotes.length > 0;
+      emoteData.bttvChannelEmotes.length > 0 ||
+      emoteData.ffzGlobalEmotes.length > 0 ||
+      emoteData.ffzChannelEmotes.length > 0;
 
     if (!hasEmotes) {
       return [{ type: 'text', content: text }];

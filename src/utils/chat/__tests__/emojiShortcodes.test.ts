@@ -1,35 +1,18 @@
+import { createEmojiEmote } from './__fixtures__/emojiEmote.fixture';
 import { replaceTextWithEmotes } from '../replaceTextWithEmotes';
 
 describe('emoji shortcode parsing', () => {
   const emojiEmotes = [
-    {
+    createEmojiEmote({
       id: '1F602',
       name: ':joy:',
-      original_name: ':joy:',
-      creator: null,
-      emote_link: '',
       url: 'https://example.com/joy.png',
-      static_url: 'https://example.com/joy.png',
-      site: 'Emoji' as const,
-      width: 72,
-      height: 72,
-      aspect_ratio: 1,
-      zero_width: false,
-    },
-    {
+    }),
+    createEmojiEmote({
       id: '1F602',
       name: ':haha:',
-      original_name: ':haha:',
-      creator: null,
-      emote_link: '',
       url: 'https://example.com/joy.png',
-      static_url: 'https://example.com/joy.png',
-      site: 'Emoji' as const,
-      width: 72,
-      height: 72,
-      aspect_ratio: 1,
-      zero_width: false,
-    },
+    }),
   ];
 
   const emptyParams = {

@@ -1,7 +1,7 @@
 import { useAuthContext } from '@app/context/AuthContext';
 import { ReadyState } from '@app/hooks/ws/constants';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
-import { chatStore$ } from '@app/store/chatStore/state';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import {
   useChatRenderPreferences,
   useUpdatePreferences,
@@ -16,11 +16,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { ChatInputShellHandle } from '../components/ChatInputShell';
 import type { ChatListRef } from '../components/ChatList';
-import type { ChatOverlayControllerHandle } from '../components/ChatOverlayController';
+import { useChatOverlays } from '../components/useChatOverlays';
 import { normaliseChatUsername } from '../util/chatUsernames';
 import { useChatCosmetics } from './useChatCosmetics';
 import { useChatEmoteLoader } from './useChatEmoteLoader';
-import { useChatInteractionHandlers } from './useChatInteractionHandlers';
+import {
+  useChatComposerActions,
+  useChatOverlayActions,
+} from './useChatInteractionHandlers';
 import { useChatIrcHandlers } from './useChatIrcHandlers';
 import { useChatLifecycle } from './useChatLifecycle';
 import { useChatMessageProcessing } from './useChatMessageProcessing';
@@ -72,7 +75,6 @@ export function useChat(channelId: string, channelName: string) {
   } = useChatTransientState(channelId);
   const listRef = useRef<ChatListRef | null>(null);
   const inputShellRef = useRef<ChatInputShellHandle>(null);
-  const overlayControllerRef = useRef<ChatOverlayControllerHandle>(null);
   const isLoadingRecentMessagesRef = useRef(false);
   const isChatMountedRef = useRef(true);
 
@@ -272,21 +274,11 @@ export function useChat(channelId: string, channelName: string) {
   const connected =
     twitchConnectionState === ReadyState.OPEN && isChatConnected();
 
-  const {
-    appendMentionToComposer,
-    handleBadgeLongPress,
-    handleEmotePress,
-    handleEmoteSelect,
-    handleMessageLongPress,
-    handleOpenEmoteSheet,
-    handleOpenSettingsSheet,
-    handleReply,
-    handleUsernamePress,
-  } = useChatInteractionHandlers({
-    fetchUserCosmetics,
-    inputShellRef,
-    overlayControllerRef,
-  });
+  const { appendMentionToComposer, handleEmoteSelect, handleReply } =
+    useChatComposerActions({
+      fetchUserCosmetics,
+      inputShellRef,
+    });
 
   const currentUserState = getUserState();
   const parsedBadges = parseBadges(currentUserState['badges-raw']).badges;
@@ -333,6 +325,51 @@ export function useChat(channelId: string, channelName: string) {
     scrollToBottom,
     updatePreferences,
   });
+
+  const { openers, overlaysElement } = useChatOverlays({
+    appendMentionToComposer,
+    canModerateChat,
+    channelId,
+    channelName,
+    disableEmoteAnimations: preferences.disableEmoteAnimations,
+    handleReply,
+    hiddenUsers,
+    highlightedUsers,
+    hidePhraseFromView,
+    hideUserFromView,
+    onClearChatCache: handleClearChatCache,
+    onClearImageCache: handleDebugClearImageCache,
+    onClearSevenTvCosmeticsCache: handleClearSevenTvCosmeticsCache,
+    onInsertEmote: handleEmoteSelect,
+    onPinMessage: handlePinMessage,
+    onRefreshPinnedMessage: handleRefreshPinnedMessage,
+    onSettingsReconnect: handleSettingsReconnect,
+    onSettingsRefetchEmotes: handleSettingsRefetchEmotes,
+    onToggleChatDensity: handleToggleChatDensity,
+    onToggleHighlightOwnMentions: handleToggleHighlightOwnMentions,
+    onToggleInlineReplyContext: handleToggleInlineReplyContext,
+    onToggleShowTimestamps: handleToggleShowTimestamps,
+    onToggleShowUnreadJumpPill: handleToggleShowUnreadJumpPill,
+    onUnpinPinnedMessage: handleUnpinPinnedMessage,
+    pinnedMessageBusy,
+    pinnedMessageId,
+    sendChatCommand,
+    showInlineReplyContext: preferences.showInlineReplyContext,
+    showTimestamps: preferences.chatTimestamps,
+    showUnreadJumpPill: preferences.showUnreadJumpPill,
+    chatDensity: preferences.chatDensity,
+    highlightOwnMentions: preferences.highlightOwnMentions,
+    toggleHighlightedUser,
+  });
+
+  const {
+    handleBadgeLongPress,
+    handleEmotePress,
+    handleMessageLongPress,
+    handleOpenEmoteSheet,
+    handleOpenSettingsSheet,
+    handleUsernamePress,
+  } = useChatOverlayActions(openers);
 
   const paneFlags = useMemo(
     () => ({
@@ -426,7 +463,7 @@ export function useChat(channelId: string, channelName: string) {
     listRef,
     messageListExtraData,
     messages$,
-    overlayControllerRef,
+    overlaysElement,
     paneFlags,
     pinnedMessage,
     pinnedMessageBusy,

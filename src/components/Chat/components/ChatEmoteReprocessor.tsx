@@ -1,5 +1,5 @@
-import { useChannelEmoteData } from '@app/store/chatStore/hooks';
-import type { AnyChatMessageType } from '@app/store/chatStore/constants';
+import { useChannelEmoteData } from '@app/store/chat/react/selectors';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { RefObject, memo } from 'react';
 
 import { useEmoteReprocessing } from '../hooks/useEmoteReprocessing';

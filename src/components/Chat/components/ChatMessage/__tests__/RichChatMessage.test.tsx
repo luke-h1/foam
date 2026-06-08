@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable camelcase */
 import { EmoteSetKind } from '@app/graphql/generated/gql';
-import type { ChatMessageType } from '@app/store/chatStore/constants';
+import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { theme } from '@app/styles/themes';
-import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
+import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { act, render, fireEvent } from '@testing-library/react-native';
@@ -50,14 +51,14 @@ const createMockMessage = (
   const message_nonce = 'nonce-123';
   return {
     id: `${message_id}_${message_nonce}`,
-    userstate: {
+    userstate: createUserStateTags({
       username: 'testuser',
       'display-name': 'TestUser',
       login: 'testuser',
       color: '#FF0000',
       'user-id': '123456',
       ...userstate,
-    } as UserStateTags,
+    }),
     message,
     badges: [],
     channel: 'testchannel',
@@ -108,9 +109,13 @@ describe('RichChatMessage', () => {
   });
 
   test('does not render object placeholders for malformed text parts', () => {
-    const malformedMessage = [
-      { type: 'text', content: { text: 'bad payload' } },
-    ] as unknown as ParsedPart[];
+    const malformedMessage: ParsedPart[] = [
+      {
+        type: 'text',
+        // @ts-expect-error malformed IRC payload should not render as visible text
+        content: { text: 'bad payload' },
+      },
+    ];
     const message = createMockMessage(malformedMessage);
 
     const { queryByText } = render(<RichChatMessage {...message} />);
@@ -199,7 +204,7 @@ describe('RichChatMessage', () => {
                 setName: '',
                 capacity: null,
                 ownerId: null,
-                kind: 'NORMAL' as EmoteSetKind,
+                kind: EmoteSetKind.Normal,
                 updatedAt: '',
                 totalCount: 0,
               },
@@ -243,7 +248,7 @@ describe('RichChatMessage', () => {
                 setName: '',
                 capacity: null,
                 ownerId: null,
-                kind: 'NORMAL' as EmoteSetKind,
+                kind: EmoteSetKind.Normal,
                 updatedAt: '',
                 totalCount: 0,
               },

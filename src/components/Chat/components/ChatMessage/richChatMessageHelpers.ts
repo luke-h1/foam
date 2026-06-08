@@ -1,7 +1,5 @@
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-import type { ReactNode } from 'react';
-
 const SUBSCRIPTION_NOTICE_TYPES = new Set<ParsedPart['type']>([
   'sub',
   'resub',
@@ -42,51 +40,6 @@ export interface ChatBodyInfo {
 
 export function normaliseUsername(value?: string): string {
   return value?.trim().replace(/^@/, '').toLowerCase() ?? '';
-}
-
-export function renderParts(
-  message: ParsedPart[],
-  renderer: (part: ParsedPart, index: number) => ReactNode,
-): ReactNode[] {
-  const renderedParts: ReactNode[] = [];
-  let currentTextPart: ParsedPart<'text'> | null = null;
-  let currentTextIndex = 0;
-
-  const pushCurrentTextPart = () => {
-    if (!currentTextPart) {
-      return;
-    }
-
-    renderedParts.push(renderer(currentTextPart, currentTextIndex));
-    currentTextPart = null;
-  };
-
-  for (let index = 0; index < message.length; index += 1) {
-    const part = message[index];
-    if (!part) {
-      continue;
-    }
-
-    if (part.type === 'text') {
-      if (currentTextPart) {
-        currentTextPart = {
-          type: 'text',
-          content: currentTextPart.content + part.content,
-        };
-      } else {
-        currentTextPart = part;
-        currentTextIndex = index;
-      }
-      continue;
-    }
-
-    pushCurrentTextPart();
-    renderedParts.push(renderer(part, index));
-  }
-
-  pushCurrentTextPart();
-
-  return renderedParts;
 }
 
 export function getPartIdentity(part: ParsedPart, index: number): string {

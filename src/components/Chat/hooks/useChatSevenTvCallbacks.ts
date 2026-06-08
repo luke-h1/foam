@@ -19,7 +19,7 @@ import {
   setUserPaint,
   updateBadge,
   updatePaint,
-} from '@app/store/chatStore/cosmetics';
+} from '@app/store/chat/actions/cosmetics';
 import type { SanitisedEmote } from '@app/types/emote';
 import type {
   BadgeData,

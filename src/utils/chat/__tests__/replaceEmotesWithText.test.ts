@@ -79,18 +79,25 @@ describe('replaceEmotesWithText', () => {
   });
 
   test('should handle mixed emote types', () => {
+    const ffzEmote = ffzSanitisedChannelEmoteSet[0];
+    const sevenTvEmote = sevenTvSanitisedChannelEmoteSetFixture[0];
+
+    if (!ffzEmote || !sevenTvEmote) {
+      throw new Error('Expected fixture emotes to be defined');
+    }
+
     const result = replaceEmotesWithText([
       { type: 'text', content: 'Hello ' },
       {
         type: 'emote',
-        content: ffzSanitisedChannelEmoteSet[0]?.name as string,
-        ...ffzSanitisedChannelEmoteSet[0],
+        content: ffzEmote.name,
+        ...ffzEmote,
       },
       { type: 'text', content: ' ' },
       {
         type: 'emote',
-        content: sevenTvSanitisedChannelEmoteSetFixture[0]?.name as string,
-        ...sevenTvSanitisedChannelEmoteSetFixture[0],
+        content: sevenTvEmote.name,
+        ...sevenTvEmote,
       },
       { type: 'text', content: ' World' },
     ]);

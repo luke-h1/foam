@@ -1,14 +1,6 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable no-await-in-loop */
 import { EmoteSetKind } from '@app/graphql/generated/gql';
-import {
-  CosmeticCreateCallbackData,
-  CosmeticUpdateCallbackData,
-  CosmeticDeleteCallbackData,
-  EntitlementCreateCallbackData,
-  EntitlementUpdateCallbackData,
-  EntitlementDeleteCallbackData,
-} from '@app/hooks/useSeventvWs';
 import type { SanitisedEmote, SevenTvSite } from '@app/types/emote';
 import { logger } from '@app/utils/logger';
 import {
@@ -387,6 +379,40 @@ export interface EntitlementCreate {
   id: string;
   kind: number;
   object: EntitlementObject;
+}
+
+export interface CosmeticCreateCallbackData {
+  cosmetic: CosmeticCreate;
+  kind: 'PAINT' | 'BADGE';
+}
+
+export interface EntitlementCreateCallbackData {
+  entitlement: EntitlementCreate;
+  kind: 'BADGE' | 'PAINT' | 'EMOTE_SET';
+  ttvUserId: string | null;
+  paintId: string | null;
+  badgeId: string | null;
+}
+
+export interface CosmeticUpdateCallbackData {
+  changes: ChangeMap<CosmeticCreate>;
+  kind: 'PAINT' | 'BADGE' | null;
+}
+
+export interface CosmeticDeleteCallbackData {
+  cosmeticId: string;
+}
+
+export interface EntitlementUpdateCallbackData {
+  changes: ChangeMap<EntitlementCreate>;
+  ttvUserId: string | null;
+  paintId: string | null;
+  badgeId: string | null;
+}
+
+export interface EntitlementDeleteCallbackData {
+  entitlementId: string;
+  ttvUserId: string | null;
 }
 
 export interface SevenTvEventMap {

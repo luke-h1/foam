@@ -1,5 +1,6 @@
 import Client from '@app/services/api/Client';
 import { fetch } from 'expo/fetch';
+import { Response } from 'cross-fetch';
 
 const mockFetch = jest.mocked(fetch);
 
@@ -11,15 +12,22 @@ function createJsonResponse({
   body: unknown;
   status?: number;
   statusText?: string;
-}) {
-  return {
-    headers: new Headers({ 'Content-Type': 'application/json' }),
-    ok: status >= 200 && status < 300,
+}): Response {
+  return new Response(JSON.stringify(body), {
+    headers: {
+      'Content-Type': 'application/json',
+    },
     status,
     statusText,
-    text: jest.fn().mockResolvedValue(JSON.stringify(body)),
-    url: 'https://api.test/response',
-  } as unknown as Awaited<ReturnType<typeof fetch>>;
+  });
+}
+
+function getRequestHeaders(init: RequestInit): Headers {
+  if (!(init.headers instanceof Headers)) {
+    throw new Error('Expected fetch init headers to be a Headers instance');
+  }
+
+  return init.headers;
 }
 
 describe('Client', () => {
@@ -29,7 +37,9 @@ describe('Client', () => {
 
   test('uses expo fetch with base URL, default headers, and serialized params', async () => {
     mockFetch.mockResolvedValueOnce(
-      createJsonResponse({ body: { data: ['stream'] } }),
+      createJsonResponse({
+        body: { data: ['stream'] },
+      }) as unknown as Awaited<ReturnType<typeof fetch>>,
     );
     const client = new Client({
       baseURL: 'https://api.test/helix',
@@ -51,7 +61,7 @@ describe('Client', () => {
     if (!init) {
       throw new Error('Expected fetch init');
     }
-    const headers = init.headers as Headers;
+    const headers = getRequestHeaders(init);
 
     expect(url).toBe('https://api.test/helix/streams?first=20&id=one%2Ctwo');
     expect(init.method).toBe('GET');
@@ -59,7 +69,11 @@ describe('Client', () => {
   });
 
   test('serializes JSON bodies and applies the current auth token', async () => {
-    mockFetch.mockResolvedValueOnce(createJsonResponse({ body: { ok: true } }));
+    mockFetch.mockResolvedValueOnce(
+      createJsonResponse({
+        body: { ok: true },
+      }) as unknown as Awaited<ReturnType<typeof fetch>>,
+    );
     const client = new Client({ baseURL: 'https://api.test/helix' });
     client.setAuthToken('user-token');
 
@@ -71,7 +85,7 @@ describe('Client', () => {
     if (!init) {
       throw new Error('Expected fetch init');
     }
-    const headers = init.headers as Headers;
+    const headers = getRequestHeaders(init);
 
     expect(init.method).toBe('POST');
     expect(init.body).toBe(JSON.stringify({ type: 'channel.poll.begin' }));
@@ -85,7 +99,7 @@ describe('Client', () => {
         body: { message: 'Forbidden' },
         status: 403,
         statusText: 'Forbidden',
-      }),
+      }) as unknown as Awaited<ReturnType<typeof fetch>>,
     );
     const client = new Client({ baseURL: 'https://api.test/helix' });
 

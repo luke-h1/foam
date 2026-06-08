@@ -1,5 +1,5 @@
-import type { ChatMessageType } from '@app/store/chatStore/constants';
-import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { ChatMessageType } from '@app/store/chat/types/constants';
+import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { render } from '@testing-library/react-native';
 import { Profiler, useEffect } from 'react';
@@ -58,13 +58,12 @@ jest.mock('@legendapp/list', () => {
   }
 
   return {
-    LegendList: React.forwardRef((props: unknown, ref: unknown) => {
-      const typedProps = props as MockLegendListProps;
-      const { data, extraData, keyExtractor, renderItem } = typedProps;
+    LegendList: React.forwardRef((props: MockLegendListProps, ref: unknown) => {
+      const { data, extraData, keyExtractor, renderItem } = props;
       const items = Array.isArray(data) ? data : [];
       const renderRow = typeof renderItem === 'function' ? renderItem : null;
       const getKey = typeof keyExtractor === 'function' ? keyExtractor : null;
-      const virtualizedWindow = getVirtualizedWindow(items, typedProps);
+      const virtualizedWindow = getVirtualizedWindow(items, props);
 
       return React.createElement(
         MockView,
@@ -145,7 +144,7 @@ function createChatMessage(index: number): PerfChatMessage {
     replyDisplayName: '',
     parentDisplayName: '',
     timestamp: '12:00',
-    userstate: {
+    userstate: createUserStateTags({
       username: sender,
       login: sender.toLowerCase(),
       color: '#9146ff',
@@ -159,7 +158,7 @@ function createChatMessage(index: number): PerfChatMessage {
       turbo: '0',
       'emote-sets': '',
       id: `msg-${index}`,
-    } as UserStateTags,
+    }),
   };
 }
 

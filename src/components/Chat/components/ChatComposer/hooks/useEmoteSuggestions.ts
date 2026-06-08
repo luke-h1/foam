@@ -1,4 +1,7 @@
-import { useCurrentEmoteData, useEmojis } from '@app/store/chatStore/hooks';
+import {
+  useCurrentEmoteData,
+  useEmojis,
+} from '@app/store/chat/react/selectors';
 import type { SanitisedEmote } from '@app/types/emote';
 
 interface SearchableEmote {

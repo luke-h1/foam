@@ -12,8 +12,8 @@ import {
   moderateMessagesByLogin,
   removeMessageById,
   restoreRecentMessagesForChannel,
-} from '@app/store/chatStore/messages';
-import { chatStore$ } from '@app/store/chatStore/state';
+} from '@app/store/chat/actions/messages';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { useChatMessages } from '../hooks/useChatMessages';
 
 const mockScrollToBottom = jest.fn();
@@ -91,7 +91,7 @@ jest.mock('@app/services/twitch-service', () => ({
   twitchService: {},
 }));
 
-jest.mock('@app/store/chatStore/channelLoad', () => ({
+jest.mock('@app/store/chat/actions/channelLoad', () => ({
   clearCache: jest.fn(),
   fetchUserPersonalEmotes: jest.fn(),
   getCurrentEmoteData: jest.fn(() => null),
@@ -100,17 +100,17 @@ jest.mock('@app/store/chatStore/channelLoad', () => ({
   updateSevenTvEmotes: jest.fn(),
 }));
 
-jest.mock('@app/store/chatStore/cosmetics', () => ({
+jest.mock('@app/store/chat/actions/cosmetics', () => ({
   fetchAndCacheUserCosmetics: jest.fn(),
   getUserBadge: jest.fn(),
 }));
 
-jest.mock('@app/store/chatStore/hooks', () => ({
+jest.mock('@app/store/chat/react/selectors', () => ({
   useChannelEmoteData: jest.fn(() => null),
   useMessages: jest.fn(() => []),
 }));
 
-jest.mock('@app/store/chatStore/state', () => ({
+jest.mock('@app/store/chat/observables/chatStore', () => ({
   chatStore$: {
     currentChannelId: {
       set: jest.fn(),
@@ -127,7 +127,7 @@ jest.mock('@app/store/chatStore/state', () => ({
   },
 }));
 
-jest.mock('@app/store/chatStore/messages', () => ({
+jest.mock('@app/store/chat/actions/messages', () => ({
   addMessage: jest.fn(),
   clearMessages: jest.fn(),
   getMessageById: jest.fn(() => undefined),

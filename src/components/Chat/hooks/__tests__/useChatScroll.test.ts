@@ -1,5 +1,6 @@
 import { FlashListRef } from '@app/components/FlashList/FlashList';
 import { renderHook, act } from '@testing-library/react-native';
+import { createRef } from '@app/testing/createRef';
 import { RefObject } from 'react';
 import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import type { AnyChatMessageType } from '../../util/messageHandlers';
@@ -24,9 +25,9 @@ describe('useChatScroll', () => {
       scrollToOffset: jest.fn(),
     };
 
-    const ref = {
-      current: mocks,
-    } as unknown as RefObject<FlashListRef<AnyChatMessageType> | null>;
+    const ref = createRef<FlashListRef<AnyChatMessageType> | null>(
+      mocks as unknown as FlashListRef<AnyChatMessageType>,
+    );
 
     return { ref, mocks };
   };
@@ -38,11 +39,29 @@ describe('useChatScroll', () => {
   ): NativeSyntheticEvent<NativeScrollEvent> =>
     ({
       nativeEvent: {
-        contentOffset,
-        layoutMeasurement,
-        contentSize,
+        contentOffset: { x: 0, ...contentOffset },
+        layoutMeasurement: { width: 0, ...layoutMeasurement },
+        contentSize: { width: 0, ...contentSize },
+        contentInset: { top: 0, left: 0, bottom: 0, right: 0 },
+        contentOffsetAnimatedValue: undefined,
+        zoomScale: 1,
+        velocity: { x: 0, y: 0 },
       },
-    }) as NativeSyntheticEvent<NativeScrollEvent>;
+      currentTarget:
+        {} as NativeSyntheticEvent<NativeScrollEvent>['currentTarget'],
+      target: {} as NativeSyntheticEvent<NativeScrollEvent>['target'],
+      bubbles: false,
+      cancelable: false,
+      defaultPrevented: false,
+      eventPhase: 0,
+      isDefaultPrevented: () => false,
+      isPropagationStopped: () => false,
+      persist: () => {},
+      preventDefault: () => {},
+      stopPropagation: () => {},
+      timeStamp: 0,
+      type: 'scroll',
+    }) as unknown as NativeSyntheticEvent<NativeScrollEvent>;
 
   beforeEach(() => {
     jest.useFakeTimers();

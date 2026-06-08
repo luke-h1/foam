@@ -10,10 +10,10 @@ import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import {
   clearPaints,
   clearSevenTvBadges,
-} from '@app/store/chatStore/cosmetics';
-import { clearEmoteImageCache } from '@app/store/chatStore/emoteImages';
-import { usePaints } from '@app/store/chatStore/hooks';
-import { chatStore$ } from '@app/store/chatStore/state';
+} from '@app/store/chat/actions/cosmetics';
+import { clearEmoteImageCache } from '@app/store/chat/actions/emoteImages';
+import { usePaints } from '@app/store/chat/react/selectors';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { theme } from '@app/styles/themes';
 import {
   CachedImageInfo,

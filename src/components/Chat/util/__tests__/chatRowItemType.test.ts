@@ -1,3 +1,5 @@
+import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
+import { createTextPart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
 import { getChatRowItemType } from '../chatRowItemType';
 import type { AnyChatMessageType } from '../messageHandlers';
 
@@ -10,23 +12,38 @@ function createUserChatMessage(
     message_nonce: 'nonce-1',
     channel: 'channel',
     sender: 'viewer',
-    message: [{ type: 'text', content: 'hello' }],
-    userstate: {
+    message: [createTextPart('hello')],
+    userstate: createUserStateTags({
       username: 'Viewer',
       login: 'viewer',
       'user-id': '123',
       color: '#FFFFFF',
-      badges: {},
-      'badges-raw': '',
-    },
-    badges: {},
+    }),
+    badges: [],
+    replyBody: '',
+    replyDisplayName: '',
+    parentDisplayName: '',
     ...overrides,
-  } as AnyChatMessageType;
+  };
 }
 
 describe('getChatRowItemType', () => {
   test('returns invalid for malformed rows', () => {
-    expect(getChatRowItemType({} as AnyChatMessageType)).toBe('invalid');
+    expect(
+      getChatRowItemType({
+        id: '',
+        message_id: '',
+        message_nonce: '',
+        channel: '',
+        sender: '',
+        message: [],
+        badges: [],
+        replyBody: '',
+        replyDisplayName: '',
+        parentDisplayName: '',
+        userstate: createUserStateTags(),
+      }),
+    ).toBe('invalid');
   });
 
   test('returns body variant for subscription notices', () => {

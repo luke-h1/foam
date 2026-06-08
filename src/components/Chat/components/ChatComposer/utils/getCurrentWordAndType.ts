@@ -1,4 +1,4 @@
-import { SuggestionType } from '../ChatComposer';
+import type { SuggestionType } from '../chatComposerTypes';
 import { getCurrentWordInfo } from './getCurrentWordInfo';
 
 export const getCurrentWordAndType = (text: string, cursorPosition: number) => {

@@ -1,6 +1,24 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import {
+  createAnonGiftPaidUpgradeTags,
+  createAnnouncementTags,
+  createBitsBadgeTierTags,
+  createCharityDonationTags,
+  createGiftPaidUpgradeTags,
+  createHighlightedMessageTags,
+  createModiversaryTags,
+  createPrimePaidUpgradeTags,
+  createRaidTags,
+  createResubTags,
+  createRewardGiftTags,
+  createRitualTags,
+  createSharedChatNoticeTags,
+  createSubGiftTags,
+  createSubMysteryGiftTags,
+  createSubscriptionTags,
+  createUnraidTags,
+  createViewerMilestoneTags,
+} from '@app/types/chat/irc-tags/__fixtures__/userNoticeTags.fixture';
+import type { BaseUserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { getCachedChannelPointRewardTitle } from '@app/utils/chat/channelPointRewardTitleStore';
 import {
   createUserStateFromTags,
@@ -9,7 +27,7 @@ import {
   createSystemMessage,
 } from '../messageHandlers';
 
-jest.mock('@app/store/chatStore/channelLoad', () => ({
+jest.mock('@app/store/chat/actions/channelLoad', () => ({
   getCurrentEmoteData: jest.fn(),
 }));
 
@@ -193,22 +211,13 @@ describe('messageHandlers', () => {
 
   describe('createUserNoticeMessage', () => {
     test('should create viewermilestone notice', () => {
-      const tags: UserNoticeTags = {
-        'msg-id': 'viewermilestone',
-        'msg-param-category': 'watch-streak',
-        'msg-param-value': '5',
+      const tags = createViewerMilestoneTags({
         'display-name': 'MilestoneUser',
         login: 'milestoneuser',
         'system-msg': 'MilestoneUser watched 5 consecutive streams',
         color: '#1AC9A2',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+        'msg-param-value': '5',
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -221,22 +230,12 @@ describe('messageHandlers', () => {
     });
 
     test('should create sub notice', () => {
-      const tags: UserNoticeTags = {
-        'msg-id': 'sub',
-        'msg-param-sub-plan': '2000',
-        'msg-param-sub-plan-name': 'Tier 1',
+      const tags = createSubscriptionTags({
         'display-name': 'SubUser',
         login: 'subuser',
         'system-msg': 'SubUser subscribed with Tier 1',
         color: '#0000FF',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -249,23 +248,13 @@ describe('messageHandlers', () => {
     });
 
     test('should create resub notice', () => {
-      const tags: UserNoticeTags = {
-        'msg-id': 'resub',
+      const tags = createResubTags({
         'msg-param-cumulative-months': '12',
-        'msg-param-sub-plan': '2000',
-        'msg-param-sub-plan-name': 'Tier 1',
         'display-name': 'ResubUser',
         login: 'resubuser',
         'system-msg': 'ResubUser resubscribed for 12 months',
         color: '#FF00FF',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -278,23 +267,14 @@ describe('messageHandlers', () => {
     });
 
     test('should create subgift notice', () => {
-      const tags: UserNoticeTags = {
-        'msg-id': 'subgift',
+      const tags = createSubGiftTags({
         'msg-param-recipient-display-name': 'GiftRecipient',
         'msg-param-recipient-id': '67890',
-        'msg-param-sub-plan': '2000',
         'display-name': 'GiftGiver',
         login: 'giftgiver',
         'system-msg': 'GiftGiver gifted a subscription to GiftRecipient',
         color: '#FFFF00',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -306,22 +286,14 @@ describe('messageHandlers', () => {
     });
 
     test('should create raid notice', () => {
-      const tags: UserNoticeTags = {
-        'msg-id': 'raid',
+      const tags = createRaidTags({
         'msg-param-displayName': 'RaidLeader',
         'msg-param-viewerCount': '500',
         'display-name': 'RaidLeader',
         login: 'raidleader',
         'system-msg': '500 raiders from RaidLeader have joined!',
         color: '#00FFFF',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -337,22 +309,14 @@ describe('messageHandlers', () => {
     });
 
     test('should create anongiftpaidupgrade notice', () => {
-      const tags: UserNoticeTags = {
-        'msg-id': 'anongiftpaidupgrade',
+      const tags = createAnonGiftPaidUpgradeTags({
         'msg-param-promo-name': 'SummerPromo',
         'msg-param-promo-gift-total': '10',
         'display-name': 'UpgradeUser',
         login: 'upgradeuser',
         'system-msg': 'UpgradeUser is continuing the gift sub',
         color: '#FF8800',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -364,23 +328,14 @@ describe('messageHandlers', () => {
     });
 
     test('should create submysterygift notice', () => {
-      const tags: UserNoticeTags = {
-        'msg-id': 'submysterygift',
+      const tags = createSubMysteryGiftTags({
         'msg-param-mass-gift-count': '5',
         'msg-param-sender-count': '42',
-        'msg-param-sub-plan': '2000',
         'display-name': 'MysteryGifter',
         login: 'mysterygifter',
         'system-msg': 'MysteryGifter gifted 5 Tier 1 Subs to the community!',
         color: '#33CC99',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -393,8 +348,7 @@ describe('messageHandlers', () => {
     });
 
     test('should create giftpaidupgrade notice', () => {
-      const tags: UserNoticeTags = {
-        'msg-id': 'giftpaidupgrade',
+      const tags = createGiftPaidUpgradeTags({
         'msg-param-sender-login': 'gifterlogin',
         'msg-param-sender-name': 'GiftSender',
         'msg-param-promo-name': 'Subtember',
@@ -404,14 +358,7 @@ describe('messageHandlers', () => {
         'system-msg':
           'UpgradeUser is continuing the gift sub they got from GiftSender!',
         color: '#FF8800',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -424,23 +371,14 @@ describe('messageHandlers', () => {
     });
 
     test('should create a channel point redemption notice without chat text', () => {
-      const tags: UserNoticeTags = {
-        'msg-id': 'rewardgift',
+      const tags = createRewardGiftTags({
         'display-name': 'RewardUser',
         login: 'rewarduser',
         'system-msg': 'RewardUser redeemed Hydrate',
-        color: '#9146FF',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
         'room-id': '67890',
         'custom-reward-id': 'reward-123',
         'msg-param-reward-title': 'Hydrate',
-      } as unknown as UserNoticeTags;
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -463,21 +401,12 @@ describe('messageHandlers', () => {
     });
 
     test('should create bitsbadgetier as a twitch system notice', () => {
-      const tags: UserNoticeTags = {
-        'msg-id': 'bitsbadgetier',
+      const tags = createBitsBadgeTierTags({
         'msg-param-threshold': '1000',
         'display-name': 'Cheerer',
         login: 'cheerer',
         'system-msg': 'Cheerer earned the 1,000 Bits badge!',
-        color: '#9146FF',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -493,20 +422,11 @@ describe('messageHandlers', () => {
     });
 
     test('should create unraid as a twitch system notice', () => {
-      const tags: UserNoticeTags = {
-        'msg-id': 'unraid',
+      const tags = createUnraidTags({
         'display-name': 'Streamer',
         login: 'streamer',
         'system-msg': 'The raid has been cancelled.',
-        color: '#9146FF',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -522,20 +442,11 @@ describe('messageHandlers', () => {
     });
 
     test('should create sharedchatnotice as a twitch system notice', () => {
-      const tags: UserNoticeTags = {
-        'msg-id': 'sharedchatnotice',
+      const tags = createSharedChatNoticeTags({
         'display-name': 'Streamer',
         login: 'streamer',
         'system-msg': 'Shared chat connected with partner channel.',
-        color: '#9146FF',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -554,22 +465,13 @@ describe('messageHandlers', () => {
     });
 
     test('should create modiversary as a twitch system notice', () => {
-      const tags: UserNoticeTags = {
-        'msg-id': 'modiversary',
+      const tags = createModiversaryTags({
         'display-name': 'ModUser',
         login: 'moduser',
         'msg-param-months': '24',
         'system-msg':
           'ModUser\\sis\\scelebrating\\s24\\smonths\\sas\\sa\\smoderator!',
-        color: '#9146FF',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -588,20 +490,12 @@ describe('messageHandlers', () => {
     });
 
     test('should create modiversary text from tags when system message is missing', () => {
-      const tags: UserNoticeTags = {
-        'msg-id': 'modiversary',
+      const tags = createModiversaryTags({
         'display-name': 'ModUser',
         login: 'moduser',
         'msg-param-months': '24',
-        color: '#9146FF',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+        'system-msg': undefined,
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -621,22 +515,7 @@ describe('messageHandlers', () => {
     });
 
     test('should handle announcement notices with user metadata', () => {
-      const tags = {
-        'msg-id': 'announcement',
-        id: '55d90904-e515-47d0-ac1d-879f7f1d7b01',
-        'tmi-sent-ts': '1648758023469',
-        'msg-param-color': 'PRIMARY',
-        'display-name': 'Gekon',
-        login: 'gekon',
-        color: '#FF5500',
-        badges: 'broadcaster/1',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '1',
-        'user-id': '12345',
-        'user-type': 'mod',
-      } as unknown as UserNoticeTags;
+      const tags = createAnnouncementTags();
 
       const result = createUserNoticeMessage({
         tags,
@@ -659,20 +538,7 @@ describe('messageHandlers', () => {
     });
 
     test('should handle highlighted-message notices with user metadata', () => {
-      const tags = {
-        'msg-id': 'highlighted-message',
-        id: 'highlight-id',
-        'display-name': 'HighlightedUser',
-        login: 'highlighteduser',
-        color: '#FF5500',
-        badges: 'subscriber/12',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '0',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+      const tags = createHighlightedMessageTags();
 
       const result = createUserNoticeMessage({
         tags,
@@ -690,8 +556,7 @@ describe('messageHandlers', () => {
     });
 
     test('should handle charitydonation notices', () => {
-      const tags = {
-        'msg-id': 'charitydonation',
+      const tags = createCharityDonationTags({
         'display-name': 'Donor',
         login: 'donor',
         'msg-param-charity-name': 'St. Jude',
@@ -699,15 +564,7 @@ describe('messageHandlers', () => {
         'msg-param-exponent': '2',
         'msg-param-donation-currency': 'USD',
         'system-msg': 'Donor donated $5.00 to St. Jude',
-        color: '#9146FF',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -723,21 +580,12 @@ describe('messageHandlers', () => {
     });
 
     test('should handle ritual notices for new chatters', () => {
-      const tags = {
-        'msg-id': 'ritual',
+      const tags = createRitualTags({
         'display-name': 'NewChatter',
         login: 'newchatter',
         'msg-param-ritual-name': 'new_chatter',
         'system-msg': 'NewChatter is new here.',
-        color: '#9146FF',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -752,21 +600,12 @@ describe('messageHandlers', () => {
     });
 
     test('should handle primepaidupgrade as subscription notice', () => {
-      const tags = {
-        'msg-id': 'primepaidupgrade',
+      const tags = createPrimePaidUpgradeTags({
         'display-name': 'PrimeUser',
         login: 'primeuser',
         'msg-param-sub-plan': '1000',
         'msg-param-cumulative-months': '3',
-        color: '#9146FF',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -778,20 +617,14 @@ describe('messageHandlers', () => {
     });
 
     test('should flag shared chat duplicated notices', () => {
-      const tags = {
-        'msg-id': 'raid',
+      const tags = createRaidTags({
         'room-id': '123',
         'source-room-id': '456',
         'system-msg': 'Raid from another channel',
-        color: '#9146FF',
-        badges: '',
-        'badge-info': '',
-        emotes: '',
-        flags: '',
-        mod: '',
-        'user-id': '12345',
-        'user-type': '',
-      } as unknown as UserNoticeTags;
+        'msg-param-displayName': '',
+        'msg-param-login': '',
+        'msg-param-viewerCount': '0',
+      });
 
       const result = createUserNoticeMessage({
         tags,
@@ -803,7 +636,7 @@ describe('messageHandlers', () => {
     });
 
     test('should handle unknown msg-id with default case', () => {
-      const tags = {
+      const tags: BaseUserNoticeTags = {
         'msg-id': 'unknown_type',
         'display-name': 'UnknownUser',
         login: 'unknownuser',
@@ -816,9 +649,10 @@ describe('messageHandlers', () => {
         mod: '',
         'user-id': '12345',
         'user-type': '',
-      } as unknown as UserNoticeTags;
+      };
 
       const result = createUserNoticeMessage({
+        // @ts-expect-error -- Twitch can emit msg-id values outside our typed union
         tags,
         channelName: 'testchannel',
         text: '',
