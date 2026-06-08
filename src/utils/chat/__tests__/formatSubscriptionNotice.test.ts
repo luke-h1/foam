@@ -24,13 +24,18 @@ describe('formatSubscriptionNotice', () => {
       }),
     );
 
-    expect(part.type).toBe('sub');
-    expect(part.subscriptionEvent).toMatchObject({
-      msgId: 'sub',
-      displayName: 'Viewer',
-      plan: '1000',
-      planName: 'Prime',
-      months: 3,
+    expect(part).toEqual({
+      type: 'sub',
+      subscriptionEvent: {
+        msgId: 'sub',
+        displayName: 'Viewer',
+        message: undefined,
+        plan: '1000',
+        planName: 'Prime',
+        months: 3,
+        streakMonths: 1,
+        shouldShareStreak: false,
+      },
     });
   });
 
@@ -47,16 +52,18 @@ describe('formatSubscriptionNotice', () => {
       'Still here!',
     );
 
-    expect(part.type).toBe('resub');
-    expect(part.subscriptionEvent).toMatchObject({
-      msgId: 'resub',
-      displayName: 'viewer',
-      message: 'Still here!',
-      plan: '3000',
-      planName: 'Tier 2',
-      months: 12,
-      streakMonths: 4,
-      shouldShareStreak: true,
+    expect(part).toEqual({
+      type: 'resub',
+      subscriptionEvent: {
+        msgId: 'resub',
+        displayName: 'ResubUser',
+        message: 'Still here!',
+        plan: '3000',
+        planName: 'Tier 2',
+        months: 12,
+        streakMonths: 4,
+        shouldShareStreak: true,
+      },
     });
   });
 
@@ -85,12 +92,14 @@ describe('formatSubscriptionNotice', () => {
       'msg-param-donation-currency': 'USD',
     });
 
-    expect(part.type).toBe('charitydonation');
-    expect(part).toMatchObject({
+    expect(part).toEqual({
+      type: 'charitydonation',
       displayName: 'Donor',
       charityName: 'Example Charity',
       amount: '$25.00',
       currency: 'USD',
+      systemMsg: '',
+      message: undefined,
     });
   });
 
@@ -101,10 +110,12 @@ describe('formatSubscriptionNotice', () => {
       'msg-param-ritual-name': 'new_chatter',
     });
 
-    expect(part.type).toBe('ritual');
-    expect(part).toMatchObject({
+    expect(part).toEqual({
+      type: 'ritual',
       displayName: 'Viewer',
       ritualName: 'new_chatter',
+      systemMsg: '',
+      message: undefined,
     });
   });
 
@@ -120,15 +131,19 @@ describe('formatSubscriptionNotice', () => {
       }),
     );
 
-    expect(part.type).toBe('anongift');
-    expect(part.subscriptionEvent).toMatchObject({
-      msgId: 'subgift',
-      displayName: 'Gifter',
-      planName: 'Tier 1',
-      recipientDisplayName: 'Recipient',
-      recipientId: '123',
-      giftMonths: 1,
-      months: 2,
+    expect(part).toEqual({
+      type: 'anongift',
+      subscriptionEvent: {
+        msgId: 'subgift',
+        displayName: 'Gifter',
+        message: undefined,
+        plan: '2000',
+        planName: 'Tier 1',
+        recipientDisplayName: 'Recipient',
+        recipientId: '123',
+        giftMonths: 1,
+        months: 2,
+      },
     });
   });
 
@@ -140,12 +155,16 @@ describe('formatSubscriptionNotice', () => {
       'msg-param-cumulative-months': '6',
     });
 
-    expect(part.type).toBe('primepaidupgrade');
-    expect(part.subscriptionEvent).toMatchObject({
-      msgId: 'primepaidupgrade',
-      displayName: 'Viewer',
-      planName: 'Prime',
-      months: 6,
+    expect(part).toEqual({
+      type: 'primepaidupgrade',
+      subscriptionEvent: {
+        msgId: 'primepaidupgrade',
+        displayName: 'Viewer',
+        message: undefined,
+        plan: '1000',
+        planName: 'Prime',
+        months: 6,
+      },
     });
   });
 });

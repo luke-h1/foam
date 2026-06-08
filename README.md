@@ -2,6 +2,11 @@
 
 A new way to experience Twitch.tv on mobile
 
+<p>
+  <img src='.github/readme/screenshots/chat.png' alt='Foam stream chat screen with Twitch messages' width='240' />
+  <img src='.github/readme/screenshots/search.png' alt='Foam search screen with live Twitch channels' width='240' />
+</p>
+
 ## Why?
 
 To improve my React native skills and learn various other tech

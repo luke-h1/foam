@@ -8,6 +8,7 @@ import {
   hasSubscribers,
 } from './manage-subscribers';
 import { Options, sharedWebSockets, type WebSocketEventMap } from './types';
+import { createWebSocket } from './webSocketTransport';
 
 export const createOrJoinSocket = (
   webSocketRef: RefObject<WebSocket | null>,
@@ -21,7 +22,11 @@ export const createOrJoinSocket = (
   if (optionsRef.current?.share) {
     if (sharedWebSockets[url] === undefined) {
       setReadyState(ReadyState.CONNECTING);
-      sharedWebSockets[url] = new WebSocket(url, optionsRef.current?.protocols);
+      sharedWebSockets[url] = createWebSocket(
+        url,
+        optionsRef.current?.protocols,
+        optionsRef.current?.options?.headers,
+      );
       attachSharedListeners(sharedWebSockets[url], url);
     } else {
       setReadyState(sharedWebSockets[url].readyState);
@@ -55,7 +60,11 @@ export const createOrJoinSocket = (
     };
   }
   setReadyState(ReadyState.CONNECTING);
-  webSocketRef.current = new WebSocket(url, optionsRef.current?.protocols);
+  webSocketRef.current = createWebSocket(
+    url,
+    optionsRef.current?.protocols,
+    optionsRef.current?.options?.headers,
+  );
 
   return attachListeners(
     webSocketRef.current,
