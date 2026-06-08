@@ -23,7 +23,7 @@ jobs:
       cache-hit: ${{ steps.cache.outputs.cache-hit }}
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
 
@@ -58,7 +58,7 @@ jobs:
     runs-on: foam
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
 
@@ -71,7 +71,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: 🔐 Load secrets
-        uses: 1password/load-secrets-action@14f2fed3712a25f8ad8916ddcca3c4ed737810f6
+        uses: 1password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259 # v4.0.0
         with:
           export-env: true
           version: 2.34.0
@@ -116,7 +116,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           persist-credentials: false
 
