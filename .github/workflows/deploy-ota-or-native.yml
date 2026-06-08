@@ -48,7 +48,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: deploy-ota-or-native
+  group: deploy-ota-or-native-${{ inputs.variant || 'production' }}-${{ inputs.platform || 'ios' }}
   cancel-in-progress: false
 
 jobs:
@@ -247,7 +247,7 @@ jobs:
     needs: [prepare, detect-changes]
     if: needs['detect-changes'].outputs['deploy-type'] == 'ota'
     runs-on: ubuntu-latest
-    concurrency: eas-update-${{ inputs.variant || 'production' }}
+    concurrency: eas-update-${{ inputs.variant || 'production' }}-${{ inputs.platform || 'ios' }}
     outputs:
       ios_update_id: ${{ steps.publish.outputs.ios_update_id }}
       android_update_id: ${{ steps.publish.outputs.android_update_id }}
