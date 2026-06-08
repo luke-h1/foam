@@ -41,8 +41,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_APP_VARIANT": "development",
-        "EXPO_PUBLIC_PLAYER_URL": "http://localhost:3000"
+        "EXPO_PUBLIC_APP_VARIANT": "development"
       },
       "android": {
         "buildType": "apk"
@@ -60,8 +59,7 @@
       "environment": "internal",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_APP_VARIANT": "internal",
-        "EXPO_PUBLIC_PLAYER_URL": "https://player-website.vercel.app"
+        "EXPO_PUBLIC_APP_VARIANT": "internal"
       },
       "ios": {
         "resourceClass": "m-medium"
@@ -76,8 +74,7 @@
       "environment": "testflight",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_APP_VARIANT": "testflight",
-        "EXPO_PUBLIC_PLAYER_URL": "https://player-website.vercel.app"
+        "EXPO_PUBLIC_APP_VARIANT": "testflight"
       },
       "ios": {
         "resourceClass": "m-medium"
@@ -92,8 +89,7 @@
       "environment": "production",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_APP_VARIANT": "production",
-        "EXPO_PUBLIC_PLAYER_URL": "https://player-website.vercel.app"
+        "EXPO_PUBLIC_APP_VARIANT": "production"
       },
       "channel": "production"
     }
