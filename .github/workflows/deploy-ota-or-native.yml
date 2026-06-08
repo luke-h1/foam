@@ -99,7 +99,6 @@ jobs:
     needs: [prepare, test]
     runs-on: ubuntu-latest
     permissions:
-      actions: read
       contents: read
     outputs:
       fingerprint-changed: ${{ steps.compare.outputs.changed }}
@@ -122,6 +121,17 @@ jobs:
       - name: 📦 Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Load fingerprint cache secrets
+        uses: 1password/load-secrets-action@14f2fed3712a25f8ad8916ddcca3c4ed737810f6
+        with:
+          export-env: true
+          version: 2.34.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID
+          FOAM_AWS_FINGERPRINT_SECRET_KEY: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_SECRET_KEY
+          FOAM_AWS_FINGERPRINT_BUCKET_NAME: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_BUCKET_NAME
+
       - name: 🔍 Calculate current fingerprints
         id: fingerprint
         run: |
@@ -136,15 +146,13 @@ jobs:
           EXPO_PUBLIC_APP_VARIANT: ${{ inputs.variant || 'production' }}
 
       - name: 📂 Load previous fingerprints
-        id: previous
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
-        with:
-          path: .fingerprint-cache
-          key: fingerprint-${{ github.ref_name }}-${{ inputs.variant || 'production' }}
-          restore-keys: |
-            fingerprint-main-${{ inputs.variant || 'production' }}
-            fingerprint-main
-            fingerprint-
+        run: >
+          bunx tsx scripts/workflows/deploy-ota-or-native.ts restore-fingerprint-cache
+          --cache-dir .fingerprint-cache
+          --bucket "${FOAM_AWS_FINGERPRINT_BUCKET_NAME}"
+          --branch "${GITHUB_REF_NAME}"
+          --fallback-branch main
+          --variant "${{ inputs.variant || 'production' }}"
 
       - name: 🔄 Compare fingerprints
         id: compare
@@ -224,6 +232,9 @@ jobs:
           AUTH_PROXY_API_BASE_URL: op://ci-cd/foam-staging/AUTH_PROXY_API_BASE_URL
           AUTH_PROXY_API_KEY: op://ci-cd/foam-staging/AUTH_PROXY_API_KEY
           SENTRY_AUTH_TOKEN: op://ci-cd/foam-staging/SENTRY_AUTH_TOKEN
+          FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID
+          FOAM_AWS_FINGERPRINT_SECRET_KEY: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_SECRET_KEY
+          FOAM_AWS_FINGERPRINT_BUCKET_NAME: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_BUCKET_NAME
           GOOGLE_SERVICES_IOS_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_IOS_PROD_BS4
           GOOGLE_SERVICES_ANDROID_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_ANDROID_PROD_BS4
           SLACK_WEBHOOK_URL: op://ci-cd/foam-staging/SLACK_WEBHOOK_URL
@@ -319,19 +330,17 @@ jobs:
           AUTH_PROXY_API_KEY: ${{ env.AUTH_PROXY_API_KEY }}
 
       - name: 💾 Save fingerprints for next run
-        run: |
-          mkdir -p .fingerprint-cache
-          echo "${NEEDS_DETECT_CHANGES_OUTPUTS_IOS_FINGERPRINT}" > .fingerprint-cache/ios
-          echo "${NEEDS_DETECT_CHANGES_OUTPUTS_ANDROID_FINGERPRINT}" > .fingerprint-cache/android
+        run: >
+          bunx tsx scripts/workflows/deploy-ota-or-native.ts save-fingerprint-cache
+          --cache-dir .fingerprint-cache
+          --bucket "${FOAM_AWS_FINGERPRINT_BUCKET_NAME}"
+          --branch "${GITHUB_REF_NAME}"
+          --variant "${{ inputs.variant || 'production' }}"
+          --current-ios "${NEEDS_DETECT_CHANGES_OUTPUTS_IOS_FINGERPRINT}"
+          --current-android "${NEEDS_DETECT_CHANGES_OUTPUTS_ANDROID_FINGERPRINT}"
         env:
           NEEDS_DETECT_CHANGES_OUTPUTS_IOS_FINGERPRINT: ${{ needs['detect-changes'].outputs['ios-fingerprint'] }}
           NEEDS_DETECT_CHANGES_OUTPUTS_ANDROID_FINGERPRINT: ${{ needs['detect-changes'].outputs['android-fingerprint'] }}
-
-      - name: 📂 Cache fingerprints
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
-        with:
-          path: .fingerprint-cache
-          key: fingerprint-${{ github.ref_name }}-${{ github.sha }}-${{ inputs.variant || 'production' }}
 
       - name: 📊 Summary
         run: |
@@ -368,6 +377,17 @@ jobs:
       - name: 📦 Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Load fingerprint cache secrets
+        uses: 1password/load-secrets-action@14f2fed3712a25f8ad8916ddcca3c4ed737810f6
+        with:
+          export-env: true
+          version: 2.34.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID
+          FOAM_AWS_FINGERPRINT_SECRET_KEY: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_SECRET_KEY
+          FOAM_AWS_FINGERPRINT_BUCKET_NAME: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_BUCKET_NAME
+
       - name: Λ Setup EAS
         uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e
         with:
@@ -376,12 +396,11 @@ jobs:
           packager: bun
 
       - name: Restore critical OTA index
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
-        with:
-          path: .ota-critical-cache
-          key: ota-critical-index-${{ inputs.variant || 'production' }}-${{ github.sha }}
-          restore-keys: |
-            ota-critical-index-${{ inputs.variant || 'production' }}-
+        run: >
+          bunx tsx scripts/workflows/deploy-ota-or-native.ts restore-critical-ota-index
+          --cache-dir .ota-critical-cache
+          --bucket "${FOAM_AWS_FINGERPRINT_BUCKET_NAME}"
+          --variant "${{ inputs.variant || 'production' }}"
 
       - name: Determine critical OTA metadata
         id: critical_metadata
@@ -428,25 +447,24 @@ jobs:
           OTA_CRITICAL_INDEX: ${{ steps.critical_metadata.outputs.next_index }}
 
       - name: 💾 Save fingerprints for next run
-        run: |
-          mkdir -p .fingerprint-cache
-          echo "${NEEDS_DETECT_CHANGES_OUTPUTS_IOS_FINGERPRINT}" > .fingerprint-cache/ios
-          echo "${NEEDS_DETECT_CHANGES_OUTPUTS_ANDROID_FINGERPRINT}" > .fingerprint-cache/android
+        run: >
+          bunx tsx scripts/workflows/deploy-ota-or-native.ts save-fingerprint-cache
+          --cache-dir .fingerprint-cache
+          --bucket "${FOAM_AWS_FINGERPRINT_BUCKET_NAME}"
+          --branch "${GITHUB_REF_NAME}"
+          --variant "${{ inputs.variant || 'production' }}"
+          --current-ios "${NEEDS_DETECT_CHANGES_OUTPUTS_IOS_FINGERPRINT}"
+          --current-android "${NEEDS_DETECT_CHANGES_OUTPUTS_ANDROID_FINGERPRINT}"
         env:
           NEEDS_DETECT_CHANGES_OUTPUTS_IOS_FINGERPRINT: ${{ needs['detect-changes'].outputs['ios-fingerprint'] }}
           NEEDS_DETECT_CHANGES_OUTPUTS_ANDROID_FINGERPRINT: ${{ needs['detect-changes'].outputs['android-fingerprint'] }}
 
-      - name: 📂 Cache fingerprints
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
-        with:
-          path: .fingerprint-cache
-          key: fingerprint-${{ github.ref_name }}-${{ github.sha }}-${{ inputs.variant || 'production' }}
-
       - name: 💾 Save critical OTA index
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
-        with:
-          path: .ota-critical-cache
-          key: ota-critical-index-${{ inputs.variant || 'production' }}-${{ github.sha }}
+        run: >
+          bunx tsx scripts/workflows/deploy-ota-or-native.ts save-critical-ota-index
+          --cache-dir .ota-critical-cache
+          --bucket "${FOAM_AWS_FINGERPRINT_BUCKET_NAME}"
+          --variant "${{ inputs.variant || 'production' }}"
 
       - name: 📊 Summary
         run: |
@@ -570,11 +588,23 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Restore previous OTA update IDs
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+      - name: Load fingerprint cache secrets
+        uses: 1password/load-secrets-action@14f2fed3712a25f8ad8916ddcca3c4ed737810f6
         with:
-          path: .ota-cache
-          key: ota-update-ids-${{ inputs.variant || 'production' }}
+          export-env: true
+          version: 2.34.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID
+          FOAM_AWS_FINGERPRINT_SECRET_KEY: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_SECRET_KEY
+          FOAM_AWS_FINGERPRINT_BUCKET_NAME: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_BUCKET_NAME
+
+      - name: Restore previous OTA update IDs
+        run: >
+          bunx tsx scripts/workflows/deploy-ota-or-native.ts restore-ota-update-ids
+          --cache-dir .ota-cache
+          --bucket "${FOAM_AWS_FINGERPRINT_BUCKET_NAME}"
+          --variant "${{ inputs.variant || 'production' }}"
 
       - name: Get previous OTA IDs for Slack
         id: previous_ota
@@ -636,7 +666,8 @@ jobs:
 
       - name: Save OTA cache
         if: needs.release.outputs.deployment_type == 'ota'
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
-        with:
-          path: .ota-cache
-          key: ota-update-ids-${{ inputs.variant || 'production' }}
+        run: >
+          bunx tsx scripts/workflows/deploy-ota-or-native.ts save-ota-update-ids
+          --cache-dir .ota-cache
+          --bucket "${FOAM_AWS_FINGERPRINT_BUCKET_NAME}"
+          --variant "${{ inputs.variant || 'production' }}"

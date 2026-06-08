@@ -1,0 +1,30 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListFoamOtaCachePrefixes",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::foam-mobile-fp-cache",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "fingerprints/*",
+            "ota-critical-index/*",
+            "ota-update-ids/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ReadWriteFoamOtaCacheObjects",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject"],
+      "Resource": [
+        "arn:aws:s3:::foam-mobile-fp-cache/fingerprints/*",
+        "arn:aws:s3:::foam-mobile-fp-cache/ota-critical-index/*",
+        "arn:aws:s3:::foam-mobile-fp-cache/ota-update-ids/*"
+      ]
+    }
+  ]
+}

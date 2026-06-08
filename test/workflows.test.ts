@@ -1,7 +1,10 @@
 import {
   compareFingerprints,
   decideDeployType,
+  getCriticalOtaIndexCachePath,
+  getFingerprintCachePrefix,
   getFinalReleaseTag,
+  getOtaUpdateIdsCachePrefix,
   getPreliminaryReleaseTag,
   parsePublishedUpdateJson,
 } from '../scripts/workflows/otaOrNativeDeployDecision';
@@ -27,6 +30,52 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 describe('otaOrNativeDeployDecision', () => {
+  describe('getFingerprintCachePrefix', () => {
+    test('builds the branch and variant scoped S3 prefix', () => {
+      expect(
+        getFingerprintCachePrefix({
+          bucket: 'foam-release-cache',
+          branch: 'main',
+          variant: 'production',
+        }),
+      ).toBe('s3://foam-release-cache/fingerprints/main/production');
+    });
+
+    test('escapes branch names so each branch remains one S3 path segment', () => {
+      expect(
+        getFingerprintCachePrefix({
+          bucket: 'foam-release-cache',
+          branch: 'feature/ota-cache',
+          variant: 'testflight',
+        }),
+      ).toBe(
+        's3://foam-release-cache/fingerprints/feature%2Fota-cache/testflight',
+      );
+    });
+  });
+
+  describe('getCriticalOtaIndexCachePath', () => {
+    test('builds the variant scoped S3 path', () => {
+      expect(
+        getCriticalOtaIndexCachePath({
+          bucket: 'foam-release-cache',
+          variant: 'production',
+        }),
+      ).toBe('s3://foam-release-cache/ota-critical-index/production/index');
+    });
+  });
+
+  describe('getOtaUpdateIdsCachePrefix', () => {
+    test('builds the variant scoped S3 prefix', () => {
+      expect(
+        getOtaUpdateIdsCachePrefix({
+          bucket: 'foam-release-cache',
+          variant: 'production',
+        }),
+      ).toBe('s3://foam-release-cache/ota-update-ids/production');
+    });
+  });
+
   describe('compareFingerprints', () => {
     test('marks first run as changed when no previous fingerprints exist', () => {
       expect(

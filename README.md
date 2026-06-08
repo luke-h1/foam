@@ -436,6 +436,27 @@ flowchart TD
   R --> S[Slack notify]
 ```
 
+The native-vs-OTA decision stores fingerprints in a private S3 bucket so the
+same cache is available to GitHub Actions and local deploy scripts. Configure
+these fields in the `op://ci-cd/foam-staging` 1Password item, and export the
+same values locally before running `bun run deploy -- ...` or
+`bun run ota -- ...`:
+
+- `FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID`
+- `FOAM_AWS_FINGERPRINT_SECRET_KEY`
+- `FOAM_AWS_FINGERPRINT_BUCKET_NAME`
+
+`FOAM_AWS_REGION` defaults to `eu-west-2` when it is not set.
+
+The IAM user only needs read/write access to these object prefixes:
+
+- `s3://<FOAM_AWS_FINGERPRINT_BUCKET_NAME>/fingerprints/*`
+- `s3://<FOAM_AWS_FINGERPRINT_BUCKET_NAME>/ota-critical-index/*`
+- `s3://<FOAM_AWS_FINGERPRINT_BUCKET_NAME>/ota-update-ids/*`
+
+Use [`infrastructure/iam-fp-policy.json`](infrastructure/iam-fp-policy.json)
+for the IAM user policy.
+
 ### Manual EAS Deploy
 
 ```mermaid
