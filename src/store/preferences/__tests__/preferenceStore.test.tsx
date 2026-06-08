@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import { replacePreferences, usePreferences } from '..';
+import { usePreferences } from '../selectors';
+import { replacePreferences } from '../state';
 
 const basePreferences = {
   updatedAt: 1,

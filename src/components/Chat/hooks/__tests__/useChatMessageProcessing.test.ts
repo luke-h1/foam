@@ -6,7 +6,7 @@ import {
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import { updateMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { useChatHydrationPreferences } from '@app/store/preferences';
+import { useChatHydrationPreferences } from '@app/store/preferences/selectors';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
@@ -48,7 +48,7 @@ jest.mock('@app/store/chat/observables/chatStore', () => ({
   },
 }));
 
-jest.mock('@app/store/preferences', () => ({
+jest.mock('@app/store/preferences/selectors', () => ({
   useChatHydrationPreferences: jest.fn(),
 }));
 

@@ -7,7 +7,7 @@ import {
   getSessionCacheString,
   setSessionCacheString,
 } from '@app/store/chat/actions/chatColorCaches';
-import { useChatRowPreferences } from '@app/store/preferences';
+import { useChatRowPreferences } from '@app/store/preferences/selectors';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
 import { createRef } from '@app/testing/createRef';
@@ -69,7 +69,7 @@ jest.mock('@app/store/chat/actions/channelLoad', () => ({
   getCurrentEmoteData: jest.fn(),
 }));
 
-jest.mock('@app/store/preferences', () => ({
+jest.mock('@app/store/preferences/selectors', () => ({
   useChatRowPreferences: jest.fn(),
 }));
 
