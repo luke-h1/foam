@@ -14,6 +14,10 @@ export function getSortedEmoteNames(
   return Array.from(emoteMap.keys()).sort((a, b) => b.length - a.length);
 }
 
+function isDelimiter(char: string): boolean {
+  return DELIMITER_REGEX.test(char);
+}
+
 export function findEmotesInText(
   text: string,
   emoteMap: Map<string, SanitisedEmote>,
@@ -21,10 +25,6 @@ export function findEmotesInText(
 ): FindEmotesInTextReturn[] {
   const foundEmotes: FindEmotesInTextReturn[] = [];
   let currentIndex = 0;
-
-  function isDelimiter(char: string): boolean {
-    return DELIMITER_REGEX.test(char);
-  }
 
   const urlRanges: { start: number; end: number }[] = [];
   const urlPattern = /https?:\/\/[^\s]+/gi;

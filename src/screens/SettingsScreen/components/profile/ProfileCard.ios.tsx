@@ -135,14 +135,7 @@ export function ProfileCard() {
           />
         </Section>
 
-        <Section
-          title='Session'
-          footer={
-            <NativeText>
-              Signing out removes your saved Twitch token from this device.
-            </NativeText>
-          }
-        >
+        <Section title='Session'>
           <Button
             label='Log out'
             systemImage='arrow.left.square'

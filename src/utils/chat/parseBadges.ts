@@ -10,12 +10,11 @@
  * //   badges: { moderator: '1', subscriber: '12', bits: '1000' },
  * // }
  */
-export function parseBadges(badgesString?: string): {
+export function parseBadges(badgesRaw = ''): {
   'badges-raw': string;
   badges: Record<string, string>;
 } {
   const badges: Record<string, string> = {};
-  const badgesRaw = badgesString || '';
 
   if (badgesRaw) {
     // Split by comma and parse each badge

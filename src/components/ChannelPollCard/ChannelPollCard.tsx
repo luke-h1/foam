@@ -104,9 +104,9 @@ function ChannelPollCardComponent({
         {poll.isActive ? (
           <PressableArea
             accessibilityRole='button'
-            onPress={() =>
-              openLinkInBrowser(`https://www.twitch.tv/${channelLogin}`)
-            }
+            onPress={async () => {
+              await openLinkInBrowser(`https://www.twitch.tv/${channelLogin}`);
+            }}
           >
             <Text color='violet.accent' type='xxs' weight='semibold'>
               Vote on Twitch

@@ -1,7 +1,7 @@
-import { getUserMessageColor } from '@app/store/chatStore/messages';
+import { getUserMessageColor } from '@app/store/chat/actions/messages';
 import { resolveMentionColor } from '../resolveMentionColor';
 
-jest.mock('@app/store/chatStore/messages', () => ({
+jest.mock('@app/store/chat/actions/messages', () => ({
   getUserMessageColor: jest.fn(),
 }));
 

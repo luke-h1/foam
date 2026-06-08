@@ -24,9 +24,9 @@ function isCacheableWebUri(uri: string | undefined): uri is string {
 
 function canUseWebImageCache() {
   return (
-    typeof globalThis.caches !== 'undefined' &&
-    typeof globalThis.fetch !== 'undefined' &&
-    typeof globalThis.URL !== 'undefined'
+    globalThis.caches !== undefined &&
+    globalThis.fetch !== undefined &&
+    globalThis.URL !== undefined
   );
 }
 
@@ -77,11 +77,13 @@ export async function cacheImageFromUrl(
   if (!isCacheableWebUri(url) || !canUseWebImageCache()) {
     return url;
   }
+
   if (options.signal?.aborted) {
     return url;
   }
 
   const cachedObjectUrl = objectUrlCache.get(url)?.uri;
+
   if (cachedObjectUrl) {
     return cachedObjectUrl;
   }

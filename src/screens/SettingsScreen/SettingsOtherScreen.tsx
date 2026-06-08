@@ -29,7 +29,9 @@ export function SettingsOtherScreen() {
             <Button
               label='FAQ'
               systemImage='questionmark.circle'
-              onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
+              onPress={async () => {
+                await openLinkInBrowser(FOAM_FAQ_URL);
+              }}
             />
             <Button
               label='Changelog'
@@ -68,7 +70,9 @@ export function SettingsOtherScreen() {
             title='FAQ'
             subtitle='Common questions and product guidance'
             icon={{ icon: 'questionmark.circle', color: theme.colorPrimary }}
-            onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
+            onPress={async () => {
+              await openLinkInBrowser(FOAM_FAQ_URL);
+            }}
           />
           <SettingsLinkRow
             title='Changelog'

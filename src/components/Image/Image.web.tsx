@@ -33,7 +33,6 @@ export const Image = function Image({
   contentFit = 'cover',
   containerStyle,
   placeholderContentFit,
-  transition = 500,
   source,
   cachePolicy,
   cachePriority = 'visible',
@@ -43,12 +42,16 @@ export const Image = function Image({
   useNitro: _useNitro,
   trackLoadTime = false,
   trackLoadContext,
+  onError,
+  onLoadEnd: onLoadEndProp,
+  onLoadStart: onLoadStartProp,
   style,
   ...props
 }: ImageProps) {
   const sourceUri = getSourceUri(source);
   const shouldUseFileCache = cacheToFile && process.env.NODE_ENV !== 'test';
   const trackLoad = Boolean(trackLoadTime && sourceUri);
+
   const diskCachedSource =
     sourceUri &&
     shouldUseFileCache &&
@@ -61,6 +64,7 @@ export const Image = function Image({
           return cachedUri ? { uri: cachedUri } : undefined;
         })()
       : undefined;
+
   const [downloadedCache, setDownloadedCache] = useState<{
     sourceUri: string | undefined;
     source: ImageProps['source'];
@@ -71,6 +75,9 @@ export const Image = function Image({
       : undefined;
 
   const cachedSource = diskCachedSource ?? downloadedCachedSource;
+  const resolvedSource = cachedSource ?? source;
+  const resolvedSourceUri = getSourceUri(resolvedSource);
+
   const reportImageLoadTime = (timing: {
     mountTimestamp: number;
     loadStartTimestamp: number;
@@ -83,6 +90,7 @@ export const Image = function Image({
     const totalLoadTimeMs = timing.loadEndTimestamp - timing.mountTimestamp;
     const startToLoadTimeMs =
       timing.loadEndTimestamp - timing.loadStartTimestamp;
+
     const safeHost = (() => {
       if (!sourceUri) {
         return 'unknown';
@@ -109,6 +117,7 @@ export const Image = function Image({
       },
     });
   };
+
   const { onLoadStart, onLoadEnd } = useMeasureImageLoadTime(
     'Image',
     reportImageLoadTime,
@@ -130,10 +139,10 @@ export const Image = function Image({
     }
 
     const cacheableSourceUri = sourceUri;
-    const controller = new AbortController();
+    const abort = new AbortController();
     cacheImageFromUrl(cacheableSourceUri, {
       priority: cachePriority,
-      signal: controller.signal,
+      signal: abort.signal,
       variant: cacheVariant,
     })
       .then(objectUrl => {
@@ -162,7 +171,7 @@ export const Image = function Image({
 
     return () => {
       isMounted = false;
-      controller.abort();
+      abort.abort();
     };
   }, [
     cachePolicy,
@@ -177,20 +186,31 @@ export const Image = function Image({
     <View style={[styles.container, containerStyle]}>
       <ExpoImage
         {...props}
-        source={cachedSource ?? source}
+        source={resolvedSource}
         style={style}
         contentFit={contentFit}
         cachePolicy={cachePolicy}
-        transition={transition}
+        transition={500}
         decodeFormat='rgb'
-        recyclingKey={recyclingKey ?? sourceUri}
+        recyclingKey={recyclingKey ?? resolvedSourceUri}
         placeholderContentFit={placeholderContentFit ?? 'cover'}
-        onLoadStart={trackLoad ? onLoadStart : undefined}
-        onLoadEnd={trackLoad ? onLoadEnd : undefined}
+        onLoadStart={() => {
+          if (trackLoad) {
+            onLoadStart();
+          }
+          onLoadStartProp?.();
+        }}
+        onLoadEnd={() => {
+          if (trackLoad) {
+            onLoadEnd();
+          }
+          onLoadEndProp?.();
+        }}
         onError={error => {
           if (__DEV__) {
             console.warn('Image loading error:', error);
           }
+          onError?.(error);
         }}
       />
     </View>

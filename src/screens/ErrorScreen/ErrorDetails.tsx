@@ -65,7 +65,9 @@ export function ErrorDetails(props: ErrorDetailsProps) {
         <View style={styles.actionRow}>
           <Button
             style={styles.primaryButton}
-            onPress={() => openLinkInBrowser(githubURL)}
+            onPress={async () => {
+              await openLinkInBrowser(githubURL);
+            }}
           >
             <Text
               type='sm'

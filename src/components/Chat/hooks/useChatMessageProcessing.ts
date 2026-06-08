@@ -1,20 +1,21 @@
 import { useCallback } from 'react';
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 import {
   fetchUserPersonalEmotes,
   getCurrentEmoteData,
   getUserPersonalEmotes,
-} from '@app/store/chatStore/channelLoad';
-import { getUserBadge } from '@app/store/chatStore/cosmetics';
-import { updateMessages } from '@app/store/chatStore/messages';
-import { chatStore$ } from '@app/store/chatStore/state';
+} from '@app/store/chat/actions/channelLoad';
+import { getUserBadge } from '@app/store/chat/actions/cosmetics';
+import { updateMessages } from '@app/store/chat/actions/messages';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { useChatHydrationPreferences } from '@app/store/preferences';
 import { prefetchImage } from '@app/components/Image/imagePrefetch';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { cacheImageFromUrl } from '@app/utils/image/image-cache';
 import { logger } from '@app/utils/logger';
-import { normaliseChatUsername } from '../util/chatUsernames';
+import { normaliseChatUsername } from '../util/normaliseChatUsername';
 import { hydrateVisibleSevenTvAssets } from '../util/hydrateVisibleSevenTvAssets';
 import {
   createUserStateFromTags,
@@ -25,7 +26,7 @@ import {
   getCachedSharedChatBadgeContext,
   getMessageBadges,
   getSharedChatBadgeContext,
-} from '../util/sharedChatBadges';
+} from '@app/store/chat/actions/sharedChatBadges';
 
 const VISIBLE_ASSET_HYDRATION_DELAY_MS = 150;
 
@@ -58,18 +59,15 @@ interface UseChatMessageProcessingOptions {
     options?: { countUnread?: boolean },
   ) => void;
   messages$: { peek: () => AnyChatMessageType[] };
-  show7TvEmotes: boolean;
-  show7tvBadges: boolean;
-  disableEmoteAnimations: boolean;
   userLogin?: string | null;
-  hydratedVisibleAssetKeysRef: MutableRefObject<Set<string>>;
-  visiblePersonalEmoteUsersRef: MutableRefObject<Set<string>>;
-  visibleCosmeticUsersRef: MutableRefObject<Set<string>>;
-  pendingVisibleMessagesRef: MutableRefObject<AnyChatMessageType[]>;
-  visibleAssetHydrationTimerRef: MutableRefObject<ReturnType<
+  hydratedVisibleAssetKeysRef: RefObject<Set<string>>;
+  visiblePersonalEmoteUsersRef: RefObject<Set<string>>;
+  visibleCosmeticUsersRef: RefObject<Set<string>>;
+  pendingVisibleMessagesRef: RefObject<AnyChatMessageType[]>;
+  visibleAssetHydrationTimerRef: RefObject<ReturnType<
     typeof setTimeout
   > | null>;
-  isAtBottomRef: MutableRefObject<boolean>;
+  isAtBottomRef: RefObject<boolean>;
   maintainBottomAfterContentChange: () => void;
   fetchUserCosmetics: (
     twitchUserId: string,
@@ -84,19 +82,19 @@ export function useChatMessageProcessing({
   channelId,
   handleNewMessage,
   messages$,
-  disableEmoteAnimations,
   fetchUserCosmetics,
   hydratedVisibleAssetKeysRef,
   isAtBottomRef,
   maintainBottomAfterContentChange,
   pendingVisibleMessagesRef,
-  show7TvEmotes,
-  show7tvBadges,
   userLogin,
   visibleAssetHydrationTimerRef,
   visibleCosmeticUsersRef,
   visiblePersonalEmoteUsersRef,
 }: UseChatMessageProcessingOptions) {
+  const { disableEmoteAnimations, show7TvEmotes, show7tvBadges } =
+    useChatHydrationPreferences();
+
   const processMessageEmotes = useCallback(
     (
       text: string,
@@ -162,6 +160,7 @@ export function useChatMessageProcessing({
 
         const cachedSharedBadgeContext =
           getCachedSharedChatBadgeContext(userstate);
+
         const badges = getMessageBadges({
           userstate,
           emoteData,

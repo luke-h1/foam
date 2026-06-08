@@ -19,7 +19,7 @@ import {
   setUserPaint,
   updateBadge,
   updatePaint,
-} from '@app/store/chatStore/cosmetics';
+} from '@app/store/chat/actions/cosmetics';
 import type { SanitisedEmote } from '@app/types/emote';
 import type {
   BadgeData,
@@ -188,6 +188,7 @@ export function useChatSevenTvCallbacks({
         }),
       );
     });
+
     removed.forEach(emote => {
       if (shouldSuppressEmoteNotice(emote)) {
         return;
@@ -250,6 +251,7 @@ export function useChatSevenTvCallbacks({
       const { changes } = data;
       let added_paints = 0;
       let updated_paints = 0;
+
       changes.updated?.forEach(update => {
         const paintData = getDataFromChangeValue(update);
         if (isPaintData(paintData)) {
@@ -258,6 +260,7 @@ export function useChatSevenTvCallbacks({
           logger.stvWs.info(`Updated paint in cache: ${paintData.name}`);
         }
       });
+
       changes.pushed?.forEach(push => {
         const paintData = getDataFromChangeValue(push);
         if (isPaintData(paintData)) {
@@ -281,6 +284,7 @@ export function useChatSevenTvCallbacks({
           },
           added_paints + updated_paints,
         );
+
         recordInfo({
           name: 'seven_tv_cosmetics_info',
           message: 'Applied 7TV paint update',
@@ -298,6 +302,7 @@ export function useChatSevenTvCallbacks({
         });
       }
     }
+
     if (data.kind === 'BADGE') {
       const { changes } = data;
       let added_badges = 0;
@@ -309,6 +314,7 @@ export function useChatSevenTvCallbacks({
         }
         return null;
       };
+
       changes.updated?.forEach(update => {
         const sanitised = toSanitised(update);
         if (sanitised) {
@@ -317,6 +323,7 @@ export function useChatSevenTvCallbacks({
           logger.stvWs.info(`Updated badge in cache: ${sanitised.title}`);
         }
       });
+
       changes.pushed?.forEach(push => {
         const sanitised = toSanitised(push);
         if (sanitised) {
@@ -340,6 +347,7 @@ export function useChatSevenTvCallbacks({
           },
           added_badges + updated_badges,
         );
+
         recordInfo({
           name: 'seven_tv_badges_info',
           message: 'Applied 7TV badge update',

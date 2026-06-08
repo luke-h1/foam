@@ -1,4 +1,4 @@
-import { getUserMessageColor } from '@app/store/chatStore/messages';
+import { getUserMessageColor } from '@app/store/chat/actions/messages';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { cachedLighten } from '@app/utils/chat/resolveCachedSenderColor';
 

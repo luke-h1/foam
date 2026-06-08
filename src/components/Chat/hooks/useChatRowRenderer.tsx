@@ -1,11 +1,12 @@
-import { chatStore$ } from '@app/store/chatStore/state';
-import { getUserMessageColor } from '@app/store/chatStore/messages';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { getUserMessageColor } from '@app/store/chat/actions/messages';
 import {
   getSessionCacheString,
   setSessionCacheString,
-} from '@app/store/chatStore/chatColorCaches';
+} from '@app/store/chat/actions/chatColorCaches';
+import { useChatRowPreferences } from '@app/store/preferences';
 import { useSelector } from '@legendapp/state/react';
-import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
+import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
@@ -13,37 +14,26 @@ import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { useRef, useCallback, useMemo, useLayoutEffect } from 'react';
 import type { RefObject } from 'react';
 
-import type { ChatListRef } from '../components/ChatList';
-import type { ChatListRenderItemInfo } from '../components/ChatList';
+import type { ChatListRef, ChatListRenderItemInfo } from '../ChatMessagePane';
 import {
   RichChatMessage,
-  type BadgePressData,
   type EmotePressData,
   type MessageActionData,
   type UsernamePressData,
-} from '../components/ChatMessage/RichChatMessage';
+} from '../ChatMessage/RichChatMessage';
 import { styles } from '../styles';
 import {
   getChatMessageListKey,
   isRenderableChatMessage,
 } from '../util/chatMessages';
 import { getChatRowItemType } from '../util/chatRowItemType';
-import { normaliseChatUsername } from '../util/chatUsernames';
+import { normaliseChatUsername } from '../util/normaliseChatUsername';
 import type { AnyChatMessageType } from '../util/messageHandlers';
 import type { ChatRowDisplayFlags } from '../types/chatUiFlags';
-import { useIsHighlightedReplyTargetMessage } from './useChatTransientState';
+import { useIsHighlightedReplyTargetMessage } from '@app/store/chat/react/transientState';
 
 const chatRowKeyExtractor = (item: AnyChatMessageType) =>
   getChatMessageListKey(item);
-
-interface ChatRowPreferences {
-  chatDensity: 'comfortable' | 'compact';
-  chatTimestamps: boolean;
-  disableEmoteAnimations: boolean;
-  highlightOwnMentions?: boolean;
-  showAlternatingChatRows: boolean;
-  showInlineReplyContext: boolean;
-}
 
 interface UseChatRowRendererOptions {
   channelId: string;
@@ -53,11 +43,9 @@ interface UseChatRowRendererOptions {
   highlightedUsers: string[];
   listRef: RefObject<ChatListRef | null>;
   messages$: { peek: () => AnyChatMessageType[] };
-  onBadgePress: (badge: BadgePressData) => void;
   onEmotePress: (emote: EmotePressData) => void;
   onMessageLongPress: (data: MessageActionData<'usernotice'>) => void;
   onUsernamePress: (data: UsernamePressData) => void;
-  preferences: ChatRowPreferences;
   setHighlightedReplyTargetMessageId: (
     value: string | null | ((current: string | null) => string | null),
   ) => void;
@@ -77,7 +65,6 @@ interface ChatMessageRowProps {
   highlightedUserSet: ReadonlySet<string>;
   index: number;
   message: AnyChatMessageType;
-  onBadgePress: (badge: BadgePressData) => void;
   onEmotePress: (emote: EmotePressData) => void;
   onMessageLongPress: (data: MessageActionData<'usernotice'>) => void;
   onReplyContextPress: (replyParentMessageId: string) => void;
@@ -95,7 +82,6 @@ const ChatMessageRow = function ChatMessageRow({
   highlightedUserSet,
   index,
   message: msg,
-  onBadgePress,
   onEmotePress,
   onMessageLongPress,
   onReplyContextPress,
@@ -133,7 +119,6 @@ const ChatMessageRow = function ChatMessageRow({
       parentColor={msg.parentColor}
       replyDisplayName={msg.replyDisplayName}
       replyBody={msg.replyBody}
-      onBadgePress={onBadgePress}
       onMessageLongPress={onMessageLongPress}
       onEmotePress={onEmotePress}
       onUsernamePress={onUsernamePress}
@@ -170,15 +155,14 @@ export function useChatRowRenderer({
   highlightedUsers,
   listRef,
   messages$,
-  onBadgePress,
   onEmotePress,
   onMessageLongPress,
   onUsernamePress,
-  preferences,
   setHighlightedReplyTargetMessageId,
   user,
 }: UseChatRowRendererOptions) {
   const mentionLoginRevision = useSelector(chatStore$.mentionLoginRevision);
+  const preferences = useChatRowPreferences();
 
   const getMentionColor = useCallback((username: string): string => {
     const cacheKey = username.replace(/^@/, '').trim().toLowerCase();
@@ -231,7 +215,6 @@ export function useChatRowRenderer({
     });
   };
 
-  const onBadgePressRef = useRef(onBadgePress);
   const onEmotePressRef = useRef(onEmotePress);
   const onMessageLongPressRef = useRef(onMessageLongPress);
   const parseTextForEmotesRef = useRef(parseTextForEmotes);
@@ -328,7 +311,6 @@ export function useChatRowRenderer({
   const handleReplyContextPressRef = useRef(handleReplyContextPress);
 
   useLayoutEffect(() => {
-    onBadgePressRef.current = onBadgePress;
     onEmotePressRef.current = onEmotePress;
     onMessageLongPressRef.current = onMessageLongPress;
     parseTextForEmotesRef.current = parseTextForEmotes;
@@ -360,7 +342,6 @@ export function useChatRowRenderer({
           highlightedUserSet={highlightedUserSet}
           index={index}
           message={msg}
-          onBadgePress={onBadgePressRef.current}
           onEmotePress={onEmotePressRef.current}
           onMessageLongPress={onMessageLongPressRef.current}
           onReplyContextPress={handleReplyContextPressRef.current}

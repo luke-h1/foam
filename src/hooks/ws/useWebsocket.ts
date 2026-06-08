@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, RefObject, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { ReadyState } from './constants';
 import { createOrJoinSocket } from './createOrJoin';
 import { getUrl } from './get-url';
@@ -39,13 +39,17 @@ export const useWebsocket = (
   const readyStateSnapshotRef = useRef(readyState);
   readyStateSnapshotRef.current = readyState;
 
-  const readyStateFromUrl: ReadyState =
+  let readyStateFromUrl = ReadyState.UNINSTANTIATED;
+  if (
     convertedUrl.current &&
     readyStateSnapshotRef.current[convertedUrl.current] !== undefined
-      ? (readyStateSnapshotRef.current[convertedUrl.current] as ReadyState)
-      : url !== null && connectRef.current
-        ? ReadyState.CONNECTING
-        : ReadyState.UNINSTANTIATED;
+  ) {
+    readyStateFromUrl = readyStateSnapshotRef.current[
+      convertedUrl.current
+    ] as ReadyState;
+  } else if (url !== null && connectRef.current) {
+    readyStateFromUrl = ReadyState.CONNECTING;
+  }
 
   const stringifiedQueryParams = options.queryParams
     ? JSON.stringify(options.queryParams)
@@ -153,7 +157,7 @@ export const useWebsocket = (
         };
 
         removeListeners = createOrJoinSocket(
-          websocketRef as RefObject<WebSocket>,
+          websocketRef,
           convertedUrl.current,
           protectedSetReadyState,
           optionsCache,

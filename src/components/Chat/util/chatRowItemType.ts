@@ -1,9 +1,10 @@
-import { chatStore$ } from '@app/store/chatStore/state';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
 import {
   getChatBodyInfo,
+  resolveChatBodyVariant,
   type ChatBodyVariant,
-} from '../components/ChatMessage/richChatMessageHelpers';
+} from '../ChatMessage/richChatMessageHelpers';
 import { isRenderableChatMessage } from './chatMessages';
 import type { AnyChatMessageType } from './messageHandlers';
 
@@ -34,14 +35,7 @@ function resolveBodyVariant(item: AnyChatMessageType): ChatBodyVariant {
       ? item.notice_tags['msg-id']
       : undefined;
 
-  if (
-    variant === 'twitch_system_notice' &&
-    (noticeMsgId === 'raid' || noticeMsgId === 'unraid')
-  ) {
-    return 'raid';
-  }
-
-  return variant;
+  return resolveChatBodyVariant(variant, noticeMsgId);
 }
 
 function getUserChatRowItemType(

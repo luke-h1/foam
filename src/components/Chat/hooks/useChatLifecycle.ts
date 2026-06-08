@@ -4,12 +4,13 @@ import {
   abortCurrentLoad,
   clearChannelResources,
   clearPersonalEmotesCache,
-} from '@app/store/chatStore/channelLoad';
-import { clearPaints } from '@app/store/chatStore/cosmetics';
-import { clearMessages, clearTtvUsers } from '@app/store/chatStore/messages';
-import { clearMentionSessionCaches } from '@app/store/chatStore/chatColorCaches';
+} from '@app/store/chat/actions/channelLoad';
+import { clearPaints } from '@app/store/chat/actions/cosmetics';
+import { clearMessages, clearTtvUsers } from '@app/store/chat/actions/messages';
+import { clearMentionSessionCaches } from '@app/store/chat/actions/chatColorCaches';
+import { clearSharedChatBadgeCaches } from '@app/store/chat/actions/sharedChatBadges';
 import { resetMentionLoginResolver } from '@app/utils/chat/mentionLoginResolver';
-import { MutableRefObject, useEffect, useRef } from 'react';
+import { RefObject, useEffect, useRef } from 'react';
 
 type PartChannel = (channelName: string) => void;
 
@@ -38,9 +39,9 @@ export function useChatLifecycle({
   cleanupScroll: () => void;
   cleanupMessages: () => void;
   cancelEmoteLoad: () => void;
-  fetchedCosmeticsUsersRef: MutableRefObject<Set<string>>;
-  isMountedRef: MutableRefObject<boolean>;
-  processedMessageIdsRef: MutableRefObject<Set<string>>;
+  fetchedCosmeticsUsersRef: RefObject<Set<string>>;
+  isMountedRef: RefObject<boolean>;
+  processedMessageIdsRef: RefObject<Set<string>>;
 }) {
   const hasPartedRef = useRef(false);
   const initializedChannelRef = useRef<string | null>(null);
@@ -70,6 +71,7 @@ export function useChatLifecycle({
       }
 
       clearMentionSessionCaches();
+      clearSharedChatBadgeCaches();
       lifecycle.clearLocalMessages();
       initializedChannelRef.current = null;
       currentEmoteSetIdRef.current = null;
@@ -93,6 +95,7 @@ export function useChatLifecycle({
     lifecycle.fetchedCosmeticsUsersRef.current.clear();
     lifecycle.processedMessageIdsRef.current.clear();
     clearMentionSessionCaches();
+    clearSharedChatBadgeCaches();
     resetMentionLoginResolver();
     lifecycle.clearLocalMessages();
     lifecycle.cleanupScroll();
@@ -117,12 +120,14 @@ export function useChatLifecycle({
     ) {
       clearMessages();
       clearMentionSessionCaches();
+      clearSharedChatBadgeCaches();
       clearLocalMessages();
     }
     initializedChannelRef.current = channelId;
 
     return () => {
       clearMentionSessionCaches();
+      clearSharedChatBadgeCaches();
       isMountedRef.current = false;
       hasPartedRef.current = false;
       currentEmoteSetIdRef.current = null;

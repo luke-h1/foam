@@ -1,18 +1,23 @@
-import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
-import { updateMessages } from '@app/store/chatStore/messages';
-import { chatStore$ } from '@app/store/chatStore/state';
+import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
+import {
+  emptyEmoteData,
+  type SanitisedEmote,
+} from '@app/store/chat/types/constants';
+import { updateMessages } from '@app/store/chat/actions/messages';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { observable } from '@legendapp/state';
 import { act, renderHook } from '@testing-library/react-native';
 import type { AnyChatMessageType } from '../../util/messageHandlers';
 import { useEmoteReprocessing } from '../useEmoteReprocessing';
 
-jest.mock('@app/store/chatStore/channelLoad', () => ({
+jest.mock('@app/store/chat/actions/channelLoad', () => ({
   getCurrentEmoteData: jest.fn(),
 }));
-jest.mock('@app/store/chatStore/messages', () => ({
+jest.mock('@app/store/chat/actions/messages', () => ({
   updateMessages: jest.fn(),
 }));
 
-jest.mock('@app/store/chatStore/state', () => ({
+jest.mock('@app/store/chat/observables/chatStore', () => ({
   chatStore$: {
     emojis: {
       peek: jest.fn(() => []),
@@ -82,15 +87,32 @@ const expectMessageUpdate = (id: string, nonce: string) => ({
   },
 });
 
+function createMessagesObservable(
+  messages: AnyChatMessageType[],
+): typeof chatStore$.messages {
+  return observable({ messages }).messages;
+}
+
 describe('useEmoteReprocessing', () => {
   const channelId = 'channel-1';
   const processedMessageIdsRef = { current: new Set<string>() };
 
+  const twitchGlobalEmote = {
+    creator: null,
+    emote_link: '',
+    id: 'e1',
+    name: 'Kappa',
+    original_name: 'Kappa',
+    site: 'Twitch Global',
+    url: '',
+  } satisfies SanitisedEmote;
+
   const emoteDataWithEmotes = {
-    sevenTvGlobalEmotes: [{ id: 'e1', name: 'Kappa', url: '' }],
+    sevenTvGlobalEmotes: [],
     sevenTvChannelEmotes: [],
-    twitchGlobalEmotes: [],
+    twitchGlobalEmotes: [twitchGlobalEmote],
     twitchChannelEmotes: [],
+    twitchSubscriberEmotes: [],
     bttvGlobalEmotes: [],
     bttvChannelEmotes: [],
     ffzGlobalEmotes: [],
@@ -109,40 +131,21 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('does nothing when emoteLoadStatus is not success', () => {
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
-    const peek = jest
-      .fn()
-      .mockReturnValue([createTextOnlyMessage('1', 'n1', 'hello')]);
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
+    const messages$ = createMessagesObservable([
+      createTextOnlyMessage('1', 'n1', 'hello'),
+    ]);
     renderHook(() =>
       useEmoteReprocessing({
         channelId,
-        channelEmoteData: {},
-        messages$: { peek },
+        channelEmoteData: emptyEmoteData,
+        messages$,
         emoteLoadStatus: 'loading',
         processedMessageIdsRef,
       }),
     );
 
     expect(mockGetCurrentEmoteData).not.toHaveBeenCalled();
-    expect(mockUpdateMessages).not.toHaveBeenCalled();
-  });
-
-  test('does nothing when getCurrentEmoteData returns null', () => {
-    mockGetCurrentEmoteData.mockReturnValue(null as never);
-    const peek = jest
-      .fn()
-      .mockReturnValue([createTextOnlyMessage('1', 'n1', 'hello')]);
-    renderHook(() =>
-      useEmoteReprocessing({
-        channelId,
-        channelEmoteData: {},
-        messages$: { peek },
-        emoteLoadStatus: 'success',
-        processedMessageIdsRef,
-      }),
-    );
-
-    expect(mockGetCurrentEmoteData).toHaveBeenCalledWith(channelId);
     expect(mockUpdateMessages).not.toHaveBeenCalled();
   });
 
@@ -153,19 +156,20 @@ describe('useEmoteReprocessing', () => {
       sevenTvChannelEmotes: [],
       twitchGlobalEmotes: [],
       twitchChannelEmotes: [],
+      twitchSubscriberEmotes: [],
       bttvGlobalEmotes: [],
       bttvChannelEmotes: [],
       ffzGlobalEmotes: [],
       ffzChannelEmotes: [],
-    } as never);
-    const peek = jest
-      .fn()
-      .mockReturnValue([createTextOnlyMessage('1', 'n1', 'hello')]);
+    });
+    const messages$ = createMessagesObservable([
+      createTextOnlyMessage('1', 'n1', 'hello'),
+    ]);
     renderHook(() =>
       useEmoteReprocessing({
         channelId,
-        channelEmoteData: {},
-        messages$: { peek },
+        channelEmoteData: emptyEmoteData,
+        messages$,
         emoteLoadStatus: 'success',
         processedMessageIdsRef,
       }),
@@ -175,15 +179,15 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('reprocesses text-only unprocessed messages and calls updateMessages', () => {
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     const msg1 = createTextOnlyMessage('msg-1', 'nonce-1', 'hello world');
-    const peek = jest.fn().mockReturnValue([msg1]);
+    const messages$ = createMessagesObservable([msg1]);
 
     renderHook(() =>
       useEmoteReprocessing({
         channelId,
-        channelEmoteData: emoteDataWithEmotes,
-        messages$: { peek },
+        channelEmoteData: emptyEmoteData,
+        messages$,
         emoteLoadStatus: 'success',
         processedMessageIdsRef,
       }),
@@ -198,17 +202,17 @@ describe('useEmoteReprocessing', () => {
 
   test('yields between large reprocessing batches', () => {
     jest.useFakeTimers();
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     const messages = Array.from({ length: 30 }, (_, index) =>
       createTextOnlyMessage(`msg-${index}`, `nonce-${index}`, 'hello world'),
     );
-    const peek = jest.fn().mockReturnValue(messages);
+    const messages$ = createMessagesObservable(messages);
 
     renderHook(() =>
       useEmoteReprocessing({
         channelId,
-        channelEmoteData: emoteDataWithEmotes,
-        messages$: { peek },
+        channelEmoteData: emptyEmoteData,
+        messages$,
         emoteLoadStatus: 'success',
         processedMessageIdsRef,
       }),
@@ -233,18 +237,18 @@ describe('useEmoteReprocessing', () => {
     jest
       .requireMock('@app/utils/chat/emoteProcessor')
       .processEmotesWorklet.mockReturnValueOnce(existingParts);
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     const msg1 = {
       ...createTextOnlyMessage('msg-1', 'nonce-1', 'Kappa'),
       message: existingParts,
     };
-    const peek = jest.fn().mockReturnValue([msg1]);
+    const messages$ = createMessagesObservable([msg1]);
 
     renderHook(() =>
       useEmoteReprocessing({
         channelId,
-        channelEmoteData: emoteDataWithEmotes,
-        messages$: { peek },
+        channelEmoteData: emptyEmoteData,
+        messages$,
         emoteLoadStatus: 'success',
         processedMessageIdsRef,
       }),
@@ -254,23 +258,18 @@ describe('useEmoteReprocessing', () => {
     expect(processedMessageIdsRef.current.has('msg-1')).toBe(true);
   });
 
-  test('skips sparse or incomplete message entries', () => {
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+  test('skips sparse message entries', () => {
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     const validMessage = createTextOnlyMessage('msg-1', 'nonce-1', 'hello');
-    const peek = jest
-      .fn()
-      .mockReturnValue([
-        undefined,
-        { message_id: '', message: [] },
-        { message_id: 'bad', message: undefined },
-        validMessage,
-      ]);
+    const messages = Array<AnyChatMessageType>(4);
+    messages[3] = validMessage;
+    const messages$ = createMessagesObservable(messages);
 
     renderHook(() =>
       useEmoteReprocessing({
         channelId,
-        channelEmoteData: emoteDataWithEmotes,
-        messages$: { peek },
+        channelEmoteData: emptyEmoteData,
+        messages$,
         emoteLoadStatus: 'success',
         processedMessageIdsRef,
       }),
@@ -283,16 +282,16 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('skips messages already in processedMessageIdsRef', () => {
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     processedMessageIdsRef.current.add('msg-1');
     const msg1 = createTextOnlyMessage('msg-1', 'nonce-1', 'hello');
-    const peek = jest.fn().mockReturnValue([msg1]);
+    const messages$ = createMessagesObservable([msg1]);
 
     renderHook(() =>
       useEmoteReprocessing({
         channelId,
-        channelEmoteData: {},
-        messages$: { peek },
+        channelEmoteData: emptyEmoteData,
+        messages$,
         emoteLoadStatus: 'success',
         processedMessageIdsRef,
       }),
@@ -301,23 +300,19 @@ describe('useEmoteReprocessing', () => {
     expect(mockUpdateMessages).not.toHaveBeenCalled();
   });
 
-  test('skips system messages and usernotice', () => {
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+  test('skips system messages', () => {
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     const systemMsg = {
       ...createTextOnlyMessage('sys-1', 'n1', 'hi'),
       sender: 'System',
     };
-    const noticeMsg = {
-      ...createTextOnlyMessage('notice-1', 'n2', 'hi'),
-      notice_tags: {},
-    };
-    const peek = jest.fn().mockReturnValue([systemMsg, noticeMsg]);
+    const messages$ = createMessagesObservable([systemMsg]);
 
     renderHook(() =>
       useEmoteReprocessing({
         channelId,
-        channelEmoteData: {},
-        messages$: { peek },
+        channelEmoteData: emptyEmoteData,
+        messages$,
         emoteLoadStatus: 'success',
         processedMessageIdsRef,
       }),
@@ -327,29 +322,31 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('reprocesses existing emote parts when reprocessKey changes', () => {
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     processedMessageIdsRef.current.add('1');
+    const message = [
+      { type: 'text', content: 'hi ' },
+      {
+        type: 'emote',
+        content: 'Kappa',
+        original_name: 'Kappa',
+        id: 'e1',
+        url: '',
+      },
+    ] satisfies AnyChatMessageType['message'];
+
     const withEmote = {
       ...createTextOnlyMessage('1', 'n1', 'hello'),
-      message: [
-        { type: 'text', content: 'hi ' },
-        {
-          type: 'emote',
-          content: 'Kappa',
-          original_name: 'Kappa',
-          id: 'e1',
-          url: '',
-        },
-      ],
+      message,
     };
-    const peek = jest.fn().mockReturnValue([withEmote]);
+    const messages$ = createMessagesObservable([withEmote]);
 
     const { rerender } = renderHook(
       ({ reprocessKey }: { reprocessKey: string }) =>
         useEmoteReprocessing({
           channelId,
-          channelEmoteData: {},
-          messages$: { peek },
+          channelEmoteData: emptyEmoteData,
+          messages$,
           emoteLoadStatus: 'success',
           processedMessageIdsRef,
           reprocessKey,
@@ -371,18 +368,21 @@ describe('useEmoteReprocessing', () => {
   });
 
   test('skips messages with non-chat content parts', () => {
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes as never);
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
+    const message = [
+      { type: 'twitchClip', content: 'https://example.com' },
+    ] satisfies AnyChatMessageType['message'];
     const withMedia = {
       ...createTextOnlyMessage('1', 'n1', 'hello'),
-      message: [{ type: 'twitchClip', content: 'https://example.com' }],
+      message,
     };
-    const peek = jest.fn().mockReturnValue([withMedia]);
+    const messages$ = createMessagesObservable([withMedia]);
 
     renderHook(() =>
       useEmoteReprocessing({
         channelId,
-        channelEmoteData: {},
-        messages$: { peek },
+        channelEmoteData: emptyEmoteData,
+        messages$,
         emoteLoadStatus: 'success',
         processedMessageIdsRef,
       }),

@@ -16,6 +16,7 @@ const extractEmotes = (
   if (!emotes) {
     return [];
   }
+
   const graphemes = [...message];
   const imageVariantsByEmoteId = new Map<
     string,

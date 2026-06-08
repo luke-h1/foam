@@ -1,11 +1,11 @@
 import { useAuthContext } from '@app/context/AuthContext';
 import {
   loadChannelResources,
-  createLoadController,
+  startChannelLoadAbort,
   abortCurrentLoad,
   getSevenTvEmoteSetId,
   getCurrentEmoteData,
-} from '@app/store/chatStore/channelLoad';
+} from '@app/store/chat/actions/channelLoad';
 import {
   preloadChannelEmotes,
   preloadGlobalEmotes,
@@ -69,7 +69,7 @@ export const useChatEmoteLoader = ({
         return;
       }
 
-      const { signal } = createLoadController();
+      const { signal } = startChannelLoadAbort();
 
       logger.chat.info('📦 Starting emote load', {
         channelId,

@@ -11,7 +11,7 @@ import {
   setUserPaint,
   updateBadge,
   updatePaint,
-} from '@app/store/chatStore/cosmetics';
+} from '@app/store/chat/actions/cosmetics';
 import { countMetric } from '@app/lib/sentry';
 import type { SanitisedEmote } from '@app/types/emote';
 import { renderHook, act } from '@testing-library/react-native';
@@ -19,7 +19,7 @@ import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmot
 import { toPaintWithId } from '../../util/normalizeSevenTvCosmetics';
 import { useChatSevenTvCallbacks } from '../useChatSevenTvCallbacks';
 
-jest.mock('@app/store/chatStore/cosmetics', () => ({
+jest.mock('@app/store/chat/actions/cosmetics', () => ({
   addBadge: jest.fn(),
   addPaint: jest.fn(),
   getBadge: jest.fn(),

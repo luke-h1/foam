@@ -171,6 +171,7 @@ export function SearchScreen() {
     getSearchHistorySnapshot,
     getSearchHistorySnapshot,
   );
+
   const searchHistory = useMemo(
     () =>
       sortSearchHistory(
@@ -363,29 +364,6 @@ export function SearchScreen() {
     [handleCategoryPress],
   );
 
-  const renderQuickActionItem: ListRenderItem<SearchQuickAction> = useCallback(
-    ({ item }) => {
-      return (
-        <Button
-          style={styles.quickActionCard}
-          onPress={() => handleQuickActionPress(item.query)}
-        >
-          <Text type='sm' weight='semibold' style={styles.quickActionTitle}>
-            {item.title}
-          </Text>
-          <Text
-            type='xs'
-            color='gray.textLow'
-            style={styles.quickActionSubtitle}
-          >
-            {item.subtitle}
-          </Text>
-        </Button>
-      );
-    },
-    [handleQuickActionPress],
-  );
-
   const showSearchHistory =
     searchResults.length === 0 && searchHistoryQueries.length > 0;
 
@@ -405,8 +383,8 @@ export function SearchScreen() {
       <SearchHeader
         activeResults={activeResults}
         handleFilterChange={handleFilterChange}
+        onQuickActionPress={handleQuickActionPress}
         query={query}
-        renderQuickActionItem={renderQuickActionItem}
         searchResultsLength={searchResults.length}
         selectedFilter={selectedFilter}
       />
@@ -434,20 +412,50 @@ export function SearchScreen() {
 type SearchHeaderProps = {
   activeResults: SearchItem[];
   handleFilterChange: (index: number) => void;
+  onQuickActionPress: (query: string) => void;
   query: string;
-  renderQuickActionItem: ListRenderItem<SearchQuickAction>;
   searchResultsLength: number;
   selectedFilter: SearchFilter;
 };
 
+function SearchQuickActionCard({
+  item,
+  onPress,
+}: {
+  item: SearchQuickAction;
+  onPress: (query: string) => void;
+}) {
+  return (
+    <Button
+      style={styles.quickActionCard}
+      onPress={() => {
+        onPress(item.query);
+      }}
+    >
+      <Text type='sm' weight='semibold' style={styles.quickActionTitle}>
+        {item.title}
+      </Text>
+      <Text type='xs' color='gray.textLow' style={styles.quickActionSubtitle}>
+        {item.subtitle}
+      </Text>
+    </Button>
+  );
+}
+
 function SearchHeader({
   activeResults,
   handleFilterChange,
+  onQuickActionPress,
   query,
-  renderQuickActionItem,
   searchResultsLength,
   selectedFilter,
 }: SearchHeaderProps) {
+  const renderQuickActionItem: ListRenderItem<SearchQuickAction> = useCallback(
+    ({ item }) => (
+      <SearchQuickActionCard item={item} onPress={onQuickActionPress} />
+    ),
+    [onQuickActionPress],
+  );
   return (
     <View style={styles.header}>
       <View style={styles.filterBar}>
@@ -460,7 +468,7 @@ function SearchHeader({
 
       {query.length === 0 && searchResultsLength === 0 && (
         <View style={styles.quickActionsSection}>
-          <View style={styles.sectionHeader}>
+          <View style={styles.quickActionsHeader}>
             <Text
               type='xs'
               weight='semibold'
@@ -476,6 +484,7 @@ function SearchHeader({
           <FlashList
             horizontal
             data={SEARCH_QUICK_ACTIONS}
+            estimatedItemSize={212}
             keyExtractor={getQuickActionKey}
             renderItem={renderQuickActionItem}
             showsHorizontalScrollIndicator={false}
@@ -577,11 +586,13 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: theme.space20,
-    paddingBottom: theme.space20,
+    paddingBottom: theme.space12,
     paddingTop: theme.space20,
   },
   historyContainer: {
+    paddingBottom: theme.space24,
     paddingHorizontal: theme.space20,
+    paddingTop: theme.space8,
   },
   quickActionCard: {
     backgroundColor: theme.color.background.darkAlt,
@@ -589,11 +600,10 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: 1,
-    marginRight: theme.space16,
-    minHeight: 104,
+    minHeight: 108,
     paddingHorizontal: theme.space16,
-    paddingVertical: theme.space16,
-    width: 190,
+    paddingVertical: theme.space14,
+    width: 200,
   },
   quickActionSubtitle: {
     marginTop: theme.space8,
@@ -602,13 +612,14 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   quickActionsRail: {
-    paddingHorizontal: 0,
+    gap: theme.space12,
+    paddingRight: theme.space4,
   },
   quickActionsList: {
-    height: 104,
+    flexGrow: 0,
   },
   quickActionsSection: {
-    marginTop: theme.space20,
+    marginTop: theme.space24,
   },
   resultItem: {
     flexDirection: 'row',
@@ -617,6 +628,10 @@ const styles = StyleSheet.create({
   },
   resultsList: {
     flex: 1,
+  },
+  quickActionsHeader: {
+    gap: 2,
+    marginBottom: theme.space16,
   },
   sectionHeader: {
     gap: 2,

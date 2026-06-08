@@ -7,6 +7,7 @@ import react from 'eslint-plugin-react';
 import reactDoctor from 'eslint-plugin-react-doctor';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactNative from 'eslint-plugin-react-native';
+import unicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -94,6 +95,7 @@ export default tseslint.config(
       'react-doctor': reactDoctor,
       'react-hooks': reactHooks,
       'react-native': reactNative,
+      unicorn,
       '@typescript-eslint': tseslint.plugin,
     },
     settings: {
@@ -201,4 +203,12 @@ export default tseslint.config(
     },
   },
   prettierConfig,
+  {
+    plugins: {
+      unicorn,
+    },
+    rules: {
+      'unicorn/no-nested-ternary': 'error',
+    },
+  },
 );

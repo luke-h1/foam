@@ -35,7 +35,7 @@ function getMinimumVersion(variant: Variant, remoteConfig: RemoteConfigType) {
 async function handleUpdatePress() {
   const storeUrl = await getStoreUrlAsync();
   if (storeUrl) {
-    openLinkInBrowser(storeUrl);
+    await openLinkInBrowser(storeUrl);
   }
 }
 

@@ -23,7 +23,7 @@ export function AppStoreSection() {
           setCanOpenStore(!!appStoreLink);
           console.log('App Store link:', appStoreLink);
           if (appStoreLink) {
-            openLinkInBrowser(appStoreLink);
+            await openLinkInBrowser(appStoreLink);
           }
         }}
         style={{ color: AC.systemBlue }}

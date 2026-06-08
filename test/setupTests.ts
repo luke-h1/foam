@@ -312,22 +312,22 @@ jest.mock('@shopify/flash-list', () => {
         ListEmptyComponent?: React.ComponentType | React.ReactNode;
       },
       ref: React.Ref<unknown>,
-    ) =>
-      React.createElement(
-        'View',
-        { ...props, ref },
-        data.length > 0
-          ? data.map((item, index) =>
-              React.createElement(
-                React.Fragment,
-                { key: String(index) },
-                renderItem?.({ item, index }),
-              ),
-            )
-          : typeof ListEmptyComponent === 'function'
-            ? React.createElement(ListEmptyComponent)
-            : ListEmptyComponent,
-      ),
+    ) => {
+      let children = ListEmptyComponent;
+      if (data.length > 0) {
+        children = data.map((item, index) =>
+          React.createElement(
+            React.Fragment,
+            { key: String(index) },
+            renderItem?.({ item, index }),
+          ),
+        );
+      } else if (typeof ListEmptyComponent === 'function') {
+        children = React.createElement(ListEmptyComponent);
+      }
+
+      return React.createElement('View', { ...props, ref }, children);
+    },
   );
 
   return {

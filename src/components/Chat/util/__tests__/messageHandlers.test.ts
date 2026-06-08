@@ -3,13 +3,14 @@
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { getCachedChannelPointRewardTitle } from '@app/utils/chat/channelPointRewardTitleStore';
 import {
+  coerceUserNoticeTags,
   createUserStateFromTags,
   createBaseMessage,
   createUserNoticeMessage,
   createSystemMessage,
 } from '../messageHandlers';
 
-jest.mock('@app/store/chatStore/channelLoad', () => ({
+jest.mock('@app/store/chat/actions/channelLoad', () => ({
   getCurrentEmoteData: jest.fn(),
 }));
 
@@ -20,6 +21,18 @@ jest.mock('@app/utils/string/generateNonce', () => ({
 describe('messageHandlers', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('coerceUserNoticeTags', () => {
+    test('casts string tag records to UserNoticeTags', () => {
+      const tags = {
+        'msg-id': 'sub',
+        'msg-param-sub-plan': '1000',
+        'msg-param-cumulative-months': '3',
+      };
+
+      expect(coerceUserNoticeTags(tags)).toEqual(tags);
+    });
   });
 
   describe('createUserStateFromTags', () => {

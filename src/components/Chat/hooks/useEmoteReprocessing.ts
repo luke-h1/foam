@@ -1,9 +1,10 @@
-import { getCurrentEmoteData } from '@app/store/chatStore/channelLoad';
-import { updateMessages } from '@app/store/chatStore/messages';
-import { chatStore$ } from '@app/store/chatStore/state';
+import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
+import { updateMessages } from '@app/store/chat/actions/messages';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { findBadges } from '@app/utils/chat/findBadges';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import type { useChannelEmoteData } from '@app/store/chat/react/selectors';
 import { useEffect, useRef } from 'react';
 import type { MutableRefObject } from 'react';
 
@@ -11,6 +12,9 @@ import type { AnyChatMessageType } from '../util/messageHandlers';
 
 const EMOTE_REPROCESS_BATCH_DELAY_MS = 32;
 const EMOTE_REPROCESS_BATCH_SIZE = 6;
+
+type ChannelEmoteData = ReturnType<typeof useChannelEmoteData>;
+type ChatMessagesObservable = typeof chatStore$.messages;
 
 export function useEmoteReprocessing({
   channelId,
@@ -21,8 +25,8 @@ export function useEmoteReprocessing({
   reprocessKey,
 }: {
   channelId: string;
-  channelEmoteData: unknown;
-  messages$: { peek: () => AnyChatMessageType[] };
+  channelEmoteData: ChannelEmoteData;
+  messages$: ChatMessagesObservable;
   emoteLoadStatus: string;
   processedMessageIdsRef: MutableRefObject<Set<string>>;
   reprocessKey?: string;
@@ -196,7 +200,7 @@ function areBadgesEqual(
   if (previous === next) {
     return true;
   }
-  if (!previous || !next || previous.length !== next.length) {
+  if (!previous || previous.length !== next?.length) {
     return false;
   }
 
@@ -285,7 +289,7 @@ function areParsedPartsEqual(
   if (previous === next) {
     return true;
   }
-  if (!previous || !next || previous.length !== next.length) {
+  if (!previous || previous.length !== next?.length) {
     return false;
   }
 

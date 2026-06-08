@@ -1,6 +1,6 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
-import type { Preferences } from '@app/store/preferenceStore';
+import type { Preferences } from '@app/store/preferences';
 import { ChatPreferenceScreen } from '../ChatPreferenceScreen';
 
 const mockUpdate = jest.fn();
@@ -32,7 +32,7 @@ const mockPreferences: Preferences = {
   showBttvBadges: true,
 };
 
-jest.mock('@app/store/preferenceStore', () => ({
+jest.mock('@app/store/preferences', () => ({
   usePreferences: () => ({
     ...mockPreferences,
     update: mockUpdate,

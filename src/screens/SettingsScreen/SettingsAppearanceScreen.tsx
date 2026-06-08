@@ -3,10 +3,7 @@ import {
   SettingsSection,
 } from '@app/components/SettingsSection/SettingsSection';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import {
-  usePreference,
-  useUpdatePreferences,
-} from '@app/store/preferenceStore';
+import { usePreference, useUpdatePreferences } from '@app/store/preferences';
 import { theme } from '@app/styles/themes';
 import {
   Form as NativeForm,
@@ -21,6 +18,7 @@ import { useRef } from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 const THEME_OPTIONS = ['foam-dark'] as const;
+
 const THEME_LABELS: Record<(typeof THEME_OPTIONS)[number], string> = {
   'foam-dark': 'Foam Dark',
 };
@@ -40,15 +38,15 @@ export function SettingsAppearanceScreen() {
             title='Theme'
             footer={
               <NativeText>
-                Foam currently ships with one canonical visual mode. Additional
-                themes will appear here as they become available.
+                Foam currently ships with one theme. Additional themes will
+                appear here as they become available.
               </NativeText>
             }
           >
             <Picker
               label='Theme'
               selection={selectedTheme}
-              onSelectionChange={value => update({ theme: value as Theme })}
+              onSelectionChange={value => update({ theme: value })}
             >
               {THEME_OPTIONS.map(opt => (
                 <NativeText key={opt} modifiers={[tag(opt)]}>
@@ -88,8 +86,6 @@ export function SettingsAppearanceScreen() {
     </View>
   );
 }
-
-type Theme = (typeof THEME_OPTIONS)[number];
 
 const styles = StyleSheet.create({
   container: {

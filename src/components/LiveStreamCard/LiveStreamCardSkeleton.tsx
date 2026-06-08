@@ -12,14 +12,12 @@ export function LiveStreamCardSkeleton({
 }) {
   const isMediaLayout = layout === 'media';
   const isTextLayout = layout === 'text';
-  const imageStyle = isTextLayout
-    ? { ...styles.imageSkeleton, ...styles.imageText }
-    : isMediaLayout
-      ? { ...styles.imageSkeleton, ...styles.imageMedia }
-      : styles.imageSkeleton;
-  const titleStyle = isTextLayout
-    ? { ...styles.titleSkeleton, ...styles.titleText }
-    : styles.titleSkeleton;
+  const imageStyle = [
+    styles.imageSkeleton,
+    isTextLayout && styles.imageText,
+    isMediaLayout && styles.imageMedia,
+  ];
+  const titleStyle = [styles.titleSkeleton, isTextLayout && styles.titleText];
 
   return (
     <View
@@ -29,11 +27,11 @@ export function LiveStreamCardSkeleton({
         isTextLayout && styles.containerText,
       ]}
     >
-      {!isTextLayout ? (
+      {isTextLayout ? null : (
         <View style={styles.imageContainer}>
           <Skeleton style={imageStyle} />
         </View>
-      ) : null}
+      )}
 
       <View style={styles.details}>
         <View style={styles.headerRow}>
@@ -48,11 +46,8 @@ export function LiveStreamCardSkeleton({
             <Skeleton style={styles.metaWideSkeleton} />
           </View>
         </View>
-        {!isTextLayout ? (
-          <Skeleton style={styles.categoryLineSkeleton} />
-        ) : null}
+        {isTextLayout ? null : <Skeleton style={styles.categoryLineSkeleton} />}
       </View>
-
       {isTextLayout ? <Skeleton style={imageStyle} /> : null}
     </View>
   );

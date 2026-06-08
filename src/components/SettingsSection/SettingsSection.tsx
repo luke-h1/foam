@@ -79,16 +79,10 @@ export function SettingsRow({
   const content = (
     <View style={styles.row}>
       {icon ? (
-        <View
-          style={[
-            styles.iconWrap,
-            danger ? styles.iconWrapDanger : null,
-            icon.color ? { backgroundColor: `${icon.color}20` } : null,
-          ]}
-        >
+        <View style={styles.iconWrap}>
           <SymbolView
             name={resolveIconName(icon.icon, icon.androidIcon)}
-            size={20}
+            size={22}
             tintColor={icon.color || theme.colorPrimary}
           />
         </View>
@@ -209,12 +203,9 @@ const styles = StyleSheet.create({
   },
   iconWrap: {
     alignItems: 'center',
-    height: 24,
+    height: 28,
     justifyContent: 'center',
-    width: 24,
-  },
-  iconWrapDanger: {
-    opacity: 0.9,
+    width: 28,
   },
   linkTrailing: {
     alignItems: 'center',

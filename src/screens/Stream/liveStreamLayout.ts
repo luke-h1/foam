@@ -118,6 +118,7 @@ export function getLiveStreamVideoDimensions({
             'sidebar',
           )
         : 0;
+
     return {
       width: Math.max(1, screenWidth - visibleSidebarChatWidth),
       height: Math.max(1, layoutHeight),

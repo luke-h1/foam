@@ -2,7 +2,7 @@ import {
   getPreferences,
   preferences$,
   replacePreferences,
-} from '@app/store/preferenceStore';
+} from '@app/store/preferences';
 import {
   isICloudPreferenceSyncAvailable,
   loadPreferencesFromICloud,

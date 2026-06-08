@@ -1,5 +1,5 @@
 import type { ICloudSyncNativeModule } from '@modules/icloud-sync';
-import type { Preferences } from '@app/store/preferenceStore';
+import type { Preferences } from '@app/store/preferences';
 
 const ICLOUD_PREFERENCES_KEY = 'preferences.v1';
 

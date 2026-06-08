@@ -2,22 +2,22 @@ import {
   abortCurrentLoad,
   clearChannelResources,
   clearPersonalEmotesCache,
-} from '@app/store/chatStore/channelLoad';
-import { clearPaints } from '@app/store/chatStore/cosmetics';
-import { clearMessages, clearTtvUsers } from '@app/store/chatStore/messages';
+} from '@app/store/chat/actions/channelLoad';
+import { clearPaints } from '@app/store/chat/actions/cosmetics';
+import { clearMessages, clearTtvUsers } from '@app/store/chat/actions/messages';
 import { renderHook } from '@testing-library/react-native';
 import { useChatLifecycle } from '../useChatLifecycle';
 
-jest.mock('@app/store/chatStore/channelLoad', () => ({
+jest.mock('@app/store/chat/actions/channelLoad', () => ({
   abortCurrentLoad: jest.fn(),
   clearChannelResources: jest.fn(),
   clearPersonalEmotesCache: jest.fn(),
 }));
-jest.mock('@app/store/chatStore/messages', () => ({
+jest.mock('@app/store/chat/actions/messages', () => ({
   clearMessages: jest.fn(),
   clearTtvUsers: jest.fn(),
 }));
-jest.mock('@app/store/chatStore/cosmetics', () => ({
+jest.mock('@app/store/chat/actions/cosmetics', () => ({
   clearPaints: jest.fn(),
 }));
 

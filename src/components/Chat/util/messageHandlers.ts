@@ -1,7 +1,7 @@
 import type {
   AnyChatMessageType,
   ChatMessageType,
-} from '@app/store/chatStore/constants';
+} from '@app/store/chat/types/constants';
 import {
   UserNoticeTags,
   UserNoticeTagsByVariant,

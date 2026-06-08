@@ -42,7 +42,7 @@ const demoOptions: ChangelogPresentOptions = {
               symbolSystemName: 'iphone',
               title: 'SwiftUI presentation',
               description:
-                'The native module decodes the payload and presents this sheet from the current view controller.',
+                'The native module decodes the payload and presents this sheet from the current native presenter.',
             },
           ],
         },

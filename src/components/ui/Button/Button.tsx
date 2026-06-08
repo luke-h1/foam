@@ -20,6 +20,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Text } from '@app/components/ui/Text/Text';
+import type { ReactNode } from 'react';
 
 type ButtonVariant = 'solid' | 'outline' | 'soft' | 'subtle' | 'link';
 
@@ -369,20 +370,25 @@ export function Button({
     }
   };
 
+  let buttonIcon: ReactNode = null;
+  if (loading) {
+    buttonIcon = <ActivityIndicator color={iconColor} />;
+  } else if (displayIcon) {
+    buttonIcon = (
+      <SymbolView
+        name={displayIcon}
+        size={SYMBOL_SIZE[size]}
+        tintColor={iconColor}
+      />
+    );
+  }
+
   return (
     <PressableScale
       style={buttonStyles}
       onPress={isDisabled ? undefined : handlePress}
     >
-      {loading ? (
-        <ActivityIndicator color={iconColor} />
-      ) : displayIcon ? (
-        <SymbolView
-          name={displayIcon}
-          size={SYMBOL_SIZE[size]}
-          tintColor={iconColor}
-        />
-      ) : null}
+      {buttonIcon}
       {title && <Text style={textStyles}>{title}</Text>}
     </PressableScale>
   );

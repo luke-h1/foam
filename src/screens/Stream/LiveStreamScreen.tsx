@@ -12,7 +12,7 @@ import { useChannelPoll } from '@app/hooks/useChannelPoll';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 import { theme } from '@app/styles/themes';
-import { usePreference } from '@app/store/preferenceStore';
+import { usePreference } from '@app/store/preferences';
 import { useQuery } from '@tanstack/react-query';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import {

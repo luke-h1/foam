@@ -24,6 +24,7 @@ export function AuthSheetScreen() {
   const { isPromptingAuth, isSignInReady, startSignIn } = useTwitchSignIn({
     onSuccess: handleAuthSuccess,
   });
+
   const isDisabled = !isSignInReady || isPromptingAuth;
 
   return (
@@ -40,7 +41,7 @@ export function AuthSheetScreen() {
           </View>
           <View style={styles.headerCopy}>
             <Text type='xxs' weight='bold' style={styles.eyebrow}>
-              FOAM FOR TWITCH
+              FOAM
             </Text>
             <Text
               type='3xl'

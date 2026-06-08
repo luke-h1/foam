@@ -34,11 +34,10 @@ export function useMeasureImageLoadTime(
   const imageLoadStartTimestamp = useRef<number | undefined>(undefined);
 
   const onLoadEnd = useCallback(() => {
-    const loadStartTimestamp = imageLoadStartTimestamp.current
-      ? imageLoadStartTimestamp.current
-      : options.fallbackToMountStartOnLoadEnd
-        ? imageMountTimestamp.current
-        : undefined;
+    let loadStartTimestamp = imageLoadStartTimestamp.current;
+    if (!loadStartTimestamp && options.fallbackToMountStartOnLoadEnd) {
+      loadStartTimestamp = imageMountTimestamp.current ?? undefined;
+    }
 
     if (!loadStartTimestamp) {
       logger.main.error('Image load start timestamp is not set');

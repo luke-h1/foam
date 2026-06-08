@@ -73,7 +73,7 @@ function pickBestBadgeFile(
     }
   }
 
-  return files[files.length - 1] ?? files[0];
+  return files.at(-1) ?? files[0];
 }
 
 export function buildSevenTvBadgeImageUrl(
@@ -239,11 +239,8 @@ function normalizePaintLayer(layer: PaintGradientLayer): PaintLayerData {
     repeat,
     image_url: layer.image_url ?? '',
     canvas_repeat: normalizeCanvasRepeat(layer.canvas_repeat),
-    at: layer.at && layer.at.length === 2 ? [layer.at[0], layer.at[1]] : null,
-    size:
-      layer.size && layer.size.length === 2
-        ? [layer.size[0], layer.size[1]]
-        : null,
+    at: layer.at?.length === 2 ? [layer.at[0], layer.at[1]] : null,
+    size: layer.size?.length === 2 ? [layer.size[0], layer.size[1]] : null,
   };
 }
 

@@ -1,7 +1,7 @@
 import {
   getSessionCacheString,
   setSessionCacheString,
-} from '@app/store/chatStore/chatColorCaches';
+} from '@app/store/chat/actions/chatColorCaches';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { lightenColor } from '@app/utils/color/lightenColor';
 

@@ -1,5 +1,5 @@
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { clearMentionSessionCaches } from '@app/store/chatStore/chatColorCaches';
+import { clearMentionSessionCaches } from '@app/store/chat/actions/chatColorCaches';
 import type { ParsedPart } from './replaceTextWithEmotes';
 
 const mentionLoginIndex = new Map<string, string>();

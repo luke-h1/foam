@@ -34,6 +34,7 @@ export function SettingsIndexScreen() {
   useScrollToTop(scrollRef);
 
   const { statusPageUrl, websiteUrl } = config;
+
   if (Platform.OS === 'ios') {
     return (
       <Host style={styles.iosHost}>
@@ -80,7 +81,9 @@ export function SettingsIndexScreen() {
             <Button
               label='FAQ'
               systemImage='questionmark.circle'
-              onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
+              onPress={async () => {
+                await openLinkInBrowser(FOAM_FAQ_URL);
+              }}
             />
             <Button
               label='Send Feedback'
@@ -90,12 +93,16 @@ export function SettingsIndexScreen() {
             <Button
               label='Status'
               systemImage='checkmark.shield'
-              onPress={() => openLinkInBrowser(statusPageUrl.value)}
+              onPress={async () => {
+                await openLinkInBrowser(statusPageUrl.value);
+              }}
             />
             <Button
               label='Website'
               systemImage='globe'
-              onPress={() => openLinkInBrowser(websiteUrl.value)}
+              onPress={async () => {
+                await openLinkInBrowser(websiteUrl.value);
+              }}
             />
           </Section>
 
@@ -184,7 +191,9 @@ export function SettingsIndexScreen() {
             title='FAQ'
             subtitle='Common questions and help information'
             icon={{ icon: 'questionmark.circle', color: theme.colorPrimary }}
-            onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
+            onPress={async () => {
+              await openLinkInBrowser(FOAM_FAQ_URL);
+            }}
           />
           <SettingsLinkRow
             title='Send Feedback'
@@ -196,13 +205,17 @@ export function SettingsIndexScreen() {
             title='Status'
             subtitle='Check service availability and operational updates'
             icon={{ icon: 'checkmark.shield', color: theme.colorOrange }}
-            onPress={() => openLinkInBrowser(statusPageUrl.value)}
+            onPress={async () => {
+              await openLinkInBrowser(statusPageUrl.value);
+            }}
           />
           <SettingsLinkRow
             title='Website'
             subtitle='Product site and public links'
             icon={{ icon: 'globe', color: theme.colorViolet }}
-            onPress={() => openLinkInBrowser(websiteUrl.value)}
+            onPress={async () => {
+              await openLinkInBrowser(websiteUrl.value);
+            }}
           />
         </SettingsSection>
 

@@ -9,14 +9,11 @@ import {
   completeAuthWithCallbackUrl,
   isAuthCallbackUrl,
 } from '@app/navigators/authLinking';
-import {
-  setNavigationReady,
-  syncNavigationState,
-} from '@app/navigators/navigationUtilities';
+
 import { parseTwitchUrl, type TwitchLink } from '@app/navigators/twitchLinking';
 import { logger } from '@app/utils/logger';
 import type { RouterAction } from 'expo-quick-actions/router';
-import { router, usePathname } from 'expo-router';
+import { router } from 'expo-router';
 import * as QuickActions from 'expo-quick-actions';
 import { useEffect, useLayoutEffect } from 'react';
 import { Linking } from 'react-native';
@@ -76,7 +73,6 @@ function getChannelLoginFromTwitchLink(link: TwitchLink): string | null {
 }
 
 export function RouterEffects() {
-  const pathname = usePathname();
   const { authState, loginWithTwitch, ready } = useAuthContext();
   const { recoveredFromError, setRecoveredFromError } = useRecoveredFromError();
 
@@ -112,11 +108,6 @@ export function RouterEffects() {
       subscription.remove();
     };
   }, []);
-
-  useEffect(() => {
-    setNavigationReady(true);
-    syncNavigationState(pathname);
-  }, [pathname]);
 
   useEffect(() => {
     const homeScreenQuickActions = getHomeQuickActions(

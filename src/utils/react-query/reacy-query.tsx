@@ -36,13 +36,13 @@ const authProxyBaseUrl = process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
 
 async function checkIsOnline(): Promise<boolean> {
   try {
-    const controller = new AbortController();
+    const abort = new AbortController();
     setTimeout(() => {
-      controller.abort();
+      abort.abort();
     }, 15e3);
     const res = await fetch(`${authProxyBaseUrl}/api/healthcheck`, {
       cache: 'no-store',
-      signal: controller.signal,
+      signal: abort.signal,
     });
 
     const json = (await res.json()) as { version: string };

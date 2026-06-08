@@ -2,6 +2,8 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       EXPO_PUBLIC_TWITCH_CLIENT_ID: string;
+      EXPO_PUBLIC_PLAYER_URL?: string;
+      EXPO_PUBLIC_TWITCH_PLAYER_WEBSITE_URL?: string;
       EXPO_PUBLIC_SENTRY_DSN?: string;
       EXPO_PUBLIC_SENTRY_RELEASE?: string;
       EXPO_PUBLIC_SENTRY_DIST?: string;

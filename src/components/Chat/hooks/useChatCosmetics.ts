@@ -1,6 +1,6 @@
 import { sevenTvService } from '@app/services/seventv-service';
-import { fetchAndCacheUserCosmetics } from '@app/store/chatStore/cosmetics';
-import { chatStore$ } from '@app/store/chatStore/state';
+import { fetchAndCacheUserCosmetics } from '@app/store/chat/actions/cosmetics';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { logger } from '@app/utils/logger';
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useEffect, useRef, useCallback } from 'react';
@@ -48,6 +48,7 @@ export function useChatCosmetics({
       const elapsedSeconds = chatStartTime
         ? (Date.now() - chatStartTime) / 1000
         : 0;
+
       logger.stvWs.debug(
         `Skipping cosmetic fetch for ${twitchUserId} - chat has been active for ${elapsedSeconds.toFixed(1)}s (limit: 5s)`,
       );

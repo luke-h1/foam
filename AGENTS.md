@@ -1,0 +1,39 @@
+# Agent Notes
+
+## Test Assertions
+
+Use `toEqual` for object assertions. Do not use `expect.objectContaining`, and do not use `toMatchObject`.
+
+Partial object matchers are tempting because they make tests quicker to write, but they also make the test less honest. Extra fields can appear, fields can drift, and the test still passes. That is not what we want in this repo.
+
+When a test cares about an object contract, write the object out and compare it with `toEqual`. If only part of a large object matters, pull those fields into a smaller object first, then use `toEqual` on that smaller object. The point is to make the shape obvious to the next person reading the test.
+
+## Test Fixtures
+
+Put shared test fixtures in a `__fixtures__` directory inside the relevant `__tests__` directory.
+
+Keeping fixtures beside the tests makes the test setup easier to follow. It also stops general-purpose fixture folders from becoming a dumping ground for shapes that only make sense for one part of the app. If the fixture belongs to the chat hook tests, it should live with the chat hook tests.
+
+Name fixture files after the thing under test, using the pattern `{thing}.fixture.ts`. For example, shared fixtures for the chat hook tests should live in `__tests__/__fixtures__/useChat.fixture.ts`.
+
+That naming keeps the fixture tied to the surface it supports. A file called `chatHookFixtures.ts` sounds like a generic bucket. A file called `useChat.fixture.ts` says what it exists for and makes it harder to keep adding unrelated test data over time.
+
+## Legend State Store Layout
+
+Legend State is unopinionated about folder shape, but we split observables, actions, and React bindings so components do not import `@legendapp/state` primitives directly.
+
+```
+src/store/
+  chat/
+    observables/   # module-level observables (chatStore$, chatTransientState$)
+    types/         # shared chat store types
+    actions/       # pure mutations against observables (no React hooks)
+    react/         # useSelector / useObservable hooks for components
+    index.ts       # barrel for common chat exports
+  preferences/
+    state.ts       # preferences$ observable + persistence
+    selectors.ts   # usePreferences and related hooks
+    index.ts
+```
+
+Put new module-level observables in `observables/`. Put write helpers that call `.set()` / `.peek()` in `actions/`. Put `useSelector` and `useObservable` in `react/`. Session-scoped caches (mention colors, shared chat badges) belong on `chatStore$`, not module-level `Map`s in components. Pure message transforms like `getVisibleMessages` also live in `actions/`. Do not wrap Legend State mutations in `useCallback` unless a React API (imperative ref, effect deps) needs a stable function reference.

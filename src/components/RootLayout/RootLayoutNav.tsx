@@ -1,5 +1,5 @@
 import { ForceUpdateModal } from '@app/components/ForceUpdateModal/ForceUpdateModal';
-import { OTAUpdates } from '@app/components/OTAUpdates/OTAUpdates';
+import { useOTAUpdates } from '@app/hooks/useOTAUpdates';
 import { Providers } from '@app/Providers/Providers';
 import { theme } from '@app/styles/themes';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
@@ -21,6 +21,8 @@ const rootStackScreens = [
 ] as const;
 
 export function RootLayoutNav() {
+  useOTAUpdates();
+
   return (
     <ThemeProvider
       value={{
@@ -65,7 +67,6 @@ export function RootLayoutNav() {
             }}
           />
         </Stack>
-        <OTAUpdates />
       </Providers>
     </ThemeProvider>
   );

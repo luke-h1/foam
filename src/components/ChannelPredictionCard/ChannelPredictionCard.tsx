@@ -48,18 +48,28 @@ function getOutcomeColor(
   }
 }
 
+function getStatusLabel(prediction: ChannelPredictionState) {
+  if (prediction.isActive) {
+    return 'Live prediction';
+  }
+
+  if (prediction.isLocked) {
+    return 'Prediction locked';
+  }
+
+  if (prediction.status === 'resolved') {
+    return 'Prediction result';
+  }
+
+  return 'Prediction canceled';
+}
+
 function ChannelPredictionCardComponent({
   channelLogin,
   prediction,
 }: ChannelPredictionCardProps) {
   const timeRemaining = formatTimeRemaining(prediction);
-  const statusLabel = prediction.isActive
-    ? 'Live prediction'
-    : prediction.isLocked
-      ? 'Prediction locked'
-      : prediction.status === 'resolved'
-        ? 'Prediction result'
-        : 'Prediction canceled';
+  const statusLabel = getStatusLabel(prediction);
 
   return (
     <View style={styles.container}>
@@ -127,9 +137,9 @@ function ChannelPredictionCardComponent({
         {(prediction.isActive || prediction.isLocked) && (
           <PressableArea
             accessibilityRole='button'
-            onPress={() =>
-              openLinkInBrowser(`https://www.twitch.tv/${channelLogin}`)
-            }
+            onPress={async () => {
+              await openLinkInBrowser(`https://www.twitch.tv/${channelLogin}`);
+            }}
           >
             <Text color='amber.accent' type='xxs' weight='semibold'>
               Predict on Twitch

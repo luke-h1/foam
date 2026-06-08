@@ -17,7 +17,7 @@ import { Text } from '@app/components/ui/Text/Text';
 
 const SWIPE_THRESHOLD = -80;
 const DELETE_THRESHOLD = -150;
-const HISTORY_ROW_HEIGHT = 56;
+const HISTORY_ROW_HEIGHT = 48;
 
 interface SwipeableHistoryItemProps {
   query: string;
@@ -243,8 +243,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: theme.space12,
-    paddingHorizontal: theme.space16,
+    marginBottom: theme.space16,
   },
   hint: {
     marginTop: theme.space16,
@@ -255,15 +254,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.color.background.dark,
     flexDirection: 'row',
-    gap: theme.space16,
-    minHeight: HISTORY_ROW_HEIGHT,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space8,
+    gap: theme.space12,
+    height: HISTORY_ROW_HEIGHT,
+    paddingHorizontal: 0,
   },
   historyList: {
-    gap: 1,
+    gap: theme.space4,
   },
   itemContainer: {
+    height: HISTORY_ROW_HEIGHT,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -276,6 +275,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   wrapper: {
-    paddingTop: theme.space20,
+    paddingTop: theme.space16,
   },
 });

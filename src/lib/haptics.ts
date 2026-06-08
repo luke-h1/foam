@@ -29,12 +29,12 @@ export async function selection() {
 export async function notification(
   type: 'success' | 'warning' | 'error' = 'success',
 ) {
-  const expoType =
-    type === 'warning'
-      ? NotificationFeedbackType.Warning
-      : type === 'error'
-        ? NotificationFeedbackType.Error
-        : NotificationFeedbackType.Success;
+  let expoType = NotificationFeedbackType.Success;
+  if (type === 'warning') {
+    expoType = NotificationFeedbackType.Warning;
+  } else if (type === 'error') {
+    expoType = NotificationFeedbackType.Error;
+  }
 
   return expoNotificationAsync(expoType);
 }

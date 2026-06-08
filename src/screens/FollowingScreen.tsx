@@ -15,10 +15,7 @@ import { useRefresh } from '@app/hooks/useRefresh';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import { TwitchStream } from '@app/services/twitch-service';
-import {
-  usePreference,
-  useUpdatePreferences,
-} from '@app/store/preferenceStore';
+import { usePreference, useUpdatePreferences } from '@app/store/preferences';
 import { theme } from '@app/styles/themes';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';

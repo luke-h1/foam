@@ -1,8 +1,8 @@
-import type { AnyChatMessageType } from '@app/store/chatStore/constants';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import {
   addMessages,
   getUserMessageColor,
-} from '@app/store/chatStore/messages';
+} from '@app/store/chat/actions/messages';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 import { useLazyRef } from '@app/hooks/useLazyRef';

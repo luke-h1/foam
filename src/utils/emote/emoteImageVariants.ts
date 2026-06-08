@@ -6,14 +6,19 @@ import type {
 } from '@app/types/emote';
 
 const preferredScales: EmoteImageScale[] = ['4x', '3x', '2x', '1x'];
+
 const bttvCdnUrlPattern =
   /^https:\/\/cdn\.betterttv\.net\/emote\/([^/]+)\/([123])x(?:\.png)?$/;
+
 const ffzCdnUrlPattern =
   /^https:\/\/cdn\.frankerfacez\.com\/emote\/([^/]+)\/(?:(animated)\/)?([124])$/;
+
 const sevenTvCdnUrlPattern =
   /^https:\/\/cdn\.7tv\.app\/emote\/([^/]+)\/([1234])x\.(avif|webp)$/;
+
 const twitchCdnUrlPattern =
   /^https:\/\/static-cdn\.jtvnw\.net\/emoticons\/v2\/([^/]+)\/(?:default|static)\/dark\/[123]\.0$/;
+
 const resolvedVariantCache = new WeakMap<SanitisedEmote, SanitisedEmote>();
 
 export function createEmoteImageVariants({
@@ -159,7 +164,11 @@ export function deriveEmoteImageVariantsFromUrl(
     return null;
   }
 
+  /**
+   * BTTV
+   */
   const bttvMatch = bttvCdnUrlPattern.exec(url);
+
   if (bttvMatch?.[1]) {
     const id = bttvMatch[1];
     return createEmoteImageVariants({
@@ -174,7 +183,11 @@ export function deriveEmoteImageVariantsFromUrl(
     });
   }
 
+  /**
+   * FFZ
+   */
   const ffzMatch = ffzCdnUrlPattern.exec(url);
+
   if (ffzMatch?.[1]) {
     const id = ffzMatch[1];
     return createEmoteImageVariants({
@@ -189,7 +202,11 @@ export function deriveEmoteImageVariantsFromUrl(
     });
   }
 
+  /**
+   * Seven TV
+   */
   const sevenTvMatch = sevenTvCdnUrlPattern.exec(url);
+
   if (sevenTvMatch?.[1] && sevenTvMatch[3]) {
     const id = sevenTvMatch[1];
     const extension = sevenTvMatch[3];
@@ -205,6 +222,9 @@ export function deriveEmoteImageVariantsFromUrl(
     });
   }
 
+  /**
+   * Twitch
+   */
   const twitchMatch = twitchCdnUrlPattern.exec(url);
   if (twitchMatch?.[1]) {
     const id = twitchMatch[1];

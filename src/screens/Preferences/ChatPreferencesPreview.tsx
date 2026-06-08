@@ -1,13 +1,13 @@
 import { memo } from 'react';
-import { RichChatMessage } from '@app/components/Chat/components/ChatMessage/RichChatMessage';
+import { RichChatMessage } from '@app/components/Chat/ChatMessage/RichChatMessage';
 import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { type SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import {
   type ChannelCacheType,
   type ChatMessageType,
-} from '@app/store/chatStore/constants';
-import { chatStore$ } from '@app/store/chatStore/state';
+} from '@app/store/chat/types/constants';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { theme } from '@app/styles/themes';
 import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { type SanitisedEmote } from '@app/types/emote';

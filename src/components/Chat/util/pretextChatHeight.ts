@@ -46,11 +46,13 @@ export function estimateChatMessageHeightWithPretext(
 
   const cacheKey = getCacheKey(message, options);
   const cached = heightCache.get(cacheKey);
+
   if (cached !== undefined) {
     return cached;
   }
 
   const measured = measureChatMessageHeight(message, options);
+
   if (measured === undefined) {
     return undefined;
   }
@@ -79,20 +81,24 @@ function measureChatMessageHeight(
   const fontSize = compact ? COMPACT_FONT_SIZE : COMFORTABLE_FONT_SIZE;
   const lineHeight = compact ? COMPACT_LINE_HEIGHT : COMFORTABLE_LINE_HEIGHT;
   const emoteSize = compact ? COMPACT_EMOTE_SIZE : COMFORTABLE_EMOTE_SIZE;
+
   const textStyle: TextStyle = {
     fontFamily: 'System',
     fontSize,
     lineHeight,
     fontWeight: '400',
   };
+
   const strongStyle: TextStyle = {
     ...textStyle,
     fontWeight: '700',
   };
+
   const auxiliaryStyle: TextStyle = {
     ...textStyle,
     fontSize: compact ? 10 : theme.fontSize11,
   };
+
   const items: InlineFlowItem[] = [];
   let minimumInlineHeight = lineHeight;
   let prelineHeight = 0;
@@ -224,7 +230,6 @@ function measureChatMessageHeight(
 
     if ('content' in part && part.content) {
       items.push({ text: part.content, style: textStyle });
-      continue;
     }
   }
 

@@ -19,6 +19,7 @@ enableFreeze(true);
 
 WebBrowser.maybeCompleteAuthSession();
 initSentry();
+
 Observe.configure({
   environment: process.env.EXPO_PUBLIC_APP_VARIANT ?? 'development',
   dispatchingEnabled: true,

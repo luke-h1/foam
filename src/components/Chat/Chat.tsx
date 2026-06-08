@@ -1,12 +1,17 @@
+import { useChannelEmoteData } from '@app/store/chat/react/selectors';
+import {
+  useChatAssetPreferenceKey,
+  useChatViewPreferences,
+} from '@app/store/preferences';
 import { memo } from 'react';
 import { View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
-import { ChatEmoteReprocessor } from './components/ChatEmoteReprocessor';
-import { ChatInputShell } from './components/ChatInputShell';
-import { ChatMessagePane } from './components/ChatMessagePane';
-import { ChatOverlayController } from './components/ChatOverlayController';
-import { ResumeScroll } from './components/ResumeScroll';
+import { ChatInputShell } from './ChatInputShell';
+import { ChatMessagePane } from './ChatMessagePane';
+import { ChatOverlays } from './ChatOverlays';
+import { ResumeScroll } from './ResumeScroll';
 import { useChat } from './hooks/useChat';
+import { useEmoteReprocessing } from './hooks/useEmoteReprocessing';
 import { styles } from './styles';
 
 export interface ChatProps {
@@ -24,6 +29,18 @@ export const Chat = memo(
     transparent = false,
   }: ChatProps) => {
     const vm = useChat(channelId, channelName);
+    const preferences = useChatViewPreferences();
+    const channelEmoteData = useChannelEmoteData(channelId);
+    const chatAssetPreferenceKey = useChatAssetPreferenceKey();
+
+    useEmoteReprocessing({
+      channelId,
+      channelEmoteData,
+      messages$: vm.messages$,
+      emoteLoadStatus: vm.emoteLoadStatus,
+      processedMessageIdsRef: vm.processedMessageIdsRef,
+      reprocessKey: chatAssetPreferenceKey,
+    });
 
     return (
       <View
@@ -33,13 +50,6 @@ export const Chat = memo(
           applyTopInset && { paddingTop: vm.insets.top },
         ]}
       >
-        <ChatEmoteReprocessor
-          channelId={channelId}
-          emoteLoadStatus={vm.emoteLoadStatus}
-          messages$={vm.messages$}
-          processedMessageIdsRef={vm.processedMessageIdsRef}
-          reprocessKey={vm.chatAssetPreferenceKey}
-        />
         <View style={styles.keyboardAvoidingView}>
           <View style={styles.chatContainer}>
             <ChatMessagePane
@@ -50,7 +60,7 @@ export const Chat = memo(
               hiddenPhrases={vm.hiddenPhrases}
               highlightedUsers={vm.highlightedUsers}
               paneFlags={vm.paneFlags}
-              chatDensity={vm.preferences.chatDensity}
+              chatDensity={preferences.chatDensity}
               listRef={vm.listRef}
               handleScroll={vm.handleScroll}
               handleScrollBeginDrag={vm.handleScrollBeginDrag}
@@ -63,7 +73,7 @@ export const Chat = memo(
               getItemType={vm.getItemType}
               listContentStyle={vm.listContentStyle}
               messageListExtraData={vm.messageListExtraData}
-              showInlineReplyContext={vm.preferences.showInlineReplyContext}
+              showInlineReplyContext={preferences.showInlineReplyContext}
               onClearFilters={vm.handleClearFilters}
               onRefreshPinnedMessage={vm.handleRefreshPinnedMessage}
               onToggleShowOnlyMentions={vm.handleToggleShowOnlyMentions}
@@ -73,7 +83,7 @@ export const Chat = memo(
               pinnedMessageBusy={vm.pinnedMessageBusy}
             />
 
-            {vm.preferences.showUnreadJumpPill &&
+            {preferences.showUnreadJumpPill &&
             !vm.isAtBottom &&
             !vm.isScrollingToBottom ? (
               <ResumeScroll
@@ -86,6 +96,7 @@ export const Chat = memo(
           <KeyboardStickyView style={styles.inputStickyView}>
             <ChatInputShell
               ref={vm.inputShellRef}
+              canModerateChat={vm.canModerateChat}
               canPinNextMessage={vm.canModerateChat}
               channelId={channelId}
               channelName={channelName}
@@ -96,28 +107,31 @@ export const Chat = memo(
               onOpenSettingsSheet={vm.handleOpenSettingsSheet}
               onPinnedMessageChanged={vm.handlePinnedMessageChanged}
               processMessageEmotes={vm.processMessageEmotes}
+              sendAction={vm.sendAction}
+              sendChatCommand={vm.sendChatCommand}
               sendMessage={vm.sendMessage}
               user={vm.user}
             />
           </KeyboardStickyView>
 
-          <ChatOverlayController
-            ref={vm.overlayControllerRef}
+          <ChatOverlays
+            ref={vm.chatOverlaysRef}
             canModerateChat={vm.canModerateChat}
             channelId={channelId}
             channelName={channelName}
-            disableEmoteAnimations={vm.preferences.disableEmoteAnimations}
-            highlightOwnMentions={vm.preferences.highlightOwnMentions}
-            showInlineReplyContext={vm.preferences.showInlineReplyContext}
-            showTimestamps={vm.preferences.chatTimestamps}
-            showUnreadJumpPill={vm.preferences.showUnreadJumpPill}
-            chatDensity={vm.preferences.chatDensity}
+            disableEmoteAnimations={preferences.disableEmoteAnimations}
+            highlightOwnMentions={preferences.highlightOwnMentions}
+            showInlineReplyContext={preferences.showInlineReplyContext}
+            showTimestamps={preferences.chatTimestamps}
+            showUnreadJumpPill={preferences.showUnreadJumpPill}
+            chatDensity={preferences.chatDensity}
             handleReply={vm.handleReply}
             highlightedUsers={vm.highlightedUsers}
             hiddenUsers={vm.hiddenUsers}
             hidePhraseFromView={vm.hidePhraseFromView}
             hideUserFromView={vm.hideUserFromView}
             appendMentionToComposer={vm.appendMentionToComposer}
+            prepareTimeoutCommand={vm.prepareTimeoutCommand}
             onClearChatCache={vm.handleClearChatCache}
             onClearImageCache={vm.handleDebugClearImageCache}
             onClearSevenTvCosmeticsCache={vm.handleClearSevenTvCosmeticsCache}

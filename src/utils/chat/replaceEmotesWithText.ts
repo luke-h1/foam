@@ -1,5 +1,5 @@
 import { ParsedPart } from './replaceTextWithEmotes';
-import { getParsedPartStringContent } from './parsedPartContent';
+import { getParsedPartStringContent } from './getParsedPartStringContent';
 
 /**
  * Converts a parsed chat message (with emotes) back to plain text (used for copying messages)

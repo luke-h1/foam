@@ -134,12 +134,16 @@ export function AboutScreen() {
           <ActionRow
             title='Website'
             icon='globe'
-            onPress={() => openLinkInBrowser('https://foam-app.com')}
+            onPress={async () => {
+              await openLinkInBrowser('https://foam-app.com');
+            }}
           />
           <ActionRow
             title='Status'
             icon='shield'
-            onPress={() => openLinkInBrowser('https://status.foam-app.com')}
+            onPress={async () => {
+              await openLinkInBrowser('https://status.foam-app.com');
+            }}
           />
         </AboutSection>
 
