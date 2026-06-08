@@ -7,6 +7,11 @@ import { toast } from 'sonner-native';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useAuthRequest } from 'expo-auth-session';
+import {
+  createTwitchSignInAuthRequest,
+  createTwitchSignInAuthResult,
+  createWebBrowserAuthSuccess,
+} from './__fixtures__/useTwitchSignIn.fixture';
 import { useTwitchSignIn } from '../useTwitchSignIn';
 
 jest.mock('expo-constants', () => ({
@@ -18,12 +23,15 @@ jest.mock('expo-constants', () => ({
   },
 }));
 
-jest.mock('expo-auth-session', () => ({
-  ResponseType: {
-    Token: 'token',
-  },
-  useAuthRequest: jest.fn(),
-}));
+jest.mock('expo-auth-session', () => {
+  const actual =
+    jest.requireActual<typeof import('expo-auth-session')>('expo-auth-session');
+
+  return {
+    ...actual,
+    useAuthRequest: jest.fn(),
+  };
+});
 
 jest.mock('expo-web-browser', () => ({
   maybeCompleteAuthSession: jest.fn(),
@@ -59,30 +67,14 @@ describe('useTwitchSignIn', () => {
   });
 
   it('completes a successful auth response once when auth context re-renders', async () => {
-    const authResult = {
-      type: 'success',
-      params: {
-        access_token: 'token-123',
-      },
-      url: 'foam://auth#access_token=token-123',
-      authentication: {
-        accessToken: 'token-123',
-        expiresIn: 3600,
-        tokenType: 'bearer',
-      },
-    } as const;
-
-    const request = {
-      url: 'https://id.twitch.tv/oauth2/authorize',
-      parseReturnUrl: jest.fn(() => authResult),
-    };
+    const authResult = createTwitchSignInAuthResult('token-123');
+    const request = createTwitchSignInAuthRequest(authResult);
     const loginWithTwitch = jest.fn();
 
-    mockedUseAuthRequest.mockReturnValue([request, null, jest.fn()] as never);
-    mockedOpenAuthSessionAsync.mockResolvedValue({
-      type: 'success',
-      url: authResult.url,
-    } as never);
+    mockedUseAuthRequest.mockReturnValue([request, null, jest.fn()]);
+    mockedOpenAuthSessionAsync.mockResolvedValue(
+      createWebBrowserAuthSuccess(authResult.url),
+    );
 
     function Wrapper({ children }: PropsWithChildren) {
       const [version, setVersion] = useState(0);
@@ -124,31 +116,15 @@ describe('useTwitchSignIn', () => {
   });
 
   it('uses the success callback instead of navigating when provided', async () => {
-    const authResult = {
-      type: 'success',
-      params: {
-        access_token: 'token-456',
-      },
-      url: 'foam://auth#access_token=token-456',
-      authentication: {
-        accessToken: 'token-456',
-        expiresIn: 3600,
-        tokenType: 'bearer',
-      },
-    } as const;
-
-    const request = {
-      url: 'https://id.twitch.tv/oauth2/authorize',
-      parseReturnUrl: jest.fn(() => authResult),
-    };
+    const authResult = createTwitchSignInAuthResult('token-456');
+    const request = createTwitchSignInAuthRequest(authResult);
     const loginWithTwitch = jest.fn();
     const onSuccess = jest.fn();
 
-    mockedUseAuthRequest.mockReturnValue([request, null, jest.fn()] as never);
-    mockedOpenAuthSessionAsync.mockResolvedValue({
-      type: 'success',
-      url: authResult.url,
-    } as never);
+    mockedUseAuthRequest.mockReturnValue([request, null, jest.fn()]);
+    mockedOpenAuthSessionAsync.mockResolvedValue(
+      createWebBrowserAuthSuccess(authResult.url),
+    );
 
     function Wrapper({ children }: PropsWithChildren) {
       const contextValue: AuthContextState = {

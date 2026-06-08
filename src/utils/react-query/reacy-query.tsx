@@ -1,3 +1,4 @@
+import { fetch } from 'expo/fetch';
 import { twitchQueries } from '@app/queries/twitchQueries';
 import {
   listenNetworkConfirmed,
@@ -36,13 +37,13 @@ const authProxyBaseUrl = process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
 
 async function checkIsOnline(): Promise<boolean> {
   try {
-    const abort = new AbortController();
+    const controller = new AbortController();
     setTimeout(() => {
-      abort.abort();
+      controller.abort();
     }, 15e3);
     const res = await fetch(`${authProxyBaseUrl}/api/healthcheck`, {
-      cache: 'no-store',
-      signal: abort.signal,
+      headers: { 'Cache-Control': 'no-store' },
+      signal: controller.signal,
     });
 
     const json = (await res.json()) as { version: string };

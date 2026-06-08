@@ -2,7 +2,6 @@ import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import type { SanitisedEmote } from '@app/types/emote';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 
-import { isUserChatProcessableMessage } from './prepareMessagesForReprocessing';
 import type { AnyChatMessageType } from './messageHandlers';
 
 type FetchUserCosmeticsOptions = {
@@ -43,6 +42,23 @@ const MAX_PERSONAL_EMOTE_FETCHES_PER_PASS = 3;
 const MAX_COSMETIC_FETCHES_PER_PASS = 3;
 const MAX_EMOTE_WARMUPS_PER_PASS = 36;
 const MAX_BADGE_WARMUPS_PER_PASS = 18;
+
+function canHydrateMessage(message: AnyChatMessageType): boolean {
+  if (message.sender === 'System') {
+    return false;
+  }
+
+  if (
+    'notice_tags' in message &&
+    message.notice_tags &&
+    !message.isAnnouncement &&
+    !message.isHighlightedMessage
+  ) {
+    return false;
+  }
+
+  return true;
+}
 
 function isMissingSharedChatSourceBadge(message: AnyChatMessageType): boolean {
   return Boolean(
@@ -128,7 +144,7 @@ export async function hydrateVisibleSevenTvAssets({
 
   messages.forEach(message => {
     const userId = message.userstate['user-id'];
-    if (!userId || !isUserChatProcessableMessage(message)) {
+    if (!userId || !canHydrateMessage(message)) {
       return;
     }
 

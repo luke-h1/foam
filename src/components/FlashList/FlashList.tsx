@@ -2,12 +2,13 @@ import {
   FlashList as ShopifyFlashList,
   FlashListProps as ShopifyFlashListProps,
   FlashListRef,
+  type ListRenderItem,
 } from '@shopify/flash-list';
 import type { Ref } from 'react';
 import { Platform } from 'react-native';
 import { FlashListWithRefresh } from './FlashListWithRefresh';
 
-export type { FlashListRef };
+export type { FlashListRef, ListRenderItem };
 
 export type FlashListProps<TItem = unknown> = ShopifyFlashListProps<TItem> & {
   inverted?: boolean;
@@ -32,5 +33,3 @@ export function FlashList<TItem>({
 
   return <ShopifyFlashList ref={ref} {...props} />;
 }
-
-export { type ListRenderItem } from '@shopify/flash-list';

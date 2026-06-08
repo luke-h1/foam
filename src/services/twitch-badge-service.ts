@@ -1,4 +1,5 @@
 import { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
+
 import { twitchApi } from './api';
 
 interface TwitchBadgeVersion {

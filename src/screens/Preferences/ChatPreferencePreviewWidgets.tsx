@@ -121,6 +121,7 @@ export const EmojiStylePreview = function EmojiStylePreview({
               contentFit='contain'
               source={{ uri: emote.url }}
               style={styles.emojiImage}
+              transition={0}
             />
           </View>
         ))}

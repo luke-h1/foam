@@ -90,8 +90,10 @@ describe('useChatTransientState', () => {
     );
     const replyTimer = setTimeout(jest.fn(), 1000);
     const hydrationTimer = setTimeout(jest.fn(), 1000);
-    result.current.highlightedReplyTargetTimeoutRef.current = replyTimer;
-    result.current.visibleAssetHydrationTimerRef.current = hydrationTimer;
+    result.current.highlightedReplyTargetTimeoutRef.current =
+      replyTimer as unknown as ReturnType<typeof setTimeout>;
+    result.current.visibleAssetHydrationTimerRef.current =
+      hydrationTimer as unknown as ReturnType<typeof setTimeout>;
 
     unmount();
 

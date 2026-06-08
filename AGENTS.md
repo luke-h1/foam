@@ -26,14 +26,15 @@ Legend State is unopinionated about folder shape, but we split observables, acti
 src/store/
   chat/
     observables/   # module-level observables (chatStore$, chatTransientState$)
-    types/         # shared chat store types
+    types/         # shared chat store types and constants
     actions/       # pure mutations against observables (no React hooks)
     react/         # useSelector / useObservable hooks for components
-    index.ts       # barrel for common chat exports
   preferences/
     state.ts       # preferences$ observable + persistence
     selectors.ts   # usePreferences and related hooks
     index.ts
 ```
+
+Import chat store modules directly (for example `@app/store/chat/observables/chatStore`, `@app/store/chat/actions/messages`, `@app/store/chat/types/constants`). Do not add barrel exports under `store/chat`.
 
 Put new module-level observables in `observables/`. Put write helpers that call `.set()` / `.peek()` in `actions/`. Put `useSelector` and `useObservable` in `react/`. Session-scoped caches (mention colors, shared chat badges) belong on `chatStore$`, not module-level `Map`s in components. Pure message transforms like `getVisibleMessages` also live in `actions/`. Do not wrap Legend State mutations in `useCallback` unless a React API (imperative ref, effect deps) needs a stable function reference.

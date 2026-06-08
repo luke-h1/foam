@@ -1,7 +1,11 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import type { SanitisedEmote } from '@app/types/emote';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
+import {
+  createEmotePart,
+  createTextPart,
+} from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
 
 import { hydrateVisibleSevenTvAssets } from '../hydrateVisibleSevenTvAssets';
 import type { AnyChatMessageType } from '../messageHandlers';
@@ -46,7 +50,7 @@ function createMessage(): AnyChatMessageType {
     id: 'message-1_nonce-1',
     message_id: 'message-1',
     message_nonce: 'nonce-1',
-    message: [{ type: 'text', content: 'Personal' }] as ParsedPart[],
+    message: [createTextPart('Personal')],
     badges: [],
     channel: 'channel',
     parentDisplayName: '',
@@ -54,18 +58,12 @@ function createMessage(): AnyChatMessageType {
     replyDisplayName: '',
     sender: 'Sender',
     timestamp: '00:00',
-    userstate: {
-      'badges-raw': '',
+    userstate: createUserStateTags({
       'display-name': 'Sender',
-      'reply-parent-display-name': '',
-      'reply-parent-msg-body': '',
-      'reply-parent-msg-id': '',
-      'reply-parent-user-login': '',
       'user-id': 'twitch-user',
-      badges: {},
       login: 'sender',
       username: 'Sender',
-    },
+    }),
   };
 }
 
@@ -299,15 +297,13 @@ describe('hydrateVisibleSevenTvAssets', () => {
     const message = createMessage();
     message.badges = [sevenTvBadge];
     message.message = [
-      {
-        type: 'emote',
+      createEmotePart('Personal', {
         id: 'personal-emote',
         name: 'Personal',
-        content: 'Personal',
         url: sevenTvPersonalEmote.url,
         static_url: 'https://cdn.7tv.app/emote/personal-emote/static.webp',
-      },
-    ] as ParsedPart[];
+      }),
+    ];
     const warmVisibleImages = jest.fn();
 
     await hydrateVisibleSevenTvAssets({

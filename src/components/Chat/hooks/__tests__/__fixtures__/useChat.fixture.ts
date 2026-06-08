@@ -1,11 +1,44 @@
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import type { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
-import type { SanitisedEmote } from '@app/types/emote';
+import type {
+  SevenTvSanitisedEmote,
+  TwitchSanitisedEmote,
+} from '@app/types/emote';
+import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
+import { EmoteSetKind } from '@app/graphql/generated/gql';
 import { createBaseMessage } from '../../../util/messageHandlers';
 
 type CurrentEmoteData = NonNullable<ReturnType<typeof getCurrentEmoteData>>;
 type UserChatMessage = ChatMessageType<'usernotice'>;
-type SevenTvChannelEmote = Extract<SanitisedEmote, { site: '7TV Channel' }>;
+type SevenTvChannelEmote = SevenTvSanitisedEmote;
+
+export function createTwitchEmote(
+  overrides: Partial<TwitchSanitisedEmote> = {},
+): TwitchSanitisedEmote {
+  return {
+    id: 'twitch-emote-1',
+    name: 'Kappa',
+    original_name: 'Kappa',
+    url: 'https://cdn.example.test/kappa.webp',
+    creator: null,
+    emote_link: 'https://twitch.tv/emotes/twitch-emote-1',
+    site: 'Twitch Channel',
+    ...overrides,
+  };
+}
+
+export function createBadge(
+  overrides: Partial<SanitisedBadgeSet> = {},
+): SanitisedBadgeSet {
+  return {
+    id: 'badge-1',
+    set: 'subscriber',
+    type: 'Twitch Subscriber Badge',
+    title: 'Subscriber',
+    url: 'https://cdn.example.test/badge.png',
+    ...overrides,
+  };
+}
 
 export function createSevenTvEmote(
   overrides: Partial<SevenTvChannelEmote> = {},
@@ -35,7 +68,7 @@ export function createSevenTvEmote(
       setName: 'Channel Set',
       capacity: 500,
       ownerId: 'owner-1',
-      kind: 'NORMAL',
+      kind: EmoteSetKind.Normal,
       updatedAt: '2026-06-08T00:00:00.000Z',
       totalCount: 1,
     },

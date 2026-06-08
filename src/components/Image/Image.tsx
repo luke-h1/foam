@@ -27,6 +27,7 @@ export const Image = function Image({
   contentFit = 'cover',
   containerStyle,
   placeholderContentFit,
+  transition = 500,
   source,
   cachePolicy,
   cachePriority = 'visible',
@@ -57,13 +58,12 @@ export const Image = function Image({
 
   const fileCachedUrl = diskCachedUrl ?? downloadedCachedUrl;
   const resolvedUrl = fileCachedUrl ?? url;
-  let resolvedSource: ImageProps['source'] = source;
-  if (fileCachedUrl && typeof source === 'object' && 'uri' in source) {
-    resolvedSource = { ...source, uri: fileCachedUrl };
-  } else if (fileCachedUrl && typeof source === 'string') {
-    resolvedSource = fileCachedUrl;
-  }
-
+  const resolvedSource =
+    fileCachedUrl && typeof source === 'object' && 'uri' in source
+      ? { ...source, uri: fileCachedUrl }
+      : fileCachedUrl && typeof source === 'string'
+        ? fileCachedUrl
+        : source;
   const imageRenderer = useNitro ? 'NitroImage' : 'Image';
   const trackLoad = Boolean(trackLoadTime && resolvedUrl);
 
@@ -121,11 +121,11 @@ export const Image = function Image({
       return;
     }
 
-    const abort = new AbortController();
+    const controller = new AbortController();
     let cancelled = false;
     void cacheImageFromUrl(url, {
       priority: cachePriority,
-      signal: abort.signal,
+      signal: controller.signal,
       variant: cacheVariant,
     }).then(cachedUrl => {
       if (!cancelled && cachedUrl !== url) {
@@ -135,7 +135,7 @@ export const Image = function Image({
 
     return () => {
       cancelled = true;
-      abort.abort();
+      controller.abort();
     };
   }, [cachePriority, cacheVariant, diskCachedUrl, shouldUseFileCache, url]);
 
@@ -206,7 +206,7 @@ export const Image = function Image({
         style={style}
         contentFit={contentFit}
         cachePolicy={cachePolicy}
-        transition={500}
+        transition={transition}
         decodeFormat='rgb'
         recyclingKey={recyclingKey ?? resolvedUrl ?? undefined}
         useAppleWebpCodec

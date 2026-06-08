@@ -48,7 +48,6 @@ export function useChatCosmetics({
       const elapsedSeconds = chatStartTime
         ? (Date.now() - chatStartTime) / 1000
         : 0;
-
       logger.stvWs.debug(
         `Skipping cosmetic fetch for ${twitchUserId} - chat has been active for ${elapsedSeconds.toFixed(1)}s (limit: 5s)`,
       );

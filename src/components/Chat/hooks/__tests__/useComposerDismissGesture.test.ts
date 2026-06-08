@@ -1,11 +1,4 @@
 import { act, renderHook } from '@testing-library/react-native';
-import {
-  COMPOSER_DISMISS_DRAG_DISTANCE,
-  COMPOSER_DISMISS_VELOCITY,
-  COMPOSER_DRAG_LIMIT,
-  dismissComposer,
-  useComposerDismissGesture,
-} from '../useComposerDismissGesture';
 
 type GestureCallbacks = {
   onEnd?: (event: { translationY: number; velocityY: number }) => void;
@@ -15,60 +8,67 @@ type GestureCallbacks = {
 
 type GestureMock = {
   callbacks: GestureCallbacks;
-  activeOffsetY: jest.Mock<GestureMock, [number]>;
-  direction: jest.Mock<GestureMock, [number]>;
-  failOffsetX: jest.Mock<GestureMock, [[number, number]]>;
-  onEnd: jest.Mock<GestureMock, [GestureCallbacks['onEnd']]>;
-  onFinalize: jest.Mock<GestureMock, [GestureCallbacks['onFinalize']]>;
-  onUpdate: jest.Mock<GestureMock, [GestureCallbacks['onUpdate']]>;
+  activeOffsetY: jest.Mock;
+  direction: jest.Mock;
+  failOffsetX: jest.Mock;
+  onEnd: jest.Mock;
+  onFinalize: jest.Mock;
+  onUpdate: jest.Mock;
 };
 
 const mockDismiss = jest.fn();
-const mockScheduleOnRN = jest.fn((fn: () => void) => fn());
 const mockSharedValue = {
   get: jest.fn(() => 0),
   set: jest.fn(),
 };
-const mockWithSpring = jest.fn((value: number) => value);
+const mockWithSpring = jest.fn((value: number, _config?: unknown) => value);
 let mockLastFlingGesture: GestureMock;
 let mockLastPanGesture: GestureMock;
 
 function mockCreateGestureMock(): GestureMock {
-  const gesture = {
-    callbacks: {},
-  } as GestureMock;
-  gesture.activeOffsetY = jest.fn(() => gesture);
-  gesture.direction = jest.fn(() => gesture);
-  gesture.failOffsetX = jest.fn(() => gesture);
-  gesture.onEnd = jest.fn(callback => {
-    gesture.callbacks.onEnd = callback;
-    return gesture;
-  });
-  gesture.onFinalize = jest.fn(callback => {
-    gesture.callbacks.onFinalize = callback;
-    return gesture;
-  });
-  gesture.onUpdate = jest.fn(callback => {
-    gesture.callbacks.onUpdate = callback;
-    return gesture;
-  });
+  const callbacks: GestureCallbacks = {};
+  const gesture: GestureMock = {
+    callbacks,
+    activeOffsetY: jest.fn(function activeOffsetY(this: GestureMock) {
+      return this;
+    }),
+    direction: jest.fn(function direction(this: GestureMock) {
+      return this;
+    }),
+    failOffsetX: jest.fn(function failOffsetX(this: GestureMock) {
+      return this;
+    }),
+    onEnd: jest.fn(callback => {
+      callbacks.onEnd = callback;
+      return gesture;
+    }),
+    onFinalize: jest.fn(callback => {
+      callbacks.onFinalize = callback;
+      return gesture;
+    }),
+    onUpdate: jest.fn(callback => {
+      callbacks.onUpdate = callback;
+      return gesture;
+    }),
+  };
   return gesture;
 }
 
 jest.mock('react-native-keyboard-controller', () => ({
   KeyboardController: {
-    dismiss: mockDismiss,
+    dismiss: (...args: unknown[]) => mockDismiss(...args),
   },
 }));
 
 jest.mock('react-native-worklets', () => ({
-  scheduleOnRN: mockScheduleOnRN,
+  scheduleOnRN: jest.fn((fn: () => void) => fn()),
 }));
 
 jest.mock('react-native-reanimated', () => ({
-  useAnimatedStyle: jest.fn((updater: () => unknown) => updater()),
-  useSharedValue: jest.fn(() => mockSharedValue),
-  withSpring: mockWithSpring,
+  useAnimatedStyle: (updater: () => unknown) => updater(),
+  useSharedValue: () => mockSharedValue,
+  withSpring: (value: number, config?: unknown) =>
+    mockWithSpring(value, config),
 }));
 
 jest.mock('react-native-gesture-handler', () => ({
@@ -91,13 +91,30 @@ jest.mock('react-native-gesture-handler', () => ({
   },
 }));
 
+import { scheduleOnRN } from 'react-native-worklets';
+import {
+  COMPOSER_DISMISS_DRAG_DISTANCE,
+  COMPOSER_DISMISS_VELOCITY,
+  COMPOSER_DRAG_LIMIT,
+} from '../../components/composerDismissConstants';
+import { useComposerDismissGesture } from '../../components/useComposerDismissGesture';
+
+const mockScheduleOnRN = jest.mocked(scheduleOnRN);
+
 describe('useComposerDismissGesture', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   test('dismissComposer delegates to the keyboard controller', () => {
-    dismissComposer();
+    renderHook(() => useComposerDismissGesture());
+
+    act(() => {
+      mockLastPanGesture.callbacks.onEnd?.({
+        translationY: COMPOSER_DISMISS_DRAG_DISTANCE + 1,
+        velocityY: 0,
+      });
+    });
 
     expect(mockDismiss).toHaveBeenCalledTimes(1);
   });
@@ -147,10 +164,7 @@ describe('useComposerDismissGesture', () => {
       });
     });
 
-    expect(mockScheduleOnRN.mock.calls).toEqual([
-      [dismissComposer],
-      [dismissComposer],
-    ]);
+    expect(mockScheduleOnRN).toHaveBeenCalledTimes(2);
     expect(mockDismiss).toHaveBeenCalledTimes(2);
   });
 
@@ -187,7 +201,7 @@ describe('useComposerDismissGesture', () => {
       },
     ]);
     expect(mockSharedValue.set.mock.calls.at(-1)).toEqual([0]);
-    expect(mockScheduleOnRN.mock.calls).toEqual([[dismissComposer]]);
+    expect(mockScheduleOnRN).toHaveBeenCalledTimes(1);
     expect(mockDismiss).toHaveBeenCalledTimes(1);
   });
 });

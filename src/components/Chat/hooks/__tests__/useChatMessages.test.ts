@@ -11,7 +11,14 @@ const mockAddMessages = jest.mocked(addMessages);
 
 function getLastFlushedMessages(): ChatMessageType<never>[] {
   const lastCall = mockAddMessages.mock.calls.at(-1);
-  return (lastCall?.[0] ?? []) as ChatMessageType<never>[];
+  const messages = lastCall?.[0];
+  if (!Array.isArray(messages)) {
+    return [];
+  }
+
+  return messages.filter(
+    (message): message is ChatMessageType<never> => message != null,
+  );
 }
 
 describe('useChatMessages', () => {
@@ -429,8 +436,8 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(50);
       });
 
-      const firstCall = mockAddMessages.mock.calls[0] as unknown[];
-      const flushedMessages = firstCall[0] as ChatMessageType<never>[];
+      const firstCall = mockAddMessages.mock.calls[0];
+      const flushedMessages = firstCall?.[0] ?? [];
 
       expect(flushedMessages).toHaveLength(600);
       expect(flushedMessages[0]?.message_id).toBe('100');

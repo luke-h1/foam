@@ -15,7 +15,11 @@ type TimedCacheEntry<T> = {
   expiresAt: number;
 };
 
-type SharedChatBadgeCacheBucket = 'sourceBadges' | 'channelBadges';
+type SourceBadgeCache = Record<
+  string,
+  TimedCacheEntry<SanitisedBadgeSet | null>
+>;
+type ChannelBadgeCache = Record<string, TimedCacheEntry<SanitisedBadgeSet[]>>;
 
 type ChatEmoteData = NonNullable<ReturnType<typeof getCurrentEmoteData>>;
 
@@ -29,38 +33,69 @@ const sharedChatChannelBadgePromises = new Map<
   Promise<SanitisedBadgeSet[]>
 >();
 
-function readBucket<T>(
-  bucket: SharedChatBadgeCacheBucket,
-): Record<string, TimedCacheEntry<T>> {
-  return chatStore$.sharedChatBadgeCaches[bucket].peek() ?? {};
+function readSourceBadgesBucket(): SourceBadgeCache {
+  return chatStore$.sharedChatBadgeCaches.sourceBadges.peek() ?? {};
 }
 
-function getTimedCacheValue<T>(
-  bucket: SharedChatBadgeCacheBucket,
+function readChannelBadgesBucket(): ChannelBadgeCache {
+  return chatStore$.sharedChatBadgeCaches.channelBadges.peek() ?? {};
+}
+
+function getSourceBadgeCacheValue(
   key: string,
-): T | undefined {
-  const entry = readBucket<T>(bucket)[key];
+): SanitisedBadgeSet | null | undefined {
+  const entry = readSourceBadgesBucket()[key];
   if (!entry) {
     return undefined;
   }
 
   if (entry.expiresAt <= Date.now()) {
-    const next = { ...readBucket<T>(bucket) };
+    const next = { ...readSourceBadgesBucket() };
     delete next[key];
-    chatStore$.sharedChatBadgeCaches[bucket].set(next);
+    chatStore$.sharedChatBadgeCaches.sourceBadges.set(next);
     return undefined;
   }
 
   return entry.value;
 }
 
-function setTimedCacheValue<T>(
-  bucket: SharedChatBadgeCacheBucket,
+function getChannelBadgesCacheValue(
   key: string,
-  value: T,
+): SanitisedBadgeSet[] | undefined {
+  const entry = readChannelBadgesBucket()[key];
+  if (!entry) {
+    return undefined;
+  }
+
+  if (entry.expiresAt <= Date.now()) {
+    const next = { ...readChannelBadgesBucket() };
+    delete next[key];
+    chatStore$.sharedChatBadgeCaches.channelBadges.set(next);
+    return undefined;
+  }
+
+  return entry.value;
+}
+
+function setSourceBadgeCacheValue(
+  key: string,
+  value: SanitisedBadgeSet | null,
 ): void {
-  chatStore$.sharedChatBadgeCaches[bucket].set({
-    ...readBucket<T>(bucket),
+  chatStore$.sharedChatBadgeCaches.sourceBadges.set({
+    ...readSourceBadgesBucket(),
+    [key]: {
+      value,
+      expiresAt: Date.now() + SHARED_CHAT_BADGE_CACHE_TTL_MS,
+    },
+  });
+}
+
+function setChannelBadgesCacheValue(
+  key: string,
+  value: SanitisedBadgeSet[],
+): void {
+  chatStore$.sharedChatBadgeCaches.channelBadges.set({
+    ...readChannelBadgesBucket(),
     [key]: {
       value,
       expiresAt: Date.now() + SHARED_CHAT_BADGE_CACHE_TTL_MS,
@@ -86,10 +121,7 @@ function getSharedChatSourceRoomId(
 async function getSharedChatSourceBadge(
   sourceRoomId: string,
 ): Promise<SanitisedBadgeSet | null> {
-  const cached = getTimedCacheValue<SanitisedBadgeSet | null>(
-    'sourceBadges',
-    sourceRoomId,
-  );
+  const cached = getSourceBadgeCacheValue(sourceRoomId);
   if (cached !== undefined) {
     return cached;
   }
@@ -120,7 +152,7 @@ async function getSharedChatSourceBadge(
       return null;
     })
     .then(sourceBadge => {
-      setTimedCacheValue('sourceBadges', sourceRoomId, sourceBadge);
+      setSourceBadgeCacheValue(sourceRoomId, sourceBadge);
       sharedChatSourceBadgePromises.delete(sourceRoomId);
       return sourceBadge;
     });
@@ -132,10 +164,7 @@ async function getSharedChatSourceBadge(
 async function getSharedChatChannelBadges(
   sourceRoomId: string,
 ): Promise<SanitisedBadgeSet[]> {
-  const cached = getTimedCacheValue<SanitisedBadgeSet[]>(
-    'channelBadges',
-    sourceRoomId,
-  );
+  const cached = getChannelBadgesCacheValue(sourceRoomId);
   if (cached) {
     return cached;
   }
@@ -152,7 +181,7 @@ async function getSharedChatChannelBadges(
       return [];
     })
     .then(sourceBadges => {
-      setTimedCacheValue('channelBadges', sourceRoomId, sourceBadges);
+      setChannelBadgesCacheValue(sourceRoomId, sourceBadges);
       sharedChatChannelBadgePromises.delete(sourceRoomId);
       return sourceBadges;
     });
@@ -196,14 +225,8 @@ export function getCachedSharedChatBadgeContext(userstate: UserStateTags): {
     return null;
   }
 
-  const sourceBadge = getTimedCacheValue<SanitisedBadgeSet | null>(
-    'sourceBadges',
-    sourceRoomId,
-  );
-  const sourceChannelBadges = getTimedCacheValue<SanitisedBadgeSet[]>(
-    'channelBadges',
-    sourceRoomId,
-  );
+  const sourceBadge = getSourceBadgeCacheValue(sourceRoomId);
+  const sourceChannelBadges = getChannelBadgesCacheValue(sourceRoomId);
 
   return {
     isComplete: sourceBadge !== undefined && sourceChannelBadges !== undefined,

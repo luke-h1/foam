@@ -19,7 +19,7 @@ function getTagNumber(
   fallback?: number,
 ): number | undefined {
   const value = getTagValue(tags, key);
-  return value ? Number.parseInt(value, 10) : fallback;
+  return value ? parseInt(value, 10) : fallback;
 }
 
 function getSharedStreakValue(
@@ -356,7 +356,7 @@ export function createViewerMilestonePart(
 
   let constructedMessage = '';
   if (category === 'watch-streak' && displayName && value) {
-    const streamCount = Number.parseInt(value, 10);
+    const streamCount = parseInt(value, 10);
     const streamText = streamCount === 1 ? 'stream' : 'streams';
     constructedMessage = `${displayName} watched ${value} consecutive ${streamText} and sparked a watch streak!`;
   } else if (systemMsg) {

@@ -2,22 +2,15 @@ export function fitWithinMaxBox(
   width: number,
   height: number,
   maxSize: number,
-) {
-  const sourceWidth = width > 0 ? width : maxSize;
-  const sourceHeight = height > 0 ? height : maxSize;
-
-  if (sourceWidth <= 0 || sourceHeight <= 0) {
-    return {
-      width: maxSize,
-      height: maxSize,
-    };
+): { width: number; height: number } {
+  if (width <= 0 || height <= 0) {
+    return { width: maxSize, height: maxSize };
   }
 
-  const scale = Math.min(maxSize / sourceWidth, maxSize / sourceHeight);
-
+  const scale = Math.min(maxSize / width, maxSize / height);
   return {
-    width: Math.max(1, Math.round(sourceWidth * scale)),
-    height: Math.max(1, Math.round(sourceHeight * scale)),
+    width: width * scale,
+    height: height * scale,
   };
 }
 

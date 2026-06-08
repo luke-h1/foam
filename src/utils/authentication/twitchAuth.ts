@@ -15,12 +15,12 @@ export interface ParsedTwitchAuthToken {
 }
 
 function getNormalizedExpiresIn(value: unknown): number {
-  let parsed = Number.NaN;
-  if (typeof value === 'number') {
-    parsed = value;
-  } else if (typeof value === 'string') {
-    parsed = Number.parseInt(value, 10);
-  }
+  const parsed =
+    typeof value === 'number'
+      ? value
+      : typeof value === 'string'
+        ? Number.parseInt(value, 10)
+        : Number.NaN;
 
   return Number.isFinite(parsed) && parsed > 0
     ? parsed

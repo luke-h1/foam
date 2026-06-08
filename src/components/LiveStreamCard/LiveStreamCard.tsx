@@ -89,6 +89,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               source={thumbnailUrl}
               style={styles.mediaImage}
               containerStyle={styles.mediaImageWrapper}
+              transition={150}
             />
             <View style={styles.liveBadge}>
               <Text type='xxs' weight='bold' style={styles.liveBadgeText}>
@@ -114,6 +115,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
                   source={stream.profilePicture}
                   style={styles.avatarImage}
                   containerStyle={styles.avatarImageWrapper}
+                  transition={150}
                 />
               ) : (
                 <View style={styles.avatarFallback}>
@@ -167,8 +169,6 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
     );
   }
 
-  const titleNumberOfLines = isTextLayout ? 3 : 2;
-
   return (
     <Button onPress={handleStreamPress} style={styles.cardWrapper}>
       <View style={cardStyles}>
@@ -178,6 +178,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               source={thumbnailUrl}
               style={imageStyle}
               containerStyle={imageWrapperStyle}
+              transition={150}
             />
           </View>
         )}
@@ -216,7 +217,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               isMediaLayout && styles.titleMedia,
               isTextLayout && styles.titleText,
             ]}
-            numberOfLines={titleNumberOfLines}
+            numberOfLines={isMediaLayout ? 2 : isTextLayout ? 3 : 2}
           >
             {stream.title}
           </Text>
@@ -260,6 +261,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               source={thumbnailUrl}
               style={imageStyle}
               containerStyle={imageWrapperStyle}
+              transition={150}
             />
           </View>
         ) : null}

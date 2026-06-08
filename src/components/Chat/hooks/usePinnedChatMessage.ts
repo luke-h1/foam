@@ -7,7 +7,7 @@ import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { logger } from '@app/utils/logger';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner-native';
-import type { MessageActionData } from '../ChatMessage/RichChatMessage';
+import type { MessageActionData } from '../components/ChatMessage/RichChatMessage';
 
 const PINNED_MESSAGE_REFRESH_INTERVAL_MS = 60_000;
 

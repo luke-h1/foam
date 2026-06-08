@@ -281,7 +281,6 @@ const config: ExpoConfig = {
     // '@bacons/apple-targets',
     'react-native-legal',
     'react-native-edge-to-edge',
-    'react-native-nitro-websockets',
     [
       'expo-build-properties',
       {

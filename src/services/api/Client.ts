@@ -1,5 +1,7 @@
-import { fetch, type FetchRequestInit } from 'expo/fetch';
+import type { FetchRequestInit } from 'expo/fetch';
 import qs from 'qs';
+
+import { platformFetch, type AppFetchFn } from './fetch';
 
 type RequestMethod = 'DELETE' | 'GET' | 'PATCH' | 'POST' | 'PUT';
 type ClientHeaderValue = boolean | null | number | string | undefined;
@@ -107,6 +109,7 @@ const defaultParamsSerializer: CustomParamsSerializer = params =>
 
 export interface ClientOptions {
   baseURL?: string;
+  fetchFn?: AppFetchFn;
   headers?: ClientHeaders;
   requestInterceptors?: RequestInterceptor[];
   responseInterceptors?: (ResponseInterceptor | ResponseInterceptorFactory)[];
@@ -225,6 +228,8 @@ export default class Client {
 
   private readonly defaultHeaders = new Headers();
 
+  private readonly fetchFn: AppFetchFn;
+
   private readonly paramsSerializer: CustomParamsSerializer;
 
   private readonly requestInterceptors = new Set<RequestInterceptor>();
@@ -233,12 +238,14 @@ export default class Client {
 
   public constructor({
     baseURL = '',
+    fetchFn = platformFetch,
     paramsSerializer = defaultParamsSerializer,
     requestInterceptors,
     responseInterceptors,
     headers,
   }: ClientOptions) {
     this.defaultBaseURL = baseURL;
+    this.fetchFn = fetchFn;
     this.paramsSerializer = paramsSerializer;
     applyHeaders(this.defaultHeaders, headers);
 
@@ -503,7 +510,7 @@ export default class Client {
         : config.body;
 
     try {
-      const response = await fetch(requestUrl, {
+      const response = await this.fetchFn(requestUrl, {
         body,
         credentials: config.credentials,
         headers,

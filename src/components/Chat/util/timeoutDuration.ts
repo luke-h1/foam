@@ -59,8 +59,17 @@ export function parseTimeoutDuration(
     };
   }
 
-  const amount = Number.parseInt(match[1], 10);
-  const unit = match[2] as DurationUnit;
+  const amountText = match[1];
+  const unitText = match[2];
+  if (!amountText || !unitText) {
+    return {
+      ok: false,
+      error: 'Use formats like 1m, 10m, 1h, or 1day',
+    };
+  }
+
+  const amount = Number.parseInt(amountText, 10);
+  const unit = unitText as DurationUnit;
   const multiplier = DURATION_UNIT_SECONDS[unit];
   if (!multiplier) {
     return { ok: false, error: 'Unknown duration unit' };
@@ -121,6 +130,13 @@ export function normalizeTimeoutCommand(
   }
 
   const login = match[1];
+  if (!login) {
+    return {
+      ok: false,
+      error: 'Usage: /timeout username 10m',
+    };
+  }
+
   const remainder = match[2]?.trim() ?? '';
   if (!remainder) {
     return {
@@ -137,7 +153,15 @@ export function normalizeTimeoutCommand(
     };
   }
 
-  const parsed = parseTimeoutDuration(durationMatch[1]);
+  const durationText = durationMatch[1];
+  if (!durationText) {
+    return {
+      ok: false,
+      error: 'Enter a duration like 10m, 1h, or 1day',
+    };
+  }
+
+  const parsed = parseTimeoutDuration(durationText);
   if (!parsed.ok) {
     return parsed;
   }

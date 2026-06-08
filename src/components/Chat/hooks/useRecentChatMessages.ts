@@ -2,7 +2,7 @@ import { recentMessagesService } from '@app/services/recent-messages-service';
 import { restoreRecentMessagesForChannel } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { logger } from '@app/utils/logger';
-import { RefObject, useEffect, useRef } from 'react';
+import { MutableRefObject, useEffect, useRef } from 'react';
 
 export function useRecentChatMessages({
   channelId,
@@ -17,7 +17,7 @@ export function useRecentChatMessages({
   channelName: string;
   forceFlush: () => void;
   processRecentIrcLine: (line: string) => Promise<void>;
-  isLoadingRecentMessagesRef: RefObject<boolean>;
+  isLoadingRecentMessagesRef: MutableRefObject<boolean>;
   scrollChatToEnd: () => void;
   showRecentMessages: boolean;
 }) {
@@ -47,18 +47,18 @@ export function useRecentChatMessages({
       return;
     }
 
-    const abort = new AbortController();
+    const abortController = new AbortController();
     isLoadingRecentMessagesRef.current = true;
 
     const loadRecentMessages = async () => {
       try {
         const recentMessages = await recentMessagesService.getRecentMessages(
           channelName,
-          abort.signal,
+          abortController.signal,
         );
 
         for (const message of recentMessages) {
-          if (abort.signal.aborted) {
+          if (abortController.signal.aborted) {
             return;
           }
           // Recent messages must replay in server order.
@@ -69,14 +69,14 @@ export function useRecentChatMessages({
         forceFlushRef.current();
         scrollChatToEndRef.current();
       } catch (error) {
-        if (!abort.signal.aborted) {
+        if (!abortController.signal.aborted) {
           logger.chat.debug('Failed to load recent messages:', error);
           if (restoredRecentCountRef.current > 0) {
             scrollChatToEndRef.current();
           }
         }
       } finally {
-        if (!abort.signal.aborted) {
+        if (!abortController.signal.aborted) {
           isLoadingRecentMessagesRef.current = false;
         }
       }
@@ -85,7 +85,7 @@ export function useRecentChatMessages({
     void loadRecentMessages();
 
     return () => {
-      abort.abort();
+      abortController.abort();
       isLoadingRecentMessagesRef.current = false;
     };
   }, [channelName, isLoadingRecentMessagesRef, showRecentMessages]);

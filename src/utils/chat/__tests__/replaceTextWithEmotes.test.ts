@@ -6,7 +6,7 @@ import { sevenTvSanitisedChannelEmoteSetFixture } from '@app/services/__fixtures
 import { seventvSanitiisedGlobalEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/sevenTvSanitisedGlobalEmoteSet.fixture';
 import { twitchTvSanitisedEmoteSetChannelFixture } from '@app/services/__fixtures__/emotes/twitch/twitchTvSanitisedEmoteSetChannel.fixture';
 import { twitchTvSanitisedEmoteSetGlobalFixture } from '@app/services/__fixtures__/emotes/twitch/twitchTvSanitisedEmoteSetGlobal.fixture';
-import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import type { SanitisedEmote } from '@app/types/emote';
 import { ParsedPart, replaceTextWithEmotes } from '../replaceTextWithEmotes';
 
@@ -34,14 +34,11 @@ describe.skip('replaceTextWithEmotesV2', () => {
     bttvGlobalEmotes: bttvSanitisedGlobalEmoteSet,
   };
 
-  /**
-   * Todo: add full @type UserStateTags
-   */
-  const defaultUserState: Partial<UserStateTags> = {
+  const defaultUserState = createUserStateTags({
     color: '#FF0000',
     username: 'test-user',
     'display-name': 'test user',
-  };
+  });
 
   test('should handle empty input', () => {
     const result = replaceTextWithEmotes({
@@ -57,7 +54,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
     const result = replaceTextWithEmotes({
       inputString: 'Hello Kappa World',
       ...defaultEmoteSets,
-      userstate: defaultUserState as UserStateTags,
+      userstate: defaultUserState,
     });
 
     expect(result).toEqual<ParsedPart[]>([
@@ -89,7 +86,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
     const result = replaceTextWithEmotes({
       inputString: 'kappa KAPPA Kappa',
       ...defaultEmoteSets,
-      userstate: defaultUserState as UserStateTags,
+      userstate: defaultUserState,
     });
 
     expect(result).toEqual<ParsedPart[]>([
@@ -123,7 +120,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
     const result = replaceTextWithEmotes({
       inputString: 'Hello 😊 World',
       ...defaultEmoteSets,
-      userstate: defaultUserState as UserStateTags,
+      userstate: defaultUserState,
     });
 
     expect(result).toEqual<ParsedPart[]>([
@@ -138,7 +135,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
     const result = replaceTextWithEmotes({
       inputString: 'Hello \uFFFD World',
       ...defaultEmoteSets,
-      userstate: defaultUserState as UserStateTags,
+      userstate: defaultUserState,
     });
 
     expect(result).toEqual<ParsedPart[]>([
@@ -163,7 +160,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
         sevenTvGlobalEmotes: seventvSanitiisedGlobalEmoteSetFixture,
         twitchChannelEmotes: [],
         twitchGlobalEmotes: [],
-        userstate: defaultUserState as UserStateTags,
+        userstate: defaultUserState,
       });
 
       expect(result).toEqual<ParsedPart[]>([
@@ -190,7 +187,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
           sevenTvGlobalEmotes: seventvSanitiisedGlobalEmoteSetFixture,
           twitchChannelEmotes: [],
           twitchGlobalEmotes: [],
-          userstate: defaultUserState as UserStateTags,
+          userstate: defaultUserState,
         });
 
         expect(result).toEqual<ParsedPart[]>([
@@ -236,7 +233,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
           ),
           twitchChannelEmotes: [],
           twitchGlobalEmotes: [],
-          userstate: defaultUserState as UserStateTags,
+          userstate: defaultUserState,
         });
 
         expect(result).toEqual<ParsedPart[]>([
@@ -267,7 +264,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
             sevenTvGlobalEmotes: [],
             twitchChannelEmotes: [],
             twitchGlobalEmotes: twitchTvSanitisedEmoteSetGlobalFixture,
-            userstate: defaultUserState as UserStateTags,
+            userstate: defaultUserState,
           });
 
           expect(result).toEqual<ParsedPart[]>([
@@ -296,7 +293,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
             sevenTvGlobalEmotes: [],
             twitchChannelEmotes: [],
             twitchGlobalEmotes: twitchTvSanitisedEmoteSetGlobalFixture,
-            userstate: defaultUserState as UserStateTags,
+            userstate: defaultUserState,
           });
 
           expect(result).toEqual<ParsedPart[]>([
@@ -335,7 +332,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
             sevenTvGlobalEmotes: [],
             twitchChannelEmotes: twitchTvSanitisedEmoteSetChannelFixture,
             twitchGlobalEmotes: [],
-            userstate: defaultUserState as UserStateTags,
+            userstate: defaultUserState,
           });
 
           expect(result).toEqual<ParsedPart[]>([
@@ -364,7 +361,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
             sevenTvGlobalEmotes: [],
             twitchChannelEmotes: [],
             twitchGlobalEmotes: twitchTvSanitisedEmoteSetChannelFixture,
-            userstate: defaultUserState as UserStateTags,
+            userstate: defaultUserState,
           });
 
           expect(result).toEqual<ParsedPart[]>([
@@ -405,7 +402,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
             sevenTvGlobalEmotes: [],
             twitchChannelEmotes: [],
             twitchGlobalEmotes: [],
-            userstate: defaultUserState as UserStateTags,
+            userstate: defaultUserState,
           });
 
           expect(result).toEqual<ParsedPart[]>([
@@ -438,7 +435,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
             sevenTvGlobalEmotes: [],
             twitchChannelEmotes: [],
             twitchGlobalEmotes: [],
-            userstate: defaultUserState as UserStateTags,
+            userstate: defaultUserState,
           });
 
           expect(result).toEqual<ParsedPart[]>([
@@ -486,7 +483,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
             sevenTvGlobalEmotes: [],
             twitchChannelEmotes: [],
             twitchGlobalEmotes: [],
-            userstate: defaultUserState as UserStateTags,
+            userstate: defaultUserState,
           });
 
           expect(result).toEqual<ParsedPart[]>([
@@ -514,7 +511,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
             sevenTvGlobalEmotes: [],
             twitchChannelEmotes: [],
             twitchGlobalEmotes: [],
-            userstate: defaultUserState as UserStateTags,
+            userstate: defaultUserState,
           });
 
           expect(result).toEqual<ParsedPart[]>([
@@ -565,7 +562,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
             sevenTvGlobalEmotes: [],
             twitchChannelEmotes: [],
             twitchGlobalEmotes: [],
-            userstate: defaultUserState as UserStateTags,
+            userstate: defaultUserState,
           });
 
           expect(result).toEqual<ParsedPart[]>([
@@ -592,7 +589,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
             sevenTvGlobalEmotes: [],
             twitchChannelEmotes: [],
             twitchGlobalEmotes: [],
-            userstate: defaultUserState as UserStateTags,
+            userstate: defaultUserState,
           });
 
           expect(result).toEqual<ParsedPart[]>([
@@ -640,7 +637,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
             sevenTvGlobalEmotes: [],
             twitchChannelEmotes: [],
             twitchGlobalEmotes: [],
-            userstate: defaultUserState as UserStateTags,
+            userstate: defaultUserState,
           });
 
           expect(result).toEqual<ParsedPart[]>([
@@ -671,7 +668,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
             sevenTvGlobalEmotes: [],
             twitchChannelEmotes: [],
             twitchGlobalEmotes: [],
-            userstate: defaultUserState as UserStateTags,
+            userstate: defaultUserState,
           });
 
           expect(result).toEqual<ParsedPart[]>([
@@ -730,7 +727,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
       emote => {
         const result = replaceTextWithEmotes({
           inputString: emote.name,
-          userstate: defaultUserState as UserStateTags,
+          userstate: defaultUserState,
           ...defaultEmoteSets,
         });
 
@@ -752,7 +749,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
     test.each(allEmoteSets)('should replace emote with text %s', emote => {
       const result = replaceTextWithEmotes({
         inputString: `hello foam world ${emote.name} hello foam world`,
-        userstate: defaultUserState as UserStateTags,
+        userstate: defaultUserState,
         ...defaultEmoteSets,
       });
 

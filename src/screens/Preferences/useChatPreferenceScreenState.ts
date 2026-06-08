@@ -1,4 +1,4 @@
-import { usePreferences } from '@app/store/preferences';
+import { usePreferences } from '@app/store/preferenceStore';
 import type { SanitisedEmote } from '@app/types/emote';
 import { useObservable, useSelector } from '@legendapp/state/react';
 import {

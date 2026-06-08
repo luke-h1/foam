@@ -1,6 +1,6 @@
-import { imageCacheManifestMMKV } from '@app/lib/mmkv';
 import { Directory, File, Paths } from 'expo-file-system';
 import * as FileSystemLegacy from 'expo-file-system/legacy';
+import { createMMKV } from 'react-native-mmkv';
 
 export const BLURHASH = 'LBDbA}oL00Na~B9u57={XRay-Uj[';
 
@@ -45,7 +45,10 @@ type DownloadTask = {
   url: string;
 };
 
-const manifestStorage = imageCacheManifestMMKV;
+const manifestStorage = createMMKV({
+  id: 'image-cache-manifest',
+  compareBeforeSet: true,
+});
 
 const manifest = new Map<string, CacheRecord>();
 const inFlight = new Map<string, Promise<string>>();

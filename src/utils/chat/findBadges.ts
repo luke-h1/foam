@@ -3,7 +3,6 @@ import type { ChatUser } from '@app/store/chat/types/constants';
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import { parseBadges } from './parseBadges';
 
 interface FindBadgesParams {
   userstate: UserStateTags;
@@ -94,25 +93,34 @@ export function findBadges({
 
   const rawTwitchBadges = getRawTwitchBadges(userstate);
 
-  const { badges: parsedTwitchBadges } = parseBadges(rawTwitchBadges);
+  if (rawTwitchBadges.length > 0) {
+    rawTwitchBadges.split(',').forEach(rawBadge => {
+      const [set, version] = rawBadge.split('/');
+      if (!set || !version) {
+        return;
+      }
 
-  for (const [set, version] of Object.entries(parsedTwitchBadges)) {
-    const channelBadge = findTwitchChannelBadge(
-      twitchChannelBadges,
-      set,
-      version,
-    );
+      const channelBadge = findTwitchChannelBadge(
+        twitchChannelBadges,
+        set,
+        version,
+      );
 
-    if (channelBadge) {
-      addBadge(badges, channelBadge, 'Twitch Channel Badge');
-      continue;
-    }
+      if (channelBadge) {
+        addBadge(badges, channelBadge, 'Twitch Channel Badge');
+        return;
+      }
 
-    const globalBadge = findTwitchGlobalBadge(twitchGlobalBadges, set, version);
+      const globalBadge = findTwitchGlobalBadge(
+        twitchGlobalBadges,
+        set,
+        version,
+      );
 
-    if (globalBadge) {
-      addBadge(badges, globalBadge, 'Twitch Global Badge');
-    }
+      if (globalBadge) {
+        addBadge(badges, globalBadge, 'Twitch Global Badge');
+      }
+    });
   }
 
   const globalFfzBadges = ffzGlobalBadges.filter(
@@ -133,7 +141,7 @@ export function findBadges({
 
   const stvUser = chatUsers.find(u => u.name === `@${userstate.username}`);
 
-  if (stvUser?.cosmetics?.badge_id) {
+  if (stvUser && stvUser.cosmetics?.badge_id) {
     const stvBadge = stvUser.cosmetics.badges.find(
       b => b.id === stvUser.cosmetics?.badge_id,
     );

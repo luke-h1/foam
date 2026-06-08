@@ -20,9 +20,7 @@ export function FaqScreen() {
     }
 
     didOpenBrowser.current = true;
-    void (async () => {
-      await openLinkInBrowser(FOAM_FAQ_URL);
-    })();
+    openLinkInBrowser(FOAM_FAQ_URL);
   }, []);
 
   return (
@@ -38,9 +36,7 @@ export function FaqScreen() {
           body='Open the Foam website in the in-app browser for common questions and product guidance.'
         >
           <Button
-            onPress={async () => {
-              await openLinkInBrowser(FOAM_FAQ_URL);
-            }}
+            onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
             style={styles.cta}
           >
             <Text weight='semibold'>Open FAQ</Text>

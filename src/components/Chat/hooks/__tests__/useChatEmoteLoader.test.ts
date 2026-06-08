@@ -1,5 +1,9 @@
 import { useAuthContext } from '@app/context/AuthContext';
 import {
+  createAuthContextValue,
+  createTestUser,
+} from '@app/context/__tests__/__fixtures__/authContext.fixture';
+import {
   abortCurrentLoad,
   getCurrentEmoteData,
   getSevenTvEmoteSetId,
@@ -55,7 +59,7 @@ const mockStartChannelLoadAbort = jest.mocked(startChannelLoadAbort);
 const mockUseAuthContext = jest.mocked(useAuthContext);
 
 function arrangeAbortController(controller = new AbortController()) {
-  mockStartChannelLoadAbort.mockReturnValue({ signal: controller.signal });
+  mockStartChannelLoadAbort.mockReturnValue(controller);
   return controller;
 }
 
@@ -63,11 +67,11 @@ describe('useChatEmoteLoader', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     arrangeAbortController();
-    mockUseAuthContext.mockReturnValue({
-      user: {
-        id: 'viewer-id',
-      },
-    } as ReturnType<typeof useAuthContext>);
+    mockUseAuthContext.mockReturnValue(
+      createAuthContextValue({
+        user: createTestUser({ id: 'viewer-id' }),
+      }),
+    );
     mockGetSevenTvEmoteSetId.mockReturnValue('set-1');
     mockGetCurrentEmoteData.mockReturnValue(
       createEmoteData({

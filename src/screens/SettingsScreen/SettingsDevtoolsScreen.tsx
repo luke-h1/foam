@@ -5,7 +5,7 @@ import {
   SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
 import { theme } from '@app/styles/themes';
-import { usePreferences } from '@app/store/preferences';
+import { usePreferences } from '@app/store/preferenceStore';
 import {
   Button,
   Form,

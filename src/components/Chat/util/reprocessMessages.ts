@@ -14,6 +14,7 @@ export interface MessageToReprocess {
 
 /**
  * Reprocess all messages with current emote data
+ * This is the core logic extracted for testability
  *
  * @param messages - Array of chat messages to reprocess
  * @param processMessageEmotes - Callback to process a message's emotes

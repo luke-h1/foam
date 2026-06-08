@@ -2,7 +2,10 @@ import { useAuthContext } from '@app/context/AuthContext';
 import { ReadyState } from '@app/hooks/ws/constants';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { usePreference } from '@app/store/preferences';
+import {
+  useChatRenderPreferences,
+  useUpdatePreferences,
+} from '@app/store/preferenceStore';
 import { parseBadges } from '@app/utils/chat/parseBadges';
 import { useNavigation } from 'expo-router';
 import { useLazyRef } from '@app/hooks/useLazyRef';
@@ -11,13 +14,16 @@ import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import type { ChatInputShellHandle } from '../ChatInputShell';
-import type { ChatListRef } from '../ChatMessagePane';
-import type { ChatOverlaysHandle } from '../ChatOverlays';
-import { normaliseChatUsername } from '../util/normaliseChatUsername';
+import type { ChatInputShellHandle } from '../components/ChatInputShell';
+import type { ChatListRef } from '../components/ChatList';
+import { useChatOverlays } from '../components/useChatOverlays';
+import { normaliseChatUsername } from '../util/chatUsernames';
 import { useChatCosmetics } from './useChatCosmetics';
 import { useChatEmoteLoader } from './useChatEmoteLoader';
-import { useChatInteractionHandlers } from './useChatInteractionHandlers';
+import {
+  useChatComposerActions,
+  useChatOverlayActions,
+} from './useChatInteractionHandlers';
 import { useChatIrcHandlers } from './useChatIrcHandlers';
 import { useChatLifecycle } from './useChatLifecycle';
 import { useChatMessageProcessing } from './useChatMessageProcessing';
@@ -25,15 +31,16 @@ import { useChatMessages } from './useChatMessages';
 import { useChatRowRenderer } from './useChatRowRenderer';
 import { useChatScroll } from './useChatScroll';
 import { useChatSettingsActions } from './useChatSettingsActions';
-import { useChatTransientState } from '@app/store/chat/react/transientState';
+import { useChatTransientState } from './useChatTransientState';
 import { usePinnedChatMessage } from './usePinnedChatMessage';
 import { useRecentChatMessages } from './useRecentChatMessages';
 import { useSevenTvChatRuntime } from './useSevenTvChatRuntime';
 
 export function useChat(channelId: string, channelName: string) {
   const { user } = useAuthContext();
-  const showRecentMessages = usePreference('showRecentMessages');
-  const chatTimestamps = usePreference('chatTimestamps');
+  const preferences = useChatRenderPreferences();
+  const updatePreferences = useUpdatePreferences();
+  const showRecentMessages = preferences.showRecentMessages !== false;
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const messages$ = chatStore$.messages;
@@ -48,7 +55,6 @@ export function useChat(channelId: string, channelName: string) {
       userId: user?.id,
     });
   }, [channelName, user?.id, user?.login]);
-
   const {
     handleClearFilters,
     handleToggleShowOnlyMentions,
@@ -67,10 +73,8 @@ export function useChat(channelId: string, channelName: string) {
     visibleCosmeticUsersRef,
     visiblePersonalEmoteUsersRef,
   } = useChatTransientState(channelId);
-
   const listRef = useRef<ChatListRef | null>(null);
   const inputShellRef = useRef<ChatInputShellHandle>(null);
-  const chatOverlaysRef = useRef<ChatOverlaysHandle>(null);
   const isLoadingRecentMessagesRef = useRef(false);
   const isChatMountedRef = useRef(true);
 
@@ -89,6 +93,33 @@ export function useChat(channelId: string, channelName: string) {
     channelId,
     enabled: true,
   });
+  const chatAssetPreferenceKey = useMemo(
+    () =>
+      [
+        preferences.emojiStyle,
+        preferences.show7TvEmotes,
+        preferences.showBttvEmotes,
+        preferences.showFFzEmotes,
+        preferences.showTwitchEmotes,
+        preferences.show7tvBadges,
+        preferences.showBttvBadges,
+        preferences.showFFzBadges,
+        preferences.showTwitchBadges,
+        preferences.showChatterinoEmotes,
+      ].join('|'),
+    [
+      preferences.emojiStyle,
+      preferences.show7TvEmotes,
+      preferences.showBttvEmotes,
+      preferences.showFFzEmotes,
+      preferences.showTwitchEmotes,
+      preferences.show7tvBadges,
+      preferences.showBttvBadges,
+      preferences.showFFzBadges,
+      preferences.showTwitchBadges,
+      preferences.showChatterinoEmotes,
+    ],
+  );
 
   const getMessagesLength = useCallback(
     () => messages$.peek().length,
@@ -141,6 +172,7 @@ export function useChat(channelId: string, channelName: string) {
     handleViewableMessagesChange,
   } = useChatMessageProcessing({
     channelId,
+    disableEmoteAnimations: preferences.disableEmoteAnimations,
     fetchUserCosmetics,
     handleNewMessage,
     hydratedVisibleAssetKeysRef,
@@ -148,6 +180,8 @@ export function useChat(channelId: string, channelName: string) {
     maintainBottomAfterContentChange,
     messages$,
     pendingVisibleMessagesRef,
+    show7TvEmotes: preferences.show7TvEmotes,
+    show7tvBadges: preferences.show7tvBadges,
     userLogin: user?.login,
     visibleAssetHydrationTimerRef,
     visibleCosmeticUsersRef,
@@ -187,7 +221,6 @@ export function useChat(channelId: string, channelName: string) {
     joinChannel,
     sendMessage,
     sendChatCommand,
-    sendAction,
     getUserState,
   } = useTwitchChat({
     channel: channelName,
@@ -241,21 +274,11 @@ export function useChat(channelId: string, channelName: string) {
   const connected =
     twitchConnectionState === ReadyState.OPEN && isChatConnected();
 
-  const {
-    appendMentionToComposer,
-    prepareTimeoutCommand,
-    handleEmotePress,
-    handleEmoteSelect,
-    handleMessageLongPress,
-    handleOpenEmoteSheet,
-    handleOpenSettingsSheet,
-    handleReply,
-    handleUsernamePress,
-  } = useChatInteractionHandlers({
-    fetchUserCosmetics,
-    inputShellRef,
-    chatOverlaysRef,
-  });
+  const { appendMentionToComposer, handleEmoteSelect, handleReply } =
+    useChatComposerActions({
+      fetchUserCosmetics,
+      inputShellRef,
+    });
 
   const currentUserState = getUserState();
   const parsedBadges = parseBadges(currentUserState['badges-raw']).badges;
@@ -293,25 +316,72 @@ export function useChat(channelId: string, channelName: string) {
   } = useChatSettingsActions({
     channelId,
     channelName,
+    chatDensity: preferences.chatDensity,
     forceFlush,
     joinChannel,
     partChannel,
     refetchEmotes,
     reprocessAllMessages,
     scrollToBottom,
+    updatePreferences,
   });
+
+  const { openers, overlaysElement } = useChatOverlays({
+    appendMentionToComposer,
+    canModerateChat,
+    channelId,
+    channelName,
+    disableEmoteAnimations: preferences.disableEmoteAnimations,
+    handleReply,
+    hiddenUsers,
+    highlightedUsers,
+    hidePhraseFromView,
+    hideUserFromView,
+    onClearChatCache: handleClearChatCache,
+    onClearImageCache: handleDebugClearImageCache,
+    onClearSevenTvCosmeticsCache: handleClearSevenTvCosmeticsCache,
+    onInsertEmote: handleEmoteSelect,
+    onPinMessage: handlePinMessage,
+    onRefreshPinnedMessage: handleRefreshPinnedMessage,
+    onSettingsReconnect: handleSettingsReconnect,
+    onSettingsRefetchEmotes: handleSettingsRefetchEmotes,
+    onToggleChatDensity: handleToggleChatDensity,
+    onToggleHighlightOwnMentions: handleToggleHighlightOwnMentions,
+    onToggleInlineReplyContext: handleToggleInlineReplyContext,
+    onToggleShowTimestamps: handleToggleShowTimestamps,
+    onToggleShowUnreadJumpPill: handleToggleShowUnreadJumpPill,
+    onUnpinPinnedMessage: handleUnpinPinnedMessage,
+    pinnedMessageBusy,
+    pinnedMessageId,
+    sendChatCommand,
+    showInlineReplyContext: preferences.showInlineReplyContext,
+    showTimestamps: preferences.chatTimestamps,
+    showUnreadJumpPill: preferences.showUnreadJumpPill,
+    chatDensity: preferences.chatDensity,
+    highlightOwnMentions: preferences.highlightOwnMentions,
+    toggleHighlightedUser,
+  });
+
+  const {
+    handleBadgeLongPress,
+    handleEmotePress,
+    handleMessageLongPress,
+    handleOpenEmoteSheet,
+    handleOpenSettingsSheet,
+    handleUsernamePress,
+  } = useChatOverlayActions(openers);
 
   const paneFlags = useMemo(
     () => ({
       canModerateChat,
       connected: twitchConnectionState === ReadyState.OPEN,
       showOnlyMentions,
-      showTimestamps: chatTimestamps,
+      showTimestamps: preferences.chatTimestamps,
       shouldMaintainScrollAtEnd,
     }),
     [
       canModerateChat,
-      chatTimestamps,
+      preferences.chatTimestamps,
       shouldMaintainScrollAtEnd,
       showOnlyMentions,
       twitchConnectionState,
@@ -330,19 +400,21 @@ export function useChat(channelId: string, channelName: string) {
     highlightedUsers,
     listRef,
     messages$,
+    onBadgePress: handleBadgeLongPress,
     onEmotePress: handleEmotePress,
     onMessageLongPress: handleMessageLongPress,
     onUsernamePress: handleUsernamePress,
+    preferences,
     setHighlightedReplyTargetMessageId,
     user,
   });
 
   return {
     appendMentionToComposer,
-    prepareTimeoutCommand,
     canModerateChat,
     channelId,
     channelName,
+    chatAssetPreferenceKey,
     connected,
     currentUsername,
     emoteLoadStatus,
@@ -391,15 +463,15 @@ export function useChat(channelId: string, channelName: string) {
     listRef,
     messageListExtraData,
     messages$,
-    chatOverlaysRef,
+    overlaysElement,
     paneFlags,
     pinnedMessage,
     pinnedMessageBusy,
     pinnedMessageId,
+    preferences,
     processedMessageIdsRef,
     processMessageEmotes,
     renderItem,
-    sendAction,
     sendChatCommand,
     sendMessage,
     shouldMaintainScrollAtEnd,

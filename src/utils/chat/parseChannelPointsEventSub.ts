@@ -90,9 +90,7 @@ export function parseChannelPointsEventSubEvent(
 
   if (rewardId === 'animated-message') {
     title = 'Message Effects';
-  }
-
-  if (rewardId === 'gigantified-emote-message') {
+  } else if (rewardId === 'gigantified-emote-message') {
     title = 'Gigantify an Emote';
   }
 

@@ -48,23 +48,18 @@ export function describeInitialRoomState(
   if (state.emoteOnly) {
     activeModes.push('emote-only');
   }
-
   if (state.subsOnly) {
     activeModes.push('subscribers-only');
   }
-
   if (state.r9k) {
     activeModes.push('unique-chat');
   }
-
   if (state.slowSeconds > 0) {
     activeModes.push(`slow mode (${state.slowSeconds}s)`);
   }
-
   if (state.followersOnlyMinutes === 0) {
     activeModes.push('followers-only');
   }
-
   if (state.followersOnlyMinutes > 0) {
     activeModes.push(`followers-only (${state.followersOnlyMinutes}m)`);
   }

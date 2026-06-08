@@ -1,7 +1,9 @@
-import type {
-  UserNoticeTags,
-  ViewerMilestoneTags,
-} from '@app/types/chat/irc-tags/usernotice';
+import {
+  createResubTags,
+  createSubGiftTags,
+  createSubscriptionTags,
+  createViewerMilestoneTags,
+} from '@app/types/chat/irc-tags/__fixtures__/userNoticeTags.fixture';
 import {
   createCharityDonationPart,
   createRitualPart,
@@ -11,15 +13,16 @@ import {
 
 describe('formatSubscriptionNotice', () => {
   test('createSubscriptionPart maps sub notices', () => {
-    const part = createSubscriptionPart({
-      'msg-id': 'sub',
-      'display-name': 'Viewer',
-      'msg-param-sub-plan': '1000',
-      'msg-param-cumulative-months': '3',
-      'msg-param-streak-months': '1',
-      'msg-param-should-share-streak': '0',
-      'msg-param-sub-plan-name': 'Prime',
-    } as UserNoticeTags);
+    const part = createSubscriptionPart(
+      createSubscriptionTags({
+        'display-name': 'Viewer',
+        'msg-param-sub-plan': '1000',
+        'msg-param-cumulative-months': '3',
+        'msg-param-streak-months': '1',
+        'msg-param-should-share-streak': '0',
+        'msg-param-sub-plan-name': 'Prime',
+      }),
+    );
 
     expect(part.type).toBe('sub');
     expect(part.subscriptionEvent).toMatchObject({
@@ -33,15 +36,14 @@ describe('formatSubscriptionNotice', () => {
 
   test('createSubscriptionPart maps resub notices with message text', () => {
     const part = createSubscriptionPart(
-      {
-        'msg-id': 'resub',
+      createResubTags({
         login: 'viewer',
         'msg-param-sub-plan': '3000',
         'msg-param-cumulative-months': '12',
         'msg-param-streak-months': '4',
         'msg-param-should-share-streak': '1',
         'msg-param-sub-plan-name': 'Tier 2',
-      } as UserNoticeTags,
+      }),
       'Still here!',
     );
 
@@ -59,14 +61,13 @@ describe('formatSubscriptionNotice', () => {
   });
 
   test('createViewerMilestonePart builds watch streak copy', () => {
-    const part = createViewerMilestonePart({
-      'msg-id': 'viewermilestone',
-      'display-name': 'Viewer',
-      'msg-param-category': 'watch-streak',
-      'msg-param-value': '10',
-      'msg-param-copoReward': '',
-      'msg-param-id': '1',
-    } as ViewerMilestoneTags);
+    const part = createViewerMilestonePart(
+      createViewerMilestoneTags({
+        'display-name': 'Viewer',
+        'msg-param-value': '10',
+        'msg-param-copoReward': '',
+      }),
+    );
 
     expect(part.type).toBe('viewermilestone');
     expect(part.systemMsg).toBe(
@@ -108,16 +109,16 @@ describe('formatSubscriptionNotice', () => {
   });
 
   test('createSubscriptionPart maps subgift notices', () => {
-    const part = createSubscriptionPart({
-      'msg-id': 'subgift',
-      'display-name': 'Gifter',
-      'msg-param-sub-plan': '2000',
-      'msg-param-recipient-display-name': 'Recipient',
-      'msg-param-recipient-id': '123',
-      'msg-param-recipient-user-name': 'recipient',
-      'msg-param-gift-months': '1',
-      'msg-param-months': '2',
-    } as UserNoticeTags);
+    const part = createSubscriptionPart(
+      createSubGiftTags({
+        'display-name': 'Gifter',
+        'msg-param-recipient-display-name': 'Recipient',
+        'msg-param-recipient-id': '123',
+        'msg-param-recipient-user-name': 'recipient',
+        'msg-param-gift-months': '1',
+        'msg-param-months': '2',
+      }),
+    );
 
     expect(part.type).toBe('anongift');
     expect(part.subscriptionEvent).toMatchObject({

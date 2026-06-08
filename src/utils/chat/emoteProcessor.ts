@@ -344,7 +344,6 @@ export const processEmotesWorklet = (
         type: 'mention',
         content: mentionText,
       });
-
       i += 1;
       // eslint-disable-next-line no-continue
       continue;

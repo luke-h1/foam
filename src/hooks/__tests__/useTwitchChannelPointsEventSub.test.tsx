@@ -1,4 +1,8 @@
 import { useAuthContext } from '@app/context/AuthContext';
+import {
+  createLoggedInAuthContextValue,
+  createLoggedOutAuthContextValue,
+} from '@app/context/__tests__/__fixtures__/authContext.fixture';
 import { useTwitchChannelPointsEventSub } from '@app/hooks/useTwitchChannelPointsEventSub';
 import TwitchWsService from '@app/services/twitch-ws-service';
 import { renderHook, waitFor } from '@testing-library/react-native';
@@ -30,15 +34,15 @@ const mockTwitchWsService = jest.mocked(TwitchWsService);
 describe('useTwitchChannelPointsEventSub', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockTwitchWsService.getInstance.mockReturnValue({} as WebSocket);
+    mockTwitchWsService.getInstance.mockReturnValue(
+      null as unknown as WebSocket,
+    );
     mockTwitchWsService.subscribeToEvent.mockResolvedValue(undefined);
     mockTwitchWsService.unsubscribeFromEvent.mockResolvedValue(undefined);
   });
 
   test('skips EventSub subscriptions when logged out', () => {
-    mockUseAuthContext.mockReturnValue({
-      authState: { isLoggedIn: false },
-    } as ReturnType<typeof useAuthContext>);
+    mockUseAuthContext.mockReturnValue(createLoggedOutAuthContextValue());
 
     renderHook(() => useTwitchChannelPointsEventSub('channel-id'));
 
@@ -47,9 +51,7 @@ describe('useTwitchChannelPointsEventSub', () => {
   });
 
   test('subscribes to channel point redemption events when logged in', async () => {
-    mockUseAuthContext.mockReturnValue({
-      authState: { isLoggedIn: true },
-    } as ReturnType<typeof useAuthContext>);
+    mockUseAuthContext.mockReturnValue(createLoggedInAuthContextValue());
 
     renderHook(() => useTwitchChannelPointsEventSub('channel-id'));
 

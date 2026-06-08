@@ -185,12 +185,13 @@ export const useChatScroll = ({
       const shouldStayAnchoredToBottom =
         !hasUserScrollIntentRef.current && !isDraggingRef.current;
 
-      const resolved =
-        !userDraggedAway &&
-        (shouldStayAnchoredToBottom ||
-          !hasUserScrollIntentRef.current ||
-          atBottom ||
-          reachedPreviousEndDuringGrowth);
+      const resolved = userDraggedAway
+        ? false
+        : shouldStayAnchoredToBottom
+          ? true
+          : hasUserScrollIntentRef.current
+            ? atBottom || reachedPreviousEndDuringGrowth
+            : true;
 
       isAtBottomRef.current = resolved;
 

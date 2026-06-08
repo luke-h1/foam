@@ -11,9 +11,11 @@ import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import {
+  createBadge,
   createChatMessage,
   createEmoteData,
   createSevenTvEmote,
+  createTwitchEmote,
 } from './__fixtures__/useChat.fixture';
 import { hydrateVisibleSevenTvAssets } from '../../util/hydrateVisibleSevenTvAssets';
 import { reprocessMessages } from '../../util/reprocessMessages';
@@ -21,7 +23,7 @@ import {
   getCachedSharedChatBadgeContext,
   getMessageBadges,
   getSharedChatBadgeContext,
-} from '@app/store/chat/actions/sharedChatBadges';
+} from '../../util/sharedChatBadges';
 import { useChatMessageProcessing } from '../useChatMessageProcessing';
 
 jest.mock('@app/store/chat/actions/channelLoad', () => ({
@@ -68,7 +70,7 @@ jest.mock('../../util/reprocessMessages', () => ({
   reprocessMessages: jest.fn(),
 }));
 
-jest.mock('@app/store/chat/actions/sharedChatBadges', () => ({
+jest.mock('../../util/sharedChatBadges', () => ({
   getCachedSharedChatBadgeContext: jest.fn(),
   getMessageBadges: jest.fn(() => []),
   getSharedChatBadgeContext: jest.fn(() =>
@@ -141,6 +143,7 @@ function renderMessageProcessing() {
   const hook = renderHook(() =>
     useChatMessageProcessing({
       channelId: 'channel-1',
+      disableEmoteAnimations: true,
       fetchUserCosmetics,
       handleNewMessage,
       hydratedVisibleAssetKeysRef: refs.hydratedVisibleAssetKeysRef,
@@ -150,6 +153,8 @@ function renderMessageProcessing() {
         peek: jest.fn(() => messages),
       },
       pendingVisibleMessagesRef: refs.pendingVisibleMessagesRef,
+      show7TvEmotes: true,
+      show7tvBadges: true,
       userLogin: 'viewer',
       visibleAssetHydrationTimerRef: refs.visibleAssetHydrationTimerRef,
       visibleCosmeticUsersRef: refs.visibleCosmeticUsersRef,
@@ -174,10 +179,10 @@ describe('useChatMessageProcessing', () => {
     name: 'Personal',
     site: '7TV Channel',
   });
-  const taggedSubscriberEmote = createSevenTvEmote({
+  const taggedSubscriberEmote = createTwitchEmote({
     id: 'tagged-1',
     name: 'SubTagged',
-    site: '7TV Channel',
+    site: 'Twitch Subscriber',
   });
 
   beforeEach(() => {
@@ -192,10 +197,10 @@ describe('useChatMessageProcessing', () => {
       createEmoteData({
         sevenTvChannelEmotes: [sevenTvEmote],
         twitchSubscriberEmotes: [
-          createSevenTvEmote({
+          createTwitchEmote({
             id: 'subscriber-1',
             name: 'SubOnly',
-            site: '7TV Channel',
+            site: 'Twitch Subscriber',
           }),
         ],
       }),
@@ -210,7 +215,7 @@ describe('useChatMessageProcessing', () => {
       }),
     ]);
     mockGetMessageBadges.mockReturnValue([
-      { set: 'subscriber', id: '12', url: 'badge.png' },
+      createBadge({ id: '12', url: 'badge.png' }),
     ]);
   });
 
@@ -221,11 +226,23 @@ describe('useChatMessageProcessing', () => {
   test('processes a live IRC message with personal, tagged, and subscriber emotes', async () => {
     mockGetCachedSharedChatBadgeContext.mockReturnValue({
       isComplete: false,
-      sourceBadge: { set: 'shared-chat-source', id: 'source', url: 's.png' },
+      sourceBadge: createBadge({
+        set: 'shared-chat-source',
+        id: 'source',
+        url: 's.png',
+        type: 'Twitch Channel Badge',
+        title: 'Shared chat source',
+      }),
       sourceChannelBadges: [],
     });
     mockGetSharedChatBadgeContext.mockResolvedValue({
-      sourceBadge: { set: 'shared-chat-source', id: 'updated', url: 'u.png' },
+      sourceBadge: createBadge({
+        set: 'shared-chat-source',
+        id: 'updated',
+        url: 'u.png',
+        type: 'Twitch Channel Badge',
+        title: 'Shared chat source',
+      }),
       sourceChannelBadges: [],
     });
     const baseMessage = createChatMessage({
@@ -261,10 +278,10 @@ describe('useChatMessageProcessing', () => {
       sevenTvPersonalEmotes: [personalEmote],
       twitchSubscriberEmotes: [
         taggedSubscriberEmote,
-        createSevenTvEmote({
+        createTwitchEmote({
           id: 'subscriber-1',
           name: 'SubOnly',
-          site: '7TV Channel',
+          site: 'Twitch Subscriber',
         }),
       ],
       userstate: baseMessage.userstate,
@@ -272,7 +289,7 @@ describe('useChatMessageProcessing', () => {
     expect(handleNewMessage.mock.calls[0]).toEqual([
       {
         ...baseMessage,
-        badges: [{ set: 'subscriber', id: '12', url: 'badge.png' }],
+        badges: [createBadge({ id: '12', url: 'badge.png' })],
         message: [{ type: 'text', content: 'processed:Kappa hello' }],
       },
       { countUnread: false },
@@ -284,7 +301,7 @@ describe('useChatMessageProcessing', () => {
           messageId: 'msg-1',
           messageNonce: 'msg-1',
           updates: {
-            badges: [{ set: 'subscriber', id: '12', url: 'badge.png' }],
+            badges: [createBadge({ id: '12', url: 'badge.png' })],
           },
         },
       ]);
@@ -292,7 +309,8 @@ describe('useChatMessageProcessing', () => {
   });
 
   test('falls back to the base message when no channel emote data is available', () => {
-    mockGetCurrentEmoteData.mockReturnValue(null);
+    mockGetCurrentEmoteData.mockReturnValue(createEmoteData());
+    mockEmojisPeek.mockReturnValue([]);
     const baseMessage = createChatMessage();
     const { handleNewMessage, hook } = renderMessageProcessing();
 

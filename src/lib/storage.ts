@@ -1,6 +1,6 @@
-import { storageMMKV } from '@app/lib/mmkv';
 import { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
 import EventEmitter from 'eventemitter3';
+import { createMMKV } from 'react-native-mmkv';
 
 export type StorageSetterOptions = {
   expiry?: Date;
@@ -30,7 +30,11 @@ const namespaceKey = (key: AllowedKey, namespacePrefix?: string) => {
 
 const storageEvents = new EventEmitter();
 
-export const storage = storageMMKV;
+export const storage = createMMKV({
+  id: 'storageService',
+  compareBeforeSet: true,
+  mode: 'multi-process',
+});
 
 type NamespacePrefixes = 'image_cache' | 'seven_tv_cache';
 

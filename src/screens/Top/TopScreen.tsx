@@ -7,7 +7,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { TabView, type SceneRendererProps } from 'react-native-tab-view';
 import { TopCategoriesScreen } from './TopCategoriesScreen';
-import { TopSegmentControl } from './components/TopSegmentControl';
+import { TopSegmentControl } from './TopSegmentControl';
 import { TOP_TAB_ROUTES } from '@app/constants/topTabRoutes';
 import { TopStreamsScreen } from './TopStreamsScreen';
 
@@ -24,7 +24,7 @@ export function TopScreen() {
   const scrollY = useSharedValue(0);
 
   const segmentStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: -Math.max(0, scrollY.get()) }],
+    transform: [{ translateY: -scrollY.get() }],
   }));
 
   const renderScene = ({ route }: SceneRendererProps & { route: Route }) => {
@@ -36,7 +36,6 @@ export function TopScreen() {
             scrollY={scrollY}
           />
         );
-
       case 'categories':
         return (
           <TopCategoriesScreen
@@ -44,7 +43,6 @@ export function TopScreen() {
             scrollY={scrollY}
           />
         );
-
       default:
         return null;
     }

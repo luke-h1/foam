@@ -168,6 +168,7 @@ function ClipCard({
           source={getClipThumbnailUrl(clip)}
           style={styles.thumbnail}
           contentFit='cover'
+          transition={150}
         />
         <View style={styles.durationBadge}>
           <Text type='xxs' weight='bold' style={styles.badgeText}>

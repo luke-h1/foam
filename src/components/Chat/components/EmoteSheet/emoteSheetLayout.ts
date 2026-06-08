@@ -1,0 +1,15 @@
+export const EMOTE_SHEET_DETENT = 0.78;
+
+export const EMOTE_SHEET_GRID_PADDING = 16;
+
+export const EMOTE_SHEET_CELL_GAP = 4;
+
+export const EMOTE_SHEET_RAIL_WIDTH = 56;
+
+export const EMOTE_SHEET_PROVIDER_BAR_HEIGHT = 54;
+
+export const EMOTE_SHEET_SEARCH_BAR_HEIGHT = 48;
+
+export const EMOTE_SHEET_MIN_CELL_SIZE = 38;
+
+export const EMOTE_SHEET_MAX_CELL_SIZE = 50;

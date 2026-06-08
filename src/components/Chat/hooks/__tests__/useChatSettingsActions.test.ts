@@ -38,16 +38,24 @@ function renderSettingsActions() {
   const reprocessAllMessages = jest.fn();
   const scrollToBottom = jest.fn();
 
+  const updatePreferences = jest.fn((patch: Record<string, unknown>) => {
+    replacePreferences({
+      ...getPreferences(),
+      ...patch,
+    });
+  });
   const hook = renderHook(() =>
     useChatSettingsActions({
       channelId: 'channel-1',
       channelName: 'foam',
+      chatDensity: 'comfortable',
       forceFlush,
       joinChannel,
       partChannel,
       refetchEmotes,
       reprocessAllMessages,
       scrollToBottom,
+      updatePreferences,
     }),
   );
 

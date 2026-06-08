@@ -3,27 +3,23 @@ import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { Redirect, router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
-import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
-
-const SKELETON_ROW_IDS = [
-  'skeleton-row-0',
-  'skeleton-row-1',
-  'skeleton-row-2',
-  'skeleton-row-3',
-  'skeleton-row-4',
-  'skeleton-row-5',
-] as const;
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 export default function IndexRoute() {
   const { authState, ready } = useAuthContext();
 
   if (!ready) {
     return (
-      <View style={styles.skeletonContainer}>
-        {SKELETON_ROW_IDS.map(id => (
-          <LiveStreamCardSkeleton key={id} />
-        ))}
+      <View style={styles.container}>
+        <ActivityIndicator size='large' color={theme.colorPrimary} />
+        <Text
+          type='sm'
+          color='gray.textLow'
+          align='center'
+          style={styles.message}
+        >
+          Starting Foam...
+        </Text>
       </View>
     );
   }
@@ -62,10 +58,5 @@ const styles = StyleSheet.create({
   },
   message: {
     marginTop: theme.space16,
-  },
-  skeletonContainer: {
-    backgroundColor: theme.color.background.dark,
-    flex: 1,
-    paddingTop: theme.space12,
   },
 });

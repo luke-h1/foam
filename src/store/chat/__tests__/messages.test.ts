@@ -1,3 +1,4 @@
+import type { AnyChatMessageType } from '../types/constants';
 import type { ChatMessageType } from '../types/constants';
 import {
   addMessage,
@@ -32,6 +33,23 @@ jest.mock('react-native-mmkv', () => ({
     remove: jest.fn(),
   }),
 }));
+
+function createInvalidStoredMessage(): AnyChatMessageType {
+  return {
+    ...createMessage('placeholder', 'placeholder', ''),
+    message_id: '',
+    message_nonce: '',
+    message: [],
+  };
+}
+
+function createSparsePersistedEntries(
+  entries: (AnyChatMessageType | undefined)[],
+): AnyChatMessageType[] {
+  const sparseEntries = [...entries];
+  // @ts-expect-error persisted replay can contain sparse historical entries
+  return sparseEntries;
+}
 
 function createMessage(
   messageId: string,
@@ -127,7 +145,7 @@ describe('chatStore messages', () => {
     addMessages([
       createMessage('msg-1', 'msg-1', 'historical'),
       createMessage('msg-1', 'msg-1', 'live'),
-    ] as ChatMessageType<never>[]);
+    ]);
 
     expect(chatStore$.messages.peek()).toHaveLength(1);
     expect(getMessageById('msg-1')?.message).toEqual([
@@ -195,11 +213,11 @@ describe('chatStore messages', () => {
 
   test('restoreRecentMessagesForChannel skips sparse persisted entries', () => {
     chatStore$.persisted.recentMessagesByChannel.set({
-      'channel-1': [
+      'channel-1': createSparsePersistedEntries([
         undefined,
-        { message_id: '', message_nonce: '', message: [] },
+        createInvalidStoredMessage(),
         createMessage('msg-1', 'nonce-1', 'first'),
-      ] as unknown as ChatMessageType<never>[],
+      ]),
     });
 
     const restoredCount = restoreRecentMessagesForChannel('channel-1');
@@ -255,7 +273,7 @@ describe('chatStore messages', () => {
     addMessages([
       createMessage('msg-1', 'nonce-1', 'first'),
       createMessage('msg-2', 'nonce-2', 'second'),
-    ] as ChatMessageType<never>[]);
+    ]);
 
     expect(chatStore$.messages.peek()).toHaveLength(2);
     expect(
@@ -312,7 +330,7 @@ describe('chatStore messages', () => {
     addMessages([
       createMessage('msg-1', 'nonce-1', 'first'),
       createMessage('msg-2', 'nonce-2', 'second'),
-    ] as ChatMessageType<never>[]);
+    ]);
 
     expect(chatStore$.messages.peek()).not.toBe(before);
     expect(getMessageById('msg-1')?.message).toEqual([
@@ -326,9 +344,9 @@ describe('chatStore messages', () => {
   test('addMessages skips sparse or incomplete entries', () => {
     addMessages([
       undefined,
-      { message_id: '', message_nonce: '', message: [] },
+      createInvalidStoredMessage(),
       createMessage('msg-1', 'nonce-1', 'first'),
-    ] as unknown as ChatMessageType<never>[]);
+    ]);
 
     expect(chatStore$.messages.peek()).toHaveLength(1);
     expect(chatStore$.messages.peek()[0]?.message_id).toBe('msg-1');

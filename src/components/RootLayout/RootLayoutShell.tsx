@@ -1,5 +1,5 @@
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { preferences$ } from '@app/store/preferences';
+import { preferences$ } from '@app/store/preferenceStore';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { logger } from '@app/utils/logger';
 import {

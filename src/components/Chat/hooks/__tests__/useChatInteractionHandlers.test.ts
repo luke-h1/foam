@@ -1,9 +1,15 @@
 import { getMessageById } from '@app/store/chat/actions/messages';
 import { act, renderHook } from '@testing-library/react-native';
-import type { ChatInputShellHandle } from '../../ChatInputShell';
-import type { ChatOverlaysHandle } from '../../ChatOverlays';
+import type { EmotePressData } from '../../components/ChatMessage/RichChatMessage.types';
+import type { ChatInputShellHandle } from '../../components/ChatInputShell';
+import type { ChatOverlayOpeners } from '../../components/useChatOverlays';
+import { createRef } from '@app/testing/createRef';
+import { createEmotePart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
 import { createChatMessage } from './__fixtures__/useChat.fixture';
-import { useChatInteractionHandlers } from '../useChatInteractionHandlers';
+import {
+  useChatComposerActions,
+  useChatOverlayActions,
+} from '../useChatInteractionHandlers';
 
 jest.mock('@app/store/chat/actions/messages', () => ({
   getMessageById: jest.fn(),
@@ -11,43 +17,59 @@ jest.mock('@app/store/chat/actions/messages', () => ({
 
 const mockGetMessageById = jest.mocked(getMessageById);
 
-function renderInteractionHandlers() {
+function renderComposerActions() {
   const fetchUserCosmetics = jest.fn(() => Promise.resolve());
   const inputShell = {
     appendEmote: jest.fn(),
     appendMention: jest.fn(),
-    prepareTimeoutCommand: jest.fn(),
+    clearReply: jest.fn(),
     setReplyTo: jest.fn(),
-  };
-  const chatOverlays = {
-    openEmotePreview: jest.fn(),
-    openEmoteSheet: jest.fn(),
-    openMessageActions: jest.fn(),
-    openSettingsSheet: jest.fn(),
-    openUserActions: jest.fn(),
   };
 
   const hook = renderHook(() =>
-    useChatInteractionHandlers({
+    useChatComposerActions({
       fetchUserCosmetics,
-      inputShellRef: {
-        current: inputShell as unknown as ChatInputShellHandle,
-      },
-      chatOverlaysRef: {
-        current: chatOverlays as ChatOverlaysHandle,
-      },
+      inputShellRef: createRef<ChatInputShellHandle | null>(inputShell),
     }),
   );
 
   return {
-    chatOverlays,
     fetchUserCosmetics,
     hook,
     inputShell,
   };
 }
 
-describe('useChatInteractionHandlers', () => {
+function renderOverlayActions() {
+  const openBadge = jest.fn();
+  const openEmotePreview = jest.fn();
+  const openEmoteSheet = jest.fn();
+  const openMessageActions = jest.fn();
+  const openSettingsSheet = jest.fn();
+  const openUserActions = jest.fn();
+  const openers: ChatOverlayOpeners = {
+    openBadge,
+    openEmotePreview,
+    openEmoteSheet,
+    openMessageActions,
+    openSettingsSheet,
+    openUserActions,
+  };
+
+  const hook = renderHook(() => useChatOverlayActions(openers));
+
+  return {
+    hook,
+    openBadge,
+    openEmotePreview,
+    openEmoteSheet,
+    openMessageActions,
+    openSettingsSheet,
+    openUserActions,
+  };
+}
+
+describe('useChatComposerActions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -73,8 +95,7 @@ describe('useChatInteractionHandlers', () => {
       },
     });
     mockGetMessageById.mockReturnValue(parentMessage);
-    const { fetchUserCosmetics, hook, inputShell } =
-      renderInteractionHandlers();
+    const { fetchUserCosmetics, hook, inputShell } = renderComposerActions();
 
     act(() => {
       hook.result.current.handleReply(replyMessage);
@@ -94,7 +115,7 @@ describe('useChatInteractionHandlers', () => {
   });
 
   test('inserts emotes and mentions into the composer', () => {
-    const { hook, inputShell } = renderInteractionHandlers();
+    const { hook, inputShell } = renderComposerActions();
 
     act(() => {
       hook.result.current.handleEmoteSelect('Kappa');
@@ -115,22 +136,32 @@ describe('useChatInteractionHandlers', () => {
       ['OMEGALUL'],
     ]);
     expect(inputShell.appendMention).toHaveBeenCalledWith('targetUser');
+  });
+});
 
-    act(() => {
-      hook.result.current.prepareTimeoutCommand('targetUser');
-    });
-
-    expect(inputShell.prepareTimeoutCommand).toHaveBeenCalledWith('targetUser');
+describe('useChatOverlayActions', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   test('opens overlay surfaces for emotes, message actions, settings, and users', () => {
     const message = createChatMessage();
-    const { chatOverlays, hook } = renderInteractionHandlers();
-    const emote = {
-      id: 'emote-1',
+    const {
+      hook,
+      openEmotePreview,
+      openEmoteSheet,
+      openMessageActions,
+      openSettingsSheet,
+      openUserActions,
+    } = renderOverlayActions();
+    const emote: EmotePressData = createEmotePart('Kappa', {
       name: 'Kappa',
+      original_name: 'Kappa',
+      site: '7TV Channel',
       url: 'https://cdn.example.test/kappa.webp',
-    };
+      creator: null,
+      emote_link: 'https://cdn.example.test/kappa.webp',
+    });
     const usernameData = {
       username: 'Viewer',
       displayName: 'Viewer',
@@ -148,15 +179,13 @@ describe('useChatInteractionHandlers', () => {
       hook.result.current.handleUsernamePress(usernameData);
     });
 
-    expect(chatOverlays.openEmoteSheet).toHaveBeenCalledTimes(1);
-    expect(chatOverlays.openSettingsSheet).toHaveBeenCalledTimes(1);
-    expect(chatOverlays.openEmotePreview.mock.calls[0]?.[0]).toEqual(emote);
-    expect(chatOverlays.openMessageActions.mock.calls[0]?.[0]).toEqual(
+    expect(openEmoteSheet).toHaveBeenCalledTimes(1);
+    expect(openSettingsSheet).toHaveBeenCalledTimes(1);
+    expect(openEmotePreview.mock.calls[0]?.[0]).toEqual(emote);
+    expect(openMessageActions.mock.calls[0]?.[0]).toEqual(
       createMessageActionPayload(message),
     );
-    expect(chatOverlays.openUserActions.mock.calls[0]?.[0]).toEqual(
-      usernameData,
-    );
+    expect(openUserActions.mock.calls[0]?.[0]).toEqual(usernameData);
   });
 });
 

@@ -4,7 +4,6 @@ import { logger } from '@app/utils/logger';
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useEffect, useRef, useCallback } from 'react';
 import { useWebsocket } from '../hooks/ws/useWebsocket';
-import { prewarmWebSocketOnAppStart } from '../hooks/ws/webSocketTransport';
 
 const TWITCH_CHAT_URL = 'wss://irc-ws.chat.twitch.tv:443';
 
@@ -123,12 +122,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const shouldConnect = Boolean(channel?.trim());
 
   const previousTokenRef = useRef<string | undefined>(undefined);
-
-  useEffect(() => {
-    if (shouldConnect) {
-      prewarmWebSocketOnAppStart(TWITCH_CHAT_URL);
-    }
-  }, [shouldConnect]);
 
   const parseTags = parseIrcTags;
 

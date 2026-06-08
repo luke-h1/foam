@@ -3,23 +3,22 @@ import type { RefObject } from 'react';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { getMessageById } from '@app/store/chat/actions/messages';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
-import type { ChatInputShellHandle } from '../ChatInputShell';
+import type { ChatInputShellHandle } from '../components/ChatInputShell';
 import type {
+  BadgePressData,
   EmotePressData,
   MessageActionData,
   UsernamePressData,
-} from '../ChatMessage/RichChatMessage';
-import type { ChatOverlaysHandle } from '../ChatOverlays';
-import { EmotePickerItem } from '../EmoteSheet/components/EmoteCell';
+} from '../components/ChatMessage/RichChatMessage.types';
+import type { EmotePickerItem } from '../components/EmoteSheet/EmoteSheet';
+import type { ChatOverlayOpeners } from '../components/useChatOverlays';
 
-export function useChatInteractionHandlers({
+export function useChatComposerActions({
   fetchUserCosmetics,
   inputShellRef,
-  chatOverlaysRef,
 }: {
   fetchUserCosmetics: (twitchUserId: string) => Promise<void>;
   inputShellRef: RefObject<ChatInputShellHandle | null>;
-  chatOverlaysRef: RefObject<ChatOverlaysHandle | null>;
 }) {
   const handleReply = useCallback(
     (message: ChatMessageType<'usernotice'>) => {
@@ -54,14 +53,6 @@ export function useChatInteractionHandlers({
     [inputShellRef],
   );
 
-  const handleOpenEmoteSheet = useCallback(() => {
-    chatOverlaysRef.current?.openEmoteSheet();
-  }, [chatOverlaysRef]);
-
-  const handleOpenSettingsSheet = useCallback(() => {
-    chatOverlaysRef.current?.openSettingsSheet();
-  }, [chatOverlaysRef]);
-
   const appendMentionToComposer = useCallback(
     (username: string) => {
       inputShellRef.current?.appendMention(username);
@@ -69,43 +60,52 @@ export function useChatInteractionHandlers({
     [inputShellRef],
   );
 
-  const prepareTimeoutCommand = useCallback(
-    (login: string) => {
-      inputShellRef.current?.prepareTimeoutCommand(login);
+  return { appendMentionToComposer, handleEmoteSelect, handleReply };
+}
+
+export function useChatOverlayActions(openers: ChatOverlayOpeners) {
+  const handleOpenEmoteSheet = useCallback(() => {
+    openers.openEmoteSheet();
+  }, [openers]);
+
+  const handleOpenSettingsSheet = useCallback(() => {
+    openers.openSettingsSheet();
+  }, [openers]);
+
+  const handleBadgeLongPress = useCallback(
+    (badge: BadgePressData) => {
+      openers.openBadge(badge);
     },
-    [inputShellRef],
+    [openers],
   );
 
   const handleMessageLongPress = useCallback(
     (data: MessageActionData<'usernotice'>) => {
-      chatOverlaysRef.current?.openMessageActions(data);
+      openers.openMessageActions(data);
     },
-    [chatOverlaysRef],
+    [openers],
   );
 
   const handleEmotePress = useCallback(
     (emote: EmotePressData) => {
-      chatOverlaysRef.current?.openEmotePreview(emote);
+      openers.openEmotePreview(emote);
     },
-    [chatOverlaysRef],
+    [openers],
   );
 
   const handleUsernamePress = useCallback(
     (usernameData: UsernamePressData) => {
-      chatOverlaysRef.current?.openUserActions(usernameData);
+      openers.openUserActions(usernameData);
     },
-    [chatOverlaysRef],
+    [openers],
   );
 
   return {
-    appendMentionToComposer,
-    prepareTimeoutCommand,
+    handleBadgeLongPress,
     handleEmotePress,
-    handleEmoteSelect,
     handleMessageLongPress,
     handleOpenEmoteSheet,
     handleOpenSettingsSheet,
-    handleReply,
     handleUsernamePress,
   };
 }

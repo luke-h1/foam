@@ -1,6 +1,5 @@
 import { clearCache } from '@app/store/chat/actions/channelLoad';
 import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
-import { usePreference, useUpdatePreferences } from '@app/store/preferences';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 import { useRef, useCallback } from 'react';
@@ -8,12 +7,14 @@ import { useRef, useCallback } from 'react';
 interface UseChatSettingsActionsOptions {
   channelId: string;
   channelName: string;
+  chatDensity: 'comfortable' | 'compact';
   forceFlush: () => void;
   joinChannel: (channel: string) => void;
   partChannel: (channel: string) => void;
   refetchEmotes: () => Promise<unknown>;
   reprocessAllMessages: () => void;
   scrollToBottom: () => void;
+  updatePreferences: (patch: Record<string, unknown>) => void;
 }
 
 function handleClearSevenTvCosmeticsCache() {
@@ -28,16 +29,15 @@ function handleClearSevenTvCosmeticsCache() {
 export function useChatSettingsActions({
   channelId,
   channelName,
+  chatDensity,
   forceFlush,
   joinChannel,
   partChannel,
   refetchEmotes,
   reprocessAllMessages,
   scrollToBottom,
+  updatePreferences,
 }: UseChatSettingsActionsOptions) {
-  const chatDensity = usePreference('chatDensity');
-  const updatePreferences = useUpdatePreferences();
-
   const channelNameRef = useRef(channelName);
   channelNameRef.current = channelName;
 

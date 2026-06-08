@@ -3,10 +3,15 @@ import type { SanitisedEmote } from '@app/types/emote';
 import {
   CosmeticCreate,
   EntitlementCreate,
-  ChangeMap,
   SevenTvEventData,
   SevenTvEventType,
   SevenTvWsMessage,
+  type CosmeticCreateCallbackData,
+  type CosmeticUpdateCallbackData,
+  type CosmeticDeleteCallbackData,
+  type EntitlementCreateCallbackData,
+  type EntitlementUpdateCallbackData,
+  type EntitlementDeleteCallbackData,
 } from '@app/utils/color/seventv-ws-service';
 import { logger } from '@app/utils/logger';
 import { recordInfo, recordWarning } from '@app/lib/sentry';
@@ -26,46 +31,18 @@ export type {
   SevenTvEventType,
   CosmeticCreate,
   EntitlementCreate,
+  CosmeticCreateCallbackData,
+  CosmeticUpdateCallbackData,
+  CosmeticDeleteCallbackData,
+  EntitlementCreateCallbackData,
+  EntitlementUpdateCallbackData,
+  EntitlementDeleteCallbackData,
 };
 
 interface EmoteUpdateCallbackData {
   added: SanitisedEmote[];
   removed: SanitisedEmote[];
   channelId: string;
-}
-
-export interface CosmeticCreateCallbackData {
-  cosmetic: CosmeticCreate;
-  kind: 'PAINT' | 'BADGE';
-}
-
-export interface EntitlementCreateCallbackData {
-  entitlement: EntitlementCreate;
-  kind: 'BADGE' | 'PAINT' | 'EMOTE_SET';
-  ttvUserId: string | null;
-  paintId: string | null;
-  badgeId: string | null;
-}
-
-export interface CosmeticUpdateCallbackData {
-  changes: ChangeMap<CosmeticCreate>;
-  kind: 'PAINT' | 'BADGE' | null;
-}
-
-export interface CosmeticDeleteCallbackData {
-  cosmeticId: string;
-}
-
-export interface EntitlementUpdateCallbackData {
-  changes: ChangeMap<EntitlementCreate>;
-  ttvUserId: string | null;
-  paintId: string | null;
-  badgeId: string | null;
-}
-
-export interface EntitlementDeleteCallbackData {
-  entitlementId: string;
-  ttvUserId: string | null;
 }
 
 interface UseSeventvWsOptions {

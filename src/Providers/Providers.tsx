@@ -8,7 +8,7 @@ import { BaseConfig } from '@app/navigators/config';
 import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
 import { twitchApi } from '@app/services/api';
 import { sevenTvV4Client } from '@app/services/gql/client';
-import { rozeniteMmkvStorages } from '@app/lib/mmkv';
+import { storage } from '@app/lib/storage';
 import { deleteTokens } from '@app/utils/authentication/deleteTokens';
 import { QueryProvider } from '@app/utils/react-query/reacy-query';
 import { useNetworkActivityDevTools } from '@rozenite/network-activity-plugin';
@@ -26,10 +26,7 @@ import { PressablesConfig } from 'pressto';
 import { PropsWithChildren } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import {
-  KeyboardProvider,
-  KeyboardToolbar,
-} from 'react-native-keyboard-controller';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { PortalProvider } from 'react-native-teleport';
 import { DevToolsBubble } from 'react-native-react-query-devtools';
 import {
@@ -99,7 +96,9 @@ function DevTools() {
   useRozeniteStoragePlugin({
     storages: [
       createMMKVStorageAdapter({
-        storages: rozeniteMmkvStorages,
+        storages: {
+          storageService: storage,
+        },
       }),
     ],
   });
@@ -128,7 +127,6 @@ export function Providers({ children }: PropsWithChildren) {
                   onReset={() => setRecoveredFromError(true)}
                 >
                   <KeyboardProvider>
-                    <KeyboardToolbar />
                     <PortalProvider>
                       {__DEV__ ? <DevTools /> : null}
                       <AnalyticsProvider>

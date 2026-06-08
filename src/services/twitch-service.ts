@@ -22,18 +22,6 @@ const authProxyApiKey =
 const authProxyApi = new Client({ baseURL: authProxyBaseUrl });
 const twitchAuthApi = new Client({ baseURL: 'https://id.twitch.tv/oauth2' });
 
-function normaliseOptionalIds(id?: string | string[]) {
-  if (Array.isArray(id)) {
-    return id;
-  }
-
-  if (id) {
-    return [id];
-  }
-
-  return undefined;
-}
-
 export interface PaginatedList<T> {
   data: T[];
   pagination?: {
@@ -209,7 +197,7 @@ type EventSubStatus =
    */
   | 'moderator_removed'
   /**
-   * One of the users specified in the Condition object was removed.
+   *  One of the users specified in the Condition object was removed.
    */
   | 'user_removed'
   /**
@@ -257,7 +245,7 @@ type EventSubStatus =
   | 'websocket_network_timeout'
 
   /**
-   * The Twitch WebSocket server experienced a network error writing the message to the client.
+   *  The Twitch WebSocket server experienced a network error writing the message to the client.
    */
   | 'websocket_network_error'
 
@@ -817,7 +805,7 @@ export const twitchService = {
     first?: number;
     after?: string;
   }) => {
-    const ids = normaliseOptionalIds(id);
+    const ids = Array.isArray(id) ? id : id ? [id] : undefined;
 
     return twitchApi.get<PaginatedList<TwitchHelixPoll>>('/polls', {
       params: {
@@ -840,7 +828,7 @@ export const twitchService = {
     first?: number;
     after?: string;
   }) => {
-    const ids = normaliseOptionalIds(id);
+    const ids = Array.isArray(id) ? id : id ? [id] : undefined;
 
     return twitchApi.get<PaginatedList<TwitchHelixPrediction>>('/predictions', {
       params: {

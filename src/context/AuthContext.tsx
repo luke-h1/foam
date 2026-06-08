@@ -493,54 +493,46 @@ export const AuthContextProvider = ({
       return false;
     };
 
-    // Optimistic path: trust the cached, non-expired user token immediately so
-    // the app can navigate without waiting for validate + userinfo. We then
-    // validate and refresh user info in the background and recover on failure.
-    twitchApi.setAuthToken(twitchToken.accessToken);
-    setState({
-      ready: true,
-      authState: {
-        isAnonAuth: false,
-        isLoggedIn: true,
-        token: twitchToken,
-      },
-    });
-    queueInitialDataPrefetch();
+    try {
+      const isValidToken = await twitchService.validateToken(
+        twitchToken.accessToken,
+      );
 
-    void (async () => {
-      try {
-        const isValidToken = await twitchService.validateToken(
-          twitchToken.accessToken,
-        );
-
-        if (!isValidToken) {
-          await refreshOrFallBackToAnon('validation_failed');
+      if (!isValidToken) {
+        if (!(await refreshOrFallBackToAnon('validation_failed'))) {
           return;
         }
-      } catch (error) {
-        await refreshOrFallBackToAnon('validation_error', error);
+      }
+    } catch (error) {
+      if (!(await refreshOrFallBackToAnon('validation_error', error))) {
         return;
       }
+    }
 
-      try {
-        const u = await twitchService.getUserInfo(twitchToken.accessToken);
-        setUser(u);
-        queueInitialDataPrefetch(u.id);
+    try {
+      const u = await twitchService.getUserInfo(twitchToken.accessToken);
+      twitchApi.setAuthToken(twitchToken.accessToken);
+      setUser(u);
 
-        void SecureStore.setItemAsync(
-          storageKeys.user,
-          JSON.stringify(twitchToken),
-        ).catch(error => {
-          logger.auth.warn('Failed to persist user token', error);
-        });
-      } catch (error) {
-        logger.auth.warn(
-          'Failed to get user info during auth bootstrap',
-          error,
-        );
-        await keepStoredUserToken('user_info_error', error);
-      }
-    })();
+      // Prefetch initial data after first interactions
+      queueInitialDataPrefetch(u.id);
+
+      await SecureStore.setItemAsync(
+        storageKeys.user,
+        JSON.stringify(twitchToken),
+      );
+      setState({
+        ready: true,
+        authState: {
+          isAnonAuth: false,
+          isLoggedIn: true,
+          token: twitchToken,
+        },
+      });
+    } catch (error) {
+      logger.auth.warn('Failed to get user info during auth bootstrap', error);
+      await keepStoredUserToken('user_info_error', error);
+    }
   };
 
   const loginWithTwitch = async (response: AuthSessionResult | null) => {
@@ -637,58 +629,54 @@ export const AuthContextProvider = ({
       return;
     }
 
-    // Optimistic path: trust the cached, non-expired token immediately so the
-    // app can navigate without waiting for a validate round-trip. We still
-    // validate in the background and recover if the token turns out bad.
-    const tokenWithExpiration = token.expiresAt
-      ? token
-      : addExpirationTimestamp({
-          accessToken: token.accessToken,
-          expiresIn: token.expiresIn,
-          tokenType: token.tokenType,
-        });
+    // Validate token with API to ensure it's still valid
+    try {
+      const isValidToken = await twitchService.validateToken(token.accessToken);
 
-    twitchApi.setAuthToken(token.accessToken);
-    setState({
-      ready: true,
-      authState: {
-        isAnonAuth: true,
-        isLoggedIn: false,
-        token: tokenWithExpiration,
-      },
-    });
-    queueInitialDataPrefetch();
-
-    // Background tasks: backfill missing expiresAt, then validate.
-    if (!token.expiresAt) {
-      void SecureStore.setItemAsync(
-        storageKeys.anon,
-        JSON.stringify(tokenWithExpiration),
-      ).catch(error => {
-        logger.auth.warn('Failed to backfill anon token expiresAt', error);
-      });
-    }
-
-    void twitchService
-      .validateToken(token.accessToken)
-      .then(async isValidToken => {
-        if (isValidToken) {
-          return;
-        }
+      if (!isValidToken) {
         logger.auth.warn(
-          'Anonymous token validation failed in background, fetching new token',
+          'Anonymous token validation failed, fetching new token',
         );
         twitchApi.removeAuthToken();
         await fetchAnonToken();
-      })
-      .catch(async error => {
-        logger.auth.error(
-          'Background token validation error, fetching new token',
-          error,
+        return;
+      }
+
+      // Token is valid and not expired
+      // Ensure token has expiration timestamp (for backward compatibility with old stored tokens)
+      const tokenWithExpiration = token.expiresAt
+        ? token
+        : addExpirationTimestamp({
+            accessToken: token.accessToken,
+            expiresIn: token.expiresIn,
+            tokenType: token.tokenType,
+          });
+
+      // Update stored token with expiration timestamp if it was missing
+      if (!token.expiresAt) {
+        await SecureStore.setItemAsync(
+          storageKeys.anon,
+          JSON.stringify(tokenWithExpiration),
         );
-        twitchApi.removeAuthToken();
-        await fetchAnonToken();
+      }
+
+      setState({
+        ready: true,
+        authState: {
+          isAnonAuth: true,
+          isLoggedIn: false,
+          token: tokenWithExpiration,
+        },
       });
+      twitchApi.setAuthToken(token.accessToken);
+
+      // Prefetch top streams for anonymous users with cached token after first interactions
+      queueInitialDataPrefetch();
+    } catch (error) {
+      logger.auth.error('Token validation error, fetching new token', error);
+      twitchApi.removeAuthToken();
+      await fetchAnonToken();
+    }
   };
 
   const populateAuthState = async () => {

@@ -43,23 +43,29 @@ function renderRuntime({
   const subscribeToChannel = jest.fn();
   const unsubscribeFromChannel = jest.fn();
   mockUseSeventvWs.mockReturnValue({
+    getConnectionState: jest.fn(() => 'CONNECTED'),
     isConnected: jest.fn(() => wsConnected),
     readyState,
     subscribeToChannel,
     unsubscribeFromChannel,
+    ws: null as unknown as WebSocket,
   });
 
-  const hook = renderHook(props => useSevenTvChatRuntime(props), {
-    initialProps: {
-      canFetchCosmetics: jest.fn(() => true),
-      channelId: 'channel-1',
-      channelName: 'foam',
-      currentEmoteSetIdRef,
-      emoteLoadStatus,
-      handleNewMessage: jest.fn(),
-      sevenTvEmoteSetId: 'set-from-loader',
+  const hook = renderHook(
+    (props: Parameters<typeof useSevenTvChatRuntime>[0]) =>
+      useSevenTvChatRuntime(props),
+    {
+      initialProps: {
+        canFetchCosmetics: jest.fn(() => true),
+        channelId: 'channel-1',
+        channelName: 'foam',
+        currentEmoteSetIdRef,
+        emoteLoadStatus,
+        handleNewMessage: jest.fn(),
+        sevenTvEmoteSetId: 'set-from-loader',
+      },
     },
-  });
+  );
 
   return {
     currentEmoteSetIdRef,

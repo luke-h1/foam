@@ -40,7 +40,7 @@ export function useDownloadTwitchClip() {
       }
 
       if (Platform.OS === 'web') {
-        await openLinkInBrowser(downloadUrl);
+        openLinkInBrowser(downloadUrl);
         return;
       }
 

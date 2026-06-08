@@ -7,7 +7,7 @@ import {
 import { fetchAndCacheUserCosmetics } from '@app/store/chat/actions/cosmetics';
 import { logger } from '@app/utils/logger';
 import { useEffect, useRef } from 'react';
-import type { RefObject } from 'react';
+import type { MutableRefObject } from 'react';
 
 import { useChatSevenTvCallbacks } from './useChatSevenTvCallbacks';
 import type { AnyChatMessageType } from '../util/messageHandlers';
@@ -24,7 +24,7 @@ export function useSevenTvChatRuntime({
   canFetchCosmetics: () => boolean;
   channelId: string;
   channelName: string;
-  currentEmoteSetIdRef: RefObject<string | null>;
+  currentEmoteSetIdRef: MutableRefObject<string | null>;
   emoteLoadStatus: string;
   handleNewMessage: (
     message: AnyChatMessageType,
@@ -51,7 +51,6 @@ export function useSevenTvChatRuntime({
     ...sevenTvCallbacks,
     onEvent: eventType => logger.stvWs.debug(`SevenTV event: ${eventType}`),
   });
-
   const wsConnected = readyState === ReadyState.OPEN && isConnected();
   const subscribeToChannelRef = useRef(subscribeToChannel);
   const unsubscribeFromChannelRef = useRef(unsubscribeFromChannel);

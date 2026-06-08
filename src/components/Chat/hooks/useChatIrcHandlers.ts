@@ -28,7 +28,7 @@ import {
   coerceUserNoticeTags,
   type AnyChatMessageType,
 } from '../util/messageHandlers';
-import type { ChatListRef } from '../ChatMessagePane';
+import type { ChatListRef } from '../components/ChatList';
 import {
   describeInitialRoomState,
   describeRoomStateChanges,

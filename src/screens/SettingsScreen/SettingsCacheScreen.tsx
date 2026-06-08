@@ -152,7 +152,6 @@ export function SettingsCacheScreen() {
             onPress={handleClearData}
             danger
           />
-
           <SettingsLinkRow
             title='Clear Image Cache'
             subtitle='Remove downloaded emote, badge, cosmetic, and image cache entries'
@@ -160,7 +159,6 @@ export function SettingsCacheScreen() {
             onPress={handleClearChatCache}
             danger
           />
-
           <SettingsLinkRow
             title='Clear 7TV Cosmetic Cache'
             subtitle='Remove cached 7TV paints and badges for chat users'

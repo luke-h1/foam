@@ -11,6 +11,7 @@ interface Props {
 }
 
 export const LiveStreamImage = memo(function LiveStreamImage({
+  animated,
   size,
   style,
   thumbnail,
@@ -25,6 +26,7 @@ export const LiveStreamImage = memo(function LiveStreamImage({
             .replace('{width}', '2560')
             .replace('{height}', '1080')}
           style={[styles.image, size && getImageSizeStyle(size)]}
+          transition={animated ? 300 : 0}
         />
       ) : null}
     </View>

@@ -13,7 +13,7 @@ export function splitTextWithTwemoji(text: string): TwemojiResult {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     callback: (icon, options, _variant) => {
       const emoji = String.fromCodePoint(
-        ...icon.split('-').map(hex => Number.parseInt(hex, 16)),
+        ...icon.split('-').map(hex => parseInt(hex, 16)),
       );
       const offset = text.indexOf(emoji, lastIndex);
 

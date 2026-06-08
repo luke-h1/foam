@@ -6,7 +6,6 @@ import { Image } from '@app/components/Image/Image';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
-import { useBottomTabOverflow } from '@app/components/TabBarBackground/useBottomTabOverflow';
 import { Text } from '@app/components/ui/Text/Text';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
@@ -18,7 +17,7 @@ import {
   type Preferences,
   usePreference,
   useUpdatePreferences,
-} from '@app/store/preferences';
+} from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import {
   getNextPageParam,
@@ -32,8 +31,8 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRef, useState, useCallback, useMemo } from 'react';
-import { RefreshControl, View, StyleSheet } from 'react-native';
+import { useRef, useState, useCallback } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 
 const FeaturedStreamHero = function FeaturedStreamHero({
@@ -68,6 +67,7 @@ const FeaturedStreamHero = function FeaturedStreamHero({
           source={thumbnailUrl}
           style={styles.heroImage}
           containerStyle={styles.heroImageContainer}
+          transition={150}
         />
         <LinearGradient
           colors={['rgba(0,0,0,0.06)', 'rgba(0,0,0,0.28)', 'rgba(0,0,0,0.92)']}
@@ -237,8 +237,6 @@ export function TopStreamsScreen({
   const streamListLayout = usePreference('streamListLayout');
   const updatePreferences = useUpdatePreferences();
   const listRef = useRef<FlashListRef<TwitchStream>>(null);
-  const tabBarOverflow = useBottomTabOverflow();
-  const listBottomInset = tabBarOverflow + theme.space20;
 
   useScrollToTop(listRef);
 
@@ -297,6 +295,14 @@ export function TopStreamsScreen({
     updatePreferences({ streamListLayout: layout });
   };
 
+  const listHeader = (
+    <TopStreamsListHeader
+      featuredStream={featuredStream}
+      streamListLayout={streamListLayout}
+      onChangeLayout={handleLayoutChange}
+    />
+  );
+
   const showSkeleton =
     refreshing || isLoading || (isFetching && allStreams.length === 0);
 
@@ -332,16 +338,13 @@ export function TopStreamsScreen({
   return (
     <TopStreamsList
       contentTopInset={contentTopInset}
-      featuredStream={featuredStream}
-      listBottomInset={listBottomInset}
       debouncedHandleLoadMore={debouncedHandleLoadMore}
+      listHeader={listHeader}
       listRef={listRef}
-      onChangeLayout={handleLayoutChange}
       onRefresh={onRefresh}
       refreshing={refreshing}
       remainingStreams={remainingStreams}
       renderItem={renderItem}
-      scrollListLayout={streamListLayout}
       scrollHandler={scrollHandler}
     />
   );
@@ -349,71 +352,29 @@ export function TopStreamsScreen({
 
 function TopStreamsList({
   contentTopInset,
-  featuredStream,
-  listBottomInset,
   debouncedHandleLoadMore,
+  listHeader,
   listRef,
-  onChangeLayout,
   onRefresh,
   refreshing,
   remainingStreams,
   renderItem,
-  scrollListLayout,
   scrollHandler,
 }: {
   contentTopInset: number;
-  featuredStream?: TwitchStream;
-  listBottomInset: number;
   debouncedHandleLoadMore: () => void;
+  listHeader: React.ReactNode;
   listRef: React.RefObject<FlashListRef<TwitchStream> | null>;
-  onChangeLayout: (layout: StreamListLayout) => void;
   onRefresh: () => void;
   refreshing: boolean;
   remainingStreams: TwitchStream[];
   renderItem: ListRenderItem<TwitchStream>;
-  scrollListLayout: StreamListLayout;
   scrollHandler: ReturnType<typeof useAnimatedScrollHandler>;
 }) {
-  const renderListHeader = useCallback(
-    () => (
-      <TopStreamsListHeader
-        featuredStream={featuredStream}
-        streamListLayout={scrollListLayout}
-        onChangeLayout={onChangeLayout}
-      />
-    ),
-    [featuredStream, onChangeLayout, scrollListLayout],
-  );
-  const listContentStyle = useMemo(
-    () => ({
-      paddingTop: contentTopInset,
-    }),
-    [contentTopInset],
-  );
-  const listContentInset = useMemo(
-    () => ({
-      bottom: listBottomInset,
-    }),
-    [listBottomInset],
-  );
-  const refreshControl = useMemo(
-    () => (
-      <RefreshControl
-        refreshing={refreshing}
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        onRefresh={onRefresh}
-        tintColor={theme.color.textSecondary.dark}
-        progressViewOffset={contentTopInset}
-      />
-    ),
-    [contentTopInset, onRefresh, refreshing],
-  );
-
   return (
     <View style={styles.container}>
       <AnimatedFlashList
         ref={listRef}
-        contentInset={listContentInset}
         contentInsetAdjustmentBehavior='automatic'
         data={remainingStreams}
         renderItem={renderItem}
@@ -421,14 +382,17 @@ function TopStreamsList({
         removeClippedSubviews
         getItemType={() => 'stream-item'}
         drawDistance={500}
-        contentContainerStyle={listContentStyle}
-        ListHeaderComponent={renderListHeader}
-        scrollIndicatorInsets={listContentInset}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingTop: contentTopInset },
+        ]}
+        ListHeaderComponent={() => listHeader}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={debouncedHandleLoadMore}
         onScroll={scrollHandler}
+        refreshing={refreshing}
         onEndReachedThreshold={0.3}
-        refreshControl={refreshControl}
+        onRefresh={onRefresh}
       />
     </View>
   );
@@ -438,6 +402,9 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
+  },
+  listContent: {
+    paddingBottom: theme.space20,
   },
   layoutToggleButton: {
     alignItems: 'center',

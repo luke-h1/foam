@@ -13,10 +13,26 @@ import {
   updatePaint,
 } from '@app/store/chat/actions/cosmetics';
 import { countMetric } from '@app/lib/sentry';
-import type { SanitisedEmote } from '@app/types/emote';
+import type { BadgeData, PaintData } from '@app/utils/color/seventv-ws-service';
 import { renderHook, act } from '@testing-library/react-native';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
 import { toPaintWithId } from '../../util/normalizeSevenTvCosmetics';
+import {
+  createBadgeChangeEntry,
+  createBadgePushedEntry,
+  createBadgeCosmeticCreateData,
+  createBadgeCosmeticUpdateData,
+  createBadgeData,
+  createEmptyChangeMap,
+  createEntitlementDeleteData,
+  createEntitlementUpdateData,
+  createPaintChangeEntry,
+  createPaintPushedEntry,
+  createPaintCosmeticCreateData,
+  createPaintCosmeticUpdateData,
+  createPaintInput,
+} from './__fixtures__/useChatSevenTvCallbacks.fixture';
+import { createSevenTvEmote } from './__fixtures__/useChat.fixture';
 import { useChatSevenTvCallbacks } from '../useChatSevenTvCallbacks';
 
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
@@ -77,17 +93,6 @@ const mockFetchAndCacheUserCosmetics = jest.fn().mockResolvedValue(undefined);
 const mockCanFetchCosmetics = jest.fn().mockReturnValue(true);
 const mockOnEmoteNotice = jest.fn();
 
-const paintInput = (overrides: {
-  id: string;
-  name: string;
-  color?: number | null;
-}) => ({
-  id: overrides.id,
-  name: overrides.name,
-  color: overrides.color ?? null,
-  function: 'LINEAR_GRADIENT' as const,
-});
-
 const defaultProps = {
   channelId: 'twitch-123',
   channelName: 'testchannel',
@@ -132,15 +137,19 @@ describe('useChatSevenTvCallbacks', () => {
       act(() => {
         result.current.onEmoteUpdate({
           channelId: 'c1',
-          added: [{ id: 'e1' } as SanitisedEmote],
-          removed: [{ id: 'e2' } as SanitisedEmote],
+          added: [
+            createSevenTvEmote({ id: 'e1', name: 'e1', original_name: 'e1' }),
+          ],
+          removed: [
+            createSevenTvEmote({ id: 'e2', name: 'e2', original_name: 'e2' }),
+          ],
         });
       });
 
       expect(mockUpdateSevenTvEmotes).toHaveBeenCalledWith(
         'c1',
-        [{ id: 'e1' }],
-        [{ id: 'e2' }],
+        [createSevenTvEmote({ id: 'e1', name: 'e1', original_name: 'e1' })],
+        [createSevenTvEmote({ id: 'e2', name: 'e2', original_name: 'e2' })],
       );
     });
 
@@ -149,8 +158,16 @@ describe('useChatSevenTvCallbacks', () => {
         useChatSevenTvCallbacks(defaultProps),
       );
 
-      const added = [{ id: 'e1', name: 'Added' } as SanitisedEmote];
-      const removed = [{ id: 'e2', name: 'Removed' } as SanitisedEmote];
+      const added = [
+        createSevenTvEmote({ id: 'e1', name: 'Added', original_name: 'Added' }),
+      ];
+      const removed = [
+        createSevenTvEmote({
+          id: 'e2',
+          name: 'Removed',
+          original_name: 'Removed',
+        }),
+      ];
 
       act(() => {
         result.current.onEmoteUpdate({
@@ -178,8 +195,20 @@ describe('useChatSevenTvCallbacks', () => {
         useChatSevenTvCallbacks(defaultProps),
       );
 
-      const added = [{ id: 'e1', name: 'nnysPat' } as SanitisedEmote];
-      const removed = [{ id: 'e2', name: 'CoolNnysThing' } as SanitisedEmote];
+      const added = [
+        createSevenTvEmote({
+          id: 'e1',
+          name: 'nnysPat',
+          original_name: 'nnysPat',
+        }),
+      ];
+      const removed = [
+        createSevenTvEmote({
+          id: 'e2',
+          name: 'CoolNnysThing',
+          original_name: 'CoolNnysThing',
+        }),
+      ];
 
       act(() => {
         result.current.onEmoteUpdate({
@@ -206,7 +235,8 @@ describe('useChatSevenTvCallbacks', () => {
       );
 
       act(() => {
-        result.current.onCosmeticCreate({ cosmetic: {} } as never);
+        // @ts-expect-error -- exercising runtime guard when cosmetic.object is absent
+        result.current.onCosmeticCreate({ kind: 'BADGE', cosmetic: {} });
       });
 
       expect(addBadge).not.toHaveBeenCalled();
@@ -217,18 +247,16 @@ describe('useChatSevenTvCallbacks', () => {
       const { result } = renderHook(() =>
         useChatSevenTvCallbacks(defaultProps),
       );
-      const badgeData = {
+      const badgeData = createBadgeData({
         id: 'badge-id',
         name: 'Badge',
         tooltip: 'Tip',
-        host: { url: 'https://cdn.7tv.app', files: [{ name: '4x' }] },
-      };
+      });
 
       act(() => {
-        result.current.onCosmeticCreate({
-          kind: 'BADGE',
-          cosmetic: { object: { kind: 'BADGE', data: badgeData } },
-        } as never);
+        result.current.onCosmeticCreate(
+          createBadgeCosmeticCreateData(badgeData),
+        );
       });
 
       expect(getBadge).toHaveBeenCalled();
@@ -253,17 +281,16 @@ describe('useChatSevenTvCallbacks', () => {
       const { result } = renderHook(() =>
         useChatSevenTvCallbacks(defaultProps),
       );
-      const badgeData = {
+      const badgeData = createBadgeData({
         id: 'badge-id',
         name: 'Badge',
         host: { url: 'https://cdn.7tv.app', files: [] },
-      };
+      });
 
       act(() => {
-        result.current.onCosmeticCreate({
-          kind: 'BADGE',
-          cosmetic: { object: { kind: 'BADGE', data: badgeData } },
-        } as never);
+        result.current.onCosmeticCreate(
+          createBadgeCosmeticCreateData(badgeData),
+        );
       });
 
       expect(addBadge).not.toHaveBeenCalled();
@@ -273,17 +300,16 @@ describe('useChatSevenTvCallbacks', () => {
       const { result } = renderHook(() =>
         useChatSevenTvCallbacks(defaultProps),
       );
-      const paintData = paintInput({
+      const paintData = createPaintInput({
         id: 'paint-id',
         name: 'Paint',
         color: 0xff0000ff,
       });
 
       act(() => {
-        result.current.onCosmeticCreate({
-          kind: 'PAINT',
-          cosmetic: { object: { kind: 'PAINT', data: paintData } },
-        } as never);
+        result.current.onCosmeticCreate(
+          createPaintCosmeticCreateData(paintData),
+        );
       });
 
       expect(getPaint).toHaveBeenCalled();
@@ -298,39 +324,31 @@ describe('useChatSevenTvCallbacks', () => {
       );
 
       act(() => {
-        result.current.onCosmeticUpdate({
-          kind: 'PAINT',
-          changes: {
+        result.current.onCosmeticUpdate(
+          createPaintCosmeticUpdateData({
+            ...createEmptyChangeMap<PaintData>(),
             updated: [
-              {
-                value: {
-                  object: {
-                    data: paintInput({
-                      id: 'paint-1',
-                      name: 'Updated Paint',
-                    }),
-                  },
-                },
-              },
+              createPaintChangeEntry(
+                createPaintInput({ id: 'paint-1', name: 'Updated Paint' }),
+                createPaintInput({ id: 'paint-1', name: 'Old Paint' }),
+              ),
             ],
             pushed: [
-              {
-                value: {
-                  object: {
-                    data: paintInput({ id: 'paint-2', name: 'Added Paint' }),
-                  },
-                },
-              },
+              createPaintPushedEntry(
+                createPaintInput({ id: 'paint-2', name: 'Added Paint' }),
+              ),
             ],
-          },
-        } as never);
+          }),
+        );
       });
 
       expect(updatePaint).toHaveBeenCalledWith(
-        toPaintWithId(paintInput({ id: 'paint-1', name: 'Updated Paint' })),
+        toPaintWithId(
+          createPaintInput({ id: 'paint-1', name: 'Updated Paint' }),
+        ),
       );
       expect(addPaint).toHaveBeenCalledWith(
-        toPaintWithId(paintInput({ id: 'paint-2', name: 'Added Paint' })),
+        toPaintWithId(createPaintInput({ id: 'paint-2', name: 'Added Paint' })),
       );
       expect(mockCountMetric.mock.calls[0]).toEqual([
         'seven_tv.cosmetic_update.applied',
@@ -353,43 +371,29 @@ describe('useChatSevenTvCallbacks', () => {
       );
 
       act(() => {
-        result.current.onCosmeticUpdate({
-          kind: 'BADGE',
-          changes: {
+        result.current.onCosmeticUpdate(
+          createBadgeCosmeticUpdateData({
+            ...createEmptyChangeMap<BadgeData>(),
             updated: [
-              {
-                value: {
-                  object: {
-                    data: {
-                      id: 'badge-1',
-                      name: 'Updated Badge',
-                      host: {
-                        url: 'https://cdn.7tv.app/badge-1',
-                        files: [{ name: '4x' }],
-                      },
-                    },
-                  },
-                },
-              },
+              createBadgeChangeEntry(
+                createBadgeData({
+                  id: 'badge-1',
+                  name: 'Updated Badge',
+                  tooltip: 'Updated Badge',
+                }),
+              ),
             ],
             pushed: [
-              {
-                value: {
-                  object: {
-                    data: {
-                      id: 'badge-2',
-                      name: 'Added Badge',
-                      host: {
-                        url: 'https://cdn.7tv.app/badge-2',
-                        files: [{ name: '4x' }],
-                      },
-                    },
-                  },
-                },
-              },
+              createBadgePushedEntry(
+                createBadgeData({
+                  id: 'badge-2',
+                  name: 'Added Badge',
+                  tooltip: 'Added Badge',
+                }),
+              ),
             ],
-          },
-        } as never);
+          }),
+        );
       });
 
       expect(mockUpdateBadge.mock.calls[0]?.[0]).toEqual({
@@ -448,11 +452,13 @@ describe('useChatSevenTvCallbacks', () => {
       );
 
       act(() => {
-        result.current.onEntitlementUpdate({
-          ttvUserId: 'ttv-1',
-          paintId: 'paint-1',
-          badgeId: 'badge-1',
-        } as never);
+        result.current.onEntitlementUpdate(
+          createEntitlementUpdateData({
+            ttvUserId: 'ttv-1',
+            paintId: 'paint-1',
+            badgeId: 'badge-1',
+          }),
+        );
       });
 
       expect(setUserPaint).toHaveBeenCalledWith('ttv-1', 'paint-1');
@@ -465,11 +471,13 @@ describe('useChatSevenTvCallbacks', () => {
       );
 
       act(() => {
-        result.current.onEntitlementUpdate({
-          ttvUserId: 'ttv-1',
-          paintId: null,
-          badgeId: null,
-        } as never);
+        result.current.onEntitlementUpdate(
+          createEntitlementUpdateData({
+            ttvUserId: 'ttv-1',
+            paintId: null,
+            badgeId: null,
+          }),
+        );
       });
 
       expect(removeUserPaint).toHaveBeenCalledWith('ttv-1');
@@ -484,7 +492,9 @@ describe('useChatSevenTvCallbacks', () => {
       );
 
       act(() => {
-        result.current.onEntitlementDelete({ ttvUserId: 'ttv-1' } as never);
+        result.current.onEntitlementDelete(
+          createEntitlementDeleteData({ ttvUserId: 'ttv-1' }),
+        );
       });
 
       expect(removeUserPaint).toHaveBeenCalledWith('ttv-1');

@@ -1,4 +1,5 @@
 import type { RefObject } from 'react';
+import { createRef } from '@app/testing/createRef';
 import { ReadyState } from '../constants';
 import { createOrJoinSocket } from '../createOrJoin';
 import type { Options } from '../types';
@@ -66,18 +67,16 @@ describe('createOrJoinSocket', () => {
     const webSocketRef: RefObject<WebSocket | null> = { current: null };
     const setReadyState = jest.fn();
     const setLastMessage = jest.fn();
-    const startRef = { current: jest.fn() } as RefObject<() => void>;
-    const reconnectCount = { current: 0 } as RefObject<number>;
-    const optionsRef = {
-      current: {
-        protocols: ['irc'],
-        options: {
-          headers: {
-            Authorization: 'Bearer token',
-          },
+    const startRef = createRef(jest.fn());
+    const reconnectCount = createRef(0);
+    const optionsRef = createRef<Options>({
+      protocols: ['irc'],
+      options: {
+        headers: {
+          Authorization: 'Bearer token',
         },
       },
-    } as RefObject<Options>;
+    });
 
     createOrJoinSocket(
       webSocketRef,

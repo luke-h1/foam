@@ -4,7 +4,6 @@ import {
   getSessionCacheString,
   setSessionCacheString,
 } from '@app/store/chat/actions/chatColorCaches';
-import { useChatRowPreferences } from '@app/store/preferences';
 import { useSelector } from '@legendapp/state/react';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
@@ -14,26 +13,37 @@ import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { useRef, useCallback, useMemo, useLayoutEffect } from 'react';
 import type { RefObject } from 'react';
 
-import type { ChatListRef, ChatListRenderItemInfo } from '../ChatMessagePane';
+import type { ChatListRef } from '../components/ChatList';
+import type { ChatListRenderItemInfo } from '../components/ChatList';
 import {
   RichChatMessage,
+  type BadgePressData,
   type EmotePressData,
   type MessageActionData,
   type UsernamePressData,
-} from '../ChatMessage/RichChatMessage';
+} from '../components/ChatMessage/RichChatMessage';
 import { styles } from '../styles';
 import {
   getChatMessageListKey,
   isRenderableChatMessage,
 } from '../util/chatMessages';
 import { getChatRowItemType } from '../util/chatRowItemType';
-import { normaliseChatUsername } from '../util/normaliseChatUsername';
+import { normaliseChatUsername } from '../util/chatUsernames';
 import type { AnyChatMessageType } from '../util/messageHandlers';
 import type { ChatRowDisplayFlags } from '../types/chatUiFlags';
-import { useIsHighlightedReplyTargetMessage } from '@app/store/chat/react/transientState';
+import { useIsHighlightedReplyTargetMessage } from './useChatTransientState';
 
 const chatRowKeyExtractor = (item: AnyChatMessageType) =>
   getChatMessageListKey(item);
+
+interface ChatRowPreferences {
+  chatDensity: 'comfortable' | 'compact';
+  chatTimestamps: boolean;
+  disableEmoteAnimations: boolean;
+  highlightOwnMentions?: boolean;
+  showAlternatingChatRows: boolean;
+  showInlineReplyContext: boolean;
+}
 
 interface UseChatRowRendererOptions {
   channelId: string;
@@ -43,9 +53,11 @@ interface UseChatRowRendererOptions {
   highlightedUsers: string[];
   listRef: RefObject<ChatListRef | null>;
   messages$: { peek: () => AnyChatMessageType[] };
+  onBadgePress: (badge: BadgePressData) => void;
   onEmotePress: (emote: EmotePressData) => void;
   onMessageLongPress: (data: MessageActionData<'usernotice'>) => void;
   onUsernamePress: (data: UsernamePressData) => void;
+  preferences: ChatRowPreferences;
   setHighlightedReplyTargetMessageId: (
     value: string | null | ((current: string | null) => string | null),
   ) => void;
@@ -65,6 +77,7 @@ interface ChatMessageRowProps {
   highlightedUserSet: ReadonlySet<string>;
   index: number;
   message: AnyChatMessageType;
+  onBadgePress: (badge: BadgePressData) => void;
   onEmotePress: (emote: EmotePressData) => void;
   onMessageLongPress: (data: MessageActionData<'usernotice'>) => void;
   onReplyContextPress: (replyParentMessageId: string) => void;
@@ -82,6 +95,7 @@ const ChatMessageRow = function ChatMessageRow({
   highlightedUserSet,
   index,
   message: msg,
+  onBadgePress,
   onEmotePress,
   onMessageLongPress,
   onReplyContextPress,
@@ -119,6 +133,7 @@ const ChatMessageRow = function ChatMessageRow({
       parentColor={msg.parentColor}
       replyDisplayName={msg.replyDisplayName}
       replyBody={msg.replyBody}
+      onBadgePress={onBadgePress}
       onMessageLongPress={onMessageLongPress}
       onEmotePress={onEmotePress}
       onUsernamePress={onUsernamePress}
@@ -155,14 +170,15 @@ export function useChatRowRenderer({
   highlightedUsers,
   listRef,
   messages$,
+  onBadgePress,
   onEmotePress,
   onMessageLongPress,
   onUsernamePress,
+  preferences,
   setHighlightedReplyTargetMessageId,
   user,
 }: UseChatRowRendererOptions) {
   const mentionLoginRevision = useSelector(chatStore$.mentionLoginRevision);
-  const preferences = useChatRowPreferences();
 
   const getMentionColor = useCallback((username: string): string => {
     const cacheKey = username.replace(/^@/, '').trim().toLowerCase();
@@ -190,10 +206,14 @@ export function useChatRowRenderer({
     const hasEmotes =
       chatStore$.emojis.peek().length > 0 ||
       emoteData.twitchGlobalEmotes.length > 0 ||
+      emoteData.twitchChannelEmotes.length > 0 ||
       emoteData.twitchSubscriberEmotes.length > 0 ||
       emoteData.sevenTvGlobalEmotes.length > 0 ||
+      emoteData.sevenTvChannelEmotes.length > 0 ||
       emoteData.bttvGlobalEmotes.length > 0 ||
-      emoteData.ffzGlobalEmotes.length > 0;
+      emoteData.bttvChannelEmotes.length > 0 ||
+      emoteData.ffzGlobalEmotes.length > 0 ||
+      emoteData.ffzChannelEmotes.length > 0;
 
     if (!hasEmotes) {
       return [{ type: 'text', content: text }];
@@ -215,6 +235,7 @@ export function useChatRowRenderer({
     });
   };
 
+  const onBadgePressRef = useRef(onBadgePress);
   const onEmotePressRef = useRef(onEmotePress);
   const onMessageLongPressRef = useRef(onMessageLongPress);
   const parseTextForEmotesRef = useRef(parseTextForEmotes);
@@ -311,6 +332,7 @@ export function useChatRowRenderer({
   const handleReplyContextPressRef = useRef(handleReplyContextPress);
 
   useLayoutEffect(() => {
+    onBadgePressRef.current = onBadgePress;
     onEmotePressRef.current = onEmotePress;
     onMessageLongPressRef.current = onMessageLongPress;
     parseTextForEmotesRef.current = parseTextForEmotes;
@@ -342,6 +364,7 @@ export function useChatRowRenderer({
           highlightedUserSet={highlightedUserSet}
           index={index}
           message={msg}
+          onBadgePress={onBadgePressRef.current}
           onEmotePress={onEmotePressRef.current}
           onMessageLongPress={onMessageLongPressRef.current}
           onReplyContextPress={handleReplyContextPressRef.current}

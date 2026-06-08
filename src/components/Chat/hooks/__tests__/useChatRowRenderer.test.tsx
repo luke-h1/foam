@@ -1,5 +1,7 @@
+import type { ObservableReadable } from '@legendapp/state';
 import { renderHook } from '@testing-library/react-native';
 import { render, act } from '@testing-library/react-native';
+import type { ChatListRef } from '../../components/ChatList';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import {
   getSessionCacheString,
@@ -8,8 +10,9 @@ import {
 import { useChatRowPreferences } from '@app/store/preferences';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
-import { RichChatMessage } from '../../ChatMessage/RichChatMessage';
-import { useIsHighlightedReplyTargetMessage } from '@app/store/chat/react/transientState';
+import { createRef } from '@app/testing/createRef';
+import { RichChatMessage } from '../../components/ChatMessage/RichChatMessage';
+import { useIsHighlightedReplyTargetMessage } from '../useChatTransientState';
 import {
   createChatMessage,
   createEmoteData,
@@ -17,17 +20,23 @@ import {
 } from './__fixtures__/useChat.fixture';
 import { useChatRowRenderer } from '../useChatRowRenderer';
 
+function mockIsObservableReadable(
+  value: unknown,
+): value is ObservableReadable<unknown> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'peek' in value &&
+    typeof value.peek === 'function'
+  );
+}
+
 jest.mock('@legendapp/state/react', () => ({
   useSelector: jest.fn((selector: unknown) => {
     if (typeof selector === 'function') {
       return selector();
     }
-    if (
-      selector &&
-      typeof selector === 'object' &&
-      'peek' in selector &&
-      typeof selector.peek === 'function'
-    ) {
+    if (mockIsObservableReadable(selector)) {
       return selector.peek();
     }
     return selector;
@@ -78,11 +87,11 @@ jest.mock('@app/utils/chat/resolveMentionColor', () => ({
   resolveMentionColor: jest.fn(() => '#mention-color'),
 }));
 
-jest.mock('@app/store/chat/react/transientState', () => ({
+jest.mock('../useChatTransientState', () => ({
   useIsHighlightedReplyTargetMessage: jest.fn(() => true),
 }));
 
-jest.mock('../../ChatMessage/RichChatMessage', () => ({
+jest.mock('../../components/ChatMessage/RichChatMessage', () => ({
   RichChatMessage: jest.fn(() => null),
 }));
 
@@ -99,11 +108,10 @@ const mockUseIsHighlightedReplyTargetMessage = jest.mocked(
 
 function renderRowRenderer() {
   const highlightedReplyTargetTimeoutRef = { current: null };
-  const listRef = {
-    current: {
-      scrollToIndex: jest.fn(),
-    },
-  };
+  const scrollToIndex = jest.fn();
+  const listRef = createRef<ChatListRef | null>({
+    scrollToIndex,
+  } as unknown as ChatListRef);
   const messages = [
     createChatMessage({
       tags: {
@@ -125,6 +133,7 @@ function renderRowRenderer() {
     }),
   ];
   const setHighlightedReplyTargetMessageId = jest.fn();
+  const onBadgePress = jest.fn();
   const onEmotePress = jest.fn();
   const onMessageLongPress = jest.fn();
   const onUsernamePress = jest.fn();
@@ -138,9 +147,18 @@ function renderRowRenderer() {
       messages$: {
         peek: jest.fn(() => messages),
       },
+      onBadgePress,
       onEmotePress,
       onMessageLongPress,
       onUsernamePress,
+      preferences: {
+        chatDensity: 'compact',
+        chatTimestamps: true,
+        disableEmoteAnimations: true,
+        highlightOwnMentions: true,
+        showAlternatingChatRows: true,
+        showInlineReplyContext: true,
+      },
       setHighlightedReplyTargetMessageId,
       user: {
         display_name: 'Viewer',
@@ -153,6 +171,7 @@ function renderRowRenderer() {
     highlightedReplyTargetTimeoutRef,
     hook,
     listRef,
+    scrollToIndex,
     messages,
     onEmotePress,
     onMessageLongPress,
@@ -183,9 +202,13 @@ describe('useChatRowRenderer', () => {
 
   test('builds list metadata from row preferences and highlighted users', () => {
     const { hook, messages } = renderRowRenderer();
+    const replyMessage = messages[1];
+    if (!replyMessage) {
+      throw new Error('Expected reply message fixture');
+    }
 
-    expect(hook.result.current.keyExtractor(messages[1])).toBe('msg-2_msg-2');
-    expect(hook.result.current.getItemType(messages[1])).toBe(
+    expect(hook.result.current.keyExtractor(replyMessage)).toBe('msg-2_msg-2');
+    expect(hook.result.current.getItemType(replyMessage)).toBe(
       'user_chat-reply',
     );
     expect(hook.result.current.messageListExtraData).toEqual({
@@ -203,10 +226,31 @@ describe('useChatRowRenderer', () => {
   test('renders a real chat row with display flags, callbacks, mentions, and emote parsing', () => {
     const { hook, messages, onEmotePress, onUsernamePress } =
       renderRowRenderer();
+    const replyMessage = messages[1];
+    if (!replyMessage) {
+      throw new Error('Expected reply message fixture');
+    }
 
-    render(hook.result.current.renderItem({ item: messages[1], index: 1 }));
+    const rendered = hook.result.current.renderItem({
+      item: replyMessage,
+      index: 1,
+      target: 'Cell',
+    });
+    if (!rendered) {
+      throw new Error('Expected renderItem to return an element');
+    }
+
+    render(rendered);
 
     const props = mockRichChatMessage.mock.calls[0]?.[0];
+    if (
+      !props?.parseTextForEmotes ||
+      !props.getMentionColor ||
+      !props.onEmotePress ||
+      !props.onUsernamePress
+    ) {
+      throw new Error('Expected RichChatMessage callback props');
+    }
     expect({
       currentUsername: props?.currentUsername,
       currentUsernameNormalized: props?.currentUsernameNormalized,
@@ -236,13 +280,13 @@ describe('useChatRowRenderer', () => {
       onUsernamePress,
     });
 
-    expect(props?.parseTextForEmotes('OMEGALUL')).toEqual([
+    expect(props.parseTextForEmotes('OMEGALUL')).toEqual([
       { type: 'text', content: 'parsed:OMEGALUL' },
     ]);
     expect(mockProcessEmotesWorklet.mock.calls[0]?.[0].inputString).toBe(
       'OMEGALUL',
     );
-    expect(props?.getMentionColor('@DisplayName')).toBe('#mention-color');
+    expect(props.getMentionColor('@DisplayName')).toBe('#mention-color');
     expect(mockResolveMentionColor).toHaveBeenCalledWith('@DisplayName');
     expect(mockSetSessionCacheString.mock.calls[0]).toEqual([
       'mentionColors',
@@ -257,38 +301,65 @@ describe('useChatRowRenderer', () => {
 
   test('reply context press scrolls to the parent message and clears the highlight after the timeout', () => {
     jest.useFakeTimers();
-    const { hook, listRef, messages, setHighlightedReplyTargetMessageId } =
-      renderRowRenderer();
+    try {
+      const {
+        hook,
+        messages,
+        scrollToIndex,
+        setHighlightedReplyTargetMessageId,
+      } = renderRowRenderer();
+      const replyMessage = messages[1];
+      if (!replyMessage) {
+        throw new Error('Expected reply message fixture');
+      }
 
-    render(hook.result.current.renderItem({ item: messages[1], index: 1 }));
-    const props = mockRichChatMessage.mock.calls[0]?.[0];
+      const rendered = hook.result.current.renderItem({
+        item: replyMessage,
+        index: 1,
+        target: 'Cell',
+      });
+      if (!rendered) {
+        throw new Error('Expected renderItem to return an element');
+      }
 
-    act(() => {
-      props?.onReplyContextPress('msg-1');
-    });
+      render(rendered);
+      const props = mockRichChatMessage.mock.calls[0]?.[0];
+      const onReplyContextPress = props?.onReplyContextPress;
+      if (!onReplyContextPress) {
+        throw new Error('Expected onReplyContextPress callback');
+      }
 
-    expect(listRef.current.scrollToIndex.mock.calls[0]?.[0]).toEqual({
-      animated: true,
-      index: 0,
-      viewPosition: 0.35,
-    });
-    expect(setHighlightedReplyTargetMessageId.mock.calls[0]).toEqual(['msg-1']);
+      act(() => {
+        onReplyContextPress('msg-1');
+      });
 
-    act(() => {
-      jest.advanceTimersByTime(2200);
-    });
+      expect(scrollToIndex.mock.calls[0]?.[0]).toEqual({
+        animated: true,
+        index: 0,
+        viewPosition: 0.35,
+      });
+      expect(setHighlightedReplyTargetMessageId.mock.calls[0]).toEqual([
+        'msg-1',
+      ]);
 
-    const clearHighlight =
-      setHighlightedReplyTargetMessageId.mock.calls[1]?.[0];
-    expect(typeof clearHighlight).toBe('function');
-    if (typeof clearHighlight === 'function') {
-      expect(clearHighlight('msg-1')).toBe(null);
-      expect(clearHighlight('different-message')).toBe('different-message');
+      act(() => {
+        jest.advanceTimersByTime(2200);
+      });
+
+      const clearHighlight =
+        setHighlightedReplyTargetMessageId.mock.calls[1]?.[0];
+      expect(typeof clearHighlight).toBe('function');
+      if (typeof clearHighlight === 'function') {
+        expect(clearHighlight('msg-1')).toBe(null);
+        expect(clearHighlight('different-message')).toBe('different-message');
+      }
+    } finally {
+      jest.useRealTimers();
     }
   });
 
   test('returns null for non-renderable rows and plain text when emote data is missing', () => {
-    mockGetCurrentEmoteData.mockReturnValue(null);
+    mockGetCurrentEmoteData.mockReturnValue(createEmoteData());
     const { hook } = renderRowRenderer();
     const invalidMessage = createChatMessage({
       overrides: {
@@ -297,7 +368,11 @@ describe('useChatRowRenderer', () => {
     });
 
     expect(
-      hook.result.current.renderItem({ item: invalidMessage, index: 0 }),
+      hook.result.current.renderItem({
+        item: invalidMessage,
+        index: 0,
+        target: 'Cell',
+      }),
     ).toBe(null);
   });
 });
