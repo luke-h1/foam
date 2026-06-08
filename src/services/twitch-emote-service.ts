@@ -1,6 +1,6 @@
 import type { TwitchSanitisedEmote } from '@app/types/emote';
 import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
-import { twitchApi } from './api';
+import { twitchApi } from './api/clients';
 import { PaginatedList, twitchService } from './twitch-service';
 
 export interface TwitchEmote {

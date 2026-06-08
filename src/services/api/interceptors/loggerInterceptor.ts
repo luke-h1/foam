@@ -7,7 +7,7 @@ export const createLoggerInterceptor = (
 ): RequestInterceptor => ({
   onRequest: config => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { baseURL, url, params } = config;
+    const { baseURL = '', url = '', params } = config;
     const logParams: Record<string, string | number | boolean> = {};
 
     if (params && typeof params === 'object') {

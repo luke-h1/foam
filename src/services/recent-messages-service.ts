@@ -1,5 +1,3 @@
-import { chatFetch } from './api/fetch';
-
 const RECENT_MESSAGES_URL =
   'https://recent-messages.robotty.de/api/v2/recent-messages';
 
@@ -94,7 +92,7 @@ export const recentMessagesService = {
     channelName: string,
     signal?: AbortSignal,
   ): Promise<string[]> => {
-    const response = await chatFetch(
+    const response = await fetch(
       `${RECENT_MESSAGES_URL}/${encodeURIComponent(channelName)}`,
       { signal },
     );

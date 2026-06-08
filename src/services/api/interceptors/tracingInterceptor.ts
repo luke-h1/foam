@@ -1,8 +1,8 @@
 import { recordError, recordInfo } from '@app/lib/sentry';
-import {
-  isFetchHttpError,
-  type ResponseInterceptor,
-  type ResponseInterceptorFactory,
+import { isAxiosError } from 'axios';
+import type {
+  ResponseInterceptor,
+  ResponseInterceptorFactory,
 } from '../Client';
 import { getApiMonitoringContext } from '../monitoring';
 
@@ -42,24 +42,21 @@ export const createTracingInterceptor: ResponseInterceptorFactory =
       return response;
     },
     onError: error => {
-      const context = isFetchHttpError(error)
+      const context = isAxiosError(error)
         ? getApiMonitoringContext({
-            baseURL: error.config.baseURL,
-            method: error.config.method,
+            baseURL: error.config?.baseURL,
+            method: error.config?.method,
             status: error.response?.status,
-            url: error.config.url,
+            url: error.config?.url,
           })
         : {};
-      const isHttpError = isFetchHttpError(error) && !!error.response;
 
       recordError({
-        name: isHttpError ? 'api_error' : 'network_error',
-        message: isHttpError
-          ? `HTTP request returned ${error.response?.status}`
-          : 'HTTP request failed',
+        name: 'network_error',
+        message: 'HTTP request failed',
         params: {
-          action: isHttpError ? 'response_error_status' : 'http_request_failed',
-          category: isHttpError ? 'api' : 'network',
+          action: 'http_request_failed',
+          category: 'network',
           ...context,
         },
         errorCause: error,

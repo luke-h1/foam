@@ -5,7 +5,7 @@ import { AccentColorProvider } from '@app/context/AccentColorContext';
 import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
 import { BaseConfig } from '@app/navigators/config';
 import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
-import { twitchApi } from '@app/services/api';
+import { twitchApi } from '@app/services/api/clients';
 import { sevenTvV4Client } from '@app/services/gql/client';
 import { deleteTokens } from '@app/utils/authentication/deleteTokens';
 import { QueryProvider } from '@app/utils/react-query/reacy-query';

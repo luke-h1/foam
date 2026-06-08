@@ -6,7 +6,7 @@ import { useDebugOptions } from '@app/hooks/useDebugOptions';
 import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
 import { BaseConfig } from '@app/navigators/config';
 import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
-import { twitchApi } from '@app/services/api';
+import { twitchApi } from '@app/services/api/clients';
 import { sevenTvV4Client } from '@app/services/gql/client';
 import { storage } from '@app/lib/storage';
 import { deleteTokens } from '@app/utils/authentication/deleteTokens';

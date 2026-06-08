@@ -1,5 +1,5 @@
 import { Text } from '@app/components/ui/Text/Text';
-import { twitchApi as _twitchApi } from '@app/services/api';
+import { twitchApi as _twitchApi } from '@app/services/api/clients';
 import {
   twitchService as _twitchService,
   type UserInfoResponse,
@@ -23,7 +23,7 @@ import {
 } from '../AuthContext';
 
 jest.mock('@app/services/twitch-service');
-jest.mock('@app/services/api');
+jest.mock('@app/services/api/clients');
 jest.mock('@app/utils/authentication/secureStore');
 
 export const initalTestAuthContextProps: AuthContextState = {

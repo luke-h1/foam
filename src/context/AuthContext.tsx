@@ -1,5 +1,5 @@
 import { twitchQueries } from '@app/queries/twitchQueries';
-import { twitchApi } from '@app/services/api';
+import { twitchApi } from '@app/services/api/clients';
 import {
   DefaultTokenResponse,
   PaginatedList,

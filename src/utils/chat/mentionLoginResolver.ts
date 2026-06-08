@@ -1,4 +1,4 @@
-import { twitchApi } from '@app/services/api';
+import { twitchApi } from '@app/services/api/clients';
 import {
   twitchService,
   type UserInfoResponse,

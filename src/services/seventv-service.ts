@@ -40,7 +40,7 @@ import {
 } from '@app/utils/color/sevenTvPaintData';
 import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { logger } from '@app/utils/logger';
-import { sevenTvApi } from './api';
+import { sevenTvApi } from './api/clients';
 import { sevenTvV4Client } from './gql/client';
 
 interface SevenTvFile {
