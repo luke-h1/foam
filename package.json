@@ -234,6 +234,7 @@
     "eslint-plugin-react-doctor": "0.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-native": "^5.0.0",
+    "eslint-plugin-reanimated": "^2.0.1",
     "expo-atlas": "^0.4.3",
     "globals": "^16.3.0",
     "husky": "9.1.7",

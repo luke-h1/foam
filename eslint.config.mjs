@@ -7,6 +7,7 @@ import react from 'eslint-plugin-react';
 import reactDoctor from 'eslint-plugin-react-doctor';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactNative from 'eslint-plugin-react-native';
+import reanimated from 'eslint-plugin-reanimated';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -94,6 +95,7 @@ export default tseslint.config(
       'react-doctor': reactDoctor,
       'react-hooks': reactHooks,
       'react-native': reactNative,
+      reanimated,
       '@typescript-eslint': tseslint.plugin,
     },
     settings: {
@@ -147,8 +149,15 @@ export default tseslint.config(
       'promise/always-return': 'off',
       'promise/catch-or-return': 'off',
       'promise/param-names': 'off',
-      'react-hooks/exhaustive-deps': 'warn',
+      'react-hooks/exhaustive-deps': [
+        'warn',
+        {
+          additionalHooks:
+            '(useAnimatedStyle|useDerivedValue|useAnimatedProps)',
+        },
+      ],
       'react-hooks/rules-of-hooks': 'error',
+      'reanimated/js-function-in-worklet': 'error',
       'react/display-name': 'off',
       'react/no-direct-mutation-state': 'off',
       'react/no-unescaped-entities': 'off',
