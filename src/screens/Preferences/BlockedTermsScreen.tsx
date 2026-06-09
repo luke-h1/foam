@@ -9,15 +9,12 @@ import {
 import { theme } from '@app/styles/themes';
 import { SymbolView } from 'expo-symbols';
 import { useCallback, useRef, useState } from 'react';
-import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { FlashListRef, ListRenderItem } from '@app/components/FlashList/FlashList';
+import type {
+  FlashListRef,
+  ListRenderItem,
+} from '@app/components/FlashList/FlashList';
 
 function SectionHeader({ count }: { count?: number }) {
   return (
@@ -71,18 +68,13 @@ function TermRow({
       <Text type='md' style={styles.termText} numberOfLines={1}>
         {term}
       </Text>
-      <TouchableOpacity
-        onPress={handleRemove}
-        style={styles.removeButton}
-        hitSlop={8}
-        activeOpacity={0.7}
-      >
+      <Pressable onPress={handleRemove} style={styles.removeButton} hitSlop={8}>
         <SymbolView
           name='minus.circle.fill'
           size={22}
           tintColor={theme.colorRed}
         />
-      </TouchableOpacity>
+      </Pressable>
     </View>
   );
 }
@@ -176,17 +168,16 @@ export function BlockedTermsScreen() {
           returnKeyType='done'
           style={styles.input}
         />
-        <TouchableOpacity
+        <Pressable
           onPress={handleAdd}
           style={[
             styles.addButton,
             !inputValue.trim() && styles.addButtonDisabled,
           ]}
           disabled={!inputValue.trim()}
-          activeOpacity={0.75}
         >
           <SymbolView name='plus' size={16} tintColor='#fff' />
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {blockedTerms.length === 0 ? (
@@ -198,7 +189,6 @@ export function BlockedTermsScreen() {
             data={blockedTerms}
             renderItem={renderItem}
             keyExtractor={item => item}
-            estimatedItemSize={56}
             contentInsetAdjustmentBehavior='automatic'
             contentContainerStyle={styles.listContent}
             ListHeaderComponent={<SectionHeader count={blockedTerms.length} />}

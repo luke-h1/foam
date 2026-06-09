@@ -1,5 +1,6 @@
 import {
   useChatRenderPreferences,
+  usePreference,
   usePreferences,
   useUpdatePreferences,
 } from '@app/store/preferenceStore';
@@ -142,6 +143,7 @@ jest.mock('@app/store/chat/actions/messages', () => ({
 
 jest.mock('@app/store/preferenceStore', () => ({
   useChatRenderPreferences: jest.fn(),
+  usePreference: jest.fn(),
   usePreferences: jest.fn(),
   useUpdatePreferences: jest.fn(),
 }));
@@ -294,6 +296,7 @@ jest.mock('../hooks/useEmoteReprocessing', () => ({
 }));
 
 const mockedUsePreferences = jest.mocked(usePreferences);
+const mockedUsePreference = jest.mocked(usePreference);
 const mockedUseChatRenderPreferences = jest.mocked(useChatRenderPreferences);
 const mockedUseUpdatePreferences = jest.mocked(useUpdatePreferences);
 const mockedGetRecentMessages = jest.mocked(
@@ -340,10 +343,12 @@ const setPreferences = (showRecentMessages = true) => {
     showTwitchEmotes: true,
     showTwitchBadges: true,
     showUnreadJumpPill: true,
+    blockedTerms: [],
     update: jest.fn(),
   } satisfies ReturnType<typeof usePreferences>;
 
   mockedUsePreferences.mockReturnValue(preferences);
+  mockedUsePreference.mockReturnValue([]);
   mockedUseChatRenderPreferences.mockReturnValue(preferences);
   mockedUseUpdatePreferences.mockReturnValue(preferences.update);
 };

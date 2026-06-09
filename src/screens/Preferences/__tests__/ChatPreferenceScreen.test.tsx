@@ -30,6 +30,7 @@ const mockPreferences: Preferences = {
   show7tvBadges: true,
   showFFzBadges: true,
   showBttvBadges: true,
+  blockedTerms: [],
 };
 
 jest.mock('@app/store/preferenceStore', () => ({
