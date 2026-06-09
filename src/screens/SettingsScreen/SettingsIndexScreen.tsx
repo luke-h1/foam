@@ -45,6 +45,11 @@ export function SettingsIndexScreen() {
               onPress={() => router.push('/tabs/settings/chat-preferences')}
             />
             <Button
+              label='Emotes & Badges'
+              systemImage='face.smiling'
+              onPress={() => router.push('/tabs/settings/emotes')}
+            />
+            <Button
               label='Cache'
               systemImage='externaldrive'
               onPress={() => router.push('/tabs/settings/cache')}
@@ -138,6 +143,12 @@ export function SettingsIndexScreen() {
               color: theme.colorPlum,
             }}
             onPress={() => router.push('/tabs/settings/chat-preferences')}
+          />
+          <SettingsLinkRow
+            title='Emotes & Badges'
+            subtitle='Browse cached emotes and badges with metadata'
+            icon={{ icon: 'face.smiling', color: theme.colorTeal }}
+            onPress={() => router.push('/tabs/settings/emotes')}
           />
           <SettingsLinkRow
             title='Cache'

@@ -72,6 +72,10 @@ export default function SettingsLayout() {
         options={{ title: 'Remote Config', headerBackTitle: 'Settings' }}
       />
       <Stack.Screen
+        name='emotes'
+        options={{ title: 'Emotes & Badges', headerBackTitle: 'Settings' }}
+      />
+      <Stack.Screen
         name='storybook'
         options={{ title: 'Storybook', headerBackTitle: 'Settings' }}
       />
