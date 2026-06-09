@@ -1,45 +1,28 @@
 import { FlashList } from '@app/components/FlashList/FlashList';
 import { Text } from '@app/components/ui/Text/Text';
-import { Input } from '@app/components/ui/Input/Input';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import { impact } from '@app/lib/haptics';
+import { Color } from '@app/styles/pallete';
 import {
   usePreference,
   useUpdatePreferences,
 } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { SymbolView } from 'expo-symbols';
+import { PressableScale } from 'pressto';
 import { useCallback, useRef, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Alert, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import type {
   FlashListRef,
   ListRenderItem,
 } from '@app/components/FlashList/FlashList';
 
-function SectionHeader({ count }: { count?: number }) {
-  return (
-    <View style={styles.sectionHeader}>
-      <Text type='xxs' weight='semibold' style={styles.sectionTitle}>
-        Blocked Terms
-      </Text>
-      {typeof count === 'number' ? (
-        <Text type='xxs' color='gray.textLow' style={styles.sectionCount}>
-          {count}
-        </Text>
-      ) : null}
-    </View>
-  );
-}
-
 function TermRow({
   term,
-  index,
-  count,
   onRemove,
 }: {
   term: string;
-  index: number;
-  count: number;
   onRemove: (term: string) => void;
 }) {
   const handleRemove = useCallback(() => {
@@ -58,64 +41,76 @@ function TermRow({
   }, [term, onRemove]);
 
   return (
-    <View
-      style={[
-        styles.row,
-        index === 0 && styles.rowFirst,
-        index === count - 1 && styles.rowLast,
-      ]}
-    >
+    <View style={styles.row}>
       <Text type='md' style={styles.termText} numberOfLines={1}>
         {term}
       </Text>
-      <Pressable onPress={handleRemove} style={styles.removeButton} hitSlop={8}>
+      <PressableScale onPress={handleRemove} hitSlop={8}>
         <SymbolView
           name='minus.circle.fill'
           size={22}
-          tintColor={theme.colorRed}
+          tintColor={Color.zinc[600]}
         />
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }
 
 function EmptyState() {
   return (
-    <ScrollView
-      contentContainerStyle={styles.emptyContent}
-      contentInsetAdjustmentBehavior='automatic'
-    >
-      <View style={styles.sectionHeaderEmpty}>
-        <Text type='xxs' weight='semibold' style={styles.sectionTitle}>
-          Blocked Terms
-        </Text>
-      </View>
-      <View style={styles.emptyPanel}>
-        <View style={styles.emptyIcon}>
-          <SymbolView
-            name='text.badge.xmark'
-            size={28}
-            tintColor={theme.colorGreyHoverAlpha}
-          />
-        </View>
-        <Text type='lg' weight='bold' align='center'>
-          No blocked terms
-        </Text>
-        <Text
-          type='xs'
-          color='gray.textLow'
-          align='center'
-          style={styles.emptyDescription}
-        >
-          Messages containing a blocked term will be hidden from chat.
-        </Text>
-      </View>
-    </ScrollView>
+    <View style={styles.emptyState}>
+      <SymbolView
+        name='text.badge.xmark'
+        size={48}
+        tintColor={Color.zinc[600]}
+      />
+      <Text type='lg' weight='medium' style={styles.emptyTitle}>
+        No blocked terms
+      </Text>
+      <Text type='sm' style={styles.emptySubtitle}>
+        Messages containing a blocked term will be hidden from chat.
+      </Text>
+    </View>
+  );
+}
+
+interface InputSectionProps {
+  value: string;
+  onChangeText: (text: string) => void;
+  onAdd: () => void;
+}
+
+function InputSection({ value, onChangeText, onAdd }: InputSectionProps) {
+  const canAdd = value.trim().length > 0;
+
+  return (
+    <View style={styles.inputSection}>
+      <TextInput
+        autoCapitalize='none'
+        autoCorrect={false}
+        placeholder='Add a term to block…'
+        placeholderTextColor={Color.zinc[500]}
+        value={value}
+        onChangeText={onChangeText}
+        onSubmitEditing={onAdd}
+        returnKeyType='done'
+        style={styles.input}
+      />
+      <PressableScale
+        onPress={canAdd ? onAdd : undefined}
+        style={[styles.addButton, canAdd ? styles.addButtonEnabled : null]}
+      >
+        <SymbolView
+          name='plus'
+          size={16}
+          tintColor={canAdd ? Color.zinc[950] : Color.zinc[500]}
+        />
+      </PressableScale>
+    </View>
   );
 }
 
 export function BlockedTermsScreen() {
-  const insets = useSafeAreaInsets();
   const blockedTerms = usePreference('blockedTerms');
   const updatePreferences = useUpdatePreferences();
   const [inputValue, setInputValue] = useState('');
@@ -132,6 +127,7 @@ export function BlockedTermsScreen() {
     }
     updatePreferences({ blockedTerms: [...blockedTerms, normalised] });
     setInputValue('');
+    void impact('light');
   }, [inputValue, blockedTerms, updatePreferences]);
 
   const handleRemove = useCallback(
@@ -144,180 +140,128 @@ export function BlockedTermsScreen() {
   );
 
   const renderItem: ListRenderItem<string> = useCallback(
-    ({ item, index }) => (
-      <TermRow
-        term={item}
-        index={index}
-        count={blockedTerms.length}
-        onRemove={handleRemove}
-      />
-    ),
-    [blockedTerms.length, handleRemove],
+    ({ item }) => <TermRow term={item} onRemove={handleRemove} />,
+    [handleRemove],
   );
 
-  return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
-      <View style={styles.inputSection}>
-        <Input
-          autoCapitalize='none'
-          autoCorrect={false}
-          placeholder='Add a term to block…'
-          value={inputValue}
-          onChangeText={setInputValue}
-          onSubmitEditing={handleAdd}
-          returnKeyType='done'
-          style={styles.input}
-        />
-        <Pressable
-          onPress={handleAdd}
-          style={[
-            styles.addButton,
-            !inputValue.trim() && styles.addButtonDisabled,
-          ]}
-          disabled={!inputValue.trim()}
-        >
-          <SymbolView name='plus' size={16} tintColor='#fff' />
-        </Pressable>
-      </View>
+  const inputSection = (
+    <InputSection
+      value={inputValue}
+      onChangeText={setInputValue}
+      onAdd={handleAdd}
+    />
+  );
 
-      {blockedTerms.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <View style={styles.listContainer}>
-          <FlashList
-            ref={listRef}
-            data={blockedTerms}
-            renderItem={renderItem}
-            keyExtractor={item => item}
-            contentInsetAdjustmentBehavior='automatic'
-            contentContainerStyle={styles.listContent}
-            ListHeaderComponent={<SectionHeader count={blockedTerms.length} />}
-            ListFooterComponent={
-              <Text type='xxs' color='gray.textLow' style={styles.footer}>
-                Messages containing these terms will be hidden from chat.
-              </Text>
-            }
-          />
-        </View>
-      )}
-    </View>
+  const hasTerms = blockedTerms.length > 0;
+
+  return (
+    <KeyboardAvoidingView behavior='padding' style={styles.keyboardAvoid}>
+      <FlashList
+        ref={listRef}
+        data={blockedTerms}
+        renderItem={renderItem}
+        keyExtractor={item => item}
+        contentInsetAdjustmentBehavior='automatic'
+        keyboardShouldPersistTaps='handled'
+        contentContainerStyle={[
+          styles.listContent,
+          !hasTerms && styles.listContentEmpty,
+        ]}
+        ListHeaderComponent={inputSection}
+        ListEmptyComponent={EmptyState}
+        ListFooterComponent={
+          hasTerms ? (
+            <Text type='xs' style={styles.footer}>
+              {blockedTerms.length}{' '}
+              {blockedTerms.length === 1 ? 'term' : 'terms'} · Messages
+              containing these will be hidden from chat.
+            </Text>
+          ) : null
+        }
+      />
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   addButton: {
     alignItems: 'center',
-    backgroundColor: theme.colorPrimary,
+    backgroundColor: Color.zinc[800],
     borderCurve: 'continuous',
-    borderRadius: 10,
-    height: 42,
+    borderRadius: 18,
+    height: 36,
     justifyContent: 'center',
-    width: 42,
+    width: 36,
   },
-  addButtonDisabled: {
-    opacity: 0.4,
+  addButtonEnabled: {
+    backgroundColor: Color.zinc[50],
   },
-  container: {
-    backgroundColor: theme.color.background.dark,
-    flex: 1,
-  },
-  emptyContent: {
-    flexGrow: 1,
-    paddingBottom: theme.space24,
-  },
-  emptyDescription: {
-    lineHeight: 20,
-    maxWidth: 280,
-  },
-  emptyIcon: {
+  emptyState: {
     alignItems: 'center',
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
-    height: 64,
-    justifyContent: 'center',
-    marginBottom: theme.space4,
-    width: 64,
-  },
-  emptyPanel: {
-    alignItems: 'center',
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderColor: theme.colorBorderSecondary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
-    borderWidth: StyleSheet.hairlineWidth,
     gap: theme.space12,
-    marginHorizontal: theme.space16,
-    paddingHorizontal: theme.space20,
-    paddingVertical: theme.space36,
+    justifyContent: 'center',
+    minHeight: 280,
+    paddingHorizontal: 40,
+  },
+  emptySubtitle: {
+    color: Color.zinc[500],
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  emptyTitle: {
+    color: Color.zinc[400],
+    marginTop: theme.space4,
   },
   footer: {
+    color: Color.zinc[500],
     lineHeight: 18,
-    paddingHorizontal: theme.space16,
-    paddingTop: theme.space8,
+    paddingHorizontal: theme.space4,
+    paddingTop: theme.space16,
   },
   input: {
+    backgroundColor: Color.zinc[900],
+    borderColor: Color.zinc[800],
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius12,
+    borderWidth: 1,
+    color: theme.colorWhite,
     flex: 1,
+    fontSize: 16,
+    height: 44,
+    paddingHorizontal: theme.space16,
   },
   inputSection: {
     alignItems: 'center',
-    borderBottomColor: theme.color.border.dark,
-    borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space8,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space12,
+    paddingBottom: theme.space16,
+    paddingTop: theme.space12,
   },
-  listContainer: {
+  keyboardAvoid: {
+    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   listContent: {
     paddingBottom: theme.space24,
+    paddingHorizontal: theme.space16,
   },
-  removeButton: {
-    flexShrink: 0,
-    padding: 4,
+  listContentEmpty: {
+    flexGrow: 1,
   },
   row: {
     alignItems: 'center',
-    borderBottomColor: theme.colorBorderSecondary,
+    borderBottomColor: Color.zinc[800],
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space12,
-    marginHorizontal: theme.space16,
-    minHeight: 56,
-    paddingVertical: theme.space12,
-  },
-  rowFirst: {
-    borderTopLeftRadius: theme.borderRadius12,
-    borderTopRightRadius: theme.borderRadius12,
-  },
-  rowLast: {
-    borderBottomLeftRadius: theme.borderRadius12,
-    borderBottomRightRadius: theme.borderRadius12,
-    borderBottomWidth: 0,
-  },
-  sectionCount: {
-    paddingHorizontal: theme.space16,
-  },
-  sectionHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingBottom: theme.space8,
-  },
-  sectionHeaderEmpty: {
-    paddingBottom: theme.space8,
-  },
-  sectionTitle: {
-    color: theme.colorGreyAlpha,
-    letterSpacing: 0.5,
-    paddingHorizontal: theme.space16,
-    textTransform: 'uppercase',
+    paddingHorizontal: theme.space4,
+    paddingVertical: 14,
   },
   termText: {
-    color: theme.color.text.dark,
+    color: theme.colorWhite,
     flex: 1,
+    fontSize: 15,
+    lineHeight: 20,
     minWidth: 0,
   },
 });
