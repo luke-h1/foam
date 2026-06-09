@@ -12,7 +12,10 @@ import { ffzService } from '@app/services/ffz-service';
 import { sevenTvService } from '@app/services/seventv-service';
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
-import { twitchService } from '@app/services/twitch-service';
+import {
+  twitchService,
+  type UserInfoResponse,
+} from '@app/services/twitch-service';
 
 import { emptyEmoteData } from '../types/constants';
 import { loadChannelResources } from '../actions/channelLoad';
@@ -290,7 +293,18 @@ describe('loadChannelResources cache fallback', () => {
     mockGetFfzChannelBadges.mockResolvedValue([badge('ffz-channel-badge-new')]);
     mockGetFfzGlobalBadges.mockResolvedValue([badge('ffz-global-badge-new')]);
     mockListChatterinoBadges.mockReturnValue([]);
-    mockGetUser.mockResolvedValue(null);
+    mockGetUser.mockResolvedValue({
+      id: '',
+      broadcaster_type: '',
+      created_at: '',
+      description: '',
+      display_name: '',
+      login: '',
+      offline_image_url: '',
+      profile_image_url: '',
+      type: '',
+      view_count: 0,
+    } satisfies UserInfoResponse);
   });
 
   afterEach(() => {
