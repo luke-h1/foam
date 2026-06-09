@@ -45,6 +45,11 @@ export function SettingsIndexScreen() {
               onPress={() => router.push('/tabs/settings/chat-preferences')}
             />
             <Button
+              label='Blocked Terms'
+              systemImage='text.badge.xmark'
+              onPress={() => router.push('/tabs/settings/blocked-terms')}
+            />
+            <Button
               label='Cache'
               systemImage='externaldrive'
               onPress={() => router.push('/tabs/settings/cache')}
@@ -138,6 +143,12 @@ export function SettingsIndexScreen() {
               color: theme.colorPlum,
             }}
             onPress={() => router.push('/tabs/settings/chat-preferences')}
+          />
+          <SettingsLinkRow
+            title='Blocked Terms'
+            subtitle='Hide chat messages containing specific words or phrases'
+            icon={{ icon: 'text.badge.xmark', color: theme.colorRed }}
+            onPress={() => router.push('/tabs/settings/blocked-terms')}
           />
           <SettingsLinkRow
             title='Cache'

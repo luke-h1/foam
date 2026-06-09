@@ -4,6 +4,7 @@ import { useTwitchChat } from '@app/services/twitch-chat-service';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import {
   useChatRenderPreferences,
+  usePreference,
   useUpdatePreferences,
 } from '@app/store/preferenceStore';
 import { parseBadges } from '@app/utils/chat/parseBadges';
@@ -40,6 +41,7 @@ export function useChat(channelId: string, channelName: string) {
   const { user } = useAuthContext();
   const preferences = useChatRenderPreferences();
   const updatePreferences = useUpdatePreferences();
+  const blockedTerms = usePreference('blockedTerms');
   const showRecentMessages = preferences.showRecentMessages !== false;
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -448,7 +450,7 @@ export function useChat(channelId: string, channelName: string) {
     handleToggleShowOnlyMentions,
     handleUnpinPinnedMessage,
     handleViewableMessagesChange,
-    hiddenPhrases,
+    hiddenPhrases: [...hiddenPhrases, ...blockedTerms],
     hiddenUsers,
     hidePhraseFromView,
     hideUserFromView,

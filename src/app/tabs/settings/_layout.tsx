@@ -32,6 +32,10 @@ export default function SettingsLayout() {
         options={{ title: 'Changelog', headerBackTitle: 'Settings' }}
       />
       <Stack.Screen
+        name='blocked-terms'
+        options={{ title: 'Blocked Terms', headerBackTitle: 'Settings' }}
+      />
+      <Stack.Screen
         name='channel-surfing'
         options={{ title: 'Channel Surfing', headerBackTitle: 'Settings' }}
       />
