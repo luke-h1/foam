@@ -13,11 +13,7 @@ import { twitchQueries } from '@app/queries/twitchQueries';
 import { twitchService } from '@app/services/twitch-service';
 import { loadChannelResources } from '@app/store/chat/actions/channelLoad';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import type {
-  ChannelCacheType,
-  SanitisedBadgeSet,
-  SanitisedEmote,
-} from '@app/store/chat/types/constants';
+import type { ChannelCacheType } from '@app/store/chat/types/constants';
 import { theme } from '@app/styles/themes';
 import { useSelector } from '@legendapp/state/react';
 import { useQuery } from '@tanstack/react-query';
@@ -67,50 +63,62 @@ function dedupeBy<T>(items: T[], key: (item: T) => string): T[] {
   });
 }
 
-function buildEmoteList(cache: ChannelCacheType | undefined): EmoteRowItem[] {
+function buildResourceList<TSource, TRow>(
+  cache: ChannelCacheType | undefined,
+  sources: (channelCache: ChannelCacheType) => TSource[],
+  key: (item: TSource) => string,
+  map: (item: TSource) => TRow,
+): TRow[] {
   if (!cache) return [];
+  return dedupeBy(sources(cache), key).map(map);
+}
 
-  const all: SanitisedEmote[] = [
-    ...(cache.twitchChannelEmotes ?? []),
-    ...(cache.twitchGlobalEmotes ?? []),
-    ...(cache.twitchSubscriberEmotes ?? []),
-    ...(cache.sevenTvChannelEmotes ?? []),
-    ...(cache.sevenTvGlobalEmotes ?? []),
-    ...(cache.ffzChannelEmotes ?? []),
-    ...(cache.ffzGlobalEmotes ?? []),
-    ...(cache.bttvChannelEmotes ?? []),
-    ...(cache.bttvGlobalEmotes ?? []),
-  ];
-
-  return dedupeBy(all, e => `${e.site}:${e.id}`).map(e => ({
-    id: e.id,
-    name: e.name,
-    url: e.url,
-    site: e.site,
-    creator: e.creator,
-    emote_link: e.emote_link,
-  }));
+function buildEmoteList(cache: ChannelCacheType | undefined): EmoteRowItem[] {
+  return buildResourceList(
+    cache,
+    channelCache => [
+      ...(channelCache.twitchChannelEmotes ?? []),
+      ...(channelCache.twitchGlobalEmotes ?? []),
+      ...(channelCache.twitchSubscriberEmotes ?? []),
+      ...(channelCache.sevenTvChannelEmotes ?? []),
+      ...(channelCache.sevenTvGlobalEmotes ?? []),
+      ...(channelCache.ffzChannelEmotes ?? []),
+      ...(channelCache.ffzGlobalEmotes ?? []),
+      ...(channelCache.bttvChannelEmotes ?? []),
+      ...(channelCache.bttvGlobalEmotes ?? []),
+    ],
+    emote => `${emote.site}:${emote.id}`,
+    emote => ({
+      id: emote.id,
+      name: emote.name,
+      url: emote.url,
+      site: emote.site,
+      creator: emote.creator,
+      emote_link: emote.emote_link,
+    }),
+  );
 }
 
 function buildBadgeList(cache: ChannelCacheType | undefined): BadgeRowItem[] {
-  if (!cache) return [];
-
-  const all: SanitisedBadgeSet[] = [
-    ...(cache.twitchChannelBadges ?? []),
-    ...(cache.twitchGlobalBadges ?? []),
-    ...(cache.ffzChannelBadges ?? []),
-    ...(cache.ffzGlobalBadges ?? []),
-    ...(cache.chatterinoBadges ?? []),
-  ];
-
-  return dedupeBy(all, b => `${b.type}:${b.id}`).map(b => ({
-    id: b.id,
-    title: b.title,
-    url: b.url,
-    type: b.type,
-    set: b.set,
-    provider: b.provider,
-  }));
+  return buildResourceList(
+    cache,
+    channelCache => [
+      ...(channelCache.twitchChannelBadges ?? []),
+      ...(channelCache.twitchGlobalBadges ?? []),
+      ...(channelCache.ffzChannelBadges ?? []),
+      ...(channelCache.ffzGlobalBadges ?? []),
+      ...(channelCache.chatterinoBadges ?? []),
+    ],
+    badge => `${badge.type}:${badge.id}`,
+    badge => ({
+      id: badge.id,
+      title: badge.title,
+      url: badge.url,
+      type: badge.type,
+      set: badge.set,
+      provider: badge.provider,
+    }),
+  );
 }
 
 function ItemRow({
@@ -131,11 +139,17 @@ function ItemRow({
   return (
     <View style={styles.item}>
       <View style={styles.thumbnailContainer}>
-        <Image source={{ uri: url }} style={styles.thumbnail} contentFit='contain' />
+        <Image
+          source={{ uri: url }}
+          style={styles.thumbnail}
+          contentFit='contain'
+        />
       </View>
       <View style={styles.itemInfo}>
         <View style={styles.itemHeader}>
-          <Text style={styles.itemName} numberOfLines={1}>{name}</Text>
+          <Text style={styles.itemName} numberOfLines={1}>
+            {name}
+          </Text>
           {tag ? (
             <View style={styles.tagBadge}>
               <Text style={styles.tagBadgeText}>{tag}</Text>
@@ -143,9 +157,13 @@ function ItemRow({
           ) : null}
         </View>
         {meta ? (
-          <Text style={styles.itemMeta} numberOfLines={1}>{meta}</Text>
+          <Text style={styles.itemMeta} numberOfLines={1}>
+            {meta}
+          </Text>
         ) : null}
-        <Text style={styles.itemId} numberOfLines={1} selectable>{detail}</Text>
+        <Text style={styles.itemId} numberOfLines={1} selectable>
+          {detail}
+        </Text>
         {link ? (
           <Text
             style={styles.itemLink}
@@ -181,12 +199,48 @@ const renderBadgeItem: ListRenderItem<BadgeRowItem> = ({ item }) => (
   />
 );
 
-function EmptyState({ message, submessage }: { message: string; submessage: string }) {
+function EmptyState({
+  message,
+  submessage,
+}: {
+  message: string;
+  submessage: string;
+}) {
   return (
     <View style={styles.emptyState}>
       <Text style={styles.emptyText}>{message}</Text>
       <Text style={styles.emptySubtext}>{submessage}</Text>
     </View>
+  );
+}
+
+function ResourceList<T>({
+  ref,
+  data,
+  renderItem,
+  keyExtractor,
+  emptyMessage,
+  emptySubmessage,
+}: {
+  ref?: RefObject<FlashListRef<T> | null>;
+  data: T[];
+  renderItem: ListRenderItem<T>;
+  keyExtractor: (item: T) => string;
+  emptyMessage: string;
+  emptySubmessage: string;
+}) {
+  return (
+    <FlashList
+      ref={ref}
+      data={data}
+      contentInsetAdjustmentBehavior='automatic'
+      renderItem={renderItem}
+      keyExtractor={keyExtractor}
+      contentContainerStyle={styles.listContent}
+      ListEmptyComponent={
+        <EmptyState message={emptyMessage} submessage={emptySubmessage} />
+      }
+    />
   );
 }
 
@@ -209,7 +263,11 @@ function FollowedStreamerPill({
       style={[styles.streamerPill, isSelected && styles.streamerPillActive]}
       activeOpacity={0.75}
     >
-      <Image source={{ uri: avatarUrl }} style={styles.streamerAvatar} contentFit='cover' />
+      <Image
+        source={{ uri: avatarUrl }}
+        style={styles.streamerAvatar}
+        contentFit='cover'
+      />
       <Text
         style={[styles.streamerName, isSelected && styles.streamerNameActive]}
         numberOfLines={1}
@@ -220,7 +278,13 @@ function FollowedStreamerPill({
   );
 }
 
-function ChannelViewer({ channelId, channelName }: { channelId: string; channelName: string }) {
+function ChannelViewer({
+  channelId,
+  channelName,
+}: {
+  channelId: string;
+  channelName: string;
+}) {
   const [activeTab, setActiveTab] = useState<TabType>('emotes');
   const [isLoading, setIsLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -229,7 +293,9 @@ function ChannelViewer({ channelId, channelName }: { channelId: string; channelN
 
   useScrollToTop(listRef);
 
-  const cache = useSelector(() => chatStore$.persisted.channelCaches[channelId]?.get());
+  const cache = useSelector(() =>
+    chatStore$.persisted.channelCaches[channelId]?.get(),
+  );
   const emoteList = buildEmoteList(cache);
   const badgeList = buildBadgeList(cache);
 
@@ -282,7 +348,12 @@ function ChannelViewer({ channelId, channelName }: { channelId: string; channelN
             activeTab === 'emotes' && { backgroundColor: theme.colorPlum },
           ]}
         >
-          <Text style={[styles.tabButtonText, activeTab === 'emotes' && styles.tabButtonTextActive]}>
+          <Text
+            style={[
+              styles.tabButtonText,
+              activeTab === 'emotes' && styles.tabButtonTextActive,
+            ]}
+          >
             Emotes ({emoteList.length})
           </Text>
         </Button>
@@ -294,7 +365,12 @@ function ChannelViewer({ channelId, channelName }: { channelId: string; channelN
             activeTab === 'badges' && { backgroundColor: theme.colorOrange },
           ]}
         >
-          <Text style={[styles.tabButtonText, activeTab === 'badges' && styles.tabButtonTextActive]}>
+          <Text
+            style={[
+              styles.tabButtonText,
+              activeTab === 'badges' && styles.tabButtonTextActive,
+            ]}
+          >
             Badges ({badgeList.length})
           </Text>
         </Button>
@@ -306,30 +382,22 @@ function ChannelViewer({ channelId, channelName }: { channelId: string; channelN
       </View>
 
       {activeTab === 'emotes' ? (
-        <FlashList
+        <ResourceList
           ref={listRef}
           data={emoteList}
-          estimatedItemSize={90}
-          contentInsetAdjustmentBehavior='automatic'
           renderItem={renderEmoteItem}
           keyExtractor={item => `${item.site}:${item.id}`}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <EmptyState message='No emotes cached' submessage='Tap refresh to fetch emotes for this channel' />
-          }
+          emptyMessage='No emotes cached'
+          emptySubmessage='Tap refresh to fetch emotes for this channel'
         />
       ) : (
-        <FlashList
+        <ResourceList
           ref={listRef as RefObject<FlashListRef<BadgeRowItem> | null>}
           data={badgeList}
-          estimatedItemSize={90}
-          contentInsetAdjustmentBehavior='automatic'
           renderItem={renderBadgeItem}
           keyExtractor={item => `${item.type}:${item.id}`}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <EmptyState message='No badges cached' submessage='Tap refresh to fetch badges for this channel' />
-          }
+          emptyMessage='No badges cached'
+          emptySubmessage='Tap refresh to fetch badges for this channel'
         />
       )}
     </View>
@@ -341,7 +409,10 @@ export function SettingsEmotesScreen() {
   const insets = useSafeAreaInsets();
 
   const [inputValue, setInputValue] = useState('');
-  const [selectedChannel, setSelectedChannel] = useState<{ id: string; name: string } | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [resolving, setResolving] = useState(false);
   const [resolveError, setResolveError] = useState<string | null>(null);
 
@@ -378,7 +449,9 @@ export function SettingsEmotesScreen() {
         setSelectedChannel({ id: userInfo.id, name: userInfo.display_name });
       });
     } catch {
-      setResolveError('Could not find that channel. Check the name and try again.');
+      setResolveError(
+        'Could not find that channel. Check the name and try again.',
+      );
     } finally {
       setResolving(false);
     }
@@ -415,7 +488,9 @@ export function SettingsEmotesScreen() {
             )}
           </Button>
         </View>
-        {resolveError ? <Text style={styles.errorText}>{resolveError}</Text> : null}
+        {resolveError ? (
+          <Text style={styles.errorText}>{resolveError}</Text>
+        ) : null}
       </View>
 
       {user && followedStreamers.length > 0 && (
@@ -424,7 +499,6 @@ export function SettingsEmotesScreen() {
           <FlashList
             data={followedStreamers}
             horizontal
-            estimatedItemSize={100}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.followedListContent}
             keyExtractor={item => item.user_id}
@@ -448,7 +522,9 @@ export function SettingsEmotesScreen() {
       ) : (
         <View style={styles.placeholder}>
           <Text style={styles.placeholderText}>
-            {user ? 'Pick a followed channel or search by name' : 'Search for a channel by name'}
+            {user
+              ? 'Pick a followed channel or search by name'
+              : 'Search for a channel by name'}
           </Text>
         </View>
       )}
