@@ -387,6 +387,11 @@ export function usePlayerBridge({
           notifyContentGateChange(message.payload?.hasContentGate ?? false);
           break;
         case 'playbackBlocked':
+          injectJS('window.playerControls.setMuted(true)');
+          injectJS('window.playerControls.play()');
+          setPlayerState(prev =>
+            prev.muted ? prev : { ...prev, muted: true },
+          );
           break;
         case 'twitchAuthComplete':
           scheduleAuthCompletionReload();
@@ -442,5 +447,6 @@ export function usePlayerBridge({
     playerState,
     playerStatus,
     resetPlayerStatus,
+    setMuted,
   };
 }

@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 import { ControlsOverlay } from './ControlsOverlay';
@@ -18,6 +18,7 @@ import {
 import type { StreamPlayerProps } from './types';
 import { usePlayerBridge } from './usePlayerBridge';
 import { useStreamPlayerControls } from './useStreamPlayerControls';
+import { Text } from '@app/components/ui/Text/Text';
 
 export type { StreamInfo, StreamPlayerProps, StreamPlayerRef } from './types';
 
@@ -157,6 +158,7 @@ export const StreamPlayer = memo(function StreamPlayer({
     playerState,
     playerStatus,
     resetPlayerStatus,
+    setMuted,
   } = usePlayerBridge({
     autoplay,
     channel,
@@ -307,6 +309,16 @@ ${buildRawTwitchPlayerBootstrapScript({
           streamInfo={streamInfo}
         />
       )}
+
+      {playerState.muted && !initialMuted && playerStatus.isReady && (
+        <TouchableOpacity
+          style={styles.tapToUnmuteBanner}
+          onPress={() => setMuted(false)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.tapToUnmuteText}>🔇 Tap to unmute</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 });
@@ -319,5 +331,21 @@ const styles = StyleSheet.create({
   },
   containerScrollable: {
     overflow: 'visible',
+  },
+  tapToUnmuteBanner: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.72)',
+    borderCurve: 'continuous',
+    borderRadius: 20,
+    bottom: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    position: 'absolute',
+    right: 16,
+  },
+  tapToUnmuteText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
