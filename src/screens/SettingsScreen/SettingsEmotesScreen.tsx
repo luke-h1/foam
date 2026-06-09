@@ -35,6 +35,29 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type TabType = 'emotes' | 'badges';
 
+const CHANNEL_TABS: {
+  id: TabType;
+  label: string;
+  color: string;
+  emptyMessage: string;
+  emptySubmessage: string;
+}[] = [
+  {
+    id: 'emotes',
+    label: 'Emotes',
+    color: theme.colorPlum,
+    emptyMessage: 'No emotes cached',
+    emptySubmessage: 'Tap refresh to fetch emotes for this channel',
+  },
+  {
+    id: 'badges',
+    label: 'Badges',
+    color: theme.colorOrange,
+    emptyMessage: 'No badges cached',
+    emptySubmessage: 'Tap refresh to fetch badges for this channel',
+  },
+];
+
 interface EmoteRowItem {
   id: string;
   name: string;
@@ -244,6 +267,37 @@ function ResourceList<T>({
   );
 }
 
+function TabButton({
+  label,
+  count,
+  isActive,
+  activeColor,
+  onPress,
+}: {
+  label: string;
+  count: number;
+  isActive: boolean;
+  activeColor: string;
+  onPress: () => void;
+}) {
+  return (
+    <Button
+      onPress={onPress}
+      style={[
+        styles.tabButton,
+        isActive && styles.tabButtonActive,
+        isActive && { backgroundColor: activeColor },
+      ]}
+    >
+      <Text
+        style={[styles.tabButtonText, isActive && styles.tabButtonTextActive]}
+      >
+        {label} ({count})
+      </Text>
+    </Button>
+  );
+}
+
 function FollowedStreamerPill({
   streamer,
   isSelected,
@@ -275,6 +329,37 @@ function FollowedStreamerPill({
         {streamer.user_name}
       </Text>
     </TouchableOpacity>
+  );
+}
+
+function StatusPanel({
+  title,
+  subtitle,
+  actionLabel,
+  onAction,
+  loading,
+}: {
+  title: string;
+  subtitle?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  loading?: boolean;
+}) {
+  return (
+    <View style={styles.centeredState}>
+      {loading ? (
+        <ActivityIndicator color={theme.colorPrimary} size='large' />
+      ) : null}
+      <Text style={loading ? styles.loadingText : styles.emptyText}>
+        {title}
+      </Text>
+      {subtitle ? <Text style={styles.emptySubtext}>{subtitle}</Text> : null}
+      {actionLabel && onAction ? (
+        <Button onPress={onAction} style={styles.actionButton}>
+          <Text style={styles.actionButtonText}>{actionLabel}</Text>
+        </Button>
+      ) : null}
+    </View>
   );
 }
 
@@ -317,63 +402,37 @@ function ChannelViewer({
   }
 
   if (isLoading) {
-    return (
-      <View style={styles.centeredState}>
-        <ActivityIndicator color={theme.colorPrimary} size='large' />
-        <Text style={styles.loadingText}>Loading {channelName}…</Text>
-      </View>
-    );
+    return <StatusPanel title={`Loading ${channelName}…`} loading />;
   }
 
   if (error) {
     return (
-      <View style={styles.centeredState}>
-        <Text style={styles.emptyText}>Failed to load channel</Text>
-        <Text style={styles.emptySubtext}>{error}</Text>
-        <Button onPress={handleLoad} style={styles.actionButton}>
-          <Text style={styles.actionButtonText}>Retry</Text>
-        </Button>
-      </View>
+      <StatusPanel
+        title='Failed to load channel'
+        subtitle={error}
+        actionLabel='Retry'
+        onAction={handleLoad}
+      />
     );
   }
+
+  const activeTabConfig =
+    CHANNEL_TABS.find(entry => entry.id === activeTab) ?? CHANNEL_TABS[0];
+  const isEmotes = activeTab === 'emotes';
 
   return (
     <View style={styles.flex}>
       <View style={styles.tabContainer}>
-        <Button
-          onPress={() => setActiveTab('emotes')}
-          style={[
-            styles.tabButton,
-            activeTab === 'emotes' && styles.tabButtonActive,
-            activeTab === 'emotes' && { backgroundColor: theme.colorPlum },
-          ]}
-        >
-          <Text
-            style={[
-              styles.tabButtonText,
-              activeTab === 'emotes' && styles.tabButtonTextActive,
-            ]}
-          >
-            Emotes ({emoteList.length})
-          </Text>
-        </Button>
-        <Button
-          onPress={() => setActiveTab('badges')}
-          style={[
-            styles.tabButton,
-            activeTab === 'badges' && styles.tabButtonActive,
-            activeTab === 'badges' && { backgroundColor: theme.colorOrange },
-          ]}
-        >
-          <Text
-            style={[
-              styles.tabButtonText,
-              activeTab === 'badges' && styles.tabButtonTextActive,
-            ]}
-          >
-            Badges ({badgeList.length})
-          </Text>
-        </Button>
+        {CHANNEL_TABS.map(tab => (
+          <TabButton
+            key={tab.id}
+            label={tab.label}
+            count={tab.id === 'emotes' ? emoteList.length : badgeList.length}
+            isActive={activeTab === tab.id}
+            activeColor={tab.color}
+            onPress={() => setActiveTab(tab.id)}
+          />
+        ))}
         {(emoteList.length > 0 || badgeList.length > 0) && (
           <Button onPress={handleLoad} style={styles.refreshButton}>
             <Text style={styles.refreshButtonText}>↻</Text>
@@ -381,25 +440,20 @@ function ChannelViewer({
         )}
       </View>
 
-      {activeTab === 'emotes' ? (
-        <ResourceList
-          ref={listRef}
-          data={emoteList}
-          renderItem={renderEmoteItem}
-          keyExtractor={item => `${item.site}:${item.id}`}
-          emptyMessage='No emotes cached'
-          emptySubmessage='Tap refresh to fetch emotes for this channel'
-        />
-      ) : (
-        <ResourceList
-          ref={listRef as RefObject<FlashListRef<BadgeRowItem> | null>}
-          data={badgeList}
-          renderItem={renderBadgeItem}
-          keyExtractor={item => `${item.type}:${item.id}`}
-          emptyMessage='No badges cached'
-          emptySubmessage='Tap refresh to fetch badges for this channel'
-        />
-      )}
+      <ResourceList
+        ref={
+          listRef as RefObject<FlashListRef<EmoteRowItem | BadgeRowItem> | null>
+        }
+        data={isEmotes ? emoteList : badgeList}
+        renderItem={isEmotes ? renderEmoteItem : renderBadgeItem}
+        keyExtractor={item =>
+          isEmotes
+            ? `${(item as EmoteRowItem).site}:${(item as EmoteRowItem).id}`
+            : `${(item as BadgeRowItem).type}:${(item as BadgeRowItem).id}`
+        }
+        emptyMessage={activeTabConfig.emptyMessage}
+        emptySubmessage={activeTabConfig.emptySubmessage}
+      />
     </View>
   );
 }
