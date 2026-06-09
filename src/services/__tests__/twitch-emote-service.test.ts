@@ -30,7 +30,7 @@ describe('twitchEmoteService', () => {
         },
       ],
       pagination: {},
-    });
+    } as unknown as Awaited<ReturnType<typeof twitchApi.get>>);
 
     const emotes = await twitchEmoteService.getSubscriberEmotes('user-1');
 

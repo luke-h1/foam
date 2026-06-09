@@ -5,7 +5,11 @@ import type { SanitisedEmote } from '@app/types/emote';
 import type { EmotePickerItem } from './EmoteSheet';
 
 export type EmoteMenuProviderId = '7TV' | 'Twitch' | 'FFZ' | 'BTTV' | 'Emoji';
-export type EmoteMenuIcon = BrandIconName | 'ffz' | `emoji:${string}`;
+export type EmoteMenuIcon =
+  | BrandIconName
+  | 'ffz'
+  | `emoji:${string}`
+  | `avatar:${string}`;
 
 export interface EmoteMenuSet {
   emotes: EmotePickerItem[];
@@ -253,7 +257,7 @@ export function buildEmoteMenuProviders(
     const profile = profiles[ownerId];
     const title = profile?.name ?? 'Subscribed Channel';
     const icon: EmoteMenuIcon = profile?.profileImageUrl
-      ? (`avatar:${profile.profileImageUrl}` as EmoteMenuIcon)
+      ? `avatar:${profile.profileImageUrl}`
       : 'twitch';
     perChannelSets.push(
       makeSet(`twitch-sub-${ownerId}`, 'Twitch', title, icon, emotes),
