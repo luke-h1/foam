@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.42-internal
+
+### 🐛 Bug Fixes
+
+- **app:** Sentry initialization
+- **app:** Sentry initialization
 ## 0.0.42-testflight
 
 ### ♻️ Refactor
