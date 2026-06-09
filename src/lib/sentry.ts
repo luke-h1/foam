@@ -1,42 +1,32 @@
+import { init as initSentry } from '@sentry/react-native';
 import * as Sentry from '@sentry/react-native';
 import type { ComponentType } from 'react';
 
 let didInitializeSentry = false;
-
-const feedbackWidgetOptions = {
-  formTitle: 'Send Feedback',
-  messageLabel: 'Feedback',
-  messagePlaceholder: 'What could be better?',
-  submitButtonLabel: 'Send Feedback',
-  successMessageText: 'Thanks for the feedback.',
-  formError: 'Please add a message before sending feedback.',
-  genericError: 'Unable to send feedback right now.',
-  buttonOptions: {
-    triggerLabel: 'Send Feedback',
-  },
-};
 
 export function init(): void {
   if (didInitializeSentry) {
     return;
   }
 
+  const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
   const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT ?? 'development';
+  // const isInternal = appVariant === 'internal' || appVariant === 'testflight';
 
-  Sentry.init({
-    enabled: appVariant !== 'development',
-    dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  initSentry({
+    enabled:
+      Boolean(dsn) &&
+      (!__DEV__ || process.env.EXPO_PUBLIC_ENABLE_SENTRY === 'true'),
+    dsn,
+    appHangTimeoutInterval: 1000,
     debug: false,
     environment: appVariant,
-    release: process.env.EXPO_PUBLIC_SENTRY_RELEASE,
     dist: process.env.EXPO_PUBLIC_SENTRY_DIST,
-    enableAutoSessionTracking: false,
-    enableLogs: true,
-    enableMetrics: true,
+    release: process.env.EXPO_PUBLIC_SENTRY_RELEASE,
+    enableAutoSessionTracking: true,
     ignoreErrors: ['Network request failed'],
-    integrations: [Sentry.feedbackIntegration(feedbackWidgetOptions)],
-    attachStacktrace: false,
-    sampleRate: appVariant === 'production' ? 0.1 : 1,
+    attachStacktrace: true,
+    sampleRate: 1,
   });
 
   didInitializeSentry = true;
@@ -119,66 +109,15 @@ export type OtaMetrics =
   | 'ota.update.alert_shown'
   | 'ota.update.applied';
 
-function serializeCause(cause: unknown): Record<string, unknown> {
-  if (!cause) {
-    return {};
-  }
-
-  if (cause instanceof Error) {
-    return {
-      cause_name: cause.name,
-      cause_message: cause.message,
-      cause_stack: cause.stack,
-    };
-  }
-
+function buildMetadata(
+  name: string,
+  params?: Record<string, unknown>,
+  cause?: unknown,
+): Record<string, unknown> {
   return {
-    cause_raw: cause,
-    cause_stringified: serializeUnknownCause(cause),
-  };
-}
-
-function serializeUnknownCause(cause: unknown): string {
-  if (typeof cause === 'string') {
-    return cause;
-  }
-
-  if (typeof cause === 'number' || typeof cause === 'boolean') {
-    return `${cause}`;
-  }
-
-  if (typeof cause === 'bigint') {
-    return cause.toString();
-  }
-
-  if (typeof cause === 'symbol') {
-    return cause.description ?? 'symbol';
-  }
-
-  if (typeof cause === 'function') {
-    return cause.name || 'function';
-  }
-
-  try {
-    return JSON.stringify(cause) ?? '[unserializable]';
-  } catch {
-    return '[unserializable]';
-  }
-}
-
-function buildRecordAttributes({
-  name,
-  params,
-  cause,
-}: {
-  name: string;
-  params?: Record<string, unknown>;
-  cause?: unknown;
-}): Record<string, unknown> {
-  return {
-    record_name: name,
     ...params,
-    ...serializeCause(cause),
+    name,
+    cause: cause instanceof Error ? cause.toString() : cause,
   };
 }
 
@@ -216,19 +155,22 @@ export function recordWarning(warning: {
   warningCause?: unknown;
 }): void {
   const message = `${warning.name}: ${warning.message}`;
-  const context = buildRecordAttributes({
-    name: warning.name,
-    params: warning.params,
-    cause: warning.warningCause,
-  });
+  const extra = buildMetadata(
+    warning.name,
+    warning.params,
+    warning.warningCause,
+  );
 
   Sentry.addBreadcrumb({
     message,
     level: 'warning',
-    data: context,
+    data: extra,
   });
 
-  Sentry.logger.warn(message, context);
+  Sentry.captureMessage(message, {
+    level: 'warning',
+    extra,
+  });
 }
 
 export function recordInfo(info: {
@@ -238,19 +180,13 @@ export function recordInfo(info: {
   infoCause?: unknown;
 }): void {
   const message = `${info.name}: ${info.message}`;
-  const context = buildRecordAttributes({
-    name: info.name,
-    params: info.params,
-    cause: info.infoCause,
-  });
+  const extra = buildMetadata(info.name, info.params, info.infoCause);
 
   Sentry.addBreadcrumb({
     message,
     level: 'info',
-    data: context,
+    data: extra,
   });
-
-  Sentry.logger.info(message, context);
 }
 
 export function countOtaMetric(

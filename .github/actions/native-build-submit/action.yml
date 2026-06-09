@@ -105,7 +105,7 @@ runs:
           if [ -n "${SENTRY_AUTH_TOKEN:-}" ] && [ "${#dsym_paths[@]}" -gt 0 ]; then
             ./node_modules/.bin/sentry-cli debug-files upload \
               --org "${SENTRY_ORG:-luke-howsam}" \
-              --project "${SENTRY_PROJECT:-foam}" \
+              --project "${SENTRY_PROJECT:-foam-tv-mobile}" \
               --include-sources \
               --type dsym \
               "${dsym_paths[@]}"

@@ -26,6 +26,25 @@ sentry_release() {
   printf '%s\n' "${EXPO_PUBLIC_SENTRY_RELEASE:-${SENTRY_RELEASE:-$(sentry_app_version)}}"
 }
 
+sentry_dist_for_variant() {
+  local app_variant="${EXPO_PUBLIC_APP_VARIANT:-${variant:-development}}"
+
+  case "$app_variant" in
+    internal)
+      printf 'foam-tv-internal\n'
+      ;;
+    testflight)
+      printf 'foam-tv-testflight\n'
+      ;;
+    production)
+      printf 'foam-tv\n'
+      ;;
+    *)
+      printf 'foam-tv-dev\n'
+      ;;
+  esac
+}
+
 sentry_dist() {
   if [ -n "${EXPO_PUBLIC_SENTRY_DIST:-}" ]; then
     printf '%s\n' "$EXPO_PUBLIC_SENTRY_DIST"
@@ -37,13 +56,7 @@ sentry_dist() {
     return
   fi
 
-  local git_sha
-  if git_sha="$(git rev-parse HEAD 2>/dev/null)"; then
-    printf '%s\n' "$git_sha"
-    return
-  fi
-
-  printf 'local\n'
+  sentry_dist_for_variant
 }
 
 sentry_cli_bin() {
@@ -141,7 +154,7 @@ sentry_upload_dsyms() {
     SENTRY_DIST="$dist" \
     sentry_run_upload "$bin" debug-files upload \
     --org "${SENTRY_ORG:-luke-howsam}" \
-    --project "${SENTRY_PROJECT:-foam}" \
+    --project "${SENTRY_PROJECT:-foam-tv-mobile}" \
     --include-sources \
     --type dsym \
     "${dsym_paths[@]}"
@@ -183,7 +196,7 @@ sentry_upload_ota_sourcemaps() {
 
   echo "Uploading Sentry OTA source maps from $output_dir"
   SENTRY_ORG="${SENTRY_ORG:-luke-howsam}" \
-    SENTRY_PROJECT="${SENTRY_PROJECT:-foam}" \
+    SENTRY_PROJECT="${SENTRY_PROJECT:-foam-tv-mobile}" \
     SENTRY_URL="${SENTRY_URL:-https://sentry.io/}" \
     SENTRY_LOAD_DOTENV="${SENTRY_LOAD_DOTENV:-0}" \
     SENTRY_RELEASE="$release" \

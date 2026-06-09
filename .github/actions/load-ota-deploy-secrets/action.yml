@@ -20,3 +20,4 @@ runs:
         FOAM_AWS_FINGERPRINT_SECRET_KEY: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_SECRET_KEY
         FOAM_AWS_FINGERPRINT_BUCKET_NAME: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_BUCKET_NAME
         SENTRY_AUTH_TOKEN: op://ci-cd/foam-staging/SENTRY_AUTH_TOKEN
+        EXPO_PUBLIC_SENTRY_DSN: op://ci-cd/foam-staging/EXPO_PUBLIC_SENTRY_DSN

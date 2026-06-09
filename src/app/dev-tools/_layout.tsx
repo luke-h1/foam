@@ -16,6 +16,10 @@ export default function DevToolsLayout() {
         name='diagnostics'
         options={{ title: 'Diagnostics', headerBackTitle: 'Dev Tools' }}
       />
+      <Stack.Screen
+        name='sentry-demo'
+        options={{ title: 'Sentry Test', headerBackTitle: 'Dev Tools' }}
+      />
     </Stack>
   );
 }

@@ -64,6 +64,12 @@ jobs:
         if: steps.pr.outputs.should_run == 'true'
         run: bun install --frozen-lockfile
 
+      - name: Load OTA deploy secrets
+        if: steps.pr.outputs.should_run == 'true'
+        uses: ./.github/actions/load-ota-deploy-secrets
+        with:
+          op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+
       - name: Λ Setup EAS
         if: steps.pr.outputs.should_run == 'true'
         uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e

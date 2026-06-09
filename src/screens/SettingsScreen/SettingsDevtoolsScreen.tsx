@@ -79,6 +79,11 @@ export function SettingsDevtoolsScreen() {
               onPress={() => router.push('/dev-tools/changelog')}
             />
             <Button
+              label='Sentry Test'
+              systemImage='exclamationmark.triangle'
+              onPress={() => router.push('/dev-tools/sentry-demo')}
+            />
+            <Button
               label='Channel Surfing'
               systemImage='antenna.radiowaves.left.and.right'
               onPress={() => router.push('/tabs/settings/channel-surfing')}
@@ -152,6 +157,15 @@ export function SettingsDevtoolsScreen() {
             subtitle='Present sample native changelog payloads'
             icon={{ icon: 'list.bullet.rectangle', color: theme.colorBlue }}
             onPress={() => router.push('/dev-tools/changelog')}
+          />
+          <SettingsLinkRow
+            title='Sentry Test'
+            subtitle='Throw an error to verify Sentry capture'
+            icon={{
+              icon: 'exclamationmark.triangle',
+              color: theme.colorRed,
+            }}
+            onPress={() => router.push('/dev-tools/sentry-demo')}
           />
           <SettingsLinkRow
             title='Channel Surfing'

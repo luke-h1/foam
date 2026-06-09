@@ -86,14 +86,10 @@ const VERSION = '0.0.42';
 
 const appConfig = VARIANT_CONFIG[variant];
 const sentryRelease = process.env.EXPO_PUBLIC_SENTRY_RELEASE ?? VERSION;
-// Local deploy/OTA scripts generate SENTRY_DIST from the current git commit
-// and expose it as EXPO_PUBLIC_SENTRY_DIST before evaluating this config.
 const sentryDist =
   process.env.EXPO_PUBLIC_SENTRY_DIST ??
   process.env.SENTRY_DIST ??
-  process.env.EAS_BUILD_GIT_COMMIT_HASH ??
-  process.env.GITHUB_SHA ??
-  'local';
+  appConfig.iosBundleIdentifier;
 const iosICloudContainerIdentifier = `iCloud.${appConfig.iosBundleIdentifier}`;
 const enableICloudEntitlements =
   process.env.ENABLE_IOS_ICLOUD_ENTITLEMENTS === 'true';
@@ -218,7 +214,7 @@ const config: ExpoConfig = {
       {
         url: 'https://sentry.io/',
         note: 'Use SENTRY_AUTH_TOKEN env to authenticate with Sentry.',
-        project: 'foam',
+        project: 'foam-tv-mobile',
         organization: 'luke-howsam',
         useNativeInit: true,
       },

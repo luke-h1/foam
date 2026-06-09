@@ -116,3 +116,5 @@ docs/
 build-artifacts/
 
 traces
+
+.env.local

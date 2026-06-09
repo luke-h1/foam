@@ -222,7 +222,7 @@ jobs:
           variant: ${{ inputs.variant || 'production' }}
           platform: ${{ inputs.platform || 'ios' }}
           sentry_release: ${{ needs.prepare.outputs.version }}
-          sentry_dist: ${{ github.sha }}
+          sentry_dist: ${{ (inputs.variant || 'production') == 'internal' && 'foam-tv-internal' || (inputs.variant || 'production') == 'testflight' && 'foam-tv-testflight' || 'foam-tv' }}
 
       - name: 💾 Save fingerprints for next run
         uses: ./.github/actions/save-fingerprint-cache
@@ -297,9 +297,9 @@ jobs:
         env:
           EXPO_PUBLIC_APP_VARIANT: ${{ inputs.variant || 'production' }}
           EXPO_PUBLIC_SENTRY_RELEASE: ${{ needs.prepare.outputs.version }}
-          EXPO_PUBLIC_SENTRY_DIST: ${{ github.sha }}
+          EXPO_PUBLIC_SENTRY_DIST: ${{ (inputs.variant || 'production') == 'internal' && 'foam-tv-internal' || (inputs.variant || 'production') == 'testflight' && 'foam-tv-testflight' || 'foam-tv' }}
           SENTRY_RELEASE: ${{ needs.prepare.outputs.version }}
-          SENTRY_DIST: ${{ github.sha }}
+          SENTRY_DIST: ${{ (inputs.variant || 'production') == 'internal' && 'foam-tv-internal' || (inputs.variant || 'production') == 'testflight' && 'foam-tv-testflight' || 'foam-tv' }}
           SENTRY_LOAD_DOTENV: 0
           DEPLOY_MESSAGE: 'Deploy: ${{ github.event.head_commit.message || github.sha }}'
           OTA_CRITICAL_INDEX: ${{ steps.critical_metadata.outputs.next_index }}
