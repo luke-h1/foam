@@ -94,12 +94,18 @@ function StreamRow({ stream }: { stream: TwitchStream }) {
             hitSlop={4}
             style={styles.nameButton}
           >
-            <Text type='sm' weight='semibold' numberOfLines={1} style={styles.streamerName}>
+            <Text
+              type='sm'
+              weight='semibold'
+              numberOfLines={1}
+              style={styles.streamerName}
+            >
               {stream.user_name}
             </Text>
           </PressableArea>
           <Text type='xxs' style={styles.metaText} numberOfLines={1}>
-            {formatViewCount(stream.viewer_count)} · {elapsedStreamTime(stream.started_at)}
+            {formatViewCount(stream.viewer_count)} ·{' '}
+            {elapsedStreamTime(stream.started_at)}
           </Text>
         </View>
 
@@ -107,7 +113,11 @@ function StreamRow({ stream }: { stream: TwitchStream }) {
           {stream.title}
         </Text>
 
-        <PressableArea onPress={handleCategoryPress} hitSlop={4} style={styles.categoryButton}>
+        <PressableArea
+          onPress={handleCategoryPress}
+          hitSlop={4}
+          style={styles.categoryButton}
+        >
           <Text type='xxs' style={styles.category} numberOfLines={1}>
             {stream.game_name}
           </Text>
@@ -142,7 +152,8 @@ export default function FollowingScreen() {
   );
 
   const refetchFollowingStreams = useCallback(
-    () => queryClient.refetchQueries({ queryKey: followingStreamsQuery.queryKey }),
+    () =>
+      queryClient.refetchQueries({ queryKey: followingStreamsQuery.queryKey }),
     [followingStreamsQuery.queryKey, queryClient],
   );
 
@@ -150,7 +161,13 @@ export default function FollowingScreen() {
     onRefresh: refetchFollowingStreams,
   });
 
-  const { data: streams, isLoading, isFetching, isError, isFetched } = useQuery({
+  const {
+    data: streams,
+    isLoading,
+    isFetching,
+    isError,
+    isFetched,
+  } = useQuery({
     ...followingStreamsQuery,
     enabled: !!user?.id,
     retry: 2,
@@ -197,7 +214,12 @@ export default function FollowingScreen() {
   if (showLoadingSkeleton) {
     return (
       <View style={styles.container}>
-        <View style={[styles.listContent, { paddingTop: insets.top + theme.space12 }]}>
+        <View
+          style={[
+            styles.listContent,
+            { paddingTop: insets.top + theme.space12 },
+          ]}
+        >
           {Array.from({ length: SKELETON_COUNT }).map((_, index) => (
             // eslint-disable-next-line react/no-array-index-key
             <StreamRowSkeleton key={index} />
@@ -235,7 +257,12 @@ export default function FollowingScreen() {
   if (!streams) {
     return (
       <View style={styles.container}>
-        <View style={[styles.listContent, { paddingTop: insets.top + theme.space12 }]}>
+        <View
+          style={[
+            styles.listContent,
+            { paddingTop: insets.top + theme.space12 },
+          ]}
+        >
           {Array.from({ length: SKELETON_COUNT }).map((_, index) => (
             // eslint-disable-next-line react/no-array-index-key
             <StreamRowSkeleton key={index} />
@@ -272,8 +299,9 @@ export default function FollowingScreen() {
         contentInsetAdjustmentBehavior='automatic'
         drawDistance={Platform.OS === 'ios' ? 500 : undefined}
         renderItem={renderItem}
-        estimatedItemSize={72}
-        contentContainerStyle={{ paddingBottom: tabBarOverflow + theme.space20 }}
+        contentContainerStyle={{
+          paddingBottom: tabBarOverflow + theme.space20,
+        }}
         onScroll={scrollHandler}
         refreshControl={refreshControl}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -389,13 +417,13 @@ const styles = StyleSheet.create({
   },
   thumbnail: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius8,
+    borderRadius: theme.borderRadius6,
     height: THUMBNAIL_H,
     width: THUMBNAIL_W,
   },
   thumbnailContainer: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius8,
+    borderRadius: theme.borderRadius6,
     flexShrink: 0,
     height: THUMBNAIL_H,
     overflow: 'hidden',
@@ -403,7 +431,7 @@ const styles = StyleSheet.create({
   },
   thumbnailSkeleton: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius8,
+    borderRadius: theme.borderRadius6,
     flexShrink: 0,
     height: THUMBNAIL_H,
     width: THUMBNAIL_W,
