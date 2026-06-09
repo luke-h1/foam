@@ -56,7 +56,7 @@ function toTwitchImageUrl(
 }
 
 function sanitiseTwitchEmote(
-  emote: Pick<TwitchEmote, 'id' | 'name'>,
+  emote: Pick<TwitchEmote, 'id' | 'name'> & { owner_id?: string },
   site: TwitchSanitisedEmote['site'],
   creator: string | null,
 ): TwitchSanitisedEmote {
@@ -81,6 +81,7 @@ function sanitiseTwitchEmote(
     creator,
     original_name: emote.name,
     site,
+    owner_id: emote.owner_id,
   };
 }
 

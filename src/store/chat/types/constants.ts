@@ -131,6 +131,10 @@ export interface ChannelCacheType {
   twitchGlobalEmotes: SanitisedEmote[];
   twitchSubscriberEmotes: SanitisedEmote[];
   twitchSubscriberEmotesUserId?: string;
+  twitchSubscriberChannelProfiles: Record<
+    string,
+    { name: string; profileImageUrl: string }
+  >;
   sevenTvChannelEmotes: SanitisedEmote[];
   sevenTvGlobalEmotes: SanitisedEmote[];
   sevenTvPersonalEmotes: Record<string, SanitisedEmote[]>;
@@ -158,6 +162,7 @@ export const emptyEmoteData = {
   twitchGlobalEmotes: [],
   twitchSubscriberEmotes: [],
   twitchSubscriberEmotesUserId: undefined,
+  twitchSubscriberChannelProfiles: {},
   sevenTvChannelEmotes: [],
   sevenTvGlobalEmotes: [],
   sevenTvPersonalBadges: {},

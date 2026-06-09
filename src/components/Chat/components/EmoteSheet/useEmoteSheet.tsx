@@ -109,6 +109,7 @@ export function useEmoteSheet({
     twitchChannelEmotes,
     twitchGlobalEmotes,
     twitchSubscriberEmotes,
+    twitchSubscriberChannelProfiles,
   } = useCurrentEmoteData();
 
   const gridWidth = sheetWidth - GRID_HORIZONTAL_PADDING * 2 - RAIL_WIDTH;
@@ -138,6 +139,7 @@ export function useEmoteSheet({
     twitchChannelEmotes,
     twitchGlobalEmotes,
     twitchSubscriberEmotes,
+    twitchSubscriberChannelProfiles,
     emojiSets: EMOJI_MENU_SECTIONS,
   });
 

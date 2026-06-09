@@ -46,7 +46,7 @@ export function createSevenTvMenuEmote(
 export function createTwitchMenuEmote(
   id: string,
   name: string,
-  site: 'Twitch Channel' | 'Twitch Global',
+  site: 'Twitch Channel' | 'Twitch Global' | 'Twitch Subscriber',
   overrides: Partial<TwitchSanitisedEmote> = {},
 ): TwitchSanitisedEmote {
   return {
@@ -76,7 +76,11 @@ export function createMenuEmote(
     );
   }
 
-  if (site === 'Twitch Channel' || site === 'Twitch Global') {
+  if (
+    site === 'Twitch Channel' ||
+    site === 'Twitch Global' ||
+    site === 'Twitch Subscriber'
+  ) {
     return createTwitchMenuEmote(
       id,
       name,

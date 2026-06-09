@@ -41,6 +41,10 @@ export interface EmoteMenuDataInput {
   twitchChannelEmotes?: SanitisedEmote[];
   twitchGlobalEmotes?: SanitisedEmote[];
   twitchSubscriberEmotes?: SanitisedEmote[];
+  twitchSubscriberChannelProfiles?: Record<
+    string,
+    { name: string; profileImageUrl: string }
+  >;
 }
 
 function chunk<TItem>(items: TItem[], size: number): TItem[][] {
@@ -224,14 +228,52 @@ export function buildEmoteMenuProviders(
     ...groupSevenTvSets('Channel', input.sevenTvChannelEmotes ?? []),
     ...groupSevenTvSets('Global', input.sevenTvGlobalEmotes ?? []),
   ];
+  const profiles = input.twitchSubscriberChannelProfiles ?? {};
+  const subscriberEmotes = input.twitchSubscriberEmotes ?? [];
+
+  const subscriberByChannel = new Map<string, SanitisedEmote[]>();
+  const subscriberNoOwner: SanitisedEmote[] = [];
+
+  for (const emote of subscriberEmotes) {
+    const ownerId =
+      'owner_id' in emote && typeof emote.owner_id === 'string'
+        ? emote.owner_id
+        : null;
+    if (ownerId) {
+      const bucket = subscriberByChannel.get(ownerId) ?? [];
+      bucket.push(emote);
+      subscriberByChannel.set(ownerId, bucket);
+    } else {
+      subscriberNoOwner.push(emote);
+    }
+  }
+
+  const perChannelSets: EmoteMenuSet[] = [];
+  subscriberByChannel.forEach((emotes, ownerId) => {
+    const profile = profiles[ownerId];
+    const title = profile?.name ?? 'Subscribed Channel';
+    const icon: EmoteMenuIcon = profile?.profileImageUrl
+      ? (`avatar:${profile.profileImageUrl}` as EmoteMenuIcon)
+      : 'twitch';
+    perChannelSets.push(
+      makeSet(`twitch-sub-${ownerId}`, 'Twitch', title, icon, emotes),
+    );
+  });
+
+  if (subscriberNoOwner.length > 0) {
+    perChannelSets.push(
+      makeSet(
+        'twitch-user',
+        'Twitch',
+        'Subscribed Emotes',
+        'twitch',
+        subscriberNoOwner,
+      ),
+    );
+  }
+
   const twitchSets = sortSets([
-    makeSet(
-      'twitch-user',
-      'Twitch',
-      'Subscribed Emotes',
-      'twitch',
-      input.twitchSubscriberEmotes ?? [],
-    ),
+    ...perChannelSets,
     makeSet(
       'twitch-channel',
       'Twitch',

@@ -285,6 +285,17 @@ export const emoteSheetStyles = StyleSheet.create({
     justifyContent: 'center',
     width: 24,
   },
+  setHeaderAvatar: {
+    borderRadius: 12,
+    height: 24,
+    width: 24,
+  },
+  setHeaderAvatarContainer: {
+    borderRadius: 12,
+    height: 24,
+    overflow: 'hidden',
+    width: 24,
+  },
   setHeaderTitle: {
     color: theme.color.text.dark,
     flex: 1,
@@ -313,6 +324,17 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   setRailEmoji: {
     fontSize: theme.fontSize16,
+  },
+  setRailAvatar: {
+    borderRadius: 12,
+    height: 24,
+    width: 24,
+  },
+  setRailAvatarContainer: {
+    borderRadius: 12,
+    height: 24,
+    overflow: 'hidden',
+    width: 24,
   },
   setRailLabel: {
     color: MENU_MUTED_TEXT,

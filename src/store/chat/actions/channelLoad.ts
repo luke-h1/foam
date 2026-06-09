@@ -5,6 +5,7 @@ import { sevenTvService } from '@app/services/seventv-service';
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
+import { twitchService } from '@app/services/twitch-service';
 import type { SanitisedEmote } from '@app/types/emote';
 import { logger } from '@app/utils/logger';
 import {
@@ -532,9 +533,44 @@ const loadChannelResourcesInternal = async (
             const channelCache = chatStore$.persisted.channelCaches[channelId];
 
             if (channelCache) {
+              const ownerIds = [
+                ...new Set(
+                  subscriberEmotes
+                    .map(e =>
+                      'owner_id' in e
+                        ? (e as { owner_id?: string }).owner_id
+                        : undefined,
+                    )
+                    .filter((id): id is string => Boolean(id)),
+                ),
+              ];
+
+              const profileResults = await Promise.allSettled(
+                ownerIds.map(id => twitchService.getUser(undefined, id)),
+              );
+
+              const profiles: Record<
+                string,
+                { name: string; profileImageUrl: string }
+              > = {};
+              profileResults.forEach((result, idx) => {
+                const ownerId = ownerIds[idx];
+                if (
+                  result.status === 'fulfilled' &&
+                  result.value?.id &&
+                  ownerId
+                ) {
+                  profiles[ownerId] = {
+                    name: result.value.display_name,
+                    profileImageUrl: result.value.profile_image_url,
+                  };
+                }
+              });
+
               channelCache.assign({
                 twitchSubscriberEmotes: subscriberEmotes,
                 twitchSubscriberEmotesUserId: twitchUserId,
+                twitchSubscriberChannelProfiles: profiles,
                 emotes: deduplicateById([
                   ...subscriberEmotes,
                   ...(existingCache.emotes ?? []),
@@ -1126,6 +1162,8 @@ const loadChannelResourcesInternal = async (
           : now,
       ...emoteResourceSets,
       twitchSubscriberEmotesUserId: twitchUserId ?? undefined,
+      twitchSubscriberChannelProfiles:
+        existingCache?.twitchSubscriberChannelProfiles ?? {},
       ...badgeResourceSets,
       sevenTvPersonalBadges: {},
       sevenTvPersonalEmotes: {},

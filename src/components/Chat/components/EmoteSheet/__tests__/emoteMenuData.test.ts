@@ -88,6 +88,110 @@ describe('emoteMenuData', () => {
     ).toBe('Smile');
   });
 
+  test('groups subscriber emotes by channel with profile name and avatar icon', () => {
+    const providers = buildEmoteMenuProviders({
+      twitchSubscriberEmotes: [
+        createMenuEmote('1', 'SubA', 'Twitch Subscriber', {
+          owner_id: 'owner-a',
+        }),
+        createMenuEmote('2', 'SubB', 'Twitch Subscriber', {
+          owner_id: 'owner-b',
+        }),
+        createMenuEmote('3', 'SubA2', 'Twitch Subscriber', {
+          owner_id: 'owner-a',
+        }),
+      ],
+      twitchSubscriberChannelProfiles: {
+        'owner-a': {
+          name: 'Streamer A',
+          profileImageUrl: 'https://example.com/a.png',
+        },
+        'owner-b': {
+          name: 'Streamer B',
+          profileImageUrl: 'https://example.com/b.png',
+        },
+      },
+    });
+
+    const twitchProvider = providers.find(provider => provider.id === 'Twitch');
+    expect(twitchProvider?.sets).toEqual([
+      {
+        emotes: [
+          createMenuEmote('1', 'SubA', 'Twitch Subscriber', {
+            owner_id: 'owner-a',
+          }),
+          createMenuEmote('3', 'SubA2', 'Twitch Subscriber', {
+            owner_id: 'owner-a',
+          }),
+        ],
+        icon: 'avatar:https://example.com/a.png',
+        id: 'twitch-sub-owner-a',
+        provider: 'Twitch',
+        shortLabel: 'SA',
+        title: 'Streamer A',
+      },
+      {
+        emotes: [
+          createMenuEmote('2', 'SubB', 'Twitch Subscriber', {
+            owner_id: 'owner-b',
+          }),
+        ],
+        icon: 'avatar:https://example.com/b.png',
+        id: 'twitch-sub-owner-b',
+        provider: 'Twitch',
+        shortLabel: 'SB',
+        title: 'Streamer B',
+      },
+    ]);
+  });
+
+  test('falls back to subscribed emotes set when subscriber emotes lack owner_id', () => {
+    const providers = buildEmoteMenuProviders({
+      twitchSubscriberEmotes: [
+        createMenuEmote('1', 'LegacySub', 'Twitch Subscriber'),
+      ],
+    });
+
+    const twitchProvider = providers.find(provider => provider.id === 'Twitch');
+    expect(twitchProvider?.sets).toEqual([
+      {
+        emotes: [createMenuEmote('1', 'LegacySub', 'Twitch Subscriber')],
+        icon: 'twitch',
+        id: 'twitch-user',
+        provider: 'Twitch',
+        shortLabel: 'SE',
+        title: 'Subscribed Emotes',
+      },
+    ]);
+  });
+
+  test('uses fallback channel title and twitch icon when profile is missing', () => {
+    const providers = buildEmoteMenuProviders({
+      twitchSubscriberEmotes: [
+        createMenuEmote('1', 'SubA', 'Twitch Subscriber', {
+          owner_id: 'owner-unknown',
+        }),
+      ],
+      twitchSubscriberChannelProfiles: {},
+    });
+
+    const twitchProvider = providers.find(provider => provider.id === 'Twitch');
+    expect(twitchProvider?.sets).toEqual([
+      {
+        emotes: [
+          createMenuEmote('1', 'SubA', 'Twitch Subscriber', {
+            owner_id: 'owner-unknown',
+          }),
+        ],
+        icon: 'twitch',
+        id: 'twitch-sub-owner-unknown',
+        provider: 'Twitch',
+        shortLabel: 'SC',
+        title: 'Subscribed Channel',
+      },
+    ]);
+  });
+
   test('flattens sets into header and row items for virtualization', () => {
     const provider = buildEmoteMenuProviders({
       twitchChannelEmotes: [

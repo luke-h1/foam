@@ -12,6 +12,7 @@ import { ffzService } from '@app/services/ffz-service';
 import { sevenTvService } from '@app/services/seventv-service';
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
+import { twitchService } from '@app/services/twitch-service';
 
 import { emptyEmoteData } from '../types/constants';
 import { loadChannelResources } from '../actions/channelLoad';
@@ -116,6 +117,12 @@ jest.mock('@app/services/twitch-emote-service', () => ({
   },
 }));
 
+jest.mock('@app/services/twitch-service', () => ({
+  twitchService: {
+    getUser: jest.fn(),
+  },
+}));
+
 const mockGetEmoteSetId = jest.mocked(sevenTvService.getEmoteSetId);
 const mockGetSanitisedEmoteSet = jest.mocked(
   sevenTvService.getSanitisedEmoteSet,
@@ -127,6 +134,7 @@ const mockGetGlobalEmotes = jest.mocked(twitchEmoteService.getGlobalEmotes);
 const mockGetSubscriberEmotes = jest.mocked(
   twitchEmoteService.getSubscriberEmotes,
 );
+const mockGetUser = jest.mocked(twitchService.getUser);
 const mockGetBttvGlobalEmotes = jest.mocked(
   bttvEmoteService.getSanitisedGlobalEmotes,
 );
@@ -282,6 +290,7 @@ describe('loadChannelResources cache fallback', () => {
     mockGetFfzChannelBadges.mockResolvedValue([badge('ffz-channel-badge-new')]);
     mockGetFfzGlobalBadges.mockResolvedValue([badge('ffz-global-badge-new')]);
     mockListChatterinoBadges.mockReturnValue([]);
+    mockGetUser.mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -373,6 +382,49 @@ describe('loadChannelResources cache fallback', () => {
     expect(ids(cache!.badges)).toEqual(['ffz-global-badge-cached']);
     expect(cache!.badgesLastUpdated).toBe(0);
     expect(cache!.lastUpdated).toBe(9_000);
+  });
+
+  test('resolves subscriber channel profiles when cached emotes belong to another user', async () => {
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...emptyEmoteData,
+        emotes: [twitchEmote('existing-emote')],
+        lastUpdated: 9_000,
+        twitchChannelEmotes: [twitchEmote('existing-emote')],
+        twitchGlobalEmotes: [twitchEmote('existing-global', 'Twitch Global')],
+        twitchSubscriberEmotes: [],
+        twitchSubscriberEmotesUserId: 'previous-user',
+        twitchSubscriberChannelProfiles: {},
+      },
+    });
+
+    mockGetSubscriberEmotes.mockResolvedValue([
+      {
+        ...twitchEmote('sub-emote', 'Twitch Subscriber'),
+        owner_id: 'owner-1',
+      },
+    ]);
+    mockGetUser.mockResolvedValue({
+      id: 'owner-1',
+      display_name: 'StreamerOne',
+      profile_image_url: 'https://example.com/owner-1.png',
+    } as Awaited<ReturnType<typeof twitchService.getUser>>);
+
+    await expect(
+      loadChannelResources({ channelId, twitchUserId }),
+    ).resolves.toBe(true);
+
+    const cache = chatStore$.persisted.channelCaches.peek()[channelId];
+    expect(cache).toBeDefined();
+    expect(cache!.twitchSubscriberEmotesUserId).toBe(twitchUserId);
+    expect(cache!.twitchSubscriberChannelProfiles).toEqual({
+      'owner-1': {
+        name: 'StreamerOne',
+        profileImageUrl: 'https://example.com/owner-1.png',
+      },
+    });
+    expect(ids(cache!.twitchSubscriberEmotes)).toEqual(['sub-emote']);
+    expect(mockGetUser).toHaveBeenCalledWith(undefined, 'owner-1');
   });
 
   test('uses empty provider slices without crashing when provider requests reject with no cache', async () => {
