@@ -29,6 +29,7 @@ const basePreferences = {
   show7tvBadges: true,
   showFFzBadges: true,
   showBttvBadges: true,
+  blockedTerms: [] as string[],
 } as const;
 
 describe('usePreferences', () => {

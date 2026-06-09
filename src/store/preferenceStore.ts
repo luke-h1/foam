@@ -34,6 +34,7 @@ export interface Preferences {
   show7tvBadges: boolean;
   showFFzBadges: boolean;
   showBttvBadges: boolean;
+  blockedTerms: string[];
 }
 
 const initialPreferences: Preferences = {
@@ -62,6 +63,7 @@ const initialPreferences: Preferences = {
   show7tvBadges: true,
   showFFzBadges: true,
   showBttvBadges: true,
+  blockedTerms: [],
 };
 
 ensureObservablePersistenceConfig();
