@@ -42,6 +42,7 @@ function renderComposerActions() {
 
 function renderOverlayActions() {
   const openBadge = jest.fn();
+  const openChattersSheet = jest.fn();
   const openEmotePreview = jest.fn();
   const openEmoteSheet = jest.fn();
   const openMessageActions = jest.fn();
@@ -49,6 +50,7 @@ function renderOverlayActions() {
   const openUserActions = jest.fn();
   const openers: ChatOverlayOpeners = {
     openBadge,
+    openChattersSheet,
     openEmotePreview,
     openEmoteSheet,
     openMessageActions,

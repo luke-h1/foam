@@ -8,11 +8,22 @@ import { observable } from '@legendapp/state';
 import { persistObservable } from '@legendapp/state/persist';
 import { useSelector } from '@legendapp/state/react';
 
+export interface CustomHighlight {
+  id: string;
+  phrase: string;
+  color: string;
+}
+
+export type ChatFontScale = 'small' | 'default' | 'large';
+export type ChatTimestampFormat = '24h' | '12h';
+export type DeletedMessageStyle = 'notice' | 'hidden';
+export type ChatScrollbackLength = 200 | 600 | 1000;
+
 export interface Preferences {
   updatedAt: number;
   theme: Theme;
   hapticFeedback: boolean;
-  streamListLayout: 'compact' | 'media' | 'text';
+  streamListLayout: 'compact' | 'media';
   chatDensity: 'comfortable' | 'compact';
   showAlternatingChatRows: boolean;
   chatTimestamps: boolean;
@@ -35,6 +46,13 @@ export interface Preferences {
   showFFzBadges: boolean;
   showBttvBadges: boolean;
   blockedTerms: string[];
+  chatTimestampFormat: ChatTimestampFormat;
+  chatFontScale: ChatFontScale;
+  chatScrollback: ChatScrollbackLength;
+  deletedMessageStyle: DeletedMessageStyle;
+  ignoreClearChat: boolean;
+  chatMentionHaptics: boolean;
+  customHighlights: CustomHighlight[];
 }
 
 const initialPreferences: Preferences = {
@@ -64,6 +82,13 @@ const initialPreferences: Preferences = {
   showFFzBadges: true,
   showBttvBadges: true,
   blockedTerms: [],
+  chatTimestampFormat: '24h',
+  chatFontScale: 'default',
+  chatScrollback: 600,
+  deletedMessageStyle: 'notice',
+  ignoreClearChat: false,
+  chatMentionHaptics: true,
+  customHighlights: [],
 };
 
 ensureObservablePersistenceConfig();
@@ -72,6 +97,11 @@ export const preferences$ = observable(initialPreferences);
 persistObservable(preferences$, {
   local: createObservablePersistenceLocalConfig(PREFERENCES_PERSISTENCE_KEY),
 });
+
+// The 'text' stream list layout was removed; migrate old persisted values.
+if ((preferences$.streamListLayout.peek() as string) === 'text') {
+  preferences$.streamListLayout.set('compact');
+}
 
 export function getPreferences(): Preferences {
   return preferences$.peek();
@@ -107,7 +137,9 @@ export type ChatRenderPreferences = EmoteRenderPreferences &
   Pick<
     Preferences,
     | 'chatDensity'
+    | 'chatFontScale'
     | 'chatTimestamps'
+    | 'customHighlights'
     | 'disableEmoteAnimations'
     | 'highlightOwnMentions'
     | 'showAlternatingChatRows'
@@ -139,7 +171,9 @@ export function useChatRenderPreferences(): ChatRenderPreferences {
     () =>
       ({
         chatDensity: preferences$.chatDensity.get(),
+        chatFontScale: preferences$.chatFontScale.get(),
         chatTimestamps: preferences$.chatTimestamps.get(),
+        customHighlights: preferences$.customHighlights.get(),
         disableEmoteAnimations: preferences$.disableEmoteAnimations.get(),
         emojiStyle: preferences$.emojiStyle.get(),
         highlightOwnMentions: preferences$.highlightOwnMentions.get(),

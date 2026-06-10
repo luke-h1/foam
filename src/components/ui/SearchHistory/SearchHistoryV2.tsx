@@ -18,6 +18,8 @@ import { Text } from '@app/components/ui/Text/Text';
 const SWIPE_THRESHOLD = -80;
 const DELETE_THRESHOLD = -150;
 const HISTORY_ROW_HEIGHT = 56;
+// Width of the resting (snapped-open) delete affordance.
+const ACTION_WIDTH = 88;
 
 interface SwipeableHistoryItemProps {
   query: string;
@@ -57,7 +59,7 @@ function SwipeableHistoryItem({
       } else if (event.translationX < SWIPE_THRESHOLD) {
         // Partial swipe - show delete button
         translateX.set(
-          withSpring(-80, {
+          withSpring(-ACTION_WIDTH, {
             damping: 20,
             stiffness: 200,
             mass: 4,
@@ -102,15 +104,24 @@ function SwipeableHistoryItem({
     overflow: 'hidden',
   }));
 
-  const animatedDeleteStyle = useAnimatedStyle(() => {
-    const deleteOpacity = interpolate(
+  // The red fill grows with the swipe so it always sits flush behind the row —
+  // no bare background peeking through, even on a full swipe-to-delete.
+  const animatedDeleteStyle = useAnimatedStyle(() => ({
+    width: Math.max(-translateX.get(), 0),
+  }));
+
+  // The icon + label stay pinned to the right edge within a fixed-width slot so
+  // they don't drift as the fill expands, and ease in as the action is revealed.
+  const animatedDeleteContentStyle = useAnimatedStyle(() => {
+    const progress = interpolate(
       translateX.get(),
-      [0, -40, -80],
-      [0, 0.5, 1],
+      [0, -ACTION_WIDTH],
+      [0, 1],
       Extrapolation.CLAMP,
     );
     return {
-      opacity: deleteOpacity,
+      opacity: progress,
+      transform: [{ scale: 0.8 + progress * 0.2 }],
     };
   });
 
@@ -124,7 +135,14 @@ function SwipeableHistoryItem({
             style={styles.deleteActionButton}
             hitSlop={8}
           >
-            <SymbolView name='trash' size={20} tintColor='#fff' />
+            <Animated.View
+              style={[styles.deleteActionContent, animatedDeleteContentStyle]}
+            >
+              <SymbolView name='trash.fill' size={20} tintColor='#fff' />
+              <Text style={styles.deleteActionLabel} weight='semibold'>
+                Delete
+              </Text>
+            </Animated.View>
           </PressableArea>
         </Animated.View>
 
@@ -157,6 +175,10 @@ interface SearchHistoryV2Props {
   onSelectItem: (query: string) => void;
   onClearAll: () => void;
 }
+
+// The history section does not scroll; anything beyond this would render
+// underneath the floating search bar.
+const MAX_VISIBLE_HISTORY = 8;
 
 export function SearchHistoryV2({
   history,
@@ -205,7 +227,7 @@ export function SearchHistoryV2({
       </View>
 
       <View style={styles.historyList}>
-        {history.map(query => (
+        {history.slice(0, MAX_VISIBLE_HISTORY).map(query => (
           <SwipeableHistoryItem
             key={query}
             query={query}
@@ -224,20 +246,31 @@ export function SearchHistoryV2({
 
 const styles = StyleSheet.create({
   deleteAction: {
-    alignItems: 'center',
+    alignItems: 'flex-end',
     backgroundColor: theme.colorRed,
     bottom: 0,
     justifyContent: 'center',
+    overflow: 'hidden',
     position: 'absolute',
     right: 0,
     top: 0,
-    width: 80,
   },
   deleteActionButton: {
     alignItems: 'center',
     height: '100%',
     justifyContent: 'center',
-    width: '100%',
+    // Fixed slot pinned to the right edge keeps the icon + label from drifting
+    // while the red fill expands beneath them during the swipe.
+    width: ACTION_WIDTH,
+  },
+  deleteActionContent: {
+    alignItems: 'center',
+    gap: theme.space4,
+    justifyContent: 'center',
+  },
+  deleteActionLabel: {
+    color: '#fff',
+    fontSize: 12,
   },
   headerRow: {
     alignItems: 'center',
@@ -253,15 +286,18 @@ const styles = StyleSheet.create({
   },
   historyItem: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.dark,
+    backgroundColor: theme.color.backgroundSecondary.dark,
     flexDirection: 'row',
-    gap: theme.space16,
+    gap: theme.space12,
     minHeight: HISTORY_ROW_HEIGHT,
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space8,
   },
   historyList: {
-    gap: 1,
+    borderRadius: theme.borderRadius12,
+    gap: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
+    marginHorizontal: theme.space16,
   },
   itemContainer: {
     overflow: 'hidden',

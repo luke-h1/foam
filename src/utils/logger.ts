@@ -247,7 +247,10 @@ type LoggingMethods = Record<defLvlType, (...args: unknown[]) => void>;
 export type AllowedPrefix = keyof typeof loggingConfig;
 
 const baseLogger = rnlogger.createLogger({
-  transport: [consoleTransport, genericTransport],
+  // Release builds only emit warnings and errors; debug/info logging is dev-only
+  // so production isn't spending CPU stringifying chat traffic.
+  severity: __DEV__ ? 'debug' : 'warn',
+  transport: __DEV__ ? [consoleTransport, genericTransport] : genericTransport,
   stringifyFunc: stringifyLogMessage,
   transportOptions: {
     colors: {

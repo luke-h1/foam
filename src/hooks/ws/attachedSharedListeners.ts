@@ -13,6 +13,9 @@ export const attachSharedListeners = (instance: WebSocket, url: string) => {
         subscriber.optionsRef.current.onMessage(message);
       }
 
+      if (!subscriber.optionsRef.current.trackLastMessage) {
+        return;
+      }
       if (
         typeof subscriber.optionsRef.current.filter === 'function' &&
         subscriber.optionsRef.current.filter(message) !== true

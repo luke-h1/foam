@@ -9,14 +9,18 @@ interface PaintedUsernameFillProps {
   displayUsername: string;
   fallbackColor: string;
   paint: PaintData;
-  usernameTextStyle?: StyleProp<TextStyle>;
+  /**
+   * Must match the mask text style exactly (metrics, weight, transform) so
+   * the fill sizer reserves the same space the mask glyphs occupy.
+   */
+  textStyle?: StyleProp<TextStyle>;
 }
 
 export function PaintedUsernameFill({
   displayUsername,
   fallbackColor,
   paint,
-  usernameTextStyle,
+  textStyle,
 }: PaintedUsernameFillProps) {
   const layers = getPaintLayers(paint);
   const baseColor =
@@ -33,9 +37,7 @@ export function PaintedUsernameFill({
           layerIndex={index}
         />
       ))}
-      <Text style={[styles.hiddenText, usernameTextStyle]}>
-        {displayUsername}
-      </Text>
+      <Text style={[textStyle, styles.hiddenText]}>{displayUsername}</Text>
     </View>
   );
 }
@@ -45,7 +47,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
   },
   hiddenText: {
-    fontWeight: 'bold',
     opacity: 0,
   },
   stack: {

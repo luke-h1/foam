@@ -5,7 +5,8 @@
  * when they appear in chat. Uses NitroImage's WebImages.preload() API.
  */
 import type { SanitisedEmote } from '@app/types/emote';
-import { getEmoteImageCacheUrls } from '@app/utils/emote/emoteImageVariants';
+import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
+import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 
 // Lazy import to avoid loading nitro modules at app startup
 type WebImagesType = { preload: (url: string) => void };
@@ -25,6 +26,26 @@ async function getWebImages(): Promise<WebImagesType> {
 const preloadedUrls = new Set<string>();
 const MAX_PRELOADED_CACHE = 500;
 
+function getDisplayEmoteCacheUrls(emote: SanitisedEmote): string[] {
+  const resolved = withResolvedEmoteImageVariants(emote);
+  const urls = new Set<string>();
+
+  for (const disableAnimations of [false, true]) {
+    const url = getDisplayEmoteUrl({
+      image_variants: resolved.image_variants,
+      url: resolved.url,
+      static_url: resolved.static_url,
+      disableAnimations,
+      preferredScale: '2x',
+    });
+    if (url) {
+      urls.add(url);
+    }
+  }
+
+  return Array.from(urls);
+}
+
 /**
  * Preload a batch of emotes in the background
  * @param emotes - Array of emotes to preload
@@ -40,10 +61,11 @@ export async function preloadEmotes(
   const seen = new Set<string>();
 
   // Keep copy-only variants out of the eager preload path. They remain on the
-  // emote metadata for copy actions, but warming every 2x/4x static/animated
-  // URL would multiply channel-entry network work.
+  // emote metadata for copy actions, but warming every static/animated scale
+  // would multiply channel-entry network work. Warm only the 2x display URLs
+  // that chat rows actually render.
   for (const emote of emotes) {
-    const urls = getEmoteImageCacheUrls(emote);
+    const urls = getDisplayEmoteCacheUrls(emote);
     for (const url of urls) {
       if (toPreload.length >= limit) {
         break;

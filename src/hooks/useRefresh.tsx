@@ -1,4 +1,4 @@
-import { impact, notification } from '@app/lib/haptics';
+import { impact } from '@app/lib/haptics';
 import { useObservable, useSelector } from '@legendapp/state/react';
 import { ReactElement, useCallback } from 'react';
 import { Platform, RefreshControl, RefreshControlProps } from 'react-native';
@@ -16,13 +16,6 @@ function fireThresholdHaptic() {
     return;
   }
   void impact('medium');
-}
-
-function fireCompleteHaptic() {
-  if (Platform.OS === 'web') {
-    return;
-  }
-  void notification('success');
 }
 
 interface UseRefreshOptions {
@@ -47,7 +40,6 @@ export function useRefresh({ onRefresh }: UseRefreshOptions): UseRefreshResult {
     isRefreshingShared.set(true);
     isRefreshing$.set(true);
     await onRefresh();
-    fireCompleteHaptic();
     isRefreshingShared.set(false);
     isRefreshing$.set(false);
   }, [isRefreshing$, isRefreshingShared, onRefresh]);

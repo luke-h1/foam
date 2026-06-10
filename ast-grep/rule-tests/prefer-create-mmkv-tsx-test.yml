@@ -1,0 +1,5 @@
+id: prefer-create-mmkv-tsx
+valid:
+  - "const storage = createMMKV({ id: 'screen-storage' });"
+invalid:
+  - "const storage = new MMKV({ id: 'rogue-storage' });"

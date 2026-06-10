@@ -2,6 +2,7 @@ import {
   applyMentionLoginCasing,
   clearMentionLoginIndex,
   formatMentionContent,
+  getAllMentionChatters,
   getMentionLogin,
   pickCanonicalLogin,
   registerMentionChatter,
@@ -54,5 +55,49 @@ describe('resolveMentionLogin', () => {
     ]);
 
     expect(parts[0]).toEqual({ type: 'mention', content: '@BungleXO' });
+  });
+
+  test('getAllMentionChatters returns every registered chatter with roles', () => {
+    registerMentionChatter({
+      login: 'streamer',
+      userId: '1',
+      color: '#ff0000',
+      role: 'broadcaster',
+    });
+    registerMentionChatter({
+      login: 'a_mod',
+      userId: '2',
+      color: '#00ff00',
+      role: 'moderator',
+    });
+    registerMentionChatter({
+      login: 'viewer',
+      userId: '3',
+      color: '#0000ff',
+    });
+
+    const chatters = getAllMentionChatters().sort((left, right) =>
+      left.login.localeCompare(right.login),
+    );
+
+    expect(chatters).toEqual([
+      { login: 'a_mod', userId: '2', color: '#00ff00', role: 'moderator' },
+      { login: 'streamer', userId: '1', color: '#ff0000', role: 'broadcaster' },
+      { login: 'viewer', userId: '3', color: '#0000ff', role: undefined },
+    ]);
+  });
+
+  test('registerMentionChatter keeps the last known role when re-registered without one', () => {
+    registerMentionChatter({
+      login: 'a_mod',
+      userId: '2',
+      color: '#00ff00',
+      role: 'moderator',
+    });
+    registerMentionChatter({ login: 'a_mod' });
+
+    expect(getAllMentionChatters()).toEqual([
+      { login: 'a_mod', userId: '2', color: '#00ff00', role: 'moderator' },
+    ]);
   });
 });

@@ -19,6 +19,8 @@ import type { ChatInputShellHandle } from '../components/ChatInputShell';
 import type { ChatListRef } from '../components/ChatList';
 import { useChatOverlays } from '../components/useChatOverlays';
 import { normaliseChatUsername } from '../util/chatUsernames';
+import { triggerMentionHaptic } from '../util/mentionHaptics';
+import { findCustomHighlight } from '@app/utils/chat/customHighlights';
 import { useChatCosmetics } from './useChatCosmetics';
 import { useChatEmoteLoader } from './useChatEmoteLoader';
 import {
@@ -133,6 +135,7 @@ export function useChat(channelId: string, channelName: string) {
     isAtBottomRef,
     isScrollingToBottom,
     isScrollingToBottomRef,
+    isUserActivelyScrolling,
     shouldMaintainScrollAtEnd,
     unreadCount,
     setUnreadCount,
@@ -151,22 +154,64 @@ export function useChat(channelId: string, channelName: string) {
   });
 
   const {
-    handleNewMessage,
+    handleNewMessage: enqueueChatMessage,
     clearLocalMessages,
     moderateBufferedMessageById,
     moderateBufferedMessagesByLogin,
     removeBufferedMessageById,
+    removeBufferedMessagesByLogin,
     cleanup: cleanupMessages,
     forceFlush,
   } = useChatMessages({
     isAtBottomRef,
     isScrollingToBottomRef,
+    isUserActivelyScrolling,
     onBottomContentChange: maintainBottomAfterContentChange,
     onUnreadIncrement: useCallback(
       (count: number) => setUnreadCount(prev => prev + count),
       [setUnreadCount],
     ),
   });
+
+  const chatMentionHaptics = usePreference('chatMentionHaptics');
+  const customHighlights = preferences.customHighlights;
+  const normalisedSelfForFeedback = normaliseChatUsername(
+    user?.login ?? user?.display_name,
+  );
+
+  // Live messages only (recent-message replays pass countUnread: false), so
+  // re-entering a chat never replays a burst of buzzes.
+  const handleNewMessage: typeof enqueueChatMessage = useCallback(
+    (message, options) => {
+      const customHighlightRules = customHighlights ?? [];
+      if (chatMentionHaptics && options?.countUnread !== false) {
+        const mentionsSelf =
+          normalisedSelfForFeedback.length > 0 &&
+          message.message.some(
+            part =>
+              part.type === 'mention' &&
+              normaliseChatUsername(part.content.replace(/^@/, '')) ===
+                normalisedSelfForFeedback,
+          );
+        const matchesCustomHighlight =
+          !mentionsSelf &&
+          customHighlightRules.length > 0 &&
+          Boolean(findCustomHighlight(message.message, customHighlightRules));
+
+        if (mentionsSelf || matchesCustomHighlight) {
+          triggerMentionHaptic();
+        }
+      }
+
+      enqueueChatMessage(message, options);
+    },
+    [
+      chatMentionHaptics,
+      customHighlights,
+      enqueueChatMessage,
+      normalisedSelfForFeedback,
+    ],
+  );
 
   const {
     processMessageEmotes,
@@ -214,6 +259,7 @@ export function useChat(channelId: string, channelName: string) {
     moderateBufferedMessagesByLogin,
     processMessageEmotes,
     removeBufferedMessageById,
+    removeBufferedMessagesByLogin,
   });
 
   const {
@@ -333,6 +379,7 @@ export function useChat(channelId: string, channelName: string) {
     canModerateChat,
     channelId,
     channelName,
+    currentUserId: user?.id,
     disableEmoteAnimations: preferences.disableEmoteAnimations,
     handleReply,
     hiddenUsers,
@@ -411,6 +458,13 @@ export function useChat(channelId: string, channelName: string) {
     user,
   });
 
+  // Stable identity: a fresh array here breaks ChatMessagePane's memo on every
+  // render and re-runs the visible-message filter over the whole list.
+  const combinedHiddenPhrases = useMemo(
+    () => [...hiddenPhrases, ...blockedTerms],
+    [hiddenPhrases, blockedTerms],
+  );
+
   return {
     appendMentionToComposer,
     canModerateChat,
@@ -450,7 +504,7 @@ export function useChat(channelId: string, channelName: string) {
     handleToggleShowOnlyMentions,
     handleUnpinPinnedMessage,
     handleViewableMessagesChange,
-    hiddenPhrases: [...hiddenPhrases, ...blockedTerms],
+    hiddenPhrases: combinedHiddenPhrases,
     hiddenUsers,
     hidePhraseFromView,
     hideUserFromView,

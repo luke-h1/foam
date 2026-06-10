@@ -142,13 +142,11 @@ function MediaLinkCardComponent({
 
   if (isPending && !thumbnail) {
     return (
-      <View style={styles.mediaContainer}>
-        <View style={styles.mediaCard}>
-          <Skeleton shimmer={false} style={styles.mediaThumbnailFrame} />
-          <View style={styles.mediaInfo}>
-            <Skeleton shimmer={false} style={styles.mediaTitleSkeleton} />
-            <Skeleton shimmer={false} style={styles.mediaMetaSkeleton} />
-          </View>
+      <View style={[styles.mediaContainer, styles.mediaCard]}>
+        <Skeleton shimmer={false} style={styles.mediaThumbnailFrame} />
+        <View style={styles.mediaInfo}>
+          <Skeleton shimmer={false} style={styles.mediaTitleSkeleton} />
+          <Skeleton shimmer={false} style={styles.mediaMetaSkeleton} />
         </View>
       </View>
     );
@@ -174,14 +172,14 @@ function MediaLinkCardComponent({
             />
           ) : (
             <View style={[styles.mediaThumbnail, styles.mediaThumbnailEmpty]}>
-              <BrandIcon name={mediaIcon} size='md' />
+              <BrandIcon name={mediaIcon} size='sm' />
             </View>
           )}
           {isTwitchClip ? (
             <View style={styles.playBadge}>
               <SymbolView
                 name='play.fill'
-                size={13}
+                size={10}
                 tintColor={theme.colorWhite}
               />
             </View>
@@ -216,50 +214,49 @@ function formatCompactNumber(value: number): string {
 
 const styles = StyleSheet.create({
   mediaCard: {
-    alignItems: 'stretch',
+    alignItems: 'center',
     backgroundColor: 'rgba(12, 12, 14, 0.94)',
     borderColor: 'rgba(255, 255, 255, 0.10)',
     borderCurve: 'continuous',
     borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
-    maxWidth: 300,
+    flexDirection: 'row',
     overflow: 'hidden',
-    width: '100%',
   },
   mediaContainer: {
     flexBasis: '100%',
-    marginVertical: 5,
-    maxWidth: 300,
+    marginVertical: 4,
+    maxWidth: 260,
   },
   mediaEyebrow: {
     color: '#BF94FF',
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0,
-    lineHeight: 13,
+    lineHeight: 12,
   },
   mediaEyebrowRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 4,
-    minHeight: 14,
+    gap: 3,
   },
   mediaInfo: {
-    gap: 3,
+    flex: 1,
+    gap: 2,
     justifyContent: 'center',
     minWidth: 0,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
   },
   mediaMeta: {
     color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize12,
-    lineHeight: 15,
+    fontSize: 11,
+    lineHeight: 13,
   },
   mediaMetaSkeleton: {
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius6,
-    height: 12,
+    height: 10,
     width: '48%',
   },
   mediaThumbnail: {
@@ -274,22 +271,23 @@ const styles = StyleSheet.create({
   mediaThumbnailFrame: {
     alignItems: 'center',
     backgroundColor: theme.colorBlack,
-    aspectRatio: 16 / 9,
+    flexShrink: 0,
+    height: 50,
     justifyContent: 'center',
     overflow: 'hidden',
     position: 'relative',
-    width: '100%',
+    width: 88,
   },
   mediaTitle: {
     color: theme.color.text.dark,
-    fontSize: theme.fontSize14,
-    fontWeight: '700',
-    lineHeight: 17,
+    fontSize: theme.fontSize12,
+    fontWeight: '600',
+    lineHeight: 15,
   },
   mediaTitleSkeleton: {
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius6,
-    height: 16,
+    height: 13,
     width: '82%',
   },
   playBadge: {
@@ -298,14 +296,14 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.28)',
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
-    height: 28,
+    height: 22,
     justifyContent: 'center',
     left: '50%',
-    marginLeft: -14,
-    marginTop: -14,
+    marginLeft: -11,
+    marginTop: -11,
     position: 'absolute',
     top: '50%',
-    width: 28,
+    width: 22,
   },
   inlineChip: {
     alignItems: 'center',

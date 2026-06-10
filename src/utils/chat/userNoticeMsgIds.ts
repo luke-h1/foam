@@ -1,4 +1,4 @@
-export const SUBSCRIPTION_USER_NOTICE_MSG_IDS = new Set([
+const SUBSCRIPTION_USER_NOTICE_MSG_IDS = new Set([
   'sub',
   'resub',
   'subgift',
@@ -14,27 +14,8 @@ export const SUBSCRIPTION_USER_NOTICE_MSG_IDS = new Set([
   'primecommunitygiftreceived',
 ]);
 
-export const METADATA_USER_NOTICE_MSG_IDS = new Set([
-  'announcement',
-  'highlighted-message',
-]);
-
-export const SYSTEM_USER_NOTICE_MSG_IDS = new Set([
-  'raid',
-  'unraid',
-  'bitsbadgetier',
-  'sharedchatnotice',
-  'modiversary',
-  'skip-subs-mode-message',
-  'midnightsquid',
-]);
-
 export function isSubscriptionUserNotice(msgId: string | undefined): boolean {
   return Boolean(msgId && SUBSCRIPTION_USER_NOTICE_MSG_IDS.has(msgId));
-}
-
-export function isMetadataUserNotice(msgId: string | undefined): boolean {
-  return Boolean(msgId && METADATA_USER_NOTICE_MSG_IDS.has(msgId));
 }
 
 export function isSharedChatDuplicatedNotice(tags: {

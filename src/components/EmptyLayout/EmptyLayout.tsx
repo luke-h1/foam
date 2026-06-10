@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Button } from '@app/components/ui/Button/Button';
+import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
@@ -124,11 +124,24 @@ export function EmptyLayoutButton({
     return (
       <View style={style}>
         <Button
-          title={title}
           disabled={!onPress}
-          onPress={onPress ?? (() => {})}
-          variant={variant === 'outline' ? 'outline' : 'solid'}
-        />
+          onPress={onPress}
+          style={[
+            styles.ctaButton,
+            variant === 'outline' && styles.ctaButtonOutline,
+          ]}
+        >
+          <Text
+            type='sm'
+            weight='semibold'
+            align='center'
+            style={
+              variant === 'outline' ? styles.ctaTextOutline : styles.ctaText
+            }
+          >
+            {title}
+          </Text>
+        </Button>
       </View>
     );
   }
@@ -149,6 +162,28 @@ export function EmptyLayoutButton({
 }
 
 const styles = StyleSheet.create({
+  ctaButton: {
+    alignItems: 'center',
+    alignSelf: 'center',
+    backgroundColor: theme.colorPrimary,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius12,
+    justifyContent: 'center',
+    minWidth: 140,
+    paddingHorizontal: theme.space24,
+    paddingVertical: theme.space12,
+  },
+  ctaButtonOutline: {
+    backgroundColor: 'transparent',
+    borderColor: theme.colorBorderSecondary,
+    borderWidth: 1,
+  },
+  ctaText: {
+    color: theme.colorBlack,
+  },
+  ctaTextOutline: {
+    color: theme.color.text.dark,
+  },
   content: {
     alignItems: 'center',
     justifyContent: 'center',

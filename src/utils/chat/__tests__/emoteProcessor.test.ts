@@ -6,6 +6,11 @@ import {
 } from '../resolveMentionLogin';
 import { processEmotesWorklet } from '../emoteProcessor';
 
+const pickFields = (value: unknown, keys: readonly string[]) =>
+  Object.fromEntries(
+    keys.map(key => [key, (value as Record<string, unknown>)[key]]),
+  );
+
 const curtisEmote: SanitisedEmote = {
   id: 'curtis-id',
   name: 'Curtis',
@@ -90,7 +95,7 @@ describe('processEmotesWorklet', () => {
       inputString: '@bunglexo high hopes',
     });
 
-    expect(result[0]).toMatchObject({
+    expect(pickFields(result[0], ['type', 'content'])).toEqual({
       type: 'mention',
       content: '@BungleXO',
     });
@@ -126,12 +131,12 @@ describe('processEmotesWorklet', () => {
       sevenTvChannelEmotes: [waveEmote],
     });
 
-    expect(result[0]).toMatchObject({
+    expect(pickFields(result[0], ['type', 'name', 'content'])).toEqual({
       type: 'emote',
       name: 'Wave',
       content: 'Wave',
     });
-    expect(result[1]).toMatchObject({
+    expect(pickFields(result[1], ['type', 'content'])).toEqual({
       type: 'mention',
       content: '@Wave',
     });
@@ -166,7 +171,7 @@ describe('processEmotesWorklet', () => {
     });
 
     expect(lowerCaseResult).toEqual([{ type: 'text', content: 'curtis' }]);
-    expect(exactCaseResult[0]).toMatchObject({
+    expect(pickFields(exactCaseResult[0], ['type', 'name'])).toEqual({
       type: 'emote',
       name: 'Curtis',
     });
@@ -288,7 +293,7 @@ describe('processEmotesWorklet', () => {
       ],
     });
 
-    expect(firstResult[0]).toMatchObject({
+    expect(pickFields(firstResult[0], ['id', 'type'])).toEqual({
       id: 'personal-middle-a',
       type: 'emote',
     });

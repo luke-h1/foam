@@ -16,6 +16,21 @@ export const chatLineMetrics = {
   },
 } as const;
 
+export type ChatFontScale = 'small' | 'default' | 'large';
+
+export function getChatFontScaleStyle(
+  fontScale: ChatFontScale | undefined,
+  compact: boolean,
+) {
+  if (fontScale === 'small') {
+    return compact ? styles.fontScaleSmallCompact : styles.fontScaleSmall;
+  }
+  if (fontScale === 'large') {
+    return compact ? styles.fontScaleLargeCompact : styles.fontScaleLarge;
+  }
+  return undefined;
+}
+
 export const styles = StyleSheet.create({
   badge: {
     height: 18,
@@ -73,6 +88,39 @@ export const styles = StyleSheet.create({
   },
   ritualNoticeMetaText: {
     color: CHAT_NOTICE_ACCENTS.ritual,
+  },
+  customHighlightContainer: {
+    borderLeftWidth: 2,
+    marginVertical: 2,
+    paddingHorizontal: theme.space8,
+    paddingVertical: theme.space4,
+  },
+  fontScaleLarge: {
+    fontSize: theme.fontSize16,
+    lineHeight: 20,
+  },
+  fontScaleLargeCompact: {
+    fontSize: theme.fontSize12,
+    lineHeight: 15,
+  },
+  fontScaleSmall: {
+    fontSize: theme.fontSize12,
+    lineHeight: 15,
+  },
+  fontScaleSmallCompact: {
+    fontSize: theme.fontSize10,
+    lineHeight: 13,
+  },
+  returningChatterMetaText: {
+    color: CHAT_NOTICE_ACCENTS.returningChatter,
+  },
+  returningChatterNoticeSurface: {
+    backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.returningChatter),
+    borderLeftColor: CHAT_NOTICE_ACCENTS.returningChatter,
+    borderLeftWidth: 2,
+    marginVertical: 2,
+    paddingHorizontal: theme.space8,
+    paddingVertical: theme.space4,
   },
   firstMessageNoticeSurface: {
     backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.firstMessage),
@@ -193,6 +241,21 @@ export const styles = StyleSheet.create({
     flexWrap: 'wrap',
     minWidth: 0,
     width: '100%',
+  },
+  messageLineInline: {
+    minWidth: 0,
+    width: '100%',
+  },
+  // Lines that contain inline emotes need a taller lineHeight than the
+  // text metrics, otherwise the fixed lineHeight clips the emote image.
+  messageTextEmoteLine: {
+    lineHeight: 32,
+  },
+  messageTextEmoteLineCompact: {
+    lineHeight: 28,
+  },
+  replyContextEmoteLine: {
+    lineHeight: 24,
   },
   messageText: {
     ...chatLineMetrics.comfortable,

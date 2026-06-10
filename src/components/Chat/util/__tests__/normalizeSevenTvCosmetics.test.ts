@@ -15,6 +15,11 @@ import {
   toPaintWithId,
 } from '../normalizeSevenTvCosmetics';
 
+const pickFields = (value: unknown, keys: readonly string[]) =>
+  Object.fromEntries(
+    keys.map(key => [key, (value as Record<string, unknown>)[key]]),
+  );
+
 function makeSevenTvFile(
   name: string,
   width = 0,
@@ -210,7 +215,9 @@ describe('normalizeSevenTvCosmetics', () => {
         },
       });
 
-      expect(paint).toMatchObject({
+      expect(
+        pickFields(paint, ['id', 'function', 'angle', 'repeat', 'stops']),
+      ).toEqual({
         id: 'paint-v2',
         function: 'LINEAR_GRADIENT',
         angle: 45,
@@ -298,7 +305,7 @@ describe('normalizeSevenTvCosmetics', () => {
         ],
       });
 
-      expect(paint).toMatchObject({
+      expect(pickFields(paint, ['function', 'image_url', 'repeat'])).toEqual({
         function: 'URL',
         image_url: 'https://cdn.7tv.app/paint/test.webp',
         repeat: true,

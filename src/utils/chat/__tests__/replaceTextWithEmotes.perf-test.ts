@@ -8,10 +8,8 @@ import type {
 import { measureFunction } from 'reassure';
 import { processEmotesWorklet } from '../emoteProcessor';
 import { extractEmotesFromTag } from '../extractEmotes';
-import {
-  findEmotesInText,
-  replaceTextWithEmotes,
-} from '../replaceTextWithEmotes';
+import { findEmotesInText } from '../findEmotesInText';
+import { replaceTextWithEmotes } from '../replaceTextWithEmotes';
 
 const MEASURE_OPTIONS = {
   runs: 5,

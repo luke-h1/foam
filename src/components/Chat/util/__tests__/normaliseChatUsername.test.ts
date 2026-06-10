@@ -1,4 +1,4 @@
-import { normaliseChatUsername } from '../normaliseChatUsername';
+import { normaliseChatUsername } from '../chatUsernames';
 
 describe('normaliseChatUsername', () => {
   test('returns an empty string for nullish values', () => {

@@ -49,12 +49,16 @@ function ChatMessagePressableComponent({
       hitSlop={hitSlop}
       onLongPress={onLongPress}
       onPress={onPress}
-      style={style}
+      // Style-function form: pressed feedback with no state or re-render,
+      // cheap enough for hundreds of chat rows.
+      style={({ pressed }) => [style, pressed && pressedStyle]}
       testID={testID}
     >
       {children}
     </Pressable>
   );
 }
+
+const pressedStyle = { opacity: 0.6 } as const;
 
 export const ChatMessagePressable = memo(ChatMessagePressableComponent);

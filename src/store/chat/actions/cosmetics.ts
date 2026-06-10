@@ -196,7 +196,7 @@ export const addPaint = (paint: PaintData) => {
 export const getPaint = (paintId: string): PaintData | undefined =>
   chatStore$.paints[paintId]?.peek();
 
-export const getUserPaintId = (ttvUserId: string): string | undefined =>
+const getUserPaintId = (ttvUserId: string): string | undefined =>
   chatStore$.userPaintIds[ttvUserId]?.peek();
 
 export const hasUserPaint = (ttvUserId?: string): boolean => {

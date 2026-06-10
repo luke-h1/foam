@@ -70,38 +70,44 @@ export function getPaintDropShadows(
   return shadows;
 }
 
-export function paintShadowToTextStyle(shadow: PaintShadow) {
-  return {
-    textShadowColor: sevenTvColorToCss(shadow.color),
-    textShadowOffset: {
-      width: shadow.x_offset || 0,
-      height: shadow.y_offset || 0,
-    },
-    textShadowRadius: shadow.radius || 0,
-  };
-}
-
 export function getLayerLayoutStyle(layer: PaintLayerData): ViewStyle {
   if (!layer.at && !layer.size) {
     return StyleSheet.absoluteFill;
   }
 
-  const widthPct = (layer.size?.[0] ?? 1) * 100;
-  const heightPct = (layer.size?.[1] ?? 1) * 100;
-  const anchorX = layer.at?.[0] ?? 0.5;
-  const anchorY = layer.at?.[1] ?? 0.5;
+  // CSS background-position percentage semantics: a position of p% aligns
+  // the p% point of the layer with the p% point of the container, i.e.
+  // offset = (container - layer) * p.
+  const sizeX = layer.size?.[0] ?? 1;
+  const sizeY = layer.size?.[1] ?? 1;
+  const posX = layer.at?.[0] ?? 0;
+  const posY = layer.at?.[1] ?? 0;
 
   return {
     position: 'absolute',
-    left: `${anchorX * 100}%`,
-    top: `${anchorY * 100}%`,
-    width: `${widthPct}%`,
-    height: `${heightPct}%`,
-    transform: [{ translateX: '-50%' }, { translateY: '-50%' }],
+    left: `${(1 - sizeX) * posX * 100}%`,
+    top: `${(1 - sizeY) * posY * 100}%`,
+    width: `${sizeX * 100}%`,
+    height: `${sizeY * 100}%`,
     overflow: 'hidden',
   };
 }
 
+function solidGradientConfig(color: string): LayerGradientConfig {
+  return {
+    colors: [color, color],
+    locations: [0, 1],
+    start: { x: 0, y: 0 },
+    end: { x: 1, y: 0 },
+  };
+}
+
+/**
+ * Repeating CSS gradients tile the stop span in both directions while keeping
+ * the stops' absolute phase (a span of [0.4, 0.6] produces tiles at
+ * ..., [0.0, 0.2], [0.2, 0.4], [0.4, 0.6], [0.6, 0.8], ...). react-native-svg
+ * has no native spreadMethod support, so expand the pattern to cover [0, 1].
+ */
 function expandRepeatingStops(stops: PaintStop[]): PaintStop[] {
   if (stops.length === 0) {
     return stops;
@@ -110,19 +116,24 @@ function expandRepeatingStops(stops: PaintStop[]): PaintStop[] {
   const sorted = stops.slice().sort((a, b) => a.at - b.at);
   const firstAt = sorted[0]?.at ?? 0;
   const lastAt = sorted[sorted.length - 1]?.at ?? 1;
-  const period = Math.max(lastAt - firstAt, 0.0001);
-  const expanded: PaintStop[] = [];
+  const period = lastAt - firstAt;
 
-  for (let offset = 0; offset < 1; offset += period) {
+  if (period <= 0.0001) {
+    return sorted;
+  }
+
+  const expanded: PaintStop[] = [];
+  const epsilon = 0.0001;
+  const startTile = Math.floor((0 - firstAt) / period);
+
+  for (let tile = startTile; firstAt + tile * period < 1; tile += 1) {
+    const offset = tile * period;
     for (const stop of sorted) {
-      const at = offset + (stop.at - firstAt);
-      if (at > 1 + 0.0001) {
-        break;
+      const at = stop.at + offset;
+      if (at < -epsilon || at > 1 + epsilon) {
+        continue;
       }
-      expanded.push({
-        at: Math.min(at, 1),
-        color: stop.color,
-      });
+      expanded.push({ at: Math.min(Math.max(at, 0), 1), color: stop.color });
     }
   }
 
@@ -130,6 +141,10 @@ function expandRepeatingStops(stops: PaintStop[]): PaintStop[] {
     return sorted;
   }
 
+  const first = expanded[0];
+  if (first && first.at > 0) {
+    expanded.unshift({ at: 0, color: first.color });
+  }
   const last = expanded[expanded.length - 1];
   if (last && last.at < 1) {
     expanded.push({ at: 1, color: last.color });
@@ -143,39 +158,27 @@ export function buildLayerGradientConfig(
   fallbackColor: string,
 ): LayerGradientConfig {
   if (layer.function === 'URL' || !layer.stops || layer.stops.length === 0) {
-    const solidColor = fallbackColor;
-    return {
-      colors: [solidColor, solidColor],
-      locations: [0, 1],
-      start: { x: 0, y: 0 },
-      end: { x: 1, y: 0 },
-    };
+    return solidGradientConfig(fallbackColor);
   }
 
-  let stops = indexedCollectionToArray<PaintStop>(layer.stops).slice();
+  let stops = indexedCollectionToArray<PaintStop>(layer.stops)
+    .slice()
+    .sort((a, b) => a.at - b.at);
   if (layer.repeat) {
     stops = expandRepeatingStops(stops);
   }
 
-  const sortedStops = stops.sort((a, b) => a.at - b.at);
-  const gradientColors = sortedStops.map(stop => sevenTvColorToCss(stop.color));
-  const gradientLocations = sortedStops.map(stop => stop.at);
+  const gradientColors = stops.map(stop => sevenTvColorToCss(stop.color));
 
   if (gradientColors.length < 2) {
-    const color = gradientColors[0] || fallbackColor;
-    return {
-      colors: [color, color],
-      locations: [0, 1],
-      start: { x: 0, y: 0 },
-      end: { x: 1, y: 0 },
-    };
+    return solidGradientConfig(gradientColors[0] || fallbackColor);
   }
 
   const points = angleToPoints(layer.angle || 0);
 
   return {
     colors: gradientColors,
-    locations: gradientLocations,
+    locations: stops.map(stop => stop.at),
     start: points.start,
     end: points.end,
   };

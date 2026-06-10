@@ -30,11 +30,14 @@ export const EmoteRenderer = memo(
       part.height || 20,
       targetSize,
     );
+    // 2x is plenty for ~30pt inline emotes; 4x animated AVIFs cost ~4x the
+    // decode CPU and frame memory (see issue #594 profiling).
     const displayUrl = getDisplayEmoteUrl({
       image_variants: part.image_variants,
       url: part.url,
       static_url: part.static_url,
       disableAnimations,
+      preferredScale: '2x',
     });
 
     if (!displayUrl) {
@@ -47,7 +50,7 @@ export const EmoteRenderer = memo(
             style={getButtonStyle(width, shouldOverlayPrevious)}
           >
             <View
-              style={getEmoteContainerStyle(width, height)}
+              style={getEmoteImageStyle(width, height)}
               testID='chat-emote-placeholder'
             />
           </ChatMessagePressable>
@@ -69,21 +72,20 @@ export const EmoteRenderer = memo(
         onLongPress={() => handleEmoteLongPress?.(part)}
         style={getButtonStyle(width, shouldOverlayPrevious)}
       >
+        {/* No containerStyle: the size + clip live on the NitroImage style so
+            each inline emote is one fewer Fabric/Yoga node. A busy message has
+            many emotes, so this trims hundreds of views per screen on scroll. */}
         <ChatInlineImage
           cacheVariant='emote'
-          containerStyle={getEmoteContainerStyle(width, height)}
           sourceUrl={displayUrl}
-          style={{
-            width,
-            height,
-          }}
+          style={getEmoteImageStyle(width, height)}
         />
       </ChatMessagePressable>
     );
   },
 );
 
-function getEmoteContainerStyle(width: number, height: number) {
+function getEmoteImageStyle(width: number, height: number) {
   return {
     width,
     height,

@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import type { RefObject } from 'react';
+import { impact, selection } from '@app/lib/haptics';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { getMessageById } from '@app/store/chat/actions/messages';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
@@ -74,6 +75,7 @@ export function useChatOverlayActions(openers: ChatOverlayOpeners) {
 
   const handleBadgeLongPress = useCallback(
     (badge: BadgePressData) => {
+      void selection();
       openers.openBadge(badge);
     },
     [openers],
@@ -81,6 +83,7 @@ export function useChatOverlayActions(openers: ChatOverlayOpeners) {
 
   const handleMessageLongPress = useCallback(
     (data: MessageActionData<'usernotice'>) => {
+      void impact('light');
       openers.openMessageActions(data);
     },
     [openers],
@@ -88,6 +91,7 @@ export function useChatOverlayActions(openers: ChatOverlayOpeners) {
 
   const handleEmotePress = useCallback(
     (emote: EmotePressData) => {
+      void selection();
       openers.openEmotePreview(emote);
     },
     [openers],
@@ -95,6 +99,7 @@ export function useChatOverlayActions(openers: ChatOverlayOpeners) {
 
   const handleUsernamePress = useCallback(
     (usernameData: UsernamePressData) => {
+      void selection();
       openers.openUserActions(usernameData);
     },
     [openers],

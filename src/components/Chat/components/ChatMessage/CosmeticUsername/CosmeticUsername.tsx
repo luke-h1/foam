@@ -15,7 +15,12 @@ import {
   paintShadowKey,
   type PaintDropShadowMode,
 } from './util/paintLayer';
-import { buildPaintUsernameTextStyle } from './util/paintTextStyle';
+import {
+  buildPaintUsernameTextStyle,
+  getPaintTextShadows,
+  getPaintTextStroke,
+  paintStrokeToShadow,
+} from './util/paintTextStyle';
 
 interface PaintedUsernameProps {
   username: string;
@@ -45,6 +50,8 @@ function PaintedUsernameWithPaint({
   const dropShadowMode = sevenTvPaintDropShadows;
   const paintTextStyle = buildPaintUsernameTextStyle(paint);
   const dropShadows = getPaintDropShadows(paint, dropShadowMode);
+  const textShadows = getPaintTextShadows(paint);
+  const stroke = getPaintTextStroke(paint);
 
   const maskTextStyle = [
     styles.maskText,
@@ -52,26 +59,24 @@ function PaintedUsernameWithPaint({
     paintTextStyle,
   ] as StyleProp<TextStyle>;
 
-  const paintStack = (
-    <PaintedUsernameFill
-      displayUsername={displayUsername}
-      fallbackColor={fallbackColor}
-      paint={paint}
-      usernameTextStyle={usernameTextStyle}
-    />
-  );
+  // Layer order mirrors the extension's CSS compositing: drop-shadow filter
+  // furthest back, then text-shadows, then the stroke, then the painted fill.
+  const underlayShadows = [
+    ...dropShadows.map(shadow => ({ shadow, source: 'drop' })),
+    ...textShadows.map(shadow => ({ shadow, source: 'text' })),
+    ...(stroke
+      ? [{ shadow: paintStrokeToShadow(stroke), source: 'stroke' }]
+      : []),
+  ];
 
   return (
     <View style={styles.paintedWrapper}>
-      {dropShadows.map(shadow => (
+      {underlayShadows.map(({ shadow, source }) => (
         <PaintedUsernameDropShadowLayer
-          key={paintShadowKey(shadow)}
+          key={`${source}-${paintShadowKey(shadow)}`}
           displayUsername={displayUsername}
-          fallbackColor={fallbackColor}
           maskTextStyle={maskTextStyle}
-          paint={paint}
           shadow={shadow}
-          usernameTextStyle={usernameTextStyle}
         />
       ))}
       <MaskedView
@@ -83,7 +88,12 @@ function PaintedUsernameWithPaint({
           </View>
         }
       >
-        {paintStack}
+        <PaintedUsernameFill
+          displayUsername={displayUsername}
+          fallbackColor={fallbackColor}
+          paint={paint}
+          textStyle={maskTextStyle}
+        />
       </MaskedView>
     </View>
   );

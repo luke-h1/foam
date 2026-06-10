@@ -1,11 +1,14 @@
 const jestConfig = {
   preset: 'jest-expo',
-  setupFilesAfterEnv: ['./test/setupTests.ts'],
+  setupFilesAfterEnv: [
+    '@shopify/react-native-skia/jestSetup.js',
+    './test/setupTests.ts',
+  ],
   transform: {
     '^.+\\.(t|j)sx?$': 'babel-jest',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|expo-pretext|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|@sentry/.*|native-base|react-native-svg|newrelic-react-native-agent)',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|expo-pretext|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|@sentry/.*|native-base|react-native-svg|newrelic-react-native-agent|@shopify/react-native-skia)',
     'node_modules/.*storybook.*',
   ],
   moduleNameMapper: {

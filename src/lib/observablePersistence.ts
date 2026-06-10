@@ -13,12 +13,16 @@ import { ObservablePersistIndexedDbJson } from './observablePersistIndexedDbJson
 let initialized = false;
 
 export const CHAT_STORE_PERSISTENCE_KEY = 'chat-store-v2';
+// Recent messages persist under their own key so the frequent message syncs
+// never re-serialize the (much larger) channel emote caches (issue #594).
+export const CHAT_RECENT_MESSAGES_PERSISTENCE_KEY = 'chat-recent-messages-v1';
 export const PREFERENCES_PERSISTENCE_KEY = 'FOAM_V1_PREFERENCES';
 
 const WEB_OBSERVABLE_DATABASE_NAME = 'foam-observable-cache';
-const WEB_OBSERVABLE_DATABASE_VERSION = 1;
+const WEB_OBSERVABLE_DATABASE_VERSION = 2;
 const WEB_OBSERVABLE_TABLE_NAMES = [
   CHAT_STORE_PERSISTENCE_KEY,
+  CHAT_RECENT_MESSAGES_PERSISTENCE_KEY,
   PREFERENCES_PERSISTENCE_KEY,
 ];
 

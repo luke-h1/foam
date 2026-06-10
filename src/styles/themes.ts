@@ -13,21 +13,26 @@ const fontScale = (value: number) =>
   isIpad ? Math.round(value * FONT_SCALE) : value;
 
 const alpha = (hex: string, opacityHex: string) => `${hex}${opacityHex}`;
-const primaryAccent = '#1AC9A2';
-const primaryAccentHover = '#9BDFB1';
+// Sky-blue accents as { light, dark }. The flat legacy `colorX` tokens below
+// read the dark value (they are consumed as plain strings); the full pair is
+// exposed via theme.color.accent / accentPress for call sites that resolve with
+// useColorScheme().
+const primaryAccent = { light: '#1083FE', dark: '#2E86FF' } as const;
+const primaryAccentPress = { light: '#0A6CE0', dark: '#5AA1FF' } as const;
 
 export type Theme = 'foam-dark';
 
 export const semanticColorGroups = {
   accent: {
-    accent: primaryAccent,
-    accentAlpha: alpha(primaryAccent, 'CC'),
-    accentHover: primaryAccentHover,
-    accentHoverAlpha: alpha(primaryAccentHover, 'CC'),
-    bgAltAlpha: alpha(primaryAccent, '1A'),
-    contrast: Color.zinc[950],
-    ui: primaryAccent,
-    uiAlpha: alpha(primaryAccent, '24'),
+    accent: primaryAccent.dark,
+    accentAlpha: alpha(primaryAccent.dark, 'CC'),
+    accentHover: primaryAccentPress.dark,
+    accentHoverAlpha: alpha(primaryAccentPress.dark, 'CC'),
+    bgAltAlpha: alpha(primaryAccent.dark, '1A'),
+    // Accent takes white text in both themes.
+    contrast: '#FFFFFF',
+    ui: primaryAccent.dark,
+    uiAlpha: alpha(primaryAccent.dark, '24'),
   },
   amber: {
     accent: Color.amber[400],
@@ -89,6 +94,8 @@ export const theme = {
   colorRed: semanticColorGroups.red.accent,
   colorWhite: semanticColorGroups.gray.text,
   colorBlack: semanticColorGroups.gray.bg,
+  colorLightGreen: primaryAccentPress.dark,
+  colorDarkGreen: primaryAccent.dark,
   colorPrimary: semanticColorGroups.accent.accent,
   colorPrimaryAlpha: semanticColorGroups.accent.accentAlpha,
   colorPrimaryHover: semanticColorGroups.accent.accentHover,
@@ -124,6 +131,8 @@ export const theme = {
   colorBorderTertiary: semanticColorGroups.gray.borderUi,
   colorSurfaceAlpha: semanticColorGroups.gray.uiAlpha,
 
+  // Sky-blue on slate. Every token is a { light, dark } pair, resolved at the
+  // call site with theme.color.X[useColorScheme() ?? 'dark'].
   color: {
     reactBlue: {
       light: '#087EA4',
@@ -133,35 +142,130 @@ export const theme = {
       light: 'rgba(255,255,255,0)',
       dark: 'rgba(0,0,0,0)',
     },
-    text: {
-      light: '#121212',
-      dark: semanticColorGroups.gray.text,
-    },
-    textSecondary: {
-      light: '#606060',
-      dark: semanticColorGroups.gray.textLow,
+    // Page background.
+    canvas: {
+      light: '#EBF0F6',
+      dark: '#0C1014',
     },
     background: {
-      light: '#FFFFFF',
-      dark: semanticColorGroups.gray.bg,
-      darkAlt: semanticColorGroups.gray.bgAlt,
-      darkAltAlpha: semanticColorGroups.gray.bgAltAlpha,
+      light: '#EBF0F6',
+      dark: '#0C1014',
+      // Retained for existing call sites; mapped onto the new slate surfaces.
+      darkAlt: '#161D26',
+      darkAltAlpha: 'rgba(22,29,38,0.92)',
     },
+    // Raised surfaces (cards, sheets, inputs).
+    surface: {
+      light: '#FFFFFF',
+      dark: '#161D26',
+    },
+    surfaceSunken: {
+      light: '#DFE7F0',
+      dark: '#070A0E',
+    },
+    surfaceElevated: {
+      light: '#FFFFFF',
+      dark: '#1B232E',
+    },
+    surfacePressed: {
+      light: '#F2F6FA',
+      dark: '#1A222C',
+    },
+    rowAlt: {
+      light: 'rgba(16,24,40,0.04)',
+      dark: 'rgba(255,255,255,0.04)',
+    },
+    // Existing surface aliases re-pointed at the slate palette for coherence.
     backgroundSecondary: {
-      light: '#f1f1f1',
-      dark: semanticColorGroups.gray.ui,
+      light: '#FFFFFF',
+      dark: '#161D26',
     },
     backgroundTertiary: {
-      light: '#f5f5f5',
-      dark: semanticColorGroups.gray.bgAlt,
+      light: '#DFE7F0',
+      dark: '#070A0E',
     },
     backgroundElement: {
-      light: '#F1F1F1',
-      dark: semanticColorGroups.gray.uiActive,
+      light: '#F2F6FA',
+      dark: '#1A222C',
+    },
+    text: {
+      light: '#0F1620',
+      dark: '#EDF1F5',
+    },
+    textSecondary: {
+      light: '#54657A',
+      dark: '#93A1B2',
+    },
+    textLow: {
+      light: '#54657A',
+      dark: '#93A1B2',
+    },
+    textFaint: {
+      light: '#8896A8',
+      dark: '#65717F',
     },
     border: {
-      light: '#D9D9D0',
-      dark: semanticColorGroups.gray.border,
+      light: 'rgba(16,30,50,0.10)',
+      dark: 'rgba(255,255,255,0.10)',
+    },
+    borderStrong: {
+      light: 'rgba(16,30,50,0.16)',
+      dark: 'rgba(255,255,255,0.16)',
+    },
+    accent: {
+      light: '#1083FE',
+      dark: '#2E86FF',
+    },
+    accentPress: {
+      light: '#0A6CE0',
+      dark: '#5AA1FF',
+    },
+    accentSurface: {
+      light: 'rgba(16,131,254,0.10)',
+      dark: 'rgba(46,134,255,0.16)',
+    },
+    accentRing: {
+      light: 'rgba(16,131,254,0.35)',
+      dark: 'rgba(46,134,255,0.45)',
+    },
+    // Accent takes white text in both themes.
+    onAccent: {
+      light: '#FFFFFF',
+      dark: '#FFFFFF',
+    },
+    live: {
+      light: '#E5484D',
+      dark: '#FF6166',
+    },
+    success: {
+      light: '#1E9C6B',
+      dark: '#38C08A',
+    },
+    warning: {
+      light: '#C8851A',
+      dark: '#E0A33A',
+    },
+    danger: {
+      light: '#DC4B4B',
+      dark: '#FF6B6B',
+    },
+    // Twitch purple — chat links/mentions only.
+    twitch: {
+      light: '#8A4FE6',
+      dark: '#A172F0',
+    },
+    twitchSurface: {
+      light: 'rgba(138,79,230,0.10)',
+      dark: 'rgba(161,114,240,0.16)',
+    },
+    // Video chrome — dark in both themes.
+    scrim: {
+      light: 'rgba(0,0,0,0.60)',
+      dark: 'rgba(0,0,0,0.62)',
+    },
+    scrimStrong: {
+      light: 'rgba(0,0,0,0.78)',
+      dark: 'rgba(0,0,0,0.82)',
     },
   },
 
@@ -218,6 +322,7 @@ export const theme = {
   borderRadius6: 6,
   borderRadius10: 10,
   borderRadius12: 12,
+  borderRadius14: 14,
   borderRadius16: 16,
   borderRadius20: 20,
   borderRadius28: 28,
@@ -228,8 +333,25 @@ export const theme = {
   borderRadius80: 80,
   borderRadius999: 999,
 
+  // Retained for existing call sites (theme.dropShadow.boxShadow).
   dropShadow: {
     boxShadow: '0 24px 64px 0 rgba(0, 0, 0, 0.45)',
+  },
+  // Elevation scale, each a { light, dark } boxShadow pair resolved at the call
+  // site with useColorScheme().
+  shadow: {
+    sm: {
+      light: '0 1px 2px rgba(16,30,50,0.06)',
+      dark: '0 1px 2px rgba(0,0,0,0.40)',
+    },
+    md: {
+      light: '0 1px 2px rgba(16,30,50,0.05), 0 8px 24px rgba(16,30,50,0.08)',
+      dark: '0 1px 2px rgba(0,0,0,0.40), 0 12px 30px rgba(0,0,0,0.45)',
+    },
+    lg: {
+      light: '0 2px 6px rgba(16,30,50,0.06), 0 18px 44px rgba(16,30,50,0.13)',
+      dark: '0 2px 6px rgba(0,0,0,0.45), 0 18px 40px rgba(0,0,0,0.55)',
+    },
   },
 } as const;
 

@@ -22,6 +22,7 @@ export function RichChatMessageBody(props: RichChatMessageState) {
     handleBadgePress,
     isChannelPointRedemption,
     isFirstMessage,
+    isReturningChatter,
     isReplyingToCurrentUser,
     onReplyContextPress,
     onUsernamePress,
@@ -83,6 +84,7 @@ export function RichChatMessageBody(props: RichChatMessageState) {
           replyFlags={{
             canJumpToReplyTarget,
             isFirstMessage,
+            isReturningChatter,
             isReplyingToCurrentUser,
             shouldRenderInlineReply,
             showChannelPointsRewardChrome,
@@ -125,6 +127,7 @@ export function RichChatMessageContainer({
     bodyVariant,
     clearRowLongPressTimer,
     compact,
+    customHighlightColor,
     isAlternatingRow,
     isAppSystemSender,
     isChannelPointRedemption,
@@ -132,6 +135,7 @@ export function RichChatMessageContainer({
     isHighlightedMessage,
     isHighlightedMessageTarget,
     isHighlightedSender,
+    isReturningChatter,
     isUserChat,
     mentionsCurrentUser,
     startRowLongPressTimer,
@@ -171,6 +175,18 @@ export function RichChatMessageContainer({
             : null,
         ],
         isUserChat && isFirstMessage && styles.firstMessageNoticeSurface,
+        isUserChat &&
+          isReturningChatter &&
+          styles.returningChatterNoticeSurface,
+        isUserChat &&
+          !mentionsCurrentUser &&
+          customHighlightColor && [
+            styles.customHighlightContainer,
+            {
+              backgroundColor: noticeSurfaceTint(customHighlightColor, 0.1),
+              borderLeftColor: customHighlightColor,
+            },
+          ],
         isUserChat &&
           isHighlightedMessage &&
           styles.highlightMyMessageContainer,

@@ -37,6 +37,7 @@ export interface UserStateTags {
   emotes?: string;
   'emote-sets'?: string;
   'first-msg'?: string;
+  'returning-chatter'?: string;
 
   'room-id'?: string;
   'msg-id'?: string;

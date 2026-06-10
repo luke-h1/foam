@@ -13,18 +13,25 @@ import { useAuthContext } from '@app/context/AuthContext';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { useRefresh } from '@app/hooks/useRefresh';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
-import { twitchQueries } from '@app/queries/twitchQueries';
+import { useFollowedStreamsQuery } from '@app/hooks/queries/use-followed-streams-query';
+import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { TwitchStream } from '@app/services/twitch-service';
 import {
   usePreference,
   useUpdatePreferences,
 } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect, useRef, type ReactElement, useCallback } from 'react';
 
 import { Platform, View, StyleSheet } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import { motion } from '@app/styles/motion';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { toast } from 'sonner-native';
@@ -43,21 +50,22 @@ export default function FollowingScreen() {
   const streamListLayout = usePreference('streamListLayout');
   const updatePreferences = useUpdatePreferences();
 
-  const followingStreamsQuery = twitchQueries.getFollowedStreams(
-    user?.id as string,
-  );
-
   const refetchFollowingStreams = useCallback(
     () =>
       queryClient.refetchQueries({
-        queryKey: followingStreamsQuery.queryKey,
+        queryKey: twitchKeys.followedStreams(user?.id as string),
       }),
-    [followingStreamsQuery.queryKey, queryClient],
+    [user?.id, queryClient],
   );
 
   const handleRefreshFollowing = useCallback(() => {
     void refetchFollowingStreams();
   }, [refetchFollowingStreams]);
+
+  const layoutFade = useSharedValue(1);
+  const layoutFadeStyle = useAnimatedStyle(() => ({
+    opacity: layoutFade.get(),
+  }));
 
   const { scrollHandler, scrollY, isRefreshing, refreshControl } = useRefresh({
     onRefresh: refetchFollowingStreams,
@@ -69,8 +77,7 @@ export default function FollowingScreen() {
     isFetching,
     isError,
     isFetched,
-  } = useQuery({
-    ...followingStreamsQuery,
+  } = useFollowedStreamsQuery(user?.id as string, {
     enabled: !!user?.id,
     retry: 2,
     retryDelay: (attemptIndex: number) =>
@@ -106,14 +113,19 @@ export default function FollowingScreen() {
     return <MemoizedLiveStreamCard stream={item} layout={streamListLayout} />;
   };
 
-  const handleSetCompactLayout = () =>
-    updatePreferences({ streamListLayout: 'compact' });
+  // Soft dip-and-recover fade when switching layouts so rows do not
+  // hard-cut between shapes.
+  const setLayoutWithFade = (layout: 'compact' | 'media') => {
+    layoutFade.set(0.35);
+    layoutFade.set(
+      withTiming(1, { duration: motion.medium, easing: motion.easing.out }),
+    );
+    updatePreferences({ streamListLayout: layout });
+  };
 
-  const handleSetMediaLayout = () =>
-    updatePreferences({ streamListLayout: 'media' });
+  const handleSetCompactLayout = () => setLayoutWithFade('compact');
 
-  const handleSetTextLayout = () =>
-    updatePreferences({ streamListLayout: 'text' });
+  const handleSetMediaLayout = () => setLayoutWithFade('media');
 
   if (!authState?.isLoggedIn) {
     return (
@@ -201,123 +213,99 @@ export default function FollowingScreen() {
         isRefreshing={isRefreshing}
         contentInsetTop={insets.top}
       />
-      <AnimatedFlashList<TwitchStream>
-        ref={listRef}
-        data={streamsArray}
-        keyExtractor={item => item.id}
-        contentInsetAdjustmentBehavior='automatic'
-        drawDistance={Platform.OS === 'ios' ? 500 : undefined}
-        getItemType={() => 'stream-card'}
-        ListHeaderComponent={
-          <View>
-            <EditorialSectionHeader eyebrow='For you' />
-            <View style={styles.layoutToggleRow}>
-              <Button
-                onPress={handleSetCompactLayout}
-                style={[
-                  styles.layoutToggleButton,
-                  streamListLayout === 'compact' &&
-                    styles.layoutToggleButtonActive,
-                ]}
-              >
-                <SymbolView
-                  name='square'
-                  size={14}
-                  tintColor={
-                    streamListLayout === 'compact'
-                      ? theme.color.text.dark
-                      : theme.color.textSecondary.dark
-                  }
-                />
-                <Text
-                  type='xxs'
-                  weight='semibold'
+      <Animated.View style={[styles.listFade, layoutFadeStyle]}>
+        <AnimatedFlashList<TwitchStream>
+          ref={listRef}
+          data={streamsArray}
+          keyExtractor={item => item.id}
+          contentInsetAdjustmentBehavior='automatic'
+          drawDistance={Platform.OS === 'ios' ? 500 : undefined}
+          getItemType={() => 'stream-card'}
+          ListHeaderComponent={
+            <View>
+              <EditorialSectionHeader eyebrow='For you' />
+              <View style={styles.layoutToggleRow}>
+                <Button
+                  onPress={handleSetCompactLayout}
                   style={[
-                    styles.layoutToggleText,
+                    styles.layoutToggleButton,
                     streamListLayout === 'compact' &&
-                      styles.layoutToggleTextActive,
+                      styles.layoutToggleButtonActive,
                   ]}
                 >
-                  Compact
-                </Text>
-              </Button>
-              <Button
-                onPress={handleSetMediaLayout}
-                style={[
-                  styles.layoutToggleButton,
-                  streamListLayout === 'media' &&
-                    styles.layoutToggleButtonActive,
-                ]}
-              >
-                <SymbolView
-                  name='photo'
-                  size={14}
-                  tintColor={
-                    streamListLayout === 'media'
-                      ? theme.color.text.dark
-                      : theme.color.textSecondary.dark
-                  }
-                />
-                <Text
-                  type='xxs'
-                  weight='semibold'
+                  <SymbolView
+                    name='square'
+                    size={14}
+                    tintColor={
+                      streamListLayout === 'compact'
+                        ? theme.color.text.dark
+                        : theme.color.textSecondary.dark
+                    }
+                  />
+                  <Text
+                    type='xxs'
+                    weight='semibold'
+                    style={[
+                      styles.layoutToggleText,
+                      streamListLayout === 'compact' &&
+                        styles.layoutToggleTextActive,
+                    ]}
+                  >
+                    Compact
+                  </Text>
+                </Button>
+                <Button
+                  onPress={handleSetMediaLayout}
                   style={[
-                    styles.layoutToggleText,
+                    styles.layoutToggleButton,
                     streamListLayout === 'media' &&
-                      styles.layoutToggleTextActive,
+                      styles.layoutToggleButtonActive,
                   ]}
                 >
-                  Media
-                </Text>
-              </Button>
-              <Button
-                onPress={handleSetTextLayout}
-                style={[
-                  styles.layoutToggleButton,
-                  streamListLayout === 'text' &&
-                    styles.layoutToggleButtonActive,
-                ]}
-              >
-                <SymbolView
-                  name='text.alignleft'
-                  size={14}
-                  tintColor={
-                    streamListLayout === 'text'
-                      ? theme.color.text.dark
-                      : theme.color.textSecondary.dark
-                  }
-                />
-                <Text
-                  type='xxs'
-                  weight='semibold'
-                  style={[
-                    styles.layoutToggleText,
-                    streamListLayout === 'text' &&
-                      styles.layoutToggleTextActive,
-                  ]}
-                >
-                  Text First
-                </Text>
-              </Button>
+                  <SymbolView
+                    name='photo'
+                    size={14}
+                    tintColor={
+                      streamListLayout === 'media'
+                        ? theme.color.text.dark
+                        : theme.color.textSecondary.dark
+                    }
+                  />
+                  <Text
+                    type='xxs'
+                    weight='semibold'
+                    style={[
+                      styles.layoutToggleText,
+                      streamListLayout === 'media' &&
+                        styles.layoutToggleTextActive,
+                    ]}
+                  >
+                    Media
+                  </Text>
+                </Button>
+              </View>
+              <View style={styles.header} />
             </View>
-            <View style={styles.header} />
-          </View>
-        }
-        contentContainerStyle={[
-          styles.listContent,
-          {
-            paddingBottom: tabBarOverflow + theme.space20,
-          },
-        ]}
-        renderItem={renderItem}
-        onScroll={scrollHandler}
-        refreshControl={refreshControl}
-      />
+          }
+          contentContainerStyle={[
+            styles.listContent,
+            {
+              paddingBottom: tabBarOverflow + theme.space20,
+            },
+          ]}
+          renderItem={renderItem}
+          onScroll={scrollHandler}
+          refreshControl={refreshControl}
+        />
+      </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  listFade: {
+    flex: 1,
+  },
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,

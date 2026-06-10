@@ -115,12 +115,23 @@ describe('image-cache', () => {
 
     fileSystemMock.evict(cachedUri);
 
-    expect(getCachedImageUri(url, options)).toBeNull();
+    // Successful stats are trusted for a while so the render path does not
+    // re-stat per emote; eviction is detected once the verification expires.
+    const realNow = Date.now();
+    const nowSpy = jest
+      .spyOn(Date, 'now')
+      .mockImplementation(() => realNow + 11 * 60 * 1000);
 
-    await cacheImageFromUrl(url, options);
+    try {
+      expect(getCachedImageUri(url, options)).toBeNull();
 
-    expect(fileSystemMock.downloadCount()).toBe(2);
-    expect(fileSystemMock.exists(cachedUri)).toBe(true);
+      await cacheImageFromUrl(url, options);
+
+      expect(fileSystemMock.downloadCount()).toBe(2);
+      expect(fileSystemMock.exists(cachedUri)).toBe(true);
+    } finally {
+      nowSpy.mockRestore();
+    }
   });
 
   test('re-downloads when a manifest record points at an evicted file', async () => {
@@ -130,7 +141,16 @@ describe('image-cache', () => {
     const cachedUri = await cacheImageFromUrl(url, options);
     fileSystemMock.evict(cachedUri);
 
-    const refreshedUri = await cacheImageFromUrl(url, options);
+    const realNow = Date.now();
+    const nowSpy = jest
+      .spyOn(Date, 'now')
+      .mockImplementation(() => realNow + 11 * 60 * 1000);
+    let refreshedUri: string;
+    try {
+      refreshedUri = await cacheImageFromUrl(url, options);
+    } finally {
+      nowSpy.mockRestore();
+    }
 
     expect(refreshedUri).toBe(cachedUri);
     expect(fileSystemMock.downloadCount()).toBe(2);

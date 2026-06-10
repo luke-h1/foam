@@ -31,6 +31,10 @@ import { getChatRowItemType } from '../util/chatRowItemType';
 import { normaliseChatUsername } from '../util/chatUsernames';
 import type { AnyChatMessageType } from '../util/messageHandlers';
 import type { ChatRowDisplayFlags } from '../types/chatUiFlags';
+import type {
+  ChatFontScale,
+  CustomHighlight,
+} from '@app/store/preferenceStore';
 import { useIsHighlightedReplyTargetMessage } from './useChatTransientState';
 
 const chatRowKeyExtractor = (item: AnyChatMessageType) =>
@@ -38,7 +42,9 @@ const chatRowKeyExtractor = (item: AnyChatMessageType) =>
 
 interface ChatRowPreferences {
   chatDensity: 'comfortable' | 'compact';
+  chatFontScale?: ChatFontScale;
   chatTimestamps: boolean;
+  customHighlights?: CustomHighlight[];
   disableEmoteAnimations: boolean;
   highlightOwnMentions?: boolean;
   showAlternatingChatRows: boolean;
@@ -72,6 +78,7 @@ interface ChatMessageRowProps {
   channelId: string;
   currentUsername?: string;
   currentUsernameNormalized: string;
+  customHighlights?: CustomHighlight[];
   displayFlags: ChatRowDisplayFlags;
   getMentionColor: (username: string) => string;
   highlightedUserSet: ReadonlySet<string>;
@@ -90,6 +97,7 @@ const ChatMessageRow = function ChatMessageRow({
   channelId,
   currentUsername,
   currentUsernameNormalized,
+  customHighlights,
   displayFlags,
   getMentionColor,
   highlightedUserSet,
@@ -104,6 +112,7 @@ const ChatMessageRow = function ChatMessageRow({
 }: ChatMessageRowProps) {
   const {
     disableEmoteAnimations,
+    fontScale,
     showAlternatingChatRows,
     showInlineReplyContext,
     showTimestamps,
@@ -142,6 +151,8 @@ const ChatMessageRow = function ChatMessageRow({
       currentUsername={currentUsername}
       currentUsernameNormalized={currentUsernameNormalized}
       density={chatDensity}
+      fontScale={fontScale}
+      customHighlights={customHighlights}
       highlightedUserSet={highlightedUserSet}
       messageDisplay={{
         disableEmoteAnimations,
@@ -259,21 +270,33 @@ export function useChatRowRenderer({
   const displayFlags = useMemo(
     (): ChatRowDisplayFlags => ({
       disableEmoteAnimations: preferences.disableEmoteAnimations,
+      fontScale: preferences.chatFontScale,
       showAlternatingChatRows: preferences.showAlternatingChatRows,
       showInlineReplyContext: preferences.showInlineReplyContext,
       showTimestamps: preferences.chatTimestamps,
     }),
     [
       preferences.disableEmoteAnimations,
+      preferences.chatFontScale,
       preferences.showAlternatingChatRows,
       preferences.showInlineReplyContext,
       preferences.chatTimestamps,
     ],
   );
+  const customHighlights = preferences.customHighlights;
+  const customHighlightsKey = useMemo(
+    () =>
+      (customHighlights ?? [])
+        .map(rule => `${rule.phrase}:${rule.color}`)
+        .join('|'),
+    [customHighlights],
+  );
   const messageListExtraData = useMemo(
     () => ({
       chatDensity: preferences.chatDensity,
+      chatFontScale: preferences.chatFontScale,
       currentUsernameNormalized,
+      customHighlightsKey,
       disableEmoteAnimations: preferences.disableEmoteAnimations,
       highlightedUsersKey: highlightedUsers.join('\u001f'),
       mentionLoginRevision,
@@ -283,9 +306,11 @@ export function useChatRowRenderer({
     }),
     [
       currentUsernameNormalized,
+      customHighlightsKey,
       highlightedUsers,
       mentionLoginRevision,
       preferences.chatDensity,
+      preferences.chatFontScale,
       preferences.disableEmoteAnimations,
       preferences.showAlternatingChatRows,
       preferences.showInlineReplyContext,
@@ -359,6 +384,7 @@ export function useChatRowRenderer({
           channelId={channelId}
           currentUsername={currentUsernameForMentions}
           currentUsernameNormalized={currentUsernameNormalized}
+          customHighlights={customHighlights}
           displayFlags={displayFlags}
           getMentionColor={getMentionColor}
           highlightedUserSet={highlightedUserSet}
@@ -377,6 +403,7 @@ export function useChatRowRenderer({
       channelId,
       currentUsernameForMentions,
       currentUsernameNormalized,
+      customHighlights,
       displayFlags,
       getMentionColor,
       highlightedUserSet,

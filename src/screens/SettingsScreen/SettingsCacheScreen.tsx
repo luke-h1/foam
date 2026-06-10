@@ -9,7 +9,7 @@ import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
-import { queryClient } from '@app/utils/react-query/queryClient';
+import { queryClient } from '@app/lib/react-query/query-client';
 import {
   Button,
   Form,

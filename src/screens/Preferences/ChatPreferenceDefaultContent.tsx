@@ -1,17 +1,23 @@
 import {
+  SettingsLinkRow,
   SettingsSection,
   SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
+import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import { ChatProviderPreferenceSections } from './ChatProviderPreferenceSections';
 import { ChatPreferenceSegmentedSettingsRow } from './ChatPreferenceSettingsRows';
 import {
   CONTEXT_TOGGLE_ROWS,
+  DELETED_STYLE_LABELS,
   DENSITY_LABELS,
+  FONT_SCALE_LABELS,
   HISTORICAL_RECENT_MESSAGES_EXPLAINER,
+  SCROLLBACK_LABELS,
+  TIMESTAMP_FORMAT_LABELS,
 } from './chatPreferenceTypes';
 import {
   DensityPreview,
@@ -28,8 +34,22 @@ type ChatPreferenceScreenState = ReturnType<
 type ChatPreferenceDefaultContentProps = ChatPreferenceScreenState;
 
 export function ChatPreferenceDefaultContent({
+  chatMentionHaptics,
+  deletedStyleIndex,
   densityIndex,
   emojiIndex,
+  fontScaleIndex,
+  handleDeletedStyleChange,
+  handleDeletedStyleValueChange,
+  handleFontScaleChange,
+  handleFontScaleValueChange,
+  handleScrollbackChange,
+  handleScrollbackValueChange,
+  handleTimestampFormatChange,
+  handleTimestampFormatValueChange,
+  ignoreClearChat,
+  scrollbackIndex,
+  timestampFormatIndex,
   emojiLabels,
   emojiPreviewEmotes,
   handleAlternatingRowsToggle,
@@ -71,6 +91,19 @@ export function ChatPreferenceDefaultContent({
         <View style={styles.settingsPreviewItem}>
           <DensityPreview density={previewDensity} />
         </View>
+        <ChatPreferenceSegmentedSettingsRow
+          icon={{
+            icon: 'textformat.size',
+            androidIcon: 'format_size',
+            color: theme.colorAmber,
+          }}
+          onChange={handleFontScaleChange}
+          onValueChange={handleFontScaleValueChange}
+          selectedIndex={fontScaleIndex}
+          subtitle='Scales message text, usernames, and mentions'
+          title='Font Size'
+          values={FONT_SCALE_LABELS}
+        />
         <SettingsToggleRow
           title='Alternating Rows'
           subtitle='Add subtle striping between chat lines'
@@ -131,12 +164,108 @@ export function ChatPreferenceDefaultContent({
             onValueChange={value => handleContextToggle(row.key, value)}
           />
         ))}
+        <ChatPreferenceSegmentedSettingsRow
+          icon={{
+            icon: 'clock.badge',
+            androidIcon: 'schedule',
+            color: theme.colorBlue,
+          }}
+          onChange={handleTimestampFormatChange}
+          onValueChange={handleTimestampFormatValueChange}
+          selectedIndex={timestampFormatIndex}
+          subtitle='Applies to newly received messages'
+          title='Timestamp Format'
+          values={TIMESTAMP_FORMAT_LABELS}
+        />
         <View style={styles.settingsPreviewItem}>
           <PreviewLabel />
           <View style={styles.previewSpacer}>
             <ChatPreferencePreview variant='context' value={previewContext} />
           </View>
         </View>
+      </SettingsSection>
+
+      <SettingsSection
+        title='Highlights'
+        footer={
+          <Text color='gray.textLow' type='xs'>
+            Highlighted phrases tint matching messages. Mention feedback also
+            buzzes when a highlight matches.
+          </Text>
+        }
+      >
+        <SettingsLinkRow
+          title='Highlighted Phrases'
+          subtitle='Tint messages containing custom phrases'
+          icon={{
+            icon: 'highlighter',
+            androidIcon: 'edit',
+            color: theme.colorAmber,
+          }}
+          onPress={() => router.push('/tabs/settings/chat-highlights')}
+        />
+        <SettingsToggleRow
+          title='Mention Feedback'
+          subtitle='Buzz when a message mentions you or matches a highlight'
+          icon={{
+            icon: 'hand.tap',
+            androidIcon: 'touch_app',
+            color: theme.colorPrimary,
+          }}
+          value={chatMentionHaptics !== false}
+          onValueChange={value => update({ chatMentionHaptics: value })}
+        />
+      </SettingsSection>
+
+      <SettingsSection title='Moderation'>
+        <ChatPreferenceSegmentedSettingsRow
+          icon={{
+            icon: 'trash.slash',
+            androidIcon: 'delete',
+            color: theme.colorRed,
+          }}
+          onChange={handleDeletedStyleChange}
+          onValueChange={handleDeletedStyleValueChange}
+          selectedIndex={deletedStyleIndex}
+          subtitle='How removed messages appear in chat'
+          title='Deleted Messages'
+          values={DELETED_STYLE_LABELS}
+        />
+        <SettingsToggleRow
+          title='Keep History on Clear'
+          subtitle='Ignore moderator chat clears and keep your scrollback'
+          icon={{
+            icon: 'clock.arrow.circlepath',
+            androidIcon: 'history',
+            color: theme.colorViolet,
+          }}
+          value={ignoreClearChat === true}
+          onValueChange={value => update({ ignoreClearChat: value })}
+        />
+      </SettingsSection>
+
+      <SettingsSection
+        title='Performance'
+        footer={
+          <Text color='gray.textLow' type='xs'>
+            Longer scrollback keeps more messages in memory; 200 is easier on
+            older devices.
+          </Text>
+        }
+      >
+        <ChatPreferenceSegmentedSettingsRow
+          icon={{
+            icon: 'text.line.last.and.arrowtriangle.forward',
+            androidIcon: 'sort',
+            color: theme.colorGrey,
+          }}
+          onChange={handleScrollbackChange}
+          onValueChange={handleScrollbackValueChange}
+          selectedIndex={scrollbackIndex}
+          subtitle='Messages kept in chat history'
+          title='Scrollback'
+          values={SCROLLBACK_LABELS}
+        />
       </SettingsSection>
 
       <ChatProviderPreferenceSections

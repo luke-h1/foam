@@ -1,326 +1,188 @@
-import { recordError } from '@app/lib/sentry';
-import Axios, {
-  type AxiosInstance,
-  type AxiosRequestConfig,
-  type AxiosResponse,
-  type CustomParamsSerializer,
-  type InternalAxiosRequestConfig,
-  isAxiosError,
-} from 'axios';
-import omit from 'lodash/omit';
-import qs from 'qs';
-
+import { fetch } from 'expo/fetch';
+import { logger, type AllowedPrefix } from '@app/utils/logger';
+import {
+  recordError,
+  recordInfo,
+  type MonitoringErrorName,
+} from '@app/lib/sentry';
 import { getApiMonitoringContext } from './monitoring';
 
-export type RequestConfig = Omit<AxiosRequestConfig, 'method' | 'url'> & {
-  cookie?: { name: string; value: string };
+const SERVICE_ERROR_MAP: Record<
+  string,
+  { exceptionName: string; errorName: MonitoringErrorName }
+> = {
+  twitch: { exceptionName: 'TwitchApiError', errorName: 'twitch_api_error' },
+  bttv: { exceptionName: 'BTTVApiError', errorName: 'bttv_api_error' },
+  stv: { exceptionName: 'SevenTVApiError', errorName: 'seven_tv_api_error' },
+  ffz: { exceptionName: 'FFZApiError', errorName: 'ffz_api_error' },
 };
 
-interface ClientRequestConfig extends RequestConfig {
-  rawResponse?: false;
+function getServiceErrorInfo(logPrefix?: AllowedPrefix) {
+  return (
+    (logPrefix && SERVICE_ERROR_MAP[logPrefix]) ?? {
+      exceptionName: 'ApiError',
+      errorName: 'api_error' as MonitoringErrorName,
+    }
+  );
 }
 
-interface ClientRawResponseRequestConfig extends RequestConfig {
-  rawResponse: true;
-}
-
-export type ClientResponse<TValue> = Omit<
-  AxiosResponse<TValue>,
-  'config' | 'request'
->;
-
-export interface RequestInterceptor {
-  onRequest: (
-    config: InternalAxiosRequestConfig,
-  ) => InternalAxiosRequestConfig | Promise<InternalAxiosRequestConfig>;
-  onError?: (error: unknown) => unknown;
-}
-
-export interface ResponseInterceptor {
-  onResponse: (
-    response: AxiosResponse<unknown>,
-  ) => AxiosResponse<unknown> | Promise<AxiosResponse<unknown>>;
-  onError?: (error: unknown) => unknown;
-}
-
-export type ResponseInterceptorFactory = (
-  client: Client,
-) => ResponseInterceptor;
-
-const defaultParamsSerializer: CustomParamsSerializer = params =>
-  qs.stringify(params, { arrayFormat: 'comma' });
-
-export interface ClientOptions {
-  baseURL?: string;
-  headers?: AxiosRequestConfig['headers'];
-  requestInterceptors?: RequestInterceptor[];
-  responseInterceptors?: (ResponseInterceptor | ResponseInterceptorFactory)[];
-  paramsSerializer?: CustomParamsSerializer;
-}
-
-export default class Client {
-  private readonly axios: AxiosInstance;
-
-  private readonly requestInterceptors: Map<RequestInterceptor, number> =
-    new Map();
-
-  private readonly responseInterceptors: Map<ResponseInterceptor, number> =
-    new Map();
-
-  public constructor({
-    baseURL,
-    paramsSerializer = defaultParamsSerializer,
-    requestInterceptors,
-    responseInterceptors,
-    headers,
-  }: ClientOptions) {
-    this.axios = Axios.create({
-      baseURL,
-      paramsSerializer,
-      headers,
-    });
-
-    requestInterceptors?.forEach(this.addRequestInterceptor.bind(this));
-    responseInterceptors?.forEach(interceptor => {
-      if (Client.isResponseInterceptorFactory(interceptor)) {
-        this.addResponseInterceptor(interceptor(this));
-      } else {
-        this.addResponseInterceptor(interceptor);
-      }
-    });
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    exceptionName = 'ApiError',
+  ) {
+    super(message);
+    this.name = exceptionName;
   }
+}
 
-  public async request<TValue>(
-    config: RequestConfig & {
-      url: string;
-      method: AxiosRequestConfig['method'];
-    },
-  ): Promise<TValue> {
-    try {
-      const response = await this.axios({
-        ...config,
-        headers: {
-          ...this.axios.defaults.headers.common,
-          ...config.headers,
-        },
-      });
+interface RequestOptions {
+  params?: Record<string, unknown>;
+  headers?: Record<string, string>;
+}
 
-      if ('rawResponse' in config && config.rawResponse) {
-        return omit(response, ['config', 'request']) as TValue;
-      }
+interface ClientOptions {
+  baseURL: string;
+  headers?: Record<string, string>;
+  logPrefix?: AllowedPrefix;
+}
 
-      return response.data as TValue;
-    } catch (error) {
-      if (isAxiosError(error)) {
-        const status = error.response?.status;
-        const errorMessage = `${config.url}_${config.method} request failed`;
+export function createApiClient({
+  baseURL,
+  headers: defaultHeaders = {},
+  logPrefix,
+}: ClientOptions) {
+  let authToken: string | undefined;
+  const { exceptionName, errorName } = getServiceErrorInfo(logPrefix);
+  const service = logPrefix ?? 'unknown';
 
-        if (__DEV__) {
-          console.error(errorMessage);
+  async function request<T>(
+    method: string,
+    path: string,
+    options: RequestOptions & { data?: unknown } = {},
+  ): Promise<T> {
+    const { params, headers: extraHeaders = {}, data } = options;
+
+    const url = new URL(`${baseURL}${path}`);
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        if (v == null) continue;
+        if (Array.isArray(v)) {
+          url.searchParams.set(k, v.join(','));
+        } else {
+          url.searchParams.set(k, String(v));
         }
-
-        recordError({
-          name: 'api_error',
-          message: errorMessage,
-          params: {
-            action: 'request_failed',
-            category: 'api',
-            ...getApiMonitoringContext({
-              baseURL: config.baseURL ?? this.baseURL,
-              method: config.method,
-              status,
-              url: config.url,
-            }),
-          },
-          errorCause: error,
-        });
-
-        return error.response?.data as TValue;
       }
+    }
 
+    if (logPrefix) {
+      logger[logPrefix].info(url.toString());
+    }
+
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      ...defaultHeaders,
+      ...extraHeaders,
+    };
+    if (authToken && !headers['Authorization']) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    if (data !== undefined) {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    let response: Response;
+    try {
+      response = await fetch(url.toString(), {
+        method,
+        headers,
+        body: data !== undefined ? JSON.stringify(data) : undefined,
+      });
+    } catch (error) {
+      recordError({
+        name: 'network_error',
+        exceptionName: `${exceptionName} (network)`,
+        message: `${method} ${path} failed`,
+        tags: { service, method },
+        fingerprint: [service, 'network_failure', path],
+        params: {
+          action: 'http_request_failed',
+          category: 'network',
+          method,
+          endpoint: path,
+        },
+        errorCause: error,
+      });
       throw error;
     }
-  }
 
-  public get<TValue = unknown>(
-    url: string,
-    config?: ClientRequestConfig,
-  ): Promise<TValue>;
-
-  public get<TValue = unknown>(
-    url: string,
-    config: ClientRawResponseRequestConfig,
-  ): Promise<ClientResponse<TValue>>;
-
-  public get<TValue = unknown>(
-    url: string,
-    config: RequestConfig = {},
-  ): Promise<TValue> {
-    return this.request({
-      ...config,
-      url,
-      method: 'GET',
+    const context = getApiMonitoringContext({
+      baseURL,
+      method,
+      status: response.status,
+      url: path,
     });
-  }
 
-  public post<TValue = unknown>(
-    url: string,
-    data?: unknown,
-    config?: ClientRequestConfig,
-  ): Promise<TValue>;
-
-  public post<TValue = unknown>(
-    url: string,
-    data: unknown,
-    config: ClientRawResponseRequestConfig,
-  ): Promise<ClientResponse<TValue>>;
-
-  public post<TValue = unknown>(
-    url: string,
-    data: unknown,
-    config: RequestConfig = {},
-  ): Promise<TValue> {
-    return this.request({
-      ...config,
-      url,
-      data,
-      method: 'POST',
-    });
-  }
-
-  public put<TValue = unknown>(
-    url: string,
-    data?: unknown,
-    config?: ClientRequestConfig,
-  ): Promise<TValue>;
-
-  public put<TValue = unknown>(
-    url: string,
-    data: unknown,
-    config: ClientRawResponseRequestConfig,
-  ): Promise<ClientResponse<TValue>>;
-
-  public put<TValue = unknown>(
-    url: string,
-    data: unknown,
-    config: RequestConfig = {},
-  ): Promise<TValue> {
-    return this.request({ ...config, url, data, method: 'PUT' });
-  }
-
-  public patch<TValue = unknown>(
-    url: string,
-    data?: unknown,
-    config?: ClientRequestConfig,
-  ): Promise<TValue>;
-
-  public patch<TValue = unknown>(
-    url: string,
-    data: unknown,
-    config: ClientRawResponseRequestConfig,
-  ): Promise<ClientResponse<TValue>>;
-
-  public patch<TValue = unknown>(
-    url: string,
-    data: unknown,
-    config: RequestConfig = {},
-  ): Promise<TValue> {
-    return this.request({
-      ...config,
-      url,
-      data,
-      method: 'PATCH',
-    });
-  }
-
-  public delete<TValue = unknown>(
-    url: string,
-    config?: ClientRequestConfig,
-  ): Promise<TValue>;
-
-  public delete<TValue = unknown>(
-    url: string,
-    config: ClientRawResponseRequestConfig,
-  ): Promise<ClientResponse<TValue>>;
-
-  public delete<TValue = unknown>(
-    url: string,
-    config: RequestConfig = {},
-  ): Promise<TValue> {
-    return this.request({
-      ...config,
-      url,
-      method: 'DELETE',
-    });
-  }
-
-  public set baseURL(url: string) {
-    this.axios.defaults.baseURL = url;
-  }
-
-  public get baseURL(): string {
-    return this.axios.defaults.baseURL ?? '';
-  }
-
-  public addRequestInterceptor(interceptor: RequestInterceptor): void {
-    if (this.requestInterceptors.has(interceptor)) {
-      return;
+    if (response.status >= 400) {
+      recordError({
+        name: errorName,
+        exceptionName,
+        message: `${method} ${path} ${response.status}`,
+        tags: {
+          service,
+          method,
+          status: String(response.status),
+          endpoint: String(context.endpoint ?? path),
+        },
+        // Group by service + method + path + status so each broken endpoint
+        // creates exactly one Sentry issue regardless of query params.
+        fingerprint: [service, method, path, String(response.status)],
+        params: { action: 'response_error_status', ...context },
+      });
+    } else {
+      recordInfo({
+        name: 'api_info',
+        message: `${method} ${context.endpoint ?? path} ${response.status}`,
+        params: { action: 'response_ok', service, ...context },
+      });
     }
 
-    const id = this.axios.interceptors.request.use(
-      interceptor.onRequest,
-      interceptor.onError,
-    );
-    this.requestInterceptors.set(interceptor, id);
-  }
-
-  public addResponseInterceptor(interceptor: ResponseInterceptor): void {
-    if (this.responseInterceptors.has(interceptor)) {
-      return;
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      throw new ApiError(
+        body || `${method} ${path} ${response.status}`,
+        response.status,
+        exceptionName,
+      );
     }
 
-    const id = this.axios.interceptors.response.use(
-      interceptor.onResponse,
-      interceptor.onError,
-    );
-    this.responseInterceptors.set(interceptor, id);
-  }
-
-  public removeRequestInterceptor(interceptor: RequestInterceptor): void {
-    const id = this.requestInterceptors.get(interceptor);
-
-    if (id) {
-      this.axios.interceptors.request.eject(id);
+    if (response.status === 204) {
+      return undefined as T;
     }
+
+    return response.json() as Promise<T>;
   }
 
-  public removeResponseInterceptor(interceptor: ResponseInterceptor): void {
-    const id = this.responseInterceptors.get(interceptor);
-
-    if (id) {
-      this.axios.interceptors.response.eject(id);
-    }
-  }
-
-  public setAuthToken(token: string) {
-    this.axios.defaults.headers.common.Authorization = `Bearer ${token}`;
-  }
-
-  public removeAuthToken() {
-    delete this.axios.defaults.headers.common.Authorization;
-  }
-
-  public getAuthToken() {
-    return this.axios.defaults.headers.common.Authorization;
-  }
-
-  private static isResponseInterceptorFactory(
-    interceptor: ResponseInterceptor | ResponseInterceptorFactory,
-  ): interceptor is ResponseInterceptorFactory {
-    return (
-      typeof interceptor === 'function' &&
-      !('onResponse' in interceptor) &&
-      !('onError' in interceptor)
-    );
-  }
+  return {
+    get: <T>(path: string, options?: RequestOptions) =>
+      request<T>('GET', path, options),
+    post: <T>(path: string, data?: unknown, options?: RequestOptions) =>
+      request<T>('POST', path, { ...options, data }),
+    put: <T>(path: string, data?: unknown, options?: RequestOptions) =>
+      request<T>('PUT', path, { ...options, data }),
+    patch: <T>(path: string, data?: unknown, options?: RequestOptions) =>
+      request<T>('PATCH', path, { ...options, data }),
+    delete: <T>(path: string, options?: RequestOptions) =>
+      request<T>('DELETE', path, options),
+    setAuthToken: (token: string) => {
+      authToken = token;
+    },
+    removeAuthToken: () => {
+      authToken = undefined;
+    },
+    getAuthToken: () => authToken,
+  };
 }
+
+export type ApiClient = ReturnType<typeof createApiClient>;

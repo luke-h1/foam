@@ -31,6 +31,9 @@ export function attachListeners(
   instance.onmessage = (message: WebSocketEventMap['message']) => {
     optionsRef.current.onMessage?.(message);
 
+    if (!optionsRef.current.trackLastMessage) {
+      return;
+    }
     if (
       typeof optionsRef.current.filter === 'function' &&
       optionsRef.current.filter(message) !== true

@@ -10,6 +10,7 @@ import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { showFeedbackWidget } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import { isDevToolsEnabled } from '@app/utils/devTools/devToolsGate';
 import { Button, Form, Host, Section } from '@expo/ui/swift-ui';
 import { router } from 'expo-router';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
@@ -26,10 +27,7 @@ export function SettingsIndexScreen() {
   const { config } = useRemoteConfig();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
-  const shouldShowDevTools =
-    process.env.EXPO_PUBLIC_APP_VARIANT === 'development' ||
-    process.env.EXPO_PUBLIC_APP_VARIANT === 'internal' ||
-    process.env.EXPO_PUBLIC_APP_VARIANT === 'e2e';
+  const shouldShowDevTools = isDevToolsEnabled;
 
   useScrollToTop(scrollRef);
 

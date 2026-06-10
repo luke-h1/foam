@@ -8,6 +8,7 @@ import {
   MessageActionPreview,
 } from './ActionSheet/MessageActionPreview';
 import { BadgePreviewSheet } from './BadgePreviewSheet/BadgePreviewSheet';
+import { ChattersSheet } from './ChattersSheet/ChattersSheet';
 
 import { EmotePreviewSheet } from './EmotePreviewSheet/EmotePreviewSheet';
 import { EmoteSheet, type EmotePickerItem } from './EmoteSheet/EmoteSheet';
@@ -24,6 +25,7 @@ export interface ChatOverlayLayerProps {
   canDeleteSelectedMessage: boolean;
   canModerateChat: boolean;
   canModerateSelectedMessageUser: boolean;
+  canBlockSelectedUser: boolean;
   canModerateSelectedUser: boolean;
   canPinSelectedMessage: boolean;
   disableEmoteAnimations: boolean;
@@ -63,6 +65,12 @@ export interface ChatOverlayLayerProps {
   onToggleShowTimestamps: (value: boolean) => void;
   onToggleShowUnreadJumpPill: (value: boolean) => void;
   onBanSelectedUser: () => void;
+  onBlockSelectedUser: () => void;
+  onReportSelectedUser: () => void;
+  onChattersSheetDidDismiss: () => void;
+  onOpenChatters: () => void;
+  onSelectChatter: (chatter: UsernamePressData) => void;
+  shouldRenderChattersSheet: boolean;
   selectedBadge: BadgePressData | null;
   selectedEmote: EmotePressData | null;
   selectedMessage: MessageActionData<'usernotice'> | null;
@@ -83,6 +91,7 @@ export const ChatOverlayLayer = memo(
     canDeleteSelectedMessage,
     canModerateChat,
     canModerateSelectedMessageUser,
+    canBlockSelectedUser,
     canModerateSelectedUser,
     canPinSelectedMessage,
     disableEmoteAnimations,
@@ -100,6 +109,12 @@ export const ChatOverlayLayer = memo(
     onActionSheetUnpinPinnedMessage,
     onActionSheetTimeoutUser,
     onBanSelectedUser,
+    onBlockSelectedUser,
+    onReportSelectedUser,
+    onChattersSheetDidDismiss,
+    onOpenChatters,
+    onSelectChatter,
+    shouldRenderChattersSheet,
     onClearChatCache,
     onClearImageCache,
     onClearSevenTvCosmeticsCache,
@@ -160,6 +175,7 @@ export const ChatOverlayLayer = memo(
             onClearImageCache={onClearImageCache}
             onClearSevenTvCosmeticsCache={onClearSevenTvCosmeticsCache}
             onDismiss={onSettingsSheetDidDismiss}
+            onOpenChatters={onOpenChatters}
             onRefetchEmotes={onSettingsRefetchEmotes}
             onReconnect={onSettingsReconnect}
             onToggleChatDensity={onToggleChatDensity}
@@ -167,6 +183,14 @@ export const ChatOverlayLayer = memo(
             onToggleInlineReplyContext={onToggleInlineReplyContext}
             onToggleShowTimestamps={onToggleShowTimestamps}
             onToggleShowUnreadJumpPill={onToggleShowUnreadJumpPill}
+          />
+        ) : null}
+
+        {shouldRenderChattersSheet ? (
+          <ChattersSheet
+            isPresented={shouldRenderChattersSheet}
+            onDismiss={onChattersSheetDidDismiss}
+            onSelectChatter={onSelectChatter}
           />
         ) : null}
 
@@ -249,10 +273,14 @@ export const ChatOverlayLayer = memo(
             onClose={onCloseSelectedUser}
             username={selectedUser.username}
             login={selectedUser.login}
+            userId={selectedUser.userId}
+            color={selectedUser.color}
             onMentionUser={onMentionSelectedUser}
             onCopyUsername={onCopySelectedUsername}
             onHideUser={onHideSelectedUser}
             onHighlightUser={onHighlightSelectedUser}
+            onBlockUser={canBlockSelectedUser ? onBlockSelectedUser : undefined}
+            onReportUser={onReportSelectedUser}
             onTimeoutUser={onTimeoutSelectedUser}
             onBanUser={onBanSelectedUser}
           />

@@ -9,12 +9,12 @@ import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { Category, twitchService } from '@app/services/twitch-service';
+import { useTopCategoriesQuery } from '@app/hooks/queries/use-top-categories-query';
+import { Category } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 import { useObservable, useSelector } from '@legendapp/state/react';
 import type { ListRenderItem } from '@shopify/flash-list';
-import { useInfiniteQuery } from '@tanstack/react-query';
 import { useRef, type RefObject, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
@@ -65,16 +65,7 @@ export function TopCategoriesScreen({
     isFetching,
     isError,
     isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ['TopCategories'],
-    queryFn: ({ pageParam }: { pageParam?: string }) =>
-      twitchService.getTopCategories(pageParam as string),
-    initialPageParam: undefined,
-    staleTime: 60_000,
-    getNextPageParam: lastPage => lastPage?.pagination?.cursor,
-    getPreviousPageParam: () => undefined,
-    refetchOnWindowFocus: true,
-  });
+  } = useTopCategoriesQuery();
 
   useRefetchOnForeground({
     refetch,

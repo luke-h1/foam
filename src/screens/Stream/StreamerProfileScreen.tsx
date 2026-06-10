@@ -12,17 +12,16 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useDownloadTwitchClip } from '@app/hooks/useDownloadTwitchClip';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { twitchQueries } from '@app/queries/twitchQueries';
+import { useClipsQuery } from '@app/hooks/queries/use-clips-query';
+import { useUserQuery } from '@app/hooks/queries/use-user-query';
 import {
   type TwitchClip,
   type UserInfoResponse,
-  twitchService,
 } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 import { formatViewCount } from '@app/utils/string/formatViewCount';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useRef, useCallback } from 'react';
 import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
@@ -221,9 +220,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
     isError: isUserError,
     isLoading: isUserLoading,
     refetch: refetchUser,
-  } = useQuery({
-    queryKey: ['user', id],
-    queryFn: () => twitchService.getUser(id),
+  } = useUserQuery(id, {
     enabled: Boolean(id),
   });
 
@@ -237,12 +234,10 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
     isFetchingNextPage,
     isLoading: isClipsLoading,
     refetch: refetchClips,
-  } = useInfiniteQuery({
-    ...twitchQueries.getClipsInfinite({ broadcasterId, first: 20 }),
-    enabled: Boolean(broadcasterId),
-    initialPageParam: undefined,
-    getNextPageParam: lastPage => lastPage?.pagination?.cursor || undefined,
-  });
+  } = useClipsQuery(
+    { broadcasterId, first: 20 },
+    { enabled: Boolean(broadcasterId) },
+  );
 
   const clips = flattenInfiniteQueryPages(clipPages?.pages);
 

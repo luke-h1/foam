@@ -1,6 +1,10 @@
 import type { ChatMessageDisplayFlags } from '@app/components/Chat/types/chatUiFlags';
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
+import type {
+  ChatFontScale,
+  CustomHighlight,
+} from '@app/store/preferenceStore';
 import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
@@ -53,5 +57,7 @@ export type RichChatMessageProps<
   isHighlightedMessageTarget?: boolean;
   highlightedUserSet?: ReadonlySet<string>;
   highlightedUsers?: string[];
+  customHighlights?: CustomHighlight[];
+  fontScale?: ChatFontScale;
   onReplyContextPress?: (replyParentMessageId: string) => void;
 };

@@ -21,7 +21,6 @@ export function AppStoreSection() {
         onPress={async () => {
           const appStoreLink = await getStoreUrlAsync();
           setCanOpenStore(!!appStoreLink);
-          console.log('App Store link:', appStoreLink);
           if (appStoreLink) {
             openLinkInBrowser(appStoreLink);
           }

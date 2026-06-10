@@ -1,0 +1,14 @@
+id: no-partial-object-matchers-ts
+snapshots:
+  "expect(result[0]).toMatchObject({ type: 'mention' });":
+    labels:
+      - source: "expect(result[0]).toMatchObject({ type: 'mention' })"
+        style: primary
+        start: 0
+        end: 52
+  "expect(spy).toHaveBeenCalledWith(expect.objectContaining({ id: '1' }));":
+    labels:
+      - source: "expect.objectContaining({ id: '1' })"
+        style: primary
+        start: 33
+        end: 69

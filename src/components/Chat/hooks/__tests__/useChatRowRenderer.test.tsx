@@ -213,7 +213,9 @@ describe('useChatRowRenderer', () => {
     );
     expect(hook.result.current.messageListExtraData).toEqual({
       chatDensity: 'compact',
+      chatFontScale: undefined,
       currentUsernameNormalized: 'viewer',
+      customHighlightsKey: '',
       disableEmoteAnimations: true,
       highlightedUsersKey: 'VIPUser\u001fviewer',
       mentionLoginRevision: 7,

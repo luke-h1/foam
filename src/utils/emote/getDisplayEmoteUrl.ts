@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import type { EmoteImageVariants } from '@app/types/emote';
+import type { EmoteImageScale, EmoteImageVariants } from '@app/types/emote';
 import { pickEmoteVariantUrl } from './emoteImageVariants';
 
 export function getDisplayEmoteUrl({
@@ -7,17 +7,20 @@ export function getDisplayEmoteUrl({
   url,
   static_url,
   disableAnimations = false,
+  preferredScale,
 }: {
   image_variants?: EmoteImageVariants | null;
   url?: string | null;
   static_url?: string | null;
   disableAnimations?: boolean;
+  preferredScale?: EmoteImageScale;
 }) {
   if (disableAnimations) {
     return pickEmoteVariantUrl({
       fallbackUrl: static_url ?? url,
       imageVariants: image_variants,
       preferredKind: 'static',
+      preferredScale,
     });
   }
 
@@ -25,5 +28,6 @@ export function getDisplayEmoteUrl({
     fallbackUrl: url,
     imageVariants: image_variants,
     preferredKind: 'animated',
+    preferredScale,
   });
 }

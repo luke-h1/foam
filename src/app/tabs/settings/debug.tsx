@@ -1,3 +1,6 @@
 import { DebugScreen } from '@app/screens/DevTools/DebugScreen';
+import { withDevToolsGate } from '@app/utils/devTools/devToolsGate';
 
-export default DebugScreen;
+const GatedDebugScreen = withDevToolsGate(DebugScreen);
+
+export default GatedDebugScreen;

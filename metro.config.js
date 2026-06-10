@@ -9,7 +9,9 @@ const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 const path = require('path');
 
 /** @type {import('expo/metro-config').MetroConfig} */
-const config = getSentryExpoConfig(__dirname);
+// includeWebReplay: false stubs @sentry-internal/replay (~310KB minified) on
+// every platform; the app never enables Sentry session replay.
+const config = getSentryExpoConfig(__dirname, { includeWebReplay: false });
 
 const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const excludedRootDirs = ['player-website', 'build-artifacts'].map(

@@ -1,10 +1,17 @@
 import { ForceUpdateModal } from '@app/components/ForceUpdateModal/ForceUpdateModal';
 import { OTAUpdates } from '@app/components/OTAUpdates/OTAUpdates';
 import { Providers } from '@app/Providers/Providers';
+import { navigationIntegration } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { StatusBar } from 'expo-status-bar';
-import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
+import {
+  DarkTheme,
+  Stack,
+  ThemeProvider,
+  useNavigationContainerRef,
+} from 'expo-router';
+import { useEffect } from 'react';
 import { RouterEffects } from './RouterEffects';
 
 const rootStackScreens = [
@@ -21,6 +28,12 @@ const rootStackScreens = [
 ] as const;
 
 export function RootLayoutNav() {
+  const navigationRef = useNavigationContainerRef();
+
+  useEffect(() => {
+    navigationIntegration.registerNavigationContainer(navigationRef);
+  }, [navigationRef]);
+
   return (
     <ThemeProvider
       value={{

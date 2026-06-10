@@ -1,16 +1,34 @@
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import {
   addMessages,
+  getMaxChatMessages,
   getUserMessageColor,
 } from '@app/store/chat/actions/messages';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 import { useLazyRef } from '@app/hooks/useLazyRef';
-import { MutableRefObject, startTransition, useRef, useCallback } from 'react';
+import {
+  MutableRefObject,
+  startTransition,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+} from 'react';
 
-const LIVE_BUFFER_FLUSH_INTERVAL_MS = 32;
-const BACKLOG_BUFFER_FLUSH_INTERVAL_MS = 80;
-const MAX_BUFFERED_MESSAGES = 600;
+// Each flush commits a new Fabric shadow tree for the chat list, and at high
+// message rates releasing the dead trees dominated the Hermes GC thread
+// (issue #594). 100ms still reads as live (10 updates/s) and cut app CPU by
+// ~40% on an 18k-viewer chat; at moderate rates it measures neutral.
+const LIVE_BUFFER_FLUSH_INTERVAL_MS = 100;
+const BACKLOG_BUFFER_FLUSH_INTERVAL_MS = 250;
+// While a drag or fling is in progress away from the bottom, publishing a
+// flush re-keys rows and forces maintainVisibleContentPosition adjustments
+// mid-gesture, dropping frames. Hold the buffer and retry once the gesture
+// settles; the buffer cap equals the store cap so nothing extra is lost.
+const SCROLL_DEFERRED_FLUSH_RETRY_MS = 250;
+// The buffer cap tracks the store cap so a held flush can still replace the
+// whole scrollback without dropping messages the store would have kept.
+const getMaxBufferedMessages = () => getMaxChatMessages();
 
 type AnyMessage = AnyChatMessageType & {
   cachedSenderColor?: string;
@@ -78,6 +96,7 @@ function shouldArmBottomContentAnchor(
 interface UseChatMessagesOptions {
   isAtBottomRef: MutableRefObject<boolean>;
   isScrollingToBottomRef?: MutableRefObject<boolean>;
+  isUserActivelyScrolling?: () => boolean;
   onBottomContentChange?: () => void;
   onUnreadIncrement: (count: number) => void;
 }
@@ -86,6 +105,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   const {
     isAtBottomRef,
     isScrollingToBottomRef,
+    isUserActivelyScrolling,
     onBottomContentChange,
     onUnreadIncrement,
   } = options;
@@ -93,6 +113,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   const messageBufferRef = useRef<AnyMessage[]>([]);
   const messageBufferIndexRef = useLazyRef(() => new Map<string, number>());
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flushBufferRef = useRef<() => void>(() => {});
   const isFlushingRef = useRef(false);
   const pendingUnreadCountRef = useRef(0);
 
@@ -127,6 +148,12 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     if (isFlushingRef.current) {
       return;
     }
+    if (!isAtBottomRef.current && isUserActivelyScrolling?.()) {
+      flushTimerRef.current = setTimeout(() => {
+        flushBufferRef.current();
+      }, SCROLL_DEFERRED_FLUSH_RETRY_MS);
+      return;
+    }
 
     isFlushingRef.current = true;
 
@@ -149,86 +176,91 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
     isFlushingRef.current = false;
   }, [
+    isAtBottomRef,
     isScrollingToBottomRef,
+    isUserActivelyScrolling,
     onBottomContentChange,
     onUnreadIncrement,
     resetBuffer,
   ]);
 
-  const startFlushTimer = (delayMs: number) => {
+  useLayoutEffect(() => {
+    flushBufferRef.current = flushBuffer;
+  });
+
+  const startFlushTimer = useCallback((delayMs: number) => {
     if (flushTimerRef.current) {
       return;
     }
 
     flushTimerRef.current = setTimeout(() => {
-      flushBuffer();
+      flushBufferRef.current();
     }, delayMs);
-  };
+  }, []);
 
-  const enqueueMessage = (
-    newMessage: AnyMessage,
-    options?: HandleNewMessageOptions,
-  ) => {
-    const key = getBufferedMessageKey(newMessage);
+  const handleNewMessage = useCallback(
+    (newMessage: AnyMessage, options?: HandleNewMessageOptions) => {
+      const key = getBufferedMessageKey(newMessage);
 
-    const messageWithCachedColor = {
-      ...newMessage,
-      cachedSenderColor: resolveCachedSenderColor(
-        newMessage,
-        getUserMessageColor,
-      ),
-    };
-
-    const existingIndex = messageBufferIndexRef.current.get(key);
-
-    if (typeof existingIndex === 'number') {
-      const existingMsg = messageBufferRef.current[existingIndex];
-      messageBufferRef.current[existingIndex] = {
-        ...messageWithCachedColor,
-        cachedSenderColor:
-          existingMsg?.cachedSenderColor ??
-          messageWithCachedColor.cachedSenderColor,
+      const messageWithCachedColor = {
+        ...newMessage,
+        cachedSenderColor: resolveCachedSenderColor(
+          newMessage,
+          getUserMessageColor,
+        ),
       };
-      return;
-    }
 
-    messageBufferIndexRef.current.set(key, messageBufferRef.current.length);
-    messageBufferRef.current.push(messageWithCachedColor);
-    if (messageBufferRef.current.length > MAX_BUFFERED_MESSAGES) {
-      const droppedCount =
-        messageBufferRef.current.length - MAX_BUFFERED_MESSAGES;
-      messageBufferRef.current = messageBufferRef.current.slice(
-        -MAX_BUFFERED_MESSAGES,
-      );
-      rebuildBufferIndex(messageBufferRef.current);
-      pendingUnreadCountRef.current = Math.max(
-        0,
-        pendingUnreadCountRef.current - droppedCount,
-      );
-    }
+      const existingIndex = messageBufferIndexRef.current.get(key);
 
-    const scrollingToBottom = isScrollingToBottomRef?.current ?? false;
-    if (
-      options?.countUnread !== false &&
-      !isAtBottomRef.current &&
-      !scrollingToBottom
-    ) {
-      pendingUnreadCountRef.current += 1;
-    }
+      if (typeof existingIndex === 'number') {
+        const existingMsg = messageBufferRef.current[existingIndex];
+        messageBufferRef.current[existingIndex] = {
+          ...messageWithCachedColor,
+          cachedSenderColor:
+            existingMsg?.cachedSenderColor ??
+            messageWithCachedColor.cachedSenderColor,
+        };
+        return;
+      }
 
-    const flushDelay =
-      isAtBottomRef.current || scrollingToBottom
-        ? LIVE_BUFFER_FLUSH_INTERVAL_MS
-        : BACKLOG_BUFFER_FLUSH_INTERVAL_MS;
-    startFlushTimer(flushDelay);
-  };
+      messageBufferIndexRef.current.set(key, messageBufferRef.current.length);
+      messageBufferRef.current.push(messageWithCachedColor);
+      const maxBufferedMessages = getMaxBufferedMessages();
+      if (messageBufferRef.current.length > maxBufferedMessages) {
+        const droppedCount =
+          messageBufferRef.current.length - maxBufferedMessages;
+        messageBufferRef.current =
+          messageBufferRef.current.slice(-maxBufferedMessages);
+        rebuildBufferIndex(messageBufferRef.current);
+        pendingUnreadCountRef.current = Math.max(
+          0,
+          pendingUnreadCountRef.current - droppedCount,
+        );
+      }
 
-  const handleNewMessage = (
-    newMessage: AnyMessage,
-    options?: HandleNewMessageOptions,
-  ) => {
-    enqueueMessage(newMessage, options);
-  };
+      const scrollingToBottom = isScrollingToBottomRef?.current ?? false;
+      if (
+        options?.countUnread !== false &&
+        !isAtBottomRef.current &&
+        !scrollingToBottom
+      ) {
+        pendingUnreadCountRef.current += 1;
+      }
+
+      const flushDelay =
+        isAtBottomRef.current || scrollingToBottom
+          ? LIVE_BUFFER_FLUSH_INTERVAL_MS
+          : BACKLOG_BUFFER_FLUSH_INTERVAL_MS;
+      startFlushTimer(flushDelay);
+    },
+    [
+      isAtBottomRef,
+      isScrollingToBottomRef,
+      messageBufferIndexRef,
+      rebuildBufferIndex,
+      startFlushTimer,
+    ],
+  );
 
   const forceFlush = useCallback(() => {
     if (messageBufferRef.current.length === 0) {
@@ -263,85 +295,112 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     pendingUnreadCountRef.current = 0;
   }, [resetBuffer]);
 
-  const removeBufferedMessageById = (messageId: string) => {
-    const normalisedMessageId = messageId.trim();
-    if (!normalisedMessageId) {
-      return;
-    }
-
-    const nextBuffer = messageBufferRef.current.filter(
-      message =>
-        message.message_id.trim() !== normalisedMessageId &&
-        message.id?.trim() !== normalisedMessageId,
-    );
-    if (nextBuffer.length === messageBufferRef.current.length) {
-      return;
-    }
-    messageBufferRef.current = nextBuffer;
-    rebuildBufferIndex(nextBuffer);
-  };
-
-  const moderateBufferedMessageById = (
-    messageId: string,
-    moderationNotice: string,
-  ) => {
-    const normalisedMessageId = normaliseMessageId(messageId);
-    if (!normalisedMessageId) {
-      return;
-    }
-
-    let nextBuffer: AnyMessage[] | null = null;
-
-    messageBufferRef.current.forEach((message, index) => {
-      if (message.message_id !== normalisedMessageId) {
+  const removeBufferedMessageById = useCallback(
+    (messageId: string) => {
+      const normalisedMessageId = messageId.trim();
+      if (!normalisedMessageId) {
         return;
       }
 
-      nextBuffer ??= messageBufferRef.current.slice();
-      nextBuffer[index] = createModeratedBufferMessage(
-        message,
-        moderationNotice,
+      const nextBuffer = messageBufferRef.current.filter(
+        message =>
+          message.message_id.trim() !== normalisedMessageId &&
+          message.id?.trim() !== normalisedMessageId,
       );
-    });
-
-    if (nextBuffer) {
+      if (nextBuffer.length === messageBufferRef.current.length) {
+        return;
+      }
       messageBufferRef.current = nextBuffer;
-    }
-  };
+      rebuildBufferIndex(nextBuffer);
+    },
+    [rebuildBufferIndex],
+  );
 
-  const moderateBufferedMessagesByLogin = (
-    login: string,
-    moderationNotice: string,
-  ) => {
-    const target = normaliseLogin(login);
-    if (!target) {
-      return;
-    }
-
-    let nextBuffer: AnyMessage[] | null = null;
-
-    messageBufferRef.current.forEach((message, index) => {
-      const messageLogin = normaliseLogin(
-        message.userstate?.login ||
-          message.userstate?.username ||
-          message.sender,
-      );
-
-      if (messageLogin !== target) {
+  const removeBufferedMessagesByLogin = useCallback(
+    (login: string) => {
+      const target = normaliseLogin(login);
+      if (!target) {
         return;
       }
 
-      nextBuffer ??= messageBufferRef.current.slice();
-      nextBuffer[index] = createModeratedBufferMessage(
-        message,
-        moderationNotice,
+      const nextBuffer = messageBufferRef.current.filter(
+        message =>
+          normaliseLogin(
+            message.userstate?.login ||
+              message.userstate?.username ||
+              message.sender,
+          ) !== target,
       );
-    });
-
-    if (nextBuffer) {
+      if (nextBuffer.length === messageBufferRef.current.length) {
+        return;
+      }
       messageBufferRef.current = nextBuffer;
-    }
-  };
+      rebuildBufferIndex(nextBuffer);
+    },
+    [rebuildBufferIndex],
+  );
+
+  const moderateBufferedMessageById = useCallback(
+    (messageId: string, moderationNotice: string) => {
+      const normalisedMessageId = normaliseMessageId(messageId);
+      if (!normalisedMessageId) {
+        return;
+      }
+
+      let nextBuffer: AnyMessage[] | null = null;
+
+      messageBufferRef.current.forEach((message, index) => {
+        if (message.message_id !== normalisedMessageId) {
+          return;
+        }
+
+        nextBuffer ??= messageBufferRef.current.slice();
+        nextBuffer[index] = createModeratedBufferMessage(
+          message,
+          moderationNotice,
+        );
+      });
+
+      if (nextBuffer) {
+        messageBufferRef.current = nextBuffer;
+      }
+    },
+    [],
+  );
+
+  const moderateBufferedMessagesByLogin = useCallback(
+    (login: string, moderationNotice: string) => {
+      const target = normaliseLogin(login);
+      if (!target) {
+        return;
+      }
+
+      let nextBuffer: AnyMessage[] | null = null;
+
+      messageBufferRef.current.forEach((message, index) => {
+        const messageLogin = normaliseLogin(
+          message.userstate?.login ||
+            message.userstate?.username ||
+            message.sender,
+        );
+
+        if (messageLogin !== target) {
+          return;
+        }
+
+        nextBuffer ??= messageBufferRef.current.slice();
+        nextBuffer[index] = createModeratedBufferMessage(
+          message,
+          moderationNotice,
+        );
+      });
+
+      if (nextBuffer) {
+        messageBufferRef.current = nextBuffer;
+      }
+    },
+    [],
+  );
 
   const cleanup = useCallback(() => {
     if (flushTimerRef.current) {
@@ -352,14 +411,17 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     pendingUnreadCountRef.current = 0;
   }, [resetBuffer]);
 
+  const getBufferSize = useCallback(() => messageBufferRef.current.length, []);
+
   return {
     handleNewMessage,
     clearLocalMessages,
     removeBufferedMessageById,
+    removeBufferedMessagesByLogin,
     moderateBufferedMessageById,
     moderateBufferedMessagesByLogin,
     cleanup,
     forceFlush,
-    getBufferSize: () => messageBufferRef.current.length,
+    getBufferSize,
   };
 };

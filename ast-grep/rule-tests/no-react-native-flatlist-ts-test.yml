@@ -1,0 +1,9 @@
+id: no-react-native-flatlist-ts
+valid:
+  - "import { View, Text } from 'react-native';"
+  - "import { LegendList } from '@legendapp/list';"
+  - "import type { FlatList } from 'some-other-lib';"
+invalid:
+  - "import { FlatList } from 'react-native';"
+  - "import { View, SectionList } from 'react-native';"
+  - "import { VirtualizedList } from 'react-native';"

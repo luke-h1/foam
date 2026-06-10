@@ -53,6 +53,7 @@ export interface SettingsSheetProps {
   onClearImageCache?: () => void;
   onClearSevenTvCosmeticsCache?: () => void;
   onDismiss: () => void;
+  onOpenChatters?: () => void;
   onRefetchEmotes?: () => void;
   onReconnect?: () => void;
   onRefreshVideo?: () => void;
@@ -68,6 +69,7 @@ export interface SettingsSheetProps {
 const SettingsSheetComponent = ({
   isPresented,
   onDismiss,
+  onOpenChatters,
   onRefetchEmotes,
   onClearChatCache,
   onClearImageCache,
@@ -156,6 +158,19 @@ const SettingsSheetComponent = ({
           nestedScrollEnabled
           showsVerticalScrollIndicator={false}
         >
+          {onOpenChatters ? (
+            <Button
+              label='View Chatters'
+              style={styles.menuItem}
+              onPress={onOpenChatters}
+            >
+              <SymbolView name='person.2' tintColor={theme.colorBorderHover} />
+              <Text style={styles.menuItemText} weight='semibold'>
+                View Chatters
+              </Text>
+            </Button>
+          ) : null}
+
           {onRefetchEmotes ? (
             <Button
               label='Refetch Emotes and Badges'

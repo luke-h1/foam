@@ -1,7 +1,8 @@
 import type { PaintLayerData } from '@app/utils/color/seventv-ws-service';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { type LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import Svg, {
   Defs,
   LinearGradient as SvgLinearGradient,
@@ -27,12 +28,27 @@ export function PaintLayerBackground({
   layerIndex,
 }: PaintLayerBackgroundProps) {
   const gradientId = `paint-layer-${layerIndex}`;
+  const [layerSize, setLayerSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const layoutStyle = getLayerLayoutStyle(layer);
   const gradientConfig = buildLayerGradientConfig(layer, fallbackColor);
   const isRadial = layer.function === 'RADIAL_GRADIENT';
   const isAssetPaint = layer.function === 'URL' && Boolean(layer.image_url);
   const isEllipse = layer.shape === 'ellipse';
   const useSvgLinear = layer.function === 'LINEAR_GRADIENT' && layer.repeat;
+
+  const handleLayout = (event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout;
+    if (
+      width > 0 &&
+      height > 0 &&
+      (layerSize?.width !== width || layerSize?.height !== height)
+    ) {
+      setLayerSize({ width, height });
+    }
+  };
 
   if (isAssetPaint) {
     return (
@@ -50,36 +66,49 @@ export function PaintLayerBackground({
   }
 
   if (isRadial) {
+    // CSS radial-gradient default sizing is farthest-corner, which needs the
+    // rendered layer size in pixels to resolve to a true circle.
+    const width = layerSize?.width ?? 0;
+    const height = layerSize?.height ?? 0;
+    const halfW = width / 2;
+    const halfH = height / 2;
+    const farthestCorner = Math.hypot(halfW, halfH);
+    const rx = isEllipse ? halfW * Math.SQRT2 : farthestCorner;
+    const ry = isEllipse ? halfH * Math.SQRT2 : farthestCorner;
+
     return (
-      <View style={[styles.layer, layoutStyle]}>
-        <Svg width='100%' height='100%' style={styles.fill}>
-          <Defs>
-            <SvgRadialGradient
-              id={`${gradientId}-radial`}
-              cx='50%'
-              cy='50%'
-              rx='50%'
-              ry={isEllipse ? '25%' : '50%'}
-              fx='50%'
-              fy='50%'
-            >
-              {gradientConfig.colors.map((color, index) => (
-                <Stop
-                  key={`${color}-${gradientConfig.locations[index]}`}
-                  offset={`${(gradientConfig.locations[index] ?? 0) * 100}%`}
-                  stopColor={color}
-                />
-              ))}
-            </SvgRadialGradient>
-          </Defs>
-          <Rect
-            x='0'
-            y='0'
-            width='100%'
-            height='100%'
-            fill={`url(#${gradientId}-radial)`}
-          />
-        </Svg>
+      <View style={[styles.layer, layoutStyle]} onLayout={handleLayout}>
+        {layerSize ? (
+          <Svg width='100%' height='100%' style={styles.fill}>
+            <Defs>
+              <SvgRadialGradient
+                id={`${gradientId}-radial`}
+                gradientUnits='userSpaceOnUse'
+                cx={halfW}
+                cy={halfH}
+                rx={rx}
+                ry={ry}
+                fx={halfW}
+                fy={halfH}
+              >
+                {gradientConfig.colors.map((color, index) => (
+                  <Stop
+                    key={`${color}-${gradientConfig.locations[index]}`}
+                    offset={`${(gradientConfig.locations[index] ?? 0) * 100}%`}
+                    stopColor={color}
+                  />
+                ))}
+              </SvgRadialGradient>
+            </Defs>
+            <Rect
+              x='0'
+              y='0'
+              width='100%'
+              height='100%'
+              fill={`url(#${gradientId}-radial)`}
+            />
+          </Svg>
+        ) : null}
       </View>
     );
   }

@@ -1,25 +1,28 @@
 import { useAuthContext } from '@app/context/AuthContext';
 import { Button } from '@app/components/Button/Button';
+import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { Text } from '@app/components/ui/Text/Text';
+import { storageMMKV } from '@app/lib/mmkv';
+import { ONBOARDING_SEEN_KEY } from '@app/screens/OnboardingScreen/OnboardingScreen';
 import { theme } from '@app/styles/themes';
 import { Redirect, router } from 'expo-router';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 export default function IndexRoute() {
   const { authState, ready } = useAuthContext();
+  const hasSeenOnboarding = storageMMKV.getBoolean(ONBOARDING_SEEN_KEY);
+
+  if (!hasSeenOnboarding) {
+    return <Redirect href='/onboarding' />;
+  }
 
   if (!ready) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size='large' color={theme.colorPrimary} />
-        <Text
-          type='sm'
-          color='gray.textLow'
-          align='center'
-          style={styles.message}
-        >
-          Starting Foam...
-        </Text>
+      <View style={styles.skeletonContainer}>
+        {Array.from({ length: 6 }).map((_, index) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <LiveStreamCardSkeleton key={index} />
+        ))}
       </View>
     );
   }
@@ -58,5 +61,10 @@ const styles = StyleSheet.create({
   },
   message: {
     marginTop: theme.space16,
+  },
+  skeletonContainer: {
+    backgroundColor: theme.color.background.dark,
+    flex: 1,
+    paddingTop: theme.space84,
   },
 });

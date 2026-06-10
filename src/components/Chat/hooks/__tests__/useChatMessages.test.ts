@@ -5,6 +5,7 @@ import { useChatMessages } from '../useChatMessages';
 
 jest.mock('@app/store/chat/actions/messages', () => ({
   addMessages: jest.fn(),
+  getMaxChatMessages: jest.fn(() => 600),
 }));
 
 const mockAddMessages = jest.mocked(addMessages);
@@ -87,6 +88,40 @@ describe('useChatMessages', () => {
 
       expect(result.current.getBufferSize()).toBe(0);
     });
+
+    test('should return referentially stable handlers across re-renders', () => {
+      // Downstream IRC handlers list these in their useCallback deps; a fresh
+      // identity per render would rebuild every chat handler on each render.
+      const { result, rerender } = renderHook(() =>
+        useChatMessages(defaultOptions),
+      );
+
+      const firstRender = { ...result.current };
+
+      rerender(undefined);
+
+      expect(result.current.handleNewMessage).toBe(
+        firstRender.handleNewMessage,
+      );
+      expect(result.current.clearLocalMessages).toBe(
+        firstRender.clearLocalMessages,
+      );
+      expect(result.current.removeBufferedMessageById).toBe(
+        firstRender.removeBufferedMessageById,
+      );
+      expect(result.current.removeBufferedMessagesByLogin).toBe(
+        firstRender.removeBufferedMessagesByLogin,
+      );
+      expect(result.current.moderateBufferedMessageById).toBe(
+        firstRender.moderateBufferedMessageById,
+      );
+      expect(result.current.moderateBufferedMessagesByLogin).toBe(
+        firstRender.moderateBufferedMessagesByLogin,
+      );
+      expect(result.current.cleanup).toBe(firstRender.cleanup);
+      expect(result.current.forceFlush).toBe(firstRender.forceFlush);
+      expect(result.current.getBufferSize).toBe(firstRender.getBufferSize);
+    });
   });
 
   describe('Message Buffering', () => {
@@ -103,7 +138,7 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(1);
 
       act(() => {
-        jest.advanceTimersByTime(31);
+        jest.advanceTimersByTime(99);
       });
 
       expect(mockAddMessages).not.toHaveBeenCalled();
@@ -128,7 +163,7 @@ describe('useChatMessages', () => {
 
       act(() => {
         result.current.handleNewMessage(createMockMessage('1'));
-        jest.advanceTimersByTime(79);
+        jest.advanceTimersByTime(249);
       });
 
       expect(mockAddMessages).not.toHaveBeenCalled();
@@ -154,7 +189,7 @@ describe('useChatMessages', () => {
       act(() => {
         result.current.handleNewMessage(createMockMessage('1'));
         result.current.handleNewMessage(createMockMessage('2'));
-        jest.advanceTimersByTime(80);
+        jest.advanceTimersByTime(250);
       });
 
       expect(mockAddMessages).toHaveBeenCalled();
@@ -173,7 +208,7 @@ describe('useChatMessages', () => {
 
       act(() => {
         result.current.handleNewMessage(createMockMessage('1'));
-        jest.advanceTimersByTime(32);
+        jest.advanceTimersByTime(100);
       });
 
       const [flushedMessage] = getLastFlushedMessages();
@@ -195,7 +230,7 @@ describe('useChatMessages', () => {
 
       act(() => {
         result.current.handleNewMessage(createMockMessage('1'));
-        jest.advanceTimersByTime(32);
+        jest.advanceTimersByTime(100);
       });
 
       const [flushedMessage] = getLastFlushedMessages();
@@ -216,7 +251,7 @@ describe('useChatMessages', () => {
 
       act(() => {
         result.current.handleNewMessage(createMockMessage('1'));
-        jest.advanceTimersByTime(80);
+        jest.advanceTimersByTime(250);
       });
 
       expect(mockAddMessages).toHaveBeenCalled();
@@ -297,7 +332,7 @@ describe('useChatMessages', () => {
       expect(onUnreadIncrement).not.toHaveBeenCalled();
 
       act(() => {
-        jest.advanceTimersByTime(80);
+        jest.advanceTimersByTime(250);
       });
 
       expect(onUnreadIncrement).toHaveBeenCalledTimes(1);
@@ -410,7 +445,7 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(250);
 
       act(() => {
-        jest.advanceTimersByTime(80);
+        jest.advanceTimersByTime(250);
       });
 
       expect(mockAddMessages).toHaveBeenCalledTimes(1);
@@ -433,7 +468,7 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(600);
 
       act(() => {
-        jest.advanceTimersByTime(50);
+        jest.advanceTimersByTime(150);
       });
 
       const firstCall = mockAddMessages.mock.calls[0];
@@ -458,7 +493,7 @@ describe('useChatMessages', () => {
         for (let i = 0; i < 700; i += 1) {
           result.current.handleNewMessage(createMockMessage(`${i}`));
         }
-        jest.advanceTimersByTime(80);
+        jest.advanceTimersByTime(250);
       });
 
       expect(onUnreadIncrement).toHaveBeenCalledTimes(1);

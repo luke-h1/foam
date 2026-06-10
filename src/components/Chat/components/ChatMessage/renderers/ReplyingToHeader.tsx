@@ -8,6 +8,11 @@ import { ChatMessagePressable } from '../ChatMessagePressable';
 import { styles } from '../RichChatMessage.styles';
 import { normaliseUsername } from '../richChatMessageHelpers';
 import { ChatMessageBody } from './ChatMessageBody';
+import {
+  canRenderMessageInline,
+  type InlineFlowPart,
+} from '@app/components/Chat/util/canRenderMessageInline';
+import { InlineMessageSpans } from './InlineMessageSpans';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 
 const REPLY_CONTEXT_EMOTE_SIZE_COMFORTABLE = 20;
@@ -52,6 +57,13 @@ export function ReplyingToHeader({
   const prefix = isReplyingToCurrentUser
     ? 'Replying to you'
     : `Replying to @${parentDisplayName}`;
+  const canRenderInlineQuote = canRenderMessageInline(parsedReplyBody, {
+    hasPaint: false,
+    isModerated: false,
+  });
+  const quoteContainsEmotes = parsedReplyBody.some(
+    part => part.type === 'emote',
+  );
   const replyContextIconColor = isReplyingToCurrentUser
     ? CHAT_NOTICE_ACCENTS.replyToYou
     : 'rgba(255, 255, 255, 0.5)';
@@ -78,30 +90,58 @@ export function ReplyingToHeader({
         ]}
       />
       <View style={styles.replyContextContent}>
-        <Text numberOfLines={1} style={replyContextPrefixTextStyle}>
-          {prefix}
-        </Text>
-        {parsedReplyBody.length > 0 ? (
-          <View style={styles.replyContextBody}>
-            <Text numberOfLines={1} style={replyContextBodyTextStyle}>
-              :{' '}
+        {canRenderInlineQuote ? (
+          <Text
+            numberOfLines={1}
+            style={[
+              replyContextPrefixTextStyle,
+              quoteContainsEmotes && styles.replyContextEmoteLine,
+            ]}
+          >
+            <Text style={replyContextPrefixTextStyle}>
+              {parsedReplyBody.length > 0 ? `${prefix}: ` : prefix}
             </Text>
-            <View style={styles.replyContextBodyParts}>
-              <ChatMessageBody
-                {...partRendererArgs}
-                compact={compact}
-                emoteTargetSize={
-                  compact
-                    ? REPLY_CONTEXT_EMOTE_SIZE_COMPACT
-                    : REPLY_CONTEXT_EMOTE_SIZE_COMFORTABLE
-                }
-                mode='message'
-                message={parsedReplyBody}
-                replyPlainMentionTarget={replyPlainMentionTarget}
-              />
-            </View>
-          </View>
-        ) : null}
+            <InlineMessageSpans
+              {...partRendererArgs}
+              compact={compact}
+              emoteTargetSize={
+                compact
+                  ? REPLY_CONTEXT_EMOTE_SIZE_COMPACT
+                  : REPLY_CONTEXT_EMOTE_SIZE_COMFORTABLE
+              }
+              message={parsedReplyBody as InlineFlowPart[]}
+              replyPlainMentionTarget={replyPlainMentionTarget}
+              textStyle={replyContextBodyTextStyle}
+            />
+          </Text>
+        ) : (
+          <>
+            <Text numberOfLines={1} style={replyContextPrefixTextStyle}>
+              {prefix}
+            </Text>
+            {parsedReplyBody.length > 0 ? (
+              <View style={styles.replyContextBody}>
+                <Text numberOfLines={1} style={replyContextBodyTextStyle}>
+                  :{' '}
+                </Text>
+                <View style={styles.replyContextBodyParts}>
+                  <ChatMessageBody
+                    {...partRendererArgs}
+                    compact={compact}
+                    emoteTargetSize={
+                      compact
+                        ? REPLY_CONTEXT_EMOTE_SIZE_COMPACT
+                        : REPLY_CONTEXT_EMOTE_SIZE_COMFORTABLE
+                    }
+                    mode='message'
+                    message={parsedReplyBody}
+                    replyPlainMentionTarget={replyPlainMentionTarget}
+                  />
+                </View>
+              </View>
+            ) : null}
+          </>
+        )}
       </View>
     </>
   );

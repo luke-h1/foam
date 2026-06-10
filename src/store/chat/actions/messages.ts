@@ -1,6 +1,6 @@
+import { getPreferences } from '@app/store/preferenceStore';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
-import { batch } from '@legendapp/state';
 import {
   clearMessageColorIndexes,
   getMessageColor as getIndexedMessageColor,
@@ -13,18 +13,31 @@ import {
   registerMentionLogin,
   registerMentionLoginsFromParts,
   registerMentionLoginsFromSender,
+  type ChatterRole,
 } from '@app/utils/chat/resolveMentionLogin';
 import type { AnyChatMessageType } from '../types/constants';
 import { chatStore$ } from '../observables/chatStore';
+import {
+  RECENT_MESSAGES_PERSISTENCE_ENABLED,
+  deletePersistedRecentMessagesForChannels,
+  writePersistedRecentMessagesForChannel,
+} from '../observables/recentMessagesPersistence';
 
 const messageKeySet = new Set<string>();
 const messageKeyOrder: string[] = [];
 const messageIdToIndex = new Map<string, number>();
 const messageKeyToIndex = new Map<string, number>();
-const MAX_CHAT_MESSAGES = 600;
+const DEFAULT_MAX_CHAT_MESSAGES = 600;
 const MAX_RECENT_MESSAGES = 80;
+
+export const getMaxChatMessages = (): number =>
+  getPreferences().chatScrollback ?? DEFAULT_MAX_CHAT_MESSAGES;
 const MAX_RECENT_MESSAGE_CHANNELS = 10;
-const RECENT_MESSAGES_SYNC_DELAY_MS = 1000;
+// Each sync re-serializes recentMessagesByChannel to MMKV, which showed up
+// as a top JS hotspot in busy chats (issue #594). Recent messages are a
+// re-entry nicety, so a long defer is fine; moderation/clear paths still
+// flush immediately.
+export const RECENT_MESSAGES_SYNC_DELAY_MS = 15_000;
 
 let recentMessagesSyncTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingRecentMessagesChannelId: string | null = null;
@@ -139,6 +152,22 @@ const isValidChatMessage = (
   );
 };
 
+const getSenderChatterRole = (
+  message: AnyChatMessageType,
+): ChatterRole | undefined => {
+  const badgesRaw = message.userstate?.['badges-raw'] ?? '';
+  if (badgesRaw.includes('broadcaster/')) {
+    return 'broadcaster';
+  }
+  if (message.userstate?.mod === '1' || badgesRaw.includes('moderator/')) {
+    return 'moderator';
+  }
+  if (badgesRaw.includes('vip/')) {
+    return 'vip';
+  }
+  return undefined;
+};
+
 const indexMessage = (message: AnyChatMessageType, index: number) => {
   const key = getMessageKey(message.message_id, message.message_nonce);
   messageKeyToIndex.set(key, index);
@@ -154,6 +183,7 @@ const indexMessage = (message: AnyChatMessageType, index: number) => {
     login: message.userstate?.login ?? message.sender,
     userId: message.userstate?.['user-id'],
     color: message.userstate?.color,
+    role: getSenderChatterRole(message),
   });
   registerMentionLoginsFromSender(
     message.userstate?.login,
@@ -179,7 +209,7 @@ const rebuildMessageIndexes = (
 
 const trimRecentMessageChannels = () => {
   const recentMessagesByChannel =
-    chatStore$.persisted.recentMessagesByChannel.peek() ?? {};
+    chatStore$.recentMessagesByChannel.peek() ?? {};
   const entries = Object.entries(recentMessagesByChannel);
 
   if (entries.length <= MAX_RECENT_MESSAGE_CHANNELS) {
@@ -204,9 +234,20 @@ const trimRecentMessageChannels = () => {
     }
   }
 
-  chatStore$.persisted.recentMessagesByChannel.set(
-    Object.fromEntries(nextEntries),
-  );
+  if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
+    const keptChannelIds = new Set(nextEntries.map(([channelId]) => channelId));
+    const droppedChannelIds: string[] = [];
+    for (const [channelId] of entries) {
+      if (!keptChannelIds.has(channelId)) {
+        droppedChannelIds.push(channelId);
+      }
+    }
+    if (droppedChannelIds.length > 0) {
+      deletePersistedRecentMessagesForChannels(droppedChannelIds);
+    }
+  }
+
+  chatStore$.recentMessagesByChannel.set(Object.fromEntries(nextEntries));
 };
 
 const persistRecentMessagesForChannel = (
@@ -214,7 +255,7 @@ const persistRecentMessagesForChannel = (
   nextMessages: AnyChatMessageType[],
 ) => {
   const recentMessagesByChannel =
-    chatStore$.persisted.recentMessagesByChannel.peek() ?? {};
+    chatStore$.recentMessagesByChannel.peek() ?? {};
   const existingMessages = recentMessagesByChannel[channelId];
   if (existingMessages === nextMessages) {
     return;
@@ -231,10 +272,15 @@ const persistRecentMessagesForChannel = (
     return;
   }
 
-  chatStore$.persisted.recentMessagesByChannel.set({
+  chatStore$.recentMessagesByChannel.set({
     ...recentMessagesByChannel,
     [channelId]: nextRecentMessages,
   });
+  // Native persistence is per-channel, so only the channel that changed is
+  // serialized + written here (web persists the whole node via Legend State).
+  if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
+    writePersistedRecentMessagesForChannel(channelId, nextRecentMessages);
+  }
   trimRecentMessageChannels();
 };
 
@@ -287,8 +333,9 @@ const syncRecentMessagesForCurrentChannel = (
 
 const trimMessageIndexes = (): boolean => {
   let didTrim = false;
+  const maxChatMessages = getMaxChatMessages();
 
-  while (messageKeyOrder.length > MAX_CHAT_MESSAGES) {
+  while (messageKeyOrder.length > maxChatMessages) {
     const removedKey = messageKeyOrder.shift();
     if (removedKey) {
       messageKeySet.delete(removedKey);
@@ -307,7 +354,7 @@ const appendToMessageWindow = (
   nextMessages: AnyChatMessageType[];
 } => {
   const nextMessages = [...currentMessages, ...storedMessages];
-  const extraMessageCount = nextMessages.length - MAX_CHAT_MESSAGES;
+  const extraMessageCount = nextMessages.length - getMaxChatMessages();
 
   if (extraMessageCount <= 0) {
     return { didTrimMessages: false, nextMessages };
@@ -429,7 +476,10 @@ export const addMessage = (message?: AnyChatMessageType) => {
   }
 
   chatStore$.messages.set(nextMessages);
-  syncRecentMessagesForCurrentChannel(nextMessages);
+  // Defer the MMKV persist (matching addMessages) so a single message never
+  // triggers a synchronous full-store stringify+write of recentMessagesByChannel
+  // on the hot path; the recent-messages cache is only a warm-start aid.
+  syncRecentMessagesForCurrentChannel(nextMessages, 'defer');
 };
 
 export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {
@@ -582,6 +632,50 @@ export const moderateMessagesByLogin = (
   syncRecentMessagesForCurrentChannel(nextMessages);
 };
 
+export const removeMessagesByLogin = (login: string) => {
+  const target = normaliseLogin(login);
+  if (!target) {
+    return;
+  }
+
+  const currentMessages = chatStore$.messages.peek();
+  const removedMessages: AnyChatMessageType[] = [];
+  const nextMessages = currentMessages.filter(message => {
+    if (!isValidChatMessage(message)) {
+      return true;
+    }
+
+    const messageLogin = normaliseLogin(
+      message.userstate?.login || message.userstate?.username || message.sender,
+    );
+
+    if (messageLogin !== target) {
+      return true;
+    }
+
+    removedMessages.push(message);
+    return false;
+  });
+
+  if (removedMessages.length === 0) {
+    return;
+  }
+
+  removedMessages.forEach(message => {
+    const key = getMessageKey(message.message_id, message.message_nonce);
+    messageKeySet.delete(key);
+
+    const orderIndex = messageKeyOrder.indexOf(key);
+    if (orderIndex >= 0) {
+      messageKeyOrder.splice(orderIndex, 1);
+    }
+  });
+
+  rebuildMessageIndexes(nextMessages);
+  chatStore$.messages.set(nextMessages);
+  syncRecentMessagesForCurrentChannel(nextMessages);
+};
+
 export const getMessageById = (
   messageId: string,
 ): AnyChatMessageType | undefined => {
@@ -642,18 +736,9 @@ export const clearMessages = () => {
   chatStore$.messages.set([]);
 };
 
-export const replaceMessagesWithSystemMessage = (
-  message: AnyChatMessageType,
-) => {
-  batch(() => {
-    clearMessages();
-    addMessage(message);
-  });
-};
-
 export const restoreRecentMessagesForChannel = (channelId: string): number => {
   const recentMessages = dedupeMessagesForStore(
-    chatStore$.persisted.recentMessagesByChannel[channelId]?.peek() ?? [],
+    chatStore$.recentMessagesByChannel[channelId]?.peek() ?? [],
   );
 
   if (recentMessages.length === 0) {

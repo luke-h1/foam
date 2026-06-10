@@ -3,11 +3,12 @@ import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { twitchQueries } from '@app/queries/twitchQueries';
+import { useUserBlockListQuery } from '@app/hooks/queries/use-user-block-list-query';
+import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { twitchService, UserBlockList } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { ListRenderItem } from '@shopify/flash-list';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useRef, type RefObject, useCallback } from 'react';
 import type { FlashListRef } from '@app/components/FlashList/FlashList';
@@ -287,29 +288,25 @@ export function BlockedUsersScreen() {
   const { user } = useAuthContext();
   const queryClient = useQueryClient();
 
-  const userBlockListQuery = twitchQueries.getUserBlockList({
-    broadcasterId: user?.id as string,
-  });
+  const userBlockListQueryKey = twitchKeys.blockList(user?.id as string);
 
-  const { data, isLoading, isError } = useQuery({
-    ...userBlockListQuery,
-    enabled: !!user?.id,
-  });
+  const { data, isLoading, isError } = useUserBlockListQuery(
+    user?.id as string,
+    { enabled: !!user?.id },
+  );
 
   const { mutate: unblockUser } = useMutation({
     mutationFn: (targetUserId: string) =>
       twitchService.unblockUser(targetUserId),
     onMutate: async targetUserId => {
       await queryClient.cancelQueries({
-        queryKey: userBlockListQuery.queryKey,
+        queryKey: userBlockListQueryKey,
       });
 
-      const previousData = queryClient.getQueryData(
-        userBlockListQuery.queryKey,
-      );
+      const previousData = queryClient.getQueryData(userBlockListQueryKey);
 
       queryClient.setQueryData<{ data: UserBlockList[] }>(
-        userBlockListQuery.queryKey,
+        userBlockListQueryKey,
         old => {
           if (!old?.data) {
             return old;
@@ -330,25 +327,22 @@ export function BlockedUsersScreen() {
     },
     onError: (_error, _targetUserId, context) => {
       if (context?.previousData) {
-        queryClient.setQueryData(
-          userBlockListQuery.queryKey,
-          context.previousData,
-        );
+        queryClient.setQueryData(userBlockListQueryKey, context.previousData);
       }
       toast.error('Failed to unblock user');
     },
     onSettled: () => {
       void queryClient.invalidateQueries({
-        queryKey: userBlockListQuery.queryKey,
+        queryKey: userBlockListQueryKey,
       });
     },
   });
 
   const onRefresh = useCallback(async () => {
     await queryClient.refetchQueries({
-      queryKey: userBlockListQuery.queryKey,
+      queryKey: userBlockListQueryKey,
     });
-  }, [queryClient, userBlockListQuery.queryKey]);
+  }, [queryClient, userBlockListQueryKey]);
 
   const handleUnblockRequest = (userId: string, userName: string) => {
     Alert.alert(

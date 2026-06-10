@@ -1,3 +1,6 @@
 import { RemoteConfigScreen } from '@app/screens/DevTools/RemoteConfigScreen';
+import { withDevToolsGate } from '@app/utils/devTools/devToolsGate';
 
-export default RemoteConfigScreen;
+const GatedRemoteConfigScreen = withDevToolsGate(RemoteConfigScreen);
+
+export default GatedRemoteConfigScreen;

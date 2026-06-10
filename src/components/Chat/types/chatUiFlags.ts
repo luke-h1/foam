@@ -61,6 +61,7 @@ export type SettingsSheetPreferenceFlags = {
 
 export type ChatRowDisplayFlags = {
   disableEmoteAnimations: boolean;
+  fontScale?: 'small' | 'default' | 'large';
   showAlternatingChatRows: boolean;
   showInlineReplyContext: boolean;
   showTimestamps: boolean;

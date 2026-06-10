@@ -1,4 +1,5 @@
-import { fireEvent, render } from '@testing-library/react-native';
+import render from '@app/test/render';
+import { fireEvent } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 import { ActionSheet } from '../ActionSheet/ActionSheet';
 import { UserActionSheet } from '../UserActionSheet';
@@ -224,5 +225,57 @@ describe('Moderator action sheets', () => {
 
     expect(queryByText('Timeout for 10m')).toBeNull();
     expect(queryByText('Ban User')).toBeNull();
+  });
+
+  test('shows block and report actions only when handlers are provided', () => {
+    const onBlockUser = jest.fn();
+    const onReportUser = jest.fn();
+
+    const { rerender, queryByText, getByText } = render(
+      <UserActionSheet
+        visibility={{
+          visible: true,
+          isHidden: false,
+          isHighlighted: false,
+        }}
+        moderation={{ canModerateChat: false, canModerateUser: false }}
+        onClose={jest.fn()}
+        username='viewer'
+        login='viewer'
+        onMentionUser={jest.fn()}
+        onCopyUsername={jest.fn()}
+        onHideUser={jest.fn()}
+        onHighlightUser={jest.fn()}
+      />,
+    );
+
+    expect(queryByText('Block User')).toBeNull();
+    expect(queryByText('Report User')).toBeNull();
+
+    rerender(
+      <UserActionSheet
+        visibility={{
+          visible: true,
+          isHidden: false,
+          isHighlighted: false,
+        }}
+        moderation={{ canModerateChat: false, canModerateUser: false }}
+        onClose={jest.fn()}
+        username='viewer'
+        login='viewer'
+        onMentionUser={jest.fn()}
+        onCopyUsername={jest.fn()}
+        onHideUser={jest.fn()}
+        onHighlightUser={jest.fn()}
+        onBlockUser={onBlockUser}
+        onReportUser={onReportUser}
+      />,
+    );
+
+    fireEvent.press(getByText('Block User'));
+    expect(onBlockUser).toHaveBeenCalledTimes(1);
+
+    fireEvent.press(getByText('Report User'));
+    expect(onReportUser).toHaveBeenCalledTimes(1);
   });
 });

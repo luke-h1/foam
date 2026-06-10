@@ -89,10 +89,6 @@ function getSearchResultKey(item: SearchItem) {
     : `category-${item.id}`;
 }
 
-function getQuickActionKey(item: SearchQuickAction) {
-  return item.query;
-}
-
 function sortSearchHistory(history: SearchHistoryItem[]) {
   const sortedHistory: SearchHistoryItem[] = [];
 
@@ -311,7 +307,11 @@ export function SearchScreen() {
   const handleQuickActionPress = useCallback(
     (actionQuery: string) => {
       searchBarRef.current?.setText(actionQuery);
-      setState(state => ({ ...state, query: actionQuery }));
+      setState(state => ({
+        ...state,
+        query: actionQuery,
+        selectedFilter: 'categories',
+      }));
       void handleQuerySearch(actionQuery);
     },
     [handleQuerySearch],
@@ -363,22 +363,16 @@ export function SearchScreen() {
     [handleCategoryPress],
   );
 
-  const renderQuickActionItem: ListRenderItem<SearchQuickAction> = useCallback(
-    ({ item }) => {
+  const renderQuickActionItem = useCallback(
+    (item: SearchQuickAction) => {
       return (
         <Button
-          style={styles.quickActionCard}
+          key={item.query}
+          style={styles.quickActionChip}
           onPress={() => handleQuickActionPress(item.query)}
         >
           <Text type='sm' weight='semibold' style={styles.quickActionTitle}>
             {item.title}
-          </Text>
-          <Text
-            type='xs'
-            color='gray.textLow'
-            style={styles.quickActionSubtitle}
-          >
-            {item.subtitle}
           </Text>
         </Button>
       );
@@ -435,7 +429,7 @@ type SearchHeaderProps = {
   activeResults: SearchItem[];
   handleFilterChange: (index: number) => void;
   query: string;
-  renderQuickActionItem: ListRenderItem<SearchQuickAction>;
+  renderQuickActionItem: (item: SearchQuickAction) => React.ReactElement;
   searchResultsLength: number;
   selectedFilter: SearchFilter;
 };
@@ -467,21 +461,12 @@ function SearchHeader({
               color='gray.textLow'
               style={styles.sectionTitle}
             >
-              START WITH
-            </Text>
-            <Text type='2xl' weight='bold' style={styles.sectionHeadline}>
-              Quick routes
+              SUGGESTED
             </Text>
           </View>
-          <FlashList
-            horizontal
-            data={SEARCH_QUICK_ACTIONS}
-            keyExtractor={getQuickActionKey}
-            renderItem={renderQuickActionItem}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.quickActionsRail}
-            style={styles.quickActionsList}
-          />
+          <View style={styles.quickActionsRow}>
+            {SEARCH_QUICK_ACTIONS.map(renderQuickActionItem)}
+          </View>
         </View>
       )}
 
@@ -494,11 +479,6 @@ function SearchHeader({
             style={styles.sectionTitle}
           >
             {selectedFilter === 'channels' ? 'CHANNELS' : 'CATEGORIES'}
-          </Text>
-          <Text type='2xl' weight='bold' style={styles.sectionHeadline}>
-            {selectedFilter === 'channels'
-              ? 'Matching channels'
-              : 'Matching categories'}
           </Text>
         </View>
       )}
@@ -550,7 +530,7 @@ const styles = StyleSheet.create({
   categoryResultImage: {
     borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.borderRadius6,
     borderWidth: 1,
     height: 76,
     width: 54,
@@ -583,32 +563,25 @@ const styles = StyleSheet.create({
   historyContainer: {
     paddingHorizontal: theme.space20,
   },
-  quickActionCard: {
+  quickActionChip: {
     backgroundColor: theme.color.background.darkAlt,
     borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.borderRadius10,
     borderWidth: 1,
-    marginRight: theme.space16,
-    minHeight: 104,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space16,
-    width: 190,
-  },
-  quickActionSubtitle: {
-    marginTop: theme.space8,
+    paddingHorizontal: theme.space12,
+    paddingVertical: theme.space8,
   },
   quickActionTitle: {
     lineHeight: 20,
   },
-  quickActionsRail: {
-    paddingHorizontal: 0,
-  },
-  quickActionsList: {
-    height: 104,
+  quickActionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.space8,
   },
   quickActionsSection: {
-    marginTop: theme.space20,
+    marginTop: theme.space16,
   },
   resultItem: {
     flexDirection: 'row',
@@ -622,9 +595,6 @@ const styles = StyleSheet.create({
     gap: 2,
     marginBottom: theme.space12,
     marginTop: theme.space20,
-  },
-  sectionHeadline: {
-    lineHeight: 28,
   },
   sectionTitle: {
     letterSpacing: 1,

@@ -40,6 +40,10 @@ export default function SettingsLayout() {
         options={{ title: 'Channel Surfing', headerBackTitle: 'Settings' }}
       />
       <Stack.Screen
+        name='chat-highlights'
+        options={{ title: 'Highlights', headerBackTitle: 'Settings' }}
+      />
+      <Stack.Screen
         name='chat-preferences'
         options={{ title: 'Chat', headerBackTitle: 'Settings' }}
       />

@@ -1,16 +1,17 @@
-import { twitchQueries } from '@app/queries/twitchQueries';
+import {
+  followedStreamsQueryOptions,
+  topCategoriesInfiniteQueryOptions,
+  topStreamsInfiniteQueryOptions,
+} from '@app/lib/react-query/queries/twitch';
 import { twitchApi } from '@app/services/api/clients';
 import {
   DefaultTokenResponse,
-  PaginatedList,
-  Category,
-  TwitchStream,
   UserInfoResponse,
   twitchService,
 } from '@app/services/twitch-service';
 import { parseTwitchAuthTokenFromResponse } from '@app/utils/authentication/twitchAuth';
 import { logger } from '@app/utils/logger';
-import { queryClient } from '@app/utils/react-query/queryClient';
+import { queryClient } from '@app/lib/react-query/query-client';
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import * as SecureStore from '@app/utils/authentication/secureStore';
 import {
@@ -31,23 +32,10 @@ import { useSyncRef } from '@app/hooks/useSyncRef';
  */
 const prefetchInitialData = (userId?: string) => {
   if (userId) {
-    const followedQuery = twitchQueries.getFollowedStreams(userId);
-    void queryClient.prefetchQuery(followedQuery);
+    void queryClient.prefetchQuery(followedStreamsQueryOptions(userId));
   }
-  void queryClient.prefetchInfiniteQuery({
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage: PaginatedList<TwitchStream>) =>
-      lastPage?.pagination?.cursor,
-    ...twitchQueries.getTopStreamsInfinite(),
-  });
-  void queryClient.prefetchInfiniteQuery({
-    queryKey: ['TopCategories'],
-    queryFn: ({ pageParam }: { pageParam?: string }) =>
-      twitchService.getTopCategories(pageParam),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage: PaginatedList<Category>) =>
-      lastPage?.pagination?.cursor,
-  });
+  void queryClient.prefetchInfiniteQuery(topStreamsInfiniteQueryOptions());
+  void queryClient.prefetchInfiniteQuery(topCategoriesInfiniteQueryOptions());
 };
 
 const queueInitialDataPrefetch = (userId?: string) => {

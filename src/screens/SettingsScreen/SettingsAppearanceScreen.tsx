@@ -1,6 +1,7 @@
 import {
   SettingsLinkRow,
   SettingsSection,
+  SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import {
@@ -15,6 +16,7 @@ import {
   Picker,
   Section,
   Text as NativeText,
+  Toggle,
 } from '@expo/ui/swift-ui';
 import { tag } from '@expo/ui/swift-ui/modifiers';
 import { useRef } from 'react';
@@ -27,6 +29,7 @@ const THEME_LABELS: Record<(typeof THEME_OPTIONS)[number], string> = {
 
 export function SettingsAppearanceScreen() {
   const selectedTheme = usePreference('theme');
+  const hapticFeedback = usePreference('hapticFeedback');
   const update = useUpdatePreferences();
   const scrollRef = useRef<ScrollView>(null);
 
@@ -60,6 +63,22 @@ export function SettingsAppearanceScreen() {
               <NativeText>Dark</NativeText>
             </LabeledContent>
           </Section>
+          <Section
+            title='Feedback'
+            footer={
+              <NativeText>
+                Subtle vibrations for actions like sending messages and
+                refreshing.
+              </NativeText>
+            }
+          >
+            <Toggle
+              label='Haptics'
+              systemImage='hand.tap'
+              isOn={hapticFeedback}
+              onIsOnChange={value => update({ hapticFeedback: value })}
+            />
+          </Section>
         </NativeForm>
       </Host>
     );
@@ -82,6 +101,15 @@ export function SettingsAppearanceScreen() {
             onPress={() => {
               update({ theme: 'foam-dark' });
             }}
+          />
+        </SettingsSection>
+        <SettingsSection title='Feedback'>
+          <SettingsToggleRow
+            title='Haptics'
+            subtitle='Subtle vibrations for actions like sending messages and refreshing'
+            icon={{ icon: 'hand.tap', color: theme.colorTeal }}
+            value={hapticFeedback}
+            onValueChange={value => update({ hapticFeedback: value })}
           />
         </SettingsSection>
       </ScrollView>

@@ -9,11 +9,11 @@ import {
   DebugErrorOverlay,
   TouchBlockOverlay,
 } from './StreamPlayerOverlays';
-import { streamWebViewWarmupPool } from './WebViewWarmupPool';
 import {
   buildRawTwitchPlayerBootstrapScript,
   buildRawTwitchPlayerUrl,
   buildTwitchClipPlayerUrl,
+  buildTwitchPlayerQualityDefaultScript,
 } from './twitchPlayerSource';
 import type { StreamPlayerProps } from './types';
 import { usePlayerBridge } from './usePlayerBridge';
@@ -134,15 +134,6 @@ export const StreamPlayer = memo(function StreamPlayer({
     };
   }, []);
 
-  const clipRef = useRef(clip);
-  clipRef.current = clip;
-
-  useEffect(() => {
-    if (!clipRef.current) {
-      streamWebViewWarmupPool.startWarmup(parent);
-    }
-  }, [parent]);
-
   const runJavaScript = (script: string) => {
     webViewRef.current?.injectJavaScript(script);
   };
@@ -210,7 +201,10 @@ ${buildRawTwitchPlayerBootstrapScript({
 
   const injectedJavaScriptBeforeContentLoaded = clip
     ? TWITCH_AUTH_HELPER_SCRIPT
-    : undefined;
+    : buildTwitchPlayerQualityDefaultScript({
+        defaultQuality: '720p60',
+        maxBitrateBps: 3_500_000,
+      });
 
   const handleWebViewHttpError = useCallback(
     (error: { statusCode: number; url: string }) => {

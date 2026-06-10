@@ -4,13 +4,13 @@ import { logger } from '@app/utils/logger';
 /**
  * App URL scheme defined in app.config.ts.
  */
-export const APP_SCHEME = 'foam';
+const APP_SCHEME = 'foam';
 
 /**
  * Public https fallback for users who don't have the app installed.
  * Matches the intentFilters/associated domains in app.config.ts.
  */
-export const PUBLIC_TWITCH_BASE = 'https://www.twitch.tv';
+const PUBLIC_TWITCH_BASE = 'https://www.twitch.tv';
 
 export type ShareableEntity =
   | { kind: 'streamer'; login: string; displayName?: string }
@@ -29,7 +29,7 @@ interface BuiltShareLink {
  * Build the deep-link payload for a given shareable entity.
  * Returns both an app-scheme URL (foam://) and a public https fallback.
  */
-export function buildShareLink(entity: ShareableEntity): BuiltShareLink {
+function buildShareLink(entity: ShareableEntity): BuiltShareLink {
   switch (entity.kind) {
     case 'streamer': {
       const login = encodeURIComponent(entity.login);

@@ -1,12 +1,17 @@
 import { logger } from '@app/utils/logger';
 import {
+  CHAT_RECENT_MESSAGES_PERSISTENCE_KEY,
   CHAT_STORE_PERSISTENCE_KEY,
   createObservablePersistenceLocalConfig,
   ensureObservablePersistenceConfig,
 } from '@app/lib/observablePersistence';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
-import { observable } from '@legendapp/state';
+import { observable, when } from '@legendapp/state';
 import { persistObservable } from '@legendapp/state/persist';
+import {
+  RECENT_MESSAGES_PERSISTENCE_ENABLED,
+  loadPersistedRecentMessages,
+} from './recentMessagesPersistence';
 
 import type {
   AnyChatMessageType,
@@ -25,8 +30,10 @@ export interface ChatStoreState {
   persisted: {
     channelCaches: Record<string, ChannelCacheType>;
     lastGlobalUpdate: number;
-    recentMessagesByChannel: Record<string, AnyChatMessageType[]>;
   };
+  // Persisted separately from `persisted` so frequent message syncs do not
+  // re-serialize the channel emote caches (issue #594).
+  recentMessagesByChannel: Record<string, AnyChatMessageType[]>;
   loadingState: ChatLoadingState;
   currentChannelId: string | null;
   emojis: SanitisedEmote[];
@@ -82,8 +89,8 @@ const initialChatStoreState: ChatStoreState = {
   persisted: {
     channelCaches: {},
     lastGlobalUpdate: 0,
-    recentMessagesByChannel: {},
   },
+  recentMessagesByChannel: {},
   loadingState: 'IDLE',
   currentChannelId: null,
   emojis: getEmojiEmotes(getPreferences().emojiStyle),
@@ -109,17 +116,36 @@ ensureObservablePersistenceConfig();
 
 export const chatStore$ = observable<ChatStoreState>(initialChatStoreState);
 
-persistObservable(chatStore$.persisted, {
+const persistedState$ = persistObservable(chatStore$.persisted, {
   local: createObservablePersistenceLocalConfig(CHAT_STORE_PERSISTENCE_KEY),
 });
 
+if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
+  // Native: seed from the per-channel MMKV keys (writes are handled per-channel
+  // in the message-sync path, not via Legend State, so a sync only re-serializes
+  // the active channel instead of every cached channel — issue #594).
+  chatStore$.recentMessagesByChannel.set(loadPersistedRecentMessages());
+} else {
+  persistObservable(chatStore$.recentMessagesByChannel, {
+    local: createObservablePersistenceLocalConfig(
+      CHAT_RECENT_MESSAGES_PERSISTENCE_KEY,
+    ),
+  });
+}
+
+// Recent messages used to live inside `persisted`; drop the stale field from
+// old installs so channelCaches writes stop re-serializing it.
+when(persistedState$?._state?.isLoadedLocal, () => {
+  const persisted = chatStore$.persisted.peek() as {
+    recentMessagesByChannel?: unknown;
+  };
+  if (persisted.recentMessagesByChannel !== undefined) {
+    (
+      chatStore$.persisted as unknown as {
+        recentMessagesByChannel: { delete: () => void };
+      }
+    ).recentMessagesByChannel.delete();
+  }
+});
+
 export type ChatMessagesObservable = typeof chatStore$.messages;
-
-export const getChatMessagesObservable = (): ChatMessagesObservable =>
-  chatStore$.messages;
-
-export const getChatEmojiEmotes = () => chatStore$.emojis.peek();
-
-export const setCurrentChatChannelId = (channelId: string | null) => {
-  chatStore$.currentChannelId.set(channelId);
-};

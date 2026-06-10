@@ -10,6 +10,8 @@ source ./scripts/deploy-common.sh
 
 validate_deploy_args "deploy"
 
+./scripts/native-build-guard.sh "$variant"
+
 case "$platform" in
   ios | android)
     ./scripts/build.sh "$variant" "$platform"
@@ -24,3 +26,5 @@ case "$platform" in
 esac
 
 ./scripts/save-fingerprint-cache.sh "$variant"
+
+./scripts/release-github.sh "$variant"

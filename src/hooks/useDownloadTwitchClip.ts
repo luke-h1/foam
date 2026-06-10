@@ -1,4 +1,5 @@
 import { useAuthContext } from '@app/context/AuthContext';
+import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { createId } from '@paralleldrive/cuid2';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Directory, File, Paths } from 'expo-file-system';
@@ -64,7 +65,7 @@ export function useDownloadTwitchClip() {
       directory.delete();
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ['clips'] });
+      void queryClient.invalidateQueries({ queryKey: twitchKeys.clips() });
     },
   });
 

@@ -223,8 +223,9 @@ const config: ExpoConfig = {
       'expo-media-library',
       {
         photosPermission:
-          'Allow $(PRODUCT_NAME) to access your photos to download emotes/badges',
-        savePhotosPermission: 'Allow $(PRODUCT_NAME) to save emotes/badges.',
+          '$(PRODUCT_NAME) uses your photo library to save downloaded clips, emotes, and badges so you can use them outside the app.',
+        savePhotosPermission:
+          '$(PRODUCT_NAME) saves downloaded clips, emotes, and badges to your photo library.',
         isAccessMediaLocationEnabled: true,
         granularPermissions: ['audio', 'photo'],
       },
@@ -283,7 +284,10 @@ const config: ExpoConfig = {
         ios: {
           useFrameworks: 'static',
           forceStaticLinking: ['RNFBApp'],
-          deploymentTarget: '18.0',
+          deploymentTarget: '16.4',
+          // Precompiled ExpoModulesCore references SwiftUICore, which fails to
+          // link with Xcode 26.5 (not an allowed client). Build from source.
+          usePrecompiledModules: false,
         },
         android: {
           enableProguardInReleaseBuilds: true,
@@ -322,7 +326,10 @@ const config: ExpoConfig = {
     },
     infoPlist: {
       NSSupportsLiveActivities: true,
-      NSPhotoLibraryUsageDescription: 'Used for saving emotes/badges',
+      NSPhotoLibraryUsageDescription:
+        'Foam uses your photo library to save downloaded clips, emotes, and badges so you can use them outside the app.',
+      NSPhotoLibraryAddUsageDescription:
+        'Foam saves downloaded clips, emotes, and badges to your photo library.',
       UIBackgroundModes: ['audio'],
     },
     entitlements: enableICloudEntitlements

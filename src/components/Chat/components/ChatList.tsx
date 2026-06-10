@@ -29,12 +29,16 @@ import {
   type ViewableMessageToken,
 } from './ChatList/getViewableChatMessages';
 
-const CHAT_DRAW_DISTANCE = 96;
+// Roughly seven rows of lookahead; at 96 fast flings outran the renderer and
+// showed skeleton rows.
+const CHAT_DRAW_DISTANCE = 250;
 const CHAT_ESTIMATED_ITEM_SIZE = 34;
 const CHAT_INITIAL_CONTAINER_POOL_RATIO = 1;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
+  // Skip viewability churn for rows that only flash past during a fling.
+  minimumViewTime: 100,
 };
 const CHAT_MAINTAIN_SCROLL_AT_END = {
   onDataChange: true,

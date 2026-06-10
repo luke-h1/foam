@@ -1,15 +1,13 @@
-import { Color } from './pallete';
-
-const tintColorLight = Color.violet[600];
-const tintColorDark = '#1AC9A2';
-const lightText = Color.zinc[950];
-const darkText = Color.zinc[50];
-const lightBackground = Color.zinc[50];
-const darkBackground = '#000000';
-const borderLight = `${Color.zinc[950]}20`;
-const borderDark = `${Color.zinc[50]}20`;
-const iconLight = Color.zinc[500];
-const iconDark = Color.zinc[300];
+const tintColorLight = '#1083FE';
+const tintColorDark = '#2E86FF';
+const lightText = '#0F1620';
+const darkText = '#EDF1F5';
+const lightBackground = '#EBF0F6';
+const darkBackground = '#0C1014';
+const borderLight = 'rgba(16,30,50,0.10)';
+const borderDark = 'rgba(255,255,255,0.10)';
+const iconLight = '#54657A';
+const iconDark = '#93A1B2';
 
 export type ThemeColor =
   | 'accent'

@@ -28,6 +28,10 @@ import {
 } from '../types/constants';
 import { clearEmoteImageCache } from './emoteImages';
 import { chatStore$, limitChannelCaches } from '../observables/chatStore';
+import {
+  RECENT_MESSAGES_PERSISTENCE_ENABLED,
+  clearPersistedRecentMessages,
+} from '../observables/recentMessagesPersistence';
 
 const channelLoadAbort = (() => {
   let current: AbortController | null = null;
@@ -1235,7 +1239,7 @@ export const clearCache = (channelId?: string) => {
 export const clearChatCosmeticsCache = (): void => {
   batch(() => {
     chatStore$.persisted.channelCaches.set({});
-    chatStore$.persisted.recentMessagesByChannel.set({});
+    chatStore$.recentMessagesByChannel.set({});
     chatStore$.persisted.lastGlobalUpdate.set(0);
     chatStore$.currentChannelId.set(null);
     chatStore$.loadingState.set('IDLE');
@@ -1244,6 +1248,9 @@ export const clearChatCosmeticsCache = (): void => {
     chatStore$.ttvUsers.set([]);
     chatStore$.messages.set([]);
   });
+  if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
+    clearPersistedRecentMessages();
+  }
   clearUserCosmeticsCache();
   clearPersonalEmotesCache();
   clearEmoteImageCache();

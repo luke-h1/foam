@@ -4,6 +4,8 @@ import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 const RETURN_TO_BOTTOM_THRESHOLD = 80;
 const USER_SCROLL_AWAY_THRESHOLD = 40;
 const SCROLL_DELTA_EPSILON = 1;
+// A scroll event this recent means a drag or momentum fling is still running.
+const SCROLL_ACTIVITY_WINDOW_MS = 120;
 const SCROLL_THROTTLE_MS = 150;
 const SCROLL_TO_BOTTOM_RETRY_MS = 50;
 const SCROLL_TO_BOTTOM_SETTLE_MS = 300;
@@ -53,6 +55,14 @@ export const useChatScroll = ({
   const lastOffsetYRef = useRef<number | null>(null);
   const isDraggingRef = useRef(false);
   const hasUserScrollIntentRef = useRef(false);
+  const lastScrollEventAtRef = useRef(0);
+
+  const isUserActivelyScrolling = useCallback(
+    () =>
+      isDraggingRef.current ||
+      Date.now() - lastScrollEventAtRef.current < SCROLL_ACTIVITY_WINDOW_MS,
+    [],
+  );
 
   const clearScrollToBottomTimers = useCallback(() => {
     if (scrollTimeoutRef.current) {
@@ -133,6 +143,7 @@ export const useChatScroll = ({
 
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      lastScrollEventAtRef.current = Date.now();
       const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
       const { y } = contentOffset;
       const contentHeight = contentSize?.height ?? 0;
@@ -318,6 +329,7 @@ export const useChatScroll = ({
     isAtBottomRef,
     isScrollingToBottom,
     isScrollingToBottomRef,
+    isUserActivelyScrolling,
     shouldMaintainScrollAtEnd,
     unreadCount,
     setUnreadCount,

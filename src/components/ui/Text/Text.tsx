@@ -161,6 +161,7 @@ export function Text({
     <RNText
       ref={ref}
       textBreakStrategy='simple'
+      maxFontSizeMultiplier={1.4}
       {...props}
       style={[sizeStyle, textStyle, style]}
     >

@@ -11,19 +11,12 @@ import { Text } from '@app/components/ui/Text/Text';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import {
-  Category,
-  TwitchStream,
-  twitchService,
-} from '@app/services/twitch-service';
+import { useCategoryQuery } from '@app/hooks/queries/use-category-query';
+import { useStreamsByCategoryQuery } from '@app/hooks/queries/use-streams-by-category-query';
+import { Category, TwitchStream } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
-import {
-  getNextPageParam,
-  getPreviousPageParam,
-} from '@app/utils/pagination/pagination';
 import { formatViewCount } from '@app/utils/string/formatViewCount';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { FC, memo, useRef } from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
@@ -91,10 +84,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
     data: category,
     isLoading: isCategoryLoading,
     isError: isCategoryError,
-  } = useQuery({
-    queryKey: ['category', id],
-    queryFn: () => twitchService.getCategory(id),
-  });
+  } = useCategoryQuery(id);
 
   const {
     data: streams,
@@ -104,14 +94,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
     isLoading: isLoadingStreams,
     isError: isErrorStreams,
     isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ['streamsByCategory', id],
-    queryFn: ({ pageParam }: { pageParam?: string }) =>
-      twitchService.getStreamsByCategory(id, pageParam),
-    initialPageParam: undefined,
-    getNextPageParam,
-    getPreviousPageParam,
-  });
+  } = useStreamsByCategoryQuery(id);
 
   const handleLoadMore = useInfiniteQueryLoadMore({
     fetchNextPage,

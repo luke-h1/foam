@@ -1,0 +1,7 @@
+id: no-react-native-flatlist-tsx
+valid:
+  - "import { View, Text } from 'react-native';"
+  - "import { FlashList } from '@shopify/flash-list';"
+invalid:
+  - "import { FlatList } from 'react-native';"
+  - "import { Text, SectionList, View } from 'react-native';"

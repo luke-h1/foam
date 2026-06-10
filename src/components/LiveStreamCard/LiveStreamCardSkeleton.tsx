@@ -8,39 +8,24 @@ const CARD_BORDER = 'rgba(255,255,255,0.13)';
 export function LiveStreamCardSkeleton({
   layout = 'compact',
 }: {
-  layout?: 'compact' | 'media' | 'text';
+  layout?: 'compact' | 'media';
 }) {
   const isMediaLayout = layout === 'media';
-  const isTextLayout = layout === 'text';
-  const imageStyle = isTextLayout
-    ? { ...styles.imageSkeleton, ...styles.imageText }
-    : isMediaLayout
-      ? { ...styles.imageSkeleton, ...styles.imageMedia }
-      : styles.imageSkeleton;
-  const titleStyle = isTextLayout
-    ? { ...styles.titleSkeleton, ...styles.titleText }
-    : styles.titleSkeleton;
+  const imageStyle = isMediaLayout
+    ? { ...styles.imageSkeleton, ...styles.imageMedia }
+    : styles.imageSkeleton;
 
   return (
-    <View
-      style={[
-        styles.container,
-        isMediaLayout && styles.containerMedia,
-        isTextLayout && styles.containerText,
-      ]}
-    >
-      {!isTextLayout ? (
-        <View style={styles.imageContainer}>
-          <Skeleton style={imageStyle} />
-        </View>
-      ) : null}
+    <View style={[styles.container, isMediaLayout && styles.containerMedia]}>
+      <View style={styles.imageContainer}>
+        <Skeleton style={imageStyle} />
+      </View>
 
       <View style={styles.details}>
         <View style={styles.headerRow}>
           <Skeleton style={styles.usernameSkeleton} />
-          {isTextLayout ? <Skeleton style={styles.categorySkeleton} /> : null}
         </View>
-        <Skeleton style={titleStyle} />
+        <Skeleton style={styles.titleSkeleton} />
         <View style={styles.metadata}>
           <View style={styles.info}>
             <Skeleton style={styles.metaTextSkeleton} />
@@ -48,12 +33,8 @@ export function LiveStreamCardSkeleton({
             <Skeleton style={styles.metaWideSkeleton} />
           </View>
         </View>
-        {!isTextLayout ? (
-          <Skeleton style={styles.categoryLineSkeleton} />
-        ) : null}
+        <Skeleton style={styles.categoryLineSkeleton} />
       </View>
-
-      {isTextLayout ? <Skeleton style={imageStyle} /> : null}
     </View>
   );
 }
@@ -64,18 +45,12 @@ const styles = StyleSheet.create({
     height: 20,
     width: 88,
   },
-  categorySkeleton: {
-    borderRadius: theme.borderRadius12,
-    height: 18,
-    marginLeft: 'auto',
-    width: 68,
-  },
   container: {
     alignItems: 'flex-start',
     backgroundColor: CARD_SURFACE,
     borderColor: CARD_BORDER,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.borderRadius10,
     borderWidth: 1,
     columnGap: theme.space12,
     flexDirection: 'row',
@@ -88,10 +63,6 @@ const styles = StyleSheet.create({
   },
   containerMedia: {
     minHeight: 124,
-  },
-  containerText: {
-    alignItems: 'stretch',
-    minHeight: 104,
   },
   details: {
     flex: 1,
@@ -114,15 +85,9 @@ const styles = StyleSheet.create({
   },
   imageSkeleton: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.borderRadius6,
     height: 88,
     width: 132,
-  },
-  imageText: {
-    alignSelf: 'center',
-    height: 76,
-    marginLeft: theme.space12,
-    width: 108,
   },
   info: {
     alignItems: 'center',
@@ -148,9 +113,6 @@ const styles = StyleSheet.create({
   titleSkeleton: {
     height: 18,
     width: '72%',
-  },
-  titleText: {
-    width: '92%',
   },
   usernameSkeleton: {
     height: 14,

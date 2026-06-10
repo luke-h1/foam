@@ -11,7 +11,6 @@ import { sanitizeInput } from './sanitizeInput';
 import { splitTextWithTwemoji } from './splitTextWithTwemoji';
 
 export type { FindEmotesInTextReturn };
-export { findEmotesInText, getSortedEmoteNames };
 
 export type TwitchNotices =
   /**

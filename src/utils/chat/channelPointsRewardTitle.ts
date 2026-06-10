@@ -3,7 +3,7 @@ import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 
 import { unescapeIrcTag } from './unescapeIrcTag';
 
-export const HIGHLIGHT_MY_MESSAGE_REWARD_TITLE = 'Highlight My Message';
+const HIGHLIGHT_MY_MESSAGE_REWARD_TITLE = 'Highlight My Message';
 
 export type ChannelPointsRewardTags = Record<
   string,

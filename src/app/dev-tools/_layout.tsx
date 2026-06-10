@@ -1,7 +1,12 @@
 import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
-import { Stack } from 'expo-router';
+import { isDevToolsEnabled } from '@app/utils/devTools/devToolsGate';
+import { Redirect, Stack } from 'expo-router';
 
 export default function DevToolsLayout() {
+  if (!isDevToolsEnabled) {
+    return <Redirect href='/tabs/settings' />;
+  }
+
   return (
     <Stack screenOptions={nativeStackScreenOptions}>
       <Stack.Screen

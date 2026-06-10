@@ -11,6 +11,7 @@ import {
   subscribeChannelPointRewardTitles,
 } from '@app/utils/chat/channelPointRewardTitleStore';
 import { hasSharedChannelPointsMessage } from '@app/components/Chat/util/channelPointsSharedMessage';
+import { findCustomHighlight } from '@app/utils/chat/customHighlights';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { useMappingHelper } from '@shopify/flash-list';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
@@ -64,6 +65,8 @@ export function useRichChatMessage<
     currentUsername,
     currentUsernameNormalized,
     density = 'comfortable',
+    fontScale,
+    customHighlights,
     highlightedUserSet,
     highlightedUsers,
     moderationNotice,
@@ -197,6 +200,7 @@ export function useRichChatMessage<
     compact,
     disableEmoteAnimations,
     effectiveHighlightedUserSet,
+    fontScale,
     getMentionColor,
     getPartKey,
     handleEmoteLongPress,
@@ -218,6 +222,14 @@ export function useRichChatMessage<
     isTwitchSystemNotice,
     isAnnouncement,
   );
+
+  const customHighlight =
+    detectedBodyVariant === 'user_chat' &&
+    !moderationNotice &&
+    customHighlights &&
+    customHighlights.length > 0
+      ? findCustomHighlight(message, customHighlights)
+      : undefined;
 
   const noticeMsgId =
     notice_tags && 'msg-id' in notice_tags ? notice_tags['msg-id'] : undefined;
@@ -302,6 +314,8 @@ export function useRichChatMessage<
   const isReply = Boolean(parentDisplayName);
   const replyParentMessageId = userstate['reply-parent-msg-id'];
   const isFirstMessage = userstate['first-msg'] === '1';
+  const isReturningChatter =
+    !isFirstMessage && userstate['returning-chatter'] === '1';
   const shouldRenderInlineReply =
     showInlineReplyContext &&
     isReply &&
@@ -327,6 +341,7 @@ export function useRichChatMessage<
     clearRowLongPressTimer,
     closeEmoteActionSheet,
     compact,
+    customHighlightColor: customHighlight?.color,
     disableEmoteAnimations,
     getMappingKey,
     handleBadgePress,
@@ -337,6 +352,7 @@ export function useRichChatMessage<
     isSharedChatDuplicated,
     isChannelPointRedemption,
     isFirstMessage,
+    isReturningChatter,
     isReplyingToCurrentUser,
     isHighlightedSender,
     isHighlightedMessageTarget,

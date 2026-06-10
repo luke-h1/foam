@@ -1,7 +1,5 @@
 import Constants from 'expo-constants';
-import Client from './Client';
-import { createLoggerInterceptor } from './interceptors/loggerInterceptor';
-import { createTracingInterceptor } from './interceptors/tracingInterceptor';
+import { createApiClient } from './Client';
 
 export const mockServerUrl = Constants.expoConfig?.extra?.MOCK_SERVER_URL as
   | string
@@ -18,39 +16,23 @@ export const twitchClientId =
     | string
     | undefined) ?? process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID;
 
-const twitchHelixClientOptions = {
+export const twitchApi = createApiClient({
   baseURL: twitchApiBaseUrl,
-  headers: {
-    'Client-ID': twitchClientId,
-  },
-  requestInterceptors: [createLoggerInterceptor('twitch')],
-  responseInterceptors: [createTracingInterceptor],
-};
+  headers: { 'Client-ID': twitchClientId ?? '' },
+  logPrefix: 'twitch',
+});
 
-export const twitchApi = new Client(twitchHelixClientOptions);
-
-export function setTwitchApiAuthToken(token: string): void {
-  twitchApi.setAuthToken(token);
-}
-
-export function removeTwitchApiAuthToken(): void {
-  twitchApi.removeAuthToken();
-}
-
-export const bttvCachedApi = new Client({
+export const bttvCachedApi = createApiClient({
   baseURL: 'https://api.betterttv.net/3/cached',
-  requestInterceptors: [createLoggerInterceptor('bttv')],
-  responseInterceptors: [createTracingInterceptor],
+  logPrefix: 'bttv',
 });
 
-export const sevenTvApi = new Client({
+export const sevenTvApi = createApiClient({
   baseURL: 'https://7tv.io/v3',
-  requestInterceptors: [createLoggerInterceptor('stv')],
-  responseInterceptors: [createTracingInterceptor],
+  logPrefix: 'stv',
 });
 
-export const ffzApi = new Client({
+export const ffzApi = createApiClient({
   baseURL: 'https://api.frankerfacez.com/v1',
-  requestInterceptors: [createLoggerInterceptor('ffz')],
-  responseInterceptors: [createTracingInterceptor],
+  logPrefix: 'ffz',
 });

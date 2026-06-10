@@ -11,7 +11,11 @@ import { MediaLinkCard } from '../../MediaLinkCard';
 import { StvEmoteEvent } from '../../StvEmoteEvent';
 import { SubscriptionNotice } from '../../usernotices/SubscriptionNotice';
 import { ViewerMileStoneNoticeComponent } from '../../usernotices/ViewerMilestoneNotice';
-import { styles } from '../RichChatMessage.styles';
+import {
+  getChatFontScaleStyle,
+  styles,
+  type ChatFontScale,
+} from '../RichChatMessage.styles';
 import type { EmotePressData } from '../RichChatMessage.types';
 import { normaliseUsername } from '../richChatMessageHelpers';
 import { EmoteRenderer } from './EmoteRenderer';
@@ -19,6 +23,7 @@ import { EmoteRenderer } from './EmoteRenderer';
 export interface UseChatMessagePartRendererArgs {
   compact: boolean;
   disableEmoteAnimations: boolean;
+  fontScale?: ChatFontScale;
   effectiveHighlightedUserSet?: ReadonlySet<string>;
   getMentionColor?: (username: string) => string;
   getPartKey: (part: ParsedPart, index: number) => Key;
@@ -35,6 +40,7 @@ export interface UseChatMessagePartRendererArgs {
 export function useChatMessagePartRenderer({
   compact,
   disableEmoteAnimations,
+  fontScale,
   effectiveHighlightedUserSet,
   getMentionColor,
   getPartKey,
@@ -62,6 +68,7 @@ export function useChatMessagePartRenderer({
             style={[
               styles.messageText,
               compact && styles.messageTextCompact,
+              getChatFontScaleStyle(fontScale, compact),
               Boolean(moderationNotice) && styles.moderatedMessageText,
             ]}
           >
@@ -115,6 +122,7 @@ export function useChatMessagePartRenderer({
             style={[
               styles.messageLink,
               compact && styles.messageLinkCompact,
+              getChatFontScaleStyle(fontScale, compact),
               Boolean(moderationNotice) && styles.moderatedMessageText,
             ]}
           >
@@ -160,6 +168,7 @@ export function useChatMessagePartRenderer({
               style={[
                 styles.messageText,
                 compact && styles.messageTextCompact,
+                getChatFontScaleStyle(fontScale, compact),
                 Boolean(moderationNotice) && styles.moderatedMessageText,
               ]}
             >
@@ -180,6 +189,7 @@ export function useChatMessagePartRenderer({
             style={[
               styles.mention,
               compact && styles.mentionCompact,
+              getChatFontScaleStyle(fontScale, compact),
               isHighlightedMention && styles.mentionHighlighted,
               { color: mentionColor },
               Boolean(moderationNotice) && styles.moderatedMessageText,
