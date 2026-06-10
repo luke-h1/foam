@@ -1235,7 +1235,7 @@ export const clearCache = (channelId?: string) => {
 export const clearChatCosmeticsCache = (): void => {
   batch(() => {
     chatStore$.persisted.channelCaches.set({});
-    chatStore$.persisted.recentMessagesByChannel.set({});
+    chatStore$.recentMessagesByChannel.set({});
     chatStore$.persisted.lastGlobalUpdate.set(0);
     chatStore$.currentChannelId.set(null);
     chatStore$.loadingState.set('IDLE');

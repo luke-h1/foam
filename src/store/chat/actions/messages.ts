@@ -24,10 +24,10 @@ const messageKeyToIndex = new Map<string, number>();
 const MAX_CHAT_MESSAGES = 600;
 const MAX_RECENT_MESSAGES = 80;
 const MAX_RECENT_MESSAGE_CHANNELS = 10;
-// Persisting recentMessagesByChannel re-serializes the whole persisted store
-// node (including channelCaches) to MMKV, which showed up as the largest JS
-// hotspot in busy chats (issue #594). Recent messages are a re-entry nicety,
-// so a long defer is fine; moderation/clear paths still flush immediately.
+// Each sync re-serializes recentMessagesByChannel to MMKV, which showed up
+// as a top JS hotspot in busy chats (issue #594). Recent messages are a
+// re-entry nicety, so a long defer is fine; moderation/clear paths still
+// flush immediately.
 export const RECENT_MESSAGES_SYNC_DELAY_MS = 15_000;
 
 let recentMessagesSyncTimer: ReturnType<typeof setTimeout> | null = null;
@@ -183,7 +183,7 @@ const rebuildMessageIndexes = (
 
 const trimRecentMessageChannels = () => {
   const recentMessagesByChannel =
-    chatStore$.persisted.recentMessagesByChannel.peek() ?? {};
+    chatStore$.recentMessagesByChannel.peek() ?? {};
   const entries = Object.entries(recentMessagesByChannel);
 
   if (entries.length <= MAX_RECENT_MESSAGE_CHANNELS) {
@@ -208,9 +208,7 @@ const trimRecentMessageChannels = () => {
     }
   }
 
-  chatStore$.persisted.recentMessagesByChannel.set(
-    Object.fromEntries(nextEntries),
-  );
+  chatStore$.recentMessagesByChannel.set(Object.fromEntries(nextEntries));
 };
 
 const persistRecentMessagesForChannel = (
@@ -218,7 +216,7 @@ const persistRecentMessagesForChannel = (
   nextMessages: AnyChatMessageType[],
 ) => {
   const recentMessagesByChannel =
-    chatStore$.persisted.recentMessagesByChannel.peek() ?? {};
+    chatStore$.recentMessagesByChannel.peek() ?? {};
   const existingMessages = recentMessagesByChannel[channelId];
   if (existingMessages === nextMessages) {
     return;
@@ -235,7 +233,7 @@ const persistRecentMessagesForChannel = (
     return;
   }
 
-  chatStore$.persisted.recentMessagesByChannel.set({
+  chatStore$.recentMessagesByChannel.set({
     ...recentMessagesByChannel,
     [channelId]: nextRecentMessages,
   });
@@ -657,7 +655,7 @@ export const replaceMessagesWithSystemMessage = (
 
 export const restoreRecentMessagesForChannel = (channelId: string): number => {
   const recentMessages = dedupeMessagesForStore(
-    chatStore$.persisted.recentMessagesByChannel[channelId]?.peek() ?? [],
+    chatStore$.recentMessagesByChannel[channelId]?.peek() ?? [],
   );
 
   if (recentMessages.length === 0) {

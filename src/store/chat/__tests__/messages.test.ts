@@ -94,14 +94,14 @@ describe('chatStore messages', () => {
   beforeEach(() => {
     clearMessages();
     chatStore$.currentChannelId.set(null);
-    chatStore$.persisted.recentMessagesByChannel.set({});
+    chatStore$.recentMessagesByChannel.set({});
   });
 
   afterEach(() => {
     jest.useRealTimers();
     clearMessages();
     chatStore$.currentChannelId.set(null);
-    chatStore$.persisted.recentMessagesByChannel.set({});
+    chatStore$.recentMessagesByChannel.set({});
   });
 
   test('removeMessageById removes the targeted message and keeps others', () => {
@@ -213,7 +213,7 @@ describe('chatStore messages', () => {
   });
 
   test('restoreRecentMessagesForChannel skips sparse persisted entries', () => {
-    chatStore$.persisted.recentMessagesByChannel.set({
+    chatStore$.recentMessagesByChannel.set({
       'channel-1': createSparsePersistedEntries([
         undefined,
         createInvalidStoredMessage(),
@@ -230,7 +230,7 @@ describe('chatStore messages', () => {
   });
 
   test('restoreRecentMessagesForChannel dedupes persisted entries by id', () => {
-    chatStore$.persisted.recentMessagesByChannel.set({
+    chatStore$.recentMessagesByChannel.set({
       'channel-1': [
         createMessage('msg-1', 'msg-1', 'first'),
         createMessage('msg-1', 'msg-1', 'duplicate key'),
@@ -278,13 +278,13 @@ describe('chatStore messages', () => {
 
     expect(chatStore$.messages.peek()).toHaveLength(2);
     expect(
-      chatStore$.persisted.recentMessagesByChannel.peek()['channel-1'],
+      chatStore$.recentMessagesByChannel.peek()['channel-1'],
     ).toBeUndefined();
 
     jest.advanceTimersByTime(RECENT_MESSAGES_SYNC_DELAY_MS);
 
     expect(
-      chatStore$.persisted.recentMessagesByChannel
+      chatStore$.recentMessagesByChannel
         .peek()
         ['channel-1']?.map(message => message.message_id),
     ).toEqual(['msg-1', 'msg-2']);
@@ -312,14 +312,13 @@ describe('chatStore messages', () => {
       { type: 'text', content: 'hydrated' },
     ]);
     expect(
-      chatStore$.persisted.recentMessagesByChannel.peek()['channel-1'],
+      chatStore$.recentMessagesByChannel.peek()['channel-1'],
     ).toBeUndefined();
 
     jest.advanceTimersByTime(RECENT_MESSAGES_SYNC_DELAY_MS);
 
     expect(
-      chatStore$.persisted.recentMessagesByChannel.peek()['channel-1']?.[0]
-        ?.message,
+      chatStore$.recentMessagesByChannel.peek()['channel-1']?.[0]?.message,
     ).toEqual([{ type: 'text', content: 'hydrated' }]);
 
     jest.useRealTimers();
