@@ -285,6 +285,9 @@ const config: ExpoConfig = {
           useFrameworks: 'static',
           forceStaticLinking: ['RNFBApp'],
           deploymentTarget: '16.4',
+          // Precompiled ExpoModulesCore references SwiftUICore, which fails to
+          // link with Xcode 26.5 (not an allowed client). Build from source.
+          usePrecompiledModules: false,
         },
         android: {
           enableProguardInReleaseBuilds: true,
