@@ -61,6 +61,9 @@ export function ReplyingToHeader({
     hasPaint: false,
     isModerated: false,
   });
+  const quoteContainsEmotes = parsedReplyBody.some(
+    part => part.type === 'emote',
+  );
   const replyContextIconColor = isReplyingToCurrentUser
     ? CHAT_NOTICE_ACCENTS.replyToYou
     : 'rgba(255, 255, 255, 0.5)';
@@ -88,7 +91,13 @@ export function ReplyingToHeader({
       />
       <View style={styles.replyContextContent}>
         {canRenderInlineQuote ? (
-          <Text numberOfLines={1} style={replyContextPrefixTextStyle}>
+          <Text
+            numberOfLines={1}
+            style={[
+              replyContextPrefixTextStyle,
+              quoteContainsEmotes && styles.replyContextEmoteLine,
+            ]}
+          >
             <Text style={replyContextPrefixTextStyle}>
               {parsedReplyBody.length > 0 ? `${prefix}: ` : prefix}
             </Text>

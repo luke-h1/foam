@@ -198,6 +198,17 @@ export const styles = StyleSheet.create({
     minWidth: 0,
     width: '100%',
   },
+  // Lines that contain inline emotes need a taller lineHeight than the
+  // text metrics, otherwise the fixed lineHeight clips the emote image.
+  messageTextEmoteLine: {
+    lineHeight: 32,
+  },
+  messageTextEmoteLineCompact: {
+    lineHeight: 28,
+  },
+  replyContextEmoteLine: {
+    lineHeight: 24,
+  },
   messageText: {
     ...chatLineMetrics.comfortable,
   },

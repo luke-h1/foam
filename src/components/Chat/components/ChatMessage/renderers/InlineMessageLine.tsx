@@ -222,6 +222,7 @@ export function InlineMessageLine({
   replyPlainMentionTarget,
   emoteTargetSize,
 }: InlineMessageLineProps): ReactNode {
+  const containsEmotes = message.some(part => part.type === 'emote');
   const spans = renderInlineMessageSpans(message, {
     compact,
     disableEmoteAnimations,
@@ -236,7 +237,16 @@ export function InlineMessageLine({
 
   return (
     <View style={styles.messageLineInline}>
-      <Text style={[styles.messageText, compact && styles.messageTextCompact]}>
+      <Text
+        style={[
+          styles.messageText,
+          compact && styles.messageTextCompact,
+          containsEmotes &&
+            (compact
+              ? styles.messageTextEmoteLineCompact
+              : styles.messageTextEmoteLine),
+        ]}
+      >
         {showTimestamp && timestamp ? (
           <Text
             tabular
