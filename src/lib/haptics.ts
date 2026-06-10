@@ -1,9 +1,7 @@
 import { getPreferences } from '@app/store/preferences/state';
 import {
   ImpactFeedbackStyle,
-  NotificationFeedbackType,
   impactAsync as expoImpactAsync,
-  notificationAsync as expoNotificationAsync,
   selectionAsync as expoSelectionAsync,
 } from 'expo-haptics';
 
@@ -35,21 +33,4 @@ export async function selection() {
     return undefined;
   }
   return expoSelectionAsync();
-}
-
-export async function notification(
-  type: 'success' | 'warning' | 'error' = 'success',
-) {
-  if (!hapticsEnabled()) {
-    return undefined;
-  }
-
-  const expoType =
-    type === 'warning'
-      ? NotificationFeedbackType.Warning
-      : type === 'error'
-        ? NotificationFeedbackType.Error
-        : NotificationFeedbackType.Success;
-
-  return expoNotificationAsync(expoType);
 }

@@ -22,14 +22,6 @@ export const twitchApi = createApiClient({
   logPrefix: 'twitch',
 });
 
-export function setTwitchApiAuthToken(token: string): void {
-  twitchApi.setAuthToken(token);
-}
-
-export function removeTwitchApiAuthToken(): void {
-  twitchApi.removeAuthToken();
-}
-
 export const bttvCachedApi = createApiClient({
   baseURL: 'https://api.betterttv.net/3/cached',
   logPrefix: 'bttv',

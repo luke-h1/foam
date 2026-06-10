@@ -88,7 +88,7 @@ async function flushPendingMentionLogins(): Promise<void> {
   }
 }
 
-export function queueMentionLoginLookup(login?: string | null): void {
+function queueMentionLoginLookup(login?: string | null): void {
   const trimmed = login?.trim();
   if (!trimmed) {
     return;

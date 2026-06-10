@@ -1,7 +1,6 @@
 import { getPreferences } from '@app/store/preferenceStore';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
-import { batch } from '@legendapp/state';
 import {
   clearMessageColorIndexes,
   getMessageColor as getIndexedMessageColor,
@@ -735,15 +734,6 @@ export const clearMessages = () => {
   clearMessageColorIndexes();
   clearMentionLoginIndex();
   chatStore$.messages.set([]);
-};
-
-export const replaceMessagesWithSystemMessage = (
-  message: AnyChatMessageType,
-) => {
-  batch(() => {
-    clearMessages();
-    addMessage(message);
-  });
 };
 
 export const restoreRecentMessagesForChannel = (channelId: string): number => {

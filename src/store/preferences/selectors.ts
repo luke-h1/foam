@@ -71,20 +71,6 @@ export function useEmoteRenderPreferences(): EmoteRenderPreferences {
   );
 }
 
-export function useChatViewPreferences(): ChatViewPreferences {
-  return useSelector(
-    () =>
-      ({
-        chatDensity: preferences$.chatDensity.get(),
-        chatTimestamps: preferences$.chatTimestamps.get(),
-        disableEmoteAnimations: preferences$.disableEmoteAnimations.get(),
-        highlightOwnMentions: preferences$.highlightOwnMentions.get(),
-        showInlineReplyContext: preferences$.showInlineReplyContext.get(),
-        showUnreadJumpPill: preferences$.showUnreadJumpPill.get(),
-      }) satisfies ChatViewPreferences,
-  );
-}
-
 export function useChatRowPreferences(): ChatRowPreferences {
   return useSelector(
     () =>
@@ -107,23 +93,6 @@ export function useChatHydrationPreferences(): ChatHydrationPreferences {
         show7TvEmotes: preferences$.show7TvEmotes.get(),
         show7tvBadges: preferences$.show7tvBadges.get(),
       }) satisfies ChatHydrationPreferences,
-  );
-}
-
-export function useChatAssetPreferenceKey(): string {
-  return useSelector(() =>
-    [
-      preferences$.emojiStyle.get(),
-      preferences$.show7TvEmotes.get(),
-      preferences$.showBttvEmotes.get(),
-      preferences$.showFFzEmotes.get(),
-      preferences$.showTwitchEmotes.get(),
-      preferences$.show7tvBadges.get(),
-      preferences$.showBttvBadges.get(),
-      preferences$.showFFzBadges.get(),
-      preferences$.showTwitchBadges.get(),
-      preferences$.showChatterinoEmotes.get(),
-    ].join('|'),
   );
 }
 

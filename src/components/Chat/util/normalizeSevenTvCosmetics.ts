@@ -107,7 +107,7 @@ export function get7TvCosmeticId(
   return data.id === ZERO_ID && data.ref_id ? data.ref_id : data.id;
 }
 
-export function isSevenTvBadge(badge: SanitisedBadgeSet): boolean {
+function isSevenTvBadge(badge: SanitisedBadgeSet): boolean {
   return badge.provider === '7tv' || badge.type === '7TV Badge';
 }
 

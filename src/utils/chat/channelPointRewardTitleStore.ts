@@ -132,7 +132,7 @@ export function registerDeferredRewardgiftStandalone(options: {
   pendingStandaloneByKey.set(key, { timeout });
 }
 
-export function cancelDeferredRewardgiftStandalone(
+function cancelDeferredRewardgiftStandalone(
   login: string,
   rewardId: string,
 ): void {

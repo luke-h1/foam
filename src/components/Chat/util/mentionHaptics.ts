@@ -14,7 +14,3 @@ export function triggerMentionHaptic(now: number = Date.now()): void {
   lastMentionHapticAt = now;
   void impact('medium');
 }
-
-export function resetMentionHapticThrottleForTesting(): void {
-  lastMentionHapticAt = 0;
-}

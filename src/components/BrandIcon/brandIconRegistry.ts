@@ -1,10 +1,9 @@
-import { typedObjectKeys } from '@app/utils/typescript/typedObjectKeys';
 import { DimensionValue } from 'react-native';
 import { BttvIcon } from './svg/BttvIcon';
 import { StvIcon } from './svg/StvIcon';
 import { TwitchIcon } from './svg/TwitchIcon';
 
-export const ICON_SIZES = {
+const ICON_SIZES = {
   xs: { height: 12, width: 12 },
   sm: { height: 16, width: 16 },
   md: { height: 20, width: 20 },
@@ -22,8 +21,6 @@ export const BrandIcons = {
 } as const;
 
 export type BrandIconName = keyof typeof BrandIcons;
-
-export const IconSizes = typedObjectKeys(ICON_SIZES);
 
 export function resolveBrandIconSize(size: IconSize) {
   if (typeof size === 'string') {

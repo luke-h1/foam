@@ -48,12 +48,14 @@ function Spinner({ size }: { size: number }) {
   const rotation = useSharedValue(0);
 
   useEffect(() => {
-    rotation.value = withRepeat(
-      withTiming(2 * Math.PI, {
-        duration: ROTATION_DURATION_MS,
-        easing: Easing.linear,
-      }),
-      -1,
+    rotation.set(
+      withRepeat(
+        withTiming(2 * Math.PI, {
+          duration: ROTATION_DURATION_MS,
+          easing: Easing.linear,
+        }),
+        -1,
+      ),
     );
   }, [rotation]);
 

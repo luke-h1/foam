@@ -72,7 +72,7 @@ export const premiumBadge = requireFixture(
   twitchSanitisedGlobalBadges.find(badge => badge.id === 'premium_1'),
   'premium badge fixture is missing',
 );
-export const moderatorBadge = requireFixture(
+const moderatorBadge = requireFixture(
   twitchSanitisedGlobalBadges.find(badge => badge.id === 'moderator_1'),
   'moderator badge fixture is missing',
 );

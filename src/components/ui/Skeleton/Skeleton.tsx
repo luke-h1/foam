@@ -42,12 +42,14 @@ function SkeletonShimmer() {
   const size = useSharedValue({ width: 0, height: 0 });
 
   useEffect(() => {
-    progress.value = withRepeat(
-      withTiming(1, {
-        duration: SHIMMER_DURATION_MS,
-        easing: Easing.inOut(Easing.ease),
-      }),
-      -1,
+    progress.set(
+      withRepeat(
+        withTiming(1, {
+          duration: SHIMMER_DURATION_MS,
+          easing: Easing.inOut(Easing.ease),
+        }),
+        -1,
+      ),
     );
   }, [progress]);
 

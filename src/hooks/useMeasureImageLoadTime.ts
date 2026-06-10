@@ -15,10 +15,7 @@ type ImageLoadTimingOptions = {
 
 export type ImageLoadTimingCallback = (timing: ImageLoadTiming) => void;
 
-export const imageComponentsLoadingTimes: Record<
-  ImageLoadLabel,
-  ImageLoadTiming[]
-> = {
+const imageComponentsLoadingTimes: Record<ImageLoadLabel, ImageLoadTiming[]> = {
   Image: [],
   ExpoImage: [],
   NitroImage: [],

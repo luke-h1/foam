@@ -149,12 +149,3 @@ when(persistedState$?._state?.isLoadedLocal, () => {
 });
 
 export type ChatMessagesObservable = typeof chatStore$.messages;
-
-export const getChatMessagesObservable = (): ChatMessagesObservable =>
-  chatStore$.messages;
-
-export const getChatEmojiEmotes = () => chatStore$.emojis.peek();
-
-export const setCurrentChatChannelId = (channelId: string | null) => {
-  chatStore$.currentChannelId.set(channelId);
-};

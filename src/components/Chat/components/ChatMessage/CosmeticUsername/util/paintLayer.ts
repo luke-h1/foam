@@ -70,17 +70,6 @@ export function getPaintDropShadows(
   return shadows;
 }
 
-export function paintShadowToTextStyle(shadow: PaintShadow) {
-  return {
-    textShadowColor: sevenTvColorToCss(shadow.color),
-    textShadowOffset: {
-      width: shadow.x_offset || 0,
-      height: shadow.y_offset || 0,
-    },
-    textShadowRadius: shadow.radius || 0,
-  };
-}
-
 export function getLayerLayoutStyle(layer: PaintLayerData): ViewStyle {
   if (!layer.at && !layer.size) {
     return StyleSheet.absoluteFill;
@@ -119,7 +108,7 @@ function solidGradientConfig(color: string): LayerGradientConfig {
  * ..., [0.0, 0.2], [0.2, 0.4], [0.4, 0.6], [0.6, 0.8], ...). react-native-svg
  * has no native spreadMethod support, so expand the pattern to cover [0, 1].
  */
-export function expandRepeatingStops(stops: PaintStop[]): PaintStop[] {
+function expandRepeatingStops(stops: PaintStop[]): PaintStop[] {
   if (stops.length === 0) {
     return stops;
   }

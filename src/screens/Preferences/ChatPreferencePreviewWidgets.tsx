@@ -1,5 +1,4 @@
 import { Image } from '@app/components/Image/Image';
-import { Switch } from '@app/components/Switch/Switch';
 import { Text, type TextType } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
@@ -9,42 +8,6 @@ import type {
   PreviewProvider,
   ProviderPreviewVariant,
 } from './chatPreferenceTypes';
-
-export function IosToggleRow({
-  custom: _custom,
-  label,
-  subtitle,
-  value,
-  onValueChange,
-}: {
-  custom?: true;
-  label: string;
-  subtitle?: string;
-  value: boolean;
-  onValueChange: (value: boolean) => void;
-}) {
-  return (
-    <View style={styles.iosToggleRow}>
-      <View style={styles.iosToggleCopy}>
-        <Text color='gray' style={styles.iosToggleLabel} weight='semibold'>
-          {label}
-        </Text>
-        {subtitle ? (
-          <Text color='gray.textLow' style={styles.iosToggleSubtitle} type='xs'>
-            {subtitle}
-          </Text>
-        ) : null}
-      </View>
-      <View style={styles.iosSwitchSlot}>
-        <Switch
-          accessibilityLabel={label}
-          value={value}
-          onValueChange={onValueChange}
-        />
-      </View>
-    </View>
-  );
-}
 
 export const DensityPreview = function DensityPreview({
   density,
@@ -138,48 +101,6 @@ export function PreviewLabel() {
   );
 }
 
-export function ProviderTogglePreviewItem({
-  custom: _custom,
-  enabled,
-  label,
-  onValueChange,
-  provider,
-  variant,
-}: {
-  custom?: true;
-  enabled: boolean;
-  label: string;
-  onValueChange: (value: boolean) => void;
-  provider: PreviewProvider;
-  variant: ProviderPreviewVariant;
-}) {
-  return (
-    <View style={styles.providerTogglePreviewItem}>
-      <View style={styles.providerToggleHeader}>
-        <Text
-          color='gray'
-          style={[styles.iosToggleLabel, styles.providerToggleLabel]}
-          weight='semibold'
-        >
-          {label}
-        </Text>
-        <View style={styles.iosSwitchSlot}>
-          <Switch
-            accessibilityLabel={label}
-            value={enabled}
-            onValueChange={onValueChange}
-          />
-        </View>
-      </View>
-      <ChatPreferencePreview
-        provider={provider}
-        variant={variant === 'emotes' ? 'providerEmotes' : 'providerBadges'}
-        value={enabled}
-      />
-    </View>
-  );
-}
-
 export const ProviderPreviewItem = function ProviderPreviewItem({
   enabled,
   provider,
@@ -224,28 +145,6 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     width: 76,
   },
-  iosToggleCopy: {
-    flex: 1,
-    gap: theme.space4,
-    minWidth: 0,
-  },
-  iosToggleLabel: {
-    flexShrink: 1,
-    minWidth: 0,
-  },
-  iosToggleRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.space16,
-    minHeight: 44,
-    paddingHorizontal: 20,
-    paddingVertical: 11,
-  },
-  iosToggleSubtitle: {
-    flexShrink: 1,
-    lineHeight: 17,
-    minWidth: 0,
-  },
   previewMessage: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -282,20 +181,5 @@ const styles = StyleSheet.create({
     paddingBottom: theme.space12,
     paddingHorizontal: 20,
     paddingTop: theme.space4,
-  },
-  providerToggleHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.space16,
-    minHeight: 44,
-  },
-  providerToggleLabel: {
-    flex: 1,
-  },
-  providerTogglePreviewItem: {
-    gap: theme.space8,
-    paddingBottom: theme.space12,
-    paddingHorizontal: 20,
-    paddingTop: theme.space8,
   },
 });

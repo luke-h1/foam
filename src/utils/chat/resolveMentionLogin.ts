@@ -224,7 +224,3 @@ export function clearMentionLoginIndex(): void {
   mentionChatterIndex.clear();
   clearMentionSessionCaches();
 }
-
-export function getMentionLoginIndexSize(): number {
-  return mentionLoginIndex.size;
-}

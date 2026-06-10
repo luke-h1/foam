@@ -4,17 +4,13 @@ import { useEmoteRenderPreferences } from '../../preferences/selectors';
 import {
   emptyEmoteData,
   type ChannelCacheType,
-  type PaintData,
   type SanitisedBadgeSet,
   type SanitisedEmote,
 } from '../types/constants';
 import { chatStore$ } from '../observables/chatStore';
 
 export const useMessages = () => useSelector(chatStore$.messages);
-export const useTtvUsers = () => useSelector(chatStore$.ttvUsers);
 export const useEmojis = () => useSelector(chatStore$.emojis);
-export const useMentionLoginRevision = () =>
-  useSelector(chatStore$.mentionLoginRevision);
 
 type ChannelEmoteData = Pick<
   ChannelCacheType,
@@ -133,13 +129,3 @@ export const useChannelEmoteData = (channelId: string | null) => {
 };
 
 export const usePaints = () => useSelector(chatStore$.paints);
-
-export const useUserPaint = (userId?: string): PaintData | null =>
-  useSelector(() => {
-    if (!userId) {
-      return null;
-    }
-
-    const paintId = chatStore$.userPaintIds[userId]?.get();
-    return paintId ? (chatStore$.paints[paintId]?.get() ?? null) : null;
-  });

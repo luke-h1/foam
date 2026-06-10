@@ -14,12 +14,3 @@ export type DisplayMode = 'PORTRAIT' | 'LANDSCAPE';
 export function mode(dimensions: Dimensions): DisplayMode {
   return dimensions.height >= dimensions.width ? 'PORTRAIT' : 'LANDSCAPE';
 }
-
-/**
- * Helper function - flip dimensions (change display mode)
- *
- * @param dimensions - screen dimensions
- */
-export function rotate(dimensions: Dimensions): Dimensions {
-  return { width: dimensions.height, height: dimensions.width };
-}

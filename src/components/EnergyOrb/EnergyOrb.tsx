@@ -36,7 +36,7 @@ function EnergyOrbComponent({
   const time = useSharedValue<number>(0);
 
   useFrameCallback(() => {
-    time.value += 0.016 * speed;
+    time.set(time.get() + 0.016 * speed);
   });
 
   const [c0r, c0g, c0b] = useMemo<RGB>(
@@ -81,4 +81,3 @@ const styles = StyleSheet.create({
 });
 
 export const EnergyOrb = memo(EnergyOrbComponent);
-export default EnergyOrb;
