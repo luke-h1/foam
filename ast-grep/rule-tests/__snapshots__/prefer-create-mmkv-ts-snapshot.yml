@@ -2,13 +2,13 @@ id: prefer-create-mmkv-ts
 snapshots:
   const storage = new MMKV();:
     labels:
-    - source: new MMKV()
-      style: primary
-      start: 16
-      end: 26
-  'const storage = new MMKV({ id: ''rogue-storage'' });':
+      - source: new MMKV()
+        style: primary
+        start: 16
+        end: 26
+  "const storage = new MMKV({ id: 'rogue-storage' });":
     labels:
-    - source: 'new MMKV({ id: ''rogue-storage'' })'
-      style: primary
-      start: 16
-      end: 49
+      - source: "new MMKV({ id: 'rogue-storage' })"
+        style: primary
+        start: 16
+        end: 49
