@@ -13,14 +13,15 @@ import { useAuthContext } from '@app/context/AuthContext';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { useRefresh } from '@app/hooks/useRefresh';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
-import { twitchQueries } from '@app/queries/twitchQueries';
+import { useFollowedStreamsQuery } from '@app/hooks/queries/use-followed-streams-query';
+import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { TwitchStream } from '@app/services/twitch-service';
 import {
   usePreference,
   useUpdatePreferences,
 } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect, useRef, type ReactElement, useCallback } from 'react';
 
@@ -43,16 +44,12 @@ export default function FollowingScreen() {
   const streamListLayout = usePreference('streamListLayout');
   const updatePreferences = useUpdatePreferences();
 
-  const followingStreamsQuery = twitchQueries.getFollowedStreams(
-    user?.id as string,
-  );
-
   const refetchFollowingStreams = useCallback(
     () =>
       queryClient.refetchQueries({
-        queryKey: followingStreamsQuery.queryKey,
+        queryKey: twitchKeys.followedStreams(user?.id as string),
       }),
-    [followingStreamsQuery.queryKey, queryClient],
+    [user?.id, queryClient],
   );
 
   const handleRefreshFollowing = useCallback(() => {
@@ -69,8 +66,7 @@ export default function FollowingScreen() {
     isFetching,
     isError,
     isFetched,
-  } = useQuery({
-    ...followingStreamsQuery,
+  } = useFollowedStreamsQuery(user?.id as string, {
     enabled: !!user?.id,
     retry: 2,
     retryDelay: (attemptIndex: number) =>
@@ -111,9 +107,6 @@ export default function FollowingScreen() {
 
   const handleSetMediaLayout = () =>
     updatePreferences({ streamListLayout: 'media' });
-
-  const handleSetTextLayout = () =>
-    updatePreferences({ streamListLayout: 'text' });
 
   if (!authState?.isLoggedIn) {
     return (
@@ -268,35 +261,6 @@ export default function FollowingScreen() {
                   ]}
                 >
                   Media
-                </Text>
-              </Button>
-              <Button
-                onPress={handleSetTextLayout}
-                style={[
-                  styles.layoutToggleButton,
-                  streamListLayout === 'text' &&
-                    styles.layoutToggleButtonActive,
-                ]}
-              >
-                <SymbolView
-                  name='text.alignleft'
-                  size={14}
-                  tintColor={
-                    streamListLayout === 'text'
-                      ? theme.color.text.dark
-                      : theme.color.textSecondary.dark
-                  }
-                />
-                <Text
-                  type='xxs'
-                  weight='semibold'
-                  style={[
-                    styles.layoutToggleText,
-                    streamListLayout === 'text' &&
-                      styles.layoutToggleTextActive,
-                  ]}
-                >
-                  Text First
                 </Text>
               </Button>
             </View>

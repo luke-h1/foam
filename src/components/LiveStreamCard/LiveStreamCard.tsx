@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { elapsedStreamTime } from '@app/utils/string/elapsedStreamTime';
 import { formatViewCount } from '@app/utils/string/formatViewCount';
 import { StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { Button } from '../Button/Button';
 import { Image } from '../Image/Image';
 import { PressableArea } from '../PressableArea/PressableArea';
@@ -12,7 +13,7 @@ import { Text } from '@app/components/ui/Text/Text';
 
 interface Props {
   stream: TwitchStream;
-  layout?: 'compact' | 'media' | 'text';
+  layout?: 'compact' | 'media';
 }
 
 const LANGUAGE_NAMES: Record<string, string> = {
@@ -25,12 +26,11 @@ const LANGUAGE_NAMES: Record<string, string> = {
   pt: 'Portuguese',
 };
 
-const CARD_SURFACE = 'rgba(255,255,255,0.035)';
+const CARD_SURFACE = 'rgba(255,255,255,0.055)';
 const CARD_BORDER = 'rgba(255,255,255,0.13)';
+const TITLE_COLOR = 'rgba(235,235,240,0.86)';
 
 function LiveStreamCard({ stream, layout = 'compact' }: Props) {
-  const isMediaLayout = layout === 'media';
-  const isTextLayout = layout === 'text';
   const thumbnailUrl = stream.thumbnail_url
     .replace('{width}', '1920')
     .replace('{height}', '1080');
@@ -59,28 +59,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
     router.push(`/category/${stream.game_id}`);
   }, [stream.game_id]);
 
-  const cardStyles = [
-    styles.container,
-    isTextLayout && styles.containerText,
-    isMediaLayout && styles.containerMedia,
-  ];
-  const imageContainerStyle = [
-    styles.imageContainer,
-    isTextLayout && styles.imageContainerText,
-    isMediaLayout && styles.imageContainerMedia,
-  ];
-  const imageStyle = [
-    styles.image,
-    isTextLayout && styles.imageText,
-    isMediaLayout && styles.imageMedia,
-  ];
-  const imageWrapperStyle = [
-    styles.imageWrapper,
-    isTextLayout && styles.imageWrapperText,
-    isMediaLayout && styles.imageWrapperMedia,
-  ];
-
-  if (isMediaLayout) {
+  if (layout === 'media') {
     return (
       <Button onPress={handleStreamPress} style={styles.mediaCardWrapper}>
         <View style={styles.mediaContainer}>
@@ -92,6 +71,9 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               transition={150}
             />
             <View style={styles.liveBadge}>
+              <Animated.View
+                style={[styles.liveBadgeDot, livePulseAnimation]}
+              />
               <Text type='xxs' weight='bold' style={styles.liveBadgeText}>
                 LIVE
               </Text>
@@ -127,12 +109,25 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
             </PressableArea>
 
             <View style={styles.mediaTextColumn}>
+              <PressableArea
+                onPress={handleStreamerPress}
+                onPressIn={handleStreamerPressIn}
+                hitSlop={6}
+              >
+                <Text
+                  type='md'
+                  weight='semibold'
+                  style={styles.mediaUsername}
+                  numberOfLines={1}
+                >
+                  {stream.user_name}
+                </Text>
+              </PressableArea>
               <Text
-                type='md'
-                weight='bold'
-                numberOfLines={1}
-                variant='mono'
-                style={styles.title}
+                type='sm'
+                weight='medium'
+                numberOfLines={2}
+                style={styles.mediaTitle}
               >
                 {stream.title}
               </Text>
@@ -144,24 +139,9 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
                   numberOfLines={1}
                 >
                   {stream.game_name}
+                  {languageLabel ? `  •  ${languageLabel}` : ''}
                 </Text>
               </PressableArea>
-              <PressableArea
-                onPress={handleStreamerPress}
-                onPressIn={handleStreamerPressIn}
-                hitSlop={6}
-              >
-                <Text type='sm' style={styles.mediaUsername} numberOfLines={1}>
-                  {stream.user_name}
-                </Text>
-              </PressableArea>
-              {languageLabel ? (
-                <View style={styles.mediaTag}>
-                  <Text type='xs' weight='medium' style={styles.mediaTagText}>
-                    {languageLabel}
-                  </Text>
-                </View>
-              ) : null}
             </View>
           </View>
         </View>
@@ -171,106 +151,95 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
 
   return (
     <Button onPress={handleStreamPress} style={styles.cardWrapper}>
-      <View style={cardStyles}>
-        {isTextLayout ? null : (
-          <View style={imageContainerStyle}>
-            <Image
-              source={thumbnailUrl}
-              style={imageStyle}
-              containerStyle={imageWrapperStyle}
-              transition={150}
-            />
-          </View>
-        )}
+      <View style={styles.container}>
+        <View style={styles.imageContainer}>
+          <Image
+            source={thumbnailUrl}
+            style={styles.image}
+            containerStyle={styles.imageWrapper}
+            transition={150}
+          />
+        </View>
 
         <View style={styles.details}>
-          <View style={styles.headerRow}>
-            <PressableArea
-              onPress={handleStreamerPress}
-              onPressIn={handleStreamerPressIn}
-              style={styles.usernameButton}
-              hitSlop={8}
+          <PressableArea
+            onPress={handleStreamerPress}
+            onPressIn={handleStreamerPressIn}
+            style={styles.usernameButton}
+            hitSlop={8}
+          >
+            <Text
+              type='sm'
+              weight='semibold'
+              numberOfLines={1}
+              style={styles.username}
             >
-              <Text type={isTextLayout ? 'xs' : 'sm'} style={styles.username}>
-                {stream.user_name}
-              </Text>
-            </PressableArea>
-
-            {isTextLayout ? (
-              <PressableArea
-                onPress={handleCategoryPress}
-                style={[styles.categoryBadge, styles.categoryBadgeText]}
-                hitSlop={4}
-              >
-                <Text type='xxs' style={styles.categoryText}>
-                  {stream.game_name}
-                </Text>
-              </PressableArea>
-            ) : null}
-          </View>
+              {stream.user_name}
+            </Text>
+          </PressableArea>
 
           <Text
-            type={isTextLayout ? 'sm' : 'xs'}
-            weight={isTextLayout ? 'semibold' : 'medium'}
-            style={[
-              styles.title,
-              isMediaLayout && styles.titleMedia,
-              isTextLayout && styles.titleText,
-            ]}
-            numberOfLines={isMediaLayout ? 2 : isTextLayout ? 3 : 2}
+            type='sm'
+            weight='normal'
+            style={styles.title}
+            numberOfLines={2}
           >
             {stream.title}
           </Text>
 
-          <View
-            style={[styles.metadataRow, isTextLayout && styles.metadataRowText]}
-          >
+          <View style={styles.metadataRow}>
             <View style={styles.liveMeta}>
-              <View style={styles.redDot} />
-              <Text type='xxs' style={styles.liveText}>
+              <Animated.View style={[styles.redDot, livePulseAnimation]} />
+              <Text type='xs' style={styles.liveText}>
                 {elapsedStreamTime(stream.started_at)}
               </Text>
             </View>
-            <Text type='xxs' style={styles.metaDivider}>
+            <Text type='xs' style={styles.metaDivider}>
               •
             </Text>
-            <Text type='xxs' style={styles.viewersText}>
+            <Text type='xs' style={styles.viewersText}>
               {formatViewCount(stream.viewer_count)} watching
             </Text>
           </View>
 
-          {isTextLayout ? null : (
-            <PressableArea
-              onPress={handleCategoryPress}
-              style={[
-                styles.categoryBadge,
-                isMediaLayout && styles.categoryBadgeMedia,
-              ]}
-              hitSlop={4}
-            >
-              <Text type='xxs' style={styles.categoryText}>
-                {stream.game_name}
-              </Text>
-            </PressableArea>
-          )}
+          <PressableArea
+            onPress={handleCategoryPress}
+            style={styles.categoryButton}
+            hitSlop={6}
+          >
+            <Text type='xs' numberOfLines={1} style={styles.categoryText}>
+              {stream.game_name}
+            </Text>
+          </PressableArea>
         </View>
-
-        {isTextLayout ? (
-          <View style={imageContainerStyle}>
-            <Image
-              source={thumbnailUrl}
-              style={imageStyle}
-              containerStyle={imageWrapperStyle}
-              transition={150}
-            />
-          </View>
-        ) : null}
       </View>
     </Button>
   );
 }
 
 export const MemoizedLiveStreamCard = memo(LiveStreamCard);
+const livePulse = {
+  '0%': {
+    opacity: 1,
+    transform: [{ scale: 1 }],
+  },
+  '50%': {
+    opacity: 0.35,
+    transform: [{ scale: 0.75 }],
+  },
+  '100%': {
+    opacity: 1,
+    transform: [{ scale: 1 }],
+  },
+};
+
+const livePulseAnimation = {
+  animationDuration: '1600ms',
+  animationIterationCount: 'infinite',
+  animationName: livePulse,
+  animationTimingFunction: 'ease-in-out',
+} as const;
+
 const styles = StyleSheet.create({
   cardWrapper: {
     width: '100%',
@@ -280,22 +249,22 @@ const styles = StyleSheet.create({
     backgroundColor: theme.darkActiveContent,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
-    height: 48,
+    height: 44,
     justifyContent: 'center',
-    width: 48,
+    width: 44,
   },
   avatarImage: {
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
-    height: 48,
-    width: 48,
+    height: 44,
+    width: 44,
   },
   avatarImageWrapper: {
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
-    height: 48,
+    height: 44,
     overflow: 'hidden',
-    width: 48,
+    width: 44,
   },
   avatarInitial: {
     color: theme.color.text.dark,
@@ -304,31 +273,20 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     marginTop: 2,
   },
-  categoryBadge: {
+  categoryButton: {
     alignSelf: 'flex-start',
-    backgroundColor: theme.darkActiveContent,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-  },
-  categoryBadgeMedia: {
-    marginTop: 2,
-  },
-  categoryBadgeText: {
-    marginLeft: 'auto',
+    minWidth: 0,
   },
   categoryText: {
-    color: theme.color.text.dark,
-    fontWeight: '500',
-    lineHeight: 14,
+    color: theme.color.textSecondary.dark,
+    lineHeight: 16,
   },
   container: {
     alignItems: 'flex-start',
     backgroundColor: CARD_SURFACE,
     borderColor: CARD_BORDER,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
+    borderRadius: theme.borderRadius10,
     borderWidth: 0.55,
     flexDirection: 'row',
     flexWrap: 'nowrap',
@@ -337,76 +295,37 @@ const styles = StyleSheet.create({
     minHeight: 112,
     overflow: 'hidden',
     paddingHorizontal: theme.space12,
-    paddingVertical: 10,
-  },
-  containerMedia: {
-    minHeight: 124,
-  },
-  containerText: {
-    alignItems: 'stretch',
-    minHeight: 104,
+    paddingVertical: theme.space12,
   },
   details: {
     flex: 1,
     flexShrink: 1,
-    gap: 5,
+    gap: 4,
     justifyContent: 'flex-start',
-    minHeight: 76,
+    minHeight: 88,
     minWidth: 0,
-  },
-  headerRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.space8,
   },
   image: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.borderRadius6,
     height: 88,
     width: 132,
   },
   imageContainer: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.borderRadius6,
     flexShrink: 0,
     height: 88,
     marginRight: theme.space12,
     overflow: 'hidden',
     width: 132,
   },
-  imageContainerMedia: {
-    height: 98,
-    width: 164,
-  },
-  imageContainerText: {
-    alignSelf: 'center',
-    height: 76,
-    marginLeft: theme.space12,
-    marginRight: 0,
-    width: 108,
-  },
-  imageMedia: {
-    height: 98,
-    width: 164,
-  },
-  imageText: {
-    height: 76,
-    width: 108,
-  },
   imageWrapper: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.borderRadius6,
     height: 88,
     overflow: 'hidden',
     width: 132,
-  },
-  imageWrapperMedia: {
-    height: 98,
-    width: 164,
-  },
-  imageWrapperText: {
-    height: 76,
-    width: 108,
   },
   liveMeta: {
     alignItems: 'center',
@@ -414,14 +333,23 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   liveBadge: {
+    alignItems: 'center',
     backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius6,
+    columnGap: 4,
+    flexDirection: 'row',
     left: theme.space12,
     paddingHorizontal: 7,
     paddingVertical: 3,
     position: 'absolute',
     top: theme.space12,
+  },
+  liveBadgeDot: {
+    backgroundColor: theme.color.background.dark,
+    borderRadius: 2.5,
+    height: 5,
+    width: 5,
   },
   liveBadgeText: {
     color: theme.color.background.dark,
@@ -449,12 +377,12 @@ const styles = StyleSheet.create({
   mediaImage: {
     aspectRatio: 16 / 9,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.borderRadius6,
     width: '100%',
   },
   mediaImageShell: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.borderRadius6,
     overflow: 'hidden',
     position: 'relative',
     width: '100%',
@@ -462,34 +390,22 @@ const styles = StyleSheet.create({
   mediaImageWrapper: {
     aspectRatio: 16 / 9,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.borderRadius6,
     overflow: 'hidden',
     width: '100%',
   },
-  mediaTag: {
-    alignSelf: 'flex-start',
-    backgroundColor: theme.darkActiveContent,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    marginTop: theme.space8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  mediaTagText: {
-    color: theme.color.text.dark,
-    lineHeight: 16,
-  },
   mediaTextColumn: {
     flex: 1,
+    gap: 2,
     minWidth: 0,
   },
   mediaTitle: {
-    color: theme.color.text.dark,
-    lineHeight: 22,
+    color: TITLE_COLOR,
+    lineHeight: 19,
   },
   mediaUsername: {
-    color: theme.color.textSecondary.dark,
-    lineHeight: 20,
+    color: theme.color.text.dark,
+    lineHeight: 21,
   },
   metaDivider: {
     color: theme.color.textSecondary.dark,
@@ -501,9 +417,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 6,
   },
-  metadataRowText: {
-    marginTop: 'auto',
-  },
   redDot: {
     backgroundColor: '#ff4444',
     borderRadius: 3,
@@ -511,21 +424,15 @@ const styles = StyleSheet.create({
     width: 6,
   },
   title: {
-    color: theme.color.text.dark,
-    lineHeight: 18,
-  },
-  titleMedia: {
-    lineHeight: 20,
-  },
-  titleText: {
-    lineHeight: 20,
+    color: TITLE_COLOR,
+    lineHeight: 19,
   },
   username: {
-    color: theme.color.textSecondary.dark,
+    color: theme.color.text.dark,
   },
   usernameButton: {
     alignSelf: 'flex-start',
-    flex: 1,
+    flex: 0,
     minWidth: 0,
   },
   viewersText: {

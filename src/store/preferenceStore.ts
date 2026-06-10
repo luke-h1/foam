@@ -12,7 +12,7 @@ export interface Preferences {
   updatedAt: number;
   theme: Theme;
   hapticFeedback: boolean;
-  streamListLayout: 'compact' | 'media' | 'text';
+  streamListLayout: 'compact' | 'media';
   chatDensity: 'comfortable' | 'compact';
   showAlternatingChatRows: boolean;
   chatTimestamps: boolean;
@@ -72,6 +72,11 @@ export const preferences$ = observable(initialPreferences);
 persistObservable(preferences$, {
   local: createObservablePersistenceLocalConfig(PREFERENCES_PERSISTENCE_KEY),
 });
+
+// The 'text' stream list layout was removed; migrate old persisted values.
+if ((preferences$.streamListLayout.peek() as string) === 'text') {
+  preferences$.streamListLayout.set('compact');
+}
 
 export function getPreferences(): Preferences {
   return preferences$.peek();

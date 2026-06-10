@@ -158,6 +158,10 @@ interface SearchHistoryV2Props {
   onClearAll: () => void;
 }
 
+// The history section does not scroll; anything beyond this would render
+// underneath the floating search bar.
+const MAX_VISIBLE_HISTORY = 8;
+
 export function SearchHistoryV2({
   history,
   onClearAll,
@@ -205,7 +209,7 @@ export function SearchHistoryV2({
       </View>
 
       <View style={styles.historyList}>
-        {history.map(query => (
+        {history.slice(0, MAX_VISIBLE_HISTORY).map(query => (
           <SwipeableHistoryItem
             key={query}
             query={query}

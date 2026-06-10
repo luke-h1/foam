@@ -6,7 +6,7 @@ const FONT_SCALE = 1.2;
 
 const isIpad = Device.osName === 'iPadOS';
 
-const spaceScale = (value: number) =>
+export const spaceScale = (value: number) =>
   isIpad ? Math.round(value * SPACE_SCALE) : value;
 
 const fontScale = (value: number) =>
@@ -85,10 +85,14 @@ export const semanticColorGroups = {
   },
 } as const;
 
+// Token naming convention: flat `colorX` scalars, `color.<semantic>.{light,dark}`
+// groups, and scaled `spaceN`/`fontSizeN`/`borderRadiusN` tokens.
 export const theme = {
   colorRed: semanticColorGroups.red.accent,
   colorWhite: semanticColorGroups.gray.text,
   colorBlack: semanticColorGroups.gray.bg,
+  colorLightGreen: primaryAccentHover,
+  colorDarkGreen: primaryAccent,
   colorPrimary: semanticColorGroups.accent.accent,
   colorPrimaryAlpha: semanticColorGroups.accent.accentAlpha,
   colorPrimaryHover: semanticColorGroups.accent.accentHover,
