@@ -10,9 +10,9 @@ import { normaliseUsername } from '../richChatMessageHelpers';
 import { ChatMessageBody } from './ChatMessageBody';
 import {
   canRenderMessageInline,
-  renderInlineMessageSpans,
   type InlineFlowPart,
-} from './InlineMessageLine';
+} from '@app/components/Chat/util/canRenderMessageInline';
+import { InlineMessageSpans } from './InlineMessageSpans';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 
 const REPLY_CONTEXT_EMOTE_SIZE_COMFORTABLE = 20;
@@ -101,15 +101,18 @@ export function ReplyingToHeader({
             <Text style={replyContextPrefixTextStyle}>
               {parsedReplyBody.length > 0 ? `${prefix}: ` : prefix}
             </Text>
-            {renderInlineMessageSpans(parsedReplyBody as InlineFlowPart[], {
-              ...partRendererArgs,
-              compact,
-              emoteTargetSize: compact
-                ? REPLY_CONTEXT_EMOTE_SIZE_COMPACT
-                : REPLY_CONTEXT_EMOTE_SIZE_COMFORTABLE,
-              replyPlainMentionTarget,
-              textStyle: replyContextBodyTextStyle,
-            })}
+            <InlineMessageSpans
+              {...partRendererArgs}
+              compact={compact}
+              emoteTargetSize={
+                compact
+                  ? REPLY_CONTEXT_EMOTE_SIZE_COMPACT
+                  : REPLY_CONTEXT_EMOTE_SIZE_COMFORTABLE
+              }
+              message={parsedReplyBody as InlineFlowPart[]}
+              replyPlainMentionTarget={replyPlainMentionTarget}
+              textStyle={replyContextBodyTextStyle}
+            />
           </Text>
         ) : (
           <>
