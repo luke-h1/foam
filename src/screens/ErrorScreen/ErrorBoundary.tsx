@@ -1,5 +1,6 @@
 /* eslint-disable react/destructuring-assignment */
 import { recordError } from '@app/lib/sentry';
+import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
 import { Component } from 'react';
 import type { ReactNode, ErrorInfo } from 'react';
 
@@ -45,6 +46,8 @@ export class ErrorBoundary extends Component<Props, State> {
       error,
       errorInfo,
     });
+
+    markSessionError();
 
     recordError({
       name: 'error_boundary_error',

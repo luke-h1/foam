@@ -8,6 +8,7 @@ import {
   ReanimatedLogLevel,
 } from 'react-native-reanimated';
 import { enableFreeze } from 'react-native-screens';
+import { installGlobalErrorHandlers } from '../lib/global-error-handlers';
 import { init as initSentry } from '../lib/sentry';
 
 configureReanimatedLogger({
@@ -19,6 +20,7 @@ enableFreeze(true);
 
 WebBrowser.maybeCompleteAuthSession();
 initSentry();
+installGlobalErrorHandlers();
 Observe.configure({
   environment: process.env.EXPO_PUBLIC_APP_VARIANT ?? 'development',
   dispatchingEnabled: true,

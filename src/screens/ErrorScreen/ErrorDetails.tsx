@@ -2,9 +2,14 @@ import type { ErrorInfo } from 'react';
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
+import { queryClient } from '@app/lib/react-query/query-client';
 import { showFeedbackWidget } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import {
+  categorizeError,
+  getFriendlyErrorMessage,
+} from '@app/utils/errors/categorizeError';
 import { useObservable, useSelector } from '@legendapp/state/react';
 import { ScrollView, View, StyleSheet } from 'react-native';
 
@@ -24,6 +29,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
   const showStackTrace = useSelector(showStackTrace$);
 
   const errorTitle = `${error}`.trim();
+  const errorCategory = categorizeError(error);
 
   const stackTrace = errorInfo?.componentStack
     ?.split('\n')
@@ -49,7 +55,9 @@ export function ErrorDetails(props: ErrorDetailsProps) {
         />
 
         <Text type='lg' weight='semibold' align='center'>
-          Something went wrong
+          {errorCategory === 'network'
+            ? 'Connection trouble'
+            : 'Something went wrong'}
         </Text>
 
         <Text
@@ -58,8 +66,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
           align='center'
           style={styles.description}
         >
-          Try resetting or restarting the app. If the issue persists, send
-          feedback so we can look into it.
+          {getFriendlyErrorMessage(errorCategory)}
         </Text>
 
         <View style={styles.actionRow}>
@@ -131,7 +138,17 @@ export function ErrorDetails(props: ErrorDetailsProps) {
         </View>
       ) : null}
 
-      <Button style={styles.resetButton} onPress={onReset}>
+      <Button
+        style={styles.resetButton}
+        onPress={() => {
+          // Failed queries would re-render straight back into the error
+          // state; clear them so the reset gets a clean fetch.
+          void queryClient.resetQueries({
+            predicate: query => query.state.status === 'error',
+          });
+          onReset();
+        }}
+      >
         <Text type='sm' weight='semibold' color='gray' contrast align='center'>
           Reset App
         </Text>

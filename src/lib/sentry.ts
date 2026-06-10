@@ -4,6 +4,7 @@ import {
   reactNavigationIntegration,
 } from '@sentry/react-native';
 import * as Sentry from '@sentry/react-native';
+import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
 import type { ComponentType } from 'react';
 
 // Created once at module load so RootLayoutNav can call
@@ -38,6 +39,15 @@ export function init() {
     attachStacktrace: true,
     sampleRate: 1,
     integrations: [reactNativeTracingIntegration(), navigationIntegration],
+    beforeSend(event) {
+      // Keep the store-review prompt gate honest: any error-level event
+      // (including unhandled rejections Sentry tracks itself) marks the
+      // session so we never ask for a rating in a bad session.
+      if (event.level === 'fatal' || event.level === 'error') {
+        markSessionError();
+      }
+      return event;
+    },
     // 100% in dev/testflight for full visibility; 20% in production to keep
     // transaction volume manageable on high-chat-volume sessions.
     tracesSampleRate: __DEV__ ? 1.0 : 0.2,
