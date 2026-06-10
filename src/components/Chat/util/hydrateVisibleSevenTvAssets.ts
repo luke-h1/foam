@@ -159,10 +159,14 @@ export async function hydrateVisibleSevenTvAssets({
       addBoundedUrl(
         emoteWarmupUrls,
         MAX_EMOTE_WARMUPS_PER_PASS,
+        // Must mirror EmoteRenderer's URL choice or the warmup caches a
+        // different variant than the row renders.
         getDisplayEmoteUrl({
+          image_variants: part.image_variants,
           url: part.url,
           static_url: part.static_url,
           disableAnimations: disableEmoteAnimations,
+          preferredScale: '2x',
         }),
       );
     });

@@ -24,7 +24,11 @@ const messageKeyToIndex = new Map<string, number>();
 const MAX_CHAT_MESSAGES = 600;
 const MAX_RECENT_MESSAGES = 80;
 const MAX_RECENT_MESSAGE_CHANNELS = 10;
-const RECENT_MESSAGES_SYNC_DELAY_MS = 1000;
+// Persisting recentMessagesByChannel re-serializes the whole persisted store
+// node (including channelCaches) to MMKV, which showed up as the largest JS
+// hotspot in busy chats (issue #594). Recent messages are a re-entry nicety,
+// so a long defer is fine; moderation/clear paths still flush immediately.
+export const RECENT_MESSAGES_SYNC_DELAY_MS = 15_000;
 
 let recentMessagesSyncTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingRecentMessagesChannelId: string | null = null;

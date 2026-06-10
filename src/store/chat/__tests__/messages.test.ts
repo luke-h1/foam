@@ -11,6 +11,7 @@ import {
   removeMessageById,
   restoreRecentMessagesForChannel,
   updateMessages,
+  RECENT_MESSAGES_SYNC_DELAY_MS,
 } from '../actions/messages';
 import { chatStore$ } from '../observables/chatStore';
 
@@ -280,7 +281,7 @@ describe('chatStore messages', () => {
       chatStore$.persisted.recentMessagesByChannel.peek()['channel-1'],
     ).toBeUndefined();
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(RECENT_MESSAGES_SYNC_DELAY_MS);
 
     expect(
       chatStore$.persisted.recentMessagesByChannel
@@ -314,7 +315,7 @@ describe('chatStore messages', () => {
       chatStore$.persisted.recentMessagesByChannel.peek()['channel-1'],
     ).toBeUndefined();
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(RECENT_MESSAGES_SYNC_DELAY_MS);
 
     expect(
       chatStore$.persisted.recentMessagesByChannel.peek()['channel-1']?.[0]

@@ -6,6 +6,15 @@ import type {
 } from '@app/types/emote';
 
 const preferredScales: EmoteImageScale[] = ['4x', '3x', '2x', '1x'];
+// Fallback order per requested scale. Lower scales fall back to the nearest
+// size first so inline renders never pay for a 4x animated decode just
+// because their exact scale is missing.
+const scaleScanOrders: Record<EmoteImageScale, EmoteImageScale[]> = {
+  '1x': ['1x', '2x', '3x', '4x'],
+  '2x': ['2x', '3x', '1x', '4x'],
+  '3x': ['3x', '2x', '4x', '1x'],
+  '4x': ['4x', '3x', '2x', '1x'],
+};
 const bttvCdnUrlPattern =
   /^https:\/\/cdn\.betterttv\.net\/emote\/([^/]+)\/([123])x(?:\.png)?$/;
 const ffzCdnUrlPattern =
@@ -63,14 +72,10 @@ export function pickEmoteVariantUrl({
   preferredKind: EmoteImageVariantKind;
   preferredScale?: EmoteImageScale;
 }): string {
+  const scanOrder = scaleScanOrders[preferredScale];
   const preferredSet = imageVariants?.[preferredKind];
-  const preferredUrl = preferredSet?.[preferredScale];
 
-  if (preferredUrl) {
-    return preferredUrl;
-  }
-
-  for (const scale of preferredScales) {
+  for (const scale of scanOrder) {
     const url = preferredSet?.[scale];
     if (url) {
       return url;
@@ -81,7 +86,7 @@ export function pickEmoteVariantUrl({
     preferredKind === 'static' ? 'animated' : 'static';
   const alternateSet = imageVariants?.[alternateKind];
 
-  for (const scale of preferredScales) {
+  for (const scale of scanOrder) {
     const url = alternateSet?.[scale];
     if (url) {
       return url;

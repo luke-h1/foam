@@ -30,11 +30,14 @@ export const EmoteRenderer = memo(
       part.height || 20,
       targetSize,
     );
+    // 2x is plenty for ~30pt inline emotes; 4x animated AVIFs cost ~4x the
+    // decode CPU and frame memory (see issue #594 profiling).
     const displayUrl = getDisplayEmoteUrl({
       image_variants: part.image_variants,
       url: part.url,
       static_url: part.static_url,
       disableAnimations,
+      preferredScale: '2x',
     });
 
     if (!displayUrl) {
