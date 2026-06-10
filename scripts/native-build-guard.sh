@@ -8,6 +8,16 @@ set -euo pipefail
 #  ./scripts/native-build-guard.sh <internal|testflight|production>
 
 variant="${1:-}"
+
+# This script runs outside dotenv, so pull the FOAM_AWS_* credentials from
+# .env when they are not already in the environment.
+if [ -z "${FOAM_AWS_FINGERPRINT_BUCKET_NAME:-}" ] && [ -f .env ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source .env
+  set +a
+fi
+
 cache_bucket="${FOAM_AWS_FINGERPRINT_BUCKET_NAME:-${FOAM_OTA_FINGERPRINT_CACHE_BUCKET_NAME:-}}"
 cache_dir="${FOAM_OTA_FINGERPRINT_CACHE_DIR:-.fingerprint-cache}"
 fallback_branch="${FOAM_OTA_FINGERPRINT_CACHE_FALLBACK_BRANCH:-main}"
