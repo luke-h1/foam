@@ -24,7 +24,8 @@ describe('resolveCachedSenderColor', () => {
       userstate: { username: 'Viewer', color: '#FF0000' },
     });
 
-    expect(color).toBe('rgb(255, 0, 0)');
+    // Pure red sits at HSL lightness 0.5; the dark-surface floor is 0.55.
+    expect(color).toBe('rgb(255, 26, 26)');
   });
 
   test('uses injected sender color lookup before deterministic fallback', () => {
@@ -36,7 +37,7 @@ describe('resolveCachedSenderColor', () => {
       () => '#1ac9a2',
     );
 
-    expect(color).toBe('rgb(61, 201, 162)');
+    expect(color).toBe('rgb(52, 229, 189)');
   });
 
   test('falls back to deterministic twitch palette per username', () => {

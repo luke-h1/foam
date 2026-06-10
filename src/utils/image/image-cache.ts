@@ -145,6 +145,7 @@ function removeRecord(key: string): void {
   if (!record) {
     return;
   }
+  verifiedFiles.delete(record.uri);
   try {
     const file = new File(record.uri);
     if (file.exists) {
@@ -175,10 +176,33 @@ function touchRecord(record: CacheRecord): string {
   return record.uri;
 }
 
+// getCachedImageUri runs during render for every chat emote and badge, and
+// File.exists is a synchronous syscall on the JS thread. Trust a successful
+// stat for a while instead of re-statting per render; eviction still
+// self-heals once the verification expires, and removeRecord /
+// clearSessionCache invalidate immediately.
+const FILE_VERIFICATION_TTL_MS = 10 * 60 * 1000;
+const verifiedFiles = new Map<string, number>();
+
 function cachedFileExists(record: CacheRecord): boolean {
+  const verifiedAt = verifiedFiles.get(record.uri);
+  if (
+    verifiedAt !== undefined &&
+    Date.now() - verifiedAt < FILE_VERIFICATION_TTL_MS
+  ) {
+    return true;
+  }
+
   try {
-    return new File(record.uri).exists;
+    const exists = new File(record.uri).exists;
+    if (exists) {
+      verifiedFiles.set(record.uri, Date.now());
+    } else {
+      verifiedFiles.delete(record.uri);
+    }
+    return exists;
   } catch {
+    verifiedFiles.delete(record.uri);
     return false;
   }
 }
@@ -379,6 +403,7 @@ export function clearSessionCache(): void {
   hydrateManifest();
   taskQueue.length = 0;
   inFlight.clear();
+  verifiedFiles.clear();
 
   Array.from(manifest.keys()).forEach(removeRecord);
 

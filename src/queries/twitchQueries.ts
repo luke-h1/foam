@@ -17,6 +17,7 @@ export const twitchQueries = {
   getStream(userLogin: string): UseQueryOptions<TwitchStream> {
     return {
       queryKey: ['stream', userLogin],
+      staleTime: 30_000,
       queryFn: () =>
         twitchService.getStream(userLogin) as Promise<TwitchStream>,
     };
@@ -24,36 +25,42 @@ export const twitchQueries = {
   getChannel(userId: string): UseQueryOptions<Channel> {
     return {
       queryKey: ['channel', userId],
+      staleTime: 60_000,
       queryFn: () => twitchService.getChannel(userId),
     };
   },
   getTopCategories(): UseQueryOptions<PaginatedList<Category>> {
     return {
       queryKey: ['topCategories'],
+      staleTime: 60_000,
       queryFn: () => twitchService.getTopCategories(),
     };
   },
   getUserImage(userId: string): UseQueryOptions<string> {
     return {
       queryKey: ['userImage', userId],
+      staleTime: 600_000,
       queryFn: () => twitchService.getUserImage(userId),
     };
   },
   getFollowedStreams(userId: string): UseQueryOptions<TwitchStream[]> {
     return {
       queryKey: ['followedStreams', userId],
+      staleTime: 30_000,
       queryFn: () => twitchService.getFollowedStreams(userId),
     };
   },
   getUserInfo(token: string): UseQueryOptions<UserInfoResponse> {
     return {
       queryKey: ['userInfo'],
+      staleTime: 300_000,
       queryFn: () => twitchService.getUserInfo(token),
     };
   },
   getUser(userId: string): UseQueryOptions<UserInfoResponse> {
     return {
       queryKey: ['user', userId],
+      staleTime: 300_000,
       queryFn: () => twitchService.getUser(userId),
     };
   },
@@ -111,6 +118,7 @@ export const twitchQueries = {
   searchChannels(query: string): UseQueryOptions<SearchChannelResponse[]> {
     return {
       queryKey: ['searchChannels', query],
+      staleTime: 60_000,
       queryFn: () => twitchService.searchChannels(query),
     };
   },
@@ -140,6 +148,7 @@ export const twitchQueries = {
   ): UseQueryOptions<PaginatedList<UserBlockList>> => {
     return {
       queryKey: ['blockList', params.broadcasterId],
+      staleTime: 60_000,
       queryFn: () => twitchService.getUserBlockList(params),
     };
   },

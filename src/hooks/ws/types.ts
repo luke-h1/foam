@@ -26,6 +26,13 @@ export interface Options {
   reconnectAttempts?: number;
   filter?: (message: WebSocketEventMap['message']) => boolean;
   retryOnError?: boolean;
+  /**
+   * Mirror every incoming message into React state (`lastMessage`). Off by
+   * default: at chat message rates the per-message setState re-rendered the
+   * host component dozens of times a second even when only `onMessage` was
+   * used.
+   */
+  trackLastMessage?: boolean;
 }
 
 export type ReadyStateState = {
