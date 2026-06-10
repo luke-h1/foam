@@ -299,9 +299,14 @@ describe('StreamPlayer component messaging', () => {
     });
 
     expect(onWebViewLoaded).toHaveBeenCalledTimes(1);
-    expect(latestWebViewProps().injectedJavaScriptBeforeContentLoaded).toEqual(
-      undefined,
-    );
+    const beforeContentScript =
+      latestWebViewProps().injectedJavaScriptBeforeContentLoaded ?? '';
+    expect(
+      beforeContentScript.includes(
+        "window.localStorage.getItem('video-quality')",
+      ),
+    ).toEqual(true);
+    expect(beforeContentScript.includes('"720p60"')).toEqual(true);
     expect(mockInjectJavaScript).not.toHaveBeenCalled();
   });
 

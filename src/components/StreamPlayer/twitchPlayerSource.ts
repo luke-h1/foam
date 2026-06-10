@@ -51,6 +51,40 @@ export function buildRawTwitchPlayerUrl(options: {
   return `https://player.twitch.tv/?${params.toString()}`;
 }
 
+/**
+ * Seeds the Twitch player's persisted quality choice before its JS boots.
+ * Without it the player defaults to auto (often source/1080p60), which is
+ * the dominant WebView CPU/bandwidth cost on a phone screen. The player
+ * only honors the choice when both `video-quality` (named group) and
+ * `quality-bitrate` (ABR cap in bps) are present — verified against
+ * player.twitch.tv in Chromium, so this applies to the Android WebView.
+ * On iOS it is a no-op: WKWebView gets native HLS where the OS owns
+ * rendition selection (the player's quality menu only offers Auto there).
+ * Only applies when no quality has been stored yet, so an existing choice
+ * wins.
+ */
+export function buildTwitchPlayerQualityDefaultScript(options: {
+  defaultQuality: string;
+  maxBitrateBps: number;
+}): string {
+  return `
+(function() {
+  try {
+    if (!window.localStorage.getItem('video-quality')) {
+      window.localStorage.setItem(
+        'video-quality',
+        JSON.stringify({ default: ${JSON.stringify(options.defaultQuality)} })
+      );
+      window.localStorage.setItem(
+        'quality-bitrate',
+        ${JSON.stringify(String(options.maxBitrateBps))}
+      );
+    }
+  } catch (e) {}
+})();
+true;`;
+}
+
 export function buildRawTwitchPlayerBootstrapScript(options: {
   autoplay: boolean;
   debug: boolean;
@@ -187,7 +221,22 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     installControlHiderStyle();
     hideElements();
 
-    var observer = new MutationObserver(hideElements);
+    // The player DOM mutates constantly; running the selector sweep on every
+    // mutation burned WebContent CPU for no benefit since the injected CSS
+    // already hides new nodes. Coalesce bursts into one sweep per 250ms.
+    var hideQueued = false;
+    function scheduleHideElements() {
+      if (hideQueued) {
+        return;
+      }
+      hideQueued = true;
+      setTimeout(function() {
+        hideQueued = false;
+        hideElements();
+      }, 250);
+    }
+
+    var observer = new MutationObserver(scheduleHideElements);
     observer.observe(document.body || document.documentElement, {
       childList: true,
       subtree: true
