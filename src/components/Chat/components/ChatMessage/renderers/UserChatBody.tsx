@@ -1,4 +1,8 @@
 import { Text } from '@app/components/ui/Text/Text';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { lightenColor } from '@app/utils/color/lightenColor';
+import { useSelector } from '@legendapp/state/react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { CHAT_NOTICE_ACCENTS } from '../../util/chatNoticeAccents';
@@ -8,6 +12,7 @@ import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
 import { RichChatMessageUsername } from '../RichChatMessageUsername';
 import { ChatMessageBadges } from './ChatMessageBadges';
 import { ChatMessageBody } from './ChatMessageBody';
+import { canRenderMessageInline, InlineMessageLine } from './InlineMessageLine';
 import { ReplyingToHeader } from './ReplyingToHeader';
 import type { BadgePressData } from '../RichChatMessage.types';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
@@ -76,6 +81,17 @@ export function UserChatBody({
   const replyPlainMentionTarget = shouldRenderInlineReply
     ? normaliseUsername(parentDisplayName)
     : undefined;
+  const hasPaint = useSelector(() =>
+    userId ? Boolean(chatStore$.userPaintIds[userId]?.get()) : false,
+  );
+  const renderInline = canRenderMessageInline(message, {
+    hasPaint,
+    isModerated: Boolean(moderationNotice),
+  });
+  const inlineUsernameColor =
+    cachedSenderColor ??
+    (userstateColor ? lightenColor(userstateColor) : undefined) ??
+    (username ? lightenColor(generateRandomTwitchColor(username)) : undefined);
 
   return (
     <View style={styles.messageColumn}>
@@ -155,55 +171,76 @@ export function UserChatBody({
           </Text>
         </ChatNoticeMetaRow>
       ) : null}
-      <View
-        style={[
-          styles.messageLine,
-          moderationNotice ? styles.messageLineModerated : null,
-        ]}
-      >
-        {moderationNotice ? (
-          <View style={styles.moderatedStrikeOverlay} />
-        ) : null}
-        {showTimestamp && timestamp ? (
-          <Text
-            tabular
-            variant='mono'
-            weight='bold'
-            style={[styles.timestamp, compact && styles.timestampCompact]}
-          >
-            {timestamp}
-          </Text>
-        ) : null}
-        <ChatMessageBadges
-          badges={badgeList}
+      {renderInline ? (
+        <InlineMessageLine
+          {...rendererArgs}
+          badgeList={badgeList}
           compact={compact}
           getMappingKey={getMappingKey}
-          moderationNotice={moderationNotice}
+          message={
+            message as Parameters<typeof InlineMessageLine>[0]['message']
+          }
           onBadgePress={onBadgePress}
-        />
-        {username ? (
-          <View
-            style={moderationNotice ? styles.moderatedUsernameContainer : null}
-          >
-            <RichChatMessageUsername
-              cachedSenderColor={cachedSenderColor}
-              compact={compact}
-              isModerated={Boolean(moderationNotice)}
-              onUsernamePress={onUsernamePress}
-              userId={userId}
-              userstateColor={userstateColor}
-              username={username}
-            />
-          </View>
-        ) : null}
-        <ChatMessageBody
-          compact={compact}
-          mode='message'
-          message={message}
+          onUsernamePress={onUsernamePress}
           replyPlainMentionTarget={replyPlainMentionTarget}
-          {...rendererArgs}
+          showTimestamp={showTimestamp}
+          timestamp={timestamp}
+          username={username}
+          usernameColor={inlineUsernameColor}
         />
-      </View>
+      ) : (
+        <View
+          style={[
+            styles.messageLine,
+            moderationNotice ? styles.messageLineModerated : null,
+          ]}
+        >
+          {moderationNotice ? (
+            <View style={styles.moderatedStrikeOverlay} />
+          ) : null}
+          {showTimestamp && timestamp ? (
+            <Text
+              tabular
+              variant='mono'
+              weight='bold'
+              style={[styles.timestamp, compact && styles.timestampCompact]}
+            >
+              {timestamp}
+            </Text>
+          ) : null}
+          <ChatMessageBadges
+            badges={badgeList}
+            compact={compact}
+            getMappingKey={getMappingKey}
+            moderationNotice={moderationNotice}
+            onBadgePress={onBadgePress}
+          />
+          {username ? (
+            <View
+              style={
+                moderationNotice ? styles.moderatedUsernameContainer : null
+              }
+            >
+              <RichChatMessageUsername
+                cachedSenderColor={cachedSenderColor}
+                compact={compact}
+                isModerated={Boolean(moderationNotice)}
+                onUsernamePress={onUsernamePress}
+                userId={userId}
+                userstateColor={userstateColor}
+                username={username}
+              />
+            </View>
+          ) : null}
+          <ChatMessageBody
+            compact={compact}
+            mode='message'
+            message={message}
+            replyPlainMentionTarget={replyPlainMentionTarget}
+            {...rendererArgs}
+          />
+        </View>
+      )}
     </View>
   );
 }

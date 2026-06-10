@@ -194,6 +194,10 @@ export const styles = StyleSheet.create({
     minWidth: 0,
     width: '100%',
   },
+  messageLineInline: {
+    minWidth: 0,
+    width: '100%',
+  },
   messageText: {
     ...chatLineMetrics.comfortable,
   },

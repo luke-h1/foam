@@ -229,10 +229,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     width: '100%',
   },
+  // No maxWidth here: Yoga clamps a percentage flexBasis with maxWidth
+  // before line-breaking, which let the card squeeze onto the username's
+  // line instead of taking its own row. The inner card enforces 300.
   mediaContainer: {
     flexBasis: '100%',
     marginVertical: 5,
-    maxWidth: 300,
   },
   mediaEyebrow: {
     color: '#BF94FF',
