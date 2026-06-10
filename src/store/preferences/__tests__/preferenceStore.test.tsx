@@ -37,6 +37,7 @@ const basePreferences = {
   ignoreClearChat: false,
   chatMentionHaptics: true,
   customHighlights: [] as { id: string; phrase: string; color: string }[],
+  shakeToReport: true,
 } as const;
 
 describe('usePreferences', () => {

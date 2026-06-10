@@ -30,6 +30,7 @@ const THEME_LABELS: Record<(typeof THEME_OPTIONS)[number], string> = {
 export function SettingsAppearanceScreen() {
   const selectedTheme = usePreference('theme');
   const hapticFeedback = usePreference('hapticFeedback');
+  const shakeToReport = usePreference('shakeToReport');
   const update = useUpdatePreferences();
   const scrollRef = useRef<ScrollView>(null);
 
@@ -78,6 +79,12 @@ export function SettingsAppearanceScreen() {
               isOn={hapticFeedback}
               onIsOnChange={value => update({ hapticFeedback: value })}
             />
+            <Toggle
+              label='Shake to report a problem'
+              systemImage='iphone.gen3.radiowaves.left.and.right'
+              isOn={shakeToReport}
+              onIsOnChange={value => update({ shakeToReport: value })}
+            />
           </Section>
         </NativeForm>
       </Host>
@@ -110,6 +117,13 @@ export function SettingsAppearanceScreen() {
             icon={{ icon: 'hand.tap', color: theme.colorTeal }}
             value={hapticFeedback}
             onValueChange={value => update({ hapticFeedback: value })}
+          />
+          <SettingsToggleRow
+            title='Shake to report'
+            subtitle='Shake your device to report a problem'
+            icon={{ icon: 'waveform.path', color: theme.colorAmber }}
+            value={shakeToReport}
+            onValueChange={value => update({ shakeToReport: value })}
           />
         </SettingsSection>
       </ScrollView>

@@ -359,6 +359,7 @@ const setPreferences = (showRecentMessages = true) => {
     ignoreClearChat: false,
     chatMentionHaptics: true,
     customHighlights: [],
+    shakeToReport: true,
     update: jest.fn(),
   } satisfies ReturnType<typeof usePreferences>;
 

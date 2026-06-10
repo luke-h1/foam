@@ -1,4 +1,6 @@
 import { AppBottomSheetProvider } from '@app/components/BottomSheet/BottomSheetProvider';
+import { GlobalErrorGate } from '@app/components/GlobalErrorGate/GlobalErrorGate';
+import { ShakeToReport } from '@app/components/ShakeToReport/ShakeToReport';
 import { OfflineBanner } from '@app/components/OfflineBanner/OfflineBanner';
 import { AuthContextProvider, useAuthContext } from '@app/context/AuthContext';
 import { AccentColorProvider } from '@app/context/AccentColorContext';
@@ -137,6 +139,8 @@ export function Providers({ children }: PropsWithChildren) {
                     {__DEV__ ? <DevTools /> : null}
                     <AnalyticsProvider>
                       <QueryProviderWithAuth>
+                        <GlobalErrorGate />
+                        <ShakeToReport />
                         <OfflineBanner />
                         {/* No global press haptic: feed taps stay silent
                             so deliberate actions (send, block, refresh)

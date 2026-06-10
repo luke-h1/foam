@@ -53,6 +53,7 @@ export interface Preferences {
   ignoreClearChat: boolean;
   chatMentionHaptics: boolean;
   customHighlights: CustomHighlight[];
+  shakeToReport: boolean;
 }
 
 const initialPreferences: Preferences = {
@@ -89,6 +90,7 @@ const initialPreferences: Preferences = {
   ignoreClearChat: false,
   chatMentionHaptics: true,
   customHighlights: [],
+  shakeToReport: true,
 };
 
 ensureObservablePersistenceConfig();

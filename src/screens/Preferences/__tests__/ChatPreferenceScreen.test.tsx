@@ -38,6 +38,7 @@ const mockPreferences: Preferences = {
   ignoreClearChat: false,
   chatMentionHaptics: true,
   customHighlights: [],
+  shakeToReport: true,
 };
 
 jest.mock('@app/store/preferenceStore', () => ({
