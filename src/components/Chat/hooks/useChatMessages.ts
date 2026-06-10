@@ -8,8 +8,12 @@ import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderCol
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { MutableRefObject, startTransition, useRef, useCallback } from 'react';
 
-const LIVE_BUFFER_FLUSH_INTERVAL_MS = 32;
-const BACKLOG_BUFFER_FLUSH_INTERVAL_MS = 80;
+// Each flush commits a new Fabric shadow tree for the chat list, and at high
+// message rates releasing the dead trees dominated the Hermes GC thread
+// (issue #594). 100ms still reads as live (10 updates/s) and cut app CPU by
+// ~40% on an 18k-viewer chat; at moderate rates it measures neutral.
+const LIVE_BUFFER_FLUSH_INTERVAL_MS = 100;
+const BACKLOG_BUFFER_FLUSH_INTERVAL_MS = 250;
 const MAX_BUFFERED_MESSAGES = 600;
 
 type AnyMessage = AnyChatMessageType & {
