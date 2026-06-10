@@ -1,3 +1,4 @@
+import { getPreferences } from '@app/store/preferences/state';
 import {
   ImpactFeedbackStyle,
   NotificationFeedbackType,
@@ -5,6 +6,12 @@ import {
   notificationAsync as expoNotificationAsync,
   selectionAsync as expoSelectionAsync,
 } from 'expo-haptics';
+
+// Every haptic in the app funnels through this module, so the user-facing
+// preference (default on) is enforced in one place.
+function hapticsEnabled(): boolean {
+  return getPreferences().hapticFeedback;
+}
 
 function getExpoImpactStyle(style: 'light' | 'medium' | 'heavy') {
   switch (style) {
@@ -19,16 +26,26 @@ function getExpoImpactStyle(style: 'light' | 'medium' | 'heavy') {
 }
 
 export async function impact(style: 'light' | 'medium' | 'heavy' = 'medium') {
+  if (!hapticsEnabled()) {
+    return undefined;
+  }
   return expoImpactAsync(getExpoImpactStyle(style));
 }
 
 export async function selection() {
+  if (!hapticsEnabled()) {
+    return undefined;
+  }
   return expoSelectionAsync();
 }
 
 export async function notification(
   type: 'success' | 'warning' | 'error' = 'success',
 ) {
+  if (!hapticsEnabled()) {
+    return undefined;
+  }
+
   const expoType =
     type === 'warning'
       ? NotificationFeedbackType.Warning

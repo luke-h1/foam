@@ -30,6 +30,7 @@ exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid c
         }
       >
         <Text
+          maxFontSizeMultiplier={1.4}
           style={
             [
               {
@@ -127,6 +128,7 @@ exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid c
         />
       </View>
       <Text
+        maxFontSizeMultiplier={1.4}
         style={
           [
             {
@@ -161,6 +163,7 @@ exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid c
 
 exports[`PaintedUsername Snapshots should match snapshot with fallback color only 1`] = `
 <Text
+  maxFontSizeMultiplier={1.4}
   style={
     [
       {
@@ -235,6 +238,7 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
         }
       >
         <Text
+          maxFontSizeMultiplier={1.4}
           style={
             [
               {
@@ -359,6 +363,7 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
         />
       </View>
       <Text
+        maxFontSizeMultiplier={1.4}
         style={
           [
             {
@@ -409,6 +414,7 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
         }
       >
         <Text
+          maxFontSizeMultiplier={1.4}
           style={
             [
               {
@@ -525,6 +531,7 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
         />
       </View>
       <Text
+        maxFontSizeMultiplier={1.4}
         style={
           [
             {
@@ -587,6 +594,7 @@ exports[`PaintedUsername Snapshots should match snapshot with long username 1`] 
         }
       >
         <Text
+          maxFontSizeMultiplier={1.4}
           style={
             [
               {
@@ -703,6 +711,7 @@ exports[`PaintedUsername Snapshots should match snapshot with long username 1`] 
         />
       </View>
       <Text
+        maxFontSizeMultiplier={1.4}
         style={
           [
             {
@@ -776,6 +785,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
         }
       >
         <Text
+          maxFontSizeMultiplier={1.4}
           style={
             [
               {
@@ -900,6 +910,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
         />
       </View>
       <Text
+        maxFontSizeMultiplier={1.4}
         style={
           [
             {
@@ -961,6 +972,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
         }
       >
         <Text
+          maxFontSizeMultiplier={1.4}
           style={
             [
               {
@@ -1085,6 +1097,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
         />
       </View>
       <Text
+        maxFontSizeMultiplier={1.4}
         style={
           [
             {
@@ -1135,6 +1148,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
         }
       >
         <Text
+          maxFontSizeMultiplier={1.4}
           style={
             [
               {
@@ -1251,6 +1265,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
         />
       </View>
       <Text
+        maxFontSizeMultiplier={1.4}
         style={
           [
             {
@@ -1324,6 +1339,7 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
         }
       >
         <Text
+          maxFontSizeMultiplier={1.4}
           style={
             [
               {
@@ -1488,6 +1504,7 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
         </RNSVGSvgView>
       </View>
       <Text
+        maxFontSizeMultiplier={1.4}
         style={
           [
             {
@@ -1538,6 +1555,7 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
         }
       >
         <Text
+          maxFontSizeMultiplier={1.4}
           style={
             [
               {
@@ -1694,6 +1712,7 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
         </RNSVGSvgView>
       </View>
       <Text
+        maxFontSizeMultiplier={1.4}
         style={
           [
             {

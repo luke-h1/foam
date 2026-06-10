@@ -59,9 +59,17 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
     router.push(`/category/${stream.game_id}`);
   }, [stream.game_id]);
 
+  const cardAccessibilityLabel = `${stream.user_name}, live, ${
+    stream.game_name
+  }, ${formatViewCount(stream.viewer_count)} watching, ${stream.title}`;
+
   if (layout === 'media') {
     return (
-      <Button onPress={handleStreamPress} style={styles.mediaCardWrapper}>
+      <Button
+        onPress={handleStreamPress}
+        label={cardAccessibilityLabel}
+        style={styles.mediaCardWrapper}
+      >
         <View style={styles.mediaContainer}>
           <View style={styles.mediaImageShell}>
             <Image
@@ -150,7 +158,11 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   }
 
   return (
-    <Button onPress={handleStreamPress} style={styles.cardWrapper}>
+    <Button
+      onPress={handleStreamPress}
+      label={cardAccessibilityLabel}
+      style={styles.cardWrapper}
+    >
       <View style={styles.container}>
         <View style={styles.imageContainer}>
           <Image

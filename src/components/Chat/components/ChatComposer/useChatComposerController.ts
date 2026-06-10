@@ -1,3 +1,4 @@
+import { impact } from '@app/lib/haptics';
 import type { ChatUser } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import { useCallback, useImperativeHandle, useState, type Ref } from 'react';
@@ -88,6 +89,8 @@ export function useChatComposerController({
     if (!submitEnabled) {
       return;
     }
+    // Sending a message is a decision-shaped action; give it weight.
+    void impact('light');
     onSubmit?.();
     blurInput();
   }, [blurInput, onSubmit, submitEnabled]);

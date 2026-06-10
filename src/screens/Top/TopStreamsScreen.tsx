@@ -20,9 +20,16 @@ import { theme } from '@app/styles/themes';
 import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 import type { ListRenderItem } from '@shopify/flash-list';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
+import Animated, {
+  SharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import { motion } from '@app/styles/motion';
 
 type StreamListLayout = Preferences['streamListLayout'];
 
@@ -207,6 +214,7 @@ export function TopStreamsScreen({
       remainingStreams={allStreams}
       renderItem={renderItem}
       scrollHandler={scrollHandler}
+      streamListLayout={streamListLayout}
     />
   );
 }
@@ -221,19 +229,23 @@ function TopStreamsList({
   remainingStreams,
   renderItem,
   scrollHandler,
+  streamListLayout,
 }: {
   contentTopInset: number;
   debouncedHandleLoadMore: () => void;
-  listHeader: React.ReactNode;
+  listHeader: React.ReactElement;
   listRef: React.RefObject<FlashListRef<TwitchStream> | null>;
   onRefresh: () => void;
   refreshing: boolean;
   remainingStreams: TwitchStream[];
   renderItem: ListRenderItem<TwitchStream>;
   scrollHandler: ReturnType<typeof useAnimatedScrollHandler>;
+  streamListLayout: StreamListLayout;
 }) {
+  const listFadeStyle = useLayoutSwitchFade(streamListLayout);
+
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, listFadeStyle]}>
       <AnimatedFlashList
         ref={listRef}
         contentInsetAdjustmentBehavior='automatic'
@@ -247,7 +259,7 @@ function TopStreamsList({
           styles.listContent,
           { paddingTop: contentTopInset },
         ]}
-        ListHeaderComponent={() => listHeader}
+        ListHeaderComponent={listHeader}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={debouncedHandleLoadMore}
         onScroll={scrollHandler}
@@ -255,8 +267,25 @@ function TopStreamsList({
         onEndReachedThreshold={0.3}
         onRefresh={onRefresh}
       />
-    </View>
+    </Animated.View>
   );
+}
+
+/**
+ * Soft dip-and-recover fade when the user switches list layouts, so the
+ * rows do not hard-cut between shapes. No remount; scroll is preserved.
+ */
+function useLayoutSwitchFade(streamListLayout: StreamListLayout) {
+  const fade = useSharedValue(1);
+
+  useEffect(() => {
+    fade.set(0.35);
+    fade.set(
+      withTiming(1, { duration: motion.medium, easing: motion.easing.out }),
+    );
+  }, [fade, streamListLayout]);
+
+  return useAnimatedStyle(() => ({ opacity: fade.get() }));
 }
 
 const styles = StyleSheet.create({

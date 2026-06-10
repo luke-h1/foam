@@ -20,10 +20,8 @@ import type {
   ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-const categoryApexImage = require('../../../../assets/data/category_apex.jpg');
-
 interface EmptyStatePresetItem {
-  imageSource: AppImageProps['source'];
+  iconName: SymbolViewProps['name'];
   heading: TextProps['children'];
   content: TextProps['children'];
   button: string;
@@ -31,7 +29,7 @@ interface EmptyStatePresetItem {
 
 const EMPTY_STATE_PRESETS = {
   generic: {
-    imageSource: categoryApexImage,
+    iconName: 'tv',
     heading: 'Nothing here yet',
     content: 'Refresh to try again, or come back in a moment.',
     button: 'Refresh',
@@ -74,25 +72,26 @@ export function EmptyState({
   buttonStyle,
   buttonOnPress,
   iconName,
-  iconSize = 34,
+  iconSize = 56,
   iconTintColor = theme.color.textSecondary.dark,
 }: EmptyStateProps) {
   const presetConfig = EMPTY_STATE_PRESETS[preset];
-  const resolvedImageSource = iconName
+  const resolvedImageSource = imageSource;
+  const resolvedIconName = resolvedImageSource
     ? undefined
-    : (imageSource ?? presetConfig.imageSource);
+    : (iconName ?? presetConfig.iconName);
   const resolvedHeading = heading ?? presetConfig.heading;
   const resolvedContent = content ?? presetConfig.content;
   const resolvedButton = button === undefined ? presetConfig.button : button;
 
   return (
     <SafeAreaView style={[styles.container, style]}>
-      <EmptyLayout style={styles.emptyLayout} variant='outline'>
+      <EmptyLayout style={styles.emptyLayout}>
         <EmptyLayoutHeader>
-          {iconName ? (
+          {resolvedIconName ? (
             <EmptyLayoutMedia style={styles.iconWrap}>
               <SymbolView
-                name={iconName}
+                name={resolvedIconName}
                 size={iconSize}
                 tintColor={iconTintColor}
               />

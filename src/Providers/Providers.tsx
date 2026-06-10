@@ -1,5 +1,6 @@
 import { ApolloProvider } from '@apollo/client/react';
 import { AppBottomSheetProvider } from '@app/components/BottomSheet/BottomSheetProvider';
+import { OfflineBanner } from '@app/components/OfflineBanner/OfflineBanner';
 import { AuthContextProvider, useAuthContext } from '@app/context/AuthContext';
 import { AccentColorProvider } from '@app/context/AccentColorContext';
 import { useDebugOptions } from '@app/hooks/useDebugOptions';
@@ -10,7 +11,7 @@ import { twitchApi } from '@app/services/api/clients';
 import { sevenTvV4Client } from '@app/services/gql/client';
 import { storage } from '@app/lib/storage';
 import { deleteTokens } from '@app/utils/authentication/deleteTokens';
-import { QueryProvider } from '@app/utils/react-query/reacy-query';
+import { QueryProvider } from '@app/lib/react-query/query-provider';
 import { useNetworkActivityDevTools } from '@rozenite/network-activity-plugin';
 import { usePerformanceMonitorDevTools } from '@rozenite/performance-monitor-plugin';
 import { useRequireProfilerDevTools } from '@rozenite/require-profiler-plugin';
@@ -21,7 +22,7 @@ import {
 import { useTanStackQueryDevTools } from '@rozenite/tanstack-query-plugin';
 import { useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
-import { selection } from '@app/lib/haptics';
+import { motion } from '@app/styles/motion';
 import { PressablesConfig } from 'pressto';
 import { PropsWithChildren } from 'react';
 import { StyleSheet } from 'react-native';
@@ -131,12 +132,13 @@ export function Providers({ children }: PropsWithChildren) {
                       {__DEV__ ? <DevTools /> : null}
                       <AnalyticsProvider>
                         <QueryProviderWithAuth>
+                          <OfflineBanner />
+                          {/* No global press haptic: feed taps stay silent
+                              so deliberate actions (send, block, refresh)
+                              keep their weight. Haptics are opt-in per
+                              control via lib/haptics. */}
                           <PressablesConfig
-                            globalHandlers={{
-                              onPress: () => {
-                                void selection();
-                              },
-                            }}
+                            config={{ minScale: motion.pressMinScale }}
                           >
                             <AppBottomSheetProvider>
                               {children}

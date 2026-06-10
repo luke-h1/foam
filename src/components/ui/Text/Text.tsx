@@ -161,6 +161,10 @@ export function Text({
     <RNText
       ref={ref}
       textBreakStrategy='simple'
+      // Dynamic Type support with a clamp: text tracks the user's system
+      // size, but fixed lineHeights and dense layouts (chat rows, cards)
+      // break beyond ~1.4x. Callers can override per usage.
+      maxFontSizeMultiplier={1.4}
       {...props}
       style={[sizeStyle, textStyle, style]}
     >
