@@ -141,14 +141,11 @@ function buildMetadata(
 
 export function recordError(error: {
   name: MonitoringErrorName;
-  /** Overrides the exception class name shown as the issue title in Sentry. */
   exceptionName?: string;
   message: string;
   params?: Record<string, unknown>;
   errorCause?: unknown;
-  /** Extra key/value pairs added as Sentry tags (searchable). */
   tags?: Record<string, string>;
-  /** Custom Sentry fingerprint — controls how issues are grouped. */
   fingerprint?: string[];
 }): void {
   Sentry.addBreadcrumb({

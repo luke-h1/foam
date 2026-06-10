@@ -7,7 +7,6 @@ import {
 } from '@app/lib/sentry';
 import { getApiMonitoringContext } from './monitoring';
 
-/** Maps a log prefix to the human-readable class name shown in Sentry and its MonitoringErrorName. */
 const SERVICE_ERROR_MAP: Record<
   string,
   { exceptionName: string; errorName: MonitoringErrorName }

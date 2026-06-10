@@ -174,35 +174,44 @@ export function useChat(channelId: string, channelName: string) {
   });
 
   const chatMentionHaptics = usePreference('chatMentionHaptics');
+  const customHighlights = preferences.customHighlights;
   const normalisedSelfForFeedback = normaliseChatUsername(
     user?.login ?? user?.display_name,
   );
 
   // Live messages only (recent-message replays pass countUnread: false), so
   // re-entering a chat never replays a burst of buzzes.
-  const handleNewMessage: typeof enqueueChatMessage = (message, options) => {
-    const customHighlightRules = preferences.customHighlights ?? [];
-    if (chatMentionHaptics && options?.countUnread !== false) {
-      const mentionsSelf =
-        normalisedSelfForFeedback.length > 0 &&
-        message.message.some(
-          part =>
-            part.type === 'mention' &&
-            normaliseChatUsername(part.content.replace(/^@/, '')) ===
-              normalisedSelfForFeedback,
-        );
-      const matchesCustomHighlight =
-        !mentionsSelf &&
-        customHighlightRules.length > 0 &&
-        Boolean(findCustomHighlight(message.message, customHighlightRules));
+  const handleNewMessage: typeof enqueueChatMessage = useCallback(
+    (message, options) => {
+      const customHighlightRules = customHighlights ?? [];
+      if (chatMentionHaptics && options?.countUnread !== false) {
+        const mentionsSelf =
+          normalisedSelfForFeedback.length > 0 &&
+          message.message.some(
+            part =>
+              part.type === 'mention' &&
+              normaliseChatUsername(part.content.replace(/^@/, '')) ===
+                normalisedSelfForFeedback,
+          );
+        const matchesCustomHighlight =
+          !mentionsSelf &&
+          customHighlightRules.length > 0 &&
+          Boolean(findCustomHighlight(message.message, customHighlightRules));
 
-      if (mentionsSelf || matchesCustomHighlight) {
-        triggerMentionHaptic();
+        if (mentionsSelf || matchesCustomHighlight) {
+          triggerMentionHaptic();
+        }
       }
-    }
 
-    enqueueChatMessage(message, options);
-  };
+      enqueueChatMessage(message, options);
+    },
+    [
+      chatMentionHaptics,
+      customHighlights,
+      enqueueChatMessage,
+      normalisedSelfForFeedback,
+    ],
+  );
 
   const {
     processMessageEmotes,

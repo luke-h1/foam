@@ -10,9 +10,7 @@ import { useSelector } from '@legendapp/state/react';
 
 export interface CustomHighlight {
   id: string;
-  /** Stored lowercased; matched case-insensitively against message text. */
   phrase: string;
-  /** 6-digit hex accent used for the row tint and border. */
   color: string;
 }
 

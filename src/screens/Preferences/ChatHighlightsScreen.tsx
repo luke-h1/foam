@@ -12,7 +12,7 @@ import { normaliseHighlightPhrase } from '@app/utils/chat/customHighlights';
 import { theme } from '@app/styles/themes';
 import { SymbolView } from 'expo-symbols';
 import { PressableScale } from 'pressto';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Alert, StyleSheet, TextInput, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import type {
@@ -154,7 +154,7 @@ export function ChatHighlightsScreen() {
 
   useScrollToTop(listRef);
 
-  const highlights = customHighlights ?? [];
+  const highlights = useMemo(() => customHighlights ?? [], [customHighlights]);
 
   const handleAdd = useCallback(() => {
     const phrase = normaliseHighlightPhrase(inputValue);

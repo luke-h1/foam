@@ -88,6 +88,40 @@ describe('useChatMessages', () => {
 
       expect(result.current.getBufferSize()).toBe(0);
     });
+
+    test('should return referentially stable handlers across re-renders', () => {
+      // Downstream IRC handlers list these in their useCallback deps; a fresh
+      // identity per render would rebuild every chat handler on each render.
+      const { result, rerender } = renderHook(() =>
+        useChatMessages(defaultOptions),
+      );
+
+      const firstRender = { ...result.current };
+
+      rerender(undefined);
+
+      expect(result.current.handleNewMessage).toBe(
+        firstRender.handleNewMessage,
+      );
+      expect(result.current.clearLocalMessages).toBe(
+        firstRender.clearLocalMessages,
+      );
+      expect(result.current.removeBufferedMessageById).toBe(
+        firstRender.removeBufferedMessageById,
+      );
+      expect(result.current.removeBufferedMessagesByLogin).toBe(
+        firstRender.removeBufferedMessagesByLogin,
+      );
+      expect(result.current.moderateBufferedMessageById).toBe(
+        firstRender.moderateBufferedMessageById,
+      );
+      expect(result.current.moderateBufferedMessagesByLogin).toBe(
+        firstRender.moderateBufferedMessagesByLogin,
+      );
+      expect(result.current.cleanup).toBe(firstRender.cleanup);
+      expect(result.current.forceFlush).toBe(firstRender.forceFlush);
+      expect(result.current.getBufferSize).toBe(firstRender.getBufferSize);
+    });
   });
 
   describe('Message Buffering', () => {

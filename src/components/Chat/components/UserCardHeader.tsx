@@ -207,8 +207,8 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   paintChip: {
-    backgroundColor: 'rgba(26, 201, 162, 0.10)',
-    borderColor: 'rgba(26, 201, 162, 0.22)',
+    backgroundColor: 'rgba(46, 134, 255, 0.10)',
+    borderColor: 'rgba(46, 134, 255, 0.22)',
   },
   paintChipText: {
     color: theme.colorPrimary,
