@@ -16,6 +16,26 @@ export const chatLineMetrics = {
   },
 } as const;
 
+export type ChatFontScale = 'small' | 'default' | 'large';
+
+/**
+ * Text metric override for the chat font size preference. Appended after the
+ * density styles on every span that spreads chatLineMetrics so usernames,
+ * mentions, links, and body text stay on a single shared baseline.
+ */
+export function getChatFontScaleStyle(
+  fontScale: ChatFontScale | undefined,
+  compact: boolean,
+) {
+  if (fontScale === 'small') {
+    return compact ? styles.fontScaleSmallCompact : styles.fontScaleSmall;
+  }
+  if (fontScale === 'large') {
+    return compact ? styles.fontScaleLargeCompact : styles.fontScaleLarge;
+  }
+  return undefined;
+}
+
 export const styles = StyleSheet.create({
   badge: {
     height: 18,
@@ -73,6 +93,39 @@ export const styles = StyleSheet.create({
   },
   ritualNoticeMetaText: {
     color: CHAT_NOTICE_ACCENTS.ritual,
+  },
+  customHighlightContainer: {
+    borderLeftWidth: 2,
+    marginVertical: 2,
+    paddingHorizontal: theme.space8,
+    paddingVertical: theme.space4,
+  },
+  fontScaleLarge: {
+    fontSize: theme.fontSize16,
+    lineHeight: 20,
+  },
+  fontScaleLargeCompact: {
+    fontSize: theme.fontSize12,
+    lineHeight: 15,
+  },
+  fontScaleSmall: {
+    fontSize: theme.fontSize12,
+    lineHeight: 15,
+  },
+  fontScaleSmallCompact: {
+    fontSize: theme.fontSize10,
+    lineHeight: 13,
+  },
+  returningChatterMetaText: {
+    color: CHAT_NOTICE_ACCENTS.returningChatter,
+  },
+  returningChatterNoticeSurface: {
+    backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.returningChatter),
+    borderLeftColor: CHAT_NOTICE_ACCENTS.returningChatter,
+    borderLeftWidth: 2,
+    marginVertical: 2,
+    paddingHorizontal: theme.space8,
+    paddingVertical: theme.space4,
   },
   firstMessageNoticeSurface: {
     backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.firstMessage),

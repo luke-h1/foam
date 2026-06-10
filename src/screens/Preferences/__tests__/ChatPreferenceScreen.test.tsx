@@ -31,6 +31,13 @@ const mockPreferences: Preferences = {
   showFFzBadges: true,
   showBttvBadges: true,
   blockedTerms: [],
+  chatTimestampFormat: '24h',
+  chatFontScale: 'default',
+  chatScrollback: 600,
+  deletedMessageStyle: 'notice',
+  ignoreClearChat: false,
+  chatMentionHaptics: true,
+  customHighlights: [],
 };
 
 jest.mock('@app/store/preferenceStore', () => ({

@@ -34,6 +34,7 @@ interface UserChatBodyProps extends UseChatMessagePartRendererArgs {
   replyFlags: {
     canJumpToReplyTarget: boolean;
     isFirstMessage: boolean;
+    isReturningChatter?: boolean;
     isReplyingToCurrentUser: boolean;
     shouldRenderInlineReply: boolean;
     showChannelPointsRewardChrome: boolean;
@@ -73,6 +74,7 @@ export function UserChatBody({
   const {
     canJumpToReplyTarget,
     isFirstMessage,
+    isReturningChatter,
     isReplyingToCurrentUser,
     shouldRenderInlineReply,
     showChannelPointsRewardChrome,
@@ -113,6 +115,14 @@ export function UserChatBody({
           label='First message'
           labelColor={CHAT_NOTICE_ACCENTS.firstMessage}
           labelStyle={styles.firstMessageMetaText}
+        />
+      ) : isReturningChatter ? (
+        <ChatNoticeMetaRow
+          compact={compact}
+          icon='arrow.uturn.left'
+          label='Returning chatter'
+          labelColor={CHAT_NOTICE_ACCENTS.returningChatter}
+          labelStyle={styles.returningChatterMetaText}
         />
       ) : null}
       {showChannelPointsRewardChrome && isHighlightedMessage ? (

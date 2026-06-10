@@ -1,3 +1,4 @@
+import { getPreferences } from '@app/store/preferenceStore';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 import { batch } from '@legendapp/state';
@@ -21,8 +22,11 @@ const messageKeySet = new Set<string>();
 const messageKeyOrder: string[] = [];
 const messageIdToIndex = new Map<string, number>();
 const messageKeyToIndex = new Map<string, number>();
-const MAX_CHAT_MESSAGES = 600;
+const DEFAULT_MAX_CHAT_MESSAGES = 600;
 const MAX_RECENT_MESSAGES = 80;
+
+export const getMaxChatMessages = (): number =>
+  getPreferences().chatScrollback ?? DEFAULT_MAX_CHAT_MESSAGES;
 const MAX_RECENT_MESSAGE_CHANNELS = 10;
 // Each sync re-serializes recentMessagesByChannel to MMKV, which showed up
 // as a top JS hotspot in busy chats (issue #594). Recent messages are a
@@ -289,8 +293,9 @@ const syncRecentMessagesForCurrentChannel = (
 
 const trimMessageIndexes = (): boolean => {
   let didTrim = false;
+  const maxChatMessages = getMaxChatMessages();
 
-  while (messageKeyOrder.length > MAX_CHAT_MESSAGES) {
+  while (messageKeyOrder.length > maxChatMessages) {
     const removedKey = messageKeyOrder.shift();
     if (removedKey) {
       messageKeySet.delete(removedKey);
@@ -309,7 +314,7 @@ const appendToMessageWindow = (
   nextMessages: AnyChatMessageType[];
 } => {
   const nextMessages = [...currentMessages, ...storedMessages];
-  const extraMessageCount = nextMessages.length - MAX_CHAT_MESSAGES;
+  const extraMessageCount = nextMessages.length - getMaxChatMessages();
 
   if (extraMessageCount <= 0) {
     return { didTrimMessages: false, nextMessages };
@@ -580,6 +585,50 @@ export const moderateMessagesByLogin = (
     return;
   }
 
+  chatStore$.messages.set(nextMessages);
+  syncRecentMessagesForCurrentChannel(nextMessages);
+};
+
+export const removeMessagesByLogin = (login: string) => {
+  const target = normaliseLogin(login);
+  if (!target) {
+    return;
+  }
+
+  const currentMessages = chatStore$.messages.peek();
+  const removedMessages: AnyChatMessageType[] = [];
+  const nextMessages = currentMessages.filter(message => {
+    if (!isValidChatMessage(message)) {
+      return true;
+    }
+
+    const messageLogin = normaliseLogin(
+      message.userstate?.login || message.userstate?.username || message.sender,
+    );
+
+    if (messageLogin !== target) {
+      return true;
+    }
+
+    removedMessages.push(message);
+    return false;
+  });
+
+  if (removedMessages.length === 0) {
+    return;
+  }
+
+  removedMessages.forEach(message => {
+    const key = getMessageKey(message.message_id, message.message_nonce);
+    messageKeySet.delete(key);
+
+    const orderIndex = messageKeyOrder.indexOf(key);
+    if (orderIndex >= 0) {
+      messageKeyOrder.splice(orderIndex, 1);
+    }
+  });
+
+  rebuildMessageIndexes(nextMessages);
   chatStore$.messages.set(nextMessages);
   syncRecentMessagesForCurrentChannel(nextMessages);
 };

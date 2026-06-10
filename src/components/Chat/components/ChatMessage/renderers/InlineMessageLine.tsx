@@ -7,7 +7,7 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import type { StyleProp, TextStyle } from 'react-native';
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { styles } from '../RichChatMessage.styles';
+import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
 import { normaliseUsername } from '../richChatMessageHelpers';
 import type { BadgePressData } from '../RichChatMessage.types';
 import { ChatMessageBadges } from './ChatMessageBadges';
@@ -43,6 +43,7 @@ type InlineSpanOptions = Pick<
   | 'compact'
   | 'disableEmoteAnimations'
   | 'effectiveHighlightedUserSet'
+  | 'fontScale'
   | 'getMentionColor'
   | 'getPartKey'
   | 'handleEmoteLongPress'
@@ -61,6 +62,7 @@ export function renderInlineMessageSpans(
     compact,
     disableEmoteAnimations,
     effectiveHighlightedUserSet,
+    fontScale,
     getMentionColor,
     getPartKey,
     handleEmoteLongPress,
@@ -69,9 +71,11 @@ export function renderInlineMessageSpans(
     emoteTargetSize,
     textStyle,
   } = options;
+  const fontScaleStyle = getChatFontScaleStyle(fontScale, compact);
   const baseTextStyle = textStyle ?? [
     styles.messageText,
     compact && styles.messageTextCompact,
+    fontScaleStyle,
   ];
   const spans: ReactNode[] = [];
   let pendingText: string | null = null;
@@ -131,7 +135,11 @@ export function renderInlineMessageSpans(
       spans.push(
         <Text
           key={getPartKey(part, index)}
-          style={[styles.messageLink, compact && styles.messageLinkCompact]}
+          style={[
+            styles.messageLink,
+            compact && styles.messageLinkCompact,
+            fontScaleStyle,
+          ]}
         >
           {content}
         </Text>,
@@ -174,6 +182,7 @@ export function renderInlineMessageSpans(
           style={[
             styles.mention,
             compact && styles.mentionCompact,
+            fontScaleStyle,
             isHighlightedMention && styles.mentionHighlighted,
             { color: mentionColor },
           ]}
@@ -215,6 +224,7 @@ export function InlineMessageLine({
   compact,
   disableEmoteAnimations,
   effectiveHighlightedUserSet,
+  fontScale,
   getMentionColor,
   getPartKey,
   handleEmoteLongPress,
@@ -223,10 +233,12 @@ export function InlineMessageLine({
   emoteTargetSize,
 }: InlineMessageLineProps): ReactNode {
   const containsEmotes = message.some(part => part.type === 'emote');
+  const fontScaleStyle = getChatFontScaleStyle(fontScale, compact);
   const spans = renderInlineMessageSpans(message, {
     compact,
     disableEmoteAnimations,
     effectiveHighlightedUserSet,
+    fontScale,
     getMentionColor,
     getPartKey,
     handleEmoteLongPress,
@@ -241,6 +253,7 @@ export function InlineMessageLine({
         style={[
           styles.messageText,
           compact && styles.messageTextCompact,
+          fontScaleStyle,
           containsEmotes &&
             (compact
               ? styles.messageTextEmoteLineCompact
@@ -270,6 +283,7 @@ export function InlineMessageLine({
             testID='chat-username-button'
             style={[
               compact ? styles.usernameTextCompact : styles.usernameText,
+              fontScaleStyle,
               usernameColor ? { color: usernameColor } : null,
             ]}
           >

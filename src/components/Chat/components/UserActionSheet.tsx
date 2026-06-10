@@ -1,5 +1,7 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Button } from '@app/components/Button/Button';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import {
   BottomSheet,
   type SnapPoint,
@@ -18,9 +20,12 @@ import type {
   UserActionVisibilityFlags,
 } from '@app/components/Chat/types/chatUiFlags';
 import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from './chatSheetSurface';
+import { UserCardHeader } from './UserCardHeader';
 
 interface UserActionSheetProps {
+  color?: string;
   login?: string;
+  userId?: string;
   moderation: ChatModerationAccessFlags;
   visibility: UserActionVisibilityFlags;
   onClose: () => void;
@@ -41,8 +46,58 @@ type UserActionItem = {
   tone?: 'accent' | 'danger' | 'default' | 'warning';
 };
 
+const MAX_RECENT_USER_MESSAGES = 5;
+
+function normaliseLogin(value?: string): string {
+  return value?.trim().toLowerCase() ?? '';
+}
+
+function getRecentUserMessages(login?: string, username?: string) {
+  const target = normaliseLogin(login) || normaliseLogin(username);
+  if (!target) {
+    return [];
+  }
+
+  const messages = chatStore$.messages.peek();
+  const recentMessages: { key: string; text: string; timestamp?: string }[] =
+    [];
+
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+    if (!message) {
+      continue;
+    }
+
+    const messageLogin = normaliseLogin(
+      message.userstate?.login || message.userstate?.username || message.sender,
+    );
+    if (messageLogin !== target) {
+      continue;
+    }
+
+    const text = replaceEmotesWithText(message.message).trim();
+    if (!text) {
+      continue;
+    }
+
+    recentMessages.push({
+      key: message.id ?? `${message.message_id}_${message.message_nonce}`,
+      text,
+      timestamp: message.timestamp,
+    });
+
+    if (recentMessages.length >= MAX_RECENT_USER_MESSAGES) {
+      break;
+    }
+  }
+
+  return recentMessages.reverse();
+}
+
 function UserActionSheetComponent({
+  color,
   login,
+  userId,
   moderation,
   visibility,
   onClose,
@@ -56,6 +111,12 @@ function UserActionSheetComponent({
 }: UserActionSheetProps) {
   const { canModerateChat, canModerateUser } = moderation;
   const { isHidden, isHighlighted, visible } = visibility;
+  // peek() on open: the scrollback updates constantly and re-rendering the
+  // sheet per message would defeat the chat flush batching.
+  const recentMessages = useMemo(
+    () => (visible ? getRecentUserMessages(login, username) : []),
+    [login, username, visible],
+  );
   const actionRows: UserActionItem[] = [
     {
       icon: 'at',
@@ -107,13 +168,18 @@ function UserActionSheetComponent({
     280,
     Math.min(windowWidth - theme.space16 * 2, 520),
   );
+  const recentMessagesHeight =
+    recentMessages.length > 0 ? 40 + recentMessages.length * 22 : 0;
   const maxScrollHeight = Math.min(
     Math.round(windowHeight * 0.54),
-    actionRows.length * 52 + 2,
+    actionRows.length * 52 + recentMessagesHeight + 2,
   );
   const sheetHeight = Math.min(
     Math.round(windowHeight * 0.72),
-    144 + actionRows.length * 52 + (isHidden || isHighlighted ? 34 : 0),
+    196 +
+      actionRows.length * 52 +
+      recentMessagesHeight +
+      (isHidden || isHighlighted ? 34 : 0),
   );
   const snapPoints: SnapPoint[] = [{ height: sheetHeight }, 'full'];
   const wrapperStyle = [
@@ -136,19 +202,12 @@ function UserActionSheetComponent({
       <View style={wrapperStyle}>
         <View style={styles.header}>
           <View style={styles.identity}>
-            <View style={styles.identityText}>
-              <Text style={styles.eyebrow} weight='semibold'>
-                User actions
-              </Text>
-              <Text style={styles.username} weight='semibold' numberOfLines={1}>
-                {username}
-              </Text>
-              {login && login !== username ? (
-                <Text style={styles.login} numberOfLines={1}>
-                  @{login}
-                </Text>
-              ) : null}
-            </View>
+            <UserCardHeader
+              fallbackColor={color}
+              login={login}
+              userId={userId}
+              username={username}
+            />
           </View>
           <Button label='Done' style={styles.doneButton} onPress={onClose}>
             <SymbolView
@@ -182,6 +241,27 @@ function UserActionSheetComponent({
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          {recentMessages.length > 0 ? (
+            <View style={styles.recentMessages}>
+              <Text style={styles.recentMessagesTitle} weight='semibold'>
+                Recent messages
+              </Text>
+              {recentMessages.map(message => (
+                <Text
+                  key={message.key}
+                  numberOfLines={1}
+                  style={styles.recentMessageText}
+                >
+                  {message.timestamp ? (
+                    <Text style={styles.recentMessageTimestamp}>
+                      {`${message.timestamp}  `}
+                    </Text>
+                  ) : null}
+                  {message.text}
+                </Text>
+              ))}
+            </View>
+          ) : null}
           <View style={styles.actionGroup}>
             {actionRows.map((action, index) => (
               <Button
@@ -310,12 +390,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 38,
   },
-  eyebrow: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize11,
-    letterSpacing: 0,
-    textTransform: 'uppercase',
-  },
   header: {
     alignItems: 'flex-start',
     flexDirection: 'row',
@@ -326,20 +400,6 @@ const styles = StyleSheet.create({
   identity: {
     flex: 1,
   },
-  identityText: {
-    flex: 1,
-    gap: 1,
-  },
-  login: {
-    color: theme.color.textSecondary.dark,
-    fontSize: 13,
-    lineHeight: theme.fontSize14 * 1.25,
-  },
-  username: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize18,
-    lineHeight: theme.fontSize18 * 1.2,
-  },
   wrapper: {
     ...chatSheetSurface,
     backgroundColor: CHAT_SHEET_BACKGROUND,
@@ -348,6 +408,32 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: theme.space12,
     paddingTop: theme.space8,
+  },
+  recentMessages: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderColor: 'rgba(255,255,255,0.07)',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius12,
+    borderWidth: 1,
+    gap: 4,
+    marginBottom: theme.space8,
+    paddingHorizontal: theme.space12,
+    paddingVertical: theme.space8,
+  },
+  recentMessagesTitle: {
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize11,
+    letterSpacing: 0.2,
+    textTransform: 'uppercase',
+  },
+  recentMessageText: {
+    color: theme.color.text.dark,
+    fontSize: theme.fontSize12,
+    lineHeight: 18,
+  },
+  recentMessageTimestamp: {
+    color: theme.color.textSecondary.dark,
+    fontSize: theme.fontSize11,
   },
   scroll: {
     flexGrow: 0,

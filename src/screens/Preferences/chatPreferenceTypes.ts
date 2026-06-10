@@ -41,6 +41,40 @@ export const DENSITY_OPTIONS = [
 
 export const DENSITY_LABELS = DENSITY_OPTIONS.map(option => option.label);
 
+export const FONT_SCALE_OPTIONS = [
+  { label: 'Small', value: 'small' as const },
+  { label: 'Default', value: 'default' as const },
+  { label: 'Large', value: 'large' as const },
+] as const;
+
+export const FONT_SCALE_LABELS = FONT_SCALE_OPTIONS.map(option => option.label);
+
+export const TIMESTAMP_FORMAT_OPTIONS = [
+  { label: '24-hour', value: '24h' as const },
+  { label: '12-hour', value: '12h' as const },
+] as const;
+
+export const TIMESTAMP_FORMAT_LABELS = TIMESTAMP_FORMAT_OPTIONS.map(
+  option => option.label,
+);
+
+export const DELETED_STYLE_OPTIONS = [
+  { label: 'Show notice', value: 'notice' as const },
+  { label: 'Hide', value: 'hidden' as const },
+] as const;
+
+export const DELETED_STYLE_LABELS = DELETED_STYLE_OPTIONS.map(
+  option => option.label,
+);
+
+export const SCROLLBACK_OPTIONS = [
+  { label: '200', value: 200 as const },
+  { label: '600', value: 600 as const },
+  { label: '1000', value: 1000 as const },
+] as const;
+
+export const SCROLLBACK_LABELS = SCROLLBACK_OPTIONS.map(option => option.label);
+
 export const EMOJI_PREVIEW_SHORTCODES = [':joy:', ':heart:', ':fire:'];
 
 export const HISTORICAL_RECENT_MESSAGES_EXPLAINER =

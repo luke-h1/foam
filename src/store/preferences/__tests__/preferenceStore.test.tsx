@@ -30,6 +30,13 @@ const basePreferences = {
   showFFzBadges: true,
   showBttvBadges: true,
   blockedTerms: [] as string[],
+  chatTimestampFormat: '24h',
+  chatFontScale: 'default',
+  chatScrollback: 600,
+  deletedMessageStyle: 'notice',
+  ignoreClearChat: false,
+  chatMentionHaptics: true,
+  customHighlights: [] as { id: string; phrase: string; color: string }[],
 } as const;
 
 describe('usePreferences', () => {

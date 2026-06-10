@@ -10,7 +10,9 @@ import {
   moderateMessageById,
   moderateMessagesByLogin,
   removeMessageById,
+  removeMessagesByLogin,
 } from '@app/store/chat/actions/messages';
+import { getPreferences } from '@app/store/preferenceStore';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { logger } from '@app/utils/logger';
@@ -51,6 +53,7 @@ interface UseChatIrcHandlersOptions {
   messages$: { peek: () => AnyChatMessageType[] };
   moderateBufferedMessageById: (messageId: string, notice: string) => void;
   moderateBufferedMessagesByLogin: (login: string, notice: string) => void;
+  removeBufferedMessagesByLogin: (login: string) => void;
   processMessageEmotes: (
     text: string,
     userstate: ReturnType<typeof createUserStateFromTags>,
@@ -74,6 +77,7 @@ export function useChatIrcHandlers({
   moderateBufferedMessagesByLogin,
   processMessageEmotes,
   removeBufferedMessageById,
+  removeBufferedMessagesByLogin,
 }: UseChatIrcHandlersOptions) {
   const roomStateRef = useRef<ParsedRoomState | null>(null);
 
@@ -204,8 +208,16 @@ export function useChatIrcHandlers({
         beforeCount,
       });
 
+      const { deletedMessageStyle, ignoreClearChat } = getPreferences();
+
       const isFullChatClear = !username;
       if (!isFullChatClear && username) {
+        if (deletedMessageStyle === 'hidden') {
+          removeBufferedMessagesByLogin(username);
+          removeMessagesByLogin(username);
+          return;
+        }
+
         const moderationNotice =
           banDuration != null
             ? `Timed out (${banDuration}s)`
@@ -213,6 +225,11 @@ export function useChatIrcHandlers({
 
         moderateBufferedMessagesByLogin(username, moderationNotice);
         moderateMessagesByLogin(username, moderationNotice);
+        return;
+      }
+
+      if (ignoreClearChat) {
+        appendSystemMessage('Chat was cleared by a moderator (history kept)');
         return;
       }
 
@@ -231,12 +248,14 @@ export function useChatIrcHandlers({
       }, 0);
     },
     [
+      appendSystemMessage,
       clearLocalMessages,
       channelId,
       channelName,
       listRef,
       messages$,
       moderateBufferedMessagesByLogin,
+      removeBufferedMessagesByLogin,
     ],
   );
 
@@ -249,6 +268,12 @@ export function useChatIrcHandlers({
         roomId: tags['room-id'],
         targetMsgId,
       });
+
+      if (getPreferences().deletedMessageStyle === 'hidden') {
+        removeBufferedMessageById(targetMsgId);
+        removeMessageById(targetMsgId);
+        return;
+      }
 
       const moderationNotice = 'Deleted';
       moderateBufferedMessageById(targetMsgId, moderationNotice);

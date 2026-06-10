@@ -10,6 +10,7 @@ jest.mock('@app/store/chat/actions/messages', () => ({
   moderateMessageById: jest.fn(),
   moderateMessagesByLogin: jest.fn(),
   removeMessageById: jest.fn(),
+  removeMessagesByLogin: jest.fn(),
 }));
 
 jest.mock('@app/utils/logger', () => ({
@@ -43,6 +44,7 @@ function renderIrcHandlers({
       handleNewMessage: jest.fn(),
       isMountedRef: { current: isMounted },
       isLoadingRecentMessagesRef: { current: isLoadingRecentMessages },
+      removeBufferedMessagesByLogin: jest.fn(),
       listRef: { current: null },
       messages$: {
         peek: jest.fn(() => Array.from({ length: messageCount })),

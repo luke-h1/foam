@@ -8,6 +8,7 @@ export const CHAT_NOTICE_ACCENTS = {
   charity: '#00AD03',
   ritual: theme.colorViolet,
   firstMessage: theme.colorViolet,
+  returningChatter: theme.colorBlue,
   viewerMilestone: theme.colorViolet,
   raid: theme.colorOrange,
   replyToYou: '#EB0400',

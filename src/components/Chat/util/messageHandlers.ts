@@ -25,9 +25,9 @@ import {
   ingestChannelPointRewardTags,
 } from '@app/utils/chat/channelPointRewardTitleStore';
 import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
+import { getPreferences } from '@app/store/preferenceStore';
 import { formatDate } from '@app/utils/date-time/date';
 import { generateNonce } from '@app/utils/string/generateNonce';
-import omit from 'lodash/omit';
 
 export type { AnyChatMessageType };
 
@@ -57,7 +57,9 @@ interface CreateBaseMessageParams {
 }
 
 function createChatTimestamp(date: Date | number = Date.now()): string {
-  return formatDate(date, 'HH:mm');
+  const format =
+    getPreferences().chatTimestampFormat === '12h' ? 'h:mm a' : 'HH:mm';
+  return formatDate(date, format);
 }
 
 function createChatTimestampFromTags(tags: { 'tmi-sent-ts'?: string }): string {
@@ -179,6 +181,9 @@ export const createUserNoticeMessage = ({
     'user-type': tags['user-type'],
   } as UserStateTags;
 
+  const { message: _droppedMessage, ...userstateTags } =
+    userstate as UserStateTags & { message?: unknown };
+
   const tagId = 'id' in tags ? (tags as { id?: string }).id : undefined;
   const messageId = tagId || generateNonce();
 
@@ -201,7 +206,7 @@ export const createUserNoticeMessage = ({
         ? tags['reply-parent-msg-body']
         : '',
     ),
-    ...omit(userstate, 'message'),
+    ...userstateTags,
   };
 
   const emptyFields = {

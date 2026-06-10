@@ -8,9 +8,13 @@ import {
 import { useEffect } from 'react';
 import {
   CONTEXT_PREVIEW_KEYS,
+  DELETED_STYLE_OPTIONS,
   DENSITY_OPTIONS,
   EMOJI_PREVIEW_SHORTCODES,
+  FONT_SCALE_OPTIONS,
   PROVIDER_PREVIEW_KEYS,
+  SCROLLBACK_OPTIONS,
+  TIMESTAMP_FORMAT_OPTIONS,
   type ContextPreviewKey,
   type ContextPreviewValue,
   type ProviderPreviewKey,
@@ -29,9 +33,15 @@ function samePreviewValues<T extends object>(
 export function useChatPreferenceScreenState() {
   const {
     chatDensity,
+    chatFontScale,
+    chatMentionHaptics,
+    chatScrollback,
+    chatTimestampFormat,
     chatTimestamps,
+    deletedMessageStyle,
     disableEmoteAnimations,
     emojiStyle,
+    ignoreClearChat,
     highlightOwnMentions,
     showAlternatingChatRows,
     showInlineReplyContext,
@@ -79,6 +89,26 @@ export function useChatPreferenceScreenState() {
   const previewProviders = useSelector(previewProviders$);
 
   const densityIndex = previewDensity === 'compact' ? 1 : 0;
+  const fontScaleIndex = Math.max(
+    0,
+    FONT_SCALE_OPTIONS.findIndex(option => option.value === chatFontScale),
+  );
+  const timestampFormatIndex = Math.max(
+    0,
+    TIMESTAMP_FORMAT_OPTIONS.findIndex(
+      option => option.value === chatTimestampFormat,
+    ),
+  );
+  const deletedStyleIndex = Math.max(
+    0,
+    DELETED_STYLE_OPTIONS.findIndex(
+      option => option.value === deletedMessageStyle,
+    ),
+  );
+  const scrollbackIndex = Math.max(
+    0,
+    SCROLLBACK_OPTIONS.findIndex(option => option.value === chatScrollback),
+  );
   const emojiLabels = EMOJI_STYLE_OPTIONS.map(option => option.label);
   const emojiIndex = Math.max(
     0,
@@ -220,6 +250,66 @@ export function useChatPreferenceScreenState() {
     handleDensitySelect(selected.value);
   };
 
+  const handleFontScaleChange = (event: SegmentedControlChangeEvent) => {
+    const option = FONT_SCALE_OPTIONS[event.nativeEvent.selectedSegmentIndex];
+    if (option) {
+      update({ chatFontScale: option.value });
+    }
+  };
+
+  const handleFontScaleValueChange = (value: string) => {
+    const option = FONT_SCALE_OPTIONS.find(option => option.label === value);
+    if (option) {
+      update({ chatFontScale: option.value });
+    }
+  };
+
+  const handleTimestampFormatChange = (event: SegmentedControlChangeEvent) => {
+    const option =
+      TIMESTAMP_FORMAT_OPTIONS[event.nativeEvent.selectedSegmentIndex];
+    if (option) {
+      update({ chatTimestampFormat: option.value });
+    }
+  };
+
+  const handleTimestampFormatValueChange = (value: string) => {
+    const option = TIMESTAMP_FORMAT_OPTIONS.find(
+      option => option.label === value,
+    );
+    if (option) {
+      update({ chatTimestampFormat: option.value });
+    }
+  };
+
+  const handleDeletedStyleChange = (event: SegmentedControlChangeEvent) => {
+    const option =
+      DELETED_STYLE_OPTIONS[event.nativeEvent.selectedSegmentIndex];
+    if (option) {
+      update({ deletedMessageStyle: option.value });
+    }
+  };
+
+  const handleDeletedStyleValueChange = (value: string) => {
+    const option = DELETED_STYLE_OPTIONS.find(option => option.label === value);
+    if (option) {
+      update({ deletedMessageStyle: option.value });
+    }
+  };
+
+  const handleScrollbackChange = (event: SegmentedControlChangeEvent) => {
+    const option = SCROLLBACK_OPTIONS[event.nativeEvent.selectedSegmentIndex];
+    if (option) {
+      update({ chatScrollback: option.value });
+    }
+  };
+
+  const handleScrollbackValueChange = (value: string) => {
+    const option = SCROLLBACK_OPTIONS.find(option => option.label === value);
+    if (option) {
+      update({ chatScrollback: option.value });
+    }
+  };
+
   const handleAlternatingRowsToggle = (value: boolean) => {
     previewAlternatingRows$.set(value);
     update({ showAlternatingChatRows: value });
@@ -250,8 +340,22 @@ export function useChatPreferenceScreenState() {
   };
 
   return {
+    chatMentionHaptics,
+    deletedStyleIndex,
     densityIndex,
     emojiIndex,
+    fontScaleIndex,
+    handleDeletedStyleChange,
+    handleDeletedStyleValueChange,
+    handleFontScaleChange,
+    handleFontScaleValueChange,
+    handleScrollbackChange,
+    handleScrollbackValueChange,
+    handleTimestampFormatChange,
+    handleTimestampFormatValueChange,
+    ignoreClearChat,
+    scrollbackIndex,
+    timestampFormatIndex,
     emojiLabels,
     emojiPreviewEmotes,
     handleAlternatingRowsToggle,

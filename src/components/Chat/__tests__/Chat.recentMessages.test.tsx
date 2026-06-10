@@ -134,14 +134,22 @@ jest.mock('@app/store/chat/actions/messages', () => ({
   getMessageById: jest.fn(() => undefined),
   getMessageColor: jest.fn(() => undefined),
   getUserMessageColor: jest.fn(() => undefined),
+  getMaxChatMessages: jest.fn(() => 600),
   moderateMessageById: jest.fn(),
   moderateMessagesByLogin: jest.fn(),
   removeMessageById: jest.fn(),
+  removeMessagesByLogin: jest.fn(),
   restoreRecentMessagesForChannel: jest.fn(),
   updateMessage: jest.fn(),
 }));
 
 jest.mock('@app/store/preferenceStore', () => ({
+  getPreferences: jest.fn(() => ({
+    chatTimestampFormat: '24h',
+    chatScrollback: 600,
+    deletedMessageStyle: 'notice',
+    ignoreClearChat: false,
+  })),
   useChatRenderPreferences: jest.fn(),
   usePreference: jest.fn(),
   usePreferences: jest.fn(),
@@ -344,6 +352,13 @@ const setPreferences = (showRecentMessages = true) => {
     showTwitchBadges: true,
     showUnreadJumpPill: true,
     blockedTerms: [],
+    chatTimestampFormat: '24h',
+    chatFontScale: 'default',
+    chatScrollback: 600,
+    deletedMessageStyle: 'notice',
+    ignoreClearChat: false,
+    chatMentionHaptics: true,
+    customHighlights: [],
     update: jest.fn(),
   } satisfies ReturnType<typeof usePreferences>;
 
@@ -366,6 +381,7 @@ describe('Chat recent messages', () => {
       moderateBufferedMessageById,
       moderateBufferedMessagesByLogin,
       removeBufferedMessageById,
+      removeBufferedMessagesByLogin: jest.fn(),
       cleanup: jest.fn(),
       forceFlush,
       getBufferSize: jest.fn(() => 0),

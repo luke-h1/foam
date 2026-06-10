@@ -5,6 +5,7 @@ import { useChatMessages } from '../useChatMessages';
 
 jest.mock('@app/store/chat/actions/messages', () => ({
   addMessages: jest.fn(),
+  getMaxChatMessages: jest.fn(() => 600),
 }));
 
 const mockAddMessages = jest.mocked(addMessages);
