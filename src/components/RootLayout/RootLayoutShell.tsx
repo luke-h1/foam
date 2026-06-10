@@ -1,3 +1,4 @@
+import { recordAppSession } from '@app/lib/expo-store-review';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { preferences$ } from '@app/store/preferenceStore';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
@@ -64,6 +65,8 @@ export function RootLayoutShell() {
       LogBox.ignoreAllLogs();
       void activateKeepAwakeAsync();
     }
+
+    recordAppSession();
   }, []);
 
   useEffect(() => {

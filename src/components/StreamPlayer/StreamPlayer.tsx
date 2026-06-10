@@ -1,3 +1,4 @@
+import { useWatchTimeTracking } from '@app/hooks/useWatchTimeTracking';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -102,6 +103,8 @@ export const StreamPlayer = memo(function StreamPlayer({
   } | null>(null);
 
   const sourceKey = `${channel ?? ''}|${clip ?? ''}|${video ?? ''}|${parent}|${autoplay}|${initialMuted}|${deferOverlayUntilUserUnmute}`;
+
+  useWatchTimeTracking();
 
   useEffect(() => {
     needsInitRef.current = true;
