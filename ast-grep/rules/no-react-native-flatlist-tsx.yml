@@ -1,0 +1,18 @@
+id: no-react-native-flatlist-tsx
+language: tsx
+severity: error
+message: Use LegendList (chat) or FlashList instead of core react-native lists.
+note: |
+  FlatList, SectionList, and VirtualizedList regress scroll performance and
+  memory compared to the recycling lists this app standardises on.
+files:
+  - 'src/**/*.tsx'
+rule:
+  kind: import_specifier
+  regex: ^(FlatList|SectionList|VirtualizedList)$
+  inside:
+    stopBy: end
+    kind: import_statement
+    has:
+      field: source
+      regex: ^['"]react-native['"]$

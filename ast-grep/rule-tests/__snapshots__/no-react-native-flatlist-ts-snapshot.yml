@@ -1,0 +1,44 @@
+id: no-react-native-flatlist-ts
+snapshots:
+  import { FlatList } from 'react-native';:
+    labels:
+    - source: FlatList
+      style: primary
+      start: 9
+      end: 17
+    - source: '''react-native'''
+      style: secondary
+      start: 25
+      end: 39
+    - source: import { FlatList } from 'react-native';
+      style: secondary
+      start: 0
+      end: 40
+  import { View, SectionList } from 'react-native';:
+    labels:
+    - source: SectionList
+      style: primary
+      start: 15
+      end: 26
+    - source: '''react-native'''
+      style: secondary
+      start: 34
+      end: 48
+    - source: import { View, SectionList } from 'react-native';
+      style: secondary
+      start: 0
+      end: 49
+  import { VirtualizedList } from 'react-native';:
+    labels:
+    - source: VirtualizedList
+      style: primary
+      start: 9
+      end: 24
+    - source: '''react-native'''
+      style: secondary
+      start: 32
+      end: 46
+    - source: import { VirtualizedList } from 'react-native';
+      style: secondary
+      start: 0
+      end: 47

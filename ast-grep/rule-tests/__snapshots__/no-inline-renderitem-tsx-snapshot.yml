@@ -1,0 +1,20 @@
+id: no-inline-renderitem-tsx
+snapshots:
+  <FlashList data={rows} renderItem={() => null} />:
+    labels:
+    - source: renderItem={() => null}
+      style: primary
+      start: 23
+      end: 46
+  <FlashList data={rows} renderItem={function (info) { return <Row info={info} />; }} />:
+    labels:
+    - source: renderItem={function (info) { return <Row info={info} />; }}
+      style: primary
+      start: 23
+      end: 83
+  <LegendList data={rows} renderItem={({ item }) => <Row item={item} />} />:
+    labels:
+    - source: renderItem={({ item }) => <Row item={item} />}
+      style: primary
+      start: 24
+      end: 70

@@ -1,0 +1,8 @@
+id: prefer-create-mmkv-tsx
+snapshots:
+  'const storage = new MMKV({ id: ''rogue-storage'' });':
+    labels:
+    - source: 'new MMKV({ id: ''rogue-storage'' })'
+      style: primary
+      start: 16
+      end: 49

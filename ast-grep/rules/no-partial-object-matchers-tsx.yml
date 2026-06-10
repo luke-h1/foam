@@ -1,0 +1,15 @@
+id: no-partial-object-matchers-tsx
+language: tsx
+severity: error
+message: Use toEqual with the exact shape; partial matchers let fields drift silently.
+note: |
+  AGENTS.md: when a test cares about an object contract, write the object out
+  and compare it with toEqual. If only part of a large object matters, pull
+  those fields into a smaller object first.
+files:
+  - 'src/**/__tests__/**/*.tsx'
+  - 'src/**/*.test.tsx'
+rule:
+  any:
+    - pattern: $EXPECT.toMatchObject($$$ARGS)
+    - pattern: expect.objectContaining($$$ARGS)

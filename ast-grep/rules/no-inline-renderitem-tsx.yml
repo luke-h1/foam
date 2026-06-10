@@ -1,0 +1,23 @@
+id: no-inline-renderitem-tsx
+language: tsx
+severity: error
+message: Inline renderItem creates a new function per render and defeats row memoization.
+note: |
+  Hoist the row renderer to a stable function (module scope or useCallback)
+  so list rows keep their memoized identity. See useChatRowRenderer for the
+  pattern used by chat.
+files:
+  - 'src/**/*.tsx'
+ignores:
+  - '**/__tests__/**'
+  - '**/*.test.tsx'
+  - '**/*.perf-test.tsx'
+  - '**/*.stories.tsx'
+rule:
+  any:
+    - pattern:
+        context: '<C renderItem={($$$PARAMS) => $BODY} />'
+        selector: jsx_attribute
+    - pattern:
+        context: '<C renderItem={function ($$$PARAMS) { $$$BODY }} />'
+        selector: jsx_attribute

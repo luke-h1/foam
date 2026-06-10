@@ -38,6 +38,8 @@
     "ota": "./scripts/release-ota.sh",
     "gen-env": "gen-env-types .env -o src/types/env.d.ts -e .",
     "lint": "bun run lint:check",
+    "lint:ast-grep": "ast-grep scan",
+    "test:ast-grep": "ast-grep test",
     "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
     "format:check": "bun run prettier:check",
@@ -185,6 +187,7 @@
     "twemoji": "14.0.2"
   },
   "devDependencies": {
+    "@ast-grep/cli": "^0.43.0",
     "@babel/core": "^7.29.0",
     "@babel/preset-react": "^7.27.1",
     "@commitlint/cli": "19.8.1",
@@ -305,8 +308,9 @@
     }
   },
   "trustedDependencies": [
-    "@shopify/react-native-skia",
+    "@ast-grep/cli",
     "@sentry/cli",
+    "@shopify/react-native-skia",
     "core-js",
     "core-js-pure",
     "esbuild",

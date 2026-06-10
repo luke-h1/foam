@@ -1,0 +1,14 @@
+id: prefer-create-mmkv-tsx
+language: tsx
+severity: error
+message: Construct MMKV through createMMKV so ids and modes stay centralised.
+note: |
+  See src/lib/mmkv.ts; direct `new MMKV()` bypasses the shared configuration
+  and the rozenite storage debugging registry.
+files:
+  - 'src/**/*.tsx'
+ignores:
+  - '**/__tests__/**'
+  - '**/*.test.tsx'
+rule:
+  pattern: new MMKV($$$ARGS)

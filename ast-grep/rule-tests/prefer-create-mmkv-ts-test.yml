@@ -1,0 +1,6 @@
+id: prefer-create-mmkv-ts
+valid:
+  - "const storage = createMMKV({ id: 'image-cache-manifest' });"
+invalid:
+  - "const storage = new MMKV({ id: 'rogue-storage' });"
+  - 'const storage = new MMKV();'

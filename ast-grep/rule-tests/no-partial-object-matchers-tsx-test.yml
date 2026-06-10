@@ -1,0 +1,6 @@
+id: no-partial-object-matchers-tsx
+valid:
+  - "expect(getByText('hello')).toEqual(expected);"
+invalid:
+  - "expect(props).toMatchObject({ compact: true });"
+  - "expect.objectContaining({ compact: true });"

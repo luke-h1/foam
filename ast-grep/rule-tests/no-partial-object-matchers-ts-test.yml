@@ -1,0 +1,7 @@
+id: no-partial-object-matchers-ts
+valid:
+  - "expect(result[0]).toEqual({ type: 'mention', content: '@user' });"
+  - "expect(pickFields(paint, ['id'])).toEqual({ id: 'paint-v2' });"
+invalid:
+  - "expect(result[0]).toMatchObject({ type: 'mention' });"
+  - "expect(spy).toHaveBeenCalledWith(expect.objectContaining({ id: '1' }));"

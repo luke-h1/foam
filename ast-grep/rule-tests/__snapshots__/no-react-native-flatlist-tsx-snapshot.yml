@@ -1,0 +1,30 @@
+id: no-react-native-flatlist-tsx
+snapshots:
+  import { FlatList } from 'react-native';:
+    labels:
+    - source: FlatList
+      style: primary
+      start: 9
+      end: 17
+    - source: '''react-native'''
+      style: secondary
+      start: 25
+      end: 39
+    - source: import { FlatList } from 'react-native';
+      style: secondary
+      start: 0
+      end: 40
+  import { Text, SectionList, View } from 'react-native';:
+    labels:
+    - source: SectionList
+      style: primary
+      start: 15
+      end: 26
+    - source: '''react-native'''
+      style: secondary
+      start: 40
+      end: 54
+    - source: import { Text, SectionList, View } from 'react-native';
+      style: secondary
+      start: 0
+      end: 55

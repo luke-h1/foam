@@ -1,0 +1,14 @@
+id: prefer-create-mmkv-ts
+language: typescript
+severity: error
+message: Construct MMKV through createMMKV so ids and modes stay centralised.
+note: |
+  See src/lib/mmkv.ts; direct `new MMKV()` bypasses the shared configuration
+  and the rozenite storage debugging registry.
+files:
+  - 'src/**/*.ts'
+ignores:
+  - '**/__tests__/**'
+  - '**/*.test.ts'
+rule:
+  pattern: new MMKV($$$ARGS)

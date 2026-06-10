@@ -1,0 +1,8 @@
+id: no-inline-renderitem-tsx
+valid:
+  - '<LegendList data={rows} renderItem={renderRow} />'
+  - '<FlashList data={rows} renderItem={renderItemCallback} keyExtractor={getKey} />'
+invalid:
+  - '<LegendList data={rows} renderItem={({ item }) => <Row item={item} />} />'
+  - '<FlashList data={rows} renderItem={() => null} />'
+  - '<FlashList data={rows} renderItem={function (info) { return <Row info={info} />; }} />'
