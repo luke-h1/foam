@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   inputRow: {
-    alignItems: 'center',
+    alignItems: 'flex-end',
     flexDirection: 'row',
     gap: COMPOSER_ROW_GAP,
     paddingHorizontal: 0,

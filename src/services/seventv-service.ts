@@ -394,7 +394,6 @@ export const sevenTvService = {
     if (emoteSetId === 'global') {
       const { data, error } = await sevenTvV4Client.query<GlobalEmoteSetQuery>({
         query: GlobalEmoteSetDocument,
-        fetchPolicy: 'network-only',
       });
 
       if (error) {
@@ -414,7 +413,6 @@ export const sevenTvService = {
     >({
       query: EmoteSetCustomDocument,
       variables: { id: emoteSetId },
-      fetchPolicy: 'network-only',
     });
 
     if (error) {
@@ -440,7 +438,6 @@ export const sevenTvService = {
     >({
       query: EmoteQueryDocument,
       variables: { id: emoteId },
-      fetchPolicy: 'network-only',
     });
 
     if (error) {
@@ -638,7 +635,6 @@ export const sevenTvService = {
   fetchAllPaints: async (): Promise<PaintData[]> => {
     const { data, error } = await sevenTvV4Client.query<PaintsQueryQuery>({
       query: PaintsQueryDocument,
-      fetchPolicy: 'network-only',
     });
 
     if (error) {

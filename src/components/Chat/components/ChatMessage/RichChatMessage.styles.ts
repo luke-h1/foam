@@ -18,11 +18,6 @@ export const chatLineMetrics = {
 
 export type ChatFontScale = 'small' | 'default' | 'large';
 
-/**
- * Text metric override for the chat font size preference. Appended after the
- * density styles on every span that spreads chatLineMetrics so usernames,
- * mentions, links, and body text stay on a single shared baseline.
- */
 export function getChatFontScaleStyle(
   fontScale: ChatFontScale | undefined,
   compact: boolean,

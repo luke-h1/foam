@@ -1,87 +1,34 @@
-import Client from '@app/services/api/Client';
-import Axios, { type AxiosInstance, type CustomParamsSerializer } from 'axios';
+import { ApiError, createApiClient } from '@app/services/api/Client';
 
-const mockRequestUse = jest.fn(() => 1);
-const mockRequestEject = jest.fn();
-const mockResponseUse = jest.fn(() => 1);
-const mockResponseEject = jest.fn();
-const mockAxiosRequest = jest.fn() as jest.Mock & {
-  defaults: {
-    baseURL?: string;
-    headers: {
-      common: Record<string, unknown>;
-    };
-  };
-  interceptors: {
-    request: {
-      eject: jest.Mock;
-      use: jest.Mock;
-    };
-    response: {
-      eject: jest.Mock;
-      use: jest.Mock;
-    };
-  };
-};
+const mockFetch = jest.fn();
 
-jest.mock('axios', () => ({
-  __esModule: true,
-  default: {
-    create: jest.fn(options => {
-      mockAxiosRequest.defaults = {
-        baseURL: options?.baseURL,
-        headers: {
-          common: {
-            ...(options?.headers ?? {}),
-          },
-        },
-      };
-      mockAxiosRequest.interceptors = {
-        request: {
-          eject: mockRequestEject,
-          use: mockRequestUse,
-        },
-        response: {
-          eject: mockResponseEject,
-          use: mockResponseUse,
-        },
-      };
-
-      return mockAxiosRequest as unknown as AxiosInstance;
-    }),
-  },
-  isAxiosError: (error: unknown) =>
-    typeof error === 'object' &&
-    error !== null &&
-    'isAxiosError' in error &&
-    error.isAxiosError === true,
+jest.mock('expo/fetch', () => ({
+  fetch: (...args: unknown[]) => mockFetch(...args) as Promise<unknown>,
 }));
 
-const mockAxiosCreate = jest.mocked(Axios.create);
+jest.mock('@app/lib/sentry', () => ({
+  recordError: jest.fn(),
+  recordInfo: jest.fn(),
+}));
 
-function getParamsSerializer(): CustomParamsSerializer {
-  const serializer = mockAxiosCreate.mock.calls[0]?.[0]?.paramsSerializer;
-  if (typeof serializer !== 'function') {
-    throw new Error('Expected paramsSerializer to be a function');
-  }
-
-  return serializer;
+function jsonResponse(body: unknown, status = 200) {
+  return {
+    ok: status < 400,
+    status,
+    statusText: status < 400 ? 'OK' : 'Error',
+    json: () => Promise.resolve(body),
+    text: () => Promise.resolve(JSON.stringify(body)),
+  };
 }
 
-describe('Client', () => {
+describe('createApiClient', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockAxiosRequest.mockReset();
+    mockFetch.mockReset();
   });
 
-  test('uses axios with base URL, default headers, and serialized params', async () => {
-    mockAxiosRequest.mockResolvedValueOnce({
-      data: { data: ['stream'] },
-      headers: {},
-      status: 200,
-      statusText: 'OK',
-    });
-    const client = new Client({
+  test('builds the URL from base URL and serialized params with default headers', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ data: ['stream'] }));
+    const client = createApiClient({
       baseURL: 'https://api.test/helix',
       headers: {
         'Client-ID': 'client-id',
@@ -97,86 +44,88 @@ describe('Client', () => {
       }),
     ).resolves.toEqual({ data: ['stream'] });
 
-    const createConfig = mockAxiosCreate.mock.calls[0]?.[0];
-    if (createConfig === undefined) {
-      throw new Error('Expected axios instance to be created');
-    }
-
-    expect({
-      baseURL: createConfig.baseURL,
-      headers: createConfig.headers,
-      serializedParams: getParamsSerializer()({
-        first: 20,
-        id: ['one', 'two'],
-      }),
-    }).toEqual({
-      baseURL: 'https://api.test/helix',
-      headers: {
-        'Client-ID': 'client-id',
-      },
-      serializedParams: 'first=20&id=one%2Ctwo',
-    });
-    expect(mockAxiosRequest.mock.calls).toEqual([
+    expect(mockFetch.mock.calls).toEqual([
       [
+        'https://api.test/helix/streams?first=20&id=one%2Ctwo',
         {
+          method: 'GET',
           headers: {
+            Accept: 'application/json',
             'Client-ID': 'client-id',
           },
-          method: 'GET',
-          params: {
-            first: 20,
-            id: ['one', 'two'],
-          },
-          url: '/streams',
+          body: undefined,
         },
       ],
     ]);
   });
 
-  test('passes JSON bodies through axios and applies the current auth token', async () => {
-    mockAxiosRequest.mockResolvedValueOnce({
-      data: { ok: true },
-      headers: {},
-      status: 200,
-      statusText: 'OK',
-    });
-    const client = new Client({ baseURL: 'https://api.test/helix' });
+  test('passes JSON bodies through fetch and applies the current auth token', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ ok: true }));
+    const client = createApiClient({ baseURL: 'https://api.test/helix' });
     client.setAuthToken('user-token');
 
     await expect(
       client.post('/eventsub/subscriptions', { type: 'channel.poll.begin' }),
     ).resolves.toEqual({ ok: true });
 
-    expect(mockAxiosRequest.mock.calls).toEqual([
+    expect(mockFetch.mock.calls).toEqual([
       [
+        'https://api.test/helix/eventsub/subscriptions',
         {
-          data: {
-            type: 'channel.poll.begin',
-          },
-          headers: {
-            Authorization: 'Bearer user-token',
-          },
           method: 'POST',
-          url: '/eventsub/subscriptions',
+          headers: {
+            Accept: 'application/json',
+            Authorization: 'Bearer user-token',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ type: 'channel.poll.begin' }),
         },
       ],
     ]);
   });
 
-  test('returns axios error response data for HTTP failures', async () => {
-    mockAxiosRequest.mockRejectedValueOnce({
-      isAxiosError: true,
-      response: {
-        data: { message: 'Forbidden' },
-        status: 403,
-      },
-    });
-    const client = new Client({ baseURL: 'https://api.test/helix' });
+  test('removeAuthToken stops sending the Authorization header', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ ok: true }));
+    const client = createApiClient({ baseURL: 'https://api.test/helix' });
+    client.setAuthToken('user-token');
+    client.removeAuthToken();
+
+    await client.get('/streams');
+
+    const [, requestInit] = mockFetch.mock.calls[0] as [
+      string,
+      { headers: Record<string, string> },
+    ];
+    expect(requestInit.headers).toEqual({ Accept: 'application/json' });
+  });
+
+  test('throws ApiError with the response body for HTTP failures', async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({ message: 'Forbidden' }, 403),
+    );
+    const client = createApiClient({ baseURL: 'https://api.test/helix' });
 
     await expect(
       client.post('/eventsub/subscriptions', {
         type: 'channel.prediction.lock',
       }),
-    ).resolves.toEqual({ message: 'Forbidden' });
+    ).rejects.toEqual(
+      new ApiError(JSON.stringify({ message: 'Forbidden' }), 403),
+    );
+  });
+
+  test('resolves undefined for 204 responses', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      status: 204,
+      statusText: 'No Content',
+      json: () => Promise.reject(new Error('no body')),
+      text: () => Promise.resolve(''),
+    });
+    const client = createApiClient({ baseURL: 'https://api.test/helix' });
+
+    await expect(
+      client.delete('/eventsub/subscriptions'),
+    ).resolves.toBeUndefined();
   });
 });

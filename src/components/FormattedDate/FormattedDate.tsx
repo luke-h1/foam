@@ -1,10 +1,8 @@
-import {
-  format as formatter,
-  formatRelative,
-  isValid,
-  parse,
-  toDate,
-} from 'date-fns';
+import { format as formatter } from 'date-fns/format';
+import { formatRelative } from 'date-fns/formatRelative';
+import { isValid } from 'date-fns/isValid';
+import { parse } from 'date-fns/parse';
+import { toDate } from 'date-fns/toDate';
 import { useMemo } from 'react';
 import { Text } from '@app/components/ui/Text/Text';
 

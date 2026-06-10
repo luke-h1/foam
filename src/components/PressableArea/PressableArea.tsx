@@ -3,6 +3,7 @@ import { Pressable } from 'react-native-gesture-handler';
 import { StyleSheet, View } from 'react-native';
 import type { PressableProps } from 'react-native-gesture-handler';
 import { EaseView } from 'react-native-ease';
+import { motion } from '@app/styles/motion';
 
 export function PressableArea({
   ref,
@@ -30,7 +31,7 @@ export function PressableArea({
     >
       <EaseView
         animate={{ opacity: pressed ? 0.75 : 1 }}
-        transition={{ type: 'timing', duration: 150 }}
+        transition={{ type: 'timing', duration: motion.fast }}
         style={styles.pressable}
       >
         {children}

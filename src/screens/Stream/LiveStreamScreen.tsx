@@ -9,11 +9,12 @@ import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import { Text } from '@app/components/ui/Text/Text';
 import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
 import { useChannelPoll } from '@app/hooks/useChannelPoll';
-import { twitchQueries } from '@app/queries/twitchQueries';
+import { useStreamQuery } from '@app/hooks/queries/use-stream-query';
+import { useUserQuery } from '@app/hooks/queries/use-user-query';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 import { theme } from '@app/styles/themes';
+import { motion } from '@app/styles/motion';
 import { usePreference } from '@app/store/preferenceStore';
-import { useQuery } from '@tanstack/react-query';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import {
   useEffect,
@@ -30,7 +31,6 @@ import type { StreamPlayerRef } from '@app/components/StreamPlayer/types';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   cancelAnimation,
-  Easing,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -62,12 +62,12 @@ const MAX_OVERLAY_CHAT_FRACTION = 0.68;
 const MAX_SIDEBAR_CHAT_FRACTION = 0.55;
 const ORIENTATION_CHAT_SLIDE_DISTANCE = 28;
 const RESIZE_ANIMATION_CONFIG = {
-  duration: 150,
-  easing: Easing.out(Easing.cubic),
+  duration: motion.fast,
+  easing: motion.easing.out,
 };
 const CHAT_REVEAL_ANIMATION_CONFIG = {
-  duration: 110,
-  easing: Easing.out(Easing.cubic),
+  duration: motion.instant,
+  easing: motion.easing.out,
 };
 
 export const LiveStreamScreen = memo(function LiveStreamScreen({
@@ -80,12 +80,16 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const disableStream = usePreference('disableStream');
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const { isLandscape, layoutHeight, portraitTopInset, screenWidth } =
-    getLiveStreamLayoutMetrics({
-      insetTop: insets.top,
-      windowHeight,
-      windowWidth,
-    });
+  const {
+    isLandscape,
+    layoutHeight,
+    portraitTopInset: _portraitTopInset,
+    screenWidth,
+  } = getLiveStreamLayoutMetrics({
+    insetTop: insets.top,
+    windowHeight,
+    windowWidth,
+  });
   const isChatEnabled = !disableChat;
   const isStreamEnabled = !disableStream;
   const [uiState, dispatchUi] = useReducer(
@@ -278,13 +282,11 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   const shouldResolveChannelIdentity = isChatEnabled || isStreamEnabled;
   const shouldFetchChannelMetadata = isFocused && normalizedLogin.length > 0;
-  const { data: stream } = useQuery({
-    ...twitchQueries.getStream(normalizedLogin),
+  const { data: stream } = useStreamQuery(normalizedLogin, {
     enabled: isStreamEnabled && shouldFetchChannelMetadata,
   });
 
-  const { data: user } = useQuery({
-    ...twitchQueries.getUser(normalizedLogin),
+  const { data: user } = useUserQuery(normalizedLogin, {
     enabled:
       shouldResolveChannelIdentity &&
       shouldFetchChannelMetadata &&
@@ -458,10 +460,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       scheduleOnRN(commitLandscapeChatWidth, chatWidth.get());
     });
 
-  const contentContainerStyle = [
-    styles.contentContainer,
-    !isLandscape && { paddingTop: portraitTopInset },
-  ];
+  const contentContainerStyle = styles.contentContainer;
 
   const resolvedChannelLogin =
     stream?.user_login ?? user?.login ?? normalizedLogin;

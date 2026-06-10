@@ -89,7 +89,6 @@ export function useChatComposerController({
     if (!submitEnabled) {
       return;
     }
-    // Sending a message is a decision-shaped action; give it weight.
     void impact('light');
     onSubmit?.();
     blurInput();

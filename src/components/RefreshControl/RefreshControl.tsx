@@ -16,8 +16,6 @@ export function RefreshControl({ onRefresh, offset }: Props) {
   const tintColor = theme.colorPrimary;
 
   const refresh = useCallback(async () => {
-    // One light impact when the refresh engages; completing a routine
-    // refresh is not an event worth a second buzz.
     if (Platform.OS !== 'web') {
       void impact('light');
     }

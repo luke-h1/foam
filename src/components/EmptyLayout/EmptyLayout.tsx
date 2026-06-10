@@ -162,8 +162,6 @@ export function EmptyLayoutButton({
 }
 
 const styles = StyleSheet.create({
-  // Native bordered-prominent style: content-hugging, centered label,
-  // continuous-curve capsule.
   ctaButton: {
     alignItems: 'center',
     alignSelf: 'center',

@@ -10,6 +10,7 @@ export type UIRadius =
   | 'md'
   | 'default'
   | 'lg'
+  | 'card'
   | 'xl'
   | 'full';
 
@@ -37,16 +38,18 @@ export type UIColor =
   | 'white'
   | 'transparent';
 
+// Biased to the small end for a tighter, more native feel.
 export const RADIUS_VALUES: Record<UIRadius, number> = {
   none: 0,
   xxs: 4,
   xs: 6,
   sm: 8,
-  md: 12,
-  default: 14,
-  lg: 16,
+  md: 10,
+  default: 12,
+  lg: 12,
+  card: 14,
   xl: 20,
-  full: 32,
+  full: 999,
 };
 
 export interface ColorConfig {

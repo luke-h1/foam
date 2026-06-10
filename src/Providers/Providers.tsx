@@ -1,4 +1,3 @@
-import { ApolloProvider } from '@apollo/client/react';
 import { AppBottomSheetProvider } from '@app/components/BottomSheet/BottomSheetProvider';
 import { OfflineBanner } from '@app/components/OfflineBanner/OfflineBanner';
 import { AuthContextProvider, useAuthContext } from '@app/context/AuthContext';
@@ -8,7 +7,6 @@ import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
 import { BaseConfig } from '@app/navigators/config';
 import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
 import { twitchApi } from '@app/services/api/clients';
-import { sevenTvV4Client } from '@app/services/gql/client';
 import { storage } from '@app/lib/storage';
 import { deleteTokens } from '@app/utils/authentication/deleteTokens';
 import { QueryProvider } from '@app/lib/react-query/query-provider';
@@ -29,7 +27,6 @@ import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { PortalProvider } from 'react-native-teleport';
-import { DevToolsBubble } from 'react-native-react-query-devtools';
 import {
   initialWindowMetrics,
   SafeAreaProvider,
@@ -48,13 +45,22 @@ function QueryProviderWithAuth({ children }: PropsWithChildren) {
   );
 }
 
+// Required lazily behind __DEV__ so Metro drops the devtools bundle (~94KB)
+// from release builds; the static import defeated the runtime gate below.
+const DevToolsBubble = __DEV__
+  ? // eslint-disable-next-line @typescript-eslint/no-require-imports
+    (
+      require('react-native-react-query-devtools') as typeof import('react-native-react-query-devtools')
+    ).DevToolsBubble
+  : null;
+
 function QueryDevelopmentTools() {
   const queryClient = useQueryClient();
   const { ReactQueryDebug } = useDebugOptions();
 
   useTanStackQueryDevTools(queryClient);
 
-  if (!ReactQueryDebug?.enabled) {
+  if (!ReactQueryDebug?.enabled || !DevToolsBubble) {
     return null;
   }
 
@@ -119,40 +125,38 @@ export function Providers({ children }: PropsWithChildren) {
   return (
     <AuthContextProvider>
       <AccentColorProvider>
-        <ApolloProvider client={sevenTvV4Client}>
-          <ScreenDimensionsProvider>
-            <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-              <GestureHandlerRootView style={styles.gestureContainer}>
-                <ErrorBoundary
-                  catchErrors={BaseConfig.catchErrors}
-                  onReset={() => setRecoveredFromError(true)}
-                >
-                  <KeyboardProvider>
-                    <PortalProvider>
-                      {__DEV__ ? <DevTools /> : null}
-                      <AnalyticsProvider>
-                        <QueryProviderWithAuth>
-                          <OfflineBanner />
-                          {/* No global press haptic: feed taps stay silent
-                              so deliberate actions (send, block, refresh)
-                              keep their weight. Haptics are opt-in per
-                              control via lib/haptics. */}
-                          <PressablesConfig
-                            config={{ minScale: motion.pressMinScale }}
-                          >
-                            <AppBottomSheetProvider>
-                              {children}
-                            </AppBottomSheetProvider>
-                          </PressablesConfig>
-                        </QueryProviderWithAuth>
-                      </AnalyticsProvider>
-                    </PortalProvider>
-                  </KeyboardProvider>
-                </ErrorBoundary>
-              </GestureHandlerRootView>
-            </SafeAreaProvider>
-          </ScreenDimensionsProvider>
-        </ApolloProvider>
+        <ScreenDimensionsProvider>
+          <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+            <GestureHandlerRootView style={styles.gestureContainer}>
+              <ErrorBoundary
+                catchErrors={BaseConfig.catchErrors}
+                onReset={() => setRecoveredFromError(true)}
+              >
+                <KeyboardProvider>
+                  <PortalProvider>
+                    {__DEV__ ? <DevTools /> : null}
+                    <AnalyticsProvider>
+                      <QueryProviderWithAuth>
+                        <OfflineBanner />
+                        {/* No global press haptic: feed taps stay silent
+                            so deliberate actions (send, block, refresh)
+                            keep their weight. Haptics are opt-in per
+                            control via lib/haptics. */}
+                        <PressablesConfig
+                          config={{ minScale: motion.pressMinScale }}
+                        >
+                          <AppBottomSheetProvider>
+                            {children}
+                          </AppBottomSheetProvider>
+                        </PressablesConfig>
+                      </QueryProviderWithAuth>
+                    </AnalyticsProvider>
+                  </PortalProvider>
+                </KeyboardProvider>
+              </ErrorBoundary>
+            </GestureHandlerRootView>
+          </SafeAreaProvider>
+        </ScreenDimensionsProvider>
       </AccentColorProvider>
     </AuthContextProvider>
   );

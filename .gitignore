@@ -115,6 +115,10 @@ docs/plans
 docs/
 build-artifacts/
 
+.fingerprint-cache/
+.release-notes-body.md
+.release-body.md
+
 traces
 
 .env.local

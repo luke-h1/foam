@@ -1,4 +1,4 @@
-import { differenceInMinutes } from 'date-fns';
+import { differenceInMinutes } from 'date-fns/differenceInMinutes';
 
 export function elapsedStreamTime(start: string) {
   const diffInMinutes = differenceInMinutes(new Date(), start);

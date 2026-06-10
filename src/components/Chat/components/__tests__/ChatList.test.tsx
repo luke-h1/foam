@@ -65,7 +65,7 @@ describe('ChatList', () => {
       onEndReachedThreshold: props.onEndReachedThreshold,
       viewabilityConfig: props.viewabilityConfig,
     }).toEqual({
-      drawDistance: 96,
+      drawDistance: 250,
       estimatedItemSize: 34,
       extraData: { showTimestamps: false },
       getEstimatedItemSize: undefined,
@@ -77,6 +77,7 @@ describe('ChatList', () => {
       onEndReachedThreshold: 0.02,
       viewabilityConfig: {
         itemVisiblePercentThreshold: 1,
+        minimumViewTime: 100,
       },
     });
   });

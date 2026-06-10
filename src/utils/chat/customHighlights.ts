@@ -27,11 +27,6 @@ export function normaliseHighlightPhrase(phrase: string): string {
   return phrase.trim().toLowerCase();
 }
 
-/**
- * Returns the first highlight rule whose phrase appears in the message text.
- * Phrases are stored lowercased; matching is case-insensitive substring, the
- * same semantics blocked terms use.
- */
 export function findCustomHighlight(
   message: ParsedPart[],
   rules: CustomHighlight[],

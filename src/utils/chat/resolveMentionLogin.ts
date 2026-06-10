@@ -4,10 +4,13 @@ import type { ParsedPart } from './replaceTextWithEmotes';
 
 const mentionLoginIndex = new Map<string, string>();
 
+export type ChatterRole = 'broadcaster' | 'moderator' | 'vip';
+
 export type MentionChatter = {
   login: string;
   userId: string;
   color: string;
+  role?: ChatterRole;
 };
 
 const mentionChatterIndex = new Map<string, MentionChatter>();
@@ -121,10 +124,12 @@ export function registerMentionChatter({
   login,
   userId,
   color,
+  role,
 }: {
   login?: string | null;
   userId?: string | null;
   color?: string | null;
+  role?: ChatterRole;
 }): void {
   const trimmedLogin = login?.trim();
   if (!trimmedLogin) {
@@ -145,7 +150,14 @@ export function registerMentionChatter({
     login: canonicalLogin,
     userId: resolvedUserId,
     color: resolvedColor,
+    // Mention-only registrations carry no role, so keep the last known one
+    // rather than clearing it.
+    role: role ?? existing?.role,
   });
+}
+
+export function getAllMentionChatters(): MentionChatter[] {
+  return Array.from(mentionChatterIndex.values());
 }
 
 function compareMentionChatters(

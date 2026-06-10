@@ -1,4 +1,3 @@
-import { ApolloProvider } from '@apollo/client/react';
 import { AppBottomSheetProvider } from '@app/components/BottomSheet/BottomSheetProvider';
 import { AuthContextProvider, useAuthContext } from '@app/context/AuthContext';
 import { AccentColorProvider } from '@app/context/AccentColorContext';
@@ -6,7 +5,6 @@ import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
 import { BaseConfig } from '@app/navigators/config';
 import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
 import { twitchApi } from '@app/services/api/clients';
-import { sevenTvV4Client } from '@app/services/gql/client';
 import { deleteTokens } from '@app/utils/authentication/deleteTokens';
 import { QueryProvider } from '@app/lib/react-query/query-provider';
 import { motion } from '@app/styles/motion';
@@ -55,32 +53,30 @@ export function Providers({ children }: PropsWithChildren) {
   return (
     <AuthContextProvider>
       <AccentColorProvider>
-        <ApolloProvider client={sevenTvV4Client}>
-          <ScreenDimensionsProvider>
-            <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-              <ErrorBoundary
-                catchErrors={BaseConfig.catchErrors}
-                onReset={() => setRecoveredFromError(true)}
-              >
-                <GestureHandlerRootView style={styles.gestureContainer}>
-                  <PortalProvider>
-                    <QueryProviderWithAuth>
-                      <QueryDevTools>
-                        <PressablesConfig
-                          config={{ minScale: motion.pressMinScale }}
-                        >
-                          <AppBottomSheetProvider>
-                            {children}
-                          </AppBottomSheetProvider>
-                        </PressablesConfig>
-                      </QueryDevTools>
-                    </QueryProviderWithAuth>
-                  </PortalProvider>
-                </GestureHandlerRootView>
-              </ErrorBoundary>
-            </SafeAreaProvider>
-          </ScreenDimensionsProvider>
-        </ApolloProvider>
+        <ScreenDimensionsProvider>
+          <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+            <ErrorBoundary
+              catchErrors={BaseConfig.catchErrors}
+              onReset={() => setRecoveredFromError(true)}
+            >
+              <GestureHandlerRootView style={styles.gestureContainer}>
+                <PortalProvider>
+                  <QueryProviderWithAuth>
+                    <QueryDevTools>
+                      <PressablesConfig
+                        config={{ minScale: motion.pressMinScale }}
+                      >
+                        <AppBottomSheetProvider>
+                          {children}
+                        </AppBottomSheetProvider>
+                      </PressablesConfig>
+                    </QueryDevTools>
+                  </QueryProviderWithAuth>
+                </PortalProvider>
+              </GestureHandlerRootView>
+            </ErrorBoundary>
+          </SafeAreaProvider>
+        </ScreenDimensionsProvider>
       </AccentColorProvider>
     </AuthContextProvider>
   );

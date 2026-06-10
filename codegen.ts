@@ -18,7 +18,14 @@ const config: CodegenConfig = {
       ],
       config: {
         withHooks: false,
-        documentMode: 'documentNode',
+        withHOC: false,
+        withComponent: false,
+        withResultType: false,
+        withMutationFn: false,
+        withMutationOptionsType: false,
+        // 'string' keeps graphql + @apollo/client out of the app bundle:
+        // documents are plain strings sent by the fetch-based gql client.
+        documentMode: 'string',
         scalars: {
           Id: 'string',
           CustomerId: 'string',

@@ -27,7 +27,6 @@ import {
 } from './ChatList';
 import { ChatViewControls } from './ChatViewControls';
 import { PinnedMessageBanner } from './PinnedMessageBanner';
-import { getChatMessageListKey } from '../util/chatMessages';
 
 const CHAT_ESTIMATED_COMFORTABLE_ROW_HEIGHT = 34;
 const CHAT_ESTIMATED_COMPACT_ROW_HEIGHT = 24;
@@ -118,31 +117,22 @@ export const ChatMessagePane = memo(
     const hasEverHadMessagesRef = useRef(false);
     const lastEmptyLogAtRef = useRef<number>(0);
 
-    const visibleMessageOptions = {
-      currentUsername,
-      hiddenUsers,
-      hiddenPhrases,
-      showOnlyMentions,
-    };
-
-    const visibleMessages = getVisibleMessages(
-      rawMessages,
-      visibleMessageOptions,
+    const visibleMessages = useMemo(
+      () =>
+        getVisibleMessages(rawMessages, {
+          currentUsername,
+          hiddenUsers,
+          hiddenPhrases,
+          showOnlyMentions,
+        }),
+      [
+        currentUsername,
+        hiddenPhrases,
+        hiddenUsers,
+        rawMessages,
+        showOnlyMentions,
+      ],
     );
-    const dedupedVisibleMessages = useMemo(() => {
-      const seen = new Set<string>();
-
-      return visibleMessages.filter(message => {
-        const key = getChatMessageListKey(message);
-        if (seen.has(key)) {
-          return false;
-        }
-
-        seen.add(key);
-        return true;
-      });
-    }, [visibleMessages]);
-
     const hasActiveFilters = Boolean(
       hiddenUsers.length ||
       hiddenPhrases.length ||
@@ -150,7 +140,11 @@ export const ChatMessagePane = memo(
       showOnlyMentions,
     );
 
-    const listData = dedupedVisibleMessages;
+    // The store guarantees unique message keys at insert time (addMessage /
+    // addMessages both guard against messageKeySet, and getChatMessageListKey
+    // returns the store-assigned id), so a per-render Set-based dedup over the
+    // whole window — up to 600 messages on every ~100ms flush — was pure churn.
+    const listData = visibleMessages;
     const handleMessagePaneLayout = useCallback((event: LayoutChangeEvent) => {
       const nextWidth = Math.round(event.nativeEvent.layout.width);
       setMessagePaneWidth(currentWidth =>

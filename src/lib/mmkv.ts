@@ -9,6 +9,7 @@ export const storageMMKV = createMMKV({
 export const imageCacheManifestMMKV = createMMKV({
   id: 'image-cache-manifest',
   compareBeforeSet: true,
+  mode: 'multi-process',
 });
 
 /**
@@ -16,6 +17,7 @@ export const imageCacheManifestMMKV = createMMKV({
  */
 export const observablePersistMMKV = createMMKV({
   id: 'obsPersist',
+  mode: 'multi-process',
 });
 
 export const rozeniteMmkvStorages = {

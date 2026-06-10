@@ -370,6 +370,7 @@ export function useChat(channelId: string, channelName: string) {
     canModerateChat,
     channelId,
     channelName,
+    currentUserId: user?.id,
     disableEmoteAnimations: preferences.disableEmoteAnimations,
     handleReply,
     hiddenUsers,

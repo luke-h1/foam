@@ -8,6 +8,10 @@ import {
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { observable, when } from '@legendapp/state';
 import { persistObservable } from '@legendapp/state/persist';
+import {
+  RECENT_MESSAGES_PERSISTENCE_ENABLED,
+  loadPersistedRecentMessages,
+} from './recentMessagesPersistence';
 
 import type {
   AnyChatMessageType,
@@ -116,11 +120,18 @@ const persistedState$ = persistObservable(chatStore$.persisted, {
   local: createObservablePersistenceLocalConfig(CHAT_STORE_PERSISTENCE_KEY),
 });
 
-persistObservable(chatStore$.recentMessagesByChannel, {
-  local: createObservablePersistenceLocalConfig(
-    CHAT_RECENT_MESSAGES_PERSISTENCE_KEY,
-  ),
-});
+if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
+  // Native: seed from the per-channel MMKV keys (writes are handled per-channel
+  // in the message-sync path, not via Legend State, so a sync only re-serializes
+  // the active channel instead of every cached channel — issue #594).
+  chatStore$.recentMessagesByChannel.set(loadPersistedRecentMessages());
+} else {
+  persistObservable(chatStore$.recentMessagesByChannel, {
+    local: createObservablePersistenceLocalConfig(
+      CHAT_RECENT_MESSAGES_PERSISTENCE_KEY,
+    ),
+  });
+}
 
 // Recent messages used to live inside `persisted`; drop the stale field from
 // old installs so channelCaches writes stop re-serializing it.

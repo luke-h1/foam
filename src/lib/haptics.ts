@@ -7,8 +7,6 @@ import {
   selectionAsync as expoSelectionAsync,
 } from 'expo-haptics';
 
-// Every haptic in the app funnels through this module, so the user-facing
-// preference (default on) is enforced in one place.
 function hapticsEnabled(): boolean {
   return getPreferences().hapticFeedback;
 }

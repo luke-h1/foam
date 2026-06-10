@@ -1,63 +1,50 @@
-import type {
-  PaintData,
-  PaintShadow,
-} from '@app/utils/color/seventv-ws-service';
-import MaskedView from '@react-native-masked-view/masked-view';
-import { type StyleProp, StyleSheet, TextStyle, View } from 'react-native';
+import type { PaintShadow } from '@app/utils/color/seventv-ws-service';
+import { type StyleProp, StyleSheet, TextStyle } from 'react-native';
 import { Text } from '@app/components/ui/Text/Text';
-import { PaintedUsernameFill } from './PaintedUsernameFill';
-import { paintShadowToTextStyle } from './util/paintLayer';
-
-const styles = StyleSheet.create({
-  maskContainer: {
-    backgroundColor: 'transparent',
-  },
-  shadowMaskedView: {
-    ...StyleSheet.absoluteFill,
-  },
-});
+import { paintShadowTextColor } from './util/paintTextStyle';
 
 interface PaintedUsernameDropShadowLayerProps {
   displayUsername: string;
-  fallbackColor: string;
   maskTextStyle: StyleProp<TextStyle>;
-  paint: PaintData;
   shadow: PaintShadow;
-  usernameTextStyle?: StyleProp<TextStyle>;
 }
 
+/**
+ * CSS `drop-shadow()` (and `text-shadow`) draws the glyph silhouette in the
+ * shadow's own color, offset and blurred, underneath the painted text. A solid
+ * glyph copy in the shadow color plus a same-color text shadow for the blur
+ * halo reproduces that without a MaskedView per shadow.
+ */
 export function PaintedUsernameDropShadowLayer({
   displayUsername,
-  fallbackColor,
   maskTextStyle,
-  paint,
   shadow,
-  usernameTextStyle,
 }: PaintedUsernameDropShadowLayerProps) {
+  const shadowColor = paintShadowTextColor(shadow);
+
   return (
-    <MaskedView
-      maskElement={
-        <View style={styles.maskContainer}>
-          <Text
-            style={[
-              maskTextStyle,
-              paintShadowToTextStyle(shadow),
-              { color: 'black' },
-            ]}
-          >
-            {displayUsername}
-          </Text>
-        </View>
-      }
+    <Text
       pointerEvents='none'
-      style={styles.shadowMaskedView}
+      style={[
+        styles.shadowText,
+        maskTextStyle,
+        {
+          color: shadowColor,
+          left: shadow.x_offset || 0,
+          textShadowColor: shadowColor,
+          textShadowOffset: { width: 0, height: 0 },
+          textShadowRadius: shadow.radius || 0,
+          top: shadow.y_offset || 0,
+        },
+      ]}
     >
-      <PaintedUsernameFill
-        displayUsername={displayUsername}
-        fallbackColor={fallbackColor}
-        paint={paint}
-        usernameTextStyle={usernameTextStyle}
-      />
-    </MaskedView>
+      {displayUsername}
+    </Text>
   );
 }
+
+const styles = StyleSheet.create({
+  shadowText: {
+    position: 'absolute',
+  },
+});

@@ -1,17 +1,27 @@
-import { init as initSentry } from '@sentry/react-native';
+import {
+  init as initSentry,
+  reactNativeTracingIntegration,
+  reactNavigationIntegration,
+} from '@sentry/react-native';
 import * as Sentry from '@sentry/react-native';
 import type { ComponentType } from 'react';
 
+// Created once at module load so RootLayoutNav can call
+// navigationIntegration.registerNavigationContainer(ref) before the first
+// navigation event fires.
+export const navigationIntegration = reactNavigationIntegration({
+  enableTimeToInitialDisplay: true,
+});
+
 let didInitializeSentry = false;
 
-export function init(): void {
+export function init() {
   if (didInitializeSentry) {
     return;
   }
 
   const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
   const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT ?? 'development';
-  // const isInternal = appVariant === 'internal' || appVariant === 'testflight';
 
   initSentry({
     enabled:
@@ -27,6 +37,10 @@ export function init(): void {
     ignoreErrors: ['Network request failed'],
     attachStacktrace: true,
     sampleRate: 1,
+    integrations: [reactNativeTracingIntegration(), navigationIntegration],
+    // 100% in dev/testflight for full visibility; 20% in production to keep
+    // transaction volume manageable on high-chat-volume sessions.
+    tracesSampleRate: __DEV__ ? 1.0 : 0.2,
   });
 
   didInitializeSentry = true;
@@ -65,6 +79,7 @@ export async function startSpanAsync<T>(
 type MonitoringEventPrefix =
   | 'api'
   | 'auth'
+  | 'bttv_api'
   | 'bttv_emotes'
   | 'bttv_provider'
   | 'bttv_ws'
@@ -73,12 +88,14 @@ type MonitoringEventPrefix =
   | 'data_loading'
   | 'error_boundary'
   | 'fatal'
+  | 'ffz_api'
   | 'ffz_badges'
   | 'ffz_emotes'
   | 'ffz_provider'
   | 'handled'
   | 'network'
   | 'ota_updates_service'
+  | 'seven_tv_api'
   | 'seven_tv_badges'
   | 'seven_tv_cosmetics'
   | 'seven_tv_emotes'
@@ -86,6 +103,7 @@ type MonitoringEventPrefix =
   | 'seven_tv_provider'
   | 'seven_tv_ws'
   | 'stream'
+  | 'twitch_api'
   | 'twitch_badges'
   | 'twitch_chat'
   | 'twitch_emotes'
@@ -123,17 +141,33 @@ function buildMetadata(
 
 export function recordError(error: {
   name: MonitoringErrorName;
+  /** Overrides the exception class name shown as the issue title in Sentry. */
+  exceptionName?: string;
   message: string;
   params?: Record<string, unknown>;
   errorCause?: unknown;
+  /** Extra key/value pairs added as Sentry tags (searchable). */
+  tags?: Record<string, string>;
+  /** Custom Sentry fingerprint — controls how issues are grouped. */
+  fingerprint?: string[];
 }): void {
   Sentry.addBreadcrumb({
-    message: `${error.name}: ${error.message}`,
+    message: `${error.exceptionName ?? error.name}: ${error.message}`,
     level: 'error',
   });
 
   Sentry.withScope(scope => {
     scope.setTag('error_type', error.name);
+
+    if (error.tags) {
+      for (const [k, v] of Object.entries(error.tags)) {
+        scope.setTag(k, v);
+      }
+    }
+
+    if (error.fingerprint) {
+      scope.setFingerprint(error.fingerprint);
+    }
 
     if (error.params) {
       scope.setContext('error_params', error.params);
@@ -142,7 +176,7 @@ export function recordError(error: {
     const exceptionToCapture = new Error(error.message, {
       cause: error.errorCause,
     });
-    exceptionToCapture.name = error.name;
+    exceptionToCapture.name = error.exceptionName ?? error.name;
 
     Sentry.captureException(exceptionToCapture);
   });

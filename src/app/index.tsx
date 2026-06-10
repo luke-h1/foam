@@ -2,16 +2,21 @@ import { useAuthContext } from '@app/context/AuthContext';
 import { Button } from '@app/components/Button/Button';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { Text } from '@app/components/ui/Text/Text';
+import { storageMMKV } from '@app/lib/mmkv';
+import { ONBOARDING_SEEN_KEY } from '@app/screens/OnboardingScreen/OnboardingScreen';
 import { theme } from '@app/styles/themes';
 import { Redirect, router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 export default function IndexRoute() {
   const { authState, ready } = useAuthContext();
+  const hasSeenOnboarding = storageMMKV.getBoolean(ONBOARDING_SEEN_KEY);
+
+  if (!hasSeenOnboarding) {
+    return <Redirect href='/onboarding' />;
+  }
 
   if (!ready) {
-    // Cold start renders the same skeleton the stream tabs use, so launch
-    // flows straight into content instead of a spinner.
     return (
       <View style={styles.skeletonContainer}>
         {Array.from({ length: 6 }).map((_, index) => (

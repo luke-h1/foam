@@ -8,10 +8,6 @@ type ButtonHaptic = 'selection' | 'light' | 'medium' | 'heavy';
 export type ButtonProps = CustomPressableProps & {
   label?: string;
   disabled?: boolean;
-  /**
-   * Opt-in haptic fired on press. Reserve for decision-shaped actions
-   * (send, confirm, destructive); plain navigation taps stay silent.
-   */
   haptic?: ButtonHaptic;
 };
 

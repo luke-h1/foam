@@ -14,9 +14,15 @@ import {
   registerMentionLogin,
   registerMentionLoginsFromParts,
   registerMentionLoginsFromSender,
+  type ChatterRole,
 } from '@app/utils/chat/resolveMentionLogin';
 import type { AnyChatMessageType } from '../types/constants';
 import { chatStore$ } from '../observables/chatStore';
+import {
+  RECENT_MESSAGES_PERSISTENCE_ENABLED,
+  deletePersistedRecentMessagesForChannels,
+  writePersistedRecentMessagesForChannel,
+} from '../observables/recentMessagesPersistence';
 
 const messageKeySet = new Set<string>();
 const messageKeyOrder: string[] = [];
@@ -147,6 +153,22 @@ const isValidChatMessage = (
   );
 };
 
+const getSenderChatterRole = (
+  message: AnyChatMessageType,
+): ChatterRole | undefined => {
+  const badgesRaw = message.userstate?.['badges-raw'] ?? '';
+  if (badgesRaw.includes('broadcaster/')) {
+    return 'broadcaster';
+  }
+  if (message.userstate?.mod === '1' || badgesRaw.includes('moderator/')) {
+    return 'moderator';
+  }
+  if (badgesRaw.includes('vip/')) {
+    return 'vip';
+  }
+  return undefined;
+};
+
 const indexMessage = (message: AnyChatMessageType, index: number) => {
   const key = getMessageKey(message.message_id, message.message_nonce);
   messageKeyToIndex.set(key, index);
@@ -162,6 +184,7 @@ const indexMessage = (message: AnyChatMessageType, index: number) => {
     login: message.userstate?.login ?? message.sender,
     userId: message.userstate?.['user-id'],
     color: message.userstate?.color,
+    role: getSenderChatterRole(message),
   });
   registerMentionLoginsFromSender(
     message.userstate?.login,
@@ -212,6 +235,19 @@ const trimRecentMessageChannels = () => {
     }
   }
 
+  if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
+    const keptChannelIds = new Set(nextEntries.map(([channelId]) => channelId));
+    const droppedChannelIds: string[] = [];
+    for (const [channelId] of entries) {
+      if (!keptChannelIds.has(channelId)) {
+        droppedChannelIds.push(channelId);
+      }
+    }
+    if (droppedChannelIds.length > 0) {
+      deletePersistedRecentMessagesForChannels(droppedChannelIds);
+    }
+  }
+
   chatStore$.recentMessagesByChannel.set(Object.fromEntries(nextEntries));
 };
 
@@ -241,6 +277,11 @@ const persistRecentMessagesForChannel = (
     ...recentMessagesByChannel,
     [channelId]: nextRecentMessages,
   });
+  // Native persistence is per-channel, so only the channel that changed is
+  // serialized + written here (web persists the whole node via Legend State).
+  if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
+    writePersistedRecentMessagesForChannel(channelId, nextRecentMessages);
+  }
   trimRecentMessageChannels();
 };
 
@@ -436,7 +477,10 @@ export const addMessage = (message?: AnyChatMessageType) => {
   }
 
   chatStore$.messages.set(nextMessages);
-  syncRecentMessagesForCurrentChannel(nextMessages);
+  // Defer the MMKV persist (matching addMessages) so a single message never
+  // triggers a synchronous full-store stringify+write of recentMessagesByChannel
+  // on the hot path; the recent-messages cache is only a warm-start aid.
+  syncRecentMessagesForCurrentChannel(nextMessages, 'defer');
 };
 
 export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {

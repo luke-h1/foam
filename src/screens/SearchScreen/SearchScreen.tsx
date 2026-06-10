@@ -307,7 +307,11 @@ export function SearchScreen() {
   const handleQuickActionPress = useCallback(
     (actionQuery: string) => {
       searchBarRef.current?.setText(actionQuery);
-      setState(state => ({ ...state, query: actionQuery }));
+      setState(state => ({
+        ...state,
+        query: actionQuery,
+        selectedFilter: 'categories',
+      }));
       void handleQuerySearch(actionQuery);
     },
     [handleQuerySearch],

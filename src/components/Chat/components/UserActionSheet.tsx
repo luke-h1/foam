@@ -33,6 +33,8 @@ interface UserActionSheetProps {
   onHideUser: () => void;
   onHighlightUser: () => void;
   onMentionUser: () => void;
+  onBlockUser?: () => void;
+  onReportUser?: () => void;
   onTimeoutUser?: () => void;
   onBanUser?: () => void;
   username: string;
@@ -105,6 +107,8 @@ function UserActionSheetComponent({
   onHideUser,
   onHighlightUser,
   onMentionUser,
+  onBlockUser,
+  onReportUser,
   onTimeoutUser,
   onBanUser,
   username,
@@ -144,6 +148,28 @@ function UserActionSheetComponent({
       subtitle: isHighlighted ? 'Remove marker' : 'Mark future messages',
       tone: 'accent',
     },
+    ...(onReportUser
+      ? [
+          {
+            icon: 'flag' as const,
+            label: 'Report User',
+            onPress: onReportUser,
+            subtitle: 'Open the Twitch report form',
+            tone: 'warning' as const,
+          },
+        ]
+      : []),
+    ...(onBlockUser
+      ? [
+          {
+            icon: 'nosign' as const,
+            label: 'Block User',
+            onPress: onBlockUser,
+            subtitle: 'Block on Twitch',
+            tone: 'danger' as const,
+          },
+        ]
+      : []),
     ...(canModerateChat && canModerateUser
       ? [
           {

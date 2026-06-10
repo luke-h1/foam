@@ -1,7 +1,14 @@
 import { theme } from '@app/styles/themes';
-import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { Canvas, LinearGradient, Fill, vec } from '@shopify/react-native-skia';
+import { useEffect } from 'react';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  Easing,
+  useDerivedValue,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 
 interface SkeletonProps {
   shimmer?: boolean;
@@ -9,59 +16,59 @@ interface SkeletonProps {
   testID?: string;
 }
 
+const SHIMMER_WIDTH = 180;
+const SHIMMER_DURATION_MS = 1450;
+const SHIMMER_COLORS = [
+  'rgba(255,255,255,0)',
+  'rgba(255,255,255,0.18)',
+  'rgba(255,255,255,0)',
+];
+
 export function Skeleton({ shimmer = true, style, testID }: SkeletonProps) {
   return (
-    <Animated.View style={[styles.skeleton, style]} testID={testID}>
-      {shimmer ? (
-        <Animated.View
-          pointerEvents='none'
-          style={[styles.shimmer, shimmerAnimationStyle]}
-        >
-          <LinearGradient
-            colors={[
-              'rgba(255,255,255,0)',
-              'rgba(255,255,255,0.18)',
-              'rgba(255,255,255,0)',
-            ]}
-            locations={[0, 0.5, 1]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={StyleSheet.absoluteFill}
-          />
-        </Animated.View>
-      ) : null}
-    </Animated.View>
+    <View style={[styles.skeleton, style]} testID={testID}>
+      {shimmer ? <SkeletonShimmer /> : null}
+    </View>
   );
 }
 
-const shimmerSweep = {
-  '0%': {
-    opacity: 0.2,
-    transform: [{ translateX: -180 }],
-  },
-  '35%': {
-    opacity: 0.85,
-  },
-  '100%': {
-    opacity: 0.2,
-    transform: [{ translateX: 520 }],
-  },
-};
+/**
+ * A single gradient band swept across the skeleton on the UI thread. The
+ * canvas size is read via `onSize` so the sweep always covers the full
+ * skeleton regardless of its measured width.
+ */
+function SkeletonShimmer() {
+  const progress = useSharedValue(0);
+  const size = useSharedValue({ width: 0, height: 0 });
 
-const shimmerAnimationStyle = {
-  animationDuration: '1450ms',
-  animationIterationCount: 'infinite',
-  animationName: shimmerSweep,
-  animationTimingFunction: 'ease-in-out',
-} as const;
+  useEffect(() => {
+    progress.value = withRepeat(
+      withTiming(1, {
+        duration: SHIMMER_DURATION_MS,
+        easing: Easing.inOut(Easing.ease),
+      }),
+      -1,
+    );
+  }, [progress]);
+
+  const start = useDerivedValue(() => {
+    const sweepStart = -SHIMMER_WIDTH;
+    const sweepEnd = size.value.width;
+    return vec(sweepStart + (sweepEnd - sweepStart) * progress.value, 0);
+  });
+
+  const end = useDerivedValue(() => vec(start.value.x + SHIMMER_WIDTH, 0));
+
+  return (
+    <Canvas style={StyleSheet.absoluteFill} onSize={size} pointerEvents='none'>
+      <Fill>
+        <LinearGradient start={start} end={end} colors={SHIMMER_COLORS} />
+      </Fill>
+    </Canvas>
+  );
+}
 
 const styles = StyleSheet.create({
-  shimmer: {
-    bottom: 0,
-    position: 'absolute',
-    top: 0,
-    width: 180,
-  },
   skeleton: {
     backgroundColor: theme.colorSurfaceAlpha,
     borderCurve: 'continuous',

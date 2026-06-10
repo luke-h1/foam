@@ -1,8 +1,13 @@
 import type { ChatMessageType } from '@app/store/chat/types/constants';
+import { queryClient } from '@app/lib/react-query/query-client';
+import { twitchKeys } from '@app/lib/react-query/query-keys';
+import { twitchService } from '@app/services/twitch-service';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { useObservable, useSelector } from '@legendapp/state/react';
 import * as Clipboard from 'expo-clipboard';
 import { useCallback } from 'react';
+import { Alert } from 'react-native';
 import { toast } from 'sonner-native';
 
 import type { EmotePickerItem } from './EmoteSheet/EmoteSheet';
@@ -16,6 +21,7 @@ import {
 
 export interface ChatOverlayOpeners {
   openBadge: (badge: BadgePressData) => void;
+  openChattersSheet: () => void;
   openEmotePreview: (emote: EmotePressData) => void;
   openEmoteSheet: () => void;
   openMessageActions: (message: MessageActionData<'usernotice'>) => void;
@@ -28,6 +34,7 @@ interface UseChatOverlaysParams {
   canModerateChat: boolean;
   channelId: string;
   channelName: string;
+  currentUserId?: string;
   disableEmoteAnimations: boolean;
   handleReply: (message: ChatMessageType<'usernotice'>) => void;
   hiddenUsers: string[];
@@ -61,6 +68,7 @@ interface UseChatOverlaysParams {
 
 interface ChatOverlayState {
   channelId: string;
+  isChattersSheetMounted: boolean;
   isEmoteSheetMounted: boolean;
   isSettingsSheetMounted: boolean;
   selectedBadge: BadgePressData | null;
@@ -72,6 +80,7 @@ interface ChatOverlayState {
 function createEmptyOverlayState(channelId: string): ChatOverlayState {
   return {
     channelId,
+    isChattersSheetMounted: false,
     isEmoteSheetMounted: false,
     isSettingsSheetMounted: false,
     selectedBadge: null,
@@ -86,6 +95,7 @@ export function useChatOverlays({
   canModerateChat,
   channelId,
   channelName,
+  currentUserId,
   disableEmoteAnimations,
   handleReply,
   hiddenUsers,
@@ -122,6 +132,7 @@ export function useChatOverlays({
   const overlay$ = useObservable(createEmptyOverlayState(channelId));
   const overlay = useSelector(overlay$);
   const {
+    isChattersSheetMounted,
     isEmoteSheetMounted,
     isSettingsSheetMounted,
     selectedBadge,
@@ -187,6 +198,10 @@ export function useChatOverlays({
     replaceOverlay({ isSettingsSheetMounted: true });
   }, [replaceOverlay]);
 
+  const openChattersSheet = useCallback(() => {
+    replaceOverlay({ isChattersSheetMounted: true });
+  }, [replaceOverlay]);
+
   const openUserActions = useCallback(
     (user: UsernamePressData) => {
       replaceOverlay({ selectedUser: user });
@@ -213,6 +228,17 @@ export function useChatOverlays({
   const handleSettingsSheetDidDismiss = useCallback(() => {
     patchOverlay({ isSettingsSheetMounted: false });
   }, [patchOverlay]);
+
+  const handleChattersSheetDidDismiss = useCallback(() => {
+    patchOverlay({ isChattersSheetMounted: false });
+  }, [patchOverlay]);
+
+  const handleSelectChatter = useCallback(
+    (chatter: UsernamePressData) => {
+      replaceOverlay({ selectedUser: chatter });
+    },
+    [replaceOverlay],
+  );
 
   const handleActionSheetReply = useCallback(() => {
     if (!selectedMessage) {
@@ -386,6 +412,63 @@ export function useChatOverlays({
     patchOverlay({ selectedUser: null });
   }, [channelName, patchOverlay, selectedUser, sendChatCommand]);
 
+  // Twitch has no public report API; the report form is web-only.
+  const handleReportSelectedUser = useCallback(() => {
+    const target = (
+      selectedUser?.login?.trim() || selectedUser?.username?.trim()
+    )?.toLowerCase();
+    if (!target) {
+      return;
+    }
+
+    patchOverlay({ selectedUser: null });
+    openLinkInBrowser(`https://www.twitch.tv/${target}/report`);
+  }, [patchOverlay, selectedUser]);
+
+  const selectedUserId = selectedUser?.userId?.trim();
+  const canBlockSelectedUser = Boolean(
+    selectedUserId &&
+    /^\d+$/.test(selectedUserId) &&
+    selectedUserId !== currentUserId,
+  );
+
+  const handleBlockSelectedUser = useCallback(() => {
+    const targetUserId = selectedUser?.userId?.trim();
+    const displayName =
+      selectedUser?.username?.trim() || selectedUser?.login?.trim();
+    if (!targetUserId || !displayName) {
+      return;
+    }
+
+    Alert.alert(
+      'Block User',
+      `Are you sure you want to block ${displayName}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: () => {
+            patchOverlay({ selectedUser: null });
+            twitchService
+              .blockUser(targetUserId, 'chat')
+              .then(() => {
+                toast.success(`Blocked ${displayName}`);
+                if (currentUserId) {
+                  void queryClient.invalidateQueries({
+                    queryKey: twitchKeys.blockList(currentUserId),
+                  });
+                }
+              })
+              .catch(() => {
+                toast.error('Failed to block user');
+              });
+          },
+        },
+      ],
+    );
+  }, [currentUserId, patchOverlay, selectedUser]);
+
   const handleCloseSelectedBadge = useCallback(() => {
     patchOverlay({ selectedBadge: null });
   }, [patchOverlay]);
@@ -432,6 +515,9 @@ export function useChatOverlays({
       onActionSheetUnpinPinnedMessage={handleActionSheetUnpinPinnedMessage}
       onActionSheetTimeoutUser={handleActionSheetTimeoutUser}
       onBanSelectedUser={handleBanSelectedUser}
+      canBlockSelectedUser={canBlockSelectedUser}
+      onBlockSelectedUser={handleBlockSelectedUser}
+      onReportSelectedUser={handleReportSelectedUser}
       onClearChatCache={onClearChatCache}
       onClearImageCache={onClearImageCache}
       onClearSevenTvCosmeticsCache={onClearSevenTvCosmeticsCache}
@@ -458,6 +544,10 @@ export function useChatOverlays({
       selectedEmote={selectedEmote}
       selectedMessage={selectedMessage}
       selectedUser={selectedUser}
+      onChattersSheetDidDismiss={handleChattersSheetDidDismiss}
+      onOpenChatters={openChattersSheet}
+      onSelectChatter={handleSelectChatter}
+      shouldRenderChattersSheet={isChattersSheetMounted}
       shouldRenderSettingsSheet={isSettingsSheetMounted}
       shouldRenderEmoteSheet={isEmoteSheetMounted}
       pinnedMessageBusy={pinnedMessageBusy}
@@ -473,6 +563,7 @@ export function useChatOverlays({
   return {
     openers: {
       openBadge,
+      openChattersSheet,
       openEmotePreview,
       openEmoteSheet,
       openMessageActions,

@@ -1,5 +1,5 @@
 import { AuthContextTestProvider } from '@app/context/AuthContext';
-import { twitchQueries } from '@app/queries/twitchQueries';
+import { twitchKeys } from '@app/lib/react-query/query-keys';
 import {
   userBlockListFixture,
   manyUserBlockListFixture,
@@ -19,21 +19,18 @@ const createQueryClient = (data: { data: UserBlockList[] }) => {
         refetchOnWindowFocus: false,
         staleTime: Infinity,
         queryFn: ({ queryKey }) => {
-          if (queryKey[0] === 'blockList') {
+          if (queryKey[1] === 'blockList') {
             return Promise.resolve(data);
           }
           return Promise.reject(
-            new Error(`No mock data for query: ${String(queryKey[0])}`),
+            new Error(`No mock data for query: ${String(queryKey)}`),
           );
         },
       },
     },
   });
 
-  const query = twitchQueries.getUserBlockList({
-    broadcasterId: userInfoFixture.id,
-  });
-  queryClient.setQueryData(query.queryKey, data);
+  queryClient.setQueryData(twitchKeys.blockList(userInfoFixture.id), data);
 
   return queryClient;
 };

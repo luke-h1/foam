@@ -1,37 +1,20 @@
 import { fetch } from 'expo/fetch';
-import { twitchQueries } from '@app/queries/twitchQueries';
 import {
   listenNetworkConfirmed,
   listenNetworkLost,
 } from '@app/utils/network/network-events';
-import { createQueryPersister } from '@app/utils/react-query/queryPersister';
 import { focusManager, onlineManager } from '@tanstack/react-query';
-import { queryClient } from './queryClient';
+import { queryClient, shouldPersistQuery } from './query-client';
+import { createQueryPersister } from './query-persister';
 import {
   PersistQueryClientProvider,
   type PersistQueryClientProviderProps,
 } from '@tanstack/react-query-persist-client';
 import { PropsWithChildren, useState } from 'react';
 import { AppState, Platform, type AppStateStatus } from 'react-native';
+import { usePrefetchOnMount } from '@app/hooks/usePrefetchOnMount';
 
 const WEB_QUERY_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
-
-/**
- * Query roots safe to persist between web reloads. These are read-heavy Twitch
- * lookups used by the home, category, following, and livestream screens.
- */
-const PERSISTED_QUERY_ROOTS = new Set([
-  twitchQueries.getTopStreams().queryKey[0],
-  twitchQueries.getTopStreamsInfinite().queryKey[0],
-  twitchQueries.getTopCategories().queryKey[0],
-  'category',
-  'channel',
-  'followedStreams',
-  'stream',
-  'streamsByCategory',
-  'user',
-  'userImage',
-]);
 
 const authProxyBaseUrl = process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
 
@@ -138,14 +121,7 @@ focusManager.setEventListener(onFocus => {
 const dehydrateOptions: PersistQueryClientProviderProps['persistOptions']['dehydrateOptions'] =
   {
     shouldDehydrateMutation: _ => false,
-    shouldDehydrateQuery: query => {
-      const queryKey = (query as { queryKey?: unknown }).queryKey;
-      if (!Array.isArray(queryKey) || typeof queryKey[0] !== 'string') {
-        return false;
-      }
-
-      return PERSISTED_QUERY_ROOTS.has(queryKey[0]);
-    },
+    shouldDehydrateQuery: query => shouldPersistQuery(query.queryKey),
   };
 
 interface QueryProviderProps extends PropsWithChildren {
@@ -177,7 +153,13 @@ function QueryProviderInner({ children, currentUserId }: QueryProviderProps) {
       client={queryClient}
       persistOptions={persistOptions}
     >
+      <PrefetchOnMount />
       {children}
     </PersistQueryClientProvider>
   );
+}
+
+function PrefetchOnMount() {
+  usePrefetchOnMount();
+  return null;
 }
