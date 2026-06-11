@@ -82,7 +82,7 @@ const VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
 const variant =
   (process.env.EXPO_PUBLIC_APP_VARIANT as Variant) || 'development';
 
-const VERSION = '0.0.42';
+const VERSION = '1.0.0';
 
 const appConfig = VARIANT_CONFIG[variant];
 const sentryRelease = process.env.EXPO_PUBLIC_SENTRY_RELEASE ?? VERSION;
