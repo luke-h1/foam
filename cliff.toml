@@ -60,6 +60,12 @@ commit_preprocessors = [
   # Check spelling
   { pattern = 'Depenendency', replace = "Dependency" },
   { pattern = 'dependency', replace = "Dependency" },
+  { pattern = 'succesful', replace = "successful" },
+  { pattern = 'messagees', replace = "messages" },
+  { pattern = '\baso\b', replace = "ASO" },
+  { pattern = '\bs3\b', replace = "S3" },
+  { pattern = '(^|\s)ota($|\s)', replace = "${1}OTA${2}" },
+  { pattern = '  +', replace = " " },
 ]
 
 # Regex for parsing commits

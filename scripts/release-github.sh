@@ -62,6 +62,16 @@ else
   esac
 fi
 
+# Variant tags for the same version often point at the same commits as this
+# release. Ignore them so git-cliff applies --tag instead of reusing the
+# existing tag's name (WARN: There is already a tag (...) for <sha>).
+escaped_version="$(printf '%s' "$version" | sed 's/[.]/\\./g')"
+case "$variant" in
+  production) ignore_tags="^${escaped_version}-(internal|testflight)$" ;;
+  testflight) ignore_tags="^${escaped_version}-internal$" ;;
+  internal) ignore_tags="^${escaped_version}-testflight$" ;;
+esac
+
 git fetch --tags origin 2>/dev/null || true
 
 tag_exists="false"
@@ -89,7 +99,7 @@ if [ -z "$previous_tag" ]; then
   release_notes="Initial release"
 else
   echo "Previous tag: $previous_tag"
-  raw_notes=$("$git_cliff_bin" --config cliff.toml "$previous_tag"..HEAD --tag "$tag" --unreleased --strip all 2>&1 | grep -v "^[[:space:]]*WARN\|^[[:space:]]*ERROR" || echo "")
+  raw_notes=$("$git_cliff_bin" --config cliff.toml "$previous_tag"..HEAD --tag "$tag" --ignore-tags "$ignore_tags" --unreleased --strip all 2>&1 | grep -v "^[[:space:]]*WARN\|^[[:space:]]*ERROR" || echo "")
   content_only=$(echo "$raw_notes" | tail -n +2 | sed '/^[[:space:]]*$/d')
 
   if [ -n "$content_only" ]; then
@@ -145,7 +155,7 @@ authed_push() {
   git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${auth_header}" push "https://github.com/${repository}.git" "$@"
 }
 
-"$git_cliff_bin" --config cliff.toml --tag "$tag" -o CHANGELOG.md
+"$git_cliff_bin" --config cliff.toml --tag "$tag" --ignore-tags "$ignore_tags" -o CHANGELOG.md
 
 if git diff --quiet CHANGELOG.md 2>/dev/null; then
   echo "CHANGELOG.md has not changed"

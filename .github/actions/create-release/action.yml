@@ -137,11 +137,24 @@ runs:
       env:
         PREVIOUS_TAG: ${{ steps.previous_tag.outputs.previous_tag }}
         INPUTS_TAG: ${{ steps.release_tag.outputs.tag }}
+        INPUTS_VERSION: ${{ inputs.version }}
+        INPUTS_VARIANT: ${{ inputs.variant }}
       run: |
+        # Variant tags for the same version often point at the same commits as
+        # this release. Ignore them so git-cliff applies --tag instead of
+        # reusing the existing tag's name (WARN: There is already a tag ...).
+        ESCAPED_VERSION="$(printf '%s' "$INPUTS_VERSION" | sed 's/[.]/\\./g')"
+        case "$INPUTS_VARIANT" in
+          production) IGNORE_TAGS="^${ESCAPED_VERSION}-(internal|testflight|preview)$" ;;
+          internal) IGNORE_TAGS="^${ESCAPED_VERSION}-(testflight|preview)$" ;;
+          testflight) IGNORE_TAGS="^${ESCAPED_VERSION}-(internal|preview)$" ;;
+          *) IGNORE_TAGS="^${ESCAPED_VERSION}-(internal|testflight)$" ;;
+        esac
+
         if [ -z "$PREVIOUS_TAG" ]; then
           RELEASE_NOTES="Initial release"
         else
-          RAW_NOTES=$(~/.cargo/bin/git-cliff --config cliff.toml "$PREVIOUS_TAG"..HEAD --tag "$INPUTS_TAG" --unreleased --strip all 2>&1 | grep -v "^[[:space:]]*WARN\|^[[:space:]]*ERROR" || echo "")
+          RAW_NOTES=$(~/.cargo/bin/git-cliff --config cliff.toml "$PREVIOUS_TAG"..HEAD --tag "$INPUTS_TAG" --ignore-tags "$IGNORE_TAGS" --unreleased --strip all 2>&1 | grep -v "^[[:space:]]*WARN\|^[[:space:]]*ERROR" || echo "")
           CONTENT_ONLY=$(echo "$RAW_NOTES" | tail -n +2 | sed '/^[[:space:]]*$/d')
 
           if [ -n "$CONTENT_ONLY" ]; then

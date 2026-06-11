@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0-testflight
+## 1.0.0
 
 ### ⚡ Performance
 
@@ -17,7 +17,7 @@
 ### 🐛 Bug Fixes
 
 - **app:** Fall back to anon auth on bootstrap failures ([#625](https://github.com/lhowsam/foam/issues/625))
-- **infrastructure:** OTA updates
+- **infrastructure:** OTA
 - **infrastructure:** Missing S3 variables
 - **app:** Only persist successful queries
 - **infrastructure:** Source token in scripts
@@ -59,7 +59,7 @@
 ### 📝 Other Changes
 
 - WIP - fix(chat): observable perf improvements + ux ([#610](https://github.com/lhowsam/foam/issues/610))
-- WIP - feat(infrastructure): s3 expo/fingerprint cache ([#617](https://github.com/lhowsam/foam/issues/617))
+- WIP - feat(infrastructure): S3 expo/fingerprint cache ([#617](https://github.com/lhowsam/foam/issues/617))
 
 ### 🔧 Miscellaneous Tasks
 
@@ -173,7 +173,7 @@
 ### 🐛 Bug Fixes
 
 - **app:** Fix android build
-- **infrastructure:** Fix clearing ota ids
+- **infrastructure:** Fix clearing OTA ids
 - **app:** Improve unmuting of webview ([#510](https://github.com/lhowsam/foam/issues/510))
 - **infrastructure:** Limit concurrency of deploy-ota-or-native workflow
 - **app:** Improve stream delay
@@ -270,7 +270,7 @@
 
 ### 🐛 Bug Fixes
 
-- **infrastructure:** Ota runtime version
+- **infrastructure:** OTA runtime version
 - **app:** Chat perf + videos
 - **app:** Fix unit tests
 
@@ -289,7 +289,7 @@
 
 ### 🐛 Bug Fixes
 
-- **infrastructure:** Ota runtime version
+- **infrastructure:** OTA runtime version
 
 ### 🔧 Miscellaneous Tasks
 
@@ -339,14 +339,14 @@
 
 - **app:** 7tv paints ([#460](https://github.com/lhowsam/foam/issues/460))
 - **app:** Integrate pressto ([#464](https://github.com/lhowsam/foam/issues/464))
-- **infrastructure:** Try ota
-- **infrastructure:** Try ota
-- **infrastructure:** Try ota
+- **infrastructure:** Try OTA
+- **infrastructure:** Try OTA
+- **infrastructure:** Try OTA
 
 ### 🐛 Bug Fixes
 
 - **chat:** Load paints on first load ([#462](https://github.com/lhowsam/foam/issues/462))
-- **app:** Ota
+- **app:** OTA
 - **app:** Fix unit tests
 - **app:** Fix ci
 - **app:** Fix ci
@@ -359,10 +359,10 @@
 - Tidy up entrypoint
 - **app:** Add cursor and clauge instructions
 - **app:** Add cursor and clauge instructions
-- **app:** Fix ota updates
+- **app:** Fix OTA updates
 - **app:** Testing native update
 - **app:** Testing native update
-- **app:** Testing ota
+- **app:** Testing OTA
 
 ## 0.0.36
 
@@ -372,9 +372,9 @@
 
 ### 🐛 Bug Fixes
 
-- **infrastructure:** Ota
-- **infrastructure:** Ota
-- **infrastructure:** Ota
+- **infrastructure:** OTA
+- **infrastructure:** OTA
+- **infrastructure:** OTA
 
 ## 0.0.37
 
@@ -394,13 +394,13 @@
 - **chat:** Settings menu ([#442](https://github.com/lhowsam/foam/issues/442))
 - **app:** Add reply support to chat ([#449](https://github.com/lhowsam/foam/issues/449))
 - **app:** Add blocked users screen ([#451](https://github.com/lhowsam/foam/issues/451))
-- **infrastructure:** Add experimental ci/cd ota
-- **infrastructure:** Add experimental ci/cd ota
-- **infrastructure:** Add experimental ci/cd ota
-- **infrastructure:** Add experimental ci/cd ota
-- **infrastructure:** Add experimental ci/cd ota
-- **infrastructure:** Add experimental ci/cd ota
-- **infrastructure:** Add experimental ci/cd ota
+- **infrastructure:** Add experimental ci/cd OTA
+- **infrastructure:** Add experimental ci/cd OTA
+- **infrastructure:** Add experimental ci/cd OTA
+- **infrastructure:** Add experimental ci/cd OTA
+- **infrastructure:** Add experimental ci/cd OTA
+- **infrastructure:** Add experimental ci/cd OTA
+- **infrastructure:** Add experimental ci/cd OTA
 - **infrastructure:** Base64 encode google secrets
 - **infrastructure:** Push to expo
 - **infrastructure:** Push to expo
@@ -601,8 +601,8 @@
 - **infrastructure:** Testing ci/cd
 - **infrastructure:** Testing ci/cd
 - **infrastructure:** Testing ci/cd
-- **app:** Add ota info
-- **app:** Add ota hook
+- **app:** Add OTA info
+- **app:** Add OTA hook
 - **app:** Setup background task
 - **app:** Setup background task
 - **app:** Upgrade to unistyles v3 ([#303](https://github.com/lhowsam/foam/issues/303))

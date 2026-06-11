@@ -24,7 +24,21 @@ runs:
         INPUTS_TAG: ${{ inputs.tag }}
         INPUTS_GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        ~/.cargo/bin/git-cliff --config cliff.toml --tag "$INPUTS_TAG" -o CHANGELOG.md
+        # Variant tags for the same version often point at the same commits as
+        # this release. Ignore them so git-cliff applies --tag instead of
+        # reusing the existing tag's name (WARN: There is already a tag ...).
+        VERSION="${INPUTS_TAG%-internal}"
+        VERSION="${VERSION%-testflight}"
+        VERSION="${VERSION%-preview}"
+        ESCAPED_VERSION="$(printf '%s' "$VERSION" | sed 's/[.]/\\./g')"
+        case "$INPUTS_TAG" in
+          "$VERSION") IGNORE_TAGS="^${ESCAPED_VERSION}-(internal|testflight|preview)$" ;;
+          "${VERSION}-internal") IGNORE_TAGS="^${ESCAPED_VERSION}-(testflight|preview)$" ;;
+          "${VERSION}-testflight") IGNORE_TAGS="^${ESCAPED_VERSION}-(internal|preview)$" ;;
+          *) IGNORE_TAGS="^${ESCAPED_VERSION}-(internal|testflight)$" ;;
+        esac
+
+        ~/.cargo/bin/git-cliff --config cliff.toml --tag "$INPUTS_TAG" --ignore-tags "$IGNORE_TAGS" -o CHANGELOG.md
 
         if git diff --quiet CHANGELOG.md 2>/dev/null; then
           echo "CHANGELOG.md has not changed"
