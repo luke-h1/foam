@@ -16,7 +16,10 @@ export function LiveStreamCardSkeleton({
     : styles.imageSkeleton;
 
   return (
-    <View style={[styles.container, isMediaLayout && styles.containerMedia]}>
+    <View
+      style={[styles.container, isMediaLayout && styles.containerMedia]}
+      testID='stream-skeleton'
+    >
       <View style={styles.imageContainer}>
         <Skeleton style={imageStyle} />
       </View>

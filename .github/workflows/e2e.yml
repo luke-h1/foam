@@ -113,7 +113,7 @@ jobs:
     name: 🧪 Run E2E Tests
     needs: [fingerprint, build]
     if: always() && needs.fingerprint.result == 'success'
-    runs-on: macos-latest
+    runs-on: foam
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -171,7 +171,7 @@ jobs:
 
       - name: 📱 Boot Simulator
         run: |
-          DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone" | head -1 | grep -oE '[0-9A-F-]{36}')
+          DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 16" | head -1 | grep -oE '[0-9A-F-]{36}')
           xcrun simctl boot "$DEVICE_ID" || true
           sleep 5
 
@@ -196,6 +196,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: detox-results
+          name: detox-results-${{ github.run_id }}
           path: artifacts/detox/
           retention-days: 7

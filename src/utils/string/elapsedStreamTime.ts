@@ -7,7 +7,7 @@ export function elapsedStreamTime(start: string) {
   const formattedMinutes = String(minutes).padStart(2, '0');
 
   if (hours > 0) {
-    return `${String(hours).padStart(2, '0')}h ${formattedMinutes}m`;
+    return `${hours}h ${formattedMinutes}m`;
   }
 
   return `${formattedMinutes}m`;

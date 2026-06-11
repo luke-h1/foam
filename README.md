@@ -3,8 +3,8 @@
 A new way to experience Twitch.tv on mobile
 
 <p>
-  <img src='.github/readme/screenshots/chat.png' alt='Foam stream chat screen with Twitch messages' width='240' />
-  <img src='.github/readme/screenshots/search.png' alt='Foam search screen with live Twitch channels' width='240' />
+  <img src='https://raw.githubusercontent.com/luke-h1/foam-fastlane/main/screenshots/6.9/01-chat.png' alt='Foam stream chat screen with Twitch messages' width='240' />
+  <img src='https://raw.githubusercontent.com/luke-h1/foam-fastlane/main/screenshots/6.9/04-search.png' alt='Foam search screen with live Twitch channels' width='240' />
 </p>
 
 ## Why?
@@ -106,7 +106,8 @@ See [Expo React Native project](https://docs.expo.dev/get-started/set-up-your-en
 
 1. Clone this repository
 
-- `git clone https://github.com/luke-h1/foam`
+- `git clone --recurse-submodules https://github.com/luke-h1/foam`
+- If you already cloned without submodules, run `git submodule update --init`
 
 2. Install `bun`
 
@@ -628,6 +629,18 @@ You can inspect build history on the [EAS Builds dashboard](https://expo.dev/acc
 
 - **Marketing / release tag version** — `VERSION` in [`app.config.ts`](app.config.ts) is read by `deploy-ota-or-native` for native release tags and changelog flow.
 - **Store build numbers** — [`eas.json`](eas.json) sets `"appVersionSource": "remote"` so compatible native version fields are managed on Expo’s side for production builds (see [EAS app version](https://docs.expo.dev/build-reference/app-versions/)).
+
+## Store assets (fastlane submodule)
+
+The `fastlane/` directory is a [git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) pointing at [`luke-h1/foam-fastlane`](https://github.com/luke-h1/foam-fastlane). It holds the App Store screenshots, app preview video, and `Deliverfile`. These assets live in a separate repo so their binary history (~60 MB per screenshot set) doesn't bloat this repo's clones and pushes.
+
+> [!IMPORTANT]
+> Run `git submodule update --init` after cloning (or clone with `--recurse-submodules`) before running any fastlane commands. CI jobs that need these assets must check out submodules too (e.g. `actions/checkout` with `submodules: true`).
+
+To update store assets:
+
+1. Commit and push the changes inside `fastlane/` (it's its own repo on `main`).
+2. Back in this repo, commit the bumped submodule pointer: `git add fastlane && git commit`.
 
 # Testers management
 

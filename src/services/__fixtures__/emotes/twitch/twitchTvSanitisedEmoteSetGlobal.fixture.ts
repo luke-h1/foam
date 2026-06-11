@@ -1,20 +1,110 @@
-import type { SanitisedEmote } from '@app/types/emote';
+import type { TwitchSanitisedEmote } from '@app/types/emote';
 
-export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
+export const twitchTvSanitisedEmoteSetGlobalFixture: TwitchSanitisedEmote[] = [
   {
-    name: 'ZLANsup',
-    id: 'emotesv2_bd02ce011d11477cba6b2753e19fbd55',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_bd02ce011d11477cba6b2753e19fbd55/default/dark/3.0',
+    name: 'VhagarChamp',
+    id: 'emotesv2_09a0aeda7a6b4722b97429ddb591e028',
+    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_09a0aeda7a6b4722b97429ddb591e028/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_09a0aeda7a6b4722b97429ddb591e028/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_09a0aeda7a6b4722b97429ddb591e028/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_09a0aeda7a6b4722b97429ddb591e028/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_09a0aeda7a6b4722b97429ddb591e028/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_09a0aeda7a6b4722b97429ddb591e028/static/dark/2.0',
+      },
+    },
     emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_bd02ce011d11477cba6b2753e19fbd55/default/dark/3.0',
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_09a0aeda7a6b4722b97429ddb591e028/default/dark/3.0',
     creator: null,
-    original_name: 'ZLANsup',
+    original_name: 'VhagarChamp',
+    site: 'Twitch Global',
+  },
+  {
+    name: 'Yagoo',
+    id: 'emotesv2_de2cc5fc92c645a29d0a4f40a9e7cde5',
+    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_de2cc5fc92c645a29d0a4f40a9e7cde5/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_de2cc5fc92c645a29d0a4f40a9e7cde5/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_de2cc5fc92c645a29d0a4f40a9e7cde5/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_de2cc5fc92c645a29d0a4f40a9e7cde5/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_de2cc5fc92c645a29d0a4f40a9e7cde5/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_de2cc5fc92c645a29d0a4f40a9e7cde5/static/dark/2.0',
+      },
+    },
+    emote_link:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_de2cc5fc92c645a29d0a4f40a9e7cde5/default/dark/3.0',
+    creator: null,
+    original_name: 'Yagoo',
+    site: 'Twitch Global',
+  },
+  {
+    name: 'SipTime',
+    id: 'emotesv2_ba5ae4be5c724ca59d649fa713ff0730',
+    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_ba5ae4be5c724ca59d649fa713ff0730/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_ba5ae4be5c724ca59d649fa713ff0730/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_ba5ae4be5c724ca59d649fa713ff0730/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_ba5ae4be5c724ca59d649fa713ff0730/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_ba5ae4be5c724ca59d649fa713ff0730/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_ba5ae4be5c724ca59d649fa713ff0730/static/dark/2.0',
+      },
+    },
+    emote_link:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_ba5ae4be5c724ca59d649fa713ff0730/default/dark/3.0',
+    creator: null,
+    original_name: 'SipTime',
+    site: 'Twitch Global',
+  },
+  {
+    name: 'EleGiggle',
+    id: 'emotesv2_cb0cec2c9975497fa093be1c3276dd92',
+    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_cb0cec2c9975497fa093be1c3276dd92/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_cb0cec2c9975497fa093be1c3276dd92/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_cb0cec2c9975497fa093be1c3276dd92/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_cb0cec2c9975497fa093be1c3276dd92/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_cb0cec2c9975497fa093be1c3276dd92/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_cb0cec2c9975497fa093be1c3276dd92/static/dark/2.0',
+      },
+    },
+    emote_link:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_cb0cec2c9975497fa093be1c3276dd92/default/dark/3.0',
+    creator: null,
+    original_name: 'EleGiggle',
     site: 'Twitch Global',
   },
   {
     name: 'FeverFighter',
     id: 'emotesv2_fc2f39b6a62c4d7e832993eab17547d2',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_fc2f39b6a62c4d7e832993eab17547d2/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_fc2f39b6a62c4d7e832993eab17547d2/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_fc2f39b6a62c4d7e832993eab17547d2/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_fc2f39b6a62c4d7e832993eab17547d2/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_fc2f39b6a62c4d7e832993eab17547d2/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_fc2f39b6a62c4d7e832993eab17547d2/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_fc2f39b6a62c4d7e832993eab17547d2/default/dark/3.0',
     creator: null,
@@ -22,19 +112,21 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     site: 'Twitch Global',
   },
   {
-    name: 'McDZombieHamburglar',
-    id: 'emotesv2_8e1771f1d00840d0b0e681a4b30b60e5',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_8e1771f1d00840d0b0e681a4b30b60e5/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_8e1771f1d00840d0b0e681a4b30b60e5/default/dark/3.0',
-    creator: null,
-    original_name: 'McDZombieHamburglar',
-    site: 'Twitch Global',
-  },
-  {
     name: 'WeDidThat',
     id: 'emotesv2_a7ab2c184e334d4a9784e6e5d51947f7',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a7ab2c184e334d4a9784e6e5d51947f7/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a7ab2c184e334d4a9784e6e5d51947f7/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a7ab2c184e334d4a9784e6e5d51947f7/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a7ab2c184e334d4a9784e6e5d51947f7/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a7ab2c184e334d4a9784e6e5d51947f7/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a7ab2c184e334d4a9784e6e5d51947f7/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a7ab2c184e334d4a9784e6e5d51947f7/default/dark/3.0',
     creator: null,
@@ -45,6 +137,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PewPewPew',
     id: 'emotesv2_587405136a8147148c77df74baaa1bf4',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_587405136a8147148c77df74baaa1bf4/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_587405136a8147148c77df74baaa1bf4/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_587405136a8147148c77df74baaa1bf4/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_587405136a8147148c77df74baaa1bf4/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_587405136a8147148c77df74baaa1bf4/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_587405136a8147148c77df74baaa1bf4/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_587405136a8147148c77df74baaa1bf4/default/dark/3.0',
     creator: null,
@@ -55,6 +159,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'JinxLUL',
     id: 'emotesv2_4e1c5651219a462894aefa8b6720efc5',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4e1c5651219a462894aefa8b6720efc5/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4e1c5651219a462894aefa8b6720efc5/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4e1c5651219a462894aefa8b6720efc5/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4e1c5651219a462894aefa8b6720efc5/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4e1c5651219a462894aefa8b6720efc5/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4e1c5651219a462894aefa8b6720efc5/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4e1c5651219a462894aefa8b6720efc5/default/dark/3.0',
     creator: null,
@@ -65,6 +181,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'FeelsVi',
     id: 'emotesv2_4b51b45f35df4dd8ad45a611c9a9ec35',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4b51b45f35df4dd8ad45a611c9a9ec35/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4b51b45f35df4dd8ad45a611c9a9ec35/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4b51b45f35df4dd8ad45a611c9a9ec35/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4b51b45f35df4dd8ad45a611c9a9ec35/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4b51b45f35df4dd8ad45a611c9a9ec35/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4b51b45f35df4dd8ad45a611c9a9ec35/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4b51b45f35df4dd8ad45a611c9a9ec35/default/dark/3.0',
     creator: null,
@@ -75,6 +203,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'AmbessaLove',
     id: 'emotesv2_a829c76ca15f49a2bf71e1270f83fe83',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a829c76ca15f49a2bf71e1270f83fe83/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a829c76ca15f49a2bf71e1270f83fe83/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a829c76ca15f49a2bf71e1270f83fe83/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a829c76ca15f49a2bf71e1270f83fe83/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a829c76ca15f49a2bf71e1270f83fe83/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a829c76ca15f49a2bf71e1270f83fe83/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a829c76ca15f49a2bf71e1270f83fe83/default/dark/3.0',
     creator: null,
@@ -85,6 +225,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'EkkoChest',
     id: 'emotesv2_db169cf5364e4634b529eef8b0616d94',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_db169cf5364e4634b529eef8b0616d94/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_db169cf5364e4634b529eef8b0616d94/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_db169cf5364e4634b529eef8b0616d94/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_db169cf5364e4634b529eef8b0616d94/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_db169cf5364e4634b529eef8b0616d94/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_db169cf5364e4634b529eef8b0616d94/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_db169cf5364e4634b529eef8b0616d94/default/dark/3.0',
     creator: null,
@@ -95,6 +247,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'CaitThinking',
     id: 'emotesv2_50b3304bc0884c6792f13615db072a5c',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_50b3304bc0884c6792f13615db072a5c/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_50b3304bc0884c6792f13615db072a5c/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_50b3304bc0884c6792f13615db072a5c/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_50b3304bc0884c6792f13615db072a5c/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_50b3304bc0884c6792f13615db072a5c/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_50b3304bc0884c6792f13615db072a5c/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_50b3304bc0884c6792f13615db072a5c/default/dark/3.0',
     creator: null,
@@ -105,6 +269,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'Cinheimer',
     id: 'emotesv2_d351c5d5e9084402b30bc39eaa3d92ae',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_d351c5d5e9084402b30bc39eaa3d92ae/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_d351c5d5e9084402b30bc39eaa3d92ae/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_d351c5d5e9084402b30bc39eaa3d92ae/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_d351c5d5e9084402b30bc39eaa3d92ae/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_d351c5d5e9084402b30bc39eaa3d92ae/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_d351c5d5e9084402b30bc39eaa3d92ae/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_d351c5d5e9084402b30bc39eaa3d92ae/default/dark/3.0',
     creator: null,
@@ -115,6 +291,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'BratChat',
     id: 'emotesv2_f2fd474fbe964964b2570671575b39ea',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_f2fd474fbe964964b2570671575b39ea/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_f2fd474fbe964964b2570671575b39ea/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_f2fd474fbe964964b2570671575b39ea/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_f2fd474fbe964964b2570671575b39ea/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_f2fd474fbe964964b2570671575b39ea/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_f2fd474fbe964964b2570671575b39ea/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_f2fd474fbe964964b2570671575b39ea/default/dark/3.0',
     creator: null,
@@ -125,6 +313,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'BigSad',
     id: 'emotesv2_db3cd788399347a8b2ebfb8a85f5badb',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_db3cd788399347a8b2ebfb8a85f5badb/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_db3cd788399347a8b2ebfb8a85f5badb/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_db3cd788399347a8b2ebfb8a85f5badb/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_db3cd788399347a8b2ebfb8a85f5badb/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_db3cd788399347a8b2ebfb8a85f5badb/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_db3cd788399347a8b2ebfb8a85f5badb/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_db3cd788399347a8b2ebfb8a85f5badb/default/dark/3.0',
     creator: null,
@@ -132,19 +332,21 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     site: 'Twitch Global',
   },
   {
-    name: 'AndalusianCrush',
-    id: 'emotesv2_ed53f0877c984ddcadfa500347b1fd0c',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_ed53f0877c984ddcadfa500347b1fd0c/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_ed53f0877c984ddcadfa500347b1fd0c/default/dark/3.0',
-    creator: null,
-    original_name: 'AndalusianCrush',
-    site: 'Twitch Global',
-  },
-  {
     name: 'GRASSLORD',
     id: 'emotesv2_973cf33af6e14a92b7c5b970a9d55afd',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_973cf33af6e14a92b7c5b970a9d55afd/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_973cf33af6e14a92b7c5b970a9d55afd/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_973cf33af6e14a92b7c5b970a9d55afd/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_973cf33af6e14a92b7c5b970a9d55afd/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_973cf33af6e14a92b7c5b970a9d55afd/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_973cf33af6e14a92b7c5b970a9d55afd/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_973cf33af6e14a92b7c5b970a9d55afd/default/dark/3.0',
     creator: null,
@@ -155,6 +357,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TWITH',
     id: 'emotesv2_5fa0f9da251941988f31b6d7632c021c',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_5fa0f9da251941988f31b6d7632c021c/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_5fa0f9da251941988f31b6d7632c021c/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_5fa0f9da251941988f31b6d7632c021c/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_5fa0f9da251941988f31b6d7632c021c/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_5fa0f9da251941988f31b6d7632c021c/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_5fa0f9da251941988f31b6d7632c021c/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_5fa0f9da251941988f31b6d7632c021c/default/dark/3.0',
     creator: null,
@@ -165,6 +379,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'SUBtember',
     id: 'emotesv2_bfb533e2253044f3a77d0032b2354c0b',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_bfb533e2253044f3a77d0032b2354c0b/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_bfb533e2253044f3a77d0032b2354c0b/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_bfb533e2253044f3a77d0032b2354c0b/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_bfb533e2253044f3a77d0032b2354c0b/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_bfb533e2253044f3a77d0032b2354c0b/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_bfb533e2253044f3a77d0032b2354c0b/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_bfb533e2253044f3a77d0032b2354c0b/default/dark/3.0',
     creator: null,
@@ -175,6 +401,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'AnotherRecord',
     id: 'emotesv2_9eade28238d64e83b0219a9025d4692d',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_9eade28238d64e83b0219a9025d4692d/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_9eade28238d64e83b0219a9025d4692d/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_9eade28238d64e83b0219a9025d4692d/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_9eade28238d64e83b0219a9025d4692d/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_9eade28238d64e83b0219a9025d4692d/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_9eade28238d64e83b0219a9025d4692d/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_9eade28238d64e83b0219a9025d4692d/default/dark/3.0',
     creator: null,
@@ -182,49 +420,21 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     site: 'Twitch Global',
   },
   {
-    name: 'BangbooBounce',
-    id: 'emotesv2_f9feac06649548448b3127dd9bd7710e',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_f9feac06649548448b3127dd9bd7710e/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_f9feac06649548448b3127dd9bd7710e/default/dark/3.0',
-    creator: null,
-    original_name: 'BangbooBounce',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'PopGhost',
-    id: 'emotesv2_cff32f43571543828847738e27acf4ef',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_cff32f43571543828847738e27acf4ef/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_cff32f43571543828847738e27acf4ef/default/dark/3.0',
-    creator: null,
-    original_name: 'PopGhost',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'KingWorldCup',
-    id: 'emotesv2_533b8c4a9f6e4bfbb528ad39974e3481',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_533b8c4a9f6e4bfbb528ad39974e3481/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_533b8c4a9f6e4bfbb528ad39974e3481/default/dark/3.0',
-    creator: null,
-    original_name: 'KingWorldCup',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'ChewyYAY',
-    id: 'emotesv2_0e0a3592d8334ef5a1cfcae6f3e76acb',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_0e0a3592d8334ef5a1cfcae6f3e76acb/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_0e0a3592d8334ef5a1cfcae6f3e76acb/default/dark/3.0',
-    creator: null,
-    original_name: 'ChewyYAY',
-    site: 'Twitch Global',
-  },
-  {
     name: 'GoatEmotey',
     id: 'emotesv2_e41e4d6808224f25ae1fb625aa26de63',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_e41e4d6808224f25ae1fb625aa26de63/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_e41e4d6808224f25ae1fb625aa26de63/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_e41e4d6808224f25ae1fb625aa26de63/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_e41e4d6808224f25ae1fb625aa26de63/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_e41e4d6808224f25ae1fb625aa26de63/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_e41e4d6808224f25ae1fb625aa26de63/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_e41e4d6808224f25ae1fb625aa26de63/default/dark/3.0',
     creator: null,
@@ -235,6 +445,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'GoldPLZ',
     id: 'emotesv2_c1f4899e65cf4f53b2fd98e15733973a',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c1f4899e65cf4f53b2fd98e15733973a/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c1f4899e65cf4f53b2fd98e15733973a/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c1f4899e65cf4f53b2fd98e15733973a/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c1f4899e65cf4f53b2fd98e15733973a/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c1f4899e65cf4f53b2fd98e15733973a/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c1f4899e65cf4f53b2fd98e15733973a/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c1f4899e65cf4f53b2fd98e15733973a/default/dark/3.0',
     creator: null,
@@ -242,19 +464,21 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     site: 'Twitch Global',
   },
   {
-    name: 'ForSigmar',
-    id: 'emotesv2_db3385fb0ea54913bf58fa5554edfdf2',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_db3385fb0ea54913bf58fa5554edfdf2/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_db3385fb0ea54913bf58fa5554edfdf2/default/dark/3.0',
-    creator: null,
-    original_name: 'ForSigmar',
-    site: 'Twitch Global',
-  },
-  {
     name: 'TwitchConHYPE',
     id: 'emotesv2_13b6dd7f3a3146ef8dc10f66d8b42a96',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_13b6dd7f3a3146ef8dc10f66d8b42a96/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_13b6dd7f3a3146ef8dc10f66d8b42a96/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_13b6dd7f3a3146ef8dc10f66d8b42a96/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_13b6dd7f3a3146ef8dc10f66d8b42a96/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_13b6dd7f3a3146ef8dc10f66d8b42a96/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_13b6dd7f3a3146ef8dc10f66d8b42a96/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_13b6dd7f3a3146ef8dc10f66d8b42a96/default/dark/3.0',
     creator: null,
@@ -265,6 +489,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PopNemo',
     id: 'emotesv2_5d523adb8bbb4786821cd7091e47da21',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_5d523adb8bbb4786821cd7091e47da21/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_5d523adb8bbb4786821cd7091e47da21/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_5d523adb8bbb4786821cd7091e47da21/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_5d523adb8bbb4786821cd7091e47da21/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_5d523adb8bbb4786821cd7091e47da21/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_5d523adb8bbb4786821cd7091e47da21/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_5d523adb8bbb4786821cd7091e47da21/default/dark/3.0',
     creator: null,
@@ -272,29 +508,21 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     site: 'Twitch Global',
   },
   {
-    name: 'FlawlessVictory',
-    id: 'emotesv2_0cb91e8a01c741fe9d4a0607f70395db',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_0cb91e8a01c741fe9d4a0607f70395db/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_0cb91e8a01c741fe9d4a0607f70395db/default/dark/3.0',
-    creator: null,
-    original_name: 'FlawlessVictory',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'PikaRamen',
-    id: 'emotesv2_a25ad7124e584c949e2f63917e3d747a',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a25ad7124e584c949e2f63917e3d747a/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a25ad7124e584c949e2f63917e3d747a/default/dark/3.0',
-    creator: null,
-    original_name: 'PikaRamen',
-    site: 'Twitch Global',
-  },
-  {
     name: 'DinoDance',
     id: 'emotesv2_dcd06b30a5c24f6eb871e8f5edbd44f7',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_dcd06b30a5c24f6eb871e8f5edbd44f7/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_dcd06b30a5c24f6eb871e8f5edbd44f7/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_dcd06b30a5c24f6eb871e8f5edbd44f7/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_dcd06b30a5c24f6eb871e8f5edbd44f7/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_dcd06b30a5c24f6eb871e8f5edbd44f7/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_dcd06b30a5c24f6eb871e8f5edbd44f7/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_dcd06b30a5c24f6eb871e8f5edbd44f7/default/dark/3.0',
     creator: null,
@@ -302,29 +530,21 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     site: 'Twitch Global',
   },
   {
-    name: 'NiceTry',
-    id: 'emotesv2_1f524be9838146e3bc9e529c17f797d3',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_1f524be9838146e3bc9e529c17f797d3/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_1f524be9838146e3bc9e529c17f797d3/default/dark/3.0',
-    creator: null,
-    original_name: 'NiceTry',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'LionOfYara',
-    id: 'emotesv2_adfadf0ae06a4258adc865761746b227',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_adfadf0ae06a4258adc865761746b227/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_adfadf0ae06a4258adc865761746b227/default/dark/3.0',
-    creator: null,
-    original_name: 'LionOfYara',
-    site: 'Twitch Global',
-  },
-  {
     name: 'NewRecord',
     id: 'emotesv2_53f6a6af8b0e453d874bbefee49b3e73',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_53f6a6af8b0e453d874bbefee49b3e73/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_53f6a6af8b0e453d874bbefee49b3e73/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_53f6a6af8b0e453d874bbefee49b3e73/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_53f6a6af8b0e453d874bbefee49b3e73/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_53f6a6af8b0e453d874bbefee49b3e73/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_53f6a6af8b0e453d874bbefee49b3e73/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_53f6a6af8b0e453d874bbefee49b3e73/default/dark/3.0',
     creator: null,
@@ -332,29 +552,21 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     site: 'Twitch Global',
   },
   {
-    name: 'Lechonk',
-    id: 'emotesv2_665235901db747b1bd395a5f1c0ab8a9',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_665235901db747b1bd395a5f1c0ab8a9/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_665235901db747b1bd395a5f1c0ab8a9/default/dark/3.0',
-    creator: null,
-    original_name: 'Lechonk',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'Getcamped',
-    id: 'emotesv2_291135bb36d24d33bf53860128b5095c',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_291135bb36d24d33bf53860128b5095c/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_291135bb36d24d33bf53860128b5095c/default/dark/3.0',
-    creator: null,
-    original_name: 'Getcamped',
-    site: 'Twitch Global',
-  },
-  {
     name: 'SUBprise',
     id: 'emotesv2_fcbeed664f7c47d6ba3b57691275ef51',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_fcbeed664f7c47d6ba3b57691275ef51/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_fcbeed664f7c47d6ba3b57691275ef51/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_fcbeed664f7c47d6ba3b57691275ef51/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_fcbeed664f7c47d6ba3b57691275ef51/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_fcbeed664f7c47d6ba3b57691275ef51/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_fcbeed664f7c47d6ba3b57691275ef51/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_fcbeed664f7c47d6ba3b57691275ef51/default/dark/3.0',
     creator: null,
@@ -362,49 +574,21 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     site: 'Twitch Global',
   },
   {
-    name: 'FallHalp',
-    id: 'emotesv2_7f9b025d534544afaf679e13fbd47b88',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_7f9b025d534544afaf679e13fbd47b88/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_7f9b025d534544afaf679e13fbd47b88/default/dark/3.0',
-    creator: null,
-    original_name: 'FallHalp',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'FallCry',
-    id: 'emotesv2_2734f1a85677416a9d8f846a2d1b4721',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_2734f1a85677416a9d8f846a2d1b4721/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_2734f1a85677416a9d8f846a2d1b4721/default/dark/3.0',
-    creator: null,
-    original_name: 'FallCry',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'FallWinning',
-    id: 'emotesv2_dee4ecfb7f0940bead9765da02c57ca9',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_dee4ecfb7f0940bead9765da02c57ca9/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_dee4ecfb7f0940bead9765da02c57ca9/default/dark/3.0',
-    creator: null,
-    original_name: 'FallWinning',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'MechaRobot',
-    id: 'emotesv2_0be25a1663bd472495b91e0302cec166',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_0be25a1663bd472495b91e0302cec166/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_0be25a1663bd472495b91e0302cec166/default/dark/3.0',
-    creator: null,
-    original_name: 'MechaRobot',
-    site: 'Twitch Global',
-  },
-  {
     name: 'ImTyping',
     id: 'emotesv2_b0c6ccb3b12b4f99a9cc83af365a09f1',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_b0c6ccb3b12b4f99a9cc83af365a09f1/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_b0c6ccb3b12b4f99a9cc83af365a09f1/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_b0c6ccb3b12b4f99a9cc83af365a09f1/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_b0c6ccb3b12b4f99a9cc83af365a09f1/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_b0c6ccb3b12b4f99a9cc83af365a09f1/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_b0c6ccb3b12b4f99a9cc83af365a09f1/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_b0c6ccb3b12b4f99a9cc83af365a09f1/default/dark/3.0',
     creator: null,
@@ -415,6 +599,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'Shush',
     id: 'emotesv2_819621bcb8f44566a1bd8ea63d06c58f',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_819621bcb8f44566a1bd8ea63d06c58f/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_819621bcb8f44566a1bd8ea63d06c58f/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_819621bcb8f44566a1bd8ea63d06c58f/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_819621bcb8f44566a1bd8ea63d06c58f/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_819621bcb8f44566a1bd8ea63d06c58f/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_819621bcb8f44566a1bd8ea63d06c58f/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_819621bcb8f44566a1bd8ea63d06c58f/default/dark/3.0',
     creator: null,
@@ -425,6 +621,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'MyAvatar',
     id: 'emotesv2_c0c9c932c82244ff920ad2134be90afb',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c0c9c932c82244ff920ad2134be90afb/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c0c9c932c82244ff920ad2134be90afb/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c0c9c932c82244ff920ad2134be90afb/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c0c9c932c82244ff920ad2134be90afb/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c0c9c932c82244ff920ad2134be90afb/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c0c9c932c82244ff920ad2134be90afb/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_c0c9c932c82244ff920ad2134be90afb/default/dark/3.0',
     creator: null,
@@ -435,6 +643,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PizzaTime',
     id: 'emotesv2_f202746ed88f4e7c872b50b1f7fd78cc',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_f202746ed88f4e7c872b50b1f7fd78cc/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_f202746ed88f4e7c872b50b1f7fd78cc/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_f202746ed88f4e7c872b50b1f7fd78cc/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_f202746ed88f4e7c872b50b1f7fd78cc/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_f202746ed88f4e7c872b50b1f7fd78cc/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_f202746ed88f4e7c872b50b1f7fd78cc/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_f202746ed88f4e7c872b50b1f7fd78cc/default/dark/3.0',
     creator: null,
@@ -445,6 +665,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'LaundryBasket',
     id: 'emotesv2_ecb0bfd49b3c4325864b948d46c8152b',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_ecb0bfd49b3c4325864b948d46c8152b/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_ecb0bfd49b3c4325864b948d46c8152b/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_ecb0bfd49b3c4325864b948d46c8152b/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_ecb0bfd49b3c4325864b948d46c8152b/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_ecb0bfd49b3c4325864b948d46c8152b/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_ecb0bfd49b3c4325864b948d46c8152b/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_ecb0bfd49b3c4325864b948d46c8152b/default/dark/3.0',
     creator: null,
@@ -455,6 +687,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'ModLove',
     id: 'emotesv2_a2dfbbbbf66f4a75b0f53db841523e6c',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a2dfbbbbf66f4a75b0f53db841523e6c/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a2dfbbbbf66f4a75b0f53db841523e6c/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a2dfbbbbf66f4a75b0f53db841523e6c/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a2dfbbbbf66f4a75b0f53db841523e6c/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a2dfbbbbf66f4a75b0f53db841523e6c/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a2dfbbbbf66f4a75b0f53db841523e6c/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_a2dfbbbbf66f4a75b0f53db841523e6c/default/dark/3.0',
     creator: null,
@@ -462,19 +706,21 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     site: 'Twitch Global',
   },
   {
-    name: 'PotFriend',
-    id: 'emotesv2_e02650251d204198923de93a0c62f5f5',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_e02650251d204198923de93a0c62f5f5/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_e02650251d204198923de93a0c62f5f5/default/dark/3.0',
-    creator: null,
-    original_name: 'PotFriend',
-    site: 'Twitch Global',
-  },
-  {
     name: 'Jebasted',
     id: 'emotesv2_031bf329c21040a897d55ef471da3dd3',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_031bf329c21040a897d55ef471da3dd3/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_031bf329c21040a897d55ef471da3dd3/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_031bf329c21040a897d55ef471da3dd3/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_031bf329c21040a897d55ef471da3dd3/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_031bf329c21040a897d55ef471da3dd3/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_031bf329c21040a897d55ef471da3dd3/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_031bf329c21040a897d55ef471da3dd3/default/dark/3.0',
     creator: null,
@@ -482,109 +728,21 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     site: 'Twitch Global',
   },
   {
-    name: 'PogBones',
-    id: 'emotesv2_30050f4353aa4322b25b6b044703e5d1',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_30050f4353aa4322b25b6b044703e5d1/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_30050f4353aa4322b25b6b044703e5d1/default/dark/3.0',
-    creator: null,
-    original_name: 'PogBones',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'PoroSad',
-    id: 'emotesv2_4c39207000564711868f3196cc0a8748',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4c39207000564711868f3196cc0a8748/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4c39207000564711868f3196cc0a8748/default/dark/3.0',
-    creator: null,
-    original_name: 'PoroSad',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'KEKHeim',
-    id: 'emotesv2_7c5d25facc384c47963d25a5057a0b40',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_7c5d25facc384c47963d25a5057a0b40/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_7c5d25facc384c47963d25a5057a0b40/default/dark/3.0',
-    creator: null,
-    original_name: 'KEKHeim',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'CaitlynS',
-    id: 'emotesv2_4acac638cffb4db49f376059f7077dae',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4acac638cffb4db49f376059f7077dae/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_4acac638cffb4db49f376059f7077dae/default/dark/3.0',
-    creator: null,
-    original_name: 'CaitlynS',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'HarleyWink',
-    id: 'emotesv2_8b0ac3eee4274a75868e3d0686d7b6f7',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_8b0ac3eee4274a75868e3d0686d7b6f7/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_8b0ac3eee4274a75868e3d0686d7b6f7/default/dark/3.0',
-    creator: null,
-    original_name: 'HarleyWink',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'WhySoSerious',
-    id: 'emotesv2_1fda4a1b40094c93af334f8b60868a7c',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_1fda4a1b40094c93af334f8b60868a7c/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_1fda4a1b40094c93af334f8b60868a7c/default/dark/3.0',
-    creator: null,
-    original_name: 'WhySoSerious',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'DarkKnight',
-    id: 'emotesv2_d9567e500d78441793bee538dcabc1da',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_d9567e500d78441793bee538dcabc1da/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_d9567e500d78441793bee538dcabc1da/default/dark/3.0',
-    creator: null,
-    original_name: 'DarkKnight',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'FamilyMan',
-    id: 'emotesv2_89f3f0761c7b4f708061e9e4be3b7d17',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_89f3f0761c7b4f708061e9e4be3b7d17/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_89f3f0761c7b4f708061e9e4be3b7d17/default/dark/3.0',
-    creator: null,
-    original_name: 'FamilyMan',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'RyuChamp',
-    id: 'emotesv2_0ebc590ba68447269831af61d8bc9e0d',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_0ebc590ba68447269831af61d8bc9e0d/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_0ebc590ba68447269831af61d8bc9e0d/default/dark/3.0',
-    creator: null,
-    original_name: 'RyuChamp',
-    site: 'Twitch Global',
-  },
-  {
-    name: 'HungryPaimon',
-    id: 'emotesv2_535e40afa0b34a9481997627b1b47d96',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_535e40afa0b34a9481997627b1b47d96/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/emotesv2_535e40afa0b34a9481997627b1b47d96/default/dark/3.0',
-    creator: null,
-    original_name: 'HungryPaimon',
-    site: 'Twitch Global',
-  },
-  {
     name: 'TransgenderPride',
     id: '307827377',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/307827377/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/307827377/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827377/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827377/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827377/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827377/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/307827377/default/dark/3.0',
     creator: null,
@@ -595,6 +753,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PansexualPride',
     id: '307827370',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/307827370/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/307827370/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827370/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827370/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827370/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827370/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/307827370/default/dark/3.0',
     creator: null,
@@ -605,6 +775,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'NonbinaryPride',
     id: '307827356',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/307827356/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/307827356/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827356/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827356/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827356/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827356/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/307827356/default/dark/3.0',
     creator: null,
@@ -615,6 +797,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'LesbianPride',
     id: '307827340',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/307827340/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/307827340/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827340/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827340/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827340/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827340/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/307827340/default/dark/3.0',
     creator: null,
@@ -625,6 +819,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'IntersexPride',
     id: '307827332',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/307827332/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/307827332/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827332/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827332/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827332/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827332/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/307827332/default/dark/3.0',
     creator: null,
@@ -635,6 +841,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'GenderFluidPride',
     id: '307827326',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/307827326/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/307827326/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827326/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827326/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827326/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827326/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/307827326/default/dark/3.0',
     creator: null,
@@ -645,6 +863,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'GayPride',
     id: '307827321',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/307827321/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/307827321/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827321/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827321/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827321/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827321/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/307827321/default/dark/3.0',
     creator: null,
@@ -655,6 +885,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'BisexualPride',
     id: '307827313',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/307827313/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/307827313/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827313/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827313/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827313/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827313/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/307827313/default/dark/3.0',
     creator: null,
@@ -665,6 +907,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'AsexualPride',
     id: '307827267',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/307827267/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/307827267/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827267/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827267/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827267/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/307827267/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/307827267/default/dark/3.0',
     creator: null,
@@ -675,6 +929,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PogChamp',
     id: '305954156',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/305954156/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/305954156/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/305954156/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/305954156/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/305954156/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/305954156/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/305954156/default/dark/3.0',
     creator: null,
@@ -685,6 +951,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'GlitchNRG',
     id: '304489309',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/304489309/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/304489309/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/304489309/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/304489309/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/304489309/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/304489309/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/304489309/default/dark/3.0',
     creator: null,
@@ -695,6 +973,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'GlitchLit',
     id: '304489128',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/304489128/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/304489128/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/304489128/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/304489128/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/304489128/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/304489128/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/304489128/default/dark/3.0',
     creator: null,
@@ -705,6 +995,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'StinkyGlitch',
     id: '304486324',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/304486324/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/304486324/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/304486324/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/304486324/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/304486324/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/304486324/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/304486324/default/dark/3.0',
     creator: null,
@@ -715,6 +1017,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'GlitchCat',
     id: '304486301',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/304486301/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/304486301/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/304486301/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/304486301/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/304486301/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/304486301/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/304486301/default/dark/3.0',
     creator: null,
@@ -725,6 +1039,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'FootGoal',
     id: '302628617',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/302628617/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/302628617/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/302628617/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/302628617/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/302628617/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/302628617/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/302628617/default/dark/3.0',
     creator: null,
@@ -735,6 +1061,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'FootYellow',
     id: '302628613',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/302628613/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/302628613/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/302628613/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/302628613/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/302628613/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/302628613/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/302628613/default/dark/3.0',
     creator: null,
@@ -745,6 +1083,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'FootBall',
     id: '302628600',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/302628600/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/302628600/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/302628600/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/302628600/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/302628600/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/302628600/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/302628600/default/dark/3.0',
     creator: null,
@@ -755,6 +1105,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'BlackLivesMatter',
     id: '302537250',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/302537250/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/302537250/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/302537250/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/302537250/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/302537250/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/302537250/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/302537250/default/dark/3.0',
     creator: null,
@@ -765,6 +1127,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'ExtraLife',
     id: '302426269',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/302426269/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/302426269/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/302426269/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/302426269/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/302426269/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/302426269/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/302426269/default/dark/3.0',
     creator: null,
@@ -775,6 +1149,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'VirtualHug',
     id: '301696583',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/301696583/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/301696583/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/301696583/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/301696583/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/301696583/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/301696583/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/301696583/default/dark/3.0',
     creator: null,
@@ -785,6 +1171,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'R-)',
     id: '555555600',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555600/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555600/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555600/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555600/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555600/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555600/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555600/default/dark/3.0',
     creator: null,
@@ -795,6 +1193,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'R)',
     id: '555555599',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555599/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555599/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555599/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555599/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555599/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555599/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555599/default/dark/3.0',
     creator: null,
@@ -805,6 +1215,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ';-p',
     id: '555555598',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555598/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555598/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555598/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555598/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555598/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555598/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555598/default/dark/3.0',
     creator: null,
@@ -815,6 +1237,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ';p',
     id: '555555597',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555597/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555597/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555597/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555597/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555597/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555597/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555597/default/dark/3.0',
     creator: null,
@@ -825,6 +1259,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ';-P',
     id: '555555596',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555596/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555596/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555596/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555596/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555596/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555596/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555596/default/dark/3.0',
     creator: null,
@@ -835,6 +1281,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ';P',
     id: '555555595',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555595/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555595/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555595/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555595/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555595/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555595/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555595/default/dark/3.0',
     creator: null,
@@ -845,6 +1303,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':-p',
     id: '555555594',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555594/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555594/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555594/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555594/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555594/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555594/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555594/default/dark/3.0',
     creator: null,
@@ -855,6 +1325,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':p',
     id: '555555593',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555593/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555593/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555593/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555593/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555593/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555593/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555593/default/dark/3.0',
     creator: null,
@@ -865,6 +1347,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':-P',
     id: '555555592',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555592/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555592/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555592/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555592/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555592/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555592/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555592/default/dark/3.0',
     creator: null,
@@ -875,6 +1369,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':P',
     id: '555555591',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555591/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555591/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555591/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555591/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555591/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555591/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555591/default/dark/3.0',
     creator: null,
@@ -885,6 +1391,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ';-)',
     id: '555555590',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555590/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555590/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555590/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555590/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555590/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555590/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555590/default/dark/3.0',
     creator: null,
@@ -895,6 +1413,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ';)',
     id: '555555589',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555589/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555589/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555589/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555589/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555589/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555589/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555589/default/dark/3.0',
     creator: null,
@@ -905,6 +1435,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':-\\',
     id: '555555588',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555588/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555588/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555588/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555588/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555588/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555588/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555588/default/dark/3.0',
     creator: null,
@@ -915,6 +1457,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':\\',
     id: '555555587',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555587/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555587/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555587/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555587/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555587/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555587/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555587/default/dark/3.0',
     creator: null,
@@ -925,6 +1479,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':-/',
     id: '555555586',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555586/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555586/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555586/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555586/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555586/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555586/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555586/default/dark/3.0',
     creator: null,
@@ -935,6 +1501,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':/',
     id: '555555585',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555585/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555585/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555585/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555585/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555585/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555585/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555585/default/dark/3.0',
     creator: null,
@@ -945,6 +1523,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: '<3',
     id: '555555584',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555584/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555584/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555584/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555584/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555584/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555584/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555584/default/dark/3.0',
     creator: null,
@@ -955,6 +1545,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':-o',
     id: '555555583',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555583/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555583/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555583/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555583/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555583/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555583/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555583/default/dark/3.0',
     creator: null,
@@ -965,6 +1567,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':o',
     id: '555555582',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555582/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555582/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555582/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555582/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555582/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555582/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555582/default/dark/3.0',
     creator: null,
@@ -975,6 +1589,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':-O',
     id: '555555581',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555581/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555581/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555581/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555581/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555581/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555581/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555581/default/dark/3.0',
     creator: null,
@@ -985,6 +1611,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':O',
     id: '555555580',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555580/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555580/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555580/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555580/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555580/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555580/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555580/default/dark/3.0',
     creator: null,
@@ -995,6 +1633,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: '8-)',
     id: '555555579',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555579/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555579/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555579/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555579/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555579/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555579/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555579/default/dark/3.0',
     creator: null,
@@ -1005,6 +1655,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'B-)',
     id: '555555578',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555578/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555578/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555578/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555578/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555578/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555578/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555578/default/dark/3.0',
     creator: null,
@@ -1015,6 +1677,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'B)',
     id: '555555577',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555577/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555577/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555577/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555577/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555577/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555577/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555577/default/dark/3.0',
     creator: null,
@@ -1025,6 +1699,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'o.o',
     id: '555555576',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555576/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555576/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555576/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555576/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555576/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555576/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555576/default/dark/3.0',
     creator: null,
@@ -1035,6 +1721,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'o_o',
     id: '555555575',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555575/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555575/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555575/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555575/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555575/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555575/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555575/default/dark/3.0',
     creator: null,
@@ -1045,6 +1743,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'o.O',
     id: '555555574',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555574/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555574/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555574/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555574/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555574/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555574/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555574/default/dark/3.0',
     creator: null,
@@ -1055,6 +1765,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'o_O',
     id: '555555573',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555573/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555573/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555573/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555573/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555573/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555573/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555573/default/dark/3.0',
     creator: null,
@@ -1065,6 +1787,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'O.O',
     id: '555555572',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555572/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555572/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555572/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555572/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555572/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555572/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555572/default/dark/3.0',
     creator: null,
@@ -1075,6 +1809,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'O_O',
     id: '555555571',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555571/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555571/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555571/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555571/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555571/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555571/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555571/default/dark/3.0',
     creator: null,
@@ -1085,6 +1831,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'O.o',
     id: '555555570',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555570/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555570/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555570/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555570/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555570/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555570/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555570/default/dark/3.0',
     creator: null,
@@ -1095,6 +1853,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'O_o',
     id: '555555569',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555569/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555569/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555569/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555569/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555569/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555569/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555569/default/dark/3.0',
     creator: null,
@@ -1105,6 +1875,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':-Z',
     id: '555555568',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555568/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555568/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555568/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555568/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555568/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555568/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555568/default/dark/3.0',
     creator: null,
@@ -1115,6 +1897,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':Z',
     id: '555555567',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555567/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555567/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555567/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555567/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555567/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555567/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555567/default/dark/3.0',
     creator: null,
@@ -1125,6 +1919,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':-z',
     id: '555555566',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555566/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555566/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555566/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555566/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555566/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555566/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555566/default/dark/3.0',
     creator: null,
@@ -1135,6 +1941,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':z',
     id: '555555565',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555565/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555565/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555565/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555565/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555565/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555565/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555565/default/dark/3.0',
     creator: null,
@@ -1145,6 +1963,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':-|',
     id: '555555564',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555564/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555564/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555564/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555564/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555564/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555564/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555564/default/dark/3.0',
     creator: null,
@@ -1155,6 +1985,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':|',
     id: '555555563',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555563/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555563/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555563/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555563/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555563/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555563/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555563/default/dark/3.0',
     creator: null,
@@ -1165,6 +2007,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: '>(',
     id: '555555562',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555562/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555562/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555562/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555562/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555562/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555562/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555562/default/dark/3.0',
     creator: null,
@@ -1175,6 +2029,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':-D',
     id: '555555561',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555561/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555561/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555561/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555561/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555561/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555561/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555561/default/dark/3.0',
     creator: null,
@@ -1185,6 +2051,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':D',
     id: '555555560',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555560/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555560/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555560/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555560/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555560/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555560/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555560/default/dark/3.0',
     creator: null,
@@ -1195,6 +2073,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':-(',
     id: '555555559',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555559/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555559/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555559/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555559/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555559/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555559/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555559/default/dark/3.0',
     creator: null,
@@ -1205,6 +2095,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':(',
     id: '555555558',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555558/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555558/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555558/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555558/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555558/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555558/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555558/default/dark/3.0',
     creator: null,
@@ -1215,6 +2117,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':-)',
     id: '555555557',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/555555557/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/555555557/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555557/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555557/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555557/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/555555557/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/555555557/default/dark/3.0',
     creator: null,
@@ -1225,6 +2139,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'BOP',
     id: '301428702',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/301428702/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/301428702/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/301428702/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/301428702/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/301428702/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/301428702/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/301428702/default/dark/3.0',
     creator: null,
@@ -1235,6 +2161,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'SingsNote',
     id: '300116350',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/300116350/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/300116350/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/300116350/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/300116350/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/300116350/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/300116350/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/300116350/default/dark/3.0',
     creator: null,
@@ -1245,6 +2183,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'SingsMic',
     id: '300116349',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/300116349/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/300116349/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/300116349/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/300116349/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/300116349/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/300116349/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/300116349/default/dark/3.0',
     creator: null,
@@ -1255,6 +2205,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TwitchSings',
     id: '300116344',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/300116344/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/300116344/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/300116344/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/300116344/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/300116344/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/300116344/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/300116344/default/dark/3.0',
     creator: null,
@@ -1265,6 +2227,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'SoonerLater',
     id: '2113050',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/2113050/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/2113050/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/2113050/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/2113050/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/2113050/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/2113050/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/2113050/default/dark/3.0',
     creator: null,
@@ -1275,6 +2249,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'HolidayTree',
     id: '1713825',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1713825/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1713825/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713825/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713825/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713825/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713825/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1713825/default/dark/3.0',
     creator: null,
@@ -1285,6 +2271,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'HolidaySanta',
     id: '1713822',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1713822/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1713822/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713822/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713822/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713822/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713822/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1713822/default/dark/3.0',
     creator: null,
@@ -1295,6 +2293,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'HolidayPresent',
     id: '1713819',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1713819/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1713819/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713819/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713819/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713819/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713819/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1713819/default/dark/3.0',
     creator: null,
@@ -1305,6 +2315,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'HolidayLog',
     id: '1713816',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1713816/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1713816/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713816/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713816/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713816/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713816/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1713816/default/dark/3.0',
     creator: null,
@@ -1315,6 +2337,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'HolidayCookie',
     id: '1713813',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1713813/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1713813/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713813/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713813/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713813/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1713813/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1713813/default/dark/3.0',
     creator: null,
@@ -1322,19 +2356,21 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     site: 'Twitch Global',
   },
   {
-    name: 'GunRun',
-    id: '1584743',
-    url: 'https://static-cdn.jtvnw.net/emoticons/v2/1584743/default/dark/3.0',
-    emote_link:
-      'https://static-cdn.jtvnw.net/emoticons/v2/1584743/default/dark/3.0',
-    creator: null,
-    original_name: 'GunRun',
-    site: 'Twitch Global',
-  },
-  {
     name: 'PixelBob',
     id: '1547903',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1547903/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1547903/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1547903/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1547903/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1547903/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1547903/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1547903/default/dark/3.0',
     creator: null,
@@ -1345,6 +2381,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'FBPenalty',
     id: '1441289',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1441289/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1441289/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441289/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441289/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441289/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441289/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1441289/default/dark/3.0',
     creator: null,
@@ -1355,6 +2403,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'FBChallenge',
     id: '1441285',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1441285/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1441285/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441285/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441285/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441285/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441285/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1441285/default/dark/3.0',
     creator: null,
@@ -1365,6 +2425,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'FBCatch',
     id: '1441281',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1441281/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1441281/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441281/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441281/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441281/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441281/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1441281/default/dark/3.0',
     creator: null,
@@ -1375,6 +2447,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'FBBlock',
     id: '1441276',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1441276/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1441276/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441276/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441276/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441276/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441276/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1441276/default/dark/3.0',
     creator: null,
@@ -1385,6 +2469,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'FBSpiral',
     id: '1441273',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1441273/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1441273/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441273/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441273/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441273/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441273/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1441273/default/dark/3.0',
     creator: null,
@@ -1395,6 +2491,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'FBPass',
     id: '1441271',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1441271/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1441271/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441271/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441271/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441271/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441271/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1441271/default/dark/3.0',
     creator: null,
@@ -1405,6 +2513,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'FBRun',
     id: '1441261',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1441261/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1441261/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441261/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441261/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441261/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1441261/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1441261/default/dark/3.0',
     creator: null,
@@ -1415,6 +2535,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'MaxLOL',
     id: '1290325',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1290325/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1290325/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1290325/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1290325/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1290325/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1290325/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1290325/default/dark/3.0',
     creator: null,
@@ -1425,6 +2557,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TwitchRPG',
     id: '1220086',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1220086/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1220086/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1220086/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1220086/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1220086/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1220086/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1220086/default/dark/3.0',
     creator: null,
@@ -1435,6 +2579,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PinkMercy',
     id: '1003190',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1003190/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1003190/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1003190/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1003190/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1003190/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1003190/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1003190/default/dark/3.0',
     creator: null,
@@ -1445,6 +2601,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'MercyWing2',
     id: '1003189',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1003189/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1003189/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1003189/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1003189/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1003189/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1003189/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1003189/default/dark/3.0',
     creator: null,
@@ -1455,6 +2623,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'MercyWing1',
     id: '1003187',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1003187/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1003187/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1003187/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1003187/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1003187/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1003187/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1003187/default/dark/3.0',
     creator: null,
@@ -1465,6 +2645,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PartyHat',
     id: '965738',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/965738/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/965738/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/965738/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/965738/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/965738/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/965738/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/965738/default/dark/3.0',
     creator: null,
@@ -1475,6 +2667,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'EarthDay',
     id: '959018',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/959018/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/959018/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/959018/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/959018/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/959018/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/959018/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/959018/default/dark/3.0',
     creator: null,
@@ -1485,6 +2689,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TombRaid',
     id: '864205',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/864205/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/864205/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/864205/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/864205/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/864205/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/864205/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/864205/default/dark/3.0',
     creator: null,
@@ -1495,6 +2711,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PopCorn',
     id: '724216',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/724216/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/724216/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/724216/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/724216/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/724216/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/724216/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/724216/default/dark/3.0',
     creator: null,
@@ -1505,6 +2733,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'FBtouchdown',
     id: '626795',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/626795/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/626795/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/626795/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/626795/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/626795/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/626795/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/626795/default/dark/3.0',
     creator: null,
@@ -1515,6 +2755,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TPFufun',
     id: '508650',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/508650/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/508650/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/508650/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/508650/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/508650/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/508650/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/508650/default/dark/3.0',
     creator: null,
@@ -1525,6 +2777,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TwitchVotes',
     id: '479745',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/479745/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/479745/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/479745/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/479745/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/479745/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/479745/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/479745/default/dark/3.0',
     creator: null,
@@ -1535,6 +2799,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'DarkMode',
     id: '461298',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/461298/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/461298/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/461298/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/461298/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/461298/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/461298/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/461298/default/dark/3.0',
     creator: null,
@@ -1545,6 +2821,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'HSWP',
     id: '446979',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/446979/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/446979/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/446979/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/446979/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/446979/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/446979/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/446979/default/dark/3.0',
     creator: null,
@@ -1555,6 +2843,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'HSCheers',
     id: '444572',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/444572/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/444572/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/444572/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/444572/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/444572/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/444572/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/444572/default/dark/3.0',
     creator: null,
@@ -1565,6 +2865,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PowerUpL',
     id: '425688',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/425688/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/425688/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/425688/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/425688/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/425688/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/425688/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/425688/default/dark/3.0',
     creator: null,
@@ -1575,6 +2887,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PowerUpR',
     id: '425671',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/425671/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/425671/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/425671/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/425671/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/425671/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/425671/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/425671/default/dark/3.0',
     creator: null,
@@ -1585,6 +2909,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'LUL',
     id: '425618',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/425618/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/425618/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/425618/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/425618/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/425618/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/425618/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/425618/default/dark/3.0',
     creator: null,
@@ -1595,6 +2931,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'EntropyWins',
     id: '376765',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/376765/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/376765/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/376765/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/376765/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/376765/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/376765/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/376765/default/dark/3.0',
     creator: null,
@@ -1605,6 +2953,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TPcrunchyroll',
     id: '323914',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/323914/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/323914/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/323914/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/323914/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/323914/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/323914/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/323914/default/dark/3.0',
     creator: null,
@@ -1615,6 +2975,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TwitchUnity',
     id: '196892',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/196892/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/196892/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/196892/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/196892/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/196892/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/196892/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/196892/default/dark/3.0',
     creator: null,
@@ -1625,6 +2997,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'Squid4',
     id: '191767',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/191767/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/191767/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/191767/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/191767/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/191767/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/191767/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/191767/default/dark/3.0',
     creator: null,
@@ -1635,6 +3019,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'Squid3',
     id: '191764',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/191764/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/191764/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/191764/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/191764/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/191764/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/191764/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/191764/default/dark/3.0',
     creator: null,
@@ -1645,6 +3041,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'Squid2',
     id: '191763',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/191763/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/191763/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/191763/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/191763/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/191763/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/191763/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/191763/default/dark/3.0',
     creator: null,
@@ -1655,6 +3063,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'Squid1',
     id: '191762',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/191762/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/191762/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/191762/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/191762/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/191762/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/191762/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/191762/default/dark/3.0',
     creator: null,
@@ -1665,6 +3085,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'CrreamAwk',
     id: '191313',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/191313/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/191313/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/191313/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/191313/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/191313/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/191313/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/191313/default/dark/3.0',
     creator: null,
@@ -1675,6 +3107,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'CarlSmile',
     id: '166266',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/166266/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/166266/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/166266/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/166266/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/166266/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/166266/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/166266/default/dark/3.0',
     creator: null,
@@ -1685,6 +3129,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TwitchLit',
     id: '166263',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/166263/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/166263/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/166263/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/166263/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/166263/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/166263/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/166263/default/dark/3.0',
     creator: null,
@@ -1695,6 +3151,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TehePelo',
     id: '160404',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/160404/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/160404/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160404/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160404/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160404/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160404/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/160404/default/dark/3.0',
     creator: null,
@@ -1705,6 +3173,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TearGlove',
     id: '160403',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/160403/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/160403/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160403/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160403/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160403/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160403/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/160403/default/dark/3.0',
     creator: null,
@@ -1715,6 +3195,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'SabaPing',
     id: '160402',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/160402/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/160402/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160402/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160402/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160402/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160402/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/160402/default/dark/3.0',
     creator: null,
@@ -1725,6 +3217,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PunOko',
     id: '160401',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/160401/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/160401/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160401/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160401/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160401/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160401/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/160401/default/dark/3.0',
     creator: null,
@@ -1735,6 +3239,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'KonCha',
     id: '160400',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/160400/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/160400/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160400/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160400/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160400/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160400/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/160400/default/dark/3.0',
     creator: null,
@@ -1745,6 +3261,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'Kappu',
     id: '160397',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/160397/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/160397/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160397/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160397/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160397/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160397/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/160397/default/dark/3.0',
     creator: null,
@@ -1755,6 +3283,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'InuyoFace',
     id: '160396',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/160396/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/160396/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160396/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160396/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160396/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160396/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/160396/default/dark/3.0',
     creator: null,
@@ -1765,6 +3305,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'BigPhish',
     id: '160395',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/160395/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/160395/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160395/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160395/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160395/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160395/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/160395/default/dark/3.0',
     creator: null,
@@ -1775,6 +3327,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'BegWan',
     id: '160394',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/160394/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/160394/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160394/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160394/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160394/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160394/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/160394/default/dark/3.0',
     creator: null,
@@ -1785,6 +3349,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'ThankEgg',
     id: '160392',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/160392/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/160392/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160392/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160392/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/160392/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/160392/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/160392/default/dark/3.0',
     creator: null,
@@ -1795,6 +3371,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'MorphinTime',
     id: '156787',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/156787/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/156787/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/156787/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/156787/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/156787/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/156787/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/156787/default/dark/3.0',
     creator: null,
@@ -1805,6 +3393,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TheIlluminati',
     id: '145315',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/145315/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/145315/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/145315/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/145315/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/145315/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/145315/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/145315/default/dark/3.0',
     creator: null,
@@ -1815,6 +3415,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TBAngel',
     id: '143490',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/143490/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/143490/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/143490/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/143490/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/143490/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/143490/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/143490/default/dark/3.0',
     creator: null,
@@ -1825,6 +3437,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'MVGame',
     id: '142140',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/142140/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/142140/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/142140/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/142140/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/142140/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/142140/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/142140/default/dark/3.0',
     creator: null,
@@ -1835,6 +3459,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'NinjaGrumpy',
     id: '138325',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/138325/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/138325/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/138325/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/138325/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/138325/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/138325/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/138325/default/dark/3.0',
     creator: null,
@@ -1845,6 +3481,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PartyTime',
     id: '135393',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/135393/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/135393/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/135393/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/135393/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/135393/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/135393/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/135393/default/dark/3.0',
     creator: null,
@@ -1855,6 +3503,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'RlyTho',
     id: '134256',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/134256/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/134256/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/134256/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/134256/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/134256/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/134256/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/134256/default/dark/3.0',
     creator: null,
@@ -1865,6 +3525,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'UWot',
     id: '134255',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/134255/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/134255/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/134255/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/134255/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/134255/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/134255/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/134255/default/dark/3.0',
     creator: null,
@@ -1875,6 +3547,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'YouDontSay',
     id: '134254',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/134254/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/134254/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/134254/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/134254/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/134254/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/134254/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/134254/default/dark/3.0',
     creator: null,
@@ -1885,6 +3569,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'KAPOW',
     id: '133537',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/133537/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/133537/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/133537/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/133537/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/133537/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/133537/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/133537/default/dark/3.0',
     creator: null,
@@ -1895,6 +3591,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'ItsBoshyTime',
     id: '133468',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/133468/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/133468/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/133468/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/133468/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/133468/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/133468/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/133468/default/dark/3.0',
     creator: null,
@@ -1905,6 +3613,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'CoolStoryBob',
     id: '123171',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/123171/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/123171/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/123171/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/123171/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/123171/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/123171/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/123171/default/dark/3.0',
     creator: null,
@@ -1915,6 +3635,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TriHard',
     id: '120232',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/120232/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/120232/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/120232/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/120232/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/120232/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/120232/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/120232/default/dark/3.0',
     creator: null,
@@ -1925,6 +3657,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'SuperVinlin',
     id: '118772',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/118772/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/118772/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/118772/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/118772/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/118772/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/118772/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/118772/default/dark/3.0',
     creator: null,
@@ -1935,6 +3679,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'FreakinStinkin',
     id: '117701',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/117701/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/117701/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/117701/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/117701/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/117701/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/117701/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/117701/default/dark/3.0',
     creator: null,
@@ -1945,6 +3701,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'Poooound',
     id: '117484',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/117484/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/117484/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/117484/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/117484/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/117484/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/117484/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/117484/default/dark/3.0',
     creator: null,
@@ -1955,6 +3723,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'CurseLit',
     id: '116625',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/116625/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/116625/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/116625/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/116625/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/116625/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/116625/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/116625/default/dark/3.0',
     creator: null,
@@ -1965,6 +3745,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'BatChest',
     id: '115234',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/115234/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/115234/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/115234/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/115234/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/115234/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/115234/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/115234/default/dark/3.0',
     creator: null,
@@ -1975,6 +3767,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'BrainSlug',
     id: '115233',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/115233/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/115233/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/115233/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/115233/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/115233/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/115233/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/115233/default/dark/3.0',
     creator: null,
@@ -1985,6 +3789,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PrimeMe',
     id: '115075',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/115075/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/115075/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/115075/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/115075/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/115075/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/115075/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/115075/default/dark/3.0',
     creator: null,
@@ -1995,6 +3811,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'StrawBeary',
     id: '114876',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/114876/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/114876/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/114876/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/114876/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/114876/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/114876/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/114876/default/dark/3.0',
     creator: null,
@@ -2005,6 +3833,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'RaccAttack',
     id: '114870',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/114870/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/114870/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/114870/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/114870/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/114870/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/114870/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/114870/default/dark/3.0',
     creator: null,
@@ -2015,6 +3855,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'UncleNox',
     id: '114856',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/114856/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/114856/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/114856/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/114856/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/114856/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/114856/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/114856/default/dark/3.0',
     creator: null,
@@ -2025,6 +3877,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'WTRuck',
     id: '114847',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/114847/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/114847/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/114847/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/114847/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/114847/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/114847/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/114847/default/dark/3.0',
     creator: null,
@@ -2035,6 +3899,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TooSpicy',
     id: '114846',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/114846/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/114846/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/114846/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/114846/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/114846/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/114846/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/114846/default/dark/3.0',
     creator: null,
@@ -2045,6 +3921,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'Jebaited',
     id: '114836',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/114836/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/114836/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/114836/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/114836/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/114836/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/114836/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/114836/default/dark/3.0',
     creator: null,
@@ -2055,6 +3943,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'DogFace',
     id: '114835',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/114835/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/114835/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/114835/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/114835/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/114835/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/114835/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/114835/default/dark/3.0',
     creator: null,
@@ -2065,6 +3965,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'BlargNaut',
     id: '114738',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/114738/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/114738/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/114738/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/114738/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/114738/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/114738/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/114738/default/dark/3.0',
     creator: null,
@@ -2075,6 +3987,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TakeNRG',
     id: '112292',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/112292/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/112292/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/112292/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/112292/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/112292/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/112292/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/112292/default/dark/3.0',
     creator: null,
@@ -2085,6 +4009,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'GivePLZ',
     id: '112291',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/112291/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/112291/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/112291/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/112291/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/112291/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/112291/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/112291/default/dark/3.0',
     creator: null,
@@ -2095,6 +4031,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'imGlitch',
     id: '112290',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/112290/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/112290/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/112290/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/112290/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/112290/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/112290/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/112290/default/dark/3.0',
     creator: null,
@@ -2105,6 +4053,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'pastaThat',
     id: '112289',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/112289/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/112289/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/112289/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/112289/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/112289/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/112289/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/112289/default/dark/3.0',
     creator: null,
@@ -2115,6 +4075,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'copyThis',
     id: '112288',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/112288/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/112288/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/112288/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/112288/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/112288/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/112288/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/112288/default/dark/3.0',
     creator: null,
@@ -2125,6 +4097,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'UnSane',
     id: '111792',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/111792/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/111792/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/111792/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/111792/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/111792/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/111792/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/111792/default/dark/3.0',
     creator: null,
@@ -2135,6 +4119,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'DatSheffy',
     id: '111700',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/111700/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/111700/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/111700/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/111700/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/111700/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/111700/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/111700/default/dark/3.0',
     creator: null,
@@ -2145,6 +4141,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TheTarFu',
     id: '111351',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/111351/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/111351/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/111351/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/111351/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/111351/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/111351/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/111351/default/dark/3.0',
     creator: null,
@@ -2155,6 +4163,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PicoMause',
     id: '111300',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/111300/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/111300/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/111300/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/111300/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/111300/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/111300/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/111300/default/dark/3.0',
     creator: null,
@@ -2165,6 +4185,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TinyFace',
     id: '111119',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/111119/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/111119/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/111119/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/111119/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/111119/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/111119/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/111119/default/dark/3.0',
     creator: null,
@@ -2175,6 +4207,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'DxCat',
     id: '110734',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/110734/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/110734/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/110734/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/110734/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/110734/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/110734/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/110734/default/dark/3.0',
     creator: null,
@@ -2185,6 +4229,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'RuleFive',
     id: '107030',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/107030/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/107030/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/107030/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/107030/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/107030/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/107030/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/107030/default/dark/3.0',
     creator: null,
@@ -2195,6 +4251,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'VoteNay',
     id: '106294',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/106294/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/106294/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/106294/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/106294/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/106294/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/106294/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/106294/default/dark/3.0',
     creator: null,
@@ -2205,6 +4273,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'VoteYea',
     id: '106293',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/106293/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/106293/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/106293/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/106293/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/106293/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/106293/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/106293/default/dark/3.0',
     creator: null,
@@ -2215,6 +4295,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PJSugar',
     id: '102556',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/102556/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/102556/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/102556/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/102556/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/102556/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/102556/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/102556/default/dark/3.0',
     creator: null,
@@ -2225,6 +4317,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'DoritosChip',
     id: '102242',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/102242/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/102242/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/102242/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/102242/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/102242/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/102242/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/102242/default/dark/3.0',
     creator: null,
@@ -2235,6 +4339,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'OpieOP',
     id: '100590',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/100590/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/100590/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/100590/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/100590/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/100590/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/100590/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/100590/default/dark/3.0',
     creator: null,
@@ -2245,6 +4361,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'FutureMan',
     id: '98562',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/98562/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/98562/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/98562/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/98562/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/98562/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/98562/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/98562/default/dark/3.0',
     creator: null,
@@ -2255,6 +4383,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'ChefFrank',
     id: '90129',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/90129/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/90129/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/90129/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/90129/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/90129/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/90129/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/90129/default/dark/3.0',
     creator: null,
@@ -2265,6 +4405,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'StinkyCheese',
     id: '90076',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/90076/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/90076/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/90076/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/90076/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/90076/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/90076/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/90076/default/dark/3.0',
     creator: null,
@@ -2275,6 +4427,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'NomNom',
     id: '90075',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/90075/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/90075/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/90075/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/90075/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/90075/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/90075/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/90075/default/dark/3.0',
     creator: null,
@@ -2285,6 +4449,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'SmoocherZ',
     id: '89945',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/89945/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/89945/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/89945/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/89945/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/89945/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/89945/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/89945/default/dark/3.0',
     creator: null,
@@ -2295,6 +4471,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'cmonBruh',
     id: '84608',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/84608/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/84608/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/84608/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/84608/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/84608/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/84608/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/84608/default/dark/3.0',
     creator: null,
@@ -2305,6 +4493,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'KappaWealth',
     id: '81997',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/81997/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/81997/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/81997/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/81997/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/81997/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/81997/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/81997/default/dark/3.0',
     creator: null,
@@ -2315,6 +4515,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'MikeHogu',
     id: '81636',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/81636/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/81636/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/81636/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/81636/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/81636/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/81636/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/81636/default/dark/3.0',
     creator: null,
@@ -2325,6 +4537,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'VoHiYo',
     id: '81274',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/81274/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/81274/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/81274/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/81274/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/81274/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/81274/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/81274/default/dark/3.0',
     creator: null,
@@ -2335,6 +4559,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'KomodoHype',
     id: '81273',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/81273/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/81273/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/81273/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/81273/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/81273/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/81273/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/81273/default/dark/3.0',
     creator: null,
@@ -2345,6 +4581,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'SeriousSloth',
     id: '81249',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/81249/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/81249/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/81249/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/81249/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/81249/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/81249/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/81249/default/dark/3.0',
     creator: null,
@@ -2355,6 +4603,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'OSFrog',
     id: '81248',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/81248/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/81248/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/81248/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/81248/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/81248/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/81248/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/81248/default/dark/3.0',
     creator: null,
@@ -2365,6 +4625,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'OhMyDog',
     id: '81103',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/81103/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/81103/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/81103/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/81103/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/81103/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/81103/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/81103/default/dark/3.0',
     creator: null,
@@ -2375,6 +4647,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'KappaClaus',
     id: '74510',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/74510/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/74510/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/74510/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/74510/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/74510/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/74510/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/74510/default/dark/3.0',
     creator: null,
@@ -2385,6 +4669,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'KappaRoss',
     id: '70433',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/70433/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/70433/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/70433/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/70433/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/70433/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/70433/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/70433/default/dark/3.0',
     creator: null,
@@ -2395,6 +4691,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'MingLee',
     id: '68856',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/68856/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/68856/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/68856/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/68856/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/68856/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/68856/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/68856/default/dark/3.0',
     creator: null,
@@ -2405,6 +4713,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'SeemsGood',
     id: '64138',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/64138/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/64138/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/64138/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/64138/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/64138/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/64138/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/64138/default/dark/3.0',
     creator: null,
@@ -2415,6 +4735,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'twitchRaid',
     id: '62836',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/62836/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/62836/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/62836/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/62836/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/62836/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/62836/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/62836/default/dark/3.0',
     creator: null,
@@ -2425,6 +4757,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'bleedPurple',
     id: '62835',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/62835/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/62835/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/62835/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/62835/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/62835/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/62835/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/62835/default/dark/3.0',
     creator: null,
@@ -2435,6 +4779,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'duDudu',
     id: '62834',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/62834/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/62834/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/62834/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/62834/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/62834/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/62834/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/62834/default/dark/3.0',
     creator: null,
@@ -2445,6 +4801,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'riPepperonis',
     id: '62833',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/62833/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/62833/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/62833/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/62833/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/62833/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/62833/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/62833/default/dark/3.0',
     creator: null,
@@ -2455,6 +4823,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'NotLikeThis',
     id: '58765',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/58765/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/58765/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/58765/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/58765/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/58765/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/58765/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/58765/default/dark/3.0',
     creator: null,
@@ -2465,6 +4845,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'DendiFace',
     id: '58135',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/58135/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/58135/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/58135/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/58135/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/58135/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/58135/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/58135/default/dark/3.0',
     creator: null,
@@ -2475,6 +4867,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'CoolCat',
     id: '58127',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/58127/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/58127/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/58127/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/58127/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/58127/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/58127/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/58127/default/dark/3.0',
     creator: null,
@@ -2485,6 +4889,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'KappaPride',
     id: '55338',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/55338/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/55338/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/55338/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/55338/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/55338/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/55338/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/55338/default/dark/3.0',
     creator: null,
@@ -2495,6 +4911,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'ShadyLulu',
     id: '52492',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/52492/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/52492/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/52492/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/52492/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/52492/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/52492/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/52492/default/dark/3.0',
     creator: null,
@@ -2505,6 +4933,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'ArgieB8',
     id: '51838',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/51838/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/51838/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/51838/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/51838/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/51838/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/51838/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/51838/default/dark/3.0',
     creator: null,
@@ -2515,6 +4955,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'CorgiDerp',
     id: '49106',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/49106/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/49106/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/49106/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/49106/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/49106/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/49106/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/49106/default/dark/3.0',
     creator: null,
@@ -2525,6 +4977,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PraiseIt',
     id: '38586',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/38586/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/38586/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/38586/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/38586/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/38586/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/38586/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/38586/default/dark/3.0',
     creator: null,
@@ -2535,6 +4999,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TTours',
     id: '38436',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/38436/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/38436/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/38436/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/38436/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/38436/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/38436/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/38436/default/dark/3.0',
     creator: null,
@@ -2545,6 +5021,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'mcaT',
     id: '35063',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/35063/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/35063/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/35063/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/35063/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/35063/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/35063/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/35063/default/dark/3.0',
     creator: null,
@@ -2555,6 +5043,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'NotATK',
     id: '34875',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/34875/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/34875/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/34875/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/34875/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/34875/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/34875/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/34875/default/dark/3.0',
     creator: null,
@@ -2565,6 +5065,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'HeyGuys',
     id: '30259',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/30259/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/30259/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/30259/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/30259/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/30259/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/30259/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/30259/default/dark/3.0',
     creator: null,
@@ -2575,6 +5087,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'Mau5',
     id: '30134',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/30134/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/30134/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/30134/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/30134/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/30134/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/30134/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/30134/default/dark/3.0',
     creator: null,
@@ -2585,6 +5109,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PRChase',
     id: '28328',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/28328/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/28328/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/28328/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/28328/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/28328/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/28328/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/28328/default/dark/3.0',
     creator: null,
@@ -2595,6 +5131,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'WutFace',
     id: '28087',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/28087/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/28087/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/28087/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/28087/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/28087/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/28087/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/28087/default/dark/3.0',
     creator: null,
@@ -2605,6 +5153,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'BuddhaBar',
     id: '27602',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/27602/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/27602/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/27602/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/27602/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/27602/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/27602/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/27602/default/dark/3.0',
     creator: null,
@@ -2615,6 +5175,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PermaSmug',
     id: '27509',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/27509/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/27509/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/27509/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/27509/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/27509/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/27509/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/27509/default/dark/3.0',
     creator: null,
@@ -2625,6 +5197,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'panicBasket',
     id: '22998',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/22998/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/22998/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/22998/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/22998/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/22998/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/22998/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/22998/default/dark/3.0',
     creator: null,
@@ -2635,6 +5219,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'BabyRage',
     id: '22639',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/22639/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/22639/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/22639/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/22639/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/22639/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/22639/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/22639/default/dark/3.0',
     creator: null,
@@ -2645,6 +5241,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'HassaanChop',
     id: '20225',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/20225/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/20225/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/20225/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/20225/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/20225/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/20225/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/20225/default/dark/3.0',
     creator: null,
@@ -2655,6 +5263,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TheThing',
     id: '7427',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/7427/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/7427/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/7427/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/7427/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/7427/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/7427/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/7427/default/dark/3.0',
     creator: null,
@@ -2665,6 +5285,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'RitzMitz',
     id: '4338',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/4338/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/4338/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/4338/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/4338/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/4338/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/4338/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/4338/default/dark/3.0',
     creator: null,
@@ -2675,6 +5307,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'YouWHY',
     id: '4337',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/4337/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/4337/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/4337/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/4337/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/4337/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/4337/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/4337/default/dark/3.0',
     creator: null,
@@ -2685,6 +5329,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PipeHype',
     id: '4240',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/4240/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/4240/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/4240/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/4240/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/4240/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/4240/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/4240/default/dark/3.0',
     creator: null,
@@ -2695,6 +5351,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'BrokeBack',
     id: '4057',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/4057/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/4057/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/4057/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/4057/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/4057/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/4057/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/4057/default/dark/3.0',
     creator: null,
@@ -2705,6 +5373,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'ANELE',
     id: '3792',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/3792/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/3792/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/3792/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/3792/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/3792/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/3792/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/3792/default/dark/3.0',
     creator: null,
@@ -2715,6 +5395,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PanicVis',
     id: '3668',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/3668/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/3668/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/3668/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/3668/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/3668/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/3668/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/3668/default/dark/3.0',
     creator: null,
@@ -2725,6 +5417,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'GrammarKing',
     id: '3632',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/3632/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/3632/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/3632/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/3632/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/3632/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/3632/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/3632/default/dark/3.0',
     creator: null,
@@ -2735,6 +5439,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PeoplesChamp',
     id: '3412',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/3412/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/3412/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/3412/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/3412/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/3412/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/3412/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/3412/default/dark/3.0',
     creator: null,
@@ -2745,6 +5461,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'SoBayed',
     id: '1906',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1906/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1906/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1906/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1906/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1906/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1906/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1906/default/dark/3.0',
     creator: null,
@@ -2755,6 +5483,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'BigBrother',
     id: '1904',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1904/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1904/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1904/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1904/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1904/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1904/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1904/default/dark/3.0',
     creator: null,
@@ -2765,6 +5505,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'Keepo',
     id: '1902',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1902/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1902/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1902/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1902/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1902/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1902/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1902/default/dark/3.0',
     creator: null,
@@ -2775,6 +5527,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'Kippa',
     id: '1901',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1901/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1901/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1901/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1901/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1901/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1901/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1901/default/dark/3.0',
     creator: null,
@@ -2785,6 +5549,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'RalpherZ',
     id: '1900',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1900/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1900/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1900/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1900/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1900/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1900/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1900/default/dark/3.0',
     creator: null,
@@ -2795,6 +5571,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TF2John',
     id: '1899',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1899/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1899/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1899/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1899/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1899/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1899/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1899/default/dark/3.0',
     creator: null,
@@ -2805,6 +5593,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'ThunBeast',
     id: '1898',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1898/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1898/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1898/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1898/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1898/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1898/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1898/default/dark/3.0',
     creator: null,
@@ -2815,6 +5615,18 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'WholeWheat',
     id: '1896',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1896/default/dark/3.0',
+    static_url:
+      'https://static-cdn.jtvnw.net/emoticons/v2/1896/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1896/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1896/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1896/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1896/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/1896/default/dark/3.0',
     creator: null,
@@ -2825,6 +5637,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'DAESuppy',
     id: '973',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/973/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/973/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/973/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/973/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/973/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/973/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/973/default/dark/3.0',
     creator: null,
@@ -2835,6 +5658,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'FailFish',
     id: '360',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/360/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/360/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/360/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/360/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/360/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/360/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/360/default/dark/3.0',
     creator: null,
@@ -2845,6 +5679,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'HotPokket',
     id: '357',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/357/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/357/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/357/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/357/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/357/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/357/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/357/default/dark/3.0',
     creator: null,
@@ -2855,6 +5700,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: '4Head',
     id: '354',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/354/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/354/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/354/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/354/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/354/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/354/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/354/default/dark/3.0',
     creator: null,
@@ -2865,6 +5721,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'ResidentSleeper',
     id: '245',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/245/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/245/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/245/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/245/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/245/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/245/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/245/default/dark/3.0',
     creator: null,
@@ -2875,6 +5742,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'FUNgineer',
     id: '244',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/244/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/244/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/244/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/244/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/244/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/244/static/dark/2.0',
+      },
+    },
     emote_link:
       'https://static-cdn.jtvnw.net/emoticons/v2/244/default/dark/3.0',
     creator: null,
@@ -2885,6 +5763,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PMSTwin',
     id: '92',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/92/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/92/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/92/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/92/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/92/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/92/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/92/default/dark/3.0',
     creator: null,
     original_name: 'PMSTwin',
@@ -2894,6 +5783,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'ShazBotstix',
     id: '87',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/87/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/87/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/87/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/87/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/87/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/87/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/87/default/dark/3.0',
     creator: null,
     original_name: 'ShazBotstix',
@@ -2903,6 +5803,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'AsianGlow',
     id: '74',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/74/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/74/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/74/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/74/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/74/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/74/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/74/default/dark/3.0',
     creator: null,
     original_name: 'AsianGlow',
@@ -2912,6 +5823,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'DBstyle',
     id: '73',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/73/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/73/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/73/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/73/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/73/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/73/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/73/default/dark/3.0',
     creator: null,
     original_name: 'DBstyle',
@@ -2921,6 +5843,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'BloodTrail',
     id: '69',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/69/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/69/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/69/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/69/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/69/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/69/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/69/default/dark/3.0',
     creator: null,
     original_name: 'BloodTrail',
@@ -2930,6 +5863,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'OneHand',
     id: '66',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/66/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/66/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/66/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/66/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/66/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/66/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/66/default/dark/3.0',
     creator: null,
     original_name: 'OneHand',
@@ -2939,6 +5883,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'FrankerZ',
     id: '65',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/65/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/65/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/65/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/65/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/65/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/65/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/65/default/dark/3.0',
     creator: null,
     original_name: 'FrankerZ',
@@ -2948,6 +5903,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'SMOrc',
     id: '52',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/52/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/52/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/52/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/52/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/52/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/52/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/52/default/dark/3.0',
     creator: null,
     original_name: 'SMOrc',
@@ -2957,6 +5923,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'ArsonNoSexy',
     id: '50',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/50/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/50/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/50/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/50/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/50/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/50/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/50/default/dark/3.0',
     creator: null,
     original_name: 'ArsonNoSexy',
@@ -2966,6 +5943,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PunchTrees',
     id: '47',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/47/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/47/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/47/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/47/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/47/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/47/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/47/default/dark/3.0',
     creator: null,
     original_name: 'PunchTrees',
@@ -2975,6 +5963,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'SSSsss',
     id: '46',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/46/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/46/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/46/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/46/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/46/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/46/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/46/default/dark/3.0',
     creator: null,
     original_name: 'SSSsss',
@@ -2984,6 +5983,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'Kreygasm',
     id: '41',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/41/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/41/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/41/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/41/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/41/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/41/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/41/default/dark/3.0',
     creator: null,
     original_name: 'Kreygasm',
@@ -2993,6 +6003,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'KevinTurtle',
     id: '40',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/40/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/40/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/40/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/40/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/40/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/40/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/40/default/dark/3.0',
     creator: null,
     original_name: 'KevinTurtle',
@@ -3002,6 +6023,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'PJSalt',
     id: '36',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/36/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/36/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/36/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/36/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/36/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/36/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/36/default/dark/3.0',
     creator: null,
     original_name: 'PJSalt',
@@ -3011,6 +6043,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'SwiftRage',
     id: '34',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/34/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/34/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/34/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/34/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/34/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/34/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/34/default/dark/3.0',
     creator: null,
     original_name: 'SwiftRage',
@@ -3020,6 +6063,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'DansGame',
     id: '33',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/33/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/33/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/33/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/33/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/33/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/33/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/33/default/dark/3.0',
     creator: null,
     original_name: 'DansGame',
@@ -3029,6 +6083,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'GingerPower',
     id: '32',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/32/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/32/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/32/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/32/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/32/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/32/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/32/default/dark/3.0',
     creator: null,
     original_name: 'GingerPower',
@@ -3038,6 +6103,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'BCWarrior',
     id: '30',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/30/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/30/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/30/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/30/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/30/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/30/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/30/default/dark/3.0',
     creator: null,
     original_name: 'BCWarrior',
@@ -3047,6 +6123,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'MrDestructoid',
     id: '28',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/28/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/28/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/28/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/28/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/28/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/28/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/28/default/dark/3.0',
     creator: null,
     original_name: 'MrDestructoid',
@@ -3056,6 +6143,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'JonCarnage',
     id: '26',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/26/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/26/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/26/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/26/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/26/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/26/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/26/default/dark/3.0',
     creator: null,
     original_name: 'JonCarnage',
@@ -3065,6 +6163,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'Kappa',
     id: '25',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/25/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/25/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0',
     creator: null,
     original_name: 'Kappa',
@@ -3074,6 +6183,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'RedCoat',
     id: '22',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/22/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/22/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/22/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/22/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/22/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/22/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/22/default/dark/3.0',
     creator: null,
     original_name: 'RedCoat',
@@ -3083,6 +6203,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'TheRinger',
     id: '18',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/18/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/18/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/18/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/18/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/18/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/18/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/18/default/dark/3.0',
     creator: null,
     original_name: 'TheRinger',
@@ -3092,6 +6223,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'StoneLightning',
     id: '17',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/17/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/17/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/17/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/17/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/17/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/17/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/17/default/dark/3.0',
     creator: null,
     original_name: 'StoneLightning',
@@ -3101,6 +6243,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'OptimizePrime',
     id: '16',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/16/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/16/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/16/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/16/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/16/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/16/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/16/default/dark/3.0',
     creator: null,
     original_name: 'OptimizePrime',
@@ -3110,6 +6263,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'JKanStyle',
     id: '15',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/15/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/15/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/15/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/15/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/15/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/15/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/15/default/dark/3.0',
     creator: null,
     original_name: 'JKanStyle',
@@ -3119,6 +6283,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'R)',
     id: '14',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/14/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/14/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/14/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/14/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/14/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/14/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/14/default/dark/3.0',
     creator: null,
     original_name: 'R)',
@@ -3128,6 +6303,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ';P',
     id: '13',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/13/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/13/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/13/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/13/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/13/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/13/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/13/default/dark/3.0',
     creator: null,
     original_name: ';P',
@@ -3137,6 +6323,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':P',
     id: '12',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/12/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/12/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/12/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/12/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/12/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/12/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/12/default/dark/3.0',
     creator: null,
     original_name: ':P',
@@ -3146,6 +6343,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ';)',
     id: '11',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/11/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/11/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/11/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/11/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/11/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/11/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/11/default/dark/3.0',
     creator: null,
     original_name: ';)',
@@ -3155,6 +6363,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':/',
     id: '10',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/10/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/10/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/10/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/10/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/10/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/10/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/10/default/dark/3.0',
     creator: null,
     original_name: ':/',
@@ -3164,6 +6383,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: '<3',
     id: '9',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/9/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/9/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/9/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/9/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/9/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/9/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/9/default/dark/3.0',
     creator: null,
     original_name: '<3',
@@ -3173,6 +6403,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':O',
     id: '8',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/8/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/8/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/8/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/8/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/8/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/8/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/8/default/dark/3.0',
     creator: null,
     original_name: ':O',
@@ -3182,6 +6423,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'B)',
     id: '7',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/7/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/7/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/7/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/7/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/7/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/7/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/7/default/dark/3.0',
     creator: null,
     original_name: 'B)',
@@ -3191,6 +6443,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: 'O_o',
     id: '6',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/6/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/6/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/6/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/6/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/6/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/6/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/6/default/dark/3.0',
     creator: null,
     original_name: 'O_o',
@@ -3200,6 +6463,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':|',
     id: '5',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/5/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/5/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/5/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/5/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/5/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/5/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/5/default/dark/3.0',
     creator: null,
     original_name: ':|',
@@ -3209,6 +6483,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: '>(',
     id: '4',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/4/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/4/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/4/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/4/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/4/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/4/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/4/default/dark/3.0',
     creator: null,
     original_name: '>(',
@@ -3218,6 +6503,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':D',
     id: '3',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/3/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/3/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/3/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/3/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/3/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/3/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/3/default/dark/3.0',
     creator: null,
     original_name: ':D',
@@ -3227,6 +6523,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':(',
     id: '2',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/2/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/2/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/2/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/2/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/2/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/2/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/2/default/dark/3.0',
     creator: null,
     original_name: ':(',
@@ -3236,6 +6543,17 @@ export const twitchTvSanitisedEmoteSetGlobalFixture: SanitisedEmote[] = [
     name: ':)',
     id: '1',
     url: 'https://static-cdn.jtvnw.net/emoticons/v2/1/default/dark/3.0',
+    static_url: 'https://static-cdn.jtvnw.net/emoticons/v2/1/static/dark/3.0',
+    image_variants: {
+      animated: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1/default/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1/default/dark/2.0',
+      },
+      static: {
+        '4x': 'https://static-cdn.jtvnw.net/emoticons/v2/1/static/dark/3.0',
+        '2x': 'https://static-cdn.jtvnw.net/emoticons/v2/1/static/dark/2.0',
+      },
+    },
     emote_link: 'https://static-cdn.jtvnw.net/emoticons/v2/1/default/dark/3.0',
     creator: null,
     original_name: ':)',

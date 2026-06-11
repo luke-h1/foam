@@ -3,9 +3,11 @@ import { TwitchStream } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { router } from 'expo-router';
 import { elapsedStreamTime } from '@app/utils/string/elapsedStreamTime';
-import { formatViewCount } from '@app/utils/string/formatViewCount';
+import {
+  formatViewCount,
+  formatViewCountCompact,
+} from '@app/utils/string/formatViewCount';
 import { StyleSheet, View } from 'react-native';
-import Animated from 'react-native-reanimated';
 import { Button } from '../Button/Button';
 import { Image } from '../Image/Image';
 import { PressableArea } from '../PressableArea/PressableArea';
@@ -78,17 +80,19 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               containerStyle={styles.mediaImageWrapper}
               transition={150}
             />
-            <View style={styles.liveBadge}>
-              <Animated.View
-                style={[styles.liveBadgeDot, livePulseAnimation]}
-              />
-              <Text type='xxs' weight='bold' style={styles.liveBadgeText}>
+            <View style={[styles.compactLiveBadge, styles.mediaLiveBadge]}>
+              <View style={styles.redDot} />
+              <Text
+                type='xxs'
+                weight='bold'
+                style={styles.compactLiveBadgeText}
+              >
                 LIVE
               </Text>
             </View>
             <View style={styles.viewerBadge}>
               <Text type='sm' weight='bold' style={styles.viewerBadgeText}>
-                {formatViewCount(stream.viewer_count)} watching
+                {formatViewCountCompact(stream.viewer_count)} watching
               </Text>
             </View>
           </View>
@@ -171,6 +175,12 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
             containerStyle={styles.imageWrapper}
             transition={150}
           />
+          <View style={styles.compactLiveBadge}>
+            <View style={styles.redDot} />
+            <Text type='xxs' weight='bold' style={styles.compactLiveBadgeText}>
+              LIVE
+            </Text>
+          </View>
         </View>
 
         <View style={styles.details}>
@@ -201,7 +211,6 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
 
           <View style={styles.metadataRow}>
             <View style={styles.liveMeta}>
-              <Animated.View style={[styles.redDot, livePulseAnimation]} />
               <Text type='xs' style={styles.liveText}>
                 {elapsedStreamTime(stream.started_at)}
               </Text>
@@ -209,8 +218,8 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
             <Text type='xs' style={styles.metaDivider}>
               •
             </Text>
-            <Text type='xs' style={styles.viewersText}>
-              {formatViewCount(stream.viewer_count)} watching
+            <Text type='xs' numberOfLines={1} style={styles.viewersText}>
+              {formatViewCountCompact(stream.viewer_count)} watching
             </Text>
           </View>
 
@@ -230,27 +239,6 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
 }
 
 export const MemoizedLiveStreamCard = memo(LiveStreamCard);
-const livePulse = {
-  '0%': {
-    opacity: 1,
-    transform: [{ scale: 1 }],
-  },
-  '50%': {
-    opacity: 0.35,
-    transform: [{ scale: 0.75 }],
-  },
-  '100%': {
-    opacity: 1,
-    transform: [{ scale: 1 }],
-  },
-};
-
-const livePulseAnimation = {
-  animationDuration: '1600ms',
-  animationIterationCount: 'infinite',
-  animationName: livePulse,
-  animationTimingFunction: 'ease-in-out',
-} as const;
 
 const styles = StyleSheet.create({
   cardWrapper: {
@@ -344,31 +332,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 4,
   },
-  liveBadge: {
+  mediaLiveBadge: {
+    left: theme.space12,
+    top: theme.space12,
+  },
+  liveText: {
+    color: theme.color.textSecondary.dark,
+  },
+  compactLiveBadge: {
     alignItems: 'center',
-    backgroundColor: theme.colorPrimary,
+    backgroundColor: 'rgba(0,0,0,0.68)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius6,
     columnGap: 4,
     flexDirection: 'row',
-    left: theme.space12,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
+    left: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     position: 'absolute',
-    top: theme.space12,
+    top: 6,
   },
-  liveBadgeDot: {
-    backgroundColor: theme.color.background.dark,
-    borderRadius: 2.5,
-    height: 5,
-    width: 5,
-  },
-  liveBadgeText: {
-    color: theme.color.background.dark,
+  compactLiveBadgeText: {
+    color: theme.color.text.dark,
     letterSpacing: 0.4,
-  },
-  liveText: {
-    color: theme.color.textSecondary.dark,
   },
   mediaCardWrapper: {
     width: '100%',
@@ -426,7 +412,7 @@ const styles = StyleSheet.create({
   metadataRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
     gap: 6,
   },
   redDot: {
@@ -449,6 +435,7 @@ const styles = StyleSheet.create({
   },
   viewersText: {
     color: theme.color.textSecondary.dark,
+    flexShrink: 1,
   },
   viewerBadge: {
     backgroundColor: 'rgba(0,0,0,0.68)',

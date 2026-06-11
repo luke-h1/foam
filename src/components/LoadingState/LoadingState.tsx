@@ -38,7 +38,7 @@ export function LoadingState({
       : SPINNER_SIZES[indicatorSize];
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, style]} testID='loading-state'>
       <Spinner size={size} />
     </View>
   );

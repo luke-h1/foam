@@ -9,12 +9,12 @@ describe('elapsedStreamTime', () => {
 
   test('should return hours and minutes when the elapsed time is exactly one hour', () => {
     const start = subMinutes(new Date(), 60).toISOString();
-    expect(elapsedStreamTime(start)).toEqual('01h 00m');
+    expect(elapsedStreamTime(start)).toEqual('1h 00m');
   });
 
   test('should return hours and minutes when the elapsed time is more than one hour', () => {
     const start = subMinutes(new Date(), 125).toISOString();
-    expect(elapsedStreamTime(start)).toBe('02h 05m');
+    expect(elapsedStreamTime(start)).toBe('2h 05m');
   });
 
   test('should return hours and minutes when the elapsed time is more than 24 hours', () => {

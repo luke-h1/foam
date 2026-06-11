@@ -5,6 +5,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'zoilGiggles',
     id: '5e8b709b518d2b5ce0b0f069',
     url: 'https://cdn.betterttv.net/emote/5e8b709b518d2b5ce0b0f069/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5e8b709b518d2b5ce0b0f069/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5e8b709b518d2b5ce0b0f069/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5e8b709b518d2b5ce0b0f069/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5e8b709b518d2b5ce0b0f069/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5e8b709b518d2b5ce0b0f069/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5e8b709b518d2b5ce0b0f069',
     original_name: 'UNKNOWN',
     creator: null,
@@ -14,6 +26,17 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'zoilFurry',
     id: '5ec2bb53f0fb3f168c4bc3fa',
     url: 'https://cdn.betterttv.net/emote/5ec2bb53f0fb3f168c4bc3fa/3x',
+    static_url: 'https://cdn.betterttv.net/emote/5ec2bb53f0fb3f168c4bc3fa/3x',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5ec2bb53f0fb3f168c4bc3fa/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5ec2bb53f0fb3f168c4bc3fa/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5ec2bb53f0fb3f168c4bc3fa/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5ec2bb53f0fb3f168c4bc3fa/2x',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5ec2bb53f0fb3f168c4bc3fa',
     original_name: 'UNKNOWN',
     creator: null,
@@ -23,6 +46,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'zoilDitch',
     id: '5ec3ce06bf37f52eeee686de',
     url: 'https://cdn.betterttv.net/emote/5ec3ce06bf37f52eeee686de/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5ec3ce06bf37f52eeee686de/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5ec3ce06bf37f52eeee686de/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5ec3ce06bf37f52eeee686de/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5ec3ce06bf37f52eeee686de/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5ec3ce06bf37f52eeee686de/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5ec3ce06bf37f52eeee686de',
     original_name: 'UNKNOWN',
     creator: null,
@@ -32,6 +67,17 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'zoil5W',
     id: '5ec52cbdf54be95e2a826f0f',
     url: 'https://cdn.betterttv.net/emote/5ec52cbdf54be95e2a826f0f/3x',
+    static_url: 'https://cdn.betterttv.net/emote/5ec52cbdf54be95e2a826f0f/3x',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5ec52cbdf54be95e2a826f0f/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5ec52cbdf54be95e2a826f0f/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5ec52cbdf54be95e2a826f0f/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5ec52cbdf54be95e2a826f0f/2x',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5ec52cbdf54be95e2a826f0f',
     original_name: 'UNKNOWN',
     creator: null,
@@ -41,6 +87,17 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'zoilStalling',
     id: '5ec67312f54be95e2a8287fd',
     url: 'https://cdn.betterttv.net/emote/5ec67312f54be95e2a8287fd/3x',
+    static_url: 'https://cdn.betterttv.net/emote/5ec67312f54be95e2a8287fd/3x',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5ec67312f54be95e2a8287fd/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5ec67312f54be95e2a8287fd/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5ec67312f54be95e2a8287fd/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5ec67312f54be95e2a8287fd/2x',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5ec67312f54be95e2a8287fd',
     original_name: 'UNKNOWN',
     creator: null,
@@ -50,6 +107,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'djShaq',
     id: '5ed1eda810aaa55e29473195',
     url: 'https://cdn.betterttv.net/emote/5ed1eda810aaa55e29473195/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5ed1eda810aaa55e29473195/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5ed1eda810aaa55e29473195/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5ed1eda810aaa55e29473195/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5ed1eda810aaa55e29473195/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5ed1eda810aaa55e29473195/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5ed1eda810aaa55e29473195',
     original_name: 'UNKNOWN',
     creator: null,
@@ -59,6 +128,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'foilL',
     id: '5edb8bab924aa35e32a71ac1',
     url: 'https://cdn.betterttv.net/emote/5edb8bab924aa35e32a71ac1/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5edb8bab924aa35e32a71ac1/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5edb8bab924aa35e32a71ac1/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5edb8bab924aa35e32a71ac1/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5edb8bab924aa35e32a71ac1/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5edb8bab924aa35e32a71ac1/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5edb8bab924aa35e32a71ac1',
     original_name: 'UNKNOWN',
     creator: null,
@@ -68,6 +149,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'pigPls',
     id: '5edba44210aaa55e2947fb7e',
     url: 'https://cdn.betterttv.net/emote/5edba44210aaa55e2947fb7e/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5edba44210aaa55e2947fb7e/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5edba44210aaa55e2947fb7e/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5edba44210aaa55e2947fb7e/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5edba44210aaa55e2947fb7e/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5edba44210aaa55e2947fb7e/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5edba44210aaa55e2947fb7e',
     original_name: 'UNKNOWN',
     creator: null,
@@ -77,6 +170,17 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'AYAYA',
     id: '5ee22dfb924aa35e32a7a112',
     url: 'https://cdn.betterttv.net/emote/5ee22dfb924aa35e32a7a112/3x',
+    static_url: 'https://cdn.betterttv.net/emote/5ee22dfb924aa35e32a7a112/3x',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5ee22dfb924aa35e32a7a112/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5ee22dfb924aa35e32a7a112/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5ee22dfb924aa35e32a7a112/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5ee22dfb924aa35e32a7a112/2x',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5ee22dfb924aa35e32a7a112',
     original_name: 'UNKNOWN',
     creator: null,
@@ -86,6 +190,17 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'zoilWolf',
     id: '5ee4d1f4f54be95e2a84e2f1',
     url: 'https://cdn.betterttv.net/emote/5ee4d1f4f54be95e2a84e2f1/3x',
+    static_url: 'https://cdn.betterttv.net/emote/5ee4d1f4f54be95e2a84e2f1/3x',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5ee4d1f4f54be95e2a84e2f1/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5ee4d1f4f54be95e2a84e2f1/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5ee4d1f4f54be95e2a84e2f1/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5ee4d1f4f54be95e2a84e2f1/2x',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5ee4d1f4f54be95e2a84e2f1',
     original_name: 'UNKNOWN',
     creator: null,
@@ -95,6 +210,17 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'PORTUGAL',
     id: '5ee7d9d1f54be95e2a851b16',
     url: 'https://cdn.betterttv.net/emote/5ee7d9d1f54be95e2a851b16/3x',
+    static_url: 'https://cdn.betterttv.net/emote/5ee7d9d1f54be95e2a851b16/3x',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5ee7d9d1f54be95e2a851b16/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5ee7d9d1f54be95e2a851b16/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5ee7d9d1f54be95e2a851b16/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5ee7d9d1f54be95e2a851b16/2x',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5ee7d9d1f54be95e2a851b16',
     original_name: 'UNKNOWN',
     creator: null,
@@ -104,6 +230,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'iLOVEapple',
     id: '5ef0332779645a0dec34d878',
     url: 'https://cdn.betterttv.net/emote/5ef0332779645a0dec34d878/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5ef0332779645a0dec34d878/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5ef0332779645a0dec34d878/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5ef0332779645a0dec34d878/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5ef0332779645a0dec34d878/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5ef0332779645a0dec34d878/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5ef0332779645a0dec34d878',
     original_name: 'UNKNOWN',
     creator: null,
@@ -113,6 +251,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'iLOVEyou',
     id: '5ef2570e51e3910deed5c135',
     url: 'https://cdn.betterttv.net/emote/5ef2570e51e3910deed5c135/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5ef2570e51e3910deed5c135/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5ef2570e51e3910deed5c135/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5ef2570e51e3910deed5c135/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5ef2570e51e3910deed5c135/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5ef2570e51e3910deed5c135/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5ef2570e51e3910deed5c135',
     original_name: 'UNKNOWN',
     creator: null,
@@ -122,6 +272,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'donkJam',
     id: '5efc9ae951e3910deed6824e',
     url: 'https://cdn.betterttv.net/emote/5efc9ae951e3910deed6824e/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5efc9ae951e3910deed6824e/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5efc9ae951e3910deed6824e/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5efc9ae951e3910deed6824e/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5efc9ae951e3910deed6824e/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5efc9ae951e3910deed6824e/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5efc9ae951e3910deed6824e',
     original_name: 'UNKNOWN',
     creator: null,
@@ -131,6 +293,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'donkPls',
     id: '5f00c29ca2ac6205303619b2',
     url: 'https://cdn.betterttv.net/emote/5f00c29ca2ac6205303619b2/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f00c29ca2ac6205303619b2/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f00c29ca2ac6205303619b2/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f00c29ca2ac6205303619b2/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f00c29ca2ac6205303619b2/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f00c29ca2ac6205303619b2/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f00c29ca2ac6205303619b2',
     original_name: 'UNKNOWN',
     creator: null,
@@ -140,6 +314,17 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'BOGGED',
     id: '5f016c196bd7f3052a0c331c',
     url: 'https://cdn.betterttv.net/emote/5f016c196bd7f3052a0c331c/3x',
+    static_url: 'https://cdn.betterttv.net/emote/5f016c196bd7f3052a0c331c/3x',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f016c196bd7f3052a0c331c/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f016c196bd7f3052a0c331c/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f016c196bd7f3052a0c331c/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f016c196bd7f3052a0c331c/2x',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f016c196bd7f3052a0c331c',
     original_name: 'UNKNOWN',
     creator: null,
@@ -149,6 +334,17 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'OMGScoots',
     id: '5f0c630d6bd7f3052a0cc1b0',
     url: 'https://cdn.betterttv.net/emote/5f0c630d6bd7f3052a0cc1b0/3x',
+    static_url: 'https://cdn.betterttv.net/emote/5f0c630d6bd7f3052a0cc1b0/3x',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f0c630d6bd7f3052a0cc1b0/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f0c630d6bd7f3052a0cc1b0/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f0c630d6bd7f3052a0cc1b0/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f0c630d6bd7f3052a0cc1b0/2x',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f0c630d6bd7f3052a0cc1b0',
     original_name: 'UNKNOWN',
     creator: null,
@@ -158,6 +354,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'catKiss',
     id: '5f1a1868cf6d2144653d1e27',
     url: 'https://cdn.betterttv.net/emote/5f1a1868cf6d2144653d1e27/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f1a1868cf6d2144653d1e27/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f1a1868cf6d2144653d1e27/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f1a1868cf6d2144653d1e27/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f1a1868cf6d2144653d1e27/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f1a1868cf6d2144653d1e27/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f1a1868cf6d2144653d1e27',
     original_name: 'UNKNOWN',
     creator: null,
@@ -167,6 +375,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'catJAM',
     id: '5f1c24b91ab9be446c4d78dc',
     url: 'https://cdn.betterttv.net/emote/5f1c24b91ab9be446c4d78dc/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f1c24b91ab9be446c4d78dc/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f1c24b91ab9be446c4d78dc/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f1c24b91ab9be446c4d78dc/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f1c24b91ab9be446c4d78dc/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f1c24b91ab9be446c4d78dc/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f1c24b91ab9be446c4d78dc',
     original_name: 'UNKNOWN',
     creator: null,
@@ -176,6 +396,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'AlienVibe',
     id: '5f1f29746f37824466018f2b',
     url: 'https://cdn.betterttv.net/emote/5f1f29746f37824466018f2b/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f1f29746f37824466018f2b/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f1f29746f37824466018f2b/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f1f29746f37824466018f2b/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f1f29746f37824466018f2b/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f1f29746f37824466018f2b/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f1f29746f37824466018f2b',
     original_name: 'UNKNOWN',
     creator: null,
@@ -185,6 +417,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'zoilGrind',
     id: '5f218f16713a6144748a6634',
     url: 'https://cdn.betterttv.net/emote/5f218f16713a6144748a6634/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f218f16713a6144748a6634/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f218f16713a6144748a6634/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f218f16713a6144748a6634/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f218f16713a6144748a6634/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f218f16713a6144748a6634/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f218f16713a6144748a6634',
     original_name: 'UNKNOWN',
     creator: null,
@@ -194,6 +438,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'PETTHEPIGGY',
     id: '5f23c9976f3782446601d57d',
     url: 'https://cdn.betterttv.net/emote/5f23c9976f3782446601d57d/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f23c9976f3782446601d57d/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f23c9976f3782446601d57d/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f23c9976f3782446601d57d/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f23c9976f3782446601d57d/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f23c9976f3782446601d57d/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f23c9976f3782446601d57d',
     original_name: 'UNKNOWN',
     creator: null,
@@ -203,6 +459,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'zoilCoomer',
     id: '5f24271b65fe924464eef175',
     url: 'https://cdn.betterttv.net/emote/5f24271b65fe924464eef175/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f24271b65fe924464eef175/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f24271b65fe924464eef175/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f24271b65fe924464eef175/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f24271b65fe924464eef175/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f24271b65fe924464eef175/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f24271b65fe924464eef175',
     original_name: 'UNKNOWN',
     creator: null,
@@ -212,6 +480,17 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'SoyChamp',
     id: '5f2873c7713a6144748ad1f5',
     url: 'https://cdn.betterttv.net/emote/5f2873c7713a6144748ad1f5/3x',
+    static_url: 'https://cdn.betterttv.net/emote/5f2873c7713a6144748ad1f5/3x',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f2873c7713a6144748ad1f5/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f2873c7713a6144748ad1f5/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f2873c7713a6144748ad1f5/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f2873c7713a6144748ad1f5/2x',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f2873c7713a6144748ad1f5',
     original_name: 'UNKNOWN',
     creator: null,
@@ -221,6 +500,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'TROLLING',
     id: '5f3177153212445d6fb3c866',
     url: 'https://cdn.betterttv.net/emote/5f3177153212445d6fb3c866/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f3177153212445d6fb3c866/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f3177153212445d6fb3c866/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f3177153212445d6fb3c866/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f3177153212445d6fb3c866/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f3177153212445d6fb3c866/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f3177153212445d6fb3c866',
     original_name: 'UNKNOWN',
     creator: null,
@@ -230,6 +521,17 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'WaitWTF',
     id: '5f33eb204510395d822b6052',
     url: 'https://cdn.betterttv.net/emote/5f33eb204510395d822b6052/3x',
+    static_url: 'https://cdn.betterttv.net/emote/5f33eb204510395d822b6052/3x',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f33eb204510395d822b6052/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f33eb204510395d822b6052/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f33eb204510395d822b6052/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f33eb204510395d822b6052/2x',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f33eb204510395d822b6052',
     original_name: 'UNKNOWN',
     creator: null,
@@ -239,6 +541,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'TRIcycle',
     id: '5f43b6a33212445d6fb4e210',
     url: 'https://cdn.betterttv.net/emote/5f43b6a33212445d6fb4e210/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f43b6a33212445d6fb4e210/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f43b6a33212445d6fb4e210/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f43b6a33212445d6fb4e210/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f43b6a33212445d6fb4e210/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f43b6a33212445d6fb4e210/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f43b6a33212445d6fb4e210',
     original_name: 'UNKNOWN',
     creator: null,
@@ -248,6 +562,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'Oinking',
     id: '5f4fb0496084af6c17195fc2',
     url: 'https://cdn.betterttv.net/emote/5f4fb0496084af6c17195fc2/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f4fb0496084af6c17195fc2/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f4fb0496084af6c17195fc2/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f4fb0496084af6c17195fc2/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f4fb0496084af6c17195fc2/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f4fb0496084af6c17195fc2/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f4fb0496084af6c17195fc2',
     original_name: 'UNKNOWN',
     creator: null,
@@ -257,6 +583,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'zoilJAMMER',
     id: '5f525c473769246c03210872',
     url: 'https://cdn.betterttv.net/emote/5f525c473769246c03210872/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f525c473769246c03210872/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f525c473769246c03210872/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f525c473769246c03210872/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f525c473769246c03210872/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f525c473769246c03210872/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f525c473769246c03210872',
     original_name: 'UNKNOWN',
     creator: null,
@@ -266,6 +604,17 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'zoilHead',
     id: '5f5394cd68d9d86c020de0b2',
     url: 'https://cdn.betterttv.net/emote/5f5394cd68d9d86c020de0b2/3x',
+    static_url: 'https://cdn.betterttv.net/emote/5f5394cd68d9d86c020de0b2/3x',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f5394cd68d9d86c020de0b2/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f5394cd68d9d86c020de0b2/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f5394cd68d9d86c020de0b2/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f5394cd68d9d86c020de0b2/2x',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f5394cd68d9d86c020de0b2',
     original_name: 'UNKNOWN',
     creator: null,
@@ -275,6 +624,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'hackerCD',
     id: '5f593cbb68d9d86c020e30a1',
     url: 'https://cdn.betterttv.net/emote/5f593cbb68d9d86c020e30a1/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f593cbb68d9d86c020e30a1/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f593cbb68d9d86c020e30a1/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f593cbb68d9d86c020e30a1/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f593cbb68d9d86c020e30a1/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f593cbb68d9d86c020e30a1/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f593cbb68d9d86c020e30a1',
     original_name: 'UNKNOWN',
     creator: null,
@@ -284,6 +645,17 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'LETSFUCKINGGO',
     id: '5f59825ee6f15f6bf457d44f',
     url: 'https://cdn.betterttv.net/emote/5f59825ee6f15f6bf457d44f/3x',
+    static_url: 'https://cdn.betterttv.net/emote/5f59825ee6f15f6bf457d44f/3x',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f59825ee6f15f6bf457d44f/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f59825ee6f15f6bf457d44f/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f59825ee6f15f6bf457d44f/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f59825ee6f15f6bf457d44f/2x',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f59825ee6f15f6bf457d44f',
     original_name: 'UNKNOWN',
     creator: null,
@@ -293,6 +665,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'zoilKool',
     id: '5f5e2df968d9d86c020e74fe',
     url: 'https://cdn.betterttv.net/emote/5f5e2df968d9d86c020e74fe/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f5e2df968d9d86c020e74fe/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f5e2df968d9d86c020e74fe/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f5e2df968d9d86c020e74fe/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f5e2df968d9d86c020e74fe/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f5e2df968d9d86c020e74fe/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f5e2df968d9d86c020e74fe',
     original_name: 'UNKNOWN',
     creator: null,
@@ -302,6 +686,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'ppCircle',
     id: '5f613c053769246c0321dae1',
     url: 'https://cdn.betterttv.net/emote/5f613c053769246c0321dae1/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f613c053769246c0321dae1/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f613c053769246c0321dae1/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f613c053769246c0321dae1/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f613c053769246c0321dae1/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f613c053769246c0321dae1/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f613c053769246c0321dae1',
     original_name: 'UNKNOWN',
     creator: null,
@@ -311,6 +707,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'Holdup',
     id: '5f6a5b25b61d3570a06f55f6',
     url: 'https://cdn.betterttv.net/emote/5f6a5b25b61d3570a06f55f6/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f6a5b25b61d3570a06f55f6/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f6a5b25b61d3570a06f55f6/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f6a5b25b61d3570a06f55f6/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f6a5b25b61d3570a06f55f6/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f6a5b25b61d3570a06f55f6/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f6a5b25b61d3570a06f55f6',
     original_name: 'UNKNOWN',
     creator: null,
@@ -320,6 +728,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'zoilHotdog',
     id: '5f6ce165239b210b0de65b28',
     url: 'https://cdn.betterttv.net/emote/5f6ce165239b210b0de65b28/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f6ce165239b210b0de65b28/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f6ce165239b210b0de65b28/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f6ce165239b210b0de65b28/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f6ce165239b210b0de65b28/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f6ce165239b210b0de65b28/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f6ce165239b210b0de65b28',
     original_name: 'UNKNOWN',
     creator: null,
@@ -329,6 +749,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'Capp',
     id: '5f70643762f49f0b21632b3c',
     url: 'https://cdn.betterttv.net/emote/5f70643762f49f0b21632b3c/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f70643762f49f0b21632b3c/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f70643762f49f0b21632b3c/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f70643762f49f0b21632b3c/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f70643762f49f0b21632b3c/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f70643762f49f0b21632b3c/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f70643762f49f0b21632b3c',
     original_name: 'UNKNOWN',
     creator: null,
@@ -338,6 +770,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'sumSmash',
     id: '5f70a48d62f49f0b21632deb',
     url: 'https://cdn.betterttv.net/emote/5f70a48d62f49f0b21632deb/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f70a48d62f49f0b21632deb/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f70a48d62f49f0b21632deb/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f70a48d62f49f0b21632deb/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f70a48d62f49f0b21632deb/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f70a48d62f49f0b21632deb/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f70a48d62f49f0b21632deb',
     original_name: 'UNKNOWN',
     creator: null,
@@ -347,6 +791,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'peepoCocoa',
     id: '5f9ec287473f4802fe485109',
     url: 'https://cdn.betterttv.net/emote/5f9ec287473f4802fe485109/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5f9ec287473f4802fe485109/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5f9ec287473f4802fe485109/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5f9ec287473f4802fe485109/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5f9ec287473f4802fe485109/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5f9ec287473f4802fe485109/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5f9ec287473f4802fe485109',
     original_name: 'UNKNOWN',
     creator: null,
@@ -356,6 +812,17 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'Gorgeous',
     id: '5fa31bc1473f4802fe48a061',
     url: 'https://cdn.betterttv.net/emote/5fa31bc1473f4802fe48a061/3x',
+    static_url: 'https://cdn.betterttv.net/emote/5fa31bc1473f4802fe48a061/3x',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5fa31bc1473f4802fe48a061/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5fa31bc1473f4802fe48a061/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5fa31bc1473f4802fe48a061/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5fa31bc1473f4802fe48a061/2x',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5fa31bc1473f4802fe48a061',
     original_name: 'UNKNOWN',
     creator: null,
@@ -365,6 +832,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'RedShell',
     id: '5fbfdd7e68e2d56f0f3a2420',
     url: 'https://cdn.betterttv.net/emote/5fbfdd7e68e2d56f0f3a2420/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5fbfdd7e68e2d56f0f3a2420/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5fbfdd7e68e2d56f0f3a2420/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5fbfdd7e68e2d56f0f3a2420/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5fbfdd7e68e2d56f0f3a2420/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5fbfdd7e68e2d56f0f3a2420/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5fbfdd7e68e2d56f0f3a2420',
     original_name: 'UNKNOWN',
     creator: null,
@@ -374,6 +853,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'zoilNo',
     id: '5fca3bc2cac2fb4621e4f2c4',
     url: 'https://cdn.betterttv.net/emote/5fca3bc2cac2fb4621e4f2c4/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5fca3bc2cac2fb4621e4f2c4/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5fca3bc2cac2fb4621e4f2c4/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5fca3bc2cac2fb4621e4f2c4/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5fca3bc2cac2fb4621e4f2c4/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5fca3bc2cac2fb4621e4f2c4/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5fca3bc2cac2fb4621e4f2c4',
     original_name: 'UNKNOWN',
     creator: null,
@@ -383,6 +874,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'zoilSaltshaker',
     id: '5fdf6b17a02cf1347ffa0fd4',
     url: 'https://cdn.betterttv.net/emote/5fdf6b17a02cf1347ffa0fd4/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5fdf6b17a02cf1347ffa0fd4/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5fdf6b17a02cf1347ffa0fd4/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5fdf6b17a02cf1347ffa0fd4/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5fdf6b17a02cf1347ffa0fd4/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5fdf6b17a02cf1347ffa0fd4/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5fdf6b17a02cf1347ffa0fd4',
     original_name: 'UNKNOWN',
     creator: null,
@@ -392,6 +895,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'PogTasty',
     id: '5fe08fea22274a347e6bde8f',
     url: 'https://cdn.betterttv.net/emote/5fe08fea22274a347e6bde8f/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5fe08fea22274a347e6bde8f/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5fe08fea22274a347e6bde8f/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5fe08fea22274a347e6bde8f/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5fe08fea22274a347e6bde8f/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5fe08fea22274a347e6bde8f/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5fe08fea22274a347e6bde8f',
     original_name: 'UNKNOWN',
     creator: null,
@@ -401,6 +916,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'Jammies',
     id: '5fe88b08e85053351218dd19',
     url: 'https://cdn.betterttv.net/emote/5fe88b08e85053351218dd19/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5fe88b08e85053351218dd19/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5fe88b08e85053351218dd19/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5fe88b08e85053351218dd19/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5fe88b08e85053351218dd19/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5fe88b08e85053351218dd19/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5fe88b08e85053351218dd19',
     original_name: 'UNKNOWN',
     creator: null,
@@ -410,6 +937,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'DietCheck',
     id: '5ff74f30beda4a0c880ed602',
     url: 'https://cdn.betterttv.net/emote/5ff74f30beda4a0c880ed602/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/5ff74f30beda4a0c880ed602/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/5ff74f30beda4a0c880ed602/3x',
+        '2x': 'https://cdn.betterttv.net/emote/5ff74f30beda4a0c880ed602/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/5ff74f30beda4a0c880ed602/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/5ff74f30beda4a0c880ed602/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/5ff74f30beda4a0c880ed602',
     original_name: 'UNKNOWN',
     creator: null,
@@ -419,6 +958,17 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'Waiting',
     id: '60006b075303dc315cbc6b5e',
     url: 'https://cdn.betterttv.net/emote/60006b075303dc315cbc6b5e/3x',
+    static_url: 'https://cdn.betterttv.net/emote/60006b075303dc315cbc6b5e/3x',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/60006b075303dc315cbc6b5e/3x',
+        '2x': 'https://cdn.betterttv.net/emote/60006b075303dc315cbc6b5e/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/60006b075303dc315cbc6b5e/3x',
+        '2x': 'https://cdn.betterttv.net/emote/60006b075303dc315cbc6b5e/2x',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/60006b075303dc315cbc6b5e',
     original_name: 'UNKNOWN',
     creator: null,
@@ -428,6 +978,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'BabyPls',
     id: '6001b6ed30e9273179ce1026',
     url: 'https://cdn.betterttv.net/emote/6001b6ed30e9273179ce1026/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/6001b6ed30e9273179ce1026/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/6001b6ed30e9273179ce1026/3x',
+        '2x': 'https://cdn.betterttv.net/emote/6001b6ed30e9273179ce1026/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/6001b6ed30e9273179ce1026/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/6001b6ed30e9273179ce1026/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/6001b6ed30e9273179ce1026',
     original_name: 'UNKNOWN',
     creator: null,
@@ -437,6 +999,18 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'Soying',
     id: '60044e965303dc315cbcad1a',
     url: 'https://cdn.betterttv.net/emote/60044e965303dc315cbcad1a/3x',
+    static_url:
+      'https://cdn.betterttv.net/emote/60044e965303dc315cbcad1a/3x.png',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/60044e965303dc315cbcad1a/3x',
+        '2x': 'https://cdn.betterttv.net/emote/60044e965303dc315cbcad1a/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/60044e965303dc315cbcad1a/3x.png',
+        '2x': 'https://cdn.betterttv.net/emote/60044e965303dc315cbcad1a/2x.png',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/60044e965303dc315cbcad1a',
     original_name: 'UNKNOWN',
     creator: null,
@@ -446,6 +1020,17 @@ export const bttvSanitisedChannelEmoteSet: BttvSanitisedEmote[] = [
     name: 'zoilCope',
     id: '600966ff8a320865dcf33158',
     url: 'https://cdn.betterttv.net/emote/600966ff8a320865dcf33158/3x',
+    static_url: 'https://cdn.betterttv.net/emote/600966ff8a320865dcf33158/3x',
+    image_variants: {
+      animated: {
+        '3x': 'https://cdn.betterttv.net/emote/600966ff8a320865dcf33158/3x',
+        '2x': 'https://cdn.betterttv.net/emote/600966ff8a320865dcf33158/2x',
+      },
+      static: {
+        '3x': 'https://cdn.betterttv.net/emote/600966ff8a320865dcf33158/3x',
+        '2x': 'https://cdn.betterttv.net/emote/600966ff8a320865dcf33158/2x',
+      },
+    },
     emote_link: 'https://betterttv.com/emotes/600966ff8a320865dcf33158',
     original_name: 'UNKNOWN',
     creator: null,
