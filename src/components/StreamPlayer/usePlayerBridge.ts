@@ -1,4 +1,9 @@
-import { countMetric } from '@app/lib/sentry';
+import {
+  countMetric,
+  recordError,
+  recordInfo,
+  recordWarning,
+} from '@app/lib/sentry';
 import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
 import { useImperativeHandle, useRef, useState, useCallback } from 'react';
 import { useSyncRef } from '@app/hooks/useSyncRef';
@@ -80,6 +85,15 @@ export function usePlayerBridge({
     typeof setTimeout
   > | null>(null);
   const lastPlaybackLatencySecondsRef = useRef<number | null>(null);
+  // Telemetry for the current WebView/source generation: time-to-first-play
+  // plus once-per-generation guards so a struggling player doesn't flood
+  // Sentry with repeated blocked/stalled reports.
+  const playerMountedAtRef = useRef(0);
+  if (playerMountedAtRef.current === 0) {
+    playerMountedAtRef.current = Date.now();
+  }
+  const reportedFirstPlayingRef = useRef(false);
+  const reportedPlaybackBlockedRef = useRef(false);
   const [prevPlayerSource, setPrevPlayerSource] = useState({
     autoplay,
     sourceKey,
@@ -94,6 +108,9 @@ export function usePlayerBridge({
     setPrevPlayerSource({ autoplay, sourceKey, webViewKey });
     setPlaybackLatencySeconds(null);
     lastPlaybackLatencySecondsRef.current = null;
+    playerMountedAtRef.current = Date.now();
+    reportedFirstPlayingRef.current = false;
+    reportedPlaybackBlockedRef.current = false;
     setOverlayUnlocked(false);
     userPausedRef.current = !autoplay;
     setPlayerStatus({
@@ -284,6 +301,14 @@ export function usePlayerBridge({
             component: 'StreamPlayer',
             defer_overlay_until_user_unmute: deferOverlayUntilUserUnmute,
           });
+          recordInfo({
+            name: 'twitch_player_info',
+            message: 'player ready',
+            params: {
+              channel,
+              elapsedMs: Date.now() - playerMountedAtRef.current,
+            },
+          });
           setPlayerStatus({
             isReady: true,
             isBuffering: false,
@@ -301,6 +326,22 @@ export function usePlayerBridge({
           if (transientPauseResumeTimeoutRef.current) {
             clearTimeout(transientPauseResumeTimeoutRef.current);
             transientPauseResumeTimeoutRef.current = null;
+          }
+          if (!reportedFirstPlayingRef.current) {
+            reportedFirstPlayingRef.current = true;
+            countMetric('stream.playing', {
+              autoplay,
+              channel: channel ?? 'unknown',
+              component: 'StreamPlayer',
+            });
+            recordInfo({
+              name: 'twitch_player_info',
+              message: 'first playing',
+              params: {
+                channel,
+                elapsedMs: Date.now() - playerMountedAtRef.current,
+              },
+            });
           }
           setPlayerState(prev => ({ ...prev, isPaused: false }));
           onPlay?.();
@@ -386,7 +427,66 @@ export function usePlayerBridge({
         case 'contentGateDetected':
           notifyContentGateChange(message.payload?.hasContentGate ?? false);
           break;
-        case 'playbackBlocked':
+        case 'playbackBlocked': {
+          const errName = message.payload?.errName ?? null;
+          countMetric('stream.playback_blocked', {
+            channel: channel ?? 'unknown',
+            err_name: errName ?? 'unknown',
+          });
+          // AbortError is the player core interrupting our play() while it
+          // swaps sources during startup — routine, recovered automatically.
+          // Anything else (NotAllowedError, NotSupportedError) means
+          // playback could not start and the player is stuck on its first
+          // frame; that is the report worth alerting on.
+          if (errName !== 'AbortError' && !reportedPlaybackBlockedRef.current) {
+            reportedPlaybackBlockedRef.current = true;
+            recordWarning({
+              name: 'twitch_player_warning',
+              message: `playback blocked: ${errName ?? 'unknown'}`,
+              params: {
+                channel,
+                errName,
+                elapsedMs: Date.now() - playerMountedAtRef.current,
+              },
+            });
+          }
+          break;
+        }
+        case 'playbackStalled':
+          recordError({
+            name: 'twitch_player_error',
+            exceptionName: 'StreamPlaybackStalled',
+            message: `playback stalled for ${message.payload.stalledMs}ms`,
+            fingerprint: ['stream-playback-stalled'],
+            params: {
+              channel,
+              ...message.payload,
+              elapsedMs: Date.now() - playerMountedAtRef.current,
+            },
+          });
+          break;
+        case 'playbackRecovered':
+          countMetric('stream.playback_recovered', {
+            channel: channel ?? 'unknown',
+          });
+          recordInfo({
+            name: 'twitch_player_info',
+            message: 'playback recovered after stall',
+            params: { channel, ...message.payload },
+          });
+          break;
+        case 'videoElementError':
+          recordError({
+            name: 'twitch_player_error',
+            exceptionName: 'StreamVideoElementError',
+            message: `video element error code ${message.payload.code ?? 'unknown'}`,
+            fingerprint: ['stream-video-element-error'],
+            params: {
+              channel,
+              ...message.payload,
+              elapsedMs: Date.now() - playerMountedAtRef.current,
+            },
+          });
           break;
         case 'twitchAuthComplete':
           scheduleAuthCompletionReload();

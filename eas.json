@@ -97,7 +97,8 @@
   "submit": {
     "internal": {
       "ios": {
-        "ascAppId": "6768048580"
+        "ascAppId": "6768048580",
+        "bundleIdentifier": "foam-tv-internal"
       },
       "android": {
         "track": "internal"
@@ -105,12 +106,14 @@
     },
     "testflight": {
       "ios": {
-        "ascAppId": "6768048560"
+        "ascAppId": "6768048560",
+        "bundleIdentifier": "foam-tv-testflight"
       }
     },
     "production": {
       "ios": {
-        "ascAppId": "6742071860"
+        "ascAppId": "6742071860",
+        "bundleIdentifier": "foam-tv"
       }
     }
   }

@@ -89,6 +89,14 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
   autoplay: boolean;
   debug: boolean;
   muted: boolean;
+  /**
+   * When > 0 the page is loaded with autoplay=false and playback is started
+   * by this script after the delay. Starting the inline video while the
+   * WKWebView is still initialising intermittently leaves its AVPlayer
+   * layer out of the compositor (sound/time advance, picture black/frozen);
+   * deferring the first play() past that window avoids the race.
+   */
+  deferStartMs?: number;
 }): string {
   return `
 (function() {
@@ -97,6 +105,8 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
   }
   window.__foamRawTwitchPlayerBootstrapped = true;
   var shouldAutoplay = ${options.autoplay ? 'true' : 'false'};
+  var deferStartMs = ${Math.max(0, options.deferStartMs ?? 0)};
+  var startAllowed = deferStartMs <= 0;
   var enableTrace = ${options.debug ? 'true' : 'false'};
   var targetMuted = ${options.muted ? 'true' : 'false'};
   var hideAttempts = 0;
@@ -349,13 +359,13 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     post('pause');
   }
 
-  function postPlaybackBlocked() {
+  function postPlaybackBlocked(errName) {
     var now = Date.now();
     if (now - lastBlockedEventAt < 2000) {
       return;
     }
     lastBlockedEventAt = now;
-    post('playbackBlocked');
+    post('playbackBlocked', { errName: errName || null });
   }
 
   function clearPlaybackRecoveryTimers() {
@@ -365,9 +375,25 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     playbackRecoveryTimers = [];
   }
 
+  function clickPlayButton() {
+    try {
+      var button = document.querySelector(
+        '[data-a-target="player-overlay-play-button"], [data-a-target="player-play-pause-button"], button[aria-label="Play"]'
+      );
+      if (button) {
+        button.click();
+      }
+    } catch (e) {}
+  }
+
   function playVideo(video) {
     if (!video) {
+      clickPlayButton();
       return;
+    }
+
+    if (!video.currentSrc && !video.src) {
+      clickPlayButton();
     }
 
     prepareInlineVideo(video);
@@ -377,12 +403,67 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     }
     var result = video.play();
     if (result && typeof result.catch === 'function') {
-      result.catch(postPlaybackBlocked);
+      result.catch(function(e) {
+        postPlaybackBlocked(e && e.name);
+      });
     }
   }
 
+  // Watches for the playback position freezing while the player believes it
+  // is playing (silent HLS death, decoder stall). The compositor blank found
+  // in the TestFlight investigation is invisible to the page, so this only
+  // covers stalls the video element itself experiences — but those were
+  // previously just as silent.
+  var watchdogStarted = false;
+  var watchdogLastTime = -1;
+  var stalledAtMs = 0;
+  var stallReported = false;
+  function startPlaybackWatchdog() {
+    if (watchdogStarted) {
+      return;
+    }
+    watchdogStarted = true;
+    setInterval(function() {
+      var video = document.querySelector('video');
+      if (!video || video.paused || userPaused || !startAllowed) {
+        watchdogLastTime = video ? video.currentTime : -1;
+        stalledAtMs = 0;
+        stallReported = false;
+        return;
+      }
+
+      var t = video.currentTime;
+      var advanced = watchdogLastTime < 0 || t - watchdogLastTime >= 0.1;
+      watchdogLastTime = t;
+
+      if (advanced) {
+        if (stallReported) {
+          post('playbackRecovered', { stalledMs: Date.now() - stalledAtMs });
+        }
+        stalledAtMs = 0;
+        stallReported = false;
+        return;
+      }
+
+      if (!stalledAtMs) {
+        stalledAtMs = Date.now();
+        return;
+      }
+
+      if (!stallReported && Date.now() - stalledAtMs >= 6000) {
+        stallReported = true;
+        post('playbackStalled', {
+          currentTime: t,
+          readyState: video.readyState,
+          networkState: video.networkState,
+          stalledMs: Date.now() - stalledAtMs
+        });
+      }
+    }, 3000);
+  }
+
   function schedulePlaybackRecovery() {
-    if (!shouldAutoplay || userPaused) {
+    if (!shouldAutoplay || userPaused || !startAllowed) {
       return;
     }
 
@@ -457,13 +538,32 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
       post('ended');
     });
 
+    video.addEventListener('error', function() {
+      post('videoElementError', {
+        code: video.error ? video.error.code : null,
+        message: video.error && video.error.message ? video.error.message : '',
+        readyState: video.readyState,
+        networkState: video.networkState
+      });
+    });
+
+    startPlaybackWatchdog();
+
     video.addEventListener('volumechange', function() {
       emitMuteState(video);
     });
 
     if (shouldAutoplay) {
-      playVideo(video);
-      schedulePlaybackRecovery();
+      if (startAllowed) {
+        playVideo(video);
+        schedulePlaybackRecovery();
+      } else {
+        setTimeout(function() {
+          startAllowed = true;
+          playVideo(video);
+          schedulePlaybackRecovery();
+        }, deferStartMs);
+      }
     }
 
     if (!video.paused) {
@@ -495,6 +595,7 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
       },
       play: function() {
         userPaused = false;
+        startAllowed = true;
         var video = document.querySelector('video');
         playVideo(video);
       },
@@ -542,7 +643,16 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
   installOverlayHider();
   installPlayerControls();
   acceptContentWarning();
-  asyncQuerySelector('video', 10000).then(installVideoBridge).catch(function() {});
+  asyncQuerySelector('video', 10000).then(function(video) {
+    if (!video) {
+      // With autoplay=false the player may not create the video element
+      // until something starts playback; press play and look again.
+      clickPlayButton();
+      asyncQuerySelector('video', 10000).then(installVideoBridge).catch(function() {});
+      return;
+    }
+    installVideoBridge(video);
+  }).catch(function() {});
   window.addEventListener('resize', schedulePlaybackRecovery);
   window.addEventListener('orientationchange', schedulePlaybackRecovery);
   window.addEventListener('pageshow', schedulePlaybackRecovery);

@@ -292,7 +292,26 @@ export type PlayerMessage =
   | { type: 'online' }
   | { type: 'pause' }
   | { type: 'play' }
-  | { type: 'playbackBlocked' }
+  | { payload: { errName: string | null }; type: 'playbackBlocked' }
+  | { payload: { stalledMs: number }; type: 'playbackRecovered' }
+  | {
+      payload: {
+        currentTime: number;
+        networkState: number;
+        readyState: number;
+        stalledMs: number;
+      };
+      type: 'playbackStalled';
+    }
+  | {
+      payload: {
+        code: number | null;
+        message: string;
+        networkState: number;
+        readyState: number;
+      };
+      type: 'videoElementError';
+    }
   | { type: 'playing' }
   | { type: 'ready' }
   | { type: 'trace'; payload: { step: string; detail?: string } }
