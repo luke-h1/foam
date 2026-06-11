@@ -9,7 +9,7 @@
 ### ✨ Features
 
 - **chat:** Blocked terms CRUD in settings ([#623](https://github.com/lhowsam/foam/issues/623))
-- **release:** Aso store metadata and in-app review prompts
+- **release:** ASO store metadata and in-app review prompts
 - **monitoring:** Global fatal handler, query error routing, friendlier error screen
 - **settings:** Shake to report a problem
 - **app:** Prepare for 1.0 ([#627](https://github.com/lhowsam/foam/issues/627))
@@ -17,9 +17,9 @@
 ### 🐛 Bug Fixes
 
 - **app:** Fall back to anon auth on bootstrap failures ([#625](https://github.com/lhowsam/foam/issues/625))
-- **infrastructure:** Ota
-- **infrastructure:** Missing s3 variables
-- **app:** Only persist succesful queries
+- **infrastructure:** OTA updates
+- **infrastructure:** Missing S3 variables
+- **app:** Only persist successful queries
 - **infrastructure:** Source token in scripts
 
 ### 🔧 Miscellaneous Tasks
@@ -30,7 +30,6 @@
 
 ### 🐛 Bug Fixes
 
-- **app:** Sentry initialization
 - **app:** Sentry initialization
 
 ## 0.0.42-testflight
@@ -76,7 +75,7 @@
 
 ### ✨ Features
 
-- **app:** Pinned messagees
+- **app:** Pinned messages
 
 ### 🐛 Bug Fixes
 
