@@ -153,7 +153,7 @@ export const ChatInputSection = memo(
         : 'Send a message...';
 
     return (
-      <View style={styles.wrapper}>
+      <View style={styles.wrapper} testID='chat-input-bar'>
         {replyTo ? (
           <View style={styles.replyShell}>
             <BlurView

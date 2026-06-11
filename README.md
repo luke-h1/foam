@@ -447,7 +447,7 @@ There are four installable [variants](https://docs.expo.dev/tutorial/eas/multipl
 3. **`internal`** — Internal QA distribution builds (`internal` profile and channel). iOS devices must be [registered for ad hoc](https://docs.expo.dev/build/internal-distribution/) builds.
 4. **`development`** — Local dev and dev-client installs only (`development` profile); not distributed from CI.
 
-Additional build profiles (for example `e2e`) are used for Detox and CI; see [`eas.json`](eas.json).
+Additional build profiles (for example `e2e`) are used for Maestro E2E runs and CI; see [`eas.json`](eas.json).
 
 ## Deploy flows
 
@@ -459,7 +459,7 @@ Production delivery is automated on the default branch. Internal, TestFlight, an
 | [`eas-deploy.yml`](.github/workflows/eas-deploy.yml)                     | **Run workflow** with `variant` (`production`, `testflight`, `internal`) and `platform` (`all`, `ios`, `android`).                                                         | Runs the matching `bun run build:<variant>:<platform>` cloud EAS build script. The package scripts use `--no-wait`; iOS production and TestFlight scripts auto-submit. Requires `EXPO_TOKEN`.                                                                                                                                                                                                                           |
 | [`rollout-ota.yml`](.github/workflows/rollout-ota.yml)                   | **Run workflow** with an OTA update group id and target rollout percentage.                                                                                                | Fetches the current rollout state and progresses an existing rollout with `eas update:edit --rollout-percentage`.                                                                                                                                                                                                                                                                                                       |
 | [`rollback-ota.yml`](.github/workflows/rollback-ota.yml)                 | **Run workflow** with `channel`, `rollback_target`, and `platform`.                                                                                                        | Rolls the selected channel back to `embedded` by runtime version, or republishes a previous OTA update group to the selected channel.                                                                                                                                                                                                                                                                                   |
-| [`e2e.yml`](.github/workflows/e2e.yml)                                   | **Run workflow** with optional `force_rebuild`.                                                                                                                            | Fingerprints the iOS `e2e` profile on the self-hosted `foam` runner, restores or builds a cached local EAS `.app`, optionally pushes an `e2e` OTA when the build is skipped, then runs Detox on `macos-latest`.                                                                                                                                                                                                         |
+| [`e2e.yml`](.github/workflows/e2e.yml)                                   | **Run workflow** with optional `force_rebuild`.                                                                                                                            | Fingerprints the iOS `e2e` profile on the self-hosted `foam` runner, restores or builds a cached local EAS `.app`, optionally pushes an `e2e` OTA when the build is skipped, then runs the Maestro flows on `macos-latest`.                                                                                                                                                                                             |
 | [`clear-cache.yml`](.github/workflows/clear-cache.yml)                   | **Run workflow**.                                                                                                                                                          | Deletes GitHub Actions caches while preserving OTA fingerprint and production OTA id caches.                                                                                                                                                                                                                                                                                                                            |
 
 There is also a draft [EAS Workflows](https://docs.expo.dev/eas/workflows/get-started/) file at [`.eas/deploy-prod.yml`](.eas/deploy-prod.yml) (mostly commented / experimental); **GitHub Actions above are the source of truth** for how this repo deploys today.
@@ -526,22 +526,44 @@ flowchart TD
 
 ## E2E testing
 
-We use [Detox](https://wix.github.io/Detox/) for E2E testing. Tests run against a mock server for deterministic results.
+We use [Maestro](https://docs.maestro.dev/) for E2E testing. Flows live in `e2e/flows/` and run against a local mock server (`e2e/mock-server/`) for deterministic results — Twitch API, IRC chat, and emote/badge providers are all mocked.
 
 ### Quick start (local simulator)
 
 ```bash
-# Install Detox simulator tooling (one-time)
-brew tap wix/brew
-brew install applesimutils
+# Install Maestro (one-time)
+brew install mobile-dev-inc/tap/maestro
 
-# Build the E2E simulator app (one-time, or when native code changes)
-bun run detox:build:ios
+# Build + install the simulator app (one-time, or when native code changes)
+bun run e2e:prebuild               # generate native projects for the e2e variant
+bun run e2e:build:ios:sim          # xcodebuild → ios/build/...Foamdev.app
+xcrun simctl install booted ios/build/Build/Products/Debug-iphonesimulator/Foamdev.app
 
-# Run tests (two terminals)
-bun run e2e:mock-server:dev  # Terminal 1: Mock server
-bun run detox:test           # Terminal 2: Tests
+# Run flows (three terminals)
+bun run e2e:mock-server:dev                    # Terminal 1: Mock server
+EXPO_PUBLIC_APP_VARIANT=e2e bunx expo start    # Terminal 2: Metro (e2e variant)
+bun run e2e:test                               # Terminal 3: Flows
 ```
+
+The local app is an expo-dev-client build: the launch subflow (`e2e/flows/common/launch.yaml`) deep-links it into Metro, so Metro **must** run with `EXPO_PUBLIC_APP_VARIANT=e2e` (that's what points the app at the mock server and skips onboarding). If Metro runs on a non-default port, pass `E2E_METRO_PORT`.
+
+### Flows
+
+| Flow                        | Covers                                                              |
+| --------------------------- | ------------------------------------------------------------------- |
+| `smoke.yaml` (tag: `smoke`) | App launches and the Top / Search / Settings tabs are present       |
+| `navigation.yaml`           | Open a stream from Top, switch to the Categories segment            |
+| `category.yaml`             | Category screen lists streams with a viewer count                   |
+| `chat.yaml`                 | Stream screen renders the player and the chat input bar             |
+| `following.yaml`            | Following tab hidden when signed out; sign-in entry point reachable |
+| `search-and-settings.yaml`  | Channel/category search with filters; Settings → Dev Tools → Debug  |
+
+### Writing flows
+
+- Start every flow with `runFlow: common/launch.yaml` — it launches the app, suppresses the expo-dev-menu overlays, and (for dev-client builds) deep-links into Metro.
+- Pass shared env through `scripts/e2e-maestro.sh` rather than hardcoding: flows receive `APP_ID`, `DEV_CLIENT`, and `DEV_CLIENT_URL`.
+- Maestro launch `arguments` do **not** reach iOS `NSUserDefaults` — the wrapper script writes dev-menu preferences with `defaults write` into the simulator app container instead.
+- Tag fast critical-path flows with `tags: [smoke]` so they run in `e2e:test:smoke`.
 
 ### Standalone build (for CI)
 
@@ -551,22 +573,33 @@ Creates a self-contained app with bundled JS - no Metro needed:
 # Build standalone E2E app
 bun run e2e:build:ios
 
-# Run tests after extracting the built `.app` and exporting `DETOX_APP_PATH`
-bun run e2e:mock-server:dev  # Terminal 1
-bun run detox:test:ci        # Terminal 2
+# Run flows after installing the built `.app` on a booted simulator
+bun run e2e:mock-server:dev               # Terminal 1
+APP_ID=foam-tv-e2e DEV_CLIENT=false bun run e2e:test   # Terminal 2
 ```
 
 ### Commands
 
-| Command                       | Description                         |
-| ----------------------------- | ----------------------------------- |
-| `bun run detox:build:ios`     | Build iOS simulator app for Detox   |
-| `bun run detox:test`          | Run all local iOS Detox tests       |
-| `bun run detox:test:smoke`    | Run smoke tests only                |
-| `bun run detox:test:ci`       | Run Detox against a prebuilt `.app` |
-| `bun run e2e:build:ios`       | Build standalone app (CI)           |
-| `bun run e2e:build:android`   | Build standalone app (Android)      |
-| `bun run e2e:mock-server:dev` | Start mock server (auto-reload)     |
+| Command                       | Description                             |
+| ----------------------------- | --------------------------------------- |
+| `bun run e2e:build:ios:sim`   | Build iOS simulator app (dev client)    |
+| `bun run e2e:test`            | Run all Maestro flows                   |
+| `bun run e2e:test:smoke`      | Run smoke flows only (`--include-tags`) |
+| `bun run e2e:build:ios`       | Build standalone app (CI)               |
+| `bun run e2e:build:android`   | Build standalone app (Android)          |
+| `bun run e2e:mock-server:dev` | Start mock server (auto-reload)         |
+
+Environment variables for `e2e:test` (see `scripts/e2e-maestro.sh`): `APP_ID` (default `foam-tv-dev`), `DEV_CLIENT` (default `true`), `E2E_METRO_PORT` (default `8081`).
+
+### Troubleshooting
+
+**Flows fail on a dev-menu sheet / launcher screen**
+
+The expo-dev-menu onboarding sheet or the dev-launcher server picker can cover the app on a fresh install. `scripts/e2e-maestro.sh` writes the dev-menu preferences into the simulator app container before running, and the launch subflow deep-links past the server picker — but both need the app installed and the simulator booted first. Failure screenshots land in `~/.maestro/tests/<run>/`.
+
+**Matchers: prefer testIDs**
+
+Mock fixtures repeat across pagination pages, so text matchers can be ambiguous. Stable testIDs exist for the chat input (`chat-input-bar`), connecting placeholder (`chat-sync-placeholder`), player area (`stream-player-container`), top lists (`top-streams-list`, `top-categories-list`), and category header subtitle (`category-viewer-count`).
 
 ### OTA updates for E2E
 

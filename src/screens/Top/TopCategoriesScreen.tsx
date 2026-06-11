@@ -159,7 +159,7 @@ function TopCategoriesList({
   scrollHandler: ReturnType<typeof useAnimatedScrollHandler>;
 }) {
   return (
-    <View style={styles.wrapper}>
+    <View style={styles.wrapper} testID='top-categories-list'>
       <AnimatedFlashList<Category>
         ref={listRef}
         data={allCategories}

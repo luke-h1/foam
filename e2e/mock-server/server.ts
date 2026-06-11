@@ -237,6 +237,80 @@ const channelBttvEmotesHandler: Handler = (_request, url) => {
   return json(channelBttvEmotes(twitchId));
 };
 
+const channelTwitchEmotes = () =>
+  json({
+    data: [
+      {
+        id: '300000001',
+        name: 'mockChannelEmote',
+        emote_type: 'subscriptions',
+        emote_set_id: '1',
+        tier: '1000',
+        format: ['static'],
+        scale: ['1.0', '2.0', '3.0'],
+        theme_mode: ['light', 'dark'],
+        images: {
+          url_1x:
+            'https://static-cdn.jtvnw.net/emoticons/v2/25/static/light/1.0',
+          url_2x:
+            'https://static-cdn.jtvnw.net/emoticons/v2/25/static/light/2.0',
+          url_4x:
+            'https://static-cdn.jtvnw.net/emoticons/v2/25/static/light/3.0',
+        },
+      },
+    ],
+    template:
+      'https://static-cdn.jtvnw.net/emoticons/v2/{{id}}/{{format}}/{{theme_mode}}/{{scale}}',
+  });
+
+const channelTwitchBadges = () =>
+  json({
+    data: [
+      {
+        set_id: 'subscriber',
+        versions: [
+          {
+            id: '0',
+            title: 'Subscriber',
+            description: 'Subscriber',
+            image_url_1x:
+              'https://static-cdn.jtvnw.net/badges/v1/5d9f2208-5dd8-11e7-8513-2ff4adfae661/1',
+            image_url_2x:
+              'https://static-cdn.jtvnw.net/badges/v1/5d9f2208-5dd8-11e7-8513-2ff4adfae661/2',
+            image_url_4x:
+              'https://static-cdn.jtvnw.net/badges/v1/5d9f2208-5dd8-11e7-8513-2ff4adfae661/3',
+            click_action: null,
+            click_url: null,
+          },
+        ],
+      },
+    ],
+  });
+
+const globalTwitchBadges = () =>
+  json({
+    data: [
+      {
+        set_id: 'moderator',
+        versions: [
+          {
+            id: '1',
+            title: 'Moderator',
+            description: 'Moderator',
+            image_url_1x:
+              'https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41db1d0/1',
+            image_url_2x:
+              'https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41db1d0/2',
+            image_url_4x:
+              'https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41db1d0/3',
+            click_action: null,
+            click_url: null,
+          },
+        ],
+      },
+    ],
+  });
+
 const ffzRoomHandler: Handler = (_request, url) => {
   const channelId = url.pathname.split('/').pop() ?? '1';
   return json(ffzRoom(channelId));
@@ -261,6 +335,9 @@ const routes: Record<string, Partial<Record<string, Handler>>> = {
     '/3/cached/emotes/global': globalBttvEmotesHandler,
     '/health': health,
     '/helix/channels': channels,
+    '/helix/chat/badges': channelTwitchBadges,
+    '/helix/chat/badges/global': globalTwitchBadges,
+    '/helix/chat/emotes': channelTwitchEmotes,
     '/helix/chat/emotes/global': globalTwitchEmotes,
     '/helix/eventsub/subscriptions': () =>
       json({ data: [], total: 0, max_total_cost: 10000, total_cost: 0 }),

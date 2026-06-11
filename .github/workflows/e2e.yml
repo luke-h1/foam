@@ -164,10 +164,10 @@ jobs:
           EXPO_PUBLIC_APP_VARIANT: e2e
           E2E_UPDATE_MESSAGE: ${{ github.event.pull_request.title || github.sha }}
 
-      - name: 🍎 Install applesimutils
+      - name: 🍎 Install Maestro
         run: |
-          brew tap wix/brew
-          brew install applesimutils
+          curl -fsSL https://get.maestro.mobile.dev | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
 
       - name: 📱 Boot Simulator
         run: |
@@ -179,23 +179,22 @@ jobs:
         run: |
           xcrun simctl install booted "$APP_PATH"
 
-      - name: 🔗 Expose app path for Detox
-        run: |
-          echo "DETOX_APP_PATH=$APP_PATH" >> $GITHUB_ENV
-
       - name: 🚀 Start mock server
         run: |
           bun run e2e:mock-server &
           sleep 3
 
-      - name: 🧪 Run Detox tests
+      - name: 🧪 Run Maestro tests
         run: |
-          bun run detox:test:ci
+          bun run e2e:test
+        env:
+          APP_ID: foam-tv-e2e
+          DEV_CLIENT: 'false'
 
       - name: 📤 Upload test artifacts
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: detox-results-${{ github.run_id }}
-          path: artifacts/detox/
+          name: maestro-results-${{ github.run_id }}
+          path: ~/.maestro/tests/
           retention-days: 7

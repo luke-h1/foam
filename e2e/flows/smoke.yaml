@@ -1,0 +1,8 @@
+appId: ${APP_ID}
+tags:
+  - smoke
+---
+- runFlow: common/launch.yaml
+- assertVisible: 'Top'
+- assertVisible: 'Search'
+- assertVisible: 'Settings'

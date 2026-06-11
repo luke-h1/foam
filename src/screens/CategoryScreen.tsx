@@ -39,6 +39,7 @@ const CategoryStreamsHeader = memo(function CategoryStreamsHeader({
       size='hero'
       title={category.name}
       subtitle={`${formatViewCount(totalViewers)} viewers`}
+      subtitleTestID='category-viewer-count'
       backgroundImage={
         category.box_art_url
           ?.replace('{width}', '600')

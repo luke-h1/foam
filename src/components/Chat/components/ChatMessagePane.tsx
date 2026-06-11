@@ -200,7 +200,10 @@ export const ChatMessagePane = memo(
     return (
       <View style={styles.messagePane} onLayout={handleMessagePaneLayout}>
         {!connected && !hasMessages && (
-          <View style={styles.connectingContainer}>
+          <View
+            style={styles.connectingContainer}
+            testID='chat-sync-placeholder'
+          >
             <Text style={styles.connectingText}>
               Connecting to {channelName}&apos;s chat...
             </Text>

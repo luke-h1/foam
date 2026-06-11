@@ -4,6 +4,7 @@ import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStrea
 import { Text } from '@app/components/ui/Text/Text';
 import { storageMMKV } from '@app/lib/mmkv';
 import { ONBOARDING_SEEN_KEY } from '@app/screens/OnboardingScreen/OnboardingScreen';
+import { isE2EMode } from '@app/services/api/clients';
 import { theme } from '@app/styles/themes';
 import { Redirect, router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
@@ -12,7 +13,9 @@ export default function IndexRoute() {
   const { authState, ready } = useAuthContext();
   const hasSeenOnboarding = storageMMKV.getBoolean(ONBOARDING_SEEN_KEY);
 
-  if (!hasSeenOnboarding) {
+  // E2E builds wipe app data on every launch, so onboarding would otherwise
+  // gate every test behind its intro screen.
+  if (!hasSeenOnboarding && !isE2EMode) {
     return <Redirect href='/onboarding' />;
   }
 

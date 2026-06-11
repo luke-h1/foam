@@ -1,0 +1,16 @@
+appId: ${APP_ID}
+---
+# Navigate from top categories into a category and check its streams.
+- runFlow: common/launch.yaml
+- tapOn: 'Categories'
+- extendedWaitUntil:
+    visible: 'Just Chatting'
+    timeout: 15000
+- tapOn:
+    text: 'Just Chatting'
+    index: 0
+- extendedWaitUntil:
+    visible: 'Blueberry42'
+    timeout: 15000
+- assertVisible:
+    id: 'category-viewer-count'

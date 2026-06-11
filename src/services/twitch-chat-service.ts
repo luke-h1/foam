@@ -1,11 +1,16 @@
 import { useAuthContext } from '@app/context/AuthContext';
+import { isE2EMode } from '@app/services/api/clients';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { logger } from '@app/utils/logger';
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useEffect, useRef, useCallback } from 'react';
 import { useWebsocket } from '../hooks/ws/useWebsocket';
 
-const TWITCH_CHAT_URL = 'wss://irc-ws.chat.twitch.tv:443';
+// E2E builds talk to the mock IRC-over-WebSocket server (e2e/mock-server)
+// instead of real Twitch chat so tests stay deterministic.
+const TWITCH_CHAT_URL = isE2EMode
+  ? 'ws://localhost:6667'
+  : 'wss://irc-ws.chat.twitch.tv:443';
 
 function parseIrcTags(tagString: string): Record<string, string> {
   const tags: Record<string, string> = {};

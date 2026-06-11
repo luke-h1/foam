@@ -1,0 +1,16 @@
+appId: ${APP_ID}
+---
+# Open a stream and check the chat UI appears (signed-out input placeholder).
+- runFlow: common/launch.yaml
+- assertVisible: 'Streams'
+- tapOn:
+    text: 'Hanging out with chat'
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: 'stream-player-container'
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: 'chat-input-bar'
+    timeout: 20000

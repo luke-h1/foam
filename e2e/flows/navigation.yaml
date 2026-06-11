@@ -1,0 +1,18 @@
+appId: ${APP_ID}
+---
+# Browse top streams and open a stream.
+# Tap the stream title (card body) — the streamer name opens the profile.
+- runFlow: common/launch.yaml
+- assertVisible: 'Streams'
+- tapOn:
+    text: 'Hanging out with chat'
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: 'stream-player-container'
+    timeout: 15000
+
+# Browse top categories (relaunch to reset navigation state).
+- runFlow: common/launch.yaml
+- tapOn: 'Categories'
+- assertVisible: 'Just Chatting'

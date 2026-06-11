@@ -1,0 +1,30 @@
+appId: ${APP_ID}
+---
+# Search channels and categories via the native nav-bar search field.
+- runFlow: common/launch.yaml
+- tapOn: 'Search'
+- tapOn: 'Search channels, games, or categories'
+- inputText: 'blueberry'
+- extendedWaitUntil:
+    visible: 'Blueberry42'
+    timeout: 15000
+- eraseText
+- inputText: 'fortnite'
+# Fortnite is a category, so switch the results filter first.
+- tapOn: 'Categories'
+- extendedWaitUntil:
+    visible: 'Fortnite'
+    timeout: 15000
+
+# Open developer debug tools from settings (relaunch to reset state).
+- runFlow: common/launch.yaml
+- tapOn: 'Settings'
+- scrollUntilVisible:
+    element: 'Dev Tools'
+- tapOn: 'Dev Tools'
+- scrollUntilVisible:
+    element: 'Debug'
+- tapOn: 'Debug'
+- extendedWaitUntil:
+    visible: 'RQ DevTools'
+    timeout: 10000

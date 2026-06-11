@@ -27,6 +27,10 @@ export interface ScreenHeaderProps {
    */
   subtitle?: string;
   /**
+   * Optional testID applied to the subtitle text
+   */
+  subtitleTestID?: string;
+  /**
    * Show back button (calls navigation.goBack by default)
    */
   back?: boolean;
@@ -84,6 +88,7 @@ export interface ScreenHeaderProps {
 export function ScreenHeader({
   title,
   subtitle,
+  subtitleTestID,
   back = true,
   onBack,
   trailing,
@@ -223,6 +228,7 @@ export function ScreenHeader({
               </Text>
               {subtitle && (
                 <Text
+                  testID={subtitleTestID}
                   type={subtitleTypeValue}
                   color={subtitleColor}
                   style={styles.subtitle}
@@ -269,7 +275,11 @@ export function ScreenHeader({
                 {title}
               </Text>
               {subtitle && (
-                <Text type={subtitleTypeValue} color={subtitleColor}>
+                <Text
+                  testID={subtitleTestID}
+                  type={subtitleTypeValue}
+                  color={subtitleColor}
+                >
                   {subtitle}
                 </Text>
               )}
@@ -291,6 +301,7 @@ export function ScreenHeader({
         >
           {subtitle && (
             <Text
+              testID={subtitleTestID}
               type={subtitleTypeValue}
               weight='semibold'
               color={subtitleColor}

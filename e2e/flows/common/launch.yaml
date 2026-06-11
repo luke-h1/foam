@@ -1,0 +1,23 @@
+# Launches the app and waits for the main UI.
+#
+# - Keeps app data (no clearState) so the expo-dev-client remembers its bundle
+#   and nothing is reinstalled between flows.
+# - For dev-client builds (DEV_CLIENT=true) deep-links straight into Metro —
+#   a cold dev client otherwise lands on the server-picker screen.
+# - The launch arguments suppress the expo-dev-menu onboarding sheet, auto-open,
+#   and floating gear button, all of which overlay the app.
+appId: ${APP_ID}
+---
+- launchApp:
+    arguments:
+      EXDevMenuIsOnboardingFinished: true
+      EXDevMenuDisableAutoLaunch: true
+      EXDevMenuShowFloatingActionButton: false
+- runFlow:
+    when:
+      true: ${DEV_CLIENT}
+    commands:
+      - openLink: ${DEV_CLIENT_URL}
+- extendedWaitUntil:
+    visible: 'Top'
+    timeout: 30000

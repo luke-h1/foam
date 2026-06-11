@@ -245,7 +245,10 @@ function TopStreamsList({
   const listFadeStyle = useLayoutSwitchFade(streamListLayout);
 
   return (
-    <Animated.View style={[styles.container, listFadeStyle]}>
+    <Animated.View
+      testID='top-streams-list'
+      style={[styles.container, listFadeStyle]}
+    >
       <AnimatedFlashList
         ref={listRef}
         contentInsetAdjustmentBehavior='automatic'

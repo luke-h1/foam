@@ -555,7 +555,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   return (
     <View style={contentContainerStyle}>
       <StatusBar style='light' />
-      <Animated.View style={[styles.videoContainer, animatedVideoStyle]}>
+      <Animated.View
+        testID='stream-player-container'
+        style={[styles.videoContainer, animatedVideoStyle]}
+      >
         {shouldRenderStreamPlayer ? (
           <StreamPlayer
             ref={streamPlayerRef}

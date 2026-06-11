@@ -1,0 +1,14 @@
+appId: ${APP_ID}
+---
+# The Following tab is hidden while signed out (NativeTabs hidden trigger),
+# so sign-in is reached through Settings instead.
+- runFlow: common/launch.yaml
+- assertNotVisible: 'Following'
+- tapOn: 'Settings'
+- extendedWaitUntil:
+    visible: 'Sign In'
+    timeout: 15000
+- tapOn: 'Sign In'
+- extendedWaitUntil:
+    visible: 'Sign in with Twitch'
+    timeout: 10000
