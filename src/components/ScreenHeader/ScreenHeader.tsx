@@ -194,7 +194,7 @@ export function ScreenHeader({
             {back && (
               <IconButton
                 icon={{ type: 'symbol', name: 'chevron.left', size: 20 }}
-                label='goBack'
+                label='Go back'
                 onPress={handleBack}
                 size='2xl'
                 hitSlop={12}
@@ -218,6 +218,7 @@ export function ScreenHeader({
             )}
             <View style={styles.textContent}>
               <Text
+                accessibilityRole='header'
                 type={titleTypeValue}
                 weight={titleWeightValue}
                 color={titleColorValue}
@@ -256,7 +257,7 @@ export function ScreenHeader({
           {back && (
             <IconButton
               icon={{ type: 'symbol', name: 'chevron.left', size: 20 }}
-              label='goBack'
+              label='Go back'
               onPress={handleBack}
               size='2xl'
               hitSlop={12}
@@ -267,6 +268,7 @@ export function ScreenHeader({
           {isInline ? (
             <View style={styles.inlineTitleSection}>
               <Text
+                accessibilityRole='header'
                 type={titleTypeValue}
                 weight={titleWeightValue}
                 color={titleColorValue}
@@ -312,6 +314,7 @@ export function ScreenHeader({
             </Text>
           )}
           <Text
+            accessibilityRole='header'
             type={titleTypeValue}
             weight={titleWeightValue}
             color={titleColorValue}

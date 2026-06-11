@@ -99,6 +99,8 @@ function ChatComposerComponent({
       <View style={chatComposerStyles.row}>
         {onPressAdd ? (
           <PressableScale
+            accessibilityLabel='Open emote picker'
+            accessibilityRole='button'
             style={chatComposerStyles.addButton}
             onPress={onPressAdd}
           >
@@ -147,6 +149,9 @@ function ChatComposerComponent({
                   : theme.darkActiveContent,
               },
             ]}
+            accessibilityLabel='Send message'
+            accessibilityRole='button'
+            accessibilityState={{ disabled: !submitEnabled }}
             onPress={handleSubmit}
           >
             <SymbolView

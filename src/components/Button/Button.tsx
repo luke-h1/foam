@@ -39,6 +39,8 @@ function ButtonComponent({
   return (
     <PressableScale
       accessibilityLabel={label}
+      accessibilityRole='button'
+      accessibilityState={{ disabled: Boolean(disabled) }}
       {...touchableProps}
       hitSlop={hitSlop}
       style={style}

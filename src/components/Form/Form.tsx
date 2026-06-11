@@ -244,6 +244,7 @@ export function FormItem({
   return (
     <Pressable
       ref={ref}
+      accessibilityRole='button'
       onPress={onPress}
       onLongPress={onLongPress}
       style={({ pressed }) => [
