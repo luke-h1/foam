@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clear cache
-        uses: actions/github-script@00f12e3e20659f42342b1c0226afda7f7c042325
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const OTA_FINGERPRINT_KEY_PREFIX = 'fingerprint-';
