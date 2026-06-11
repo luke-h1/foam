@@ -12,7 +12,6 @@ import {
 } from '@tanstack/react-query-persist-client';
 import { PropsWithChildren, useState } from 'react';
 import { AppState, Platform, type AppStateStatus } from 'react-native';
-import { usePrefetchOnMount } from '@app/hooks/usePrefetchOnMount';
 
 const WEB_QUERY_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 
@@ -121,7 +120,11 @@ focusManager.setEventListener(onFocus => {
 const dehydrateOptions: PersistQueryClientProviderProps['persistOptions']['dehydrateOptions'] =
   {
     shouldDehydrateMutation: _ => false,
-    shouldDehydrateQuery: query => shouldPersistQuery(query.queryKey),
+    // Only persist settled successful queries. Persisting pending queries
+    // makes the next launch resume them before auth has set a token, so
+    // they reject and get re-persisted as pending again, forever.
+    shouldDehydrateQuery: query =>
+      query.state.status === 'success' && shouldPersistQuery(query.queryKey),
   };
 
 interface QueryProviderProps extends PropsWithChildren {
@@ -153,13 +156,7 @@ function QueryProviderInner({ children, currentUserId }: QueryProviderProps) {
       client={queryClient}
       persistOptions={persistOptions}
     >
-      <PrefetchOnMount />
       {children}
     </PersistQueryClientProvider>
   );
-}
-
-function PrefetchOnMount() {
-  usePrefetchOnMount();
-  return null;
 }

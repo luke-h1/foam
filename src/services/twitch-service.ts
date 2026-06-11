@@ -541,7 +541,15 @@ export const twitchService = {
     const res = await fetch('https://id.twitch.tv/oauth2/validate', {
       headers: { Authorization: `Bearer ${token}` },
     });
-    return res.status === 200;
+    if (res.status !== 200) {
+      return false;
+    }
+    // A token issued for another client ID still validates, but every Helix
+    // call rejects it with "Client ID and OAuth token do not match".
+    const body = (await res.json().catch(() => null)) as {
+      client_id?: string;
+    } | null;
+    return body?.client_id === twitchClientId;
   },
 
   /**
