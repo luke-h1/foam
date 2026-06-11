@@ -38,6 +38,11 @@ if [ -z "$git_cliff_bin" ]; then
   exit 1
 fi
 
+if [ -z "${GITHUB_RELEASE_TOKEN:-}" ] && [ -f .env ]; then
+  GITHUB_RELEASE_TOKEN="$(grep -E '^GITHUB_RELEASE_TOKEN=' .env | head -n 1 | cut -d= -f2- | tr -d '"' | tr -d "'")"
+  export GITHUB_RELEASE_TOKEN
+fi
+
 if [ "$dry_run" = "false" ] && [ -z "${GITHUB_RELEASE_TOKEN:-}" ]; then
   echo "GITHUB_RELEASE_TOKEN is not set. Add it to your .env (see .env.example)."
   exit 1
