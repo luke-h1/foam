@@ -91,7 +91,9 @@ function sanitiseBttvEmote(emote, site, creator) {
 }
 
 async function fetchBttvGlobal() {
-  const result = await getJson('https://api.betterttv.net/3/cached/emotes/global');
+  const result = await getJson(
+    'https://api.betterttv.net/3/cached/emotes/global',
+  );
   return result.map(emote => sanitiseBttvEmote(emote, 'Global BTTV', null));
 }
 
@@ -313,7 +315,9 @@ function pickBestImage(images) {
     const atScale = images.filter(img => img.scale === targetScale);
     if (atScale.length === 0) return undefined;
     const animated = atScale.filter(img => img.frameCount > 1);
-    return animated.length > 0 ? pickBestFormat(animated) : pickBestFormat(atScale);
+    return animated.length > 0
+      ? pickBestFormat(animated)
+      : pickBestFormat(atScale);
   }
   return undefined;
 }
@@ -394,7 +398,9 @@ async function fetchSevenTvGlobal() {
 }
 
 async function fetchSevenTvChannel(twitchChannelId) {
-  const user = await getJson(`https://7tv.io/v3/users/twitch/${twitchChannelId}`);
+  const user = await getJson(
+    `https://7tv.io/v3/users/twitch/${twitchChannelId}`,
+  );
   const setId = user.emote_set.id;
   const data = await sevenTvGql(
     `query emoteSetCustom($id: Id!) { emoteSets { emoteSet(id: $id) { ${STV_EMOTE_SET_FIELDS} } } }\n${STV_IMAGE_FRAGMENT}`,
@@ -426,7 +432,11 @@ function writeSimpleFixture(relativePath, exportName, type, emotes) {
   );
 }
 
-function writeSevenTvFixture(relativePath, exportName, { setMetadata, emotes }) {
+function writeSevenTvFixture(
+  relativePath,
+  exportName,
+  { setMetadata, emotes },
+) {
   const kindMember = kindToEnumMember[setMetadata.kind];
   if (!kindMember) {
     throw new Error(`Unknown EmoteSetKind: ${setMetadata.kind}`);
