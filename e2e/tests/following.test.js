@@ -6,13 +6,11 @@ describe('following', () => {
       .toBeVisible()
       .withTimeout(20000);
 
-    // The tab bar should have a Following tab
     await waitFor(element(by.text('Following')))
       .toBeVisible()
       .withTimeout(10000);
     await element(by.text('Following')).tap();
 
-    // Unauthenticated state: sign-in prompt
     await waitFor(element(by.text('Your followed streams')))
       .toBeVisible()
       .withTimeout(15000);
@@ -35,7 +33,6 @@ describe('following', () => {
 
     await element(by.text('Sign In')).tap();
 
-    // Auth sheet should appear
     await waitFor(element(by.text('Sign in with Twitch')))
       .toBeVisible()
       .withTimeout(10000);

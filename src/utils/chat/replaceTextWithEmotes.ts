@@ -503,7 +503,6 @@ export function replaceTextWithEmotes({
         const textSegments = text.split(/\s*�+\s*/);
         for (const segment of textSegments) {
           if (!segment) continue;
-          // Split text into words and process each word
           const words = segment.split(/(\s+)/);
           words.forEach(word => {
             if (word.startsWith('@')) {
@@ -537,7 +536,6 @@ export function replaceTextWithEmotes({
                 ...emoteInMention,
               });
             } else if (/\s+/.test(word)) {
-              // Preserve whitespace
               replacedParts.push({
                 type: 'text',
                 content: word,

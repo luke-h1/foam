@@ -1,80 +1,22 @@
-import { render, screen } from '@testing-library/react-native';
-import { useFollowedStreamsQuery as _useFollowedStreamsQuery } from '@app/hooks/queries/use-followed-streams-query';
-import { useAuthContext as _useAuthContext } from '@app/context/AuthContext';
+import { render as baseRender, screen } from '@testing-library/react-native';
+import { AuthContextTestProvider } from '@app/context/AuthContext';
+import {
+  twitchService as _twitchService,
+  UserInfoResponse,
+} from '@app/services/twitch-service';
 import FollowingScreen from '@app/screens/FollowingScreen';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactNode } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-jest.mock('@app/hooks/queries/use-followed-streams-query');
-jest.mock('@app/context/AuthContext');
-jest.mock('@tanstack/react-query', () => ({
-  ...jest.requireActual('@tanstack/react-query'),
-  useQueryClient: jest.fn(() => ({ refetchQueries: jest.fn() })),
-}));
-jest.mock('@app/hooks/useScrollToTop', () => ({ useScrollToTop: jest.fn() }));
-jest.mock('@app/hooks/useRefetchOnForeground', () => ({
-  useRefetchOnForeground: jest.fn(),
-}));
-jest.mock('@app/hooks/useRefresh', () => ({
-  useRefresh: jest.fn(() => ({
-    scrollHandler: jest.fn(),
-    scrollY: { value: 0, get: () => 0, set: jest.fn() },
-    isRefreshing: false,
-    refreshControl: null,
-  })),
-}));
-jest.mock('@app/components/TabBarBackground/useBottomTabOverflow', () => ({
-  useBottomTabOverflow: jest.fn(() => 0),
-}));
-jest.mock('@app/store/preferenceStore', () => ({
-  usePreference: jest.fn(() => 'compact'),
-  useUpdatePreferences: jest.fn(() => jest.fn()),
-}));
-jest.mock('@app/components/LiveStreamCard/LiveStreamCard', () => ({
-  MemoizedLiveStreamCard: ({ stream }: { stream: { user_name: string } }) => {
-    const React = require('react');
-    const { Text } = require('react-native');
-    return React.createElement(Text, null, stream.user_name);
-  },
-}));
-jest.mock('@app/components/LiveStreamCard/LiveStreamCardSkeleton', () => ({
-  LiveStreamCardSkeleton: () => {
-    const React = require('react');
-    const { View } = require('react-native');
-    return React.createElement(View, { testID: 'stream-skeleton' });
-  },
-}));
-jest.mock('@app/components/FlashList/AnimatedFlashList', () => ({
-  AnimatedFlashList: jest.requireMock('@shopify/flash-list').FlashList,
-}));
-jest.mock('@app/components/RefreshControl/RefreshIndicator', () => ({
-  RefreshIndicator: () => null,
-}));
-jest.mock(
-  '@app/components/EditorialSectionHeader/EditorialSectionHeader',
-  () => ({
-    EditorialSectionHeader: () => null,
-  }),
-);
+jest.mock('@app/services/twitch-service');
 jest.mock('expo-symbols', () => ({ SymbolView: () => null }));
-jest.mock('react-native-safe-area-context', () => {
-  const React = require('react');
-  const { View } = require('react-native');
-  return {
-    useSafeAreaInsets: jest.fn(() => ({
-      top: 0,
-      bottom: 0,
-      left: 0,
-      right: 0,
-    })),
-    SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children,
-    SafeAreaView: ({ children, ...props }: { children?: React.ReactNode }) =>
-      React.createElement(View, props, children),
-  };
-});
 
-const useFollowedStreamsQuery = jest.mocked(_useFollowedStreamsQuery);
-const useAuthContext = jest.mocked(_useAuthContext);
+const twitchService = jest.mocked(_twitchService);
 
-const mockUser = {
+const TEST_TOKEN_EXPIRES_AT = 4_102_444_800_000;
+
+const mockUser: UserInfoResponse = {
   id: '123456',
   login: 'blueberry42',
   display_name: 'Blueberry42',
@@ -86,15 +28,6 @@ const mockUser = {
   view_count: 0,
   created_at: '',
 };
-
-const baseQueryResult = {
-  data: undefined,
-  refetch: jest.fn(),
-  isLoading: false,
-  isFetching: false,
-  isError: false,
-  isFetched: false,
-} as unknown as ReturnType<typeof _useFollowedStreamsQuery>;
 
 const mockStream = {
   id: '1',
@@ -114,76 +47,90 @@ const mockStream = {
   is_mature: false,
 };
 
+function renderFollowingScreen({ loggedIn }: { loggedIn: boolean }) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <SafeAreaProvider
+      initialMetrics={{
+        frame: { x: 0, y: 0, width: 390, height: 844 },
+        insets: { top: 0, bottom: 0, left: 0, right: 0 },
+      }}
+    >
+      <QueryClientProvider client={queryClient}>
+        <AuthContextTestProvider
+          ready
+          authState={{
+            isLoggedIn: loggedIn,
+            isAnonAuth: !loggedIn,
+            token: {
+              accessToken: 'test-token',
+              expiresIn: 3600,
+              tokenType: 'bearer',
+              expiresAt: TEST_TOKEN_EXPIRES_AT,
+            },
+          }}
+          user={loggedIn ? mockUser : undefined}
+          loginWithTwitch={jest.fn()}
+          logout={jest.fn()}
+          populateAuthState={jest.fn()}
+          fetchAnonToken={jest.fn()}
+        >
+          {children}
+        </AuthContextTestProvider>
+      </QueryClientProvider>
+    </SafeAreaProvider>
+  );
+
+  return baseRender(<FollowingScreen />, { wrapper });
+}
+
 describe('FollowingScreen', () => {
   test('shows sign-in empty state when not authenticated', () => {
-    useAuthContext.mockReturnValue({
-      authState: { isLoggedIn: false },
-      user: null,
-    } as unknown as ReturnType<typeof _useAuthContext>);
-    useFollowedStreamsQuery.mockReturnValue({ ...baseQueryResult });
+    renderFollowingScreen({ loggedIn: false });
 
-    render(<FollowingScreen />);
-
-    expect(screen.getByText('Your followed streams')).toBeTruthy();
-    expect(screen.getByText('Sign In')).toBeTruthy();
+    expect(screen.getByText('Your followed streams')).toBeOnTheScreen();
+    expect(screen.getByText('Sign In')).toBeOnTheScreen();
   });
 
   test('shows loading skeletons while fetching for authenticated user', () => {
-    useAuthContext.mockReturnValue({
-      authState: { isLoggedIn: true },
-      user: mockUser,
-    } as unknown as ReturnType<typeof _useAuthContext>);
-    useFollowedStreamsQuery.mockReturnValue(
-      Object.assign({}, baseQueryResult, { isLoading: true }),
-    );
+    twitchService.getFollowedStreams.mockReturnValue(new Promise(() => {}));
 
-    render(<FollowingScreen />);
+    renderFollowingScreen({ loggedIn: true });
 
     expect(screen.getAllByTestId('stream-skeleton').length).toBeGreaterThan(0);
   });
 
-  test('renders followed streams for authenticated user', () => {
-    useAuthContext.mockReturnValue({
-      authState: { isLoggedIn: true },
-      user: mockUser,
-    } as unknown as ReturnType<typeof _useAuthContext>);
-    useFollowedStreamsQuery.mockReturnValue(
-      Object.assign({}, baseQueryResult, {
-        data: [mockStream],
-        isFetched: true,
-      }),
+  test('renders followed streams for authenticated user', async () => {
+    twitchService.getFollowedStreams.mockResolvedValue([mockStream]);
+    twitchService.getUserImage.mockResolvedValue(
+      'https://example.com/avatar.jpg',
     );
 
-    render(<FollowingScreen />);
+    renderFollowingScreen({ loggedIn: true });
 
-    expect(screen.getByText('LiveStreamer')).toBeTruthy();
+    expect(await screen.findByText('LiveStreamer')).toBeOnTheScreen();
   });
 
-  test('shows error state when fetch fails', () => {
-    useAuthContext.mockReturnValue({
-      authState: { isLoggedIn: true },
-      user: mockUser,
-    } as unknown as ReturnType<typeof _useAuthContext>);
-    useFollowedStreamsQuery.mockReturnValue(
-      Object.assign({}, baseQueryResult, { isError: true, isFetched: true }),
+  test('shows error state when fetch fails', async () => {
+    twitchService.getFollowedStreams.mockRejectedValue(
+      new Error('network error'),
     );
 
-    render(<FollowingScreen />);
+    renderFollowingScreen({ loggedIn: true });
 
-    expect(screen.getByText('Refresh')).toBeTruthy();
-  });
+    expect(
+      await screen.findByText('Refresh', {}, { timeout: 15000 }),
+    ).toBeOnTheScreen();
+  }, 20000);
 
-  test('shows empty state when no followed streams', () => {
-    useAuthContext.mockReturnValue({
-      authState: { isLoggedIn: true },
-      user: mockUser,
-    } as unknown as ReturnType<typeof _useAuthContext>);
-    useFollowedStreamsQuery.mockReturnValue(
-      Object.assign({}, baseQueryResult, { data: [], isFetched: true }),
-    );
+  test('shows empty state when no followed streams', async () => {
+    twitchService.getFollowedStreams.mockResolvedValue([]);
 
-    render(<FollowingScreen />);
+    renderFollowingScreen({ loggedIn: true });
 
-    expect(screen.getByText('No one is live')).toBeTruthy();
+    expect(await screen.findByText('No one is live')).toBeOnTheScreen();
   });
 });

@@ -25,7 +25,7 @@ const TOP_CATEGORY_SKELETON_KEY_PREFIX = 'skeleton-';
 
 function CategoryCardSkeleton() {
   return (
-    <View style={styles.cardContainer}>
+    <View style={styles.cardContainer} testID='category-skeleton'>
       <Skeleton style={styles.skeletonImage} />
       <Skeleton style={styles.skeletonTitle} />
     </View>

@@ -5,6 +5,6 @@ describe('AuthCallbackScreen', () => {
   test('renders completing sign-in message', () => {
     render(<AuthCallbackScreen />);
 
-    expect(screen.getByText('Completing sign in…')).toBeTruthy();
+    expect(screen.getByText('Completing sign in…')).toBeOnTheScreen();
   });
 });

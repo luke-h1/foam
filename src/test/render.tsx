@@ -6,8 +6,14 @@ import {
   RenderResult,
 } from '@testing-library/react-native';
 import { ReactElement, ReactNode } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 const TEST_TOKEN_EXPIRES_AT = 4_102_444_800_000;
+
+export const TEST_SAFE_AREA_METRICS = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 0, bottom: 0, left: 0, right: 0 },
+};
 
 export const DefaultWrapper = ({ children }: { children: ReactNode }) => {
   const queryClient = new QueryClient({
@@ -19,28 +25,30 @@ export const DefaultWrapper = ({ children }: { children: ReactNode }) => {
   });
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthContextTestProvider
-        ready
-        authState={{
-          isLoggedIn: false,
-          isAnonAuth: true,
-          token: {
-            accessToken: 'test-token',
-            expiresIn: 3600,
-            tokenType: 'bearer',
-            expiresAt: TEST_TOKEN_EXPIRES_AT,
-          },
-        }}
-        user={undefined}
-        loginWithTwitch={jest.fn()}
-        logout={jest.fn()}
-        populateAuthState={jest.fn()}
-        fetchAnonToken={jest.fn()}
-      >
-        {children}
-      </AuthContextTestProvider>
-    </QueryClientProvider>
+    <SafeAreaProvider initialMetrics={TEST_SAFE_AREA_METRICS}>
+      <QueryClientProvider client={queryClient}>
+        <AuthContextTestProvider
+          ready
+          authState={{
+            isLoggedIn: false,
+            isAnonAuth: true,
+            token: {
+              accessToken: 'test-token',
+              expiresIn: 3600,
+              tokenType: 'bearer',
+              expiresAt: TEST_TOKEN_EXPIRES_AT,
+            },
+          }}
+          user={undefined}
+          loginWithTwitch={jest.fn()}
+          logout={jest.fn()}
+          populateAuthState={jest.fn()}
+          fetchAnonToken={jest.fn()}
+        >
+          {children}
+        </AuthContextTestProvider>
+      </QueryClientProvider>
+    </SafeAreaProvider>
   );
 };
 

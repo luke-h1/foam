@@ -68,9 +68,9 @@ describe('ChattersSheet', () => {
       onSelectChatter: onSelectChatter,
     });
 
-    expect(getByText('Broadcaster')).toBeTruthy();
-    expect(getByText('Moderators')).toBeTruthy();
-    expect(getByText('Viewers')).toBeTruthy();
+    expect(getByText('Broadcaster')).toBeOnTheScreen();
+    expect(getByText('Moderators')).toBeOnTheScreen();
+    expect(getByText('Viewers')).toBeOnTheScreen();
 
     fireEvent.press(getByText('SomeViewer'));
     expect(onSelectChatter).toHaveBeenCalledTimes(1);
@@ -103,7 +103,7 @@ describe('ChattersSheet', () => {
 
     fireEvent.changeText(getByPlaceholderText('Filter chatters'), 'viewer');
 
-    expect(queryByText('SomeViewer')).toBeTruthy();
+    expect(queryByText('SomeViewer')).toBeOnTheScreen();
     expect(queryByText('streamer')).toBeNull();
     expect(queryByText('Broadcaster')).toBeNull();
   });
@@ -119,7 +119,7 @@ describe('ChattersSheet', () => {
       getByText(
         'No chatters seen yet. Users appear here once they send a message.',
       ),
-    ).toBeTruthy();
+    ).toBeOnTheScreen();
   });
 
   test('omits pseudo user ids from mention-only chatters', () => {

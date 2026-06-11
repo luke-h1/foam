@@ -25,6 +25,21 @@ global.TextDecoder = TextDecoder as typeof global.TextDecoder;
 
 configureReassure({ testingLibrary: 'react-native' });
 
+/**
+ * The Skia jest mock renders components as plain Views but routes imperative
+ * calls (Skia.Path.Make etc.) to global.CanvasKit, which is never loaded in
+ * jsdom. Nothing is actually drawn in tests, so a call-through proxy is enough.
+ */
+function canvasKitStub(): any {
+  return new Proxy(function () {}, {
+    get: (_target, prop) =>
+      prop === Symbol.toPrimitive ? () => 0 : canvasKitStub(),
+    construct: () => canvasKitStub(),
+    apply: () => canvasKitStub(),
+  });
+}
+(global as any).CanvasKit = canvasKitStub();
+
 jest.mock('expo-font');
 jest.mock('expo-asset');
 // Mock react-native-vector-icons - mocks are in __mocks__ directory
@@ -206,6 +221,7 @@ jest.mock('react-native-reanimated', () => {
     runOnUI: (fn: (...args: unknown[]) => unknown) => fn,
     useAnimatedReaction: jest.fn(),
     useAnimatedRef: () => ({ current: null }),
+    useFrameCallback: jest.fn(() => ({ setActive: jest.fn() })),
     useAnimatedScrollHandler: (handler: unknown) => handler,
     useAnimatedStyle: (updater: () => unknown) => updater(),
     useDerivedValue: (updater: () => unknown) => {
@@ -233,6 +249,25 @@ jest.mock('react-native-reanimated', () => {
     withSequence: (...values: unknown[]) => values.at(-1),
     withSpring: identityAnimation,
     withTiming: identityAnimation,
+    ...Object.fromEntries(
+      ['FadeIn', 'FadeInUp', 'FadeInDown', 'FadeOut', 'SlideInDown'].map(
+        name => {
+          const builder: Record<string, unknown> = {};
+          for (const method of [
+            'duration',
+            'delay',
+            'easing',
+            'springify',
+            'damping',
+            'stiffness',
+            'build',
+          ]) {
+            builder[method] = () => builder;
+          }
+          return [name, builder];
+        },
+      ),
+    ),
   };
 });
 
@@ -301,6 +336,7 @@ jest.mock('@shopify/flash-list', () => {
       {
         data = [],
         renderItem,
+        ListHeaderComponent,
         ListEmptyComponent,
         ...props
       }: {
@@ -309,6 +345,7 @@ jest.mock('@shopify/flash-list', () => {
           item: unknown;
           index: number;
         }) => React.ReactNode;
+        ListHeaderComponent?: React.ComponentType | React.ReactNode;
         ListEmptyComponent?: React.ComponentType | React.ReactNode;
       },
       ref: React.Ref<unknown>,
@@ -316,6 +353,9 @@ jest.mock('@shopify/flash-list', () => {
       React.createElement(
         'View',
         { ...props, ref },
+        typeof ListHeaderComponent === 'function'
+          ? React.createElement(ListHeaderComponent)
+          : ListHeaderComponent,
         data.length > 0
           ? data.map((item, index) =>
               React.createElement(
@@ -372,13 +412,36 @@ jest.mock('expo-router', () => ({
   },
   Stack: {
     Screen: () => null,
+    // Stack.SearchBar renders into the native navigation header; surface it
+    // as a plain TextInput so tests can type into it.
+    SearchBar: require('react').forwardRef(
+      (
+        props: {
+          placeholder?: string;
+          onChangeText?: (e: unknown) => void;
+        },
+        ref: unknown,
+      ) =>
+        require('react').createElement(require('react-native').TextInput, {
+          ref,
+          testID: 'search-input',
+          placeholder: props.placeholder,
+          onChangeText: (text: string) =>
+            props.onChangeText?.({ nativeEvent: { text } }),
+        }),
+    ),
   },
+  useFocusEffect: jest.fn((effect: () => void | (() => void)) => {
+    const React = require('react');
+    React.useEffect(effect, [effect]);
+  }),
   useLocalSearchParams: jest.fn(() => ({})),
   useNavigation: jest.fn(() => ({
     addListener: jest.fn(() => jest.fn()),
     goBack: jest.fn(),
     setOptions: jest.fn(),
   })),
+  useScrollToTop: jest.fn(),
   usePathname: jest.fn(() => '/'),
   useRouter: jest.fn(() => ({
     back: jest.fn(),

@@ -8,12 +8,7 @@ import { twitchService as _twitchService } from '@app/services/twitch-service';
 import { storageService as _storageService } from '@app/lib/storage';
 import { SearchScreen } from '../SearchScreen';
 
-jest.mock('@app/services/twitch-service', () => ({
-  twitchService: {
-    searchChannels: jest.fn(),
-    searchCategories: jest.fn(),
-  },
-}));
+jest.mock('@app/services/twitch-service');
 
 jest.mock('@app/lib/storage', () => ({
   storageService: {
@@ -35,6 +30,8 @@ jest.mock('expo-screen-orientation', () => ({
 jest.mock('@app/components/FlashList/FlashList', () => ({
   FlashList: jest.requireMock('@shopify/flash-list').FlashList,
 }));
+// SegmentedControl wraps the native @expo/ui control, which cannot receive
+// segment-change events in tests; expose each segment as a pressable instead.
 jest.mock('@app/components/SegmentedControl/SegmentedControl', () => ({
   SegmentedControl: ({
     items,
@@ -62,88 +59,6 @@ jest.mock('@app/components/SegmentedControl/SegmentedControl', () => ({
     );
   },
 }));
-jest.mock('@app/components/ui/SearchHistory/SearchHistoryV2', () => ({
-  SearchHistoryV2: ({
-    history,
-    onSelectItem,
-  }: {
-    history: string[];
-    onSelectItem: (q: string) => void;
-  }) => {
-    const React = require('react');
-    const { View, TouchableOpacity, Text } = require('react-native');
-    return React.createElement(
-      View,
-      { testID: 'search-history' },
-      history.map((q: string) =>
-        React.createElement(
-          TouchableOpacity,
-          { key: q, onPress: () => onSelectItem(q), testID: `history-${q}` },
-          React.createElement(Text, null, q),
-        ),
-      ),
-    );
-  },
-}));
-jest.mock('../components/StreamerCard', () => ({
-  StreamerCard: ({ stream }: { stream: { display_name: string } }) => {
-    const React = require('react');
-    const { Text } = require('react-native');
-    return React.createElement(Text, null, stream.display_name);
-  },
-}));
-jest.mock('@app/components/Image/Image', () => ({ Image: () => null }));
-jest.mock('expo-router', () => {
-  const React = require('react');
-  const { TextInput } = require('react-native');
-  const SearchBar = React.forwardRef(
-    (
-      {
-        placeholder,
-        onChangeText,
-      }: {
-        placeholder?: string;
-        onChangeText?: (e: unknown) => void;
-      },
-      ref: React.Ref<unknown>,
-    ) =>
-      React.createElement(TextInput, {
-        ref,
-        testID: 'search-input',
-        placeholder,
-        onChangeText: (text: string) =>
-          onChangeText?.({ nativeEvent: { text } }),
-      }),
-  );
-  return {
-    __esModule: true,
-    router: {
-      back: jest.fn(),
-      navigate: jest.fn(),
-      push: jest.fn(),
-      replace: jest.fn(),
-      setParams: jest.fn(),
-    },
-    Stack: {
-      Screen: () => null,
-      SearchBar,
-    },
-    useLocalSearchParams: jest.fn(() => ({})),
-    useNavigation: jest.fn(() => ({
-      addListener: jest.fn(() => jest.fn()),
-      goBack: jest.fn(),
-      setOptions: jest.fn(),
-    })),
-    usePathname: jest.fn(() => '/'),
-    useRouter: jest.fn(() => ({
-      back: jest.fn(),
-      navigate: jest.fn(),
-      push: jest.fn(),
-      replace: jest.fn(),
-      setParams: jest.fn(),
-    })),
-  };
-});
 
 const twitchService = jest.mocked(_twitchService);
 const storageService = jest.mocked(_storageService);
@@ -180,14 +95,14 @@ describe('SearchScreen', () => {
   test('renders search input', () => {
     render(<SearchScreen />);
 
-    expect(screen.getByTestId('search-input')).toBeTruthy();
+    expect(screen.getByTestId('search-input')).toBeOnTheScreen();
   });
 
   test('shows quick action chips before a search is made', () => {
     render(<SearchScreen />);
 
-    expect(screen.getByText('Just Chatting')).toBeTruthy();
-    expect(screen.getByText('Valorant')).toBeTruthy();
+    expect(screen.getByText('Just Chatting')).toBeOnTheScreen();
+    expect(screen.getByText('Valorant')).toBeOnTheScreen();
   });
 
   test('shows channel results after searching', async () => {
@@ -196,7 +111,7 @@ describe('SearchScreen', () => {
     fireEvent.changeText(screen.getByTestId('search-input'), 'stre');
 
     await waitFor(() => {
-      expect(screen.getByText('Streamer1')).toBeTruthy();
+      expect(screen.getByText('Streamer1')).toBeOnTheScreen();
     });
   });
 
@@ -209,9 +124,9 @@ describe('SearchScreen', () => {
       expect(twitchService.searchCategories).toHaveBeenCalled();
     });
 
-    fireEvent.press(screen.getByTestId('filter-categories')); // label is "Categories"
+    fireEvent.press(screen.getByTestId('filter-categories'));
 
-    expect(screen.getByText('Just Chatting')).toBeTruthy();
+    expect(screen.getByText('Just Chatting')).toBeOnTheScreen();
   });
 
   test('does not search when query is shorter than 2 chars', async () => {
@@ -231,7 +146,7 @@ describe('SearchScreen', () => {
 
     render(<SearchScreen />);
 
-    expect(screen.getByTestId('search-history')).toBeTruthy();
-    expect(screen.getByText('xqc')).toBeTruthy();
+    expect(screen.getByText('RECENT SEARCHES')).toBeOnTheScreen();
+    expect(screen.getByText('xqc')).toBeOnTheScreen();
   });
 });

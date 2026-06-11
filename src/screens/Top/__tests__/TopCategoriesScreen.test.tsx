@@ -1,132 +1,67 @@
-import { render, screen } from '@testing-library/react-native';
-import { useTopCategoriesQuery as _useTopCategoriesQuery } from '@app/hooks/queries/use-top-categories-query';
+import { screen } from '@testing-library/react-native';
+import { twitchService as _twitchService } from '@app/services/twitch-service';
+import render from '@app/test/render';
 import { TopCategoriesScreen } from '../TopCategoriesScreen';
 
-jest.mock('@app/hooks/queries/use-top-categories-query');
-jest.mock('@app/hooks/useScrollToTop', () => ({ useScrollToTop: jest.fn() }));
-jest.mock('@app/hooks/useRefetchOnForeground', () => ({
-  useRefetchOnForeground: jest.fn(),
-}));
-jest.mock('@app/hooks/useInfiniteQueryLoadMore', () => ({
-  useInfiniteQueryLoadMore: jest.fn(() => jest.fn()),
-}));
-jest.mock('@legendapp/state/react', () => ({
-  useObservable: (initial: unknown) => ({
-    get: () => initial,
-    set: jest.fn(),
-    peek: () => initial,
-  }),
-  useSelector: (obs: { get: () => unknown }) => obs.get(),
-}));
-jest.mock('@app/components/FlashList/AnimatedFlashList', () => ({
-  AnimatedFlashList: jest.requireMock('@shopify/flash-list').FlashList,
-}));
-jest.mock('@app/components/FlashList/FlashList', () => ({
-  FlashList: jest.requireMock('@shopify/flash-list').FlashList,
-}));
-jest.mock('@app/components/CategoryCard/CategoryCard', () => ({
-  CATEGORY_CARD_HEIGHT: 200,
-  MemoizedCategoryCard: ({ category }: { category: { name: string } }) => {
-    const React = require('react');
-    const { Text } = require('react-native');
-    return React.createElement(Text, null, category.name);
-  },
-}));
-jest.mock('@app/components/ui/Skeleton/Skeleton', () => ({
-  Skeleton: () => {
-    const React = require('react');
-    const { View } = require('react-native');
-    return React.createElement(View, { testID: 'skeleton' });
-  },
-}));
+jest.mock('@app/services/twitch-service');
 
-const useTopCategoriesQuery = jest.mocked(_useTopCategoriesQuery);
-
-const mockRefetch = jest.fn();
-const mockFetchNextPage = jest.fn();
-
-const baseQueryResult = {
-  data: undefined,
-  fetchNextPage: mockFetchNextPage,
-  refetch: mockRefetch,
-  hasNextPage: false,
-  isLoading: false,
-  isFetching: false,
-  isError: false,
-  isFetchingNextPage: false,
-} as unknown as ReturnType<typeof _useTopCategoriesQuery>;
+const twitchService = jest.mocked(_twitchService);
 
 const mockCategory = {
   id: 'cat1',
   name: 'Just Chatting',
-  box_art_url: 'https://example.com/art.jpg',
+  box_art_url: 'https://example.com/art-{width}x{height}.jpg',
 };
 
 describe('TopCategoriesScreen', () => {
   test('shows skeleton while loading', () => {
-    useTopCategoriesQuery.mockReturnValue(
-      Object.assign({}, baseQueryResult, { isLoading: true }),
-    );
+    twitchService.getTopCategories.mockReturnValue(new Promise(() => {}));
 
     render(<TopCategoriesScreen />);
 
-    expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId('category-skeleton').length).toBeGreaterThan(
+      0,
+    );
   });
 
-  test('renders category list when data is available', () => {
-    useTopCategoriesQuery.mockReturnValue(
-      Object.assign({}, baseQueryResult, {
-        data: { pages: [{ data: [mockCategory] }], pageParams: [] },
-      }),
-    );
+  test('renders category list when data is available', async () => {
+    twitchService.getTopCategories.mockResolvedValue({
+      data: [mockCategory],
+    });
 
     render(<TopCategoriesScreen />);
 
-    expect(screen.getByText('Just Chatting')).toBeTruthy();
+    expect(await screen.findByText('Just Chatting')).toBeOnTheScreen();
   });
 
-  test('shows error empty state when fetch fails', () => {
-    useTopCategoriesQuery.mockReturnValue(
-      Object.assign({}, baseQueryResult, { isError: true }),
+  test('shows error empty state when fetch fails', async () => {
+    twitchService.getTopCategories.mockRejectedValue(
+      new Error('network error'),
     );
 
     render(<TopCategoriesScreen />);
 
-    expect(screen.getByText('Failed to fetch top categories')).toBeTruthy();
+    expect(
+      await screen.findByText('Failed to fetch top categories'),
+    ).toBeOnTheScreen();
   });
 
-  test('shows empty state when no categories returned', () => {
-    useTopCategoriesQuery.mockReturnValue(
-      Object.assign({}, baseQueryResult, {
-        data: { pages: [{ data: [] }], pageParams: [] },
-      }),
-    );
+  test('shows empty state when no categories returned', async () => {
+    twitchService.getTopCategories.mockResolvedValue({ data: [] });
 
     render(<TopCategoriesScreen />);
 
-    expect(screen.getByText('No categories found')).toBeTruthy();
+    expect(await screen.findByText('No categories found')).toBeOnTheScreen();
   });
 
-  test('renders multiple categories', () => {
-    useTopCategoriesQuery.mockReturnValue(
-      Object.assign({}, baseQueryResult, {
-        data: {
-          pages: [
-            {
-              data: [
-                mockCategory,
-                { id: 'cat2', name: 'Fortnite', box_art_url: '' },
-              ],
-            },
-          ],
-          pageParams: [],
-        },
-      }),
-    );
+  test('renders multiple categories', async () => {
+    twitchService.getTopCategories.mockResolvedValue({
+      data: [mockCategory, { id: 'cat2', name: 'Fortnite', box_art_url: '' }],
+    });
 
     render(<TopCategoriesScreen />);
 
-    expect(screen.getByText('Just Chatting')).toBeTruthy();
-    expect(screen.getByText('Fortnite')).toBeTruthy();
+    expect(await screen.findByText('Just Chatting')).toBeOnTheScreen();
+    expect(screen.getByText('Fortnite')).toBeOnTheScreen();
   });
 });

@@ -1,55 +1,12 @@
-import { render, screen } from '@testing-library/react-native';
-import { useTopStreamsQuery as _useTopStreamsQuery } from '@app/hooks/queries/use-top-streams-query';
+import { screen } from '@testing-library/react-native';
+import { twitchService as _twitchService } from '@app/services/twitch-service';
+import render from '@app/test/render';
 import { TopStreamsScreen } from '../TopStreamsScreen';
 
-jest.mock('@app/hooks/queries/use-top-streams-query');
-jest.mock('@app/hooks/useScrollToTop', () => ({ useScrollToTop: jest.fn() }));
-jest.mock('@app/hooks/useRefetchOnForeground', () => ({
-  useRefetchOnForeground: jest.fn(),
-}));
-jest.mock('@app/hooks/useDebouncedCallback', () => ({
-  useDebouncedCallback: (fn: unknown) => [fn],
-}));
-jest.mock('@app/hooks/useInfiniteQueryLoadMore', () => ({
-  useInfiniteQueryLoadMore: jest.fn(() => jest.fn()),
-}));
-jest.mock('@app/store/preferenceStore', () => ({
-  usePreference: jest.fn(() => 'compact'),
-  useUpdatePreferences: jest.fn(() => jest.fn()),
-}));
+jest.mock('@app/services/twitch-service');
 jest.mock('expo-symbols', () => ({ SymbolView: () => null }));
-jest.mock('@app/components/LiveStreamCard/LiveStreamCard', () => ({
-  MemoizedLiveStreamCard: ({ stream }: { stream: { user_name: string } }) => {
-    const React = require('react');
-    const { Text } = require('react-native');
-    return React.createElement(Text, null, stream.user_name);
-  },
-}));
-jest.mock('@app/components/LiveStreamCard/LiveStreamCardSkeleton', () => ({
-  LiveStreamCardSkeleton: () => {
-    const React = require('react');
-    const { View } = require('react-native');
-    return React.createElement(View, { testID: 'stream-skeleton' });
-  },
-}));
-jest.mock('@app/components/FlashList/AnimatedFlashList', () => ({
-  AnimatedFlashList: jest.requireMock('@shopify/flash-list').FlashList,
-}));
 
-const useTopStreamsQuery = jest.mocked(_useTopStreamsQuery);
-
-const mockRefetch = jest.fn();
-const mockFetchNextPage = jest.fn();
-
-const baseQueryResult = {
-  data: undefined,
-  fetchNextPage: mockFetchNextPage,
-  refetch: mockRefetch,
-  hasNextPage: false,
-  isLoading: false,
-  isFetching: false,
-  isFetchingNextPage: false,
-} as unknown as ReturnType<typeof _useTopStreamsQuery>;
+const twitchService = jest.mocked(_twitchService);
 
 const mockStream = {
   id: '1',
@@ -70,70 +27,52 @@ const mockStream = {
 };
 
 describe('TopStreamsScreen', () => {
-  test('shows loading skeletons while fetching', () => {
-    useTopStreamsQuery.mockReturnValue(
-      Object.assign({}, baseQueryResult, { isLoading: true }),
+  beforeEach(() => {
+    twitchService.getUserImage.mockResolvedValue(
+      'https://example.com/avatar.jpg',
     );
+  });
+
+  test('shows loading skeletons while fetching', () => {
+    twitchService.getTopStreams.mockReturnValue(new Promise(() => {}));
 
     render(<TopStreamsScreen />);
 
     expect(screen.getAllByTestId('stream-skeleton').length).toBeGreaterThan(0);
   });
 
-  test('renders stream list when data is available', () => {
-    useTopStreamsQuery.mockReturnValue(
-      Object.assign({}, baseQueryResult, {
-        data: { pages: [{ data: [mockStream] }], pageParams: [] },
-      }),
-    );
+  test('renders stream list when data is available', async () => {
+    twitchService.getTopStreams.mockResolvedValue({ data: [mockStream] });
 
     render(<TopStreamsScreen />);
 
-    expect(screen.getByText('Streamer1')).toBeTruthy();
+    expect(await screen.findByText('Streamer1')).toBeOnTheScreen();
   });
 
-  test('shows empty state when no streams returned', () => {
-    useTopStreamsQuery.mockReturnValue(
-      Object.assign({}, baseQueryResult, {
-        data: { pages: [{ data: [] }], pageParams: [] },
-      }),
-    );
+  test('shows empty state when no streams returned', async () => {
+    twitchService.getTopStreams.mockResolvedValue({ data: [] });
 
     render(<TopStreamsScreen />);
 
-    expect(screen.getByText('No Top Streams found')).toBeTruthy();
+    expect(await screen.findByText('No Top Streams found')).toBeOnTheScreen();
   });
 
-  test('shows empty state when data is undefined', () => {
-    useTopStreamsQuery.mockReturnValue(
-      Object.assign({}, baseQueryResult, { data: undefined }),
-    );
+  test('shows empty state when the fetch fails', async () => {
+    twitchService.getTopStreams.mockRejectedValue(new Error('network error'));
 
     render(<TopStreamsScreen />);
 
-    expect(screen.getByText('No Top Streams found')).toBeTruthy();
+    expect(await screen.findByText('No Top Streams found')).toBeOnTheScreen();
   });
 
-  test('renders multiple streams', () => {
-    useTopStreamsQuery.mockReturnValue(
-      Object.assign({}, baseQueryResult, {
-        data: {
-          pages: [
-            {
-              data: [
-                mockStream,
-                { ...mockStream, id: '2', user_name: 'Streamer2' },
-              ],
-            },
-          ],
-          pageParams: [],
-        },
-      }),
-    );
+  test('renders multiple streams', async () => {
+    twitchService.getTopStreams.mockResolvedValue({
+      data: [mockStream, { ...mockStream, id: '2', user_name: 'Streamer2' }],
+    });
 
     render(<TopStreamsScreen />);
 
-    expect(screen.getByText('Streamer1')).toBeTruthy();
-    expect(screen.getByText('Streamer2')).toBeTruthy();
+    expect(await screen.findByText('Streamer1')).toBeOnTheScreen();
+    expect(screen.getByText('Streamer2')).toBeOnTheScreen();
   });
 });

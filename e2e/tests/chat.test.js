@@ -6,7 +6,6 @@ describe('chat', () => {
       .toBeVisible()
       .withTimeout(20000);
 
-    // Wait for the streams list
     await waitFor(element(by.text('Streams')))
       .toBeVisible()
       .withTimeout(10000);
@@ -39,7 +38,6 @@ describe('chat', () => {
       .withTimeout(15000);
     await element(by.text('Blueberry42')).tap();
 
-    // Stream player container should be present
     await waitFor(element(by.id('stream-player-container')))
       .toBeVisible()
       .withTimeout(20000);
