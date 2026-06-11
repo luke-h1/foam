@@ -58,6 +58,7 @@
     "lint:ast-grep": "ast-grep scan",
     "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
+    "metadata:push": "eas metadata:push --profile production",
     "ota": "./scripts/release-ota.sh",
     "perf:chat:ios": "bash scripts/perf/capture-chat-instruments.sh",
     "perf:chat:ios:export": "bash scripts/perf/export-instruments-trace.sh",
@@ -261,8 +262,7 @@
     ],
     "*.{ts,tsx}": "ast-grep scan",
     "*.json": "bunx prettier --write",
-    "assets/icons/**/*.svg": "bash -c 'bun svgo -f ./assets/icons'",
-    "*.{png,jpg,jpeg,gif}": "bun expo optimize"
+    "assets/icons/**/*.svg": "bash -c 'bun svgo -f ./assets/icons'"
   },
   "config": {
     "commitizen": {

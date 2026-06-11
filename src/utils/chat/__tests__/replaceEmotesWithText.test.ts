@@ -6,6 +6,7 @@ import { sevenTvSanitisedChannelEmoteSetFixture } from '@app/services/__fixtures
 import { seventvSanitiisedGlobalEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/sevenTvSanitisedGlobalEmoteSet.fixture';
 import { twitchTvSanitisedEmoteSetChannelFixture } from '@app/services/__fixtures__/emotes/twitch/twitchTvSanitisedEmoteSetChannel.fixture';
 import { twitchTvSanitisedEmoteSetGlobalFixture } from '@app/services/__fixtures__/emotes/twitch/twitchTvSanitisedEmoteSetGlobal.fixture';
+import type { SanitisedEmote } from '@app/types/emote';
 import { replaceEmotesWithText } from '../replaceEmotesWithText';
 
 describe('replaceEmotesWithText', () => {
@@ -13,7 +14,7 @@ describe('replaceEmotesWithText', () => {
     expect(replaceEmotesWithText([])).toEqual('');
   });
 
-  const allEmoteSets = [
+  const allEmoteSets: { name: string; emotes: SanitisedEmote[] }[] = [
     { name: 'FFZ Channel', emotes: ffzSanitisedChannelEmoteSet },
     { name: 'FFZ Global', emotes: ffzSanitisedGlobalEmoteSet },
     { name: '7TV Channel', emotes: sevenTvSanitisedChannelEmoteSetFixture },

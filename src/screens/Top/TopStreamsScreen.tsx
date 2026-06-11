@@ -300,7 +300,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: theme.color.background.darkAlt,
     borderColor: theme.colorBorderSecondary,
-    borderCurve: 'continuous',
+    // No continuous borderCurve here: combined with a pill radius larger
+    // than half the height it renders flattened, clipped-looking edges.
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
     flexDirection: 'row',
@@ -316,8 +317,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: theme.space8,
-    marginBottom: theme.space20,
-    marginHorizontal: theme.space20,
+    // Align with the stream cards (space16 + 5px card margin) and keep the
+    // gap to the first card tight. The top margin keeps the pills clear of
+    // the opaque segment header overlay, which otherwise crops their top
+    // corners at rest.
+    marginBottom: theme.space8,
+    marginHorizontal: theme.space16,
+    marginTop: theme.space8,
   },
   layoutToggleText: {
     color: theme.color.textSecondary.dark,

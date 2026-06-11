@@ -8,12 +8,10 @@ import { twitchTvSanitisedEmoteSetChannelFixture } from '@app/services/__fixture
 import { twitchTvSanitisedEmoteSetGlobalFixture } from '@app/services/__fixtures__/emotes/twitch/twitchTvSanitisedEmoteSetGlobal.fixture';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import type { SanitisedEmote } from '@app/types/emote';
+import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { ParsedPart, replaceTextWithEmotes } from '../replaceTextWithEmotes';
 
-/**
- * Todo - update test to assert on the extra fields we've added
- */
-describe.skip('replaceTextWithEmotesV2', () => {
+describe('replaceTextWithEmotesV2', () => {
   const defaultEmoteSets: {
     ffzChannelEmotes: SanitisedEmote[];
     ffzGlobalEmotes: SanitisedEmote[];
@@ -40,6 +38,40 @@ describe.skip('replaceTextWithEmotesV2', () => {
     'display-name': 'test user',
   });
 
+  function expectedEmotePart(
+    emote: SanitisedEmote,
+    contentOverride?: string,
+  ): ParsedPart {
+    const resolved = withResolvedEmoteImageVariants(emote);
+    return {
+      type: 'emote',
+      content: contentOverride ?? emote.name,
+      ...resolved,
+    } as ParsedPart;
+  }
+
+  /**
+   * Mirrors registerEmoteLookup in replaceTextWithEmotes: each emote also
+   * registers its original_name as an alternate lookup key, so an emote whose
+   * name matches an earlier emote's name or alias never resolves to itself.
+   * Tests can only assert exact output for emotes that win their lookup key.
+   */
+  function resolvableEmotes(emotes: SanitisedEmote[]): SanitisedEmote[] {
+    const seen = new Set<string>();
+    const result: SanitisedEmote[] = [];
+    emotes.forEach(emote => {
+      if (!seen.has(emote.name)) {
+        result.push(emote);
+      }
+      seen.add(emote.name);
+      const alternateName = emote.original_name?.trim();
+      if (alternateName) {
+        seen.add(alternateName);
+      }
+    });
+    return result;
+  }
+
   test('should handle empty input', () => {
     const result = replaceTextWithEmotes({
       inputString: '',
@@ -51,6 +83,10 @@ describe.skip('replaceTextWithEmotesV2', () => {
   });
 
   test('should replace single emote in text', () => {
+    const kappaEmote = twitchTvSanitisedEmoteSetGlobalFixture.find(
+      e => e.name === 'Kappa',
+    )!;
+
     const result = replaceTextWithEmotes({
       inputString: 'Hello Kappa World',
       ...defaultEmoteSets,
@@ -58,31 +94,33 @@ describe.skip('replaceTextWithEmotesV2', () => {
     });
 
     expect(result).toEqual<ParsedPart[]>([
-      {
-        content: 'Hello ',
-        type: 'text',
-      },
-      {
-        content: 'Kappa',
-        height: undefined,
-        type: 'emote',
-        url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0',
-        width: undefined,
-      },
-      {
-        content: ' ',
-        type: 'text',
-      },
-      {
-        content: 'World',
-        type: 'text',
-      },
+      { content: 'Hello', type: 'text' },
+      { content: ' ', type: 'text' },
+      expectedEmotePart(kappaEmote),
+      { content: ' ', type: 'text' },
+      { content: 'World', type: 'text' },
     ]);
   });
 
-  test.skip('should handle mentions with emotes', () => {});
+  test('should handle mentions without emote matches', () => {
+    const result = replaceTextWithEmotes({
+      inputString: '@someUser hello',
+      ...defaultEmoteSets,
+      userstate: defaultUserState,
+    });
+
+    expect(result).toEqual<ParsedPart[]>([
+      { type: 'mention', content: '@someUser' },
+      { content: ' ', type: 'text' },
+      { content: 'hello', type: 'text' },
+    ]);
+  });
 
   test('should match emotes case-sensitively', () => {
+    const kappaEmote = twitchTvSanitisedEmoteSetGlobalFixture.find(
+      e => e.name === 'Kappa',
+    )!;
+
     const result = replaceTextWithEmotes({
       inputString: 'kappa KAPPA Kappa',
       ...defaultEmoteSets,
@@ -90,29 +128,11 @@ describe.skip('replaceTextWithEmotesV2', () => {
     });
 
     expect(result).toEqual<ParsedPart[]>([
-      {
-        content: 'kappa',
-        type: 'text',
-      },
-      {
-        content: ' ',
-        type: 'text',
-      },
-      {
-        content: 'KAPPA',
-        type: 'text',
-      },
-      {
-        content: ' ',
-        type: 'text',
-      },
-      {
-        content: 'Kappa',
-        height: undefined,
-        type: 'emote',
-        url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0',
-        width: undefined,
-      },
+      { content: 'kappa', type: 'text' },
+      { content: ' ', type: 'text' },
+      { content: 'KAPPA', type: 'text' },
+      { content: ' ', type: 'text' },
+      expectedEmotePart(kappaEmote),
     ]);
   });
 
@@ -131,9 +151,9 @@ describe.skip('replaceTextWithEmotesV2', () => {
   });
 
   test('should filter out replacement character (encoding issues)', () => {
-    // U+FFFD is the unicode replacement character (�) for invalid/malformed text
+    // U+FFFD is the unicode replacement character (?) for invalid/malformed text
     const result = replaceTextWithEmotes({
-      inputString: 'Hello \uFFFD World',
+      inputString: 'Hello � World',
       ...defaultEmoteSets,
       userstate: defaultUserState,
     });
@@ -146,7 +166,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
 
   describe('7tv', () => {
     test.each(
-      sevenTvSanitisedChannelEmoteSetFixture.filter(
+      resolvableEmotes(sevenTvSanitisedChannelEmoteSetFixture).filter(
         emote => emote.name !== 'Stare' && emote.name !== 'TeaTime',
       ),
     )('should replace 7TV emote %s', emote => {
@@ -163,18 +183,10 @@ describe.skip('replaceTextWithEmotesV2', () => {
         userstate: defaultUserState,
       });
 
-      expect(result).toEqual<ParsedPart[]>([
-        {
-          content: emote.name,
-          height: emote.height,
-          type: 'emote',
-          url: emote.url,
-          width: emote.width,
-        },
-      ]);
+      expect(result).toEqual<ParsedPart[]>([expectedEmotePart(emote)]);
     });
 
-    test.each(sevenTvSanitisedChannelEmoteSetFixture)(
+    test.each(resolvableEmotes(sevenTvSanitisedChannelEmoteSetFixture))(
       'should replace 7TV emote with text %s',
       emote => {
         const result = replaceTextWithEmotes({
@@ -191,21 +203,13 @@ describe.skip('replaceTextWithEmotesV2', () => {
         });
 
         expect(result).toEqual<ParsedPart[]>([
-          {
-            content: emote.name,
-            height: emote.height,
-            type: 'emote',
-            width: emote.width,
-            url: emote.url,
-          },
-          {
-            content: ' ',
-            type: 'text',
-          },
-          {
-            content: 'hello foam world',
-            type: 'text',
-          },
+          expectedEmotePart(emote),
+          { content: ' ', type: 'text' },
+          { content: 'hello', type: 'text' },
+          { content: ' ', type: 'text' },
+          { content: 'foam', type: 'text' },
+          { content: ' ', type: 'text' },
+          { content: 'world', type: 'text' },
         ]);
       },
     );
@@ -217,41 +221,40 @@ describe.skip('replaceTextWithEmotesV2', () => {
     )(
       'Channel emote should take priority over duplicated global emote %s',
       emote => {
+        const channelSet = sevenTvSanitisedChannelEmoteSetFixture.filter(
+          // eslint-disable-next-line no-shadow
+          emote => emote.name === 'Stare' || emote.name === 'TeaTime',
+        );
+        const globalSet = seventvSanitiisedGlobalEmoteSetFixture.filter(
+          // eslint-disable-next-line no-shadow
+          emote => emote.name === 'Stare' || emote.name === 'TeaTime',
+        );
+
         const result = replaceTextWithEmotes({
           inputString: emote.name,
           bttvChannelEmotes: [],
           bttvGlobalEmotes: [],
           ffzChannelEmotes: [],
           ffzGlobalEmotes: [],
-          sevenTvChannelEmotes: sevenTvSanitisedChannelEmoteSetFixture.filter(
-            // eslint-disable-next-line no-shadow
-            emote => emote.name === 'Stare' || emote.name === 'TeaTime',
-          ),
-          sevenTvGlobalEmotes: seventvSanitiisedGlobalEmoteSetFixture.filter(
-            // eslint-disable-next-line no-shadow
-            emote => emote.name === 'Stare' || emote.name === 'TeaTime',
-          ),
+          sevenTvChannelEmotes: channelSet,
+          sevenTvGlobalEmotes: globalSet,
           twitchChannelEmotes: [],
           twitchGlobalEmotes: [],
           userstate: defaultUserState,
         });
 
-        expect(result).toEqual<ParsedPart[]>([
-          {
-            content: emote.name,
-            height: emote.height,
-            type: 'emote',
-            url: emote.url,
-            width: emote.width,
-          },
-        ]);
+        expect(result).toEqual<ParsedPart[]>([expectedEmotePart(emote)]);
       },
     );
   });
 
   describe('Twitch', () => {
     describe('Twitch global', () => {
-      test.each(twitchTvSanitisedEmoteSetGlobalFixture)(
+      const uniqueTwitchGlobal = resolvableEmotes(
+        twitchTvSanitisedEmoteSetGlobalFixture,
+      );
+
+      test.each(uniqueTwitchGlobal)(
         'should replace Twitch global emote %s',
         emote => {
           const result = replaceTextWithEmotes({
@@ -267,20 +270,11 @@ describe.skip('replaceTextWithEmotesV2', () => {
             userstate: defaultUserState,
           });
 
-          expect(result).toEqual<ParsedPart[]>([
-            {
-              content: emote.name,
-              height: emote.height,
-              type: 'emote',
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-              url: expect.any(String), // weird issue with it mapping to another url
-              width: emote.width,
-            },
-          ]);
+          expect(result).toEqual<ParsedPart[]>([expectedEmotePart(emote)]);
         },
       );
 
-      test.each(twitchTvSanitisedEmoteSetGlobalFixture)(
+      test.each(uniqueTwitchGlobal)(
         'Should replace Twitch global emote within text %s',
         emote => {
           const result = replaceTextWithEmotes({
@@ -297,22 +291,13 @@ describe.skip('replaceTextWithEmotesV2', () => {
           });
 
           expect(result).toEqual<ParsedPart[]>([
-            {
-              content: emote.name,
-              height: undefined,
-              type: 'emote',
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-              url: expect.any(String),
-              width: undefined,
-            },
-            {
-              content: ' ',
-              type: 'text',
-            },
-            {
-              content: 'test foam world',
-              type: 'text',
-            },
+            expectedEmotePart(emote),
+            { content: ' ', type: 'text' },
+            { content: 'test', type: 'text' },
+            { content: ' ', type: 'text' },
+            { content: 'foam', type: 'text' },
+            { content: ' ', type: 'text' },
+            { content: 'world', type: 'text' },
           ]);
         },
       );
@@ -335,16 +320,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
             userstate: defaultUserState,
           });
 
-          expect(result).toEqual<ParsedPart[]>([
-            {
-              content: emote.name,
-              height: emote.height,
-              type: 'emote',
-
-              url: emote.url,
-              width: emote.width,
-            },
-          ]);
+          expect(result).toEqual<ParsedPart[]>([expectedEmotePart(emote)]);
         },
       );
 
@@ -365,29 +341,20 @@ describe.skip('replaceTextWithEmotesV2', () => {
           });
 
           expect(result).toEqual<ParsedPart[]>([
-            {
-              content: emote.name,
-              height: undefined,
-              type: 'emote',
-
-              url: emote.url,
-              width: undefined,
-            },
-            {
-              content: ' ',
-              type: 'text',
-            },
-            {
-              content: 'test foam world',
-              type: 'text',
-            },
+            expectedEmotePart(emote),
+            { content: ' ', type: 'text' },
+            { content: 'test', type: 'text' },
+            { content: ' ', type: 'text' },
+            { content: 'foam', type: 'text' },
+            { content: ' ', type: 'text' },
+            { content: 'world', type: 'text' },
           ]);
         },
       );
     });
   });
 
-  describe.skip('bttv', () => {
+  describe('bttv', () => {
     describe('channel', () => {
       test.each(bttvSanitisedChannelEmoteSet)(
         'should replace BTTV channel emote %s',
@@ -405,20 +372,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
             userstate: defaultUserState,
           });
 
-          expect(result).toEqual<ParsedPart[]>([
-            {
-              creator: emote.creator,
-              flags: emote.flags,
-              original_name: emote.original_name,
-              site: emote.site,
-              emote_link: emote.emote_link,
-              content: emote.name,
-              height: emote.height,
-              type: 'emote',
-              url: emote.url,
-              width: emote.width,
-            },
-          ]);
+          expect(result).toEqual<ParsedPart[]>([expectedEmotePart(emote)]);
         },
       );
 
@@ -439,44 +393,28 @@ describe.skip('replaceTextWithEmotesV2', () => {
           });
 
           expect(result).toEqual<ParsedPart[]>([
-            {
-              content: 'hello ',
-              type: 'text',
-            },
-            {
-              content: emote.name,
-              height: undefined,
-              type: 'emote',
-              url: emote.url,
-              width: undefined,
-            },
-            {
-              content: ' ',
-              type: 'text',
-            },
-            {
-              content: 'foam world ',
-              type: 'text',
-            },
-            {
-              content: emote.name,
-              height: undefined,
-              type: 'emote',
-              url: emote.url,
-              width: undefined,
-            },
+            { content: 'hello', type: 'text' },
+            { content: ' ', type: 'text' },
+            expectedEmotePart(emote),
+            { content: ' ', type: 'text' },
+            { content: 'foam', type: 'text' },
+            { content: ' ', type: 'text' },
+            { content: 'world', type: 'text' },
+            { content: ' ', type: 'text' },
+            expectedEmotePart(emote),
           ]);
         },
       );
     });
-    describe.skip('global', () => {
+
+    describe('global', () => {
       test.each(bttvSanitisedGlobalEmoteSet)(
         'should replace BTTV emote %s',
         emote => {
           const result = replaceTextWithEmotes({
             inputString: emote.name,
-            bttvChannelEmotes: bttvSanitisedGlobalEmoteSet,
-            bttvGlobalEmotes: [],
+            bttvChannelEmotes: [],
+            bttvGlobalEmotes: bttvSanitisedGlobalEmoteSet,
             ffzChannelEmotes: [],
             ffzGlobalEmotes: [],
             sevenTvChannelEmotes: [],
@@ -486,15 +424,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
             userstate: defaultUserState,
           });
 
-          expect(result).toEqual<ParsedPart[]>([
-            {
-              content: emote.name,
-              height: emote.height,
-              type: 'emote',
-              url: emote.url,
-              width: emote.width,
-            },
-          ]);
+          expect(result).toEqual<ParsedPart[]>([expectedEmotePart(emote)]);
         },
       );
 
@@ -503,8 +433,8 @@ describe.skip('replaceTextWithEmotesV2', () => {
         emote => {
           const result = replaceTextWithEmotes({
             inputString: `hello ${emote.name} foam world ${emote.name}`,
-            bttvChannelEmotes: bttvSanitisedGlobalEmoteSet,
-            bttvGlobalEmotes: [],
+            bttvChannelEmotes: [],
+            bttvGlobalEmotes: bttvSanitisedGlobalEmoteSet,
             ffzChannelEmotes: [],
             ffzGlobalEmotes: [],
             sevenTvChannelEmotes: [],
@@ -515,39 +445,22 @@ describe.skip('replaceTextWithEmotesV2', () => {
           });
 
           expect(result).toEqual<ParsedPart[]>([
-            {
-              content: 'hello ',
-              type: 'text',
-            },
-            {
-              content: emote.name,
-              height: undefined,
-              type: 'emote',
-              url: emote.url,
-              width: undefined,
-            },
-            {
-              content: ' ',
-              type: 'text',
-            },
-            {
-              content: 'foam world ',
-              type: 'text',
-            },
-            {
-              content: emote.name,
-              height: undefined,
-              type: 'emote',
-              url: emote.url,
-              width: undefined,
-            },
+            { content: 'hello', type: 'text' },
+            { content: ' ', type: 'text' },
+            expectedEmotePart(emote),
+            { content: ' ', type: 'text' },
+            { content: 'foam', type: 'text' },
+            { content: ' ', type: 'text' },
+            { content: 'world', type: 'text' },
+            { content: ' ', type: 'text' },
+            expectedEmotePart(emote),
           ]);
         },
       );
     });
   });
 
-  describe.skip('ffz', () => {
+  describe('ffz', () => {
     describe('channel', () => {
       test.each(ffzSanitisedChannelEmoteSet)(
         'should replace FFZ channel emote %s',
@@ -565,17 +478,10 @@ describe.skip('replaceTextWithEmotesV2', () => {
             userstate: defaultUserState,
           });
 
-          expect(result).toEqual<ParsedPart[]>([
-            {
-              content: emote.name,
-              height: emote.height,
-              type: 'emote',
-              url: emote.url,
-              width: emote.width,
-            },
-          ]);
+          expect(result).toEqual<ParsedPart[]>([expectedEmotePart(emote)]);
         },
       );
+
       test.each(ffzSanitisedChannelEmoteSet)(
         'should replace FFZ channel emote with text %s',
         emote => {
@@ -593,37 +499,21 @@ describe.skip('replaceTextWithEmotesV2', () => {
           });
 
           expect(result).toEqual<ParsedPart[]>([
-            {
-              content: 'hello ',
-              type: 'text',
-            },
-            {
-              content: emote.name,
-              height: undefined,
-              type: 'emote',
-              url: emote.url,
-              width: undefined,
-            },
-            {
-              content: ' ',
-              type: 'text',
-            },
-            {
-              content: 'foam world ',
-              type: 'text',
-            },
-            {
-              content: emote.name,
-              height: undefined,
-              type: 'emote',
-              url: emote.url,
-              width: undefined,
-            },
+            { content: 'hello', type: 'text' },
+            { content: ' ', type: 'text' },
+            expectedEmotePart(emote),
+            { content: ' ', type: 'text' },
+            { content: 'foam', type: 'text' },
+            { content: ' ', type: 'text' },
+            { content: 'world', type: 'text' },
+            { content: ' ', type: 'text' },
+            expectedEmotePart(emote),
           ]);
         },
       );
     });
-    describe.skip('global', () => {
+
+    describe('global', () => {
       test.each(ffzSanitisedGlobalEmoteSet)(
         'should replace FFZ global emote %s',
         emote => {
@@ -631,8 +521,8 @@ describe.skip('replaceTextWithEmotesV2', () => {
             inputString: emote.name,
             bttvChannelEmotes: [],
             bttvGlobalEmotes: [],
-            ffzChannelEmotes: ffzSanitisedGlobalEmoteSet,
-            ffzGlobalEmotes: [],
+            ffzChannelEmotes: [],
+            ffzGlobalEmotes: ffzSanitisedGlobalEmoteSet,
             sevenTvChannelEmotes: [],
             sevenTvGlobalEmotes: [],
             twitchChannelEmotes: [],
@@ -640,18 +530,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
             userstate: defaultUserState,
           });
 
-          expect(result).toEqual<ParsedPart[]>([
-            {
-              id: emote.id,
-              name: emote.name,
-              flags: emote.flags,
-              content: emote.name,
-              height: emote.height,
-              type: 'emote',
-              url: emote.url,
-              width: emote.width,
-            },
-          ]);
+          expect(result).toEqual<ParsedPart[]>([expectedEmotePart(emote)]);
         },
       );
 
@@ -672,46 +551,23 @@ describe.skip('replaceTextWithEmotesV2', () => {
           });
 
           expect(result).toEqual<ParsedPart[]>([
-            {
-              content: 'hello ',
-              type: 'text',
-            },
-            {
-              id: emote.id,
-              name: emote.name,
-              content: emote.name,
-              creator: emote.creator,
-              emote_link: emote.emote_link,
-              original_name: emote.original_name,
-              site: emote.site,
-              height: undefined,
-              type: 'emote',
-              url: emote.url,
-              width: undefined,
-            },
-            {
-              content: ' ',
-              type: 'text',
-            },
-            {
-              content: 'foam world ',
-              type: 'text',
-            },
-            {
-              content: emote.name,
-              height: undefined,
-              type: 'emote',
-              url: emote.url,
-              width: undefined,
-            },
+            { content: 'hello', type: 'text' },
+            { content: ' ', type: 'text' },
+            expectedEmotePart(emote),
+            { content: ' ', type: 'text' },
+            { content: 'foam', type: 'text' },
+            { content: ' ', type: 'text' },
+            { content: 'world', type: 'text' },
+            { content: ' ', type: 'text' },
+            expectedEmotePart(emote),
           ]);
         },
       );
     });
   });
 
-  describe.skip('smoke', () => {
-    const allEmoteSets = [
+  describe('smoke', () => {
+    const allEmoteSets: SanitisedEmote[][] = [
       ffzSanitisedChannelEmoteSet,
       ffzSanitisedGlobalEmoteSet,
       sevenTvSanitisedChannelEmoteSetFixture,
@@ -731,18 +587,7 @@ describe.skip('replaceTextWithEmotesV2', () => {
           ...defaultEmoteSets,
         });
 
-        expect(result).toEqual<ParsedPart[]>([
-          {
-            id: emote.id,
-            name: emote.name,
-            flags: emote.flags,
-            content: emote.name,
-            height: emote.height,
-            width: emote.width,
-            url: emote.url,
-            type: 'emote',
-          },
-        ]);
+        expect(result).toEqual<ParsedPart[]>([expectedEmotePart(emote)]);
       },
     );
 
@@ -754,31 +599,19 @@ describe.skip('replaceTextWithEmotesV2', () => {
       });
 
       expect(result).toEqual<ParsedPart[]>([
-        {
-          content: 'hello foam world ',
-          type: 'text',
-        },
-        {
-          id: emote.id,
-          name: emote.name,
-          content: emote.name,
-          height: emote.height,
-          width: emote.width,
-          type: 'emote',
-          url: emote.url,
-          creator: emote.creator,
-          emote_link: emote.emote_link,
-          original_name: emote.original_name,
-          site: emote.site,
-        },
-        {
-          content: ' ',
-          type: 'text',
-        },
-        {
-          content: 'hello foam world',
-          type: 'text',
-        },
+        { content: 'hello', type: 'text' },
+        { content: ' ', type: 'text' },
+        { content: 'foam', type: 'text' },
+        { content: ' ', type: 'text' },
+        { content: 'world', type: 'text' },
+        { content: ' ', type: 'text' },
+        expectedEmotePart(emote),
+        { content: ' ', type: 'text' },
+        { content: 'hello', type: 'text' },
+        { content: ' ', type: 'text' },
+        { content: 'foam', type: 'text' },
+        { content: ' ', type: 'text' },
+        { content: 'world', type: 'text' },
       ]);
     });
   });

@@ -80,11 +80,25 @@ export function createApiClient({
       logger[logPrefix].info(url.toString());
     }
 
+    // Merge case-insensitively: HTTP header names are case-insensitive, so a
+    // per-request 'Client-Id' must replace a default 'Client-ID' rather than
+    // coexist with it (fetch would combine them into "X, X" and Twitch
+    // rejects the request).
     const headers: Record<string, string> = {
       Accept: 'application/json',
       ...defaultHeaders,
-      ...extraHeaders,
     };
+    const headerKeyMap = new Map(
+      Object.keys(headers).map(k => [k.toLowerCase(), k]),
+    );
+    for (const [name, value] of Object.entries(extraHeaders)) {
+      const existing = headerKeyMap.get(name.toLowerCase());
+      if (existing) {
+        delete headers[existing];
+      }
+      headers[name] = value;
+      headerKeyMap.set(name.toLowerCase(), name);
+    }
     if (authToken && !headers['Authorization']) {
       headers['Authorization'] = `Bearer ${authToken}`;
     }
@@ -177,6 +191,9 @@ export function createApiClient({
       request<T>('DELETE', path, options),
     setAuthToken: (token: string) => {
       authToken = token;
+    },
+    setDefaultHeader: (name: string, value: string) => {
+      defaultHeaders[name] = value;
     },
     removeAuthToken: () => {
       authToken = undefined;

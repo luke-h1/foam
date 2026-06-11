@@ -28,13 +28,39 @@ import {
   searchChannels,
   getFollowedStreams,
 } from './fixtures/users';
+import {
+  globalBttvEmotes,
+  channelBttvEmotes,
+  ffzGlobalSet,
+  ffzRoom,
+  ffzBadges,
+  sevenTvGlobalEmoteSet,
+  sevenTvChannelUser,
+  sevenTvCosmetics,
+  sampleChatMessages,
+} from './fixtures/emotes';
 
 declare const Bun: {
   serve(options: {
     port: number;
-    fetch(request: Request): Response | Promise<Response>;
+    fetch(request: Request, server: BunServer): Response | Promise<Response>;
+    websocket?: {
+      open(ws: BunWebSocket): void;
+      message(ws: BunWebSocket, message: string | Uint8Array): void;
+      close(ws: BunWebSocket): void;
+    };
   }): unknown;
 };
+
+interface BunServer {
+  upgrade(request: Request): boolean;
+}
+
+interface BunWebSocket {
+  send(data: string): void;
+  close(): void;
+  readyState: number;
+}
 
 type Handler = (request: Request, url: URL) => Response;
 
@@ -204,60 +230,40 @@ const validateOauth: Handler = request => {
   });
 };
 
-const globalBttvEmotes = () =>
-  json([
-    { id: 'bttv1', code: 'OMEGALUL', imageType: 'png', animated: false },
-    { id: 'bttv2', code: 'monkaS', imageType: 'png', animated: false },
-  ]);
+const globalBttvEmotesHandler: Handler = () => json(globalBttvEmotes);
 
-const channelBttvEmotes = () =>
-  json({
-    channelEmotes: [
-      {
-        id: 'bttvch1',
-        code: 'FeelsGoodMan',
-        imageType: 'png',
-        animated: false,
-      },
-    ],
-    sharedEmotes: [],
-  });
+const channelBttvEmotesHandler: Handler = (_request, url) => {
+  const twitchId = url.pathname.split('/').pop() ?? 'unknown';
+  return json(channelBttvEmotes(twitchId));
+};
 
-const ffzRoom = () =>
-  json({
-    room: { set: 1 },
-    sets: {
-      1: {
-        emoticons: [
-          {
-            id: 1,
-            name: 'LULW',
-            urls: { 1: 'https://cdn.frankerfacez.com/emote/128054/1' },
-          },
-        ],
-      },
-    },
-  });
+const ffzRoomHandler: Handler = (_request, url) => {
+  const channelId = url.pathname.split('/').pop() ?? '1';
+  return json(ffzRoom(channelId));
+};
 
-const sevenTvGlobalEmotes = () =>
-  json({
-    emotes: [
-      {
-        id: '7tv1',
-        name: 'Sadge',
-        data: { host: { url: 'https://cdn.7tv.app/emote/7tv1' } },
-      },
-    ],
-  });
+const ffzGlobalSetHandler: Handler = () => json(ffzGlobalSet);
+const ffzBadgesHandler: Handler = () => json(ffzBadges);
+
+const sevenTvGlobalEmoteSetHandler: Handler = () => json(sevenTvGlobalEmoteSet);
+
+const sevenTvChannelUserHandler: Handler = (_request, url) => {
+  const twitchId = url.pathname.split('/').pop() ?? '0';
+  return json(sevenTvChannelUser(twitchId));
+};
+
+const sevenTvCosmeticsHandler: Handler = () => json(sevenTvCosmetics);
 
 const reset = () => json({ status: 'reset complete' });
 
 const routes: Record<string, Partial<Record<string, Handler>>> = {
   GET: {
-    '/3/cached/emotes/global': globalBttvEmotes,
+    '/3/cached/emotes/global': globalBttvEmotesHandler,
     '/health': health,
     '/helix/channels': channels,
     '/helix/chat/emotes/global': globalTwitchEmotes,
+    '/helix/eventsub/subscriptions': () =>
+      json({ data: [], total: 0, max_total_cost: 10000, total_cost: 0 }),
     '/helix/games': games,
     '/helix/games/top': topGames,
     '/helix/search/categories': searchGameCategories,
@@ -269,18 +275,46 @@ const routes: Record<string, Partial<Record<string, Handler>>> = {
     '/mock/streams': () => json(mockStreams),
     '/oauth2/validate': validateOauth,
     '/token': anonymousToken,
-    '/v3/emote-sets/global': sevenTvGlobalEmotes,
+    '/v1/badges': ffzBadgesHandler,
+    '/v1/set/global': ffzGlobalSetHandler,
+    '/v3/cosmetics': sevenTvCosmeticsHandler,
+    '/v3/emote-sets/global': sevenTvGlobalEmoteSetHandler,
   },
   POST: {
+    '/helix/eventsub/subscriptions': () =>
+      json(
+        {
+          data: [
+            {
+              id: 'mock-sub-id',
+              status: 'enabled',
+              type: 'channel.chat.message',
+              version: '1',
+              cost: 0,
+              condition: {},
+              transport: { method: 'websocket', session_id: 'mock-session' },
+              created_at: new Date().toISOString(),
+            },
+          ],
+          total: 1,
+          max_total_cost: 10000,
+          total_cost: 0,
+        },
+        { status: 202 },
+      ),
     '/mock/reset': reset,
     '/oauth2/token': refreshedToken,
+  },
+  DELETE: {
+    '/helix/eventsub/subscriptions': () => new Response(null, { status: 204 }),
   },
 };
 
 const paramRoutes: Record<string, [RegExp, Handler][]> = {
   GET: [
-    [/^\/3\/cached\/users\/twitch\/[^/]+$/, channelBttvEmotes],
-    [/^\/v1\/room\/id\/[^/]+$/, ffzRoom],
+    [/^\/3\/cached\/users\/twitch\/[^/]+$/, channelBttvEmotesHandler],
+    [/^\/v1\/room\/id\/[^/]+$/, ffzRoomHandler],
+    [/^\/v3\/users\/twitch\/[^/]+$/, sevenTvChannelUserHandler],
   ],
 };
 
@@ -314,12 +348,77 @@ const handleRequest = (request: Request) => {
   return handler(request, url);
 };
 
-// todo - add chat support
-// todo - add dummy stream support
+const IRC_PORT = Number(process.env.MOCK_IRC_PORT ?? 6667);
+
+// Minimal IRC-over-WebSocket mock that satisfies the Twitch chat handshake.
+// Sends GLOBALUSERSTATE + ROOMSTATE after CAP / NICK / JOIN so the app
+// transitions out of the "connecting" state.
+Bun.serve({
+  port: IRC_PORT,
+  fetch: (request, server) => {
+    if (server.upgrade(request)) {
+      return new Response(null, { status: 101 });
+    }
+    return new Response('IRC WebSocket server', { status: 200 });
+  },
+  websocket: {
+    open(ws) {
+      ws.send(':tmi.twitch.tv 001 justinfan12345 :Welcome, GLHF!');
+      ws.send(':tmi.twitch.tv 002 justinfan12345 :Your host is tmi.twitch.tv');
+      ws.send(':tmi.twitch.tv 003 justinfan12345 :This server is rather new');
+      ws.send(':tmi.twitch.tv 004 justinfan12345 :-');
+      ws.send(':tmi.twitch.tv 375 justinfan12345 :-');
+      ws.send(
+        ':tmi.twitch.tv 372 justinfan12345 :You are in a maze of twisty passages.',
+      );
+      ws.send(':tmi.twitch.tv 376 justinfan12345 :>');
+    },
+    message(ws, message) {
+      const msg = typeof message === 'string' ? message : message.toString();
+
+      if (msg.startsWith('CAP REQ')) {
+        ws.send(
+          ':tmi.twitch.tv CAP * ACK :twitch.tv/commands twitch.tv/membership twitch.tv/tags',
+        );
+        return;
+      }
+
+      if (msg.startsWith('JOIN')) {
+        const channel = msg.split(' ')[1]?.trim() ?? '#unknown';
+        ws.send(
+          `:justinfan12345!justinfan12345@justinfan12345.tmi.twitch.tv JOIN ${channel}`,
+        );
+        ws.send(
+          `@emote-only=0;followers-only=-1;r9k=0;slow=0;subs-only=0 :tmi.twitch.tv ROOMSTATE ${channel}`,
+        );
+        ws.send(
+          `@color=;display-name=justinfan12345;emote-sets=0;user-id=12345;user-type= :tmi.twitch.tv GLOBALUSERSTATE`,
+        );
+        ws.send(
+          `:tmi.twitch.tv 353 justinfan12345 = ${channel} :justinfan12345`,
+        );
+        ws.send(
+          `:tmi.twitch.tv 366 justinfan12345 ${channel} :End of /NAMES list`,
+        );
+        // Send a burst of sample chat messages with third-party emote references
+        // so the chat renders populated content in E2E tests.
+        for (const chatMsg of sampleChatMessages(channel)) {
+          ws.send(chatMsg);
+        }
+        return;
+      }
+
+      if (msg === 'PING :tmi.twitch.tv' || msg.startsWith('PING')) {
+        ws.send('PONG :tmi.twitch.tv');
+      }
+    },
+    close(_ws) {},
+  },
+});
 
 Bun.serve({
   port: PORT,
-  fetch: request => {
+  fetch: (request, _server) => {
     try {
       return handleRequest(request);
     } catch (error) {
@@ -333,7 +432,8 @@ console.log(`
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    Foam E2E Mock Server                         ║
 ╠══════════════════════════════════════════════════════════════════╣
-║  Server running at: http://localhost:${PORT}                    ║
+║  HTTP server:  http://localhost:${PORT}                         ║
+║  IRC WebSocket: ws://localhost:${IRC_PORT}                      ║
 ║                                                                 ║
 ║  Available endpoints:                                           ║
 ║  - GET  /health                    Health check                 ║
@@ -346,6 +446,14 @@ console.log(`
 ║  - GET  /helix/users               User info                    ║
 ║  - GET  /helix/channels            Channel info                 ║
 ║  - GET  /token                     Auth token                   ║
+║  - GET  /3/cached/emotes/global    BTTV global emotes           ║
+║  - GET  /3/cached/users/twitch/:id BTTV channel emotes          ║
+║  - GET  /v1/set/global             FFZ global emotes            ║
+║  - GET  /v1/room/id/:id            FFZ channel emotes           ║
+║  - GET  /v1/badges                 FFZ badges                   ║
+║  - GET  /v3/emote-sets/global      7TV global emote set         ║
+║  - GET  /v3/users/twitch/:id       7TV channel user+emotes      ║
+║  - GET  /v3/cosmetics              7TV cosmetics/badges         ║
 ║                                                                 ║
 ║  Debug endpoints:                                               ║
 ║  - GET  /mock/streams              List all mock streams        ║

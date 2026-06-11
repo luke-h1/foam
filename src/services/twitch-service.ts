@@ -7,7 +7,8 @@ import {
   twitchApi,
   mockServerUrl,
   isE2EMode,
-  twitchClientId,
+  getTwitchClientId,
+  setTwitchClientId,
 } from './api/clients';
 
 import {
@@ -527,6 +528,10 @@ export const twitchService = {
 
     if (!body.data.access_token) {
       console.error('no token received from auth lambda');
+    } else {
+      // Fresh proxy tokens may be issued under a different client ID than
+      // EXPO_PUBLIC_TWITCH_CLIENT_ID; sync the Helix Client-Id header to it.
+      await twitchService.validateToken(body.data.access_token);
     }
 
     return body.data;
@@ -538,18 +543,24 @@ export const twitchService = {
    * @see https://dev.twitch.tv/docs/authentication/validate-tokens#validating-tokens
    */
   validateToken: async (token: string): Promise<boolean> => {
+    if (isE2EMode) {
+      return true;
+    }
     const res = await fetch('https://id.twitch.tv/oauth2/validate', {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.status !== 200) {
       return false;
     }
-    // A token issued for another client ID still validates, but every Helix
-    // call rejects it with "Client ID and OAuth token do not match".
+    // Helix rejects requests whose Client-Id header does not match the client
+    // the token was issued for, so adopt the token's client ID.
     const body = (await res.json().catch(() => null)) as {
       client_id?: string;
     } | null;
-    return body?.client_id === twitchClientId;
+    if (body?.client_id && body.client_id !== getTwitchClientId()) {
+      setTwitchClientId(body.client_id);
+    }
+    return true;
   },
 
   /**
@@ -563,9 +574,6 @@ export const twitchService = {
     const result = await twitchApi.get<PaginatedList<TwitchStream>>(
       '/streams',
       {
-        headers: {
-          'Client-Id': twitchClientId,
-        },
         params: {
           ...(cursor && { after: cursor }),
         },
@@ -605,9 +613,6 @@ export const twitchService = {
       params: {
         first: 15,
         ...params,
-      },
-      headers: {
-        'Client-Id': twitchClientId,
       },
     });
 
@@ -662,7 +667,6 @@ export const twitchService = {
   getUserInfo: async (token: string): Promise<UserInfoResponse> => {
     const result = await twitchApi.get<{ data: UserInfoResponse[] }>('/users', {
       headers: {
-        'Client-Id': twitchClientId,
         Authorization: `Bearer ${token}`,
       },
     });

@@ -553,12 +553,11 @@ const styles = StyleSheet.create({
   },
   filterBar: {
     alignSelf: 'stretch',
-    marginTop: theme.space12,
   },
   header: {
     paddingHorizontal: theme.space20,
-    paddingBottom: theme.space20,
-    paddingTop: theme.space20,
+    paddingBottom: theme.space12,
+    paddingTop: theme.space4,
   },
   historyContainer: {
     paddingHorizontal: theme.space20,
@@ -581,7 +580,7 @@ const styles = StyleSheet.create({
     gap: theme.space8,
   },
   quickActionsSection: {
-    marginTop: theme.space16,
+    marginTop: theme.space12,
   },
   resultItem: {
     flexDirection: 'row',
@@ -593,8 +592,8 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     gap: 2,
-    marginBottom: theme.space12,
-    marginTop: theme.space20,
+    marginBottom: theme.space8,
+    marginTop: theme.space12,
   },
   sectionTitle: {
     letterSpacing: 1,

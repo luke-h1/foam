@@ -25,6 +25,7 @@ export function TopSegmentControl({
 
 const styles = StyleSheet.create({
   segmentFrame: {
+    alignSelf: 'stretch',
     paddingBottom: theme.space8,
     paddingTop: theme.space12,
   },
