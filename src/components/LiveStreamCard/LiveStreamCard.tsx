@@ -99,6 +99,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
 
           <View style={styles.mediaDetailsRow}>
             <PressableArea
+              accessibilityLabel={`${stream.user_name}'s profile`}
               onPress={handleStreamerPress}
               onPressIn={handleStreamerPressIn}
               style={styles.avatarPressable}
@@ -122,6 +123,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
 
             <View style={styles.mediaTextColumn}>
               <PressableArea
+                accessibilityLabel={`${stream.user_name}'s profile`}
                 onPress={handleStreamerPress}
                 onPressIn={handleStreamerPressIn}
                 hitSlop={6}
@@ -143,7 +145,11 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               >
                 {stream.title}
               </Text>
-              <PressableArea onPress={handleCategoryPress} hitSlop={6}>
+              <PressableArea
+                accessibilityLabel={`${stream.game_name} category`}
+                onPress={handleCategoryPress}
+                hitSlop={6}
+              >
                 <Text
                   type='sm'
                   weight='medium'
@@ -185,6 +191,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
 
         <View style={styles.details}>
           <PressableArea
+            accessibilityLabel={`${stream.user_name}'s profile`}
             onPress={handleStreamerPress}
             onPressIn={handleStreamerPressIn}
             style={styles.usernameButton}

@@ -33,7 +33,11 @@ export function CategoryCard({ category }: Props) {
   }
 
   return (
-    <Button onPress={handlePress} style={styles.container}>
+    <Button
+      label={`${category.name} category`}
+      onPress={handlePress}
+      style={styles.container}
+    >
       <View style={styles.wrapper}>
         <Image
           source={category.box_art_url

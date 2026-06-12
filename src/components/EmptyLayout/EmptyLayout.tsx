@@ -125,6 +125,7 @@ export function EmptyLayoutButton({
       <View style={style}>
         <Button
           disabled={!onPress}
+          label={title}
           onPress={onPress}
           style={[
             styles.ctaButton,

@@ -99,7 +99,12 @@ function ChatComposerComponent({
 
       <View style={styles.row}>
         {onPressAdd ? (
-          <PressableScale style={styles.addButton} onPress={onPressAdd}>
+          <PressableScale
+            accessibilityLabel='Open emote picker'
+            accessibilityRole='button'
+            style={styles.addButton}
+            onPress={onPressAdd}
+          >
             <SymbolView
               name='face.smiling'
               size={22}
@@ -143,6 +148,9 @@ function ChatComposerComponent({
                   : theme.darkActiveContent,
               },
             ]}
+            accessibilityLabel='Send message'
+            accessibilityRole='button'
+            accessibilityState={{ disabled: !submitEnabled }}
             onPress={handleSubmit}
           >
             <SymbolView

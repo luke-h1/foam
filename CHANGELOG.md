@@ -31,6 +31,7 @@
 ### 🐛 Bug Fixes
 
 - **app:** Sentry initialization
+- **app:** Sentry initialization
 
 ## 0.0.42-testflight
 
@@ -362,7 +363,10 @@
 - **app:** Fix OTA updates
 - **app:** Testing native update
 - **app:** Testing native update
-- **app:** Testing OTA
+  <<<<<<< HEAD
+- # **app:** Testing OTA
+- **app:** Testing ota
+  > > > > > > > 2f49a7b5 (chore(app): improve accesibility)
 
 ## 0.0.36
 
@@ -372,9 +376,15 @@
 
 ### 🐛 Bug Fixes
 
+<<<<<<< HEAD
+
 - **infrastructure:** OTA
 - **infrastructure:** OTA
-- **infrastructure:** OTA
+- # **infrastructure:** OTA
+- **infrastructure:** Ota
+- **infrastructure:** Ota
+- **infrastructure:** Ota
+  > > > > > > > 2f49a7b5 (chore(app): improve accesibility)
 
 ## 0.0.37
 

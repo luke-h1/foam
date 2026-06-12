@@ -17,6 +17,7 @@ export function PressableArea({
 
   return (
     <Pressable
+      accessibilityRole='button'
       {...rest}
       ref={ref}
       style={style}
