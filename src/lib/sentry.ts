@@ -35,6 +35,7 @@ export function init() {
     dist: process.env.EXPO_PUBLIC_SENTRY_DIST,
     release: process.env.EXPO_PUBLIC_SENTRY_RELEASE,
     enableAutoSessionTracking: true,
+    enableLogs: true,
     ignoreErrors: ['Network request failed'],
     attachStacktrace: true,
     sampleRate: 1,
@@ -208,10 +209,9 @@ export function recordWarning(warning: {
     data: extra,
   });
 
-  Sentry.captureMessage(message, {
-    level: 'warning',
-    extra,
-  });
+  // Sentry Logs instead of captureMessage: warnings shouldn't consume
+  // error-event quota.
+  Sentry.logger.warn(message, extra);
 }
 
 export function recordInfo(info: {
@@ -228,6 +228,8 @@ export function recordInfo(info: {
     level: 'info',
     data: extra,
   });
+
+  Sentry.logger.info(message, extra);
 }
 
 export function countOtaMetric(

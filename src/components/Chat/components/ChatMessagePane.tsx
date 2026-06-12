@@ -14,6 +14,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
+import type { ChatFontScale } from '@app/store/preferenceStore';
 import type { ChatPaneFlags } from '../types/chatUiFlags';
 import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
 import { styles } from '../styles';
@@ -39,6 +40,7 @@ export interface ChatMessagePaneProps {
   channelName: string;
   currentUsername?: string;
   chatDensity: 'comfortable' | 'compact';
+  chatFontScale?: ChatFontScale;
   hiddenUsers: string[];
   hiddenPhrases: string[];
   highlightedUsers: string[];
@@ -47,6 +49,7 @@ export interface ChatMessagePaneProps {
   handleScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   handleScrollBeginDrag: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   handleScrollEndDrag: () => void;
+  handleMomentumScrollBegin: () => void;
   handleMomentumScrollEnd: () => void;
   handleEndReached: () => void;
   handleContentSizeChange: () => void;
@@ -75,10 +78,12 @@ export const ChatMessagePane = memo(
     highlightedUsers,
     paneFlags,
     chatDensity,
+    chatFontScale,
     listRef,
     handleScroll,
     handleScrollBeginDrag,
     handleScrollEndDrag,
+    handleMomentumScrollBegin,
     handleMomentumScrollEnd,
     handleEndReached,
     handleContentSizeChange,
@@ -157,6 +162,7 @@ export const ChatMessagePane = memo(
         estimateChatMessageHeightWithPretext(item, {
           containerWidth: pretextMeasureWidth,
           density: chatDensity,
+          fontScale: chatFontScale,
           showInlineReplyContext,
           showTimestamp: showTimestamps,
         }) ??
@@ -165,6 +171,7 @@ export const ChatMessagePane = memo(
           : CHAT_ESTIMATED_COMFORTABLE_ROW_HEIGHT),
       [
         chatDensity,
+        chatFontScale,
         pretextMeasureWidth,
         showInlineReplyContext,
         showTimestamps,
@@ -243,6 +250,7 @@ export const ChatMessagePane = memo(
           handleScroll={handleScroll}
           handleScrollBeginDrag={handleScrollBeginDrag}
           handleScrollEndDrag={handleScrollEndDrag}
+          handleMomentumScrollBegin={handleMomentumScrollBegin}
           handleMomentumScrollEnd={handleMomentumScrollEnd}
           handleEndReached={handleEndReached}
           handleContentSizeChange={handleContentSizeChange}

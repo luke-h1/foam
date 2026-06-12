@@ -21,6 +21,8 @@ export type InlineFlowItem = {
 
 type PreparedInlineFlow = unknown;
 
+type PreparedTextWithSegments = unknown;
+
 interface ExpoPretextModule {
   prepareInlineFlow: (items: InlineFlowItem[]) => PreparedInlineFlow;
   measureInlineFlow: (
@@ -28,10 +30,17 @@ interface ExpoPretextModule {
     maxWidth: number,
     lineHeight: number,
   ) => LayoutResult;
+  prepareWithSegments: (
+    text: string,
+    style: TextStyle,
+  ) => PreparedTextWithSegments;
+  measureNaturalWidth: (prepared: PreparedTextWithSegments) => number;
 }
 
 const expoPretext = require('expo-pretext') as ExpoPretextModule;
 
 export const prepareInlineFlow = expoPretext.prepareInlineFlow;
 export const measureInlineFlow = expoPretext.measureInlineFlow;
+export const prepareWithSegments = expoPretext.prepareWithSegments;
+export const measureNaturalWidth = expoPretext.measureNaturalWidth;
 export type { TextStyle };

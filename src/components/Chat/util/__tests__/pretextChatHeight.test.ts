@@ -62,6 +62,68 @@ describe('estimateChatMessageHeightWithPretext', () => {
     expect(replyHeight).toBeGreaterThan(plainHeight ?? 0);
   });
 
+  test('reply context adds a single line regardless of reply body length', () => {
+    const makeOptions = {
+      containerWidth: 320,
+      density: 'comfortable',
+      showInlineReplyContext: true,
+      showTimestamp: false,
+    } as const;
+    const shortReplyHeight = estimateChatMessageHeightWithPretext(
+      createMessage({
+        id: 'msg-reply-short',
+        parentDisplayName: 'originalUser',
+        replyBody: 'ok',
+      }),
+      makeOptions,
+    );
+    const longReplyHeight = estimateChatMessageHeightWithPretext(
+      createMessage({
+        id: 'msg-reply-long',
+        parentDisplayName: 'originalUser',
+        replyBody:
+          'a very long reply body that would wrap onto many lines if it were not clamped to a single line by the renderer'.repeat(
+            3,
+          ),
+      }),
+      makeOptions,
+    );
+
+    // ReplyingToHeader renders numberOfLines={1}, so the estimate must not
+    // grow with the reply body.
+    expect(longReplyHeight).toEqual(shortReplyHeight);
+  });
+
+  test('larger chat font scale produces taller estimates for wrapped text', () => {
+    const longText =
+      'this message definitely wraps onto several lines at this width '.repeat(
+        3,
+      );
+    const makeMessage = (id: string) =>
+      createMessage({ id, message: [{ type: 'text', content: longText }] });
+    const defaultHeight = estimateChatMessageHeightWithPretext(
+      makeMessage('msg-scale-default'),
+      {
+        containerWidth: 320,
+        density: 'comfortable',
+        showInlineReplyContext: false,
+        showTimestamp: false,
+      },
+    );
+    const largeHeight = estimateChatMessageHeightWithPretext(
+      makeMessage('msg-scale-large'),
+      {
+        containerWidth: 320,
+        density: 'comfortable',
+        fontScale: 'large',
+        showInlineReplyContext: false,
+        showTimestamp: false,
+      },
+    );
+
+    expect(largeHeight ?? 0).toBeGreaterThan(defaultHeight ?? 0);
+  });
+
   test('measures inline emote messages at the emote line height', () => {
     const longText =
       'this message definitely wraps onto several lines at this width ';

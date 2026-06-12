@@ -205,6 +205,7 @@ function ChatListPerfFixture() {
       handleScroll={jest.fn()}
       handleScrollBeginDrag={jest.fn()}
       handleScrollEndDrag={jest.fn()}
+      handleMomentumScrollBegin={jest.fn()}
       handleMomentumScrollEnd={jest.fn()}
       handleEndReached={jest.fn()}
       handleContentSizeChange={jest.fn()}

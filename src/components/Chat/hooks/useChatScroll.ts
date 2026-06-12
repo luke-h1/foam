@@ -54,6 +54,10 @@ export const useChatScroll = ({
   const lastViewHeightRef = useRef(0);
   const lastOffsetYRef = useRef<number | null>(null);
   const isDraggingRef = useRef(false);
+  const isMomentumScrollingRef = useRef(false);
+  const scrollEndDragSettleRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const hasUserScrollIntentRef = useRef(false);
   const lastScrollEventAtRef = useRef(0);
 
@@ -102,28 +106,51 @@ export const useChatScroll = ({
     clearScrollToBottomTimers();
     clearBottomContentAnchor();
     isDraggingRef.current = true;
+    isMomentumScrollingRef.current = false;
     isScrollingToBottomRef.current = false;
     setIsScrollingToBottom(false);
     shouldMaintainScrollAtEndRef.current = false;
     setShouldMaintainScrollAtEnd(false);
     lastOffsetYRef.current = e.nativeEvent.contentOffset.y;
+    if (scrollEndDragSettleRef.current) {
+      clearTimeout(scrollEndDragSettleRef.current);
+      scrollEndDragSettleRef.current = null;
+    }
   };
 
+  // Don't re-enable immediately: a fling fires onMomentumScrollBegin within
+  // a few ms, which cancels this timeout and prevents premature re-enable.
+  // For a slow drag-release with no fling the timeout fires and re-enables.
   const handleScrollEndDrag = useCallback(() => {
     isDraggingRef.current = false;
-    if (isAtBottomRef.current) {
-      shouldMaintainScrollAtEndRef.current = true;
-      setShouldMaintainScrollAtEnd(true);
+    if (scrollEndDragSettleRef.current) {
+      clearTimeout(scrollEndDragSettleRef.current);
+    }
+    scrollEndDragSettleRef.current = setTimeout(() => {
+      scrollEndDragSettleRef.current = null;
+      if (!isMomentumScrollingRef.current && isAtBottomRef.current) {
+        shouldMaintainScrollAtEndRef.current = true;
+        setShouldMaintainScrollAtEnd(true);
+      }
+    }, 50);
+  }, [isAtBottomRef]);
+
+  const handleMomentumScrollBegin = useCallback(() => {
+    isMomentumScrollingRef.current = true;
+    if (scrollEndDragSettleRef.current) {
+      clearTimeout(scrollEndDragSettleRef.current);
+      scrollEndDragSettleRef.current = null;
     }
   }, []);
 
   const handleMomentumScrollEnd = useCallback(() => {
+    isMomentumScrollingRef.current = false;
     isDraggingRef.current = false;
     if (isAtBottomRef.current) {
       shouldMaintainScrollAtEndRef.current = true;
       setShouldMaintainScrollAtEnd(true);
     }
-  }, []);
+  }, [isAtBottomRef]);
 
   const markAtBottom = useCallback(() => {
     isAtBottomRef.current = true;
@@ -194,13 +221,15 @@ export const useChatScroll = ({
       }
 
       const shouldStayAnchoredToBottom =
-        !hasUserScrollIntentRef.current && !isDraggingRef.current;
+        !hasUserScrollIntentRef.current &&
+        !isDraggingRef.current &&
+        !isMomentumScrollingRef.current;
 
       const resolved = userDraggedAway
         ? false
         : shouldStayAnchoredToBottom
           ? true
-          : hasUserScrollIntentRef.current
+          : hasUserScrollIntentRef.current || isMomentumScrollingRef.current
             ? atBottom || reachedPreviousEndDuringGrowth
             : true;
 
@@ -322,6 +351,10 @@ export const useChatScroll = ({
       clearTimeout(scrollThrottleRef.current);
     }
     scrollThrottleRef.current = null;
+    if (scrollEndDragSettleRef.current) {
+      clearTimeout(scrollEndDragSettleRef.current);
+      scrollEndDragSettleRef.current = null;
+    }
   }, [clearBottomContentAnchor, clearScrollToBottomTimers]);
 
   return {
@@ -336,6 +369,7 @@ export const useChatScroll = ({
     handleScroll,
     handleScrollBeginDrag,
     handleScrollEndDrag,
+    handleMomentumScrollBegin,
     handleMomentumScrollEnd,
     handleEndReached: markAtBottom,
     handleContentSizeChange,

@@ -15,6 +15,7 @@ import {
   buildRawTwitchPlayerUrl,
   buildTwitchClipPlayerUrl,
   buildTwitchPlayerQualityDefaultScript,
+  buildTwitchPlayerUiBlockScript,
 } from './twitchPlayerSource';
 import type { StreamPlayerProps } from './types';
 import { usePlayerBridge } from './usePlayerBridge';
@@ -251,7 +252,10 @@ export const StreamPlayer = memo(function StreamPlayer({
   // The stock player.twitch.tv page runs unscripted: Twitch's own UI handles
   // playback, so the playerControls bootstrap is not injected and the bridge
   // (ready/playing/pause messages, native controls overlay) stays dormant.
-  const injectedJavaScript = TWITCH_AUTH_HELPER_SCRIPT;
+  // The UI-block script runs after load to hide subscribe/gift/follow/avatar
+  // elements and intercept any remaining www.twitch.tv link clicks.
+  const injectedJavaScript =
+    TWITCH_AUTH_HELPER_SCRIPT + '\n' + buildTwitchPlayerUiBlockScript();
 
   const injectedJavaScriptBeforeContentLoaded = clip
     ? TWITCH_AUTH_HELPER_SCRIPT

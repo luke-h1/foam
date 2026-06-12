@@ -1,5 +1,6 @@
 /* eslint-disable camelcase */
 import { fetch } from 'expo/fetch';
+import { recordInfo } from '@app/lib/sentry';
 import type { TwitchHelixPoll } from '@app/types/twitch/poll';
 import type { TwitchHelixPrediction } from '@app/types/twitch/prediction';
 import Constants from 'expo-constants';
@@ -556,9 +557,22 @@ export const twitchService = {
     // the token was issued for, so adopt the token's client ID.
     const body = (await res.json().catch(() => null)) as {
       client_id?: string;
+      expires_in?: number;
     } | null;
     if (body?.client_id && body.client_id !== getTwitchClientId()) {
       setTwitchClientId(body.client_id);
+    }
+    if (typeof body?.expires_in === 'number') {
+      recordInfo({
+        name: 'auth_info',
+        message: 'twitch token validated',
+        params: {
+          expiresInSeconds: body.expires_in,
+          expiresAt: new Date(
+            Date.now() + body.expires_in * 1000,
+          ).toISOString(),
+        },
+      });
     }
     return true;
   },

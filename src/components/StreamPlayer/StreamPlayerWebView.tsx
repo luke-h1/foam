@@ -12,6 +12,7 @@ import type {
 import {
   isAllowedTwitchPlayerNavigation,
   isAppUrl,
+  isTwitchMainSiteNavigation,
   isTwitchPassportCallbackUrl,
 } from './twitchPlayerSource';
 
@@ -77,6 +78,16 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
   const handleShouldStartLoadWithRequest: OnShouldStartLoadWithRequest =
     request => {
       if (isAppUrl(request.url)) {
+        return false;
+      }
+
+      // Always block top-frame navigation to www.twitch.tv (subscribe, gift,
+      // user profiles, etc.).  Login uses id.twitch.tv and the passport-
+      // callback path — both intentionally exempt.
+      if (
+        request.isTopFrame !== false &&
+        isTwitchMainSiteNavigation(request.url)
+      ) {
         return false;
       }
 

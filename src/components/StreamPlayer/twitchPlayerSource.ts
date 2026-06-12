@@ -696,3 +696,79 @@ export function isTwitchPassportCallbackUrl(url: string): boolean {
     return false;
   }
 }
+
+// Returns true for top-frame navigations to the Twitch main site that are NOT
+// the login passport-callback.  login (id.twitch.tv) and the callback are
+// intentionally allowed; everything else (subscribe, gift, profiles, etc.) is
+// blocked so the WebView never leaves the player context.
+export function isTwitchMainSiteNavigation(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return (
+      parsed.hostname === 'www.twitch.tv' &&
+      !parsed.pathname.startsWith('/passport-callback')
+    );
+  } catch {
+    return false;
+  }
+}
+
+// Injects CSS and a click interceptor that hide and block subscribe, gift-sub,
+// follow/heart, avatar, and username links in the embedded Twitch player page.
+export function buildTwitchPlayerUiBlockScript(): string {
+  return `
+(function() {
+  if (window.__foamUiBlockInstalled) { return true; }
+  window.__foamUiBlockInstalled = true;
+
+  var CSS = [
+    '[data-a-target="subscribe-button"]',
+    '[data-a-target="subscriptions-manage"]',
+    '[data-a-target="gift-subscription-button"]',
+    '[data-a-target*="gift-sub"]',
+    '[data-a-target="follow-button"]',
+    '[data-a-target="unfollow-button"]',
+    '[data-a-target*="follow-button"]',
+    '[data-a-target="user-avatar-link"]',
+    '[data-a-target="user-avatar"]',
+    '[class*="SubscribeButton"]',
+    '[class*="GiftButton"]',
+    '[class*="FollowButton"]',
+    '[class*="follow-btn"]',
+    'a[href*="/subscribe"]',
+    'a[href*="/gift"]'
+  ].join(',') + '{display:none!important;pointer-events:none!important;visibility:hidden!important;}';
+
+  var style = document.createElement('style');
+  style.id = 'foam-ui-block-style';
+  style.textContent = CSS;
+  (document.head || document.documentElement).appendChild(style);
+
+  // Belt-and-suspenders: intercept any click that would navigate to the Twitch
+  // main site (profiles, subscribe pages, etc.).  Login (id.twitch.tv) and the
+  // passport-callback are handled at the native level and are not affected.
+  document.addEventListener('click', function(e) {
+    var el = e.target;
+    while (el && el !== document.body) {
+      if (el.tagName === 'A') {
+        try {
+          var href = el.href || el.getAttribute('href') || '';
+          var url = new URL(href, window.location.href);
+          if (
+            url.hostname === 'www.twitch.tv' &&
+            !url.pathname.startsWith('/passport-callback')
+          ) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+          }
+        } catch (_) {}
+        break;
+      }
+      el = el.parentElement;
+    }
+  }, true);
+
+  return true;
+})();
+true;`;
+}

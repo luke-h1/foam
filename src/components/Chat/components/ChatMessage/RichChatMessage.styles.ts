@@ -16,7 +16,39 @@ export const chatLineMetrics = {
   },
 } as const;
 
+const chatFontScaleLineMetrics = {
+  small: {
+    comfortable: { fontSize: theme.fontSize12, lineHeight: 15 },
+    compact: { fontSize: theme.fontSize10, lineHeight: 13 },
+  },
+  large: {
+    comfortable: { fontSize: theme.fontSize16, lineHeight: 20 },
+    compact: { fontSize: theme.fontSize12, lineHeight: 15 },
+  },
+} as const;
+
 export type ChatFontScale = 'small' | 'default' | 'large';
+
+export interface ChatLineMetrics {
+  fontSize: number;
+  lineHeight: number;
+}
+
+/**
+ * The fontSize/lineHeight a message body line renders at, after the chat
+ * font-scale preference is applied. Height estimation
+ * (util/pretextChatHeight.ts) must measure with these exact metrics.
+ */
+export function getChatLineMetrics(
+  fontScale: ChatFontScale | undefined,
+  compact: boolean,
+): ChatLineMetrics {
+  const density = compact ? 'compact' : 'comfortable';
+  if (fontScale === 'small' || fontScale === 'large') {
+    return chatFontScaleLineMetrics[fontScale][density];
+  }
+  return chatLineMetrics[density];
+}
 
 export function getChatFontScaleStyle(
   fontScale: ChatFontScale | undefined,
@@ -96,20 +128,16 @@ export const styles = StyleSheet.create({
     paddingVertical: theme.space4,
   },
   fontScaleLarge: {
-    fontSize: theme.fontSize16,
-    lineHeight: 20,
+    ...chatFontScaleLineMetrics.large.comfortable,
   },
   fontScaleLargeCompact: {
-    fontSize: theme.fontSize12,
-    lineHeight: 15,
+    ...chatFontScaleLineMetrics.large.compact,
   },
   fontScaleSmall: {
-    fontSize: theme.fontSize12,
-    lineHeight: 15,
+    ...chatFontScaleLineMetrics.small.comfortable,
   },
   fontScaleSmallCompact: {
-    fontSize: theme.fontSize10,
-    lineHeight: 13,
+    ...chatFontScaleLineMetrics.small.compact,
   },
   returningChatterMetaText: {
     color: CHAT_NOTICE_ACCENTS.returningChatter,

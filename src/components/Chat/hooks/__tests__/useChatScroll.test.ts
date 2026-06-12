@@ -167,6 +167,12 @@ describe('useChatScroll', () => {
         result.current.handleScrollEndDrag();
       });
 
+      // End-drag re-enables after a settle window so a fling's
+      // onMomentumScrollBegin can cancel it first.
+      act(() => {
+        jest.advanceTimersByTime(50);
+      });
+
       expect(result.current.shouldMaintainScrollAtEnd).toBe(true);
     });
 

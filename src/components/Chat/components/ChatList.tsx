@@ -85,6 +85,7 @@ interface ChatListProps {
   handleScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   handleScrollBeginDrag: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   handleScrollEndDrag: () => void;
+  handleMomentumScrollBegin: () => void;
   handleMomentumScrollEnd: () => void;
   handleEndReached: () => void;
   handleContentSizeChange: () => void;
@@ -109,6 +110,7 @@ export const ChatList = memo(
     handleScroll,
     handleScrollBeginDrag,
     handleScrollEndDrag,
+    handleMomentumScrollBegin,
     handleMomentumScrollEnd,
     handleEndReached,
     handleContentSizeChange,
@@ -193,6 +195,7 @@ export const ChatList = memo(
         onScroll={handleScroll}
         onScrollBeginDrag={handleScrollBeginDrag}
         onScrollEndDrag={handleScrollEndDrag}
+        onMomentumScrollBegin={handleMomentumScrollBegin}
         onMomentumScrollEnd={handleMomentumScrollEnd}
         onEndReached={handleEndReached}
         onEndReachedThreshold={CHAT_END_REACHED_THRESHOLD}
