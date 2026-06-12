@@ -1,6 +1,7 @@
 import { useWatchTimeTracking } from '@app/hooks/useWatchTimeTracking';
+import { recordInfo } from '@app/lib/sentry';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { InteractionManager, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 import { ControlsOverlay } from './ControlsOverlay';
@@ -101,6 +102,48 @@ export const StreamPlayer = memo(function StreamPlayer({
     url: string;
     statusCode: number;
   } | null>(null);
+  // Mounting the WebView while the screen-push animation is still running
+  // makes WKWebView start the inline video mid-transition; its AVPlayer
+  // layer then intermittently never attaches to the compositor (audio and
+  // currentTime advance but the picture is black or frozen on one frame).
+  // Wait for interactions/transitions to settle before creating the WebView.
+  const [canMountWebView, setCanMountWebView] = useState(false);
+  useEffect(() => {
+    const task = InteractionManager.runAfterInteractions(() => {
+      setCanMountWebView(true);
+    });
+    return () => task.cancel();
+  }, []);
+
+  // Even when mounted post-transition, WKWebView sometimes fails to attach
+  // the inline video's AVPlayer layer to the compositor (picture stays black
+  // or frozen while playback advances). The page cannot observe this, so we
+  // unconditionally force a frame change shortly after playback starts —
+  // resizing the WKWebView makes it rebuild its layer tree and pick the
+  // video layer up.
+  const [layoutNudge, setLayoutNudge] = useState(0);
+  const nudgeTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const nudgePlayedRef = useRef(false);
+  const handleBridgePlaying = useCallback(() => {
+    if (nudgePlayedRef.current) {
+      return;
+    }
+    nudgePlayedRef.current = true;
+    const pulse = (delay: number) => {
+      nudgeTimeoutsRef.current.push(
+        setTimeout(() => setLayoutNudge(1), delay),
+        setTimeout(() => setLayoutNudge(0), delay + 120),
+      );
+    };
+    pulse(0);
+    pulse(2500);
+  }, []);
+  useEffect(() => {
+    const timeoutsRef = nudgeTimeoutsRef;
+    return () => {
+      timeoutsRef.current.forEach(clearTimeout);
+    };
+  }, []);
 
   const sourceKey = `${channel ?? ''}|${clip ?? ''}|${video ?? ''}|${parent}|${autoplay}|${initialMuted}|${deferOverlayUntilUserUnmute}`;
 
@@ -108,12 +151,19 @@ export const StreamPlayer = memo(function StreamPlayer({
 
   useEffect(() => {
     needsInitRef.current = true;
+    nudgePlayedRef.current = false;
   }, [sourceKey]);
 
   const remountEmbedWebView = useCallback(() => {
+    recordInfo({
+      name: 'twitch_player_info',
+      message: 'webview remounted',
+      params: { channel },
+    });
     needsInitRef.current = true;
+    nudgePlayedRef.current = false;
     setWebViewKey(key => key + 1);
-  }, []);
+  }, [channel]);
 
   const scheduleAuthCompletionReload = useCallback(() => {
     if (authCompletionReloadTimeoutRef.current) {
@@ -164,7 +214,10 @@ export const StreamPlayer = memo(function StreamPlayer({
     onOnline,
     onPause,
     onPlaybackLatencyChange,
-    onPlay,
+    onPlay: () => {
+      handleBridgePlaying();
+      onPlay?.();
+    },
     onReady,
     ref,
     runJavaScript,
@@ -188,7 +241,10 @@ export const StreamPlayer = memo(function StreamPlayer({
           channel: channelName,
           video,
           parent,
-          autoplay,
+          // The bootstrap starts playback itself (deferStartMs) so the
+          // inline video doesn't begin while WKWebView is still
+          // initialising — see canMountWebView above for the same race.
+          autoplay: false,
           muted: initialMuted,
         }),
       };
@@ -199,6 +255,7 @@ ${buildRawTwitchPlayerBootstrapScript({
   autoplay,
   debug: __DEV__,
   muted: initialMuted,
+  deferStartMs: 600,
 })}`
     : TWITCH_AUTH_HELPER_SCRIPT;
 
@@ -247,33 +304,36 @@ ${buildRawTwitchPlayerBootstrapScript({
       style={[
         styles.container,
         { width: playerWidth, height: playerHeight },
+        layoutNudge !== 0 && { paddingBottom: layoutNudge },
         hasContentGate && styles.containerScrollable,
       ]}
     >
-      <StreamPlayerWebView
-        allowsTwitchInteraction={allowsTwitchInteraction}
-        channel={channel}
-        clip={clip}
-        injectedJavaScript={injectedJavaScript}
-        injectedJavaScriptBeforeContentLoaded={
-          injectedJavaScriptBeforeContentLoaded
-        }
-        needsInitRef={needsInitRef}
-        onError={onError}
-        onHttpError={handleWebViewHttpError}
-        onMessage={handleMessage}
-        onWebViewLoaded={onWebViewLoaded}
-        parent={parent}
-        remountWebView={remountEmbedWebView}
-        restrictWebViewNavigationToTwitchPlayer={
-          restrictWebViewNavigationToTwitchPlayer
-        }
-        scheduleAuthCompletionReload={scheduleAuthCompletionReload}
-        source={webViewSource}
-        video={video}
-        webViewKey={webViewKey}
-        webViewRef={webViewRef}
-      />
+      {canMountWebView ? (
+        <StreamPlayerWebView
+          allowsTwitchInteraction={allowsTwitchInteraction}
+          channel={channel}
+          clip={clip}
+          injectedJavaScript={injectedJavaScript}
+          injectedJavaScriptBeforeContentLoaded={
+            injectedJavaScriptBeforeContentLoaded
+          }
+          needsInitRef={needsInitRef}
+          onError={onError}
+          onHttpError={handleWebViewHttpError}
+          onMessage={handleMessage}
+          onWebViewLoaded={onWebViewLoaded}
+          parent={parent}
+          remountWebView={remountEmbedWebView}
+          restrictWebViewNavigationToTwitchPlayer={
+            restrictWebViewNavigationToTwitchPlayer
+          }
+          scheduleAuthCompletionReload={scheduleAuthCompletionReload}
+          source={webViewSource}
+          video={video}
+          webViewKey={webViewKey}
+          webViewRef={webViewRef}
+        />
+      ) : null}
 
       {shouldShowNativeControls && (
         <TouchBlockOverlay gesture={videoTapGesture} />

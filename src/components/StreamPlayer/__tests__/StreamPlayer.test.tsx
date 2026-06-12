@@ -24,9 +24,27 @@ jest.mock('@app/lib/haptics', () => ({
   impact: jest.fn(),
 }));
 
+// StreamPlayer defers mounting the WebView until interactions settle (see
+// canMountWebView); run the callback synchronously so tests can read the
+// WebView props right after render.
+jest.mock('react-native/Libraries/Interaction/InteractionManager', () => ({
+  __esModule: true,
+  default: {
+    runAfterInteractions: (callback: () => void) => {
+      callback();
+      return { cancel: jest.fn() };
+    },
+    createInteractionHandle: jest.fn(),
+    clearInteractionHandle: jest.fn(),
+    setDeadline: jest.fn(),
+  },
+}));
+
 jest.mock('@app/lib/sentry', () => ({
   countMetric: jest.fn(),
   recordError: jest.fn(),
+  recordInfo: jest.fn(),
+  recordWarning: jest.fn(),
 }));
 
 jest.mock('react-native-safe-area-context', () => ({
@@ -264,7 +282,7 @@ describe('StreamPlayer component messaging', () => {
     );
 
     expect(latestWebViewProps().source).toEqual({
-      uri: 'https://player.twitch.tv/?channel=cohhcarnage&muted=false&parent=www.twitch.tv',
+      uri: 'https://player.twitch.tv/?channel=cohhcarnage&autoplay=false&muted=false&parent=www.twitch.tv',
     });
     const injectedJavaScript = latestWebViewProps().injectedJavaScript;
     if (typeof injectedJavaScript !== 'string') {
@@ -278,6 +296,7 @@ describe('StreamPlayer component messaging', () => {
     expect(injectedJavaScript.includes('var shouldAutoplay = true')).toEqual(
       true,
     );
+    expect(injectedJavaScript.includes('var deferStartMs = 600')).toEqual(true);
     expect(
       injectedJavaScript.includes(
         "window.addEventListener('orientationchange', schedulePlaybackRecovery)",

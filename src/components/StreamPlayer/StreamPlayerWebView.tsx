@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { recordError } from '@app/lib/sentry';
+import { countMetric, recordError, recordWarning } from '@app/lib/sentry';
 import type { ComponentProps, RefObject } from 'react';
 import { StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -146,6 +146,25 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
     onError?.(`HTTP ${nativeEvent.statusCode}: ${nativeEvent.description}`);
   };
 
+  // WKWebView kills its content process under memory pressure (and Android
+  // its render process); the player goes black until the remount completes.
+  // Previously this happened silently — record it so field blank-player
+  // reports can be correlated with process kills.
+  const handleWebViewProcessGone = (
+    reason: 'content_process_terminated' | 'render_process_gone',
+  ) => {
+    countMetric('stream.webview_process_gone', {
+      channel: channel ?? 'unknown',
+      reason,
+    });
+    recordWarning({
+      name: 'twitch_player_warning',
+      message: `WebView process gone (${reason}), remounting player`,
+      params: { channel, reason },
+    });
+    remountWebView();
+  };
+
   const handleLoadStart = (renderer: 'WebView') => {
     if (__DEV__) {
       console.warn(`[StreamPlayer:${renderer}] onLoadStart`, {
@@ -194,7 +213,9 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
         styles.webView,
         allowsTwitchInteraction && styles.webViewScrollable,
       ]}
-      onContentProcessDidTerminate={remountWebView}
+      onContentProcessDidTerminate={() =>
+        handleWebViewProcessGone('content_process_terminated')
+      }
       onError={handleWebViewError}
       onHttpError={handleWebViewHttpError}
       onNavigationStateChange={event => {
@@ -207,7 +228,9 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       onLoadEnd={event => handleLoadEnd(event.nativeEvent.url)}
       onLoadStart={() => handleLoadStart('WebView')}
       onMessage={onMessage}
-      onRenderProcessGone={remountWebView}
+      onRenderProcessGone={() =>
+        handleWebViewProcessGone('render_process_gone')
+      }
     />
   );
 });

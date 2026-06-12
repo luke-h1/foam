@@ -26,7 +26,7 @@ jobs:
     steps:
       - name: 🔎 Resolve PR
         id: pr
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1f3791c5f9
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             const pr = await github.rest.pulls.get({
@@ -97,7 +97,7 @@ jobs:
 
       - name: 💬 Comment surf QR on PR
         if: steps.pr.outputs.should_run == 'true'
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1f3791c5f9
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           SURF_COMMENT: ${{ steps.surf.outputs.comment }}
           SURF_COMMENT_ID: surf-pr-${{ steps.pr.outputs.number }}
