@@ -268,7 +268,7 @@ describe('StreamPlayer component messaging', () => {
     expect(mockWebViewProps.length).toBeGreaterThan(3);
   });
 
-  test('uses the raw Twitch player URL with a Frosty-style control bootstrap', () => {
+  test('loads the stock raw Twitch player URL without the control bootstrap', () => {
     const onWebViewLoaded = jest.fn();
 
     render(
@@ -282,31 +282,17 @@ describe('StreamPlayer component messaging', () => {
     );
 
     expect(latestWebViewProps().source).toEqual({
-      uri: 'https://player.twitch.tv/?channel=cohhcarnage&autoplay=false&muted=false&parent=www.twitch.tv',
+      uri: 'https://player.twitch.tv/?channel=cohhcarnage&muted=false&parent=www.twitch.tv',
     });
     const injectedJavaScript = latestWebViewProps().injectedJavaScript;
     if (typeof injectedJavaScript !== 'string') {
       throw new Error('Expected injectedJavaScript to be a string');
     }
-    expect(injectedJavaScript.includes('.player-controls')).toEqual(true);
-    expect(injectedJavaScript.includes('window.playerControls')).toEqual(true);
+    expect(injectedJavaScript.includes('twitchAuthComplete')).toEqual(true);
+    expect(injectedJavaScript.includes('window.playerControls')).toEqual(false);
     expect(
-      injectedJavaScript.includes("video.setAttribute('playsinline', '')"),
-    ).toEqual(true);
-    expect(injectedJavaScript.includes('var shouldAutoplay = true')).toEqual(
-      true,
-    );
-    expect(injectedJavaScript.includes('var deferStartMs = 600')).toEqual(true);
-    expect(
-      injectedJavaScript.includes(
-        "window.addEventListener('orientationchange', schedulePlaybackRecovery)",
-      ),
-    ).toEqual(true);
-    expect(
-      injectedJavaScript.includes(
-        "style.id = 'foam-twitch-control-hide-style'",
-      ),
-    ).toEqual(true);
+      injectedJavaScript.includes('foam-twitch-control-hide-style'),
+    ).toEqual(false);
 
     const { onLoadEnd } = latestWebViewProps();
     act(() => {

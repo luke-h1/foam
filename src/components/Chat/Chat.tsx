@@ -82,7 +82,10 @@ export const Chat = memo(
             ) : null}
           </View>
 
-          <KeyboardStickyView style={styles.inputStickyView}>
+          <KeyboardStickyView
+            offset={{ closed: -vm.insets.bottom }}
+            style={styles.inputStickyView}
+          >
             <ChatInputShell
               ref={vm.inputShellRef}
               canPinNextMessage={vm.canModerateChat}

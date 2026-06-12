@@ -7,6 +7,7 @@ import {
   type TextStyle,
 } from './expoPretext';
 
+import { canRenderMessageInline } from './canRenderMessageInline';
 import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
 import type { AnyChatMessageType } from './messageHandlers';
 
@@ -14,6 +15,14 @@ const COMPACT_LINE_HEIGHT = 14;
 const COMPACT_FONT_SIZE = theme.fontSize11;
 const COMFORTABLE_LINE_HEIGHT = 17;
 const COMFORTABLE_FONT_SIZE = theme.fontSize14;
+
+/**
+ *  Inline emote messages render the whole Text at the emote line height
+ *  (messageTextEmoteLine / messageTextEmoteLineCompact in
+ *  RichChatMessage.styles.ts), so every wrapped line is this tall.
+ */
+const COMPACT_EMOTE_LINE_HEIGHT = 30;
+const COMFORTABLE_EMOTE_LINE_HEIGHT = 34;
 const ROW_VERTICAL_PADDING = 6;
 const MIN_MEASURE_WIDTH = 80;
 const NON_BREAKING_SPACE = '\u00A0';
@@ -236,8 +245,24 @@ function measureChatMessageHeight(
     MIN_MEASURE_WIDTH,
     Math.floor(options.containerWidth),
   );
+  // Inline emote messages render as one Text with the taller emote
+  // lineHeight applied to every wrapped line, so measure with that height
+  // or emote-heavy rows come out a line short and the list clips them.
+  // Paint status isn't known here; painted senders fall back to the
+  // flex-wrap path, where this is still a close estimate.
+  const rendersInlineEmoteLine =
+    message.message.some(part => part.type === 'emote') &&
+    canRenderMessageInline(message.message, {
+      hasPaint: false,
+      isModerated: Boolean(message.moderationNotice),
+    });
+  const flowLineHeight = rendersInlineEmoteLine
+    ? compact
+      ? COMPACT_EMOTE_LINE_HEIGHT
+      : COMFORTABLE_EMOTE_LINE_HEIGHT
+    : lineHeight;
   const prepared = prepareInlineFlow(items);
-  const measured = measureInlineFlow(prepared, maxWidth, lineHeight);
+  const measured = measureInlineFlow(prepared, maxWidth, flowLineHeight);
   const minimumHeight = Math.max(
     minimumInlineHeight,
     message.badges?.length ? badgeSize : 0,

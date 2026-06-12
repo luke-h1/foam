@@ -463,8 +463,16 @@ export function replaceTextWithEmotes({
     splitParts.forEach(({ emoji, text }) => {
       if (emoji) {
         const unifiedEmoji = decodeEmojiToUnified(emoji);
+        // Standalone emoji are keyed without FE0F in the dataset (e.g. "2764"
+        // for ❤️), while ZWJ sequences keep it — try both forms.
+        const unifiedWithoutVariant = unifiedEmoji
+          .split('-')
+          .filter(hex => hex !== 'FE0F')
+          .join('-');
         const foundEmote =
-          emojiMap.get(unifiedEmoji) ?? emoteMap.get(unifiedEmoji);
+          emojiMap.get(unifiedEmoji) ??
+          emojiMap.get(unifiedWithoutVariant) ??
+          emoteMap.get(unifiedEmoji);
 
         if (foundEmote) {
           replacedParts.push({

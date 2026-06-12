@@ -56,6 +56,11 @@ interface LiveStreamScreenProps {
 }
 
 const LANDSCAPE_CHAT_RESIZE_LONG_PRESS_MS = 220;
+/**
+ * In landscape insets.top is 0, so without an explicit offset the chat
+ * controls land on the Twitch player's own top-right chrome (LIVE badge).
+ */
+const LANDSCAPE_CHAT_CONTROLS_TOP_OFFSET = 60;
 const CHAT_CONNECTION_FALLBACK_MS = 10_000;
 const CHAT_TOGGLE_DEBOUNCE_MS = 450;
 const MAX_OVERLAY_CHAT_FRACTION = 0.68;
@@ -80,16 +85,25 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const disableStream = usePreference('disableStream');
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const {
-    isLandscape,
-    layoutHeight,
-    portraitTopInset: _portraitTopInset,
-    screenWidth,
-  } = getLiveStreamLayoutMetrics({
-    insetTop: insets.top,
-    windowHeight,
-    windowWidth,
-  });
+  const { isLandscape, layoutHeight, portraitTopInset, screenWidth } =
+    getLiveStreamLayoutMetrics({
+      insetTop: insets.top,
+      windowHeight,
+      windowWidth,
+    });
+
+  /**
+   * In landscape the notch / Dynamic Island sits on one horizontal edge and
+   * the home indicator on the other, so the safe-area insets land on left and
+   * right rather than top. Reserve that space so video and chat controls never
+   * slide under the Dynamic Island.
+   */
+  const landscapeInsetLeft = isLandscape ? insets.left : 0;
+  const landscapeInsetRight = isLandscape ? insets.right : 0;
+  const contentWidth = Math.max(
+    1,
+    screenWidth - landscapeInsetLeft - landscapeInsetRight,
+  );
   const isChatEnabled = !disableChat;
   const isStreamEnabled = !disableStream;
   const [uiState, dispatchUi] = useReducer(
@@ -157,7 +171,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       type: 'setLandscapeChatWidth',
       landscapeChatWidth: clampLandscapeChatWidth(
         width,
-        screenWidth,
+        contentWidth,
         fullscreenChatMode,
       ),
     });
@@ -301,7 +315,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     landscapeChatWidth,
     layoutHeight,
     isStreamEnabled,
-    screenWidth,
+    screenWidth: contentWidth,
   });
 
   const chatDimensions = getLiveStreamChatDimensions({
@@ -311,7 +325,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     landscapeChatWidth,
     layoutHeight,
     isStreamEnabled,
-    screenWidth,
+    screenWidth: contentWidth,
   });
 
   const isLandscapeChatHidden = !isChatVisibleForLayout && isLandscape;
@@ -329,9 +343,11 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   const animatedChatStyle = useAnimatedStyle(() => ({
     height: chatHeight.get(),
-    left: isLandscape ? Math.max(0, screenWidth - chatWidth.get()) : 0,
+    left: isLandscape
+      ? landscapeInsetLeft + Math.max(0, contentWidth - chatWidth.get())
+      : 0,
     opacity: chatOpacity.get(),
-    top: isLandscape ? 0 : videoHeight.get(),
+    top: isLandscape ? 0 : portraitTopInset + videoHeight.get(),
     transform: [{ translateX: chatTranslateX.get() }],
     width: chatWidth.get(),
   }));
@@ -419,13 +435,13 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   const animatedVideoStyle = useAnimatedStyle(() => ({
     height: videoHeight.get(),
-    left: 0,
-    top: 0,
+    left: landscapeInsetLeft,
+    top: portraitTopInset,
     width: videoWidth.get(),
   }));
 
   const animatedFullscreenControlsStyle = useAnimatedStyle(() => ({
-    right: theme.space16 + chatWidth.get(),
+    right: theme.space16 + landscapeInsetRight + chatWidth.get(),
   }));
 
   const animatedResizeHandleStyle = useAnimatedStyle(() => ({
@@ -443,8 +459,8 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
         fullscreenChatMode === 'overlay'
           ? MAX_OVERLAY_CHAT_FRACTION
           : MAX_SIDEBAR_CHAT_FRACTION;
-      const minWidth = Math.min(LANDSCAPE_CHAT_MIN_WIDTH, screenWidth * 0.42);
-      const maxWidth = Math.max(minWidth, screenWidth * maxFraction);
+      const minWidth = Math.min(LANDSCAPE_CHAT_MIN_WIDTH, contentWidth * 0.42);
+      const maxWidth = Math.max(minWidth, contentWidth * maxFraction);
       const nextWidth = Math.min(
         maxWidth,
         Math.max(minWidth, resizeStartWidth.get() - event.translationX),
@@ -452,7 +468,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
       chatWidth.set(nextWidth);
       if (fullscreenChatMode === 'sidebar' && isChatVisibleForLayout) {
-        videoWidth.set(Math.max(1, screenWidth - nextWidth));
+        videoWidth.set(Math.max(1, contentWidth - nextWidth));
       }
     })
     .onFinalize(() => {
@@ -674,7 +690,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           pointerEvents='box-none'
           style={[
             styles.fullscreenChatControls,
-            { top: insets.top + theme.space12 },
+            { top: insets.top + LANDSCAPE_CHAT_CONTROLS_TOP_OFFSET },
             animatedFullscreenControlsStyle,
           ]}
         >

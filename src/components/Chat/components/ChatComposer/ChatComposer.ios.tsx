@@ -2,13 +2,12 @@ import { useAccentColor } from '@app/context/AccentColorContext';
 import { Input, type InputRef } from '@app/components/ui/Input/Input.ios';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
-import { SymbolView } from 'expo-symbols';
-import { PressableScale } from 'pressto';
 import { memo, useCallback, useRef, type Ref } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { EmoteSuggestionRail } from './EmoteSuggestionRail';
 import { UserSuggestionRail } from './UserSuggestionRail';
 import { COMPOSER_INPUT_MIN_HEIGHT } from '../composerSizing';
+import { ComposerIconButton } from '../ComposerIconButton';
 import { chatComposerStyles } from './chatComposerStyles';
 import {
   useChatComposerController,
@@ -98,18 +97,12 @@ function ChatComposerComponent({
 
       <View style={chatComposerStyles.row}>
         {onPressAdd ? (
-          <PressableScale
-            accessibilityLabel='Open emote picker'
-            accessibilityRole='button'
-            style={chatComposerStyles.addButton}
+          <ComposerIconButton
+            icon='face.smiling'
+            iconSize={20}
+            label='Open emote picker'
             onPress={onPressAdd}
-          >
-            <SymbolView
-              name='face.smiling'
-              size={22}
-              tintColor={theme.colorGreyHoverAlpha}
-            />
-          </PressableScale>
+          />
         ) : null}
 
         <View style={styles.inputWrapper}>
@@ -122,6 +115,7 @@ function ChatComposerComponent({
             editable={editable}
             value={text}
             multiline
+            numberOfLines={4}
             onBlur={() => setIsFocused(false)}
             onChangeText={handleChangeText}
             onFocus={() => setIsFocused(true)}
@@ -140,26 +134,15 @@ function ChatComposerComponent({
         </View>
 
         {onSubmit ? (
-          <PressableScale
-            style={[
-              chatComposerStyles.submitButton,
-              {
-                backgroundColor: submitEnabled
-                  ? accentHex
-                  : theme.darkActiveContent,
-              },
-            ]}
-            accessibilityLabel='Send message'
-            accessibilityRole='button'
-            accessibilityState={{ disabled: !submitEnabled }}
+          <ComposerIconButton
+            disabled={!submitEnabled}
+            icon='arrow.up'
+            iconSize={16}
+            label='Send message'
             onPress={handleSubmit}
-          >
-            <SymbolView
-              name='arrow.up'
-              size={20}
-              tintColor={submitEnabled ? '#fff' : theme.colorGreyHoverAlpha}
-            />
-          </PressableScale>
+            prominent
+            prominentColor={accentHex ?? theme.colorViolet}
+          />
         ) : null}
       </View>
     </View>
