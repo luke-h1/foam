@@ -17,7 +17,7 @@ import { Text } from '@app/components/ui/Text/Text';
 
 const SWIPE_THRESHOLD = -80;
 const DELETE_THRESHOLD = -150;
-const HISTORY_ROW_HEIGHT = 56;
+const HISTORY_ROW_HEIGHT = 44;
 // Width of the resting (snapped-open) delete affordance.
 const ACTION_WIDTH = 88;
 
@@ -236,10 +236,6 @@ export function SearchHistoryV2({
           />
         ))}
       </View>
-
-      <Text type='xxs' color='gray.textLow' style={styles.hint}>
-        Swipe left to delete
-      </Text>
     </View>
   );
 }
@@ -279,21 +275,16 @@ const styles = StyleSheet.create({
     marginBottom: theme.space12,
     paddingHorizontal: theme.space16,
   },
-  hint: {
-    marginTop: theme.space16,
-    opacity: 0.6,
-    textAlign: 'center',
-  },
   historyItem: {
     alignItems: 'center',
     backgroundColor: theme.color.backgroundSecondary.dark,
     flexDirection: 'row',
     gap: theme.space12,
-    minHeight: HISTORY_ROW_HEIGHT,
+    height: HISTORY_ROW_HEIGHT,
     paddingHorizontal: theme.space16,
-    paddingVertical: theme.space8,
   },
   historyList: {
+    backgroundColor: theme.colorBorderSecondary,
     borderRadius: theme.borderRadius12,
     gap: StyleSheet.hairlineWidth,
     overflow: 'hidden',
