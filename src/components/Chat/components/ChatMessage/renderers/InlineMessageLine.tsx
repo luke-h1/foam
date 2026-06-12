@@ -44,6 +44,16 @@ export function InlineMessageLine({
 }: InlineMessageLineProps): ReactNode {
   const containsEmotes = message.some(part => part.type === 'emote');
   const fontScaleStyle = getChatFontScaleStyle(fontScale, compact);
+  // TextKit sizes a wrapped line from the paragraph style carried by its
+  // character ranges, and every nested span sets its own (17pt) lineHeight.
+  // The taller emote line height must therefore be applied to each nested
+  // span, not just the outer Text — otherwise rows whose first span is plain
+  // text (no badges) keep the 17pt line and clip the 30pt emote attachment.
+  const emoteLineStyle = containsEmotes
+    ? compact
+      ? styles.messageTextEmoteLineCompact
+      : styles.messageTextEmoteLine
+    : undefined;
 
   return (
     <View style={styles.messageLineInline}>
@@ -52,10 +62,7 @@ export function InlineMessageLine({
           styles.messageText,
           compact && styles.messageTextCompact,
           fontScaleStyle,
-          containsEmotes &&
-            (compact
-              ? styles.messageTextEmoteLineCompact
-              : styles.messageTextEmoteLine),
+          emoteLineStyle,
         ]}
       >
         {showTimestamp && timestamp ? (
@@ -63,7 +70,11 @@ export function InlineMessageLine({
             tabular
             variant='mono'
             weight='bold'
-            style={[styles.timestamp, compact && styles.timestampCompact]}
+            style={[
+              styles.timestamp,
+              compact && styles.timestampCompact,
+              emoteLineStyle,
+            ]}
           >
             {`${timestamp} `}
           </Text>
@@ -82,6 +93,7 @@ export function InlineMessageLine({
             style={[
               compact ? styles.usernameTextCompact : styles.usernameText,
               fontScaleStyle,
+              emoteLineStyle,
               usernameColor ? { color: usernameColor } : null,
             ]}
           >
@@ -89,6 +101,7 @@ export function InlineMessageLine({
           </Text>
         ) : null}
         <InlineMessageSpans
+          emoteLineStyle={emoteLineStyle}
           compact={compact}
           disableEmoteAnimations={disableEmoteAnimations}
           effectiveHighlightedUserSet={effectiveHighlightedUserSet}

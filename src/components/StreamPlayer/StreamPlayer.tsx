@@ -12,7 +12,6 @@ import {
   TouchBlockOverlay,
 } from './StreamPlayerOverlays';
 import {
-  buildRawTwitchPlayerBootstrapScript,
   buildRawTwitchPlayerUrl,
   buildTwitchClipPlayerUrl,
   buildTwitchPlayerQualityDefaultScript,
@@ -121,6 +120,9 @@ export const StreamPlayer = memo(function StreamPlayer({
   // unconditionally force a frame change shortly after playback starts —
   // resizing the WKWebView makes it rebuild its layer tree and pick the
   // video layer up.
+  // With the unscripted player there is no bridge 'playing' event, so the
+  // nudge fires off WebView load-end; autoplay starts shortly after, which
+  // the second pulse at +2.5s covers.
   const [layoutNudge, setLayoutNudge] = useState(0);
   const nudgeTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const nudgePlayedRef = useRef(false);
@@ -241,23 +243,15 @@ export const StreamPlayer = memo(function StreamPlayer({
           channel: channelName,
           video,
           parent,
-          // The bootstrap starts playback itself (deferStartMs) so the
-          // inline video doesn't begin while WKWebView is still
-          // initialising — see canMountWebView above for the same race.
-          autoplay: false,
+          autoplay,
           muted: initialMuted,
         }),
       };
 
-  const injectedJavaScript = !clip
-    ? `${TWITCH_AUTH_HELPER_SCRIPT}
-${buildRawTwitchPlayerBootstrapScript({
-  autoplay,
-  debug: __DEV__,
-  muted: initialMuted,
-  deferStartMs: 600,
-})}`
-    : TWITCH_AUTH_HELPER_SCRIPT;
+  // The stock player.twitch.tv page runs unscripted: Twitch's own UI handles
+  // playback, so the playerControls bootstrap is not injected and the bridge
+  // (ready/playing/pause messages, native controls overlay) stays dormant.
+  const injectedJavaScript = TWITCH_AUTH_HELPER_SCRIPT;
 
   const injectedJavaScriptBeforeContentLoaded = clip
     ? TWITCH_AUTH_HELPER_SCRIPT
@@ -321,7 +315,10 @@ ${buildRawTwitchPlayerBootstrapScript({
           onError={onError}
           onHttpError={handleWebViewHttpError}
           onMessage={handleMessage}
-          onWebViewLoaded={onWebViewLoaded}
+          onWebViewLoaded={() => {
+            handleBridgePlaying();
+            onWebViewLoaded?.();
+          }}
           parent={parent}
           remountWebView={remountEmbedWebView}
           restrictWebViewNavigationToTwitchPlayer={

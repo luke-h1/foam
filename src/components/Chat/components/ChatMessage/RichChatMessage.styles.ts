@@ -248,11 +248,14 @@ export const styles = StyleSheet.create({
   },
   // Lines that contain inline emotes need a taller lineHeight than the
   // text metrics, otherwise the fixed lineHeight clips the emote image.
+  // Must fit the emote attachment (30pt / 26pt compact) plus the font
+  // descent, since attachments sit on the text baseline. Keep in sync with
+  // the emote line height constants in util/pretextChatHeight.ts.
   messageTextEmoteLine: {
-    lineHeight: 32,
+    lineHeight: 34,
   },
   messageTextEmoteLineCompact: {
-    lineHeight: 28,
+    lineHeight: 30,
   },
   replyContextEmoteLine: {
     lineHeight: 24,

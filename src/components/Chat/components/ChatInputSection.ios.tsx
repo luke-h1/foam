@@ -5,117 +5,19 @@ import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { truncate } from '@app/utils/string/truncate';
-import {
-  Button as SwiftUIButton,
-  GlassEffectContainer,
-  Host,
-  Image,
-} from '@expo/ui/swift-ui';
-import {
-  accessibilityLabel,
-  background,
-  buttonStyle,
-  clipShape,
-  disabled as disabledModifier,
-  padding,
-  tint,
-  type ViewModifier,
-} from '@expo/ui/swift-ui/modifiers';
 import { BlurView } from 'expo-blur';
-import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { SymbolView } from 'expo-symbols';
 import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { GestureDetector } from 'react-native-gesture-handler';
-import type { SFSymbol } from 'sf-symbols-typescript';
-import { COMPOSER_CONTROL_SIZE, COMPOSER_ROW_GAP } from './composerSizing';
+import { COMPOSER_ROW_GAP } from './composerSizing';
 import { ChatComposer } from './ChatComposer/ChatComposer';
+import { ComposerIconButton } from './ComposerIconButton';
 import type { ChatInputSectionProps } from './chatInputSectionTypes';
 import { useComposerDismissGesture } from './useComposerDismissGesture';
 
 export type { ReplyToData } from './chatInputSectionTypes';
-
-interface ActionIconButtonProps {
-  active?: boolean;
-  disabled?: boolean;
-  icon: SFSymbol;
-  label?: string;
-  onPress: () => void;
-  prominent?: boolean;
-}
-
-function ActionIconButtonComponent({
-  active,
-  disabled,
-  icon,
-  label,
-  onPress,
-  prominent,
-}: ActionIconButtonProps) {
-  const liquidGlassAvailable = isLiquidGlassAvailable();
-  const isHighlighted = Boolean(active || prominent);
-  const resolvedButtonStyle = liquidGlassAvailable
-    ? prominent
-      ? 'glassProminent'
-      : 'glass'
-    : prominent
-      ? 'bordered'
-      : 'plain';
-  const iconColor = disabled
-    ? 'rgba(255,255,255,0.36)'
-    : isHighlighted
-      ? '#ffffff'
-      : 'rgba(255,255,255,0.86)';
-  const handlePress = () => {
-    if (!disabled) {
-      onPress();
-    }
-  };
-  const buttonModifiers: ViewModifier[] = [
-    tint(iconColor),
-    buttonStyle(resolvedButtonStyle),
-    background(
-      prominent
-        ? theme.colorViolet
-        : liquidGlassAvailable
-          ? 'transparent'
-          : active
-            ? 'rgba(255,255,255,0.18)'
-            : 'rgba(255,255,255,0.12)',
-    ),
-    clipShape('circle'),
-    disabledModifier(Boolean(disabled)),
-  ];
-
-  if (label) {
-    buttonModifiers.push(accessibilityLabel(label));
-  }
-
-  return (
-    <Host matchContents style={styles.actionButtonHost}>
-      <GlassEffectContainer>
-        <SwiftUIButton onPress={handlePress} modifiers={buttonModifiers}>
-          <Image
-            color={iconColor}
-            modifiers={[
-              padding({ vertical: 6, horizontal: 0 }),
-              clipShape('circle'),
-              padding({
-                horizontal: liquidGlassAvailable ? 0 : 12,
-                vertical: liquidGlassAvailable ? 0 : 8,
-              }),
-            ]}
-            size={18}
-            systemName={icon}
-          />
-        </SwiftUIButton>
-      </GlassEffectContainer>
-    </Host>
-  );
-}
-
-const ActionIconButton = ActionIconButtonComponent;
 
 export const ChatInputSection = memo(
   ({
@@ -207,13 +109,13 @@ export const ChatInputSection = memo(
                 />
               </View>
 
-              <ActionIconButton
+              <ComposerIconButton
                 icon='gearshape'
                 label='Open chat settings'
                 onPress={onOpenSettingsSheet}
               />
               {canPinNextMessage ? (
-                <ActionIconButton
+                <ComposerIconButton
                   active={pinNextMessage}
                   icon={pinNextMessage ? 'pin.fill' : 'pin'}
                   label={
@@ -231,11 +133,6 @@ export const ChatInputSection = memo(
 );
 
 const styles = StyleSheet.create({
-  actionButtonHost: {
-    flexShrink: 0,
-    height: COMPOSER_CONTROL_SIZE,
-    width: COMPOSER_CONTROL_SIZE,
-  },
   composerShell: {
     backgroundColor: '#000000',
     overflow: 'visible',

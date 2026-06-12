@@ -25,6 +25,13 @@ type InlineMessageSpansProps = Pick<
 > & {
   message: InlineFlowPart[];
   textStyle?: StyleProp<TextStyle>;
+  /**
+   * Line height override applied to every span on lines that contain emotes.
+   * TextKit derives a wrapped line's height from the paragraph style of the
+   * spans on it, so each nested span needs the taller line height or the
+   * emote attachment overflows and clips.
+   */
+  emoteLineStyle?: StyleProp<TextStyle>;
 };
 
 export function InlineMessageSpans({
@@ -40,12 +47,14 @@ export function InlineMessageSpans({
   replyPlainMentionTarget,
   emoteTargetSize,
   textStyle,
+  emoteLineStyle,
 }: InlineMessageSpansProps) {
   const fontScaleStyle = getChatFontScaleStyle(fontScale, compact);
   const baseTextStyle = textStyle ?? [
     styles.messageText,
     compact && styles.messageTextCompact,
     fontScaleStyle,
+    emoteLineStyle,
   ];
   const spans: ReactNode[] = [];
   let pendingText: string | null = null;
@@ -109,6 +118,7 @@ export function InlineMessageSpans({
             styles.messageLink,
             compact && styles.messageLinkCompact,
             fontScaleStyle,
+            emoteLineStyle,
           ]}
         >
           {content}
@@ -153,6 +163,7 @@ export function InlineMessageSpans({
             styles.mention,
             compact && styles.mentionCompact,
             fontScaleStyle,
+            emoteLineStyle,
             isHighlightedMention && styles.mentionHighlighted,
             { color: mentionColor },
           ]}
