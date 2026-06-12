@@ -102,9 +102,11 @@ describe('estimateChatMessageHeightWithPretext', () => {
       },
     );
 
-    // Same wrapped text, but the emote forces the whole Text onto the
-    // taller emote lineHeight (34 vs 17 per line), so the estimate must
-    // grow far beyond just the appended emote width.
+    /**
+     * Same wrapped text, but the emote forces the whole Text onto the
+     * taller emote lineHeight (34 vs 17 per line), so the estimate must
+     * grow far beyond just the appended emote width.
+     */
     expect(emoteHeight).toBeGreaterThan((textOnlyHeight ?? 0) * 1.5);
   });
 });

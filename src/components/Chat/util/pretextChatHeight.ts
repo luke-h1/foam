@@ -15,9 +15,12 @@ const COMPACT_LINE_HEIGHT = 14;
 const COMPACT_FONT_SIZE = theme.fontSize11;
 const COMFORTABLE_LINE_HEIGHT = 17;
 const COMFORTABLE_FONT_SIZE = theme.fontSize14;
-// Inline emote messages render the whole Text at the emote line height
-// (messageTextEmoteLine / messageTextEmoteLineCompact in
-// RichChatMessage.styles.ts), so every wrapped line is this tall.
+
+/**
+ *  Inline emote messages render the whole Text at the emote line height
+ *  (messageTextEmoteLine / messageTextEmoteLineCompact in
+ *  RichChatMessage.styles.ts), so every wrapped line is this tall.
+ */
 const COMPACT_EMOTE_LINE_HEIGHT = 30;
 const COMFORTABLE_EMOTE_LINE_HEIGHT = 34;
 const ROW_VERTICAL_PADDING = 6;

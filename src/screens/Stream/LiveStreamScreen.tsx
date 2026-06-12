@@ -56,8 +56,10 @@ interface LiveStreamScreenProps {
 }
 
 const LANDSCAPE_CHAT_RESIZE_LONG_PRESS_MS = 220;
-// In landscape insets.top is 0, so without an explicit offset the chat
-// controls land on the Twitch player's own top-right chrome (LIVE badge).
+/**
+ * In landscape insets.top is 0, so without an explicit offset the chat
+ * controls land on the Twitch player's own top-right chrome (LIVE badge).
+ */
 const LANDSCAPE_CHAT_CONTROLS_TOP_OFFSET = 60;
 const CHAT_CONNECTION_FALLBACK_MS = 10_000;
 const CHAT_TOGGLE_DEBOUNCE_MS = 450;
@@ -89,10 +91,13 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       windowHeight,
       windowWidth,
     });
-  // In landscape the notch / Dynamic Island sits on one horizontal edge and
-  // the home indicator on the other, so the safe-area insets land on left and
-  // right rather than top. Reserve that space so video and chat controls never
-  // slide under the Dynamic Island.
+
+  /**
+   * In landscape the notch / Dynamic Island sits on one horizontal edge and
+   * the home indicator on the other, so the safe-area insets land on left and
+   * right rather than top. Reserve that space so video and chat controls never
+   * slide under the Dynamic Island.
+   */
   const landscapeInsetLeft = isLandscape ? insets.left : 0;
   const landscapeInsetRight = isLandscape ? insets.right : 0;
   const contentWidth = Math.max(

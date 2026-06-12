@@ -610,9 +610,11 @@ export function Input(props: ThemedInputProps) {
   return (
     <Host
       colorScheme={scheme}
-      // RN owns this field's placement; without this the hosting view
-      // re-applies the window safe area (home indicator / keyboard) inside its
-      // own bounds and the field content renders shifted out of the host frame.
+      /**
+       * RN owns this field's placement; without this the hosting view
+       * re-applies the window safe area (home indicator / keyboard) inside its
+       * own bounds and the field content renders shifted out of the host frame.
+       */
       ignoreSafeArea='all'
       matchContents={{ vertical: true }}
       onLayoutContent={
@@ -882,10 +884,13 @@ function frameForStyle(
 ) {
   const height = numberValue(style.height);
   const minHeight = numberValue(style.minHeight);
-  // A flexible SwiftUI frame expands to fill maxHeight rather than hugging its
-  // content, which makes the host measure max-tall (e.g. a one-line composer
-  // reserving 120pt). Leave maxHeight to the RN host style, which clamps
-  // without expanding; growth is already limited by lineLimit for multiline.
+
+  /**
+   * A flexible SwiftUI frame expands to fill maxHeight rather than hugging its
+   * content, which makes the host measure max-tall (e.g. a one-line composer
+   * reserving 120pt). Leave maxHeight to the RN host style, which clamps
+   * without expanding; growth is already limited by lineLimit for multiline.
+   */
   const maxHeight =
     alignment === 'topLeading' ? undefined : numberValue(style.maxHeight);
 
