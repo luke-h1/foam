@@ -33,7 +33,7 @@ build_ios() {
       --platform ios \
       --profile "$profile" \
       --output "$ipa_path" \
-      # --non-interactive
+      --non-interactive
 
   if [ ! -f "$ipa_path" ]; then
     echo "Unable to find an IPA at $ipa_path"
