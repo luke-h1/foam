@@ -22,20 +22,22 @@ import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useRef } from 'react';
 import { toast } from 'sonner-native';
 import { clearEmoteImageCache } from '@app/store/chat/actions/emoteImages';
+import { useTranslation } from 'react-i18next';
+import i18next from '@app/i18n/i18next';
 
 function handleClearData() {
   Alert.alert(
-    'Clear Local Data',
-    'This clears cached app data and forces fresh fetches the next time screens load.',
+    i18next.t('settings:clearLocalData'),
+    i18next.t('settings:clearLocalDataConfirm'),
     [
-      { text: 'Cancel', style: 'cancel' },
+      { text: i18next.t('common:cancel'), style: 'cancel' },
       {
-        text: 'Clear',
+        text: i18next.t('settings:clear'),
         style: 'destructive',
         onPress: () => {
           storageService.clear();
           queryClient.clear();
-          toast.success('Local data cleared');
+          toast.success(i18next.t('settings:localDataCleared'));
         },
       },
     ],
@@ -44,19 +46,19 @@ function handleClearData() {
 
 function handleClearChatCache() {
   Alert.alert(
-    'Clear Chat Cache',
-    'This removes cached emotes, badges, and other downloaded media from this device.',
+    i18next.t('settings:clearChatCacheTitle'),
+    i18next.t('settings:clearChatCacheConfirm'),
     [
-      { text: 'Cancel', style: 'cancel' },
+      { text: i18next.t('common:cancel'), style: 'cancel' },
       {
-        text: 'Clear',
+        text: i18next.t('settings:clear'),
         style: 'destructive',
         onPress: () => {
           clearChatCosmeticsCache();
           clearEmoteImageCache();
           storageService.clearImageCache();
           void clearImageCache().then(() => {
-            toast.success('Chat cache cleared');
+            toast.success(i18next.t('settings:chatCacheCleared'));
           });
         },
       },
@@ -66,16 +68,16 @@ function handleClearChatCache() {
 
 function handleClearSevenTvCosmeticsCache() {
   Alert.alert(
-    'Clear 7TV Cosmetic Cache',
-    'This removes cached 7TV user paints and badges. They will be fetched again as users appear in chat.',
+    i18next.t('settings:clearSevenTvCacheTitle'),
+    i18next.t('settings:clearSevenTvCacheConfirm'),
     [
-      { text: 'Cancel', style: 'cancel' },
+      { text: i18next.t('common:cancel'), style: 'cancel' },
       {
-        text: 'Clear',
+        text: i18next.t('settings:clear'),
         style: 'destructive',
         onPress: () => {
           clearUserCosmeticsCache();
-          toast.success('7TV cosmetic cache cleared');
+          toast.success(i18next.t('settings:sevenTvCacheCleared'));
         },
       },
     ],
@@ -83,6 +85,7 @@ function handleClearSevenTvCosmeticsCache() {
 }
 
 export function SettingsCacheScreen() {
+  const { t } = useTranslation('settings');
   const scrollRef = useRef<ScrollView>(null);
 
   useScrollToTop(scrollRef);
@@ -92,31 +95,26 @@ export function SettingsCacheScreen() {
       <Host style={styles.iosHost}>
         <Form>
           <Section
-            title='Danger Zone'
-            footer={
-              <NativeText>
-                Use these when stream metadata, badges, emotes, or downloaded
-                chat media need a hard refresh.
-              </NativeText>
-            }
+            title={t('dangerZone')}
+            footer={<NativeText>{t('cacheFooterIos')}</NativeText>}
             modifiers={[tint('red')]}
           >
             <Button
-              label='Clear Local Data'
+              label={t('clearLocalData')}
               systemImage='externaldrive'
               // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
               role='destructive'
               onPress={handleClearData}
             />
             <Button
-              label='Clear Chat Media Cache'
+              label={t('clearChatMediaCache')}
               systemImage='trash'
               // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
               role='destructive'
               onPress={handleClearChatCache}
             />
             <Button
-              label='Clear 7TV Cosmetic Cache'
+              label={t('clearSevenTvCacheTitle')}
               systemImage='sparkles'
               // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
               role='destructive'
@@ -137,31 +135,30 @@ export function SettingsCacheScreen() {
         contentContainerStyle={styles.content}
       >
         <SettingsSection
-          title='Danger Zone'
+          title={t('dangerZone')}
           footer={
             <Text type='xs' color='gray.textLow'>
-              These actions should be used for troubleshooting and hard
-              refreshes, not routine cleanup.
+              {t('cacheFooter')}
             </Text>
           }
         >
           <SettingsLinkRow
-            title='Clear Data'
-            subtitle='Sign out and refetch stream, category, emote, and badge state'
+            title={t('clearData')}
+            subtitle={t('clearDataDescription')}
             icon={{ icon: 'externaldrive', color: theme.colorRed }}
             onPress={handleClearData}
             danger
           />
           <SettingsLinkRow
-            title='Clear Image Cache'
-            subtitle='Remove downloaded emote, badge, cosmetic, and image cache entries'
+            title={t('clearImageCache')}
+            subtitle={t('clearImageCacheDescription')}
             icon={{ icon: 'trash', color: theme.colorRed }}
             onPress={handleClearChatCache}
             danger
           />
           <SettingsLinkRow
-            title='Clear 7TV Cosmetic Cache'
-            subtitle='Remove cached 7TV paints and badges for chat users'
+            title={t('clearSevenTvCacheTitle')}
+            subtitle={t('clearSevenTvCacheDescription')}
             icon={{ icon: 'sparkles', color: theme.colorRed }}
             onPress={handleClearSevenTvCosmeticsCache}
             danger

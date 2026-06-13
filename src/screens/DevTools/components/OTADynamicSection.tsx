@@ -7,6 +7,7 @@ import * as Updates from 'expo-updates';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { ENV_SUPPORTS_OTA } from '../utils/envSupportsOta';
 import { theme } from '@app/styles/themes';
+import { useTranslation } from 'react-i18next';
 
 const otaLoadingTitleHint = <ActivityIndicator animating />;
 const otaReloadHint = (
@@ -29,22 +30,23 @@ async function reloadOtaWithScreen() {
 }
 
 export function OTADynamicSection() {
+  const { t } = useTranslation('devTools');
   const updates = Updates.useUpdates();
 
   const fetchingTitle = (() => {
     if (updates.isDownloading) {
-      return 'Downloading...';
+      return t('downloading');
     }
     if (updates.isChecking) {
-      return 'Checking for updates...';
+      return t('checkingForUpdates');
     }
     if (updates.isUpdatePending) {
-      return 'Reload app';
+      return t('reloadApp');
     }
     if (updates.isUpdateAvailable) {
-      return 'Download & reload';
+      return t('downloadAndReload');
     }
-    return 'Check again';
+    return t('checkAgain');
   })();
 
   const { checkError } = updates;
@@ -73,8 +75,8 @@ export function OTADynamicSection() {
     <Form.Section
       title={
         !updates.isUpdatePending && !updates.isUpdateAvailable
-          ? 'Synchronized ✓'
-          : 'Needs synchronization'
+          ? t('synchronized')
+          : t('needsSynchronization')
       }
       titleHint={isLoading ? otaLoadingTitleHint : lastCheckTime}
     >
@@ -83,7 +85,7 @@ export function OTADynamicSection() {
         onPress={() => {
           if (__DEV__ && !ENV_SUPPORTS_OTA) {
             // eslint-disable-next-line no-alert
-            alert('OTA updates are not available in the Expo Go app.');
+            alert(t('otaUnavailableInExpoGo'));
             return;
           }
           void (async () => {
@@ -140,7 +142,9 @@ export function OTADynamicSection() {
       </Form.Text>
       {checkError && (
         <Form.HStack style={styles.errorContainer}>
-          <Form.Text style={styles.errorText}>Error checking status</Form.Text>
+          <Form.Text style={styles.errorText}>
+            {t('errorCheckingStatus')}
+          </Form.Text>
           <View style={styles.spacer} />
           <Form.Text style={styles.errorMessage}>
             {checkError.message}

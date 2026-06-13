@@ -6,6 +6,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IconButton } from '../IconButton/IconButton';
@@ -105,6 +106,7 @@ export function ScreenHeader({
   featuredImage,
   heroHeight = 280,
 }: ScreenHeaderProps) {
+  const { t } = useTranslation('common');
   const insets = useSafeAreaInsets();
 
   const handleBack =
@@ -194,7 +196,7 @@ export function ScreenHeader({
             {back && (
               <IconButton
                 icon={{ type: 'symbol', name: 'chevron.left', size: 20 }}
-                label='Go back'
+                label={t('goBack')}
                 onPress={handleBack}
                 size='2xl'
                 hitSlop={12}
@@ -257,7 +259,7 @@ export function ScreenHeader({
           {back && (
             <IconButton
               icon={{ type: 'symbol', name: 'chevron.left', size: 20 }}
-              label='Go back'
+              label={t('goBack')}
               onPress={handleBack}
               size='2xl'
               hitSlop={12}

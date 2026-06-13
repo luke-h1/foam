@@ -6,6 +6,7 @@ import { UserChatBody } from './UserChatBody';
 import type { BadgePressData } from '../RichChatMessage.types';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
+import i18next from '@app/i18n/i18next';
 
 interface AnnouncementChatBodyProps extends UseChatMessagePartRendererArgs {
   accentColor?: string;
@@ -44,7 +45,7 @@ export function AnnouncementChatBody({
       <ChatNoticeMetaRow
         compact={compact}
         icon='megaphone.fill'
-        label='Announcement'
+        label={i18next.t('chat:notices.announcement')}
         labelColor={resolvedAccentColor}
         labelStyle={styles.announcementMetaText}
       />

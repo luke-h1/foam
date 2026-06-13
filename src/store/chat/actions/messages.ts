@@ -6,6 +6,7 @@ import {
   getMessageColor as getIndexedMessageColor,
   getUserMessageColor,
   indexMessageColor,
+  removeMessageColor,
 } from './messageColorIndex';
 import {
   clearMentionLoginIndex,
@@ -331,39 +332,88 @@ const syncRecentMessagesForCurrentChannel = (
   );
 };
 
-const trimMessageIndexes = (): boolean => {
-  let didTrim = false;
+const trimMessageIndexes = (): number => {
+  let trimmedCount = 0;
   const maxChatMessages = getMaxChatMessages();
 
   while (messageKeyOrder.length > maxChatMessages) {
     const removedKey = messageKeyOrder.shift();
     if (removedKey) {
       messageKeySet.delete(removedKey);
-      didTrim = true;
+      trimmedCount += 1;
     }
   }
 
-  return didTrim;
+  return trimmedCount;
 };
 
 const appendToMessageWindow = (
   currentMessages: AnyChatMessageType[],
   storedMessages: AnyChatMessageType[],
 ): {
-  didTrimMessages: boolean;
+  droppedMessages: AnyChatMessageType[];
   nextMessages: AnyChatMessageType[];
 } => {
   const nextMessages = [...currentMessages, ...storedMessages];
   const extraMessageCount = nextMessages.length - getMaxChatMessages();
 
   if (extraMessageCount <= 0) {
-    return { didTrimMessages: false, nextMessages };
+    return { droppedMessages: [], nextMessages };
   }
 
   return {
-    didTrimMessages: true,
+    droppedMessages: nextMessages.slice(0, extraMessageCount),
     nextMessages: nextMessages.slice(extraMessageCount),
   };
+};
+
+const shiftMessageIndexes = (offset: number) => {
+  if (offset <= 0) {
+    return;
+  }
+
+  messageKeyToIndex.forEach((index, key) => {
+    messageKeyToIndex.set(key, index - offset);
+  });
+  messageIdToIndex.forEach((index, key) => {
+    messageIdToIndex.set(key, index - offset);
+  });
+};
+
+// Once the window is full, every flush trims from the front. A full
+// rebuildMessageIndexes there re-ran the mention/color registrations for the
+// whole window (iterating every part of every message) ~10x/s on busy chats;
+// dropping the evicted entries and shifting the survivors is pure Map work.
+const indexAppendedMessages = (
+  storedMessages: AnyChatMessageType[],
+  appendStartIndex: number,
+  droppedMessages: AnyChatMessageType[],
+) => {
+  droppedMessages.forEach((message, droppedIndex) => {
+    const key = getMessageKey(message.message_id, message.message_nonce);
+    messageKeyToIndex.delete(key);
+
+    const normalisedMessageId = normaliseMessageIdentifier(message.message_id);
+    // Another window entry can share this message_id under a different
+    // nonce; only drop the id entry when it still points at the evicted row.
+    if (
+      normalisedMessageId &&
+      messageIdToIndex.get(normalisedMessageId) === droppedIndex
+    ) {
+      messageIdToIndex.delete(normalisedMessageId);
+    }
+
+    removeMessageColor(message.message_id);
+  });
+
+  shiftMessageIndexes(droppedMessages.length);
+
+  storedMessages.forEach((message, index) => {
+    const windowIndex = appendStartIndex + index - droppedMessages.length;
+    if (windowIndex >= 0) {
+      indexMessage(message, windowIndex);
+    }
+  });
 };
 
 const publishMessageAtIndex = (
@@ -463,16 +513,17 @@ export const addMessage = (message?: AnyChatMessageType) => {
   messageKeyOrder.push(key);
   const currentMessages = chatStore$.messages.peek();
   const nextMessageIndex = currentMessages.length;
-  const { didTrimMessages, nextMessages } = appendToMessageWindow(
+  const { droppedMessages, nextMessages } = appendToMessageWindow(
     currentMessages,
     [storedMessage],
   );
 
-  const didTrimIndexes = trimMessageIndexes();
-  if (didTrimIndexes || didTrimMessages) {
-    rebuildMessageIndexes(nextMessages);
+  const trimmedKeyCount = trimMessageIndexes();
+  if (trimmedKeyCount === droppedMessages.length) {
+    indexAppendedMessages([storedMessage], nextMessageIndex, droppedMessages);
   } else {
-    indexMessage(storedMessage, nextMessageIndex);
+    // Key order diverged from the window (shouldn't happen) — resync fully.
+    rebuildMessageIndexes(nextMessages);
   }
 
   chatStore$.messages.set(nextMessages);
@@ -507,18 +558,21 @@ export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {
   const storedMessages = newMessages.map(prepareMessageForStore);
   const currentMessages = chatStore$.messages.peek();
   const nextMessageStartIndex = currentMessages.length;
-  const { didTrimMessages, nextMessages } = appendToMessageWindow(
+  const { droppedMessages, nextMessages } = appendToMessageWindow(
     currentMessages,
     storedMessages,
   );
 
-  const didTrimIndexes = trimMessageIndexes();
-  if (didTrimIndexes || didTrimMessages) {
-    rebuildMessageIndexes(nextMessages);
+  const trimmedKeyCount = trimMessageIndexes();
+  if (trimmedKeyCount === droppedMessages.length) {
+    indexAppendedMessages(
+      storedMessages,
+      nextMessageStartIndex,
+      droppedMessages,
+    );
   } else {
-    storedMessages.forEach((message, index) => {
-      indexMessage(message, nextMessageStartIndex + index);
-    });
+    // Key order diverged from the window (shouldn't happen) — resync fully.
+    rebuildMessageIndexes(nextMessages);
   }
 
   chatStore$.messages.set(nextMessages);

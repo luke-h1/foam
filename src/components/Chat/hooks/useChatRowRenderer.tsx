@@ -121,6 +121,35 @@ const ChatMessageRow = function ChatMessageRow({
     channelId,
     msg.message_id,
   );
+  const isAlternatingRow = showAlternatingChatRows && index % 2 === 1;
+  // Keep a stable identity for unchanged rows: a fresh object here would
+  // defeat RichChatMessage's memo on every parent-driven re-render.
+  const messageDisplay = useMemo(
+    () => ({
+      disableEmoteAnimations,
+      isAlternatingRow,
+      isChannelPointRedemption: msg.isChannelPointRedemption,
+      isAnnouncement: msg.isAnnouncement,
+      isHighlightedMessage: msg.isHighlightedMessage,
+      isSharedChatDuplicated: msg.isSharedChatDuplicated,
+      isHighlightedMessageTarget,
+      isTwitchSystemNotice: msg.isTwitchSystemNotice,
+      showInlineReplyContext,
+      showTimestamp: showTimestamps,
+    }),
+    [
+      disableEmoteAnimations,
+      isAlternatingRow,
+      isHighlightedMessageTarget,
+      msg.isAnnouncement,
+      msg.isChannelPointRedemption,
+      msg.isHighlightedMessage,
+      msg.isSharedChatDuplicated,
+      msg.isTwitchSystemNotice,
+      showInlineReplyContext,
+      showTimestamps,
+    ],
+  );
 
   return (
     <RichChatMessage
@@ -154,18 +183,7 @@ const ChatMessageRow = function ChatMessageRow({
       fontScale={fontScale}
       customHighlights={customHighlights}
       highlightedUserSet={highlightedUserSet}
-      messageDisplay={{
-        disableEmoteAnimations,
-        isAlternatingRow: showAlternatingChatRows && index % 2 === 1,
-        isChannelPointRedemption: msg.isChannelPointRedemption,
-        isAnnouncement: msg.isAnnouncement,
-        isHighlightedMessage: msg.isHighlightedMessage,
-        isSharedChatDuplicated: msg.isSharedChatDuplicated,
-        isHighlightedMessageTarget,
-        isTwitchSystemNotice: msg.isTwitchSystemNotice,
-        showInlineReplyContext,
-        showTimestamp: showTimestamps,
-      }}
+      messageDisplay={messageDisplay}
       onReplyContextPress={onReplyContextPress}
       // @ts-expect-error - notice_tags union type not narrowing correctly
       notice_tags={
@@ -204,47 +222,50 @@ export function useChatRowRenderer({
     return displayColor;
   }, []);
 
-  const parseTextForEmotes = (text: string): ParsedPart[] => {
-    if (!text.trim()) {
-      return [];
-    }
+  const parseTextForEmotes = useCallback(
+    (text: string): ParsedPart[] => {
+      if (!text.trim()) {
+        return [];
+      }
 
-    const emoteData = getCurrentEmoteData(channelId);
-    if (!emoteData) {
-      return [{ type: 'text', content: text }];
-    }
+      const emoteData = getCurrentEmoteData(channelId);
+      if (!emoteData) {
+        return [{ type: 'text', content: text }];
+      }
 
-    const hasEmotes =
-      chatStore$.emojis.peek().length > 0 ||
-      emoteData.twitchGlobalEmotes.length > 0 ||
-      emoteData.twitchChannelEmotes.length > 0 ||
-      emoteData.twitchSubscriberEmotes.length > 0 ||
-      emoteData.sevenTvGlobalEmotes.length > 0 ||
-      emoteData.sevenTvChannelEmotes.length > 0 ||
-      emoteData.bttvGlobalEmotes.length > 0 ||
-      emoteData.bttvChannelEmotes.length > 0 ||
-      emoteData.ffzGlobalEmotes.length > 0 ||
-      emoteData.ffzChannelEmotes.length > 0;
+      const hasEmotes =
+        chatStore$.emojis.peek().length > 0 ||
+        emoteData.twitchGlobalEmotes.length > 0 ||
+        emoteData.twitchChannelEmotes.length > 0 ||
+        emoteData.twitchSubscriberEmotes.length > 0 ||
+        emoteData.sevenTvGlobalEmotes.length > 0 ||
+        emoteData.sevenTvChannelEmotes.length > 0 ||
+        emoteData.bttvGlobalEmotes.length > 0 ||
+        emoteData.bttvChannelEmotes.length > 0 ||
+        emoteData.ffzGlobalEmotes.length > 0 ||
+        emoteData.ffzChannelEmotes.length > 0;
 
-    if (!hasEmotes) {
-      return [{ type: 'text', content: text }];
-    }
+      if (!hasEmotes) {
+        return [{ type: 'text', content: text }];
+      }
 
-    return processEmotesWorklet({
-      inputString: text.trimEnd(),
-      userstate: null,
-      emojiEmotes: chatStore$.emojis.peek(),
-      sevenTvGlobalEmotes: emoteData.sevenTvGlobalEmotes,
-      sevenTvChannelEmotes: emoteData.sevenTvChannelEmotes,
-      twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
-      twitchChannelEmotes: emoteData.twitchChannelEmotes,
-      twitchSubscriberEmotes: emoteData.twitchSubscriberEmotes,
-      ffzChannelEmotes: emoteData.ffzChannelEmotes,
-      ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
-      bttvChannelEmotes: emoteData.bttvChannelEmotes,
-      bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
-    });
-  };
+      return processEmotesWorklet({
+        inputString: text.trimEnd(),
+        userstate: null,
+        emojiEmotes: chatStore$.emojis.peek(),
+        sevenTvGlobalEmotes: emoteData.sevenTvGlobalEmotes,
+        sevenTvChannelEmotes: emoteData.sevenTvChannelEmotes,
+        twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
+        twitchChannelEmotes: emoteData.twitchChannelEmotes,
+        twitchSubscriberEmotes: emoteData.twitchSubscriberEmotes,
+        ffzChannelEmotes: emoteData.ffzChannelEmotes,
+        ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
+        bttvChannelEmotes: emoteData.bttvChannelEmotes,
+        bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
+      });
+    },
+    [channelId],
+  );
 
   const onBadgePressRef = useRef(onBadgePress);
   const onEmotePressRef = useRef(onEmotePress);

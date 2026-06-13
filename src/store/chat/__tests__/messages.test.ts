@@ -404,4 +404,37 @@ describe('chatStore messages', () => {
       { type: 'text', content: '649' },
     ]);
   });
+
+  test('surviving messages stay addressable after later flushes trim the window', () => {
+    addMessages(
+      Array.from({ length: 600 }, (_, index) =>
+        createMessage(`msg-${index}`, `nonce-${index}`, `${index}`),
+      ),
+    );
+
+    // A follow-up flush on a full window front-trims the survivors, whose
+    // indexes were recorded before the trim and must shift with it.
+    addMessages(
+      Array.from({ length: 10 }, (_, index) =>
+        createMessage(`msg-${600 + index}`, `nonce-${600 + index}`, 'late'),
+      ),
+    );
+
+    const messages = chatStore$.messages.peek();
+    expect(messages).toHaveLength(600);
+    expect(messages[0]?.message_id).toBe('msg-10');
+    expect(getMessageById('msg-9')).toBeUndefined();
+    expect(getMessageById('msg-300')?.message).toEqual([
+      { type: 'text', content: '300' },
+    ]);
+
+    moderateMessageById('msg-300', 'Timed out (10s)');
+
+    expect(getMessageById('msg-300')?.moderationNotice).toBe('Timed out (10s)');
+    expect(getMessageById('msg-300')?.message).toEqual([
+      { type: 'text', content: '300—Timed out (10s)' },
+    ]);
+    expect(getMessageById('msg-299')?.moderationNotice).toBeUndefined();
+    expect(getMessageById('msg-301')?.moderationNotice).toBeUndefined();
+  });
 });

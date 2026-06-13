@@ -6,6 +6,7 @@ import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import { LegendList, type LegendListRenderItemProps } from '@legendapp/list';
 import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 const EMOTE_SUGGESTION_ITEM_SIZE = 48;
 
@@ -63,6 +64,7 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
   suggestionScale,
   suggestionTranslateY,
 }: EmoteSuggestionsProps) {
+  const { t } = useTranslation('chat');
   const renderItem = useMemo(
     () => createRenderEmoteSuggestionItem(handleEmotePress),
     [handleEmotePress],
@@ -82,7 +84,7 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
   return (
     <View style={[styles.suggestionsWrapper, suggestionStyle]}>
       <View style={styles.suggestionsContainer}>
-        <Text style={styles.headerLabel}>Emotes</Text>
+        <Text style={styles.headerLabel}>{t('composer.emotes')}</Text>
         <LegendList
           data={emotes}
           horizontal

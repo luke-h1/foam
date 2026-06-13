@@ -18,6 +18,7 @@ import type { ListRenderItem } from '@shopify/flash-list';
 import { useRef, type RefObject, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 
 const SKELETON_COUNT = 9;
 const SKELETON_COLUMNS = 3;
@@ -41,6 +42,7 @@ export function TopCategoriesScreen({
   contentTopInset = 0,
   scrollY,
 }: TopCategoriesScreenProps = {}) {
+  const { t } = useTranslation('stream');
   const refreshing$ = useObservable(false);
   const refreshing = useSelector(refreshing$);
   const listRef = useRef<FlashListRef<Category>>(null);
@@ -110,8 +112,8 @@ export function TopCategoriesScreen({
     return (
       <View style={styles.wrapper}>
         <EmptyState
-          heading='Failed to fetch categories'
-          content='Failed to fetch top categories'
+          heading={t('failedToFetchCategories')}
+          content={t('failedToFetchTopCategories')}
         />
       </View>
     );
@@ -121,7 +123,7 @@ export function TopCategoriesScreen({
     return (
       <View style={styles.wrapper}>
         <EmptyState
-          content='No categories found'
+          content={t('noCategoriesFound')}
           buttonOnPress={() => void onRefresh()}
         />
       </View>

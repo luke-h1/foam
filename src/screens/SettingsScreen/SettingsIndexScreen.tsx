@@ -15,6 +15,7 @@ import { Button, Form, Host, Section } from '@expo/ui/swift-ui';
 import { router } from 'expo-router';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BuildStatus } from './components/BuildStatus';
 
@@ -28,6 +29,7 @@ export function SettingsIndexScreen() {
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const shouldShowDevTools = isDevToolsEnabled;
+  const { t } = useTranslation('settings');
 
   useScrollToTop(scrollRef);
 
@@ -36,32 +38,32 @@ export function SettingsIndexScreen() {
     return (
       <Host style={styles.iosHost}>
         <Form>
-          <Section title='Stream Experience'>
+          <Section title={t('streamExperience')}>
             <Button
-              label='Chat'
+              label={t('chat')}
               systemImage='bubble.left.and.bubble.right'
               onPress={() => router.push('/tabs/settings/chat-preferences')}
             />
             <Button
-              label='Blocked Terms'
+              label={t('blockedTerms')}
               systemImage='text.badge.xmark'
               onPress={() => router.push('/tabs/settings/blocked-terms')}
             />
             <Button
-              label='Cache'
+              label={t('cache')}
               systemImage='externaldrive'
               onPress={() => router.push('/tabs/settings/cache')}
             />
             <Button
-              label='Appearance'
+              label={t('appearance')}
               systemImage='paintpalette'
               onPress={() => router.push('/tabs/settings/appearance')}
             />
           </Section>
 
-          <Section title='Account'>
+          <Section title={t('account')}>
             <Button
-              label={user ? 'Profile' : 'Sign In'}
+              label={user ? t('profile') : t('signIn')}
               systemImage='person.circle'
               onPress={() => {
                 if (user) {
@@ -74,44 +76,44 @@ export function SettingsIndexScreen() {
             />
           </Section>
 
-          <Section title='Support & Feedback'>
+          <Section title={t('supportAndFeedback')}>
             <Button
-              label='About Foam'
+              label={t('aboutFoam')}
               systemImage='info.circle'
               onPress={() => router.push('/tabs/settings/about')}
             />
             <Button
-              label='FAQ'
+              label={t('faq')}
               systemImage='questionmark.circle'
               onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
             />
             <Button
-              label='Send Feedback'
+              label={t('sendFeedback')}
               systemImage='paperplane'
               onPress={handleSendFeedback}
             />
             <Button
-              label='Status'
+              label={t('status')}
               systemImage='checkmark.shield'
               onPress={() => openLinkInBrowser(statusPageUrl.value)}
             />
             <Button
-              label='Website'
+              label={t('website')}
               systemImage='globe'
               onPress={() => openLinkInBrowser(websiteUrl.value)}
             />
           </Section>
 
-          <Section title={shouldShowDevTools ? 'Developer' : 'More'}>
+          <Section title={shouldShowDevTools ? t('developer') : t('more')}>
             {shouldShowDevTools ? (
               <Button
-                label='Dev Tools'
+                label={t('devTools')}
                 systemImage='hammer'
                 onPress={() => router.push('/tabs/settings/dev-tools')}
               />
             ) : null}
             <Button
-              label='Other'
+              label={t('other')}
               systemImage='ellipsis.circle'
               onPress={() => router.push('/tabs/settings/other')}
             />
@@ -132,10 +134,10 @@ export function SettingsIndexScreen() {
           { paddingBottom: insets.bottom + theme.space56 },
         ]}
       >
-        <SettingsSection title='Stream Experience'>
+        <SettingsSection title={t('streamExperience')}>
           <SettingsLinkRow
-            title='Chat'
-            subtitle='Density, timestamps, mentions, emotes, and badges'
+            title={t('chat')}
+            subtitle={t('chatDescription')}
             icon={{
               icon: 'bubble.left.and.bubble.right',
               color: theme.colorPlum,
@@ -143,33 +145,29 @@ export function SettingsIndexScreen() {
             onPress={() => router.push('/tabs/settings/chat-preferences')}
           />
           <SettingsLinkRow
-            title='Blocked Terms'
-            subtitle='Hide chat messages containing specific words or phrases'
+            title={t('blockedTerms')}
+            subtitle={t('blockedTermsDescription')}
             icon={{ icon: 'text.badge.xmark', color: theme.colorRed }}
             onPress={() => router.push('/tabs/settings/blocked-terms')}
           />
           <SettingsLinkRow
-            title='Cache'
-            subtitle='Clear local app data, emotes, badges, and media'
+            title={t('cache')}
+            subtitle={t('cacheDescription')}
             icon={{ icon: 'externaldrive', color: theme.colorPrimary }}
             onPress={() => router.push('/tabs/settings/cache')}
           />
           <SettingsLinkRow
-            title='Appearance'
-            subtitle='Theme and visual mode'
+            title={t('appearance')}
+            subtitle={t('appearanceDescription')}
             icon={{ icon: 'paintpalette', color: theme.colorAmber }}
             onPress={() => router.push('/tabs/settings/appearance')}
           />
         </SettingsSection>
 
-        <SettingsSection title='Account'>
+        <SettingsSection title={t('account')}>
           <SettingsLinkRow
-            title={user ? 'Profile' : 'Sign In'}
-            subtitle={
-              user
-                ? 'Channel identity, blocked users, and sign-out controls'
-                : 'Connect your Twitch account to unlock following and chat'
-            }
+            title={user ? t('profile') : t('signIn')}
+            subtitle={user ? t('profileDescription') : t('signInDescription')}
             icon={{ icon: 'person.circle', color: theme.colorTeal }}
             onPress={() => {
               if (user) {
@@ -182,51 +180,53 @@ export function SettingsIndexScreen() {
           />
         </SettingsSection>
 
-        <SettingsSection title='Support & Feedback'>
+        <SettingsSection title={t('supportAndFeedback')}>
           <SettingsLinkRow
-            title='About Foam'
-            subtitle='What the app is built for and where to reach us'
+            title={t('aboutFoam')}
+            subtitle={t('aboutFoamDescription')}
             icon={{ icon: 'info.circle', color: theme.colorBlue }}
             onPress={() => router.push('/tabs/settings/about')}
           />
           <SettingsLinkRow
-            title='FAQ'
-            subtitle='Common questions and help information'
+            title={t('faq')}
+            subtitle={t('faqDescription')}
             icon={{ icon: 'questionmark.circle', color: theme.colorPrimary }}
             onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
           />
           <SettingsLinkRow
-            title='Send Feedback'
-            subtitle='Share feedback, ideas, or what could be better'
+            title={t('sendFeedback')}
+            subtitle={t('sendFeedbackDescription')}
             icon={{ icon: 'paperplane', color: theme.colorTeal }}
             onPress={handleSendFeedback}
           />
           <SettingsLinkRow
-            title='Status'
-            subtitle='Check service availability and operational updates'
+            title={t('status')}
+            subtitle={t('statusDescription')}
             icon={{ icon: 'checkmark.shield', color: theme.colorOrange }}
             onPress={() => openLinkInBrowser(statusPageUrl.value)}
           />
           <SettingsLinkRow
-            title='Website'
-            subtitle='Product site and public links'
+            title={t('website')}
+            subtitle={t('websiteDescription')}
             icon={{ icon: 'globe', color: theme.colorViolet }}
             onPress={() => openLinkInBrowser(websiteUrl.value)}
           />
         </SettingsSection>
 
-        <SettingsSection title={shouldShowDevTools ? 'Developer' : 'More'}>
+        <SettingsSection
+          title={shouldShowDevTools ? t('developer') : t('more')}
+        >
           {shouldShowDevTools ? (
             <SettingsLinkRow
-              title='Dev Tools'
-              subtitle='Diagnostics, cache tools, remote config, and Storybook'
+              title={t('devTools')}
+              subtitle={t('devToolsDescription')}
               icon={{ icon: 'hammer', color: theme.colorOrange }}
               onPress={() => router.push('/tabs/settings/dev-tools')}
             />
           ) : null}
           <SettingsLinkRow
-            title='Other'
-            subtitle='Licenses, changelog, and supporting reference screens'
+            title={t('other')}
+            subtitle={t('otherDescription')}
             icon={{ icon: 'ellipsis.circle', color: theme.colorGrey }}
             onPress={() => router.push('/tabs/settings/other')}
           />
@@ -235,7 +235,7 @@ export function SettingsIndexScreen() {
         <View style={styles.buildWrap}>
           <BuildStatus />
           <Text type='xs' color='gray.textLow' style={styles.buildNote}>
-            Build details and release state for this install of Foam.
+            {t('buildNote')}
           </Text>
         </View>
       </ScrollView>

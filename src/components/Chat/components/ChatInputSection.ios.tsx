@@ -16,6 +16,7 @@ import { ChatComposer } from './ChatComposer/ChatComposer';
 import { ComposerIconButton } from './ComposerIconButton';
 import type { ChatInputSectionProps } from './chatInputSectionTypes';
 import { useComposerDismissGesture } from './useComposerDismissGesture';
+import { useTranslation } from 'react-i18next';
 
 export type { ReplyToData } from './chatInputSectionTypes';
 
@@ -48,11 +49,12 @@ export const ChatInputSection = memo(
       isConnected &&
       isAuthenticated &&
       !isSending;
+    const { t } = useTranslation('chat');
     const inputPlaceholder = !isAuthenticated
-      ? 'Sign in to send messages'
+      ? t('composer.signInToSend')
       : replyTo !== null
-        ? `Reply to ${replyTo.username}...`
-        : 'Send a message...';
+        ? t('composer.replyToUser', { username: replyTo.username })
+        : t('composer.sendAMessage');
 
     return (
       <View style={styles.wrapper} testID='chat-input-bar'>
@@ -66,7 +68,9 @@ export const ChatInputSection = memo(
             <View style={styles.replyIndicator} />
             <View style={styles.replyContent}>
               <View style={styles.replyLabelRow}>
-                <Text style={styles.replyLabel}>Replying to</Text>
+                <Text style={styles.replyLabel}>
+                  {t('composer.replyingTo')}
+                </Text>
                 <PaintedUsername
                   fallbackColor={
                     replyTo.color ? lightenColor(replyTo.color) : undefined
@@ -111,7 +115,7 @@ export const ChatInputSection = memo(
 
               <ComposerIconButton
                 icon='gearshape'
-                label='Open chat settings'
+                label={t('composer.openChatSettings')}
                 onPress={onOpenSettingsSheet}
               />
               {canPinNextMessage ? (
@@ -119,7 +123,9 @@ export const ChatInputSection = memo(
                   active={pinNextMessage}
                   icon={pinNextMessage ? 'pin.fill' : 'pin'}
                   label={
-                    pinNextMessage ? 'Send and pin message' : 'Pin next message'
+                    pinNextMessage
+                      ? t('composer.sendAndPinMessage')
+                      : t('composer.pinNextMessage')
                   }
                   onPress={onTogglePinNextMessage ?? (() => undefined)}
                 />

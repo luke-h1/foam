@@ -2,6 +2,7 @@ import '../utils/performance/wdyr';
 
 import { Observe } from 'expo-observe';
 import 'expo-dev-client';
+import '../i18n/i18next';
 import * as WebBrowser from 'expo-web-browser';
 import {
   configureReanimatedLogger,

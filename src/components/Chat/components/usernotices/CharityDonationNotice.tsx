@@ -7,6 +7,7 @@ import { View } from 'react-native';
 import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
 import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';
 import { styles } from '../ChatMessage/RichChatMessage.styles';
+import i18next from '@app/i18n/i18next';
 
 interface CharityDonationNoticeProps {
   part: ParsedPart<'charitydonation'>;
@@ -22,7 +23,7 @@ function CharityDonationNoticeComponent({ part }: CharityDonationNoticeProps) {
     <View style={styles.messageColumn}>
       <ChatNoticeMetaRow
         icon='heart.fill'
-        label='Charity donation'
+        label={i18next.t('chat:notices.charityDonation')}
         labelColor={CHAT_NOTICE_ACCENTS.charity}
       />
       <Text style={styles.messageMetaText}>

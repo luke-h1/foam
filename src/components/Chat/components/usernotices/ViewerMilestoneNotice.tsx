@@ -10,6 +10,7 @@ import {
   resolveViewerMilestoneBody,
   splitViewerMilestoneLead,
 } from './util/viewerMilestoneBody';
+import i18next from '@app/i18n/i18next';
 
 interface ViewerMilestoneNoticeProps {
   part: ParsedPart<'viewermilestone'>;
@@ -18,11 +19,11 @@ interface ViewerMilestoneNoticeProps {
 function getMilestoneMetaLabel(category: string): string {
   switch (category) {
     case 'watch-streak':
-      return 'Watch streak';
+      return i18next.t('chat:notices.watchStreak');
     case 'follow':
-      return 'Follow milestone';
+      return i18next.t('chat:notices.followMilestone');
     default:
-      return 'Milestone';
+      return i18next.t('chat:notices.milestone');
   }
 }
 

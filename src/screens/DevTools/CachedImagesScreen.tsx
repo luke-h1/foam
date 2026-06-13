@@ -23,6 +23,8 @@ import {
 import { useSelector } from '@legendapp/state/react';
 import { useRef, useState, useCallback, type RefObject } from 'react';
 import { Alert, View, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import i18next from '@app/i18n/i18next';
 
 type TabType = 'images' | 'badges' | 'paints';
 
@@ -82,12 +84,15 @@ export function CachedImagesScreen() {
 
   const handleClearCache = useCallback(() => {
     Alert.alert(
-      'Clear Image Cache',
-      `Are you sure you want to delete ${images.length} cached images (${formatBytes(totalSize)})?`,
+      i18next.t('devTools:clearImageCache'),
+      i18next.t('devTools:clearImageCacheConfirm', {
+        count: images.length,
+        size: formatBytes(totalSize),
+      }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: i18next.t('common:cancel'), style: 'cancel' },
         {
-          text: 'Clear',
+          text: i18next.t('devTools:clear'),
           style: 'destructive',
           onPress: () => {
             clearEmoteImageCache();
@@ -104,16 +109,21 @@ export function CachedImagesScreen() {
 
   const handleClearBadges = useCallback(() => {
     Alert.alert(
-      'Clear 7TV Badges',
-      `Are you sure you want to clear ${badgeList.length} cached 7TV badges?`,
+      i18next.t('devTools:clearSevenTvBadges'),
+      i18next.t('devTools:clearSevenTvBadgesConfirm', {
+        count: badgeList.length,
+      }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: i18next.t('common:cancel'), style: 'cancel' },
         {
-          text: 'Clear',
+          text: i18next.t('devTools:clear'),
           style: 'destructive',
           onPress: () => {
             clearSevenTvBadges();
-            Alert.alert('Success', 'All 7TV badges have been cleared');
+            Alert.alert(
+              i18next.t('devTools:success'),
+              i18next.t('devTools:badgesCleared'),
+            );
             setRefreshKey(k => k + 1);
           },
         },
@@ -123,16 +133,21 @@ export function CachedImagesScreen() {
 
   const handleClearPaints = useCallback(() => {
     Alert.alert(
-      'Clear Paints',
-      `Are you sure you want to clear ${paintList.length} cached 7TV paints?`,
+      i18next.t('devTools:clearPaints'),
+      i18next.t('devTools:clearPaintsConfirm', {
+        count: paintList.length,
+      }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: i18next.t('common:cancel'), style: 'cancel' },
         {
-          text: 'Clear',
+          text: i18next.t('devTools:clear'),
           style: 'destructive',
           onPress: () => {
             clearPaints();
-            Alert.alert('Success', 'All paints have been cleared');
+            Alert.alert(
+              i18next.t('devTools:success'),
+              i18next.t('devTools:paintsCleared'),
+            );
             setRefreshKey(k => k + 1);
           },
         },
@@ -187,6 +202,7 @@ function CachedImagesListHeader({
   onSelectTab: (tab: TabType) => void;
   paintList: PaintInfo[];
 }) {
+  const { t } = useTranslation('devTools');
   return (
     <View style={styles.headerContainer}>
       <View style={styles.tabContainer}>
@@ -206,7 +222,7 @@ function CachedImagesListHeader({
               activeTab === 'images' && styles.tabButtonTextActive,
             ]}
           >
-            Images
+            {t('images')}
           </Text>
         </Button>
         <Button
@@ -225,7 +241,7 @@ function CachedImagesListHeader({
               activeTab === 'badges' && styles.tabButtonTextActive,
             ]}
           >
-            Badges
+            {t('badges')}
           </Text>
         </Button>
         <Button
@@ -244,7 +260,7 @@ function CachedImagesListHeader({
               activeTab === 'paints' && styles.tabButtonTextActive,
             ]}
           >
-            Paints
+            {t('paints')}
           </Text>
         </Button>
       </View>
@@ -252,7 +268,7 @@ function CachedImagesListHeader({
       {/* Cache Location (only show for images) */}
       {activeTab === 'images' && (
         <View style={styles.pathContainer}>
-          <Text style={styles.pathLabel}>Cache Location</Text>
+          <Text style={styles.pathLabel}>{t('cacheLocation')}</Text>
           <Text style={styles.pathValue} numberOfLines={1} selectable>
             {getCacheDirectoryPath()}
           </Text>
@@ -262,7 +278,7 @@ function CachedImagesListHeader({
       {/* Action Buttons */}
       <View style={styles.actions}>
         <Button onPress={onRefresh} style={styles.button}>
-          <Text style={styles.buttonText}>Refresh</Text>
+          <Text style={styles.buttonText}>{t('refresh')}</Text>
         </Button>
         {activeTab === 'images' && (
           <Button
@@ -276,7 +292,7 @@ function CachedImagesListHeader({
                 images.length === 0 && styles.buttonTextDisabled,
               ]}
             >
-              Clear
+              {t('clear')}
             </Text>
           </Button>
         )}
@@ -292,7 +308,7 @@ function CachedImagesListHeader({
                 badgeList.length === 0 && styles.buttonTextDisabled,
               ]}
             >
-              Clear
+              {t('clear')}
             </Text>
           </Button>
         )}
@@ -308,7 +324,7 @@ function CachedImagesListHeader({
                 paintList.length === 0 && styles.buttonTextDisabled,
               ]}
             >
-              Clear
+              {t('clear')}
             </Text>
           </Button>
         )}
@@ -621,7 +637,7 @@ const renderCachedPaintItem: ListRenderItem<PaintInfo> = ({ item }) => (
     <View style={styles.itemInfo}>
       <View style={styles.itemHeader}>
         <Text style={styles.itemName} numberOfLines={1}>
-          {item.name || 'Unnamed Paint'}
+          {item.name || i18next.t('devTools:unnamedPaint')}
         </Text>
         {item.color ? (
           <View style={[styles.colorBadge, { backgroundColor: item.color }]} />
@@ -676,8 +692,8 @@ function CachedImagesTabContent({
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <CachedImagesEmptyState
-            message='No cached images found'
-            submessage='Emote images will appear here after visiting a chat'
+            message={i18next.t('devTools:noCachedImages')}
+            submessage={i18next.t('devTools:noCachedImagesDescription')}
           />
         }
       />
@@ -695,8 +711,8 @@ function CachedImagesTabContent({
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <CachedImagesEmptyState
-            message='No cached badges found'
-            submessage='7TV badges will appear here after viewing users with badges in chat'
+            message={i18next.t('devTools:noCachedBadges')}
+            submessage={i18next.t('devTools:noCachedBadgesDescription')}
           />
         }
       />
@@ -714,8 +730,8 @@ function CachedImagesTabContent({
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <CachedImagesEmptyState
-            message='No cached paints found'
-            submessage='7TV paints will appear here after viewing users with paints in chat'
+            message={i18next.t('devTools:noCachedPaints')}
+            submessage={i18next.t('devTools:noCachedPaintsDescription')}
           />
         }
       />

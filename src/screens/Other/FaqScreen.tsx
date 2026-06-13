@@ -7,8 +7,10 @@ import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { useEffect, useRef } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { OtherInfoCard } from './components/OtherInfoCard';
+import { useTranslation } from 'react-i18next';
 
 export function FaqScreen() {
+  const { t } = useTranslation('faq');
   const scrollRef = useRef<ScrollView>(null);
   const didOpenBrowser = useRef(false);
 
@@ -31,15 +33,12 @@ export function FaqScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <OtherInfoCard
-          title='FAQ'
-          body='Open the Foam website in the in-app browser for common questions and product guidance.'
-        >
+        <OtherInfoCard title={t('title')} body={t('body')}>
           <Button
             onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
             style={styles.cta}
           >
-            <Text weight='semibold'>Open FAQ</Text>
+            <Text weight='semibold'>{t('openFaq')}</Text>
           </Button>
         </OtherInfoCard>
       </ScrollView>

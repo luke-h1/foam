@@ -12,6 +12,7 @@ import {
 } from '@app/utils/errors/categorizeError';
 import { useObservable, useSelector } from '@legendapp/state/react';
 import { ScrollView, View, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 export interface ErrorDetailsProps {
   error: Error | null;
@@ -24,6 +25,7 @@ function handleShowFeedback() {
 }
 
 export function ErrorDetails(props: ErrorDetailsProps) {
+  const { t } = useTranslation('errors');
   const { error, errorInfo, onReset } = props;
   const showStackTrace$ = useObservable(false);
   const showStackTrace = useSelector(showStackTrace$);
@@ -56,8 +58,8 @@ export function ErrorDetails(props: ErrorDetailsProps) {
 
         <Text type='lg' weight='semibold' align='center'>
           {errorCategory === 'network'
-            ? 'Connection trouble'
-            : 'Something went wrong'}
+            ? t('connectionTrouble')
+            : t('somethingWentWrong')}
         </Text>
 
         <Text
@@ -87,7 +89,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
 
           <Button style={styles.secondaryButton} onPress={handleShowFeedback}>
             <Text type='sm' weight='semibold' color='gray' align='center'>
-              Send Feedback
+              {t('sendFeedback')}
             </Text>
           </Button>
         </View>
@@ -102,7 +104,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
             align='center'
             style={styles.linkText}
           >
-            {showStackTrace ? 'Hide Stack Trace' : 'Show Stack Trace'}
+            {showStackTrace ? t('hideStackTrace') : t('showStackTrace')}
           </Text>
         </Button>
       </View>

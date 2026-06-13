@@ -16,6 +16,7 @@ import {
   View,
 } from 'react-native';
 import { toast } from 'sonner-native';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   visible: boolean;
@@ -31,6 +32,7 @@ type PreviewAction = {
 };
 
 function BadgePreviewSheetComponent(props: Props) {
+  const { t } = useTranslation(['chat', 'common']);
   const { visible, onClose, selectedBadge } = props;
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   const sheetWidth = Math.max(
@@ -54,41 +56,46 @@ function BadgePreviewSheetComponent(props: Props) {
       field === 'name' ? selectedBadge.title : selectedBadge.url,
     ).then(() =>
       toast.success(
-        field === 'name' ? 'Badge name copied' : 'Badge URL copied',
+        field === 'name'
+          ? t('badgePreview.nameCopied')
+          : t('badgePreview.urlCopied'),
       ),
     );
   };
 
   const metadataRows = [
-    { label: 'Type', value: selectedBadge.type },
-    { label: 'Provider', value: selectedBadge.provider?.toUpperCase() },
-    { label: 'Owner', value: selectedBadge.owner_username },
-    { label: 'Set', value: selectedBadge.set },
-    { label: 'ID', value: selectedBadge.id },
+    { label: t('badgePreview.type'), value: selectedBadge.type },
+    {
+      label: t('badgePreview.provider'),
+      value: selectedBadge.provider?.toUpperCase(),
+    },
+    { label: t('badgePreview.owner'), value: selectedBadge.owner_username },
+    { label: t('badgePreview.set'), value: selectedBadge.set },
+    { label: t('badgePreview.id'), value: selectedBadge.id },
   ].filter(row => Boolean(row.value));
 
   const actions: PreviewAction[] = (() => {
     const items: PreviewAction[] = [
       {
         icon: 'doc.on.doc',
-        label: 'Copy Badge name',
+        label: t('badgePreview.copyBadgeName'),
         onPress: () => handleCopy('name'),
         subtitle: selectedBadge.title,
       },
       {
         icon: 'link',
-        label: 'Copy Badge URL',
+        label: t('badgePreview.copyBadgeUrl'),
         onPress: () => handleCopy('url'),
-        subtitle: 'Rendered badge source',
+        subtitle: t('badgePreview.copyBadgeUrlSubtitle'),
       },
     ];
 
     if (selectedBadge.url) {
       items.push({
         icon: 'arrow.up.right.square',
-        label: 'Open in Browser',
+        label: t('badgePreview.openInBrowser'),
         onPress: () => openLinkInBrowser(selectedBadge.url),
-        subtitle: 'Image source',
+        subtitle: t('badgePreview.openInBrowserSubtitle'),
       });
     }
 
@@ -106,13 +113,17 @@ function BadgePreviewSheetComponent(props: Props) {
         <View style={styles.topBar}>
           <View style={styles.heading}>
             <Text style={styles.eyebrow} weight='semibold'>
-              Badge preview
+              {t('badgePreview.eyebrow')}
             </Text>
             <Text style={styles.title} weight='semibold' numberOfLines={2}>
               {selectedBadge.title}
             </Text>
           </View>
-          <Button label='Done' style={styles.doneButton} onPress={onClose}>
+          <Button
+            label={t('common:done')}
+            style={styles.doneButton}
+            onPress={onClose}
+          >
             <SymbolView
               name='checkmark'
               size={18}

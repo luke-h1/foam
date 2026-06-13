@@ -3,6 +3,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { useState } from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 function SentryTestError() {
   throw new Error('Sentry test error from Foam dev tools');
@@ -11,6 +12,7 @@ function SentryTestError() {
 }
 
 export function SentryTestScreen() {
+  const { t } = useTranslation('devTools');
   const [shouldThrow, setShouldThrow] = useState(false);
 
   return (
@@ -22,25 +24,24 @@ export function SentryTestScreen() {
       >
         {Platform.OS === 'ios' ? null : (
           <Text type='xl' weight='bold' style={styles.title}>
-            Sentry Test
+            {t('sentryTest')}
           </Text>
         )}
 
         <View style={styles.panel}>
-          <Text weight='semibold'>Throw test error</Text>
+          <Text weight='semibold'>{t('throwTestError')}</Text>
           <Text type='xs' color='gray.textLow'>
-            Sends an unhandled JavaScript error through the app error boundary
-            and Sentry wrapper.
+            {t('throwTestErrorDescription')}
           </Text>
 
           <Button
             accessibilityRole='button'
-            label='Throw Sentry test error'
+            label={t('throwSentryTestError')}
             onPress={() => setShouldThrow(true)}
             style={styles.errorButton}
           >
             <Text type='sm' weight='semibold' style={styles.errorButtonText}>
-              Throw Error
+              {t('throwError')}
             </Text>
           </Button>
         </View>

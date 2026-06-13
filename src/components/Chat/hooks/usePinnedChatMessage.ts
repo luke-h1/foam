@@ -8,6 +8,7 @@ import { logger } from '@app/utils/logger';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner-native';
 import type { MessageActionData } from '../components/ChatMessage/RichChatMessage';
+import i18next from '@app/i18n/i18next';
 
 const PINNED_MESSAGE_REFRESH_INTERVAL_MS = 60_000;
 
@@ -125,12 +126,12 @@ export function usePinnedChatMessage({
         })
         .then(() => {
           setPinnedMessage(createPinnedMessageViewModelFromAction(message));
-          toast.success('Message pinned');
+          toast.success(i18next.t('chat:pinned.messagePinned'));
           void loadPinnedMessage();
         })
         .catch(error => {
           logger.chat.error('Failed to pin chat message', error);
-          toast.error('Could not pin message');
+          toast.error(i18next.t('chat:pinned.couldNotPin'));
         })
         .finally(() => {
           setPinnedMessageBusy(false);
@@ -170,13 +171,13 @@ export function usePinnedChatMessage({
         });
 
         if (!silent) {
-          toast.success('Pin refreshed');
+          toast.success(i18next.t('chat:pinned.pinRefreshed'));
         }
         await loadPinnedMessage();
       } catch (error) {
         logger.chat.error('Failed to update pinned chat message', error);
         if (!silent) {
-          toast.error('Could not refresh pin');
+          toast.error(i18next.t('chat:pinned.couldNotRefreshPin'));
         }
       } finally {
         if (silent) {
@@ -233,11 +234,11 @@ export function usePinnedChatMessage({
       })
       .then(() => {
         setPinnedMessage(null);
-        toast.success('Message unpinned');
+        toast.success(i18next.t('chat:pinned.messageUnpinned'));
       })
       .catch(error => {
         logger.chat.error('Failed to unpin chat message', error);
-        toast.error('Could not unpin message');
+        toast.error(i18next.t('chat:pinned.couldNotUnpin'));
       })
       .finally(() => {
         setPinnedMessageBusy(false);

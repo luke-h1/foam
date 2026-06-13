@@ -7,12 +7,15 @@ import { AppStoreSection } from './AppStoreSection';
 import { ExpoSection } from './ExpoSection';
 import { OTADynamicSection } from './OTADynamicSection';
 import { OTASection } from './OTASection';
+import { useTranslation } from 'react-i18next';
 
 const settingsHintIcon = (
   <SymbolView name='gear' tintColor={AC.secondaryLabel} />
 );
 
 export function Diagnostics() {
+  const { t } = useTranslation('devTools');
+
   return (
     <BodyScrollView
       contentInsetAdjustmentBehavior='automatic'
@@ -20,14 +23,14 @@ export function Diagnostics() {
     >
       <AppStoreSection />
       <ExpoSection />
-      <Form.Section title='Views'>
+      <Form.Section title={t('views')}>
         {process.env.EXPO_OS !== 'web' && (
           <Form.Text
             // eslint-disable-next-line @typescript-eslint/no-misused-promises
             onPress={() => Linking.openSettings()}
             hint={settingsHintIcon}
           >
-            Open System Settings
+            {t('openSystemSettings')}
           </Form.Text>
         )}
       </Form.Section>

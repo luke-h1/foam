@@ -8,6 +8,7 @@ import { View } from 'react-native';
 import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
 import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';
 import { styles } from '../ChatMessage/RichChatMessage.styles';
+import i18next from '@app/i18n/i18next';
 
 interface RitualNoticeProps {
   part: ParsedPart<'ritual'>;
@@ -16,9 +17,11 @@ interface RitualNoticeProps {
 function getRitualMetaLabel(ritualName: string): string {
   switch (ritualName) {
     case 'new_chatter':
-      return 'New chatter';
+      return i18next.t('chat:notices.newChatter');
     default:
-      return ritualName ? ritualName.replace(/_/g, ' ') : 'Chat ritual';
+      return ritualName
+        ? ritualName.replace(/_/g, ' ')
+        : i18next.t('chat:notices.chatRitual');
   }
 }
 

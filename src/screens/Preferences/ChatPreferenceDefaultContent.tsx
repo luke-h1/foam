@@ -12,12 +12,11 @@ import { ChatProviderPreferenceSections } from './ChatProviderPreferenceSections
 import { ChatPreferenceSegmentedSettingsRow } from './ChatPreferenceSettingsRows';
 import {
   CONTEXT_TOGGLE_ROWS,
-  DELETED_STYLE_LABELS,
-  DENSITY_LABELS,
-  FONT_SCALE_LABELS,
-  HISTORICAL_RECENT_MESSAGES_EXPLAINER,
+  DELETED_STYLE_OPTIONS,
+  DENSITY_OPTIONS,
+  FONT_SCALE_OPTIONS,
   SCROLLBACK_LABELS,
-  TIMESTAMP_FORMAT_LABELS,
+  TIMESTAMP_FORMAT_OPTIONS,
 } from './chatPreferenceTypes';
 import {
   DensityPreview,
@@ -26,6 +25,7 @@ import {
   ProviderPreviewItem,
 } from './ChatPreferencePreviewWidgets';
 import type { useChatPreferenceScreenState } from './useChatPreferenceScreenState';
+import { useTranslation } from 'react-i18next';
 
 type ChatPreferenceScreenState = ReturnType<
   typeof useChatPreferenceScreenState
@@ -68,9 +68,11 @@ export function ChatPreferenceDefaultContent({
   showRecentMessages,
   update,
 }: ChatPreferenceDefaultContentProps) {
+  const { t } = useTranslation('preferences');
+
   return (
     <>
-      <SettingsSection title='Layout'>
+      <SettingsSection title={t('layout')}>
         <ChatPreferenceSegmentedSettingsRow
           icon={{
             icon: 'list.bullet',
@@ -82,11 +84,11 @@ export function ChatPreferenceDefaultContent({
           selectedIndex={densityIndex}
           subtitle={
             previewDensity === 'compact'
-              ? 'Tighter rows for faster scanning'
-              : 'Roomier rows with more breathing space'
+              ? t('densityCompactDescription')
+              : t('densityComfortableDescription')
           }
-          title='Message Density'
-          values={DENSITY_LABELS}
+          title={t('messageDensity')}
+          values={DENSITY_OPTIONS.map(option => t(option.labelKey))}
         />
         <View style={styles.settingsPreviewItem}>
           <DensityPreview density={previewDensity} />
@@ -100,13 +102,13 @@ export function ChatPreferenceDefaultContent({
           onChange={handleFontScaleChange}
           onValueChange={handleFontScaleValueChange}
           selectedIndex={fontScaleIndex}
-          subtitle='Scales message text, usernames, and mentions'
-          title='Font Size'
-          values={FONT_SCALE_LABELS}
+          subtitle={t('fontSizeDescription')}
+          title={t('fontSize')}
+          values={FONT_SCALE_OPTIONS.map(option => t(option.labelKey))}
         />
         <SettingsToggleRow
-          title='Alternating Rows'
-          subtitle='Add subtle striping between chat lines'
+          title={t('alternatingRows')}
+          subtitle={t('alternatingRowsDescription')}
           icon={{
             icon: 'line.3.horizontal',
             androidIcon: 'menu',
@@ -123,7 +125,7 @@ export function ChatPreferenceDefaultContent({
         </View>
       </SettingsSection>
 
-      <SettingsSection title='Emoji Style'>
+      <SettingsSection title={t('emojiStyle')}>
         <ChatPreferenceSegmentedSettingsRow
           icon={{
             icon: 'face.smiling',
@@ -133,8 +135,8 @@ export function ChatPreferenceDefaultContent({
           onChange={handleEmojiStyleChangeByIndex}
           onValueChange={handleEmojiStyleChange}
           selectedIndex={emojiIndex}
-          subtitle='Changes emoji images in existing chat messages'
-          title='Emoji Set'
+          subtitle={t('emojiSetDescription')}
+          title={t('emojiSet')}
           values={emojiLabels}
         />
         <View style={styles.settingsPreviewItem}>
@@ -142,10 +144,10 @@ export function ChatPreferenceDefaultContent({
         </View>
       </SettingsSection>
 
-      <SettingsSection title='Context'>
+      <SettingsSection title={t('context')}>
         <SettingsToggleRow
-          title='Historical Recent Messages'
-          subtitle={HISTORICAL_RECENT_MESSAGES_EXPLAINER}
+          title={t('historicalRecentMessages')}
+          subtitle={t('historicalRecentMessagesDescription')}
           icon={{
             icon: 'clock.arrow.circlepath',
             androidIcon: 'history',
@@ -157,8 +159,8 @@ export function ChatPreferenceDefaultContent({
         {CONTEXT_TOGGLE_ROWS.map(row => (
           <SettingsToggleRow
             key={row.key}
-            title={row.label}
-            subtitle={row.subtitle}
+            title={t(row.labelKey)}
+            subtitle={t(row.subtitleKey)}
             icon={row.icon}
             value={previewContext[row.key]}
             onValueChange={value => handleContextToggle(row.key, value)}
@@ -173,9 +175,9 @@ export function ChatPreferenceDefaultContent({
           onChange={handleTimestampFormatChange}
           onValueChange={handleTimestampFormatValueChange}
           selectedIndex={timestampFormatIndex}
-          subtitle='Applies to newly received messages'
-          title='Timestamp Format'
-          values={TIMESTAMP_FORMAT_LABELS}
+          subtitle={t('timestampFormatDescription')}
+          title={t('timestampFormat')}
+          values={TIMESTAMP_FORMAT_OPTIONS.map(option => t(option.labelKey))}
         />
         <View style={styles.settingsPreviewItem}>
           <PreviewLabel />
@@ -186,17 +188,16 @@ export function ChatPreferenceDefaultContent({
       </SettingsSection>
 
       <SettingsSection
-        title='Highlights'
+        title={t('highlights')}
         footer={
           <Text color='gray.textLow' type='xs'>
-            Highlighted phrases tint matching messages. Mention feedback also
-            buzzes when a highlight matches.
+            {t('highlightsFooter')}
           </Text>
         }
       >
         <SettingsLinkRow
-          title='Highlighted Phrases'
-          subtitle='Tint messages containing custom phrases'
+          title={t('highlightedPhrases')}
+          subtitle={t('highlightedPhrasesDescription')}
           icon={{
             icon: 'highlighter',
             androidIcon: 'edit',
@@ -205,8 +206,8 @@ export function ChatPreferenceDefaultContent({
           onPress={() => router.push('/tabs/settings/chat-highlights')}
         />
         <SettingsToggleRow
-          title='Mention Feedback'
-          subtitle='Buzz when a message mentions you or matches a highlight'
+          title={t('mentionFeedback')}
+          subtitle={t('mentionFeedbackDescription')}
           icon={{
             icon: 'hand.tap',
             androidIcon: 'touch_app',
@@ -217,7 +218,7 @@ export function ChatPreferenceDefaultContent({
         />
       </SettingsSection>
 
-      <SettingsSection title='Moderation'>
+      <SettingsSection title={t('moderation')}>
         <ChatPreferenceSegmentedSettingsRow
           icon={{
             icon: 'trash.slash',
@@ -227,13 +228,13 @@ export function ChatPreferenceDefaultContent({
           onChange={handleDeletedStyleChange}
           onValueChange={handleDeletedStyleValueChange}
           selectedIndex={deletedStyleIndex}
-          subtitle='How removed messages appear in chat'
-          title='Deleted Messages'
-          values={DELETED_STYLE_LABELS}
+          subtitle={t('deletedMessagesDescription')}
+          title={t('deletedMessages')}
+          values={DELETED_STYLE_OPTIONS.map(option => t(option.labelKey))}
         />
         <SettingsToggleRow
-          title='Keep History on Clear'
-          subtitle='Ignore moderator chat clears and keep your scrollback'
+          title={t('keepHistoryOnClear')}
+          subtitle={t('keepHistoryOnClearDescription')}
           icon={{
             icon: 'clock.arrow.circlepath',
             androidIcon: 'history',
@@ -245,11 +246,10 @@ export function ChatPreferenceDefaultContent({
       </SettingsSection>
 
       <SettingsSection
-        title='Performance'
+        title={t('performance')}
         footer={
           <Text color='gray.textLow' type='xs'>
-            Longer scrollback keeps more messages in memory; 200 is easier on
-            older devices.
+            {t('performanceFooter')}
           </Text>
         }
       >
@@ -262,8 +262,8 @@ export function ChatPreferenceDefaultContent({
           onChange={handleScrollbackChange}
           onValueChange={handleScrollbackValueChange}
           selectedIndex={scrollbackIndex}
-          subtitle='Messages kept in chat history'
-          title='Scrollback'
+          subtitle={t('scrollbackDescription')}
+          title={t('scrollback')}
           values={SCROLLBACK_LABELS}
         />
       </SettingsSection>
@@ -275,17 +275,16 @@ export function ChatPreferenceDefaultContent({
       />
 
       <SettingsSection
-        title='Media'
+        title={t('media')}
         footer={
           <Text color='gray.textLow' type='xs'>
-            Animated Twitch, BTTV, FFZ, and 7TV emotes will render as still
-            images when this is enabled.
+            {t('mediaFooter')}
           </Text>
         }
       >
         <SettingsToggleRow
-          title='Disable Emote Animations'
-          subtitle='Prefer static emote rendering'
+          title={t('disableEmoteAnimations')}
+          subtitle={t('disableEmoteAnimationsDescription')}
           icon={{
             icon: 'slash.circle',
             androidIcon: 'block',

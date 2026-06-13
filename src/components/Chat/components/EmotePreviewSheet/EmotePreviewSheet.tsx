@@ -17,6 +17,7 @@ import {
   View,
 } from 'react-native';
 import { toast } from 'sonner-native';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   disableAnimations?: boolean;
@@ -39,6 +40,7 @@ function getEmoteName(emote: ParsedPart<'emote'>): string {
 }
 
 function EmotePreviewSheetComponent(props: Props) {
+  const { t } = useTranslation(['chat', 'common']);
   const { visible, onClose, selectedEmote, disableAnimations = false } = props;
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   const sheetWidth = Math.max(
@@ -106,16 +108,18 @@ function EmotePreviewSheetComponent(props: Props) {
       field === 'name' ? emoteName : displayUrl,
     ).then(() =>
       toast.success(
-        field === 'name' ? 'Emote name copied' : 'Emote URL copied',
+        field === 'name'
+          ? t('emotePreview.nameCopied')
+          : t('emotePreview.urlCopied'),
       ),
     );
   };
 
   const metadataRows = [
-    { label: 'Provider', value: selectedEmote.site },
-    { label: 'Creator', value: selectedEmote.creator },
+    { label: t('emotePreview.provider'), value: selectedEmote.site },
+    { label: t('emotePreview.creator'), value: selectedEmote.creator },
     {
-      label: 'Original',
+      label: t('emotePreview.original'),
       value:
         selectedEmote.original_name && selectedEmote.original_name !== emoteName
           ? selectedEmote.original_name
@@ -127,24 +131,24 @@ function EmotePreviewSheetComponent(props: Props) {
     const items: PreviewAction[] = [
       {
         icon: 'doc.on.doc',
-        label: 'Copy emote name',
+        label: t('emotePreview.copyEmoteName'),
         onPress: () => handleCopy('name'),
         subtitle: emoteName,
       },
       {
         icon: 'link',
-        label: 'Copy emote URL',
+        label: t('emotePreview.copyEmoteUrl'),
         onPress: () => handleCopy('url'),
-        subtitle: 'Rendered image source',
+        subtitle: t('emotePreview.copyEmoteUrlSubtitle'),
       },
     ];
 
     if (emoteLink) {
       items.push({
         icon: 'arrow.up.right.square',
-        label: 'Open in Browser',
+        label: t('emotePreview.openInBrowser'),
         onPress: () => openLinkInBrowser(emoteLink),
-        subtitle: 'Source page',
+        subtitle: t('emotePreview.openInBrowserSubtitle'),
       });
     }
 
@@ -162,13 +166,17 @@ function EmotePreviewSheetComponent(props: Props) {
         <View style={styles.topBar}>
           <View style={styles.heading}>
             <Text style={styles.eyebrow} weight='semibold'>
-              Emote preview
+              {t('emotePreview.eyebrow')}
             </Text>
             <Text style={styles.title} weight='semibold' numberOfLines={2}>
               {emoteName}
             </Text>
           </View>
-          <Button label='Done' style={styles.doneButton} onPress={onClose}>
+          <Button
+            label={t('common:done')}
+            style={styles.doneButton}
+            onPress={onClose}
+          >
             <SymbolView
               name='checkmark'
               size={18}

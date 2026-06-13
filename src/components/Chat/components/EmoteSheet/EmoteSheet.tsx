@@ -18,6 +18,7 @@ import type { LayoutChangeEvent } from 'react-native';
 import type { LegendListRef } from '@legendapp/list';
 import { EMOTE_SHEET_DETENT } from './emoteSheetLayout';
 import { useEmoteSheet } from './useEmoteSheet';
+import { useTranslation } from 'react-i18next';
 
 interface EmoteSheetProps {
   isPresented: boolean;
@@ -32,6 +33,7 @@ export function EmoteSheet({
   onDismiss,
   onEmoteSelect,
 }: EmoteSheetProps) {
+  const { t } = useTranslation('chat');
   const { bottom: bottomInset } = useSafeAreaInsets();
   const emoteListRef = useRef<LegendListRef>(null);
   const [layoutWidth, setLayoutWidth] = useState(0);
@@ -90,7 +92,7 @@ export function EmoteSheet({
           <View style={styles.searchContainer}>
             <View style={styles.searchRow}>
               <EmoteSearchFilter
-                placeholder='Search emotes'
+                placeholder={t('emoteSheet.searchEmotes')}
                 onChange={sheet.handleSearchChange}
                 onSubmitEditing={() =>
                   sheet.handleSearchChange(sheet.searchQuery)
@@ -111,9 +113,11 @@ export function EmoteSheet({
             <View style={styles.contentPane}>
               {sheet.showEmpty ? (
                 <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateTitle}>No emotes found</Text>
+                  <Text style={styles.emptyStateTitle}>
+                    {t('emoteSheet.noEmotesFound')}
+                  </Text>
                   <Text style={styles.emptyStateBody}>
-                    Try a shorter filter or switch providers.
+                    {t('emoteSheet.noEmotesFoundHint')}
                   </Text>
                 </View>
               ) : (

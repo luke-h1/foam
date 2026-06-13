@@ -1,6 +1,7 @@
 import { theme } from '@app/styles/themes';
 import { onlineManager } from '@tanstack/react-query';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -12,6 +13,7 @@ const BANNER_HEIGHT = 32;
 const ANIM_DURATION = 250;
 
 export function OfflineBanner() {
+  const { t } = useTranslation('common');
   const online = onlineManager.isOnline();
   const height = useSharedValue(online ? 0 : BANNER_HEIGHT);
 
@@ -30,7 +32,7 @@ export function OfflineBanner() {
   return (
     <Animated.View style={[styles.wrapper, animatedStyle]}>
       <Animated.View style={styles.banner}>
-        <Text style={styles.text}>No internet connection</Text>
+        <Text style={styles.text}>{t('noInternetConnection')}</Text>
       </Animated.View>
     </Animated.View>
   );

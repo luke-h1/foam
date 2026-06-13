@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { UsernamePressData } from '../ChatMessage/RichChatMessage.types';
 import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
 import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from '../chatSheetSurface';
+import { useTranslation } from 'react-i18next';
 
 export interface ChattersSheetProps {
   isPresented: boolean;
@@ -24,15 +25,20 @@ export interface ChattersSheetProps {
   onSelectChatter: (chatter: UsernamePressData) => void;
 }
 
+type RoleLabelKey = 'broadcaster' | 'moderators' | 'vips' | 'viewers';
+
 type ChattersListItem =
-  | { type: 'header'; key: string; label: string; count: number }
+  | { type: 'header'; key: string; labelKey: RoleLabelKey; count: number }
   | { type: 'chatter'; key: string; chatter: MentionChatter };
 
-const ROLE_SECTIONS: { role: ChatterRole | undefined; label: string }[] = [
-  { role: 'broadcaster', label: 'Broadcaster' },
-  { role: 'moderator', label: 'Moderators' },
-  { role: 'vip', label: 'VIPs' },
-  { role: undefined, label: 'Viewers' },
+const ROLE_SECTIONS: {
+  role: ChatterRole | undefined;
+  labelKey: RoleLabelKey;
+}[] = [
+  { role: 'broadcaster', labelKey: 'broadcaster' },
+  { role: 'moderator', labelKey: 'moderators' },
+  { role: 'vip', labelKey: 'vips' },
+  { role: undefined, labelKey: 'viewers' },
 ];
 
 function compareChattersByLogin(
@@ -68,8 +74,8 @@ function buildChattersListItems(
 
     items.push({
       type: 'header',
-      key: `header_${section.label}`,
-      label: section.label,
+      key: `header_${section.labelKey}`,
+      labelKey: section.labelKey,
       count: sectionChatters.length,
     });
     sectionChatters.forEach(chatter => {
@@ -100,6 +106,7 @@ const ChattersSheetComponent = ({
   onDismiss,
   onSelectChatter,
 }: ChattersSheetProps) => {
+  const { t } = useTranslation('chat');
   const [query, setQuery] = useState('');
   const { bottom: bottomInset } = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
@@ -122,7 +129,7 @@ const ChattersSheetComponent = ({
       return (
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionHeaderText} weight='semibold'>
-            {item.label}
+            {t(`chatters.${item.labelKey}`)}
           </Text>
           <Text style={styles.sectionHeaderCount} weight='semibold'>
             {item.count}
@@ -160,10 +167,10 @@ const ChattersSheetComponent = ({
       <View style={[styles.container, { height: sheetHeight }]}>
         <View style={styles.header}>
           <Text style={styles.headerEyebrow} weight='semibold'>
-            CHAT
+            {t('chatters.eyebrow')}
           </Text>
           <Text style={styles.headerTitle} weight='semibold'>
-            Chatters
+            {t('chatters.title')}
           </Text>
         </View>
 
@@ -179,7 +186,7 @@ const ChattersSheetComponent = ({
             autoCorrect={false}
             color='white'
             onChangeText={setQuery}
-            placeholder='Filter chatters'
+            placeholder={t('chatters.filterChatters')}
             placeholderTextColor='rgba(255,255,255,0.42)'
             radius='none'
             returnKeyType='search'
@@ -198,9 +205,7 @@ const ChattersSheetComponent = ({
               tintColor={theme.color.textSecondary.dark}
             />
             <Text style={styles.emptyStateText}>
-              {query.trim()
-                ? 'No chatters match your filter.'
-                : 'No chatters seen yet. Users appear here once they send a message.'}
+              {query.trim() ? t('chatters.noMatches') : t('chatters.empty')}
             </Text>
           </View>
         ) : (

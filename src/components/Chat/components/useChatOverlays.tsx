@@ -18,6 +18,7 @@ import {
   MessageActionData,
   UsernamePressData,
 } from './ChatMessage/RichChatMessage.types';
+import i18next from '@app/i18n/i18next';
 
 export interface ChatOverlayOpeners {
   openBadge: (badge: BadgePressData) => void;
@@ -254,7 +255,7 @@ export function useChatOverlays({
     }
     const messageText = replaceEmotesWithText(selectedMessage.message);
     void Clipboard.setStringAsync(messageText).then(() =>
-      toast.success('Copied to clipboard'),
+      toast.success(i18next.t('chat:userActions.copiedToClipboard')),
     );
     patchOverlay({ selectedMessage: null });
   }, [patchOverlay, selectedMessage]);
@@ -285,7 +286,7 @@ export function useChatOverlays({
     }
 
     sendChatCommand(channelName, `/delete ${messageId}`);
-    toast.success('Delete command sent');
+    toast.success(i18next.t('chat:userActions.deleteCommandSent'));
     patchOverlay({ selectedMessage: null });
   }, [
     channelName,
@@ -373,7 +374,7 @@ export function useChatOverlays({
     }
 
     void Clipboard.setStringAsync(selectedUser.username).then(() =>
-      toast.success('Copied username'),
+      toast.success(i18next.t('chat:userActions.copiedUsername')),
     );
     patchOverlay({ selectedUser: null });
   }, [patchOverlay, selectedUser]);
@@ -441,12 +442,12 @@ export function useChatOverlays({
     }
 
     Alert.alert(
-      'Block User',
-      `Are you sure you want to block ${displayName}?`,
+      i18next.t('chat:userActions.blockUser'),
+      i18next.t('chat:userActions.blockUserConfirm', { name: displayName }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: i18next.t('common:cancel'), style: 'cancel' },
         {
-          text: 'Block',
+          text: i18next.t('chat:userActions.block'),
           style: 'destructive',
           onPress: () => {
             patchOverlay({ selectedUser: null });
@@ -461,7 +462,7 @@ export function useChatOverlays({
                 }
               })
               .catch(() => {
-                toast.error('Failed to block user');
+                toast.error(i18next.t('chat:userActions.failedToBlockUser'));
               });
           },
         },

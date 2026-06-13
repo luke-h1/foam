@@ -5,6 +5,8 @@ import ChangelogModule from '@modules/changelog/src/ChangelogModule';
 import type { ChangelogPresentOptions } from '@modules/changelog/src/Changelog.types';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import i18next from '@app/i18n/i18next';
 
 type ChangelogState = {
   currentVersion: string;
@@ -80,14 +82,15 @@ function readChangelogState(): ChangelogState {
 }
 
 export function ChangelogDemoScreen() {
+  const { t } = useTranslation('devTools');
   const [state, setState] = useState<ChangelogState>(() =>
     readChangelogState(),
   );
 
   const stateRows = [
-    ['Current app version', state.currentVersion],
-    ['Latest seen app version', state.latestSeenAppVersion ?? 'none'],
-    ['Latest seen OTA version', state.latestSeenOTAVersion ?? 'none'],
+    [t('currentAppVersion'), state.currentVersion],
+    [t('latestSeenAppVersion'), state.latestSeenAppVersion ?? t('none')],
+    [t('latestSeenOtaVersion'), state.latestSeenOTAVersion ?? t('none')],
   ];
 
   const refreshState = () => {
@@ -99,7 +102,7 @@ export function ChangelogDemoScreen() {
       await ChangelogModule.present(demoOptions);
       refreshState();
     } catch (error) {
-      Alert.alert('Changelog failed', String(error));
+      Alert.alert(i18next.t('devTools:changelogFailed'), String(error));
     }
   };
 
@@ -112,7 +115,7 @@ export function ChangelogDemoScreen() {
       });
       refreshState();
     } catch (error) {
-      Alert.alert('Changelog failed', String(error));
+      Alert.alert(i18next.t('devTools:changelogFailed'), String(error));
     }
   };
 
@@ -128,7 +131,7 @@ export function ChangelogDemoScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.section}>
-          <Text weight='semibold'>Module state</Text>
+          <Text weight='semibold'>{t('moduleState')}</Text>
           <View style={styles.stateCard}>
             {stateRows.map(([label, value]) => (
               <View key={label} style={styles.stateRow}>
@@ -144,30 +147,30 @@ export function ChangelogDemoScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text weight='semibold'>Actions</Text>
+          <Text weight='semibold'>{t('actions')}</Text>
           <View style={styles.actions}>
             <Button
-              label='Present app changelog'
+              label={t('presentAppChangelog')}
               onPress={() => void handlePresentCurrent()}
               style={styles.primaryButton}
             >
               <Text weight='semibold' style={styles.primaryButtonText}>
-                Present app changelog
+                {t('presentAppChangelog')}
               </Text>
             </Button>
             <Button
-              label='Present OTA changelog'
+              label={t('presentOtaChangelog')}
               onPress={() => void handlePresentOTA()}
               style={styles.secondaryButton}
             >
-              <Text weight='semibold'>Present OTA changelog</Text>
+              <Text weight='semibold'>{t('presentOtaChangelog')}</Text>
             </Button>
             <Button
-              label='Reset seen versions'
+              label={t('resetSeenVersions')}
               onPress={handleReset}
               style={styles.secondaryButton}
             >
-              <Text weight='semibold'>Reset seen versions</Text>
+              <Text weight='semibold'>{t('resetSeenVersions')}</Text>
             </Button>
           </View>
         </View>

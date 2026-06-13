@@ -10,8 +10,10 @@ import { Button, Form, Host, Section } from '@expo/ui/swift-ui';
 import { router } from 'expo-router';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export function SettingsOtherScreen() {
+  const { t } = useTranslation('settings');
   const scrollRef = useRef<ScrollView>(null);
 
   useScrollToTop(scrollRef);
@@ -20,26 +22,26 @@ export function SettingsOtherScreen() {
     return (
       <Host style={styles.iosHost}>
         <Form>
-          <Section title='Support & Feedback'>
+          <Section title={t('supportAndFeedback')}>
             <Button
-              label='About Foam'
+              label={t('aboutFoam')}
               systemImage='info.circle'
               onPress={() => router.push('/tabs/settings/about')}
             />
             <Button
-              label='FAQ'
+              label={t('faq')}
               systemImage='questionmark.circle'
               onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
             />
             <Button
-              label='Changelog'
+              label={t('changelog')}
               systemImage='clock'
               onPress={() => router.push('/tabs/settings/changelog')}
             />
           </Section>
-          <Section title='Legal'>
+          <Section title={t('legal')}>
             <Button
-              label='OSS Licenses'
+              label={t('ossLicenses')}
               systemImage='doc.text'
               onPress={() => router.push('/tabs/settings/licenses')}
             />
@@ -57,31 +59,31 @@ export function SettingsOtherScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        <SettingsSection title='Support & Feedback'>
+        <SettingsSection title={t('supportAndFeedback')}>
           <SettingsLinkRow
-            title='About Foam'
-            subtitle='What the app is built for'
+            title={t('aboutFoam')}
+            subtitle={t('aboutFoamShortDescription')}
             icon={{ icon: 'info.circle', color: theme.colorBlue }}
             onPress={() => router.push('/tabs/settings/about')}
           />
           <SettingsLinkRow
-            title='FAQ'
-            subtitle='Common questions and product guidance'
+            title={t('faq')}
+            subtitle={t('faqShortDescription')}
             icon={{ icon: 'questionmark.circle', color: theme.colorPrimary }}
             onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
           />
           <SettingsLinkRow
-            title='Changelog'
-            subtitle='Recent release notes and product updates'
+            title={t('changelog')}
+            subtitle={t('changelogDescription')}
             icon={{ icon: 'clock', color: theme.colorAmber }}
             onPress={() => router.push('/tabs/settings/changelog')}
           />
         </SettingsSection>
 
-        <SettingsSection title='Legal'>
+        <SettingsSection title={t('legal')}>
           <SettingsLinkRow
-            title='OSS Licenses'
-            subtitle='Open-source software used by the app'
+            title={t('ossLicenses')}
+            subtitle={t('ossLicensesDescription')}
             icon={{ icon: 'doc.text', color: theme.colorViolet }}
             onPress={() => router.push('/tabs/settings/licenses')}
           />

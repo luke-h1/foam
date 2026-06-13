@@ -4,21 +4,21 @@ import { theme } from '@app/styles/themes';
 import { StyleSheet, View } from 'react-native';
 import { ReactNativeLegal } from 'react-native-legal';
 import { OtherInfoCard } from './components/OtherInfoCard';
+import { useTranslation } from 'react-i18next';
 
 export function LicensesScreen() {
+  const { t } = useTranslation('licenses');
+
   return (
     <View style={styles.container}>
-      <OtherInfoCard
-        title='Open-source acknowledgements'
-        body='Launch the native license list to inspect bundled dependencies and attribution details.'
-      >
+      <OtherInfoCard title={t('acknowledgements')} body={t('body')}>
         <Button
           onPress={() =>
-            ReactNativeLegal.launchLicenseListScreen('OSS licenses')
+            ReactNativeLegal.launchLicenseListScreen(t('ossLicenses'))
           }
           style={styles.cta}
         >
-          <Text weight='semibold'>Open license list</Text>
+          <Text weight='semibold'>{t('openLicenseList')}</Text>
         </Button>
       </OtherInfoCard>
     </View>

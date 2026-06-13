@@ -16,6 +16,7 @@ import { useQueries } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { Pressable, View, StyleSheet } from 'react-native';
+import i18next from '@app/i18n/i18next';
 
 type MediaLinkCardProps = {
   layout?: 'card' | 'inline';
@@ -80,8 +81,8 @@ function MediaLinkCardComponent({
 
   const title =
     type === 'stvEmote'
-      ? (sevenTvEmote.data?.name ?? '7TV emote')
-      : (twitchClip.data?.title ?? 'Twitch clip');
+      ? (sevenTvEmote.data?.name ?? i18next.t('chat:media.stvEmote'))
+      : (twitchClip.data?.title ?? i18next.t('chat:media.twitchClip'));
 
   const createdBy =
     type === 'stvEmote'
@@ -95,17 +96,23 @@ function MediaLinkCardComponent({
   if (isTwitchClip) {
     mediaMeta =
       [
-        createdBy ? `Clipped by ${createdBy}` : null,
+        createdBy
+          ? i18next.t('chat:media.clippedBy', { name: createdBy })
+          : null,
         typeof viewCount === 'number' && viewCount > 0
-          ? `${formatCompactNumber(viewCount)} views`
+          ? i18next.t('chat:media.views', {
+              count: formatCompactNumber(viewCount),
+            })
           : null,
       ]
         .filter(Boolean)
-        .join(' - ') || 'Open Twitch clip';
+        .join(' - ') || i18next.t('chat:media.openTwitchClip');
   } else if (createdBy) {
     mediaMeta = `By ${createdBy}`;
   }
-  const mediaLabel = isTwitchClip ? 'Twitch clip' : '7TV emote';
+  const mediaLabel = isTwitchClip
+    ? i18next.t('chat:media.twitchClip')
+    : i18next.t('chat:media.stvEmote');
   const mediaIcon = isTwitchClip ? 'twitch' : 'stv';
   const mediaImageFit = isTwitchClip ? 'cover' : 'contain';
 

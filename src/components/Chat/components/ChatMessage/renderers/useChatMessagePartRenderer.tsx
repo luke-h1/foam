@@ -27,7 +27,7 @@ export interface UseChatMessagePartRendererArgs {
   effectiveHighlightedUserSet?: ReadonlySet<string>;
   getMentionColor?: (username: string) => string;
   getPartKey: (part: ParsedPart, index: number) => Key;
-  handleEmoteLongPress?: (part: EmotePressData) => void;
+  onEmoteTouchStart?: (part: EmotePressData) => void;
   message: ParsedPart[];
   moderationNotice?: unknown;
   normalisedCurrentUsername?: string;
@@ -44,7 +44,7 @@ export function useChatMessagePartRenderer({
   effectiveHighlightedUserSet,
   getMentionColor,
   getPartKey,
-  handleEmoteLongPress,
+  onEmoteTouchStart,
   message,
   moderationNotice,
   normalisedCurrentUsername,
@@ -141,7 +141,7 @@ export function useChatMessagePartRenderer({
             disableAnimations={disableEmoteAnimations}
             key={getPartKey(part, index)}
             part={part}
-            handleEmoteLongPress={handleEmoteLongPress}
+            onEmoteTouchStart={onEmoteTouchStart}
             shouldOverlayPrevious={shouldOverlayPrevious}
             targetSize={emoteTargetSize ?? (compact ? 26 : 30)}
           />

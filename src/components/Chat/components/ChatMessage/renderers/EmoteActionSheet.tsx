@@ -27,6 +27,8 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { toast } from 'sonner-native';
+import { useTranslation } from 'react-i18next';
+import i18next from '@app/i18n/i18next';
 
 type PartVariant = ParsedPart<'emote'>;
 type ActionId =
@@ -37,8 +39,8 @@ type ActionId =
   | 'preview';
 
 const COPY_IMAGE_VARIANT_ACTIONS = [
-  { id: 'copy-url-2x', label: 'Copy 2x image URL', scale: '2x' },
-  { id: 'copy-url-4x', label: 'Copy 4x image URL', scale: '4x' },
+  { id: 'copy-url-2x', scale: '2x' },
+  { id: 'copy-url-4x', scale: '4x' },
 ] as const;
 
 function getEmoteActionSFSymbolName(actionId: ActionId) {
@@ -72,6 +74,7 @@ function EmoteActionSheetComponent({
   part,
   onPress,
 }: EmoteActionSheetProps) {
+  const { t } = useTranslation(['chat', 'common']);
   const [uncontrolledVisible, setUncontrolledVisible] = useState(false);
   const isControlled = typeof isPresented === 'boolean';
   const visible = isControlled ? isPresented : uncontrolledVisible;
@@ -151,7 +154,7 @@ function EmoteActionSheetComponent({
       return;
     }
     void Clipboard.setStringAsync(text).then(() => {
-      toast.success('Emote name copied to clipboard');
+      toast.success(i18next.t('chat:emoteActions.nameCopied'));
     });
   }, [part.name, part.original_name, closeSheet]);
 
@@ -161,7 +164,7 @@ function EmoteActionSheetComponent({
       return;
     }
     void Clipboard.setStringAsync(displayUrl).then(() => {
-      toast.success('Emote URL copied to clipboard');
+      toast.success(i18next.t('chat:emoteActions.urlCopied'));
     });
   }, [closeSheet, displayUrl]);
 
@@ -173,7 +176,9 @@ function EmoteActionSheetComponent({
         return;
       }
       void Clipboard.setStringAsync(url).then(() => {
-        toast.success(`${scale} emote URL copied to clipboard`);
+        toast.success(
+          i18next.t('chat:emoteActions.scaledUrlCopied', { scale }),
+        );
       });
     },
     [closeSheet, scaledImageUrls],
@@ -187,31 +192,31 @@ function EmoteActionSheetComponent({
   const actions = [
     {
       id: 'copy-name' as const,
-      label: 'Copy name',
+      label: t('emoteActions.copyName'),
       onPress: copyName,
       visible: true,
     },
     {
       id: 'copy-url' as const,
-      label: 'Copy image URL',
+      label: t('emoteActions.copyImageUrl'),
       onPress: copyImageUrl,
       visible: Boolean(displayUrl),
     },
     ...COPY_IMAGE_VARIANT_ACTIONS.map(action => ({
       id: action.id,
-      label: action.label,
+      label: t('emoteActions.copyScaledImageUrl', { scale: action.scale }),
       onPress: () => copyScaledImageUrl(action.scale),
       visible: Boolean(scaledImageUrls[action.scale]),
     })),
     {
       id: 'preview' as const,
-      label: 'Preview',
+      label: t('emoteActions.preview'),
       onPress: handlePreview,
       visible: Boolean(onPress),
     },
   ].filter(action => action.visible);
 
-  const previewSubtitle = 'Emote actions';
+  const previewSubtitle = t('emoteActions.title');
 
   const triggerChild =
     children && isValidElement(children)
@@ -239,11 +244,11 @@ function EmoteActionSheetComponent({
             <View style={styles.topBar}>
               <View style={styles.heading}>
                 <Text style={styles.eyebrow} weight='semibold'>
-                  Emote actions
+                  {t('emoteActions.title')}
                 </Text>
               </View>
               <Button
-                label='Done'
+                label={t('common:done')}
                 style={styles.doneButton}
                 onPress={closeSheet}
               >

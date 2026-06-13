@@ -13,6 +13,7 @@ import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/asy
 import * as ReactNative from 'react-native';
 import type { ReactNode } from 'react';
 import 'cross-fetch/polyfill';
+import '@app/i18n/i18next';
 import { configure as configureReassure } from 'reassure';
 import { TextEncoder, TextDecoder } from 'util';
 import mockFile from '../__mocks__/mockFile';

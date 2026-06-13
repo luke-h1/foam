@@ -26,6 +26,7 @@ import { toast } from 'sonner-native';
 import { AppState, InteractionManager } from 'react-native';
 import { recordError } from '@app/lib/sentry';
 import { useSyncRef } from '@app/hooks/useSyncRef';
+import i18next from '@app/i18n/i18next';
 
 /**
  * Prefetch initial data for faster startup
@@ -503,7 +504,7 @@ export const AuthContextProvider = ({
     });
 
     if (!response || response?.type !== 'success') {
-      toast.error("Couldn't authenticate with twitch");
+      toast.error(i18next.t('auth:couldNotAuthenticate'));
       await doAnonAuth();
       return null;
     }
@@ -516,7 +517,7 @@ export const AuthContextProvider = ({
         hasAuthentication: !!response.authentication,
         responseUrl: response.url,
       });
-      toast.error("Couldn't authenticate with twitch");
+      toast.error(i18next.t('auth:couldNotAuthenticate'));
       await doAnonAuth();
       return null;
     }

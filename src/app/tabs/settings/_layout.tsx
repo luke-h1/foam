@@ -3,85 +3,87 @@ import {
   nativeStackTabRootScreenOptions,
 } from '@app/utils/navigation/nativeStackOptions';
 import { Stack } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 export default function SettingsLayout() {
+  const { t } = useTranslation('navigation');
   return (
     <Stack screenOptions={nativeStackScreenOptions}>
       <Stack.Screen
         name='index'
-        options={{ title: 'Settings', ...nativeStackTabRootScreenOptions }}
+        options={{ title: t('settings'), ...nativeStackTabRootScreenOptions }}
       />
       <Stack.Screen
         name='about'
-        options={{ title: 'About', headerBackTitle: 'Settings' }}
+        options={{ title: t('about'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='appearance'
-        options={{ title: 'Appearance', headerBackTitle: 'Settings' }}
+        options={{ title: t('appearance'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='cache'
-        options={{ title: 'Cache', headerBackTitle: 'Settings' }}
+        options={{ title: t('cache'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='cached-images'
-        options={{ title: 'Cached Images', headerBackTitle: 'Settings' }}
+        options={{ title: t('cachedImages'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='changelog'
-        options={{ title: 'Changelog', headerBackTitle: 'Settings' }}
+        options={{ title: t('changelog'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='blocked-terms'
-        options={{ title: 'Blocked Terms', headerBackTitle: 'Settings' }}
+        options={{ title: t('blockedTerms'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='channel-surfing'
-        options={{ title: 'Channel Surfing', headerBackTitle: 'Settings' }}
+        options={{ title: t('channelSurfing'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='chat-highlights'
-        options={{ title: 'Highlights', headerBackTitle: 'Settings' }}
+        options={{ title: t('highlights'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='chat-preferences'
-        options={{ title: 'Chat', headerBackTitle: 'Settings' }}
+        options={{ title: t('chat'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='debug'
-        options={{ title: 'Debug', headerBackTitle: 'Settings' }}
+        options={{ title: t('debug'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='dev-tools'
-        options={{ title: 'Dev Tools', headerBackTitle: 'Settings' }}
+        options={{ title: t('devTools'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='diagnostics'
-        options={{ title: 'Diagnostics', headerBackTitle: 'Settings' }}
+        options={{ title: t('diagnostics'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='faq'
-        options={{ title: 'FAQ', headerBackTitle: 'Settings' }}
+        options={{ title: t('faq'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='licenses'
-        options={{ title: 'OSS Licenses', headerBackTitle: 'Settings' }}
+        options={{ title: t('ossLicenses'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='other'
-        options={{ title: 'Other', headerBackTitle: 'Settings' }}
+        options={{ title: t('other'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='profile'
-        options={{ title: 'Profile', headerBackTitle: 'Settings' }}
+        options={{ title: t('profile'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='remote-config'
-        options={{ title: 'Remote Config', headerBackTitle: 'Settings' }}
+        options={{ title: t('remoteConfig'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='storybook'
-        options={{ title: 'Storybook', headerBackTitle: 'Settings' }}
+        options={{ title: t('storybook'), headerBackTitle: t('settings') }}
       />
     </Stack>
   );

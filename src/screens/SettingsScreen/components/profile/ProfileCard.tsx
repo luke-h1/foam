@@ -10,6 +10,8 @@ import { useRef } from 'react';
 import type { ReactNode } from 'react';
 
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import i18next from '@app/i18n/i18next';
 
 interface ProfileSectionProps {
   title?: string;
@@ -103,12 +105,12 @@ function ActionRow({
 
 function formatMemberSince(createdAt?: string) {
   if (!createdAt) {
-    return 'Unknown';
+    return i18next.t('settings:unknown');
   }
 
   const date = new Date(createdAt);
   if (Number.isNaN(date.getTime())) {
-    return 'Unknown';
+    return i18next.t('settings:unknown');
   }
 
   return date.toLocaleDateString(undefined, {
@@ -118,6 +120,7 @@ function formatMemberSince(createdAt?: string) {
 }
 
 export function ProfileCard() {
+  const { t } = useTranslation(['settings', 'common']);
   const { user, logout } = useAuthContext();
   const scrollRef = useRef<ScrollView>(null);
 
@@ -126,25 +129,21 @@ export function ProfileCard() {
   const memberSince = formatMemberSince(user?.created_at);
 
   const confirmLogout = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out of your account?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: () => {
-            void (async () => {
-              await logout();
-              setTimeout(() => {
-                router.replace('/tabs/top');
-              }, 300);
-            })();
-          },
+    Alert.alert(t('signOut'), t('signOutConfirm'), [
+      { text: t('common:cancel'), style: 'cancel' },
+      {
+        text: t('signOut'),
+        style: 'destructive',
+        onPress: () => {
+          void (async () => {
+            await logout();
+            setTimeout(() => {
+              router.replace('/tabs/top');
+            }, 300);
+          })();
         },
-      ],
-    );
+      },
+    ]);
   };
 
   if (!user) {
@@ -165,7 +164,7 @@ export function ProfileCard() {
               />
             </View>
             <Text type='lg' weight='bold' align='center'>
-              Not signed in
+              {t('notSignedIn')}
             </Text>
             <Text
               type='xs'
@@ -173,8 +172,7 @@ export function ProfileCard() {
               align='center'
               style={styles.signInDescription}
             >
-              Sign in with Twitch to use chat, follows, channel shortcuts, and
-              account controls.
+              {t('signInPromptDescription')}
             </Text>
             <PressableArea
               style={styles.pressableFill}
@@ -187,7 +185,7 @@ export function ProfileCard() {
                   tintColor={theme.colorBlack}
                 />
                 <Text type='xs' weight='bold' color='accent' contrast>
-                  Sign in
+                  {t('signInShort')}
                 </Text>
               </View>
             </PressableArea>
@@ -206,10 +204,10 @@ export function ProfileCard() {
       showsVerticalScrollIndicator={false}
     >
       <ProfileSection
-        title='Account'
+        title={t('account')}
         footer={
           <Text type='xxs' color='gray.textLow' style={styles.footerText}>
-            User ID: {user.id}
+            {t('userId', { id: user.id })}
           </Text>
         }
       >
@@ -248,19 +246,22 @@ export function ProfileCard() {
           </View>
         </PressableArea>
 
-        <InfoRow label='Channel' value={user.broadcaster_type || 'Viewer'} />
-        <InfoRow label='Member Since' value={memberSince} />
+        <InfoRow
+          label={t('channel')}
+          value={user.broadcaster_type || t('viewer')}
+        />
+        <InfoRow label={t('memberSince')} value={memberSince} />
       </ProfileSection>
 
-      <ProfileSection title='Twitch'>
+      <ProfileSection title={t('twitch')}>
         <ActionRow
-          title='My Channel'
+          title={t('myChannel')}
           icon='tv'
           color={theme.colorWhite}
           onPress={() => router.push(`/streams/streamer-profile/${user.id}`)}
         />
         <ActionRow
-          title='Blocked Users'
+          title={t('blockedUsers')}
           icon='person.crop.circle.badge.xmark'
           color={theme.colorWhite}
           onPress={() => router.push('/preferences/blocked-users')}
@@ -268,15 +269,15 @@ export function ProfileCard() {
       </ProfileSection>
 
       <ProfileSection
-        title='Session'
+        title={t('session')}
         footer={
           <Text type='xxs' color='gray.textLow' style={styles.footerText}>
-            Signing out removes your saved Twitch token from this device.
+            {t('sessionFooter')}
           </Text>
         }
       >
         <ActionRow
-          title='Log out'
+          title={t('logOut')}
           icon='arrow.left.square'
           destructive
           showChevron={false}

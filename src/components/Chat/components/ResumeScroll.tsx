@@ -4,6 +4,7 @@ import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { View, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 export interface ResumeScrollProps {
   unreadCount: number;
@@ -14,6 +15,8 @@ function ResumeScrollComponent({
   onScrollToBottom,
   unreadCount,
 }: ResumeScrollProps) {
+  const { t } = useTranslation('chat');
+
   return (
     <View style={styles.resumeButtonContainer}>
       <Button style={styles.resumeButton} onPress={onScrollToBottom}>
@@ -22,7 +25,7 @@ function ResumeScrollComponent({
           size={16}
           tintColor={theme.colorAmberAlpha}
         />
-        <Text style={styles.resumeText}>Jump to latest</Text>
+        <Text style={styles.resumeText}>{t('controls.jumpToLatest')}</Text>
         {unreadCount > 0 && (
           <Text style={styles.resumeCount}> {unreadCount}</Text>
         )}

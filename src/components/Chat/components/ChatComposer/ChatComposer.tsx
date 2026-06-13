@@ -12,6 +12,7 @@ import {
   useChatComposerController,
   type ChatComposerHandle,
 } from './useChatComposerController';
+import { useTranslation } from 'react-i18next';
 
 export type { ChatComposerHandle };
 export type { SuggestionType } from './chatComposerTypes';
@@ -36,11 +37,12 @@ function ChatComposerComponent({
   onEmoteSelect,
   maxSuggestions = 50,
   prioritizeChannelEmotes = true,
-  placeholder = 'Send a message...',
+  placeholder,
   editable = true,
   canSend,
   ref,
 }: ChatComposerProps) {
+  const { t } = useTranslation('chat');
   const inputRef = useRef<TextInputType>(null);
   const { accentHex } = useAccentColor();
 
@@ -100,7 +102,7 @@ function ChatComposerComponent({
       <View style={styles.row}>
         {onPressAdd ? (
           <PressableScale
-            accessibilityLabel='Open emote picker'
+            accessibilityLabel={t('composer.openEmotePicker')}
             accessibilityRole='button'
             style={styles.addButton}
             onPress={onPressAdd}
@@ -130,7 +132,7 @@ function ChatComposerComponent({
           onSubmitEditing={handleSubmit}
           selection={selection}
           value={text}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t('composer.sendAMessage')}
           placeholderTextColor='#8E8E93'
           returnKeyType='send'
           selectionColor={theme.color.text.dark}
@@ -148,7 +150,7 @@ function ChatComposerComponent({
                   : theme.darkActiveContent,
               },
             ]}
-            accessibilityLabel='Send message'
+            accessibilityLabel={t('composer.sendMessage')}
             accessibilityRole='button'
             accessibilityState={{ disabled: !submitEnabled }}
             onPress={handleSubmit}

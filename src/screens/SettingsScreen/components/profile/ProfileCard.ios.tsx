@@ -14,15 +14,17 @@ import {
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { Alert, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import i18next from '@app/i18n/i18next';
 
 function formatMemberSince(createdAt?: string) {
   if (!createdAt) {
-    return 'Unknown';
+    return i18next.t('settings:unknown');
   }
 
   const date = new Date(createdAt);
   if (Number.isNaN(date.getTime())) {
-    return 'Unknown';
+    return i18next.t('settings:unknown');
   }
 
   return date.toLocaleDateString(undefined, {
@@ -32,28 +34,25 @@ function formatMemberSince(createdAt?: string) {
 }
 
 export function ProfileCard() {
+  const { t } = useTranslation(['settings', 'common']);
   const { user, logout } = useAuthContext();
 
   const confirmLogout = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out of your account?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: () => {
-            void (async () => {
-              await logout();
-              setTimeout(() => {
-                router.replace('/tabs/top');
-              }, 300);
-            })();
-          },
+    Alert.alert(t('signOut'), t('signOutConfirm'), [
+      { text: t('common:cancel'), style: 'cancel' },
+      {
+        text: t('signOut'),
+        style: 'destructive',
+        onPress: () => {
+          void (async () => {
+            await logout();
+            setTimeout(() => {
+              router.replace('/tabs/top');
+            }, 300);
+          })();
         },
-      ],
-    );
+      },
+    ]);
   };
 
   if (!user) {
@@ -61,15 +60,10 @@ export function ProfileCard() {
       <Host style={styles.host}>
         <Form>
           <Section
-            footer={
-              <NativeText>
-                Sign in with Twitch to use chat, follows, channel shortcuts, and
-                account controls.
-              </NativeText>
-            }
+            footer={<NativeText>{t('signInPromptDescription')}</NativeText>}
           >
             <Button
-              label='Sign in with Twitch'
+              label={t('signInWithTwitch')}
               systemImage='arrow.right.square'
               onPress={() => router.push('/auth-sheet')}
             />
@@ -85,8 +79,8 @@ export function ProfileCard() {
     <Host style={styles.host}>
       <Form>
         <Section
-          title='Account'
-          footer={<NativeText>User ID: {user.id}</NativeText>}
+          title={t('account')}
+          footer={<NativeText>{t('userId', { id: user.id })}</NativeText>}
         >
           <RNHostView matchContents>
             <View style={styles.identityRow}>
@@ -114,37 +108,33 @@ export function ProfileCard() {
               </View>
             </View>
           </RNHostView>
-          <LabeledContent label='Channel'>
-            <NativeText>{user.broadcaster_type || 'Viewer'}</NativeText>
+          <LabeledContent label={t('channel')}>
+            <NativeText>{user.broadcaster_type || t('viewer')}</NativeText>
           </LabeledContent>
-          <LabeledContent label='Member Since'>
+          <LabeledContent label={t('memberSince')}>
             <NativeText>{memberSince}</NativeText>
           </LabeledContent>
         </Section>
 
-        <Section title='Twitch'>
+        <Section title={t('twitch')}>
           <Button
-            label='My Channel'
+            label={t('myChannel')}
             systemImage='tv'
             onPress={() => router.push(`/streams/streamer-profile/${user.id}`)}
           />
           <Button
-            label='Blocked Users'
+            label={t('blockedUsers')}
             systemImage='person.crop.circle.badge.xmark'
             onPress={() => router.push('/preferences/blocked-users')}
           />
         </Section>
 
         <Section
-          title='Session'
-          footer={
-            <NativeText>
-              Signing out removes your saved Twitch token from this device.
-            </NativeText>
-          }
+          title={t('session')}
+          footer={<NativeText>{t('sessionFooter')}</NativeText>}
         >
           <Button
-            label='Log out'
+            label={t('logOut')}
             systemImage='arrow.left.square'
             // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
             role='destructive'

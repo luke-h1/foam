@@ -3,6 +3,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { useImperativeHandle, type Ref } from 'react';
 import { Linking, StyleSheet, View, type DimensionValue } from 'react-native';
+import i18next from '@app/i18n/i18next';
 
 export interface StreamPlayerRef {
   forceRefresh: () => void;
@@ -169,7 +170,7 @@ export function StreamPlayer({
       style={[styles.container, { width: playerWidth, height: playerHeight }]}
     >
       <iframe
-        title='Twitch video player'
+        title={i18next.t('stream:twitchVideoPlayer')}
         sandbox='allow-scripts allow-popups allow-popups-to-escape-sandbox allow-presentation'
         allow='autoplay; encrypted-media; fullscreen; picture-in-picture'
         allowFullScreen

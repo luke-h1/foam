@@ -4,6 +4,7 @@ import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 interface ChatViewControlsProps {
   hasActiveFilters: boolean;
@@ -19,6 +20,8 @@ export const ChatViewControls = memo(
     onToggleShowOnlyMentions,
     showOnlyMentions,
   }: ChatViewControlsProps) => {
+    const { t } = useTranslation('chat');
+
     if (!hasActiveFilters) {
       return null;
     }
@@ -39,7 +42,9 @@ export const ChatViewControls = memo(
                 size={14}
                 tintColor={theme.colorGreyHoverAlpha}
               />
-              <Text style={styles.filterChipText}>Mentions</Text>
+              <Text style={styles.filterChipText}>
+                {t('controls.mentions')}
+              </Text>
             </Button>
 
             <Button style={styles.clearChip} onPress={onClearFilters}>
@@ -48,7 +53,7 @@ export const ChatViewControls = memo(
                 size={14}
                 tintColor={theme.colorGreyHoverAlpha}
               />
-              <Text style={styles.filterChipText}>Clear</Text>
+              <Text style={styles.filterChipText}>{t('controls.clear')}</Text>
             </Button>
           </View>
         </View>

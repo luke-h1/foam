@@ -1,6 +1,7 @@
 import { Text } from '@app/components/ui/Text/Text';
 import type { ReactNode } from 'react';
 import { subscriptionNoticeStyles as styles } from './subscriptionNoticeStyles';
+import i18next from '@app/i18n/i18next';
 
 export interface SubscriptionDescriptionInput {
   msgId: string;
@@ -42,7 +43,11 @@ export function buildSubscriptionNoticeDescription(
     case 'sub': {
       parts.push(
         <Text key='action' style={styles.descriptionText}>
-          Subscribed{isPrime ? ' with Prime' : ` with ${tierDisplay}`}.
+          {isPrime
+            ? i18next.t('chat:subNotice.subscribedWithPrime')
+            : i18next.t('chat:subNotice.subscribedWithTier', {
+                tier: tierDisplay,
+              })}
         </Text>,
       );
       break;
@@ -52,20 +57,23 @@ export function buildSubscriptionNoticeDescription(
 
       parts.push(
         <Text key='action' style={styles.descriptionText}>
-          Subscribed{isPrime ? ' with Prime' : ` with ${tierDisplay}`}.
+          {isPrime
+            ? i18next.t('chat:subNotice.subscribedWithPrime')
+            : i18next.t('chat:subNotice.subscribedWithTier', {
+                tier: tierDisplay,
+              })}
         </Text>,
       );
 
       if (hasMonths) {
         parts.push(
           <Text key='months' style={styles.descriptionText}>
-            {' '}
-            They&apos;ve subscribed for{' '}
+            {i18next.t('chat:subNotice.subscribedFor')}
           </Text>,
         );
         parts.push(
           <Text key='monthsCount' style={styles.monthsHighlight}>
-            {cumulativeMonths} month{cumulativeMonths > 1 ? 's' : ''}
+            {i18next.t('chat:subNotice.months', { count: cumulativeMonths })}
           </Text>,
         );
 
@@ -76,7 +84,7 @@ export function buildSubscriptionNoticeDescription(
         ) {
           parts.push(
             <Text key='streak' style={styles.descriptionText}>
-              , {streakMonths} month{streakMonths > 1 ? 's' : ''} in a row
+              {i18next.t('chat:subNotice.streak', { count: streakMonths })}
             </Text>,
           );
         }
@@ -93,7 +101,7 @@ export function buildSubscriptionNoticeDescription(
       if (recipientDisplayName) {
         parts.push(
           <Text key='action' style={styles.descriptionText}>
-            Gifted a {tierDisplay} subscription to{' '}
+            {i18next.t('chat:subNotice.giftedSubTo', { tier: tierDisplay })}
           </Text>,
         );
         parts.push(
@@ -104,15 +112,14 @@ export function buildSubscriptionNoticeDescription(
       } else {
         parts.push(
           <Text key='action' style={styles.descriptionText}>
-            Gifted a {tierDisplay} subscription
+            {i18next.t('chat:subNotice.giftedSub', { tier: tierDisplay })}
           </Text>,
         );
       }
       if (giftMonths !== undefined && giftMonths > 1) {
         parts.push(
           <Text key='giftMonths' style={styles.descriptionText}>
-            {' '}
-            ({giftMonths} months)
+            {i18next.t('chat:subNotice.giftMonths', { count: giftMonths })}
           </Text>,
         );
       }
@@ -126,15 +133,18 @@ export function buildSubscriptionNoticeDescription(
     case 'anongiftpaidupgrade': {
       parts.push(
         <Text key='action' style={styles.descriptionText}>
-          Continuing their gift subscription
+          {i18next.t('chat:subNotice.continuingGiftSub')}
         </Text>,
       );
       if (promoName) {
         parts.push(
           <Text key='promo' style={styles.descriptionText}>
-            {' '}
-            ({promoName}
-            {promoGiftTotal ? `, ${promoGiftTotal} total` : ''})
+            {promoGiftTotal
+              ? i18next.t('chat:subNotice.promoWithTotal', {
+                  name: promoName,
+                  total: promoGiftTotal,
+                })
+              : i18next.t('chat:subNotice.promo', { name: promoName })}
           </Text>,
         );
       }
@@ -148,7 +158,7 @@ export function buildSubscriptionNoticeDescription(
     case 'submysterygift': {
       parts.push(
         <Text key='action' style={styles.descriptionText}>
-          Gifted{' '}
+          {i18next.t('chat:subNotice.gifted')}
         </Text>,
       );
       parts.push(
@@ -158,16 +168,17 @@ export function buildSubscriptionNoticeDescription(
       );
       parts.push(
         <Text key='tail' style={styles.descriptionText}>
-          {' '}
-          {tierDisplay} subscription{massGiftCount === 1 ? '' : 's'} to the
-          community
+          {i18next.t('chat:subNotice.massGiftTail', {
+            count: massGiftCount ?? 0,
+            tier: tierDisplay,
+          })}
         </Text>,
       );
 
       if (senderCount !== undefined && senderCount > 0) {
         parts.push(
           <Text key='senderCount' style={styles.descriptionText}>
-            . They&apos;ve gifted {senderCount} in the channel
+            {i18next.t('chat:subNotice.senderCount', { count: senderCount })}
           </Text>,
         );
       }
@@ -182,15 +193,14 @@ export function buildSubscriptionNoticeDescription(
     case 'giftpaidupgrade': {
       parts.push(
         <Text key='action' style={styles.descriptionText}>
-          Continuing the gift sub
+          {i18next.t('chat:subNotice.continuingTheGiftSub')}
         </Text>,
       );
 
       if (senderName) {
         parts.push(
           <Text key='from' style={styles.descriptionText}>
-            {' '}
-            from{' '}
+            {i18next.t('chat:subNotice.from')}
           </Text>,
         );
 
@@ -204,9 +214,12 @@ export function buildSubscriptionNoticeDescription(
       if (promoName) {
         parts.push(
           <Text key='promo' style={styles.descriptionText}>
-            {' '}
-            ({promoName}
-            {promoGiftTotal ? `, ${promoGiftTotal} total` : ''})
+            {promoGiftTotal
+              ? i18next.t('chat:subNotice.promoWithTotal', {
+                  name: promoName,
+                  total: promoGiftTotal,
+                })
+              : i18next.t('chat:subNotice.promo', { name: promoName })}
           </Text>,
         );
       }
@@ -221,8 +234,11 @@ export function buildSubscriptionNoticeDescription(
     case 'primepaidupgrade': {
       parts.push(
         <Text key='action' style={styles.descriptionText}>
-          Upgraded their Prime subscription
-          {isPrime ? '' : ` to ${tierDisplay}`}.
+          {isPrime
+            ? i18next.t('chat:subNotice.upgradedPrime')
+            : i18next.t('chat:subNotice.upgradedPrimeToTier', {
+                tier: tierDisplay,
+              })}
         </Text>,
       );
       break;
@@ -230,8 +246,11 @@ export function buildSubscriptionNoticeDescription(
     case 'extendsub': {
       parts.push(
         <Text key='action' style={styles.descriptionText}>
-          Extended their subscription
-          {isPrime ? ' with Prime' : ` with ${tierDisplay}`}.
+          {isPrime
+            ? i18next.t('chat:subNotice.extendedWithPrime')
+            : i18next.t('chat:subNotice.extendedWithTier', {
+                tier: tierDisplay,
+              })}
         </Text>,
       );
       break;
@@ -239,7 +258,7 @@ export function buildSubscriptionNoticeDescription(
     case 'standardpayforward': {
       parts.push(
         <Text key='action' style={styles.descriptionText}>
-          Paid their subscription forward to another viewer.
+          {i18next.t('chat:subNotice.paidForward')}
         </Text>,
       );
       break;
@@ -248,7 +267,7 @@ export function buildSubscriptionNoticeDescription(
       if (recipientDisplayName) {
         parts.push(
           <Text key='action' style={styles.descriptionText}>
-            Paid their subscription forward to{' '}
+            {i18next.t('chat:subNotice.paidForwardTo')}
           </Text>,
         );
         parts.push(
@@ -259,7 +278,7 @@ export function buildSubscriptionNoticeDescription(
       } else {
         parts.push(
           <Text key='action' style={styles.descriptionText}>
-            Paid their subscription forward to the community
+            {i18next.t('chat:subNotice.paidForwardToCommunity')}
           </Text>,
         );
       }
@@ -273,7 +292,7 @@ export function buildSubscriptionNoticeDescription(
     case 'primecommunitygiftreceived': {
       parts.push(
         <Text key='action' style={styles.descriptionText}>
-          Received a Prime subscription from the community.
+          {i18next.t('chat:subNotice.receivedPrimeFromCommunity')}
         </Text>,
       );
       break;
@@ -282,7 +301,9 @@ export function buildSubscriptionNoticeDescription(
       if (recipientDisplayName) {
         parts.push(
           <Text key='action' style={styles.descriptionText}>
-            An anonymous gifter gifted a {tierDisplay} subscription to{' '}
+            {i18next.t('chat:subNotice.anonGiftedSubTo', {
+              tier: tierDisplay,
+            })}
           </Text>,
         );
         parts.push(
@@ -293,7 +314,7 @@ export function buildSubscriptionNoticeDescription(
       } else {
         parts.push(
           <Text key='action' style={styles.descriptionText}>
-            An anonymous gifter gifted a {tierDisplay} subscription
+            {i18next.t('chat:subNotice.anonGiftedSub', { tier: tierDisplay })}
           </Text>,
         );
       }
@@ -307,7 +328,7 @@ export function buildSubscriptionNoticeDescription(
     case 'anonsubmysterygift': {
       parts.push(
         <Text key='action' style={styles.descriptionText}>
-          An anonymous gifter gifted{' '}
+          {i18next.t('chat:subNotice.anonGifted')}
         </Text>,
       );
       parts.push(
@@ -332,7 +353,7 @@ export function buildSubscriptionNoticeDescription(
     default:
       parts.push(
         <Text key='action' style={styles.descriptionText}>
-          Subscription event.
+          {i18next.t('chat:subNotice.subscriptionEvent')}
         </Text>,
       );
   }

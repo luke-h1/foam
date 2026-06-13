@@ -15,6 +15,8 @@ import type { FlashListRef } from '@app/components/FlashList/FlashList';
 import { Alert, ScrollView, View, StyleSheet } from 'react-native';
 import { toast } from 'sonner-native';
 import { BlockedUsersActionButton } from './components/BlockedUsersActionButton';
+import { useTranslation } from 'react-i18next';
+import i18next from '@app/i18n/i18next';
 
 const SKELETON_COUNT = 5;
 const SKELETON_DATA = Array.from(
@@ -35,6 +37,7 @@ const BlockedUserItem = function BlockedUserItem({
   count,
   onUnblock,
 }: BlockedUserItemProps) {
+  const { t } = useTranslation('preferences');
   const handlePress = useCallback(() => {
     onUnblock(user.user_id, user.display_name);
   }, [onUnblock, user.display_name, user.user_id]);
@@ -56,7 +59,7 @@ const BlockedUserItem = function BlockedUserItem({
         </Text>
       </View>
       <BlockedUsersActionButton
-        label='Unblock'
+        label={t('unblock')}
         onPress={handlePress}
         style={styles.unblockButton}
         variant='destructive'
@@ -108,6 +111,8 @@ function ListStatePanel({
   onAction,
   onRefresh: _onRefresh,
 }: ListStatePanelProps) {
+  const { t } = useTranslation('preferences');
+
   return (
     <ScrollView
       style={styles.stateScroll}
@@ -117,7 +122,7 @@ function ListStatePanel({
     >
       <View style={styles.stateSection}>
         <Text type='xxs' weight='semibold' style={styles.sectionTitle}>
-          Blocked Accounts
+          {t('blockedAccounts')}
         </Text>
         <View style={styles.statePanel}>
           <View style={styles.stateIcon}>
@@ -156,10 +161,12 @@ interface BlockedUsersSectionHeaderProps {
 }
 
 function BlockedUsersSectionHeader({ count }: BlockedUsersSectionHeaderProps) {
+  const { t } = useTranslation('preferences');
+
   return (
     <View style={styles.sectionHeader}>
       <Text type='xxs' weight='semibold' style={styles.sectionTitle}>
-        Blocked Accounts
+        {t('blockedAccounts')}
       </Text>
       {typeof count === 'number' ? (
         <Text type='xxs' color='gray.textLow' style={styles.sectionCountText}>
@@ -185,6 +192,7 @@ function BlockedUsersList({
   onRefresh,
   onUnblock,
 }: BlockedUsersListProps) {
+  const { t } = useTranslation('preferences');
   const listRef = useRef(null);
 
   useScrollToTop(listRef);
@@ -220,9 +228,9 @@ function BlockedUsersList({
     return (
       <ListStatePanel
         icon='exclamationmark.circle'
-        title='Could not load blocked users'
-        description='Twitch did not return your blocked users list. Refresh and try again.'
-        actionLabel='Retry'
+        title={t('couldNotLoadBlockedUsers')}
+        description={t('couldNotLoadBlockedUsersDescription')}
+        actionLabel={t('retry')}
         onAction={() => void onRefresh()}
         onRefresh={onRefresh}
       />
@@ -233,8 +241,8 @@ function BlockedUsersList({
     return (
       <ListStatePanel
         icon='shield'
-        title='No blocked users'
-        description='Accounts you block on Twitch will appear here for quick review.'
+        title={t('noBlockedUsers')}
+        description={t('noBlockedUsersDescription')}
         onRefresh={onRefresh}
       />
     );
@@ -323,13 +331,13 @@ export function BlockedUsersScreen() {
       return { previousData };
     },
     onSuccess: () => {
-      toast.success('User unblocked successfully');
+      toast.success(i18next.t('preferences:userUnblocked'));
     },
     onError: (_error, _targetUserId, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(userBlockListQueryKey, context.previousData);
       }
-      toast.error('Failed to unblock user');
+      toast.error(i18next.t('preferences:failedToUnblock'));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({
@@ -346,12 +354,12 @@ export function BlockedUsersScreen() {
 
   const handleUnblockRequest = (userId: string, userName: string) => {
     Alert.alert(
-      'Unblock User',
-      `Are you sure you want to unblock ${userName}?`,
+      i18next.t('preferences:unblockUser'),
+      i18next.t('preferences:unblockUserConfirm', { name: userName }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: i18next.t('common:cancel'), style: 'cancel' },
         {
-          text: 'Unblock',
+          text: i18next.t('preferences:unblock'),
           onPress: () => unblockUser(userId),
           style: 'destructive',
         },

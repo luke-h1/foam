@@ -3,8 +3,10 @@ import { theme } from '@app/styles/themes';
 import { SymbolView } from 'expo-symbols';
 import { StyleSheet, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 export function ControlsTriggerButton({ onPress }: { onPress: () => void }) {
+  const { t } = useTranslation('common');
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const topOffset =
@@ -14,7 +16,7 @@ export function ControlsTriggerButton({ onPress }: { onPress: () => void }) {
     <PressableArea
       onPress={onPress}
       style={[styles.controlsTriggerButton, { top: topOffset }]}
-      accessibilityLabel='Show player controls'
+      accessibilityLabel={t('showPlayerControls')}
       accessibilityRole='button'
     >
       <SymbolView name='ellipsis' size={24} tintColor={theme.colorWhite} />

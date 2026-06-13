@@ -39,6 +39,7 @@ interface OverlayMetricsState {
 }
 
 import { formatDuration } from './formatStreamDuration';
+import { useTranslation } from 'react-i18next';
 
 function formatViewerCount(count?: number): string {
   if (!count) {
@@ -60,6 +61,7 @@ export function ControlsOverlay({
   showPip,
   streamInfo,
 }: ControlsOverlayProps) {
+  const { t } = useTranslation(['stream', 'common']);
   const showPipButton = showPip ?? Platform.OS === 'ios';
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -134,7 +136,7 @@ export function ControlsOverlay({
         {onBackPress && (
           <View style={styles.headerButtonContainer}>
             <Button
-              label='Back'
+              label={t('common:back')}
               style={styles.headerButton}
               onPress={onBackPress}
             >
@@ -184,7 +186,7 @@ export function ControlsOverlay({
 
       <View style={styles.centerControls}>
         <Button
-          label={paused ? 'Play' : 'Pause'}
+          label={paused ? t('play') : t('pause')}
           style={[
             styles.playPauseButton,
             isPortrait && styles.playPauseButtonPortrait,
@@ -218,7 +220,7 @@ export function ControlsOverlay({
           >
             <View style={styles.liveIndicator}>
               <View style={styles.liveDot} />
-              <Text style={styles.liveText}>LIVE</Text>
+              <Text style={styles.liveText}>{t('live')}</Text>
             </View>
             <Text
               style={[
@@ -256,7 +258,7 @@ export function ControlsOverlay({
         {onRefresh && (
           <View style={styles.controlButtonContainer}>
             <Button
-              label='Refresh'
+              label={t('refresh')}
               style={styles.controlButton}
               onPress={onRefresh}
             >
@@ -272,7 +274,7 @@ export function ControlsOverlay({
         {onSharePress && (
           <View style={styles.controlButtonContainer}>
             <Button
-              label='Share'
+              label={t('common:share')}
               style={styles.controlButton}
               onPress={onSharePress}
             >
@@ -288,7 +290,7 @@ export function ControlsOverlay({
         {showPipButton && onPipPress && (
           <View style={styles.controlButtonContainer}>
             <Button
-              label='Picture in Picture'
+              label={t('pictureInPicture')}
               style={styles.controlButton}
               onPress={onPipPress}
             >

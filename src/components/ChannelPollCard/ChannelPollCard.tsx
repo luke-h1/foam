@@ -6,6 +6,7 @@ import { theme } from '@app/styles/themes';
 import type { ChannelPollState } from '@app/types/twitch/poll';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { StyleSheet, View } from 'react-native';
+import i18next from '@app/i18n/i18next';
 
 interface ChannelPollCardProps {
   channelLogin: string;
@@ -19,7 +20,7 @@ function formatTimeRemaining(poll: ChannelPollState): string | null {
 
   const remainingMs = new Date(poll.endsAt).getTime() - Date.now();
   if (remainingMs <= 0) {
-    return 'Ending…';
+    return i18next.t('chat:poll.ending');
   }
 
   const remainingSeconds = Math.ceil(remainingMs / 1000);
@@ -38,7 +39,9 @@ function ChannelPollCardComponent({
   poll,
 }: ChannelPollCardProps) {
   const timeRemaining = formatTimeRemaining(poll);
-  const statusLabel = poll.isActive ? 'Live poll' : 'Poll result';
+  const statusLabel = poll.isActive
+    ? i18next.t('chat:poll.live')
+    : i18next.t('chat:poll.result');
 
   return (
     <View style={styles.container}>

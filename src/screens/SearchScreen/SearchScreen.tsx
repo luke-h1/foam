@@ -34,6 +34,7 @@ import {
 } from 'react-native';
 import type { SearchBarCommands } from 'react-native-screens';
 import { StreamerCard } from './components/StreamerCard';
+import { useTranslation } from 'react-i18next';
 
 interface SearchHistoryItem {
   query: string;
@@ -155,6 +156,7 @@ function writeSearchHistoryQuery(query: string) {
 }
 
 export function SearchScreen() {
+  const { t } = useTranslation('search');
   const [{ query, selectedFilter, searchResults, categoryResults }, setState] =
     useState<SearchState>(SEARCH_INITIAL_STATE);
   const listRef = useRef<FlashListRef<SearchItem>>(null);
@@ -393,7 +395,7 @@ export function SearchScreen() {
         onChangeText={handleNativeSearchTextChange}
         onClose={handleClearSearch}
         onSearchButtonPress={handleNativeSearchSubmit}
-        placeholder='Search channels, games, or categories'
+        placeholder={t('searchPlaceholder')}
         placement='automatic'
       />
       <SearchHeader
@@ -442,13 +444,14 @@ function SearchHeader({
   searchResultsLength,
   selectedFilter,
 }: SearchHeaderProps) {
+  const { t } = useTranslation('search');
   return (
     <View style={styles.header}>
       <View style={styles.filterBar}>
         <SegmentedControl
           currentIndex={selectedFilter === 'channels' ? 0 : 1}
           onChange={handleFilterChange}
-          items={[{ label: 'Channels' }, { label: 'Categories' }]}
+          items={[{ label: t('channels') }, { label: t('categories') }]}
         />
       </View>
 
@@ -461,7 +464,7 @@ function SearchHeader({
               color='gray.textLow'
               style={styles.sectionTitle}
             >
-              SUGGESTED
+              {t('suggested')}
             </Text>
           </View>
           <View style={styles.quickActionsRow}>
@@ -478,7 +481,9 @@ function SearchHeader({
             color='gray.textLow'
             style={styles.sectionTitle}
           >
-            {selectedFilter === 'channels' ? 'CHANNELS' : 'CATEGORIES'}
+            {selectedFilter === 'channels'
+              ? t('channelsHeader')
+              : t('categoriesHeader')}
           </Text>
         </View>
       )}

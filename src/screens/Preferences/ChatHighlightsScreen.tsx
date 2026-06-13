@@ -19,6 +19,7 @@ import type {
   FlashListRef,
   ListRenderItem,
 } from '@app/components/FlashList/FlashList';
+import { useTranslation } from 'react-i18next';
 
 const HIGHLIGHT_COLORS = [
   theme.colorPrimary,
@@ -36,20 +37,21 @@ function HighlightRow({
   highlight: CustomHighlight;
   onRemove: (id: string) => void;
 }) {
+  const { t } = useTranslation(['preferences', 'common']);
   const handleRemove = useCallback(() => {
     Alert.alert(
-      'Remove highlight',
-      `Stop highlighting messages containing "${highlight.phrase}"?`,
+      t('removeHighlight'),
+      t('removeHighlightConfirm', { phrase: highlight.phrase }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common:cancel'), style: 'cancel' },
         {
-          text: 'Remove',
+          text: t('remove'),
           style: 'destructive',
           onPress: () => onRemove(highlight.id),
         },
       ],
     );
-  }, [highlight, onRemove]);
+  }, [highlight, onRemove, t]);
 
   return (
     <View style={styles.row}>
@@ -69,15 +71,16 @@ function HighlightRow({
 }
 
 function EmptyState() {
+  const { t } = useTranslation('preferences');
+
   return (
     <View style={styles.emptyState}>
       <SymbolView name='highlighter' size={48} tintColor={Color.zinc[600]} />
       <Text type='lg' weight='medium' style={styles.emptyTitle}>
-        No highlights
+        {t('noHighlights')}
       </Text>
       <Text type='sm' style={styles.emptySubtitle}>
-        Messages containing a highlighted phrase get a colored tint in chat,
-        plus a haptic buzz when mention feedback is on.
+        {t('noHighlightsDescription')}
       </Text>
     </View>
   );
@@ -98,6 +101,7 @@ function InputSection({
   onSelectColor,
   onAdd,
 }: InputSectionProps) {
+  const { t } = useTranslation('preferences');
   const canAdd = value.trim().length > 0;
 
   return (
@@ -106,7 +110,7 @@ function InputSection({
         <TextInput
           autoCapitalize='none'
           autoCorrect={false}
-          placeholder='Add a phrase to highlight…'
+          placeholder={t('addPhrasePlaceholder')}
           placeholderTextColor={Color.zinc[500]}
           value={value}
           onChangeText={onChangeText}
@@ -144,6 +148,7 @@ function InputSection({
 }
 
 export function ChatHighlightsScreen() {
+  const { t } = useTranslation('preferences');
   const customHighlights = usePreference('customHighlights');
   const updatePreferences = useUpdatePreferences();
   const [inputValue, setInputValue] = useState('');
@@ -217,9 +222,7 @@ export function ChatHighlightsScreen() {
         ListFooterComponent={
           hasHighlights ? (
             <Text type='xs' style={styles.footer}>
-              {highlights.length}{' '}
-              {highlights.length === 1 ? 'phrase' : 'phrases'} · Matching
-              messages are tinted in chat.
+              {t('phrasesFooter', { count: highlights.length })}
             </Text>
           ) : null
         }

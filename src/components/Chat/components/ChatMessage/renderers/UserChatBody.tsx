@@ -19,6 +19,7 @@ import type { BadgePressData } from '../RichChatMessage.types';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
+import i18next from '@app/i18n/i18next';
 
 interface UserChatBodyProps extends UseChatMessagePartRendererArgs {
   badgeList: SanitisedBadgeSet[];
@@ -113,7 +114,7 @@ export function UserChatBody({
         <ChatNoticeMetaRow
           compact={compact}
           icon='sparkles'
-          label='First message'
+          label={i18next.t('chat:notices.firstMessage')}
           labelColor={CHAT_NOTICE_ACCENTS.firstMessage}
           labelStyle={styles.firstMessageMetaText}
         />
@@ -121,7 +122,7 @@ export function UserChatBody({
         <ChatNoticeMetaRow
           compact={compact}
           icon='arrow.uturn.left'
-          label='Returning chatter'
+          label={i18next.t('chat:notices.returningChatter')}
           labelColor={CHAT_NOTICE_ACCENTS.returningChatter}
           labelStyle={styles.returningChatterMetaText}
         />

@@ -1,8 +1,10 @@
 import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
 import { isDevToolsEnabled } from '@app/utils/devTools/devToolsGate';
 import { Redirect, Stack } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 export default function DevToolsLayout() {
+  const { t } = useTranslation('navigation');
   if (!isDevToolsEnabled) {
     return <Redirect href='/tabs/settings' />;
   }
@@ -11,19 +13,19 @@ export default function DevToolsLayout() {
     <Stack screenOptions={nativeStackScreenOptions}>
       <Stack.Screen
         name='changelog'
-        options={{ title: 'Changelog Demo', headerBackTitle: 'Dev Tools' }}
+        options={{ title: t('changelogDemo'), headerBackTitle: t('devTools') }}
       />
       <Stack.Screen
         name='debug'
-        options={{ title: 'Debug', headerBackTitle: 'Dev Tools' }}
+        options={{ title: t('debug'), headerBackTitle: t('devTools') }}
       />
       <Stack.Screen
         name='diagnostics'
-        options={{ title: 'Diagnostics', headerBackTitle: 'Dev Tools' }}
+        options={{ title: t('diagnostics'), headerBackTitle: t('devTools') }}
       />
       <Stack.Screen
         name='sentry-demo'
-        options={{ title: 'Sentry Test', headerBackTitle: 'Dev Tools' }}
+        options={{ title: t('sentryTest'), headerBackTitle: t('devTools') }}
       />
     </Stack>
   );

@@ -11,6 +11,7 @@ import { useRef } from 'react';
 import type { ReactNode } from 'react';
 
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 const appIconProduction = require('../../../assets/app-icon/app-icon-production.png');
 
@@ -30,8 +31,6 @@ interface ActionRowProps {
   icon: SymbolViewProps['name'];
   onPress: () => void;
 }
-
-const OTA_LABEL = Updates.updateId ?? 'Embedded';
 
 function AboutSection({ title, footer, children }: AboutSectionProps) {
   return (
@@ -88,7 +87,9 @@ function ActionRow({ title, icon, onPress }: ActionRowProps) {
 }
 
 export function AboutScreen() {
+  const { t } = useTranslation('about');
   const scrollRef = useRef<ScrollView>(null);
+  const otaLabel = Updates.updateId ?? t('embedded');
 
   useScrollToTop(scrollRef);
 
@@ -106,53 +107,44 @@ export function AboutScreen() {
             <Image source={appIconProduction} style={styles.appIcon} />
             <View style={styles.identityText}>
               <Text type='lg' weight='bold' numberOfLines={1}>
-                Foam
+                {t('appName')}
               </Text>
               <Text type='xs' color='gray.textLow' numberOfLines={2}>
-                Streams, discovery, and chat controls in one mobile-first shell.
+                {t('tagline')}
               </Text>
             </View>
           </View>
         </AboutSection>
 
-        <AboutSection title='Built For'>
-          <InfoRow
-            label='Chat'
-            value='Native feeling chat with 7TV, BTTV and FFZ support. Inspired by projects such as Chatterino and the 7TV Chrome extension'
-          />
-          <InfoRow
-            label='Discovery'
-            value='Find and discover new streamers without the clutter'
-          />
-          <InfoRow
-            label='Viewing'
-            value='A viewing experience to rival desktop'
-          />
+        <AboutSection title={t('builtFor')}>
+          <InfoRow label={t('chat')} value={t('chatDescription')} />
+          <InfoRow label={t('discovery')} value={t('discoveryDescription')} />
+          <InfoRow label={t('viewing')} value={t('viewingDescription')} />
         </AboutSection>
 
-        <AboutSection title='Resources'>
+        <AboutSection title={t('resources')}>
           <ActionRow
-            title='Website'
+            title={t('website')}
             icon='globe'
             onPress={() => openLinkInBrowser('https://foam-app.com')}
           />
           <ActionRow
-            title='Status'
+            title={t('status')}
             icon='shield'
             onPress={() => openLinkInBrowser('https://status.foam-app.com')}
           />
         </AboutSection>
 
-        <AboutSection title='Build'>
+        <AboutSection title={t('build')}>
           <InfoRow
-            label='Version'
-            value={Application.nativeApplicationVersion ?? 'Unknown'}
+            label={t('version')}
+            value={Application.nativeApplicationVersion ?? t('unknown')}
           />
           <InfoRow
-            label='Build'
-            value={Application.nativeBuildVersion ?? 'Unknown'}
+            label={t('build')}
+            value={Application.nativeBuildVersion ?? t('unknown')}
           />
-          <InfoRow label='OTA' value={OTA_LABEL} />
+          <InfoRow label={t('ota')} value={otaLabel} />
         </AboutSection>
       </ScrollView>
     </View>

@@ -124,6 +124,10 @@ export function useRichChatMessage<
   const rowLongPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  // Set from each emote's onTouchStart (which bubbles before the row's), so
+  // the single row-level long-press timer can open the emote sheet without a
+  // Pressable per emote — busy rows used to mount hundreds of them.
+  const pressedEmotePartRef = useRef<EmotePressData | null>(null);
 
   useEffect(() => {
     return () => {
@@ -151,13 +155,18 @@ export function useRichChatMessage<
     onEmotePress?.(part);
   };
 
-  const clearRowLongPressTimer = () => {
+  const stopRowLongPressTimer = () => {
     if (!rowLongPressTimerRef.current) {
       return;
     }
 
     clearTimeout(rowLongPressTimerRef.current);
     rowLongPressTimerRef.current = null;
+  };
+
+  const clearRowLongPressTimer = () => {
+    pressedEmotePartRef.current = null;
+    stopRowLongPressTimer();
   };
 
   useEffect(
@@ -170,9 +179,8 @@ export function useRichChatMessage<
     [],
   );
 
-  const handleEmoteLongPress = (part: EmotePressData) => {
-    clearRowLongPressTimer();
-    setSelectedEmoteAction(part);
+  const handleEmoteTouchStart = (part: EmotePressData) => {
+    pressedEmotePartRef.current = part;
   };
 
   const closeEmoteActionSheet = () => {
@@ -203,7 +211,7 @@ export function useRichChatMessage<
     fontScale,
     getMentionColor,
     getPartKey,
-    handleEmoteLongPress,
+    onEmoteTouchStart: handleEmoteTouchStart,
     message,
     moderationNotice,
     normalisedCurrentUsername,
@@ -300,14 +308,22 @@ export function useRichChatMessage<
   };
 
   const startRowLongPressTimer = () => {
-    if (!canReply && !onMessageLongPress) {
-      return;
-    }
-
-    clearRowLongPressTimer();
+    // Only stop the timer here: the pressed emote (if any) was just recorded
+    // by the emote's own onTouchStart, which bubbles before the row's.
+    stopRowLongPressTimer();
     rowLongPressTimerRef.current = setTimeout(() => {
       rowLongPressTimerRef.current = null;
-      handleLongPress();
+      const pressedEmotePart = pressedEmotePartRef.current;
+      pressedEmotePartRef.current = null;
+
+      if (pressedEmotePart) {
+        setSelectedEmoteAction(pressedEmotePart);
+        return;
+      }
+
+      if (canReply || onMessageLongPress) {
+        handleLongPress();
+      }
     }, MESSAGE_LONG_PRESS_DELAY_MS);
   };
 

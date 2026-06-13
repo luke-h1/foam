@@ -36,6 +36,10 @@ export const indexMessageColor = (message: AnyChatMessageType): void => {
   });
 };
 
+export const removeMessageColor = (messageId: string): void => {
+  messageColorIndex.delete(messageId);
+};
+
 export const clearMessageColorIndexes = (): void => {
   messageColorIndex.clear();
   senderColorIndex.clear();

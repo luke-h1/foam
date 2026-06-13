@@ -20,6 +20,7 @@ import { formatViewCount } from '@app/utils/string/formatViewCount';
 import { router } from 'expo-router';
 import { FC, memo, useRef } from 'react';
 import { Platform, View, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 const renderCategoryStreamItem: ListRenderItem<TwitchStream> = ({ item }) => (
   <MemoizedLiveStreamCard stream={item} />
@@ -77,6 +78,7 @@ interface CategoryScreenProps {
 }
 
 export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
+  const { t } = useTranslation('stream');
   const flashListRef = useRef<FlashListRef<TwitchStream>>(null);
 
   useScrollToTop(flashListRef);
@@ -116,8 +118,8 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
   if (isCategoryError || isErrorStreams) {
     return (
       <EmptyState
-        content='Failed to fetch categories'
-        heading='No Categories'
+        content={t('failedToFetchCategories')}
+        heading={t('noCategories')}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         buttonOnPress={() => refetch()}
       />
@@ -129,7 +131,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
   }
 
   if (allStreams.length === 0 || !category) {
-    return <EmptyState content='No Top Streams found' />;
+    return <EmptyState content={t('noTopStreamsFound')} />;
   }
 
   return (

@@ -4,7 +4,6 @@ import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import { View } from 'react-native';
-import { ChatMessagePressable } from '../ChatMessagePressable';
 import { ChatInlineImage } from './ChatInlineImage';
 
 type PartVariant = ParsedPart<'emote'>;
@@ -12,7 +11,7 @@ type PartVariant = ParsedPart<'emote'>;
 interface EmoteRendererProps {
   disableAnimations?: boolean;
   part: PartVariant;
-  handleEmoteLongPress?: (part: PartVariant) => void;
+  onEmoteTouchStart?: (part: PartVariant) => void;
   shouldOverlayPrevious?: boolean;
   targetSize?: number;
 }
@@ -20,7 +19,7 @@ interface EmoteRendererProps {
 export const EmoteRenderer = memo(
   ({
     part,
-    handleEmoteLongPress,
+    onEmoteTouchStart,
     disableAnimations = false,
     shouldOverlayPrevious = false,
     targetSize = 30,
@@ -39,38 +38,44 @@ export const EmoteRenderer = memo(
       disableAnimations,
       preferredScale: '2x',
     });
+    // No Pressable: long-press is detected by the row's timer, this just
+    // records which emote the touch started on. A busy screen renders
+    // hundreds of emotes, so each Pressable's gesture machinery added up.
+    const handleTouchStart = onEmoteTouchStart
+      ? () => onEmoteTouchStart(part)
+      : undefined;
 
     if (!displayUrl) {
       const fallbackLabel = part.content || part.name;
 
       if (!fallbackLabel) {
         return (
-          <ChatMessagePressable
-            onLongPress={() => handleEmoteLongPress?.(part)}
-            style={getButtonStyle(width, shouldOverlayPrevious)}
+          <View
+            onTouchStart={handleTouchStart}
+            style={getContainerStyle(width, shouldOverlayPrevious)}
           >
             <View
               style={getEmoteImageStyle(width, height)}
               testID='chat-emote-placeholder'
             />
-          </ChatMessagePressable>
+          </View>
         );
       }
 
       return (
-        <ChatMessagePressable
-          onLongPress={() => handleEmoteLongPress?.(part)}
-          style={getButtonStyle(width, shouldOverlayPrevious)}
+        <View
+          onTouchStart={handleTouchStart}
+          style={getContainerStyle(width, shouldOverlayPrevious)}
         >
           <Text style={getNameStyle(width, height)}>{fallbackLabel}</Text>
-        </ChatMessagePressable>
+        </View>
       );
     }
 
     return (
-      <ChatMessagePressable
-        onLongPress={() => handleEmoteLongPress?.(part)}
-        style={getButtonStyle(width, shouldOverlayPrevious)}
+      <View
+        onTouchStart={handleTouchStart}
+        style={getContainerStyle(width, shouldOverlayPrevious)}
       >
         {/* No containerStyle: the size + clip live on the NitroImage style so
             each inline emote is one fewer Fabric/Yoga node. A busy message has
@@ -80,7 +85,7 @@ export const EmoteRenderer = memo(
           sourceUrl={displayUrl}
           style={getEmoteImageStyle(width, height)}
         />
-      </ChatMessagePressable>
+      </View>
     );
   },
 );
@@ -93,7 +98,7 @@ function getEmoteImageStyle(width: number, height: number) {
   };
 }
 
-function getButtonStyle(width: number, shouldOverlayPrevious: boolean) {
+function getContainerStyle(width: number, shouldOverlayPrevious: boolean) {
   if (!shouldOverlayPrevious) {
     return undefined;
   }

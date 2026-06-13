@@ -4,8 +4,10 @@ import * as AC from '@bacons/apple-colors';
 import * as Application from 'expo-application';
 import { useState } from 'react';
 import { getStoreUrlAsync } from '../utils/getStoreUrlAsync';
+import { useTranslation } from 'react-i18next';
 
 export function AppStoreSection() {
+  const { t } = useTranslation('devTools');
   const [canOpenStore, setCanOpenStore] = useState<boolean>(true);
   if (process.env.EXPO_OS === 'web') {
     return null;
@@ -13,7 +15,7 @@ export function AppStoreSection() {
 
   return (
     <Form.Section
-      title={process.env.EXPO_OS === 'ios' ? 'App Store' : 'Play Store'}
+      title={process.env.EXPO_OS === 'ios' ? t('appStore') : t('playStore')}
     >
       <Form.Text
         hint={`${Application.nativeApplicationVersion} (${Application.nativeBuildVersion})`}
@@ -27,10 +29,10 @@ export function AppStoreSection() {
         }}
         style={{ color: AC.systemBlue }}
       >
-        {canOpenStore ? `Check for app updates` : 'App not available'}
+        {canOpenStore ? t('checkForAppUpdates') : t('appNotAvailable')}
       </Form.Text>
       <Form.Text hint={Application.applicationId}>
-        {process.env.EXPO_OS === 'ios' ? `Bundle ID` : 'App ID'}
+        {process.env.EXPO_OS === 'ios' ? t('bundleId') : t('appId')}
       </Form.Text>
     </Form.Section>
   );

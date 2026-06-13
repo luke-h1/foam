@@ -6,6 +6,7 @@ import type { ChatBodyVariant } from '../richChatMessageHelpers';
 import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
 import { ChatMessageBody } from './ChatMessageBody';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
+import i18next from '@app/i18n/i18next';
 
 interface ChatNoticeBodyProps extends UseChatMessagePartRendererArgs {
   bodyVariant: Exclude<ChatBodyVariant, 'user_chat'>;
@@ -56,7 +57,11 @@ export function ChatNoticeBody({
           <ChatNoticeMetaRow
             compact={compact}
             icon={isUnraid ? 'xmark.circle.fill' : 'person.3.fill'}
-            label={isUnraid ? 'Raid cancelled' : 'Raid'}
+            label={
+              isUnraid
+                ? i18next.t('chat:notices.raidCancelled')
+                : i18next.t('chat:notices.raid')
+            }
             labelColor={CHAT_NOTICE_ACCENTS.raid}
             labelStyle={styles.raidNoticeMetaText}
           />

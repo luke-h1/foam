@@ -26,6 +26,7 @@ import {
   createUserStateFromTags,
   type AnyChatMessageType,
 } from '../util/messageHandlers';
+import i18next from '@app/i18n/i18next';
 
 export interface ChatInputShellHandle {
   appendEmote: (emoteName: string) => void;
@@ -215,7 +216,7 @@ export const ChatInputShell = memo(function ChatInputShell({
         optimisticMessageId = sendResult?.message_id || optimisticMessageId;
       } catch (error) {
         logger.chat.error('issue sending pinned message', error);
-        toast.error('Could not send pinned message');
+        toast.error(i18next.t('chat:pinned.couldNotSendPinned'));
         setIsSendingPinnedMessage(false);
         return;
       }
@@ -251,7 +252,7 @@ export const ChatInputShell = memo(function ChatInputShell({
         senderName,
         text: messageText.trimEnd(),
       });
-      toast.success('Message pinned');
+      toast.success(i18next.t('chat:pinned.messagePinned'));
       setIsSendingPinnedMessage(false);
     } else if (replyTo) {
       try {

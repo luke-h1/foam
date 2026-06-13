@@ -206,6 +206,7 @@ const config: ExpoConfig = {
   plugins: [
     'expo-router',
     'expo-image',
+    'expo-localization',
     '@rnrepo/expo-config-plugin',
     'react-native-compressor',
     'expo-status-bar',

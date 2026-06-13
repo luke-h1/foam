@@ -27,6 +27,8 @@ import { useRef, useCallback } from 'react';
 import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
+import { useTranslation } from 'react-i18next';
+import i18next from '@app/i18n/i18next';
 
 interface StreamerProfileScreenProps {
   id: string;
@@ -66,10 +68,12 @@ function formatRelativeAge(value: string) {
   const unit = units.find(item => diffSeconds >= item.seconds);
 
   if (!unit) {
-    return 'now';
+    return i18next.t('stream:relativeAgeNow');
   }
 
-  return `${Math.floor(diffSeconds / unit.seconds)}${unit.label} ago`;
+  return i18next.t('stream:relativeAge', {
+    age: `${Math.floor(diffSeconds / unit.seconds)}${unit.label}`,
+  });
 }
 
 function StreamerProfileHeader({
@@ -79,6 +83,7 @@ function StreamerProfileHeader({
   clipCount: number;
   user: UserInfoResponse;
 }) {
+  const { t } = useTranslation('stream');
   const insets = useSafeAreaInsets();
 
   return (
@@ -86,7 +91,7 @@ function StreamerProfileHeader({
       <View style={styles.navRow}>
         <IconButton
           icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}
-          label={`Share ${user.display_name}`}
+          label={t('shareUser', { name: user.display_name })}
           onPress={() => {
             void shareDeepLink({
               kind: 'streamer',
@@ -99,7 +104,7 @@ function StreamerProfileHeader({
         />
         <IconButton
           icon={{ type: 'symbol', name: 'xmark', size: 18 }}
-          label='Close streamer profile'
+          label={t('closeStreamerProfile')}
           onPress={() => router.back()}
           size='2xl'
           style={styles.closeButton}
@@ -135,10 +140,12 @@ function StreamerProfileHeader({
 
       <View style={styles.sectionRow}>
         <Text type='lg' weight='bold'>
-          Clips
+          {t('clips')}
         </Text>
         <Text type='xs' color='gray.textLow'>
-          {clipCount > 0 ? `${clipCount} loaded` : 'Top clips'}
+          {clipCount > 0
+            ? t('clipsLoaded', { count: clipCount })
+            : t('topClips')}
         </Text>
       </View>
     </View>
@@ -156,6 +163,7 @@ function ClipCard({
   onDownload: (clip: TwitchClip) => void;
   width: number;
 }) {
+  const { t } = useTranslation('stream');
   const handleView = useCallback(() => {
     router.push(`/streams/clip/${encodeURIComponent(clip.id)}`);
   }, [clip.id]);
@@ -179,14 +187,16 @@ function ClipCard({
       <View style={styles.clipBody}>
         <Button onPress={handleView} style={styles.clipTextButton}>
           <Text type='sm' weight='bold' numberOfLines={2} style={styles.title}>
-            {clip.title || 'Untitled clip'}
+            {clip.title || t('untitledClip')}
           </Text>
           <Text type='xs' color='gray.textLow' numberOfLines={1}>
-            {formatViewCount(clip.view_count)} views -{' '}
-            {formatRelativeAge(clip.created_at)}
+            {t('clipMeta', {
+              views: formatViewCount(clip.view_count),
+              age: formatRelativeAge(clip.created_at),
+            })}
           </Text>
           <Text type='xs' color='gray.textLow' numberOfLines={1}>
-            Clipped by {clip.creator_name}
+            {t('clippedBy', { name: clip.creator_name })}
           </Text>
         </Button>
 
@@ -197,7 +207,7 @@ function ClipCard({
             size: 20,
             color: theme.color.text.dark,
           }}
-          label={`Download ${clip.title}`}
+          label={t('downloadClip', { title: clip.title })}
           loading={downloading}
           onPress={() => onDownload(clip)}
           size='2xl'
@@ -209,6 +219,7 @@ function ClipCard({
 }
 
 export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
+  const { t } = useTranslation('stream');
   const listRef = useRef<FlashListRef<ClipListItem>>(null);
   const { width: windowWidth } = useWindowDimensions();
   const { download, downloadingClipId } = useDownloadTwitchClip();
@@ -258,7 +269,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
       { clip },
       {
         onError: error => toast.error(error.message),
-        onSuccess: () => toast.success('Clip saved'),
+        onSuccess: () => toast.success(i18next.t('stream:clipSaved')),
       },
     );
   };
@@ -283,8 +294,8 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   if (isUserError || !user) {
     return (
       <EmptyState
-        heading='Streamer not found'
-        content='Could not load this channel.'
+        heading={t('streamerNotFound')}
+        content={t('streamerNotFoundDescription')}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         buttonOnPress={() => refetchUser()}
       />
@@ -294,8 +305,8 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   if (isClipsError) {
     return (
       <EmptyState
-        heading='Clips unavailable'
-        content='Could not load clips for this channel.'
+        heading={t('clipsUnavailable')}
+        content={t('clipsUnavailableDescription')}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         buttonOnPress={() => refetchClips()}
       />

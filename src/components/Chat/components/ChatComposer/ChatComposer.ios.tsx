@@ -13,6 +13,7 @@ import {
   useChatComposerController,
   type ChatComposerHandle,
 } from './useChatComposerController';
+import { useTranslation } from 'react-i18next';
 
 export type { ChatComposerHandle };
 
@@ -36,11 +37,12 @@ function ChatComposerComponent({
   onEmoteSelect,
   maxSuggestions = 50,
   prioritizeChannelEmotes = true,
-  placeholder = 'Send a message...',
+  placeholder,
   editable = true,
   canSend,
   ref,
 }: ChatComposerProps) {
+  const { t } = useTranslation('chat');
   const inputRef = useRef<InputRef>(null);
   const { accentHex } = useAccentColor();
 
@@ -100,7 +102,7 @@ function ChatComposerComponent({
           <ComposerIconButton
             icon='face.smiling'
             iconSize={20}
-            label='Open emote picker'
+            label={t('composer.openEmotePicker')}
             onPress={onPressAdd}
           />
         ) : null}
@@ -123,7 +125,7 @@ function ChatComposerComponent({
               handleSelectionChange(selection.start)
             }
             onSubmitEditing={handleSubmit}
-            placeholder={placeholder}
+            placeholder={placeholder ?? t('composer.sendAMessage')}
             placeholderTextColor='rgba(255,255,255,0.46)'
             radius='xl'
             returnKeyType='send'
@@ -138,7 +140,7 @@ function ChatComposerComponent({
             disabled={!submitEnabled}
             icon='arrow.up'
             iconSize={16}
-            label='Send message'
+            label={t('composer.sendMessage')}
             onPress={handleSubmit}
             prominent
             prominentColor={accentHex ?? theme.colorViolet}

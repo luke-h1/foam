@@ -13,6 +13,7 @@ import {
 import { PortalHost } from 'react-native-teleport';
 import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from '../chatSheetSurface';
 import { MESSAGE_ACTION_PREVIEW_PORTAL_NAME } from './MessageActionPreview';
+import { useTranslation } from 'react-i18next';
 
 type MessageActionId =
   | 'copy'
@@ -100,6 +101,7 @@ type ActionItem = {
 };
 
 function ActionSheetComponent(props: Props) {
+  const { t } = useTranslation(['chat', 'common']);
   const {
     visible,
     onClose,
@@ -128,8 +130,8 @@ function ActionSheetComponent(props: Props) {
     const items: ActionItem[] = [
       {
         id: 'copy',
-        label: 'Copy Message',
-        subtitle: 'Text and emotes',
+        label: t('messageActions.copyMessage'),
+        subtitle: t('messageActions.copyMessageSubtitle'),
         onPress: () => {
           handleCopy();
           onClose();
@@ -137,8 +139,8 @@ function ActionSheetComponent(props: Props) {
       },
       {
         id: 'reply',
-        label: 'Reply',
-        subtitle: 'Quote in composer',
+        label: t('messageActions.reply'),
+        subtitle: t('messageActions.replySubtitle'),
         tone: 'accent',
         onPress: () => {
           handleReply();
@@ -147,8 +149,8 @@ function ActionSheetComponent(props: Props) {
       },
       {
         id: 'hide-phrase',
-        label: 'Hide Phrase',
-        subtitle: 'Filter this wording',
+        label: t('messageActions.hidePhrase'),
+        subtitle: t('messageActions.hidePhraseSubtitle'),
         onPress: () => {
           handleHidePhrase?.();
           onClose();
@@ -159,8 +161,8 @@ function ActionSheetComponent(props: Props) {
     if (username) {
       items.splice(2, 0, {
         id: 'hide-user',
-        label: 'Hide User',
-        subtitle: 'Mute locally',
+        label: t('userActions.hideUser'),
+        subtitle: t('userActions.hideUserSubtitle'),
         onPress: () => {
           handleHideUser?.();
           onClose();
@@ -169,8 +171,12 @@ function ActionSheetComponent(props: Props) {
 
       items.splice(3, 0, {
         id: 'highlight-user',
-        label: isUserHighlighted ? 'Unhighlight User' : 'Highlight User',
-        subtitle: isUserHighlighted ? 'Remove marker' : 'Mark future messages',
+        label: isUserHighlighted
+          ? t('userActions.unhighlightUser')
+          : t('userActions.highlightUser'),
+        subtitle: isUserHighlighted
+          ? t('userActions.unhighlightUserSubtitle')
+          : t('userActions.highlightUserSubtitle'),
         tone: 'accent',
         onPress: () => {
           handleHighlightUser?.();
@@ -185,8 +191,8 @@ function ActionSheetComponent(props: Props) {
           items.push(
             {
               id: 'update-pin',
-              label: 'Refresh Pin',
-              subtitle: 'Extend pinned message',
+              label: t('messageActions.refreshPin'),
+              subtitle: t('messageActions.refreshPinSubtitle'),
               tone: 'accent',
               onPress: () => {
                 handleUpdatePinnedMessage?.();
@@ -195,8 +201,8 @@ function ActionSheetComponent(props: Props) {
             },
             {
               id: 'unpin-message',
-              label: 'Unpin Message',
-              subtitle: 'Remove from header',
+              label: t('messageActions.unpinMessage'),
+              subtitle: t('messageActions.unpinMessageSubtitle'),
               onPress: () => {
                 handleUnpinMessage?.();
                 onClose();
@@ -206,8 +212,8 @@ function ActionSheetComponent(props: Props) {
         } else {
           items.push({
             id: 'pin-message',
-            label: 'Pin Message',
-            subtitle: 'Keep at top',
+            label: t('messageActions.pinMessage'),
+            subtitle: t('messageActions.pinMessageSubtitle'),
             tone: 'accent',
             onPress: () => {
               handlePinMessage?.();
@@ -220,8 +226,8 @@ function ActionSheetComponent(props: Props) {
       if (canDeleteMessage) {
         items.push({
           id: 'delete-message',
-          label: 'Delete Message',
-          subtitle: 'Remove from chat',
+          label: t('messageActions.deleteMessage'),
+          subtitle: t('messageActions.deleteMessageSubtitle'),
           tone: 'danger',
           onPress: () => {
             handleDeleteMessage?.();
@@ -234,8 +240,8 @@ function ActionSheetComponent(props: Props) {
         items.push(
           {
             id: 'timeout-user',
-            label: 'Timeout for 10m',
-            subtitle: 'Temporary moderation',
+            label: t('userActions.timeoutUser'),
+            subtitle: t('userActions.timeoutUserSubtitle'),
             tone: 'warning',
             onPress: () => {
               handleTimeoutUser?.();
@@ -244,8 +250,8 @@ function ActionSheetComponent(props: Props) {
           },
           {
             id: 'ban-user',
-            label: 'Ban User',
-            subtitle: 'Permanent moderation',
+            label: t('userActions.banUser'),
+            subtitle: t('userActions.banUserSubtitle'),
             tone: 'danger',
             onPress: () => {
               handleBanUser?.();
@@ -293,13 +299,17 @@ function ActionSheetComponent(props: Props) {
         <View style={styles.header}>
           <View>
             <Text style={styles.eyebrow} weight='semibold'>
-              Selected message
+              {t('messageActions.eyebrow')}
             </Text>
             <Text style={styles.title} weight='semibold'>
-              Message Actions
+              {t('messageActions.title')}
             </Text>
           </View>
-          <Button label='Done' onPress={onClose} style={styles.closeButton}>
+          <Button
+            label={t('common:done')}
+            onPress={onClose}
+            style={styles.closeButton}
+          >
             <SymbolView
               name='checkmark'
               size={18}
@@ -318,7 +328,7 @@ function ActionSheetComponent(props: Props) {
           <View style={styles.actionGroup}>
             {actions.map((action, index) => (
               <Button
-                key={action.label}
+                key={action.id}
                 onPress={action.onPress}
                 style={[
                   styles.actionButton,

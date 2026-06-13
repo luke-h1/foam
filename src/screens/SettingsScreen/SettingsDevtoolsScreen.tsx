@@ -17,8 +17,10 @@ import {
 import { router } from 'expo-router';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export function SettingsDevtoolsScreen() {
+  const { t } = useTranslation('settings');
   const { disableChat, disableStream, update } = usePreferences();
   const scrollRef = useRef<ScrollView>(null);
 
@@ -28,68 +30,64 @@ export function SettingsDevtoolsScreen() {
     return (
       <Host style={styles.iosHost}>
         <Form>
-          <Section title='Diagnostics'>
+          <Section title={t('diagnostics')}>
             <Button
-              label='App Diagnostics'
+              label={t('appDiagnostics')}
               systemImage='stethoscope'
               onPress={() => router.push('/tabs/settings/diagnostics')}
             />
             <Button
-              label='Remote Config'
+              label={t('remoteConfig')}
               systemImage='cloud'
               onPress={() => router.push('/tabs/settings/remote-config')}
             />
           </Section>
 
-          <Section title='Stream Diagnostics'>
+          <Section title={t('streamDiagnostics')}>
             <Toggle
               isOn={disableStream}
               onIsOnChange={value => update({ disableStream: value })}
             >
-              <NativeText>Disable Stream</NativeText>
-              <NativeText>
-                Remove the Twitch WebView to isolate chat performance
-              </NativeText>
+              <NativeText>{t('disableStream')}</NativeText>
+              <NativeText>{t('disableStreamDescription')}</NativeText>
             </Toggle>
             <Toggle
               isOn={disableChat}
               onIsOnChange={value => update({ disableChat: value })}
             >
-              <NativeText>Disable Chat</NativeText>
-              <NativeText>
-                Remove chat rendering to isolate the player
-              </NativeText>
+              <NativeText>{t('disableChat')}</NativeText>
+              <NativeText>{t('disableChatDescription')}</NativeText>
             </Toggle>
           </Section>
 
-          <Section title='Developer Tools'>
+          <Section title={t('developerTools')}>
             <Button
-              label='Debug'
+              label={t('debug')}
               systemImage='ladybug'
               onPress={() => router.push('/tabs/settings/debug')}
             />
             <Button
-              label='Cached Images'
+              label={t('cachedImages')}
               systemImage='photo.stack'
               onPress={() => router.push('/tabs/settings/cached-images')}
             />
             <Button
-              label='Changelog Demo'
+              label={t('changelogDemo')}
               systemImage='list.bullet.rectangle'
               onPress={() => router.push('/dev-tools/changelog')}
             />
             <Button
-              label='Sentry Test'
+              label={t('sentryTest')}
               systemImage='exclamationmark.triangle'
               onPress={() => router.push('/dev-tools/sentry-demo')}
             />
             <Button
-              label='Channel Surfing'
+              label={t('channelSurfing')}
               systemImage='antenna.radiowaves.left.and.right'
               onPress={() => router.push('/tabs/settings/channel-surfing')}
             />
             <Button
-              label='Storybook'
+              label={t('storybook')}
               systemImage='book.closed'
               onPress={() => router.push('/tabs/settings/storybook')}
             />
@@ -107,60 +105,60 @@ export function SettingsDevtoolsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        <SettingsSection title='Diagnostics'>
+        <SettingsSection title={t('diagnostics')}>
           <SettingsLinkRow
-            title='App Diagnostics'
-            subtitle='Version, environment, and runtime details'
+            title={t('appDiagnostics')}
+            subtitle={t('appDiagnosticsDescription')}
             icon={{ icon: 'stethoscope', color: theme.colorBlue }}
             onPress={() => router.push('/tabs/settings/diagnostics')}
           />
           <SettingsLinkRow
-            title='Remote Config'
-            subtitle='Inspect fetched config and local overrides'
+            title={t('remoteConfig')}
+            subtitle={t('remoteConfigDescription')}
             icon={{ icon: 'cloud', color: theme.colorPlum }}
             onPress={() => router.push('/tabs/settings/remote-config')}
           />
         </SettingsSection>
 
-        <SettingsSection title='Stream Diagnostics'>
+        <SettingsSection title={t('streamDiagnostics')}>
           <SettingsToggleRow
-            title='Disable Stream'
-            subtitle='Remove the Twitch WebView to isolate chat performance'
+            title={t('disableStream')}
+            subtitle={t('disableStreamDescription')}
             icon={{ icon: 'video.slash', color: theme.colorOrange }}
             value={disableStream}
             onValueChange={value => update({ disableStream: value })}
           />
           <SettingsToggleRow
-            title='Disable Chat'
-            subtitle='Remove chat rendering to isolate the player'
+            title={t('disableChat')}
+            subtitle={t('disableChatDescription')}
             icon={{ icon: 'message', color: theme.colorPlum }}
             value={disableChat}
             onValueChange={value => update({ disableChat: value })}
           />
         </SettingsSection>
 
-        <SettingsSection title='Developer Tools'>
+        <SettingsSection title={t('developerTools')}>
           <SettingsLinkRow
-            title='Debug'
-            subtitle='Manual debug helpers and experiments'
+            title={t('debug')}
+            subtitle={t('debugDescription')}
             icon={{ icon: 'ladybug', color: theme.colorOrange }}
             onPress={() => router.push('/tabs/settings/debug')}
           />
           <SettingsLinkRow
-            title='Cached Images'
-            subtitle='Inspect and manage emote and badge media cache'
+            title={t('cachedImages')}
+            subtitle={t('cachedImagesDescription')}
             icon={{ icon: 'photo.stack', color: theme.colorPrimary }}
             onPress={() => router.push('/tabs/settings/cached-images')}
           />
           <SettingsLinkRow
-            title='Changelog Demo'
-            subtitle='Present sample native changelog payloads'
+            title={t('changelogDemo')}
+            subtitle={t('changelogDemoDescription')}
             icon={{ icon: 'list.bullet.rectangle', color: theme.colorBlue }}
             onPress={() => router.push('/dev-tools/changelog')}
           />
           <SettingsLinkRow
-            title='Sentry Test'
-            subtitle='Throw an error to verify Sentry capture'
+            title={t('sentryTest')}
+            subtitle={t('sentryTestDescription')}
             icon={{
               icon: 'exclamationmark.triangle',
               color: theme.colorRed,
@@ -168,8 +166,8 @@ export function SettingsDevtoolsScreen() {
             onPress={() => router.push('/dev-tools/sentry-demo')}
           />
           <SettingsLinkRow
-            title='Channel Surfing'
-            subtitle='Load an EAS Update from a different channel or PR branch'
+            title={t('channelSurfing')}
+            subtitle={t('channelSurfingDescription')}
             icon={{
               icon: 'antenna.radiowaves.left.and.right',
               color: theme.colorPlum,
@@ -177,8 +175,8 @@ export function SettingsDevtoolsScreen() {
             onPress={() => router.push('/tabs/settings/channel-surfing')}
           />
           <SettingsLinkRow
-            title='Storybook'
-            subtitle='Component previews and design-system inspection'
+            title={t('storybook')}
+            subtitle={t('storybookDescription')}
             icon={{ icon: 'book.closed', color: theme.colorTeal }}
             onPress={() => router.push('/tabs/settings/storybook')}
           />

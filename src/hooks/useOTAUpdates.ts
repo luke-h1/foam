@@ -13,6 +13,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { Alert, AppState, AppStateStatus, Platform } from 'react-native';
 import { theme } from '@app/styles/themes';
 import { countOtaMetric, recordError, recordInfo } from '@app/lib/sentry';
+import i18next from '@app/i18n/i18next';
 
 const MINIMUM_MINIMIZE_TIME = 15 * 60e3; // 15 minutes
 const INITIAL_CHECK_DELAY = 3e3; // 3 seconds
@@ -174,11 +175,11 @@ export function useOTAUpdates() {
     });
 
     Alert.alert(
-      'Update Available',
-      'A new version has been downloaded and is ready to install. Relaunch now?',
+      i18next.t('updates:updateAvailable'),
+      i18next.t('updates:updateAvailableMessage'),
       [
         {
-          text: 'Relaunch',
+          text: i18next.t('updates:relaunch'),
           style: 'default',
           onPress: () => {
             countOtaMetric('ota.update.applied', {

@@ -1,6 +1,7 @@
 import { theme } from '@app/styles/themes';
 import { SymbolView } from 'expo-symbols';
 import { useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, View, StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -32,6 +33,7 @@ function SwipeableHistoryItem({
   onSelect,
   onDelete,
 }: SwipeableHistoryItemProps) {
+  const { t } = useTranslation('common');
   const translateX = useSharedValue(0);
   const itemHeight = useSharedValue(HISTORY_ROW_HEIGHT);
   const opacity = useSharedValue(1);
@@ -140,7 +142,7 @@ function SwipeableHistoryItem({
             >
               <SymbolView name='trash.fill' size={20} tintColor='#fff' />
               <Text style={styles.deleteActionLabel} weight='semibold'>
-                Delete
+                {t('delete')}
               </Text>
             </Animated.View>
           </PressableArea>
@@ -186,23 +188,20 @@ export function SearchHistoryV2({
   onClearItem,
   onSelectItem,
 }: SearchHistoryV2Props) {
+  const { t } = useTranslation(['search', 'common']);
   const handleClearAll = useCallback(() => {
-    Alert.alert(
-      'Clear Search History',
-      'Are you sure you want to clear all your recent searches?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Clear All',
-          style: 'destructive',
-          onPress: onClearAll,
-        },
-      ],
-    );
-  }, [onClearAll]);
+    Alert.alert(t('clearSearchHistory'), t('clearSearchHistoryConfirm'), [
+      {
+        text: t('common:cancel'),
+        style: 'cancel',
+      },
+      {
+        text: t('common:clearAll'),
+        style: 'destructive',
+        onPress: onClearAll,
+      },
+    ]);
+  }, [onClearAll, t]);
 
   if (history.length === 0) {
     return null;
@@ -217,11 +216,11 @@ export function SearchHistoryV2({
           color='gray.textLow'
           style={styles.sectionTitle}
         >
-          RECENT SEARCHES
+          {t('recentSearches')}
         </Text>
         <PressableArea onPress={handleClearAll} hitSlop={8}>
           <Text type='xs' color='red.accent'>
-            Clear All
+            {t('common:clearAll')}
           </Text>
         </PressableArea>
       </View>

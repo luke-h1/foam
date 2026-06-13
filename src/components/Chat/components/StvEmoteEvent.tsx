@@ -9,6 +9,7 @@ import { View, StyleSheet } from 'react-native';
 import { CHAT_NOTICE_ACCENTS } from './util/chatNoticeAccents';
 import { ChatNoticeMetaRow } from './ChatMessage/renderers/ChatNoticeMetaRow';
 import { styles as chatStyles } from './ChatMessage/RichChatMessage.styles';
+import i18next from '@app/i18n/i18next';
 
 interface StvEmoteEventProps {
   disableAnimations?: boolean;
@@ -32,7 +33,9 @@ function StvEmoteEventComponent({
     disableAnimations,
   });
 
-  const status = removed ? 'Removed' : 'Added';
+  const status = removed
+    ? i18next.t('chat:notices.removed')
+    : i18next.t('chat:notices.added');
   const accentColor = removed
     ? CHAT_NOTICE_ACCENTS.stvRemoved
     : CHAT_NOTICE_ACCENTS.stvAdded;

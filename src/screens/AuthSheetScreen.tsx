@@ -10,6 +10,7 @@ import { router } from 'expo-router';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 function handleAuthSuccess() {
   if (router.canDismiss()) {
@@ -21,6 +22,7 @@ function handleAuthSuccess() {
 }
 
 export function AuthSheetScreen() {
+  const { t } = useTranslation('auth');
   const { isPromptingAuth, isSignInReady, startSignIn } = useTwitchSignIn({
     onSuccess: handleAuthSuccess,
   });
@@ -40,7 +42,7 @@ export function AuthSheetScreen() {
           </View>
           <View style={styles.headerCopy}>
             <Text type='xxs' weight='bold' style={styles.eyebrow}>
-              FOAM FOR TWITCH
+              {t('eyebrow')}
             </Text>
             <Text
               type='3xl'
@@ -48,18 +50,17 @@ export function AuthSheetScreen() {
               color='gray.text'
               style={styles.title}
             >
-              Sign in with Twitch
+              {t('title')}
             </Text>
             <Text type='sm' color='gray.textLow' style={styles.subtitle}>
-              Open your followed channels, chat access, and third-party emotes
-              in one place.
+              {t('subtitle')}
             </Text>
           </View>
         </View>
 
         <Button
           accessibilityRole='button'
-          label='Continue with Twitch'
+          label={t('continueWithTwitch')}
           onPress={() => {
             void impact('light');
             void startSignIn();
@@ -84,15 +85,15 @@ export function AuthSheetScreen() {
               <BrandIcon name='twitch' size='md' color={theme.colorWhite} />
             </View>
             <Text type='sm' color='gray.text' weight='bold'>
-              {isPromptingAuth ? 'Opening Twitch...' : 'Continue with Twitch'}
+              {isPromptingAuth ? t('openingTwitch') : t('continueWithTwitch')}
             </Text>
           </LinearGradient>
         </Button>
 
         <View style={styles.featureList}>
-          <FeatureItem icon='message' label='Twitch chat' />
-          <FeatureItem icon='star' label='BTTV, FFZ, and 7TV emotes' />
-          <FeatureItem icon='person.2' label='Minimal UI' />
+          <FeatureItem icon='message' label={t('featureChat')} />
+          <FeatureItem icon='star' label={t('featureEmotes')} />
+          <FeatureItem icon='person.2' label={t('featureUi')} />
         </View>
       </View>
     </SafeAreaView>

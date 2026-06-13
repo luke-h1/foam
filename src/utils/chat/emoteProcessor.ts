@@ -2,11 +2,7 @@ import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
 import { applyMentionLoginCasing } from './resolveMentionLogin';
 import { queueMentionLoginsFromParts } from './mentionLoginResolver';
-import {
-  findEmoteMatchingMention,
-  parseWordLinkParts,
-  ParsedPart,
-} from './replaceTextWithEmotes';
+import { parseWordLinkParts, ParsedPart } from './replaceTextWithEmotes';
 
 interface EmoteProcessorParams {
   inputString: string;
@@ -39,6 +35,10 @@ type EmoteCollection = {
   cacheKey: string;
   emojiMap: ReadonlyMap<string, SanitisedEmote>;
   emoteMap: ReadonlyMap<string, SanitisedEmote>;
+  // Lowercased name/original_name -> emote, in emoteMap priority order, so a
+  // mention like "@forsen" resolves with one Map lookup instead of a full
+  // scan + per-emote toLowerCase on every @word of every message.
+  mentionEmoteMap: ReadonlyMap<string, SanitisedEmote>;
 };
 
 let nextEmoteArrayId = 0;
@@ -170,7 +170,23 @@ function getBaseCollection({
     }
   });
 
-  const collection = { cacheKey, emojiMap, emoteMap };
+  const mentionEmoteMap = new Map<string, SanitisedEmote>();
+  emoteMap.forEach(emote => {
+    const lowerName = emote.name.trimEnd().toLowerCase();
+    if (lowerName && !mentionEmoteMap.has(lowerName)) {
+      mentionEmoteMap.set(lowerName, emote);
+    }
+
+    const alternateName = emote.original_name?.trim();
+    if (alternateName) {
+      const lowerAlternateName = alternateName.toLowerCase();
+      if (!mentionEmoteMap.has(lowerAlternateName)) {
+        mentionEmoteMap.set(lowerAlternateName, emote);
+      }
+    }
+  });
+
+  const collection = { cacheKey, emojiMap, emoteMap, mentionEmoteMap };
   if (baseCollectionCache.size >= MAX_BASE_COLLECTION_CACHE_SIZE) {
     const firstKey = baseCollectionCache.keys().next().value;
     if (firstKey) {
@@ -236,6 +252,18 @@ function createScopedEmoteLookup(
   scopedLookupCache.set(cacheKey, lookup);
 
   return lookup;
+}
+
+// Emoji hexcode keys always include a code point above 0x7F, so pure-ASCII
+// words (the vast majority of chat words) can never match the emoji map —
+// skip the per-word code-point expansion for them.
+function hasNonAsciiChar(word: string): boolean {
+  for (let i = 0; i < word.length; i += 1) {
+    if (word.charCodeAt(i) > 0x7f) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export const processEmotesWorklet = (
@@ -315,10 +343,10 @@ export const processEmotesWorklet = (
 
     if (word.startsWith('@')) {
       const mentionText = word.endsWith(' ') ? word.trimEnd() : word;
-      const emoteInMention = findEmoteMatchingMention(
-        mentionText,
-        baseCollection.emoteMap.values(),
-      );
+      const mentionTarget = mentionText.slice(1).trimEnd().toLowerCase();
+      const emoteInMention = mentionTarget
+        ? baseCollection.mentionEmoteMap.get(mentionTarget)
+        : undefined;
 
       if (emoteInMention) {
         result.push({
@@ -359,7 +387,7 @@ export const processEmotesWorklet = (
 
     let emote = getEmote(word);
 
-    if (!emote && word.length <= 8) {
+    if (!emote && word.length <= 8 && hasNonAsciiChar(word)) {
       const upperWord = [...word]
         .map(char => char.codePointAt(0)?.toString(16).toUpperCase() || '')
         .join('-');

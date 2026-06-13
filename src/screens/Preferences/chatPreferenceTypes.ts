@@ -35,37 +35,25 @@ export type SegmentedControlChangeEvent = {
 };
 
 export const DENSITY_OPTIONS = [
-  { label: 'Comfortable', value: 'comfortable' as const },
-  { label: 'Compact', value: 'compact' as const },
+  { labelKey: 'densityComfortable', value: 'comfortable' },
+  { labelKey: 'densityCompact', value: 'compact' },
 ] as const;
-
-export const DENSITY_LABELS = DENSITY_OPTIONS.map(option => option.label);
 
 export const FONT_SCALE_OPTIONS = [
-  { label: 'Small', value: 'small' as const },
-  { label: 'Default', value: 'default' as const },
-  { label: 'Large', value: 'large' as const },
+  { labelKey: 'fontSmall', value: 'small' },
+  { labelKey: 'fontDefault', value: 'default' },
+  { labelKey: 'fontLarge', value: 'large' },
 ] as const;
-
-export const FONT_SCALE_LABELS = FONT_SCALE_OPTIONS.map(option => option.label);
 
 export const TIMESTAMP_FORMAT_OPTIONS = [
-  { label: '24-hour', value: '24h' as const },
-  { label: '12-hour', value: '12h' as const },
+  { labelKey: 'timestamp24h', value: '24h' },
+  { labelKey: 'timestamp12h', value: '12h' },
 ] as const;
-
-export const TIMESTAMP_FORMAT_LABELS = TIMESTAMP_FORMAT_OPTIONS.map(
-  option => option.label,
-);
 
 export const DELETED_STYLE_OPTIONS = [
-  { label: 'Show notice', value: 'notice' as const },
-  { label: 'Hide', value: 'hidden' as const },
+  { labelKey: 'deletedShowNotice', value: 'notice' },
+  { labelKey: 'deletedHide', value: 'hidden' },
 ] as const;
-
-export const DELETED_STYLE_LABELS = DELETED_STYLE_OPTIONS.map(
-  option => option.label,
-);
 
 export const SCROLLBACK_OPTIONS = [
   { label: '200', value: 200 as const },
@@ -76,9 +64,6 @@ export const SCROLLBACK_OPTIONS = [
 export const SCROLLBACK_LABELS = SCROLLBACK_OPTIONS.map(option => option.label);
 
 export const EMOJI_PREVIEW_SHORTCODES = [':joy:', ':heart:', ':fire:'];
-
-export const HISTORICAL_RECENT_MESSAGES_EXPLAINER =
-  'Loads historical recent messages in chat through the third-party API service at recent-messages.robotty.de.';
 
 export const CONTEXT_PREVIEW_KEYS = [
   'chatTimestamps',
@@ -101,8 +86,8 @@ export const PROVIDER_PREVIEW_KEYS = [
 export const CONTEXT_TOGGLE_ROWS = [
   {
     key: 'chatTimestamps',
-    label: 'Show Timestamps',
-    subtitle: 'Display message timestamps inline',
+    labelKey: 'showTimestamps',
+    subtitleKey: 'showTimestampsDescription',
     icon: {
       icon: 'clock',
       androidIcon: 'schedule',
@@ -111,8 +96,8 @@ export const CONTEXT_TOGGLE_ROWS = [
   },
   {
     key: 'highlightOwnMentions',
-    label: 'Highlight Own Mentions',
-    subtitle: 'Accent messages that mention your username',
+    labelKey: 'highlightOwnMentions',
+    subtitleKey: 'highlightOwnMentionsDescription',
     icon: {
       icon: 'at',
       androidIcon: 'alternate_email',
@@ -121,8 +106,8 @@ export const CONTEXT_TOGGLE_ROWS = [
   },
   {
     key: 'showInlineReplyContext',
-    label: 'Inline Reply Context',
-    subtitle: 'Show the replied-to message above responses',
+    labelKey: 'inlineReplyContext',
+    subtitleKey: 'inlineReplyContextDescription',
     icon: {
       icon: 'arrowshape.turn.up.left',
       androidIcon: 'reply',
@@ -131,8 +116,8 @@ export const CONTEXT_TOGGLE_ROWS = [
   },
   {
     key: 'showUnreadJumpPill',
-    label: 'Show Jump Pill',
-    subtitle: 'Display the unread jump-to-latest affordance',
+    labelKey: 'showJumpPill',
+    subtitleKey: 'showJumpPillDescription',
     icon: {
       icon: 'arrow.down.circle',
       androidIcon: 'arrow_circle_down',
@@ -142,62 +127,6 @@ export const CONTEXT_TOGGLE_ROWS = [
 ] as const satisfies readonly {
   icon: { color: string; icon: SFSymbol; androidIcon: AndroidSymbol };
   key: ContextPreviewKey;
-  label: string;
-  subtitle: string;
-}[];
-
-export const PROVIDER_PREFERENCE_SECTIONS = [
-  {
-    title: '7TV',
-    provider: '7tv',
-    emotes: {
-      key: 'show7TvEmotes',
-      subtitle: 'Render 7TV emotes in chat',
-    },
-    badges: {
-      key: 'show7tvBadges',
-      subtitle: 'Render 7TV badges next to usernames',
-    },
-  },
-  {
-    title: 'BTTV',
-    provider: 'bttv',
-    emotes: {
-      key: 'showBttvEmotes',
-      subtitle: 'Render BetterTTV emotes in chat',
-    },
-    badges: {
-      key: 'showBttvBadges',
-      subtitle: 'Render BetterTTV badges next to usernames',
-    },
-  },
-  {
-    title: 'FFZ',
-    provider: 'ffz',
-    emotes: {
-      key: 'showFFzEmotes',
-      subtitle: 'Render FrankerFaceZ emotes in chat',
-    },
-    badges: {
-      key: 'showFFzBadges',
-      subtitle: 'Render FrankerFaceZ badges next to usernames',
-    },
-  },
-  {
-    title: 'Twitch',
-    provider: 'twitch',
-    emotes: {
-      key: 'showTwitchEmotes',
-      subtitle: 'Render native Twitch emotes in chat',
-    },
-    badges: {
-      key: 'showTwitchBadges',
-      subtitle: 'Render native Twitch badges next to usernames',
-    },
-  },
-] as const satisfies readonly {
-  badges: { key: ProviderPreviewKey; subtitle: string };
-  emotes: { key: ProviderPreviewKey; subtitle: string };
-  provider: PreviewProvider;
-  title: string;
+  labelKey: string;
+  subtitleKey: string;
 }[];

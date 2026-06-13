@@ -30,6 +30,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { motion } from '@app/styles/motion';
+import { useTranslation } from 'react-i18next';
 
 type StreamListLayout = Preferences['streamListLayout'];
 
@@ -110,6 +111,7 @@ export function TopStreamsScreen({
   contentTopInset = 0,
   scrollY,
 }: TopStreamsScreenProps = {}) {
+  const { t } = useTranslation('stream');
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const streamListLayout = usePreference('streamListLayout');
   const updatePreferences = useUpdatePreferences();
@@ -189,7 +191,10 @@ export function TopStreamsScreen({
     return (
       <View style={styles.container}>
         {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
-        <EmptyState content='No Top Streams found' buttonOnPress={onRefresh} />
+        <EmptyState
+          content={t('noTopStreamsFound')}
+          buttonOnPress={onRefresh}
+        />
       </View>
     );
   }
@@ -198,7 +203,10 @@ export function TopStreamsScreen({
     return (
       <View style={styles.container}>
         {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
-        <EmptyState content='No Top Streams found' buttonOnPress={onRefresh} />
+        <EmptyState
+          content={t('noTopStreamsFound')}
+          buttonOnPress={onRefresh}
+        />
       </View>
     );
   }

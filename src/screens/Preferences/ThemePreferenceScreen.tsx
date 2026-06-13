@@ -8,21 +8,23 @@ import {
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { View, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 export function ThemePreferenceScreen() {
+  const { t } = useTranslation('preferences');
+
   return (
     <View style={styles.container}>
       <EmptyLayout variant='outline' style={styles.empty}>
         <EmptyLayoutHeader>
-          <EmptyLayoutTitle>Foam Dark</EmptyLayoutTitle>
+          <EmptyLayoutTitle>{t('foamDarkTitle')}</EmptyLayoutTitle>
           <EmptyLayoutDescription>
-            The redesign now runs on a single cinematic theme instead of
-            splitting effort across legacy variants.
+            {t('foamDarkDescription')}
           </EmptyLayoutDescription>
         </EmptyLayoutHeader>
         <EmptyLayoutContent>
           <Text type='sm' color='gray.textLow'>
-            Additional themes can be added later on top of the new token system.
+            {t('foamDarkFootnote')}
           </Text>
         </EmptyLayoutContent>
       </EmptyLayout>

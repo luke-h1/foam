@@ -6,6 +6,7 @@ import { theme } from '@app/styles/themes';
 import { router } from 'expo-router';
 import { useWindowDimensions, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 
 export const ONBOARDING_SEEN_KEY = 'V1_hasSeenOnboarding';
 
@@ -15,6 +16,7 @@ function handleGetStarted() {
 }
 
 export function OnboardingScreen() {
+  const { t } = useTranslation('onboarding');
   const { width } = useWindowDimensions();
   const orbSize = Math.min(width * 0.72, 300);
 
@@ -39,11 +41,10 @@ export function OnboardingScreen() {
         style={styles.content}
       >
         <Text type='3xl' weight='bold' align='center'>
-          Welcome to foam
+          {t('title')}
         </Text>
         <Text type='md' align='center' color='gray' style={styles.description}>
-          The fastest way to watch Twitch — browse live streams, explore
-          categories, and follow your favourite creators.
+          {t('description')}
         </Text>
       </Animated.View>
 
@@ -54,7 +55,7 @@ export function OnboardingScreen() {
         <Button
           onPress={handleGetStarted}
           haptic='medium'
-          label='Get started'
+          label={t('getStarted')}
           style={styles.ctaButton}
         >
           <Text
@@ -64,16 +65,16 @@ export function OnboardingScreen() {
             align='center'
             weight='semibold'
           >
-            Get started
+            {t('getStarted')}
           </Text>
         </Button>
         <Button
           onPress={handleGetStarted}
-          label='Skip'
+          label={t('skip')}
           style={styles.skipButton}
         >
           <Text type='sm' align='center' color='gray'>
-            Skip
+            {t('skip')}
           </Text>
         </Button>
       </Animated.View>

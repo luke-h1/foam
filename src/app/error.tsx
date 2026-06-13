@@ -1,6 +1,7 @@
 import { type ErrorBoundaryProps, Stack, router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@app/components/Button/Button';
 import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import { SymbolView } from 'expo-symbols';
@@ -14,7 +15,8 @@ function handleReportBug() {
 }
 
 export default function AppError({ error, retry }: ErrorBoundaryProps) {
-  const errorMessage = 'An unexpected issue interrupted the app.';
+  const { t } = useTranslation(['errors', 'common']);
+  const errorMessage = t('unexpectedIssue');
 
   useEffect(() => {
     recordError({
@@ -31,11 +33,11 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Something went wrong' }} />
+      <Stack.Screen options={{ title: t('somethingWentWrong') }} />
       <View style={styles.container}>
         <ScreenHeader
-          title='Something went wrong'
-          subtitle='Recovery'
+          title={t('somethingWentWrong')}
+          subtitle={t('recovery')}
           size='medium'
           back={false}
         />
@@ -55,10 +57,10 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
 
             <View style={styles.copy}>
               <Text type='lg' weight='semibold' color='gray'>
-                This screen crashed
+                {t('screenCrashed')}
               </Text>
               <Text type='sm' color='gray.textLow' style={styles.body}>
-                Try loading it again. If it keeps failing, report a bug
+                {t('tryLoadingAgain')}
               </Text>
             </View>
           </View>
@@ -70,7 +72,7 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
               color='gray.textLow'
               style={styles.sectionLabel}
             >
-              MESSAGE
+              {t('messageLabel')}
             </Text>
             <Text type='sm' color='gray' selectable style={styles.errorText}>
               {errorMessage}
@@ -86,13 +88,13 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
                 weight='semibold'
                 align='center'
               >
-                Try again
+                {t('common:tryAgain')}
               </Text>
             </Button>
 
             <Button style={styles.reportButton} onPress={handleReportBug}>
               <Text type='sm' color='gray' weight='semibold' align='center'>
-                Report bug
+                {t('reportBug')}
               </Text>
             </Button>
 
@@ -103,7 +105,7 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
               }}
             >
               <Text type='sm' color='gray' weight='semibold' align='center'>
-                Go home
+                {t('goHome')}
               </Text>
             </Button>
           </View>

@@ -13,15 +13,21 @@ import {
 } from 'expo-updates';
 import { useCallback, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import i18next from '@app/i18n/i18next';
 
 export function ChannelSurfingScreen() {
+  const { t } = useTranslation('devTools');
   const [channelInput, setChannelInput] = useState('');
   const [busy, setBusy] = useState(false);
 
   const surf = useCallback(async () => {
     const next = channelInput.trim();
     if (!next) {
-      Alert.alert('Enter a channel', 'e.g. pr-123, internal, testflight');
+      Alert.alert(
+        i18next.t('devTools:enterChannel'),
+        i18next.t('devTools:enterChannelHint'),
+      );
       return;
     }
     setBusy(true);
@@ -30,8 +36,11 @@ export function ChannelSurfingScreen() {
       const result = await checkForUpdateAsync();
       if (!result.isAvailable) {
         Alert.alert(
-          'No update found',
-          `No update available on channel "${next}" for runtime ${runtimeVersion}.`,
+          i18next.t('devTools:noUpdateFound'),
+          i18next.t('devTools:noUpdateFoundMessage', {
+            channel: next,
+            runtime: runtimeVersion,
+          }),
         );
         setBusy(false);
         return;
@@ -41,7 +50,7 @@ export function ChannelSurfingScreen() {
     } catch (err) {
       setBusy(false);
       Alert.alert(
-        'Failed to surf',
+        i18next.t('devTools:failedToSurf'),
         err instanceof Error ? err.message : String(err),
       );
     }
@@ -49,12 +58,12 @@ export function ChannelSurfingScreen() {
 
   const reset = useCallback(() => {
     Alert.alert(
-      'Reset channel?',
-      'Returns to the original build channel and reloads.',
+      i18next.t('devTools:resetChannel'),
+      i18next.t('devTools:resetChannelMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: i18next.t('common:cancel'), style: 'cancel' },
         {
-          text: 'Reset',
+          text: i18next.t('devTools:reset'),
           style: 'destructive',
           onPress: async () => {
             setBusy(true);
@@ -64,7 +73,7 @@ export function ChannelSurfingScreen() {
             } catch (err) {
               setBusy(false);
               Alert.alert(
-                'Failed to reset',
+                i18next.t('devTools:failedToReset'),
                 err instanceof Error ? err.message : String(err),
               );
             }
@@ -81,21 +90,26 @@ export function ChannelSurfingScreen() {
         contentContainerStyle={styles.content}
       >
         <View style={styles.info}>
-          <Row label='Current channel' value={channel || 'unknown'} />
-          <Row label='Runtime version' value={runtimeVersion ?? 'unknown'} />
-          <Row label='Update ID' value={updateId ?? 'embedded'} />
+          <Row
+            label={t('currentChannel')}
+            value={channel || t('unknownValue')}
+          />
+          <Row
+            label={t('runtimeVersion')}
+            value={runtimeVersion ?? t('unknownValue')}
+          />
+          <Row label={t('updateId')} value={updateId ?? t('embeddedValue')} />
         </View>
 
         <Text color='gray.textLow' style={styles.hint} type='sm'>
-          Enter the channel (or branch mapped to a channel) you want to load.
-          For PR previews this is typically pr-&lt;number&gt;.
+          {t('channelHint')}
         </Text>
 
         <Input
           autoCapitalize='none'
           autoCorrect={false}
           editable={!busy}
-          placeholder='e.g. pr-579'
+          placeholder={t('channelPlaceholder')}
           value={channelInput}
           onChangeText={setChannelInput}
         />
@@ -103,20 +117,18 @@ export function ChannelSurfingScreen() {
         <View style={styles.actions}>
           <Button disabled={busy} onPress={surf} style={styles.primaryBtn}>
             <Text type='sm' weight='semibold' style={styles.primaryBtnText}>
-              {busy ? 'Loading…' : 'Surf to channel'}
+              {busy ? t('loading') : t('surfToChannel')}
             </Text>
           </Button>
           <Button disabled={busy} onPress={reset} style={styles.secondaryBtn}>
             <Text type='sm' weight='semibold' color='red.accent'>
-              Reset to build channel
+              {t('resetToBuildChannel')}
             </Text>
           </Button>
         </View>
 
         <Text color='gray.textLow' style={styles.footnote} type='xs'>
-          A bad update on the chosen channel can leave the app unable to start.
-          If that happens, force-quit and reopen — the build channel is restored
-          on next launch via the embedded bundle.
+          {t('surfFootnote')}
         </Text>
       </ScrollView>
     </View>

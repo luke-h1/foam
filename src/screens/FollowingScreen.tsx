@@ -35,6 +35,8 @@ import { motion } from '@app/styles/motion';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { toast } from 'sonner-native';
+import i18next from '@app/i18n/i18next';
+import { useTranslation } from 'react-i18next';
 
 export interface Section {
   key: string;
@@ -43,6 +45,7 @@ export interface Section {
 }
 
 export default function FollowingScreen() {
+  const { t } = useTranslation(['stream', 'common']);
   const { authState, user } = useAuthContext();
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
@@ -105,7 +108,7 @@ export default function FollowingScreen() {
 
     if (isFetched && !hasShownErrorToast.current) {
       hasShownErrorToast.current = true;
-      toast.error('Failed to fetch followed streams');
+      toast.error(i18next.t('stream:failedToFetchFollowed'));
     }
   }, [isError, isFetched]);
 
@@ -130,10 +133,10 @@ export default function FollowingScreen() {
   if (!authState?.isLoggedIn) {
     return (
       <EmptyState
-        button='Sign In'
+        button={t('common:signIn')}
         buttonOnPress={() => router.push('/auth-sheet')}
-        content='Connect your Twitch account to see streams from channels you follow.'
-        heading='Your followed streams'
+        content={t('followingSignInPrompt')}
+        heading={t('followingHeading')}
         iconName='person.2'
         style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
       />
@@ -161,8 +164,8 @@ export default function FollowingScreen() {
     return (
       <EmptyState
         button={null}
-        content='Log in to see streams from channels you follow.'
-        heading='Your followed streams'
+        content={t('followingLogInPrompt')}
+        heading={t('followingHeading')}
         iconName='person.2'
         style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
       />
@@ -172,10 +175,10 @@ export default function FollowingScreen() {
   if (isFetched && isError) {
     return (
       <EmptyState
-        button='Refresh'
+        button={t('common:refresh')}
         buttonOnPress={handleRefreshFollowing}
-        content='Twitch did not return your followed streams.'
-        heading="Couldn't load following"
+        content={t('followingLoadFailedDescription')}
+        heading={t('followingLoadFailed')}
         iconName='exclamationmark.triangle'
         style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
       />
@@ -196,10 +199,10 @@ export default function FollowingScreen() {
   if (streamsArray.length === 0) {
     return (
       <EmptyState
-        button='Refresh'
+        button={t('common:refresh')}
         buttonOnPress={handleRefreshFollowing}
-        content='None of your followed streamers are live right now.'
-        heading='No one is live'
+        content={t('noOneIsLiveDescription')}
+        heading={t('noOneIsLive')}
         iconName='antenna.radiowaves.left.and.right'
         style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
       />

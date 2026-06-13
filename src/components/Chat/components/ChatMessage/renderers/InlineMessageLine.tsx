@@ -37,7 +37,7 @@ export function InlineMessageLine({
   fontScale,
   getMentionColor,
   getPartKey,
-  handleEmoteLongPress,
+  onEmoteTouchStart,
   normalisedCurrentUsername,
   replyPlainMentionTarget,
   emoteTargetSize,
@@ -108,7 +108,7 @@ export function InlineMessageLine({
           fontScale={fontScale}
           getMentionColor={getMentionColor}
           getPartKey={getPartKey}
-          handleEmoteLongPress={handleEmoteLongPress}
+          onEmoteTouchStart={onEmoteTouchStart}
           message={message}
           normalisedCurrentUsername={normalisedCurrentUsername}
           replyPlainMentionTarget={replyPlainMentionTarget}

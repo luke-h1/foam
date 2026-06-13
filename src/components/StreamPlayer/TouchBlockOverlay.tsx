@@ -1,17 +1,20 @@
 import type { ComponentProps } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
+import { useTranslation } from 'react-i18next';
 
 export function TouchBlockOverlay({
   gesture,
 }: {
   gesture: ComponentProps<typeof GestureDetector>['gesture'];
 }) {
+  const { t } = useTranslation('common');
+
   return (
     <GestureDetector gesture={gesture}>
       <View
         style={styles.touchBlockOverlay}
-        accessibilityLabel='Show player controls'
+        accessibilityLabel={t('showPlayerControls')}
         accessibilityRole='button'
       />
     </GestureDetector>

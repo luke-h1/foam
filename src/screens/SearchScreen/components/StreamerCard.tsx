@@ -4,6 +4,7 @@ import { SearchChannelResponse } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { memo } from 'react';
 import { View, StyleSheet } from 'react-native';
+import i18next from '@app/i18n/i18next';
 
 interface Props {
   stream: SearchChannelResponse;
@@ -34,7 +35,9 @@ export const StreamerCard = memo(function StreamerCard({ stream }: Props) {
           </Text>
         ) : (
           <Text type='xs' color='gray.textLow' numberOfLines={1}>
-            {isLive ? 'Streaming' : 'Offline'}
+            {isLive
+              ? i18next.t('search:streaming')
+              : i18next.t('search:offline')}
           </Text>
         )}
       </View>

@@ -15,6 +15,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
 import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from '../chatSheetSurface';
+import { useTranslation } from 'react-i18next';
 
 function ToggleMenuItemComponent({
   icon,
@@ -85,6 +86,7 @@ const SettingsSheetComponent = ({
   reconnectionAttempts,
   preferenceFlags,
 }: SettingsSheetProps) => {
+  const { t } = useTranslation(['chat', 'common']);
   const {
     chatDensity = 'comfortable',
     highlightOwnMentions = true,
@@ -142,10 +144,10 @@ const SettingsSheetComponent = ({
       <View style={[styles.container, { height: sheetHeight }]}>
         <View style={styles.header}>
           <Text style={styles.headerEyebrow} weight='semibold'>
-            CHAT
+            {t('settingsSheet.eyebrow')}
           </Text>
           <Text style={styles.headerTitle} weight='semibold'>
-            Settings
+            {t('settingsSheet.title')}
           </Text>
         </View>
 
@@ -160,20 +162,20 @@ const SettingsSheetComponent = ({
         >
           {onOpenChatters ? (
             <Button
-              label='View Chatters'
+              label={t('settingsSheet.viewChatters')}
               style={styles.menuItem}
               onPress={onOpenChatters}
             >
               <SymbolView name='person.2' tintColor={theme.colorBorderHover} />
               <Text style={styles.menuItemText} weight='semibold'>
-                View Chatters
+                {t('settingsSheet.viewChatters')}
               </Text>
             </Button>
           ) : null}
 
           {onRefetchEmotes ? (
             <Button
-              label='Refetch Emotes and Badges'
+              label={t('settingsSheet.refetchEmotesLabel')}
               style={styles.menuItem}
               onPress={handleRefetchEmotes}
             >
@@ -182,13 +184,13 @@ const SettingsSheetComponent = ({
                 tintColor={theme.colorBorderHover}
               />
               <Text style={styles.menuItemText} weight='semibold'>
-                Refetch Emotes & Badges
+                {t('settingsSheet.refetchEmotes')}
               </Text>
             </Button>
           ) : null}
 
           <Button
-            label='Toggle Chat Density'
+            label={t('settingsSheet.toggleChatDensity')}
             style={styles.menuItem}
             onPress={() => {
               onToggleChatDensity?.();
@@ -201,90 +203,92 @@ const SettingsSheetComponent = ({
             />
             <View style={styles.menuItemTextContainer}>
               <Text style={styles.menuItemText} weight='semibold'>
-                Density
+                {t('settingsSheet.density')}
               </Text>
               <Text style={styles.menuItemValue} weight='bold'>
-                {chatDensity === 'compact' ? 'Compact' : 'Comfortable'}
+                {chatDensity === 'compact'
+                  ? t('settingsSheet.compact')
+                  : t('settingsSheet.comfortable')}
               </Text>
             </View>
           </Button>
 
           <ToggleMenuItem
             icon='clock'
-            label='Show Timestamps'
+            label={t('settingsSheet.showTimestamps')}
             value={showTimestamps}
             onValueChange={onToggleShowTimestamps}
           />
 
           <ToggleMenuItem
             icon='at'
-            label='Highlight Own Mentions'
+            label={t('settingsSheet.highlightOwnMentions')}
             value={highlightOwnMentions}
             onValueChange={onToggleHighlightOwnMentions}
           />
 
           <ToggleMenuItem
             icon='arrowshape.turn.up.left'
-            label='Inline Reply Context'
+            label={t('settingsSheet.inlineReplyContext')}
             value={showInlineReplyContext}
             onValueChange={onToggleInlineReplyContext}
           />
 
           <ToggleMenuItem
             icon='arrow.down.circle'
-            label='Show Jump Pill'
+            label={t('settingsSheet.showJumpPill')}
             value={showUnreadJumpPill}
             onValueChange={onToggleShowUnreadJumpPill}
           />
 
           {onReconnect ? (
             <Button
-              label='Reconnect'
+              label={t('settingsSheet.reconnect')}
               style={styles.menuItem}
               onPress={handleReconnect}
             >
               <SymbolView name='wifi' tintColor={theme.colorBorderHover} />
               <Text style={styles.menuItemText} weight='semibold'>
-                Reconnect
+                {t('settingsSheet.reconnect')}
               </Text>
             </Button>
           ) : null}
 
           {onClearChatCache ? (
             <Button
-              label='Clear Chat Cache'
+              label={t('settingsSheet.clearChatCache')}
               style={styles.menuItem}
               onPress={handleClearChatCache}
             >
               <SymbolView name='cylinder' tintColor={theme.colorBorderHover} />
               <Text style={styles.menuItemText} weight='semibold'>
-                Clear Chat Cache
+                {t('settingsSheet.clearChatCache')}
               </Text>
             </Button>
           ) : null}
 
           {onClearImageCache ? (
             <Button
-              label='Clear Image Cache'
+              label={t('settingsSheet.clearImageCache')}
               style={styles.menuItem}
               onPress={handleClearImageCache}
             >
               <SymbolView name='trash' tintColor={theme.colorBorderHover} />
               <Text style={styles.menuItemText} weight='semibold'>
-                Clear Image Cache
+                {t('settingsSheet.clearImageCache')}
               </Text>
             </Button>
           ) : null}
 
           {onClearSevenTvCosmeticsCache ? (
             <Button
-              label='Clear 7TV Cosmetic Cache'
+              label={t('settingsSheet.clearSevenTvCosmeticCache')}
               style={styles.menuItem}
               onPress={handleClearSevenTvCosmeticsCache}
             >
               <SymbolView name='sparkles' tintColor={theme.colorBorderHover} />
               <Text style={styles.menuItemText} weight='semibold'>
-                Clear 7TV Cosmetic Cache
+                {t('settingsSheet.clearSevenTvCosmeticCache')}
               </Text>
             </Button>
           ) : null}
@@ -296,25 +300,25 @@ const SettingsSheetComponent = ({
             />
             <View style={styles.menuItemTextContainer}>
               <Text style={styles.menuItemText} weight='semibold'>
-                Display Latency
+                {t('settingsSheet.displayLatency')}
               </Text>
               <Text style={styles.menuItemValue} weight='bold'>
                 {latency !== null && latency !== undefined
                   ? `${latency}ms`
-                  : 'N/A'}
+                  : t('common:notAvailable')}
               </Text>
             </View>
           </View>
 
           {onRefreshVideo ? (
             <Button
-              label='Refresh Video'
+              label={t('settingsSheet.refreshVideo')}
               style={styles.menuItem}
               onPress={handleRefreshVideo}
             >
               <SymbolView name='video' tintColor={theme.colorBorderHover} />
               <Text style={styles.menuItemText} weight='semibold'>
-                Refresh Video
+                {t('settingsSheet.refreshVideo')}
               </Text>
             </Button>
           ) : null}
@@ -323,7 +327,7 @@ const SettingsSheetComponent = ({
             <SymbolView name='repeat' tintColor={theme.colorBorderHover} />
             <View style={styles.menuItemTextContainer}>
               <Text style={styles.menuItemText} weight='semibold'>
-                Reconnection Attempts
+                {t('settingsSheet.reconnectionAttempts')}
               </Text>
               <Text style={styles.menuItemValue} weight='bold'>
                 {reconnectionAttempts ?? 0}

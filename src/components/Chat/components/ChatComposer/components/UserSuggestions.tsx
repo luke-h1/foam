@@ -5,6 +5,7 @@ import type { ChatUser } from '@app/store/chat/types/constants';
 import { theme } from '@app/styles/themes';
 import { LegendList, type LegendListRenderItemProps } from '@legendapp/list';
 import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 const USER_SUGGESTION_ITEM_SIZE = 40;
 
@@ -61,6 +62,7 @@ export const UserSuggestions = memo(function UserSuggestions({
   showUserSuggestions,
   handleUserSelect,
 }: UserSuggestionsProps) {
+  const { t } = useTranslation('chat');
   if (!showUserSuggestions || users.length === 0) {
     return null;
   }
@@ -68,7 +70,7 @@ export const UserSuggestions = memo(function UserSuggestions({
   return (
     <View style={styles.userSuggestionsWrapper}>
       <View style={styles.userSuggestionsContainer}>
-        <Text style={styles.headerLabel}>Mention</Text>
+        <Text style={styles.headerLabel}>{t('composer.mention')}</Text>
         <LegendList
           data={users}
           horizontal

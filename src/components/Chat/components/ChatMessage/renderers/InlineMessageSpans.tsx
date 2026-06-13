@@ -18,7 +18,7 @@ type InlineMessageSpansProps = Pick<
   | 'fontScale'
   | 'getMentionColor'
   | 'getPartKey'
-  | 'handleEmoteLongPress'
+  | 'onEmoteTouchStart'
   | 'normalisedCurrentUsername'
   | 'replyPlainMentionTarget'
   | 'emoteTargetSize'
@@ -41,7 +41,7 @@ export function InlineMessageSpans({
   fontScale,
   getMentionColor,
   getPartKey,
-  handleEmoteLongPress,
+  onEmoteTouchStart,
   message,
   normalisedCurrentUsername,
   replyPlainMentionTarget,
@@ -98,7 +98,7 @@ export function InlineMessageSpans({
           disableAnimations={disableEmoteAnimations}
           key={getPartKey(part, index)}
           part={part}
-          handleEmoteLongPress={handleEmoteLongPress}
+          onEmoteTouchStart={onEmoteTouchStart}
           targetSize={emoteTargetSize ?? (compact ? 26 : 30)}
         />,
       );

@@ -13,6 +13,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { toast } from 'sonner-native';
+import i18next from '@app/i18n/i18next';
 
 const USER_SCOPES = [
   'user:read:follows',
@@ -166,7 +167,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
         hasAuthentication,
       },
     });
-    toast.success('Logged in');
+    toast.success(i18next.t('auth:loggedIn'));
 
     if (onSuccess) {
       await onSuccess();
@@ -179,7 +180,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
   const startSignIn = async () => {
     if (!request || authSessionActiveRef.current) {
       if (!request) {
-        toast.error('Twitch sign-in is not ready yet');
+        toast.error(i18next.t('auth:signInNotReady'));
       }
       logger.auth.info('[AUTHDBG] useTwitchSignIn prompt blocked', {
         hasRequest: !!request,
@@ -284,7 +285,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
         params: { action: 'prompt_failed' },
         warningCause: error,
       });
-      toast.error('Twitch sign-in failed. Please try again.');
+      toast.error(i18next.t('auth:signInFailed'));
     }
 
     endPrompt();

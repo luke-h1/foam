@@ -8,6 +8,7 @@ import type {
   PreviewProvider,
   ProviderPreviewVariant,
 } from './chatPreferenceTypes';
+import { useTranslation } from 'react-i18next';
 
 export const DensityPreview = function DensityPreview({
   density,
@@ -94,9 +95,11 @@ export const EmojiStylePreview = function EmojiStylePreview({
 };
 
 export function PreviewLabel() {
+  const { t } = useTranslation('preferences');
+
   return (
     <Text color='gray.textLow' type='xxs' weight='semibold'>
-      Preview
+      {t('preview')}
     </Text>
   );
 }

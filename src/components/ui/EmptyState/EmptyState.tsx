@@ -20,19 +20,20 @@ import type {
   ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 interface EmptyStatePresetItem {
   iconName: SymbolViewProps['name'];
-  heading: TextProps['children'];
-  content: TextProps['children'];
-  button: string;
+  headingKey: 'nothingHereYet';
+  contentKey: 'nothingHereYetDescription';
+  buttonKey: 'refresh';
 }
 
 const EMPTY_STATE_PRESETS = {
   generic: {
     iconName: 'tv',
-    heading: 'Nothing here yet',
-    content: 'Refresh to try again, or come back in a moment.',
-    button: 'Refresh',
+    headingKey: 'nothingHereYet',
+    contentKey: 'nothingHereYetDescription',
+    buttonKey: 'refresh',
   },
 } satisfies Record<string, EmptyStatePresetItem>;
 
@@ -75,14 +76,16 @@ export function EmptyState({
   iconSize = 56,
   iconTintColor = theme.color.textSecondary.dark,
 }: EmptyStateProps) {
+  const { t } = useTranslation('common');
   const presetConfig = EMPTY_STATE_PRESETS[preset];
   const resolvedImageSource = imageSource;
   const resolvedIconName = resolvedImageSource
     ? undefined
     : (iconName ?? presetConfig.iconName);
-  const resolvedHeading = heading ?? presetConfig.heading;
-  const resolvedContent = content ?? presetConfig.content;
-  const resolvedButton = button === undefined ? presetConfig.button : button;
+  const resolvedHeading = heading ?? t(presetConfig.headingKey);
+  const resolvedContent = content ?? t(presetConfig.contentKey);
+  const resolvedButton =
+    button === undefined ? t(presetConfig.buttonKey) : button;
 
   return (
     <SafeAreaView style={[styles.container, style]}>

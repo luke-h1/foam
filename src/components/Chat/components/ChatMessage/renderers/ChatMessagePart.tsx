@@ -27,7 +27,7 @@ export function ChatMessagePart({
   effectiveHighlightedUserSet,
   getMentionColor,
   getPartKey,
-  handleEmoteLongPress,
+  onEmoteTouchStart,
   index,
   message,
   mode,
@@ -146,7 +146,7 @@ export function ChatMessagePart({
           disableAnimations={disableEmoteAnimations}
           key={getPartKey(part, index)}
           part={part}
-          handleEmoteLongPress={handleEmoteLongPress}
+          onEmoteTouchStart={onEmoteTouchStart}
           shouldOverlayPrevious={shouldOverlayPrevious}
           targetSize={emoteTargetSize ?? (compact ? 26 : 30)}
         />

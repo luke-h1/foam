@@ -21,6 +21,7 @@ import {
   type ProviderPreviewValue,
   type SegmentedControlChangeEvent,
 } from './chatPreferenceTypes';
+import { useTranslation } from 'react-i18next';
 
 function samePreviewValues<T extends object>(
   left: T,
@@ -31,6 +32,7 @@ function samePreviewValues<T extends object>(
 }
 
 export function useChatPreferenceScreenState() {
+  const { t } = useTranslation('preferences');
   const {
     chatDensity,
     chatFontScale,
@@ -241,7 +243,9 @@ export function useChatPreferenceScreenState() {
   };
 
   const handleDensityValueChange = (value: string) => {
-    const selected = DENSITY_OPTIONS.find(option => option.label === value);
+    const selected = DENSITY_OPTIONS.find(
+      option => t(option.labelKey) === value,
+    );
 
     if (!selected) {
       return;
@@ -258,7 +262,9 @@ export function useChatPreferenceScreenState() {
   };
 
   const handleFontScaleValueChange = (value: string) => {
-    const option = FONT_SCALE_OPTIONS.find(option => option.label === value);
+    const option = FONT_SCALE_OPTIONS.find(
+      option => t(option.labelKey) === value,
+    );
     if (option) {
       update({ chatFontScale: option.value });
     }
@@ -274,7 +280,7 @@ export function useChatPreferenceScreenState() {
 
   const handleTimestampFormatValueChange = (value: string) => {
     const option = TIMESTAMP_FORMAT_OPTIONS.find(
-      option => option.label === value,
+      option => t(option.labelKey) === value,
     );
     if (option) {
       update({ chatTimestampFormat: option.value });
@@ -290,7 +296,9 @@ export function useChatPreferenceScreenState() {
   };
 
   const handleDeletedStyleValueChange = (value: string) => {
-    const option = DELETED_STYLE_OPTIONS.find(option => option.label === value);
+    const option = DELETED_STYLE_OPTIONS.find(
+      option => t(option.labelKey) === value,
+    );
     if (option) {
       update({ deletedMessageStyle: option.value });
     }

@@ -26,6 +26,7 @@ import type {
   ReplyToData,
 } from './chatInputSectionTypes';
 import { useComposerDismissGesture } from './useComposerDismissGesture';
+import { useTranslation } from 'react-i18next';
 
 export type { ReplyToData };
 
@@ -58,11 +59,12 @@ export const ChatInputSection = memo(
       messageInput.trim() && isConnected && isAuthenticated && !isSending,
     );
 
+    const { t } = useTranslation('chat');
     const inputPlaceholder = !isAuthenticated
-      ? 'Sign in to send messages'
+      ? t('composer.signInToSend')
       : replyTo !== null
-        ? `Reply to ${replyTo.username}...`
-        : 'Send a message...';
+        ? t('composer.replyToUser', { username: replyTo.username })
+        : t('composer.sendAMessage');
 
     return (
       <View style={styles.wrapper} testID='chat-input-bar'>
@@ -71,7 +73,9 @@ export const ChatInputSection = memo(
             <View style={styles.replyIndicator} />
             <View style={styles.replyContent}>
               <View style={styles.replyLabelRow}>
-                <Text style={styles.replyLabel}>Replying to </Text>
+                <Text style={styles.replyLabel}>
+                  {t('composer.replyingTo')}{' '}
+                </Text>
                 <PaintedUsername
                   username={replyTo.username}
                   userId={replyTo.userId}
@@ -129,7 +133,9 @@ export const ChatInputSection = memo(
               {canPinNextMessage ? (
                 <Button
                   label={
-                    pinNextMessage ? 'Send and pin message' : 'Pin next message'
+                    pinNextMessage
+                      ? t('composer.sendAndPinMessage')
+                      : t('composer.pinNextMessage')
                   }
                   style={[
                     styles.actionButton,

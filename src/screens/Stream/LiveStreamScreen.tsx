@@ -50,6 +50,7 @@ import {
   initialLiveStreamScreenState,
   liveStreamScreenReducer,
 } from './liveStreamScreenReducer';
+import { useTranslation } from 'react-i18next';
 
 interface LiveStreamScreenProps {
   id: string;
@@ -78,6 +79,7 @@ const CHAT_REVEAL_ANIMATION_CONFIG = {
 export const LiveStreamScreen = memo(function LiveStreamScreen({
   id,
 }: LiveStreamScreenProps) {
+  const { t } = useTranslation('stream');
   const isFocused = useIsFocused();
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
   const normalizedLogin = id.trim().toLowerCase();
@@ -674,7 +676,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           (shouldMountChat || shouldShowChatConnectionNotice) ? (
             <GestureDetector gesture={resizeChatGesture}>
               <Animated.View
-                accessibilityLabel='Resize chat'
+                accessibilityLabel={t('resizeChat')}
                 accessibilityRole='adjustable'
                 style={[styles.chatResizeHandle, animatedResizeHandleStyle]}
               >
@@ -695,7 +697,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           ]}
         >
           <Button
-            label={isChatVisible ? 'Hide chat' : 'Show chat'}
+            label={isChatVisible ? t('hideChat') : t('showChat')}
             onPress={toggleChat}
             style={styles.fullscreenChatControlButton}
           >

@@ -15,16 +15,22 @@ import * as Clipboard from 'expo-clipboard';
 import { useEffect, useRef, useCallback } from 'react';
 import { Alert, Platform, ScrollView, View, StyleSheet } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { useTranslation } from 'react-i18next';
+import i18next from '@app/i18n/i18next';
 
 function handleClearDebugStorage() {
-  Alert.alert('Clear storage?', `This will wipe ${NAMESPACE}`, [
-    { text: 'Cancel', style: 'cancel' },
-    {
-      text: 'Clear',
-      style: 'destructive',
-      onPress: () => storageService.clear(),
-    },
-  ]);
+  Alert.alert(
+    i18next.t('devTools:clearStorageConfirm'),
+    i18next.t('devTools:clearStorageMessage', { namespace: NAMESPACE }),
+    [
+      { text: i18next.t('common:cancel'), style: 'cancel' },
+      {
+        text: i18next.t('devTools:clear'),
+        style: 'destructive',
+        onPress: () => storageService.clear(),
+      },
+    ],
+  );
 }
 
 function handleToggleReactQueryDebug(val: boolean) {
@@ -32,6 +38,7 @@ function handleToggleReactQueryDebug(val: boolean) {
 }
 
 export function DebugScreen() {
+  const { t } = useTranslation('devTools');
   const debugOptions = useDebugOptions();
   const { user, authState } = useAuthContext();
 
@@ -73,9 +80,9 @@ export function DebugScreen() {
     try {
       const res = await twitchService.getUser(username);
       await Clipboard.setStringAsync(res.id);
-      Alert.alert('Copied', res.id);
+      Alert.alert(i18next.t('devTools:copied'), res.id);
     } catch {
-      Alert.alert('Not found');
+      Alert.alert(i18next.t('devTools:notFound'));
     }
   };
 
@@ -110,16 +117,16 @@ export function DebugScreen() {
         >
           {Platform.OS === 'ios' ? null : (
             <Text type='xl' weight='bold' style={styles.title}>
-              Debug
+              {t('debug')}
             </Text>
           )}
 
           {/* Storage */}
           <View style={styles.row}>
             <View style={styles.rowText}>
-              <Text weight='semibold'>Clear storage</Text>
+              <Text weight='semibold'>{t('clearStorage')}</Text>
               <Text type='xs' color='gray.textLow'>
-                Wipe {NAMESPACE}
+                {t('wipeNamespace', { namespace: NAMESPACE })}
               </Text>
             </View>
             <Button
@@ -127,16 +134,16 @@ export function DebugScreen() {
               style={styles.destructiveBtn}
             >
               <Text type='sm' weight='semibold' color='red.accent'>
-                Clear
+                {t('clear')}
               </Text>
             </Button>
           </View>
 
           <View style={styles.row}>
             <View style={styles.rowText}>
-              <Text weight='semibold'>RQ DevTools</Text>
+              <Text weight='semibold'>{t('rqDevTools')}</Text>
               <Text type='xs' color='gray.textLow'>
-                Shows React Query debugger
+                {t('rqDevToolsDescription')}
               </Text>
             </View>
             <Switch
@@ -149,12 +156,12 @@ export function DebugScreen() {
 
           {/* Username converter */}
           <Text weight='semibold' style={styles.label}>
-            Username → ID
+            {t('usernameToId')}
           </Text>
           <View style={styles.inputRow}>
             <Input
               style={styles.input}
-              placeholder='username'
+              placeholder={t('usernamePlaceholder')}
               value={username}
               onChangeText={handleUsernameChange}
               autoCapitalize='none'
@@ -178,9 +185,9 @@ export function DebugScreen() {
 
           {/* Token */}
           <Text weight='semibold' style={styles.label}>
-            Token{' '}
+            {t('token')}{' '}
             <Text type='sm' color='gray.textLow'>
-              ({authState?.isAnonAuth ? 'anon' : 'user'})
+              ({authState?.isAnonAuth ? t('anon') : t('user')})
             </Text>
           </Text>
           <View style={styles.tokenBox}>
@@ -193,7 +200,7 @@ export function DebugScreen() {
               style={styles.copyBtn}
             >
               <Text type='xs' weight='semibold'>
-                copy
+                {t('copy')}
               </Text>
             </Button>
           </View>
@@ -202,12 +209,12 @@ export function DebugScreen() {
 
           {/* Join channel */}
           <Text weight='semibold' style={styles.label}>
-            Join channel
+            {t('joinChannel')}
           </Text>
           <View style={styles.inputRow}>
             <Input
               style={styles.input}
-              placeholder='channel'
+              placeholder={t('channelPlaceholderShort')}
               value={channelName}
               onChangeText={handleChannelNameChange}
               autoCapitalize='none'
@@ -217,14 +224,14 @@ export function DebugScreen() {
             />
             <Button onPress={handleJoinChannel} style={styles.joinBtn}>
               <Text type='sm' weight='semibold' style={styles.joinBtnText}>
-                Go
+                {t('go')}
               </Text>
             </Button>
           </View>
 
           {user && (
             <Text type='xs' color='gray.textLow' style={styles.hint}>
-              logged in as {user.display_name}
+              {t('loggedInAs', { name: user.display_name })}
             </Text>
           )}
 
@@ -232,7 +239,7 @@ export function DebugScreen() {
 
           {/* Storage state */}
           <Text weight='semibold' style={styles.label}>
-            Storage state
+            {t('storageState')}
           </Text>
           <View style={styles.codeBlock}>
             <Text type='xs' style={styles.codeText}>

@@ -3,6 +3,7 @@ import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import { Platform } from 'react-native';
 import { toast } from 'sonner-native';
 import { twitchKeys } from './query-keys';
+import i18next from '@app/i18n/i18next';
 
 declare module '@tanstack/react-query' {
   interface Register {
@@ -50,7 +51,7 @@ export function handleMutationError(
   });
 
   if (!meta?.suppressErrorToast) {
-    toast.error(meta?.errorMessage ?? 'Something went wrong. Try again.');
+    toast.error(meta?.errorMessage ?? i18next.t('common:requestFailed'));
   }
 }
 

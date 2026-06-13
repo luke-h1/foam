@@ -13,6 +13,7 @@ import { theme } from '@app/styles/themes';
 import * as AC from '@bacons/apple-colors';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { ActivityIndicator, Platform, View, StyleSheet } from 'react-native';
+import i18next from '@app/i18n/i18next';
 
 function getSourceIcon(source: string): SymbolViewProps['name'] {
   switch (source) {
@@ -72,7 +73,9 @@ export function RemoteConfigScreen() {
             <SymbolView name='arrow.clockwise' size={16} tintColor='#fff' />
           )}
           <Text type='sm' weight='semibold' style={styles.buttonText}>
-            {isRefetching ? 'Fetching...' : 'Fetch from server'}
+            {isRefetching
+              ? i18next.t('devTools:fetching')
+              : i18next.t('devTools:fetchFromServer')}
           </Text>
         </Button>
       </View>

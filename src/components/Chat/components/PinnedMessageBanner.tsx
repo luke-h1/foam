@@ -6,6 +6,7 @@ import { View } from 'react-native';
 
 import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
 import { styles } from '../styles';
+import { useTranslation } from 'react-i18next';
 
 export const PinnedMessageBanner = memo(
   ({
@@ -21,13 +22,15 @@ export const PinnedMessageBanner = memo(
     pinnedMessage: PinnedChatMessageViewModel | null;
     pinnedMessageBusy: boolean;
   }) => {
+    const { t } = useTranslation('chat');
+
     if (!pinnedMessage?.text.trim()) {
       return null;
     }
 
     const title = pinnedMessage.senderName
-      ? `${pinnedMessage.senderName} pinned`
-      : 'Pinned message';
+      ? t('pinned.userPinned', { name: pinnedMessage.senderName })
+      : t('pinned.pinnedMessage');
 
     return (
       <View style={styles.pinnedMessageBanner}>
@@ -50,7 +53,7 @@ export const PinnedMessageBanner = memo(
           <View style={styles.pinnedMessageActions}>
             <Button
               disabled={pinnedMessageBusy}
-              label='Refresh pin'
+              label={t('pinned.refreshPin')}
               onPress={onRefresh}
               style={styles.pinnedMessageActionButton}
             >
@@ -62,7 +65,7 @@ export const PinnedMessageBanner = memo(
             </Button>
             <Button
               disabled={pinnedMessageBusy}
-              label='Unpin message'
+              label={t('pinned.unpinMessage')}
               onPress={onUnpin}
               style={styles.pinnedMessageActionButton}
             >
