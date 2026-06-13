@@ -299,6 +299,7 @@ const config: ExpoConfig = {
     ],
     ['./src/plugins/withPodDeploymentTarget.js', { minIosVersion: '16.4' }],
     './src/plugins/withIosStaticFrameworkHeaderFix.js',
+    './src/plugins/withExpoModulemapArchiveFix.js',
     '@react-native-firebase/app',
     './src/plugins/withAndroidReleaseLintFix.js',
     './src/plugins/withAndroidMainActivityConfigChanges.js',
