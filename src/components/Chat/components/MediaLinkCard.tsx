@@ -16,7 +16,7 @@ import { useQueries } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { Pressable, View, StyleSheet } from 'react-native';
-import i18next from '@app/i18n/i18next';
+import { useTranslation } from 'react-i18next';
 
 type MediaLinkCardProps = {
   layout?: 'card' | 'inline';
@@ -36,6 +36,7 @@ function MediaLinkCardComponent({
   type,
   url,
 }: MediaLinkCardProps) {
+  const { t } = useTranslation('chat');
   const twitchClipId = getTwitchClipIdFromUrl(url);
   const [sevenTvEmote, twitchClip] = useQueries({
     queries: [
@@ -80,8 +81,8 @@ function MediaLinkCardComponent({
 
   const title =
     type === 'stvEmote'
-      ? (sevenTvEmote.data?.name ?? i18next.t('chat:media.stvEmote'))
-      : (twitchClip.data?.title ?? i18next.t('chat:media.twitchClip'));
+      ? (sevenTvEmote.data?.name ?? t('media.stvEmote'))
+      : (twitchClip.data?.title ?? t('media.twitchClip'));
 
   const createdBy =
     type === 'stvEmote'
@@ -93,23 +94,19 @@ function MediaLinkCardComponent({
   const isTwitchClip = type === 'twitchClip';
   const mediaMeta = isTwitchClip
     ? [
-        createdBy
-          ? i18next.t('chat:media.clippedBy', { name: createdBy })
-          : null,
+        createdBy ? t('media.clippedBy', { name: createdBy }) : null,
         typeof viewCount === 'number' && viewCount > 0
-          ? i18next.t('chat:media.views', {
+          ? t('media.views', {
               count: formatCompactNumber(viewCount),
             })
           : null,
       ]
         .filter(Boolean)
-        .join(' - ') || i18next.t('chat:media.openTwitchClip')
+        .join(' - ') || t('media.openTwitchClip')
     : createdBy
-      ? i18next.t('chat:media.by', { name: createdBy })
-      : i18next.t('chat:media.stvEmote');
-  const mediaLabel = isTwitchClip
-    ? i18next.t('chat:media.twitchClip')
-    : i18next.t('chat:media.stvEmote');
+      ? t('media.by', { name: createdBy })
+      : t('media.stvEmote');
+  const mediaLabel = isTwitchClip ? t('media.twitchClip') : t('media.stvEmote');
   const mediaIcon = isTwitchClip ? 'twitch' : 'stv';
   const mediaImageFit = isTwitchClip ? 'cover' : 'contain';
 
