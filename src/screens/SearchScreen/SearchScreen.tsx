@@ -512,7 +512,6 @@ function SearchResultsList({
       getItemType={item =>
         isSearchChannelItem(item) ? 'search-channel' : 'search-category'
       }
-      removeClippedSubviews
       showsVerticalScrollIndicator={false}
       contentInsetAdjustmentBehavior='automatic'
       data={activeResults}

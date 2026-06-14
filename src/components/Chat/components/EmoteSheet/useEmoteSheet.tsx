@@ -8,7 +8,6 @@ import React, {
   useState,
 } from 'react';
 import { useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { LegendListRef, LegendListRenderItemProps } from '@legendapp/list';
 
 import { EmoteRow } from './EmoteRow';
@@ -21,25 +20,8 @@ import {
   flattenProviderSets,
 } from './emoteMenuData';
 import type { EmotePickerItem } from './emoteSheetTypes';
-import {
-  EMOTE_SHEET_CELL_GAP,
-  EMOTE_SHEET_DETENT,
-  EMOTE_SHEET_GRID_PADDING,
-  EMOTE_SHEET_MAX_CELL_SIZE,
-  EMOTE_SHEET_MIN_CELL_SIZE,
-  EMOTE_SHEET_PROVIDER_BAR_HEIGHT,
-  EMOTE_SHEET_RAIL_WIDTH,
-  EMOTE_SHEET_SEARCH_BAR_HEIGHT,
-} from './emoteSheetLayout';
+import { EMOTE_SHEET_DETENT } from './emoteSheetLayout';
 
-const MIN_CELL_SIZE = EMOTE_SHEET_MIN_CELL_SIZE;
-const MAX_CELL_SIZE = EMOTE_SHEET_MAX_CELL_SIZE;
-const CELL_GAP = EMOTE_SHEET_CELL_GAP;
-const GRID_HORIZONTAL_PADDING = EMOTE_SHEET_GRID_PADDING;
-const RAIL_WIDTH = EMOTE_SHEET_RAIL_WIDTH;
-const PROVIDER_BAR_HEIGHT = EMOTE_SHEET_PROVIDER_BAR_HEIGHT;
-const SEARCH_BAR_HEIGHT = EMOTE_SHEET_SEARCH_BAR_HEIGHT;
-const SHEET_DETENT = EMOTE_SHEET_DETENT;
 const EMOTE_WARMUP_DELAY_MS = 250;
 const MAX_WARMUP_EMOTES = 3;
 const EMOTE_SHEET_VIEWABILITY_CONFIG = {
@@ -89,10 +71,9 @@ export function useEmoteSheet({
   emoteListRef: React.RefObject<LegendListRef | null>;
   layoutWidth: number;
 }) {
-  const { bottom: bottomInset } = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const sheetWidth = layoutWidth > 0 ? layoutWidth : screenWidth;
-  const sheetHeight = Math.round(screenHeight * SHEET_DETENT);
+  const sheetHeight = Math.round(screenHeight * EMOTE_SHEET_DETENT);
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const [activeProviderId, setActiveProviderId] =
@@ -111,21 +92,14 @@ export function useEmoteSheet({
     twitchSubscriberEmotes,
   } = useCurrentEmoteData();
 
-  const gridWidth = sheetWidth - GRID_HORIZONTAL_PADDING * 2 - RAIL_WIDTH;
+  const gridWidth = sheetWidth - 16 * 2;
   const columns = Math.max(
     4,
-    Math.min(
-      7,
-      Math.floor((gridWidth + CELL_GAP) / (MIN_CELL_SIZE + CELL_GAP)),
-    ),
+    Math.min(8, Math.floor((gridWidth + 4) / (38 + 4))),
   );
   const cellSize = Math.min(
-    MAX_CELL_SIZE,
-    Math.max(MIN_CELL_SIZE, (gridWidth - CELL_GAP * (columns - 1)) / columns),
-  );
-  const bodyHeight = Math.max(
-    360,
-    sheetHeight - PROVIDER_BAR_HEIGHT - SEARCH_BAR_HEIGHT - 56 - bottomInset,
+    50,
+    Math.max(38, (gridWidth - 4 * (columns - 1)) / columns),
   );
 
   const providers = buildEmoteMenuProviders({
@@ -292,7 +266,6 @@ export function useEmoteSheet({
   return {
     activeProviderId: effectiveActiveProviderId,
     activeSetId: effectiveActiveSetId,
-    bodyHeight,
     cellSize,
     filteredSets,
     handleClearSearch,

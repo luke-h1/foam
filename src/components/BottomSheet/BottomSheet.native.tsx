@@ -2,7 +2,6 @@ import {
   ModalBottomSheet,
   type Detent,
 } from '@swmansion/react-native-bottom-sheet';
-import { theme } from '@app/styles/themes';
 import { useLayoutEffect, useRef, useState } from 'react';
 import type { PropsWithChildren } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -124,16 +123,9 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   dragIndicator: {
-    backgroundColor: 'rgba(255,255,255,0.38)',
+    backgroundColor: 'rgba(255,255,255,0.3)',
     borderRadius: 999,
-    height: 4,
+    height: 5,
     width: 36,
-  },
-  surface: {
-    backgroundColor: '#0b0b0d',
-    borderCurve: 'continuous',
-    borderTopLeftRadius: theme.borderRadius28,
-    borderTopRightRadius: theme.borderRadius28,
-    overflow: 'hidden',
   },
 });

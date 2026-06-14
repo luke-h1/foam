@@ -28,8 +28,6 @@ const LANGUAGE_NAMES: Record<string, string> = {
   pt: 'Portuguese',
 };
 
-const CARD_SURFACE = 'rgba(255,255,255,0.055)';
-const CARD_BORDER = 'rgba(255,255,255,0.13)';
 const TITLE_COLOR = 'rgba(235,235,240,0.86)';
 
 function LiveStreamCard({ stream, layout = 'compact' }: Props) {
@@ -290,8 +288,8 @@ const styles = StyleSheet.create({
   },
   container: {
     alignItems: 'flex-start',
-    backgroundColor: CARD_SURFACE,
-    borderColor: CARD_BORDER,
+    backgroundColor: 'rgba(255,255,255,0.055)',
+    borderColor: 'rgba(255,255,255,0.13)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius10,
     borderWidth: 0.55,

@@ -178,9 +178,10 @@ function EmotePreviewSheetComponent(props: Props) {
             onPress={onClose}
           >
             <SymbolView
-              name='checkmark'
-              size={18}
-              tintColor={theme.color.text.dark}
+              name='xmark'
+              size={15}
+              weight='semibold'
+              tintColor={theme.color.textSecondary.dark}
             />
           </Button>
         </View>
@@ -266,65 +267,60 @@ export const EmotePreviewSheet = memo(EmotePreviewSheetComponent);
 const styles = StyleSheet.create({
   actionButton: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.055)',
+    backgroundColor: 'transparent',
     flexDirection: 'row',
-    gap: theme.space8,
-    minHeight: 52,
-    paddingHorizontal: theme.space12,
+    gap: theme.space12,
+    minHeight: 56,
+    paddingHorizontal: theme.space16,
     paddingVertical: theme.space8,
   },
   actionButtonBorder: {
-    borderBottomColor: 'rgba(255,255,255,0.075)',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   actionCopy: {
     flex: 1,
-    gap: 2,
+    gap: 1,
   },
   actionGroup: {
-    backgroundColor: '#19191c',
-    borderColor: 'rgba(255,255,255,0.065)',
+    backgroundColor: 'rgba(255,255,255,0.07)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
-    borderWidth: 1,
     overflow: 'hidden',
   },
   actionIconFrame: {
     alignItems: 'center',
-    backgroundColor: 'rgba(26, 201, 162, 0.12)',
-    borderColor: 'rgba(26, 201, 162, 0.18)',
+    backgroundColor: 'rgba(46,134,255,0.16)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius10,
-    borderWidth: 1,
-    height: 32,
+    borderRadius: 8,
+    height: 30,
     justifyContent: 'center',
-    width: 32,
+    width: 30,
   },
   actionSubtitle: {
     color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize11,
-    lineHeight: theme.fontSize11 * 1.25,
+    fontSize: theme.fontSize12,
+    lineHeight: theme.fontSize12 * 1.3,
   },
   actionText: {
     color: theme.color.text.dark,
-    fontSize: theme.fontSize14,
-    lineHeight: theme.fontSize14 * 1.25,
+    fontSize: theme.fontSize17,
+    lineHeight: theme.fontSize17 * 1.2,
   },
   container: {
+    alignSelf: 'center',
     paddingBottom: theme.space24,
     paddingHorizontal: theme.space20,
     paddingTop: theme.space4,
   },
   doneButton: {
     alignItems: 'center',
-    backgroundColor: '#1f2024',
-    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.14)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
-    borderWidth: 1,
-    height: 38,
+    height: 30,
     justifyContent: 'center',
-    width: 38,
+    width: 30,
   },
   emoteImage: {
     borderCurve: 'continuous',
@@ -333,7 +329,7 @@ const styles = StyleSheet.create({
   eyebrow: {
     color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize11,
-    letterSpacing: 0,
+    letterSpacing: 0.6,
     marginBottom: 2,
     textTransform: 'uppercase',
   },
@@ -343,21 +339,17 @@ const styles = StyleSheet.create({
   },
   imageStage: {
     alignItems: 'center',
-    backgroundColor: '#19191c',
-    borderColor: 'rgba(255,255,255,0.065)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
-    borderWidth: 1,
     height: 152,
     justifyContent: 'center',
     width: '100%',
   },
   metadataCard: {
-    backgroundColor: '#19191c',
-    borderColor: 'rgba(255,255,255,0.065)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
-    borderWidth: 1,
     padding: theme.space12,
   },
   metadataLabel: {
@@ -375,7 +367,7 @@ const styles = StyleSheet.create({
   metadataValue: {
     color: theme.color.text.dark,
     flex: 1,
-    fontSize: 13,
+    fontSize: theme.fontSize14,
     lineHeight: theme.fontSize14 * 1.2,
   },
   previewPanel: {
@@ -384,8 +376,8 @@ const styles = StyleSheet.create({
   },
   previewPill: {
     alignSelf: 'flex-start',
-    backgroundColor: theme.colorAccentSurface,
-    borderColor: 'rgba(26, 201, 162, 0.22)',
+    backgroundColor: 'rgba(46,134,255,0.16)',
+    borderColor: 'rgba(46,134,255,0.34)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: 1,

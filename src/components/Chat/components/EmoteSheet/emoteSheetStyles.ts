@@ -1,49 +1,44 @@
 import { StyleSheet } from 'react-native';
 import { theme } from '@app/styles/themes';
-import { CHAT_SHEET_BACKGROUND } from '../chatSheetSurface';
-import {
-  EMOTE_SHEET_CELL_GAP,
-  EMOTE_SHEET_GRID_PADDING,
-  EMOTE_SHEET_PROVIDER_BAR_HEIGHT,
-  EMOTE_SHEET_RAIL_WIDTH,
-  EMOTE_SHEET_SEARCH_BAR_HEIGHT,
-} from './emoteSheetLayout';
 
-const CELL_GAP = EMOTE_SHEET_CELL_GAP;
-const GRID_HORIZONTAL_PADDING = EMOTE_SHEET_GRID_PADDING;
-const RAIL_WIDTH = EMOTE_SHEET_RAIL_WIDTH;
-const PROVIDER_BAR_HEIGHT = EMOTE_SHEET_PROVIDER_BAR_HEIGHT;
-const SEARCH_BAR_HEIGHT = EMOTE_SHEET_SEARCH_BAR_HEIGHT;
 const MENU_HEADER_BACKGROUND = '#111215';
-const MENU_ACTIVE_SURFACE = '#2b2d33';
 const MENU_BORDER = 'rgba(255, 255, 255, 0.075)';
-const MENU_MUTED_TEXT = 'rgba(255, 255, 255, 0.62)';
-const MENU_SURFACE = '#1f2025';
 
 export const emoteSheetStyles = StyleSheet.create({
   body: {
     flex: 1,
-    flexDirection: 'row',
     minHeight: 0,
+    minWidth: 0,
+    overflow: 'hidden',
     width: '100%',
+  },
+  categoryBar: {
+    alignItems: 'center',
+    backgroundColor: MENU_HEADER_BACKGROUND,
+    borderTopColor: MENU_BORDER,
+    borderTopWidth: 1,
+    flexDirection: 'row',
+    overflow: 'hidden',
+    paddingTop: theme.space8,
+    width: '100%',
+  },
+  categoryBarContent: {
+    alignItems: 'center',
+    gap: theme.space8,
+    paddingHorizontal: theme.space12,
   },
   container: {
     alignSelf: 'stretch',
-    backgroundColor: CHAT_SHEET_BACKGROUND,
+    backgroundColor: '#0b0b0d',
     flex: 1,
     minHeight: 0,
-    width: '100%',
-  },
-  contentPane: {
-    flex: 1,
-    minHeight: 0,
-    minWidth: 0,
+    overflow: 'hidden',
     width: '100%',
   },
   sheetHandle: {
-    backgroundColor: 'rgba(255, 255, 255, 0.38)',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 999,
-    height: 4,
+    height: 5,
     width: 36,
   },
   sheetHandleRow: {
@@ -61,11 +56,8 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   emoteCell: {
     alignItems: 'center',
-    backgroundColor: '#15161a',
-    borderColor: 'rgba(255,255,255,0.035)',
     borderCurve: 'continuous',
     borderRadius: 8,
-    borderWidth: StyleSheet.hairlineWidth,
     justifyContent: 'center',
     padding: 3,
   },
@@ -98,7 +90,7 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   emoteRow: {
     flexDirection: 'row',
-    gap: CELL_GAP,
+    gap: 4,
     justifyContent: 'flex-start',
     paddingVertical: 2,
   },
@@ -135,7 +127,7 @@ export const emoteSheetStyles = StyleSheet.create({
     backgroundColor: MENU_HEADER_BACKGROUND,
     borderBottomColor: MENU_BORDER,
     borderBottomWidth: 1,
-    minHeight: PROVIDER_BAR_HEIGHT + SEARCH_BAR_HEIGHT,
+    minHeight: 102,
     overflow: 'hidden',
     paddingBottom: theme.space8,
     position: 'relative',
@@ -143,11 +135,10 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   list: {
     flex: 1,
-    width: '100%',
   },
   listContent: {
     paddingBottom: theme.space36,
-    paddingHorizontal: GRID_HORIZONTAL_PADDING,
+    paddingHorizontal: 16,
     paddingTop: theme.space4,
   },
   placeholderContent: {
@@ -157,12 +148,12 @@ export const emoteSheetStyles = StyleSheet.create({
     minHeight: 420,
   },
   providerBar: {
-    maxHeight: PROVIDER_BAR_HEIGHT,
+    maxHeight: 54,
   },
   providerBarContent: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: theme.space8,
+    gap: theme.space12,
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space8,
   },
@@ -182,8 +173,8 @@ export const emoteSheetStyles = StyleSheet.create({
     position: 'relative',
   },
   providerChipActive: {
-    backgroundColor: MENU_ACTIVE_SURFACE,
-    borderColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: 'rgba(46,134,255,0.18)',
+    borderColor: 'rgba(46,134,255,0.4)',
     minWidth: 88,
     paddingHorizontal: theme.space12,
   },
@@ -196,26 +187,10 @@ export const emoteSheetStyles = StyleSheet.create({
     fontSize: theme.fontSize12,
     fontWeight: '700',
   },
-  rail: {
-    backgroundColor: MENU_HEADER_BACKGROUND,
-    borderLeftColor: MENU_BORDER,
-    borderLeftWidth: 1,
-    flexShrink: 0,
-    minHeight: 0,
-    overflow: 'hidden',
-    position: 'relative',
-    width: RAIL_WIDTH,
-  },
-  railContent: {
-    alignItems: 'center',
-    paddingBottom: theme.space28,
-    paddingHorizontal: theme.space4,
-    paddingTop: theme.space8,
-    width: '100%',
-  },
   searchContainer: {
-    height: SEARCH_BAR_HEIGHT,
+    height: 48,
     justifyContent: 'center',
+    marginTop: theme.space12,
     paddingHorizontal: theme.space16,
   },
   searchRow: {
@@ -224,7 +199,7 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   searchInputWrap: {
     alignItems: 'center',
-    backgroundColor: MENU_SURFACE,
+    backgroundColor: '#1f2025',
     borderColor: 'rgba(255,255,255,0.065)',
     borderCurve: 'continuous',
     borderRadius: 8,
@@ -253,7 +228,7 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   searchClearButton: {
     alignItems: 'center',
-    backgroundColor: MENU_ACTIVE_SURFACE,
+    backgroundColor: '#2b2d33',
     borderRadius: 4,
     height: 28,
     justifyContent: 'center',
@@ -265,17 +240,12 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   setHeader: {
     alignItems: 'center',
-    backgroundColor: '#15161a',
-    borderColor: 'rgba(255,255,255,0.045)',
-    borderCurve: 'continuous',
-    borderRadius: 8,
-    borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space8,
     marginBottom: theme.space4,
-    marginTop: theme.space4,
-    minHeight: 40,
-    paddingHorizontal: theme.space12,
+    marginTop: theme.space8,
+    minHeight: 36,
+    paddingHorizontal: theme.space4,
     paddingVertical: theme.space4,
   },
   setHeaderIcon: {
@@ -294,7 +264,6 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   setRailButton: {
     alignItems: 'center',
-    alignSelf: 'stretch',
     backgroundColor: '#191a1f',
     borderColor: 'rgba(255,255,255,0.045)',
     borderCurve: 'continuous',
@@ -302,20 +271,18 @@ export const emoteSheetStyles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     height: 40,
     justifyContent: 'center',
-    marginBottom: theme.space8,
-    maxWidth: 44,
     minWidth: 40,
-    paddingHorizontal: theme.space4,
+    paddingHorizontal: theme.space8,
   },
   setRailButtonActive: {
-    backgroundColor: MENU_ACTIVE_SURFACE,
-    borderColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: 'rgba(46,134,255,0.18)',
+    borderColor: 'rgba(46,134,255,0.4)',
   },
   setRailEmoji: {
     fontSize: theme.fontSize16,
   },
   setRailLabel: {
-    color: MENU_MUTED_TEXT,
+    color: 'rgba(255, 255, 255, 0.62)',
     fontSize: theme.fontSize10,
     fontWeight: '800',
     letterSpacing: 0.2,

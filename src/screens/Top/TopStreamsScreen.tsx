@@ -263,7 +263,6 @@ function TopStreamsList({
         data={remainingStreams}
         renderItem={renderItem}
         keyExtractor={item => item.id}
-        removeClippedSubviews
         getItemType={() => 'stream-item'}
         drawDistance={500}
         contentContainerStyle={[

@@ -11,7 +11,6 @@ import {
   View,
 } from 'react-native';
 import { PortalHost } from 'react-native-teleport';
-import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from '../chatSheetSurface';
 import { MESSAGE_ACTION_PREVIEW_PORTAL_NAME } from './MessageActionPreview';
 import { useTranslation } from 'react-i18next';
 
@@ -271,11 +270,11 @@ function ActionSheetComponent(props: Props) {
   );
   const maxScrollHeight = Math.min(
     Math.round(windowHeight * 0.62),
-    actions.length * 52 + 116,
+    actions.length * 58 + 116,
   );
   const sheetHeight = Math.min(
     Math.round(windowHeight * 0.82),
-    Math.max(360, actions.length * 52 + 224),
+    Math.max(360, actions.length * 58 + 224),
   );
   const snapPoints = [{ height: sheetHeight }];
   const wrapperStyle = [
@@ -311,9 +310,10 @@ function ActionSheetComponent(props: Props) {
             style={styles.closeButton}
           >
             <SymbolView
-              name='checkmark'
-              size={18}
-              tintColor={theme.color.text.dark}
+              name='xmark'
+              size={15}
+              weight='semibold'
+              tintColor={theme.color.textSecondary.dark}
             />
           </Button>
         </View>
@@ -390,86 +390,77 @@ export const ActionSheet = memo(ActionSheetComponent);
 
 const styles = StyleSheet.create({
   actionButton: {
-    backgroundColor: 'rgba(255,255,255,0.055)',
-    minHeight: 52,
-    paddingHorizontal: theme.space12,
+    backgroundColor: 'transparent',
+    minHeight: 56,
+    paddingHorizontal: theme.space16,
     paddingVertical: theme.space8,
   },
   actionButtonBorder: {
-    borderBottomColor: 'rgba(255,255,255,0.075)',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   actionContent: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: theme.space8,
+    gap: theme.space12,
   },
   actionCopy: {
     flex: 1,
-    gap: 2,
+    gap: 1,
   },
   actionGroup: {
-    backgroundColor: 'rgba(255,255,255,0.055)',
-    borderColor: 'rgba(255,255,255,0.085)',
+    backgroundColor: 'rgba(255,255,255,0.07)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
-    borderWidth: 1,
     overflow: 'hidden',
   },
   actionIconAccent: {
-    backgroundColor: 'rgba(26, 201, 162, 0.12)',
-    borderColor: 'rgba(26, 201, 162, 0.18)',
+    backgroundColor: 'rgba(46,134,255,0.16)',
   },
   actionIconDanger: {
     backgroundColor: theme.colorRedSurface,
-    borderColor: theme.colorRedBorderUi,
   },
   actionIconFrame: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderColor: 'rgba(255,255,255,0.075)',
+    backgroundColor: 'rgba(255,255,255,0.09)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius10,
-    borderWidth: 1,
-    height: 32,
+    borderRadius: 8,
+    height: 30,
     justifyContent: 'center',
-    width: 32,
+    width: 30,
   },
   actionIconWarning: {
-    backgroundColor: 'rgba(251, 191, 36, 0.12)',
-    borderColor: 'rgba(251, 191, 36, 0.26)',
+    backgroundColor: 'rgba(224,163,58,0.16)',
   },
   actionIcon: {
     opacity: 0.9,
   },
   actionSubtitle: {
     color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize11,
-    lineHeight: theme.fontSize11 * 1.25,
+    fontSize: theme.fontSize12,
+    lineHeight: theme.fontSize12 * 1.3,
   },
   actionText: {
     color: theme.color.text.dark,
-    fontSize: theme.fontSize14,
-    lineHeight: theme.fontSize14 * 1.25,
+    fontSize: theme.fontSize17,
+    lineHeight: theme.fontSize17 * 1.2,
   },
   actionTextDanger: {
     color: theme.colorRed,
   },
   closeButton: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.075)',
-    borderColor: 'rgba(255,255,255,0.085)',
+    backgroundColor: 'rgba(255,255,255,0.14)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
-    borderWidth: 1,
-    height: 38,
+    height: 30,
     justifyContent: 'center',
-    width: 38,
+    width: 30,
   },
   eyebrow: {
     color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize11,
-    letterSpacing: 0,
+    letterSpacing: 0.6,
     marginBottom: 2,
     textTransform: 'uppercase',
   },
@@ -485,10 +476,7 @@ const styles = StyleSheet.create({
     lineHeight: theme.fontSize16 * 1.25,
   },
   wrapper: {
-    ...chatSheetSurface,
-    backgroundColor: CHAT_SHEET_BACKGROUND,
-    borderColor: 'rgba(255,255,255,0.10)',
-    borderWidth: 1,
+    alignSelf: 'center',
     gap: theme.space12,
     paddingHorizontal: theme.space12,
     paddingTop: theme.space8,

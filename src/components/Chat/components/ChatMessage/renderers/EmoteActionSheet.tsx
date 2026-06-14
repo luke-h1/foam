@@ -253,9 +253,10 @@ function EmoteActionSheetComponent({
                 onPress={closeSheet}
               >
                 <SymbolView
-                  name='checkmark'
-                  size={18}
-                  tintColor={theme.color.text.dark}
+                  name='xmark'
+                  size={15}
+                  weight='semibold'
+                  tintColor={theme.color.textSecondary.dark}
                 />
               </Button>
             </View>
@@ -334,55 +335,48 @@ const styles = StyleSheet.create({
     paddingVertical: theme.space12,
   },
   actionButtonWithDivider: {
-    borderTopColor: 'rgba(255,255,255,0.055)',
+    borderTopColor: 'rgba(255,255,255,0.1)',
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   actionCopy: {
     flex: 1,
   },
   actionGroup: {
-    backgroundColor: '#18191d',
-    borderColor: 'rgba(255,255,255,0.10)',
+    backgroundColor: 'rgba(255,255,255,0.07)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
-    borderWidth: 1,
     overflow: 'hidden',
-    boxShadow: '0 10px 18px rgba(0, 0, 0, 0.22)',
   },
   actionIcon: {
     opacity: 0.9,
   },
   actionIconFrame: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.055)',
-    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.09)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
-    borderWidth: 1,
-    height: 36,
+    borderRadius: 8,
+    height: 30,
     justifyContent: 'center',
-    width: 36,
+    width: 30,
   },
   actionText: {
     color: theme.color.text.dark,
-    fontSize: theme.fontSize16,
-    lineHeight: theme.fontSize16 * 1.18,
+    fontSize: theme.fontSize17,
+    lineHeight: theme.fontSize17 * 1.2,
   },
   doneButton: {
     alignItems: 'center',
-    backgroundColor: '#1f2024',
-    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.14)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
-    borderWidth: 1,
-    height: 38,
+    height: 30,
     justifyContent: 'center',
-    width: 38,
+    width: 30,
   },
   eyebrow: {
     color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize11,
-    letterSpacing: 0,
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
   heading: {
@@ -404,11 +398,9 @@ const styles = StyleSheet.create({
   },
   previewImageContainer: {
     alignItems: 'center',
-    backgroundColor: '#19191c',
-    borderColor: 'rgba(255,255,255,0.065)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
-    borderWidth: 1,
     height: 64,
     justifyContent: 'center',
     overflow: 'hidden',
@@ -436,6 +428,7 @@ const styles = StyleSheet.create({
     paddingBottom: theme.space8,
   },
   wrapper: {
+    alignSelf: 'center',
     gap: theme.space12,
     paddingBottom: theme.space24,
     paddingHorizontal: theme.space20,

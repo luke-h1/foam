@@ -19,7 +19,6 @@ import type {
   ChatModerationAccessFlags,
   UserActionVisibilityFlags,
 } from '@app/components/Chat/types/chatUiFlags';
-import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from './chatSheetSurface';
 import { UserCardHeader } from './UserCardHeader';
 import { useTranslation } from 'react-i18next';
 
@@ -206,12 +205,12 @@ function UserActionSheetComponent({
     recentMessages.length > 0 ? 40 + recentMessages.length * 22 : 0;
   const maxScrollHeight = Math.min(
     Math.round(windowHeight * 0.54),
-    actionRows.length * 52 + recentMessagesHeight + 2,
+    actionRows.length * 58 + recentMessagesHeight + 2,
   );
   const sheetHeight = Math.min(
     Math.round(windowHeight * 0.72),
     196 +
-      actionRows.length * 52 +
+      actionRows.length * 58 +
       recentMessagesHeight +
       (isHidden || isHighlighted ? 34 : 0),
   );
@@ -249,9 +248,10 @@ function UserActionSheetComponent({
             onPress={onClose}
           >
             <SymbolView
-              name='checkmark'
-              size={18}
-              tintColor={theme.color.text.dark}
+              name='xmark'
+              size={15}
+              weight='semibold'
+              tintColor={theme.color.textSecondary.dark}
             />
           </Button>
         </View>
@@ -358,75 +358,66 @@ export const UserActionSheet = memo(UserActionSheetComponent);
 const styles = StyleSheet.create({
   actionButton: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.055)',
+    backgroundColor: 'transparent',
     flexDirection: 'row',
-    gap: theme.space8,
-    minHeight: 52,
-    paddingHorizontal: theme.space12,
+    gap: theme.space12,
+    minHeight: 56,
+    paddingHorizontal: theme.space16,
     paddingVertical: theme.space8,
   },
   actionButtonBorder: {
-    borderBottomColor: 'rgba(255,255,255,0.075)',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   actionCopy: {
     flex: 1,
-    gap: 2,
+    gap: 1,
   },
   actionGroup: {
-    backgroundColor: 'rgba(255,255,255,0.055)',
-    borderColor: 'rgba(255,255,255,0.085)',
+    backgroundColor: 'rgba(255,255,255,0.07)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
-    borderWidth: 1,
     overflow: 'hidden',
   },
   actionIconAccent: {
-    backgroundColor: 'rgba(26, 201, 162, 0.12)',
-    borderColor: 'rgba(26, 201, 162, 0.18)',
+    backgroundColor: 'rgba(46,134,255,0.16)',
   },
   actionIconDanger: {
     backgroundColor: theme.colorRedSurface,
-    borderColor: theme.colorRedBorderUi,
   },
   actionIconFrame: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderColor: 'rgba(255,255,255,0.075)',
+    backgroundColor: 'rgba(255,255,255,0.09)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius10,
-    borderWidth: 1,
-    height: 32,
+    borderRadius: 8,
+    height: 30,
     justifyContent: 'center',
-    width: 32,
+    width: 30,
   },
   actionIconWarning: {
-    backgroundColor: 'rgba(251, 191, 36, 0.12)',
-    borderColor: 'rgba(251, 191, 36, 0.26)',
+    backgroundColor: 'rgba(224,163,58,0.16)',
   },
   actionSubtitle: {
     color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize11,
-    lineHeight: theme.fontSize11 * 1.25,
+    fontSize: theme.fontSize12,
+    lineHeight: theme.fontSize12 * 1.3,
   },
   actionText: {
     color: theme.color.text.dark,
-    fontSize: theme.fontSize14,
-    lineHeight: theme.fontSize14 * 1.25,
+    fontSize: theme.fontSize17,
+    lineHeight: theme.fontSize17 * 1.2,
   },
   actionTextDanger: {
     color: theme.colorRed,
   },
   doneButton: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.075)',
-    borderColor: 'rgba(255,255,255,0.085)',
+    backgroundColor: 'rgba(255,255,255,0.14)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
-    borderWidth: 1,
-    height: 38,
+    height: 30,
     justifyContent: 'center',
-    width: 38,
+    width: 30,
   },
   header: {
     alignItems: 'flex-start',
@@ -439,20 +430,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   wrapper: {
-    ...chatSheetSurface,
-    backgroundColor: CHAT_SHEET_BACKGROUND,
-    borderColor: 'rgba(255,255,255,0.10)',
-    borderWidth: 1,
+    alignSelf: 'center',
     gap: 10,
     paddingHorizontal: theme.space12,
     paddingTop: theme.space8,
   },
   recentMessages: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderColor: 'rgba(255,255,255,0.07)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
-    borderWidth: 1,
     gap: 4,
     marginBottom: theme.space8,
     paddingHorizontal: theme.space12,
@@ -489,8 +475,8 @@ const styles = StyleSheet.create({
     paddingVertical: theme.space4,
   },
   statePillAccent: {
-    backgroundColor: theme.colorAccentSurface,
-    borderColor: 'rgba(26, 201, 162, 0.24)',
+    backgroundColor: 'rgba(46,134,255,0.16)',
+    borderColor: 'rgba(46,134,255,0.34)',
   },
   statePillAccentText: {
     color: theme.colorPrimary,

@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
-import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from '../chatSheetSurface';
+import { chatSheetSurface } from '../chatSheetSurface';
 import { useTranslation } from 'react-i18next';
 
 function ToggleMenuItemComponent({
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
   container: {
     ...chatSheetSurface,
     alignSelf: 'stretch',
-    backgroundColor: CHAT_SHEET_BACKGROUND,
+    backgroundColor: 'transparent',
     flexDirection: 'column',
     minHeight: 0,
     width: '100%',
@@ -361,33 +361,31 @@ const styles = StyleSheet.create({
   headerEyebrow: {
     color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize11,
-    letterSpacing: 1,
+    letterSpacing: 0.6,
     marginBottom: 2,
   },
   headerTitle: {
-    fontSize: theme.fontSize16,
+    fontSize: theme.fontSize18,
   },
   menuContainer: {
     paddingTop: 0,
   },
   menuItem: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.color.border.dark,
+    backgroundColor: 'rgba(255,255,255,0.07)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
-    borderWidth: 1,
     flexDirection: 'row',
     gap: theme.space12,
     marginBottom: theme.space8,
     marginHorizontal: theme.space20,
-    minHeight: 50,
+    minHeight: 56,
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space12,
   },
   menuItemText: {
     flex: 1,
-    fontSize: theme.fontSize14,
+    fontSize: theme.fontSize17,
   },
   menuItemTextContainer: {
     alignItems: 'center',

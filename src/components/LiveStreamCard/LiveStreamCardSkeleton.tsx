@@ -2,9 +2,6 @@ import { theme } from '@app/styles/themes';
 import { StyleSheet, View } from 'react-native';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 
-const CARD_SURFACE = 'rgba(255,255,255,0.035)';
-const CARD_BORDER = 'rgba(255,255,255,0.13)';
-
 export function LiveStreamCardSkeleton({
   layout = 'compact',
 }: {
@@ -50,8 +47,8 @@ const styles = StyleSheet.create({
   },
   container: {
     alignItems: 'flex-start',
-    backgroundColor: CARD_SURFACE,
-    borderColor: CARD_BORDER,
+    backgroundColor: 'rgba(255,255,255,0.035)',
+    borderColor: 'rgba(255,255,255,0.13)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius10,
     borderWidth: 1,

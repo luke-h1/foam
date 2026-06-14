@@ -16,7 +16,7 @@ import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { UsernamePressData } from '../ChatMessage/RichChatMessage.types';
 import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
-import { CHAT_SHEET_BACKGROUND, chatSheetSurface } from '../chatSheetSurface';
+import { chatSheetSurface } from '../chatSheetSurface';
 import { useTranslation } from 'react-i18next';
 
 export interface ChattersSheetProps {
@@ -229,19 +229,19 @@ export const ChattersSheet = memo(ChattersSheetComponent);
 const styles = StyleSheet.create({
   chatterName: {
     flex: 1,
-    fontSize: theme.fontSize14,
+    fontSize: theme.fontSize17,
   },
   chatterRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    minHeight: 40,
+    minHeight: 44,
     paddingHorizontal: theme.space20,
     paddingVertical: theme.space8,
   },
   container: {
     ...chatSheetSurface,
     alignSelf: 'stretch',
-    backgroundColor: CHAT_SHEET_BACKGROUND,
+    backgroundColor: 'transparent',
     flexDirection: 'column',
     minHeight: 0,
     width: '100%',
@@ -268,19 +268,19 @@ const styles = StyleSheet.create({
   headerEyebrow: {
     color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize11,
-    letterSpacing: 1,
+    letterSpacing: 0.6,
     marginBottom: 2,
   },
   headerTitle: {
-    fontSize: theme.fontSize16,
+    fontSize: theme.fontSize18,
   },
   searchInput: {
     flex: 1,
   },
   searchWrap: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.color.border.dark,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderColor: 'rgba(255,255,255,0.1)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     borderWidth: 1,

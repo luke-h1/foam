@@ -2,12 +2,12 @@ import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
 import { Text } from '@app/components/ui/Text/Text';
 import { LegendList } from '@legendapp/list';
 import { theme } from '@app/styles/themes';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmoteSearchFilter } from './EmoteSearchFilter';
 import { EmoteSheetIosBlur } from './EmoteSheetIosBlur';
-import { renderProviderChip } from './EmoteSheetProviderChip';
+import { ProviderChip } from './ProviderChip';
 import { renderSetRailItem } from './EmoteSheetSetRailItem';
 import { emoteSheetStyles as styles } from './emoteSheetStyles';
 import type { EmotePickerItem } from './emoteSheetTypes';
@@ -60,34 +60,29 @@ export function EmoteSheet({
       snapPoints={[{ fraction: EMOTE_SHEET_DETENT }]}
       testID='chat-emote-sheet'
     >
-      <View
-        onLayout={handleContainerLayout}
-        style={[
-          styles.container,
-          { paddingBottom: bottomInset + theme.space20 },
-        ]}
-      >
+      <View onLayout={handleContainerLayout} style={styles.container}>
         <View style={styles.sheetHandleRow}>
           <View style={styles.sheetHandle} />
         </View>
         <View style={styles.header}>
           <IosBlur intensity={32} />
-          <LegendList
-            data={sheet.providers}
+          <ScrollView
             horizontal
-            estimatedItemSize={96}
-            keyExtractor={provider => provider.id}
             keyboardShouldPersistTaps='handled'
-            nestedScrollEnabled
-            renderItem={renderProviderChip}
-            extraData={{
-              activeProviderId: sheet.activeProviderId,
-              onProviderPress: sheet.handleProviderPress,
-            }}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.providerBarContent}
             style={styles.providerBar}
-          />
+          >
+            {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- bounded set of provider tabs */}
+            {sheet.providers.map(provider => (
+              <ProviderChip
+                key={provider.id}
+                isActive={provider.id === sheet.activeProviderId}
+                onPress={() => sheet.handleProviderPress(provider.id)}
+                provider={provider}
+              />
+            ))}
+          </ScrollView>
 
           <View style={styles.searchContainer}>
             <View style={styles.searchRow}>
@@ -109,8 +104,8 @@ export function EmoteSheet({
             <ActivityIndicator size='large' color={theme.color.text.dark} />
           </View>
         ) : (
-          <View style={styles.body}>
-            <View style={styles.contentPane}>
+          <>
+            <View style={styles.body}>
               {sheet.showEmpty ? (
                 <View style={styles.emptyState}>
                   <Text style={styles.emptyStateTitle}>
@@ -133,7 +128,14 @@ export function EmoteSheet({
                   }
                   onViewableItemsChanged={sheet.onViewableItemsChanged}
                   viewabilityConfig={sheet.viewabilityConfig}
-                  contentContainerStyle={styles.listContent}
+                  contentContainerStyle={[
+                    styles.listContent,
+                    {
+                      paddingBottom:
+                        theme.space36 +
+                        (sheet.filteredSets.length > 1 ? 0 : bottomInset),
+                    },
+                  ]}
                   drawDistance={96}
                   recycleItems
                   showsVerticalScrollIndicator={false}
@@ -143,23 +145,31 @@ export function EmoteSheet({
               )}
             </View>
 
-            <View style={styles.rail}>
-              <IosBlur intensity={28} />
-              <LegendList
-                data={sheet.filteredSets}
-                estimatedItemSize={44}
-                keyExtractor={set => set.id}
-                nestedScrollEnabled
-                renderItem={renderSetRailItem}
-                extraData={{
-                  activeSetId: sheet.activeSetId,
-                  onScrollToSet: sheet.handleScrollToSet,
-                }}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.railContent}
-              />
-            </View>
-          </View>
+            {sheet.filteredSets.length > 1 ? (
+              <View
+                style={[
+                  styles.categoryBar,
+                  { paddingBottom: theme.space8 + bottomInset },
+                ]}
+              >
+                <IosBlur intensity={32} />
+                <LegendList
+                  data={sheet.filteredSets}
+                  horizontal
+                  estimatedItemSize={48}
+                  keyExtractor={set => set.id}
+                  nestedScrollEnabled
+                  renderItem={renderSetRailItem}
+                  extraData={{
+                    activeSetId: sheet.activeSetId,
+                    onScrollToSet: sheet.handleScrollToSet,
+                  }}
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.categoryBarContent}
+                />
+              </View>
+            ) : null}
+          </>
         )}
       </View>
     </BottomSheet>
