@@ -77,6 +77,18 @@ export function RootLayoutNav() {
               },
             }}
           />
+          <Stack.Screen
+            name='feedback'
+            options={{
+              presentation: 'formSheet',
+              sheetGrabberVisible: true,
+              sheetAllowedDetents: [0.85],
+              sheetCornerRadius: theme.borderRadius28,
+              contentStyle: {
+                backgroundColor: theme.color.background.dark,
+              },
+            }}
+          />
         </Stack>
         <OTAUpdates />
       </Providers>

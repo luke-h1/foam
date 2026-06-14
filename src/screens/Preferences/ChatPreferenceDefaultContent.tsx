@@ -39,6 +39,7 @@ export function ChatPreferenceDefaultContent({
   densityIndex,
   emojiIndex,
   fontScaleIndex,
+  previewFontScale,
   handleDeletedStyleChange,
   handleDeletedStyleValueChange,
   handleFontScaleChange,
@@ -106,6 +107,9 @@ export function ChatPreferenceDefaultContent({
           title={t('fontSize')}
           values={FONT_SCALE_OPTIONS.map(option => t(option.labelKey))}
         />
+        <View style={styles.settingsPreviewItem}>
+          <ChatPreferencePreview variant='fontScale' value={previewFontScale} />
+        </View>
         <SettingsToggleRow
           title={t('alternatingRows')}
           subtitle={t('alternatingRowsDescription')}

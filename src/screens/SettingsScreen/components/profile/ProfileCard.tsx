@@ -213,7 +213,7 @@ export function ProfileCard() {
       >
         <PressableArea
           style={styles.pressableFill}
-          onPress={() => router.push(`/streams/streamer-profile/${user.id}`)}
+          onPress={() => router.push(`/streams/streamer-profile/${user.login}`)}
         >
           <View style={styles.identityRow}>
             {user.profile_image_url ? (
@@ -258,7 +258,7 @@ export function ProfileCard() {
           title={t('myChannel')}
           icon='tv'
           color={theme.colorWhite}
-          onPress={() => router.push(`/streams/streamer-profile/${user.id}`)}
+          onPress={() => router.push(`/streams/streamer-profile/${user.login}`)}
         />
         <ActionRow
           title={t('blockedUsers')}

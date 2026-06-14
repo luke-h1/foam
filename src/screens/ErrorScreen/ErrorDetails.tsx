@@ -3,8 +3,8 @@ import { Button } from '@app/components/Button/Button';
 import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { queryClient } from '@app/lib/react-query/query-client';
-import { showFeedbackWidget } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
+import { router } from 'expo-router';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import {
   categorizeError,
@@ -21,7 +21,7 @@ export interface ErrorDetailsProps {
 }
 
 function handleShowFeedback() {
-  showFeedbackWidget();
+  router.push('/feedback');
 }
 
 export function ErrorDetails(props: ErrorDetailsProps) {

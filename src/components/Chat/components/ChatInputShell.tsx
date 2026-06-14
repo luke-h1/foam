@@ -21,6 +21,7 @@ import { KeyboardController } from 'react-native-keyboard-controller';
 import { toast } from 'sonner-native';
 
 import { ChatInputSection, type ReplyToData } from './ChatInputSection';
+import { useChatImageUpload } from '../hooks/useChatImageUpload';
 import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
 import {
   createUserStateFromTags,
@@ -127,6 +128,26 @@ export const ChatInputShell = memo(function ChatInputShell({
     },
     [isAuthenticated],
   );
+
+  const handleImageUploaded = useCallback((url: string) => {
+    setDraft(prev => {
+      const needsSpace =
+        prev.messageInput.length > 0 && !prev.messageInput.endsWith(' ');
+      const next = `${prev.messageInput}${needsSpace ? ' ' : ''}${url} `;
+      chatInputRef.current?.setText(next);
+      return { ...prev, messageInput: next };
+    });
+  }, []);
+
+  const { isUploading: isUploadingImage, pickAndUpload } =
+    useChatImageUpload(handleImageUploaded);
+
+  const handleAttachImage = useCallback(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+    void pickAndUpload();
+  }, [isAuthenticated, pickAndUpload]);
 
   const handleClearReply = useCallback(() => {
     setDraft(prev => ({ ...prev, replyTo: null }));
@@ -336,6 +357,8 @@ export const ChatInputShell = memo(function ChatInputShell({
       onSubmit={handleSendMessage}
       onOpenEmoteSheet={onOpenEmoteSheet}
       onOpenSettingsSheet={onOpenSettingsSheet}
+      onAttachImage={handleAttachImage}
+      isUploadingImage={isUploadingImage}
       replyTo={replyTo}
       onClearReply={handleClearReply}
       connection={{

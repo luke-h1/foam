@@ -29,6 +29,8 @@ export const ChatInputSection = memo(
     onSubmit,
     onOpenEmoteSheet,
     onOpenSettingsSheet,
+    onAttachImage,
+    isUploadingImage,
     replyTo,
     onClearReply,
     pin,
@@ -113,6 +115,14 @@ export const ChatInputSection = memo(
                 />
               </View>
 
+              {onAttachImage ? (
+                <ComposerIconButton
+                  disabled={isUploadingImage || !isAuthenticated}
+                  icon={isUploadingImage ? 'arrow.up.circle' : 'photo'}
+                  label={t('composer.attachImage')}
+                  onPress={onAttachImage}
+                />
+              ) : null}
               <ComposerIconButton
                 icon='gearshape'
                 label={t('composer.openChatSettings')}

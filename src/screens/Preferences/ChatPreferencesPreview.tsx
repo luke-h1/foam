@@ -8,6 +8,7 @@ import {
   type ChatMessageType,
 } from '@app/store/chat/types/constants';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { type ChatFontScale } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { type SanitisedEmote } from '@app/types/emote';
@@ -29,6 +30,7 @@ type PreviewMessage = ChatMessageType<'usernotice'>;
 
 type PreviewState = {
   chatDensity: 'comfortable' | 'compact';
+  chatFontScale: ChatFontScale;
   chatTimestamps: boolean;
   disableEmoteAnimations: boolean;
   highlightOwnMentions: boolean;
@@ -46,6 +48,10 @@ export type ChatPreferencePreviewProps =
   | {
       variant: 'density';
       value: PreviewState['chatDensity'];
+    }
+  | {
+      variant: 'fontScale';
+      value: PreviewState['chatFontScale'];
     }
   | {
       variant: 'context';
@@ -71,6 +77,7 @@ export type ChatPreferencePreviewProps =
 
 const PREVIEW_DEFAULTS: PreviewState = {
   chatDensity: 'comfortable',
+  chatFontScale: 'default',
   chatTimestamps: true,
   disableEmoteAnimations: false,
   highlightOwnMentions: true,
@@ -143,6 +150,16 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
           messages={[previewMessages.plain, previewMessages.reply]}
           settings={{ chatDensity: value }}
           testID='chat-preference-preview-density'
+        />
+      );
+    }
+
+    case 'fontScale': {
+      return (
+        <ChatPreviewSurface
+          messages={[previewMessages.plain, previewMessages.reply]}
+          settings={{ chatFontScale: value }}
+          testID='chat-preference-preview-font-scale'
         />
       );
     }
@@ -294,6 +311,7 @@ const ChatPreviewSurface = function ChatPreviewSurface({
             }
             density={previewState.chatDensity}
             disableEmoteAnimations={previewState.disableEmoteAnimations}
+            fontScale={previewState.chatFontScale}
             getMentionColor={getMentionColor}
             isAlternatingRow={
               previewState.showAlternatingChatRows && index % 2 === 1

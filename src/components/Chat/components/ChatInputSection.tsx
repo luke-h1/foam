@@ -11,7 +11,7 @@ import {
 } from '@app/utils/string/createHitSlop';
 import { truncate } from '@app/utils/string/truncate';
 import { memo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -39,6 +39,8 @@ export const ChatInputSection = memo(
     onSubmit,
     onOpenEmoteSheet,
     onOpenSettingsSheet,
+    onAttachImage,
+    isUploadingImage,
     replyTo,
     onClearReply,
     pin,
@@ -129,6 +131,29 @@ export const ChatInputSection = memo(
                   prioritizeChannelEmotes
                 />
               </View>
+
+              {onAttachImage ? (
+                <Button
+                  label={t('composer.attachImage')}
+                  style={styles.actionButton}
+                  onPress={onAttachImage}
+                  disabled={isUploadingImage || !isAuthenticated}
+                  hitSlop={createHorizontalHitslop(COMPOSER_CONTROL_SIZE)}
+                >
+                  {isUploadingImage ? (
+                    <ActivityIndicator
+                      size='small'
+                      color={theme.colorGreyHoverAlpha}
+                    />
+                  ) : (
+                    <SymbolView
+                      name='photo'
+                      size={20}
+                      tintColor={theme.colorGreyHoverAlpha}
+                    />
+                  )}
+                </Button>
+              ) : null}
 
               {canPinNextMessage ? (
                 <Button

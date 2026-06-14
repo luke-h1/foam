@@ -1,6 +1,6 @@
 import { useShakeDetector } from '@app/hooks/useShakeDetector';
-import { showFeedbackWidget } from '@app/lib/sentry';
 import { usePreference } from '@app/store/preferenceStore';
+import { router } from 'expo-router';
 import { useRef } from 'react';
 
 const SHAKE_COOLDOWN_MS = 30_000;
@@ -9,7 +9,7 @@ const SHAKE_COOLDOWN_MS = 30_000;
 const isE2E = process.env.EXPO_PUBLIC_APP_VARIANT === 'e2e';
 
 /**
- * Opens the Sentry feedback widget when the user shakes their device,
+ * Opens the custom feedback screen when the user shakes their device,
  * so bugs can be reported from anywhere without hunting through
  * settings. Toggled via the shakeToReport preference.
  */
@@ -24,7 +24,7 @@ export function ShakeToReport() {
         return;
       }
       lastTriggeredAtRef.current = now;
-      showFeedbackWidget();
+      router.push('/feedback');
     },
     { enabled: shakeToReport && !isE2E },
   );

@@ -7,7 +7,6 @@ import { FOAM_FAQ_URL } from '@app/constants/links';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { showFeedbackWidget } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { isDevToolsEnabled } from '@app/utils/devTools/devToolsGate';
@@ -20,7 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BuildStatus } from './components/BuildStatus';
 
 function handleSendFeedback() {
-  showFeedbackWidget();
+  router.push('/feedback');
 }
 
 export function SettingsIndexScreen() {

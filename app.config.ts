@@ -232,6 +232,13 @@ const config: ExpoConfig = {
       },
     ],
     [
+      'expo-image-picker',
+      {
+        photosPermission:
+          '$(PRODUCT_NAME) accesses your photos so you can upload an image to chat.',
+      },
+    ],
+    [
       'expo-quick-actions',
       {
         iosActions: quickActions,
@@ -299,7 +306,12 @@ const config: ExpoConfig = {
     ],
     ['./src/plugins/withPodDeploymentTarget.js', { minIosVersion: '16.4' }],
     './src/plugins/withIosStaticFrameworkHeaderFix.js',
-    './src/plugins/withExpoModulemapArchiveFix.js',
+    // Disabled: repointing ExpoModulesCore's modulemap to the public-headers
+    // path drops its Swift-generated header, hiding `@objc` classes like
+    // ExpoFabricView from consumer modules (expo-blur, expo-image, ...) and
+    // failing the archive. Testing whether the "no such module 'Expo'" race it
+    // papered over is gone now that RNRepo's mixed modulemaps are disabled.
+    // './src/plugins/withExpoModulemapArchiveFix.js',
     '@react-native-firebase/app',
     './src/plugins/withAndroidReleaseLintFix.js',
     './src/plugins/withAndroidMainActivityConfigChanges.js',

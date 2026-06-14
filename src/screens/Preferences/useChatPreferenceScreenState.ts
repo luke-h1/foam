@@ -61,6 +61,7 @@ export function useChatPreferenceScreenState() {
   } = usePreferences();
 
   const previewDensity$ = useObservable(chatDensity);
+  const previewFontScale$ = useObservable(chatFontScale);
   const previewAlternatingRows$ = useObservable(showAlternatingChatRows);
   const previewEmojiStyle$ = useObservable(emojiStyle);
   const previewContext$ = useObservable<ContextPreviewValue>({
@@ -82,6 +83,7 @@ export function useChatPreferenceScreenState() {
   });
 
   const previewDensity = useSelector(previewDensity$);
+  const previewFontScale = useSelector(previewFontScale$);
   const previewAlternatingRows = useSelector(previewAlternatingRows$);
   const previewEmojiStyle = useSelector(previewEmojiStyle$);
   const previewContext = useSelector(previewContext$);
@@ -134,6 +136,10 @@ export function useChatPreferenceScreenState() {
   useEffect(() => {
     previewDensity$.set(chatDensity);
   }, [chatDensity, previewDensity$]);
+
+  useEffect(() => {
+    previewFontScale$.set(chatFontScale);
+  }, [chatFontScale, previewFontScale$]);
 
   useEffect(() => {
     previewAlternatingRows$.set(showAlternatingChatRows);
@@ -257,6 +263,7 @@ export function useChatPreferenceScreenState() {
   const handleFontScaleChange = (event: SegmentedControlChangeEvent) => {
     const option = FONT_SCALE_OPTIONS[event.nativeEvent.selectedSegmentIndex];
     if (option) {
+      previewFontScale$.set(option.value);
       update({ chatFontScale: option.value });
     }
   };
@@ -266,6 +273,7 @@ export function useChatPreferenceScreenState() {
       option => t(option.labelKey) === value,
     );
     if (option) {
+      previewFontScale$.set(option.value);
       update({ chatFontScale: option.value });
     }
   };
@@ -377,6 +385,7 @@ export function useChatPreferenceScreenState() {
     previewAlternatingRows,
     previewContext,
     previewDensity,
+    previewFontScale,
     previewDisableEmoteAnimations,
     previewProviders,
     showRecentMessages,

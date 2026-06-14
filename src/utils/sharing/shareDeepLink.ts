@@ -37,8 +37,8 @@ function buildShareLink(entity: ShareableEntity): BuiltShareLink {
       return {
         appUrl: `${APP_SCHEME}://streams/streamer-profile/${login}`,
         webUrl: `${PUBLIC_TWITCH_BASE}/${login}/about`,
-        title: `${name} on Twitch`,
-        message: `Check out ${name} on Twitch`,
+        title: `${name} on Foam`,
+        message: `Check out ${name} on Foam`,
       };
     }
     case 'liveStream': {
@@ -47,8 +47,8 @@ function buildShareLink(entity: ShareableEntity): BuiltShareLink {
       return {
         appUrl: `${APP_SCHEME}://streams/live-stream/${login}`,
         webUrl: `${PUBLIC_TWITCH_BASE}/${login}`,
-        title: `${name} is live on Twitch`,
-        message: `Watch ${name} live on Twitch`,
+        title: `${name} is live`,
+        message: `Watch ${name} live on Foam`,
       };
     }
     case 'clip': {
@@ -56,10 +56,10 @@ function buildShareLink(entity: ShareableEntity): BuiltShareLink {
       return {
         appUrl: `${APP_SCHEME}://streams/clip/${id}`,
         webUrl: `https://clips.twitch.tv/${id}`,
-        title: entity.title ?? 'Twitch clip',
+        title: entity.title ?? 'Foam clip',
         message: entity.title
-          ? `Watch "${entity.title}" on Twitch`
-          : 'Watch this clip on Twitch',
+          ? `Watch "${entity.title}" on Foam`
+          : 'Watch this clip on Foam',
       };
     }
     case 'category': {
@@ -68,8 +68,8 @@ function buildShareLink(entity: ShareableEntity): BuiltShareLink {
       return {
         appUrl: `${APP_SCHEME}://category/${id}`,
         webUrl: `${PUBLIC_TWITCH_BASE}/directory/category/${id}`,
-        title: `${name} on Twitch`,
-        message: `Check out ${name} on Twitch`,
+        title: `${name} on Foam`,
+        message: `Check out ${name} on Foam`,
       };
     }
   }
@@ -77,20 +77,20 @@ function buildShareLink(entity: ShareableEntity): BuiltShareLink {
 
 /**
  * Open the native share sheet for the given entity.
- * Shares the public https URL (which the app's intent filters / associated
- * domains will also catch on install) so links remain useful for recipients
- * who don't have Foam.
+ * Shares the Foam deep link (foam://) so recipients who have the app open the
+ * content directly in Foam, with the public Twitch URL appended as a fallback
+ * for anyone who doesn't have Foam installed.
  */
 export async function shareDeepLink(entity: ShareableEntity): Promise<void> {
   const link = buildShareLink(entity);
-  const message = `${link.message}\n${link.webUrl}`;
+  const message = `${link.message}\n${link.appUrl}\n\nNo Foam? ${link.webUrl}`;
 
   try {
     await Share.share(
       {
         title: link.title,
         message,
-        url: link.webUrl,
+        url: link.appUrl,
       },
       {
         subject: link.title,

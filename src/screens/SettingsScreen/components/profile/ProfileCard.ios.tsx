@@ -120,7 +120,9 @@ export function ProfileCard() {
           <Button
             label={t('myChannel')}
             systemImage='tv'
-            onPress={() => router.push(`/streams/streamer-profile/${user.id}`)}
+            onPress={() =>
+              router.push(`/streams/streamer-profile/${user.login}`)
+            }
           />
           <Button
             label={t('blockedUsers')}
@@ -169,6 +171,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: theme.space12,
+    // RNHostView content doesn't inherit the SwiftUI row's insets; match them.
+    minHeight: 52,
+    paddingHorizontal: theme.space16,
     paddingVertical: theme.space8,
   },
   identityText: {

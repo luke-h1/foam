@@ -25,9 +25,16 @@ build_ios() {
   mkdir -p "$extracted_dir"
   : > "$build_marker"
 
+  # RNRepo's prebuilt iOS XCFrameworks 404 on rnrepo.org for the Expo core
+  # modules (expo, expo-modules-core, expo-dev-launcher, expo-dev-menu,
+  # expo-log-box) on this RN/SDK combo, so it falls them back to source anyway
+  # while flooding pod install with failed downloads. Disable it so every pod
+  # builds from source cleanly. iOS-only; Android gradle prebuilds keep working.
+  # Re-enable once rnrepo.org publishes matching iOS xcframeworks.
   run_with_variant_env env \
     EXPO_PUBLIC_ENABLE_TREESHACKING=1 \
     EXPO_APPLE_TEAM_ID="XJA7HDCMMY" \
+    DISABLE_RNREPO=true \
     bun run eas build \
       --local \
       --platform ios \

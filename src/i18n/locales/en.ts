@@ -84,6 +84,13 @@ const en = {
       sendAndPinMessage: 'Send and pin message',
       emotes: 'Emotes',
       mention: 'Mention',
+      attachImage: 'Attach image',
+    },
+    imageUpload: {
+      uploading: 'Uploading image…',
+      uploaded: 'Image uploaded',
+      failed: "Couldn't upload that image. Please try again.",
+      permissionDenied: 'Allow photo access to attach an image.',
     },
     pinned: {
       pinnedMessage: 'Pinned message',
@@ -299,6 +306,26 @@ const en = {
     sendFeedback: 'Send Feedback',
     hideStackTrace: 'Hide Stack Trace',
     showStackTrace: 'Show Stack Trace',
+  },
+
+  feedback: {
+    title: 'Send feedback',
+    subtitle:
+      'Found a bug or have an idea? Tell us and it goes straight to the team.',
+    typeBug: 'Bug',
+    typeIdea: 'Idea',
+    messageLabel: 'MESSAGE',
+    messagePlaceholderBug:
+      'What went wrong, and what were you doing when it happened?',
+    messagePlaceholderIdea: 'What would make Foam better?',
+    emailLabel: 'Email (optional)',
+    emailPlaceholder: 'you@example.com, so we can follow up',
+    submit: 'Send',
+    submitting: 'Sending…',
+    successTitle: 'Thanks for the feedback!',
+    success: 'Your feedback was sent — we appreciate it.',
+    error: "Couldn't send your feedback. Please try again.",
+    emptyMessage: 'Please enter a message first.',
   },
 
   search: {

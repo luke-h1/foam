@@ -7,11 +7,11 @@ import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import { SymbolView } from 'expo-symbols';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Text } from '@app/components/ui/Text/Text';
-import { recordError, showFeedbackWidget } from '@app/lib/sentry';
+import { recordError } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 
 function handleReportBug() {
-  showFeedbackWidget();
+  router.push('/feedback');
 }
 
 export default function AppError({ error, retry }: ErrorBoundaryProps) {

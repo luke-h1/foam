@@ -68,6 +68,30 @@ export function showFeedbackWidget(): void {
   Sentry.showFeedbackWidget();
 }
 
+export type FeedbackType = 'bug' | 'idea';
+
+/**
+ * Submit user feedback from the custom in-app feedback screen.
+ * Tagged with the feedback type so bug reports and ideas can be triaged
+ * separately in Sentry.
+ */
+export function sendFeedback(feedback: {
+  type: FeedbackType;
+  message: string;
+  email?: string;
+  name?: string;
+}): void {
+  init();
+  Sentry.withScope(scope => {
+    scope.setTag('feedback_type', feedback.type);
+    Sentry.captureFeedback({
+      message: feedback.message,
+      email: feedback.email || undefined,
+      name: feedback.name || undefined,
+    });
+  });
+}
+
 export function countMetric(
   name: string,
   attributes?: Record<string, string | number | boolean>,

@@ -26,7 +26,6 @@ import {
   Montserrat_500Medium_Italic,
 } from '@expo-google-fonts/montserrat';
 import { useObserveEffect } from '@legendapp/state/react';
-import { useObserve } from 'expo-observe';
 import * as Font from 'expo-font';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import { useEffect, useRef } from 'react';
@@ -56,8 +55,6 @@ const deferredFontMap = {
 };
 
 export function RootLayoutShell() {
-  const { markInteractive } = useObserve();
-  const didMarkInteractive = useRef(false);
   const didScheduleExtraFontLoad = useRef(false);
 
   useEffect(() => {
@@ -68,15 +65,6 @@ export function RootLayoutShell() {
 
     recordAppSession();
   }, []);
-
-  useEffect(() => {
-    if (didMarkInteractive.current) {
-      return;
-    }
-
-    didMarkInteractive.current = true;
-    markInteractive();
-  }, [markInteractive]);
 
   useEffect(() => {
     let cancelled = false;

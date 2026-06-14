@@ -27,6 +27,8 @@ export interface ChatInputSectionProps {
   onSubmit: () => void;
   onOpenEmoteSheet: () => void;
   onOpenSettingsSheet: () => void;
+  onAttachImage?: () => void;
+  isUploadingImage?: boolean;
   replyTo: ReplyToData | null;
   onClearReply: () => void;
   pin?: ChatPinFlags;
