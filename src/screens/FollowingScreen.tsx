@@ -5,13 +5,11 @@ import { ListRenderItem } from '@app/components/FlashList/FlashList';
 import { SymbolView } from 'expo-symbols';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
-import { RefreshIndicator } from '@app/components/RefreshControl/RefreshIndicator';
 import { useBottomTabOverflow } from '@app/components/TabBarBackground/useBottomTabOverflow';
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { useRefresh } from '@app/hooks/useRefresh';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useFollowedStreamsQuery } from '@app/hooks/queries/use-followed-streams-query';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
@@ -23,7 +21,13 @@ import {
 import { theme } from '@app/styles/themes';
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { useEffect, useRef, type ReactElement, useCallback } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ReactElement,
+  useCallback,
+} from 'react';
 
 import { Platform, View, StyleSheet } from 'react-native';
 import Animated, {
@@ -32,7 +36,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { motion } from '@app/styles/motion';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { toast } from 'sonner-native';
 import i18next from '@app/i18n/i18next';
@@ -48,7 +51,6 @@ export default function FollowingScreen() {
   const { t } = useTranslation(['stream', 'common']);
   const { authState, user } = useAuthContext();
   const queryClient = useQueryClient();
-  const insets = useSafeAreaInsets();
   const tabBarOverflow = useBottomTabOverflow();
   const streamListLayout = usePreference('streamListLayout');
   const updatePreferences = useUpdatePreferences();
@@ -61,18 +63,21 @@ export default function FollowingScreen() {
     [user?.id, queryClient],
   );
 
-  const handleRefreshFollowing = useCallback(() => {
-    void refetchFollowingStreams();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefreshFollowing = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refetchFollowingStreams();
+    } finally {
+      setIsRefreshing(false);
+    }
   }, [refetchFollowingStreams]);
 
   const layoutFade = useSharedValue(1);
   const layoutFadeStyle = useAnimatedStyle(() => ({
     opacity: layoutFade.get(),
   }));
-
-  const { scrollHandler, scrollY, isRefreshing, refreshControl } = useRefresh({
-    onRefresh: refetchFollowingStreams,
-  });
 
   const {
     data: streams,
@@ -144,7 +149,7 @@ export default function FollowingScreen() {
   }
 
   const showLoadingSkeleton =
-    isRefreshing || isLoading || (isFetching && streamsArray.length === 0);
+    isLoading || (isFetching && streamsArray.length === 0);
 
   if (showLoadingSkeleton) {
     return (
@@ -176,7 +181,7 @@ export default function FollowingScreen() {
     return (
       <EmptyState
         button={t('common:refresh')}
-        buttonOnPress={handleRefreshFollowing}
+        buttonOnPress={() => void handleRefreshFollowing()}
         content={t('followingLoadFailedDescription')}
         heading={t('followingLoadFailed')}
         iconName='exclamationmark.triangle'
@@ -200,7 +205,7 @@ export default function FollowingScreen() {
     return (
       <EmptyState
         button={t('common:refresh')}
-        buttonOnPress={handleRefreshFollowing}
+        buttonOnPress={() => void handleRefreshFollowing()}
         content={t('noOneIsLiveDescription')}
         heading={t('noOneIsLive')}
         iconName='antenna.radiowaves.left.and.right'
@@ -211,11 +216,6 @@ export default function FollowingScreen() {
 
   return (
     <View style={styles.container}>
-      <RefreshIndicator
-        scrollY={scrollY}
-        isRefreshing={isRefreshing}
-        contentInsetTop={insets.top}
-      />
       <Animated.View style={[styles.listFade, layoutFadeStyle]}>
         <AnimatedFlashList<TwitchStream>
           ref={listRef}
@@ -297,8 +297,8 @@ export default function FollowingScreen() {
             },
           ]}
           renderItem={renderItem}
-          onScroll={scrollHandler}
-          refreshControl={refreshControl}
+          refreshing={isRefreshing}
+          onRefresh={handleRefreshFollowing}
         />
       </Animated.View>
     </View>

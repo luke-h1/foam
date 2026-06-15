@@ -76,6 +76,9 @@ const MAX_OVERLAY_CHAT_FRACTION = 0.68;
 const MAX_SIDEBAR_CHAT_FRACTION = 0.55;
 const ORIENTATION_CHAT_SLIDE_DISTANCE = 28;
 
+const LANDSCAPE_CHAT_CLOSE_WIDTH_FRACTION = 0.55;
+const LANDSCAPE_CHAT_CLOSE_VELOCITY = 900;
+
 const RESIZE_ANIMATION_CONFIG = {
   duration: motion.fast,
   easing: motion.easing.out,
@@ -272,6 +275,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
     applyLandscapeChatCycleAction(landscapeChatCycleAction);
   }, [applyLandscapeChatCycleAction, canToggleChat, landscapeChatCycleAction]);
+
+  const closeLandscapeChatBySwipe = useCallback(() => {
+    applyLandscapeChatCycleAction('hide');
+  }, [applyLandscapeChatCycleAction]);
 
   const streamSessionKey = `${isStreamEnabled}:${normalizedLogin ?? ''}`;
   const lastStreamSessionKeyRef = useRef(streamSessionKey);
@@ -495,7 +502,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       const maxWidth = Math.max(minWidth, contentWidth * maxFraction);
       const nextWidth = Math.min(
         maxWidth,
-        Math.max(minWidth, resizeStartWidth.get() - event.translationX),
+        Math.max(0, resizeStartWidth.get() - event.translationX),
       );
 
       chatWidth.set(nextWidth);
@@ -503,9 +510,32 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
         videoWidth.set(Math.max(1, contentWidth - nextWidth));
       }
     })
+    .onEnd(event => {
+      const minWidth = Math.min(LANDSCAPE_CHAT_MIN_WIDTH, contentWidth * 0.42);
+      const closeWidth = minWidth * LANDSCAPE_CHAT_CLOSE_WIDTH_FRACTION;
+      const width = chatWidth.get();
+      if (
+        width < closeWidth ||
+        event.velocityX > LANDSCAPE_CHAT_CLOSE_VELOCITY
+      ) {
+        scheduleOnRN(closeLandscapeChatBySwipe);
+        return;
+      }
+
+      const committedWidth = Math.max(minWidth, width);
+      chatWidth.set(withTiming(committedWidth, RESIZE_ANIMATION_CONFIG));
+      if (fullscreenChatMode === 'sidebar' && isChatVisibleForLayout) {
+        videoWidth.set(
+          withTiming(
+            Math.max(1, contentWidth - committedWidth),
+            RESIZE_ANIMATION_CONFIG,
+          ),
+        );
+      }
+      scheduleOnRN(commitLandscapeChatWidth, committedWidth);
+    })
     .onFinalize(() => {
       resizeHandleOpacity.set(LANDSCAPE_CHAT_DIVIDER_RESTING_OPACITY);
-      scheduleOnRN(commitLandscapeChatWidth, chatWidth.get());
     });
 
   const contentContainerStyle = styles.contentContainer;

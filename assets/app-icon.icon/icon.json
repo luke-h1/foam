@@ -1,12 +1,51 @@
 {
-  "fill": "automatic",
+  "fill-specializations": [
+    {
+      "value": {
+        "linear-gradient": [
+          "srgb:0.76354,0.49093,1.00000,1.00000",
+          "srgb:0.30365,0.25971,0.81042,1.00000"
+        ],
+        "orientation": {
+          "start": { "x": 0, "y": 0 },
+          "stop": { "x": 1, "y": 1 }
+        }
+      }
+    },
+    {
+      "appearance": "dark",
+      "value": {
+        "linear-gradient": [
+          "srgb:0.35294,0.24706,0.69020,1.00000",
+          "srgb:0.14118,0.10196,0.36078,1.00000"
+        ],
+        "orientation": {
+          "start": { "x": 0, "y": 0 },
+          "stop": { "x": 1, "y": 1 }
+        }
+      }
+    },
+    {
+      "appearance": "tinted",
+      "value": {
+        "linear-gradient": [
+          "srgb:0.18039,0.18039,0.20000,1.00000",
+          "srgb:0.07843,0.07843,0.09020,1.00000"
+        ],
+        "orientation": {
+          "start": { "x": 0, "y": 0 },
+          "stop": { "x": 1, "y": 1 }
+        }
+      }
+    }
+  ],
   "groups": [
     {
       "layers": [
         {
           "glass": false,
-          "image-name": "icon.png",
-          "name": "icon"
+          "image-name": "foreground.png",
+          "name": "foreground"
         }
       ],
       "shadow": {
