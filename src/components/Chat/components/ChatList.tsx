@@ -184,10 +184,14 @@ export const ChatList = memo(
         recycleItems={CHAT_RECYCLE_ITEMS}
         keyExtractor={keyExtractor}
         getItemType={getItemType}
-        // size+data stabilization: keeps the visible row in place when messages
-        // arrive (and when the backlog is trimmed off the top while scrolled
-        // up). Bottom pinning is handled by maintainScrollAtEnd.
-        maintainVisibleContentPosition
+        // Only anchor visible content while scrolled up — keeps the reading
+        // position fixed as messages append and the backlog is trimmed off the
+        // top. At the bottom it MUST be off: the boolean form enables data
+        // anchoring that holds the *old* visible row in place, fighting the
+        // scroll-to-end that follows new messages (jitter + a clipped newest
+        // row). With it off, the manual follow in useChatScroll can pin the
+        // newest row all the way down without anything pulling back.
+        maintainVisibleContentPosition={!shouldMaintainScrollAtEnd}
         maintainScrollAtEnd={
           shouldMaintainScrollAtEnd ? CHAT_MAINTAIN_SCROLL_AT_END : false
         }
