@@ -263,6 +263,52 @@ describe('AuthContext', () => {
     });
   });
 
+  test('keeps an expired user token without a refresh token when Twitch still validates it', async () => {
+    const user: UserInfoResponse = {
+      id: '123',
+      login: 'test_user',
+      display_name: 'Test User',
+      type: '',
+      broadcaster_type: '',
+      description: '',
+      profile_image_url: '',
+      offline_image_url: '',
+      view_count: 0,
+      created_at: '',
+    };
+
+    SecureStore.getItemAsync.mockResolvedValueOnce(null);
+    SecureStore.getItemAsync.mockResolvedValueOnce(
+      JSON.stringify({
+        accessToken: 'implicit-user-token',
+        expiresIn: 3600,
+        tokenType: 'bearer',
+        expiresAt: Date.now() - 1000,
+      }),
+    );
+    twitchService.validateToken.mockResolvedValueOnce(true);
+    twitchService.getUserInfo.mockResolvedValueOnce(user);
+
+    render(
+      <AuthContextProvider>
+        <TestComponent />
+      </AuthContextProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('User')).toBeOnTheScreen();
+      expect(screen.getByText('Test User')).toBeOnTheScreen();
+    });
+
+    // Implicit-grant token has no refresh token, so we never attempt a refresh
+    // and never clear it solely because the local expiresAt has passed.
+    expect(twitchService.getRefreshToken).not.toHaveBeenCalled();
+    expect(twitchApi.setAuthToken).toHaveBeenCalledWith('implicit-user-token');
+    expect(SecureStore.deleteItemAsync).not.toHaveBeenCalledWith(
+      'V1_foam-user',
+    );
+  });
+
   test('proactively refreshes near-expiry user token after startup', async () => {
     const user: UserInfoResponse = {
       id: '123',

@@ -406,7 +406,11 @@ export const AuthContextProvider = ({
       return;
     }
 
-    // Check if token is expired before making API calls
+    // Implicit-grant tokens have no refresh token and Twitch omits expires_in,
+    // so our local expiresAt can be a bogus 1-hour window even though the token
+    // is valid for weeks. Don't clear on that alone — try a refresh, and when
+    // none is available fall through to Twitch's validate endpoint below as the
+    // source of truth.
     if (isTokenExpired(twitchToken)) {
       const refreshedToken = await refreshStoredUserToken(
         twitchToken,
@@ -417,11 +421,8 @@ export const AuthContextProvider = ({
         twitchToken = refreshedToken;
       } else {
         logger.auth.info(
-          'Stored user token is expired, clearing and falling back to anon auth',
+          'Stored user token appears expired and cannot be refreshed; validating with Twitch before clearing',
         );
-        await SecureStore.deleteItemAsync(storageKeys.user);
-        await doAnonAuth();
-        return;
       }
     }
 
