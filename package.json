@@ -47,6 +47,7 @@
     "format:fix": "bun run prettier:fix",
     "gen-env": "gen-env-types .env -o src/types/env.d.ts -e .",
     "gen:emoji": "node scripts/generateEmojiDataset.mjs",
+    "gen:paints": "node scripts/refreshPaintFixtures.mjs",
     "gql:codegen": "graphql-codegen",
     "icons:optimize": "svgo -f ./assets/icons",
     "ios": "EXPO_PUBLIC_APP_VARIANT=development expo run:ios",
@@ -97,7 +98,7 @@
     "@expo-google-fonts/source-code-pro": "^0.4.0",
     "@expo/metro-runtime": "~56.0.15",
     "@expo/ui": "~56.0.17",
-    "@legendapp/list": "2.0.19",
+    "@legendapp/list": "3.0.4",
     "@legendapp/state": "^2.1.15",
     "@paralleldrive/cuid2": "^2.2.2",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -105,7 +106,6 @@
     "@react-native-firebase/app": "^23.7.0",
     "@react-native-firebase/installations": "^23.7.0",
     "@react-native-firebase/remote-config": "^23.7.0",
-    "@react-native-masked-view/masked-view": "^0.3.2",
     "@rnrepo/expo-config-plugin": "^0.3.1",
     "@sentry/react-native": "~7.11.0",
     "@shopify/flash-list": "2.0.2",
@@ -297,7 +297,8 @@
     }
   },
   "patchedDependencies": {
-    "@legendapp/state@2.1.15": "patches/@legendapp%2Fstate@2.1.15.patch"
+    "@legendapp/state@2.1.15": "patches/@legendapp%2Fstate@2.1.15.patch",
+    "@legendapp/list@3.0.4": "patches/@legendapp%2Flist@3.0.4.patch"
   },
   "reanimated": {
     "staticFeatureFlags": {

@@ -60,6 +60,38 @@ export function pickBestImage(images: readonly Image[]): Image | undefined {
   }, undefined);
 }
 
+// expo-image plays animated WebP/GIF on iOS (SDWebImage) and Android (Glide),
+// but animated AVIF doesn't loop reliably inside the SwiftUI mask host, so for
+// animated paint textures prefer a format that actually plays — mirroring how
+// the 7TV extension animates the texture in-browser.
+function pickAnimatedFormat(imgs: Image[]): Image | undefined {
+  return (
+    imgs.find(img => img.mime === 'image/webp') ??
+    imgs.find(img => img.mime === 'image/gif') ??
+    imgs.find(img => img.mime === 'image/avif') ??
+    imgs[0]
+  );
+}
+
+/**
+ * Pick the image URL for a paint's image layer. Animated paints prefer an
+ * animated format expo-image can loop; static paints fall back to pickBestImage.
+ */
+export function pickBestPaintLayerImage(
+  images: readonly Image[],
+): Image | undefined {
+  for (const targetScale of [4, 3, 2, 1]) {
+    const animatedAtScale = images.filter(
+      img => img.scale === targetScale && img.frameCount > 1,
+    );
+    if (animatedAtScale.length > 0) {
+      return pickAnimatedFormat(animatedAtScale);
+    }
+  }
+
+  return pickBestImage(images);
+}
+
 const convertV4Layer = (
   layer: V4Paint['data']['layers'][number],
 ): PaintGradientLayer | null => {
@@ -106,7 +138,7 @@ const convertV4Layer = (
     case 'PaintLayerTypeImage':
       return {
         function: 'URL',
-        image_url: pickBestImage(ty.images)?.url ?? '',
+        image_url: pickBestPaintLayerImage(ty.images)?.url ?? '',
         stops: [],
         canvas_repeat: '',
         size: [1, 1],

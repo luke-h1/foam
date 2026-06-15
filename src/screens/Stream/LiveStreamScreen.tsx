@@ -14,7 +14,10 @@ import { useUserQuery } from '@app/hooks/queries/use-user-query';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 import { theme } from '@app/styles/themes';
 import { motion } from '@app/styles/motion';
-import { usePreference } from '@app/store/preferenceStore';
+import {
+  usePreference,
+  useUpdatePreferences,
+} from '@app/store/preferenceStore';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import {
   useEffect,
@@ -56,7 +59,12 @@ interface LiveStreamScreenProps {
   id: string;
 }
 
-const LANDSCAPE_CHAT_RESIZE_LONG_PRESS_MS = 220;
+// Horizontal travel before the divider drag claims the gesture, and vertical
+// travel that hands it back to chat scrolling.
+const LANDSCAPE_CHAT_RESIZE_ACTIVATION_DISTANCE = 6;
+const LANDSCAPE_CHAT_RESIZE_FAIL_DISTANCE = 12;
+// Resting vs. active opacity for the always-visible divider grip.
+const LANDSCAPE_CHAT_DIVIDER_RESTING_OPACITY = 0.55;
 /**
  * In landscape insets.top is 0, so without an explicit offset the chat
  * controls land on the Twitch player's own top-right chrome (LIVE badge).
@@ -85,6 +93,8 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const normalizedLogin = id.trim().toLowerCase();
   const disableChat = usePreference('disableChat');
   const disableStream = usePreference('disableStream');
+  const persistedLandscapeChatWidth = usePreference('landscapeChatWidth');
+  const updatePreferences = useUpdatePreferences();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { isLandscape, layoutHeight, portraitTopInset, screenWidth } =
@@ -110,7 +120,11 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const isStreamEnabled = !disableStream;
   const [uiState, dispatchUi] = useReducer(
     liveStreamScreenReducer,
-    initialLiveStreamScreenState,
+    persistedLandscapeChatWidth,
+    seedWidth => ({
+      ...initialLiveStreamScreenState,
+      landscapeChatWidth: seedWidth,
+    }),
   );
   const {
     fullscreenChatMode,
@@ -169,14 +183,17 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   }, []);
 
   const commitLandscapeChatWidth = (width: number) => {
+    const clampedWidth = clampLandscapeChatWidth(
+      width,
+      contentWidth,
+      fullscreenChatMode,
+    );
     dispatchUi({
       type: 'setLandscapeChatWidth',
-      landscapeChatWidth: clampLandscapeChatWidth(
-        width,
-        contentWidth,
-        fullscreenChatMode,
-      ),
+      landscapeChatWidth: clampedWidth,
     });
+    // Persist so the chosen width survives leaving the screen / relaunch.
+    updatePreferences({ landscapeChatWidth: clampedWidth });
   };
 
   const applyLandscapeChatCycleAction = useCallback(
@@ -341,7 +358,9 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const chatOpacity = useSharedValue(1);
   const chatTranslateX = useSharedValue(0);
   const resizeStartWidth = useSharedValue(0);
-  const resizeHandleOpacity = useSharedValue(0.42);
+  const resizeHandleOpacity = useSharedValue(
+    LANDSCAPE_CHAT_DIVIDER_RESTING_OPACITY,
+  );
 
   const animatedChatStyle = useAnimatedStyle(() => ({
     height: chatHeight.get(),
@@ -451,10 +470,19 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   }));
 
   const resizeChatGesture = Gesture.Pan()
-    .activateAfterLongPress(LANDSCAPE_CHAT_RESIZE_LONG_PRESS_MS)
+    // Drag the divider directly; only claim the gesture once it moves
+    // horizontally so vertical touches still reach chat scrolling.
+    .activeOffsetX([
+      -LANDSCAPE_CHAT_RESIZE_ACTIVATION_DISTANCE,
+      LANDSCAPE_CHAT_RESIZE_ACTIVATION_DISTANCE,
+    ])
+    .failOffsetY([
+      -LANDSCAPE_CHAT_RESIZE_FAIL_DISTANCE,
+      LANDSCAPE_CHAT_RESIZE_FAIL_DISTANCE,
+    ])
     .onBegin(() => {
       resizeStartWidth.set(chatWidth.get());
-      resizeHandleOpacity.set(0.9);
+      resizeHandleOpacity.set(1);
     })
     .onUpdate(event => {
       const maxFraction =
@@ -474,7 +502,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       }
     })
     .onFinalize(() => {
-      resizeHandleOpacity.set(0.42);
+      resizeHandleOpacity.set(LANDSCAPE_CHAT_DIVIDER_RESTING_OPACITY);
       scheduleOnRN(commitLandscapeChatWidth, chatWidth.get());
     });
 
@@ -680,7 +708,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
                 accessibilityRole='adjustable'
                 style={[styles.chatResizeHandle, animatedResizeHandleStyle]}
               >
-                <View style={styles.chatResizeIndicator} />
+                <View style={styles.chatResizeDividerLine} />
+                <View style={styles.chatResizeGrip}>
+                  <View style={styles.chatResizeIndicator} />
+                </View>
               </Animated.View>
             </GestureDetector>
           ) : null}
@@ -758,13 +789,32 @@ const styles = StyleSheet.create({
     left: 0,
     position: 'absolute',
     top: 0,
-    width: 24,
+    width: 30,
     zIndex: 8,
   },
-  chatResizeIndicator: {
-    backgroundColor: 'rgba(255,255,255,0.46)',
+  chatResizeDividerLine: {
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    top: 0,
+    width: StyleSheet.hairlineWidth,
+  },
+  chatResizeGrip: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(18,18,22,0.74)',
+    borderColor: 'rgba(255,255,255,0.4)',
+    borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
-    height: 48,
+    borderWidth: StyleSheet.hairlineWidth,
+    height: 52,
+    justifyContent: 'center',
+    width: 16,
+  },
+  chatResizeIndicator: {
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderRadius: theme.borderRadius999,
+    height: 26,
     width: 3,
   },
   overlayChatBlur: {

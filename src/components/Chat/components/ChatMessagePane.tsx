@@ -1,25 +1,21 @@
 import { Text } from '@app/components/ui/Text/Text';
 import { useMessages } from '@app/store/chat/react/selectors';
 import { logger } from '@app/utils/logger';
-import { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react';
+import { useEffect, useMemo, useRef, memo } from 'react';
 import type { RefObject } from 'react';
 
 import {
-  type LayoutChangeEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   type StyleProp,
-  useWindowDimensions,
   View,
   type ViewStyle,
 } from 'react-native';
 
-import type { ChatFontScale } from '@app/store/preferenceStore';
 import type { ChatPaneFlags } from '../types/chatUiFlags';
 import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
 import { styles } from '../styles';
 import type { AnyChatMessageType } from '../util/messageHandlers';
-import { estimateChatMessageHeightWithPretext } from '../util/pretextChatHeight';
 import { getVisibleMessages } from '../util/visibleMessages';
 import {
   ChatList,
@@ -29,18 +25,10 @@ import {
 import { ChatViewControls } from './ChatViewControls';
 import { PinnedMessageBanner } from './PinnedMessageBanner';
 
-const CHAT_ESTIMATED_COMFORTABLE_ROW_HEIGHT = 34;
-const CHAT_ESTIMATED_COMPACT_ROW_HEIGHT = 24;
-const CHAT_LIST_HORIZONTAL_INSET = 32;
-const CHAT_ROW_HORIZONTAL_INSET = 12;
-const CHAT_MIN_PRETEXT_WIDTH = 80;
-
 export interface ChatMessagePaneProps {
   channelId: string;
   channelName: string;
   currentUsername?: string;
-  chatDensity: 'comfortable' | 'compact';
-  chatFontScale?: ChatFontScale;
   hiddenUsers: string[];
   hiddenPhrases: string[];
   highlightedUsers: string[];
@@ -65,7 +53,6 @@ export interface ChatMessagePaneProps {
   onViewableMessagesChange?: (messages: AnyChatMessageType[]) => void;
   pinnedMessage: PinnedChatMessageViewModel | null;
   pinnedMessageBusy: boolean;
-  showInlineReplyContext: boolean;
 }
 
 export const ChatMessagePane = memo(
@@ -77,8 +64,6 @@ export const ChatMessagePane = memo(
     hiddenPhrases,
     highlightedUsers,
     paneFlags,
-    chatDensity,
-    chatFontScale,
     listRef,
     handleScroll,
     handleScrollBeginDrag,
@@ -99,26 +84,16 @@ export const ChatMessagePane = memo(
     onViewableMessagesChange,
     pinnedMessage,
     pinnedMessageBusy,
-    showInlineReplyContext,
   }: ChatMessagePaneProps) => {
     const {
       canModerateChat,
       connected,
       shouldMaintainScrollAtEnd,
       showOnlyMentions,
-      showTimestamps,
     } = paneFlags;
     const storedMessages = useMessages() as AnyChatMessageType[];
     const rawMessages = storedMessages;
     const hasMessages = rawMessages.length > 0;
-    const { width: windowWidth } = useWindowDimensions();
-    const [messagePaneWidth, setMessagePaneWidth] = useState(0);
-    const pretextMeasureWidth = Math.max(
-      CHAT_MIN_PRETEXT_WIDTH,
-      messagePaneWidth > CHAT_MIN_PRETEXT_WIDTH
-        ? messagePaneWidth - CHAT_ROW_HORIZONTAL_INSET
-        : Math.round(windowWidth - CHAT_LIST_HORIZONTAL_INSET),
-    );
     const hasEverHadMessagesRef = useRef(false);
     const lastEmptyLogAtRef = useRef<number>(0);
 
@@ -150,33 +125,6 @@ export const ChatMessagePane = memo(
     // returns the store-assigned id), so a per-render Set-based dedup over the
     // whole window — up to 600 messages on every ~100ms flush — was pure churn.
     const listData = visibleMessages;
-    const handleMessagePaneLayout = useCallback((event: LayoutChangeEvent) => {
-      const nextWidth = Math.round(event.nativeEvent.layout.width);
-      setMessagePaneWidth(currentWidth =>
-        Math.abs(currentWidth - nextWidth) > 1 ? nextWidth : currentWidth,
-      );
-    }, []);
-
-    const getEstimatedItemSize = useCallback(
-      (_index: number, item?: AnyChatMessageType, _type?: string) =>
-        estimateChatMessageHeightWithPretext(item, {
-          containerWidth: pretextMeasureWidth,
-          density: chatDensity,
-          fontScale: chatFontScale,
-          showInlineReplyContext,
-          showTimestamp: showTimestamps,
-        }) ??
-        (chatDensity === 'compact'
-          ? CHAT_ESTIMATED_COMPACT_ROW_HEIGHT
-          : CHAT_ESTIMATED_COMFORTABLE_ROW_HEIGHT),
-      [
-        chatDensity,
-        chatFontScale,
-        pretextMeasureWidth,
-        showInlineReplyContext,
-        showTimestamps,
-      ],
-    );
 
     useEffect(() => {
       if (hasMessages) {
@@ -205,7 +153,7 @@ export const ChatMessagePane = memo(
     }, [channelId, channelName, hasMessages]);
 
     return (
-      <View style={styles.messagePane} onLayout={handleMessagePaneLayout}>
+      <View style={styles.messagePane}>
         {!connected && !hasMessages && (
           <View
             style={styles.connectingContainer}
@@ -257,7 +205,6 @@ export const ChatMessagePane = memo(
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           getItemType={getItemType}
-          getEstimatedItemSize={getEstimatedItemSize}
           extraData={messageListExtraData}
           contentContainerStyle={listContentStyle}
           onViewableMessagesChange={onViewableMessagesChange}

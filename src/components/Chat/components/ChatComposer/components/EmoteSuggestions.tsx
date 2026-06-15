@@ -4,7 +4,10 @@ import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
-import { LegendList, type LegendListRenderItemProps } from '@legendapp/list';
+import {
+  LegendList,
+  type LegendListRenderItemProps,
+} from '@legendapp/list/react-native';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 

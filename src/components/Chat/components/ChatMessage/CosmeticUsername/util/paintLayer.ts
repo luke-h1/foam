@@ -188,10 +188,6 @@ export function imageRepeatFromCanvasRepeat(
   canvasRepeat: PaintCanvasRepeat,
   layerRepeat: boolean,
 ): 'cover' | 'contain' | 'fill' | 'none' | 'scale-down' {
-  if (canvasRepeat === 'no-repeat' || canvasRepeat === '') {
-    return 'cover';
-  }
-
   if (
     layerRepeat ||
     canvasRepeat === 'repeat' ||
@@ -200,8 +196,11 @@ export function imageRepeatFromCanvasRepeat(
     canvasRepeat === 'round' ||
     canvasRepeat === 'space'
   ) {
+    // RN has no background tiling; natural-size top-left is the closest match.
     return 'none';
   }
 
-  return 'cover';
+  // Non-repeating paints mirror the extension's `background-size: 100% 100%`,
+  // which stretches the texture to the glyph box (CSS fill, not cover).
+  return 'fill';
 }

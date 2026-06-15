@@ -3,7 +3,7 @@ import {
   LegendList,
   type LegendListRef,
   type LegendListRenderItemProps,
-} from '@legendapp/list';
+} from '@legendapp/list/react-native';
 import {
   memo,
   RefObject,
@@ -33,15 +33,17 @@ import {
 // showed skeleton rows.
 const CHAT_DRAW_DISTANCE = 250;
 const CHAT_ESTIMATED_ITEM_SIZE = 34;
-const CHAT_INITIAL_CONTAINER_POOL_RATIO = 1;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
   // Skip viewability churn for rows that only flash past during a fling.
   minimumViewTime: 100,
 };
+// Re-pin to the end on new messages (dataChange) and when an already-rendered
+// row grows after its real height is measured (itemLayout) — the latter keeps
+// an under-estimated emote/username row from staying clipped at the bottom.
 const CHAT_MAINTAIN_SCROLL_AT_END = {
-  onDataChange: true,
+  on: { dataChange: true, itemLayout: true },
 };
 const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
 const CHAT_RECYCLE_ITEMS = false;
@@ -92,11 +94,6 @@ interface ChatListProps {
   renderItem: ChatListRenderItem;
   keyExtractor: (item: AnyChatMessageType, index: number) => string;
   getItemType: (item: AnyChatMessageType) => string;
-  getEstimatedItemSize?: (
-    index: number,
-    item?: AnyChatMessageType,
-    type?: string,
-  ) => number;
   contentContainerStyle: StyleProp<ViewStyle>;
   extraData?: unknown;
   onViewableMessagesChange?: (messages: AnyChatMessageType[]) => void;
@@ -117,7 +114,6 @@ export const ChatList = memo(
     renderItem,
     keyExtractor,
     getItemType,
-    getEstimatedItemSize,
     contentContainerStyle,
     extraData,
     onViewableMessagesChange,
@@ -179,15 +175,19 @@ export const ChatList = memo(
         data={data}
         ref={listRef}
         drawDistance={CHAT_DRAW_DISTANCE}
+        // v3 has no per-item estimate hook; rows are measured on layout, so a
+        // single initial hint is all that's needed (the pretext estimator no
+        // longer feeds the list).
         estimatedItemSize={CHAT_ESTIMATED_ITEM_SIZE}
-        initialContainerPoolRatio={CHAT_INITIAL_CONTAINER_POOL_RATIO}
         // Disabled due repeated iOS crashes ("attempt to recycle mounted view")
         // when rows are updated while actively scrolled.
         recycleItems={CHAT_RECYCLE_ITEMS}
         keyExtractor={keyExtractor}
         getItemType={getItemType}
-        getEstimatedItemSize={getEstimatedItemSize}
-        maintainVisibleContentPosition={!shouldMaintainScrollAtEnd}
+        // size+data stabilization: keeps the visible row in place when messages
+        // arrive (and when the backlog is trimmed off the top while scrolled
+        // up). Bottom pinning is handled by maintainScrollAtEnd.
+        maintainVisibleContentPosition
         maintainScrollAtEnd={
           shouldMaintainScrollAtEnd ? CHAT_MAINTAIN_SCROLL_AT_END : false
         }

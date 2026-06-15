@@ -3,12 +3,11 @@ import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import { useSelector } from '@legendapp/state/react';
-import MaskedView from '@react-native-masked-view/masked-view';
 import { type StyleProp, TextStyle, View, StyleSheet } from 'react-native';
 import { Text } from '@app/components/ui/Text/Text';
 import { chatLineMetrics } from '../RichChatMessage.styles';
 import { PaintedUsernameDropShadowLayer } from './PaintedUsernameDropShadowLayer';
-import { PaintedUsernameFill } from './PaintedUsernameFill';
+import { PaintedUsernameMaskedFill } from './PaintedUsernameMaskedFill';
 import {
   DEFAULT_PAINT_DROP_SHADOW_MODE,
   getPaintDropShadows,
@@ -71,30 +70,22 @@ function PaintedUsernameWithPaint({
 
   return (
     <View style={styles.paintedWrapper}>
-      {underlayShadows.map(({ shadow, source }) => (
+      {underlayShadows.map(({ shadow, source }, index) => (
         <PaintedUsernameDropShadowLayer
-          key={`${source}-${paintShadowKey(shadow)}`}
+          // Static, never-reordered list; index disambiguates identical shadows.
+          // eslint-disable-next-line react-doctor/no-array-index-as-key
+          key={`${source}-${index}-${paintShadowKey(shadow)}`}
           displayUsername={displayUsername}
           maskTextStyle={maskTextStyle}
           shadow={shadow}
         />
       ))}
-      <MaskedView
-        maskElement={
-          <View style={styles.maskContainer}>
-            <Text style={[maskTextStyle, { color: 'black' }]}>
-              {displayUsername}
-            </Text>
-          </View>
-        }
-      >
-        <PaintedUsernameFill
-          displayUsername={displayUsername}
-          fallbackColor={fallbackColor}
-          paint={paint}
-          textStyle={maskTextStyle}
-        />
-      </MaskedView>
+      <PaintedUsernameMaskedFill
+        displayUsername={displayUsername}
+        fallbackColor={fallbackColor}
+        paint={paint}
+        maskTextStyle={maskTextStyle}
+      />
     </View>
   );
 }
@@ -150,9 +141,6 @@ function PaintedUsernameComponent({
 }
 
 const styles = StyleSheet.create({
-  maskContainer: {
-    backgroundColor: 'transparent',
-  },
   maskText: {
     ...chatLineMetrics.comfortable,
     color: 'black',

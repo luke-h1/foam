@@ -360,6 +360,7 @@ const setPreferences = (showRecentMessages = true) => {
     chatMentionHaptics: true,
     customHighlights: [],
     shakeToReport: true,
+    landscapeChatWidth: null,
     update: jest.fn(),
   } satisfies ReturnType<typeof usePreferences>;
 

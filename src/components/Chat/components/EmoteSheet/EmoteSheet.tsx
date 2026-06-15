@@ -1,6 +1,6 @@
 import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
 import { Text } from '@app/components/ui/Text/Text';
-import { LegendList } from '@legendapp/list';
+import { LegendList } from '@legendapp/list/react-native';
 import { theme } from '@app/styles/themes';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,7 +15,7 @@ import type { EmotePickerItem } from './emoteSheetTypes';
 export type { EmotePickerItem };
 import { useRef, useState } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
-import type { LegendListRef } from '@legendapp/list';
+import type { LegendListRef } from '@legendapp/list/react-native';
 import { EMOTE_SHEET_DETENT } from './emoteSheetLayout';
 import { useEmoteSheet } from './useEmoteSheet';
 import { useTranslation } from 'react-i18next';
@@ -123,7 +123,7 @@ export function EmoteSheet({
                   keyExtractor={item => item.key}
                   getItemType={item => item.type}
                   estimatedItemSize={sheet.cellSize + 4}
-                  getEstimatedItemSize={(_index, _item, type) =>
+                  getFixedItemSize={(_item, _index, type) =>
                     type === 'header' ? 44 : sheet.cellSize + 4
                   }
                   onViewableItemsChanged={sheet.onViewableItemsChanged}

@@ -161,7 +161,7 @@ describe('PaintedUsername', () => {
       expect(paintImage.props.contentFit).toBe('none');
     });
 
-    test('should render URL paint as a covered asset image', () => {
+    test('should stretch a non-repeating URL paint to fill the glyph box', () => {
       const urlPaint = createPaintData({
         function: 'URL',
         image_url: 'https://cdn.7tv.app/paint/test/4x.webp',
@@ -169,11 +169,12 @@ describe('PaintedUsername', () => {
       });
 
       const { UNSAFE_getByType } = render(
-        <PaintedUsername username='AssetCover' paint={urlPaint} />,
+        <PaintedUsername username='AssetFill' paint={urlPaint} />,
       );
 
       const paintImage = UNSAFE_getByType(Image);
-      expect(paintImage.props.contentFit).toBe('cover');
+      // Mirrors the extension's `background-size: 100% 100%`.
+      expect(paintImage.props.contentFit).toBe('fill');
     });
 
     test('should handle single stop gradient by duplicating color', () => {

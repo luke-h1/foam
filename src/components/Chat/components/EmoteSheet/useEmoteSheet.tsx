@@ -8,7 +8,10 @@ import React, {
   useState,
 } from 'react';
 import { useWindowDimensions } from 'react-native';
-import type { LegendListRef, LegendListRenderItemProps } from '@legendapp/list';
+import type {
+  LegendListRef,
+  LegendListRenderItemProps,
+} from '@legendapp/list/react-native';
 
 import { EmoteRow } from './EmoteRow';
 import { SetHeader } from './SetHeader';

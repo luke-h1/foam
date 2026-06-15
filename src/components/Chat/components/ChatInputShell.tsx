@@ -17,6 +17,7 @@ import {
   useState,
   type Ref,
 } from 'react';
+import { useWindowDimensions } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { toast } from 'sonner-native';
 
@@ -92,6 +93,9 @@ export const ChatInputShell = memo(function ChatInputShell({
   ref,
 }: ChatInputShellProps) {
   const chatInputRef = useRef<ChatComposerHandle>(null);
+  const { width, height } = useWindowDimensions();
+  // Landscape chat is a narrow sidebar with no room for the upload control.
+  const isLandscape = width > height;
   const [draft, setDraft] = useState<ChatDraftState>(createEmptyDraft);
   const [isSendingPinnedMessage, setIsSendingPinnedMessage] = useState(false);
   const { messageInput, pinNextMessage, replyTo } = draft;
@@ -357,7 +361,7 @@ export const ChatInputShell = memo(function ChatInputShell({
       onSubmit={handleSendMessage}
       onOpenEmoteSheet={onOpenEmoteSheet}
       onOpenSettingsSheet={onOpenSettingsSheet}
-      onAttachImage={handleAttachImage}
+      onAttachImage={isLandscape ? undefined : handleAttachImage}
       isUploadingImage={isUploadingImage}
       replyTo={replyTo}
       onClearReply={handleClearReply}
