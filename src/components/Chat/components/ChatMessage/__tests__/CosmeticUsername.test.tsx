@@ -173,7 +173,6 @@ describe('PaintedUsername', () => {
       );
 
       const paintImage = UNSAFE_getByType(Image);
-      // Mirrors the extension's `background-size: 100% 100%`.
       expect(paintImage.props.contentFit).toBe('fill');
     });
 

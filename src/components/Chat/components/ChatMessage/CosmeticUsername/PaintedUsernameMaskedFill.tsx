@@ -21,10 +21,6 @@ interface PaintedUsernameMaskedFillProps {
  * left a deleted view still mounted, tripping RCTComponentViewRegistry's
  * "Attempt to recycle a mounted view" assertion (SIGABRT in debug, a native
  * use-after-free in release).
- *
- * Expo UI renders the mask and content through absolutely-filled SwiftUI hosts,
- * so the MaskedView has no intrinsic size. An invisible in-flow sizer Text
- * establishes the box from the same glyph metrics; the MaskedView then fills it.
  */
 export function PaintedUsernameMaskedFill({
   displayUsername,

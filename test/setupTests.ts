@@ -43,12 +43,8 @@ function canvasKitStub(): any {
 
 jest.mock('expo-font');
 jest.mock('expo-asset');
-// Mock react-native-vector-icons - mocks are in __mocks__ directory
 jest.mock('react-native-vector-icons');
 
-// Expo UI's MaskedView bridges into SwiftUI/Compose hosts that can't render in
-// jsdom. Render the mask and content inline so painted usernames still appear
-// in snapshots.
 jest.mock('@expo/ui/community/masked-view', () => {
   const React = require('react');
   const { View } = require('react-native');

@@ -9,11 +9,6 @@ interface PaintedUsernameMaskedFillProps {
   maskTextStyle: StyleProp<TextStyle>;
 }
 
-/**
- * Web fallback: Expo UI's MaskedView has no web implementation, so render the
- * username in the paint's representative colour instead of the glyph-clipped
- * gradient. The drop-shadow/stroke underlays still render from CosmeticUsername.
- */
 export function PaintedUsernameMaskedFill({
   displayUsername,
   fallbackColor,

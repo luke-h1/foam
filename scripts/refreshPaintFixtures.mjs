@@ -1,20 +1,3 @@
-/**
- * Refreshes the 7TV paint fixture used by the PaintedUsername Storybook gallery
- * (src/components/Chat/components/ChatMessage/CosmeticUsername.stories.tsx).
- *
- * The story used to call sevenTvService.fetchAllPaints() live on every render,
- * which hammers the 7TV API on each hot reload. Instead we snapshot the paints
- * once into a fixture and render that offline.
- *
- * The 7TV v4 `paints` query is NOT server-paginated (PaintQuery.paints takes no
- * arguments and returns every paint in a single response), so we fetch all of
- * them in one request and the Storybook gallery paginates locally. Unlike the
- * generated PaintsQueryDocument we explicitly select __typename on the layer
- * union so the stored data is convertible offline (convertV4PaintToPaintData
- * switches on ty.__typename).
- *
- * Usage: node scripts/refreshPaintFixtures.mjs
- */
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -84,13 +67,12 @@ async function fetchAllPaints() {
 
 const paints = await fetchAllPaints();
 
-// Radial gradient `shape` comes back as the raw enum string ("CIRCLE"/"ELLIPSE")
-// but SevenTvPaintSource types it as the nominal PaintRadialGradientShape enum,
-// so reference the enum members instead of the bare string (same approach
-// refreshEmoteFixtures.mjs uses for EmoteSetKind).
 const paintsJson = JSON.stringify(paints, null, 2)
   .replaceAll('"shape": "CIRCLE"', '"shape": PaintRadialGradientShape.Circle')
-  .replaceAll('"shape": "ELLIPSE"', '"shape": PaintRadialGradientShape.Ellipse');
+  .replaceAll(
+    '"shape": "ELLIPSE"',
+    '"shape": PaintRadialGradientShape.Ellipse',
+  );
 
 const fileContents =
   `import { PaintRadialGradientShape } from '@app/graphql/generated/gql';\n` +

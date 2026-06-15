@@ -12,33 +12,6 @@ describe('redirectSystemPath', () => {
     mockIsAuthCallbackUrl.mockReturnValue(false);
   });
 
-  test('routes a Twitch channel URL to the live stream screen', () => {
-    expect(
-      redirectSystemPath({
-        path: 'https://www.twitch.tv/cohhcarnage',
-        initial: true,
-      }),
-    ).toBe('/streams/live-stream/cohhcarnage');
-  });
-
-  test('routes a Twitch clip URL to the clip screen', () => {
-    expect(
-      redirectSystemPath({
-        path: 'https://clips.twitch.tv/CoolClipSlug',
-        initial: false,
-      }),
-    ).toBe('/streams/clip/CoolClipSlug');
-  });
-
-  test('routes a channel /about URL to the streamer profile screen', () => {
-    expect(
-      redirectSystemPath({
-        path: 'https://www.twitch.tv/cohhcarnage/about',
-        initial: false,
-      }),
-    ).toBe('/streams/streamer-profile/cohhcarnage');
-  });
-
   test('passes auth callback URLs through untouched', () => {
     mockIsAuthCallbackUrl.mockReturnValue(true);
     const url = 'foam://auth#access_token=abc&token_type=bearer';
@@ -46,7 +19,16 @@ describe('redirectSystemPath', () => {
     expect(redirectSystemPath({ path: url, initial: true })).toBe(url);
   });
 
-  test('leaves app-scheme paths it does not recognise unchanged', () => {
+  test('passes Twitch URLs through without rewriting', () => {
+    expect(
+      redirectSystemPath({
+        path: 'https://www.twitch.tv/cohhcarnage',
+        initial: true,
+      }),
+    ).toBe('https://www.twitch.tv/cohhcarnage');
+  });
+
+  test('leaves app paths unchanged', () => {
     expect(
       redirectSystemPath({
         path: '/streams/live-stream/xqc',

@@ -118,9 +118,11 @@ export const useChatScroll = ({
     }
   };
 
-  // Don't re-enable immediately: a fling fires onMomentumScrollBegin within
-  // a few ms, which cancels this timeout and prevents premature re-enable.
-  // For a slow drag-release with no fling the timeout fires and re-enables.
+  /**
+   * Don't re-enable immediately: a fling fires onMomentumScrollBegin within
+   * a few ms, which cancels this timeout and prevents premature re-enable.
+   * For a slow drag-release with no fling the timeout fires and re-enables.
+   */
   const handleScrollEndDrag = useCallback(() => {
     isDraggingRef.current = false;
     if (scrollEndDragSettleRef.current) {
@@ -294,6 +296,7 @@ export const useChatScroll = ({
     );
     scrollTimeoutRef.current = setTimeout(() => {
       clearScrollToBottomTimers();
+
       markAtBottom();
       isScrollingToBottomRef.current = false;
       setIsScrollingToBottom(false);
@@ -333,13 +336,15 @@ export const useChatScroll = ({
       return;
     }
 
-    // Re-snap to the newest row whenever we're pinned to the bottom — not just
-    // in the short window after an explicit scroll-to-bottom. LegendList's
-    // maintainScrollAtEnd scrolls using the *estimated* row height, so an
-    // under-estimated emote/badge/username row lands a few px short and gets
-    // clipped at the viewport bottom until its real height is measured. The
-    // scrollToLatestOnce guard (isAtBottomRef + not dragging) keeps this from
-    // disturbing a user who has scrolled up to read history.
+    /**
+     * Re-snap to the newest row whenever we're pinned to the bottom — not just
+     * in the short window after an explicit scroll-to-bottom. LegendList's
+     * maintainScrollAtEnd scrolls using the *estimated* row height, so an
+     * under-estimated emote/badge/username row lands a few px short and gets
+     * clipped at the viewport bottom until its real height is measured. The
+     * scrollToLatestOnce guard (isAtBottomRef + not dragging) keeps this from
+     * disturbing a user who has scrolled up to read history.
+     */
     if (
       !shouldAnchorBottomOnContentChangeRef.current &&
       !isAtBottomRef.current

@@ -37,6 +37,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
+  WithTimingConfig,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -59,30 +60,26 @@ interface LiveStreamScreenProps {
   id: string;
 }
 
-// Horizontal travel before the divider drag claims the gesture, and vertical
-// travel that hands it back to chat scrolling.
 const LANDSCAPE_CHAT_RESIZE_ACTIVATION_DISTANCE = 6;
 const LANDSCAPE_CHAT_RESIZE_FAIL_DISTANCE = 12;
-// Resting vs. active opacity for the always-visible divider grip.
 const LANDSCAPE_CHAT_DIVIDER_RESTING_OPACITY = 0.55;
-/**
- * In landscape insets.top is 0, so without an explicit offset the chat
- * controls land on the Twitch player's own top-right chrome (LIVE badge).
- */
+
 const LANDSCAPE_CHAT_CONTROLS_TOP_OFFSET = 60;
 const CHAT_CONNECTION_FALLBACK_MS = 10_000;
 const CHAT_TOGGLE_DEBOUNCE_MS = 450;
 const MAX_OVERLAY_CHAT_FRACTION = 0.68;
 const MAX_SIDEBAR_CHAT_FRACTION = 0.55;
 const ORIENTATION_CHAT_SLIDE_DISTANCE = 28;
+
 const RESIZE_ANIMATION_CONFIG = {
   duration: motion.fast,
   easing: motion.easing.out,
-};
+} satisfies WithTimingConfig;
+
 const CHAT_REVEAL_ANIMATION_CONFIG = {
   duration: motion.instant,
   easing: motion.easing.out,
-};
+} satisfies WithTimingConfig;
 
 export const LiveStreamScreen = memo(function LiveStreamScreen({
   id,
@@ -470,8 +467,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   }));
 
   const resizeChatGesture = Gesture.Pan()
-    // Drag the divider directly; only claim the gesture once it moves
-    // horizontally so vertical touches still reach chat scrolling.
     .activeOffsetX([
       -LANDSCAPE_CHAT_RESIZE_ACTIVATION_DISTANCE,
       LANDSCAPE_CHAT_RESIZE_ACTIVATION_DISTANCE,

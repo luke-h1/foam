@@ -15,12 +15,6 @@ export type TwitchLink =
 const TWITCH_HOSTS = ['twitch.tv', 'www.twitch.tv', 'm.twitch.tv'];
 const TWITCH_CLIP_HOSTS = ['clips.twitch.tv', 'www.clips.twitch.tv'];
 
-/**
- * Twitch web paths whose first segment is a reserved route rather than a
- * channel login (e.g. twitch.tv/directory/category/...). We can't resolve the
- * name slug these carry to an in-app screen from the URL alone, so they are
- * not treated as channels.
- */
 const RESERVED_FIRST_SEGMENTS = new Set(['directory']);
 
 export function parseTwitchUrl(url: string | null): TwitchLink {
@@ -83,11 +77,6 @@ export function parseTwitchUrl(url: string | null): TwitchLink {
   return null;
 }
 
-/**
- * Map a parsed Twitch link to the in-app route that should display it.
- * Returns null when the link can't be resolved to a screen (e.g. a bare VOD,
- * which has no dedicated player route).
- */
 export function twitchLinkToAppPath(link: TwitchLink): string | null {
   if (!link) {
     return null;

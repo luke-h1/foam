@@ -60,10 +60,6 @@ export function pickBestImage(images: readonly Image[]): Image | undefined {
   }, undefined);
 }
 
-// expo-image plays animated WebP/GIF on iOS (SDWebImage) and Android (Glide),
-// but animated AVIF doesn't loop reliably inside the SwiftUI mask host, so for
-// animated paint textures prefer a format that actually plays — mirroring how
-// the 7TV extension animates the texture in-browser.
 function pickAnimatedFormat(imgs: Image[]): Image | undefined {
   return (
     imgs.find(img => img.mime === 'image/webp') ??

@@ -196,11 +196,8 @@ export function imageRepeatFromCanvasRepeat(
     canvasRepeat === 'round' ||
     canvasRepeat === 'space'
   ) {
-    // RN has no background tiling; natural-size top-left is the closest match.
     return 'none';
   }
 
-  // Non-repeating paints mirror the extension's `background-size: 100% 100%`,
-  // which stretches the texture to the glyph box (CSS fill, not cover).
   return 'fill';
 }

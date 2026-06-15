@@ -153,10 +153,6 @@ export function RouterEffects() {
         }
         return;
       }
-
-      // Twitch deep links are routed by src/app/+native-intent.ts
-      // (redirectSystemPath) through Expo Router, so there is nothing more to
-      // do for them here.
     }
 
     const linkingSubscription = Linking.addEventListener('url', ({ url }) => {
