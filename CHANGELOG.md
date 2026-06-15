@@ -2,9 +2,14 @@
 
 ## 1.0.0-internal
 
+### ♻️ Refactor
+
+- **chat:** Improve bottom sheet
+
 ### ✨ Features
 
 - **app:** I8n
+- **app:** I8n ([#633](https://github.com/lhowsam/foam/issues/633))
 
 ### 🐛 Bug Fixes
 
@@ -12,13 +17,14 @@
 - **chat:** Emote cut off, composer clip, safe area ([#631](https://github.com/lhowsam/foam/issues/631))
 - **chat:** Chat height calc
 - **chat:** Chat height calc
+- **app:** Fix build
+- **app:** Auth expiry ([#640](https://github.com/lhowsam/foam/issues/640))
 
 ### 🔧 Miscellaneous Tasks
 
 - **app:** Improve accesibility ([#629](https://github.com/lhowsam/foam/issues/629))
 - Upgrade bun to 1.3.14
 - Upgrade bun to 1.3.14 in CI
-
 ## 1.0.0
 
 ### ⚡ Performance
@@ -44,14 +50,12 @@
 ### 🔧 Miscellaneous Tasks
 
 - **test:** Full e2e coverage
-
 ## 0.0.42-internal
 
 ### 🐛 Bug Fixes
 
 - **app:** Sentry initialization
 - **app:** Sentry initialization
-
 ## 0.0.42-testflight
 
 ### ♻️ Refactor
@@ -85,7 +89,6 @@
 
 - **app:** Update rozenite ([#612](https://github.com/lhowsam/foam/issues/612))
 - **infrastructure:** Update action versions ([#618](https://github.com/lhowsam/foam/issues/618))
-
 ## 0.0.41
 
 ### ♻️ Refactor
@@ -110,7 +113,6 @@
 - **app:** Refine observability standards ([#573](https://github.com/lhowsam/foam/issues/573))
 - **app:** Release 0.0.41
 - **tooling:** Update commitlint
-
 ## 0.0.40
 
 ### ♻️ Refactor
@@ -179,7 +181,6 @@
 - **security:** Add zizmor
 - **infrastructure:** Add sonarcube ([#560](https://github.com/lhowsam/foam/issues/560))
 - **documentation:** Simplify proxy server
-
 ## ota-c42ee437-f55f-4a6e-93b8-7fb765721c2d
 
 ### ♻️ Refactor
@@ -202,13 +203,11 @@
 
 - **app:** Upgrade deps ([#509](https://github.com/lhowsam/foam/issues/509))
 - **app:** Remove interactionManager
-
 ## ota-9dc97786-4ff2-40e0-83b9-19be83418ed1
 
 ### 🐛 Bug Fixes
 
 - **app:** Fix crash on rotate
-
 ## ota-8b3783c1-ee13-4bf3-8d2d-b68cf79a0655
 
 ### ♻️ Refactor
@@ -225,7 +224,6 @@
 
 - **app:** Fix build
 - **app:** Fix build
-
 ## ota-1ffa7bd3-e434-4400-9364-90da567dcf68
 
 ### 🐛 Bug Fixes
@@ -236,26 +234,22 @@
 ### 🔧 Miscellaneous Tasks
 
 - **app:** Update agent skills
-
 ## ota-0831b9f9-5fce-43bb-8b70-fe9c4633601b
 
 ### ✨ Features
 
 - **app:** Ensure chat + video is in sync ([#488](https://github.com/lhowsam/foam/issues/488))
-
 ## ota-a0aa7b2d-23b7-4b57-b1eb-f6f96acb3718
 
 ### 🔧 Miscellaneous Tasks
 
 - **infrastructure:** Refresh agents
-
 ## ota-aae23856-f62e-4417-aa6b-efcef6d920b6
 
 ### 🐛 Bug Fixes
 
 - **app:** Fix inf re-render loop
 - **app:** Fix changelogs
-
 ## ota-09afb2ac-dbdf-4b7d-996c-6beeaef68082
 
 ### 🐛 Bug Fixes
@@ -268,7 +262,6 @@
 - **app:** Remove old native player
 - **app:** Improve gh release format
 - **infrastructure:** Improve slack msg
-
 ## ota-c3493b6f-a9f2-4896-9a64-fb2d956e8245
 
 ### 🐛 Bug Fixes
@@ -281,7 +274,6 @@
 - **app:** Refresh agent skills
 - **infrastructure:** Slack noti fix
 - **infrastructure:** Fix deploy-ota-or-native
-
 ## 0.0.39
 
 ### ♻️ Refactor
@@ -304,7 +296,6 @@
 - **app:** Update deps
 - **app:** Increase test speed
 - **infrastructure:** Slack notifications
-
 ## ota-0.0.38-27
 
 ### 🐛 Bug Fixes
@@ -314,13 +305,11 @@
 ### 🔧 Miscellaneous Tasks
 
 - **infrastructure:** Don't pr a changelog
-
 ## ota-b578613f-7fd1-4d05-a6fc-10a2c2fff773
 
 ### 🐛 Bug Fixes
 
 - **infrastructure:** Improve release notes generation
-
 ## ota-1054ebce-6b29-4342-ad1f-030bfca5d82b
 
 ### ♻️ Refactor
@@ -352,7 +341,6 @@
 - **infrastructure:** Optimise jest speed
 - **app:** Refresh agents
 - **app:** Automate changelog ([#474](https://github.com/lhowsam/foam/issues/474))
-
 ## 0.0.38
 
 ### ✨ Features
@@ -383,7 +371,6 @@
 - **app:** Testing native update
 - **app:** Testing native update
 - **app:** Testing OTA
-
 ## 0.0.36
 
 ### ✨ Features
@@ -395,7 +382,6 @@
 - **infrastructure:** OTA
 - **infrastructure:** OTA
 - **infrastructure:** OTA
-
 ## 0.0.37
 
 ### ♻️ Refactor
@@ -443,7 +429,6 @@
 - **app:** Prompt to confirm logout ([#443](https://github.com/lhowsam/foam/issues/443))
 - **app:** Add .easignore
 - **infrastructure:** Test self hosted runner ([#454](https://github.com/lhowsam/foam/issues/454))
-
 ## 0.0.34
 
 ### ♻️ Refactor
@@ -467,7 +452,6 @@
 
 - **app:** Fix storybook
 - **app:** Install expo-insights
-
 ## 0.0.33
 
 ### ♻️ Refactor
@@ -503,7 +487,6 @@
 - **tooling:** Add hermes release profiler ([#416](https://github.com/lhowsam/foam/issues/416))
 - **tooling:** Patch expo-file-system tsc ([#418](https://github.com/lhowsam/foam/issues/418))
 - **sentry:** Adjust sentry rates ([#419](https://github.com/lhowsam/foam/issues/419))
-
 ## 0.0.32
 
 ### 🐛 Bug Fixes
@@ -520,7 +503,6 @@
 - **ci:** Add deploy-testflight self-hosted workflow
 - **ci:** Add deploy-testflight self-hosted workflow
 - **infrastructure:** Tidy up ci/cd ([#385](https://github.com/lhowsam/foam/issues/385))
-
 ## 0.0.31
 
 ### 🐛 Bug Fixes
@@ -533,7 +515,6 @@
 
 - **app:** Add expo-atlas
 - Add refined plugin
-
 ## 0.0.30
 
 ### ✨ Features
@@ -550,7 +531,6 @@
 
 - **infrastructure:** Preview set up
 - **infrastructure:** Remove dead code
-
 ## 0.0.29
 
 ### ✨ Features
@@ -570,7 +550,6 @@
 
 - **app:** Tidy up caching code
 - Revert deploy.sh
-
 ## 0.0.27
 
 ### ♻️ Refactor
@@ -590,7 +569,6 @@
 ### 🔧 Miscellaneous Tasks
 
 - **documentation:** Update setup docs ([#329](https://github.com/lhowsam/foam/issues/329))
-
 ## 0.0.26
 
 ### ✨ Features
@@ -604,7 +582,6 @@
 ### 🔧 Miscellaneous Tasks
 
 - **app:** Remove auth loading screen ([#314](https://github.com/lhowsam/foam/issues/314))
-
 ## 0.0.25
 
 ### ♻️ Refactor
@@ -634,7 +611,6 @@
 - **app:** Remove unused deps ([#309](https://github.com/lhowsam/foam/issues/309))
 - **app:** Update deps ([#310](https://github.com/lhowsam/foam/issues/310))
 - **app:** Update core RN deps ([#311](https://github.com/lhowsam/foam/issues/311))
-
 ## 0.0.24
 
 ### ✨ Features
@@ -647,7 +623,6 @@
 
 - **app:** Fix diagnostics screen
 - **chat:** Improve sheet typography
-
 ## 0.0.23
 
 ### ✨ Features
@@ -657,7 +632,6 @@
 ### 🔧 Miscellaneous Tasks
 
 - Update .gitignore
-
 ## 0.0.22
 
 ### ✨ Features
@@ -675,7 +649,6 @@
 - Fix build
 - Fix build
 - **docs:** Update .env.example
-
 ## 0.0.21
 
 ### ✨ Features
@@ -690,7 +663,6 @@
 ### 🔧 Miscellaneous Tasks
 
 - **infrastructure:** Add OTA ci/cd
-
 ## 0.0.20
 
 ### ✨ Features
@@ -708,13 +680,11 @@
 - **app:** Lock orientation on search
 - **app:** Compress images
 - **app:** Compress Images
-
 ## 0.0.19
 
 ### ✨ Features
 
 - **app:** Add react-query devtools
-
 ## 0.0.18
 
 ### 🐛 Bug Fixes
@@ -724,13 +694,11 @@
 ### 🧪 Testing
 
 - **auth:** Improve auth tests
-
 ## 0.0.17
 
 ### 🔧 Miscellaneous Tasks
 
 - **app:** Refactor online manager
-
 ## 0.0.16
 
 ### ✨ Features
@@ -740,13 +708,11 @@
 ### 🐛 Bug Fixes
 
 - **app:** Fix auth ctx persistence issues
-
 ## 0.0.15
 
 ### 🐛 Bug Fixes
 
 - **app:** Fix auth crashes
-
 ## 0.0.14
 
 ### ✨ Features
@@ -765,7 +731,6 @@
 - **ci:** Test alternate ci/cd workflow
 - **ci:** Test alternate ci/cd workflow
 - **ci:** Test alternate ci/cd workflow
-
 ## 0.0.13
 
 ### ♻️ Refactor
@@ -782,19 +747,16 @@
 
 - **app:** Debug auth issues
 - **app:** Debug auth issues
-
 ## 0.0.12
 
 ### 🔧 Miscellaneous Tasks
 
 - **app:** Debug auth
-
 ## 0.0.11
 
 ### 🐛 Bug Fixes
 
 - **app:** Speculative crash fix around fonts
-
 ## 0.0.9
 
 ### ✨ Features
@@ -806,13 +768,11 @@
 ### 🐛 Bug Fixes
 
 - **app:** Comment out fb
-
 ## 0.0.8
 
 ### 🐛 Bug Fixes
 
 - **app:** Fix crash on start
-
 ## 0.0.7
 
 ### 🔧 Miscellaneous Tasks
@@ -820,37 +780,31 @@
 - **app:** Debug release
 - **app:** Debug release
 - **app:** Debug release
-
 ## 0.0.6
 
 ### 🔧 Miscellaneous Tasks
 
 - **app:** Debug release
-
 ## 0.0.5
 
 ### 🐛 Bug Fixes
 
 - **app:** Navigation state in prod
-
 ## 0.0.4
 
 ### ✨ Features
 
 - **app:** Debug screen
-
 ## 0.0.3
 
 ### 🐛 Bug Fixes
 
 - **app:** Fix commmitlint
-
 ## 0.0.2
 
 ### 🔧 Miscellaneous Tasks
 
 - **app:** Gs services file
-
 ## 0.0.1
 
 ### ♻️ Refactor
@@ -1019,3 +973,4 @@
 ### 🧪 Testing
 
 - **app:** Add missing util unit tests
+
