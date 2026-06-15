@@ -54,6 +54,7 @@ describe('createApiClient', () => {
             'Client-ID': 'client-id',
           },
           body: undefined,
+          signal: expect.any(AbortSignal),
         },
       ],
     ]);
@@ -79,6 +80,7 @@ describe('createApiClient', () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ type: 'channel.poll.begin' }),
+          signal: expect.any(AbortSignal),
         },
       ],
     ]);

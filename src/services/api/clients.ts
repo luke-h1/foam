@@ -51,3 +51,8 @@ export const ffzApi = createApiClient({
   baseURL: 'https://api.frankerfacez.com/v1',
   logPrefix: 'ffz',
 });
+
+export const streamElementsApi = createApiClient({
+  baseURL: 'https://api.streamelements.com/kappa/v2',
+  logPrefix: 'streamElements',
+});

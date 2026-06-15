@@ -4,6 +4,7 @@ export type ApiProvider =
   | 'bttv'
   | 'ffz'
   | 'seven_tv'
+  | 'stream_elements'
   | 'twitch'
   | 'unknown';
 
@@ -51,6 +52,10 @@ function getProvider(rawUrl: string, host: string): ApiProvider {
 
   if (target.includes('7tv')) {
     return 'seven_tv';
+  }
+
+  if (target.includes('streamelements')) {
+    return 'stream_elements';
   }
 
   if (target.includes('/api/')) {

@@ -43,6 +43,8 @@ const COPY_IMAGE_VARIANT_ACTIONS = [
   { id: 'copy-url-4x', scale: '4x' },
 ] as const;
 
+const PREVIEW_IMAGE_MAX_SIZE = 56;
+
 function getEmoteActionSFSymbolName(actionId: ActionId) {
   switch (actionId) {
     case 'copy-name':
@@ -127,6 +129,19 @@ function EmoteActionSheetComponent({
           },
     [displayUrl, part],
   );
+
+  const previewImageSize = useMemo(() => {
+    const aspectRatio = (part.width || 28) / (part.height || 28);
+    return aspectRatio >= 1
+      ? {
+          width: PREVIEW_IMAGE_MAX_SIZE,
+          height: Math.round(PREVIEW_IMAGE_MAX_SIZE / aspectRatio),
+        }
+      : {
+          width: Math.round(PREVIEW_IMAGE_MAX_SIZE * aspectRatio),
+          height: PREVIEW_IMAGE_MAX_SIZE,
+        };
+  }, [part.width, part.height]);
 
   const openSheet = useCallback(
     (e: GestureResponderEvent) => {
@@ -271,7 +286,7 @@ function EmoteActionSheetComponent({
                         trackLoadContext='chat.emote-action-sheet'
                         source={displayUrl}
                         cacheVariant='emote'
-                        style={styles.previewImage}
+                        style={previewImageSize}
                         contentFit='contain'
                         transition={50}
                       />
@@ -391,10 +406,6 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize12,
     lineHeight: theme.fontSize12 * 1.3,
     marginTop: 4,
-  },
-  previewImage: {
-    height: 56,
-    width: 56,
   },
   previewImageContainer: {
     alignItems: 'center',

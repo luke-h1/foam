@@ -4,6 +4,7 @@ import {
   PaginatedList,
   TwitchStream,
   TwitchClipsRequestParams,
+  TwitchVideosRequestParams,
   UserBlockList,
   UserInfoResponse,
 } from '@app/services/twitch-service';
@@ -89,6 +90,19 @@ export function clipsInfiniteQueryOptions(
     staleTime: 60_000,
     queryFn: ({ pageParam }) =>
       twitchService.getClips({ ...params, after: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: lastPage => lastPage?.pagination?.cursor || undefined,
+  });
+}
+
+export function videosInfiniteQueryOptions(
+  params: Omit<TwitchVideosRequestParams, 'after'>,
+) {
+  return infiniteQueryOptions({
+    queryKey: twitchKeys.videosInfinite(params),
+    staleTime: 60_000,
+    queryFn: ({ pageParam }) =>
+      twitchService.getVideos({ ...params, after: pageParam }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: lastPage => lastPage?.pagination?.cursor || undefined,
   });

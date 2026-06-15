@@ -62,7 +62,7 @@ jobs:
 
       - name: 📦 Install dependencies
         if: steps.pr.outputs.should_run == 'true'
-        run: bun install --frozen-lockfile
+        run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Load OTA deploy secrets
         if: steps.pr.outputs.should_run == 'true'

@@ -329,7 +329,7 @@ export function parseWordLinkParts(word: string): ParsedPart[] | null {
   ];
 }
 
-export function findEmoteMatchingMention(
+function findEmoteMatchingMention(
   mentionText: string,
   emotes: Iterable<SanitisedEmote>,
 ): SanitisedEmote | undefined {

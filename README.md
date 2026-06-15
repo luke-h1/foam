@@ -92,6 +92,30 @@ The native cache stores files in Expo's cache directory under `chat-img-cache` a
 
 Visible chat assets are warmed aggressively. Incoming visible badge and emote URLs are cached with `visible` priority, emote sheets warm uncached emote variants with `interactive` priority, and cached file URLs are prefetched once they resolve. On web, the same wrapper uses cacheable object URLs and revokes unused downloads when a component unmounts.
 
+## Networking
+
+All outbound HTTP goes through [`createApiClient`](src/services/api/Client.ts), which produces one tagged client per upstream in [`src/services/api/clients.ts`](src/services/api/clients.ts): `twitchApi`, `bttvCachedApi`, `sevenTvApi`, `ffzApi`, and `streamElementsApi`. The factory centralizes the cross-cutting concerns so the per-service modules under [`src/services`](src/services) stay thin: case-insensitive header merging (Helix rejects duplicated `Client-Id` headers), bearer-token injection, a typed `ApiError` that carries the HTTP `status`, and Sentry recording for both network failures and non-2xx responses (fingerprinted per service + method + path + status so each broken endpoint is one issue).
+
+### Request timeouts
+
+Every request is bounded by an `AbortController` (default **10s**, override per client with the `timeout` option). A timed-out request aborts the connection, records a `timeout` Sentry event, and throws `ApiError` with status `408`.
+
+This matters because Foam depends on third-party emote and cosmetic services (7TV, BTTV, FFZ, StreamElements) that degrade independently of Twitch. When one stalls without closing the socket the underlying `fetch` never rejects — and react-query's `retry` only fires on rejection, so an unbounded request would leave the query `pending` forever. The timeout converts a silent hang into a retryable error.
+
+## Internationalization (i18n)
+
+Foam uses [i18next](https://www.i18next.com/) with [react-i18next](https://react.i18next.com/), initialized in [`src/i18n/i18next.ts`](src/i18n/i18next.ts). On launch the active language is detected from the device locale via `expo-localization`, falling back to `en` when the device language isn't in `supportedLanguages`.
+
+English (`src/i18n/locales/en.ts`) is the source of truth and currently the only shipped locale. Strings are grouped into namespaces (`common` is the default), including `chat`, `stream`, `settings`, `preferences`, `search`, `auth`, `onboarding`, `errors`, and `feedback`. Key typing comes from [`src/i18n/i18n.d.ts`](src/i18n/i18n.d.ts), which feeds the `en` resources into i18next's `CustomTypeOptions` so `t()` keys are autocompleted and type-checked.
+
+Conventions:
+
+- In components, prefer the `useTranslation` hook (array form when a component pulls from more than one namespace).
+- In hot chat-row render paths, toasts, and plain module-level functions where a hook can't run, call `i18next.t('namespace.key')` directly.
+- For option arrays (settings pickers, segmented controls), store a `labelKey` on each option and resolve it at render time rather than baking translated strings into config.
+
+To add a language: copy `en.ts` to a new locale typed against the `en` export so TypeScript flags missing keys, then register it in `resources`, `supportedLanguages`, and `LANGUAGE_LABELS` in `src/i18n/i18next.ts`.
+
 # Getting started
 
 You will need the following in order to run the project locally:
