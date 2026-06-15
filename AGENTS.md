@@ -48,7 +48,7 @@ Write JSDoc comments as multi-line blocks. Never collapse them onto a single lin
 timeSeconds?: number;
 ```
 
-Do not write `/** VOD resume offset in seconds; only applied when video is set. */` on one line, even when the comment is short and even for `/** @type {...} */` annotations. The opening `/**`, the ` * ` content, and the closing ` */` each get their own line, indented to match the code they document.
+Do not write `/** VOD resume offset in seconds; only applied when video is set. */` on one line, even when the comment is short and even for `/** @type {...} */` annotations. The opening `/**`, the `*` content, and the closing ` */` each get their own line, indented to match the code they document.
 
 The multi-line form is the format the repo uses everywhere, so keeping to it avoids a mix of styles and keeps comments easy to extend later without reflowing the line.
 
