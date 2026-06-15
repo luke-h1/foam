@@ -1,8 +1,9 @@
 import { useWatchTimeTracking } from '@app/hooks/useWatchTimeTracking';
 import { recordInfo } from '@app/lib/sentry';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { InteractionManager, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
+import type { WebViewMessageEvent } from 'react-native-webview';
 
 import { ControlsOverlay } from './ControlsOverlay';
 import { StreamPlayerWebView } from './StreamPlayerWebView';
@@ -58,6 +59,31 @@ const TWITCH_AUTH_HELPER_SCRIPT = `
   new MutationObserver(detectAuthComplete).observe(document.documentElement, {
     childList: true,
     subtree: true});
+})();
+true;
+`;
+
+// Polls the VOD <video> element's position and reports it to native so the
+// last-known offset survives a WebView reload. The stock player owns the
+// scrubber; we only observe, so this never fights the user's own seeks.
+const VOD_PROGRESS_TRACKER_SCRIPT = `
+(() => {
+  if (window.__foamVodProgressInstalled) {
+    return;
+  }
+  window.__foamVodProgressInstalled = true;
+
+  setInterval(() => {
+    try {
+      const video = document.querySelector('video');
+      const time = video ? video.currentTime : 0;
+      if (Number.isFinite(time) && time > 0) {
+        window.ReactNativeWebView?.postMessage(
+          JSON.stringify({ type: 'vodProgress', payload: { currentTime: time } }),
+        );
+      }
+    } catch {}
+  }, 3000);
 })();
 true;
 `;
@@ -150,11 +176,16 @@ export const StreamPlayer = memo(function StreamPlayer({
 
   const sourceKey = `${channel ?? ''}|${clip ?? ''}|${video ?? ''}|${parent}|${autoplay}|${initialMuted}|${deferOverlayUntilUserUnmute}`;
 
+  // Last reported VOD playback offset (seconds). Survives a WebView remount so
+  // the embed can resume instead of restarting at 0:00; reset per source.
+  const resumeTimeRef = useRef(0);
+
   useWatchTimeTracking();
 
   useEffect(() => {
     needsInitRef.current = true;
     nudgePlayedRef.current = false;
+    resumeTimeRef.current = 0;
   }, [sourceKey]);
 
   const remountEmbedWebView = useCallback(() => {
@@ -230,24 +261,34 @@ export const StreamPlayer = memo(function StreamPlayer({
   });
 
   const channelName = channel || 'twitch';
-  const webViewSource = clip
-    ? {
-        uri: buildTwitchClipPlayerUrl({
-          clip,
-          parent,
-          autoplay,
-          muted: initialMuted,
-        }),
-      }
-    : {
-        uri: buildRawTwitchPlayerUrl({
-          channel: channelName,
-          video,
-          parent,
-          autoplay,
-          muted: initialMuted,
-        }),
-      };
+  // Memoised so the URL only changes when the source or a remount (webViewKey)
+  // does — never on an incidental re-render (e.g. the layout nudge), which
+  // would otherwise reload the WebView. On remount it reads the latest
+  // resume offset so a VOD picks up where it left off.
+  const webViewSource = useMemo(
+    () =>
+      clip
+        ? {
+            uri: buildTwitchClipPlayerUrl({
+              clip,
+              parent,
+              autoplay,
+              muted: initialMuted,
+            }),
+          }
+        : {
+            uri: buildRawTwitchPlayerUrl({
+              channel: channelName,
+              video,
+              parent,
+              autoplay,
+              muted: initialMuted,
+              timeSeconds: video ? resumeTimeRef.current : undefined,
+            }),
+          },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [clip, channelName, video, parent, autoplay, initialMuted, webViewKey],
+  );
 
   // The stock player.twitch.tv page runs unscripted: Twitch's own UI handles
   // playback, so the playerControls bootstrap is not injected and the bridge
@@ -255,7 +296,34 @@ export const StreamPlayer = memo(function StreamPlayer({
   // The UI-block script runs after load to hide subscribe/gift/follow/avatar
   // elements and intercept any remaining www.twitch.tv link clicks.
   const injectedJavaScript =
-    TWITCH_AUTH_HELPER_SCRIPT + '\n' + buildTwitchPlayerUiBlockScript();
+    TWITCH_AUTH_HELPER_SCRIPT +
+    '\n' +
+    buildTwitchPlayerUiBlockScript() +
+    (video ? '\n' + VOD_PROGRESS_TRACKER_SCRIPT : '');
+
+  // The tracker posts unsolicited `vodProgress` messages; capture those for
+  // resume-on-reload and forward everything else to the player bridge.
+  const handleWebViewMessage = useCallback(
+    (event: WebViewMessageEvent) => {
+      try {
+        const message = JSON.parse(event.nativeEvent.data) as {
+          type?: string;
+          payload?: { currentTime?: number };
+        };
+        if (message.type === 'vodProgress') {
+          const time = message.payload?.currentTime;
+          if (typeof time === 'number' && Number.isFinite(time)) {
+            resumeTimeRef.current = time;
+          }
+          return;
+        }
+      } catch {
+        // Fall through to the bridge for non-JSON / unexpected payloads.
+      }
+      handleMessage(event);
+    },
+    [handleMessage],
+  );
 
   const injectedJavaScriptBeforeContentLoaded = clip
     ? TWITCH_AUTH_HELPER_SCRIPT
@@ -318,7 +386,7 @@ export const StreamPlayer = memo(function StreamPlayer({
           needsInitRef={needsInitRef}
           onError={onError}
           onHttpError={handleWebViewHttpError}
-          onMessage={handleMessage}
+          onMessage={handleWebViewMessage}
           onWebViewLoaded={() => {
             handleBridgePlaying();
             onWebViewLoaded?.();

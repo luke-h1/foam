@@ -33,6 +33,23 @@ const MAX_RECENT_MESSAGES = 80;
 
 export const getMaxChatMessages = (): number =>
   getPreferences().chatScrollback ?? DEFAULT_MAX_CHAT_MESSAGES;
+
+// Trimming the front of the window shifts every row index. While the user is
+// scrolled up, LegendList runs native maintainVisibleContentPosition
+// (index-anchored at minIndexForVisible: 0); a front-trim re-anchors it to a
+// now-different index 0 and yanks the list to the top. So while paused we stop
+// front-trimming and let the window grow to a bounded ceiling, then resume (and
+// catch up) once the user returns to the bottom where trimming is safe.
+const SUSPENDED_FRONT_TRIM_HEADROOM = 1500;
+let frontTrimSuspended = false;
+
+export const setChatFrontTrimSuspended = (suspended: boolean): void => {
+  frontTrimSuspended = suspended;
+};
+
+const getEffectiveMaxChatMessages = (): number =>
+  getMaxChatMessages() +
+  (frontTrimSuspended ? SUSPENDED_FRONT_TRIM_HEADROOM : 0);
 const MAX_RECENT_MESSAGE_CHANNELS = 10;
 // Each sync re-serializes recentMessagesByChannel to MMKV, which showed up
 // as a top JS hotspot in busy chats (issue #594). Recent messages are a
@@ -334,7 +351,7 @@ const syncRecentMessagesForCurrentChannel = (
 
 const trimMessageIndexes = (): number => {
   let trimmedCount = 0;
-  const maxChatMessages = getMaxChatMessages();
+  const maxChatMessages = getEffectiveMaxChatMessages();
 
   while (messageKeyOrder.length > maxChatMessages) {
     const removedKey = messageKeyOrder.shift();
@@ -355,7 +372,7 @@ const appendToMessageWindow = (
   nextMessages: AnyChatMessageType[];
 } => {
   const nextMessages = [...currentMessages, ...storedMessages];
-  const extraMessageCount = nextMessages.length - getMaxChatMessages();
+  const extraMessageCount = nextMessages.length - getEffectiveMaxChatMessages();
 
   if (extraMessageCount <= 0) {
     return { droppedMessages: [], nextMessages };
@@ -781,6 +798,7 @@ export const removeMessageById = (messageId: string) => {
 
 export const clearMessages = () => {
   flushPendingRecentMessagesSync();
+  frontTrimSuspended = false;
   messageKeySet.clear();
   messageKeyOrder.length = 0;
   messageIdToIndex.clear();

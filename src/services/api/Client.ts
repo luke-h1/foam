@@ -46,12 +46,22 @@ interface ClientOptions {
   baseURL: string;
   headers?: Record<string, string>;
   logPrefix?: AllowedPrefix;
+  /**
+   * Per-request timeout in milliseconds. Foam depends on third-party emote and
+   * cosmetic services (7TV, BTTV, FFZ, StreamElements) that can stall without
+   * closing the connection; without a bound a hung request never rejects, so
+   * react-query's `retry` never fires and the query stays pending forever.
+   */
+  timeout?: number;
 }
+
+const DEFAULT_TIMEOUT_MS = 10_000;
 
 export function createApiClient({
   baseURL,
   headers: defaultHeaders = {},
   logPrefix,
+  timeout = DEFAULT_TIMEOUT_MS,
 }: ClientOptions) {
   let authToken: string | undefined;
   const { exceptionName, errorName } = getServiceErrorInfo(logPrefix);
@@ -106,14 +116,46 @@ export function createApiClient({
       headers['Content-Type'] = 'application/json';
     }
 
+    const controller = new AbortController();
+    let didTimeout = false;
+    const timeoutId = setTimeout(() => {
+      didTimeout = true;
+      controller.abort();
+    }, timeout);
+
     let response: Response;
     try {
       response = await fetch(url.toString(), {
         method,
         headers,
         body: data !== undefined ? JSON.stringify(data) : undefined,
+        signal: controller.signal,
       });
     } catch (error) {
+      if (didTimeout) {
+        recordError({
+          name: 'network_error',
+          exceptionName: `${exceptionName} (timeout)`,
+          message: `${method} ${path} timed out after ${timeout}ms`,
+          tags: { service, method },
+          fingerprint: [service, 'timeout', path],
+          params: {
+            action: 'http_request_timeout',
+            category: 'timeout',
+            method,
+            endpoint: path,
+            timeoutMs: timeout,
+          },
+          errorCause: error,
+        });
+        // 408 Request Timeout gives downstream code (and react-query retries) a
+        // meaningful status instead of an opaque AbortError.
+        throw new ApiError(
+          `${method} ${path} timed out after ${timeout}ms`,
+          408,
+          exceptionName,
+        );
+      }
       recordError({
         name: 'network_error',
         exceptionName: `${exceptionName} (network)`,
@@ -129,6 +171,8 @@ export function createApiClient({
         errorCause: error,
       });
       throw error;
+    } finally {
+      clearTimeout(timeoutId);
     }
 
     const context = getApiMonitoringContext({

@@ -5,9 +5,13 @@ export interface AccelerometerSample {
 }
 
 export interface ShakeDetectorOptions {
-  /** Total acceleration (in g, gravity included) that counts as a spike. */
+  /**
+   * Total acceleration (in g, gravity included) that counts as a spike.
+   */
   magnitudeThreshold?: number;
-  /** Spikes required inside the window to register a shake. */
+  /**
+   * Spikes required inside the window to register a shake.
+   */
   minSpikes?: number;
   windowMs?: number;
 }

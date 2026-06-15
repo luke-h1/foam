@@ -8,9 +8,13 @@ import i18next from '@app/i18n/i18next';
 declare module '@tanstack/react-query' {
   interface Register {
     mutationMeta: {
-      /** Skip the default error toast for this mutation. */
+      /**
+       * Skip the default error toast for this mutation.
+       */
       suppressErrorToast?: boolean;
-      /** User-facing message shown in the default error toast. */
+      /**
+       * User-facing message shown in the default error toast.
+       */
       errorMessage?: string;
     };
   }

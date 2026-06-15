@@ -15,7 +15,8 @@ export default function StreamsLayout() {
         name='streamer-profile/[id]'
         options={{
           headerShown: false,
-          presentation: 'modal',
+          gestureEnabled: true,
+          fullScreenGestureEnabled: true,
         }}
       />
       <Stack.Screen
@@ -23,6 +24,14 @@ export default function StreamsLayout() {
         options={{
           headerShown: false,
           presentation: 'modal',
+        }}
+      />
+      <Stack.Screen
+        name='vod/[id]'
+        options={{
+          headerShown: false,
+          gestureEnabled: true,
+          fullScreenGestureEnabled: true,
         }}
       />
     </Stack>

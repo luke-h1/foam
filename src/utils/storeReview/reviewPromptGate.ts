@@ -1,7 +1,7 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export const REVIEW_PROMPT_MIN_SESSIONS = 3;
-export const REVIEW_PROMPT_MIN_WATCH_TIME_MS = 30 * 60 * 1000;
+const REVIEW_PROMPT_MIN_SESSIONS = 3;
+const REVIEW_PROMPT_MIN_WATCH_TIME_MS = 30 * 60 * 1000;
 export const REVIEW_PROMPT_COOLDOWN_MS = 90 * DAY_MS;
 
 export interface ReviewPromptState {

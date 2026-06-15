@@ -2,6 +2,7 @@ import { useAuthContext } from '@app/context/AuthContext';
 import { ReadyState } from '@app/hooks/ws/constants';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { setChatFrontTrimSuspended } from '@app/store/chat/actions/messages';
 import {
   useChatRenderPreferences,
   usePreference,
@@ -153,6 +154,16 @@ export function useChat(channelId: string, channelName: string) {
     listRef,
     getMessagesLength,
   });
+
+  // While scrolled up (maintainVisibleContentPosition active) pause front-trim
+  // of the message window so removing the oldest rows can't re-anchor the list
+  // to the top; trimming resumes when the user returns to the bottom.
+  useEffect(() => {
+    setChatFrontTrimSuspended(!shouldMaintainScrollAtEnd);
+    return () => {
+      setChatFrontTrimSuspended(false);
+    };
+  }, [shouldMaintainScrollAtEnd]);
 
   const {
     handleNewMessage: enqueueChatMessage,

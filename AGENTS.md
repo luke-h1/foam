@@ -37,4 +37,19 @@ src/store/
 
 Import chat store modules directly (for example `@app/store/chat/observables/chatStore`, `@app/store/chat/actions/messages`, `@app/store/chat/types/constants`). Do not add barrel exports under `store/chat`.
 
+## JSDoc Comments
+
+Write JSDoc comments as multi-line blocks. Never collapse them onto a single line.
+
+```ts
+/**
+ * VOD resume offset in seconds; only applied when `video` is set.
+ */
+timeSeconds?: number;
+```
+
+Do not write `/** VOD resume offset in seconds; only applied when video is set. */` on one line, even when the comment is short and even for `/** @type {...} */` annotations. The opening `/**`, the `*` content, and the closing ` */` each get their own line, indented to match the code they document.
+
+The multi-line form is the format the repo uses everywhere, so keeping to it avoids a mix of styles and keeps comments easy to extend later without reflowing the line.
+
 Put new module-level observables in `observables/`. Put write helpers that call `.set()` / `.peek()` in `actions/`. Put `useSelector` and `useObservable` in `react/`. Session-scoped caches (mention colors, shared chat badges) belong on `chatStore$`, not module-level `Map`s in components. Pure message transforms like `getVisibleMessages` also live in `actions/`. Do not wrap Legend State mutations in `useCallback` unless a React API (imperative ref, effect deps) needs a stable function reference.

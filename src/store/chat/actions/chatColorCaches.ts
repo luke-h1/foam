@@ -1,6 +1,8 @@
 import { chatStore$ } from '../observables/chatStore';
 
-/** Short-lived render caches — not persisted, trimmed aggressively for memory. */
+/**
+ * Short-lived render caches — not persisted, trimmed aggressively for memory.
+ */
 export const CHAT_SESSION_CACHE_TTL_MS = 30_000;
 
 export type SessionCacheBucket = 'mentionColors' | 'lightenedColors';

@@ -1,4 +1,7 @@
-import type { TwitchClipsRequestParams } from '@app/services/twitch-service';
+import type {
+  TwitchClipsRequestParams,
+  TwitchVideosRequestParams,
+} from '@app/services/twitch-service';
 
 export const twitchKeys = {
   all: ['twitch'] as const,
@@ -20,7 +23,22 @@ export const twitchKeys = {
       params.broadcasterId,
       params.startedAt,
       params.endedAt,
+      params.first ?? 20,
+    ] as const,
+  videos: () => [...twitchKeys.all, 'videos'] as const,
+  videosInfinite: (params: Omit<TwitchVideosRequestParams, 'after'>) =>
+    [
+      ...twitchKeys.videos(),
+      params.userId,
+      params.type ?? 'archive',
+      params.first ?? 20,
     ] as const,
   blockList: (broadcasterId: string) =>
     [...twitchKeys.all, 'blockList', broadcasterId] as const,
+};
+
+export const streamElementsKeys = {
+  all: ['streamElements'] as const,
+  chatStats: (channelName: string) =>
+    [...streamElementsKeys.all, 'chatStats', channelName] as const,
 };

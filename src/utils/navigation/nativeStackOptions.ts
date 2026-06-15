@@ -3,7 +3,9 @@ import { Platform } from 'react-native';
 
 const isIOS = Platform.OS === 'ios';
 
-/** Default for pushed/detail screens: compact title + back button. */
+/**
+ * Default for pushed/detail screens: compact title + back button.
+ */
 export const nativeStackScreenOptions = {
   headerShown: true,
   headerLargeTitle: false,
@@ -17,7 +19,9 @@ export const nativeStackScreenOptions = {
   contentStyle: { backgroundColor: theme.color.background.dark },
 } as const;
 
-/** Tab root screens only: iOS large title that collapses on scroll. */
+/**
+ * Tab root screens only: iOS large title that collapses on scroll.
+ */
 export const nativeStackTabRootScreenOptions = {
   headerLargeTitle: isIOS,
   headerTransparent: isIOS,

@@ -44,7 +44,9 @@ function ChatMessageComponent<
   );
 }
 
-/** memo() erases generics; one cast restores the component's type signature. */
+/**
+ * memo() erases generics; one cast restores the component's type signature.
+ */
 export const RichChatMessage = memo(
   ChatMessageComponent,
 ) as unknown as typeof ChatMessageComponent;

@@ -179,6 +179,10 @@ const loggingConfig = {
     enabled: true,
     color: 'magenta',
   },
+  streamElements: {
+    enabled: true,
+    color: 'whiteBright',
+  },
   chat: {
     enabled: true,
     color: 'magentaBright',
@@ -280,6 +284,7 @@ export const logger: Record<AllowedPrefix, LoggingMethods> = {
   bttv: createExtendedLogger('bttv'),
   ffz: createExtendedLogger('ffz'),
   twitch: createExtendedLogger('twitch'),
+  streamElements: createExtendedLogger('streamElements'),
   chat: createExtendedLogger('chat'),
   auth: createExtendedLogger('auth'),
   performance: createExtendedLogger('performance'),

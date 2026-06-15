@@ -33,7 +33,9 @@ function toArray(value) {
   return Array.isArray(value) ? value : [value];
 }
 
-/** @type {[hexcode: string, aliases: string[]][]} */
+/**
+ * @type {[hexcode: string, aliases: string[]][]}
+ */
 const entries = [];
 
 for (const { hexcode } of emojiData) {

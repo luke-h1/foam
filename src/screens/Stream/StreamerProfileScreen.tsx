@@ -8,22 +8,30 @@ import {
 import { IconButton } from '@app/components/IconButton/IconButton';
 import { Image } from '@app/components/Image/Image';
 import { LoadingState } from '@app/components/LoadingState/LoadingState';
+import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
 import { Text } from '@app/components/ui/Text/Text';
 import { useDownloadTwitchClip } from '@app/hooks/useDownloadTwitchClip';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { useClipsQuery } from '@app/hooks/queries/use-clips-query';
+import { useVideosQuery } from '@app/hooks/queries/use-videos-query';
+import { useStreamElementsStatsQuery } from '@app/hooks/queries/use-streamelements-stats-query';
 import { useUserQuery } from '@app/hooks/queries/use-user-query';
+import type { StreamElementsChatStats } from '@app/services/streamelements-service';
 import {
   type TwitchClip,
+  type TwitchVideo,
   type UserInfoResponse,
 } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
-import { formatViewCount } from '@app/utils/string/formatViewCount';
+import {
+  formatViewCount,
+  formatViewCountCompact,
+} from '@app/utils/string/formatViewCount';
 import { router } from 'expo-router';
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState } from 'react';
 import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { toast } from 'sonner-native';
@@ -34,12 +42,57 @@ interface StreamerProfileScreenProps {
   id: string;
 }
 
-type ClipListItem = TwitchClip;
+type ProfileTab = 'vods' | 'clips';
+
+type ProfileListItem = TwitchClip | TwitchVideo;
 
 function getClipThumbnailUrl(clip: TwitchClip) {
   return clip.thumbnail_url
     .replace('-preview-480x272', '-preview-640x360')
     .replace('-preview-260x147', '-preview-640x360');
+}
+
+function getVodThumbnailUrl(vod: TwitchVideo, fallback: string) {
+  // In-progress recordings (the broadcast is still live) have no generated
+  // thumbnail yet — Twitch returns an empty string or a `_404_processing`
+  // placeholder on vod-secure that responds 403. Fall back to the channel art.
+  if (!vod.thumbnail_url || /_404|404_processing/.test(vod.thumbnail_url)) {
+    return fallback;
+  }
+
+  return vod.thumbnail_url
+    .replace(/%?\{width\}/, '640')
+    .replace(/%?\{height\}/, '360');
+}
+
+function formatVodDuration(duration: string) {
+  const match = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/.exec(duration);
+
+  if (!match || (!match[1] && !match[2] && !match[3])) {
+    return duration;
+  }
+
+  const hours = Number(match[1] ?? 0);
+  const minutes = Number(match[2] ?? 0);
+  const seconds = Number(match[3] ?? 0);
+  const paddedMinutes = minutes.toString().padStart(hours > 0 ? 2 : 1, '0');
+  const paddedSeconds = seconds.toString().padStart(2, '0');
+
+  return hours > 0
+    ? `${hours}:${paddedMinutes}:${paddedSeconds}`
+    : `${paddedMinutes}:${paddedSeconds}`;
+}
+
+function getTopChatEmote(stats: StreamElementsChatStats) {
+  return [
+    ...stats.sevenTVEmotes,
+    ...stats.bttvEmotes,
+    ...stats.ffzEmotes,
+    ...stats.twitchEmotes,
+  ].reduce<(typeof stats.twitchEmotes)[number] | undefined>(
+    (top, emote) => (!top || emote.amount > top.amount ? emote : top),
+    undefined,
+  );
 }
 
 function formatDuration(duration: number) {
@@ -76,11 +129,58 @@ function formatRelativeAge(value: string) {
   });
 }
 
+function StreamElementsStats({ stats }: { stats: StreamElementsChatStats }) {
+  const { t } = useTranslation('stream');
+  const topEmote = getTopChatEmote(stats);
+
+  return (
+    <View style={styles.statsStrip}>
+      <View style={styles.statsRow}>
+        <View style={styles.statChip}>
+          <Text type='sm' weight='bold'>
+            {formatViewCountCompact(stats.totalMessages)}
+          </Text>
+          <Text type='xxs' color='gray.textLow'>
+            {t('messagesLabel')}
+          </Text>
+        </View>
+        <View style={styles.statChip}>
+          <Text type='sm' weight='bold'>
+            {formatViewCountCompact(stats.uniqueChatters)}
+          </Text>
+          <Text type='xxs' color='gray.textLow'>
+            {t('chattersLabel')}
+          </Text>
+        </View>
+        {topEmote ? (
+          <View style={styles.statChip}>
+            <Text type='sm' weight='bold' numberOfLines={1}>
+              {topEmote.emote}
+            </Text>
+            <Text type='xxs' color='gray.textLow'>
+              {t('topEmoteStat')}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+      <Text type='xxs' color='gray.textLow' style={styles.statsAttribution}>
+        {t('viaStreamElements')}
+      </Text>
+    </View>
+  );
+}
+
 function StreamerProfileHeader({
-  clipCount,
+  activeTab,
+  loadedCount,
+  onTabChange,
+  streamElementsStats,
   user,
 }: {
-  clipCount: number;
+  activeTab: ProfileTab;
+  loadedCount: number;
+  onTabChange: (tab: ProfileTab) => void;
+  streamElementsStats?: StreamElementsChatStats;
   user: UserInfoResponse;
 }) {
   const { t } = useTranslation('stream');
@@ -138,16 +238,72 @@ function StreamerProfileHeader({
         </Text>
       ) : null}
 
+      {streamElementsStats ? (
+        <StreamElementsStats stats={streamElementsStats} />
+      ) : null}
+
       <View style={styles.sectionRow}>
-        <Text type='lg' weight='bold'>
-          {t('clips')}
-        </Text>
-        <Text type='xs' color='gray.textLow'>
-          {clipCount > 0
-            ? t('clipsLoaded', { count: clipCount })
-            : t('topClips')}
-        </Text>
+        <SegmentedControl
+          items={[{ label: t('vods') }, { label: t('clips') }]}
+          currentIndex={activeTab === 'vods' ? 0 : 1}
+          onChange={index => onTabChange(index === 0 ? 'vods' : 'clips')}
+        />
       </View>
+
+      <Text type='xs' color='gray.textLow' style={styles.sectionCaption}>
+        {loadedCount > 0
+          ? activeTab === 'vods'
+            ? t('vodsLoaded', { count: loadedCount })
+            : t('clipsLoaded', { count: loadedCount })
+          : activeTab === 'vods'
+            ? t('recentVods')
+            : t('topClips')}
+      </Text>
+    </View>
+  );
+}
+
+function VodCard({
+  vod,
+  width,
+  fallbackImage,
+}: {
+  vod: TwitchVideo;
+  width: number;
+  fallbackImage: string;
+}) {
+  const { t } = useTranslation('stream');
+  const handleView = useCallback(() => {
+    router.push(`/streams/vod/${encodeURIComponent(vod.id)}`);
+  }, [vod.id]);
+
+  return (
+    <View style={[styles.clipCard, { width }]}>
+      <Button onPress={handleView} style={styles.thumbnailButton}>
+        <Image
+          source={getVodThumbnailUrl(vod, fallbackImage)}
+          style={styles.thumbnail}
+          contentFit='cover'
+          transition={150}
+        />
+        <View style={styles.durationBadge}>
+          <Text type='xxs' weight='bold' style={styles.badgeText}>
+            {formatVodDuration(vod.duration)}
+          </Text>
+        </View>
+      </Button>
+
+      <Button onPress={handleView} style={styles.vodTextButton}>
+        <Text type='sm' weight='bold' numberOfLines={2} style={styles.title}>
+          {vod.title || t('untitledVod')}
+        </Text>
+        <Text type='xs' color='gray.textLow' numberOfLines={1}>
+          {t('vodMeta', {
+            views: formatViewCount(vod.view_count),
+            age: formatRelativeAge(vod.published_at || vod.created_at),
+          })}
+        </Text>
+      </Button>
     </View>
   );
 }
@@ -218,11 +374,62 @@ function ClipCard({
   );
 }
 
+function ProfileTabEmptyState({
+  activeTab,
+  isError,
+  isLoading,
+  onRetry,
+}: {
+  activeTab: ProfileTab;
+  isError: boolean;
+  isLoading: boolean;
+  onRetry: () => void;
+}) {
+  const { t } = useTranslation('stream');
+
+  if (isLoading) {
+    return (
+      <View style={styles.centeredBody}>
+        <LoadingState indicatorSize='small' style={styles.inlineLoading} />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.centeredBody}>
+        <Text type='sm' weight='bold'>
+          {activeTab === 'vods' ? t('vodsUnavailable') : t('clipsUnavailable')}
+        </Text>
+        <Text type='xs' color='gray.textLow' style={styles.emptyDescription}>
+          {activeTab === 'vods'
+            ? t('vodsUnavailableDescription')
+            : t('clipsUnavailableDescription')}
+        </Text>
+        <Button onPress={onRetry} style={styles.retryButton}>
+          <Text type='sm' weight='semibold'>
+            {t('refresh')}
+          </Text>
+        </Button>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.centeredBody}>
+      <Text type='sm' color='gray.textLow'>
+        {activeTab === 'vods' ? t('noVods') : t('noClips')}
+      </Text>
+    </View>
+  );
+}
+
 export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   const { t } = useTranslation('stream');
-  const listRef = useRef<FlashListRef<ClipListItem>>(null);
+  const listRef = useRef<FlashListRef<ProfileListItem>>(null);
   const { width: windowWidth } = useWindowDimensions();
   const { download, downloadingClipId } = useDownloadTwitchClip();
+  const [activeTab, setActiveTab] = useState<ProfileTab>('vods');
 
   useScrollToTop(listRef);
 
@@ -236,21 +443,22 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   });
 
   const broadcasterId = user?.id ?? '';
+  const enabled = Boolean(broadcasterId);
 
-  const {
-    data: clipPages,
-    fetchNextPage,
-    hasNextPage,
-    isError: isClipsError,
-    isFetchingNextPage,
-    isLoading: isClipsLoading,
-    refetch: refetchClips,
-  } = useClipsQuery(
-    { broadcasterId, first: 20 },
-    { enabled: Boolean(broadcasterId) },
+  const clipsQuery = useClipsQuery({ broadcasterId, first: 20 }, { enabled });
+  const videosQuery = useVideosQuery(
+    { userId: broadcasterId, first: 20 },
+    {
+      enabled,
+    },
   );
 
-  const clips = flattenInfiniteQueryPages(clipPages?.pages);
+  const streamElementsQuery = useStreamElementsStatsQuery(user?.login ?? '', {
+    enabled: Boolean(user?.login),
+  });
+
+  const clips = flattenInfiniteQueryPages(clipsQuery.data?.pages);
+  const vods = flattenInfiniteQueryPages(videosQuery.data?.pages);
 
   const cardWidth =
     Platform.OS === 'web' && windowWidth >= 820
@@ -258,10 +466,15 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
       : windowWidth - theme.space20 * 2;
   const columns = Platform.OS === 'web' && windowWidth >= 820 ? 2 : 1;
 
-  const handleLoadMore = useInfiniteQueryLoadMore({
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
+  const handleLoadMoreClips = useInfiniteQueryLoadMore({
+    fetchNextPage: clipsQuery.fetchNextPage,
+    hasNextPage: clipsQuery.hasNextPage,
+    isFetchingNextPage: clipsQuery.isFetchingNextPage,
+  });
+  const handleLoadMoreVods = useInfiniteQueryLoadMore({
+    fetchNextPage: videosQuery.fetchNextPage,
+    hasNextPage: videosQuery.hasNextPage,
+    isFetchingNextPage: videosQuery.isFetchingNextPage,
   });
 
   const handleDownload = (clip: TwitchClip) => {
@@ -274,18 +487,34 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
     );
   };
 
-  const renderItem: ListRenderItem<ClipListItem> = ({ item }) => (
-    <ClipCard
-      clip={item}
-      downloading={downloadingClipId === item.id}
-      onDownload={handleDownload}
-      width={cardWidth}
-    />
-  );
+  const renderItem: ListRenderItem<ProfileListItem> = ({ item }) => {
+    if (activeTab === 'clips') {
+      const clip = item as TwitchClip;
+      return (
+        <ClipCard
+          clip={clip}
+          downloading={downloadingClipId === clip.id}
+          onDownload={handleDownload}
+          width={cardWidth}
+        />
+      );
+    }
 
-  const listHeader = user ? (
-    <StreamerProfileHeader user={user} clipCount={clips.length} />
-  ) : null;
+    return (
+      <VodCard
+        vod={item as TwitchVideo}
+        width={cardWidth}
+        fallbackImage={user?.offline_image_url ?? user?.profile_image_url ?? ''}
+      />
+    );
+  };
+
+  const isVods = activeTab === 'vods';
+  const items = isVods ? vods : clips;
+  const isTabLoading = isVods ? videosQuery.isLoading : clipsQuery.isLoading;
+  const isTabError = isVods ? videosQuery.isError : clipsQuery.isError;
+  const handleLoadMore = isVods ? handleLoadMoreVods : handleLoadMoreClips;
+  const refetchTab = isVods ? videosQuery.refetch : clipsQuery.refetch;
 
   if (isUserLoading) {
     return <LoadingState />;
@@ -302,56 +531,40 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
     );
   }
 
-  if (isClipsError) {
-    return (
-      <EmptyState
-        heading={t('clipsUnavailable')}
-        content={t('clipsUnavailableDescription')}
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        buttonOnPress={() => refetchClips()}
-      />
-    );
-  }
-
-  if (isClipsLoading) {
-    return (
-      <View style={styles.container}>
-        {listHeader}
-        <View style={styles.centeredBody}>
-          <LoadingState indicatorSize='small' style={styles.inlineLoading} />
-        </View>
-      </View>
-    );
-  }
-
-  if (clips.length === 0) {
-    return (
-      <View style={styles.container}>
-        {listHeader}
-        <View style={styles.centeredBody}>
-          <Text type='sm' color='gray.textLow'>
-            No clips found.
-          </Text>
-        </View>
-      </View>
-    );
-  }
+  const listHeader = (
+    <StreamerProfileHeader
+      activeTab={activeTab}
+      loadedCount={items.length}
+      onTabChange={setActiveTab}
+      streamElementsStats={streamElementsQuery.data}
+      user={user}
+    />
+  );
 
   return (
     <View style={styles.container}>
-      <FlashList<ClipListItem>
+      <FlashList<ProfileListItem>
         ref={listRef}
-        data={clips}
-        extraData={downloadingClipId}
-        key={columns}
+        data={items}
+        extraData={`${activeTab}-${downloadingClipId}`}
+        key={`${activeTab}-${columns}`}
         numColumns={columns}
         contentInsetAdjustmentBehavior='automatic'
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={listHeader}
+        ListEmptyComponent={
+          <ProfileTabEmptyState
+            activeTab={activeTab}
+            isError={isTabError}
+            isLoading={isTabLoading}
+            // eslint-disable-next-line @typescript-eslint/no-misused-promises
+            onRetry={() => refetchTab()}
+          />
+        }
         renderItem={renderItem}
         keyExtractor={item => item.id}
-        getItemType={() => 'streamer-clip'}
+        getItemType={() => activeTab}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.4}
@@ -455,13 +668,54 @@ const styles = StyleSheet.create({
     gap: theme.space16,
   },
   sectionRow: {
-    alignItems: 'baseline',
     borderTopColor: theme.colorBorderSecondary,
     borderTopWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     marginTop: theme.space20,
     paddingTop: theme.space16,
+  },
+  sectionCaption: {
+    marginTop: theme.space8,
+    textAlign: 'right',
+  },
+  statsStrip: {
+    marginTop: theme.space16,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: theme.space8,
+  },
+  statChip: {
+    backgroundColor: theme.darkActiveContent,
+    borderColor: theme.colorBorderSecondary,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius12,
+    borderWidth: StyleSheet.hairlineWidth,
+    flex: 1,
+    gap: 2,
+    paddingHorizontal: theme.space12,
+    paddingVertical: theme.space8,
+  },
+  statsAttribution: {
+    marginTop: theme.space8,
+  },
+  emptyDescription: {
+    marginTop: theme.space4,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: theme.darkActiveContent,
+    borderColor: theme.colorBorderSecondary,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    borderWidth: 1,
+    marginTop: theme.space16,
+    paddingHorizontal: theme.space20,
+    paddingVertical: theme.space8,
+  },
+  vodTextButton: {
+    gap: 2,
+    minWidth: 0,
+    paddingTop: theme.space12,
   },
   thumbnail: {
     aspectRatio: 16 / 9,

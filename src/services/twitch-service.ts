@@ -169,6 +169,33 @@ export interface TwitchClipsRequestParams {
   startedAt?: string;
 }
 
+export interface TwitchVideo {
+  id: string;
+  stream_id: string | null;
+  user_id: string;
+  user_login: string;
+  user_name: string;
+  title: string;
+  description: string;
+  created_at: string;
+  published_at: string;
+  url: string;
+  thumbnail_url: string;
+  viewable: string;
+  view_count: number;
+  language: string;
+  type: 'archive' | 'highlight' | 'upload';
+  duration: string;
+  muted_segments: { duration: number; offset: number }[] | null;
+}
+
+export interface TwitchVideosRequestParams {
+  userId: string;
+  after?: string;
+  first?: number;
+  type?: 'all' | 'archive' | 'highlight' | 'upload';
+}
+
 type EventSubStatus =
   /**
    * The subscription is enabled.
@@ -764,6 +791,25 @@ export const twitchService = {
         ...(after && { after }),
         ...(endedAt && { ended_at: endedAt }),
         ...(startedAt && { started_at: startedAt }),
+      },
+    });
+  },
+
+  /**
+   * @see https://dev.twitch.tv/docs/api/reference/#get-videos
+   */
+  getVideos: async ({
+    after,
+    first = 20,
+    type = 'archive',
+    userId,
+  }: TwitchVideosRequestParams): Promise<PaginatedList<TwitchVideo>> => {
+    return twitchApi.get<PaginatedList<TwitchVideo>>('/videos', {
+      params: {
+        user_id: userId,
+        first,
+        type,
+        ...(after && { after }),
       },
     });
   },

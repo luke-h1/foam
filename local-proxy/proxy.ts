@@ -181,6 +181,10 @@ const getDefaultToken = async () => {
 
 const renderPendingPage = (url: URL) => {
   const redirectUrl = `foam://?${url.searchParams.toString()}`;
+  const safeRedirectUrl = JSON.stringify(redirectUrl)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026');
 
   return html(`
       <html>
@@ -191,7 +195,7 @@ const renderPendingPage = (url: URL) => {
           <h1>Redirecting...</h1>
           <script>
             setTimeout(() => {
-              window.location.href = ${JSON.stringify(redirectUrl)};
+              window.location.href = ${safeRedirectUrl};
             }, 1000);
           </script>
         </body>
