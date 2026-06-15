@@ -23,10 +23,16 @@ export const twitchKeys = {
       params.broadcasterId,
       params.startedAt,
       params.endedAt,
+      params.first ?? 20,
     ] as const,
   videos: () => [...twitchKeys.all, 'videos'] as const,
   videosInfinite: (params: Omit<TwitchVideosRequestParams, 'after'>) =>
-    [...twitchKeys.videos(), params.userId, params.type] as const,
+    [
+      ...twitchKeys.videos(),
+      params.userId,
+      params.type ?? 'archive',
+      params.first ?? 20,
+    ] as const,
   blockList: (broadcasterId: string) =>
     [...twitchKeys.all, 'blockList', broadcasterId] as const,
 };

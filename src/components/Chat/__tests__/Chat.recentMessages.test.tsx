@@ -140,6 +140,7 @@ jest.mock('@app/store/chat/actions/messages', () => ({
   removeMessageById: jest.fn(),
   removeMessagesByLogin: jest.fn(),
   restoreRecentMessagesForChannel: jest.fn(),
+  setChatFrontTrimSuspended: jest.fn(),
   updateMessage: jest.fn(),
 }));
 

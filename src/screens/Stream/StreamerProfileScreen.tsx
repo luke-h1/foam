@@ -66,9 +66,9 @@ function getVodThumbnailUrl(vod: TwitchVideo, fallback: string) {
 }
 
 function formatVodDuration(duration: string) {
-  const match = /(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?/.exec(duration);
+  const match = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/.exec(duration);
 
-  if (!match) {
+  if (!match || (!match[1] && !match[2] && !match[3])) {
     return duration;
   }
 
