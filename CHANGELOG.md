@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0
+## 1.0.0-testflight
 
 ### ♻️ Refactor
 
@@ -29,7 +29,7 @@
 - Upgrade bun to 1.3.14
 - Upgrade bun to 1.3.14 in CI
 - **app:** Update legend list ([#641](https://github.com/lhowsam/foam/issues/641))
-## 1.0.0
+## 1.0.0-testflight
 
 ### ⚡ Performance
 
