@@ -42,7 +42,9 @@ export function buildRawTwitchPlayerUrl(options: {
   channel: string;
   muted: boolean;
   parent: string;
-  /** VOD resume offset in seconds; only applied when `video` is set. */
+  /**
+   * VOD resume offset in seconds; only applied when `video` is set.
+   */
   timeSeconds?: number;
   video?: string;
 }): string {

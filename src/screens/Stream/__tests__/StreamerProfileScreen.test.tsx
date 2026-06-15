@@ -1,6 +1,14 @@
 import { fireEvent, screen } from '@testing-library/react-native';
-import { twitchService as _twitchService } from '@app/services/twitch-service';
-import { streamElementsService as _streamElementsService } from '@app/services/streamelements-service';
+import {
+  twitchService as _twitchService,
+  type TwitchClip,
+  type TwitchVideo,
+  type UserInfoResponse,
+} from '@app/services/twitch-service';
+import {
+  streamElementsService as _streamElementsService,
+  type StreamElementsChatStats,
+} from '@app/services/streamelements-service';
 import render from '@app/test/render';
 import { StreamerProfileScreen } from '@app/screens/Stream/StreamerProfileScreen';
 
@@ -48,7 +56,7 @@ jest.mock('@app/components/SegmentedControl/SegmentedControl', () => ({
 const twitchService = jest.mocked(_twitchService);
 const streamElementsService = jest.mocked(_streamElementsService);
 
-const mockUser = {
+const mockUser: UserInfoResponse = {
   id: '123',
   login: 'shroud',
   display_name: 'shroud',
@@ -61,7 +69,7 @@ const mockUser = {
   view_count: 0,
 };
 
-const mockVideo = {
+const mockVideo: TwitchVideo = {
   id: 'v1',
   stream_id: 's1',
   user_id: '123',
@@ -76,12 +84,12 @@ const mockVideo = {
   viewable: 'public',
   view_count: 12345,
   language: 'en',
-  type: 'archive' as const,
+  type: 'archive',
   duration: '1h2m3s',
   muted_segments: null,
 };
 
-const mockClip = {
+const mockClip: TwitchClip = {
   id: 'c1',
   url: 'https://clips.twitch.tv/c1',
   embed_url: 'https://clips.twitch.tv/embed?clip=c1',
@@ -101,7 +109,7 @@ const mockClip = {
   is_featured: false,
 };
 
-const mockChatStats = {
+const mockChatStats: StreamElementsChatStats = {
   channel: 'shroud',
   totalMessages: 69134962,
   uniqueChatters: 118560,
