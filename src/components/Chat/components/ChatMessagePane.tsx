@@ -1,4 +1,5 @@
 import { Text } from '@app/components/ui/Text/Text';
+import { theme } from '@app/styles/themes';
 import { useMessages } from '@app/store/chat/react/selectors';
 import { logger } from '@app/utils/logger';
 import { useEffect, useMemo, useRef, memo } from 'react';
@@ -11,6 +12,7 @@ import {
   View,
   type ViewStyle,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { ChatPaneFlags } from '../types/chatUiFlags';
 import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
@@ -96,6 +98,17 @@ export const ChatMessagePane = memo(
     const hasMessages = rawMessages.length > 0;
     const hasEverHadMessagesRef = useRef(false);
     const lastEmptyLogAtRef = useRef<number>(0);
+    const insets = useSafeAreaInsets();
+
+    // The composer floats over the bottom of the list — Chat.tsx lifts its
+    // KeyboardStickyView up by `insets.bottom`, so without this the newest row
+    // scrolls to the list's true bottom and lands *behind* the composer (only
+    // a sliver visible above it). Reserve that lift plus a small gap so the
+    // newest message always rests just above the composer.
+    const listContentStyleWithComposerClearance = useMemo(
+      () => [listContentStyle, { paddingBottom: insets.bottom + theme.space8 }],
+      [insets.bottom, listContentStyle],
+    );
 
     const visibleMessages = useMemo(
       () =>
@@ -206,7 +219,7 @@ export const ChatMessagePane = memo(
           keyExtractor={keyExtractor}
           getItemType={getItemType}
           extraData={messageListExtraData}
-          contentContainerStyle={listContentStyle}
+          contentContainerStyle={listContentStyleWithComposerClearance}
           onViewableMessagesChange={onViewableMessagesChange}
         />
       </View>

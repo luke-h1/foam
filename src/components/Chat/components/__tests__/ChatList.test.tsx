@@ -69,7 +69,9 @@ describe('ChatList', () => {
       extraData: { showTimestamps: false },
       maintainScrollAtEnd: { on: { dataChange: true, itemLayout: true } },
       maintainScrollAtEndThreshold: 0.1,
-      maintainVisibleContentPosition: true,
+      // Off while pinned to the bottom (shouldMaintainScrollAtEnd) so it can't
+      // fight maintainScrollAtEnd; on only when scrolled up to hold position.
+      maintainVisibleContentPosition: false,
       recycleItems: false,
       onEndReachedThreshold: 0.02,
       viewabilityConfig: {

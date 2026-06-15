@@ -19,6 +19,7 @@ import {
   useUpdatePreferences,
 } from '@app/store/preferenceStore';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import {
   useEffect,
   useLayoutEffect,
@@ -63,6 +64,10 @@ interface LiveStreamScreenProps {
 const LANDSCAPE_CHAT_RESIZE_ACTIVATION_DISTANCE = 6;
 const LANDSCAPE_CHAT_RESIZE_FAIL_DISTANCE = 12;
 const LANDSCAPE_CHAT_DIVIDER_RESTING_OPACITY = 0.55;
+
+// Hold the screen awake while watching so playback isn't interrupted by the
+// idle-timer auto-lock — which kicks in aggressively under Low Power Mode.
+const KEEP_AWAKE_TAG = 'live-stream';
 
 const LANDSCAPE_CHAT_CONTROLS_TOP_OFFSET = 60;
 const CHAT_CONNECTION_FALLBACK_MS = 10_000;
@@ -154,7 +159,9 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   useFocusEffect(
     useCallback(() => {
+      void activateKeepAwakeAsync(KEEP_AWAKE_TAG);
       return () => {
+        void deactivateKeepAwake(KEEP_AWAKE_TAG);
         streamPlayerRef.current?.pause();
         if (isStreamEnabled) {
           dispatchUi({

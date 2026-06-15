@@ -338,12 +338,14 @@ export const useChatScroll = ({
 
     /**
      * Re-snap to the newest row whenever we're pinned to the bottom — not just
-     * in the short window after an explicit scroll-to-bottom. LegendList's
-     * maintainScrollAtEnd scrolls using the *estimated* row height, so an
-     * under-estimated emote/badge/username row lands a few px short and gets
-     * clipped at the viewport bottom until its real height is measured. The
-     * scrollToLatestOnce guard (isAtBottomRef + not dragging) keeps this from
-     * disturbing a user who has scrolled up to read history.
+     * in the short window after an explicit scroll-to-bottom. Native
+     * maintainScrollAtEnd only re-pins within maintainScrollAtEndThreshold
+     * (10% of the viewport), so a tall under-estimated emote/username row lands
+     * short and stays clipped at the bottom. The manual scrollToEnd has no
+     * threshold and follows it all the way down. With maintainVisibleContentPosition
+     * disabled at the bottom there's no data-anchoring left to fight, so this no
+     * longer jitters. The scrollToLatestOnce guard (isAtBottomRef + not dragging)
+     * keeps it from disturbing a user who has scrolled up to read history.
      */
     if (
       !shouldAnchorBottomOnContentChangeRef.current &&
