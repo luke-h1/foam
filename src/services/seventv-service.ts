@@ -645,6 +645,6 @@ export const sevenTvService = {
 
     return paints
       .map(convertV4PaintToPaintData)
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => a.name.localeCompare(b.name, 'en'));
   },
 } as const;

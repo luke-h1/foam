@@ -48,6 +48,7 @@ async function fetchAllPaints() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query: PAINTS_QUERY }),
+    signal: AbortSignal.timeout(30_000),
   });
 
   if (!res.ok) {
@@ -61,8 +62,9 @@ async function fetchAllPaints() {
 
   const paints = result.data?.paints?.paints ?? [];
   // Sort by name so the fixture diffs stay stable between refreshes, matching
-  // the ordering sevenTvService.fetchAllPaints() applies.
-  return [...paints].sort((a, b) => a.name.localeCompare(b.name));
+  // the ordering sevenTvService.fetchAllPaints() applies. Pin the locale so the
+  // ordering is deterministic regardless of the machine's default locale.
+  return [...paints].sort((a, b) => a.name.localeCompare(b.name, 'en'));
 }
 
 const paints = await fetchAllPaints();
