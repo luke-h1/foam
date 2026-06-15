@@ -13,7 +13,7 @@ import { estimateChatMessageHeightWithPretext } from '../util/pretextChatHeight'
 import type { AnyChatMessageType } from '../util/messageHandlers';
 import { getVisibleMessages } from '../util/visibleMessages';
 
-jest.mock('@legendapp/list', () => {
+jest.mock('@legendapp/list/react-native', () => {
   const React = require('react');
   const { View: MockView } = require('react-native');
 
