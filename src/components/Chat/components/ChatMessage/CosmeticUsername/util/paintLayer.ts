@@ -188,10 +188,6 @@ export function imageRepeatFromCanvasRepeat(
   canvasRepeat: PaintCanvasRepeat,
   layerRepeat: boolean,
 ): 'cover' | 'contain' | 'fill' | 'none' | 'scale-down' {
-  if (canvasRepeat === 'no-repeat' || canvasRepeat === '') {
-    return 'cover';
-  }
-
   if (
     layerRepeat ||
     canvasRepeat === 'repeat' ||
@@ -203,5 +199,5 @@ export function imageRepeatFromCanvasRepeat(
     return 'none';
   }
 
-  return 'cover';
+  return 'fill';
 }

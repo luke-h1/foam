@@ -1,4 +1,4 @@
-import type { LegendListRenderItemProps } from '@legendapp/list';
+import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
 
 import type { EmoteMenuSet } from './emoteMenuData';
 import { SetRailButton } from './SetRailButton';

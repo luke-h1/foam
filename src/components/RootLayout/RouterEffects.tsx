@@ -13,7 +13,6 @@ import {
   setNavigationReady,
   syncNavigationState,
 } from '@app/navigators/navigationUtilities';
-import { parseTwitchUrl, type TwitchLink } from '@app/navigators/twitchLinking';
 import { logger } from '@app/utils/logger';
 import type { RouterAction } from 'expo-quick-actions/router';
 import { router, usePathname } from 'expo-router';
@@ -62,18 +61,6 @@ const getHomeQuickActions = (showFollowingAction: boolean): RouterAction[] => {
     ...quickActionsBase,
   ];
 };
-
-function getChannelLoginFromTwitchLink(link: TwitchLink): string | null {
-  if (!link) {
-    return null;
-  }
-
-  if (link.type === 'vod' || link.type === 'clip') {
-    return null;
-  }
-
-  return link.channelLogin;
-}
 
 export function RouterEffects() {
   const pathname = usePathname();
@@ -165,26 +152,6 @@ export function RouterEffects() {
           router.replace('/tabs/following');
         }
         return;
-      }
-
-      const link = parseTwitchUrl(url);
-      logger.auth.info(`${logPrefix} parseTwitchUrl result`, {
-        url,
-        link: link ?? null,
-      });
-      if (!link) {
-        return;
-      }
-
-      if (link.type === 'clip') {
-        router.push(`/streams/clip/${encodeURIComponent(link.clipId)}`);
-        return;
-      }
-
-      const channelLogin = getChannelLoginFromTwitchLink(link);
-
-      if (channelLogin) {
-        router.push(`/streams/live-stream/${channelLogin}`);
       }
     }
 

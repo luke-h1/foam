@@ -8,7 +8,7 @@ const mockLegendList = jest.fn((_props: unknown) => (
   <View testID='flash-list' />
 ));
 
-jest.mock('@legendapp/list', () => ({
+jest.mock('@legendapp/list/react-native', () => ({
   LegendList: (props: unknown) => mockLegendList(props),
 }));
 
@@ -44,9 +44,9 @@ describe('ChatList', () => {
       drawDistance?: number;
       estimatedItemSize?: number;
       extraData?: unknown;
-      getEstimatedItemSize?: unknown;
-      initialContainerPoolRatio?: number;
-      maintainScrollAtEnd?: boolean | { onDataChange: boolean };
+      maintainScrollAtEnd?:
+        | boolean
+        | { on: { dataChange?: boolean; itemLayout?: boolean } };
       maintainScrollAtEndThreshold?: number;
       onEndReachedThreshold?: number;
       recycleItems?: boolean;
@@ -57,8 +57,6 @@ describe('ChatList', () => {
       drawDistance: props.drawDistance,
       estimatedItemSize: props.estimatedItemSize,
       extraData: props.extraData,
-      getEstimatedItemSize: props.getEstimatedItemSize,
-      initialContainerPoolRatio: props.initialContainerPoolRatio,
       maintainScrollAtEnd: props.maintainScrollAtEnd,
       maintainScrollAtEndThreshold: props.maintainScrollAtEndThreshold,
       maintainVisibleContentPosition: props.maintainVisibleContentPosition,
@@ -69,11 +67,9 @@ describe('ChatList', () => {
       drawDistance: 250,
       estimatedItemSize: 34,
       extraData: { showTimestamps: false },
-      getEstimatedItemSize: undefined,
-      initialContainerPoolRatio: 1,
-      maintainScrollAtEnd: { onDataChange: true },
+      maintainScrollAtEnd: { on: { dataChange: true, itemLayout: true } },
       maintainScrollAtEndThreshold: 0.1,
-      maintainVisibleContentPosition: false,
+      maintainVisibleContentPosition: true,
       recycleItems: false,
       onEndReachedThreshold: 0.02,
       viewabilityConfig: {

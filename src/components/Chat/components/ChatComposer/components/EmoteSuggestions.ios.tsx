@@ -2,7 +2,10 @@ import { memo, useMemo } from 'react';
 import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
 import type { SanitisedEmote } from '@app/types/emote';
-import { LegendList, type LegendListRenderItemProps } from '@legendapp/list';
+import {
+  LegendList,
+  type LegendListRenderItemProps,
+} from '@legendapp/list/react-native';
 import { StyleSheet, View } from 'react-native';
 
 const EMOTE_SUGGESTION_ITEM_SIZE = 44;

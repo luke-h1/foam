@@ -54,6 +54,12 @@ export interface Preferences {
   chatMentionHaptics: boolean;
   customHighlights: CustomHighlight[];
   shakeToReport: boolean;
+  /**
+   * User-chosen landscape chat panel width in px, set by dragging the
+   * video/chat divider. Null until the user resizes, then re-clamped to the
+   * current screen at layout time so it stays valid across devices.
+   */
+  landscapeChatWidth: number | null;
 }
 
 const initialPreferences: Preferences = {
@@ -91,6 +97,7 @@ const initialPreferences: Preferences = {
   chatMentionHaptics: true,
   customHighlights: [],
   shakeToReport: true,
+  landscapeChatWidth: null,
 };
 
 ensureObservablePersistenceConfig();

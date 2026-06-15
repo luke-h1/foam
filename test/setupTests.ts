@@ -43,8 +43,21 @@ function canvasKitStub(): any {
 
 jest.mock('expo-font');
 jest.mock('expo-asset');
-// Mock react-native-vector-icons - mocks are in __mocks__ directory
 jest.mock('react-native-vector-icons');
+
+jest.mock('@expo/ui/community/masked-view', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    MaskedView: ({ maskElement, children, ...props }: any) =>
+      React.createElement(
+        View,
+        { testID: 'masked-view', ...props },
+        maskElement,
+        children,
+      ),
+  };
+});
 
 /**
  * Polyfill for setImmediate which Sentry uses under the hood

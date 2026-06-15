@@ -1,10 +1,36 @@
-import { sevenTvService } from '@app/services/seventv-service';
+import {
+  convertV4PaintToPaintData,
+  type SevenTvPaintSource,
+} from '@app/utils/color/sevenTvPaintData';
 import type { PaintData } from '@app/utils/color/seventv-ws-service';
+import {
+  FlashList,
+  type ListRenderItem,
+} from '@app/components/FlashList/FlashList';
 import type { Meta, StoryObj } from '@storybook/react';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { Text } from '@app/components/ui/Text/Text';
+import { sevenTvPaintsFixture } from './__fixtures__/sevenTvPaints.fixture';
 import { PaintedUsername } from './CosmeticUsername/CosmeticUsername';
+
+// A paint is animated when it has an image layer with a multi-frame texture.
+// frameCount only survives on the raw fixture (conversion drops it), so classify
+// before converting. Refresh the offline snapshot with `bun gen:paints`.
+function isAnimatedPaint(paint: SevenTvPaintSource): boolean {
+  return paint.data.layers.some(
+    layer =>
+      layer.ty.__typename === 'PaintLayerTypeImage' &&
+      layer.ty.images.some(image => image.frameCount > 1),
+  );
+}
+
+const animatedPaints = sevenTvPaintsFixture
+  .filter(isAnimatedPaint)
+  .map(convertV4PaintToPaintData);
+
+const staticPaints = sevenTvPaintsFixture
+  .filter(paint => !isAnimatedPaint(paint))
+  .map(convertV4PaintToPaintData);
 
 const meta = {
   title: 'components/Chat/PaintedUsername',
@@ -43,68 +69,63 @@ export const Default: Story = {
   },
 };
 
-function AllPaintsFromApiGallery() {
-  const [paints, setPaints] = useState<PaintData[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+type GalleryRow =
+  | { kind: 'header'; title: string; count: number }
+  | { kind: 'paint'; paint: PaintData };
 
-  useEffect(() => {
-    let cancelled = false;
+const galleryRows: GalleryRow[] = [
+  { kind: 'header', title: 'Animated', count: animatedPaints.length },
+  ...animatedPaints.map(paint => ({ kind: 'paint' as const, paint })),
+  { kind: 'header', title: 'Static', count: staticPaints.length },
+  ...staticPaints.map(paint => ({ kind: 'paint' as const, paint })),
+];
 
-    sevenTvService
-      .fetchAllPaints()
-      .then(result => {
-        if (!cancelled) {
-          setPaints(result);
-        }
-      })
-      .catch(fetchError => {
-        if (!cancelled) {
-          setError(
-            fetchError instanceof Error
-              ? fetchError.message
-              : 'Failed to load paints',
-          );
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (error) {
+const renderGalleryRow: ListRenderItem<GalleryRow> = ({ item }) => {
+  if (item.kind === 'header') {
     return (
-      <Text color='red' type='sm'>
-        {error}
+      <Text
+        color='gray.text'
+        type='sm'
+        weight='bold'
+        style={{ paddingTop: 16, paddingBottom: 4 }}
+      >
+        {item.title} ({item.count})
       </Text>
     );
   }
 
-  if (!paints) {
-    return <ActivityIndicator color='#FFFFFF' />;
-  }
-
   return (
-    <ScrollView contentContainerStyle={{ gap: 10, paddingBottom: 24 }}>
+    <View style={{ gap: 2, paddingBottom: 10 }}>
       <Text color='gray.textLow' type='xs'>
-        {paints.length} paints from 7TV API
+        {item.paint.name}
       </Text>
-      {paints.map(paint => (
-        <View key={paint.id} style={{ gap: 2 }}>
-          <Text color='gray.textLow' type='xs'>
-            {paint.name}
-          </Text>
-          <PaintedUsername paint={paint} showColon={false} username='Preview' />
-        </View>
-      ))}
-    </ScrollView>
+      <PaintedUsername
+        paint={item.paint}
+        showColon={false}
+        username='Preview'
+      />
+    </View>
+  );
+};
+
+function AllPaintsGallery() {
+  return (
+    <FlashList<GalleryRow>
+      data={galleryRows}
+      renderItem={renderGalleryRow}
+      keyExtractor={item =>
+        item.kind === 'header' ? `header-${item.title}` : item.paint.id
+      }
+      getItemType={item => item.kind}
+      contentContainerStyle={{ paddingBottom: 24 }}
+    />
   );
 }
 
-export const AllPaintsFromApi: Story = {
+export const AllPaints: Story = {
   args: {
     username: 'Preview',
     showColon: false,
   },
-  render: () => <AllPaintsFromApiGallery />,
+  render: () => <AllPaintsGallery />,
 };

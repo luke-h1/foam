@@ -9,9 +9,52 @@ exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid c
     }
   }
 >
-  <RNCMaskedView>
+  <View
+    style={
+      {
+        "alignSelf": "flex-start",
+        "position": "relative",
+      }
+    }
+  >
+    <Text
+      maxFontSizeMultiplier={1.4}
+      style={
+        [
+          {
+            "fontSize": 16,
+            "lineHeight": 24,
+          },
+          {
+            "color": "#fafafa",
+            "fontFamily": "Montserrat_400Regular",
+            "fontStyle": "normal",
+            "fontVariant": undefined,
+            "fontWeight": undefined,
+            "textAlign": "left",
+          },
+          [
+            [
+              {
+                "color": "black",
+                "fontSize": 14,
+                "fontWeight": "bold",
+                "lineHeight": 17,
+              },
+              undefined,
+              {},
+            ],
+            {
+              "opacity": 0,
+            },
+          ],
+        ]
+      }
+      textBreakStrategy="simple"
+    >
+      UrlPaintUser: 
+    </Text>
     <View
-      pointerEvents="none"
       style={
         {
           "bottom": 0,
@@ -21,6 +64,7 @@ exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid c
           "top": 0,
         }
       }
+      testID="masked-view"
     >
       <View
         style={
@@ -67,105 +111,105 @@ exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid c
           UrlPaintUser: 
         </Text>
       </View>
-    </View>
-    <View
-      style={
-        {
-          "flexDirection": "row",
-          "position": "relative",
-        }
-      }
-    >
       <View
         style={
-          [
-            {
-              "bottom": 0,
-              "left": 0,
-              "position": "absolute",
-              "right": 0,
-              "top": 0,
-            },
-            {
-              "backgroundColor": "rgba(255, 165, 0, 1.000)",
-            },
-          ]
-        }
-      />
-      <View
-        style={
-          [
-            {
-              "overflow": "hidden",
-            },
-            {
-              "bottom": 0,
-              "left": 0,
-              "position": "absolute",
-              "right": 0,
-              "top": 0,
-            },
-          ]
+          {
+            "flexDirection": "row",
+            "position": "relative",
+          }
         }
       >
         <View
-          contentFit="cover"
-          source={
-            {
-              "uri": "https://example.com/paint.png",
-            }
-          }
           style={
-            {
-              "bottom": 0,
-              "left": 0,
-              "position": "absolute",
-              "right": 0,
-              "top": 0,
-            }
-          }
-          testID="expo-image"
-        />
-      </View>
-      <Text
-        maxFontSizeMultiplier={1.4}
-        style={
-          [
-            {
-              "fontSize": 16,
-              "lineHeight": 24,
-            },
-            {
-              "color": "#fafafa",
-              "fontFamily": "Montserrat_400Regular",
-              "fontStyle": "normal",
-              "fontVariant": undefined,
-              "fontWeight": undefined,
-              "textAlign": "left",
-            },
             [
-              [
-                {
-                  "color": "black",
-                  "fontSize": 14,
-                  "fontWeight": "bold",
-                  "lineHeight": 17,
-                },
-                undefined,
-                {},
-              ],
               {
-                "opacity": 0,
+                "bottom": 0,
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "top": 0,
               },
-            ],
-          ]
-        }
-        textBreakStrategy="simple"
-      >
-        UrlPaintUser: 
-      </Text>
+              {
+                "backgroundColor": "rgba(255, 165, 0, 1.000)",
+              },
+            ]
+          }
+        />
+        <View
+          style={
+            [
+              {
+                "overflow": "hidden",
+              },
+              {
+                "bottom": 0,
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "top": 0,
+              },
+            ]
+          }
+        >
+          <View
+            contentFit="fill"
+            source={
+              {
+                "uri": "https://example.com/paint.png",
+              }
+            }
+            style={
+              {
+                "bottom": 0,
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "top": 0,
+              }
+            }
+            testID="expo-image"
+          />
+        </View>
+        <Text
+          maxFontSizeMultiplier={1.4}
+          style={
+            [
+              {
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              {
+                "color": "#fafafa",
+                "fontFamily": "Montserrat_400Regular",
+                "fontStyle": "normal",
+                "fontVariant": undefined,
+                "fontWeight": undefined,
+                "textAlign": "left",
+              },
+              [
+                [
+                  {
+                    "color": "black",
+                    "fontSize": 14,
+                    "fontWeight": "bold",
+                    "lineHeight": 17,
+                  },
+                  undefined,
+                  {},
+                ],
+                {
+                  "opacity": 0,
+                },
+              ],
+            ]
+          }
+          textBreakStrategy="simple"
+        >
+          UrlPaintUser: 
+        </Text>
+      </View>
     </View>
-  </RNCMaskedView>
+  </View>
 </View>
 `;
 
@@ -263,9 +307,52 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
   >
     RoseGoldUser: 
   </Text>
-  <RNCMaskedView>
+  <View
+    style={
+      {
+        "alignSelf": "flex-start",
+        "position": "relative",
+      }
+    }
+  >
+    <Text
+      maxFontSizeMultiplier={1.4}
+      style={
+        [
+          {
+            "fontSize": 16,
+            "lineHeight": 24,
+          },
+          {
+            "color": "#fafafa",
+            "fontFamily": "Montserrat_400Regular",
+            "fontStyle": "normal",
+            "fontVariant": undefined,
+            "fontWeight": undefined,
+            "textAlign": "left",
+          },
+          [
+            [
+              {
+                "color": "black",
+                "fontSize": 14,
+                "fontWeight": "bold",
+                "lineHeight": 17,
+              },
+              undefined,
+              {},
+            ],
+            {
+              "opacity": 0,
+            },
+          ],
+        ]
+      }
+      textBreakStrategy="simple"
+    >
+      RoseGoldUser: 
+    </Text>
     <View
-      pointerEvents="none"
       style={
         {
           "bottom": 0,
@@ -275,6 +362,7 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
           "top": 0,
         }
       }
+      testID="masked-view"
     >
       <View
         style={
@@ -321,124 +409,124 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
           RoseGoldUser: 
         </Text>
       </View>
-    </View>
-    <View
-      style={
-        {
-          "flexDirection": "row",
-          "position": "relative",
-        }
-      }
-    >
       <View
         style={
-          [
-            {
-              "bottom": 0,
-              "left": 0,
-              "position": "absolute",
-              "right": 0,
-              "top": 0,
-            },
-            {
-              "backgroundColor": "#FFFFFF",
-            },
-          ]
-        }
-      />
-      <View
-        style={
-          [
-            {
-              "overflow": "hidden",
-            },
-            {
-              "bottom": 0,
-              "left": 0,
-              "position": "absolute",
-              "right": 0,
-              "top": 0,
-            },
-          ]
+          {
+            "flexDirection": "row",
+            "position": "relative",
+          }
         }
       >
-        <ViewManagerAdapter_ExpoLinearGradient
-          colors={
-            [
-              4294866580,
-              4294953140,
-              4294921587,
-            ]
-          }
-          endPoint={
-            [
-              1,
-              0.5,
-            ]
-          }
-          locations={
-            [
-              0,
-              0.5,
-              1,
-            ]
-          }
-          startPoint={
-            [
-              0,
-              0.5000000000000001,
-            ]
-          }
+        <View
           style={
-            {
-              "bottom": 0,
-              "left": 0,
-              "position": "absolute",
-              "right": 0,
-              "top": 0,
-            }
+            [
+              {
+                "bottom": 0,
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "top": 0,
+              },
+              {
+                "backgroundColor": "#FFFFFF",
+              },
+            ]
           }
         />
-      </View>
-      <Text
-        maxFontSizeMultiplier={1.4}
-        style={
-          [
-            {
-              "fontSize": 16,
-              "lineHeight": 24,
-            },
-            {
-              "color": "#fafafa",
-              "fontFamily": "Montserrat_400Regular",
-              "fontStyle": "normal",
-              "fontVariant": undefined,
-              "fontWeight": undefined,
-              "textAlign": "left",
-            },
+        <View
+          style={
             [
-              [
-                {
-                  "color": "black",
-                  "fontSize": 14,
-                  "fontWeight": "bold",
-                  "lineHeight": 17,
-                },
-                undefined,
-                {},
-              ],
               {
-                "opacity": 0,
+                "overflow": "hidden",
               },
-            ],
-          ]
-        }
-        textBreakStrategy="simple"
-      >
-        RoseGoldUser: 
-      </Text>
+              {
+                "bottom": 0,
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "top": 0,
+              },
+            ]
+          }
+        >
+          <ViewManagerAdapter_ExpoLinearGradient
+            colors={
+              [
+                4294866580,
+                4294953140,
+                4294921587,
+              ]
+            }
+            endPoint={
+              [
+                1,
+                0.5,
+              ]
+            }
+            locations={
+              [
+                0,
+                0.5,
+                1,
+              ]
+            }
+            startPoint={
+              [
+                0,
+                0.5000000000000001,
+              ]
+            }
+            style={
+              {
+                "bottom": 0,
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "top": 0,
+              }
+            }
+          />
+        </View>
+        <Text
+          maxFontSizeMultiplier={1.4}
+          style={
+            [
+              {
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              {
+                "color": "#fafafa",
+                "fontFamily": "Montserrat_400Regular",
+                "fontStyle": "normal",
+                "fontVariant": undefined,
+                "fontWeight": undefined,
+                "textAlign": "left",
+              },
+              [
+                [
+                  {
+                    "color": "black",
+                    "fontSize": 14,
+                    "fontWeight": "bold",
+                    "lineHeight": 17,
+                  },
+                  undefined,
+                  {},
+                ],
+                {
+                  "opacity": 0,
+                },
+              ],
+            ]
+          }
+          textBreakStrategy="simple"
+        >
+          RoseGoldUser: 
+        </Text>
+      </View>
     </View>
-  </RNCMaskedView>
+  </View>
 </View>
 `;
 
@@ -451,9 +539,52 @@ exports[`PaintedUsername Snapshots should match snapshot with long username 1`] 
     }
   }
 >
-  <RNCMaskedView>
+  <View
+    style={
+      {
+        "alignSelf": "flex-start",
+        "position": "relative",
+      }
+    }
+  >
+    <Text
+      maxFontSizeMultiplier={1.4}
+      style={
+        [
+          {
+            "fontSize": 16,
+            "lineHeight": 24,
+          },
+          {
+            "color": "#fafafa",
+            "fontFamily": "Montserrat_400Regular",
+            "fontStyle": "normal",
+            "fontVariant": undefined,
+            "fontWeight": undefined,
+            "textAlign": "left",
+          },
+          [
+            [
+              {
+                "color": "black",
+                "fontSize": 14,
+                "fontWeight": "bold",
+                "lineHeight": 17,
+              },
+              undefined,
+              {},
+            ],
+            {
+              "opacity": 0,
+            },
+          ],
+        ]
+      }
+      textBreakStrategy="simple"
+    >
+      VeryLongUsernameForTestingPurposes: 
+    </Text>
     <View
-      pointerEvents="none"
       style={
         {
           "bottom": 0,
@@ -463,6 +594,7 @@ exports[`PaintedUsername Snapshots should match snapshot with long username 1`] 
           "top": 0,
         }
       }
+      testID="masked-view"
     >
       <View
         style={
@@ -509,124 +641,124 @@ exports[`PaintedUsername Snapshots should match snapshot with long username 1`] 
           VeryLongUsernameForTestingPurposes: 
         </Text>
       </View>
-    </View>
-    <View
-      style={
-        {
-          "flexDirection": "row",
-          "position": "relative",
-        }
-      }
-    >
       <View
         style={
-          [
-            {
-              "bottom": 0,
-              "left": 0,
-              "position": "absolute",
-              "right": 0,
-              "top": 0,
-            },
-            {
-              "backgroundColor": "#FFFFFF",
-            },
-          ]
-        }
-      />
-      <View
-        style={
-          [
-            {
-              "overflow": "hidden",
-            },
-            {
-              "bottom": 0,
-              "left": 0,
-              "position": "absolute",
-              "right": 0,
-              "top": 0,
-            },
-          ]
+          {
+            "flexDirection": "row",
+            "position": "relative",
+          }
         }
       >
-        <ViewManagerAdapter_ExpoLinearGradient
-          colors={
-            [
-              4291049729,
-              4294940210,
-              4291049729,
-            ]
-          }
-          endPoint={
-            [
-              1,
-              0.5,
-            ]
-          }
-          locations={
-            [
-              0,
-              0.5,
-              1,
-            ]
-          }
-          startPoint={
-            [
-              0,
-              0.5000000000000001,
-            ]
-          }
+        <View
           style={
-            {
-              "bottom": 0,
-              "left": 0,
-              "position": "absolute",
-              "right": 0,
-              "top": 0,
-            }
+            [
+              {
+                "bottom": 0,
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "top": 0,
+              },
+              {
+                "backgroundColor": "#FFFFFF",
+              },
+            ]
           }
         />
-      </View>
-      <Text
-        maxFontSizeMultiplier={1.4}
-        style={
-          [
-            {
-              "fontSize": 16,
-              "lineHeight": 24,
-            },
-            {
-              "color": "#fafafa",
-              "fontFamily": "Montserrat_400Regular",
-              "fontStyle": "normal",
-              "fontVariant": undefined,
-              "fontWeight": undefined,
-              "textAlign": "left",
-            },
+        <View
+          style={
             [
-              [
-                {
-                  "color": "black",
-                  "fontSize": 14,
-                  "fontWeight": "bold",
-                  "lineHeight": 17,
-                },
-                undefined,
-                {},
-              ],
               {
-                "opacity": 0,
+                "overflow": "hidden",
               },
-            ],
-          ]
-        }
-        textBreakStrategy="simple"
-      >
-        VeryLongUsernameForTestingPurposes: 
-      </Text>
+              {
+                "bottom": 0,
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "top": 0,
+              },
+            ]
+          }
+        >
+          <ViewManagerAdapter_ExpoLinearGradient
+            colors={
+              [
+                4291049729,
+                4294940210,
+                4291049729,
+              ]
+            }
+            endPoint={
+              [
+                1,
+                0.5,
+              ]
+            }
+            locations={
+              [
+                0,
+                0.5,
+                1,
+              ]
+            }
+            startPoint={
+              [
+                0,
+                0.5000000000000001,
+              ]
+            }
+            style={
+              {
+                "bottom": 0,
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "top": 0,
+              }
+            }
+          />
+        </View>
+        <Text
+          maxFontSizeMultiplier={1.4}
+          style={
+            [
+              {
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              {
+                "color": "#fafafa",
+                "fontFamily": "Montserrat_400Regular",
+                "fontStyle": "normal",
+                "fontVariant": undefined,
+                "fontWeight": undefined,
+                "textAlign": "left",
+              },
+              [
+                [
+                  {
+                    "color": "black",
+                    "fontSize": 14,
+                    "fontWeight": "bold",
+                    "lineHeight": 17,
+                  },
+                  undefined,
+                  {},
+                ],
+                {
+                  "opacity": 0,
+                },
+              ],
+            ]
+          }
+          textBreakStrategy="simple"
+        >
+          VeryLongUsernameForTestingPurposes: 
+        </Text>
+      </View>
     </View>
-  </RNCMaskedView>
+  </View>
 </View>
 `;
 
@@ -737,9 +869,52 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
   >
     DivisionUser: 
   </Text>
-  <RNCMaskedView>
+  <View
+    style={
+      {
+        "alignSelf": "flex-start",
+        "position": "relative",
+      }
+    }
+  >
+    <Text
+      maxFontSizeMultiplier={1.4}
+      style={
+        [
+          {
+            "fontSize": 16,
+            "lineHeight": 24,
+          },
+          {
+            "color": "#fafafa",
+            "fontFamily": "Montserrat_400Regular",
+            "fontStyle": "normal",
+            "fontVariant": undefined,
+            "fontWeight": undefined,
+            "textAlign": "left",
+          },
+          [
+            [
+              {
+                "color": "black",
+                "fontSize": 14,
+                "fontWeight": "bold",
+                "lineHeight": 17,
+              },
+              undefined,
+              {},
+            ],
+            {
+              "opacity": 0,
+            },
+          ],
+        ]
+      }
+      textBreakStrategy="simple"
+    >
+      DivisionUser: 
+    </Text>
     <View
-      pointerEvents="none"
       style={
         {
           "bottom": 0,
@@ -749,6 +924,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
           "top": 0,
         }
       }
+      testID="masked-view"
     >
       <View
         style={
@@ -795,124 +971,124 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
           DivisionUser: 
         </Text>
       </View>
-    </View>
-    <View
-      style={
-        {
-          "flexDirection": "row",
-          "position": "relative",
-        }
-      }
-    >
       <View
         style={
-          [
-            {
-              "bottom": 0,
-              "left": 0,
-              "position": "absolute",
-              "right": 0,
-              "top": 0,
-            },
-            {
-              "backgroundColor": "#FFFFFF",
-            },
-          ]
-        }
-      />
-      <View
-        style={
-          [
-            {
-              "overflow": "hidden",
-            },
-            {
-              "bottom": 0,
-              "left": 0,
-              "position": "absolute",
-              "right": 0,
-              "top": 0,
-            },
-          ]
+          {
+            "flexDirection": "row",
+            "position": "relative",
+          }
         }
       >
-        <ViewManagerAdapter_ExpoLinearGradient
-          colors={
-            [
-              4288433174,
-              4291328050,
-              4286725135,
-            ]
-          }
-          endPoint={
-            [
-              1,
-              0.5,
-            ]
-          }
-          locations={
-            [
-              0,
-              0.5,
-              1,
-            ]
-          }
-          startPoint={
-            [
-              0,
-              0.5000000000000001,
-            ]
-          }
+        <View
           style={
-            {
-              "bottom": 0,
-              "left": 0,
-              "position": "absolute",
-              "right": 0,
-              "top": 0,
-            }
+            [
+              {
+                "bottom": 0,
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "top": 0,
+              },
+              {
+                "backgroundColor": "#FFFFFF",
+              },
+            ]
           }
         />
-      </View>
-      <Text
-        maxFontSizeMultiplier={1.4}
-        style={
-          [
-            {
-              "fontSize": 16,
-              "lineHeight": 24,
-            },
-            {
-              "color": "#fafafa",
-              "fontFamily": "Montserrat_400Regular",
-              "fontStyle": "normal",
-              "fontVariant": undefined,
-              "fontWeight": undefined,
-              "textAlign": "left",
-            },
+        <View
+          style={
             [
-              [
-                {
-                  "color": "black",
-                  "fontSize": 14,
-                  "fontWeight": "bold",
-                  "lineHeight": 17,
-                },
-                undefined,
-                {},
-              ],
               {
-                "opacity": 0,
+                "overflow": "hidden",
               },
-            ],
-          ]
-        }
-        textBreakStrategy="simple"
-      >
-        DivisionUser: 
-      </Text>
+              {
+                "bottom": 0,
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "top": 0,
+              },
+            ]
+          }
+        >
+          <ViewManagerAdapter_ExpoLinearGradient
+            colors={
+              [
+                4288433174,
+                4291328050,
+                4286725135,
+              ]
+            }
+            endPoint={
+              [
+                1,
+                0.5,
+              ]
+            }
+            locations={
+              [
+                0,
+                0.5,
+                1,
+              ]
+            }
+            startPoint={
+              [
+                0,
+                0.5000000000000001,
+              ]
+            }
+            style={
+              {
+                "bottom": 0,
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "top": 0,
+              }
+            }
+          />
+        </View>
+        <Text
+          maxFontSizeMultiplier={1.4}
+          style={
+            [
+              {
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              {
+                "color": "#fafafa",
+                "fontFamily": "Montserrat_400Regular",
+                "fontStyle": "normal",
+                "fontVariant": undefined,
+                "fontWeight": undefined,
+                "textAlign": "left",
+              },
+              [
+                [
+                  {
+                    "color": "black",
+                    "fontSize": 14,
+                    "fontWeight": "bold",
+                    "lineHeight": 17,
+                  },
+                  undefined,
+                  {},
+                ],
+                {
+                  "opacity": 0,
+                },
+              ],
+            ]
+          }
+          textBreakStrategy="simple"
+        >
+          DivisionUser: 
+        </Text>
+      </View>
     </View>
-  </RNCMaskedView>
+  </View>
 </View>
 `;
 
@@ -974,9 +1150,52 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
   >
     FlowerchildUser: 
   </Text>
-  <RNCMaskedView>
+  <View
+    style={
+      {
+        "alignSelf": "flex-start",
+        "position": "relative",
+      }
+    }
+  >
+    <Text
+      maxFontSizeMultiplier={1.4}
+      style={
+        [
+          {
+            "fontSize": 16,
+            "lineHeight": 24,
+          },
+          {
+            "color": "#fafafa",
+            "fontFamily": "Montserrat_400Regular",
+            "fontStyle": "normal",
+            "fontVariant": undefined,
+            "fontWeight": undefined,
+            "textAlign": "left",
+          },
+          [
+            [
+              {
+                "color": "black",
+                "fontSize": 14,
+                "fontWeight": "bold",
+                "lineHeight": 17,
+              },
+              undefined,
+              {},
+            ],
+            {
+              "opacity": 0,
+            },
+          ],
+        ]
+      }
+      textBreakStrategy="simple"
+    >
+      FlowerchildUser: 
+    </Text>
     <View
-      pointerEvents="none"
       style={
         {
           "bottom": 0,
@@ -986,6 +1205,7 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
           "top": 0,
         }
       }
+      testID="masked-view"
     >
       <View
         style={
@@ -1032,86 +1252,86 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
           FlowerchildUser: 
         </Text>
       </View>
-    </View>
-    <View
-      style={
-        {
-          "flexDirection": "row",
-          "position": "relative",
-        }
-      }
-    >
       <View
         style={
-          [
-            {
-              "bottom": 0,
-              "left": 0,
-              "position": "absolute",
-              "right": 0,
-              "top": 0,
-            },
-            {
-              "backgroundColor": "#FFFFFF",
-            },
-          ]
+          {
+            "flexDirection": "row",
+            "position": "relative",
+          }
         }
-      />
-      <View
-        onLayout={[Function]}
-        style={
-          [
-            {
-              "overflow": "hidden",
-            },
-            {
-              "bottom": 0,
-              "left": 0,
-              "position": "absolute",
-              "right": 0,
-              "top": 0,
-            },
-          ]
-        }
-      />
-      <Text
-        maxFontSizeMultiplier={1.4}
-        style={
-          [
-            {
-              "fontSize": 16,
-              "lineHeight": 24,
-            },
-            {
-              "color": "#fafafa",
-              "fontFamily": "Montserrat_400Regular",
-              "fontStyle": "normal",
-              "fontVariant": undefined,
-              "fontWeight": undefined,
-              "textAlign": "left",
-            },
-            [
-              [
-                {
-                  "color": "black",
-                  "fontSize": 14,
-                  "fontWeight": "bold",
-                  "lineHeight": 17,
-                },
-                undefined,
-                {},
-              ],
-              {
-                "opacity": 0,
-              },
-            ],
-          ]
-        }
-        textBreakStrategy="simple"
       >
-        FlowerchildUser: 
-      </Text>
+        <View
+          style={
+            [
+              {
+                "bottom": 0,
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "top": 0,
+              },
+              {
+                "backgroundColor": "#FFFFFF",
+              },
+            ]
+          }
+        />
+        <View
+          onLayout={[Function]}
+          style={
+            [
+              {
+                "overflow": "hidden",
+              },
+              {
+                "bottom": 0,
+                "left": 0,
+                "position": "absolute",
+                "right": 0,
+                "top": 0,
+              },
+            ]
+          }
+        />
+        <Text
+          maxFontSizeMultiplier={1.4}
+          style={
+            [
+              {
+                "fontSize": 16,
+                "lineHeight": 24,
+              },
+              {
+                "color": "#fafafa",
+                "fontFamily": "Montserrat_400Regular",
+                "fontStyle": "normal",
+                "fontVariant": undefined,
+                "fontWeight": undefined,
+                "textAlign": "left",
+              },
+              [
+                [
+                  {
+                    "color": "black",
+                    "fontSize": 14,
+                    "fontWeight": "bold",
+                    "lineHeight": 17,
+                  },
+                  undefined,
+                  {},
+                ],
+                {
+                  "opacity": 0,
+                },
+              ],
+            ]
+          }
+          textBreakStrategy="simple"
+        >
+          FlowerchildUser: 
+        </Text>
+      </View>
     </View>
-  </RNCMaskedView>
+  </View>
 </View>
 `;

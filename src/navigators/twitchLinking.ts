@@ -1,10 +1,12 @@
 /**
  * Parse Twitch URLs for deeplink handling.
  * Supports: twitch.tv/:channel, www.twitch.tv/:channel, m.twitch.tv/:channel,
- * /:channel/video/:videoId, /videos/:videoId, and Twitch clip URLs.
+ * /:channel/about, /:channel/video/:videoId, /videos/:videoId, and Twitch clip
+ * URLs.
  */
 export type TwitchLink =
   | { type: 'channel'; channelLogin: string }
+  | { type: 'profile'; channelLogin: string }
   | { type: 'clip'; channelLogin?: string; clipId: string }
   | { type: 'video'; channelLogin: string; videoId: string }
   | { type: 'vod'; videoId: string }
@@ -12,6 +14,8 @@ export type TwitchLink =
 
 const TWITCH_HOSTS = ['twitch.tv', 'www.twitch.tv', 'm.twitch.tv'];
 const TWITCH_CLIP_HOSTS = ['clips.twitch.tv', 'www.clips.twitch.tv'];
+
+const RESERVED_FIRST_SEGMENTS = new Set(['directory']);
 
 export function parseTwitchUrl(url: string | null): TwitchLink {
   if (!url || typeof url !== 'string') {
@@ -44,6 +48,9 @@ export function parseTwitchUrl(url: string | null): TwitchLink {
       if (first === 'clip' && path[1]) {
         return { type: 'clip', clipId: path[1] };
       }
+      if (RESERVED_FIRST_SEGMENTS.has(first as string)) {
+        return null;
+      }
       const channelLogin = first;
       if (path[1] === 'clip' && path[2]) {
         return {
@@ -59,10 +66,30 @@ export function parseTwitchUrl(url: string | null): TwitchLink {
           videoId: path[2],
         };
       }
+      if (path[1] === 'about') {
+        return { type: 'profile', channelLogin: channelLogin as string };
+      }
       return { type: 'channel', channelLogin: channelLogin as string };
     }
   } catch {
     // ignore
   }
   return null;
+}
+
+export function twitchLinkToAppPath(link: TwitchLink): string | null {
+  if (!link) {
+    return null;
+  }
+  switch (link.type) {
+    case 'channel':
+    case 'video':
+      return `/streams/live-stream/${link.channelLogin}`;
+    case 'profile':
+      return `/streams/streamer-profile/${link.channelLogin}`;
+    case 'clip':
+      return `/streams/clip/${link.clipId}`;
+    case 'vod':
+      return null;
+  }
 }
