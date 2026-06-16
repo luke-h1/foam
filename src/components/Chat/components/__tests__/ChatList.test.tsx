@@ -65,14 +65,16 @@ describe('ChatList', () => {
       viewabilityConfig: props.viewabilityConfig,
     }).toEqual({
       drawDistance: 250,
-      estimatedItemSize: 34,
+      estimatedItemSize: 44,
       extraData: { showTimestamps: false },
       maintainScrollAtEnd: { on: { dataChange: true, itemLayout: true } },
       maintainScrollAtEndThreshold: 0.1,
-      // Off while pinned to the bottom (shouldMaintainScrollAtEnd) so it can't
-      // fight maintainScrollAtEnd; on only when scrolled up to hold position.
-      maintainVisibleContentPosition: false,
-      recycleItems: false,
+      // `undefined` while pinned to the bottom keeps LegendList's scroll
+      // stabilization on (so swiping up doesn't lurch toward the start) while
+      // skipping data-change anchoring that would fight maintainScrollAtEnd.
+      // It becomes `true` only when scrolled up, to hold the reading position.
+      maintainVisibleContentPosition: undefined,
+      recycleItems: true,
       onEndReachedThreshold: 0.02,
       viewabilityConfig: {
         itemVisiblePercentThreshold: 1,

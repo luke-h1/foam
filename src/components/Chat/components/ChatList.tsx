@@ -30,9 +30,16 @@ import {
 } from './ChatList/getViewableChatMessages';
 
 // Roughly seven rows of lookahead; at 96 fast flings outran the renderer and
-// showed skeleton rows.
+// showed skeleton rows. NOTE: a much larger buffer (1000) combined with
+// recycling corrupted LegendList's position estimation on dynamic-height rows
+// (huge inter-message gaps, "54 pages" of phantom scroll height), so keep this
+// moderate.
 const CHAT_DRAW_DISTANCE = 250;
-const CHAT_ESTIMATED_ITEM_SIZE = 34;
+// A realistic average row height (badge line + one or two text lines) rather
+// than a single-line minimum. v3 has no per-item estimator, so this flat hint
+// is all LegendList gets; 34 under-shot most rows, forcing a scroll-position
+// correction (ScrollAdjust) as each row measured taller — visible as jitter.
+const CHAT_ESTIMATED_ITEM_SIZE = 44;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
@@ -46,7 +53,14 @@ const CHAT_MAINTAIN_SCROLL_AT_END = {
   on: { dataChange: true, itemLayout: true },
 };
 const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
-const CHAT_RECYCLE_ITEMS = false;
+// Recycling is the dominant smoothness lever on high-volume chats: with it off,
+// every row scrolled into view (and every new message) mounts a fresh tree
+// (~8ms each in profiling) instead of rebinding a pooled one — GC churn = jitter.
+// It was disabled for an iOS "recycle a mounted view" crash, but that came from
+// @react-native-masked-view's Fabric interop; rows now use @expo/ui's
+// masked-view ([[maskedview-recycle-crash]]), so the crash reason no longer
+// applies. Re-verify on a paint-heavy busy chat (iOS) before release.
+const CHAT_RECYCLE_ITEMS = true;
 
 function ChatListRowSkeleton({ index }: { index: number }) {
   return (
@@ -184,14 +198,22 @@ export const ChatList = memo(
         recycleItems={CHAT_RECYCLE_ITEMS}
         keyExtractor={keyExtractor}
         getItemType={getItemType}
-        // Only anchor visible content while scrolled up — keeps the reading
-        // position fixed as messages append and the backlog is trimmed off the
-        // top. At the bottom it MUST be off: the boolean form enables data
-        // anchoring that holds the *old* visible row in place, fighting the
-        // scroll-to-end that follows new messages (jitter + a clipped newest
-        // row). With it off, the manual follow in useChatScroll can pin the
-        // newest row all the way down without anything pulling back.
-        maintainVisibleContentPosition={!shouldMaintainScrollAtEnd}
+        // Keep *scroll* stabilization on in both states so swiping up through
+        // off-screen rows that were under-estimated (estimatedItemSize is a
+        // hint; emote/multi-line rows measure taller) doesn't lurch toward the
+        // start of the list as those rows get measured. Only toggle *data*
+        // anchoring:
+        //   - scrolled up (`true`): anchors the visible row so it stays fixed as
+        //     messages append and the backlog is trimmed off the top.
+        //   - at the bottom (`undefined` = scroll-on / data-off): data anchoring
+        //     would hold the *old* visible row in place, fighting the
+        //     scroll-to-end that follows new messages (the #641 jitter + clipped
+        //     newest row), so the manual follow in useChatScroll owns the bottom.
+        // Passing `false` here (the old boolean form) also disabled scroll
+        // stabilization, which is what made swipe-up jump to the top.
+        maintainVisibleContentPosition={
+          shouldMaintainScrollAtEnd ? undefined : true
+        }
         maintainScrollAtEnd={
           shouldMaintainScrollAtEnd ? CHAT_MAINTAIN_SCROLL_AT_END : false
         }

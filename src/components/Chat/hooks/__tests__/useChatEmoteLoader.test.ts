@@ -14,6 +14,7 @@ import {
   preloadChannelEmotes,
   preloadGlobalEmotes,
 } from '@app/utils/image/preloadEmotes';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import {
   createEmoteData,
@@ -133,6 +134,32 @@ describe('useChatEmoteLoader', () => {
       twitchUserId: 'viewer-id',
     });
     expect(result.current.status).toBe('success');
+  });
+
+  test('force-refetches the active channel when the cosmetics cache is cleared', async () => {
+    const controller = arrangeAbortController();
+    const { result } = renderHook(() =>
+      useChatEmoteLoader({ channelId: 'channel-1' }),
+    );
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('success');
+    });
+    expect(mockLoadChannelResources).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      chatStore$.cosmeticsCacheVersion.set(version => version + 1);
+    });
+
+    await waitFor(() => {
+      expect(mockLoadChannelResources).toHaveBeenCalledTimes(2);
+    });
+    expect(mockLoadChannelResources.mock.calls[1]?.[0]).toEqual({
+      channelId: 'channel-1',
+      forceRefresh: true,
+      signal: controller.signal,
+      twitchUserId: 'viewer-id',
+    });
   });
 
   test('cancel aborts the active load and marks the hook cancelled while mounted', () => {

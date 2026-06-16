@@ -24868,7 +24868,7 @@ export const sevenTvSanitisedChannelEmoteSetFixture: SevenTvSanitisedEmote[] = [
     },
     flags: 0,
     original_name: 'yugi',
-    creator: 'kv__i',
+    creator: 'testuser',
     emote_link: 'https://7tv.app/emotes/01KD1CGEG0SNBHWMNMG3QJXMB2',
     site: '7TV Channel',
     frame_count: 1,

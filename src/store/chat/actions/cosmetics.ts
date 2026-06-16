@@ -168,6 +168,10 @@ export const clearUserCosmeticsCache = () => {
     'sevenTvUserCosmetics_',
   );
   clearPaintsAndBadges();
+  // Signal the active chat's emote loader to refetch — clearing the store alone
+  // won't reload an already-mounted channel. clearChatCosmeticsCache also routes
+  // through here, so both the chat-media and 7TV cache clears bump this.
+  chatStore$.cosmeticsCacheVersion.set(version => version + 1);
 };
 
 export const setUserPaint = (ttvUserId: string, paintId: string): void => {
