@@ -28,14 +28,23 @@ export function isAdminLogin(
   return admins.some(admin => normaliseLogin(admin) === normalised);
 }
 
-export function useIsDevToolsEnabled(): boolean {
-  const { user } = useAuthContext();
-  const { config } = useRemoteConfig();
+export type DevToolsAccess = 'enabled' | 'denied' | 'pending';
+
+export function useDevToolsAccess(): DevToolsAccess {
+  const { ready, user } = useAuthContext();
+  const { config, isLoading } = useRemoteConfig();
 
   if (isDevToolsEnabled) {
-    return true;
+    return 'enabled';
   }
-  return isAdminLogin(user?.login, config.admins.value);
+  if (isAdminLogin(user?.login, config.admins.value)) {
+    return 'enabled';
+  }
+  // The admin list comes from remote config and the login from restored auth.
+  // Until both have settled, "not an admin" is indistinguishable from "not
+  // loaded yet", so hold rather than redirect — otherwise an admin opening a
+  // gated screen during the initial fetch gets bounced straight back out.
+  return !ready || isLoading ? 'pending' : 'denied';
 }
 
 export function withDevToolsGate<P extends object>(
@@ -46,13 +55,14 @@ export function withDevToolsGate<P extends object>(
   }
 
   return function DevToolsGate(props: P) {
-    const { user } = useAuthContext();
-    const { config } = useRemoteConfig();
+    const access = useDevToolsAccess();
 
-    if (isAdminLogin(user?.login, config.admins.value)) {
-      return <Screen {...props} />;
+    if (access === 'pending') {
+      return null;
     }
-
-    return <Redirect href='/tabs/settings' />;
+    if (access === 'denied') {
+      return <Redirect href='/tabs/settings' />;
+    }
+    return <Screen {...props} />;
   };
 }

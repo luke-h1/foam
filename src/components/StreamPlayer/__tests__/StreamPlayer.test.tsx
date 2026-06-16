@@ -360,49 +360,36 @@ describe('StreamPlayer component messaging', () => {
     expect(latestWebViewProps().onOpenWindow).toEqual(undefined);
   });
 
-  test('blocks app navigation while allowing iframe navigation', () => {
+  test('blocks only the app deep-link scheme, allowing all web navigation', () => {
     render(
       <StreamPlayer
         channel='cohhcarnage'
         height={200}
         muted
-        restrictWebViewNavigationToTwitchPlayer
         showOverlayControls={false}
         width={300}
       />,
     );
 
-    const { onShouldStartLoadWithRequest } = latestWebViewProps();
+    const shouldStart = latestWebViewProps()
+      .onShouldStartLoadWithRequest as (request: {
+      isTopFrame?: boolean;
+      url: string;
+    }) => boolean;
 
+    expect(shouldStart({ url: 'foam://stream/cohhcarnage' })).toBe(false);
+    expect(shouldStart({ url: 'exp+foam://stream/cohhcarnage' })).toBe(false);
     expect(
-      (
-        onShouldStartLoadWithRequest as (request: {
-          isTopFrame?: boolean;
-          url: string;
-        }) => boolean
-      )({ url: 'foam://stream/cohhcarnage' }),
-    ).toBe(false);
-    expect(
-      (
-        onShouldStartLoadWithRequest as (request: {
-          isTopFrame?: boolean;
-          url: string;
-        }) => boolean
-      )({
-        isTopFrame: false,
-        url: 'https://evil.example/frame',
+      shouldStart({
+        isTopFrame: true,
+        url: 'https://www.twitch.tv/cohhcarnage',
       }),
     ).toBe(true);
     expect(
-      (
-        onShouldStartLoadWithRequest as (request: {
-          isTopFrame?: boolean;
-          url: string;
-        }) => boolean
-      )({
-        isTopFrame: true,
-        url: 'https://evil.example/top',
-      }),
-    ).toBe(false);
+      shouldStart({ isTopFrame: true, url: 'https://id.twitch.tv/oauth2' }),
+    ).toBe(true);
+    expect(
+      shouldStart({ isTopFrame: false, url: 'https://evil.example/frame' }),
+    ).toBe(true);
   });
 });

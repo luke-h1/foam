@@ -14,10 +14,11 @@ import {
 } from './StreamPlayerOverlays';
 import {
   buildRawTwitchPlayerUrl,
-  buildTwitchCaptionSuppressorScript,
+  buildTwitchCaptionHiderScript,
   buildTwitchClipPlayerUrl,
+  buildTwitchContentGateAcceptScript,
+  buildTwitchOverlayHideScript,
   buildTwitchPlayerQualityDefaultScript,
-  buildTwitchPlayerUiBlockScript,
 } from './twitchPlayerSource';
 import type { StreamPlayerProps } from './types';
 import { usePlayerBridge } from './usePlayerBridge';
@@ -112,7 +113,6 @@ export const StreamPlayer = memo(function StreamPlayer({
   onVideoAreaSwipeDown,
   onWebViewLoaded,
   parent = 'www.twitch.tv',
-  restrictWebViewNavigationToTwitchPlayer = false,
   showOverlayControls = false,
   streamInfo,
   video,
@@ -294,14 +294,19 @@ export const StreamPlayer = memo(function StreamPlayer({
   // The stock player.twitch.tv page runs unscripted: Twitch's own UI handles
   // playback, so the playerControls bootstrap is not injected and the bridge
   // (ready/playing/pause messages, native controls overlay) stays dormant.
-  // The UI-block script runs after load to hide subscribe/gift/follow/avatar
-  // elements and intercept any remaining www.twitch.tv link clicks.
+  // We only auto-accept the mature-content gate and hide the text track
+  // ('hidden', not 'disabled', which would stall WKWebView's native HLS
+  // AVPlayer); the player's own chrome is hidden only when foam is drawing its
+  // own overlay controls over the video.
   const injectedJavaScript =
     TWITCH_AUTH_HELPER_SCRIPT +
     '\n' +
-    buildTwitchPlayerUiBlockScript() +
+    buildTwitchContentGateAcceptScript() +
     '\n' +
-    buildTwitchCaptionSuppressorScript() +
+    buildTwitchCaptionHiderScript() +
+    (showOverlayControls && !clip
+      ? '\n' + buildTwitchOverlayHideScript()
+      : '') +
     (video ? '\n' + VOD_PROGRESS_TRACKER_SCRIPT : '');
 
   // The tracker posts unsolicited `vodProgress` messages; capture those for
@@ -394,11 +399,7 @@ export const StreamPlayer = memo(function StreamPlayer({
             handleBridgePlaying();
             onWebViewLoaded?.();
           }}
-          parent={parent}
           remountWebView={remountEmbedWebView}
-          restrictWebViewNavigationToTwitchPlayer={
-            restrictWebViewNavigationToTwitchPlayer
-          }
           scheduleAuthCompletionReload={scheduleAuthCompletionReload}
           source={webViewSource}
           video={video}

@@ -9,14 +9,15 @@ import type {
   WebViewHttpError,
 } from 'react-native-webview/lib/WebViewTypes';
 
-import {
-  isAllowedTwitchPlayerNavigation,
-  isAppUrl,
-  isTwitchMainSiteNavigation,
-  isTwitchPassportCallbackUrl,
-} from './twitchPlayerSource';
+import { isAppUrl, isTwitchPassportCallbackUrl } from './twitchPlayerSource';
 
 type WebViewSource = ComponentProps<typeof WebView>['source'];
+
+// The player webview does no navigation interception beyond refusing the app's
+// own deep-link scheme. Twitch's login (id.twitch.tv), passport-callback, and
+// any in-player links are all allowed to proceed.
+const handleShouldStartLoadWithRequest: OnShouldStartLoadWithRequest =
+  request => !isAppUrl(request.url);
 
 interface StreamPlayerWebViewProps {
   allowsTwitchInteraction: boolean;
@@ -31,9 +32,7 @@ interface StreamPlayerWebViewProps {
   onMessage: ComponentProps<typeof WebView>['onMessage'];
   onOpenWindow?: ComponentProps<typeof WebView>['onOpenWindow'];
   onWebViewLoaded?: () => void;
-  parent: string;
   remountWebView: () => void;
-  restrictWebViewNavigationToTwitchPlayer: boolean;
   scheduleAuthCompletionReload: () => void;
   source: WebViewSource;
   video?: string;
@@ -54,9 +53,7 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
   onMessage,
   onOpenWindow,
   onWebViewLoaded,
-  parent,
   remountWebView,
-  restrictWebViewNavigationToTwitchPlayer,
   scheduleAuthCompletionReload,
   source,
   video,
@@ -74,33 +71,6 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       needsInitRef.current = false;
     }
   };
-
-  const handleShouldStartLoadWithRequest: OnShouldStartLoadWithRequest =
-    request => {
-      if (isAppUrl(request.url)) {
-        return false;
-      }
-
-      // Always block top-frame navigation to www.twitch.tv (subscribe, gift,
-      // user profiles, etc.).  Login uses id.twitch.tv and the passport-
-      // callback path — both intentionally exempt.
-      if (
-        request.isTopFrame !== false &&
-        isTwitchMainSiteNavigation(request.url)
-      ) {
-        return false;
-      }
-
-      if (!restrictWebViewNavigationToTwitchPlayer) {
-        return true;
-      }
-
-      if (request.isTopFrame === false) {
-        return true;
-      }
-
-      return isAllowedTwitchPlayerNavigation(request.url, parent);
-    };
 
   const handleWebViewError = (event: { nativeEvent: WebViewError }) => {
     const { nativeEvent } = event;

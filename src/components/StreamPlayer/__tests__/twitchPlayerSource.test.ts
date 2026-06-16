@@ -1,34 +1,38 @@
 import {
   buildRawTwitchPlayerBootstrapScript,
   buildRawTwitchPlayerUrl,
-  buildTwitchCaptionSuppressorScript,
+  buildTwitchCaptionHiderScript,
   buildTwitchClipPlayerUrl,
-  isAllowedTwitchPlayerNavigation,
+  buildTwitchContentGateAcceptScript,
+  buildTwitchOverlayHideScript,
   isAppUrl,
   isTwitchPassportCallbackUrl,
 } from '../twitchPlayerSource';
 
 describe('twitchPlayerSource', () => {
-  test('allows only Twitch and parent navigation targets', () => {
-    expect(isAllowedTwitchPlayerNavigation('', 'www.twitch.tv')).toBe(false);
-    expect(
-      isAllowedTwitchPlayerNavigation(
-        'https://id.twitch.tv/oauth2/authorize',
-        'www.twitch.tv',
-      ),
-    ).toBe(true);
-    expect(
-      isAllowedTwitchPlayerNavigation(
-        'https://evil.example/player',
-        'www.twitch.tv',
-      ),
-    ).toBe(false);
-    expect(
-      isAllowedTwitchPlayerNavigation(
-        'https://www.twitch.tv/login',
-        'www.twitch.tv',
-      ),
-    ).toBe(true);
+  test('content-gate accept clicks the anonymous classification gate', () => {
+    const script = buildTwitchContentGateAcceptScript();
+
+    expect(script).toContain(
+      'asyncQuerySelector(\'button[data-a-target*="content-classification-gate"]\', 10000)',
+    );
+    expect(script).toContain('button.click()');
+  });
+
+  test('overlay hide targets only the three player-chrome selectors', () => {
+    const script = buildTwitchOverlayHideScript();
+
+    expect(script).toContain("document.querySelector('.top-bar')");
+    expect(script).toContain("document.querySelector('.player-controls')");
+    expect(script).toContain(
+      "document.querySelector('#channel-player-disclosures')",
+    );
+    expect(script).toContain(
+      "document.querySelector('.video-player__overlay')",
+    );
+    // Must not reintroduce subscribe/gift/follow blocking or click interception.
+    expect(script).not.toContain('subscribe-button');
+    expect(script).not.toContain("addEventListener('click'");
   });
 
   test('builds raw Twitch player URLs without mixing channel and video params', () => {
@@ -71,32 +75,28 @@ describe('twitchPlayerSource', () => {
     );
   });
 
-  test('keeps captions disabled across ad boundaries', () => {
+  test('hides captions with text track "hidden", never "disabled"', () => {
     const script = buildRawTwitchPlayerBootstrapScript({
       autoplay: true,
       debug: false,
       muted: false,
     });
 
-    expect(script).toContain("tracks[i].mode = 'disabled'");
-    expect(script).toContain("video.textTracks.addEventListener('addtrack'");
-    expect(script).toContain("video.textTracks.addEventListener('change'");
-    expect(script).toContain('installCaptionSuppressor(video)');
-    expect(script).toContain('video::-webkit-media-text-track-container');
+    // 'disabled' makes WKWebView's native HLS AVPlayer renegotiate and stall;
+    // 'hidden' keeps the track loaded but unrendered. No caption CSS either.
+    expect(script).toContain("video.textTracks[0].mode = 'hidden'");
+    expect(script).not.toContain("mode = 'disabled'");
+    expect(script).not.toContain('text-track-container');
   });
 
-  test('suppresses captions by disabling text tracks and re-applying on changes', () => {
-    const script = buildTwitchCaptionSuppressorScript();
+  test('caption hider switches the text track to hidden on play and pause', () => {
+    const script = buildTwitchCaptionHiderScript();
 
-    expect(script).toContain("tracks[i].mode = 'disabled'");
-    expect(script).toContain("video.textTracks.addEventListener('addtrack'");
-    expect(script).toContain("video.textTracks.addEventListener('change'");
+    expect(script).toContain("video.textTracks[0].mode = 'hidden'");
+    expect(script).not.toContain("mode = 'disabled'");
+    expect(script).not.toContain('text-track-container');
     expect(script).toContain("video.addEventListener('playing'");
     expect(script).toContain("video.addEventListener('pause'");
-    expect(script).toContain('video::-webkit-media-text-track-container');
-    expect(script).toContain(
-      "document.querySelectorAll('video').forEach(suppress)",
-    );
   });
 
   test('builds Twitch clip embed URLs', () => {

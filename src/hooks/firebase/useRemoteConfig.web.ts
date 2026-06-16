@@ -93,6 +93,7 @@ export type UseRemoteConfigResult = {
   config: RemoteConfigType;
   refetch: () => Promise<boolean>;
   isRefetching: boolean;
+  isLoading: boolean;
 };
 
 export function useRemoteConfig(): UseRemoteConfigResult {
@@ -105,5 +106,5 @@ export function useRemoteConfig(): UseRemoteConfigResult {
     return false;
   }, []);
 
-  return { config, refetch, isRefetching };
+  return { config, refetch, isRefetching, isLoading: false };
 }

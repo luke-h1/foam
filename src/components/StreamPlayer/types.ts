@@ -204,10 +204,6 @@ export interface StreamPlayerProps {
    */
   streamProxyBaseUrl?: string;
   /**
-   * Experiment: restrict top-level WebView navigations to Twitch player/auth URLs.
-   */
-  restrictWebViewNavigationToTwitchPlayer?: boolean;
-  /**
    * Show custom overlay controls
    * @default false
    */

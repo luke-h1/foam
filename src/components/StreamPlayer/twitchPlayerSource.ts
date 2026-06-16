@@ -1,32 +1,3 @@
-const TWITCH_PLAYER_ALLOWED_NAVIGATION_PREFIXES = [
-  'about:blank',
-  'https://id.twitch.tv/',
-  'https://www.twitch.tv/passport-callback',
-  'https://clips.twitch.tv/',
-  'https://player.twitch.tv/',
-];
-
-export function isAllowedTwitchPlayerNavigation(
-  url: string,
-  parent: string,
-): boolean {
-  if (!url) {
-    return false;
-  }
-
-  const normalizedParent = parent.trim().toLowerCase();
-  const parentBaseUrl = normalizedParent
-    ? `https://${normalizedParent}/`
-    : null;
-
-  return (
-    TWITCH_PLAYER_ALLOWED_NAVIGATION_PREFIXES.some(prefix =>
-      url.startsWith(prefix),
-    ) ||
-    (parentBaseUrl != null && url.startsWith(parentBaseUrl))
-  );
-}
-
 // Twitch's player embed expects a VOD start offset as `XhYmZs`, not seconds.
 function formatTwitchTimeParam(totalSeconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(totalSeconds));
@@ -241,17 +212,7 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
       'video::-webkit-media-controls-enclosure',
       'video::-webkit-media-controls-panel',
       'video::-webkit-media-controls-play-button',
-      'video::-webkit-media-controls-start-playback-button',
-      'video::-webkit-media-text-track-container',
-      'video::-webkit-media-text-track-display',
-      'video::-webkit-media-text-track-region',
-      'video::-webkit-media-text-track-region-container',
-      '[data-a-target="player-captions"]',
-      '[data-a-target*="captions"]',
-      '.player-captions-container',
-      '.captions-container',
-      '[class*="captions"]',
-      '[class*="Captions"]'
+      'video::-webkit-media-controls-start-playback-button'
     ].join(',') + '{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;}';
     (document.head || document.documentElement).appendChild(style);
   }
@@ -308,6 +269,19 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     });
   }
 
+  // Hide captions by switching the first text track to 'hidden' (never
+  // 'disabled'). 'disabled' makes WKWebView's native HLS AVPlayer drop and
+  // renegotiate the rendition, which stalls playback; 'hidden' keeps the track
+  // loaded but unrendered. No ::-webkit-media-text-track CSS for the same
+  // reason. Re-applied on playing/pause since Twitch re-enables CC across ads.
+  function hideCaptions(video) {
+    try {
+      if (video && video.textTracks && video.textTracks.length > 0) {
+        video.textTracks[0].mode = 'hidden';
+      }
+    } catch (e) {}
+  }
+
   function prepareInlineVideo(video) {
     if (!video) {
       return;
@@ -322,38 +296,6 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
       video.setAttribute('x-webkit-airplay', 'deny');
       video.setAttribute('controlsList', 'nodownload noplaybackrate noremoteplayback');
       video.removeAttribute('controls');
-    } catch (e) {}
-  }
-
-  function hideTextTracks(video) {
-    if (!video || !video.textTracks) {
-      return;
-    }
-    try {
-      var tracks = video.textTracks;
-      for (var i = 0; i < tracks.length; i++) {
-        if (tracks[i] && tracks[i].mode !== 'disabled') {
-          tracks[i].mode = 'disabled';
-        }
-      }
-    } catch (e) {}
-  }
-
-  function installCaptionSuppressor(video) {
-    if (!video || video.__foamCaptionsSuppressed) {
-      return;
-    }
-    video.__foamCaptionsSuppressed = true;
-    hideTextTracks(video);
-    try {
-      if (video.textTracks) {
-        video.textTracks.addEventListener('addtrack', function() {
-          hideTextTracks(video);
-        });
-        video.textTracks.addEventListener('change', function() {
-          hideTextTracks(video);
-        });
-      }
     } catch (e) {}
   }
 
@@ -547,7 +489,9 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
 
     video.__foamBridgeInstalled = true;
     prepareInlineVideo(video);
-    installCaptionSuppressor(video);
+    if (!video.paused) {
+      hideCaptions(video);
+    }
     video.muted = targetMuted;
     if (!targetMuted) {
       video.volume = 1;
@@ -559,7 +503,7 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
       clearPendingPause();
       clearPlaybackRecoveryTimers();
       userPaused = false;
-      hideTextTracks(video);
+      hideCaptions(video);
       video.muted = targetMuted;
       if (!targetMuted) {
         video.volume = 1;
@@ -580,7 +524,7 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     video.addEventListener('pause', function() {
       clearPendingPause();
       stopPlaybackStats();
-      hideTextTracks(video);
+      hideCaptions(video);
       schedulePlaybackRecovery();
       pendingPauseTimer = setTimeout(function() {
         postPauseIfStillPaused(video);
@@ -717,75 +661,53 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
 true;`;
 }
 
-export function buildTwitchCaptionSuppressorScript(): string {
+/**
+ * Hides Twitch's auto-enabled closed captions on the stock (unscripted) player
+ * page. Sets the first text track to 'hidden' rather than 'disabled':
+ * 'disabled' makes WKWebView's native HLS AVPlayer drop and renegotiate the
+ * rendition, which stalls/starves playback. 'hidden' keeps the track loaded but
+ * unrendered, and deliberately touches no ::-webkit-media-text-track CSS. The
+ * playing/pause listeners re-apply it because Twitch re-enables CC across ads.
+ */
+export function buildTwitchCaptionHiderScript(): string {
   return `
 (function() {
-  if (window.__foamCaptionSuppressorInstalled) { return true; }
-  window.__foamCaptionSuppressorInstalled = true;
+  if (window.__foamCaptionHiderInstalled) { return true; }
+  window.__foamCaptionHiderInstalled = true;
 
-  if (!document.getElementById('foam-caption-hide-style')) {
-    var style = document.createElement('style');
-    style.id = 'foam-caption-hide-style';
-    style.textContent = [
-      'video::-webkit-media-text-track-container',
-      'video::-webkit-media-text-track-display',
-      'video::-webkit-media-text-track-region',
-      'video::-webkit-media-text-track-region-container',
-      '[data-a-target="player-captions"]',
-      '[data-a-target*="captions"]',
-      '.player-captions-container',
-      '.captions-container',
-      '[class*="captions"]',
-      '[class*="Captions"]'
-    ].join(',') + '{display:none!important;visibility:hidden!important;opacity:0!important;}';
-    (document.head || document.documentElement).appendChild(style);
-  }
-
-  function hideTextTracks(video) {
-    if (!video || !video.textTracks) { return; }
+  function hide(video) {
     try {
-      var tracks = video.textTracks;
-      for (var i = 0; i < tracks.length; i++) {
-        if (tracks[i] && tracks[i].mode !== 'disabled') {
-          tracks[i].mode = 'disabled';
-        }
+      if (video && video.textTracks && video.textTracks.length > 0) {
+        video.textTracks[0].mode = 'hidden';
       }
     } catch (e) {}
   }
 
-  function suppress(video) {
-    if (!video || video.__foamCaptionsSuppressed) { return; }
-    video.__foamCaptionsSuppressed = true;
-    hideTextTracks(video);
-    try {
-      video.textTracks.addEventListener('addtrack', function() { hideTextTracks(video); });
-      video.textTracks.addEventListener('change', function() { hideTextTracks(video); });
-    } catch (e) {}
-    video.addEventListener('playing', function() { hideTextTracks(video); });
-    video.addEventListener('pause', function() { hideTextTracks(video); });
+  function attach(video) {
+    if (!video || video.__foamCaptionHider) { return; }
+    video.__foamCaptionHider = true;
+    video.addEventListener('playing', function() { hide(video); });
+    video.addEventListener('pause', function() { hide(video); });
+    if (!video.paused) { hide(video); }
   }
 
-  function sweep() {
-    document.querySelectorAll('video').forEach(suppress);
+  var existing = document.querySelector('video');
+  if (existing) {
+    attach(existing);
+    return true;
   }
 
-  sweep();
-
-  var sweepQueued = false;
-  function scheduleSweep() {
-    if (sweepQueued) { return; }
-    sweepQueued = true;
-    setTimeout(function() {
-      sweepQueued = false;
-      sweep();
-    }, 250);
-  }
-
-  new MutationObserver(scheduleSweep).observe(document.body || document.documentElement, {
+  var observer = new MutationObserver(function() {
+    var video = document.querySelector('video');
+    if (video) {
+      observer.disconnect();
+      attach(video);
+    }
+  });
+  observer.observe(document.body || document.documentElement, {
     childList: true,
     subtree: true
   });
-
   return true;
 })();
 true;`;
@@ -825,77 +747,75 @@ export function isTwitchPassportCallbackUrl(url: string): boolean {
   }
 }
 
-// Returns true for top-frame navigations to the Twitch main site that are NOT
-// the login passport-callback.  login (id.twitch.tv) and the callback are
-// intentionally allowed; everything else (subscribe, gift, profiles, etc.) is
-// blocked so the WebView never leaves the player context.
-export function isTwitchMainSiteNavigation(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-    return (
-      parsed.hostname === 'www.twitch.tv' &&
-      !parsed.pathname.startsWith('/passport-callback')
-    );
-  } catch {
-    return false;
-  }
-}
-
-// Injects CSS and a click interceptor that hide and block subscribe, gift-sub,
-// follow/heart, avatar, and username links in the embedded Twitch player page.
-export function buildTwitchPlayerUiBlockScript(): string {
+// Auto-accepts Twitch's mature-content classification gate: clicks the
+// "Continue" button as soon as it appears. parent=www.twitch.tv makes Twitch
+// render the anonymous gate rather than a login-required one.
+export function buildTwitchContentGateAcceptScript(): string {
   return `
 (function() {
-  if (window.__foamUiBlockInstalled) { return true; }
-  window.__foamUiBlockInstalled = true;
+  if (window.__foamContentGateAcceptInstalled) { return true; }
+  window.__foamContentGateAcceptInstalled = true;
 
-  var CSS = [
-    '[data-a-target="subscribe-button"]',
-    '[data-a-target="subscriptions-manage"]',
-    '[data-a-target="gift-subscription-button"]',
-    '[data-a-target*="gift-sub"]',
-    '[data-a-target="follow-button"]',
-    '[data-a-target="unfollow-button"]',
-    '[data-a-target*="follow-button"]',
-    '[data-a-target="user-avatar-link"]',
-    '[data-a-target="user-avatar"]',
-    '[class*="SubscribeButton"]',
-    '[class*="GiftButton"]',
-    '[class*="FollowButton"]',
-    '[class*="follow-btn"]',
-    'a[href*="/subscribe"]',
-    'a[href*="/gift"]'
-  ].join(',') + '{display:none!important;pointer-events:none!important;visibility:hidden!important;}';
-
-  var style = document.createElement('style');
-  style.id = 'foam-ui-block-style';
-  style.textContent = CSS;
-  (document.head || document.documentElement).appendChild(style);
-
-  // Belt-and-suspenders: intercept any click that would navigate to the Twitch
-  // main site (profiles, subscribe pages, etc.).  Login (id.twitch.tv) and the
-  // passport-callback are handled at the native level and are not affected.
-  document.addEventListener('click', function(e) {
-    var el = e.target;
-    while (el && el !== document.body) {
-      if (el.tagName === 'A') {
-        try {
-          var href = el.href || el.getAttribute('href') || '';
-          var url = new URL(href, window.location.href);
-          if (
-            url.hostname === 'www.twitch.tv' &&
-            !url.pathname.startsWith('/passport-callback')
-          ) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-          }
-        } catch (_) {}
-        break;
+  function asyncQuerySelector(selector, timeout) {
+    return new Promise(function(resolve) {
+      var el = document.querySelector(selector);
+      if (el) { resolve(el); return; }
+      var observer = new MutationObserver(function() {
+        el = document.querySelector(selector);
+        if (el) { observer.disconnect(); resolve(el); }
+      });
+      observer.observe(document.body || document.documentElement, {
+        childList: true,
+        subtree: true
+      });
+      if (timeout) {
+        setTimeout(function() { observer.disconnect(); resolve(undefined); }, timeout);
       }
-      el = el.parentElement;
-    }
-  }, true);
+    });
+  }
 
+  asyncQuerySelector('button[data-a-target*="content-classification-gate"]', 10000)
+    .then(function(button) { if (button) { button.click(); } })
+    .catch(function() {});
+  return true;
+})();
+true;`;
+}
+
+// Hides the stock player's chrome so only the video shows when foam draws its
+// own overlay controls: hides .top-bar, .player-controls and
+// #channel-player-disclosures, re-applying them as the .video-player__overlay
+// subtree mutates.
+export function buildTwitchOverlayHideScript(): string {
+  return `
+(function() {
+  if (window.__foamOverlayHideInstalled) { return true; }
+  window.__foamOverlayHideInstalled = true;
+
+  function hide() {
+    [
+      document.querySelector('.top-bar'),
+      document.querySelector('.player-controls'),
+      document.querySelector('#channel-player-disclosures')
+    ].forEach(function(el) {
+      if (el) { el.style.setProperty('display', 'none', 'important'); }
+    });
+  }
+
+  var observer = new MutationObserver(function() {
+    var videoOverlay = document.querySelector('.video-player__overlay');
+    if (!videoOverlay) { return; }
+    hide();
+    new MutationObserver(hide).observe(videoOverlay, {
+      childList: true,
+      subtree: true
+    });
+    observer.disconnect();
+  });
+  observer.observe(document.body || document.documentElement, {
+    childList: true,
+    subtree: true
+  });
   return true;
 })();
 true;`;

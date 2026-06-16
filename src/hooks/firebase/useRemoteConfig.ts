@@ -138,6 +138,7 @@ export type UseRemoteConfigResult = {
   config: RemoteConfigType;
   refetch: () => Promise<boolean>;
   isRefetching: boolean;
+  isLoading: boolean;
 };
 
 async function fetchRemoteConfig(): Promise<boolean> {
@@ -204,6 +205,7 @@ export function useRemoteConfig(): UseRemoteConfigResult {
     data: config = buildConfigFromDefaults(),
     refetch: refetchQuery,
     isFetching,
+    isFetched,
   } = useQuery({
     queryKey: ['remoteConfig'],
     queryFn: async () => {
@@ -212,6 +214,10 @@ export function useRemoteConfig(): UseRemoteConfigResult {
     },
     staleTime: 5 * 60 * 1000,
     initialData: buildConfigFromDefaults,
+    // Without this, initialData (admins: []) counts as fresh for staleTime, so
+    // queryFn never runs on mount and the real config is never fetched/read.
+    // Backdating it marks the defaults stale immediately so we fetch on mount.
+    initialDataUpdatedAt: 0,
   });
 
   const refetch = async (): Promise<boolean> => {
@@ -228,5 +234,6 @@ export function useRemoteConfig(): UseRemoteConfigResult {
     config,
     refetch,
     isRefetching: isFetching || isManualRefetching,
+    isLoading: !isFetched,
   };
 }
