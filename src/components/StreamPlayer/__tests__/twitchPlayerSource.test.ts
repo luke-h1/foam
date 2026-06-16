@@ -1,6 +1,7 @@
 import {
   buildRawTwitchPlayerBootstrapScript,
   buildRawTwitchPlayerUrl,
+  buildTwitchCaptionSuppressorScript,
   buildTwitchClipPlayerUrl,
   isAllowedTwitchPlayerNavigation,
   isAppUrl,
@@ -82,6 +83,20 @@ describe('twitchPlayerSource', () => {
     expect(script).toContain("video.textTracks.addEventListener('change'");
     expect(script).toContain('installCaptionSuppressor(video)');
     expect(script).toContain('video::-webkit-media-text-track-container');
+  });
+
+  test('suppresses captions by disabling text tracks and re-applying on changes', () => {
+    const script = buildTwitchCaptionSuppressorScript();
+
+    expect(script).toContain("tracks[i].mode = 'disabled'");
+    expect(script).toContain("video.textTracks.addEventListener('addtrack'");
+    expect(script).toContain("video.textTracks.addEventListener('change'");
+    expect(script).toContain("video.addEventListener('playing'");
+    expect(script).toContain("video.addEventListener('pause'");
+    expect(script).toContain('video::-webkit-media-text-track-container');
+    expect(script).toContain(
+      "document.querySelectorAll('video').forEach(suppress)",
+    );
   });
 
   test('builds Twitch clip embed URLs', () => {

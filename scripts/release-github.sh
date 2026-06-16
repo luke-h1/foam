@@ -157,6 +157,8 @@ authed_push() {
 
 "$git_cliff_bin" --config cliff.toml --tag "$tag" --ignore-tags "$ignore_tags" -o CHANGELOG.md
 
+bunx prettier --write CHANGELOG.md
+
 if git diff --quiet CHANGELOG.md 2>/dev/null; then
   echo "CHANGELOG.md has not changed"
 else

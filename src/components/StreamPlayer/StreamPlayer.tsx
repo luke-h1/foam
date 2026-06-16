@@ -14,6 +14,7 @@ import {
 } from './StreamPlayerOverlays';
 import {
   buildRawTwitchPlayerUrl,
+  buildTwitchCaptionSuppressorScript,
   buildTwitchClipPlayerUrl,
   buildTwitchPlayerQualityDefaultScript,
   buildTwitchPlayerUiBlockScript,
@@ -299,6 +300,8 @@ export const StreamPlayer = memo(function StreamPlayer({
     TWITCH_AUTH_HELPER_SCRIPT +
     '\n' +
     buildTwitchPlayerUiBlockScript() +
+    '\n' +
+    buildTwitchCaptionSuppressorScript() +
     (video ? '\n' + VOD_PROGRESS_TRACKER_SCRIPT : '');
 
   // The tracker posts unsolicited `vodProgress` messages; capture those for
