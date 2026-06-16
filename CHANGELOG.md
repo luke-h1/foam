@@ -23,6 +23,7 @@
 - **chat:** Fix chat clipping height ([#642](https://github.com/lhowsam/foam/issues/642))
 - **chat:** Width aware chat window
 - **app:** Release patches ([#645](https://github.com/lhowsam/foam/issues/645))
+- **chat:** Hide captions ([#646](https://github.com/lhowsam/foam/issues/646))
 
 ### 🔧 Miscellaneous Tasks
 
