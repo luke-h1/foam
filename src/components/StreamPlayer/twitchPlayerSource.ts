@@ -747,9 +747,11 @@ export function isTwitchPassportCallbackUrl(url: string): boolean {
   }
 }
 
-// Auto-accepts Twitch's mature-content classification gate: clicks the
-// "Continue" button as soon as it appears. parent=www.twitch.tv makes Twitch
-// render the anonymous gate rather than a login-required one.
+/**
+ * Auto-accepts Twitch's mature-content classification gate: clicks the
+ * "Continue" button as soon as it appears. parent=www.twitch.tv makes Twitch
+ * render the anonymous gate rather than a login-required one.
+ */
 export function buildTwitchContentGateAcceptScript(): string {
   return `
 (function() {
@@ -782,10 +784,12 @@ export function buildTwitchContentGateAcceptScript(): string {
 true;`;
 }
 
-// Hides the stock player's chrome so only the video shows when foam draws its
-// own overlay controls: hides .top-bar, .player-controls and
-// #channel-player-disclosures, re-applying them as the .video-player__overlay
-// subtree mutates.
+/**
+ * Hides the stock player's chrome so only the video shows when foam draws its
+ * own overlay controls: hides .top-bar, .player-controls and
+ * #channel-player-disclosures, re-applying them as the .video-player__overlay
+ * subtree mutates.
+ */
 export function buildTwitchOverlayHideScript(): string {
   return `
 (function() {
@@ -802,15 +806,20 @@ export function buildTwitchOverlayHideScript(): string {
     });
   }
 
+  var overlayObserver = null;
+  var observedOverlay = null;
+
   var observer = new MutationObserver(function() {
     var videoOverlay = document.querySelector('.video-player__overlay');
-    if (!videoOverlay) { return; }
+    if (!videoOverlay || videoOverlay === observedOverlay) { return; }
+    if (overlayObserver) { overlayObserver.disconnect(); }
+    observedOverlay = videoOverlay;
     hide();
-    new MutationObserver(hide).observe(videoOverlay, {
+    overlayObserver = new MutationObserver(hide);
+    overlayObserver.observe(videoOverlay, {
       childList: true,
       subtree: true
     });
-    observer.disconnect();
   });
   observer.observe(document.body || document.documentElement, {
     childList: true,

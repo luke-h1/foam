@@ -114,4 +114,17 @@ describe('useDevToolsAccess', () => {
 
     expect(result.current).toBe('denied');
   });
+
+  test('denies a logged-out user once auth has settled', () => {
+    mockUseAuthContext.mockReturnValue(
+      createAuthContextValue({ ready: true, user: undefined }),
+    );
+    mockUseRemoteConfig.mockReturnValue(
+      createRemoteConfigResult(['admin_user']),
+    );
+
+    const { result } = renderHook(() => useDevToolsAccess());
+
+    expect(result.current).toBe('denied');
+  });
 });
