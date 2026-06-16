@@ -107,8 +107,6 @@ describe('liveStreamLayout', () => {
   });
 
   test('keeps a user-chosen width narrower than the default on a phone', () => {
-    // Phone in landscape: default sidebar is screenWidth * 0.35 = 273. A width
-    // dragged below that must be preserved, not snapped back up to the default.
     const screenWidth = 780;
     const defaultWidth = getDefaultLandscapeChatWidth('sidebar', screenWidth);
     const narrowed = clampLandscapeChatWidth(230, screenWidth, 'sidebar');

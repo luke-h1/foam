@@ -77,8 +77,6 @@ describe('twitchPlayerSource', () => {
       muted: false,
     });
 
-    // Every track is disabled (not just hidden), and re-disabled when adverts
-    // add a new track or flip one back to 'showing'.
     expect(script).toContain("tracks[i].mode = 'disabled'");
     expect(script).toContain("video.textTracks.addEventListener('addtrack'");
     expect(script).toContain("video.textTracks.addEventListener('change'");

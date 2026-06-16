@@ -41,9 +41,6 @@ export interface ChatStoreState {
   ttvUsers: ChatUser[];
   messages: AnyChatMessageType[];
   mentionLoginRevision: number;
-  // Bumped whenever the cosmetics/emote caches are cleared manually. The active
-  // chat's emote loader watches it and refetches, since clearing the store does
-  // not by itself re-trigger a load for an already-mounted channel.
   cosmeticsCacheVersion: number;
   paints: Record<string, PaintData>;
   userPaintIds: Record<string, string>;

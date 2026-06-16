@@ -3,10 +3,6 @@ export type LandscapeChatCycleAction = 'hide' | 'show' | 'overlay';
 
 const DEFAULT_OVERLAY_CHAT_WIDTH = 380;
 const DEFAULT_SIDEBAR_CHAT_FRACTION = 0.35;
-// Must stay below the default sidebar width (screenWidth * 0.35) so the chat can
-// actually be dragged narrower than its default. On a phone in landscape the
-// default lands around 245-280px; an earlier 280px minimum sat at or above that,
-// so narrowing snapped straight back to the default width.
 export const LANDSCAPE_CHAT_MIN_WIDTH = 200;
 const MAX_OVERLAY_CHAT_FRACTION = 0.68;
 const MAX_SIDEBAR_CHAT_FRACTION = 0.55;

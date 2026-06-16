@@ -145,9 +145,6 @@ export const useChatEmoteLoader = ({
   const loadEmotesRef = useRef(loadEmotes);
   loadEmotesRef.current = loadEmotes;
 
-  // A manual cache clear (Settings → clear chat/7TV cache) bumps this and wipes
-  // the store for the active channel. The channel is unchanged, so the load
-  // below would otherwise skip it; force a refetch when the version advances.
   const cosmeticsCacheVersion = useSelector(() =>
     chatStore$.cosmeticsCacheVersion.get(),
   );

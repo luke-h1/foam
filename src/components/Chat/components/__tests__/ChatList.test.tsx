@@ -69,10 +69,6 @@ describe('ChatList', () => {
       extraData: { showTimestamps: false },
       maintainScrollAtEnd: { on: { dataChange: true, itemLayout: true } },
       maintainScrollAtEndThreshold: 0.1,
-      // `undefined` while pinned to the bottom keeps LegendList's scroll
-      // stabilization on (so swiping up doesn't lurch toward the start) while
-      // skipping data-change anchoring that would fight maintainScrollAtEnd.
-      // It becomes `true` only when scrolled up, to hold the reading position.
       maintainVisibleContentPosition: undefined,
       recycleItems: true,
       onEndReachedThreshold: 0.02,

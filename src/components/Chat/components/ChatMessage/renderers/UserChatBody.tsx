@@ -100,12 +100,6 @@ export function UserChatBody({
     cachedSenderColor ??
     (userstateColor ? lightenColor(userstateColor) : undefined) ??
     (username ? lightenColor(generateRandomTwitchColor(username)) : undefined);
-  // When the whole line can't render inline only because the username has a
-  // paint (the body parts are all inline-flow compatible), still flow the body
-  // through a single nested Text. The flex-sibling path renders each emote as a
-  // 30pt View, which lands on its own wrap line and tears a vertical gap into
-  // multi-line messages; nested Text carries emotes as inline attachments with
-  // the taller emote line height, matching the non-paint inline path.
   const bodyCanFlowInline =
     !renderInline &&
     canRenderMessageInline(message, {
