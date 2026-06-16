@@ -11,6 +11,8 @@ import {
   preloadGlobalEmotes,
 } from '@app/utils/image/preloadEmotes';
 import { logger } from '@app/utils/logger';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { useSelector } from '@legendapp/state/react';
 import {
   useEffect,
   useLayoutEffect,
@@ -143,18 +145,32 @@ export const useChatEmoteLoader = ({
   const loadEmotesRef = useRef(loadEmotes);
   loadEmotesRef.current = loadEmotes;
 
+  const cosmeticsCacheVersion = useSelector(() =>
+    chatStore$.cosmeticsCacheVersion.get(),
+  );
+  const lastCosmeticsCacheVersionRef = useRef(cosmeticsCacheVersion);
+
   useEffect(() => {
     isMountedRef.current = true;
 
-    if (enabled && channelId && currentChannelRef.current !== channelId) {
-      void loadEmotesRef.current(false);
+    const cacheCleared =
+      lastCosmeticsCacheVersionRef.current !== cosmeticsCacheVersion;
+    lastCosmeticsCacheVersionRef.current = cosmeticsCacheVersion;
+
+    if (enabled && channelId) {
+      if (cacheCleared) {
+        currentChannelRef.current = null;
+        void loadEmotesRef.current(true);
+      } else if (currentChannelRef.current !== channelId) {
+        void loadEmotesRef.current(false);
+      }
     }
 
     return () => {
       isMountedRef.current = false;
       abortCurrentLoad();
     };
-  }, [channelId, enabled]);
+  }, [channelId, enabled, cosmeticsCacheVersion]);
 
   const sevenTvEmoteSetId = getSevenTvEmoteSetId(channelId) ?? undefined;
 

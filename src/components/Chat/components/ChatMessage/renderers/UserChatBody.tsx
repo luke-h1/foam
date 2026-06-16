@@ -6,14 +6,18 @@ import { useSelector } from '@legendapp/state/react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { CHAT_NOTICE_ACCENTS } from '../../util/chatNoticeAccents';
-import { styles } from '../RichChatMessage.styles';
+import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
 import { normaliseUsername } from '../richChatMessageHelpers';
 import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
 import { RichChatMessageUsername } from '../RichChatMessageUsername';
 import { ChatMessageBadges } from './ChatMessageBadges';
 import { ChatMessageBody } from './ChatMessageBody';
-import { canRenderMessageInline } from '@app/components/Chat/util/canRenderMessageInline';
+import {
+  canRenderMessageInline,
+  type InlineFlowPart,
+} from '@app/components/Chat/util/canRenderMessageInline';
 import { InlineMessageLine } from './InlineMessageLine';
+import { InlineMessageSpans } from './InlineMessageSpans';
 import { ReplyingToHeader } from './ReplyingToHeader';
 import type { BadgePressData } from '../RichChatMessage.types';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
@@ -96,6 +100,18 @@ export function UserChatBody({
     cachedSenderColor ??
     (userstateColor ? lightenColor(userstateColor) : undefined) ??
     (username ? lightenColor(generateRandomTwitchColor(username)) : undefined);
+  const bodyCanFlowInline =
+    !renderInline &&
+    canRenderMessageInline(message, {
+      hasPaint: false,
+      isModerated: Boolean(moderationNotice),
+    });
+  const bodyContainsEmotes = message.some(part => part.type === 'emote');
+  const bodyEmoteLineStyle = bodyContainsEmotes
+    ? compact
+      ? styles.messageTextEmoteLineCompact
+      : styles.messageTextEmoteLine
+    : undefined;
 
   return (
     <View style={styles.messageColumn}>
@@ -244,13 +260,32 @@ export function UserChatBody({
               />
             </View>
           ) : null}
-          <ChatMessageBody
-            compact={compact}
-            mode='message'
-            message={message}
-            replyPlainMentionTarget={replyPlainMentionTarget}
-            {...rendererArgs}
-          />
+          {bodyCanFlowInline ? (
+            <Text
+              style={[
+                styles.messageText,
+                compact && styles.messageTextCompact,
+                getChatFontScaleStyle(rendererArgs.fontScale, compact),
+                bodyEmoteLineStyle,
+              ]}
+            >
+              <InlineMessageSpans
+                {...rendererArgs}
+                compact={compact}
+                message={message as InlineFlowPart[]}
+                replyPlainMentionTarget={replyPlainMentionTarget}
+                emoteLineStyle={bodyEmoteLineStyle}
+              />
+            </Text>
+          ) : (
+            <ChatMessageBody
+              compact={compact}
+              mode='message'
+              message={message}
+              replyPlainMentionTarget={replyPlainMentionTarget}
+              {...rendererArgs}
+            />
+          )}
         </View>
       )}
     </View>

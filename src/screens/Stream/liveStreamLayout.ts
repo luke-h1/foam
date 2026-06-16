@@ -3,7 +3,7 @@ export type LandscapeChatCycleAction = 'hide' | 'show' | 'overlay';
 
 const DEFAULT_OVERLAY_CHAT_WIDTH = 380;
 const DEFAULT_SIDEBAR_CHAT_FRACTION = 0.35;
-export const LANDSCAPE_CHAT_MIN_WIDTH = 280;
+export const LANDSCAPE_CHAT_MIN_WIDTH = 200;
 const MAX_OVERLAY_CHAT_FRACTION = 0.68;
 const MAX_SIDEBAR_CHAT_FRACTION = 0.55;
 

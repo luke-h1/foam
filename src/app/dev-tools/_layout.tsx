@@ -1,11 +1,12 @@
 import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
-import { isDevToolsEnabled } from '@app/utils/devTools/devToolsGate';
+import { useIsDevToolsEnabled } from '@app/utils/devTools/devToolsGate';
 import { Redirect, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 export default function DevToolsLayout() {
   const { t } = useTranslation('navigation');
-  if (!isDevToolsEnabled) {
+  const devToolsEnabled = useIsDevToolsEnabled();
+  if (!devToolsEnabled) {
     return <Redirect href='/tabs/settings' />;
   }
 

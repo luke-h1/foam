@@ -85,6 +85,10 @@ const variant =
 const VERSION = '1.0.0';
 
 const appConfig = VARIANT_CONFIG[variant];
+const twitchClientId =
+  variant === 'production'
+    ? process.env.EXPO_PUBLIC_TWITCH_PROD_CLIENT_ID
+    : process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID;
 const sentryRelease = process.env.EXPO_PUBLIC_SENTRY_RELEASE ?? VERSION;
 const sentryDist =
   process.env.EXPO_PUBLIC_SENTRY_DIST ??
@@ -187,7 +191,7 @@ const config: ExpoConfig = {
     },
     EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL:
       process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL,
-    EXPO_PUBLIC_TWITCH_CLIENT_ID: process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID,
+    EXPO_PUBLIC_TWITCH_CLIENT_ID: twitchClientId,
     EXPO_PUBLIC_AUTH_PROXY_API_KEY: process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY,
     EXPO_PUBLIC_SENTRY_DSN: process.env.EXPO_PUBLIC_SENTRY_DSN,
     EXPO_PUBLIC_SENTRY_RELEASE: sentryRelease,

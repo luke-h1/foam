@@ -168,6 +168,7 @@ export const clearUserCosmeticsCache = () => {
     'sevenTvUserCosmetics_',
   );
   clearPaintsAndBadges();
+  chatStore$.cosmeticsCacheVersion.set(version => version + 1);
 };
 
 export const setUserPaint = (ttvUserId: string, paintId: string): void => {

@@ -9,7 +9,10 @@ import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
-import { isDevToolsEnabled } from '@app/utils/devTools/devToolsGate';
+import {
+  isAdminLogin,
+  isDevToolsEnabled,
+} from '@app/utils/devTools/devToolsGate';
 import { Button, Form, Host, Section } from '@expo/ui/swift-ui';
 import { router } from 'expo-router';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
@@ -27,7 +30,8 @@ export function SettingsIndexScreen() {
   const { config } = useRemoteConfig();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
-  const shouldShowDevTools = isDevToolsEnabled;
+  const shouldShowDevTools =
+    isDevToolsEnabled || isAdminLogin(user?.login, config.admins.value);
   const { t } = useTranslation('settings');
 
   useScrollToTop(scrollRef);

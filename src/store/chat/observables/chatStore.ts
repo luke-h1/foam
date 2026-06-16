@@ -41,6 +41,7 @@ export interface ChatStoreState {
   ttvUsers: ChatUser[];
   messages: AnyChatMessageType[];
   mentionLoginRevision: number;
+  cosmeticsCacheVersion: number;
   paints: Record<string, PaintData>;
   userPaintIds: Record<string, string>;
   badges: Record<string, SanitisedBadgeSet>;
@@ -98,6 +99,7 @@ const initialChatStoreState: ChatStoreState = {
   ttvUsers: [],
   messages: [],
   mentionLoginRevision: 0,
+  cosmeticsCacheVersion: 0,
   paints: {},
   userPaintIds: {},
   badges: {},

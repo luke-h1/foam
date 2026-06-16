@@ -241,7 +241,17 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
       'video::-webkit-media-controls-enclosure',
       'video::-webkit-media-controls-panel',
       'video::-webkit-media-controls-play-button',
-      'video::-webkit-media-controls-start-playback-button'
+      'video::-webkit-media-controls-start-playback-button',
+      'video::-webkit-media-text-track-container',
+      'video::-webkit-media-text-track-display',
+      'video::-webkit-media-text-track-region',
+      'video::-webkit-media-text-track-region-container',
+      '[data-a-target="player-captions"]',
+      '[data-a-target*="captions"]',
+      '.player-captions-container',
+      '.captions-container',
+      '[class*="captions"]',
+      '[class*="Captions"]'
     ].join(',') + '{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;}';
     (document.head || document.documentElement).appendChild(style);
   }
@@ -312,6 +322,38 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
       video.setAttribute('x-webkit-airplay', 'deny');
       video.setAttribute('controlsList', 'nodownload noplaybackrate noremoteplayback');
       video.removeAttribute('controls');
+    } catch (e) {}
+  }
+
+  function hideTextTracks(video) {
+    if (!video || !video.textTracks) {
+      return;
+    }
+    try {
+      var tracks = video.textTracks;
+      for (var i = 0; i < tracks.length; i++) {
+        if (tracks[i] && tracks[i].mode !== 'disabled') {
+          tracks[i].mode = 'disabled';
+        }
+      }
+    } catch (e) {}
+  }
+
+  function installCaptionSuppressor(video) {
+    if (!video || video.__foamCaptionsSuppressed) {
+      return;
+    }
+    video.__foamCaptionsSuppressed = true;
+    hideTextTracks(video);
+    try {
+      if (video.textTracks) {
+        video.textTracks.addEventListener('addtrack', function() {
+          hideTextTracks(video);
+        });
+        video.textTracks.addEventListener('change', function() {
+          hideTextTracks(video);
+        });
+      }
     } catch (e) {}
   }
 
@@ -505,6 +547,7 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
 
     video.__foamBridgeInstalled = true;
     prepareInlineVideo(video);
+    installCaptionSuppressor(video);
     video.muted = targetMuted;
     if (!targetMuted) {
       video.volume = 1;
@@ -516,11 +559,7 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
       clearPendingPause();
       clearPlaybackRecoveryTimers();
       userPaused = false;
-      try {
-        if (video.textTracks && video.textTracks[0]) {
-          video.textTracks[0].mode = 'hidden';
-        }
-      } catch (e) {}
+      hideTextTracks(video);
       video.muted = targetMuted;
       if (!targetMuted) {
         video.volume = 1;
@@ -541,11 +580,7 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     video.addEventListener('pause', function() {
       clearPendingPause();
       stopPlaybackStats();
-      try {
-        if (video.textTracks && video.textTracks[0]) {
-          video.textTracks[0].mode = 'hidden';
-        }
-      } catch (e) {}
+      hideTextTracks(video);
       schedulePlaybackRecovery();
       pendingPauseTimer = setTimeout(function() {
         postPauseIfStillPaused(video);

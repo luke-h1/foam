@@ -70,6 +70,20 @@ describe('twitchPlayerSource', () => {
     );
   });
 
+  test('keeps captions disabled across ad boundaries', () => {
+    const script = buildRawTwitchPlayerBootstrapScript({
+      autoplay: true,
+      debug: false,
+      muted: false,
+    });
+
+    expect(script).toContain("tracks[i].mode = 'disabled'");
+    expect(script).toContain("video.textTracks.addEventListener('addtrack'");
+    expect(script).toContain("video.textTracks.addEventListener('change'");
+    expect(script).toContain('installCaptionSuppressor(video)');
+    expect(script).toContain('video::-webkit-media-text-track-container');
+  });
+
   test('builds Twitch clip embed URLs', () => {
     expect(
       buildTwitchClipPlayerUrl({

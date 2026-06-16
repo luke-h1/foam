@@ -32,7 +32,7 @@ import {
 // Roughly seven rows of lookahead; at 96 fast flings outran the renderer and
 // showed skeleton rows.
 const CHAT_DRAW_DISTANCE = 250;
-const CHAT_ESTIMATED_ITEM_SIZE = 34;
+const CHAT_ESTIMATED_ITEM_SIZE = 44;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
@@ -46,7 +46,7 @@ const CHAT_MAINTAIN_SCROLL_AT_END = {
   on: { dataChange: true, itemLayout: true },
 };
 const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
-const CHAT_RECYCLE_ITEMS = false;
+const CHAT_RECYCLE_ITEMS = true;
 
 function ChatListRowSkeleton({ index }: { index: number }) {
   return (
@@ -184,14 +184,9 @@ export const ChatList = memo(
         recycleItems={CHAT_RECYCLE_ITEMS}
         keyExtractor={keyExtractor}
         getItemType={getItemType}
-        // Only anchor visible content while scrolled up — keeps the reading
-        // position fixed as messages append and the backlog is trimmed off the
-        // top. At the bottom it MUST be off: the boolean form enables data
-        // anchoring that holds the *old* visible row in place, fighting the
-        // scroll-to-end that follows new messages (jitter + a clipped newest
-        // row). With it off, the manual follow in useChatScroll can pin the
-        // newest row all the way down without anything pulling back.
-        maintainVisibleContentPosition={!shouldMaintainScrollAtEnd}
+        maintainVisibleContentPosition={
+          shouldMaintainScrollAtEnd ? undefined : true
+        }
         maintainScrollAtEnd={
           shouldMaintainScrollAtEnd ? CHAT_MAINTAIN_SCROLL_AT_END : false
         }

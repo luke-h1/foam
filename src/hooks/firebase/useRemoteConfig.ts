@@ -44,6 +44,7 @@ export interface RemoteConfigSchema {
    */
   statusPageUrl: string;
   websiteUrl: string;
+  admins: string[];
 }
 
 export type RemoteConfigKey = keyof RemoteConfigSchema;
@@ -66,10 +67,11 @@ export const defaultRemoteConfig = {
     '{"android": {"development": "0.0.0", "internal": "0.0.0", "testflight": "0.0.0", "production": "0.0.0"}, "ios": {"development": "0.0.0", "internal": "0.0.0", "testflight": "0.0.0", "production": "0.0.0"}}',
   statusPageUrl: 'https://status.foam-app.com',
   websiteUrl: 'https://foam-app.com',
+  admins: '[]',
 } satisfies Record<RemoteConfigKey, string>;
 
 // Keys that contain JSON and need parsing
-const jsonKeys: RemoteConfigKey[] = ['splash', 'minimumVersion'];
+const jsonKeys: RemoteConfigKey[] = ['splash', 'minimumVersion', 'admins'];
 
 function getErrorMessage(error: unknown): string | null {
   if (error instanceof Error) {
