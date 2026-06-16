@@ -2,6 +2,7 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       EXPO_PUBLIC_TWITCH_CLIENT_ID: string;
+      EXPO_PUBLIC_TWITCH_PROD_CLIENT_ID?: string;
       EXPO_PUBLIC_ENABLE_SENTRY?: string;
       EXPO_PUBLIC_SENTRY_DSN?: string;
       EXPO_PUBLIC_SENTRY_RELEASE?: string;
