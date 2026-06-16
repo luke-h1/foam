@@ -10,6 +10,7 @@
     "atlas:analyze": "expo-atlas",
     "atlas:analyze:file": "expo-atlas .expo/atlas.jsonl",
     "atlas:export": "EXPO_UNSTABLE_ATLAS=true expo export --platform all",
+    "bench": "node --import tsx benchmarks/string.bench.ts && node --import tsx benchmarks/chat.bench.ts",
     "build:debug:android": "cd android && ./gradlew assembleDebug -DtestBuildType=debug -Dorg.gradle.jvmargs=-Xmx4g",
     "build:debug:ios": "cd ios && pod install && cd .. && xcodebuild ONLY_ACTIVE_ARCH=YES -workspace ios/Foam.xcworkspace -UseNewBuildSystem=YES -scheme Foam -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build -quiet",
     "build:internal": "eas build --profile internal --platform all --non-interactive --no-wait",
@@ -187,6 +188,7 @@
     "@ast-grep/cli": "^0.43.0",
     "@babel/core": "^7.29.0",
     "@babel/preset-react": "^7.27.1",
+    "@codspeed/tinybench-plugin": "5.6.0",
     "@commitlint/cli": "19.8.1",
     "@commitlint/config-conventional": "19.8.1",
     "@eslint/js": "^9.39.4",
@@ -251,6 +253,7 @@
     "reassure": "1.4.1",
     "storybook": "^10.3.6",
     "svgo": "^4.0.0",
+    "tinybench": "^5",
     "tsx": "^4.20.3",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.60.0"

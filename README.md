@@ -2,6 +2,8 @@
 
 A new way to experience Twitch.tv on mobile
 
+[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/luke-h1/foam?utm_source=badge)
+
 <p>
   <img src='https://raw.githubusercontent.com/luke-h1/foam-fastlane/main/screenshots/6.9/01-chat.png' alt='Foam stream chat screen with Twitch messages' width='240' />
   <img src='https://raw.githubusercontent.com/luke-h1/foam-fastlane/main/screenshots/6.9/04-search.png' alt='Foam search screen with live Twitch channels' width='240' />
