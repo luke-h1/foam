@@ -717,6 +717,80 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
 true;`;
 }
 
+export function buildTwitchCaptionSuppressorScript(): string {
+  return `
+(function() {
+  if (window.__foamCaptionSuppressorInstalled) { return true; }
+  window.__foamCaptionSuppressorInstalled = true;
+
+  if (!document.getElementById('foam-caption-hide-style')) {
+    var style = document.createElement('style');
+    style.id = 'foam-caption-hide-style';
+    style.textContent = [
+      'video::-webkit-media-text-track-container',
+      'video::-webkit-media-text-track-display',
+      'video::-webkit-media-text-track-region',
+      'video::-webkit-media-text-track-region-container',
+      '[data-a-target="player-captions"]',
+      '[data-a-target*="captions"]',
+      '.player-captions-container',
+      '.captions-container',
+      '[class*="captions"]',
+      '[class*="Captions"]'
+    ].join(',') + '{display:none!important;visibility:hidden!important;opacity:0!important;}';
+    (document.head || document.documentElement).appendChild(style);
+  }
+
+  function hideTextTracks(video) {
+    if (!video || !video.textTracks) { return; }
+    try {
+      var tracks = video.textTracks;
+      for (var i = 0; i < tracks.length; i++) {
+        if (tracks[i] && tracks[i].mode !== 'disabled') {
+          tracks[i].mode = 'disabled';
+        }
+      }
+    } catch (e) {}
+  }
+
+  function suppress(video) {
+    if (!video || video.__foamCaptionsSuppressed) { return; }
+    video.__foamCaptionsSuppressed = true;
+    hideTextTracks(video);
+    try {
+      video.textTracks.addEventListener('addtrack', function() { hideTextTracks(video); });
+      video.textTracks.addEventListener('change', function() { hideTextTracks(video); });
+    } catch (e) {}
+    video.addEventListener('playing', function() { hideTextTracks(video); });
+    video.addEventListener('pause', function() { hideTextTracks(video); });
+  }
+
+  function sweep() {
+    document.querySelectorAll('video').forEach(suppress);
+  }
+
+  sweep();
+
+  var sweepQueued = false;
+  function scheduleSweep() {
+    if (sweepQueued) { return; }
+    sweepQueued = true;
+    setTimeout(function() {
+      sweepQueued = false;
+      sweep();
+    }, 250);
+  }
+
+  new MutationObserver(scheduleSweep).observe(document.body || document.documentElement, {
+    childList: true,
+    subtree: true
+  });
+
+  return true;
+})();
+true;`;
+}
+
 export function buildTwitchClipPlayerUrl(options: {
   autoplay: boolean;
   clip: string;
