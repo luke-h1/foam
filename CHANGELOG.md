@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0
+## 1.0.0-internal
 
 ### ♻️ Refactor
 
@@ -24,6 +24,9 @@
 - **chat:** Width aware chat window
 - **app:** Release patches ([#645](https://github.com/lhowsam/foam/issues/645))
 - **chat:** Hide captions ([#646](https://github.com/lhowsam/foam/issues/646))
+- **player:** Captions persisting
+- **player:** Captions persisting
+- **app:** Player captions
 
 ### 🔧 Miscellaneous Tasks
 
