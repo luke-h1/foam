@@ -1,4 +1,5 @@
 import type { SanitisedEmote } from '@app/types/emote';
+import { Image as ExpoImage } from 'expo-image';
 import {
   clearPreloadCache,
   preloadChannelEmotes,
@@ -6,16 +7,19 @@ import {
   preloadGlobalEmotes,
 } from '../preloadEmotes';
 
-jest.mock('react-native-nitro-web-image', () => ({
-  WebImages: {
-    preload: jest.fn(),
+jest.mock('expo-image', () => ({
+  Image: {
+    prefetch: jest.fn().mockResolvedValue(true),
   },
 }));
 
-const webImagesMock = jest.requireMock('react-native-nitro-web-image')
-  .WebImages as {
-  preload: jest.Mock;
-};
+const prefetchMock = jest.mocked(ExpoImage.prefetch);
+
+// prefetch warms a batch of urls per call; flatten to the warmed url sequence.
+const warmedUrls = () =>
+  prefetchMock.mock.calls.flatMap(([urls]) =>
+    Array.isArray(urls) ? urls : [urls],
+  );
 
 function emote(name: string, url = `https://example.com/${name}.webp`) {
   return {
@@ -33,7 +37,7 @@ function emote(name: string, url = `https://example.com/${name}.webp`) {
 describe('preloadEmotes', () => {
   beforeEach(() => {
     clearPreloadCache();
-    webImagesMock.preload.mockReset();
+    prefetchMock.mockClear();
   });
 
   test('preloads each emote cache URL once across calls', async () => {
@@ -43,7 +47,7 @@ describe('preloadEmotes', () => {
     await preloadEmotes([first, duplicate]);
     await preloadEmotes([first]);
 
-    expect(webImagesMock.preload.mock.calls.map(([url]) => url)).toEqual([
+    expect(warmedUrls()).toEqual([
       'https://example.com/shared.webp',
       'https://example.com/shared.webp.png',
     ]);
@@ -52,10 +56,7 @@ describe('preloadEmotes', () => {
   test('respects the requested preload limit', async () => {
     await preloadEmotes([emote('one'), emote('two')], 1);
 
-    expect(webImagesMock.preload).toHaveBeenCalledTimes(1);
-    expect(webImagesMock.preload).toHaveBeenCalledWith(
-      'https://example.com/one.webp',
-    );
+    expect(warmedUrls()).toEqual(['https://example.com/one.webp']);
   });
 
   test('keeps global and channel preload ordering stable', async () => {
@@ -66,7 +67,7 @@ describe('preloadEmotes', () => {
       ffzGlobalEmotes: [emote('ffz-global')],
     });
     clearPreloadCache();
-    webImagesMock.preload.mockClear();
+    prefetchMock.mockClear();
 
     await preloadChannelEmotes({
       twitchChannelEmotes: [emote('twitch-channel')],
@@ -75,8 +76,6 @@ describe('preloadEmotes', () => {
       ffzChannelEmotes: [emote('ffz-channel')],
     });
 
-    expect(webImagesMock.preload.mock.calls[0]?.[0]).toBe(
-      'https://example.com/seven-tv-channel.webp',
-    );
+    expect(warmedUrls()[0]).toBe('https://example.com/seven-tv-channel.webp');
   });
 });

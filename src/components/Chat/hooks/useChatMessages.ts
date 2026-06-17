@@ -21,11 +21,29 @@ import {
 // ~40% on an 18k-viewer chat; at moderate rates it measures neutral.
 const LIVE_BUFFER_FLUSH_INTERVAL_MS = 100;
 const BACKLOG_BUFFER_FLUSH_INTERVAL_MS = 250;
+// Under a raid the cost that drops frames is the per-flush list reconcile, which
+// fires every LIVE interval (10x/s) regardless of how few rows each commits — so
+// halving the flush rate halves the jank opportunities. We only slow down once a
+// flush has seen a raid-sized batch (RAID_PENDING_THRESHOLD), and snap back to
+// 100ms the moment batches shrink, so normal/busy chat stays at full liveness.
+// Fewer, larger-gap commits are also strictly better for GC (issue #594).
+const RAID_BUFFER_FLUSH_INTERVAL_MS = 180;
+const RAID_PENDING_THRESHOLD = 8;
 // While a drag or fling is in progress away from the bottom, publishing a
 // flush re-keys rows and forces maintainVisibleContentPosition adjustments
 // mid-gesture, dropping frames. Hold the buffer and retry once the gesture
 // settles; the buffer cap equals the store cap so nothing extra is lost.
 const SCROLL_DEFERRED_FLUSH_RETRY_MS = 250;
+// Raid sampling: when following live, a 200 msg/s raid buffers ~20 messages per
+// 100ms flush, so React mounts ~20 new rows in a single reconciliation — one
+// very heavy frame that caps scroll fps. Nobody can read 200 msg/s anyway, so
+// cap the rows committed per live flush and drop the older overflow (it would
+// have scrolled past unread). 3 rows per 100ms flush (~30 msg/s) keeps each
+// flush-frame affordable under a raid while staying invisible to normal busy
+// chat (which is ≤2/flush). Combined with the ingestion limiter the chat does
+// bounded work no matter how fast a raid arrives. Only applies at the bottom,
+// and keeps the one-flush-per-100ms cadence (issue #594 GC win).
+const MAX_LIVE_COMMIT_PER_FLUSH = 3;
 // The buffer cap tracks the store cap so a held flush can still replace the
 // whole scrollback without dropping messages the store would have kept.
 const getMaxBufferedMessages = () => getMaxChatMessages();
@@ -116,6 +134,8 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   const flushBufferRef = useRef<() => void>(() => {});
   const isFlushingRef = useRef(false);
   const pendingUnreadCountRef = useRef(0);
+  // Set when a flush sees a raid-sized batch; slows the next live flush cadence.
+  const raidFlushModeRef = useRef(false);
 
   const resetBuffer = useCallback(() => {
     messageBufferRef.current = [];
@@ -157,8 +177,20 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
     isFlushingRef.current = true;
 
-    const messagesToFlush = messageBufferRef.current;
+    let messagesToFlush = messageBufferRef.current;
+    // A raid-sized batch this window means the next live flush should slow down
+    // to cut reconcile-driven jank; a small batch snaps liveness back to 100ms.
+    raidFlushModeRef.current =
+      isAtBottomRef.current && messagesToFlush.length > RAID_PENDING_THRESHOLD;
     resetBuffer();
+    // Drop the oldest overflow when following a raid live (see constant). Only
+    // at the bottom, where unread isn't accrued, so no unread bookkeeping.
+    if (
+      isAtBottomRef.current &&
+      messagesToFlush.length > MAX_LIVE_COMMIT_PER_FLUSH
+    ) {
+      messagesToFlush = messagesToFlush.slice(-MAX_LIVE_COMMIT_PER_FLUSH);
+    }
     const shouldMaintainBottom = shouldArmBottomContentAnchor(
       isScrollingToBottomRef,
     );
@@ -247,9 +279,12 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
         pendingUnreadCountRef.current += 1;
       }
 
+      const liveFlushDelay = raidFlushModeRef.current
+        ? RAID_BUFFER_FLUSH_INTERVAL_MS
+        : LIVE_BUFFER_FLUSH_INTERVAL_MS;
       const flushDelay =
         isAtBottomRef.current || scrollingToBottom
-          ? LIVE_BUFFER_FLUSH_INTERVAL_MS
+          ? liveFlushDelay
           : BACKLOG_BUFFER_FLUSH_INTERVAL_MS;
       startFlushTimer(flushDelay);
     },
@@ -409,6 +444,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     }
     resetBuffer();
     pendingUnreadCountRef.current = 0;
+    raidFlushModeRef.current = false;
   }, [resetBuffer]);
 
   const getBufferSize = useCallback(() => messageBufferRef.current.length, []);

@@ -218,7 +218,8 @@ describe('useChatRowRenderer', () => {
       customHighlightsKey: '',
       disableEmoteAnimations: true,
       highlightedUsersKey: 'VIPUser\u001fviewer',
-      mentionLoginRevision: 7,
+      // mentionLoginRevision intentionally excluded from extraData (would
+      // re-render every row per mention resolve); MentionSpan subscribes to it.
       showAlternatingChatRows: true,
       showInlineReplyContext: true,
       showTimestamps: true,

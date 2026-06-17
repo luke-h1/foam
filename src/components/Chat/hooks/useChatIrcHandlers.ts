@@ -1,4 +1,5 @@
 import { batch } from '@legendapp/state';
+import { shouldProcessLiveMessage } from '@app/components/Chat/util/chatIngestRateLimiter';
 import { useCallback, useRef, type RefObject } from 'react';
 
 import { parseIrcMessage } from '@app/services/recent-messages-service';
@@ -90,6 +91,11 @@ export function useChatIrcHandlers({
 
   const handlePrivmsgMessage = useCallback(
     (tags: Record<string, string>, text: string, countUnread = true) => {
+      // Raid guard: drop excess live messages before the expensive emote/badge
+      // parse. Recent-message replay (countUnread === false) is never sampled.
+      if (countUnread && !shouldProcessLiveMessage()) {
+        return;
+      }
       const userstate = createUserStateFromTags(tags);
       const replyParentMessageId = tags['reply-parent-msg-id'];
       const replyParentDisplayName = tags['reply-parent-display-name'];

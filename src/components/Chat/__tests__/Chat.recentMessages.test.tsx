@@ -33,6 +33,13 @@ jest.mock('@app/context/AuthContext', () => ({
   }),
 }));
 
+// The chat pipeline mounts the dev-only synthetic flood (useChat), now gated on
+// dev-tools access. This suite never activates the flood; stub access so it
+// stays inert without pulling remote-config / a QueryClient into the render.
+jest.mock('@app/utils/devTools/devToolsGate', () => ({
+  useDevToolsAccess: () => 'denied',
+}));
+
 jest.mock('@app/hooks/useSeventvWs', () => ({
   useSeventvWs: () => ({
     subscribeToChannel: jest.fn(),

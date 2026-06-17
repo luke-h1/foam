@@ -1,5 +1,5 @@
 import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
-import { recordError } from './sentry';
+import { flushSentry, recordError } from './sentry';
 
 type FatalErrorListener = (error: Error) => void;
 
@@ -54,6 +54,10 @@ export function installGlobalErrorHandlers(): void {
         params: { handledBy: 'global_error_handler' },
         errorCause: fatalError,
       });
+
+      // The recovery UI keeps the app alive, so force the envelope out now in
+      // case the user force-quits before the transport flushes on its own.
+      void flushSentry();
 
       fatalErrorListener(fatalError);
       return;

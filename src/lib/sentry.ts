@@ -1,7 +1,10 @@
 import {
   init as initSentry,
   reactNativeTracingIntegration,
-  reactNavigationIntegration,
+  appStartIntegration,
+  graphqlIntegration,
+  expoRouterIntegration,
+  mobileReplayIntegration,
 } from '@sentry/react-native';
 import * as Sentry from '@sentry/react-native';
 import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
@@ -10,11 +13,33 @@ import type { ComponentType } from 'react';
 // Created once at module load so RootLayoutNav can call
 // navigationIntegration.registerNavigationContainer(ref) before the first
 // navigation event fires.
-export const navigationIntegration = reactNavigationIntegration({
+export const navigationIntegration = expoRouterIntegration({
   enableTimeToInitialDisplay: true,
+  enablePrefetchTracking: true,
+  enableTimeToInitialDisplayForPreloadedRoutes: true,
 });
 
 let didInitializeSentry = false;
+
+export interface SentryStatus {
+  enabled: boolean;
+  hasDsn: boolean;
+  environment: string;
+  release?: string;
+  dist?: string;
+  debug: boolean;
+}
+
+let sentryStatus: SentryStatus = {
+  enabled: false,
+  hasDsn: false,
+  environment: process.env.EXPO_PUBLIC_APP_VARIANT ?? 'development',
+  debug: false,
+};
+
+export function getSentryStatus(): SentryStatus {
+  return sentryStatus;
+}
 
 export function init() {
   if (didInitializeSentry) {
@@ -23,23 +48,54 @@ export function init() {
 
   const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
   const appVariant = process.env.EXPO_PUBLIC_APP_VARIANT ?? 'development';
+  const hasDsn = Boolean(dsn);
+  const enabled =
+    hasDsn && (!__DEV__ || process.env.EXPO_PUBLIC_ENABLE_SENTRY === 'true');
+  const debug = process.env.EXPO_PUBLIC_SENTRY_DEBUG === 'true';
+
+  sentryStatus = {
+    enabled,
+    hasDsn,
+    environment: appVariant,
+    release: process.env.EXPO_PUBLIC_SENTRY_RELEASE,
+    dist: process.env.EXPO_PUBLIC_SENTRY_DIST,
+    debug,
+  };
+
+  // A release build with no DSN means Sentry silently captures nothing, which
+  // is indistinguishable from "no errors" in the dashboard. Make it loud so it
+  // shows up in device logs (Console.app / adb logcat) during triage.
+  if (!hasDsn && !__DEV__) {
+    console.error(
+      '[sentry] EXPO_PUBLIC_SENTRY_DSN is missing from this build — error reporting is disabled.',
+    );
+  }
 
   initSentry({
-    enabled:
-      Boolean(dsn) &&
-      (!__DEV__ || process.env.EXPO_PUBLIC_ENABLE_SENTRY === 'true'),
+    enabled,
     dsn,
     appHangTimeoutInterval: 1000,
-    debug: false,
+    debug,
     environment: appVariant,
     dist: process.env.EXPO_PUBLIC_SENTRY_DIST,
     release: process.env.EXPO_PUBLIC_SENTRY_RELEASE,
     enableAutoSessionTracking: true,
     enableLogs: true,
-    ignoreErrors: ['Network request failed'],
+    enableCaptureFailedRequests: true,
     attachStacktrace: true,
+    attachScreenshot: true,
+    attachViewHierarchy: true,
+    ignoreErrors: ['Network request failed'],
     sampleRate: 1,
-    integrations: [reactNativeTracingIntegration(), navigationIntegration],
+    enableAutoPerformanceTracing: true,
+    integrations: [
+      reactNativeTracingIntegration(),
+      navigationIntegration,
+      reactNativeTracingIntegration,
+      appStartIntegration,
+      graphqlIntegration,
+      mobileReplayIntegration,
+    ],
     beforeSend(event) {
       // Keep the store-review prompt gate honest: any error-level event
       // (including unhandled rejections Sentry tracks itself) marks the
@@ -49,12 +105,32 @@ export function init() {
       }
       return event;
     },
-    // 100% in dev/testflight for full visibility; 20% in production to keep
-    // transaction volume manageable on high-chat-volume sessions.
-    tracesSampleRate: __DEV__ ? 1.0 : 0.2,
+    tracesSampleRate: 1.0,
   });
 
   didInitializeSentry = true;
+}
+
+export function flushSentry(): Promise<boolean> {
+  return Sentry.flush();
+}
+
+/**
+ * Sends a message event and waits for the transport to flush. Lets a real
+ * TestFlight build confirm the whole pipeline (init -> capture -> network)
+ * works, rather than guessing from an empty dashboard.
+ */
+export async function verifySentryDelivery(): Promise<{
+  eventId?: string;
+  flushed: boolean;
+}> {
+  init();
+  const eventId = Sentry.captureMessage(
+    `Foam Sentry delivery check (${sentryStatus.environment})`,
+    'info',
+  );
+  const flushed = await Sentry.flush();
+  return { eventId, flushed };
 }
 
 export function wrapWithSentry<P extends Record<string, unknown>>(
@@ -233,8 +309,6 @@ export function recordWarning(warning: {
     data: extra,
   });
 
-  // Sentry Logs instead of captureMessage: warnings shouldn't consume
-  // error-event quota.
   Sentry.logger.warn(message, extra);
 }
 

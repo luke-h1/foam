@@ -281,7 +281,6 @@ function EmoteActionSheetComponent({
                   {displayUrl ? (
                     <View style={styles.previewImageContainer}>
                       <Image
-                        useNitro
                         trackLoadTime
                         trackLoadContext='chat.emote-action-sheet'
                         source={displayUrl}

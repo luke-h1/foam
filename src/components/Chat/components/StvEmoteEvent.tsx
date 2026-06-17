@@ -69,7 +69,6 @@ function StvEmoteEventComponent({
       </ChatNoticeMetaRow>
       <View style={styles.content}>
         <Image
-          useNitro
           trackLoadTime
           trackLoadContext='chat.stv-emote-event'
           source={displayUrl}

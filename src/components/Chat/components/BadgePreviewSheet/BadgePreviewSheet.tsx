@@ -141,7 +141,6 @@ function BadgePreviewSheetComponent(props: Props) {
           <View style={styles.previewPanel}>
             <View style={styles.imageStage}>
               <Image
-                useNitro
                 trackLoadTime
                 trackLoadContext='chat.badge-preview'
                 source={selectedBadge.url}
@@ -251,8 +250,8 @@ const styles = StyleSheet.create({
     lineHeight: theme.fontSize17 * 1.2,
   },
   badgeImage: {
-    height: 60,
-    width: 60,
+    height: 96,
+    width: 96,
   },
   container: {
     alignSelf: 'center',

@@ -122,3 +122,8 @@ build-artifacts/
 traces
 
 .env.local
+
+sentry.options.json
+
+
+!.vscode/settings.json

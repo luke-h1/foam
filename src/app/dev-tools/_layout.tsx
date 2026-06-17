@@ -31,6 +31,14 @@ export default function DevToolsLayout() {
         name='sentry-demo'
         options={{ title: t('sentryTest'), headerBackTitle: t('devTools') }}
       />
+      <Stack.Screen
+        name='image-benchmark'
+        options={{ title: 'Image Benchmark', headerBackTitle: t('devTools') }}
+      />
+      <Stack.Screen
+        name='chat-perf'
+        options={{ title: 'Chat Perf', headerBackTitle: t('devTools') }}
+      />
     </Stack>
   );
 }

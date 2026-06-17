@@ -1,5 +1,6 @@
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
+import { getSentryStatus, verifySentryDelivery } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { useState } from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
@@ -11,9 +12,27 @@ function SentryTestError() {
   return null;
 }
 
+type DeliveryState =
+  | { status: 'idle' }
+  | { status: 'sending' }
+  | { status: 'done'; eventId: string | undefined; flushed: boolean };
+
 export function SentryTestScreen() {
   const { t } = useTranslation('devTools');
   const [shouldThrow, setShouldThrow] = useState(false);
+  const [delivery, setDelivery] = useState<DeliveryState>({ status: 'idle' });
+
+  const status = getSentryStatus();
+
+  async function handleVerifyDelivery() {
+    setDelivery({ status: 'sending' });
+    const result = await verifySentryDelivery();
+    setDelivery({
+      status: 'done',
+      eventId: result.eventId,
+      flushed: result.flushed,
+    });
+  }
 
   return (
     <View style={styles.screenContainer}>
@@ -27,6 +46,63 @@ export function SentryTestScreen() {
             {t('sentryTest')}
           </Text>
         )}
+
+        <View style={styles.panel}>
+          <Text weight='semibold'>{t('sentryStatus')}</Text>
+          <StatusRow
+            label={t('enabled')}
+            value={status.enabled ? t('yes') : t('no')}
+            warn={!status.enabled}
+          />
+          <StatusRow
+            label={t('dsn')}
+            value={status.hasDsn ? t('present') : t('missing')}
+            warn={!status.hasDsn}
+          />
+          <StatusRow label={t('environment')} value={status.environment} />
+          <StatusRow
+            label={t('release')}
+            value={status.release ?? t('unknown')}
+          />
+          <StatusRow label={t('dist')} value={status.dist ?? t('unknown')} />
+          <StatusRow
+            label={t('debug')}
+            value={status.debug ? t('yes') : t('no')}
+          />
+        </View>
+
+        <View style={styles.panel}>
+          <Text weight='semibold'>{t('verifyDelivery')}</Text>
+          <Text type='xs' color='gray.textLow'>
+            {t('verifyDeliveryDescription')}
+          </Text>
+
+          <Button
+            accessibilityRole='button'
+            label={t('verifyDelivery')}
+            onPress={handleVerifyDelivery}
+            disabled={delivery.status === 'sending'}
+            style={styles.verifyButton}
+          >
+            <Text type='sm' weight='semibold' style={styles.verifyButtonText}>
+              {delivery.status === 'sending'
+                ? t('sending')
+                : t('verifyDelivery')}
+            </Text>
+          </Button>
+
+          {delivery.status === 'done' ? (
+            <Text
+              type='xs'
+              color={delivery.flushed ? 'gray' : 'gray.textLow'}
+              style={styles.result}
+            >
+              {delivery.flushed
+                ? t('deliveryConfirmed', { id: delivery.eventId ?? '—' })
+                : t('deliveryFailed')}
+            </Text>
+          ) : null}
+        </View>
 
         <View style={styles.panel}>
           <Text weight='semibold'>{t('throwTestError')}</Text>
@@ -50,8 +126,35 @@ export function SentryTestScreen() {
   );
 }
 
+function StatusRow({
+  label,
+  value,
+  warn,
+}: {
+  label: string;
+  value: string;
+  warn?: boolean;
+}) {
+  return (
+    <View style={styles.statusRow}>
+      <Text type='sm' color='gray.textLow'>
+        {label}
+      </Text>
+      <Text
+        type='sm'
+        weight='semibold'
+        color='gray'
+        style={warn ? styles.warnValue : undefined}
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   content: {
+    gap: theme.space16,
     padding: theme.space20,
     paddingBottom: 100,
   },
@@ -74,11 +177,34 @@ const styles = StyleSheet.create({
     gap: theme.space8,
     padding: theme.space16,
   },
+  result: {
+    marginTop: theme.space12,
+  },
   screenContainer: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
   },
+  statusRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   title: {
     marginBottom: theme.space28,
+  },
+  verifyButton: {
+    alignItems: 'center',
+    backgroundColor: theme.colorPrimary,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius12,
+    marginTop: theme.space12,
+    paddingHorizontal: theme.space20,
+    paddingVertical: theme.space12,
+  },
+  verifyButtonText: {
+    color: '#fff',
+  },
+  warnValue: {
+    color: theme.colorAmber,
   },
 });

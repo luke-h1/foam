@@ -37,7 +37,6 @@ function renderMessagePart(messagePart: ParsedPart, occurrence: number) {
       return (
         <Image
           key={key}
-          useNitro
           trackLoadTime
           trackLoadContext='chat.subscription-notice-emote'
           source={messagePart.url}

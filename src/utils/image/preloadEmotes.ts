@@ -1,26 +1,15 @@
 /**
- * Emote preloading utility using NitroImage
+ * Emote preloading utility.
  *
- * Preloads emote images in the background to ensure instant display
- * when they appear in chat. Uses NitroImage's WebImages.preload() API.
+ * Warms emote images into expo-image's memory + disk cache so they render
+ * instantly (already decoded) the first time they appear in chat. This must
+ * target the same cache the chat renderer reads — ChatInlineImage renders via
+ * expo-image, so preloading goes through ExpoImage.prefetch.
  */
+import { Image as ExpoImage } from 'expo-image';
 import type { SanitisedEmote } from '@app/types/emote';
 import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
-
-// Lazy import to avoid loading nitro modules at app startup
-type WebImagesType = { preload: (url: string) => void };
-let WebImages: WebImagesType | null = null;
-
-async function getWebImages(): Promise<WebImagesType> {
-  if (!WebImages) {
-    const module = require('react-native-nitro-web-image') as {
-      WebImages: WebImagesType;
-    };
-    WebImages = module.WebImages;
-  }
-  return WebImages;
-}
 
 // Track preloaded URLs to avoid duplicate preloads
 const preloadedUrls = new Set<string>();
@@ -55,8 +44,6 @@ export async function preloadEmotes(
   emotes: SanitisedEmote[],
   limit = 50,
 ): Promise<void> {
-  const webImages = await getWebImages();
-
   const toPreload: string[] = [];
   const seen = new Set<string>();
 
@@ -95,21 +82,11 @@ export async function preloadEmotes(
     batches.push(toPreload.slice(i, i + BATCH_SIZE));
   }
   for (const batch of batches) {
-    // Sequential batches to avoid overwhelming the network
+    // Sequential batches to avoid overwhelming the network. prefetch warms
+    // expo-image's memory + disk cache, which is what the chat rows read.
     // eslint-disable-next-line react-doctor/async-await-in-loop -- batch preload is intentionally throttled
-    await Promise.allSettled(
-      batch.map(url => {
-        try {
-          // preload is synchronous - it just queues the download
-          webImages.preload(url);
-          preloadedUrls.add(url);
-          return Promise.resolve();
-        } catch {
-          // Silently ignore preload failures - emote will load on demand
-          return Promise.resolve();
-        }
-      }),
-    );
+    await ExpoImage.prefetch(batch, 'memory-disk').catch(() => undefined);
+    batch.forEach(url => preloadedUrls.add(url));
   }
 
   // Prevent unbounded cache growth

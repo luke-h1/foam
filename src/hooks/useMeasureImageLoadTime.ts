@@ -1,7 +1,7 @@
 import { logger } from '@app/utils/logger';
 import { useRef, useCallback } from 'react';
 
-export type ImageLoadLabel = 'Image' | 'ExpoImage' | 'NitroImage';
+export type ImageLoadLabel = 'Image' | 'ExpoImage';
 
 export type ImageLoadTiming = {
   mountTimestamp: number;
@@ -18,7 +18,6 @@ export type ImageLoadTimingCallback = (timing: ImageLoadTiming) => void;
 const imageComponentsLoadingTimes: Record<ImageLoadLabel, ImageLoadTiming[]> = {
   Image: [],
   ExpoImage: [],
-  NitroImage: [],
 };
 
 export function useMeasureImageLoadTime(

@@ -41,7 +41,6 @@ function renderMessagePart(part: ParsedPart, occurrence: number) {
       return (
         <Image
           key={key}
-          useNitro
           trackLoadTime
           trackLoadContext='chat.message-action-sheet'
           source={part.url}

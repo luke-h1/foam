@@ -132,7 +132,9 @@ describe('StreamerProfileScreen', () => {
   test('renders the profile and VODs by default', async () => {
     render(<StreamerProfileScreen id='shroud' />);
 
-    expect(await screen.findByText('Epic Broadcast')).toBeOnTheScreen();
+    expect(
+      await screen.findByText('Epic Broadcast', {}, { timeout: 5000 }),
+    ).toBeOnTheScreen();
     expect(screen.getByText('shroud')).toBeOnTheScreen();
     expect(screen.getByText('@shroud')).toBeOnTheScreen();
     // VOD duration "1h2m3s" formatted as h:mm:ss

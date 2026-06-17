@@ -1,13 +1,11 @@
 import { Text } from '@app/components/ui/Text/Text';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin';
 import type { ReactNode } from 'react';
 import type { StyleProp, TextStyle } from 'react-native';
 import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
-import { normaliseUsername } from '../richChatMessageHelpers';
 import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
 import { EmoteRenderer } from './EmoteRenderer';
+import { MentionSpan } from './MentionSpan';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 
 type InlineMessageSpansProps = Pick<
@@ -128,48 +126,22 @@ export function InlineMessageSpans({
     }
 
     if (part.type === 'mention') {
-      const mentionContent = formatMentionContent(content);
-      const mentionedUsername = mentionContent.replace(/^@/, '').trim();
-      const normalisedMentionedUsername = normaliseUsername(mentionedUsername);
-      const isReplyTargetMention = Boolean(
-        replyPlainMentionTarget &&
-        normalisedMentionedUsername === replyPlainMentionTarget,
-      );
-
-      if (isReplyTargetMention) {
-        spans.push(
-          <Text
-            key={getPartKey(part, index)}
-            color='gray.text'
-            style={baseTextStyle}
-          >
-            {mentionContent}
-          </Text>,
-        );
-        continue;
-      }
-
-      const mentionColor = getMentionColor
-        ? getMentionColor(mentionedUsername)
-        : generateRandomTwitchColor(mentionedUsername);
-      const isHighlightedMention =
-        effectiveHighlightedUserSet?.has(normalisedMentionedUsername) ||
-        normalisedCurrentUsername === normalisedMentionedUsername;
-
+      // A self-subscribing span so mention resolution re-renders only the span,
+      // not the whole row (mentionLoginRevision is intentionally out of the
+      // list's extraData — see MentionSpan).
       spans.push(
-        <Text
+        <MentionSpan
           key={getPartKey(part, index)}
-          style={[
-            styles.mention,
-            compact && styles.mentionCompact,
-            fontScaleStyle,
-            emoteLineStyle,
-            isHighlightedMention && styles.mentionHighlighted,
-            { color: mentionColor },
-          ]}
-        >
-          {mentionContent}
-        </Text>,
+          content={content}
+          baseTextStyle={baseTextStyle}
+          fontScaleStyle={fontScaleStyle}
+          emoteLineStyle={emoteLineStyle}
+          compact={compact}
+          getMentionColor={getMentionColor}
+          effectiveHighlightedUserSet={effectiveHighlightedUserSet}
+          normalisedCurrentUsername={normalisedCurrentUsername}
+          replyPlainMentionTarget={replyPlainMentionTarget}
+        />,
       );
       continue;
     }

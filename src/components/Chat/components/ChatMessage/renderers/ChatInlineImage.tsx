@@ -1,18 +1,14 @@
-import { memo, useEffect, useState } from 'react';
-import {
-  cacheImageFromUrl,
-  getCachedImageUri,
-} from '@app/utils/image/image-cache';
+import { memo, type ReactElement } from 'react';
+import { Image as ExpoImage } from 'expo-image';
+import { useCachedEmote } from '@app/Providers/CachedEmotesProvider/useCachedEmote';
 import {
   type ImageStyle,
   type StyleProp,
   type ViewStyle,
   View,
 } from 'react-native';
-import { NitroImage } from 'react-native-nitro-image';
 
 interface ChatInlineImageProps {
-  cacheVariant: 'badge' | 'emote';
   containerStyle?: StyleProp<ViewStyle>;
   resizeMode?: 'contain' | 'cover' | 'stretch';
   sourceUrl: string;
@@ -21,53 +17,25 @@ interface ChatInlineImageProps {
 }
 
 function ChatInlineImageComponent({
-  cacheVariant,
   containerStyle,
   resizeMode = 'contain',
   sourceUrl,
   style,
   testID,
 }: ChatInlineImageProps) {
-  const diskCachedUrl =
-    getCachedImageUri(sourceUrl, { variant: cacheVariant }) ?? null;
-  const [downloadedCache, setDownloadedCache] = useState<{
-    cachedUrl: string | null;
-    sourceUrl: string | null;
-  }>({ cachedUrl: null, sourceUrl: null });
-  const downloadedCachedUrl =
-    downloadedCache.sourceUrl === sourceUrl ? downloadedCache.cachedUrl : null;
-  const resolvedUrl = diskCachedUrl ?? downloadedCachedUrl ?? sourceUrl;
-  const image = { url: resolvedUrl };
+  // Shared, size-capped decoded ref (decode-once across all rows showing this
+  // image), null until decoded — falls back to the url so the first occurrence
+  // still shows (expo-image memory+disk caches the url too).
+  const sharedRef = useCachedEmote(sourceUrl);
 
-  useEffect(() => {
-    if (!sourceUrl || diskCachedUrl || process.env.NODE_ENV === 'test') {
-      return;
-    }
-
-    const controller = new AbortController();
-    let cancelled = false;
-
-    void cacheImageFromUrl(sourceUrl, {
-      priority: 'visible',
-      signal: controller.signal,
-      variant: cacheVariant,
-    }).then(cachedUrl => {
-      if (!cancelled && cachedUrl !== sourceUrl) {
-        setDownloadedCache({ sourceUrl, cachedUrl });
-      }
-    });
-
-    return () => {
-      cancelled = true;
-      controller.abort();
-    };
-  }, [cacheVariant, diskCachedUrl, sourceUrl]);
-
-  const imageElement = (
-    <NitroImage
-      image={image}
-      resizeMode={resizeMode}
-      recyclingKey={resolvedUrl}
+  const imageElement: ReactElement = (
+    <ExpoImage
+      source={sharedRef ?? { uri: sourceUrl }}
+      contentFit={resizeMode === 'stretch' ? 'fill' : resizeMode}
+      recyclingKey={sourceUrl}
+      cachePolicy='memory-disk'
+      priority='high'
+      transition={0}
       style={style}
       testID={testID}
     />

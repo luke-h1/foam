@@ -1,5 +1,7 @@
 # Foam mobile app
 
+[![License: BSD 3-Clause](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](LICENSE.MD)
+
 A new way to experience Twitch.tv on mobile
 
 <p>
@@ -32,6 +34,7 @@ The native Twitch app experience doesn't quite line up with the desktop experien
 - [API dependencies](#api-dependencies)
 - [Markdown writing guide](#markdown-writing-guide)
 - [Bug reports](#bug-reports)
+- [License](#license)
 
 # Project structure
 
@@ -225,6 +228,44 @@ In order to run the `development` variant of the app locally you will need to ru
 4. `bun run start` - once the native part of the project is installed on the emulator/simulator/your physical device you can run the JS metro server
    - this will start the JS server that bundles and serves a hot-reloaded version of the JS app
    - JS server will start automatically when running `bun run ios` or `bun run android`
+
+## Troubleshooting iOS native builds (RNRepo)
+
+This project uses [RNRepo](https://rnrepo.org) (`@rnrepo/expo-config-plugin` + its CocoaPods/Gradle build-tools) to swap some native modules for prebuilt binaries and speed up native builds. On **iOS**, RNRepo's prebuilt XCFrameworks currently 404 on rnrepo.org for the Expo core modules (`expo`, `expo-modules-core`, `expo-dev-launcher`, `expo-dev-menu`, `expo-log-box`) on our RN/SDK combo, so it falls back to building them from source anyway — but leaves behind a build phase and a half-configured Pods project that only "works" while DerivedData is warm.
+
+Because of this, **all iOS scripts disable RNRepo** by setting `DISABLE_RNREPO=true` (see `package.json`: `ios`, `ios:production`, `prebuild`, `prebuild:ios`, `e2e:dev:ios`, `e2e:prebuild`, `build:debug:ios`, `build:local:production:ios`). The release path (`bun run build:local`, via `scripts/build.sh`) does the same. Android keeps RNRepo enabled — its Gradle prebuilds work fine.
+
+### Symptoms
+
+You'll hit this when DerivedData is cleared, the simulator/Pods are wiped, or a native dependency is upgraded **without** reinstalling pods from source. The iOS build fails with errors like:
+
+```
+ios/Foamdev/AppDelegate.swift:1:17: error: no such module 'Expo'
+<unknown>:0: error: module map file '.../Build/Products/Debug-iphonesimulator/Expo/Expo.modulemap' not found
+```
+
+A related variant after upgrading a native pod (e.g. `@sentry/react-native`) is a stale compiled module: `cannot find 'RNSentrySDK' in scope`. That one is a stale **DerivedData** module cache — clearing it forces the rebuild, which then surfaces the RNRepo issue above if pods were installed with RNRepo enabled.
+
+### Fix
+
+Reinstall pods from source with RNRepo disabled, then build:
+
+```bash
+# regenerate the Pods project from source (rewrites the gitignored ios/Podfile.lock)
+DISABLE_RNREPO=true pod install --project-directory=ios
+
+# then build — the bun scripts already set DISABLE_RNREPO=true for you
+bun run ios
+```
+
+If a stale compiled module is also involved, clear that build's DerivedData first:
+
+```bash
+rm -rf ~/Library/Developer/Xcode/DerivedData/Foamdev-*
+```
+
+> [!NOTE]
+> Just setting `DISABLE_RNREPO=true` at `xcodebuild` time is **not** enough on its own — the flag is only read by RNRepo's pre/post-install hooks, so you must re-run `pod install` (or any `prebuild`/`run:ios` script, which run it for you) to regenerate the Pods project without the prebuilt setup. Re-enable RNRepo on iOS once rnrepo.org publishes matching iOS XCFrameworks.
 
 ## Remote build cache
 
@@ -824,3 +865,7 @@ If you encounter a problem with this project, please open an issue. Be sure to i
 - Node version
 - OS
 - Brief but thorough reproduction steps of the issue (including screenshots/videos)
+
+# License
+
+This project is licensed under the [BSD 3-Clause License](LICENSE.MD).

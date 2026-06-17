@@ -15,4 +15,18 @@ if (__DEV__ && !process.env.EXPO_PUBLIC_REACT_PERF_TRACKS) {
   delete console.timeStamp;
 }
 
+// Bound expo-image's image cache. By default both tiers are unbounded
+// (maxMemoryCost/maxDiskSize: 0); under sustained chat raids the decoded working
+// set grew multi-GB and could get the app jettisoned. Cap the in-memory decoded
+// cache at 2GB (SDWebImage evicts least-recently-used past the limit, and
+// NSCache also drops under OS memory pressure) and the disk cache at 512MB.
+try {
+  require('expo-image').Image.configureCache({
+    maxMemoryCost: 2 * 1024 * 1024 * 1024,
+    maxDiskSize: 512 * 1024 * 1024,
+  });
+} catch {
+  // expo-image native module unavailable (e.g. web) — cache stays default.
+}
+
 require('expo-router/entry');

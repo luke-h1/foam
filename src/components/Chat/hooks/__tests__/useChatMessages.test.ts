@@ -433,8 +433,16 @@ describe('useChatMessages', () => {
   });
 
   describe('High volume', () => {
+    // Reading history (scrolled up): a delayed flush must commit the whole
+    // backlog so nothing the store would keep is lost. Raid sampling only
+    // applies at the bottom (see the test below it).
+    const scrolledUpOptions = {
+      ...defaultOptions,
+      isAtBottomRef: { current: false },
+    };
+
     test('should flush entire buffer so all messages appear', () => {
-      const { result } = renderHook(() => useChatMessages(defaultOptions));
+      const { result } = renderHook(() => useChatMessages(scrolledUpOptions));
 
       act(() => {
         for (let i = 0; i < 250; i += 1) {
@@ -457,7 +465,7 @@ describe('useChatMessages', () => {
     });
 
     test('caps pending messages when flushing is delayed', () => {
-      const { result } = renderHook(() => useChatMessages(defaultOptions));
+      const { result } = renderHook(() => useChatMessages(scrolledUpOptions));
 
       act(() => {
         for (let i = 0; i < 700; i += 1) {
@@ -468,7 +476,8 @@ describe('useChatMessages', () => {
       expect(result.current.getBufferSize()).toBe(600);
 
       act(() => {
-        jest.advanceTimersByTime(150);
+        // Scrolled up uses the backlog flush interval (250ms).
+        jest.advanceTimersByTime(250);
       });
 
       const firstCall = mockAddMessages.mock.calls[0];
@@ -477,6 +486,33 @@ describe('useChatMessages', () => {
       expect(flushedMessages).toHaveLength(600);
       expect(flushedMessages[0]?.message_id).toBe('100');
       expect(flushedMessages.at(-1)?.message_id).toBe('699');
+    });
+
+    test('samples a live raid at the bottom to the newest rows per flush', () => {
+      const { result } = renderHook(() =>
+        useChatMessages({
+          ...defaultOptions,
+          isAtBottomRef: { current: true },
+        }),
+      );
+
+      // A burst of 50 messages lands in one flush window while following live.
+      act(() => {
+        for (let i = 0; i < 50; i += 1) {
+          result.current.handleNewMessage(createMockMessage(`${i}`));
+        }
+      });
+
+      act(() => {
+        jest.advanceTimersByTime(100);
+      });
+
+      const flushedMessages = getLastFlushedMessages();
+      // Only the newest MAX_LIVE_COMMIT_PER_FLUSH (3) commit; older overflow is
+      // dropped because it would have scrolled past unread anyway.
+      expect(flushedMessages).toHaveLength(3);
+      expect(flushedMessages[0]?.message_id).toBe('47');
+      expect(flushedMessages.at(-1)?.message_id).toBe('49');
     });
 
     test('caps pending unread count with the retained high-volume buffer', () => {

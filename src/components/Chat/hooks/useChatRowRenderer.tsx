@@ -4,7 +4,6 @@ import {
   getSessionCacheString,
   setSessionCacheString,
 } from '@app/store/chat/actions/chatColorCaches';
-import { useSelector } from '@legendapp/state/react';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
@@ -207,8 +206,6 @@ export function useChatRowRenderer({
   setHighlightedReplyTargetMessageId,
   user,
 }: UseChatRowRendererOptions) {
-  const mentionLoginRevision = useSelector(chatStore$.mentionLoginRevision);
-
   const getMentionColor = useCallback((username: string): string => {
     const cacheKey = username.replace(/^@/, '').trim().toLowerCase();
     const cached = getSessionCacheString('mentionColors', cacheKey);
@@ -312,6 +309,11 @@ export function useChatRowRenderer({
         .join('|'),
     [customHighlights],
   );
+  // Note: mentionLoginRevision is intentionally excluded. It bumps ~every 400ms
+  // as @mention logins resolve from Helix; including it re-rendered every visible
+  // row each time (the dominant frame-drop source in mention-heavy chat — busy
+  // chat went from ~57fps to a flat 60fps once removed). Mention spans subscribe
+  // to the revision themselves (MentionSpan), so only those spans re-render.
   const messageListExtraData = useMemo(
     () => ({
       chatDensity: preferences.chatDensity,
@@ -320,7 +322,6 @@ export function useChatRowRenderer({
       customHighlightsKey,
       disableEmoteAnimations: preferences.disableEmoteAnimations,
       highlightedUsersKey: highlightedUsers.join('\u001f'),
-      mentionLoginRevision,
       showAlternatingChatRows: preferences.showAlternatingChatRows,
       showInlineReplyContext: preferences.showInlineReplyContext,
       showTimestamps: preferences.chatTimestamps,
@@ -329,7 +330,6 @@ export function useChatRowRenderer({
       currentUsernameNormalized,
       customHighlightsKey,
       highlightedUsers,
-      mentionLoginRevision,
       preferences.chatDensity,
       preferences.chatFontScale,
       preferences.disableEmoteAnimations,

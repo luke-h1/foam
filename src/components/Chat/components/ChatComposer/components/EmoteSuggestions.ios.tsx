@@ -43,7 +43,6 @@ function EmoteSuggestionTile({
           source={item.url}
           cacheVariant='emote'
           style={styles.emoteImage}
-          useNitro
           trackLoadTime
           trackLoadContext='chat.emote-suggestions'
         />

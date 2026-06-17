@@ -1,13 +1,12 @@
 import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
 import { recordInfo } from '@app/lib/sentry';
 import { View, StyleSheet } from 'react-native';
-import { NitroImage } from 'react-native-nitro-image';
 import { useMeasureImageLoadTime } from '@app/hooks/useMeasureImageLoadTime';
 import {
   cacheImageFromUrl,
   getCachedImageUri,
 } from '@app/utils/image/image-cache';
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import type { ImageProps } from './Image.types';
 
 /**
@@ -34,7 +33,6 @@ export const Image = function Image({
   cacheToFile = true,
   cacheVariant = 'image',
   recyclingKey,
-  useNitro = false,
   trackLoadTime = false,
   trackLoadContext,
   onError,
@@ -64,7 +62,6 @@ export const Image = function Image({
       : fileCachedUrl && typeof source === 'string'
         ? fileCachedUrl
         : source;
-  const imageRenderer = useNitro ? 'NitroImage' : 'Image';
   const trackLoad = Boolean(trackLoadTime && resolvedUrl);
 
   const reportImageLoadTime = (timing: {
@@ -98,7 +95,7 @@ export const Image = function Image({
         url: typeof source === 'string' ? source : 'uri-object',
         durationFromMountMs: Math.round(totalLoadTimeMs),
         durationFromLoadStartMs: Math.round(startToLoadTimeMs),
-        imageRenderer,
+        imageRenderer: 'Image',
         imageContext: trackLoadContext ?? 'chat-image',
         host: safeHost,
       },
@@ -106,15 +103,9 @@ export const Image = function Image({
   };
 
   const { onLoadStart, onLoadEnd } = useMeasureImageLoadTime(
-    imageRenderer,
+    'Image',
     reportImageLoadTime,
-    { fallbackToMountStartOnLoadEnd: useNitro },
   );
-  const didReportNitroLoad = useRef(false);
-
-  useEffect(() => {
-    didReportNitroLoad.current = false;
-  }, [resolvedUrl]);
 
   useEffect(() => {
     if (!url || !shouldUseFileCache || diskCachedUrl) {
@@ -139,14 +130,6 @@ export const Image = function Image({
     };
   }, [cachePriority, cacheVariant, diskCachedUrl, shouldUseFileCache, url]);
 
-  const handleNitroLoadEnd = useCallback(() => {
-    if (!useNitro || !trackLoad || didReportNitroLoad.current || !resolvedUrl) {
-      return;
-    }
-    didReportNitroLoad.current = true;
-    onLoadEnd();
-  }, [onLoadEnd, resolvedUrl, trackLoad, useNitro]);
-
   const handleLoadStart = useCallback(() => {
     if (trackLoad) {
       onLoadStart();
@@ -167,36 +150,6 @@ export const Image = function Image({
     }
     onError?.(error as ImageErrorEventData);
   };
-
-  if (useNitro && resolvedUrl) {
-    const resizeMode = ((): 'cover' | 'contain' | 'stretch' => {
-      if (contentFit === 'cover') {
-        return 'cover';
-      }
-      if (contentFit === 'contain') {
-        return 'contain';
-      }
-      if (contentFit === 'fill') {
-        return 'stretch';
-      }
-      return 'cover';
-    })();
-
-    return (
-      <View
-        style={[styles.container, containerStyle]}
-        onLayout={handleNitroLoadEnd}
-      >
-        <NitroImage
-          image={{ url: resolvedUrl }}
-          style={style}
-          resizeMode={resizeMode}
-          recyclingKey={resolvedUrl}
-          testID={props.testID}
-        />
-      </View>
-    );
-  }
 
   return (
     <View style={[styles.container, containerStyle]}>

@@ -57,7 +57,6 @@ export function ChatMessageBadges({
         onPress={onBadgePress ? () => onBadgePress(normalizedBadge) : undefined}
       >
         <ChatInlineImage
-          cacheVariant='badge'
           sourceUrl={normalizedBadge.url}
           style={[
             styles.badge,

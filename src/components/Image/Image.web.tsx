@@ -40,7 +40,6 @@ export const Image = function Image({
   cacheToFile = true,
   cacheVariant = 'image',
   recyclingKey,
-  useNitro: _useNitro,
   trackLoadTime = false,
   trackLoadContext,
   style,

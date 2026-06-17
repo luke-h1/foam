@@ -1,4 +1,5 @@
 import { useAuthContext } from '@app/context/AuthContext';
+import { useSyntheticChatFlood } from '@app/dev/imageBenchmark/useSyntheticChatFlood';
 import { ReadyState } from '@app/hooks/ws/constants';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
@@ -40,7 +41,14 @@ import { usePinnedChatMessage } from './usePinnedChatMessage';
 import { useRecentChatMessages } from './useRecentChatMessages';
 import { useSevenTvChatRuntime } from './useSevenTvChatRuntime';
 
-export function useChat(channelId: string, channelName: string) {
+export function useChat(
+  channelId: string,
+  channelName: string,
+  // DEV/perf only (Chat Perf screen): when true, the live Twitch transports are
+  // not connected and the synthetic flood is the only message source, for a
+  // deterministic replay independent of the channel being live.
+  syntheticTransport = false,
+) {
   const { user } = useAuthContext();
   const preferences = useChatRenderPreferences();
   const updatePreferences = useUpdatePreferences();
@@ -283,7 +291,9 @@ export function useChat(channelId: string, channelName: string) {
     sendChatCommand,
     getUserState,
   } = useTwitchChat({
-    channel: channelName,
+    // No channel ⇒ the IRC socket never connects (shouldConnect is false), so
+    // in perf mode the synthetic flood is the only thing feeding onMessage.
+    channel: syntheticTransport ? undefined : channelName,
     onMessage,
     onNotice,
     onUserNotice,
@@ -294,6 +304,8 @@ export function useChat(channelId: string, channelName: string) {
     onJoin,
     onPart,
   });
+
+  useSyntheticChatFlood({ channelName, channelId, onMessage });
 
   const { currentEmoteSetIdRef } = useChatLifecycle({
     navigation,
@@ -316,7 +328,8 @@ export function useChat(channelId: string, channelName: string) {
     processRecentIrcLine: handleRecentIrcMessage,
     isLoadingRecentMessagesRef,
     scrollChatToEnd: scrollToBottom,
-    showRecentMessages,
+    // No real recent-message replay in perf mode — the flood seeds the scrollback.
+    showRecentMessages: syntheticTransport ? false : showRecentMessages,
   });
 
   useSevenTvChatRuntime({
@@ -329,7 +342,8 @@ export function useChat(channelId: string, channelName: string) {
     sevenTvEmoteSetId,
   });
 
-  useTwitchChannelPointsEventSub(channelId);
+  // undefined channelId ⇒ EventSub never subscribes (canSubscribe is false).
+  useTwitchChannelPointsEventSub(syntheticTransport ? undefined : channelId);
 
   const connected =
     twitchConnectionState === ReadyState.OPEN && isChatConnected();
