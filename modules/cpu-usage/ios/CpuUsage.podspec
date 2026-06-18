@@ -3,7 +3,7 @@ Pod::Spec.new do |s|
   s.version        = '1.0.0'
   s.summary        = 'Reports the current process CPU usage.'
   s.description    = 'Sums per-thread CPU usage for the current task (the same number top reports for the process) so the dev chat-perf benchmark can show on-device CPU load.'
-  s.license        = { type: 'MIT' }
+  s.license        = { type: 'BSD-3-Clause' }
   s.authors        = 'Foam'
   s.homepage       = 'https://github.com/luke-h1/foam.git'
   s.platforms      = {

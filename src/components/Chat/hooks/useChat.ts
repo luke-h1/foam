@@ -305,7 +305,12 @@ export function useChat(
     onPart,
   });
 
-  useSyntheticChatFlood({ channelName, channelId, onMessage });
+  useSyntheticChatFlood({
+    channelName,
+    channelId,
+    onMessage,
+    enabled: syntheticTransport,
+  });
 
   const { currentEmoteSetIdRef } = useChatLifecycle({
     navigation,

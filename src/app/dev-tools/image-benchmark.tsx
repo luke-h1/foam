@@ -24,20 +24,21 @@ import {
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+const DECODE_COLUMNS = ['scenario', 'mean', 'p50', 'p95', 'total'];
+
 function Row({ cells, header }: { cells: string[]; header?: boolean }) {
   return (
     <View style={[styles.row, header && styles.headerRow]}>
-      {cells.map((c, i) => (
+      {DECODE_COLUMNS.map((col, i) => (
         <Text
-          // eslint-disable-next-line react/no-array-index-key
-          key={i}
+          key={col}
           style={[
             styles.cell,
             i === 0 && styles.cellFirst,
             header && styles.cellHeader,
           ]}
         >
-          {c}
+          {cells[i]}
         </Text>
       ))}
     </View>

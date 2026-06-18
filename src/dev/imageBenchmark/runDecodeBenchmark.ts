@@ -47,7 +47,7 @@ function summarise(
   fail: number,
   totalMs: number,
 ): PassResult {
-  const sorted = [...durations].sort((a, b) => a - b);
+  const sorted = durations.toSorted((a, b) => a - b);
   const sum = durations.reduce((acc, d) => acc + d, 0);
   return {
     pass,
@@ -81,6 +81,7 @@ export async function runSequential(
     }
     const t0 = performance.now();
     try {
+      // eslint-disable-next-line react-doctor/async-await-in-loop -- sequential is the measurement: one decode at a time, timed individually
       await decodeOne(url);
       durations.push(performance.now() - t0);
     } catch {
@@ -100,6 +101,7 @@ export async function runConcurrent(
   urls: string[],
   concurrency = 16,
 ): Promise<PassResult> {
+  const workerCount = Math.max(1, Math.floor(concurrency));
   const durations: number[] = [];
   let fail = 0;
   let cursor = 0;
@@ -115,6 +117,7 @@ export async function runConcurrent(
       }
       const t0 = performance.now();
       try {
+        // eslint-disable-next-line react-doctor/async-await-in-loop -- each worker drains the shared queue serially; concurrency comes from running N workers
         await decodeOne(url);
         durations.push(performance.now() - t0);
       } catch {
@@ -123,7 +126,7 @@ export async function runConcurrent(
     }
   }
 
-  await Promise.all(Array.from({ length: concurrency }, () => worker()));
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
   const totalMs = performance.now() - start;
   return summarise('warm', 'concurrent', durations, fail, totalMs);
 }

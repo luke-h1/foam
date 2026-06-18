@@ -82,12 +82,12 @@ export function SettingsDevtoolsScreen() {
               onPress={() => router.push('/dev-tools/sentry-demo')}
             />
             <Button
-              label='Image Benchmark'
+              label={t('imageBenchmark')}
               systemImage='speedometer'
               onPress={() => router.push('/dev-tools/image-benchmark')}
             />
             <Button
-              label='Chat Perf (burst test)'
+              label={t('chatPerfBurstTest')}
               systemImage='bolt.horizontal'
               onPress={() => router.push('/dev-tools/chat-perf')}
             />
@@ -176,14 +176,14 @@ export function SettingsDevtoolsScreen() {
             onPress={() => router.push('/dev-tools/sentry-demo')}
           />
           <SettingsLinkRow
-            title='Image Benchmark'
-            subtitle='expo-image vs nitro decode + synthetic chat stress test'
+            title={t('imageBenchmark')}
+            subtitle={t('imageBenchmarkDescription')}
             icon={{ icon: 'speedometer', color: theme.colorTeal }}
             onPress={() => router.push('/dev-tools/image-benchmark')}
           />
           <SettingsLinkRow
-            title='Chat Perf (burst test)'
-            subtitle='real cinna chat + synthetic burst flood + live FPS readout'
+            title={t('chatPerfBurstTest')}
+            subtitle={t('chatPerfBurstTestDescription')}
             icon={{ icon: 'bolt.horizontal', color: theme.colorOrange }}
             onPress={() => router.push('/dev-tools/chat-perf')}
           />

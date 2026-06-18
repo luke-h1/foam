@@ -266,12 +266,14 @@ const en = {
     changelogDemo: 'Changelog Demo',
     channelSurfing: 'Channel Surfing',
     chat: 'Chat',
+    chatPerf: 'Chat Perf',
     debug: 'Debug',
     devTools: 'Dev Tools',
     diagnostics: 'Diagnostics',
     faq: 'FAQ',
     following: 'Following',
     highlights: 'Highlights',
+    imageBenchmark: 'Image Benchmark',
     ossLicenses: 'OSS Licenses',
     other: 'Other',
     profile: 'Profile',
@@ -540,6 +542,12 @@ const en = {
     changelogDemoDescription: 'Present sample native changelog payloads',
     sentryTest: 'Sentry Test',
     sentryTestDescription: 'Throw an error to verify Sentry capture',
+    imageBenchmark: 'Image Benchmark',
+    imageBenchmarkDescription:
+      'expo-image vs nitro decode + synthetic chat stress test',
+    chatPerfBurstTest: 'Chat Perf (burst test)',
+    chatPerfBurstTestDescription:
+      'real cinna chat + synthetic burst flood + live FPS readout',
     channelSurfing: 'Channel Surfing',
     channelSurfingDescription:
       'Load an EAS Update from a different channel or PR branch',

@@ -239,7 +239,7 @@ Because of this, **all iOS scripts disable RNRepo** by setting `DISABLE_RNREPO=t
 
 You'll hit this when DerivedData is cleared, the simulator/Pods are wiped, or a native dependency is upgraded **without** reinstalling pods from source. The iOS build fails with errors like:
 
-```
+```text
 ios/Foamdev/AppDelegate.swift:1:17: error: no such module 'Expo'
 <unknown>:0: error: module map file '.../Build/Products/Debug-iphonesimulator/Expo/Expo.modulemap' not found
 ```

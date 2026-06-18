@@ -10,9 +10,11 @@ import * as Sentry from '@sentry/react-native';
 import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
 import type { ComponentType } from 'react';
 
-// Created once at module load so RootLayoutNav can call
-// navigationIntegration.registerNavigationContainer(ref) before the first
-// navigation event fires.
+/**
+ * expoRouterIntegration auto-instruments Expo Router navigation, so no manual
+ * registerNavigationContainer call is required — it is created here and passed
+ * straight to Sentry.init's integrations below.
+ */
 export const navigationIntegration = expoRouterIntegration({
   enableTimeToInitialDisplay: true,
   enablePrefetchTracking: true,
@@ -52,6 +54,11 @@ export function init() {
   const enabled =
     hasDsn && (!__DEV__ || process.env.EXPO_PUBLIC_ENABLE_SENTRY === 'true');
   const debug = process.env.EXPO_PUBLIC_SENTRY_DEBUG === 'true';
+  /**
+   * Screenshots / view hierarchy can capture other users' chat messages and
+   * logins, so keep them opt-in rather than attached to every event.
+   */
+  const captureUi = process.env.EXPO_PUBLIC_SENTRY_ATTACH_UI === 'true';
 
   sentryStatus = {
     enabled,
@@ -83,18 +90,17 @@ export function init() {
     enableLogs: true,
     enableCaptureFailedRequests: true,
     attachStacktrace: true,
-    attachScreenshot: true,
-    attachViewHierarchy: true,
+    attachScreenshot: captureUi,
+    attachViewHierarchy: captureUi,
     ignoreErrors: ['Network request failed'],
     sampleRate: 1,
     enableAutoPerformanceTracing: true,
     integrations: [
-      reactNativeTracingIntegration(),
       navigationIntegration,
-      reactNativeTracingIntegration,
-      appStartIntegration,
-      graphqlIntegration,
-      mobileReplayIntegration,
+      reactNativeTracingIntegration(),
+      appStartIntegration(),
+      graphqlIntegration({ endpoints: ['https://7tv.io/v4/gql'] }),
+      mobileReplayIntegration(),
     ],
     beforeSend(event) {
       // Keep the store-review prompt gate honest: any error-level event
@@ -125,6 +131,9 @@ export async function verifySentryDelivery(): Promise<{
   flushed: boolean;
 }> {
   init();
+  if (!sentryStatus.enabled || !sentryStatus.hasDsn) {
+    return { flushed: false };
+  }
   const eventId = Sentry.captureMessage(
     `Foam Sentry delivery check (${sentryStatus.environment})`,
     'info',

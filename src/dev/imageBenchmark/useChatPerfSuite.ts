@@ -183,11 +183,18 @@ export function useChatPerfSuite() {
       // Start the flood for warmup ramp; restart the fixture replay at measure
       // start so each run processes a byte-identical stream (repeatable).
       syntheticChatControl.current = SYNTHETIC_PRESETS[phase.preset]!;
-      // eslint-disable-next-line react-doctor/async-await-in-loop -- phases are inherently ordered (warmup → measure → cooldown)
+      // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- phases are ordered and the window must run to completion (it IS the work); cancellation is checked after
       await runWindow(i, label, 'warming up', WARMUP_MS, false, suiteEnd);
+      if (cancelRef.current) {
+        break;
+      }
 
       resetFloodReplay();
+      // eslint-disable-next-line react-doctor/async-defer-await -- the measure window must run fully before we can check whether it was cancelled
       await runWindow(i, label, 'measuring', phase.measureMs, true, suiteEnd);
+      if (cancelRef.current) {
+        break;
+      }
 
       const fps = accum.current.fps;
       const secs = Math.max(1, fps.length);
@@ -211,7 +218,11 @@ export function useChatPerfSuite() {
       // Cooldown: stop the flood so memory/GC settles before the next phase.
       syntheticChatControl.current = SYNTHETIC_PRESETS.off!;
       if (i < SUITE_PHASES.length - 1) {
+        // eslint-disable-next-line react-doctor/async-defer-await -- the cooldown window must run fully before we can check whether it was cancelled
         await runWindow(i, label, 'cooldown', COOLDOWN_MS, false, suiteEnd);
+        if (cancelRef.current) {
+          break;
+        }
       }
     }
 

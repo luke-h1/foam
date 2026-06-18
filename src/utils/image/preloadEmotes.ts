@@ -84,9 +84,13 @@ export async function preloadEmotes(
   for (const batch of batches) {
     // Sequential batches to avoid overwhelming the network. prefetch warms
     // expo-image's memory + disk cache, which is what the chat rows read.
-    // eslint-disable-next-line react-doctor/async-await-in-loop -- batch preload is intentionally throttled
-    await ExpoImage.prefetch(batch, 'memory-disk').catch(() => undefined);
-    batch.forEach(url => preloadedUrls.add(url));
+    try {
+      // eslint-disable-next-line react-doctor/async-await-in-loop -- batch preload is intentionally throttled
+      await ExpoImage.prefetch(batch, 'memory-disk');
+      batch.forEach(url => preloadedUrls.add(url));
+    } catch {
+      // Leave failed URLs out of preloadedUrls so a later attempt can retry them.
+    }
   }
 
   // Prevent unbounded cache growth

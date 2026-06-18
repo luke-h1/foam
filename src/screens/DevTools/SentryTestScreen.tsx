@@ -26,12 +26,16 @@ export function SentryTestScreen() {
 
   async function handleVerifyDelivery() {
     setDelivery({ status: 'sending' });
-    const result = await verifySentryDelivery();
-    setDelivery({
-      status: 'done',
-      eventId: result.eventId,
-      flushed: result.flushed,
-    });
+    try {
+      const result = await verifySentryDelivery();
+      setDelivery({
+        status: 'done',
+        eventId: result.eventId,
+        flushed: result.flushed,
+      });
+    } catch {
+      setDelivery({ status: 'done', eventId: undefined, flushed: false });
+    }
   }
 
   return (

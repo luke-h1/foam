@@ -33,11 +33,11 @@ export default function DevToolsLayout() {
       />
       <Stack.Screen
         name='image-benchmark'
-        options={{ title: 'Image Benchmark', headerBackTitle: t('devTools') }}
+        options={{ title: t('imageBenchmark'), headerBackTitle: t('devTools') }}
       />
       <Stack.Screen
         name='chat-perf'
-        options={{ title: 'Chat Perf', headerBackTitle: t('devTools') }}
+        options={{ title: t('chatPerf'), headerBackTitle: t('devTools') }}
       />
     </Stack>
   );

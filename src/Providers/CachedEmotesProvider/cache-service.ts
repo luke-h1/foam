@@ -22,8 +22,15 @@ export const EMOTE_DECODE_MAX_PX = 96;
 const MAX_ENTRIES = 1200;
 
 const refs = new Map<string, ImageRef>();
-const inflight = new Set<string>();
+/**
+ * Maps an in-flight url to the cacheEpoch active when its decode started.
+ * clearCachedEmoteRefs bumps cacheEpoch, so a decode that resolves after a clear
+ * is fenced out — it can't repopulate the cleared cache, and an old .finally
+ * can't delete a newer request's inflight marker for the same url.
+ */
+const inflight = new Map<string, number>();
 const listeners = new Map<string, Set<() => void>>();
+let cacheEpoch = 0;
 
 function notify(url: string): void {
   listeners.get(url)?.forEach(cb => cb());
@@ -44,9 +51,13 @@ export function ensureCachedEmoteRef(
   if (!url || refs.has(url) || inflight.has(url)) {
     return;
   }
-  inflight.add(url);
+  const requestEpoch = cacheEpoch;
+  inflight.set(url, requestEpoch);
   Image.loadAsync({ uri: url }, { maxWidth: maxPx, maxHeight: maxPx })
     .then(ref => {
+      if (inflight.get(url) !== requestEpoch || requestEpoch !== cacheEpoch) {
+        return;
+      }
       if (refs.size >= MAX_ENTRIES) {
         const oldest = refs.keys().next().value;
         if (oldest !== undefined) {
@@ -57,7 +68,11 @@ export function ensureCachedEmoteRef(
       notify(url);
     })
     .catch(() => undefined)
-    .finally(() => inflight.delete(url));
+    .finally(() => {
+      if (inflight.get(url) === requestEpoch) {
+        inflight.delete(url);
+      }
+    });
 }
 
 export function subscribeCachedEmoteRef(
@@ -90,12 +105,19 @@ export async function warmCachedEmoteRefs(
       if (!url || refs.has(url) || inflight.has(url)) {
         return undefined;
       }
-      inflight.add(url);
+      const requestEpoch = cacheEpoch;
+      inflight.set(url, requestEpoch);
       return Image.loadAsync(
         { uri: url },
         { maxWidth: maxPx, maxHeight: maxPx },
       )
         .then(ref => {
+          if (
+            inflight.get(url) !== requestEpoch ||
+            requestEpoch !== cacheEpoch
+          ) {
+            return;
+          }
           if (refs.size >= MAX_ENTRIES) {
             const oldest = refs.keys().next().value;
             if (oldest !== undefined) {
@@ -106,7 +128,11 @@ export async function warmCachedEmoteRefs(
           notify(url);
         })
         .catch(() => undefined)
-        .finally(() => inflight.delete(url));
+        .finally(() => {
+          if (inflight.get(url) === requestEpoch) {
+            inflight.delete(url);
+          }
+        });
     }),
   );
 }
@@ -116,6 +142,7 @@ export async function warmCachedEmoteRefs(
 // and falls back to the url. Called on channel change to bound memory across
 // channel hops, and whenever the native image cache is cleared.
 export function clearCachedEmoteRefs(): void {
+  cacheEpoch += 1;
   refs.clear();
   inflight.clear();
   notifyAll();

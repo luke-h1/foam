@@ -28,6 +28,11 @@ type OnMessage = (
 // keeps producing unique message ids across the whole session.
 let replayCursor = 0;
 let emitSeq = 0;
+/**
+ * Bumped on every reset so the running interval can drop its accumulated
+ * carryover/lastBurst state and restart emission cadence from a clean slate.
+ */
+let replayEpoch = 0;
 
 // The expanded {tags,text} pool is built once per room id (the fixture is
 // otherwise channel-independent) so emitting only costs a spread + two field
@@ -49,16 +54,19 @@ function getFixturePool(roomId: string): BuiltFixtureMessage[] {
 // nitro and expo process a byte-identical stream.
 export function resetFloodReplay(): void {
   replayCursor = 0;
+  replayEpoch += 1;
 }
 
 export function useSyntheticChatFlood({
   channelName,
   channelId,
   onMessage,
+  enabled,
 }: {
   channelName: string;
   channelId: string;
   onMessage: OnMessage;
+  enabled: boolean;
 }): void {
   // Gated exactly like the dev menu: dev/internal/e2e builds, or an admin login
   // on testflight/production (useDevToolsAccess). The flood only ever *emits*
@@ -68,12 +76,13 @@ export function useSyntheticChatFlood({
   // TestFlight as an admin), not just __DEV__ Metro.
   const devToolsAccess = useDevToolsAccess();
   useEffect(() => {
-    if (devToolsAccess !== 'enabled') {
+    if (!enabled || devToolsAccess !== 'enabled') {
       return;
     }
     const TICK_MS = 100;
     let carryover = 0;
     let lastBurst = performance.now();
+    let seenReplayEpoch = replayEpoch;
     const pool = getFixturePool(channelId);
 
     const emitOne = () => {
@@ -102,7 +111,13 @@ export function useSyntheticChatFlood({
 
     const interval = setInterval(() => {
       const cfg = syntheticChatControl.current;
+      if (seenReplayEpoch !== replayEpoch) {
+        seenReplayEpoch = replayEpoch;
+        carryover = 0;
+        lastBurst = performance.now();
+      }
       if (!cfg.active) {
+        carryover = 0;
         return;
       }
       carryover += (cfg.msgPerSec * TICK_MS) / 1000;
@@ -122,5 +137,5 @@ export function useSyntheticChatFlood({
     }, TICK_MS);
 
     return () => clearInterval(interval);
-  }, [channelName, channelId, onMessage, devToolsAccess]);
+  }, [channelName, channelId, onMessage, devToolsAccess, enabled]);
 }

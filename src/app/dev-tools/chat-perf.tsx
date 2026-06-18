@@ -164,20 +164,21 @@ export default function ChatPerfScreen() {
   );
 }
 
+const RESULT_COLUMNS = ['phase', 'ui-fps', 'ui-jank', 'js-fps', 'drop%'];
+
 function ResultRow({ cells, header }: { cells: string[]; header?: boolean }) {
   return (
     <View style={styles.resRow}>
-      {cells.map((c, i) => (
+      {RESULT_COLUMNS.map((col, i) => (
         <Text
-          // eslint-disable-next-line react/no-array-index-key
-          key={i}
+          key={col}
           style={[
             styles.resCell,
             i === 0 && styles.resCellFirst,
             header && styles.resHeader,
           ]}
         >
-          {c}
+          {cells[i]}
         </Text>
       ))}
     </View>

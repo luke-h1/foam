@@ -16,13 +16,21 @@ import { FIXTURE_COLORS } from './chatFixtureData';
 export type FixtureRole = 'sub' | 'mod' | 'vip' | 'broadcaster';
 
 export interface IrcFixtureMessage {
-  /** Display name; login is derived as the lowercased form. */
+  /**
+   * Display name; login is derived as the lowercased form.
+   */
   user: string;
-  /** Message body — emote names render as images when the set is loaded. */
+  /**
+   * Message body — emote names render as images when the set is loaded.
+   */
   text: string;
-  /** Badge tier; omitted = plain viewer. */
+  /**
+   * Badge tier; omitted = plain viewer.
+   */
   role?: FixtureRole;
-  /** When set, emitted as a reply to this (display name + body). */
+  /**
+   * When set, emitted as a reply to this (display name + body).
+   */
   replyTo?: { name: string; text: string };
 }
 
