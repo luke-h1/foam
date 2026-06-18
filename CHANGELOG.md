@@ -27,6 +27,8 @@
 - **player:** Captions persisting
 - **player:** Captions persisting
 - **app:** Player captions
+- **app:** Image perf
+- **app:** Image perf
 
 ### 🔧 Miscellaneous Tasks
 
