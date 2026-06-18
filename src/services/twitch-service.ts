@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import { fetch } from 'expo/fetch';
 import { recordInfo } from '@app/lib/sentry';
+import { logger } from '@app/utils/logger';
 import type { TwitchHelixPoll } from '@app/types/twitch/poll';
 import type { TwitchHelixPrediction } from '@app/types/twitch/prediction';
 import Constants from 'expo-constants';
@@ -555,7 +556,7 @@ export const twitchService = {
     const body = (await res.json()) as { data: DefaultTokenResponse };
 
     if (!body.data.access_token) {
-      console.error('no token received from auth lambda');
+      logger.auth.error('no token received from auth lambda');
     } else {
       // Fresh proxy tokens may be issued under a different client ID than
       // EXPO_PUBLIC_TWITCH_CLIENT_ID; sync the Helix Client-Id header to it.

@@ -1,5 +1,6 @@
 import { Image as ExpoImage } from 'expo-image';
 import { recordInfo } from '@app/lib/sentry';
+import { logger } from '@app/utils/logger';
 import { useMeasureImageLoadTime } from '@app/hooks/useMeasureImageLoadTime';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -187,9 +188,7 @@ export const Image = function Image({
         onLoadStart={trackLoad ? onLoadStart : undefined}
         onLoadEnd={trackLoad ? onLoadEnd : undefined}
         onError={error => {
-          if (__DEV__) {
-            console.warn('Image loading error:', error);
-          }
+          logger.main.debug('Image loading error:', error);
         }}
       />
     </View>

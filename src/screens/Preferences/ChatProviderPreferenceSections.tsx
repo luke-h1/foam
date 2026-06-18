@@ -10,13 +10,6 @@ import { useTranslation } from 'react-i18next';
 
 type PreviewProvider = '7tv' | 'bttv' | 'ffz' | 'twitch';
 
-const PROVIDER_COLORS: Record<PreviewProvider, string> = {
-  '7tv': theme.colorPlum,
-  bttv: theme.colorOrange,
-  ffz: theme.colorBlue,
-  twitch: theme.colorViolet,
-};
-
 const EMOTES_ICON: SFSymbol = 'face.smiling';
 const EMOTES_ANDROID_ICON: AndroidSymbol = 'sentiment_satisfied';
 const BADGES_ICON: SFSymbol = 'rosette';
@@ -110,7 +103,7 @@ export function ChatProviderPreferenceSections({
   return (
     <>
       {PROVIDER_PREFERENCE_SECTIONS.map(section => {
-        const tint = PROVIDER_COLORS[section.provider];
+        const tint = theme.colorGrey;
         return (
           <SettingsSection key={section.title} title={section.title}>
             <SettingsToggleRow

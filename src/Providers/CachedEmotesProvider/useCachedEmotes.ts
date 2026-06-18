@@ -1,8 +1,9 @@
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
+import type { SanitisedEmote } from '@app/types/emote';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import { logger } from '@app/utils/logger';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { clearCachedEmoteRefs, warmCachedEmoteRefs } from './cache-service';
+import { releaseChannelEmoteRefs, warmCachedEmoteRefs } from './cache-service';
 
 export type CachedEmotesLoadingState = 'IDLE' | 'WARMING' | 'WARMED';
 
@@ -12,21 +13,13 @@ const WARM_BATCH_SIZE = 24;
 // Only the most common emotes are worth decoding up front; the long tail is
 // warmed lazily by useCachedEmote as those emotes actually appear.
 const WARM_LIMIT = 96;
+// Global set is pinned and warmed first; capped so it can't dominate the budget.
+const GLOBAL_WARM_LIMIT = 128;
 
-function getChannelDisplayUrls(channelId: string): string[] {
-  const data = getCurrentEmoteData(channelId);
-  if (!data) {
-    return [];
-  }
-  const emotes = [
-    ...data.sevenTvChannelEmotes,
-    ...data.bttvChannelEmotes,
-    ...data.ffzChannelEmotes,
-    ...data.twitchChannelEmotes,
-  ];
+function collectDisplayUrls(emotes: SanitisedEmote[], limit: number): string[] {
   const urls = new Set<string>();
   for (const emote of emotes) {
-    if (urls.size >= WARM_LIMIT) {
+    if (urls.size >= limit) {
       break;
     }
     const url = getDisplayEmoteUrl({
@@ -42,6 +35,38 @@ function getChannelDisplayUrls(channelId: string): string[] {
   return Array.from(urls);
 }
 
+function getGlobalDisplayUrls(channelId: string): string[] {
+  const data = getCurrentEmoteData(channelId);
+  if (!data) {
+    return [];
+  }
+  return collectDisplayUrls(
+    [
+      ...data.sevenTvGlobalEmotes,
+      ...data.bttvGlobalEmotes,
+      ...data.ffzGlobalEmotes,
+      ...data.twitchGlobalEmotes,
+    ],
+    GLOBAL_WARM_LIMIT,
+  );
+}
+
+function getChannelDisplayUrls(channelId: string): string[] {
+  const data = getCurrentEmoteData(channelId);
+  if (!data) {
+    return [];
+  }
+  return collectDisplayUrls(
+    [
+      ...data.sevenTvChannelEmotes,
+      ...data.bttvChannelEmotes,
+      ...data.ffzChannelEmotes,
+      ...data.twitchChannelEmotes,
+    ],
+    WARM_LIMIT,
+  );
+}
+
 export function useCachedEmotes(channelId: string) {
   const [loadingState, setLoadingState] =
     useState<CachedEmotesLoadingState>('IDLE');
@@ -52,41 +77,58 @@ export function useCachedEmotes(channelId: string) {
    */
   const runIdRef = useRef(0);
 
+  const warmInBatches = useCallback(
+    async (urls: string[], pin: boolean, runId: number): Promise<boolean> => {
+      for (let i = 0; i < urls.length; i += WARM_BATCH_SIZE) {
+        // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- batches are sequential and each must finish warming before we can tell whether this run was superseded
+        await warmCachedEmoteRefs(urls.slice(i, i + WARM_BATCH_SIZE), { pin });
+        if (runId !== runIdRef.current) {
+          return false;
+        }
+      }
+      return true;
+    },
+    [],
+  );
+
   const calculate = useCallback(
     async (runId: number) => {
-      const urls = getChannelDisplayUrls(channelId);
-      if (urls.length === 0) {
+      const globalUrls = getGlobalDisplayUrls(channelId);
+      const channelUrls = getChannelDisplayUrls(channelId);
+      if (globalUrls.length === 0 && channelUrls.length === 0) {
         setLoadingState('WARMED');
         return;
       }
       setLoadingState('WARMING');
-      for (let i = 0; i < urls.length; i += WARM_BATCH_SIZE) {
-        // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- batches are sequential and each must finish warming before we can tell whether this run was superseded
-        await warmCachedEmoteRefs(urls.slice(i, i + WARM_BATCH_SIZE));
-        if (runId !== runIdRef.current) {
-          return;
-        }
+      if (!(await warmInBatches(globalUrls, true, runId))) {
+        return;
+      }
+      if (!(await warmInBatches(channelUrls, false, runId))) {
+        return;
       }
       setLoadingState('WARMED');
     },
-    [channelId],
+    [channelId, warmInBatches],
   );
 
   const recalculateCachedEmotes = useCallback(async () => {
     logger.chat.debug('🔄 Recalculating cached emotes', { channelId });
     runIdRef.current += 1;
     const runId = runIdRef.current;
-    clearCachedEmoteRefs();
+    releaseChannelEmoteRefs();
     await calculate(runId);
   }, [calculate, channelId]);
 
-  // Warm on channel change; release the previous channel's refs to bound memory.
+  /**
+   * Warm on channel change; release the previous channel's refs (pinned globals
+   * survive so the hop doesn't re-decode them).
+   */
   useEffect(() => {
     runIdRef.current += 1;
     void calculate(runIdRef.current);
     return () => {
       runIdRef.current += 1;
-      clearCachedEmoteRefs();
+      releaseChannelEmoteRefs();
       setLoadingState('IDLE');
     };
   }, [calculate]);

@@ -21,6 +21,10 @@ import {
   type MessageActionData,
   type UsernamePressData,
 } from '../components/ChatMessage/RichChatMessage';
+import {
+  RowVisibilityContext,
+  useRowVisibility,
+} from '../components/ChatMessage/rowVisibility';
 import { styles } from '../styles';
 import {
   getChatMessageListKey,
@@ -120,6 +124,7 @@ const ChatMessageRow = function ChatMessageRow({
     channelId,
     msg.message_id,
   );
+  const rowVisibility = useRowVisibility();
   const isAlternatingRow = showAlternatingChatRows && index % 2 === 1;
   // Keep a stable identity for unchanged rows: a fresh object here would
   // defeat RichChatMessage's memo on every parent-driven re-render.
@@ -151,44 +156,46 @@ const ChatMessageRow = function ChatMessageRow({
   );
 
   return (
-    <RichChatMessage
-      id={msg.id}
-      broadcasterId={channelId}
-      channel={msg.channel}
-      message={msg.message}
-      userstate={msg.userstate}
-      badges={msg.badges}
-      cachedSenderColor={
-        msg.cachedSenderColor ??
-        resolveCachedSenderColor(msg, getUserMessageColor)
-      }
-      message_id={msg.message_id}
-      message_nonce={msg.message_nonce}
-      sender={msg.sender}
-      style={styles.messageContainer}
-      parentDisplayName={msg.parentDisplayName}
-      parentColor={msg.parentColor}
-      replyDisplayName={msg.replyDisplayName}
-      replyBody={msg.replyBody}
-      onBadgePress={onBadgePress}
-      onMessageLongPress={onMessageLongPress}
-      onEmotePress={onEmotePress}
-      onUsernamePress={onUsernamePress}
-      getMentionColor={getMentionColor}
-      parseTextForEmotes={parseTextForEmotes}
-      currentUsername={currentUsername}
-      currentUsernameNormalized={currentUsernameNormalized}
-      density={chatDensity}
-      fontScale={fontScale}
-      customHighlights={customHighlights}
-      highlightedUserSet={highlightedUserSet}
-      messageDisplay={messageDisplay}
-      onReplyContextPress={onReplyContextPress}
-      // @ts-expect-error - notice_tags union type not narrowing correctly
-      notice_tags={
-        'notice_tags' in msg && msg.notice_tags ? msg.notice_tags : undefined
-      }
-    />
+    <RowVisibilityContext.Provider value={rowVisibility}>
+      <RichChatMessage
+        id={msg.id}
+        broadcasterId={channelId}
+        channel={msg.channel}
+        message={msg.message}
+        userstate={msg.userstate}
+        badges={msg.badges}
+        cachedSenderColor={
+          msg.cachedSenderColor ??
+          resolveCachedSenderColor(msg, getUserMessageColor)
+        }
+        message_id={msg.message_id}
+        message_nonce={msg.message_nonce}
+        sender={msg.sender}
+        style={styles.messageContainer}
+        parentDisplayName={msg.parentDisplayName}
+        parentColor={msg.parentColor}
+        replyDisplayName={msg.replyDisplayName}
+        replyBody={msg.replyBody}
+        onBadgePress={onBadgePress}
+        onMessageLongPress={onMessageLongPress}
+        onEmotePress={onEmotePress}
+        onUsernamePress={onUsernamePress}
+        getMentionColor={getMentionColor}
+        parseTextForEmotes={parseTextForEmotes}
+        currentUsername={currentUsername}
+        currentUsernameNormalized={currentUsernameNormalized}
+        density={chatDensity}
+        fontScale={fontScale}
+        customHighlights={customHighlights}
+        highlightedUserSet={highlightedUserSet}
+        messageDisplay={messageDisplay}
+        onReplyContextPress={onReplyContextPress}
+        // @ts-expect-error - notice_tags union type not narrowing correctly
+        notice_tags={
+          'notice_tags' in msg && msg.notice_tags ? msg.notice_tags : undefined
+        }
+      />
+    </RowVisibilityContext.Provider>
   );
 };
 

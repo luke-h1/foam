@@ -1,4 +1,5 @@
 import type { RefObject } from 'react';
+import { logger } from '@app/utils/logger';
 
 type IfEquals<X, Y, A = X, B = never> =
   (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2 ? A : B;
@@ -22,7 +23,7 @@ export const websocketWrapper = (
         return start;
       }
       if (typeof val === 'function') {
-        console.error(
+        logger.main.error(
           'Calling methods directly on the websocket is not supported at this moment. You must use the methods returned by useWebSocket.',
         );
 
@@ -33,7 +34,7 @@ export const websocketWrapper = (
     },
     set: (obj: WebSocket, key: WritableKeys<WebSocket>, val: unknown) => {
       if (/^on/.test(key)) {
-        console.warn(
+        logger.main.warn(
           "The websocket's event handlers should be defined through the options object passed into useWebSocket.",
         );
         return false;

@@ -1,4 +1,5 @@
 import { RefObject } from 'react';
+import { logger } from '@app/utils/logger';
 import {
   DEFAULT_RECONNECT_INTERVAL_MS,
   DEFAULT_RECONNECT_LIMIT,
@@ -72,7 +73,7 @@ export function attachListeners(
         }, delay);
       } else {
         optionsRef.current.onReconnectStop?.(reconnectAttempts);
-        console.error(
+        logger.main.error(
           `Maximum reconnect attempts reached: ${reconnectAttempts}`,
         );
       }
@@ -98,7 +99,7 @@ export function attachListeners(
         }, delay);
       } else {
         optionsRef.current.onReconnectStop?.(reconnectAttempts);
-        console.error(
+        logger.main.error(
           `Maximum reconnect attempts reached: ${reconnectAttempts}`,
         );
       }

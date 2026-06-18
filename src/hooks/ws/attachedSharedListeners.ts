@@ -5,6 +5,7 @@ import {
 } from './constants';
 import { getSubscribers } from './manage-subscribers';
 import { sharedWebSockets, type WebSocketEventMap } from './types';
+import { logger } from '@app/utils/logger';
 
 export const attachSharedListeners = (instance: WebSocket, url: string) => {
   instance.onmessage = (message: WebSocketEventMap['message']) => {
@@ -70,7 +71,7 @@ export const attachSharedListeners = (instance: WebSocket, url: string) => {
               subscriber.optionsRef.current.reconnectAttempts as number,
             );
           }
-          console.error(
+          logger.main.error(
             `Max reconnect attempts of ${reconnectAttempts} exceeded`,
           );
         }

@@ -4,6 +4,7 @@ import {
   consoleTransport,
 } from 'react-native-logs';
 import type { transportFunctionType } from 'react-native-logs';
+import { forwardLogToSentry } from '@app/lib/sentry';
 
 type TransportProps = Parameters<
   transportFunctionType<Record<string, unknown>>
@@ -154,6 +155,35 @@ const createGenericTransport =
 
 const genericTransport = createGenericTransport();
 
+// Forwards warn/error to Sentry so the app logger is the single sink: one
+// `logger.*` call lands in the console and Sentry, no separate Sentry call.
+const createSentryTransport =
+  (): transportFunctionType<Record<string, unknown>> =>
+  (props: TransportProps) => {
+    if (!props?.level) {
+      return;
+    }
+
+    const { msg, rawMsg, level, extension } = props;
+    const levelText = level.text;
+    if (levelText !== 'warn' && levelText !== 'error') {
+      return;
+    }
+
+    const category = extension ?? 'app';
+    const rawArgs = Array.isArray(rawMsg) ? rawMsg : [rawMsg];
+    const error = rawArgs.find((arg): arg is Error => arg instanceof Error);
+
+    forwardLogToSentry({
+      level: levelText,
+      category,
+      message: (typeof msg === 'string' ? msg : String(msg)).trim(),
+      error,
+    });
+  };
+
+const sentryTransport = createSentryTransport();
+
 const loggingConfig = {
   main: {
     enabled: true,
@@ -254,7 +284,9 @@ const baseLogger = rnlogger.createLogger({
   // Release builds only emit warnings and errors; debug/info logging is dev-only
   // so production isn't spending CPU stringifying chat traffic.
   severity: __DEV__ ? 'debug' : 'warn',
-  transport: __DEV__ ? [consoleTransport, genericTransport] : genericTransport,
+  transport: __DEV__
+    ? [consoleTransport, genericTransport, sentryTransport]
+    : [genericTransport, sentryTransport],
   stringifyFunc: stringifyLogMessage,
   transportOptions: {
     colors: {

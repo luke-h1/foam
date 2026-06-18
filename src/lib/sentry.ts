@@ -339,6 +339,43 @@ export function recordInfo(info: {
   Sentry.logger.info(message, extra);
 }
 
+/**
+ * Forwards a log entry from the app logger (src/utils/logger.ts) into Sentry so
+ * a single `logger.*` call reaches both the console and Sentry — callers no
+ * longer need to also call recordError/recordWarning by hand. Only warn/error
+ * are forwarded; debug/info stay local. No-ops when Sentry is disabled.
+ */
+export function forwardLogToSentry(entry: {
+  level: 'warn' | 'error';
+  category: string;
+  message: string;
+  error?: Error;
+}): void {
+  const { level, category, message, error } = entry;
+
+  // A logging call must never throw and break the caller, so swallow any
+  // failure from the Sentry pipeline (e.g. before init / in tests).
+  try {
+    if (level === 'error') {
+      Sentry.withScope(scope => {
+        scope.setTag('log_category', category);
+        scope.setExtra('log_message', message);
+        if (error) {
+          Sentry.captureException(error);
+        } else {
+          Sentry.captureMessage(message, 'error');
+        }
+      });
+      return;
+    }
+
+    Sentry.addBreadcrumb({ category, message, level: 'warning' });
+    Sentry.logger.warn(message, { category });
+  } catch {
+    // Intentionally ignored — never let logging crash app logic.
+  }
+}
+
 export function countOtaMetric(
   name: OtaMetrics,
   attributes?: Record<string, string | number | boolean>,

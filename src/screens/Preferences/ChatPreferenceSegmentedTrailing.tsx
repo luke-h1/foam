@@ -1,4 +1,3 @@
-import { theme } from '@app/styles/themes';
 import { SegmentedControl } from '@expo/ui/community/segmented-control';
 import { StyleSheet } from 'react-native';
 
@@ -34,7 +33,6 @@ export function ChatPreferenceSegmentedTrailing({
       style={
         variant === 'ios' ? styles.iosSegmentedControl : styles.segmentedControl
       }
-      tintColor={theme.colorPrimary}
       values={[...values]}
     />
   );

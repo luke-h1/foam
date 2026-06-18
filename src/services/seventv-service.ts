@@ -33,6 +33,7 @@ import type {
 } from '@app/types/emote';
 import {
   convertV4PaintToPaintData,
+  pickAnimatedFormat,
   pickBestFormat,
   pickBestImage,
   type V4Badge,
@@ -223,28 +224,34 @@ export const clearSevenTvUserIdCache = () => {
 };
 
 function buildV4ImageVariants(images: readonly Image[]): EmoteImageVariants {
-  const variants = images.reduce<{
-    animated: EmoteImageVariantSet;
-    static: EmoteImageVariantSet;
-  }>(
-    (variants, image) => {
-      const scale = `${image.scale}x` as '1x' | '2x' | '3x' | '4x';
-      if (!['1x', '2x', '3x', '4x'].includes(scale)) {
-        return variants;
-      }
+  const animated: EmoteImageVariantSet = {};
+  const staticSet: EmoteImageVariantSet = {};
 
-      if (image.frameCount > 1) {
-        variants.animated[scale] = image.url;
-      } else {
-        variants.static[scale] = image.url;
-      }
+  for (const scale of ['1x', '2x', '3x', '4x'] as const) {
+    const atScale = images.filter(image => `${image.scale}x` === scale);
+    if (atScale.length === 0) {
+      continue;
+    }
+    /**
+     * Animated: prefer WebP (VP8) over AVIF — expo-image decodes AVIF via
+     * software dav1d (~60-75% of chat CPU on device), WebP is far cheaper.
+     */
+    const animatedImage = pickAnimatedFormat(
+      atScale.filter(image => image.frameCount > 1),
+    );
+    if (animatedImage) {
+      animated[scale] = animatedImage.url;
+    }
+    // Static decode is cheap either way; keep AVIF (smallest) for static.
+    const staticImage = pickBestFormat(
+      atScale.filter(image => image.frameCount <= 1),
+    );
+    if (staticImage) {
+      staticSet[scale] = staticImage.url;
+    }
+  }
 
-      return variants;
-    },
-    { animated: {}, static: {} },
-  );
-
-  return createEmoteImageVariants(variants);
+  return createEmoteImageVariants({ animated, static: staticSet });
 }
 
 function pickBestStaticImage(images: readonly Image[]): Image | undefined {

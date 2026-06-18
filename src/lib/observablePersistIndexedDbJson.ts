@@ -7,6 +7,7 @@ import {
   type PersistMetadata,
   type PersistOptionsLocal,
 } from '@legendapp/state';
+import { logger } from '@app/utils/logger';
 
 const METADATA_SUFFIX = '__m';
 const VALUE_ID = 'state';
@@ -70,7 +71,7 @@ export class ObservablePersistIndexedDbJson implements ObservablePersistLocal {
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     }).catch(error => {
-      console.warn(
+      logger.cache.warn(
         '[legend-state] Failed to open IndexedDB persistence',
         error,
       );

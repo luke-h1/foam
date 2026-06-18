@@ -4,6 +4,7 @@ import {
   recordInfo,
   recordWarning,
 } from '@app/lib/sentry';
+import { logger } from '@app/utils/logger';
 import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
 import { useImperativeHandle, useRef, useState, useCallback } from 'react';
 import { useSyncRef } from '@app/hooks/useSyncRef';
@@ -409,16 +410,14 @@ export function usePlayerBridge({
           }
           break;
         case 'trace':
-          if (__DEV__) {
-            console.warn(
-              '[StreamPlayer:embed]',
-              message.payload?.step ?? '?',
-              message.payload?.detail ?? '',
-            );
-          }
+          logger.main.debug(
+            '[StreamPlayer:embed]',
+            message.payload?.step ?? '?',
+            message.payload?.detail ?? '',
+          );
           break;
         case 'error':
-          console.warn(
+          logger.main.warn(
             '[StreamPlayer:embed ERROR]',
             message.payload?.message ?? message.payload,
           );

@@ -2,6 +2,7 @@ import type {
   PersistedClient,
   Persister,
 } from '@tanstack/react-query-persist-client';
+import { logger } from '@app/utils/logger';
 
 const DATABASE_NAME = 'foam-query-cache';
 const DATABASE_VERSION = 1;
@@ -44,7 +45,7 @@ function openDatabase(): Promise<IDBDatabase | null> {
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     }).catch(error => {
-      console.warn('[query-cache] Failed to open IndexedDB cache', error);
+      logger.cache.warn('[query-cache] Failed to open IndexedDB cache', error);
       dbPromise = undefined;
       return null;
     });

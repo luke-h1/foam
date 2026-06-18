@@ -1,5 +1,6 @@
 import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
 import { recordInfo } from '@app/lib/sentry';
+import { logger } from '@app/utils/logger';
 import { View, StyleSheet } from 'react-native';
 import { useMeasureImageLoadTime } from '@app/hooks/useMeasureImageLoadTime';
 import {
@@ -145,9 +146,7 @@ export const Image = function Image({
   }, [onLoadEnd, onLoadEndProp, trackLoad]);
 
   const handleError = (error: unknown) => {
-    if (__DEV__) {
-      console.warn('Image loading error:', error);
-    }
+    logger.main.debug('Image loading error:', error);
     onError?.(error as ImageErrorEventData);
   };
 

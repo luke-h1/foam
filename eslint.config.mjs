@@ -209,5 +209,21 @@ export default tseslint.config(
       'react-doctor/no-many-boolean-props': 'off',
     },
   },
+  {
+    // App code logs through src/utils/logger (which forwards to Sentry), never
+    // console directly. logger.ts is the console sink and sentry.ts is the
+    // Sentry bootstrap, so both are exempt.
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: [
+      'src/**/__tests__/**',
+      'src/**/*.test.{ts,tsx}',
+      'src/**/*.stories.{ts,tsx}',
+      'src/utils/logger.ts',
+      'src/lib/sentry.ts',
+    ],
+    rules: {
+      'no-console': 'error',
+    },
+  },
   prettierConfig,
 );

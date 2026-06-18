@@ -1,6 +1,7 @@
 import { createRef } from 'react';
 import { act, render } from '@testing-library/react-native';
 import type { WebViewProps } from 'react-native-webview';
+import { logger } from '@app/utils/logger';
 
 const mockInjectJavaScript = jest.fn();
 const mockWebViewProps: WebViewProps[] = [];
@@ -99,7 +100,7 @@ describe('StreamPlayer component messaging', () => {
     const onPlaybackLatencyChange = jest.fn();
     const onPlay = jest.fn();
     const onReady = jest.fn();
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    const warnSpy = jest.spyOn(logger.main, 'warn').mockImplementation();
 
     render(
       <StreamPlayer

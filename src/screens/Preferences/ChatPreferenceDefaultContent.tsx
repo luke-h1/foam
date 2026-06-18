@@ -98,7 +98,7 @@ export function ChatPreferenceDefaultContent({
           icon={{
             icon: 'textformat.size',
             androidIcon: 'format_size',
-            color: theme.colorAmber,
+            color: theme.colorGrey,
           }}
           onChange={handleFontScaleChange}
           onValueChange={handleFontScaleValueChange}
@@ -116,7 +116,7 @@ export function ChatPreferenceDefaultContent({
           icon={{
             icon: 'line.3.horizontal',
             androidIcon: 'menu',
-            color: theme.colorBlue,
+            color: theme.colorGrey,
           }}
           value={previewAlternatingRows}
           onValueChange={handleAlternatingRowsToggle}
@@ -134,7 +134,7 @@ export function ChatPreferenceDefaultContent({
           icon={{
             icon: 'face.smiling',
             androidIcon: 'sentiment_satisfied',
-            color: theme.colorAmber,
+            color: theme.colorGrey,
           }}
           onChange={handleEmojiStyleChangeByIndex}
           onValueChange={handleEmojiStyleChange}
@@ -155,7 +155,7 @@ export function ChatPreferenceDefaultContent({
           icon={{
             icon: 'clock.arrow.circlepath',
             androidIcon: 'history',
-            color: theme.colorPrimary,
+            color: theme.colorGrey,
           }}
           value={showRecentMessages !== false}
           onValueChange={value => update({ showRecentMessages: value })}
@@ -174,7 +174,7 @@ export function ChatPreferenceDefaultContent({
           icon={{
             icon: 'clock.badge',
             androidIcon: 'schedule',
-            color: theme.colorBlue,
+            color: theme.colorGrey,
           }}
           onChange={handleTimestampFormatChange}
           onValueChange={handleTimestampFormatValueChange}
@@ -205,7 +205,7 @@ export function ChatPreferenceDefaultContent({
           icon={{
             icon: 'highlighter',
             androidIcon: 'edit',
-            color: theme.colorAmber,
+            color: theme.colorGrey,
           }}
           onPress={() => router.push('/tabs/settings/chat-highlights')}
         />
@@ -215,7 +215,7 @@ export function ChatPreferenceDefaultContent({
           icon={{
             icon: 'hand.tap',
             androidIcon: 'touch_app',
-            color: theme.colorPrimary,
+            color: theme.colorGrey,
           }}
           value={chatMentionHaptics !== false}
           onValueChange={value => update({ chatMentionHaptics: value })}
@@ -227,7 +227,7 @@ export function ChatPreferenceDefaultContent({
           icon={{
             icon: 'trash.slash',
             androidIcon: 'delete',
-            color: theme.colorRed,
+            color: theme.colorGrey,
           }}
           onChange={handleDeletedStyleChange}
           onValueChange={handleDeletedStyleValueChange}
@@ -242,7 +242,7 @@ export function ChatPreferenceDefaultContent({
           icon={{
             icon: 'clock.arrow.circlepath',
             androidIcon: 'history',
-            color: theme.colorViolet,
+            color: theme.colorGrey,
           }}
           value={ignoreClearChat === true}
           onValueChange={value => update({ ignoreClearChat: value })}
@@ -292,7 +292,7 @@ export function ChatPreferenceDefaultContent({
           icon={{
             icon: 'slash.circle',
             androidIcon: 'block',
-            color: theme.colorRed,
+            color: theme.colorGrey,
           }}
           value={previewDisableEmoteAnimations}
           onValueChange={handleDisableEmoteAnimationsToggle}

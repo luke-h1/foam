@@ -1,11 +1,13 @@
 import { useCallback, memo } from 'react';
-import { Button } from '@app/components/Button/Button';
 import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
-import { Switch } from '@app/components/Switch/Switch';
+import {
+  SettingsLinkRow,
+  SettingsSection,
+  SettingsToggleRow,
+} from '@app/components/SettingsSection/SettingsSection';
 import { Text } from '@app/components/ui/Text/Text';
 import type { SettingsSheetPreferenceFlags } from '@app/components/Chat/types/chatUiFlags';
 import { theme } from '@app/styles/themes';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import {
   ScrollView,
   View,
@@ -16,36 +18,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
 import { chatSheetSurface } from '../chatSheetSurface';
 import { useTranslation } from 'react-i18next';
-
-function ToggleMenuItemComponent({
-  icon,
-  label,
-  onValueChange,
-  value,
-}: {
-  icon: SymbolViewProps['name'];
-  label: string;
-  onValueChange?: (value: boolean) => void;
-  value: boolean;
-}) {
-  return (
-    <View style={styles.menuItem}>
-      <SymbolView name={icon} tintColor={theme.colorBorderHover} />
-      <View style={styles.menuItemTextContainer}>
-        <Text style={styles.menuItemText} weight='semibold'>
-          {label}
-        </Text>
-        <Switch
-          accessibilityLabel={label}
-          value={value}
-          onValueChange={onValueChange}
-        />
-      </View>
-    </View>
-  );
-}
-
-const ToggleMenuItem = ToggleMenuItemComponent;
 
 export interface SettingsSheetProps {
   isPresented: boolean;
@@ -102,6 +74,11 @@ const SettingsSheetComponent = ({
     onDismiss();
   }, [onDismiss]);
 
+  const handleToggleDensity = useCallback(() => {
+    onToggleChatDensity?.();
+    dismissSheet();
+  }, [onToggleChatDensity, dismissSheet]);
+
   const handleRefetchEmotes = useCallback(() => {
     onRefetchEmotes?.();
     dismissSheet();
@@ -132,6 +109,11 @@ const SettingsSheetComponent = ({
     dismissSheet();
   }, [onRefreshVideo, dismissSheet]);
 
+  const hasActions = Boolean(onOpenChatters || onRefetchEmotes);
+  const hasStorage = Boolean(
+    onClearChatCache || onClearImageCache || onClearSevenTvCosmeticsCache,
+  );
+
   return (
     <BottomSheet
       enableFixedSnapPoints
@@ -143,197 +125,188 @@ const SettingsSheetComponent = ({
     >
       <View style={[styles.container, { height: sheetHeight }]}>
         <View style={styles.header}>
-          <Text style={styles.headerEyebrow} weight='semibold'>
-            {t('settingsSheet.eyebrow')}
-          </Text>
           <Text style={styles.headerTitle} weight='semibold'>
             {t('settingsSheet.title')}
           </Text>
         </View>
 
         <ScrollView
-          style={styles.menuScroll}
+          style={styles.scroll}
           contentContainerStyle={[
-            styles.menuContainer,
-            { paddingBottom: bottomInset + theme.space20 },
+            styles.content,
+            { paddingBottom: bottomInset + theme.space24 },
           ]}
           nestedScrollEnabled
           showsVerticalScrollIndicator={false}
         >
-          {onOpenChatters ? (
-            <Button
-              label={t('settingsSheet.viewChatters')}
-              style={styles.menuItem}
-              onPress={onOpenChatters}
-            >
-              <SymbolView name='person.2' tintColor={theme.colorBorderHover} />
-              <Text style={styles.menuItemText} weight='semibold'>
-                {t('settingsSheet.viewChatters')}
-              </Text>
-            </Button>
-          ) : null}
-
-          {onRefetchEmotes ? (
-            <Button
-              label={t('settingsSheet.refetchEmotesLabel')}
-              style={styles.menuItem}
-              onPress={handleRefetchEmotes}
-            >
-              <SymbolView
-                name='arrow.clockwise'
-                tintColor={theme.colorBorderHover}
-              />
-              <Text style={styles.menuItemText} weight='semibold'>
-                {t('settingsSheet.refetchEmotes')}
-              </Text>
-            </Button>
-          ) : null}
-
-          <Button
-            label={t('settingsSheet.toggleChatDensity')}
-            style={styles.menuItem}
-            onPress={() => {
-              onToggleChatDensity?.();
-              dismissSheet();
-            }}
-          >
-            <SymbolView
-              name='text.alignleft'
-              tintColor={theme.colorBorderHover}
-            />
-            <View style={styles.menuItemTextContainer}>
-              <Text style={styles.menuItemText} weight='semibold'>
-                {t('settingsSheet.density')}
-              </Text>
-              <Text style={styles.menuItemValue} weight='bold'>
-                {chatDensity === 'compact'
+          <SettingsSection title={t('settingsSheet.sectionAppearance')}>
+            <SettingsLinkRow
+              title={t('settingsSheet.density')}
+              icon={{
+                icon: 'text.alignleft',
+                androidIcon: 'format_align_left',
+                color: theme.colorGrey,
+              }}
+              value={
+                chatDensity === 'compact'
                   ? t('settingsSheet.compact')
-                  : t('settingsSheet.comfortable')}
-              </Text>
-            </View>
-          </Button>
-
-          <ToggleMenuItem
-            icon='clock'
-            label={t('settingsSheet.showTimestamps')}
-            value={showTimestamps}
-            onValueChange={onToggleShowTimestamps}
-          />
-
-          <ToggleMenuItem
-            icon='at'
-            label={t('settingsSheet.highlightOwnMentions')}
-            value={highlightOwnMentions}
-            onValueChange={onToggleHighlightOwnMentions}
-          />
-
-          <ToggleMenuItem
-            icon='arrowshape.turn.up.left'
-            label={t('settingsSheet.inlineReplyContext')}
-            value={showInlineReplyContext}
-            onValueChange={onToggleInlineReplyContext}
-          />
-
-          <ToggleMenuItem
-            icon='arrow.down.circle'
-            label={t('settingsSheet.showJumpPill')}
-            value={showUnreadJumpPill}
-            onValueChange={onToggleShowUnreadJumpPill}
-          />
-
-          {onReconnect ? (
-            <Button
-              label={t('settingsSheet.reconnect')}
-              style={styles.menuItem}
-              onPress={handleReconnect}
-            >
-              <SymbolView name='wifi' tintColor={theme.colorBorderHover} />
-              <Text style={styles.menuItemText} weight='semibold'>
-                {t('settingsSheet.reconnect')}
-              </Text>
-            </Button>
-          ) : null}
-
-          {onClearChatCache ? (
-            <Button
-              label={t('settingsSheet.clearChatCache')}
-              style={styles.menuItem}
-              onPress={handleClearChatCache}
-            >
-              <SymbolView name='cylinder' tintColor={theme.colorBorderHover} />
-              <Text style={styles.menuItemText} weight='semibold'>
-                {t('settingsSheet.clearChatCache')}
-              </Text>
-            </Button>
-          ) : null}
-
-          {onClearImageCache ? (
-            <Button
-              label={t('settingsSheet.clearImageCache')}
-              style={styles.menuItem}
-              onPress={handleClearImageCache}
-            >
-              <SymbolView name='trash' tintColor={theme.colorBorderHover} />
-              <Text style={styles.menuItemText} weight='semibold'>
-                {t('settingsSheet.clearImageCache')}
-              </Text>
-            </Button>
-          ) : null}
-
-          {onClearSevenTvCosmeticsCache ? (
-            <Button
-              label={t('settingsSheet.clearSevenTvCosmeticCache')}
-              style={styles.menuItem}
-              onPress={handleClearSevenTvCosmeticsCache}
-            >
-              <SymbolView name='sparkles' tintColor={theme.colorBorderHover} />
-              <Text style={styles.menuItemText} weight='semibold'>
-                {t('settingsSheet.clearSevenTvCosmeticCache')}
-              </Text>
-            </Button>
-          ) : null}
-
-          <View style={styles.menuItem}>
-            <SymbolView
-              name='waveform.path.ecg'
-              tintColor={theme.colorBorderHover}
+                  : t('settingsSheet.comfortable')
+              }
+              onPress={handleToggleDensity}
             />
-            <View style={styles.menuItemTextContainer}>
-              <Text style={styles.menuItemText} weight='semibold'>
-                {t('settingsSheet.displayLatency')}
-              </Text>
-              <Text style={styles.menuItemValue} weight='bold'>
-                {latency !== null && latency !== undefined
-                  ? `${latency}ms`
-                  : t('common:notAvailable')}
-              </Text>
-            </View>
-          </View>
+            <SettingsToggleRow
+              title={t('settingsSheet.showTimestamps')}
+              icon={{
+                icon: 'clock',
+                androidIcon: 'schedule',
+                color: theme.colorBlue,
+              }}
+              value={showTimestamps}
+              onValueChange={value => onToggleShowTimestamps?.(value)}
+            />
+            <SettingsToggleRow
+              title={t('settingsSheet.highlightOwnMentions')}
+              icon={{
+                icon: 'at',
+                androidIcon: 'alternate_email',
+                color: theme.colorPrimary,
+              }}
+              value={highlightOwnMentions}
+              onValueChange={value => onToggleHighlightOwnMentions?.(value)}
+            />
+            <SettingsToggleRow
+              title={t('settingsSheet.inlineReplyContext')}
+              icon={{
+                icon: 'arrowshape.turn.up.left',
+                androidIcon: 'reply',
+                color: theme.colorAmber,
+              }}
+              value={showInlineReplyContext}
+              onValueChange={value => onToggleInlineReplyContext?.(value)}
+            />
+            <SettingsToggleRow
+              title={t('settingsSheet.showJumpPill')}
+              icon={{
+                icon: 'arrow.down.circle',
+                androidIcon: 'arrow_circle_down',
+                color: theme.colorGrey,
+              }}
+              value={showUnreadJumpPill}
+              onValueChange={value => onToggleShowUnreadJumpPill?.(value)}
+            />
+          </SettingsSection>
 
-          {onRefreshVideo ? (
-            <Button
-              label={t('settingsSheet.refreshVideo')}
-              style={styles.menuItem}
-              onPress={handleRefreshVideo}
-            >
-              <SymbolView name='video' tintColor={theme.colorBorderHover} />
-              <Text style={styles.menuItemText} weight='semibold'>
-                {t('settingsSheet.refreshVideo')}
-              </Text>
-            </Button>
+          {hasActions ? (
+            <SettingsSection title={t('settingsSheet.sectionActions')}>
+              {onOpenChatters ? (
+                <SettingsLinkRow
+                  title={t('settingsSheet.viewChatters')}
+                  icon={{
+                    icon: 'person.2',
+                    androidIcon: 'group',
+                    color: theme.colorBlue,
+                  }}
+                  onPress={onOpenChatters}
+                />
+              ) : null}
+              {onRefetchEmotes ? (
+                <SettingsLinkRow
+                  title={t('settingsSheet.refetchEmotes')}
+                  icon={{
+                    icon: 'arrow.clockwise',
+                    androidIcon: 'refresh',
+                    color: theme.colorPrimary,
+                  }}
+                  onPress={handleRefetchEmotes}
+                />
+              ) : null}
+            </SettingsSection>
           ) : null}
 
-          <View style={styles.menuItem}>
-            <SymbolView name='repeat' tintColor={theme.colorBorderHover} />
-            <View style={styles.menuItemTextContainer}>
-              <Text style={styles.menuItemText} weight='semibold'>
-                {t('settingsSheet.reconnectionAttempts')}
-              </Text>
-              <Text style={styles.menuItemValue} weight='bold'>
-                {reconnectionAttempts ?? 0}
-              </Text>
-            </View>
-          </View>
+          <SettingsSection title={t('settingsSheet.sectionConnection')}>
+            {onReconnect ? (
+              <SettingsLinkRow
+                title={t('settingsSheet.reconnect')}
+                icon={{
+                  icon: 'wifi',
+                  androidIcon: 'wifi',
+                  color: theme.colorPrimary,
+                }}
+                onPress={handleReconnect}
+              />
+            ) : null}
+            {onRefreshVideo ? (
+              <SettingsLinkRow
+                title={t('settingsSheet.refreshVideo')}
+                icon={{
+                  icon: 'video',
+                  androidIcon: 'videocam',
+                  color: theme.colorBlue,
+                }}
+                onPress={handleRefreshVideo}
+              />
+            ) : null}
+            <SettingsLinkRow
+              title={t('settingsSheet.displayLatency')}
+              icon={{
+                icon: 'waveform.path.ecg',
+                androidIcon: 'monitoring',
+                color: theme.colorGrey,
+              }}
+              value={
+                latency !== null && latency !== undefined
+                  ? `${latency}ms`
+                  : t('common:notAvailable')
+              }
+            />
+            <SettingsLinkRow
+              title={t('settingsSheet.reconnectionAttempts')}
+              icon={{
+                icon: 'repeat',
+                androidIcon: 'repeat',
+                color: theme.colorGrey,
+              }}
+              value={String(reconnectionAttempts ?? 0)}
+            />
+          </SettingsSection>
+
+          {hasStorage ? (
+            <SettingsSection title={t('settingsSheet.sectionStorage')}>
+              {onClearChatCache ? (
+                <SettingsLinkRow
+                  title={t('settingsSheet.clearChatCache')}
+                  icon={{
+                    icon: 'cylinder',
+                    androidIcon: 'database',
+                    color: theme.colorRed,
+                  }}
+                  onPress={handleClearChatCache}
+                />
+              ) : null}
+              {onClearImageCache ? (
+                <SettingsLinkRow
+                  title={t('settingsSheet.clearImageCache')}
+                  icon={{
+                    icon: 'trash',
+                    androidIcon: 'delete',
+                    color: theme.colorRed,
+                  }}
+                  onPress={handleClearImageCache}
+                />
+              ) : null}
+              {onClearSevenTvCosmeticsCache ? (
+                <SettingsLinkRow
+                  title={t('settingsSheet.clearSevenTvCosmeticCache')}
+                  icon={{
+                    icon: 'sparkles',
+                    androidIcon: 'auto_awesome',
+                    color: theme.colorRed,
+                  }}
+                  onPress={handleClearSevenTvCosmeticsCache}
+                />
+              ) : null}
+            </SettingsSection>
+          ) : null}
         </ScrollView>
       </View>
     </BottomSheet>
@@ -351,53 +324,19 @@ const styles = StyleSheet.create({
     minHeight: 0,
     width: '100%',
   },
-  header: {
-    borderBottomColor: theme.color.border.dark,
-    borderBottomWidth: 1,
-    marginBottom: theme.space8,
+  content: {
     paddingHorizontal: theme.space20,
-    paddingVertical: theme.space12,
+    paddingTop: theme.space16,
   },
-  headerEyebrow: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize11,
-    letterSpacing: 0.6,
-    marginBottom: 2,
+  header: {
+    paddingHorizontal: theme.space20,
+    paddingTop: theme.space4,
+    paddingBottom: theme.space12,
   },
   headerTitle: {
-    fontSize: theme.fontSize18,
+    fontSize: theme.fontSize20,
   },
-  menuContainer: {
-    paddingTop: 0,
-  },
-  menuItem: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
-    flexDirection: 'row',
-    gap: theme.space12,
-    marginBottom: theme.space8,
-    marginHorizontal: theme.space20,
-    minHeight: 56,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space12,
-  },
-  menuItemText: {
-    flex: 1,
-    fontSize: theme.fontSize17,
-  },
-  menuItemTextContainer: {
-    alignItems: 'center',
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  menuItemValue: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize14,
-  },
-  menuScroll: {
+  scroll: {
     flex: 1,
     minHeight: 0,
   },

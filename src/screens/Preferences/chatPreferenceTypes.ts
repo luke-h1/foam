@@ -91,7 +91,7 @@ export const CONTEXT_TOGGLE_ROWS = [
     icon: {
       icon: 'clock',
       androidIcon: 'schedule',
-      color: theme.colorBlue,
+      color: theme.colorGrey,
     },
   },
   {
@@ -101,7 +101,7 @@ export const CONTEXT_TOGGLE_ROWS = [
     icon: {
       icon: 'at',
       androidIcon: 'alternate_email',
-      color: theme.colorViolet,
+      color: theme.colorGrey,
     },
   },
   {
@@ -111,7 +111,7 @@ export const CONTEXT_TOGGLE_ROWS = [
     icon: {
       icon: 'arrowshape.turn.up.left',
       androidIcon: 'reply',
-      color: theme.colorPlum,
+      color: theme.colorGrey,
     },
   },
   {
@@ -121,7 +121,7 @@ export const CONTEXT_TOGGLE_ROWS = [
     icon: {
       icon: 'arrow.down.circle',
       androidIcon: 'arrow_circle_down',
-      color: theme.colorAmber,
+      color: theme.colorGrey,
     },
   },
 ] as const satisfies readonly {

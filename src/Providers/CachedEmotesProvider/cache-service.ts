@@ -17,11 +17,20 @@ import { Image, type ImageRef } from 'expo-image';
 // small image — it just caps the memory of oversized source art.
 export const EMOTE_DECODE_MAX_PX = 96;
 
-// Bound the JS-side ref map independently of expo's native cache (which is
-// bounded via Image.configureCache). Oldest insertion is evicted first.
+/**
+ * Bound the JS-side ref map independently of expo's native cache (which is
+ * bounded via Image.configureCache). Oldest non-pinned insertion is evicted
+ * first; pinned entries (see `pinned`) are never evicted by the cap.
+ */
 const MAX_ENTRIES = 1200;
 
 const refs = new Map<string, ImageRef>();
+/**
+ * Global emote urls that survive a channel hop and are never cap-evicted, so the
+ * common set is decoded once per session. Must stay « MAX_ENTRIES (else the cap
+ * can't reclaim). Only a full clearCachedEmoteRefs drops them.
+ */
+const pinned = new Set<string>();
 /**
  * Maps an in-flight url to the cacheEpoch active when its decode started.
  * clearCachedEmoteRefs bumps cacheEpoch, so a decode that resolves after a clear
@@ -31,6 +40,42 @@ const refs = new Map<string, ImageRef>();
 const inflight = new Map<string, number>();
 const listeners = new Map<string, Set<() => void>>();
 let cacheEpoch = 0;
+
+function evictOneUnpinned(): void {
+  for (const url of refs.keys()) {
+    if (!pinned.has(url)) {
+      refs.delete(url);
+      return;
+    }
+  }
+}
+
+/**
+ * Cap simultaneous decodes so a raid's burst of never-seen emotes can't fire
+ * hundreds of parallel loadAsync calls (decode-buffer memory spike + JS churn).
+ */
+const MAX_CONCURRENT_DECODES = 8;
+let activeDecodes = 0;
+const decodeWaiters: (() => void)[] = [];
+
+function acquireDecodeSlot(): Promise<void> {
+  if (activeDecodes < MAX_CONCURRENT_DECODES) {
+    activeDecodes += 1;
+    return Promise.resolve();
+  }
+  return new Promise<void>(resolve => {
+    decodeWaiters.push(resolve);
+  });
+}
+
+function releaseDecodeSlot(): void {
+  const next = decodeWaiters.shift();
+  if (next) {
+    next();
+  } else {
+    activeDecodes -= 1;
+  }
+}
 
 function notify(url: string): void {
   listeners.get(url)?.forEach(cb => cb());
@@ -44,35 +89,62 @@ export function getCachedEmoteRef(url: string): ImageRef | null {
   return refs.get(url) ?? null;
 }
 
+function decodeInto(url: string, maxPx: number, pin: boolean): Promise<void> {
+  if (!url || refs.has(url) || inflight.has(url)) {
+    if (pin && refs.has(url)) {
+      pinned.add(url);
+    }
+    return Promise.resolve();
+  }
+  const requestEpoch = cacheEpoch;
+  // Synchronous before the first await so concurrent callers dedupe immediately.
+  inflight.set(url, requestEpoch);
+  return runDecode(url, maxPx, pin, requestEpoch);
+}
+
+async function runDecode(
+  url: string,
+  maxPx: number,
+  pin: boolean,
+  requestEpoch: number,
+): Promise<void> {
+  // eslint-disable-next-line react-doctor/async-defer-await -- the slot must be acquired BEFORE the staleness re-check: a clear can happen while this decode is queued, and we only learn that after we own a slot
+  await acquireDecodeSlot();
+  try {
+    if (requestEpoch !== cacheEpoch) {
+      return;
+    }
+    // eslint-disable-next-line react-doctor/async-defer-await -- the staleness fence must re-check AFTER the decode resolves (a clear during the load must not repopulate the cache); this is the epoch fence the tests rely on
+    const ref = await Image.loadAsync(
+      { uri: url },
+      { maxWidth: maxPx, maxHeight: maxPx },
+    );
+    if (inflight.get(url) !== requestEpoch || requestEpoch !== cacheEpoch) {
+      return;
+    }
+    if (refs.size >= MAX_ENTRIES) {
+      evictOneUnpinned();
+    }
+    refs.set(url, ref);
+    if (pin) {
+      pinned.add(url);
+    }
+    notify(url);
+  } catch {
+    // decode failed — leave uncached
+  } finally {
+    releaseDecodeSlot();
+    if (inflight.get(url) === requestEpoch) {
+      inflight.delete(url);
+    }
+  }
+}
+
 export function ensureCachedEmoteRef(
   url: string,
   maxPx: number = EMOTE_DECODE_MAX_PX,
 ): void {
-  if (!url || refs.has(url) || inflight.has(url)) {
-    return;
-  }
-  const requestEpoch = cacheEpoch;
-  inflight.set(url, requestEpoch);
-  Image.loadAsync({ uri: url }, { maxWidth: maxPx, maxHeight: maxPx })
-    .then(ref => {
-      if (inflight.get(url) !== requestEpoch || requestEpoch !== cacheEpoch) {
-        return;
-      }
-      if (refs.size >= MAX_ENTRIES) {
-        const oldest = refs.keys().next().value;
-        if (oldest !== undefined) {
-          refs.delete(oldest);
-        }
-      }
-      refs.set(url, ref);
-      notify(url);
-    })
-    .catch(() => undefined)
-    .finally(() => {
-      if (inflight.get(url) === requestEpoch) {
-        inflight.delete(url);
-      }
-    });
+  void decodeInto(url, maxPx, false);
 }
 
 export function subscribeCachedEmoteRef(
@@ -93,61 +165,55 @@ export function subscribeCachedEmoteRef(
   };
 }
 
-// Awaitable batch warm used by the provider to optimise a channel's emote set
-// up front (like swm-photos' batched mipmap calculation), so the most common
-// emotes are already decoded before their first message arrives.
+/**
+ * Awaitable batch warm used by the provider to optimise an emote set up front
+ * (like swm-photos' batched mipmap calculation), so the most common emotes are
+ * already decoded before their first message arrives. `pin: true` marks the set
+ * as session-global so it survives channel hops (see `pinned`).
+ */
 export async function warmCachedEmoteRefs(
   urls: string[],
-  maxPx: number = EMOTE_DECODE_MAX_PX,
+  {
+    maxPx = EMOTE_DECODE_MAX_PX,
+    pin = false,
+  }: { maxPx?: number; pin?: boolean } = {},
 ): Promise<void> {
-  await Promise.all(
-    urls.map(url => {
-      if (!url || refs.has(url) || inflight.has(url)) {
-        return undefined;
-      }
-      const requestEpoch = cacheEpoch;
-      inflight.set(url, requestEpoch);
-      return Image.loadAsync(
-        { uri: url },
-        { maxWidth: maxPx, maxHeight: maxPx },
-      )
-        .then(ref => {
-          if (
-            inflight.get(url) !== requestEpoch ||
-            requestEpoch !== cacheEpoch
-          ) {
-            return;
-          }
-          if (refs.size >= MAX_ENTRIES) {
-            const oldest = refs.keys().next().value;
-            if (oldest !== undefined) {
-              refs.delete(oldest);
-            }
-          }
-          refs.set(url, ref);
-          notify(url);
-        })
-        .catch(() => undefined)
-        .finally(() => {
-          if (inflight.get(url) === requestEpoch) {
-            inflight.delete(url);
-          }
-        });
-    }),
-  );
+  await Promise.all(urls.map(url => decodeInto(url, maxPx, pin)));
 }
 
-// Releases all decoded refs (native bitmaps are freed once unreferenced) and
-// notifies mounted consumers so any row holding one drops its now-dangling ref
-// and falls back to the url. Called on channel change to bound memory across
-// channel hops, and whenever the native image cache is cleared.
+/**
+ * Channel-hop release: drops the channel-specific refs (notifying those rows to
+ * fall back to the url) but keeps the pinned global set decoded.
+ */
+export function releaseChannelEmoteRefs(): void {
+  const dropped: string[] = [];
+  for (const url of refs.keys()) {
+    if (!pinned.has(url)) {
+      dropped.push(url);
+    }
+  }
+  dropped.forEach(url => {
+    refs.delete(url);
+    notify(url);
+  });
+}
+
+/**
+ * Full clear including pinned globals; for when the native image cache is wiped,
+ * so no ref dangles at a freed bitmap. Notifies all mounted rows to fall back.
+ */
 export function clearCachedEmoteRefs(): void {
   cacheEpoch += 1;
   refs.clear();
   inflight.clear();
+  pinned.clear();
   notifyAll();
 }
 
-export function getCachedEmoteStats(): { decoded: number; inflight: number } {
-  return { decoded: refs.size, inflight: inflight.size };
+export function getCachedEmoteStats(): {
+  decoded: number;
+  inflight: number;
+  pinned: number;
+} {
+  return { decoded: refs.size, inflight: inflight.size, pinned: pinned.size };
 }

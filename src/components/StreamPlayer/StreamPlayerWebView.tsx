@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { countMetric, recordError, recordWarning } from '@app/lib/sentry';
+import { logger } from '@app/utils/logger';
 import type { ComponentProps, RefObject } from 'react';
 import { StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -74,7 +75,7 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
 
   const handleWebViewError = (event: { nativeEvent: WebViewError }) => {
     const { nativeEvent } = event;
-    console.warn('[StreamPlayer:WebView ERROR]', {
+    logger.main.warn('[StreamPlayer:WebView ERROR]', {
       code: nativeEvent.code,
       description: nativeEvent.description,
       url: nativeEvent.url,
@@ -99,7 +100,7 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
 
   const handleWebViewHttpError = (event: { nativeEvent: WebViewHttpError }) => {
     const { nativeEvent } = event;
-    console.warn('[StreamPlayer:HTTP ERROR]', {
+    logger.main.warn('[StreamPlayer:HTTP ERROR]', {
       statusCode: nativeEvent.statusCode,
       url: nativeEvent.url,
       description: nativeEvent.description,
@@ -147,13 +148,11 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
   };
 
   const handleLoadStart = (renderer: 'WebView') => {
-    if (__DEV__) {
-      console.warn(`[StreamPlayer:${renderer}] onLoadStart`, {
-        channel,
-        hasClip: !!clip,
-        hasVideo: !!video,
-      });
-    }
+    logger.main.debug(`[StreamPlayer:${renderer}] onLoadStart`, {
+      channel,
+      hasClip: !!clip,
+      hasVideo: !!video,
+    });
   };
 
   return (
