@@ -17,19 +17,9 @@ import { Image, type ImageRef } from 'expo-image';
 // small image — it just caps the memory of oversized source art.
 export const EMOTE_DECODE_MAX_PX = 96;
 
-/**
- * Bound the JS-side ref map independently of expo's native cache (which is
- * bounded via Image.configureCache). Oldest non-pinned insertion is evicted
- * first; pinned entries (see `pinned`) are never evicted by the cap.
- */
 const MAX_ENTRIES = 1200;
 
 const refs = new Map<string, ImageRef>();
-/**
- * Global emote urls that survive a channel hop and are never cap-evicted, so the
- * common set is decoded once per session. Must stay « MAX_ENTRIES (else the cap
- * can't reclaim). Only a full clearCachedEmoteRefs drops them.
- */
 const pinned = new Set<string>();
 /**
  * Maps an in-flight url to the cacheEpoch active when its decode started.
@@ -50,10 +40,6 @@ function evictOneUnpinned(): void {
   }
 }
 
-/**
- * Cap simultaneous decodes so a raid's burst of never-seen emotes can't fire
- * hundreds of parallel loadAsync calls (decode-buffer memory spike + JS churn).
- */
 const MAX_CONCURRENT_DECODES = 8;
 let activeDecodes = 0;
 const decodeWaiters: (() => void)[] = [];
@@ -97,7 +83,6 @@ function decodeInto(url: string, maxPx: number, pin: boolean): Promise<void> {
     return Promise.resolve();
   }
   const requestEpoch = cacheEpoch;
-  // Synchronous before the first await so concurrent callers dedupe immediately.
   inflight.set(url, requestEpoch);
   return runDecode(url, maxPx, pin, requestEpoch);
 }
@@ -131,7 +116,7 @@ async function runDecode(
     }
     notify(url);
   } catch {
-    // decode failed — leave uncached
+    // ignore
   } finally {
     releaseDecodeSlot();
     if (inflight.get(url) === requestEpoch) {
@@ -165,12 +150,6 @@ export function subscribeCachedEmoteRef(
   };
 }
 
-/**
- * Awaitable batch warm used by the provider to optimise an emote set up front
- * (like swm-photos' batched mipmap calculation), so the most common emotes are
- * already decoded before their first message arrives. `pin: true` marks the set
- * as session-global so it survives channel hops (see `pinned`).
- */
 export async function warmCachedEmoteRefs(
   urls: string[],
   {
@@ -181,10 +160,14 @@ export async function warmCachedEmoteRefs(
   await Promise.all(urls.map(url => decodeInto(url, maxPx, pin)));
 }
 
-/**
- * Channel-hop release: drops the channel-specific refs (notifying those rows to
- * fall back to the url) but keeps the pinned global set decoded.
- */
+export function evictCachedEmoteRef(url: string): void {
+  const hadRef = refs.delete(url);
+  pinned.delete(url);
+  if (hadRef) {
+    notify(url);
+  }
+}
+
 export function releaseChannelEmoteRefs(): void {
   const dropped: string[] = [];
   for (const url of refs.keys()) {
@@ -198,10 +181,6 @@ export function releaseChannelEmoteRefs(): void {
   });
 }
 
-/**
- * Full clear including pinned globals; for when the native image cache is wiped,
- * so no ref dangles at a freed bitmap. Notifies all mounted rows to fall back.
- */
 export function clearCachedEmoteRefs(): void {
   cacheEpoch += 1;
   refs.clear();

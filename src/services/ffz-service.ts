@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { recordWarning } from '@app/lib/sentry';
 import type { FfzSanitisedEmote } from '@app/types/emote';
 import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { logger } from '@app/utils/logger';
@@ -151,17 +150,13 @@ export const ffzService = {
 
       return sanitisedSet as FfzSanitisedEmote[];
     } catch (error) {
-      logger.ffz.error('Error fetching global FFZ emotes:', error);
-      recordWarning({
+      logger.ffz.warn('Failed to fetch global FFZ emotes', {
         name: 'ffz_emotes_warning',
-        message: 'Failed to fetch global FFZ emotes',
-        params: {
-          action: 'global_emotes_failed',
-          provider: 'ffz',
-          resource_type: 'emotes',
-          scope: 'global',
-        },
-        warningCause: error,
+        error,
+        action: 'global_emotes_failed',
+        provider: 'ffz',
+        resource_type: 'emotes',
+        scope: 'global',
       });
       throw error;
     }
@@ -236,18 +231,14 @@ export const ffzService = {
 
       return sanitisedBadges;
     } catch (error) {
-      logger.ffz.error('Error fetching FFZ badges:', error);
-      recordWarning({
+      logger.ffz.warn('Failed to fetch channel FFZ badges', {
         name: 'ffz_badges_warning',
-        message: 'Failed to fetch channel FFZ badges',
-        params: {
-          action: 'channel_badges_failed',
-          channel_id: channelId,
-          provider: 'ffz',
-          resource_type: 'badges',
-          scope: 'channel',
-        },
-        warningCause: error,
+        error,
+        action: 'channel_badges_failed',
+        channel_id: channelId,
+        provider: 'ffz',
+        resource_type: 'badges',
+        scope: 'channel',
       });
       throw error;
     }
@@ -276,21 +267,14 @@ export const ffzService = {
       }
       return [];
     } catch (error) {
-      logger.ffz.error(
-        `Error fetching FFZ emotes for channel ${channelId}:`,
-        error,
-      );
-      recordWarning({
+      logger.ffz.warn(`Failed to fetch channel FFZ emotes for ${channelId}`, {
         name: 'ffz_emotes_warning',
-        message: 'Failed to fetch channel FFZ emotes',
-        params: {
-          action: 'channel_emotes_failed',
-          channel_id: channelId,
-          provider: 'ffz',
-          resource_type: 'emotes',
-          scope: 'channel',
-        },
-        warningCause: error,
+        error,
+        action: 'channel_emotes_failed',
+        channel_id: channelId,
+        provider: 'ffz',
+        resource_type: 'emotes',
+        scope: 'channel',
       });
       throw error;
     }
@@ -323,17 +307,13 @@ export const ffzService = {
 
       return sanitisedSet;
     } catch (error) {
-      logger.ffz.error('Error fetching FFZ badges:', error);
-      recordWarning({
+      logger.ffz.warn('Failed to fetch global FFZ badges', {
         name: 'ffz_badges_warning',
-        message: 'Failed to fetch global FFZ badges',
-        params: {
-          action: 'global_badges_failed',
-          provider: 'ffz',
-          resource_type: 'badges',
-          scope: 'global',
-        },
-        warningCause: error,
+        error,
+        action: 'global_badges_failed',
+        provider: 'ffz',
+        resource_type: 'badges',
+        scope: 'global',
       });
       throw error;
     }

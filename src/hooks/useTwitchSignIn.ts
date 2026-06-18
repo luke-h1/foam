@@ -1,5 +1,4 @@
 import { useAuthContext } from '@app/context/AuthContext';
-import { recordInfo, recordWarning } from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 import {
   type AuthSessionResult,
@@ -138,17 +137,17 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
         ? 'authentication' in nextResponse && !!nextResponse.authentication
         : false;
 
-      recordWarning({
-        name: 'auth_warning',
-        message: `Twitch sign in event: ${nextResponse?.type || 'unknownAuthEvent'}`,
-        params: {
+      logger.auth.warn(
+        `Twitch sign in event: ${nextResponse?.type || 'unknownAuthEvent'}`,
+        {
+          name: 'auth_warning',
+          error: nextResponse,
           category: 'Auth',
           action: 'login_event_non_success',
           responseType: nextResponse?.type ?? 'unknownAuthEvent',
           hasAuthentication,
         },
-        warningCause: nextResponse,
-      });
+      );
       return;
     }
 
@@ -157,15 +156,12 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
     const hasAuthentication =
       'authentication' in nextResponse && !!nextResponse.authentication;
 
-    recordInfo({
+    logger.auth.info('Twitch sign in succeeded', {
       name: 'auth_info',
-      message: 'Twitch sign in succeeded',
-      params: {
-        category: 'Auth',
-        action: 'login_success',
-        responseType: nextResponse.type,
-        hasAuthentication,
-      },
+      category: 'Auth',
+      action: 'login_success',
+      responseType: nextResponse.type,
+      hasAuthentication,
     });
     toast.success(i18next.t('auth:loggedIn'));
 
@@ -278,12 +274,10 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
           ),
       });
     } catch (error) {
-      logger.auth.error('[AUTHDBG] useTwitchSignIn prompt failed', { error });
-      recordWarning({
+      logger.auth.warn('Twitch sign-in prompt failed', {
         name: 'twitch_sign_in_warning',
-        message: 'Twitch sign-in prompt failed',
-        params: { action: 'prompt_failed' },
-        warningCause: error,
+        error,
+        action: 'prompt_failed',
       });
       toast.error(i18next.t('auth:signInFailed'));
     }

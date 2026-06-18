@@ -38,8 +38,10 @@ const handleChannelPointsRedemption: TwitchEventSubCallback = message => {
 };
 
 export function useTwitchChannelPointsEventSub(channelId: string | undefined) {
-  const { authState } = useAuthContext();
-  const canSubscribe = Boolean(channelId && authState?.isLoggedIn);
+  const { authState, user } = useAuthContext();
+  const canSubscribe = Boolean(
+    channelId && authState?.isLoggedIn && user?.id === channelId,
+  );
 
   useEffect(() => {
     if (!canSubscribe || !channelId) {

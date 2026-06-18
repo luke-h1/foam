@@ -116,6 +116,36 @@ describe('replaceTextWithEmotesV2', () => {
     ]);
   });
 
+  test('should split trailing punctuation off a mention', () => {
+    const result = replaceTextWithEmotes({
+      inputString: '@someUser, hello',
+      ...defaultEmoteSets,
+      userstate: defaultUserState,
+    });
+
+    expect(result).toEqual<ParsedPart[]>([
+      { type: 'mention', content: '@someUser' },
+      { content: ',', type: 'text' },
+      { content: ' ', type: 'text' },
+      { content: 'hello', type: 'text' },
+    ]);
+  });
+
+  test('should split each mention in a comma-separated list', () => {
+    const result = replaceTextWithEmotes({
+      inputString: '@userOne, @userTwo',
+      ...defaultEmoteSets,
+      userstate: defaultUserState,
+    });
+
+    expect(result).toEqual<ParsedPart[]>([
+      { type: 'mention', content: '@userOne' },
+      { content: ',', type: 'text' },
+      { content: ' ', type: 'text' },
+      { type: 'mention', content: '@userTwo' },
+    ]);
+  });
+
   test('should match emotes case-sensitively', () => {
     const kappaEmote = twitchTvSanitisedEmoteSetGlobalFixture.find(
       e => e.name === 'Kappa',

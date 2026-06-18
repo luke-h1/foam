@@ -30,10 +30,6 @@ jest.mock('@app/services/twitch-service', () => ({
   },
 }));
 
-jest.mock('@app/lib/sentry', () => ({
-  recordWarning: jest.fn(),
-}));
-
 jest.mock('@app/utils/logger', () => ({
   logger: {
     twitchWs: {

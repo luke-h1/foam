@@ -1,5 +1,4 @@
 import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
-import { recordInfo } from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 import { View, StyleSheet } from 'react-native';
 import { useMeasureImageLoadTime } from '@app/hooks/useMeasureImageLoadTime';
@@ -88,18 +87,15 @@ export const Image = function Image({
       }
     })();
 
-    recordInfo({
+    logger.main.info('chat.image.load_time', {
       name: 'data_loading_info',
-      message: 'chat.image.load_time',
-      params: {
-        urlHost: safeHost ?? 'unknown',
-        url: typeof source === 'string' ? source : 'uri-object',
-        durationFromMountMs: Math.round(totalLoadTimeMs),
-        durationFromLoadStartMs: Math.round(startToLoadTimeMs),
-        imageRenderer: 'Image',
-        imageContext: trackLoadContext ?? 'chat-image',
-        host: safeHost,
-      },
+      urlHost: safeHost ?? 'unknown',
+      url: typeof source === 'string' ? source : 'uri-object',
+      durationFromMountMs: Math.round(totalLoadTimeMs),
+      durationFromLoadStartMs: Math.round(startToLoadTimeMs),
+      imageRenderer: 'Image',
+      imageContext: trackLoadContext ?? 'chat-image',
+      host: safeHost,
     });
   };
 

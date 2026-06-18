@@ -1,5 +1,5 @@
 import { storageService } from '@app/lib/storage';
-import { recordWarning } from '@app/lib/sentry';
+import { logger } from '@app/utils/logger';
 import {
   shouldRequestReview,
   type ReviewPromptState,
@@ -84,10 +84,9 @@ export async function maybeRequestStoreReview(): Promise<void> {
 
     await StoreReview.requestReview();
   } catch (error) {
-    recordWarning({
+    logger.main.warn('Store review request failed', {
       name: 'handled_warning',
-      message: 'Store review request failed',
-      warningCause: error,
+      error,
     });
   } finally {
     requestInFlight = false;

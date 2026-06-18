@@ -177,36 +177,39 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
     isFlushingRef.current = true;
 
-    let messagesToFlush = messageBufferRef.current;
-    // A raid-sized batch this window means the next live flush should slow down
-    // to cut reconcile-driven jank; a small batch snaps liveness back to 100ms.
-    raidFlushModeRef.current =
-      isAtBottomRef.current && messagesToFlush.length > RAID_PENDING_THRESHOLD;
-    resetBuffer();
-    // Drop the oldest overflow when following a raid live (see constant). Only
-    // at the bottom, where unread isn't accrued, so no unread bookkeeping.
-    if (
-      isAtBottomRef.current &&
-      messagesToFlush.length > MAX_LIVE_COMMIT_PER_FLUSH
-    ) {
-      messagesToFlush = messagesToFlush.slice(-MAX_LIVE_COMMIT_PER_FLUSH);
+    try {
+      let messagesToFlush = messageBufferRef.current;
+      // A raid-sized batch this window means the next live flush should slow
+      // down to cut reconcile-driven jank; a small batch snaps back to 100ms.
+      raidFlushModeRef.current =
+        isAtBottomRef.current &&
+        messagesToFlush.length > RAID_PENDING_THRESHOLD;
+      resetBuffer();
+      // Drop the oldest overflow when following a raid live (see constant). Only
+      // at the bottom, where unread isn't accrued, so no unread bookkeeping.
+      if (
+        isAtBottomRef.current &&
+        messagesToFlush.length > MAX_LIVE_COMMIT_PER_FLUSH
+      ) {
+        messagesToFlush = messagesToFlush.slice(-MAX_LIVE_COMMIT_PER_FLUSH);
+      }
+      const shouldMaintainBottom = shouldArmBottomContentAnchor(
+        isScrollingToBottomRef,
+      );
+
+      publishBufferedMessages(messagesToFlush);
+
+      if (shouldMaintainBottom) {
+        onBottomContentChange?.();
+      }
+
+      if (pendingUnreadCountRef.current > 0) {
+        onUnreadIncrement(pendingUnreadCountRef.current);
+        pendingUnreadCountRef.current = 0;
+      }
+    } finally {
+      isFlushingRef.current = false;
     }
-    const shouldMaintainBottom = shouldArmBottomContentAnchor(
-      isScrollingToBottomRef,
-    );
-
-    publishBufferedMessages(messagesToFlush);
-
-    if (shouldMaintainBottom) {
-      onBottomContentChange?.();
-    }
-
-    if (pendingUnreadCountRef.current > 0) {
-      onUnreadIncrement(pendingUnreadCountRef.current);
-      pendingUnreadCountRef.current = 0;
-    }
-
-    isFlushingRef.current = false;
   }, [
     isAtBottomRef,
     isScrollingToBottomRef,

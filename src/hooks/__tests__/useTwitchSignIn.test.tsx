@@ -51,9 +51,15 @@ jest.mock('sonner-native', () => ({
   },
 }));
 
-jest.mock('@app/lib/sentry', () => ({
-  recordInfo: jest.fn(),
-  recordWarning: jest.fn(),
+jest.mock('@app/utils/logger', () => ({
+  logger: {
+    auth: {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    },
+  },
 }));
 
 const mockedUseAuthRequest = jest.mocked(useAuthRequest);

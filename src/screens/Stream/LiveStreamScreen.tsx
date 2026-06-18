@@ -146,7 +146,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const chatOrientationRevealFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
-    void ScreenOrientation.unlockAsync();
     const frameRef = chatOrientationRevealFrameRef;
     return () => {
       const frameId = frameRef.current;
@@ -154,17 +153,18 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
         cancelAnimationFrame(frameId);
         frameRef.current = null;
       }
-      void ScreenOrientation.lockAsync(
-        ScreenOrientation.OrientationLock.PORTRAIT_UP,
-      );
     };
   }, []);
 
   useFocusEffect(
     useCallback(() => {
+      void ScreenOrientation.unlockAsync();
       void activateKeepAwakeAsync(KEEP_AWAKE_TAG);
       return () => {
         void deactivateKeepAwake(KEEP_AWAKE_TAG);
+        void ScreenOrientation.lockAsync(
+          ScreenOrientation.OrientationLock.PORTRAIT_UP,
+        );
         streamPlayerRef.current?.pause();
         if (isStreamEnabled) {
           dispatchUi({

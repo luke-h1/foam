@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 import { fetch } from 'expo/fetch';
-import { recordInfo } from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 import type { TwitchHelixPoll } from '@app/types/twitch/poll';
 import type { TwitchHelixPrediction } from '@app/types/twitch/prediction';
@@ -591,15 +590,10 @@ export const twitchService = {
       setTwitchClientId(body.client_id);
     }
     if (typeof body?.expires_in === 'number') {
-      recordInfo({
+      logger.auth.info('twitch token validated', {
         name: 'auth_info',
-        message: 'twitch token validated',
-        params: {
-          expiresInSeconds: body.expires_in,
-          expiresAt: new Date(
-            Date.now() + body.expires_in * 1000,
-          ).toISOString(),
-        },
+        expiresInSeconds: body.expires_in,
+        expiresAt: new Date(Date.now() + body.expires_in * 1000).toISOString(),
       });
     }
     return true;

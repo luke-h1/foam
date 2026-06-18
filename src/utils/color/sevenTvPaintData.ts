@@ -60,11 +60,6 @@ export function pickBestImage(images: readonly Image[]): Image | undefined {
   }, undefined);
 }
 
-/**
- * Animated frames: WebP (VP8) > GIF > AVIF. expo-image decodes WebP far cheaper
- * than AVIF (which routes through software dav1d), so this is the preferred
- * animated format for both paints and emotes.
- */
 export function pickAnimatedFormat(imgs: Image[]): Image | undefined {
   return (
     imgs.find(img => img.mime === 'image/webp') ??

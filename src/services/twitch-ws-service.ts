@@ -1,5 +1,4 @@
 import { logger } from '@app/utils/logger';
-import { recordInfo, recordWarning } from '@app/lib/sentry';
 import { twitchService } from './twitch-service';
 
 interface EventSubMetadata {
@@ -134,14 +133,11 @@ class TwitchWsService {
     TwitchWsService.instance.onopen = () => {
       logger.twitchWs.info('💜 twitch event sub WS connected');
       TwitchWsService.isReconnecting = false;
-      recordInfo({
+      logger.twitchWs.info('Twitch EventSub WebSocket connected', {
         name: 'twitch_ws_info',
-        message: 'Twitch EventSub WebSocket connected',
-        params: {
-          action: 'connected',
-          provider: 'twitch',
-          source: 'twitch_ws_service',
-        },
+        action: 'connected',
+        provider: 'twitch',
+        source: 'twitch_ws_service',
       });
     };
 
@@ -153,16 +149,12 @@ class TwitchWsService {
     };
 
     TwitchWsService.instance.onerror = error => {
-      logger.twitchWs.error('🟣 Twitch EventSub WebSocket error:', error);
-      recordWarning({
+      logger.twitchWs.warn('🟣 Twitch EventSub WebSocket error', {
         name: 'twitch_ws_warning',
-        message: 'Twitch EventSub WebSocket error',
-        params: {
-          action: 'error',
-          provider: 'twitch',
-          source: 'twitch_ws_service',
-        },
-        warningCause: error,
+        error,
+        action: 'error',
+        provider: 'twitch',
+        source: 'twitch_ws_service',
       });
     };
 
@@ -171,16 +163,13 @@ class TwitchWsService {
         `🟣 Twitch EventSub WebSocket closed: ${event.code} - ${event.reason} - ${event.timeStamp}`,
       );
       if (event.code !== 1000) {
-        recordWarning({
+        logger.twitchWs.warn('Twitch EventSub WebSocket closed unexpectedly', {
           name: 'twitch_ws_warning',
-          message: 'Twitch EventSub WebSocket closed unexpectedly',
-          params: {
-            action: 'closed',
-            code: event.code,
-            provider: 'twitch',
-            reason: event.reason,
-            source: 'twitch_ws_service',
-          },
+          action: 'closed',
+          code: event.code,
+          provider: 'twitch',
+          reason: event.reason,
+          source: 'twitch_ws_service',
         });
       }
       TwitchWsService.clearKeepaliveTimer();
@@ -242,16 +231,12 @@ class TwitchWsService {
           );
       }
     } catch (e) {
-      logger.twitchWs.error('🟣 Failed to parse EventSub message:', e);
-      recordWarning({
+      logger.twitchWs.warn('Failed to parse Twitch EventSub message', {
         name: 'twitch_ws_warning',
-        message: 'Failed to parse Twitch EventSub message',
-        params: {
-          action: 'message_parse_failed',
-          provider: 'twitch',
-          source: 'twitch_ws_service',
-        },
-        warningCause: e,
+        error: e,
+        action: 'message_parse_failed',
+        provider: 'twitch',
+        source: 'twitch_ws_service',
       });
     }
   }
@@ -451,18 +436,17 @@ class TwitchWsService {
         `💜 Successfully subscribed to ${eventType} with ID: ${subscription.id}`,
       );
     } catch (error) {
-      logger.twitchWs.error(`💜 Failed to subscribe to ${eventType}:`, error);
-      recordWarning({
-        name: 'twitch_ws_warning',
-        message: 'Failed to subscribe to Twitch EventSub event',
-        params: {
+      logger.twitchWs.warn(
+        `Failed to subscribe to Twitch EventSub event ${eventType}`,
+        {
+          name: 'twitch_ws_warning',
+          error,
           action: 'subscription_create_failed',
           event_type: eventType,
           provider: 'twitch',
           source: 'twitch_ws_service',
         },
-        warningCause: error,
-      });
+      );
       // Remove the callback if subscription failed
       TwitchWsService.removeEventListener(eventType, callback);
     }
@@ -501,22 +485,18 @@ class TwitchWsService {
         `💜 Successfully unsubscribed from ${eventType} (ID: ${subscriptionId})`,
       );
     } catch (error) {
-      logger.twitchWs.error(
-        `💜 Failed to unsubscribe from ${eventType}:`,
-        error,
-      );
-      recordWarning({
-        name: 'twitch_ws_warning',
-        message: 'Failed to unsubscribe from Twitch EventSub event',
-        params: {
+      logger.twitchWs.warn(
+        `Failed to unsubscribe from Twitch EventSub event ${eventType}`,
+        {
+          name: 'twitch_ws_warning',
+          error,
           action: 'subscription_delete_failed',
           event_type: eventType,
           provider: 'twitch',
           source: 'twitch_ws_service',
           subscription_id: subscriptionId,
         },
-        warningCause: error,
-      });
+      );
     }
   }
 
@@ -583,17 +563,16 @@ class TwitchWsService {
         }
       });
     } catch (error) {
-      logger.twitchWs.error('💜 Failed to fetch active subscriptions:', error);
-      recordWarning({
-        name: 'twitch_ws_warning',
-        message: 'Failed to fetch active Twitch EventSub subscriptions',
-        params: {
+      logger.twitchWs.warn(
+        'Failed to fetch active Twitch EventSub subscriptions',
+        {
+          name: 'twitch_ws_warning',
+          error,
           action: 'active_subscriptions_fetch_failed',
           provider: 'twitch',
           source: 'twitch_ws_service',
         },
-        warningCause: error,
-      });
+      );
     }
   }
 
@@ -637,20 +616,16 @@ class TwitchWsService {
           logger.twitchWs.info(`💜 Cleaned up subscription: ${subscriptionId}`);
         } catch (error) {
           logger.twitchWs.warn(
-            `💜 Failed to cleanup subscription ${subscriptionId}:`,
-            error,
-          );
-          recordWarning({
-            name: 'twitch_ws_warning',
-            message: 'Failed to clean up Twitch EventSub subscription',
-            params: {
+            `Failed to clean up Twitch EventSub subscription ${subscriptionId}`,
+            {
+              name: 'twitch_ws_warning',
+              error,
               action: 'subscription_cleanup_failed',
               provider: 'twitch',
               source: 'twitch_ws_service',
               subscription_id: subscriptionId,
             },
-            warningCause: error,
-          });
+          );
         }
       })(),
     );

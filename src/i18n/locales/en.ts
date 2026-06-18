@@ -90,7 +90,6 @@ const en = {
       uploading: 'Uploading image…',
       uploaded: 'Image uploaded',
       failed: "Couldn't upload that image. Please try again.",
-      permissionDenied: 'Allow photo access to attach an image.',
     },
     pinned: {
       pinnedMessage: 'Pinned message',

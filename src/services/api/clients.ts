@@ -24,6 +24,7 @@ export const twitchApi = createApiClient({
   baseURL: twitchApiBaseUrl,
   headers: { 'Client-ID': envTwitchClientId ?? '' },
   logPrefix: 'twitch',
+  requiresAuth: true,
 });
 
 /**

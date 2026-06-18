@@ -1,7 +1,6 @@
 import { useAuthContext } from '@app/context/AuthContext';
 import TwitchWsService from '@app/services/twitch-ws-service';
 import { twitchService } from '@app/services/twitch-service';
-import { recordWarning } from '@app/lib/sentry';
 import type {
   ChannelPredictionState,
   TwitchEventSubPrediction,
@@ -60,20 +59,16 @@ export function useChannelPrediction(channelId?: string) {
       })
       .catch(error => {
         logger.twitchWs.warn(
-          'Failed to fetch initial helix prediction state',
-          error,
-        );
-        recordWarning({
-          name: 'twitch_predictions_warning',
-          message: 'Failed to fetch initial Twitch prediction state',
-          params: {
+          'Failed to fetch initial Twitch prediction state',
+          {
+            name: 'twitch_predictions_warning',
+            error,
             action: 'initial_prediction_fetch_failed',
             channel_id: channelId,
             provider: 'twitch',
             screen: 'chat',
           },
-          warningCause: error,
-        });
+        );
       });
 
     return () => {

@@ -1,10 +1,6 @@
 import { fetch } from 'expo/fetch';
 import { logger, type AllowedPrefix } from '@app/utils/logger';
-import {
-  recordError,
-  recordInfo,
-  type MonitoringErrorName,
-} from '@app/lib/sentry';
+import type { MonitoringErrorName } from '@app/lib/sentry';
 import { getApiMonitoringContext } from './monitoring';
 
 const SERVICE_ERROR_MAP: Record<
@@ -53,19 +49,57 @@ interface ClientOptions {
    * react-query's `retry` never fires and the query stays pending forever.
    */
   timeout?: number;
+  /**
+   * When true, requests wait for the first auth token (bounded by
+   * AUTH_READY_TIMEOUT_MS) instead of firing token-less on cold start.
+   */
+  requiresAuth?: boolean;
 }
 
 const DEFAULT_TIMEOUT_MS = 10_000;
+const AUTH_READY_TIMEOUT_MS = 8_000;
 
 export function createApiClient({
   baseURL,
   headers: defaultHeaders = {},
   logPrefix,
   timeout = DEFAULT_TIMEOUT_MS,
+  requiresAuth = false,
 }: ClientOptions) {
   let authToken: string | undefined;
+  let resolveTokenReady: (() => void) | undefined;
+  let tokenReady: Promise<void> | undefined = requiresAuth
+    ? new Promise<void>(resolve => {
+        resolveTokenReady = resolve;
+      })
+    : undefined;
+
+  function settleTokenReady() {
+    resolveTokenReady?.();
+    resolveTokenReady = undefined;
+    tokenReady = undefined;
+  }
+
+  async function waitForAuthToken(): Promise<void> {
+    const pending = tokenReady;
+    if (!pending) {
+      return;
+    }
+    await new Promise<void>(resolve => {
+      const timer = setTimeout(() => {
+        settleTokenReady();
+        resolve();
+      }, AUTH_READY_TIMEOUT_MS);
+      void pending.then(() => {
+        clearTimeout(timer);
+        resolve();
+      });
+    });
+  }
+
   const { exceptionName, errorName } = getServiceErrorInfo(logPrefix);
   const service = logPrefix ?? 'unknown';
+  const log = logger[logPrefix ?? 'api'];
 
   async function request<T>(
     method: string,
@@ -88,6 +122,13 @@ export function createApiClient({
 
     if (logPrefix) {
       logger[logPrefix].info(url.toString());
+    }
+
+    const hasExplicitAuth = Object.keys(extraHeaders).some(
+      key => key.toLowerCase() === 'authorization',
+    );
+    if (requiresAuth && !authToken && !hasExplicitAuth) {
+      await waitForAuthToken();
     }
 
     // Merge case-insensitively: HTTP header names are case-insensitive, so a
@@ -133,20 +174,17 @@ export function createApiClient({
       });
     } catch (error) {
       if (didTimeout) {
-        recordError({
+        log.warn(`${method} ${path} timed out after ${timeout}ms`, {
           name: 'network_error',
           exceptionName: `${exceptionName} (timeout)`,
-          message: `${method} ${path} timed out after ${timeout}ms`,
+          error,
           tags: { service, method },
           fingerprint: [service, 'timeout', path],
-          params: {
-            action: 'http_request_timeout',
-            category: 'timeout',
-            method,
-            endpoint: path,
-            timeoutMs: timeout,
-          },
-          errorCause: error,
+          action: 'http_request_timeout',
+          category: 'timeout',
+          method,
+          endpoint: path,
+          timeoutMs: timeout,
         });
         // 408 Request Timeout gives downstream code (and react-query retries) a
         // meaningful status instead of an opaque AbortError.
@@ -156,19 +194,16 @@ export function createApiClient({
           exceptionName,
         );
       }
-      recordError({
+      log.warn(`${method} ${path} failed`, {
         name: 'network_error',
         exceptionName: `${exceptionName} (network)`,
-        message: `${method} ${path} failed`,
+        error,
         tags: { service, method },
         fingerprint: [service, 'network_failure', path],
-        params: {
-          action: 'http_request_failed',
-          category: 'network',
-          method,
-          endpoint: path,
-        },
-        errorCause: error,
+        action: 'http_request_failed',
+        category: 'network',
+        method,
+        endpoint: path,
       });
       throw error;
     } finally {
@@ -183,10 +218,10 @@ export function createApiClient({
     });
 
     if (response.status >= 400) {
-      recordError({
+      const logFailure = response.status >= 500 ? log.error : log.warn;
+      logFailure(`${method} ${path} ${response.status}`, {
         name: errorName,
         exceptionName,
-        message: `${method} ${path} ${response.status}`,
         tags: {
           service,
           method,
@@ -196,13 +231,15 @@ export function createApiClient({
         // Group by service + method + path + status so each broken endpoint
         // creates exactly one Sentry issue regardless of query params.
         fingerprint: [service, method, path, String(response.status)],
-        params: { action: 'response_error_status', ...context },
+        action: 'response_error_status',
+        ...context,
       });
     } else {
-      recordInfo({
+      log.info(`${method} ${context.endpoint ?? path} ${response.status}`, {
         name: 'api_info',
-        message: `${method} ${context.endpoint ?? path} ${response.status}`,
-        params: { action: 'response_ok', service, ...context },
+        action: 'response_ok',
+        service,
+        ...context,
       });
     }
 
@@ -235,6 +272,7 @@ export function createApiClient({
       request<T>('DELETE', path, options),
     setAuthToken: (token: string) => {
       authToken = token;
+      settleTokenReady();
     },
     setDefaultHeader: (name: string, value: string) => {
       defaultHeaders[name] = value;

@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { countMetric, recordError, recordWarning } from '@app/lib/sentry';
+import { countMetric } from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 import type { ComponentProps, RefObject } from 'react';
 import { StyleSheet } from 'react-native';
@@ -75,16 +75,11 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
 
   const handleWebViewError = (event: { nativeEvent: WebViewError }) => {
     const { nativeEvent } = event;
-    logger.main.warn('[StreamPlayer:WebView ERROR]', {
-      code: nativeEvent.code,
-      description: nativeEvent.description,
-      url: nativeEvent.url,
-    });
-
-    recordError({
-      name: 'stream_error',
-      message: `StreamPlayer WebView error: ${nativeEvent.description}`,
-      params: {
+    logger.main.error(
+      `StreamPlayer WebView error: ${nativeEvent.description}`,
+      {
+        name: 'stream_error',
+        error: nativeEvent,
         category: 'Stream',
         action: 'webview_error',
         code: nativeEvent.code,
@@ -92,29 +87,23 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
         url: nativeEvent.url,
         channel,
       },
-      errorCause: nativeEvent,
-    });
+    );
 
     onError?.(nativeEvent.description);
   };
 
   const handleWebViewHttpError = (event: { nativeEvent: WebViewHttpError }) => {
     const { nativeEvent } = event;
-    logger.main.warn('[StreamPlayer:HTTP ERROR]', {
-      statusCode: nativeEvent.statusCode,
-      url: nativeEvent.url,
-      description: nativeEvent.description,
-    });
-
     onHttpError({
       url: nativeEvent.url,
       statusCode: nativeEvent.statusCode,
     });
 
-    recordError({
-      name: 'stream_error',
-      message: `StreamPlayer HTTP error: ${nativeEvent.statusCode} ${nativeEvent.description}`,
-      params: {
+    logger.main.error(
+      `StreamPlayer HTTP error: ${nativeEvent.statusCode} ${nativeEvent.description}`,
+      {
+        name: 'stream_error',
+        error: nativeEvent,
         category: 'Stream',
         action: 'webview_http_error',
         statusCode: nativeEvent.statusCode,
@@ -122,8 +111,7 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
         url: nativeEvent.url,
         channel,
       },
-      errorCause: nativeEvent,
-    });
+    );
 
     onError?.(`HTTP ${nativeEvent.statusCode}: ${nativeEvent.description}`);
   };
@@ -139,10 +127,10 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       channel: channel ?? 'unknown',
       reason,
     });
-    recordWarning({
+    logger.main.warn(`WebView process gone (${reason}), remounting player`, {
       name: 'twitch_player_warning',
-      message: `WebView process gone (${reason}), remounting player`,
-      params: { channel, reason },
+      channel,
+      reason,
     });
     remountWebView();
   };

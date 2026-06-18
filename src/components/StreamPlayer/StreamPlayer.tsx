@@ -1,5 +1,5 @@
 import { useWatchTimeTracking } from '@app/hooks/useWatchTimeTracking';
-import { recordInfo } from '@app/lib/sentry';
+import { logger } from '@app/utils/logger';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { InteractionManager, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -190,10 +190,9 @@ export const StreamPlayer = memo(function StreamPlayer({
   }, [sourceKey]);
 
   const remountEmbedWebView = useCallback(() => {
-    recordInfo({
+    logger.main.info('webview remounted', {
       name: 'twitch_player_info',
-      message: 'webview remounted',
-      params: { channel },
+      channel,
     });
     needsInitRef.current = true;
     nudgePlayedRef.current = false;

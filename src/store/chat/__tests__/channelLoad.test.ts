@@ -38,9 +38,6 @@ jest.mock('react-native-mmkv', () => ({
 }));
 
 jest.mock('@app/lib/sentry', () => ({
-  recordError: jest.fn(),
-  recordInfo: jest.fn(),
-  recordWarning: jest.fn(),
   startSpanAsync: jest.fn(
     async (_name: string, _op: string, fn: () => Promise<unknown>) => fn(),
   ),

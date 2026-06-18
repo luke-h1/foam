@@ -28,7 +28,7 @@ import type {
   PaintData,
 } from '@app/utils/color/seventv-ws-service';
 import { logger } from '@app/utils/logger';
-import { countMetric, recordInfo } from '@app/lib/sentry';
+import { countMetric } from '@app/lib/sentry';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
 
 import {
@@ -281,20 +281,17 @@ export function useChatSevenTvCallbacks({
           },
           added_paints + updated_paints,
         );
-        recordInfo({
+        logger.stvWs.info('Applied 7TV paint update', {
           name: 'seven_tv_cosmetics_info',
-          message: 'Applied 7TV paint update',
-          params: {
-            action: 'paint_update_applied',
-            added_paints,
-            channel_id: channelId,
-            channel_name: channelName,
-            provider: 'seven_tv',
-            resource_type: 'paints',
-            screen: 'chat',
-            seven_tv_emote_set_id: sevenTvEmoteSetId,
-            updated_paints,
-          },
+          action: 'paint_update_applied',
+          added_paints,
+          channel_id: channelId,
+          channel_name: channelName,
+          provider: 'seven_tv',
+          resource_type: 'paints',
+          screen: 'chat',
+          seven_tv_emote_set_id: sevenTvEmoteSetId,
+          updated_paints,
         });
       }
     }
@@ -340,20 +337,17 @@ export function useChatSevenTvCallbacks({
           },
           added_badges + updated_badges,
         );
-        recordInfo({
+        logger.stvWs.info('Applied 7TV badge update', {
           name: 'seven_tv_badges_info',
-          message: 'Applied 7TV badge update',
-          params: {
-            action: 'badge_update_applied',
-            added_badges,
-            channel_id: channelId,
-            channel_name: channelName,
-            provider: 'seven_tv',
-            resource_type: 'badges',
-            screen: 'chat',
-            seven_tv_emote_set_id: sevenTvEmoteSetId,
-            updated_badges,
-          },
+          action: 'badge_update_applied',
+          added_badges,
+          channel_id: channelId,
+          channel_name: channelName,
+          provider: 'seven_tv',
+          resource_type: 'badges',
+          screen: 'chat',
+          seven_tv_emote_set_id: sevenTvEmoteSetId,
+          updated_badges,
         });
       }
     }

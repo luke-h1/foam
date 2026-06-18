@@ -210,9 +210,6 @@ export default tseslint.config(
     },
   },
   {
-    // App code logs through src/utils/logger (which forwards to Sentry), never
-    // console directly. logger.ts is the console sink and sentry.ts is the
-    // Sentry bootstrap, so both are exempt.
     files: ['src/**/*.{ts,tsx}'],
     ignores: [
       'src/**/__tests__/**',

@@ -23,7 +23,6 @@ import {
   UserPersonalEmotesQueryQuery,
   UserPersonalEmotesQueryQueryVariables,
 } from '@app/graphql/generated/gql';
-import { recordWarning } from '@app/lib/sentry';
 import { storageService } from '@app/lib/storage';
 import type {
   EmoteImageVariantSet,
@@ -232,17 +231,12 @@ function buildV4ImageVariants(images: readonly Image[]): EmoteImageVariants {
     if (atScale.length === 0) {
       continue;
     }
-    /**
-     * Animated: prefer WebP (VP8) over AVIF — expo-image decodes AVIF via
-     * software dav1d (~60-75% of chat CPU on device), WebP is far cheaper.
-     */
     const animatedImage = pickAnimatedFormat(
       atScale.filter(image => image.frameCount > 1),
     );
     if (animatedImage) {
       animated[scale] = animatedImage.url;
     }
-    // Static decode is cheap either way; keep AVIF (smallest) for static.
     const staticImage = pickBestFormat(
       atScale.filter(image => image.frameCount <= 1),
     );
@@ -343,19 +337,15 @@ export const sevenTvService = {
       if (error) {
         logger.stv.warn(
           `Failed to resolve 7TV user for Twitch user ${twitchUserId}:`,
-          error.message,
-        );
-        recordWarning({
-          name: 'seven_tv_provider_warning',
-          message: 'Failed to resolve 7TV user',
-          params: {
+          {
+            name: 'seven_tv_provider_warning',
+            error,
             action: 'user_by_connection_failed',
             provider: 'seven_tv',
             resource_type: 'user',
             twitch_user_id: twitchUserId,
           },
-          warningCause: error,
-        });
+        );
         return '';
       }
 
@@ -378,17 +368,13 @@ export const sevenTvService = {
     );
 
     if (!result.emote_set.id) {
-      logger.stv.error('no set id returned from stv api');
-      recordWarning({
+      logger.stv.warn('7TV API returned no emote set ID', {
         name: 'seven_tv_emotes_warning',
-        message: '7TV API returned no emote set ID',
-        params: {
-          action: 'emote_set_id_missing',
-          channel_id: twitchUserId,
-          provider: 'seven_tv',
-          resource_type: 'emotes',
-          scope: 'channel',
-        },
+        action: 'emote_set_id_missing',
+        channel_id: twitchUserId,
+        provider: 'seven_tv',
+        resource_type: 'emotes',
+        scope: 'channel',
       });
     }
 
@@ -502,20 +488,16 @@ export const sevenTvService = {
     if (error) {
       logger.stv.warn(
         `Failed to fetch personal emotes for user ${twitchUserId}:`,
-        error.message,
-      );
-      recordWarning({
-        name: 'seven_tv_emotes_warning',
-        message: 'Failed to fetch 7TV personal emotes',
-        params: {
+        {
+          name: 'seven_tv_emotes_warning',
+          error,
           action: 'personal_emotes_gql_failed',
           provider: 'seven_tv',
           resource_type: 'emotes',
           scope: 'personal',
           twitch_user_id: twitchUserId,
         },
-        warningCause: error,
-      });
+      );
       return [];
     }
 
@@ -587,17 +569,13 @@ export const sevenTvService = {
       });
 
       if (error) {
-        logger.stv.error('v4 GQL request failed:', error.message);
-        recordWarning({
+        logger.stv.warn('Failed to fetch 7TV cosmetics', {
           name: 'seven_tv_cosmetics_warning',
-          message: 'Failed to fetch 7TV cosmetics',
-          params: {
-            action: 'cosmetics_gql_failed',
-            provider: 'seven_tv',
-            resource_type: 'cosmetics',
-            seven_tv_user_id: sevenTvUserId,
-          },
-          warningCause: error,
+          error,
+          action: 'cosmetics_gql_failed',
+          provider: 'seven_tv',
+          resource_type: 'cosmetics',
+          seven_tv_user_id: sevenTvUserId,
         });
         return null;
       }
@@ -623,17 +601,13 @@ export const sevenTvService = {
         badge: style.activeBadge ?? null,
       };
     } catch (error) {
-      logger.stv.error('Failed to fetch user cosmetics via GQL:', error);
-      recordWarning({
+      logger.stv.warn('Failed to fetch user cosmetics via GQL', {
         name: 'seven_tv_cosmetics_warning',
-        message: 'Failed to fetch 7TV cosmetics',
-        params: {
-          action: 'cosmetics_fetch_failed',
-          provider: 'seven_tv',
-          resource_type: 'cosmetics',
-          seven_tv_user_id: sevenTvUserId,
-        },
-        warningCause: error,
+        error,
+        action: 'cosmetics_fetch_failed',
+        provider: 'seven_tv',
+        resource_type: 'cosmetics',
+        seven_tv_user_id: sevenTvUserId,
       });
       return null;
     }
