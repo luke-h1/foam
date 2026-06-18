@@ -57,7 +57,8 @@ it('uploads the picked image without requesting media library permission', async
   });
 
   expect(mockRequestPermissions).not.toHaveBeenCalled();
-  expect(mockUpload).toHaveBeenCalledWith({
+  expect(mockUpload).toHaveBeenCalledTimes(1);
+  expect(mockUpload.mock.calls[0]?.[0]).toEqual({
     uri: 'file:///tmp/photo.jpg',
     fileName: 'photo.jpg',
     mimeType: 'image/jpeg',
@@ -98,4 +99,18 @@ it('shows an error toast when the upload fails', async () => {
     expect(mockToastError).toHaveBeenCalled();
   });
   expect(onUploaded).not.toHaveBeenCalled();
+});
+
+it('shows an error toast when the image picker throws', async () => {
+  mockLaunchImageLibrary.mockRejectedValue(new Error('picker crashed'));
+  const onUploaded = jest.fn();
+
+  const { result } = renderHook(() => useChatImageUpload(onUploaded));
+  await act(async () => {
+    await result.current.pickAndUpload();
+  });
+
+  expect(mockUpload).not.toHaveBeenCalled();
+  expect(onUploaded).not.toHaveBeenCalled();
+  expect(mockToastError).toHaveBeenCalled();
 });

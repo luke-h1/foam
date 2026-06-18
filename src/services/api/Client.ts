@@ -86,7 +86,10 @@ export function createApiClient({
       return;
     }
     await new Promise<void>(resolve => {
-      const timer = setTimeout(resolve, AUTH_READY_TIMEOUT_MS);
+      const timer = setTimeout(() => {
+        settleTokenReady();
+        resolve();
+      }, AUTH_READY_TIMEOUT_MS);
       void pending.then(() => {
         clearTimeout(timer);
         resolve();
