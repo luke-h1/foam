@@ -1,5 +1,5 @@
 /* eslint-disable react/destructuring-assignment */
-import { recordError } from '@app/lib/sentry';
+import { logger } from '@app/utils/logger';
 import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
 import { Component } from 'react';
 import type { ReactNode, ErrorInfo } from 'react';
@@ -49,15 +49,12 @@ export class ErrorBoundary extends Component<Props, State> {
 
     markSessionError();
 
-    recordError({
+    logger.main.error(error.message || 'Unhandled error boundary exception', {
       name: 'error_boundary_error',
-      message: error.message || 'Unhandled error boundary exception',
-      params: {
-        category: 'ErrorBoundary',
-        action: 'component_catch',
-        componentStack: errorInfo.componentStack,
-      },
-      errorCause: error,
+      error,
+      category: 'ErrorBoundary',
+      action: 'component_catch',
+      componentStack: errorInfo.componentStack,
     });
   }
 

@@ -514,11 +514,26 @@ export function replaceTextWithEmotes({
           const words = segment.split(/(\s+)/);
           words.forEach(word => {
             if (word.startsWith('@')) {
-              const mentionText = word.endsWith(' ') ? word.trimEnd() : word;
-              const emoteInMention = findEmoteMatchingMention(
-                mentionText,
+              const fullMention = word.endsWith(' ') ? word.trimEnd() : word;
+
+              let mentionText = fullMention;
+              let mentionTrailing = '';
+              let emoteInMention = findEmoteMatchingMention(
+                fullMention,
                 emoteMap.values(),
               );
+
+              if (!emoteInMention) {
+                const loginMatch = fullMention.match(/^@[a-zA-Z0-9_]+/);
+                if (loginMatch && loginMatch[0] !== fullMention) {
+                  mentionText = loginMatch[0];
+                  mentionTrailing = fullMention.slice(mentionText.length);
+                  emoteInMention = findEmoteMatchingMention(
+                    mentionText,
+                    emoteMap.values(),
+                  );
+                }
+              }
 
               if (emoteInMention) {
                 replacedParts.push({
@@ -543,6 +558,12 @@ export function replaceTextWithEmotes({
                 content: mentionText,
                 ...emoteInMention,
               });
+              if (mentionTrailing) {
+                replacedParts.push({
+                  type: 'text',
+                  content: mentionTrailing,
+                });
+              }
             } else if (/\s+/.test(word)) {
               replacedParts.push({
                 type: 'text',

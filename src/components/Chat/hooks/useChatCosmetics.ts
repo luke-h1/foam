@@ -5,6 +5,29 @@ import { logger } from '@app/utils/logger';
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useEffect, useRef, useCallback } from 'react';
 
+const MAX_CONCURRENT_COSMETIC_FETCHES = 4;
+let activeCosmeticFetches = 0;
+const cosmeticFetchQueue: (() => void)[] = [];
+
+function acquireCosmeticSlot(): Promise<void> {
+  if (activeCosmeticFetches < MAX_CONCURRENT_COSMETIC_FETCHES) {
+    activeCosmeticFetches += 1;
+    return Promise.resolve();
+  }
+  return new Promise(resolve => {
+    cosmeticFetchQueue.push(resolve);
+  });
+}
+
+function releaseCosmeticSlot(): void {
+  const next = cosmeticFetchQueue.shift();
+  if (next) {
+    next();
+  } else {
+    activeCosmeticFetches -= 1;
+  }
+}
+
 export function useChatCosmetics({
   channelId,
   userId,
@@ -65,6 +88,7 @@ export function useChatCosmetics({
 
     fetchedCosmeticsUsersRef.current.add(twitchUserId);
 
+    await acquireCosmeticSlot();
     try {
       logger.stvWs.info(`Fetching cosmetics for user ${twitchUserId}...`);
       const sevenTvUserId = await sevenTvService.get7tvUserId(twitchUserId);
@@ -83,6 +107,8 @@ export function useChatCosmetics({
         `Failed to fetch cosmetics for ${twitchUserId}:`,
         error,
       );
+    } finally {
+      releaseCosmeticSlot();
     }
   };
 

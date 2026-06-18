@@ -56,7 +56,6 @@ jest.mock('@app/utils/logger', () => ({
 
 jest.mock('@app/lib/sentry', () => ({
   countMetric: jest.fn(),
-  recordInfo: jest.fn(),
 }));
 
 jest.mock('@app/utils/emote/stv/generateSevenTvEmoteNotice', () => ({

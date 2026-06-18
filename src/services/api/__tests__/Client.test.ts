@@ -1,4 +1,5 @@
 import { ApiError, createApiClient } from '@app/services/api/Client';
+import { logger } from '@app/utils/logger';
 
 const mockFetch = jest.fn();
 
@@ -6,10 +7,25 @@ jest.mock('expo/fetch', () => ({
   fetch: (...args: unknown[]) => mockFetch(...args) as Promise<unknown>,
 }));
 
-jest.mock('@app/lib/sentry', () => ({
-  recordError: jest.fn(),
-  recordInfo: jest.fn(),
-}));
+jest.mock('@app/utils/logger', () => {
+  const categories: Record<string, unknown> = {};
+  return {
+    logger: new Proxy(
+      {},
+      {
+        get: (_target, prop: string) => {
+          categories[prop] ??= {
+            debug: jest.fn(),
+            info: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+          };
+          return categories[prop];
+        },
+      },
+    ),
+  };
+});
 
 function jsonResponse(body: unknown, status = 200) {
   return {
@@ -23,7 +39,12 @@ function jsonResponse(body: unknown, status = 200) {
 
 describe('createApiClient', () => {
   beforeEach(() => {
+    jest.clearAllMocks();
     mockFetch.mockReset();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
   });
 
   test('builds the URL from base URL and serialized params with default headers', async () => {
@@ -129,5 +150,65 @@ describe('createApiClient', () => {
     await expect(
       client.delete('/eventsub/subscriptions'),
     ).resolves.toBeUndefined();
+  });
+
+  test('requiresAuth defers the request until a token is set, then sends it', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ data: [] }));
+    const client = createApiClient({
+      baseURL: 'https://api.test/helix',
+      requiresAuth: true,
+    });
+
+    const pending = client.get('/streams');
+    await Promise.resolve();
+    expect(mockFetch).not.toHaveBeenCalled();
+
+    client.setAuthToken('anon-token');
+    await expect(pending).resolves.toEqual({ data: [] });
+
+    const [, requestInit] = mockFetch.mock.calls[0] as [
+      string,
+      { headers: Record<string, string> },
+    ];
+    expect(requestInit.headers.Authorization).toBe('Bearer anon-token');
+  });
+
+  test('requiresAuth does not defer when an explicit Authorization header is set', async () => {
+    jest.useFakeTimers();
+    mockFetch.mockResolvedValueOnce(jsonResponse({ data: [] }));
+    const client = createApiClient({
+      baseURL: 'https://api.test/helix',
+      requiresAuth: true,
+    });
+
+    await expect(
+      client.get('/users', { headers: { Authorization: 'Bearer explicit' } }),
+    ).resolves.toEqual({ data: [] });
+
+    const [, requestInit] = mockFetch.mock.calls[0] as [
+      string,
+      { headers: Record<string, string> },
+    ];
+    expect(requestInit.headers.Authorization).toBe('Bearer explicit');
+  });
+
+  test('logs 4xx failures at warn level, not error', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ message: 'nope' }, 404));
+    const client = createApiClient({ baseURL: 'https://api.test/helix' });
+
+    await expect(client.get('/users')).rejects.toBeInstanceOf(ApiError);
+
+    expect(jest.mocked(logger.api.warn)).toHaveBeenCalledTimes(1);
+    expect(jest.mocked(logger.api.error)).not.toHaveBeenCalled();
+  });
+
+  test('logs 5xx failures at error level', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ message: 'boom' }, 500));
+    const client = createApiClient({ baseURL: 'https://api.test/helix' });
+
+    await expect(client.get('/users')).rejects.toBeInstanceOf(ApiError);
+
+    expect(jest.mocked(logger.api.error)).toHaveBeenCalledTimes(1);
+    expect(jest.mocked(logger.api.warn)).not.toHaveBeenCalled();
   });
 });

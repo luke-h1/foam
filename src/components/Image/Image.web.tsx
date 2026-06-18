@@ -1,5 +1,4 @@
 import { Image as ExpoImage } from 'expo-image';
-import { recordInfo } from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 import { useMeasureImageLoadTime } from '@app/hooks/useMeasureImageLoadTime';
 import { useEffect, useState } from 'react';
@@ -94,19 +93,16 @@ export const Image = function Image({
       }
     })();
 
-    recordInfo({
+    logger.main.info('chat.image.load_time', {
       name: 'data_loading_info',
-      message: 'chat.image.load_time',
-      params: {
-        urlHost: safeHost,
-        url: sourceUri ?? 'unknown',
-        durationFromMountMs: Math.round(totalLoadTimeMs),
-        durationFromLoadStartMs: Math.round(startToLoadTimeMs),
-        imageRenderer: 'Image',
-        imageContext: trackLoadContext ?? 'chat-image',
-        host: safeHost,
-        platform: 'web',
-      },
+      urlHost: safeHost,
+      url: sourceUri ?? 'unknown',
+      durationFromMountMs: Math.round(totalLoadTimeMs),
+      durationFromLoadStartMs: Math.round(startToLoadTimeMs),
+      imageRenderer: 'Image',
+      imageContext: trackLoadContext ?? 'chat-image',
+      host: safeHost,
+      platform: 'web',
     });
   };
   const { onLoadStart, onLoadEnd } = useMeasureImageLoadTime(

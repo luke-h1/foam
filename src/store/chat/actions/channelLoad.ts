@@ -7,12 +7,7 @@ import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
 import type { SanitisedEmote } from '@app/types/emote';
 import { logger } from '@app/utils/logger';
-import {
-  recordError,
-  recordInfo,
-  recordWarning,
-  startSpanAsync,
-} from '@app/lib/sentry';
+import { startSpanAsync } from '@app/lib/sentry';
 import type { MonitoringWarningName } from '@app/lib/sentry';
 import { clearChatStorePersistence } from '@app/lib/observablePersistence';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
@@ -114,11 +109,8 @@ export const fetchUserPersonalEmotes = async (
           });
           logger.stv.info(
             `Cached ${personalEmotes.length} personal emotes for user ${twitchUserId}`,
-          );
-          recordInfo({
-            name: 'seven_tv_emotes_info',
-            message: 'Cached 7TV personal emotes',
-            params: {
+            {
+              name: 'seven_tv_emotes_info',
               action: 'personal_emotes_cached',
               channel_id: channelId,
               emote_count: personalEmotes.length,
@@ -128,19 +120,16 @@ export const fetchUserPersonalEmotes = async (
               screen: 'chat',
               twitch_user_id: twitchUserId,
             },
-          });
+          );
         }
       }
       return personalEmotes;
     } catch (error) {
-      logger.stv.error(
+      logger.stv.warn(
         `Failed to fetch personal emotes for user ${twitchUserId}:`,
-        error,
-      );
-      recordWarning({
-        name: 'seven_tv_emotes_warning',
-        message: 'Failed to fetch 7TV personal emotes',
-        params: {
+        {
+          name: 'seven_tv_emotes_warning',
+          error,
           action: 'personal_emotes_failed',
           channel_id: channelId,
           provider: 'seven_tv',
@@ -149,8 +138,7 @@ export const fetchUserPersonalEmotes = async (
           screen: 'chat',
           twitch_user_id: twitchUserId,
         },
-        warningCause: error,
-      });
+      );
       checkedUsersForPersonalEmotes.add(twitchUserId);
       return [];
     } finally {
@@ -198,13 +186,10 @@ export const notify7TVPresence = async (
   try {
     const sevenTvUserId = await sevenTvService.get7tvUserId(twitchUserId);
     if (!sevenTvUserId) {
-      logger.stvWs.warn(
+      logger.stvWs.info(
         `Could not get 7TV user ID for Twitch user: ${twitchUserId}`,
-      );
-      recordInfo({
-        name: 'seven_tv_presence_info',
-        message: 'Skipped 7TV presence because user was not linked',
-        params: {
+        {
+          name: 'seven_tv_presence_info',
           action: 'presence_user_not_linked',
           channel_id: twitchChannelId,
           provider: 'seven_tv',
@@ -212,17 +197,14 @@ export const notify7TVPresence = async (
           screen: 'chat',
           twitch_user_id: twitchUserId,
         },
-      });
+      );
       return;
     }
     await sevenTvService.sendPresence(twitchChannelId, sevenTvUserId);
     logger.stvWs.info(
       `Notified 7TV about presence in channel ${twitchChannelId} for user ${twitchUserId}`,
-    );
-    recordInfo({
-      name: 'seven_tv_presence_info',
-      message: 'Notified 7TV presence',
-      params: {
+      {
+        name: 'seven_tv_presence_info',
         action: 'presence_notified',
         channel_id: twitchChannelId,
         provider: 'seven_tv',
@@ -231,24 +213,17 @@ export const notify7TVPresence = async (
         seven_tv_user_id: sevenTvUserId,
         twitch_user_id: twitchUserId,
       },
-    });
-  } catch (error) {
-    logger.stvWs.error(
-      `Failed to notify 7TV about presence: ${String(error)}`,
-      error,
     );
-    recordWarning({
+  } catch (error) {
+    logger.stvWs.warn(`Failed to notify 7TV about presence: ${String(error)}`, {
       name: 'seven_tv_presence_warning',
-      message: 'Failed to notify 7TV presence',
-      params: {
-        action: 'presence_notify_failed',
-        channel_id: twitchChannelId,
-        provider: 'seven_tv',
-        resource_type: 'presence',
-        screen: 'chat',
-        twitch_user_id: twitchUserId,
-      },
-      warningCause: error,
+      error,
+      action: 'presence_notify_failed',
+      channel_id: twitchChannelId,
+      provider: 'seven_tv',
+      resource_type: 'presence',
+      screen: 'chat',
+      twitch_user_id: twitchUserId,
     });
   }
 };
@@ -335,20 +310,16 @@ const getDedupedSettledOrCachedValue = <
   const cachedItems = (existingCache?.[key] ?? []) as unknown as T[];
 
   if (cachedItems.length > 0) {
-    logger.chat.info(`Using cached ${resourceName} as fallback.`);
-    recordInfo({
+    logger.chat.info(`Using cached ${resourceName} as fallback`, {
       name: 'chat_resources_info',
-      message: `Using cached ${resourceName} as fallback`,
-      params: {
-        action: 'provider_resource_cache_fallback_used',
-        cached_count: cachedItems.length,
-        channel_id: channelId,
-        provider,
-        resource_name: resourceName,
-        resource_type: resourceType,
-        scope,
-        screen: 'chat',
-      },
+      action: 'provider_resource_cache_fallback_used',
+      cached_count: cachedItems.length,
+      channel_id: channelId,
+      provider,
+      resource_name: resourceName,
+      resource_type: resourceType,
+      scope,
+      screen: 'chat',
     });
   }
 
@@ -385,35 +356,29 @@ function reportProviderResourceResults({
     }
 
     failedResources += 1;
-    recordWarning({
+    logger.chat.warn(`Failed to load ${resource.name}`, {
       name: resource.warning_name,
-      message: `Failed to load ${resource.name}`,
-      params: {
-        action: 'provider_resource_failed',
-        channel_id: channelId,
-        provider: resource.provider,
-        resource_name: resource.name,
-        resource_type: resource.resource_type,
-        scope: resource.scope,
-        screen: 'chat',
-        trigger,
-      },
-      warningCause: resource.result.reason,
+      error: resource.result.reason,
+      action: 'provider_resource_failed',
+      channel_id: channelId,
+      provider: resource.provider,
+      resource_name: resource.name,
+      resource_type: resource.resource_type,
+      scope: resource.scope,
+      screen: 'chat',
+      trigger,
     });
   });
 
-  recordInfo({
+  logger.chat.info('Provider resources settled', {
     name: 'chat_resources_info',
-    message: 'Provider resources settled',
-    params: {
-      action: 'provider_resources_settled',
-      channel_id: channelId,
-      failed_resources: failedResources,
-      screen: 'chat',
-      total_resources: resources.length,
-      trigger,
-      ...counts,
-    },
+    action: 'provider_resources_settled',
+    channel_id: channelId,
+    failed_resources: failedResources,
+    screen: 'chat',
+    total_resources: resources.length,
+    trigger,
+    ...counts,
   });
 }
 
@@ -481,22 +446,15 @@ const loadChannelResourcesInternal = async (
               if (exitIfAborted(signal, true)) {
                 return false;
               }
-              logger.chat.warn(
-                'Failed to get 7TV emote set ID for cached data:',
-                error,
-              );
-              recordWarning({
+              logger.chat.warn('Failed to resolve cached 7TV emote set ID', {
                 name: 'seven_tv_emotes_warning',
-                message: 'Failed to resolve cached 7TV emote set ID',
-                params: {
-                  action: 'cached_emote_set_id_failed',
-                  channel_id: channelId,
-                  provider: 'seven_tv',
-                  resource_type: 'emotes',
-                  scope: 'channel',
-                  screen: 'chat',
-                },
-                warningCause: error,
+                error,
+                action: 'cached_emote_set_id_failed',
+                channel_id: channelId,
+                provider: 'seven_tv',
+                resource_type: 'emotes',
+                scope: 'channel',
+                screen: 'chat',
               });
             }
           }
@@ -697,28 +655,22 @@ const loadChannelResourcesInternal = async (
                   : Date.now(),
               });
             }
-            recordInfo({
+            logger.chat.info('Refetched badges (1h TTL); using cached emotes', {
               name: 'chat_resources_info',
-              message: 'Refetched badges (1h TTL); using cached emotes',
-              params: {
-                action: 'badges_refetched_cached_emotes',
-                badge_cache_age_ms: badgeCacheAge,
-                category: 'data_loading',
-                channel_id: channelId,
-                screen: 'chat',
-              },
+              action: 'badges_refetched_cached_emotes',
+              badge_cache_age_ms: badgeCacheAge,
+              category: 'data_loading',
+              channel_id: channelId,
+              screen: 'chat',
             });
           } else {
-            recordInfo({
+            logger.chat.info('Using cached channel resources', {
               name: 'chat_resources_info',
-              message: 'Using cached channel resources',
-              params: {
-                action: 'cached_channel_resources_used',
-                cache_age_ms: cacheAge,
-                category: 'data_loading',
-                channel_id: channelId,
-                screen: 'chat',
-              },
+              action: 'cached_channel_resources_used',
+              cache_age_ms: cacheAge,
+              category: 'data_loading',
+              channel_id: channelId,
+              screen: 'chat',
             });
           }
           batch(() => {
@@ -744,19 +696,15 @@ const loadChannelResourcesInternal = async (
     try {
       sevenTvSetId = await sevenTvService.getEmoteSetId(channelId);
     } catch (error) {
-      logger.chat.warn('Failed to get 7TV emote set ID:', error);
-      recordWarning({
+      logger.chat.warn('Failed to resolve 7TV emote set ID', {
         name: 'seven_tv_emotes_warning',
-        message: 'Failed to resolve 7TV emote set ID',
-        params: {
-          action: 'emote_set_id_failed',
-          channel_id: channelId,
-          provider: 'seven_tv',
-          resource_type: 'emotes',
-          scope: 'channel',
-          screen: 'chat',
-        },
-        warningCause: error,
+        error,
+        action: 'emote_set_id_failed',
+        channel_id: channelId,
+        provider: 'seven_tv',
+        resource_type: 'emotes',
+        scope: 'channel',
+        screen: 'chat',
       });
     }
 
@@ -1151,17 +1099,14 @@ const loadChannelResourcesInternal = async (
       void notify7TVPresence(twitchUserId, channelId);
     }
 
-    recordInfo({
+    logger.chat.info('Loaded channel resources', {
       name: 'chat_resources_info',
-      message: 'Loaded channel resources',
-      params: {
-        action: 'channel_resources_loaded',
-        badge_count: allBadges.length,
-        category: 'data_loading',
-        channel_id: channelId,
-        emote_count: allEmotes.length,
-        screen: 'chat',
-      },
+      action: 'channel_resources_loaded',
+      badge_count: allBadges.length,
+      category: 'data_loading',
+      channel_id: channelId,
+      emote_count: allEmotes.length,
+      screen: 'chat',
     });
 
     return true;
@@ -1169,16 +1114,12 @@ const loadChannelResourcesInternal = async (
     if (exitIfAborted(signal, true)) {
       return false;
     }
-    logger.chat.error('Error loading channel resources:', error);
-    recordError({
+    logger.chat.error('Failed to load channel resources', {
       name: 'chat_resources_error',
-      message: 'Failed to load channel resources',
-      params: {
-        action: 'channel_resources_failed',
-        channel_id: channelId,
-        screen: 'chat',
-      },
-      errorCause: error,
+      error,
+      action: 'channel_resources_failed',
+      channel_id: channelId,
+      screen: 'chat',
     });
     chatStore$.loadingState.set('ERROR');
     return false;

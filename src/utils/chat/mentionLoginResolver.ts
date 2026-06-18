@@ -25,6 +25,12 @@ let mentionSearchTimer: ReturnType<typeof setTimeout> | null = null;
 let mentionSearchRequestId = 0;
 let lastMentionSearchQuery = '';
 
+const TWITCH_LOGIN_PATTERN = /^[a-zA-Z0-9_]{1,25}$/;
+
+function extractTwitchLogin(value: string): string {
+  return value.match(/^[a-zA-Z0-9_]{1,25}/)?.[0] ?? '';
+}
+
 function bumpMentionLoginRevision(): void {
   clearSessionCache('mentionColors');
   chatStore$.mentionLoginRevision.set(revision => (revision ?? 0) + 1);
@@ -46,8 +52,18 @@ async function flushPendingMentionLogins(): Promise<void> {
     return;
   }
 
-  const logins = [...pendingLogins].slice(0, MAX_LOGINS_PER_REQUEST);
-  logins.forEach(login => pendingLogins.delete(login));
+  const logins = [...pendingLogins]
+    .filter(login => TWITCH_LOGIN_PATTERN.test(login))
+    .slice(0, MAX_LOGINS_PER_REQUEST);
+  pendingLogins.forEach(login => {
+    if (!TWITCH_LOGIN_PATTERN.test(login) || logins.includes(login)) {
+      pendingLogins.delete(login);
+    }
+  });
+
+  if (logins.length === 0) {
+    return;
+  }
 
   try {
     const params = new URLSearchParams();
@@ -89,7 +105,7 @@ async function flushPendingMentionLogins(): Promise<void> {
 }
 
 function queueMentionLoginLookup(login?: string | null): void {
-  const trimmed = login?.trim();
+  const trimmed = extractTwitchLogin(login?.trim() ?? '');
   if (!trimmed) {
     return;
   }

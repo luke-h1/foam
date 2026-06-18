@@ -22,10 +22,6 @@ const flushMicrotasks = () =>
 
 describe('cache-service', () => {
   beforeEach(() => {
-    /**
-     * Restore the default decode impl after any test that overrides it
-     * (clearAllMocks resets calls, not implementations).
-     */
     loadAsync.mockImplementation(() => Promise.resolve({} as ImageRef));
   });
   afterEach(() => {
@@ -145,13 +141,11 @@ describe('cache-service', () => {
     ).forEach(url => ensureCachedEmoteRef(url));
     await flushMicrotasks();
 
-    // MAX_CONCURRENT_DECODES = 8: eight decode, four wait in the queue.
     expect(loadAsync).toHaveBeenCalledTimes(8);
 
     releases.splice(0, 4).forEach(release => release());
     await flushMicrotasks();
 
-    // Freed slots pull the queued decodes through.
     expect(loadAsync).toHaveBeenCalledTimes(12);
   });
 });

@@ -7,7 +7,7 @@ import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import { SymbolView } from 'expo-symbols';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Text } from '@app/components/ui/Text/Text';
-import { recordError } from '@app/lib/sentry';
+import { logger } from '@app/utils/logger';
 import { theme } from '@app/styles/themes';
 
 function handleReportBug() {
@@ -19,15 +19,12 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
   const errorMessage = t('unexpectedIssue');
 
   useEffect(() => {
-    recordError({
+    logger.main.error(errorMessage, {
       name: 'error_boundary_error',
-      message: errorMessage,
-      params: {
-        category: 'ErrorBoundary',
-        action: 'router_500_screen',
-        isRecoverable: true,
-      },
-      errorCause: error,
+      error,
+      category: 'ErrorBoundary',
+      action: 'router_500_screen',
+      isRecoverable: true,
     });
   }, [errorMessage, error]);
 

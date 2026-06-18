@@ -35,7 +35,7 @@ export const kappaService = {
     });
 
     if (!response.ok) {
-      logger.chat.error('[kappa] upload failed', response.status);
+      logger.chat.error('[kappa] upload failed', { status: response.status });
       throw new Error(`kappa upload failed with status ${response.status}`);
     }
 
@@ -43,7 +43,9 @@ export const kappaService = {
     const link = data.link ?? data.url;
 
     if (!link) {
-      logger.chat.error('[kappa] upload response missing link', data);
+      logger.chat.error('[kappa] upload response missing link', {
+        response: data,
+      });
       throw new Error('kappa upload response did not include a link');
     }
 

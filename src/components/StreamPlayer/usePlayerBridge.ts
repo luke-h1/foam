@@ -1,9 +1,4 @@
-import {
-  countMetric,
-  recordError,
-  recordInfo,
-  recordWarning,
-} from '@app/lib/sentry';
+import { countMetric } from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
 import { useImperativeHandle, useRef, useState, useCallback } from 'react';
@@ -302,13 +297,10 @@ export function usePlayerBridge({
             component: 'StreamPlayer',
             defer_overlay_until_user_unmute: deferOverlayUntilUserUnmute,
           });
-          recordInfo({
+          logger.main.info('player ready', {
             name: 'twitch_player_info',
-            message: 'player ready',
-            params: {
-              channel,
-              elapsedMs: Date.now() - playerMountedAtRef.current,
-            },
+            channel,
+            elapsedMs: Date.now() - playerMountedAtRef.current,
           });
           setPlayerStatus({
             isReady: true,
@@ -335,13 +327,10 @@ export function usePlayerBridge({
               channel: channel ?? 'unknown',
               component: 'StreamPlayer',
             });
-            recordInfo({
+            logger.main.info('first playing', {
               name: 'twitch_player_info',
-              message: 'first playing',
-              params: {
-                channel,
-                elapsedMs: Date.now() - playerMountedAtRef.current,
-              },
+              channel,
+              elapsedMs: Date.now() - playerMountedAtRef.current,
             });
           }
           setPlayerState(prev => ({ ...prev, isPaused: false }));
@@ -439,53 +428,50 @@ export function usePlayerBridge({
           // frame; that is the report worth alerting on.
           if (errName !== 'AbortError' && !reportedPlaybackBlockedRef.current) {
             reportedPlaybackBlockedRef.current = true;
-            recordWarning({
+            logger.main.warn(`playback blocked: ${errName ?? 'unknown'}`, {
               name: 'twitch_player_warning',
-              message: `playback blocked: ${errName ?? 'unknown'}`,
-              params: {
-                channel,
-                errName,
-                elapsedMs: Date.now() - playerMountedAtRef.current,
-              },
+              channel,
+              errName,
+              elapsedMs: Date.now() - playerMountedAtRef.current,
             });
           }
           break;
         }
         case 'playbackStalled':
-          recordError({
-            name: 'twitch_player_error',
-            exceptionName: 'StreamPlaybackStalled',
-            message: `playback stalled for ${message.payload.stalledMs}ms`,
-            fingerprint: ['stream-playback-stalled'],
-            params: {
+          logger.main.error(
+            `playback stalled for ${message.payload.stalledMs}ms`,
+            {
+              name: 'twitch_player_error',
+              exceptionName: 'StreamPlaybackStalled',
+              fingerprint: ['stream-playback-stalled'],
               channel,
               ...message.payload,
               elapsedMs: Date.now() - playerMountedAtRef.current,
             },
-          });
+          );
           break;
         case 'playbackRecovered':
           countMetric('stream.playback_recovered', {
             channel: channel ?? 'unknown',
           });
-          recordInfo({
+          logger.main.info('playback recovered after stall', {
             name: 'twitch_player_info',
-            message: 'playback recovered after stall',
-            params: { channel, ...message.payload },
+            channel,
+            ...message.payload,
           });
           break;
         case 'videoElementError':
-          recordError({
-            name: 'twitch_player_error',
-            exceptionName: 'StreamVideoElementError',
-            message: `video element error code ${message.payload.code ?? 'unknown'}`,
-            fingerprint: ['stream-video-element-error'],
-            params: {
+          logger.main.error(
+            `video element error code ${message.payload.code ?? 'unknown'}`,
+            {
+              name: 'twitch_player_error',
+              exceptionName: 'StreamVideoElementError',
+              fingerprint: ['stream-video-element-error'],
               channel,
               ...message.payload,
               elapsedMs: Date.now() - playerMountedAtRef.current,
             },
-          });
+          );
           break;
         case 'twitchAuthComplete':
           scheduleAuthCompletionReload();

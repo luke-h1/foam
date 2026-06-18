@@ -1,5 +1,6 @@
 import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
-import { flushSentry, recordError } from './sentry';
+import { logger } from '@app/utils/logger';
+import { flushSentry } from './sentry';
 
 type FatalErrorListener = (error: Error) => void;
 
@@ -47,12 +48,11 @@ export function installGlobalErrorHandlers(): void {
       const fatalError =
         error instanceof Error ? error : new Error(String(error));
 
-      recordError({
+      logger.main.error(fatalError.message, {
         name: 'fatal_error',
         exceptionName: fatalError.name,
-        message: fatalError.message,
-        params: { handledBy: 'global_error_handler' },
-        errorCause: fatalError,
+        error: fatalError,
+        handledBy: 'global_error_handler',
       });
 
       // The recovery UI keeps the app alive, so force the envelope out now in

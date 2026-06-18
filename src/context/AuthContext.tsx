@@ -24,7 +24,6 @@ import {
 } from 'react';
 import { toast } from 'sonner-native';
 import { AppState, InteractionManager } from 'react-native';
-import { recordError } from '@app/lib/sentry';
 import { useSyncRef } from '@app/hooks/useSyncRef';
 import i18next from '@app/i18n/i18next';
 
@@ -331,16 +330,13 @@ export const AuthContextProvider = ({
       errorType: error instanceof Error ? error.name : typeof error,
     });
 
-    recordError({
+    logger.auth.error(`Auth context did not initialize in time: ${reason}`, {
       name: 'auth_error',
-      message: `Auth context did not initialize in time: ${reason}`,
-      params: {
-        category: 'Auth',
-        action: 'startup_timeout',
-        reason,
-        errorType: error instanceof Error ? error.name : typeof error,
-      },
-      errorCause: error,
+      error,
+      category: 'Auth',
+      action: 'startup_timeout',
+      reason,
+      errorType: error instanceof Error ? error.name : typeof error,
     });
   };
 

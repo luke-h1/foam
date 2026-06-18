@@ -8,6 +8,7 @@ import {
 } from '@sentry/react-native';
 import * as Sentry from '@sentry/react-native';
 import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
+import type { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
 import type { ComponentType } from 'react';
 
 /**
@@ -239,6 +240,20 @@ export type MonitoringErrorName = `${MonitoringEventPrefix}_error`;
 export type MonitoringWarningName = `${MonitoringEventPrefix}_warning`;
 export type MonitoringInfoName = `${MonitoringEventPrefix}_info`;
 
+export type MonitoringEventName =
+  | MonitoringErrorName
+  | MonitoringWarningName
+  | MonitoringInfoName;
+
+export type LogMetadata = {
+  name?: OpenStringUnion<MonitoringEventName>;
+  tags?: Record<string, string | number | boolean | null | undefined>;
+  fingerprint?: string[];
+  error?: unknown;
+  exceptionName?: string;
+  [key: string]: unknown;
+};
+
 export type OtaMetrics =
   | 'ota.check.started'
   | 'ota.update.available'
@@ -247,132 +262,103 @@ export type OtaMetrics =
   | 'ota.update.alert_shown'
   | 'ota.update.applied';
 
-function buildMetadata(
-  name: string,
-  params?: Record<string, unknown>,
-  cause?: unknown,
-): Record<string, unknown> {
-  return {
-    ...params,
-    name,
-    cause: cause instanceof Error ? cause.toString() : cause,
-  };
-}
+const RESERVED_LOG_META_KEYS = new Set([
+  'name',
+  'tags',
+  'fingerprint',
+  'error',
+  'exceptionName',
+]);
 
-export function recordError(error: {
-  name: MonitoringErrorName;
-  exceptionName?: string;
-  message: string;
-  params?: Record<string, unknown>;
-  errorCause?: unknown;
-  tags?: Record<string, string>;
-  fingerprint?: string[];
-}): void {
-  Sentry.addBreadcrumb({
-    message: `${error.exceptionName ?? error.name}: ${error.message}`,
-    level: 'error',
-  });
-
-  Sentry.withScope(scope => {
-    scope.setTag('error_type', error.name);
-
-    if (error.tags) {
-      for (const [k, v] of Object.entries(error.tags)) {
-        scope.setTag(k, v);
-      }
+function extractLogExtra(metadata?: LogMetadata): Record<string, unknown> {
+  if (!metadata) {
+    return {};
+  }
+  const extra: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(metadata)) {
+    if (!RESERVED_LOG_META_KEYS.has(key)) {
+      extra[key] = value;
     }
-
-    if (error.fingerprint) {
-      scope.setFingerprint(error.fingerprint);
-    }
-
-    if (error.params) {
-      scope.setContext('error_params', error.params);
-    }
-
-    const exceptionToCapture = new Error(error.message, {
-      cause: error.errorCause,
-    });
-    exceptionToCapture.name = error.exceptionName ?? error.name;
-
-    Sentry.captureException(exceptionToCapture);
-  });
+  }
+  return extra;
 }
 
-export function recordWarning(warning: {
-  name: MonitoringWarningName;
-  message: string;
-  params?: Record<string, unknown>;
-  warningCause?: unknown;
-}): void {
-  const message = `${warning.name}: ${warning.message}`;
-  const extra = buildMetadata(
-    warning.name,
-    warning.params,
-    warning.warningCause,
-  );
-
-  Sentry.addBreadcrumb({
-    message,
-    level: 'warning',
-    data: extra,
-  });
-
-  Sentry.logger.warn(message, extra);
+function buildSentryException(
+  message: string,
+  name: string | undefined,
+  exceptionName: string | undefined,
+  cause: unknown,
+): Error {
+  const exception =
+    cause !== undefined ? new Error(message, { cause }) : new Error(message);
+  exception.name = exceptionName ?? name ?? 'Error';
+  return exception;
 }
 
-export function recordInfo(info: {
-  name: MonitoringInfoName;
-  message: string;
-  params?: Record<string, unknown>;
-  infoCause?: unknown;
-}): void {
-  const message = `${info.name}: ${info.message}`;
-  const extra = buildMetadata(info.name, info.params, info.infoCause);
-
-  Sentry.addBreadcrumb({
-    message,
-    level: 'info',
-    data: extra,
-  });
-
-  Sentry.logger.info(message, extra);
-}
-
-/**
- * Forwards a log entry from the app logger (src/utils/logger.ts) into Sentry so
- * a single `logger.*` call reaches both the console and Sentry — callers no
- * longer need to also call recordError/recordWarning by hand. Only warn/error
- * are forwarded; debug/info stay local. No-ops when Sentry is disabled.
- */
 export function forwardLogToSentry(entry: {
-  level: 'warn' | 'error';
+  level: 'info' | 'warn' | 'error';
   category: string;
   message: string;
-  error?: Error;
+  error?: unknown;
+  metadata?: LogMetadata;
 }): void {
-  const { level, category, message, error } = entry;
+  const { level, category, message, error, metadata } = entry;
 
-  // A logging call must never throw and break the caller, so swallow any
-  // failure from the Sentry pipeline (e.g. before init / in tests).
   try {
+    const name = typeof metadata?.name === 'string' ? metadata.name : undefined;
+    const cause = error ?? metadata?.error;
+    const headline = name ? `${name}: ${message}` : message;
+    const extra: Record<string, unknown> = extractLogExtra(metadata);
+    if (cause !== undefined) {
+      extra.cause = cause instanceof Error ? cause.toString() : cause;
+    }
+
     if (level === 'error') {
+      Sentry.addBreadcrumb({ category, message: headline, level: 'error' });
+
       Sentry.withScope(scope => {
         scope.setTag('log_category', category);
-        scope.setExtra('log_message', message);
-        if (error) {
-          Sentry.captureException(error);
-        } else {
-          Sentry.captureMessage(message, 'error');
+        if (name) {
+          scope.setTag('error_type', name);
         }
+        if (metadata?.tags) {
+          for (const [key, value] of Object.entries(metadata.tags)) {
+            scope.setTag(key, value);
+          }
+        }
+        if (metadata?.fingerprint) {
+          scope.setFingerprint(metadata.fingerprint);
+        }
+        scope.setContext('log_metadata', extra);
+
+        const exception =
+          cause instanceof Error
+            ? cause
+            : buildSentryException(
+                message,
+                name,
+                metadata?.exceptionName,
+                cause,
+              );
+        Sentry.captureException(exception);
       });
       return;
     }
 
-    Sentry.addBreadcrumb({ category, message, level: 'warning' });
-    Sentry.logger.warn(message, { category });
+    Sentry.addBreadcrumb({
+      category,
+      message: headline,
+      level: level === 'warn' ? 'warning' : 'info',
+      data: extra,
+    });
+
+    if (level === 'warn') {
+      Sentry.logger.warn(headline, extra);
+    } else {
+      Sentry.logger.info(headline, extra);
+    }
   } catch {
-    // Intentionally ignored — never let logging crash app logic.
+    // ignore
   }
 }
 

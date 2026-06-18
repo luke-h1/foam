@@ -125,6 +125,41 @@ describe('useChatMessages', () => {
   });
 
   describe('Message Buffering', () => {
+    test('keeps flushing after a flush throws, so the chat cannot freeze', () => {
+      const onUnreadIncrement = jest.fn();
+      const { result } = renderHook(() =>
+        useChatMessages({
+          isAtBottomRef: { current: false },
+          onUnreadIncrement,
+        }),
+      );
+
+      onUnreadIncrement.mockImplementationOnce(() => {
+        throw new Error('flush boom');
+      });
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+      });
+      try {
+        act(() => {
+          jest.advanceTimersByTime(250);
+        });
+      } catch {
+        // ignore
+      }
+      expect(mockAddMessages).toHaveBeenCalledTimes(1);
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('2'));
+      });
+      act(() => {
+        jest.advanceTimersByTime(250);
+      });
+
+      expect(mockAddMessages).toHaveBeenCalledTimes(2);
+    });
+
     test('should buffer messages and flush periodically', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));
 

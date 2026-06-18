@@ -1,4 +1,4 @@
-import { recordWarning } from '@app/lib/sentry';
+import { logger } from '@app/utils/logger';
 import { twitchService } from '@app/services/twitch-service';
 import TwitchWsService from '@app/services/twitch-ws-service';
 
@@ -8,11 +8,6 @@ jest.mock('@app/services/twitch-service', () => ({
     deleteEventSubscription: jest.fn(),
     listEventSubscriptions: jest.fn(),
   },
-}));
-
-jest.mock('@app/lib/sentry', () => ({
-  recordInfo: jest.fn(),
-  recordWarning: jest.fn(),
 }));
 
 jest.mock('@app/utils/logger', () => ({
@@ -34,7 +29,7 @@ const twitchWsState = getTwitchWsTestState();
 const mockCreateEventSubscription = jest.mocked(
   twitchService.createEventSubscription,
 );
-const mockRecordWarning = jest.mocked(recordWarning);
+const mockWarn = jest.mocked(logger.twitchWs.warn);
 
 describe('TwitchWsService EventSub response handling', () => {
   beforeEach(() => {
@@ -63,10 +58,12 @@ describe('TwitchWsService EventSub response handling', () => {
       twitchWsState.eventCallbacks.get('channel.prediction.begin'),
     ).toEqual([]);
     expect(mockCreateEventSubscription).toHaveBeenCalledTimes(1);
-    const warningPayload = mockRecordWarning.mock.calls[0]?.[0];
+    const warningPayload = mockWarn.mock.calls[0]?.[1] as
+      | Record<string, unknown>
+      | undefined;
     expect({
-      action: warningPayload?.params?.action,
-      event_type: warningPayload?.params?.event_type,
+      action: warningPayload?.action,
+      event_type: warningPayload?.event_type,
     }).toEqual({
       action: 'subscription_create_failed',
       event_type: 'channel.prediction.begin',

@@ -2,6 +2,7 @@ import { useAuthContext } from '@app/context/AuthContext';
 import {
   createLoggedInAuthContextValue,
   createLoggedOutAuthContextValue,
+  createTestUser,
 } from '@app/context/__tests__/__fixtures__/authContext.fixture';
 import { useTwitchChannelPointsEventSub } from '@app/hooks/useTwitchChannelPointsEventSub';
 import TwitchWsService from '@app/services/twitch-ws-service';
@@ -50,8 +51,25 @@ describe('useTwitchChannelPointsEventSub', () => {
     expect(mockTwitchWsService.subscribeToEvent).not.toHaveBeenCalled();
   });
 
-  test('subscribes to channel point redemption events when logged in', async () => {
-    mockUseAuthContext.mockReturnValue(createLoggedInAuthContextValue());
+  test('skips EventSub subscriptions when viewing another channel', () => {
+    mockUseAuthContext.mockReturnValue(
+      createLoggedInAuthContextValue({
+        user: createTestUser({ id: 'viewer-id' }),
+      }),
+    );
+
+    renderHook(() => useTwitchChannelPointsEventSub('channel-id'));
+
+    expect(mockTwitchWsService.getInstance).not.toHaveBeenCalled();
+    expect(mockTwitchWsService.subscribeToEvent).not.toHaveBeenCalled();
+  });
+
+  test('subscribes to channel point redemption events on your own channel', async () => {
+    mockUseAuthContext.mockReturnValue(
+      createLoggedInAuthContextValue({
+        user: createTestUser({ id: 'channel-id' }),
+      }),
+    );
 
     renderHook(() => useTwitchChannelPointsEventSub('channel-id'));
 

@@ -18,16 +18,17 @@ export function useChatImageUpload(onUploaded: (url: string) => void) {
       return;
     }
 
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      toast.error(i18next.t('chat:imageUpload.permissionDenied'));
+    let result: ImagePicker.ImagePickerResult;
+    try {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.8,
+      });
+    } catch (error) {
+      logger.chat.error('[kappa] image picker failed', { error });
+      toast.error(i18next.t('chat:imageUpload.failed'));
       return;
     }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      quality: 0.8,
-    });
 
     const asset = result.canceled ? undefined : result.assets[0];
     if (!asset) {
@@ -44,7 +45,7 @@ export function useChatImageUpload(onUploaded: (url: string) => void) {
       onUploaded(link);
       toast.success(i18next.t('chat:imageUpload.uploaded'));
     } catch (error) {
-      logger.chat.error('[kappa] chat image upload failed', error);
+      logger.chat.error('[kappa] chat image upload failed', { error });
       toast.error(i18next.t('chat:imageUpload.failed'));
     } finally {
       setIsUploading(false);

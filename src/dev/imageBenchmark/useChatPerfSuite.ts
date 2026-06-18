@@ -24,7 +24,8 @@ const pct = (a: number[], q: number) => {
   if (a.length === 0) {
     return 0;
   }
-  const s = a.toSorted((x, y) => x - y);
+  // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks Array.prototype.toSorted (throws "undefined is not a function"); copy-then-sort is the safe equivalent
+  const s = [...a].sort((x, y) => x - y);
   return s[Math.min(s.length - 1, Math.floor(q * s.length))]!;
 };
 

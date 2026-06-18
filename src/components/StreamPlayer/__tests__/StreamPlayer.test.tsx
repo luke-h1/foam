@@ -43,9 +43,7 @@ jest.mock('react-native/Libraries/Interaction/InteractionManager', () => ({
 
 jest.mock('@app/lib/sentry', () => ({
   countMetric: jest.fn(),
-  recordError: jest.fn(),
-  recordInfo: jest.fn(),
-  recordWarning: jest.fn(),
+  forwardLogToSentry: jest.fn(),
 }));
 
 jest.mock('react-native-safe-area-context', () => ({

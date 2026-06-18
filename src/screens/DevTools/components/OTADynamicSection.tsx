@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 import * as Form from '@app/components/Form/Form';
 import { SymbolView } from 'expo-symbols';
-import { recordInfo } from '@app/lib/sentry';
+import { logger } from '@app/utils/logger';
 import * as AC from '@bacons/apple-colors';
 import * as Updates from 'expo-updates';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
@@ -90,27 +90,21 @@ export function OTADynamicSection() {
           }
           void (async () => {
             if (updates.isUpdatePending) {
-              recordInfo({
+              logger.main.info('OTA reload triggered from dev tools', {
                 name: 'ota_updates_service_info',
-                message: 'OTA reload triggered from dev tools',
-                params: {
-                  category: 'OTAUpdatesService',
-                  action: 'dev_tools_reload',
-                  source: 'pending',
-                  updateState: 'pending',
-                },
+                category: 'OTAUpdatesService',
+                action: 'dev_tools_reload',
+                source: 'pending',
+                updateState: 'pending',
               });
               await reloadOtaWithScreen();
             } else if (updates.isUpdateAvailable) {
-              recordInfo({
+              logger.main.info('OTA check and fetch triggered from dev tools', {
                 name: 'ota_updates_service_info',
-                message: 'OTA check and fetch triggered from dev tools',
-                params: {
-                  category: 'OTAUpdatesService',
-                  action: 'dev_tools_fetch',
-                  source: 'available',
-                  updateState: 'available',
-                },
+                category: 'OTAUpdatesService',
+                action: 'dev_tools_fetch',
+                source: 'available',
+                updateState: 'available',
               });
               const result = await Updates.checkForUpdateAsync();
               if (result.isAvailable) {
@@ -118,15 +112,12 @@ export function OTADynamicSection() {
                 await reloadOtaWithScreen();
               }
             } else {
-              recordInfo({
+              logger.main.info('OTA check triggered from dev tools', {
                 name: 'ota_updates_service_info',
-                message: 'OTA check triggered from dev tools',
-                params: {
-                  category: 'OTAUpdatesService',
-                  action: 'dev_tools_check',
-                  source: 'idle',
-                  updateState: 'idle',
-                },
+                category: 'OTAUpdatesService',
+                action: 'dev_tools_check',
+                source: 'idle',
+                updateState: 'idle',
               });
               const result = await Updates.checkForUpdateAsync();
               if (result.isAvailable) {

@@ -47,7 +47,8 @@ function summarise(
   fail: number,
   totalMs: number,
 ): PassResult {
-  const sorted = durations.toSorted((a, b) => a - b);
+  // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks Array.prototype.toSorted (throws "undefined is not a function"); copy-then-sort is the safe equivalent
+  const sorted = [...durations].sort((a, b) => a - b);
   const sum = durations.reduce((acc, d) => acc + d, 0);
   return {
     pass,

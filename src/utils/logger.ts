@@ -1,10 +1,9 @@
-import {
-  logger as rnlogger,
-  defLvlType,
-  consoleTransport,
-} from 'react-native-logs';
+import { logger as rnlogger, consoleTransport } from 'react-native-logs';
 import type { transportFunctionType } from 'react-native-logs';
 import { forwardLogToSentry } from '@app/lib/sentry';
+import type { LogMetadata } from '@app/lib/sentry';
+
+export type { LogMetadata } from '@app/lib/sentry';
 
 type TransportProps = Parameters<
   transportFunctionType<Record<string, unknown>>
@@ -155,8 +154,6 @@ const createGenericTransport =
 
 const genericTransport = createGenericTransport();
 
-// Forwards warn/error to Sentry so the app logger is the single sink: one
-// `logger.*` call lands in the console and Sentry, no separate Sentry call.
 const createSentryTransport =
   (): transportFunctionType<Record<string, unknown>> =>
   (props: TransportProps) => {
@@ -164,21 +161,49 @@ const createSentryTransport =
       return;
     }
 
-    const { msg, rawMsg, level, extension } = props;
+    const { rawMsg, level, extension } = props;
     const levelText = level.text;
-    if (levelText !== 'warn' && levelText !== 'error') {
+    if (levelText === 'debug') {
       return;
     }
 
-    const category = extension ?? 'app';
     const rawArgs = Array.isArray(rawMsg) ? rawMsg : [rawMsg];
-    const error = rawArgs.find((arg): arg is Error => arg instanceof Error);
+    const [firstArg, secondArg] = rawArgs;
+
+    let metadata: LogMetadata | undefined;
+    let error: unknown;
+    if (secondArg instanceof Error) {
+      error = secondArg;
+    } else if (isRecord(secondArg)) {
+      metadata = secondArg as LogMetadata;
+      error = metadata.error;
+    }
+
+    if (levelText === 'info' && !metadata) {
+      return;
+    }
+
+    if (firstArg instanceof Error) {
+      error ??= firstArg;
+    }
+    const message =
+      firstArg instanceof Error
+        ? firstArg.message
+        : typeof firstArg === 'string'
+          ? firstArg
+          : String(firstArg);
 
     forwardLogToSentry({
-      level: levelText,
-      category,
-      message: (typeof msg === 'string' ? msg : String(msg)).trim(),
+      level:
+        levelText === 'error'
+          ? 'error'
+          : levelText === 'warn'
+            ? 'warn'
+            : 'info',
+      category: extension ?? 'app',
+      message,
       error,
+      metadata,
     });
   };
 
@@ -276,7 +301,22 @@ const loggingConfig = {
   }
 >;
 
-type LoggingMethods = Record<defLvlType, (...args: unknown[]) => void>;
+interface LogMethod {
+  (message: string, metadata: LogMetadata): void;
+  (message: string, ...args: unknown[]): void;
+}
+
+interface ErrorLogMethod {
+  (message: string | Error, metadata: LogMetadata): void;
+  (message: string | Error, ...args: unknown[]): void;
+}
+
+interface LoggingMethods {
+  debug: LogMethod;
+  info: LogMethod;
+  warn: LogMethod;
+  error: ErrorLogMethod;
+}
 
 export type AllowedPrefix = keyof typeof loggingConfig;
 
@@ -306,8 +346,17 @@ const baseLogger = rnlogger.createLogger({
   ),
 });
 
-const createExtendedLogger = (prefix: AllowedPrefix): LoggingMethods =>
-  baseLogger.extend(prefix);
+const createExtendedLogger = (prefix: AllowedPrefix): LoggingMethods => {
+  const base = baseLogger.extend(prefix);
+  return {
+    debug: (message: string, ...args: unknown[]) =>
+      base.debug(message, ...args),
+    info: (message: string, ...args: unknown[]) => base.info(message, ...args),
+    warn: (message: string, ...args: unknown[]) => base.warn(message, ...args),
+    error: (message: string | Error, ...args: unknown[]) =>
+      base.error(message, ...args),
+  };
+};
 
 export const logger: Record<AllowedPrefix, LoggingMethods> = {
   main: createExtendedLogger('main'),

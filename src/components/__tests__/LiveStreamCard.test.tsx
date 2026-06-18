@@ -2,9 +2,10 @@ import {
   twitchService as _twitchService,
   TwitchStream,
 } from '@app/services/twitch-service';
-import render from '@app/test/render';
+import render, { DefaultWrapper } from '@app/test/render';
 import { NavigationContainer } from 'expo-router/react-navigation';
 import { screen } from '@testing-library/react-native';
+import { ReactNode } from 'react';
 import { MemoizedLiveStreamCard as LiveStreamCard } from '../LiveStreamCard/LiveStreamCard';
 
 const mockStream: TwitchStream = {
@@ -38,7 +39,11 @@ describe('LiveStreamCard', () => {
 
   test('renders correctly', () => {
     render(<LiveStreamCard stream={mockStream} />, {
-      wrapper: NavigationContainer,
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <DefaultWrapper>
+          <NavigationContainer>{children}</NavigationContainer>
+        </DefaultWrapper>
+      ),
     });
 
     expect(screen.getByText('Test Stream Title')).toBeOnTheScreen();

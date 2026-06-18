@@ -1,4 +1,4 @@
-import { recordError } from '@app/lib/sentry';
+import { logger } from '@app/utils/logger';
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import { Platform } from 'react-native';
 import { toast } from 'sonner-native';
@@ -26,12 +26,11 @@ export function handleQueryError(
   error: Error,
   queryKey: readonly unknown[],
 ): void {
-  recordError({
+  logger.api.error(error.message, {
     name: 'api_error',
     exceptionName: error.name,
-    message: error.message,
-    params: { queryKey },
-    errorCause: error,
+    error,
+    queryKey,
     // Group by query scope, not full key: keys often embed ids and
     // would otherwise explode into one Sentry issue per channel/user.
     fingerprint: [
@@ -46,11 +45,10 @@ export function handleMutationError(
   error: Error,
   meta: { suppressErrorToast?: boolean; errorMessage?: string } | undefined,
 ): void {
-  recordError({
+  logger.api.error(error.message, {
     name: 'api_error',
     exceptionName: error.name,
-    message: error.message,
-    errorCause: error,
+    error,
     fingerprint: ['mutation_error', error.message],
   });
 

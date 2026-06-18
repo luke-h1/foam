@@ -1,5 +1,7 @@
 import { useCallback, memo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { TwitchStream } from '@app/services/twitch-service';
+import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { theme } from '@app/styles/themes';
 import { router } from 'expo-router';
 import { elapsedStreamTime } from '@app/utils/string/elapsedStreamTime';
@@ -31,6 +33,7 @@ const LANGUAGE_NAMES: Record<string, string> = {
 const TITLE_COLOR = 'rgba(235,235,240,0.86)';
 
 function LiveStreamCard({ stream, layout = 'compact' }: Props) {
+  const queryClient = useQueryClient();
   const thumbnailUrl = stream.thumbnail_url
     .replace('{width}', '1920')
     .replace('{height}', '1080');
@@ -43,9 +46,14 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
       ),
     ) ?? LANGUAGE_NAMES[stream.language];
 
-  const handleStreamPress = useCallback(() => {
-    router.push(`/streams/live-stream/${stream.user_login}`);
+  const handleStreamPressIn = useCallback(() => {
+    router.prefetch(`/streams/live-stream/${stream.user_login}`);
   }, [stream.user_login]);
+
+  const handleStreamPress = useCallback(() => {
+    queryClient.setQueryData(twitchKeys.stream(stream.user_login), stream);
+    router.push(`/streams/live-stream/${stream.user_login}`);
+  }, [queryClient, stream]);
 
   const handleStreamerPressIn = useCallback(() => {
     router.prefetch(`/streams/streamer-profile/${stream.user_login}`);
@@ -67,6 +75,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
     return (
       <Button
         onPress={handleStreamPress}
+        onPressIn={handleStreamPressIn}
         label={cardAccessibilityLabel}
         style={styles.mediaCardWrapper}
       >
@@ -168,6 +177,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   return (
     <Button
       onPress={handleStreamPress}
+      onPressIn={handleStreamPressIn}
       label={cardAccessibilityLabel}
       style={styles.cardWrapper}
     >
