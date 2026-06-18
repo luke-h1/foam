@@ -29,6 +29,7 @@
 - **app:** Player captions
 - **app:** Image perf
 - **app:** Image perf
+- **perf:** Reduce animated emote decode cpu
 
 ### 🔧 Miscellaneous Tasks
 
