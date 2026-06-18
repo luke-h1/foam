@@ -28,7 +28,7 @@ let lastMentionSearchQuery = '';
 const TWITCH_LOGIN_PATTERN = /^[a-zA-Z0-9_]{1,25}$/;
 
 function extractTwitchLogin(value: string): string {
-  return value.match(/^[a-zA-Z0-9_]{1,25}/)?.[0] ?? '';
+  return value.match(/^([a-zA-Z0-9_]{1,25})(?![a-zA-Z0-9_])/)?.[1] ?? '';
 }
 
 function bumpMentionLoginRevision(): void {
@@ -55,8 +55,9 @@ async function flushPendingMentionLogins(): Promise<void> {
   const logins = [...pendingLogins]
     .filter(login => TWITCH_LOGIN_PATTERN.test(login))
     .slice(0, MAX_LOGINS_PER_REQUEST);
+  const selected = new Set(logins);
   pendingLogins.forEach(login => {
-    if (!TWITCH_LOGIN_PATTERN.test(login) || logins.includes(login)) {
+    if (!TWITCH_LOGIN_PATTERN.test(login) || selected.has(login)) {
       pendingLogins.delete(login);
     }
   });

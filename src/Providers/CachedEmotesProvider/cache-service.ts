@@ -161,7 +161,9 @@ export async function warmCachedEmoteRefs(
 }
 
 export function evictCachedEmoteRef(url: string): void {
-  if (refs.delete(url)) {
+  const hadRef = refs.delete(url);
+  pinned.delete(url);
+  if (hadRef) {
     notify(url);
   }
 }

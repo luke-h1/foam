@@ -25,14 +25,18 @@ describe('handleQueryError', () => {
 
     handleQueryError(error, ['twitch', 'stream', 'channel-123']);
 
-    expect(errorMock).toHaveBeenCalledTimes(1);
-    expect(errorMock).toHaveBeenCalledWith('boom', {
-      name: 'api_error',
-      exceptionName: 'Error',
-      error,
-      queryKey: ['twitch', 'stream', 'channel-123'],
-      fingerprint: ['query_error', 'twitch', 'stream'],
-    });
+    expect(errorMock.mock.calls).toEqual([
+      [
+        'boom',
+        {
+          name: 'api_error',
+          exceptionName: 'Error',
+          error,
+          queryKey: ['twitch', 'stream', 'channel-123'],
+          fingerprint: ['query_error', 'twitch', 'stream'],
+        },
+      ],
+    ]);
   });
 
   test('does not show a toast for query errors', () => {

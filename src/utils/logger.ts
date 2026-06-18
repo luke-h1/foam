@@ -179,7 +179,7 @@ const createSentryTransport =
       error = metadata.error;
     }
 
-    if (levelText === 'info' && !metadata) {
+    if (levelText === 'info' && typeof metadata?.name !== 'string') {
       return;
     }
 

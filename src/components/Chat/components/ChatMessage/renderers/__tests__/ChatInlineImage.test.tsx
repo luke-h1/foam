@@ -1,4 +1,5 @@
 import { render, act } from '@testing-library/react-native';
+import { evictCachedEmoteRef } from '@app/Providers/CachedEmotesProvider/cache-service';
 import {
   createRowVisibilityStore,
   RowVisibilityContext,
@@ -8,16 +9,25 @@ import { ChatInlineImage } from '../ChatInlineImage';
 const mockStartAnimating = jest.fn();
 const mockStopAnimating = jest.fn();
 
+let mockImageProps: { onError?: () => void; recyclingKey?: string } | null =
+  null;
+
 jest.mock('expo-image', () => {
   const ReactModule = require('react');
   return {
-    Image: ReactModule.forwardRef((_props: unknown, ref: unknown) => {
-      ReactModule.useImperativeHandle(ref, () => ({
-        startAnimating: mockStartAnimating,
-        stopAnimating: mockStopAnimating,
-      }));
-      return null;
-    }),
+    Image: ReactModule.forwardRef(
+      (
+        props: { onError?: () => void; recyclingKey?: string },
+        ref: unknown,
+      ) => {
+        mockImageProps = props;
+        ReactModule.useImperativeHandle(ref, () => ({
+          startAnimating: mockStartAnimating,
+          stopAnimating: mockStopAnimating,
+        }));
+        return null;
+      },
+    ),
   };
 });
 
@@ -27,9 +37,16 @@ jest.mock('@app/Providers/CachedEmotesProvider/useCachedEmote', () => ({
   useCachedEmote: () => mockSharedRef,
 }));
 
+jest.mock('@app/Providers/CachedEmotesProvider/cache-service', () => ({
+  evictCachedEmoteRef: jest.fn(),
+}));
+
+const evictMock = jest.mocked(evictCachedEmoteRef);
+
 describe('ChatInlineImage off-screen pause', () => {
   beforeEach(() => {
     mockSharedRef = { isAnimated: true };
+    mockImageProps = null;
   });
   afterEach(() => {
     jest.clearAllMocks();
@@ -109,5 +126,43 @@ describe('ChatInlineImage off-screen pause', () => {
 
     expect(mockStartAnimating).not.toHaveBeenCalled();
     expect(mockStopAnimating).not.toHaveBeenCalled();
+  });
+});
+
+describe('ChatInlineImage error retry', () => {
+  beforeEach(() => {
+    mockSharedRef = { isAnimated: false };
+    mockImageProps = null;
+  });
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('evicts the cached ref and remounts with a new recyclingKey on error', () => {
+    const sourceUrl = 'https://cdn.7tv.app/emote/err/2x.avif';
+    render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
+
+    expect(mockImageProps?.recyclingKey).toBe(`${sourceUrl}#0`);
+
+    act(() => mockImageProps?.onError?.());
+
+    expect(evictMock).toHaveBeenCalledTimes(1);
+    expect(evictMock).toHaveBeenCalledWith(sourceUrl);
+    expect(mockImageProps?.recyclingKey).toBe(`${sourceUrl}#1`);
+  });
+
+  test('stops retrying after the cap of 2 attempts', () => {
+    const sourceUrl = 'https://cdn.7tv.app/emote/err/2x.avif';
+    render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
+
+    act(() => mockImageProps?.onError?.());
+    act(() => mockImageProps?.onError?.());
+    expect(evictMock).toHaveBeenCalledTimes(2);
+    expect(mockImageProps?.recyclingKey).toBe(`${sourceUrl}#2`);
+
+    act(() => mockImageProps?.onError?.());
+
+    expect(evictMock).toHaveBeenCalledTimes(2);
+    expect(mockImageProps?.recyclingKey).toBe(`${sourceUrl}#2`);
   });
 });
