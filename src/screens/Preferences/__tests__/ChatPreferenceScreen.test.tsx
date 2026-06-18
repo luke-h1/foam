@@ -1,7 +1,7 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
 import type { Preferences } from '@app/store/preferenceStore';
-import { ChatPreferenceScreen } from '../ChatPreferenceScreen';
+import { ChatPreferenceScrollContent } from '../ChatPreferenceScreen';
 
 const mockUpdate = jest.fn();
 const mockPreferences: Preferences = {
@@ -118,7 +118,9 @@ describe('ChatPreferenceScreen', () => {
   });
 
   test('updates the context preview immediately when toggling a setting', () => {
-    const { getByLabelText, getByTestId } = render(<ChatPreferenceScreen />);
+    const { getByLabelText, getByTestId } = render(
+      <ChatPreferenceScrollContent />,
+    );
 
     expect(
       getByTestId('chat-preference-preview-context').props.children,
@@ -133,7 +135,9 @@ describe('ChatPreferenceScreen', () => {
   });
 
   test('updates alternating rows immediately when toggled', () => {
-    const { getByLabelText, getByTestId } = render(<ChatPreferenceScreen />);
+    const { getByLabelText, getByTestId } = render(
+      <ChatPreferenceScrollContent />,
+    );
 
     expect(
       getByTestId('chat-preference-preview-alternatingRows').props.children,
@@ -148,7 +152,9 @@ describe('ChatPreferenceScreen', () => {
   });
 
   test('updates provider previews immediately when toggling provider media', () => {
-    const { getAllByLabelText, getByTestId } = render(<ChatPreferenceScreen />);
+    const { getAllByLabelText, getByTestId } = render(
+      <ChatPreferenceScrollContent />,
+    );
 
     expect(
       getByTestId('chat-preference-preview-7tv-providerEmotes').props.children,
@@ -163,7 +169,9 @@ describe('ChatPreferenceScreen', () => {
   });
 
   test('updates the emote animation preview immediately when toggling media', () => {
-    const { getByLabelText, getByTestId } = render(<ChatPreferenceScreen />);
+    const { getByLabelText, getByTestId } = render(
+      <ChatPreferenceScrollContent />,
+    );
 
     expect(
       getByTestId('chat-preference-preview-emoteAnimations').props.children,
