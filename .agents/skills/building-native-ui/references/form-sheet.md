@@ -23,23 +23,23 @@ Configure the Stack.Screen with transparent backgrounds and sheet presentation:
 
 ```tsx
 // app/_layout.tsx
-import { Stack } from 'expo-router';
+import { Stack } from "expo-router";
 
 export default function Layout() {
   return (
     <Stack>
-      <Stack.Screen name='index' />
+      <Stack.Screen name="index" />
       <Stack.Screen
-        name='about'
+        name="about"
         options={{
-          presentation: 'formSheet',
+          presentation: "formSheet",
           sheetAllowedDetents: [0.25],
           headerTransparent: true,
-          contentStyle: { backgroundColor: 'transparent' },
+          contentStyle: { backgroundColor: "transparent" },
           sheetGrabberVisible: true,
         }}
       >
-        <Stack.Header style={{ backgroundColor: 'transparent' }}></Stack.Header>
+        <Stack.Header style={{ backgroundColor: "transparent" }}></Stack.Header>
       </Stack.Screen>
     </Stack>
   );
@@ -54,7 +54,7 @@ Use `flex: 1` to allow the content to fill available space, enabling footer posi
 
 ```tsx
 // app/about.tsx
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from "react-native";
 
 export default function AboutSheet() {
   return (
@@ -97,18 +97,18 @@ import { Stack } from 'expo-router';
 export default function Layout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name='index' />
+      <Stack.Screen name="index" />
       <Stack.Screen
-        name='info-sheet'
+        name="info-sheet"
         options={{
-          presentation: 'formSheet',
+          presentation: "formSheet",
           sheetAllowedDetents: [0.2, 0.5, 1.0],
           sheetLargestUndimmedDetentIndex: 1,
           /* other options */
         }}
       />
     </Stack>
-  );
+  )
 }
 ```
 
@@ -134,24 +134,24 @@ export default function Layout() {
 
 ```tsx
 // _layout.tsx
-import { Stack } from 'expo-router';
+import { Stack } from "expo-router";
 
 export default function Layout() {
   return (
     <Stack>
-      <Stack.Screen name='index' options={{ title: 'Home' }} />
+      <Stack.Screen name="index" options={{ title: "Home" }} />
       <Stack.Screen
-        name='confirm'
+        name="confirm"
         options={{
-          contentStyle: { backgroundColor: 'transparent' },
-          presentation: 'formSheet',
-          title: '',
+          contentStyle: { backgroundColor: "transparent" },
+          presentation: "formSheet",
+          title: "",
           sheetGrabberVisible: true,
           sheetAllowedDetents: [0.25],
           headerTransparent: true,
         }}
       >
-        <Stack.Header style={{ backgroundColor: 'transparent' }}>
+        <Stack.Header style={{ backgroundColor: "transparent" }}>
           <Stack.Header.Right />
         </Stack.Header>
       </Stack.Screen>
@@ -162,8 +162,8 @@ export default function Layout() {
 
 ```tsx
 // app/confirm.tsx
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
+import { View, Text, Pressable, StyleSheet } from "react-native";
+import { router } from "expo-router";
 
 export default function ConfirmSheet() {
   return (
@@ -194,21 +194,21 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   title: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
   },
   description: {
     fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
   },
   footer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 16,
     gap: 12,
   },
@@ -216,24 +216,24 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 14,
     borderRadius: 10,
-    backgroundColor: '#f0f0f0',
-    alignItems: 'center',
+    backgroundColor: "#f0f0f0",
+    alignItems: "center",
   },
   cancelText: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   confirmButton: {
     flex: 1,
     padding: 14,
     borderRadius: 10,
-    backgroundColor: '#007AFF',
-    alignItems: 'center',
+    backgroundColor: "#007AFF",
+    alignItems: "center",
   },
   confirmText: {
     fontSize: 16,
-    fontWeight: '500',
-    color: 'white',
+    fontWeight: "500",
+    color: "white",
   },
 });
 ```

@@ -27,10 +27,7 @@ const composed = useMemo(() => Gesture.Race(pan, longPress), [pan, longPress]);
 // v3
 const composed = useExclusiveGestures(doubleTap, singleTap);
 // v2
-const composed = useMemo(
-  () => Gesture.Exclusive(doubleTap, singleTap),
-  [doubleTap, singleTap],
-);
+const composed = useMemo(() => Gesture.Exclusive(doubleTap, singleTap), [doubleTap, singleTap]);
 ```
 
 **Do not reuse the same gesture instance across multiple GestureDetectors** -- this causes undefined behavior. Create separate gesture instances for each detector.
@@ -90,7 +87,7 @@ const doubleTap = useTapGesture({
 
 ### block
 
-Prevent referenced gestures from activating while this one is active. Use for ScrollView with pinchable items -- block scroll while pinching:
+Prevent referenced gestures from activating while this one is active. Use for ScrollView with gestures attached to items -- block scroll while pinching:
 
 ```tsx
 // v3
@@ -108,27 +105,20 @@ The most common cross-component scenario. Create a Native gesture for the Scroll
 
 ```tsx
 // v2
-const scrollRef = useRef(null);
-const nativeScroll = useMemo(() => Gesture.Native().withRef(scrollRef), []);
-const pan = useMemo(
-  () =>
-    Gesture.Pan()
-      .simultaneousWithExternalGesture(nativeScroll)
-      .onUpdate(e => {
-        offsetX.value = e.translationX;
-      }),
-  [nativeScroll],
-);
-const composed = useMemo(
-  () => Gesture.Simultaneous(pan, nativeScroll),
-  [pan, nativeScroll],
-);
+const nativeScroll = useMemo(() => Gesture.Native(), []);
+const pan = useMemo(() =>
+  Gesture.Pan()
+    .simultaneousWithExternalGesture(nativeScroll)
+    .onUpdate((e) => { offsetX.value = e.translationX; }),
+[nativeScroll]);
 
-<ScrollView ref={scrollRef}>
-  <GestureDetector gesture={composed}>
-    <Animated.View style={animatedStyle} />
-  </GestureDetector>
-</ScrollView>;
+<GestureDetector gesture={nativeScroll}>
+  <ScrollView>
+    <GestureDetector gesture={pan}>
+      <Animated.View style={animatedStyle} />
+    </GestureDetector>
+  </ScrollView>
+</GestureDetector>
 ```
 
 For horizontal pan inside vertical ScrollView, use `activeOffsetX` and `failOffsetY` on the Pan to disambiguate:
@@ -176,11 +166,11 @@ import {
 ```
 
 Rules:
-
 - `VirtualGestureDetector` must be a descendant of `InterceptingGestureDetector`
 - `InterceptingGestureDetector`'s `gesture` prop is optional (it can serve solely as context)
 - `VirtualGestureDetector` with `Animated.event` only works with `useNativeDriver: false`
 - Do not nest detectors using different APIs (hook vs builder) -- causes undefined behavior
+- Keep `InterceptingGestureDetector` as close to the root of the subtree as possible (attached to the `<Svg>`, or the non-nested `<Text>` components)
 
 For full API, webfetch [Gesture Detectors](https://docs.swmansion.com/react-native-gesture-handler/docs/fundamentals/gesture-detectors).
 
@@ -213,7 +203,7 @@ Changes to the `enabled` property only take effect when a new gesture starts (fi
 When implementing custom gesture components inside a `ScrollView` on web, set `touchAction` on `GestureDetector` to allow browser scroll:
 
 ```tsx
-<GestureDetector gesture={swipe} touchAction='pan-y'>
+<GestureDetector gesture={swipe} touchAction="pan-y">
   {/* Allows vertical scrolling while handling horizontal swipe */}
 </GestureDetector>
 ```

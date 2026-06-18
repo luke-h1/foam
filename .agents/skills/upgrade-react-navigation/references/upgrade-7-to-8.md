@@ -7,19 +7,19 @@ Upgrade React Navigation to 8.x and handle the required breaking changes.
 ## Minimum requirements
 
 - Upgrade all `@react-navigation/*` packages together.
-- Verify the official minimum versions:
+- Verify the official minimum versions and update if needed:
   - `react-native` `>= 0.83`
   - `expo` `>= 55` if you use Expo
-  - `typescript` `>= 5.9.2` if you use TypeScript
-  - `react-native-screens` `>= 4.20.0`
+  - `typescript` `>= 6.0.0` if you use TypeScript
+  - `react-native-screens` `>= 4.25.0`
   - `react-native-safe-area-context` `>= 5.5.0`
+  - `react-native-gesture-handler` `>= 3.0.0`
   - `react-native-reanimated` `>= 4.0.0`
+  - `react-native-pager-view` `>= 8.0.0`
   - `react-native-web` `>= 0.21.0` if the app targets Web
-- Install or update these required packages:
-  - `react-native-screens`
-  - `react-native-safe-area-context`
-  - `react-native-reanimated`
-  - `react-native-pager-view` to the latest compatible version
+- Install these required packages:
+  - `react-native-screens` `>= 4.25.0`
+  - `react-native-safe-area-context` `>= 5.5.0`
   - `@callstack/liquid-glass`
 - If the repo uses Expo, ensure development builds are used. Verify that either `expo-dev-client` is installed or the start workflow uses `expo start --dev-client`.
 - If the repo uses TypeScript, set `moduleResolution: 'bundler'` and enable either `strict: true` or `strictNullChecks: true`.
@@ -39,18 +39,19 @@ If custom navigators use built-in navigator views such as `StackView`, `BottomTa
 ## Areas to review
 
 - Root navigator typing, common hook usage, static screen config objects, and custom navigator typings
-- Bottom tabs, custom tab bars, tab headers, and image-based tab icons
-- Navigation APIs affected by removed navigator ids, `getParent(id)`, `navigateDeprecated`, `navigationInChildEnabled`, `setParams` with `backBehavior="fullHistory"`, and `getId` behavior changes
+- Bottom tabs, custom tab bars, tab headers, image-based tab icons, Material Top Tabs, and direct `react-native-tab-view` usage
+- Navigation APIs affected by removed navigator ids, `getParent(id)`, `navigateDeprecated`, `navigationInChildEnabled`, `setParams` with `backBehavior="fullHistory"`, the screen `getId` prop, and the removed `navigation.getId()` method
 - Removed lifecycle and layout props such as detach/freeze options, `Header` layout props, and `getDefaultHeaderHeight`
 - Linking and static navigation config, including `prefixes`, `enabled`, `UNSTABLE_router`, and `UNSTABLE_routeNamesChangeBehavior`
-- Direct `@react-navigation/elements` usage, removed exports, and direct `Header` rendering
+- Direct `@react-navigation/core` and `@react-navigation/elements` usage, plus server-rendering impact
 
 ## Required migration steps
 
 ### 1. Update dependencies and environment
 
 - Upgrade all `@react-navigation/*` packages together.
-- Install or update the required peer packages listed above.
+- Install `react-native-screens` `>= 4.25.0`, `react-native-safe-area-context` `>= 5.5.0`, and `@callstack/liquid-glass`.
+- Check the other listed peer package minimum versions when they are already present or required by the app's navigators.
 - If the repo uses Expo, ensure development builds are used by installing `expo-dev-client` or by using `expo start --dev-client` in the start workflow.
 - If the repo uses TypeScript, update `tsconfig.json` so it uses `moduleResolution: 'bundler'` and either `strict: true` or `strictNullChecks: true`.
 
@@ -91,7 +92,7 @@ const navigation = useNavigation('Profile');
 const route = useRoute('Profile');
 const focusedRouteName = useNavigationState(
   'Profile',
-  state => state.routes[state.index].name,
+  (state) => state.routes[state.index].name,
 );
 ```
 
@@ -108,7 +109,7 @@ const navigation = useNavigation() as StackNavigationProp<
 const route = useRoute() as RouteProp<RootStackParamList, 'Profile'>;
 
 const focusedRouteName = useNavigationState(
-  state => state.routes[state.index].name as keyof RootStackParamList,
+  (state) => state.routes[state.index].name as keyof RootStackParamList,
 );
 ```
 
@@ -134,25 +135,16 @@ const Stack = createNativeStackNavigator({
 
 #### Custom navigators need updated types
 
-If the repo defines a custom navigator, update its `createNavigatorFactory` call and any local navigator wrapper typings. Define the type bag as an interface extending `NavigatorTypeBagBase` (use `this['ParamList']` for self-reference, and the new `ActionHelpers` field for action helpers like `TabActionHelpers`), then pass it as a type parameter to `createNavigatorFactory`. Add a `createXScreen` helper for static screen configs using the new `createScreenFactory`.
+If the repo defines a custom navigator, update its `createNavigatorFactory` call and any local navigator wrapper typings. Define the type bag as an exported interface extending `NavigatorTypeBagBase` (use `this['ParamList']` for self-reference, and the new `ActionHelpers` field for action helpers like `TabActionHelpers`), then pass it as a type parameter to `createNavigatorFactory`. Add a `createXScreen` helper for static screen configs using the new `createScreenFactory`.
 
-The new shape should look like this:
+The updated shape should look like this:
 
 ```tsx
-import * as React from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  type StyleProp,
-  type ViewStyle,
-  StyleSheet,
-} from 'react-native';
 import {
   createNavigatorFactory,
   createScreenFactory,
-  CommonActions,
   type DefaultNavigatorOptions,
+  type NavigationProp,
   type NavigatorTypeBagBase,
   type ParamListBase,
   type TabActionHelpers,
@@ -160,7 +152,6 @@ import {
   TabRouter,
   type TabRouterOptions,
   useNavigationBuilder,
-  type NavigationProp,
 } from '@react-navigation/native';
 
 type MyNavigationConfig = {
@@ -179,21 +170,17 @@ type MyNavigationEventMap = {
 type MyNavigationProp<
   ParamList extends ParamListBase,
   RouteName extends keyof ParamList = keyof ParamList,
-  NavigatorID extends string | undefined = undefined,
 > = NavigationProp<
   ParamList,
   RouteName,
-  NavigatorID,
   TabNavigationState<ParamList>,
   MyNavigationOptions,
-  MyNavigationEventMap
-> &
-  TabActionHelpers<ParamList>;
+  MyNavigationEventMap,
+  TabActionHelpers<ParamList>
+>;
 
-// The props accepted by the component is a combination of 3 things
 type Props = DefaultNavigatorOptions<
   ParamListBase,
-  string | undefined,
   TabNavigationState<ParamListBase>,
   MyNavigationOptions,
   MyNavigationEventMap,
@@ -220,7 +207,7 @@ function TabNavigator({ tabBarStyle, contentStyle, ...rest }: Props) {
 }
 
 // Types required for type-checking the navigator
-interface MyTabTypeBag extends NavigatorTypeBagBase {
+export interface MyTabTypeBag extends NavigatorTypeBagBase {
   State: TabNavigationState<this['ParamList']>;
   ScreenOptions: MyNavigationOptions;
   EventMap: MyNavigationEventMap;
@@ -291,7 +278,7 @@ const parent = navigation.getParent('RootTabs');
 After:
 
 ```tsx
-<RootStack.Screen name='HomeTabs' component={HomeTabsScreen} />
+<RootStack.Screen name="HomeTabs" component={HomeTabsScreen} />
 ```
 
 ```tsx
@@ -314,11 +301,25 @@ After:
 navigation.pushParams({ filter: 'new' });
 ```
 
-#### `getId` no longer reorders the stack
+#### Stack state shape changed
 
-In 7.x, navigating to an existing route with the same `getId` could move that route instance to the top of the stack. In 8.x, it no longer reorders the stack that way.
+`state.preloadedRoutes` is removed. `state.routes` now contains both active and preloaded routes, with preloaded routes at `state.routes.slice(state.index + 1)`.
 
-If code relied on returning to the existing route instance instead of pushing a new one, rewrite the affected call sites to use `{ pop: true }`.
+Update code that reads the focused route from the end of the array, or that reads `state.preloadedRoutes` directly (e.g. in `useNavigationState`).
+
+Before:
+
+```tsx
+const focused = state.routes[state.routes.length - 1];
+const preloaded = state.preloadedRoutes;
+```
+
+After:
+
+```tsx
+const focused = state.routes[state.index];
+const preloaded = state.routes.slice(state.index + 1);
+```
 
 #### Navigators no longer use `InteractionManager`
 
@@ -348,10 +349,11 @@ If the repo manually annotates React Navigation icon props, header props, or nav
 
 Check these cases:
 
-- `layout` on `Header`
-- `titleLayout` and `screenLayout` on `HeaderBackButton`
+- `layout` on `Header` (both `@react-navigation/elements` and stack)
+- `titleLayout`, `screenLayout`, and `onLabelLayout` on `HeaderBackButton`
 - `layouts.title` and `layouts.leftLabel` in stack `headerStyleInterpolator`
-- `layout` in `react-native-tab-view`
+- `layout` on bottom tab bar props
+- `layout` and `initialLayout` in `react-native-tab-view`
 - `layout` in `react-native-drawer-layout`
 
 If removed layout-related props were previously used to read header or screen dimensions, replace that usage with `useFrameSize` from `@react-navigation/elements`.
@@ -378,6 +380,7 @@ Apply these direct updates:
 
 - `headerSearchBarOptions.onChangeText` becomes `onChange`
 - `headerBackImage` and `headerBackImageSource` become `headerBackIcon`
+- `headerLargeTitle` becomes `headerLargeTitleEnabled`
 - `gestureResponseDistance` in stack now takes a `number`
 - `overlayColor` in drawer becomes `overlayStyle`
 
@@ -415,6 +418,36 @@ Remove these native stack options:
 - `statusBarBackgroundColor`
 - `statusBarTranslucent`
 
+#### Material Top Tabs and `react-native-tab-view` use Material Design 3
+
+Material Top Tabs and `react-native-tab-view` now use the Material Design 3 primary tab bar variant by default.
+
+To preserve the previous visual style, use the secondary variant.
+
+For Material Top Tabs Navigator:
+
+```tsx
+<Tab.Navigator
+  screenOptions={{
+    tabBarVariant: 'secondary',
+  }}
+>
+```
+
+For `react-native-tab-view`:
+
+```tsx
+<TabBar variant="secondary" {...props} />
+```
+
+Update custom indicator and tab item code:
+
+- `renderIndicator`, `tabBarIndicator`, and `TabBarIndicator` no longer receive `width`, `getTabWidth`, `gap`, or `children`
+- indicator props now include `variant`, `widths`, and `offsets`
+- `renderTabBarItem` and `TabBarItem` no longer receive `onLayout` or `defaultTabWidth`
+- tab item props now include `variant`, `onMeasureLayout`, and `onMeasureLabelLayout`
+- custom tab bar items must call `onMeasureLayout` and `onMeasureLabelLayout` so the indicator can measure correctly
+
 ### 4. Update linking and static navigation config
 
 #### `prefixes` is no longer required
@@ -436,13 +469,25 @@ This applies only to static `Navigation`, not dynamic `NavigationContainer`.
 - Rename `UNSTABLE_routeNamesChangeBehavior` to `routeNamesChangeBehavior`
 - If the repo uses `UNSTABLE_router`, rename it to `router` without changing the implementation
 
-### 5. Remove deprecated APIs and update `@react-navigation/elements`
+### 5. Remove deprecated APIs and public exports
 
 If these deprecated APIs are present, update or remove them:
 
 - Replace `navigateDeprecated(ScreenName, params)` with `navigate(ScreenName, params, { pop: true })`
-- `navigation.getId` has no direct replacement; remove the usage and rework the surrounding logic to use screen names or route params instead of navigator ids
+- The removed `navigation.getId()` method has no direct replacement; remove the usage and rework the surrounding logic to use screen names or route params instead of navigator ids
 - Remove `navigationInChildEnabled` only after migrating navigation actions so they start from a screen in the current or parent navigator
+
+#### Removed exports from `@react-navigation/core`
+
+Replace:
+
+- `createComponentForStaticNavigation` with the static navigator's `getComponent()` method
+
+Remove usage of:
+
+- `CurrentRenderContext`
+- `StaticConfigGroup`
+- `StaticConfigScreens`
 
 #### `HeaderBackButton` and `DrawerToggleButton` now use `icon`
 
@@ -467,8 +512,11 @@ Replace:
 - `Background` with `useTheme` plus a normal `View`
 - `Screen` with the public components or plain `View` structure that renders the same UI. If it was only being used to render a header, render `Header` directly instead
 - `SafeAreaProviderCompat` with `SafeAreaProvider` from `react-native-safe-area-context`
+- `Lazy` and `ResourceSavingView` with local copied implementations only if the behavior is still needed
 - `MissingIcon` with local placeholder icon code
 - `Assets` by removing the preloading code
+
+Some of these exports are still available from `@react-navigation/elements/internal` as an unstable escape hatch if a direct replacement is not feasible.
 
 #### Direct `Header` usage
 
@@ -501,29 +549,35 @@ getDefaultHeaderHeight({
 2. Rework the TypeScript setup.
 3. Update navigator behavior and option APIs.
 4. Update linking and static navigation config.
-5. Remove deprecated APIs and update direct `@react-navigation/elements` usage.
+5. Remove deprecated APIs and public exports.
 6. Run automated checks, then ask the user to complete manual checks.
 7. Call out the behavior changes introduced by the migration.
 
 ## Behavior changes to note
 
 - Code previously deferred with `InteractionManager.runAfterInteractions` now runs from navigator `transitionEnd` events instead of the old global interaction queue behavior.
-- Navigating to an existing route with the same `getId` no longer moves that route instance to the top of the stack. If the previous flow relied on going back to the existing route instead of pushing a new one, it now needs `{ pop: true }`.
+- Navigating to an existing route with the same screen `getId` value no longer moves that route instance to the top of the stack. If the previous flow relied on going back to the existing route instead of pushing a new one, it now needs `{ pop: true }`.
+- Calling `preload()` for the same screen now updates that screen's params instead of creating a separate preloaded instance. If a flow relied on preloading multiple instances of the same screen, set the screen `getId` prop so each call with a different id creates a distinct preloaded instance.
 - Previously, detach and freeze options could keep unfocused screens mounted or keep their effects alive. Now `inactiveBehavior: 'pause'` can clean up effects or background work when a screen becomes unfocused.
 - Previously, native stack Android system bar options could customize or disable those bars through React Navigation. Now those options are removed, so apps must keep edge-to-edge enabled and handle system bars outside React Navigation.
+- On Web, unfocused screens now use the `inert` attribute so they are non-interactive and hidden from assistive technologies without requiring `display: none`.
+- Server rendering changed in a way that may require app-specific routing and metadata handling: `ServerContainer` moved to `@react-navigation/native/server`, its `location` prop now takes a `URL`, and it no longer accepts a `ref` or exposes `getCurrentOptions`.
 
 ## Automated checks
 
-- Required package versions and peer dependencies are installed, including `react-native-screens`, `react-native-safe-area-context`, `react-native-reanimated`, `react-native-pager-view`, and `@callstack/liquid-glass`.
+- Required packages are installed and meet minimum versions: `react-native-screens` `>= 4.25.0`, `react-native-safe-area-context` `>= 5.5.0`, and `@callstack/liquid-glass`.
+- Other peer dependency entries meet the minimum versions when they are already present or required by the app's navigators, including `react-native-gesture-handler`, `react-native-reanimated`, `react-native-pager-view`, and `react-native-web`.
 - Expo repos use a development-build workflow.
 - TypeScript repos use `moduleResolution: 'bundler'` and either `strict: true` or `strictNullChecks: true`.
 - Global `RootParamList` registration is replaced with `RootNavigator` module augmentation.
 - `useNavigation`, `useRoute`, and `useNavigationState` no longer use hook generics.
 - Object-form static screen configs use the matching `createXScreen` helper.
-- Navigator `id` props are removed, `navigation.getParent(id)` is rewritten, and `navigation.getId` is no longer used.
+- Navigator `id` props are removed, `navigation.getParent(id)` is rewritten, and the removed `navigation.getId()` method is no longer used.
 - Static `Navigation` linking config no longer relies on `enabled: 'auto'`, and explicit `enabled` values preserve the previous behavior where needed.
 - Removed APIs and props are gone, including `@react-navigation/bottom-tabs/unstable`, `navigateDeprecated`, `navigationInChildEnabled`, `headerBackImage`, `headerBackImageSource`, `imageSource`, `detachInactiveScreens`, `detachPreviousScreen`, `freezeOnBlur`, `navigationBarColor`, `navigationBarTranslucent`, `statusBarBackgroundColor`, `statusBarTranslucent`, `UNSTABLE_router`, and `UNSTABLE_routeNamesChangeBehavior`.
+- Material Top Tabs and direct `react-native-tab-view` usage have been updated for `tabBarVariant`, `TabBar` `variant`, custom indicator props, custom tab item measurement props, and removed `initialLayout`.
 - Removed `@react-navigation/elements` exports are fully replaced.
+- Removed `@react-navigation/core` exports are fully replaced or removed.
 
 ## Manual checks
 

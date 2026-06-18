@@ -31,19 +31,19 @@ export const SpriteGrid = () => {
     <Group>
       <Rect
         rect={rect(strokeWidth / 2, strokeWidth / 2, size.width, size.height)}
-        color='cyan'
+        color="cyan"
       />
       <Rect
         rect={rect(strokeWidth / 2, strokeWidth / 2, size.width, size.height)}
-        color='blue'
-        style='stroke'
+        color="blue"
+        style="stroke"
         strokeWidth={strokeWidth}
       />
     </Group>,
-    textureSize,
+    textureSize
   );
 
-  const gesture = Gesture.Pan().onChange(e => (pos.value = e));
+  const gesture = Gesture.Pan().onChange((e) => (pos.value = e));
   const count = 150;
   const gridWidth = 256;
 

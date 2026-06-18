@@ -22,9 +22,9 @@ tabs. Avoid `@react-navigation/bottom-tabs` when native feel matters.
 **Incorrect (JS stack navigator):**
 
 ```tsx
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator } from '@react-navigation/stack'
 
-const Stack = createStackNavigator();
+const Stack = createStackNavigator()
 
 function App() {
   return (
@@ -32,16 +32,16 @@ function App() {
       <Stack.Screen name='Home' component={HomeScreen} />
       <Stack.Screen name='Details' component={DetailsScreen} />
     </Stack.Navigator>
-  );
+  )
 }
 ```
 
 **Correct (native stack with react-navigation):**
 
 ```tsx
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack'
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator()
 
 function App() {
   return (
@@ -49,7 +49,7 @@ function App() {
       <Stack.Screen name='Home' component={HomeScreen} />
       <Stack.Screen name='Details' component={DetailsScreen} />
     </Stack.Navigator>
-  );
+  )
 }
 ```
 
@@ -57,10 +57,10 @@ function App() {
 
 ```tsx
 // app/_layout.tsx
-import { Stack } from 'expo-router';
+import { Stack } from 'expo-router'
 
 export default function Layout() {
-  return <Stack />;
+  return <Stack />
 }
 ```
 
@@ -69,9 +69,9 @@ export default function Layout() {
 **Incorrect (JS bottom tabs):**
 
 ```tsx
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator()
 
 function App() {
   return (
@@ -79,16 +79,16 @@ function App() {
       <Tab.Screen name='Home' component={HomeScreen} />
       <Tab.Screen name='Settings' component={SettingsScreen} />
     </Tab.Navigator>
-  );
+  )
 }
 ```
 
 **Correct (native bottom tabs with react-navigation):**
 
 ```tsx
-import { createNativeBottomTabNavigator } from '@bottom-tabs/react-navigation';
+import { createNativeBottomTabNavigator } from '@bottom-tabs/react-navigation'
 
-const Tab = createNativeBottomTabNavigator();
+const Tab = createNativeBottomTabNavigator()
 
 function App() {
   return (
@@ -108,7 +108,7 @@ function App() {
         }}
       />
     </Tab.Navigator>
-  );
+  )
 }
 ```
 
@@ -116,7 +116,7 @@ function App() {
 
 ```tsx
 // app/(tabs)/_layout.tsx
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { NativeTabs } from 'expo-router/unstable-native-tabs'
 
 export default function TabLayout() {
   return (
@@ -130,7 +130,7 @@ export default function TabLayout() {
         <NativeTabs.Trigger.Icon sf='gear' md='settings' />
       </NativeTabs.Trigger>
     </NativeTabs>
-  );
+  )
 }
 ```
 

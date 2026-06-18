@@ -11,7 +11,7 @@ import Animated, {
   FadeIn,
   FadeOut,
   LinearTransition,
-} from 'react-native-reanimated';
+} from "react-native-reanimated";
 
 function App() {
   return (
@@ -34,14 +34,14 @@ import Animated, {
   useScrollViewOffset,
   useAnimatedStyle,
   interpolate,
-} from 'react-native-reanimated';
+} from "react-native-reanimated";
 
 function Page() {
   const ref = useAnimatedRef();
   const scroll = useScrollViewOffset(ref);
 
   const style = useAnimatedStyle(() => ({
-    opacity: interpolate(scroll.value, [0, 30], [0, 1], 'clamp'),
+    opacity: interpolate(scroll.value, [0, 30], [0, 1], "clamp"),
   }));
 
   return (
@@ -112,7 +112,7 @@ import {
   useSharedValue,
   withSpring,
   withTiming,
-} from 'react-native-reanimated';
+} from "react-native-reanimated";
 
 const offset = useSharedValue(0);
 
@@ -133,19 +133,19 @@ const style = useAnimatedStyle(() => ({
 Combine with React Native Gesture Handler:
 
 ```tsx
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-} from 'react-native-reanimated';
+} from "react-native-reanimated";
 
 function DraggableBox() {
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
 
   const gesture = Gesture.Pan()
-    .onUpdate(e => {
+    .onUpdate((e) => {
       translateX.value = e.translationX;
       translateY.value = e.translationY;
     })
@@ -177,7 +177,7 @@ Animate with keyboard height changes:
 import Animated, {
   useAnimatedKeyboard,
   useAnimatedStyle,
-} from 'react-native-reanimated';
+} from "react-native-reanimated";
 
 function KeyboardAwareView() {
   const keyboard = useAnimatedKeyboard();

@@ -11,7 +11,7 @@ For API details on specific components and props, webfetch https://github.com/so
 
 ## References
 
-| File             | When to read                                                                                                                                |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `when-to-use.md` | Deciding between react-native-svg, expo-image, @expo/vector-icons, Skia, or Lottie                                                          |
-| `svg.md`         | Installing react-native-svg; loading SVGs from URIs, XML strings, or files; filters; touch events; performance considerations; known issues |
+| File | When to read |
+|------|-------------|
+| `when-to-use.md` | Deciding between react-native-svg, expo-image, @expo/vector-icons, Skia, or Lottie |
+| `svg.md` | Installing react-native-svg; loading SVGs from URIs, XML strings, or files; filters; touch events; performance considerations; known issues |

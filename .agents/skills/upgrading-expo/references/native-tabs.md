@@ -12,10 +12,10 @@ import {
   Label,
   Badge,
   VectorIcon,
-} from 'expo-router/unstable-native-tabs';
+} from "expo-router/unstable-native-tabs";
 
 // SDK 55+
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { NativeTabs } from "expo-router/unstable-native-tabs";
 ```
 
 ## Component Changes
@@ -39,7 +39,7 @@ New component for Apple Music-style mini players on iOS +26 that float above the
   <NativeTabs.BottomAccessory>
     {/* Content above tabs */}
   </NativeTabs.BottomAccessory>
-  <NativeTabs.Trigger name='(index)'>
+  <NativeTabs.Trigger name="(index)">
     <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
   </NativeTabs.Trigger>
 </NativeTabs>
@@ -52,7 +52,7 @@ On Android and web, this component will render as a no-op. Position a view absol
 New `md` prop for Material icon glyphs on Android (alongside existing `drawable`):
 
 ```tsx
-<NativeTabs.Trigger.Icon sf='house' md='home' />
+<NativeTabs.Trigger.Icon sf="house" md="home" />
 ```
 
 ## Full Migration Example
@@ -65,21 +65,21 @@ import {
   Icon,
   Label,
   Badge,
-} from 'expo-router/unstable-native-tabs';
+} from "expo-router/unstable-native-tabs";
 
 export default function TabLayout() {
   return (
-    <NativeTabs minimizeBehavior='onScrollDown'>
-      <NativeTabs.Trigger name='(index)'>
+    <NativeTabs minimizeBehavior="onScrollDown">
+      <NativeTabs.Trigger name="(index)">
         <Label>Home</Label>
-        <Icon sf='house.fill' />
+        <Icon sf="house.fill" />
         <Badge>3</Badge>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name='(settings)'>
+      <NativeTabs.Trigger name="(settings)">
         <Label>Settings</Label>
-        <Icon sf='gear' />
+        <Icon sf="gear" />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name='(search)' role='search'>
+      <NativeTabs.Trigger name="(search)" role="search">
         <Label>Search</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
@@ -90,21 +90,21 @@ export default function TabLayout() {
 ### After (SDK 55+)
 
 ```tsx
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { NativeTabs } from "expo-router/unstable-native-tabs";
 
 export default function TabLayout() {
   return (
-    <NativeTabs minimizeBehavior='onScrollDown'>
-      <NativeTabs.Trigger name='(index)'>
+    <NativeTabs minimizeBehavior="onScrollDown">
+      <NativeTabs.Trigger name="(index)">
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf='house.fill' md='home' />
+        <NativeTabs.Trigger.Icon sf="house.fill" md="home" />
         <NativeTabs.Trigger.Badge>3</NativeTabs.Trigger.Badge>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name='(settings)'>
+      <NativeTabs.Trigger name="(settings)">
         <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf='gear' md='settings' />
+        <NativeTabs.Trigger.Icon sf="gear" md="settings" />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name='(search)' role='search'>
+      <NativeTabs.Trigger name="(search)" role="search">
         <NativeTabs.Trigger.Label>Search</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>

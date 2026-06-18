@@ -107,8 +107,8 @@ AudioManager.setAudioSessionActivity(false);
 import { FileFormat, FilePreset, FileDirectory } from 'react-native-audio-api';
 
 recorder.enableFileOutput({
-  format: FileFormat.M4A, // M4A | Wav | Caf | Flac
-  preset: FilePreset.High, // Lossless | High | Medium | Low
+  format: FileFormat.M4A,      // M4A | Wav | Caf | Flac
+  preset: FilePreset.High,     // Lossless | High | Medium | Low
   directory: FileDirectory.Document, // Document | Cache (default)
   subDirectory: 'recordings',
   fileNamePrefix: 'voice_note',
@@ -118,21 +118,21 @@ recorder.enableFileOutput({
 
 ### File Format Guide
 
-| Format | Best for                       | Notes                                         |
-| ------ | ------------------------------ | --------------------------------------------- |
-| `M4A`  | General recording, voice notes | Default. Good compression, wide compatibility |
-| `Wav`  | Lossless capture               | Large files, use with `Lossless` preset       |
-| `Caf`  | iOS lossless capture           | Apple-specific container                      |
-| `Flac` | High quality with compression  | Lossless compression, smaller than WAV        |
+| Format | Best for | Notes |
+|--------|----------|-------|
+| `M4A` | General recording, voice notes | Default. Good compression, wide compatibility |
+| `Wav` | Lossless capture | Large files, use with `Lossless` preset |
+| `Caf` | iOS lossless capture | Apple-specific container |
+| `Flac` | High quality with compression | Lossless compression, smaller than WAV |
 
 ### Preset Guide
 
-| Preset     | Use case                                            |
-| ---------- | --------------------------------------------------- |
-| `Lossless` | Maximum quality, large files. Only with WAV or CAF  |
-| `High`     | Music, high-quality voice. Near-lossless perception |
-| `Medium`   | Voice notes, podcasts. Good quality/size balance    |
-| `Low`      | Quick notes, diagnostics. Small files, speech-only  |
+| Preset | Use case |
+|--------|----------|
+| `Lossless` | Maximum quality, large files. Only with WAV or CAF |
+| `High` | Music, high-quality voice. Near-lossless perception |
+| `Medium` | Voice notes, podcasts. Good quality/size balance |
+| `Low` | Quick notes, diagnostics. Small files, speech-only |
 
 ### Custom Preset
 
@@ -180,7 +180,7 @@ recorder.onAudioReady(
     // buffer is an AudioBuffer with PCM data
     // numFrames: number of audio frames in this chunk
     // when: timestamp relative to recording start
-  },
+  }
 );
 
 // Clean up when done
@@ -196,11 +196,7 @@ The `sampleRate`, `bufferLength`, and `channelCount` are preferred values. Actua
 Connects the recorder to the audio graph through a `RecorderAdapterNode` for real-time processing with effects, analysis, or worklets.
 
 ```tsx
-import {
-  AudioRecorder,
-  AudioContext,
-  AudioManager,
-} from 'react-native-audio-api';
+import { AudioRecorder, AudioContext, AudioManager } from 'react-native-audio-api';
 
 AudioManager.setAudioSessionOptions({
   iosCategory: 'playAndRecord',
@@ -237,15 +233,15 @@ recorder.disconnect(); // disconnects from the audio graph
 ## Pause and Resume
 
 ```tsx
-recorder.pause(); // pauses without finalizing the file
-recorder.resume(); // resumes from where it paused
+recorder.pause();    // pauses without finalizing the file
+recorder.resume();   // resumes from where it paused
 ```
 
 ### State Queries
 
 ```tsx
 recorder.isRecording(); // true if actively recording
-recorder.isPaused(); // true if paused
+recorder.isPaused();    // true if paused
 recorder.getCurrentDuration(); // current recording duration (file output only)
 ```
 
@@ -254,7 +250,7 @@ recorder.getCurrentDuration(); // current recording duration (file output only)
 ## Error Handling
 
 ```tsx
-recorder.onError(error => {
+recorder.onError((error) => {
   console.error('Recording error:', error.message);
 });
 

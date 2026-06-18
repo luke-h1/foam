@@ -106,7 +106,6 @@ Check if package.json has excluded packages:
 ```
 
 Exclusions are often workarounds that may no longer be needed after upgrading. Review each one.
-
 ## Removing patches
 
 Check if there are any outdated patches in the `patches/` directory. Remove them if they are no longer needed.

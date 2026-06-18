@@ -13,7 +13,6 @@ npm install @shopify/react-native-skia
 ```
 
 With Expo:
-
 ```sh
 npx expo install @shopify/react-native-skia
 ```
@@ -47,10 +46,10 @@ export const AnimatedCircles = () => {
 
   return (
     <Canvas style={{ flex: 1 }}>
-      <Group blendMode='multiply'>
-        <Circle cx={r} cy={r} r={r} color='cyan' />
-        <Circle cx={c} cy={r} r={r} color='magenta' />
-        <Circle cx={size / 2} cy={c} r={r} color='yellow' />
+      <Group blendMode="multiply">
+        <Circle cx={r} cy={r} r={r} color="cyan" />
+        <Circle cx={c} cy={r} r={r} color="magenta" />
+        <Circle cx={size / 2} cy={c} r={r} color="yellow" />
       </Group>
     </Canvas>
   );
@@ -76,7 +75,7 @@ const Demo = () => {
 
   return (
     <Canvas style={{ flex: 1 }} onSize={size}>
-      <Rect color='cyan' rect={rect} />
+      <Rect color="cyan" rect={rect} />
     </Canvas>
   );
 };
@@ -116,7 +115,7 @@ export const AnimatedGradient = () => {
     progress.value = withRepeat(
       withTiming(startColors.length - 1, { duration: 4000 }),
       -1,
-      true,
+      true
     );
   }, []);
 
@@ -219,12 +218,7 @@ Interpolates between path shapes based on a progress value. All paths must conta
 ```tsx
 import { useEffect } from 'react';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
-import {
-  Skia,
-  usePathInterpolation,
-  Canvas,
-  Path,
-} from '@shopify/react-native-skia';
+import { Skia, usePathInterpolation, Canvas, Path } from '@shopify/react-native-skia';
 
 const angry = Skia.Path.MakeFromSVGString('M 16 25 C 32 27 ...')!;
 const normal = Skia.Path.MakeFromSVGString('M 21 31 C 31 32 ...')!;
@@ -236,21 +230,11 @@ const MorphingFace = () => {
     progress.value = withTiming(1, { duration: 1000 });
   }, []);
 
-  const path = usePathInterpolation(
-    progress,
-    [0, 0.5, 1],
-    [angry, normal, happy],
-  );
+  const path = usePathInterpolation(progress, [0, 0.5, 1], [angry, normal, happy]);
 
   return (
     <Canvas style={{ flex: 1 }}>
-      <Path
-        path={path}
-        style='stroke'
-        strokeWidth={5}
-        strokeCap='round'
-        strokeJoin='round'
-      />
+      <Path path={path} style="stroke" strokeWidth={5} strokeCap="round" strokeJoin="round" />
     </Canvas>
   );
 };
@@ -263,24 +247,18 @@ Animates a path using imperative commands inside a worklet. Supports 3D transfor
 ```tsx
 import { useSharedValue, withSpring } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import {
-  usePathValue,
-  Canvas,
-  Path,
-  processTransform3d,
-  Skia,
-} from '@shopify/react-native-skia';
+import { usePathValue, Canvas, Path, processTransform3d, Skia } from '@shopify/react-native-skia';
 
 const rrct = Skia.Path.Make();
 rrct.addRRect(Skia.RRectXY(Skia.XYWHRect(0, 0, 100, 100), 10, 10));
 
 export const Card3D = () => {
   const rotateY = useSharedValue(0);
-  const gesture = Gesture.Pan().onChange(e => {
+  const gesture = Gesture.Pan().onChange((e) => {
     rotateY.value -= e.changeX / 300;
   });
 
-  const clip = usePathValue(path => {
+  const clip = usePathValue((path) => {
     'worklet';
     path.transform(
       processTransform3d([
@@ -288,7 +266,7 @@ export const Card3D = () => {
         { perspective: 300 },
         { rotateY: rotateY.value },
         { translate: [-50, -50] },
-      ]),
+      ])
     );
   }, rrct);
 
@@ -323,7 +301,7 @@ export default function Lissajous() {
 
   return (
     <Canvas style={{ flex: 1 }}>
-      <Circle c={vec(0, 0)} r={50} color='cyan' transform={transform} />
+      <Circle c={vec(0, 0)} r={50} color="cyan" transform={transform} />
     </Canvas>
   );
 }
@@ -346,10 +324,10 @@ export const DraggableCircle = () => {
   const translateX = useSharedValue(width / 2);
 
   const gesture = Gesture.Pan()
-    .onChange(e => {
+    .onChange((e) => {
       translateX.value += e.changeX;
     })
-    .onEnd(e => {
+    .onEnd((e) => {
       translateX.value = withDecay({
         velocity: e.velocityX,
         clamp: [0, width],
@@ -359,8 +337,8 @@ export const DraggableCircle = () => {
   return (
     <GestureDetector gesture={gesture}>
       <Canvas style={{ flex: 1 }}>
-        <Fill color='white' />
-        <Circle cx={translateX} cy={40} r={20} color='#3E3E' />
+        <Fill color="white" />
+        <Circle cx={translateX} cy={40} r={20} color="#3E3E" />
       </Canvas>
     </GestureDetector>
   );
@@ -375,10 +353,7 @@ Gestures apply to the entire canvas by default. To target a specific drawn eleme
 import { View } from 'react-native';
 import { Canvas, Circle, Fill } from '@shopify/react-native-skia';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-} from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
 
 const radius = 30;
 
@@ -395,7 +370,7 @@ export const TrackedCircle = () => {
     transform: [{ translateX: x.value }, { translateY: y.value }],
   }));
 
-  const gesture = Gesture.Pan().onChange(e => {
+  const gesture = Gesture.Pan().onChange((e) => {
     x.value += e.x;
     y.value += e.y;
   });
@@ -403,8 +378,8 @@ export const TrackedCircle = () => {
   return (
     <View style={{ flex: 1 }}>
       <Canvas style={{ flex: 1 }}>
-        <Fill color='white' />
-        <Circle cx={x} cy={y} r={radius} color='cyan' />
+        <Fill color="white" />
+        <Circle cx={x} cy={y} r={radius} color="cyan" />
       </Canvas>
       <GestureDetector gesture={gesture}>
         <Animated.View style={overlayStyle} />
@@ -445,13 +420,7 @@ vec4 main(vec2 pos) {
 Apply SKSL shaders as image filters to existing drawings. The currently filtered image is passed as the `image` uniform:
 
 ```tsx
-import {
-  Canvas,
-  Skia,
-  Group,
-  Circle,
-  RuntimeShader,
-} from '@shopify/react-native-skia';
+import { Canvas, Skia, Group, Circle, RuntimeShader } from '@shopify/react-native-skia';
 
 const source = Skia.RuntimeEffect.Make(`
 uniform shader image;
@@ -465,7 +434,7 @@ export const FilteredCircle = () => (
   <Canvas style={{ flex: 1 }}>
     <Group>
       <RuntimeShader source={source} />
-      <Circle cx={128} cy={128} r={128} color='lightblue' />
+      <Circle cx={128} cy={128} r={128} color="lightblue" />
     </Group>
   </Canvas>
 );

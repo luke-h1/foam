@@ -135,7 +135,7 @@ Follow Apple Human Interface Guidelines.
 Use CSS `boxShadow` style prop. NEVER use legacy React Native shadow or elevation styles.
 
 ```tsx
-<View style={{ boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)' }} />
+<View style={{ boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)" }} />
 ```
 
 'inset' shadows are supported.
@@ -170,7 +170,7 @@ Whenever possible, include a `<Link.Preview>` to follow iOS conventions. Add con
 Set the page title in Stack.Screen options:
 
 ```tsx
-<Stack.Screen options={{ title: 'Home' }} />
+<Stack.Screen options={{ title: "Home" }} />
 ```
 
 ## Context Menus
@@ -178,9 +178,9 @@ Set the page title in Stack.Screen options:
 Add long press context menus to Link components:
 
 ```tsx
-import { Link } from 'expo-router';
+import { Link } from "expo-router";
 
-<Link href='/settings' asChild>
+<Link href="/settings" asChild>
   <Link.Trigger>
     <Pressable>
       <Card />
@@ -188,21 +188,21 @@ import { Link } from 'expo-router';
   </Link.Trigger>
   <Link.Menu>
     <Link.MenuAction
-      title='Share'
-      icon='square.and.arrow.up'
+      title="Share"
+      icon="square.and.arrow.up"
       onPress={handleSharePress}
     />
     <Link.MenuAction
-      title='Block'
-      icon='nosign'
+      title="Block"
+      icon="nosign"
       destructive
       onPress={handleBlockPress}
     />
-    <Link.Menu title='More' icon='ellipsis'>
-      <Link.MenuAction title='Copy' icon='doc.on.doc' onPress={() => {}} />
+    <Link.Menu title="More" icon="ellipsis">
+      <Link.MenuAction title="Copy" icon="doc.on.doc" onPress={() => {}} />
       <Link.MenuAction
-        title='Delete'
-        icon='trash'
+        title="Delete"
+        icon="trash"
         destructive
         onPress={() => {}}
       />
@@ -216,7 +216,7 @@ import { Link } from 'expo-router';
 Use link previews frequently to enhance navigation:
 
 ```tsx
-<Link href='/settings'>
+<Link href="/settings">
   <Link.Trigger>
     <Pressable>
       <Card />
@@ -233,7 +233,7 @@ Link preview can be used with context menus.
 Present a screen as a modal:
 
 ```tsx
-<Stack.Screen name='modal' options={{ presentation: 'modal' }} />
+<Stack.Screen name="modal" options={{ presentation: "modal" }} />
 ```
 
 Prefer this to building a custom modal component.
@@ -244,12 +244,12 @@ Present a screen as a dynamic form sheet:
 
 ```tsx
 <Stack.Screen
-  name='sheet'
+  name="sheet"
   options={{
-    presentation: 'formSheet',
+    presentation: "formSheet",
     sheetGrabberVisible: true,
     sheetAllowedDetents: [0.5, 1.0],
-    contentStyle: { backgroundColor: 'transparent' },
+    contentStyle: { backgroundColor: "transparent" },
   }}
 />
 ```
@@ -271,18 +271,18 @@ app/
 
 ```tsx
 // app/_layout.tsx
-import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
-import { Theme } from '../components/theme';
+import { NativeTabs, Icon, Label } from "expo-router/unstable-native-tabs";
+import { Theme } from "../components/theme";
 
 export default function Layout() {
   return (
     <Theme>
       <NativeTabs>
-        <NativeTabs.Trigger name='(index)'>
-          <Icon sf='list.dash' />
+        <NativeTabs.Trigger name="(index)">
+          <Icon sf="list.dash" />
           <Label>Items</Label>
         </NativeTabs.Trigger>
-        <NativeTabs.Trigger name='(search)' role='search' />
+        <NativeTabs.Trigger name="(search)" role="search" />
       </NativeTabs>
     </Theme>
   );
@@ -293,12 +293,12 @@ Create a shared group route so both tabs can push common screens:
 
 ```tsx
 // app/(index,search)/_layout.tsx
-import { Stack } from 'expo-router/stack';
-import { PlatformColor } from 'react-native';
+import { Stack } from "expo-router/stack";
+import { PlatformColor } from "react-native";
 
 export default function Layout({ segment }) {
   const screen = segment.match(/\((.*)\)/)?.[1]!;
-  const titles: Record<string, string> = { index: 'Items', search: 'Search' };
+  const titles: Record<string, string> = { index: "Items", search: "Search" };
 
   return (
     <Stack
@@ -306,15 +306,15 @@ export default function Layout({ segment }) {
         headerTransparent: true,
         headerShadowVisible: false,
         headerLargeTitleShadowVisible: false,
-        headerLargeStyle: { backgroundColor: 'transparent' },
-        headerTitleStyle: { color: PlatformColor('label') },
+        headerLargeStyle: { backgroundColor: "transparent" },
+        headerTitleStyle: { color: PlatformColor("label") },
         headerLargeTitle: true,
-        headerBlurEffect: 'none',
-        headerBackButtonDisplayMode: 'minimal',
+        headerBlurEffect: "none",
+        headerBackButtonDisplayMode: "minimal",
       }}
     >
       <Stack.Screen name={screen} options={{ title: titles[screen] }} />
-      <Stack.Screen name='i/[id]' options={{ headerLargeTitle: false }} />
+      <Stack.Screen name="i/[id]" options={{ headerLargeTitle: false }} />
     </Stack>
   );
 }

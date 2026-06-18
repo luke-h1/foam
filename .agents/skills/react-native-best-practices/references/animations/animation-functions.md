@@ -19,7 +19,6 @@ Do **not** add `'worklet';` to callbacks passed to Reanimated and Worklets APIs 
 ### [useSharedValue](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue)
 
 **Gotchas:**
-
 - Never destructure: `const { value } = sv` breaks reactivity.
 - For objects, reassign the entire value: `sv.value = { ...sv.value, x: 50 }`. Direct mutation (`sv.value.x = 50`) loses reactivity.
 - For large arrays/objects, use `.modify()` to mutate in place: `sv.modify(arr => { arr.push(item); return arr; })`.
@@ -39,12 +38,7 @@ function Counter() {
   return (
     <Animated.View>
       {/* Triggers "Writing to value during component render" warning */}
-      <Button
-        onPress={() => {
-          count.value += 1;
-        }}
-        title={`Count: ${count.value}`}
-      />
+      <Button onPress={() => { count.value += 1; }} title={`Count: ${count.value}`} />
     </Animated.View>
   );
 }
@@ -59,12 +53,7 @@ function AnimatedCounter() {
 
   return (
     <Animated.View style={animatedStyle}>
-      <Button
-        onPress={() => {
-          offset.value = withSpring(offset.value + 50);
-        }}
-        title='Move'
-      />
+      <Button onPress={() => { offset.value = withSpring(offset.value + 50); }} title="Move" />
     </Animated.View>
   );
 }
@@ -77,11 +66,10 @@ const animatedStyle = useAnimatedStyle(() => ({
   transform: [{ translateX: withSpring(offset.value) }],
 }));
 
-<Animated.View style={[styles.box, animatedStyle]} />;
+<Animated.View style={[styles.box, animatedStyle]} />
 ```
 
 **Rules:**
-
 - Keep static styles in `StyleSheet.create()`. Only put dynamic parts in `useAnimatedStyle`.
 - Animated styles override static styles in the style array.
 - Removing an animated style does not unset its values. Manually set properties to `undefined` to clear them.
@@ -124,7 +112,6 @@ The ref value (`current`) is `null` until the component mounts. It is only acces
 ### [withSpring](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring)
 
 Two configuration modes (cannot mix):
-
 - **Physics-based** (stiffness/damping)
 - **Duration-based** (duration/dampingRatio)
 
@@ -169,7 +156,7 @@ sv.value = withRepeat(withTiming(1, { duration: 800 }), -1, true);
 sv.value = withSequence(
   withTiming(50, { duration: 200 }),
   withSpring(0),
-  withDelay(300, withTiming(100)),
+  withDelay(300, withTiming(100))
 );
 
 // Clamped spring

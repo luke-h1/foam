@@ -20,11 +20,11 @@ Load at most one reference file per question. For API signatures and config opti
 
 ## References
 
-| File                          | When to read                                                                                                                                                                                                                     |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `audio.md`                    | Decision tree for choosing an audio approach; AudioContext lifecycle and singleton pattern; audio graph concepts; decoding audio data; AudioBuffer state management                                                              |
-| `playback.md`                 | Playing audio with `AudioBufferSourceNode`, `OscillatorNode`, `StreamerNode`, `AudioBufferQueueSourceNode`; looping and scheduling; `AudioParam` scheduling methods; playback rate and pitch; noise generation                   |
-| `recording.md`                | Recording audio with `AudioRecorder`; three recording modes (file, data callback, graph processing); file output configuration and formats; permissions; background recording setup                                              |
-| `effects-and-analysis.md`     | Audio effects chain (`GainNode`, `BiquadFilterNode`, `DelayNode`, `ConvolverNode`, `StereoPannerNode`, `WaveShaperNode`); ADSR envelopes; `AnalyserNode` for time-domain and frequency-domain data; audio visualization patterns |
-| `worklets.md`                 | Audio worklets with `WorkletNode`, `WorkletSourceNode`, `WorkletProcessingNode`; `UIRuntime` vs `AudioRuntime`; performance budgets and latency constraints; custom synthesis and real-time processing                           |
-| `system-and-notifications.md` | `AudioManager` for session configuration and system events; `PlaybackNotificationManager` and `RecordingNotificationManager` for media controls; permissions; interruption handling; testing with mocks                          |
+| File | When to read |
+|------|-------------|
+| `audio.md` | Decision tree for choosing an audio approach; AudioContext lifecycle and singleton pattern; audio graph concepts; decoding audio data; AudioBuffer state management |
+| `playback.md` | Playing audio with `AudioBufferSourceNode`, `OscillatorNode`, `StreamerNode`, `AudioBufferQueueSourceNode`; looping and scheduling; `AudioParam` scheduling methods; playback rate and pitch; noise generation |
+| `recording.md` | Recording audio with `AudioRecorder`; three recording modes (file, data callback, graph processing); file output configuration and formats; permissions; background recording setup |
+| `effects-and-analysis.md` | Audio effects chain (`GainNode`, `BiquadFilterNode`, `DelayNode`, `ConvolverNode`, `StereoPannerNode`, `WaveShaperNode`); ADSR envelopes; `AnalyserNode` for time-domain and frequency-domain data; audio visualization patterns |
+| `worklets.md` | Audio worklets with `WorkletNode`, `WorkletSourceNode`, `WorkletProcessingNode`; `UIRuntime` vs `AudioRuntime`; performance budgets and latency constraints; custom synthesis and real-time processing |
+| `system-and-notifications.md` | `AudioManager` for session configuration and system events; `PlaybackNotificationManager` and `RecordingNotificationManager` for media controls; permissions; interruption handling; testing with mocks |

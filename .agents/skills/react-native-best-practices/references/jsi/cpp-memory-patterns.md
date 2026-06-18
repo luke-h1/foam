@@ -107,11 +107,11 @@ private:
 };
 ```
 
-| Capture              | Use when                                       | Risk                                 |
-| -------------------- | ---------------------------------------------- | ------------------------------------ |
-| Raw `this`           | Synchronous call only, never stored by JS      | Dangling if JS stores the function   |
-| `shared_from_this()` | C++ must keep object alive (timer, background) | Prevents GC from ever freeing it     |
-| `weak_from_this()`   | Function may outlive the HostObject            | Graceful failure via `.lock()` check |
+| Capture | Use when | Risk |
+|---------|----------|------|
+| Raw `this` | Synchronous call only, never stored by JS | Dangling if JS stores the function |
+| `shared_from_this()` | C++ must keep object alive (timer, background) | Prevents GC from ever freeing it |
+| `weak_from_this()` | Function may outlive the HostObject | Graceful failure via `.lock()` check |
 
 Default to `weak_from_this()` for any function returned from `get`.
 

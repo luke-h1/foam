@@ -11,7 +11,6 @@ From `jsi.h` (emphasis added):
 Every JSI call that accepts `Runtime&` must be made from the same thread that owns the runtime — typically the React Native JS thread. There is no internal locking. Concurrent access from two threads, even if each call looks atomic, produces data races and undefined behavior.
 
 This includes:
-
 - Reading and writing JS properties
 - Calling JS functions
 - Creating JSI values
@@ -38,7 +37,6 @@ JSI objects (`Value`, `Object`, `Function`, etc.) hold a `PointerValue*` handle 
 If a `Value` or `Object` outlives its runtime, its destructor will call `ptr_->invalidate()` on a now-dead engine — a crash or silent corruption.
 
 Problematic pattern:
-
 ```cpp
 // DON'T: jsi::Value stored in a long-lived container
 struct AppState {

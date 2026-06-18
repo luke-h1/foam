@@ -30,7 +30,7 @@ Same for vectors:
 ```ts
 const dir = d.vec3f();
 vec3.subtract(target, eye, dir); // writes into `dir`
-vec3.normalize(dir, dir); // in-place
+vec3.normalize(dir, dir);        // in-place
 ```
 
 > Requires `wgpu-matrix >= 3.3.0`.
@@ -48,11 +48,11 @@ WGSL matrices are column-major in memory. Key implications:
 - **Shader element access.** `mat[i]` is not allowed - use `mat.columns[i]` for the i-th column, `mat.columns[c][r]` for an element.
 - **`Float32Array` layouts** (raw byte writes):
 
-  | Schema      | Floats         | Layout                                                                  |
-  | ----------- | -------------- | ----------------------------------------------------------------------- |
-  | `d.mat2x2f` | 4              | `[c0.x, c0.y, c1.x, c1.y]` - packed                                     |
+  | Schema | Floats | Layout |
+  |---|---|---|
+  | `d.mat2x2f` | 4 | `[c0.x, c0.y, c1.x, c1.y]` - packed |
   | `d.mat3x3f` | **12** (not 9) | Each column padded to 4 floats: `[c0.x, c0.y, c0.z, PAD, c1..., c2...]` |
-  | `d.mat4x4f` | 16             | `[c0.xyzw, c1.xyzw, c2.xyzw, c3.xyzw]` - packed                         |
+  | `d.mat4x4f` | 16 | `[c0.xyzw, c1.xyzw, c2.xyzw, c3.xyzw]` - packed |
 
   `mat3x3f`'s per-column padding to 16 bytes is a WGSL rule. Plain JS arrays (9 numbers) get padding added automatically; `TypedArray`/`ArrayBuffer` inputs must include it. `wgpu-matrix` follows all these conventions natively.
 
@@ -74,10 +74,7 @@ const projMat = new Float32Array(16);
 mat4.perspective(Math.PI / 4, aspect, 0.1, 1000, projMat);
 mat4.lookAt(eye, target, up, viewMat);
 
-const cameraUniform = root.createUniform(Camera, {
-  view: viewMat,
-  proj: projMat,
-});
+const cameraUniform = root.createUniform(Camera, { view: viewMat, proj: projMat });
 
 // Per-frame: recompute into the same buffer, write only what changed
 mat4.lookAt(newEye, target, up, viewMat);
@@ -94,12 +91,12 @@ Add `viewInv`/`projInv` fields when shaders need to go from clip/screen back to 
 
 **Write-path speed (slowest to fastest):**
 
-| Form                         | Example (`arrayOf(vec3f, N)`)                 | When to prefer                          |
-| ---------------------------- | --------------------------------------------- | --------------------------------------- |
-| TypeGPU instances            | `particles.map(p => d.vec3f(p.x, p.y, p.z))`  | Small ad-hoc writes, teaching code      |
-| Plain tuples / arrays        | `[[x, y, z], [x, y, z], ...]`                 | Readable, no wrapper allocation         |
-| Pre-allocated `Float32Array` | `f32.subarray(i*4, i*4+3).set([x, y, z])`     | Hot paths; matches WGSL layout directly |
-| Raw `ArrayBuffer`            | `new Float32Array(arrayBuffer)[i*4] = x; ...` | Maximum throughput                      |
+| Form | Example (`arrayOf(vec3f, N)`) | When to prefer |
+|---|---|---|
+| TypeGPU instances | `particles.map(p => d.vec3f(p.x, p.y, p.z))` | Small ad-hoc writes, teaching code |
+| Plain tuples / arrays | `[[x, y, z], [x, y, z], ...]` | Readable, no wrapper allocation |
+| Pre-allocated `Float32Array` | `f32.subarray(i*4, i*4+3).set([x, y, z])` | Hot paths; matches WGSL layout directly |
+| Raw `ArrayBuffer` | `new Float32Array(arrayBuffer)[i*4] = x; ...` | Maximum throughput |
 
 ### Pre-allocated `Float32Array` + subarrays
 
@@ -107,28 +104,21 @@ The cleanest fast path for struct-heavy uniforms:
 
 ```ts
 const Camera = d.struct({
-  view: d.mat4x4f,
-  proj: d.mat4x4f,
-  viewInv: d.mat4x4f,
-  projInv: d.mat4x4f,
+  view: d.mat4x4f, proj: d.mat4x4f,
+  viewInv: d.mat4x4f, projInv: d.mat4x4f,
 });
 
 const cameraBuffer = root.createBuffer(Camera).$usage('uniform');
 
 // Single flat buffer, one view per matrix. Allocated ONCE.
-const raw = new Float32Array(d.sizeOf(Camera) / 4); // 64 floats
-const view = raw.subarray(0, 16);
-const proj = raw.subarray(16, 32);
+const raw     = new Float32Array(d.sizeOf(Camera) / 4); // 64 floats
+const view    = raw.subarray(0,  16);
+const proj    = raw.subarray(16, 32);
 const viewInv = raw.subarray(32, 48);
 const projInv = raw.subarray(48, 64);
 
 // Every frame - zero allocations:
-function updateCamera(
-  eye: Float32Array,
-  target: Float32Array,
-  up: Float32Array,
-  aspect: number,
-) {
+function updateCamera(eye: Float32Array, target: Float32Array, up: Float32Array, aspect: number) {
   mat4.lookAt(eye, target, up, view);
   mat4.invert(view, viewInv);
   mat4.perspective(Math.PI / 4, aspect, 0.1, 1000, proj);
@@ -138,7 +128,6 @@ function updateCamera(
 ```
 
 Layout notes:
-
 - `mat4x4f` is 16 floats each, packed - subarrays `(0,16)`, `(16,32)`, etc. align cleanly.
 - `vec3f` or `mat3x3f`: leave WGSL padding (4 floats per `vec3f`, 4 per `mat3x3f` column). TypeGPU does **not** add padding for `TypedArray`/`ArrayBuffer` - it copies verbatim.
 - `d.sizeOf(Schema)` and `d.memoryLayoutOf(Schema, fieldAccessor)` give byte offsets - use those instead of hardcoded numbers.
@@ -149,4 +138,4 @@ When CPU data is separate packed arrays per field (positions, velocities, colour
 
 ### When the trade-off flips
 
-TypeGPU instances are fine for setup-time data (initial buffer contents), small rarely-written uniforms, and prototypes. Switch to tuples/typed arrays when data is large, written every frame, or showing up in GC traces. Rule of thumb: _if it runs in `requestAnimationFrame`, it should not allocate TypeGPU wrappers._
+TypeGPU instances are fine for setup-time data (initial buffer contents), small rarely-written uniforms, and prototypes. Switch to tuples/typed arrays when data is large, written every frame, or showing up in GC traces. Rule of thumb: *if it runs in `requestAnimationFrame`, it should not allocate TypeGPU wrappers.*

@@ -1,6 +1,6 @@
 ---
 name: upgrade-react-navigation
-description: Upgrade React Navigation from 6.x to 7.x or from 7.x to 8.x.
+description: Upgrade React Navigation to a new major version (6.x to 7.x or 7.x to 8.x), applying the required breaking changes — peer-dependency and tooling bumps, and renamed or removed navigate, linking, theme, navigator, and screen-option APIs — while preserving navigation behavior.
 ---
 
 # Upgrade React Navigation
@@ -15,19 +15,11 @@ You are upgrading React Navigation major version (6.x -> 7.x or 7.x -> 8.x).
 
 ## Adaptation policy
 
-Treat the patterns in this skill as canonical starting points, not an exhaustive list. The examples are meant to illustrate the core patterns.
+Treat the patterns in this skill as canonical starting points, not an exhaustive list. The absence of an exact matching example is not a blocker.
 
-When applying this skill to a codebase:
-
-- Prefer the simplest migration pattern that preserves behavior.
-- First try to map the local code to an equivalent of the patterns in this skill.
-- Do not require an exact matching example in the skill before proceeding.
-- If the local code differs in structure, infer the closest equivalent pattern and adapt it.
+- Map local code to the closest pattern here and adapt it; infer an equivalent when the structure differs.
+- Prefer the simplest upgrade that preserves behavior.
 - Keep changes minimal and upgrade only the affected code.
-
-## Scope rule
-
-Do not treat the absence of an explicit example in this skill as a blocker. Use the guidance here to derive the appropriate migration for the local code.
 
 ## When to ask for clarification
 
@@ -46,5 +38,14 @@ Check `@react-navigation/native` in `package.json` first.
 
 - If `6.x`, read [`references/upgrade-6-to-7.md`](./references/upgrade-6-to-7.md)
 - If `7.x`, read [`references/upgrade-7-to-8.md`](./references/upgrade-7-to-8.md)
+- For any other version, follow the [upgrade guides](https://reactnavigation.org/docs/upgrade-guides.md) to move to 7.x or 8.x first.
 
 Load exactly one reference file unless explicitly comparing versions.
+
+## Verification
+
+After upgrading:
+
+- Determine the package manager from `package.json` or the lockfile.
+- Run the existing type checker, linter, and relevant tests when scripts are available.
+- Work through the "Automated checks" and "Manual checks" in the loaded reference. If a step cannot run, report why.

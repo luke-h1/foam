@@ -1,6 +1,6 @@
 ---
 name: migrate-to-static-config
-description: Migrate React Navigation navigators from dynamic component based config to static object based config.
+description: Migrate React Navigation 7.x or 8.x navigators from JSX-based Dynamic API Navigator and Screen elements to Static API object configuration. Use when converting React Navigation screen trees, static navigation containers, nested navigators, groups, linking/deep-link config, render callbacks, getComponent screens, custom navigators, or static/dynamic API boundaries while preserving behavior and TypeScript types.
 ---
 
 # Migrating to Static Config
@@ -15,17 +15,12 @@ You are migrating screens from Dynamic API to the Static API in React Navigation
 
 ## Adaptation policy
 
-Treat the patterns in this skill as canonical starting points, not an exhaustive list. The examples are meant to illustrate the core patterns.
+Treat the patterns in this skill as canonical starting points, not an exhaustive list. The absence of an exact matching example is not a blocker.
 
-When applying this skill to a codebase:
-
-- Prefer the simplest migration pattern that preserves behavior.
-- First try to map the local code to an equivalent of the patterns in this skill.
-- Do not require an exact matching example in the skill before proceeding.
-- If the local code differs in structure, infer the closest equivalent pattern and adapt it.
-- Avoid inventing bespoke abstractions unless the simpler patterns clearly cannot preserve existing behavior.
-- Keep changes minimal and local to the migration.
-- If multiple approaches are possible, choose the one closest to the existing code style and React Navigation's intended static API.
+- Map local code to the closest pattern here and adapt it; infer an equivalent when the structure differs.
+- Prefer the simplest migration that preserves behavior.
+- Keep changes minimal and local, matching the existing code style and React Navigation's intended static API.
+- Avoid bespoke abstractions unless the simpler patterns clearly cannot preserve behavior.
 
 ## Decision rule
 
@@ -35,10 +30,6 @@ Use this order of preference:
 2. Static config plus `.with()` for navigator-level wrappers or dynamic navigator props.
 3. Static config plus context for extra screen data that was previously passed through render callbacks.
 4. Keep the navigator dynamic only if static config cannot express the screen structure without changing behavior materially.
-
-## Scope rule
-
-Do not treat the absence of an explicit example in this skill as a blocker. Use the guidance here to derive the appropriate migration for the local code.
 
 ## When to ask for clarification
 
@@ -59,4 +50,14 @@ Check `@react-navigation/native` in `package.json` first.
 - If `7.x`, read [`references/react-navigation-7.md`](./references/react-navigation-7.md)
 - If `8.x`, read [`references/react-navigation-8.md`](./references/react-navigation-8.md)
 
-Load exactly one reference file unless explicitly comparing versions.
+Static config is not supported in versions prior to 7.x.
+
+Load the main reference file for the matching version. The main reference points to companion files (custom navigators, render callbacks, `getComponent`, mixing APIs) — load each only when the matching pattern is present in the codebase being migrated.
+
+## Verification
+
+After editing code:
+
+- Determine the package manager from `package.json` or the lockfile.
+- Run the existing type checker, linter, and relevant tests when scripts are available.
+- If a verification step cannot run, report why and do a manual review against the checklist in the loaded reference.

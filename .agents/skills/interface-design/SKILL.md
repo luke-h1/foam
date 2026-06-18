@@ -1,6 +1,6 @@
 ---
 name: interface-design
-description: This skill is for interface design — dashboards, admin panels, apps, tools, and interactive products. NOT for marketing design (landing pages, marketing sites, campaigns).
+description: Craft-first interface design for dashboards, admin panels, SaaS apps, tools, settings pages, data interfaces, and interactive products. Use when designing, building, reviewing, auditing, or refining product UI where visual craft, layout hierarchy, tokens, states, visual direction, image-based references, or design-system consistency matter. Not for marketing pages, landing pages, campaigns, or brand-only work.
 ---
 
 # Interface Design
@@ -11,7 +11,7 @@ Build interface design with craft and consistency.
 
 **Use for:** Dashboards, admin panels, SaaS apps, tools, settings pages, data interfaces.
 
-**Not for:** Landing pages, marketing sites, campaigns. Redirect those to `/frontend-design`.
+**Not for:** Landing pages, marketing sites, campaigns, or brand-only work. Use a marketing/frontend design skill for those instead.
 
 ---
 
@@ -45,7 +45,7 @@ The trap is thinking some decisions are creative and others are structural. Ther
 
 # Intent First
 
-Before touching code, answer these. Not in your head — out loud, to yourself or the user.
+Before touching code, answer these. In Codex, keep the answer as a compact working brief unless the direction needs user confirmation.
 
 **Who is this human?**
 Not "users." The actual person. Where are they when they open this? What's on their mind? What did they do 5 minutes ago, what will they do 5 minutes after? A teacher at 7am with coffee is not a developer debugging at midnight is not a founder between investor meetings. Their world shapes the interface.
@@ -56,7 +56,7 @@ Not "use the dashboard." The verb. Grade these submissions. Find the broken depl
 **What should this feel like?**
 Say it in words that mean something. "Clean and modern" means nothing — every AI says that. Warm like a notebook? Cold like a terminal? Dense like a trading floor? Calm like a reading app? The answer shapes color, type, spacing, density — everything.
 
-If you cannot answer these with specifics, stop. Ask the user. Do not guess. Do not default.
+If the prompt is too vague to identify the human, task, and feel, ask one concise question. If the context is enough to make a responsible assumption, state the assumption briefly and proceed.
 
 ## Every Choice Must Be A Choice
 
@@ -114,7 +114,6 @@ The difference: time in the product's world before any visual or structural thin
 ## Proposal Requirements
 
 Your direction must explicitly reference:
-
 - Domain concepts you explored
 - Colors from your color world exploration
 - Your signature element
@@ -163,7 +162,6 @@ Surfaces stack. A dropdown sits above a card which sits above the page. Build a 
 Each jump should be only a few percentage points of lightness. You can barely see the difference in isolation. But when surfaces stack, the hierarchy emerges. Whisper-quiet shifts that you feel rather than see.
 
 **Key decisions:**
-
 - **Sidebars:** Same background as canvas, not different. Different colors fragment the visual space into "sidebar world" and "content world." A subtle border is enough separation.
 - **Dropdowns:** One level above their parent surface. If both share the same level, the dropdown blends into the card and layering is lost.
 - **Inputs:** Slightly darker than their surroundings, not lighter. Inputs are "inset" — they receive content. A darker background signals "type here" without heavy borders.
@@ -185,7 +183,6 @@ Every pattern has infinite expressions. **No interface should look the same.**
 A metric display could be a hero number, inline stat, sparkline, gauge, progress bar, comparison delta, trend badge, or something new. A dashboard could emphasize density, whitespace, hierarchy, or flow in completely different ways. Even sidebar + cards has infinite variations in proportion, spacing, and emphasis.
 
 **Before building, ask:**
-
 - What's the ONE thing users do most here?
 - What products solve similar problems brilliantly? Study them.
 - Why would this interface feel designed for its purpose, not templated?
@@ -256,7 +253,6 @@ Keep it symmetrical. If one side has a value, others should match unless content
 ## Depth
 
 Choose ONE approach and commit:
-
 - **Borders-only** — Clean, technical. For dense tools.
 - **Subtle shadows** — Soft lift. For approachable products.
 - **Layered shadows** — Premium, dimensional. For cards that need presence.
@@ -322,17 +318,25 @@ Dark interfaces have different needs. Shadows are less visible on dark backgroun
 # Workflow
 
 ## Communication
-
 Be invisible. Don't announce modes or narrate process.
 
 **Never say:** "I'm in ESTABLISH MODE", "Let me check system.md..."
 
 **Instead:** Jump into work. State suggestions with reasoning.
 
+## Codex Execution
+
+Codex should use this skill as a working discipline, not just advice. When editing UI:
+
+1. Inspect the existing app, design tokens, component patterns, and `.interface-design/system.md` if present.
+2. Make the domain exploration concrete before choosing layout, color, type, density, and navigation.
+3. For greenfield screens, major redesigns, vague visual direction, or post-build craft critique, read `references/imagegen.md` and use Codex `$imagegen` as a visual companion when available.
+4. Patch the implementation, then run the relevant build/typecheck/tests when available.
+5. Verify visually for non-trivial UI work. Use a local browser or screenshots at desktop and mobile widths, then fix visible overlap, broken spacing, blank states, unreadable text, missing assets, and generic composition before presenting the result.
+6. Keep user-facing updates short. Do not expose long private design monologues; surface only the useful recommendation or decision.
+
 ## Suggest + Ask
-
 Lead with your exploration and recommendation, then confirm:
-
 ```
 "Domain: [5+ concepts from the product's world]
 Color world: [5+ colors that exist in this domain]
@@ -345,14 +349,12 @@ Direction: [approach that connects to the above]"
 ```
 
 ## If Project Has system.md
-
 Read `.interface-design/system.md` and apply. Decisions are made.
 
 ## If No system.md
-
 1. Explore domain — Produce all four required outputs
 2. Propose — Direction must reference all four
-3. Confirm — Get user buy-in
+3. Confirm — Get user buy-in when the direction is ambiguous or costly to change
 4. Build — Apply principles
 5. **Evaluate** — Run the mandate checks before showing
 6. Offer to save
@@ -368,11 +370,11 @@ When you finish building something, **always offer to save**:
 ```
 
 If yes, write to `.interface-design/system.md`:
-
 - Direction and feel
 - Depth strategy (borders/shadows/layered)
 - Spacing base unit
 - Key component patterns
+- Visual direction notes, selected image references, and prompts when Codex image generation shaped the design
 
 ### What to Save
 
@@ -389,14 +391,16 @@ This compounds — each save makes future work faster and more consistent.
 # Deep Dives
 
 For more detail on specific topics:
-
 - `references/principles.md` — Code examples, specific values, dark mode
 - `references/validation.md` — Memory management, when to update system.md
 - `references/critique.md` — Post-build craft critique protocol
+- `references/imagegen.md` — Codex image generation workflow for direction boards, UI references, paintovers, and project-bound assets
 
-# Commands
+# Codex Invocation
 
-- `/interface-design:status` — Current system state
-- `/interface-design:audit` — Check code against system
-- `/interface-design:extract` — Extract patterns from code
-- `/interface-design:critique` — Critique your build for craft, then rebuild what defaulted
+Claude Code's legacy `:status`, `:audit`, `:extract`, and `:critique` command files are packaged separately in this repository. Codex may expose `/interface-design` as a skill slash command, but does not need the Claude command files. If the user asks for any of these actions through `/interface-design`, `$interface-design`, or natural language, perform the equivalent inline:
+
+- `interface-design status`, `/interface-design status`, or `/interface-design:status` — Read `.interface-design/system.md`, summarize direction, tokens, patterns, and last modified time. If missing, suggest extract or first-build setup.
+- `interface-design audit`, `/interface-design audit`, or `/interface-design:audit` — Check UI files against `.interface-design/system.md` for spacing, depth, color, token, and pattern drift. Report file/line findings and fixes.
+- `interface-design extract`, `/interface-design extract`, or `/interface-design:extract` — Scan UI files for repeated spacing, radius, colors, shadows, buttons, cards, and controls. Propose a `.interface-design/system.md`; write it only after user confirmation.
+- `interface-design critique`, `/interface-design critique`, or `/interface-design:critique` — Review the current build for composition, craft, content coherence, and structural hacks; then patch the defaulted parts before responding.

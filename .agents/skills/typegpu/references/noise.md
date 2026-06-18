@@ -28,12 +28,12 @@ const main = tgpu.fragmentFn({
 
 ### Seed functions
 
-| Function         | Seed type |
-| ---------------- | --------- |
-| `randf.seed(x)`  | `f32`     |
-| `randf.seed2(v)` | `d.v2f`   |
-| `randf.seed3(v)` | `d.v3f`   |
-| `randf.seed4(v)` | `d.v4f`   |
+| Function | Seed type |
+|---|---|
+| `randf.seed(x)` | `f32` |
+| `randf.seed2(v)` | `d.v2f` |
+| `randf.seed3(v)` | `d.v3f` |
+| `randf.seed4(v)` | `d.v4f` |
 
 Canonical compute-shader pattern: `seed2(globalInvocationId.xy / dispatchSize.xy)`.
 
@@ -43,34 +43,34 @@ Built on `randf.sample()` - they share the thread's PRNG state (no separate seed
 
 ### Discrete
 
-| Function             | Returns               | Notes                             |
-| -------------------- | --------------------- | --------------------------------- |
+| Function | Returns | Notes |
+|---|---|---|
 | `randf.bernoulli(p)` | `0` or `1` (as `f32`) | Biased coin flip; `p` in `[0, 1]` |
 
 ### Continuous
 
-| Function                  | Returns                | Notes                     |
-| ------------------------- | ---------------------- | ------------------------- |
-| `randf.sample()`          | `f32` in `[0, 1)`      | Base PRNG                 |
-| `randf.sampleExclusive()` | `f32` in `(0, 1)`      | Use before `log`          |
-| `randf.normal(mu, sigma)` | `f32` ~ `N(mu, sigma)` | Box-Muller; `sigma > 0`   |
-| `randf.exponential(rate)` | `f32` >= 0             | `rate > 0`                |
-| `randf.cauchy(x0, gamma)` | `f32`                  | Heavy-tailed; `gamma > 0` |
+| Function | Returns | Notes |
+|---|---|---|
+| `randf.sample()` | `f32` in `[0, 1)` | Base PRNG |
+| `randf.sampleExclusive()` | `f32` in `(0, 1)` | Use before `log` |
+| `randf.normal(mu, sigma)` | `f32` ~ `N(mu, sigma)` | Box-Muller; `sigma > 0` |
+| `randf.exponential(rate)` | `f32` >= 0 | `rate > 0` |
+| `randf.cauchy(x0, gamma)` | `f32` | Heavy-tailed; `gamma > 0` |
 
 ### Geometric
 
 Uniformly distributed vectors over shapes - bread and butter for path tracers, particle systems, AO, soft shadows.
 
-| Function                     | Returns | Shape                                  |
-| ---------------------------- | ------- | -------------------------------------- |
-| `randf.inUnitCircle()`       | `d.v2f` | Inside the unit disc                   |
-| `randf.onUnitCircle()`       | `d.v2f` | On the unit circle (perimeter)         |
-| `randf.inUnitCube()`         | `d.v3f` | Inside the unit cube                   |
-| `randf.onUnitCube()`         | `d.v3f` | On the surface of the unit cube        |
-| `randf.inUnitSphere()`       | `d.v3f` | Inside the unit sphere                 |
-| `randf.onUnitSphere()`       | `d.v3f` | On the unit sphere (uniform direction) |
-| `randf.inHemisphere(normal)` | `d.v3f` | Inside the upper hemisphere            |
-| `randf.onHemisphere(normal)` | `d.v3f` | On the upper hemisphere                |
+| Function | Returns | Shape |
+|---|---|---|
+| `randf.inUnitCircle()` | `d.v2f` | Inside the unit disc |
+| `randf.onUnitCircle()` | `d.v2f` | On the unit circle (perimeter) |
+| `randf.inUnitCube()` | `d.v3f` | Inside the unit cube |
+| `randf.onUnitCube()` | `d.v3f` | On the surface of the unit cube |
+| `randf.inUnitSphere()` | `d.v3f` | Inside the unit sphere |
+| `randf.onUnitSphere()` | `d.v3f` | On the unit sphere (uniform direction) |
+| `randf.inHemisphere(normal)` | `d.v3f` | Inside the upper hemisphere |
+| `randf.onHemisphere(normal)` | `d.v3f` | On the upper hemisphere |
 
 For diffuse BRDF sampling: `onHemisphere(normal)`. For uniform direction (Monte Carlo over sphere): `onUnitSphere()`.
 
@@ -88,7 +88,7 @@ const main = tgpu.fragmentFn({
   out: d.vec4f,
 })(({ pos }) => {
   const n = perlin2d.sample(pos.xy.mul(0.05)); // "interesting" scale ~1 unit/cell
-  return d.vec4f(n * 0.5 + 0.5, 0, 0, 1); // remap [-1,1] to [0,1]
+  return d.vec4f(n * 0.5 + 0.5, 0, 0, 1);     // remap [-1,1] to [0,1]
 });
 ```
 

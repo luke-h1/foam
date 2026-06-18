@@ -12,14 +12,14 @@ A tombstone (Android) or crash report (iOS) has three parts worth reading: the s
 signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x7b1a4fe000
 ```
 
-| Field                     | Meaning                                                                   |
-| ------------------------- | ------------------------------------------------------------------------- |
-| `SIGSEGV` (signal 11)     | Memory access violation — process accessed memory it doesn't own          |
-| `SIGABRT` (signal 6)      | Deliberate abort — assertion failure, `std::terminate`, `__assert2`       |
-| `SEGV_MAPERR`             | Address is not mapped — points to freed or never-allocated memory         |
-| `SEGV_ACCERR`             | Address is mapped but the access mode is wrong (e.g., write to read-only) |
-| fault addr near `0x0`     | Null pointer dereference                                                  |
-| fault addr non-null, high | Use-after-free (the address was once valid, then freed)                   |
+| Field | Meaning |
+|---|---|
+| `SIGSEGV` (signal 11) | Memory access violation — process accessed memory it doesn't own |
+| `SIGABRT` (signal 6) | Deliberate abort — assertion failure, `std::terminate`, `__assert2` |
+| `SEGV_MAPERR` | Address is not mapped — points to freed or never-allocated memory |
+| `SEGV_ACCERR` | Address is mapped but the access mode is wrong (e.g., write to read-only) |
+| fault addr near `0x0` | Null pointer dereference |
+| fault addr non-null, high | Use-after-free (the address was once valid, then freed) |
 
 **Backtrace reading order**
 
@@ -37,12 +37,12 @@ Read bottom-up. The bottom frame is where the thread started (e.g., `__pthread_s
 
 The thread name tells you which domain crashed:
 
-| Thread name                                        | Domain                                          |
-| -------------------------------------------------- | ----------------------------------------------- |
-| `mqt_js`                                           | JS thread (React Native's message queue thread) |
-| `mqt_native_modules`                               | Legacy bridge thread (rare on New Architecture) |
-| `main` (iOS) / app name e.g. `com.myapp` (Android) | Main/UI thread                                  |
-| Any other name                                     | A background thread you (or a library) created  |
+| Thread name | Domain |
+|---|---|
+| `mqt_js` | JS thread (React Native's message queue thread) |
+| `mqt_native_modules` | Legacy bridge thread (rare on New Architecture) |
+| `main` (iOS) / app name e.g. `com.myapp` (Android) | Main/UI thread |
+| Any other name | A background thread you (or a library) created |
 
 If `mqt_js` is the crashing thread, the JS thread is involved — look for GC finalization, HostObject destruction, or a JSI call made from the wrong thread. If a background thread is the crashing thread, look for ownership bugs: a raw pointer to memory that the JS thread's GC freed.
 
@@ -272,43 +272,43 @@ Run this before merging any native JSI module to production.
 
 ### Ownership
 
-| Check                              | What to verify                                                                                                                                                                                             |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Check | What to verify |
+|---|---|
 | Raw pointers to HostObject members | Every background thread that holds a raw pointer to a HostObject-owned resource also holds a `shared_ptr` to that resource, OR the HostObject destructor `join()`s the thread before members are destroyed |
-| Lambda `this` captures             | Lambdas that outlive the HostObject capture `shared_from_this()`, not `this`                                                                                                                               |
-| `jsi::Value` in callbacks          | Values captured in async callbacks are either moved into `shared_ptr<jsi::Value>` or their data is copied into plain C++ types before the callback is dispatched                                           |
-| Ref cycles                         | No `shared_ptr` cycle between a HostObject and a callback it owns — use `weak_ptr` to break the cycle                                                                                                      |
+| Lambda `this` captures | Lambdas that outlive the HostObject capture `shared_from_this()`, not `this` |
+| `jsi::Value` in callbacks | Values captured in async callbacks are either moved into `shared_ptr<jsi::Value>` or their data is copied into plain C++ types before the callback is dispatched |
+| Ref cycles | No `shared_ptr` cycle between a HostObject and a callback it owns — use `weak_ptr` to break the cycle |
 
 ### Threading
 
-| Check                                         | What to verify                                                                                            |
-| --------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| JSI Runtime access                            | Every call that takes `Runtime&` happens on the JS thread or inside a `CallInvoker::invokeAsync` callback |
-| JNI on background threads (Android)           | Every thread that calls JNI has called `AttachCurrentThread` and detaches before exit                     |
-| ObjC/JNI from real-time threads (iOS/Android) | No `@objc` message sends or JNI calls inside audio, MIDI, or other real-time callbacks                    |
-| `jsi::Value` concurrent writes                | No two threads assign, move, or destroy the same `jsi::Value` concurrently                                |
+| Check | What to verify |
+|---|---|
+| JSI Runtime access | Every call that takes `Runtime&` happens on the JS thread or inside a `CallInvoker::invokeAsync` callback |
+| JNI on background threads (Android) | Every thread that calls JNI has called `AttachCurrentThread` and detaches before exit |
+| ObjC/JNI from real-time threads (iOS/Android) | No `@objc` message sends or JNI calls inside audio, MIDI, or other real-time callbacks |
+| `jsi::Value` concurrent writes | No two threads assign, move, or destroy the same `jsi::Value` concurrently |
 
 ### Memory
 
-| Check                           | What to verify                                                                                                                                                                                     |
-| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Every cross-boundary allocation | Exactly one system (GC heap or native heap) owns each allocation — no double-free risk                                                                                                             |
-| `ArrayBuffer` backing store     | The `MutableBuffer` that backs any `ArrayBuffer` exposed to JS outlives all JS references to it                                                                                                    |
-| Large native allocations        | Allocations invisible to the GC (large native buffers) don't prevent GC from collecting — consider calling `runtime.instrumentation().collectGarbage()` as a hint if memory pressure is observable |
+| Check | What to verify |
+|---|---|
+| Every cross-boundary allocation | Exactly one system (GC heap or native heap) owns each allocation — no double-free risk |
+| `ArrayBuffer` backing store | The `MutableBuffer` that backs any `ArrayBuffer` exposed to JS outlives all JS references to it |
+| Large native allocations | Allocations invisible to the GC (large native buffers) don't prevent GC from collecting — consider calling `runtime.instrumentation().collectGarbage()` as a hint if memory pressure is observable |
 
 ### Platform
 
-| Check                    | What to verify                                                                                       |
-| ------------------------ | ---------------------------------------------------------------------------------------------------- |
-| Tested on both platforms | Functionality verified on a real iOS device (arm64) and a real Android device (arm64-v8a)            |
-| ABI filters              | `CMakeLists.txt` `abiFilters` includes all target ABIs; no crash on 64-bit-only devices              |
-| Bitcode / dSYM archived  | Unstripped `.so` files (Android) and `.dSYM` bundles (iOS) are archived alongside each release build |
+| Check | What to verify |
+|---|---|
+| Tested on both platforms | Functionality verified on a real iOS device (arm64) and a real Android device (arm64-v8a) |
+| ABI filters | `CMakeLists.txt` `abiFilters` includes all target ABIs; no crash on 64-bit-only devices |
+| Bitcode / dSYM archived | Unstripped `.so` files (Android) and `.dSYM` bundles (iOS) are archived alongside each release build |
 
 ### Lifecycle
 
-| Check                      | What to verify                                                                                                                                                        |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `install()` timing         | `install()` runs before the JS bundle evaluates; the global is never `undefined` on first call                                                                        |
-| `install()` idempotency    | A second `install()` call (fast refresh, bundle reload) does not leak globals or native objects                                                                       |
-| Destructor safety          | HostObject destructor does not block the JS thread; background threads are signalled and co-ownership via `shared_ptr` handles the actual deallocation                |
+| Check | What to verify |
+|---|---|
+| `install()` timing | `install()` runs before the JS bundle evaluates; the global is never `undefined` on first call |
+| `install()` idempotency | A second `install()` call (fast refresh, bundle reload) does not leak globals or native objects |
+| Destructor safety | HostObject destructor does not block the JS thread; background threads are signalled and co-ownership via `shared_ptr` handles the actual deallocation |
 | App-lifecycle coordination | Any resource the module owns (file handles, audio sessions, sockets) is released when the app backgrounds or the module is torn down — not only at GC collection time |

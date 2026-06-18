@@ -1,4 +1,5 @@
 const scopes = [
+  'ai',
   'api',
   'app',
   'assets',

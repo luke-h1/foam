@@ -34,13 +34,13 @@ Create a new file with the `'use dom';` directive at the top:
 
 ```tsx
 // components/WebChart.tsx
-'use dom';
+"use dom";
 
 export default function WebChart({
   data,
 }: {
   data: number[];
-  dom: import('expo/dom').DOMProps;
+  dom: import("expo/dom").DOMProps;
 }) {
   return (
     <div style={{ padding: 20 }}>
@@ -68,11 +68,11 @@ export default function WebChart({
 Every DOM component receives a special `dom` prop for webview configuration. Always type it in your props:
 
 ```tsx
-'use dom';
+"use dom";
 
 interface Props {
   content: string;
-  dom: import('expo/dom').DOMProps;
+  dom: import("expo/dom").DOMProps;
 }
 
 export default function MyComponent({ content }: Props) {
@@ -108,18 +108,18 @@ Pass async functions as props to expose native functionality to the DOM componen
 
 ```tsx
 // app/index.tsx (native)
-import { Alert } from 'react-native';
-import DOMComponent from '@/components/dom-component';
+import { Alert } from "react-native";
+import DOMComponent from "@/components/dom-component";
 
 export default function Screen() {
   return (
     <DOMComponent
       showAlert={async (message: string) => {
-        Alert.alert('From Web', message);
+        Alert.alert("From Web", message);
       }}
       saveData={async (data: { name: string; value: number }) => {
         // Save to native storage, database, etc.
-        console.log('Saving:', data);
+        console.log("Saving:", data);
         return { success: true };
       }}
     />
@@ -129,7 +129,7 @@ export default function Screen() {
 
 ```tsx
 // components/dom-component.tsx
-'use dom';
+"use dom";
 
 interface Props {
   showAlert: (message: string) => Promise<void>;
@@ -137,14 +137,14 @@ interface Props {
     name: string;
     value: number;
   }) => Promise<{ success: boolean }>;
-  dom?: import('expo/dom').DOMProps;
+  dom?: import("expo/dom").DOMProps;
 }
 
 export default function DOMComponent({ showAlert, saveData }: Props) {
   const handleClick = async () => {
-    await showAlert('Hello from the webview!');
-    const result = await saveData({ name: 'test', value: 42 });
-    console.log('Save result:', result);
+    await showAlert("Hello from the webview!");
+    const result = await saveData({ name: "test", value: 42 });
+    console.log("Save result:", result);
   };
 
   return <button onClick={handleClick}>Trigger Native Action</button>;
@@ -157,15 +157,15 @@ DOM components can use any web library:
 
 ```tsx
 // components/syntax-highlight.tsx
-'use dom';
+"use dom";
 
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import SyntaxHighlighter from "react-syntax-highlighter";
+import { docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
 
 interface Props {
   code: string;
   language: string;
-  dom?: import('expo/dom').DOMProps;
+  dom?: import("expo/dom").DOMProps;
 }
 
 export default function SyntaxHighlight({ code, language }: Props) {
@@ -179,7 +179,7 @@ export default function SyntaxHighlight({ code, language }: Props) {
 
 ```tsx
 // components/chart.tsx
-'use dom';
+"use dom";
 
 import {
   LineChart,
@@ -188,21 +188,21 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-} from 'recharts';
+} from "recharts";
 
 interface Props {
   data: Array<{ name: string; value: number }>;
-  dom: import('expo/dom').DOMProps;
+  dom: import("expo/dom").DOMProps;
 }
 
 export default function Chart({ data }: Props) {
   return (
     <LineChart width={400} height={300} data={data}>
-      <CartesianGrid strokeDasharray='3 3' />
-      <XAxis dataKey='name' />
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="name" />
       <YAxis />
       <Tooltip />
-      <Line type='monotone' dataKey='value' stroke='#8884d8' />
+      <Line type="monotone" dataKey="value" stroke="#8884d8" />
     </LineChart>
   );
 }
@@ -214,18 +214,18 @@ CSS imports must be in the DOM component file since they run in isolated context
 
 ```tsx
 // components/styled-component.tsx
-'use dom';
+"use dom";
 
-import '@/styles.css'; // CSS file in same directory
+import "@/styles.css"; // CSS file in same directory
 
 export default function StyledComponent({
   dom,
 }: {
-  dom: import('expo/dom').DOMProps;
+  dom: import("expo/dom").DOMProps;
 }) {
   return (
-    <div className='container'>
-      <h1 className='title'>Styled Content</h1>
+    <div className="container">
+      <h1 className="title">Styled Content</h1>
     </div>
   );
 }
@@ -234,23 +234,23 @@ export default function StyledComponent({
 Or use inline styles / CSS-in-JS:
 
 ```tsx
-'use dom';
+"use dom";
 
 const styles = {
   container: {
     padding: 20,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
   },
   title: {
     fontSize: 24,
-    color: '#333',
+    color: "#333",
   },
 };
 
 export default function StyledComponent({
   dom,
 }: {
-  dom: import('expo/dom').DOMProps;
+  dom: import("expo/dom").DOMProps;
 }) {
   return (
     <div style={styles.container}>
@@ -265,21 +265,21 @@ export default function StyledComponent({
 The expo-router `<Link />` component and router API work inside DOM components:
 
 ```tsx
-'use dom';
+"use dom";
 
-import { Link, useRouter } from 'expo-router';
+import { Link, useRouter } from "expo-router";
 
 export default function Navigation({
   dom,
 }: {
-  dom: import('expo/dom').DOMProps;
+  dom: import("expo/dom").DOMProps;
 }) {
   const router = useRouter();
 
   return (
     <nav>
-      <Link href='/about'>About</Link>
-      <button onClick={() => router.push('/settings')}>Settings</button>
+      <Link href="/about">About</Link>
+      <button onClick={() => router.push("/settings")}>Settings</button>
     </nav>
   );
 }
@@ -300,8 +300,8 @@ These hooks don't work directly in DOM components because they need synchronous 
 
 ```tsx
 // app/[id].tsx (native)
-import { useLocalSearchParams, usePathname } from 'expo-router';
-import DOMComponent from '@/components/dom-component';
+import { useLocalSearchParams, usePathname } from "expo-router";
+import DOMComponent from "@/components/dom-component";
 
 export default function Screen() {
   const { id } = useLocalSearchParams();
@@ -313,12 +313,12 @@ export default function Screen() {
 
 ```tsx
 // components/dom-component.tsx
-'use dom';
+"use dom";
 
 interface Props {
   id: string;
   pathname: string;
-  dom?: import('expo/dom').DOMProps;
+  dom?: import("expo/dom").DOMProps;
 }
 
 export default function DOMComponent({ id, pathname }: Props) {
@@ -336,16 +336,16 @@ export default function DOMComponent({ id, pathname }: Props) {
 Check if code is running in a DOM component:
 
 ```tsx
-'use dom';
+"use dom";
 
-import { IS_DOM } from 'expo/dom';
+import { IS_DOM } from "expo/dom";
 
 export default function Component({
   dom,
 }: {
-  dom?: import('expo/dom').DOMProps;
+  dom?: import("expo/dom").DOMProps;
 }) {
-  return <div>{IS_DOM ? 'Running in DOM component' : 'Running natively'}</div>;
+  return <div>{IS_DOM ? "Running in DOM component" : "Running natively"}</div>;
 }
 ```
 
@@ -354,17 +354,17 @@ export default function Component({
 Prefer requiring assets instead of using the public directory:
 
 ```tsx
-'use dom';
+"use dom";
 
 // Good - bundled with the component
-const logo = require('../assets/logo.png');
+const logo = require("../assets/logo.png");
 
 export default function Component({
   dom,
 }: {
-  dom: import('expo/dom').DOMProps;
+  dom: import("expo/dom").DOMProps;
 }) {
-  return <img src={logo} alt='Logo' />;
+  return <img src={logo} alt="Logo" />;
 }
 ```
 
@@ -374,9 +374,9 @@ Import and use DOM components like regular components:
 
 ```tsx
 // app/index.tsx
-import { View, Text } from 'react-native';
-import WebChart from '@/components/web-chart';
-import CodeBlock from '@/components/code-block';
+import { View, Text } from "react-native";
+import WebChart from "@/components/web-chart";
+import CodeBlock from "@/components/code-block";
 
 export default function HomeScreen() {
   return (
@@ -386,8 +386,8 @@ export default function HomeScreen() {
       <WebChart data={[10, 20, 30, 40, 50]} dom={{ style: { height: 300 } }} />
 
       <CodeBlock
-        code='const x = 1;'
-        language='javascript'
+        code="const x = 1;"
+        language="javascript"
         dom={{ scrollEnabled: true }}
       />
 

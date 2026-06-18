@@ -15,12 +15,10 @@ This skill targets TypeGPU `0.11.2`. If the user's project is on an older releas
 ## When to read reference files
 
 **Read before writing virtually any shader or GPU function** — these two cover the rules that trip people up most:
-
 - `references/types.md` — abstract type resolution, exactly when `d.f32()` is required vs redundant, sampler/texture schemas for `tgpu.fn` signatures, CPU-side `TgpuBuffer`/`TgpuTexture` TypeScript types. **If you skip this, you'll hit type errors.**
 - `references/shaders.md` — full `std` library listing, loops (`std.range`, `tgpu.unroll`), `tgpu.comptime`, outer-scope capture rules, complete builtin reference for all three shader stages, `console.log`. **Read this for any non-trivial shader logic.**
 
 **Read when the task specifically involves:**
-
 - `references/pipelines.md` — vertex buffers/layouts, `attribs` wiring, MRT, fullscreen triangle, depth/stencil, blend modes, `fragDepth` output, loading 3D models (`@loaders.gl`), resolve API
 - `references/matrices.md` — `wgpu-matrix` integration, column-major layout, camera uniforms, `common.writeSoA`, fast-path CPU writes. **Read for any 3D work** (view/projection matrices, animated transforms, model loading)
 - `references/textures.md` — texture creation, views, samplers, storage textures, mipmaps, multisampling
@@ -36,13 +34,13 @@ This skill targets TypeGPU `0.11.2`. If the user's project is on an older releas
 ```ts
 import tgpu, { d, std, common } from 'typegpu';
 
-const root = await tgpu.init(); // request a GPU device
-const root = tgpu.initFromDevice(device); // or wrap an existing GPUDevice
+const root = await tgpu.init();             // request a GPU device
+const root = tgpu.initFromDevice(device);   // or wrap an existing GPUDevice
 
 const context = root.configureContext({ canvas, alphaMode: 'premultiplied' });
 ```
 
-Create one root at app startup. Resources from different roots cannot interact.
+Create one root at app startup. Resources from different roots cannot interact. 
 
 ---
 
@@ -51,14 +49,12 @@ Create one root at app startup. Resources from different roots cannot interact.
 A schema defines memory layout and infers TypeScript types; the same schema is used for buffers, shader signatures, and bind group entries.
 
 ### Scalars
-
 ```ts
 d.f32    d.i32    d.u32    d.f16
 // d.bool is NOT host-shareable - use d.u32 in buffers
 ```
 
 ### Vectors and matrices
-
 ```ts
 d.vec2f  d.vec3f  d.vec4f     // f32
 d.vec2i  d.vec3i  d.vec4i     // i32
@@ -73,17 +69,17 @@ Instance types: `d.vec3f()` -> `d.v3f`, `d.mat4x4f()` -> `d.m4x4f`.
 **Vector constructors are richly overloaded - use them.** They compose from any mix of scalars and smaller vectors that adds up to the right component count:
 
 ```ts
-d.vec3f(); // zero-init: (0, 0, 0)
-d.vec3f(1); // broadcast:  (1, 1, 1)
-d.vec3f(1, 2, 3); // individual components
-d.vec3f(someVec2, 1); // vec2 + scalar
-d.vec3f(1, someVec2); // scalar + vec2
+d.vec3f()              // zero-init: (0, 0, 0)
+d.vec3f(1)             // broadcast:  (1, 1, 1)
+d.vec3f(1, 2, 3)       // individual components
+d.vec3f(someVec2, 1)   // vec2 + scalar
+d.vec3f(1, someVec2)   // scalar + vec2
 
-d.vec4f(); // zero-init: (0, 0, 0, 0)
-d.vec4f(0.5); // broadcast:  (0.5, 0.5, 0.5, 0.5)
-d.vec4f(rgb, 1); // vec3 + scalar (common: color + alpha)
-d.vec4f(v2a, v2b); // two vec2s
-d.vec4f(1, uv, 0); // scalar + vec2 + scalar
+d.vec4f()              // zero-init: (0, 0, 0, 0)
+d.vec4f(0.5)           // broadcast:  (0.5, 0.5, 0.5, 0.5)
+d.vec4f(rgb, 1)        // vec3 + scalar (common: color + alpha)
+d.vec4f(v2a, v2b)      // two vec2s
+d.vec4f(1, uv, 0)      // scalar + vec2 + scalar
 ```
 
 Swizzles (`.xy`, `.zw`, `.rgb`, `.ba`, etc.) return vector instances that work as constructor arguments: `d.vec4f(pos.xy, vel.zw)`.
@@ -91,23 +87,22 @@ Swizzles (`.xy`, `.zw`, `.rgb`, `.ba`, etc.) return vector instances that work a
 **Prefer these overloads over manual component decomposition.** Instead of `d.vec3f(v.x, v.y, newZ)`, write `d.vec3f(v.xy, newZ)`.
 
 ### Compound types
-
 ```ts
 const Particle = d.struct({
   position: d.vec2f,
   velocity: d.vec2f,
-  color: d.vec4f,
+  color:    d.vec4f,
 });
 
 const ParticleArray = d.arrayOf(Particle, 1000); // fixed-size
 ```
 
-**Runtime-sized schemas.** `d.arrayOf(Element)` without a count returns a _function_ `(n: number) => WgslArray<Element>`. This dual nature is the key: pass the function itself (unsized) to bind group layouts, call it with a count (sized) for buffer creation.
+**Runtime-sized schemas.** `d.arrayOf(Element)` without a count returns a *function* `(n: number) => WgslArray<Element>`. This dual nature is the key: pass the function itself (unsized) to bind group layouts, call it with a count (sized) for buffer creation.
 
 ```ts
 // Plain array - arrayOf without count is already a factory:
 const layout = tgpu.bindGroupLayout({
-  data: { storage: d.arrayOf(d.f32), access: 'mutable' }, // unsized for layout
+  data: { storage: d.arrayOf(d.f32), access: 'mutable' },  // unsized for layout
 });
 const buf = root.createBuffer(d.arrayOf(d.f32, 1024)).$usage('storage'); // sized for buffer
 
@@ -115,7 +110,7 @@ const buf = root.createBuffer(d.arrayOf(d.f32, 1024)).$usage('storage'); // size
 const RuntimeStruct = (n: number) =>
   d.struct({
     counter: d.atomic(d.u32),
-    items: d.arrayOf(d.f32, n), // last field gets the runtime size
+    items:   d.arrayOf(d.f32, n),  // last field gets the runtime size
   });
 
 const layout2 = tgpu.bindGroupLayout({
@@ -152,10 +147,7 @@ const rotate = (v: d.v2f, angle: number) => {
 Pinned WGSL signature. Use for library code or when you need a fixed WGSL interface.
 
 ```ts
-const rotate = tgpu.fn(
-  [d.vec2f, d.f32],
-  d.vec2f,
-)((v, angle) => {
+const rotate = tgpu.fn([d.vec2f, d.f32], d.vec2f)((v, angle) => {
   'use gpu';
   // ...
 });
@@ -168,15 +160,13 @@ const rotate = tgpu.fn(
 const myCompute = tgpu.computeFn({
   workgroupSize: [64],
   in: { gid: d.builtin.globalInvocationId },
-})(input => {
-  'use gpu'; /* input.gid: d.v3u */
-});
+})((input) => { 'use gpu'; /* input.gid: d.v3u */ });
 
 // Vertex
 const myVertex = tgpu.vertexFn({
-  in: { position: d.vec3f, uv: d.vec2f },
+  in:  { position: d.vec3f, uv: d.vec2f },
   out: { position: d.builtin.position, fragUv: d.vec2f },
-})(input => {
+})((input) => {
   'use gpu';
   return { position: d.vec4f(input.position, 1), fragUv: input.uv };
 });
@@ -185,10 +175,7 @@ const myVertex = tgpu.vertexFn({
 const myFragment = tgpu.fragmentFn({
   in: { fragUv: d.vec2f },
   out: d.vec4f,
-})(input => {
-  'use gpu';
-  return d.vec4f(input.fragUv, 0, 1);
-});
+})((input) => { 'use gpu'; return d.vec4f(input.fragUv, 0, 1); });
 ```
 
 Vertex `in` may include builtins: `d.builtin.vertexIndex`, `d.builtin.instanceIndex`.
@@ -212,12 +199,10 @@ Full shader syntax, branch pruning, the `std` library, and type inference: see `
 const buf = root.createBuffer(d.arrayOf(Particle, 1000)).$usage('storage');
 
 // With typed initial value (only when non-zero — all buffers are zero-initialized by default):
-const uBuf = root
-  .createBuffer(Config, { time: 1, scale: 2.0 })
-  .$usage('uniform');
+const uBuf = root.createBuffer(Config, { time: 1, scale: 2.0 }).$usage('uniform');
 
 // With an initializer callback - buffer is still mapped (cheapest CPU path):
-const buf = root.createBuffer(Schema, mappedBuffer => {
+const buf = root.createBuffer(Schema, (mappedBuffer) => {
   mappedBuffer.write([10, 20], { startOffset: firstChunk.offset });
   mappedBuffer.write([30, 40], { startOffset: secondChunk.offset });
 });
@@ -229,13 +214,13 @@ buf.write(12);
 
 ### Usage flags
 
-| Literal      | Shader access                                                   |
-| ------------ | --------------------------------------------------------------- |
-| `'uniform'`  | `var<uniform>`                                                  |
-| `'storage'`  | `var<storage, read>` (or `read_write` with `access: 'mutable'`) |
-| `'vertex'`   | vertex input, paired with `tgpu.vertexLayout`                   |
-| `'index'`    | index buffer (`d.u16` or `d.u32` schema only)                   |
-| `'indirect'` | indirect dispatch/draw                                          |
+| Literal | Shader access |
+|---|---|
+| `'uniform'` | `var<uniform>` |
+| `'storage'` | `var<storage, read>` (or `read_write` with `access: 'mutable'`) |
+| `'vertex'` | vertex input, paired with `tgpu.vertexLayout` |
+| `'index'` | index buffer (`d.u16` or `d.u32` schema only) |
+| `'indirect'` | indirect dispatch/draw |
 
 All buffers get `COPY_SRC | COPY_DST` automatically. `$addFlags(GPUBufferUsage.X)` adds any flag not covered by `$usage`.
 
@@ -243,19 +228,19 @@ All buffers get `COPY_SRC | COPY_DST` automatically. `$addFlags(GPUBufferUsage.X
 
 `.write(value)` handles alignment. Four input forms (slowest → fastest):
 
-| Form                   | Example (`vec3f`)             | Notes                                                 |
-| ---------------------- | ----------------------------- | ----------------------------------------------------- |
-| Typed instance         | `d.vec3f(1, 2, 3)`            | Allocates a wrapper — fine for setup/prototypes       |
-| Plain JS array / tuple | `[1, 2, 3]`                   | No allocation, padding added automatically            |
-| TypedArray             | `new Float32Array([1, 2, 3])` | Bytes copied verbatim — **must include WGSL padding** |
-| ArrayBuffer            | `rawBytes`                    | Maximum throughput, bytes copied verbatim             |
+| Form | Example (`vec3f`) | Notes |
+|---|---|---|
+| Typed instance | `d.vec3f(1, 2, 3)` | Allocates a wrapper — fine for setup/prototypes |
+| Plain JS array / tuple | `[1, 2, 3]` | No allocation, padding added automatically |
+| TypedArray | `new Float32Array([1, 2, 3])` | Bytes copied verbatim — **must include WGSL padding** |
+| ArrayBuffer | `rawBytes` | Maximum throughput, bytes copied verbatim |
 
 Cache plain arrays or `Float32Array` at setup and reuse. For the padding rules (`vec3f` = 16 bytes, `mat3x3f` per-column padding) and full fast-path guidance, see `references/matrices.md`.
 
 **Slice write** - update a sub-region using `d.memoryLayoutOf` to get byte offsets:
 
 ```ts
-const layout = d.memoryLayoutOf(schema, a => a[3]);
+const layout = d.memoryLayoutOf(schema, (a) => a[3]);
 buffer.write([4, 5, 6], { startOffset: layout.offset });
 ```
 
@@ -283,9 +268,9 @@ const data = await buffer.read(); // returns a typed JS value matching the schem
 Skip manual bind groups - the buffer is always bound when referenced in any shader:
 
 ```ts
-const particlesMutable = root.createMutable(d.arrayOf(Particle, 1000)); // var<storage, read_write>
-const configUniform = root.createUniform(Config); // var<uniform>
-const bufReadonly = root.createReadonly(d.arrayOf(d.f32, N)); // var<storage, read>
+const particlesMutable = root.createMutable(d.arrayOf(Particle, 1000));  // var<storage, read_write>
+const configUniform    = root.createUniform(Config);                     // var<uniform>
+const bufReadonly      = root.createReadonly(d.arrayOf(d.f32, N));       // var<storage, read>
 ```
 
 Access inside shaders via `particles.$`, `config.$`. Prefer fixed resources by default; switch to manual bind groups when you need to swap resources per frame, manage `@group` indices, or share layouts across pipelines.
@@ -296,16 +281,16 @@ Access inside shaders via `particles.$`, `config.$`. Prefer fixed resources by d
 
 ```ts
 const layout = tgpu.bindGroupLayout({
-  config: { uniform: ConfigSchema },
+  config:    { uniform: ConfigSchema },
   particles: { storage: d.arrayOf(Particle), access: 'mutable' },
-  mySampler: { sampler: 'filtering' }, // 'filtering' | 'non-filtering' | 'comparison'
+  mySampler: { sampler: 'filtering' },   // 'filtering' | 'non-filtering' | 'comparison'
   myTexture: { texture: d.texture2d(d.f32) },
 });
 
 // Inside shaders: layout.$.config, layout.$.particles, ...
 
 const bindGroup = root.createBindGroup(layout, {
-  config: configBuffer,
+  config:    configBuffer,
   particles: particleBuffer,
   mySampler: tgpuSampler,
   myTexture: textureOrView,
@@ -327,20 +312,10 @@ pipeline.with(bindGroup).dispatchWorkgroups(Math.ceil(N / 64));
 
 // Guarded - TypeGPU handles workgroup sizing and bounds checking automatically.
 // The callback's parameter count sets the dimensionality (0D to 3D):
-const p0 = root.createGuardedComputePipeline(() => {
-  'use gpu'; /* runs once */
-});
-const p1 = root.createGuardedComputePipeline((x: number) => {
-  'use gpu';
-});
-const p2 = root.createGuardedComputePipeline((x: number, y: number) => {
-  'use gpu';
-});
-const p3 = root.createGuardedComputePipeline(
-  (x: number, y: number, z: number) => {
-    'use gpu';
-  },
-);
+const p0 = root.createGuardedComputePipeline(() => { 'use gpu'; /* runs once */ });
+const p1 = root.createGuardedComputePipeline((x: number) => { 'use gpu'; });
+const p2 = root.createGuardedComputePipeline((x: number, y: number) => { 'use gpu'; });
+const p3 = root.createGuardedComputePipeline((x: number, y: number, z: number) => { 'use gpu'; });
 
 // dispatchThreads matches the callback's arity - pass thread counts, not workgroup counts.
 // TypeGPU picks workgroup sizes internally and injects a bounds guard so threads
@@ -424,7 +399,7 @@ const rayMarcher = tgpu.computeFn({
 });
 
 root
-  .with(distFnSlot, pos => {
+  .with(distFnSlot, (pos) => {
     'use gpu';
     return std.length(pos - d.vec3f(0, 0, -5)) - 1.0; // sphere SDF
   })

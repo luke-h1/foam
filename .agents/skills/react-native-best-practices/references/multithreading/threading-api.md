@@ -41,16 +41,12 @@ scheduleOnRN(setCount, newCount);
 ```tsx
 // WRONG: function defined inside a worklet
 scheduleOnUI(() => {
-  const myFn = () => {
-    /* ... */
-  };
+  const myFn = () => { /* ... */ };
   scheduleOnRN(myFn); // throws
 });
 
 // CORRECT: function defined in RN Runtime scope
-const myFn = () => {
-  /* ... */
-};
+const myFn = () => { /* ... */ };
 scheduleOnUI(() => {
   scheduleOnRN(myFn);
 });
@@ -65,14 +61,10 @@ import { scheduleOnRuntime, createWorkletRuntime } from 'react-native-worklets';
 
 const backgroundRuntime = createWorkletRuntime({ name: 'background' });
 
-scheduleOnRuntime(
-  backgroundRuntime,
-  (data: number[]) => {
-    const sum = data.reduce((a, b) => a + b, 0);
-    console.log('Sum:', sum);
-  },
-  [1, 2, 3, 4, 5],
-);
+scheduleOnRuntime(backgroundRuntime, (data: number[]) => {
+  const sum = data.reduce((a, b) => a + b, 0);
+  console.log('Sum:', sum);
+}, [1, 2, 3, 4, 5]);
 ```
 
 - Can only be called from the RN Runtime (unless Bundle Mode is enabled).
@@ -110,14 +102,10 @@ import { runOnRuntimeAsync, createWorkletRuntime } from 'react-native-worklets';
 const backgroundRuntime = createWorkletRuntime({ name: 'background' });
 
 async function processData(data: number[]) {
-  const result = await runOnRuntimeAsync(
-    backgroundRuntime,
-    (numbers: number[]) => {
-      'worklet';
-      return numbers.reduce((sum, n) => sum + n, 0);
-    },
-    data,
-  );
+  const result = await runOnRuntimeAsync(backgroundRuntime, (numbers: number[]) => {
+    'worklet';
+    return numbers.reduce((sum, n) => sum + n, 0);
+  }, data);
 
   console.log('Result:', result);
 }
@@ -179,26 +167,25 @@ Worker Runtimes run worklets on separate threads for background processing.
 import { createWorkletRuntime } from 'react-native-worklets';
 
 const runtime = createWorkletRuntime({
-  name: 'data-processor', // Debug label
-  initializer: () => {
-    // Runs synchronously after creation
+  name: 'data-processor',      // Debug label
+  initializer: () => {         // Runs synchronously after creation
     'worklet';
     console.log('Runtime ready');
   },
-  enableEventLoop: true, // Provides setTimeout, setInterval, etc.
+  enableEventLoop: true,       // Provides setTimeout, setInterval, etc.
 });
 ```
 
 ### Configuration options
 
-| Option                      | Default       | Purpose                                                                         |
-| --------------------------- | ------------- | ------------------------------------------------------------------------------- |
-| `name`                      | `'anonymous'` | Debug label for the runtime                                                     |
-| `initializer`               | none          | Worklet to inject globals or setup code                                         |
-| `enableEventLoop`           | `true`        | Provides `setTimeout`, `setInterval`, `requestAnimationFrame`, `queueMicrotask` |
-| `animationQueuePollingRate` | `16`          | Milliseconds between frame callback polls                                       |
-| `useDefaultQueue`           | `true`        | Use the built-in scheduling queue                                               |
-| `customQueue`               | none          | Custom queue object (requires `useDefaultQueue: false`)                         |
+| Option | Default | Purpose |
+|--------|---------|---------|
+| `name` | `'anonymous'` | Debug label for the runtime |
+| `initializer` | none | Worklet to inject globals or setup code |
+| `enableEventLoop` | `true` | Provides `setTimeout`, `setInterval`, `requestAnimationFrame`, `queueMicrotask` |
+| `animationQueuePollingRate` | `16` | Milliseconds between frame callback polls |
+| `useDefaultQueue` | `true` | Use the built-in scheduling queue |
+| `customQueue` | none | Custom queue object (requires `useDefaultQueue: false`) |
 
 ### What's available on Worker Runtimes
 
@@ -232,22 +219,18 @@ Utility functions to check which runtime is executing the current code:
 
 ```tsx
 import {
-  isRNRuntime,
-  isUIRuntime,
-  isWorkerRuntime,
-  isWorkletRuntime,
-  getRuntimeKind,
-  RuntimeKind,
+  isRNRuntime, isUIRuntime, isWorkerRuntime, isWorkletRuntime,
+  getRuntimeKind, RuntimeKind,
 } from 'react-native-worklets';
 
 // Boolean checks
-isRNRuntime(); // true on JS thread
-isUIRuntime(); // true on UI thread
-isWorkerRuntime(); // true on any Worker Runtime
-isWorkletRuntime(); // true on UI or Worker Runtime
+isRNRuntime();       // true on JS thread
+isUIRuntime();       // true on UI thread
+isWorkerRuntime();   // true on any Worker Runtime
+isWorkletRuntime();  // true on UI or Worker Runtime
 
 // Enum-based
-getRuntimeKind(); // RuntimeKind.ReactNative (1), UI (2), or Worker (3)
+getRuntimeKind();    // RuntimeKind.ReactNative (1), UI (2), or Worker (3)
 ```
 
 Useful for writing functions that behave differently depending on which runtime calls them.
@@ -256,19 +239,19 @@ Useful for writing functions that behave differently depending on which runtime 
 
 ## Migrating from Deprecated APIs
 
-| Deprecated                         | Replacement                       | Key difference                         |
-| ---------------------------------- | --------------------------------- | -------------------------------------- |
-| `runOnUI(fn)(args)`                | `scheduleOnUI(fn, args)`          | Arguments passed directly, no currying |
-| `runOnJS(fn)(args)`                | `scheduleOnRN(fn, args)`          | Arguments passed directly, no currying |
-| `runOnRuntime(rt, fn)(args)`       | `scheduleOnRuntime(rt, fn, args)` | Arguments passed directly, no currying |
-| `executeOnUIRuntimeSync(fn)(args)` | `runOnUISync(fn, args)`           | Arguments passed directly, no currying |
+| Deprecated | Replacement | Key difference |
+|-----------|-------------|----------------|
+| `runOnUI(fn)(args)` | `scheduleOnUI(fn, args)` | Arguments passed directly, no currying |
+| `runOnJS(fn)(args)` | `scheduleOnRN(fn, args)` | Arguments passed directly, no currying |
+| `runOnRuntime(rt, fn)(args)` | `scheduleOnRuntime(rt, fn, args)` | Arguments passed directly, no currying |
+| `executeOnUIRuntimeSync(fn)(args)` | `runOnUISync(fn, args)` | Arguments passed directly, no currying |
 
 ### Common Mistakes
 
 ```tsx
 // WRONG: calling the function inside the API
-runOnUIAsync(myWorklet(10)); // passes the return value, not the worklet
-scheduleOnUI(myWorklet(10)); // same mistake
+runOnUIAsync(myWorklet(10));       // passes the return value, not the worklet
+scheduleOnUI(myWorklet(10));       // same mistake
 
 // CORRECT: pass function reference and arguments separately
 await runOnUIAsync(myWorklet, 10);

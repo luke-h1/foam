@@ -9,9 +9,9 @@ Software Mansion's production patterns for rich text editing and Markdown render
 
 There are two libraries that cover rich text use cases:
 
-| Library                          | Component              | Purpose                          |
-| -------------------------------- | ---------------------- | -------------------------------- |
-| `react-native-enriched`          | `EnrichedTextInput`    | Rich text **editing** (input)    |
+| Library | Component | Purpose |
+|---------|-----------|---------|
+| `react-native-enriched` | `EnrichedTextInput` | Rich text **editing** (input) |
 | `react-native-enriched-markdown` | `EnrichedMarkdownText` | Markdown **rendering** (display) |
 
 Both libraries require the React Native New Architecture (Fabric) and support iOS and Android.
@@ -49,7 +49,7 @@ export default function RichEditor() {
     <View style={styles.container}>
       <EnrichedTextInput
         ref={ref}
-        onChangeState={e => setStylesState(e.nativeEvent)}
+        onChangeState={(e) => setStylesState(e.nativeEvent)}
         style={styles.input}
       />
       <Button
@@ -67,13 +67,11 @@ export default function RichEditor() {
 **Toggling styles via ref**: All formatting is applied imperatively through the ref. Call `ref.current?.toggleBold()`, `ref.current?.toggleItalic()`, etc.
 
 **Style detection via onChangeState**: The `onChangeState` callback fires whenever the style state changes (e.g., cursor moves into bold text). Each style reports three properties:
-
 - `isActive`: The style is applied at the current selection (highlight the toolbar button)
 - `isBlocking`: The style is blocked by another active style (disable the toolbar button)
 - `isConflicting`: The style conflicts with another active style (toggling it removes the conflicting style)
 
 **Inline vs paragraph styles**:
-
 - Inline styles (bold, italic, underline, strikethrough, inline code) apply to the exact character range selected. With no selection, they apply to the next characters typed.
 - Paragraph styles (headings, codeblock, blockquote, lists) apply to entire paragraphs (text between newlines). If the selection spans multiple paragraphs, all are affected.
 
@@ -85,24 +83,24 @@ export default function RichEditor() {
 
 The `OnChangeStateEvent` key column shows the exact property name on the event object returned by `onChangeState`. Use these keys when reading style state (e.g. `stylesState.strikeThrough.isActive`). Note that casing varies (e.g. `strikeThrough` with capital T, `inlineCode` with capital C).
 
-| Style          | Toggle method                 | `OnChangeStateEvent` key | Type      |
-| -------------- | ----------------------------- | ------------------------ | --------- |
-| Bold           | `toggleBold()`                | `bold`                   | Inline    |
-| Italic         | `toggleItalic()`              | `italic`                 | Inline    |
-| Underline      | `toggleUnderline()`           | `underline`              | Inline    |
-| Strikethrough  | `toggleStrikeThrough()`       | `strikeThrough`          | Inline    |
-| Inline code    | `toggleInlineCode()`          | `inlineCode`             | Inline    |
-| H1             | `toggleH1()`                  | `h1`                     | Paragraph |
-| H2             | `toggleH2()`                  | `h2`                     | Paragraph |
-| H3             | `toggleH3()`                  | `h3`                     | Paragraph |
-| H4             | `toggleH4()`                  | `h4`                     | Paragraph |
-| H5             | `toggleH5()`                  | `h5`                     | Paragraph |
-| H6             | `toggleH6()`                  | `h6`                     | Paragraph |
-| Code block     | `toggleCodeBlock()`           | `codeBlock`              | Paragraph |
-| Block quote    | `toggleBlockQuote()`          | `blockQuote`             | Paragraph |
-| Ordered list   | `toggleOrderedList()`         | `orderedList`            | Paragraph |
-| Unordered list | `toggleUnorderedList()`       | `unorderedList`          | Paragraph |
-| Checkbox list  | `toggleCheckboxList(checked)` | `checkboxList`           | Paragraph |
+| Style | Toggle method | `OnChangeStateEvent` key | Type |
+|-------|--------------|--------------------------|------|
+| Bold | `toggleBold()` | `bold` | Inline |
+| Italic | `toggleItalic()` | `italic` | Inline |
+| Underline | `toggleUnderline()` | `underline` | Inline |
+| Strikethrough | `toggleStrikeThrough()` | `strikeThrough` | Inline |
+| Inline code | `toggleInlineCode()` | `inlineCode` | Inline |
+| H1 | `toggleH1()` | `h1` | Paragraph |
+| H2 | `toggleH2()` | `h2` | Paragraph |
+| H3 | `toggleH3()` | `h3` | Paragraph |
+| H4 | `toggleH4()` | `h4` | Paragraph |
+| H5 | `toggleH5()` | `h5` | Paragraph |
+| H6 | `toggleH6()` | `h6` | Paragraph |
+| Code block | `toggleCodeBlock()` | `codeBlock` | Paragraph |
+| Block quote | `toggleBlockQuote()` | `blockQuote` | Paragraph |
+| Ordered list | `toggleOrderedList()` | `orderedList` | Paragraph |
+| Unordered list | `toggleUnorderedList()` | `unorderedList` | Paragraph |
+| Checkbox list | `toggleCheckboxList(checked)` | `checkboxList` | Paragraph |
 
 ### Links
 
@@ -126,16 +124,10 @@ Mentions support custom indicators (default: `@`). Set custom indicators via the
 <EnrichedTextInput
   ref={ref}
   mentionIndicators={['@', '#']}
-  onStartMention={indicator => {
-    /* show picker */
-  }}
-  onChangeMention={({ indicator, text }) => {
-    /* filter list */
-  }}
-  onEndMention={indicator => {
-    /* hide picker */
-  }}
-/>;
+  onStartMention={(indicator) => { /* show picker */ }}
+  onChangeMention={({ indicator, text }) => { /* filter list */ }}
+  onEndMention={(indicator) => { /* hide picker */ }}
+/>
 
 // Complete the mention when user selects from picker
 ref.current?.setMention('@', 'John Doe', { userId: '123' });
@@ -188,14 +180,14 @@ export default function MarkdownDisplay() {
 
 ### Flavors
 
-| Flavor                 | Features                                                    | Layout                                              |
-| ---------------------- | ----------------------------------------------------------- | --------------------------------------------------- |
-| `commonmark` (default) | All CommonMark elements, inline math (`$...$`)              | Single TextView                                     |
-| `github`               | CommonMark + GFM tables, task lists, block math (`$$...$$`) | Segmented layout (separate TextViews + table views) |
+| Flavor | Features | Layout |
+|--------|----------|--------|
+| `commonmark` (default) | All CommonMark elements, inline math (`$...$`) | Single TextView |
+| `github` | CommonMark + GFM tables, task lists, block math (`$$...$$`) | Segmented layout (separate TextViews + table views) |
 
 ```tsx
 <EnrichedMarkdownText
-  flavor='github'
+  flavor="github"
   markdown={markdown}
   onLinkPress={({ url }) => Linking.openURL(url)}
 />
@@ -207,7 +199,7 @@ Tables require `flavor="github"` and support column alignment, rich text in cell
 
 ```tsx
 <EnrichedMarkdownText
-  flavor='github'
+  flavor="github"
   markdown={tableMarkdown}
   markdownStyle={{
     table: {
@@ -228,7 +220,7 @@ Task lists require `flavor="github"`. Handle checkbox taps with `onTaskListItemP
 
 ```tsx
 <EnrichedMarkdownText
-  flavor='github'
+  flavor="github"
   markdown={`- [x] Done\n- [ ] Todo`}
   onTaskListItemPress={({ index, checked, text }) => {
     console.log(`Task ${index}: ${checked ? 'checked' : 'unchecked'}`);
@@ -244,9 +236,8 @@ Task lists require `flavor="github"`. Handle checkbox taps with `onTaskListItemP
 Use `String.raw` or double backslashes for LaTeX commands in JS strings.
 
 Disable math to reduce bundle size (iosMath ~2.5 MB on iOS):
-
 ```tsx
-<EnrichedMarkdownText md4cFlags={{ latexMath: false }} markdown='...' />
+<EnrichedMarkdownText md4cFlags={{ latexMath: false }} markdown="..." />
 ```
 
 ### Customizing styles
@@ -256,22 +247,14 @@ Use the `markdownStyle` prop. Memoize it with `useMemo` to avoid re-renders:
 ```tsx
 import type { MarkdownStyle } from 'react-native-enriched-markdown';
 
-const markdownStyle: MarkdownStyle = useMemo(
-  () => ({
-    paragraph: { fontSize: 16, color: '#333', lineHeight: 24 },
-    h1: { fontSize: 32, fontWeight: 'bold', marginBottom: 16 },
-    code: { color: '#E91E63', backgroundColor: '#F5F5F5' },
-    codeBlock: {
-      backgroundColor: '#1E1E1E',
-      color: '#D4D4D4',
-      padding: 16,
-      borderRadius: 8,
-    },
-    link: { color: '#007AFF', underline: true },
-    blockquote: { borderColor: '#007AFF', backgroundColor: '#F0F8FF' },
-  }),
-  [],
-);
+const markdownStyle: MarkdownStyle = useMemo(() => ({
+  paragraph: { fontSize: 16, color: '#333', lineHeight: 24 },
+  h1: { fontSize: 32, fontWeight: 'bold', marginBottom: 16 },
+  code: { color: '#E91E63', backgroundColor: '#F5F5F5' },
+  codeBlock: { backgroundColor: '#1E1E1E', color: '#D4D4D4', padding: 16, borderRadius: 8 },
+  link: { color: '#007AFF', underline: true },
+  blockquote: { borderColor: '#007AFF', backgroundColor: '#F0F8FF' },
+}), []);
 ```
 
 Inline elements inherit typography from their parent block (fontSize, fontFamily, color), then add their own styling on top.
@@ -312,10 +295,8 @@ For detailed API documentation, webfetch the relevant page from the upstream doc
 ## Known limitations
 
 ### react-native-enriched
-
 - Only one level of lists (no nested lists)
 - iOS headings cannot have the same `fontSize` as the input's `fontSize`
 
 ### react-native-enriched-markdown
-
 - `flavor="github"` segments text into separate TextViews, so text selection cannot span across segments

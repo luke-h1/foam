@@ -108,7 +108,6 @@ RCT_EXPORT_MODULE()
 ```
 
 Key points:
-
 - `RCTCxxBridge` is React Native's internal bridge class that holds the `jsi::Runtime*`. It is not a public stable API, but has been consistent across RN 0.68+.
 - `setBridge:` runs before the JS bundle is evaluated, guaranteeing the globals are registered before JS calls them.
 - `requiresMainQueueSetup = YES` ensures initialization runs on the main queue, required if `install()` touches any UIKit state.
@@ -153,12 +152,12 @@ end
 
 Critical lines:
 
-| Line                          | Purpose                                                                                                                                 |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `s.source_files`              | Tells Xcode which files to compile. Paths are relative to the podspec location (library root). Include both `ios/*.mm` and `cpp/*.cpp`. |
-| `HEADER_SEARCH_PATHS`         | Lets `#include "install.h"` find your shared C++ headers. `PODS_TARGET_SRCROOT` resolves to the library root.                           |
-| `CLANG_CXX_LANGUAGE_STANDARD` | Enables C++17 features (`std::optional`, structured bindings) needed by most JSI code.                                                  |
-| `React-jsi` dependency        | Provides `<jsi/jsi.h>` and the `jsi::Runtime` type. Without it the `.mm` file won't find the JSI headers.                               |
+| Line | Purpose |
+|------|---------|
+| `s.source_files` | Tells Xcode which files to compile. Paths are relative to the podspec location (library root). Include both `ios/*.mm` and `cpp/*.cpp`. |
+| `HEADER_SEARCH_PATHS` | Lets `#include "install.h"` find your shared C++ headers. `PODS_TARGET_SRCROOT` resolves to the library root. |
+| `CLANG_CXX_LANGUAGE_STANDARD` | Enables C++17 features (`std::optional`, structured bindings) needed by most JSI code. |
+| `React-jsi` dependency | Provides `<jsi/jsi.h>` and the `jsi::Runtime` type. Without it the `.mm` file won't find the JSI headers. |
 
 After adding the podspec, consumers run `cd ios && pod install` and Xcode picks up everything automatically.
 
@@ -183,7 +182,6 @@ companion object {
 The string `"mymodule"` matches the target name in `add_library(mymodule ...)` in `CMakeLists.txt`.
 
 **Local vs global JNI references.** JNI distinguishes two reference types:
-
 - **Local references** are valid only within the current JNI call frame (the duration of one `JNIEnv*` call). They are automatically freed when the native method returns.
 - **Global references** (`env->NewGlobalRef(obj)`) survive across calls and must be manually released with `env->DeleteGlobalRef(ref)`. Forgetting to delete a global ref leaks the Java object and prevents GC.
 
@@ -294,7 +292,6 @@ struct MyModule : public facebook::jni::JavaClass<MyModule> {
 ```
 
 Why FBJNI over raw JNI:
-
 - **Reference safety** — `local_ref<T>` and `global_ref<T>` are RAII wrappers; references are released automatically.
 - **Exception translation** — Java exceptions thrown during JNI calls are automatically rethrown as C++ exceptions (and vice versa).
 - **Type-safe method lookup** — `getMethod<jint(jlong)>("nativeInstall")` is checked at compile time; raw JNI uses untyped strings that fail at runtime.
@@ -335,12 +332,12 @@ For the New Architecture (RN 0.76+), register via `TurboReactPackage` or the cod
 
 ## Library Templates
 
-| Template                                        | Command / URL                                                                          | Notes                                                                           |
-| ----------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| **create-react-native-library** _(recommended)_ | `npx create-react-native-library@latest MyLib` → choose _"C++ for both iOS & Android"_ | Actively maintained, sets up TurboModule + JSI boilerplate, CMakeLists, podspec |
-| mrousavy/react-native-jsi-library-template      | GitHub: `mrousavy/react-native-jsi-library-template`                                   | Minimal JSI-only template, good for learning the wiring                         |
-| ospfranco/react-native-jsi-template             | GitHub: `ospfranco/react-native-jsi-template`                                          | Another minimal template, sqlite-focused examples                               |
-| ammarahm-ed/react-native-jsi-template           | GitHub: `ammarahm-ed/react-native-jsi-template`                                        | Simple JSI setup without TurboModule overhead                                   |
+| Template | Command / URL | Notes |
+|----------|--------------|-------|
+| **create-react-native-library** *(recommended)* | `npx create-react-native-library@latest MyLib` → choose *"C++ for both iOS & Android"* | Actively maintained, sets up TurboModule + JSI boilerplate, CMakeLists, podspec |
+| mrousavy/react-native-jsi-library-template | GitHub: `mrousavy/react-native-jsi-library-template` | Minimal JSI-only template, good for learning the wiring |
+| ospfranco/react-native-jsi-template | GitHub: `ospfranco/react-native-jsi-template` | Another minimal template, sqlite-focused examples |
+| ammarahm-ed/react-native-jsi-template | GitHub: `ammarahm-ed/react-native-jsi-template` | Simple JSI setup without TurboModule overhead |
 
 Start with `create-react-native-library` unless you have a specific reason to use a minimal template — it handles the platform glue that's easy to get wrong.
 
@@ -348,14 +345,14 @@ Start with `create-react-native-library` unless you have a specific reason to us
 
 ## JSI vs TurboModules vs Nitro Modules
 
-|                        | **Raw JSI**                                                 | **TurboModules**                                   | **Nitro Modules**                                   |
-| ---------------------- | ----------------------------------------------------------- | -------------------------------------------------- | --------------------------------------------------- |
-| **What it is**         | Bare C++ engine API                                         | RN's official native module system, built on JSI   | Third-party alternative to TurboModules (mrousavy)  |
-| **Type safety**        | Manual — you check types at runtime                         | Schema-generated from TypeScript spec              | Schema-generated from TypeScript; stricter types    |
-| **Codegen**            | None                                                        | Yes (`react-native-codegen`)                       | Yes (Nitrogen codegen)                              |
-| **Async support**      | Manual (Promise + CallInvoker)                              | Built-in via Promise return type                   | Built-in                                            |
-| **Performance**        | Maximum — you control everything                            | Good                                               | Slightly faster than TurboModules (fewer layers)    |
-| **Maintenance burden** | High — all boilerplate manual                               | Low — mostly generated                             | Low — mostly generated                              |
-| **Best for**           | Libraries with unusual requirements, learning JSI internals | Standard native modules shipping with React Native | Third-party libraries targeting maximum performance |
+| | **Raw JSI** | **TurboModules** | **Nitro Modules** |
+|-|------------|-----------------|------------------|
+| **What it is** | Bare C++ engine API | RN's official native module system, built on JSI | Third-party alternative to TurboModules (mrousavy) |
+| **Type safety** | Manual — you check types at runtime | Schema-generated from TypeScript spec | Schema-generated from TypeScript; stricter types |
+| **Codegen** | None | Yes (`react-native-codegen`) | Yes (Nitrogen codegen) |
+| **Async support** | Manual (Promise + CallInvoker) | Built-in via Promise return type | Built-in |
+| **Performance** | Maximum — you control everything | Good | Slightly faster than TurboModules (fewer layers) |
+| **Maintenance burden** | High — all boilerplate manual | Low — mostly generated | Low — mostly generated |
+| **Best for** | Libraries with unusual requirements, learning JSI internals | Standard native modules shipping with React Native | Third-party libraries targeting maximum performance |
 
 For most library authors, **TurboModules** (via `create-react-native-library`) is the right choice. Use raw JSI only when you need capabilities that TurboModules don't expose — such as `HostObject` with intercepted property access, custom `ArrayBuffer` providers, or a custom runtime decorator.

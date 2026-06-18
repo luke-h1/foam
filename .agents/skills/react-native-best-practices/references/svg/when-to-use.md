@@ -33,13 +33,13 @@ For a static SVG from your design team, this means unnecessary reconciliation co
 
 ## Alternative Comparison
 
-| Tool                                            | Best for                                                               | Key trade-off                                                                                                             |
-| ----------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `expo-image`                                    | Static SVG images (delegates to Glide/SDWebImage natively)             | Loads async, which can cause blinking on first render. Use preloading to minimize this. No filter support.                |
-| Icon fonts (`@expo/vector-icons`, Font Awesome) | Icons                                                                  | Limited to available glyphs in the font. Very performant.                                                                 |
-| `react-native-vector-image`                     | Static SVGs as native assets (Vector Drawables on Android, PDF on iOS) | Build-time asset generation step required                                                                                 |
-| Lottie / Rive                                   | Animated vector graphics                                               | Requires converting assets from SVG to Lottie/Rive format. Better animation performance than SVG.                         |
-| `react-native-skia`                             | Complex SVGs with filters, Reanimated integration                      | Each `Canvas` object is heavy. Rendering many small SVGs in separate Canvases degrades performance. Adds to package size. |
-| WebView                                         | SVGs with features no other renderer supports                          | Heavier than native options, but browsers cover the most of the SVG standard                                              |
+| Tool | Best for | Key trade-off |
+|---|---|---|
+| `expo-image` | Static SVG images (delegates to Glide/SDWebImage natively) | Loads async, which can cause blinking on first render. Use preloading to minimize this. No filter support. |
+| Icon fonts (`@expo/vector-icons`, Font Awesome) | Icons | Limited to available glyphs in the font. Very performant. |
+| `react-native-vector-image` | Static SVGs as native assets (Vector Drawables on Android, PDF on iOS) | Build-time asset generation step required |
+| Lottie / Rive | Animated vector graphics | Requires converting assets from SVG to Lottie/Rive format. Better animation performance than SVG. |
+| `react-native-skia` | Complex SVGs with filters, Reanimated integration | Each `Canvas` object is heavy. Rendering many small SVGs in separate Canvases degrades performance. Adds to package size. |
+| WebView | SVGs with features no other renderer supports | Heavier than native options, but browsers cover the most of the SVG standard |
 
 ---

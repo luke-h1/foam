@@ -8,11 +8,11 @@ JSI (JavaScript Interface) is a C++ header-only API that provides a language-agn
 
 React Native runs across three execution domains. Understanding which thread a crash frame belongs to is the first step in any debugging session.
 
-| Thread                | Name in crash traces                                       | What runs there                                                                         |
-| --------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| **JS Thread**         | `mqt_js`                                                   | Hermes engine, all JS/TS code, JSI calls                                                |
-| **UI / Main Thread**  | `main` (iOS) / app package name e.g. `com.myapp` (Android) | Native view rendering, layout, touch hit-testing (UIKit on iOS, View system on Android) |
-| **Native Background** | varies (`AudioEncoder`, `RNBGThread`, etc.)                | File I/O, network, audio, any heavy native work dispatched from a native module         |
+| Thread | Name in crash traces | What runs there |
+|---|---|---|
+| **JS Thread** | `mqt_js` | Hermes engine, all JS/TS code, JSI calls |
+| **UI / Main Thread** | `main` (iOS) / app package name e.g. `com.myapp` (Android) | Native view rendering, layout, touch hit-testing (UIKit on iOS, View system on Android) |
+| **Native Background** | varies (`AudioEncoder`, `RNBGThread`, etc.) | File I/O, network, audio, any heavy native work dispatched from a native module |
 
 These domains **do not share mutable state**. In the old architecture they communicated exclusively via serialized messages. The New Architecture adds shared immutable C++ data structures (the Fabric shadow tree) and the direct JSI call path, but the fundamental isolation still holds: you cannot safely access one thread's mutable state from another.
 
@@ -58,9 +58,8 @@ This is why Hermes apps start faster: the most expensive part of JS engine start
 Hermes uses a garbage collector called **Hades** (Hermes Approach to Decreasing Execution Stalls).
 
 **Generational.** Objects are split into two generations:
-
-- _Young generation_ — recently allocated objects, collected frequently and cheaply (most objects die young).
-- _Old generation_ — objects that survived multiple young-gen collections, collected less often.
+- *Young generation* — recently allocated objects, collected frequently and cheaply (most objects die young).
+- *Old generation* — objects that survived multiple young-gen collections, collected less often.
 
 **Mostly-concurrent.** The bulk of collection work (tracing the object graph, sweeping unreachable objects) runs on a **background thread** while JavaScript continues executing. Only specific phases — root marking and weak reference finalization — require a brief **stop-the-world (STW) pause** where the JS thread is halted.
 
@@ -99,7 +98,6 @@ Nothing is injected automatically. Every binding is opt-in via `rt.global()`.
 JSI calls are **synchronous**. When C++ calls into JS (or JS calls into C++ via a HostFunction), both sides execute on the same thread and control returns to the caller before anything else runs. This is fundamentally different from the old RN bridge, which queued messages asynchronously across threads.
 
 Consequences:
-
 - JSI bindings are faster — no serialization, no thread hops for the call itself.
 - The JS thread can be blocked by a slow HostFunction. Don't do heavy work synchronously in a HostFunction; return a Promise and use `CallInvoker` to resolve it from a background thread.
 - `evaluateJavaScript` is also synchronous — it blocks until the script finishes.
