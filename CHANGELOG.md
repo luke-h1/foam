@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0-internal
+## 1.0.0
 
 ### ♻️ Refactor
 
@@ -11,6 +11,7 @@
 - **app:** I8n
 - **app:** I8n ([#633](https://github.com/lhowsam/foam/issues/633))
 - **app:** Vod screen ([#644](https://github.com/lhowsam/foam/issues/644))
+- **app:** Improve chat settings ui
 
 ### 🐛 Bug Fixes
 
@@ -30,6 +31,7 @@
 - **app:** Image perf
 - **app:** Image perf
 - **perf:** Reduce animated emote decode cpu
+- **perf:** Improve chat perf ([#651](https://github.com/lhowsam/foam/issues/651))
 
 ### 🔧 Miscellaneous Tasks
 
@@ -37,6 +39,7 @@
 - Upgrade bun to 1.3.14
 - Upgrade bun to 1.3.14 in CI
 - **app:** Update legend list ([#641](https://github.com/lhowsam/foam/issues/641))
+- **ai:** Update skills
 
 ## 1.0.0
 
