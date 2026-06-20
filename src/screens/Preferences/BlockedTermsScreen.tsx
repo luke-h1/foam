@@ -168,6 +168,7 @@ export function BlockedTermsScreen() {
         renderItem={renderItem}
         keyExtractor={item => item}
         contentInsetAdjustmentBehavior='automatic'
+        keyboardDismissMode='on-drag'
         keyboardShouldPersistTaps='handled'
         contentContainerStyle={[
           styles.listContent,

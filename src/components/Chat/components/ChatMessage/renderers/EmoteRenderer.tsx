@@ -3,6 +3,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
+import { isLowEndDevice } from '@app/utils/device/deviceTier';
 import { View } from 'react-native';
 import { ChatInlineImage } from './ChatInlineImage';
 
@@ -36,7 +37,7 @@ export const EmoteRenderer = memo(
       url: part.url,
       static_url: part.static_url,
       disableAnimations,
-      preferredScale: '2x',
+      preferredScale: isLowEndDevice() ? '1x' : '2x',
     });
     // No Pressable: long-press is detected by the row's timer, this just
     // records which emote the touch started on. A busy screen renders
@@ -83,6 +84,8 @@ export const EmoteRenderer = memo(
         <ChatInlineImage
           sourceUrl={displayUrl}
           style={getEmoteImageStyle(width, height)}
+          priority='normal'
+          transitionMs={0}
         />
       </View>
     );

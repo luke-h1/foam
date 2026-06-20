@@ -108,6 +108,7 @@ describe('useChatComposerActions', () => {
     expect(inputShell.setReplyTo.mock.calls[0]?.[0]).toEqual({
       color: '#00ff00',
       message: 'replying with Kappa',
+      messageParts: replyMessage.message,
       messageId: 'reply-1',
       parentMessage: 'parent text OMEGALUL',
       replyParentUserLogin: 'Viewer',

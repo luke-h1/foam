@@ -3,10 +3,10 @@ import {
   SettingsSection,
 } from '@app/components/SettingsSection/SettingsSection';
 import { Text } from '@app/components/ui/Text/Text';
-import { FOAM_FAQ_URL } from '@app/constants/links';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import { openLicenseList } from '@app/lib/legal';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import {
@@ -88,7 +88,7 @@ export function SettingsIndexScreen() {
             <Button
               label={t('faq')}
               systemImage='questionmark.circle'
-              onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
+              onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
             />
             <Button
               label={t('sendFeedback')}
@@ -104,6 +104,11 @@ export function SettingsIndexScreen() {
               label={t('website')}
               systemImage='globe'
               onPress={() => openLinkInBrowser(websiteUrl.value)}
+            />
+            <Button
+              label={t('ossLicenses')}
+              systemImage='doc.text'
+              onPress={() => openLicenseList(t('ossLicenses'))}
             />
           </Section>
 
@@ -194,7 +199,7 @@ export function SettingsIndexScreen() {
             title={t('faq')}
             subtitle={t('faqDescription')}
             icon={{ icon: 'questionmark.circle', color: theme.colorPrimary }}
-            onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
+            onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
           />
           <SettingsLinkRow
             title={t('sendFeedback')}
@@ -213,6 +218,12 @@ export function SettingsIndexScreen() {
             subtitle={t('websiteDescription')}
             icon={{ icon: 'globe', color: theme.colorViolet }}
             onPress={() => openLinkInBrowser(websiteUrl.value)}
+          />
+          <SettingsLinkRow
+            title={t('ossLicenses')}
+            subtitle={t('ossLicensesDescription')}
+            icon={{ icon: 'doc.text', color: theme.colorViolet }}
+            onPress={() => openLicenseList(t('ossLicenses'))}
           />
         </SettingsSection>
 

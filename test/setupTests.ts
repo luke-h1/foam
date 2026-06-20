@@ -506,6 +506,11 @@ jest.mock('@app/components/BottomSheet/BottomSheetProvider', () => ({
   AppBottomSheetProvider: ({ children }: { children?: ReactNode }) => children,
 }));
 
+jest.mock('@app/utils/device/deviceTier', () => ({
+  getDeviceTier: () => 'high',
+  isLowEndDevice: () => false,
+}));
+
 jest.mock('sonner-native', () => ({
   Toaster: () => null,
   toast: {

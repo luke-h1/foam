@@ -7,6 +7,7 @@ import {
   ensureCachedEmoteRef,
   getCachedEmoteRef,
   subscribeCachedEmoteRef,
+  touchCachedEmoteRef,
 } from './cache-service';
 
 /**
@@ -28,9 +29,17 @@ export function useCachedEmote(
     () => getCachedEmoteRef(url),
     () => null,
   );
-  // Lazily decode on first use (the ref subscription above re-renders when ready).
+  // Lazily decode on first use (the ref subscription above re-renders when
+  // ready); once decoded, mark it recently-used so eviction keeps hot emotes.
+
+  /**
+   * Lazily decode on first use (the ref subscription above re-renders when
+   * ready); once decoded, mark it recently-used so eviction keeps hot emotes.
+   */
   useEffect(() => {
-    if (!ref && url) {
+    if (ref) {
+      touchCachedEmoteRef(url);
+    } else if (url) {
       ensureCachedEmoteRef(url, maxPx);
     }
   }, [url, maxPx, ref]);

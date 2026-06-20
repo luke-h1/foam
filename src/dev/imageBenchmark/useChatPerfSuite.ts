@@ -41,8 +41,6 @@ export interface SuiteState {
   phaseIndex: number;
   phaseLabel: string;
   phaseSub: string;
-  phaseSecondsLeft: number;
-  totalSecondsLeft: number;
   measuring: boolean;
   results: PhaseResult[];
 }
@@ -52,8 +50,6 @@ const IDLE: SuiteState = {
   phaseIndex: -1,
   phaseLabel: '',
   phaseSub: '',
-  phaseSecondsLeft: 0,
-  totalSecondsLeft: 0,
   measuring: false,
   results: [],
 };
@@ -68,6 +64,7 @@ export function useChatPerfSuite() {
   const [suite, setSuite] = useState<SuiteState>(IDLE);
   const accum = useRef({ on: false, fps: [] as number[], jank: 0, frames: 0 });
   const cancelRef = useRef(false);
+  const runningRef = useRef(false);
 
   // UI-thread frame accumulators (the real rendering smoothness). Reanimated
   // ticks this worklet on the UI thread; we gate accumulation to measure windows
@@ -75,9 +72,24 @@ export function useChatPerfSuite() {
   const uiFrames = useSharedValue(0);
   const uiJank = useSharedValue(0);
   const uiActive = useSharedValue(false);
+  // Countdown is driven here on the UI thread so it keeps ticking even while the
+  // JS thread is saturated by the flood being measured (a JS-state countdown
+  // freezes exactly when the suite is busiest).
+  const phaseCountdownMs = useSharedValue(0);
+  const totalCountdownMs = useSharedValue(0);
+  const countdownTicking = useSharedValue(false);
 
   useFrameCallback(frame => {
     'worklet';
+    if (countdownTicking.value && frame.timeSincePreviousFrame !== null) {
+      const dt = frame.timeSincePreviousFrame;
+      if (phaseCountdownMs.value > 0) {
+        phaseCountdownMs.value = Math.max(0, phaseCountdownMs.value - dt);
+      }
+      if (totalCountdownMs.value > 0) {
+        totalCountdownMs.value = Math.max(0, totalCountdownMs.value - dt);
+      }
+    }
     if (!uiActive.value) {
       return;
     }
@@ -141,103 +153,117 @@ export function useChatPerfSuite() {
         uiJank.value = 0;
         uiActive.value = true;
       }
+      phaseCountdownMs.value = ms;
+      totalCountdownMs.value = Math.max(0, suiteEnd - start);
+      setSuite(s => ({
+        ...s,
+        phaseIndex,
+        phaseLabel: label,
+        phaseSub: sub,
+        measuring,
+      }));
       while (performance.now() - start < ms) {
         if (cancelRef.current) {
           break;
         }
-        const phaseLeft = Math.ceil((ms - (performance.now() - start)) / 1000);
-        const totalLeft = Math.max(
-          0,
-          Math.ceil((suiteEnd - performance.now()) / 1000),
-        );
-        setSuite(s => ({
-          ...s,
-          phaseIndex,
-          phaseLabel: label,
-          phaseSub: sub,
-          phaseSecondsLeft: phaseLeft,
-          totalSecondsLeft: totalLeft,
-          measuring,
-        }));
-        await sleep(200);
+        await sleep(120);
       }
       accum.current.on = false;
       uiActive.value = false;
     },
-    [uiActive, uiFrames, uiJank],
+    [phaseCountdownMs, totalCountdownMs, uiActive, uiFrames, uiJank],
   );
 
   const runSuite = useCallback(async () => {
+    if (runningRef.current) {
+      return;
+    }
+    runningRef.current = true;
     cancelRef.current = false;
+    countdownTicking.value = true;
     const results: PhaseResult[] = [];
 
     setSuite({ ...IDLE, running: true });
     const suiteEnd = performance.now() + SUITE_TOTAL_MS;
 
-    for (let i = 0; i < SUITE_PHASES.length; i += 1) {
-      if (cancelRef.current) {
-        break;
-      }
-      const phase = SUITE_PHASES[i]!;
-      const label = phase.preset;
-
-      // Start the flood for warmup ramp; restart the fixture replay at measure
-      // start so each run processes a byte-identical stream (repeatable).
-      syntheticChatControl.current = SYNTHETIC_PRESETS[phase.preset]!;
-      // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- phases are ordered and the window must run to completion (it IS the work); cancellation is checked after
-      await runWindow(i, label, 'warming up', WARMUP_MS, false, suiteEnd);
-      if (cancelRef.current) {
-        break;
-      }
-
-      resetFloodReplay();
-      // eslint-disable-next-line react-doctor/async-defer-await -- the measure window must run fully before we can check whether it was cancelled
-      await runWindow(i, label, 'measuring', phase.measureMs, true, suiteEnd);
-      if (cancelRef.current) {
-        break;
-      }
-
-      const fps = accum.current.fps;
-      const secs = Math.max(1, fps.length);
-      const uiSecs = Math.max(1, phase.measureMs / 1000);
-      results.push({
-        preset: phase.preset,
-        fpsAvg: Math.round(mean(fps)),
-        fpsMin: fps.length ? Math.min(...fps) : 0,
-        fpsP10: Math.round(pct(fps, 0.1)),
-        jankPerSec: Math.round((accum.current.jank / secs) * 10) / 10,
-        droppedPct: Math.max(
-          0,
-          Math.round(100 * (1 - accum.current.frames / (secs * 60))),
-        ),
-        messages: chatStore$.messages.peek().length,
-        uiFpsAvg: Math.round(uiFrames.value / uiSecs),
-        uiJankPerSec: Math.round((uiJank.value / uiSecs) * 10) / 10,
-      });
-      setSuite(s => ({ ...s, results: [...results] }));
-
-      // Cooldown: stop the flood so memory/GC settles before the next phase.
-      syntheticChatControl.current = SYNTHETIC_PRESETS.off!;
-      if (i < SUITE_PHASES.length - 1) {
-        // eslint-disable-next-line react-doctor/async-defer-await -- the cooldown window must run fully before we can check whether it was cancelled
-        await runWindow(i, label, 'cooldown', COOLDOWN_MS, false, suiteEnd);
+    try {
+      for (let i = 0; i < SUITE_PHASES.length; i += 1) {
         if (cancelRef.current) {
           break;
         }
+        const phase = SUITE_PHASES[i]!;
+        const label = phase.preset;
+
+        // Start the flood for warmup ramp; restart the fixture replay at measure
+        // start so each run processes a byte-identical stream (repeatable).
+        syntheticChatControl.current = SYNTHETIC_PRESETS[phase.preset]!;
+        // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- phases are ordered and the window must run to completion (it IS the work); cancellation is checked after
+        await runWindow(i, label, 'warming up', WARMUP_MS, false, suiteEnd);
+        if (cancelRef.current) {
+          break;
+        }
+
+        resetFloodReplay();
+        // eslint-disable-next-line react-doctor/async-defer-await -- the measure window must run fully before we can check whether it was cancelled
+        await runWindow(i, label, 'measuring', phase.measureMs, true, suiteEnd);
+        if (cancelRef.current) {
+          break;
+        }
+
+        const fps = accum.current.fps;
+        const secs = Math.max(1, fps.length);
+        const uiSecs = Math.max(1, phase.measureMs / 1000);
+        results.push({
+          preset: phase.preset,
+          fpsAvg: Math.round(mean(fps)),
+          fpsMin: fps.length ? Math.min(...fps) : 0,
+          fpsP10: Math.round(pct(fps, 0.1)),
+          jankPerSec: Math.round((accum.current.jank / secs) * 10) / 10,
+          droppedPct: Math.max(
+            0,
+            Math.round(100 * (1 - accum.current.frames / (secs * 60))),
+          ),
+          messages: chatStore$.messages.peek().length,
+          uiFpsAvg: Math.round(uiFrames.value / uiSecs),
+          uiJankPerSec: Math.round((uiJank.value / uiSecs) * 10) / 10,
+        });
+        setSuite(s => ({ ...s, results: [...results] }));
+
+        // Cooldown: stop the flood so memory/GC settles before the next phase.
+        syntheticChatControl.current = SYNTHETIC_PRESETS.off!;
+        if (i < SUITE_PHASES.length - 1) {
+          // eslint-disable-next-line react-doctor/async-defer-await -- the cooldown window must run fully before we can check whether it was cancelled
+          await runWindow(i, label, 'cooldown', COOLDOWN_MS, false, suiteEnd);
+          if (cancelRef.current) {
+            break;
+          }
+        }
       }
+    } finally {
+      syntheticChatControl.current = SYNTHETIC_PRESETS.off!;
+      resetFloodReplay();
+      countdownTicking.value = false;
+      setSuite(s => ({ ...IDLE, results: s.results }));
+      runningRef.current = false;
     }
+  }, [runWindow, uiFrames, uiJank, countdownTicking]);
 
-    syntheticChatControl.current = SYNTHETIC_PRESETS.off!;
-    resetFloodReplay();
-    setSuite(s => ({ ...IDLE, results: s.results }));
-  }, [runWindow, uiFrames, uiJank]);
-
+  // Signal cancel + stop the flood immediately, but let runSuite's finally own
+  // the transition to IDLE — otherwise the Run button reappears mid-cancel and a
+  // re-tap would reset cancelRef and start a second overlapping run.
   const stopSuite = useCallback(() => {
     cancelRef.current = true;
     syntheticChatControl.current = SYNTHETIC_PRESETS.off!;
     resetFloodReplay();
-    setSuite(s => ({ ...IDLE, results: s.results }));
+    setSuite(s => (s.running ? { ...s, phaseSub: 'stopping…' } : s));
   }, []);
 
-  return { live, suite, runSuite, stopSuite };
+  return {
+    live,
+    suite,
+    runSuite,
+    stopSuite,
+    phaseCountdownMs,
+    totalCountdownMs,
+  };
 }

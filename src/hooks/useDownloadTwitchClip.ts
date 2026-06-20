@@ -1,7 +1,7 @@
 import { useAuthContext } from '@app/context/AuthContext';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
-import { createId } from '@paralleldrive/cuid2';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import * as Crypto from 'expo-crypto';
 import { Directory, File, Paths } from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import { Platform } from 'react-native';
@@ -51,7 +51,7 @@ export function useDownloadTwitchClip() {
         throw new Error('Permission not granted');
       }
 
-      const directory = new Directory(Paths.cache, createId());
+      const directory = new Directory(Paths.cache, Crypto.randomUUID());
 
       directory.create({
         intermediates: true,

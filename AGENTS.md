@@ -37,6 +37,21 @@ src/store/
 
 Import chat store modules directly (for example `@app/store/chat/observables/chatStore`, `@app/store/chat/actions/messages`, `@app/store/chat/types/constants`). Do not add barrel exports under `store/chat`.
 
+## Inline Simple Values
+
+Do not lift a simple, self-explanatory value into a named constant just to reference it once. Inline it at the use site.
+
+```ts
+// avoid
+const CARD_BG = '#1C1C1E';
+<View style={{ backgroundColor: CARD_BG }} />
+
+// prefer
+<View style={{ backgroundColor: '#1C1C1E' }} />
+```
+
+A name like `THE_COLOR_OF_A_COMPONENT = '#55'` adds a layer of indirection without adding information — the literal already says everything the name does. Reserve module-level constants for values that are genuinely shared across files and must stay in sync, or that encode non-obvious meaning the literal cannot convey. A single component color, size, or string used in one place should be written where it is used.
+
 ## JSDoc Comments
 
 Write JSDoc comments as multi-line blocks. Never collapse them onto a single line.

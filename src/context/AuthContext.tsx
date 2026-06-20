@@ -584,54 +584,50 @@ export const AuthContextProvider = ({
       return;
     }
 
-    // Validate token with API to ensure it's still valid
-    try {
-      const isValidToken = await twitchService.validateToken(token.accessToken);
+    const tokenWithExpiration = token.expiresAt
+      ? token
+      : addExpirationTimestamp({
+          accessToken: token.accessToken,
+          expiresIn: token.expiresIn,
+          tokenType: token.tokenType,
+        });
 
-      if (!isValidToken) {
+    twitchApi.setAuthToken(token.accessToken);
+    setState({
+      ready: true,
+      authState: {
+        isAnonAuth: true,
+        isLoggedIn: false,
+        token: tokenWithExpiration,
+      },
+    });
+
+    if (!token.expiresAt) {
+      void SecureStore.setItemAsync(
+        storageKeys.anon,
+        JSON.stringify(tokenWithExpiration),
+      ).catch(error => {
+        logger.auth.warn('Failed to persist anon token expiry', error);
+      });
+    }
+
+    queueInitialDataPrefetch();
+
+    void twitchService
+      .validateToken(token.accessToken)
+      .then(isValidToken => {
+        if (isValidToken) {
+          return;
+        }
         logger.auth.warn(
           'Anonymous token validation failed, fetching new token',
         );
         twitchApi.removeAuthToken();
-        await fetchAnonToken();
-        return;
-      }
-
-      // Token is valid and not expired
-      // Ensure token has expiration timestamp (for backward compatibility with old stored tokens)
-      const tokenWithExpiration = token.expiresAt
-        ? token
-        : addExpirationTimestamp({
-            accessToken: token.accessToken,
-            expiresIn: token.expiresIn,
-            tokenType: token.tokenType,
-          });
-
-      // Update stored token with expiration timestamp if it was missing
-      if (!token.expiresAt) {
-        await SecureStore.setItemAsync(
-          storageKeys.anon,
-          JSON.stringify(tokenWithExpiration),
-        );
-      }
-
-      setState({
-        ready: true,
-        authState: {
-          isAnonAuth: true,
-          isLoggedIn: false,
-          token: tokenWithExpiration,
-        },
+        void fetchAnonToken();
+      })
+      .catch(error => {
+        logger.auth.warn('Anonymous token background validation error', error);
       });
-      twitchApi.setAuthToken(token.accessToken);
-
-      // Prefetch top streams for anonymous users with cached token after first interactions
-      queueInitialDataPrefetch();
-    } catch (error) {
-      logger.auth.error('Token validation error, fetching new token', error);
-      twitchApi.removeAuthToken();
-      await fetchAnonToken();
-    }
   };
 
   const populateAuthState = async () => {

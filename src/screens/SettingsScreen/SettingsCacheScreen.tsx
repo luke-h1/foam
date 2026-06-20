@@ -44,10 +44,10 @@ function handleClearData() {
   );
 }
 
-function handleClearChatCache() {
+function handleClearCache() {
   Alert.alert(
-    i18next.t('settings:clearChatCacheTitle'),
-    i18next.t('settings:clearChatCacheConfirm'),
+    i18next.t('settings:clearCacheTitle'),
+    i18next.t('settings:clearCacheConfirm'),
     [
       { text: i18next.t('common:cancel'), style: 'cancel' },
       {
@@ -55,29 +55,12 @@ function handleClearChatCache() {
         style: 'destructive',
         onPress: () => {
           clearChatCosmeticsCache();
+          clearUserCosmeticsCache();
           clearEmoteImageCache();
           storageService.clearImageCache();
           void clearImageCache().then(() => {
-            toast.success(i18next.t('settings:chatCacheCleared'));
+            toast.success(i18next.t('settings:cacheCleared'));
           });
-        },
-      },
-    ],
-  );
-}
-
-function handleClearSevenTvCosmeticsCache() {
-  Alert.alert(
-    i18next.t('settings:clearSevenTvCacheTitle'),
-    i18next.t('settings:clearSevenTvCacheConfirm'),
-    [
-      { text: i18next.t('common:cancel'), style: 'cancel' },
-      {
-        text: i18next.t('settings:clear'),
-        style: 'destructive',
-        onPress: () => {
-          clearUserCosmeticsCache();
-          toast.success(i18next.t('settings:sevenTvCacheCleared'));
         },
       },
     ],
@@ -107,18 +90,11 @@ export function SettingsCacheScreen() {
               onPress={handleClearData}
             />
             <Button
-              label={t('clearChatMediaCache')}
+              label={t('clearCache')}
               systemImage='trash'
               // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
               role='destructive'
-              onPress={handleClearChatCache}
-            />
-            <Button
-              label={t('clearSevenTvCacheTitle')}
-              systemImage='sparkles'
-              // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
-              role='destructive'
-              onPress={handleClearSevenTvCosmeticsCache}
+              onPress={handleClearCache}
             />
           </Section>
         </Form>
@@ -150,17 +126,10 @@ export function SettingsCacheScreen() {
             danger
           />
           <SettingsLinkRow
-            title={t('clearImageCache')}
-            subtitle={t('clearImageCacheDescription')}
+            title={t('clearCache')}
+            subtitle={t('clearCacheDescription')}
             icon={{ icon: 'trash', color: theme.colorRed }}
-            onPress={handleClearChatCache}
-            danger
-          />
-          <SettingsLinkRow
-            title={t('clearSevenTvCacheTitle')}
-            subtitle={t('clearSevenTvCacheDescription')}
-            icon={{ icon: 'sparkles', color: theme.colorRed }}
-            onPress={handleClearSevenTvCosmeticsCache}
+            onPress={handleClearCache}
             danger
           />
         </SettingsSection>

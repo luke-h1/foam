@@ -1,8 +1,6 @@
 import type { ChatComposerHandle } from './ChatComposer/ChatComposer';
 import type { useAuthContext } from '@app/context/AuthContext';
-import { twitchService } from '@app/services/twitch-service';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
-import type { SanitisedEmote } from '@app/types/emote';
 import { formatDate } from '@app/utils/date-time/date';
 import { findBadges } from '@app/utils/chat/findBadges';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
@@ -19,16 +17,13 @@ import {
 } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
-import { toast } from 'sonner-native';
 
 import { ChatInputSection, type ReplyToData } from './ChatInputSection';
 import { useChatImageUpload } from '../hooks/useChatImageUpload';
-import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
 import {
   createUserStateFromTags,
   type AnyChatMessageType,
 } from '../util/messageHandlers';
-import i18next from '@app/i18n/i18next';
 
 export interface ChatInputShellHandle {
   appendEmote: (emoteName: string) => void;
@@ -38,7 +33,6 @@ export interface ChatInputShellHandle {
 }
 
 interface ChatInputShellProps {
-  canPinNextMessage: boolean;
   channelId: string;
   channelName: string;
   connected: boolean;
@@ -46,7 +40,7 @@ interface ChatInputShellProps {
   isChatConnected: () => boolean;
   onOpenEmoteSheet: () => void;
   onOpenSettingsSheet: () => void;
-  onPinnedMessageChanged: (message: PinnedChatMessageViewModel) => void;
+  onRefreshCommand: () => void;
   processMessageEmotes: (
     text: string,
     userstate: ReturnType<typeof createUserStateFromTags>,
@@ -67,18 +61,15 @@ interface ChatInputShellProps {
 
 interface ChatDraftState {
   messageInput: string;
-  pinNextMessage: boolean;
   replyTo: ReplyToData | null;
 }
 
 const createEmptyDraft = (): ChatDraftState => ({
   messageInput: '',
-  pinNextMessage: false,
   replyTo: null,
 });
 
 export const ChatInputShell = memo(function ChatInputShell({
-  canPinNextMessage,
   channelId,
   channelName,
   connected,
@@ -86,7 +77,7 @@ export const ChatInputShell = memo(function ChatInputShell({
   isChatConnected,
   onOpenEmoteSheet,
   onOpenSettingsSheet,
-  onPinnedMessageChanged,
+  onRefreshCommand,
   processMessageEmotes,
   sendMessage,
   user,
@@ -96,14 +87,12 @@ export const ChatInputShell = memo(function ChatInputShell({
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
   const [draft, setDraft] = useState<ChatDraftState>(createEmptyDraft);
-  const [isSendingPinnedMessage, setIsSendingPinnedMessage] = useState(false);
-  const { messageInput, pinNextMessage, replyTo } = draft;
+  const { messageInput, replyTo } = draft;
+  const messageInputRef = useRef(messageInput);
   const isAuthenticated = Boolean(user?.id && user?.login);
-  const canPinCurrentMessage =
-    canPinNextMessage && !replyTo && !isSendingPinnedMessage;
-  const isPinNextMessageSelected = canPinCurrentMessage && pinNextMessage;
 
   const clearDraft = useCallback(() => {
+    messageInputRef.current = '';
     chatInputRef.current?.setText('');
     setDraft(createEmptyDraft());
   }, []);
@@ -113,34 +102,25 @@ export const ChatInputShell = memo(function ChatInputShell({
       if (!isAuthenticated) {
         return;
       }
+      messageInputRef.current = text;
       setDraft(prev => ({ ...prev, messageInput: text }));
     },
     [isAuthenticated],
   );
 
-  const handleComposerEmoteSelect = useCallback(
-    (emote: SanitisedEmote) => {
-      if (!isAuthenticated) {
-        return;
-      }
-      setDraft(prev => {
-        const next = `${prev.messageInput}${prev.messageInput.length > 0 ? ' ' : ''}${emote.name} `;
-        chatInputRef.current?.setText(next);
-        return { ...prev, messageInput: next };
-      });
-    },
-    [isAuthenticated],
-  );
-
-  const handleImageUploaded = useCallback((url: string) => {
-    setDraft(prev => {
-      const needsSpace =
-        prev.messageInput.length > 0 && !prev.messageInput.endsWith(' ');
-      const next = `${prev.messageInput}${needsSpace ? ' ' : ''}${url} `;
-      chatInputRef.current?.setText(next);
-      return { ...prev, messageInput: next };
-    });
+  const writeComposerText = useCallback((next: string) => {
+    messageInputRef.current = next;
+    chatInputRef.current?.setText(next);
   }, []);
+
+  const handleImageUploaded = useCallback(
+    (url: string) => {
+      const current = messageInputRef.current;
+      const needsSpace = current.length > 0 && !current.endsWith(' ');
+      writeComposerText(`${current}${needsSpace ? ' ' : ''}${url} `);
+    },
+    [writeComposerText],
+  );
 
   const { isUploading: isUploadingImage, pickAndUpload } =
     useChatImageUpload(handleImageUploaded);
@@ -162,18 +142,18 @@ export const ChatInputShell = memo(function ChatInputShell({
     }
   }, [clearDraft, isAuthenticated]);
 
-  const handleTogglePinNextMessage = useCallback(() => {
-    if (!canPinCurrentMessage) {
-      return;
-    }
-
-    setDraft(prev => ({ ...prev, pinNextMessage: !prev.pinNextMessage }));
-  }, [canPinCurrentMessage]);
-
-  const handleSendMessage = useCallback(async () => {
+  const handleSendMessage = useCallback(() => {
     if (!messageInput.trim()) {
       return;
     }
+
+    if (messageInput.trim().toLowerCase() === '/refresh') {
+      onRefreshCommand();
+      clearDraft();
+      void KeyboardController.dismiss();
+      return;
+    }
+
     if (!isAuthenticated) {
       logger.chat.warn('Cannot send chat message while signed out');
       return;
@@ -186,7 +166,6 @@ export const ChatInputShell = memo(function ChatInputShell({
     const messageText = replyTo
       ? `@${replyTo.username} ${messageInput}`
       : messageInput;
-    const shouldPinMessage = isPinNextMessageSelected;
     const currentUserState = getUserState();
     const badgeData = parseBadges(currentUserState.badges || '');
 
@@ -227,24 +206,7 @@ export const ChatInputShell = memo(function ChatInputShell({
         })
       : [];
 
-    let optimisticMessageId = `${Date.now()}`;
-    if (shouldPinMessage) {
-      setIsSendingPinnedMessage(true);
-      try {
-        const sendResult = await twitchService.sendChatMessage({
-          broadcasterId: channelId,
-          message: messageText,
-          pin: true,
-          senderId: user?.id ?? '',
-        });
-        optimisticMessageId = sendResult?.message_id || optimisticMessageId;
-      } catch (error) {
-        logger.chat.error('issue sending pinned message', error);
-        toast.error(i18next.t('chat:pinned.couldNotSendPinned'));
-        setIsSendingPinnedMessage(false);
-        return;
-      }
-    }
+    const optimisticMessageId = `${Date.now()}`;
 
     const optimisticMessage: AnyChatMessageType = {
       id: `${optimisticMessageId}_${optimisticMessageId}`,
@@ -270,15 +232,7 @@ export const ChatInputShell = memo(function ChatInputShell({
       false,
     );
 
-    if (shouldPinMessage) {
-      onPinnedMessageChanged({
-        messageId: optimisticMessage.message_id,
-        senderName,
-        text: messageText.trimEnd(),
-      });
-      toast.success(i18next.t('chat:pinned.messagePinned'));
-      setIsSendingPinnedMessage(false);
-    } else if (replyTo) {
+    if (replyTo) {
       try {
         sendMessage(
           channelName,
@@ -303,9 +257,8 @@ export const ChatInputShell = memo(function ChatInputShell({
     getUserState,
     isChatConnected,
     isAuthenticated,
-    isPinNextMessageSelected,
     messageInput,
-    onPinnedMessageChanged,
+    onRefreshCommand,
     processMessageEmotes,
     replyTo,
     sendMessage,
@@ -319,24 +272,20 @@ export const ChatInputShell = memo(function ChatInputShell({
         if (!isAuthenticated) {
           return;
         }
-        setDraft(prev => {
-          const next = `${prev.messageInput}${prev.messageInput.length > 0 ? ' ' : ''}${emoteName} `;
-          chatInputRef.current?.setText(next);
-          return { ...prev, messageInput: next };
-        });
+        const current = messageInputRef.current;
+        writeComposerText(
+          `${current}${current.length > 0 ? ' ' : ''}${emoteName} `,
+        );
       },
       appendMention: (username: string) => {
         if (!isAuthenticated) {
           return;
         }
-        setDraft(prev => {
-          const trimmed = prev.messageInput.trim();
-          const next = !trimmed
-            ? `@${username} `
-            : `${prev.messageInput}${prev.messageInput.endsWith(' ') ? '' : ' '}@${username} `;
-          chatInputRef.current?.setText(next);
-          return { ...prev, messageInput: next };
-        });
+        const current = messageInputRef.current;
+        const next = !current.trim()
+          ? `@${username} `
+          : `${current}${current.endsWith(' ') ? '' : ' '}@${username} `;
+        writeComposerText(next);
         chatInputRef.current?.focus();
       },
       clearReply: () => {
@@ -349,14 +298,13 @@ export const ChatInputShell = memo(function ChatInputShell({
         setDraft(prev => ({ ...prev, replyTo: nextReplyTo }));
       },
     }),
-    [isAuthenticated],
+    [isAuthenticated, writeComposerText],
   );
 
   return (
     <ChatInputSection
       messageInput={messageInput}
       onChangeText={handleComposerTextChange}
-      onEmoteSelect={handleComposerEmoteSelect}
       onSubmit={handleSendMessage}
       onOpenEmoteSheet={onOpenEmoteSheet}
       onOpenSettingsSheet={onOpenSettingsSheet}
@@ -367,12 +315,7 @@ export const ChatInputShell = memo(function ChatInputShell({
       connection={{
         isAuthenticated,
         isConnected: connected,
-        isSending: isSendingPinnedMessage,
-      }}
-      pin={{
-        canPinNextMessage: canPinCurrentMessage,
-        onTogglePinNextMessage: handleTogglePinNextMessage,
-        pinNextMessage: isPinNextMessageSelected,
+        isSending: false,
       }}
       inputRef={chatInputRef}
     />

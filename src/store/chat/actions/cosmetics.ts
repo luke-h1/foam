@@ -35,6 +35,7 @@ type CachedUserCosmetics = {
 };
 
 const userCosmeticsRequests = new Map<string, Promise<string | null>>();
+const sessionCosmeticsCache = new Map<string, CachedUserCosmetics>();
 
 const getUserCosmeticsStorageKey = (sevenTvUserId: string) =>
   `sevenTvUserCosmetics_${USER_COSMETICS_CACHE_PREFIX}${sevenTvUserId}` as const;
@@ -80,18 +81,32 @@ function applyCachedUserCosmetics(cosmetics: CachedUserCosmetics) {
 function getCachedUserCosmetics(
   sevenTvUserId: string,
 ): CachedUserCosmetics | undefined {
-  return (
+  const sessionCached = sessionCosmeticsCache.get(sevenTvUserId);
+  if (sessionCached) {
+    if (sessionCached.expiresAt > Date.now()) {
+      return sessionCached;
+    }
+    sessionCosmeticsCache.delete(sevenTvUserId);
+  }
+
+  const stored =
     storageService.getString<CachedUserCosmetics>(
       getUserCosmeticsStorageKey(sevenTvUserId),
       SEVEN_TV_CACHE_NAMESPACE,
-    ) ?? undefined
-  );
+    ) ?? undefined;
+
+  if (stored) {
+    sessionCosmeticsCache.set(sevenTvUserId, stored);
+  }
+
+  return stored;
 }
 
 function setCachedUserCosmetics(
   sevenTvUserId: string,
   cosmetics: CachedUserCosmetics,
 ) {
+  sessionCosmeticsCache.set(sevenTvUserId, cosmetics);
   storageService.set(
     getUserCosmeticsStorageKey(sevenTvUserId),
     cosmetics,
@@ -162,6 +177,7 @@ export const fetchAndCacheUserCosmetics = async (
 
 export const clearUserCosmeticsCache = () => {
   userCosmeticsRequests.clear();
+  sessionCosmeticsCache.clear();
   clearSevenTvUserIdCache();
   storageService.clearNamespace(
     SEVEN_TV_CACHE_NAMESPACE,
@@ -173,18 +189,20 @@ export const clearUserCosmeticsCache = () => {
 
 export const setUserPaint = (ttvUserId: string, paintId: string): void => {
   const current = chatStore$.userPaintIds.peek();
-  const entries = Object.keys(current);
 
-  if (entries.length >= MAX_COSMETIC_ENTRIES) {
+  if (
+    !(ttvUserId in current) &&
+    Object.keys(current).length >= MAX_COSMETIC_ENTRIES
+  ) {
     const trimCount = Math.floor(MAX_COSMETIC_ENTRIES * 0.2);
     const trimmed = Object.fromEntries(
       Object.entries(current).slice(trimCount),
     );
-
     chatStore$.userPaintIds.set({ ...trimmed, [ttvUserId]: paintId });
-  } else {
-    chatStore$.userPaintIds.set({ ...current, [ttvUserId]: paintId });
+    return;
   }
+
+  chatStore$.userPaintIds[ttvUserId]?.set(paintId);
 };
 
 export const addPaint = (paint: PaintData) => {
@@ -226,18 +244,20 @@ export const getBadge = (badgeId: string): SanitisedBadgeSet | undefined => {
 
 export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
   const current = chatStore$.userBadgeIds.peek();
-  const entries = Object.keys(current);
 
-  if (entries.length >= MAX_COSMETIC_ENTRIES) {
+  if (
+    !(ttvUserId in current) &&
+    Object.keys(current).length >= MAX_COSMETIC_ENTRIES
+  ) {
     const trimCount = Math.floor(MAX_COSMETIC_ENTRIES * 0.2);
     const trimmed = Object.fromEntries(
       Object.entries(current).slice(trimCount),
     );
-
     chatStore$.userBadgeIds.set({ ...trimmed, [ttvUserId]: badgeId });
-  } else {
-    chatStore$.userBadgeIds.set({ ...current, [ttvUserId]: badgeId });
+    return;
   }
+
+  chatStore$.userBadgeIds[ttvUserId]?.set(badgeId);
 };
 
 export const getUserBadge = (

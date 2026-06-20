@@ -1,7 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { useKeepAwake } from 'expo-keep-awake';
 import { useLocalSearchParams } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  type TextInputProps,
+  type StyleProp,
+  type TextStyle,
+  View,
+} from 'react-native';
+import Animated, {
+  useAnimatedProps,
+  useAnimatedStyle,
+  type SharedValue,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Chat } from '@app/components/Chat/Chat';
 import { LiveChatPerfOverlay } from '@app/dev/imageBenchmark/LiveChatPerfOverlay';
@@ -13,14 +27,36 @@ import {
 } from '@app/dev/imageBenchmark/syntheticChatControl';
 import { resetFloodReplay } from '@app/dev/imageBenchmark/useSyntheticChatFlood';
 
-// cinna — heavy 7TV channel (942 emotes, 65% animated AVIF). Mounting the real
-// Chat here loads her actual emote/badge sets, so this is as real-world as the
-// live stream's chat; the synthetic flood just adds repeatable burst load.
 const CINNA = { channelId: '204730616', channelName: 'cinna' };
 
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+
+function CountdownSeconds({
+  ms,
+  suffix,
+  style,
+}: {
+  ms: SharedValue<number>;
+  suffix: string;
+  style: StyleProp<TextStyle>;
+}) {
+  const animatedProps = useAnimatedProps(() => {
+    const secs = Math.max(0, Math.ceil(ms.value / 1000));
+    return { text: `${secs}${suffix}` } as unknown as TextInputProps;
+  });
+  return (
+    <AnimatedTextInput
+      animatedProps={animatedProps}
+      defaultValue={`0${suffix}`}
+      editable={false}
+      pointerEvents='none'
+      style={[styles.countdownInput, style]}
+      underlineColorAndroid='transparent'
+    />
+  );
+}
+
 export default function ChatPerfScreen() {
-  // Keep the screen awake for the length of a suite run so the device never
-  // dims/locks mid-benchmark and skews the frame/CPU numbers.
   useKeepAwake();
   const insets = useSafeAreaInsets();
   const { flood: floodParam, suite: suiteParam } = useLocalSearchParams<{
@@ -30,7 +66,21 @@ export default function ChatPerfScreen() {
   const [flood, setFlood] = useState(
     floodParam && SYNTHETIC_PRESETS[floodParam] ? floodParam : 'off',
   );
-  const { live, suite, runSuite, stopSuite } = useChatPerfSuite();
+  const {
+    live,
+    suite,
+    runSuite,
+    stopSuite,
+    phaseCountdownMs,
+    totalCountdownMs,
+  } = useChatPerfSuite();
+  const progressStyle = useAnimatedStyle(() => {
+    const pct = Math.max(
+      0,
+      Math.min(100, (1 - totalCountdownMs.value / SUITE_TOTAL_MS) * 100),
+    );
+    return { width: `${pct}%` };
+  });
   const autoStarted = useRef(false);
 
   useEffect(() => {
@@ -62,7 +112,6 @@ export default function ChatPerfScreen() {
   };
 
   const totalSecs = Math.round(SUITE_TOTAL_MS / 1000);
-  const progress = suite.running ? 1 - suite.totalSecondsLeft / totalSecs : 0;
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + 44 }]}>
@@ -83,26 +132,27 @@ export default function ChatPerfScreen() {
             </Pressable>
           </View>
           <View style={styles.progressTrack}>
-            <View
-              style={[
-                styles.progressFill,
-                { width: `${Math.round(progress * 100)}%` },
-              ]}
-            />
+            <Animated.View style={[styles.progressFill, progressStyle]} />
           </View>
           <View style={styles.countdownRow}>
-            <Text
+            <CountdownSeconds
+              ms={phaseCountdownMs}
+              suffix='s'
               style={[
                 styles.countdown,
                 suite.measuring && styles.countdownMeasuring,
               ]}
-            >
-              {suite.phaseSecondsLeft}s
-            </Text>
-            <Text style={styles.countdownSub}>
-              {suite.measuring ? 'measuring' : 'warming up'} · total{' '}
-              {suite.totalSecondsLeft}s left
-            </Text>
+            />
+            <View style={styles.countdownSubRow}>
+              <Text style={styles.countdownSub}>
+                {suite.measuring ? 'measuring' : 'warming up'} · total{' '}
+              </Text>
+              <CountdownSeconds
+                ms={totalCountdownMs}
+                suffix='s left'
+                style={styles.countdownSub}
+              />
+            </View>
           </View>
         </View>
       ) : (
@@ -131,8 +181,6 @@ export default function ChatPerfScreen() {
 
       {suite.results.length > 0 ? (
         <View style={styles.results}>
-          {/* ui-fps/ui-jank = real UI-thread rendering (the metric that answers
-              the goal); js-fps is JS-thread headroom (inflated jank, secondary). */}
           <ResultRow
             header
             cells={['phase', 'ui-fps', 'ui-jank', 'js-fps', 'drop%']}
@@ -249,6 +297,8 @@ const styles = StyleSheet.create({
   },
   countdownMeasuring: { color: '#3ddc84' },
   countdownSub: { color: '#888', fontSize: 11, fontFamily: 'Menlo' },
+  countdownSubRow: { flexDirection: 'row', alignItems: 'baseline' },
+  countdownInput: { padding: 0 },
   results: { paddingHorizontal: 10, paddingVertical: 4 },
   resRow: { flexDirection: 'row', paddingVertical: 2 },
   resCell: {

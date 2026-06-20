@@ -1,3 +1,5 @@
+import { parseJsonOnUIThread } from '@app/lib/offThreadJson';
+
 const RECENT_MESSAGES_URL =
   'https://recent-messages.robotty.de/api/v2/recent-messages';
 
@@ -101,7 +103,9 @@ export const recentMessagesService = {
       throw new Error(`Failed to load recent messages: ${response.status}`);
     }
 
-    const payload = (await response.json()) as RecentMessagesResponse;
+    const payload = await parseJsonOnUIThread<RecentMessagesResponse>(
+      await response.text(),
+    );
     if (!Array.isArray(payload.messages)) {
       return [];
     }

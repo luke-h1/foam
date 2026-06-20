@@ -2,7 +2,6 @@ import {
   SettingsLinkRow,
   SettingsSection,
 } from '@app/components/SettingsSection/SettingsSection';
-import { FOAM_FAQ_URL } from '@app/constants/links';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
@@ -31,19 +30,12 @@ export function SettingsOtherScreen() {
             <Button
               label={t('faq')}
               systemImage='questionmark.circle'
-              onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
+              onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
             />
             <Button
               label={t('changelog')}
               systemImage='clock'
               onPress={() => router.push('/tabs/settings/changelog')}
-            />
-          </Section>
-          <Section title={t('legal')}>
-            <Button
-              label={t('ossLicenses')}
-              systemImage='doc.text'
-              onPress={() => router.push('/tabs/settings/licenses')}
             />
           </Section>
         </Form>
@@ -70,22 +62,13 @@ export function SettingsOtherScreen() {
             title={t('faq')}
             subtitle={t('faqShortDescription')}
             icon={{ icon: 'questionmark.circle', color: theme.colorPrimary }}
-            onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
+            onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
           />
           <SettingsLinkRow
             title={t('changelog')}
             subtitle={t('changelogDescription')}
             icon={{ icon: 'clock', color: theme.colorAmber }}
             onPress={() => router.push('/tabs/settings/changelog')}
-          />
-        </SettingsSection>
-
-        <SettingsSection title={t('legal')}>
-          <SettingsLinkRow
-            title={t('ossLicenses')}
-            subtitle={t('ossLicensesDescription')}
-            icon={{ icon: 'doc.text', color: theme.colorViolet }}
-            onPress={() => router.push('/tabs/settings/licenses')}
           />
         </SettingsSection>
       </ScrollView>

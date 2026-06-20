@@ -50,6 +50,9 @@ export const styles = StyleSheet.create({
     paddingBottom: theme.space8,
     paddingTop: 0,
   },
+  listGestureWrapper: {
+    flex: 1,
+  },
   messagePane: {
     flex: 1,
   },

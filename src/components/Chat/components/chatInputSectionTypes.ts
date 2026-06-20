@@ -1,8 +1,5 @@
-import type {
-  ChatConnectionFlags,
-  ChatPinFlags,
-} from '@app/components/Chat/types/chatUiFlags';
-import type { SanitisedEmote } from '@app/types/emote';
+import type { ChatConnectionFlags } from '@app/components/Chat/types/chatUiFlags';
+import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import type { ChatComposerHandle } from './ChatComposer/ChatComposer';
 import type { RefObject } from 'react';
 
@@ -10,6 +7,11 @@ export interface ReplyToData {
   messageId: string;
   username: string;
   message: string;
+  /**
+   * Parsed parts of the replied-to message so the preview can render its
+   * emotes inline instead of showing their names as text.
+   */
+  messageParts?: ParsedPart[];
   replyParentUserLogin: string;
   parentMessage: string;
   color?: string;
@@ -23,7 +25,6 @@ export interface ChatInputSectionProps {
   connection: ChatConnectionFlags;
   messageInput: string;
   onChangeText: (text: string) => void;
-  onEmoteSelect: (emote: SanitisedEmote) => void;
   onSubmit: () => void;
   onOpenEmoteSheet: () => void;
   onOpenSettingsSheet: () => void;
@@ -31,6 +32,5 @@ export interface ChatInputSectionProps {
   isUploadingImage?: boolean;
   replyTo: ReplyToData | null;
   onClearReply: () => void;
-  pin?: ChatPinFlags;
   inputRef?: RefObject<ChatComposerHandle | null>;
 }

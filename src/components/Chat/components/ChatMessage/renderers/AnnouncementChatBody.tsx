@@ -64,7 +64,6 @@ export function AnnouncementChatBody({
           showChannelPointsRewardChrome: false,
           showTimestamp,
         }}
-        rewardSummaryTitle=''
         timestamp={timestamp}
         userId={userId}
         userstateColor={userstateColor}

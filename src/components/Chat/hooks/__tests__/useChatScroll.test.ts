@@ -4,6 +4,7 @@ import { createRef } from '@app/testing/createRef';
 import { RefObject } from 'react';
 import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import type { AnyChatMessageType } from '../../util/messageHandlers';
+import { chatScrollActivity } from '../../util/chatScrollActivity';
 import { useChatScroll } from '../useChatScroll';
 
 interface MockListMethods {
@@ -68,10 +69,43 @@ describe('useChatScroll', () => {
   });
 
   afterEach(() => {
+    chatScrollActivity.reset();
     jest.useRealTimers();
   });
 
   const getMessagesLength = (length: number) => () => length;
+
+  describe('scroll activity signal (emote animation pause)', () => {
+    test('programmatic auto-scroll does not flag activity; a user drag does', () => {
+      chatScrollActivity.reset();
+      const { ref: listRef } = createMockListRef();
+      const { result } = renderHook(() =>
+        useChatScroll({
+          listRef,
+          getMessagesLength: getMessagesLength(10),
+        }),
+      );
+
+      act(() => {
+        result.current.handleScroll(
+          createScrollEvent({ y: 1900 }, { height: 500 }, { height: 2000 }),
+        );
+      });
+      expect(chatScrollActivity.isActive()).toBe(false);
+
+      act(() => {
+        result.current.handleScrollBeginDrag(
+          createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
+      });
+      expect(chatScrollActivity.isActive()).toBe(true);
+
+      act(() => {
+        jest.advanceTimersByTime(200);
+      });
+      expect(chatScrollActivity.isActive()).toBe(false);
+    });
+  });
 
   describe('Initial State', () => {
     test('should start at bottom', () => {

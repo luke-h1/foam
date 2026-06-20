@@ -2,7 +2,6 @@ import { Button as PressableButton } from '@app/components/Button/Button';
 import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/CosmeticUsername';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import type { SanitisedEmote } from '@app/types/emote';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { truncate } from '@app/utils/string/truncate';
 import { BlurView } from 'expo-blur';
@@ -14,6 +13,7 @@ import { GestureDetector } from 'react-native-gesture-handler';
 import { COMPOSER_ROW_GAP } from './composerSizing';
 import { ChatComposer } from './ChatComposer/ChatComposer';
 import { ComposerIconButton } from './ComposerIconButton';
+import { ReplyPreviewBody } from './ReplyPreviewBody';
 import type { ChatInputSectionProps } from './chatInputSectionTypes';
 import { useComposerDismissGesture } from './useComposerDismissGesture';
 import { useTranslation } from 'react-i18next';
@@ -25,7 +25,6 @@ export const ChatInputSection = memo(
     connection,
     messageInput,
     onChangeText,
-    onEmoteSelect,
     onSubmit,
     onOpenEmoteSheet,
     onOpenSettingsSheet,
@@ -33,24 +32,14 @@ export const ChatInputSection = memo(
     isUploadingImage,
     replyTo,
     onClearReply,
-    pin,
     inputRef,
   }: ChatInputSectionProps) => {
-    const { isAuthenticated, isConnected, isSending } = connection;
-    const { canPinNextMessage, onTogglePinNextMessage, pinNextMessage } =
-      pin ?? {};
+    const { isAuthenticated, isSending } = connection;
     const { composerAnimatedStyle, composerGesture } =
       useComposerDismissGesture();
 
-    const handleEmoteSelect = (emote: SanitisedEmote) => {
-      onEmoteSelect(emote);
-    };
-
     const canSend =
-      messageInput.trim().length > 0 &&
-      isConnected &&
-      isAuthenticated &&
-      !isSending;
+      messageInput.trim().length > 0 && isAuthenticated && !isSending;
     const { t } = useTranslation('chat');
     const inputPlaceholder = !isAuthenticated
       ? t('composer.signInToSend')
@@ -83,7 +72,12 @@ export const ChatInputSection = memo(
                   usernameTextStyle={styles.replyPaintedUsername}
                 />
               </View>
-              {replyTo.message ? (
+              {replyTo.messageParts?.length ? (
+                <ReplyPreviewBody
+                  parts={replyTo.messageParts}
+                  textStyle={styles.replyMessagePreview}
+                />
+              ) : replyTo.message ? (
                 <Text numberOfLines={1} style={styles.replyMessagePreview}>
                   {truncate(replyTo.message.trim() || replyTo.message, 72)}
                 </Text>
@@ -107,7 +101,6 @@ export const ChatInputSection = memo(
                   onChangeText={onChangeText}
                   onSubmit={onSubmit}
                   onPressAdd={onOpenEmoteSheet}
-                  onEmoteSelect={handleEmoteSelect}
                   placeholder={inputPlaceholder}
                   editable={isAuthenticated}
                   canSend={canSend}
@@ -128,18 +121,6 @@ export const ChatInputSection = memo(
                 label={t('composer.openChatSettings')}
                 onPress={onOpenSettingsSheet}
               />
-              {canPinNextMessage ? (
-                <ComposerIconButton
-                  active={pinNextMessage}
-                  icon={pinNextMessage ? 'pin.fill' : 'pin'}
-                  label={
-                    pinNextMessage
-                      ? t('composer.sendAndPinMessage')
-                      : t('composer.pinNextMessage')
-                  }
-                  onPress={onTogglePinNextMessage ?? (() => undefined)}
-                />
-              ) : null}
             </View>
           </Animated.View>
         </GestureDetector>

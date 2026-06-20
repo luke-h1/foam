@@ -50,6 +50,7 @@ function createRemoteConfigResult(
     statusPageUrl: entry('https://status.foam-app.com'),
     websiteUrl: entry('https://foam-app.com'),
     admins: entry(admins),
+    experiments: entry({}),
   };
 
   return { config, refetch: jest.fn(), isRefetching: false, isLoading };

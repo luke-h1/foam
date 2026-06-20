@@ -3,7 +3,6 @@ import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/Cos
 import { SymbolView } from 'expo-symbols';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import type { SanitisedEmote } from '@app/types/emote';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import {
   createHitslop,
@@ -21,6 +20,7 @@ import {
   COMPOSER_ROW_GAP,
 } from './composerSizing';
 import { ChatComposer } from './ChatComposer/ChatComposer';
+import { ReplyPreviewBody } from './ReplyPreviewBody';
 import type {
   ChatInputSectionProps,
   ReplyToData,
@@ -35,7 +35,6 @@ export const ChatInputSection = memo(
     connection,
     messageInput,
     onChangeText,
-    onEmoteSelect,
     onSubmit,
     onOpenEmoteSheet,
     onOpenSettingsSheet,
@@ -43,22 +42,15 @@ export const ChatInputSection = memo(
     isUploadingImage,
     replyTo,
     onClearReply,
-    pin,
     inputRef,
   }: ChatInputSectionProps) => {
-    const { isAuthenticated, isConnected, isSending } = connection;
-    const { canPinNextMessage, onTogglePinNextMessage, pinNextMessage } =
-      pin ?? {};
+    const { isAuthenticated, isSending } = connection;
     const insets = useSafeAreaInsets();
     const { composerAnimatedStyle, composerGesture } =
       useComposerDismissGesture();
 
-    const handleEmoteSelect = (emote: SanitisedEmote) => {
-      onEmoteSelect(emote);
-    };
-
     const canSend = Boolean(
-      messageInput.trim() && isConnected && isAuthenticated && !isSending,
+      messageInput.trim() && isAuthenticated && !isSending,
     );
 
     const { t } = useTranslation('chat');
@@ -88,11 +80,16 @@ export const ChatInputSection = memo(
                   }
                 />
               </View>
-              {replyTo.message && (
+              {replyTo.messageParts?.length ? (
+                <ReplyPreviewBody
+                  parts={replyTo.messageParts}
+                  textStyle={styles.replyMessagePreview}
+                />
+              ) : replyTo.message ? (
                 <Text style={styles.replyMessagePreview} numberOfLines={1}>
                   {truncate(replyTo.message.trim() || replyTo.message, 60)}
                 </Text>
-              )}
+              ) : null}
             </View>
             <Button
               style={styles.replyDismissButton}
@@ -124,7 +121,6 @@ export const ChatInputSection = memo(
                   onChangeText={onChangeText}
                   onSubmit={onSubmit}
                   onPressAdd={onOpenEmoteSheet}
-                  onEmoteSelect={handleEmoteSelect}
                   placeholder={inputPlaceholder}
                   editable={isAuthenticated}
                   canSend={canSend}
@@ -152,30 +148,6 @@ export const ChatInputSection = memo(
                       tintColor={theme.colorGreyHoverAlpha}
                     />
                   )}
-                </Button>
-              ) : null}
-
-              {canPinNextMessage ? (
-                <Button
-                  label={
-                    pinNextMessage
-                      ? t('composer.sendAndPinMessage')
-                      : t('composer.pinNextMessage')
-                  }
-                  style={[
-                    styles.actionButton,
-                    pinNextMessage && styles.actionButtonActive,
-                  ]}
-                  onPress={onTogglePinNextMessage}
-                  hitSlop={createHorizontalHitslop(COMPOSER_CONTROL_SIZE)}
-                >
-                  <SymbolView
-                    name='mappin'
-                    size={20}
-                    tintColor={
-                      pinNextMessage ? '#fff' : theme.colorGreyHoverAlpha
-                    }
-                  />
                 </Button>
               ) : null}
 
@@ -208,9 +180,6 @@ const styles = StyleSheet.create({
     height: COMPOSER_CONTROL_SIZE,
     justifyContent: 'center',
     width: COMPOSER_CONTROL_SIZE,
-  },
-  actionButtonActive: {
-    backgroundColor: 'rgba(255,255,255,0.16)',
   },
   composerShell: {
     backgroundColor: '#222222',

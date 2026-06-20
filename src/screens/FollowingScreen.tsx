@@ -124,6 +124,9 @@ export default function FollowingScreen() {
   // Soft dip-and-recover fade when switching layouts so rows do not
   // hard-cut between shapes.
   const setLayoutWithFade = (layout: 'compact' | 'media') => {
+    if (layout === streamListLayout) {
+      return;
+    }
     layoutFade.set(0.35);
     layoutFade.set(
       withTiming(1, { duration: motion.medium, easing: motion.easing.out }),
@@ -237,7 +240,7 @@ export default function FollowingScreen() {
                   ]}
                 >
                   <SymbolView
-                    name='square'
+                    name='list.bullet'
                     size={14}
                     tintColor={
                       streamListLayout === 'compact'

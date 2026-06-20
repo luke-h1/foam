@@ -39,7 +39,7 @@ const STREAM_LIST_LAYOUT_OPTIONS: {
   label: string;
   value: StreamListLayout;
 }[] = [
-  { icon: 'square', label: 'Compact', value: 'compact' },
+  { icon: 'list.bullet', label: 'Compact', value: 'compact' },
   { icon: 'photo', label: 'Media', value: 'media' },
 ];
 
@@ -163,6 +163,9 @@ export function TopStreamsScreen({
   const allStreams = flattenInfiniteQueryPages(streams?.pages);
 
   const handleLayoutChange = (layout: StreamListLayout) => {
+    if (layout === streamListLayout) {
+      return;
+    }
     updatePreferences({ streamListLayout: layout });
   };
 

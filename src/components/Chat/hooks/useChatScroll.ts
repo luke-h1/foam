@@ -1,5 +1,6 @@
 import { RefObject, useRef, useState, useCallback } from 'react';
 import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import { chatScrollActivity } from '../util/chatScrollActivity';
 
 const RETURN_TO_BOTTOM_THRESHOLD = 80;
 const USER_SCROLL_AWAY_THRESHOLD = 40;
@@ -103,6 +104,7 @@ export const useChatScroll = ({
   const handleScrollBeginDrag = (
     e: NativeSyntheticEvent<NativeScrollEvent>,
   ) => {
+    chatScrollActivity.poke();
     clearScrollToBottomTimers();
     clearBottomContentAnchor();
     isDraggingRef.current = true;
@@ -173,6 +175,9 @@ export const useChatScroll = ({
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       lastScrollEventAtRef.current = Date.now();
+      if (isDraggingRef.current || isMomentumScrollingRef.current) {
+        chatScrollActivity.poke();
+      }
       const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
       const { y } = contentOffset;
       const contentHeight = contentSize?.height ?? 0;
@@ -362,6 +367,7 @@ export const useChatScroll = ({
   }, []);
 
   const cleanup = useCallback(() => {
+    chatScrollActivity.reset();
     clearScrollToBottomTimers();
     clearBottomContentAnchor();
     if (scrollThrottleRef.current) {

@@ -35,6 +35,7 @@ export function useChatComposerActions({
         messageId: message.message_id,
         username: message.sender,
         message: messageText,
+        messageParts: message.message,
         replyParentUserLogin: message.userstate.username || '',
         parentMessage: parentMessage
           ? replaceEmotesWithText(parentMessage.message)

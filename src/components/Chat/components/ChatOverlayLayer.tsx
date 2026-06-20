@@ -1,12 +1,6 @@
 import { memo } from 'react';
-import { Portal } from 'react-native-teleport';
 
 import { ActionSheet } from './ActionSheet/ActionSheet';
-import {
-  MESSAGE_ACTION_PREVIEW_PORTAL_INSTANCE_NAME,
-  MESSAGE_ACTION_PREVIEW_PORTAL_NAME,
-  MessageActionPreview,
-} from './ActionSheet/MessageActionPreview';
 import { BadgePreviewSheet } from './BadgePreviewSheet/BadgePreviewSheet';
 import { ChattersSheet } from './ChattersSheet/ChattersSheet';
 
@@ -212,47 +206,35 @@ export const ChatOverlayLayer = memo(
         ) : null}
 
         {selectedMessage ? (
-          <>
-            <ActionSheet
-              visible
-              onClose={onCloseSelectedMessage}
-              username={selectedMessage.username}
-              handleReply={onActionSheetReply}
-              handleCopy={onActionSheetCopy}
-              handleHidePhrase={onActionSheetHidePhrase}
-              handleHideUser={onActionSheetHideUser}
-              handleHighlightUser={onActionSheetHighlightUser}
-              handlePinMessage={onActionSheetPinMessage}
-              handleUpdatePinnedMessage={onActionSheetUpdatePinnedMessage}
-              handleUnpinMessage={onActionSheetUnpinPinnedMessage}
-              handleDeleteMessage={onActionSheetDeleteMessage}
-              handleTimeoutUser={onActionSheetTimeoutUser}
-              handleBanUser={onActionSheetBanUser}
-              canModerateChat={canModerateChat}
-              canDeleteMessage={canDeleteSelectedMessage}
-              canPinMessage={canPinSelectedMessage}
-              canModerateUser={canModerateSelectedMessageUser}
-              isPinnedMessage={
-                pinnedMessageId === selectedMessage.messageData.message_id
-              }
-              isPinnedMessageBusy={pinnedMessageBusy}
-              isUserHighlighted={Boolean(
-                selectedMessage.username &&
-                highlightedUsers.includes(
-                  selectedMessage.username.toLowerCase(),
-                ),
-              )}
-            />
-            <Portal
-              hostName={MESSAGE_ACTION_PREVIEW_PORTAL_NAME}
-              name={MESSAGE_ACTION_PREVIEW_PORTAL_INSTANCE_NAME}
-            >
-              <MessageActionPreview
-                message={selectedMessage.message}
-                username={selectedMessage.username}
-              />
-            </Portal>
-          </>
+          <ActionSheet
+            visible
+            onClose={onCloseSelectedMessage}
+            username={selectedMessage.username}
+            messagePreview={selectedMessage.message}
+            handleReply={onActionSheetReply}
+            handleCopy={onActionSheetCopy}
+            handleHidePhrase={onActionSheetHidePhrase}
+            handleHideUser={onActionSheetHideUser}
+            handleHighlightUser={onActionSheetHighlightUser}
+            handlePinMessage={onActionSheetPinMessage}
+            handleUpdatePinnedMessage={onActionSheetUpdatePinnedMessage}
+            handleUnpinMessage={onActionSheetUnpinPinnedMessage}
+            handleDeleteMessage={onActionSheetDeleteMessage}
+            handleTimeoutUser={onActionSheetTimeoutUser}
+            handleBanUser={onActionSheetBanUser}
+            canModerateChat={canModerateChat}
+            canDeleteMessage={canDeleteSelectedMessage}
+            canPinMessage={canPinSelectedMessage}
+            canModerateUser={canModerateSelectedMessageUser}
+            isPinnedMessage={
+              pinnedMessageId === selectedMessage.messageData.message_id
+            }
+            isPinnedMessageBusy={pinnedMessageBusy}
+            isUserHighlighted={Boolean(
+              selectedMessage.username &&
+              highlightedUsers.includes(selectedMessage.username.toLowerCase()),
+            )}
+          />
         ) : null}
 
         {selectedUser ? (

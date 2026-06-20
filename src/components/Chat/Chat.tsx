@@ -98,7 +98,6 @@ export const Chat = memo(
             >
               <ChatInputShell
                 ref={vm.inputShellRef}
-                canPinNextMessage={vm.canModerateChat}
                 channelId={channelId}
                 channelName={channelName}
                 connected={vm.connected}
@@ -106,7 +105,7 @@ export const Chat = memo(
                 isChatConnected={vm.isChatConnected}
                 onOpenEmoteSheet={vm.handleOpenEmoteSheet}
                 onOpenSettingsSheet={vm.handleOpenSettingsSheet}
-                onPinnedMessageChanged={vm.handlePinnedMessageChanged}
+                onRefreshCommand={vm.handleRefreshCommand}
                 processMessageEmotes={vm.processMessageEmotes}
                 sendMessage={vm.sendMessage}
                 user={vm.user}

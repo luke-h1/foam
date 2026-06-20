@@ -1,6 +1,5 @@
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
-import { FOAM_FAQ_URL } from '@app/constants/links';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
@@ -22,7 +21,7 @@ export function FaqScreen() {
     }
 
     didOpenBrowser.current = true;
-    openLinkInBrowser(FOAM_FAQ_URL);
+    openLinkInBrowser('https://foam-app.com/faq');
   }, []);
 
   return (
@@ -35,7 +34,7 @@ export function FaqScreen() {
       >
         <OtherInfoCard title={t('title')} body={t('body')}>
           <Button
-            onPress={() => openLinkInBrowser(FOAM_FAQ_URL)}
+            onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
             style={styles.cta}
           >
             <Text weight='semibold'>{t('openFaq')}</Text>

@@ -17,23 +17,28 @@ import {
   View,
 } from 'react-native';
 import { RowVisibilityContext } from '../rowVisibility';
+import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
 
 const CHAT_IMAGE_SKELETON = { blurhash: 'A0CsjpfQfQfQ' };
 
 interface ChatInlineImageProps {
   containerStyle?: StyleProp<ViewStyle>;
+  priority?: 'low' | 'normal' | 'high';
   resizeMode?: 'contain' | 'cover' | 'stretch';
   sourceUrl: string;
   style: StyleProp<ImageStyle>;
   testID?: string;
+  transitionMs?: number;
 }
 
 function ChatInlineImageComponent({
   containerStyle,
+  priority = 'high',
   resizeMode = 'contain',
   sourceUrl,
   style,
   testID,
+  transitionMs = 100,
 }: ChatInlineImageProps) {
   // Shared, size-capped decoded ref (decode-once across all rows showing this
   // image), null until decoded — falls back to the url so the first occurrence
@@ -63,17 +68,24 @@ function ChatInlineImageComponent({
     if (!rowVisibility || !animated) {
       return;
     }
-    const apply = (visible: boolean): void => {
-      if (visible) {
+    const apply = (): void => {
+      const shouldAnimate =
+        rowVisibility.isVisible() && !chatScrollActivity.isActive();
+      if (shouldAnimate) {
         void imageRef.current?.startAnimating?.();
       } else {
         void imageRef.current?.stopAnimating?.();
       }
     };
-    if (!rowVisibility.isVisible()) {
-      apply(false);
+    if (!(rowVisibility.isVisible() && !chatScrollActivity.isActive())) {
+      void imageRef.current?.stopAnimating?.();
     }
-    return rowVisibility.subscribe(apply);
+    const unsubscribeVisibility = rowVisibility.subscribe(apply);
+    const unsubscribeScroll = chatScrollActivity.subscribe(apply);
+    return () => {
+      unsubscribeVisibility();
+      unsubscribeScroll();
+    };
   }, [rowVisibility, animated]);
 
   const imageElement: ReactElement = (
@@ -82,12 +94,16 @@ function ChatInlineImageComponent({
       source={sharedRef ?? { uri: sourceUrl }}
       contentFit={resizeMode === 'stretch' ? 'fill' : resizeMode}
       recyclingKey={`${sourceUrl}#${reloadNonce}`}
-      autoplay={rowVisibility && animated ? rowVisibility.isVisible() : true}
+      autoplay={
+        rowVisibility && animated
+          ? rowVisibility.isVisible() && !chatScrollActivity.isActive()
+          : true
+      }
       cachePolicy='memory-disk'
-      priority='high'
+      priority={priority}
       placeholder={CHAT_IMAGE_SKELETON}
       placeholderContentFit='cover'
-      transition={100}
+      transition={transitionMs}
       onError={handleError}
       style={style}
       testID={testID}

@@ -12,6 +12,8 @@ import {
   View,
   type ViewStyle,
 } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { KeyboardController } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { ChatPaneFlags } from '../types/chatUiFlags';
@@ -99,6 +101,17 @@ export const ChatMessagePane = memo(
     const hasEverHadMessagesRef = useRef(false);
     const lastEmptyLogAtRef = useRef<number>(0);
     const insets = useSafeAreaInsets();
+
+    const dismissKeyboardGesture = useMemo(
+      () =>
+        Gesture.Tap()
+          .maxDuration(250)
+          .onEnd(() => {
+            void KeyboardController.dismiss();
+          })
+          .runOnJS(true),
+      [],
+    );
 
     // The composer floats over the bottom of the list — Chat.tsx lifts its
     // KeyboardStickyView up by `insets.bottom`, so without this the newest row
@@ -204,24 +217,28 @@ export const ChatMessagePane = memo(
           </View>
         ) : null}
 
-        <ChatList
-          data={listData}
-          listRef={listRef}
-          shouldMaintainScrollAtEnd={shouldMaintainScrollAtEnd}
-          handleScroll={handleScroll}
-          handleScrollBeginDrag={handleScrollBeginDrag}
-          handleScrollEndDrag={handleScrollEndDrag}
-          handleMomentumScrollBegin={handleMomentumScrollBegin}
-          handleMomentumScrollEnd={handleMomentumScrollEnd}
-          handleEndReached={handleEndReached}
-          handleContentSizeChange={handleContentSizeChange}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
-          getItemType={getItemType}
-          extraData={messageListExtraData}
-          contentContainerStyle={listContentStyleWithComposerClearance}
-          onViewableMessagesChange={onViewableMessagesChange}
-        />
+        <GestureDetector gesture={dismissKeyboardGesture}>
+          <View style={styles.listGestureWrapper}>
+            <ChatList
+              data={listData}
+              listRef={listRef}
+              shouldMaintainScrollAtEnd={shouldMaintainScrollAtEnd}
+              handleScroll={handleScroll}
+              handleScrollBeginDrag={handleScrollBeginDrag}
+              handleScrollEndDrag={handleScrollEndDrag}
+              handleMomentumScrollBegin={handleMomentumScrollBegin}
+              handleMomentumScrollEnd={handleMomentumScrollEnd}
+              handleEndReached={handleEndReached}
+              handleContentSizeChange={handleContentSizeChange}
+              renderItem={renderItem}
+              keyExtractor={keyExtractor}
+              getItemType={getItemType}
+              extraData={messageListExtraData}
+              contentContainerStyle={listContentStyleWithComposerClearance}
+              onViewableMessagesChange={onViewableMessagesChange}
+            />
+          </View>
+        </GestureDetector>
       </View>
     );
   },

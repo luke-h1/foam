@@ -1,4 +1,5 @@
 import { fetch } from 'expo/fetch';
+import { parseJsonOnUIThread } from '@app/lib/offThreadJson';
 import { logger, type AllowedPrefix } from '@app/utils/logger';
 import type { MonitoringErrorName } from '@app/lib/sentry';
 import { getApiMonitoringContext } from './monitoring';
@@ -256,7 +257,7 @@ export function createApiClient({
       return undefined as T;
     }
 
-    return response.json() as Promise<T>;
+    return parseJsonOnUIThread<T>(await response.text());
   }
 
   return {
