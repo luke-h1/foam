@@ -32,6 +32,7 @@
 - **app:** Image perf
 - **perf:** Reduce animated emote decode cpu
 - **perf:** Improve chat perf ([#651](https://github.com/lhowsam/foam/issues/651))
+- **perf:** Perf sweep ([#653](https://github.com/lhowsam/foam/issues/653))
 
 ### 🔧 Miscellaneous Tasks
 
@@ -40,6 +41,7 @@
 - Upgrade bun to 1.3.14 in CI
 - **app:** Update legend list ([#641](https://github.com/lhowsam/foam/issues/641))
 - **ai:** Update skills
+- **chat:** Tidy up scroll activity
 
 ## 1.0.0
 
