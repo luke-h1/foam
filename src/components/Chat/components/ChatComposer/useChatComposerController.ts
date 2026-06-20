@@ -13,7 +13,6 @@ export interface ChatComposerHandle {
 interface UseChatComposerControllerOptions {
   onChangeText?: (text: string) => void;
   onSubmit?: () => void;
-  onEmoteSelect?: (emote: SanitisedEmote) => void;
   canSend?: boolean;
   ref?: Ref<ChatComposerHandle>;
   focusInput: () => void;
@@ -24,7 +23,6 @@ interface UseChatComposerControllerOptions {
 export function useChatComposerController({
   onChangeText,
   onSubmit,
-  onEmoteSelect,
   canSend,
   ref,
   focusInput,
@@ -100,10 +98,9 @@ export function useChatComposerController({
       const afterWord = text.substring(wordInfo.end);
       const newText = `${beforeWord}${emote.name}${afterWord}`;
       const newCursor = wordInfo.start + emote.name.length;
-      onEmoteSelect?.(emote);
       writeText(newText, newCursor);
     },
-    [onEmoteSelect, text, wordInfo.end, wordInfo.start, writeText],
+    [text, wordInfo.end, wordInfo.start, writeText],
   );
 
   const handleUserSelect = useCallback(

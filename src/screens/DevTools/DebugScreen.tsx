@@ -1,6 +1,9 @@
 import { Button } from '@app/components/Button/Button';
-import { SymbolView } from 'expo-symbols';
-import { Switch } from '@app/components/Switch/Switch';
+import {
+  SettingsLinkRow,
+  SettingsSection,
+  SettingsToggleRow,
+} from '@app/components/SettingsSection/SettingsSection';
 import { Text } from '@app/components/ui/Text/Text';
 import { Input } from '@app/components/ui/Input/Input';
 import { useAuthContext } from '@app/context/AuthContext';
@@ -9,12 +12,25 @@ import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { NAMESPACE, storageService } from '@app/lib/storage';
 import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
-import { useObservable, useSelector } from '@legendapp/state/react';
+import {
+  Button as NativeButton,
+  Form,
+  Host,
+  Section,
+  Text as NativeText,
+  TextField,
+  Toggle,
+} from '@expo/ui/swift-ui';
+import {
+  autocorrectionDisabled,
+  textInputAutocapitalization,
+} from '@expo/ui/swift-ui/modifiers';
 import { router } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Alert, Platform, ScrollView, View, StyleSheet } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { toast } from 'sonner-native';
 import { useTranslation } from 'react-i18next';
 import i18next from '@app/i18n/i18next';
 
@@ -42,38 +58,44 @@ export function DebugScreen() {
   const debugOptions = useDebugOptions();
   const { user, authState } = useAuthContext();
 
-  const username$ = useObservable('');
-  const channelName$ = useObservable('');
-  const channelId$ = useObservable('');
+  const [username, setUsername] = useState('');
+  const [channelName, setChannelName] = useState('');
+  const channelIdRef = useRef('');
   const reactQueryEnabled = debugOptions.ReactQueryDebug?.enabled ?? false;
-  const username = useSelector(username$);
-  const channelName = useSelector(channelName$);
-  const channelId = useSelector(channelId$);
   const scrollRef = useRef<ScrollView>(null);
+  const accessToken = authState?.token?.accessToken ?? '';
+  const tokenKind = authState?.isAnonAuth ? t('anon') : t('user');
 
   useScrollToTop(scrollRef);
 
   useEffect(() => {
-    if (!channelName.trim()) {
+    const query = channelName.trim();
+    channelIdRef.current = '';
+    if (!query) {
       return;
     }
-    const t = setTimeout(() => {
-      void twitchService.getUser(channelName).then(r => channelId$.set(r.id));
+    let active = true;
+    const timeout = setTimeout(() => {
+      void twitchService
+        .getUser(query)
+        .then(r => {
+          if (active) {
+            channelIdRef.current = r.id;
+          }
+        })
+        .catch(() => {
+          if (active) {
+            channelIdRef.current = '';
+          }
+        });
     }, 400);
-    return () => clearTimeout(t);
-  }, [channelId$, channelName]);
+    return () => {
+      active = false;
+      clearTimeout(timeout);
+    };
+  }, [channelName]);
 
-  const handleUsernameChange = useCallback(
-    (value: string) => username$.set(value),
-    [username$],
-  );
-
-  const handleChannelNameChange = useCallback(
-    (value: string) => channelName$.set(value),
-    [channelName$],
-  );
-
-  const handleConvertUsername = async () => {
+  const handleConvertUsername = useCallback(async () => {
     if (!username.trim()) {
       return;
     }
@@ -84,168 +106,226 @@ export function DebugScreen() {
     } catch {
       Alert.alert(i18next.t('devTools:notFound'));
     }
-  };
+  }, [username]);
 
-  const handleCopyToken = async () => {
-    if (authState?.token?.accessToken) {
-      await Clipboard.setStringAsync(authState.token.accessToken);
+  const handleCopyToken = useCallback(async () => {
+    if (!accessToken) {
+      return;
     }
-  };
+    await Clipboard.setStringAsync(accessToken);
+    toast.success(i18next.t('devTools:copied'));
+  }, [accessToken]);
 
-  const handleJoinChannel = () => {
+  const handleCopyStorageState = useCallback(async () => {
+    await Clipboard.setStringAsync(JSON.stringify(debugOptions, null, 2));
+    toast.success(i18next.t('devTools:storageStateCopied'));
+  }, [debugOptions]);
+
+  const handleJoinChannel = useCallback(() => {
     if (!channelName.trim()) {
       return;
     }
     router.push({
       pathname: '/chat',
-      params: { channelName, channelId },
+      params: { channelName, channelId: channelIdRef.current },
     });
-  };
+  }, [channelName]);
+
+  if (Platform.OS === 'ios') {
+    return (
+      <Host style={styles.iosHost}>
+        <Form>
+          <Section
+            title={t('storage')}
+            footer={
+              <NativeText>
+                {t('wipeNamespace', { namespace: NAMESPACE })}
+              </NativeText>
+            }
+          >
+            <Toggle
+              isOn={reactQueryEnabled}
+              onIsOnChange={handleToggleReactQueryDebug}
+            >
+              <NativeText>{t('rqDevTools')}</NativeText>
+              <NativeText>{t('rqDevToolsDescription')}</NativeText>
+            </Toggle>
+            <NativeButton
+              label={t('copyStorageState')}
+              systemImage='doc.on.doc'
+              onPress={() => void handleCopyStorageState()}
+            />
+            <NativeButton
+              label={t('clearStorage')}
+              systemImage='trash'
+              // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
+              role='destructive'
+              onPress={handleClearDebugStorage}
+            />
+          </Section>
+
+          <Section title={t('usernameToId')}>
+            <TextField
+              placeholder={t('usernamePlaceholder')}
+              onTextChange={setUsername}
+              modifiers={[
+                autocorrectionDisabled(true),
+                textInputAutocapitalization('never'),
+              ]}
+            />
+            <NativeButton
+              label={t('copyUserId')}
+              systemImage='number'
+              onPress={() => void handleConvertUsername()}
+            />
+          </Section>
+
+          <Section
+            title={t('token')}
+            footer={
+              <NativeText>
+                {accessToken
+                  ? `${tokenKind} · …${accessToken.slice(-16)}`
+                  : t('noToken')}
+              </NativeText>
+            }
+          >
+            <NativeButton
+              label={t('copyToken')}
+              systemImage='key'
+              onPress={() => void handleCopyToken()}
+            />
+          </Section>
+
+          <Section
+            title={t('joinChannel')}
+            footer={
+              user ? (
+                <NativeText>
+                  {t('loggedInAs', { name: user.display_name })}
+                </NativeText>
+              ) : undefined
+            }
+          >
+            <TextField
+              placeholder={t('channelPlaceholderShort')}
+              onTextChange={setChannelName}
+              modifiers={[
+                autocorrectionDisabled(true),
+                textInputAutocapitalization('never'),
+              ]}
+            />
+            <NativeButton
+              label={t('joinChannel')}
+              systemImage='arrow.right.circle'
+              onPress={handleJoinChannel}
+            />
+          </Section>
+        </Form>
+      </Host>
+    );
+  }
 
   return (
     <View style={styles.screenContainer}>
-      <KeyboardAvoidingView
-        behavior='padding'
-        style={styles.flex}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
+      <KeyboardAvoidingView behavior='padding' style={styles.flex}>
         <ScrollView
           ref={scrollRef}
           contentInsetAdjustmentBehavior='automatic'
           contentContainerStyle={styles.content}
+          keyboardDismissMode='on-drag'
           keyboardShouldPersistTaps='handled'
         >
-          {Platform.OS === 'ios' ? null : (
-            <Text type='xl' weight='bold' style={styles.title}>
-              {t('debug')}
-            </Text>
-          )}
-
-          {/* Storage */}
-          <View style={styles.row}>
-            <View style={styles.rowText}>
-              <Text weight='semibold'>{t('clearStorage')}</Text>
-              <Text type='xs' color='gray.textLow'>
-                {t('wipeNamespace', { namespace: NAMESPACE })}
-              </Text>
-            </View>
-            <Button
-              onPress={handleClearDebugStorage}
-              style={styles.destructiveBtn}
-            >
-              <Text type='sm' weight='semibold' color='red.accent'>
-                {t('clear')}
-              </Text>
-            </Button>
-          </View>
-
-          <View style={styles.row}>
-            <View style={styles.rowText}>
-              <Text weight='semibold'>{t('rqDevTools')}</Text>
-              <Text type='xs' color='gray.textLow'>
-                {t('rqDevToolsDescription')}
-              </Text>
-            </View>
-            <Switch
+          <SettingsSection title={t('storage')}>
+            <SettingsToggleRow
+              title={t('rqDevTools')}
+              subtitle={t('rqDevToolsDescription')}
+              icon={{ icon: 'ladybug', color: theme.colorOrange }}
               value={reactQueryEnabled}
               onValueChange={handleToggleReactQueryDebug}
             />
-          </View>
-
-          <View style={styles.divider} />
-
-          {/* Username converter */}
-          <Text weight='semibold' style={styles.label}>
-            {t('usernameToId')}
-          </Text>
-          <View style={styles.inputRow}>
-            <Input
-              style={styles.input}
-              placeholder={t('usernamePlaceholder')}
-              value={username}
-              onChangeText={handleUsernameChange}
-              autoCapitalize='none'
-              autoCorrect={false}
-              variant='outline'
-              radius='sm'
+            <SettingsLinkRow
+              title={t('copyStorageState')}
+              icon={{ icon: 'doc.on.doc', color: theme.colorBlue }}
+              onPress={() => void handleCopyStorageState()}
             />
-            <Button
-              onPress={() => void handleConvertUsername()}
-              style={styles.goBtn}
-            >
-              <SymbolView
-                name='doc.on.doc'
-                size={16}
-                tintColor={theme.color.text.dark}
+            <SettingsLinkRow
+              title={t('clearStorage')}
+              subtitle={t('wipeNamespace', { namespace: NAMESPACE })}
+              icon={{ icon: 'trash', color: theme.colorRed }}
+              onPress={handleClearDebugStorage}
+              danger
+            />
+          </SettingsSection>
+
+          <SettingsSection title={t('usernameToId')}>
+            <View style={styles.inputRow}>
+              <Input
+                style={styles.input}
+                placeholder={t('usernamePlaceholder')}
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize='none'
+                autoCorrect={false}
+                variant='outline'
+                radius='sm'
               />
-            </Button>
-          </View>
+              <Button
+                onPress={() => void handleConvertUsername()}
+                style={styles.goBtn}
+              >
+                <Text type='sm' weight='semibold'>
+                  {t('copy')}
+                </Text>
+              </Button>
+            </View>
+          </SettingsSection>
 
-          <View style={styles.divider} />
-
-          {/* Token */}
-          <Text weight='semibold' style={styles.label}>
-            {t('token')}{' '}
-            <Text type='sm' color='gray.textLow'>
-              ({authState?.isAnonAuth ? t('anon') : t('user')})
-            </Text>
-          </Text>
-          <View style={styles.tokenBox}>
-            <Text type='xs' numberOfLines={1} style={styles.tokenText}>
-              {authState?.token?.accessToken ?? '—'}
-            </Text>
-            <Button
-              // eslint-disable-next-line @typescript-eslint/no-misused-promises
-              onPress={handleCopyToken}
-              style={styles.copyBtn}
-            >
-              <Text type='xs' weight='semibold'>
-                {t('copy')}
+          <SettingsSection
+            title={t('token')}
+            footer={
+              <Text type='xs' color='gray.textLow'>
+                {accessToken
+                  ? `${tokenKind} · …${accessToken.slice(-16)}`
+                  : t('noToken')}
               </Text>
-            </Button>
-          </View>
-
-          <View style={styles.divider} />
-
-          {/* Join channel */}
-          <Text weight='semibold' style={styles.label}>
-            {t('joinChannel')}
-          </Text>
-          <View style={styles.inputRow}>
-            <Input
-              style={styles.input}
-              placeholder={t('channelPlaceholderShort')}
-              value={channelName}
-              onChangeText={handleChannelNameChange}
-              autoCapitalize='none'
-              autoCorrect={false}
-              variant='outline'
-              radius='sm'
+            }
+          >
+            <SettingsLinkRow
+              title={t('copyToken')}
+              icon={{ icon: 'key', color: theme.colorTeal }}
+              onPress={() => void handleCopyToken()}
             />
-            <Button onPress={handleJoinChannel} style={styles.joinBtn}>
-              <Text type='sm' weight='semibold' style={styles.joinBtnText}>
-                {t('go')}
-              </Text>
-            </Button>
-          </View>
+          </SettingsSection>
 
-          {user && (
-            <Text type='xs' color='gray.textLow' style={styles.hint}>
-              {t('loggedInAs', { name: user.display_name })}
-            </Text>
-          )}
-
-          <View style={styles.divider} />
-
-          {/* Storage state */}
-          <Text weight='semibold' style={styles.label}>
-            {t('storageState')}
-          </Text>
-          <View style={styles.codeBlock}>
-            <Text type='xs' style={styles.codeText}>
-              {JSON.stringify(debugOptions, null, 2)}
-            </Text>
-          </View>
+          <SettingsSection
+            title={t('joinChannel')}
+            footer={
+              user ? (
+                <Text type='xs' color='gray.textLow'>
+                  {t('loggedInAs', { name: user.display_name })}
+                </Text>
+              ) : undefined
+            }
+          >
+            <View style={styles.inputRow}>
+              <Input
+                style={styles.input}
+                placeholder={t('channelPlaceholderShort')}
+                value={channelName}
+                onChangeText={setChannelName}
+                autoCapitalize='none'
+                autoCorrect={false}
+                variant='outline'
+                radius='sm'
+              />
+              <Button onPress={handleJoinChannel} style={styles.joinBtn}>
+                <Text type='sm' weight='semibold' style={styles.joinBtnText}>
+                  {t('go')}
+                </Text>
+              </Button>
+            </View>
+          </SettingsSection>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -253,32 +333,10 @@ export function DebugScreen() {
 }
 
 const styles = StyleSheet.create({
-  codeBlock: {
-    backgroundColor: theme.color.background.darkAltAlpha,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
-    padding: theme.space16,
-  },
-  codeText: {
-    color: theme.colorPrimary,
-    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
-  },
   content: {
-    padding: theme.space20,
-    paddingBottom: 100,
-  },
-  copyBtn: {
-    paddingHorizontal: theme.space12,
-    paddingVertical: theme.space8,
-  },
-  destructiveBtn: {
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space12,
-  },
-  divider: {
-    backgroundColor: theme.colorBorderSecondary,
-    height: 1,
-    marginVertical: theme.space16,
+    paddingBottom: theme.space56,
+    paddingHorizontal: theme.space20,
+    paddingTop: theme.space16,
   },
   flex: {
     flex: 1,
@@ -290,13 +348,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius12,
     height: 44,
     justifyContent: 'center',
-    width: 44,
-  },
-  hint: {
-    marginTop: theme.space12,
-  },
-  inputFlex: {
-    flex: 1,
+    paddingHorizontal: theme.space16,
   },
   input: {
     flex: 1,
@@ -304,8 +356,14 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     gap: theme.space12,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space12,
+  },
+  iosHost: {
+    flex: 1,
   },
   joinBtn: {
+    alignItems: 'center',
     backgroundColor: theme.colorBlue,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
@@ -315,37 +373,8 @@ const styles = StyleSheet.create({
   joinBtnText: {
     color: '#fff',
   },
-  label: {
-    marginBottom: theme.space12,
-  },
-  row: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: theme.space16,
-  },
-  rowText: {
-    flex: 1,
-  },
   screenContainer: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
-  },
-  title: {
-    marginBottom: theme.space28,
-  },
-  tokenBox: {
-    alignItems: 'center',
-    backgroundColor: theme.color.background.darkAltAlpha,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
-    flexDirection: 'row',
-    gap: theme.space12,
-    padding: theme.space12,
-  },
-  tokenText: {
-    color: theme.color.text.dark,
-    flex: 1,
-    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
   },
 });

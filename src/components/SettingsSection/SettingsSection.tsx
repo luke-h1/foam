@@ -30,10 +30,12 @@ export function SettingsSection({
   title,
   footer,
   children,
+  cardColor,
 }: {
   title?: string;
   footer?: ReactNode;
   children: ReactNode;
+  cardColor?: string;
 }) {
   return (
     <View style={styles.section}>
@@ -48,7 +50,11 @@ export function SettingsSection({
         </Text>
       ) : null}
 
-      <View style={styles.card}>{children}</View>
+      <View
+        style={[styles.card, cardColor ? { backgroundColor: cardColor } : null]}
+      >
+        {children}
+      </View>
 
       {footer ? <View style={styles.footer}>{footer}</View> : null}
     </View>

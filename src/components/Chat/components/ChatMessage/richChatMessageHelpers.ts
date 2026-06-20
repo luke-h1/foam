@@ -1,36 +1,9 @@
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-const SUBSCRIPTION_NOTICE_TYPES = new Set<ParsedPart['type']>([
-  'sub',
-  'resub',
-  'anongiftpaidupgrade',
-  'anongift',
-  'submysterygift',
-  'giftpaidupgrade',
-  'primepaidupgrade',
-]);
+import { deriveChatBody } from '@app/utils/chat/deriveChatBody';
+import type { ChatBodyVariant } from '@app/utils/chat/deriveChatBody';
 
-const CHARITY_DONATION_TYPES = new Set<ParsedPart['type']>(['charitydonation']);
-const RITUAL_NOTICE_TYPES = new Set<ParsedPart['type']>(['ritual']);
-
-const STV_EMOTE_EVENT_TYPES = new Set<ParsedPart['type']>([
-  'stv_emote_added',
-  'stv_emote_removed',
-]);
-
-const VIEWER_MILESTONE_TYPES = new Set<ParsedPart['type']>(['viewermilestone']);
-
-export type ChatBodyVariant =
-  | 'twitch_system_notice'
-  | 'raid'
-  | 'announcement'
-  | 'subscription'
-  | 'charity_donation'
-  | 'ritual'
-  | 'stv_emote_event'
-  | 'viewer_milestone'
-  | 'app_system_sender'
-  | 'user_chat';
+export type { ChatBodyVariant };
 
 export interface ChatBodyInfo {
   hasSubscriptionNotice: boolean;
@@ -53,107 +26,19 @@ export function getChatBodyInfo(
   isTwitchSystemNotice?: boolean,
   isAnnouncement?: boolean,
 ): ChatBodyInfo {
-  if (isAnnouncement) {
-    return {
-      hasSubscriptionNotice: false,
-      mentionsCurrentUser: false,
-      variant: 'announcement',
-    };
-  }
+  const derived = deriveChatBody(message, {
+    sender,
+    isTwitchSystemNotice,
+    isAnnouncement,
+  });
 
-  if (isTwitchSystemNotice) {
-    return {
-      hasSubscriptionNotice: false,
-      mentionsCurrentUser: false,
-      variant: 'twitch_system_notice',
-    };
-  }
-
-  let hasSubscriptionNotice = false;
-  let hasStvEmoteEvent = false;
-  let hasViewerMilestone = false;
-  let hasCharityDonation = false;
-  let hasRitualNotice = false;
-  let mentionsCurrentUser = false;
-
-  for (const part of message) {
-    if (
-      !mentionsCurrentUser &&
-      normalisedCurrentUsername &&
-      part.type === 'mention' &&
-      normaliseUsername(part.content) === normalisedCurrentUsername
-    ) {
-      mentionsCurrentUser = true;
-    }
-
-    if (SUBSCRIPTION_NOTICE_TYPES.has(part.type)) {
-      hasSubscriptionNotice = true;
-      continue;
-    }
-
-    if (STV_EMOTE_EVENT_TYPES.has(part.type)) {
-      hasStvEmoteEvent = true;
-      continue;
-    }
-
-    if (VIEWER_MILESTONE_TYPES.has(part.type)) {
-      hasViewerMilestone = true;
-      continue;
-    }
-
-    if (CHARITY_DONATION_TYPES.has(part.type)) {
-      hasCharityDonation = true;
-      continue;
-    }
-
-    if (RITUAL_NOTICE_TYPES.has(part.type)) {
-      hasRitualNotice = true;
-    }
-  }
-
-  if (hasSubscriptionNotice) {
-    return {
-      hasSubscriptionNotice,
-      mentionsCurrentUser,
-      variant: 'subscription',
-    };
-  }
-  if (hasCharityDonation) {
-    return {
-      hasSubscriptionNotice,
-      mentionsCurrentUser,
-      variant: 'charity_donation',
-    };
-  }
-  if (hasRitualNotice) {
-    return {
-      hasSubscriptionNotice,
-      mentionsCurrentUser,
-      variant: 'ritual',
-    };
-  }
-  if (hasStvEmoteEvent) {
-    return {
-      hasSubscriptionNotice,
-      mentionsCurrentUser,
-      variant: 'stv_emote_event',
-    };
-  }
-  if (hasViewerMilestone) {
-    return {
-      hasSubscriptionNotice,
-      mentionsCurrentUser,
-      variant: 'viewer_milestone',
-    };
-  }
-  if (sender?.toLowerCase() === 'system') {
-    return {
-      hasSubscriptionNotice,
-      mentionsCurrentUser,
-      variant: 'app_system_sender',
-    };
-  }
-  return { hasSubscriptionNotice, mentionsCurrentUser, variant: 'user_chat' };
+  return {
+    hasSubscriptionNotice: derived.hasSubscriptionNotice,
+    mentionsCurrentUser: normalisedCurrentUsername
+      ? derived.mentionLogins.includes(normalisedCurrentUsername)
+      : false,
+    variant: derived.variant,
+  };
 }
 
 export function isUserNoticeTags(tags: unknown): tags is UserNoticeTags {

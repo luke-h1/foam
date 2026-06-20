@@ -1,23 +1,32 @@
-// Decode-once, share-everywhere cache for chat inline images (emotes + badges).
-// Mirrors the swm-photos CachedPhotosProvider/cache-service split: this module
-// is the pure data layer (store/retrieve/evict), the provider owns lifecycle,
-// and useCachedEmote is the consumer hook.
-//
-// The same emote appears in many rows during a busy/raid chat. Rendering each as
-// `<Image source={{ uri }}>` makes every row do a cache lookup + go through the
-// load pipeline, and the cached bitmap is decoded at full source resolution.
-// Instead we decode each url ONCE via `Image.loadAsync(url, { maxWidth })` into a
-// shared, display-sized `ImageRef`, and render `<Image source={ref}>` so each row
-// just composites an already-decoded, size-bounded bitmap. Animated AVIFs keep
-// animating — the ref carries `isAnimated` and the view autoplays.
+/**
+ * Decode-once, share-everywhere cache for chat inline images (emotes + badges).
+ * Mirrors the swm-photos CachedPhotosProvider/cache-service split: this module
+ * is the pure data layer (store/retrieve/evict), the provider owns lifecycle,
+ * and useCachedEmote is the consumer hook.
+ *
+ * The same emote appears in many rows during a busy/raid chat. Rendering each as
+ * `<Image source={{ uri }}>` makes every row do a cache lookup + go through the
+ * load pipeline, and the cached bitmap is decoded at full source resolution.
+ * Instead we decode each url ONCE via `Image.loadAsync(url, { maxWidth })` into a
+ * shared, display-sized `ImageRef`, and render `<Image source={ref}>` so each row
+ * just composites an already-decoded, size-bounded bitmap. Animated AVIFs keep
+ * animating — the ref carries `isAnimated` and the view autoplays.
+ */
 import { Image, type ImageRef } from 'expo-image';
+import { AppState } from 'react-native';
+import { getDeviceTier } from '@app/utils/device/deviceTier';
 
-// Upper bound on the decoded bitmap edge. Inline emotes render ~30pt (≈90px at
-// 3x) and badges smaller; loadAsync only downscales, so this never enlarges a
-// small image — it just caps the memory of oversized source art.
-export const EMOTE_DECODE_MAX_PX = 96;
+const isLowTier = getDeviceTier() === 'low';
 
-const MAX_ENTRIES = 1200;
+/**
+ * Upper bound on the decoded bitmap edge. Inline emotes render ~30pt (≈90px at
+ * 3x) and badges smaller; loadAsync only downscales, so this never enlarges a
+ * small image — it just caps the memory of oversized source art. Low-tier
+ * devices cap tighter and keep fewer decoded entries to relieve memory.
+ */
+export const EMOTE_DECODE_MAX_PX = isLowTier ? 64 : 96;
+
+const MAX_ENTRIES = isLowTier ? 600 : 1200;
 
 const refs = new Map<string, ImageRef>();
 const pinned = new Set<string>();
@@ -40,7 +49,7 @@ function evictOneUnpinned(): void {
   }
 }
 
-const MAX_CONCURRENT_DECODES = 8;
+const MAX_CONCURRENT_DECODES = isLowTier ? 4 : 8;
 let activeDecodes = 0;
 const decodeWaiters: (() => void)[] = [];
 
@@ -73,6 +82,19 @@ function notifyAll(): void {
 
 export function getCachedEmoteRef(url: string): ImageRef | null {
   return refs.get(url) ?? null;
+}
+
+/**
+ * Re-inserts the entry at the end of the Map so eviction (which scans insertion
+ * order) drops the least-recently-rendered ref, not the oldest-decoded one.
+ * Kept out of getCachedEmoteRef so the useSyncExternalStore snapshot stays pure.
+ */
+export function touchCachedEmoteRef(url: string): void {
+  const ref = refs.get(url);
+  if (ref !== undefined) {
+    refs.delete(url);
+    refs.set(url, ref);
+  }
 }
 
 function decodeInto(url: string, maxPx: number, pin: boolean): Promise<void> {
@@ -187,6 +209,35 @@ export function clearCachedEmoteRefs(): void {
   inflight.clear();
   pinned.clear();
   notifyAll();
+}
+
+/**
+ * Under memory pressure, shed every unpinned decoded bitmap (channel emotes
+ * re-decode lazily on next render) and drop expo-image's in-memory cache. The
+ * hard-referenced `refs` map otherwise never yields to the OS, so on a
+ * constrained device this is the difference between trimming and being jettisoned.
+ */
+export function trimCachedEmoteRefsForMemoryPressure(): void {
+  releaseChannelEmoteRefs();
+  void Image.clearMemoryCache();
+}
+
+let memoryPressureSubscribed = false;
+
+/**
+ * iOS-only: AppState emits 'memoryWarning'. Registered once for the app's
+ * lifetime (the cache outlives any single chat mount). Android trim hooks would
+ * need a native onTrimMemory bridge — not wired here.
+ */
+export function subscribeEmoteCacheMemoryPressure(): void {
+  if (memoryPressureSubscribed) {
+    return;
+  }
+  memoryPressureSubscribed = true;
+  AppState.addEventListener(
+    'memoryWarning',
+    trimCachedEmoteRefsForMemoryPressure,
+  );
 }
 
 export function getCachedEmoteStats(): {

@@ -1,5 +1,8 @@
 jest.mock('expo-image', () => ({
-  Image: { loadAsync: jest.fn(() => Promise.resolve({})) },
+  Image: {
+    loadAsync: jest.fn(() => Promise.resolve({})),
+    clearMemoryCache: jest.fn(),
+  },
 }));
 
 import { Image, type ImageRef } from 'expo-image';
@@ -10,6 +13,8 @@ import {
   getCachedEmoteStats,
   releaseChannelEmoteRefs,
   subscribeCachedEmoteRef,
+  touchCachedEmoteRef,
+  trimCachedEmoteRefsForMemoryPressure,
   warmCachedEmoteRefs,
 } from '@app/Providers/CachedEmotesProvider/cache-service';
 
@@ -124,6 +129,37 @@ describe('cache-service', () => {
       inflight: 0,
       pinned: 1,
     });
+  });
+
+  test('memory-pressure trim drops unpinned refs, keeps pinned, clears memory cache', async () => {
+    const pinnedUrl = 'https://cdn.7tv.app/emote/mpPinned/2x.avif';
+    const unpinnedUrl = 'https://cdn.7tv.app/emote/mpUnpinned/2x.avif';
+    await warmCachedEmoteRefs([pinnedUrl], { pin: true });
+    await warmCachedEmoteRefs([unpinnedUrl]);
+
+    trimCachedEmoteRefsForMemoryPressure();
+
+    expect(getCachedEmoteRef(pinnedUrl)).toEqual({});
+    expect(getCachedEmoteRef(unpinnedUrl)).toBeNull();
+    expect(Image.clearMemoryCache).toHaveBeenCalledTimes(1);
+  });
+
+  test('eviction drops the least-recently-touched unpinned ref', async () => {
+    const urls = Array.from(
+      { length: 1200 },
+      (_, i) => `https://cdn.7tv.app/emote/lru${i}/2x.avif`,
+    );
+    await warmCachedEmoteRefs(urls);
+    expect(getCachedEmoteStats().decoded).toBe(1200);
+
+    // Mark the oldest-decoded entry as most-recently-used.
+    touchCachedEmoteRef(urls[0]!);
+    // One more decode trips the cap and evicts the now-oldest unpinned entry.
+    await warmCachedEmoteRefs(['https://cdn.7tv.app/emote/lruExtra/2x.avif']);
+
+    expect(getCachedEmoteStats().decoded).toBe(1200);
+    expect(getCachedEmoteRef(urls[0]!)).toEqual({});
+    expect(getCachedEmoteRef(urls[1]!)).toBeNull();
   });
 
   test('caps concurrent decodes and drains the queue as slots free', async () => {

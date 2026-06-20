@@ -13,12 +13,6 @@ export type ChatConnectionFlags = {
   isSending: boolean;
 };
 
-export type ChatPinFlags = {
-  canPinNextMessage?: boolean;
-  onTogglePinNextMessage?: () => void;
-  pinNextMessage?: boolean;
-};
-
 export type ChatPaneFlags = {
   canModerateChat: boolean;
   connected: boolean;

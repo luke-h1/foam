@@ -1,4 +1,11 @@
-import { createContext, PropsWithChildren, use, useMemo } from 'react';
+import {
+  createContext,
+  PropsWithChildren,
+  use,
+  useEffect,
+  useMemo,
+} from 'react';
+import { subscribeEmoteCacheMemoryPressure } from './cache-service';
 import {
   CachedEmotesLoadingState,
   useCachedEmotes as useCachedEmotesData,
@@ -29,6 +36,10 @@ export const CachedEmotesProvider = ({
 }: PropsWithChildren<{ channelId: string }>) => {
   const { loadingState, recalculateCachedEmotes } =
     useCachedEmotesData(channelId);
+
+  useEffect(() => {
+    subscribeEmoteCacheMemoryPressure();
+  }, []);
 
   return (
     <CachedEmotesContext.Provider

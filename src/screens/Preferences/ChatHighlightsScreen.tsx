@@ -212,6 +212,7 @@ export function ChatHighlightsScreen() {
         renderItem={renderItem}
         keyExtractor={item => item.id}
         contentInsetAdjustmentBehavior='automatic'
+        keyboardDismissMode='on-drag'
         keyboardShouldPersistTaps='handled'
         contentContainerStyle={[
           styles.listContent,

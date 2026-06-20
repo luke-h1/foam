@@ -45,6 +45,12 @@ export interface RemoteConfigSchema {
   statusPageUrl: string;
   websiteUrl: string;
   admins: string[];
+
+  /**
+   * A/B test variant assignments keyed by experiment name. Firebase A/B Testing
+   * sets this per user; the client reads it via `useExperiment`.
+   */
+  experiments: Record<string, string>;
 }
 
 export type RemoteConfigKey = keyof RemoteConfigSchema;
@@ -68,10 +74,16 @@ export const defaultRemoteConfig = {
   statusPageUrl: 'https://status.foam-app.com',
   websiteUrl: 'https://foam-app.com',
   admins: '[]',
+  experiments: '{}',
 } satisfies Record<RemoteConfigKey, string>;
 
 // Keys that contain JSON and need parsing
-const jsonKeys: RemoteConfigKey[] = ['splash', 'minimumVersion', 'admins'];
+const jsonKeys: RemoteConfigKey[] = [
+  'splash',
+  'minimumVersion',
+  'admins',
+  'experiments',
+];
 
 function getErrorMessage(error: unknown): string | null {
   if (error instanceof Error) {

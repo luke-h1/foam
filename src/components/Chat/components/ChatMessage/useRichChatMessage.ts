@@ -1,20 +1,10 @@
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
-import {
-  channelPointsRewardTitleFromUserstate,
-  channelPointsRewardTitleFromTags,
-  channelPointsRewardTitleFieldsFromUserstate,
-} from '@app/utils/chat/channelPointsRewardTitle';
-import {
-  getChannelPointRewardTitleCacheVersion,
-  resolveChannelPointRewardTitle,
-  subscribeChannelPointRewardTitles,
-} from '@app/utils/chat/channelPointRewardTitleStore';
 import { hasSharedChannelPointsMessage } from '@app/components/Chat/util/channelPointsSharedMessage';
 import { findCustomHighlight } from '@app/utils/chat/customHighlights';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { useMappingHelper } from '@shopify/flash-list';
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type {
   BadgePressData,
@@ -137,11 +127,9 @@ export function useRichChatMessage<
   const compact = density === 'compact';
   const normalisedCurrentUsername =
     currentUsernameNormalized ?? normaliseUsername(currentUsername);
-  const fallbackHighlightedUserSet = new Set(
-    (highlightedUsers ?? []).map(normaliseUsername),
-  );
   const effectiveHighlightedUserSet =
-    highlightedUserSet ?? fallbackHighlightedUserSet;
+    highlightedUserSet ??
+    new Set((highlightedUsers ?? []).map(normaliseUsername));
   const messageSenderKey = normaliseUsername(
     userstate.username || userstate.login || sender,
   );
@@ -260,28 +248,6 @@ export function useRichChatMessage<
     (typeof userstate['room-id'] === 'string'
       ? userstate['room-id']
       : undefined) ?? broadcasterId;
-  const rewardTitleCacheVersion = useSyncExternalStore(
-    subscribeChannelPointRewardTitles,
-    getChannelPointRewardTitleCacheVersion,
-    getChannelPointRewardTitleCacheVersion,
-  );
-  const rewardTitleResolved = showChannelPointsRewardChrome
-    ? (() => {
-        void rewardTitleCacheVersion;
-
-        return (
-          channelPointsRewardTitleFromUserstate(userstate) ??
-          (isUserNoticeTags(notice_tags)
-            ? channelPointsRewardTitleFromTags(notice_tags)
-            : undefined) ??
-          resolveChannelPointRewardTitle({
-            tags: channelPointsRewardTitleFieldsFromUserstate(userstate),
-            broadcasterId: roomId,
-          })
-        );
-      })()
-    : undefined;
-  const rewardSummaryTitle = rewardTitleResolved ?? 'Channel Points reward';
 
   const canReply =
     onReply &&
@@ -381,7 +347,7 @@ export function useRichChatMessage<
     partRendererArgs,
     replyBody,
     replyParentMessageId,
-    rewardSummaryTitle,
+    roomId,
     selectedEmoteAction,
     shouldRenderInlineReply,
     showChannelPointsRewardChrome,

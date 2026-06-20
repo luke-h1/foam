@@ -37,6 +37,23 @@ src/store/
 
 Import chat store modules directly (for example `@app/store/chat/observables/chatStore`, `@app/store/chat/actions/messages`, `@app/store/chat/types/constants`). Do not add barrel exports under `store/chat`.
 
+## Inline Simple Values
+
+This applies only to obvious, self-explanatory single-use literals — chiefly styles (a one-off colour, size, or spacing) and single-use UI strings. Do not lift those into a named constant just to reference them once; inline them at the use site.
+
+```ts
+// avoid
+const CARD_BG = '#1C1C1E';
+<View style={{ backgroundColor: CARD_BG }} />
+
+// prefer
+<View style={{ backgroundColor: '#1C1C1E' }} />
+```
+
+A name like `THE_COLOR_OF_A_COMPONENT = '#55'` adds a layer of indirection without adding information — the literal already says everything the name does.
+
+This is **not** a blanket "inline every single-use value" rule. Keep a named constant (or an inline explanatory comment) when the literal encodes non-obvious meaning the value alone cannot convey — a magic number such as a memory threshold (`3 * 1024 * 1024 * 1024` // 3GB), a tuned timeout, a protocol constant, or anything a reader would have to reverse-engineer. Also keep module-level constants for values genuinely shared across files that must stay in sync. The rule targets needless indirection over obvious literals, not the removal of meaningful names.
+
 ## JSDoc Comments
 
 Write JSDoc comments as multi-line blocks. Never collapse them onto a single line.

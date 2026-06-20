@@ -8,13 +8,13 @@ import { router } from 'expo-router';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { useState } from 'react';
 import {
-  KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
   TextInput,
   View,
 } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner-native';
@@ -78,6 +78,7 @@ export function FeedbackScreen() {
       >
         <ScrollView
           contentContainerStyle={styles.content}
+          keyboardDismissMode='on-drag'
           keyboardShouldPersistTaps='handled'
           showsVerticalScrollIndicator={false}
         >

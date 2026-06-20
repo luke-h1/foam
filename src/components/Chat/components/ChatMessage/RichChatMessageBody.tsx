@@ -30,7 +30,7 @@ export function RichChatMessageBody(props: RichChatMessageState) {
     partRendererArgs,
     replyBody,
     replyParentMessageId,
-    rewardSummaryTitle,
+    roomId,
     shouldRenderInlineReply,
     showChannelPointsRewardChrome,
     showTimestamp,
@@ -91,9 +91,10 @@ export function RichChatMessageBody(props: RichChatMessageState) {
             showTimestamp,
           }}
           replyParentMessageId={replyParentMessageId}
-          rewardSummaryTitle={rewardSummaryTitle}
+          roomId={roomId}
           timestamp={timestamp}
           userId={userstate['user-id']}
+          userstate={userstate}
           userstateColor={userstate.color}
           username={userstate.username}
           {...partRendererArgs}

@@ -25,6 +25,7 @@ const en = {
   },
 
   chat: {
+    emotesRefreshed: 'Refreshed emotes and badges',
     messageActions: {
       eyebrow: 'Selected message',
       title: 'Message Actions',
@@ -179,6 +180,7 @@ const en = {
       clearChatCache: 'Clear Chat Cache',
       clearImageCache: 'Clear Image Cache',
       clearSevenTvCosmeticCache: 'Clear 7TV Cosmetic Cache',
+      clearCache: 'Clear Cache',
       displayLatency: 'Display Latency',
       refreshVideo: 'Refresh Video',
     },
@@ -493,6 +495,13 @@ const en = {
     clearSevenTvCacheConfirm:
       'This removes cached 7TV user paints and badges. They will be fetched again as users appear in chat.',
     sevenTvCacheCleared: '7TV cosmetic cache cleared',
+    clearCache: 'Clear Cache',
+    clearCacheDescription:
+      'Remove cached emotes, badges, 7TV cosmetics, and downloaded images',
+    clearCacheTitle: 'Clear Cache',
+    clearCacheConfirm:
+      'This removes all cached emotes, badges, 7TV cosmetics, and downloaded media from this device. They will be fetched again as needed.',
+    cacheCleared: 'Cache cleared',
     clear: 'Clear',
     clearChatMediaCache: 'Clear Chat Media Cache',
     clearData: 'Clear Data',
@@ -776,6 +785,12 @@ const en = {
     go: 'Go',
     loggedInAs: 'logged in as {{name}}',
     storageState: 'Storage state',
+    storage: 'Storage',
+    copyUserId: 'Copy user ID',
+    copyToken: 'Copy access token',
+    copyStorageState: 'Copy storage state',
+    storageStateCopied: 'Storage state copied',
+    noToken: 'No token available',
     moduleState: 'Module state',
     actions: 'Actions',
     presentAppChangelog: 'Present app changelog',

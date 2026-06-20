@@ -10,8 +10,8 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { PortalHost } from 'react-native-teleport';
-import { MESSAGE_ACTION_PREVIEW_PORTAL_NAME } from './MessageActionPreview';
+import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { MessageActionPreview } from './MessageActionPreview';
 import { useTranslation } from 'react-i18next';
 
 type MessageActionId =
@@ -60,6 +60,7 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   username?: string;
+  messagePreview?: ParsedPart[];
   handleReply: () => void;
   handleCopy: () => void;
   handleHidePhrase?: () => void;
@@ -105,6 +106,7 @@ function ActionSheetComponent(props: Props) {
     visible,
     onClose,
     username,
+    messagePreview,
     handleReply,
     handleCopy,
     handleHidePhrase,
@@ -323,7 +325,12 @@ function ActionSheetComponent(props: Props) {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <PortalHost name={MESSAGE_ACTION_PREVIEW_PORTAL_NAME} />
+          {messagePreview ? (
+            <MessageActionPreview
+              message={messagePreview}
+              username={username}
+            />
+          ) : null}
 
           <View style={styles.actionGroup}>
             {actions.map((action, index) => (

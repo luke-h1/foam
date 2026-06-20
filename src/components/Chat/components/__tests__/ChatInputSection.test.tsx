@@ -37,7 +37,6 @@ describe('ChatInputSection', () => {
         <ChatInputSection
           messageInput='hello'
           onChangeText={onChangeText}
-          onEmoteSelect={jest.fn()}
           onSubmit={onSubmit}
           onOpenEmoteSheet={onOpenEmoteSheet}
           onOpenSettingsSheet={jest.fn()}

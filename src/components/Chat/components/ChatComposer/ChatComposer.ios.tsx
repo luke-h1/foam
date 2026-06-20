@@ -1,7 +1,6 @@
 import { useAccentColor } from '@app/context/AccentColorContext';
 import { Input, type InputRef } from '@app/components/ui/Input/Input.ios';
 import { theme } from '@app/styles/themes';
-import type { SanitisedEmote } from '@app/types/emote';
 import { memo, useCallback, useRef, type Ref } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { EmoteSuggestionRail } from './EmoteSuggestionRail';
@@ -21,7 +20,6 @@ export interface ChatComposerProps {
   onChangeText?: (text: string) => void;
   onSubmit?: () => void;
   onPressAdd?: () => void;
-  onEmoteSelect?: (emote: SanitisedEmote) => void;
   maxSuggestions?: number;
   prioritizeChannelEmotes?: boolean;
   placeholder?: string;
@@ -34,7 +32,6 @@ function ChatComposerComponent({
   onChangeText,
   onSubmit,
   onPressAdd,
-  onEmoteSelect,
   maxSuggestions = 50,
   prioritizeChannelEmotes = true,
   placeholder,
@@ -69,7 +66,6 @@ function ChatComposerComponent({
   } = useChatComposerController({
     onChangeText,
     onSubmit,
-    onEmoteSelect,
     canSend,
     ref,
     focusInput,

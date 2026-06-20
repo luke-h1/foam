@@ -69,7 +69,7 @@ const initialPreferences: Preferences = {
   streamListLayout: 'compact',
   chatDensity: 'comfortable',
   showAlternatingChatRows: false,
-  chatTimestamps: true,
+  chatTimestamps: false,
   highlightOwnMentions: true,
   showInlineReplyContext: true,
   showRecentMessages: true,

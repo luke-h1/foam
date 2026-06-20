@@ -1,6 +1,9 @@
 import { clearCache } from '@app/store/chat/actions/channelLoad';
 import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
+import { addMessage } from '@app/store/chat/actions/messages';
+import { createSystemMessage } from '@app/components/Chat/util/messageHandlers';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
+import i18next from '@app/i18n/i18next';
 import { logger } from '@app/utils/logger';
 import { useRef, useCallback } from 'react';
 
@@ -86,11 +89,41 @@ export function useChatSettingsActions({
     scrollToBottom();
   }, [forceFlush, scrollToBottom]);
 
-  const handleSettingsRefetchEmotes = useCallback(() => {
-    void refetchEmotesRef.current().then(() => {
-      reprocessAllMessagesRef.current();
-    });
+  const announceRefresh = useCallback(() => {
+    addMessage(
+      createSystemMessage(
+        channelNameRef.current,
+        i18next.t('chat:emotesRefreshed'),
+      ),
+    );
   }, []);
+
+  const handleSettingsRefetchEmotes = useCallback(() => {
+    void (async () => {
+      try {
+        await refetchEmotesRef.current();
+        reprocessAllMessagesRef.current();
+        announceRefresh();
+      } catch (error) {
+        logger.chat.error('Failed to refetch emotes:', error);
+      }
+    })();
+  }, [announceRefresh]);
+
+  const handleRefreshCommand = useCallback(() => {
+    void (async () => {
+      try {
+        clearCache(channelId);
+        clearUserCosmeticsCache();
+        await clearImageCache(channelId);
+        await refetchEmotesRef.current();
+        reprocessAllMessagesRef.current();
+        announceRefresh();
+      } catch (error) {
+        logger.chat.error('Failed to run refresh command:', error);
+      }
+    })();
+  }, [announceRefresh, channelId]);
 
   const handleSettingsReconnect = useCallback(() => {
     partChannelRef.current(channelNameRef.current);
@@ -129,6 +162,7 @@ export function useChatSettingsActions({
     handleResumeScrollToBottom,
     handleSettingsReconnect,
     handleSettingsRefetchEmotes,
+    handleRefreshCommand,
     handleToggleChatDensity,
     handleToggleHighlightOwnMentions,
     handleToggleInlineReplyContext,

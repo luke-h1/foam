@@ -1,7 +1,8 @@
 import { useCallback, memo } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { TwitchStream } from '@app/services/twitch-service';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
+import { userQueryOptions } from '@app/lib/react-query/queries/twitch';
 import { theme } from '@app/styles/themes';
 import { router } from 'expo-router';
 import { elapsedStreamTime } from '@app/utils/string/elapsedStreamTime';
@@ -39,6 +40,13 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
     .replace('{height}', '1080');
 
   const avatarInitial = stream.user_name.trim().charAt(0).toUpperCase();
+
+  const { data: streamerInfo } = useQuery({
+    ...userQueryOptions(stream.user_login),
+    enabled: layout === 'media' && !stream.profilePicture,
+  });
+  const profilePicture =
+    stream.profilePicture ?? streamerInfo?.profile_image_url;
   const languageLabel =
     stream.tags?.find(tag =>
       Object.values(LANGUAGE_NAMES).some(
@@ -112,9 +120,9 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               style={styles.avatarPressable}
               hitSlop={8}
             >
-              {stream.profilePicture ? (
+              {profilePicture ? (
                 <Image
-                  source={stream.profilePicture}
+                  source={profilePicture}
                   style={styles.avatarImage}
                   containerStyle={styles.avatarImageWrapper}
                   transition={150}

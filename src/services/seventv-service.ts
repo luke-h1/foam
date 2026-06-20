@@ -15,10 +15,8 @@ import {
   type PaintsQueryQuery,
   UserCosmeticsDocument,
   UserCosmeticsQuery,
-  UserCosmeticsQueryVariables,
   UserByConnectionDocument,
   UserByConnectionQuery,
-  UserByConnectionQueryVariables,
   UserPersonalEmotesQueryDocument,
   UserPersonalEmotesQueryQuery,
   UserPersonalEmotesQueryQueryVariables,
@@ -42,6 +40,7 @@ import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { logger } from '@app/utils/logger';
 import { sevenTvApi } from './api/clients';
 import { sevenTvV4Client } from './gql/client';
+import { runCosmeticsQuery } from './gql/sevenTvWorkletClient';
 
 interface SevenTvFile {
   name: string;
@@ -326,13 +325,24 @@ export const sevenTvService = {
     }
 
     const request = (async () => {
-      const { data, error } = await sevenTvV4Client.query<
-        UserByConnectionQuery,
-        UserByConnectionQueryVariables
-      >({
-        query: UserByConnectionDocument,
-        variables: { platformId: twitchUserId },
-      });
+      const { result, error } = await runCosmeticsQuery(
+        UserByConnectionDocument,
+        { platformId: twitchUserId },
+        responseText => {
+          'worklet';
+          const parsed = JSON.parse(responseText) as {
+            data?: UserByConnectionQuery;
+            errors?: { message?: string }[];
+          };
+          if (parsed.errors?.length) {
+            throw new Error(
+              parsed.errors.flatMap(e => e.message ?? []).join('; ') ||
+                '7TV GQL error',
+            );
+          }
+          return parsed.data?.users?.userByConnection?.id ?? '';
+        },
+      );
 
       if (error) {
         logger.stv.warn(
@@ -349,7 +359,7 @@ export const sevenTvService = {
         return '';
       }
 
-      const userId = data?.users?.userByConnection?.id ?? '';
+      const userId = result ?? '';
       cacheSevenTvUserId(twitchUserId, userId);
       return userId;
     })();
@@ -559,14 +569,41 @@ export const sevenTvService = {
   getUserCosmeticsGql: async (
     sevenTvUserId: string,
   ): Promise<UserCosmeticsInfo | null> => {
+    const twitchPlatform = Platform.Twitch;
     try {
-      const { data, error } = await sevenTvV4Client.query<
-        UserCosmeticsQuery,
-        UserCosmeticsQueryVariables
-      >({
-        query: UserCosmeticsDocument,
-        variables: { id: sevenTvUserId },
-      });
+      const { result, error } = await runCosmeticsQuery(
+        UserCosmeticsDocument,
+        { id: sevenTvUserId },
+        responseText => {
+          'worklet';
+          const parsed = JSON.parse(responseText) as {
+            data?: UserCosmeticsQuery;
+            errors?: { message?: string }[];
+          };
+          if (parsed.errors?.length) {
+            throw new Error(
+              parsed.errors.flatMap(e => e.message ?? []).join('; ') ||
+                '7TV GQL error',
+            );
+          }
+          const user = parsed.data?.users?.user;
+          if (!user) {
+            return null;
+          }
+          const twitchConnection = user.connections.find(
+            conn => conn.platform === twitchPlatform,
+          );
+          const { style } = user;
+          return {
+            userId: user.id,
+            ttvUserId: twitchConnection?.platformId ?? null,
+            paintId: style.activePaintId ?? null,
+            badgeId: style.activeBadgeId ?? null,
+            paint: style.activePaint ?? null,
+            badge: style.activeBadge ?? null,
+          } satisfies UserCosmeticsInfo;
+        },
+      );
 
       if (error) {
         logger.stv.warn('Failed to fetch 7TV cosmetics', {
@@ -580,26 +617,7 @@ export const sevenTvService = {
         return null;
       }
 
-      const user = data?.users?.user;
-
-      if (!user) {
-        return null;
-      }
-
-      const twitchConnection = user.connections.find(
-        conn => conn.platform === Platform.Twitch,
-      );
-
-      const { style } = user;
-
-      return {
-        userId: user.id,
-        ttvUserId: twitchConnection?.platformId ?? null,
-        paintId: style.activePaintId ?? null,
-        badgeId: style.activeBadgeId ?? null,
-        paint: style.activePaint ?? null,
-        badge: style.activeBadge ?? null,
-      };
+      return result ?? null;
     } catch (error) {
       logger.stv.warn('Failed to fetch user cosmetics via GQL', {
         name: 'seven_tv_cosmetics_warning',

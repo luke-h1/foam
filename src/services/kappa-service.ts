@@ -1,9 +1,6 @@
+import * as FileSystem from 'expo-file-system/legacy';
 import { logger } from '@app/utils/logger';
 
-/**
- * kappa.lol is a free image host popular in the Twitch community. Its upload
- * endpoint accepts a multipart `file` field and responds with `{ link }`.
- */
 const KAPPA_UPLOAD_URL = 'https://kappa.lol/api/upload';
 
 export interface KappaUploadAsset {
@@ -18,28 +15,30 @@ export interface KappaUploadResult {
 
 export const kappaService = {
   upload: async (asset: KappaUploadAsset): Promise<KappaUploadResult> => {
-    const formData = new FormData();
-    const fileName = asset.fileName ?? `foam-${Date.now()}.jpg`;
-    const type = asset.mimeType ?? 'image/jpeg';
+    const mimeType = asset.mimeType ?? 'image/jpeg';
 
-    // React Native's FormData accepts this { uri, name, type } file shape.
-    formData.append('file', {
-      uri: asset.uri,
-      name: fileName,
-      type,
-    } as unknown as Blob);
-
-    const response = await fetch(KAPPA_UPLOAD_URL, {
-      method: 'POST',
-      body: formData,
+    const response = await FileSystem.uploadAsync(KAPPA_UPLOAD_URL, asset.uri, {
+      httpMethod: 'POST',
+      uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+      fieldName: 'file',
+      mimeType,
     });
 
-    if (!response.ok) {
+    if (response.status < 200 || response.status >= 300) {
       logger.chat.error('[kappa] upload failed', { status: response.status });
       throw new Error(`kappa upload failed with status ${response.status}`);
     }
 
-    const data = (await response.json()) as { link?: string; url?: string };
+    let data: { link?: string; url?: string };
+    try {
+      data = JSON.parse(response.body) as { link?: string; url?: string };
+    } catch {
+      logger.chat.error('[kappa] upload response was not valid json', {
+        body: response.body?.slice(0, 200),
+      });
+      throw new Error('kappa upload response was not valid json');
+    }
+
     const link = data.link ?? data.url;
 
     if (!link) {

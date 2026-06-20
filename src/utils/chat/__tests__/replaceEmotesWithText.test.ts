@@ -35,7 +35,7 @@ describe('replaceEmotesWithText', () => {
             ...emote,
           },
         ]);
-        expect(result).toEqual(emote.original_name || emote.name);
+        expect(result).toEqual(emote.name);
       });
 
       test.each(emotes)(
@@ -50,9 +50,7 @@ describe('replaceEmotesWithText', () => {
             },
             { type: 'text', content: ' World' },
           ]);
-          expect(result).toEqual(
-            `Hello ${emote.original_name || emote.name} World`,
-          );
+          expect(result).toEqual(`Hello ${emote.name} World`);
         },
       );
 
@@ -72,9 +70,7 @@ describe('replaceEmotesWithText', () => {
           },
           { type: 'text', content: ' World' },
         ]);
-        expect(result).toEqual(
-          `Hello ${emote.original_name || emote.name} ${emote.original_name || emote.name} World`,
-        );
+        expect(result).toEqual(`Hello ${emote.name} ${emote.name} World`);
       });
     });
   });
@@ -104,10 +100,7 @@ describe('replaceEmotesWithText', () => {
     ]);
 
     expect(result).toEqual(
-      `Hello ${ffzSanitisedChannelEmoteSet[0]?.original_name || ffzSanitisedChannelEmoteSet[0]?.name} ${
-        sevenTvSanitisedChannelEmoteSetFixture[0]?.original_name ||
-        sevenTvSanitisedChannelEmoteSetFixture[0]?.name
-      } World`,
+      `Hello ${ffzSanitisedChannelEmoteSet[0]?.name} ${sevenTvSanitisedChannelEmoteSetFixture[0]?.name} World`,
     );
   });
 

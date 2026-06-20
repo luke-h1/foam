@@ -73,7 +73,6 @@ function renderSheetStory(args: SettingsSheetProps) {
 
 export const Default: Story = {
   args: {
-    latency: null,
     reconnectionAttempts: 0,
   },
   render: renderSheetStory,
@@ -81,7 +80,6 @@ export const Default: Story = {
 
 export const WithLatency: Story = {
   args: {
-    latency: 45,
     reconnectionAttempts: 0,
   },
   render: renderSheetStory,
@@ -89,7 +87,6 @@ export const WithLatency: Story = {
 
 export const WithReconnectionAttempts: Story = {
   args: {
-    latency: 32,
     reconnectionAttempts: 3,
   },
   render: renderSheetStory,
@@ -97,7 +94,6 @@ export const WithReconnectionAttempts: Story = {
 
 export const AllData: Story = {
   args: {
-    latency: 67,
     reconnectionAttempts: 5,
   },
   render: renderSheetStory,
@@ -105,7 +101,6 @@ export const AllData: Story = {
 
 export const NoLatency: Story = {
   args: {
-    latency: null,
     reconnectionAttempts: 2,
   },
   render: renderSheetStory,

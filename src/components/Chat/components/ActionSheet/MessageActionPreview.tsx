@@ -9,10 +9,6 @@ import { StyleSheet, View } from 'react-native';
 
 import { PaintedUsername } from '../ChatMessage/CosmeticUsername/CosmeticUsername';
 
-export const MESSAGE_ACTION_PREVIEW_PORTAL_NAME = 'chat-message-action-preview';
-export const MESSAGE_ACTION_PREVIEW_PORTAL_INSTANCE_NAME =
-  'selected-message-preview';
-
 interface MessageActionPreviewProps {
   message: ParsedPart[];
   username?: string;

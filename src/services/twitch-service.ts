@@ -1,5 +1,6 @@
 /* eslint-disable camelcase */
 import { fetch } from 'expo/fetch';
+import { parseJsonOnUIThread } from '@app/lib/offThreadJson';
 import { logger } from '@app/utils/logger';
 import type { TwitchHelixPoll } from '@app/types/twitch/poll';
 import type { TwitchHelixPrediction } from '@app/types/twitch/prediction';
@@ -412,7 +413,9 @@ export const twitchService = {
       method: 'POST',
       headers: { 'x-api-key': authProxyApiKey ?? '' },
     });
-    const body = (await res.json()) as AuthProxyResponse<RefreshTokenResponse>;
+    const body = await parseJsonOnUIThread<
+      AuthProxyResponse<RefreshTokenResponse>
+    >(await res.text());
 
     if (!body.data) {
       throw new Error(body.error ?? 'Failed to refresh Twitch token');
@@ -552,7 +555,9 @@ export const twitchService = {
     const res = await fetch(tokenUrl, {
       headers: isE2EMode ? {} : { 'x-api-key': authProxyApiKey ?? '' },
     });
-    const body = (await res.json()) as { data: DefaultTokenResponse };
+    const body = await parseJsonOnUIThread<{ data: DefaultTokenResponse }>(
+      await res.text(),
+    );
 
     if (!body.data.access_token) {
       logger.auth.error('no token received from auth lambda');
@@ -582,10 +587,10 @@ export const twitchService = {
     }
     // Helix rejects requests whose Client-Id header does not match the client
     // the token was issued for, so adopt the token's client ID.
-    const body = (await res.json().catch(() => null)) as {
+    const body = await parseJsonOnUIThread<{
       client_id?: string;
       expires_in?: number;
-    } | null;
+    } | null>(await res.text()).catch(() => null);
     if (body?.client_id && body.client_id !== getTwitchClientId()) {
       setTwitchClientId(body.client_id);
     }

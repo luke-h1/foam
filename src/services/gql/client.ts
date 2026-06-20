@@ -1,3 +1,5 @@
+import { parseJsonOnUIThread } from '@app/lib/offThreadJson';
+
 const SEVEN_TV_GQL_URL = 'https://7tv.io/v4/gql';
 
 interface QueryOptions<TVariables> {
@@ -33,7 +35,9 @@ export const sevenTvV4Client = {
         };
       }
 
-      const result = (await response.json()) as GraphQLResponse<TData>;
+      const result = await parseJsonOnUIThread<GraphQLResponse<TData>>(
+        await response.text(),
+      );
 
       if (result.errors?.length) {
         return {

@@ -17,9 +17,12 @@ export function replaceEmotesWithText(parts: ParsedPart[]): string {
       switch (part.type) {
         case 'emote':
           /**
-           * For emotes - use the original name
+           * Use the channel-facing text: the parsed `content` is the alias as it
+           * appears in this channel (or the emoji character), so reconstructed
+           * text matches what was shown rather than the emote's global
+           * original_name.
            */
-          return part.original_name || getParsedPartStringContent(part);
+          return getParsedPartStringContent(part);
 
         case 'mention':
           /**

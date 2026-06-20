@@ -19,6 +19,8 @@ import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
 import { chatSheetSurface } from '../chatSheetSurface';
 import { useTranslation } from 'react-i18next';
 
+const ICON_TINT = theme.color.textSecondary.dark;
+
 export interface SettingsSheetProps {
   isPresented: boolean;
   preferenceFlags?: SettingsSheetPreferenceFlags;
@@ -35,7 +37,6 @@ export interface SettingsSheetProps {
   onToggleInlineReplyContext?: (value: boolean) => void;
   onToggleShowTimestamps?: (value: boolean) => void;
   onToggleShowUnreadJumpPill?: (value: boolean) => void;
-  latency?: number | null;
   reconnectionAttempts?: number;
 }
 
@@ -54,7 +55,6 @@ const SettingsSheetComponent = ({
   onToggleInlineReplyContext,
   onToggleShowTimestamps,
   onToggleShowUnreadJumpPill,
-  latency,
   reconnectionAttempts,
   preferenceFlags,
 }: SettingsSheetProps) => {
@@ -63,7 +63,7 @@ const SettingsSheetComponent = ({
     chatDensity = 'comfortable',
     highlightOwnMentions = true,
     showInlineReplyContext = true,
-    showTimestamps = true,
+    showTimestamps = false,
     showUnreadJumpPill = true,
   } = preferenceFlags ?? {};
   const { bottom: bottomInset } = useSafeAreaInsets();
@@ -84,20 +84,17 @@ const SettingsSheetComponent = ({
     dismissSheet();
   }, [onRefetchEmotes, dismissSheet]);
 
-  const handleClearChatCache = useCallback(() => {
+  const handleClearCache = useCallback(() => {
     onClearChatCache?.();
-    dismissSheet();
-  }, [onClearChatCache, dismissSheet]);
-
-  const handleClearImageCache = useCallback(() => {
     onClearImageCache?.();
-    dismissSheet();
-  }, [onClearImageCache, dismissSheet]);
-
-  const handleClearSevenTvCosmeticsCache = useCallback(() => {
     onClearSevenTvCosmeticsCache?.();
     dismissSheet();
-  }, [onClearSevenTvCosmeticsCache, dismissSheet]);
+  }, [
+    onClearChatCache,
+    onClearImageCache,
+    onClearSevenTvCosmeticsCache,
+    dismissSheet,
+  ]);
 
   const handleReconnect = useCallback(() => {
     onReconnect?.();
@@ -139,13 +136,16 @@ const SettingsSheetComponent = ({
           nestedScrollEnabled
           showsVerticalScrollIndicator={false}
         >
-          <SettingsSection title={t('settingsSheet.sectionAppearance')}>
+          <SettingsSection
+            title={t('settingsSheet.sectionAppearance')}
+            cardColor='#1C1C1E'
+          >
             <SettingsLinkRow
               title={t('settingsSheet.density')}
               icon={{
                 icon: 'text.alignleft',
                 androidIcon: 'format_align_left',
-                color: theme.colorGrey,
+                color: ICON_TINT,
               }}
               value={
                 chatDensity === 'compact'
@@ -159,7 +159,7 @@ const SettingsSheetComponent = ({
               icon={{
                 icon: 'clock',
                 androidIcon: 'schedule',
-                color: theme.colorBlue,
+                color: ICON_TINT,
               }}
               value={showTimestamps}
               onValueChange={value => onToggleShowTimestamps?.(value)}
@@ -169,7 +169,7 @@ const SettingsSheetComponent = ({
               icon={{
                 icon: 'at',
                 androidIcon: 'alternate_email',
-                color: theme.colorPrimary,
+                color: ICON_TINT,
               }}
               value={highlightOwnMentions}
               onValueChange={value => onToggleHighlightOwnMentions?.(value)}
@@ -179,7 +179,7 @@ const SettingsSheetComponent = ({
               icon={{
                 icon: 'arrowshape.turn.up.left',
                 androidIcon: 'reply',
-                color: theme.colorAmber,
+                color: ICON_TINT,
               }}
               value={showInlineReplyContext}
               onValueChange={value => onToggleInlineReplyContext?.(value)}
@@ -189,7 +189,7 @@ const SettingsSheetComponent = ({
               icon={{
                 icon: 'arrow.down.circle',
                 androidIcon: 'arrow_circle_down',
-                color: theme.colorGrey,
+                color: ICON_TINT,
               }}
               value={showUnreadJumpPill}
               onValueChange={value => onToggleShowUnreadJumpPill?.(value)}
@@ -197,14 +197,17 @@ const SettingsSheetComponent = ({
           </SettingsSection>
 
           {hasActions ? (
-            <SettingsSection title={t('settingsSheet.sectionActions')}>
+            <SettingsSection
+              title={t('settingsSheet.sectionActions')}
+              cardColor='#1C1C1E'
+            >
               {onOpenChatters ? (
                 <SettingsLinkRow
                   title={t('settingsSheet.viewChatters')}
                   icon={{
                     icon: 'person.2',
                     androidIcon: 'group',
-                    color: theme.colorBlue,
+                    color: ICON_TINT,
                   }}
                   onPress={onOpenChatters}
                 />
@@ -215,7 +218,7 @@ const SettingsSheetComponent = ({
                   icon={{
                     icon: 'arrow.clockwise',
                     androidIcon: 'refresh',
-                    color: theme.colorPrimary,
+                    color: ICON_TINT,
                   }}
                   onPress={handleRefetchEmotes}
                 />
@@ -223,14 +226,17 @@ const SettingsSheetComponent = ({
             </SettingsSection>
           ) : null}
 
-          <SettingsSection title={t('settingsSheet.sectionConnection')}>
+          <SettingsSection
+            title={t('settingsSheet.sectionConnection')}
+            cardColor='#1C1C1E'
+          >
             {onReconnect ? (
               <SettingsLinkRow
                 title={t('settingsSheet.reconnect')}
                 icon={{
                   icon: 'wifi',
                   androidIcon: 'wifi',
-                  color: theme.colorPrimary,
+                  color: ICON_TINT,
                 }}
                 onPress={handleReconnect}
               />
@@ -241,70 +247,37 @@ const SettingsSheetComponent = ({
                 icon={{
                   icon: 'video',
                   androidIcon: 'videocam',
-                  color: theme.colorBlue,
+                  color: ICON_TINT,
                 }}
                 onPress={handleRefreshVideo}
               />
             ) : null}
             <SettingsLinkRow
-              title={t('settingsSheet.displayLatency')}
-              icon={{
-                icon: 'waveform.path.ecg',
-                androidIcon: 'monitoring',
-                color: theme.colorGrey,
-              }}
-              value={
-                latency !== null && latency !== undefined
-                  ? `${latency}ms`
-                  : t('common:notAvailable')
-              }
-            />
-            <SettingsLinkRow
               title={t('settingsSheet.reconnectionAttempts')}
               icon={{
                 icon: 'repeat',
                 androidIcon: 'repeat',
-                color: theme.colorGrey,
+                color: ICON_TINT,
               }}
               value={String(reconnectionAttempts ?? 0)}
             />
           </SettingsSection>
 
           {hasStorage ? (
-            <SettingsSection title={t('settingsSheet.sectionStorage')}>
-              {onClearChatCache ? (
-                <SettingsLinkRow
-                  title={t('settingsSheet.clearChatCache')}
-                  icon={{
-                    icon: 'cylinder',
-                    androidIcon: 'database',
-                    color: theme.colorRed,
-                  }}
-                  onPress={handleClearChatCache}
-                />
-              ) : null}
-              {onClearImageCache ? (
-                <SettingsLinkRow
-                  title={t('settingsSheet.clearImageCache')}
-                  icon={{
-                    icon: 'trash',
-                    androidIcon: 'delete',
-                    color: theme.colorRed,
-                  }}
-                  onPress={handleClearImageCache}
-                />
-              ) : null}
-              {onClearSevenTvCosmeticsCache ? (
-                <SettingsLinkRow
-                  title={t('settingsSheet.clearSevenTvCosmeticCache')}
-                  icon={{
-                    icon: 'sparkles',
-                    androidIcon: 'auto_awesome',
-                    color: theme.colorRed,
-                  }}
-                  onPress={handleClearSevenTvCosmeticsCache}
-                />
-              ) : null}
+            <SettingsSection
+              title={t('settingsSheet.sectionStorage')}
+              cardColor='#1C1C1E'
+            >
+              <SettingsLinkRow
+                title={t('settingsSheet.clearCache')}
+                icon={{
+                  icon: 'trash',
+                  androidIcon: 'delete',
+                  color: theme.colorRed,
+                }}
+                onPress={handleClearCache}
+                danger
+              />
             </SettingsSection>
           ) : null}
         </ScrollView>
@@ -329,9 +302,11 @@ const styles = StyleSheet.create({
     paddingTop: theme.space16,
   },
   header: {
+    borderBottomColor: theme.colorBorderSecondary,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingBottom: theme.space12,
     paddingHorizontal: theme.space20,
     paddingTop: theme.space4,
-    paddingBottom: theme.space12,
   },
   headerTitle: {
     fontSize: theme.fontSize20,

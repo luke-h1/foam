@@ -8,14 +8,13 @@ import { View } from 'react-native';
 import { CHAT_NOTICE_ACCENTS } from '../../util/chatNoticeAccents';
 import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
 import { normaliseUsername } from '../richChatMessageHelpers';
+import { ChannelPointsRewardMetaRow } from './ChannelPointsRewardMetaRow';
 import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
 import { RichChatMessageUsername } from '../RichChatMessageUsername';
 import { ChatMessageBadges } from './ChatMessageBadges';
 import { ChatMessageBody } from './ChatMessageBody';
-import {
-  canRenderMessageInline,
-  type InlineFlowPart,
-} from '@app/components/Chat/util/canRenderMessageInline';
+import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
+import { getMessageStructure } from '@app/utils/chat/deriveChatBody';
 import { InlineMessageLine } from './InlineMessageLine';
 import { InlineMessageSpans } from './InlineMessageSpans';
 import { ReplyingToHeader } from './ReplyingToHeader';
@@ -23,6 +22,7 @@ import type { BadgePressData } from '../RichChatMessage.types';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
+import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import i18next from '@app/i18n/i18next';
 
 interface UserChatBodyProps extends UseChatMessagePartRendererArgs {
@@ -47,9 +47,10 @@ interface UserChatBodyProps extends UseChatMessagePartRendererArgs {
     showTimestamp: boolean;
   };
   replyParentMessageId?: string;
-  rewardSummaryTitle: string;
+  roomId?: string;
   timestamp?: string;
   userId?: string;
+  userstate?: UserStateTags;
   userstateColor?: string;
   username?: string;
 }
@@ -70,9 +71,10 @@ export function UserChatBody({
   replyBody,
   replyFlags,
   replyParentMessageId,
-  rewardSummaryTitle,
+  roomId,
   timestamp,
   userId,
+  userstate,
   userstateColor,
   username,
   ...rendererArgs
@@ -92,21 +94,16 @@ export function UserChatBody({
   const hasPaint = useSelector(() =>
     userId ? Boolean(chatStore$.userPaintIds[userId]?.get()) : false,
   );
-  const renderInline = canRenderMessageInline(message, {
-    hasPaint,
-    isModerated: Boolean(moderationNotice),
-  });
+  const isModerated = Boolean(moderationNotice);
+  const { canBeInline, containsEmotes: bodyContainsEmotes } =
+    getMessageStructure(message);
+  const canFlowInline = canBeInline && !isModerated;
+  const renderInline = canFlowInline && !hasPaint;
   const inlineUsernameColor =
     cachedSenderColor ??
     (userstateColor ? lightenColor(userstateColor) : undefined) ??
     (username ? lightenColor(generateRandomTwitchColor(username)) : undefined);
-  const bodyCanFlowInline =
-    !renderInline &&
-    canRenderMessageInline(message, {
-      hasPaint: false,
-      isModerated: Boolean(moderationNotice),
-    });
-  const bodyContainsEmotes = message.some(part => part.type === 'emote');
+  const bodyCanFlowInline = canFlowInline && !renderInline;
   const bodyEmoteLineStyle = bodyContainsEmotes
     ? compact
       ? styles.messageTextEmoteLineCompact
@@ -143,61 +140,16 @@ export function UserChatBody({
           labelStyle={styles.returningChatterMetaText}
         />
       ) : null}
-      {showChannelPointsRewardChrome && isHighlightedMessage ? (
-        <ChatNoticeMetaRow
+      {showChannelPointsRewardChrome && userstate ? (
+        <ChannelPointsRewardMetaRow
           compact={compact}
-          icon='sparkles'
-          label={rewardSummaryTitle}
-          labelColor={CHAT_NOTICE_ACCENTS.highlight}
-          labelStyle={styles.highlightMyMessageMetaText}
+          isHighlightedMessage={isHighlightedMessage}
+          moderationNotice={moderationNotice}
+          noticeTags={rendererArgs.noticeTags}
+          roomId={roomId}
+          username={username}
+          userstate={userstate}
         />
-      ) : showChannelPointsRewardChrome ? (
-        <ChatNoticeMetaRow
-          compact={compact}
-          icon='gift.fill'
-          labelColor={CHAT_NOTICE_ACCENTS.channelPoints}
-        >
-          <Text
-            style={[
-              styles.messageMetaText,
-              styles.messageMetaTextStrong,
-              styles.channelPointsMetaText,
-              compact && styles.messageMetaTextCompact,
-            ]}
-          >
-            <Text
-              style={
-                moderationNotice
-                  ? [styles.channelPointsMetaName, styles.moderatedMessageText]
-                  : styles.channelPointsMetaName
-              }
-            >
-              {username}
-            </Text>
-            <Text
-              style={
-                moderationNotice
-                  ? [styles.channelPointsMetaMuted, styles.moderatedMessageText]
-                  : styles.channelPointsMetaMuted
-              }
-            >
-              {' '}
-              redeemed{' '}
-            </Text>
-            <Text
-              style={
-                moderationNotice
-                  ? [
-                      styles.channelPointsMetaReward,
-                      styles.moderatedMessageText,
-                    ]
-                  : styles.channelPointsMetaReward
-              }
-            >
-              {rewardSummaryTitle}
-            </Text>
-          </Text>
-        </ChatNoticeMetaRow>
       ) : null}
       {renderInline ? (
         <InlineMessageLine
