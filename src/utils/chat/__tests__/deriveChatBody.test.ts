@@ -96,9 +96,22 @@ describe('deriveChatBody', () => {
     );
   });
 
-  test('memoises the derived descriptor per parts array', () => {
-    const message = [text('memo')];
+  test('reuses the cached scan across calls for the same parts array', () => {
+    const message = [mention('@forsen')];
 
-    expect(deriveChatBody(message)).toBe(deriveChatBody(message));
+    expect(deriveChatBody(message).mentionLogins).toBe(
+      deriveChatBody(message).mentionLogins,
+    );
+  });
+
+  test('recomputes variant when flags differ for the same parts array', () => {
+    const message = [text('hi')];
+
+    expect(deriveChatBody(message, { isAnnouncement: true }).variant).toBe(
+      'announcement',
+    );
+    expect(deriveChatBody(message, { isAnnouncement: false }).variant).toBe(
+      'user_chat',
+    );
   });
 });

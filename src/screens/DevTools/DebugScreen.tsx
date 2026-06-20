@@ -69,18 +69,30 @@ export function DebugScreen() {
   useScrollToTop(scrollRef);
 
   useEffect(() => {
-    if (!channelName.trim()) {
+    const query = channelName.trim();
+    channelIdRef.current = '';
+    if (!query) {
       return;
     }
+    let active = true;
     const timeout = setTimeout(() => {
       void twitchService
-        .getUser(channelName)
+        .getUser(query)
         .then(r => {
-          channelIdRef.current = r.id;
+          if (active) {
+            channelIdRef.current = r.id;
+          }
         })
-        .catch(() => undefined);
+        .catch(() => {
+          if (active) {
+            channelIdRef.current = '';
+          }
+        });
     }, 400);
-    return () => clearTimeout(timeout);
+    return () => {
+      active = false;
+      clearTimeout(timeout);
+    };
   }, [channelName]);
 
   const handleConvertUsername = useCallback(async () => {

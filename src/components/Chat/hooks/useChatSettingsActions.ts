@@ -99,20 +99,30 @@ export function useChatSettingsActions({
   }, []);
 
   const handleSettingsRefetchEmotes = useCallback(() => {
-    void refetchEmotesRef.current().then(() => {
-      reprocessAllMessagesRef.current();
-      announceRefresh();
-    });
+    void (async () => {
+      try {
+        await refetchEmotesRef.current();
+        reprocessAllMessagesRef.current();
+        announceRefresh();
+      } catch (error) {
+        logger.chat.error('Failed to refetch emotes:', error);
+      }
+    })();
   }, [announceRefresh]);
 
   const handleRefreshCommand = useCallback(() => {
-    clearCache(channelId);
-    clearUserCosmeticsCache();
-    void clearImageCache(channelId);
-    void refetchEmotesRef.current().then(() => {
-      reprocessAllMessagesRef.current();
-      announceRefresh();
-    });
+    void (async () => {
+      try {
+        clearCache(channelId);
+        clearUserCosmeticsCache();
+        await clearImageCache(channelId);
+        await refetchEmotesRef.current();
+        reprocessAllMessagesRef.current();
+        announceRefresh();
+      } catch (error) {
+        logger.chat.error('Failed to run refresh command:', error);
+      }
+    })();
   }, [announceRefresh, channelId]);
 
   const handleSettingsReconnect = useCallback(() => {

@@ -1,7 +1,5 @@
 import { deriveFromResponseOnUIThread } from '@app/lib/offThreadJson';
 
-const SEVEN_TV_GQL_URL = 'https://7tv.io/v4/gql';
-
 /**
  * Runs a 7TV GraphQL query and derives the result from the response on the UI
  * thread via `parse` (a worklet returning only the compact shape the caller
@@ -13,7 +11,7 @@ export async function runCosmeticsQuery<TResult>(
   parse: (responseText: string) => TResult,
 ): Promise<{ result?: TResult; error?: Error }> {
   try {
-    const response = await fetch(SEVEN_TV_GQL_URL, {
+    const response = await fetch('https://7tv.io/v4/gql', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query, variables }),

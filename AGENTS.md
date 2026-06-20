@@ -39,7 +39,7 @@ Import chat store modules directly (for example `@app/store/chat/observables/cha
 
 ## Inline Simple Values
 
-Do not lift a simple, self-explanatory value into a named constant just to reference it once. Inline it at the use site.
+This applies only to obvious, self-explanatory single-use literals — chiefly styles (a one-off colour, size, or spacing) and single-use UI strings. Do not lift those into a named constant just to reference them once; inline them at the use site.
 
 ```ts
 // avoid
@@ -50,7 +50,9 @@ const CARD_BG = '#1C1C1E';
 <View style={{ backgroundColor: '#1C1C1E' }} />
 ```
 
-A name like `THE_COLOR_OF_A_COMPONENT = '#55'` adds a layer of indirection without adding information — the literal already says everything the name does. Reserve module-level constants for values that are genuinely shared across files and must stay in sync, or that encode non-obvious meaning the literal cannot convey. A single component color, size, or string used in one place should be written where it is used.
+A name like `THE_COLOR_OF_A_COMPONENT = '#55'` adds a layer of indirection without adding information — the literal already says everything the name does.
+
+This is **not** a blanket "inline every single-use value" rule. Keep a named constant (or an inline explanatory comment) when the literal encodes non-obvious meaning the value alone cannot convey — a magic number such as a memory threshold (`3 * 1024 * 1024 * 1024` // 3GB), a tuned timeout, a protocol constant, or anything a reader would have to reverse-engineer. Also keep module-level constants for values genuinely shared across files that must stay in sync. The rule targets needless indirection over obvious literals, not the removal of meaningful names.
 
 ## JSDoc Comments
 

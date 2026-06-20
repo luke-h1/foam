@@ -291,6 +291,8 @@ export const AuthContextProvider = ({
   const [user, setUser] = useState<UserInfoResponse | undefined>(undefined);
   const hasTimedOut = useRef(false);
   const userTokenRefreshInFlightRef = useRef(false);
+  const authStateRef = useRef(state.authState);
+  authStateRef.current = state.authState;
 
   const markAuthStateReadyFallback = (reason: string, error?: unknown) => {
     if (state.ready || hasTimedOut.current) {
@@ -613,10 +615,20 @@ export const AuthContextProvider = ({
 
     queueInitialDataPrefetch();
 
+    const validatedAnonAccessToken = token.accessToken;
     void twitchService
       .validateToken(token.accessToken)
       .then(isValidToken => {
         if (isValidToken) {
+          return;
+        }
+        const currentAuthState = authStateRef.current;
+        if (
+          !currentAuthState ||
+          currentAuthState.isLoggedIn ||
+          !currentAuthState.isAnonAuth ||
+          currentAuthState.token.accessToken !== validatedAnonAccessToken
+        ) {
           return;
         }
         logger.auth.warn(

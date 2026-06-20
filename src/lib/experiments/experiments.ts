@@ -27,7 +27,13 @@ export function resolveExperimentVariant<N extends ExperimentName>(
   assignments: RemoteConfigSchema['experiments'],
 ): ExperimentVariant<N> {
   const definition = EXPERIMENTS[name];
-  const assigned = assignments[name];
+  const safeAssignments =
+    assignments !== null &&
+    typeof assignments === 'object' &&
+    !Array.isArray(assignments)
+      ? assignments
+      : {};
+  const assigned = safeAssignments[name];
 
   return assigned !== undefined &&
     (definition.variants as readonly string[]).includes(assigned)

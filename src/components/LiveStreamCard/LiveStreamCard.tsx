@@ -43,7 +43,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
 
   const { data: streamerInfo } = useQuery({
     ...userQueryOptions(stream.user_login),
-    enabled: layout === 'media',
+    enabled: layout === 'media' && !stream.profilePicture,
   });
   const profilePicture =
     stream.profilePicture ?? streamerInfo?.profile_image_url;

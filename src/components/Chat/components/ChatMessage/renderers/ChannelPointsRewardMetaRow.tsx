@@ -36,12 +36,11 @@ export function ChannelPointsRewardMetaRow({
   username,
   userstate,
 }: ChannelPointsRewardMetaRowProps) {
-  const rewardTitleCacheVersion = useSyncExternalStore(
+  useSyncExternalStore(
     subscribeChannelPointRewardTitles,
     getChannelPointRewardTitleCacheVersion,
     getChannelPointRewardTitleCacheVersion,
   );
-  void rewardTitleCacheVersion;
 
   const rewardSummaryTitle =
     channelPointsRewardTitleFromUserstate(userstate) ??

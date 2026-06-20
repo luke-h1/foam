@@ -54,7 +54,16 @@ const STV_EMOTE_EVENT_TYPES = new Set<ParsedPart['type']>([
 ]);
 const VIEWER_MILESTONE_TYPES = new Set<ParsedPart['type']>(['viewermilestone']);
 
-const bodyCache = new WeakMap<ParsedPart[], ChatBodyDerived>();
+interface ChatBodyScan extends MessageStructure {
+  hasSubscriptionNotice: boolean;
+  hasCharityDonation: boolean;
+  hasRitualNotice: boolean;
+  hasStvEmoteEvent: boolean;
+  hasViewerMilestone: boolean;
+  mentionLogins: string[];
+}
+
+const scanCache = new WeakMap<ParsedPart[], ChatBodyScan>();
 const structureCache = new WeakMap<ParsedPart[], MessageStructure>();
 
 function normaliseLogin(value?: string): string {
@@ -126,11 +135,8 @@ function resolveChatBodyVariant(
   return 'user_chat';
 }
 
-export function deriveChatBody(
-  message: ParsedPart[],
-  flags: DeriveChatBodyFlags = {},
-): ChatBodyDerived {
-  const cached = bodyCache.get(message);
+function scanChatBody(message: ParsedPart[]): ChatBodyScan {
+  const cached = scanCache.get(message);
   if (cached) {
     return cached;
   }
@@ -178,22 +184,32 @@ export function deriveChatBody(
     }
   }
 
-  const variant = resolveChatBodyVariant(flags, {
+  const scan: ChatBodyScan = {
+    canBeInline,
+    containsEmotes,
     hasSubscriptionNotice,
     hasCharityDonation,
     hasRitualNotice,
     hasStvEmoteEvent,
     hasViewerMilestone,
-  });
-
-  const derived: ChatBodyDerived = {
-    canBeInline,
-    containsEmotes,
-    hasSubscriptionNotice,
     mentionLogins,
-    variant,
   };
-  bodyCache.set(message, derived);
+  scanCache.set(message, scan);
   structureCache.set(message, { canBeInline, containsEmotes });
-  return derived;
+  return scan;
+}
+
+export function deriveChatBody(
+  message: ParsedPart[],
+  flags: DeriveChatBodyFlags = {},
+): ChatBodyDerived {
+  const scan = scanChatBody(message);
+
+  return {
+    canBeInline: scan.canBeInline,
+    containsEmotes: scan.containsEmotes,
+    hasSubscriptionNotice: scan.hasSubscriptionNotice,
+    mentionLogins: scan.mentionLogins,
+    variant: resolveChatBodyVariant(flags, scan),
+  };
 }

@@ -2,8 +2,6 @@ import DeviceInfo from 'react-native-device-info';
 
 export type DeviceTier = 'low' | 'high';
 
-const LOW_RAM_THRESHOLD_BYTES = 3 * 1024 * 1024 * 1024; // 3GB
-
 let cached: DeviceTier | null = null;
 
 export function getDeviceTier(): DeviceTier {
@@ -16,7 +14,8 @@ export function getDeviceTier(): DeviceTier {
     const totalMemory = DeviceInfo.getTotalMemorySync?.() ?? 0;
     if (
       isLowRam ||
-      (totalMemory > 0 && totalMemory < LOW_RAM_THRESHOLD_BYTES)
+      // 3GB in bytes
+      (totalMemory > 0 && totalMemory < 3 * 1024 * 1024 * 1024)
     ) {
       tier = 'low';
     }

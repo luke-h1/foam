@@ -143,11 +143,12 @@ export const ChatInputShell = memo(function ChatInputShell({
   }, [clearDraft, isAuthenticated]);
 
   const handleSendMessage = useCallback(() => {
-    if (!messageInput.trim()) {
+    const currentInput = messageInputRef.current;
+    if (!currentInput.trim()) {
       return;
     }
 
-    if (messageInput.trim().toLowerCase() === '/refresh') {
+    if (currentInput.trim().toLowerCase() === '/refresh') {
       onRefreshCommand();
       clearDraft();
       void KeyboardController.dismiss();
@@ -164,8 +165,8 @@ export const ChatInputShell = memo(function ChatInputShell({
     }
 
     const messageText = replyTo
-      ? `@${replyTo.username} ${messageInput}`
-      : messageInput;
+      ? `@${replyTo.username} ${currentInput}`
+      : currentInput;
     const currentUserState = getUserState();
     const badgeData = parseBadges(currentUserState.badges || '');
 
@@ -257,7 +258,6 @@ export const ChatInputShell = memo(function ChatInputShell({
     getUserState,
     isChatConnected,
     isAuthenticated,
-    messageInput,
     onRefreshCommand,
     processMessageEmotes,
     replyTo,

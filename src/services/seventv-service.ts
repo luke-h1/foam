@@ -332,7 +332,14 @@ export const sevenTvService = {
           'worklet';
           const parsed = JSON.parse(responseText) as {
             data?: UserByConnectionQuery;
+            errors?: { message?: string }[];
           };
+          if (parsed.errors?.length) {
+            throw new Error(
+              parsed.errors.flatMap(e => e.message ?? []).join('; ') ||
+                '7TV GQL error',
+            );
+          }
           return parsed.data?.users?.userByConnection?.id ?? '';
         },
       );
@@ -571,7 +578,14 @@ export const sevenTvService = {
           'worklet';
           const parsed = JSON.parse(responseText) as {
             data?: UserCosmeticsQuery;
+            errors?: { message?: string }[];
           };
+          if (parsed.errors?.length) {
+            throw new Error(
+              parsed.errors.flatMap(e => e.message ?? []).join('; ') ||
+                '7TV GQL error',
+            );
+          }
           const user = parsed.data?.users?.user;
           if (!user) {
             return null;

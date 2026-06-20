@@ -413,12 +413,12 @@ const handleRequest = (request: Request) => {
 
   console.log(
     `[${new Date().toISOString()}] ${request.method} ${url.pathname}`,
-  ); // NOSONAR - dev-only request logging.
+  );
 
   const handler = getHandler(request.method, url.pathname);
 
   if (!handler) {
-    console.warn(`[404] Route not found: ${request.method} ${url.pathname}`); // NOSONAR - dev-only request logging.
+    console.warn(`[404] Route not found: ${request.method} ${url.pathname}`);
     return json({ error: 'Not found' }, { status: 404 });
   }
 
