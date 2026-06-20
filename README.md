@@ -475,10 +475,10 @@ flowchart LR
 
 Static analysis and GitHub Actions security are checked in two places:
 
-| Workflow                                           | Trigger                                           | Purpose                                                                                               |
-| -------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| [`zizmor.yml`](.github/workflows/zizmor.yml)       | Pull requests targeting `main`, and `main` pushes | Scans workflow YAML for unsafe permissions, injection risks, unpinned actions, and related CI issues. |
-| [`codeql.yml`](.github/workflows/codeql.yml)       | Weekly schedule on the default branch             | Runs GitHub's static analysis and uploads results to code scanning.                                   |
+| Workflow                                     | Trigger                                           | Purpose                                                                                               |
+| -------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| [`zizmor.yml`](.github/workflows/zizmor.yml) | Pull requests targeting `main`, and `main` pushes | Scans workflow YAML for unsafe permissions, injection risks, unpinned actions, and related CI issues. |
+| [`codeql.yml`](.github/workflows/codeql.yml) | Weekly schedule on the default branch             | Runs GitHub's static analysis and uploads results to code scanning.                                   |
 
 Keep workflow permissions scoped to the smallest set each job needs, keep `persist-credentials: false` on checkout unless a job must push, and pin third-party actions to full 40-character commit SHAs instead of floating tags like `@v4`.
 
