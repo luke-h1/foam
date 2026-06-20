@@ -19,8 +19,6 @@ import {
 import { RowVisibilityContext } from '../rowVisibility';
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
 
-const CHAT_IMAGE_SKELETON = { blurhash: 'A0CsjpfQfQfQ' };
-
 interface ChatInlineImageProps {
   containerStyle?: StyleProp<ViewStyle>;
   priority?: 'low' | 'normal' | 'high';
@@ -101,7 +99,7 @@ function ChatInlineImageComponent({
       }
       cachePolicy='memory-disk'
       priority={priority}
-      placeholder={CHAT_IMAGE_SKELETON}
+      placeholder={{ blurhash: 'A0CsjpfQfQfQ' }}
       placeholderContentFit='cover'
       transition={transitionMs}
       onError={handleError}

@@ -5,8 +5,6 @@ import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { StyleSheet, View, type StyleProp, type TextStyle } from 'react-native';
 
-const MAX_PREVIEW_PARTS = 24;
-
 interface ReplyPreviewBodyProps {
   parts: ParsedPart[];
   textStyle?: StyleProp<TextStyle>;
@@ -20,7 +18,7 @@ function ReplyPreviewBodyComponent({
 
   return (
     <View style={styles.row}>
-      {parts.slice(0, MAX_PREVIEW_PARTS).map(part => {
+      {parts.slice(0, 24).map(part => {
         const isEmote = part.type === 'emote' && Boolean(part.url);
         const content = getParsedPartStringContent(part);
         const base = isEmote ? `emote:${part.url}` : `text:${content}`;

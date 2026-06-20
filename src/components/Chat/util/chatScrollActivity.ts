@@ -1,7 +1,5 @@
 type ScrollActivityListener = (active: boolean) => void;
 
-const SETTLE_MS = 150;
-
 let active = false;
 let settleTimer: ReturnType<typeof setTimeout> | null = null;
 const listeners = new Set<ScrollActivityListener>();
@@ -30,7 +28,7 @@ export const chatScrollActivity = {
     settleTimer = setTimeout(() => {
       settleTimer = null;
       setActive(false);
-    }, SETTLE_MS);
+    }, 150);
   },
   reset(): void {
     if (settleTimer) {
