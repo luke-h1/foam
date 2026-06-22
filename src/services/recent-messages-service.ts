@@ -1,14 +1,8 @@
 import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
+import type { ParsedIrcMessage } from '@app/types/chat/recentMessages';
 
 const RECENT_MESSAGES_URL =
   'https://recent-messages.robotty.de/api/v2/recent-messages';
-
-export type ParsedIrcMessage = {
-  tags?: Record<string, string>;
-  prefix?: string;
-  command: string;
-  params: string[];
-};
 
 type RecentMessagesResponse = {
   messages?: unknown;

@@ -1,9 +1,7 @@
 import { queryOptions } from '@tanstack/react-query';
 
-import {
-  type StreamElementsChatStats,
-  streamElementsService,
-} from '@app/services/streamelements-service';
+import { streamElementsService } from '@app/services/streamelements-service';
+import type { StreamElementsChatStats } from '@app/types/streamelements/stats';
 
 import { streamElementsKeys } from '../query-keys';
 

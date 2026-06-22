@@ -16,8 +16,9 @@ import { useUserBlockListQuery } from '@app/hooks/queries/useUserBlockListQuery'
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import i18next from '@app/i18n/i18next';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
-import { twitchService, UserBlockList } from '@app/services/twitch-service';
+import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
+import type { UserBlockList } from '@app/types/twitch/user';
 
 import { BlockedUsersActionButton } from './components/BlockedUsersActionButton';
 

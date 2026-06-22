@@ -1,15 +1,12 @@
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 
-import {
-  Category,
-  PaginatedList,
-  TwitchClipsRequestParams,
-  twitchService,
-  TwitchStream,
-  TwitchVideosRequestParams,
-  UserBlockList,
-  UserInfoResponse,
-} from '@app/services/twitch-service';
+import { twitchService } from '@app/services/twitch-service';
+import type { PaginatedList } from '@app/types/twitch/api';
+import type { Category } from '@app/types/twitch/category';
+import type { TwitchClipsRequestParams } from '@app/types/twitch/clip';
+import type { TwitchStream } from '@app/types/twitch/stream';
+import type { UserBlockList, UserInfoResponse } from '@app/types/twitch/user';
+import type { TwitchVideosRequestParams } from '@app/types/twitch/video';
 import {
   getNextPageParam,
   getPreviousPageParam,

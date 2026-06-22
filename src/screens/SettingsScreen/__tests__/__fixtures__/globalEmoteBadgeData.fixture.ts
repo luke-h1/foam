@@ -1,8 +1,8 @@
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import type {
   BttvSanitisedEmote,
   TwitchSanitisedEmote,
 } from '@app/types/emote';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 export const twitchGlobalEmotesFixture: TwitchSanitisedEmote[] = [
   {

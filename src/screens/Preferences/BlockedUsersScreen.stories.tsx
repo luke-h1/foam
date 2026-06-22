@@ -10,7 +10,7 @@ import {
   userBlockListFixture,
 } from '@app/services/__fixtures__/twitch/userBlockList.fixture';
 import { userInfoFixture } from '@app/services/__fixtures__/twitch/userInfo.fixture';
-import { UserBlockList } from '@app/services/twitch-service';
+import type { UserBlockList } from '@app/types/twitch/user';
 
 import { BlockedUsersScreen } from './BlockedUsersScreen';
 

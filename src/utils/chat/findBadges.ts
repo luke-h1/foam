@@ -1,8 +1,8 @@
 import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
-import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import type { ChatUser } from '@app/store/chat/types/constants';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 interface FindBadgesParams {
   userstate: UserStateTags;

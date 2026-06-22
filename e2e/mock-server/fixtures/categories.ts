@@ -1,4 +1,5 @@
-import { Category, PaginatedList } from '@app/services/twitch-service';
+import type { PaginatedList } from '@app/types/twitch/api';
+import type { Category } from '@app/types/twitch/category';
 
 export const mockCategories: Category[] = [
   {

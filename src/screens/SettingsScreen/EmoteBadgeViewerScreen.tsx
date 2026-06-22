@@ -25,9 +25,9 @@ import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedCont
 import { Text } from '@app/components/ui/Text/Text';
 import { useGlobalBadgesQuery } from '@app/hooks/queries/useGlobalBadgesQuery';
 import { useGlobalEmotesQuery } from '@app/hooks/queries/useGlobalEmotesQuery';
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 const BADGE_CELL_SIZE = 64;

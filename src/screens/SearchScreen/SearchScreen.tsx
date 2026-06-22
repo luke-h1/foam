@@ -30,12 +30,10 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { storageService } from '@app/lib/storage';
-import {
-  Category,
-  SearchChannelResponse,
-  twitchService,
-} from '@app/services/twitch-service';
+import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
+import type { Category } from '@app/types/twitch/category';
+import type { SearchChannelResponse } from '@app/types/twitch/channel';
 
 import { StreamerCard } from './components/StreamerCard';
 

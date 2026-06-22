@@ -1,5 +1,5 @@
 import type { EmoteSetKind } from '@app/graphql/generated/gql';
-import type { StvUser } from '@app/services/seventv-service';
+import type { StvUser } from '@app/types/seventv/users';
 
 export interface SevenTvEmoteSetMetadata {
   setId: string;

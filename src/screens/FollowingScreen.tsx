@@ -33,13 +33,13 @@ import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import i18next from '@app/i18n/i18next';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
-import { TwitchStream } from '@app/services/twitch-service';
 import {
   usePreference,
   useUpdatePreferences,
 } from '@app/store/preferenceStore';
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
+import type { TwitchStream } from '@app/types/twitch/stream';
 
 export interface Section {
   key: string;

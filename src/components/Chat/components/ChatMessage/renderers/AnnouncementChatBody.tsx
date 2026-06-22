@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 
 import i18next from '@app/i18n/i18next';
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import { styles } from '../RichChatMessage.styles';
 import type { BadgePressData } from '../RichChatMessage.types';

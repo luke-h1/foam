@@ -3,9 +3,9 @@ import { toast } from 'sonner-native';
 
 import {
   getPinnedChatMessageText,
-  type TwitchPinnedChatMessage,
   twitchService,
 } from '@app/services/twitch-service';
+import type { TwitchPinnedChatMessage } from '@app/types/twitch/chat';
 
 import { usePinnedChatMessage } from '../usePinnedChatMessage';
 import {

@@ -3,10 +3,10 @@ import { queryOptions } from '@tanstack/react-query';
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import { ffzService } from '@app/services/ffz-service';
 import { sevenTvService } from '@app/services/seventv-service';
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
 import type { SanitisedEmote } from '@app/types/emote';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import { emoteKeys } from '../query-keys';
 

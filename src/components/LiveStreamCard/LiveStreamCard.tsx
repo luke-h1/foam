@@ -7,8 +7,8 @@ import { router } from 'expo-router';
 import { Text } from '@app/components/ui/Text/Text';
 import { userQueryOptions } from '@app/lib/react-query/queries/twitch';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
-import { TwitchStream } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
+import type { TwitchStream } from '@app/types/twitch/stream';
 import { elapsedStreamTime } from '@app/utils/string/elapsedStreamTime';
 import {
   formatViewCount,

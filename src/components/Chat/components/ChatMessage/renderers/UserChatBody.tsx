@@ -8,9 +8,9 @@ import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageI
 import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { getMessageStructure } from '@app/utils/chat/deriveChatBody';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { lightenColor } from '@app/utils/color/lightenColor';

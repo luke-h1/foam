@@ -1,32 +1,10 @@
 import type { TwitchSanitisedEmote } from '@app/types/emote';
+import type { PaginatedList } from '@app/types/twitch/api';
+import type { TwitchEmote } from '@app/types/twitch/emote';
 import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 
 import { twitchApi } from './api/clients';
-import { PaginatedList, twitchService } from './twitch-service';
-
-export interface TwitchEmote {
-  id: string;
-  name: string;
-  emote_type:
-    | 'bitstier'
-    | 'channelpoints'
-    | 'follower'
-    | 'globals'
-    | 'hypetrain'
-    | 'none'
-    | 'owl2019'
-    | 'prime'
-    | 'rewards'
-    | 'smilies'
-    | 'subscriptions'
-    | 'turbo'
-    | 'twofactor';
-  emote_set_id: string;
-  owner_id: string;
-  format: ['static' | 'animated'];
-  scale: ['1.0', '2.0', '3.0'];
-  theme_mode: ['light', 'dark'];
-}
+import { twitchService } from './twitch-service';
 
 interface TwitchEmotePage {
   data?: TwitchEmote[];

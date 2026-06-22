@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 
 import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
 import { Text } from '@app/components/ui/Text/Text';
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
 import type { BadgePressData } from '../RichChatMessage.types';

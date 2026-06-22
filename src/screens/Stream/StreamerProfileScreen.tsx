@@ -26,13 +26,11 @@ import { useDownloadTwitchClip } from '@app/hooks/useDownloadTwitchClip';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import i18next from '@app/i18n/i18next';
-import type { StreamElementsChatStats } from '@app/services/streamelements-service';
-import {
-  type TwitchClip,
-  type TwitchVideo,
-  type UserInfoResponse,
-} from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
+import type { StreamElementsChatStats } from '@app/types/streamelements/stats';
+import type { TwitchClip } from '@app/types/twitch/clip';
+import type { UserInfoResponse } from '@app/types/twitch/user';
+import type { TwitchVideo } from '@app/types/twitch/video';
 import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 import {

@@ -7,7 +7,8 @@ import * as MediaLibrary from 'expo-media-library';
 
 import { useAuthContext } from '@app/context/AuthContext';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
-import { type TwitchClip, twitchService } from '@app/services/twitch-service';
+import { twitchService } from '@app/services/twitch-service';
+import type { TwitchClip } from '@app/types/twitch/clip';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { saveFilesToAppAlbum } from '@app/utils/image/saveFilesToAppAlbum';
 

@@ -1,7 +1,5 @@
-import type {
-  TwitchClipsRequestParams,
-  TwitchVideosRequestParams,
-} from '@app/services/twitch-service';
+import type { TwitchClipsRequestParams } from '@app/types/twitch/clip';
+import type { TwitchVideosRequestParams } from '@app/types/twitch/video';
 
 export const twitchKeys = {
   all: ['twitch'] as const,

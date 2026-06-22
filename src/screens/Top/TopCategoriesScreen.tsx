@@ -18,8 +18,8 @@ import { useTopCategoriesQuery } from '@app/hooks/queries/useTopCategoriesQuery'
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { Category } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
+import type { Category } from '@app/types/twitch/category';
 import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 
 const SKELETON_COUNT = 9;

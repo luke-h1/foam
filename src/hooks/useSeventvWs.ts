@@ -6,7 +6,6 @@ import { EmoteSetKind } from '@app/graphql/generated/gql';
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useSyncRef } from '@app/hooks/useSyncRef';
 import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
-import type { SevenTvEmote, StvUser } from '@app/services/seventv-service';
 import type { SanitisedEmote } from '@app/types/emote';
 import {
   CosmeticCreate,
@@ -21,6 +20,8 @@ import {
   SevenTvEventType,
   SevenTvWsMessage,
 } from '@app/types/seventv/cosmetics';
+import type { SevenTvEmote } from '@app/types/seventv/emotes';
+import type { StvUser } from '@app/types/seventv/users';
 import { logger } from '@app/utils/logger';
 
 import { ReadyState } from './ws/constants';

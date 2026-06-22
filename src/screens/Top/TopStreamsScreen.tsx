@@ -24,7 +24,6 @@ import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { TwitchStream } from '@app/services/twitch-service';
 import {
   type Preferences,
   usePreference,
@@ -32,6 +31,7 @@ import {
 } from '@app/store/preferenceStore';
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
+import type { TwitchStream } from '@app/types/twitch/stream';
 import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 
 type StreamListLayout = Preferences['streamListLayout'];

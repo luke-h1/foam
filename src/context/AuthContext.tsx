@@ -20,11 +20,9 @@ import {
 } from '@app/lib/react-query/queries/twitch';
 import { queryClient } from '@app/lib/react-query/query-client';
 import { twitchApi } from '@app/services/api/clients';
-import {
-  DefaultTokenResponse,
-  twitchService,
-  UserInfoResponse,
-} from '@app/services/twitch-service';
+import { twitchService } from '@app/services/twitch-service';
+import type { DefaultTokenResponse } from '@app/types/twitch/auth';
+import type { UserInfoResponse } from '@app/types/twitch/user';
 import * as SecureStore from '@app/utils/authentication/secureStore';
 import {
   addExpirationTimestamp,

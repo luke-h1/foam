@@ -11,10 +11,8 @@ import { type AuthSessionResult, TokenResponse } from 'expo-auth-session';
 
 import { Text } from '@app/components/ui/Text/Text';
 import { twitchApi as _twitchApi } from '@app/services/api/clients';
-import {
-  twitchService as _twitchService,
-  type UserInfoResponse,
-} from '@app/services/twitch-service';
+import { twitchService as _twitchService } from '@app/services/twitch-service';
+import type { UserInfoResponse } from '@app/types/twitch/user';
 import * as _SecureStore from '@app/utils/authentication/secureStore';
 
 import {

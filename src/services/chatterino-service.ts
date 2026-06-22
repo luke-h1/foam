@@ -1,4 +1,4 @@
-import { SanitisedBadgeSet } from './twitch-badge-service';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 const chatterinoBadges = {
   badges: [

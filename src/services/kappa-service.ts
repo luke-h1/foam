@@ -1,18 +1,12 @@
 import * as FileSystem from 'expo-file-system/legacy';
 
+import type {
+  KappaUploadAsset,
+  KappaUploadResult,
+} from '@app/types/kappa/upload';
 import { logger } from '@app/utils/logger';
 
 const KAPPA_UPLOAD_URL = 'https://kappa.lol/api/upload';
-
-export interface KappaUploadAsset {
-  uri: string;
-  fileName?: string;
-  mimeType?: string;
-}
-
-export interface KappaUploadResult {
-  link: string;
-}
 
 export const kappaService = {
   upload: async (asset: KappaUploadAsset): Promise<KappaUploadResult> => {

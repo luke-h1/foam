@@ -1,5 +1,3 @@
-import type { SevenTvHost } from '@app/services/seventv-service';
-import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import type {
   BadgeData,
@@ -12,6 +10,8 @@ import type {
   PaintStop,
   PaintTextStyle,
 } from '@app/types/seventv/cosmetics';
+import type { SevenTvHost } from '@app/types/seventv/emotes';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 const ZERO_ID = '00000000000000000000000000';
 const SEVEN_TV_BADGE_CDN_BASE = 'https://cdn.7tv.app/badge';

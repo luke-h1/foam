@@ -17,8 +17,8 @@ import { Image } from '@app/components/Image/Image';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useSaveImageToGallery } from '@app/hooks/useSaveImageToGallery';
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { theme } from '@app/styles/themes';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 
 interface Props {

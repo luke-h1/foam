@@ -4,7 +4,6 @@ import type {
   EntitlementDeleteCallbackData,
   EntitlementUpdateCallbackData,
 } from '@app/hooks/useSeventvWs';
-import type { SevenTvHost } from '@app/services/seventv-service';
 import type {
   BadgeCosmetic,
   BadgeData,
@@ -12,6 +11,7 @@ import type {
   CosmeticCreate,
   PaintData,
 } from '@app/types/seventv/cosmetics';
+import type { SevenTvHost } from '@app/types/seventv/emotes';
 
 const emptyIndexedCollection = { length: 0 };
 

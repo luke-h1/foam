@@ -5,9 +5,9 @@ import { toast } from 'sonner-native';
 import i18next from '@app/i18n/i18next';
 import {
   getPinnedChatMessageText,
-  type TwitchPinnedChatMessage,
   twitchService,
 } from '@app/services/twitch-service';
+import type { TwitchPinnedChatMessage } from '@app/types/twitch/chat';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { logger } from '@app/utils/logger';
 

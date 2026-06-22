@@ -1,20 +1,8 @@
+import type { BttvEmote } from '@app/types/bttv/emote';
 import type { BttvSanitisedEmote } from '@app/types/emote';
 import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 
 import { bttvCachedApi } from './api/clients';
-
-export interface BttvEmote {
-  id: string;
-  code: string;
-  codeOriginal?: string;
-  imageType: string;
-  animated: boolean;
-  userId: string;
-  modifier: boolean;
-  user?: {
-    name: string;
-  };
-}
 
 interface BttvChannelEmoteSet {
   id: string;

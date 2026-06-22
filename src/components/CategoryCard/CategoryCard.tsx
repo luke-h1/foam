@@ -4,8 +4,8 @@ import { StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 
 import { Text } from '@app/components/ui/Text/Text';
-import { Category } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
+import type { Category } from '@app/types/twitch/category';
 
 import { Button } from '../Button/Button';
 import { Image } from '../Image/Image';

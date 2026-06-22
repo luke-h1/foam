@@ -4,8 +4,8 @@ import { StyleSheet, View } from 'react-native';
 import { LiveStreamImage } from '@app/components/LiveStreamImage/LiveStreamImage';
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
-import { SearchChannelResponse } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
+import type { SearchChannelResponse } from '@app/types/twitch/channel';
 
 interface Props {
   stream: SearchChannelResponse;

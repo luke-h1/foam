@@ -3,8 +3,34 @@ import { fetch } from 'expo/fetch';
 import Constants from 'expo-constants';
 
 import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
+import type { PaginatedList } from '@app/types/twitch/api';
+import type {
+  DefaultTokenResponse,
+  RefreshTokenResponse,
+} from '@app/types/twitch/auth';
+import type { Category } from '@app/types/twitch/category';
+import type { Channel, SearchChannelResponse } from '@app/types/twitch/channel';
+import type {
+  TwitchPinnedChatMessage,
+  TwitchSendChatMessageResult,
+} from '@app/types/twitch/chat';
+import type {
+  TwitchClip,
+  TwitchClipDownload,
+  TwitchClipsRequestParams,
+} from '@app/types/twitch/clip';
 import type { TwitchHelixPoll } from '@app/types/twitch/poll';
 import type { TwitchHelixPrediction } from '@app/types/twitch/prediction';
+import type { TwitchStream } from '@app/types/twitch/stream';
+import type {
+  UserBlockList,
+  UserBlockListRequestParams,
+  UserInfoResponse,
+} from '@app/types/twitch/user';
+import type {
+  TwitchVideo,
+  TwitchVideosRequestParams,
+} from '@app/types/twitch/video';
 import {
   cacheChannelPointRewardTitle,
   getCachedChannelPointRewardTitle,
@@ -29,80 +55,6 @@ const authProxyApiKey =
     | string
     | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY;
 
-export interface PaginatedList<T> {
-  data: T[];
-  pagination?: {
-    cursor: string;
-  };
-  total?: number;
-}
-
-export interface UserInfoResponse {
-  broadcaster_type: string;
-  created_at: string;
-  description: string;
-  display_name: string;
-  id: string;
-  login: string;
-  offline_image_url: string;
-  profile_image_url: string;
-  type: string;
-  view_count: number;
-}
-
-export interface TwitchStream {
-  id: string;
-  user_id: string;
-  user_login: string;
-  user_name: string;
-  game_id: string;
-  game_name: string;
-  type: string;
-  title: string;
-  viewer_count: number;
-  started_at: string;
-  language: string;
-  thumbnail_url: string;
-  tag_ids: unknown[];
-  tags: string[];
-  profilePicture?: string;
-  is_mature: boolean;
-}
-
-export interface Channel {
-  broadcasterId: string;
-  broadcasterLogin: string;
-  broadcasterName: string;
-}
-
-export interface Category {
-  box_art_url: string;
-  id: string;
-  igdb_id?: string; // can be an empty string so we specify undefined to represent the falsy value
-  name: string;
-}
-
-export interface SearchChannelResponse {
-  broadcaster_language: string;
-  broadcaster_login: string;
-  display_name: string;
-  game_id: string;
-  game_name: string;
-  id: string;
-  is_live: boolean;
-  tag_ids: unknown[];
-  tags: string[];
-  thumbnail_url: string;
-  title: string;
-  started_at: string;
-}
-
-export interface DefaultTokenResponse {
-  access_token: string;
-  expires_in: number;
-  token_type: string;
-}
-
 interface Emote {
   format: string[];
   id: string;
@@ -116,86 +68,17 @@ interface Emote {
   }[];
 }
 
-export interface RefreshTokenResponse {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  scope: string;
-  token_type: string;
-}
-
 interface AuthProxyResponse<T> {
   data: T | null;
   error?: string | null;
-}
-
-export interface TwitchClip {
-  id: string;
-  url: string;
-  embed_url: string;
-  broadcaster_id: string;
-  broadcaster_name: string;
-  creator_id: string;
-  creator_name: string;
-  video_id: string;
-  game_id: string;
-  language: string;
-  title: string;
-  view_count: number;
-  created_at: string;
-  thumbnail_url: string;
-  duration: number;
-  vod_offset: number;
-  is_featured: boolean;
 }
 
 interface TwitchClipResponse {
   data: TwitchClip[];
 }
 
-export interface TwitchClipDownload {
-  clip_id: string;
-  landscape_download_url: string | null;
-  portrait_download_url: string | null;
-}
-
 interface TwitchClipDownloadResponse {
   data: TwitchClipDownload[];
-}
-
-export interface TwitchClipsRequestParams {
-  broadcasterId: string;
-  after?: string;
-  endedAt?: string;
-  first?: number;
-  startedAt?: string;
-}
-
-export interface TwitchVideo {
-  id: string;
-  stream_id: string | null;
-  user_id: string;
-  user_login: string;
-  user_name: string;
-  title: string;
-  description: string;
-  created_at: string;
-  published_at: string;
-  url: string;
-  thumbnail_url: string;
-  viewable: string;
-  view_count: number;
-  language: string;
-  type: 'archive' | 'highlight' | 'upload';
-  duration: string;
-  muted_segments: { duration: number; offset: number }[] | null;
-}
-
-export interface TwitchVideosRequestParams {
-  userId: string;
-  after?: string;
-  first?: number;
-  type?: 'all' | 'archive' | 'highlight' | 'upload';
 }
 
 type EventSubStatus =
@@ -297,66 +180,6 @@ interface EventSubscription {
   disconnected_at?: string;
   cost: number;
 }
-
-export interface UserBlockList {
-  user_id: string;
-  user_login: string;
-  display_name: string;
-}
-
-export interface UserBlockListRequestParams {
-  broadcasterId: string;
-  first?: number;
-  after?: number;
-}
-
-export type TwitchChatMessageFragment = {
-  type: 'text' | 'cheermote' | 'emote' | 'mention';
-  text: string;
-  cheermote?: unknown;
-  emote?: {
-    id?: string;
-    emote_set_id?: string;
-    owner_id?: string;
-    format?: string[];
-  };
-  mention?: {
-    user_id?: string;
-    user_login?: string;
-    user_name?: string;
-  };
-};
-
-export type TwitchPinnedChatMessage = {
-  broadcaster_id?: string;
-  broadcaster_login?: string;
-  broadcaster_name?: string;
-  created_at?: string;
-  expires_at?: string | null;
-  message?:
-    | string
-    | {
-        fragments?: TwitchChatMessageFragment[];
-        text?: string;
-      };
-  message_id: string;
-  moderator_id?: string;
-  moderator_login?: string;
-  moderator_name?: string;
-  pinned_by_login?: string;
-  pinned_by_name?: string;
-  pinned_by_user_id?: string;
-  updated_at?: string;
-};
-
-export type TwitchSendChatMessageResult = {
-  drop_reason?: {
-    code: string;
-    message: string;
-  } | null;
-  is_sent: boolean;
-  message_id: string;
-};
 
 type PinnedChatMessageParams = {
   broadcasterId: string;

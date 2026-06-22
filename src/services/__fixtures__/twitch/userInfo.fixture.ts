@@ -1,4 +1,4 @@
-import { UserInfoResponse } from '@app/services/twitch-service';
+import type { UserInfoResponse } from '@app/types/twitch/user';
 
 export const userInfoFixture: UserInfoResponse = {
   broadcaster_type: 'partner',

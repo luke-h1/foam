@@ -9,8 +9,8 @@ import {
   clearSevenTvUserIdCache,
   sevenTvService,
 } from '@app/services/seventv-service';
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import type { PaintData } from '@app/types/seventv/cosmetics';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import {
   convertV4PaintToPaintData,
   type V4Badge,

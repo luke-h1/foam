@@ -1,9 +1,7 @@
-import type {
-  SevenTvEmote,
-  SevenTvHost,
-  StvUser,
-} from '@app/services/seventv-service';
 import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
+import type { SevenTvEmote, SevenTvHost } from '@app/types/seventv/emotes';
+import type { StvUser } from '@app/types/seventv/users';
+import type { V4Badge, V4Paint } from '@app/utils/color/sevenTvPaintData';
 
 interface EventObject {
   id: string;
@@ -286,6 +284,15 @@ export interface BadgeCosmetic {
 }
 
 export type CosmeticCreate = BadgeCosmetic | PaintCosmetic;
+
+export interface UserCosmeticsInfo {
+  userId: string;
+  ttvUserId: string | null;
+  paintId: string | null;
+  badgeId: string | null;
+  paint: V4Paint | null;
+  badge: V4Badge | null;
+}
 
 type EmoteChange = SevenTvEmote & { origin_id: string | null };
 

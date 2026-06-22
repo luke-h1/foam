@@ -1,7 +1,7 @@
 import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
 
 import { followedStreamsQueryOptions } from '@app/lib/react-query/queries/twitch';
-import type { TwitchStream } from '@app/services/twitch-service';
+import type { TwitchStream } from '@app/types/twitch/stream';
 
 type FollowedStreamsQueryOptions = Omit<
   UseQueryOptions<TwitchStream[], Error>,

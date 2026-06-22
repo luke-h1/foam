@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import {
-  PaginatedList,
-  SearchChannelResponse,
-  TwitchStream,
-  UserInfoResponse,
-} from '@app/services/twitch-service';
+import type { PaginatedList } from '@app/types/twitch/api';
+import type { SearchChannelResponse } from '@app/types/twitch/channel';
+import type { TwitchStream } from '@app/types/twitch/stream';
+import type { UserInfoResponse } from '@app/types/twitch/user';
 
 import { mockStreams } from './streams';
 

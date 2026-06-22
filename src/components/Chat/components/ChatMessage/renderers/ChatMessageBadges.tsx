@@ -2,7 +2,7 @@ import { View } from 'react-native';
 import type { Key, ReactNode } from 'react';
 
 import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import { ChatMessagePressable } from '../ChatMessagePressable';
 import { styles } from '../RichChatMessage.styles';
