@@ -1,3 +1,5 @@
+import { logger } from '@app/utils/logger';
+
 import {
   DEFAULT_RECONNECT_INTERVAL_MS,
   DEFAULT_RECONNECT_LIMIT,
@@ -5,7 +7,6 @@ import {
 } from './constants';
 import { getSubscribers } from './manage-subscribers';
 import { sharedWebSockets, type WebSocketEventMap } from './types';
-import { logger } from '@app/utils/logger';
 
 export const attachSharedListeners = (instance: WebSocket, url: string) => {
   instance.onmessage = (message: WebSocketEventMap['message']) => {

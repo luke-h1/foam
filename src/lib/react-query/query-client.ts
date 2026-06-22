@@ -1,8 +1,10 @@
-import { logger } from '@app/utils/logger';
-import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import { Platform } from 'react-native';
+
+import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
+
 import i18next from '@app/i18n/i18next';
+import { logger } from '@app/utils/logger';
 
 declare module '@tanstack/react-query' {
   interface Register {

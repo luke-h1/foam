@@ -1,6 +1,7 @@
-import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
+
+import { useFocusEffect } from 'expo-router';
 
 interface UseRefetchOnForegroundOptions {
   enabled?: boolean;

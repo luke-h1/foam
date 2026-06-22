@@ -1,23 +1,25 @@
-import { useCallback, memo } from 'react';
+import { memo,useCallback } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
+import type { SettingsSheetPreferenceFlags } from '@app/components/Chat/types/chatUiFlags';
 import {
   SettingsLinkRow,
   SettingsSection,
   SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
 import { Text } from '@app/components/ui/Text/Text';
-import type { SettingsSheetPreferenceFlags } from '@app/components/Chat/types/chatUiFlags';
 import { theme } from '@app/styles/themes';
-import {
-  ScrollView,
-  View,
-  StyleSheet,
-  useWindowDimensions,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
 import { chatSheetSurface } from '../chatSheetSurface';
-import { useTranslation } from 'react-i18next';
 
 const ICON_TINT = theme.color.textSecondary.dark;
 

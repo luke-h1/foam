@@ -1,6 +1,7 @@
 // DEV-ONLY: decode benchmark for expo-image. Uses the imperative decode API so
 // each pass produces a true "decoded + ready" signal.
 import { Image as ExpoImage } from 'expo-image';
+
 import type { PassResult } from './benchResults';
 
 // Decoded references are retained in this bag during a run so host-side memory

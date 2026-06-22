@@ -1,7 +1,9 @@
+import type { RefObject } from 'react';
+
 import type { ChatConnectionFlags } from '@app/components/Chat/types/chatUiFlags';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+
 import type { ChatComposerHandle } from './ChatComposer/ChatComposer';
-import type { RefObject } from 'react';
 
 export interface ReplyToData {
   messageId: string;

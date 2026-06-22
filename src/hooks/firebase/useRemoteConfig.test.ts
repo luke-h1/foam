@@ -1,8 +1,11 @@
+import { createElement, type PropsWithChildren } from 'react';
+
+import { fetchAndActivate } from '@react-native-firebase/remote-config';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
+
 import { DefaultWrapper } from '@app/test/render';
 import { logger } from '@app/utils/logger';
-import { act, renderHook, waitFor } from '@testing-library/react-native';
-import { fetchAndActivate } from '@react-native-firebase/remote-config';
-import { createElement, type PropsWithChildren } from 'react';
+
 import { useRemoteConfig } from './useRemoteConfig';
 
 const wrapper = ({ children }: PropsWithChildren) =>

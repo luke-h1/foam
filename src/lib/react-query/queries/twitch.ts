@@ -1,9 +1,11 @@
+import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
+
 import {
-  twitchService,
   Category,
   PaginatedList,
-  TwitchStream,
   TwitchClipsRequestParams,
+  twitchService,
+  TwitchStream,
   TwitchVideosRequestParams,
   UserBlockList,
   UserInfoResponse,
@@ -12,7 +14,7 @@ import {
   getNextPageParam,
   getPreviousPageParam,
 } from '@app/utils/pagination/pagination';
-import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
+
 import { twitchKeys } from '../query-keys';
 
 const MAX_INFINITE_PAGES = 15;

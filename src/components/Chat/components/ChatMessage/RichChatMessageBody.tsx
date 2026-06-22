@@ -1,9 +1,9 @@
-import type { ReactNode } from 'react';
 import { View } from 'react-native';
+import type { ReactNode } from 'react';
 
 import { noticeSurfaceTint } from '../util/chatNoticeAccents';
-import { ChatNoticeBody } from './renderers/ChatNoticeBody';
 import { AnnouncementChatBody } from './renderers/AnnouncementChatBody';
+import { ChatNoticeBody } from './renderers/ChatNoticeBody';
 import { SharedChatSourceLabel } from './renderers/SharedChatSourceLabel';
 import { UserChatBody } from './renderers/UserChatBody';
 import { styles } from './RichChatMessage.styles';

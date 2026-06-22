@@ -1,4 +1,5 @@
-import { theme } from '@app/styles/themes';
+import { StyleSheet } from 'react-native';
+
 import {
   Button as SwiftUIButton,
   GlassEffectContainer,
@@ -17,8 +18,10 @@ import {
   type ViewModifier,
 } from '@expo/ui/swift-ui/modifiers';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
-import { StyleSheet } from 'react-native';
 import type { SFSymbol } from 'sf-symbols-typescript';
+
+import { theme } from '@app/styles/themes';
+
 import { COMPOSER_CONTROL_SIZE } from './composerSizing';
 
 export interface ComposerIconButtonProps {

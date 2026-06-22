@@ -1,4 +1,5 @@
-import { theme } from '@app/styles/themes';
+import { type StyleProp, StyleSheet, type ViewStyle } from 'react-native';
+
 import { Button, Host } from '@expo/ui/swift-ui';
 import {
   buttonStyle,
@@ -6,7 +7,8 @@ import {
   frame,
   tint,
 } from '@expo/ui/swift-ui/modifiers';
-import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+
+import { theme } from '@app/styles/themes';
 
 export interface BlockedUsersActionButtonProps {
   label: string;

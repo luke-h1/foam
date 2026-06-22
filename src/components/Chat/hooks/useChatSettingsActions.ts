@@ -1,11 +1,12 @@
+import { useCallback,useRef } from 'react';
+
+import { createSystemMessage } from '@app/components/Chat/util/messageHandlers';
+import i18next from '@app/i18n/i18next';
 import { clearCache } from '@app/store/chat/actions/channelLoad';
 import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
 import { addMessage } from '@app/store/chat/actions/messages';
-import { createSystemMessage } from '@app/components/Chat/util/messageHandlers';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
-import i18next from '@app/i18n/i18next';
 import { logger } from '@app/utils/logger';
-import { useRef, useCallback } from 'react';
 
 interface UseChatSettingsActionsOptions {
   channelId: string;

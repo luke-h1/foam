@@ -1,6 +1,7 @@
 import { Button } from '@app/components/Button/Button';
-import { Text } from '@app/components/ui/Text/Text';
 import type { EmoteMenuSet } from '@app/components/Chat/components/EmoteSheet/util/emoteMenuData';
+import { Text } from '@app/components/ui/Text/Text';
+
 import { emoteSheetStyles as styles } from './emoteSheetStyles';
 
 export function SetRailButton({

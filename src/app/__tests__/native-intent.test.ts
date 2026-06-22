@@ -1,4 +1,5 @@
 import { isAuthCallbackUrl } from '@app/navigators/authLinking';
+
 import { redirectSystemPath } from '../+native-intent';
 
 jest.mock('@app/navigators/authLinking', () => ({

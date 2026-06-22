@@ -1,11 +1,12 @@
 import type {
   CosmeticCreateCallbackData,
-  CosmeticUpdateCallbackData,
   CosmeticDeleteCallbackData,
+  CosmeticUpdateCallbackData,
   EntitlementCreateCallbackData,
-  EntitlementUpdateCallbackData,
   EntitlementDeleteCallbackData,
+  EntitlementUpdateCallbackData,
 } from '@app/hooks/useSeventvWs';
+import { countMetric } from '@app/lib/sentry';
 import {
   addBadge,
   addPaint,
@@ -22,14 +23,13 @@ import {
 } from '@app/store/chat/actions/cosmetics';
 import type { SanitisedEmote } from '@app/types/emote';
 import type {
-  BadgeData,
   BadgeCosmetic,
+  BadgeData,
   PaintCosmetic,
   PaintData,
 } from '@app/utils/color/seventv-ws-service';
-import { logger } from '@app/utils/logger';
-import { countMetric } from '@app/lib/sentry';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
+import { logger } from '@app/utils/logger';
 
 import {
   get7TvCosmeticId,

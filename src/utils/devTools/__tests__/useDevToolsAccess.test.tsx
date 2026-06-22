@@ -1,16 +1,17 @@
-import { useAuthContext } from '@app/context/AuthContext';
+import { renderHook } from '@testing-library/react-native';
+
 import {
   createAuthContextValue,
   createTestUser,
 } from '@app/context/__tests__/__fixtures__/authContext.fixture';
-import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
+import { useAuthContext } from '@app/context/AuthContext';
 import type {
   RemoteConfigEntry,
   RemoteConfigType,
   UseRemoteConfigResult,
 } from '@app/hooks/firebase/useRemoteConfig';
+import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useDevToolsAccess } from '@app/utils/devTools/devToolsGate';
-import { renderHook } from '@testing-library/react-native';
 
 jest.mock('@app/context/AuthContext', () => ({
   useAuthContext: jest.fn(),

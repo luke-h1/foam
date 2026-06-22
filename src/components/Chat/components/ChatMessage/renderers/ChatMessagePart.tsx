@@ -1,16 +1,17 @@
-import { Text } from '@app/components/ui/Text/Text';
-import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin';
 import { MediaLinkCard } from '@app/components/Chat/components/MediaLinkCard';
 import { StvEmoteEvent } from '@app/components/Chat/components/StvEmoteEvent';
-import { SubscriptionNotice } from '@app/components/Chat/components/usernotices/SubscriptionNotice';
-import { ViewerMileStoneNoticeComponent } from '@app/components/Chat/components/usernotices/ViewerMilestoneNotice';
 import { CharityDonationNotice } from '@app/components/Chat/components/usernotices/CharityDonationNotice';
 import { RitualNotice } from '@app/components/Chat/components/usernotices/RitualNotice';
-import { styles } from '../RichChatMessage.styles';
+import { SubscriptionNotice } from '@app/components/Chat/components/usernotices/SubscriptionNotice';
+import { ViewerMileStoneNoticeComponent } from '@app/components/Chat/components/usernotices/ViewerMilestoneNotice';
 import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
+import { Text } from '@app/components/ui/Text/Text';
+import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
+import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin';
+
+import { styles } from '../RichChatMessage.styles';
 import { EmoteRenderer } from './EmoteRenderer';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 

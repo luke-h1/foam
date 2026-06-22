@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+
 import { theme } from '@app/styles/themes';
 
 const MENU_HEADER_BACKGROUND = '#111215';

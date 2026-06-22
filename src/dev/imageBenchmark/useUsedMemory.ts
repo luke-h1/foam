@@ -3,8 +3,8 @@
 // the JS heap, so `performance.memory` wouldn't see them — DeviceInfo's
 // getUsedMemory reads the process's actual footprint, which is what climbs when
 // the image cache is unbounded.
-import DeviceInfo from 'react-native-device-info';
 import { useEffect, useState } from 'react';
+import DeviceInfo from 'react-native-device-info';
 
 export function useUsedMemoryMb(): number {
   const [mb, setMb] = useState(0);

@@ -1,4 +1,5 @@
 import { logger } from '@app/utils/logger';
+
 import { streamElementsApi } from './api/clients';
 
 export interface StreamElementsEmoteStat {

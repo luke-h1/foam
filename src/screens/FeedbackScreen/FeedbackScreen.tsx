@@ -1,11 +1,3 @@
-import { Button } from '@app/components/Button/Button';
-import { Text } from '@app/components/ui/Text/Text';
-import { useAuthContext } from '@app/context/AuthContext';
-import { impact } from '@app/lib/haptics';
-import { sendFeedback, type FeedbackType } from '@app/lib/sentry';
-import { theme } from '@app/styles/themes';
-import { router } from 'expo-router';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { useState } from 'react';
 import {
   Platform,
@@ -14,10 +6,20 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTranslation } from 'react-i18next';
+
+import { router } from 'expo-router';
 import { toast } from 'sonner-native';
+
+import { Button } from '@app/components/Button/Button';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
+import { useAuthContext } from '@app/context/AuthContext';
+import { impact } from '@app/lib/haptics';
+import { type FeedbackType,sendFeedback } from '@app/lib/sentry';
+import { theme } from '@app/styles/themes';
 
 const FEEDBACK_TYPES: {
   value: FeedbackType;

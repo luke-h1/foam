@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+
 import { createApiClient } from './Client';
 
 export const mockServerUrl = Constants.expoConfig?.extra?.MOCK_SERVER_URL as

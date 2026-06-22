@@ -1,14 +1,16 @@
-import { theme } from '@app/styles/themes';
 import { useState } from 'react';
-import { useWindowDimensions, View, StyleSheet } from 'react-native';
+import { StyleSheet,useWindowDimensions, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
-import { TabView, type SceneRendererProps } from 'react-native-tab-view';
+import { type SceneRendererProps,TabView } from 'react-native-tab-view';
+
+import { TOP_TAB_ROUTES } from '@app/constants/topTabRoutes';
+import { theme } from '@app/styles/themes';
+
 import { TopCategoriesScreen } from './TopCategoriesScreen';
 import { TopSegmentControl } from './TopSegmentControl';
-import { TOP_TAB_ROUTES } from '@app/constants/topTabRoutes';
 import { TopStreamsScreen } from './TopStreamsScreen';
 
 type Route = { key: string; title: string };

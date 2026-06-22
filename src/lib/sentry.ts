@@ -1,16 +1,18 @@
-import {
-  init as initSentry,
-  reactNativeTracingIntegration,
-  appStartIntegration,
-  graphqlIntegration,
-  expoRouterIntegration,
-  mobileReplayIntegration,
-} from '@sentry/react-native';
-import * as Sentry from '@sentry/react-native';
-import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
-import { sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
-import type { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
 import type { ComponentType } from 'react';
+
+import * as Sentry from '@sentry/react-native';
+import {
+  appStartIntegration,
+  expoRouterIntegration,
+  graphqlIntegration,
+  init as initSentry,
+  mobileReplayIntegration,
+  reactNativeTracingIntegration,
+} from '@sentry/react-native';
+
+import { sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
+import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
+import type { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
 
 /**
  * expoRouterIntegration auto-instruments Expo Router navigation, so no manual

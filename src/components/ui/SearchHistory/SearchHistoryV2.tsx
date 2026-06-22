@@ -1,20 +1,21 @@
-import { theme } from '@app/styles/themes';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { useCallback } from 'react';
+import { Alert, StyleSheet,View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Alert, View, StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  Extrapolation,
+  interpolate,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   withTiming,
-  interpolate,
-  Extrapolation,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
+
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
+import { theme } from '@app/styles/themes';
 
 const SWIPE_THRESHOLD = -80;
 const DELETE_THRESHOLD = -150;

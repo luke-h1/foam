@@ -1,15 +1,18 @@
-import {
-  convertV4PaintToPaintData,
-  type SevenTvPaintSource,
-} from '@app/utils/color/sevenTvPaintData';
-import type { PaintData } from '@app/utils/color/seventv-ws-service';
+import { View } from 'react-native';
+
+import type { Meta, StoryObj } from '@storybook/react';
+
 import {
   FlashList,
   type ListRenderItem,
 } from '@app/components/FlashList/FlashList';
-import type { Meta, StoryObj } from '@storybook/react';
-import { View } from 'react-native';
 import { Text } from '@app/components/ui/Text/Text';
+import type { PaintData } from '@app/utils/color/seventv-ws-service';
+import {
+  convertV4PaintToPaintData,
+  type SevenTvPaintSource,
+} from '@app/utils/color/sevenTvPaintData';
+
 import { sevenTvPaintsFixture } from './__fixtures__/sevenTvPaints.fixture';
 import { PaintedUsername } from './CosmeticUsername/CosmeticUsername';
 

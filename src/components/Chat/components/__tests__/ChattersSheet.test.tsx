@@ -1,10 +1,13 @@
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+import { fireEvent } from '@testing-library/react-native';
+
 import render from '@app/test/render';
 import {
   clearMentionLoginIndex,
   registerMentionChatter,
 } from '@app/utils/chat/resolveMentionLogin';
-import { fireEvent } from '@testing-library/react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 import {
   ChattersSheet,
   type ChattersSheetProps,

@@ -1,10 +1,13 @@
-import { FlashListRef } from '@app/components/FlashList/FlashList';
-import { renderHook, act } from '@testing-library/react-native';
-import { createRef } from '@app/test/createRef';
 import { RefObject } from 'react';
-import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import type { AnyChatMessageType } from '@app/components/Chat/util/messageHandlers';
+import { NativeScrollEvent,NativeSyntheticEvent } from 'react-native';
+
+import { act,renderHook } from '@testing-library/react-native';
+
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
+import type { AnyChatMessageType } from '@app/components/Chat/util/messageHandlers';
+import { FlashListRef } from '@app/components/FlashList/FlashList';
+import { createRef } from '@app/test/createRef';
+
 import { useChatScroll } from '../useChatScroll';
 
 interface MockListMethods {

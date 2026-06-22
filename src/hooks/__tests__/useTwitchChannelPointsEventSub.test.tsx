@@ -1,12 +1,13 @@
-import { useAuthContext } from '@app/context/AuthContext';
+import { renderHook, waitFor } from '@testing-library/react-native';
+
 import {
   createLoggedInAuthContextValue,
   createLoggedOutAuthContextValue,
   createTestUser,
 } from '@app/context/__tests__/__fixtures__/authContext.fixture';
+import { useAuthContext } from '@app/context/AuthContext';
 import { useTwitchChannelPointsEventSub } from '@app/hooks/useTwitchChannelPointsEventSub';
 import TwitchWsService from '@app/services/twitch-ws-service';
-import { renderHook, waitFor } from '@testing-library/react-native';
 
 jest.mock('@app/context/AuthContext', () => ({
   useAuthContext: jest.fn(),

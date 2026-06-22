@@ -1,27 +1,30 @@
+import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { useObservable, useSelector } from '@legendapp/state/react';
+
 import { usePreferences } from '@app/store/preferenceStore';
 import type { SanitisedEmote } from '@app/types/emote';
-import { useObservable, useSelector } from '@legendapp/state/react';
 import {
   EMOJI_STYLE_OPTIONS,
   getEmojiEmotes,
 } from '@app/utils/emoji/emojiEmotes';
-import { useEffect } from 'react';
+
 import {
   CONTEXT_PREVIEW_KEYS,
+  type ContextPreviewKey,
+  type ContextPreviewValue,
   DELETED_STYLE_OPTIONS,
   DENSITY_OPTIONS,
   EMOJI_PREVIEW_SHORTCODES,
   FONT_SCALE_OPTIONS,
   PROVIDER_PREVIEW_KEYS,
-  SCROLLBACK_OPTIONS,
-  TIMESTAMP_FORMAT_OPTIONS,
-  type ContextPreviewKey,
-  type ContextPreviewValue,
   type ProviderPreviewKey,
   type ProviderPreviewValue,
+  SCROLLBACK_OPTIONS,
   type SegmentedControlChangeEvent,
+  TIMESTAMP_FORMAT_OPTIONS,
 } from './chatPreferenceTypes';
-import { useTranslation } from 'react-i18next';
 
 function samePreviewValues<T extends object>(
   left: T,

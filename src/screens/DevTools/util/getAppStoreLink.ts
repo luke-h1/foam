@@ -1,5 +1,6 @@
-import { storageService } from '@app/lib/storage';
 import { fetch } from 'expo/fetch';
+
+import { storageService } from '@app/lib/storage';
 
 type AppStoreLookupResponse = {
   resultCount: number;

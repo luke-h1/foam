@@ -1,4 +1,5 @@
 import { createContext, PropsWithChildren, use } from 'react';
+
 import type { CachedEmotesLoadingState } from './useCachedEmotes';
 
 type CachedEmotesDataType = {

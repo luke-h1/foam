@@ -1,29 +1,30 @@
-import type { ChatComposerHandle } from './ChatComposer/ChatComposer';
-import type { useAuthContext } from '@app/context/AuthContext';
-import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
-import { formatDate } from '@app/utils/date-time/date';
-import { findBadges } from '@app/utils/chat/findBadges';
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { parseBadges } from '@app/utils/chat/parseBadges';
-import { logger } from '@app/utils/logger';
 import {
   memo,
+  type Ref,
   useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
   useState,
-  type Ref,
 } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 
-import { ChatInputSection, type ReplyToData } from './ChatInputSection';
+import type { useAuthContext } from '@app/context/AuthContext';
+import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
+import { findBadges } from '@app/utils/chat/findBadges';
+import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { parseBadges } from '@app/utils/chat/parseBadges';
+import { formatDate } from '@app/utils/date-time/date';
+import { logger } from '@app/utils/logger';
+
 import { useChatImageUpload } from '../hooks/useChatImageUpload';
 import {
-  createUserStateFromTags,
   type AnyChatMessageType,
+  createUserStateFromTags,
 } from '../util/messageHandlers';
+import type { ChatComposerHandle } from './ChatComposer/ChatComposer';
+import { ChatInputSection, type ReplyToData } from './ChatInputSection';
 
 export interface ChatInputShellHandle {
   appendEmote: (emoteName: string) => void;

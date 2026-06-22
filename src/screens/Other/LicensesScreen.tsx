@@ -1,10 +1,12 @@
+import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { ReactNativeLegal } from 'react-native-legal';
+
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { StyleSheet, View } from 'react-native';
-import { ReactNativeLegal } from 'react-native-legal';
+
 import { OtherInfoCard } from './components/OtherInfoCard';
-import { useTranslation } from 'react-i18next';
 
 export function LicensesScreen() {
   const { t } = useTranslation('licenses');

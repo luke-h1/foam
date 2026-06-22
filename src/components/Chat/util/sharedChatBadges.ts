@@ -1,5 +1,5 @@
-import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
+import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchService } from '@app/services/twitch-service';
 import type { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';

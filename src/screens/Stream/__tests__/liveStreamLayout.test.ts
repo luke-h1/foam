@@ -40,9 +40,9 @@ jest.mock('expo-screen-orientation', () => ({
 import {
   clampLandscapeChatWidth,
   getDefaultLandscapeChatWidth,
+  getLiveStreamChatDimensions,
   getLiveStreamChatLeft,
   getLiveStreamLayoutMetrics,
-  getLiveStreamChatDimensions,
   getLiveStreamVideoDimensions,
   getNextChatCycleAction,
 } from '../liveStreamLayout';

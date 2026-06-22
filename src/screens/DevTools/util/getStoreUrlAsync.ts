@@ -1,5 +1,7 @@
-import * as Application from 'expo-application';
 import { Linking } from 'react-native';
+
+import * as Application from 'expo-application';
+
 import { getAppStoreLink } from './getAppStoreLink';
 
 /**

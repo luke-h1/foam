@@ -1,12 +1,13 @@
 import { View } from 'react-native';
 
-import { styles } from '../RichChatMessage.styles';
-import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
-import { UserChatBody } from './UserChatBody';
-import type { BadgePressData } from '../RichChatMessage.types';
-import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import i18next from '@app/i18n/i18next';
+import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
+
+import { styles } from '../RichChatMessage.styles';
+import type { BadgePressData } from '../RichChatMessage.types';
+import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
+import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
+import { UserChatBody } from './UserChatBody';
 
 interface AnnouncementChatBodyProps extends UseChatMessagePartRendererArgs {
   accentColor?: string;

@@ -1,7 +1,7 @@
-import { Button } from '@app/components/Button/Button';
-import { Input } from '@app/components/ui/Input/Input';
-import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
+import { useCallback, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
 import {
   channel,
   checkForUpdateAsync,
@@ -11,10 +11,12 @@ import {
   setUpdateRequestHeadersOverride,
   updateId,
 } from 'expo-updates';
-import { useCallback, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
+
+import { Button } from '@app/components/Button/Button';
+import { Input } from '@app/components/ui/Input/Input';
+import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
+import { theme } from '@app/styles/themes';
 
 export function ChannelSurfingScreen() {
   const { t } = useTranslation('devTools');

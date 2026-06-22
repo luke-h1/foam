@@ -1,10 +1,11 @@
+import { useState } from 'react';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { getSentryStatus, verifySentryDelivery } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
-import { useState } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 function SentryTestError() {
   throw new Error('Sentry test error from Foam dev tools');

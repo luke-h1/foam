@@ -1,8 +1,3 @@
-import { Button } from '@app/components/Button/Button';
-import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
-import { LinearGradient } from 'expo-linear-gradient';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { useEffect, useState } from 'react';
 import {
   Platform,
@@ -18,6 +13,14 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { LinearGradient } from 'expo-linear-gradient';
+
+import { Button } from '@app/components/Button/Button';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
+import { theme } from '@app/styles/themes';
+
 import type { StreamInfo } from './types';
 
 interface ControlsOverlayProps {
@@ -38,8 +41,9 @@ interface OverlayMetricsState {
   duration: string;
 }
 
-import { formatDuration } from './formatStreamDuration';
 import { useTranslation } from 'react-i18next';
+
+import { formatDuration } from './formatStreamDuration';
 
 function formatViewerCount(count?: number): string {
   if (!count) {

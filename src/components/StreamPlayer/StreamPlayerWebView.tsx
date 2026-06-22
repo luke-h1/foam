@@ -1,14 +1,15 @@
 import { memo } from 'react';
-import { countMetric } from '@app/lib/sentry';
-import { logger } from '@app/utils/logger';
-import type { ComponentProps, RefObject } from 'react';
 import { StyleSheet } from 'react-native';
+import type { ComponentProps, RefObject } from 'react';
 import { WebView } from 'react-native-webview';
 import type {
   OnShouldStartLoadWithRequest,
   WebViewError,
   WebViewHttpError,
 } from 'react-native-webview/lib/WebViewTypes';
+
+import { countMetric } from '@app/lib/sentry';
+import { logger } from '@app/utils/logger';
 
 import { isAppUrl, isTwitchPassportCallbackUrl } from './twitchPlayerSource';
 

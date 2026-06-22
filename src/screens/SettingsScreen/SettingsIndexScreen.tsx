@@ -1,3 +1,11 @@
+import { useRef } from 'react';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { Button, Form, Host, Section } from '@expo/ui/swift-ui';
+import { router } from 'expo-router';
+
 import {
   SettingsLinkRow,
   SettingsSection,
@@ -13,12 +21,7 @@ import {
   isAdminLogin,
   isDevToolsEnabled,
 } from '@app/utils/devTools/devToolsGate';
-import { Button, Form, Host, Section } from '@expo/ui/swift-ui';
-import { router } from 'expo-router';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useRef } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { BuildStatus } from './components/BuildStatus';
 
 function handleSendFeedback() {

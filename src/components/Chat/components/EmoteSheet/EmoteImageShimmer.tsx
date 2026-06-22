@@ -1,14 +1,16 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
-  Easing,
   cancelAnimation,
+  Easing,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+
+import { LinearGradient } from 'expo-linear-gradient';
+
 import { emoteSheetStyles as styles } from './emoteSheetStyles';
 
 const SHIMMER_DURATION_MS = 1200;

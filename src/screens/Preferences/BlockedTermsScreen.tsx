@@ -1,23 +1,25 @@
-import { FlashList } from '@app/components/FlashList/FlashList';
-import { Text } from '@app/components/ui/Text/Text';
-import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { impact } from '@app/lib/haptics';
-import { Color } from '@app/styles/pallete';
-import {
-  usePreference,
-  useUpdatePreferences,
-} from '@app/store/preferenceStore';
-import { theme } from '@app/styles/themes';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
-import { PressableScale } from 'pressto';
 import { useCallback, useRef, useState } from 'react';
 import { Alert, StyleSheet, TextInput, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+
+import { PressableScale } from 'pressto';
+
 import type {
   FlashListRef,
   ListRenderItem,
 } from '@app/components/FlashList/FlashList';
-import { useTranslation } from 'react-i18next';
+import { FlashList } from '@app/components/FlashList/FlashList';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import { impact } from '@app/lib/haptics';
+import {
+  usePreference,
+  useUpdatePreferences,
+} from '@app/store/preferenceStore';
+import { Color } from '@app/styles/pallete';
+import { theme } from '@app/styles/themes';
 
 function TermRow({
   term,

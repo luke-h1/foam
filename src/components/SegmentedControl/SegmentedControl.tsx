@@ -1,10 +1,11 @@
-import { selection } from '@app/lib/haptics';
-import {
-  SegmentedControl as ExpoSegmentedControl,
-  type NativeSegmentedControlChangeEvent,
-} from '@expo/ui/community/segmented-control';
 import { StyleSheet } from 'react-native';
 
+import {
+  type NativeSegmentedControlChangeEvent,
+  SegmentedControl as ExpoSegmentedControl,
+} from '@expo/ui/community/segmented-control';
+
+import { selection } from '@app/lib/haptics';
 import { theme } from '@app/styles/themes';
 
 type SegmentedControlItem = {

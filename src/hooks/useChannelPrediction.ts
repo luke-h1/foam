@@ -1,16 +1,17 @@
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+
 import { useAuthContext } from '@app/context/AuthContext';
-import TwitchWsService from '@app/services/twitch-ws-service';
 import { twitchService } from '@app/services/twitch-service';
+import TwitchWsService from '@app/services/twitch-ws-service';
 import type {
   ChannelPredictionState,
   TwitchEventSubPrediction,
 } from '@app/types/twitch/prediction';
+import { logger } from '@app/utils/logger';
 import {
   normaliseEventSubPrediction,
   normaliseHelixPrediction,
 } from '@app/utils/twitch/normalisePrediction';
-import { logger } from '@app/utils/logger';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 interface EventSubMessage {
   event?: Record<string, unknown>;

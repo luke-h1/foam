@@ -1,6 +1,8 @@
+import { initReactI18next } from 'react-i18next';
+
 import { getLocales } from 'expo-localization';
 import i18next from 'i18next';
-import { initReactI18next } from 'react-i18next';
+
 import en from './locales/en';
 
 export const resources = { en } as const;

@@ -1,5 +1,12 @@
+import { useCallback, useRef, useState } from 'react';
+import { Platform, StyleSheet, useWindowDimensions,View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { router } from 'expo-router';
+import { toast } from 'sonner-native';
+
 import { Button } from '@app/components/Button/Button';
-import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import {
   FlashList,
   type FlashListRef,
@@ -9,14 +16,16 @@ import { IconButton } from '@app/components/IconButton/IconButton';
 import { Image } from '@app/components/Image/Image';
 import { LoadingState } from '@app/components/LoadingState/LoadingState';
 import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
+import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { Text } from '@app/components/ui/Text/Text';
+import { useClipsQuery } from '@app/hooks/queries/use-clips-query';
+import { useStreamElementsStatsQuery } from '@app/hooks/queries/use-streamelements-stats-query';
+import { useUserQuery } from '@app/hooks/queries/use-user-query';
+import { useVideosQuery } from '@app/hooks/queries/use-videos-query';
 import { useDownloadTwitchClip } from '@app/hooks/useDownloadTwitchClip';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { useClipsQuery } from '@app/hooks/queries/use-clips-query';
-import { useVideosQuery } from '@app/hooks/queries/use-videos-query';
-import { useStreamElementsStatsQuery } from '@app/hooks/queries/use-streamelements-stats-query';
-import { useUserQuery } from '@app/hooks/queries/use-user-query';
+import i18next from '@app/i18n/i18next';
 import type { StreamElementsChatStats } from '@app/services/streamelements-service';
 import {
   type TwitchClip,
@@ -30,13 +39,6 @@ import {
   formatViewCount,
   formatViewCountCompact,
 } from '@app/utils/string/formatViewCount';
-import { router } from 'expo-router';
-import { useRef, useCallback, useState } from 'react';
-import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { toast } from 'sonner-native';
-import { useTranslation } from 'react-i18next';
-import i18next from '@app/i18n/i18next';
 
 interface StreamerProfileScreenProps {
   id: string;

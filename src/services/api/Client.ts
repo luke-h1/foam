@@ -1,7 +1,9 @@
 import { fetch } from 'expo/fetch';
+
 import { parseJsonOnUIThread } from '@app/lib/offThreadJson';
-import { logger, type AllowedPrefix } from '@app/utils/logger';
 import type { MonitoringErrorName } from '@app/lib/sentry';
+import { type AllowedPrefix,logger } from '@app/utils/logger';
+
 import { getApiMonitoringContext } from './monitoring';
 
 const SERVICE_ERROR_MAP: Record<

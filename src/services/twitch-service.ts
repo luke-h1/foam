@@ -1,22 +1,23 @@
 /* eslint-disable camelcase */
 import { fetch } from 'expo/fetch';
+import Constants from 'expo-constants';
+
 import { parseJsonOnUIThread } from '@app/lib/offThreadJson';
-import { logger } from '@app/utils/logger';
 import type { TwitchHelixPoll } from '@app/types/twitch/poll';
 import type { TwitchHelixPrediction } from '@app/types/twitch/prediction';
-import Constants from 'expo-constants';
-import {
-  twitchApi,
-  mockServerUrl,
-  isE2EMode,
-  getTwitchClientId,
-  setTwitchClientId,
-} from './api/clients';
-
 import {
   cacheChannelPointRewardTitle,
   getCachedChannelPointRewardTitle,
 } from '@app/utils/chat/channelPointRewardTitleStore';
+import { logger } from '@app/utils/logger';
+
+import {
+  getTwitchClientId,
+  isE2EMode,
+  mockServerUrl,
+  setTwitchClientId,
+  twitchApi,
+} from './api/clients';
 
 const authProxyBaseUrl =
   (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL as

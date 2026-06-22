@@ -1,5 +1,6 @@
 import type { BttvSanitisedEmote } from '@app/types/emote';
 import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
+
 import { bttvCachedApi } from './api/clients';
 
 export interface BttvEmote {

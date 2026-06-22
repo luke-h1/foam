@@ -1,17 +1,18 @@
+import { useRef } from 'react';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { router } from 'expo-router';
+
 import { Image } from '@app/components/Image/Image';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { theme } from '@app/styles/themes';
-import { router } from 'expo-router';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
-import { useRef } from 'react';
-import type { ReactNode } from 'react';
-
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 import i18next from '@app/i18n/i18next';
+import { theme } from '@app/styles/themes';
 
 interface ProfileSectionProps {
   title?: string;

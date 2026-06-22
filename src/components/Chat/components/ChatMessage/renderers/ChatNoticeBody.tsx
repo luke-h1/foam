@@ -1,12 +1,14 @@
-import { Text } from '@app/components/ui/Text/Text';
 import { View } from 'react-native';
+
 import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
-import { styles } from '../RichChatMessage.styles';
 import type { ChatBodyVariant } from '@app/components/Chat/util/richChatMessageHelpers';
-import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
-import { ChatMessageBody } from './ChatMessageBody';
-import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
+import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
+
+import { styles } from '../RichChatMessage.styles';
+import { ChatMessageBody } from './ChatMessageBody';
+import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
+import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 
 interface ChatNoticeBodyProps extends UseChatMessagePartRendererArgs {
   bodyVariant: Exclude<ChatBodyVariant, 'user_chat'>;

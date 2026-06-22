@@ -1,8 +1,9 @@
-import { PaginatedList, TwitchStream } from '@app/services/twitch-service';
 import {
   GetNextPageParamFunction,
   GetPreviousPageParamFunction,
 } from '@tanstack/react-query';
+
+import { PaginatedList, TwitchStream } from '@app/services/twitch-service';
 
 export const getNextPageParam: GetNextPageParamFunction<
   string | undefined,

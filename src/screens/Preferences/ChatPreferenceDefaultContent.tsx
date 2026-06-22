@@ -1,3 +1,8 @@
+import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
+import { router } from 'expo-router';
+
 import {
   SettingsLinkRow,
   SettingsSection,
@@ -5,11 +10,15 @@ import {
 } from '@app/components/SettingsSection/SettingsSection';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
-import { ChatPreferencePreview } from './ChatPreferencesPreview';
-import { ChatProviderPreferenceSections } from './ChatProviderPreferenceSections';
+
+import {
+  DensityPreview,
+  EmojiStylePreview,
+  PreviewLabel,
+  ProviderPreviewItem,
+} from './ChatPreferencePreviewWidgets';
 import { ChatPreferenceSegmentedSettingsRow } from './ChatPreferenceSettingsRows';
+import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import {
   CONTEXT_TOGGLE_ROWS,
   DELETED_STYLE_OPTIONS,
@@ -18,14 +27,8 @@ import {
   SCROLLBACK_LABELS,
   TIMESTAMP_FORMAT_OPTIONS,
 } from './chatPreferenceTypes';
-import {
-  DensityPreview,
-  EmojiStylePreview,
-  PreviewLabel,
-  ProviderPreviewItem,
-} from './ChatPreferencePreviewWidgets';
+import { ChatProviderPreferenceSections } from './ChatProviderPreferenceSections';
 import type { useChatPreferenceScreenState } from './useChatPreferenceScreenState';
-import { useTranslation } from 'react-i18next';
 
 type ChatPreferenceScreenState = ReturnType<
   typeof useChatPreferenceScreenState

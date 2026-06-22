@@ -6,6 +6,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
+
 import { Image } from '../Image/Image';
 import { LoadingState } from '../LoadingState/LoadingState';
 

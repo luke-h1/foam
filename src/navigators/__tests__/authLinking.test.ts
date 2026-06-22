@@ -1,8 +1,9 @@
+import type { AuthSessionResult } from 'expo-auth-session';
+
 import {
   completeAuthWithCallbackUrl,
   isAuthCallbackUrl,
 } from '@app/navigators/authLinking';
-import type { AuthSessionResult } from 'expo-auth-session';
 
 describe('authLinking magic-link sign in', () => {
   // The magic link App Review uses: an obscure proxy URL redirects into the app

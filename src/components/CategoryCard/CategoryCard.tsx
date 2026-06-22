@@ -1,11 +1,14 @@
-import { useCallback, memo } from 'react';
+import { memo,useCallback } from 'react';
+import { StyleSheet,View } from 'react-native';
+
+import { router } from 'expo-router';
+
+import { Text } from '@app/components/ui/Text/Text';
 import { Category } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
-import { router } from 'expo-router';
-import { View, StyleSheet } from 'react-native';
+
 import { Button } from '../Button/Button';
 import { Image } from '../Image/Image';
-import { Text } from '@app/components/ui/Text/Text';
 
 interface Props {
   category: Category;

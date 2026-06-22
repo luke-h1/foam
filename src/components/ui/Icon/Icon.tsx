@@ -2,12 +2,13 @@ import {
   SymbolView as ExpoSymbolView,
   type SymbolViewProps,
 } from 'expo-symbols';
+
 import { sfSymbolToAndroid } from './sfSymbolToAndroid';
 
 export type {
-  SymbolViewProps,
-  SFSymbol,
   AndroidSymbol,
+  SFSymbol,
+  SymbolViewProps,
   SymbolWeight,
 } from 'expo-symbols';
 

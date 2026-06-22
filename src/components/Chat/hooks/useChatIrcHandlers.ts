@@ -1,7 +1,8 @@
-import { batch } from '@legendapp/state';
-import { shouldProcessLiveMessage } from '@app/components/Chat/util/chatIngestRateLimiter';
-import { useCallback, useRef, type RefObject } from 'react';
+import { type RefObject,useCallback, useRef } from 'react';
 
+import { batch } from '@legendapp/state';
+
+import { shouldProcessLiveMessage } from '@app/components/Chat/util/chatIngestRateLimiter';
 import { parseIrcMessage } from '@app/services/recent-messages-service';
 import {
   addMessage,
@@ -15,29 +16,29 @@ import {
 } from '@app/store/chat/actions/messages';
 import { getPreferences } from '@app/store/preferenceStore';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { logger } from '@app/utils/logger';
-
-import { formatNoticeMessage } from '../util/formatNoticeMessage';
 import {
   ingestChannelPointRewardTags,
   registerDeferredRewardgiftStandalone,
 } from '@app/utils/chat/channelPointRewardTitleStore';
+import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { logger } from '@app/utils/logger';
+
+import type { ChatListRef } from '../components/ChatList';
+import { formatNoticeMessage } from '../util/formatNoticeMessage';
 import {
+  type AnyChatMessageType,
+  coerceUserNoticeTags,
   createBaseMessage,
   createSystemMessage,
   createUserNoticeMessage,
   createUserStateFromTags,
-  coerceUserNoticeTags,
-  type AnyChatMessageType,
 } from '../util/messageHandlers';
-import type { ChatListRef } from '../components/ChatList';
 import {
   describeInitialRoomState,
   describeRoomStateChanges,
+  type ParsedRoomState,
   parseRoomStateTags,
   SUPPRESSED_NOTICE_IDS,
-  type ParsedRoomState,
 } from '../util/roomState';
 
 interface UseChatIrcHandlersOptions {

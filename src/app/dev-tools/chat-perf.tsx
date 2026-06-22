@@ -1,30 +1,32 @@
 import { useEffect, useRef, useState } from 'react';
-import { useKeepAwake } from 'expo-keep-awake';
-import { useLocalSearchParams } from 'expo-router';
 import {
   Pressable,
+  type StyleProp,
   StyleSheet,
   Text,
   TextInput,
   type TextInputProps,
-  type StyleProp,
   type TextStyle,
   View,
 } from 'react-native';
 import Animated, {
+  type SharedValue,
   useAnimatedProps,
   useAnimatedStyle,
-  type SharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { useKeepAwake } from 'expo-keep-awake';
+import { useLocalSearchParams } from 'expo-router';
+
 import { Chat } from '@app/components/Chat/Chat';
-import { LiveChatPerfOverlay } from '@app/dev/imageBenchmark/LiveChatPerfOverlay';
-import { useChatPerfSuite } from '@app/dev/imageBenchmark/useChatPerfSuite';
 import { SUITE_TOTAL_MS } from '@app/dev/imageBenchmark/chatPerfSuite';
+import { LiveChatPerfOverlay } from '@app/dev/imageBenchmark/LiveChatPerfOverlay';
 import {
   setSyntheticChatControl,
   SYNTHETIC_PRESETS,
 } from '@app/dev/imageBenchmark/syntheticChatControl';
+import { useChatPerfSuite } from '@app/dev/imageBenchmark/useChatPerfSuite';
 import { resetFloodReplay } from '@app/dev/imageBenchmark/useSyntheticChatFlood';
 
 const CINNA = { channelId: '204730616', channelName: 'cinna' };

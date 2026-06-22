@@ -1,3 +1,12 @@
+import { act, renderHook, waitFor } from '@testing-library/react-native';
+
+import { hydrateVisibleSevenTvAssets } from '@app/components/Chat/util/hydrateVisibleSevenTvAssets';
+import { reprocessMessages } from '@app/components/Chat/util/reprocessMessages';
+import {
+  getCachedSharedChatBadgeContext,
+  getMessageBadges,
+  getSharedChatBadgeContext,
+} from '@app/components/Chat/util/sharedChatBadges';
 import {
   fetchUserPersonalEmotes,
   getCurrentEmoteData,
@@ -9,7 +18,8 @@ import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { useChatHydrationPreferences } from '@app/store/preferences/selectors';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes';
-import { act, renderHook, waitFor } from '@testing-library/react-native';
+
+import { useChatMessageProcessing } from '../useChatMessageProcessing';
 import {
   createBadge,
   createChatMessage,
@@ -17,14 +27,6 @@ import {
   createSevenTvEmote,
   createTwitchEmote,
 } from './__fixtures__/useChat.fixture';
-import { hydrateVisibleSevenTvAssets } from '@app/components/Chat/util/hydrateVisibleSevenTvAssets';
-import { reprocessMessages } from '@app/components/Chat/util/reprocessMessages';
-import {
-  getCachedSharedChatBadgeContext,
-  getMessageBadges,
-  getSharedChatBadgeContext,
-} from '@app/components/Chat/util/sharedChatBadges';
-import { useChatMessageProcessing } from '../useChatMessageProcessing';
 
 jest.mock('@app/store/chat/actions/channelLoad', () => ({
   fetchUserPersonalEmotes: jest.fn(() => Promise.resolve([])),

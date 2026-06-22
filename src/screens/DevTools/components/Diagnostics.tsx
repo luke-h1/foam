@@ -1,13 +1,16 @@
+import { Linking, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
+import * as AC from '@bacons/apple-colors';
+
 import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import * as Form from '@app/components/Form/Form';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
-import * as AC from '@bacons/apple-colors';
-import { Linking, StyleSheet } from 'react-native';
+
 import { AppStoreSection } from './AppStoreSection';
 import { ExpoSection } from './ExpoSection';
 import { OTADynamicSection } from './OTADynamicSection';
 import { OTASection } from './OTASection';
-import { useTranslation } from 'react-i18next';
 
 const settingsHintIcon = (
   <SymbolView name='gear' tintColor={AC.secondaryLabel} />

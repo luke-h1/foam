@@ -1,22 +1,25 @@
+import { memo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { GestureDetector } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
+
+import { BlurView } from 'expo-blur';
+import { SymbolView } from 'expo-symbols';
+
 import { Button as PressableButton } from '@app/components/Button/Button';
 import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/CosmeticUsername';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { truncate } from '@app/utils/string/truncate';
-import { BlurView } from 'expo-blur';
-import { SymbolView } from 'expo-symbols';
-import { memo } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated from 'react-native-reanimated';
-import { GestureDetector } from 'react-native-gesture-handler';
-import { COMPOSER_ROW_GAP } from './composerSizing';
+
 import { ChatComposer } from './ChatComposer/ChatComposer';
-import { ComposerIconButton } from './ComposerIconButton';
-import { ReplyPreviewBody } from './ReplyPreviewBody';
 import type { ChatInputSectionProps } from './chatInputSectionTypes';
+import { ComposerIconButton } from './ComposerIconButton';
+import { COMPOSER_ROW_GAP } from './composerSizing';
+import { ReplyPreviewBody } from './ReplyPreviewBody';
 import { useComposerDismissGesture } from './useComposerDismissGesture';
-import { useTranslation } from 'react-i18next';
 
 export type { ReplyToData } from './chatInputSectionTypes';
 

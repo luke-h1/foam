@@ -1,4 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
+
 import { logger } from '@app/utils/logger';
 
 const KAPPA_UPLOAD_URL = 'https://kappa.lol/api/upload';

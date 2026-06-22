@@ -1,23 +1,25 @@
 import { memo } from 'react';
-/* eslint-disable react-native/sort-styles */
-import { Button } from '@app/components/Button/Button';
-import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
-import { Image } from '@app/components/Image/Image';
-import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
-import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
-import * as Clipboard from 'expo-clipboard';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import {
   ScrollView,
   StyleSheet,
   useWindowDimensions,
   View,
 } from 'react-native';
-import { toast } from 'sonner-native';
 import { useTranslation } from 'react-i18next';
+
+import * as Clipboard from 'expo-clipboard';
+import { toast } from 'sonner-native';
+
+import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
+/* eslint-disable react-native/sort-styles */
+import { Button } from '@app/components/Button/Button';
+import { Image } from '@app/components/Image/Image';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
+import { theme } from '@app/styles/themes';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 
 interface Props {
   disableAnimations?: boolean;

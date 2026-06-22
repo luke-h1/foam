@@ -1,17 +1,13 @@
-import { AppBottomSheetProvider } from '@app/components/BottomSheet/BottomSheetProvider';
-import { GlobalErrorGate } from '@app/components/GlobalErrorGate/GlobalErrorGate';
-import { ShakeToReport } from '@app/components/ShakeToReport/ShakeToReport';
-import { OfflineBanner } from '@app/components/OfflineBanner/OfflineBanner';
-import { AuthContextProvider } from '@app/context/AuthContext';
-import { AccentColorProvider } from '@app/context/AccentColorContext';
-import { useDebugOptions } from '@app/hooks/useDebugOptions';
-import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
-import { BaseConfig } from '@app/navigators/config';
-import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
-import { twitchApi } from '@app/services/api/clients';
-import { storage } from '@app/lib/storage';
-import { deleteTokens } from '@app/utils/authentication/deleteTokens';
-import { QueryProvider } from '@app/lib/react-query/query-provider';
+import { PropsWithChildren } from 'react';
+import { StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
+import {
+  initialWindowMetrics,
+  SafeAreaProvider,
+} from 'react-native-safe-area-context';
+import { PortalProvider } from 'react-native-teleport';
+
 import { useNetworkActivityDevTools } from '@rozenite/network-activity-plugin';
 import { usePerformanceMonitorDevTools } from '@rozenite/performance-monitor-plugin';
 import { useRequireProfilerDevTools } from '@rozenite/require-profiler-plugin';
@@ -22,21 +18,28 @@ import {
 import { useTanStackQueryDevTools } from '@rozenite/tanstack-query-plugin';
 import { useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
-import { motion } from '@app/styles/motion';
 import { PressablesConfig } from 'pressto';
-import { PropsWithChildren } from 'react';
-import { StyleSheet } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { PortalProvider } from 'react-native-teleport';
-import {
-  initialWindowMetrics,
-  SafeAreaProvider,
-} from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
-import { ScreenDimensionsProvider } from './ScreenDimensionsProvider/ScreenDimensionsProvider';
+
+import { AppBottomSheetProvider } from '@app/components/BottomSheet/BottomSheetProvider';
+import { GlobalErrorGate } from '@app/components/GlobalErrorGate/GlobalErrorGate';
+import { OfflineBanner } from '@app/components/OfflineBanner/OfflineBanner';
+import { ShakeToReport } from '@app/components/ShakeToReport/ShakeToReport';
+import { AccentColorProvider } from '@app/context/AccentColorContext';
+import { AuthContextProvider } from '@app/context/AuthContext';
+import { useDebugOptions } from '@app/hooks/useDebugOptions';
+import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
+import { QueryProvider } from '@app/lib/react-query/query-provider';
+import { storage } from '@app/lib/storage';
+import { BaseConfig } from '@app/navigators/config';
+import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
+import { twitchApi } from '@app/services/api/clients';
+import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
+import { deleteTokens } from '@app/utils/authentication/deleteTokens';
+
 import { AnalyticsProvider } from './AnalyticsProvider';
+import { ScreenDimensionsProvider } from './ScreenDimensionsProvider/ScreenDimensionsProvider';
 
 function QueryProviderWithDevTools({ children }: PropsWithChildren) {
   return (

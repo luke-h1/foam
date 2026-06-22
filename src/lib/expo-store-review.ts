@@ -1,13 +1,15 @@
+import { Platform } from 'react-native';
+
+import * as Application from 'expo-application';
+import * as StoreReview from 'expo-store-review';
+
 import { storageService } from '@app/lib/storage';
 import { logger } from '@app/utils/logger';
 import {
-  shouldRequestReview,
   type ReviewPromptState,
+  shouldRequestReview,
 } from '@app/utils/storeReview/reviewPromptGate';
 import { hasSessionError } from '@app/utils/storeReview/sessionErrorFlag';
-import * as Application from 'expo-application';
-import * as StoreReview from 'expo-store-review';
-import { Platform } from 'react-native';
 
 const STORE_REVIEW_STATE_KEY = 'store_review_state';
 

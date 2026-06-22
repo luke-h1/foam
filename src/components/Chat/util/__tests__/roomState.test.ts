@@ -1,9 +1,9 @@
 import {
-  SUPPRESSED_NOTICE_IDS,
   describeInitialRoomState,
   describeRoomStateChanges,
-  parseRoomStateTags,
   type ParsedRoomState,
+  parseRoomStateTags,
+  SUPPRESSED_NOTICE_IDS,
 } from '../roomState';
 
 const emptyRoomState: ParsedRoomState = {

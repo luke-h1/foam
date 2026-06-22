@@ -1,12 +1,13 @@
 import { memo } from 'react';
-import { Button } from '@app/components/Button/Button';
-import { Text } from '@app/components/ui/Text/Text';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
+import { Button } from '@app/components/Button/Button';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
 
 import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
 import { styles } from '../styles';
-import { useTranslation } from 'react-i18next';
 
 export const PinnedMessageBanner = memo(
   ({

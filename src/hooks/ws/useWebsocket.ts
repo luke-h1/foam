@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, RefObject, useCallback } from 'react';
+import { RefObject, useCallback,useEffect, useRef, useState } from 'react';
+
 import { ReadyState } from './constants';
 import { createOrJoinSocket } from './createOrJoin';
 import { getUrl } from './get-url';
@@ -8,9 +9,9 @@ import {
   ReadyStateState,
   SendJsonMessage,
   SendMessage,
+  sharedWebSockets,
   WebSocketHookReturn,
   WebSocketMessage,
-  sharedWebSockets,
 } from './types';
 
 export const useWebsocket = (

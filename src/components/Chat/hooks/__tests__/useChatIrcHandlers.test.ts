@@ -1,5 +1,7 @@
+import { act,renderHook } from '@testing-library/react-native';
+
 import { addMessage, clearMessages } from '@app/store/chat/actions/messages';
-import { renderHook, act } from '@testing-library/react-native';
+
 import { useChatIrcHandlers } from '../useChatIrcHandlers';
 
 jest.mock('@app/store/chat/actions/messages', () => ({

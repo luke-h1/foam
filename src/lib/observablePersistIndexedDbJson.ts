@@ -1,12 +1,13 @@
 import {
-  internal,
-  setAtPath,
   type Change,
+  internal,
   type ObservablePersistenceConfigLocalGlobalOptions,
   type ObservablePersistLocal,
   type PersistMetadata,
   type PersistOptionsLocal,
+  setAtPath,
 } from '@legendapp/state';
+
 import { logger } from '@app/utils/logger';
 
 const METADATA_SUFFIX = '__m';

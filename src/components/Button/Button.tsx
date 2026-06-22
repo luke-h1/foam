@@ -1,7 +1,9 @@
 import { memo } from 'react';
-import { createHitslop } from '@app/utils/string/createHitSlop';
+
+import { type CustomPressableProps,PressableScale } from 'pressto';
+
 import { impact, selection } from '@app/lib/haptics';
-import { PressableScale, type CustomPressableProps } from 'pressto';
+import { createHitslop } from '@app/utils/string/createHitSlop';
 
 type ButtonHaptic = 'selection' | 'light' | 'medium' | 'heavy';
 

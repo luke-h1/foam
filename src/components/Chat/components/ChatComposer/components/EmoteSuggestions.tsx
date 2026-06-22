@@ -1,15 +1,17 @@
 import { memo, useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
+import {
+  LegendList,
+  type LegendListRenderItemProps,
+} from '@legendapp/list/react-native';
+
 import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
-import {
-  LegendList,
-  type LegendListRenderItemProps,
-} from '@legendapp/list/react-native';
-import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 const EMOTE_SUGGESTION_ITEM_SIZE = 48;
 

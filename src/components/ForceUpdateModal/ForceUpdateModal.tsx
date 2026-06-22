@@ -1,3 +1,10 @@
+import { Modal as RNModal, Platform, StyleSheet,View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import * as Application from 'expo-application';
+
+import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
 import {
   RemoteConfigType,
   useRemoteConfig,
@@ -6,13 +13,9 @@ import { getStoreUrlAsync } from '@app/screens/DevTools/util/getStoreUrlAsync';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { isUpdateRequired } from '@app/utils/version/compareVersions';
-import * as Application from 'expo-application';
-import { Modal as RNModal, Platform, View, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Variant } from '../../../app.config';
 import { Button } from '../Button/Button';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
-import { Text } from '@app/components/ui/Text/Text';
 
 function getMinimumVersion(variant: Variant, remoteConfig: RemoteConfigType) {
   const platform = Platform.OS === 'ios' ? 'ios' : 'android';

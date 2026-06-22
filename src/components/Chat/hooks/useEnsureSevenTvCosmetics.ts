@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 import { sevenTvService } from '@app/services/seventv-service';
 import {
   fetchAndCacheUserCosmetics,
@@ -5,7 +7,6 @@ import {
   hasUserPaint,
 } from '@app/store/chat/actions/cosmetics';
 import { logger } from '@app/utils/logger';
-import { useEffect } from 'react';
 
 /**
  * Resolves and caches a user's 7TV cosmetics (paint + badge) into the chat

@@ -1,5 +1,6 @@
-import { BlurView } from 'expo-blur';
 import { Platform, StyleSheet } from 'react-native';
+
+import { BlurView } from 'expo-blur';
 
 export function EmoteSheetIosBlur({ intensity }: { intensity: number }) {
   return Platform.OS === 'ios' ? (

@@ -1,16 +1,18 @@
+import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useTwitchSignIn } from '@app/hooks/useTwitchSignIn';
 import { impact } from '@app/lib/haptics';
 import { theme } from '@app/styles/themes';
-import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
-import { StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTranslation } from 'react-i18next';
 
 function handleAuthSuccess() {
   if (router.canDismiss()) {

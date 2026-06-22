@@ -1,11 +1,14 @@
-import { Image as ExpoImage } from 'expo-image';
-import { logger } from '@app/utils/logger';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+
+import { Image as ExpoImage } from 'expo-image';
+
 import {
   cacheImageFromUrl,
   getCachedImageUri,
 } from '@app/utils/image/image-cache';
+import { logger } from '@app/utils/logger';
+
 import type { ImageProps } from './Image.types';
 
 const getSourceUri = (source: ImageProps['source']) => {

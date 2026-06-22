@@ -1,5 +1,6 @@
-import { streamElementsChatStatsQueryOptions } from '@app/lib/react-query/queries/streamelements';
 import { useQuery } from '@tanstack/react-query';
+
+import { streamElementsChatStatsQueryOptions } from '@app/lib/react-query/queries/streamelements';
 
 interface StreamElementsStatsQueryOptions {
   enabled?: boolean;

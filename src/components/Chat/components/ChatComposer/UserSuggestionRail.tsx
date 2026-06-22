@@ -1,6 +1,8 @@
-import type { ChatUser } from '@app/store/chat/types/constants';
 import { useDeferredValue } from 'react';
 import { StyleSheet, View } from 'react-native';
+
+import type { ChatUser } from '@app/store/chat/types/constants';
+
 import { UserSuggestions } from './components/UserSuggestions';
 import { useUserSuggestions } from './hooks/useUserSuggestions';
 

@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { useLocalSearchParams } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CINNA_EMOTE_URLS } from '@app/dev/imageBenchmark/cinnaEmoteWorkload';
+
+import { useLocalSearchParams } from 'expo-router';
+
 import {
   appendRun,
   markPhase,
+  type PassResult,
   readResults,
   resetResults,
-  type PassResult,
 } from '@app/dev/imageBenchmark/benchResults';
+import { CINNA_EMOTE_URLS } from '@app/dev/imageBenchmark/cinnaEmoteWorkload';
 import {
   clearRetained,
   prewarm,
@@ -19,8 +21,8 @@ import {
 } from '@app/dev/imageBenchmark/runDecodeBenchmark';
 import {
   setSyntheticChatControl,
-  syntheticChatControl,
   SYNTHETIC_PRESETS,
+  syntheticChatControl,
 } from '@app/dev/imageBenchmark/syntheticChatControl';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));

@@ -1,11 +1,13 @@
-import { useAuthContext } from '@app/context/AuthContext';
-import { logger } from '@app/utils/logger';
+import { PropsWithChildren, useEffect, useRef } from 'react';
+
 import {
   StatsigProviderRN,
   useStatsigClient,
 } from '@statsig/react-native-bindings';
 import { usePathname } from 'expo-router';
-import { PropsWithChildren, useEffect, useRef } from 'react';
+
+import { useAuthContext } from '@app/context/AuthContext';
+import { logger } from '@app/utils/logger';
 
 const statsigClientKey = process.env.EXPO_PUBLIC_STATSIG_CLIENT_KEY;
 

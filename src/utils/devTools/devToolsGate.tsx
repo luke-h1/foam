@@ -1,7 +1,9 @@
+import type { ComponentType } from 'react';
+
+import { Redirect } from 'expo-router';
+
 import { useAuthContext } from '@app/context/AuthContext';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
-import { Redirect } from 'expo-router';
-import type { ComponentType } from 'react';
 
 /**
  * Dev tooling is only reachable in development, internal, and e2e builds.

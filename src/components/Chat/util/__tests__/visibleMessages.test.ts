@@ -2,6 +2,7 @@ import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+
 import { getVisibleMessages } from '../visibleMessages';
 
 type TestMessage = ChatMessageType<'usernotice'>;

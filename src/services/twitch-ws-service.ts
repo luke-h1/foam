@@ -1,4 +1,5 @@
 import { logger } from '@app/utils/logger';
+
 import { twitchService } from './twitch-service';
 
 interface EventSubMetadata {

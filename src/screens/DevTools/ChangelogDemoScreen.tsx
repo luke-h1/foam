@@ -1,12 +1,13 @@
-import { Button } from '@app/components/Button/Button';
-import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
-import ChangelogModule from '@modules/changelog/src/ChangelogModule';
-import type { ChangelogPresentOptions } from '@modules/changelog/src/Changelog.types';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+
+import { Button } from '@app/components/Button/Button';
+import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
+import { theme } from '@app/styles/themes';
+import type { ChangelogPresentOptions } from '@modules/changelog/src/Changelog.types';
+import ChangelogModule from '@modules/changelog/src/ChangelogModule';
 
 type ChangelogState = {
   currentVersion: string;

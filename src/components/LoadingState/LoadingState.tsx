@@ -1,12 +1,10 @@
-import { theme } from '@app/styles/themes';
-import { Canvas, Path, Skia } from '@shopify/react-native-skia';
 import { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 import type {
   ActivityIndicatorProps,
   StyleProp,
   ViewStyle,
 } from 'react-native';
-import { StyleSheet, View } from 'react-native';
 import {
   Easing,
   useDerivedValue,
@@ -14,6 +12,10 @@ import {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+
+import { Canvas, Path, Skia } from '@shopify/react-native-skia';
+
+import { theme } from '@app/styles/themes';
 
 interface LoadingStateProps {
   indicatorSize?: ActivityIndicatorProps['size'];

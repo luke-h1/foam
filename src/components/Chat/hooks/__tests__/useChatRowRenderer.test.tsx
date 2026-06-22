@@ -1,24 +1,26 @@
 import type { ObservableReadable } from '@legendapp/state';
 import { renderHook } from '@testing-library/react-native';
-import { render, act } from '@testing-library/react-native';
+import { act,render } from '@testing-library/react-native';
+
 import type { ChatListRef } from '@app/components/Chat/components/ChatList';
+import { RichChatMessage } from '@app/components/Chat/components/ChatMessage/RichChatMessage';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import {
   getSessionCacheString,
   setSessionCacheString,
 } from '@app/store/chat/actions/chatColorCaches';
 import { useChatRowPreferences } from '@app/store/preferences/selectors';
+import { createRef } from '@app/test/createRef';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
-import { createRef } from '@app/test/createRef';
-import { RichChatMessage } from '@app/components/Chat/components/ChatMessage/RichChatMessage';
+
+import { useChatRowRenderer } from '../useChatRowRenderer';
 import { useIsHighlightedReplyTargetMessage } from '../useChatTransientState';
 import {
   createChatMessage,
   createEmoteData,
   createSevenTvEmote,
 } from './__fixtures__/useChat.fixture';
-import { useChatRowRenderer } from '../useChatRowRenderer';
 
 function mockIsObservableReadable(
   value: unknown,

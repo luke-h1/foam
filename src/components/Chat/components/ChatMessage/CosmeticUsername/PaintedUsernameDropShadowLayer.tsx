@@ -1,6 +1,8 @@
-import type { PaintShadow } from '@app/utils/color/seventv-ws-service';
 import { type StyleProp, StyleSheet, TextStyle } from 'react-native';
+
 import { Text } from '@app/components/ui/Text/Text';
+import type { PaintShadow } from '@app/utils/color/seventv-ws-service';
+
 import { paintShadowTextColor } from './util/paintTextStyle';
 
 interface PaintedUsernameDropShadowLayerProps {

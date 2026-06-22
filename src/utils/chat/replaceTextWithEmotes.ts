@@ -1,11 +1,12 @@
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
 import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
+
 import { logger } from '../logger';
 import {
   findEmotesInText,
-  getSortedEmoteNames,
   type FindEmotesInTextReturn,
+  getSortedEmoteNames,
 } from './findEmotesInText';
 import { sanitizeInput } from './sanitizeInput';
 import { splitTextWithTwemoji } from './splitTextWithTwemoji';

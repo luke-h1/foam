@@ -1,5 +1,7 @@
-import { render } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+import { render } from '@testing-library/react-native';
+
 import type { ChatComposerProps } from '../ChatComposer/ChatComposer';
 import { ChatInputSection } from '../ChatInputSection';
 

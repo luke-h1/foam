@@ -1,14 +1,15 @@
 import { memo } from 'react';
-import type { ReactNode } from 'react';
-import { createHitslop } from '@app/utils/string/createHitSlop';
 import {
-  Pressable,
-  View,
   type GestureResponderEvent,
   type Insets,
+  Pressable,
   type StyleProp,
+  View,
   type ViewStyle,
 } from 'react-native';
+import type { ReactNode } from 'react';
+
+import { createHitslop } from '@app/utils/string/createHitSlop';
 
 interface ChatMessagePressableProps {
   accessibilityLabel?: string;

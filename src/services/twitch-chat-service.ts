@@ -1,11 +1,13 @@
+import { useCallback,useEffect, useRef } from 'react';
+
 import { useAuthContext } from '@app/context/AuthContext';
+import { useLazyRef } from '@app/hooks/useLazyRef';
 import { isE2EMode } from '@app/services/api/clients';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { logger } from '@app/utils/logger';
-import { useLazyRef } from '@app/hooks/useLazyRef';
-import { useEffect, useRef, useCallback } from 'react';
-import { useWebsocket } from '../hooks/ws/useWebsocket';
+
 import { ReadyState } from '../hooks/ws/constants';
+import { useWebsocket } from '../hooks/ws/useWebsocket';
 
 /**
  * Twitch IRC PINGs roughly every 5 min and we PONG, but a half-open socket

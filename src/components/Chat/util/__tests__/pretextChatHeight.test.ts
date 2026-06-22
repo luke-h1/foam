@@ -1,6 +1,6 @@
-import { createChatMessageFixture } from './__fixtures__/chatMessage.fixture';
 import type { AnyChatMessageType } from '../messageHandlers';
 import { estimateChatMessageHeightWithPretext } from '../pretextChatHeight';
+import { createChatMessageFixture } from './__fixtures__/chatMessage.fixture';
 
 function createMessage(
   overrides: Partial<AnyChatMessageType> = {},

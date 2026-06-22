@@ -1,4 +1,5 @@
 import type { RefObject } from 'react';
+
 import { ReadyState } from './constants';
 
 export interface QueryParams {

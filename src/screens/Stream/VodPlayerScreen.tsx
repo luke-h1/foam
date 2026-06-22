@@ -1,15 +1,18 @@
+import { useCallback, useEffect } from 'react';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
+import { router, useFocusEffect } from 'expo-router';
+import * as ScreenOrientation from 'expo-screen-orientation';
+import { StatusBar } from 'expo-status-bar';
+
 import { IconButton } from '@app/components/IconButton/IconButton';
 import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { theme } from '@app/styles/themes';
-import { router, useFocusEffect } from 'expo-router';
-import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
-import { StatusBar } from 'expo-status-bar';
-import * as ScreenOrientation from 'expo-screen-orientation';
-import { useCallback, useEffect } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTranslation } from 'react-i18next';
+
 import { getLiveStreamLayoutMetrics } from './liveStreamLayout';
 
 interface VodPlayerScreenProps {

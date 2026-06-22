@@ -1,11 +1,12 @@
-import { Host, Switch as ExpoSwitch } from '@expo/ui';
-import { useObservable, useSelector } from '@legendapp/state/react';
-import { useEffect, memo } from 'react';
+import { memo,useEffect } from 'react';
 import {
   StyleSheet,
-  View,
   type SwitchProps as NativeSwitchProps,
+  View,
 } from 'react-native';
+
+import { Host, Switch as ExpoSwitch } from '@expo/ui';
+import { useObservable, useSelector } from '@legendapp/state/react';
 
 export const Switch = memo(function Switch({
   accessibilityLabel,

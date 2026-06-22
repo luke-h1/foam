@@ -1,6 +1,8 @@
-import { useAuthContext } from '@app/context/AuthContext';
-import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
+
+import { router } from 'expo-router';
+
+import { useAuthContext } from '@app/context/AuthContext';
 
 export function usePopulateAuth() {
   const { authState } = useAuthContext();

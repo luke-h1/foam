@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next';
+
+import { NativeTabs } from 'expo-router/unstable-native-tabs';
+
 import { useAuthContext } from '@app/context/AuthContext';
 import { theme } from '@app/styles/themes';
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { useTranslation } from 'react-i18next';
 
 export default function TabsLayout() {
   const { authState } = useAuthContext();

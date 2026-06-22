@@ -1,5 +1,5 @@
-import { streamElementsService } from '../streamelements-service';
 import { streamElementsApi } from '../api/clients';
+import { streamElementsService } from '../streamelements-service';
 
 jest.mock('../api/clients', () => ({
   streamElementsApi: { get: jest.fn() },

@@ -1,7 +1,8 @@
 import { createMMKV } from 'react-native-mmkv';
 
-import type { AnyChatMessageType } from '../types/constants';
 import { CHAT_RECENT_MESSAGES_PERSISTENCE_KEY } from '@app/lib/observablePersistence';
+
+import type { AnyChatMessageType } from '../types/constants';
 
 // Recent messages are persisted with one MMKV key per channel rather than a
 // single serialized map. A busy chat re-syncs every few seconds; with the

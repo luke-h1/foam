@@ -1,11 +1,5 @@
-import {
-  useChatRenderPreferences,
-  usePreference,
-  usePreferences,
-  useUpdatePreferences,
-} from '@app/store/preferenceStore';
 import { render, waitFor } from '@testing-library/react-native';
-import { Chat } from '../Chat';
+
 import { recentMessagesService } from '@app/services/recent-messages-service';
 import {
   addMessage,
@@ -15,6 +9,14 @@ import {
   restoreRecentMessagesForChannel,
 } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import {
+  useChatRenderPreferences,
+  usePreference,
+  usePreferences,
+  useUpdatePreferences,
+} from '@app/store/preferenceStore';
+
+import { Chat } from '../Chat';
 import { useChatMessages } from '../hooks/useChatMessages';
 
 const mockScrollToBottom = jest.fn();

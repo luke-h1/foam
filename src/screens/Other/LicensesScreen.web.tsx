@@ -1,9 +1,11 @@
+import { StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { theme } from '@app/styles/themes';
-import { StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { OtherInfoCard } from './components/OtherInfoCard';
-import { useTranslation } from 'react-i18next';
 
 export function LicensesScreen() {
   const { t } = useTranslation('licenses');

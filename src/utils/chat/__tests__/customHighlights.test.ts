@@ -1,4 +1,5 @@
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+
 import {
   findCustomHighlight,
   normaliseHighlightPhrase,

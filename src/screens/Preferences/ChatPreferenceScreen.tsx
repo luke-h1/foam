@@ -1,7 +1,9 @@
+import { useRef } from 'react';
+import { Platform, ScrollView, StyleSheet } from 'react-native';
+
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
-import { Platform, ScrollView, StyleSheet } from 'react-native';
-import { useRef } from 'react';
+
 import { ChatPreferenceDefaultContent } from './ChatPreferenceDefaultContent';
 import { ChatPreferenceNativeForm } from './ChatPreferenceNativeForm';
 import { useChatPreferenceScreenState } from './useChatPreferenceScreenState';

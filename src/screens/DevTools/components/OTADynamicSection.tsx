@@ -1,13 +1,16 @@
 /* eslint-disable no-undef */
-import * as Form from '@app/components/Form/Form';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
-import { logger } from '@app/utils/logger';
+import { ActivityIndicator, StyleSheet,View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
 import * as AC from '@bacons/apple-colors';
 import * as Updates from 'expo-updates';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
-import { ENV_SUPPORTS_OTA } from '../util/envSupportsOta';
+
+import * as Form from '@app/components/Form/Form';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { theme } from '@app/styles/themes';
-import { useTranslation } from 'react-i18next';
+import { logger } from '@app/utils/logger';
+
+import { ENV_SUPPORTS_OTA } from '../util/envSupportsOta';
 
 const otaLoadingTitleHint = <ActivityIndicator animating />;
 const otaReloadHint = (

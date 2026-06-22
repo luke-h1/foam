@@ -1,18 +1,20 @@
 import { memo } from 'react';
-import { Button } from '@app/components/Button/Button';
-import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
-import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
 import {
   ScrollView,
   StyleSheet,
   useWindowDimensions,
   View,
 } from 'react-native';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { MessageActionPreview } from './MessageActionPreview';
 import { useTranslation } from 'react-i18next';
+
+import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
+import { Button } from '@app/components/Button/Button';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
+import { theme } from '@app/styles/themes';
+import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+
+import { MessageActionPreview } from './MessageActionPreview';
 
 type MessageActionId =
   | 'copy'

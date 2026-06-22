@@ -1,19 +1,22 @@
 import { memo } from 'react';
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
-import type { PaintData } from '@app/utils/color/seventv-ws-service';
+import { type StyleProp, StyleSheet,TextStyle, View } from 'react-native';
+
 import { useSelector } from '@legendapp/state/react';
-import { type StyleProp, TextStyle, View, StyleSheet } from 'react-native';
-import { Text } from '@app/components/ui/Text/Text';
+
 import { useChatScrollActive } from '@app/components/Chat/util/useChatScrollActive';
+import { Text } from '@app/components/ui/Text/Text';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import type { PaintData } from '@app/utils/color/seventv-ws-service';
+import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
+
 import { chatLineMetrics } from '../RichChatMessage.styles';
 import { PaintedUsernameDropShadowLayer } from './PaintedUsernameDropShadowLayer';
 import { PaintedUsernameMaskedFill } from './PaintedUsernameMaskedFill';
 import {
   DEFAULT_PAINT_DROP_SHADOW_MODE,
   getPaintDropShadows,
-  paintShadowKey,
   type PaintDropShadowMode,
+  paintShadowKey,
 } from './util/paintLayer';
 import {
   buildPaintUsernameTextStyle,

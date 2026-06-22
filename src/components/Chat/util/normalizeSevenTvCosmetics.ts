@@ -1,6 +1,6 @@
 import type { SevenTvHost } from '@app/services/seventv-service';
-import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
+import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import type {
   BadgeData,
   PaintCanvasRepeat,

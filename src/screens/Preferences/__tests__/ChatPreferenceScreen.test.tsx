@@ -1,6 +1,7 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
 import type { Preferences } from '@app/store/preferenceStore';
+
 import { ChatPreferenceScrollContent } from '../ChatPreferenceScreen';
 
 const mockUpdate = jest.fn();

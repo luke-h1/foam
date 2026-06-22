@@ -1,18 +1,20 @@
-import { AuthContext, type AuthContextState } from '@app/context/AuthContext';
-import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { useState } from 'react';
 import type { PropsWithChildren } from 'react';
 
-import { toast } from 'sonner-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { useAuthRequest } from 'expo-auth-session';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useAuthRequest } from 'expo-auth-session';
+import { toast } from 'sonner-native';
+
+import { AuthContext, type AuthContextState } from '@app/context/AuthContext';
+
+import { useTwitchSignIn } from '../useTwitchSignIn';
 import {
   createTwitchSignInAuthRequest,
   createTwitchSignInAuthResult,
   createWebBrowserAuthSuccess,
 } from './__fixtures__/useTwitchSignIn.fixture';
-import { useTwitchSignIn } from '../useTwitchSignIn';
 
 jest.mock('expo-constants', () => ({
   expoConfig: {

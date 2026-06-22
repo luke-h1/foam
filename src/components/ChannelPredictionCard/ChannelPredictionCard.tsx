@@ -1,11 +1,12 @@
 import { memo } from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
-import { Text } from '@app/components/ui/Text/Text';
 import { Badge } from '@app/components/ui/Badge/Badge';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { ChannelPredictionState } from '@app/types/twitch/prediction';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
-import { StyleSheet, View } from 'react-native';
 
 interface ChannelPredictionCardProps {
   channelLogin: string;

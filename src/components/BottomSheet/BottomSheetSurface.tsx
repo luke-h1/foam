@@ -1,6 +1,8 @@
-import { theme } from '@app/styles/themes';
-import { BlurView } from 'expo-blur';
 import { Platform, StyleSheet, View } from 'react-native';
+
+import { BlurView } from 'expo-blur';
+
+import { theme } from '@app/styles/themes';
 
 export function BottomSheetSurface() {
   if (Platform.OS === 'ios') {

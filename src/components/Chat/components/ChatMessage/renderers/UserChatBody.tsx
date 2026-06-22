@@ -1,29 +1,31 @@
+import { View } from 'react-native';
+import type { ReactNode } from 'react';
+
+import { useSelector } from '@legendapp/state/react';
+
+import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
+import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
+import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
 import { Text } from '@app/components/ui/Text/Text';
+import i18next from '@app/i18n/i18next';
+import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import { getMessageStructure } from '@app/utils/chat/deriveChatBody';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { lightenColor } from '@app/utils/color/lightenColor';
-import { useSelector } from '@legendapp/state/react';
-import type { ReactNode } from 'react';
-import { View } from 'react-native';
-import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
+
 import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
-import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
-import { ChannelPointsRewardMetaRow } from './ChannelPointsRewardMetaRow';
-import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
+import type { BadgePressData } from '../RichChatMessage.types';
 import { RichChatMessageUsername } from '../RichChatMessageUsername';
+import { ChannelPointsRewardMetaRow } from './ChannelPointsRewardMetaRow';
 import { ChatMessageBadges } from './ChatMessageBadges';
 import { ChatMessageBody } from './ChatMessageBody';
-import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
-import { getMessageStructure } from '@app/utils/chat/deriveChatBody';
+import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
 import { InlineMessageLine } from './InlineMessageLine';
 import { InlineMessageSpans } from './InlineMessageSpans';
 import { ReplyingToHeader } from './ReplyingToHeader';
-import type { BadgePressData } from '../RichChatMessage.types';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
-
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import i18next from '@app/i18n/i18next';
 
 interface UserChatBodyProps extends UseChatMessagePartRendererArgs {
   badgeList: SanitisedBadgeSet[];

@@ -6,6 +6,7 @@ import type {
   PaintShadow,
   PaintStop,
 } from '@app/utils/color/seventv-ws-service';
+
 import {
   badgeUrlFromHost,
   get7TvCosmeticId,

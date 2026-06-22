@@ -1,9 +1,10 @@
-import { getDisplayEmoteUrl } from '../getDisplayEmoteUrl';
+import type { SanitisedEmote } from '@app/types/emote';
+
 import {
   getEmoteImageCacheUrls,
   withResolvedEmoteImageVariants,
 } from '../emoteImageVariants';
-import type { SanitisedEmote } from '@app/types/emote';
+import { getDisplayEmoteUrl } from '../getDisplayEmoteUrl';
 
 describe('getDisplayEmoteUrl', () => {
   test('returns the animated URL when animations are enabled', () => {

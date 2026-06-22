@@ -1,5 +1,7 @@
 import { useCallback } from 'react';
 import type { MutableRefObject } from 'react';
+
+import { prefetchImage } from '@app/components/Image/imagePrefetch';
 import {
   fetchUserPersonalEmotes,
   getCurrentEmoteData,
@@ -8,17 +10,17 @@ import {
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import { updateMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { prefetchImage } from '@app/components/Image/imagePrefetch';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { cacheImageFromUrl } from '@app/utils/image/image-cache';
 import { logger } from '@app/utils/logger';
+
 import { normaliseChatUsername } from '../util/chatUsernames';
 import { hydrateVisibleSevenTvAssets } from '../util/hydrateVisibleSevenTvAssets';
 import {
-  createUserStateFromTags,
   type AnyChatMessageType,
+  createUserStateFromTags,
 } from '../util/messageHandlers';
 import { reprocessMessages } from '../util/reprocessMessages';
 import {

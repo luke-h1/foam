@@ -1,11 +1,17 @@
-import { recordAppSession } from '@app/lib/expo-store-review';
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { preferences$ } from '@app/store/preferenceStore';
-import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
-import { logger } from '@app/utils/logger';
+import { useEffect, useRef } from 'react';
+import { InteractionManager, LogBox } from 'react-native';
+
+import {
+  InstrumentSerif_400Regular,
+  InstrumentSerif_400Regular_Italic,
+} from '@expo-google-fonts/instrument-serif';
 import {
   Montserrat_300Light,
   Montserrat_300Light_Italic,
+  Montserrat_400Regular,
+  Montserrat_400Regular_Italic,
+  Montserrat_500Medium,
+  Montserrat_500Medium_Italic,
   Montserrat_600SemiBold,
   Montserrat_600SemiBold_Italic,
   Montserrat_700Bold,
@@ -14,20 +20,17 @@ import {
   Montserrat_800ExtraBold_Italic,
   Montserrat_900Black,
   Montserrat_900Black_Italic,
-  Montserrat_400Regular,
-  Montserrat_400Regular_Italic,
-  Montserrat_500Medium,
-  Montserrat_500Medium_Italic,
 } from '@expo-google-fonts/montserrat';
-import {
-  InstrumentSerif_400Regular,
-  InstrumentSerif_400Regular_Italic,
-} from '@expo-google-fonts/instrument-serif';
 import { useObserveEffect } from '@legendapp/state/react';
 import * as Font from 'expo-font';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
-import { useEffect, useRef } from 'react';
-import { InteractionManager, LogBox } from 'react-native';
+
+import { recordAppSession } from '@app/lib/expo-store-review';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { preferences$ } from '@app/store/preferenceStore';
+import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
+import { logger } from '@app/utils/logger';
+
 import { RootLayoutNav } from './RootLayoutNav';
 
 const criticalFontMap = {

@@ -92,6 +92,7 @@ jest.mock('react-native-gesture-handler', () => ({
 }));
 
 import { scheduleOnRN } from 'react-native-worklets';
+
 import {
   COMPOSER_DISMISS_DRAG_DISTANCE,
   COMPOSER_DISMISS_VELOCITY,

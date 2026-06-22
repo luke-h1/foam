@@ -1,18 +1,19 @@
-import { useWatchTimeTracking } from '@app/hooks/useWatchTimeTracking';
-import { logger } from '@app/utils/logger';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { InteractionManager, StyleSheet, View } from 'react-native';
-import { WebView } from 'react-native-webview';
 import type { WebViewMessageEvent } from 'react-native-webview';
+import { WebView } from 'react-native-webview';
+
+import { useWatchTimeTracking } from '@app/hooks/useWatchTimeTracking';
+import { logger } from '@app/utils/logger';
 
 import { ControlsOverlay } from './ControlsOverlay';
-import { StreamPlayerPoster } from './StreamPlayerPoster';
-import { StreamPlayerWebView } from './StreamPlayerWebView';
 import {
   ControlsTriggerButton,
   DebugErrorOverlay,
   TouchBlockOverlay,
 } from './StreamPlayerOverlays';
+import { StreamPlayerPoster } from './StreamPlayerPoster';
+import { StreamPlayerWebView } from './StreamPlayerWebView';
 import {
   buildRawTwitchPlayerUrl,
   buildTwitchAutoplayEnsureScript,

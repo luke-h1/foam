@@ -1,10 +1,12 @@
-import {
-  ModalBottomSheet,
-  type Detent,
-} from '@swmansion/react-native-bottom-sheet';
 import { useLayoutEffect, useRef, useState } from 'react';
-import type { PropsWithChildren } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import type { PropsWithChildren } from 'react';
+
+import {
+  type Detent,
+  ModalBottomSheet,
+} from '@swmansion/react-native-bottom-sheet';
+
 import { BottomSheetSurface } from './BottomSheetSurface';
 
 const bottomSheetSurfaceElement = <BottomSheetSurface />;

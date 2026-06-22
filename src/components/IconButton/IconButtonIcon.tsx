@@ -1,7 +1,8 @@
+import { ActivityIndicator } from 'react-native';
+
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { resolveSpacingValue, Spacing } from '@app/styles/spacing';
 import { theme } from '@app/styles/themes';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
-import { ActivityIndicator } from 'react-native';
 
 type IconType =
   | {

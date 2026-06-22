@@ -1,7 +1,9 @@
+import { renderHook } from '@testing-library/react-native';
+
 import { useSeventvWs } from '@app/hooks/useSeventvWs';
 import { ReadyState } from '@app/hooks/ws/constants';
 import { getSevenTvEmoteSetId } from '@app/store/chat/actions/channelLoad';
-import { renderHook } from '@testing-library/react-native';
+
 import { useSevenTvChatRuntime } from '../useSevenTvChatRuntime';
 
 jest.mock('@app/hooks/useSeventvWs', () => ({

@@ -1,27 +1,6 @@
-import { Button } from '@app/components/Button/Button';
-import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
-import { AnimatedFlashList } from '@app/components/FlashList/AnimatedFlashList';
-import { FlashListRef } from '@app/components/FlashList/FlashList';
-import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
-import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
-import { Text } from '@app/components/ui/Text/Text';
-import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
-import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
-import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
-import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { useTopStreamsQuery } from '@app/hooks/queries/use-top-streams-query';
-import { TwitchStream } from '@app/services/twitch-service';
-import {
-  type Preferences,
-  usePreference,
-  useUpdatePreferences,
-} from '@app/store/preferenceStore';
-import { theme } from '@app/styles/themes';
-import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
-import type { ListRenderItem } from '@shopify/flash-list';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { useCallback,useEffect, useRef, useState } from 'react';
+import { StyleSheet,View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Animated, {
   SharedValue,
   useAnimatedScrollHandler,
@@ -29,8 +8,31 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+
+import type { ListRenderItem } from '@shopify/flash-list';
+
+import { Button } from '@app/components/Button/Button';
+import { AnimatedFlashList } from '@app/components/FlashList/AnimatedFlashList';
+import { FlashListRef } from '@app/components/FlashList/FlashList';
+import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
+import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
+import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
+import { useTopStreamsQuery } from '@app/hooks/queries/use-top-streams-query';
+import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
+import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
+import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import { TwitchStream } from '@app/services/twitch-service';
+import {
+  type Preferences,
+  usePreference,
+  useUpdatePreferences,
+} from '@app/store/preferenceStore';
 import { motion } from '@app/styles/motion';
-import { useTranslation } from 'react-i18next';
+import { theme } from '@app/styles/themes';
+import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 
 type StreamListLayout = Preferences['streamListLayout'];
 

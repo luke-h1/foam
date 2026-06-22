@@ -1,12 +1,13 @@
 import { memo } from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
-import { Text } from '@app/components/ui/Text/Text';
 import { Badge } from '@app/components/ui/Badge/Badge';
+import { Text } from '@app/components/ui/Text/Text';
+import i18next from '@app/i18n/i18next';
 import { theme } from '@app/styles/themes';
 import type { ChannelPollState } from '@app/types/twitch/poll';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
-import { StyleSheet, View } from 'react-native';
-import i18next from '@app/i18n/i18next';
 
 interface ChannelPollCardProps {
   channelLogin: string;

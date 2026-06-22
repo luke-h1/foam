@@ -1,17 +1,20 @@
+import { memo, type Ref,useCallback, useRef } from 'react';
+import { TextInput, type TextInput as TextInputType, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
+import { PressableScale } from 'pressto';
+
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { useAccentColor } from '@app/context/AccentColorContext';
 import { theme } from '@app/styles/themes';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
-import { PressableScale } from 'pressto';
-import { memo, useCallback, useRef, type Ref } from 'react';
-import { TextInput, type TextInput as TextInputType, View } from 'react-native';
-import { EmoteSuggestionRail } from './EmoteSuggestionRail';
-import { UserSuggestionRail } from './UserSuggestionRail';
+
 import { chatComposerStyles as styles } from './chatComposerStyles';
+import { EmoteSuggestionRail } from './EmoteSuggestionRail';
 import {
-  useChatComposerController,
   type ChatComposerHandle,
+  useChatComposerController,
 } from './useChatComposerController';
-import { useTranslation } from 'react-i18next';
+import { UserSuggestionRail } from './UserSuggestionRail';
 
 export type { ChatComposerHandle };
 export type { SuggestionType } from './chatComposerTypes';

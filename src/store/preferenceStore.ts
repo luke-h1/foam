@@ -1,12 +1,13 @@
+import { observable } from '@legendapp/state';
+import { persistObservable } from '@legendapp/state/persist';
+import { useSelector } from '@legendapp/state/react';
+
 import {
   createObservablePersistenceLocalConfig,
   ensureObservablePersistenceConfig,
   PREFERENCES_PERSISTENCE_KEY,
 } from '@app/lib/observablePersistence';
 import { Theme } from '@app/styles/themes';
-import { observable } from '@legendapp/state';
-import { persistObservable } from '@legendapp/state/persist';
-import { useSelector } from '@legendapp/state/react';
 
 export interface CustomHighlight {
   id: string;

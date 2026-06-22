@@ -1,6 +1,7 @@
-import { theme } from '@app/styles/themes';
 import { StyleSheet, View } from 'react-native';
+
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
+import { theme } from '@app/styles/themes';
 
 export function LiveStreamCardSkeleton({
   layout = 'compact',

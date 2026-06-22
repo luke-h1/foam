@@ -1,3 +1,10 @@
+import { useEffect, useLayoutEffect } from 'react';
+import { Linking } from 'react-native';
+
+import * as QuickActions from 'expo-quick-actions';
+import type { RouterAction } from 'expo-quick-actions/router';
+import { router, usePathname } from 'expo-router';
+
 import { useAuthContext } from '@app/context/AuthContext';
 import { useClearExpiredStorageItems } from '@app/hooks/useClearExpiredStorageItems';
 import { useIcloudPreferenceSync } from '@app/hooks/useIcloudPreferenceSync';
@@ -14,11 +21,6 @@ import {
   syncNavigationState,
 } from '@app/navigators/navigationUtilities';
 import { logger } from '@app/utils/logger';
-import type { RouterAction } from 'expo-quick-actions/router';
-import { router, usePathname } from 'expo-router';
-import * as QuickActions from 'expo-quick-actions';
-import { useEffect, useLayoutEffect } from 'react';
-import { Linking } from 'react-native';
 
 const quickActionsBase: RouterAction[] = [
   {

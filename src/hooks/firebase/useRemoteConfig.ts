@@ -1,5 +1,7 @@
 import '@react-native-firebase/installations';
-import { logger } from '@app/utils/logger';
+
+import { useState } from 'react';
+
 import { getApp } from '@react-native-firebase/app';
 import {
   fetchAndActivate,
@@ -9,7 +11,8 @@ import {
   setDefaults,
 } from '@react-native-firebase/remote-config';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+
+import { logger } from '@app/utils/logger';
 
 const remoteConfig = getRemoteConfig(getApp());
 let remoteConfigFetchPromise: Promise<boolean> | null = null;

@@ -1,22 +1,25 @@
+import { type RefObject, useCallback,useRef } from 'react';
+import { Alert, ScrollView, StyleSheet,View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
+import { ListRenderItem } from '@shopify/flash-list';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner-native';
+
+import type { FlashListRef } from '@app/components/FlashList/FlashList';
 import { FlashList } from '@app/components/FlashList/FlashList';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
-import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { useUserBlockListQuery } from '@app/hooks/queries/use-user-block-list-query';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import i18next from '@app/i18n/i18next';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { twitchService, UserBlockList } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
-import { ListRenderItem } from '@shopify/flash-list';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
-import { useRef, type RefObject, useCallback } from 'react';
-import type { FlashListRef } from '@app/components/FlashList/FlashList';
-import { Alert, ScrollView, View, StyleSheet } from 'react-native';
-import { toast } from 'sonner-native';
+
 import { BlockedUsersActionButton } from './components/BlockedUsersActionButton';
-import { useTranslation } from 'react-i18next';
-import i18next from '@app/i18n/i18next';
 
 const SKELETON_COUNT = 5;
 const SKELETON_DATA = Array.from(

@@ -1,5 +1,6 @@
-import { Redirect } from 'expo-router';
 import type { ComponentType } from 'react';
+
+import { Redirect } from 'expo-router';
 
 /**
  * Storybook must stay out of production bundles. The require below is only

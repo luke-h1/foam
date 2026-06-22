@@ -1,9 +1,10 @@
-import { logger } from '@app/utils/logger';
 import {
   createWorkletRuntime,
   runOnRuntimeAsync,
   type WorkletRuntime,
 } from 'react-native-worklets';
+
+import { logger } from '@app/utils/logger';
 
 let parseRuntime: WorkletRuntime | null | undefined;
 

@@ -1,6 +1,7 @@
+import { useInfiniteQuery } from '@tanstack/react-query';
+
 import { clipsInfiniteQueryOptions } from '@app/lib/react-query/queries/twitch';
 import type { TwitchClipsRequestParams } from '@app/services/twitch-service';
-import { useInfiniteQuery } from '@tanstack/react-query';
 
 interface ClipsQueryOptions {
   enabled?: boolean;

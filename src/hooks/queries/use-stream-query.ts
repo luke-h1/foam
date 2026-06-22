@@ -1,5 +1,6 @@
-import { streamQueryOptions } from '@app/lib/react-query/queries/twitch';
 import { useQuery } from '@tanstack/react-query';
+
+import { streamQueryOptions } from '@app/lib/react-query/queries/twitch';
 
 interface StreamQueryOptions {
   enabled?: boolean;

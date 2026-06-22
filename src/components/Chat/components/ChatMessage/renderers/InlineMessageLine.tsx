@@ -1,10 +1,12 @@
-import { Text } from '@app/components/ui/Text/Text';
-import type { ReactNode } from 'react';
 import { View } from 'react-native';
+import type { ReactNode } from 'react';
+
+import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
+import { Text } from '@app/components/ui/Text/Text';
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
+
 import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
 import type { BadgePressData } from '../RichChatMessage.types';
-import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
 import { ChatMessageBadges } from './ChatMessageBadges';
 import { InlineMessageSpans } from './InlineMessageSpans';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';

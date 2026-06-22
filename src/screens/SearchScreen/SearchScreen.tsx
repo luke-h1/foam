@@ -1,3 +1,26 @@
+import {
+  type RefObject,
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
+import {
+  type NativeSyntheticEvent,
+  StyleSheet,
+  type TextInputFocusEventData,
+  View,
+} from 'react-native';
+import { useTranslation } from 'react-i18next';
+import type { SearchBarCommands } from 'react-native-screens';
+
+import { ListRenderItem } from '@shopify/flash-list';
+import { router, Stack } from 'expo-router';
+import * as ScreenOrientation from 'expo-screen-orientation';
+
 import { Button } from '@app/components/Button/Button';
 import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { Image } from '@app/components/Image/Image';
@@ -13,28 +36,8 @@ import {
   twitchService,
 } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
-import { ListRenderItem } from '@shopify/flash-list';
-import { router, Stack } from 'expo-router';
-import * as ScreenOrientation from 'expo-screen-orientation';
-import {
-  startTransition,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-  type RefObject,
-} from 'react';
-import {
-  View,
-  StyleSheet,
-  type NativeSyntheticEvent,
-  type TextInputFocusEventData,
-} from 'react-native';
-import type { SearchBarCommands } from 'react-native-screens';
+
 import { StreamerCard } from './components/StreamerCard';
-import { useTranslation } from 'react-i18next';
 
 interface SearchHistoryItem {
   query: string;

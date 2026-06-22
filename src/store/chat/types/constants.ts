@@ -1,5 +1,6 @@
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
+import type { ViewStyle } from 'react-native';
 
+import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import type { ClearChatTags } from '@app/types/chat/irc-tags/clearchat';
 import type { ClearMsgTags } from '@app/types/chat/irc-tags/clearmsg';
 import type { GlobalUserStateTags } from '@app/types/chat/irc-tags/globaluserstate';
@@ -15,7 +16,6 @@ import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import type { PaintData } from '@app/utils/color/seventv-ws-service';
-import type { ViewStyle } from 'react-native';
 
 export type { PaintData, SanitisedBadgeSet, SanitisedEmote };
 

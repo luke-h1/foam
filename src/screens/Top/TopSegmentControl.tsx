@@ -1,7 +1,8 @@
+import { StyleSheet,View } from 'react-native';
+
 import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
 import { TOP_TAB_ROUTES } from '@app/constants/topTabRoutes';
 import { theme } from '@app/styles/themes';
-import { View, StyleSheet } from 'react-native';
 
 type TopSegmentControlProps = {
   index: number;

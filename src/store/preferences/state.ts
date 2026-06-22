@@ -4,7 +4,7 @@
 // are invisible to the other until relaunch).
 export {
   getPreferences,
+  type Preferences,
   preferences$,
   replacePreferences,
-  type Preferences,
 } from '@app/store/preferenceStore';

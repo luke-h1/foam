@@ -1,13 +1,14 @@
 import { useSelector } from '@legendapp/state/react';
 
 import { useEmoteRenderPreferences } from '@app/store/preferences/selectors';
+
+import { chatStore$ } from '../observables/chatStore';
 import {
-  emptyEmoteData,
   type ChannelCacheType,
+  emptyEmoteData,
   type SanitisedBadgeSet,
   type SanitisedEmote,
 } from '../types/constants';
-import { chatStore$ } from '../observables/chatStore';
 
 export const useMessages = () => useSelector(chatStore$.messages);
 export const useEmojis = () => useSelector(chatStore$.emojis);

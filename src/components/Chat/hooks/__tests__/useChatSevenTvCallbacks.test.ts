@@ -1,3 +1,7 @@
+import { act,renderHook } from '@testing-library/react-native';
+
+import { toPaintWithId } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
+import { countMetric } from '@app/lib/sentry';
 import {
   addBadge,
   addPaint,
@@ -12,28 +16,26 @@ import {
   updateBadge,
   updatePaint,
 } from '@app/store/chat/actions/cosmetics';
-import { countMetric } from '@app/lib/sentry';
 import type { BadgeData, PaintData } from '@app/utils/color/seventv-ws-service';
-import { renderHook, act } from '@testing-library/react-native';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
-import { toPaintWithId } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
+
+import { useChatSevenTvCallbacks } from '../useChatSevenTvCallbacks';
+import { createSevenTvEmote } from './__fixtures__/useChat.fixture';
 import {
   createBadgeChangeEntry,
-  createBadgePushedEntry,
   createBadgeCosmeticCreateData,
   createBadgeCosmeticUpdateData,
   createBadgeData,
+  createBadgePushedEntry,
   createEmptyChangeMap,
   createEntitlementDeleteData,
   createEntitlementUpdateData,
   createPaintChangeEntry,
-  createPaintPushedEntry,
   createPaintCosmeticCreateData,
   createPaintCosmeticUpdateData,
   createPaintInput,
+  createPaintPushedEntry,
 } from './__fixtures__/useChatSevenTvCallbacks.fixture';
-import { createSevenTvEmote } from './__fixtures__/useChat.fixture';
-import { useChatSevenTvCallbacks } from '../useChatSevenTvCallbacks';
 
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
   addBadge: jest.fn(),

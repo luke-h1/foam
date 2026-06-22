@@ -1,4 +1,5 @@
 import { subMinutes } from 'date-fns';
+
 import { elapsedStreamTime } from '../string/elapsedStreamTime';
 
 describe('elapsedStreamTime', () => {

@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react-native';
+
 import { AuthCallbackScreen } from '@app/screens/AuthCallbackScreen';
 
 describe('AuthCallbackScreen', () => {

@@ -2,6 +2,7 @@
 import type { FfzSanitisedEmote } from '@app/types/emote';
 import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { logger } from '@app/utils/logger';
+
 import { ffzApi } from './api/clients';
 import { SanitisedBadgeSet } from './twitch-badge-service';
 

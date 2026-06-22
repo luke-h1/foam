@@ -1,5 +1,6 @@
-import { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
 import EventEmitter from 'eventemitter3';
+
+import { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
 
 export type StorageSetterOptions = {
   expiry?: Date;

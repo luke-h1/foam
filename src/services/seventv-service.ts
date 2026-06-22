@@ -1,4 +1,3 @@
-import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import {
   EmoteQueryDocument,
   type EmoteQueryQuery,
@@ -10,24 +9,25 @@ import {
   GlobalEmoteSetDocument,
   type GlobalEmoteSetQuery,
   type Image,
-  Platform,
   PaintsQueryDocument,
   type PaintsQueryQuery,
-  UserCosmeticsDocument,
-  UserCosmeticsQuery,
+  Platform,
   UserByConnectionDocument,
   UserByConnectionQuery,
+  UserCosmeticsDocument,
+  UserCosmeticsQuery,
   UserPersonalEmotesQueryDocument,
   UserPersonalEmotesQueryQuery,
   UserPersonalEmotesQueryQueryVariables,
 } from '@app/graphql/generated/gql';
 import { storageService } from '@app/lib/storage';
 import type {
-  EmoteImageVariantSet,
   EmoteImageVariants,
+  EmoteImageVariantSet,
   SevenTvEmoteSetMetadata,
   SevenTvSanitisedEmote,
 } from '@app/types/emote';
+import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import {
   convertV4PaintToPaintData,
   pickAnimatedFormat,
@@ -38,6 +38,7 @@ import {
 } from '@app/utils/color/sevenTvPaintData';
 import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { logger } from '@app/utils/logger';
+
 import { sevenTvApi } from './api/clients';
 import { sevenTvV4Client } from './gql/client';
 import { runCosmeticsQuery } from './gql/sevenTvWorkletClient';

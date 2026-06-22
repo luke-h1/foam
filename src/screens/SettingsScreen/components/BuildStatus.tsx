@@ -1,9 +1,11 @@
-import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
-import * as Application from 'expo-application';
-import * as Updates from 'expo-updates';
 import { StyleSheet, View } from 'react-native';
 import { Circle, Svg } from 'react-native-svg';
+
+import * as Application from 'expo-application';
+import * as Updates from 'expo-updates';
+
+import { Text } from '@app/components/ui/Text/Text';
+import { theme } from '@app/styles/themes';
 
 export function BuildStatus() {
   const updateProgress = Updates.updateId ? 1 : 0.72;

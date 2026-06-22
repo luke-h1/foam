@@ -1,5 +1,6 @@
-import { setFatalErrorListener } from '@app/lib/global-error-handlers';
 import { useEffect, useState } from 'react';
+
+import { setFatalErrorListener } from '@app/lib/global-error-handlers';
 
 /**
  * Bridges fatal errors caught by the global JS error handler into the

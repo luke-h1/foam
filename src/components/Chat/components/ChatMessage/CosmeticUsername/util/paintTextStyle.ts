@@ -1,11 +1,12 @@
+import type { TextStyle } from 'react-native';
+
 import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
-import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 import type {
   PaintData,
   PaintShadow,
   PaintTextStroke,
 } from '@app/utils/color/seventv-ws-service';
-import type { TextStyle } from 'react-native';
+import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
 // Paint-pure derivations, memoised on the paint object so every user wearing a
 // shared paint reuses one computed result (the 7TV extension computes each

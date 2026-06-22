@@ -1,9 +1,11 @@
+import type { ComponentType, FC } from 'react';
+
 import Bugsnag from '@bugsnag/expo';
 import BugsnagPerformance from '@bugsnag/expo-performance';
 import * as Updates from 'expo-updates';
-import { sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
+
 import type { LogMetadata } from '@app/lib/sentry';
-import type { ComponentType, FC } from 'react';
+import { sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
 
 let didInitializeBugsnag = false;
 

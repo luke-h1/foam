@@ -1,24 +1,26 @@
+import { type RefObject, useCallback,useRef } from 'react';
+import { StyleSheet,View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
+
+import { useObservable, useSelector } from '@legendapp/state/react';
+import type { ListRenderItem } from '@shopify/flash-list';
+
 import {
   CATEGORY_CARD_HEIGHT,
   MemoizedCategoryCard,
 } from '@app/components/CategoryCard/CategoryCard';
-import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { AnimatedFlashList } from '@app/components/FlashList/AnimatedFlashList';
 import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
+import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
+import { useTopCategoriesQuery } from '@app/hooks/queries/use-top-categories-query';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { useTopCategoriesQuery } from '@app/hooks/queries/use-top-categories-query';
 import { Category } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
-import { useObservable, useSelector } from '@legendapp/state/react';
-import type { ListRenderItem } from '@shopify/flash-list';
-import { useRef, type RefObject, useCallback } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
-import { useTranslation } from 'react-i18next';
 
 const SKELETON_COUNT = 9;
 const SKELETON_COLUMNS = 3;

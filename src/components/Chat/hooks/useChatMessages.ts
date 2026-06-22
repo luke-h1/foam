@@ -1,12 +1,3 @@
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
-import {
-  addMessages,
-  getMaxChatMessages,
-  getUserMessageColor,
-} from '@app/store/chat/actions/messages';
-import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
-import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
-import { useLazyRef } from '@app/hooks/useLazyRef';
 import {
   MutableRefObject,
   startTransition,
@@ -14,6 +5,16 @@ import {
   useLayoutEffect,
   useRef,
 } from 'react';
+
+import { useLazyRef } from '@app/hooks/useLazyRef';
+import {
+  addMessages,
+  getMaxChatMessages,
+  getUserMessageColor,
+} from '@app/store/chat/actions/messages';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
+import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 
 // Each flush commits a new Fabric shadow tree for the chat list, and at high
 // message rates releasing the dead trees dominated the Hermes GC thread

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+
 import CpuUsage from '@modules/cpu-usage/src/CpuUsageModule';
 
 function readUsage(): number | null {

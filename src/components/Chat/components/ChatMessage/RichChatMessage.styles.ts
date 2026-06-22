@@ -1,9 +1,11 @@
+import { StyleSheet } from 'react-native';
+
+import { theme } from '@app/styles/themes';
+
 import {
   CHAT_NOTICE_ACCENTS,
   noticeSurfaceTint,
 } from '../util/chatNoticeAccents';
-import { theme } from '@app/styles/themes';
-import { StyleSheet } from 'react-native';
 
 export const chatLineMetrics = {
   comfortable: {

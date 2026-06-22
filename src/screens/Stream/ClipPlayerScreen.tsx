@@ -1,12 +1,14 @@
+import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { router } from 'expo-router';
+
 import { IconButton } from '@app/components/IconButton/IconButton';
 import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { theme } from '@app/styles/themes';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
-import { router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTranslation } from 'react-i18next';
 
 interface ClipPlayerScreenProps {
   id: string;

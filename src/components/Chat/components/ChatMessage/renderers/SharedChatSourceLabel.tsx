@@ -1,9 +1,10 @@
-import { Text } from '@app/components/ui/Text/Text';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { View } from 'react-native';
 
-import { styles } from '../RichChatMessage.styles';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
+
+import { styles } from '../RichChatMessage.styles';
 
 export function SharedChatSourceLabel() {
   return (

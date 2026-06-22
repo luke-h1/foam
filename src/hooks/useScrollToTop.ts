@@ -1,5 +1,6 @@
-import { useScrollToTop as useNavigationScrollToTop } from 'expo-router';
 import { Ref, RefObject, useRef } from 'react';
+
+import { useScrollToTop as useNavigationScrollToTop } from 'expo-router';
 
 type ScrollOptions = { x?: number; y?: number; animated?: boolean };
 type WebScrollable = { injectJavaScript: (script: string) => void };

@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
 } from 'react';
+
 import { subscribeEmoteCacheMemoryPressure } from './cache-service';
 import {
   CachedEmotesLoadingState,

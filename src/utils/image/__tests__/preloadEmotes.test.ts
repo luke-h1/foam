@@ -1,5 +1,7 @@
-import type { SanitisedEmote } from '@app/types/emote';
 import { Image as ExpoImage } from 'expo-image';
+
+import type { SanitisedEmote } from '@app/types/emote';
+
 import {
   clearPreloadCache,
   preloadChannelEmotes,

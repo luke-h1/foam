@@ -1,11 +1,12 @@
-import { KeyboardController } from 'react-native-keyboard-controller';
 import { Directions, Gesture } from 'react-native-gesture-handler';
+import { KeyboardController } from 'react-native-keyboard-controller';
 import {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
+
 import {
   COMPOSER_DISMISS_DRAG_DISTANCE,
   COMPOSER_DISMISS_VELOCITY,

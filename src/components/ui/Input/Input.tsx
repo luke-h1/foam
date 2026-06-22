@@ -1,3 +1,14 @@
+import {
+  type StyleProp,
+  StyleSheet,
+  TextInput,
+  type TextInputProps,
+  type TextStyle,
+  useColorScheme,
+  type ViewStyle,
+} from 'react-native';
+import type { Ref } from 'react';
+
 import { useAccentColor } from '@app/context/AccentColorContext';
 import { colors } from '@app/styles/colors';
 import {
@@ -8,16 +19,6 @@ import {
   UIRadius,
   UISize,
 } from '@app/styles/ui';
-import type { Ref } from 'react';
-import {
-  StyleSheet,
-  TextInput,
-  type StyleProp,
-  type TextInputProps,
-  type TextStyle,
-  type ViewStyle,
-  useColorScheme,
-} from 'react-native';
 
 type InputVariant = 'outline' | 'soft' | 'subtle' | 'underline';
 export type InputRef = TextInput;

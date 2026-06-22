@@ -2,18 +2,17 @@ import { memo } from 'react';
 
 import { ActionSheet } from './ActionSheet/ActionSheet';
 import { BadgePreviewSheet } from './BadgePreviewSheet/BadgePreviewSheet';
-import { ChattersSheet } from './ChattersSheet/ChattersSheet';
-
-import { EmotePreviewSheet } from './EmotePreviewSheet/EmotePreviewSheet';
-import { EmoteSheet, type EmotePickerItem } from './EmoteSheet/EmoteSheet';
-import { SettingsSheet } from './SettingsSheet/SettingsSheet';
-import { UserActionSheet } from './UserActionSheet';
 import {
   BadgePressData,
   EmotePressData,
   MessageActionData,
   UsernamePressData,
 } from './ChatMessage/RichChatMessage.types';
+import { ChattersSheet } from './ChattersSheet/ChattersSheet';
+import { EmotePreviewSheet } from './EmotePreviewSheet/EmotePreviewSheet';
+import { type EmotePickerItem,EmoteSheet } from './EmoteSheet/EmoteSheet';
+import { SettingsSheet } from './SettingsSheet/SettingsSheet';
+import { UserActionSheet } from './UserActionSheet';
 
 export interface ChatOverlayLayerProps {
   canDeleteSelectedMessage: boolean;

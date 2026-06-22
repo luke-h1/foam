@@ -1,10 +1,11 @@
-import { theme } from '@app/styles/themes';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import type {
   ActivityIndicatorProps,
   StyleProp,
   ViewStyle,
 } from 'react-native';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+
+import { theme } from '@app/styles/themes';
 
 interface LoadingStateProps {
   indicatorSize?: ActivityIndicatorProps['size'];

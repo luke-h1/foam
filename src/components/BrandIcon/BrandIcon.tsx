@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { DimensionValue, ViewStyle } from 'react-native';
+
 import {
   BrandIconName,
   BrandIcons,

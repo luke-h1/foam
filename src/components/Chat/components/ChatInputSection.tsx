@@ -1,3 +1,10 @@
+import { memo } from 'react';
+import { ActivityIndicator, StyleSheet,View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { GestureDetector } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { Button } from '@app/components/Button/Button';
 import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/CosmeticUsername';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
@@ -9,24 +16,19 @@ import {
   createHorizontalHitslop,
 } from '@app/utils/string/createHitSlop';
 import { truncate } from '@app/utils/string/truncate';
-import { memo } from 'react';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
-import { GestureDetector } from 'react-native-gesture-handler';
-import Animated from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { ChatComposer } from './ChatComposer/ChatComposer';
+import type {
+  ChatInputSectionProps,
+  ReplyToData,
+} from './chatInputSectionTypes';
 import {
   COMPOSER_CONTROL_RADIUS,
   COMPOSER_CONTROL_SIZE,
   COMPOSER_ROW_GAP,
 } from './composerSizing';
-import { ChatComposer } from './ChatComposer/ChatComposer';
 import { ReplyPreviewBody } from './ReplyPreviewBody';
-import type {
-  ChatInputSectionProps,
-  ReplyToData,
-} from './chatInputSectionTypes';
 import { useComposerDismissGesture } from './useComposerDismissGesture';
-import { useTranslation } from 'react-i18next';
 
 export type { ReplyToData };
 

@@ -1,10 +1,12 @@
 import { memo } from 'react';
+import { View } from 'react-native';
+
 import { Text } from '@app/components/ui/Text/Text';
 import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import { isLowEndDevice } from '@app/utils/device/deviceTier';
-import { View } from 'react-native';
+import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
+
 import { ChatInlineImage } from './ChatInlineImage';
 
 type PartVariant = ParsedPart<'emote'>;

@@ -3,8 +3,8 @@ import {
   twitchService,
   type UserInfoResponse,
 } from '@app/services/twitch-service';
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { clearSessionCache } from '@app/store/chat/actions/chatColorCaches';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { logger } from '@app/utils/logger';
 

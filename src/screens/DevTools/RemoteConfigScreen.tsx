@@ -1,19 +1,21 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-base-to-string */
+import { ActivityIndicator, Platform, StyleSheet,View } from 'react-native';
+
+import * as AC from '@bacons/apple-colors';
+
 import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import { Button } from '@app/components/Button/Button';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import {
   defaultRemoteConfig,
   RemoteConfigKey,
   useRemoteConfig,
 } from '@app/hooks/firebase/useRemoteConfig';
-import { theme } from '@app/styles/themes';
-import * as AC from '@bacons/apple-colors';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
-import { ActivityIndicator, Platform, View, StyleSheet } from 'react-native';
 import i18next from '@app/i18n/i18next';
+import { theme } from '@app/styles/themes';
 
 function getSourceIcon(source: string): SymbolViewProps['name'] {
   switch (source) {

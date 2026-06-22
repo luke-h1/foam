@@ -4,8 +4,10 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react-native';
-import { twitchService as _twitchService } from '@app/services/twitch-service';
+
 import { storageService as _storageService } from '@app/lib/storage';
+import { twitchService as _twitchService } from '@app/services/twitch-service';
+
 import { SearchScreen } from '../SearchScreen';
 
 jest.mock('@app/services/twitch-service');

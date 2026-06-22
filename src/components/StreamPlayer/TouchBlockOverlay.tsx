@@ -1,7 +1,7 @@
-import type { ComponentProps } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { GestureDetector } from 'react-native-gesture-handler';
+import type { ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
+import { GestureDetector } from 'react-native-gesture-handler';
 
 export function TouchBlockOverlay({
   gesture,

@@ -1,6 +1,8 @@
 /* eslint-disable react-doctor/rn-no-raw-text -- FormattedDate children are test inputs */
-import render from '@app/test/render';
 import { screen } from '@testing-library/react-native';
+
+import render from '@app/test/render';
+
 import { FormattedDate } from '../FormattedDate/FormattedDate';
 
 describe('FormattedDate', () => {

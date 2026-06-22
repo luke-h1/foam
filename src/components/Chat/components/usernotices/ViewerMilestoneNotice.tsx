@@ -1,16 +1,17 @@
 import { memo } from 'react';
-import { Text } from '@app/components/ui/Text/Text';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { View } from 'react-native';
 
-import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
+import { Text } from '@app/components/ui/Text/Text';
+import i18next from '@app/i18n/i18next';
+import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+
 import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';
 import { styles } from '../ChatMessage/RichChatMessage.styles';
+import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
 import {
   resolveViewerMilestoneBody,
   splitViewerMilestoneLead,
 } from './util/viewerMilestoneBody';
-import i18next from '@app/i18n/i18next';
 
 interface ViewerMilestoneNoticeProps {
   part: ParsedPart<'viewermilestone'>;

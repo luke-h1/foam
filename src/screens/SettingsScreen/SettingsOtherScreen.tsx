@@ -1,3 +1,10 @@
+import { useRef } from 'react';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
+import { Button, Form, Host, Section } from '@expo/ui/swift-ui';
+import { router } from 'expo-router';
+
 import {
   SettingsLinkRow,
   SettingsSection,
@@ -5,11 +12,6 @@ import {
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
-import { Button, Form, Host, Section } from '@expo/ui/swift-ui';
-import { router } from 'expo-router';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useRef } from 'react';
-import { useTranslation } from 'react-i18next';
 
 export function SettingsOtherScreen() {
   const { t } = useTranslation('settings');

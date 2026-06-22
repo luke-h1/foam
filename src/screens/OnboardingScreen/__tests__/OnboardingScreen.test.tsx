@@ -1,6 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { router } from 'expo-router';
+
 import { storageMMKV as _storageMMKV } from '@app/lib/mmkv';
+
 import { OnboardingScreen } from '../OnboardingScreen';
 
 jest.mock('@app/lib/mmkv', () => ({

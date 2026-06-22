@@ -1,5 +1,6 @@
-import { AllowedKey, storageService } from '@app/lib/storage';
 import { useEffect, useState } from 'react';
+
+import { AllowedKey, storageService } from '@app/lib/storage';
 
 type DebugOptions = {
   [key in AllowedKey]?: { enabled: boolean };

@@ -1,10 +1,11 @@
 import type { SanitisedEmote } from '@app/types/emote';
-import { cacheEmoteImages, clearEmoteImageCache } from '../actions/emoteImages';
 import {
   clearSessionCache,
   getCachedImageUri,
   warmImageCache,
 } from '@app/utils/image/image-cache';
+
+import { cacheEmoteImages, clearEmoteImageCache } from '../actions/emoteImages';
 
 jest.mock('@app/utils/image/image-cache', () => ({
   cacheImageFromUrl: jest.fn(),

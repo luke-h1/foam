@@ -1,7 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/react';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+import type { Meta, StoryObj } from '@storybook/react';
+
 import { SettingsSheet, type SettingsSheetProps } from './SettingsSheet';
 
 const meta = {

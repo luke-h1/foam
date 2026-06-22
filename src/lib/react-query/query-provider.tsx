@@ -1,16 +1,19 @@
-import { fetch } from 'expo/fetch';
-import {
-  listenNetworkConfirmed,
-  listenNetworkLost,
-} from '@app/utils/network/network-events';
+import { PropsWithChildren } from 'react';
+import { AppState, type AppStateStatus,Platform } from 'react-native';
+
 import {
   focusManager,
   onlineManager,
   QueryClientProvider,
 } from '@tanstack/react-query';
+import { fetch } from 'expo/fetch';
+
+import {
+  listenNetworkConfirmed,
+  listenNetworkLost,
+} from '@app/utils/network/network-events';
+
 import { queryClient } from './query-client';
-import { PropsWithChildren } from 'react';
-import { AppState, Platform, type AppStateStatus } from 'react-native';
 
 const authProxyBaseUrl = process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
 

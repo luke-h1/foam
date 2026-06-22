@@ -1,9 +1,11 @@
+import { useTranslation } from 'react-i18next';
+
+import { Stack } from 'expo-router';
+
 import {
   nativeStackScreenOptions,
   nativeStackTabRootScreenOptions,
 } from '@app/utils/navigation/nativeStackOptions';
-import { Stack } from 'expo-router';
-import { useTranslation } from 'react-i18next';
 
 export default function FollowingLayout() {
   const { t } = useTranslation('navigation');

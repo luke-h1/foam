@@ -1,5 +1,6 @@
-import { userQueryOptions } from '@app/lib/react-query/queries/twitch';
 import { useQuery } from '@tanstack/react-query';
+
+import { userQueryOptions } from '@app/lib/react-query/queries/twitch';
 
 interface UserQueryOptions {
   enabled?: boolean;

@@ -1,3 +1,13 @@
+import { ReactNode, type Ref } from 'react';
+import {
+  StyleSheet,
+  // eslint-disable-next-line no-restricted-imports
+  Text as RNText,
+  // eslint-disable-next-line no-restricted-imports
+  TextProps as RNTextProps,
+  TextStyle,
+} from 'react-native';
+
 import { getMargin, MarginProps } from '@app/styles/spacing';
 import {
   resolveThemeColor,
@@ -5,16 +15,6 @@ import {
   type ThemeColor,
   type ThemeColorToken,
 } from '@app/styles/themes';
-import { ReactNode, type Ref } from 'react';
-
-import {
-  // eslint-disable-next-line no-restricted-imports
-  Text as RNText,
-  // eslint-disable-next-line no-restricted-imports
-  TextProps as RNTextProps,
-  StyleSheet,
-  TextStyle,
-} from 'react-native';
 
 export type TextType =
   | 'default'

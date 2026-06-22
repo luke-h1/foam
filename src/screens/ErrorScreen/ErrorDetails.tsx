@@ -1,18 +1,20 @@
+import { ScrollView, StyleSheet,View } from 'react-native';
 import type { ErrorInfo } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { useObservable, useSelector } from '@legendapp/state/react';
+import { router } from 'expo-router';
+
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { queryClient } from '@app/lib/react-query/query-client';
 import { theme } from '@app/styles/themes';
-import { router } from 'expo-router';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import {
   categorizeError,
   getFriendlyErrorMessage,
 } from '@app/utils/errors/categorizeError';
-import { useObservable, useSelector } from '@legendapp/state/react';
-import { ScrollView, View, StyleSheet } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 export interface ErrorDetailsProps {
   error: Error | null;

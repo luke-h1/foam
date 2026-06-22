@@ -1,3 +1,5 @@
+import { measureFunction } from 'reassure';
+
 import type {
   BttvSanitisedEmote,
   EmojiSanitisedEmote,
@@ -5,7 +7,7 @@ import type {
   SanitisedEmote,
   TwitchSanitisedEmote,
 } from '@app/types/emote';
-import { measureFunction } from 'reassure';
+
 import { processEmotesWorklet } from '../emoteProcessor';
 import { extractEmotesFromTag } from '../extractEmotes';
 import { findEmotesInText } from '../findEmotesInText';

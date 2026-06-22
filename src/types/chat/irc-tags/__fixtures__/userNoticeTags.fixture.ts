@@ -1,8 +1,8 @@
 import type {
-  AnonGiftPaidUpgradeTags,
   AnnouncementTags,
-  BitsBadgeTierTags,
+  AnonGiftPaidUpgradeTags,
   BaseUserNoticeTags,
+  BitsBadgeTierTags,
   CharityDonationTags,
   ExtendSubTags,
   GiftPaidUpgradeTags,

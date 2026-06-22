@@ -1,5 +1,7 @@
-import { act, renderHook } from '@testing-library/react-native';
 import type { RefObject } from 'react';
+
+import { act, renderHook } from '@testing-library/react-native';
+
 import { useScrollRef, useScrollToTop } from '../useScrollToTop';
 
 const mockUseNavigationScrollToTop = jest.fn();

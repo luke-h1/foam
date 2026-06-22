@@ -1,10 +1,12 @@
+import { useEffect } from 'react';
+
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { logger } from '@app/utils/logger';
-import { useEffect } from 'react';
+
 import {
-  resolveExperimentVariant,
   type ExperimentName,
   type ExperimentVariant,
+  resolveExperimentVariant,
 } from './experiments';
 
 const loggedExposures = new Set<string>();

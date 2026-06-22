@@ -1,8 +1,9 @@
 import { PropsWithChildren, type Ref, useState } from 'react';
-import { Pressable } from 'react-native-gesture-handler';
 import { StyleSheet, View } from 'react-native';
-import type { PressableProps } from 'react-native-gesture-handler';
 import { EaseView } from 'react-native-ease';
+import type { PressableProps } from 'react-native-gesture-handler';
+import { Pressable } from 'react-native-gesture-handler';
+
 import { motion } from '@app/styles/motion';
 
 export function PressableArea({

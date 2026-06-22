@@ -1,9 +1,10 @@
+import { useCallback,useEffect, useRef } from 'react';
+
+import { useLazyRef } from '@app/hooks/useLazyRef';
 import { sevenTvService } from '@app/services/seventv-service';
 import { fetchAndCacheUserCosmetics } from '@app/store/chat/actions/cosmetics';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { logger } from '@app/utils/logger';
-import { useLazyRef } from '@app/hooks/useLazyRef';
-import { useEffect, useRef, useCallback } from 'react';
 
 const MAX_CONCURRENT_COSMETIC_FETCHES = 4;
 let activeCosmeticFetches = 0;

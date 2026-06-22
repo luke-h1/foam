@@ -1,12 +1,14 @@
-import { EnergyOrb } from '@app/components/EnergyOrb/EnergyOrb';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+
+import { router } from 'expo-router';
+
 import { Button } from '@app/components/Button/Button';
+import { EnergyOrb } from '@app/components/EnergyOrb/EnergyOrb';
 import { Text } from '@app/components/ui/Text/Text';
 import { storageMMKV } from '@app/lib/mmkv';
 import { theme } from '@app/styles/themes';
-import { router } from 'expo-router';
-import { useWindowDimensions, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { useTranslation } from 'react-i18next';
 
 export const ONBOARDING_SEEN_KEY = 'V1_hasSeenOnboarding';
 

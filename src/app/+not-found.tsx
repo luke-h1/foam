@@ -1,6 +1,8 @@
-import { Link, Stack } from 'expo-router';
-import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
+import { Link, Stack } from 'expo-router';
+
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 

@@ -1,10 +1,12 @@
+import { isLiquidGlassAvailable } from 'expo-glass-effect';
+import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+
 import { ForceUpdateModal } from '@app/components/ForceUpdateModal/ForceUpdateModal';
 import { OTAUpdates } from '@app/components/OTAUpdates/OTAUpdates';
 import { Providers } from '@app/Providers/Providers';
 import { theme } from '@app/styles/themes';
-import { isLiquidGlassAvailable } from 'expo-glass-effect';
-import { StatusBar } from 'expo-status-bar';
-import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
+
 import { RouterEffects } from './RouterEffects';
 
 const rootStackScreens = [

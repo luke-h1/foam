@@ -1,4 +1,5 @@
 import type { SanitisedEmote } from '@app/types/emote';
+
 import {
   findEmotesInText,
   type FindEmotesInTextReturn,

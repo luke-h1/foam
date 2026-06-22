@@ -1,5 +1,5 @@
-import { emptyEmoteData } from '../types/constants';
 import { limitChannelCaches } from '../observables/chatStore';
+import { emptyEmoteData } from '../types/constants';
 
 jest.mock('@legendapp/state/persist', () => ({
   configureObservablePersistence: jest.fn(),

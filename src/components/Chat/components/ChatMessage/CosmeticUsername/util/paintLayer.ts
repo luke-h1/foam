@@ -1,5 +1,6 @@
+import { StyleSheet, type ViewStyle } from 'react-native';
+
 import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
-import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 import type {
   PaintCanvasRepeat,
   PaintData,
@@ -7,7 +8,8 @@ import type {
   PaintShadow,
   PaintStop,
 } from '@app/utils/color/seventv-ws-service';
-import { StyleSheet, type ViewStyle } from 'react-native';
+import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
+
 import { angleToPoints } from './angleToPoints';
 
 export interface LayerGradientConfig {

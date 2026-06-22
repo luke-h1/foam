@@ -1,37 +1,14 @@
-import { BlurView } from 'expo-blur';
-import { StatusBar } from 'expo-status-bar';
-import { Button } from '@app/components/Button/Button';
-import { Chat } from '@app/components/Chat/Chat';
-import { ChannelPredictionCard } from '@app/components/ChannelPredictionCard/ChannelPredictionCard';
-import { ChannelPollCard } from '@app/components/ChannelPollCard/ChannelPollCard';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
-import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
-import { Text } from '@app/components/ui/Text/Text';
-import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
-import { useChannelPoll } from '@app/hooks/useChannelPoll';
-import { useStreamQuery } from '@app/hooks/queries/use-stream-query';
-import { useUserQuery } from '@app/hooks/queries/use-user-query';
-import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
-import { theme } from '@app/styles/themes';
-import { motion } from '@app/styles/motion';
 import {
-  usePreference,
-  useUpdatePreferences,
-} from '@app/store/preferenceStore';
-import * as ScreenOrientation from 'expo-screen-orientation';
-import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
-import {
+  memo,
+  useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useReducer,
   useRef,
-  useCallback,
-  memo,
-  useMemo,
 } from 'react';
-import { useFocusEffect, useIsFocused } from 'expo-router';
-import { AppState, useWindowDimensions, View, StyleSheet } from 'react-native';
-import type { StreamPlayerRef } from '@app/components/StreamPlayer/types';
+import { AppState, StyleSheet,useWindowDimensions, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   cancelAnimation,
@@ -42,6 +19,33 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
+
+import { BlurView } from 'expo-blur';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
+import { useFocusEffect, useIsFocused } from 'expo-router';
+import * as ScreenOrientation from 'expo-screen-orientation';
+import { StatusBar } from 'expo-status-bar';
+
+import { Button } from '@app/components/Button/Button';
+import { ChannelPollCard } from '@app/components/ChannelPollCard/ChannelPollCard';
+import { ChannelPredictionCard } from '@app/components/ChannelPredictionCard/ChannelPredictionCard';
+import { Chat } from '@app/components/Chat/Chat';
+import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
+import type { StreamPlayerRef } from '@app/components/StreamPlayer/types';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
+import { useStreamQuery } from '@app/hooks/queries/use-stream-query';
+import { useUserQuery } from '@app/hooks/queries/use-user-query';
+import { useChannelPoll } from '@app/hooks/useChannelPoll';
+import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
+import {
+  usePreference,
+  useUpdatePreferences,
+} from '@app/store/preferenceStore';
+import { motion } from '@app/styles/motion';
+import { theme } from '@app/styles/themes';
+import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
+
 import {
   clampLandscapeChatWidth,
   getLiveStreamChatDimensions,
@@ -55,7 +59,6 @@ import {
   initialLiveStreamScreenState,
   liveStreamScreenReducer,
 } from './liveStreamScreenReducer';
-import { useTranslation } from 'react-i18next';
 
 interface LiveStreamScreenProps {
   id: string;

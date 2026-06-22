@@ -1,7 +1,8 @@
 import { View } from 'react-native';
-import type { EmotePickerItem } from './emoteSheetTypes';
+
 import { EmoteCell } from './EmoteCell';
 import { emoteSheetStyles as styles } from './emoteSheetStyles';
+import type { EmotePickerItem } from './emoteSheetTypes';
 
 export function EmoteRow({
   cellSize,

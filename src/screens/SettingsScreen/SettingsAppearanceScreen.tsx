@@ -1,3 +1,18 @@
+import { useRef } from 'react';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
+import {
+  Form as NativeForm,
+  Host,
+  LabeledContent,
+  Picker,
+  Section,
+  Text as NativeText,
+  Toggle,
+} from '@expo/ui/swift-ui';
+import { tag } from '@expo/ui/swift-ui/modifiers';
+
 import {
   SettingsLinkRow,
   SettingsSection,
@@ -9,19 +24,6 @@ import {
   useUpdatePreferences,
 } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
-import {
-  Form as NativeForm,
-  Host,
-  LabeledContent,
-  Picker,
-  Section,
-  Text as NativeText,
-  Toggle,
-} from '@expo/ui/swift-ui';
-import { tag } from '@expo/ui/swift-ui/modifiers';
-import { useRef } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 const THEME_OPTIONS = ['foam-dark'] as const;
 

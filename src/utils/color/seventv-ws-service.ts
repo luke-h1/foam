@@ -1,17 +1,17 @@
 /* eslint-disable no-promise-executor-return */
 /* eslint-disable no-await-in-loop */
 import { EmoteSetKind } from '@app/graphql/generated/gql';
-import type { SanitisedEmote, SevenTvSite } from '@app/types/emote';
-import { logger } from '@app/utils/logger';
 import {
-  StvUser,
   SevenTvEmote,
   SevenTvHost,
+  StvUser,
 } from '@app/services/seventv-service';
 import {
   IndexedCollection,
   indexedCollectionToArray,
 } from '@app/services/ws/util/indexedCollection';
+import type { SanitisedEmote, SevenTvSite } from '@app/types/emote';
+import { logger } from '@app/utils/logger';
 
 interface EventObject {
   id: string;

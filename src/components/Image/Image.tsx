@@ -1,11 +1,14 @@
+import { useEffect, useState } from 'react';
+import { StyleSheet,View } from 'react-native';
+
 import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
-import { logger } from '@app/utils/logger';
-import { View, StyleSheet } from 'react-native';
+
 import {
   cacheImageFromUrl,
   getCachedImageUri,
 } from '@app/utils/image/image-cache';
-import { useEffect, useState } from 'react';
+import { logger } from '@app/utils/logger';
+
 import type { ImageProps } from './Image.types';
 
 /**

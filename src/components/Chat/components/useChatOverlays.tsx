@@ -1,24 +1,26 @@
-import type { ChatMessageType } from '@app/store/chat/types/constants';
+import { useCallback } from 'react';
+import { Alert } from 'react-native';
+
+import { useObservable, useSelector } from '@legendapp/state/react';
+import * as Clipboard from 'expo-clipboard';
+import { toast } from 'sonner-native';
+
+import i18next from '@app/i18n/i18next';
 import { queryClient } from '@app/lib/react-query/query-client';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { twitchService } from '@app/services/twitch-service';
+import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
-import { useObservable, useSelector } from '@legendapp/state/react';
-import * as Clipboard from 'expo-clipboard';
-import { useCallback } from 'react';
-import { Alert } from 'react-native';
-import { toast } from 'sonner-native';
 
-import type { EmotePickerItem } from './EmoteSheet/EmoteSheet';
-import { ChatOverlayLayer } from './ChatOverlayLayer';
 import {
   BadgePressData,
   EmotePressData,
   MessageActionData,
   UsernamePressData,
 } from './ChatMessage/RichChatMessage.types';
-import i18next from '@app/i18n/i18next';
+import { ChatOverlayLayer } from './ChatOverlayLayer';
+import type { EmotePickerItem } from './EmoteSheet/EmoteSheet';
 
 export interface ChatOverlayOpeners {
   openBadge: (badge: BadgePressData) => void;

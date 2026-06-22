@@ -1,7 +1,6 @@
-import { Image } from '@app/components/Image/Image';
-import { Text } from '@app/components/ui/Text/Text';
-import { useAuthContext } from '@app/context/AuthContext';
-import { theme } from '@app/styles/themes';
+import { Alert, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
 import {
   Button,
   Form,
@@ -13,9 +12,12 @@ import {
 } from '@expo/ui/swift-ui';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { Alert, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
+
+import { Image } from '@app/components/Image/Image';
+import { Text } from '@app/components/ui/Text/Text';
+import { useAuthContext } from '@app/context/AuthContext';
 import i18next from '@app/i18n/i18next';
+import { theme } from '@app/styles/themes';
 
 function formatMemberSince(createdAt?: string) {
   if (!createdAt) {

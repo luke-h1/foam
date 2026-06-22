@@ -1,6 +1,8 @@
 import { screen } from '@testing-library/react-native';
+
 import { twitchService as _twitchService } from '@app/services/twitch-service';
 import render from '@app/test/render';
+
 import { TopStreamsScreen } from '../TopStreamsScreen';
 
 jest.mock('@app/services/twitch-service');

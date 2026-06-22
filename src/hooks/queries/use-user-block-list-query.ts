@@ -1,5 +1,6 @@
-import { userBlockListQueryOptions } from '@app/lib/react-query/queries/twitch';
 import { useQuery } from '@tanstack/react-query';
+
+import { userBlockListQueryOptions } from '@app/lib/react-query/queries/twitch';
 
 interface UserBlockListQueryOptions {
   enabled?: boolean;

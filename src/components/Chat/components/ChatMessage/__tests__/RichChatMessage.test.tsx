@@ -1,5 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable camelcase */
+import type { ReactTestInstance } from 'react-test-renderer';
+
+import { act, fireEvent,render } from '@testing-library/react-native';
+
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { theme } from '@app/styles/themes';
@@ -7,8 +11,7 @@ import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userS
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { act, render, fireEvent } from '@testing-library/react-native';
-import type { ReactTestInstance } from 'react-test-renderer';
+
 import { RichChatMessage } from '../RichChatMessage';
 
 jest.mock('@app/utils/date-time/date', () => ({

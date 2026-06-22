@@ -1,4 +1,5 @@
 import { RefObject } from 'react';
+
 import { appendQueryParams, parseSocketIOUrl } from './socket-io';
 import { Options } from './types';
 

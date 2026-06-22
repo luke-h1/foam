@@ -1,15 +1,16 @@
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import {
   createEmotePart,
   createMentionPart,
   createTextPart,
 } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
+import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+
 import { AnyChatMessageType } from '../messageHandlers';
 import {
-  shouldReprocessMessage,
   extractTextFromMessage,
   filterMessagesForReprocessing,
+  shouldReprocessMessage,
 } from '../prepareMessagesForReprocessing';
 import { reprocessMessages } from '../reprocessMessages';
 

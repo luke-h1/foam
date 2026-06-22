@@ -1,24 +1,27 @@
-import { AppBottomSheetProvider } from '@app/components/BottomSheet/BottomSheetProvider';
-import { AuthContextProvider } from '@app/context/AuthContext';
-import { AccentColorProvider } from '@app/context/AccentColorContext';
-import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
-import { BaseConfig } from '@app/navigators/config';
-import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
-import { twitchApi } from '@app/services/api/clients';
-import { deleteTokens } from '@app/utils/authentication/deleteTokens';
-import { QueryProvider } from '@app/lib/react-query/query-provider';
-import { motion } from '@app/styles/motion';
-import { theme } from '@app/styles/themes';
-import { PressablesConfig } from 'pressto';
 import { PropsWithChildren } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { PortalProvider } from 'react-native-teleport';
 import {
   initialWindowMetrics,
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
+import { PortalProvider } from 'react-native-teleport';
+
+import { PressablesConfig } from 'pressto';
 import { Toaster } from 'sonner-native';
+
+import { AppBottomSheetProvider } from '@app/components/BottomSheet/BottomSheetProvider';
+import { AccentColorProvider } from '@app/context/AccentColorContext';
+import { AuthContextProvider } from '@app/context/AuthContext';
+import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
+import { QueryProvider } from '@app/lib/react-query/query-provider';
+import { BaseConfig } from '@app/navigators/config';
+import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
+import { twitchApi } from '@app/services/api/clients';
+import { motion } from '@app/styles/motion';
+import { theme } from '@app/styles/themes';
+import { deleteTokens } from '@app/utils/authentication/deleteTokens';
+
 import { ScreenDimensionsProvider } from './ScreenDimensionsProvider/ScreenDimensionsProvider';
 
 function QueryDevTools({ children }: PropsWithChildren) {

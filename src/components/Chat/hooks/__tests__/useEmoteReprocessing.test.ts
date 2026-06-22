@@ -1,15 +1,17 @@
+import { act, renderHook } from '@testing-library/react-native';
+
+import type { AnyChatMessageType } from '@app/components/Chat/util/messageHandlers';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { updateMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { act, renderHook } from '@testing-library/react-native';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import { createEmotePart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
-import type { AnyChatMessageType } from '@app/components/Chat/util/messageHandlers';
+
+import { useEmoteReprocessing } from '../useEmoteReprocessing';
 import {
   createEmoteData,
   createSevenTvEmote,
 } from './__fixtures__/useChat.fixture';
-import { useEmoteReprocessing } from '../useEmoteReprocessing';
 
 jest.mock('@app/store/chat/actions/channelLoad', () => ({
   getCurrentEmoteData: jest.fn(),

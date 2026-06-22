@@ -1,11 +1,7 @@
-import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import {
-  SettingsLinkRow,
-  SettingsSection,
-  SettingsToggleRow,
-} from '@app/components/SettingsSection/SettingsSection';
-import { theme } from '@app/styles/themes';
-import { usePreferences } from '@app/store/preferenceStore';
+import { useRef } from 'react';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
 import {
   Button,
   Form,
@@ -15,9 +11,15 @@ import {
   Toggle,
 } from '@expo/ui/swift-ui';
 import { router } from 'expo-router';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+
+import {
+  SettingsLinkRow,
+  SettingsSection,
+  SettingsToggleRow,
+} from '@app/components/SettingsSection/SettingsSection';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import { usePreferences } from '@app/store/preferenceStore';
+import { theme } from '@app/styles/themes';
 
 export function SettingsDevtoolsScreen() {
   const { t } = useTranslation('settings');

@@ -1,9 +1,10 @@
-import { PressableArea } from '@app/components/PressableArea/PressableArea';
-import { theme } from '@app/styles/themes';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { StyleSheet, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { PressableArea } from '@app/components/PressableArea/PressableArea';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { theme } from '@app/styles/themes';
 
 export function ControlsTriggerButton({ onPress }: { onPress: () => void }) {
   const { t } = useTranslation('common');

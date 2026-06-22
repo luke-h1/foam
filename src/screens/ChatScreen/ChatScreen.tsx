@@ -1,6 +1,7 @@
-import { Chat } from '@app/components/Chat/Chat';
 import { FC } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet,View } from 'react-native';
+
+import { Chat } from '@app/components/Chat/Chat';
 
 interface ChatScreenProps {
   channelId: string;

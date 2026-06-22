@@ -1,5 +1,7 @@
-import { theme } from '@app/styles/themes';
 import { StyleSheet } from 'react-native';
+
+import { theme } from '@app/styles/themes';
+
 import {
   COMPOSER_CONTROL_RADIUS,
   COMPOSER_CONTROL_SIZE,

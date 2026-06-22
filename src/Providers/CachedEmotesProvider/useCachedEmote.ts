@@ -1,7 +1,9 @@
 /* eslint-disable react-doctor/no-event-handler -- useSyncExternalStore's
    subscribe + the lazy-decode effect are store wiring, not faked event handlers */
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
+
 import type { ImageRef } from 'expo-image';
+
 import {
   EMOTE_DECODE_MAX_PX,
   ensureCachedEmoteRef,

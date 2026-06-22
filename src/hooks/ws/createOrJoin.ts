@@ -1,11 +1,12 @@
 import { RefObject } from 'react';
-import { attachListeners } from './attachListener';
+
 import { attachSharedListeners } from './attachedSharedListeners';
+import { attachListeners } from './attachListener';
 import { ReadyState } from './constants';
 import {
   addSubscriber,
-  removeSubscriber,
   hasSubscribers,
+  removeSubscriber,
 } from './manage-subscribers';
 import { Options, sharedWebSockets, type WebSocketEventMap } from './types';
 

@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+
 import { useAuthContext } from '@app/context/AuthContext';
 import TwitchWsService, {
   type TwitchEventSubCallback,
@@ -8,7 +10,6 @@ import {
   parseChannelPointsEventSubEvent,
 } from '@app/utils/chat/parseChannelPointsEventSub';
 import { logger } from '@app/utils/logger';
-import { useEffect } from 'react';
 
 const CUSTOM_REWARD_REDEMPTION_EVENT =
   'channel.channel_points_custom_reward_redemption.add';

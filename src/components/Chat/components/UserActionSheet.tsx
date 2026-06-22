@@ -1,26 +1,28 @@
 import { memo, useMemo } from 'react';
-import { Button } from '@app/components/Button/Button';
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
-import {
-  BottomSheet,
-  type SnapPoint,
-} from '@app/components/BottomSheet/BottomSheet';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
-import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
 import {
   ScrollView,
   StyleSheet,
   useWindowDimensions,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
+import {
+  BottomSheet,
+  type SnapPoint,
+} from '@app/components/BottomSheet/BottomSheet';
+import { Button } from '@app/components/Button/Button';
 import type {
   ChatModerationAccessFlags,
   UserActionVisibilityFlags,
 } from '@app/components/Chat/types/chatUiFlags';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { theme } from '@app/styles/themes';
+import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
+
 import { UserCardHeader } from './UserCardHeader';
-import { useTranslation } from 'react-i18next';
 
 interface UserActionSheetProps {
   color?: string;

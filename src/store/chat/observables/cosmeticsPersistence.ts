@@ -1,4 +1,5 @@
 import { storageService } from '@app/lib/storage';
+
 import type { PaintData, SanitisedBadgeSet } from '../types/constants';
 
 /**

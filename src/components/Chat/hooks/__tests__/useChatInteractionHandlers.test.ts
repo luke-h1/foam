@@ -1,15 +1,17 @@
-import { getMessageById } from '@app/store/chat/actions/messages';
 import { act, renderHook } from '@testing-library/react-native';
-import type { EmotePressData } from '@app/components/Chat/components/ChatMessage/RichChatMessage.types';
+
 import type { ChatInputShellHandle } from '@app/components/Chat/components/ChatInputShell';
+import type { EmotePressData } from '@app/components/Chat/components/ChatMessage/RichChatMessage.types';
 import type { ChatOverlayOpeners } from '@app/components/Chat/components/useChatOverlays';
+import { getMessageById } from '@app/store/chat/actions/messages';
 import { createRef } from '@app/test/createRef';
 import { createEmotePart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
-import { createChatMessage } from './__fixtures__/useChat.fixture';
+
 import {
   useChatComposerActions,
   useChatOverlayActions,
 } from '../useChatInteractionHandlers';
+import { createChatMessage } from './__fixtures__/useChat.fixture';
 
 jest.mock('@app/store/chat/actions/messages', () => ({
   getMessageById: jest.fn(),

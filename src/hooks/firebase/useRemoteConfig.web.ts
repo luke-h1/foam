@@ -1,5 +1,6 @@
+import { useCallback,useState } from 'react';
+
 import { logger } from '@app/utils/logger';
-import { useState, useCallback } from 'react';
 
 export interface RemoteConfigSchema {
   splash: { '7tvUnavailable': boolean; app: boolean };

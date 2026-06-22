@@ -1,33 +1,35 @@
-import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
+import {
+  memo,
+  RefObject,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+} from 'react';
+import {
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle,
+} from 'react-native';
+import type { ReactElement } from 'react';
+
 import {
   LegendList,
   type LegendListRef,
   type LegendListRenderItemProps,
 } from '@legendapp/list/react-native';
-import {
-  memo,
-  RefObject,
-  useCallback,
-  useLayoutEffect,
-  useEffect,
-  useRef,
-} from 'react';
-import type { ReactElement } from 'react';
-import {
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-  StyleSheet,
-  StyleProp,
-  View,
-  ViewStyle,
-} from 'react-native';
 
-import type { AnyChatMessageType } from '../util/messageHandlers';
-import { getChatMessageListKey } from '../util/chatMessages';
 import {
   getViewableChatMessages,
   type ViewableMessageToken,
 } from '@app/components/Chat/util/getViewableChatMessages';
+import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
+
+import { getChatMessageListKey } from '../util/chatMessages';
+import type { AnyChatMessageType } from '../util/messageHandlers';
 
 // Roughly seven rows of lookahead; at 96 fast flings outran the renderer and
 // showed skeleton rows.

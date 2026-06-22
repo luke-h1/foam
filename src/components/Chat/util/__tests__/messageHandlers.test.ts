@@ -1,6 +1,6 @@
 import {
-  createAnonGiftPaidUpgradeTags,
   createAnnouncementTags,
+  createAnonGiftPaidUpgradeTags,
   createBitsBadgeTierTags,
   createCharityDonationTags,
   createGiftPaidUpgradeTags,
@@ -20,11 +20,12 @@ import {
 } from '@app/types/chat/irc-tags/__fixtures__/userNoticeTags.fixture';
 import type { BaseUserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { getCachedChannelPointRewardTitle } from '@app/utils/chat/channelPointRewardTitleStore';
+
 import {
-  createUserStateFromTags,
   createBaseMessage,
-  createUserNoticeMessage,
   createSystemMessage,
+  createUserNoticeMessage,
+  createUserStateFromTags,
 } from '../messageHandlers';
 
 jest.mock('@app/store/chat/actions/channelLoad', () => ({

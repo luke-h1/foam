@@ -1,25 +1,27 @@
+import { useEffect, useRef, useState } from 'react';
+
+import { useMappingHelper } from '@shopify/flash-list';
+
+import { hasSharedChannelPointsMessage } from '@app/components/Chat/util/channelPointsSharedMessage';
+import { getAnnouncementAccentColor } from '@app/components/Chat/util/getAnnouncementAccentColor';
+import { toChatMessageData } from '@app/components/Chat/util/richChatMessageData';
+import {
+  getAnnouncementColorParam,
+  getChatBodyInfo,
+  getPartIdentity,
+  isUserNoticeTags,
+  normaliseUsername,
+} from '@app/components/Chat/util/richChatMessageHelpers';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
-import { hasSharedChannelPointsMessage } from '@app/components/Chat/util/channelPointsSharedMessage';
 import { findCustomHighlight } from '@app/utils/chat/customHighlights';
 import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { useMappingHelper } from '@shopify/flash-list';
-import { useEffect, useRef, useState } from 'react';
 
 import type {
   BadgePressData,
   EmotePressData,
   RichChatMessageProps,
 } from './RichChatMessage.types';
-import { getAnnouncementAccentColor } from '@app/components/Chat/util/getAnnouncementAccentColor';
-import {
-  getChatBodyInfo,
-  getAnnouncementColorParam,
-  getPartIdentity,
-  isUserNoticeTags,
-  normaliseUsername,
-} from '@app/components/Chat/util/richChatMessageHelpers';
-import { toChatMessageData } from '@app/components/Chat/util/richChatMessageData';
 
 const MESSAGE_LONG_PRESS_DELAY_MS = 650;
 

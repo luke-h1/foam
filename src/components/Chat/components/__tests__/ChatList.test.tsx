@@ -1,7 +1,10 @@
-import { render } from '@testing-library/react-native';
-import type { ReactElement } from 'react';
 import { View } from 'react-native';
+import type { ReactElement } from 'react';
+
+import { render } from '@testing-library/react-native';
+
 import { createChatMessageFixture } from '@app/components/Chat/util/__tests__/__fixtures__/chatMessage.fixture';
+
 import { ChatList } from '../ChatList';
 
 const mockLegendList = jest.fn((_props: unknown) => (

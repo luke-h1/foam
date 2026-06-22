@@ -1,9 +1,10 @@
-import { logger } from '@app/utils/logger';
 import type { AuthSessionResult } from 'expo-auth-session';
+
 import {
   buildAuthSessionResultFromToken,
   parseTwitchAuthTokenFromUrl,
 } from '@app/utils/authentication/twitchAuth';
+import { logger } from '@app/utils/logger';
 
 const log = (msg: string, data?: object) => {
   logger.auth.info(`[Auth] ${msg}`, data ?? {});
