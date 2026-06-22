@@ -34,7 +34,6 @@ const channelLoadAbort = (() => {
     startNext(): AbortController {
       if (current) {
         current.abort();
-        logger.main.info('🚫 Aborted previous load request');
       }
       current = new AbortController();
       return current;
@@ -45,7 +44,6 @@ const channelLoadAbort = (() => {
       }
       current.abort();
       current = null;
-      logger.main.info('🚫 Aborted current load request');
     },
   };
 })();
@@ -107,20 +105,6 @@ export const fetchUserPersonalEmotes = async (
             ...currentPersonalEmotes,
             [twitchUserId]: personalEmotes,
           });
-          logger.stv.info(
-            `Cached ${personalEmotes.length} personal emotes for user ${twitchUserId}`,
-            {
-              name: 'seven_tv_emotes_info',
-              action: 'personal_emotes_cached',
-              channel_id: channelId,
-              emote_count: personalEmotes.length,
-              provider: 'seven_tv',
-              resource_type: 'emotes',
-              scope: 'personal',
-              screen: 'chat',
-              twitch_user_id: twitchUserId,
-            },
-          );
         }
       }
       return personalEmotes;
@@ -177,43 +161,15 @@ export const notify7TVPresence = async (
   twitchChannelId: string,
 ): Promise<void> => {
   if (!twitchUserId || !twitchChannelId) {
-    logger.stvWs.debug(
-      'Skipping 7TV presence notification: missing user or channel ID',
-    );
     return;
   }
 
   try {
     const sevenTvUserId = await sevenTvService.get7tvUserId(twitchUserId);
     if (!sevenTvUserId) {
-      logger.stvWs.info(
-        `Could not get 7TV user ID for Twitch user: ${twitchUserId}`,
-        {
-          name: 'seven_tv_presence_info',
-          action: 'presence_user_not_linked',
-          channel_id: twitchChannelId,
-          provider: 'seven_tv',
-          resource_type: 'presence',
-          screen: 'chat',
-          twitch_user_id: twitchUserId,
-        },
-      );
       return;
     }
     await sevenTvService.sendPresence(twitchChannelId, sevenTvUserId);
-    logger.stvWs.info(
-      `Notified 7TV about presence in channel ${twitchChannelId} for user ${twitchUserId}`,
-      {
-        name: 'seven_tv_presence_info',
-        action: 'presence_notified',
-        channel_id: twitchChannelId,
-        provider: 'seven_tv',
-        resource_type: 'presence',
-        screen: 'chat',
-        seven_tv_user_id: sevenTvUserId,
-        twitch_user_id: twitchUserId,
-      },
-    );
   } catch (error) {
     logger.stvWs.warn(`Failed to notify 7TV about presence: ${String(error)}`, {
       name: 'seven_tv_presence_warning',
@@ -1272,9 +1228,6 @@ export const updateSevenTvEmotes = (
   added: SanitisedEmote[],
   removed: SanitisedEmote[],
 ) => {
-  logger.chat.info(
-    `Updating SevenTV emotes for channel ${channelId}: +${added.length} -${removed.length}`,
-  );
   const caches = chatStore$.persisted.channelCaches.peek();
   const cache = caches?.[channelId];
 

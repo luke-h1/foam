@@ -9,7 +9,7 @@ import {
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { toast } from 'sonner-native';
 import i18next from '@app/i18n/i18next';
@@ -69,9 +69,6 @@ const discovery = {
   tokenEndpoint: 'https://id.twitch.tv/oauth2/token',
 } satisfies DiscoveryDocument;
 
-const redact = (value: string | null | undefined) =>
-  value ? `${value.slice(0, 8)}...` : null;
-
 WebBrowser.maybeCompleteAuthSession();
 
 interface UseTwitchSignInOptions {
@@ -88,7 +85,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
     null,
   );
 
-  const [request, response] = useAuthRequest(
+  const [request] = useAuthRequest(
     {
       clientId:
         (Constants.expoConfig?.extra?.EXPO_PUBLIC_TWITCH_CLIENT_ID as
@@ -113,23 +110,6 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
   );
 
   const completeAuth = async (nextResponse: AuthSessionResult | null) => {
-    const successResponse =
-      nextResponse?.type === 'success' ? nextResponse : null;
-
-    logger.auth.info('[AUTHDBG] useTwitchSignIn.completeAuth start', {
-      responseType: nextResponse?.type ?? null,
-      responseUrl: successResponse?.url ?? null,
-      hasAuthentication: !!successResponse?.authentication,
-      responseParams: successResponse?.params ?? null,
-      accessTokenPreview:
-        redact(successResponse?.authentication?.accessToken) ??
-        redact(
-          typeof successResponse?.params?.access_token === 'string'
-            ? successResponse.params.access_token
-            : null,
-        ),
-    });
-
     if (nextResponse?.type !== 'success') {
       await loginWithTwitch(nextResponse);
 
@@ -178,10 +158,6 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
       if (!request) {
         toast.error(i18next.t('auth:signInNotReady'));
       }
-      logger.auth.info('[AUTHDBG] useTwitchSignIn prompt blocked', {
-        hasRequest: !!request,
-        authSessionActive: authSessionActiveRef.current,
-      });
       return;
     }
 
@@ -191,19 +167,11 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
     const endPrompt = () => {
       authSessionActiveRef.current = false;
       setIsPromptingAuth(false);
-      logger.auth.info('[AUTHDBG] useTwitchSignIn prompt finally');
     };
 
     try {
       const authUrl =
         request.url ?? (await request.makeAuthUrlAsync(discovery));
-      logger.auth.info('[AUTHDBG] useTwitchSignIn prompt start', {
-        redirectUri,
-        appReturnUrl,
-        authUrl,
-        responseType: ResponseType.Token,
-        usePKCE: false,
-      });
 
       const promptResult = await WebBrowser.openAuthSessionAsync(
         authUrl,
@@ -213,9 +181,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
         },
       );
       let parsedResult: AuthSessionResult;
-      let successPromptResultRaw: typeof promptResult | null = null;
       if (promptResult.type === 'success') {
-        successPromptResultRaw = promptResult;
         parsedResult = request.parseReturnUrl(promptResult.url);
       } else {
         switch (promptResult.type) {
@@ -230,9 +196,6 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
             break;
         }
       }
-
-      const successPromptResult =
-        parsedResult.type === 'success' ? parsedResult : null;
 
       if (parsedResult.type === 'success') {
         const successAuthResponseKey =
@@ -255,24 +218,6 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
       }
 
       setAuthResponse(parsedResult);
-
-      logger.auth.info('[AUTHDBG] useTwitchSignIn prompt result', {
-        type: parsedResult.type,
-        rawType: promptResult.type,
-        rawUrl: successPromptResultRaw?.url ?? null,
-        url: successPromptResult?.url ?? null,
-        params: successPromptResult?.params ?? null,
-        errorCode:
-          'errorCode' in parsedResult ? (parsedResult.errorCode ?? null) : null,
-        hasAuthentication: !!successPromptResult?.authentication,
-        accessTokenPreview:
-          redact(successPromptResult?.authentication?.accessToken) ??
-          redact(
-            typeof successPromptResult?.params.access_token === 'string'
-              ? successPromptResult.params.access_token
-              : null,
-          ),
-      });
     } catch (error) {
       logger.auth.warn('Twitch sign-in prompt failed', {
         name: 'twitch_sign_in_warning',
@@ -284,18 +229,6 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
 
     endPrompt();
   };
-
-  useEffect(() => {
-    logger.auth.info('[AUTHDBG] useTwitchSignIn request state', {
-      hasRequest: !!request,
-      responseType: authResponseRef.current?.type ?? null,
-      loadedResponseType: response?.type ?? null,
-      redirectUri,
-      proxyUrl,
-      appReturnUrl,
-      platform: Platform.OS,
-    });
-  }, [request, response]);
 
   const authResponseRef = useRef(authResponse);
   authResponseRef.current = authResponse;

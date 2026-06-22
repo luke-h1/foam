@@ -5,6 +5,7 @@ import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import { useSelector } from '@legendapp/state/react';
 import { type StyleProp, TextStyle, View, StyleSheet } from 'react-native';
 import { Text } from '@app/components/ui/Text/Text';
+import { useChatScrollActive } from '@app/components/Chat/util/useChatScrollActive';
 import { chatLineMetrics } from '../RichChatMessage.styles';
 import { PaintedUsernameDropShadowLayer } from './PaintedUsernameDropShadowLayer';
 import { PaintedUsernameMaskedFill } from './PaintedUsernameMaskedFill';
@@ -111,6 +112,7 @@ function PaintedUsernameComponent({
     return paintId ? chatStore$.paints[paintId]?.get() : null;
   });
   const paint = paintProp ?? storePaint ?? null;
+  const isScrolling = useChatScrollActive();
 
   if (!paint) {
     return (
@@ -128,6 +130,26 @@ function PaintedUsernameComponent({
 
   const solidFallback =
     paint.color === null ? fallbackColor : sevenTvColorToCss(paint.color);
+
+  // During an active fling, render the username in its dominant solid colour
+  // and skip the per-row MaskedView offscreen pass + gradient/SVG/image fill
+  // layers; the full painted fill returns when the list settles (~150ms),
+  // mirroring how animated emotes pause decode during scroll. This sheds the
+  // offscreen render passes at the moment the Core Animation render encoder is
+  // most pressured (FOAM-TV-MOBILE-BJ render-commit OOM).
+  if (isScrolling) {
+    return (
+      <Text
+        style={[
+          styles.plainUsername,
+          { color: solidFallback },
+          usernameTextStyle,
+        ]}
+      >
+        {displayUsername}
+      </Text>
+    );
+  }
 
   return (
     <PaintedUsernameWithPaint

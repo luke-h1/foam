@@ -292,6 +292,10 @@ describe('StreamPlayer component messaging', () => {
     expect(
       injectedJavaScript.includes('foam-twitch-control-hide-style'),
     ).toEqual(false);
+    // Autoplaying live: nudge the stock player into unmuted playback.
+    expect(
+      injectedJavaScript.includes('__foamAutoplayEnsureInstalled'),
+    ).toEqual(true);
 
     const { onLoadEnd } = latestWebViewProps();
     act(() => {
@@ -330,6 +334,11 @@ describe('StreamPlayer component messaging', () => {
     expect(latestWebViewProps().source).toEqual({
       uri: 'https://clips.twitch.tv/embed?clip=AnimatedOptimisticWasabiVoteNay&parent=www.twitch.tv&autoplay=true&muted=false&preload=metadata',
     });
+    const clipInjectedJavaScript = latestWebViewProps().injectedJavaScript;
+    expect(
+      typeof clipInjectedJavaScript === 'string' &&
+        clipInjectedJavaScript.includes('__foamAutoplayEnsureInstalled'),
+    ).toEqual(false);
 
     const { onLoadEnd } = latestWebViewProps();
     act(() => {

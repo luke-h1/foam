@@ -14,17 +14,15 @@ import {
   Montserrat_800ExtraBold_Italic,
   Montserrat_900Black,
   Montserrat_900Black_Italic,
-} from '@expo-google-fonts/montserrat';
-import {
-  InstrumentSerif_400Regular,
-  InstrumentSerif_400Regular_Italic,
-} from '@expo-google-fonts/instrument-serif';
-import {
   Montserrat_400Regular,
   Montserrat_400Regular_Italic,
   Montserrat_500Medium,
   Montserrat_500Medium_Italic,
 } from '@expo-google-fonts/montserrat';
+import {
+  InstrumentSerif_400Regular,
+  InstrumentSerif_400Regular_Italic,
+} from '@expo-google-fonts/instrument-serif';
 import { useObserveEffect } from '@legendapp/state/react';
 import * as Font from 'expo-font';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';

@@ -18,6 +18,37 @@ import { batch } from '@legendapp/state';
 
 import { MAX_COSMETIC_ENTRIES } from '../types/constants';
 import { chatStore$ } from '../observables/chatStore';
+import { writePersistedCosmetics } from '../observables/cosmeticsPersistence';
+import {
+  clearAllMissingBadges,
+  clearMissingBadge,
+  reportMissingBadge,
+} from './missingBadges';
+
+export { getMissingBadgeIds, hasMissingBadges } from './missingBadges';
+
+const COSMETICS_PERSIST_DEBOUNCE_MS = 4000;
+let cosmeticsPersistTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Debounced MMKV snapshot of the cosmetic maps. Cosmetics arrive in a burst as
+ * a channel loads; coalescing into one write per quiet window keeps this off
+ * the hot path and avoids repeated whole-map serialization.
+ */
+export const scheduleCosmeticsPersist = (): void => {
+  if (cosmeticsPersistTimer) {
+    return;
+  }
+  cosmeticsPersistTimer = setTimeout(() => {
+    cosmeticsPersistTimer = null;
+    writePersistedCosmetics({
+      paints: chatStore$.paints.peek(),
+      badges: chatStore$.badges.peek(),
+      userPaintIds: chatStore$.userPaintIds.peek(),
+      userBadgeIds: chatStore$.userBadgeIds.peek(),
+    });
+  }, COSMETICS_PERSIST_DEBOUNCE_MS);
+};
 
 const USER_COSMETICS_CACHE_PREFIX = 'user-cosmetics:';
 // Keep persisted 7TV user cosmetics for at most 12 hours before refetching.
@@ -199,16 +230,18 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
       Object.entries(current).slice(trimCount),
     );
     chatStore$.userPaintIds.set({ ...trimmed, [ttvUserId]: paintId });
-    return;
+  } else {
+    chatStore$.userPaintIds[ttvUserId]?.set(paintId);
   }
 
-  chatStore$.userPaintIds[ttvUserId]?.set(paintId);
+  scheduleCosmeticsPersist();
 };
 
 export const addPaint = (paint: PaintData) => {
   if (paint.id) {
     const cell = chatStore$.paints[paint.id];
     cell?.set(paint);
+    scheduleCosmeticsPersist();
   }
 };
 
@@ -231,6 +264,8 @@ export const addBadge = (badge: SanitisedBadgeSet) => {
   if (badge.id) {
     const cell = chatStore$.badges[badge.id];
     cell?.set(badge);
+    clearMissingBadge(badge.id);
+    scheduleCosmeticsPersist();
   }
 };
 
@@ -254,10 +289,17 @@ export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
       Object.entries(current).slice(trimCount),
     );
     chatStore$.userBadgeIds.set({ ...trimmed, [ttvUserId]: badgeId });
-    return;
+  } else {
+    chatStore$.userBadgeIds[ttvUserId]?.set(badgeId);
   }
 
-  chatStore$.userBadgeIds[ttvUserId]?.set(badgeId);
+  // Surface entitlements that reference a badge we have not loaded a
+  // definition for yet (e.g. the cosmetic.create has not arrived).
+  if (!getBadge(badgeId)) {
+    reportMissingBadge(badgeId, ttvUserId);
+  }
+
+  scheduleCosmeticsPersist();
 };
 
 export const getUserBadge = (
@@ -267,7 +309,12 @@ export const getUserBadge = (
   if (!badgeId) {
     return undefined;
   }
-  return getBadge(badgeId);
+  const badge = getBadge(badgeId);
+  if (!badge) {
+    reportMissingBadge(badgeId, ttvUserId);
+    return undefined;
+  }
+  return badge;
 };
 
 export const getUserBadgeId = (ttvUserId: string): string | undefined =>
@@ -348,4 +395,6 @@ const clearPaintsAndBadges = () => {
     chatStore$.badges.set({});
     chatStore$.userBadgeIds.set({});
   });
+  clearAllMissingBadges();
+  scheduleCosmeticsPersist();
 };

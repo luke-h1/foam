@@ -203,6 +203,106 @@ const renderPendingPage = (url: URL) => {
     `);
 };
 
+interface MagicLinkBlob {
+  key: string;
+  access_token: string;
+  refresh_token?: string;
+  expires_in?: number;
+  token_type?: string;
+}
+
+const getMagicLinkBlob = (): MagicLinkBlob | null => {
+  const raw = process.env.MAGIC_LINK_BLOB;
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as MagicLinkBlob;
+    if (!parsed.key || !parsed.access_token) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    console.error('failed to parse MAGIC_LINK_BLOB');
+    return null;
+  }
+};
+
+const constantTimeEquals = (a: string, b: string): boolean => {
+  const aBytes = Buffer.from(a);
+  const bBytes = Buffer.from(b);
+  const length = Math.max(aBytes.length, bBytes.length);
+  let result = aBytes.length === bBytes.length ? 0 : 1;
+  for (let i = 0; i < length; i += 1) {
+    result |= (aBytes[i] ?? 0) ^ (bBytes[i] ?? 0);
+  }
+  return result === 0;
+};
+
+const buildMagicTargetUrl = (blob: MagicLinkBlob): string => {
+  const params = new URLSearchParams();
+  params.set('access_token', blob.access_token);
+  if (blob.refresh_token) {
+    params.set('refresh_token', blob.refresh_token);
+  }
+  params.set('token_type', blob.token_type ?? 'bearer');
+  if (blob.expires_in && blob.expires_in > 0) {
+    params.set('expires_in', String(blob.expires_in));
+  }
+  return `foam://auth?${params.toString()}`;
+};
+
+const renderMagicRedirect = (target: string) => {
+  const safeTarget = JSON.stringify(target)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026');
+  const hrefAttr = target
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+  return html(`<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <title>Foam - Signing in</title>
+  </head>
+  <body>
+    <h1>Signing in…</h1>
+    <p>If nothing happens automatically, return to Foam.</p>
+    <a id="open-foam" href="${hrefAttr}">Open Foam</a>
+    <script>
+      const redirectUrl = ${safeTarget};
+      const openFoam = document.getElementById('open-foam');
+      if (openFoam) {
+        openFoam.setAttribute('href', redirectUrl);
+      }
+      window.location.replace(redirectUrl);
+      setTimeout(() => {
+        window.location.href = redirectUrl;
+      }, 150);
+    </script>
+  </body>
+</html>`);
+};
+
+const handleMagic = (url: URL): Response => {
+  const blob = getMagicLinkBlob();
+  const key = url.searchParams.get('key') ?? '';
+
+  // 404 (not 401/403) when the link is unconfigured or the secret is wrong, so
+  // the route's existence is never revealed to anyone probing the proxy.
+  if (!blob || !key || !constantTimeEquals(key, blob.key)) {
+    return notFound();
+  }
+
+  return renderMagicRedirect(buildMagicTargetUrl(blob));
+};
+
 const handleRequest = async (request: Request) => {
   if (request.method !== 'GET') {
     return notFound();
@@ -231,6 +331,8 @@ const handleRequest = async (request: Request) => {
       return renderStreamPage(request, url);
     case '/api/pending':
       return renderPendingPage(url);
+    case '/api/magic':
+      return handleMagic(url);
     default:
       return notFound();
   }

@@ -88,15 +88,14 @@ export const queryClient = createQueryClient();
  * Query scopes safe to persist between reloads. These are read-heavy Twitch
  * lookups used by the home, category, following, and livestream screens.
  */
-const PERSISTED_TWITCH_SCOPES = new Set<string>([
-  'stream',
-  'user',
-  'category',
-  'followedStreams',
-  'topStreams',
-  'topCategories',
-  'streamsByCategory',
-]);
+// Query-cache persistence is disabled (empty allowlist). The persister
+// serializes the whole dehydrated client via JSON.stringify on every throttled
+// tick on the JS thread; as queries accumulate over a session that output
+// string balloons until allocation fails (FOAM-TV-MOBILE-9V / -AY OOM). Infinite
+// queries (topStreams/topCategories/streamsByCategory) were the worst offenders
+// (unbounded `data.pages`), but even bounded per-entity queries pile up across a
+// long session, so nothing is persisted. All scopes refetch fresh on launch.
+const PERSISTED_TWITCH_SCOPES = new Set<string>();
 
 export function shouldPersistQuery(queryKey: readonly unknown[]) {
   return (

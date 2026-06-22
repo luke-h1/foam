@@ -217,6 +217,7 @@ export default tseslint.config(
       'src/**/*.stories.{ts,tsx}',
       'src/utils/logger.ts',
       'src/lib/sentry.ts',
+      'src/lib/bugsnag.ts',
     ],
     rules: {
       'no-console': 'error',

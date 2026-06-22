@@ -1,6 +1,7 @@
 import {
   buildRawTwitchPlayerBootstrapScript,
   buildRawTwitchPlayerUrl,
+  buildTwitchAutoplayEnsureScript,
   buildTwitchCaptionHiderScript,
   buildTwitchClipPlayerUrl,
   buildTwitchContentGateAcceptScript,
@@ -73,6 +74,30 @@ describe('twitchPlayerSource', () => {
     expect(script).toContain(
       "window.addEventListener('orientationchange', schedulePlaybackRecovery)",
     );
+  });
+
+  test('autoplay-ensure unmutes and plays the video after a startup defer', () => {
+    const script = buildTwitchAutoplayEnsureScript({ muted: false });
+
+    expect(script).toContain('var TARGET_MUTED = false');
+    expect(script).toContain('var START_DELAY_MS = 800');
+    expect(script).toContain('video.muted = TARGET_MUTED');
+    expect(script).toContain('video.volume = 1');
+    expect(script).toContain('video.play()');
+    // Falls back to muted playback only if unmuted autoplay is blocked.
+    expect(script).toContain('video.muted = true');
+  });
+
+  test('autoplay-ensure keeps a muted start muted', () => {
+    const script = buildTwitchAutoplayEnsureScript({
+      muted: true,
+      startDelayMs: 0,
+    });
+
+    expect(script).toContain('var TARGET_MUTED = true');
+    expect(script).toContain('var START_DELAY_MS = 0');
+    // Volume is raised only when not muted (guarded at runtime).
+    expect(script).toContain('if (!TARGET_MUTED) { video.volume = 1; }');
   });
 
   test('hides captions with text track "hidden", never "disabled"', () => {

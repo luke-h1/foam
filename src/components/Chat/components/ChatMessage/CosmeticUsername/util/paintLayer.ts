@@ -17,7 +17,25 @@ export interface LayerGradientConfig {
   end: { x: number; y: number };
 }
 
+// A paint is shared by paint_id across every user wearing it (mirroring the
+// 7TV extension, which builds one CSS rule per paint and reuses it for all
+// users). These derivations are pure functions of the paint, so memoise them
+// on the paint object — every painted row that shares a paint then reuses the
+// same computed layers/gradient configs instead of rebuilding them per render.
+// WeakMap-keyed so entries drop with the paint object; no eviction needed.
+const paintLayersCache = new WeakMap<PaintData, PaintLayerData[]>();
+
 export function getPaintLayers(paint: PaintData): PaintLayerData[] {
+  const cached = paintLayersCache.get(paint);
+  if (cached) {
+    return cached;
+  }
+  const layers = computePaintLayers(paint);
+  paintLayersCache.set(paint, layers);
+  return layers;
+}
+
+function computePaintLayers(paint: PaintData): PaintLayerData[] {
   const layers = indexedCollectionToArray(paint.layers);
   if (layers.length > 0) {
     return layers;
@@ -54,6 +72,18 @@ export type PaintDropShadowMode = 0 | 1 | 2;
 
 export const DEFAULT_PAINT_DROP_SHADOW_MODE = 1 as const;
 
+const paintDropShadowsCache = new WeakMap<PaintData, PaintShadow[]>();
+
+function getAllPaintDropShadows(paint: PaintData): PaintShadow[] {
+  const cached = paintDropShadowsCache.get(paint);
+  if (cached) {
+    return cached;
+  }
+  const shadows = indexedCollectionToArray(paint.shadows);
+  paintDropShadowsCache.set(paint, shadows);
+  return shadows;
+}
+
 export function getPaintDropShadows(
   paint: PaintData,
   mode: PaintDropShadowMode = DEFAULT_PAINT_DROP_SHADOW_MODE,
@@ -62,7 +92,7 @@ export function getPaintDropShadows(
     return [];
   }
 
-  const shadows = indexedCollectionToArray(paint.shadows);
+  const shadows = getAllPaintDropShadows(paint);
   if (mode === 2) {
     return shadows.slice(0, 1);
   }
@@ -153,7 +183,34 @@ function expandRepeatingStops(stops: PaintStop[]): PaintStop[] {
   return expanded;
 }
 
+// Keyed on the (memoised, stable) layer object, then on fallbackColor — the
+// only per-call input. Repeating-gradient stop expansion + sorting + colour
+// conversion are the heaviest paint work; sharing the result across every user
+// wearing the paint is the main per-render saving.
+const layerGradientConfigCache = new WeakMap<
+  PaintLayerData,
+  Map<string, LayerGradientConfig>
+>();
+
 export function buildLayerGradientConfig(
+  layer: PaintLayerData,
+  fallbackColor: string,
+): LayerGradientConfig {
+  let byFallback = layerGradientConfigCache.get(layer);
+  if (!byFallback) {
+    byFallback = new Map();
+    layerGradientConfigCache.set(layer, byFallback);
+  }
+  const cached = byFallback.get(fallbackColor);
+  if (cached) {
+    return cached;
+  }
+  const config = computeLayerGradientConfig(layer, fallbackColor);
+  byFallback.set(fallbackColor, config);
+  return config;
+}
+
+function computeLayerGradientConfig(
   layer: PaintLayerData,
   fallbackColor: string,
 ): LayerGradientConfig {

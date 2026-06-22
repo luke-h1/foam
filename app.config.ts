@@ -196,6 +196,9 @@ const config: ExpoConfig = {
     EXPO_PUBLIC_SENTRY_DSN: process.env.EXPO_PUBLIC_SENTRY_DSN,
     EXPO_PUBLIC_SENTRY_RELEASE: sentryRelease,
     EXPO_PUBLIC_SENTRY_DIST: sentryDist,
+    bugsnag: {
+      apiKey: process.env.EXPO_PUBLIC_BUGSNAG_API_KEY,
+    },
     MOCK_SERVER_URL: appConfig.mockServerUrl,
     ota: {
       criticalIndex: Number.parseInt(process.env.OTA_CRITICAL_INDEX ?? '0', 10),

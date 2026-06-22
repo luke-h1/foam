@@ -1,4 +1,4 @@
-import { render, act } from '@testing-library/react-native';
+import { render, screen, act } from '@testing-library/react-native';
 import { evictCachedEmoteRef } from '@app/Providers/CachedEmotesProvider/cache-service';
 import {
   createRowVisibilityStore,
@@ -9,15 +9,22 @@ import { ChatInlineImage } from '../ChatInlineImage';
 const mockStartAnimating = jest.fn();
 const mockStopAnimating = jest.fn();
 
-let mockImageProps: { onError?: () => void; recyclingKey?: string } | null =
-  null;
+let mockImageProps: {
+  onError?: () => void;
+  onLoad?: () => void;
+  recyclingKey?: string;
+} | null = null;
 
 jest.mock('expo-image', () => {
   const ReactModule = require('react');
   return {
     Image: ReactModule.forwardRef(
       (
-        props: { onError?: () => void; recyclingKey?: string },
+        props: {
+          onError?: () => void;
+          onLoad?: () => void;
+          recyclingKey?: string;
+        },
         ref: unknown,
       ) => {
         mockImageProps = props;
@@ -133,36 +140,92 @@ describe('ChatInlineImage error retry', () => {
   beforeEach(() => {
     mockSharedRef = { isAnimated: false };
     mockImageProps = null;
+    jest.useFakeTimers();
   });
   afterEach(() => {
+    jest.useRealTimers();
     jest.clearAllMocks();
   });
 
-  test('evicts the cached ref and remounts with a new recyclingKey on error', () => {
+  test('evicts the cached ref and remounts with a new recyclingKey after the backoff delay', () => {
     const sourceUrl = 'https://cdn.7tv.app/emote/err/2x.avif';
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
-    expect(mockImageProps?.recyclingKey).toBe(`${sourceUrl}#0`);
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
 
     act(() => mockImageProps?.onError?.());
 
     expect(evictMock).toHaveBeenCalledTimes(1);
     expect(evictMock).toHaveBeenCalledWith(sourceUrl);
-    expect(mockImageProps?.recyclingKey).toBe(`${sourceUrl}#1`);
+    // The reload is deferred behind the backoff timer, not fired synchronously.
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
+
+    act(() => jest.advanceTimersByTime(400));
+
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#1`);
   });
 
-  test('stops retrying after the cap of 2 attempts', () => {
+  test('keeps retrying on a backoff and gives up after the cap', () => {
     const sourceUrl = 'https://cdn.7tv.app/emote/err/2x.avif';
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
-    act(() => mockImageProps?.onError?.());
-    act(() => mockImageProps?.onError?.());
-    expect(evictMock).toHaveBeenCalledTimes(2);
-    expect(mockImageProps?.recyclingKey).toBe(`${sourceUrl}#2`);
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      act(() => mockImageProps?.onError?.());
+      act(() => jest.advanceTimersByTime(8000));
+    }
+
+    expect(evictMock).toHaveBeenCalledTimes(4);
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#4`);
 
     act(() => mockImageProps?.onError?.());
 
-    expect(evictMock).toHaveBeenCalledTimes(2);
-    expect(mockImageProps?.recyclingKey).toBe(`${sourceUrl}#2`);
+    expect(evictMock).toHaveBeenCalledTimes(4);
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#4`);
+  });
+
+  test('a successful load resets the retry budget', () => {
+    const sourceUrl = 'https://cdn.7tv.app/emote/err/2x.avif';
+    render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
+
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      act(() => mockImageProps?.onError?.());
+      act(() => jest.advanceTimersByTime(8000));
+    }
+    expect(evictMock).toHaveBeenCalledTimes(4);
+
+    act(() => mockImageProps?.onLoad?.());
+    act(() => mockImageProps?.onError?.());
+
+    expect(evictMock).toHaveBeenCalledTimes(5);
+  });
+});
+
+describe('ChatInlineImage loading shimmer', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('shows the shimmer while an uncached image loads and hides it once loaded', () => {
+    mockSharedRef = null;
+    const sourceUrl = 'https://cdn.7tv.app/emote/load/2x.avif';
+    render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
+
+    expect(screen.getByTestId('chat-image-shimmer')).toBeOnTheScreen();
+
+    act(() => mockImageProps?.onLoad?.());
+
+    expect(screen.queryByTestId('chat-image-shimmer')).not.toBeOnTheScreen();
+  });
+
+  test('a decoded shared ref renders immediately without a shimmer', () => {
+    mockSharedRef = { isAnimated: false };
+    render(
+      <ChatInlineImage
+        sourceUrl='https://cdn.7tv.app/emote/cached/2x.avif'
+        style={{}}
+      />,
+    );
+
+    expect(screen.queryByTestId('chat-image-shimmer')).not.toBeOnTheScreen();
   });
 });

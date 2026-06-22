@@ -14,10 +14,20 @@ import {
   type ImageStyle,
   type StyleProp,
   type ViewStyle,
+  StyleSheet,
   View,
 } from 'react-native';
 import { RowVisibilityContext } from '../rowVisibility';
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
+import { ChatImageShimmer } from './ChatImageShimmer';
+
+// Keep retrying a failed load on a backoff so a transient network blip (common
+// during raids/floods) doesn't strand an emote as a dead grey box forever, while
+// still being gentle enough not to hammer the network. After this many attempts
+// we give up and leave a static grey placeholder.
+const MAX_RELOAD_ATTEMPTS = 4;
+const RELOAD_BASE_DELAY_MS = 400;
+const RELOAD_MAX_DELAY_MS = 8000;
 
 interface ChatInlineImageProps {
   containerStyle?: StyleProp<ViewStyle>;
@@ -44,19 +54,51 @@ function ChatInlineImageComponent({
   const sharedRef = useCachedEmote(sourceUrl);
 
   const [reloadNonce, setReloadNonce] = useState(0);
+  // 'loading' until the url-fallback reports onLoad, 'loaded' once it has, or
+  // 'failed' after we exhaust retries. Drives the shimmer overlay below. A
+  // decoded sharedRef is already a guaranteed bitmap, so it counts as loaded.
+  const [status, setStatus] = useState<'loading' | 'loaded' | 'failed'>(
+    'loading',
+  );
   const attemptsRef = useRef({ url: sourceUrl, count: 0 });
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+      }
+    },
+    [],
+  );
+
+  const handleLoad = useCallback(() => {
+    attemptsRef.current.count = 0;
+    setStatus('loaded');
+  }, []);
+
   const handleError = useCallback(() => {
     const attempts = attemptsRef.current;
     if (attempts.url !== sourceUrl) {
       attempts.url = sourceUrl;
       attempts.count = 0;
     }
-    if (attempts.count >= 2) {
+    if (attempts.count >= MAX_RELOAD_ATTEMPTS) {
+      setStatus('failed');
       return;
     }
     attempts.count += 1;
     evictCachedEmoteRef(sourceUrl);
-    setReloadNonce(nonce => nonce + 1);
+    const delay = Math.min(
+      RELOAD_MAX_DELAY_MS,
+      RELOAD_BASE_DELAY_MS * 2 ** (attempts.count - 1),
+    );
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+    }
+    retryTimerRef.current = setTimeout(() => {
+      setReloadNonce(nonce => nonce + 1);
+    }, delay);
   }, [sourceUrl]);
 
   const rowVisibility = use(RowVisibilityContext);
@@ -86,6 +128,11 @@ function ChatInlineImageComponent({
     };
   }, [rowVisibility, animated]);
 
+  // Show the shimmer only while there's nothing real to display yet: a decoded
+  // sharedRef is instant, so cached emotes (the busy-chat common case) never
+  // shimmer and stay on the bare-image fast path with no extra Fabric node.
+  const overlayVisible = sharedRef == null && status !== 'loaded';
+
   const imageElement: ReactElement = (
     <ExpoImage
       ref={imageRef}
@@ -99,20 +146,35 @@ function ChatInlineImageComponent({
       }
       cachePolicy='memory-disk'
       priority={priority}
-      placeholder={{ blurhash: 'A0CsjpfQfQfQ' }}
-      placeholderContentFit='cover'
       transition={transitionMs}
+      onLoad={handleLoad}
       onError={handleError}
-      style={style}
+      style={overlayVisible ? StyleSheet.absoluteFill : style}
       testID={testID}
     />
   );
 
-  if (!containerStyle) {
-    return imageElement;
+  if (containerStyle) {
+    return (
+      <View style={containerStyle}>
+        {overlayVisible ? (
+          <ChatImageShimmer animate={status === 'loading'} />
+        ) : null}
+        {imageElement}
+      </View>
+    );
   }
 
-  return <View style={containerStyle}>{imageElement}</View>;
+  if (overlayVisible) {
+    return (
+      <View style={style}>
+        <ChatImageShimmer animate={status === 'loading'} />
+        {imageElement}
+      </View>
+    );
+  }
+
+  return imageElement;
 }
 
 export const ChatInlineImage = memo(ChatInlineImageComponent);

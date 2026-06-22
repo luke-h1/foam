@@ -2,111 +2,14 @@ import { logger as rnlogger, consoleTransport } from 'react-native-logs';
 import type { transportFunctionType } from 'react-native-logs';
 import { forwardLogToSentry } from '@app/lib/sentry';
 import type { LogMetadata } from '@app/lib/sentry';
+import { forwardLogToBugsnag } from '@app/lib/bugsnag';
+import { isRecord, sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
 
 export type { LogMetadata } from '@app/lib/sentry';
 
 type TransportProps = Parameters<
   transportFunctionType<Record<string, unknown>>
 >[0];
-
-const MAX_LOG_STRING_LENGTH = 500;
-const MAX_LOG_ARRAY_PREVIEW = 3;
-const MAX_LOG_OBJECT_KEYS = 12;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function isEmoteLike(value: unknown): value is Record<string, unknown> {
-  if (!isRecord(value)) {
-    return false;
-  }
-
-  return (
-    typeof value.id === 'string' &&
-    typeof value.name === 'string' &&
-    typeof value.url === 'string' &&
-    typeof value.site === 'string'
-  );
-}
-
-function summariseHomogeneousArray(value: unknown[]): string | null {
-  if (value.length === 0) {
-    return '[]';
-  }
-
-  const first = value[0];
-  if (isEmoteLike(first)) {
-    const site = typeof first.site === 'string' ? first.site : 'emote';
-    return `[Array(${value.length}) ${site} emotes]`;
-  }
-
-  return null;
-}
-
-function sanitiseLogValue(value: string, seen?: WeakSet<object>): string;
-function sanitiseLogValue(value: unknown, seen?: WeakSet<object>): unknown;
-function sanitiseLogValue(value: unknown, seen = new WeakSet<object>()) {
-  if (value instanceof Error) {
-    return {
-      name: value.name,
-      message: value.message,
-      stack: value.stack,
-    };
-  }
-
-  if (typeof value === 'string') {
-    return value.length > MAX_LOG_STRING_LENGTH
-      ? `${value.slice(0, MAX_LOG_STRING_LENGTH)}... [truncated]`
-      : value;
-  }
-
-  if (Array.isArray(value)) {
-    const summary = summariseHomogeneousArray(value);
-    if (summary) {
-      return summary;
-    }
-
-    if (value.length > MAX_LOG_ARRAY_PREVIEW) {
-      return {
-        length: value.length,
-        preview: value
-          .slice(0, MAX_LOG_ARRAY_PREVIEW)
-          .map(item => sanitiseLogValue(item, seen)),
-      };
-    }
-
-    return value.map(item => sanitiseLogValue(item, seen));
-  }
-
-  if (!isRecord(value)) {
-    return value;
-  }
-
-  if (seen.has(value)) {
-    return '[Circular]';
-  }
-  seen.add(value);
-
-  if (isEmoteLike(value)) {
-    return {
-      id: value.id,
-      name: value.name,
-      site: value.site,
-    };
-  }
-
-  const result: Record<string, unknown> = {};
-  const entries = Object.entries(value);
-  for (const [key, nestedValue] of entries.slice(0, MAX_LOG_OBJECT_KEYS)) {
-    result[key] = sanitiseLogValue(nestedValue, seen);
-  }
-  if (entries.length > MAX_LOG_OBJECT_KEYS) {
-    result.__truncatedKeys = entries.length - MAX_LOG_OBJECT_KEYS;
-  }
-
-  return result;
-}
 
 function stringifyLogMessage(value: unknown): string {
   if (typeof value === 'string') {
@@ -154,7 +57,7 @@ const createGenericTransport =
 
 const genericTransport = createGenericTransport();
 
-const createSentryTransport =
+const createMonitoringTransport =
   (): transportFunctionType<Record<string, unknown>> =>
   (props: TransportProps) => {
     if (!props?.level) {
@@ -193,21 +96,24 @@ const createSentryTransport =
           ? firstArg
           : String(firstArg);
 
-    forwardLogToSentry({
+    const entry = {
       level:
         levelText === 'error'
-          ? 'error'
+          ? ('error' as const)
           : levelText === 'warn'
-            ? 'warn'
-            : 'info',
+            ? ('warn' as const)
+            : ('info' as const),
       category: extension ?? 'app',
       message,
       error,
       metadata,
-    });
+    };
+
+    forwardLogToSentry(entry);
+    forwardLogToBugsnag(entry);
   };
 
-const sentryTransport = createSentryTransport();
+const monitoringTransport = createMonitoringTransport();
 
 const loggingConfig = {
   main: {
@@ -325,8 +231,8 @@ const baseLogger = rnlogger.createLogger({
   // so production isn't spending CPU stringifying chat traffic.
   severity: __DEV__ ? 'debug' : 'warn',
   transport: __DEV__
-    ? [consoleTransport, genericTransport, sentryTransport]
-    : [genericTransport, sentryTransport],
+    ? [consoleTransport, genericTransport, monitoringTransport]
+    : [genericTransport, monitoringTransport],
   stringifyFunc: stringifyLogMessage,
   transportOptions: {
     colors: {

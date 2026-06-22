@@ -6,12 +6,13 @@ import {
   ensureObservablePersistenceConfig,
 } from '@app/lib/observablePersistence';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
-import { observable, when } from '@legendapp/state';
+import { batch, observable, when } from '@legendapp/state';
 import { persistObservable } from '@legendapp/state/persist';
 import {
   RECENT_MESSAGES_PERSISTENCE_ENABLED,
   loadPersistedRecentMessages,
 } from './recentMessagesPersistence';
+import { loadPersistedCosmetics } from './cosmeticsPersistence';
 
 import type {
   AnyChatMessageType,
@@ -117,6 +118,20 @@ const initialChatStoreState: ChatStoreState = {
 ensureObservablePersistenceConfig();
 
 export const chatStore$ = observable<ChatStoreState>(initialChatStoreState);
+
+// Rehydrate the 7TV cosmetic maps from the previous session's MMKV snapshot so
+// paints/badges render immediately on launch instead of waiting for the event
+// API to re-stream every entitlement. The websocket still corrects and extends
+// this live (create/update/delete).
+const persistedCosmetics = loadPersistedCosmetics();
+if (persistedCosmetics) {
+  batch(() => {
+    chatStore$.paints.set(persistedCosmetics.paints);
+    chatStore$.badges.set(persistedCosmetics.badges);
+    chatStore$.userPaintIds.set(persistedCosmetics.userPaintIds);
+    chatStore$.userBadgeIds.set(persistedCosmetics.userBadgeIds);
+  });
+}
 
 const persistedState$ = persistObservable(chatStore$.persisted, {
   local: createObservablePersistenceLocalConfig(CHAT_STORE_PERSISTENCE_KEY),

@@ -28,7 +28,23 @@ export const EMOTE_DECODE_MAX_PX = isLowTier ? 64 : 96;
 
 const MAX_ENTRIES = isLowTier ? 600 : 1200;
 
+/**
+ * Hard ceiling on resident decoded-bitmap memory. The entry count alone is a
+ * poor proxy: a static badge costs ~tens of KB while an animated AVIF emote
+ * holds a multi-frame working set that is an order of magnitude larger, so a
+ * 1200-entry channel of animated emotes can dominate total process memory and
+ * push the app past the iOS per-process limit (observed as a Hermes
+ * heap-growth OOM, FOAM-TV-MOBILE-BG). The byte budget is the primary bound;
+ * MAX_ENTRIES is now a backstop. Heuristic — tune against an on-device
+ * Instruments Allocations / vmmap capture.
+ */
+const MAX_DECODED_BYTES = isLowTier ? 64 * 1024 * 1024 : 192 * 1024 * 1024;
+const FALLBACK_REF_BYTES = 48 * 1024;
+const ANIMATED_BYTE_FACTOR = 8;
+
 const refs = new Map<string, ImageRef>();
+const refBytes = new Map<string, number>();
+let totalBytes = 0;
 const pinned = new Set<string>();
 /**
  * Maps an in-flight url to the cacheEpoch active when its decode started.
@@ -40,12 +56,50 @@ const inflight = new Map<string, number>();
 const listeners = new Map<string, Set<() => void>>();
 let cacheEpoch = 0;
 
-function evictOneUnpinned(): void {
+function estimateRefBytes(ref: ImageRef): number {
+  const { width, height } = ref;
+  if (!width || !height) {
+    return FALLBACK_REF_BYTES;
+  }
+  const scale = ref.scale || 1;
+  const pixelBytes = width * scale * height * scale * 4;
+  return Math.round(
+    ref.isAnimated ? pixelBytes * ANIMATED_BYTE_FACTOR : pixelBytes,
+  );
+}
+
+function dropRefBytes(url: string): void {
+  const cost = refBytes.get(url);
+  if (cost !== undefined) {
+    totalBytes -= cost;
+    refBytes.delete(url);
+  }
+}
+
+function withinBudget(incomingBytes: number): boolean {
+  return (
+    refs.size < MAX_ENTRIES && totalBytes + incomingBytes <= MAX_DECODED_BYTES
+  );
+}
+
+/**
+ * Evict least-recently-rendered unpinned refs until the incoming decode fits
+ * under both the byte budget and the entry-count backstop. Stops once no
+ * unpinned entry remains so a fully-pinned cache can still grow rather than spin.
+ */
+function evictUnpinnedToFit(incomingBytes: number): void {
+  if (withinBudget(incomingBytes)) {
+    return;
+  }
   for (const url of refs.keys()) {
-    if (!pinned.has(url)) {
-      refs.delete(url);
+    if (withinBudget(incomingBytes)) {
       return;
     }
+    if (pinned.has(url)) {
+      continue;
+    }
+    refs.delete(url);
+    dropRefBytes(url);
   }
 }
 
@@ -129,10 +183,11 @@ async function runDecode(
     if (inflight.get(url) !== requestEpoch || requestEpoch !== cacheEpoch) {
       return;
     }
-    if (refs.size >= MAX_ENTRIES) {
-      evictOneUnpinned();
-    }
+    const cost = estimateRefBytes(ref);
+    evictUnpinnedToFit(cost);
     refs.set(url, ref);
+    refBytes.set(url, cost);
+    totalBytes += cost;
     if (pin) {
       pinned.add(url);
     }
@@ -184,6 +239,7 @@ export async function warmCachedEmoteRefs(
 
 export function evictCachedEmoteRef(url: string): void {
   const hadRef = refs.delete(url);
+  dropRefBytes(url);
   pinned.delete(url);
   if (hadRef) {
     notify(url);
@@ -199,6 +255,7 @@ export function releaseChannelEmoteRefs(): void {
   }
   dropped.forEach(url => {
     refs.delete(url);
+    dropRefBytes(url);
     notify(url);
   });
 }
@@ -206,6 +263,8 @@ export function releaseChannelEmoteRefs(): void {
 export function clearCachedEmoteRefs(): void {
   cacheEpoch += 1;
   refs.clear();
+  refBytes.clear();
+  totalBytes = 0;
   inflight.clear();
   pinned.clear();
   notifyAll();
@@ -225,9 +284,14 @@ export function trimCachedEmoteRefsForMemoryPressure(): void {
 let memoryPressureSubscribed = false;
 
 /**
- * iOS-only: AppState emits 'memoryWarning'. Registered once for the app's
- * lifetime (the cache outlives any single chat mount). Android trim hooks would
- * need a native onTrimMemory bridge — not wired here.
+ * Registered once for the app's lifetime (the cache outlives any single chat
+ * mount). Two triggers:
+ * - iOS `memoryWarning`: late and unreliable before a fast OOM, so it can't be
+ *   the only safety valve.
+ * - Backgrounding: proactively shed the unpinned working set while the app is
+ *   off-screen so a long single-channel session can't sit at the cap until the
+ *   OS reclaims it. Refs re-decode lazily on the next render when foregrounded.
+ * Android trim hooks would need a native onTrimMemory bridge — not wired here.
  */
 export function subscribeEmoteCacheMemoryPressure(): void {
   if (memoryPressureSubscribed) {
@@ -238,6 +302,11 @@ export function subscribeEmoteCacheMemoryPressure(): void {
     'memoryWarning',
     trimCachedEmoteRefsForMemoryPressure,
   );
+  AppState.addEventListener('change', nextAppState => {
+    if (nextAppState === 'background') {
+      trimCachedEmoteRefsForMemoryPressure();
+    }
+  });
 }
 
 export function getCachedEmoteStats(): {
@@ -246,4 +315,9 @@ export function getCachedEmoteStats(): {
   pinned: number;
 } {
   return { decoded: refs.size, inflight: inflight.size, pinned: pinned.size };
+}
+
+/** Estimated resident decoded-bitmap bytes, for the chat-perf harness. */
+export function getCachedEmoteByteEstimate(): number {
+  return totalBytes;
 }

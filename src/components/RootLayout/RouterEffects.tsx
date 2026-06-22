@@ -20,8 +20,6 @@ import * as QuickActions from 'expo-quick-actions';
 import { useEffect, useLayoutEffect } from 'react';
 import { Linking } from 'react-native';
 
-const logPrefix = '[AUTHDBG] RouterEffects';
-
 const quickActionsBase: RouterAction[] = [
   {
     id: 'live',
@@ -131,23 +129,12 @@ export function RouterEffects() {
 
   useEffect(() => {
     async function handleIncomingUrl(url: string | null) {
-      logger.auth.info(`${logPrefix}.handleIncomingUrl`, {
-        url,
-      });
-
       if (!url) {
         return;
       }
 
       if (isAuthCallbackUrl(url)) {
-        logger.auth.info(`${logPrefix} auth callback matched`, {
-          url,
-        });
         const handled = await completeAuthWithCallbackUrl(url, loginWithTwitch);
-        logger.auth.info(`${logPrefix} auth callback handled`, {
-          url,
-          handled,
-        });
         if (handled) {
           router.replace('/tabs/following');
         }
@@ -156,15 +143,10 @@ export function RouterEffects() {
     }
 
     const linkingSubscription = Linking.addEventListener('url', ({ url }) => {
-      logger.auth.info(`${logPrefix} Linking event received`, { url });
       void handleIncomingUrl(url);
     });
 
     void Linking.getInitialURL().then((initialUrl: string | null) => {
-      logger.auth.info(`${logPrefix} Linking.getInitialURL resolved`, {
-        initialUrl,
-      });
-
       if (initialUrl) {
         setTimeout(() => {
           void handleIncomingUrl(initialUrl);

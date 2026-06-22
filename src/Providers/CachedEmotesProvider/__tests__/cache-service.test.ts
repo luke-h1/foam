@@ -9,6 +9,7 @@ import { Image, type ImageRef } from 'expo-image';
 import {
   clearCachedEmoteRefs,
   ensureCachedEmoteRef,
+  getCachedEmoteByteEstimate,
   getCachedEmoteRef,
   getCachedEmoteStats,
   releaseChannelEmoteRefs,
@@ -17,6 +18,11 @@ import {
   trimCachedEmoteRefsForMemoryPressure,
   warmCachedEmoteRefs,
 } from '@app/Providers/CachedEmotesProvider/cache-service';
+
+const MAX_DECODED_BYTES_HIGH_TIER = 192 * 1024 * 1024;
+// 6000x6000x4 = 144MB: one fits under the 192MiB high-tier budget, two don't.
+const bigRef = (isAnimated = false) =>
+  ({ width: 6000, height: 6000, scale: 1, isAnimated }) as unknown as ImageRef;
 
 const loadAsync = jest.mocked(Image.loadAsync);
 
@@ -160,6 +166,51 @@ describe('cache-service', () => {
     expect(getCachedEmoteStats().decoded).toBe(1200);
     expect(getCachedEmoteRef(urls[0]!)).toEqual({});
     expect(getCachedEmoteRef(urls[1]!)).toBeNull();
+  });
+
+  test('evicts to stay under the decoded-byte budget before the entry-count cap', async () => {
+    loadAsync.mockResolvedValue(bigRef());
+
+    await warmCachedEmoteRefs(['https://cdn.7tv.app/emote/big0/2x.avif']);
+    await warmCachedEmoteRefs(['https://cdn.7tv.app/emote/big1/2x.avif']);
+    await warmCachedEmoteRefs(['https://cdn.7tv.app/emote/big2/2x.avif']);
+
+    // Two 144MB refs would exceed the 192MiB budget, so each new decode evicts
+    // the previous unpinned one long before the 1200-entry count cap.
+    expect(getCachedEmoteStats().decoded).toBe(1);
+    expect(getCachedEmoteByteEstimate()).toBeLessThanOrEqual(
+      MAX_DECODED_BYTES_HIGH_TIER,
+    );
+    expect(getCachedEmoteRef('https://cdn.7tv.app/emote/big2/2x.avif')).toEqual(
+      bigRef(),
+    );
+  });
+
+  test('the byte budget never evicts pinned refs', async () => {
+    loadAsync.mockResolvedValue(bigRef());
+
+    await warmCachedEmoteRefs(['https://cdn.7tv.app/emote/bigPinned/2x.avif'], {
+      pin: true,
+    });
+    await warmCachedEmoteRefs([
+      'https://cdn.7tv.app/emote/bigUnpinned/2x.avif',
+    ]);
+
+    // The pinned ref keeps the cache over budget rather than being evicted.
+    expect(
+      getCachedEmoteRef('https://cdn.7tv.app/emote/bigPinned/2x.avif'),
+    ).toEqual(bigRef());
+    expect(getCachedEmoteStats().pinned).toBe(1);
+  });
+
+  test('clearing the cache resets the byte estimate', async () => {
+    loadAsync.mockResolvedValue(bigRef());
+    await warmCachedEmoteRefs(['https://cdn.7tv.app/emote/bigClear/2x.avif']);
+    expect(getCachedEmoteByteEstimate()).toBeGreaterThan(0);
+
+    clearCachedEmoteRefs();
+
+    expect(getCachedEmoteByteEstimate()).toBe(0);
   });
 
   test('caps concurrent decodes and drains the queue as slots free', async () => {

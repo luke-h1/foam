@@ -7,6 +7,13 @@ import type {
 } from '@app/utils/color/seventv-ws-service';
 import type { TextStyle } from 'react-native';
 
+// Paint-pure derivations, memoised on the paint object so every user wearing a
+// shared paint reuses one computed result (the 7TV extension computes each
+// paint's style once, not per user). WeakMap-keyed so entries drop with the
+// paint; no eviction needed.
+const textStyleCache = new WeakMap<PaintData, TextStyle>();
+const textShadowsCache = new WeakMap<PaintData, PaintShadow[]>();
+
 /**
  * Styles that change glyph shape (weight, transform). These must be applied
  * to the mask text, the fill sizer, and every shadow underlay so all layers
@@ -15,6 +22,16 @@ import type { TextStyle } from 'react-native';
  * (shadow behind stroke behind fill).
  */
 export function buildPaintUsernameTextStyle(paint: PaintData): TextStyle {
+  const cached = textStyleCache.get(paint);
+  if (cached) {
+    return cached;
+  }
+  const style = computePaintUsernameTextStyle(paint);
+  textStyleCache.set(paint, style);
+  return style;
+}
+
+function computePaintUsernameTextStyle(paint: PaintData): TextStyle {
   const textStyle = paint.textStyle;
   if (!textStyle) {
     return {};
@@ -36,8 +53,14 @@ export function buildPaintUsernameTextStyle(paint: PaintData): TextStyle {
 }
 
 export function getPaintTextShadows(paint: PaintData): PaintShadow[] {
+  const cached = textShadowsCache.get(paint);
+  if (cached) {
+    return cached;
+  }
   const shadows = paint.textStyle?.shadows;
-  return shadows ? indexedCollectionToArray(shadows) : [];
+  const result = shadows ? indexedCollectionToArray(shadows) : [];
+  textShadowsCache.set(paint, result);
+  return result;
 }
 
 export function getPaintTextStroke(paint: PaintData): PaintTextStroke | null {

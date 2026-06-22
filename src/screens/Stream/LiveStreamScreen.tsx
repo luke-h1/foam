@@ -596,6 +596,18 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       ? styles.overlayChatContainer
       : undefined;
 
+  // Matches the live-stream card's request size so the loading poster is an
+  // instant cache hit when arriving from the stream list.
+  const posterUrl = useMemo(
+    () =>
+      stream?.thumbnail_url
+        ? stream.thumbnail_url
+            .replace('{width}', '1920')
+            .replace('{height}', '1080')
+        : undefined,
+    [stream?.thumbnail_url],
+  );
+
   const streamInfo = useMemo(
     () =>
       isStreamEnabled && resolvedChannelLogin
@@ -652,6 +664,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             onVideoAreaPress={isLandscape ? cycleLandscapeChatMode : undefined}
             onVideoAreaSwipeDown={isLandscape ? handleExitLandscape : undefined}
             onWebViewLoaded={handlePlayerLoaded}
+            posterUrl={posterUrl}
             streamInfo={streamInfo}
           />
         ) : null}

@@ -6,6 +6,7 @@ import { WebView } from 'react-native-webview';
 import type { WebViewMessageEvent } from 'react-native-webview';
 
 import { ControlsOverlay } from './ControlsOverlay';
+import { StreamPlayerPoster } from './StreamPlayerPoster';
 import { StreamPlayerWebView } from './StreamPlayerWebView';
 import {
   ControlsTriggerButton,
@@ -14,6 +15,7 @@ import {
 } from './StreamPlayerOverlays';
 import {
   buildRawTwitchPlayerUrl,
+  buildTwitchAutoplayEnsureScript,
   buildTwitchCaptionHiderScript,
   buildTwitchClipPlayerUrl,
   buildTwitchContentGateAcceptScript,
@@ -90,6 +92,13 @@ const VOD_PROGRESS_TRACKER_SCRIPT = `
 true;
 `;
 
+// The unscripted live player gives no 'playing' bridge event, so the poster is
+// dismissed off WebView load-end. Linger briefly past that so the first decoded
+// frame is already on screen before the loading frame fades away.
+const POSTER_HIDE_DELAY_MS = 450;
+// Never strand the poster over the player if the page errors before load-end.
+const POSTER_SAFETY_TIMEOUT_MS = 9000;
+
 export const StreamPlayer = memo(function StreamPlayer({
   autoplay = true,
   channel,
@@ -113,6 +122,7 @@ export const StreamPlayer = memo(function StreamPlayer({
   onVideoAreaSwipeDown,
   onWebViewLoaded,
   parent = 'www.twitch.tv',
+  posterUrl,
   showOverlayControls = false,
   streamInfo,
   video,
@@ -154,11 +164,23 @@ export const StreamPlayer = memo(function StreamPlayer({
   const [layoutNudge, setLayoutNudge] = useState(0);
   const nudgeTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const nudgePlayedRef = useRef(false);
+  // Loading frame shown over the WebView (stream thumbnail + spinner) until the
+  // player has actually started, replacing the black box during page load.
+  const [isPlayerLoading, setIsPlayerLoading] = useState(true);
+  const posterHideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const handleBridgePlaying = useCallback(() => {
     if (nudgePlayedRef.current) {
       return;
     }
     nudgePlayedRef.current = true;
+    if (!posterHideTimeoutRef.current) {
+      posterHideTimeoutRef.current = setTimeout(() => {
+        posterHideTimeoutRef.current = null;
+        setIsPlayerLoading(false);
+      }, POSTER_HIDE_DELAY_MS);
+    }
     const pulse = (delay: number) => {
       nudgeTimeoutsRef.current.push(
         setTimeout(() => setLayoutNudge(1), delay),
@@ -170,8 +192,12 @@ export const StreamPlayer = memo(function StreamPlayer({
   }, []);
   useEffect(() => {
     const timeoutsRef = nudgeTimeoutsRef;
+    const posterTimeoutRef = posterHideTimeoutRef;
     return () => {
       timeoutsRef.current.forEach(clearTimeout);
+      if (posterTimeoutRef.current) {
+        clearTimeout(posterTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -187,7 +213,18 @@ export const StreamPlayer = memo(function StreamPlayer({
     needsInitRef.current = true;
     nudgePlayedRef.current = false;
     resumeTimeRef.current = 0;
+    setIsPlayerLoading(true);
   }, [sourceKey]);
+
+  // Re-show the loading frame for each WebView generation and arm a safety
+  // dismissal so a load that never finishes can't trap it over the player.
+  useEffect(() => {
+    const timeout = setTimeout(
+      () => setIsPlayerLoading(false),
+      POSTER_SAFETY_TIMEOUT_MS,
+    );
+    return () => clearTimeout(timeout);
+  }, [sourceKey, webViewKey]);
 
   const remountEmbedWebView = useCallback(() => {
     logger.main.info('webview remounted', {
@@ -196,6 +233,11 @@ export const StreamPlayer = memo(function StreamPlayer({
     });
     needsInitRef.current = true;
     nudgePlayedRef.current = false;
+    if (posterHideTimeoutRef.current) {
+      clearTimeout(posterHideTimeoutRef.current);
+      posterHideTimeoutRef.current = null;
+    }
+    setIsPlayerLoading(true);
     setWebViewKey(key => key + 1);
   }, [channel]);
 
@@ -293,16 +335,20 @@ export const StreamPlayer = memo(function StreamPlayer({
   // The stock player.twitch.tv page runs unscripted: Twitch's own UI handles
   // playback, so the playerControls bootstrap is not injected and the bridge
   // (ready/playing/pause messages, native controls overlay) stays dormant.
-  // We only auto-accept the mature-content gate and hide the text track
-  // ('hidden', not 'disabled', which would stall WKWebView's native HLS
-  // AVPlayer); the player's own chrome is hidden only when foam is drawing its
-  // own overlay controls over the video.
+  // We auto-accept the mature-content gate, hide the text track ('hidden', not
+  // 'disabled', which would stall WKWebView's native HLS AVPlayer), and — when
+  // autoplaying — nudge the video into unmuted playback since Twitch's embed
+  // otherwise tends to land paused/muted. The player's own chrome is hidden
+  // only when foam is drawing its own overlay controls over the video.
   const injectedJavaScript =
     TWITCH_AUTH_HELPER_SCRIPT +
     '\n' +
     buildTwitchContentGateAcceptScript() +
     '\n' +
     buildTwitchCaptionHiderScript() +
+    (autoplay && !clip
+      ? '\n' + buildTwitchAutoplayEnsureScript({ muted: initialMuted })
+      : '') +
     (showOverlayControls && !clip
       ? '\n' + buildTwitchOverlayHideScript()
       : '') +
@@ -406,6 +452,8 @@ export const StreamPlayer = memo(function StreamPlayer({
           webViewRef={webViewRef}
         />
       ) : null}
+
+      <StreamPlayerPoster posterUrl={posterUrl} visible={isPlayerLoading} />
 
       {shouldShowNativeControls && (
         <TouchBlockOverlay gesture={videoTapGesture} />

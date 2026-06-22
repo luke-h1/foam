@@ -10,6 +10,7 @@ import {
 import { enableFreeze } from 'react-native-screens';
 import { installGlobalErrorHandlers } from '../lib/global-error-handlers';
 import { init as initSentry } from '../lib/sentry';
+import { init as initBugsnag } from '../lib/bugsnag';
 
 configureReanimatedLogger({
   level: ReanimatedLogLevel.warn,
@@ -20,6 +21,7 @@ enableFreeze(true);
 
 WebBrowser.maybeCompleteAuthSession();
 initSentry();
+initBugsnag();
 installGlobalErrorHandlers();
 
 export { default } from './defaultRootLayout';

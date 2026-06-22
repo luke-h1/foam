@@ -8,6 +8,7 @@ import {
 } from '@sentry/react-native';
 import * as Sentry from '@sentry/react-native';
 import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
+import { sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
 import type { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
 import type { ComponentType } from 'react';
 
@@ -312,6 +313,11 @@ export function forwardLogToSentry(entry: {
     if (cause !== undefined) {
       extra.cause = cause instanceof Error ? cause.toString() : cause;
     }
+    // Bound the metadata before it reaches Sentry. Callers can pass arbitrarily
+    // large objects (emote lists, WebSocket payloads, API responses); left raw
+    // they bloat the event and have OOM-aborted envelope serialization on the
+    // JS thread on low-memory devices (FOAM-TV-MOBILE-9V).
+    const safeExtra = sanitiseLogValue(extra) as Record<string, unknown>;
 
     if (level === 'error') {
       Sentry.addBreadcrumb({ category, message: headline, level: 'error' });
@@ -329,7 +335,7 @@ export function forwardLogToSentry(entry: {
         if (metadata?.fingerprint) {
           scope.setFingerprint(metadata.fingerprint);
         }
-        scope.setContext('log_metadata', extra);
+        scope.setContext('log_metadata', safeExtra);
 
         const exception =
           cause instanceof Error
@@ -349,13 +355,13 @@ export function forwardLogToSentry(entry: {
       category,
       message: headline,
       level: level === 'warn' ? 'warning' : 'info',
-      data: extra,
+      data: safeExtra,
     });
 
     if (level === 'warn') {
-      Sentry.logger.warn(headline, extra);
+      Sentry.logger.warn(headline, safeExtra);
     } else {
-      Sentry.logger.info(headline, extra);
+      Sentry.logger.info(headline, safeExtra);
     }
   } catch {
     // ignore

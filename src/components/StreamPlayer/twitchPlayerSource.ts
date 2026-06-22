@@ -75,6 +75,89 @@ export function buildTwitchPlayerQualityDefaultScript(options: {
 true;`;
 }
 
+/**
+ * Drives playback on the stock (unscripted) player so a stream doesn't sit
+ * paused/muted after load. Twitch's embed frequently honours neither the
+ * `muted=false` URL param (it restores a stored mute preference) nor unmuted
+ * autoplay on its own, leaving the video paused or silent. This locates the
+ * <video> element, sets it unmuted at full volume, and calls play().
+ *
+ * The first play() is deferred past the WKWebView init window: starting the
+ * inline video too early intermittently leaves its AVPlayer layer out of the
+ * compositor (audio advances, picture is black). The deferral plus the
+ * StreamPlayer layout nudge keep playback off that race. A blocked unmuted
+ * play() falls back to muted playback so the stream is at least moving, and a
+ * later retry unmutes it once it is running.
+ */
+export function buildTwitchAutoplayEnsureScript(options: {
+  muted: boolean;
+  startDelayMs?: number;
+}): string {
+  const startDelayMs = Math.max(0, options.startDelayMs ?? 800);
+  return `
+(function() {
+  if (window.__foamAutoplayEnsureInstalled) { return true; }
+  window.__foamAutoplayEnsureInstalled = true;
+
+  var TARGET_MUTED = ${options.muted ? 'true' : 'false'};
+  var START_DELAY_MS = ${startDelayMs};
+
+  function applyAudio(video) {
+    try {
+      video.muted = TARGET_MUTED;
+      if (!TARGET_MUTED) { video.volume = 1; }
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+      video.removeAttribute('controls');
+    } catch (e) {}
+  }
+
+  function ensurePlaying(video) {
+    if (!video) { return; }
+    applyAudio(video);
+    if (!video.paused) { return; }
+    var result = video.play();
+    if (result && typeof result.catch === 'function') {
+      result.catch(function() {
+        if (!TARGET_MUTED) {
+          try {
+            video.muted = true;
+            var muted = video.play();
+            if (muted && typeof muted.catch === 'function') {
+              muted.catch(function() {});
+            }
+          } catch (e) {}
+        }
+      });
+    }
+  }
+
+  function attach(video) {
+    if (!video || video.__foamAutoplayEnsure) { return; }
+    video.__foamAutoplayEnsure = true;
+    [0, 800, 1800, 3200].forEach(function(delay) {
+      setTimeout(function() { ensurePlaying(video); }, START_DELAY_MS + delay);
+    });
+    video.addEventListener('loadeddata', function() { ensurePlaying(video); });
+    video.addEventListener('canplay', function() { ensurePlaying(video); });
+  }
+
+  var existing = document.querySelector('video');
+  if (existing) { attach(existing); return true; }
+
+  var observer = new MutationObserver(function() {
+    var video = document.querySelector('video');
+    if (video) { observer.disconnect(); attach(video); }
+  });
+  observer.observe(document.body || document.documentElement, {
+    childList: true,
+    subtree: true
+  });
+  return true;
+})();
+true;`;
+}
+
 export function buildRawTwitchPlayerBootstrapScript(options: {
   autoplay: boolean;
   debug: boolean;

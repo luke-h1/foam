@@ -92,7 +92,6 @@ export function parseTwitchAuthTokenFromUrl(
   url: string | null | undefined,
 ): ParsedTwitchAuthToken | null {
   if (!url) {
-    logger.auth.info('[AUTHDBG] parseTwitchAuthTokenFromUrl no url');
     return null;
   }
 
@@ -101,29 +100,13 @@ export function parseTwitchAuthTokenFromUrl(
 
     const fromQuery = parseTokenFields(key => parsedUrl.searchParams.get(key));
     if (fromQuery) {
-      logger.auth.info('[AUTHDBG] parseTwitchAuthTokenFromUrl query token', {
-        url,
-        accessTokenPreview: `${fromQuery.accessToken.slice(0, 8)}...`,
-        expiresIn: fromQuery.expiresIn,
-      });
       return fromQuery;
     }
 
     const hashParams = getHashParams(parsedUrl);
-    const fromHash = parseTokenFields(key => hashParams.get(key));
-    logger.auth.info(
-      '[AUTHDBG] parseTwitchAuthTokenFromUrl hash parse result',
-      {
-        url,
-        matched: !!fromHash,
-        accessTokenPreview: fromHash
-          ? `${fromHash.accessToken.slice(0, 8)}...`
-          : null,
-      },
-    );
-    return fromHash;
+    return parseTokenFields(key => hashParams.get(key));
   } catch {
-    logger.auth.error('[AUTHDBG] parseTwitchAuthTokenFromUrl failed', { url });
+    logger.auth.warn('Failed to parse Twitch auth token from URL');
     return null;
   }
 }
@@ -132,9 +115,6 @@ export function parseTwitchAuthTokenFromResponse(
   response: AuthSessionResult | null,
 ): ParsedTwitchAuthToken | null {
   if (!response || response.type !== 'success') {
-    logger.auth.info('[AUTHDBG] parseTwitchAuthTokenFromResponse ignored', {
-      responseType: response?.type ?? null,
-    });
     return null;
   }
 
@@ -148,15 +128,6 @@ export function parseTwitchAuthTokenFromResponse(
         : undefined) ??
       parseRefreshTokenFromUrl(response.url);
 
-    logger.auth.info(
-      '[AUTHDBG] parseTwitchAuthTokenFromResponse authentication token',
-      {
-        responseUrl: response.url ?? null,
-        accessTokenPreview: `${response.authentication.accessToken.slice(0, 8)}...`,
-        expiresIn: getNormalizedExpiresIn(response.authentication.expiresIn),
-        hasRefreshToken: !!refreshToken,
-      },
-    );
     return {
       accessToken: response.authentication.accessToken,
       expiresIn: getNormalizedExpiresIn(response.authentication.expiresIn),
@@ -171,24 +142,9 @@ export function parseTwitchAuthTokenFromResponse(
   });
 
   if (fromParams) {
-    logger.auth.info(
-      '[AUTHDBG] parseTwitchAuthTokenFromResponse params token',
-      {
-        responseUrl: response.url ?? null,
-        responseParams: response.params,
-        accessTokenPreview: `${fromParams.accessToken.slice(0, 8)}...`,
-      },
-    );
     return fromParams;
   }
 
-  logger.auth.info(
-    '[AUTHDBG] parseTwitchAuthTokenFromResponse falling back to url',
-    {
-      responseUrl: response.url ?? null,
-      responseParams: response.params,
-    },
-  );
   return parseTwitchAuthTokenFromUrl(response.url);
 }
 

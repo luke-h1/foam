@@ -199,6 +199,11 @@ export interface StreamPlayerProps {
    */
   parent?: string;
   /**
+   * Thumbnail shown (behind a loading spinner) while the WebView player boots,
+   * so the user sees the stream's preview frame instead of a black box.
+   */
+  posterUrl?: string;
+  /**
    * Base URL for stream proxy (e.g. http://localhost:4000).
    * When set, WebView loads Twitch embed via proxy instead of direct player URL.
    */

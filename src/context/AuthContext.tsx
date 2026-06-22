@@ -493,15 +493,6 @@ export const AuthContextProvider = ({
   };
 
   const loginWithTwitch = async (response: AuthSessionResult | null) => {
-    const successResponse = response?.type === 'success' ? response : null;
-
-    logger.auth.info('[AUTHDBG] AuthContext.loginWithTwitch start', {
-      responseType: response?.type ?? null,
-      responseUrl: successResponse?.url ?? null,
-      responseParams: successResponse?.params ?? null,
-      hasAuthentication: !!successResponse?.authentication,
-    });
-
     if (!response || response?.type !== 'success') {
       toast.error(i18next.t('auth:couldNotAuthenticate'));
       await doAnonAuth();
@@ -528,13 +519,6 @@ export const AuthContextProvider = ({
       refreshToken: parsedToken.refreshToken,
     });
 
-    logger.auth.info('[AUTHDBG] AuthContext.loginWithTwitch token parsed', {
-      accessTokenPreview: `${token.accessToken.slice(0, 8)}...`,
-      expiresIn: token.expiresIn,
-      tokenType: token.tokenType,
-      hasRefreshToken: !!token.refreshToken,
-    });
-
     // we have succeeded
     setState({
       ready: true,
@@ -556,13 +540,6 @@ export const AuthContextProvider = ({
       await SecureStore.deleteItemAsync(storageKeys.anon);
 
       await SecureStore.setItemAsync(storageKeys.user, JSON.stringify(token));
-      logger.auth.info(
-        '[AUTHDBG] AuthContext.loginWithTwitch user auth complete',
-        {
-          userId: u.id,
-          login: u.login,
-        },
-      );
     } catch (error) {
       logger.auth.error('Failed to get user info after login', error);
       await doAnonAuth();

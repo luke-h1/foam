@@ -3,8 +3,10 @@ import { useCurrentEmoteData } from '@app/store/chat/react/selectors';
 import type { SanitisedEmote } from '@app/types/emote';
 import React, {
   startTransition,
+  useCallback,
   useDeferredValue,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 import { useWindowDimensions } from 'react-native';
@@ -18,12 +20,15 @@ import { SetHeader } from './SetHeader';
 import {
   buildEmoteMenuProviders,
   type EmoteMenuListItem,
+  type EmoteMenuProvider,
   type EmoteMenuProviderId,
   filterProviderSets,
   flattenProviderSets,
 } from './emoteMenuData';
 import type { EmotePickerItem } from './emoteSheetTypes';
 import { EMOTE_SHEET_DETENT } from './emoteSheetLayout';
+
+const EMPTY_PROVIDERS: EmoteMenuProvider[] = [];
 
 const EMOTE_WARMUP_DELAY_MS = 250;
 const MAX_WARMUP_EMOTES = 3;
@@ -82,6 +87,11 @@ export function useEmoteSheet({
   const [activeProviderId, setActiveProviderId] =
     useState<EmoteMenuProviderId | null>(null);
   const [activeSetId, setActiveSetId] = useState<string | null>(null);
+  // The provider/emote build below is O(all emotes) — grouping, sorting and
+  // flattening thousands of 7TV emotes. Running it in the mount render blocks the
+  // sheet's present, so we hold it off for one frame: the sheet animates in with
+  // a spinner, then the lists build once the open is underway.
+  const [contentReady, setContentReady] = useState(false);
 
   const {
     bttvChannelEmotes,
@@ -105,18 +115,45 @@ export function useEmoteSheet({
     Math.max(38, (gridWidth - 4 * (columns - 1)) / columns),
   );
 
-  const providers = buildEmoteMenuProviders({
-    bttvChannelEmotes,
-    bttvGlobalEmotes,
-    ffzChannelEmotes,
-    ffzGlobalEmotes,
-    sevenTvChannelEmotes,
-    sevenTvGlobalEmotes,
-    twitchChannelEmotes,
-    twitchGlobalEmotes,
-    twitchSubscriberEmotes,
-    emojiSets: EMOJI_MENU_SECTIONS,
-  });
+  useEffect(() => {
+    if (!isPresented) {
+      return undefined;
+    }
+    const frame = requestAnimationFrame(() => {
+      startTransition(() => setContentReady(true));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isPresented]);
+
+  const providers = useMemo(
+    () =>
+      contentReady
+        ? buildEmoteMenuProviders({
+            bttvChannelEmotes,
+            bttvGlobalEmotes,
+            ffzChannelEmotes,
+            ffzGlobalEmotes,
+            sevenTvChannelEmotes,
+            sevenTvGlobalEmotes,
+            twitchChannelEmotes,
+            twitchGlobalEmotes,
+            twitchSubscriberEmotes,
+            emojiSets: EMOJI_MENU_SECTIONS,
+          })
+        : EMPTY_PROVIDERS,
+    [
+      contentReady,
+      bttvChannelEmotes,
+      bttvGlobalEmotes,
+      ffzChannelEmotes,
+      ffzGlobalEmotes,
+      sevenTvChannelEmotes,
+      sevenTvGlobalEmotes,
+      twitchChannelEmotes,
+      twitchGlobalEmotes,
+      twitchSubscriberEmotes,
+    ],
+  );
 
   const effectiveActiveProviderId =
     providers.length === 0
@@ -130,7 +167,10 @@ export function useEmoteSheet({
     provider => provider.id === effectiveActiveProviderId,
   );
 
-  const filteredSets = filterProviderSets(activeProvider, deferredSearchQuery);
+  const filteredSets = useMemo(
+    () => filterProviderSets(activeProvider, deferredSearchQuery),
+    [activeProvider, deferredSearchQuery],
+  );
 
   const defaultSetId = filteredSets[0]?.id ?? null;
   const effectiveActiveSetId =
@@ -142,9 +182,9 @@ export function useEmoteSheet({
     emoteListRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, [deferredSearchQuery, effectiveActiveProviderId, emoteListRef]);
 
-  const { items: listItems, setStartIndices } = flattenProviderSets(
-    filteredSets,
-    columns,
+  const { items: listItems, setStartIndices } = useMemo(
+    () => flattenProviderSets(filteredSets, columns),
+    [filteredSets, columns],
   );
 
   useEffect(() => {
@@ -179,91 +219,101 @@ export function useEmoteSheet({
     };
   }, [effectiveActiveSetId, columns, filteredSets, isPresented]);
 
-  const handleDismiss = () => {
+  const handleDismiss = useCallback(() => {
     setSearchQuery('');
     onDismiss();
-  };
+  }, [onDismiss]);
 
-  const handleEmotePress = (item: EmotePickerItem) => {
-    onEmoteSelect?.(item);
-  };
+  const handleEmotePress = useCallback(
+    (item: EmotePickerItem) => {
+      onEmoteSelect?.(item);
+    },
+    [onEmoteSelect],
+  );
 
-  const handleScrollToSet = (setId: string) => {
-    const index =
-      setStartIndices[filteredSets.findIndex(set => set.id === setId)];
-    if (typeof index !== 'number') {
-      return;
-    }
+  const handleScrollToSet = useCallback(
+    (setId: string) => {
+      const index =
+        setStartIndices[filteredSets.findIndex(set => set.id === setId)];
+      if (typeof index !== 'number') {
+        return;
+      }
 
-    setActiveSetId(setId);
-    emoteListRef.current?.scrollToIndex({
-      index,
-      animated: true,
-    });
-  };
+      setActiveSetId(setId);
+      emoteListRef.current?.scrollToIndex({
+        index,
+        animated: true,
+      });
+    },
+    [setStartIndices, filteredSets, emoteListRef],
+  );
 
-  const handleProviderPress = (providerId: EmoteMenuProviderId) => {
+  const handleProviderPress = useCallback((providerId: EmoteMenuProviderId) => {
     setActiveProviderId(providerId);
-  };
+  }, []);
 
-  const handleSearchChange = (value?: string) => {
+  const handleSearchChange = useCallback((value?: string) => {
     startTransition(() => {
       setSearchQuery(value ?? '');
     });
-  };
+  }, []);
 
-  const handleClearSearch = () => {
+  const handleClearSearch = useCallback(() => {
     setSearchQuery('');
-  };
+  }, []);
 
-  const onViewableItemsChanged = (info: {
-    viewableItems: { index: number | null; item: EmoteMenuListItem }[];
-  }) => {
-    let firstVisible: (typeof info.viewableItems)[number] | undefined;
-    let minIndex = Number.POSITIVE_INFINITY;
+  const onViewableItemsChanged = useCallback(
+    (info: {
+      viewableItems: { index: number | null; item: EmoteMenuListItem }[];
+    }) => {
+      let firstVisible: (typeof info.viewableItems)[number] | undefined;
+      let minIndex = Number.POSITIVE_INFINITY;
 
-    for (const item of info.viewableItems) {
-      if (item.index == null) {
-        continue;
+      for (const item of info.viewableItems) {
+        if (item.index == null) {
+          continue;
+        }
+
+        if (item.index < minIndex) {
+          minIndex = item.index;
+          firstVisible = item;
+        }
       }
 
-      if (item.index < minIndex) {
-        minIndex = item.index;
-        firstVisible = item;
+      if (!firstVisible?.item?.setId) {
+        return;
       }
-    }
 
-    if (!firstVisible?.item?.setId) {
-      return;
-    }
-
-    setActiveSetId(firstVisible.item.setId);
-  };
+      setActiveSetId(firstVisible.item.setId);
+    },
+    [],
+  );
 
   const viewabilityConfig = EMOTE_SHEET_VIEWABILITY_CONFIG;
 
-  const renderItem = ({
-    item,
-  }: LegendListRenderItemProps<EmoteMenuListItem>) => {
-    if (item.type === 'header') {
-      const set = filteredSets.find(set => set.id === item.setId);
-      if (!set) {
-        return null;
+  const renderItem = useCallback(
+    ({ item }: LegendListRenderItemProps<EmoteMenuListItem>) => {
+      if (item.type === 'header') {
+        const set = filteredSets.find(set => set.id === item.setId);
+        if (!set) {
+          return null;
+        }
+
+        return <SetHeader set={set} />;
       }
 
-      return <SetHeader set={set} />;
-    }
+      return (
+        <EmoteRow
+          cellSize={cellSize}
+          items={item.items ?? []}
+          onPress={handleEmotePress}
+        />
+      );
+    },
+    [filteredSets, cellSize, handleEmotePress],
+  );
 
-    return (
-      <EmoteRow
-        cellSize={cellSize}
-        items={item.items ?? []}
-        onPress={handleEmotePress}
-      />
-    );
-  };
-
-  const showPlaceholder = providers.length === 0;
+  const showPlaceholder = !contentReady || providers.length === 0;
   const showEmpty = providers.length > 0 && filteredSets.length === 0;
 
   return {
