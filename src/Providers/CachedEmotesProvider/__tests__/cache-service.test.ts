@@ -6,6 +6,7 @@ jest.mock('expo-image', () => ({
 }));
 
 import { Image, type ImageRef } from 'expo-image';
+
 import {
   clearCachedEmoteRefs,
   ensureCachedEmoteRef,

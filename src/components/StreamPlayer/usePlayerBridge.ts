@@ -1,4 +1,4 @@
-import { useCallback,useImperativeHandle, useRef, useState } from 'react';
+import { useCallback, useImperativeHandle, useRef, useState } from 'react';
 import type { Ref } from 'react';
 import type { WebViewMessageEvent } from 'react-native-webview';
 

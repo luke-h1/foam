@@ -16,9 +16,10 @@ import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
+import { useSaveImageToGallery } from '@app/hooks/useSaveImageToGallery';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 
 interface Props {
@@ -33,6 +34,7 @@ type PreviewAction = {
   label: string;
   onPress: () => void;
   subtitle: string;
+  disabled?: boolean;
 };
 
 const MIN_EMOTE_SIZE = 36;
@@ -43,6 +45,7 @@ function getEmoteName(emote: ParsedPart<'emote'>): string {
 
 function EmotePreviewSheetComponent(props: Props) {
   const { t } = useTranslation(['chat', 'common']);
+  const { saveImage, isSaving } = useSaveImageToGallery();
   const { visible, onClose, selectedEmote, disableAnimations = false } = props;
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   const sheetWidth = Math.max(
@@ -53,6 +56,13 @@ function EmotePreviewSheetComponent(props: Props) {
     url: selectedEmote.url,
     static_url: selectedEmote.static_url,
     disableAnimations,
+  });
+  const saveUrl = getDisplayEmoteUrl({
+    image_variants: selectedEmote.image_variants,
+    url: selectedEmote.url,
+    static_url: selectedEmote.static_url,
+    disableAnimations: true,
+    preferredScale: '4x',
   });
   const emoteName = getEmoteName(selectedEmote);
   const emoteLink =
@@ -117,6 +127,16 @@ function EmotePreviewSheetComponent(props: Props) {
     );
   };
 
+  const handleSaveImage = () => {
+    saveImage(
+      { url: saveUrl },
+      {
+        onError: () => toast.error(t('emotePreview.imageSaveFailed')),
+        onSuccess: () => toast.success(t('emotePreview.imageSaved')),
+      },
+    );
+  };
+
   const metadataRows = [
     { label: t('emotePreview.provider'), value: selectedEmote.site },
     { label: t('emotePreview.creator'), value: selectedEmote.creator },
@@ -144,6 +164,16 @@ function EmotePreviewSheetComponent(props: Props) {
         subtitle: t('emotePreview.copyEmoteUrlSubtitle'),
       },
     ];
+
+    if (saveUrl) {
+      items.push({
+        icon: 'square.and.arrow.down',
+        label: t('emotePreview.saveImage'),
+        onPress: handleSaveImage,
+        subtitle: t('emotePreview.saveImageSubtitle'),
+        disabled: isSaving,
+      });
+    }
 
     if (emoteLink) {
       items.push({
@@ -233,6 +263,7 @@ function EmotePreviewSheetComponent(props: Props) {
               <Button
                 key={action.label}
                 onPress={action.onPress}
+                disabled={action.disabled}
                 style={[
                   styles.actionButton,
                   index < actions.length - 1 && styles.actionButtonBorder,

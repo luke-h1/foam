@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet,View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
 

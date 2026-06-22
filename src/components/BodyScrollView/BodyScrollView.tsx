@@ -1,4 +1,4 @@
-import { type Ref,useImperativeHandle, useRef } from 'react';
+import { type Ref, useImperativeHandle, useRef } from 'react';
 import { ScrollView, type ScrollViewProps } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

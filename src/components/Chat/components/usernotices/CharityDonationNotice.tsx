@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 
 import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';

@@ -1,31 +1,42 @@
 import {
-  followedStreamsQueryOptions,
-  topCategoriesInfiniteQueryOptions,
-  topStreamsInfiniteQueryOptions,
-} from '@app/lib/react-query/queries/twitch';
-import { twitchApi } from '@app/services/api/clients';
-import {
-  DefaultTokenResponse,
-  UserInfoResponse,
-  twitchService,
-} from '@app/services/twitch-service';
-import { parseTwitchAuthTokenFromResponse } from '@app/utils/authentication/twitchAuth';
-import { logger } from '@app/utils/logger';
-import { queryClient } from '@app/lib/react-query/query-client';
-import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
-import * as SecureStore from '@app/utils/authentication/secureStore';
-import {
   createContext,
   ReactNode,
   use,
   useEffect,
-  useState,
   useRef,
+  useState,
 } from 'react';
-import { toast } from 'sonner-native';
 import { AppState, InteractionManager } from 'react-native';
+
+import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
+import { toast } from 'sonner-native';
+
 import { useSyncRef } from '@app/hooks/useSyncRef';
 import i18next from '@app/i18n/i18next';
+import {
+  followedStreamsQueryOptions,
+  topCategoriesInfiniteQueryOptions,
+  topStreamsInfiniteQueryOptions,
+} from '@app/lib/react-query/queries/twitch';
+import { queryClient } from '@app/lib/react-query/query-client';
+import { twitchApi } from '@app/services/api/clients';
+import {
+  DefaultTokenResponse,
+  twitchService,
+  UserInfoResponse,
+} from '@app/services/twitch-service';
+import * as SecureStore from '@app/utils/authentication/secureStore';
+import {
+  addExpirationTimestamp,
+  getFallbackAnonToken,
+  isTokenExpired,
+  normaliseTwitchToken,
+  refreshStoredUserToken,
+  shouldProactivelyRefreshUserToken,
+  type TwitchToken,
+} from '@app/utils/authentication/tokenLifecycle';
+import { parseTwitchAuthTokenFromResponse } from '@app/utils/authentication/twitchAuth';
+import { logger } from '@app/utils/logger';
 
 /**
  * Prefetch initial data for faster startup
@@ -49,109 +60,14 @@ export const storageKeys = {
   user: 'V1_foam-user', // logged in token
 } as const;
 
-/**
- * Buffer time in seconds before token expiration to consider it expired
- * This allows proactive refresh before actual expiration
- */
-const TOKEN_EXPIRATION_BUFFER = 60; // 1 minute buffer
 const AUTH_STARTUP_TIMEOUT_MS = 12_000;
-const USER_TOKEN_REFRESH_BUFFER_MS = 5 * 60 * 1000;
 const USER_TOKEN_REFRESH_POLL_INTERVAL_MS = 60_000;
-
-/**
- * Check if a token is expired or will expire soon
- * Uses expires_in from the Twitch API response to calculate expiration
- * @param token - The token to check
- * @returns true if token is expired or will expire within the buffer time
- */
-const isTokenExpired = (token: TwitchToken): boolean => {
-  const { expiresAt } = token;
-
-  if (!expiresAt) {
-    // If no expiration timestamp, we can't determine expiration - assume valid but log warning
-    logger.auth.warn(
-      'Token missing expiresAt timestamp, cannot verify expiration',
-    );
-    return false;
-  }
-
-  const now = Date.now();
-  const bufferTime = TOKEN_EXPIRATION_BUFFER * 1000; // Convert to milliseconds
-
-  return now >= expiresAt - bufferTime;
-};
-
-/**
- * Calculate expiration timestamp from expiresIn and add it to a token
- */
-const addExpirationTimestamp = (
-  token: Omit<TwitchToken, 'expiresAt'>,
-): TwitchToken => {
-  const now = Date.now();
-  return {
-    ...token,
-    expiresAt: now + token.expiresIn * 1000, // expiresIn is in seconds, convert to milliseconds
-  };
-};
-
-const isTwitchToken = (
-  token: TokenResponse | TwitchToken,
-): token is TwitchToken => {
-  return 'expiresAt' in token;
-};
-
-export interface TwitchToken {
-  accessToken: string;
-  expiresIn: number;
-  tokenType: string;
-  refreshToken?: string;
-  expiresAt?: number; // Unix timestamp in milliseconds when token expires
-}
-
-const shouldProactivelyRefreshUserToken = (
-  token: TwitchToken,
-  now = Date.now(),
-) => {
-  if (!token.refreshToken || !token.expiresAt) {
-    return false;
-  }
-
-  return now >= token.expiresAt - USER_TOKEN_REFRESH_BUFFER_MS;
-};
-
-const normaliseTwitchToken = (
-  token: TokenResponse | TwitchToken,
-): TwitchToken | null => {
-  if (isTwitchToken(token)) {
-    return token;
-  }
-
-  if (token.expiresIn === undefined) {
-    logger.auth.warn('Token missing expiresIn, cannot proceed with auth');
-    return null;
-  }
-
-  const maybeStoredToken = token as Partial<TwitchToken>;
-  return addExpirationTimestamp({
-    accessToken: token.accessToken,
-    expiresIn: token.expiresIn,
-    tokenType: token.tokenType,
-    refreshToken: maybeStoredToken.refreshToken,
-  });
-};
 
 interface AuthState {
   isLoggedIn: boolean;
   isAnonAuth: boolean;
   token: TwitchToken;
 }
-
-const getFallbackAnonToken = (): TwitchToken => ({
-  accessToken: '',
-  expiresIn: 3600,
-  tokenType: 'bearer',
-  expiresAt: Date.now() + 60 * 60 * 1000,
-});
 
 export interface AuthContextState {
   user?: UserInfoResponse;
@@ -193,41 +109,6 @@ function applyRefreshedUserToken(
       token: refreshedToken,
     },
   };
-}
-
-async function refreshStoredUserToken(
-  token: TwitchToken,
-  reason: string,
-): Promise<TwitchToken | null> {
-  if (!token.refreshToken) {
-    logger.auth.info('User token cannot be refreshed without refresh token', {
-      reason,
-    });
-    return null;
-  }
-
-  try {
-    const refreshed = await twitchService.getRefreshToken(token.refreshToken);
-    const refreshedToken = addExpirationTimestamp({
-      accessToken: refreshed.access_token,
-      expiresIn: refreshed.expires_in,
-      tokenType: refreshed.token_type,
-      refreshToken: refreshed.refresh_token || token.refreshToken,
-    });
-
-    logger.auth.info('Refreshed stored user token', {
-      reason,
-      expiresIn: refreshedToken.expiresIn,
-    });
-
-    return refreshedToken;
-  } catch (error) {
-    logger.auth.warn('Failed to refresh stored user token', {
-      reason,
-      error,
-    });
-    return null;
-  }
 }
 
 async function refreshCurrentUserTokenForState(
@@ -292,9 +173,7 @@ export const AuthContextProvider = ({
   const hasTimedOut = useRef(false);
   const userTokenRefreshInFlightRef = useRef(false);
   const authStateRef = useRef(state.authState);
-  useEffect(() => {
-    authStateRef.current = state.authState;
-  }, [state.authState]);
+  authStateRef.current = state.authState;
 
   const markAuthStateReadyFallback = (reason: string, error?: unknown) => {
     if (state.ready || hasTimedOut.current) {

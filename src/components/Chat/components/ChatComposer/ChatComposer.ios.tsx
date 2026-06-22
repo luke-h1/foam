@@ -1,4 +1,4 @@
-import { memo, type Ref,useCallback, useRef } from 'react';
+import { memo, type Ref, useCallback, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 

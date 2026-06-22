@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { StyleSheet,View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { LiveStreamImage } from '@app/components/LiveStreamImage/LiveStreamImage';
 import { Text } from '@app/components/ui/Text/Text';

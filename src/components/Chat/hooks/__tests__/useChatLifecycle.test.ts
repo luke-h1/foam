@@ -1,11 +1,13 @@
+import { renderHook } from '@testing-library/react-native';
+
 import {
   abortCurrentLoad,
   clearChannelResources,
   clearPersonalEmotesCache,
 } from '@app/store/chat/actions/channelLoad';
 import { clearPaints } from '@app/store/chat/actions/cosmetics';
-import { clearMessages, clearTtvUsers } from '@app/store/chat/actions/messages';
-import { renderHook } from '@testing-library/react-native';
+import { clearMessages } from '@app/store/chat/actions/messages';
+
 import { useChatLifecycle } from '../useChatLifecycle';
 
 jest.mock('@app/store/chat/actions/channelLoad', () => ({
@@ -15,7 +17,6 @@ jest.mock('@app/store/chat/actions/channelLoad', () => ({
 }));
 jest.mock('@app/store/chat/actions/messages', () => ({
   clearMessages: jest.fn(),
-  clearTtvUsers: jest.fn(),
 }));
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
   clearPaints: jest.fn(),
@@ -127,7 +128,6 @@ describe('useChatLifecycle', () => {
       expect(abortCurrentLoad).toHaveBeenCalled();
       expect(cancelEmoteLoad).toHaveBeenCalled();
       expect(clearChannelResources).toHaveBeenCalled();
-      expect(clearTtvUsers).toHaveBeenCalled();
       expect(clearPaints).toHaveBeenCalled();
       expect(clearPersonalEmotesCache).toHaveBeenCalled();
       expect(clearMessages).not.toHaveBeenCalled();

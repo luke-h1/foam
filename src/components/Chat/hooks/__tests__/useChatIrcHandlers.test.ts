@@ -1,4 +1,4 @@
-import { act,renderHook } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 
 import { addMessage, clearMessages } from '@app/store/chat/actions/messages';
 

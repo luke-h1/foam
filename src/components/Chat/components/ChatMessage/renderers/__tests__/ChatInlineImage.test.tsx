@@ -1,10 +1,12 @@
-import { render, screen, act } from '@testing-library/react-native';
-import { evictCachedEmoteRef } from '@app/Providers/CachedEmotesProvider/cache-service';
-import { logger } from '@app/utils/logger';
+import { act, render, screen } from '@testing-library/react-native';
+
 import {
   createRowVisibilityStore,
   RowVisibilityContext,
-} from '../../rowVisibility';
+} from '@app/components/Chat/components/ChatMessage/rowVisibility';
+import { evictCachedEmoteRef } from '@app/Providers/CachedEmotesProvider/cache-service';
+import { logger } from '@app/utils/logger';
+
 import { ChatInlineImage } from '../ChatInlineImage';
 
 const mockStartAnimating = jest.fn();
@@ -198,25 +200,25 @@ describe('ChatInlineImage error retry', () => {
     const sourceUrl = 'https://cdn.7tv.app/emote/err/2x.avif';
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
-    for (let attempt = 0; attempt < 4; attempt += 1) {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
       act(() => mockImageProps?.onError?.());
       act(() => jest.advanceTimersByTime(8000));
     }
 
-    expect(evictMock).toHaveBeenCalledTimes(4);
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#4`);
+    expect(evictMock).toHaveBeenCalledTimes(8);
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#8`);
 
     act(() => mockImageProps?.onError?.());
 
-    expect(evictMock).toHaveBeenCalledTimes(4);
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#4`);
+    expect(evictMock).toHaveBeenCalledTimes(8);
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#8`);
   });
 
   test('logs a forwarded warning once the retry budget is exhausted', () => {
     const sourceUrl = 'https://cdn.7tv.app/emote/err/2x.avif';
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
-    for (let attempt = 0; attempt < 4; attempt += 1) {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
       act(() => mockImageProps?.onError?.());
       act(() => jest.advanceTimersByTime(8000));
     }
@@ -230,7 +232,7 @@ describe('ChatInlineImage error retry', () => {
       name: 'chat_resources_warning',
       error: undefined,
       url: sourceUrl,
-      attempts: 4,
+      attempts: 8,
     });
   });
 

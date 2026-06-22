@@ -1,4 +1,4 @@
-import { StyleSheet,View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
 import { TOP_TAB_ROUTES } from '@app/constants/topTabRoutes';

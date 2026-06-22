@@ -64,7 +64,19 @@ export function useChatComposerActions({
     [inputShellRef],
   );
 
-  return { appendMentionToComposer, handleEmoteSelect, handleReply };
+  const insertPhraseToComposer = useCallback(
+    (text: string) => {
+      inputShellRef.current?.insertPhrase(text);
+    },
+    [inputShellRef],
+  );
+
+  return {
+    appendMentionToComposer,
+    handleEmoteSelect,
+    handleReply,
+    insertPhraseToComposer,
+  };
 }
 
 export function useChatOverlayActions(openers: ChatOverlayOpeners) {

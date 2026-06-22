@@ -5,7 +5,7 @@ import type {
   PaintData,
   PaintShadow,
   PaintStop,
-} from '@app/utils/color/seventv-ws-service';
+} from '@app/types/seventv/cosmetics';
 
 import {
   badgeUrlFromHost,

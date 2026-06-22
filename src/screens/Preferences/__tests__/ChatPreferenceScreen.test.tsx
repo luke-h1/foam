@@ -39,6 +39,7 @@ const mockPreferences: Preferences = {
   ignoreClearChat: false,
   chatMentionHaptics: true,
   customHighlights: [],
+  savedPhrases: [],
   shakeToReport: true,
   landscapeChatWidth: null,
 };

@@ -1,4 +1,4 @@
-import { useCallback,useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { sevenTvService } from '@app/services/seventv-service';

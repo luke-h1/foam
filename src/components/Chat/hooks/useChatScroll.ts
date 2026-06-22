@@ -1,5 +1,5 @@
-import { RefObject, useCallback,useRef, useState } from 'react';
-import { NativeScrollEvent,NativeSyntheticEvent } from 'react-native';
+import { RefObject, useCallback, useRef, useState } from 'react';
+import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 import { chatScrollActivity } from '../util/chatScrollActivity';
 

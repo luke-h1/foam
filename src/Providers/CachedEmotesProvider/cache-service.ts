@@ -12,8 +12,10 @@
  * just composites an already-decoded, size-bounded bitmap. Animated AVIFs keep
  * animating — the ref carries `isAnimated` and the view autoplays.
  */
-import { Image, type ImageRef } from 'expo-image';
 import { AppState } from 'react-native';
+
+import { Image, type ImageRef } from 'expo-image';
+
 import { getDeviceTier } from '@app/utils/device/deviceTier';
 
 const isLowTier = getDeviceTier() === 'low';
@@ -93,6 +95,9 @@ function flushPendingReleases(): void {
   const batch = pendingReleases.splice(0, pendingReleases.length);
   for (const { url, ref } of batch) {
     if (listeners.has(url)) {
+      // A new subscriber raced in before this flush — re-queue so the ref is
+      // retried next frame instead of leaking when that subscriber leaves.
+      pendingReleases.push({ url, ref });
       continue;
     }
     try {
@@ -100,6 +105,10 @@ function flushPendingReleases(): void {
     } catch {
       // ignore
     }
+  }
+  if (pendingReleases.length > 0 && !releaseFlushScheduled) {
+    releaseFlushScheduled = true;
+    requestAnimationFrame(flushPendingReleases);
   }
 }
 

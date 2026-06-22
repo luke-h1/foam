@@ -17,10 +17,8 @@ import { type ChatFontScale } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { type SanitisedEmote } from '@app/types/emote';
-import {
-  type ParsedPart,
-  replaceTextWithEmotes,
-} from '@app/utils/chat/replaceTextWithEmotes';
+import { type ParsedPart } from '@app/utils/chat/parsedPart';
+import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 
 import { chatPreferencePreviewFixtures } from './chatPreferencePreviewFixtures';
 

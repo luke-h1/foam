@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { StyleSheet,useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
-import { type SceneRendererProps,TabView } from 'react-native-tab-view';
+import { type SceneRendererProps, TabView } from 'react-native-tab-view';
 
 import { TOP_TAB_ROUTES } from '@app/constants/topTabRoutes';
 import { theme } from '@app/styles/themes';

@@ -1,4 +1,4 @@
-import { useCallback,useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { Alert, AppState, AppStateStatus, Platform } from 'react-native';
 
 import { nativeBuildVersion } from 'expo-application';

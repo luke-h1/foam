@@ -1,5 +1,5 @@
-import { type Ref,useImperativeHandle } from 'react';
-import { type DimensionValue,Linking, StyleSheet, View } from 'react-native';
+import { type Ref, useImperativeHandle } from 'react';
+import { type DimensionValue, Linking, StyleSheet, View } from 'react-native';
 
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';

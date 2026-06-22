@@ -355,11 +355,15 @@ export function useChat(
   const connected =
     twitchConnectionState === ReadyState.OPEN && isChatConnected();
 
-  const { appendMentionToComposer, handleEmoteSelect, handleReply } =
-    useChatComposerActions({
-      fetchUserCosmetics,
-      inputShellRef,
-    });
+  const {
+    appendMentionToComposer,
+    handleEmoteSelect,
+    handleReply,
+    insertPhraseToComposer,
+  } = useChatComposerActions({
+    fetchUserCosmetics,
+    inputShellRef,
+  });
 
   const currentUserState = getUserState();
   const parsedBadges = parseBadges(currentUserState['badges-raw']).badges;
@@ -420,6 +424,7 @@ export function useChat(
     highlightedUsers,
     hidePhraseFromView,
     hideUserFromView,
+    insertPhraseToComposer,
     onClearChatCache: handleClearChatCache,
     onClearImageCache: handleDebugClearImageCache,
     onClearSevenTvCosmeticsCache: handleClearSevenTvCosmeticsCache,

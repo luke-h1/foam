@@ -27,7 +27,7 @@ import type {
   BadgeData,
   PaintCosmetic,
   PaintData,
-} from '@app/utils/color/seventv-ws-service';
+} from '@app/types/seventv/cosmetics';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
 import { logger } from '@app/utils/logger';
 

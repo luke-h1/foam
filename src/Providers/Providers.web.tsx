@@ -17,10 +17,8 @@ import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
 import { QueryProvider } from '@app/lib/react-query/query-provider';
 import { BaseConfig } from '@app/navigators/config';
 import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
-import { twitchApi } from '@app/services/api/clients';
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
-import { deleteTokens } from '@app/utils/authentication/deleteTokens';
 
 import { ScreenDimensionsProvider } from './ScreenDimensionsProvider/ScreenDimensionsProvider';
 
@@ -41,12 +39,6 @@ function QueryDevTools({ children }: PropsWithChildren) {
 
 export function Providers({ children }: PropsWithChildren) {
   const { setRecoveredFromError } = useRecoveredFromError();
-
-  const shouldDelete = false;
-  if (shouldDelete) {
-    void deleteTokens();
-    twitchApi.removeAuthToken();
-  }
 
   return (
     <AuthContextProvider>

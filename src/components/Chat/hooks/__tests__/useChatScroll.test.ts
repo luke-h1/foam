@@ -1,7 +1,7 @@
 import { RefObject } from 'react';
-import { NativeScrollEvent,NativeSyntheticEvent } from 'react-native';
+import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
-import { act,renderHook } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
 import type { AnyChatMessageType } from '@app/components/Chat/util/messageHandlers';

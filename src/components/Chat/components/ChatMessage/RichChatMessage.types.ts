@@ -7,7 +7,7 @@ import type {
 } from '@app/store/preferenceStore';
 import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 export type EmotePressData = ParsedPart<'emote'>;
 export type BadgePressData = SanitisedBadgeSet;

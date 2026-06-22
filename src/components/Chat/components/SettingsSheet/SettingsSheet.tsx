@@ -1,4 +1,4 @@
-import { memo,useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -31,6 +31,7 @@ export interface SettingsSheetProps {
   onClearSevenTvCosmeticsCache?: () => void;
   onDismiss: () => void;
   onOpenChatters?: () => void;
+  onOpenSavedPhrases?: () => void;
   onRefetchEmotes?: () => void;
   onReconnect?: () => void;
   onRefreshVideo?: () => void;
@@ -46,6 +47,7 @@ const SettingsSheetComponent = ({
   isPresented,
   onDismiss,
   onOpenChatters,
+  onOpenSavedPhrases,
   onRefetchEmotes,
   onClearChatCache,
   onClearImageCache,
@@ -86,6 +88,11 @@ const SettingsSheetComponent = ({
     dismissSheet();
   }, [onRefetchEmotes, dismissSheet]);
 
+  const handleOpenSavedPhrases = useCallback(() => {
+    dismissSheet();
+    onOpenSavedPhrases?.();
+  }, [dismissSheet, onOpenSavedPhrases]);
+
   const handleClearCache = useCallback(() => {
     onClearChatCache?.();
     onClearImageCache?.();
@@ -108,7 +115,9 @@ const SettingsSheetComponent = ({
     dismissSheet();
   }, [onRefreshVideo, dismissSheet]);
 
-  const hasActions = Boolean(onOpenChatters || onRefetchEmotes);
+  const hasActions = Boolean(
+    onOpenChatters || onOpenSavedPhrases || onRefetchEmotes,
+  );
   const hasStorage = Boolean(
     onClearChatCache || onClearImageCache || onClearSevenTvCosmeticsCache,
   );
@@ -212,6 +221,17 @@ const SettingsSheetComponent = ({
                     color: ICON_TINT,
                   }}
                   onPress={onOpenChatters}
+                />
+              ) : null}
+              {onOpenSavedPhrases ? (
+                <SettingsLinkRow
+                  title={t('settingsSheet.savedPhrases')}
+                  icon={{
+                    icon: 'text.bubble',
+                    androidIcon: 'chat_bubble',
+                    color: ICON_TINT,
+                  }}
+                  onPress={handleOpenSavedPhrases}
                 />
               ) : null}
               {onRefetchEmotes ? (

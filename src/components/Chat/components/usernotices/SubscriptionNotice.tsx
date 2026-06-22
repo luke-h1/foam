@@ -5,7 +5,7 @@ import { getSubscriptionTierDisplay } from '@app/components/Chat/components/user
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';
 import { styles as chatStyles } from '../ChatMessage/RichChatMessage.styles';

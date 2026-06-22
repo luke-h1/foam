@@ -2,7 +2,7 @@
 import { fetch } from 'expo/fetch';
 import Constants from 'expo-constants';
 
-import { parseJsonOnUIThread } from '@app/lib/offThreadJson';
+import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
 import type { TwitchHelixPoll } from '@app/types/twitch/poll';
 import type { TwitchHelixPrediction } from '@app/types/twitch/prediction';
 import {
@@ -414,7 +414,7 @@ export const twitchService = {
       method: 'POST',
       headers: { 'x-api-key': authProxyApiKey ?? '' },
     });
-    const body = await parseJsonOnUIThread<
+    const body = await parseJsonOnWorklet<
       AuthProxyResponse<RefreshTokenResponse>
     >(await res.text());
 
@@ -556,7 +556,7 @@ export const twitchService = {
     const res = await fetch(tokenUrl, {
       headers: isE2EMode ? {} : { 'x-api-key': authProxyApiKey ?? '' },
     });
-    const body = await parseJsonOnUIThread<{ data: DefaultTokenResponse }>(
+    const body = await parseJsonOnWorklet<{ data: DefaultTokenResponse }>(
       await res.text(),
     );
 
@@ -588,7 +588,7 @@ export const twitchService = {
     }
     // Helix rejects requests whose Client-Id header does not match the client
     // the token was issued for, so adopt the token's client ID.
-    const body = await parseJsonOnUIThread<{
+    const body = await parseJsonOnWorklet<{
       client_id?: string;
       expires_in?: number;
     } | null>(await res.text()).catch(() => null);

@@ -1,14 +1,18 @@
+import { observable } from '@legendapp/state';
+import { useSelector } from '@legendapp/state/react';
+
 import {
-  channelPointsRewardTitleFromTags,
-  type ChannelPointsRewardTagSource,
   type ChannelPointsRewardTags,
+  type ChannelPointsRewardTagSource,
+  channelPointsRewardTitleFromTags,
 } from './channelPointsRewardTitle';
 
-type Listener = () => void;
-
+// The title cache stays a plain Map (imperative, hot-path lookups), but its
+// reactivity bridge is a legend-state observable so subscribed rows re-render
+// when a deferred title resolves — mirrors chatStore$.mentionLoginRevision.
 const channelPointRewardTitleCache = new Map<string, string>();
-const listeners = new Set<Listener>();
 const rewardIdOnlyCache = new Map<string, string>();
+const rewardTitleRevision$ = observable(0);
 
 function channelPointRewardCacheKey(
   broadcasterId: string,
@@ -30,31 +34,23 @@ const pendingStandaloneByKey = new Map<
   { timeout: ReturnType<typeof setTimeout> }
 >();
 
-let cacheVersion = 0;
-
 const STANDALONE_REDEMPTION_DELAY_MS = 500;
 
 function pendingKey(login: string, rewardId: string): string {
   return `${login.toLowerCase()}:${rewardId}`;
 }
 
-export function subscribeChannelPointRewardTitles(
-  listener: Listener,
-): () => void {
-  listeners.add(listener);
-
-  return () => {
-    listeners.delete(listener);
-  };
-}
-
-export function getChannelPointRewardTitleCacheVersion(): number {
-  return cacheVersion;
+/**
+ * Subscribe a component to reward-title resolutions. Returns the current
+ * revision; the value itself is meaningless — it only forces a re-render when a
+ * newly resolved title may change what a row should display.
+ */
+export function useChannelPointRewardTitleRevision(): number {
+  return useSelector(rewardTitleRevision$);
 }
 
 function notifyChannelPointRewardTitleListeners(): void {
-  cacheVersion += 1;
-  listeners.forEach(listener => listener());
+  rewardTitleRevision$.set(revision => revision + 1);
 }
 
 export function cacheChannelPointRewardTitle(

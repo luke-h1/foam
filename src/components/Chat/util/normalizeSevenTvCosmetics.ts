@@ -11,7 +11,7 @@ import type {
   PaintShape,
   PaintStop,
   PaintTextStyle,
-} from '@app/utils/color/seventv-ws-service';
+} from '@app/types/seventv/cosmetics';
 
 const ZERO_ID = '00000000000000000000000000';
 const SEVEN_TV_BADGE_CDN_BASE = 'https://cdn.7tv.app/badge';

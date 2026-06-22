@@ -10,7 +10,7 @@ import {
   sevenTvService,
 } from '@app/services/seventv-service';
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import type { PaintData } from '@app/utils/color/seventv-ws-service';
+import type { PaintData } from '@app/types/seventv/cosmetics';
 import {
   convertV4PaintToPaintData,
   type V4Badge,

@@ -1,4 +1,4 @@
-import { Modal as RNModal, Platform, StyleSheet,View } from 'react-native';
+import { Modal as RNModal, Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import * as Application from 'expo-application';

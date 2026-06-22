@@ -1,4 +1,4 @@
-import { useCallback,useRef } from 'react';
+import { useCallback, useRef } from 'react';
 
 import { createSystemMessage } from '@app/components/Chat/util/messageHandlers';
 import i18next from '@app/i18n/i18next';

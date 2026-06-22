@@ -1,5 +1,5 @@
-import { memo,useCallback } from 'react';
-import { StyleSheet,View } from 'react-native';
+import { memo, useCallback } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { router } from 'expo-router';
 

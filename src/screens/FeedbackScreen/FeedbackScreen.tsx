@@ -18,7 +18,7 @@ import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { impact } from '@app/lib/haptics';
-import { type FeedbackType,sendFeedback } from '@app/lib/sentry';
+import { type FeedbackType, sendFeedback } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 
 const FEEDBACK_TYPES: {

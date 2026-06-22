@@ -24,6 +24,7 @@ function renderComposerActions() {
   const inputShell = {
     appendEmote: jest.fn(),
     appendMention: jest.fn(),
+    insertPhrase: jest.fn(),
     clearReply: jest.fn(),
     setReplyTo: jest.fn(),
   };
@@ -48,6 +49,7 @@ function renderOverlayActions() {
   const openEmotePreview = jest.fn();
   const openEmoteSheet = jest.fn();
   const openMessageActions = jest.fn();
+  const openSavedPhrasesSheet = jest.fn();
   const openSettingsSheet = jest.fn();
   const openUserActions = jest.fn();
   const openers: ChatOverlayOpeners = {
@@ -56,6 +58,7 @@ function renderOverlayActions() {
     openEmotePreview,
     openEmoteSheet,
     openMessageActions,
+    openSavedPhrasesSheet,
     openSettingsSheet,
     openUserActions,
   };
@@ -134,6 +137,7 @@ describe('useChatComposerActions', () => {
         site: 'BTTV',
       });
       hook.result.current.appendMentionToComposer('targetUser');
+      hook.result.current.insertPhraseToComposer('be right back');
     });
 
     expect(inputShell.appendEmote.mock.calls).toEqual([
@@ -141,6 +145,7 @@ describe('useChatComposerActions', () => {
       ['OMEGALUL'],
     ]);
     expect(inputShell.appendMention).toHaveBeenCalledWith('targetUser');
+    expect(inputShell.insertPhrase).toHaveBeenCalledWith('be right back');
   });
 });
 

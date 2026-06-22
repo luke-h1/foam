@@ -1,4 +1,4 @@
-import { TwitchStream, PaginatedList } from '@app/services/twitch-service';
+import { PaginatedList, TwitchStream } from '@app/services/twitch-service';
 
 export const mockStreams: TwitchStream[] = [
   {

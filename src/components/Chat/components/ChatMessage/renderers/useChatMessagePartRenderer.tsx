@@ -9,8 +9,8 @@ import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelp
 import { Text } from '@app/components/ui/Text/Text';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin';
 
 import {

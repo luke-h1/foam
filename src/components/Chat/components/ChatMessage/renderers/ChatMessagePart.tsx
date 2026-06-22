@@ -7,8 +7,8 @@ import { ViewerMileStoneNoticeComponent } from '@app/components/Chat/components/
 import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
 import { Text } from '@app/components/ui/Text/Text';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin';
 
 import { styles } from '../RichChatMessage.styles';

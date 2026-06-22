@@ -12,7 +12,7 @@ import { Button } from '@app/components/Button/Button';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { MessageActionPreview } from './MessageActionPreview';
 

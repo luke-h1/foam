@@ -9,13 +9,16 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import '@testing-library/jest-native/extend-expect';
 import 'react-native-url-polyfill/auto';
-import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
-import * as ReactNative from 'react-native';
-import type { ReactNode } from 'react';
 import 'cross-fetch/polyfill';
 import '@app/i18n/i18next';
+
+import * as ReactNative from 'react-native';
+import type { ReactNode } from 'react';
+
+import mockAsyncStorage from '@react-native-async-storage/async-storage/jest/async-storage-mock';
 import { configure as configureReassure } from 'reassure';
-import { TextEncoder, TextDecoder } from 'util';
+import { TextDecoder, TextEncoder } from 'util';
+
 import mockFile from '../__mocks__/mockFile';
 
 // Polyfill TextEncoder/TextDecoder for Node.js environment

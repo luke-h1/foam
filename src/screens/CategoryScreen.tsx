@@ -1,5 +1,5 @@
 import { FC, memo, useRef } from 'react';
-import { Platform, StyleSheet,View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { router } from 'expo-router';
@@ -14,8 +14,8 @@ import { LoadingState } from '@app/components/LoadingState/LoadingState';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { Text } from '@app/components/ui/Text/Text';
-import { useCategoryQuery } from '@app/hooks/queries/use-category-query';
-import { useStreamsByCategoryQuery } from '@app/hooks/queries/use-streams-by-category-query';
+import { useCategoryQuery } from '@app/hooks/queries/useCategoryQuery';
+import { useStreamsByCategoryQuery } from '@app/hooks/queries/useStreamsByCategoryQuery';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { Category, TwitchStream } from '@app/services/twitch-service';

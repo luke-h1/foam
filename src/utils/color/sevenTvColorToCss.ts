@@ -1,4 +1,5 @@
-import { SevenTvColor } from './seventv-ws-service';
+import { SevenTvColor } from '@app/types/seventv/cosmetics';
+
 import { sevenTvColorToRgba } from './sevenTvColorToRgba';
 
 /**

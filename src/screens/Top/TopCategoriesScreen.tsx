@@ -1,5 +1,5 @@
-import { type RefObject, useCallback,useRef } from 'react';
-import { StyleSheet,View } from 'react-native';
+import { type RefObject, useCallback, useRef } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 
@@ -14,7 +14,7 @@ import { AnimatedFlashList } from '@app/components/FlashList/AnimatedFlashList';
 import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
-import { useTopCategoriesQuery } from '@app/hooks/queries/use-top-categories-query';
+import { useTopCategoriesQuery } from '@app/hooks/queries/useTopCategoriesQuery';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';

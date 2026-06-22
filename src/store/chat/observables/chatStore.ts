@@ -1,31 +1,31 @@
-import { logger } from '@app/utils/logger';
+import { batch, observable, when } from '@legendapp/state';
+import { persistObservable } from '@legendapp/state/persist';
+
 import {
   CHAT_RECENT_MESSAGES_PERSISTENCE_KEY,
   CHAT_STORE_PERSISTENCE_KEY,
   createObservablePersistenceLocalConfig,
   ensureObservablePersistenceConfig,
 } from '@app/lib/observablePersistence';
+import { getPreferences } from '@app/store/preferences/state';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
-import { batch, observable, when } from '@legendapp/state';
-import { persistObservable } from '@legendapp/state/persist';
-import {
-  RECENT_MESSAGES_PERSISTENCE_ENABLED,
-  loadPersistedRecentMessages,
-} from './recentMessagesPersistence';
-import { loadPersistedCosmetics } from './cosmeticsPersistence';
+import { logger } from '@app/utils/logger';
 
 import type {
   AnyChatMessageType,
   Bit,
   ChannelCacheType,
   ChatLoadingState,
-  ChatUser,
   PaintData,
   SanitisedBadgeSet,
   SanitisedEmote,
 } from '../types/constants';
 import { MAX_CACHED_CHANNELS } from '../types/constants';
-import { getPreferences } from '../../preferences/state';
+import { loadPersistedCosmetics } from './cosmeticsPersistence';
+import {
+  loadPersistedRecentMessages,
+  RECENT_MESSAGES_PERSISTENCE_ENABLED,
+} from './recentMessagesPersistence';
 
 export interface ChatStoreState {
   persisted: {
@@ -39,7 +39,6 @@ export interface ChatStoreState {
   currentChannelId: string | null;
   emojis: SanitisedEmote[];
   bits: Bit[];
-  ttvUsers: ChatUser[];
   messages: AnyChatMessageType[];
   mentionLoginRevision: number;
   cosmeticsCacheVersion: number;
@@ -97,7 +96,6 @@ const initialChatStoreState: ChatStoreState = {
   currentChannelId: null,
   emojis: getEmojiEmotes(getPreferences().emojiStyle),
   bits: [],
-  ttvUsers: [],
   messages: [],
   mentionLoginRevision: 0,
   cosmeticsCacheVersion: 0,

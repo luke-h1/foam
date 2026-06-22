@@ -42,3 +42,9 @@ export const streamElementsKeys = {
   chatStats: (channelName: string) =>
     [...streamElementsKeys.all, 'chatStats', channelName] as const,
 };
+
+export const emoteKeys = {
+  all: ['emotes'] as const,
+  globalEmotes: () => [...emoteKeys.all, 'global'] as const,
+  globalBadges: () => [...emoteKeys.all, 'globalBadges'] as const,
+};

@@ -1,4 +1,4 @@
-import { memo,useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';

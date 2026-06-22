@@ -6,7 +6,7 @@ import { updateMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { findBadges } from '@app/utils/chat/findBadges';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import type { AnyChatMessageType } from '../util/messageHandlers';
 

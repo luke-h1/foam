@@ -1,5 +1,5 @@
-import { useCallback,useEffect, useRef, useState } from 'react';
-import { StyleSheet,View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, {
   SharedValue,
@@ -19,7 +19,7 @@ import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStrea
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
-import { useTopStreamsQuery } from '@app/hooks/queries/use-top-streams-query';
+import { useTopStreamsQuery } from '@app/hooks/queries/useTopStreamsQuery';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';

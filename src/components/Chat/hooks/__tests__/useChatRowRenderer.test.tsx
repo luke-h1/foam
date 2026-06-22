@@ -1,6 +1,6 @@
 import type { ObservableReadable } from '@legendapp/state';
 import { renderHook } from '@testing-library/react-native';
-import { act,render } from '@testing-library/react-native';
+import { act, render } from '@testing-library/react-native';
 
 import type { ChatListRef } from '@app/components/Chat/components/ChatList';
 import { RichChatMessage } from '@app/components/Chat/components/ChatMessage/RichChatMessage';

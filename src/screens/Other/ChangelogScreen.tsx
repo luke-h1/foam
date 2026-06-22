@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { ScrollView, StyleSheet,View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';

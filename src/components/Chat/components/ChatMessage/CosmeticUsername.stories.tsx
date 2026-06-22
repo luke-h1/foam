@@ -7,7 +7,7 @@ import {
   type ListRenderItem,
 } from '@app/components/FlashList/FlashList';
 import { Text } from '@app/components/ui/Text/Text';
-import type { PaintData } from '@app/utils/color/seventv-ws-service';
+import type { PaintData } from '@app/types/seventv/cosmetics';
 import {
   convertV4PaintToPaintData,
   type SevenTvPaintSource,

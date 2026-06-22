@@ -3,7 +3,7 @@ import { View } from 'react-native';
 
 import { Text } from '@app/components/ui/Text/Text';
 import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { isLowEndDevice } from '@app/utils/device/deviceTier';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 

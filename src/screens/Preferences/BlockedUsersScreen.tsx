@@ -1,5 +1,5 @@
-import { type RefObject, useCallback,useRef } from 'react';
-import { Alert, ScrollView, StyleSheet,View } from 'react-native';
+import { type RefObject, useCallback, useRef } from 'react';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { ListRenderItem } from '@shopify/flash-list';
@@ -12,7 +12,7 @@ import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
-import { useUserBlockListQuery } from '@app/hooks/queries/use-user-block-list-query';
+import { useUserBlockListQuery } from '@app/hooks/queries/useUserBlockListQuery';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import i18next from '@app/i18n/i18next';
 import { twitchKeys } from '@app/lib/react-query/query-keys';

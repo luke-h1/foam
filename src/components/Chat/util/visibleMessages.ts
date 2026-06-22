@@ -1,6 +1,6 @@
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 
 const messageTextCache = new WeakMap<ParsedPart[], string>();
 const normalisedMessageFieldsCache = new WeakMap<

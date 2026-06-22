@@ -1,4 +1,4 @@
-import { act,renderHook } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 
 import { toPaintWithId } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
 import { countMetric } from '@app/lib/sentry';
@@ -16,7 +16,7 @@ import {
   updateBadge,
   updatePaint,
 } from '@app/store/chat/actions/cosmetics';
-import type { BadgeData, PaintData } from '@app/utils/color/seventv-ws-service';
+import type { BadgeData, PaintData } from '@app/types/seventv/cosmetics';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
 
 import { useChatSevenTvCallbacks } from '../useChatSevenTvCallbacks';

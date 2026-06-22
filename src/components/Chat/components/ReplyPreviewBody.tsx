@@ -1,10 +1,10 @@
 import { memo } from 'react';
-import { type StyleProp, StyleSheet, type TextStyle,View } from 'react-native';
+import { type StyleProp, StyleSheet, type TextStyle, View } from 'react-native';
 
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 
 interface ReplyPreviewBodyProps {
   parts: ParsedPart[];

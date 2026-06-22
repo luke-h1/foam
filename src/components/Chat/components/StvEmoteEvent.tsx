@@ -1,11 +1,11 @@
 import { memo } from 'react';
-import { StyleSheet,View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 
 import { ChatNoticeMetaRow } from './ChatMessage/renderers/ChatNoticeMetaRow';

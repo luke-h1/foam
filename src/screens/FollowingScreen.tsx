@@ -5,7 +5,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Platform, StyleSheet,View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, {
   useAnimatedStyle,
@@ -28,7 +28,7 @@ import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
-import { useFollowedStreamsQuery } from '@app/hooks/queries/use-followed-streams-query';
+import { useFollowedStreamsQuery } from '@app/hooks/queries/useFollowedStreamsQuery';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import i18next from '@app/i18n/i18next';

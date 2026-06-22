@@ -1,5 +1,5 @@
 import { getPartIdentity } from '@app/components/Chat/util/richChatMessageHelpers';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 describe('richChatMessageBody', () => {
   test('creates position-based identities for repeated content parts', () => {

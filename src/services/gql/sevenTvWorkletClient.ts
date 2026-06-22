@@ -1,4 +1,4 @@
-import { deriveFromResponseOnUIThread } from '@app/lib/offThreadJson';
+import { deriveFromResponseOnWorklet } from '@app/lib/offThreadJson';
 
 /**
  * Runs a 7TV GraphQL query and derives the result from the response on the UI
@@ -22,7 +22,7 @@ export async function runCosmeticsQuery<TResult>(
       };
     }
     return {
-      result: await deriveFromResponseOnUIThread(await response.text(), parse),
+      result: await deriveFromResponseOnWorklet(await response.text(), parse),
     };
   } catch (error) {
     return {

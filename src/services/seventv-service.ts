@@ -27,7 +27,7 @@ import type {
   SevenTvEmoteSetMetadata,
   SevenTvSanitisedEmote,
 } from '@app/types/emote';
-import type { PaintData } from '@app/utils/color/seventv-ws-service';
+import type { PaintData } from '@app/types/seventv/cosmetics';
 import {
   convertV4PaintToPaintData,
   pickAnimatedFormat,

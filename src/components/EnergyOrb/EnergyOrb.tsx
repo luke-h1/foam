@@ -1,4 +1,4 @@
-import { memo,useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import {
   useDerivedValue,

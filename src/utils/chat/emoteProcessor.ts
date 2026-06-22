@@ -2,7 +2,8 @@ import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
 
 import { queueMentionLoginsFromParts } from './mentionLoginResolver';
-import { ParsedPart,parseWordLinkParts } from './replaceTextWithEmotes';
+import type { ParsedPart } from './parsedPart';
+import { parseWordLinkParts } from './replaceTextWithEmotes';
 import { applyMentionLoginCasing } from './resolveMentionLogin';
 
 interface EmoteProcessorParams {

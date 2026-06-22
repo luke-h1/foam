@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { Platform, StyleSheet, useWindowDimensions,View } from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -18,10 +18,10 @@ import { LoadingState } from '@app/components/LoadingState/LoadingState';
 import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { Text } from '@app/components/ui/Text/Text';
-import { useClipsQuery } from '@app/hooks/queries/use-clips-query';
-import { useStreamElementsStatsQuery } from '@app/hooks/queries/use-streamelements-stats-query';
-import { useUserQuery } from '@app/hooks/queries/use-user-query';
-import { useVideosQuery } from '@app/hooks/queries/use-videos-query';
+import { useClipsQuery } from '@app/hooks/queries/useClipsQuery';
+import { useStreamElementsStatsQuery } from '@app/hooks/queries/useStreamelementsStatsQuery';
+import { useUserQuery } from '@app/hooks/queries/useUserQuery';
+import { useVideosQuery } from '@app/hooks/queries/useVideosQuery';
 import { useDownloadTwitchClip } from '@app/hooks/useDownloadTwitchClip';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';

@@ -28,6 +28,7 @@ export interface ChatOverlayOpeners {
   openEmotePreview: (emote: EmotePressData) => void;
   openEmoteSheet: () => void;
   openMessageActions: (message: MessageActionData<'usernotice'>) => void;
+  openSavedPhrasesSheet: () => void;
   openSettingsSheet: () => void;
   openUserActions: (user: UsernamePressData) => void;
 }
@@ -44,6 +45,7 @@ interface UseChatOverlaysParams {
   highlightedUsers: string[];
   hidePhraseFromView: (phrase?: string) => void;
   hideUserFromView: (username?: string) => void;
+  insertPhraseToComposer: (text: string) => void;
   onClearChatCache: () => void;
   onClearImageCache: () => void;
   onClearSevenTvCosmeticsCache: () => void;
@@ -73,6 +75,7 @@ interface ChatOverlayState {
   channelId: string;
   isChattersSheetMounted: boolean;
   isEmoteSheetMounted: boolean;
+  isSavedPhrasesSheetMounted: boolean;
   isSettingsSheetMounted: boolean;
   selectedBadge: BadgePressData | null;
   selectedEmote: EmotePressData | null;
@@ -85,6 +88,7 @@ function createEmptyOverlayState(channelId: string): ChatOverlayState {
     channelId,
     isChattersSheetMounted: false,
     isEmoteSheetMounted: false,
+    isSavedPhrasesSheetMounted: false,
     isSettingsSheetMounted: false,
     selectedBadge: null,
     selectedEmote: null,
@@ -105,6 +109,7 @@ export function useChatOverlays({
   highlightedUsers,
   hidePhraseFromView,
   hideUserFromView,
+  insertPhraseToComposer,
   onClearChatCache,
   onClearImageCache,
   onClearSevenTvCosmeticsCache,
@@ -137,6 +142,7 @@ export function useChatOverlays({
   const {
     isChattersSheetMounted,
     isEmoteSheetMounted,
+    isSavedPhrasesSheetMounted,
     isSettingsSheetMounted,
     selectedBadge,
     selectedEmote,
@@ -205,6 +211,10 @@ export function useChatOverlays({
     replaceOverlay({ isChattersSheetMounted: true });
   }, [replaceOverlay]);
 
+  const openSavedPhrasesSheet = useCallback(() => {
+    replaceOverlay({ isSavedPhrasesSheetMounted: true });
+  }, [replaceOverlay]);
+
   const openUserActions = useCallback(
     (user: UsernamePressData) => {
       replaceOverlay({ selectedUser: user });
@@ -235,6 +245,18 @@ export function useChatOverlays({
   const handleChattersSheetDidDismiss = useCallback(() => {
     patchOverlay({ isChattersSheetMounted: false });
   }, [patchOverlay]);
+
+  const handleSavedPhrasesSheetDidDismiss = useCallback(() => {
+    patchOverlay({ isSavedPhrasesSheetMounted: false });
+  }, [patchOverlay]);
+
+  const handleSelectSavedPhrase = useCallback(
+    (text: string) => {
+      insertPhraseToComposer(text);
+      patchOverlay({ isSavedPhrasesSheetMounted: false });
+    },
+    [insertPhraseToComposer, patchOverlay],
+  );
 
   const handleSelectChatter = useCallback(
     (chatter: UsernamePressData) => {
@@ -549,8 +571,12 @@ export function useChatOverlays({
       selectedUser={selectedUser}
       onChattersSheetDidDismiss={handleChattersSheetDidDismiss}
       onOpenChatters={openChattersSheet}
+      onOpenSavedPhrases={openSavedPhrasesSheet}
+      onSavedPhrasesSheetDidDismiss={handleSavedPhrasesSheetDidDismiss}
       onSelectChatter={handleSelectChatter}
+      onSelectSavedPhrase={handleSelectSavedPhrase}
       shouldRenderChattersSheet={isChattersSheetMounted}
+      shouldRenderSavedPhrasesSheet={isSavedPhrasesSheetMounted}
       shouldRenderSettingsSheet={isSettingsSheetMounted}
       shouldRenderEmoteSheet={isEmoteSheetMounted}
       pinnedMessageBusy={pinnedMessageBusy}
@@ -570,6 +596,7 @@ export function useChatOverlays({
       openEmotePreview,
       openEmoteSheet,
       openMessageActions,
+      openSavedPhrasesSheet,
       openSettingsSheet,
       openUserActions,
     },

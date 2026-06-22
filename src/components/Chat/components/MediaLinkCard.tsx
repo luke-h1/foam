@@ -1,5 +1,5 @@
-import { memo,useCallback } from 'react';
-import { Pressable, StyleSheet,View } from 'react-native';
+import { memo, useCallback } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useQueries } from '@tanstack/react-query';
@@ -14,10 +14,10 @@ import { Text } from '@app/components/ui/Text/Text';
 import { sevenTvService } from '@app/services/seventv-service';
 import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
+import { type TwitchAnd7TVVariant } from '@app/utils/chat/parsedPart';
 import {
   getTwitchClipIdFromUrl,
   SEVENTV_EMOTE_LINK_REGEX,
-  TwitchAnd7TVVariant,
 } from '@app/utils/chat/replaceTextWithEmotes';
 
 type MediaLinkCardProps = {

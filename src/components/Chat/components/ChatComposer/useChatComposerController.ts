@@ -1,4 +1,4 @@
-import { type Ref,useCallback, useImperativeHandle, useState } from 'react';
+import { type Ref, useCallback, useImperativeHandle, useState } from 'react';
 
 import { impact } from '@app/lib/haptics';
 import type { ChatUser } from '@app/store/chat/types/constants';

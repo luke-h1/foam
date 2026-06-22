@@ -36,6 +36,7 @@ const basePreferences = {
   ignoreClearChat: false,
   chatMentionHaptics: true,
   customHighlights: [] as { id: string; phrase: string; color: string }[],
+  savedPhrases: [] as { id: string; text: string }[],
   shakeToReport: true,
   landscapeChatWidth: null,
 } as const;

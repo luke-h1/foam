@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { type ErrorBoundaryProps, router,Stack } from 'expo-router';
+import { type ErrorBoundaryProps, router, Stack } from 'expo-router';
 
 import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import { Button } from '@app/components/Button/Button';

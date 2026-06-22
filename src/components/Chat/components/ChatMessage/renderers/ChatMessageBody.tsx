@@ -1,5 +1,5 @@
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 
 import { ChatMessagePart } from './ChatMessagePart';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';

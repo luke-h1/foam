@@ -1,9 +1,14 @@
-import { useCallback,useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { useAuthContext } from '@app/context/AuthContext';
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { isE2EMode } from '@app/services/api/clients';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import {
+  containsMutedWords,
+  isUserBlocked,
+} from '@app/utils/chat/chatMessageFilters';
+import { type IrcMessage, parseIrcMessage } from '@app/utils/chat/ircProtocol';
 import { logger } from '@app/utils/logger';
 
 import { ReadyState } from '../hooks/ws/constants';
@@ -25,46 +30,12 @@ const TWITCH_CHAT_URL = isE2EMode
   ? 'ws://localhost:6667'
   : 'wss://irc-ws.chat.twitch.tv:443';
 
-function parseIrcTags(tagString: string): Record<string, string> {
-  const tags: Record<string, string> = {};
-  if (!tagString) {
-    return tags;
-  }
-
-  let start = 0;
-  while (start <= tagString.length) {
-    const separatorIndex = tagString.indexOf(';', start);
-    const endIndex = separatorIndex === -1 ? tagString.length : separatorIndex;
-    const part = tagString.slice(start, endIndex);
-    const keyValue = part.split('=');
-    const key = keyValue[0] ?? '';
-
-    if (key) {
-      tags[key] = keyValue.length > 1 ? keyValue.slice(1).join('=') : '';
-    }
-
-    if (separatorIndex === -1) {
-      break;
-    }
-    start = separatorIndex + 1;
-  }
-
-  return tags;
-}
-
 function formatIrcChannelName(channelName: string): string {
   return channelName.startsWith('#') ? channelName : `#${channelName}`;
 }
 
 function handleTwitchChatWebSocketError(error: Event) {
   logger.chat.error('💬 Twitch IRC WebSocket error:', error);
-}
-
-interface IrcMessage {
-  tags?: Record<string, string>;
-  prefix?: string;
-  command: string;
-  params: string[];
 }
 
 interface UseTwitchChatOptions {
@@ -143,98 +114,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const shouldConnect = Boolean(channel?.trim());
 
   const previousTokenRef = useRef<string | undefined>(undefined);
-
-  const parseTags = parseIrcTags;
-
-  /**
-   * Parse IRC message (format: [@tags] :prefix COMMAND params)
-   */
-  const parseIrcMessage = (line: string): IrcMessage | null => {
-    if (!line.trim()) {
-      return null;
-    }
-
-    let remaining = line.trim();
-    let tags: Record<string, string> | undefined;
-    let prefix: string | undefined;
-
-    // Parse tags
-    if (remaining.startsWith('@')) {
-      const tagEnd = remaining.indexOf(' ');
-      if (tagEnd === -1) {
-        return null;
-      }
-      const tagString = remaining.substring(1, tagEnd);
-      tags = parseTags(tagString);
-      remaining = remaining.substring(tagEnd + 1).trim();
-    }
-
-    // Parse prefix
-    if (remaining.startsWith(':')) {
-      const prefixEnd = remaining.indexOf(' ');
-      if (prefixEnd === -1) {
-        return null;
-      }
-      prefix = remaining.substring(1, prefixEnd);
-      remaining = remaining.substring(prefixEnd + 1).trim();
-    }
-
-    const commandEnd = remaining.indexOf(' ');
-    const command =
-      commandEnd === -1 ? remaining : remaining.slice(0, commandEnd);
-    if (!command) {
-      return null;
-    }
-
-    const params: string[] = [];
-    const paramString =
-      commandEnd === -1 ? '' : remaining.slice(commandEnd + 1);
-    const trailingIndex = paramString.indexOf(' :');
-
-    if (trailingIndex >= 0) {
-      const leading = paramString.slice(0, trailingIndex);
-      if (leading) {
-        params.push(...leading.split(' '));
-      }
-      params.push(paramString.slice(trailingIndex + 2));
-    } else if (paramString.startsWith(':')) {
-      params.push(paramString.slice(1));
-    } else if (paramString) {
-      params.push(...paramString.split(' '));
-    }
-
-    return { tags, prefix, command, params };
-  };
-
-  /**
-   * Check if a user is blocked
-   */
-  const isUserBlocked = (username?: string): boolean => {
-    if (!username || blockedUsers.length === 0) {
-      return false;
-    }
-    return blockedUsers.some(
-      blockedUser =>
-        blockedUser.userLogin.toLowerCase() === username.toLowerCase(),
-    );
-  };
-
-  /**
-   * Check if message contains muted words
-   */
-  const containsMutedWords = (message: string): boolean => {
-    if (mutedWords.length === 0) {
-      return false;
-    }
-
-    const messageLower = message.toLowerCase();
-    const words = matchWholeWord ? messageLower.split(' ') : [messageLower];
-
-    return mutedWords.some(mutedWord => {
-      const mutedWordLower = mutedWord.toLowerCase();
-      return words.some(word => word === mutedWordLower);
-    });
-  };
 
   /**
    * Send IRC command
@@ -414,7 +293,11 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
             const isChannelOwner =
               channelName.slice(1).toLowerCase() === user?.login?.toLowerCase();
 
-            if (!isMod && !isChannelOwner && isUserBlocked(username)) {
+            if (
+              !isMod &&
+              !isChannelOwner &&
+              isUserBlocked(username, blockedUsers)
+            ) {
               logger.chat.debug(
                 `Filtered message from blocked user: ${username}`,
               );
@@ -422,7 +305,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
             }
 
             // Filter muted words
-            if (containsMutedWords(messageText)) {
+            if (containsMutedWords(messageText, mutedWords, matchWholeWord)) {
               logger.chat.debug(`Filtered message containing muted words`);
               return;
             }

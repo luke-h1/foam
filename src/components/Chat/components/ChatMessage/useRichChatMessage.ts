@@ -15,7 +15,7 @@ import {
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 import { findCustomHighlight } from '@app/utils/chat/customHighlights';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import type {
   BadgePressData,

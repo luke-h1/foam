@@ -12,33 +12,33 @@
  */
 
 import {
-  getTopCategoriesResponse,
   getCategoryById,
-  searchCategories,
+  getTopCategoriesResponse,
   mockCategories,
+  searchCategories,
 } from './fixtures/categories';
 import {
-  getTopStreamsResponse,
+  channelBttvEmotes,
+  ffzBadges,
+  ffzGlobalSet,
+  ffzRoom,
+  globalBttvEmotes,
+  sampleChatMessages,
+  sevenTvChannelUser,
+  sevenTvCosmetics,
+  sevenTvGlobalEmoteSet,
+} from './fixtures/emotes';
+import {
   getStreamByLogin,
+  getTopStreamsResponse,
   mockStreams,
 } from './fixtures/streams';
 import {
-  getUserByLogin,
-  getUserById,
-  searchChannels,
   getFollowedStreams,
+  getUserById,
+  getUserByLogin,
+  searchChannels,
 } from './fixtures/users';
-import {
-  globalBttvEmotes,
-  channelBttvEmotes,
-  ffzGlobalSet,
-  ffzRoom,
-  ffzBadges,
-  sevenTvGlobalEmoteSet,
-  sevenTvChannelUser,
-  sevenTvCosmetics,
-  sampleChatMessages,
-} from './fixtures/emotes';
 
 declare const Bun: {
   serve(options: {

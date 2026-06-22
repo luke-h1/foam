@@ -3,7 +3,7 @@ import {
   ViewerMilestoneTags,
 } from '@app/types/chat/irc-tags/usernotice';
 import { formatCharityAmount } from '@app/utils/chat/formatCharityAmount';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { ParsedPart } from '@app/utils/chat/parsedPart';
 
 function getTagValue(
   tags: Record<string, string | boolean | undefined>,

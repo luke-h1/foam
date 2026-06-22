@@ -7,7 +7,7 @@ import type {
   PaintLayerData,
   PaintShadow,
   PaintStop,
-} from '@app/utils/color/seventv-ws-service';
+} from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
 import { angleToPoints } from './angleToPoints';

@@ -1,5 +1,5 @@
 import { memo, useMemo, useState } from 'react';
-import { StyleSheet, useWindowDimensions,View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 

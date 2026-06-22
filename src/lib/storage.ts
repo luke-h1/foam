@@ -35,8 +35,18 @@ const storageEvents = new EventEmitter();
 export const storage = createMMKV({
   id: 'storageService',
   compareBeforeSet: true,
-  mode: 'multi-process',
 });
+
+const isStorageItemExpired = (item: StorageItem): boolean =>
+  item.expiry !== undefined && new Date() >= new Date(item.expiry);
+
+const removeNamespacedKeys = (prefix: string): void => {
+  for (const key of storage.getAllKeys()) {
+    if (key.startsWith(prefix)) {
+      storage.remove(key);
+    }
+  }
+};
 
 type NamespacePrefixes = 'image_cache' | 'seven_tv_cache';
 
@@ -52,14 +62,14 @@ export const storageService = {
       return null;
     }
 
-    const { value, expiry } = JSON.parse(item) as StorageItem<T>;
+    const parsed = JSON.parse(item) as StorageItem<T>;
 
-    if (expiry && new Date() >= new Date(expiry)) {
+    if (isStorageItemExpired(parsed)) {
       storageService.remove(key);
       return null;
     }
 
-    return value;
+    return parsed.value;
   },
 
   set(
@@ -95,8 +105,7 @@ export const storageService = {
   },
 
   clear(): void {
-    const keys = storage.getAllKeys().filter(key => key.startsWith(NAMESPACE));
-    keys.forEach(key => storage.remove(key));
+    removeNamespacedKeys(NAMESPACE);
     storageEvents.emit('storageChange', 'all');
   },
 
@@ -107,32 +116,19 @@ export const storageService = {
   },
 
   clearExpired(): void {
-    const keys = storageService.getAllKeys();
-
-    keys.forEach(key => {
+    storageService.getAllKeys().forEach(key => {
       const item = storage.getString(key);
-      if (item) {
-        const { expiry } = JSON.parse(item) as StorageItem;
-        if (expiry && new Date() >= new Date(expiry)) {
-          storage.remove(key);
-        }
+      if (item && isStorageItemExpired(JSON.parse(item) as StorageItem)) {
+        storage.remove(key);
       }
     });
   },
   clearImageCache() {
-    const keys = storage
-      .getAllKeys()
-      .filter(key => key.startsWith(`${NAMESPACE}_image_cache`));
-    keys.forEach(key => storage.remove(key));
+    removeNamespacedKeys(`${NAMESPACE}_image_cache`);
     storageEvents.emit('storageChange', 'image_cache');
   },
   clearNamespace(namespacePrefix: NamespacePrefixes, keyPrefix = '') {
-    const keys = storage
-      .getAllKeys()
-      .filter(key =>
-        key.startsWith(`${NAMESPACE}_${namespacePrefix}_${keyPrefix}`),
-      );
-    keys.forEach(key => storage.remove(key));
+    removeNamespacedKeys(`${NAMESPACE}_${namespacePrefix}_${keyPrefix}`);
     storageEvents.emit('storageChange', namespacePrefix);
   },
 } as const;

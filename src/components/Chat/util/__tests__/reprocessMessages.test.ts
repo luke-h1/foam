@@ -4,7 +4,7 @@ import {
   createMentionPart,
   createTextPart,
 } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { AnyChatMessageType } from '../messageHandlers';
 import {

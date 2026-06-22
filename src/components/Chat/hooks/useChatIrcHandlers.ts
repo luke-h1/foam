@@ -1,4 +1,4 @@
-import { type RefObject,useCallback, useRef } from 'react';
+import { type RefObject, useCallback, useRef } from 'react';
 
 import { batch } from '@legendapp/state';
 

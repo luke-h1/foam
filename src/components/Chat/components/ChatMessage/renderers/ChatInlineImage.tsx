@@ -1,25 +1,28 @@
 import {
   memo,
+  type ReactElement,
   use,
   useCallback,
   useEffect,
   useRef,
   useState,
-  type ReactElement,
 } from 'react';
-import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
-import { logger } from '@app/utils/logger';
-import { useCachedEmote } from '@app/Providers/CachedEmotesProvider/useCachedEmote';
-import { evictCachedEmoteRef } from '@app/Providers/CachedEmotesProvider/cache-service';
 import {
   type ImageStyle,
   type StyleProp,
-  type ViewStyle,
   StyleSheet,
   View,
+  type ViewStyle,
 } from 'react-native';
-import { RowVisibilityContext } from '../rowVisibility';
+
+import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
+
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
+import { evictCachedEmoteRef } from '@app/Providers/CachedEmotesProvider/cache-service';
+import { useCachedEmote } from '@app/Providers/CachedEmotesProvider/useCachedEmote';
+import { logger } from '@app/utils/logger';
+
+import { RowVisibilityContext } from '../rowVisibility';
 import { ChatImageShimmer } from './ChatImageShimmer';
 
 /**
@@ -81,6 +84,16 @@ function ChatInlineImageComponent({
   const attemptsRef = useRef({ url: sourceUrl, count: 0 });
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // A retry timer scheduled for a previous url must not fire after the row is
+  // reused for a new one — it would bump reloadNonce and reload the wrong emote.
+  useEffect(() => {
+    attemptsRef.current = { url: sourceUrl, count: 0 };
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+  }, [sourceUrl]);
+
   useEffect(
     () => () => {
       if (retryTimerRef.current) {
@@ -126,6 +139,7 @@ function ChatInlineImageComponent({
         clearTimeout(retryTimerRef.current);
       }
       retryTimerRef.current = setTimeout(() => {
+        retryTimerRef.current = null;
         setReloadNonce(nonce => nonce + 1);
       }, delay);
     },

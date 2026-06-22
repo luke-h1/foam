@@ -1,4 +1,4 @@
-import { type StyleProp, type TextStyle,View } from 'react-native';
+import { type StyleProp, type TextStyle, View } from 'react-native';
 import type { ReactNode } from 'react';
 
 import { SymbolView } from '@app/components/ui/Icon/Icon';

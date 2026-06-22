@@ -15,6 +15,11 @@ export interface CustomHighlight {
   color: string;
 }
 
+export interface SavedPhrase {
+  id: string;
+  text: string;
+}
+
 export type ChatFontScale = 'small' | 'default' | 'large';
 export type ChatTimestampFormat = '24h' | '12h';
 export type DeletedMessageStyle = 'notice' | 'hidden';
@@ -54,6 +59,7 @@ export interface Preferences {
   ignoreClearChat: boolean;
   chatMentionHaptics: boolean;
   customHighlights: CustomHighlight[];
+  savedPhrases: SavedPhrase[];
   shakeToReport: boolean;
   /**
    * User-chosen landscape chat panel width in px, set by dragging the
@@ -97,6 +103,7 @@ const initialPreferences: Preferences = {
   ignoreClearChat: false,
   chatMentionHaptics: true,
   customHighlights: [],
+  savedPhrases: [],
   shakeToReport: true,
   landscapeChatWidth: null,
 };

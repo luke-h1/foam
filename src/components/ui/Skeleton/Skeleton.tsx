@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import {
+  cancelAnimation,
   Easing,
   useDerivedValue,
   useSharedValue,
@@ -53,6 +54,7 @@ function SkeletonShimmer() {
         -1,
       ),
     );
+    return () => cancelAnimation(progress);
   }, [progress]);
 
   const start = useDerivedValue(() => {

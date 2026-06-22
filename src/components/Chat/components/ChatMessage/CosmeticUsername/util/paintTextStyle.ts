@@ -5,7 +5,7 @@ import type {
   PaintData,
   PaintShadow,
   PaintTextStroke,
-} from '@app/utils/color/seventv-ws-service';
+} from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
 // Paint-pure derivations, memoised on the paint object so every user wearing a

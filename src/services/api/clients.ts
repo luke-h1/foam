@@ -49,6 +49,11 @@ export const sevenTvApi = createApiClient({
   logPrefix: 'stv',
 });
 
+export const sevenTvGqlApi = createApiClient({
+  baseURL: 'https://7tv.io/v4',
+  logPrefix: 'stv',
+});
+
 export const ffzApi = createApiClient({
   baseURL: 'https://api.frankerfacez.com/v1',
   logPrefix: 'ffz',

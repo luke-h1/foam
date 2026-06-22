@@ -1,6 +1,4 @@
-import { parseJsonOnUIThread } from '@app/lib/offThreadJson';
-
-const SEVEN_TV_GQL_URL = 'https://7tv.io/v4/gql';
+import { sevenTvGqlApi } from '@app/services/api/clients';
 
 interface QueryOptions<TVariables> {
   query: string;
@@ -23,21 +21,10 @@ export const sevenTvV4Client = {
     variables,
   }: QueryOptions<TVariables>): Promise<QueryResult<TData>> {
     try {
-      const response = await fetch(SEVEN_TV_GQL_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, variables }),
+      const result = await sevenTvGqlApi.post<GraphQLResponse<TData>>('/gql', {
+        query,
+        variables,
       });
-
-      if (!response.ok) {
-        return {
-          error: new Error(`7TV GQL request failed: HTTP ${response.status}`),
-        };
-      }
-
-      const result = await parseJsonOnUIThread<GraphQLResponse<TData>>(
-        await response.text(),
-      );
 
       if (result.errors?.length) {
         return {

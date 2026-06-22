@@ -14,8 +14,8 @@ import type {
 } from '@app/types/chat/irc-tags/usernotice';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import type { PaintData } from '@app/utils/color/seventv-ws-service';
+import type { PaintData } from '@app/types/seventv/cosmetics';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 export type { PaintData, SanitisedBadgeSet, SanitisedEmote };
 

@@ -1,4 +1,4 @@
-import { useCallback,useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { usePathname } from 'expo-router';
 
@@ -20,7 +20,7 @@ import {
   SevenTvEventData,
   SevenTvEventType,
   SevenTvWsMessage,
-} from '@app/utils/color/seventv-ws-service';
+} from '@app/types/seventv/cosmetics';
 import { logger } from '@app/utils/logger';
 
 import { ReadyState } from './ws/constants';

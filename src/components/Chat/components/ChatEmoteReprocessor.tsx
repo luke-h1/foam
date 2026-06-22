@@ -1,4 +1,4 @@
-import { memo,RefObject } from 'react';
+import { memo, RefObject } from 'react';
 
 import { useChannelEmoteData } from '@app/store/chat/react/selectors';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';

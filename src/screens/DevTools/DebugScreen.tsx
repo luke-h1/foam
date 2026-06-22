@@ -1,5 +1,5 @@
-import { useCallback,useEffect, useRef, useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet,View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 

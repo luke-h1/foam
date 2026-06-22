@@ -1,4 +1,4 @@
-import { type ReactElement,useMemo } from 'react';
+import { type ReactElement, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 

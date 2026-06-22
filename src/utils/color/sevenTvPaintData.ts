@@ -8,8 +8,7 @@ import {
   type UserCosmeticsQuery,
 } from '@app/graphql/generated/gql';
 import { IndexedCollection } from '@app/services/ws/util/indexedCollection';
-
-import type { PaintData, PaintShadow } from './seventv-ws-service';
+import type { PaintData, PaintShadow } from '@app/types/seventv/cosmetics';
 
 type V4User = NonNullable<UserCosmeticsQuery['users']['user']>;
 

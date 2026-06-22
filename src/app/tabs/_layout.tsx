@@ -14,19 +14,19 @@ export default function TabsLayout() {
     <NativeTabs tintColor={theme.colorWhite} minimizeBehavior='onScrollDown'>
       <NativeTabs.Trigger name='following' hidden={!isLoggedIn}>
         <NativeTabs.Trigger.Label>{t('following')}</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf='person.2' />
+        <NativeTabs.Trigger.Icon sf='person.2' md='group' />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name='top'>
         <NativeTabs.Trigger.Label>{t('top')}</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf='chart.bar.xaxis' />
+        <NativeTabs.Trigger.Icon sf='chart.bar.xaxis' md='leaderboard' />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name='search' role='search'>
         <NativeTabs.Trigger.Label>{t('search')}</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf='magnifyingglass' />
+        <NativeTabs.Trigger.Icon sf='magnifyingglass' md='search' />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name='settings'>
         <NativeTabs.Trigger.Label>{t('settings')}</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf='gearshape' />
+        <NativeTabs.Trigger.Icon sf='gearshape' md='settings' />
       </NativeTabs.Trigger>
     </NativeTabs>
   );

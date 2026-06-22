@@ -2,7 +2,7 @@ import { act, render } from '@testing-library/react-native';
 import { Image } from 'expo-image';
 
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
-import type { PaintData } from '@app/utils/color/seventv-ws-service';
+import type { PaintData } from '@app/types/seventv/cosmetics';
 
 import { PaintedUsername } from '../CosmeticUsername/CosmeticUsername';
 

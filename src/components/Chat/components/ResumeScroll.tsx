@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { StyleSheet,View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@app/components/Button/Button';

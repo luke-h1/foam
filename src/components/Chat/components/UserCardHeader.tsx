@@ -5,7 +5,7 @@ import { Image } from 'expo-image';
 
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
-import { useUserQuery } from '@app/hooks/queries/use-user-query';
+import { useUserQuery } from '@app/hooks/queries/useUserQuery';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { theme } from '@app/styles/themes';
 import { formatDate } from '@app/utils/date-time/date';

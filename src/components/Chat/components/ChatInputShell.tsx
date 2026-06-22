@@ -29,6 +29,7 @@ import { ChatInputSection, type ReplyToData } from './ChatInputSection';
 export interface ChatInputShellHandle {
   appendEmote: (emoteName: string) => void;
   appendMention: (username: string) => void;
+  insertPhrase: (text: string) => void;
   clearReply: () => void;
   setReplyTo: (replyTo: ReplyToData | null) => void;
 }
@@ -288,6 +289,15 @@ export const ChatInputShell = memo(function ChatInputShell({
           ? `@${username} `
           : `${current}${current.endsWith(' ') ? '' : ' '}@${username} `;
         writeComposerText(next);
+        chatInputRef.current?.focus();
+      },
+      insertPhrase: (text: string) => {
+        if (!isAuthenticated) {
+          return;
+        }
+        const current = messageInputRef.current;
+        const needsSpace = current.length > 0 && !current.endsWith(' ');
+        writeComposerText(`${current}${needsSpace ? ' ' : ''}${text} `);
         chatInputRef.current?.focus();
       },
       clearReply: () => {

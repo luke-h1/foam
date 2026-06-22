@@ -1,6 +1,6 @@
 /* eslint-disable react/destructuring-assignment */
 import { Component } from 'react';
-import type { ErrorInfo,ReactNode } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
 
 import { logger } from '@app/utils/logger';
 import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';

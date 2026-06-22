@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet,View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import type { ErrorInfo } from 'react';
 import { useTranslation } from 'react-i18next';
 

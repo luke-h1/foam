@@ -1,6 +1,6 @@
 import { useSelector } from '@legendapp/state/react';
 
-import { type Preferences,preferences$ } from './state';
+import { type Preferences, preferences$ } from './state';
 
 export type EmoteRenderPreferences = Pick<
   Preferences,

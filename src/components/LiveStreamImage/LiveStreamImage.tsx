@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { StyleSheet,View, ViewStyle } from 'react-native';
+import { StyleSheet, View, ViewStyle } from 'react-native';
 
 import { theme } from '@app/styles/themes';
 

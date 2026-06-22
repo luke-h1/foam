@@ -2,7 +2,7 @@ import {
   deriveChatBody,
   getMessageStructure,
 } from '@app/utils/chat/deriveChatBody';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 const text = (content: string): ParsedPart => ({ type: 'text', content });
 const mention = (content: string): ParsedPart => ({ type: 'mention', content });

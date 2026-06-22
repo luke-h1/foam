@@ -56,6 +56,16 @@ export function SettingsIndexScreen() {
               onPress={() => router.push('/tabs/settings/blocked-terms')}
             />
             <Button
+              label={t('emotesAndBadges')}
+              systemImage='face.smiling'
+              onPress={() => router.push('/tabs/settings/emotes-and-badges')}
+            />
+            <Button
+              label={t('savedPhrases')}
+              systemImage='text.bubble'
+              onPress={() => router.push('/tabs/settings/saved-phrases')}
+            />
+            <Button
               label={t('cache')}
               systemImage='externaldrive'
               onPress={() => router.push('/tabs/settings/cache')}
@@ -160,6 +170,18 @@ export function SettingsIndexScreen() {
             subtitle={t('blockedTermsDescription')}
             icon={{ icon: 'text.badge.xmark', color: theme.colorRed }}
             onPress={() => router.push('/tabs/settings/blocked-terms')}
+          />
+          <SettingsLinkRow
+            title={t('emotesAndBadges')}
+            subtitle={t('emotesAndBadgesDescription')}
+            icon={{ icon: 'face.smiling', color: theme.colorAmber }}
+            onPress={() => router.push('/tabs/settings/emotes-and-badges')}
+          />
+          <SettingsLinkRow
+            title={t('savedPhrases')}
+            subtitle={t('savedPhrasesDescription')}
+            icon={{ icon: 'text.bubble', color: theme.colorBlue }}
+            onPress={() => router.push('/tabs/settings/saved-phrases')}
           />
           <SettingsLinkRow
             title={t('cache')}

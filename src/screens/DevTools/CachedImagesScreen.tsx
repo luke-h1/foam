@@ -1,5 +1,5 @@
-import { type RefObject,useCallback, useRef, useState } from 'react';
-import { Alert, StyleSheet,View } from 'react-native';
+import { type RefObject, useCallback, useRef, useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useSelector } from '@legendapp/state/react';

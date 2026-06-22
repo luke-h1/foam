@@ -4,7 +4,7 @@ import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';
 
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { EmoteActionSheet } from '../EmoteActionSheet';
 

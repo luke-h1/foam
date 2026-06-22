@@ -1,4 +1,4 @@
-import { Insets, StyleProp, StyleSheet,ViewStyle } from 'react-native';
+import { Insets, StyleProp, StyleSheet, ViewStyle } from 'react-native';
 
 import { type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { resolveSpacingValue, Spacing } from '@app/styles/spacing';

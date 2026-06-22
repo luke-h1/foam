@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import { ActivityIndicator, StyleSheet,View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import * as AC from '@bacons/apple-colors';

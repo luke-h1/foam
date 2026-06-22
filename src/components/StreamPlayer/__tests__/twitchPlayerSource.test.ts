@@ -110,6 +110,7 @@ describe('twitchPlayerSource', () => {
 
     const muted = buildTwitchPlayerAudioDefaultScript({ muted: true });
     expect(muted).toContain('JSON.stringify({ default: true })');
+    expect(muted).toContain("window.localStorage.setItem('volume', '1')");
   });
 
   test('hides captions with text track "hidden", never "disabled"', () => {

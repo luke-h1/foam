@@ -9,7 +9,7 @@ import {
 import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { ChatMessagePressable } from '../ChatMessagePressable';
 import { styles } from '../RichChatMessage.styles';

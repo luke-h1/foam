@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  UserInfoResponse,
-  SearchChannelResponse,
   PaginatedList,
+  SearchChannelResponse,
   TwitchStream,
+  UserInfoResponse,
 } from '@app/services/twitch-service';
+
 import { mockStreams } from './streams';
 
 export const mockUsers: UserInfoResponse[] = [

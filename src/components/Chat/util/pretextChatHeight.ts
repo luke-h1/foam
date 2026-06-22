@@ -1,7 +1,7 @@
 import { PixelRatio } from 'react-native';
 
 import { theme } from '@app/styles/themes';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import {
   type ChatFontScale,

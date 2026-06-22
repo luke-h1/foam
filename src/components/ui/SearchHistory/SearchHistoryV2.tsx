@@ -1,5 +1,5 @@
-import { useCallback } from 'react';
-import { Alert, StyleSheet,View } from 'react-native';
+import { useCallback, useMemo } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -39,37 +39,51 @@ function SwipeableHistoryItem({
   const itemHeight = useSharedValue(HISTORY_ROW_HEIGHT);
   const opacity = useSharedValue(1);
 
-  const panGesture = Gesture.Pan()
-    .activeOffsetX([-10, 10])
-    .onUpdate(event => {
-      // Only allow left swipe
-      if (event.translationX < 0) {
-        translateX.set(event.translationX);
-      }
-    })
-    .onEnd(event => {
-      if (event.translationX < DELETE_THRESHOLD) {
-        // Full swipe - delete
-        translateX.set(withTiming(-400, { duration: 200 }));
-        itemHeight.set(withTiming(0, { duration: 200 }));
-        opacity.set(
-          withTiming(0, { duration: 200 }, finished => {
-            if (finished) {
-              scheduleOnRN(onDelete);
-            }
-          }),
-        );
-      } else if (event.translationX < SWIPE_THRESHOLD) {
-        // Partial swipe - show delete button
-        translateX.set(
-          withSpring(-ACTION_WIDTH, {
-            damping: 20,
-            stiffness: 200,
-            mass: 4,
-          }),
-        );
-      } else {
-        // Snap back
+  const composedGesture = useMemo(() => {
+    const panGesture = Gesture.Pan()
+      .activeOffsetX([-10, 10])
+      .onUpdate(event => {
+        // Only allow left swipe
+        if (event.translationX < 0) {
+          translateX.set(event.translationX);
+        }
+      })
+      .onEnd(event => {
+        if (event.translationX < DELETE_THRESHOLD) {
+          // Full swipe - delete
+          translateX.set(withTiming(-400, { duration: 200 }));
+          itemHeight.set(withTiming(0, { duration: 200 }));
+          opacity.set(
+            withTiming(0, { duration: 200 }, finished => {
+              if (finished) {
+                scheduleOnRN(onDelete);
+              }
+            }),
+          );
+        } else if (event.translationX < SWIPE_THRESHOLD) {
+          // Partial swipe - show delete button
+          translateX.set(
+            withSpring(-ACTION_WIDTH, {
+              damping: 20,
+              stiffness: 200,
+              mass: 4,
+            }),
+          );
+        } else {
+          // Snap back
+          translateX.set(
+            withSpring(0, {
+              damping: 20,
+              stiffness: 200,
+              mass: 4,
+            }),
+          );
+        }
+      });
+
+    const tapGesture = Gesture.Tap().onEnd(() => {
+      if (translateX.get() < -40) {
+        // If swiped, tap snaps back
         translateX.set(
           withSpring(0, {
             damping: 20,
@@ -77,25 +91,13 @@ function SwipeableHistoryItem({
             mass: 4,
           }),
         );
+      } else {
+        scheduleOnRN(onSelect);
       }
     });
 
-  const tapGesture = Gesture.Tap().onEnd(() => {
-    if (translateX.get() < -40) {
-      // If swiped, tap snaps back
-      translateX.set(
-        withSpring(0, {
-          damping: 20,
-          stiffness: 200,
-          mass: 4,
-        }),
-      );
-    } else {
-      scheduleOnRN(onSelect);
-    }
-  });
-
-  const composedGesture = Gesture.Race(panGesture, tapGesture);
+    return Gesture.Race(panGesture, tapGesture);
+  }, [translateX, itemHeight, opacity, onDelete, onSelect]);
 
   const animatedRowStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.get() }],

@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { ScrollView,View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import type { ReactNode } from 'react';
 
 import { ffzSanitiisedChannelBadges } from '@app/services/__fixtures__/badges/ffz/ffzSanitisedChannelBadges.fixture';
@@ -10,7 +10,7 @@ import { chatterinoService } from '@app/services/chatterino-service';
 import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { ParsedPart } from '@app/utils/chat/parsedPart';
 
 function requireFixture<T>(value: T | undefined, label: string): T {
   if (!value) {

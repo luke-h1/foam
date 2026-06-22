@@ -11,7 +11,7 @@ import type {
   ChangeMap,
   CosmeticCreate,
   PaintData,
-} from '@app/utils/color/seventv-ws-service';
+} from '@app/types/seventv/cosmetics';
 
 const emptyIndexedCollection = { length: 0 };
 

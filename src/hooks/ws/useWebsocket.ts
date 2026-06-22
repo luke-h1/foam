@@ -1,4 +1,4 @@
-import { RefObject, useCallback,useEffect, useRef, useState } from 'react';
+import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
 import { ReadyState } from './constants';
 import { createOrJoinSocket } from './createOrJoin';
