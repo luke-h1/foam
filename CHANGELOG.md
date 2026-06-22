@@ -33,6 +33,7 @@
 - **perf:** Reduce animated emote decode cpu
 - **perf:** Improve chat perf ([#651](https://github.com/lhowsam/foam/issues/651))
 - **perf:** Perf sweep ([#653](https://github.com/lhowsam/foam/issues/653))
+- **perf:** Perf sweep pt 2
 
 ### 🔧 Miscellaneous Tasks
 
