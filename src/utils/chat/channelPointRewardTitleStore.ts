@@ -7,9 +7,6 @@ import {
   channelPointsRewardTitleFromTags,
 } from './channelPointsRewardTitle';
 
-// The title cache stays a plain Map (imperative, hot-path lookups), but its
-// reactivity bridge is a legend-state observable so subscribed rows re-render
-// when a deferred title resolves — mirrors chatStore$.mentionLoginRevision.
 const channelPointRewardTitleCache = new Map<string, string>();
 const rewardIdOnlyCache = new Map<string, string>();
 const rewardTitleRevision$ = observable(0);

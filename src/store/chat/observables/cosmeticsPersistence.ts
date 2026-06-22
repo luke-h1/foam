@@ -2,18 +2,6 @@ import { storageService } from '@app/lib/storage';
 
 import type { PaintData, SanitisedBadgeSet } from '../types/constants';
 
-/**
- * Persistent MMKV cache of the 7TV cosmetic maps so paints/badges seen in a
- * previous session are available immediately on the next launch — mirroring the
- * 7TV extension, which keeps a local cosmetic store rather than re-deriving
- * everything from scratch each time.
- *
- * Writes are debounced + size-capped by the caller (see `scheduleCosmeticsPersist`
- * in cosmetics.ts): cosmetics arrive in a burst when a channel loads, and
- * serialising the whole map on every entry would repeat the frequent-whole-map
- * serialization that aborted the JS thread under memory pressure
- * (FOAM-TV-MOBILE-9V). One coalesced snapshot per quiet window instead.
- */
 const COSMETICS_SNAPSHOT_KEY = 'sevenTvCosmeticsSnapshot_v1';
 const COSMETICS_NAMESPACE = 'seven_tv_cache';
 const SNAPSHOT_TTL_MS = 24 * 60 * 60 * 1000;
@@ -36,7 +24,6 @@ function capRecord<T>(
   if (entries.length <= max) {
     return record;
   }
-  // Object key order is insertion order, so keep the most-recently-added.
   return Object.fromEntries(entries.slice(entries.length - max));
 }
 
