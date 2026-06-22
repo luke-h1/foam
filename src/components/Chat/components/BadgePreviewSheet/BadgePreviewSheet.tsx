@@ -141,7 +141,6 @@ function BadgePreviewSheetComponent(props: Props) {
           <View style={styles.previewPanel}>
             <View style={styles.imageStage}>
               <Image
-                trackLoadTime
                 trackLoadContext='chat.badge-preview'
                 source={selectedBadge.url}
                 cacheVariant='badge'

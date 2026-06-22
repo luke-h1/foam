@@ -69,7 +69,6 @@ function StvEmoteEventComponent({
       </ChatNoticeMetaRow>
       <View style={styles.content}>
         <Image
-          trackLoadTime
           trackLoadContext='chat.stv-emote-event'
           source={displayUrl}
           cacheVariant='emote'

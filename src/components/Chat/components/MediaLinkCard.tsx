@@ -128,7 +128,6 @@ function MediaLinkCardComponent({
       >
         {thumbnail ? (
           <Image
-            trackLoadTime
             trackLoadContext='chat.media-link-inline'
             source={thumbnail}
             style={styles.inlineThumbnail}
@@ -166,7 +165,6 @@ function MediaLinkCardComponent({
         <View style={styles.mediaThumbnailFrame}>
           {thumbnail ? (
             <Image
-              trackLoadTime
               trackLoadContext='chat.media-link-card'
               source={thumbnail}
               style={styles.mediaThumbnail}

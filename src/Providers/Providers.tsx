@@ -2,7 +2,7 @@ import { AppBottomSheetProvider } from '@app/components/BottomSheet/BottomSheetP
 import { GlobalErrorGate } from '@app/components/GlobalErrorGate/GlobalErrorGate';
 import { ShakeToReport } from '@app/components/ShakeToReport/ShakeToReport';
 import { OfflineBanner } from '@app/components/OfflineBanner/OfflineBanner';
-import { AuthContextProvider, useAuthContext } from '@app/context/AuthContext';
+import { AuthContextProvider } from '@app/context/AuthContext';
 import { AccentColorProvider } from '@app/context/AccentColorContext';
 import { useDebugOptions } from '@app/hooks/useDebugOptions';
 import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
@@ -38,10 +38,9 @@ import { ScreenDimensionsProvider } from './ScreenDimensionsProvider/ScreenDimen
 import { theme } from '@app/styles/themes';
 import { AnalyticsProvider } from './AnalyticsProvider';
 
-function QueryProviderWithAuth({ children }: PropsWithChildren) {
-  const { user } = useAuthContext();
+function QueryProviderWithDevTools({ children }: PropsWithChildren) {
   return (
-    <QueryProvider currentUserId={user?.id}>
+    <QueryProvider>
       <QueryDevTools>{children}</QueryDevTools>
     </QueryProvider>
   );
@@ -138,7 +137,7 @@ export function Providers({ children }: PropsWithChildren) {
                   <PortalProvider>
                     {__DEV__ ? <DevTools /> : null}
                     <AnalyticsProvider>
-                      <QueryProviderWithAuth>
+                      <QueryProviderWithDevTools>
                         <GlobalErrorGate />
                         <ShakeToReport />
                         <OfflineBanner />
@@ -153,7 +152,7 @@ export function Providers({ children }: PropsWithChildren) {
                             {children}
                           </AppBottomSheetProvider>
                         </PressablesConfig>
-                      </QueryProviderWithAuth>
+                      </QueryProviderWithDevTools>
                     </AnalyticsProvider>
                   </PortalProvider>
                 </KeyboardProvider>

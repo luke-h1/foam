@@ -1,6 +1,5 @@
 import { Image as ExpoImage } from 'expo-image';
 import { logger } from '@app/utils/logger';
-import { useMeasureImageLoadTime } from '@app/hooks/useMeasureImageLoadTime';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
@@ -40,14 +39,12 @@ export const Image = function Image({
   cacheToFile = true,
   cacheVariant = 'image',
   recyclingKey,
-  trackLoadTime = false,
   trackLoadContext,
   style,
   ...props
 }: ImageProps) {
   const sourceUri = getSourceUri(source);
   const shouldUseFileCache = cacheToFile && process.env.NODE_ENV !== 'test';
-  const trackLoad = Boolean(trackLoadTime && sourceUri);
   const diskCachedSource =
     sourceUri &&
     shouldUseFileCache &&
@@ -70,46 +67,6 @@ export const Image = function Image({
       : undefined;
 
   const cachedSource = diskCachedSource ?? downloadedCachedSource;
-  const reportImageLoadTime = (timing: {
-    mountTimestamp: number;
-    loadStartTimestamp: number;
-    loadEndTimestamp: number;
-  }) => {
-    if (!trackLoad) {
-      return;
-    }
-
-    const totalLoadTimeMs = timing.loadEndTimestamp - timing.mountTimestamp;
-    const startToLoadTimeMs =
-      timing.loadEndTimestamp - timing.loadStartTimestamp;
-    const safeHost = (() => {
-      if (!sourceUri) {
-        return 'unknown';
-      }
-      try {
-        return new URL(sourceUri).hostname;
-      } catch {
-        return 'unknown';
-      }
-    })();
-
-    logger.main.info('chat.image.load_time', {
-      name: 'data_loading_info',
-      urlHost: safeHost,
-      url: sourceUri ?? 'unknown',
-      durationFromMountMs: Math.round(totalLoadTimeMs),
-      durationFromLoadStartMs: Math.round(startToLoadTimeMs),
-      imageRenderer: 'Image',
-      imageContext: trackLoadContext ?? 'chat-image',
-      host: safeHost,
-      platform: 'web',
-    });
-  };
-  const { onLoadStart, onLoadEnd } = useMeasureImageLoadTime(
-    'Image',
-    reportImageLoadTime,
-    { fallbackToMountStartOnLoadEnd: true },
-  );
 
   useEffect(() => {
     let isMounted = true;
@@ -181,10 +138,11 @@ export const Image = function Image({
         decodeFormat='rgb'
         recyclingKey={recyclingKey ?? sourceUri}
         placeholderContentFit={placeholderContentFit ?? 'cover'}
-        onLoadStart={trackLoad ? onLoadStart : undefined}
-        onLoadEnd={trackLoad ? onLoadEnd : undefined}
         onError={error => {
-          logger.main.debug('Image loading error:', error);
+          logger.main.debug('Image loading error:', {
+            error,
+            imageContext: trackLoadContext ?? 'chat-image',
+          });
         }}
       />
     </View>

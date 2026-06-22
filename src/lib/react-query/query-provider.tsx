@@ -3,17 +3,14 @@ import {
   listenNetworkConfirmed,
   listenNetworkLost,
 } from '@app/utils/network/network-events';
-import { focusManager, onlineManager } from '@tanstack/react-query';
-import { queryClient, shouldPersistQuery } from './query-client';
-import { createQueryPersister } from './query-persister';
 import {
-  PersistQueryClientProvider,
-  type PersistQueryClientProviderProps,
-} from '@tanstack/react-query-persist-client';
-import { PropsWithChildren, useState } from 'react';
+  focusManager,
+  onlineManager,
+  QueryClientProvider,
+} from '@tanstack/react-query';
+import { queryClient } from './query-client';
+import { PropsWithChildren } from 'react';
 import { AppState, Platform, type AppStateStatus } from 'react-native';
-
-const WEB_QUERY_CACHE_MAX_AGE = 24 * 60 * 60 * 1000;
 
 const authProxyBaseUrl = process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
 
@@ -117,46 +114,8 @@ focusManager.setEventListener(onFocus => {
   }
 });
 
-const dehydrateOptions: PersistQueryClientProviderProps['persistOptions']['dehydrateOptions'] =
-  {
-    shouldDehydrateMutation: _ => false,
-    // Only persist settled successful queries. Persisting pending queries
-    // makes the next launch resume them before auth has set a token, so
-    // they reject and get re-persisted as pending again, forever.
-    shouldDehydrateQuery: query =>
-      query.state.status === 'success' && shouldPersistQuery(query.queryKey),
-  };
-
-interface QueryProviderProps extends PropsWithChildren {
-  currentUserId?: string;
-}
-
-export function QueryProvider({ children, currentUserId }: QueryProviderProps) {
+export function QueryProvider({ children }: PropsWithChildren) {
   return (
-    <QueryProviderInner key={currentUserId} currentUserId={currentUserId}>
-      {children}
-    </QueryProviderInner>
-  );
-}
-
-function QueryProviderInner({ children, currentUserId }: QueryProviderProps) {
-  const [persistOptions] = useState(() => {
-    const persister = createQueryPersister(
-      `query-cache-${currentUserId ?? 'logged-out'}`,
-    );
-    return {
-      persister,
-      dehydrateOptions,
-      maxAge: WEB_QUERY_CACHE_MAX_AGE,
-    };
-  });
-
-  return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={persistOptions}
-    >
-      {children}
-    </PersistQueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 }

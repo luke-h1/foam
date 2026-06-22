@@ -1,12 +1,11 @@
 import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
 import { logger } from '@app/utils/logger';
 import { View, StyleSheet } from 'react-native';
-import { useMeasureImageLoadTime } from '@app/hooks/useMeasureImageLoadTime';
 import {
   cacheImageFromUrl,
   getCachedImageUri,
 } from '@app/utils/image/image-cache';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import type { ImageProps } from './Image.types';
 
 /**
@@ -44,11 +43,10 @@ export const Image = function Image({
   cacheToFile = true,
   cacheVariant = 'image',
   recyclingKey,
-  trackLoadTime = false,
   trackLoadContext,
   onError,
-  onLoadEnd: onLoadEndProp,
-  onLoadStart: onLoadStartProp,
+  onLoadEnd,
+  onLoadStart,
   style,
   ...props
 }: ImageProps) {
@@ -73,39 +71,6 @@ export const Image = function Image({
       : fileCachedUrl && typeof source === 'string'
         ? fileCachedUrl
         : source;
-  const trackLoad = Boolean(trackLoadTime && resolvedUrl);
-
-  const reportImageLoadTime = (timing: {
-    mountTimestamp: number;
-    loadStartTimestamp: number;
-    loadEndTimestamp: number;
-  }) => {
-    if (!trackLoad) {
-      return;
-    }
-
-    const totalLoadTimeMs = timing.loadEndTimestamp - timing.mountTimestamp;
-    const startToLoadTimeMs =
-      timing.loadEndTimestamp - timing.loadStartTimestamp;
-    const safeHost = getHostname(resolvedUrl);
-
-    logger.main.info('chat.image.load_time', {
-      name: 'data_loading_info',
-      urlHost: safeHost ?? 'unknown',
-      url: typeof source === 'string' ? source : 'uri-object',
-      durationFromMountMs: Math.round(totalLoadTimeMs),
-      durationFromLoadStartMs: Math.round(startToLoadTimeMs),
-      imageRenderer: 'Image',
-      imageContext: trackLoadContext ?? 'chat-image',
-      host: safeHost,
-    });
-  };
-
-  const { onLoadStart, onLoadEnd } = useMeasureImageLoadTime(
-    'Image',
-    reportImageLoadTime,
-  );
-
   useEffect(() => {
     if (!url || !shouldUseFileCache || diskCachedUrl) {
       return;
@@ -128,20 +93,6 @@ export const Image = function Image({
       controller.abort();
     };
   }, [cachePriority, cacheVariant, diskCachedUrl, shouldUseFileCache, url]);
-
-  const handleLoadStart = useCallback(() => {
-    if (trackLoad) {
-      onLoadStart();
-    }
-    onLoadStartProp?.();
-  }, [onLoadStart, onLoadStartProp, trackLoad]);
-
-  const handleLoadEnd = useCallback(() => {
-    if (trackLoad) {
-      onLoadEnd();
-    }
-    onLoadEndProp?.();
-  }, [onLoadEnd, onLoadEndProp, trackLoad]);
 
   const handleError = (event: ImageErrorEventData) => {
     const host = getHostname(resolvedUrl);
@@ -177,8 +128,8 @@ export const Image = function Image({
         useAppleWebpCodec
         placeholderContentFit={placeholderContentFit ?? 'cover'}
         onError={handleError}
-        onLoadStart={handleLoadStart}
-        onLoadEnd={handleLoadEnd}
+        onLoadStart={onLoadStart}
+        onLoadEnd={onLoadEnd}
       />
     </View>
   );

@@ -281,7 +281,6 @@ function EmoteActionSheetComponent({
                   {displayUrl ? (
                     <View style={styles.previewImageContainer}>
                       <Image
-                        trackLoadTime
                         trackLoadContext='chat.emote-action-sheet'
                         source={displayUrl}
                         cacheVariant='emote'

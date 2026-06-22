@@ -37,7 +37,6 @@ function renderMessagePart(part: ParsedPart, occurrence: number) {
       return (
         <Image
           key={key}
-          trackLoadTime
           trackLoadContext='chat.message-action-sheet'
           source={part.url}
           cacheVariant='emote'

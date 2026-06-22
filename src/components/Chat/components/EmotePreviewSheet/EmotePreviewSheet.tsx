@@ -194,7 +194,6 @@ function EmotePreviewSheetComponent(props: Props) {
           <View style={styles.previewPanel}>
             <View style={styles.imageStage}>
               <Image
-                trackLoadTime
                 trackLoadContext='chat.emote-preview'
                 source={displayUrl}
                 cacheVariant='emote'

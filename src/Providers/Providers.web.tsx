@@ -1,5 +1,5 @@
 import { AppBottomSheetProvider } from '@app/components/BottomSheet/BottomSheetProvider';
-import { AuthContextProvider, useAuthContext } from '@app/context/AuthContext';
+import { AuthContextProvider } from '@app/context/AuthContext';
 import { AccentColorProvider } from '@app/context/AccentColorContext';
 import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
 import { BaseConfig } from '@app/navigators/config';
@@ -20,11 +20,6 @@ import {
 } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
 import { ScreenDimensionsProvider } from './ScreenDimensionsProvider/ScreenDimensionsProvider';
-
-function QueryProviderWithAuth({ children }: PropsWithChildren) {
-  const { user } = useAuthContext();
-  return <QueryProvider currentUserId={user?.id}>{children}</QueryProvider>;
-}
 
 function QueryDevTools({ children }: PropsWithChildren) {
   return (
@@ -61,7 +56,7 @@ export function Providers({ children }: PropsWithChildren) {
             >
               <GestureHandlerRootView style={styles.gestureContainer}>
                 <PortalProvider>
-                  <QueryProviderWithAuth>
+                  <QueryProvider>
                     <QueryDevTools>
                       <PressablesConfig
                         config={{ minScale: motion.pressMinScale }}
@@ -71,7 +66,7 @@ export function Providers({ children }: PropsWithChildren) {
                         </AppBottomSheetProvider>
                       </PressablesConfig>
                     </QueryDevTools>
-                  </QueryProviderWithAuth>
+                  </QueryProvider>
                 </PortalProvider>
               </GestureHandlerRootView>
             </ErrorBoundary>

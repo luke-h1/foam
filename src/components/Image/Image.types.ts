@@ -4,7 +4,6 @@ import type { ImageCachePriority } from '@app/utils/image/image-cache';
 
 export interface ImageProps extends Omit<ExpoImageProps, 'source'> {
   containerStyle?: StyleProp<ViewStyle>;
-  trackLoadTime?: boolean;
   trackLoadContext?: string;
   cachePriority?: ImageCachePriority;
   cacheToFile?: boolean;
