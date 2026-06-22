@@ -18,6 +18,7 @@ import {
   runSequential,
 } from '@app/dev/imageBenchmark/runDecodeBenchmark';
 import {
+  setSyntheticChatControl,
   syntheticChatControl,
   SYNTHETIC_PRESETS,
 } from '@app/dev/imageBenchmark/syntheticChatControl';
@@ -116,22 +117,25 @@ export default function ImageBenchmarkScreen() {
       await prewarm(CINNA_EMOTE_URLS);
       await runPasses();
       setStatus('ALL DONE');
-    } finally {
-      setBusy(false);
-      setRuns(readResults().runs);
+    } catch (error) {
+      setStatus(`error: ${String(error)}`);
     }
+    setBusy(false);
+    setRuns(readResults().runs);
   };
 
   useEffect(() => {
+    // Auto-start runs once on mount (guarded by autoStarted); runAll closes over
+    // benchmark state we deliberately don't want to re-trigger the suite.
     if (auto && !autoStarted.current) {
       autoStarted.current = true;
       void runAll();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps, react-doctor/exhaustive-deps
   }, [auto]);
 
   const setFloodPreset = (key: string) => {
-    syntheticChatControl.current = SYNTHETIC_PRESETS[key]!;
+    setSyntheticChatControl(SYNTHETIC_PRESETS[key]!);
     setFlood(key);
   };
 

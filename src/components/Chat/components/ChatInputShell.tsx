@@ -138,6 +138,7 @@ export const ChatInputShell = memo(function ChatInputShell({
 
   useEffect(() => {
     if (!isAuthenticated) {
+      // eslint-disable-next-line react-doctor/no-derived-state -- draft is user input (not derivable); this resets it AND imperatively clears the native composer (setText) on sign-out
       clearDraft();
     }
   }, [clearDraft, isAuthenticated]);

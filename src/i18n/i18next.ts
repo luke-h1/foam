@@ -9,10 +9,6 @@ export const defaultNS = 'common';
 export const fallbackLanguage = 'en';
 export const supportedLanguages = ['en'] as const;
 
-export const LANGUAGE_LABELS: Record<string, string> = {
-  en: 'English',
-};
-
 const supported = supportedLanguages as unknown as string[];
 
 function detectFromDevice(): string {

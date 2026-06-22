@@ -67,11 +67,7 @@ export default function FollowingScreen() {
 
   const handleRefreshFollowing = useCallback(async () => {
     setIsRefreshing(true);
-    try {
-      await refetchFollowingStreams();
-    } finally {
-      setIsRefreshing(false);
-    }
+    await refetchFollowingStreams().finally(() => setIsRefreshing(false));
   }, [refetchFollowingStreams]);
 
   const layoutFade = useSharedValue(1);

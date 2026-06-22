@@ -8,6 +8,12 @@
       "**/*.test.tsx",
       "**/*.spec.ts",
       "**/*.spec.tsx"
+    ],
+    "overrides": [
+      {
+        "files": ["package.json"],
+        "rules": ["deslop/unused-dependency", "deslop/unused-dev-dependency"]
+      }
     ]
   },
   "rules": {

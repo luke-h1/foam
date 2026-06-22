@@ -329,7 +329,7 @@ export const StreamPlayer = memo(function StreamPlayer({
               timeSeconds: video ? resumeTimeRef.current : undefined,
             }),
           },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps, react-doctor/exhaustive-deps
     [clip, channelName, video, parent, autoplay, initialMuted, webViewKey],
   );
 

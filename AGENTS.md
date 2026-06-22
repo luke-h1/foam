@@ -70,3 +70,16 @@ Do not write `/** VOD resume offset in seconds; only applied when video is set. 
 The multi-line form is the format the repo uses everywhere, so keeping to it avoids a mix of styles and keeps comments easy to extend later without reflowing the line.
 
 Put new module-level observables in `observables/`. Put write helpers that call `.set()` / `.peek()` in `actions/`. Put `useSelector` and `useObservable` in `react/`. Session-scoped caches (mention colors, shared chat badges) belong on `chatStore$`, not module-level `Map`s in components. Pure message transforms like `getVisibleMessages` also live in `actions/`. Do not wrap Legend State mutations in `useCallback` unless a React API (imperative ref, effect deps) needs a stable function reference.
+
+## React Doctor: package.json dependency rules
+
+`deslop/unused-dependency` and `deslop/unused-dev-dependency` are turned off for `package.json` in `doctor.config.json`. They only follow static JS imports, so they false-positive on every package this app loads through a channel they can't scan. Do not remove a dependency just because react-doctor (or a quick `bun why`) reports it unused — check these channels first:
+
+- **Config plugins** — `@rnrepo/expo-config-plugin` (string in the `app.config.ts` `plugins` array).
+- **Font assets** — `@expo-google-fonts/source-code-pro` (referenced by file path in the `expo-font` config plugin, never imported).
+- **CLI binaries** — `@bugsnag/source-maps` (its `bugsnag-source-maps` bin is invoked by `scripts/bugsnag-upload.sh`).
+- **Native autolinking / codegen** — `@bugsnag/react-native-performance` (New-Arch native module with `codegenConfig`; kept as a direct exact-pin so codegen runs even though it also arrives transitively via `@bugsnag/expo-performance`).
+- **Build-cache providers** — `eas-build-cache-provider` (powers `expo.experiments.buildCacheProvider: 'eas'`).
+- **Auto-discovered devtools** — `@rozenite/expo-atlas-plugin`, `@rozenite/react-navigation-plugin` (Rozenite loads installed plugin packages without a JS import).
+
+Because the rule is off for `package.json`, a genuinely unused dependency won't be flagged automatically — verify by hand when adding or removing deps.

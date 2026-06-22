@@ -22,7 +22,7 @@ import { LiveChatPerfOverlay } from '@app/dev/imageBenchmark/LiveChatPerfOverlay
 import { useChatPerfSuite } from '@app/dev/imageBenchmark/useChatPerfSuite';
 import { SUITE_TOTAL_MS } from '@app/dev/imageBenchmark/chatPerfSuite';
 import {
-  syntheticChatControl,
+  setSyntheticChatControl,
   SYNTHETIC_PRESETS,
 } from '@app/dev/imageBenchmark/syntheticChatControl';
 import { resetFloodReplay } from '@app/dev/imageBenchmark/useSyntheticChatFlood';
@@ -96,18 +96,17 @@ export default function ChatPerfScreen() {
   useEffect(() => {
     if (floodParam && SYNTHETIC_PRESETS[floodParam]) {
       resetFloodReplay();
-      syntheticChatControl.current = SYNTHETIC_PRESETS[floodParam]!;
+      setSyntheticChatControl(SYNTHETIC_PRESETS[floodParam]!);
     }
     return () => {
-      syntheticChatControl.current = SYNTHETIC_PRESETS.off!;
+      setSyntheticChatControl(SYNTHETIC_PRESETS.off!);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [floodParam]);
 
   const setPreset = (key: string) => {
     // Restart the fixture from the top so each manual run is the same replay.
     resetFloodReplay();
-    syntheticChatControl.current = SYNTHETIC_PRESETS[key]!;
+    setSyntheticChatControl(SYNTHETIC_PRESETS[key]!);
     setFlood(key);
   };
 

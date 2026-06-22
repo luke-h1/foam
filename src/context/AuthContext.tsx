@@ -292,7 +292,9 @@ export const AuthContextProvider = ({
   const hasTimedOut = useRef(false);
   const userTokenRefreshInFlightRef = useRef(false);
   const authStateRef = useRef(state.authState);
-  authStateRef.current = state.authState;
+  useEffect(() => {
+    authStateRef.current = state.authState;
+  }, [state.authState]);
 
   const markAuthStateReadyFallback = (reason: string, error?: unknown) => {
     if (state.ready || hasTimedOut.current) {

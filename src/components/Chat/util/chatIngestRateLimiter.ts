@@ -31,8 +31,3 @@ export function shouldProcessLiveMessage(): boolean {
   }
   return false;
 }
-
-export function resetChatIngestRateLimiter(): void {
-  tokens = BUCKET_SIZE;
-  lastRefill = 0;
-}
