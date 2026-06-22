@@ -8,6 +8,7 @@ import reactDoctor from 'eslint-plugin-react-doctor';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactNative from 'eslint-plugin-react-native';
 import reanimated from 'eslint-plugin-reanimated';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -98,6 +99,7 @@ export default tseslint.config(
       'react-hooks': reactHooks,
       'react-native': reactNative,
       reanimated,
+      'simple-import-sort': simpleImportSort,
       '@typescript-eslint': tseslint.plugin,
     },
     settings: {
@@ -115,6 +117,20 @@ export default tseslint.config(
       ...reactDoctor.configs['tanstack-query'].rules,
       'react-doctor/rn-no-raw-text': 'error',
       'local/prefer-alias-imports': 'warn',
+      'simple-import-sort/imports': [
+        'warn',
+        {
+          groups: [
+            ['^\\u0000'],
+            ['^react$', '^react-native$', '^react', '^react-native'],
+            ['^@?\\w'],
+            ['^@app/', '^@modules/', '^@e2e/'],
+            ['^\\.'],
+            ['^.+\\.(css|json)$'],
+          ],
+        },
+      ],
+      'simple-import-sort/exports': 'warn',
       'react-doctor/react-compiler-no-manual-memoization': 'off',
       'react-doctor/no-effect-with-fresh-deps': 'off',
       'react-doctor/exhaustive-deps': 'off',
