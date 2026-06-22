@@ -1,8 +1,8 @@
 import { getMessageById } from '@app/store/chat/actions/messages';
 import { act, renderHook } from '@testing-library/react-native';
-import type { EmotePressData } from '../../components/ChatMessage/RichChatMessage.types';
-import type { ChatInputShellHandle } from '../../components/ChatInputShell';
-import type { ChatOverlayOpeners } from '../../components/useChatOverlays';
+import type { EmotePressData } from '@app/components/Chat/components/ChatMessage/RichChatMessage.types';
+import type { ChatInputShellHandle } from '@app/components/Chat/components/ChatInputShell';
+import type { ChatOverlayOpeners } from '@app/components/Chat/components/useChatOverlays';
 import { createRef } from '@app/test/createRef';
 import { createEmotePart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
 import { createChatMessage } from './__fixtures__/useChat.fixture';

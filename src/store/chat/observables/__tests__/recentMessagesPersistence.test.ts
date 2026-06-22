@@ -1,4 +1,4 @@
-import type { AnyChatMessageType } from '../../types/constants';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import {
   RECENT_MESSAGES_PERSISTENCE_ENABLED,
   clearPersistedRecentMessages,

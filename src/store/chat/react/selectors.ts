@@ -1,6 +1,6 @@
 import { useSelector } from '@legendapp/state/react';
 
-import { useEmoteRenderPreferences } from '../../preferences/selectors';
+import { useEmoteRenderPreferences } from '@app/store/preferences/selectors';
 import {
   emptyEmoteData,
   type ChannelCacheType,

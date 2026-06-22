@@ -1,6 +1,6 @@
 import { Text } from '@app/components/ui/Text/Text';
 import { View } from 'react-native';
-import { CHAT_NOTICE_ACCENTS } from '../../util/chatNoticeAccents';
+import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
 import { styles } from '../RichChatMessage.styles';
 import type { ChatBodyVariant } from '@app/components/Chat/util/richChatMessageHelpers';
 import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';

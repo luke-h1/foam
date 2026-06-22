@@ -6,7 +6,7 @@ import type {
 } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { EmoteSetKind } from '@app/graphql/generated/gql';
-import { createBaseMessage } from '../../../util/messageHandlers';
+import { createBaseMessage } from '@app/components/Chat/util/messageHandlers';
 
 type CurrentEmoteData = NonNullable<ReturnType<typeof getCurrentEmoteData>>;
 type UserChatMessage = ChatMessageType<'usernotice'>;

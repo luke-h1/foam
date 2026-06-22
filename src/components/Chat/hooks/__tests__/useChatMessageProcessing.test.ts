@@ -17,13 +17,13 @@ import {
   createSevenTvEmote,
   createTwitchEmote,
 } from './__fixtures__/useChat.fixture';
-import { hydrateVisibleSevenTvAssets } from '../../util/hydrateVisibleSevenTvAssets';
-import { reprocessMessages } from '../../util/reprocessMessages';
+import { hydrateVisibleSevenTvAssets } from '@app/components/Chat/util/hydrateVisibleSevenTvAssets';
+import { reprocessMessages } from '@app/components/Chat/util/reprocessMessages';
 import {
   getCachedSharedChatBadgeContext,
   getMessageBadges,
   getSharedChatBadgeContext,
-} from '../../util/sharedChatBadges';
+} from '@app/components/Chat/util/sharedChatBadges';
 import { useChatMessageProcessing } from '../useChatMessageProcessing';
 
 jest.mock('@app/store/chat/actions/channelLoad', () => ({

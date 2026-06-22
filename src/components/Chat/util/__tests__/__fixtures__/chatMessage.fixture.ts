@@ -1,6 +1,6 @@
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import { createTextPart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
-import type { AnyChatMessageType } from '../../messageHandlers';
+import type { AnyChatMessageType } from '@app/components/Chat/util/messageHandlers';
 
 export function createChatMessageFixture(
   overrides: Partial<AnyChatMessageType> = {},

@@ -1,7 +1,7 @@
 import type { ObservableReadable } from '@legendapp/state';
 import { renderHook } from '@testing-library/react-native';
 import { render, act } from '@testing-library/react-native';
-import type { ChatListRef } from '../../components/ChatList';
+import type { ChatListRef } from '@app/components/Chat/components/ChatList';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import {
   getSessionCacheString,
@@ -11,7 +11,7 @@ import { useChatRowPreferences } from '@app/store/preferences/selectors';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
 import { createRef } from '@app/test/createRef';
-import { RichChatMessage } from '../../components/ChatMessage/RichChatMessage';
+import { RichChatMessage } from '@app/components/Chat/components/ChatMessage/RichChatMessage';
 import { useIsHighlightedReplyTargetMessage } from '../useChatTransientState';
 import {
   createChatMessage,

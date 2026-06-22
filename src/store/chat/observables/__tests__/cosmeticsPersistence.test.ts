@@ -1,4 +1,4 @@
-import type { PaintData } from '../../types/constants';
+import type { PaintData } from '@app/store/chat/types/constants';
 import {
   loadPersistedCosmetics,
   writePersistedCosmetics,

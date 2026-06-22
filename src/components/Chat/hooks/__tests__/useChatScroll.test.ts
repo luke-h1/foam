@@ -3,8 +3,8 @@ import { renderHook, act } from '@testing-library/react-native';
 import { createRef } from '@app/test/createRef';
 import { RefObject } from 'react';
 import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import type { AnyChatMessageType } from '../../util/messageHandlers';
-import { chatScrollActivity } from '../../util/chatScrollActivity';
+import type { AnyChatMessageType } from '@app/components/Chat/util/messageHandlers';
+import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
 import { useChatScroll } from '../useChatScroll';
 
 interface MockListMethods {

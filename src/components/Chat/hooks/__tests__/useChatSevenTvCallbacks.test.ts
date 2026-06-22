@@ -16,7 +16,7 @@ import { countMetric } from '@app/lib/sentry';
 import type { BadgeData, PaintData } from '@app/utils/color/seventv-ws-service';
 import { renderHook, act } from '@testing-library/react-native';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
-import { toPaintWithId } from '../../util/normalizeSevenTvCosmetics';
+import { toPaintWithId } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
 import {
   createBadgeChangeEntry,
   createBadgePushedEntry,

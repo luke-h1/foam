@@ -7,11 +7,11 @@ import {
   StvUser,
   SevenTvEmote,
   SevenTvHost,
-} from '../../services/seventv-service';
+} from '@app/services/seventv-service';
 import {
   IndexedCollection,
   indexedCollectionToArray,
-} from '../../services/ws/util/indexedCollection';
+} from '@app/services/ws/util/indexedCollection';
 
 interface EventObject {
   id: string;

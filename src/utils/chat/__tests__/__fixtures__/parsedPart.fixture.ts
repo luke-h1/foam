@@ -1,4 +1,4 @@
-import type { ParsedPart } from '../../replaceTextWithEmotes';
+import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 
 export function createTextPart(
   content: string,

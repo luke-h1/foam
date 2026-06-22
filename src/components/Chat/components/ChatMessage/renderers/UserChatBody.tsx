@@ -5,7 +5,7 @@ import { lightenColor } from '@app/utils/color/lightenColor';
 import { useSelector } from '@legendapp/state/react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { CHAT_NOTICE_ACCENTS } from '../../util/chatNoticeAccents';
+import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
 import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
 import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
 import { ChannelPointsRewardMetaRow } from './ChannelPointsRewardMetaRow';

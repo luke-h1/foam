@@ -4,7 +4,7 @@ import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { act, renderHook } from '@testing-library/react-native';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import { createEmotePart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
-import type { AnyChatMessageType } from '../../util/messageHandlers';
+import type { AnyChatMessageType } from '@app/components/Chat/util/messageHandlers';
 import {
   createEmoteData,
   createSevenTvEmote,
