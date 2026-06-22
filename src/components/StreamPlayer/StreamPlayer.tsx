@@ -20,6 +20,7 @@ import {
   buildTwitchClipPlayerUrl,
   buildTwitchContentGateAcceptScript,
   buildTwitchOverlayHideScript,
+  buildTwitchPlayerAudioDefaultScript,
   buildTwitchPlayerQualityDefaultScript,
 } from './twitchPlayerSource';
 import type { StreamPlayerProps } from './types';
@@ -383,7 +384,9 @@ export const StreamPlayer = memo(function StreamPlayer({
     : buildTwitchPlayerQualityDefaultScript({
         defaultQuality: '720p60',
         maxBitrateBps: 3_500_000,
-      });
+      }) +
+      '\n' +
+      buildTwitchPlayerAudioDefaultScript({ muted: initialMuted });
 
   const handleWebViewHttpError = useCallback(
     (error: { statusCode: number; url: string }) => {

@@ -7,7 +7,8 @@ import {
   useState,
   type ReactElement,
 } from 'react';
-import { Image as ExpoImage } from 'expo-image';
+import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
+import { logger } from '@app/utils/logger';
 import { useCachedEmote } from '@app/Providers/CachedEmotesProvider/useCachedEmote';
 import { evictCachedEmoteRef } from '@app/Providers/CachedEmotesProvider/cache-service';
 import {
@@ -28,6 +29,25 @@ import { ChatImageShimmer } from './ChatImageShimmer';
 const MAX_RELOAD_ATTEMPTS = 4;
 const RELOAD_BASE_DELAY_MS = 400;
 const RELOAD_MAX_DELAY_MS = 8000;
+
+// expo-image's startAnimating/stopAnimating are async native calls. Once
+// LegendList recycles a row's view out from under the ref they reject with
+// "Unable to find the 'ImageView' view with tag" — and because the callers
+// fire-and-forget, that became an unhandled rejection (FOAM-TV-MOBILE-AH). A
+// detached view has nothing to animate, so swallow it.
+function runAnimationCommand(
+  image: ExpoImage | null,
+  command: 'startAnimating' | 'stopAnimating',
+): void {
+  try {
+    const result = image?.[command]?.() as Promise<unknown> | undefined;
+    if (result && typeof result.catch === 'function') {
+      result.catch(() => {});
+    }
+  } catch {
+    // synchronous throw from an already-detached view — same story
+  }
+}
 
 interface ChatInlineImageProps {
   containerStyle?: StyleProp<ViewStyle>;
@@ -77,29 +97,42 @@ function ChatInlineImageComponent({
     setStatus('loaded');
   }, []);
 
-  const handleError = useCallback(() => {
-    const attempts = attemptsRef.current;
-    if (attempts.url !== sourceUrl) {
-      attempts.url = sourceUrl;
-      attempts.count = 0;
-    }
-    if (attempts.count >= MAX_RELOAD_ATTEMPTS) {
-      setStatus('failed');
-      return;
-    }
-    attempts.count += 1;
-    evictCachedEmoteRef(sourceUrl);
-    const delay = Math.min(
-      RELOAD_MAX_DELAY_MS,
-      RELOAD_BASE_DELAY_MS * 2 ** (attempts.count - 1),
-    );
-    if (retryTimerRef.current) {
-      clearTimeout(retryTimerRef.current);
-    }
-    retryTimerRef.current = setTimeout(() => {
-      setReloadNonce(nonce => nonce + 1);
-    }, delay);
-  }, [sourceUrl]);
+  const handleError = useCallback(
+    (event?: ImageErrorEventData) => {
+      const attempts = attemptsRef.current;
+      if (attempts.url !== sourceUrl) {
+        attempts.url = sourceUrl;
+        attempts.count = 0;
+      }
+      if (attempts.count >= MAX_RELOAD_ATTEMPTS) {
+        logger.chat.warn('chat.emote.load_failed', {
+          name: 'chat_resources_warning',
+          error: event?.error,
+          url: sourceUrl,
+          attempts: attempts.count,
+        });
+        setStatus('failed');
+        return;
+      }
+      attempts.count += 1;
+      logger.chat.debug('chat.emote.load_retry', {
+        url: sourceUrl,
+        attempt: attempts.count,
+      });
+      evictCachedEmoteRef(sourceUrl);
+      const delay = Math.min(
+        RELOAD_MAX_DELAY_MS,
+        RELOAD_BASE_DELAY_MS * 2 ** (attempts.count - 1),
+      );
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+      }
+      retryTimerRef.current = setTimeout(() => {
+        setReloadNonce(nonce => nonce + 1);
+      }, delay);
+    },
+    [sourceUrl],
+  );
 
   const rowVisibility = use(RowVisibilityContext);
   const animated = sharedRef?.isAnimated === true;
@@ -111,14 +144,13 @@ function ChatInlineImageComponent({
     const apply = (): void => {
       const shouldAnimate =
         rowVisibility.isVisible() && !chatScrollActivity.isActive();
-      if (shouldAnimate) {
-        void imageRef.current?.startAnimating?.();
-      } else {
-        void imageRef.current?.stopAnimating?.();
-      }
+      runAnimationCommand(
+        imageRef.current,
+        shouldAnimate ? 'startAnimating' : 'stopAnimating',
+      );
     };
     if (!(rowVisibility.isVisible() && !chatScrollActivity.isActive())) {
-      void imageRef.current?.stopAnimating?.();
+      runAnimationCommand(imageRef.current, 'stopAnimating');
     }
     const unsubscribeVisibility = rowVisibility.subscribe(apply);
     const unsubscribeScroll = chatScrollActivity.subscribe(apply);

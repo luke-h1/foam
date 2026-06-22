@@ -7,6 +7,7 @@ import {
   mobileReplayIntegration,
 } from '@sentry/react-native';
 import * as Sentry from '@sentry/react-native';
+import { Image as ExpoImage } from 'expo-image';
 import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
 import { sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
 import type { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
@@ -115,6 +116,8 @@ export function init() {
     },
     tracesSampleRate: 1.0,
   });
+
+  Sentry.wrapExpoImage(ExpoImage);
 
   didInitializeSentry = true;
 }

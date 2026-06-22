@@ -22,6 +22,17 @@ function getSourceUrl(source: ImageProps['source']): string | null {
   return null;
 }
 
+function getHostname(url: string | null | undefined): string | undefined {
+  if (!url) {
+    return undefined;
+  }
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return undefined;
+  }
+}
+
 export const Image = function Image({
   contentFit = 'cover',
   containerStyle,
@@ -76,16 +87,7 @@ export const Image = function Image({
     const totalLoadTimeMs = timing.loadEndTimestamp - timing.mountTimestamp;
     const startToLoadTimeMs =
       timing.loadEndTimestamp - timing.loadStartTimestamp;
-    const safeHost = (() => {
-      if (!resolvedUrl) {
-        return undefined;
-      }
-      try {
-        return new URL(resolvedUrl).hostname;
-      } catch {
-        return undefined;
-      }
-    })();
+    const safeHost = getHostname(resolvedUrl);
 
     logger.main.info('chat.image.load_time', {
       name: 'data_loading_info',
@@ -141,9 +143,24 @@ export const Image = function Image({
     onLoadEndProp?.();
   }, [onLoadEnd, onLoadEndProp, trackLoad]);
 
-  const handleError = (error: unknown) => {
-    logger.main.debug('Image loading error:', error);
-    onError?.(error as ImageErrorEventData);
+  const handleError = (event: ImageErrorEventData) => {
+    const host = getHostname(resolvedUrl);
+    logger.main.warn('image.load_failed', {
+      name: 'data_loading_warning',
+      error: event?.error,
+      url: typeof source === 'string' ? source : 'uri-object',
+      urlHost: host ?? 'unknown',
+      host,
+      fromFileCache: Boolean(fileCachedUrl),
+      imageRenderer: 'Image',
+      imageContext: trackLoadContext ?? 'chat-image',
+      tags: {
+        image_renderer: 'Image',
+        image_context: trackLoadContext ?? 'chat-image',
+        image_host: host ?? 'unknown',
+      },
+    });
+    onError?.(event);
   };
 
   return (

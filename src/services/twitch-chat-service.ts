@@ -5,6 +5,17 @@ import { logger } from '@app/utils/logger';
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useEffect, useRef, useCallback } from 'react';
 import { useWebsocket } from '../hooks/ws/useWebsocket';
+import { ReadyState } from '../hooks/ws/constants';
+
+// Twitch IRC PINGs roughly every 5 min and we PONG, but a half-open socket
+// (Wi-Fi↔cellular handoff, NAT/idle timeout, background→foreground) frequently
+// fires no close event: the WebSocket sits in OPEN forever, no messages arrive,
+// and the reconnect path never runs — chat silently stops while the app still
+// believes it is connected. Send our own PING on an interval (Twitch answers
+// with PONG, which counts as inbound activity) and force a reconnect if the
+// server has gone quiet for longer than the timeout.
+const CHAT_HEARTBEAT_INTERVAL_MS = 60_000;
+const CHAT_HEARTBEAT_TIMEOUT_MS = 150_000;
 
 // E2E builds talk to the mock IRC-over-WebSocket server (e2e/mock-server)
 // instead of real Twitch chat so tests stay deterministic.
@@ -113,6 +124,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     `justinfan${Math.floor(Math.random() * 90000) + 10000}`,
   );
   const pendingIrcMessagesRef = useRef<string[]>([]);
+  // Seeded on open and refreshed on every inbound line; the heartbeat only
+  // reads it once readyState is OPEN, by which point onOpen has set it.
+  const lastActivityAtRef = useRef(0);
   const sendIrcMessageRef = useRef<((message: string) => void) | null>(null);
   const messageBufferRef = useRef<string>('');
   const userStateRef = useRef<Record<string, string>>({});
@@ -612,6 +626,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
   const handleMessage = (event: MessageEvent) => {
     try {
+      lastActivityAtRef.current = Date.now();
       const text = `${messageBufferRef.current}${event.data as string}`;
       let cursor = 0;
 
@@ -649,6 +664,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     logger.chat.info('💬 Twitch IRC WebSocket connected');
     isAuthenticatedRef.current = false;
     joinedChannelsRef.current.clear();
+    lastActivityAtRef.current = Date.now();
 
     authenticate();
   }, [authenticate, joinedChannelsRef]);
@@ -686,7 +702,11 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       onClose: handleWebSocketClose,
       onError: handleWebSocketError,
       shouldReconnect,
-      reconnectAttempts: 30,
+      // A long outage (tunnel/commute) used to exhaust 30 attempts in ~7min and
+      // then never retry, leaving chat permanently dead until the screen
+      // remounted. The backoff caps the interval at ~16s, so a higher ceiling
+      // just keeps chat trying to come back across a longer gap.
+      reconnectAttempts: 100,
       reconnectInterval: 2000,
     },
     shouldConnect,
@@ -695,6 +715,32 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   // Reconnect chat when token changes (e.g. after 401 refresh) so we authenticate with the new token.
   const getWebSocketRef = useRef(getWebSocket);
   getWebSocketRef.current = getWebSocket;
+
+  useEffect(() => {
+    if (!shouldConnect) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      if (readyState !== ReadyState.OPEN) {
+        return;
+      }
+      const idleMs = Date.now() - lastActivityAtRef.current;
+      if (idleMs >= CHAT_HEARTBEAT_TIMEOUT_MS) {
+        logger.chat.warn(
+          '💬 Twitch IRC idle past heartbeat timeout, forcing reconnect',
+          { name: 'twitch_chat_warning', idleMs },
+        );
+        // Bump the marker so we don't re-close before the reconnect lands.
+        lastActivityAtRef.current = Date.now();
+        getWebSocketRef.current().close(4002, 'chat heartbeat timeout');
+        return;
+      }
+      sendIrcCommand('PING', 'tmi.twitch.tv');
+    }, CHAT_HEARTBEAT_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [shouldConnect, readyState, sendIrcCommand]);
 
   useEffect(() => {
     const currentToken = authState?.token?.accessToken;
