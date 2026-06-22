@@ -22,19 +22,23 @@ import { RowVisibilityContext } from '../rowVisibility';
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
 import { ChatImageShimmer } from './ChatImageShimmer';
 
-// Keep retrying a failed load on a backoff so a transient network blip (common
-// during raids/floods) doesn't strand an emote as a dead grey box forever, while
-// still being gentle enough not to hammer the network. After this many attempts
-// we give up and leave a static grey placeholder.
-const MAX_RELOAD_ATTEMPTS = 4;
+/**
+ *  Keep retrying a failed load on a backoff so a transient network blip (common
+ * during raids/floods) doesn't strand an emote as a dead grey box forever, while
+ * still being gentle enough not to hammer the network. After this many attempts
+ *  we give up and leave a static grey placeholder.
+ */
+const MAX_RELOAD_ATTEMPTS = 8;
 const RELOAD_BASE_DELAY_MS = 400;
 const RELOAD_MAX_DELAY_MS = 8000;
 
-// expo-image's startAnimating/stopAnimating are async native calls. Once
-// LegendList recycles a row's view out from under the ref they reject with
-// "Unable to find the 'ImageView' view with tag" — and because the callers
-// fire-and-forget, that became an unhandled rejection (FOAM-TV-MOBILE-AH). A
-// detached view has nothing to animate, so swallow it.
+/**
+ * expo-image's startAnimating/stopAnimating are async native calls. Once
+ * LegendList recycles a row's view out from under the ref they reject with
+ * "Unable to find the 'ImageView' view with tag" — and because the callers
+ * fire-and-forget, that became an unhandled rejection (FOAM-TV-MOBILE-AH). A
+ * detached view has nothing to animate, so swallow it.
+ */
 function runAnimationCommand(
   image: ExpoImage | null,
   command: 'startAnimating' | 'stopAnimating',
@@ -68,15 +72,9 @@ function ChatInlineImageComponent({
   testID,
   transitionMs = 100,
 }: ChatInlineImageProps) {
-  // Shared, size-capped decoded ref (decode-once across all rows showing this
-  // image), null until decoded — falls back to the url so the first occurrence
-  // still shows (expo-image memory+disk caches the url too).
   const sharedRef = useCachedEmote(sourceUrl);
 
   const [reloadNonce, setReloadNonce] = useState(0);
-  // 'loading' until the url-fallback reports onLoad, 'loaded' once it has, or
-  // 'failed' after we exhaust retries. Drives the shimmer overlay below. A
-  // decoded sharedRef is already a guaranteed bitmap, so it counts as loaded.
   const [status, setStatus] = useState<'loading' | 'loaded' | 'failed'>(
     'loading',
   );

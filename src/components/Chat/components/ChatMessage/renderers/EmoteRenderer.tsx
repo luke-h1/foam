@@ -11,6 +11,7 @@ type PartVariant = ParsedPart<'emote'>;
 
 interface EmoteRendererProps {
   disableAnimations?: boolean;
+  isModerated?: boolean;
   part: PartVariant;
   onEmoteTouchStart?: (part: PartVariant) => void;
   shouldOverlayPrevious?: boolean;
@@ -22,6 +23,7 @@ export const EmoteRenderer = memo(
     part,
     onEmoteTouchStart,
     disableAnimations = false,
+    isModerated = false,
     shouldOverlayPrevious = false,
     targetSize = 30,
   }: EmoteRendererProps) => {
@@ -53,7 +55,7 @@ export const EmoteRenderer = memo(
         return (
           <View
             onTouchStart={handleTouchStart}
-            style={getContainerStyle(width, shouldOverlayPrevious)}
+            style={getContainerStyle(width, shouldOverlayPrevious, isModerated)}
           >
             <View
               style={getEmoteImageStyle(width, height)}
@@ -66,7 +68,7 @@ export const EmoteRenderer = memo(
       return (
         <View
           onTouchStart={handleTouchStart}
-          style={getContainerStyle(width, shouldOverlayPrevious)}
+          style={getContainerStyle(width, shouldOverlayPrevious, isModerated)}
         >
           <Text style={getNameStyle(width, height)}>{fallbackLabel}</Text>
         </View>
@@ -76,7 +78,7 @@ export const EmoteRenderer = memo(
     return (
       <View
         onTouchStart={handleTouchStart}
-        style={getContainerStyle(width, shouldOverlayPrevious)}
+        style={getContainerStyle(width, shouldOverlayPrevious, isModerated)}
       >
         {/* No containerStyle: the size + clip live on the image style so each
             inline emote is one fewer Fabric/Yoga node. A busy message has many
@@ -100,14 +102,21 @@ function getEmoteImageStyle(width: number, height: number) {
   };
 }
 
-function getContainerStyle(width: number, shouldOverlayPrevious: boolean) {
-  if (!shouldOverlayPrevious) {
+function getContainerStyle(
+  width: number,
+  shouldOverlayPrevious: boolean,
+  isModerated: boolean,
+) {
+  if (!shouldOverlayPrevious && !isModerated) {
     return undefined;
   }
 
   return {
-    marginLeft: Math.round(width * -0.72),
-    zIndex: 2,
+    ...(shouldOverlayPrevious && {
+      marginLeft: Math.round(width * -0.72),
+      zIndex: 2,
+    }),
+    ...(isModerated && { opacity: 0.72 }),
   };
 }
 

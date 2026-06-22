@@ -14,10 +14,6 @@ module.exports = api => {
         },
       },
     ],
-    // TRIAL: react-native-boost strips RN View's JS wrapper to the host node
-    // at build time. Text is disabled (foam's Text wrapper spreads {...props}
-    // so boost bails anyway). Flip verbose:true + rebuild --clear to log every
-    // optimize/skip; silent in jest, where the runtime falls back to plain View.
     [
       'react-native-boost/plugin',
       {

@@ -7,18 +7,18 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useWebsocket } from '../hooks/ws/useWebsocket';
 import { ReadyState } from '../hooks/ws/constants';
 
-// Twitch IRC PINGs roughly every 5 min and we PONG, but a half-open socket
-// (Wi-Fi↔cellular handoff, NAT/idle timeout, background→foreground) frequently
-// fires no close event: the WebSocket sits in OPEN forever, no messages arrive,
-// and the reconnect path never runs — chat silently stops while the app still
-// believes it is connected. Send our own PING on an interval (Twitch answers
-// with PONG, which counts as inbound activity) and force a reconnect if the
-// server has gone quiet for longer than the timeout.
+/**
+ * Twitch IRC PINGs roughly every 5 min and we PONG, but a half-open socket
+ * (Wi-Fi↔cellular handoff, NAT/idle timeout, background→foreground) frequently
+ * fires no close event: the WebSocket sits in OPEN forever, no messages arrive,
+ * and the reconnect path never runs — chat silently stops while the app still
+ * believes it is connected. Send our own PING on an interval (Twitch answers
+ * with PONG, which counts as inbound activity) and force a reconnect if the
+ * server has gone quiet for longer than the timeout.
+ */
 const CHAT_HEARTBEAT_INTERVAL_MS = 60_000;
 const CHAT_HEARTBEAT_TIMEOUT_MS = 150_000;
 
-// E2E builds talk to the mock IRC-over-WebSocket server (e2e/mock-server)
-// instead of real Twitch chat so tests stay deterministic.
 const TWITCH_CHAT_URL = isE2EMode
   ? 'ws://localhost:6667'
   : 'wss://irc-ws.chat.twitch.tv:443';
@@ -702,10 +702,12 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       onClose: handleWebSocketClose,
       onError: handleWebSocketError,
       shouldReconnect,
-      // A long outage (tunnel/commute) used to exhaust 30 attempts in ~7min and
-      // then never retry, leaving chat permanently dead until the screen
-      // remounted. The backoff caps the interval at ~16s, so a higher ceiling
-      // just keeps chat trying to come back across a longer gap.
+      /**
+       * A long outage (tunnel/commute) used to exhaust 30 attempts in ~7min and
+       * then never retry, leaving chat permanently dead until the screen
+       * remounted. The backoff caps the interval at ~16s, so a higher ceiling
+       * just keeps chat trying to come back across a longer gap.
+       */
       reconnectAttempts: 100,
       reconnectInterval: 2000,
     },

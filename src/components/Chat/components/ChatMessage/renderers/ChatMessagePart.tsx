@@ -144,6 +144,7 @@ export function ChatMessagePart({
       return (
         <EmoteRenderer
           disableAnimations={disableEmoteAnimations}
+          isModerated={Boolean(moderationNotice)}
           key={getPartKey(part, index)}
           part={part}
           onEmoteTouchStart={onEmoteTouchStart}
