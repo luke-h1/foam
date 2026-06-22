@@ -4,7 +4,7 @@ import {
   buildEmoteMenuProviders,
   filterProviderSets,
   flattenProviderSets,
-} from '../emoteMenuData';
+} from '@app/components/Chat/components/EmoteSheet/util/emoteMenuData';
 import { createMenuEmote } from './__fixtures__/emoteMenuData.fixture';
 
 describe('emoteMenuData', () => {

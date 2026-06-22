@@ -18,8 +18,8 @@ import {
   getPartIdentity,
   isUserNoticeTags,
   normaliseUsername,
-} from './richChatMessageHelpers';
-import { toChatMessageData } from './richChatMessageData';
+} from '@app/components/Chat/util/richChatMessageHelpers';
+import { toChatMessageData } from '@app/components/Chat/util/richChatMessageData';
 
 const MESSAGE_LONG_PRESS_DELAY_MS = 650;
 

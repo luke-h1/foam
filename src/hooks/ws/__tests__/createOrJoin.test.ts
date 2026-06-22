@@ -1,5 +1,5 @@
 import type { RefObject } from 'react';
-import { createRef } from '@app/testing/createRef';
+import { createRef } from '@app/test/createRef';
 import { ReadyState } from '../constants';
 import { createOrJoinSocket } from '../createOrJoin';
 import type { Options } from '../types';

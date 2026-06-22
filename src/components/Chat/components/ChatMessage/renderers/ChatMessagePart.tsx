@@ -10,7 +10,7 @@ import { ViewerMileStoneNoticeComponent } from '../../usernotices/ViewerMileston
 import { CharityDonationNotice } from '../../usernotices/CharityDonationNotice';
 import { RitualNotice } from '../../usernotices/RitualNotice';
 import { styles } from '../RichChatMessage.styles';
-import { normaliseUsername } from '../richChatMessageHelpers';
+import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
 import { EmoteRenderer } from './EmoteRenderer';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 

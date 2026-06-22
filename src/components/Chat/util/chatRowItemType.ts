@@ -3,7 +3,7 @@ import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
 import {
   getChatBodyInfo,
   type ChatBodyVariant,
-} from '../components/ChatMessage/richChatMessageHelpers';
+} from '@app/components/Chat/util/richChatMessageHelpers';
 import { isRenderableChatMessage } from './chatMessages';
 import type { AnyChatMessageType } from './messageHandlers';
 

@@ -7,7 +7,7 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { CHAT_NOTICE_ACCENTS } from '../../util/chatNoticeAccents';
 import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
-import { normaliseUsername } from '../richChatMessageHelpers';
+import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
 import { ChannelPointsRewardMetaRow } from './ChannelPointsRewardMetaRow';
 import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
 import { RichChatMessageUsername } from '../RichChatMessageUsername';

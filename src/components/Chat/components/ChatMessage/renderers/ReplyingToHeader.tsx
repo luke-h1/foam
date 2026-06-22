@@ -6,7 +6,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { CHAT_NOTICE_ACCENTS } from '../../util/chatNoticeAccents';
 import { ChatMessagePressable } from '../ChatMessagePressable';
 import { styles } from '../RichChatMessage.styles';
-import { normaliseUsername } from '../richChatMessageHelpers';
+import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
 import { ChatMessageBody } from './ChatMessageBody';
 import {
   canRenderMessageInline,

@@ -2,8 +2,8 @@
 import * as Form from '@app/components/Form/Form';
 import Constants from 'expo-constants';
 import { useEffect, useState } from 'react';
-import { getHermesVersion } from '../utils/getHermesVersion';
-import { getReleaseTypeAsync } from '../utils/getReleaseTypeAsync';
+import { getHermesVersion } from '../util/getHermesVersion';
+import { getReleaseTypeAsync } from '../util/getReleaseTypeAsync';
 import { useTranslation } from 'react-i18next';
 import i18next from '@app/i18n/i18next';
 

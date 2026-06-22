@@ -2,7 +2,7 @@ import {
   RemoteConfigType,
   useRemoteConfig,
 } from '@app/hooks/firebase/useRemoteConfig';
-import { getStoreUrlAsync } from '@app/screens/DevTools/utils/getStoreUrlAsync';
+import { getStoreUrlAsync } from '@app/screens/DevTools/util/getStoreUrlAsync';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { isUpdateRequired } from '@app/utils/version/compareVersions';

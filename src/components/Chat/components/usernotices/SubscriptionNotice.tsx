@@ -9,7 +9,7 @@ import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
 import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';
 import { styles as chatStyles } from '../ChatMessage/RichChatMessage.styles';
 import { buildSubscriptionNoticeDescription } from './buildSubscriptionNoticeDescription';
-import { getSubscriptionTierDisplay } from './subscriptionNoticeTier';
+import { getSubscriptionTierDisplay } from '@app/components/Chat/components/usernotices/util/subscriptionNoticeTier';
 import { subscriptionNoticeStyles as styles } from './subscriptionNoticeStyles';
 
 function getMessagePartKey(part: ParsedPart, occurrence: number): string {

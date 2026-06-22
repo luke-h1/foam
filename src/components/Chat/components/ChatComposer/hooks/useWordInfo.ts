@@ -1,4 +1,4 @@
-import { getCurrentWordAndType } from '../utils/getCurrentWordAndType';
+import { getCurrentWordAndType } from '../util/getCurrentWordAndType';
 
 interface UseWordInfoProps {
   text: string;

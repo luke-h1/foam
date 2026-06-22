@@ -24,7 +24,7 @@ import {
   type EmoteMenuProviderId,
   filterProviderSets,
   flattenProviderSets,
-} from './emoteMenuData';
+} from '@app/components/Chat/components/EmoteSheet/util/emoteMenuData';
 import type { EmotePickerItem } from './emoteSheetTypes';
 import { EMOTE_SHEET_DETENT } from './emoteSheetLayout';
 

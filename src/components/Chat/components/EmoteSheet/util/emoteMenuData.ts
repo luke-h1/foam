@@ -2,7 +2,7 @@ import { BrandIconName } from '@app/components/BrandIcon/brandIconRegistry';
 import { emptyEmoteData } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 
-import type { EmotePickerItem } from './EmoteSheet';
+import type { EmotePickerItem } from '../EmoteSheet';
 
 export type EmoteMenuProviderId = '7TV' | 'Twitch' | 'FFZ' | 'BTTV' | 'Emoji';
 export type EmoteMenuIcon = BrandIconName | 'ffz' | `emoji:${string}`;

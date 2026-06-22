@@ -6,7 +6,7 @@ import { useSelector } from '@legendapp/state/react';
 import { memo } from 'react';
 import type { StyleProp, TextStyle } from 'react-native';
 import { styles } from '../RichChatMessage.styles';
-import { normaliseUsername } from '../richChatMessageHelpers';
+import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
 
 interface MentionSpanProps {
   content: string;

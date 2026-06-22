@@ -3,7 +3,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { isBrandIcon } from '@app/utils/typescript/type-guards/isBrandIcon';
 import { StyleSheet } from 'react-native';
-import type { EmoteMenuIcon as EmoteMenuIconType } from './emoteMenuData';
+import type { EmoteMenuIcon as EmoteMenuIconType } from '@app/components/Chat/components/EmoteSheet/util/emoteMenuData';
 
 const PROVIDER_ACCENT_COLORS: Partial<Record<EmoteMenuIconType, string>> = {
   twitch: theme.colorPlum,

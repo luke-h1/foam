@@ -1,4 +1,4 @@
-import type { AnyChatMessageType } from '../../util/messageHandlers';
+import type { AnyChatMessageType } from './messageHandlers';
 
 export type ViewableMessageToken = {
   item?: AnyChatMessageType;

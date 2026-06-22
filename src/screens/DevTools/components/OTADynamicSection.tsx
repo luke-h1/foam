@@ -5,7 +5,7 @@ import { logger } from '@app/utils/logger';
 import * as AC from '@bacons/apple-colors';
 import * as Updates from 'expo-updates';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
-import { ENV_SUPPORTS_OTA } from '../utils/envSupportsOta';
+import { ENV_SUPPORTS_OTA } from '../util/envSupportsOta';
 import { theme } from '@app/styles/themes';
 import { useTranslation } from 'react-i18next';
 

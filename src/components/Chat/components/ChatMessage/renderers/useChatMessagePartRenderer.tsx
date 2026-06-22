@@ -17,7 +17,7 @@ import {
   type ChatFontScale,
 } from '../RichChatMessage.styles';
 import type { EmotePressData } from '../RichChatMessage.types';
-import { normaliseUsername } from '../richChatMessageHelpers';
+import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
 import { EmoteRenderer } from './EmoteRenderer';
 
 export interface UseChatMessagePartRendererArgs {

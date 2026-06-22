@@ -1,6 +1,6 @@
 import { Text } from '@app/components/ui/Text/Text';
 import { View } from 'react-native';
-import type { EmoteMenuSet } from './emoteMenuData';
+import type { EmoteMenuSet } from '@app/components/Chat/components/EmoteSheet/util/emoteMenuData';
 import { EmoteMenuIcon } from './EmoteMenuIcon';
 import { emoteSheetStyles as styles } from './emoteSheetStyles';
 

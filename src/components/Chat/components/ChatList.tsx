@@ -27,7 +27,7 @@ import { getChatMessageListKey } from '../util/chatMessages';
 import {
   getViewableChatMessages,
   type ViewableMessageToken,
-} from './ChatList/getViewableChatMessages';
+} from '@app/components/Chat/util/getViewableChatMessages';
 
 // Roughly seven rows of lookahead; at 96 fast flings outran the renderer and
 // showed skeleton rows.

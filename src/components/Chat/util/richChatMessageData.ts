@@ -2,7 +2,7 @@ import type { ChatMessageType } from '@app/store/chat/types/constants';
 import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 
-import type { RichChatMessageProps } from './RichChatMessage.types';
+import type { RichChatMessageProps } from '@app/components/Chat/components/ChatMessage/RichChatMessage.types';
 
 export function toChatMessageData<
   TNoticeType extends NoticeVariants,

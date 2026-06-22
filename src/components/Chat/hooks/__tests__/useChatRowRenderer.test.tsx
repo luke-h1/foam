@@ -10,7 +10,7 @@ import {
 import { useChatRowPreferences } from '@app/store/preferences/selectors';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
-import { createRef } from '@app/testing/createRef';
+import { createRef } from '@app/test/createRef';
 import { RichChatMessage } from '../../components/ChatMessage/RichChatMessage';
 import { useIsHighlightedReplyTargetMessage } from '../useChatTransientState';
 import {

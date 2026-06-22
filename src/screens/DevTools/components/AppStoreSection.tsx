@@ -3,7 +3,7 @@ import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import * as AC from '@bacons/apple-colors';
 import * as Application from 'expo-application';
 import { useState } from 'react';
-import { getStoreUrlAsync } from '../utils/getStoreUrlAsync';
+import { getStoreUrlAsync } from '../util/getStoreUrlAsync';
 import { useTranslation } from 'react-i18next';
 
 export function AppStoreSection() {

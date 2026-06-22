@@ -1,6 +1,6 @@
 import { FlashListRef } from '@app/components/FlashList/FlashList';
 import { renderHook, act } from '@testing-library/react-native';
-import { createRef } from '@app/testing/createRef';
+import { createRef } from '@app/test/createRef';
 import { RefObject } from 'react';
 import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import type { AnyChatMessageType } from '../../util/messageHandlers';

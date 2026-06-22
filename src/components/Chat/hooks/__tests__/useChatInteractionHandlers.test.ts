@@ -3,7 +3,7 @@ import { act, renderHook } from '@testing-library/react-native';
 import type { EmotePressData } from '../../components/ChatMessage/RichChatMessage.types';
 import type { ChatInputShellHandle } from '../../components/ChatInputShell';
 import type { ChatOverlayOpeners } from '../../components/useChatOverlays';
-import { createRef } from '@app/testing/createRef';
+import { createRef } from '@app/test/createRef';
 import { createEmotePart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
 import { createChatMessage } from './__fixtures__/useChat.fixture';
 import {
