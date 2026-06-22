@@ -17,7 +17,8 @@ module.exports = {
     },
   },
   create(context) {
-    const cwd = typeof context.getCwd === 'function' ? context.getCwd() : process.cwd();
+    const cwd =
+      typeof context.getCwd === 'function' ? context.getCwd() : context.cwd;
     const srcRoot = path.join(cwd, 'src');
     const filename =
       typeof context.getFilename === 'function'
