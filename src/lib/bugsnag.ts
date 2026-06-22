@@ -1,9 +1,11 @@
+import type { ComponentType, FC } from 'react';
+
 import Bugsnag from '@bugsnag/expo';
 import BugsnagPerformance from '@bugsnag/expo-performance';
 import * as Updates from 'expo-updates';
-import { sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
+
 import type { LogMetadata } from '@app/lib/sentry';
-import type { ComponentType, FC } from 'react';
+import { sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
 
 let didInitializeBugsnag = false;
 
@@ -58,10 +60,6 @@ export function forwardLogToBugsnag(entry: {
     const name = typeof metadata?.name === 'string' ? metadata.name : undefined;
     const cause = error ?? metadata?.error;
     const headline = name ? `${name}: ${message}` : message;
-    // Bound the metadata before it reaches Bugsnag. Callers can pass arbitrarily
-    // large objects (emote lists, WebSocket payloads, API responses); left raw
-    // they have OOM-aborted payload serialization on the JS thread on
-    // low-memory devices (FOAM-TV-MOBILE-9V).
     const extra = sanitiseLogValue(extractLogExtra(metadata)) as Record<
       string,
       unknown

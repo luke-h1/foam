@@ -1,9 +1,11 @@
 import { useCallback } from 'react';
 import type { RefObject } from 'react';
+
 import { impact, selection } from '@app/lib/haptics';
-import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { getMessageById } from '@app/store/chat/actions/messages';
+import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
+
 import type { ChatInputShellHandle } from '../components/ChatInputShell';
 import type {
   BadgePressData,
@@ -62,7 +64,19 @@ export function useChatComposerActions({
     [inputShellRef],
   );
 
-  return { appendMentionToComposer, handleEmoteSelect, handleReply };
+  const insertPhraseToComposer = useCallback(
+    (text: string) => {
+      inputShellRef.current?.insertPhrase(text);
+    },
+    [inputShellRef],
+  );
+
+  return {
+    appendMentionToComposer,
+    handleEmoteSelect,
+    handleReply,
+    insertPhraseToComposer,
+  };
 }
 
 export function useChatOverlayActions(openers: ChatOverlayOpeners) {

@@ -1,11 +1,13 @@
-import { theme } from '@app/styles/themes';
-import { useObservable, useSelector } from '@legendapp/state/react';
-import { useEffect, memo } from 'react';
+import { memo, useEffect } from 'react';
 import {
   StyleSheet,
   Switch as NativeSwitch,
   type SwitchProps as NativeSwitchProps,
 } from 'react-native';
+
+import { useObservable, useSelector } from '@legendapp/state/react';
+
+import { theme } from '@app/styles/themes';
 
 export const Switch = memo(function Switch({
   accessibilityState,

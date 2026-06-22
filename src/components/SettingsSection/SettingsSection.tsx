@@ -1,12 +1,14 @@
-import { PressableArea } from '@app/components/PressableArea/PressableArea';
-import { Switch } from '@app/components/Switch/Switch';
-import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
-import type { AndroidSymbol } from '@app/components/ui/Icon/Icon';
-import type { SFSymbol } from 'sf-symbols-typescript';
 import { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
+
+import type { SFSymbol } from 'sf-symbols-typescript';
+
+import { PressableArea } from '@app/components/PressableArea/PressableArea';
+import { Switch } from '@app/components/Switch/Switch';
+import type { AndroidSymbol } from '@app/components/ui/Icon/Icon';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
+import { theme } from '@app/styles/themes';
 
 type RowIcon =
   | {

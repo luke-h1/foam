@@ -1,3 +1,6 @@
+import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
 import {
   EmptyLayout,
   EmptyLayoutContent,
@@ -7,8 +10,6 @@ import {
 } from '@app/components/EmptyLayout/EmptyLayout';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { View, StyleSheet } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 export function ThemePreferenceScreen() {
   const { t } = useTranslation('preferences');

@@ -56,3 +56,7 @@ export const SYNTHETIC_PRESETS: Record<string, SyntheticChatConfig> = {
 export const syntheticChatControl: { current: SyntheticChatConfig } = {
   current: OFF,
 };
+
+export function setSyntheticChatControl(config: SyntheticChatConfig): void {
+  syntheticChatControl.current = config;
+}

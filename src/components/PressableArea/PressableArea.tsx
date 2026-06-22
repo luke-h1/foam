@@ -1,9 +1,12 @@
 import { PropsWithChildren, type Ref, useState } from 'react';
-import { Pressable } from 'react-native-gesture-handler';
 import { StyleSheet, View } from 'react-native';
-import type { PressableProps } from 'react-native-gesture-handler';
 import { EaseView } from 'react-native-ease';
+import type { PressableProps } from 'react-native-gesture-handler';
+import { Pressable } from 'react-native-gesture-handler';
+
 import { motion } from '@app/styles/motion';
+
+const isAndroid = process.env.EXPO_OS === 'android';
 
 export function PressableArea({
   ref,
@@ -11,6 +14,7 @@ export function PressableArea({
   onPressIn,
   onPressOut,
   style,
+  android_ripple,
   ...rest
 }: PropsWithChildren<PressableProps> & { ref?: Ref<View> }) {
   const [pressed, setPressed] = useState(false);
@@ -18,6 +22,10 @@ export function PressableArea({
   return (
     <Pressable
       accessibilityRole='button'
+      android_ripple={
+        android_ripple ??
+        (isAndroid ? { color: 'rgba(255, 255, 255, 0.12)' } : undefined)
+      }
       {...rest}
       ref={ref}
       style={style}
@@ -31,7 +39,7 @@ export function PressableArea({
       }}
     >
       <EaseView
-        animate={{ opacity: pressed ? 0.75 : 1 }}
+        animate={{ opacity: pressed && !isAndroid ? 0.75 : 1 }}
         transition={{ type: 'timing', duration: motion.fast }}
         style={styles.pressable}
       >

@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-restricted-imports
-import { View, Text } from 'react-native';
+import { Text, View } from 'react-native';
 
 // Mock all icon sets
 const createMockIconSet = (name: string) => {

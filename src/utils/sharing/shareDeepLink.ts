@@ -1,4 +1,5 @@
 import { Share } from 'react-native';
+
 import { logger } from '@app/utils/logger';
 
 /**

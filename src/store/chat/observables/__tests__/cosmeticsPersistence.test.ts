@@ -1,8 +1,9 @@
-import type { PaintData } from '../../types/constants';
+import type { PaintData } from '@app/store/chat/types/constants';
+
 import {
+  type CosmeticsSnapshot,
   loadPersistedCosmetics,
   writePersistedCosmetics,
-  type CosmeticsSnapshot,
 } from '../cosmeticsPersistence';
 
 const mockBackingStore = new Map<string, unknown>();

@@ -1,5 +1,7 @@
-import type { Meta, StoryObj } from '@storybook/react';
 import { View } from 'react-native';
+
+import type { Meta, StoryObj } from '@storybook/react';
+
 import { CategoryCard } from './CategoryCard';
 
 const meta = {

@@ -1,15 +1,17 @@
-import { getMessageById } from '@app/store/chat/actions/messages';
 import { act, renderHook } from '@testing-library/react-native';
-import type { EmotePressData } from '../../components/ChatMessage/RichChatMessage.types';
-import type { ChatInputShellHandle } from '../../components/ChatInputShell';
-import type { ChatOverlayOpeners } from '../../components/useChatOverlays';
-import { createRef } from '@app/testing/createRef';
+
+import type { ChatInputShellHandle } from '@app/components/Chat/components/ChatInputShell';
+import type { EmotePressData } from '@app/components/Chat/components/ChatMessage/RichChatMessage.types';
+import type { ChatOverlayOpeners } from '@app/components/Chat/components/useChatOverlays';
+import { getMessageById } from '@app/store/chat/actions/messages';
+import { createRef } from '@app/test/createRef';
 import { createEmotePart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
-import { createChatMessage } from './__fixtures__/useChat.fixture';
+
 import {
   useChatComposerActions,
   useChatOverlayActions,
 } from '../useChatInteractionHandlers';
+import { createChatMessage } from './__fixtures__/useChat.fixture';
 
 jest.mock('@app/store/chat/actions/messages', () => ({
   getMessageById: jest.fn(),
@@ -22,6 +24,7 @@ function renderComposerActions() {
   const inputShell = {
     appendEmote: jest.fn(),
     appendMention: jest.fn(),
+    insertPhrase: jest.fn(),
     clearReply: jest.fn(),
     setReplyTo: jest.fn(),
   };
@@ -46,6 +49,7 @@ function renderOverlayActions() {
   const openEmotePreview = jest.fn();
   const openEmoteSheet = jest.fn();
   const openMessageActions = jest.fn();
+  const openSavedPhrasesSheet = jest.fn();
   const openSettingsSheet = jest.fn();
   const openUserActions = jest.fn();
   const openers: ChatOverlayOpeners = {
@@ -54,6 +58,7 @@ function renderOverlayActions() {
     openEmotePreview,
     openEmoteSheet,
     openMessageActions,
+    openSavedPhrasesSheet,
     openSettingsSheet,
     openUserActions,
   };
@@ -132,6 +137,7 @@ describe('useChatComposerActions', () => {
         site: 'BTTV',
       });
       hook.result.current.appendMentionToComposer('targetUser');
+      hook.result.current.insertPhraseToComposer('be right back');
     });
 
     expect(inputShell.appendEmote.mock.calls).toEqual([
@@ -139,6 +145,7 @@ describe('useChatComposerActions', () => {
       ['OMEGALUL'],
     ]);
     expect(inputShell.appendMention).toHaveBeenCalledWith('targetUser');
+    expect(inputShell.insertPhrase).toHaveBeenCalledWith('be right back');
   });
 });
 

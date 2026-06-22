@@ -1,5 +1,6 @@
-import { VodPlayerScreen } from '@app/screens/Stream/VodPlayerScreen';
 import { useLocalSearchParams } from 'expo-router';
+
+import { VodPlayerScreen } from '@app/screens/Stream/VodPlayerScreen';
 
 export default function VodPlayerRoute() {
   const { id } = useLocalSearchParams<{ id?: string | string[] }>();

@@ -1,12 +1,15 @@
+import { memo } from 'react';
+import type { StyleProp, TextStyle } from 'react-native';
+
+import { useSelector } from '@legendapp/state/react';
+
+import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
 import { Text } from '@app/components/ui/Text/Text';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin';
-import { useSelector } from '@legendapp/state/react';
-import { memo } from 'react';
-import type { StyleProp, TextStyle } from 'react-native';
+
 import { styles } from '../RichChatMessage.styles';
-import { normaliseUsername } from '../richChatMessageHelpers';
 
 interface MentionSpanProps {
   content: string;

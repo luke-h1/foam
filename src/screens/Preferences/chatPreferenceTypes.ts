@@ -1,5 +1,6 @@
-import type { AndroidSymbol } from '@app/components/ui/Icon/Icon';
 import type { SFSymbol } from 'sf-symbols-typescript';
+
+import type { AndroidSymbol } from '@app/components/ui/Icon/Icon';
 import { theme } from '@app/styles/themes';
 
 export type ContextPreviewValue = {

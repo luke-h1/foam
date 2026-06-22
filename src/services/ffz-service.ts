@@ -1,93 +1,21 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import type { FfzSanitisedEmote } from '@app/types/emote';
+import type { FfzBadgesResponse } from '@app/types/ffz/badge';
+import type {
+  FfzChannelEmotesResponse,
+  FfzEmoticon,
+  FfzGlobalEmotesResponse,
+} from '@app/types/ffz/emote';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { logger } from '@app/utils/logger';
+
 import { ffzApi } from './api/clients';
-import { SanitisedBadgeSet } from './twitch-badge-service';
-
-export interface FfzEmoticon {
-  id: number;
-  name: string;
-  height: number;
-  width: number;
-  public: boolean;
-  hidden: boolean;
-  animated: boolean;
-  modifier: boolean;
-  modifier_flags: number;
-  owner: {
-    _id: number;
-    name: string;
-    display_name: string;
-  };
-  urls: {
-    '1': string;
-    '2': string;
-    '4': string;
-  };
-  status: number;
-  usage_count: number;
-  created_at: string;
-  last_updated: string;
-}
-export interface FfzSet {
-  id: number;
-  _type: number;
-  title: string;
-  emoticons: FfzEmoticon[];
-}
-
-export interface FfzChannelEmotesResponse {
-  room: {
-    set: number | string;
-    vip_badge?: { [key: string]: string };
-    mod_urls?: { [key: string]: string };
-    user_badge_ids?: { [key: string]: string[] };
-    user_badges?: { [key: string]: string[] };
-  };
-  sets: {
-    [setId: string]: FfzSet;
-  };
-}
-
-export interface FfzGlobalEmotesResponse {
-  default_sets: number[];
-  sets: {
-    [setId: string]: FfzSet;
-  };
-  users: {
-    [userId: string]: string[];
-  };
-}
-
-export interface FfzBadgesResponse {
-  badges: FfzBadge[];
-  users: FfzBadgeUsers;
-}
-
-export interface FfzBadge {
-  id: number;
-  name: string;
-  title: string;
-  slot: number;
-  replaces: string;
-  color: string;
-  image: string;
-  urls: {
-    '1': string;
-    '2': string;
-    '4': string;
-  };
-}
 
 interface FFzErrorResponse {
   status: number;
   error: string;
   message: string;
-}
-
-export interface FfzBadgeUsers {
-  [badgeId: string]: string[];
 }
 
 function toFfzStaticUrl(emoteId: number, scale: '2x' | '4x'): string {

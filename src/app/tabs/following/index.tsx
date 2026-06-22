@@ -1,10 +1,12 @@
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+
+import { router } from 'expo-router';
+
+import { Button } from '@app/components/Button/Button';
 import { DeferUntilFocused } from '@app/components/DeferUntilFocused/DeferUntilFocused';
+import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import FollowingScreen from '@app/screens/FollowingScreen';
-import { router } from 'expo-router';
-import { Button } from '@app/components/Button/Button';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
 export default function FollowingRoute() {

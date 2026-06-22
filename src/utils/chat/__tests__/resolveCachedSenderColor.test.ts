@@ -1,4 +1,5 @@
 import { clearSessionCache } from '@app/store/chat/actions/chatColorCaches';
+
 import { resolveCachedSenderColor } from '../resolveCachedSenderColor';
 
 type SenderColorMessage = Parameters<typeof resolveCachedSenderColor>[0];

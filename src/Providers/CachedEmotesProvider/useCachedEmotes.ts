@@ -1,8 +1,10 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import type { SanitisedEmote } from '@app/types/emote';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import { logger } from '@app/utils/logger';
-import { useCallback, useEffect, useRef, useState } from 'react';
+
 import { releaseChannelEmoteRefs, warmCachedEmoteRefs } from './cache-service';
 
 export type CachedEmotesLoadingState = 'IDLE' | 'WARMING' | 'WARMED';

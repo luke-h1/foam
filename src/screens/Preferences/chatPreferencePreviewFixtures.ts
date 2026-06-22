@@ -6,8 +6,8 @@ import { ffzSanitisedGlobalEmoteSet } from '@app/services/__fixtures__/emotes/ff
 import { sevenTvSanitisedChannelEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/sevenTvSanitisedChannelEmoteSet.fixture';
 import { seventvSanitiisedGlobalEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/sevenTvSanitisedGlobalEmoteSet.fixture';
 import { twitchTvSanitisedEmoteSetGlobalFixture } from '@app/services/__fixtures__/emotes/twitch/twitchTvSanitisedEmoteSetGlobal.fixture';
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import type { SanitisedEmote } from '@app/types/emote';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 type PreviewProvider = '7tv' | 'bttv' | 'ffz' | 'twitch';
 

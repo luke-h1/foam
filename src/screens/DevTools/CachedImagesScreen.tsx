@@ -1,3 +1,9 @@
+import { type RefObject, useCallback, useRef, useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
+import { useSelector } from '@legendapp/state/react';
+
 import { Button } from '@app/components/Button/Button';
 import {
   FlashList,
@@ -7,24 +13,20 @@ import {
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import i18next from '@app/i18n/i18next';
 import {
   clearPaints,
   clearSevenTvBadges,
 } from '@app/store/chat/actions/cosmetics';
 import { clearEmoteImageCache } from '@app/store/chat/actions/emoteImages';
-import { usePaints } from '@app/store/chat/react/selectors';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { usePaints } from '@app/store/chat/react/selectors';
 import { theme } from '@app/styles/themes';
 import {
   CachedImageInfo,
   getCacheDirectoryPath,
   listCachedImages,
 } from '@app/utils/image/image-cache';
-import { useSelector } from '@legendapp/state/react';
-import { useRef, useState, useCallback, type RefObject } from 'react';
-import { Alert, View, StyleSheet } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import i18next from '@app/i18n/i18next';
 
 type TabType = 'images' | 'badges' | 'paints';
 

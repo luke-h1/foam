@@ -1,10 +1,11 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { SanitisedEmote } from '@app/types/emote';
+
+import { processEmotesWorklet } from '../emoteProcessor';
 import {
   clearMentionLoginIndex,
   registerMentionLogin,
 } from '../resolveMentionLogin';
-import { processEmotesWorklet } from '../emoteProcessor';
 
 const pickFields = (value: unknown, keys: readonly string[]) =>
   Object.fromEntries(

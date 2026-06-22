@@ -1,5 +1,6 @@
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { logger } from '@app/utils/logger';
+
 import { AnyChatMessageType } from './messageHandlers';
 import {
   extractTextFromMessage,

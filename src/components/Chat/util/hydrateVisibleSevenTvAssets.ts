@@ -1,5 +1,5 @@
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import type { SanitisedEmote } from '@app/types/emote';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 
 import type { AnyChatMessageType } from './messageHandlers';

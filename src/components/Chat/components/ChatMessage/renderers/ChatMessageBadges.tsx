@@ -1,10 +1,12 @@
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
-import type { Key, ReactNode } from 'react';
 import { View } from 'react-native';
+import type { Key, ReactNode } from 'react';
+
+import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+
 import { ChatMessagePressable } from '../ChatMessagePressable';
-import { ChatInlineImage } from './ChatInlineImage';
 import { styles } from '../RichChatMessage.styles';
+import { ChatInlineImage } from './ChatInlineImage';
 
 interface ChatMessageBadgesProps {
   badges?: SanitisedBadgeSet[];

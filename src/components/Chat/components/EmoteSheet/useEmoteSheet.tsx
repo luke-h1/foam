@@ -1,6 +1,3 @@
-import { cacheEmoteImages } from '@app/store/chat/actions/emoteImages';
-import { useCurrentEmoteData } from '@app/store/chat/react/selectors';
-import type { SanitisedEmote } from '@app/types/emote';
 import React, {
   startTransition,
   useCallback,
@@ -10,13 +7,12 @@ import React, {
   useState,
 } from 'react';
 import { useWindowDimensions } from 'react-native';
+
 import type {
   LegendListRef,
   LegendListRenderItemProps,
 } from '@legendapp/list/react-native';
 
-import { EmoteRow } from './EmoteRow';
-import { SetHeader } from './SetHeader';
 import {
   buildEmoteMenuProviders,
   type EmoteMenuListItem,
@@ -24,9 +20,15 @@ import {
   type EmoteMenuProviderId,
   filterProviderSets,
   flattenProviderSets,
-} from './emoteMenuData';
-import type { EmotePickerItem } from './emoteSheetTypes';
+} from '@app/components/Chat/components/EmoteSheet/util/emoteMenuData';
+import { cacheEmoteImages } from '@app/store/chat/actions/emoteImages';
+import { useCurrentEmoteData } from '@app/store/chat/react/selectors';
+import type { SanitisedEmote } from '@app/types/emote';
+
+import { EmoteRow } from './EmoteRow';
 import { EMOTE_SHEET_DETENT } from './emoteSheetLayout';
+import type { EmotePickerItem } from './emoteSheetTypes';
+import { SetHeader } from './SetHeader';
 
 const EMPTY_PROVIDERS: EmoteMenuProvider[] = [];
 

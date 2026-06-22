@@ -7,6 +7,7 @@ import { seventvSanitiisedGlobalEmoteSetFixture } from '@app/services/__fixtures
 import { twitchTvSanitisedEmoteSetChannelFixture } from '@app/services/__fixtures__/emotes/twitch/twitchTvSanitisedEmoteSetChannel.fixture';
 import { twitchTvSanitisedEmoteSetGlobalFixture } from '@app/services/__fixtures__/emotes/twitch/twitchTvSanitisedEmoteSetGlobal.fixture';
 import type { SanitisedEmote } from '@app/types/emote';
+
 import { replaceEmotesWithText } from '../replaceEmotesWithText';
 
 describe('replaceEmotesWithText', () => {

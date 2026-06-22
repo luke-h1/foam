@@ -1,7 +1,9 @@
+import { type Ref, useCallback, useImperativeHandle, useState } from 'react';
+
 import { impact } from '@app/lib/haptics';
 import type { ChatUser } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
-import { useCallback, useImperativeHandle, useState, type Ref } from 'react';
+
 import { useWordInfo } from './hooks/useWordInfo';
 
 export interface ChatComposerHandle {

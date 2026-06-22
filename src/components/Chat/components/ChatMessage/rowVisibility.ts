@@ -1,5 +1,6 @@
-import { useViewability } from '@legendapp/list/react-native';
 import { createContext, useCallback, useRef } from 'react';
+
+import { useViewability } from '@legendapp/list/react-native';
 
 export type RowVisibilityListener = (isVisible: boolean) => void;
 

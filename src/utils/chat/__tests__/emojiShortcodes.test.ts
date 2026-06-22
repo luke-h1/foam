@@ -1,5 +1,5 @@
-import { createEmojiEmote } from './__fixtures__/emojiEmote.fixture';
 import { replaceTextWithEmotes } from '../replaceTextWithEmotes';
+import { createEmojiEmote } from './__fixtures__/emojiEmote.fixture';
 
 describe('emoji shortcode parsing', () => {
   const emojiEmotes = [

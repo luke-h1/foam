@@ -1,6 +1,8 @@
-import type { Meta, StoryObj } from '@storybook/react';
 import { ErrorInfo } from 'react';
 import { View } from 'react-native';
+
+import type { Meta, StoryObj } from '@storybook/react';
+
 import { ErrorDetails } from './ErrorDetails';
 
 const meta = {

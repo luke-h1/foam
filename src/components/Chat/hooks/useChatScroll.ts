@@ -1,5 +1,6 @@
-import { RefObject, useRef, useState, useCallback } from 'react';
-import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import { RefObject, useCallback, useRef, useState } from 'react';
+import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+
 import { chatScrollActivity } from '../util/chatScrollActivity';
 
 const RETURN_TO_BOTTOM_THRESHOLD = 80;

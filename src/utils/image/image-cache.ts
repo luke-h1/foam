@@ -1,6 +1,7 @@
+import { createMMKV } from 'react-native-mmkv';
+
 import { Directory, File, Paths } from 'expo-file-system';
 import * as FileSystemLegacy from 'expo-file-system/legacy';
-import { createMMKV } from 'react-native-mmkv';
 
 export const BLURHASH = 'LBDbA}oL00Na~B9u57={XRay-Uj[';
 

@@ -1,11 +1,12 @@
 import { memo } from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { lightenColor } from '@app/utils/color/lightenColor';
-import { StyleSheet, View } from 'react-native';
 
 import { PaintedUsername } from '../ChatMessage/CosmeticUsername/CosmeticUsername';
 
@@ -37,7 +38,6 @@ function renderMessagePart(part: ParsedPart, occurrence: number) {
       return (
         <Image
           key={key}
-          trackLoadTime
           trackLoadContext='chat.message-action-sheet'
           source={part.url}
           cacheVariant='emote'

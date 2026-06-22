@@ -1,25 +1,25 @@
 import { memo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import type { ReactNode } from 'react';
+
+import { useSelector } from '@legendapp/state/react';
+
 import { RichChatMessage } from '@app/components/Chat/components/ChatMessage/RichChatMessage';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
-import { type SanitisedBadgeSet } from '@app/services/twitch-badge-service';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import {
   type ChannelCacheType,
   type ChatMessageType,
 } from '@app/store/chat/types/constants';
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { type ChatFontScale } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { type SanitisedEmote } from '@app/types/emote';
-import {
-  replaceTextWithEmotes,
-  type ParsedPart,
-} from '@app/utils/chat/replaceTextWithEmotes';
-import { useSelector } from '@legendapp/state/react';
-import type { ReactNode } from 'react';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { type ParsedPart } from '@app/utils/chat/parsedPart';
+import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 
-import { StyleSheet, View } from 'react-native';
 import { chatPreferencePreviewFixtures } from './chatPreferencePreviewFixtures';
 
 const PREVIEW_CHANNEL = 'preview';

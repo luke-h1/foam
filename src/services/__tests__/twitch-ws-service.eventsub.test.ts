@@ -1,6 +1,6 @@
-import { logger } from '@app/utils/logger';
 import { twitchService } from '@app/services/twitch-service';
 import TwitchWsService from '@app/services/twitch-ws-service';
+import { logger } from '@app/utils/logger';
 
 jest.mock('@app/services/twitch-service', () => ({
   twitchService: {

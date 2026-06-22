@@ -1,6 +1,8 @@
-import { theme } from '@app/styles/themes';
-import * as WebBrowser from 'expo-web-browser';
 import { Linking } from 'react-native';
+
+import * as WebBrowser from 'expo-web-browser';
+
+import { theme } from '@app/styles/themes';
 
 export function openLinkInBrowser(url: string) {
   void WebBrowser.openBrowserAsync(url, {

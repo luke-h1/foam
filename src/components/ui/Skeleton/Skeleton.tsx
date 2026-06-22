@@ -1,14 +1,17 @@
-import { theme } from '@app/styles/themes';
-import { Canvas, LinearGradient, Fill, vec } from '@shopify/react-native-skia';
 import { useEffect } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import {
+  cancelAnimation,
   Easing,
   useDerivedValue,
   useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+
+import { Canvas, Fill, LinearGradient, vec } from '@shopify/react-native-skia';
+
+import { theme } from '@app/styles/themes';
 
 interface SkeletonProps {
   shimmer?: boolean;
@@ -51,6 +54,7 @@ function SkeletonShimmer() {
         -1,
       ),
     );
+    return () => cancelAnimation(progress);
   }, [progress]);
 
   const start = useDerivedValue(() => {

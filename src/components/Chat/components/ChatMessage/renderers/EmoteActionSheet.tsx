@@ -1,34 +1,36 @@
-import { Button } from '@app/components/Button/Button';
-import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
-import { Image } from '@app/components/Image/Image';
-import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
-import type { EmoteImageScale } from '@app/types/emote';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { deriveEmoteImageVariantsFromUrl } from '@app/utils/emote/emoteImageVariants';
-import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
-import * as Clipboard from 'expo-clipboard';
 import {
-  ReactNode,
-  useState,
   cloneElement,
   isValidElement,
+  memo,
   ReactElement,
+  ReactNode,
   useCallback,
   useMemo,
-  memo,
+  useState,
 } from 'react';
 import {
-  Platform,
-  View,
   type GestureResponderEvent,
+  Platform,
   StyleSheet,
   useWindowDimensions,
+  View,
 } from 'react-native';
-import { toast } from 'sonner-native';
 import { useTranslation } from 'react-i18next';
+
+import * as Clipboard from 'expo-clipboard';
+import { toast } from 'sonner-native';
+
+import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
+import { Button } from '@app/components/Button/Button';
+import { Image } from '@app/components/Image/Image';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
+import { theme } from '@app/styles/themes';
+import type { EmoteImageScale } from '@app/types/emote';
+import { ParsedPart } from '@app/utils/chat/parsedPart';
+import { deriveEmoteImageVariantsFromUrl } from '@app/utils/emote/emoteImageVariants';
+import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 
 type PartVariant = ParsedPart<'emote'>;
 type ActionId =
@@ -281,7 +283,6 @@ function EmoteActionSheetComponent({
                   {displayUrl ? (
                     <View style={styles.previewImageContainer}>
                       <Image
-                        trackLoadTime
                         trackLoadContext='chat.emote-action-sheet'
                         source={displayUrl}
                         cacheVariant='emote'

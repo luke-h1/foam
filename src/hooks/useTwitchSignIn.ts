@@ -1,5 +1,6 @@
-import { useAuthContext } from '@app/context/AuthContext';
-import { logger } from '@app/utils/logger';
+import { useRef, useState } from 'react';
+import { Platform } from 'react-native';
+
 import {
   type AuthSessionResult,
   DiscoveryDocument,
@@ -9,10 +10,11 @@ import {
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useRef, useState } from 'react';
-import { Platform } from 'react-native';
 import { toast } from 'sonner-native';
+
+import { useAuthContext } from '@app/context/AuthContext';
 import i18next from '@app/i18n/i18next';
+import { logger } from '@app/utils/logger';
 
 const USER_SCOPES = [
   'user:read:follows',

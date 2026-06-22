@@ -1,33 +1,35 @@
-import type { ChatComposerHandle } from './ChatComposer/ChatComposer';
-import type { useAuthContext } from '@app/context/AuthContext';
-import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
-import { formatDate } from '@app/utils/date-time/date';
-import { findBadges } from '@app/utils/chat/findBadges';
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { parseBadges } from '@app/utils/chat/parseBadges';
-import { logger } from '@app/utils/logger';
 import {
   memo,
+  type Ref,
   useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
   useState,
-  type Ref,
 } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 
-import { ChatInputSection, type ReplyToData } from './ChatInputSection';
+import type { useAuthContext } from '@app/context/AuthContext';
+import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
+import { findBadges } from '@app/utils/chat/findBadges';
+import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { parseBadges } from '@app/utils/chat/parseBadges';
+import { formatDate } from '@app/utils/date-time/date';
+import { logger } from '@app/utils/logger';
+
 import { useChatImageUpload } from '../hooks/useChatImageUpload';
 import {
-  createUserStateFromTags,
   type AnyChatMessageType,
+  createUserStateFromTags,
 } from '../util/messageHandlers';
+import type { ChatComposerHandle } from './ChatComposer/ChatComposer';
+import { ChatInputSection, type ReplyToData } from './ChatInputSection';
 
 export interface ChatInputShellHandle {
   appendEmote: (emoteName: string) => void;
   appendMention: (username: string) => void;
+  insertPhrase: (text: string) => void;
   clearReply: () => void;
   setReplyTo: (replyTo: ReplyToData | null) => void;
 }
@@ -138,6 +140,7 @@ export const ChatInputShell = memo(function ChatInputShell({
 
   useEffect(() => {
     if (!isAuthenticated) {
+      // eslint-disable-next-line react-doctor/no-derived-state -- draft is user input (not derivable); this resets it AND imperatively clears the native composer (setText) on sign-out
       clearDraft();
     }
   }, [clearDraft, isAuthenticated]);
@@ -286,6 +289,15 @@ export const ChatInputShell = memo(function ChatInputShell({
           ? `@${username} `
           : `${current}${current.endsWith(' ') ? '' : ' '}@${username} `;
         writeComposerText(next);
+        chatInputRef.current?.focus();
+      },
+      insertPhrase: (text: string) => {
+        if (!isAuthenticated) {
+          return;
+        }
+        const current = messageInputRef.current;
+        const needsSpace = current.length > 0 && !current.endsWith(' ');
+        writeComposerText(`${current}${needsSpace ? ' ' : ''}${text} `);
         chatInputRef.current?.focus();
       },
       clearReply: () => {

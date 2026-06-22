@@ -1,22 +1,49 @@
 /* eslint-disable camelcase */
 import { fetch } from 'expo/fetch';
-import { parseJsonOnUIThread } from '@app/lib/offThreadJson';
-import { logger } from '@app/utils/logger';
+import Constants from 'expo-constants';
+
+import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
+import type { PaginatedList } from '@app/types/twitch/api';
+import type {
+  DefaultTokenResponse,
+  RefreshTokenResponse,
+} from '@app/types/twitch/auth';
+import type { Category } from '@app/types/twitch/category';
+import type { Channel, SearchChannelResponse } from '@app/types/twitch/channel';
+import type {
+  TwitchPinnedChatMessage,
+  TwitchSendChatMessageResult,
+} from '@app/types/twitch/chat';
+import type {
+  TwitchClip,
+  TwitchClipDownload,
+  TwitchClipsRequestParams,
+} from '@app/types/twitch/clip';
 import type { TwitchHelixPoll } from '@app/types/twitch/poll';
 import type { TwitchHelixPrediction } from '@app/types/twitch/prediction';
-import Constants from 'expo-constants';
-import {
-  twitchApi,
-  mockServerUrl,
-  isE2EMode,
-  getTwitchClientId,
-  setTwitchClientId,
-} from './api/clients';
-
+import type { TwitchStream } from '@app/types/twitch/stream';
+import type {
+  UserBlockList,
+  UserBlockListRequestParams,
+  UserInfoResponse,
+} from '@app/types/twitch/user';
+import type {
+  TwitchVideo,
+  TwitchVideosRequestParams,
+} from '@app/types/twitch/video';
 import {
   cacheChannelPointRewardTitle,
   getCachedChannelPointRewardTitle,
 } from '@app/utils/chat/channelPointRewardTitleStore';
+import { logger } from '@app/utils/logger';
+
+import {
+  getTwitchClientId,
+  isE2EMode,
+  mockServerUrl,
+  setTwitchClientId,
+  twitchApi,
+} from './api/clients';
 
 const authProxyBaseUrl =
   (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL as
@@ -27,80 +54,6 @@ const authProxyApiKey =
   (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_KEY as
     | string
     | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY;
-
-export interface PaginatedList<T> {
-  data: T[];
-  pagination?: {
-    cursor: string;
-  };
-  total?: number;
-}
-
-export interface UserInfoResponse {
-  broadcaster_type: string;
-  created_at: string;
-  description: string;
-  display_name: string;
-  id: string;
-  login: string;
-  offline_image_url: string;
-  profile_image_url: string;
-  type: string;
-  view_count: number;
-}
-
-export interface TwitchStream {
-  id: string;
-  user_id: string;
-  user_login: string;
-  user_name: string;
-  game_id: string;
-  game_name: string;
-  type: string;
-  title: string;
-  viewer_count: number;
-  started_at: string;
-  language: string;
-  thumbnail_url: string;
-  tag_ids: unknown[];
-  tags: string[];
-  profilePicture?: string;
-  is_mature: boolean;
-}
-
-export interface Channel {
-  broadcasterId: string;
-  broadcasterLogin: string;
-  broadcasterName: string;
-}
-
-export interface Category {
-  box_art_url: string;
-  id: string;
-  igdb_id?: string; // can be an empty string so we specify undefined to represent the falsy value
-  name: string;
-}
-
-export interface SearchChannelResponse {
-  broadcaster_language: string;
-  broadcaster_login: string;
-  display_name: string;
-  game_id: string;
-  game_name: string;
-  id: string;
-  is_live: boolean;
-  tag_ids: unknown[];
-  tags: string[];
-  thumbnail_url: string;
-  title: string;
-  started_at: string;
-}
-
-export interface DefaultTokenResponse {
-  access_token: string;
-  expires_in: number;
-  token_type: string;
-}
 
 interface Emote {
   format: string[];
@@ -115,86 +68,17 @@ interface Emote {
   }[];
 }
 
-export interface RefreshTokenResponse {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  scope: string;
-  token_type: string;
-}
-
 interface AuthProxyResponse<T> {
   data: T | null;
   error?: string | null;
-}
-
-export interface TwitchClip {
-  id: string;
-  url: string;
-  embed_url: string;
-  broadcaster_id: string;
-  broadcaster_name: string;
-  creator_id: string;
-  creator_name: string;
-  video_id: string;
-  game_id: string;
-  language: string;
-  title: string;
-  view_count: number;
-  created_at: string;
-  thumbnail_url: string;
-  duration: number;
-  vod_offset: number;
-  is_featured: boolean;
 }
 
 interface TwitchClipResponse {
   data: TwitchClip[];
 }
 
-export interface TwitchClipDownload {
-  clip_id: string;
-  landscape_download_url: string | null;
-  portrait_download_url: string | null;
-}
-
 interface TwitchClipDownloadResponse {
   data: TwitchClipDownload[];
-}
-
-export interface TwitchClipsRequestParams {
-  broadcasterId: string;
-  after?: string;
-  endedAt?: string;
-  first?: number;
-  startedAt?: string;
-}
-
-export interface TwitchVideo {
-  id: string;
-  stream_id: string | null;
-  user_id: string;
-  user_login: string;
-  user_name: string;
-  title: string;
-  description: string;
-  created_at: string;
-  published_at: string;
-  url: string;
-  thumbnail_url: string;
-  viewable: string;
-  view_count: number;
-  language: string;
-  type: 'archive' | 'highlight' | 'upload';
-  duration: string;
-  muted_segments: { duration: number; offset: number }[] | null;
-}
-
-export interface TwitchVideosRequestParams {
-  userId: string;
-  after?: string;
-  first?: number;
-  type?: 'all' | 'archive' | 'highlight' | 'upload';
 }
 
 type EventSubStatus =
@@ -297,66 +181,6 @@ interface EventSubscription {
   cost: number;
 }
 
-export interface UserBlockList {
-  user_id: string;
-  user_login: string;
-  display_name: string;
-}
-
-export interface UserBlockListRequestParams {
-  broadcasterId: string;
-  first?: number;
-  after?: number;
-}
-
-export type TwitchChatMessageFragment = {
-  type: 'text' | 'cheermote' | 'emote' | 'mention';
-  text: string;
-  cheermote?: unknown;
-  emote?: {
-    id?: string;
-    emote_set_id?: string;
-    owner_id?: string;
-    format?: string[];
-  };
-  mention?: {
-    user_id?: string;
-    user_login?: string;
-    user_name?: string;
-  };
-};
-
-export type TwitchPinnedChatMessage = {
-  broadcaster_id?: string;
-  broadcaster_login?: string;
-  broadcaster_name?: string;
-  created_at?: string;
-  expires_at?: string | null;
-  message?:
-    | string
-    | {
-        fragments?: TwitchChatMessageFragment[];
-        text?: string;
-      };
-  message_id: string;
-  moderator_id?: string;
-  moderator_login?: string;
-  moderator_name?: string;
-  pinned_by_login?: string;
-  pinned_by_name?: string;
-  pinned_by_user_id?: string;
-  updated_at?: string;
-};
-
-export type TwitchSendChatMessageResult = {
-  drop_reason?: {
-    code: string;
-    message: string;
-  } | null;
-  is_sent: boolean;
-  message_id: string;
-};
-
 type PinnedChatMessageParams = {
   broadcasterId: string;
   moderatorId: string;
@@ -413,7 +237,7 @@ export const twitchService = {
       method: 'POST',
       headers: { 'x-api-key': authProxyApiKey ?? '' },
     });
-    const body = await parseJsonOnUIThread<
+    const body = await parseJsonOnWorklet<
       AuthProxyResponse<RefreshTokenResponse>
     >(await res.text());
 
@@ -555,7 +379,7 @@ export const twitchService = {
     const res = await fetch(tokenUrl, {
       headers: isE2EMode ? {} : { 'x-api-key': authProxyApiKey ?? '' },
     });
-    const body = await parseJsonOnUIThread<{ data: DefaultTokenResponse }>(
+    const body = await parseJsonOnWorklet<{ data: DefaultTokenResponse }>(
       await res.text(),
     );
 
@@ -587,7 +411,7 @@ export const twitchService = {
     }
     // Helix rejects requests whose Client-Id header does not match the client
     // the token was issued for, so adopt the token's client ID.
-    const body = await parseJsonOnUIThread<{
+    const body = await parseJsonOnWorklet<{
       client_id?: string;
       expires_in?: number;
     } | null>(await res.text()).catch(() => null);

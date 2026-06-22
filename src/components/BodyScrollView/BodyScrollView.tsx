@@ -1,8 +1,10 @@
-import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { useImperativeHandle, useRef, type Ref } from 'react';
+import { type Ref, useImperativeHandle, useRef } from 'react';
 import { ScrollView, type ScrollViewProps } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
+
 import { useBottomTabOverflow } from '../TabBarBackground/useBottomTabOverflow';
 
 type BodyScrollViewRef = ScrollView | Animated.ScrollView;

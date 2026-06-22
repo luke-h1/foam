@@ -1,5 +1,7 @@
 import { useCallback } from 'react';
 import type { MutableRefObject } from 'react';
+
+import { prefetchImage } from '@app/components/Image/imagePrefetch';
 import {
   fetchUserPersonalEmotes,
   getCurrentEmoteData,
@@ -8,19 +10,17 @@ import {
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import { updateMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { prefetchImage } from '@app/components/Image/imagePrefetch';
-import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
-import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { cacheImageFromUrl } from '@app/utils/image/image-cache';
 import { logger } from '@app/utils/logger';
-import { normaliseChatUsername } from '../util/chatUsernames';
+
 import { hydrateVisibleSevenTvAssets } from '../util/hydrateVisibleSevenTvAssets';
 import {
-  createUserStateFromTags,
   type AnyChatMessageType,
+  createUserStateFromTags,
 } from '../util/messageHandlers';
 import { reprocessMessages } from '../util/reprocessMessages';
+import { resolveMessageEmoteParts } from '../util/resolveMessageEmoteParts';
 import {
   getCachedSharedChatBadgeContext,
   getMessageBadges,
@@ -128,40 +128,15 @@ export function useChatMessageProcessing({
         return;
       }
 
-      const personalEmotes =
-        userId && show7TvEmotes ? getUserPersonalEmotes(userId, channelId) : [];
-      const currentUserLogin = normaliseChatUsername(userLogin);
-      const senderLogin = normaliseChatUsername(
-        userstate.login || userstate.username,
-      );
-      const twitchTaggedSubscriberEmotes = extractEmotesFromTag(
-        userstate.emotes,
-        text.trimEnd(),
-      );
-      const twitchSubscriberEmotes =
-        senderLogin && senderLogin === currentUserLogin
-          ? emoteData.twitchSubscriberEmotes
-          : [];
-      const scopedTwitchSubscriberEmotes =
-        twitchTaggedSubscriberEmotes.length > 0
-          ? [...twitchTaggedSubscriberEmotes, ...twitchSubscriberEmotes]
-          : twitchSubscriberEmotes;
-
       try {
-        const replacedMessage = processEmotesWorklet({
-          inputString: text.trimEnd(),
+        const replacedMessage = resolveMessageEmoteParts({
+          channelId,
+          emoteData,
+          show7TvEmotes,
+          text: text.trimEnd(),
+          userId,
+          userLogin,
           userstate,
-          emojiEmotes: chatStore$.emojis.peek(),
-          sevenTvGlobalEmotes: emoteData.sevenTvGlobalEmotes,
-          sevenTvChannelEmotes: emoteData.sevenTvChannelEmotes,
-          sevenTvPersonalEmotes: personalEmotes,
-          twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
-          twitchChannelEmotes: emoteData.twitchChannelEmotes,
-          twitchSubscriberEmotes: scopedTwitchSubscriberEmotes,
-          ffzChannelEmotes: emoteData.ffzChannelEmotes,
-          ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
-          bttvChannelEmotes: emoteData.bttvChannelEmotes,
-          bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
         });
 
         const cachedSharedBadgeContext =
@@ -235,40 +210,16 @@ export function useChatMessageProcessing({
       }
 
       const userId = message.userstate['user-id'];
-      const personalEmotes =
-        userId && show7TvEmotes ? getUserPersonalEmotes(userId, channelId) : [];
-      const currentUserLogin = normaliseChatUsername(userLogin);
-      const senderLogin = normaliseChatUsername(
-        message.userstate.login || message.userstate.username,
-      );
-      const twitchTaggedSubscriberEmotes = extractEmotesFromTag(
-        message.userstate.emotes,
-        text,
-      );
-      const twitchSubscriberEmotes =
-        senderLogin && senderLogin === currentUserLogin
-          ? emoteData.twitchSubscriberEmotes
-          : [];
-      const scopedTwitchSubscriberEmotes =
-        twitchTaggedSubscriberEmotes.length > 0
-          ? [...twitchTaggedSubscriberEmotes, ...twitchSubscriberEmotes]
-          : twitchSubscriberEmotes;
 
       try {
-        const replacedMessage = processEmotesWorklet({
-          inputString: text,
+        const replacedMessage = resolveMessageEmoteParts({
+          channelId,
+          emoteData,
+          show7TvEmotes,
+          text,
+          userId,
+          userLogin,
           userstate: message.userstate,
-          emojiEmotes: chatStore$.emojis.peek(),
-          sevenTvGlobalEmotes: emoteData.sevenTvGlobalEmotes,
-          sevenTvChannelEmotes: emoteData.sevenTvChannelEmotes,
-          sevenTvPersonalEmotes: personalEmotes,
-          twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
-          twitchChannelEmotes: emoteData.twitchChannelEmotes,
-          twitchSubscriberEmotes: scopedTwitchSubscriberEmotes,
-          ffzChannelEmotes: emoteData.ffzChannelEmotes,
-          ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
-          bttvChannelEmotes: emoteData.bttvChannelEmotes,
-          bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
         });
 
         const { sourceBadge, sourceChannelBadges } =

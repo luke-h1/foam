@@ -8,12 +8,14 @@
 // The replay is deterministic by construction: the fixture is emitted in order
 // at the preset's rate. 7TV emotes render by name-matching the channel's loaded
 // emote set — point this at a channel whose set is loaded (e.g. cinna).
-import { useDevToolsAccess } from '@app/utils/devTools/devToolsGate';
 import { useEffect } from 'react';
+
+import { useDevToolsAccess } from '@app/utils/devTools/devToolsGate';
+
 import {
-  IRC_FIXTURE_MESSAGES,
   buildIrcFixtureMessage,
   type BuiltFixtureMessage,
+  IRC_FIXTURE_MESSAGES,
 } from './ircFixtureMessages';
 import { syntheticChatControl } from './syntheticChatControl';
 

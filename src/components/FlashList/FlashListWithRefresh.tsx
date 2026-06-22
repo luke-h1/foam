@@ -1,8 +1,10 @@
+import type { Ref } from 'react';
+
 import {
   FlashList as ShopifyFlashList,
   FlashListRef,
 } from '@shopify/flash-list';
-import type { Ref } from 'react';
+
 import type { FlashListProps } from './FlashList';
 
 export function FlashListWithRefresh<TItem>({

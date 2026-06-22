@@ -1,15 +1,16 @@
 /* eslint-disable camelcase */
+import { ScrollView, View } from 'react-native';
+import type { ReactNode } from 'react';
+
 import { ffzSanitiisedChannelBadges } from '@app/services/__fixtures__/badges/ffz/ffzSanitisedChannelBadges.fixture';
 import { twitchSanitisedGlobalBadges } from '@app/services/__fixtures__/badges/twitch/twitchSanitisedGlobalBadges.fixture';
 import { sevenTvSanitisedChannelEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/sevenTvSanitisedChannelEmoteSet.fixture';
 import { seventvSanitiisedGlobalEmoteSetFixture } from '@app/services/__fixtures__/emotes/stv/sevenTvSanitisedGlobalEmoteSet.fixture';
 import { chatterinoService } from '@app/services/chatterino-service';
-import { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import type { ReactNode } from 'react';
-import { View, ScrollView } from 'react-native';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { ParsedPart } from '@app/utils/chat/parsedPart';
 
 function requireFixture<T>(value: T | undefined, label: string): T {
   if (!value) {

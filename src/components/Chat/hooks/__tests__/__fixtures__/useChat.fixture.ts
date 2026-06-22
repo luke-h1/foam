@@ -1,12 +1,12 @@
-import type { ChatMessageType } from '@app/store/chat/types/constants';
+import { createBaseMessage } from '@app/components/Chat/util/messageHandlers';
+import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
+import type { ChatMessageType } from '@app/store/chat/types/constants';
 import type {
   SevenTvSanitisedEmote,
   TwitchSanitisedEmote,
 } from '@app/types/emote';
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { EmoteSetKind } from '@app/graphql/generated/gql';
-import { createBaseMessage } from '../../../util/messageHandlers';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 type CurrentEmoteData = NonNullable<ReturnType<typeof getCurrentEmoteData>>;
 type UserChatMessage = ChatMessageType<'usernotice'>;

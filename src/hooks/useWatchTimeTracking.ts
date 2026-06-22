@@ -1,9 +1,10 @@
+import { useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
+
 import {
   maybeRequestStoreReview,
   recordWatchTime,
 } from '@app/lib/expo-store-review';
-import { useEffect, useRef } from 'react';
-import { AppState } from 'react-native';
 
 /**
  * Accumulates foreground stream watch time for the store-review prompt

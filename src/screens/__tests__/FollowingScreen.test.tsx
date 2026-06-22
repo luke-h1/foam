@@ -1,13 +1,13 @@
-import { render as baseRender, screen } from '@testing-library/react-native';
-import { AuthContextTestProvider } from '@app/context/AuthContext';
-import {
-  twitchService as _twitchService,
-  UserInfoResponse,
-} from '@app/services/twitch-service';
-import FollowingScreen from '@app/screens/FollowingScreen';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render as baseRender, screen } from '@testing-library/react-native';
+
+import { AuthContextTestProvider } from '@app/context/AuthContext';
+import FollowingScreen from '@app/screens/FollowingScreen';
+import { twitchService as _twitchService } from '@app/services/twitch-service';
+import type { UserInfoResponse } from '@app/types/twitch/user';
 
 jest.mock('@app/services/twitch-service');
 jest.mock('expo-symbols', () => ({ SymbolView: () => null }));

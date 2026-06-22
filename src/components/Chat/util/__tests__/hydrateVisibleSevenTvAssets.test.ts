@@ -1,7 +1,7 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import type { SanitisedEmote } from '@app/types/emote';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
+import type { SanitisedEmote } from '@app/types/emote';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import {
   createEmotePart,
   createTextPart,

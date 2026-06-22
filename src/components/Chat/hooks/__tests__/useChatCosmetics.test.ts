@@ -1,6 +1,8 @@
+import { act, renderHook, waitFor } from '@testing-library/react-native';
+
 import { sevenTvService } from '@app/services/seventv-service';
 import { fetchAndCacheUserCosmetics } from '@app/store/chat/actions/cosmetics';
-import { act, renderHook, waitFor } from '@testing-library/react-native';
+
 import { useChatCosmetics } from '../useChatCosmetics';
 
 type MockObservableValue<T> = {

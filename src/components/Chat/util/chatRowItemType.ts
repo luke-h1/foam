@@ -1,9 +1,10 @@
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
 import {
-  getChatBodyInfo,
   type ChatBodyVariant,
-} from '../components/ChatMessage/richChatMessageHelpers';
+  getChatBodyInfo,
+} from '@app/components/Chat/util/richChatMessageHelpers';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+
+import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
 import { isRenderableChatMessage } from './chatMessages';
 import type { AnyChatMessageType } from './messageHandlers';
 

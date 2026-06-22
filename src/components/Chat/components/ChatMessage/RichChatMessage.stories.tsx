@@ -1,10 +1,13 @@
-import type { ChatMessageType } from '@app/store/chat/types/constants';
-import type { Meta, StoryObj } from '@storybook/react';
 import { View } from 'react-native';
+
+import type { Meta, StoryObj } from '@storybook/react';
+
+import type { ChatMessageType } from '@app/store/chat/types/constants';
+
 import { RichChatMessage } from './RichChatMessage';
 import {
-  chatterinoBadge,
   chatStoryDecorator,
+  chatterinoBadge,
   createBaseMessage,
   ffzModBadge,
   ffzVipBadge,

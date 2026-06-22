@@ -1,15 +1,16 @@
-import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
+import { MutableRefObject, useEffect, useRef } from 'react';
+
 import { useSyncRef } from '@app/hooks/useSyncRef';
+import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
 import {
   abortCurrentLoad,
   clearChannelResources,
   clearPersonalEmotesCache,
 } from '@app/store/chat/actions/channelLoad';
-import { clearPaints } from '@app/store/chat/actions/cosmetics';
-import { clearMessages, clearTtvUsers } from '@app/store/chat/actions/messages';
 import { clearMentionSessionCaches } from '@app/store/chat/actions/chatColorCaches';
+import { clearPaints } from '@app/store/chat/actions/cosmetics';
+import { clearMessages } from '@app/store/chat/actions/messages';
 import { resetMentionLoginResolver } from '@app/utils/chat/mentionLoginResolver';
-import { MutableRefObject, useEffect, useRef } from 'react';
 
 type PartChannel = (channelName: string) => void;
 
@@ -87,7 +88,6 @@ export function useChatLifecycle({
     abortCurrentLoad();
     lifecycle.cancelEmoteLoad();
     clearChannelResources();
-    clearTtvUsers();
     clearPaints();
     clearPersonalEmotesCache();
     lifecycle.fetchedCosmeticsUsersRef.current.clear();

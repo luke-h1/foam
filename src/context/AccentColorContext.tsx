@@ -1,8 +1,8 @@
+import React, { createContext, use, useState } from 'react';
+import { useColorScheme } from 'react-native';
+
 import { colors } from '@app/styles/colors';
 import { getColorValue, UIColor } from '@app/styles/ui';
-import React, { createContext, use, useState } from 'react';
-
-import { useColorScheme } from 'react-native';
 
 interface AccentColorContextValue {
   accentHex: string;

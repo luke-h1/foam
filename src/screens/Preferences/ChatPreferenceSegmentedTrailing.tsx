@@ -1,5 +1,6 @@
-import { SegmentedControl } from '@expo/ui/community/segmented-control';
 import { StyleSheet } from 'react-native';
+
+import { SegmentedControl } from '@expo/ui/community/segmented-control';
 
 const styles = StyleSheet.create({
   segmentedControl: {

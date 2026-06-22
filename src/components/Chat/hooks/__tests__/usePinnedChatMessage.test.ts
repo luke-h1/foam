@@ -1,15 +1,17 @@
+import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { toast } from 'sonner-native';
+
 import {
   getPinnedChatMessageText,
   twitchService,
-  type TwitchPinnedChatMessage,
 } from '@app/services/twitch-service';
-import { toast } from 'sonner-native';
-import { act, renderHook, waitFor } from '@testing-library/react-native';
+import type { TwitchPinnedChatMessage } from '@app/types/twitch/chat';
+
+import { usePinnedChatMessage } from '../usePinnedChatMessage';
 import {
   createChatMessage,
   createMessageActionData,
 } from './__fixtures__/useChat.fixture';
-import { usePinnedChatMessage } from '../usePinnedChatMessage';
 
 jest.mock('@app/services/twitch-service', () => ({
   getPinnedChatMessageText: jest.fn(() => 'api pinned text'),

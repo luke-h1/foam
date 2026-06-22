@@ -1,23 +1,26 @@
 import { memo, useMemo, useState } from 'react';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import type { ListRenderItem } from '@shopify/flash-list';
+
 import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
 import { Button } from '@app/components/Button/Button';
 import { FlashList } from '@app/components/FlashList/FlashList';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Input } from '@app/components/ui/Input/Input';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import {
-  getAllMentionChatters,
   type ChatterRole,
+  getAllMentionChatters,
   type MentionChatter,
 } from '@app/utils/chat/resolveMentionLogin';
-import type { ListRenderItem } from '@shopify/flash-list';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import type { UsernamePressData } from '../ChatMessage/RichChatMessage.types';
 import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
 import { chatSheetSurface } from '../chatSheetSurface';
-import { useTranslation } from 'react-i18next';
 
 export interface ChattersSheetProps {
   isPresented: boolean;

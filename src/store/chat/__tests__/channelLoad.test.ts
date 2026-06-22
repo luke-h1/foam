@@ -1,21 +1,21 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import type {
-  BttvSanitisedEmote,
-  FfzSanitisedEmote,
-  SevenTvSanitisedEmote,
-  TwitchSanitisedEmote,
-} from '@app/types/emote';
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import { chatterinoService } from '@app/services/chatterino-service';
 import { ffzService } from '@app/services/ffz-service';
 import { sevenTvService } from '@app/services/seventv-service';
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
+import type {
+  BttvSanitisedEmote,
+  FfzSanitisedEmote,
+  SevenTvSanitisedEmote,
+  TwitchSanitisedEmote,
+} from '@app/types/emote';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
-import { emptyEmoteData } from '../types/constants';
 import { loadChannelResources } from '../actions/channelLoad';
 import { chatStore$ } from '../observables/chatStore';
+import { emptyEmoteData } from '../types/constants';
 
 jest.mock('@legendapp/state/persist', () => ({
   configureObservablePersistence: jest.fn(),

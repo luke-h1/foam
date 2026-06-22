@@ -1,3 +1,6 @@
+import { useCallback, useEffect, useRef } from 'react';
+import { Alert, AppState, AppStateStatus, Platform } from 'react-native';
+
 import { nativeBuildVersion } from 'expo-application';
 import * as Updates from 'expo-updates';
 import {
@@ -9,12 +12,11 @@ import {
   reloadAsync,
   setExtraParamAsync,
 } from 'expo-updates';
-import { useEffect, useRef, useCallback } from 'react';
-import { Alert, AppState, AppStateStatus, Platform } from 'react-native';
-import { theme } from '@app/styles/themes';
-import { countOtaMetric } from '@app/lib/sentry';
-import { logger } from '@app/utils/logger';
+
 import i18next from '@app/i18n/i18next';
+import { countOtaMetric } from '@app/lib/sentry';
+import { theme } from '@app/styles/themes';
+import { logger } from '@app/utils/logger';
 
 const MINIMUM_MINIMIZE_TIME = 15 * 60e3; // 15 minutes
 const INITIAL_CHECK_DELAY = 3e3; // 3 seconds

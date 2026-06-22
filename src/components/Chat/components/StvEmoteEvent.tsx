@@ -1,15 +1,16 @@
 import { memo } from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import i18next from '@app/i18n/i18next';
+import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
-import { View, StyleSheet } from 'react-native';
 
-import { CHAT_NOTICE_ACCENTS } from './util/chatNoticeAccents';
 import { ChatNoticeMetaRow } from './ChatMessage/renderers/ChatNoticeMetaRow';
 import { styles as chatStyles } from './ChatMessage/RichChatMessage.styles';
-import i18next from '@app/i18n/i18next';
+import { CHAT_NOTICE_ACCENTS } from './util/chatNoticeAccents';
 
 interface StvEmoteEventProps {
   disableAnimations?: boolean;
@@ -69,7 +70,6 @@ function StvEmoteEventComponent({
       </ChatNoticeMetaRow>
       <View style={styles.content}>
         <Image
-          trackLoadTime
           trackLoadContext='chat.stv-emote-event'
           source={displayUrl}
           cacheVariant='emote'

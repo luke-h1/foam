@@ -1,4 +1,5 @@
 import * as Device from 'expo-device';
+
 import { Color } from './pallete';
 
 const SPACE_SCALE = 1.33;

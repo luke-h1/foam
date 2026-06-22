@@ -1,19 +1,19 @@
+import { act } from 'react';
+import type { FC, PropsWithChildren } from 'react';
+
+import {
+  render,
+  renderHook,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
+import { type AuthSessionResult, TokenResponse } from 'expo-auth-session';
+
 import { Text } from '@app/components/ui/Text/Text';
 import { twitchApi as _twitchApi } from '@app/services/api/clients';
-import {
-  twitchService as _twitchService,
-  type UserInfoResponse,
-} from '@app/services/twitch-service';
-import {
-  waitFor,
-  renderHook,
-  render,
-  screen,
-} from '@testing-library/react-native';
-import { TokenResponse, type AuthSessionResult } from 'expo-auth-session';
+import { twitchService as _twitchService } from '@app/services/twitch-service';
+import type { UserInfoResponse } from '@app/types/twitch/user';
 import * as _SecureStore from '@app/utils/authentication/secureStore';
-import { act } from 'react';
-import type { PropsWithChildren, FC } from 'react';
 
 import {
   AuthContextProvider,
@@ -43,6 +43,18 @@ const twitchApi = jest.mocked(_twitchApi);
 describe('AuthContext', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // clearAllMocks does not drain mockResolvedValueOnce queues or per-test
+    // implementations, so a test whose call count shifts can consume a stale
+    // value queued by an earlier test. Fully reset the auth mocks each test
+    // (each test sets the behaviour it needs) so the suite is not call-count
+    // fragile. Scoped to these mocks so the global setup-file mocks survive.
+    SecureStore.getItemAsync.mockReset();
+    SecureStore.setItemAsync.mockReset();
+    SecureStore.deleteItemAsync.mockReset();
+    twitchService.getDefaultToken.mockReset();
+    twitchService.validateToken.mockReset();
+    twitchService.getUserInfo.mockReset();
+    twitchService.getRefreshToken.mockReset();
     twitchService.getTopStreams.mockResolvedValue({
       data: [],
     });
@@ -145,6 +157,12 @@ describe('AuthContext', () => {
       }),
     };
     twitchService.getUserInfo.mockResolvedValue(user);
+    twitchService.getDefaultToken.mockResolvedValue({
+      access_token: 'anon',
+      expires_in: 3600,
+      token_type: 'bearer',
+    });
+    SecureStore.getItemAsync.mockResolvedValue(null);
 
     const { result } = renderHook(() => useAuthContext(), {
       wrapper,

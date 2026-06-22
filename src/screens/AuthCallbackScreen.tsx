@@ -1,5 +1,6 @@
+import { StyleSheet, View } from 'react-native';
+
 import { Text } from '@app/components/ui/Text/Text';
-import { View, StyleSheet } from 'react-native';
 
 /**
  * Shown when the app is opened via the Twitch OAuth redirect.

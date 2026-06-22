@@ -2,6 +2,7 @@
 // lives in useChatPerfSuite (single source); the UI-thread frame health comes
 // from useUiThreadFrameHealth (Reanimated, the real rendering smoothness).
 import { StyleSheet, Text, View } from 'react-native';
+
 import type { LiveStats } from './useChatPerfSuite';
 import { useCpuUsage } from './useCpuUsage';
 import { useUiThreadFrameHealth } from './useUiThreadFrameHealth';

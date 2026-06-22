@@ -1,13 +1,15 @@
-import { useAuthContext } from '@app/context/AuthContext';
+import { StyleSheet, View } from 'react-native';
+
+import { Redirect, router } from 'expo-router';
+
 import { Button } from '@app/components/Button/Button';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { Text } from '@app/components/ui/Text/Text';
+import { useAuthContext } from '@app/context/AuthContext';
 import { storageMMKV } from '@app/lib/mmkv';
 import { ONBOARDING_SEEN_KEY } from '@app/screens/OnboardingScreen/OnboardingScreen';
 import { isE2EMode } from '@app/services/api/clients';
 import { theme } from '@app/styles/themes';
-import { Redirect, router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
 
 export default function IndexRoute() {
   const { authState, ready } = useAuthContext();

@@ -1,21 +1,22 @@
-import { theme } from '@app/styles/themes';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { PixelRatio } from 'react-native';
+
+import { theme } from '@app/styles/themes';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
+
 import {
-  getChatLineMetrics,
   type ChatFontScale,
+  getChatLineMetrics,
 } from '../components/ChatMessage/RichChatMessage.styles';
+import { canRenderMessageInline } from './canRenderMessageInline';
+import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
 import {
+  type InlineFlowItem,
   measureInlineFlow,
   measureNaturalWidth,
   prepareInlineFlow,
   prepareWithSegments,
-  type InlineFlowItem,
   type TextStyle,
 } from './expoPretext';
-
-import { canRenderMessageInline } from './canRenderMessageInline';
-import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
 import type { AnyChatMessageType } from './messageHandlers';
 
 /**

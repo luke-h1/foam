@@ -1,7 +1,9 @@
 import { fetch } from 'expo/fetch';
-import { parseJsonOnUIThread } from '@app/lib/offThreadJson';
-import { logger, type AllowedPrefix } from '@app/utils/logger';
+
+import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
 import type { MonitoringErrorName } from '@app/lib/sentry';
+import { type AllowedPrefix, logger } from '@app/utils/logger';
+
 import { getApiMonitoringContext } from './monitoring';
 
 const SERVICE_ERROR_MAP: Record<
@@ -257,7 +259,7 @@ export function createApiClient({
       return undefined as T;
     }
 
-    return parseJsonOnUIThread<T>(await response.text());
+    return parseJsonOnWorklet<T>(await response.text());
   }
 
   return {

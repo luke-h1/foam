@@ -1,13 +1,15 @@
+import { StyleSheet, type ViewStyle } from 'react-native';
+
 import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
-import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 import type {
   PaintCanvasRepeat,
   PaintData,
   PaintLayerData,
   PaintShadow,
   PaintStop,
-} from '@app/utils/color/seventv-ws-service';
-import { StyleSheet, type ViewStyle } from 'react-native';
+} from '@app/types/seventv/cosmetics';
+import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
+
 import { angleToPoints } from './angleToPoints';
 
 export interface LayerGradientConfig {

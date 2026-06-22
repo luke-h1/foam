@@ -1,15 +1,14 @@
 import {
-  PaintRadialGradientShape,
-  type Image,
-  type UserCosmeticsQuery,
-} from '@app/graphql/generated/gql';
-import {
   normalizeSevenTvPaint,
   type PaintGradientLayer,
 } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
+import {
+  type Image,
+  PaintRadialGradientShape,
+  type UserCosmeticsQuery,
+} from '@app/graphql/generated/gql';
 import { IndexedCollection } from '@app/services/ws/util/indexedCollection';
-
-import type { PaintData, PaintShadow } from './seventv-ws-service';
+import type { PaintData, PaintShadow } from '@app/types/seventv/cosmetics';
 
 type V4User = NonNullable<UserCosmeticsQuery['users']['user']>;
 

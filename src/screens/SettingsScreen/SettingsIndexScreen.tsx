@@ -1,3 +1,11 @@
+import { useRef } from 'react';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { Button, Form, Host, Section } from '@expo/ui/swift-ui';
+import { router } from 'expo-router';
+
 import {
   SettingsLinkRow,
   SettingsSection,
@@ -13,12 +21,7 @@ import {
   isAdminLogin,
   isDevToolsEnabled,
 } from '@app/utils/devTools/devToolsGate';
-import { Button, Form, Host, Section } from '@expo/ui/swift-ui';
-import { router } from 'expo-router';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useRef } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { BuildStatus } from './components/BuildStatus';
 
 function handleSendFeedback() {
@@ -51,6 +54,16 @@ export function SettingsIndexScreen() {
               label={t('blockedTerms')}
               systemImage='text.badge.xmark'
               onPress={() => router.push('/tabs/settings/blocked-terms')}
+            />
+            <Button
+              label={t('emotesAndBadges')}
+              systemImage='face.smiling'
+              onPress={() => router.push('/tabs/settings/emotes-and-badges')}
+            />
+            <Button
+              label={t('savedPhrases')}
+              systemImage='text.bubble'
+              onPress={() => router.push('/tabs/settings/saved-phrases')}
             />
             <Button
               label={t('cache')}
@@ -157,6 +170,18 @@ export function SettingsIndexScreen() {
             subtitle={t('blockedTermsDescription')}
             icon={{ icon: 'text.badge.xmark', color: theme.colorRed }}
             onPress={() => router.push('/tabs/settings/blocked-terms')}
+          />
+          <SettingsLinkRow
+            title={t('emotesAndBadges')}
+            subtitle={t('emotesAndBadgesDescription')}
+            icon={{ icon: 'face.smiling', color: theme.colorAmber }}
+            onPress={() => router.push('/tabs/settings/emotes-and-badges')}
+          />
+          <SettingsLinkRow
+            title={t('savedPhrases')}
+            subtitle={t('savedPhrasesDescription')}
+            icon={{ icon: 'text.bubble', color: theme.colorBlue }}
+            onPress={() => router.push('/tabs/settings/saved-phrases')}
           />
           <SettingsLinkRow
             title={t('cache')}

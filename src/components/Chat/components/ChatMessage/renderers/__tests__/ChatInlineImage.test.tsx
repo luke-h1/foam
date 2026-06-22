@@ -1,9 +1,12 @@
-import { render, screen, act } from '@testing-library/react-native';
-import { evictCachedEmoteRef } from '@app/Providers/CachedEmotesProvider/cache-service';
+import { act, render, screen } from '@testing-library/react-native';
+
 import {
   createRowVisibilityStore,
   RowVisibilityContext,
-} from '../../rowVisibility';
+} from '@app/components/Chat/components/ChatMessage/rowVisibility';
+import { evictCachedEmoteRef } from '@app/Providers/CachedEmotesProvider/cache-service';
+import { logger } from '@app/utils/logger';
+
 import { ChatInlineImage } from '../ChatInlineImage';
 
 const mockStartAnimating = jest.fn();
@@ -48,7 +51,14 @@ jest.mock('@app/Providers/CachedEmotesProvider/cache-service', () => ({
   evictCachedEmoteRef: jest.fn(),
 }));
 
+jest.mock('@app/utils/logger', () => ({
+  logger: {
+    chat: { warn: jest.fn(), debug: jest.fn() },
+  },
+}));
+
 const evictMock = jest.mocked(evictCachedEmoteRef);
+const warnMock = jest.mocked(logger.chat.warn);
 
 describe('ChatInlineImage off-screen pause', () => {
   beforeEach(() => {
@@ -79,6 +89,27 @@ describe('ChatInlineImage off-screen pause', () => {
 
     act(() => store.setVisible(false));
     expect(mockStopAnimating).toHaveBeenCalledTimes(2);
+  });
+
+  test('attaches a catch to the animation command so a recycled-view rejection never goes unhandled (FOAM-TV-MOBILE-AH)', () => {
+    const catchSpy = jest.fn();
+    mockStartAnimating.mockReturnValueOnce({ catch: catchSpy });
+    const store = createRowVisibilityStore(true);
+
+    render(
+      <RowVisibilityContext.Provider value={store}>
+        <ChatInlineImage
+          sourceUrl='https://cdn.7tv.app/emote/recycled/2x.avif'
+          style={{}}
+        />
+      </RowVisibilityContext.Provider>,
+    );
+
+    act(() => store.setVisible(false));
+    act(() => store.setVisible(true));
+
+    expect(mockStartAnimating).toHaveBeenCalledTimes(1);
+    expect(catchSpy).toHaveBeenCalledTimes(1);
   });
 
   test('does not touch animation on a visible mount (autoplay handles it)', () => {
@@ -169,18 +200,40 @@ describe('ChatInlineImage error retry', () => {
     const sourceUrl = 'https://cdn.7tv.app/emote/err/2x.avif';
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
-    for (let attempt = 0; attempt < 4; attempt += 1) {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
       act(() => mockImageProps?.onError?.());
       act(() => jest.advanceTimersByTime(8000));
     }
 
-    expect(evictMock).toHaveBeenCalledTimes(4);
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#4`);
+    expect(evictMock).toHaveBeenCalledTimes(8);
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#8`);
 
     act(() => mockImageProps?.onError?.());
 
-    expect(evictMock).toHaveBeenCalledTimes(4);
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#4`);
+    expect(evictMock).toHaveBeenCalledTimes(8);
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#8`);
+  });
+
+  test('logs a forwarded warning once the retry budget is exhausted', () => {
+    const sourceUrl = 'https://cdn.7tv.app/emote/err/2x.avif';
+    render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
+
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      act(() => mockImageProps?.onError?.());
+      act(() => jest.advanceTimersByTime(8000));
+    }
+
+    expect(warnMock).not.toHaveBeenCalled();
+
+    act(() => mockImageProps?.onError?.());
+
+    expect(warnMock).toHaveBeenCalledTimes(1);
+    expect(warnMock).toHaveBeenCalledWith('chat.emote.load_failed', {
+      name: 'chat_resources_warning',
+      error: undefined,
+      url: sourceUrl,
+      attempts: 8,
+    });
   });
 
   test('a successful load resets the retry budget', () => {

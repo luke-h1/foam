@@ -1,4 +1,4 @@
-import { SevenTvColor } from './seventv-ws-service';
+import { SevenTvColor } from '@app/types/seventv/cosmetics';
 
 export function sevenTvColorToRgba(color: SevenTvColor): {
   r: number;

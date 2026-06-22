@@ -1,13 +1,15 @@
 import { memo } from 'react';
-import { Button } from '@app/components/Button/Button';
-import { Text } from '@app/components/ui/Text/Text';
-import type { ChatUser } from '@app/store/chat/types/constants';
-import { theme } from '@app/styles/themes';
+import { StyleSheet, View } from 'react-native';
+
 import {
   LegendList,
   type LegendListRenderItemProps,
 } from '@legendapp/list/react-native';
-import { StyleSheet, View } from 'react-native';
+
+import { Button } from '@app/components/Button/Button';
+import { Text } from '@app/components/ui/Text/Text';
+import type { ChatUser } from '@app/store/chat/types/constants';
+import { theme } from '@app/styles/themes';
 
 const USER_SUGGESTION_ITEM_SIZE = 128;
 

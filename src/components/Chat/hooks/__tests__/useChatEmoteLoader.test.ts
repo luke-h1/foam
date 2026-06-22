@@ -1,8 +1,10 @@
-import { useAuthContext } from '@app/context/AuthContext';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
+
 import {
   createAuthContextValue,
   createTestUser,
 } from '@app/context/__tests__/__fixtures__/authContext.fixture';
+import { useAuthContext } from '@app/context/AuthContext';
 import {
   abortCurrentLoad,
   getCurrentEmoteData,
@@ -10,17 +12,17 @@ import {
   loadChannelResources,
   startChannelLoadAbort,
 } from '@app/store/chat/actions/channelLoad';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import {
   preloadChannelEmotes,
   preloadGlobalEmotes,
 } from '@app/utils/image/preloadEmotes';
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { act, renderHook, waitFor } from '@testing-library/react-native';
+
+import { useChatEmoteLoader } from '../useChatEmoteLoader';
 import {
   createEmoteData,
   createSevenTvEmote,
 } from './__fixtures__/useChat.fixture';
-import { useChatEmoteLoader } from '../useChatEmoteLoader';
 
 jest.mock('@app/context/AuthContext', () => ({
   useAuthContext: jest.fn(),

@@ -1,9 +1,11 @@
+import { ReactNode, type Ref } from 'react';
+import Animated from 'react-native-reanimated';
+
 import {
   FlashListRef,
   ListRenderItem as FlashListRenderItem,
 } from '@shopify/flash-list';
-import { ReactNode, type Ref } from 'react';
-import Animated from 'react-native-reanimated';
+
 import { FlashList, type FlashListProps } from './FlashList';
 
 export type ListRenderItem<TItem = unknown> = FlashListRenderItem<TItem>;

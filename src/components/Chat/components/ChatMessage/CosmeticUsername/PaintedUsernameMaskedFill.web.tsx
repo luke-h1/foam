@@ -1,6 +1,7 @@
-import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import { type StyleProp, TextStyle } from 'react-native';
+
 import { Text } from '@app/components/ui/Text/Text';
+import type { PaintData } from '@app/types/seventv/cosmetics';
 
 interface PaintedUsernameMaskedFillProps {
   displayUsername: string;

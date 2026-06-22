@@ -1,12 +1,14 @@
+import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
-import { logger } from '@app/utils/logger';
-import { View, StyleSheet } from 'react-native';
-import { useMeasureImageLoadTime } from '@app/hooks/useMeasureImageLoadTime';
+
 import {
   cacheImageFromUrl,
   getCachedImageUri,
 } from '@app/utils/image/image-cache';
-import { useEffect, useState, useCallback } from 'react';
+import { logger } from '@app/utils/logger';
+
 import type { ImageProps } from './Image.types';
 
 /**
@@ -22,6 +24,17 @@ function getSourceUrl(source: ImageProps['source']): string | null {
   return null;
 }
 
+function getHostname(url: string | null | undefined): string | undefined {
+  if (!url) {
+    return undefined;
+  }
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return undefined;
+  }
+}
+
 export const Image = function Image({
   contentFit = 'cover',
   containerStyle,
@@ -33,11 +46,10 @@ export const Image = function Image({
   cacheToFile = true,
   cacheVariant = 'image',
   recyclingKey,
-  trackLoadTime = false,
   trackLoadContext,
   onError,
-  onLoadEnd: onLoadEndProp,
-  onLoadStart: onLoadStartProp,
+  onLoadEnd,
+  onLoadStart,
   style,
   ...props
 }: ImageProps) {
@@ -62,48 +74,6 @@ export const Image = function Image({
       : fileCachedUrl && typeof source === 'string'
         ? fileCachedUrl
         : source;
-  const trackLoad = Boolean(trackLoadTime && resolvedUrl);
-
-  const reportImageLoadTime = (timing: {
-    mountTimestamp: number;
-    loadStartTimestamp: number;
-    loadEndTimestamp: number;
-  }) => {
-    if (!trackLoad) {
-      return;
-    }
-
-    const totalLoadTimeMs = timing.loadEndTimestamp - timing.mountTimestamp;
-    const startToLoadTimeMs =
-      timing.loadEndTimestamp - timing.loadStartTimestamp;
-    const safeHost = (() => {
-      if (!resolvedUrl) {
-        return undefined;
-      }
-      try {
-        return new URL(resolvedUrl).hostname;
-      } catch {
-        return undefined;
-      }
-    })();
-
-    logger.main.info('chat.image.load_time', {
-      name: 'data_loading_info',
-      urlHost: safeHost ?? 'unknown',
-      url: typeof source === 'string' ? source : 'uri-object',
-      durationFromMountMs: Math.round(totalLoadTimeMs),
-      durationFromLoadStartMs: Math.round(startToLoadTimeMs),
-      imageRenderer: 'Image',
-      imageContext: trackLoadContext ?? 'chat-image',
-      host: safeHost,
-    });
-  };
-
-  const { onLoadStart, onLoadEnd } = useMeasureImageLoadTime(
-    'Image',
-    reportImageLoadTime,
-  );
-
   useEffect(() => {
     if (!url || !shouldUseFileCache || diskCachedUrl) {
       return;
@@ -127,23 +97,24 @@ export const Image = function Image({
     };
   }, [cachePriority, cacheVariant, diskCachedUrl, shouldUseFileCache, url]);
 
-  const handleLoadStart = useCallback(() => {
-    if (trackLoad) {
-      onLoadStart();
-    }
-    onLoadStartProp?.();
-  }, [onLoadStart, onLoadStartProp, trackLoad]);
-
-  const handleLoadEnd = useCallback(() => {
-    if (trackLoad) {
-      onLoadEnd();
-    }
-    onLoadEndProp?.();
-  }, [onLoadEnd, onLoadEndProp, trackLoad]);
-
-  const handleError = (error: unknown) => {
-    logger.main.debug('Image loading error:', error);
-    onError?.(error as ImageErrorEventData);
+  const handleError = (event: ImageErrorEventData) => {
+    const host = getHostname(resolvedUrl);
+    logger.main.warn('image.load_failed', {
+      name: 'data_loading_warning',
+      error: event?.error,
+      url: typeof source === 'string' ? source : 'uri-object',
+      urlHost: host ?? 'unknown',
+      host,
+      fromFileCache: Boolean(fileCachedUrl),
+      imageRenderer: 'Image',
+      imageContext: trackLoadContext ?? 'chat-image',
+      tags: {
+        image_renderer: 'Image',
+        image_context: trackLoadContext ?? 'chat-image',
+        image_host: host ?? 'unknown',
+      },
+    });
+    onError?.(event);
   };
 
   return (
@@ -160,8 +131,8 @@ export const Image = function Image({
         useAppleWebpCodec
         placeholderContentFit={placeholderContentFit ?? 'cover'}
         onError={handleError}
-        onLoadStart={handleLoadStart}
-        onLoadEnd={handleLoadEnd}
+        onLoadStart={onLoadStart}
+        onLoadEnd={onLoadEnd}
       />
     </View>
   );

@@ -1,37 +1,14 @@
-import { BlurView } from 'expo-blur';
-import { StatusBar } from 'expo-status-bar';
-import { Button } from '@app/components/Button/Button';
-import { Chat } from '@app/components/Chat/Chat';
-import { ChannelPredictionCard } from '@app/components/ChannelPredictionCard/ChannelPredictionCard';
-import { ChannelPollCard } from '@app/components/ChannelPollCard/ChannelPollCard';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
-import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
-import { Text } from '@app/components/ui/Text/Text';
-import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
-import { useChannelPoll } from '@app/hooks/useChannelPoll';
-import { useStreamQuery } from '@app/hooks/queries/use-stream-query';
-import { useUserQuery } from '@app/hooks/queries/use-user-query';
-import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
-import { theme } from '@app/styles/themes';
-import { motion } from '@app/styles/motion';
 import {
-  usePreference,
-  useUpdatePreferences,
-} from '@app/store/preferenceStore';
-import * as ScreenOrientation from 'expo-screen-orientation';
-import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
-import {
+  memo,
+  useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useReducer,
   useRef,
-  useCallback,
-  memo,
-  useMemo,
 } from 'react';
-import { useFocusEffect, useIsFocused } from 'expo-router';
-import { AppState, useWindowDimensions, View, StyleSheet } from 'react-native';
-import type { StreamPlayerRef } from '@app/components/StreamPlayer/types';
+import { AppState, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   cancelAnimation,
@@ -42,6 +19,33 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
+
+import { BlurView } from 'expo-blur';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
+import { useFocusEffect, useIsFocused } from 'expo-router';
+import * as ScreenOrientation from 'expo-screen-orientation';
+import { StatusBar } from 'expo-status-bar';
+
+import { Button } from '@app/components/Button/Button';
+import { ChannelPollCard } from '@app/components/ChannelPollCard/ChannelPollCard';
+import { ChannelPredictionCard } from '@app/components/ChannelPredictionCard/ChannelPredictionCard';
+import { Chat } from '@app/components/Chat/Chat';
+import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
+import type { StreamPlayerRef } from '@app/components/StreamPlayer/types';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
+import { useStreamQuery } from '@app/hooks/queries/useStreamQuery';
+import { useUserQuery } from '@app/hooks/queries/useUserQuery';
+import { useChannelPoll } from '@app/hooks/useChannelPoll';
+import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
+import {
+  usePreference,
+  useUpdatePreferences,
+} from '@app/store/preferenceStore';
+import { motion } from '@app/styles/motion';
+import { theme } from '@app/styles/themes';
+import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
+
 import {
   clampLandscapeChatWidth,
   getLiveStreamChatDimensions,
@@ -55,7 +59,6 @@ import {
   initialLiveStreamScreenState,
   liveStreamScreenReducer,
 } from './liveStreamScreenReducer';
-import { useTranslation } from 'react-i18next';
 
 interface LiveStreamScreenProps {
   id: string;
@@ -189,19 +192,22 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     return () => subscription.remove();
   }, []);
 
-  const commitLandscapeChatWidth = (width: number) => {
-    const clampedWidth = clampLandscapeChatWidth(
-      width,
-      contentWidth,
-      fullscreenChatMode,
-    );
-    dispatchUi({
-      type: 'setLandscapeChatWidth',
-      landscapeChatWidth: clampedWidth,
-    });
-    // Persist so the chosen width survives leaving the screen / relaunch.
-    updatePreferences({ landscapeChatWidth: clampedWidth });
-  };
+  const commitLandscapeChatWidth = useCallback(
+    (width: number) => {
+      const clampedWidth = clampLandscapeChatWidth(
+        width,
+        contentWidth,
+        fullscreenChatMode,
+      );
+      dispatchUi({
+        type: 'setLandscapeChatWidth',
+        landscapeChatWidth: clampedWidth,
+      });
+      // Persist so the chosen width survives leaving the screen / relaunch.
+      updatePreferences({ landscapeChatWidth: clampedWidth });
+    },
+    [contentWidth, fullscreenChatMode, dispatchUi, updatePreferences],
+  );
 
   const applyLandscapeChatCycleAction = useCallback(
     (action: LandscapeChatCycleAction) => {
@@ -480,63 +486,83 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     opacity: resizeHandleOpacity.get(),
   }));
 
-  const resizeChatGesture = Gesture.Pan()
-    .activeOffsetX([
-      -LANDSCAPE_CHAT_RESIZE_ACTIVATION_DISTANCE,
-      LANDSCAPE_CHAT_RESIZE_ACTIVATION_DISTANCE,
-    ])
-    .failOffsetY([
-      -LANDSCAPE_CHAT_RESIZE_FAIL_DISTANCE,
-      LANDSCAPE_CHAT_RESIZE_FAIL_DISTANCE,
-    ])
-    .onBegin(() => {
-      resizeStartWidth.set(chatWidth.get());
-      resizeHandleOpacity.set(1);
-    })
-    .onUpdate(event => {
-      const maxFraction =
-        fullscreenChatMode === 'overlay'
-          ? MAX_OVERLAY_CHAT_FRACTION
-          : MAX_SIDEBAR_CHAT_FRACTION;
-      const minWidth = Math.min(LANDSCAPE_CHAT_MIN_WIDTH, contentWidth * 0.42);
-      const maxWidth = Math.max(minWidth, contentWidth * maxFraction);
-      const nextWidth = Math.min(
-        maxWidth,
-        Math.max(0, resizeStartWidth.get() - event.translationX),
-      );
+  const resizeChatGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .activeOffsetX([
+          -LANDSCAPE_CHAT_RESIZE_ACTIVATION_DISTANCE,
+          LANDSCAPE_CHAT_RESIZE_ACTIVATION_DISTANCE,
+        ])
+        .failOffsetY([
+          -LANDSCAPE_CHAT_RESIZE_FAIL_DISTANCE,
+          LANDSCAPE_CHAT_RESIZE_FAIL_DISTANCE,
+        ])
+        .onBegin(() => {
+          resizeStartWidth.set(chatWidth.get());
+          resizeHandleOpacity.set(1);
+        })
+        .onUpdate(event => {
+          const maxFraction =
+            fullscreenChatMode === 'overlay'
+              ? MAX_OVERLAY_CHAT_FRACTION
+              : MAX_SIDEBAR_CHAT_FRACTION;
+          const minWidth = Math.min(
+            LANDSCAPE_CHAT_MIN_WIDTH,
+            contentWidth * 0.42,
+          );
+          const maxWidth = Math.max(minWidth, contentWidth * maxFraction);
+          const nextWidth = Math.min(
+            maxWidth,
+            Math.max(0, resizeStartWidth.get() - event.translationX),
+          );
 
-      chatWidth.set(nextWidth);
-      if (fullscreenChatMode === 'sidebar' && isChatVisibleForLayout) {
-        videoWidth.set(Math.max(1, contentWidth - nextWidth));
-      }
-    })
-    .onEnd(event => {
-      const minWidth = Math.min(LANDSCAPE_CHAT_MIN_WIDTH, contentWidth * 0.42);
-      const closeWidth = minWidth * LANDSCAPE_CHAT_CLOSE_WIDTH_FRACTION;
-      const width = chatWidth.get();
-      if (
-        width < closeWidth ||
-        event.velocityX > LANDSCAPE_CHAT_CLOSE_VELOCITY
-      ) {
-        scheduleOnRN(closeLandscapeChatBySwipe);
-        return;
-      }
+          chatWidth.set(nextWidth);
+          if (fullscreenChatMode === 'sidebar' && isChatVisibleForLayout) {
+            videoWidth.set(Math.max(1, contentWidth - nextWidth));
+          }
+        })
+        .onEnd(event => {
+          const minWidth = Math.min(
+            LANDSCAPE_CHAT_MIN_WIDTH,
+            contentWidth * 0.42,
+          );
+          const closeWidth = minWidth * LANDSCAPE_CHAT_CLOSE_WIDTH_FRACTION;
+          const width = chatWidth.get();
+          if (
+            width < closeWidth ||
+            event.velocityX > LANDSCAPE_CHAT_CLOSE_VELOCITY
+          ) {
+            scheduleOnRN(closeLandscapeChatBySwipe);
+            return;
+          }
 
-      const committedWidth = Math.max(minWidth, width);
-      chatWidth.set(withTiming(committedWidth, RESIZE_ANIMATION_CONFIG));
-      if (fullscreenChatMode === 'sidebar' && isChatVisibleForLayout) {
-        videoWidth.set(
-          withTiming(
-            Math.max(1, contentWidth - committedWidth),
-            RESIZE_ANIMATION_CONFIG,
-          ),
-        );
-      }
-      scheduleOnRN(commitLandscapeChatWidth, committedWidth);
-    })
-    .onFinalize(() => {
-      resizeHandleOpacity.set(LANDSCAPE_CHAT_DIVIDER_RESTING_OPACITY);
-    });
+          const committedWidth = Math.max(minWidth, width);
+          chatWidth.set(withTiming(committedWidth, RESIZE_ANIMATION_CONFIG));
+          if (fullscreenChatMode === 'sidebar' && isChatVisibleForLayout) {
+            videoWidth.set(
+              withTiming(
+                Math.max(1, contentWidth - committedWidth),
+                RESIZE_ANIMATION_CONFIG,
+              ),
+            );
+          }
+          scheduleOnRN(commitLandscapeChatWidth, committedWidth);
+        })
+        .onFinalize(() => {
+          resizeHandleOpacity.set(LANDSCAPE_CHAT_DIVIDER_RESTING_OPACITY);
+        }),
+    [
+      fullscreenChatMode,
+      contentWidth,
+      isChatVisibleForLayout,
+      closeLandscapeChatBySwipe,
+      commitLandscapeChatWidth,
+      chatWidth,
+      videoWidth,
+      resizeStartWidth,
+      resizeHandleOpacity,
+    ],
+  );
 
   const contentContainerStyle = styles.contentContainer;
 

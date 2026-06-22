@@ -1,12 +1,14 @@
 import { memo, useMemo } from 'react';
-import { Button } from '@app/components/Button/Button';
-import { Image } from '@app/components/Image/Image';
-import type { SanitisedEmote } from '@app/types/emote';
+import { StyleSheet, View } from 'react-native';
+
 import {
   LegendList,
   type LegendListRenderItemProps,
 } from '@legendapp/list/react-native';
-import { StyleSheet, View } from 'react-native';
+
+import { Button } from '@app/components/Button/Button';
+import { Image } from '@app/components/Image/Image';
+import type { SanitisedEmote } from '@app/types/emote';
 
 const EMOTE_SUGGESTION_ITEM_SIZE = 44;
 
@@ -43,7 +45,6 @@ function EmoteSuggestionTile({
           source={item.url}
           cacheVariant='emote'
           style={styles.emoteImage}
-          trackLoadTime
           trackLoadContext='chat.emote-suggestions'
         />
       </View>

@@ -1,15 +1,16 @@
 import { memo } from 'react';
+import { View } from 'react-native';
+
+import { getSubscriptionTierDisplay } from '@app/components/Chat/components/usernotices/util/subscriptionNoticeTier';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { View } from 'react-native';
+import { ParsedPart } from '@app/utils/chat/parsedPart';
 
-import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
 import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';
 import { styles as chatStyles } from '../ChatMessage/RichChatMessage.styles';
+import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
 import { buildSubscriptionNoticeDescription } from './buildSubscriptionNoticeDescription';
-import { getSubscriptionTierDisplay } from './subscriptionNoticeTier';
 import { subscriptionNoticeStyles as styles } from './subscriptionNoticeStyles';
 
 function getMessagePartKey(part: ParsedPart, occurrence: number): string {
@@ -37,7 +38,6 @@ function renderMessagePart(messagePart: ParsedPart, occurrence: number) {
       return (
         <Image
           key={key}
-          trackLoadTime
           trackLoadContext='chat.subscription-notice-emote'
           source={messagePart.url}
           cacheVariant='emote'

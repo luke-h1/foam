@@ -1,23 +1,25 @@
-import { useCallback, memo } from 'react';
+import { memo, useCallback } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
+import type { SettingsSheetPreferenceFlags } from '@app/components/Chat/types/chatUiFlags';
 import {
   SettingsLinkRow,
   SettingsSection,
   SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
 import { Text } from '@app/components/ui/Text/Text';
-import type { SettingsSheetPreferenceFlags } from '@app/components/Chat/types/chatUiFlags';
 import { theme } from '@app/styles/themes';
-import {
-  ScrollView,
-  View,
-  StyleSheet,
-  useWindowDimensions,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
 import { chatSheetSurface } from '../chatSheetSurface';
-import { useTranslation } from 'react-i18next';
 
 const ICON_TINT = theme.color.textSecondary.dark;
 
@@ -29,6 +31,7 @@ export interface SettingsSheetProps {
   onClearSevenTvCosmeticsCache?: () => void;
   onDismiss: () => void;
   onOpenChatters?: () => void;
+  onOpenSavedPhrases?: () => void;
   onRefetchEmotes?: () => void;
   onReconnect?: () => void;
   onRefreshVideo?: () => void;
@@ -44,6 +47,7 @@ const SettingsSheetComponent = ({
   isPresented,
   onDismiss,
   onOpenChatters,
+  onOpenSavedPhrases,
   onRefetchEmotes,
   onClearChatCache,
   onClearImageCache,
@@ -84,6 +88,11 @@ const SettingsSheetComponent = ({
     dismissSheet();
   }, [onRefetchEmotes, dismissSheet]);
 
+  const handleOpenSavedPhrases = useCallback(() => {
+    dismissSheet();
+    onOpenSavedPhrases?.();
+  }, [dismissSheet, onOpenSavedPhrases]);
+
   const handleClearCache = useCallback(() => {
     onClearChatCache?.();
     onClearImageCache?.();
@@ -106,7 +115,9 @@ const SettingsSheetComponent = ({
     dismissSheet();
   }, [onRefreshVideo, dismissSheet]);
 
-  const hasActions = Boolean(onOpenChatters || onRefetchEmotes);
+  const hasActions = Boolean(
+    onOpenChatters || onOpenSavedPhrases || onRefetchEmotes,
+  );
   const hasStorage = Boolean(
     onClearChatCache || onClearImageCache || onClearSevenTvCosmeticsCache,
   );
@@ -210,6 +221,17 @@ const SettingsSheetComponent = ({
                     color: ICON_TINT,
                   }}
                   onPress={onOpenChatters}
+                />
+              ) : null}
+              {onOpenSavedPhrases ? (
+                <SettingsLinkRow
+                  title={t('settingsSheet.savedPhrases')}
+                  icon={{
+                    icon: 'text.bubble',
+                    androidIcon: 'chat_bubble',
+                    color: ICON_TINT,
+                  }}
+                  onPress={handleOpenSavedPhrases}
                 />
               ) : null}
               {onRefetchEmotes ? (

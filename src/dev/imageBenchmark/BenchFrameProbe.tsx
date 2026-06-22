@@ -2,6 +2,7 @@
 // fps in 1s windows held in memory (no per-frame IO that would bias the
 // metric) and flushes to img-bench.json every 10s and on unmount.
 import { useEffect } from 'react';
+
 import { appendFrames } from './benchResults';
 
 interface FrameSample {

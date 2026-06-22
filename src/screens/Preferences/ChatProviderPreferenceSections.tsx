@@ -1,12 +1,14 @@
+import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import type { SFSymbol } from 'sf-symbols-typescript';
+
 import {
   SettingsSection,
   SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
-import { theme } from '@app/styles/themes';
 import type { AndroidSymbol } from '@app/components/ui/Icon/Icon';
-import type { SFSymbol } from 'sf-symbols-typescript';
-import type { ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
+import { theme } from '@app/styles/themes';
 
 type PreviewProvider = '7tv' | 'bttv' | 'ffz' | 'twitch';
 

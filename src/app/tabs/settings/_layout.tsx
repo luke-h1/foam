@@ -1,9 +1,11 @@
+import { useTranslation } from 'react-i18next';
+
+import { Stack } from 'expo-router';
+
 import {
   nativeStackScreenOptions,
   nativeStackTabRootScreenOptions,
 } from '@app/utils/navigation/nativeStackOptions';
-import { Stack } from 'expo-router';
-import { useTranslation } from 'react-i18next';
 
 export default function SettingsLayout() {
   const { t } = useTranslation('navigation');
@@ -62,6 +64,13 @@ export default function SettingsLayout() {
         options={{ title: t('diagnostics'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
+        name='emotes-and-badges'
+        options={{
+          title: t('emotesAndBadges'),
+          headerBackTitle: t('settings'),
+        }}
+      />
+      <Stack.Screen
         name='faq'
         options={{ title: t('faq'), headerBackTitle: t('settings') }}
       />
@@ -80,6 +89,10 @@ export default function SettingsLayout() {
       <Stack.Screen
         name='remote-config'
         options={{ title: t('remoteConfig'), headerBackTitle: t('settings') }}
+      />
+      <Stack.Screen
+        name='saved-phrases'
+        options={{ title: t('savedPhrases'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
         name='storybook'

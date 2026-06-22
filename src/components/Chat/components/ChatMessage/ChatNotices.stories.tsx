@@ -1,8 +1,10 @@
+import type { Meta, StoryObj } from '@storybook/react';
+
 import type {
   AnnouncementTags,
   SubscriptionTags,
 } from '@app/types/chat/irc-tags/usernotice';
-import type { Meta, StoryObj } from '@storybook/react';
+
 import { RichChatMessage } from './RichChatMessage';
 import {
   broadcasterBadge,

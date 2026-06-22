@@ -1,9 +1,7 @@
-import { usePreferences } from '@app/store/preferenceStore';
-import { theme } from '@app/styles/themes';
-import {
-  EMOJI_STYLE_OPTIONS,
-  getEmojiEmotes,
-} from '@app/utils/emoji/emojiEmotes';
+import { type ReactElement, useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
 import {
   Button,
   Form,
@@ -16,24 +14,29 @@ import {
 } from '@expo/ui/swift-ui';
 import { tag } from '@expo/ui/swift-ui/modifiers';
 import { router } from 'expo-router';
-import { useMemo, type ReactElement } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { ChatPreferencePreview } from './ChatPreferencesPreview';
+
+import { usePreferences } from '@app/store/preferenceStore';
+import { theme } from '@app/styles/themes';
+import {
+  EMOJI_STYLE_OPTIONS,
+  getEmojiEmotes,
+} from '@app/utils/emoji/emojiEmotes';
+
 import {
   DensityPreview,
   EmojiStylePreview,
   PreviewLabel,
   ProviderPreviewItem,
 } from './ChatPreferencePreviewWidgets';
+import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import {
   DELETED_STYLE_OPTIONS,
   DENSITY_OPTIONS,
   EMOJI_PREVIEW_SHORTCODES,
   FONT_SCALE_OPTIONS,
+  type PreviewProvider,
   SCROLLBACK_OPTIONS,
   TIMESTAMP_FORMAT_OPTIONS,
-  type PreviewProvider,
 } from './chatPreferenceTypes';
 
 function hostPreview(node: ReactElement, padded = true) {

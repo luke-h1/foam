@@ -1,6 +1,8 @@
-import type { SanitisedEmote } from '@app/types/emote';
 import { useDeferredValue } from 'react';
 import { StyleSheet, View } from 'react-native';
+
+import type { SanitisedEmote } from '@app/types/emote';
+
 import { EmoteSuggestions } from './components/EmoteSuggestions';
 import { useEmoteSuggestions } from './hooks/useEmoteSuggestions';
 import { useSuggestionAnimations } from './hooks/useSuggestionAnimations';

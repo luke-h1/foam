@@ -1,4 +1,5 @@
 import type { RefObject } from 'react';
+
 import { logger } from '@app/utils/logger';
 
 type IfEquals<X, Y, A = X, B = never> =

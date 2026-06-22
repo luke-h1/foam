@@ -1,6 +1,9 @@
-import render from '@app/test/render';
-import { fireEvent } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
+
+import { fireEvent } from '@testing-library/react-native';
+
+import render from '@app/test/render';
+
 import { ActionSheet } from '../ActionSheet/ActionSheet';
 import { UserActionSheet } from '../UserActionSheet';
 

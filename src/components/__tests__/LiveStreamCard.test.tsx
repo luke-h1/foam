@@ -1,11 +1,12 @@
-import {
-  twitchService as _twitchService,
-  TwitchStream,
-} from '@app/services/twitch-service';
-import render, { DefaultWrapper } from '@app/test/render';
-import { NavigationContainer } from 'expo-router/react-navigation';
-import { screen } from '@testing-library/react-native';
 import { ReactNode } from 'react';
+
+import { screen } from '@testing-library/react-native';
+import { NavigationContainer } from 'expo-router/react-navigation';
+
+import { twitchService as _twitchService } from '@app/services/twitch-service';
+import render, { DefaultWrapper } from '@app/test/render';
+import type { TwitchStream } from '@app/types/twitch/stream';
+
 import { MemoizedLiveStreamCard as LiveStreamCard } from '../LiveStreamCard/LiveStreamCard';
 
 const mockStream: TwitchStream = {

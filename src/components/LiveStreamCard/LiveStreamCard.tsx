@@ -1,20 +1,23 @@
-import { useCallback, memo } from 'react';
+import { memo, useCallback } from 'react';
+import { StyleSheet, View } from 'react-native';
+
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { TwitchStream } from '@app/services/twitch-service';
-import { twitchKeys } from '@app/lib/react-query/query-keys';
-import { userQueryOptions } from '@app/lib/react-query/queries/twitch';
-import { theme } from '@app/styles/themes';
 import { router } from 'expo-router';
+
+import { Text } from '@app/components/ui/Text/Text';
+import { userQueryOptions } from '@app/lib/react-query/queries/twitch';
+import { twitchKeys } from '@app/lib/react-query/query-keys';
+import { theme } from '@app/styles/themes';
+import type { TwitchStream } from '@app/types/twitch/stream';
 import { elapsedStreamTime } from '@app/utils/string/elapsedStreamTime';
 import {
   formatViewCount,
   formatViewCountCompact,
 } from '@app/utils/string/formatViewCount';
-import { StyleSheet, View } from 'react-native';
+
 import { Button } from '../Button/Button';
 import { Image } from '../Image/Image';
 import { PressableArea } from '../PressableArea/PressableArea';
-import { Text } from '@app/components/ui/Text/Text';
 
 interface Props {
   stream: TwitchStream;

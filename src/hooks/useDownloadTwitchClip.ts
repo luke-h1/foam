@@ -1,11 +1,14 @@
-import { useAuthContext } from '@app/context/AuthContext';
-import { twitchKeys } from '@app/lib/react-query/query-keys';
+import { Platform } from 'react-native';
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
 import { Directory, File, Paths } from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
-import { Platform } from 'react-native';
-import { twitchService, type TwitchClip } from '@app/services/twitch-service';
+
+import { useAuthContext } from '@app/context/AuthContext';
+import { twitchKeys } from '@app/lib/react-query/query-keys';
+import { twitchService } from '@app/services/twitch-service';
+import type { TwitchClip } from '@app/types/twitch/clip';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { saveFilesToAppAlbum } from '@app/utils/image/saveFilesToAppAlbum';
 

@@ -1,5 +1,6 @@
-import { theme } from '@app/styles/themes';
 import { Platform } from 'react-native';
+
+import { theme } from '@app/styles/themes';
 
 const isIOS = Platform.OS === 'ios';
 

@@ -1,26 +1,29 @@
-import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
+import { FC, memo, useRef } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
+import { router } from 'expo-router';
+
 import {
   FlashList,
   FlashListRef,
   ListRenderItem,
 } from '@app/components/FlashList/FlashList';
-import { LoadingState } from '@app/components/LoadingState/LoadingState';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
+import { LoadingState } from '@app/components/LoadingState/LoadingState';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
+import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { Text } from '@app/components/ui/Text/Text';
-import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
+import { useCategoryQuery } from '@app/hooks/queries/useCategoryQuery';
+import { useStreamsByCategoryQuery } from '@app/hooks/queries/useStreamsByCategoryQuery';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { useCategoryQuery } from '@app/hooks/queries/use-category-query';
-import { useStreamsByCategoryQuery } from '@app/hooks/queries/use-streams-by-category-query';
-import { Category, TwitchStream } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
+import type { Category } from '@app/types/twitch/category';
+import type { TwitchStream } from '@app/types/twitch/stream';
 import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
+import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 import { formatViewCount } from '@app/utils/string/formatViewCount';
-import { router } from 'expo-router';
-import { FC, memo, useRef } from 'react';
-import { Platform, View, StyleSheet } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 const renderCategoryStreamItem: ListRenderItem<TwitchStream> = ({ item }) => (
   <MemoizedLiveStreamCard stream={item} />

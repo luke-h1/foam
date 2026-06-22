@@ -1,7 +1,8 @@
-import { Text } from '@app/components/ui/Text/Text';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { type StyleProp, type TextStyle, View } from 'react-native';
 import type { ReactNode } from 'react';
-import { View, type StyleProp, type TextStyle } from 'react-native';
+
+import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
 
 import { styles } from '../RichChatMessage.styles';
 

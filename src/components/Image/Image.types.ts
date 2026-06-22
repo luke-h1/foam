@@ -1,10 +1,11 @@
-import { ImageProps as ExpoImageProps } from 'expo-image';
 import { StyleProp, ViewStyle } from 'react-native';
+
+import { ImageProps as ExpoImageProps } from 'expo-image';
+
 import type { ImageCachePriority } from '@app/utils/image/image-cache';
 
 export interface ImageProps extends Omit<ExpoImageProps, 'source'> {
   containerStyle?: StyleProp<ViewStyle>;
-  trackLoadTime?: boolean;
   trackLoadContext?: string;
   cachePriority?: ImageCachePriority;
   cacheToFile?: boolean;

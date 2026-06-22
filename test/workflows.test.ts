@@ -1,17 +1,13 @@
 import {
-  compareFingerprints,
-  decideDeployType,
-  getCriticalOtaIndexCachePath,
-  getFingerprintCachePrefix,
-  getFinalReleaseTag,
-  getOtaUpdateIdsCachePrefix,
-  getPreliminaryReleaseTag,
-  parsePublishedUpdateJson,
-} from '../scripts/workflows/otaOrNativeDeployDecision';
-import {
-  parseCurrentRolloutPercentage,
-  validateTargetPercentage,
-} from '../scripts/workflows/otaRolloutPercentage';
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import {
   buildChatPerformanceComment,
   buildCurrentTable,
@@ -20,14 +16,19 @@ import {
   writeChatPerformanceComment,
 } from '../scripts/workflows/chat-performance-comment';
 import {
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+  compareFingerprints,
+  decideDeployType,
+  getCriticalOtaIndexCachePath,
+  getFinalReleaseTag,
+  getFingerprintCachePrefix,
+  getOtaUpdateIdsCachePrefix,
+  getPreliminaryReleaseTag,
+  parsePublishedUpdateJson,
+} from '../scripts/workflows/otaOrNativeDeployDecision';
+import {
+  parseCurrentRolloutPercentage,
+  validateTargetPercentage,
+} from '../scripts/workflows/otaRolloutPercentage';
 
 describe('otaOrNativeDeployDecision', () => {
   describe('getFingerprintCachePrefix', () => {

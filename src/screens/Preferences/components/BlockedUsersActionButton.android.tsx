@@ -1,4 +1,5 @@
-import { theme } from '@app/styles/themes';
+import { type StyleProp, StyleSheet, type ViewStyle } from 'react-native';
+
 import {
   Button,
   Host,
@@ -7,7 +8,8 @@ import {
   TextButton,
 } from '@expo/ui/jetpack-compose';
 import { size } from '@expo/ui/jetpack-compose/modifiers';
-import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+
+import { theme } from '@app/styles/themes';
 
 export interface BlockedUsersActionButtonProps {
   label: string;

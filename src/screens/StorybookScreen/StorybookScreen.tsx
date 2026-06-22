@@ -1,5 +1,7 @@
+import { StyleSheet, View } from 'react-native';
+
 import { theme } from '@app/styles/themes';
-import { View, StyleSheet } from 'react-native';
+
 import StoryBook from '../../../.rnstorybook';
 
 export function StorybookScreen() {

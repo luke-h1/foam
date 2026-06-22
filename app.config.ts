@@ -372,6 +372,7 @@ const config: ExpoConfig = {
   },
   android: {
     package: appConfig.androidPackageName,
+    predictiveBackGestureEnabled: true,
     googleServicesFile: googleServicesExist
       ? appConfig.androidGoogleServicesFile
       : undefined,
@@ -392,6 +393,8 @@ const config: ExpoConfig = {
         ],
       },
     ],
+  } as NonNullable<ExpoConfig['android']> & {
+    predictiveBackGestureEnabled?: boolean;
   },
 };
 

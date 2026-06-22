@@ -1,5 +1,5 @@
 import type { AuthContextState } from '@app/context/AuthContext';
-import type { UserInfoResponse } from '@app/services/twitch-service';
+import type { UserInfoResponse } from '@app/types/twitch/user';
 
 export function createTestUser(
   overrides: Partial<UserInfoResponse> = {},

@@ -1,7 +1,9 @@
-import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
-import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import { type StyleProp, StyleSheet, TextStyle, View } from 'react-native';
+
 import { Text } from '@app/components/ui/Text/Text';
+import type { PaintData } from '@app/types/seventv/cosmetics';
+import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
+
 import { PaintLayerBackground } from './PaintLayerBackground';
 import { getPaintLayers } from './util/paintLayer';
 

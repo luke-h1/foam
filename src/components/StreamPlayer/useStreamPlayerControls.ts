@@ -1,6 +1,4 @@
-import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
-import { impact } from '@app/lib/haptics';
-import { useLayoutEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import {
   Directions,
@@ -8,6 +6,9 @@ import {
   type GestureType,
 } from 'react-native-gesture-handler';
 import { scheduleOnRN } from 'react-native-worklets';
+
+import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
+import { impact } from '@app/lib/haptics';
 
 const SINGLE_TAP_DELAY_MS = 400;
 

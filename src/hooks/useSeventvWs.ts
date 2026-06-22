@@ -1,41 +1,45 @@
+import { useCallback, useEffect, useRef } from 'react';
+
+import { usePathname } from 'expo-router';
+
 import { EmoteSetKind } from '@app/graphql/generated/gql';
+import { useLazyRef } from '@app/hooks/useLazyRef';
+import { useSyncRef } from '@app/hooks/useSyncRef';
+import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
 import type { SanitisedEmote } from '@app/types/emote';
 import {
   CosmeticCreate,
+  type CosmeticCreateCallbackData,
+  type CosmeticDeleteCallbackData,
+  type CosmeticUpdateCallbackData,
   EntitlementCreate,
+  type EntitlementCreateCallbackData,
+  type EntitlementDeleteCallbackData,
+  type EntitlementUpdateCallbackData,
   SevenTvEventData,
   SevenTvEventType,
   SevenTvWsMessage,
-  type CosmeticCreateCallbackData,
-  type CosmeticUpdateCallbackData,
-  type CosmeticDeleteCallbackData,
-  type EntitlementCreateCallbackData,
-  type EntitlementUpdateCallbackData,
-  type EntitlementDeleteCallbackData,
-} from '@app/utils/color/seventv-ws-service';
+} from '@app/types/seventv/cosmetics';
+import type { SevenTvEmote } from '@app/types/seventv/emotes';
+import type { StvUser } from '@app/types/seventv/users';
 import { logger } from '@app/utils/logger';
-import { usePathname } from 'expo-router';
-import { useLazyRef } from '@app/hooks/useLazyRef';
-import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
-import { useSyncRef } from '@app/hooks/useSyncRef';
-import { useEffect, useRef, useCallback } from 'react';
-import type { SevenTvEmote, StvUser } from '@app/services/seventv-service';
+
 import { ReadyState } from './ws/constants';
 import { useWebsocket } from './ws/useWebsocket';
 
 const SEVENTV_CHAT_SCREENS = ['Chat', 'LiveStream'];
 
 export type {
+  CosmeticCreate,
+  CosmeticCreateCallbackData,
+  CosmeticDeleteCallbackData,
+  CosmeticUpdateCallbackData,
+  EntitlementCreate,
+  EntitlementCreateCallbackData,
+  EntitlementDeleteCallbackData,
+  EntitlementUpdateCallbackData,
   SevenTvEventData,
   SevenTvEventType,
-  CosmeticCreate,
-  EntitlementCreate,
-  CosmeticCreateCallbackData,
-  CosmeticUpdateCallbackData,
-  CosmeticDeleteCallbackData,
-  EntitlementCreateCallbackData,
-  EntitlementUpdateCallbackData,
-  EntitlementDeleteCallbackData,
 };
 
 interface EmoteUpdateCallbackData {

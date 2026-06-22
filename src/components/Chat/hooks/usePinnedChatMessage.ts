@@ -1,14 +1,17 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import { toast } from 'sonner-native';
+
+import i18next from '@app/i18n/i18next';
 import {
   getPinnedChatMessageText,
   twitchService,
-  type TwitchPinnedChatMessage,
 } from '@app/services/twitch-service';
+import type { TwitchPinnedChatMessage } from '@app/types/twitch/chat';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { logger } from '@app/utils/logger';
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { toast } from 'sonner-native';
+
 import type { MessageActionData } from '../components/ChatMessage/RichChatMessage';
-import i18next from '@app/i18n/i18next';
 
 const PINNED_MESSAGE_REFRESH_INTERVAL_MS = 60_000;
 

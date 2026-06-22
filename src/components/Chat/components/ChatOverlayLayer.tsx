@@ -2,18 +2,18 @@ import { memo } from 'react';
 
 import { ActionSheet } from './ActionSheet/ActionSheet';
 import { BadgePreviewSheet } from './BadgePreviewSheet/BadgePreviewSheet';
-import { ChattersSheet } from './ChattersSheet/ChattersSheet';
-
-import { EmotePreviewSheet } from './EmotePreviewSheet/EmotePreviewSheet';
-import { EmoteSheet, type EmotePickerItem } from './EmoteSheet/EmoteSheet';
-import { SettingsSheet } from './SettingsSheet/SettingsSheet';
-import { UserActionSheet } from './UserActionSheet';
 import {
   BadgePressData,
   EmotePressData,
   MessageActionData,
   UsernamePressData,
 } from './ChatMessage/RichChatMessage.types';
+import { ChattersSheet } from './ChattersSheet/ChattersSheet';
+import { EmotePreviewSheet } from './EmotePreviewSheet/EmotePreviewSheet';
+import { type EmotePickerItem, EmoteSheet } from './EmoteSheet/EmoteSheet';
+import { SavedPhrasesSheet } from './SavedPhrasesSheet/SavedPhrasesSheet';
+import { SettingsSheet } from './SettingsSheet/SettingsSheet';
+import { UserActionSheet } from './UserActionSheet';
 
 export interface ChatOverlayLayerProps {
   canDeleteSelectedMessage: boolean;
@@ -63,8 +63,12 @@ export interface ChatOverlayLayerProps {
   onReportSelectedUser: () => void;
   onChattersSheetDidDismiss: () => void;
   onOpenChatters: () => void;
+  onOpenSavedPhrases: () => void;
+  onSavedPhrasesSheetDidDismiss: () => void;
   onSelectChatter: (chatter: UsernamePressData) => void;
+  onSelectSavedPhrase: (text: string) => void;
   shouldRenderChattersSheet: boolean;
+  shouldRenderSavedPhrasesSheet: boolean;
   selectedBadge: BadgePressData | null;
   selectedEmote: EmotePressData | null;
   selectedMessage: MessageActionData<'usernotice'> | null;
@@ -107,8 +111,12 @@ export const ChatOverlayLayer = memo(
     onReportSelectedUser,
     onChattersSheetDidDismiss,
     onOpenChatters,
+    onOpenSavedPhrases,
+    onSavedPhrasesSheetDidDismiss,
     onSelectChatter,
+    onSelectSavedPhrase,
     shouldRenderChattersSheet,
+    shouldRenderSavedPhrasesSheet,
     onClearChatCache,
     onClearImageCache,
     onClearSevenTvCosmeticsCache,
@@ -170,6 +178,7 @@ export const ChatOverlayLayer = memo(
             onClearSevenTvCosmeticsCache={onClearSevenTvCosmeticsCache}
             onDismiss={onSettingsSheetDidDismiss}
             onOpenChatters={onOpenChatters}
+            onOpenSavedPhrases={onOpenSavedPhrases}
             onRefetchEmotes={onSettingsRefetchEmotes}
             onReconnect={onSettingsReconnect}
             onToggleChatDensity={onToggleChatDensity}
@@ -185,6 +194,14 @@ export const ChatOverlayLayer = memo(
             isPresented={shouldRenderChattersSheet}
             onDismiss={onChattersSheetDidDismiss}
             onSelectChatter={onSelectChatter}
+          />
+        ) : null}
+
+        {shouldRenderSavedPhrasesSheet ? (
+          <SavedPhrasesSheet
+            isPresented={shouldRenderSavedPhrasesSheet}
+            onDismiss={onSavedPhrasesSheetDidDismiss}
+            onSelectPhrase={onSelectSavedPhrase}
           />
         ) : null}
 

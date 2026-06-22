@@ -1,4 +1,4 @@
-import { UserBlockList } from '@app/services/twitch-service';
+import type { UserBlockList } from '@app/types/twitch/user';
 
 export const userBlockListFixture: UserBlockList[] = [
   {

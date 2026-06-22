@@ -1,18 +1,19 @@
-import { useWatchTimeTracking } from '@app/hooks/useWatchTimeTracking';
-import { logger } from '@app/utils/logger';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { InteractionManager, StyleSheet, View } from 'react-native';
-import { WebView } from 'react-native-webview';
 import type { WebViewMessageEvent } from 'react-native-webview';
+import { WebView } from 'react-native-webview';
+
+import { useWatchTimeTracking } from '@app/hooks/useWatchTimeTracking';
+import { logger } from '@app/utils/logger';
 
 import { ControlsOverlay } from './ControlsOverlay';
-import { StreamPlayerPoster } from './StreamPlayerPoster';
-import { StreamPlayerWebView } from './StreamPlayerWebView';
 import {
   ControlsTriggerButton,
   DebugErrorOverlay,
   TouchBlockOverlay,
 } from './StreamPlayerOverlays';
+import { StreamPlayerPoster } from './StreamPlayerPoster';
+import { StreamPlayerWebView } from './StreamPlayerWebView';
 import {
   buildRawTwitchPlayerUrl,
   buildTwitchAutoplayEnsureScript,
@@ -20,6 +21,7 @@ import {
   buildTwitchClipPlayerUrl,
   buildTwitchContentGateAcceptScript,
   buildTwitchOverlayHideScript,
+  buildTwitchPlayerAudioDefaultScript,
   buildTwitchPlayerQualityDefaultScript,
 } from './twitchPlayerSource';
 import type { StreamPlayerProps } from './types';
@@ -328,7 +330,7 @@ export const StreamPlayer = memo(function StreamPlayer({
               timeSeconds: video ? resumeTimeRef.current : undefined,
             }),
           },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps, react-doctor/exhaustive-deps
     [clip, channelName, video, parent, autoplay, initialMuted, webViewKey],
   );
 
@@ -383,7 +385,9 @@ export const StreamPlayer = memo(function StreamPlayer({
     : buildTwitchPlayerQualityDefaultScript({
         defaultQuality: '720p60',
         maxBitrateBps: 3_500_000,
-      });
+      }) +
+      '\n' +
+      buildTwitchPlayerAudioDefaultScript({ muted: initialMuted });
 
   const handleWebViewHttpError = useCallback(
     (error: { statusCode: number; url: string }) => {

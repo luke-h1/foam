@@ -1,9 +1,11 @@
+import { act, renderHook } from '@testing-library/react-native';
+import { router } from 'expo-router';
+
 import {
   type AuthContextState,
   useAuthContext,
 } from '@app/context/AuthContext';
-import { act, renderHook } from '@testing-library/react-native';
-import { router } from 'expo-router';
+
 import { usePopulateAuth } from '../usePopulateAuth';
 
 jest.mock('expo-router', () => ({

@@ -1,25 +1,27 @@
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
+
+import { useSelector } from '@legendapp/state/react';
+
 import { useAuthContext } from '@app/context/AuthContext';
 import {
+  abortCurrentLoad,
+  getCurrentEmoteData,
+  getSevenTvEmoteSetId,
   loadChannelResources,
   startChannelLoadAbort,
-  abortCurrentLoad,
-  getSevenTvEmoteSetId,
-  getCurrentEmoteData,
 } from '@app/store/chat/actions/channelLoad';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import {
   preloadChannelEmotes,
   preloadGlobalEmotes,
 } from '@app/utils/image/preloadEmotes';
 import { logger } from '@app/utils/logger';
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { useSelector } from '@legendapp/state/react';
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  useCallback,
-} from 'react';
 
 export type EmoteLoadingStatus =
   | 'idle'

@@ -1,14 +1,7 @@
-import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import {
-  SettingsLinkRow,
-  SettingsSection,
-} from '@app/components/SettingsSection/SettingsSection';
-import { storageService } from '@app/lib/storage';
-import { clearChatCosmeticsCache } from '@app/store/chat/actions/channelLoad';
-import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
-import { clearImageCache } from '@app/utils/image/clearImageCache';
-import { queryClient } from '@app/lib/react-query/query-client';
+import { useRef } from 'react';
+import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
 import {
   Button,
   Form,
@@ -17,11 +10,20 @@ import {
   Text as NativeText,
 } from '@expo/ui/swift-ui';
 import { tint } from '@expo/ui/swift-ui/modifiers';
-import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useRef } from 'react';
 import { toast } from 'sonner-native';
-import { useTranslation } from 'react-i18next';
+
+import {
+  SettingsLinkRow,
+  SettingsSection,
+} from '@app/components/SettingsSection/SettingsSection';
+import { Text } from '@app/components/ui/Text/Text';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import i18next from '@app/i18n/i18next';
+import { queryClient } from '@app/lib/react-query/query-client';
+import { storageService } from '@app/lib/storage';
+import { clearChatCosmeticsCache } from '@app/store/chat/actions/channelLoad';
+import { theme } from '@app/styles/themes';
+import { clearImageCache } from '@app/utils/image/clearImageCache';
 
 function handleClearData() {
   Alert.alert(

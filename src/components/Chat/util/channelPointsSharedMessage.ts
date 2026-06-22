@@ -1,4 +1,4 @@
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 const SHARED_CHANNEL_POINTS_PART_TYPES = new Set([
   'emote',

@@ -1,7 +1,9 @@
 import { memo } from 'react';
-import { createHitslop } from '@app/utils/string/createHitSlop';
+
+import { type CustomPressableProps, PressableScale } from 'pressto';
+
 import { impact, selection } from '@app/lib/haptics';
-import { PressableScale, type CustomPressableProps } from 'pressto';
+import { createHitslop } from '@app/utils/string/createHitSlop';
 
 type ButtonHaptic = 'selection' | 'light' | 'medium' | 'heavy';
 
@@ -27,6 +29,7 @@ function ButtonComponent({
   label,
   disabled,
   haptic,
+  rippleColor,
   ...touchableProps
 }: ButtonProps) {
   const handlePress: typeof onPress = event => {
@@ -45,6 +48,12 @@ function ButtonComponent({
       hitSlop={hitSlop}
       style={style}
       enabled={!disabled}
+      rippleColor={
+        rippleColor ??
+        (process.env.EXPO_OS === 'android'
+          ? 'rgba(255, 255, 255, 0.12)'
+          : undefined)
+      }
       onPress={handlePress}
     >
       {children}

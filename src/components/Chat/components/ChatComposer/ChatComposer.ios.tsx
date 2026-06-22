@@ -1,18 +1,20 @@
-import { useAccentColor } from '@app/context/AccentColorContext';
-import { Input, type InputRef } from '@app/components/ui/Input/Input.ios';
-import { theme } from '@app/styles/themes';
-import { memo, useCallback, useRef, type Ref } from 'react';
+import { memo, type Ref, useCallback, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { EmoteSuggestionRail } from './EmoteSuggestionRail';
-import { UserSuggestionRail } from './UserSuggestionRail';
-import { COMPOSER_INPUT_MIN_HEIGHT } from '../composerSizing';
-import { ComposerIconButton } from '../ComposerIconButton';
-import { chatComposerStyles } from './chatComposerStyles';
-import {
-  useChatComposerController,
-  type ChatComposerHandle,
-} from './useChatComposerController';
 import { useTranslation } from 'react-i18next';
+
+import { Input, type InputRef } from '@app/components/ui/Input/Input.ios';
+import { useAccentColor } from '@app/context/AccentColorContext';
+import { theme } from '@app/styles/themes';
+
+import { ComposerIconButton } from '../ComposerIconButton';
+import { COMPOSER_INPUT_MIN_HEIGHT } from '../composerSizing';
+import { chatComposerStyles } from './chatComposerStyles';
+import { EmoteSuggestionRail } from './EmoteSuggestionRail';
+import {
+  type ChatComposerHandle,
+  useChatComposerController,
+} from './useChatComposerController';
+import { UserSuggestionRail } from './UserSuggestionRail';
 
 export type { ChatComposerHandle };
 

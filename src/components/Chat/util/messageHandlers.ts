@@ -2,6 +2,7 @@ import type {
   AnyChatMessageType,
   ChatMessageType,
 } from '@app/store/chat/types/constants';
+import { getPreferences } from '@app/store/preferenceStore';
 import {
   UserNoticeTags,
   UserNoticeTagsByVariant,
@@ -9,23 +10,22 @@ import {
 } from '@app/types/chat/irc-tags/usernotice';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import {
+  enrichChannelPointPrivmsgTags,
+  ingestChannelPointRewardTags,
+} from '@app/utils/chat/channelPointRewardTitleStore';
+import { isHighlightMyMessageTags } from '@app/utils/chat/channelPointsRewardTitle';
+import {
   createCharityDonationPart,
   createRitualPart,
   createSubscriptionPart,
   createViewerMilestonePart,
 } from '@app/utils/chat/formatSubscriptionNotice';
 import { parseBadges } from '@app/utils/chat/parseBadges';
+import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 import {
   isSharedChatDuplicatedNotice,
   isSubscriptionUserNotice,
 } from '@app/utils/chat/userNoticeMsgIds';
-import { isHighlightMyMessageTags } from '@app/utils/chat/channelPointsRewardTitle';
-import {
-  enrichChannelPointPrivmsgTags,
-  ingestChannelPointRewardTags,
-} from '@app/utils/chat/channelPointRewardTitleStore';
-import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
-import { getPreferences } from '@app/store/preferenceStore';
 import { formatDate } from '@app/utils/date-time/date';
 import { generateNonce } from '@app/utils/string/generateNonce';
 

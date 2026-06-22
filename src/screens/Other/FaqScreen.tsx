@@ -1,12 +1,14 @@
+import { useEffect, useRef } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
-import { useEffect, useRef } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+
 import { OtherInfoCard } from './components/OtherInfoCard';
-import { useTranslation } from 'react-i18next';
 
 export function FaqScreen() {
   const { t } = useTranslation('faq');

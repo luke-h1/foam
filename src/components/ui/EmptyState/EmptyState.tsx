@@ -1,4 +1,14 @@
 /* eslint-disable no-restricted-imports */
+import { useTranslation } from 'react-i18next';
+import type {
+  ImageStyle,
+  StyleProp,
+  TextProps,
+  TextStyle,
+  ViewStyle,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import {
   EmptyLayout,
   EmptyLayoutButton,
@@ -10,17 +20,8 @@ import {
 } from '@app/components/EmptyLayout/EmptyLayout';
 import { Image } from '@app/components/Image/Image';
 import type { ImageProps as AppImageProps } from '@app/components/Image/Image.types';
-import { theme } from '@app/styles/themes';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
-import type {
-  ImageStyle,
-  StyleProp,
-  TextProps,
-  TextStyle,
-  ViewStyle,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTranslation } from 'react-i18next';
+import { theme } from '@app/styles/themes';
 interface EmptyStatePresetItem {
   iconName: SymbolViewProps['name'];
   headingKey: 'nothingHereYet';

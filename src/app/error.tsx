@@ -1,14 +1,16 @@
-import { type ErrorBoundaryProps, Stack, router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
 import { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@app/components/Button/Button';
+
+import { type ErrorBoundaryProps, router, Stack } from 'expo-router';
+
 import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { Button } from '@app/components/Button/Button';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
-import { logger } from '@app/utils/logger';
 import { theme } from '@app/styles/themes';
+import { logger } from '@app/utils/logger';
 
 function handleReportBug() {
   router.push('/feedback');

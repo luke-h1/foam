@@ -1,18 +1,20 @@
-import {
-  getPreferences,
-  preferences$,
-  replacePreferences,
-} from '@app/store/preferenceStore';
+import { useEffect, useRef } from 'react';
+import { AppState, InteractionManager } from 'react-native';
+
+import { useObserveEffect } from '@legendapp/state/react';
+
 import {
   isICloudPreferenceSyncAvailable,
   loadPreferencesFromICloud,
   savePreferencesToICloud,
   synchronizeICloudPreferences,
 } from '@app/lib/icloud-sync';
+import {
+  getPreferences,
+  preferences$,
+  replacePreferences,
+} from '@app/store/preferenceStore';
 import { logger } from '@app/utils/logger';
-import { useObserveEffect } from '@legendapp/state/react';
-import { useEffect, useRef } from 'react';
-import { AppState, InteractionManager } from 'react-native';
 
 export function useIcloudPreferenceSync() {
   const latestLocalTimestampRef = useRef(getPreferences().updatedAt);

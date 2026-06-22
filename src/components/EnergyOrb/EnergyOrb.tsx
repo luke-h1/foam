@@ -1,24 +1,26 @@
-import { useMemo, memo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
+import {
+  useDerivedValue,
+  useFrameCallback,
+  useSharedValue,
+} from 'react-native-reanimated';
+
 import {
   Canvas,
   Fill,
-  Skia,
   Shader,
+  Skia,
   type Uniforms,
 } from '@shopify/react-native-skia';
+
 import {
-  useSharedValue,
-  useFrameCallback,
-  useDerivedValue,
-} from 'react-native-reanimated';
-import {
-  SHADER_SOURCE,
   DEFAULT_COLORS,
-  DEFAULT_SPEED,
-  DEFAULT_INTENSITY,
   DEFAULT_GLOW_RADIUS,
+  DEFAULT_INTENSITY,
   DEFAULT_SIZE,
+  DEFAULT_SPEED,
+  SHADER_SOURCE,
 } from './conf';
 import { parseColor } from './helper';
 import type { IEnergyOrb, RGB } from './types';

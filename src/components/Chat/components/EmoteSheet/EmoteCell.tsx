@@ -1,14 +1,16 @@
+import { useState } from 'react';
+import { View } from 'react-native';
+
 import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import { BLURHASH } from '@app/utils/image/image-cache';
-import { useState } from 'react';
-import { View } from 'react-native';
-import type { EmotePickerItem } from './emoteSheetTypes';
+
 import { EmoteImageShimmer } from './EmoteImageShimmer';
 import { emoteSheetStyles as styles } from './emoteSheetStyles';
+import type { EmotePickerItem } from './emoteSheetTypes';
 
 // Picker cells render at ~40pt; the 2x variant keeps the sheet from decoding
 // hundreds of 4x animated AVIFs at once (see issue #594 profiling).

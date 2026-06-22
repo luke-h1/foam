@@ -1,6 +1,8 @@
-import { SettingsRow } from '@app/components/SettingsSection/SettingsSection';
-import type { ComponentProps } from 'react';
 import { View } from 'react-native';
+import type { ComponentProps } from 'react';
+
+import { SettingsRow } from '@app/components/SettingsSection/SettingsSection';
+
 import { ChatPreferenceSegmentedTrailing } from './ChatPreferenceSegmentedTrailing';
 
 type SettingsRowIcon = ComponentProps<typeof SettingsRow>['icon'];

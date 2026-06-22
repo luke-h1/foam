@@ -1,9 +1,8 @@
-import { Image } from '@app/components/Image/Image';
-import { PressableArea } from '@app/components/PressableArea/PressableArea';
-import { Text } from '@app/components/ui/Text/Text';
-import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { theme } from '@app/styles/themes';
-import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import { useRef } from 'react';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+
 import {
   Button,
   Form,
@@ -15,12 +14,14 @@ import {
 } from '@expo/ui/swift-ui';
 import * as Application from 'expo-application';
 import * as Updates from 'expo-updates';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
-import { useRef } from 'react';
-import type { ReactNode } from 'react';
 
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
+import { Image } from '@app/components/Image/Image';
+import { PressableArea } from '@app/components/PressableArea/PressableArea';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import { theme } from '@app/styles/themes';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 
 const appIconProduction = require('../../../assets/app-icon/app-icon-production.png');
 

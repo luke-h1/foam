@@ -1,7 +1,9 @@
+import { renderHook, waitFor } from '@testing-library/react-native';
+
 import { recentMessagesService } from '@app/services/recent-messages-service';
 import { restoreRecentMessagesForChannel } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { renderHook, waitFor } from '@testing-library/react-native';
+
 import { useRecentChatMessages } from '../useRecentChatMessages';
 
 jest.mock('@app/services/recent-messages-service', () => ({

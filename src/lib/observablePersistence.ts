@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+
 import type {
   ObservablePersistLocal,
   PersistOptionsLocal,
@@ -8,6 +9,7 @@ import {
   mapPersistences,
 } from '@legendapp/state/persist';
 import { ObservablePersistMMKV } from '@legendapp/state/persist-plugins/mmkv';
+
 import { ObservablePersistIndexedDbJson } from './observablePersistIndexedDbJson';
 
 let initialized = false;

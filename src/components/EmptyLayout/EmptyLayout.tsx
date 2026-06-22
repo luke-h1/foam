@@ -1,16 +1,17 @@
-import type { ReactNode } from 'react';
-import { Button } from '@app/components/Button/Button';
-import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
-import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import {
+  type StyleProp,
   // eslint-disable-next-line no-restricted-imports
   StyleSheet,
-  View,
-  type StyleProp,
   type TextStyle,
+  View,
   type ViewStyle,
 } from 'react-native';
+import type { ReactNode } from 'react';
+
+import { Button } from '@app/components/Button/Button';
+import { PressableArea } from '@app/components/PressableArea/PressableArea';
+import { Text } from '@app/components/ui/Text/Text';
+import { theme } from '@app/styles/themes';
 
 type EmptyLayoutVariant = 'default' | 'outline';
 type EmptyMediaVariant = 'icon' | 'illustration';

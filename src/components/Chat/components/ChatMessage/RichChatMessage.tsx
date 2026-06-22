@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
+import { memo } from 'react';
+
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
-import { memo } from 'react';
 
 import { EmoteActionSheet } from './renderers/EmoteActionSheet';
 import type { RichChatMessageProps } from './RichChatMessage.types';

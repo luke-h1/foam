@@ -1,10 +1,11 @@
 import { memo } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { View, StyleSheet } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 export interface ResumeScrollProps {
   unreadCount: number;

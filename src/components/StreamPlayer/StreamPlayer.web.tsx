@@ -1,9 +1,10 @@
+import { type Ref, useImperativeHandle } from 'react';
+import { type DimensionValue, Linking, StyleSheet, View } from 'react-native';
+
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
-import { useImperativeHandle, type Ref } from 'react';
-import { Linking, StyleSheet, View, type DimensionValue } from 'react-native';
 import i18next from '@app/i18n/i18next';
+import { theme } from '@app/styles/themes';
 
 export interface StreamPlayerRef {
   forceRefresh: () => void;

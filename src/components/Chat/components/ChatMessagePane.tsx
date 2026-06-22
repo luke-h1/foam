@@ -1,10 +1,4 @@
-import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
-import { useMessages } from '@app/store/chat/react/selectors';
-import { logger } from '@app/utils/logger';
-import { useEffect, useMemo, useRef, memo } from 'react';
-import type { RefObject } from 'react';
-
+import { memo, useEffect, useMemo, useRef } from 'react';
 import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -12,13 +6,19 @@ import {
   View,
   type ViewStyle,
 } from 'react-native';
+import type { RefObject } from 'react';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import type { ChatPaneFlags } from '../types/chatUiFlags';
+import { Text } from '@app/components/ui/Text/Text';
+import { useMessages } from '@app/store/chat/react/selectors';
+import { theme } from '@app/styles/themes';
+import { logger } from '@app/utils/logger';
+
 import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
 import { styles } from '../styles';
+import type { ChatPaneFlags } from '../types/chatUiFlags';
 import type { AnyChatMessageType } from '../util/messageHandlers';
 import { getVisibleMessages } from '../util/visibleMessages';
 import {

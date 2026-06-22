@@ -1,17 +1,20 @@
+import { ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+
+import { Text, TextType, TextWeight } from '@app/components/ui/Text/Text';
 import {
   theme,
   type ThemeColor,
   type ThemeColorToken,
 } from '@app/styles/themes';
-import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
-import { ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
-import { View, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { IconButton } from '../IconButton/IconButton';
 import { Image } from '../Image/Image';
-import { Text, TextType, TextWeight } from '@app/components/ui/Text/Text';
 
 /**
  * Unified header component that supports both standard and hero layouts

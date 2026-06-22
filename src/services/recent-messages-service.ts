@@ -1,14 +1,8 @@
-import { parseJsonOnUIThread } from '@app/lib/offThreadJson';
+import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
+import type { ParsedIrcMessage } from '@app/types/chat/recentMessages';
 
 const RECENT_MESSAGES_URL =
   'https://recent-messages.robotty.de/api/v2/recent-messages';
-
-export type ParsedIrcMessage = {
-  tags?: Record<string, string>;
-  prefix?: string;
-  command: string;
-  params: string[];
-};
 
 type RecentMessagesResponse = {
   messages?: unknown;
@@ -103,7 +97,7 @@ export const recentMessagesService = {
       throw new Error(`Failed to load recent messages: ${response.status}`);
     }
 
-    const payload = await parseJsonOnUIThread<RecentMessagesResponse>(
+    const payload = await parseJsonOnWorklet<RecentMessagesResponse>(
       await response.text(),
     );
     if (!Array.isArray(payload.messages)) {

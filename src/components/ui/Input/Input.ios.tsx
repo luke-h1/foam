@@ -1,23 +1,32 @@
-import { useAccentColor } from '@app/context/AccentColorContext';
-import { colors } from '@app/styles/colors';
 import {
-  getColorValue,
-  InputColorConfig,
-  RADIUS_VALUES,
-  UIColor,
-  UIRadius,
-  UISize,
-} from '@app/styles/ui';
+  type Ref,
+  useId,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
+import {
+  type ColorValue,
+  type StyleProp,
+  StyleSheet,
+  type TextInputProps,
+  type TextStyle,
+  useColorScheme,
+  type ViewStyle,
+} from 'react-native';
+import { scheduleOnRN } from 'react-native-worklets';
+
 import {
   GlassEffectContainer,
   Host,
   SecureField,
+  type SecureFieldRef,
   Text as SwiftUIText,
   TextField,
+  type TextFieldRef,
   useNativeState,
   VStack,
-  type SecureFieldRef,
-  type TextFieldRef,
 } from '@expo/ui/swift-ui';
 import {
   Animation,
@@ -45,25 +54,17 @@ import {
   type ViewModifier,
 } from '@expo/ui/swift-ui/modifiers';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
-import {
-  useId,
-  useImperativeHandle,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type Ref,
-} from 'react';
 
+import { useAccentColor } from '@app/context/AccentColorContext';
+import { colors } from '@app/styles/colors';
 import {
-  StyleSheet,
-  type ColorValue,
-  type StyleProp,
-  type TextInputProps,
-  type TextStyle,
-  type ViewStyle,
-  useColorScheme,
-} from 'react-native';
-import { scheduleOnRN } from 'react-native-worklets';
+  getColorValue,
+  InputColorConfig,
+  RADIUS_VALUES,
+  UIColor,
+  UIRadius,
+  UISize,
+} from '@app/styles/ui';
 
 type InputVariant = 'outline' | 'soft' | 'subtle' | 'underline';
 

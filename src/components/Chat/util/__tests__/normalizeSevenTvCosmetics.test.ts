@@ -1,11 +1,12 @@
-import type { SevenTvHost } from '@app/services/seventv-service';
 import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import type {
   BadgeData,
   PaintData,
   PaintShadow,
   PaintStop,
-} from '@app/utils/color/seventv-ws-service';
+} from '@app/types/seventv/cosmetics';
+import type { SevenTvHost } from '@app/types/seventv/emotes';
+
 import {
   badgeUrlFromHost,
   get7TvCosmeticId,

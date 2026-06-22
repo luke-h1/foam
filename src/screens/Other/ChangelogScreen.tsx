@@ -1,8 +1,9 @@
+import { useRef } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+
 import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
-import { useRef } from 'react';
-import { ScrollView, View, StyleSheet } from 'react-native';
 
 // todo - in the future, read from github md
 const mockChangelog = `

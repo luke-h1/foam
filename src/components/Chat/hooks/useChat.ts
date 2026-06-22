@@ -1,28 +1,30 @@
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { useNavigation } from 'expo-router';
+
 import { useAuthContext } from '@app/context/AuthContext';
 import { useSyntheticChatFlood } from '@app/dev/imageBenchmark/useSyntheticChatFlood';
+import { useLazyRef } from '@app/hooks/useLazyRef';
+import { useTwitchChannelPointsEventSub } from '@app/hooks/useTwitchChannelPointsEventSub';
 import { ReadyState } from '@app/hooks/ws/constants';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { setChatFrontTrimSuspended } from '@app/store/chat/actions/messages';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import {
   useChatRenderPreferences,
   usePreference,
   useUpdatePreferences,
 } from '@app/store/preferenceStore';
+import { findCustomHighlight } from '@app/utils/chat/customHighlights';
 import { parseBadges } from '@app/utils/chat/parseBadges';
-import { useNavigation } from 'expo-router';
-import { useLazyRef } from '@app/hooks/useLazyRef';
-import { useTwitchChannelPointsEventSub } from '@app/hooks/useTwitchChannelPointsEventSub';
 import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { ChatInputShellHandle } from '../components/ChatInputShell';
 import type { ChatListRef } from '../components/ChatList';
 import { useChatOverlays } from '../components/useChatOverlays';
 import { normaliseChatUsername } from '../util/chatUsernames';
 import { triggerMentionHaptic } from '../util/mentionHaptics';
-import { findCustomHighlight } from '@app/utils/chat/customHighlights';
 import { useChatCosmetics } from './useChatCosmetics';
 import { useChatEmoteLoader } from './useChatEmoteLoader';
 import {
@@ -353,11 +355,15 @@ export function useChat(
   const connected =
     twitchConnectionState === ReadyState.OPEN && isChatConnected();
 
-  const { appendMentionToComposer, handleEmoteSelect, handleReply } =
-    useChatComposerActions({
-      fetchUserCosmetics,
-      inputShellRef,
-    });
+  const {
+    appendMentionToComposer,
+    handleEmoteSelect,
+    handleReply,
+    insertPhraseToComposer,
+  } = useChatComposerActions({
+    fetchUserCosmetics,
+    inputShellRef,
+  });
 
   const currentUserState = getUserState();
   const parsedBadges = parseBadges(currentUserState['badges-raw']).badges;
@@ -418,6 +424,7 @@ export function useChat(
     highlightedUsers,
     hidePhraseFromView,
     hideUserFromView,
+    insertPhraseToComposer,
     onClearChatCache: handleClearChatCache,
     onClearImageCache: handleDebugClearImageCache,
     onClearSevenTvCosmeticsCache: handleClearSevenTvCosmeticsCache,

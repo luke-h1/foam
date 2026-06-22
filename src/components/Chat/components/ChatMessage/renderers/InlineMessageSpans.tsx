@@ -1,9 +1,11 @@
-import { Text } from '@app/components/ui/Text/Text';
-import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 import type { ReactNode } from 'react';
 import type { StyleProp, TextStyle } from 'react-native';
-import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
+
 import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
+import { Text } from '@app/components/ui/Text/Text';
+import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
+
+import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
 import { EmoteRenderer } from './EmoteRenderer';
 import { MentionSpan } from './MentionSpan';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';

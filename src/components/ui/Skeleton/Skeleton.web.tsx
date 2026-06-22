@@ -1,7 +1,9 @@
-import { theme } from '@app/styles/themes';
-import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { type StyleProp, StyleSheet, type ViewStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
+
+import { LinearGradient } from 'expo-linear-gradient';
+
+import { theme } from '@app/styles/themes';
 
 interface SkeletonProps {
   shimmer?: boolean;

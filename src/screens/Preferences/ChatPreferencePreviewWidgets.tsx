@@ -1,14 +1,16 @@
+import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
 import { Image } from '@app/components/Image/Image';
 import { Text, type TextType } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
-import { StyleSheet, View } from 'react-native';
+
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import type {
   PreviewProvider,
   ProviderPreviewVariant,
 } from './chatPreferenceTypes';
-import { useTranslation } from 'react-i18next';
 
 export const DensityPreview = function DensityPreview({
   density,

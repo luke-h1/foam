@@ -1,3 +1,5 @@
+import { batch } from '@legendapp/state';
+
 import {
   buildSevenTvBadgeImageUrl,
   normalizeSevenTvBadge,
@@ -7,18 +9,17 @@ import {
   clearSevenTvUserIdCache,
   sevenTvService,
 } from '@app/services/seventv-service';
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
+import type { PaintData } from '@app/types/seventv/cosmetics';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import {
   convertV4PaintToPaintData,
   type V4Badge,
 } from '@app/utils/color/sevenTvPaintData';
-import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import { logger } from '@app/utils/logger';
-import { batch } from '@legendapp/state';
 
-import { MAX_COSMETIC_ENTRIES } from '../types/constants';
 import { chatStore$ } from '../observables/chatStore';
 import { writePersistedCosmetics } from '../observables/cosmeticsPersistence';
+import { MAX_COSMETIC_ENTRIES } from '../types/constants';
 import {
   clearAllMissingBadges,
   clearMissingBadge,

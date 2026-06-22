@@ -1,6 +1,8 @@
 import { createRef } from 'react';
-import { act, render } from '@testing-library/react-native';
 import type { WebViewProps } from 'react-native-webview';
+
+import { act, render } from '@testing-library/react-native';
+
 import { logger } from '@app/utils/logger';
 
 const mockInjectJavaScript = jest.fn();

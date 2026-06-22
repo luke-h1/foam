@@ -1,5 +1,5 @@
 import type { CustomHighlight } from '@app/store/preferenceStore';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 
 // Match results are cached per message-part array; the rules array is part of

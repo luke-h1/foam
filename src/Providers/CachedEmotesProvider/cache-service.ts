@@ -12,8 +12,10 @@
  * just composites an already-decoded, size-bounded bitmap. Animated AVIFs keep
  * animating — the ref carries `isAnimated` and the view autoplays.
  */
-import { Image, type ImageRef } from 'expo-image';
 import { AppState } from 'react-native';
+
+import { Image, type ImageRef } from 'expo-image';
+
 import { getDeviceTier } from '@app/utils/device/deviceTier';
 
 const isLowTier = getDeviceTier() === 'low';
@@ -76,23 +78,52 @@ function dropRefBytes(url: string): void {
   }
 }
 
+const pendingReleases: { url: string; ref: ImageRef }[] = [];
+let releaseFlushScheduled = false;
+
 /**
- * Evict a url from the cache: detach its native bitmap so it deallocates now
- * instead of whenever the JS GC eventually collects the `ImageRef` (too late
- * under memory pressure), then drop it from the maps. A released ref throws on
- * any later native call, so only release when no consumer is subscribed to this
- * url — `useCachedEmote` subscribes for its whole mounted life, so an absent
- * listener means nothing is rendering `<Image source={ref}>`. Off-screen refs in
- * the virtualized list are unsubscribed, so this still frees the large majority.
- * Returns whether the url was cached.
+ * Native release is deferred a frame and re-checked. `useCachedEmote` registers
+ * its subscription in a passive effect (asynchronously after the render that
+ * reads the ref), so releasing synchronously on eviction can race that
+ * subscription and detach a bitmap a mounted `<Image source={ref}>` is still
+ * drawing — the emote, and an emote-only message, goes blank. By the next frame
+ * the subscription exists, so an absent listener reliably means nothing holds
+ * the ref. A released ref throws on any later native call, hence the try/catch.
  */
-function releaseRef(url: string): boolean {
-  const ref = refs.get(url);
-  if (ref && !listeners.has(url)) {
+function flushPendingReleases(): void {
+  releaseFlushScheduled = false;
+  const batch = pendingReleases.splice(0, pendingReleases.length);
+  for (const { url, ref } of batch) {
+    if (listeners.has(url)) {
+      // A new subscriber raced in before this flush — re-queue so the ref is
+      // retried next frame instead of leaking when that subscriber leaves.
+      pendingReleases.push({ url, ref });
+      continue;
+    }
     try {
       ref.release();
     } catch {
       // ignore
+    }
+  }
+  if (pendingReleases.length > 0 && !releaseFlushScheduled) {
+    releaseFlushScheduled = true;
+    requestAnimationFrame(flushPendingReleases);
+  }
+}
+
+/**
+ * Evict a url from the cache: drop it from the maps now and queue its native
+ * bitmap for release so it deallocates without waiting for the JS GC (too late
+ * under memory pressure). Returns whether the url was cached.
+ */
+function releaseRef(url: string): boolean {
+  const ref = refs.get(url);
+  if (ref) {
+    pendingReleases.push({ url, ref });
+    if (!releaseFlushScheduled) {
+      releaseFlushScheduled = true;
+      requestAnimationFrame(flushPendingReleases);
     }
   }
   dropRefBytes(url);

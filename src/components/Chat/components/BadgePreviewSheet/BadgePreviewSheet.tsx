@@ -1,22 +1,25 @@
 import { memo } from 'react';
-/* eslint-disable react-native/sort-styles */
-import { Button } from '@app/components/Button/Button';
-import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
-import { Image } from '@app/components/Image/Image';
-import { Text } from '@app/components/ui/Text/Text';
-import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
-import { theme } from '@app/styles/themes';
-import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
-import * as Clipboard from 'expo-clipboard';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import {
   ScrollView,
   StyleSheet,
   useWindowDimensions,
   View,
 } from 'react-native';
-import { toast } from 'sonner-native';
 import { useTranslation } from 'react-i18next';
+
+import * as Clipboard from 'expo-clipboard';
+import { toast } from 'sonner-native';
+
+import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
+/* eslint-disable react-native/sort-styles */
+import { Button } from '@app/components/Button/Button';
+import { Image } from '@app/components/Image/Image';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
+import { useSaveImageToGallery } from '@app/hooks/useSaveImageToGallery';
+import { theme } from '@app/styles/themes';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 
 interface Props {
   visible: boolean;
@@ -29,10 +32,12 @@ type PreviewAction = {
   label: string;
   onPress: () => void;
   subtitle: string;
+  disabled?: boolean;
 };
 
 function BadgePreviewSheetComponent(props: Props) {
   const { t } = useTranslation(['chat', 'common']);
+  const { saveImage, isSaving } = useSaveImageToGallery();
   const { visible, onClose, selectedBadge } = props;
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   const sheetWidth = Math.max(
@@ -60,6 +65,16 @@ function BadgePreviewSheetComponent(props: Props) {
           ? t('badgePreview.nameCopied')
           : t('badgePreview.urlCopied'),
       ),
+    );
+  };
+
+  const handleSaveImage = () => {
+    saveImage(
+      { url: selectedBadge.url },
+      {
+        onError: () => toast.error(t('badgePreview.imageSaveFailed')),
+        onSuccess: () => toast.success(t('badgePreview.imageSaved')),
+      },
     );
   };
 
@@ -91,6 +106,13 @@ function BadgePreviewSheetComponent(props: Props) {
     ];
 
     if (selectedBadge.url) {
+      items.push({
+        icon: 'square.and.arrow.down',
+        label: t('badgePreview.saveImage'),
+        onPress: handleSaveImage,
+        subtitle: t('badgePreview.saveImageSubtitle'),
+        disabled: isSaving,
+      });
       items.push({
         icon: 'arrow.up.right.square',
         label: t('badgePreview.openInBrowser'),
@@ -141,7 +163,6 @@ function BadgePreviewSheetComponent(props: Props) {
           <View style={styles.previewPanel}>
             <View style={styles.imageStage}>
               <Image
-                trackLoadTime
                 trackLoadContext='chat.badge-preview'
                 source={selectedBadge.url}
                 cacheVariant='badge'
@@ -175,6 +196,7 @@ function BadgePreviewSheetComponent(props: Props) {
               <Button
                 key={action.label}
                 onPress={action.onPress}
+                disabled={action.disabled}
                 style={[
                   styles.actionButton,
                   index < actions.length - 1 && styles.actionButtonBorder,

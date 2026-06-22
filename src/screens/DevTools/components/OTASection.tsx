@@ -1,6 +1,8 @@
-import * as Form from '@app/components/Form/Form';
-import * as Updates from 'expo-updates';
 import { useTranslation } from 'react-i18next';
+
+import * as Updates from 'expo-updates';
+
+import * as Form from '@app/components/Form/Form';
 
 export function OTASection() {
   const { t } = useTranslation('devTools');

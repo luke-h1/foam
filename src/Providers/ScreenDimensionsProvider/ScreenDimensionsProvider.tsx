@@ -1,5 +1,6 @@
 import { createContext, PropsWithChildren } from 'react';
 import { useWindowDimensions } from 'react-native';
+
 import { Dimensions, DisplayMode, mode } from './dimensions';
 
 type ScreenDimensionsContextDataType = {

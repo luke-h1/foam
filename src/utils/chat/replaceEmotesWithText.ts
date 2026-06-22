@@ -1,4 +1,4 @@
-import { ParsedPart } from './replaceTextWithEmotes';
+import { ParsedPart } from './parsedPart';
 import { getParsedPartStringContent } from './parsedPartContent';
 
 /**

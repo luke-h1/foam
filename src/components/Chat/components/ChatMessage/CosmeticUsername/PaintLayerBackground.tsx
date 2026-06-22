@@ -1,6 +1,3 @@
-import type { PaintLayerData } from '@app/utils/color/seventv-ws-service';
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { type LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import Svg, {
@@ -10,6 +7,12 @@ import Svg, {
   Rect,
   Stop,
 } from 'react-native-svg';
+
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+
+import type { PaintLayerData } from '@app/types/seventv/cosmetics';
+
 import {
   buildLayerGradientConfig,
   getLayerLayoutStyle,

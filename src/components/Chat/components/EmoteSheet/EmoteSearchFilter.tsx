@@ -1,8 +1,10 @@
+import { View } from 'react-native';
+
 import { Button } from '@app/components/Button/Button';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Input } from '@app/components/ui/Input/Input';
 import { theme } from '@app/styles/themes';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
-import { View } from 'react-native';
+
 import { emoteSheetStyles as styles } from './emoteSheetStyles';
 
 export function EmoteSearchFilter({

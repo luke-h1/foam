@@ -1,16 +1,17 @@
+import { MediaLinkCard } from '@app/components/Chat/components/MediaLinkCard';
+import { StvEmoteEvent } from '@app/components/Chat/components/StvEmoteEvent';
+import { CharityDonationNotice } from '@app/components/Chat/components/usernotices/CharityDonationNotice';
+import { RitualNotice } from '@app/components/Chat/components/usernotices/RitualNotice';
+import { SubscriptionNotice } from '@app/components/Chat/components/usernotices/SubscriptionNotice';
+import { ViewerMileStoneNoticeComponent } from '@app/components/Chat/components/usernotices/ViewerMilestoneNotice';
+import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
 import { Text } from '@app/components/ui/Text/Text';
-import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
+import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin';
-import { MediaLinkCard } from '../../MediaLinkCard';
-import { StvEmoteEvent } from '../../StvEmoteEvent';
-import { SubscriptionNotice } from '../../usernotices/SubscriptionNotice';
-import { ViewerMileStoneNoticeComponent } from '../../usernotices/ViewerMilestoneNotice';
-import { CharityDonationNotice } from '../../usernotices/CharityDonationNotice';
-import { RitualNotice } from '../../usernotices/RitualNotice';
+
 import { styles } from '../RichChatMessage.styles';
-import { normaliseUsername } from '../richChatMessageHelpers';
 import { EmoteRenderer } from './EmoteRenderer';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 
@@ -144,6 +145,7 @@ export function ChatMessagePart({
       return (
         <EmoteRenderer
           disableAnimations={disableEmoteAnimations}
+          isModerated={Boolean(moderationNotice)}
           key={getPartKey(part, index)}
           part={part}
           onEmoteTouchStart={onEmoteTouchStart}

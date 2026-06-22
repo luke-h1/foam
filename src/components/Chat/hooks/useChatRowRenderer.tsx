@@ -1,24 +1,29 @@
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { getUserMessageColor } from '@app/store/chat/actions/messages';
+import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
+import type { RefObject } from 'react';
+
+import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import {
   getSessionCacheString,
   setSessionCacheString,
 } from '@app/store/chat/actions/chatColorCaches';
-import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
+import { getUserMessageColor } from '@app/store/chat/actions/messages';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import type {
+  ChatFontScale,
+  CustomHighlight,
+} from '@app/store/preferenceStore';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
-import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
-import { useRef, useCallback, useMemo, useLayoutEffect } from 'react';
-import type { RefObject } from 'react';
 
 import type { ChatListRef } from '../components/ChatList';
 import type { ChatListRenderItemInfo } from '../components/ChatList';
 import {
-  RichChatMessage,
   type BadgePressData,
   type EmotePressData,
   type MessageActionData,
+  RichChatMessage,
   type UsernamePressData,
 } from '../components/ChatMessage/RichChatMessage';
 import {
@@ -26,6 +31,7 @@ import {
   useRowVisibility,
 } from '../components/ChatMessage/rowVisibility';
 import { styles } from '../styles';
+import type { ChatRowDisplayFlags } from '../types/chatUiFlags';
 import {
   getChatMessageListKey,
   isRenderableChatMessage,
@@ -33,11 +39,6 @@ import {
 import { getChatRowItemType } from '../util/chatRowItemType';
 import { normaliseChatUsername } from '../util/chatUsernames';
 import type { AnyChatMessageType } from '../util/messageHandlers';
-import type { ChatRowDisplayFlags } from '../types/chatUiFlags';
-import type {
-  ChatFontScale,
-  CustomHighlight,
-} from '@app/store/preferenceStore';
 import { useIsHighlightedReplyTargetMessage } from './useChatTransientState';
 
 const chatRowKeyExtractor = (item: AnyChatMessageType) =>

@@ -1,43 +1,34 @@
+import { useCallback, useEffect, useRef } from 'react';
+
 import { useAuthContext } from '@app/context/AuthContext';
+import { useLazyRef } from '@app/hooks/useLazyRef';
 import { isE2EMode } from '@app/services/api/clients';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import {
+  containsMutedWords,
+  isUserBlocked,
+} from '@app/utils/chat/chatMessageFilters';
+import { type IrcMessage, parseIrcMessage } from '@app/utils/chat/ircProtocol';
 import { logger } from '@app/utils/logger';
-import { useLazyRef } from '@app/hooks/useLazyRef';
-import { useEffect, useRef, useCallback } from 'react';
+
+import { ReadyState } from '../hooks/ws/constants';
 import { useWebsocket } from '../hooks/ws/useWebsocket';
 
-// E2E builds talk to the mock IRC-over-WebSocket server (e2e/mock-server)
-// instead of real Twitch chat so tests stay deterministic.
+/**
+ * Twitch IRC PINGs roughly every 5 min and we PONG, but a half-open socket
+ * (Wi-Fi↔cellular handoff, NAT/idle timeout, background→foreground) frequently
+ * fires no close event: the WebSocket sits in OPEN forever, no messages arrive,
+ * and the reconnect path never runs — chat silently stops while the app still
+ * believes it is connected. Send our own PING on an interval (Twitch answers
+ * with PONG, which counts as inbound activity) and force a reconnect if the
+ * server has gone quiet for longer than the timeout.
+ */
+const CHAT_HEARTBEAT_INTERVAL_MS = 60_000;
+const CHAT_HEARTBEAT_TIMEOUT_MS = 150_000;
+
 const TWITCH_CHAT_URL = isE2EMode
   ? 'ws://localhost:6667'
   : 'wss://irc-ws.chat.twitch.tv:443';
-
-function parseIrcTags(tagString: string): Record<string, string> {
-  const tags: Record<string, string> = {};
-  if (!tagString) {
-    return tags;
-  }
-
-  let start = 0;
-  while (start <= tagString.length) {
-    const separatorIndex = tagString.indexOf(';', start);
-    const endIndex = separatorIndex === -1 ? tagString.length : separatorIndex;
-    const part = tagString.slice(start, endIndex);
-    const keyValue = part.split('=');
-    const key = keyValue[0] ?? '';
-
-    if (key) {
-      tags[key] = keyValue.length > 1 ? keyValue.slice(1).join('=') : '';
-    }
-
-    if (separatorIndex === -1) {
-      break;
-    }
-    start = separatorIndex + 1;
-  }
-
-  return tags;
-}
 
 function formatIrcChannelName(channelName: string): string {
   return channelName.startsWith('#') ? channelName : `#${channelName}`;
@@ -45,13 +36,6 @@ function formatIrcChannelName(channelName: string): string {
 
 function handleTwitchChatWebSocketError(error: Event) {
   logger.chat.error('💬 Twitch IRC WebSocket error:', error);
-}
-
-interface IrcMessage {
-  tags?: Record<string, string>;
-  prefix?: string;
-  command: string;
-  params: string[];
 }
 
 interface UseTwitchChatOptions {
@@ -113,6 +97,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     `justinfan${Math.floor(Math.random() * 90000) + 10000}`,
   );
   const pendingIrcMessagesRef = useRef<string[]>([]);
+  // Seeded on open and refreshed on every inbound line; the heartbeat only
+  // reads it once readyState is OPEN, by which point onOpen has set it.
+  const lastActivityAtRef = useRef(0);
   const sendIrcMessageRef = useRef<((message: string) => void) | null>(null);
   const messageBufferRef = useRef<string>('');
   const userStateRef = useRef<Record<string, string>>({});
@@ -127,98 +114,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const shouldConnect = Boolean(channel?.trim());
 
   const previousTokenRef = useRef<string | undefined>(undefined);
-
-  const parseTags = parseIrcTags;
-
-  /**
-   * Parse IRC message (format: [@tags] :prefix COMMAND params)
-   */
-  const parseIrcMessage = (line: string): IrcMessage | null => {
-    if (!line.trim()) {
-      return null;
-    }
-
-    let remaining = line.trim();
-    let tags: Record<string, string> | undefined;
-    let prefix: string | undefined;
-
-    // Parse tags
-    if (remaining.startsWith('@')) {
-      const tagEnd = remaining.indexOf(' ');
-      if (tagEnd === -1) {
-        return null;
-      }
-      const tagString = remaining.substring(1, tagEnd);
-      tags = parseTags(tagString);
-      remaining = remaining.substring(tagEnd + 1).trim();
-    }
-
-    // Parse prefix
-    if (remaining.startsWith(':')) {
-      const prefixEnd = remaining.indexOf(' ');
-      if (prefixEnd === -1) {
-        return null;
-      }
-      prefix = remaining.substring(1, prefixEnd);
-      remaining = remaining.substring(prefixEnd + 1).trim();
-    }
-
-    const commandEnd = remaining.indexOf(' ');
-    const command =
-      commandEnd === -1 ? remaining : remaining.slice(0, commandEnd);
-    if (!command) {
-      return null;
-    }
-
-    const params: string[] = [];
-    const paramString =
-      commandEnd === -1 ? '' : remaining.slice(commandEnd + 1);
-    const trailingIndex = paramString.indexOf(' :');
-
-    if (trailingIndex >= 0) {
-      const leading = paramString.slice(0, trailingIndex);
-      if (leading) {
-        params.push(...leading.split(' '));
-      }
-      params.push(paramString.slice(trailingIndex + 2));
-    } else if (paramString.startsWith(':')) {
-      params.push(paramString.slice(1));
-    } else if (paramString) {
-      params.push(...paramString.split(' '));
-    }
-
-    return { tags, prefix, command, params };
-  };
-
-  /**
-   * Check if a user is blocked
-   */
-  const isUserBlocked = (username?: string): boolean => {
-    if (!username || blockedUsers.length === 0) {
-      return false;
-    }
-    return blockedUsers.some(
-      blockedUser =>
-        blockedUser.userLogin.toLowerCase() === username.toLowerCase(),
-    );
-  };
-
-  /**
-   * Check if message contains muted words
-   */
-  const containsMutedWords = (message: string): boolean => {
-    if (mutedWords.length === 0) {
-      return false;
-    }
-
-    const messageLower = message.toLowerCase();
-    const words = matchWholeWord ? messageLower.split(' ') : [messageLower];
-
-    return mutedWords.some(mutedWord => {
-      const mutedWordLower = mutedWord.toLowerCase();
-      return words.some(word => word === mutedWordLower);
-    });
-  };
 
   /**
    * Send IRC command
@@ -398,7 +293,11 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
             const isChannelOwner =
               channelName.slice(1).toLowerCase() === user?.login?.toLowerCase();
 
-            if (!isMod && !isChannelOwner && isUserBlocked(username)) {
+            if (
+              !isMod &&
+              !isChannelOwner &&
+              isUserBlocked(username, blockedUsers)
+            ) {
               logger.chat.debug(
                 `Filtered message from blocked user: ${username}`,
               );
@@ -406,7 +305,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
             }
 
             // Filter muted words
-            if (containsMutedWords(messageText)) {
+            if (containsMutedWords(messageText, mutedWords, matchWholeWord)) {
               logger.chat.debug(`Filtered message containing muted words`);
               return;
             }
@@ -612,6 +511,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
   const handleMessage = (event: MessageEvent) => {
     try {
+      lastActivityAtRef.current = Date.now();
       const text = `${messageBufferRef.current}${event.data as string}`;
       let cursor = 0;
 
@@ -649,6 +549,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     logger.chat.info('💬 Twitch IRC WebSocket connected');
     isAuthenticatedRef.current = false;
     joinedChannelsRef.current.clear();
+    lastActivityAtRef.current = Date.now();
 
     authenticate();
   }, [authenticate, joinedChannelsRef]);
@@ -686,7 +587,13 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       onClose: handleWebSocketClose,
       onError: handleWebSocketError,
       shouldReconnect,
-      reconnectAttempts: 30,
+      /**
+       * A long outage (tunnel/commute) used to exhaust 30 attempts in ~7min and
+       * then never retry, leaving chat permanently dead until the screen
+       * remounted. The backoff caps the interval at ~16s, so a higher ceiling
+       * just keeps chat trying to come back across a longer gap.
+       */
+      reconnectAttempts: 100,
       reconnectInterval: 2000,
     },
     shouldConnect,
@@ -695,6 +602,32 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   // Reconnect chat when token changes (e.g. after 401 refresh) so we authenticate with the new token.
   const getWebSocketRef = useRef(getWebSocket);
   getWebSocketRef.current = getWebSocket;
+
+  useEffect(() => {
+    if (!shouldConnect) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      if (readyState !== ReadyState.OPEN) {
+        return;
+      }
+      const idleMs = Date.now() - lastActivityAtRef.current;
+      if (idleMs >= CHAT_HEARTBEAT_TIMEOUT_MS) {
+        logger.chat.warn(
+          '💬 Twitch IRC idle past heartbeat timeout, forcing reconnect',
+          { name: 'twitch_chat_warning', idleMs },
+        );
+        // Bump the marker so we don't re-close before the reconnect lands.
+        lastActivityAtRef.current = Date.now();
+        getWebSocketRef.current().close(4002, 'chat heartbeat timeout');
+        return;
+      }
+      sendIrcCommand('PING', 'tmi.twitch.tv');
+    }, CHAT_HEARTBEAT_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [shouldConnect, readyState, sendIrcCommand]);
 
   useEffect(() => {
     const currentToken = authState?.token?.accessToken;

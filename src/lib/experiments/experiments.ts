@@ -10,7 +10,7 @@ interface ExperimentDefinition {
  * Config `experiments` object that Firebase A/B Testing assigns per user. Add
  * real experiments here;
  */
-export const EXPERIMENTS = {
+const EXPERIMENTS = {
   chatComposerLayout: {
     variants: ['control', 'compact'],
     control: 'control',

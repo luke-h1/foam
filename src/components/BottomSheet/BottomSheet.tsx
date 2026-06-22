@@ -1,6 +1,6 @@
 import { memo } from 'react';
-import type { PropsWithChildren } from 'react';
 import { StyleSheet, View } from 'react-native';
+import type { PropsWithChildren } from 'react';
 
 export type SnapPoint = { fraction: number } | { height: number } | 'full';
 

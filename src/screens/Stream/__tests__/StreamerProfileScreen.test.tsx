@@ -1,16 +1,13 @@
 import { fireEvent, screen } from '@testing-library/react-native';
-import {
-  twitchService as _twitchService,
-  type TwitchClip,
-  type TwitchVideo,
-  type UserInfoResponse,
-} from '@app/services/twitch-service';
-import {
-  streamElementsService as _streamElementsService,
-  type StreamElementsChatStats,
-} from '@app/services/streamelements-service';
-import render from '@app/test/render';
+
 import { StreamerProfileScreen } from '@app/screens/Stream/StreamerProfileScreen';
+import { streamElementsService as _streamElementsService } from '@app/services/streamelements-service';
+import { twitchService as _twitchService } from '@app/services/twitch-service';
+import render from '@app/test/render';
+import type { StreamElementsChatStats } from '@app/types/streamelements/stats';
+import type { TwitchClip } from '@app/types/twitch/clip';
+import type { UserInfoResponse } from '@app/types/twitch/user';
+import type { TwitchVideo } from '@app/types/twitch/video';
 
 jest.mock('@app/services/twitch-service');
 jest.mock('@app/services/streamelements-service');

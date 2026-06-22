@@ -1,7 +1,5 @@
-import type {
-  TwitchClipsRequestParams,
-  TwitchVideosRequestParams,
-} from '@app/services/twitch-service';
+import type { TwitchClipsRequestParams } from '@app/types/twitch/clip';
+import type { TwitchVideosRequestParams } from '@app/types/twitch/video';
 
 export const twitchKeys = {
   all: ['twitch'] as const,
@@ -41,4 +39,10 @@ export const streamElementsKeys = {
   all: ['streamElements'] as const,
   chatStats: (channelName: string) =>
     [...streamElementsKeys.all, 'chatStats', channelName] as const,
+};
+
+export const emoteKeys = {
+  all: ['emotes'] as const,
+  globalEmotes: () => [...emoteKeys.all, 'global'] as const,
+  globalBadges: () => [...emoteKeys.all, 'globalBadges'] as const,
 };

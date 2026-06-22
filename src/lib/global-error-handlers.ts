@@ -1,5 +1,6 @@
-import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
 import { logger } from '@app/utils/logger';
+import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
+
 import { flushSentry } from './sentry';
 
 type FatalErrorListener = (error: Error) => void;

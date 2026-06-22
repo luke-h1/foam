@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+
 import { createApiClient } from './Client';
 
 export const mockServerUrl = Constants.expoConfig?.extra?.MOCK_SERVER_URL as
@@ -45,6 +46,11 @@ export const bttvCachedApi = createApiClient({
 
 export const sevenTvApi = createApiClient({
   baseURL: 'https://7tv.io/v3',
+  logPrefix: 'stv',
+});
+
+export const sevenTvGqlApi = createApiClient({
+  baseURL: 'https://7tv.io/v4',
   logPrefix: 'stv',
 });
 

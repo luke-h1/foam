@@ -1,9 +1,10 @@
-import { getPreferences } from '@app/store/preferences/state';
 import {
-  ImpactFeedbackStyle,
   impactAsync as expoImpactAsync,
+  ImpactFeedbackStyle,
   selectionAsync as expoSelectionAsync,
 } from 'expo-haptics';
+
+import { getPreferences } from '@app/store/preferences/state';
 
 function hapticsEnabled(): boolean {
   return getPreferences().hapticFeedback;

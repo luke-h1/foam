@@ -7,6 +7,7 @@
  * expo-image, so preloading goes through ExpoImage.prefetch.
  */
 import { Image as ExpoImage } from 'expo-image';
+
 import type { SanitisedEmote } from '@app/types/emote';
 import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';

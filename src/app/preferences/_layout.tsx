@@ -1,6 +1,8 @@
-import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
-import { Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+
+import { Stack } from 'expo-router';
+
+import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
 
 export default function PreferencesLayout() {
   const { t } = useTranslation('navigation');

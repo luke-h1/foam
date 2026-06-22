@@ -1,7 +1,9 @@
-import { createShakeDetector } from '@app/utils/shake/shakeDetection';
-import { Accelerometer } from 'expo-sensors';
 import { useEffect, useRef } from 'react';
 import { AppState, Platform } from 'react-native';
+
+import { Accelerometer } from 'expo-sensors';
+
+import { createShakeDetector } from '@app/utils/shake/shakeDetection';
 
 const ACCELEROMETER_INTERVAL_MS = 80;
 

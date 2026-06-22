@@ -1,7 +1,8 @@
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { lightenColor } from '@app/utils/color/lightenColor';
-import { PaintedUsername } from './CosmeticUsername/CosmeticUsername';
+
 import { ChatMessagePressable } from './ChatMessagePressable';
+import { PaintedUsername } from './CosmeticUsername/CosmeticUsername';
 import { styles } from './RichChatMessage.styles';
 
 interface RichChatMessageUsernameProps {

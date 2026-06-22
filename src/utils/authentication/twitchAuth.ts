@@ -3,6 +3,7 @@ import {
   TokenResponse,
   type TokenType,
 } from 'expo-auth-session';
+
 import { logger } from '../logger';
 
 const DEFAULT_EXPIRES_IN_SEC = 3600;

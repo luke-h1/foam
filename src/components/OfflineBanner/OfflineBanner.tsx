@@ -1,13 +1,15 @@
-import { theme } from '@app/styles/themes';
-import { onlineManager } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+
+import { onlineManager } from '@tanstack/react-query';
+
+import { theme } from '@app/styles/themes';
 
 const BANNER_HEIGHT = 32;
 const ANIM_DURATION = 250;

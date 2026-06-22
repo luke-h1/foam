@@ -1,17 +1,8 @@
-import { Button } from '@app/components/Button/Button';
-import {
-  SettingsLinkRow,
-  SettingsSection,
-  SettingsToggleRow,
-} from '@app/components/SettingsSection/SettingsSection';
-import { Text } from '@app/components/ui/Text/Text';
-import { Input } from '@app/components/ui/Input/Input';
-import { useAuthContext } from '@app/context/AuthContext';
-import { useDebugOptions } from '@app/hooks/useDebugOptions';
-import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { NAMESPACE, storageService } from '@app/lib/storage';
-import { twitchService } from '@app/services/twitch-service';
-import { theme } from '@app/styles/themes';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+
 import {
   Button as NativeButton,
   Form,
@@ -25,14 +16,25 @@ import {
   autocorrectionDisabled,
   textInputAutocapitalization,
 } from '@expo/ui/swift-ui/modifiers';
-import { router } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { Alert, Platform, ScrollView, View, StyleSheet } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { router } from 'expo-router';
 import { toast } from 'sonner-native';
-import { useTranslation } from 'react-i18next';
+
+import { Button } from '@app/components/Button/Button';
+import {
+  SettingsLinkRow,
+  SettingsSection,
+  SettingsToggleRow,
+} from '@app/components/SettingsSection/SettingsSection';
+import { Input } from '@app/components/ui/Input/Input';
+import { Text } from '@app/components/ui/Text/Text';
+import { useAuthContext } from '@app/context/AuthContext';
+import { useDebugOptions } from '@app/hooks/useDebugOptions';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import i18next from '@app/i18n/i18next';
+import { NAMESPACE, storageService } from '@app/lib/storage';
+import { twitchService } from '@app/services/twitch-service';
+import { theme } from '@app/styles/themes';
 
 function handleClearDebugStorage() {
   Alert.alert(

@@ -1,16 +1,17 @@
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+
 import { useAuthContext } from '@app/context/AuthContext';
-import TwitchWsService from '@app/services/twitch-ws-service';
 import { twitchService } from '@app/services/twitch-service';
+import TwitchWsService from '@app/services/twitch-ws-service';
 import type {
   ChannelPollState,
   TwitchEventSubPoll,
 } from '@app/types/twitch/poll';
+import { logger } from '@app/utils/logger';
 import {
   normaliseEventSubPoll,
   normaliseHelixPoll,
 } from '@app/utils/twitch/normalisePoll';
-import { logger } from '@app/utils/logger';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 interface EventSubMessage {
   event?: Record<string, unknown>;

@@ -1,19 +1,22 @@
-import { theme } from '@app/styles/themes';
-import { Canvas, Path, Skia } from '@shopify/react-native-skia';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
 import type {
   ActivityIndicatorProps,
   StyleProp,
   ViewStyle,
 } from 'react-native';
-import { StyleSheet, View } from 'react-native';
 import {
+  cancelAnimation,
   Easing,
   useDerivedValue,
   useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+
+import { Canvas, Path, Skia } from '@shopify/react-native-skia';
+
+import { theme } from '@app/styles/themes';
 
 interface LoadingStateProps {
   indicatorSize?: ActivityIndicatorProps['size'];
@@ -57,17 +60,21 @@ function Spinner({ size }: { size: number }) {
         -1,
       ),
     );
+    return () => cancelAnimation(rotation);
   }, [rotation]);
 
   const transform = useDerivedValue(() => [{ rotate: rotation.value }]);
 
-  const inset = STROKE_WIDTH / 2;
-  const arc = Skia.Path.Make();
-  arc.addArc(
-    Skia.XYWHRect(inset, inset, size - STROKE_WIDTH, size - STROKE_WIDTH),
-    0,
-    ARC_SWEEP_DEGREES,
-  );
+  const arc = useMemo(() => {
+    const inset = STROKE_WIDTH / 2;
+    const path = Skia.Path.Make();
+    path.addArc(
+      Skia.XYWHRect(inset, inset, size - STROKE_WIDTH, size - STROKE_WIDTH),
+      0,
+      ARC_SWEEP_DEGREES,
+    );
+    return path;
+  }, [size]);
 
   return (
     <Canvas style={{ width: size, height: size }}>

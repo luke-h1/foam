@@ -1,7 +1,7 @@
 import {
   REVIEW_PROMPT_COOLDOWN_MS,
-  shouldRequestReview,
   type ReviewPromptState,
+  shouldRequestReview,
 } from '../reviewPromptGate';
 
 const NOW = 1_750_000_000_000;

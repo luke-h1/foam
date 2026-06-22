@@ -1,45 +1,45 @@
-import { EditorialSectionHeader } from '@app/components/EditorialSectionHeader/EditorialSectionHeader';
-import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
-import { AnimatedFlashList } from '@app/components/FlashList/AnimatedFlashList';
-import { ListRenderItem } from '@app/components/FlashList/FlashList';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
-import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
-import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
-import { useBottomTabOverflow } from '@app/components/TabBarBackground/useBottomTabOverflow';
-import { Button } from '@app/components/Button/Button';
-import { Text } from '@app/components/ui/Text/Text';
-import { useAuthContext } from '@app/context/AuthContext';
-import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
-import { useFollowedStreamsQuery } from '@app/hooks/queries/use-followed-streams-query';
-import { twitchKeys } from '@app/lib/react-query/query-keys';
-import { TwitchStream } from '@app/services/twitch-service';
 import {
-  usePreference,
-  useUpdatePreferences,
-} from '@app/store/preferenceStore';
-import { theme } from '@app/styles/themes';
-import { useQueryClient } from '@tanstack/react-query';
-import { router } from 'expo-router';
-import {
+  type ReactElement,
+  useCallback,
   useEffect,
   useRef,
   useState,
-  type ReactElement,
-  useCallback,
 } from 'react';
-
-import { Platform, View, StyleSheet } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { motion } from '@app/styles/motion';
 
+import { useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import { toast } from 'sonner-native';
+
+import { Button } from '@app/components/Button/Button';
+import { EditorialSectionHeader } from '@app/components/EditorialSectionHeader/EditorialSectionHeader';
+import { AnimatedFlashList } from '@app/components/FlashList/AnimatedFlashList';
+import { ListRenderItem } from '@app/components/FlashList/FlashList';
+import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
+import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
+import { useBottomTabOverflow } from '@app/components/TabBarBackground/useBottomTabOverflow';
+import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
+import { useAuthContext } from '@app/context/AuthContext';
+import { useFollowedStreamsQuery } from '@app/hooks/queries/useFollowedStreamsQuery';
+import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
+import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import i18next from '@app/i18n/i18next';
-import { useTranslation } from 'react-i18next';
+import { twitchKeys } from '@app/lib/react-query/query-keys';
+import {
+  usePreference,
+  useUpdatePreferences,
+} from '@app/store/preferenceStore';
+import { motion } from '@app/styles/motion';
+import { theme } from '@app/styles/themes';
+import type { TwitchStream } from '@app/types/twitch/stream';
 
 export interface Section {
   key: string;
@@ -67,11 +67,7 @@ export default function FollowingScreen() {
 
   const handleRefreshFollowing = useCallback(async () => {
     setIsRefreshing(true);
-    try {
-      await refetchFollowingStreams();
-    } finally {
-      setIsRefreshing(false);
-    }
+    await refetchFollowingStreams().finally(() => setIsRefreshing(false));
   }, [refetchFollowingStreams]);
 
   const layoutFade = useSharedValue(1);

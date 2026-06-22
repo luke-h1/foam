@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { useLocalSearchParams } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CINNA_EMOTE_URLS } from '@app/dev/imageBenchmark/cinnaEmoteWorkload';
+
+import { useLocalSearchParams } from 'expo-router';
+
 import {
   appendRun,
   markPhase,
+  type PassResult,
   readResults,
   resetResults,
-  type PassResult,
 } from '@app/dev/imageBenchmark/benchResults';
+import { CINNA_EMOTE_URLS } from '@app/dev/imageBenchmark/cinnaEmoteWorkload';
 import {
   clearRetained,
   prewarm,
@@ -18,8 +20,9 @@ import {
   runSequential,
 } from '@app/dev/imageBenchmark/runDecodeBenchmark';
 import {
-  syntheticChatControl,
+  setSyntheticChatControl,
   SYNTHETIC_PRESETS,
+  syntheticChatControl,
 } from '@app/dev/imageBenchmark/syntheticChatControl';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -116,22 +119,25 @@ export default function ImageBenchmarkScreen() {
       await prewarm(CINNA_EMOTE_URLS);
       await runPasses();
       setStatus('ALL DONE');
-    } finally {
-      setBusy(false);
-      setRuns(readResults().runs);
+    } catch (error) {
+      setStatus(`error: ${String(error)}`);
     }
+    setBusy(false);
+    setRuns(readResults().runs);
   };
 
   useEffect(() => {
+    // Auto-start runs once on mount (guarded by autoStarted); runAll closes over
+    // benchmark state we deliberately don't want to re-trigger the suite.
     if (auto && !autoStarted.current) {
       autoStarted.current = true;
       void runAll();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps, react-doctor/exhaustive-deps
   }, [auto]);
 
   const setFloodPreset = (key: string) => {
-    syntheticChatControl.current = SYNTHETIC_PRESETS[key]!;
+    setSyntheticChatControl(SYNTHETIC_PRESETS[key]!);
     setFlood(key);
   };
 

@@ -1,5 +1,7 @@
-import { theme } from '@app/styles/themes';
 import { StyleSheet, View } from 'react-native';
+
+import { theme } from '@app/styles/themes';
+
 import { ProfileCard } from './components/profile/ProfileCard';
 
 export function SettingsProfileScreen() {

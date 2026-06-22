@@ -1,24 +1,28 @@
-import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
-import { Text } from '@app/components/ui/Text/Text';
-import { LegendList } from '@legendapp/list/react-native';
-import { theme } from '@app/styles/themes';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { LegendList } from '@legendapp/list/react-native';
+
+import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
+import { Text } from '@app/components/ui/Text/Text';
+import { theme } from '@app/styles/themes';
+
 import { EmoteSearchFilter } from './EmoteSearchFilter';
 import { EmoteSheetIosBlur } from './EmoteSheetIosBlur';
-import { ProviderChip } from './ProviderChip';
 import { renderSetRailItem } from './EmoteSheetSetRailItem';
 import { emoteSheetStyles as styles } from './emoteSheetStyles';
 import type { EmotePickerItem } from './emoteSheetTypes';
+import { ProviderChip } from './ProviderChip';
 
 export type { EmotePickerItem };
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { LayoutChangeEvent } from 'react-native';
+
 import type { LegendListRef } from '@legendapp/list/react-native';
+
 import { EMOTE_SHEET_DETENT } from './emoteSheetLayout';
 import { useEmoteSheet } from './useEmoteSheet';
-import { useTranslation } from 'react-i18next';
 
 interface EmoteSheetProps {
   isPresented: boolean;

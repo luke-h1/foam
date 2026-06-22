@@ -1,7 +1,8 @@
+import { type StyleProp, StyleSheet, type ViewStyle } from 'react-native';
+
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 
 export interface BlockedUsersActionButtonProps {
   label: string;

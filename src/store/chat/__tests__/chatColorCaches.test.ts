@@ -1,4 +1,3 @@
-import { chatStore$ } from '../observables/chatStore';
 import {
   CHAT_SESSION_CACHE_TTL_MS,
   clearMentionSessionCaches,
@@ -6,6 +5,7 @@ import {
   getSessionCacheString,
   setSessionCacheString,
 } from '../actions/chatColorCaches';
+import { chatStore$ } from '../observables/chatStore';
 
 describe('chatColorCaches', () => {
   beforeEach(() => {

@@ -1,5 +1,3 @@
-import type { AnyChatMessageType } from '../types/constants';
-import type { ChatMessageType } from '../types/constants';
 import {
   addMessage,
   addMessages,
@@ -9,12 +7,14 @@ import {
   getUserMessageColor,
   moderateMessageById,
   moderateMessagesByLogin,
+  RECENT_MESSAGES_SYNC_DELAY_MS,
   removeMessageById,
   restoreRecentMessagesForChannel,
   updateMessages,
-  RECENT_MESSAGES_SYNC_DELAY_MS,
 } from '../actions/messages';
 import { chatStore$ } from '../observables/chatStore';
+import type { AnyChatMessageType } from '../types/constants';
+import type { ChatMessageType } from '../types/constants';
 
 jest.mock('@legendapp/state/persist', () => ({
   configureObservablePersistence: jest.fn(),

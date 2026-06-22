@@ -1,10 +1,10 @@
-import { EmoteSetKind } from '@app/graphql/generated/gql';
-
 import {
   buildEmoteMenuProviders,
   filterProviderSets,
   flattenProviderSets,
-} from '../emoteMenuData';
+} from '@app/components/Chat/components/EmoteSheet/util/emoteMenuData';
+import { EmoteSetKind } from '@app/graphql/generated/gql';
+
 import { createMenuEmote } from './__fixtures__/emoteMenuData.fixture';
 
 describe('emoteMenuData', () => {

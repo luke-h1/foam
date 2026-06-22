@@ -1,3 +1,6 @@
+import { useEffect, useRef } from 'react';
+import type { MutableRefObject } from 'react';
+
 import { useSeventvWs } from '@app/hooks/useSeventvWs';
 import { ReadyState } from '@app/hooks/ws/constants';
 import {
@@ -6,11 +9,9 @@ import {
 } from '@app/store/chat/actions/channelLoad';
 import { fetchAndCacheUserCosmetics } from '@app/store/chat/actions/cosmetics';
 import { logger } from '@app/utils/logger';
-import { useEffect, useRef } from 'react';
-import type { MutableRefObject } from 'react';
 
-import { useChatSevenTvCallbacks } from './useChatSevenTvCallbacks';
 import type { AnyChatMessageType } from '../util/messageHandlers';
+import { useChatSevenTvCallbacks } from './useChatSevenTvCallbacks';
 
 export function useSevenTvChatRuntime({
   canFetchCosmetics,

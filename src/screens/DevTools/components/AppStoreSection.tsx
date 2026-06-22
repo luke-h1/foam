@@ -1,10 +1,13 @@
-import * as Form from '@app/components/Form/Form';
-import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
 import * as AC from '@bacons/apple-colors';
 import * as Application from 'expo-application';
-import { useState } from 'react';
-import { getStoreUrlAsync } from '../utils/getStoreUrlAsync';
-import { useTranslation } from 'react-i18next';
+
+import * as Form from '@app/components/Form/Form';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+
+import { getStoreUrlAsync } from '../util/getStoreUrlAsync';
 
 export function AppStoreSection() {
   const { t } = useTranslation('devTools');

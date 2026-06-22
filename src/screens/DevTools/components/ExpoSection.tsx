@@ -1,11 +1,14 @@
 /* eslint-disable no-undef */
-import * as Form from '@app/components/Form/Form';
-import Constants from 'expo-constants';
 import { useEffect, useState } from 'react';
-import { getHermesVersion } from '../utils/getHermesVersion';
-import { getReleaseTypeAsync } from '../utils/getReleaseTypeAsync';
 import { useTranslation } from 'react-i18next';
+
+import Constants from 'expo-constants';
+
+import * as Form from '@app/components/Form/Form';
 import i18next from '@app/i18n/i18next';
+
+import { getHermesVersion } from '../util/getHermesVersion';
+import { getReleaseTypeAsync } from '../util/getReleaseTypeAsync';
 
 export function ExpoSection() {
   const { t } = useTranslation('devTools');

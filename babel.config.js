@@ -1,5 +1,6 @@
 module.exports = api => {
   api.cache.using(() => process.env.NODE_ENV);
+  const isTest = process.env.NODE_ENV === 'test';
 
   const plugins = [
     [
@@ -11,6 +12,15 @@ module.exports = api => {
           '@app': './src',
           '@modules': './modules',
         },
+      },
+    ],
+    [
+      'react-native-boost/plugin',
+      {
+        optimizations: { text: false, view: true },
+        ignores: ['node_modules/**'],
+        verbose: false,
+        silent: isTest,
       },
     ],
     [

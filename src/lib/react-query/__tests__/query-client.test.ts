@@ -1,5 +1,7 @@
-import { logger } from '@app/utils/logger';
 import { toast } from 'sonner-native';
+
+import { logger } from '@app/utils/logger';
+
 import { handleMutationError, handleQueryError } from '../query-client';
 
 jest.mock('@app/utils/logger', () => ({

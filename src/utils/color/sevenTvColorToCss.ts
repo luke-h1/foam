@@ -1,5 +1,6 @@
+import { SevenTvColor } from '@app/types/seventv/cosmetics';
+
 import { sevenTvColorToRgba } from './sevenTvColorToRgba';
-import { SevenTvColor } from './seventv-ws-service';
 
 /**
  * Converts a 7TV packed RGBA color integer to a CSS-compatible rgba() string.

@@ -1,22 +1,24 @@
-import { useCallback, memo } from 'react';
+import { memo, useCallback } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+
+import { useQueries } from '@tanstack/react-query';
+import { router } from 'expo-router';
+
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import { Text } from '@app/components/ui/Text/Text';
 import { sevenTvService } from '@app/services/seventv-service';
 import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
+import { type TwitchAnd7TVVariant } from '@app/utils/chat/parsedPart';
 import {
-  SEVENTV_EMOTE_LINK_REGEX,
-  TwitchAnd7TVVariant,
   getTwitchClipIdFromUrl,
+  SEVENTV_EMOTE_LINK_REGEX,
 } from '@app/utils/chat/replaceTextWithEmotes';
-import { useQueries } from '@tanstack/react-query';
-import { router } from 'expo-router';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
-import { Pressable, View, StyleSheet } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
 type MediaLinkCardProps = {
   layout?: 'card' | 'inline';
@@ -128,7 +130,6 @@ function MediaLinkCardComponent({
       >
         {thumbnail ? (
           <Image
-            trackLoadTime
             trackLoadContext='chat.media-link-inline'
             source={thumbnail}
             style={styles.inlineThumbnail}
@@ -166,7 +167,6 @@ function MediaLinkCardComponent({
         <View style={styles.mediaThumbnailFrame}>
           {thumbnail ? (
             <Image
-              trackLoadTime
               trackLoadContext='chat.media-link-card'
               source={thumbnail}
               style={styles.mediaThumbnail}

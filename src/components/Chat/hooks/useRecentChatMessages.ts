@@ -1,8 +1,9 @@
+import { MutableRefObject, useEffect, useRef } from 'react';
+
 import { recentMessagesService } from '@app/services/recent-messages-service';
 import { restoreRecentMessagesForChannel } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { logger } from '@app/utils/logger';
-import { MutableRefObject, useEffect, useRef } from 'react';
 
 export function useRecentChatMessages({
   channelId,

@@ -1,5 +1,6 @@
+import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
-import { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
+
 import { AnyChatMessageType } from './messageHandlers';
 
 export function shouldReprocessMessage(msg: AnyChatMessageType): boolean {

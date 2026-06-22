@@ -1,3 +1,5 @@
+import { act, renderHook, waitFor } from '@testing-library/react-native';
+
 import { clearCache } from '@app/store/chat/actions/channelLoad';
 import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
 import {
@@ -5,7 +7,7 @@ import {
   replacePreferences,
 } from '@app/store/preferences/state';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
-import { act, renderHook, waitFor } from '@testing-library/react-native';
+
 import { useChatSettingsActions } from '../useChatSettingsActions';
 
 jest.mock('@app/store/chat/actions/channelLoad', () => ({

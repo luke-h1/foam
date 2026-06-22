@@ -1,9 +1,10 @@
-import { logger } from '@app/utils/logger';
-import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import { Platform } from 'react-native';
+
+import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
-import { twitchKeys } from './query-keys';
+
 import i18next from '@app/i18n/i18next';
+import { logger } from '@app/utils/logger';
 
 declare module '@tanstack/react-query' {
   interface Register {
@@ -83,24 +84,3 @@ const createQueryClient = () => {
 };
 
 export const queryClient = createQueryClient();
-
-/**
- * Query scopes safe to persist between reloads. These are read-heavy Twitch
- * lookups used by the home, category, following, and livestream screens.
- */
-// Query-cache persistence is disabled (empty allowlist). The persister
-// serializes the whole dehydrated client via JSON.stringify on every throttled
-// tick on the JS thread; as queries accumulate over a session that output
-// string balloons until allocation fails (FOAM-TV-MOBILE-9V / -AY OOM). Infinite
-// queries (topStreams/topCategories/streamsByCategory) were the worst offenders
-// (unbounded `data.pages`), but even bounded per-entity queries pile up across a
-// long session, so nothing is persisted. All scopes refetch fresh on launch.
-const PERSISTED_TWITCH_SCOPES = new Set<string>();
-
-export function shouldPersistQuery(queryKey: readonly unknown[]) {
-  return (
-    queryKey[0] === twitchKeys.all[0] &&
-    typeof queryKey[1] === 'string' &&
-    PERSISTED_TWITCH_SCOPES.has(queryKey[1])
-  );
-}

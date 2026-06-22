@@ -1,4 +1,3 @@
-import type { PaintData } from '@app/utils/color/seventv-ws-service';
 import {
   EmoteQueryDocument,
   type EmoteQueryQuery,
@@ -10,108 +9,44 @@ import {
   GlobalEmoteSetDocument,
   type GlobalEmoteSetQuery,
   type Image,
-  Platform,
   PaintsQueryDocument,
   type PaintsQueryQuery,
-  UserCosmeticsDocument,
-  UserCosmeticsQuery,
+  Platform,
   UserByConnectionDocument,
   UserByConnectionQuery,
+  UserCosmeticsDocument,
+  UserCosmeticsQuery,
   UserPersonalEmotesQueryDocument,
   UserPersonalEmotesQueryQuery,
   UserPersonalEmotesQueryQueryVariables,
 } from '@app/graphql/generated/gql';
 import { storageService } from '@app/lib/storage';
 import type {
-  EmoteImageVariantSet,
   EmoteImageVariants,
+  EmoteImageVariantSet,
   SevenTvEmoteSetMetadata,
   SevenTvSanitisedEmote,
 } from '@app/types/emote';
+import type {
+  PaintData,
+  UserCosmeticsInfo,
+} from '@app/types/seventv/cosmetics';
+import type {
+  SevenTvEmote,
+  SevenTvEmotePreview,
+} from '@app/types/seventv/emotes';
 import {
   convertV4PaintToPaintData,
   pickAnimatedFormat,
   pickBestFormat,
   pickBestImage,
-  type V4Badge,
-  type V4Paint,
 } from '@app/utils/color/sevenTvPaintData';
 import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { logger } from '@app/utils/logger';
+
 import { sevenTvApi } from './api/clients';
 import { sevenTvV4Client } from './gql/client';
 import { runCosmeticsQuery } from './gql/sevenTvWorkletClient';
-
-interface SevenTvFile {
-  name: string;
-  static_name: string;
-  width: number;
-  height: number;
-  frame_count: number;
-  size: number;
-  format: string;
-}
-
-export interface SevenTvHost {
-  url: string;
-  files: SevenTvFile[];
-}
-
-export interface StvConnection {
-  id: string;
-  platform: 'TWITCH' | 'YOUTUBE' | 'KICK';
-  username: string;
-  display_name: string;
-  linked_at: number;
-  emote_capacity: number;
-  emote_set_id: string;
-}
-
-export interface StvUser {
-  id: string;
-  username: string;
-  display_name: string;
-  avatar_url: string;
-  style: object;
-  role_ids: string[];
-  connection: StvConnection[];
-}
-
-export interface SevenTvEmote {
-  id: string;
-  name: string;
-  flags: number;
-  timestamp: number;
-  actor_id: string;
-  data: {
-    id: string;
-    name: string;
-    flags: number;
-    lifecycle: number;
-    state: string[];
-    listed: boolean;
-    animated: boolean;
-    tags?: string[];
-    owner: {
-      id: string;
-      username: string;
-      display_name: string;
-      avatar_url?: string;
-      style: {
-        paint_id?: string;
-        badge_id?: string;
-        color?: number;
-      };
-      role_ids: string[];
-      connection: StvConnection[];
-      roles?: string[];
-    };
-    host: {
-      url: string;
-      files: SevenTvFile[];
-    };
-  };
-}
 
 interface StvEmoteSet {
   id: string;
@@ -151,24 +86,6 @@ interface StvChannelEmotesResponse {
     created_at: number;
     avatar_url: string;
   };
-}
-
-export interface SevenTvEmotePreview {
-  id: string;
-  name: string;
-  owner: {
-    display_name: string;
-    username: string;
-  } | null;
-}
-
-export interface UserCosmeticsInfo {
-  userId: string;
-  ttvUserId: string | null;
-  paintId: string | null;
-  badgeId: string | null;
-  paint: V4Paint | null;
-  badge: V4Badge | null;
 }
 
 const SEVEN_TV_USER_ID_CACHE_PREFIX = 'user-id:';

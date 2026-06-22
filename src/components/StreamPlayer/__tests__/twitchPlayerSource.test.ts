@@ -6,6 +6,7 @@ import {
   buildTwitchClipPlayerUrl,
   buildTwitchContentGateAcceptScript,
   buildTwitchOverlayHideScript,
+  buildTwitchPlayerAudioDefaultScript,
   isAppUrl,
   isTwitchPassportCallbackUrl,
 } from '../twitchPlayerSource';
@@ -98,6 +99,18 @@ describe('twitchPlayerSource', () => {
     expect(script).toContain('var START_DELAY_MS = 0');
     // Volume is raised only when not muted (guarded at runtime).
     expect(script).toContain('if (!TARGET_MUTED) { video.volume = 1; }');
+  });
+
+  test('seeds the Twitch player mute preference so it boots in the requested audio state', () => {
+    const unmuted = buildTwitchPlayerAudioDefaultScript({ muted: false });
+    expect(unmuted).toContain(
+      "window.localStorage.setItem(\n      'video-muted',\n      JSON.stringify({ default: false })\n    )",
+    );
+    expect(unmuted).toContain("window.localStorage.setItem('volume', '1')");
+
+    const muted = buildTwitchPlayerAudioDefaultScript({ muted: true });
+    expect(muted).toContain('JSON.stringify({ default: true })');
+    expect(muted).toContain("window.localStorage.setItem('volume', '1')");
   });
 
   test('hides captions with text track "hidden", never "disabled"', () => {

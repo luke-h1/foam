@@ -3,19 +3,21 @@
 // drives renderer + seeded flood, exposing a live countdown and final results.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFrameCallback, useSharedValue } from 'react-native-reanimated';
+
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+
 import {
   COOLDOWN_MS,
+  type PhaseResult,
   SUITE_PHASES,
   SUITE_TOTAL_MS,
   WARMUP_MS,
-  type PhaseResult,
 } from './chatPerfSuite';
-import { resetFloodReplay } from './useSyntheticChatFlood';
 import {
-  syntheticChatControl,
   SYNTHETIC_PRESETS,
+  syntheticChatControl,
 } from './syntheticChatControl';
+import { resetFloodReplay } from './useSyntheticChatFlood';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const mean = (a: number[]) =>

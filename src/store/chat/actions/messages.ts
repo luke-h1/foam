@@ -2,27 +2,28 @@ import { getPreferences } from '@app/store/preferenceStore';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 import {
+  type ChatterRole,
+  clearMentionLoginIndex,
+  registerMentionChatter,
+  registerMentionLogin,
+  registerMentionLoginsFromParts,
+  registerMentionLoginsFromSender,
+} from '@app/utils/chat/resolveMentionLogin';
+
+import { chatStore$ } from '../observables/chatStore';
+import {
+  deletePersistedRecentMessagesForChannels,
+  RECENT_MESSAGES_PERSISTENCE_ENABLED,
+  writePersistedRecentMessagesForChannel,
+} from '../observables/recentMessagesPersistence';
+import type { AnyChatMessageType } from '../types/constants';
+import {
   clearMessageColorIndexes,
   getMessageColor as getIndexedMessageColor,
   getUserMessageColor,
   indexMessageColor,
   removeMessageColor,
 } from './messageColorIndex';
-import {
-  clearMentionLoginIndex,
-  registerMentionChatter,
-  registerMentionLogin,
-  registerMentionLoginsFromParts,
-  registerMentionLoginsFromSender,
-  type ChatterRole,
-} from '@app/utils/chat/resolveMentionLogin';
-import type { AnyChatMessageType } from '../types/constants';
-import { chatStore$ } from '../observables/chatStore';
-import {
-  RECENT_MESSAGES_PERSISTENCE_ENABLED,
-  deletePersistedRecentMessagesForChannels,
-  writePersistedRecentMessagesForChannel,
-} from '../observables/recentMessagesPersistence';
 
 const messageKeySet = new Set<string>();
 const messageKeyOrder: string[] = [];
@@ -842,7 +843,3 @@ export const getMessageColor = (messageId: string): string | undefined =>
   getIndexedMessageColor(messageId);
 
 export { getUserMessageColor } from './messageColorIndex';
-
-export const clearTtvUsers = () => {
-  chatStore$.ttvUsers.set([]);
-};

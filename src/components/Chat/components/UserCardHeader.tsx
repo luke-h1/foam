@@ -1,12 +1,15 @@
-import { useUserQuery } from '@app/hooks/queries/use-user-query';
+import { StyleSheet, View } from 'react-native';
+
+import { useSelector } from '@legendapp/state/react';
+import { Image } from 'expo-image';
+
+import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
+import { useUserQuery } from '@app/hooks/queries/useUserQuery';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { theme } from '@app/styles/themes';
 import { formatDate } from '@app/utils/date-time/date';
-import { useSelector } from '@legendapp/state/react';
-import { Image } from 'expo-image';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
-import { StyleSheet, View } from 'react-native';
-import { Text } from '@app/components/ui/Text/Text';
+
 import { useEnsureSevenTvCosmetics } from '../hooks/useEnsureSevenTvCosmetics';
 import { PaintedUsername } from './ChatMessage/CosmeticUsername/CosmeticUsername';
 

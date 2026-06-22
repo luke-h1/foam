@@ -1,7 +1,8 @@
-import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
 import { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
+
+import { Text } from '@app/components/ui/Text/Text';
+import { theme } from '@app/styles/themes';
 
 interface OtherInfoCardProps {
   children?: ReactNode;

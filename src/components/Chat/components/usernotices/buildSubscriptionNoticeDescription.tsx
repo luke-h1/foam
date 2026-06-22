@@ -1,7 +1,9 @@
-import { Text } from '@app/components/ui/Text/Text';
 import type { ReactNode } from 'react';
-import { subscriptionNoticeStyles as styles } from './subscriptionNoticeStyles';
+
+import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
+
+import { subscriptionNoticeStyles as styles } from './subscriptionNoticeStyles';
 
 export interface SubscriptionDescriptionInput {
   msgId: string;

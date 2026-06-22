@@ -1,19 +1,17 @@
+import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
 import { Text } from '@app/components/ui/Text/Text';
-import {
-  channelPointsRewardTitleFromTags,
-  channelPointsRewardTitleFromUserstate,
-  channelPointsRewardTitleFieldsFromUserstate,
-} from '@app/utils/chat/channelPointsRewardTitle';
-import {
-  getChannelPointRewardTitleCacheVersion,
-  resolveChannelPointRewardTitle,
-  subscribeChannelPointRewardTitles,
-} from '@app/utils/chat/channelPointRewardTitleStore';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import { useSyncExternalStore } from 'react';
+import {
+  resolveChannelPointRewardTitle,
+  useChannelPointRewardTitleRevision,
+} from '@app/utils/chat/channelPointRewardTitleStore';
+import {
+  channelPointsRewardTitleFieldsFromUserstate,
+  channelPointsRewardTitleFromTags,
+  channelPointsRewardTitleFromUserstate,
+} from '@app/utils/chat/channelPointsRewardTitle';
 
-import { CHAT_NOTICE_ACCENTS } from '../../util/chatNoticeAccents';
 import { styles } from '../RichChatMessage.styles';
 import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
 
@@ -36,11 +34,7 @@ export function ChannelPointsRewardMetaRow({
   username,
   userstate,
 }: ChannelPointsRewardMetaRowProps) {
-  useSyncExternalStore(
-    subscribeChannelPointRewardTitles,
-    getChannelPointRewardTitleCacheVersion,
-    getChannelPointRewardTitleCacheVersion,
-  );
+  useChannelPointRewardTitleRevision();
 
   const rewardSummaryTitle =
     channelPointsRewardTitleFromUserstate(userstate) ??
