@@ -1,6 +1,6 @@
 import { resolveSpacingValue, Spacing } from '@app/styles/spacing';
 import { theme } from '@app/styles/themes';
-import { type SymbolViewProps } from 'expo-symbols';
+import { type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Insets, StyleProp, ViewStyle, StyleSheet } from 'react-native';
 import { Button } from '../Button/Button';
 import { IconButtonIcon } from './IconButtonIcon';

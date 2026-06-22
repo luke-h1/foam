@@ -1,4 +1,4 @@
-import type { AndroidSymbol } from 'expo-symbols';
+import type { AndroidSymbol } from '@app/components/ui/Icon/Icon';
 import type { SFSymbol } from 'sf-symbols-typescript';
 import { theme } from '@app/styles/themes';
 
@@ -56,9 +56,9 @@ export const DELETED_STYLE_OPTIONS = [
 ] as const;
 
 export const SCROLLBACK_OPTIONS = [
+  { label: '150', value: 150 as const },
   { label: '200', value: 200 as const },
-  { label: '600', value: 600 as const },
-  { label: '1000', value: 1000 as const },
+  { label: '250', value: 250 as const },
 ] as const;
 
 export const SCROLLBACK_LABELS = SCROLLBACK_OPTIONS.map(option => option.label);

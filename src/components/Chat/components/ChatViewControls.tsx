@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Button } from '@app/components/Button/Button';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { StyleSheet, View } from 'react-native';

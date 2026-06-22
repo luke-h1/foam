@@ -11,7 +11,7 @@ import {
 } from '@app/hooks/firebase/useRemoteConfig';
 import { theme } from '@app/styles/themes';
 import * as AC from '@bacons/apple-colors';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { ActivityIndicator, Platform, View, StyleSheet } from 'react-native';
 import i18next from '@app/i18n/i18next';
 

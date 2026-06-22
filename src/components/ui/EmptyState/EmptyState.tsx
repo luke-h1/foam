@@ -11,7 +11,7 @@ import {
 import { Image } from '@app/components/Image/Image';
 import type { ImageProps as AppImageProps } from '@app/components/Image/Image.types';
 import { theme } from '@app/styles/themes';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import type {
   ImageStyle,
   StyleProp,

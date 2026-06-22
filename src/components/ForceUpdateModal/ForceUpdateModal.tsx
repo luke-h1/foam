@@ -11,7 +11,7 @@ import { Modal as RNModal, Platform, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Variant } from '../../../app.config';
 import { Button } from '../Button/Button';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 
 function getMinimumVersion(variant: Variant, remoteConfig: RemoteConfigType) {

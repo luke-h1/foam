@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 import * as Form from '@app/components/Form/Form';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { logger } from '@app/utils/logger';
 import * as AC from '@bacons/apple-colors';
 import * as Updates from 'expo-updates';

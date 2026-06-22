@@ -7,7 +7,7 @@ import { impact } from '@app/lib/haptics';
 import { theme } from '@app/styles/themes';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';

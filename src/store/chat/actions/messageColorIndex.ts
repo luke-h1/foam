@@ -3,6 +3,23 @@ import type { AnyChatMessageType } from '../types/constants';
 const messageColorIndex = new Map<string, string>();
 const senderColorIndex = new Map<string, string>();
 
+const MAX_SENDER_COLOR_ENTRIES = 5000;
+
+const capSenderColorIndex = (): void => {
+  if (senderColorIndex.size <= MAX_SENDER_COLOR_ENTRIES) {
+    return;
+  }
+  const trimCount = Math.floor(MAX_SENDER_COLOR_ENTRIES * 0.2);
+  let removed = 0;
+  for (const key of senderColorIndex.keys()) {
+    if (removed >= trimCount) {
+      break;
+    }
+    senderColorIndex.delete(key);
+    removed += 1;
+  }
+};
+
 const normaliseIndexKey = (value?: string): string | null => {
   const normalised = value?.trim().toLowerCase();
   return normalised || null;
@@ -34,6 +51,8 @@ export const indexMessageColor = (message: AnyChatMessageType): void => {
       senderColorIndex.set(senderKey, color);
     }
   });
+
+  capSenderColorIndex();
 };
 
 export const removeMessageColor = (messageId: string): void => {

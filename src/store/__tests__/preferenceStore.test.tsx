@@ -31,7 +31,7 @@ const basePreferences = {
   blockedTerms: [] as string[],
   chatTimestampFormat: '24h',
   chatFontScale: 'default',
-  chatScrollback: 600,
+  chatScrollback: 150,
   deletedMessageStyle: 'notice',
   ignoreClearChat: false,
   chatMentionHaptics: true,

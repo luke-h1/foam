@@ -1,6 +1,6 @@
 import type { ErrorInfo } from 'react';
 import { Button } from '@app/components/Button/Button';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { queryClient } from '@app/lib/react-query/query-client';
 import { theme } from '@app/styles/themes';

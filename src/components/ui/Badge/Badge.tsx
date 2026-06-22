@@ -8,7 +8,7 @@ import {
   UIRadius,
   RADIUS_VALUES,
 } from '@app/styles/ui';
-import { SFSymbol, SymbolView } from 'expo-symbols';
+import { SFSymbol, SymbolView } from '@app/components/ui/Icon/Icon';
 import React from 'react';
 import { StyleSheet, useColorScheme, View, ViewStyle } from 'react-native';
 import { Text } from '@app/components/ui/Text/Text';

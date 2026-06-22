@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@app/components/Button/Button';
 import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
 import { Text } from '@app/components/ui/Text/Text';
 import { logger } from '@app/utils/logger';

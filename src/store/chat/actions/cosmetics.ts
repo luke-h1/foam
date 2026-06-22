@@ -68,6 +68,25 @@ type CachedUserCosmetics = {
 const userCosmeticsRequests = new Map<string, Promise<string | null>>();
 const sessionCosmeticsCache = new Map<string, CachedUserCosmetics>();
 
+const cacheSessionCosmetics = (
+  sevenTvUserId: string,
+  cosmetics: CachedUserCosmetics,
+): void => {
+  sessionCosmeticsCache.set(sevenTvUserId, cosmetics);
+  if (sessionCosmeticsCache.size <= MAX_COSMETIC_ENTRIES) {
+    return;
+  }
+  const trimCount = Math.floor(MAX_COSMETIC_ENTRIES * 0.2);
+  let removed = 0;
+  for (const key of sessionCosmeticsCache.keys()) {
+    if (removed >= trimCount) {
+      break;
+    }
+    sessionCosmeticsCache.delete(key);
+    removed += 1;
+  }
+};
+
 const getUserCosmeticsStorageKey = (sevenTvUserId: string) =>
   `sevenTvUserCosmetics_${USER_COSMETICS_CACHE_PREFIX}${sevenTvUserId}` as const;
 
@@ -127,7 +146,7 @@ function getCachedUserCosmetics(
     ) ?? undefined;
 
   if (stored) {
-    sessionCosmeticsCache.set(sevenTvUserId, stored);
+    cacheSessionCosmetics(sevenTvUserId, stored);
   }
 
   return stored;
@@ -137,7 +156,7 @@ function setCachedUserCosmetics(
   sevenTvUserId: string,
   cosmetics: CachedUserCosmetics,
 ) {
-  sessionCosmeticsCache.set(sevenTvUserId, cosmetics);
+  cacheSessionCosmetics(sevenTvUserId, cosmetics);
   storageService.set(
     getUserCosmeticsStorageKey(sevenTvUserId),
     cosmetics,

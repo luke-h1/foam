@@ -8,6 +8,7 @@
         "@bacons/apple-colors": "^0.0.8",
         "@bugsnag/expo": "^55.0.0",
         "@bugsnag/expo-performance": "^54.0.0",
+        "@bugsnag/react-native-performance": "3.4.1",
         "@expo-google-fonts/instrument-serif": "^0.4.1",
         "@expo-google-fonts/montserrat": "^0.4.2",
         "@expo-google-fonts/source-code-pro": "^0.4.0",

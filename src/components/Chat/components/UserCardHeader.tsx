@@ -4,7 +4,7 @@ import { theme } from '@app/styles/themes';
 import { formatDate } from '@app/utils/date-time/date';
 import { useSelector } from '@legendapp/state/react';
 import { Image } from 'expo-image';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { StyleSheet, View } from 'react-native';
 import { Text } from '@app/components/ui/Text/Text';
 import { useEnsureSevenTvCosmetics } from '../hooks/useEnsureSevenTvCosmetics';

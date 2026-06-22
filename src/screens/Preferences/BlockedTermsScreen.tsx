@@ -8,7 +8,7 @@ import {
   useUpdatePreferences,
 } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { PressableScale } from 'pressto';
 import { useCallback, useRef, useState } from 'react';
 import { Alert, StyleSheet, TextInput, View } from 'react-native';

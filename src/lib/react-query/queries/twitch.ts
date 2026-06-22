@@ -15,6 +15,8 @@ import {
 import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 import { twitchKeys } from '../query-keys';
 
+const MAX_INFINITE_PAGES = 15;
+
 export function streamQueryOptions(userLogin: string) {
   return queryOptions({
     queryKey: twitchKeys.stream(userLogin),
@@ -53,6 +55,7 @@ export function topStreamsInfiniteQueryOptions() {
     staleTime: 60_000,
     queryFn: ({ pageParam }) => twitchService.getTopStreams(pageParam),
     initialPageParam: undefined as string | undefined,
+    maxPages: MAX_INFINITE_PAGES,
     getNextPageParam,
     getPreviousPageParam,
   });
@@ -64,6 +67,7 @@ export function topCategoriesInfiniteQueryOptions() {
     staleTime: 60_000,
     queryFn: ({ pageParam }) => twitchService.getTopCategories(pageParam),
     initialPageParam: undefined as string | undefined,
+    maxPages: MAX_INFINITE_PAGES,
     getNextPageParam: (lastPage: PaginatedList<Category>) =>
       lastPage?.pagination?.cursor,
     getPreviousPageParam: () => undefined,
@@ -77,6 +81,7 @@ export function streamsByCategoryInfiniteQueryOptions(categoryId: string) {
     queryFn: ({ pageParam }) =>
       twitchService.getStreamsByCategory(categoryId, pageParam),
     initialPageParam: undefined as string | undefined,
+    maxPages: MAX_INFINITE_PAGES,
     getNextPageParam,
     getPreviousPageParam,
   });
@@ -91,6 +96,7 @@ export function clipsInfiniteQueryOptions(
     queryFn: ({ pageParam }) =>
       twitchService.getClips({ ...params, after: pageParam }),
     initialPageParam: undefined as string | undefined,
+    maxPages: MAX_INFINITE_PAGES,
     getNextPageParam: lastPage => lastPage?.pagination?.cursor || undefined,
   });
 }
@@ -104,6 +110,7 @@ export function videosInfiniteQueryOptions(
     queryFn: ({ pageParam }) =>
       twitchService.getVideos({ ...params, after: pageParam }),
     initialPageParam: undefined as string | undefined,
+    maxPages: MAX_INFINITE_PAGES,
     getNextPageParam: lastPage => lastPage?.pagination?.cursor || undefined,
   });
 }

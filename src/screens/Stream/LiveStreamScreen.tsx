@@ -4,7 +4,7 @@ import { Button } from '@app/components/Button/Button';
 import { Chat } from '@app/components/Chat/Chat';
 import { ChannelPredictionCard } from '@app/components/ChannelPredictionCard/ChannelPredictionCard';
 import { ChannelPollCard } from '@app/components/ChannelPollCard/ChannelPollCard';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import { Text } from '@app/components/ui/Text/Text';
 import { useChannelPrediction } from '@app/hooks/useChannelPrediction';

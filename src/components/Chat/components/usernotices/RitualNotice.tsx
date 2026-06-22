@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { Text } from '@app/components/ui/Text/Text';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';
 import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { View } from 'react-native';
 
 import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';

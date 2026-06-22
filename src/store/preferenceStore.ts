@@ -17,7 +17,7 @@ export interface CustomHighlight {
 export type ChatFontScale = 'small' | 'default' | 'large';
 export type ChatTimestampFormat = '24h' | '12h';
 export type DeletedMessageStyle = 'notice' | 'hidden';
-export type ChatScrollbackLength = 200 | 600 | 1000;
+export type ChatScrollbackLength = 150 | 200 | 250;
 
 export interface Preferences {
   updatedAt: number;
@@ -91,7 +91,7 @@ const initialPreferences: Preferences = {
   blockedTerms: [],
   chatTimestampFormat: '24h',
   chatFontScale: 'default',
-  chatScrollback: 600,
+  chatScrollback: 150,
   deletedMessageStyle: 'notice',
   ignoreClearChat: false,
   chatMentionHaptics: true,

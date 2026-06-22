@@ -14,7 +14,7 @@ import {
 } from '@app/utils/chat/replaceTextWithEmotes';
 import { useQueries } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Pressable, View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 

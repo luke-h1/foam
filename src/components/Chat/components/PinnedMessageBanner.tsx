@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Button } from '@app/components/Button/Button';
 import { Text } from '@app/components/ui/Text/Text';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { View } from 'react-native';
 
 import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';

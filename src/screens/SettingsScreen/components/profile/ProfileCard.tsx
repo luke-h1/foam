@@ -5,7 +5,7 @@ import { useAuthContext } from '@app/context/AuthContext';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 import { router } from 'expo-router';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { useRef } from 'react';
 import type { ReactNode } from 'react';
 

@@ -4,6 +4,23 @@ import type { ParsedPart } from './replaceTextWithEmotes';
 
 const mentionLoginIndex = new Map<string, string>();
 
+const MAX_MENTION_ENTRIES = 8000;
+
+function capMentionIndex(index: Map<string, unknown>): void {
+  if (index.size <= MAX_MENTION_ENTRIES) {
+    return;
+  }
+  const trimCount = Math.floor(MAX_MENTION_ENTRIES * 0.2);
+  let removed = 0;
+  for (const key of index.keys()) {
+    if (removed >= trimCount) {
+      break;
+    }
+    index.delete(key);
+    removed += 1;
+  }
+}
+
 export type ChatterRole = 'broadcaster' | 'moderator' | 'vip';
 
 export type MentionChatter = {
@@ -51,6 +68,7 @@ export function registerMentionLogin(login?: string | null): void {
   }
 
   mentionLoginIndex.set(key, next);
+  capMentionIndex(mentionLoginIndex);
 }
 
 export function getMentionLogin(login: string): string {
@@ -97,11 +115,12 @@ export function registerMentionLoginsFromSender(
 }
 
 export function applyMentionLoginCasing(parts: ParsedPart[]): ParsedPart[] {
-  let didChange = false;
+  let nextParts: ParsedPart[] | null = null;
 
-  const nextParts = parts.map(part => {
-    if (part.type !== 'mention' || !('content' in part)) {
-      return part;
+  for (let i = 0; i < parts.length; i += 1) {
+    const part = parts[i];
+    if (!part || part.type !== 'mention' || !('content' in part)) {
+      continue;
     }
 
     const login = part.content.replace(/^@/, '').trim();
@@ -110,14 +129,16 @@ export function applyMentionLoginCasing(parts: ParsedPart[]): ParsedPart[] {
     const canonicalLogin = getMentionLogin(login);
     const content = `@${canonicalLogin}`;
     if (content === part.content) {
-      return part;
+      continue;
     }
 
-    didChange = true;
-    return { ...part, content };
-  });
+    if (!nextParts) {
+      nextParts = parts.slice();
+    }
+    nextParts[i] = { ...part, content };
+  }
 
-  return didChange ? nextParts : parts;
+  return nextParts ?? parts;
 }
 
 export function registerMentionChatter({
@@ -154,6 +175,7 @@ export function registerMentionChatter({
     // rather than clearing it.
     role: role ?? existing?.role,
   });
+  capMentionIndex(mentionChatterIndex);
 }
 
 export function getAllMentionChatters(): MentionChatter[] {

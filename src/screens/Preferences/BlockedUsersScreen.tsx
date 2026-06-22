@@ -9,7 +9,7 @@ import { twitchService, UserBlockList } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { useRef, type RefObject, useCallback } from 'react';
 import type { FlashListRef } from '@app/components/FlashList/FlashList';
 import { Alert, ScrollView, View, StyleSheet } from 'react-native';

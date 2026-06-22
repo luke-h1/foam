@@ -154,7 +154,7 @@ jest.mock('@app/store/chat/actions/messages', () => ({
 jest.mock('@app/store/preferenceStore', () => ({
   getPreferences: jest.fn(() => ({
     chatTimestampFormat: '24h',
-    chatScrollback: 600,
+    chatScrollback: 150,
     deletedMessageStyle: 'notice',
     ignoreClearChat: false,
   })),
@@ -362,7 +362,7 @@ const setPreferences = (showRecentMessages = true) => {
     blockedTerms: [],
     chatTimestampFormat: '24h',
     chatFontScale: 'default',
-    chatScrollback: 600,
+    chatScrollback: 150,
     deletedMessageStyle: 'notice',
     ignoreClearChat: false,
     chatMentionHaptics: true,

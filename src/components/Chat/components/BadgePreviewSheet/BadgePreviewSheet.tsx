@@ -8,7 +8,7 @@ import type { SanitisedBadgeSet } from '@app/services/twitch-badge-service';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import * as Clipboard from 'expo-clipboard';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import {
   ScrollView,
   StyleSheet,

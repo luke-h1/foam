@@ -76,6 +76,29 @@ function dropRefBytes(url: string): void {
   }
 }
 
+/**
+ * Evict a url from the cache: detach its native bitmap so it deallocates now
+ * instead of whenever the JS GC eventually collects the `ImageRef` (too late
+ * under memory pressure), then drop it from the maps. A released ref throws on
+ * any later native call, so only release when no consumer is subscribed to this
+ * url — `useCachedEmote` subscribes for its whole mounted life, so an absent
+ * listener means nothing is rendering `<Image source={ref}>`. Off-screen refs in
+ * the virtualized list are unsubscribed, so this still frees the large majority.
+ * Returns whether the url was cached.
+ */
+function releaseRef(url: string): boolean {
+  const ref = refs.get(url);
+  if (ref && !listeners.has(url)) {
+    try {
+      ref.release();
+    } catch {
+      // ignore
+    }
+  }
+  dropRefBytes(url);
+  return refs.delete(url);
+}
+
 function withinBudget(incomingBytes: number): boolean {
   return (
     refs.size < MAX_ENTRIES && totalBytes + incomingBytes <= MAX_DECODED_BYTES
@@ -98,8 +121,7 @@ function evictUnpinnedToFit(incomingBytes: number): void {
     if (pinned.has(url)) {
       continue;
     }
-    refs.delete(url);
-    dropRefBytes(url);
+    releaseRef(url);
   }
 }
 
@@ -238,8 +260,7 @@ export async function warmCachedEmoteRefs(
 }
 
 export function evictCachedEmoteRef(url: string): void {
-  const hadRef = refs.delete(url);
-  dropRefBytes(url);
+  const hadRef = releaseRef(url);
   pinned.delete(url);
   if (hadRef) {
     notify(url);
@@ -254,14 +275,16 @@ export function releaseChannelEmoteRefs(): void {
     }
   }
   dropped.forEach(url => {
-    refs.delete(url);
-    dropRefBytes(url);
+    releaseRef(url);
     notify(url);
   });
 }
 
 export function clearCachedEmoteRefs(): void {
   cacheEpoch += 1;
+  for (const url of refs.keys()) {
+    releaseRef(url);
+  }
   refs.clear();
   refBytes.clear();
   totalBytes = 0;

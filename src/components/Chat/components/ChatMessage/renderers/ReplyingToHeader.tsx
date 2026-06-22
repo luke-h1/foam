@@ -1,4 +1,4 @@
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { useMemo } from 'react';
 import { View } from 'react-native';
 import type { ParsedPart } from '@app/utils/chat/replaceTextWithEmotes';

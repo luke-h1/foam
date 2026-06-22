@@ -28,7 +28,7 @@ const messageKeySet = new Set<string>();
 const messageKeyOrder: string[] = [];
 const messageIdToIndex = new Map<string, number>();
 const messageKeyToIndex = new Map<string, number>();
-const DEFAULT_MAX_CHAT_MESSAGES = 600;
+const DEFAULT_MAX_CHAT_MESSAGES = 150;
 const MAX_RECENT_MESSAGES = 80;
 
 export const getMaxChatMessages = (): number =>
@@ -40,7 +40,7 @@ export const getMaxChatMessages = (): number =>
 // now-different index 0 and yanks the list to the top. So while paused we stop
 // front-trimming and let the window grow to a bounded ceiling, then resume (and
 // catch up) once the user returns to the bottom where trimming is safe.
-const SUSPENDED_FRONT_TRIM_HEADROOM = 1500;
+const SUSPENDED_FRONT_TRIM_HEADROOM = 350;
 let frontTrimSuspended = false;
 
 export const setChatFrontTrimSuspended = (suspended: boolean): void => {

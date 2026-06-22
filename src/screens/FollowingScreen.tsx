@@ -2,7 +2,7 @@ import { EditorialSectionHeader } from '@app/components/EditorialSectionHeader/E
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { AnimatedFlashList } from '@app/components/FlashList/AnimatedFlashList';
 import { ListRenderItem } from '@app/components/FlashList/FlashList';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { useBottomTabOverflow } from '@app/components/TabBarBackground/useBottomTabOverflow';

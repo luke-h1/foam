@@ -6,7 +6,7 @@ import {
   BottomSheet,
   type SnapPoint,
 } from '@app/components/BottomSheet/BottomSheet';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import {

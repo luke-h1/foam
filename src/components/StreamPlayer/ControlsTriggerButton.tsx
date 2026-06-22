@@ -1,6 +1,6 @@
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { theme } from '@app/styles/themes';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { StyleSheet, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';

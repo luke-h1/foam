@@ -10,7 +10,7 @@ import {
 } from '@app/store/preferenceStore';
 import { normaliseHighlightPhrase } from '@app/utils/chat/customHighlights';
 import { theme } from '@app/styles/themes';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { PressableScale } from 'pressto';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Alert, StyleSheet, TextInput, View } from 'react-native';

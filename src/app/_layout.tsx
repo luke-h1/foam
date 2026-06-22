@@ -13,7 +13,7 @@ import { init as initSentry } from '../lib/sentry';
 import { init as initBugsnag } from '../lib/bugsnag';
 
 configureReanimatedLogger({
-  level: ReanimatedLogLevel.warn,
+  level: ReanimatedLogLevel.error,
   strict: false,
 });
 

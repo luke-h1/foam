@@ -1,6 +1,6 @@
 import { useAccentColor } from '@app/context/AccentColorContext';
 import { theme } from '@app/styles/themes';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { PressableScale } from 'pressto';
 import { memo, useCallback, useRef, type Ref } from 'react';
 import { TextInput, type TextInput as TextInputType, View } from 'react-native';

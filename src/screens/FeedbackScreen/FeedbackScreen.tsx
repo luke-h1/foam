@@ -5,7 +5,7 @@ import { impact } from '@app/lib/haptics';
 import { sendFeedback, type FeedbackType } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { router } from 'expo-router';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { useState } from 'react';
 import {
   Platform,

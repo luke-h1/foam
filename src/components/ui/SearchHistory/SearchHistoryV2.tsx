@@ -1,5 +1,5 @@
 import { theme } from '@app/styles/themes';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, View, StyleSheet } from 'react-native';

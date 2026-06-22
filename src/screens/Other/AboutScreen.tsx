@@ -15,7 +15,7 @@ import {
 } from '@expo/ui/swift-ui';
 import * as Application from 'expo-application';
 import * as Updates from 'expo-updates';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { useRef } from 'react';
 import type { ReactNode } from 'react';
 

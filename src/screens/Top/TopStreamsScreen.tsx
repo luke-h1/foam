@@ -19,7 +19,7 @@ import {
 import { theme } from '@app/styles/themes';
 import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 import type { ListRenderItem } from '@shopify/flash-list';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
+import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, {

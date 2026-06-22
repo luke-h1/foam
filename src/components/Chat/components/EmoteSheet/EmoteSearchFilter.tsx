@@ -1,7 +1,7 @@
 import { Button } from '@app/components/Button/Button';
 import { Input } from '@app/components/ui/Input/Input';
 import { theme } from '@app/styles/themes';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { View } from 'react-native';
 import { emoteSheetStyles as styles } from './emoteSheetStyles';
 

@@ -1,5 +1,5 @@
 import { Text } from '@app/components/ui/Text/Text';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import type { ReactNode } from 'react';
 import { View, type StyleProp, type TextStyle } from 'react-native';
 

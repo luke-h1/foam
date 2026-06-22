@@ -4,6 +4,7 @@ import {
   addMessage,
   addMessages,
   clearMessages,
+  getMaxChatMessages,
   getMessageById,
   getUserMessageColor,
   moderateMessageById,
@@ -388,26 +389,30 @@ describe('chatStore messages', () => {
   });
 
   test('addMessages keeps the in-memory chat window bounded', () => {
+    const cap = getMaxChatMessages();
+    const total = cap + 50;
     addMessages(
-      Array.from({ length: 650 }, (_, index) =>
+      Array.from({ length: total }, (_, index) =>
         createMessage(`msg-${index}`, `nonce-${index}`, `${index}`),
       ),
     );
 
     const messages = chatStore$.messages.peek();
+    const lastId = total - 1;
 
-    expect(messages).toHaveLength(600);
+    expect(messages).toHaveLength(cap);
     expect(messages[0]?.message_id).toBe('msg-50');
-    expect(messages.at(-1)?.message_id).toBe('msg-649');
+    expect(messages.at(-1)?.message_id).toBe(`msg-${lastId}`);
     expect(getMessageById('msg-0')).toBeUndefined();
-    expect(getMessageById('msg-649')?.message).toEqual([
-      { type: 'text', content: '649' },
+    expect(getMessageById(`msg-${lastId}`)?.message).toEqual([
+      { type: 'text', content: `${lastId}` },
     ]);
   });
 
   test('surviving messages stay addressable after later flushes trim the window', () => {
+    const cap = getMaxChatMessages();
     addMessages(
-      Array.from({ length: 600 }, (_, index) =>
+      Array.from({ length: cap }, (_, index) =>
         createMessage(`msg-${index}`, `nonce-${index}`, `${index}`),
       ),
     );
@@ -416,25 +421,33 @@ describe('chatStore messages', () => {
     // indexes were recorded before the trim and must shift with it.
     addMessages(
       Array.from({ length: 10 }, (_, index) =>
-        createMessage(`msg-${600 + index}`, `nonce-${600 + index}`, 'late'),
+        createMessage(`msg-${cap + index}`, `nonce-${cap + index}`, 'late'),
       ),
     );
 
     const messages = chatStore$.messages.peek();
-    expect(messages).toHaveLength(600);
+    expect(messages).toHaveLength(cap);
     expect(messages[0]?.message_id).toBe('msg-10');
     expect(getMessageById('msg-9')).toBeUndefined();
-    expect(getMessageById('msg-300')?.message).toEqual([
-      { type: 'text', content: '300' },
+
+    const survivor = cap - 50;
+    expect(getMessageById(`msg-${survivor}`)?.message).toEqual([
+      { type: 'text', content: `${survivor}` },
     ]);
 
-    moderateMessageById('msg-300', 'Timed out (10s)');
+    moderateMessageById(`msg-${survivor}`, 'Timed out (10s)');
 
-    expect(getMessageById('msg-300')?.moderationNotice).toBe('Timed out (10s)');
-    expect(getMessageById('msg-300')?.message).toEqual([
-      { type: 'text', content: '300—Timed out (10s)' },
+    expect(getMessageById(`msg-${survivor}`)?.moderationNotice).toBe(
+      'Timed out (10s)',
+    );
+    expect(getMessageById(`msg-${survivor}`)?.message).toEqual([
+      { type: 'text', content: `${survivor}—Timed out (10s)` },
     ]);
-    expect(getMessageById('msg-299')?.moderationNotice).toBeUndefined();
-    expect(getMessageById('msg-301')?.moderationNotice).toBeUndefined();
+    expect(
+      getMessageById(`msg-${survivor - 1}`)?.moderationNotice,
+    ).toBeUndefined();
+    expect(
+      getMessageById(`msg-${survivor + 1}`)?.moderationNotice,
+    ).toBeUndefined();
   });
 });

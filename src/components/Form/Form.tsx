@@ -8,7 +8,7 @@ import {
   SymbolView,
   type SymbolViewProps,
   type SymbolWeight,
-} from 'expo-symbols';
+} from '@app/components/ui/Icon/Icon';
 import {
   Children,
   cloneElement,

@@ -11,7 +11,7 @@ import {
   type MentionChatter,
 } from '@app/utils/chat/resolveMentionLogin';
 import type { ListRenderItem } from '@shopify/flash-list';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { UsernamePressData } from '../ChatMessage/RichChatMessage.types';

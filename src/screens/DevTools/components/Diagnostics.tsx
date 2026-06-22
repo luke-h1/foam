@@ -1,6 +1,6 @@
 import { BodyScrollView } from '@app/components/BodyScrollView/BodyScrollView';
 import * as Form from '@app/components/Form/Form';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import * as AC from '@bacons/apple-colors';
 import { Linking, StyleSheet } from 'react-native';
 import { AppStoreSection } from './AppStoreSection';
