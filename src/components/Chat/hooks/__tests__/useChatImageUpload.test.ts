@@ -45,7 +45,7 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-it('uploads the picked image without requesting media library permission', async () => {
+test('uploads the picked image without requesting media library permission', async () => {
   mockLaunchImageLibrary.mockResolvedValue({
     canceled: false,
     assets: [pickedAsset],
@@ -69,7 +69,7 @@ it('uploads the picked image without requesting media library permission', async
   expect(mockToastSuccess).toHaveBeenCalled();
 });
 
-it('does nothing when the user cancels the picker', async () => {
+test('does nothing when the user cancels the picker', async () => {
   mockLaunchImageLibrary.mockResolvedValue({ canceled: true, assets: null });
   const onUploaded = jest.fn();
 
@@ -82,7 +82,7 @@ it('does nothing when the user cancels the picker', async () => {
   expect(onUploaded).not.toHaveBeenCalled();
 });
 
-it('shows an error toast when the upload fails', async () => {
+test('shows an error toast when the upload fails', async () => {
   mockLaunchImageLibrary.mockResolvedValue({
     canceled: false,
     assets: [pickedAsset],
@@ -103,7 +103,7 @@ it('shows an error toast when the upload fails', async () => {
   expect(onUploaded).not.toHaveBeenCalled();
 });
 
-it('shows an error toast when the image picker throws', async () => {
+test('shows an error toast when the image picker throws', async () => {
   mockLaunchImageLibrary.mockRejectedValue(new Error('picker crashed'));
   const onUploaded = jest.fn();
 

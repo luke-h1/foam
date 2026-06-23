@@ -1,7 +1,7 @@
 import i18next from '@app/i18n/i18next';
 
 describe('i18n', () => {
-  it('initializes with English and resolves keys across namespaces', () => {
+  test('initializes with English and resolves keys across namespaces', () => {
     expect(i18next.isInitialized).toBe(true);
     expect(i18next.language).toBe('en');
     expect(i18next.t('save')).toBe('Save');

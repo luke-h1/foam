@@ -22,7 +22,7 @@ export function parseActionMessage(text: string): ParsedActionMessage {
   return { isAction: false, text };
 }
 
-const ACTION_COMMAND = /^\/me\s+/i;
+const ACTION_COMMAND = /^\/me(?:\s+|$)/i;
 
 export function parseActionCommand(input: string): ParsedActionMessage {
   const match = ACTION_COMMAND.exec(input);

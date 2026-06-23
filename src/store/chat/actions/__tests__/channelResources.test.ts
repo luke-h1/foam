@@ -65,7 +65,7 @@ function spec(key: EmoteResourceSpec['key']): EmoteResourceSpec {
 }
 
 describe('buildEmoteResourceSpecs', () => {
-  it('produces one ordered spec per provider slice with matching cache keys', () => {
+  test('produces one ordered spec per provider slice with matching cache keys', () => {
     const specs = buildEmoteResourceSpecs({
       channelId,
       sevenTvSetId: 'set-1',
@@ -87,7 +87,7 @@ describe('buildEmoteResourceSpecs', () => {
 });
 
 describe('buildBadgeResourceSpecs', () => {
-  it('produces one ordered spec per badge slice', () => {
+  test('produces one ordered spec per badge slice', () => {
     const specs = buildBadgeResourceSpecs({ channelId });
 
     expect(specs.map(s => s.key)).toEqual([
@@ -101,7 +101,7 @@ describe('buildBadgeResourceSpecs', () => {
 });
 
 describe('settleSpecs', () => {
-  it('zips each spec with its settled result in order', async () => {
+  test('zips each spec with its settled result in order', async () => {
     const fulfilled = spec('twitchChannelEmotes');
     fulfilled.fetch = () => Promise.resolve([emote('a')]);
     const rejected = spec('twitchGlobalEmotes');
@@ -127,7 +127,7 @@ describe('reconcileSettledSpecs', () => {
     twitchChannelEmotes: [emote('cached')],
   };
 
-  it('deduplicates fulfilled results by id', () => {
+  test('deduplicates fulfilled results by id', () => {
     const settled: SettledSpec<EmoteCacheKey, SanitisedEmote>[] = [
       {
         spec: spec('twitchChannelEmotes'),
@@ -149,7 +149,7 @@ describe('reconcileSettledSpecs', () => {
     ]);
   });
 
-  it('falls back to the cached slice when a fetch rejects', () => {
+  test('falls back to the cached slice when a fetch rejects', () => {
     const settled: SettledSpec<EmoteCacheKey, SanitisedEmote>[] = [
       {
         spec: spec('twitchChannelEmotes'),
@@ -165,7 +165,7 @@ describe('reconcileSettledSpecs', () => {
     expect(reconciled.get('twitchChannelEmotes')).toEqual([emote('cached')]);
   });
 
-  it('yields an empty slice when a fetch rejects with no cache', () => {
+  test('yields an empty slice when a fetch rejects with no cache', () => {
     const settled: SettledSpec<EmoteCacheKey, SanitisedEmote>[] = [
       {
         spec: spec('twitchChannelEmotes'),
@@ -188,7 +188,7 @@ describe('reportResourceResults', () => {
     jest.mocked(logger.chat.info).mockClear();
   });
 
-  it('warns once per rejected resource and counts every resource', () => {
+  test('warns once per rejected resource and counts every resource', () => {
     const settled: SettledSpec<EmoteCacheKey, SanitisedEmote>[] = [
       {
         spec: spec('twitchChannelEmotes'),

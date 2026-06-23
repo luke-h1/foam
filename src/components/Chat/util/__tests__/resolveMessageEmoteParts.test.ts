@@ -47,7 +47,7 @@ beforeEach(() => {
 });
 
 describe('resolveMessageEmoteParts subscriber scoping', () => {
-  it('includes the channel subscriber emotes when the sender is the current user', () => {
+  test('includes the channel subscriber emotes when the sender is the current user', () => {
     const userstate = createUserStateFromTags(createChatTags({ login: 'me' }));
 
     resolveMessageEmoteParts({
@@ -63,7 +63,7 @@ describe('resolveMessageEmoteParts subscriber scoping', () => {
     expect(lastWorkletArgs().twitchSubscriberEmotes).toEqual([subscriberEmote]);
   });
 
-  it('omits the channel subscriber emotes for other senders', () => {
+  test('omits the channel subscriber emotes for other senders', () => {
     const userstate = createUserStateFromTags(
       createChatTags({ login: 'someone-else' }),
     );
@@ -83,7 +83,7 @@ describe('resolveMessageEmoteParts subscriber scoping', () => {
 });
 
 describe('resolveMessageEmoteParts personal emotes', () => {
-  it('feeds the user personal emotes when 7TV emotes are enabled', () => {
+  test('feeds the user personal emotes when 7TV emotes are enabled', () => {
     const personalEmote = createTwitchEmote({ id: 'p-1', name: 'Personal' });
     mockGetUserPersonalEmotes.mockReturnValue([personalEmote]);
     const userstate = createUserStateFromTags(createChatTags({ login: 'me' }));
@@ -102,7 +102,7 @@ describe('resolveMessageEmoteParts personal emotes', () => {
     expect(lastWorkletArgs().sevenTvPersonalEmotes).toEqual([personalEmote]);
   });
 
-  it('skips personal emote lookup when 7TV emotes are disabled', () => {
+  test('skips personal emote lookup when 7TV emotes are disabled', () => {
     const userstate = createUserStateFromTags(createChatTags({ login: 'me' }));
 
     resolveMessageEmoteParts({

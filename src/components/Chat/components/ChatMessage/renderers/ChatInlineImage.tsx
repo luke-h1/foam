@@ -16,11 +16,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import {
-  Image as ExpoImage,
-  type ImageErrorEventData,
-  type ImageRef,
-} from 'expo-image';
+import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
 
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
 import {
@@ -111,10 +107,10 @@ function ChatInlineImageComponent({
   }>({ index: 0, status: 'loading', url: sourceUrl });
   const retryCountRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const failedSharedRef = useRef<ImageRef | null>(null);
+  const [failedRefUrl, setFailedRefUrl] = useState<string | null>(null);
 
   const isCurrentUrl = load.url === sourceUrl;
-  const showRef = sharedRef != null && sharedRef !== failedSharedRef.current;
+  const showRef = sharedRef != null && failedRefUrl !== sourceUrl;
   const candidateIndex = showRef ? 0 : isCurrentUrl ? load.index : 0;
   const status = isCurrentUrl ? load.status : 'loading';
 
@@ -125,7 +121,6 @@ function ChatInlineImageComponent({
   // than during render.
   useEffect(() => {
     retryCountRef.current = 0;
-    failedSharedRef.current = null;
   }, [sourceUrl]);
 
   // Drop any retry timer scheduled for the previous url — it would otherwise
@@ -152,7 +147,7 @@ function ChatInlineImageComponent({
   const handleError = useCallback(
     (event?: ImageErrorEventData) => {
       if (showRef) {
-        failedSharedRef.current = sharedRef;
+        setFailedRefUrl(sourceUrl);
       } else if (candidateIndex === 0) {
         evictCachedEmoteRef(candidateUrl);
       }
@@ -220,14 +215,7 @@ function ChatInlineImageComponent({
         setReloadNonce(nonce => nonce + 1);
       }, delay);
     },
-    [
-      candidateIndex,
-      candidateUrl,
-      fallbackChain,
-      sharedRef,
-      showRef,
-      sourceUrl,
-    ],
+    [candidateIndex, candidateUrl, fallbackChain, showRef, sourceUrl],
   );
 
   const rowVisibility = use(RowVisibilityContext);

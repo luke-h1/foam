@@ -26,11 +26,11 @@ beforeEach(() => {
 });
 
 describe('recentMessagesPersistence', () => {
-  it('is enabled on native', () => {
+  test('is enabled on native', () => {
     expect(RECENT_MESSAGES_PERSISTENCE_ENABLED).toEqual(true);
   });
 
-  it('round-trips recent messages per channel', () => {
+  test('round-trips recent messages per channel', () => {
     const channelA = [makeMessage('a1'), makeMessage('a2')];
     const channelB = [makeMessage('b1')];
 
@@ -43,7 +43,7 @@ describe('recentMessagesPersistence', () => {
     });
   });
 
-  it('overwrites a channel without touching others', () => {
+  test('overwrites a channel without touching others', () => {
     writePersistedRecentMessagesForChannel('channel-a', [makeMessage('a1')]);
     writePersistedRecentMessagesForChannel('channel-b', [makeMessage('b1')]);
 
@@ -56,7 +56,7 @@ describe('recentMessagesPersistence', () => {
     });
   });
 
-  it('deletes only the given channels', () => {
+  test('deletes only the given channels', () => {
     writePersistedRecentMessagesForChannel('channel-a', [makeMessage('a1')]);
     writePersistedRecentMessagesForChannel('channel-b', [makeMessage('b1')]);
     writePersistedRecentMessagesForChannel('channel-c', [makeMessage('c1')]);
@@ -68,7 +68,7 @@ describe('recentMessagesPersistence', () => {
     });
   });
 
-  it('clears every channel', () => {
+  test('clears every channel', () => {
     writePersistedRecentMessagesForChannel('channel-a', [makeMessage('a1')]);
     writePersistedRecentMessagesForChannel('channel-b', [makeMessage('b1')]);
 
@@ -77,7 +77,7 @@ describe('recentMessagesPersistence', () => {
     expect(loadPersistedRecentMessages()).toEqual({});
   });
 
-  it('drops a channel whose stored value is corrupt', () => {
+  test('drops a channel whose stored value is corrupt', () => {
     writePersistedRecentMessagesForChannel('channel-a', [makeMessage('a1')]);
     // Corrupt the channel-b entry directly via the underlying store.
     const { createMMKV } = require('react-native-mmkv');

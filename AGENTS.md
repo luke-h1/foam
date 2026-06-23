@@ -8,6 +8,12 @@ Partial object matchers are tempting because they make tests quicker to write, b
 
 When a test cares about an object contract, write the object out and compare it with `toEqual`. If only part of a large object matters, pull those fields into a smaller object first, then use `toEqual` on that smaller object. The point is to make the shape obvious to the next person reading the test.
 
+## Test Functions
+
+Use `test()` to declare unit tests, not `it()`. Keep this consistent across every spec so the test files read the same way.
+
+`it()` reads as an English sentence with the `describe` block, but it also reads ambiguously on its own and mixing the two styles across files adds noise for no benefit. `test('does the thing', ...)` says plainly what it is.
+
 ## Test Fixtures
 
 Put shared test fixtures in a `__fixtures__` directory inside the relevant `__tests__` directory.

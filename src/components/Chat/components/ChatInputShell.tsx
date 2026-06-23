@@ -171,6 +171,11 @@ export const ChatInputShell = memo(function ChatInputShell({
     const { isAction, text: actionBody } = replyTo
       ? { isAction: false, text: currentInput }
       : parseActionCommand(currentInput);
+
+    if (isAction && !actionBody.trim()) {
+      return;
+    }
+
     const sentText = replyTo
       ? `@${replyTo.username} ${currentInput}`
       : currentInput;

@@ -1,7 +1,7 @@
 import { flattenInfiniteQueryPages } from '../flattenInfiniteQueryPages';
 
 describe('flattenInfiniteQueryPages', () => {
-  it('flattens page data and removes empty items', () => {
+  test('flattens page data and removes empty items', () => {
     expect(
       flattenInfiniteQueryPages([
         { data: ['one', undefined, 'two'] },
@@ -11,7 +11,7 @@ describe('flattenInfiniteQueryPages', () => {
     ).toEqual(['one', 'two', 'three']);
   });
 
-  it('returns an empty array when pages are missing', () => {
+  test('returns an empty array when pages are missing', () => {
     expect(flattenInfiniteQueryPages(undefined)).toEqual([]);
   });
 });

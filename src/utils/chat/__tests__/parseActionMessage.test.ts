@@ -4,28 +4,28 @@ const ctcp = (text: string) =>
   `${String.fromCharCode(1)}ACTION ${text}${String.fromCharCode(1)}`;
 
 describe('parseActionMessage', () => {
-  it('strips the CTCP ACTION wrapper and flags the message', () => {
+  test('strips the CTCP ACTION wrapper and flags the message', () => {
     expect(parseActionMessage(ctcp('waves at chat'))).toEqual({
       isAction: true,
       text: 'waves at chat',
     });
   });
 
-  it('handles an empty action body', () => {
+  test('handles an empty action body', () => {
     expect(parseActionMessage(ctcp(''))).toEqual({
       isAction: true,
       text: '',
     });
   });
 
-  it('leaves a normal message untouched', () => {
+  test('leaves a normal message untouched', () => {
     expect(parseActionMessage('hello world')).toEqual({
       isAction: false,
       text: 'hello world',
     });
   });
 
-  it('does not treat an unterminated wrapper as an action', () => {
+  test('does not treat an unterminated wrapper as an action', () => {
     const unterminated = `${String.fromCharCode(1)}ACTION waves`;
     expect(parseActionMessage(unterminated)).toEqual({
       isAction: false,
@@ -35,21 +35,42 @@ describe('parseActionMessage', () => {
 });
 
 describe('parseActionCommand', () => {
-  it('strips a leading /me command', () => {
+  test('strips a leading /me command', () => {
     expect(parseActionCommand('/me waves at chat')).toEqual({
       isAction: true,
       text: 'waves at chat',
     });
   });
 
-  it('is case-insensitive and tolerates extra whitespace', () => {
+  test('is case-insensitive and tolerates extra whitespace', () => {
     expect(parseActionCommand('/ME   dances')).toEqual({
       isAction: true,
       text: 'dances',
     });
   });
 
-  it('leaves other slash commands and plain text untouched', () => {
+  test('flags a bare /me with no body as an empty action', () => {
+    expect(parseActionCommand('/me')).toEqual({
+      isAction: true,
+      text: '',
+    });
+  });
+
+  test('flags a /me followed by only whitespace as an empty action', () => {
+    expect(parseActionCommand('/me   ')).toEqual({
+      isAction: true,
+      text: '',
+    });
+  });
+
+  test('does not treat /men as the action command', () => {
+    expect(parseActionCommand('/men do things')).toEqual({
+      isAction: false,
+      text: '/men do things',
+    });
+  });
+
+  test('leaves other slash commands and plain text untouched', () => {
     expect(parseActionCommand('/ban someone')).toEqual({
       isAction: false,
       text: '/ban someone',
