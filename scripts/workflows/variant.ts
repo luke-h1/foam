@@ -63,7 +63,7 @@ export function appendVariant(value: string, variant: string): string {
 export function ignoreTagsPattern(version: string, variant: string): string {
   getVariantMeta(variant);
 
-  const escapedVersion = version.replace(/\./g, '\\.');
+  const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const siblings = (Object.keys(VARIANTS) as Variant[])
     .filter(name => VARIANTS[name].tagSuffix !== '' && name !== variant)
     .map(name => VARIANTS[name].tagSuffix);

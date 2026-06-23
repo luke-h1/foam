@@ -201,7 +201,13 @@ jobs:
 
       - name: 🏷️ Resolve Sentry dist
         id: sentry_dist
-        run: echo "dist=$(bunx tsx scripts/workflows/variant-cli.ts sentry-dist --variant "${VARIANT}")" >> "$GITHUB_OUTPUT"
+        run: |
+          DIST="$(bunx tsx scripts/workflows/variant-cli.ts sentry-dist --variant "${VARIANT}")"
+          if [ -z "$DIST" ]; then
+            echo "::error::Failed to resolve Sentry dist for variant ${VARIANT}"
+            exit 1
+          fi
+          echo "dist=$DIST" >> "$GITHUB_OUTPUT"
         env:
           VARIANT: ${{ inputs.variant || 'production' }}
 
@@ -269,7 +275,13 @@ jobs:
 
       - name: 🏷️ Resolve Sentry dist
         id: sentry_dist
-        run: echo "dist=$(bunx tsx scripts/workflows/variant-cli.ts sentry-dist --variant "${VARIANT}")" >> "$GITHUB_OUTPUT"
+        run: |
+          DIST="$(bunx tsx scripts/workflows/variant-cli.ts sentry-dist --variant "${VARIANT}")"
+          if [ -z "$DIST" ]; then
+            echo "::error::Failed to resolve Sentry dist for variant ${VARIANT}"
+            exit 1
+          fi
+          echo "dist=$DIST" >> "$GITHUB_OUTPUT"
         env:
           VARIANT: ${{ inputs.variant || 'production' }}
 
