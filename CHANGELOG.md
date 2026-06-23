@@ -35,6 +35,8 @@
 - **perf:** Perf sweep ([#653](https://github.com/lhowsam/foam/issues/653))
 - **perf:** Perf sweep pt 2
 - **perf:** Perf sweep pt 2
+- **perf:** Perf sweep pt 2 ([#654](https://github.com/lhowsam/foam/issues/654))
+- **perf:** Perf sweep
 
 ### 🔧 Miscellaneous Tasks
 
