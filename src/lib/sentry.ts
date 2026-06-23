@@ -95,6 +95,10 @@ export function init() {
     attachStacktrace: true,
     attachScreenshot: true,
     attachViewHierarchy: true,
+    screenshot: {
+      maskAllText: true,
+      maskAllImages: true,
+    },
     ignoreErrors: ['Network request failed'],
     sampleRate: 1.0,
     tracesSampleRate: 1.0,
@@ -107,7 +111,11 @@ export function init() {
       reactNativeTracingIntegration(),
       appStartIntegration(),
       graphqlIntegration({ endpoints: ['https://7tv.io/v4/gql'] }),
-      mobileReplayIntegration(),
+      mobileReplayIntegration({
+        maskAllText: true,
+        maskAllImages: true,
+        maskAllVectors: true,
+      }),
     ],
     beforeSend(event) {
       // Keep the store-review prompt gate honest: any error-level event

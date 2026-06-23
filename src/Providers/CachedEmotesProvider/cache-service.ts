@@ -172,23 +172,42 @@ function evictUnpinnedToFit(incomingBytes: number): void {
 
 const MAX_CONCURRENT_DECODES = isLowTier ? 4 : 8;
 let activeDecodes = 0;
-const decodeWaiters: (() => void)[] = [];
-const lowPriorityDecodeWaiters: (() => void)[] = [];
+type DecodeWaiter = { url: string; resolve: () => void };
+const decodeWaiters: DecodeWaiter[] = [];
+const lowPriorityDecodeWaiters: DecodeWaiter[] = [];
 
-function acquireDecodeSlot(lowPriority = false): Promise<void> {
+function acquireDecodeSlot(url: string, lowPriority = false): Promise<void> {
   if (activeDecodes < MAX_CONCURRENT_DECODES) {
     activeDecodes += 1;
     return Promise.resolve();
   }
   return new Promise<void>(resolve => {
-    (lowPriority ? lowPriorityDecodeWaiters : decodeWaiters).push(resolve);
+    (lowPriority ? lowPriorityDecodeWaiters : decodeWaiters).push({
+      url,
+      resolve,
+    });
   });
+}
+
+/**
+ * A url whose warm (low-priority) decode is still queued can become visible
+ * before it acquires a slot. Move its waiter into the normal queue so the
+ * visible render is no longer stuck behind other warm work.
+ */
+function promoteDecodeWaiter(url: string): void {
+  const index = lowPriorityDecodeWaiters.findIndex(
+    waiter => waiter.url === url,
+  );
+  if (index === -1) {
+    return;
+  }
+  decodeWaiters.push(...lowPriorityDecodeWaiters.splice(index, 1));
 }
 
 function releaseDecodeSlot(): void {
   const next = decodeWaiters.shift() ?? lowPriorityDecodeWaiters.shift();
   if (next) {
-    next();
+    next.resolve();
   } else {
     activeDecodes -= 1;
   }
@@ -229,6 +248,9 @@ function decodeInto(
     if (pin && refs.has(url)) {
       pinned.add(url);
     }
+    if (url && !lowPriority && inflight.has(url)) {
+      promoteDecodeWaiter(url);
+    }
     return Promise.resolve();
   }
   const requestEpoch = cacheEpoch;
@@ -244,7 +266,7 @@ async function runDecode(
   lowPriority: boolean,
 ): Promise<void> {
   // eslint-disable-next-line react-doctor/async-defer-await -- the slot must be acquired BEFORE the staleness re-check: a clear can happen while this decode is queued, and we only learn that after we own a slot
-  await acquireDecodeSlot(lowPriority);
+  await acquireDecodeSlot(url, lowPriority);
   try {
     if (requestEpoch !== cacheEpoch) {
       return;

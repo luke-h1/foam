@@ -266,14 +266,62 @@ describe('cache-service', () => {
     ensureCachedEmoteRef(renderUrl);
     await flushMicrotasks();
 
-    expect(decodedUrls).toHaveLength(8);
+    const saturatedSlotCount = decodedUrls.length;
+    expect(saturatedSlotCount).toBeGreaterThan(0);
+    expect(decodedUrls).not.toContain(renderUrl);
 
     releases[0]!();
     await flushMicrotasks();
 
-    expect(decodedUrls[8]).toBe(renderUrl);
+    expect(decodedUrls[saturatedSlotCount]).toBe(renderUrl);
 
-    releases.forEach(release => release());
+    let releaseIndex = 0;
+    while (releaseIndex < releases.length) {
+      releases[releaseIndex]!();
+      releaseIndex += 1;
+      await flushMicrotasks();
+    }
+  });
+
+  test('promotes a queued warm decode to normal priority when it becomes visible', async () => {
+    const decodedUrls: string[] = [];
+    const releases: (() => void)[] = [];
+    loadAsync.mockImplementation(source => {
+      decodedUrls.push((source as { uri: string }).uri);
+      return new Promise<ImageRef>(resolve => {
+        releases.push(() => resolve({} as ImageRef));
+      });
+    });
+
+    const saturatingWarmUrls = Array.from(
+      { length: 8 },
+      (_, i) => `https://cdn.7tv.app/emote/promotefill${i}/2x.avif`,
+    );
+    void warmCachedEmoteRefs(saturatingWarmUrls);
+
+    const promotedUrl = 'https://cdn.7tv.app/emote/promoted/2x.avif';
+    void warmCachedEmoteRefs([
+      'https://cdn.7tv.app/emote/promoteq0/2x.avif',
+      promotedUrl,
+      'https://cdn.7tv.app/emote/promoteq1/2x.avif',
+    ]);
     await flushMicrotasks();
+
+    const saturatedSlotCount = decodedUrls.length;
+    expect(decodedUrls).not.toContain(promotedUrl);
+
+    ensureCachedEmoteRef(promotedUrl);
+
+    releases[0]!();
+    await flushMicrotasks();
+
+    expect(decodedUrls[saturatedSlotCount]).toBe(promotedUrl);
+
+    let releaseIndex = 0;
+    while (releaseIndex < releases.length) {
+      releases[releaseIndex]!();
+      releaseIndex += 1;
+      await flushMicrotasks();
+    }
   });
 });
