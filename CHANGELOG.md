@@ -42,6 +42,7 @@
 - **perf:** Correct reanimated worklets babel plugin order ([#661](https://github.com/lhowsam/foam/issues/661))
 - **app:** Stray unicode chars ([#662](https://github.com/lhowsam/foam/issues/662))
 - **app:** Crash after excessive nav actions ([#663](https://github.com/lhowsam/foam/issues/663))
+- **app:** Player intermitent pausing ([#664](https://github.com/lhowsam/foam/issues/664))
 
 ### 🔧 Miscellaneous Tasks
 
