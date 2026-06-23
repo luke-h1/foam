@@ -2,16 +2,16 @@
 // message rates releasing the dead trees dominated the Hermes GC thread
 // (issue #594). 100ms still reads as live (10 updates/s) and cut app CPU by
 // ~40% on an 18k-viewer chat; at moderate rates it measures neutral.
-export const LIVE_BUFFER_FLUSH_INTERVAL_MS = 100;
-export const BACKLOG_BUFFER_FLUSH_INTERVAL_MS = 250;
+const LIVE_BUFFER_FLUSH_INTERVAL_MS = 100;
+const BACKLOG_BUFFER_FLUSH_INTERVAL_MS = 250;
 // Under a raid the cost that drops frames is the per-flush list reconcile, which
 // fires every LIVE interval (10x/s) regardless of how few rows each commits — so
 // halving the flush rate halves the jank opportunities. We only slow down once a
 // flush has seen a raid-sized batch (RAID_PENDING_THRESHOLD), and snap back to
 // 100ms the moment batches shrink, so normal/busy chat stays at full liveness.
 // Fewer, larger-gap commits are also strictly better for GC (issue #594).
-export const RAID_BUFFER_FLUSH_INTERVAL_MS = 180;
-export const RAID_PENDING_THRESHOLD = 8;
+const RAID_BUFFER_FLUSH_INTERVAL_MS = 180;
+const RAID_PENDING_THRESHOLD = 8;
 // While a drag or fling is in progress away from the bottom, publishing a
 // flush re-keys rows and forces maintainVisibleContentPosition adjustments
 // mid-gesture, dropping frames. Hold the buffer and retry once the gesture
@@ -26,7 +26,7 @@ export const SCROLL_DEFERRED_FLUSH_RETRY_MS = 250;
 // chat (which is ≤2/flush). Combined with the ingestion limiter the chat does
 // bounded work no matter how fast a raid arrives. Only applies at the bottom,
 // and keeps the one-flush-per-100ms cadence (issue #594 GC win).
-export const MAX_LIVE_COMMIT_PER_FLUSH = 3;
+const MAX_LIVE_COMMIT_PER_FLUSH = 3;
 
 /**
  * A flush that committed a raid-sized batch while following live should slow the
