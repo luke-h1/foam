@@ -36,6 +36,23 @@ const LANGUAGE_NAMES: Record<string, string> = {
 
 const TITLE_COLOR = 'rgba(235,235,240,0.86)';
 
+// A slow screen transition tempts a second tap, which pushes the same route
+// twice (two stacked LiveStreamScreens). Dedupe rapid pushes to the same path
+// across all cards; a different destination is always allowed through.
+const NAV_DEDUPE_MS = 1000;
+let lastNavPath = '';
+let lastNavAt = 0;
+
+function pushRouteOnce(path: string) {
+  const now = Date.now();
+  if (path === lastNavPath && now - lastNavAt < NAV_DEDUPE_MS) {
+    return;
+  }
+  lastNavPath = path;
+  lastNavAt = now;
+  router.push(path);
+}
+
 function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   const queryClient = useQueryClient();
   const thumbnailUrl = stream.thumbnail_url
@@ -63,7 +80,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
 
   const handleStreamPress = useCallback(() => {
     queryClient.setQueryData(twitchKeys.stream(stream.user_login), stream);
-    router.push(`/streams/live-stream/${stream.user_login}`);
+    pushRouteOnce(`/streams/live-stream/${stream.user_login}`);
   }, [queryClient, stream]);
 
   const handleStreamerPressIn = useCallback(() => {
@@ -71,11 +88,11 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   }, [stream.user_login]);
 
   const handleStreamerPress = useCallback(() => {
-    router.push(`/streams/streamer-profile/${stream.user_login}`);
+    pushRouteOnce(`/streams/streamer-profile/${stream.user_login}`);
   }, [stream.user_login]);
 
   const handleCategoryPress = useCallback(() => {
-    router.push(`/category/${stream.game_id}`);
+    pushRouteOnce(`/category/${stream.game_id}`);
   }, [stream.game_id]);
 
   const cardAccessibilityLabel = `${stream.user_name}, live, ${

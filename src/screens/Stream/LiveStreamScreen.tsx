@@ -42,6 +42,7 @@ import {
   usePreference,
   useUpdatePreferences,
 } from '@app/store/preferenceStore';
+import { setMeasuredVideoLatencySeconds } from '@app/store/stream/videoLatency';
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
@@ -91,6 +92,10 @@ const CHAT_REVEAL_ANIMATION_CONFIG = {
   duration: motion.instant,
   easing: motion.easing.out,
 } satisfies WithTimingConfig;
+
+function handlePlaybackLatencyChange(latencySeconds: number) {
+  setMeasuredVideoLatencySeconds(latencySeconds);
+}
 
 export const LiveStreamScreen = memo(function LiveStreamScreen({
   id,
@@ -170,13 +175,11 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           ScreenOrientation.OrientationLock.PORTRAIT_UP,
         );
         streamPlayerRef.current?.pause();
+        setMeasuredVideoLatencySeconds(null);
         if (isStreamEnabled) {
           dispatchUi({
-            type: 'patch',
-            patch: {
-              isChatConnectionReady: false,
-              videoLatencySeconds: null,
-            },
+            type: 'setChatConnectionReady',
+            isChatConnectionReady: false,
           });
         }
       };
@@ -314,12 +317,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   useLayoutEffect(() => {
     if (lastStreamSessionKeyRef.current !== streamSessionKey) {
       lastStreamSessionKeyRef.current = streamSessionKey;
+      setMeasuredVideoLatencySeconds(null);
       dispatchUi({
-        type: 'patch',
-        patch: {
-          isChatConnectionReady: !isStreamEnabled,
-          videoLatencySeconds: null,
-        },
+        type: 'setChatConnectionReady',
+        isChatConnectionReady: !isStreamEnabled,
       });
     }
   }, [isStreamEnabled, streamSessionKey]);
@@ -343,13 +344,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   const handlePlayerLoaded = () => {
     dispatchUi({ type: 'setChatConnectionReady', isChatConnectionReady: true });
-  };
-
-  const handlePlaybackLatencyChange = (latencySeconds: number) => {
-    dispatchUi({
-      type: 'setVideoLatencySeconds',
-      videoLatencySeconds: latencySeconds,
-    });
   };
 
   const shouldResolveChannelIdentity = isChatEnabled || isStreamEnabled;

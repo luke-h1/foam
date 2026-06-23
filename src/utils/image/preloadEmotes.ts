@@ -8,9 +8,14 @@
  */
 import { Image as ExpoImage } from 'expo-image';
 
+import { getPreferences } from '@app/store/preferenceStore';
 import type { SanitisedEmote } from '@app/types/emote';
 import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
+import {
+  isSevenTvEmoteSite,
+  resolveEmotePreferredScale,
+} from '@app/utils/emote/resolveEmoteScale';
 
 // Track preloaded URLs to avoid duplicate preloads
 const preloadedUrls = new Set<string>();
@@ -18,6 +23,10 @@ const MAX_PRELOADED_CACHE = 500;
 
 function getDisplayEmoteCacheUrls(emote: SanitisedEmote): string[] {
   const resolved = withResolvedEmoteImageVariants(emote);
+  const preferredScale = resolveEmotePreferredScale({
+    isSevenTv: isSevenTvEmoteSite(emote.site),
+    sevenTvLowRes: getPreferences().sevenTvLowResEmotes,
+  });
   const urls = new Set<string>();
 
   for (const disableAnimations of [false, true]) {
@@ -26,7 +35,7 @@ function getDisplayEmoteCacheUrls(emote: SanitisedEmote): string[] {
       url: resolved.url,
       static_url: resolved.static_url,
       disableAnimations,
-      preferredScale: '2x',
+      preferredScale,
     });
     if (url) {
       urls.add(url);

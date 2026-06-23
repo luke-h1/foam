@@ -11,6 +11,11 @@ import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
 import { impact } from '@app/lib/haptics';
 
 const SINGLE_TAP_DELAY_MS = 400;
+// At startup the player reports paused until the first `playing` event, so the
+// centre play button is showing and an impatient burst of taps each fires a
+// separate play() into the WebView — a JS-injection + autoplay-recovery storm
+// that janks the screen. Coalesce taps to at most one toggle per window.
+const PLAY_PAUSE_THROTTLE_MS = 500;
 
 interface UseStreamPlayerControlsOptions {
   onVideoAreaPress?: () => void;
@@ -165,7 +170,16 @@ export function useStreamPlayerControls({
     onVideoAreaSwipeDown,
   ]);
 
+  const lastPlayPauseAtRef = useRef(0);
+
   const handlePlayPause = useCallback(() => {
+    const now = Date.now();
+    if (now - lastPlayPauseAtRef.current < PLAY_PAUSE_THROTTLE_MS) {
+      showControls();
+      return;
+    }
+    lastPlayPauseAtRef.current = now;
+
     if (playerIsPaused) {
       play();
     } else {

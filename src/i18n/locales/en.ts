@@ -639,6 +639,13 @@ const en = {
     keepHistoryOnClear: 'Keep History on Clear',
     keepHistoryOnClearDescription:
       'Ignore moderator chat clears and keep your scrollback',
+    sync: 'Sync',
+    syncFooter:
+      'Delay chat so it lines up with the video. Auto-sync matches the stream’s measured latency; turn it off to choose a fixed delay.',
+    autoSyncChatDelay: 'Auto-sync to Video',
+    autoSyncChatDelayDescription: 'Match chat to the measured stream latency',
+    chatDelay: 'Chat Delay',
+    chatDelayDescription: 'Hold new messages before showing them',
     performance: 'Performance',
     performanceFooter:
       'Longer scrollback keeps more messages in memory; 200 is easier on older devices.',
@@ -649,6 +656,9 @@ const en = {
       'Animated Twitch, BTTV, FFZ, and 7TV emotes will render as still images when this is enabled.',
     disableEmoteAnimations: 'Disable Emote Animations',
     disableEmoteAnimationsDescription: 'Prefer static emote rendering',
+    lowResSevenTvEmotes: 'Low-res 7TV Emotes',
+    lowResSevenTvEmotesDescription:
+      'Use 1x 7TV emote images to cut memory and decode (lower quality)',
     preview: 'Preview',
     emotes: 'Emotes',
     badges: 'Badges',

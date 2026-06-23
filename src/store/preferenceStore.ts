@@ -47,6 +47,12 @@ export interface Preferences {
   showChatterinoEmotes: boolean;
   showTwitchEmotes: boolean;
   disableEmoteAnimations: boolean;
+  /**
+   * Render 7TV emotes from their 1x source instead of 2x, cutting decode CPU
+   * and frame memory (the dominant animated-AVIF cost) at the price of sharpness
+   * on hi-DPI screens. Experimental — flagged off by default.
+   */
+  sevenTvLowResEmotes: boolean;
   showTwitchBadges: boolean;
   show7tvBadges: boolean;
   showFFzBadges: boolean;
@@ -55,6 +61,17 @@ export interface Preferences {
   chatTimestampFormat: ChatTimestampFormat;
   chatFontScale: ChatFontScale;
   chatScrollback: ChatScrollbackLength;
+  /**
+   * Seconds to hold new live chat messages before showing them, so chat lines
+   * up with the (latency-delayed) video. Ignored while {@link autoSyncChatDelay}
+   * is on. 0 = no delay (today's behaviour).
+   */
+  chatDelay: number;
+  /**
+   * When on, the chat delay tracks the player's measured broadcaster latency
+   * instead of the fixed {@link chatDelay} value.
+   */
+  autoSyncChatDelay: boolean;
   deletedMessageStyle: DeletedMessageStyle;
   ignoreClearChat: boolean;
   chatMentionHaptics: boolean;
@@ -91,6 +108,7 @@ const initialPreferences: Preferences = {
   showChatterinoEmotes: true,
   showTwitchEmotes: true,
   disableEmoteAnimations: false,
+  sevenTvLowResEmotes: false,
   showTwitchBadges: true,
   show7tvBadges: true,
   showFFzBadges: true,
@@ -99,6 +117,8 @@ const initialPreferences: Preferences = {
   chatTimestampFormat: '24h',
   chatFontScale: 'default',
   chatScrollback: 150,
+  chatDelay: 0,
+  autoSyncChatDelay: false,
   deletedMessageStyle: 'notice',
   ignoreClearChat: false,
   chatMentionHaptics: true,

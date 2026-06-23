@@ -13,6 +13,7 @@ import {
 } from '@app/store/chat/actions/messages';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 
+import { createChatDelayQueue } from '../util/chatDelayQueue';
 import {
   pickFlushDelay,
   sampleLiveCommit,
@@ -27,6 +28,10 @@ import {
 type HandleNewMessageOptions = {
   countUnread?: boolean;
 };
+
+// Floor on how often the delay queue is checked, so a burst of near-simultaneous
+// releases coalesces into one drain instead of one timer per message.
+const DELAY_RELEASE_MIN_INTERVAL_MS = 80;
 
 function publishBufferedMessages(messages: BufferedMessage[]) {
   if (messages.length === 0) {
@@ -45,6 +50,12 @@ function shouldArmBottomContentAnchor(
 }
 
 interface UseChatMessagesOptions {
+  /**
+   * Live messages are held this many ms before entering the render buffer, so
+   * chat can line up with the latency-delayed video. Read fresh on every
+   * message (default 0 = today's no-delay path).
+   */
+  getChatDelayMs?: () => number;
   isAtBottomRef: MutableRefObject<boolean>;
   isScrollingToBottomRef?: MutableRefObject<boolean>;
   isUserActivelyScrolling?: () => boolean;
@@ -54,6 +65,7 @@ interface UseChatMessagesOptions {
 
 export const useChatMessages = (options: UseChatMessagesOptions) => {
   const {
+    getChatDelayMs,
     isAtBottomRef,
     isScrollingToBottomRef,
     isUserActivelyScrolling,
@@ -62,12 +74,20 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   } = options;
 
   const bufferRef = useLazyRef(() => createMessageBuffer());
+  const delayQueueRef = useLazyRef(() => createChatDelayQueue());
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const delayTickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const flushBufferRef = useRef<() => void>(() => {});
+  const scheduleDelayTickRef = useRef<() => void>(() => {});
+  const getChatDelayMsRef = useRef<() => number>(getChatDelayMs ?? (() => 0));
   const isFlushingRef = useRef(false);
   const pendingUnreadCountRef = useRef(0);
   // Set when a flush sees a raid-sized batch; slows the next live flush cadence.
   const raidFlushModeRef = useRef(false);
+
+  useLayoutEffect(() => {
+    getChatDelayMsRef.current = getChatDelayMs ?? (() => 0);
+  });
 
   const flushBuffer = useCallback(() => {
     flushTimerRef.current = null;
@@ -139,18 +159,19 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     }, delayMs);
   }, []);
 
-  const handleNewMessage = useCallback(
-    (newMessage: BufferedMessage, messageOptions?: HandleNewMessageOptions) => {
-      const messageWithCachedColor = {
-        ...newMessage,
-        cachedSenderColor: resolveCachedSenderColor(
-          newMessage,
-          getUserMessageColor,
-        ),
-      };
+  const clearDelayTick = useCallback(() => {
+    if (delayTickTimerRef.current) {
+      clearTimeout(delayTickTimerRef.current);
+      delayTickTimerRef.current = null;
+    }
+  }, []);
 
-      const { added, dropped } = bufferRef.current.add(messageWithCachedColor);
-
+  // Commit one message into the render buffer and run the unread/flush
+  // bookkeeping. The direct path and the delayed-release path share this so a
+  // message is accounted for identically whenever it actually becomes visible.
+  const ingestMessage = useCallback(
+    (message: BufferedMessage, countUnread?: boolean) => {
+      const { added, dropped } = bufferRef.current.add(message);
       if (!added) {
         return;
       }
@@ -164,7 +185,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
       const scrollingToBottom = isScrollingToBottomRef?.current ?? false;
       if (
-        messageOptions?.countUnread !== false &&
+        countUnread !== false &&
         !isAtBottomRef.current &&
         !scrollingToBottom
       ) {
@@ -180,6 +201,77 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     },
     [bufferRef, isAtBottomRef, isScrollingToBottomRef, startFlushTimer],
   );
+
+  const runDelayTick = useCallback(() => {
+    delayTickTimerRef.current = null;
+    const due = delayQueueRef.current.drainDue(Date.now());
+    due.forEach(entry => ingestMessage(entry.message, entry.countUnread));
+    scheduleDelayTickRef.current();
+  }, [delayQueueRef, ingestMessage]);
+
+  const scheduleDelayTick = useCallback(() => {
+    if (delayTickTimerRef.current) {
+      return;
+    }
+    const nextReleaseAt = delayQueueRef.current.peekNextReleaseAt();
+    if (nextReleaseAt == null) {
+      return;
+    }
+    const wait = Math.max(
+      DELAY_RELEASE_MIN_INTERVAL_MS,
+      nextReleaseAt - Date.now(),
+    );
+    delayTickTimerRef.current = setTimeout(runDelayTick, wait);
+  }, [delayQueueRef, runDelayTick]);
+
+  useLayoutEffect(() => {
+    scheduleDelayTickRef.current = scheduleDelayTick;
+  });
+
+  const handleNewMessage = useCallback(
+    (newMessage: BufferedMessage, messageOptions?: HandleNewMessageOptions) => {
+      const messageWithCachedColor = {
+        ...newMessage,
+        cachedSenderColor: resolveCachedSenderColor(
+          newMessage,
+          getUserMessageColor,
+        ),
+      };
+
+      const countUnread = messageOptions?.countUnread;
+      // Historical replay (countUnread === false) is already old, so it bypasses
+      // the delay; live messages are held for the effective delay.
+      const delayMs =
+        countUnread === false ? 0 : Math.max(0, getChatDelayMsRef.current());
+
+      if (delayMs <= 0) {
+        ingestMessage(messageWithCachedColor, countUnread);
+        return;
+      }
+
+      delayQueueRef.current.enqueue(
+        messageWithCachedColor,
+        Date.now() + delayMs,
+        countUnread !== false,
+      );
+      scheduleDelayTick();
+    },
+    [delayQueueRef, ingestMessage, scheduleDelayTick],
+  );
+
+  // Re-evaluate after the delay setting changes: drain everything held when the
+  // delay is switched off so nothing is stranded, otherwise ensure a release
+  // tick is pending.
+  const reconcileChatDelay = useCallback(() => {
+    if (getChatDelayMsRef.current() <= 0) {
+      clearDelayTick();
+      delayQueueRef.current
+        .drainAll()
+        .forEach(entry => ingestMessage(entry.message, entry.countUnread));
+      return;
+    }
+    scheduleDelayTick();
+  }, [clearDelayTick, delayQueueRef, ingestMessage, scheduleDelayTick]);
 
   const forceFlush = useCallback(() => {
     const buffer = bufferRef.current;
@@ -211,35 +303,41 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
   const clearLocalMessages = useCallback(() => {
     bufferRef.current.clear();
+    delayQueueRef.current.clear();
+    clearDelayTick();
     pendingUnreadCountRef.current = 0;
-  }, [bufferRef]);
+  }, [bufferRef, clearDelayTick, delayQueueRef]);
 
   const removeBufferedMessageById = useCallback(
     (messageId: string) => {
       bufferRef.current.removeById(messageId);
+      delayQueueRef.current.removeById(messageId);
     },
-    [bufferRef],
+    [bufferRef, delayQueueRef],
   );
 
   const removeBufferedMessagesByLogin = useCallback(
     (login: string) => {
       bufferRef.current.removeByLogin(login);
+      delayQueueRef.current.removeByLogin(login);
     },
-    [bufferRef],
+    [bufferRef, delayQueueRef],
   );
 
   const moderateBufferedMessageById = useCallback(
     (messageId: string, moderationNotice: string) => {
       bufferRef.current.moderateById(messageId, moderationNotice);
+      delayQueueRef.current.moderateById(messageId, moderationNotice);
     },
-    [bufferRef],
+    [bufferRef, delayQueueRef],
   );
 
   const moderateBufferedMessagesByLogin = useCallback(
     (login: string, moderationNotice: string) => {
       bufferRef.current.moderateByLogin(login, moderationNotice);
+      delayQueueRef.current.moderateByLogin(login, moderationNotice);
     },
-    [bufferRef],
+    [bufferRef, delayQueueRef],
   );
 
   const cleanup = useCallback(() => {
@@ -247,10 +345,12 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       clearTimeout(flushTimerRef.current);
       flushTimerRef.current = null;
     }
+    clearDelayTick();
     bufferRef.current.clear();
+    delayQueueRef.current.clear();
     pendingUnreadCountRef.current = 0;
     raidFlushModeRef.current = false;
-  }, [bufferRef]);
+  }, [bufferRef, clearDelayTick, delayQueueRef]);
 
   const getBufferSize = useCallback(
     () => bufferRef.current.size(),
@@ -260,6 +360,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   return {
     handleNewMessage,
     clearLocalMessages,
+    reconcileChatDelay,
     removeBufferedMessageById,
     removeBufferedMessagesByLogin,
     moderateBufferedMessageById,

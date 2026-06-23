@@ -1,10 +1,15 @@
 import { getMaxChatMessages } from '@app/store/chat/actions/messages';
-import type { AnyChatMessageType } from '@app/store/chat/types/constants';
-import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 
-export type BufferedMessage = AnyChatMessageType & {
-  cachedSenderColor?: string;
-};
+import {
+  type BufferedMessage,
+  createModeratedBufferMessage,
+  getBufferedMessageKey,
+  getBufferedMessageLogin,
+  normaliseLogin,
+  normaliseMessageId,
+} from './bufferedMessageOps';
+
+export type { BufferedMessage } from './bufferedMessageOps';
 
 export type AddResult = {
   /**
@@ -28,42 +33,6 @@ export interface MessageBuffer {
   moderateById(messageId: string, moderationNotice: string): void;
   moderateByLogin(login: string, moderationNotice: string): void;
 }
-
-const normaliseMessageId = (value: string): string => value.trim();
-
-const normaliseLogin = (value?: string): string =>
-  value?.trim().toLowerCase() ?? '';
-
-const getBufferedMessageKey = (message: BufferedMessage): string => {
-  const id = message.id?.trim();
-  if (id) {
-    return id;
-  }
-
-  return `${normaliseMessageId(message.message_id)}_${normaliseMessageId(
-    message.message_nonce,
-  )}`;
-};
-
-const createModeratedBufferMessage = (
-  message: BufferedMessage,
-  moderationNotice: string,
-): BufferedMessage => {
-  const plainText = replaceEmotesWithText(message.message).trim();
-
-  return {
-    ...message,
-    message: [
-      {
-        type: 'text',
-        content: plainText
-          ? `${plainText}—${moderationNotice}`
-          : moderationNotice,
-      },
-    ],
-    moderationNotice,
-  };
-};
 
 /**
  * The live-chat ingestion buffer: a dedup-by-key list (keyed by message id, or
@@ -157,12 +126,7 @@ export const createMessageBuffer = (
       }
 
       const next = messages.filter(
-        message =>
-          normaliseLogin(
-            message.userstate?.login ||
-              message.userstate?.username ||
-              message.sender,
-          ) !== target,
+        message => getBufferedMessageLogin(message) !== target,
       );
       if (next.length === messages.length) {
         return false;
@@ -206,13 +170,7 @@ export const createMessageBuffer = (
       let nextBuffer: BufferedMessage[] | null = null;
 
       messages.forEach((message, position) => {
-        const messageLogin = normaliseLogin(
-          message.userstate?.login ||
-            message.userstate?.username ||
-            message.sender,
-        );
-
-        if (messageLogin !== target) {
+        if (getBufferedMessageLogin(message) !== target) {
           return;
         }
 

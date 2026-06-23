@@ -573,4 +573,86 @@ describe('useChatMessages', () => {
       expect(onUnreadIncrement).toHaveBeenCalledWith(600);
     });
   });
+
+  describe('Chat delay', () => {
+    test('holds live messages for the effective delay before flushing', () => {
+      const { result } = renderHook(() =>
+        useChatMessages({ ...defaultOptions, getChatDelayMs: () => 3000 }),
+      );
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+      });
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(mockAddMessages).not.toHaveBeenCalled();
+
+      act(() => {
+        jest.advanceTimersByTime(3000);
+      });
+      act(() => {
+        jest.advanceTimersByTime(200);
+      });
+
+      expect(getLastFlushedMessages().map(m => m.message_id)).toEqual(['1']);
+    });
+
+    test('does not delay when the effective delay is zero', () => {
+      const { result } = renderHook(() =>
+        useChatMessages({ ...defaultOptions, getChatDelayMs: () => 0 }),
+      );
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+      });
+      act(() => {
+        jest.advanceTimersByTime(200);
+      });
+
+      expect(getLastFlushedMessages().map(m => m.message_id)).toEqual(['1']);
+    });
+
+    test('never delays historical replay (countUnread false)', () => {
+      const { result } = renderHook(() =>
+        useChatMessages({ ...defaultOptions, getChatDelayMs: () => 5000 }),
+      );
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'), {
+          countUnread: false,
+        });
+      });
+      act(() => {
+        jest.advanceTimersByTime(200);
+      });
+
+      expect(getLastFlushedMessages().map(m => m.message_id)).toEqual(['1']);
+    });
+
+    test('reconcile flushes everything held once the delay is turned off', () => {
+      let delayMs = 5000;
+      const { result } = renderHook(() =>
+        useChatMessages({ ...defaultOptions, getChatDelayMs: () => delayMs }),
+      );
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+      });
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(mockAddMessages).not.toHaveBeenCalled();
+
+      delayMs = 0;
+      act(() => {
+        result.current.reconcileChatDelay();
+      });
+      act(() => {
+        jest.advanceTimersByTime(200);
+      });
+
+      expect(getLastFlushedMessages().map(m => m.message_id)).toEqual(['1']);
+    });
+  });
 });

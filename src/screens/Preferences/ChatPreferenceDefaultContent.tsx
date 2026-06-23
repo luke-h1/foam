@@ -20,6 +20,7 @@ import {
 import { ChatPreferenceSegmentedSettingsRow } from './ChatPreferenceSettingsRows';
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import {
+  CHAT_DELAY_LABELS,
   CONTEXT_TOGGLE_ROWS,
   DELETED_STYLE_OPTIONS,
   DENSITY_OPTIONS,
@@ -37,12 +38,16 @@ type ChatPreferenceScreenState = ReturnType<
 type ChatPreferenceDefaultContentProps = ChatPreferenceScreenState;
 
 export function ChatPreferenceDefaultContent({
+  autoSyncChatDelay,
+  chatDelayIndex,
   chatMentionHaptics,
   deletedStyleIndex,
   densityIndex,
   emojiIndex,
   fontScaleIndex,
   previewFontScale,
+  handleChatDelayChange,
+  handleChatDelayValueChange,
   handleDeletedStyleChange,
   handleDeletedStyleValueChange,
   handleFontScaleChange,
@@ -69,6 +74,7 @@ export function ChatPreferenceDefaultContent({
   previewDensity,
   previewDisableEmoteAnimations,
   previewProviders,
+  sevenTvLowResEmotes,
   showRecentMessages,
   update,
 }: ChatPreferenceDefaultContentProps) {
@@ -195,6 +201,42 @@ export function ChatPreferenceDefaultContent({
       </SettingsSection>
 
       <SettingsSection
+        title={t('sync')}
+        footer={
+          <Text color='gray.textLow' type='xs'>
+            {t('syncFooter')}
+          </Text>
+        }
+      >
+        <SettingsToggleRow
+          title={t('autoSyncChatDelay')}
+          subtitle={t('autoSyncChatDelayDescription')}
+          icon={{
+            icon: 'arrow.triangle.2.circlepath',
+            androidIcon: 'sync',
+            color: theme.colorGrey,
+          }}
+          value={autoSyncChatDelay === true}
+          onValueChange={value => update({ autoSyncChatDelay: value })}
+        />
+        {!autoSyncChatDelay ? (
+          <ChatPreferenceSegmentedSettingsRow
+            icon={{
+              icon: 'timer',
+              androidIcon: 'timer',
+              color: theme.colorGrey,
+            }}
+            onChange={handleChatDelayChange}
+            onValueChange={handleChatDelayValueChange}
+            selectedIndex={chatDelayIndex}
+            subtitle={t('chatDelayDescription')}
+            title={t('chatDelay')}
+            values={CHAT_DELAY_LABELS}
+          />
+        ) : null}
+      </SettingsSection>
+
+      <SettingsSection
         title={t('highlights')}
         footer={
           <Text color='gray.textLow' type='xs'>
@@ -306,6 +348,17 @@ export function ChatPreferenceDefaultContent({
             value={previewDisableEmoteAnimations}
           />
         </View>
+        <SettingsToggleRow
+          title={t('lowResSevenTvEmotes')}
+          subtitle={t('lowResSevenTvEmotesDescription')}
+          icon={{
+            icon: 'arrow.down.right.and.arrow.up.left',
+            androidIcon: 'photo_size_select_small',
+            color: theme.colorGrey,
+          }}
+          value={sevenTvLowResEmotes === true}
+          onValueChange={value => update({ sevenTvLowResEmotes: value })}
+        />
       </SettingsSection>
     </>
   );

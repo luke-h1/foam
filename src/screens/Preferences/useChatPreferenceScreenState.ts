@@ -11,6 +11,7 @@ import {
 } from '@app/utils/emoji/emojiEmotes';
 
 import {
+  CHAT_DELAY_OPTIONS,
   CONTEXT_PREVIEW_KEYS,
   type ContextPreviewKey,
   type ContextPreviewValue,
@@ -37,6 +38,8 @@ function samePreviewValues<T extends object>(
 export function useChatPreferenceScreenState() {
   const { t } = useTranslation('preferences');
   const {
+    autoSyncChatDelay,
+    chatDelay,
     chatDensity,
     chatFontScale,
     chatMentionHaptics,
@@ -48,6 +51,7 @@ export function useChatPreferenceScreenState() {
     emojiStyle,
     ignoreClearChat,
     highlightOwnMentions,
+    sevenTvLowResEmotes,
     showAlternatingChatRows,
     showInlineReplyContext,
     showRecentMessages,
@@ -115,6 +119,10 @@ export function useChatPreferenceScreenState() {
   const scrollbackIndex = Math.max(
     0,
     SCROLLBACK_OPTIONS.findIndex(option => option.value === chatScrollback),
+  );
+  const chatDelayIndex = Math.max(
+    0,
+    CHAT_DELAY_OPTIONS.findIndex(option => option.value === chatDelay),
   );
   const emojiLabels = EMOJI_STYLE_OPTIONS.map(option => option.label);
   const emojiIndex = Math.max(
@@ -329,6 +337,20 @@ export function useChatPreferenceScreenState() {
     }
   };
 
+  const handleChatDelayChange = (event: SegmentedControlChangeEvent) => {
+    const option = CHAT_DELAY_OPTIONS[event.nativeEvent.selectedSegmentIndex];
+    if (option) {
+      update({ chatDelay: option.value });
+    }
+  };
+
+  const handleChatDelayValueChange = (value: string) => {
+    const option = CHAT_DELAY_OPTIONS.find(option => option.label === value);
+    if (option) {
+      update({ chatDelay: option.value });
+    }
+  };
+
   const handleAlternatingRowsToggle = (value: boolean) => {
     previewAlternatingRows$.set(value);
     update({ showAlternatingChatRows: value });
@@ -359,6 +381,8 @@ export function useChatPreferenceScreenState() {
   };
 
   return {
+    autoSyncChatDelay,
+    chatDelayIndex,
     chatMentionHaptics,
     deletedStyleIndex,
     densityIndex,
@@ -368,6 +392,8 @@ export function useChatPreferenceScreenState() {
     handleDeletedStyleValueChange,
     handleFontScaleChange,
     handleFontScaleValueChange,
+    handleChatDelayChange,
+    handleChatDelayValueChange,
     handleScrollbackChange,
     handleScrollbackValueChange,
     handleTimestampFormatChange,
@@ -391,6 +417,7 @@ export function useChatPreferenceScreenState() {
     previewFontScale,
     previewDisableEmoteAnimations,
     previewProviders,
+    sevenTvLowResEmotes,
     showRecentMessages,
     update,
   };

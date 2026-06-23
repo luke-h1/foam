@@ -633,6 +633,75 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     }, 1000));
   }
 
+  // Live-edge catch-up. Trims accumulated latency so chat lines up with the
+  // picture without the user having to set a chat delay: when playback has
+  // fallen well behind the live edge it plays slightly faster (pitch-preserved,
+  // imperceptible) until back within the target window, and hard-seeks only on
+  // egregious drift (e.g. returning from a long background). Gated on active,
+  // user-wanted playback so it never fights the autoplay/recovery logic.
+  var LIVE_SYNC_TARGET_S = 4;
+  var LIVE_SYNC_TRIGGER_S = 8;
+  var LIVE_SYNC_SEEK_S = 30;
+  var LIVE_SYNC_RATE = 1.05;
+  var liveSyncStarted = false;
+  var liveSyncActive = false;
+
+  function setPlaybackRate(video, rate) {
+    try {
+      if (video.playbackRate !== rate) {
+        video.preservesPitch = true;
+        video.playbackRate = rate;
+      }
+    } catch (e) {}
+  }
+
+  function resetPlaybackRate(video) {
+    if (!video) { return; }
+    liveSyncActive = false;
+    setPlaybackRate(video, 1);
+  }
+
+  function adjustLiveSync(video) {
+    if (!video || video.paused || userPaused || !startAllowed) {
+      if (video) { resetPlaybackRate(video); }
+      return;
+    }
+
+    var seekable = video.seekable;
+    if (!seekable || seekable.length === 0) {
+      return;
+    }
+
+    var liveEdge = seekable.end(seekable.length - 1);
+    var drift = liveEdge - video.currentTime;
+    if (!isFinite(drift) || drift < 0) {
+      return;
+    }
+
+    if (drift > LIVE_SYNC_SEEK_S) {
+      try { video.currentTime = liveEdge - LIVE_SYNC_TARGET_S; } catch (e) {}
+      resetPlaybackRate(video);
+      return;
+    }
+
+    if (drift > LIVE_SYNC_TRIGGER_S) {
+      liveSyncActive = true;
+      setPlaybackRate(video, LIVE_SYNC_RATE);
+    } else if (liveSyncActive && drift <= LIVE_SYNC_TARGET_S) {
+      resetPlaybackRate(video);
+    }
+  }
+
+  function startLiveSync() {
+    if (liveSyncStarted) {
+      return;
+    }
+    liveSyncStarted = true;
+    setInterval(function() {
+      adjustLiveSync(document.querySelector('video'));
+    }, 2000);
+  }
+
   function installVideoBridge(video) {
     if (!video || video.__foamBridgeInstalled) {
       return;
@@ -675,6 +744,7 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     video.addEventListener('pause', function() {
       clearPendingPause();
       stopPlaybackStats();
+      resetPlaybackRate(video);
       hideCaptions(video);
       schedulePlaybackRecovery();
       pendingPauseTimer = setTimeout(function() {
@@ -697,6 +767,7 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     });
 
     startPlaybackWatchdog();
+    startLiveSync();
 
     video.addEventListener('volumechange', function() {
       emitMuteState(video);

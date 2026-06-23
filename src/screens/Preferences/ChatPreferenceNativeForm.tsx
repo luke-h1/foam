@@ -30,6 +30,7 @@ import {
 } from './ChatPreferencePreviewWidgets';
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import {
+  CHAT_DELAY_OPTIONS,
   DELETED_STYLE_OPTIONS,
   DENSITY_OPTIONS,
   EMOJI_PREVIEW_SHORTCODES,
@@ -225,6 +226,32 @@ export function ChatPreferenceNativeForm() {
         </Section>
 
         <Section
+          title={t('sync')}
+          footer={<NativeText>{t('syncFooter')}</NativeText>}
+        >
+          <Toggle
+            label={t('autoSyncChatDelay')}
+            systemImage='arrow.triangle.2.circlepath'
+            isOn={preferences.autoSyncChatDelay}
+            onIsOnChange={value => update({ autoSyncChatDelay: value })}
+          />
+          {!preferences.autoSyncChatDelay ? (
+            <Picker
+              label={t('chatDelay')}
+              systemImage='timer'
+              selection={preferences.chatDelay}
+              onSelectionChange={value => update({ chatDelay: value })}
+            >
+              {CHAT_DELAY_OPTIONS.map(option => (
+                <NativeText key={option.value} modifiers={[tag(option.value)]}>
+                  {option.label}
+                </NativeText>
+              ))}
+            </Picker>
+          ) : null}
+        </Section>
+
+        <Section
           title={t('highlights')}
           footer={<NativeText>{t('highlightsFooter')}</NativeText>}
         >
@@ -329,6 +356,12 @@ export function ChatPreferenceNativeForm() {
               value={preferences.disableEmoteAnimations}
             />,
           )}
+          <Toggle
+            label={t('lowResSevenTvEmotes')}
+            systemImage='arrow.down.right.and.arrow.up.left'
+            isOn={preferences.sevenTvLowResEmotes}
+            onIsOnChange={value => update({ sevenTvLowResEmotes: value })}
+          />
         </Section>
       </Form>
     </Host>

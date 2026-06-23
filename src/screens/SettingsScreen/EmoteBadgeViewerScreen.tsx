@@ -1,10 +1,21 @@
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Platform,
+  ScrollView,
+  type SectionListData,
+  type SectionListRenderItemInfo,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Host, ProgressView } from '@expo/ui/swift-ui';
+import { controlSize, tint } from '@expo/ui/swift-ui/modifiers';
 import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
 import { LegendList } from '@legendapp/list/react-native';
+import { SectionList as LegendSectionList } from '@legendapp/list/section-list';
 
 import { Button } from '@app/components/Button/Button';
 import { BadgePreviewSheet } from '@app/components/Chat/components/BadgePreviewSheet/BadgePreviewSheet';
@@ -28,10 +39,27 @@ import { useGlobalEmotesQuery } from '@app/hooks/queries/useGlobalEmotesQuery';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import {
+  type BadgeProviderSection,
+  type BadgeRow,
+  groupBadgesByProvider,
+} from '@app/utils/chat/groupBadgesByProvider';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 const BADGE_CELL_SIZE = 64;
 const BADGE_IMAGE_SIZE = 40;
+const BADGE_COLUMNS = 5;
+
+const loaderModifiers = [controlSize('large'), tint(theme.colorPrimary)];
+
+const loader =
+  Platform.OS === 'ios' ? (
+    <Host matchContents>
+      <ProgressView modifiers={loaderModifiers} />
+    </Host>
+  ) : (
+    <ActivityIndicator size='large' color={theme.colorPrimary} />
+  );
 
 function toEmotePart(emote: SanitisedEmote): ParsedPart<'emote'> {
   return { ...emote, type: 'emote', content: emote.name };
@@ -109,11 +137,7 @@ function EmotesTab({
   );
 
   if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size='large' color={theme.color.text.dark} />
-      </View>
-    );
+    return <View style={styles.centered}>{loader}</View>;
   }
 
   if (providers.length === 0) {
@@ -186,6 +210,32 @@ function BadgeCell({
   );
 }
 
+function BadgeRowView({
+  row,
+  onPress,
+}: {
+  row: BadgeRow;
+  onPress: (badge: SanitisedBadgeSet) => void;
+}) {
+  return (
+    <View style={styles.badgeRow}>
+      {row.map(badge => (
+        <BadgeCell key={badge.id} badge={badge} onPress={onPress} />
+      ))}
+    </View>
+  );
+}
+
+function BadgeSectionHeader({ title }: { title: string }) {
+  return (
+    <View style={styles.badgeSectionHeader}>
+      <Text type='sm' weight='semibold' style={styles.badgeSectionTitle}>
+        {title}
+      </Text>
+    </View>
+  );
+}
+
 function BadgesTab({
   onSelectBadge,
 }: {
@@ -195,19 +245,29 @@ function BadgesTab({
   const { bottom: bottomInset } = useSafeAreaInsets();
   const { data, isLoading } = useGlobalBadgesQuery();
 
+  const sections = useMemo(
+    () => (data ? groupBadgesByProvider(data, BADGE_COLUMNS) : []),
+    [data],
+  );
+
   const renderItem = useCallback(
-    ({ item }: LegendListRenderItemProps<SanitisedBadgeSet>) => (
-      <BadgeCell badge={item} onPress={onSelectBadge} />
+    ({ item }: SectionListRenderItemInfo<BadgeRow, BadgeProviderSection>) => (
+      <BadgeRowView row={item} onPress={onSelectBadge} />
     ),
     [onSelectBadge],
   );
 
+  const renderSectionHeader = useCallback(
+    ({
+      section,
+    }: {
+      section: SectionListData<BadgeRow, BadgeProviderSection>;
+    }) => <BadgeSectionHeader title={section.title} />,
+    [],
+  );
+
   if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size='large' color={theme.color.text.dark} />
-      </View>
-    );
+    return <View style={styles.centered}>{loader}</View>;
   }
 
   if (!data || data.length === 0) {
@@ -219,13 +279,13 @@ function BadgesTab({
   }
 
   return (
-    <LegendList
-      data={data}
+    <LegendSectionList
+      sections={sections}
       renderItem={renderItem}
-      keyExtractor={(item, index) => `${item.type}-${item.id}-${index}`}
-      getItemType={() => 'badge'}
-      numColumns={5}
-      estimatedItemSize={BADGE_CELL_SIZE}
+      renderSectionHeader={renderSectionHeader}
+      keyExtractor={(row, index) => `${row[0]?.id ?? 'row'}-${index}`}
+      stickySectionHeadersEnabled
+      estimatedItemSize={BADGE_CELL_SIZE + theme.space8}
       recycleItems
       showsVerticalScrollIndicator={false}
       contentContainerStyle={[
@@ -239,6 +299,7 @@ function BadgesTab({
 
 export function EmoteBadgeViewerScreen() {
   const { t } = useTranslation('settings');
+  const { top: topInset } = useSafeAreaInsets();
   const [tabIndex, setTabIndex] = useState(0);
   const [selectedEmote, setSelectedEmote] =
     useState<ParsedPart<'emote'> | null>(null);
@@ -251,7 +312,12 @@ export function EmoteBadgeViewerScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        Platform.OS === 'ios' && { paddingTop: topInset + 44 },
+      ]}
+    >
       <View style={styles.segmentWrap}>
         <SegmentedControl
           items={[
@@ -303,8 +369,20 @@ const styles = StyleSheet.create({
     width: BADGE_IMAGE_SIZE,
   },
   badgeListContent: {
+    paddingTop: theme.space4,
+  },
+  badgeRow: {
+    flexDirection: 'row',
     paddingHorizontal: theme.space12,
-    paddingTop: theme.space8,
+  },
+  badgeSectionHeader: {
+    backgroundColor: theme.color.background.dark,
+    paddingBottom: theme.space8,
+    paddingHorizontal: theme.space16,
+    paddingTop: theme.space12,
+  },
+  badgeSectionTitle: {
+    color: theme.color.text.dark,
   },
   centered: {
     alignItems: 'center',

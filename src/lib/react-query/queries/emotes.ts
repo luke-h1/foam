@@ -60,13 +60,7 @@ export function globalBadgesQueryOptions() {
   return queryOptions<SanitisedBadgeSet[]>({
     queryKey: emoteKeys.globalBadges(),
     staleTime: GLOBAL_STALE_TIME,
-    queryFn: async () => {
-      const [twitchGlobalBadges, ffzGlobalBadges] = await Promise.all([
-        fetchOrEmpty(() => twitchBadgeService.listSanitisedGlobalBadges()),
-        fetchOrEmpty(() => ffzService.getSanitisedGlobalBadges()),
-      ]);
-
-      return [...twitchGlobalBadges, ...ffzGlobalBadges];
-    },
+    queryFn: () =>
+      fetchOrEmpty(() => twitchBadgeService.listSanitisedGlobalBadges()),
   });
 }

@@ -48,6 +48,45 @@ jest.mock('@legendapp/list/react-native', () => ({
   },
 }));
 
+// LegendSectionList virtualizes natively; render every section header and item
+// so the grouped badge grid is assertable under jest.
+jest.mock('@legendapp/list/section-list', () => ({
+  SectionList: ({
+    sections,
+    renderItem,
+    renderSectionHeader,
+    keyExtractor,
+  }: {
+    sections: { key: string; data: unknown[] }[];
+    renderItem: (info: { item: unknown; index: number }) => unknown;
+    renderSectionHeader: (info: { section: unknown }) => unknown;
+    keyExtractor: (item: unknown, index: number) => string;
+  }) => {
+    const React = require('react');
+    const { View } = require('react-native');
+    return React.createElement(
+      View,
+      null,
+      sections.map(section =>
+        React.createElement(View, { key: section.key }, [
+          React.createElement(
+            View,
+            { key: `${section.key}-header` },
+            renderSectionHeader({ section }),
+          ),
+          ...section.data.map((item, index) =>
+            React.createElement(
+              View,
+              { key: keyExtractor(item, index) },
+              renderItem({ item, index }),
+            ),
+          ),
+        ]),
+      ),
+    );
+  },
+}));
+
 // The preview sheets pull in expo-media-library (via useSaveImageToGallery)
 // and are exercised by their own tests; stub them here to keep this screen test
 // focused on the viewer's data wiring.
@@ -128,6 +167,7 @@ describe('EmoteBadgeViewerScreen', () => {
     expect(
       await screen.findByTestId('badge-cell-moderator_1_1'),
     ).toBeOnTheScreen();
+    expect(screen.getByText('Twitch')).toBeOnTheScreen();
     expect(twitchBadgeService.listSanitisedGlobalBadges).toHaveBeenCalled();
   });
 

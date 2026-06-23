@@ -9,7 +9,6 @@ export type LiveStreamScreenState = {
   isChatVisible: boolean;
   landscapeChatCycleAction: LandscapeChatCycleAction;
   landscapeChatWidth: number | null;
-  videoLatencySeconds: number | null;
 };
 
 export type LiveStreamScreenAction =
@@ -21,8 +20,7 @@ export type LiveStreamScreenAction =
       landscapeChatCycleAction: LandscapeChatCycleAction;
     }
   | { type: 'setLandscapeChatWidth'; landscapeChatWidth: number | null }
-  | { type: 'setChatConnectionReady'; isChatConnectionReady: boolean }
-  | { type: 'setVideoLatencySeconds'; videoLatencySeconds: number | null };
+  | { type: 'setChatConnectionReady'; isChatConnectionReady: boolean };
 
 export const initialLiveStreamScreenState: LiveStreamScreenState = {
   fullscreenChatMode: 'sidebar',
@@ -30,7 +28,6 @@ export const initialLiveStreamScreenState: LiveStreamScreenState = {
   isChatVisible: true,
   landscapeChatCycleAction: 'hide',
   landscapeChatWidth: null,
-  videoLatencySeconds: null,
 };
 
 export function liveStreamScreenReducer(
@@ -53,8 +50,6 @@ export function liveStreamScreenReducer(
       return { ...state, landscapeChatWidth: action.landscapeChatWidth };
     case 'setChatConnectionReady':
       return { ...state, isChatConnectionReady: action.isChatConnectionReady };
-    case 'setVideoLatencySeconds':
-      return { ...state, videoLatencySeconds: action.videoLatencySeconds };
     default:
       return state;
   }

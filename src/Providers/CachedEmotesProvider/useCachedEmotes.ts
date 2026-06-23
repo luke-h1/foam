@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
+import { getPreferences } from '@app/store/preferenceStore';
 import type { SanitisedEmote } from '@app/types/emote';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
+import {
+  isSevenTvEmoteSite,
+  resolveEmotePreferredScale,
+} from '@app/utils/emote/resolveEmoteScale';
 import { logger } from '@app/utils/logger';
 
 import { releaseChannelEmoteRefs, warmCachedEmoteRefs } from './cache-service';
@@ -14,6 +19,7 @@ const WARM_LIMIT = 96;
 const GLOBAL_WARM_LIMIT = 128;
 
 function collectDisplayUrls(emotes: SanitisedEmote[], limit: number): string[] {
+  const sevenTvLowRes = getPreferences().sevenTvLowResEmotes;
   const urls = new Set<string>();
   for (const emote of emotes) {
     if (urls.size >= limit) {
@@ -23,7 +29,10 @@ function collectDisplayUrls(emotes: SanitisedEmote[], limit: number): string[] {
       image_variants: emote.image_variants,
       url: emote.url,
       static_url: emote.static_url,
-      preferredScale: '2x',
+      preferredScale: resolveEmotePreferredScale({
+        isSevenTv: isSevenTvEmoteSite(emote.site),
+        sevenTvLowRes,
+      }),
     });
     if (url) {
       urls.add(url);

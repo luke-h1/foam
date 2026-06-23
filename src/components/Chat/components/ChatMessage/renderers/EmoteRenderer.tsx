@@ -2,10 +2,15 @@ import { memo } from 'react';
 import { View } from 'react-native';
 
 import { Text } from '@app/components/ui/Text/Text';
+import { getPreferences } from '@app/store/preferenceStore';
 import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { isLowEndDevice } from '@app/utils/device/deviceTier';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
+import {
+  isSevenTvEmoteSite,
+  resolveEmotePreferredScale,
+} from '@app/utils/emote/resolveEmoteScale';
 import { logger } from '@app/utils/logger';
 
 import { ChatInlineImage } from './ChatInlineImage';
@@ -36,13 +41,20 @@ export const EmoteRenderer = memo(
       targetSize,
     );
     // 2x is plenty for ~30pt inline emotes; 4x animated AVIFs cost ~4x the
-    // decode CPU and frame memory (see issue #594 profiling).
+    // decode CPU and frame memory (see issue #594 profiling). 1x on low-RAM
+    // devices, and on 7TV emotes when the experimental low-res flag is on. The
+    // flag is read non-reactively; toggling it bumps chatAssetPreferenceKey,
+    // which reprocesses messages and re-renders these rows.
     const displayUrl = getDisplayEmoteUrl({
       image_variants: part.image_variants,
       url: part.url,
       static_url: part.static_url,
       disableAnimations,
-      preferredScale: isLowEndDevice() ? '1x' : '2x',
+      preferredScale: resolveEmotePreferredScale({
+        isSevenTv: isSevenTvEmoteSite(part.site),
+        sevenTvLowRes: getPreferences().sevenTvLowResEmotes,
+        isLowEnd: isLowEndDevice(),
+      }),
     });
     // No Pressable: long-press is detected by the row's timer, this just
     // records which emote the touch started on. A busy screen renders
