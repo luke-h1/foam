@@ -94,27 +94,32 @@ function ChatInlineImageComponent({
     [sourceUrl],
   );
 
-  const [candidateIndex, setCandidateIndex] = useState(0);
   const [reloadNonce, setReloadNonce] = useState(0);
-  const [status, setStatus] = useState<'loading' | 'loaded' | 'failed'>(
-    'loading',
-  );
+  // Per-emote load progress, tagged with the url it belongs to. When LegendList
+  // recycles the row to a new emote the tag stops matching, so we derive a fresh
+  // "first candidate, loading" view until a handler writes the new url back. This
+  // avoids both a frame showing the previous emote's fallback variant and any
+  // render-phase setState to reset it.
+  const [load, setLoad] = useState<{
+    index: number;
+    status: 'loading' | 'loaded' | 'failed';
+    url: string;
+  }>({ index: 0, status: 'loading', url: sourceUrl });
   const retryCountRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // When the row is reused for a new emote, restart from the first candidate.
-  // Resetting during render (rather than in an effect) avoids a frame that shows
-  // the previous emote's fallback variant for the new url.
-  const prevSourceUrlRef = useRef(sourceUrl);
-  if (prevSourceUrlRef.current !== sourceUrl) {
-    prevSourceUrlRef.current = sourceUrl;
-    setCandidateIndex(0);
-    setStatus('loading');
-    retryCountRef.current = 0;
-  }
+  const isCurrentUrl = load.url === sourceUrl;
+  const candidateIndex = isCurrentUrl ? load.index : 0;
+  const status = isCurrentUrl ? load.status : 'loading';
 
   const candidateUrl =
     fallbackChain[candidateIndex] ?? fallbackChain[0] ?? sourceUrl;
+
+  // retryCountRef isn't rendered, so reset it for a recycled emote here rather
+  // than during render.
+  useEffect(() => {
+    retryCountRef.current = 0;
+  }, [sourceUrl]);
 
   // Drop any retry timer scheduled for the previous url — it would otherwise
   // bump reloadNonce and reload the wrong emote — and on unmount.
@@ -130,8 +135,12 @@ function ChatInlineImageComponent({
 
   const handleLoad = useCallback(() => {
     retryCountRef.current = 0;
-    setStatus('loaded');
-  }, []);
+    setLoad(prev => ({
+      index: prev.url === sourceUrl ? prev.index : 0,
+      status: 'loaded',
+      url: sourceUrl,
+    }));
+  }, [sourceUrl]);
 
   const handleError = useCallback(
     (event?: ImageErrorEventData) => {
@@ -147,7 +156,11 @@ function ChatInlineImageComponent({
           to: fallbackChain[candidateIndex + 1],
         });
         retryCountRef.current = 0;
-        setCandidateIndex(index => index + 1);
+        setLoad({
+          index: candidateIndex + 1,
+          status: 'loading',
+          url: sourceUrl,
+        });
         return;
       }
 
@@ -175,7 +188,7 @@ function ChatInlineImageComponent({
             cacheReleaseRaces: getEmoteRefReleaseRaceCount(),
           },
         });
-        setStatus('failed');
+        setLoad({ index: candidateIndex, status: 'failed', url: sourceUrl });
         return;
       }
 

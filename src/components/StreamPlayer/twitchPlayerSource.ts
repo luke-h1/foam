@@ -176,19 +176,21 @@ export function buildTwitchAutoplayEnsureScript(options: {
     }
 
     try {
-      video.muted = TARGET_MUTED;
-      if (!TARGET_MUTED) { video.volume = 1; }
+      var shouldStartMuted = TARGET_MUTED || unmuteBlocked;
+      video.muted = shouldStartMuted;
+      if (!shouldStartMuted) { video.volume = 1; }
       var result = video.play();
       if (result && typeof result.catch === 'function') {
-        result.catch(function() { playMuted(video); });
+        result.catch(function() { unmuteBlocked = true; playMuted(video); });
       }
     } catch (e) {
+      unmuteBlocked = true;
       playMuted(video);
     }
 
-    if (!TARGET_MUTED) {
+    if (!TARGET_MUTED && !unmuteBlocked) {
       setTimeout(function() {
-        if (video.paused) { playMuted(video); }
+        if (video.paused) { unmuteBlocked = true; playMuted(video); }
       }, 400);
     }
   }

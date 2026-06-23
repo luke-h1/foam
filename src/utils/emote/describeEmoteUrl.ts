@@ -29,11 +29,14 @@ export function describeEmoteUrl(url: string): EmoteUrlDescriptor {
 
   const b = bttv.exec(url);
   if (b) {
+    // BTTV's bare `{n}x` url serves whatever the emote actually is (static png
+    // or animated gif/webp) — it doesn't encode the kind. Only the explicit
+    // `.png` variant is reliably static; leave the bare form unknown.
     return {
       provider: 'bttv',
       id: b[1] ?? null,
       scale: b[2] ? `${b[2]}x` : null,
-      kind: b[3] ? 'static' : 'animated',
+      kind: b[3] ? 'static' : null,
     };
   }
 

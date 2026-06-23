@@ -10,8 +10,6 @@
 const VARIANT_FILENAME_PATTERN =
   /^(?<base>.+\/)(?<size>[1-4])x(?<staticSuffix>_static)?\.(?<ext>avif|webp|png|gif)(?<query>\?.*)?$/i;
 
-const FALLBACK_FORMATS = ['webp', 'avif'] as const;
-
 export function buildImageFallbackChain(url: string): string[] {
   const groups = VARIANT_FILENAME_PATTERN.exec(url)?.groups;
   if (!groups?.base || !groups.size || !groups.ext) {
@@ -24,7 +22,7 @@ export function buildImageFallbackChain(url: string): string[] {
   const size = Number(groups.size);
   const ext = groups.ext.toLowerCase();
 
-  const formats = [...new Set([ext, ...FALLBACK_FORMATS])];
+  const formats = [...new Set([ext, 'webp', 'avif'])];
 
   const chain: string[] = [];
   const seen = new Set<string>();

@@ -25,7 +25,15 @@ describe('describeEmoteUrl', () => {
       provider: 'bttv',
       id: 'xyz',
       scale: '3x',
-      kind: 'animated',
+      kind: null,
+    });
+    expect(
+      describeEmoteUrl('https://cdn.betterttv.net/emote/xyz/3x.png'),
+    ).toEqual({
+      provider: 'bttv',
+      id: 'xyz',
+      scale: '3x',
+      kind: 'static',
     });
   });
 
