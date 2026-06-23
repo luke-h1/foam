@@ -235,5 +235,45 @@ describe('cache-service', () => {
     await flushMicrotasks();
 
     expect(loadAsync).toHaveBeenCalledTimes(12);
+
+    releases.forEach(release => release());
+    await flushMicrotasks();
+  });
+
+  test('visible render decodes preempt queued warm decodes when slots are saturated', async () => {
+    const decodedUrls: string[] = [];
+    const releases: (() => void)[] = [];
+    loadAsync.mockImplementation(source => {
+      decodedUrls.push((source as { uri: string }).uri);
+      return new Promise<ImageRef>(resolve => {
+        releases.push(() => resolve({} as ImageRef));
+      });
+    });
+
+    const saturatingWarmUrls = Array.from(
+      { length: 8 },
+      (_, i) => `https://cdn.7tv.app/emote/warmfill${i}/2x.avif`,
+    );
+    void warmCachedEmoteRefs(saturatingWarmUrls);
+
+    const queuedWarmUrls = Array.from(
+      { length: 3 },
+      (_, i) => `https://cdn.7tv.app/emote/warmqueue${i}/2x.avif`,
+    );
+    void warmCachedEmoteRefs(queuedWarmUrls);
+
+    const renderUrl = 'https://cdn.7tv.app/emote/render/2x.avif';
+    ensureCachedEmoteRef(renderUrl);
+    await flushMicrotasks();
+
+    expect(decodedUrls).toHaveLength(8);
+
+    releases[0]!();
+    await flushMicrotasks();
+
+    expect(decodedUrls[8]).toBe(renderUrl);
+
+    releases.forEach(release => release());
+    await flushMicrotasks();
   });
 });

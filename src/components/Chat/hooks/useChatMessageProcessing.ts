@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import type { MutableRefObject } from 'react';
 
-import { prefetchImage } from '@app/components/Image/imagePrefetch';
 import {
   fetchUserPersonalEmotes,
   getCurrentEmoteData,
@@ -11,7 +10,6 @@ import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import { updateMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
-import { cacheImageFromUrl } from '@app/utils/image/image-cache';
 import { logger } from '@app/utils/logger';
 
 import { hydrateVisibleSevenTvAssets } from '../util/hydrateVisibleSevenTvAssets';
@@ -29,28 +27,6 @@ import {
 
 const VISIBLE_ASSET_HYDRATION_DELAY_MS = 150;
 
-function warmVisibleImages({
-  badgeUrls,
-  emoteUrls,
-}: {
-  badgeUrls: string[];
-  emoteUrls: string[];
-}) {
-  const warm = (url: string, variant: 'badge' | 'emote') => {
-    void cacheImageFromUrl(url, {
-      priority: 'visible',
-      variant,
-    }).then(cachedUri => {
-      if (cachedUri !== url) {
-        void prefetchImage(cachedUri);
-      }
-    });
-  };
-
-  badgeUrls.forEach(url => warm(url, 'badge'));
-  emoteUrls.forEach(url => warm(url, 'emote'));
-}
-
 interface UseChatMessageProcessingOptions {
   channelId: string;
   handleNewMessage: (
@@ -60,7 +36,6 @@ interface UseChatMessageProcessingOptions {
   messages$: { peek: () => AnyChatMessageType[] };
   show7TvEmotes: boolean;
   show7tvBadges: boolean;
-  disableEmoteAnimations: boolean;
   userLogin?: string | null;
   hydratedVisibleAssetKeysRef: MutableRefObject<Set<string>>;
   visiblePersonalEmoteUsersRef: MutableRefObject<Set<string>>;
@@ -84,7 +59,6 @@ export function useChatMessageProcessing({
   channelId,
   handleNewMessage,
   messages$,
-  disableEmoteAnimations,
   fetchUserCosmetics,
   hydratedVisibleAssetKeysRef,
   isAtBottomRef,
@@ -267,14 +241,12 @@ export function useChatMessageProcessing({
           hydratedMessageKeys: hydratedVisibleAssetKeysRef.current,
           personalEmoteUsers: visiblePersonalEmoteUsersRef.current,
           cosmeticUsers: visibleCosmeticUsersRef.current,
-          disableEmoteAnimations,
           getUserPersonalEmotes,
           fetchUserPersonalEmotes,
           getUserBadge: twitchUserId => getUserBadge(twitchUserId) ?? null,
           fetchUserCosmetics,
           hydratePersonalEmotes: show7TvEmotes,
           hydrateCosmetics: show7tvBadges,
-          warmVisibleImages,
           reprocessMessage: reprocessVisibleMessageFromCache,
         }).then(didReprocessMessages => {
           if (
@@ -289,7 +261,6 @@ export function useChatMessageProcessing({
     },
     [
       channelId,
-      disableEmoteAnimations,
       fetchUserCosmetics,
       hydratedVisibleAssetKeysRef,
       isAtBottomRef,

@@ -83,14 +83,6 @@ jest.mock('../../util/sharedChatBadges', () => ({
   ),
 }));
 
-jest.mock('@app/utils/image/image-cache', () => ({
-  cacheImageFromUrl: jest.fn((url: string) => Promise.resolve(url)),
-}));
-
-jest.mock('@app/components/Image/imagePrefetch', () => ({
-  prefetchImage: jest.fn(),
-}));
-
 jest.mock('@app/utils/logger', () => ({
   logger: {
     chat: {
@@ -145,7 +137,6 @@ function renderMessageProcessing() {
   const hook = renderHook(() =>
     useChatMessageProcessing({
       channelId: 'channel-1',
-      disableEmoteAnimations: true,
       fetchUserCosmetics,
       handleNewMessage,
       hydratedVisibleAssetKeysRef: refs.hydratedVisibleAssetKeysRef,
@@ -366,14 +357,12 @@ describe('useChatMessageProcessing', () => {
     const hydrateParams = mockHydrateVisibleSevenTvAssets.mock.calls[0]?.[0];
     expect({
       channelId: hydrateParams?.channelId,
-      disableEmoteAnimations: hydrateParams?.disableEmoteAnimations,
       fetchUserCosmetics: hydrateParams?.fetchUserCosmetics,
       hydrateCosmetics: hydrateParams?.hydrateCosmetics,
       hydratePersonalEmotes: hydrateParams?.hydratePersonalEmotes,
       messages: hydrateParams?.messages.map(message => message.message_id),
     }).toEqual({
       channelId: 'channel-1',
-      disableEmoteAnimations: true,
       fetchUserCosmetics,
       hydrateCosmetics: true,
       hydratePersonalEmotes: true,

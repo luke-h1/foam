@@ -173,19 +173,20 @@ function evictUnpinnedToFit(incomingBytes: number): void {
 const MAX_CONCURRENT_DECODES = isLowTier ? 4 : 8;
 let activeDecodes = 0;
 const decodeWaiters: (() => void)[] = [];
+const lowPriorityDecodeWaiters: (() => void)[] = [];
 
-function acquireDecodeSlot(): Promise<void> {
+function acquireDecodeSlot(lowPriority = false): Promise<void> {
   if (activeDecodes < MAX_CONCURRENT_DECODES) {
     activeDecodes += 1;
     return Promise.resolve();
   }
   return new Promise<void>(resolve => {
-    decodeWaiters.push(resolve);
+    (lowPriority ? lowPriorityDecodeWaiters : decodeWaiters).push(resolve);
   });
 }
 
 function releaseDecodeSlot(): void {
-  const next = decodeWaiters.shift();
+  const next = decodeWaiters.shift() ?? lowPriorityDecodeWaiters.shift();
   if (next) {
     next();
   } else {
@@ -218,7 +219,12 @@ export function touchCachedEmoteRef(url: string): void {
   }
 }
 
-function decodeInto(url: string, maxPx: number, pin: boolean): Promise<void> {
+function decodeInto(
+  url: string,
+  maxPx: number,
+  pin: boolean,
+  lowPriority = false,
+): Promise<void> {
   if (!url || refs.has(url) || inflight.has(url)) {
     if (pin && refs.has(url)) {
       pinned.add(url);
@@ -227,7 +233,7 @@ function decodeInto(url: string, maxPx: number, pin: boolean): Promise<void> {
   }
   const requestEpoch = cacheEpoch;
   inflight.set(url, requestEpoch);
-  return runDecode(url, maxPx, pin, requestEpoch);
+  return runDecode(url, maxPx, pin, requestEpoch, lowPriority);
 }
 
 async function runDecode(
@@ -235,9 +241,10 @@ async function runDecode(
   maxPx: number,
   pin: boolean,
   requestEpoch: number,
+  lowPriority: boolean,
 ): Promise<void> {
   // eslint-disable-next-line react-doctor/async-defer-await -- the slot must be acquired BEFORE the staleness re-check: a clear can happen while this decode is queued, and we only learn that after we own a slot
-  await acquireDecodeSlot();
+  await acquireDecodeSlot(lowPriority);
   try {
     if (requestEpoch !== cacheEpoch) {
       return;
@@ -311,7 +318,7 @@ export async function warmCachedEmoteRefs(
     pin = false,
   }: { maxPx?: number; pin?: boolean } = {},
 ): Promise<void> {
-  await Promise.all(urls.map(url => decodeInto(url, maxPx, pin)));
+  await Promise.all(urls.map(url => decodeInto(url, maxPx, pin, true)));
 }
 
 export function evictCachedEmoteRef(url: string): void {

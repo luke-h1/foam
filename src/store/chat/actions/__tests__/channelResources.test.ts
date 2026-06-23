@@ -10,6 +10,7 @@ import {
   type EmoteResourceSpec,
   reconcileSettledSpecs,
   reportResourceResults,
+  ResourceFetchTimeoutError,
   type SettledSpec,
   settleSpecs,
 } from '../channelResources';
@@ -118,6 +119,53 @@ describe('settleSpecs', () => {
       value: [emote('a')],
     });
     expect(settled[1]!.result.status).toBe('rejected');
+  });
+
+  describe('per-provider timeout', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    test('rejects a spec whose fetch exceeds the timeout while fast specs stay fulfilled', async () => {
+      const fast = spec('twitchChannelEmotes');
+      fast.fetch = () => Promise.resolve([emote('a')]);
+      const slow = spec('twitchGlobalEmotes');
+      slow.fetch = () => new Promise<SanitisedEmote[]>(() => {});
+
+      const settledPromise = settleSpecs([fast, slow], 1000);
+      await jest.advanceTimersByTimeAsync(1000);
+      const settled = await settledPromise;
+
+      expect(settled[0]!.result).toEqual({
+        status: 'fulfilled',
+        value: [emote('a')],
+      });
+      expect(settled[1]!.result.status).toBe('rejected');
+      expect(
+        (settled[1]!.result as PromiseRejectedResult).reason,
+      ).toBeInstanceOf(ResourceFetchTimeoutError);
+    });
+
+    test('does not time out a fetch that resolves before the deadline', async () => {
+      const within = spec('twitchChannelEmotes');
+      within.fetch = () =>
+        new Promise<SanitisedEmote[]>(resolve => {
+          setTimeout(() => resolve([emote('b')]), 500);
+        });
+
+      const settledPromise = settleSpecs([within], 1000);
+      await jest.advanceTimersByTimeAsync(500);
+      const settled = await settledPromise;
+
+      expect(settled[0]!.result).toEqual({
+        status: 'fulfilled',
+        value: [emote('b')],
+      });
+    });
   });
 });
 

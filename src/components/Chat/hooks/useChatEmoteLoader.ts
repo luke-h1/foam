@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { InteractionManager } from 'react-native';
 
 import { useSelector } from '@legendapp/state/react';
 
@@ -109,11 +110,16 @@ export const useChatEmoteLoader = ({
 
           const emoteData = getCurrentEmoteData(channelId);
           if (emoteData) {
-            void Promise.all([
-              preloadGlobalEmotes(emoteData),
-              preloadChannelEmotes(emoteData),
-            ]).then(() => {
-              logger.chat.debug('🖼️ Emote preload completed');
+            InteractionManager.runAfterInteractions(() => {
+              if (currentChannelRef.current !== channelId) {
+                return;
+              }
+              void Promise.all([
+                preloadGlobalEmotes(emoteData),
+                preloadChannelEmotes(emoteData),
+              ]).then(() => {
+                logger.chat.debug('🖼️ Emote preload completed');
+              });
             });
           }
         } else {

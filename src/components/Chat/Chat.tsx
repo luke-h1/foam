@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 
-import { BenchFrameProbe } from '@app/dev/imageBenchmark/BenchFrameProbe';
+import { BenchFrameProbe } from '@app/dev/imageBenchmark/BenchFrameProbe.gate';
 import { CachedEmotesProvider } from '@app/Providers/CachedEmotesProvider/CachedEmotesProvider';
 
 import { ChatEmoteReprocessor } from './components/ChatEmoteReprocessor';
