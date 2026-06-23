@@ -1,6 +1,16 @@
 name: 'Setup Bun and Install'
 description: 'Install Bun from the repo version file and install dependencies.'
 
+inputs:
+  ignore-scripts:
+    description: 'Pass --ignore-scripts to bun install to skip postinstall scripts.'
+    required: false
+    default: 'false'
+  node:
+    description: 'Also set up Node from .nvmrc (for tooling that shells out to node).'
+    required: false
+    default: 'false'
+
 runs:
   using: 'composite'
   steps:
@@ -15,6 +25,19 @@ runs:
       shell: bash
       run: echo "$(dirname "${{ steps.setup_bun.outputs.bun-path }}")" >> "$GITHUB_PATH"
 
+    - name: Setup Node
+      if: ${{ inputs.node == 'true' }}
+      uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+      with:
+        node-version-file: .nvmrc
+
     - name: Install dependencies
       shell: bash
-      run: bun install --frozen-lockfile
+      env:
+        IGNORE_SCRIPTS: ${{ inputs.ignore-scripts }}
+      run: |
+        if [ "$IGNORE_SCRIPTS" = "true" ]; then
+          bun install --frozen-lockfile --ignore-scripts
+        else
+          bun install --frozen-lockfile
+        fi

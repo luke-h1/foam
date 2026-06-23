@@ -1,3 +1,5 @@
+import { appendVariant } from './variant';
+
 export type DeployType = 'ota' | 'build';
 export type ManualDeployType = DeployType | 'auto';
 
@@ -93,10 +95,6 @@ export function getFinalReleaseTag(input: {
   }
 
   return appendVariant(input.version, input.variant);
-}
-
-function appendVariant(value: string, variant: string): string {
-  return variant === 'production' ? value : `${value}-${variant}`;
 }
 
 export function parsePublishedUpdateJson(updateJson: string): {
