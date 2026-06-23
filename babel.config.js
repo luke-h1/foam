@@ -15,18 +15,18 @@ module.exports = api => {
       },
     ],
     [
+      'react-native-worklets/plugin',
+      {
+        strictGlobal: true,
+      },
+    ],
+    [
       'react-native-boost/plugin',
       {
         optimizations: { text: false, view: true },
         ignores: ['node_modules/**'],
         verbose: false,
         silent: isTest,
-      },
-    ],
-    [
-      'react-native-worklets/plugin',
-      {
-        strictGlobal: true,
       },
     ],
   ].filter(Boolean);
