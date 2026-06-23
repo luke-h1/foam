@@ -299,7 +299,8 @@
   },
   "patchedDependencies": {
     "@legendapp/state@2.1.15": "patches/@legendapp%2Fstate@2.1.15.patch",
-    "@legendapp/list@3.0.4": "patches/@legendapp%2Flist@3.0.4.patch"
+    "@legendapp/list@3.0.4": "patches/@legendapp%2Flist@3.0.4.patch",
+    "expo-image@56.0.11": "patches/expo-image@56.0.11.patch"
   },
   "reanimated": {
     "staticFeatureFlags": {

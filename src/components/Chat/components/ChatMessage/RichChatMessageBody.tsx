@@ -20,6 +20,7 @@ export function RichChatMessageBody(props: RichChatMessageState) {
     canJumpToReplyTarget,
     getMappingKey,
     handleBadgePress,
+    isAction,
     isChannelPointRedemption,
     isFirstMessage,
     isReturningChatter,
@@ -75,6 +76,7 @@ export function RichChatMessageBody(props: RichChatMessageState) {
           getMappingKey={(id, index) => String(getMappingKey(id, index))}
           onBadgePress={handleBadgePress}
           cachedSenderColor={cachedSenderColor}
+          isAction={isAction}
           isChannelPointRedemption={isChannelPointRedemption}
           isHighlightedMessage={isHighlightedMessage}
           onReplyContextPress={onReplyContextPress}

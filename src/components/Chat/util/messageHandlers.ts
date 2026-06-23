@@ -54,6 +54,7 @@ interface CreateBaseMessageParams {
   channelName: string;
   text: string;
   broadcasterId?: string;
+  isAction?: boolean;
 }
 
 function createChatTimestamp(date: Date | number = Date.now()): string {
@@ -98,6 +99,7 @@ export const createBaseMessage = ({
   channelName,
   text,
   broadcasterId,
+  isAction,
 }: CreateBaseMessageParams): ChatMessageType<'usernotice'> => {
   const enrichedTags = enrichChannelPointPrivmsgTags(tags, broadcasterId);
   const userstate = createUserStateFromTags(enrichedTags);
@@ -122,6 +124,7 @@ export const createBaseMessage = ({
     isChannelPointRedemption:
       Boolean(enrichedTags['custom-reward-id']) || isHighlightedMessage,
     ...(isHighlightedMessage ? { isHighlightedMessage: true } : {}),
+    ...(isAction ? { isAction: true } : {}),
   };
 };
 

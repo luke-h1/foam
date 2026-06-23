@@ -33,6 +33,7 @@ interface UserChatBodyProps extends UseChatMessagePartRendererArgs {
   getMappingKey: (id: string, index: number) => string;
   onBadgePress?: (badge: BadgePressData) => void;
   compact: boolean;
+  isAction?: boolean;
   isChannelPointRedemption?: boolean;
   isHighlightedMessage?: boolean;
   onReplyContextPress?: (replyParentMessageId: string) => void;
@@ -63,6 +64,7 @@ export function UserChatBody({
   onBadgePress,
   cachedSenderColor,
   compact,
+  isAction,
   isChannelPointRedemption,
   isHighlightedMessage,
   message,
@@ -105,6 +107,7 @@ export function UserChatBody({
     cachedSenderColor ??
     (userstateColor ? lightenColor(userstateColor) : undefined) ??
     (username ? lightenColor(generateRandomTwitchColor(username)) : undefined);
+  const actionColor = isAction ? inlineUsernameColor : undefined;
   const bodyCanFlowInline = canFlowInline && !renderInline;
   const bodyEmoteLineStyle = bodyContainsEmotes
     ? compact
@@ -159,6 +162,7 @@ export function UserChatBody({
           badgeList={badgeList}
           compact={compact}
           getMappingKey={getMappingKey}
+          isAction={isAction}
           message={
             message as Parameters<typeof InlineMessageLine>[0]['message']
           }
@@ -167,6 +171,7 @@ export function UserChatBody({
           replyPlainMentionTarget={replyPlainMentionTarget}
           showTimestamp={showTimestamp}
           timestamp={timestamp}
+          textColor={actionColor}
           username={username}
           usernameColor={inlineUsernameColor}
         />
@@ -229,6 +234,7 @@ export function UserChatBody({
                 message={message as InlineFlowPart[]}
                 replyPlainMentionTarget={replyPlainMentionTarget}
                 emoteLineStyle={bodyEmoteLineStyle}
+                textColor={actionColor}
               />
             </Text>
           ) : (
@@ -237,6 +243,7 @@ export function UserChatBody({
               mode='message'
               message={message}
               replyPlainMentionTarget={replyPlainMentionTarget}
+              textColor={actionColor}
               {...rendererArgs}
             />
           )}

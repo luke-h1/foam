@@ -11,6 +11,7 @@ import {
 import type { ParsedPart } from './parsedPart';
 import { sanitizeInput } from './sanitizeInput';
 import { splitTextWithTwemoji } from './splitTextWithTwemoji';
+import { stripInvisibleChars } from './stripInvisibleChars';
 
 export type { FindEmotesInTextReturn };
 
@@ -232,7 +233,7 @@ export function replaceTextWithEmotes({
     }
   });
 
-  const sanitizedInput = sanitizeInput(inputString);
+  const sanitizedInput = stripInvisibleChars(sanitizeInput(inputString));
   const sortedEmoteNames = getSortedEmoteNames(emoteMap);
 
   try {

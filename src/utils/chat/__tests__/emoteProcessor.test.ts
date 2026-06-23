@@ -240,6 +240,39 @@ describe('processEmotesWorklet', () => {
     ]);
   });
 
+  test('strips the duplicate-message bypass char fused to an emote name', () => {
+    const dogEmote = createEmote({ id: 'dog-emote', name: 'dogE' });
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'dogE\u034F',
+      sevenTvChannelEmotes: [dogEmote],
+    });
+
+    expect(
+      result.map(part => ({
+        type: part.type,
+        content: 'content' in part ? part.content : undefined,
+      })),
+    ).toEqual([{ type: 'emote', content: 'dogE' }]);
+  });
+
+  test('drops a trailing bypass char instead of rendering it as a text box', () => {
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'safe \u034F',
+    });
+
+    expect(
+      result.map(part => ({
+        type: part.type,
+        content: 'content' in part ? part.content : undefined,
+      })),
+    ).toEqual([
+      { type: 'text', content: 'safe' },
+      { type: 'text', content: ' ' },
+    ]);
+  });
+
   test('reuses cached processing results for the same emote collections', () => {
     const params = {
       ...emptyParams,

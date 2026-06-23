@@ -32,6 +32,7 @@ type InlineMessageSpansProps = Pick<
    * emote attachment overflows and clips.
    */
   emoteLineStyle?: StyleProp<TextStyle>;
+  textColor?: string;
 };
 
 export function InlineMessageSpans({
@@ -48,6 +49,7 @@ export function InlineMessageSpans({
   emoteTargetSize,
   textStyle,
   emoteLineStyle,
+  textColor,
 }: InlineMessageSpansProps) {
   const fontScaleStyle = getChatFontScaleStyle(fontScale, compact);
   const baseTextStyle = textStyle ?? [
@@ -56,6 +58,7 @@ export function InlineMessageSpans({
     fontScaleStyle,
     emoteLineStyle,
   ];
+  const textColorStyle = textColor ? { color: textColor } : null;
   const spans: ReactNode[] = [];
   let pendingText: string | null = null;
   let pendingTextKey: ReturnType<typeof getPartKey> | null = null;
@@ -65,7 +68,11 @@ export function InlineMessageSpans({
       return;
     }
     spans.push(
-      <Text key={pendingTextKey} color='gray.text' style={baseTextStyle}>
+      <Text
+        key={pendingTextKey}
+        color='gray.text'
+        style={[baseTextStyle, textColorStyle]}
+      >
         {pendingText}
       </Text>,
     );

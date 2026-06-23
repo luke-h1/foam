@@ -14,6 +14,7 @@ import type { useAuthContext } from '@app/context/AuthContext';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { findBadges } from '@app/utils/chat/findBadges';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { parseActionCommand } from '@app/utils/chat/parseActionMessage';
 import { parseBadges } from '@app/utils/chat/parseBadges';
 import { formatDate } from '@app/utils/date-time/date';
 import { logger } from '@app/utils/logger';
@@ -167,9 +168,15 @@ export const ChatInputShell = memo(function ChatInputShell({
       logger.chat.warn('Sending chat message while IRC join state is stale');
     }
 
-    const messageText = replyTo
+    const { isAction, text: actionBody } = replyTo
+      ? { isAction: false, text: currentInput }
+      : parseActionCommand(currentInput);
+    const sentText = replyTo
       ? `@${replyTo.username} ${currentInput}`
       : currentInput;
+    const messageText = replyTo
+      ? `@${replyTo.username} ${currentInput}`
+      : actionBody;
     const currentUserState = getUserState();
     const badgeData = parseBadges(currentUserState.badges || '');
 
@@ -226,6 +233,7 @@ export const ChatInputShell = memo(function ChatInputShell({
       replyDisplayName: replyTo?.replyParentUserLogin || '',
       replyBody: replyTo?.message || '',
       parentColor: replyTo?.color,
+      ...(isAction ? { isAction: true } : {}),
     };
 
     void processMessageEmotes(
@@ -240,7 +248,7 @@ export const ChatInputShell = memo(function ChatInputShell({
       try {
         sendMessage(
           channelName,
-          messageText,
+          sentText,
           replyTo.messageId,
           replyTo.username,
           replyTo.message,
@@ -249,7 +257,7 @@ export const ChatInputShell = memo(function ChatInputShell({
         logger.chat.error('issue sending reply', error);
       }
     } else {
-      sendMessage(channelName, messageText);
+      sendMessage(channelName, sentText);
     }
 
     clearDraft();

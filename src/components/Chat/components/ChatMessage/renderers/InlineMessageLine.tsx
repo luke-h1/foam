@@ -14,6 +14,7 @@ import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRendere
 interface InlineMessageLineProps extends UseChatMessagePartRendererArgs {
   badgeList: SanitisedBadgeSet[];
   getMappingKey: (id: string, index: number) => string;
+  isAction?: boolean;
   message: InlineFlowPart[];
   onBadgePress?: (badge: BadgePressData) => void;
   onUsernamePress?: () => void;
@@ -26,6 +27,7 @@ interface InlineMessageLineProps extends UseChatMessagePartRendererArgs {
 export function InlineMessageLine({
   badgeList,
   getMappingKey,
+  isAction,
   message,
   onBadgePress,
   onUsernamePress,
@@ -43,6 +45,7 @@ export function InlineMessageLine({
   normalisedCurrentUsername,
   replyPlainMentionTarget,
   emoteTargetSize,
+  textColor,
 }: InlineMessageLineProps): ReactNode {
   const containsEmotes = message.some(part => part.type === 'emote');
   const fontScaleStyle = getChatFontScaleStyle(fontScale, compact);
@@ -99,7 +102,7 @@ export function InlineMessageLine({
               usernameColor ? { color: usernameColor } : null,
             ]}
           >
-            {`${username}: `}
+            {isAction ? `${username} ` : `${username}: `}
           </Text>
         ) : null}
         <InlineMessageSpans
@@ -115,6 +118,7 @@ export function InlineMessageLine({
           normalisedCurrentUsername={normalisedCurrentUsername}
           replyPlainMentionTarget={replyPlainMentionTarget}
           emoteTargetSize={emoteTargetSize}
+          textColor={textColor}
         />
       </Text>
     </View>

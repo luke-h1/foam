@@ -36,6 +36,7 @@ export interface UseChatMessagePartRendererArgs {
   parseTextForEmotes?: (text: string) => ParsedPart[];
   replyPlainMentionTarget?: string;
   emoteTargetSize?: number;
+  textColor?: string;
 }
 
 export function useChatMessagePartRenderer({

@@ -77,6 +77,7 @@ export interface ChatMessageType<
   parentColor?: string;
   isChannelPointRedemption?: boolean;
   isAnnouncement?: boolean;
+  isAction?: boolean;
   isHighlightedMessage?: boolean;
   isSharedChatDuplicated?: boolean;
   isTwitchSystemNotice?: boolean;
