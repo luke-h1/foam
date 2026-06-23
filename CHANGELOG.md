@@ -5,6 +5,7 @@
 ### ♻️ Refactor
 
 - **chat:** Improve bottom sheet
+- **infrastructure:** Improve GHA workflows ([#657](https://github.com/lhowsam/foam/issues/657))
 
 ### ✨ Features
 
@@ -46,6 +47,7 @@
 - **app:** Update legend list ([#641](https://github.com/lhowsam/foam/issues/641))
 - **ai:** Update skills
 - **chat:** Tidy up scroll activity
+- **infrastructure:** Swap sentry org ([#658](https://github.com/lhowsam/foam/issues/658))
 
 ## 1.0.0
 
