@@ -24,6 +24,7 @@ import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchC
 import { logger } from '@app/utils/logger';
 
 import type { ChatListRef } from '../components/ChatList';
+import { formatModerationSystemMessage } from '../util/formatModerationSystemMessage';
 import { formatNoticeMessage } from '../util/formatNoticeMessage';
 import {
   type AnyChatMessageType,
@@ -219,6 +220,10 @@ export function useChatIrcHandlers({
 
       const isFullChatClear = !username;
       if (!isFullChatClear && username) {
+        appendSystemMessage(
+          formatModerationSystemMessage(username, banDuration),
+        );
+
         if (deletedMessageStyle === 'hidden') {
           removeBufferedMessagesByLogin(username);
           removeMessagesByLogin(username);

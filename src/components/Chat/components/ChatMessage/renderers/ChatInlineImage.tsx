@@ -4,6 +4,7 @@ import {
   use,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -18,18 +19,29 @@ import {
 import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
 
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
-import { evictCachedEmoteRef } from '@app/Providers/CachedEmotesProvider/cache-service';
+import {
+  evictCachedEmoteRef,
+  getCachedEmoteByteEstimate,
+  getCachedEmoteStats,
+  getEmoteRefReleaseRaceCount,
+} from '@app/Providers/CachedEmotesProvider/cache-service';
 import { useCachedEmote } from '@app/Providers/CachedEmotesProvider/useCachedEmote';
+import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
+import { buildImageFallbackChain } from '@app/utils/emote/imageFallbackChain';
 import { logger } from '@app/utils/logger';
 
 import { RowVisibilityContext } from '../rowVisibility';
 import { ChatImageShimmer } from './ChatImageShimmer';
 
 /**
- *  Keep retrying a failed load on a backoff so a transient network blip (common
- * during raids/floods) doesn't strand an emote as a dead grey box forever, while
- * still being gentle enough not to hammer the network. After this many attempts
- *  we give up and leave a static grey placeholder.
+ * A failed load is handled in two stages. First we walk the format/size
+ * fallback chain (webp -> avif, 4x -> 1x): 7TV often advertises a variant its
+ * CDN doesn't actually serve, so the original 404s but a smaller size or the
+ * other format loads fine — try those immediately rather than hammering the
+ * dead URL. Only once every variant is exhausted do we fall back to a patient
+ * backoff retry of the smallest candidate, to ride out a transient network blip
+ * (common during raids/floods) without stranding the emote as a dead grey box.
+ * After this many backoff attempts we give up and leave a static placeholder.
  */
 const MAX_RELOAD_ATTEMPTS = 8;
 const RELOAD_BASE_DELAY_MS = 400;
@@ -77,63 +89,104 @@ function ChatInlineImageComponent({
 }: ChatInlineImageProps) {
   const sharedRef = useCachedEmote(sourceUrl);
 
+  const fallbackChain = useMemo(
+    () => buildImageFallbackChain(sourceUrl),
+    [sourceUrl],
+  );
+
+  const [candidateIndex, setCandidateIndex] = useState(0);
   const [reloadNonce, setReloadNonce] = useState(0);
   const [status, setStatus] = useState<'loading' | 'loaded' | 'failed'>(
     'loading',
   );
-  const attemptsRef = useRef({ url: sourceUrl, count: 0 });
+  const retryCountRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // A retry timer scheduled for a previous url must not fire after the row is
-  // reused for a new one — it would bump reloadNonce and reload the wrong emote.
-  useEffect(() => {
-    attemptsRef.current = { url: sourceUrl, count: 0 };
-    if (retryTimerRef.current) {
-      clearTimeout(retryTimerRef.current);
-      retryTimerRef.current = null;
-    }
-  }, [sourceUrl]);
+  // When the row is reused for a new emote, restart from the first candidate.
+  // Resetting during render (rather than in an effect) avoids a frame that shows
+  // the previous emote's fallback variant for the new url.
+  const prevSourceUrlRef = useRef(sourceUrl);
+  if (prevSourceUrlRef.current !== sourceUrl) {
+    prevSourceUrlRef.current = sourceUrl;
+    setCandidateIndex(0);
+    setStatus('loading');
+    retryCountRef.current = 0;
+  }
 
+  const candidateUrl =
+    fallbackChain[candidateIndex] ?? fallbackChain[0] ?? sourceUrl;
+
+  // Drop any retry timer scheduled for the previous url — it would otherwise
+  // bump reloadNonce and reload the wrong emote — and on unmount.
   useEffect(
     () => () => {
       if (retryTimerRef.current) {
         clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
       }
     },
-    [],
+    [sourceUrl],
   );
 
   const handleLoad = useCallback(() => {
-    attemptsRef.current.count = 0;
+    retryCountRef.current = 0;
     setStatus('loaded');
   }, []);
 
   const handleError = useCallback(
     (event?: ImageErrorEventData) => {
-      const attempts = attemptsRef.current;
-      if (attempts.url !== sourceUrl) {
-        attempts.url = sourceUrl;
-        attempts.count = 0;
+      evictCachedEmoteRef(candidateUrl);
+
+      // The current size/format is unavailable (typically a 404 on a variant
+      // 7TV advertises but the CDN doesn't serve). Move to the next candidate —
+      // alternate format first, then a smaller size — immediately, since it's a
+      // genuinely different URL rather than the same dead one.
+      if (candidateIndex < fallbackChain.length - 1) {
+        logger.chat.debug('chat.emote.fallback', {
+          from: candidateUrl,
+          to: fallbackChain[candidateIndex + 1],
+        });
+        retryCountRef.current = 0;
+        setCandidateIndex(index => index + 1);
+        return;
       }
-      if (attempts.count >= MAX_RELOAD_ATTEMPTS) {
+
+      // Every format/size has 404'd. Patiently backoff-retry the smallest
+      // candidate — the one most likely to exist — to ride out a transient blip.
+      if (retryCountRef.current >= MAX_RELOAD_ATTEMPTS) {
+        const descriptor = describeEmoteUrl(candidateUrl);
+        const cache = getCachedEmoteStats();
         logger.chat.warn('chat.emote.load_failed', {
           name: 'chat_resources_warning',
           error: event?.error,
           url: sourceUrl,
-          attempts: attempts.count,
+          finalUrl: candidateUrl,
+          candidatesTried: fallbackChain.length,
+          attempts: retryCountRef.current,
+          renderPath: candidateIndex === 0 && sharedRef ? 'imageRef' : 'uri',
+          tags: {
+            emoteProvider: descriptor.provider,
+            emoteScale: descriptor.scale,
+            emoteKind: descriptor.kind,
+            cacheDecoded: cache.decoded,
+            cacheInflight: cache.inflight,
+            cachePinned: cache.pinned,
+            cacheBytes: getCachedEmoteByteEstimate(),
+            cacheReleaseRaces: getEmoteRefReleaseRaceCount(),
+          },
         });
         setStatus('failed');
         return;
       }
-      attempts.count += 1;
+
+      retryCountRef.current += 1;
       logger.chat.debug('chat.emote.load_retry', {
-        url: sourceUrl,
-        attempt: attempts.count,
+        url: candidateUrl,
+        attempt: retryCountRef.current,
       });
-      evictCachedEmoteRef(sourceUrl);
       const delay = Math.min(
         RELOAD_MAX_DELAY_MS,
-        RELOAD_BASE_DELAY_MS * 2 ** (attempts.count - 1),
+        RELOAD_BASE_DELAY_MS * 2 ** (retryCountRef.current - 1),
       );
       if (retryTimerRef.current) {
         clearTimeout(retryTimerRef.current);
@@ -143,7 +196,7 @@ function ChatInlineImageComponent({
         setReloadNonce(nonce => nonce + 1);
       }, delay);
     },
-    [sourceUrl],
+    [candidateIndex, candidateUrl, fallbackChain, sharedRef, sourceUrl],
   );
 
   const rowVisibility = use(RowVisibilityContext);
@@ -177,12 +230,17 @@ function ChatInlineImageComponent({
   // shimmer and stay on the bare-image fast path with no extra Fabric node.
   const overlayVisible = sharedRef == null && status !== 'loaded';
 
+  // The decoded sharedRef belongs to the original url; once a load failure has
+  // walked us onto a fallback variant, render that variant's uri instead.
+  const source =
+    candidateIndex === 0 && sharedRef ? sharedRef : { uri: candidateUrl };
+
   const imageElement: ReactElement = (
     <ExpoImage
       ref={imageRef}
-      source={sharedRef ?? { uri: sourceUrl }}
+      source={source}
       contentFit={resizeMode === 'stretch' ? 'fill' : resizeMode}
-      recyclingKey={`${sourceUrl}#${reloadNonce}`}
+      recyclingKey={`${candidateUrl}#${reloadNonce}`}
       autoplay={
         rowVisibility && animated
           ? rowVisibility.isVisible() && !chatScrollActivity.isActive()

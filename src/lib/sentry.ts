@@ -8,7 +8,9 @@ import {
   init as initSentry,
   mobileReplayIntegration,
   reactNativeTracingIntegration,
+  wrapExpoImage,
 } from '@sentry/react-native';
+import { Image as ExpoImage } from 'expo-image';
 
 import { sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
 import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
@@ -117,6 +119,8 @@ export function init() {
     },
     tracesSampleRate: 1.0,
   });
+
+  wrapExpoImage(ExpoImage);
 
   didInitializeSentry = true;
 }

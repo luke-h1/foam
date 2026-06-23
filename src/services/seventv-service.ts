@@ -198,35 +198,41 @@ function sanitiseV4EmoteSet(
     totalCount: emoteSet.emotes.totalCount,
   };
 
-  return emoteSet.emotes.items.map(item => {
-    const { emote } = item;
-    const bestImage = pickBestImage(emote.images);
-    const bestStaticImage = pickBestStaticImage(emote.images);
-    const imageVariants = buildV4ImageVariants(emote.images);
-    const width = bestImage?.width ?? 0;
-    const height = bestImage?.height ?? 0;
-    const zeroWidth = item.flags.zeroWidth || emote.flags.defaultZeroWidth;
+  return emoteSet.emotes.items
+    .map(item => {
+      const { emote } = item;
+      const bestImage = pickBestImage(emote.images);
+      const bestStaticImage = pickBestStaticImage(emote.images);
+      const imageVariants = buildV4ImageVariants(emote.images);
+      const width = bestImage?.width ?? 0;
+      const height = bestImage?.height ?? 0;
+      const zeroWidth = item.flags.zeroWidth || emote.flags.defaultZeroWidth;
 
-    return {
-      name: item.alias,
-      id: emote.id,
-      url: bestImage?.url ?? '',
-      static_url: bestStaticImage?.url,
-      image_variants: imageVariants,
-      flags: zeroWidth ? 256 : 0,
-      original_name: emote.defaultName,
-      creator: emote.owner?.mainConnection?.platformDisplayName ?? null,
-      emote_link: `https://7tv.app/emotes/${emote.id}`,
-      site,
-      frame_count: bestImage?.frameCount ?? 1,
-      format: bestImage?.mime?.replace('image/', '') ?? 'webp',
-      aspect_ratio: height > 0 ? width / height : 1,
-      zero_width: zeroWidth,
-      width,
-      height,
-      set_metadata: setMetadata,
-    };
-  });
+      return {
+        name: item.alias,
+        id: emote.id,
+        url: bestImage?.url ?? '',
+        static_url: bestStaticImage?.url,
+        image_variants: imageVariants,
+        flags: zeroWidth ? 256 : 0,
+        original_name: emote.defaultName,
+        creator: emote.owner?.mainConnection?.platformDisplayName ?? null,
+        emote_link: `https://7tv.app/emotes/${emote.id}`,
+        site,
+        frame_count: bestImage?.frameCount ?? 1,
+        format: bestImage?.mime?.replace('image/', '') ?? 'webp',
+        aspect_ratio: height > 0 ? width / height : 1,
+        zero_width: zeroWidth,
+        width,
+        height,
+        set_metadata: setMetadata,
+      };
+    })
+    .filter(hasRenderableUrl);
+}
+
+function hasRenderableUrl(emote: { url: string }): boolean {
+  return emote.url !== '';
 }
 
 export const sevenTvService = {
@@ -444,38 +450,42 @@ export const sevenTvService = {
       totalCount: personalEmoteSet.emotes.items.length,
     };
 
-    return personalEmoteSet.emotes.items.map(item => {
-      const { emote } = item;
-      const emoteName = item.alias || emote.defaultName;
+    return personalEmoteSet.emotes.items
+      .map((item): SevenTvSanitisedEmote => {
+        const { emote } = item;
+        const emoteName = item.alias || emote.defaultName;
 
-      const bestImage = pickBestImage(emote.images);
-      const bestStaticImage = pickBestStaticImage(emote.images);
-      const imageVariants = buildV4ImageVariants(emote.images);
+        const bestImage = pickBestImage(emote.images);
+        const bestStaticImage = pickBestStaticImage(emote.images);
+        const imageVariants = buildV4ImageVariants(emote.images);
 
-      const imgScale = bestImage?.scale ?? 1;
-      const imgWidth = bestImage ? Math.round(bestImage.width / imgScale) : 0;
-      const imgHeight = bestImage ? Math.round(bestImage.height / imgScale) : 0;
+        const imgScale = bestImage?.scale ?? 1;
+        const imgWidth = bestImage ? Math.round(bestImage.width / imgScale) : 0;
+        const imgHeight = bestImage
+          ? Math.round(bestImage.height / imgScale)
+          : 0;
 
-      return {
-        name: emoteName,
-        id: emote.id,
-        url: bestImage?.url ?? '',
-        static_url: bestStaticImage?.url,
-        image_variants: imageVariants,
-        flags: emote.flags.animated ? 1 : 0,
-        original_name: emote.defaultName,
-        creator: emote.owner?.mainConnection?.platformDisplayName ?? null,
-        emote_link: `https://7tv.app/emotes/${emote.id}`,
-        site: '7TV Personal',
-        frame_count: bestImage?.frameCount ?? 1,
-        format: bestImage?.mime?.replace('image/', '') ?? 'webp',
-        aspect_ratio: imgHeight > 0 ? imgWidth / imgHeight : 1,
-        zero_width: emote.flags.defaultZeroWidth,
-        width: imgWidth,
-        height: imgHeight,
-        set_metadata: setMetadata,
-      };
-    });
+        return {
+          name: emoteName,
+          id: emote.id,
+          url: bestImage?.url ?? '',
+          static_url: bestStaticImage?.url,
+          image_variants: imageVariants,
+          flags: emote.flags.animated ? 1 : 0,
+          original_name: emote.defaultName,
+          creator: emote.owner?.mainConnection?.platformDisplayName ?? null,
+          emote_link: `https://7tv.app/emotes/${emote.id}`,
+          site: '7TV Personal',
+          frame_count: bestImage?.frameCount ?? 1,
+          format: bestImage?.mime?.replace('image/', '') ?? 'webp',
+          aspect_ratio: imgHeight > 0 ? imgWidth / imgHeight : 1,
+          zero_width: emote.flags.defaultZeroWidth,
+          width: imgWidth,
+          height: imgHeight,
+          set_metadata: setMetadata,
+        };
+      })
+      .filter(hasRenderableUrl);
   },
 
   /**

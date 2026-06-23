@@ -89,6 +89,17 @@ describe('twitchPlayerSource', () => {
     expect(script).toContain('video.muted = true');
   });
 
+  test('autoplay-ensure recovers when an unmuted play() silently re-pauses', () => {
+    const script = buildTwitchAutoplayEnsureScript({ muted: false });
+
+    // iOS resolves an unmuted play() then re-pauses with no rejection to
+    // catch, so a deferred check falls back to muted playback if still paused.
+    expect(script).toContain('if (video.paused) { playMuted(video); }');
+    // Once unmuting re-pauses the video, stop fighting it (no oscillation).
+    expect(script).toContain('var unmuteBlocked = false');
+    expect(script).toContain('unmuteBlocked = true; playMuted(video);');
+  });
+
   test('autoplay-ensure keeps a muted start muted', () => {
     const script = buildTwitchAutoplayEnsureScript({
       muted: true,

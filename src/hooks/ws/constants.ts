@@ -6,6 +6,7 @@ export const SOCKET_IO_PATH = '/socket.io/?EIO=3&transport=websocket';
 const SOCKET_IO_PING_CODE = '2';
 export const DEFAULT_RECONNECT_LIMIT = 20;
 export const DEFAULT_RECONNECT_INTERVAL_MS = 5000;
+export const FAST_FIRST_RECONNECT_INTERVAL_MS = 300;
 
 export const setupSocketPing = (instance: WebSocket) => {
   const ping = () => instance.send(SOCKET_IO_PING_CODE);

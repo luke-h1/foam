@@ -105,6 +105,56 @@ describe('useChatIrcHandlers', () => {
     });
   });
 
+  test('posts a system message announcing a timeout with a humanised duration', () => {
+    const { result } = renderIrcHandlers();
+
+    act(() => {
+      result.current.onClearChat('#foam', {}, 'baduser', 1200);
+    });
+
+    const message = mockAddMessage.mock.calls[0]?.[0];
+    expect({
+      content:
+        message?.message[0] && 'content' in message.message[0]
+          ? message.message[0].content
+          : undefined,
+      sender: message?.sender,
+    }).toEqual({
+      content: 'baduser has been timed out for 20m',
+      sender: 'System',
+    });
+  });
+
+  test('posts a system message announcing a permanent ban when no duration is given', () => {
+    const { result } = renderIrcHandlers();
+
+    act(() => {
+      result.current.onClearChat('#foam', {}, 'baduser');
+    });
+
+    const message = mockAddMessage.mock.calls[0]?.[0];
+    const content =
+      message?.message[0] && 'content' in message.message[0]
+        ? message.message[0].content
+        : undefined;
+    expect(content).toEqual('baduser has been permanently banned');
+  });
+
+  test('does not announce a per-user action on a full chat clear', () => {
+    const { result } = renderIrcHandlers();
+
+    act(() => {
+      result.current.onClearChat('#foam', {});
+    });
+
+    const message = mockAddMessage.mock.calls[0]?.[0];
+    const content =
+      message?.message[0] && 'content' in message.message[0]
+        ? message.message[0].content
+        : undefined;
+    expect(content).toEqual('Chat was cleared by a moderator');
+  });
+
   test('does not clear rendered messages when part fires after chat unmounts', () => {
     const clearLocalMessages = jest.fn();
     const { result } = renderIrcHandlers({
