@@ -39,6 +39,8 @@
 - **perf:** Perf sweep pt 2 ([#654](https://github.com/lhowsam/foam/issues/654))
 - **perf:** Perf sweep
 - **app:** Debug missing images ([#660](https://github.com/lhowsam/foam/issues/660))
+- **perf:** Correct reanimated worklets babel plugin order ([#661](https://github.com/lhowsam/foam/issues/661))
+- **app:** Stray unicode chars ([#662](https://github.com/lhowsam/foam/issues/662))
 
 ### 🔧 Miscellaneous Tasks
 
