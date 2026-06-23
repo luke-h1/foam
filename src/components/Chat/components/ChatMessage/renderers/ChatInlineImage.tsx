@@ -107,9 +107,11 @@ function ChatInlineImageComponent({
   }>({ index: 0, status: 'loading', url: sourceUrl });
   const retryCountRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [failedRefUrl, setFailedRefUrl] = useState<string | null>(null);
 
   const isCurrentUrl = load.url === sourceUrl;
-  const candidateIndex = isCurrentUrl ? load.index : 0;
+  const showRef = sharedRef != null && failedRefUrl !== sourceUrl;
+  const candidateIndex = showRef ? 0 : isCurrentUrl ? load.index : 0;
   const status = isCurrentUrl ? load.status : 'loading';
 
   const candidateUrl =
@@ -144,7 +146,11 @@ function ChatInlineImageComponent({
 
   const handleError = useCallback(
     (event?: ImageErrorEventData) => {
-      evictCachedEmoteRef(candidateUrl);
+      if (showRef) {
+        setFailedRefUrl(sourceUrl);
+      } else if (candidateIndex === 0) {
+        evictCachedEmoteRef(candidateUrl);
+      }
 
       // The current size/format is unavailable (typically a 404 on a variant
       // 7TV advertises but the CDN doesn't serve). Move to the next candidate —
@@ -176,7 +182,7 @@ function ChatInlineImageComponent({
           finalUrl: candidateUrl,
           candidatesTried: fallbackChain.length,
           attempts: retryCountRef.current,
-          renderPath: candidateIndex === 0 && sharedRef ? 'imageRef' : 'uri',
+          renderPath: showRef ? 'imageRef' : 'uri',
           tags: {
             emoteProvider: descriptor.provider,
             emoteScale: descriptor.scale,
@@ -209,7 +215,7 @@ function ChatInlineImageComponent({
         setReloadNonce(nonce => nonce + 1);
       }, delay);
     },
-    [candidateIndex, candidateUrl, fallbackChain, sharedRef, sourceUrl],
+    [candidateIndex, candidateUrl, fallbackChain, showRef, sourceUrl],
   );
 
   const rowVisibility = use(RowVisibilityContext);
@@ -243,10 +249,9 @@ function ChatInlineImageComponent({
   // shimmer and stay on the bare-image fast path with no extra Fabric node.
   const overlayVisible = sharedRef == null && status !== 'loaded';
 
-  // The decoded sharedRef belongs to the original url; once a load failure has
-  // walked us onto a fallback variant, render that variant's uri instead.
-  const source =
-    candidateIndex === 0 && sharedRef ? sharedRef : { uri: candidateUrl };
+  // Render the decoded sharedRef whenever it's available and hasn't failed to
+  // display; otherwise render the current fallback variant's uri.
+  const source = showRef ? sharedRef : { uri: candidateUrl };
 
   const imageElement: ReactElement = (
     <ExpoImage

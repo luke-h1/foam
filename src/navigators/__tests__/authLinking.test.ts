@@ -12,15 +12,15 @@ describe('authLinking magic-link sign in', () => {
   const magicUrl =
     'foam://auth?access_token=magic-access-token&refresh_token=magic-refresh-token&token_type=bearer&expires_in=14400';
 
-  it('recognises a magic-link callback URL that carries a token', () => {
+  test('recognises a magic-link callback URL that carries a token', () => {
     expect(isAuthCallbackUrl(magicUrl)).toBe(true);
   });
 
-  it('does not treat a tokenless callback URL as a sign in', () => {
+  test('does not treat a tokenless callback URL as a sign in', () => {
     expect(isAuthCallbackUrl('foam://auth')).toBe(false);
   });
 
-  it('completes login from a magic-link URL and forwards the refresh token', async () => {
+  test('completes login from a magic-link URL and forwards the refresh token', async () => {
     const loginWithTwitch = jest.fn(
       async (_response: AuthSessionResult | null) => null,
     );

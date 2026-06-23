@@ -4,7 +4,7 @@ const TWEMOJI_BASE =
   'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg';
 
 describe('splitTextWithTwemoji', () => {
-  it('splits plain text and emoji into segments', () => {
+  test('splits plain text and emoji into segments', () => {
     expect(splitTextWithTwemoji('hello 😀 world')).toEqual([
       { text: 'hello' },
       { emoji: '😀', image: `${TWEMOJI_BASE}/1f600.svg` },
@@ -12,13 +12,13 @@ describe('splitTextWithTwemoji', () => {
     ]);
   });
 
-  it('returns a single text segment when there are no emoji', () => {
+  test('returns a single text segment when there are no emoji', () => {
     expect(splitTextWithTwemoji('just words')).toEqual([
       { text: 'just words' },
     ]);
   });
 
-  it('consumes the U+FE0F variation selector instead of leaking it into the next text segment', () => {
+  test('consumes the U+FE0F variation selector instead of leaking it into the next text segment', () => {
     expect(splitTextWithTwemoji('hi ❤️ there')).toEqual([
       { text: 'hi' },
       { emoji: '❤️', image: `${TWEMOJI_BASE}/2764.svg` },
@@ -26,7 +26,7 @@ describe('splitTextWithTwemoji', () => {
     ]);
   });
 
-  it('does not corrupt surrounding text for keycap sequences', () => {
+  test('does not corrupt surrounding text for keycap sequences', () => {
     const result = splitTextWithTwemoji('press 1️⃣ now');
 
     expect(result).toEqual([
@@ -36,14 +36,14 @@ describe('splitTextWithTwemoji', () => {
     ]);
   });
 
-  it('handles repeated variation-selector emoji', () => {
+  test('handles repeated variation-selector emoji', () => {
     expect(splitTextWithTwemoji('❤️❤️')).toEqual([
       { emoji: '❤️', image: `${TWEMOJI_BASE}/2764.svg` },
       { emoji: '❤️', image: `${TWEMOJI_BASE}/2764.svg` },
     ]);
   });
 
-  it('keeps ZWJ sequences intact', () => {
+  test('keeps ZWJ sequences intact', () => {
     const family = '👨‍👩‍👧';
     const result = splitTextWithTwemoji(`look ${family}!`);
 

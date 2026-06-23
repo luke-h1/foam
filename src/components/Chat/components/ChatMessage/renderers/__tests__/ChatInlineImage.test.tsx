@@ -317,3 +317,44 @@ describe('ChatInlineImage loading shimmer', () => {
     expect(screen.queryByTestId('chat-image-shimmer')).not.toBeOnTheScreen();
   });
 });
+
+describe('ChatInlineImage shared-ref recovery', () => {
+  beforeEach(() => {
+    mockSharedRef = null;
+    mockImageProps = null;
+    jest.useFakeTimers();
+  });
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.clearAllMocks();
+  });
+
+  test('snaps back to the shared ref once it decodes, abandoning the fallback walk', () => {
+    const base = 'https://cdn.7tv.app/emote/01H85';
+    const sourceUrl = `${base}/2x.webp`;
+    const { rerender } = render(
+      <ChatInlineImage sourceUrl={sourceUrl} style={{}} />,
+    );
+
+    // A transient error walks the row off the original url onto a fallback variant.
+    act(() => mockImageProps?.onError?.());
+    expect(mockImageProps?.recyclingKey).toEqual(`${base}/2x.avif#0`);
+
+    // The shared ref finishes decoding — proof the original url is good — so the
+    // row must abandon the walk and render the ref at index 0 again.
+    mockSharedRef = { isAnimated: true };
+    rerender(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
+
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
+  });
+
+  test('one row erroring does not evict a healthy shared ref shown by other rows', () => {
+    mockSharedRef = { isAnimated: true };
+    const sourceUrl = 'https://cdn.7tv.app/emote/01H85/2x.webp';
+    render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
+
+    act(() => mockImageProps?.onError?.());
+
+    expect(evictMock).not.toHaveBeenCalled();
+  });
+});

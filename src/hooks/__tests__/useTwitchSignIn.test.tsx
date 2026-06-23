@@ -74,7 +74,7 @@ describe('useTwitchSignIn', () => {
     jest.clearAllMocks();
   });
 
-  it('completes a successful auth response once when auth context re-renders', async () => {
+  test('completes a successful auth response once when auth context re-renders', async () => {
     const authResult = createTwitchSignInAuthResult('token-123');
     const request = createTwitchSignInAuthRequest(authResult);
     const loginWithTwitch = jest.fn();
@@ -123,7 +123,7 @@ describe('useTwitchSignIn', () => {
     });
   });
 
-  it('uses the success callback instead of navigating when provided', async () => {
+  test('uses the success callback instead of navigating when provided', async () => {
     const authResult = createTwitchSignInAuthResult('token-456');
     const request = createTwitchSignInAuthRequest(authResult);
     const loginWithTwitch = jest.fn();

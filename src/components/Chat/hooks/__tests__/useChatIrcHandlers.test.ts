@@ -32,11 +32,13 @@ function renderIrcHandlers({
   isMounted = true,
   messageCount = 0,
   clearLocalMessages = jest.fn(),
+  processMessageEmotes = jest.fn(),
 }: {
   isLoadingRecentMessages?: boolean;
   isMounted?: boolean;
   messageCount?: number;
   clearLocalMessages?: jest.Mock;
+  processMessageEmotes?: jest.Mock;
 } = {}) {
   return renderHook(() =>
     useChatIrcHandlers({
@@ -53,7 +55,7 @@ function renderIrcHandlers({
       },
       moderateBufferedMessageById: jest.fn(),
       moderateBufferedMessagesByLogin: jest.fn(),
-      processMessageEmotes: jest.fn(),
+      processMessageEmotes,
       removeBufferedMessageById: jest.fn(),
     }),
   );
@@ -103,6 +105,42 @@ describe('useChatIrcHandlers', () => {
       content: "Connected to foam's room",
       sender: 'System',
     });
+  });
+
+  test('strips the CTCP ACTION wrapper and flags /me messages', () => {
+    const processMessageEmotes = jest.fn();
+    const { result } = renderIrcHandlers({ processMessageEmotes });
+
+    act(() => {
+      result.current.onMessage(
+        '#foam',
+        { 'display-name': 'Bob', login: 'bob', color: '#FF0000' },
+        `${String.fromCharCode(1)}ACTION waves at chat${String.fromCharCode(1)}`,
+      );
+    });
+
+    expect(processMessageEmotes).toHaveBeenCalledTimes(1);
+    const [text, , baseMessage] = processMessageEmotes.mock.calls[0] ?? [];
+    expect(text).toEqual('waves at chat');
+    expect(baseMessage.isAction).toEqual(true);
+    expect(baseMessage.message[0].content).toEqual('waves at chat');
+  });
+
+  test('does not flag a normal message as an action', () => {
+    const processMessageEmotes = jest.fn();
+    const { result } = renderIrcHandlers({ processMessageEmotes });
+
+    act(() => {
+      result.current.onMessage(
+        '#foam',
+        { 'display-name': 'Bob', login: 'bob' },
+        'hello world',
+      );
+    });
+
+    const [text, , baseMessage] = processMessageEmotes.mock.calls[0] ?? [];
+    expect(text).toEqual('hello world');
+    expect(baseMessage.isAction).toBeUndefined();
   });
 
   test('posts a system message announcing a timeout with a humanised duration', () => {

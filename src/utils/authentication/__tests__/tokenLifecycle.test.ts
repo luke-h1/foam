@@ -48,21 +48,21 @@ function token(overrides: Partial<TwitchToken> = {}): TwitchToken {
 }
 
 describe('isTokenExpired', () => {
-  it('treats a token without expiresAt as not expired', () => {
+  test('treats a token without expiresAt as not expired', () => {
     expect(isTokenExpired(token({ expiresAt: undefined }))).toBe(false);
   });
 
-  it('is expired once inside the 60s buffer', () => {
+  test('is expired once inside the 60s buffer', () => {
     expect(isTokenExpired(token({ expiresAt: NOW + 30_000 }))).toBe(true);
   });
 
-  it('is not expired well before the buffer', () => {
+  test('is not expired well before the buffer', () => {
     expect(isTokenExpired(token({ expiresAt: NOW + 120_000 }))).toBe(false);
   });
 });
 
 describe('addExpirationTimestamp', () => {
-  it('derives expiresAt from expiresIn seconds', () => {
+  test('derives expiresAt from expiresIn seconds', () => {
     expect(addExpirationTimestamp(token({ expiresIn: 3600 }))).toEqual(
       token({ expiresIn: 3600, expiresAt: NOW + 3600 * 1000 }),
     );
@@ -70,7 +70,7 @@ describe('addExpirationTimestamp', () => {
 });
 
 describe('shouldProactivelyRefreshUserToken', () => {
-  it('returns false without a refresh token', () => {
+  test('returns false without a refresh token', () => {
     expect(
       shouldProactivelyRefreshUserToken(
         token({ expiresAt: NOW + 1000, refreshToken: undefined }),
@@ -78,7 +78,7 @@ describe('shouldProactivelyRefreshUserToken', () => {
     ).toBe(false);
   });
 
-  it('returns false without expiresAt', () => {
+  test('returns false without expiresAt', () => {
     expect(
       shouldProactivelyRefreshUserToken(
         token({ refreshToken: 'r', expiresAt: undefined }),
@@ -86,7 +86,7 @@ describe('shouldProactivelyRefreshUserToken', () => {
     ).toBe(false);
   });
 
-  it('returns true within the 5 minute refresh window', () => {
+  test('returns true within the 5 minute refresh window', () => {
     expect(
       shouldProactivelyRefreshUserToken(
         token({ refreshToken: 'r', expiresAt: NOW + 60_000 }),
@@ -94,7 +94,7 @@ describe('shouldProactivelyRefreshUserToken', () => {
     ).toBe(true);
   });
 
-  it('returns false outside the refresh window', () => {
+  test('returns false outside the refresh window', () => {
     expect(
       shouldProactivelyRefreshUserToken(
         token({ refreshToken: 'r', expiresAt: NOW + 10 * 60_000 }),
@@ -104,12 +104,12 @@ describe('shouldProactivelyRefreshUserToken', () => {
 });
 
 describe('normaliseTwitchToken', () => {
-  it('returns an already-normalised token unchanged', () => {
+  test('returns an already-normalised token unchanged', () => {
     const existing = token({ expiresAt: NOW + 1000 });
     expect(normaliseTwitchToken(existing)).toBe(existing);
   });
 
-  it('adds expiresAt to a raw token response', () => {
+  test('adds expiresAt to a raw token response', () => {
     const raw = new TokenResponse({
       accessToken: 'access',
       expiresIn: 3600,
@@ -126,7 +126,7 @@ describe('normaliseTwitchToken', () => {
     });
   });
 
-  it('returns null when expiresIn is missing', () => {
+  test('returns null when expiresIn is missing', () => {
     const raw = new TokenResponse({
       accessToken: 'access',
       tokenType: 'bearer',
@@ -137,14 +137,14 @@ describe('normaliseTwitchToken', () => {
 });
 
 describe('refreshStoredUserToken', () => {
-  it('returns null without a refresh token', async () => {
+  test('returns null without a refresh token', async () => {
     expect(
       await refreshStoredUserToken(token({ refreshToken: undefined }), 'test'),
     ).toBeNull();
     expect(getRefreshToken).not.toHaveBeenCalled();
   });
 
-  it('returns a refreshed token, keeping the prior refresh token when none is returned', async () => {
+  test('returns a refreshed token, keeping the prior refresh token when none is returned', async () => {
     getRefreshToken.mockResolvedValue({
       access_token: 'new-access',
       expires_in: 7200,
@@ -164,7 +164,7 @@ describe('refreshStoredUserToken', () => {
     });
   });
 
-  it('returns null when the refresh exchange throws', async () => {
+  test('returns null when the refresh exchange throws', async () => {
     getRefreshToken.mockRejectedValue(new Error('boom'));
 
     expect(

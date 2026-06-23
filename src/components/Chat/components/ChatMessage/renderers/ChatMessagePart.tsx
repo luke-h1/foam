@@ -38,6 +38,7 @@ export function ChatMessagePart({
   parseTextForEmotes,
   replyPlainMentionTarget,
   emoteTargetSize,
+  textColor,
   part,
 }: ChatMessagePartProps) {
   if (mode === 'system' && part.type === 'text') {
@@ -76,6 +77,7 @@ export function ChatMessagePart({
           style={[
             styles.messageText,
             compact && styles.messageTextCompact,
+            textColor ? { color: textColor } : null,
             Boolean(moderationNotice) && styles.moderatedMessageText,
           ]}
         >

@@ -11,6 +11,7 @@ import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userS
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
+import { lightenColor } from '@app/utils/color/lightenColor';
 
 import { RichChatMessage } from '../RichChatMessage';
 
@@ -109,6 +110,33 @@ describe('RichChatMessage', () => {
 
     expect(queryByText('Hello')).toBeNull();
     expect(queryByText('world')).toBeNull();
+  });
+
+  test('tints /me action message bodies in the sender colour', () => {
+    const message = createMockMessage(
+      [{ type: 'text', content: 'waves at chat' }],
+      { color: '#FF0000' },
+      { isAction: true },
+    );
+
+    const { getByText } = render(<RichChatMessage {...message} />);
+
+    expect(getByText('waves at chat')).toHaveStyle({
+      color: lightenColor('#FF0000'),
+    });
+  });
+
+  test('does not tint a regular message body in the sender colour', () => {
+    const message = createMockMessage(
+      [{ type: 'text', content: 'waves at chat' }],
+      { color: '#FF0000' },
+    );
+
+    const { getByText } = render(<RichChatMessage {...message} />);
+
+    expect(getByText('waves at chat')).not.toHaveStyle({
+      color: lightenColor('#FF0000'),
+    });
   });
 
   test('does not render object placeholders for malformed text parts', () => {

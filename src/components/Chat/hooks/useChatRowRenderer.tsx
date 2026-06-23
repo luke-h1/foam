@@ -172,6 +172,7 @@ const ChatMessageRow = function ChatMessageRow({
         message_id={msg.message_id}
         message_nonce={msg.message_nonce}
         sender={msg.sender}
+        isAction={msg.isAction}
         style={styles.messageContainer}
         parentDisplayName={msg.parentDisplayName}
         parentColor={msg.parentColor}

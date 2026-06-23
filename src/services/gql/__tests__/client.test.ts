@@ -15,7 +15,7 @@ describe('sevenTvV4Client.query', () => {
     post.mockReset();
   });
 
-  it('posts the query and variables to the GQL endpoint', async () => {
+  test('posts the query and variables to the GQL endpoint', async () => {
     post.mockResolvedValue({ data: { ok: true } });
 
     await sevenTvV4Client.query({
@@ -29,7 +29,7 @@ describe('sevenTvV4Client.query', () => {
     });
   });
 
-  it('returns parsed data on success', async () => {
+  test('returns parsed data on success', async () => {
     post.mockResolvedValue({ data: { value: 42 } });
 
     const result = await sevenTvV4Client.query<{ value: number }>({
@@ -39,7 +39,7 @@ describe('sevenTvV4Client.query', () => {
     expect(result).toEqual({ data: { value: 42 } });
   });
 
-  it('surfaces GraphQL body errors alongside any partial data', async () => {
+  test('surfaces GraphQL body errors alongside any partial data', async () => {
     post.mockResolvedValue({
       data: { value: null },
       errors: [{ message: 'bad field' }, { message: 'missing arg' }],
@@ -55,7 +55,7 @@ describe('sevenTvV4Client.query', () => {
     });
   });
 
-  it('returns the thrown HTTP error as an error result', async () => {
+  test('returns the thrown HTTP error as an error result', async () => {
     const httpError = new Error('SevenTVApiError');
     post.mockRejectedValue(httpError);
 

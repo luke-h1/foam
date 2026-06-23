@@ -5,6 +5,7 @@ import { queueMentionLoginsFromParts } from './mentionLoginResolver';
 import type { ParsedPart } from './parsedPart';
 import { parseWordLinkParts } from './replaceTextWithEmotes';
 import { applyMentionLoginCasing } from './resolveMentionLogin';
+import { stripInvisibleChars } from './stripInvisibleChars';
 
 interface EmoteProcessorParams {
   inputString: string;
@@ -286,8 +287,10 @@ export const processEmotesWorklet = (
     bttvGlobalEmotes,
   } = params;
 
-  if (!inputString) {
-    return [{ type: 'text', content: inputString }];
+  const cleanInput = stripInvisibleChars(inputString);
+
+  if (!cleanInput) {
+    return [{ type: 'text', content: cleanInput }];
   }
 
   const baseCollection = getBaseCollection({
@@ -306,7 +309,7 @@ export const processEmotesWorklet = (
     twitchSubscriberEmotes,
   );
   const cacheKey = createCacheKey(
-    inputString,
+    cleanInput,
     baseCollection.cacheKey,
     scopedEmoteKey,
   );
@@ -323,7 +326,7 @@ export const processEmotesWorklet = (
   );
   const emojiMap = baseCollection.emojiMap;
 
-  const words = inputString.split(/(\s+)/);
+  const words = cleanInput.split(/(\s+)/);
   const result: ParsedPart[] = [];
 
   let i = 0;

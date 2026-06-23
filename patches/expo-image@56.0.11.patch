@@ -1,0 +1,20 @@
+diff --git a/ios/ImageView.swift b/ios/ImageView.swift
+index cccedd7adf7328b18bb61333c3fe2473c79e72cd..8917134a516b206eda2bead68bbe151d8d3efc16 100644
+--- a/ios/ImageView.swift
++++ b/ios/ImageView.swift
+@@ -150,6 +150,15 @@ public final class ImageView: ExpoView {
+     if lockResource && !force {
+       return
+     }
++    // A directly-set image ref (`source` is a SharedRef, so `sources == nil`) is not
++    // reloadable. If the view was emptied after the ref was applied — e.g. a `recyclingKey`
++    // change whose `sdImageView.image = nil` ran after the source prop in the same prop batch —
++    // reload would fall through to the placeholder and the image would stay permanently blank.
++    // Re-assert the retained ref here so the ref path self-heals like `sources`-based loads do.
++    if sources == nil, let sourceImage, isViewEmpty {
++      renderSourceImage(sourceImage)
++      return
++    }
+     if isViewEmpty {
+       if placeholderImage != nil {
+         displayPlaceholderIfNecessary()

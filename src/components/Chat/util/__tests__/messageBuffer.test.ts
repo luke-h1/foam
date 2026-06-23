@@ -19,7 +19,7 @@ function message(id: string, overrides: Partial<BufferedMessage> = {}) {
 }
 
 describe('createMessageBuffer add/drain', () => {
-  it('appends new messages and drains them in order, clearing the buffer', () => {
+  test('appends new messages and drains them in order, clearing the buffer', () => {
     const buffer = createMessageBuffer(() => 1000);
 
     expect(buffer.add(message('a'))).toEqual({ added: true, dropped: 0 });
@@ -31,7 +31,7 @@ describe('createMessageBuffer add/drain', () => {
     expect(buffer.size()).toBe(0);
   });
 
-  it('merges a same-key message and keeps the existing cached colour', () => {
+  test('merges a same-key message and keeps the existing cached colour', () => {
     const buffer = createMessageBuffer(() => 1000);
 
     buffer.add(message('a', { cachedSenderColor: 'red' }));
@@ -42,7 +42,7 @@ describe('createMessageBuffer add/drain', () => {
     expect(buffer.drain()[0]!.cachedSenderColor).toBe('red');
   });
 
-  it('drops the oldest entries past the cap and reports the dropped count', () => {
+  test('drops the oldest entries past the cap and reports the dropped count', () => {
     const buffer = createMessageBuffer(() => 2);
 
     buffer.add(message('a'));
@@ -55,7 +55,7 @@ describe('createMessageBuffer add/drain', () => {
 });
 
 describe('createMessageBuffer edits', () => {
-  it('removes a buffered message by id', () => {
+  test('removes a buffered message by id', () => {
     const buffer = createMessageBuffer(() => 1000);
     buffer.add(message('a'));
     buffer.add(message('b'));
@@ -64,7 +64,7 @@ describe('createMessageBuffer edits', () => {
     expect(buffer.drain().map(m => m.message_id)).toEqual(['b']);
   });
 
-  it('removes every buffered message from a login', () => {
+  test('removes every buffered message from a login', () => {
     const buffer = createMessageBuffer(() => 1000);
     buffer.add(message('a'));
     buffer.add(message('b'));
@@ -73,7 +73,7 @@ describe('createMessageBuffer edits', () => {
     expect(buffer.drain().map(m => m.message_id)).toEqual(['b']);
   });
 
-  it('replaces a moderated message body with the notice', () => {
+  test('replaces a moderated message body with the notice', () => {
     const buffer = createMessageBuffer(() => 1000);
     buffer.add(message('a'));
 
@@ -86,7 +86,7 @@ describe('createMessageBuffer edits', () => {
     expect(moderated!.moderationNotice).toBe('Deleted by a moderator');
   });
 
-  it('clears the buffer', () => {
+  test('clears the buffer', () => {
     const buffer = createMessageBuffer(() => 1000);
     buffer.add(message('a'));
 

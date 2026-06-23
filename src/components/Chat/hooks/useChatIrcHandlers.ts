@@ -21,6 +21,7 @@ import {
   registerDeferredRewardgiftStandalone,
 } from '@app/utils/chat/channelPointRewardTitleStore';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { parseActionMessage } from '@app/utils/chat/parseActionMessage';
 import { logger } from '@app/utils/logger';
 
 import type { ChatListRef } from '../components/ChatList';
@@ -92,12 +93,13 @@ export function useChatIrcHandlers({
   );
 
   const handlePrivmsgMessage = useCallback(
-    (tags: Record<string, string>, text: string, countUnread = true) => {
+    (tags: Record<string, string>, rawText: string, countUnread = true) => {
       // Raid guard: drop excess live messages before the expensive emote/badge
       // parse. Recent-message replay (countUnread === false) is never sampled.
       if (countUnread && !shouldProcessLiveMessage()) {
         return;
       }
+      const { isAction, text } = parseActionMessage(rawText);
       const userstate = createUserStateFromTags(tags);
       const replyParentMessageId = tags['reply-parent-msg-id'];
       const replyParentDisplayName = tags['reply-parent-display-name'];
@@ -120,6 +122,7 @@ export function useChatIrcHandlers({
         channelName,
         text,
         broadcasterId: channelId,
+        isAction,
       });
       const messageWithParentColor = { ...baseMessage, parentColor };
 
