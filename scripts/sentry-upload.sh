@@ -153,7 +153,7 @@ sentry_upload_dsyms() {
     SENTRY_RELEASE="$release" \
     SENTRY_DIST="$dist" \
     sentry_run_upload "$bin" debug-files upload \
-    --org "${SENTRY_ORG:-luke-howsam}" \
+    --org "${SENTRY_ORG:-foam-tv}" \
     --project "${SENTRY_PROJECT:-foam-tv-mobile}" \
     --include-sources \
     --type dsym \
@@ -195,7 +195,7 @@ sentry_upload_ota_sourcemaps() {
   dist="$(sentry_dist)"
 
   echo "Uploading Sentry OTA source maps from $output_dir"
-  SENTRY_ORG="${SENTRY_ORG:-luke-howsam}" \
+  SENTRY_ORG="${SENTRY_ORG:-foam-tv}" \
     SENTRY_PROJECT="${SENTRY_PROJECT:-foam-tv-mobile}" \
     SENTRY_URL="${SENTRY_URL:-https://sentry.io/}" \
     SENTRY_LOAD_DOTENV="${SENTRY_LOAD_DOTENV:-0}" \
