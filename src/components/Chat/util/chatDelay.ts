@@ -17,7 +17,11 @@ export function resolveEffectiveChatDelayMs(options: {
   const { autoSync, manualDelaySeconds, measuredLatencySeconds } = options;
 
   if (autoSync) {
-    if (measuredLatencySeconds == null || measuredLatencySeconds <= 0) {
+    if (
+      measuredLatencySeconds == null ||
+      !Number.isFinite(measuredLatencySeconds) ||
+      measuredLatencySeconds <= 0
+    ) {
       return 0;
     }
     return (
@@ -25,5 +29,8 @@ export function resolveEffectiveChatDelayMs(options: {
     );
   }
 
+  if (!Number.isFinite(manualDelaySeconds)) {
+    return 0;
+  }
   return Math.max(0, manualDelaySeconds) * 1000;
 }

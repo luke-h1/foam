@@ -48,14 +48,13 @@ import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 const BADGE_CELL_SIZE = 64;
 const BADGE_IMAGE_SIZE = 40;
-const BADGE_COLUMNS = 5;
-
-const loaderModifiers = [controlSize('large'), tint(theme.colorPrimary)];
 
 const loader =
   Platform.OS === 'ios' ? (
     <Host matchContents>
-      <ProgressView modifiers={loaderModifiers} />
+      <ProgressView
+        modifiers={[controlSize('large'), tint(theme.colorPrimary)]}
+      />
     </Host>
   ) : (
     <ActivityIndicator size='large' color={theme.colorPrimary} />
@@ -246,7 +245,7 @@ function BadgesTab({
   const { data, isLoading } = useGlobalBadgesQuery();
 
   const sections = useMemo(
-    () => (data ? groupBadgesByProvider(data, BADGE_COLUMNS) : []),
+    () => (data ? groupBadgesByProvider(data, 5) : []),
     [data],
   );
 

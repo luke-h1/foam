@@ -119,7 +119,8 @@ export const createChatDelayQueue = (
         return;
       }
       queue = queue.map(entry =>
-        entry.message.message_id === target
+        entry.message.message_id.trim() === target ||
+        entry.message.id?.trim() === target
           ? {
               ...entry,
               message: createModeratedBufferMessage(

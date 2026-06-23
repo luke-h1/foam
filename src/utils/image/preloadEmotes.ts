@@ -10,6 +10,7 @@ import { Image as ExpoImage } from 'expo-image';
 
 import { getPreferences } from '@app/store/preferenceStore';
 import type { SanitisedEmote } from '@app/types/emote';
+import { isLowEndDevice } from '@app/utils/device/deviceTier';
 import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import {
@@ -26,6 +27,7 @@ function getDisplayEmoteCacheUrls(emote: SanitisedEmote): string[] {
   const preferredScale = resolveEmotePreferredScale({
     isSevenTv: isSevenTvEmoteSite(emote.site),
     sevenTvLowRes: getPreferences().sevenTvLowResEmotes,
+    isLowEnd: isLowEndDevice(),
   });
   const urls = new Set<string>();
 

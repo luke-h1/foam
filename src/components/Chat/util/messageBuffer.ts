@@ -145,7 +145,10 @@ export const createMessageBuffer = (
       let nextBuffer: BufferedMessage[] | null = null;
 
       messages.forEach((message, position) => {
-        if (message.message_id !== normalisedMessageId) {
+        if (
+          message.message_id.trim() !== normalisedMessageId &&
+          message.id?.trim() !== normalisedMessageId
+        ) {
           return;
         }
 

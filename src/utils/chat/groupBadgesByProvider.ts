@@ -42,6 +42,7 @@ export function groupBadgesByProvider(
   badges: SanitisedBadgeSet[],
   columns: number,
 ): BadgeProviderSection[] {
+  const columnsPerRow = Math.max(1, columns);
   const grouped = new Map<BadgeProviderKey, SanitisedBadgeSet[]>();
 
   for (const badge of badges) {
@@ -62,8 +63,8 @@ export function groupBadgesByProvider(
       continue;
     }
     const rows: BadgeRow[] = [];
-    for (let index = 0; index < items.length; index += columns) {
-      rows.push(items.slice(index, index + columns));
+    for (let index = 0; index < items.length; index += columnsPerRow) {
+      rows.push(items.slice(index, index + columnsPerRow));
     }
     sections.push({ key, title: PROVIDER_TITLES[key], data: rows });
   }

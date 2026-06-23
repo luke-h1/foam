@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { getPreferences } from '@app/store/preferenceStore';
 import type { SanitisedEmote } from '@app/types/emote';
+import { isLowEndDevice } from '@app/utils/device/deviceTier';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import {
   isSevenTvEmoteSite,
@@ -20,6 +21,7 @@ const GLOBAL_WARM_LIMIT = 128;
 
 function collectDisplayUrls(emotes: SanitisedEmote[], limit: number): string[] {
   const sevenTvLowRes = getPreferences().sevenTvLowResEmotes;
+  const lowEnd = isLowEndDevice();
   const urls = new Set<string>();
   for (const emote of emotes) {
     if (urls.size >= limit) {
@@ -32,6 +34,7 @@ function collectDisplayUrls(emotes: SanitisedEmote[], limit: number): string[] {
       preferredScale: resolveEmotePreferredScale({
         isSevenTv: isSevenTvEmoteSite(emote.site),
         sevenTvLowRes,
+        isLowEnd: lowEnd,
       }),
     });
     if (url) {

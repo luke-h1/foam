@@ -302,10 +302,15 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   ]);
 
   const clearLocalMessages = useCallback(() => {
+    if (flushTimerRef.current) {
+      clearTimeout(flushTimerRef.current);
+      flushTimerRef.current = null;
+    }
     bufferRef.current.clear();
     delayQueueRef.current.clear();
     clearDelayTick();
     pendingUnreadCountRef.current = 0;
+    raidFlushModeRef.current = false;
   }, [bufferRef, clearDelayTick, delayQueueRef]);
 
   const removeBufferedMessageById = useCallback(
