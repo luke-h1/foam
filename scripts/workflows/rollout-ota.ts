@@ -1,35 +1,21 @@
-import { execFileSync } from 'node:child_process';
 import {
   parseCurrentRolloutPercentage,
   validateTargetPercentage,
 } from './otaRolloutPercentage';
-import { getRequiredArg, writeGithubOutput } from './github-actions';
+import {
+  getCommandErrorMessage,
+  getRequiredArg,
+  runTool,
+  writeGithubOutput,
+  type ToolRunner,
+} from './github-actions';
 
-function getCommandErrorMessage(error: unknown): string {
-  if (!(error instanceof Error)) {
-    return 'Unknown command failure';
-  }
-
-  const commandError = error as Error & {
-    stderr?: string | Buffer | null;
-  };
-  const stderr =
-    typeof commandError.stderr === 'string'
-      ? commandError.stderr.trim()
-      : commandError.stderr?.toString().trim();
-
-  return stderr === '' || stderr == null ? error.message : stderr;
-}
-
-function fetchCurrentCommand(args: string[]): void {
+function fetchCurrentCommand(args: string[], run: ToolRunner = runTool): void {
   const otaId = getRequiredArg(args, 'ota-id');
   let viewOutput = '';
 
   try {
-    viewOutput = execFileSync('eas', ['update:view', otaId], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
+    viewOutput = run('eas', ['update:view', otaId]);
   } catch (error) {
     throw new Error(
       `Failed to view update group. Make sure ota_id is an update group ID. ${getCommandErrorMessage(
@@ -58,7 +44,7 @@ function fetchCurrentCommand(args: string[]): void {
   console.log(`Current rollout: ${currentRollout}%`);
 }
 
-function progressCommand(args: string[]): void {
+function progressCommand(args: string[], run: ToolRunner = runTool): void {
   const otaId = getRequiredArg(args, 'ota-id');
   const target = validateTargetPercentage(getRequiredArg(args, 'target'));
   const current = Number.parseInt(getRequiredArg(args, 'current'), 10);
@@ -71,7 +57,7 @@ function progressCommand(args: string[]): void {
 
   console.log(`Setting rollout for ${otaId} to ${target}%...`);
   try {
-    execFileSync(
+    run(
       'eas',
       [
         'update:edit',
@@ -80,10 +66,7 @@ function progressCommand(args: string[]): void {
         String(target),
         '--non-interactive',
       ],
-      {
-        encoding: 'utf8',
-        stdio: 'inherit',
-      },
+      { stdio: 'inherit' },
     );
   } catch (error) {
     throw new Error(

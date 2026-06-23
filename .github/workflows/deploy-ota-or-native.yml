@@ -199,6 +199,18 @@ jobs:
       - name: 🥟 Setup Bun and install dependencies
         uses: ./.github/actions/setup-bun-install
 
+      - name: 🏷️ Resolve Sentry dist
+        id: sentry_dist
+        run: |
+          DIST="$(bunx tsx scripts/workflows/variant-cli.ts sentry-dist --variant "${VARIANT}")"
+          if [ -z "$DIST" ]; then
+            echo "::error::Failed to resolve Sentry dist for variant ${VARIANT}"
+            exit 1
+          fi
+          echo "dist=$DIST" >> "$GITHUB_OUTPUT"
+        env:
+          VARIANT: ${{ inputs.variant || 'production' }}
+
       - name: Load secrets
         uses: ./.github/actions/load-native-deploy-secrets
         with:
@@ -222,7 +234,7 @@ jobs:
           variant: ${{ inputs.variant || 'production' }}
           platform: ${{ inputs.platform || 'ios' }}
           sentry_release: ${{ needs.prepare.outputs.version }}
-          sentry_dist: ${{ (inputs.variant || 'production') == 'internal' && 'foam-tv-internal' || (inputs.variant || 'production') == 'testflight' && 'foam-tv-testflight' || 'foam-tv' }}
+          sentry_dist: ${{ steps.sentry_dist.outputs.dist }}
 
       - name: 💾 Save fingerprints for next run
         uses: ./.github/actions/save-fingerprint-cache
@@ -261,6 +273,18 @@ jobs:
       - name: 🥟 Setup Bun and install dependencies
         uses: ./.github/actions/setup-bun-install
 
+      - name: 🏷️ Resolve Sentry dist
+        id: sentry_dist
+        run: |
+          DIST="$(bunx tsx scripts/workflows/variant-cli.ts sentry-dist --variant "${VARIANT}")"
+          if [ -z "$DIST" ]; then
+            echo "::error::Failed to resolve Sentry dist for variant ${VARIANT}"
+            exit 1
+          fi
+          echo "dist=$DIST" >> "$GITHUB_OUTPUT"
+        env:
+          VARIANT: ${{ inputs.variant || 'production' }}
+
       - name: Load OTA deploy secrets
         uses: ./.github/actions/load-ota-deploy-secrets
         with:
@@ -297,9 +321,9 @@ jobs:
         env:
           EXPO_PUBLIC_APP_VARIANT: ${{ inputs.variant || 'production' }}
           EXPO_PUBLIC_SENTRY_RELEASE: ${{ needs.prepare.outputs.version }}
-          EXPO_PUBLIC_SENTRY_DIST: ${{ (inputs.variant || 'production') == 'internal' && 'foam-tv-internal' || (inputs.variant || 'production') == 'testflight' && 'foam-tv-testflight' || 'foam-tv' }}
+          EXPO_PUBLIC_SENTRY_DIST: ${{ steps.sentry_dist.outputs.dist }}
           SENTRY_RELEASE: ${{ needs.prepare.outputs.version }}
-          SENTRY_DIST: ${{ (inputs.variant || 'production') == 'internal' && 'foam-tv-internal' || (inputs.variant || 'production') == 'testflight' && 'foam-tv-testflight' || 'foam-tv' }}
+          SENTRY_DIST: ${{ steps.sentry_dist.outputs.dist }}
           SENTRY_LOAD_DOTENV: 0
           DEPLOY_MESSAGE: 'Deploy: ${{ github.event.head_commit.message || github.sha }}'
           OTA_CRITICAL_INDEX: ${{ steps.critical_metadata.outputs.next_index }}

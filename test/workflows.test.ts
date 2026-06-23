@@ -15,6 +15,7 @@ import {
   readCurrentEntries,
   writeChatPerformanceComment,
 } from '../scripts/workflows/chat-performance-comment';
+import { getCommandErrorMessage } from '../scripts/workflows/github-actions';
 import {
   compareFingerprints,
   decideDeployType,
@@ -29,6 +30,38 @@ import {
   parseCurrentRolloutPercentage,
   validateTargetPercentage,
 } from '../scripts/workflows/otaRolloutPercentage';
+import {
+  requireBucketName,
+  restoreEntries,
+  type S3Copier,
+  saveEntries,
+} from '../scripts/workflows/s3Cache';
+import {
+  appendVariant,
+  getVariantMeta,
+  ignoreTagsPattern,
+  isVariant,
+  sentryDistFor,
+  variantLabel,
+} from '../scripts/workflows/variant';
+
+function createMemoryCopier(remotes: string[] = []): {
+  copier: S3Copier;
+  uploads: { local: string; remote: string }[];
+} {
+  const available = new Set(remotes);
+  const uploads: { local: string; remote: string }[] = [];
+
+  return {
+    uploads,
+    copier: {
+      download: source => available.has(source),
+      upload: (local, remote) => {
+        uploads.push({ local, remote });
+      },
+    },
+  };
+}
 
 describe('otaOrNativeDeployDecision', () => {
   describe('getFingerprintCachePrefix', () => {
@@ -244,6 +277,153 @@ Rollout Percentage  25%
         'target_percentage must be an integer between 1 and 100.',
       );
     });
+  });
+});
+
+describe('s3Cache', () => {
+  describe('requireBucketName', () => {
+    test('accepts a bare bucket name', () => {
+      expect(() => requireBucketName('foam-release-cache')).not.toThrow();
+    });
+
+    test('rejects an s3 uri', () => {
+      expect(() => requireBucketName('s3://foam-release-cache')).toThrow(
+        'Expected an S3 bucket name',
+      );
+    });
+
+    test('rejects a value containing a path segment', () => {
+      expect(() =>
+        requireBucketName('foam-release-cache/fingerprints'),
+      ).toThrow('Expected an S3 bucket name');
+    });
+
+    test('rejects an empty value', () => {
+      expect(() => requireBucketName('')).toThrow('Expected an S3 bucket name');
+    });
+  });
+
+  describe('restoreEntries', () => {
+    test('counts only the entries the copier could download', () => {
+      const { copier } = createMemoryCopier(['s3://bucket/prefix/ios']);
+
+      expect(
+        restoreEntries(copier, [
+          { remote: 's3://bucket/prefix/ios', local: '/tmp/ios' },
+          { remote: 's3://bucket/prefix/android', local: '/tmp/android' },
+        ]),
+      ).toBe(1);
+    });
+  });
+
+  describe('saveEntries', () => {
+    test('uploads existing files and throws when a file is missing by default', () => {
+      const dir = mkdtempSync(join(tmpdir(), 'foam-s3-'));
+      const iosPath = join(dir, 'ios');
+      const androidPath = join(dir, 'android');
+
+      try {
+        writeFileSync(iosPath, 'ios-hash\n', 'utf8');
+        const { copier, uploads } = createMemoryCopier();
+
+        saveEntries(copier, [{ local: iosPath, remote: 's3://bucket/ios' }]);
+        expect(uploads).toEqual([
+          { local: iosPath, remote: 's3://bucket/ios' },
+        ]);
+
+        expect(() =>
+          saveEntries(copier, [
+            { local: androidPath, remote: 's3://bucket/android' },
+          ]),
+        ).toThrow('Cache file does not exist');
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+
+    test('skips missing files when onMissing is skip', () => {
+      const dir = mkdtempSync(join(tmpdir(), 'foam-s3-'));
+
+      try {
+        const { copier, uploads } = createMemoryCopier();
+
+        saveEntries(
+          copier,
+          [{ local: join(dir, 'android'), remote: 's3://bucket/android' }],
+          { onMissing: 'skip' },
+        );
+
+        expect(uploads).toEqual([]);
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+  });
+});
+
+describe('variant', () => {
+  test('maps each variant to its Sentry dist', () => {
+    expect(sentryDistFor('production')).toBe('foam-tv');
+    expect(sentryDistFor('internal')).toBe('foam-tv-internal');
+    expect(sentryDistFor('testflight')).toBe('foam-tv-testflight');
+  });
+
+  test('maps each variant to its release label', () => {
+    expect(variantLabel('production')).toBe('Production');
+    expect(variantLabel('testflight')).toBe('TestFlight');
+    expect(variantLabel('preview')).toBe('Preview');
+  });
+
+  test('appends the tag suffix only for non-production variants', () => {
+    expect(appendVariant('1.2.3', 'production')).toBe('1.2.3');
+    expect(appendVariant('1.2.3', 'internal')).toBe('1.2.3-internal');
+    expect(appendVariant('1.2.3', 'preview')).toBe('1.2.3-preview');
+  });
+
+  test('recognises known variants and rejects unknown ones', () => {
+    expect(isVariant('production')).toBe(true);
+    expect(isVariant('e2e')).toBe(false);
+  });
+
+  test('throws for an unsupported variant', () => {
+    expect(() => getVariantMeta('e2e')).toThrow('Unsupported variant: e2e');
+  });
+
+  describe('ignoreTagsPattern', () => {
+    test('ignores every other suffixed variant for a production release', () => {
+      expect(ignoreTagsPattern('1.2.3', 'production')).toBe(
+        '^1\\.2\\.3-(internal|testflight|preview)$',
+      );
+    });
+
+    test('excludes the release variant itself', () => {
+      expect(ignoreTagsPattern('1.2.3', 'internal')).toBe(
+        '^1\\.2\\.3-(testflight|preview)$',
+      );
+      expect(ignoreTagsPattern('1.2.3', 'testflight')).toBe(
+        '^1\\.2\\.3-(internal|preview)$',
+      );
+    });
+  });
+});
+
+describe('getCommandErrorMessage', () => {
+  test('prefers a trimmed stderr when present', () => {
+    const error = Object.assign(new Error('boom'), {
+      stderr: '  detailed failure  ',
+    });
+
+    expect(getCommandErrorMessage(error)).toBe('detailed failure');
+  });
+
+  test('falls back to the error message when stderr is empty', () => {
+    const error = Object.assign(new Error('plain message'), { stderr: '' });
+
+    expect(getCommandErrorMessage(error)).toBe('plain message');
+  });
+
+  test('returns a generic message for non-Error values', () => {
+    expect(getCommandErrorMessage('weird')).toBe('Unknown command failure');
   });
 });
 

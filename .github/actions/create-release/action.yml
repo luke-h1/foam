@@ -143,13 +143,7 @@ runs:
         # Variant tags for the same version often point at the same commits as
         # this release. Ignore them so git-cliff applies --tag instead of
         # reusing the existing tag's name (WARN: There is already a tag ...).
-        ESCAPED_VERSION="$(printf '%s' "$INPUTS_VERSION" | sed 's/[.]/\\./g')"
-        case "$INPUTS_VARIANT" in
-          production) IGNORE_TAGS="^${ESCAPED_VERSION}-(internal|testflight|preview)$" ;;
-          internal) IGNORE_TAGS="^${ESCAPED_VERSION}-(testflight|preview)$" ;;
-          testflight) IGNORE_TAGS="^${ESCAPED_VERSION}-(internal|preview)$" ;;
-          *) IGNORE_TAGS="^${ESCAPED_VERSION}-(internal|testflight)$" ;;
-        esac
+        IGNORE_TAGS="$(bunx tsx scripts/workflows/variant-cli.ts ignore-tags --version "$INPUTS_VERSION" --variant "$INPUTS_VARIANT")"
 
         if [ -z "$PREVIOUS_TAG" ]; then
           RELEASE_NOTES="Initial release"
@@ -202,12 +196,7 @@ runs:
         INPUTS_VARIANT: ${{ inputs.variant }}
         INPUTS_DEPLOYMENT_TYPE: ${{ inputs.deployment_type }}
       run: |
-        case "$INPUTS_VARIANT" in
-          preview) VARIANT_LABEL="Preview" ;;
-          internal) VARIANT_LABEL="Internal" ;;
-          testflight) VARIANT_LABEL="TestFlight" ;;
-          *) VARIANT_LABEL="Production" ;;
-        esac
+        VARIANT_LABEL="$(bunx tsx scripts/workflows/variant-cli.ts label --variant "$INPUTS_VARIANT")"
 
         DEPLOYMENT_LABEL="Native Build"
         if [ "$INPUTS_DEPLOYMENT_TYPE" = "ota" ]; then

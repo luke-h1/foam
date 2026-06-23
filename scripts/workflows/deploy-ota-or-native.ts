@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process';
 import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -11,23 +10,21 @@ import {
   getPreliminaryReleaseTag,
   parsePublishedUpdateJson,
 } from './otaOrNativeDeployDecision';
-import { getRequiredArg, writeGithubOutput } from './github-actions';
-
-function getCommandErrorMessage(error: unknown): string {
-  if (!(error instanceof Error)) {
-    return 'Unknown command failure';
-  }
-
-  const commandError = error as Error & {
-    stderr?: string | Buffer | null;
-  };
-  const stderr =
-    typeof commandError.stderr === 'string'
-      ? commandError.stderr.trim()
-      : commandError.stderr?.toString().trim();
-
-  return stderr === '' || stderr == null ? error.message : stderr;
-}
+import {
+  getCommandErrorMessage,
+  getRequiredArg,
+  runTool,
+  writeGithubOutput,
+  type ToolRunner,
+} from './github-actions';
+import {
+  createAwsCopier,
+  requireBucketName,
+  restoreEntries,
+  saveEntries,
+  type S3Copier,
+} from './s3Cache';
+import { isVariant } from './variant';
 
 function readFingerprint(
   cacheDir: string,
@@ -40,12 +37,6 @@ function readFingerprint(
   }
 
   return readFileSync(path, 'utf8').trim();
-}
-
-function requireBucketName(value: string): void {
-  if (value === '' || value.startsWith('s3://') || value.includes('/')) {
-    throw new Error(`Expected an S3 bucket name, received: ${value}`);
-  }
 }
 
 function getAwsEnv(): NodeJS.ProcessEnv {
@@ -83,26 +74,11 @@ function getAwsEnv(): NodeJS.ProcessEnv {
   return env;
 }
 
-function copyFromS3(source: string, target: string): boolean {
-  try {
-    execFileSync('aws', ['s3', 'cp', source, target, '--only-show-errors'], {
-      encoding: 'utf8',
-      env: getAwsEnv(),
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-    return true;
-  } catch {
-    return false;
-  }
+function awsCopier(): S3Copier {
+  return createAwsCopier(getAwsEnv());
 }
 
-function copyToS3(source: string, target: string): void {
-  execFileSync('aws', ['s3', 'cp', source, target, '--only-show-errors'], {
-    encoding: 'utf8',
-    env: getAwsEnv(),
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-}
+const PLATFORMS = ['ios', 'android'] as const;
 
 function restoreFingerprintCacheCommand(args: string[]): void {
   const cacheDir = getRequiredArg(args, 'cache-dir');
@@ -114,6 +90,8 @@ function restoreFingerprintCacheCommand(args: string[]): void {
   requireBucketName(bucket);
   mkdirSync(cacheDir, { recursive: true });
 
+  const copier = awsCopier();
+
   const restore = (cacheBranch: string): number => {
     const prefix = getFingerprintCachePrefix({
       bucket,
@@ -121,20 +99,13 @@ function restoreFingerprintCacheCommand(args: string[]): void {
       variant,
     });
 
-    let restored = 0;
-
-    for (const platform of ['ios', 'android'] as const) {
-      const restoredPlatform = copyFromS3(
-        `${prefix}/${platform}`,
-        join(cacheDir, platform),
-      );
-
-      if (restoredPlatform) {
-        restored += 1;
-      }
-    }
-
-    return restored;
+    return restoreEntries(
+      copier,
+      PLATFORMS.map(platform => ({
+        remote: `${prefix}/${platform}`,
+        local: join(cacheDir, platform),
+      })),
+    );
   };
 
   const restoredFromBranch = restore(branch);
@@ -167,19 +138,21 @@ function saveFingerprintCacheCommand(args: string[]): void {
   const variant = getRequiredArg(args, 'variant');
   const currentIos = getRequiredArg(args, 'current-ios');
   const currentAndroid = getRequiredArg(args, 'current-android');
-  const prefix = getFingerprintCachePrefix({
-    bucket,
-    branch,
-    variant,
-  });
 
   requireBucketName(bucket);
   mkdirSync(cacheDir, { recursive: true });
   writeFileSync(join(cacheDir, 'ios'), `${currentIos}\n`, 'utf8');
   writeFileSync(join(cacheDir, 'android'), `${currentAndroid}\n`, 'utf8');
 
-  copyToS3(join(cacheDir, 'ios'), `${prefix}/ios`);
-  copyToS3(join(cacheDir, 'android'), `${prefix}/android`);
+  const prefix = getFingerprintCachePrefix({ bucket, branch, variant });
+
+  saveEntries(
+    awsCopier(),
+    PLATFORMS.map(platform => ({
+      local: join(cacheDir, platform),
+      remote: `${prefix}/${platform}`,
+    })),
+  );
 
   console.log(`💾 Saved fingerprints to S3 for ${branch}/${variant} 🚀`);
 }
@@ -188,13 +161,18 @@ function restoreCriticalOtaIndexCommand(args: string[]): void {
   const cacheDir = getRequiredArg(args, 'cache-dir');
   const bucket = getRequiredArg(args, 'bucket');
   const variant = getRequiredArg(args, 'variant');
-  const cachePath = getCriticalOtaIndexCachePath({ bucket, variant });
-  const targetPath = join(cacheDir, 'index');
 
   requireBucketName(bucket);
   mkdirSync(cacheDir, { recursive: true });
 
-  if (copyFromS3(cachePath, targetPath)) {
+  const restored = restoreEntries(awsCopier(), [
+    {
+      remote: getCriticalOtaIndexCachePath({ bucket, variant }),
+      local: join(cacheDir, 'index'),
+    },
+  ]);
+
+  if (restored > 0) {
     console.log(`📂 Restored critical OTA index from S3 for ${variant}`);
     return;
   }
@@ -206,16 +184,15 @@ function saveCriticalOtaIndexCommand(args: string[]): void {
   const cacheDir = getRequiredArg(args, 'cache-dir');
   const bucket = getRequiredArg(args, 'bucket');
   const variant = getRequiredArg(args, 'variant');
-  const cachePath = getCriticalOtaIndexCachePath({ bucket, variant });
-  const sourcePath = join(cacheDir, 'index');
 
   requireBucketName(bucket);
 
-  if (!existsSync(sourcePath)) {
-    throw new Error(`Critical OTA index file does not exist: ${sourcePath}`);
-  }
-
-  copyToS3(sourcePath, cachePath);
+  saveEntries(awsCopier(), [
+    {
+      local: join(cacheDir, 'index'),
+      remote: getCriticalOtaIndexCachePath({ bucket, variant }),
+    },
+  ]);
 
   console.log(`💾 Saved critical OTA index to S3 for ${variant}`);
 }
@@ -224,23 +201,19 @@ function restoreOtaUpdateIdsCommand(args: string[]): void {
   const cacheDir = getRequiredArg(args, 'cache-dir');
   const bucket = getRequiredArg(args, 'bucket');
   const variant = getRequiredArg(args, 'variant');
-  const prefix = getOtaUpdateIdsCachePrefix({ bucket, variant });
 
   requireBucketName(bucket);
   mkdirSync(cacheDir, { recursive: true });
 
-  let restored = 0;
+  const prefix = getOtaUpdateIdsCachePrefix({ bucket, variant });
 
-  for (const platform of ['ios', 'android'] as const) {
-    const restoredPlatform = copyFromS3(
-      `${prefix}/${platform}`,
-      join(cacheDir, platform),
-    );
-
-    if (restoredPlatform) {
-      restored += 1;
-    }
-  }
+  const restored = restoreEntries(
+    awsCopier(),
+    PLATFORMS.map(platform => ({
+      remote: `${prefix}/${platform}`,
+      local: join(cacheDir, platform),
+    })),
+  );
 
   if (restored > 0) {
     console.log(
@@ -256,17 +229,19 @@ function saveOtaUpdateIdsCommand(args: string[]): void {
   const cacheDir = getRequiredArg(args, 'cache-dir');
   const bucket = getRequiredArg(args, 'bucket');
   const variant = getRequiredArg(args, 'variant');
-  const prefix = getOtaUpdateIdsCachePrefix({ bucket, variant });
 
   requireBucketName(bucket);
 
-  for (const platform of ['ios', 'android'] as const) {
-    const sourcePath = join(cacheDir, platform);
+  const prefix = getOtaUpdateIdsCachePrefix({ bucket, variant });
 
-    if (existsSync(sourcePath)) {
-      copyToS3(sourcePath, `${prefix}/${platform}`);
-    }
-  }
+  saveEntries(
+    awsCopier(),
+    PLATFORMS.map(platform => ({
+      local: join(cacheDir, platform),
+      remote: `${prefix}/${platform}`,
+    })),
+    { onMissing: 'skip' },
+  );
 
   console.log(`💾 Saved OTA update IDs to S3 for ${variant}`);
 }
@@ -346,20 +321,22 @@ function preliminaryTagCommand(args: string[]): void {
   writeGithubOutput('tag', tag);
 }
 
-function publishOtaCommand(args: string[]): void {
+function publishOtaCommand(args: string[], run: ToolRunner = runTool): void {
   const platform = getRequiredArg(args, 'platform', 'ios');
   const variant = getRequiredArg(args, 'variant', 'production');
   const message = getRequiredArg(args, 'message');
-  if (!['production', 'internal', 'testflight'].includes(variant)) {
+
+  if (!isVariant(variant)) {
     throw new Error(`Unsupported variant: ${variant}`);
   }
+
   const platformArgs =
     platform === 'all' ? ['--platform', 'all'] : ['--platform', platform];
 
   let updateOutput = '[]';
 
   try {
-    updateOutput = execFileSync(
+    updateOutput = run(
       'eas',
       [
         'update',
@@ -373,14 +350,12 @@ function publishOtaCommand(args: string[]): void {
         '--json',
       ],
       {
-        encoding: 'utf8',
         env: Object.fromEntries(
           Object.entries({
             ...process.env,
             EXPO_PUBLIC_APP_VARIANT: variant,
           }).map(([key, value]) => [key, value == null ? '' : String(value)]),
         ) as NodeJS.ProcessEnv,
-        stdio: ['ignore', 'pipe', 'pipe'],
       },
     );
   } catch (error) {
