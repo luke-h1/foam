@@ -227,7 +227,7 @@ const config: ExpoConfig = {
         url: 'https://sentry.io',
         note: 'Use SENTRY_AUTH_TOKEN env to authenticate with Sentry.',
         project: 'foam-tv-mobile',
-        organization: 'luke-howsam',
+        organization: 'foam-tv',
       },
     ],
     [
