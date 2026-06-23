@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0-testflight
+## 1.0.0
 
 ### ♻️ Refactor
 
@@ -38,6 +38,7 @@
 - **perf:** Perf sweep pt 2
 - **perf:** Perf sweep pt 2 ([#654](https://github.com/lhowsam/foam/issues/654))
 - **perf:** Perf sweep
+- **app:** Debug missing images ([#660](https://github.com/lhowsam/foam/issues/660))
 
 ### 🔧 Miscellaneous Tasks
 
@@ -49,7 +50,7 @@
 - **chat:** Tidy up scroll activity
 - **infrastructure:** Swap sentry org ([#658](https://github.com/lhowsam/foam/issues/658))
 
-## 1.0.0-testflight
+## 1.0.0
 
 ### ⚡ Performance
 
