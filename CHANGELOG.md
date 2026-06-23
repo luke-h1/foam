@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0
+## 1.0.0-internal
 
 ### ♻️ Refactor
 
@@ -41,6 +41,7 @@
 - **app:** Debug missing images ([#660](https://github.com/lhowsam/foam/issues/660))
 - **perf:** Correct reanimated worklets babel plugin order ([#661](https://github.com/lhowsam/foam/issues/661))
 - **app:** Stray unicode chars ([#662](https://github.com/lhowsam/foam/issues/662))
+- **app:** Crash after excessive nav actions ([#663](https://github.com/lhowsam/foam/issues/663))
 
 ### 🔧 Miscellaneous Tasks
 
