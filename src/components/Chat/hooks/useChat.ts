@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from 'expo-router';
 
 import { useAuthContext } from '@app/context/AuthContext';
-import { useSyntheticChatFlood } from '@app/dev/imageBenchmark/useSyntheticChatFlood';
+import { useSyntheticChatFlood } from '@app/dev/imageBenchmark/useSyntheticChatFlood.gate';
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useTwitchChannelPointsEventSub } from '@app/hooks/useTwitchChannelPointsEventSub';
 import { ReadyState } from '@app/hooks/ws/constants';
@@ -241,7 +241,6 @@ export function useChat(
     handleViewableMessagesChange,
   } = useChatMessageProcessing({
     channelId,
-    disableEmoteAnimations: preferences.disableEmoteAnimations,
     fetchUserCosmetics,
     handleNewMessage,
     hydratedVisibleAssetKeysRef,

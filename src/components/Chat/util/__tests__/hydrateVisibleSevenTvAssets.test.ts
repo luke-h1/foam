@@ -2,10 +2,7 @@ import { EmoteSetKind } from '@app/graphql/generated/gql';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import {
-  createEmotePart,
-  createTextPart,
-} from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
+import { createTextPart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
 
 import { hydrateVisibleSevenTvAssets } from '../hydrateVisibleSevenTvAssets';
 import type { AnyChatMessageType } from '../messageHandlers';
@@ -98,7 +95,6 @@ describe('hydrateVisibleSevenTvAssets', () => {
       hydratedMessageKeys: new Set(),
       personalEmoteUsers: new Set(),
       cosmeticUsers: new Set(['twitch-user']),
-      disableEmoteAnimations: false,
       getUserPersonalEmotes: jest.fn(() => []),
       fetchUserPersonalEmotes,
       getUserBadge: jest.fn(() => null),
@@ -123,7 +119,6 @@ describe('hydrateVisibleSevenTvAssets', () => {
       hydratedMessageKeys: new Set(),
       personalEmoteUsers: new Set(),
       cosmeticUsers: new Set(['1', '2', '3', '4', '5']),
-      disableEmoteAnimations: false,
       getUserPersonalEmotes: jest.fn(() => []),
       fetchUserPersonalEmotes,
       getUserBadge: jest.fn(() => null),
@@ -150,7 +145,6 @@ describe('hydrateVisibleSevenTvAssets', () => {
       hydratedMessageKeys: new Set(),
       personalEmoteUsers,
       cosmeticUsers: new Set(['twitch-user']),
-      disableEmoteAnimations: false,
       getUserPersonalEmotes,
       fetchUserPersonalEmotes,
       getUserBadge: jest.fn(() => null),
@@ -181,7 +175,6 @@ describe('hydrateVisibleSevenTvAssets', () => {
       hydratedMessageKeys: new Set(),
       personalEmoteUsers: new Set(['twitch-user']),
       cosmeticUsers: new Set(),
-      disableEmoteAnimations: false,
       getUserPersonalEmotes: jest.fn(() => []),
       fetchUserPersonalEmotes: jest.fn(),
       getUserBadge,
@@ -205,7 +198,6 @@ describe('hydrateVisibleSevenTvAssets', () => {
       hydratedMessageKeys: new Set(),
       personalEmoteUsers: new Set(['1', '2', '3', '4', '5']),
       cosmeticUsers: new Set(),
-      disableEmoteAnimations: false,
       getUserPersonalEmotes: jest.fn(() => []),
       fetchUserPersonalEmotes: jest.fn(),
       getUserBadge: jest.fn(() => null),
@@ -229,7 +221,6 @@ describe('hydrateVisibleSevenTvAssets', () => {
       hydratedMessageKeys: new Set(),
       personalEmoteUsers: new Set(['twitch-user']),
       cosmeticUsers,
-      disableEmoteAnimations: false,
       getUserPersonalEmotes: jest.fn(() => []),
       fetchUserPersonalEmotes: jest.fn(),
       getUserBadge,
@@ -255,7 +246,6 @@ describe('hydrateVisibleSevenTvAssets', () => {
       hydratedMessageKeys: new Set(),
       personalEmoteUsers: new Set(['twitch-user']),
       cosmeticUsers: new Set(['twitch-user']),
-      disableEmoteAnimations: false,
       getUserPersonalEmotes: jest.fn(() => []),
       fetchUserPersonalEmotes: jest.fn(),
       getUserBadge: jest.fn(() => null),
@@ -277,7 +267,6 @@ describe('hydrateVisibleSevenTvAssets', () => {
       hydratedMessageKeys,
       personalEmoteUsers: new Set(['twitch-user']),
       cosmeticUsers: new Set(['twitch-user']),
-      disableEmoteAnimations: false,
       getUserPersonalEmotes: jest.fn(() => [sevenTvPersonalEmote]),
       fetchUserPersonalEmotes: jest.fn(),
       getUserBadge: jest.fn(() => sevenTvBadge),
@@ -291,39 +280,5 @@ describe('hydrateVisibleSevenTvAssets', () => {
     expect(reprocessMessage).toHaveBeenCalledTimes(1);
     expect(firstPassDidReprocess).toBe(true);
     expect(secondPassDidReprocess).toBe(false);
-  });
-
-  test('warms visible badge and emote image URLs in bounded batches', async () => {
-    const message = createMessage();
-    message.badges = [sevenTvBadge];
-    message.message = [
-      createEmotePart('Personal', {
-        id: 'personal-emote',
-        name: 'Personal',
-        url: sevenTvPersonalEmote.url,
-        static_url: 'https://cdn.7tv.app/emote/personal-emote/static.webp',
-      }),
-    ];
-    const warmVisibleImages = jest.fn();
-
-    await hydrateVisibleSevenTvAssets({
-      channelId: 'channel-id',
-      messages: [message],
-      hydratedMessageKeys: new Set(),
-      personalEmoteUsers: new Set(['twitch-user']),
-      cosmeticUsers: new Set(['twitch-user']),
-      disableEmoteAnimations: true,
-      getUserPersonalEmotes: jest.fn(() => []),
-      fetchUserPersonalEmotes: jest.fn(),
-      getUserBadge: jest.fn(() => null),
-      fetchUserCosmetics: jest.fn(),
-      warmVisibleImages,
-      reprocessMessage: jest.fn(),
-    });
-
-    expect(warmVisibleImages).toHaveBeenCalledWith({
-      badgeUrls: [sevenTvBadge.url],
-      emoteUrls: ['https://cdn.7tv.app/emote/personal-emote/static.webp'],
-    });
   });
 });

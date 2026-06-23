@@ -1,6 +1,5 @@
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 
 import type { AnyChatMessageType } from './messageHandlers';
 
@@ -15,7 +14,6 @@ type HydrateVisibleSevenTvAssetsParams = {
   hydratedMessageKeys: Set<string>;
   personalEmoteUsers: Set<string>;
   cosmeticUsers: Set<string>;
-  disableEmoteAnimations: boolean;
   getUserPersonalEmotes: (
     twitchUserId: string,
     channelId: string,
@@ -31,17 +29,11 @@ type HydrateVisibleSevenTvAssetsParams = {
   ) => Promise<void>;
   hydratePersonalEmotes?: boolean;
   hydrateCosmetics?: boolean;
-  warmVisibleImages?: (assets: {
-    badgeUrls: string[];
-    emoteUrls: string[];
-  }) => void;
   reprocessMessage: (message: AnyChatMessageType) => void | Promise<void>;
 };
 
 const MAX_PERSONAL_EMOTE_FETCHES_PER_PASS = 3;
 const MAX_COSMETIC_FETCHES_PER_PASS = 3;
-const MAX_EMOTE_WARMUPS_PER_PASS = 36;
-const MAX_BADGE_WARMUPS_PER_PASS = 18;
 
 function canHydrateMessage(message: AnyChatMessageType): boolean {
   if (message.sender === 'System') {
@@ -89,33 +81,21 @@ function getHydrationKey({
   ].join('|');
 }
 
-function addBoundedUrl(target: Set<string>, max: number, url?: string) {
-  if (!url || target.size >= max) {
-    return;
-  }
-
-  target.add(url);
-}
-
 export async function hydrateVisibleSevenTvAssets({
   channelId,
   messages,
   hydratedMessageKeys,
   personalEmoteUsers,
   cosmeticUsers,
-  disableEmoteAnimations,
   getUserPersonalEmotes,
   fetchUserPersonalEmotes,
   getUserBadge,
   fetchUserCosmetics,
   hydratePersonalEmotes = true,
   hydrateCosmetics = true,
-  warmVisibleImages,
   reprocessMessage,
 }: HydrateVisibleSevenTvAssetsParams): Promise<boolean> {
   const pending: Promise<void>[] = [];
-  const emoteWarmupUrls = new Set<string>();
-  const badgeWarmupUrls = new Set<string>();
   let personalEmoteFetchesStarted = 0;
   let cosmeticFetchesStarted = 0;
   let didScheduleReprocess = false;
@@ -147,29 +127,6 @@ export async function hydrateVisibleSevenTvAssets({
     if (!userId || !canHydrateMessage(message)) {
       return;
     }
-
-    message.badges.forEach(badge => {
-      addBoundedUrl(badgeWarmupUrls, MAX_BADGE_WARMUPS_PER_PASS, badge.url);
-    });
-    message.message.forEach(part => {
-      if (part.type !== 'emote') {
-        return;
-      }
-
-      addBoundedUrl(
-        emoteWarmupUrls,
-        MAX_EMOTE_WARMUPS_PER_PASS,
-        // Must mirror EmoteRenderer's URL choice or the warmup caches a
-        // different variant than the row renders.
-        getDisplayEmoteUrl({
-          image_variants: part.image_variants,
-          url: part.url,
-          static_url: part.static_url,
-          disableAnimations: disableEmoteAnimations,
-          preferredScale: '2x',
-        }),
-      );
-    });
 
     const cachedPersonalEmotes = hydratePersonalEmotes
       ? getUserPersonalEmotes(userId, channelId)
@@ -221,13 +178,6 @@ export async function hydrateVisibleSevenTvAssets({
       }
     }
   });
-
-  if (emoteWarmupUrls.size > 0 || badgeWarmupUrls.size > 0) {
-    warmVisibleImages?.({
-      badgeUrls: [...badgeWarmupUrls],
-      emoteUrls: [...emoteWarmupUrls],
-    });
-  }
 
   await Promise.all(pending);
 

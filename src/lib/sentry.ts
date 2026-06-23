@@ -25,6 +25,7 @@ export const navigationIntegration = expoRouterIntegration({
   enableTimeToInitialDisplay: true,
   enablePrefetchTracking: true,
   enableTimeToInitialDisplayForPreloadedRoutes: true,
+  useDispatchedActionData: true,
 });
 
 let didInitializeSentry = false;
@@ -59,12 +60,8 @@ export function init() {
   const hasDsn = Boolean(dsn);
   const enabled =
     hasDsn && (!__DEV__ || process.env.EXPO_PUBLIC_ENABLE_SENTRY === 'true');
+
   const debug = process.env.EXPO_PUBLIC_SENTRY_DEBUG === 'true';
-  /**
-   * Screenshots / view hierarchy can capture other users' chat messages and
-   * logins, so keep them opt-in rather than attached to every event.
-   */
-  const captureUi = process.env.EXPO_PUBLIC_SENTRY_ATTACH_UI === 'true';
 
   sentryStatus = {
     enabled,
@@ -96,17 +93,29 @@ export function init() {
     enableLogs: true,
     enableCaptureFailedRequests: true,
     attachStacktrace: true,
-    attachScreenshot: captureUi,
-    attachViewHierarchy: captureUi,
+    attachScreenshot: true,
+    attachViewHierarchy: true,
+    screenshot: {
+      maskAllText: true,
+      maskAllImages: true,
+    },
     ignoreErrors: ['Network request failed'],
-    sampleRate: 1,
+    sampleRate: 1.0,
+    tracesSampleRate: 1.0,
+    profilesSampleRate: 1.0,
     enableAutoPerformanceTracing: true,
+    replaysSessionSampleRate: 1.0,
+    replaysOnErrorSampleRate: 1.0,
     integrations: [
       navigationIntegration,
       reactNativeTracingIntegration(),
       appStartIntegration(),
       graphqlIntegration({ endpoints: ['https://7tv.io/v4/gql'] }),
-      mobileReplayIntegration(),
+      mobileReplayIntegration({
+        maskAllText: true,
+        maskAllImages: true,
+        maskAllVectors: true,
+      }),
     ],
     beforeSend(event) {
       // Keep the store-review prompt gate honest: any error-level event
@@ -117,7 +126,6 @@ export function init() {
       }
       return event;
     },
-    tracesSampleRate: 1.0,
   });
 
   wrapExpoImage(ExpoImage);

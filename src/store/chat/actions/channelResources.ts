@@ -259,13 +259,46 @@ export const buildBadgeResourceSpecs = ({
   },
 ];
 
+export const RESOURCE_FETCH_TIMEOUT_MS = 8000;
+
+export class ResourceFetchTimeoutError extends Error {
+  constructor(resourceName: string, timeoutMs: number) {
+    super(`${resourceName} fetch timed out after ${timeoutMs}ms`);
+    this.name = 'ResourceFetchTimeoutError';
+  }
+}
+
+const withTimeout = <T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  resourceName: string,
+): Promise<T> =>
+  new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new ResourceFetchTimeoutError(resourceName, timeoutMs));
+    }, timeoutMs);
+    promise.then(
+      value => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      error => {
+        clearTimeout(timer);
+        reject(error as Error);
+      },
+    );
+  });
+
 export const settleSpecs = async <
   TKey extends keyof ChannelCacheType,
   TItem extends Identifiable,
 >(
   specs: readonly ResourceSpec<TKey, TItem>[],
+  timeoutMs: number = RESOURCE_FETCH_TIMEOUT_MS,
 ): Promise<SettledSpec<TKey, TItem>[]> => {
-  const results = await Promise.allSettled(specs.map(spec => spec.fetch()));
+  const results = await Promise.allSettled(
+    specs.map(spec => withTimeout(spec.fetch(), timeoutMs, spec.name)),
+  );
   return specs.map((spec, index) => ({ spec, result: results[index]! }));
 };
 
