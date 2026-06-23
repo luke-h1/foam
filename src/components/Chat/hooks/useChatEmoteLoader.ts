@@ -111,7 +111,10 @@ export const useChatEmoteLoader = ({
           const emoteData = getCurrentEmoteData(channelId);
           if (emoteData) {
             InteractionManager.runAfterInteractions(() => {
-              if (currentChannelRef.current !== channelId) {
+              if (
+                !isMountedRef.current ||
+                currentChannelRef.current !== channelId
+              ) {
                 return;
               }
               void Promise.all([
