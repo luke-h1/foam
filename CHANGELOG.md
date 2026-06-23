@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0-internal
+## 1.0.0
 
 ### ♻️ Refactor
 
