@@ -98,6 +98,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const { t } = useTranslation('stream');
   const isFocused = useIsFocused();
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
+  const wasPlayingBeforeBackgroundRef = useRef(false);
   const normalizedLogin = id.trim().toLowerCase();
   const disableChat = usePreference('disableChat');
   const disableStream = usePreference('disableStream');
@@ -184,8 +185,22 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', nextState => {
-      if (nextState === 'background' || nextState === 'inactive') {
-        streamPlayerRef.current?.pause();
+      const player = streamPlayerRef.current;
+      if (!player) {
+        return;
+      }
+      // Only pause on a full background. `inactive` fires for transient
+      // interruptions (Control Center / notification pulldown, call banner,
+      // Face ID, app-switcher peek) that don't background the app — pausing on
+      // those left the player stopped with nothing to resume it.
+      if (nextState === 'background') {
+        wasPlayingBeforeBackgroundRef.current = !player.getPaused();
+        player.pause();
+      } else if (nextState === 'active') {
+        if (wasPlayingBeforeBackgroundRef.current) {
+          player.play();
+        }
+        wasPlayingBeforeBackgroundRef.current = false;
       }
     });
 
