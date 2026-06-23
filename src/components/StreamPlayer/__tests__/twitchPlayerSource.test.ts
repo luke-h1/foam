@@ -89,6 +89,20 @@ describe('twitchPlayerSource', () => {
     expect(script).toContain('video.muted = true');
   });
 
+  test('autoplay-ensure recovers when an unmuted play() silently re-pauses', () => {
+    const script = buildTwitchAutoplayEnsureScript({ muted: false });
+
+    // iOS resolves an unmuted play() then re-pauses with no rejection to
+    // catch, so a deferred check falls back to muted playback if still paused.
+    // The fallback latches unmuteBlocked first so the next tick stops fighting.
+    expect(script).toContain(
+      'if (video.paused) { unmuteBlocked = true; playMuted(video); }',
+    );
+    // Once unmuting re-pauses the video, stop fighting it (no oscillation).
+    expect(script).toContain('var unmuteBlocked = false');
+    expect(script).toContain('unmuteBlocked = true; playMuted(video);');
+  });
+
   test('autoplay-ensure keeps a muted start muted', () => {
     const script = buildTwitchAutoplayEnsureScript({
       muted: true,
@@ -97,8 +111,8 @@ describe('twitchPlayerSource', () => {
 
     expect(script).toContain('var TARGET_MUTED = true');
     expect(script).toContain('var START_DELAY_MS = 0');
-    // Volume is raised only when not muted (guarded at runtime).
-    expect(script).toContain('if (!TARGET_MUTED) { video.volume = 1; }');
+    // Volume is raised only when starting unmuted (guarded at runtime).
+    expect(script).toContain('if (!shouldStartMuted) { video.volume = 1; }');
   });
 
   test('seeds the Twitch player mute preference so it boots in the requested audio state', () => {

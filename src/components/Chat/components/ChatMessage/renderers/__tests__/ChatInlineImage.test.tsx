@@ -49,6 +49,9 @@ jest.mock('@app/Providers/CachedEmotesProvider/useCachedEmote', () => ({
 
 jest.mock('@app/Providers/CachedEmotesProvider/cache-service', () => ({
   evictCachedEmoteRef: jest.fn(),
+  getCachedEmoteStats: jest.fn(() => ({ decoded: 0, inflight: 0, pinned: 0 })),
+  getCachedEmoteByteEstimate: jest.fn(() => 0),
+  getEmoteRefReleaseRaceCount: jest.fn(() => 0),
 }));
 
 jest.mock('@app/utils/logger', () => ({
@@ -167,9 +170,9 @@ describe('ChatInlineImage off-screen pause', () => {
   });
 });
 
-describe('ChatInlineImage error retry', () => {
+describe('ChatInlineImage fallback chain', () => {
   beforeEach(() => {
-    mockSharedRef = { isAnimated: false };
+    mockSharedRef = null;
     mockImageProps = null;
     jest.useFakeTimers();
   });
@@ -178,47 +181,68 @@ describe('ChatInlineImage error retry', () => {
     jest.clearAllMocks();
   });
 
-  test('evicts the cached ref and remounts with a new recyclingKey after the backoff delay', () => {
-    const sourceUrl = 'https://cdn.7tv.app/emote/err/2x.avif';
-    render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
+  test('walks to the alternate format then a smaller size on each 404, with no backoff delay', () => {
+    const base = 'https://cdn.7tv.app/badge/01H85';
+    render(<ChatInlineImage sourceUrl={`${base}/4x.webp`} style={{}} />);
 
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
+    expect(mockImageProps?.recyclingKey).toEqual(`${base}/4x.webp#0`);
 
+    // 4x.webp 404s -> swap format, same size, immediately.
     act(() => mockImageProps?.onError?.());
+    expect(evictMock).toHaveBeenCalledWith(`${base}/4x.webp`);
+    expect(mockImageProps?.recyclingKey).toEqual(`${base}/4x.avif#0`);
 
-    expect(evictMock).toHaveBeenCalledTimes(1);
-    expect(evictMock).toHaveBeenCalledWith(sourceUrl);
-    // The reload is deferred behind the backoff timer, not fired synchronously.
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
+    // 4x.avif 404s -> drop to the next size down.
+    act(() => mockImageProps?.onError?.());
+    expect(mockImageProps?.recyclingKey).toEqual(`${base}/3x.webp#0`);
 
-    act(() => jest.advanceTimersByTime(400));
-
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#1`);
+    // The fallback walk is immediate — nothing is waiting on a timer.
+    act(() => jest.advanceTimersByTime(8000));
+    expect(mockImageProps?.recyclingKey).toEqual(`${base}/3x.webp#0`);
   });
 
-  test('keeps retrying on a backoff and gives up after the cap', () => {
-    const sourceUrl = 'https://cdn.7tv.app/emote/err/2x.avif';
-    render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
+  test('a successful load on a fallback variant stops the walk and renders it', () => {
+    const base = 'https://cdn.7tv.app/badge/01H85';
+    render(<ChatInlineImage sourceUrl={`${base}/4x.webp`} style={{}} />);
 
-    for (let attempt = 0; attempt < 8; attempt += 1) {
+    act(() => mockImageProps?.onError?.());
+    act(() => mockImageProps?.onError?.());
+    expect(mockImageProps?.recyclingKey).toEqual(`${base}/3x.webp#0`);
+
+    act(() => mockImageProps?.onLoad?.());
+
+    // No further fallback once a variant loads.
+    expect(mockImageProps?.recyclingKey).toEqual(`${base}/3x.webp#0`);
+  });
+
+  test('backoff-retries the smallest candidate once every format and size is exhausted', () => {
+    const base = 'https://cdn.7tv.app/badge/01H85';
+    render(<ChatInlineImage sourceUrl={`${base}/4x.webp`} style={{}} />);
+
+    // 8 candidates: {4,3,2,1}x x {webp,avif}. 7 errors walk to the last one.
+    for (let i = 0; i < 7; i += 1) {
       act(() => mockImageProps?.onError?.());
-      act(() => jest.advanceTimersByTime(8000));
     }
+    expect(mockImageProps?.recyclingKey).toEqual(`${base}/1x.avif#0`);
 
-    expect(evictMock).toHaveBeenCalledTimes(8);
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#8`);
-
+    // Now on the smallest candidate, errors become backoff retries of it.
     act(() => mockImageProps?.onError?.());
-
-    expect(evictMock).toHaveBeenCalledTimes(8);
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#8`);
+    expect(mockImageProps?.recyclingKey).toEqual(`${base}/1x.avif#0`);
+    act(() => jest.advanceTimersByTime(400));
+    expect(mockImageProps?.recyclingKey).toEqual(`${base}/1x.avif#1`);
   });
 
-  test('logs a forwarded warning once the retry budget is exhausted', () => {
-    const sourceUrl = 'https://cdn.7tv.app/emote/err/2x.avif';
+  test('logs a forwarded warning only after the whole chain and the backoff budget are exhausted', () => {
+    const base = 'https://cdn.7tv.app/badge/01H85';
+    const sourceUrl = `${base}/4x.webp`;
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
-    for (let attempt = 0; attempt < 8; attempt += 1) {
+    // Walk the 7 fallback candidates.
+    for (let i = 0; i < 7; i += 1) {
+      act(() => mockImageProps?.onError?.());
+    }
+    // Then 8 backoff retries of the smallest candidate.
+    for (let i = 0; i < 8; i += 1) {
       act(() => mockImageProps?.onError?.());
       act(() => jest.advanceTimersByTime(8000));
     }
@@ -232,24 +256,35 @@ describe('ChatInlineImage error retry', () => {
       name: 'chat_resources_warning',
       error: undefined,
       url: sourceUrl,
+      finalUrl: `${base}/1x.avif`,
+      candidatesTried: 8,
       attempts: 8,
+      renderPath: 'uri',
+      tags: {
+        emoteProvider: 'unknown',
+        emoteScale: null,
+        emoteKind: null,
+        cacheDecoded: 0,
+        cacheInflight: 0,
+        cachePinned: 0,
+        cacheBytes: 0,
+        cacheReleaseRaces: 0,
+      },
     });
   });
 
-  test('a successful load resets the retry budget', () => {
-    const sourceUrl = 'https://cdn.7tv.app/emote/err/2x.avif';
+  test('a url with no derivable variants goes straight to backoff retries', () => {
+    const sourceUrl =
+      'https://static-cdn.jtvnw.net/emoticons/v2/x/default/dark/3.0';
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
-    for (let attempt = 0; attempt < 4; attempt += 1) {
-      act(() => mockImageProps?.onError?.());
-      act(() => jest.advanceTimersByTime(8000));
-    }
-    expect(evictMock).toHaveBeenCalledTimes(4);
-
-    act(() => mockImageProps?.onLoad?.());
     act(() => mockImageProps?.onError?.());
+    expect(evictMock).toHaveBeenCalledWith(sourceUrl);
+    // No fallback variant, so it stays on the same url and waits for the timer.
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
 
-    expect(evictMock).toHaveBeenCalledTimes(5);
+    act(() => jest.advanceTimersByTime(400));
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#1`);
   });
 });
 

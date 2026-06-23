@@ -17,6 +17,7 @@ import { AppState } from 'react-native';
 import { Image, type ImageRef } from 'expo-image';
 
 import { getDeviceTier } from '@app/utils/device/deviceTier';
+import { logger } from '@app/utils/logger';
 
 const isLowTier = getDeviceTier() === 'low';
 
@@ -58,6 +59,9 @@ const inflight = new Map<string, number>();
 const listeners = new Map<string, Set<() => void>>();
 let cacheEpoch = 0;
 
+const recentlyReleased = new Set<string>();
+let releaseRaceCount = 0;
+
 function estimateRefBytes(ref: ImageRef): number {
   const { width, height } = ref;
   if (!width || !height) {
@@ -80,6 +84,15 @@ function dropRefBytes(url: string): void {
 
 const pendingReleases: { url: string; ref: ImageRef }[] = [];
 let releaseFlushScheduled = false;
+
+function markRecentlyReleased(url: string): void {
+  recentlyReleased.add(url);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      recentlyReleased.delete(url);
+    });
+  });
+}
 
 /**
  * Native release is deferred a frame and re-checked. `useCachedEmote` registers
@@ -105,6 +118,7 @@ function flushPendingReleases(): void {
     } catch {
       // ignore
     }
+    markRecentlyReleased(url);
   }
   if (pendingReleases.length > 0 && !releaseFlushScheduled) {
     releaseFlushScheduled = true;
@@ -266,6 +280,16 @@ export function subscribeCachedEmoteRef(
   url: string,
   cb: () => void,
 ): () => void {
+  if (recentlyReleased.has(url) && !refs.has(url)) {
+    releaseRaceCount += 1;
+    if (releaseRaceCount === 1 || releaseRaceCount % 50 === 0) {
+      logger.chat.warn('chat.emote.ref_release_race', {
+        name: 'chat_resources_warning',
+        url,
+        count: releaseRaceCount,
+      });
+    }
+  }
   let set = listeners.get(url);
   if (!set) {
     set = new Set();
@@ -321,6 +345,8 @@ export function clearCachedEmoteRefs(): void {
   totalBytes = 0;
   inflight.clear();
   pinned.clear();
+  recentlyReleased.clear();
+  releaseRaceCount = 0;
   notifyAll();
 }
 
@@ -374,4 +400,8 @@ export function getCachedEmoteStats(): {
 /** Estimated resident decoded-bitmap bytes, for the chat-perf harness. */
 export function getCachedEmoteByteEstimate(): number {
   return totalBytes;
+}
+
+export function getEmoteRefReleaseRaceCount(): number {
+  return releaseRaceCount;
 }

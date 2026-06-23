@@ -326,6 +326,8 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       case 'RECONNECT': {
         logger.chat.warn('Received Twitch IRC RECONNECT request');
         optionsRef.current.onReconnect?.();
+        lastActivityAtRef.current = Date.now();
+        getWebSocketRef.current().close(4003, 'twitch reconnect');
         break;
       }
 

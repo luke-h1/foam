@@ -5,10 +5,21 @@ import { logger } from '@app/utils/logger';
 import {
   DEFAULT_RECONNECT_INTERVAL_MS,
   DEFAULT_RECONNECT_LIMIT,
+  FAST_FIRST_RECONNECT_INTERVAL_MS,
   ReadyState,
   setupSocketPing,
 } from './constants';
 import type { Options, WebSocketEventMap } from './types';
+
+export function getReconnectDelay(
+  attempt: number,
+  baseInterval: number,
+): number {
+  if (attempt === 0) {
+    return FAST_FIRST_RECONNECT_INTERVAL_MS;
+  }
+  return Math.round(baseInterval * Math.min(1.5 ** (attempt - 1), 8));
+}
 
 export interface Setters {
   setLastMessage: (message: WebSocketEventMap['message']) => void;
@@ -66,9 +77,7 @@ export function attachListeners(
         optionsRef.current.reconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS;
 
       if (reconnectCount.current < reconnectAttempts) {
-        const attempt = reconnectCount.current;
-        const backoffMultiplier = Math.min(1.5 ** attempt, 8);
-        const delay = Math.round(baseInterval * backoffMultiplier);
+        const delay = getReconnectDelay(reconnectCount.current, baseInterval);
         reconnectTimeout = setTimeout(() => {
           reconnectCount.current += 1;
           reconnect();
@@ -92,9 +101,7 @@ export function attachListeners(
         optionsRef.current.reconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS;
 
       if (reconnectCount.current < reconnectAttempts) {
-        const attempt = reconnectCount.current;
-        const backoffMultiplier = Math.min(1.5 ** attempt, 8);
-        const delay = Math.round(baseInterval * backoffMultiplier);
+        const delay = getReconnectDelay(reconnectCount.current, baseInterval);
         reconnectTimeout = setTimeout(() => {
           reconnectCount.current += 1;
           reconnect();

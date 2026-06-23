@@ -6,6 +6,7 @@ import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { isLowEndDevice } from '@app/utils/device/deviceTier';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
+import { logger } from '@app/utils/logger';
 
 import { ChatInlineImage } from './ChatInlineImage';
 
@@ -51,6 +52,12 @@ export const EmoteRenderer = memo(
       : undefined;
 
     if (!displayUrl) {
+      logger.chat.debug('chat.emote.no_url', {
+        name: part.name,
+        hasVariants: part.image_variants != null,
+        url: part.url,
+        site: part.site,
+      });
       const fallbackLabel = part.content || part.name;
 
       if (!fallbackLabel) {

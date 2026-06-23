@@ -105,18 +105,20 @@ true;`;
 }
 
 /**
- * Drives playback on the stock (unscripted) player so a stream doesn't sit
- * paused/muted after load. Twitch's embed frequently honours neither the
- * `muted=false` URL param (it restores a stored mute preference) nor unmuted
- * autoplay on its own, leaving the video paused or silent. This locates the
- * <video> element, sets it unmuted at full volume, and calls play().
+ * Drives playback on the stock (unscripted) player so a stream never sits
+ * paused after load. Twitch's embed honours neither the `muted=false` URL param
+ * nor unmuted autoplay reliably, and on iOS an unmuted play() resolves but is
+ * then silently re-paused by WebKit (no rejection to catch) — leaving the video
+ * stuck on the play button. This guarantees playback: it tries the requested
+ * audio state, and on any pause — a rejected play() OR a silent re-pause —
+ * falls back to muted playback so the picture is always moving. Once unmuting a
+ * playing video makes WebKit re-pause it, it stops fighting and stays muted
+ * (a later user tap can unmute), which avoids an unmute/re-pause oscillation.
  *
- * The first play() is deferred past the WKWebView init window: starting the
+ * The first attempt is deferred past the WKWebView init window: starting the
  * inline video too early intermittently leaves its AVPlayer layer out of the
  * compositor (audio advances, picture is black). The deferral plus the
- * StreamPlayer layout nudge keep playback off that race. A blocked unmuted
- * play() falls back to muted playback so the stream is at least moving, and a
- * later retry unmutes it once it is running.
+ * StreamPlayer layout nudge keep playback off that race.
  */
 export function buildTwitchAutoplayEnsureScript(options: {
   muted: boolean;
@@ -130,46 +132,83 @@ export function buildTwitchAutoplayEnsureScript(options: {
 
   var TARGET_MUTED = ${options.muted ? 'true' : 'false'};
   var START_DELAY_MS = ${startDelayMs};
+  var unmuteBlocked = false;
 
-  function applyAudio(video) {
+  function prepare(video) {
     try {
-      video.muted = TARGET_MUTED;
-      if (!TARGET_MUTED) { video.volume = 1; }
       video.setAttribute('playsinline', '');
       video.setAttribute('webkit-playsinline', '');
       video.removeAttribute('controls');
     } catch (e) {}
   }
 
+  function playMuted(video) {
+    try {
+      video.muted = true;
+      var p = video.play();
+      if (p && typeof p.catch === 'function') { p.catch(function() {}); }
+    } catch (e) {}
+  }
+
+  function reconcileAudio(video) {
+    if (TARGET_MUTED) {
+      if (!video.muted) { video.muted = true; }
+      return;
+    }
+    if (unmuteBlocked || !video.muted) {
+      if (!video.muted) { video.volume = 1; }
+      return;
+    }
+    video.muted = TARGET_MUTED;
+    video.volume = 1;
+    setTimeout(function() {
+      if (video.paused) { unmuteBlocked = true; playMuted(video); }
+    }, 250);
+  }
+
   function ensurePlaying(video) {
     if (!video) { return; }
-    applyAudio(video);
-    if (!video.paused) { return; }
-    var result = video.play();
-    if (result && typeof result.catch === 'function') {
-      result.catch(function() {
-        if (!TARGET_MUTED) {
-          try {
-            video.muted = true;
-            var muted = video.play();
-            if (muted && typeof muted.catch === 'function') {
-              muted.catch(function() {});
-            }
-          } catch (e) {}
-        }
-      });
+    prepare(video);
+
+    if (!video.paused) {
+      reconcileAudio(video);
+      return;
     }
+
+    try {
+      var shouldStartMuted = TARGET_MUTED || unmuteBlocked;
+      video.muted = shouldStartMuted;
+      if (!shouldStartMuted) { video.volume = 1; }
+      var result = video.play();
+      if (result && typeof result.catch === 'function') {
+        result.catch(function() { unmuteBlocked = true; playMuted(video); });
+      }
+    } catch (e) {
+      unmuteBlocked = true;
+      playMuted(video);
+    }
+
+    if (!TARGET_MUTED && !unmuteBlocked) {
+      setTimeout(function() {
+        if (video.paused) { unmuteBlocked = true; playMuted(video); }
+      }, 400);
+    }
+  }
+
+  function tick() {
+    ensurePlaying(document.querySelector('video'));
   }
 
   function attach(video) {
     if (!video || video.__foamAutoplayEnsure) { return; }
     video.__foamAutoplayEnsure = true;
-    [0, 800, 1800, 3200].forEach(function(delay) {
-      setTimeout(function() { ensurePlaying(video); }, START_DELAY_MS + delay);
-    });
-    video.addEventListener('loadeddata', function() { ensurePlaying(video); });
-    video.addEventListener('canplay', function() { ensurePlaying(video); });
+    video.addEventListener('loadeddata', tick);
+    video.addEventListener('canplay', tick);
   }
+
+  [0, 800, 1800, 3200].forEach(function(delay) {
+    setTimeout(tick, START_DELAY_MS + delay);
+  });
 
   var existing = document.querySelector('video');
   if (existing) { attach(existing); return true; }
