@@ -1,6 +1,6 @@
 import { use, useEffect, useState } from 'react';
 
-import { NavigationContext } from '@react-navigation/core';
+import { NavigationContext } from 'expo-router/build/react-navigation/core';
 
 export function useScreenFocused(): boolean {
   const navigation = use(NavigationContext);
