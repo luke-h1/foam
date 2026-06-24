@@ -1,14 +1,12 @@
 import { StyleSheet, View } from 'react-native';
 
-import { useSelector } from '@legendapp/state/react';
-
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
-import { videoLatencyDisplay$ } from '@app/store/stream/videoLatency';
+import { useVideoLatencyDisplay } from '@app/store/stream/react/selectors';
 import { theme } from '@app/styles/themes';
 
 export function ChatLatencyPill() {
-  const latencySeconds = useSelector(videoLatencyDisplay$);
+  const latencySeconds = useVideoLatencyDisplay();
   const label = latencySeconds == null ? '—' : `${latencySeconds.toFixed(1)}s`;
 
   return (

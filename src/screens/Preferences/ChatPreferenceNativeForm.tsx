@@ -244,7 +244,7 @@ export function ChatPreferenceNativeForm() {
             >
               {CHAT_DELAY_OPTIONS.map(option => (
                 <NativeText key={option.value} modifiers={[tag(option.value)]}>
-                  {option.label}
+                  {t(option.labelKey)}
                 </NativeText>
               ))}
             </Picker>

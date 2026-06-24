@@ -13,6 +13,7 @@ import { toast } from 'sonner-native';
 import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
 /* eslint-disable react-native/sort-styles */
 import { Button } from '@app/components/Button/Button';
+import { computeSheetHeight } from '@app/components/Chat/util/computeSheetHeight';
 import { Image } from '@app/components/Image/Image';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
@@ -114,11 +115,11 @@ function BadgePreviewSheetComponent(props: Props) {
     return items;
   })();
 
-  // Fixed content-derived detent: the flex:1 content has no intrinsic height, so
-  // a content detent balloons to full height and clips the title under the notch.
-  const sheetHeight = Math.min(
-    Math.round(screenHeight * 0.82),
-    Math.max(420, 128 + metadataRows.length * 56 + actions.length * 58 + 200),
+  const sheetHeight = computeSheetHeight(
+    screenHeight,
+    metadataRows.length,
+    actions.length,
+    128,
   );
 
   return (

@@ -76,12 +76,11 @@ export function useStreamPlayerControls({
 
   // Post-gesture bookkeeping: promote a second tap to the double-tap action, else sync timer + React state.
   const handleTapSettled = useCallback(
-    (nowShown: boolean) => {
+    (nowShown: boolean, tapTime: number) => {
       const handlers = gestureHandlersRef.current;
-      const now = Date.now();
       if (
         handlers.onVideoAreaPress &&
-        now - lastTapAtRef.current < DOUBLE_TAP_WINDOW_MS
+        tapTime - lastTapAtRef.current < DOUBLE_TAP_WINDOW_MS
       ) {
         lastTapAtRef.current = 0;
         forceHideControls();
@@ -91,7 +90,7 @@ export function useStreamPlayerControls({
         handlers.onVideoAreaPress();
         return;
       }
-      lastTapAtRef.current = now;
+      lastTapAtRef.current = tapTime;
       setControlsVisible(nowShown);
       if (nowShown) {
         armAutoHide();
@@ -116,11 +115,12 @@ export function useStreamPlayerControls({
       .onEnd(() => {
         'worklet';
 
+        const tapTime = Date.now();
         // Toggle visually on the UI thread, then hand bookkeeping to JS.
         const nextShown = controlsTarget.value > 0.5 ? 0 : 1;
         controlsTarget.value = nextShown;
         controlsOpacity.value = withTiming(nextShown, CONTROLS_FADE);
-        scheduleOnRN(handleTapSettled, nextShown === 1);
+        scheduleOnRN(handleTapSettled, nextShown === 1, tapTime);
       });
 
     // A swipe never competes with a tap, so compose them simultaneously (no added tap latency).

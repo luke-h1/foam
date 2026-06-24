@@ -40,8 +40,9 @@ function EnergyOrbComponent({
   const focused = useScreenFocused();
   const time = useSharedValue<number>(0);
 
-  const frameCallback = useFrameCallback(() => {
-    time.set(time.get() + 0.016 * speed);
+  const frameCallback = useFrameCallback(frameInfo => {
+    const deltaSeconds = (frameInfo.timeSincePreviousFrame ?? 16) / 1000;
+    time.set(time.get() + deltaSeconds * speed);
   });
 
   useEffect(() => {

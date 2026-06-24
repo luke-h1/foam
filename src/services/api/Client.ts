@@ -176,7 +176,7 @@ export function createApiClient({
     let response: Response;
     try {
       response = await startSpanAsync(
-        `${method} ${requestContext.endpoint ?? path}`,
+        `${method} ${String(requestContext.provider ?? 'unknown')}`,
         'http.client',
         () =>
           fetch(url.toString(), {

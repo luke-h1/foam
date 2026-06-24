@@ -69,12 +69,7 @@ function Spinner({ size }: { size: number }) {
     return () => cancelAnimation(rotation);
   }, [focused, rotation]);
 
-  const transformBuffer = useSharedValue<[{ rotate: number }]>([{ rotate: 0 }]);
-  const transform = useDerivedValue(() => {
-    'worklet';
-    transformBuffer.value[0].rotate = rotation.value;
-    return transformBuffer.value;
-  });
+  const transform = useDerivedValue(() => [{ rotate: rotation.get() }]);
 
   const arc = useMemo(() => {
     const inset = STROKE_WIDTH / 2;

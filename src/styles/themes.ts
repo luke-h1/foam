@@ -139,7 +139,9 @@ export const theme = {
   colorSurfaceAlpha: semanticColorGroups.gray.uiAlpha,
 
   // Sky-blue on slate. Every token is a { light, dark } pair, resolved at the
-  // call site with theme.color.X[useColorScheme() ?? 'dark'].
+  // call site with theme.color.X[useColorScheme() ?? 'dark'] — except the
+  // brand/notice/chatSample groups below, which are scheme-independent brand
+  // colours used as raw strings (e.g. theme.color.brand.twitch).
   color: {
     reactBlue: {
       light: '#087EA4',

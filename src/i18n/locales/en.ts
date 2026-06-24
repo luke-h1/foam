@@ -650,6 +650,11 @@ const en = {
     autoSyncChatDelayDescription: 'Match chat to the measured stream latency',
     chatDelay: 'Chat Delay',
     chatDelayDescription: 'Hold new messages before showing them',
+    chatDelayOff: 'Off',
+    chatDelay2s: '2s',
+    chatDelay5s: '5s',
+    chatDelay8s: '8s',
+    chatDelay12s: '12s',
     performance: 'Performance',
     performanceFooter:
       'Longer scrollback keeps more messages in memory; 200 is easier on older devices.',

@@ -344,7 +344,9 @@ export function useChatPreferenceScreenState() {
   };
 
   const handleChatDelayValueChange = (value: string) => {
-    const option = CHAT_DELAY_OPTIONS.find(option => option.label === value);
+    const option = CHAT_DELAY_OPTIONS.find(
+      option => t(option.labelKey) === value,
+    );
     if (option) {
       update({ chatDelay: option.value });
     }

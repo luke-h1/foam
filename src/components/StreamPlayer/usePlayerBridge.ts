@@ -116,12 +116,14 @@ export function usePlayerBridge({
     });
   }
 
-  useUnmountCallback(() => {
+  const clearTransientPauseResume = useCallback(() => {
     if (transientPauseResumeTimeoutRef.current) {
       clearTimeout(transientPauseResumeTimeoutRef.current);
       transientPauseResumeTimeoutRef.current = null;
     }
-  });
+  }, []);
+
+  useUnmountCallback(clearTransientPauseResume);
 
   const onContentGateChangeRef = useSyncRef(onContentGateChange);
   const notifyContentGateChange = (nextHasContentGate: boolean) => {
@@ -151,6 +153,9 @@ export function usePlayerBridge({
     if (!transientPauseResumeTimeoutRef.current) {
       transientPauseResumeTimeoutRef.current = setTimeout(() => {
         transientPauseResumeTimeoutRef.current = null;
+        if (userPausedRef.current) {
+          return;
+        }
         injectJS(
           'if (window.__foamEnsurePlaying) { window.__foamEnsurePlaying(); }' +
             'if (window.playerControls) { window.playerControls.play(); }',
@@ -173,12 +178,13 @@ export function usePlayerBridge({
 
   const pause = useCallback(() => {
     userPausedRef.current = true;
+    clearTransientPauseResume();
     injectJS(
       'if (window.__foamStopEnsurePlaying) { window.__foamStopEnsurePlaying(); }' +
         'var v = document.querySelector("video"); if (v) { v.pause(); }' +
         'if (window.playerControls) { window.playerControls.pause(); }',
     );
-  }, [injectJS]);
+  }, [clearTransientPauseResume, injectJS]);
 
   // Mute drives the <video> directly via __foamSetMuted; flip state optimistically and let
   // the page's volumechange confirm it.
@@ -304,16 +310,19 @@ export function usePlayerBridge({
       setVideo: (videoId, timestamp) =>
         playerBridgeRef.current.setVideo(videoId, timestamp),
       setVolume: volume => playerBridgeRef.current.setVolume(volume),
-      releaseMedia: () =>
+      releaseMedia: () => {
+        userPausedRef.current = true;
+        clearTransientPauseResume();
         injectJS(
           'if (window.__foamStopEnsurePlaying) { window.__foamStopEnsurePlaying(); }' +
             'var v = document.querySelector("video"); if (v) { try { v.pause(); v.removeAttribute("src"); v.load(); } catch(e){} }',
-        ),
+        );
+      },
       syncToLive: () =>
         injectJS('window.__foamSyncToLive && window.__foamSyncToLive();'),
       unmute: () => playerBridgeRef.current.unmute(),
     }),
-    [injectJS],
+    [clearTransientPauseResume, injectJS],
   );
 
   const handleMessage = (event: WebViewMessageEvent) => {

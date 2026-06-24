@@ -237,8 +237,10 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
       const countUnread = messageOptions?.countUnread;
       // Historical replay (countUnread === false) is already old, so it bypasses the delay.
+      const rawDelayMs =
+        countUnread === false ? 0 : getChatDelayMsRef.current();
       const delayMs =
-        countUnread === false ? 0 : Math.max(0, getChatDelayMsRef.current());
+        Number.isFinite(rawDelayMs) && rawDelayMs > 0 ? rawDelayMs : 0;
 
       if (delayMs <= 0) {
         ingestMessage(messageWithCachedColor, countUnread);
@@ -257,7 +259,8 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
   // On delay-setting change: drain everything held if delay is off, else ensure a tick is pending.
   const reconcileChatDelay = useCallback(() => {
-    if (getChatDelayMsRef.current() <= 0) {
+    const effectiveDelayMs = getChatDelayMsRef.current();
+    if (!Number.isFinite(effectiveDelayMs) || effectiveDelayMs <= 0) {
       clearDelayTick();
       delayQueueRef.current
         .drainAll()

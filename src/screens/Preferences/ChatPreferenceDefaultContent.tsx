@@ -20,7 +20,7 @@ import {
 import { ChatPreferenceSegmentedSettingsRow } from './ChatPreferenceSettingsRows';
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import {
-  CHAT_DELAY_LABELS,
+  CHAT_DELAY_OPTIONS,
   CONTEXT_TOGGLE_ROWS,
   DELETED_STYLE_OPTIONS,
   DENSITY_OPTIONS,
@@ -230,7 +230,7 @@ export function ChatPreferenceDefaultContent({
             selectedIndex={chatDelayIndex}
             subtitle={t('chatDelayDescription')}
             title={t('chatDelay')}
-            values={CHAT_DELAY_LABELS}
+            values={CHAT_DELAY_OPTIONS.map(option => t(option.labelKey))}
           />
         ) : null}
       </SettingsSection>

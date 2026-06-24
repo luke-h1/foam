@@ -18,10 +18,6 @@ import { theme } from '@app/styles/themes';
 import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
 
 const ICON_TINT = theme.color.textSecondary.dark;
-const SETTINGS_SHEET_SNAP_POINTS = [`${CHAT_SETTINGS_SHEET_DETENT * 100}%`];
-const SHEET_BACKGROUND_STYLE = {
-  backgroundColor: theme.color.surfaceSunken.dark,
-};
 
 export interface SettingsSheetProps {
   isPresented: boolean;
@@ -130,8 +126,8 @@ const SettingsSheetComponent = ({
       index={isPresented ? 0 : -1}
       onDismiss={onDismiss}
       enablePanDownToClose
-      snapPoints={SETTINGS_SHEET_SNAP_POINTS}
-      backgroundStyle={SHEET_BACKGROUND_STYLE}
+      snapPoints={[`${CHAT_SETTINGS_SHEET_DETENT * 100}%`]}
+      backgroundStyle={{ backgroundColor: theme.color.surfaceSunken.dark }}
     >
       <View style={styles.container} testID='chat-settings-sheet'>
         <View style={styles.header}>
