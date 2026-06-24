@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0-testflight
+## 1.0.0
 
 ### ♻️ Refactor
 
@@ -57,7 +57,7 @@
 - **chat:** Tidy up scroll activity
 - **infrastructure:** Swap sentry org ([#658](https://github.com/lhowsam/foam/issues/658))
 
-## 1.0.0-testflight
+## 1.0.0
 
 ### ⚡ Performance
 
