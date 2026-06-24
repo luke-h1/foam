@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0
+## 1.0.0-internal
 
 ### ♻️ Refactor
 
@@ -43,6 +43,9 @@
 - **app:** Stray unicode chars ([#662](https://github.com/lhowsam/foam/issues/662))
 - **app:** Crash after excessive nav actions ([#663](https://github.com/lhowsam/foam/issues/663))
 - **app:** Player intermitent pausing ([#664](https://github.com/lhowsam/foam/issues/664))
+- **chat:** Player lag emote scale ([#665](https://github.com/lhowsam/foam/issues/665))
+- **app:** Patch ref warning ([#666](https://github.com/lhowsam/foam/issues/666))
+- **app:** Fix import error
 
 ### 🔧 Miscellaneous Tasks
 
