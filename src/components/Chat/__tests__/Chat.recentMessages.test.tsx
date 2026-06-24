@@ -372,6 +372,9 @@ const setPreferences = (showRecentMessages = true) => {
     savedPhrases: [],
     shakeToReport: true,
     landscapeChatWidth: null,
+    customPlayerEnabled: true,
+    chatDelay: 0,
+    autoSyncChatDelay: false,
     update: jest.fn(),
   } satisfies ReturnType<typeof usePreferences>;
 
@@ -391,6 +394,7 @@ describe('Chat recent messages', () => {
     const chatMessages = {
       handleNewMessage,
       clearLocalMessages,
+      reconcileChatDelay: jest.fn(),
       moderateBufferedMessageById,
       moderateBufferedMessagesByLogin,
       removeBufferedMessageById,

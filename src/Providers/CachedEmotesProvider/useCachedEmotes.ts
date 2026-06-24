@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import type { SanitisedEmote } from '@app/types/emote';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
+import { CHAT_INLINE_EMOTE_SCALE } from '@app/utils/emote/resolveEmoteScale';
 import { logger } from '@app/utils/logger';
 
 import { releaseChannelEmoteRefs, warmCachedEmoteRefs } from './cache-service';
@@ -23,7 +24,7 @@ function collectDisplayUrls(emotes: SanitisedEmote[], limit: number): string[] {
       image_variants: emote.image_variants,
       url: emote.url,
       static_url: emote.static_url,
-      preferredScale: '2x',
+      preferredScale: CHAT_INLINE_EMOTE_SCALE,
     });
     if (url) {
       urls.add(url);

@@ -55,6 +55,16 @@ export interface Preferences {
   chatTimestampFormat: ChatTimestampFormat;
   chatFontScale: ChatFontScale;
   chatScrollback: ChatScrollbackLength;
+  /**
+   * Seconds to hold new chat messages before showing them. Ignored while
+   * autoSyncChatDelay is on. 0 = off.
+   */
+  chatDelay: number;
+  /**
+   * When on, the chat delay tracks the player's measured latency instead of
+   * {@link chatDelay}.
+   */
+  autoSyncChatDelay: boolean;
   deletedMessageStyle: DeletedMessageStyle;
   ignoreClearChat: boolean;
   chatMentionHaptics: boolean;
@@ -67,6 +77,11 @@ export interface Preferences {
    * current screen at layout time so it stays valid across devices.
    */
   landscapeChatWidth: number | null;
+  /**
+   * Use foam's custom-controls player (hidden Twitch chrome + ControlsOverlay).
+   * Off = stock player.
+   */
+  customPlayerEnabled: boolean;
 }
 
 const initialPreferences: Preferences = {
@@ -99,6 +114,8 @@ const initialPreferences: Preferences = {
   chatTimestampFormat: '24h',
   chatFontScale: 'default',
   chatScrollback: 150,
+  chatDelay: 0,
+  autoSyncChatDelay: false,
   deletedMessageStyle: 'notice',
   ignoreClearChat: false,
   chatMentionHaptics: true,
@@ -106,6 +123,7 @@ const initialPreferences: Preferences = {
   savedPhrases: [],
   shakeToReport: true,
   landscapeChatWidth: null,
+  customPlayerEnabled: true,
 };
 
 ensureObservablePersistenceConfig();

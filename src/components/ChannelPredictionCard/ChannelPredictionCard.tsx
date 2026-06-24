@@ -146,7 +146,7 @@ export const ChannelPredictionCard = memo(ChannelPredictionCardComponent);
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#151312',
+    backgroundColor: theme.color.surface.dark,
     borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: StyleSheet.hairlineWidth,
     gap: theme.space12,

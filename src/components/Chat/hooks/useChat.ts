@@ -16,6 +16,7 @@ import {
   usePreference,
   useUpdatePreferences,
 } from '@app/store/preferenceStore';
+import { getMeasuredVideoLatencySeconds } from '@app/store/stream/videoLatency';
 import { findCustomHighlight } from '@app/utils/chat/customHighlights';
 import { parseBadges } from '@app/utils/chat/parseBadges';
 import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin';
@@ -23,6 +24,7 @@ import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin';
 import type { ChatInputShellHandle } from '../components/ChatInputShell';
 import type { ChatListRef } from '../components/ChatList';
 import { useChatOverlays } from '../components/useChatOverlays';
+import { resolveEffectiveChatDelayMs } from '../util/chatDelay';
 import { normaliseChatUsername } from '../util/chatUsernames';
 import { triggerMentionHaptic } from '../util/mentionHaptics';
 import { useChatCosmetics } from './useChatCosmetics';
@@ -55,6 +57,8 @@ export function useChat(
   const preferences = useChatRenderPreferences();
   const updatePreferences = useUpdatePreferences();
   const blockedTerms = usePreference('blockedTerms');
+  const chatDelay = usePreference('chatDelay');
+  const autoSyncChatDelay = usePreference('autoSyncChatDelay');
   const showRecentMessages = preferences.showRecentMessages !== false;
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -175,16 +179,28 @@ export function useChat(
     };
   }, [shouldMaintainScrollAtEnd]);
 
+  const getChatDelayMs = useCallback(
+    () =>
+      resolveEffectiveChatDelayMs({
+        autoSync: autoSyncChatDelay,
+        manualDelaySeconds: chatDelay,
+        measuredLatencySeconds: getMeasuredVideoLatencySeconds(),
+      }),
+    [autoSyncChatDelay, chatDelay],
+  );
+
   const {
     handleNewMessage: enqueueChatMessage,
     clearLocalMessages,
     moderateBufferedMessageById,
     moderateBufferedMessagesByLogin,
+    reconcileChatDelay,
     removeBufferedMessageById,
     removeBufferedMessagesByLogin,
     cleanup: cleanupMessages,
     forceFlush,
   } = useChatMessages({
+    getChatDelayMs,
     isAtBottomRef,
     isScrollingToBottomRef,
     isUserActivelyScrolling,
@@ -194,6 +210,11 @@ export function useChat(
       [setUnreadCount],
     ),
   });
+
+  // Switching the delay off must release anything held; turning it on ensures a tick is pending.
+  useEffect(() => {
+    reconcileChatDelay();
+  }, [autoSyncChatDelay, chatDelay, reconcileChatDelay]);
 
   const chatMentionHaptics = usePreference('chatMentionHaptics');
   const customHighlights = preferences.customHighlights;

@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { Text } from '@app/components/ui/Text/Text';
+import { theme } from '@app/styles/themes';
 
 /**
  * Shown when the app is opened via the Twitch OAuth redirect.
@@ -20,7 +21,7 @@ export function AuthCallbackScreen() {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: theme.colorBlack,
     flex: 1,
     justifyContent: 'center',
   },

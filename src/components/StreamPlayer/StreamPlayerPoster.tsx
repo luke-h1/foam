@@ -7,6 +7,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { theme } from '@app/styles/themes';
+
 import { Image } from '../Image/Image';
 import { LoadingState } from '../LoadingState/LoadingState';
 
@@ -76,7 +78,7 @@ export const StreamPlayerPoster = memo(function StreamPlayerPoster({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: theme.colorBlack,
     justifyContent: 'center',
   },
   image: {

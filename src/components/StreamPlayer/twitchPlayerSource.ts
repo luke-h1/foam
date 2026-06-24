@@ -133,6 +133,8 @@ export function buildTwitchAutoplayEnsureScript(options: {
   var TARGET_MUTED = ${options.muted ? 'true' : 'false'};
   var START_DELAY_MS = ${startDelayMs};
   var unmuteBlocked = false;
+  // One-shot autoplay guard: set on first play and by native pause.
+  var stopped = false;
 
   function prepare(video) {
     try {
@@ -150,65 +152,129 @@ export function buildTwitchAutoplayEnsureScript(options: {
     } catch (e) {}
   }
 
+  function postMuteState(video) {
+    try {
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'muteState',
+        payload: {
+          muted: !!video.muted,
+          volume: typeof video.volume === 'number' ? video.volume : 1
+        }
+      }));
+    } catch (e) {}
+  }
+
+  var unmuteAttempts = 0;
+
+  // Unmute the already-playing stream; iOS re-pauses cold unmuted autoplay, so retry then accept muted.
   function reconcileAudio(video) {
     if (TARGET_MUTED) {
       if (!video.muted) { video.muted = true; }
       return;
     }
-    if (unmuteBlocked || !video.muted) {
-      if (!video.muted) { video.volume = 1; }
-      return;
-    }
-    video.muted = TARGET_MUTED;
+    if (unmuteBlocked) { return; }
+    video.muted = false;
     video.volume = 1;
     setTimeout(function() {
-      if (video.paused) { unmuteBlocked = true; playMuted(video); }
+      var v = document.querySelector('video');
+      if (!v || TARGET_MUTED || !v.paused) { return; }
+      unmuteAttempts++;
+      if (unmuteAttempts >= 3) {
+        unmuteBlocked = true;
+        playMuted(v);
+        return;
+      }
+      var p = v.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch(function() { unmuteBlocked = true; playMuted(v); });
+      }
+      setTimeout(function() {
+        reconcileAudio(document.querySelector('video'));
+      }, 250);
     }, 250);
   }
 
   function ensurePlaying(video) {
-    if (!video) { return; }
+    if (stopped || !video) { return; }
     prepare(video);
 
     if (!video.paused) {
+      // Already playing: go inert so we never force play over a user/native pause.
+      stopped = true;
       reconcileAudio(video);
       return;
     }
 
+    // Always start muted: iOS blocks unmuted autoplay; reconcileAudio raises volume once playing.
     try {
-      var shouldStartMuted = TARGET_MUTED || unmuteBlocked;
-      video.muted = shouldStartMuted;
-      if (!shouldStartMuted) { video.volume = 1; }
+      video.muted = true;
       var result = video.play();
       if (result && typeof result.catch === 'function') {
-        result.catch(function() { unmuteBlocked = true; playMuted(video); });
+        result.catch(function() {});
       }
-    } catch (e) {
-      unmuteBlocked = true;
-      playMuted(video);
-    }
-
-    if (!TARGET_MUTED && !unmuteBlocked) {
-      setTimeout(function() {
-        if (video.paused) { unmuteBlocked = true; playMuted(video); }
-      }, 400);
-    }
+    } catch (e) {}
   }
 
   function tick() {
     ensurePlaying(document.querySelector('video'));
   }
 
+  // Retry play until the video starts or a deadline; stops on first play. Re-callable from native.
+  window.__foamEnsurePlaying = function() {
+    stopped = false;
+    var deadline = Date.now() + 12000;
+    function pump() {
+      if (stopped) { return; }
+      var video = document.querySelector('video');
+      if (video && !video.paused) { return; }
+      tick();
+      if (Date.now() < deadline) { setTimeout(pump, 600); }
+    }
+    pump();
+  };
+
+  // Native calls this on pause so the loop stops fighting teardown.
+  window.__foamStopEnsurePlaying = function() {
+    stopped = true;
+  };
+
+  // User mute toggle: stop the loop, pin unmuteBlocked, re-kick play if an unmute re-pauses.
+  window.__foamSetMuted = function(nextMuted) {
+    try {
+      stopped = true;
+      unmuteBlocked = true;
+      var video = document.querySelector('video');
+      if (!video) { return; }
+      video.muted = !!nextMuted;
+      if (!nextMuted) {
+        video.volume = 1;
+        if (video.paused) {
+          var p = video.play();
+          if (p && typeof p.catch === 'function') { p.catch(function() {}); }
+          setTimeout(function() {
+            if (video.paused && !video.muted) {
+              var p2 = video.play();
+              if (p2 && typeof p2.catch === 'function') { p2.catch(function() {}); }
+            }
+          }, 150);
+        }
+      }
+      postMuteState(video);
+    } catch (e) {}
+  };
+
   function attach(video) {
     if (!video || video.__foamAutoplayEnsure) { return; }
     video.__foamAutoplayEnsure = true;
     video.addEventListener('loadeddata', tick);
     video.addEventListener('canplay', tick);
+    // Reconcile audio as soon as playback is confirmed.
+    video.addEventListener('playing', tick);
+    video.addEventListener('volumechange', function() { postMuteState(video); });
+    postMuteState(video);
   }
 
-  [0, 800, 1800, 3200].forEach(function(delay) {
-    setTimeout(tick, START_DELAY_MS + delay);
-  });
+  setTimeout(window.__foamEnsurePlaying, START_DELAY_MS);
 
   var existing = document.querySelector('video');
   if (existing) { attach(existing); return true; }
@@ -633,6 +699,70 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     }, 1000));
   }
 
+  // Live-edge catch-up: speed up slightly when behind, hard-seek on egregious drift.
+  var LIVE_SYNC_TARGET_S = 4;
+  var LIVE_SYNC_TRIGGER_S = 8;
+  var LIVE_SYNC_SEEK_S = 30;
+  var LIVE_SYNC_RATE = 1.05;
+  var liveSyncStarted = false;
+  var liveSyncActive = false;
+
+  function setPlaybackRate(video, rate) {
+    try {
+      if (video.playbackRate !== rate) {
+        video.preservesPitch = true;
+        video.playbackRate = rate;
+      }
+    } catch (e) {}
+  }
+
+  function resetPlaybackRate(video) {
+    if (!video) { return; }
+    liveSyncActive = false;
+    setPlaybackRate(video, 1);
+  }
+
+  function adjustLiveSync(video) {
+    if (!video || video.paused || userPaused || !startAllowed) {
+      if (video) { resetPlaybackRate(video); }
+      return;
+    }
+
+    var seekable = video.seekable;
+    if (!seekable || seekable.length === 0) {
+      return;
+    }
+
+    var liveEdge = seekable.end(seekable.length - 1);
+    var drift = liveEdge - video.currentTime;
+    if (!isFinite(drift) || drift < 0) {
+      return;
+    }
+
+    if (drift > LIVE_SYNC_SEEK_S) {
+      try { video.currentTime = liveEdge - LIVE_SYNC_TARGET_S; } catch (e) {}
+      resetPlaybackRate(video);
+      return;
+    }
+
+    if (drift > LIVE_SYNC_TRIGGER_S) {
+      liveSyncActive = true;
+      setPlaybackRate(video, LIVE_SYNC_RATE);
+    } else if (liveSyncActive && drift <= LIVE_SYNC_TARGET_S) {
+      resetPlaybackRate(video);
+    }
+  }
+
+  function startLiveSync() {
+    if (liveSyncStarted) {
+      return;
+    }
+    liveSyncStarted = true;
+    setInterval(function() {
+      adjustLiveSync(document.querySelector('video'));
+    }, 2000);
+  }
+
   function installVideoBridge(video) {
     if (!video || video.__foamBridgeInstalled) {
       return;
@@ -675,6 +805,7 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     video.addEventListener('pause', function() {
       clearPendingPause();
       stopPlaybackStats();
+      resetPlaybackRate(video);
       hideCaptions(video);
       schedulePlaybackRecovery();
       pendingPauseTimer = setTimeout(function() {
@@ -697,6 +828,7 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     });
 
     startPlaybackWatchdog();
+    startLiveSync();
 
     video.addEventListener('volumechange', function() {
       emitMuteState(video);
@@ -976,6 +1108,443 @@ export function buildTwitchOverlayHideScript(): string {
     childList: true,
     subtree: true
   });
+  return true;
+})();
+true;`;
+}
+
+/**
+ * Drives Twitch's hidden Video Stats overlay to read broadcaster latency and
+ * posts it to the bridge as `playbackStats { hlsLatencyBroadcaster }`.
+ */
+export function buildTwitchLatencyTrackerScript(): string {
+  return `
+(function() {
+  if (window.__foamLatencyTrackerInstalled) { return true; }
+  window.__foamLatencyTrackerInstalled = true;
+
+  var LATENCY_NODE = '[aria-label="Latency To Broadcaster"]';
+  var STATS_OVERLAY_HIDE_ID = 'foam-stats-overlay-hide';
+  var SETTINGS_MENU_HIDE_ID = 'foam-settings-menu-hide';
+
+  function post(type, payload) {
+    try {
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: type,
+        payload: payload || {}
+      }));
+    } catch (e) {}
+  }
+
+  function ensureStyle(id, css) {
+    if (document.getElementById(id)) { return; }
+    var style = document.createElement('style');
+    style.id = id;
+    style.textContent = css;
+    (document.head || document.documentElement).appendChild(style);
+  }
+
+  function removeStyle(id) {
+    var existing = document.getElementById(id);
+    if (existing && existing.parentNode) {
+      existing.parentNode.removeChild(existing);
+    }
+  }
+
+  // Ads tear down the latency node — skip while one is playing.
+  function isAdActive() {
+    return !!document.querySelector(
+      '[data-a-target="video-ad-label"],[data-a-target="video-ad-countdown"],.video-player__ad-info-container,[data-test-selector="ad-banner-default-text-area__content"]'
+    );
+  }
+
+  // Keep the stats overlay hidden for the session.
+  ensureStyle(
+    STATS_OVERLAY_HIDE_ID,
+    '[data-a-target="player-overlay-video-stats"]{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;}'
+  );
+
+  function asyncQuerySelector(selector, timeout) {
+    return new Promise(function(resolve) {
+      var existing = document.querySelector(selector);
+      if (existing) { resolve(existing); return; }
+      var timeoutId;
+      var observer = new MutationObserver(function() {
+        var element = document.querySelector(selector);
+        if (element) {
+          observer.disconnect();
+          clearTimeout(timeoutId);
+          resolve(element);
+        }
+      });
+      observer.observe(document.body || document.documentElement, {
+        childList: true,
+        subtree: true
+      });
+      timeoutId = setTimeout(function() {
+        observer.disconnect();
+        resolve(undefined);
+      }, timeout || 8000);
+    });
+  }
+
+  var enableInFlight = false;
+  var enableAttempts = 0;
+  var hadLatencyNode = false;
+
+  async function enableVideoStats() {
+    if (enableInFlight) { return; }
+    enableInFlight = true;
+    // Hide the settings menu only while we drive it; safety timer always restores it.
+    ensureStyle(
+      SETTINGS_MENU_HIDE_ID,
+      '[data-a-target="player-settings-menu"]{display:none!important;visibility:hidden!important;opacity:0!important;}'
+    );
+    var safety = setTimeout(function() { removeStyle(SETTINGS_MENU_HIDE_ID); }, 6000);
+    try {
+      var settingsButton = await asyncQuerySelector('[data-a-target="player-settings-button"]', 10000);
+      if (!settingsButton) { return; }
+      settingsButton.click();
+
+      var advancedItem = await asyncQuerySelector('[data-a-target="player-settings-menu-item-advanced"]');
+      if (!advancedItem) { settingsButton.click(); return; }
+      advancedItem.click();
+
+      var statsCheckbox = await asyncQuerySelector('[data-a-target="player-settings-submenu-advanced-video-stats"] input');
+      if (statsCheckbox && !statsCheckbox.checked) { statsCheckbox.click(); }
+
+      settingsButton.click();
+      post('trace', { step: 'latency', detail: 'enable attempt ' + enableAttempts + (statsCheckbox ? ' toggled' : ' no-checkbox') });
+    } catch (e) {
+    } finally {
+      clearTimeout(safety);
+      // Let the close click unmount the menu before revealing it.
+      setTimeout(function() {
+        removeStyle(SETTINGS_MENU_HIDE_ID);
+        enableInFlight = false;
+      }, 350);
+    }
+  }
+
+  var lastPosted = undefined;
+  function readLatency() {
+    var element = document.querySelector(LATENCY_NODE);
+    var text = element && element.textContent ? element.textContent.trim() : '';
+    var match = text.match(/([0-9.]+)\\s*sec/i);
+    var next = null;
+    if (match) {
+      var parsed = Number.parseFloat(match[1]);
+      if (Number.isFinite(parsed) && parsed > 0) { next = parsed; }
+    }
+    if (next === null) {
+      if (text) { post('trace', { step: 'latency', detail: 'unparsed "' + text + '"' }); }
+      return;
+    }
+    if (
+      lastPosted === next ||
+      (typeof lastPosted === 'number' && Math.abs(lastPosted - next) < 0.25)
+    ) {
+      return;
+    }
+    lastPosted = next;
+    post('playbackStats', {
+      bufferSize: null,
+      displayResolution: null,
+      fps: null,
+      hlsLatencyBroadcaster: next,
+      playbackRate: null,
+      skippedFrames: null,
+      videoResolution: null
+    });
+  }
+
+  function tick() {
+    if (isAdActive()) {
+      // Refresh the enable budget so stats re-enable after the ad.
+      enableAttempts = 0;
+      hadLatencyNode = false;
+      return;
+    }
+    if (!document.querySelector(LATENCY_NODE)) {
+      // Lost a node we had (ad/reset): refresh the budget.
+      if (hadLatencyNode) {
+        hadLatencyNode = false;
+        enableAttempts = 0;
+      }
+      if (enableAttempts < 12 && !enableInFlight) {
+        enableAttempts += 1;
+        enableVideoStats();
+      }
+      return;
+    }
+    hadLatencyNode = true;
+    enableAttempts = 0;
+    readLatency();
+  }
+
+  function start() {
+    tick();
+    setInterval(tick, 4000);
+  }
+
+  if (document.querySelector('video')) {
+    start();
+  } else {
+    var boot = new MutationObserver(function() {
+      if (document.querySelector('video')) {
+        boot.disconnect();
+        start();
+      }
+    });
+    boot.observe(document.body || document.documentElement, {
+      childList: true,
+      subtree: true
+    });
+    setTimeout(function() { boot.disconnect(); start(); }, 10000);
+  }
+
+  return true;
+})();
+true;`;
+}
+
+/**
+ * Seeks a live stream's playhead to the live edge to trim client-side latency.
+ * Runs once at start and exposes `window.__foamSyncToLive()` for on-demand
+ * re-triggers.
+ */
+export function buildTwitchLiveSyncScript(options: {
+  targetSeconds?: number;
+}): string {
+  const targetSeconds = options.targetSeconds ?? 3;
+  return `
+(function() {
+  if (window.__foamLiveSyncInstalled) { return true; }
+  window.__foamLiveSyncInstalled = true;
+
+  var TARGET_S = ${targetSeconds};
+
+  function post(type, payload) {
+    try {
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: type,
+        payload: payload || {}
+      }));
+    } catch (e) {}
+  }
+
+  // Ads run on their own video element; seeking is wrong.
+  function isAdActive() {
+    return !!document.querySelector(
+      '[data-a-target="video-ad-label"],[data-a-target="video-ad-countdown"],.video-player__ad-info-container,[data-test-selector="ad-banner-default-text-area__content"]'
+    );
+  }
+
+  // Seek to the live edge once; no-op if within target or during an ad.
+  window.__foamSyncToLive = function() {
+    if (isAdActive()) {
+      post('trace', { step: 'livesync', detail: 'skipped (ad playing)' });
+      return false;
+    }
+    var video = document.querySelector('video');
+    if (!video) {
+      post('trace', { step: 'livesync', detail: 'no video element' });
+      return false;
+    }
+    var seekable = video.seekable;
+    if (!seekable || seekable.length === 0) {
+      // Low-latency live can expose no seekable range — can't seek.
+      post('trace', { step: 'livesync', detail: 'no seekable range' });
+      return false;
+    }
+
+    var liveEdge = seekable.end(seekable.length - 1);
+    var drift = liveEdge - video.currentTime;
+    // Report drift: a small one means server-side latency no seek can cut.
+    post('trace', {
+      step: 'livesync',
+      detail: 'edge=' + liveEdge.toFixed(1) + ' cur=' + video.currentTime.toFixed(1) + ' drift=' + (isFinite(drift) ? drift.toFixed(1) : '?') + 's'
+    });
+    if (!isFinite(drift) || drift <= TARGET_S) {
+      return false;
+    }
+
+    try { video.currentTime = liveEdge - TARGET_S; } catch (e) {
+      post('trace', { step: 'livesync', detail: 'seek threw' });
+      return false;
+    }
+    post('trace', { step: 'livesync', detail: 'synced to live from drift ' + drift.toFixed(1) + 's' });
+    return true;
+  };
+
+  // One-shot at start once the stream (not an ad) is playing; user re-triggers later.
+  var attempts = 0;
+  function syncAtStart() {
+    attempts += 1;
+    if (!isAdActive()) {
+      var video = document.querySelector('video');
+      if (video && !video.paused && video.seekable && video.seekable.length > 0) {
+        window.__foamSyncToLive();
+        return;
+      }
+    }
+    if (attempts < 40) {
+      setTimeout(syncAtStart, 2000);
+    }
+  }
+  setTimeout(syncAtStart, 2000);
+
+  return true;
+})();
+true;`;
+}
+
+/**
+ * Hides Twitch's own player chrome so foam's custom ControlsOverlay renders
+ * over a bare video.
+ */
+export function buildTwitchChromeHiderScript(): string {
+  return `
+(function() {
+  if (window.__foamChromeHiderInstalled) { return true; }
+  window.__foamChromeHiderInstalled = true;
+
+  var HIDE_SELECTORS = [
+    '.top-bar',
+    '.player-controls',
+    '.player-overlay-background',
+    '.twilight-player-overlay',
+    '#channel-player-disclosures',
+    '[data-a-target="player-controls"]',
+    '[data-a-target="player-overlay-click-handler"]',
+    '[data-a-target="player-overlay-play-button"]',
+    '[data-a-target="player-overlay-preview-background"]',
+    '[data-a-target="player-overlay-video-stats"]',
+    '[data-a-target="top-bar"]',
+    '[data-a-target*="player-controls"]',
+    '[data-a-target*="player-overlay"]',
+    '[data-a-target*="player-settings"]',
+    '[class*="Controls"]',
+    '[class*="controls"]',
+    'video::-webkit-media-controls',
+    'video::-webkit-media-controls-enclosure',
+    'video::-webkit-media-controls-panel',
+    'video::-webkit-media-controls-play-button',
+    'video::-webkit-media-controls-start-playback-button'
+  ];
+
+  function installStyle() {
+    if (document.getElementById('foam-twitch-control-hide-style')) { return; }
+    var style = document.createElement('style');
+    style.id = 'foam-twitch-control-hide-style';
+    style.textContent = HIDE_SELECTORS.join(',') +
+      '{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;}';
+    (document.head || document.documentElement).appendChild(style);
+  }
+
+  var SWEEP_SELECTORS = [
+    '.persistent-player',
+    '.top-bar',
+    '.player-controls',
+    '.player-overlay-background',
+    '.twilight-player-overlay',
+    '#channel-player-disclosures',
+    '[data-a-target="player-overlay-click-handler"]',
+    '[data-a-target="player-overlay-mature-accept"]',
+    '[data-a-target="player-overlay-play-button"]',
+    '[data-a-target="player-overlay-preview-background"]',
+    '[data-a-target="top-bar"]',
+    '[data-a-target*="player-controls"]',
+    '[data-a-target*="player-overlay"]',
+    '[class*="Controls"]',
+    '[class*="controls"]'
+  ];
+
+  function hideElements() {
+    SWEEP_SELECTORS.forEach(function(selector) {
+      document.querySelectorAll(selector).forEach(function(element) {
+        if (element.tagName === 'VIDEO' || element.querySelector('video')) { return; }
+        element.style.setProperty('display', 'none', 'important');
+        element.style.setProperty('visibility', 'hidden', 'important');
+        element.style.setProperty('pointer-events', 'none', 'important');
+      });
+    });
+  }
+
+  installStyle();
+  hideElements();
+
+  var queued = false;
+  function scheduleHide() {
+    if (queued) { return; }
+    queued = true;
+    setTimeout(function() { queued = false; hideElements(); }, 250);
+  }
+  var observer = new MutationObserver(scheduleHide);
+  observer.observe(document.body || document.documentElement, {
+    childList: true,
+    subtree: true
+  });
+
+  return true;
+})();
+true;`;
+}
+
+/**
+ * Reports the <video> element's playback state to the bridge (ready/playing/
+ * pause) so foam's custom controls know when to appear and reflect play/pause.
+ * Without it the bridge stays dormant and the overlay never shows.
+ */
+export function buildTwitchPlayerStateScript(): string {
+  return `
+(function() {
+  if (window.__foamPlayerStateInstalled) { return true; }
+  window.__foamPlayerStateInstalled = true;
+
+  function post(type, payload) {
+    try {
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: type,
+        payload: payload || {}
+      }));
+    } catch (e) {}
+  }
+
+  var readySent = false;
+  function sendReady() {
+    if (readySent) { return; }
+    readySent = true;
+    post('ready');
+  }
+
+  function attach(video) {
+    if (!video || video.__foamStateAttached) { return; }
+    video.__foamStateAttached = true;
+    if (video.readyState >= 2) { sendReady(); }
+    video.addEventListener('loadeddata', sendReady);
+    video.addEventListener('canplay', sendReady);
+    video.addEventListener('playing', function() { sendReady(); post('playing'); });
+    video.addEventListener('play', function() { post('playing'); });
+    video.addEventListener('pause', function() { post('pause'); });
+    if (!video.paused) { post('playing'); }
+  }
+
+  var existing = document.querySelector('video');
+  if (existing) {
+    attach(existing);
+  }
+  var observer = new MutationObserver(function() {
+    var video = document.querySelector('video');
+    if (video && !video.__foamStateAttached) {
+      attach(video);
+    }
+  });
+  observer.observe(document.body || document.documentElement, {
+    childList: true,
+    subtree: true
+  });
+
   return true;
 })();
 true;`;

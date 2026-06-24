@@ -3,6 +3,7 @@ import type {
   ChatMessageType,
 } from '@app/store/chat/types/constants';
 import { getPreferences } from '@app/store/preferenceStore';
+import { Color } from '@app/styles/pallete';
 import {
   UserNoticeTags,
   UserNoticeTagsByVariant,
@@ -475,7 +476,7 @@ export const createSystemMessage = (
       username: 'System',
       'user-id': '',
       id: '',
-      color: '#808080',
+      color: Color.grayscale[500],
       badges: {},
       'badges-raw': '',
       'user-type': '',

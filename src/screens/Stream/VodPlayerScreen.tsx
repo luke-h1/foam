@@ -138,12 +138,12 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   container: {
-    backgroundColor: '#000',
+    backgroundColor: theme.colorBlack,
     flex: 1,
   },
   videoContainer: {
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: theme.colorBlack,
     justifyContent: 'center',
     position: 'absolute',
     zIndex: 1,

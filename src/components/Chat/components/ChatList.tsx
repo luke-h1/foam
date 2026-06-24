@@ -205,6 +205,9 @@ export const ChatList = memo(
         extraData={extraData}
         style={styles.list}
         contentContainerStyle={contentContainerStyle}
+        // The composer is in a sibling KeyboardStickyView, so RN's tap-dismiss never fires; drag to dismiss.
+        keyboardDismissMode='on-drag'
+        keyboardShouldPersistTaps='handled'
         scrollEventThrottle={16}
         viewabilityConfig={CHAT_VIEWABILITY_CONFIG}
         onViewableItemsChanged={onViewableItemsChanged}

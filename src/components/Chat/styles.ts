@@ -110,12 +110,12 @@ export const styles = StyleSheet.create({
     lineHeight: 18,
   },
   pinnedMessageTitle: {
-    color: '#ffffff',
+    color: theme.colorWhite,
     fontSize: theme.fontSize12,
     lineHeight: 16,
   },
   wrapper: {
-    backgroundColor: '#000',
+    backgroundColor: theme.colorBlack,
     flex: 1,
   },
   wrapperTransparent: {

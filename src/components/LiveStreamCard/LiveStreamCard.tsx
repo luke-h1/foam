@@ -4,9 +4,11 @@ import { StyleSheet, View } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 
+import { LiveBadge } from '@app/components/LiveBadge/LiveBadge';
 import { Text } from '@app/components/ui/Text/Text';
 import { userQueryOptions } from '@app/lib/react-query/queries/twitch';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
+import { Color } from '@app/styles/pallete';
 import { theme } from '@app/styles/themes';
 import type { TwitchStream } from '@app/types/twitch/stream';
 import { elapsedStreamTime } from '@app/utils/string/elapsedStreamTime';
@@ -34,7 +36,22 @@ const LANGUAGE_NAMES: Record<string, string> = {
   pt: 'Portuguese',
 };
 
-const TITLE_COLOR = 'rgba(235,235,240,0.86)';
+const TITLE_COLOR = 'rgba(244,244,245,0.86)';
+
+// Dedupe rapid double-taps that would push the same route twice (two stacked screens).
+const NAV_DEDUPE_MS = 1000;
+let lastNavPath = '';
+let lastNavAt = 0;
+
+function pushRouteOnce(path: string) {
+  const now = Date.now();
+  if (path === lastNavPath && now - lastNavAt < NAV_DEDUPE_MS) {
+    return;
+  }
+  lastNavPath = path;
+  lastNavAt = now;
+  router.push(path);
+}
 
 function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   const queryClient = useQueryClient();
@@ -63,7 +80,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
 
   const handleStreamPress = useCallback(() => {
     queryClient.setQueryData(twitchKeys.stream(stream.user_login), stream);
-    router.push(`/streams/live-stream/${stream.user_login}`);
+    pushRouteOnce(`/streams/live-stream/${stream.user_login}`);
   }, [queryClient, stream]);
 
   const handleStreamerPressIn = useCallback(() => {
@@ -71,11 +88,11 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   }, [stream.user_login]);
 
   const handleStreamerPress = useCallback(() => {
-    router.push(`/streams/streamer-profile/${stream.user_login}`);
+    pushRouteOnce(`/streams/streamer-profile/${stream.user_login}`);
   }, [stream.user_login]);
 
   const handleCategoryPress = useCallback(() => {
-    router.push(`/category/${stream.game_id}`);
+    pushRouteOnce(`/category/${stream.game_id}`);
   }, [stream.game_id]);
 
   const cardAccessibilityLabel = `${stream.user_name}, live, ${
@@ -98,16 +115,9 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               containerStyle={styles.mediaImageWrapper}
               transition={150}
             />
-            <View style={[styles.compactLiveBadge, styles.mediaLiveBadge]}>
-              <View style={styles.redDot} />
-              <Text
-                type='xxs'
-                weight='bold'
-                style={styles.compactLiveBadgeText}
-              >
-                LIVE
-              </Text>
-            </View>
+            <LiveBadge
+              style={[styles.compactLiveBadge, styles.mediaLiveBadge]}
+            />
             <View style={styles.viewerBadge}>
               <Text type='sm' weight='bold' style={styles.viewerBadgeText}>
                 {formatViewCountCompact(stream.viewer_count)} watching
@@ -200,12 +210,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
             containerStyle={styles.imageWrapper}
             transition={150}
           />
-          <View style={styles.compactLiveBadge}>
-            <View style={styles.redDot} />
-            <Text type='xxs' weight='bold' style={styles.compactLiveBadgeText}>
-              LIVE
-            </Text>
-          </View>
+          <LiveBadge style={styles.compactLiveBadge} />
         </View>
 
         <View style={styles.details}>
@@ -293,7 +298,7 @@ const styles = StyleSheet.create({
     width: 44,
   },
   avatarInitial: {
-    color: theme.color.text.dark,
+    color: Color.zinc[50],
   },
   avatarPressable: {
     flexShrink: 0,
@@ -304,20 +309,20 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   categoryText: {
-    color: theme.color.textSecondary.dark,
+    color: Color.zinc[400],
     lineHeight: 16,
   },
   container: {
     alignItems: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.055)',
-    borderColor: 'rgba(255,255,255,0.13)',
+    backgroundColor: Color.zinc[900],
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius10,
-    borderWidth: 0.55,
+    borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     flexWrap: 'nowrap',
     marginHorizontal: theme.space16,
-    marginVertical: 5,
+    marginVertical: theme.space4,
     minHeight: 112,
     overflow: 'hidden',
     paddingHorizontal: theme.space12,
@@ -326,7 +331,7 @@ const styles = StyleSheet.create({
   details: {
     flex: 1,
     flexShrink: 1,
-    gap: 4,
+    gap: theme.space2,
     justifyContent: 'flex-start',
     minHeight: 88,
     minWidth: 0,
@@ -363,30 +368,18 @@ const styles = StyleSheet.create({
     top: theme.space12,
   },
   liveText: {
-    color: theme.color.textSecondary.dark,
+    color: Color.zinc[400],
   },
   compactLiveBadge: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.68)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius6,
-    columnGap: 4,
-    flexDirection: 'row',
     left: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
     position: 'absolute',
     top: 6,
-  },
-  compactLiveBadgeText: {
-    color: theme.color.text.dark,
-    letterSpacing: 0.4,
   },
   mediaCardWrapper: {
     width: '100%',
   },
   mediaCategory: {
-    color: theme.color.textSecondary.dark,
+    color: Color.zinc[400],
     lineHeight: 20,
   },
   mediaContainer: {
@@ -428,11 +421,11 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   mediaUsername: {
-    color: theme.color.text.dark,
+    color: Color.zinc[50],
     lineHeight: 21,
   },
   metaDivider: {
-    color: theme.color.textSecondary.dark,
+    color: Color.zinc[400],
     opacity: 0.5,
   },
   metadataRow: {
@@ -440,19 +433,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'nowrap',
     gap: 6,
-  },
-  redDot: {
-    backgroundColor: '#ff4444',
-    borderRadius: 3,
-    height: 6,
-    width: 6,
+    marginTop: theme.space4,
   },
   title: {
     color: TITLE_COLOR,
     lineHeight: 19,
   },
   username: {
-    color: theme.color.text.dark,
+    color: Color.zinc[50],
   },
   usernameButton: {
     alignSelf: 'flex-start',
@@ -460,7 +448,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   viewersText: {
-    color: theme.color.textSecondary.dark,
+    color: Color.zinc[400],
     flexShrink: 1,
   },
   viewerBadge: {
@@ -474,7 +462,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   viewerBadgeText: {
-    color: theme.color.text.dark,
+    color: Color.zinc[50],
     lineHeight: 20,
   },
 });

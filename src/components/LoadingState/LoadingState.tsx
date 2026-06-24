@@ -16,6 +16,7 @@ import {
 
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
 
+import { useScreenFocused } from '@app/hooks/useScreenFocused';
 import { theme } from '@app/styles/themes';
 
 interface LoadingStateProps {
@@ -48,9 +49,14 @@ export function LoadingState({
 }
 
 function Spinner({ size }: { size: number }) {
+  const focused = useScreenFocused();
   const rotation = useSharedValue(0);
 
   useEffect(() => {
+    if (!focused) {
+      cancelAnimation(rotation);
+      return;
+    }
     rotation.set(
       withRepeat(
         withTiming(2 * Math.PI, {
@@ -61,9 +67,9 @@ function Spinner({ size }: { size: number }) {
       ),
     );
     return () => cancelAnimation(rotation);
-  }, [rotation]);
+  }, [focused, rotation]);
 
-  const transform = useDerivedValue(() => [{ rotate: rotation.value }]);
+  const transform = useDerivedValue(() => [{ rotate: rotation.get() }]);
 
   const arc = useMemo(() => {
     const inset = STROKE_WIDTH / 2;

@@ -23,6 +23,8 @@ export interface StreamPlayerRef {
   setQuality: (quality: string) => void;
   setVideo: (videoId: string, timestamp?: number) => void;
   setVolume: (volume: number) => void;
+  releaseMedia: () => void;
+  syncToLive: () => void;
   unmute: () => void;
 }
 
@@ -158,6 +160,8 @@ export function StreamPlayer({
       setQuality: () => undefined,
       setVideo: () => undefined,
       setVolume: () => undefined,
+      releaseMedia: () => undefined,
+      syncToLive: () => undefined,
       unmute: () => undefined,
     }),
     [channel, muted, onRefresh],
@@ -209,7 +213,7 @@ export function StreamPlayer({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#000',
+    backgroundColor: theme.colorBlack,
     overflow: 'hidden',
     position: 'relative',
   },

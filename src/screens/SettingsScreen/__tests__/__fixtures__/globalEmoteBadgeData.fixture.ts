@@ -40,3 +40,14 @@ export const twitchGlobalBadgesFixture: SanitisedBadgeSet[] = [
     set: 'moderator',
   },
 ];
+
+export const sevenTvGlobalBadgesFixture: SanitisedBadgeSet[] = [
+  {
+    id: '7tv_badge_1',
+    url: 'https://cdn.7tv.app/badge/7tv_badge_1/4x.webp',
+    title: 'Subscriber',
+    type: '7TV Badge',
+    set: '7tv_badge_1',
+    provider: '7tv',
+  },
+];

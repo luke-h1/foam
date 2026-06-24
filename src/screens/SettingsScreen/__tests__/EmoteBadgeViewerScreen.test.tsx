@@ -10,6 +10,7 @@ import render from '@app/test/render';
 
 import {
   bttvGlobalEmotesFixture,
+  sevenTvGlobalBadgesFixture,
   twitchGlobalBadgesFixture,
   twitchGlobalEmotesFixture,
 } from './__fixtures__/globalEmoteBadgeData.fixture';
@@ -43,6 +44,45 @@ jest.mock('@legendapp/list/react-native', () => ({
           { key: keyExtractor(item, index) },
           renderItem({ item, index }),
         ),
+      ),
+    );
+  },
+}));
+
+// LegendSectionList virtualizes natively; render every section header and item
+// so the grouped badge grid is assertable under jest.
+jest.mock('@legendapp/list/section-list', () => ({
+  SectionList: ({
+    sections,
+    renderItem,
+    renderSectionHeader,
+    keyExtractor,
+  }: {
+    sections: { key: string; data: unknown[] }[];
+    renderItem: (info: { item: unknown; index: number }) => unknown;
+    renderSectionHeader: (info: { section: unknown }) => unknown;
+    keyExtractor: (item: unknown, index: number) => string;
+  }) => {
+    const React = require('react');
+    const { View } = require('react-native');
+    return React.createElement(
+      View,
+      null,
+      sections.map(section =>
+        React.createElement(View, { key: section.key }, [
+          React.createElement(
+            View,
+            { key: `${section.key}-header` },
+            renderSectionHeader({ section }),
+          ),
+          ...section.data.map((item, index) =>
+            React.createElement(
+              View,
+              { key: keyExtractor(item, index) },
+              renderItem({ item, index }),
+            ),
+          ),
+        ]),
       ),
     );
   },
@@ -110,6 +150,7 @@ describe('EmoteBadgeViewerScreen', () => {
       twitchGlobalBadgesFixture,
     );
     ffzService.getSanitisedGlobalBadges.mockResolvedValue([]);
+    sevenTvService.fetchAllBadges.mockResolvedValue(sevenTvGlobalBadgesFixture);
   });
 
   test('renders global emote provider sets by default', async () => {
@@ -128,11 +169,27 @@ describe('EmoteBadgeViewerScreen', () => {
     expect(
       await screen.findByTestId('badge-cell-moderator_1_1'),
     ).toBeOnTheScreen();
+    expect(screen.getByText('Twitch')).toBeOnTheScreen();
     expect(twitchBadgeService.listSanitisedGlobalBadges).toHaveBeenCalled();
+  });
+
+  test('renders 7TV badges in the badges tab', async () => {
+    render(<EmoteBadgeViewerScreen />);
+
+    await screen.findByText('Global Emotes');
+
+    fireEvent.press(screen.getByTestId('tab-badges'));
+
+    expect(
+      await screen.findByTestId('badge-cell-7tv_badge_1'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('7TV')).toBeOnTheScreen();
+    expect(sevenTvService.fetchAllBadges).toHaveBeenCalled();
   });
 
   test('shows the empty state when no badges are available', async () => {
     twitchBadgeService.listSanitisedGlobalBadges.mockResolvedValue([]);
+    sevenTvService.fetchAllBadges.mockResolvedValue([]);
 
     render(<EmoteBadgeViewerScreen />);
 

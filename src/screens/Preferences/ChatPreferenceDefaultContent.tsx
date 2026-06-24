@@ -20,6 +20,7 @@ import {
 import { ChatPreferenceSegmentedSettingsRow } from './ChatPreferenceSettingsRows';
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import {
+  CHAT_DELAY_OPTIONS,
   CONTEXT_TOGGLE_ROWS,
   DELETED_STYLE_OPTIONS,
   DENSITY_OPTIONS,
@@ -37,12 +38,16 @@ type ChatPreferenceScreenState = ReturnType<
 type ChatPreferenceDefaultContentProps = ChatPreferenceScreenState;
 
 export function ChatPreferenceDefaultContent({
+  autoSyncChatDelay,
+  chatDelayIndex,
   chatMentionHaptics,
   deletedStyleIndex,
   densityIndex,
   emojiIndex,
   fontScaleIndex,
   previewFontScale,
+  handleChatDelayChange,
+  handleChatDelayValueChange,
   handleDeletedStyleChange,
   handleDeletedStyleValueChange,
   handleFontScaleChange,
@@ -192,6 +197,42 @@ export function ChatPreferenceDefaultContent({
             <ChatPreferencePreview variant='context' value={previewContext} />
           </View>
         </View>
+      </SettingsSection>
+
+      <SettingsSection
+        title={t('sync')}
+        footer={
+          <Text color='gray.textLow' type='xs'>
+            {t('syncFooter')}
+          </Text>
+        }
+      >
+        <SettingsToggleRow
+          title={t('autoSyncChatDelay')}
+          subtitle={t('autoSyncChatDelayDescription')}
+          icon={{
+            icon: 'arrow.triangle.2.circlepath',
+            androidIcon: 'sync',
+            color: theme.colorGrey,
+          }}
+          value={autoSyncChatDelay === true}
+          onValueChange={value => update({ autoSyncChatDelay: value })}
+        />
+        {!autoSyncChatDelay ? (
+          <ChatPreferenceSegmentedSettingsRow
+            icon={{
+              icon: 'timer',
+              androidIcon: 'timer',
+              color: theme.colorGrey,
+            }}
+            onChange={handleChatDelayChange}
+            onValueChange={handleChatDelayValueChange}
+            selectedIndex={chatDelayIndex}
+            subtitle={t('chatDelayDescription')}
+            title={t('chatDelay')}
+            values={CHAT_DELAY_OPTIONS.map(option => t(option.labelKey))}
+          />
+        ) : null}
       </SettingsSection>
 
       <SettingsSection

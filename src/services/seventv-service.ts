@@ -1,4 +1,6 @@
 import {
+  BadgesQueryDocument,
+  type BadgesQueryQuery,
   EmoteQueryDocument,
   type EmoteQueryQuery,
   type EmoteQueryQueryVariables,
@@ -35,6 +37,7 @@ import type {
   SevenTvEmote,
   SevenTvEmotePreview,
 } from '@app/types/seventv/emotes';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import {
   convertV4PaintToPaintData,
   pickAnimatedFormat,
@@ -572,5 +575,33 @@ export const sevenTvService = {
     return paints
       .map(convertV4PaintToPaintData)
       .sort((a, b) => a.name.localeCompare(b.name, 'en'));
+  },
+
+  fetchAllBadges: async (): Promise<SanitisedBadgeSet[]> => {
+    const { data, error } = await sevenTvV4Client.query<BadgesQueryQuery>({
+      query: BadgesQueryDocument,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return (data?.badges?.badges ?? [])
+      .flatMap<SanitisedBadgeSet>(badge => {
+        const url = pickBestImage(badge.images)?.url;
+        return url
+          ? [
+              {
+                id: badge.id,
+                url,
+                title: badge.name,
+                type: '7TV Badge',
+                set: badge.id,
+                provider: '7tv',
+              },
+            ]
+          : [];
+      })
+      .sort((a, b) => a.title.localeCompare(b.title, 'en'));
   },
 } as const;

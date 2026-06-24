@@ -30,6 +30,7 @@ import {
 } from './ChatPreferencePreviewWidgets';
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import {
+  CHAT_DELAY_OPTIONS,
   DELETED_STYLE_OPTIONS,
   DENSITY_OPTIONS,
   EMOJI_PREVIEW_SHORTCODES,
@@ -222,6 +223,32 @@ export function ChatPreferenceNativeForm() {
               </View>
             </View>,
           )}
+        </Section>
+
+        <Section
+          title={t('sync')}
+          footer={<NativeText>{t('syncFooter')}</NativeText>}
+        >
+          <Toggle
+            label={t('autoSyncChatDelay')}
+            systemImage='arrow.triangle.2.circlepath'
+            isOn={preferences.autoSyncChatDelay}
+            onIsOnChange={value => update({ autoSyncChatDelay: value })}
+          />
+          {!preferences.autoSyncChatDelay ? (
+            <Picker
+              label={t('chatDelay')}
+              systemImage='timer'
+              selection={preferences.chatDelay}
+              onSelectionChange={value => update({ chatDelay: value })}
+            >
+              {CHAT_DELAY_OPTIONS.map(option => (
+                <NativeText key={option.value} modifiers={[tag(option.value)]}>
+                  {t(option.labelKey)}
+                </NativeText>
+              ))}
+            </Picker>
+          ) : null}
         </Section>
 
         <Section

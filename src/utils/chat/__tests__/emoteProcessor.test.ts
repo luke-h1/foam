@@ -178,6 +178,32 @@ describe('processEmotesWorklet', () => {
     });
   });
 
+  test('matches the channel alias but not the emote original name', () => {
+    const aliasedEmote = createEmote({
+      id: 'this-emote',
+      name: 'This',
+      original_name: 'THIS',
+    });
+
+    const aliasResult = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'This',
+      sevenTvChannelEmotes: [aliasedEmote],
+    });
+
+    const originalNameResult = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'THIS',
+      sevenTvChannelEmotes: [aliasedEmote],
+    });
+
+    expect(pickFields(aliasResult[0], ['type', 'name'])).toEqual({
+      type: 'emote',
+      name: 'This',
+    });
+    expect(originalNameResult).toEqual([{ type: 'text', content: 'THIS' }]);
+  });
+
   test('prefers personal and subscriber emotes over base emotes', () => {
     const baseEmote = createEmote({ id: 'base-wave', name: 'Wave' });
     const subscriberEmote = createEmote({

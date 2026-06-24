@@ -1,3 +1,5 @@
+import { theme } from '@app/styles/themes';
+
 import type { RGB } from './types';
 
 const SHADER_SOURCE = `
@@ -45,7 +47,11 @@ const NAMED_COLORS: Record<string, RGB> = {
 };
 
 // Sky-blue accent family, matching the app theme.
-const DEFAULT_COLORS = ['#1083FE', '#2E86FF', '#5AA1FF'];
+const DEFAULT_COLORS = [
+  theme.color.accent.light,
+  theme.color.accent.dark,
+  theme.color.accentPress.dark,
+];
 const DEFAULT_SPEED = 1.0;
 const DEFAULT_INTENSITY = 2.0;
 const DEFAULT_GLOW_RADIUS = 0.45;

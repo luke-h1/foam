@@ -60,13 +60,15 @@ export function globalBadgesQueryOptions() {
   return queryOptions<SanitisedBadgeSet[]>({
     queryKey: emoteKeys.globalBadges(),
     staleTime: GLOBAL_STALE_TIME,
-    queryFn: async () => {
-      const [twitchGlobalBadges, ffzGlobalBadges] = await Promise.all([
-        fetchOrEmpty(() => twitchBadgeService.listSanitisedGlobalBadges()),
-        fetchOrEmpty(() => ffzService.getSanitisedGlobalBadges()),
-      ]);
+    queryFn: () =>
+      fetchOrEmpty(() => twitchBadgeService.listSanitisedGlobalBadges()),
+  });
+}
 
-      return [...twitchGlobalBadges, ...ffzGlobalBadges];
-    },
+export function sevenTvBadgesQueryOptions() {
+  return queryOptions<SanitisedBadgeSet[]>({
+    queryKey: emoteKeys.sevenTvBadges(),
+    staleTime: GLOBAL_STALE_TIME,
+    queryFn: () => fetchOrEmpty(() => sevenTvService.fetchAllBadges()),
   });
 }

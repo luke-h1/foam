@@ -3,6 +3,14 @@ jest.mock('@app/styles/themes', () => ({
     colorViolet: '#9147FF',
     colorOrange: '#FF6905',
     colorPrimary: '#00F593',
+    color: {
+      notice: {
+        announcement: '#EB0400',
+        muted: '#ADADB8',
+        subscription: '#FFD700',
+        charity: '#00AD03',
+      },
+    },
   },
 }));
 

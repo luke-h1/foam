@@ -363,7 +363,7 @@ function ActionSheetComponent(props: Props) {
                             ? theme.colorAmber
                             : action.tone === 'accent'
                               ? theme.colorPrimary
-                              : '#b7bdc9'
+                              : theme.color.textSecondary.dark
                       }
                       weight='regular'
                       style={styles.actionIcon}

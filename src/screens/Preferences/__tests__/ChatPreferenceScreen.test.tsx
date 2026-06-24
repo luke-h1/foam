@@ -35,6 +35,8 @@ const mockPreferences: Preferences = {
   chatTimestampFormat: '24h',
   chatFontScale: 'default',
   chatScrollback: 150,
+  chatDelay: 0,
+  autoSyncChatDelay: false,
   deletedMessageStyle: 'notice',
   ignoreClearChat: false,
   chatMentionHaptics: true,
@@ -42,6 +44,7 @@ const mockPreferences: Preferences = {
   savedPhrases: [],
   shakeToReport: true,
   landscapeChatWidth: null,
+  customPlayerEnabled: true,
 };
 
 jest.mock('@app/store/preferenceStore', () => ({

@@ -33,6 +33,8 @@ const basePreferences = {
   chatTimestampFormat: '24h',
   chatFontScale: 'default',
   chatScrollback: 150,
+  chatDelay: 0,
+  autoSyncChatDelay: false,
   deletedMessageStyle: 'notice',
   ignoreClearChat: false,
   chatMentionHaptics: true,
@@ -40,6 +42,7 @@ const basePreferences = {
   savedPhrases: [] as { id: string; text: string }[],
   shakeToReport: true,
   landscapeChatWidth: null,
+  customPlayerEnabled: true,
 } as const;
 
 describe('usePreferences', () => {

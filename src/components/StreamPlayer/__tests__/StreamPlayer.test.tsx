@@ -317,7 +317,10 @@ describe('StreamPlayer component messaging', () => {
       ),
     ).toEqual(true);
     expect(beforeContentScript.includes('"720p60"')).toEqual(true);
-    expect(mockInjectJavaScript).not.toHaveBeenCalled();
+    // On WebView-ready it kicks autoplay (not the control bootstrap).
+    expect(mockInjectJavaScript).toHaveBeenCalledWith(
+      expect.stringContaining('window.__foamEnsurePlaying'),
+    );
   });
 
   test('uses the Twitch clip embed URL for clips', () => {

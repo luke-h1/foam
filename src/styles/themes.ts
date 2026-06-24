@@ -91,6 +91,12 @@ export const semanticColorGroups = {
   },
 } as const;
 
+const CANVAS = { light: '#EBF0F6', dark: '#0C1014' } as const;
+const SURFACE = { light: '#FFFFFF', dark: '#161D26' } as const;
+const SURFACE_SUNKEN = { light: '#DFE7F0', dark: '#070A0E' } as const;
+const SURFACE_ELEVATED = { light: '#FFFFFF', dark: '#1B232E' } as const;
+const SURFACE_PRESSED = { light: '#F2F6FA', dark: '#1A222C' } as const;
+
 export const theme = {
   colorRed: semanticColorGroups.red.accent,
   colorWhite: semanticColorGroups.gray.text,
@@ -133,7 +139,9 @@ export const theme = {
   colorSurfaceAlpha: semanticColorGroups.gray.uiAlpha,
 
   // Sky-blue on slate. Every token is a { light, dark } pair, resolved at the
-  // call site with theme.color.X[useColorScheme() ?? 'dark'].
+  // call site with theme.color.X[useColorScheme() ?? 'dark'] — except the
+  // brand/notice/chatSample groups below, which are scheme-independent brand
+  // colours used as raw strings (e.g. theme.color.brand.twitch).
   color: {
     reactBlue: {
       light: '#087EA4',
@@ -144,51 +152,26 @@ export const theme = {
       dark: 'rgba(0,0,0,0)',
     },
     // Page background.
-    canvas: {
-      light: '#EBF0F6',
-      dark: '#0C1014',
-    },
+    canvas: CANVAS,
     background: {
-      light: '#EBF0F6',
-      dark: '#0C1014',
+      ...CANVAS,
       // Retained for existing call sites; mapped onto the new slate surfaces.
-      darkAlt: '#161D26',
+      darkAlt: SURFACE.dark,
       darkAltAlpha: 'rgba(22,29,38,0.92)',
     },
     // Raised surfaces (cards, sheets, inputs).
-    surface: {
-      light: '#FFFFFF',
-      dark: '#161D26',
-    },
-    surfaceSunken: {
-      light: '#DFE7F0',
-      dark: '#070A0E',
-    },
-    surfaceElevated: {
-      light: '#FFFFFF',
-      dark: '#1B232E',
-    },
-    surfacePressed: {
-      light: '#F2F6FA',
-      dark: '#1A222C',
-    },
+    surface: SURFACE,
+    surfaceSunken: SURFACE_SUNKEN,
+    surfaceElevated: SURFACE_ELEVATED,
+    surfacePressed: SURFACE_PRESSED,
     rowAlt: {
       light: 'rgba(16,24,40,0.04)',
       dark: 'rgba(255,255,255,0.04)',
     },
     // Existing surface aliases re-pointed at the slate palette for coherence.
-    backgroundSecondary: {
-      light: '#FFFFFF',
-      dark: '#161D26',
-    },
-    backgroundTertiary: {
-      light: '#DFE7F0',
-      dark: '#070A0E',
-    },
-    backgroundElement: {
-      light: '#F2F6FA',
-      dark: '#1A222C',
-    },
+    backgroundSecondary: SURFACE,
+    backgroundTertiary: SURFACE_SUNKEN,
+    backgroundElement: SURFACE_PRESSED,
     text: {
       light: '#0F1620',
       dark: '#EDF1F5',
@@ -258,6 +241,29 @@ export const theme = {
     twitchSurface: {
       light: 'rgba(138,79,230,0.10)',
       dark: 'rgba(161,114,240,0.16)',
+    },
+    surfaceNeutral: {
+      light: '#FFFFFF',
+      dark: '#1C1C1E',
+    },
+    brand: {
+      twitch: '#9147FF',
+      twitchLight: '#A970FF',
+      twitchBorder: '#BF94FF',
+    },
+    notice: {
+      announcement: '#EB0400',
+      muted: '#ADADB8',
+      subscription: '#FFD700',
+      charity: '#00AD03',
+      blue: '#1475E1',
+      orange: '#FF6905',
+    },
+    chatSample: {
+      blue: '#1E90FF',
+      green: '#3CB371',
+      purple: Color.purple[400],
+      amber: Color.amber[500],
     },
     // Video chrome — dark in both themes.
     scrim: {

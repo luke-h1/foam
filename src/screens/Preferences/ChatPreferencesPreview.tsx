@@ -88,7 +88,7 @@ const PREVIEW_DEFAULTS: PreviewState = {
 
 const previewMessages = {
   plain: createPreviewMessage({
-    color: '#1E90FF',
+    color: theme.color.chatSample.blue,
     displayName: 'StreamEnjoyer',
     id: 'preview-plain',
     login: 'streamenjoyer',
@@ -96,7 +96,7 @@ const previewMessages = {
     userId: '101',
   }),
   reply: createPreviewMessage({
-    color: '#3CB371',
+    color: theme.color.chatSample.green,
     displayName: 'ChatFan',
     id: 'preview-reply',
     login: 'chatfan',
@@ -107,7 +107,7 @@ const previewMessages = {
     userId: '102',
   }),
   mention: createPreviewMessage({
-    color: '#C084FC',
+    color: theme.color.chatSample.purple,
     displayName: 'ModBot',
     id: 'preview-mention',
     login: 'modbot',
@@ -119,7 +119,7 @@ const previewMessages = {
     userId: '103',
   }),
   emoteAnimations: createPreviewMessage({
-    color: '#F59E0B',
+    color: theme.color.chatSample.amber,
     displayName: 'EmoteFan',
     id: 'preview-emote-animations',
     login: 'emotefan',

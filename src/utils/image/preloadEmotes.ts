@@ -11,6 +11,7 @@ import { Image as ExpoImage } from 'expo-image';
 import type { SanitisedEmote } from '@app/types/emote';
 import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
+import { CHAT_INLINE_EMOTE_SCALE } from '@app/utils/emote/resolveEmoteScale';
 
 // Track preloaded URLs to avoid duplicate preloads
 const preloadedUrls = new Set<string>();
@@ -26,7 +27,7 @@ function getDisplayEmoteCacheUrls(emote: SanitisedEmote): string[] {
       url: resolved.url,
       static_url: resolved.static_url,
       disableAnimations,
-      preferredScale: '2x',
+      preferredScale: CHAT_INLINE_EMOTE_SCALE,
     });
     if (url) {
       urls.add(url);
@@ -50,7 +51,7 @@ export async function preloadEmotes(
 
   // Keep copy-only variants out of the eager preload path. They remain on the
   // emote metadata for copy actions, but warming every static/animated scale
-  // would multiply channel-entry network work. Warm only the 2x display URLs
+  // would multiply channel-entry network work. Warm only the display URLs
   // that chat rows actually render.
   for (const emote of emotes) {
     const urls = getDisplayEmoteCacheUrls(emote);

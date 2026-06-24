@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { LiveBadge } from '@app/components/LiveBadge/LiveBadge';
 import { LiveStreamImage } from '@app/components/LiveStreamImage/LiveStreamImage';
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
@@ -22,13 +23,7 @@ export const StreamerCard = memo(function StreamerCard({ stream }: Props) {
           <Text type='sm' weight='semibold' numberOfLines={1}>
             {stream.display_name}
           </Text>
-          {isLive && (
-            <View style={styles.liveBadge}>
-              <Text type='xxs' style={styles.liveText}>
-                LIVE
-              </Text>
-            </View>
-          )}
+          {isLive && <LiveBadge tone='tinted' />}
         </View>
         {stream.game_name ? (
           <Text type='xs' color='gray.textLow' numberOfLines={1}>
@@ -58,19 +53,6 @@ const styles = StyleSheet.create({
   info: {
     flex: 1,
     gap: 2,
-  },
-  liveBadge: {
-    backgroundColor: theme.colorRedSurface,
-    borderColor: theme.colorRedBorder,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  liveText: {
-    color: theme.colorRed,
-    fontWeight: '600',
   },
   nameRow: {
     alignItems: 'center',

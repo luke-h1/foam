@@ -13,6 +13,7 @@ import { toast } from 'sonner-native';
 import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
 /* eslint-disable react-native/sort-styles */
 import { Button } from '@app/components/Button/Button';
+import { computeSheetHeight } from '@app/components/Chat/util/computeSheetHeight';
 import { Image } from '@app/components/Image/Image';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
@@ -70,17 +71,7 @@ function EmotePreviewSheetComponent(props: Props) {
       ? selectedEmote.emote_link
       : undefined;
   const maxEmoteSize = Math.min(Math.max(screenWidth * 0.36, 96), 156);
-  const scrollStyle = [
-    styles.scroll,
-    { maxHeight: Math.round(screenHeight * 0.58) },
-  ];
-  const containerStyle = [
-    styles.container,
-    {
-      maxHeight: Math.round(screenHeight * 0.82),
-      width: sheetWidth,
-    },
-  ];
+  const containerStyle = [styles.container, { width: sheetWidth }];
 
   const emoteSize = (() => {
     const originalWidth = selectedEmote.width || 28;
@@ -187,11 +178,20 @@ function EmotePreviewSheetComponent(props: Props) {
     return items;
   })();
 
+  const sheetHeight = computeSheetHeight(
+    screenHeight,
+    metadataRows.length,
+    actions.length,
+    152,
+  );
+
   return (
     <BottomSheet
+      enableFixedSnapPoints
       isPresented={visible}
       onDismiss={onClose}
       showDragIndicator
+      snapPoints={[{ height: sheetHeight }]}
       testID='emote-preview-sheet'
     >
       <View style={containerStyle}>
@@ -219,7 +219,7 @@ function EmotePreviewSheetComponent(props: Props) {
         </View>
 
         <ScrollView
-          style={scrollStyle}
+          style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
@@ -340,6 +340,7 @@ const styles = StyleSheet.create({
   },
   container: {
     alignSelf: 'center',
+    flex: 1,
     paddingBottom: theme.space24,
     paddingHorizontal: theme.space20,
     paddingTop: theme.space4,
@@ -420,7 +421,7 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize11,
   },
   scroll: {
-    flexGrow: 0,
+    flex: 1,
   },
   scrollContent: {
     gap: theme.space12,

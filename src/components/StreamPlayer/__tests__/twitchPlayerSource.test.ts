@@ -5,6 +5,8 @@ import {
   buildTwitchCaptionHiderScript,
   buildTwitchClipPlayerUrl,
   buildTwitchContentGateAcceptScript,
+  buildTwitchLatencyTrackerScript,
+  buildTwitchLiveSyncScript,
   buildTwitchOverlayHideScript,
   buildTwitchPlayerAudioDefaultScript,
   isAppUrl,
@@ -19,6 +21,49 @@ describe('twitchPlayerSource', () => {
       'asyncQuerySelector(\'button[data-a-target*="content-classification-gate"]\', 10000)',
     );
     expect(script).toContain('button.click()');
+  });
+
+  test('latency tracker drives the video-stats menu and reads the latency node', () => {
+    const script = buildTwitchLatencyTrackerScript();
+
+    // Navigates Twitch's settings menu: gear -> Advanced -> Video Stats input.
+    expect(script).toContain(
+      'asyncQuerySelector(\'[data-a-target="player-settings-button"]\', 10000)',
+    );
+    expect(script).toContain(
+      'asyncQuerySelector(\'[data-a-target="player-settings-menu-item-advanced"]\')',
+    );
+    expect(script).toContain(
+      'asyncQuerySelector(\'[data-a-target="player-settings-submenu-advanced-video-stats"] input\')',
+    );
+    // Reads the latency node and posts it to the bridge.
+    expect(script).toContain('[aria-label="Latency To Broadcaster"]');
+    expect(script).toContain('hlsLatencyBroadcaster');
+    // Keeps Twitch's stats overlay hidden so nothing shows over the video.
+    expect(script).toContain('[data-a-target="player-overlay-video-stats"]');
+    // The whitespace escape survives into the injected regex as \\s, not s.
+    expect(script).toContain('([0-9.]+)\\s*sec');
+    // Detects ads so it re-enables stats once the stream resumes.
+    expect(script).toContain('function isAdActive()');
+    expect(script).toContain('[data-a-target="video-ad-label"]');
+  });
+
+  test('live sync seeks to the live edge and exposes a re-trigger hook', () => {
+    const script = buildTwitchLiveSyncScript({ targetSeconds: 3 });
+
+    // Measures client drift from the newest seekable segment.
+    expect(script).toContain('seekable.end(seekable.length - 1)');
+    expect(script).toContain('var drift = liveEdge - video.currentTime');
+    expect(script).toContain('var TARGET_S = 3');
+    // Seeks to the live edge, leaving the target buffer.
+    expect(script).toContain('video.currentTime = liveEdge - TARGET_S');
+    // Re-triggerable on demand from chat settings.
+    expect(script).toContain('window.__foamSyncToLive = function()');
+    // Runs once at start, not on a continuous interval.
+    expect(script).not.toContain('setInterval');
+    // Skips ads so the start-sync targets the real stream, not a pre-roll.
+    expect(script).toContain('function isAdActive()');
+    expect(script).toContain('skipped (ad playing)');
   });
 
   test('overlay hide targets only the three player-chrome selectors', () => {
@@ -77,30 +122,31 @@ describe('twitchPlayerSource', () => {
     );
   });
 
-  test('autoplay-ensure unmutes and plays the video after a startup defer', () => {
+  test('autoplay-ensure starts muted then raises the volume', () => {
     const script = buildTwitchAutoplayEnsureScript({ muted: false });
 
     expect(script).toContain('var TARGET_MUTED = false');
     expect(script).toContain('var START_DELAY_MS = 800');
-    expect(script).toContain('video.muted = TARGET_MUTED');
-    expect(script).toContain('video.volume = 1');
-    expect(script).toContain('video.play()');
-    // Falls back to muted playback only if unmuted autoplay is blocked.
+    // Playback always begins muted (the only state iOS autoplay reliably
+    // permits) so the picture moves immediately.
     expect(script).toContain('video.muted = true');
+    expect(script).toContain('video.play()');
+    // Once playing, reconcileAudio brings the stream up to full volume.
+    expect(script).toContain('video.muted = false');
+    expect(script).toContain('video.volume = 1');
   });
 
-  test('autoplay-ensure recovers when an unmuted play() silently re-pauses', () => {
+  test('autoplay-ensure gives up to muted after repeated unmute re-pauses', () => {
     const script = buildTwitchAutoplayEnsureScript({ muted: false });
 
-    // iOS resolves an unmuted play() then re-pauses with no rejection to
-    // catch, so a deferred check falls back to muted playback if still paused.
-    // The fallback latches unmuteBlocked first so the next tick stops fighting.
-    expect(script).toContain(
-      'if (video.paused) { unmuteBlocked = true; playMuted(video); }',
-    );
-    // Once unmuting re-pauses the video, stop fighting it (no oscillation).
+    // Unmuting an ongoing stream can make iOS silently re-pause it; the script
+    // resumes and retries a bounded number of times, then accepts muted
+    // playback so the picture never stalls on a pause.
     expect(script).toContain('var unmuteBlocked = false');
-    expect(script).toContain('unmuteBlocked = true; playMuted(video);');
+    expect(script).toContain('unmuteAttempts++');
+    expect(script).toContain('if (unmuteAttempts >= 3)');
+    expect(script).toContain('unmuteBlocked = true;');
+    expect(script).toContain('playMuted(v);');
   });
 
   test('autoplay-ensure keeps a muted start muted', () => {
@@ -111,8 +157,8 @@ describe('twitchPlayerSource', () => {
 
     expect(script).toContain('var TARGET_MUTED = true');
     expect(script).toContain('var START_DELAY_MS = 0');
-    // Volume is raised only when starting unmuted (guarded at runtime).
-    expect(script).toContain('if (!shouldStartMuted) { video.volume = 1; }');
+    // With a muted target the stream is held muted, never raised to volume.
+    expect(script).toContain('if (!video.muted) { video.muted = true; }');
   });
 
   test('seeds the Twitch player mute preference so it boots in the requested audio state', () => {

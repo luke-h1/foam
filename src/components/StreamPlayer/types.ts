@@ -70,6 +70,15 @@ export interface StreamPlayerRef {
    */
   setVolume: (volume: number) => void;
   /**
+   * Release the underlying media (pause + drop the <video> source) so the
+   * WebView can be torn down without an active AVPlayer wedging the transition.
+   */
+  releaseMedia: () => void;
+  /**
+   * Seek a live stream back to the live edge to trim accumulated client latency
+   */
+  syncToLive: () => void;
+  /**
    * Unmute the player
    */
   unmute: () => void;

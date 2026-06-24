@@ -192,6 +192,8 @@ const en = {
       clearCache: 'Clear Cache',
       displayLatency: 'Display Latency',
       refreshVideo: 'Refresh Video',
+      syncToLive: 'Sync to Live',
+      syncToLiveSubtitle: 'Jump back to the live edge',
     },
     controls: {
       mentions: 'Mentions',
@@ -401,6 +403,8 @@ const en = {
     relativeAge: '{{age}} ago',
     play: 'Play',
     pause: 'Pause',
+    mute: 'Mute',
+    unmute: 'Unmute',
     live: 'LIVE',
     refresh: 'Refresh',
     pictureInPicture: 'Picture in Picture',
@@ -639,6 +643,18 @@ const en = {
     keepHistoryOnClear: 'Keep History on Clear',
     keepHistoryOnClearDescription:
       'Ignore moderator chat clears and keep your scrollback',
+    sync: 'Sync',
+    syncFooter:
+      'Delay chat so it lines up with the video. Auto-sync matches the stream’s measured latency; turn it off to choose a fixed delay.',
+    autoSyncChatDelay: 'Auto-sync to Video',
+    autoSyncChatDelayDescription: 'Match chat to the measured stream latency',
+    chatDelay: 'Chat Delay',
+    chatDelayDescription: 'Hold new messages before showing them',
+    chatDelayOff: 'Off',
+    chatDelay2s: '2s',
+    chatDelay5s: '5s',
+    chatDelay8s: '8s',
+    chatDelay12s: '12s',
     performance: 'Performance',
     performanceFooter:
       'Longer scrollback keeps more messages in memory; 200 is easier on older devices.',

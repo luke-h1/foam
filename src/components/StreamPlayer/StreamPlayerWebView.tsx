@@ -9,6 +9,7 @@ import type {
 } from 'react-native-webview/lib/WebViewTypes';
 
 import { countMetric } from '@app/lib/sentry';
+import { theme } from '@app/styles/themes';
 import { logger } from '@app/utils/logger';
 
 import { isAppUrl, isTwitchPassportCallbackUrl } from './twitchPlayerSource';
@@ -34,6 +35,9 @@ interface StreamPlayerWebViewProps {
   onMessage: ComponentProps<typeof WebView>['onMessage'];
   onOpenWindow?: ComponentProps<typeof WebView>['onOpenWindow'];
   onWebViewLoaded?: () => void;
+  // When false the WebView is transparent (non-opaque WKWebView), so the iOS rotation snapshot
+  // reveals the thumbnail behind it instead of the WebView's black backing.
+  opaque?: boolean;
   remountWebView: () => void;
   scheduleAuthCompletionReload: () => void;
   source: WebViewSource;
@@ -55,6 +59,7 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
   onMessage,
   onOpenWindow,
   onWebViewLoaded,
+  opaque = true,
   remountWebView,
   scheduleAuthCompletionReload,
   source,
@@ -162,6 +167,9 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       mixedContentMode='never'
       nestedScrollEnabled={false}
       overScrollMode='never'
+      // When foam draws its own controls, ignore touches so WKWebView's gesture recognisers
+      // don't delay the overlay's tap.
+      pointerEvents={allowsTwitchInteraction ? 'auto' : 'none'}
       scrollEnabled={allowsTwitchInteraction}
       keyboardDisplayRequiresUserAction={!allowsTwitchInteraction}
       setBuiltInZoomControls={false}
@@ -181,6 +189,7 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       style={[
         styles.webView,
         allowsTwitchInteraction && styles.webViewScrollable,
+        !opaque && styles.webViewTransparent,
       ]}
       onContentProcessDidTerminate={() =>
         handleWebViewProcessGone('content_process_terminated')
@@ -206,12 +215,15 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
 
 const styles = StyleSheet.create({
   webView: {
-    backgroundColor: '#000',
+    backgroundColor: theme.colorBlack,
     flex: 1,
     height: '100%',
     width: '100%',
   },
   webViewScrollable: {
     minHeight: '100%',
+  },
+  webViewTransparent: {
+    backgroundColor: 'transparent',
   },
 });

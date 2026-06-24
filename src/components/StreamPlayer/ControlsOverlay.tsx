@@ -1,22 +1,15 @@
 import { useEffect, useState } from 'react';
-import {
-  Platform,
-  Pressable,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
-  Easing,
+  type SharedValue,
   useAnimatedStyle,
-  useSharedValue,
-  withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { Button } from '@app/components/Button/Button';
+import { LiveBadge } from '@app/components/LiveBadge/LiveBadge';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
@@ -25,13 +18,17 @@ import type { StreamInfo } from './types';
 
 interface ControlsOverlayProps {
   isVisible: boolean;
-  latencySeconds?: number | null;
+  muted?: boolean;
+  /**
+   * Drives the overlay fade + pointer events on the UI thread.
+   */
+  opacity: SharedValue<number>;
   onBackPress?: () => void;
+  onMutePress?: () => void;
   onPipPress?: () => void;
   onPlayPausePress: () => void;
   onRefresh?: () => void;
   onSharePress?: () => void;
-  onToggleControls: () => void;
   paused: boolean;
   showPip?: boolean;
   streamInfo?: StreamInfo;
@@ -54,13 +51,14 @@ function formatViewerCount(count?: number): string {
 
 export function ControlsOverlay({
   isVisible,
-  latencySeconds,
+  muted,
+  opacity,
   onBackPress,
+  onMutePress,
   onPipPress,
   onPlayPausePress,
   onRefresh,
   onSharePress,
-  onToggleControls,
   paused,
   showPip,
   streamInfo,
@@ -72,7 +70,6 @@ export function ControlsOverlay({
   const isPortrait = windowHeight >= windowWidth;
   const headerTopOffset = isPortrait ? theme.space12 : insets.top + 8;
   const bottomOffset = isPortrait ? theme.space8 : insets.bottom + 12;
-  const opacity = useSharedValue(0);
   const [metrics, setMetrics] = useState<OverlayMetricsState>({
     duration: '0:00',
   });
@@ -102,28 +99,15 @@ export function ControlsOverlay({
 
   const durationLabel = streamInfo?.startedAt ? metrics.duration : '0:00';
 
-  useEffect(() => {
-    opacity.set(
-      withTiming(isVisible ? 1 : 0, {
-        duration: 200,
-        easing: Easing.ease,
-      }),
-    );
-  }, [isVisible, opacity]);
-
+  // box-none while visible: empty-area taps fall through to the video gesture, only buttons
+  // capture touches; 'none' while hidden so buttons don't swallow the reveal tap.
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.get(),
-    pointerEvents: opacity.get() > 0.5 ? 'auto' : 'none',
+    pointerEvents: opacity.get() > 0.01 ? 'box-none' : 'none',
   }));
 
   return (
     <Animated.View style={[styles.controlsOverlay, animatedStyle]}>
-      <Pressable
-        accessibilityRole='button'
-        onPress={onToggleControls}
-        style={styles.overlayTapTarget}
-      />
-
       <LinearGradient
         colors={['rgba(0,0,0,0.86)', 'rgba(0,0,0,0.42)', 'transparent']}
         style={styles.topGradient}
@@ -131,6 +115,7 @@ export function ControlsOverlay({
       />
 
       <View
+        pointerEvents='box-none'
         style={[
           styles.header,
           isPortrait && styles.headerPortrait,
@@ -138,7 +123,7 @@ export function ControlsOverlay({
         ]}
       >
         {onBackPress && (
-          <View style={styles.headerButtonContainer}>
+          <View style={styles.glassButton}>
             <Button
               label={t('common:back')}
               style={styles.headerButton}
@@ -169,26 +154,9 @@ export function ControlsOverlay({
             </Text>
           )}
         </View>
-
-        <View style={styles.spacer} />
-
-        <View
-          pointerEvents='none'
-          style={[styles.latencyBadge, isPortrait && styles.hidden]}
-        >
-          <SymbolView
-            name='clock'
-            size={12}
-            tintColor={theme.colorWhite}
-            style={styles.latencyBadgeIcon}
-          />
-          <Text style={styles.latencyBadgeText}>
-            {latencySeconds == null ? '--' : `${latencySeconds.toFixed(1)}s`}
-          </Text>
-        </View>
       </View>
 
-      <View style={styles.centerControls}>
+      <View pointerEvents='box-none' style={styles.centerControls}>
         <Button
           label={paused ? t('play') : t('pause')}
           style={[
@@ -212,20 +180,18 @@ export function ControlsOverlay({
       />
 
       <View
+        pointerEvents='box-none'
         style={[
           styles.bottomControls,
           isPortrait && styles.bottomControlsPortrait,
           { paddingBottom: bottomOffset },
         ]}
       >
-        <View style={styles.streamMetadataColumn}>
+        <View pointerEvents='box-none' style={styles.streamMetadataColumn}>
           <View
             style={[styles.liveRail, isPortrait && styles.liveRailPortrait]}
           >
-            <View style={styles.liveIndicator}>
-              <View style={styles.liveDot} />
-              <Text style={styles.liveText}>{t('live')}</Text>
-            </View>
+            <LiveBadge label={t('live')} />
             <Text
               style={[
                 styles.durationText,
@@ -259,8 +225,23 @@ export function ControlsOverlay({
         </View>
 
         <View style={styles.spacer} />
+        {onMutePress && (
+          <View style={styles.glassButton}>
+            <Button
+              label={muted ? t('unmute') : t('mute')}
+              style={styles.controlButton}
+              onPress={onMutePress}
+            >
+              <SymbolView
+                name={muted ? 'speaker.slash.fill' : 'speaker.wave.2.fill'}
+                size={18}
+                tintColor={theme.colorWhite}
+              />
+            </Button>
+          </View>
+        )}
         {onRefresh && (
-          <View style={styles.controlButtonContainer}>
+          <View style={styles.glassButton}>
             <Button
               label={t('refresh')}
               style={styles.controlButton}
@@ -276,7 +257,7 @@ export function ControlsOverlay({
         )}
 
         {onSharePress && (
-          <View style={styles.controlButtonContainer}>
+          <View style={styles.glassButton}>
             <Button
               label={t('common:share')}
               style={styles.controlButton}
@@ -292,7 +273,7 @@ export function ControlsOverlay({
         )}
 
         {showPipButton && onPipPress && (
-          <View style={styles.controlButtonContainer}>
+          <View style={styles.glassButton}>
             <Button
               label={t('pictureInPicture')}
               style={styles.controlButton}
@@ -315,7 +296,7 @@ const styles = StyleSheet.create({
     gap: theme.space8,
     left: 0,
     paddingHorizontal: theme.space20,
-    paddingTop: 48,
+    paddingTop: theme.space44,
     position: 'absolute',
     right: 0,
     zIndex: 1,
@@ -342,25 +323,17 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
   },
-  container: {
-    backgroundColor: '#000',
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  containerScrollable: {
-    overflow: 'visible',
-  },
   controlButton: {
     alignItems: 'center',
     height: 44,
     justifyContent: 'center',
     width: 44,
   },
-  controlButtonContainer: {
+  glassButton: {
     alignItems: 'center',
-    backgroundColor: 'rgba(22,22,22,0.58)',
+    backgroundColor: theme.colorBlackOverlay,
     borderCurve: 'continuous',
-    borderColor: 'rgba(255,255,255,0.18)',
+    borderColor: theme.color.borderStrong.dark,
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
     height: 44,
@@ -405,42 +378,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 44,
   },
-  headerButtonContainer: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(22,22,22,0.58)',
-    borderCurve: 'continuous',
-    borderColor: 'rgba(255,255,255,0.16)',
-    borderRadius: theme.borderRadius999,
-    borderWidth: 1,
-    height: 44,
-    justifyContent: 'center',
-    boxShadow: '0 8px 18px rgba(0, 0, 0, 0.28)',
-    width: 44,
-  },
-  latencyBadge: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(22,22,22,0.52)',
-    borderColor: 'rgba(255,255,255,0.16)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: theme.space8,
-    minHeight: 32,
-    paddingHorizontal: theme.space8,
-    paddingVertical: theme.space4,
-  },
-  latencyBadgeIcon: {
-    opacity: 0.9,
-  },
-  latencyBadgeText: {
-    color: theme.colorWhite,
-    fontSize: theme.fontSize11,
-    fontWeight: '600',
-  },
-  hidden: {
-    display: 'none',
-  },
   liveRail: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -455,35 +392,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: theme.space8,
     paddingVertical: theme.space4,
-  },
-  liveDot: {
-    backgroundColor: theme.colorRed,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    height: 7,
-    width: 7,
-  },
-  liveIndicator: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(229,9,20,0.92)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius4,
-    flexDirection: 'row',
-    gap: theme.space8,
-    paddingHorizontal: theme.space8,
-    paddingVertical: 4,
-  },
-  liveText: {
-    color: theme.colorWhite,
-    fontSize: theme.fontSize11,
-    fontWeight: '800',
-  },
-  overlayTapTarget: {
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-    right: 0,
-    top: 0,
   },
   playPauseButton: {
     alignItems: 'center',

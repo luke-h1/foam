@@ -91,22 +91,10 @@ function getBaseCollectionKey(
 function setIfMissing(
   emoteMap: Map<string, SanitisedEmote>,
   emotes: SanitisedEmote[],
-  includeOriginalNameAlias = false,
 ): void {
   emotes.forEach(emote => {
     if (!emoteMap.has(emote.name)) {
       emoteMap.set(emote.name, emote);
-    }
-    if (!includeOriginalNameAlias) {
-      return;
-    }
-    const alternateName = emote.original_name?.trim();
-    if (
-      alternateName &&
-      alternateName !== emote.name &&
-      !emoteMap.has(alternateName)
-    ) {
-      emoteMap.set(alternateName, emote);
     }
   });
 }
@@ -152,10 +140,10 @@ function getBaseCollection({
   const emoteMap = new Map<string, SanitisedEmote>();
   const emojiMap = new Map<string, SanitisedEmote>();
 
-  setIfMissing(emoteMap, sevenTvChannelEmotes, true);
-  setIfMissing(emoteMap, twitchChannelEmotes, true);
-  setIfMissing(emoteMap, ffzChannelEmotes, true);
-  setIfMissing(emoteMap, bttvChannelEmotes, true);
+  setIfMissing(emoteMap, sevenTvChannelEmotes);
+  setIfMissing(emoteMap, twitchChannelEmotes);
+  setIfMissing(emoteMap, ffzChannelEmotes);
+  setIfMissing(emoteMap, bttvChannelEmotes);
   setIfMissing(emoteMap, emojiEmotes);
   setIfMissing(emoteMap, sevenTvGlobalEmotes);
   setIfMissing(emoteMap, twitchGlobalEmotes);
@@ -238,8 +226,8 @@ function createScopedEmoteLookup(
 
   const personalEmoteMap = new Map<string, SanitisedEmote>();
   const subscriberEmoteMap = new Map<string, SanitisedEmote>();
-  setIfMissing(personalEmoteMap, sevenTvPersonalEmotes, true);
-  setIfMissing(subscriberEmoteMap, twitchSubscriberEmotes, true);
+  setIfMissing(personalEmoteMap, sevenTvPersonalEmotes);
+  setIfMissing(subscriberEmoteMap, twitchSubscriberEmotes);
 
   const lookup = (name: string) =>
     personalEmoteMap.get(name) ??
