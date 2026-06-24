@@ -215,6 +215,8 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     isChatEnabled && (!isLandscape || isChatVisibleForLayout);
   const lastChatToggleTimeRef = useRef<number>(0);
   const previousIsLandscapeRef = useRef(isLandscape);
+  const isStreamEnabledRef = useRef(isStreamEnabled);
+  isStreamEnabledRef.current = isStreamEnabled;
 
   useFocusEffect(
     useCallback(() => {
@@ -229,14 +231,14 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
         );
         streamPlayerRef.current?.pause();
         setMeasuredVideoLatencySeconds(null);
-        if (isStreamEnabled) {
+        if (isStreamEnabledRef.current) {
           dispatchUi({
             type: 'setChatConnectionReady',
             isChatConnectionReady: false,
           });
         }
       };
-    }, [dispatchUi, isStreamEnabled]),
+    }, [dispatchUi]),
   );
 
   /**
