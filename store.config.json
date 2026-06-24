@@ -1,11 +1,13 @@
 {
   "configVersion": 0,
   "apple": {
+    "version": "1.0",
+    "release": {
+      "automaticRelease": true
+    },
     "info": {
-      "en-US": {
+      "en-GB": {
         "title": "Foam for Twitch",
-        "subtitle": "Live streams, chat & emotes",
-        "promoText": "Chat that actually keeps up — 7TV, BetterTTV, and FrankerFaceZ emotes rendered right in chat, with smooth scrolling even in the busiest channels.",
         "description": "Foam is a fast, beautiful way to watch Twitch on your phone — built for people who live in chat.\n\nSEE EVERY EMOTE\nFoam renders 7TV, BetterTTV, and FrankerFaceZ emotes and badges right in chat, including animated and zero-width emotes. No more walls of text where emotes should be — chat looks the way it does on desktop.\n\nCHAT THAT KEEPS UP\nA chat engine tuned for high-volume channels. Smooth scrolling, instant emote rendering, reply threads, and user cards — even when chat is flying.\n\nMADE FOR VIEWERS\n• Browse followed channels, top streams, and categories\n• Theater-friendly player with background audio\n• Search streamers and categories instantly\n• Block users and filter chat with custom blocked terms\n• Pinned messages, polls, and predictions\n• Quick actions to jump straight into Following, Live, or Search\n\nYOUR CHAT, YOUR WAY\nFine-grained chat preferences: timestamps, message spacing, emote sizes, and more. Dark by default, easy on the eyes for long watch sessions.\n\nFoam is a free, open-source companion app for Twitch. It is not affiliated with Twitch Interactive, Inc.",
         "keywords": [
           "stream",
@@ -22,8 +24,34 @@
           "clips",
           "badges"
         ],
-        "supportUrl": "https://github.com/luke-h1/foam/issues",
         "marketingUrl": "https://foam-app.com",
+        "promoText": "Chat that actually keeps up — 7TV, BetterTTV, and FrankerFaceZ emotes rendered right in chat, with smooth scrolling even in the busiest channels.",
+        "supportUrl": "https://github.com/luke-h1/foam/issues",
+        "subtitle": "Live streams, chat & emotes",
+        "privacyPolicyUrl": "https://foam-app.com/privacy"
+      },
+      "en-US": {
+        "description": "Foam is a fast, beautiful way to watch Twitch on your phone — built for people who live in chat.\n\nSEE EVERY EMOTE\nFoam renders 7TV, BetterTTV, and FrankerFaceZ emotes and badges right in chat, including animated and zero-width emotes. No more walls of text where emotes should be — chat looks the way it does on desktop.\n\nCHAT THAT KEEPS UP\nA chat engine tuned for high-volume channels. Smooth scrolling, instant emote rendering, reply threads, and user cards — even when chat is flying.\n\nMADE FOR VIEWERS\n• Browse followed channels, top streams, and categories\n• Theater-friendly player with background audio\n• Search streamers and categories instantly\n• Block users and filter chat with custom blocked terms\n• Pinned messages, polls, and predictions\n• Quick actions to jump straight into Following, Live, or Search\n\nYOUR CHAT, YOUR WAY\nFine-grained chat preferences: timestamps, message spacing, emote sizes, and more. Dark by default, easy on the eyes for long watch sessions.\n\nFoam is a free, open-source companion app for Twitch. It is not affiliated with Twitch Interactive, Inc.",
+        "keywords": [
+          "stream",
+          "live",
+          "chat",
+          "emotes",
+          "7tv",
+          "bttv",
+          "ffz",
+          "streamer",
+          "gaming",
+          "viewer",
+          "vod",
+          "clips",
+          "badges"
+        ],
+        "marketingUrl": "https://foam-app.com",
+        "promoText": "Chat that actually keeps up — 7TV, BetterTTV, and FrankerFaceZ emotes rendered right in chat, with smooth scrolling even in the busiest channels.",
+        "supportUrl": "https://github.com/luke-h1/foam/issues",
+        "title": "Foam for Twitch",
+        "subtitle": "Live streams, chat & emotes",
         "privacyPolicyUrl": "https://foam-app.com/privacy"
       }
     },
