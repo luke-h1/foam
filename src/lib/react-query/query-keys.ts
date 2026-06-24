@@ -45,4 +45,5 @@ export const emoteKeys = {
   all: ['emotes'] as const,
   globalEmotes: () => [...emoteKeys.all, 'global'] as const,
   globalBadges: () => [...emoteKeys.all, 'globalBadges'] as const,
+  sevenTvBadges: () => [...emoteKeys.all, 'sevenTvBadges'] as const,
 };

@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     zIndex: 9999,
   },
   text: {
-    color: '#000',
+    color: theme.colorBlack,
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: 0.2,

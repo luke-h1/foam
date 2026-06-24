@@ -8,7 +8,7 @@ import { isBrandIcon } from '@app/utils/typescript/type-guards/isBrandIcon';
 
 const PROVIDER_ACCENT_COLORS: Partial<Record<EmoteMenuIconType, string>> = {
   twitch: theme.colorPlum,
-  stv: '#ffffff',
+  stv: theme.colorWhite,
   ffz: theme.colorPrimary,
   bttv: theme.colorOrange,
 };

@@ -29,23 +29,13 @@ export interface ChatDelayQueue {
   moderateByLogin(login: string, moderationNotice: string): void;
 }
 
-// Safety ceiling so a long delay + sustained chat can't grow the queue without
-// bound. The live-ingest rate limiter caps arrivals at ~30/s, so this only bites
-// at a ~33s+ delay; dropping the oldest then is the same "newest matters when
-// following live" trade the flush sampler already makes.
+// Safety ceiling so a long delay + sustained chat can't grow the queue unbounded; drop oldest.
 const DEFAULT_MAX_DELAYED_MESSAGES = 1000;
 
 /**
- * Holds live chat messages for a chosen delay before they enter the render
- * buffer, so chat can be lined up with the latency-delayed video (Frosty's
- * chat-delay model). Entries keep their arrival order and are released FIFO:
- * the head is released once its own `releaseAt` is due, and the scan stops at
- * the first not-yet-due entry. Releasing in arrival order (rather than strictly
- * by `releaseAt`) means a mid-stream delay change can never reorder messages.
- *
- * Moderation/removal mirror {@link createMessageBuffer} so a delete or timeout
- * arriving while its target is still held isn't missed — the held copy is
- * edited or dropped before it is ever shown.
+ * Holds live chat messages for a delay before they enter the render buffer, so chat
+ * lines up with the latency-delayed video. Released FIFO in arrival order so a mid-stream
+ * delay change can't reorder messages. Moderation/removal mirror {@link createMessageBuffer}.
  */
 export const createChatDelayQueue = (
   maxDelayedMessages = DEFAULT_MAX_DELAYED_MESSAGES,

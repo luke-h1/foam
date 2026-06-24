@@ -1,9 +1,10 @@
+import { theme } from '@app/styles/themes';
 const ANNOUNCEMENT_ACCENT_COLORS = {
-  PRIMARY: '#EB0400',
-  BLUE: '#1475E1',
-  GREEN: '#00AD03',
-  ORANGE: '#FF6905',
-  PURPLE: '#9147FF',
+  PRIMARY: theme.color.notice.announcement,
+  BLUE: theme.color.notice.blue,
+  GREEN: theme.color.notice.charity,
+  ORANGE: theme.color.notice.orange,
+  PURPLE: theme.color.brand.twitch,
 } as const;
 
 export function getAnnouncementAccentColor(msgParamColor?: string): string {

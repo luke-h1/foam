@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   container: {
-    backgroundColor: '#000',
+    backgroundColor: theme.colorBlack,
     flex: 1,
   },
 });

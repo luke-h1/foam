@@ -356,12 +356,6 @@ export function ChatPreferenceNativeForm() {
               value={preferences.disableEmoteAnimations}
             />,
           )}
-          <Toggle
-            label={t('lowResSevenTvEmotes')}
-            systemImage='arrow.down.right.and.arrow.up.left'
-            isOn={preferences.sevenTvLowResEmotes}
-            onIsOnChange={value => update({ sevenTvLowResEmotes: value })}
-          />
         </Section>
       </Form>
     </Host>

@@ -192,6 +192,8 @@ const en = {
       clearCache: 'Clear Cache',
       displayLatency: 'Display Latency',
       refreshVideo: 'Refresh Video',
+      syncToLive: 'Sync to Live',
+      syncToLiveSubtitle: 'Jump back to the live edge',
     },
     controls: {
       mentions: 'Mentions',
@@ -401,6 +403,8 @@ const en = {
     relativeAge: '{{age}} ago',
     play: 'Play',
     pause: 'Pause',
+    mute: 'Mute',
+    unmute: 'Unmute',
     live: 'LIVE',
     refresh: 'Refresh',
     pictureInPicture: 'Picture in Picture',
@@ -656,9 +660,6 @@ const en = {
       'Animated Twitch, BTTV, FFZ, and 7TV emotes will render as still images when this is enabled.',
     disableEmoteAnimations: 'Disable Emote Animations',
     disableEmoteAnimationsDescription: 'Prefer static emote rendering',
-    lowResSevenTvEmotes: 'Low-res 7TV Emotes',
-    lowResSevenTvEmotesDescription:
-      'Use 1x 7TV emote images to cut memory and decode (lower quality)',
     preview: 'Preview',
     emotes: 'Emotes',
     badges: 'Badges',

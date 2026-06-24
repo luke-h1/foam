@@ -151,34 +151,56 @@ export function usePlayerBridge({
     if (!transientPauseResumeTimeoutRef.current) {
       transientPauseResumeTimeoutRef.current = setTimeout(() => {
         transientPauseResumeTimeoutRef.current = null;
-        injectJS('window.playerControls.play()');
+        injectJS(
+          'if (window.__foamEnsurePlaying) { window.__foamEnsurePlaying(); }' +
+            'if (window.playerControls) { window.playerControls.play(); }',
+        );
       }, 250);
     }
 
     return true;
   }, [autoplay, injectJS]);
 
+  // The stock player page has no window.playerControls, so play/pause must also drive the
+  // <video> directly and arm/disarm the autoplay loop.
   const play = useCallback(() => {
     userPausedRef.current = false;
-    injectJS('window.playerControls.play()');
+    injectJS(
+      'if (window.__foamEnsurePlaying) { window.__foamEnsurePlaying(); }' +
+        'if (window.playerControls) { window.playerControls.play(); }',
+    );
   }, [injectJS]);
 
   const pause = useCallback(() => {
     userPausedRef.current = true;
-    injectJS('window.playerControls.pause()');
+    injectJS(
+      'if (window.__foamStopEnsurePlaying) { window.__foamStopEnsurePlaying(); }' +
+        'var v = document.querySelector("video"); if (v) { v.pause(); }' +
+        'if (window.playerControls) { window.playerControls.pause(); }',
+    );
   }, [injectJS]);
 
-  const mute = useCallback(() => {
-    injectJS('window.playerControls.mute()');
-  }, [injectJS]);
+  // Mute drives the <video> directly via __foamSetMuted; flip state optimistically and let
+  // the page's volumechange confirm it.
+  const applyMuted = useCallback(
+    (muted: boolean) => {
+      setPlayerState(prev =>
+        prev.muted === muted ? prev : { ...prev, muted },
+      );
+      injectJS(
+        `if (window.__foamSetMuted) { window.__foamSetMuted(${muted}); }` +
+          ` else { var v = document.querySelector('video'); if (v) { v.muted = ${muted}; if (!${muted}) { v.volume = 1; } } }` +
+          `if (window.playerControls && window.playerControls.setMuted) { window.playerControls.setMuted(${muted}); }`,
+      );
+    },
+    [injectJS],
+  );
 
-  const unmute = useCallback(() => {
-    injectJS('window.playerControls.unmute()');
-  }, [injectJS]);
+  const mute = useCallback(() => applyMuted(true), [applyMuted]);
 
-  const setMuted = (muted: boolean) => {
-    injectJS(`window.playerControls.setMuted(${muted})`);
-  };
+  const unmute = useCallback(() => applyMuted(false), [applyMuted]);
+
+  const setMuted = (muted: boolean) => applyMuted(muted);
 
   const setVolume = (volume: number) => {
     injectJS(`window.playerControls.setVolume(${volume})`);
@@ -282,9 +304,16 @@ export function usePlayerBridge({
       setVideo: (videoId, timestamp) =>
         playerBridgeRef.current.setVideo(videoId, timestamp),
       setVolume: volume => playerBridgeRef.current.setVolume(volume),
+      releaseMedia: () =>
+        injectJS(
+          'if (window.__foamStopEnsurePlaying) { window.__foamStopEnsurePlaying(); }' +
+            'var v = document.querySelector("video"); if (v) { try { v.pause(); v.removeAttribute("src"); v.load(); } catch(e){} }',
+        ),
+      syncToLive: () =>
+        injectJS('window.__foamSyncToLive && window.__foamSyncToLive();'),
       unmute: () => playerBridgeRef.current.unmute(),
     }),
-    [],
+    [injectJS],
   );
 
   const handleMessage = (event: WebViewMessageEvent) => {
@@ -528,5 +557,6 @@ export function usePlayerBridge({
     playerState,
     playerStatus,
     resetPlayerStatus,
+    setMuted,
   };
 }

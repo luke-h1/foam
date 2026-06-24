@@ -36,6 +36,7 @@ import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedCont
 import { Text } from '@app/components/ui/Text/Text';
 import { useGlobalBadgesQuery } from '@app/hooks/queries/useGlobalBadgesQuery';
 import { useGlobalEmotesQuery } from '@app/hooks/queries/useGlobalEmotesQuery';
+import { useSevenTvBadgesQuery } from '@app/hooks/queries/useSevenTvBadgesQuery';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
@@ -218,8 +219,12 @@ function BadgeRowView({
 }) {
   return (
     <View style={styles.badgeRow}>
-      {row.map(badge => (
-        <BadgeCell key={badge.id} badge={badge} onPress={onPress} />
+      {row.map((badge, index) => (
+        <BadgeCell
+          key={`${badge.provider ?? 'twitch'}-${badge.id}-${index}`}
+          badge={badge}
+          onPress={onPress}
+        />
       ))}
     </View>
   );
@@ -242,12 +247,17 @@ function BadgesTab({
 }) {
   const { t } = useTranslation('settings');
   const { bottom: bottomInset } = useSafeAreaInsets();
-  const { data, isLoading } = useGlobalBadgesQuery();
+  const { data: twitchBadges, isLoading: twitchLoading } =
+    useGlobalBadgesQuery();
+  const { data: sevenTvBadges, isLoading: sevenTvLoading } =
+    useSevenTvBadgesQuery();
 
-  const sections = useMemo(
-    () => (data ? groupBadgesByProvider(data, 5) : []),
-    [data],
+  const badges = useMemo(
+    () => [...(twitchBadges ?? []), ...(sevenTvBadges ?? [])],
+    [twitchBadges, sevenTvBadges],
   );
+
+  const sections = useMemo(() => groupBadgesByProvider(badges, 5), [badges]);
 
   const renderItem = useCallback(
     ({ item }: SectionListRenderItemInfo<BadgeRow, BadgeProviderSection>) => (
@@ -265,11 +275,11 @@ function BadgesTab({
     [],
   );
 
-  if (isLoading) {
+  if (twitchLoading || (badges.length === 0 && sevenTvLoading)) {
     return <View style={styles.centered}>{loader}</View>;
   }
 
-  if (!data || data.length === 0) {
+  if (badges.length === 0) {
     return (
       <View style={styles.centered}>
         <Text weight='semibold'>{t('emoteBadgeViewerNoBadges')}</Text>

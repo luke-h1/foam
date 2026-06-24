@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useEffect, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import {
   useDerivedValue,
@@ -13,6 +13,8 @@ import {
   Skia,
   type Uniforms,
 } from '@shopify/react-native-skia';
+
+import { useScreenFocused } from '@app/hooks/useScreenFocused';
 
 import {
   DEFAULT_COLORS,
@@ -35,11 +37,16 @@ function EnergyOrbComponent({
   colors = DEFAULT_COLORS,
   glowRadius = DEFAULT_GLOW_RADIUS,
 }: IEnergyOrb) {
+  const focused = useScreenFocused();
   const time = useSharedValue<number>(0);
 
-  useFrameCallback(() => {
+  const frameCallback = useFrameCallback(() => {
     time.set(time.get() + 0.016 * speed);
   });
+
+  useEffect(() => {
+    frameCallback.setActive(focused);
+  }, [focused, frameCallback]);
 
   const [c0r, c0g, c0b] = useMemo<RGB>(
     () => parseColor(colors[0] || DEFAULT_COLORS[0]),
@@ -54,14 +61,22 @@ function EnergyOrbComponent({
     [colors],
   );
 
+  const iResolution = useMemo<[number, number]>(
+    () => [width, height],
+    [width, height],
+  );
+  const uColor0 = useMemo<RGB>(() => [c0r, c0g, c0b], [c0r, c0g, c0b]);
+  const uColor1 = useMemo<RGB>(() => [c1r, c1g, c1b], [c1r, c1g, c1b]);
+  const uColor2 = useMemo<RGB>(() => [c2r, c2g, c2b], [c2r, c2g, c2b]);
+
   const uniforms = useDerivedValue<Uniforms>(() => ({
     iTime: time.value,
-    iResolution: [width, height],
+    iResolution,
     uSpeed: speed,
     uIntensity: intensity,
-    uColor0: [c0r, c0g, c0b],
-    uColor1: [c1r, c1g, c1b],
-    uColor2: [c2r, c2g, c2b],
+    uColor0,
+    uColor1,
+    uColor2,
     uGlowRadius: glowRadius,
   }));
 

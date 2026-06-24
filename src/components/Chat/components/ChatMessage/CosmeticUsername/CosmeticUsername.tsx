@@ -6,6 +6,7 @@ import { useSelector } from '@legendapp/state/react';
 import { useChatScrollActive } from '@app/components/Chat/util/useChatScrollActive';
 import { Text } from '@app/components/ui/Text/Text';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
@@ -98,7 +99,7 @@ function PaintedUsernameComponent({
   username,
   paint: paintProp,
   userId,
-  fallbackColor = '#FFFFFF',
+  fallbackColor = theme.color.text.dark,
   showColon = true,
   sevenTvPaintDropShadows: sevenTvPaintDropShadowsProp,
   usernameTextStyle,

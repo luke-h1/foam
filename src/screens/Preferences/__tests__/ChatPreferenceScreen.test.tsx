@@ -27,7 +27,6 @@ const mockPreferences: Preferences = {
   showChatterinoEmotes: true,
   showTwitchEmotes: true,
   disableEmoteAnimations: false,
-  sevenTvLowResEmotes: false,
   showTwitchBadges: true,
   show7tvBadges: true,
   showFFzBadges: true,
@@ -45,6 +44,7 @@ const mockPreferences: Preferences = {
   savedPhrases: [],
   shakeToReport: true,
   landscapeChatWidth: null,
+  customPlayerEnabled: true,
 };
 
 jest.mock('@app/store/preferenceStore', () => ({

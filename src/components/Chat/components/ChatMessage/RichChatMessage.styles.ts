@@ -192,7 +192,7 @@ export const styles = StyleSheet.create({
     marginBottom: 4,
   },
   sharedChatLabelText: {
-    color: '#ADADB8',
+    color: theme.color.notice.muted,
     fontSize: theme.fontSize11,
     fontWeight: '600',
     lineHeight: 14,
@@ -244,19 +244,19 @@ export const styles = StyleSheet.create({
     marginHorizontal: 1,
   },
   mentionDefaultColor: {
-    color: '#FFFFFF',
+    color: theme.colorWhite,
   },
   mentionHighlighted: {
     fontWeight: '700',
   },
   messageLink: {
     ...chatLineMetrics.comfortable,
-    color: '#9147FF',
+    color: theme.color.brand.twitch,
     textDecorationLine: 'underline',
   },
   messageLinkCompact: {
     ...chatLineMetrics.compact,
-    color: '#9147FF',
+    color: theme.color.brand.twitch,
     textDecorationLine: 'underline',
   },
   messageColumn: {

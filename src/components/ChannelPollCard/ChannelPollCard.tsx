@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   container: {
-    backgroundColor: '#121216',
+    backgroundColor: theme.color.surface.dark,
     borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: StyleSheet.hairlineWidth,
     gap: theme.space12,

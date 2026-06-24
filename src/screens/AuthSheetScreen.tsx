@@ -77,7 +77,7 @@ export function AuthSheetScreen() {
                     theme.color.backgroundElement.dark,
                     theme.color.backgroundElement.dark,
                   ]
-                : ['#a970ff', '#9146ff']
+                : [theme.color.brand.twitchLight, theme.color.brand.twitch]
             }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -204,8 +204,8 @@ const styles = StyleSheet.create({
     gap: theme.space8,
   },
   loginButton: {
-    backgroundColor: '#9146ff',
-    borderColor: '#bf94ff',
+    backgroundColor: theme.color.brand.twitch,
+    borderColor: theme.color.brand.twitchBorder,
     borderRadius: theme.borderRadius16,
     borderWidth: 1,
     boxShadow: '0px 18px 40px rgba(145, 70, 255, 0.28)',

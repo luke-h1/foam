@@ -330,7 +330,7 @@ function UserActionSheetComponent({
                           ? theme.colorAmber
                           : action.tone === 'accent'
                             ? theme.colorPrimary
-                            : '#b7bdc9'
+                            : theme.color.textSecondary.dark
                     }
                   />
                 </View>

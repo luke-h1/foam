@@ -1,14 +1,10 @@
 import { memo, useCallback } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
+import { BottomSheet } from '@expo/ui/community/bottom-sheet';
+
 import type { SettingsSheetPreferenceFlags } from '@app/components/Chat/types/chatUiFlags';
 import {
   SettingsLinkRow,
@@ -16,12 +12,16 @@ import {
   SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
 import { Text } from '@app/components/ui/Text/Text';
+import { requestLiveSync } from '@app/store/stream/liveSyncBus';
 import { theme } from '@app/styles/themes';
 
 import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
-import { chatSheetSurface } from '../chatSheetSurface';
 
 const ICON_TINT = theme.color.textSecondary.dark;
+const SETTINGS_SHEET_SNAP_POINTS = [`${CHAT_SETTINGS_SHEET_DETENT * 100}%`];
+const SHEET_BACKGROUND_STYLE = {
+  backgroundColor: theme.color.surfaceSunken.dark,
+};
 
 export interface SettingsSheetProps {
   isPresented: boolean;
@@ -71,8 +71,6 @@ const SettingsSheetComponent = ({
     showUnreadJumpPill = true,
   } = preferenceFlags ?? {};
   const { bottom: bottomInset } = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
-  const sheetHeight = Math.round(windowHeight * CHAT_SETTINGS_SHEET_DETENT);
 
   const dismissSheet = useCallback(() => {
     onDismiss();
@@ -115,6 +113,11 @@ const SettingsSheetComponent = ({
     dismissSheet();
   }, [onRefreshVideo, dismissSheet]);
 
+  const handleSyncToLive = useCallback(() => {
+    requestLiveSync();
+    dismissSheet();
+  }, [dismissSheet]);
+
   const hasActions = Boolean(
     onOpenChatters || onOpenSavedPhrases || onRefetchEmotes,
   );
@@ -124,14 +127,13 @@ const SettingsSheetComponent = ({
 
   return (
     <BottomSheet
-      enableFixedSnapPoints
-      isPresented={isPresented}
+      index={isPresented ? 0 : -1}
       onDismiss={onDismiss}
-      showDragIndicator
-      snapPoints={[{ fraction: CHAT_SETTINGS_SHEET_DETENT }]}
-      testID='chat-settings-sheet'
+      enablePanDownToClose
+      snapPoints={SETTINGS_SHEET_SNAP_POINTS}
+      backgroundStyle={SHEET_BACKGROUND_STYLE}
     >
-      <View style={[styles.container, { height: sheetHeight }]}>
+      <View style={styles.container} testID='chat-settings-sheet'>
         <View style={styles.header}>
           <Text style={styles.headerTitle} weight='semibold'>
             {t('settingsSheet.title')}
@@ -149,7 +151,7 @@ const SettingsSheetComponent = ({
         >
           <SettingsSection
             title={t('settingsSheet.sectionAppearance')}
-            cardColor='#1C1C1E'
+            cardColor={theme.color.surfaceNeutral.dark}
           >
             <SettingsLinkRow
               title={t('settingsSheet.density')}
@@ -210,7 +212,7 @@ const SettingsSheetComponent = ({
           {hasActions ? (
             <SettingsSection
               title={t('settingsSheet.sectionActions')}
-              cardColor='#1C1C1E'
+              cardColor={theme.color.surfaceNeutral.dark}
             >
               {onOpenChatters ? (
                 <SettingsLinkRow
@@ -250,8 +252,18 @@ const SettingsSheetComponent = ({
 
           <SettingsSection
             title={t('settingsSheet.sectionConnection')}
-            cardColor='#1C1C1E'
+            cardColor={theme.color.surfaceNeutral.dark}
           >
+            <SettingsLinkRow
+              title={t('settingsSheet.syncToLive')}
+              subtitle={t('settingsSheet.syncToLiveSubtitle')}
+              icon={{
+                icon: 'forward.end.fill',
+                androidIcon: 'skip_next',
+                color: ICON_TINT,
+              }}
+              onPress={handleSyncToLive}
+            />
             {onReconnect ? (
               <SettingsLinkRow
                 title={t('settingsSheet.reconnect')}
@@ -288,7 +300,7 @@ const SettingsSheetComponent = ({
           {hasStorage ? (
             <SettingsSection
               title={t('settingsSheet.sectionStorage')}
-              cardColor='#1C1C1E'
+              cardColor={theme.color.surfaceNeutral.dark}
             >
               <SettingsLinkRow
                 title={t('settingsSheet.clearCache')}
@@ -312,9 +324,8 @@ export const SettingsSheet = memo(SettingsSheetComponent);
 
 const styles = StyleSheet.create({
   container: {
-    ...chatSheetSurface,
     alignSelf: 'stretch',
-    backgroundColor: 'transparent',
+    flex: 1,
     flexDirection: 'column',
     minHeight: 0,
     width: '100%',

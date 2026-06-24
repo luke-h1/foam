@@ -25,7 +25,6 @@ const basePreferences = {
   showChatterinoEmotes: true,
   showTwitchEmotes: true,
   disableEmoteAnimations: false,
-  sevenTvLowResEmotes: false,
   showTwitchBadges: true,
   show7tvBadges: true,
   showFFzBadges: true,
@@ -43,6 +42,7 @@ const basePreferences = {
   savedPhrases: [] as { id: string; text: string }[],
   shakeToReport: true,
   landscapeChatWidth: null,
+  customPlayerEnabled: true,
 } as const;
 
 describe('usePreferences', () => {

@@ -51,7 +51,6 @@ export function useChatPreferenceScreenState() {
     emojiStyle,
     ignoreClearChat,
     highlightOwnMentions,
-    sevenTvLowResEmotes,
     showAlternatingChatRows,
     showInlineReplyContext,
     showRecentMessages,
@@ -417,7 +416,6 @@ export function useChatPreferenceScreenState() {
     previewFontScale,
     previewDisableEmoteAnimations,
     previewProviders,
-    sevenTvLowResEmotes,
     showRecentMessages,
     update,
   };

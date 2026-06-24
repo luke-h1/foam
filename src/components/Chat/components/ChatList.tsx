@@ -205,9 +205,7 @@ export const ChatList = memo(
         extraData={extraData}
         style={styles.list}
         contentContainerStyle={contentContainerStyle}
-        // The composer lives in a sibling KeyboardStickyView, so RN's built-in
-        // tap-to-dismiss never fires for it; dragging the list is the reliable
-        // way to dismiss, and handled-taps keep row touchables working.
+        // The composer is in a sibling KeyboardStickyView, so RN's tap-dismiss never fires; drag to dismiss.
         keyboardDismissMode='on-drag'
         keyboardShouldPersistTaps='handled'
         scrollEventThrottle={16}

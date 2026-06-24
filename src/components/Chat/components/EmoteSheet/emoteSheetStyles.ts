@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 
 import { theme } from '@app/styles/themes';
 
-const MENU_HEADER_BACKGROUND = '#111215';
+const MENU_HEADER_BACKGROUND = theme.color.surface.dark;
 const MENU_BORDER = 'rgba(255, 255, 255, 0.075)';
 
 export const emoteSheetStyles = StyleSheet.create({
@@ -30,7 +30,7 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   container: {
     alignSelf: 'stretch',
-    backgroundColor: '#0b0b0d',
+    backgroundColor: theme.color.surfaceSunken.dark,
     flex: 1,
     minHeight: 0,
     overflow: 'hidden',
@@ -79,7 +79,7 @@ export const emoteSheetStyles = StyleSheet.create({
     opacity: 0,
   },
   emoteImagePlaceholder: {
-    backgroundColor: '#202127',
+    backgroundColor: theme.color.surfaceElevated.dark,
     borderColor: 'rgba(255,255,255,0.055)',
     borderCurve: 'continuous',
     borderRadius: 8,
@@ -160,7 +160,7 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   providerChip: {
     alignItems: 'center',
-    backgroundColor: '#191a1f',
+    backgroundColor: theme.color.surface.dark,
     borderColor: 'rgba(255,255,255,0.055)',
     borderCurve: 'continuous',
     borderRadius: 8,
@@ -200,7 +200,7 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   searchInputWrap: {
     alignItems: 'center',
-    backgroundColor: '#1f2025',
+    backgroundColor: theme.color.surfaceElevated.dark,
     borderColor: 'rgba(255,255,255,0.065)',
     borderCurve: 'continuous',
     borderRadius: 8,
@@ -229,7 +229,7 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   searchClearButton: {
     alignItems: 'center',
-    backgroundColor: '#2b2d33',
+    backgroundColor: theme.color.surfaceElevated.dark,
     borderRadius: 4,
     height: 28,
     justifyContent: 'center',
@@ -265,7 +265,7 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   setRailButton: {
     alignItems: 'center',
-    backgroundColor: '#191a1f',
+    backgroundColor: theme.color.surface.dark,
     borderColor: 'rgba(255,255,255,0.045)',
     borderCurve: 'continuous',
     borderRadius: 10,

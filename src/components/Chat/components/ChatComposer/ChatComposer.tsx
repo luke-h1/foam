@@ -132,7 +132,7 @@ function ChatComposerComponent({
           selection={selection}
           value={text}
           placeholder={placeholder ?? t('composer.sendAMessage')}
-          placeholderTextColor='#8E8E93'
+          placeholderTextColor={theme.color.textSecondary.dark}
           returnKeyType='send'
           selectionColor={theme.color.text.dark}
           style={styles.input}
@@ -157,7 +157,9 @@ function ChatComposerComponent({
             <SymbolView
               name='arrow.up'
               size={20}
-              tintColor={submitEnabled ? '#fff' : theme.colorGreyHoverAlpha}
+              tintColor={
+                submitEnabled ? theme.colorWhite : theme.colorGreyHoverAlpha
+              }
             />
           </PressableScale>
         ) : null}

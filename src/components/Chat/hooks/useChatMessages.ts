@@ -29,8 +29,7 @@ type HandleNewMessageOptions = {
   countUnread?: boolean;
 };
 
-// Floor on how often the delay queue is checked, so a burst of near-simultaneous
-// releases coalesces into one drain instead of one timer per message.
+// Floor on delay-queue checks so a burst of releases coalesces into one drain.
 const DELAY_RELEASE_MIN_INTERVAL_MS = 80;
 
 function publishBufferedMessages(messages: BufferedMessage[]) {
@@ -51,9 +50,8 @@ function shouldArmBottomContentAnchor(
 
 interface UseChatMessagesOptions {
   /**
-   * Live messages are held this many ms before entering the render buffer, so
-   * chat can line up with the latency-delayed video. Read fresh on every
-   * message (default 0 = today's no-delay path).
+   * Hold live messages this many ms before the render buffer (default 0 = no
+   * delay).
    */
   getChatDelayMs?: () => number;
   isAtBottomRef: MutableRefObject<boolean>;
@@ -166,9 +164,8 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     }
   }, []);
 
-  // Commit one message into the render buffer and run the unread/flush
-  // bookkeeping. The direct path and the delayed-release path share this so a
-  // message is accounted for identically whenever it actually becomes visible.
+  // Commit one message into the render buffer + run unread/flush bookkeeping (shared by
+  // the direct and delayed-release paths).
   const ingestMessage = useCallback(
     (message: BufferedMessage, countUnread?: boolean) => {
       const { added, dropped } = bufferRef.current.add(message);
@@ -239,8 +236,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       };
 
       const countUnread = messageOptions?.countUnread;
-      // Historical replay (countUnread === false) is already old, so it bypasses
-      // the delay; live messages are held for the effective delay.
+      // Historical replay (countUnread === false) is already old, so it bypasses the delay.
       const delayMs =
         countUnread === false ? 0 : Math.max(0, getChatDelayMsRef.current());
 
@@ -259,9 +255,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     [delayQueueRef, ingestMessage, scheduleDelayTick],
   );
 
-  // Re-evaluate after the delay setting changes: drain everything held when the
-  // delay is switched off so nothing is stranded, otherwise ensure a release
-  // tick is pending.
+  // On delay-setting change: drain everything held if delay is off, else ensure a tick is pending.
   const reconcileChatDelay = useCallback(() => {
     if (getChatDelayMsRef.current() <= 0) {
       clearDelayTick();

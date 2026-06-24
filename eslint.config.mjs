@@ -242,5 +242,26 @@ export default tseslint.config(
       'no-console': 'error',
     },
   },
+  {
+    files: ['src/components/**/*.{ts,tsx}', 'src/screens/**/*.{ts,tsx}'],
+    ignores: [
+      'src/**/__tests__/**',
+      'src/**/*.test.{ts,tsx}',
+      'src/**/*.stories.{ts,tsx}',
+      'src/**/*StoryFixtures.{ts,tsx}',
+      'src/components/BrandIcon/**',
+      'src/screens/DevTools/**',
+    ],
+    rules: {
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: 'Literal[value=/^#[0-9a-fA-F]{3,8}$/]',
+          message:
+            'Avoid hardcoded hex colors in UI. Use a theme token from src/styles/themes.ts (e.g. theme.color.live, theme.color.surface, theme.colorWhite) so colors stay consistent.',
+        },
+      ],
+    },
+  },
   prettierConfig,
 );

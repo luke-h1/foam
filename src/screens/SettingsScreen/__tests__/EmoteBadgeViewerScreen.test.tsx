@@ -10,6 +10,7 @@ import render from '@app/test/render';
 
 import {
   bttvGlobalEmotesFixture,
+  sevenTvGlobalBadgesFixture,
   twitchGlobalBadgesFixture,
   twitchGlobalEmotesFixture,
 } from './__fixtures__/globalEmoteBadgeData.fixture';
@@ -149,6 +150,7 @@ describe('EmoteBadgeViewerScreen', () => {
       twitchGlobalBadgesFixture,
     );
     ffzService.getSanitisedGlobalBadges.mockResolvedValue([]);
+    sevenTvService.fetchAllBadges.mockResolvedValue(sevenTvGlobalBadgesFixture);
   });
 
   test('renders global emote provider sets by default', async () => {
@@ -171,8 +173,23 @@ describe('EmoteBadgeViewerScreen', () => {
     expect(twitchBadgeService.listSanitisedGlobalBadges).toHaveBeenCalled();
   });
 
+  test('renders 7TV badges in the badges tab', async () => {
+    render(<EmoteBadgeViewerScreen />);
+
+    await screen.findByText('Global Emotes');
+
+    fireEvent.press(screen.getByTestId('tab-badges'));
+
+    expect(
+      await screen.findByTestId('badge-cell-7tv_badge_1'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('7TV')).toBeOnTheScreen();
+    expect(sevenTvService.fetchAllBadges).toHaveBeenCalled();
+  });
+
   test('shows the empty state when no badges are available', async () => {
     twitchBadgeService.listSanitisedGlobalBadges.mockResolvedValue([]);
+    sevenTvService.fetchAllBadges.mockResolvedValue([]);
 
     render(<EmoteBadgeViewerScreen />);
 

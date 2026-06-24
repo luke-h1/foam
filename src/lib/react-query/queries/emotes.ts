@@ -64,3 +64,11 @@ export function globalBadgesQueryOptions() {
       fetchOrEmpty(() => twitchBadgeService.listSanitisedGlobalBadges()),
   });
 }
+
+export function sevenTvBadgesQueryOptions() {
+  return queryOptions<SanitisedBadgeSet[]>({
+    queryKey: emoteKeys.sevenTvBadges(),
+    staleTime: GLOBAL_STALE_TIME,
+    queryFn: () => fetchOrEmpty(() => sevenTvService.fetchAllBadges()),
+  });
+}

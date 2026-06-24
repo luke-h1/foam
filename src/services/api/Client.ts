@@ -1,7 +1,7 @@
 import { fetch } from 'expo/fetch';
 
 import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
-import type { MonitoringErrorName } from '@app/lib/sentry';
+import { type MonitoringErrorName, startSpanAsync } from '@app/lib/sentry';
 import { type AllowedPrefix, logger } from '@app/utils/logger';
 
 import { getApiMonitoringContext } from './monitoring';
@@ -160,6 +160,12 @@ export function createApiClient({
       headers['Content-Type'] = 'application/json';
     }
 
+    const requestContext = getApiMonitoringContext({
+      baseURL,
+      method,
+      url: path,
+    });
+
     const controller = new AbortController();
     let didTimeout = false;
     const timeoutId = setTimeout(() => {
@@ -169,12 +175,23 @@ export function createApiClient({
 
     let response: Response;
     try {
-      response = await fetch(url.toString(), {
-        method,
-        headers,
-        body: data !== undefined ? JSON.stringify(data) : undefined,
-        signal: controller.signal,
-      });
+      response = await startSpanAsync(
+        `${method} ${requestContext.endpoint ?? path}`,
+        'http.client',
+        () =>
+          fetch(url.toString(), {
+            method,
+            headers,
+            body: data !== undefined ? JSON.stringify(data) : undefined,
+            signal: controller.signal,
+          }),
+        {
+          provider: String(requestContext.provider ?? 'unknown'),
+          'server.address': String(requestContext.host ?? url.host),
+          'http.request.method': method,
+          'url.full': url.toString(),
+        },
+      );
     } catch (error) {
       if (didTimeout) {
         log.warn(`${method} ${path} timed out after ${timeout}ms`, {

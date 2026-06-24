@@ -1,13 +1,9 @@
-// A bogus latency reading shouldn't strand chat behind a huge delay; cap the
-// auto-synced delay at a sane ceiling (well above any real broadcaster latency).
+// Cap the auto-synced delay so a bogus latency reading can't strand chat behind a huge delay.
 export const MAX_AUTO_SYNC_CHAT_DELAY_SECONDS = 30;
 
 /**
- * Resolves the effective chat-delay in milliseconds from the user's preferences
- * and the player's measured latency (Frosty's `effectiveChatDelay`): auto-sync
- * tracks the measured broadcaster latency, otherwise the fixed manual delay.
- * Returns 0 (no delay — today's path) when auto-sync is on but no latency has
- * been measured yet.
+ * Effective chat-delay (ms): auto-sync tracks measured latency, else the manual delay.
+ * Returns 0 when auto-sync is on but no latency has been measured.
  */
 export function resolveEffectiveChatDelayMs(options: {
   autoSync: boolean;

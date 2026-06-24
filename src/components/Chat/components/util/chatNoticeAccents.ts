@@ -1,19 +1,19 @@
 import { theme } from '@app/styles/themes';
 
 export const CHAT_NOTICE_ACCENTS = {
-  announcement: '#EB0400',
+  announcement: theme.color.notice.announcement,
   channelPoints: theme.colorViolet,
-  highlight: '#ADADB8',
-  subscription: '#FFD700',
-  charity: '#00AD03',
+  highlight: theme.color.notice.muted,
+  subscription: theme.color.notice.subscription,
+  charity: theme.color.notice.charity,
   ritual: theme.colorViolet,
   firstMessage: theme.colorViolet,
   returningChatter: theme.colorBlue,
   viewerMilestone: theme.colorViolet,
   raid: theme.colorOrange,
-  replyToYou: '#EB0400',
+  replyToYou: theme.color.notice.announcement,
   stvAdded: theme.colorPrimary,
-  stvRemoved: '#EB0400',
+  stvRemoved: theme.color.notice.announcement,
 } as const;
 
 export function noticeSurfaceTint(hex: string, alpha = 0.06): string {

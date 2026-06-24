@@ -59,7 +59,6 @@ export function useChat(
   const blockedTerms = usePreference('blockedTerms');
   const chatDelay = usePreference('chatDelay');
   const autoSyncChatDelay = usePreference('autoSyncChatDelay');
-  const sevenTvLowResEmotes = usePreference('sevenTvLowResEmotes');
   const showRecentMessages = preferences.showRecentMessages !== false;
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -126,7 +125,6 @@ export function useChat(
         preferences.showFFzBadges,
         preferences.showTwitchBadges,
         preferences.showChatterinoEmotes,
-        sevenTvLowResEmotes,
       ].join('|'),
     [
       preferences.emojiStyle,
@@ -139,7 +137,6 @@ export function useChat(
       preferences.showFFzBadges,
       preferences.showTwitchBadges,
       preferences.showChatterinoEmotes,
-      sevenTvLowResEmotes,
     ],
   );
 
@@ -214,8 +211,7 @@ export function useChat(
     ),
   });
 
-  // Switching auto-sync / manual delay off must release anything already held;
-  // turning it on just ensures a release tick is pending.
+  // Switching the delay off must release anything held; turning it on ensures a tick is pending.
   useEffect(() => {
     reconcileChatDelay();
   }, [autoSyncChatDelay, chatDelay, reconcileChatDelay]);

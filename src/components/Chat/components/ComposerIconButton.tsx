@@ -65,7 +65,7 @@ export function ComposerIconButton({
   if (disabled) {
     iconColor = 'rgba(255,255,255,0.36)';
   } else if (isHighlighted) {
-    iconColor = '#ffffff';
+    iconColor = theme.colorWhite;
   } else {
     iconColor = 'rgba(255,255,255,0.86)';
   }

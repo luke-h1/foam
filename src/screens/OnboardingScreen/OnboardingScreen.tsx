@@ -31,7 +31,11 @@ export function OnboardingScreen() {
         <EnergyOrb
           width={orbSize}
           height={orbSize}
-          colors={['#1083FE', '#2E86FF', '#5AA1FF']}
+          colors={[
+            theme.color.accent.light,
+            theme.color.accent.dark,
+            theme.color.accentPress.dark,
+          ]}
           intensity={2.2}
           glowRadius={0.42}
           speed={0.9}

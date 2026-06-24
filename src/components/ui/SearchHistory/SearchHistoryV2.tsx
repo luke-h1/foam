@@ -143,7 +143,11 @@ function SwipeableHistoryItem({
             <Animated.View
               style={[styles.deleteActionContent, animatedDeleteContentStyle]}
             >
-              <SymbolView name='trash.fill' size={20} tintColor='#fff' />
+              <SymbolView
+                name='trash.fill'
+                size={20}
+                tintColor={theme.colorWhite}
+              />
               <Text style={styles.deleteActionLabel} weight='semibold'>
                 {t('delete')}
               </Text>
@@ -267,7 +271,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   deleteActionLabel: {
-    color: '#fff',
+    color: theme.colorWhite,
     fontSize: 12,
   },
   headerRow: {

@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     maxWidth: 260,
   },
   mediaEyebrow: {
-    color: '#BF94FF',
+    color: theme.color.brand.twitchBorder,
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0,

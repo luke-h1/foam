@@ -74,7 +74,6 @@ export function ChatPreferenceDefaultContent({
   previewDensity,
   previewDisableEmoteAnimations,
   previewProviders,
-  sevenTvLowResEmotes,
   showRecentMessages,
   update,
 }: ChatPreferenceDefaultContentProps) {
@@ -348,17 +347,6 @@ export function ChatPreferenceDefaultContent({
             value={previewDisableEmoteAnimations}
           />
         </View>
-        <SettingsToggleRow
-          title={t('lowResSevenTvEmotes')}
-          subtitle={t('lowResSevenTvEmotesDescription')}
-          icon={{
-            icon: 'arrow.down.right.and.arrow.up.left',
-            androidIcon: 'photo_size_select_small',
-            color: theme.colorGrey,
-          }}
-          value={sevenTvLowResEmotes === true}
-          onValueChange={value => update({ sevenTvLowResEmotes: value })}
-        />
       </SettingsSection>
     </>
   );

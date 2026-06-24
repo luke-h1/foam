@@ -90,7 +90,7 @@ export const ChatInputSection = memo(
               onPress={onClearReply}
               style={styles.replyDismissButton}
             >
-              <SymbolView tintColor='#ffffff' name='xmark' size={16} />
+              <SymbolView tintColor={theme.colorWhite} name='xmark' size={16} />
             </PressableButton>
           </View>
         ) : null}
@@ -134,7 +134,7 @@ export const ChatInputSection = memo(
 
 const styles = StyleSheet.create({
   composerShell: {
-    backgroundColor: '#000000',
+    backgroundColor: theme.colorBlack,
     overflow: 'visible',
     paddingHorizontal: theme.space12,
     paddingTop: theme.space4,

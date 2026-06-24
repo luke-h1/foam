@@ -4,25 +4,26 @@ import type { WebViewMessageEvent } from 'react-native-webview';
 import { WebView } from 'react-native-webview';
 
 import { useWatchTimeTracking } from '@app/hooks/useWatchTimeTracking';
+import { theme } from '@app/styles/themes';
 import { logger } from '@app/utils/logger';
 
+import { Image } from '../Image/Image';
 import { ControlsOverlay } from './ControlsOverlay';
-import {
-  ControlsTriggerButton,
-  DebugErrorOverlay,
-  TouchBlockOverlay,
-} from './StreamPlayerOverlays';
+import { DebugErrorOverlay, TouchBlockOverlay } from './StreamPlayerOverlays';
 import { StreamPlayerPoster } from './StreamPlayerPoster';
 import { StreamPlayerWebView } from './StreamPlayerWebView';
 import {
   buildRawTwitchPlayerUrl,
   buildTwitchAutoplayEnsureScript,
   buildTwitchCaptionHiderScript,
+  buildTwitchChromeHiderScript,
   buildTwitchClipPlayerUrl,
   buildTwitchContentGateAcceptScript,
-  buildTwitchOverlayHideScript,
+  buildTwitchLatencyTrackerScript,
+  buildTwitchLiveSyncScript,
   buildTwitchPlayerAudioDefaultScript,
   buildTwitchPlayerQualityDefaultScript,
+  buildTwitchPlayerStateScript,
 } from './twitchPlayerSource';
 import type { StreamPlayerProps } from './types';
 import { usePlayerBridge } from './usePlayerBridge';
@@ -275,10 +276,10 @@ export const StreamPlayer = memo(function StreamPlayer({
     overlayUnlocked,
     pause,
     play,
-    playbackLatencySeconds,
     playerState,
     playerStatus,
     resetPlayerStatus,
+    setMuted,
   } = usePlayerBridge({
     autoplay,
     channel,
@@ -352,7 +353,17 @@ export const StreamPlayer = memo(function StreamPlayer({
       ? '\n' + buildTwitchAutoplayEnsureScript({ muted: initialMuted })
       : '') +
     (showOverlayControls && !clip
-      ? '\n' + buildTwitchOverlayHideScript()
+      ? '\n' +
+        buildTwitchChromeHiderScript() +
+        '\n' +
+        buildTwitchPlayerStateScript()
+      : '') +
+    // Live + custom-player only: read broadcaster latency for the chat pill and seek to live at start.
+    (showOverlayControls && !clip && !video
+      ? '\n' +
+        buildTwitchLatencyTrackerScript() +
+        '\n' +
+        buildTwitchLiveSyncScript({})
       : '') +
     (video ? '\n' + VOD_PROGRESS_TRACKER_SCRIPT : '');
 
@@ -396,7 +407,7 @@ export const StreamPlayer = memo(function StreamPlayer({
     [],
   );
 
-  const { controlsVisible, handlePlayPause, toggleControls, videoTapGesture } =
+  const { controlsOpacity, controlsVisible, handlePlayPause, videoTapGesture } =
     useStreamPlayerControls({
       onVideoAreaPress,
       onVideoAreaSwipeDown,
@@ -410,10 +421,17 @@ export const StreamPlayer = memo(function StreamPlayer({
     onRefresh?.();
   }, [onRefresh, resetPlayerStatus]);
 
+  const handleMutePress = useCallback(() => {
+    setMuted(!playerState.muted);
+  }, [playerState.muted, setMuted]);
+
   const playerWidth = width ?? '100%';
   const playerHeight = height ?? '100%';
   const allowsTwitchInteraction =
     Boolean(clip) || !showOverlayControls || hasContentGate;
+  // Thumbnail behind a transparent WebView so the iOS rotation snapshot shows the poster,
+  // not the WebView's black backing. Live only.
+  const showBehindThumbnail = Boolean(posterUrl) && !clip && !video;
   const shouldShowNativeControls =
     showOverlayControls &&
     !clip &&
@@ -431,6 +449,15 @@ export const StreamPlayer = memo(function StreamPlayer({
         hasContentGate && styles.containerScrollable,
       ]}
     >
+      {showBehindThumbnail ? (
+        <Image
+          source={posterUrl}
+          contentFit='cover'
+          containerStyle={StyleSheet.absoluteFill}
+          style={styles.behindThumbnail}
+        />
+      ) : null}
+
       {canMountWebView ? (
         <StreamPlayerWebView
           allowsTwitchInteraction={allowsTwitchInteraction}
@@ -441,11 +468,18 @@ export const StreamPlayer = memo(function StreamPlayer({
             injectedJavaScriptBeforeContentLoaded
           }
           needsInitRef={needsInitRef}
+          opaque={!showBehindThumbnail}
           onError={onError}
           onHttpError={handleWebViewHttpError}
           onMessage={handleWebViewMessage}
           onWebViewLoaded={() => {
             handleBridgePlaying();
+            // Kick autoplay off the WebView-ready signal so the stream starts without a tap.
+            if (autoplay && !clip) {
+              runJavaScript(
+                'window.__foamEnsurePlaying && window.__foamEnsurePlaying(); true;',
+              );
+            }
             onWebViewLoaded?.();
           }}
           remountWebView={remountEmbedWebView}
@@ -471,19 +505,16 @@ export const StreamPlayer = memo(function StreamPlayer({
       )}
 
       {shouldShowNativeControls && (
-        <ControlsTriggerButton onPress={toggleControls} />
-      )}
-
-      {shouldShowNativeControls && (
         <ControlsOverlay
           isVisible={controlsVisible}
-          latencySeconds={playbackLatencySeconds}
+          muted={playerState.muted}
+          opacity={controlsOpacity}
           onBackPress={onBackPress}
+          onMutePress={handleMutePress}
           onPipPress={() => {}}
           onPlayPausePress={handlePlayPause}
           onRefresh={onRefresh ? handleRefresh : undefined}
           onSharePress={onSharePress}
-          onToggleControls={toggleControls}
           paused={playerState.isPaused}
           streamInfo={streamInfo}
         />
@@ -493,8 +524,12 @@ export const StreamPlayer = memo(function StreamPlayer({
 });
 
 const styles = StyleSheet.create({
+  behindThumbnail: {
+    height: '100%',
+    width: '100%',
+  },
   container: {
-    backgroundColor: '#000',
+    backgroundColor: theme.colorBlack,
     overflow: 'hidden',
     position: 'relative',
   },

@@ -1,16 +1,23 @@
-import { useEffect } from 'react';
-import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
+import { useEffect, useState } from 'react';
 import {
+  type LayoutChangeEvent,
+  type StyleProp,
+  StyleSheet,
+  View,
+  type ViewStyle,
+} from 'react-native';
+import Animated, {
   cancelAnimation,
   Easing,
-  useDerivedValue,
+  useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
 
-import { Canvas, Fill, LinearGradient, vec } from '@shopify/react-native-skia';
+import { LinearGradient } from 'expo-linear-gradient';
 
+import { useScreenFocused } from '@app/hooks/useScreenFocused';
 import { theme } from '@app/styles/themes';
 
 interface SkeletonProps {
@@ -21,60 +28,78 @@ interface SkeletonProps {
 
 const SHIMMER_WIDTH = 180;
 const SHIMMER_DURATION_MS = 1450;
-const SHIMMER_COLORS = [
-  'rgba(255,255,255,0)',
-  'rgba(255,255,255,0.18)',
-  'rgba(255,255,255,0)',
-];
 
 export function Skeleton({ shimmer = true, style, testID }: SkeletonProps) {
+  const [width, setWidth] = useState(0);
+
   return (
-    <View style={[styles.skeleton, style]} testID={testID}>
-      {shimmer ? <SkeletonShimmer /> : null}
+    <View
+      style={[styles.skeleton, style]}
+      testID={testID}
+      onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
+    >
+      {shimmer ? <SkeletonShimmer containerWidth={width} /> : null}
     </View>
   );
 }
 
 /**
- * A single gradient band swept across the skeleton on the UI thread. The
- * canvas size is read via `onSize` so the sweep always covers the full
- * skeleton regardless of its measured width.
+ * A gradient band swept across the skeleton via a single `translateX` (no Skia
+ * canvas, so many skeletons render without separate TextureViews). Pauses while
+ * off-screen.
  */
-function SkeletonShimmer() {
-  const progress = useSharedValue(0);
-  const size = useSharedValue({ width: 0, height: 0 });
+function SkeletonShimmer({ containerWidth }: { containerWidth: number }) {
+  const focused = useScreenFocused();
+  const translateX = useSharedValue(-SHIMMER_WIDTH);
 
   useEffect(() => {
-    progress.set(
+    if (!focused || containerWidth <= 0) {
+      cancelAnimation(translateX);
+      return;
+    }
+
+    translateX.set(-SHIMMER_WIDTH);
+    translateX.set(
       withRepeat(
-        withTiming(1, {
+        withTiming(containerWidth, {
           duration: SHIMMER_DURATION_MS,
           easing: Easing.inOut(Easing.ease),
         }),
         -1,
       ),
     );
-    return () => cancelAnimation(progress);
-  }, [progress]);
 
-  const start = useDerivedValue(() => {
-    const sweepStart = -SHIMMER_WIDTH;
-    const sweepEnd = size.value.width;
-    return vec(sweepStart + (sweepEnd - sweepStart) * progress.value, 0);
-  });
+    return () => cancelAnimation(translateX);
+  }, [focused, containerWidth, translateX]);
 
-  const end = useDerivedValue(() => vec(start.value.x + SHIMMER_WIDTH, 0));
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.get() }],
+  }));
 
   return (
-    <Canvas style={StyleSheet.absoluteFill} onSize={size} pointerEvents='none'>
-      <Fill>
-        <LinearGradient start={start} end={end} colors={SHIMMER_COLORS} />
-      </Fill>
-    </Canvas>
+    <Animated.View pointerEvents='none' style={[styles.shimmer, animatedStyle]}>
+      <LinearGradient
+        colors={[
+          'rgba(255,255,255,0)',
+          'rgba(255,255,255,0.18)',
+          'rgba(255,255,255,0)',
+        ]}
+        locations={[0, 0.5, 1]}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        style={StyleSheet.absoluteFill}
+      />
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
+  shimmer: {
+    bottom: 0,
+    position: 'absolute',
+    top: 0,
+    width: SHIMMER_WIDTH,
+  },
   skeleton: {
     backgroundColor: theme.colorSurfaceAlpha,
     borderCurve: 'continuous',

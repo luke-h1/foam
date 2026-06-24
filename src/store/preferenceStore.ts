@@ -47,12 +47,6 @@ export interface Preferences {
   showChatterinoEmotes: boolean;
   showTwitchEmotes: boolean;
   disableEmoteAnimations: boolean;
-  /**
-   * Render 7TV emotes from their 1x source instead of 2x, cutting decode CPU
-   * and frame memory (the dominant animated-AVIF cost) at the price of sharpness
-   * on hi-DPI screens. Experimental — flagged off by default.
-   */
-  sevenTvLowResEmotes: boolean;
   showTwitchBadges: boolean;
   show7tvBadges: boolean;
   showFFzBadges: boolean;
@@ -62,14 +56,13 @@ export interface Preferences {
   chatFontScale: ChatFontScale;
   chatScrollback: ChatScrollbackLength;
   /**
-   * Seconds to hold new live chat messages before showing them, so chat lines
-   * up with the (latency-delayed) video. Ignored while {@link autoSyncChatDelay}
-   * is on. 0 = no delay (today's behaviour).
+   * Seconds to hold new chat messages before showing them. Ignored while
+   * autoSyncChatDelay is on. 0 = off.
    */
   chatDelay: number;
   /**
-   * When on, the chat delay tracks the player's measured broadcaster latency
-   * instead of the fixed {@link chatDelay} value.
+   * When on, the chat delay tracks the player's measured latency instead of
+   * {@link chatDelay}.
    */
   autoSyncChatDelay: boolean;
   deletedMessageStyle: DeletedMessageStyle;
@@ -84,6 +77,11 @@ export interface Preferences {
    * current screen at layout time so it stays valid across devices.
    */
   landscapeChatWidth: number | null;
+  /**
+   * Use foam's custom-controls player (hidden Twitch chrome + ControlsOverlay).
+   * Off = stock player.
+   */
+  customPlayerEnabled: boolean;
 }
 
 const initialPreferences: Preferences = {
@@ -108,7 +106,6 @@ const initialPreferences: Preferences = {
   showChatterinoEmotes: true,
   showTwitchEmotes: true,
   disableEmoteAnimations: false,
-  sevenTvLowResEmotes: false,
   showTwitchBadges: true,
   show7tvBadges: true,
   showFFzBadges: true,
@@ -126,6 +123,7 @@ const initialPreferences: Preferences = {
   savedPhrases: [],
   shakeToReport: true,
   landscapeChatWidth: null,
+  customPlayerEnabled: true,
 };
 
 ensureObservablePersistenceConfig();
