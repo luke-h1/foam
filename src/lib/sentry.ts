@@ -31,11 +31,11 @@ export const navigationIntegration = expoRouterIntegration({
 let didInitializeSentry = false;
 
 /**
- * Strip personally-identifying fields before an event leaves the device.
- * Covers the IP address (server-side geolocation), any account identifiers
- * that may have been attached to the scope, and device names like
- * "Luke's iPhone" that embed a person's name. User-submitted feedback carries
- * its email on the feedback context, not event.user, so it is unaffected.
+ * Strip personally-identifying fields before an event leaves the device: the
+ * IP address (which Sentry geolocates server-side), account identifiers that
+ * may have reached the scope, device names like "Luke's iPhone" that embed a
+ * person's name, and the host name. User-submitted feedback carries its email
+ * on the feedback context, not event.user, so it is unaffected.
  */
 function scrubPii<T extends Sentry.ErrorEvent | Sentry.TransactionEvent>(
   event: T,
@@ -46,8 +46,11 @@ function scrubPii<T extends Sentry.ErrorEvent | Sentry.TransactionEvent>(
     delete event.user.username;
     delete event.user.name;
     delete event.user.geo;
-    delete event.server_name;
   }
+  if (event.contexts?.device) {
+    delete event.contexts.device.name;
+  }
+  delete event.server_name;
   return event;
 }
 
