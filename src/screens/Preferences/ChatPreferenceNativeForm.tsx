@@ -229,26 +229,18 @@ export function ChatPreferenceNativeForm() {
           title={t('sync')}
           footer={<NativeText>{t('syncFooter')}</NativeText>}
         >
-          <Toggle
-            label={t('autoSyncChatDelay')}
-            systemImage='arrow.triangle.2.circlepath'
-            isOn={preferences.autoSyncChatDelay}
-            onIsOnChange={value => update({ autoSyncChatDelay: value })}
-          />
-          {!preferences.autoSyncChatDelay ? (
-            <Picker
-              label={t('chatDelay')}
-              systemImage='timer'
-              selection={preferences.chatDelay}
-              onSelectionChange={value => update({ chatDelay: value })}
-            >
-              {CHAT_DELAY_OPTIONS.map(option => (
-                <NativeText key={option.value} modifiers={[tag(option.value)]}>
-                  {t(option.labelKey)}
-                </NativeText>
-              ))}
-            </Picker>
-          ) : null}
+          <Picker
+            label={t('chatDelay')}
+            systemImage='timer'
+            selection={preferences.chatDelay}
+            onSelectionChange={value => update({ chatDelay: value })}
+          >
+            {CHAT_DELAY_OPTIONS.map(option => (
+              <NativeText key={option.value} modifiers={[tag(option.value)]}>
+                {t(option.labelKey)}
+              </NativeText>
+            ))}
+          </Picker>
         </Section>
 
         <Section

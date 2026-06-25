@@ -38,7 +38,6 @@ function samePreviewValues<T extends object>(
 export function useChatPreferenceScreenState() {
   const { t } = useTranslation('preferences');
   const {
-    autoSyncChatDelay,
     chatDelay,
     chatDensity,
     chatFontScale,
@@ -382,7 +381,6 @@ export function useChatPreferenceScreenState() {
   };
 
   return {
-    autoSyncChatDelay,
     chatDelayIndex,
     chatMentionHaptics,
     deletedStyleIndex,

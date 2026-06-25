@@ -56,15 +56,9 @@ export interface Preferences {
   chatFontScale: ChatFontScale;
   chatScrollback: ChatScrollbackLength;
   /**
-   * Seconds to hold new chat messages before showing them. Ignored while
-   * autoSyncChatDelay is on. 0 = off.
+   * Seconds to hold new chat messages before showing them. 0 = off.
    */
   chatDelay: number;
-  /**
-   * When on, the chat delay tracks the player's measured latency instead of
-   * {@link chatDelay}.
-   */
-  autoSyncChatDelay: boolean;
   deletedMessageStyle: DeletedMessageStyle;
   ignoreClearChat: boolean;
   chatMentionHaptics: boolean;
@@ -115,7 +109,6 @@ const initialPreferences: Preferences = {
   chatFontScale: 'default',
   chatScrollback: 150,
   chatDelay: 0,
-  autoSyncChatDelay: false,
   deletedMessageStyle: 'notice',
   ignoreClearChat: false,
   chatMentionHaptics: true,

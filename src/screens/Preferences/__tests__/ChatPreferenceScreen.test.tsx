@@ -36,7 +36,6 @@ const mockPreferences: Preferences = {
   chatFontScale: 'default',
   chatScrollback: 150,
   chatDelay: 0,
-  autoSyncChatDelay: false,
   deletedMessageStyle: 'notice',
   ignoreClearChat: false,
   chatMentionHaptics: true,

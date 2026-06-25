@@ -38,7 +38,6 @@ type ChatPreferenceScreenState = ReturnType<
 type ChatPreferenceDefaultContentProps = ChatPreferenceScreenState;
 
 export function ChatPreferenceDefaultContent({
-  autoSyncChatDelay,
   chatDelayIndex,
   chatMentionHaptics,
   deletedStyleIndex,
@@ -207,32 +206,19 @@ export function ChatPreferenceDefaultContent({
           </Text>
         }
       >
-        <SettingsToggleRow
-          title={t('autoSyncChatDelay')}
-          subtitle={t('autoSyncChatDelayDescription')}
+        <ChatPreferenceSegmentedSettingsRow
           icon={{
-            icon: 'arrow.triangle.2.circlepath',
-            androidIcon: 'sync',
+            icon: 'timer',
+            androidIcon: 'timer',
             color: theme.colorGrey,
           }}
-          value={autoSyncChatDelay === true}
-          onValueChange={value => update({ autoSyncChatDelay: value })}
+          onChange={handleChatDelayChange}
+          onValueChange={handleChatDelayValueChange}
+          selectedIndex={chatDelayIndex}
+          subtitle={t('chatDelayDescription')}
+          title={t('chatDelay')}
+          values={CHAT_DELAY_OPTIONS.map(option => t(option.labelKey))}
         />
-        {!autoSyncChatDelay ? (
-          <ChatPreferenceSegmentedSettingsRow
-            icon={{
-              icon: 'timer',
-              androidIcon: 'timer',
-              color: theme.colorGrey,
-            }}
-            onChange={handleChatDelayChange}
-            onValueChange={handleChatDelayValueChange}
-            selectedIndex={chatDelayIndex}
-            subtitle={t('chatDelayDescription')}
-            title={t('chatDelay')}
-            values={CHAT_DELAY_OPTIONS.map(option => t(option.labelKey))}
-          />
-        ) : null}
       </SettingsSection>
 
       <SettingsSection
