@@ -46,6 +46,7 @@ function scrubPii<T extends Sentry.ErrorEvent | Sentry.TransactionEvent>(
     delete event.user.username;
     delete event.user.name;
     delete event.user.geo;
+    delete event.server_name;
   }
   return event;
 }
