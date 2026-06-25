@@ -101,7 +101,7 @@
     "@expo-google-fonts/montserrat": "^0.4.2",
     "@expo-google-fonts/source-code-pro": "^0.4.0",
     "@expo/metro-runtime": "~56.0.15",
-    "@expo/ui": "~56.0.17",
+    "@expo/ui": "~56.0.18",
     "@legendapp/list": "3.0.4",
     "@legendapp/state": "^2.1.15",
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -124,19 +124,19 @@
     "expo-application": "~56.0.3",
     "expo-auth-session": "~56.0.14",
     "expo-blur": "~56.0.3",
-    "expo-build-properties": "~56.0.18",
+    "expo-build-properties": "~56.0.19",
     "expo-clipboard": "~56.0.4",
     "expo-constants": "~56.0.18",
     "expo-crypto": "~56.0.4",
     "expo-dev-client": "~56.0.20",
     "expo-device": "~56.0.4",
     "expo-file-system": "~56.0.8",
-    "expo-font": "~56.0.6",
+    "expo-font": "~56.0.7",
     "expo-glass-effect": "~56.0.4",
     "expo-haptics": "~56.0.3",
     "expo-image": "~56.0.11",
-    "expo-image-picker": "~56.0.17",
-    "expo-insights": "~56.0.17",
+    "expo-image-picker": "~56.0.18",
+    "expo-insights": "~56.0.18",
     "expo-linear-gradient": "~56.0.4",
     "expo-linking": "~56.0.14",
     "expo-localization": "~56.0.6",
@@ -144,7 +144,7 @@
     "expo-network": "~56.0.5",
     "expo-pretext": "^1.1.0",
     "expo-quick-actions": "^6.0.1",
-    "expo-router": "~56.2.10",
+    "expo-router": "~56.2.11",
     "expo-screen-orientation": "~56.0.5",
     "expo-secure-store": "~56.0.4",
     "expo-sensors": "~56.0.6",
@@ -287,6 +287,11 @@
     }
   },
   "expo": {
+    "install": {
+      "exclude": [
+        "@sentry/react-native"
+      ]
+    },
     "doctor": {
       "reactNativeDirectoryCheck": {
         "exclude": [
