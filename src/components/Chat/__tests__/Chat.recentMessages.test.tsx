@@ -373,6 +373,7 @@ const setPreferences = (showRecentMessages = true) => {
     shakeToReport: true,
     landscapeChatWidth: null,
     customPlayerEnabled: true,
+    analyticsEnabled: true,
     chatDelay: 0,
     update: jest.fn(),
   } satisfies ReturnType<typeof usePreferences>;

@@ -501,6 +501,11 @@ const en = {
     shakeToReportIos: 'Shake to report a problem',
     shakeToReport: 'Shake to report',
     shakeToReportDescription: 'Shake your device to report a problem',
+    privacy: 'Privacy',
+    shareAnalytics: 'Share analytics',
+    shareAnalyticsDescription: 'Help improve Foam with anonymous usage data',
+    shareAnalyticsFooter:
+      'When on, Foam sends anonymous, aggregated usage data (such as which screens are opened) to help improve the app. No chat messages or personal information are collected. Turn this off to opt out.',
     dangerZone: 'Danger Zone',
     cacheFooterIos:
       'Use these when stream metadata, badges, emotes, or downloaded chat media need a hard refresh.',

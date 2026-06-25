@@ -44,6 +44,7 @@ const mockPreferences: Preferences = {
   shakeToReport: true,
   landscapeChatWidth: null,
   customPlayerEnabled: true,
+  analyticsEnabled: true,
 };
 
 jest.mock('@app/store/preferenceStore', () => ({
