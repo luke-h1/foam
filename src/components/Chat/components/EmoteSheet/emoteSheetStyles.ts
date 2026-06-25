@@ -2,12 +2,12 @@ import { StyleSheet } from 'react-native';
 
 import { theme } from '@app/styles/themes';
 
-const MENU_BACKGROUND = '#0A0A0B';
-const MENU_HEADER_BACKGROUND = '#0E0E10';
-const MENU_CARD = '#1C1C1E';
-const MENU_CARD_ACTIVE = '#2C2C2E';
-const MENU_BORDER = 'rgba(255, 255, 255, 0.075)';
-const MENU_BORDER_ACTIVE = 'rgba(255, 255, 255, 0.18)';
+const MENU_BACKGROUND = theme.color.menu.background;
+const MENU_HEADER_BACKGROUND = theme.color.menu.header;
+const MENU_CARD = theme.color.menu.card;
+const MENU_CARD_ACTIVE = theme.color.menu.cardActive;
+const MENU_BORDER = theme.color.menu.border;
+const MENU_BORDER_ACTIVE = theme.color.menu.borderActive;
 
 export const emoteSheetStyles = StyleSheet.create({
   body: {

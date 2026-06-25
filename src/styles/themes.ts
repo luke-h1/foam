@@ -246,6 +246,16 @@ export const theme = {
       light: '#FFFFFF',
       dark: '#1C1C1E',
     },
+    // Neutral near-black menu surfaces (emote sheet) — off the blue-slate
+    // palette to read as a system menu. Dark-only raw strings.
+    menu: {
+      background: '#0A0A0B',
+      header: '#0E0E10',
+      card: '#1C1C1E',
+      cardActive: '#2C2C2E',
+      border: 'rgba(255, 255, 255, 0.075)',
+      borderActive: 'rgba(255, 255, 255, 0.18)',
+    },
     brand: {
       twitch: '#9147FF',
       twitchLight: '#A970FF',

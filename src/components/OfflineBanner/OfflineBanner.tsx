@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, {
@@ -20,6 +20,7 @@ export function OfflineBanner() {
   const insets = useSafeAreaInsets();
   const online = onlineManager.isOnline();
   const progress = useSharedValue(online ? 0 : 1);
+  const topInset = useSharedValue(insets.top);
 
   useEffect(() => {
     return onlineManager.subscribe(isOnline => {
@@ -29,10 +30,12 @@ export function OfflineBanner() {
     });
   }, [progress]);
 
-  const totalHeight = insets.top + BANNER_HEIGHT;
+  useLayoutEffect(() => {
+    topInset.value = insets.top;
+  }, [insets.top, topInset]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    height: progress.value * totalHeight,
+    height: progress.value * (topInset.value + BANNER_HEIGHT),
   }));
 
   return (
