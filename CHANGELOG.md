@@ -59,6 +59,7 @@
 - **chat:** Tidy up scroll activity
 - **infrastructure:** Swap sentry org ([#658](https://github.com/lhowsam/foam/issues/658))
 - **app:** Tidy up delay options ([#667](https://github.com/lhowsam/foam/issues/667))
+- **app:** Analytics opt out + pii scrub ([#668](https://github.com/lhowsam/foam/issues/668))
 
 ## 1.0.0
 
