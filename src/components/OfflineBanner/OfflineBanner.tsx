@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from 'react';
+import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, {
@@ -20,7 +20,6 @@ export function OfflineBanner() {
   const insets = useSafeAreaInsets();
   const online = onlineManager.isOnline();
   const progress = useSharedValue(online ? 0 : 1);
-  const topInset = useSharedValue(insets.top);
 
   useEffect(() => {
     return onlineManager.subscribe(isOnline => {
@@ -30,17 +29,17 @@ export function OfflineBanner() {
     });
   }, [progress]);
 
-  useLayoutEffect(() => {
-    topInset.value = insets.top;
-  }, [insets.top, topInset]);
+  const totalHeight = insets.top + BANNER_HEIGHT;
 
   const animatedStyle = useAnimatedStyle(() => ({
-    height: progress.value * (topInset.value + BANNER_HEIGHT),
+    transform: [{ translateY: (progress.value - 1) * totalHeight }],
   }));
 
   return (
-    <Animated.View style={[styles.wrapper, animatedStyle]}>
-      <View style={[styles.statusBarFill, { height: insets.top }]} />
+    <Animated.View
+      pointerEvents='none'
+      style={[styles.wrapper, { paddingTop: insets.top }, animatedStyle]}
+    >
       <View style={styles.banner}>
         <Text style={styles.text}>{t('noInternetConnection')}</Text>
       </View>
@@ -50,11 +49,12 @@ export function OfflineBanner() {
 
 const styles = StyleSheet.create({
   wrapper: {
-    overflow: 'hidden',
-    zIndex: 9999,
-  },
-  statusBarFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     backgroundColor: theme.colorBlack,
+    zIndex: 9999,
   },
   banner: {
     backgroundColor: theme.colorAmber,
