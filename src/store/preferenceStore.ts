@@ -76,6 +76,11 @@ export interface Preferences {
    * Off = stock player.
    */
   customPlayerEnabled: boolean;
+  /**
+   * Opt in to anonymous Statsig usage analytics. Off = no Statsig client is
+   * created and no events are sent.
+   */
+  analyticsEnabled: boolean;
 }
 
 const initialPreferences: Preferences = {
@@ -117,6 +122,7 @@ const initialPreferences: Preferences = {
   shakeToReport: true,
   landscapeChatWidth: null,
   customPlayerEnabled: true,
+  analyticsEnabled: true,
 };
 
 ensureObservablePersistenceConfig();

@@ -2,20 +2,35 @@ import { useRef } from 'react';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { Button, Form, Host, Section } from '@expo/ui/swift-ui';
+import {
+  Button,
+  Form,
+  Host,
+  Section,
+  Text as NativeText,
+  Toggle,
+} from '@expo/ui/swift-ui';
 import { router } from 'expo-router';
 
 import {
   SettingsLinkRow,
   SettingsSection,
+  SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
+import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import {
+  usePreference,
+  useUpdatePreferences,
+} from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 
 export function SettingsOtherScreen() {
   const { t } = useTranslation('settings');
   const scrollRef = useRef<ScrollView>(null);
+  const analyticsEnabled = usePreference('analyticsEnabled');
+  const update = useUpdatePreferences();
 
   useScrollToTop(scrollRef);
 
@@ -23,6 +38,17 @@ export function SettingsOtherScreen() {
     return (
       <Host style={styles.iosHost}>
         <Form>
+          <Section
+            title={t('privacy')}
+            footer={<NativeText>{t('shareAnalyticsFooter')}</NativeText>}
+          >
+            <Toggle
+              label={t('shareAnalytics')}
+              systemImage='chart.bar'
+              isOn={analyticsEnabled}
+              onIsOnChange={value => update({ analyticsEnabled: value })}
+            />
+          </Section>
           <Section title={t('supportAndFeedback')}>
             <Button
               label={t('aboutFoam')}
@@ -53,6 +79,23 @@ export function SettingsOtherScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
+        <SettingsSection
+          title={t('privacy')}
+          footer={
+            <Text type='xs' color='gray.textLow'>
+              {t('shareAnalyticsFooter')}
+            </Text>
+          }
+        >
+          <SettingsToggleRow
+            title={t('shareAnalytics')}
+            subtitle={t('shareAnalyticsDescription')}
+            icon={{ icon: 'chart.bar', color: theme.colorTeal }}
+            value={analyticsEnabled}
+            onValueChange={value => update({ analyticsEnabled: value })}
+          />
+        </SettingsSection>
+
         <SettingsSection title={t('supportAndFeedback')}>
           <SettingsLinkRow
             title={t('aboutFoam')}

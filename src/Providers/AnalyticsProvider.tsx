@@ -7,6 +7,7 @@ import {
 import { usePathname } from 'expo-router';
 
 import { useAuthContext } from '@app/context/AuthContext';
+import { usePreference } from '@app/store/preferenceStore';
 import { logger } from '@app/utils/logger';
 
 const statsigClientKey = process.env.EXPO_PUBLIC_STATSIG_CLIENT_KEY;
@@ -38,8 +39,9 @@ function ScreenAnalytics() {
 
 export function AnalyticsProvider({ children }: PropsWithChildren) {
   const { user } = useAuthContext();
+  const analyticsEnabled = usePreference('analyticsEnabled');
 
-  if (!statsigClientKey) {
+  if (!statsigClientKey || !analyticsEnabled) {
     return <>{children}</>;
   }
 

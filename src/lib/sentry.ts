@@ -30,6 +30,26 @@ export const navigationIntegration = expoRouterIntegration({
 
 let didInitializeSentry = false;
 
+/**
+ * Strip personally-identifying fields before an event leaves the device.
+ * Covers the IP address (server-side geolocation), any account identifiers
+ * that may have been attached to the scope, and device names like
+ * "Luke's iPhone" that embed a person's name. User-submitted feedback carries
+ * its email on the feedback context, not event.user, so it is unaffected.
+ */
+function scrubPii<T extends Sentry.ErrorEvent | Sentry.TransactionEvent>(
+  event: T,
+): T {
+  if (event.user) {
+    event.user.ip_address = undefined;
+    delete event.user.email;
+    delete event.user.username;
+    delete event.user.name;
+    delete event.user.geo;
+  }
+  return event;
+}
+
 export interface SentryStatus {
   enabled: boolean;
   hasDsn: boolean;
@@ -90,6 +110,7 @@ export function init() {
     dist: process.env.EXPO_PUBLIC_SENTRY_DIST,
     release: process.env.EXPO_PUBLIC_SENTRY_RELEASE,
     enableAutoSessionTracking: true,
+    sendDefaultPii: false,
     enableLogs: true,
     enableCaptureFailedRequests: true,
     attachStacktrace: true,
@@ -124,7 +145,10 @@ export function init() {
       if (event.level === 'fatal' || event.level === 'error') {
         markSessionError();
       }
-      return event;
+      return scrubPii(event);
+    },
+    beforeSendTransaction(event) {
+      return scrubPii(event);
     },
   });
 

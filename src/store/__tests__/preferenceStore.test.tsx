@@ -41,6 +41,7 @@ const basePreferences = {
   shakeToReport: true,
   landscapeChatWidth: null,
   customPlayerEnabled: true,
+  analyticsEnabled: true,
 } as const;
 
 describe('usePreferences', () => {
