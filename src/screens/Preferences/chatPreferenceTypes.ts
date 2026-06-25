@@ -71,6 +71,7 @@ export const CHAT_DELAY_OPTIONS = [
   { labelKey: 'chatDelay5s', value: 5 as const },
   { labelKey: 'chatDelay8s', value: 8 as const },
   { labelKey: 'chatDelay12s', value: 12 as const },
+  { labelKey: 'chatDelay15s', value: 15 as const },
 ] as const;
 
 export const EMOJI_PREVIEW_SHORTCODES = [':joy:', ':heart:', ':fire:'];

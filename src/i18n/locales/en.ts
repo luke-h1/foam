@@ -644,10 +644,7 @@ const en = {
     keepHistoryOnClearDescription:
       'Ignore moderator chat clears and keep your scrollback',
     sync: 'Sync',
-    syncFooter:
-      'Delay chat so it lines up with the video. Auto-sync matches the stream’s measured latency; turn it off to choose a fixed delay.',
-    autoSyncChatDelay: 'Auto-sync to Video',
-    autoSyncChatDelayDescription: 'Match chat to the measured stream latency',
+    syncFooter: 'Delay chat so it lines up with the video.',
     chatDelay: 'Chat Delay',
     chatDelayDescription: 'Hold new messages before showing them',
     chatDelayOff: 'Off',
@@ -655,6 +652,7 @@ const en = {
     chatDelay5s: '5s',
     chatDelay8s: '8s',
     chatDelay12s: '12s',
+    chatDelay15s: '15s',
     performance: 'Performance',
     performanceFooter:
       'Longer scrollback keeps more messages in memory; 200 is easier on older devices.',

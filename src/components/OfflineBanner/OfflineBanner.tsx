@@ -1,11 +1,12 @@
-import { useEffect } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { useEffect, useLayoutEffect } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { onlineManager } from '@tanstack/react-query';
 
@@ -16,26 +17,33 @@ const ANIM_DURATION = 250;
 
 export function OfflineBanner() {
   const { t } = useTranslation('common');
+  const insets = useSafeAreaInsets();
   const online = onlineManager.isOnline();
-  const height = useSharedValue(online ? 0 : BANNER_HEIGHT);
+  const progress = useSharedValue(online ? 0 : 1);
+  const topInset = useSharedValue(insets.top);
 
   useEffect(() => {
     return onlineManager.subscribe(isOnline => {
-      height.value = withTiming(isOnline ? 0 : BANNER_HEIGHT, {
+      progress.value = withTiming(isOnline ? 0 : 1, {
         duration: ANIM_DURATION,
       });
     });
-  }, [height]);
+  }, [progress]);
+
+  useLayoutEffect(() => {
+    topInset.value = insets.top;
+  }, [insets.top, topInset]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    height: height.value,
+    height: progress.value * (topInset.value + BANNER_HEIGHT),
   }));
 
   return (
     <Animated.View style={[styles.wrapper, animatedStyle]}>
-      <Animated.View style={styles.banner}>
+      <View style={[styles.statusBarFill, { height: insets.top }]} />
+      <View style={styles.banner}>
         <Text style={styles.text}>{t('noInternetConnection')}</Text>
-      </Animated.View>
+      </View>
     </Animated.View>
   );
 }
@@ -43,13 +51,16 @@ export function OfflineBanner() {
 const styles = StyleSheet.create({
   wrapper: {
     overflow: 'hidden',
+    zIndex: 9999,
+  },
+  statusBarFill: {
+    backgroundColor: theme.colorBlack,
   },
   banner: {
     backgroundColor: theme.colorAmber,
     height: BANNER_HEIGHT,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 9999,
   },
   text: {
     color: theme.colorBlack,

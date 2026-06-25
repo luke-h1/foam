@@ -16,7 +16,6 @@ import {
   usePreference,
   useUpdatePreferences,
 } from '@app/store/preferenceStore';
-import { getMeasuredVideoLatencySeconds } from '@app/store/stream/videoLatency';
 import { findCustomHighlight } from '@app/utils/chat/customHighlights';
 import { parseBadges } from '@app/utils/chat/parseBadges';
 import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin';
@@ -58,7 +57,6 @@ export function useChat(
   const updatePreferences = useUpdatePreferences();
   const blockedTerms = usePreference('blockedTerms');
   const chatDelay = usePreference('chatDelay');
-  const autoSyncChatDelay = usePreference('autoSyncChatDelay');
   const showRecentMessages = preferences.showRecentMessages !== false;
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -180,13 +178,8 @@ export function useChat(
   }, [shouldMaintainScrollAtEnd]);
 
   const getChatDelayMs = useCallback(
-    () =>
-      resolveEffectiveChatDelayMs({
-        autoSync: autoSyncChatDelay,
-        manualDelaySeconds: chatDelay,
-        measuredLatencySeconds: getMeasuredVideoLatencySeconds(),
-      }),
-    [autoSyncChatDelay, chatDelay],
+    () => resolveEffectiveChatDelayMs(chatDelay),
+    [chatDelay],
   );
 
   const {
@@ -214,7 +207,7 @@ export function useChat(
   // Switching the delay off must release anything held; turning it on ensures a tick is pending.
   useEffect(() => {
     reconcileChatDelay();
-  }, [autoSyncChatDelay, chatDelay, reconcileChatDelay]);
+  }, [chatDelay, reconcileChatDelay]);
 
   const chatMentionHaptics = usePreference('chatMentionHaptics');
   const customHighlights = preferences.customHighlights;

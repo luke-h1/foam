@@ -2,8 +2,12 @@ import { StyleSheet } from 'react-native';
 
 import { theme } from '@app/styles/themes';
 
-const MENU_HEADER_BACKGROUND = theme.color.surface.dark;
-const MENU_BORDER = 'rgba(255, 255, 255, 0.075)';
+const MENU_BACKGROUND = theme.color.menu.background;
+const MENU_HEADER_BACKGROUND = theme.color.menu.header;
+const MENU_CARD = theme.color.menu.card;
+const MENU_CARD_ACTIVE = theme.color.menu.cardActive;
+const MENU_BORDER = theme.color.menu.border;
+const MENU_BORDER_ACTIVE = theme.color.menu.borderActive;
 
 export const emoteSheetStyles = StyleSheet.create({
   body: {
@@ -30,20 +34,21 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   container: {
     alignSelf: 'stretch',
-    backgroundColor: theme.color.surfaceSunken.dark,
+    backgroundColor: MENU_BACKGROUND,
     flex: 1,
     minHeight: 0,
     overflow: 'hidden',
     width: '100%',
   },
   sheetHandle: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
     borderRadius: 999,
     height: 5,
     width: 36,
   },
   sheetHandleRow: {
     alignItems: 'center',
+    backgroundColor: MENU_HEADER_BACKGROUND,
     justifyContent: 'center',
     paddingBottom: 4,
     paddingTop: 8,
@@ -79,8 +84,8 @@ export const emoteSheetStyles = StyleSheet.create({
     opacity: 0,
   },
   emoteImagePlaceholder: {
-    backgroundColor: theme.color.surfaceElevated.dark,
-    borderColor: 'rgba(255,255,255,0.055)',
+    backgroundColor: MENU_CARD,
+    borderColor: MENU_BORDER,
     borderCurve: 'continuous',
     borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
@@ -160,8 +165,8 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   providerChip: {
     alignItems: 'center',
-    backgroundColor: theme.color.surface.dark,
-    borderColor: 'rgba(255,255,255,0.055)',
+    backgroundColor: MENU_CARD,
+    borderColor: MENU_BORDER,
     borderCurve: 'continuous',
     borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
@@ -174,8 +179,8 @@ export const emoteSheetStyles = StyleSheet.create({
     position: 'relative',
   },
   providerChipActive: {
-    backgroundColor: 'rgba(46,134,255,0.18)',
-    borderColor: 'rgba(46,134,255,0.4)',
+    backgroundColor: MENU_CARD_ACTIVE,
+    borderColor: MENU_BORDER_ACTIVE,
     minWidth: 88,
     paddingHorizontal: theme.space12,
   },
@@ -200,8 +205,8 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   searchInputWrap: {
     alignItems: 'center',
-    backgroundColor: theme.color.surfaceElevated.dark,
-    borderColor: 'rgba(255,255,255,0.065)',
+    backgroundColor: MENU_CARD,
+    borderColor: MENU_BORDER,
     borderCurve: 'continuous',
     borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
@@ -229,7 +234,7 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   searchClearButton: {
     alignItems: 'center',
-    backgroundColor: theme.color.surfaceElevated.dark,
+    backgroundColor: MENU_CARD_ACTIVE,
     borderRadius: 4,
     height: 28,
     justifyContent: 'center',
@@ -265,8 +270,8 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   setRailButton: {
     alignItems: 'center',
-    backgroundColor: theme.color.surface.dark,
-    borderColor: 'rgba(255,255,255,0.045)',
+    backgroundColor: MENU_CARD,
+    borderColor: MENU_BORDER,
     borderCurve: 'continuous',
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
@@ -276,8 +281,8 @@ export const emoteSheetStyles = StyleSheet.create({
     paddingHorizontal: theme.space8,
   },
   setRailButtonActive: {
-    backgroundColor: 'rgba(46,134,255,0.18)',
-    borderColor: 'rgba(46,134,255,0.4)',
+    backgroundColor: MENU_CARD_ACTIVE,
+    borderColor: MENU_BORDER_ACTIVE,
   },
   setRailEmoji: {
     fontSize: theme.fontSize16,
