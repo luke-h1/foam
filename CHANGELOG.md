@@ -46,6 +46,8 @@
 - **chat:** Player lag emote scale ([#665](https://github.com/lhowsam/foam/issues/665))
 - **app:** Patch ref warning ([#666](https://github.com/lhowsam/foam/issues/666))
 - **app:** Fix import error
+- **infrastructure:** Fix metadata not showing
+- **app:** Offline banner
 
 ### 🔧 Miscellaneous Tasks
 
@@ -56,6 +58,7 @@
 - **ai:** Update skills
 - **chat:** Tidy up scroll activity
 - **infrastructure:** Swap sentry org ([#658](https://github.com/lhowsam/foam/issues/658))
+- **app:** Tidy up delay options ([#667](https://github.com/lhowsam/foam/issues/667))
 
 ## 1.0.0
 
