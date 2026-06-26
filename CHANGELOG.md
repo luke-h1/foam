@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0-internal
+## 1.0.0-testflight
 
 ### ♻️ Refactor
 
@@ -61,7 +61,7 @@
 - **app:** Tidy up delay options ([#667](https://github.com/lhowsam/foam/issues/667))
 - **app:** Analytics opt out + pii scrub ([#668](https://github.com/lhowsam/foam/issues/668))
 
-## 1.0.0
+## 1.0.0-testflight
 
 ### ⚡ Performance
 

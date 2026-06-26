@@ -7,18 +7,24 @@ set -euo pipefail
 #
 #  ./scripts/release-github.sh internal
 #  ./scripts/release-github.sh production --dry-run
+#  ./scripts/release-github.sh internal --no-push
 
 variant="${1:-}"
 dry_run="false"
+no_push="false"
+shift || true
 
-case "${2:-}" in
-  --dry-run) dry_run="true" ;;
-  '') ;;
-  *)
-    echo "Unknown argument: $2"
-    exit 1
-    ;;
-esac
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --dry-run) dry_run="true" ;;
+    --no-push) no_push="true" ;;
+    *)
+      echo "Unknown argument: $1"
+      exit 1
+      ;;
+  esac
+  shift
+done
 
 case "$variant" in
   internal | testflight | production) ;;
@@ -43,7 +49,7 @@ if [ -z "${GITHUB_RELEASE_TOKEN:-}" ] && [ -f .env ]; then
   export GITHUB_RELEASE_TOKEN
 fi
 
-if [ "$dry_run" = "false" ] && [ -z "${GITHUB_RELEASE_TOKEN:-}" ]; then
+if [ "$dry_run" = "false" ] && [ "$no_push" = "false" ] && [ -z "${GITHUB_RELEASE_TOKEN:-}" ]; then
   echo "GITHUB_RELEASE_TOKEN is not set. Add it to your .env (see .env.example)."
   exit 1
 fi
@@ -150,14 +156,26 @@ if [ "$dry_run" = "true" ]; then
   exit 0
 fi
 
-auth_header="$(printf 'luke-h1:%s' "$GITHUB_RELEASE_TOKEN" | base64 | tr -d '\n')"
-authed_push() {
-  git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${auth_header}" push "https://github.com/${repository}.git" "$@"
-}
+if [ "$no_push" = "false" ]; then
+  auth_header="$(printf 'luke-h1:%s' "$GITHUB_RELEASE_TOKEN" | base64 | tr -d '\n')"
+  authed_push() {
+    git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${auth_header}" push "https://github.com/${repository}.git" "$@"
+  }
+fi
 
 "$git_cliff_bin" --config cliff.toml --tag "$tag" --ignore-tags "$ignore_tags" -o CHANGELOG.md
 
 bunx prettier --write CHANGELOG.md
+
+if [ "$no_push" = "true" ]; then
+  if git diff --quiet CHANGELOG.md 2>/dev/null; then
+    echo "CHANGELOG.md has not changed"
+  else
+    echo "CHANGELOG.md regenerated locally and left uncommitted (--no-push)"
+  fi
+  echo "Skipping commit, tag, push, and GitHub release for $tag (--no-push)"
+  exit 0
+fi
 
 if git diff --quiet CHANGELOG.md 2>/dev/null; then
   echo "CHANGELOG.md has not changed"

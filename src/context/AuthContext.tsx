@@ -469,13 +469,12 @@ export const AuthContextProvider = ({
       });
     }
 
-    queueInitialDataPrefetch();
-
     const validatedAnonAccessToken = token.accessToken;
     void twitchService
       .validateToken(token.accessToken)
       .then(isValidToken => {
         if (isValidToken) {
+          queueInitialDataPrefetch();
           return;
         }
         const currentAuthState = authStateRef.current;
@@ -495,6 +494,7 @@ export const AuthContextProvider = ({
       })
       .catch(error => {
         logger.auth.warn('Anonymous token background validation error', error);
+        queueInitialDataPrefetch();
       });
   };
 
