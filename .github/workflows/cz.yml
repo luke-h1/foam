@@ -19,6 +19,7 @@ jobs:
         uses: ./.github/actions/setup-bun-install
         with:
           node: 'true'
+          ignore-scripts: 'true'
 
       - name: 🧑‍🔬 Check commit message
         run: |
