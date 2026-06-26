@@ -85,10 +85,7 @@ const variant =
 const VERSION = '1.0.0';
 
 const appConfig = VARIANT_CONFIG[variant];
-const twitchClientId =
-  variant === 'production'
-    ? process.env.EXPO_PUBLIC_TWITCH_PROD_CLIENT_ID
-    : process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID;
+const twitchClientId = process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID;
 const sentryRelease = process.env.EXPO_PUBLIC_SENTRY_RELEASE ?? VERSION;
 const sentryDist =
   process.env.EXPO_PUBLIC_SENTRY_DIST ??

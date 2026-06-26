@@ -5,6 +5,10 @@ inputs:
   op_service_account_token:
     description: '1Password service account token'
     required: true
+  variant:
+    description: 'Release variant; production reads all secrets from the ci-cd/foam-mobile-production item, every other variant from ci-cd/foam-mobile-staging.'
+    required: false
+    default: 'production'
 
 runs:
   using: 'composite'
@@ -16,14 +20,13 @@ runs:
         version: 2.34.0
       env:
         OP_SERVICE_ACCOUNT_TOKEN: ${{ inputs.op_service_account_token }}
-        FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID
-        FOAM_AWS_FINGERPRINT_SECRET_KEY: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_SECRET_KEY
-        FOAM_AWS_FINGERPRINT_BUCKET_NAME: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_BUCKET_NAME
-        SENTRY_AUTH_TOKEN: op://ci-cd/foam-staging/SENTRY_AUTH_TOKEN
-        EXPO_PUBLIC_SENTRY_DSN: op://ci-cd/foam-staging/EXPO_PUBLIC_SENTRY_DSN
-        EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL: op://ci-cd/foam-staging/AUTH_PROXY_API_BASE_URL
-        EXPO_PUBLIC_AUTH_PROXY_API_KEY: op://ci-cd/foam-staging/AUTH_PROXY_API_KEY
-        EXPO_PUBLIC_TWITCH_CLIENT_ID: op://ci-cd/foam-staging/TWITCH_CLIENT_ID
-        EXPO_PUBLIC_TWITCH_PROD_CLIENT_ID: op://ci-cd/foam-staging/TWITCH_PROD_CLIENT_ID
-        EXPO_PUBLIC_BUGSNAG_API_KEY: op://ci-cd/foam-staging/EXPO_PUBLIC_BUGSNAG_API_KEY
-        EXPO_PUBLIC_STATSIG_CLIENT_KEY: op://ci-cd/foam-staging/EXPO_PUBLIC_STATSIG_CLIENT_KEY
+        FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID
+        FOAM_AWS_FINGERPRINT_SECRET_KEY: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/FOAM_AWS_FINGERPRINT_SECRET_KEY
+        FOAM_AWS_FINGERPRINT_BUCKET_NAME: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/FOAM_AWS_FINGERPRINT_BUCKET_NAME
+        SENTRY_AUTH_TOKEN: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/SENTRY_AUTH_TOKEN
+        EXPO_PUBLIC_SENTRY_DSN: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/EXPO_PUBLIC_SENTRY_DSN
+        EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/AUTH_PROXY_API_BASE_URL
+        EXPO_PUBLIC_AUTH_PROXY_API_KEY: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/AUTH_PROXY_API_KEY
+        EXPO_PUBLIC_TWITCH_CLIENT_ID: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/TWITCH_CLIENT_ID
+        EXPO_PUBLIC_BUGSNAG_API_KEY: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/EXPO_PUBLIC_BUGSNAG_API_KEY
+        EXPO_PUBLIC_STATSIG_CLIENT_KEY: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/EXPO_PUBLIC_STATSIG_CLIENT_KEY

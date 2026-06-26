@@ -68,7 +68,7 @@ jobs:
           version: 2.34.0
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          GOOGLE_SERVICES_IOS_PROD_BS4: op://ci-cd/foam-staging/GOOGLE_SERVICES_IOS_PROD_BS4
+          GOOGLE_SERVICES_IOS_PROD_BS4: op://ci-cd/foam-mobile-staging/GOOGLE_SERVICES_IOS_PROD_BS4
 
       - name: 📄 Decode Google Services file
         run: |
