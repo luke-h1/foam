@@ -128,7 +128,7 @@ export const preferencesSchema = z.object({
   analyticsEnabled: z.boolean(),
 }) satisfies z.ZodType<Preferences>;
 
-const initialPreferences: Preferences = {
+export const initialPreferences: Preferences = {
   updatedAt: Date.now(),
   theme: 'foam-dark',
   hapticFeedback: true,

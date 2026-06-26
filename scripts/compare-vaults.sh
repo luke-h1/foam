@@ -89,16 +89,21 @@ fi
 
 if $compare_values; then
   echo "Value comparison (= identical, ≠ differs, </> present on one side only):"
-  staging_values="$(op item get "$staging_item" --vault "$vault" --format json --reveal)"
-  production_values="$(op item get "$production_item" --vault "$vault" --format json --reveal)"
-  jq -nr --argjson s "$staging_values" --argjson p "$production_values" '
+  if ! {
+    op item get "$staging_item" --vault "$vault" --format json --reveal
+    op item get "$production_item" --vault "$vault" --format json --reveal
+  } | jq -nr '
     def field_map: (.fields // []) | map(select((.label // "") != "")) | map({key: .label, value: (.value // "")}) | from_entries;
+    (input) as $s | (input) as $p |
     ($s | field_map) as $sf | ($p | field_map) as $pf |
     (($sf | keys) + ($pf | keys) | unique)[] as $k |
     if   ($sf[$k] == null)      then "  > \($k) (only in production)"
     elif ($pf[$k] == null)      then "  < \($k) (only in staging)"
     elif ($sf[$k] == $pf[$k])   then "  = \($k)"
-    else                             "  ≠ \($k)" end'
+    else                             "  ≠ \($k)" end'; then
+    echo "error: cannot read or compare revealed item values." >&2
+    exit 2
+  fi
   echo
 fi
 

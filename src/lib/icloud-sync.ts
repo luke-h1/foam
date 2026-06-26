@@ -1,4 +1,5 @@
 import {
+  initialPreferences,
   type Preferences,
   preferencesSchema,
 } from '@app/store/preferenceStore';
@@ -33,14 +34,9 @@ export function isICloudPreferenceSyncAvailable(): boolean {
   return iCloudSyncModule?.isAvailable() === true;
 }
 
-export async function loadPreferencesFromICloud(): Promise<Preferences | null> {
-  const iCloudSyncModule = getICloudSyncModule();
-
-  if (!iCloudSyncModule) {
-    return null;
-  }
-
-  const rawValue = await iCloudSyncModule.getString(ICLOUD_PREFERENCES_KEY);
+export function parsePreferencesPayload(
+  rawValue: string | null,
+): Preferences | null {
   if (!rawValue) {
     return null;
   }
@@ -52,13 +48,30 @@ export async function loadPreferencesFromICloud(): Promise<Preferences | null> {
     return null;
   }
 
-  const result = preferencesSchema.safeParse(parsed);
+  const merged =
+    typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
+      ? { ...initialPreferences, ...parsed }
+      : parsed;
+
+  const result = preferencesSchema.safeParse(merged);
   if (!result.success) {
     logger.main.warn('Discarded malformed iCloud preferences', result.error);
     return null;
   }
 
   return result.data;
+}
+
+export async function loadPreferencesFromICloud(): Promise<Preferences | null> {
+  const iCloudSyncModule = getICloudSyncModule();
+
+  if (!iCloudSyncModule) {
+    return null;
+  }
+
+  const rawValue = await iCloudSyncModule.getString(ICLOUD_PREFERENCES_KEY);
+
+  return parsePreferencesPayload(rawValue);
 }
 
 export async function savePreferencesToICloud(
