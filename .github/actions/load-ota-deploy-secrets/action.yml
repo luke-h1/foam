@@ -6,7 +6,7 @@ inputs:
     description: '1Password service account token'
     required: true
   variant:
-    description: 'Release variant; production reads all secrets from the ci-cd/foam-mobile-production item, every other variant from ci-cd/foam-mobile-staging.'
+    description: 'Release variant'
     required: false
     default: 'production'
 
