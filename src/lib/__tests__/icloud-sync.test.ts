@@ -4,6 +4,10 @@ import { logger } from '@app/utils/logger';
 
 const warnSpy = jest.spyOn(logger.main, 'warn').mockImplementation(() => {});
 
+beforeEach(() => {
+  warnSpy.mockClear();
+});
+
 describe('parsePreferencesPayload', () => {
   test('restores a legacy blob missing a newly added field, filling it from defaults', () => {
     const { analyticsEnabled: _omitted, ...legacyBlob } = {

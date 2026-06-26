@@ -25,13 +25,26 @@ args=()
 while [ $# -gt 0 ]; do
   case "$1" in
     --values) compare_values=true ;;
-    --vault) shift; vault="${1:-}" ;;
+    --vault)
+      shift
+      if [ $# -eq 0 ] || [[ "$1" == -* ]]; then
+        echo "error: --vault requires a vault name." >&2
+        usage >&2
+        exit 2
+      fi
+      vault="$1"
+      ;;
     -h | --help) usage; exit 0 ;;
     -*) echo "error: unknown option '$1'" >&2; usage >&2; exit 2 ;;
     *) args+=("$1") ;;
   esac
   shift
 done
+if [ "${#args[@]}" -gt 2 ]; then
+  echo "error: expected at most 2 positional arguments." >&2
+  usage >&2
+  exit 2
+fi
 [ "${#args[@]}" -ge 1 ] && staging_item="${args[0]}"
 [ "${#args[@]}" -ge 2 ] && production_item="${args[1]}"
 
