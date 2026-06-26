@@ -1,6 +1,7 @@
 import { observable } from '@legendapp/state';
 import { persistObservable } from '@legendapp/state/persist';
 import { useSelector } from '@legendapp/state/react';
+import { z } from 'zod';
 
 import {
   createObservablePersistenceLocalConfig,
@@ -83,7 +84,51 @@ export interface Preferences {
   analyticsEnabled: boolean;
 }
 
-const initialPreferences: Preferences = {
+export const preferencesSchema = z.object({
+  updatedAt: z.number(),
+  theme: z.literal('foam-dark'),
+  hapticFeedback: z.boolean(),
+  streamListLayout: z.enum(['compact', 'media']),
+  chatDensity: z.enum(['comfortable', 'compact']),
+  showAlternatingChatRows: z.boolean(),
+  chatTimestamps: z.boolean(),
+  highlightOwnMentions: z.boolean(),
+  showInlineReplyContext: z.boolean(),
+  showRecentMessages: z.boolean(),
+  showUnreadJumpPill: z.boolean(),
+  disableChat: z.boolean(),
+  disableStream: z.boolean(),
+  useUIKitForWebView: z.boolean(),
+  emojiStyle: z.enum(['twitter', 'google']),
+  show7TvEmotes: z.boolean(),
+  showBttvEmotes: z.boolean(),
+  showFFzEmotes: z.boolean(),
+  showChatterinoEmotes: z.boolean(),
+  showTwitchEmotes: z.boolean(),
+  disableEmoteAnimations: z.boolean(),
+  showTwitchBadges: z.boolean(),
+  show7tvBadges: z.boolean(),
+  showFFzBadges: z.boolean(),
+  showBttvBadges: z.boolean(),
+  blockedTerms: z.array(z.string()),
+  chatTimestampFormat: z.enum(['24h', '12h']),
+  chatFontScale: z.enum(['small', 'default', 'large']),
+  chatScrollback: z.union([z.literal(150), z.literal(200), z.literal(250)]),
+  chatDelay: z.number(),
+  deletedMessageStyle: z.enum(['notice', 'hidden']),
+  ignoreClearChat: z.boolean(),
+  chatMentionHaptics: z.boolean(),
+  customHighlights: z.array(
+    z.object({ id: z.string(), phrase: z.string(), color: z.string() }),
+  ),
+  savedPhrases: z.array(z.object({ id: z.string(), text: z.string() })),
+  shakeToReport: z.boolean(),
+  landscapeChatWidth: z.number().nullable(),
+  customPlayerEnabled: z.boolean(),
+  analyticsEnabled: z.boolean(),
+}) satisfies z.ZodType<Preferences>;
+
+export const initialPreferences: Preferences = {
   updatedAt: Date.now(),
   theme: 'foam-dark',
   hapticFeedback: true,

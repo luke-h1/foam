@@ -65,6 +65,7 @@ jobs:
         uses: ./.github/actions/load-ota-deploy-secrets
         with:
           op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          variant: development
 
       - name: Λ Setup EAS
         if: steps.pr.outputs.should_run == 'true'

@@ -1,34 +1,65 @@
-import type { Preferences } from '@app/store/preferenceStore';
+import {
+  initialPreferences,
+  type Preferences,
+  preferencesSchema,
+} from '@app/store/preferenceStore';
+import { logger } from '@app/utils/logger';
 import type { ICloudSyncNativeModule } from '@modules/icloud-sync/src/ICloudSync.types';
 
 const ICLOUD_PREFERENCES_KEY = 'preferences.v1';
 
-let cachedICloudSyncModule: ICloudSyncNativeModule | null | undefined;
+let cachedModule: ICloudSyncNativeModule | null | undefined;
 
 function getICloudSyncModule(): ICloudSyncNativeModule | null {
   if (process.env.EXPO_OS !== 'ios') {
     return null;
   }
 
-  if (cachedICloudSyncModule !== undefined) {
-    return cachedICloudSyncModule;
+  if (cachedModule === undefined) {
+    try {
+      cachedModule =
+        // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
+        require('@modules/icloud-sync/src/ICloudSyncModule').default ?? null;
+    } catch {
+      cachedModule = null;
+    }
   }
 
-  try {
-    cachedICloudSyncModule =
-      // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
-      require('@modules/icloud-sync/src/ICloudSyncModule').default ?? null;
-  } catch {
-    cachedICloudSyncModule = null;
-  }
-
-  return cachedICloudSyncModule ?? null;
+  return cachedModule ?? null;
 }
 
 export function isICloudPreferenceSyncAvailable(): boolean {
   const iCloudSyncModule = getICloudSyncModule();
 
   return iCloudSyncModule?.isAvailable() === true;
+}
+
+export function parsePreferencesPayload(
+  rawValue: string | null,
+): Preferences | null {
+  if (!rawValue) {
+    return null;
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(rawValue);
+  } catch {
+    return null;
+  }
+
+  const merged =
+    typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
+      ? { ...initialPreferences, ...parsed }
+      : parsed;
+
+  const result = preferencesSchema.safeParse(merged);
+  if (!result.success) {
+    logger.main.warn('Discarded malformed iCloud preferences', result.error);
+    return null;
+  }
+
+  return result.data;
 }
 
 export async function loadPreferencesFromICloud(): Promise<Preferences | null> {
@@ -39,15 +70,8 @@ export async function loadPreferencesFromICloud(): Promise<Preferences | null> {
   }
 
   const rawValue = await iCloudSyncModule.getString(ICLOUD_PREFERENCES_KEY);
-  if (!rawValue) {
-    return null;
-  }
 
-  try {
-    return JSON.parse(rawValue) as Preferences;
-  } catch {
-    return null;
-  }
+  return parsePreferencesPayload(rawValue);
 }
 
 export async function savePreferencesToICloud(

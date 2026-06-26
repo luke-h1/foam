@@ -115,6 +115,7 @@ jobs:
         uses: ./.github/actions/load-fingerprint-cache-secrets
         with:
           op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          variant: ${{ inputs.variant || 'production' }}
 
       - name: 🔍 Calculate current fingerprints
         id: fingerprint
@@ -215,6 +216,7 @@ jobs:
         uses: ./.github/actions/load-native-deploy-secrets
         with:
           op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          variant: ${{ inputs.variant || 'production' }}
 
       - name: 📄 Decode and write Google service files
         uses: ./.github/actions/write-google-service-files
@@ -289,6 +291,7 @@ jobs:
         uses: ./.github/actions/load-ota-deploy-secrets
         with:
           op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          variant: ${{ inputs.variant || 'production' }}
 
       - name: Λ Setup EAS
         uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e
@@ -468,6 +471,7 @@ jobs:
         uses: ./.github/actions/load-fingerprint-cache-secrets
         with:
           op_service_account_token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          variant: ${{ inputs.variant || 'production' }}
 
       - name: 🥟 Setup Bun and install dependencies
         uses: ./.github/actions/setup-bun-install
@@ -508,7 +512,7 @@ jobs:
           version: 2.34.0
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          SLACK_WEBHOOK_URL: op://ci-cd/foam-staging/SLACK_WEBHOOK_URL
+          SLACK_WEBHOOK_URL: op://ci-cd/foam-mobile-${{ (inputs.variant || 'production') == 'production' && 'production' || 'staging' }}/SLACK_WEBHOOK_URL
 
       - name: Send Slack notification
         uses: ./.github/actions/slack-deploy-notification

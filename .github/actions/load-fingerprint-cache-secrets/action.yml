@@ -5,6 +5,10 @@ inputs:
   op_service_account_token:
     description: '1Password service account token'
     required: true
+  variant:
+    description: 'Release variant; production reads all secrets from the ci-cd/foam-mobile-production item, every other variant from ci-cd/foam-mobile-staging.'
+    required: false
+    default: 'production'
 
 runs:
   using: 'composite'
@@ -16,6 +20,6 @@ runs:
         version: 2.34.0
       env:
         OP_SERVICE_ACCOUNT_TOKEN: ${{ inputs.op_service_account_token }}
-        FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID
-        FOAM_AWS_FINGERPRINT_SECRET_KEY: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_SECRET_KEY
-        FOAM_AWS_FINGERPRINT_BUCKET_NAME: op://ci-cd/foam-staging/FOAM_AWS_FINGERPRINT_BUCKET_NAME
+        FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID
+        FOAM_AWS_FINGERPRINT_SECRET_KEY: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/FOAM_AWS_FINGERPRINT_SECRET_KEY
+        FOAM_AWS_FINGERPRINT_BUCKET_NAME: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/FOAM_AWS_FINGERPRINT_BUCKET_NAME
