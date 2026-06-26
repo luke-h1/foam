@@ -23,3 +23,7 @@ runs:
         EXPO_PUBLIC_SENTRY_DSN: op://ci-cd/foam-staging/EXPO_PUBLIC_SENTRY_DSN
         EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL: op://ci-cd/foam-staging/AUTH_PROXY_API_BASE_URL
         EXPO_PUBLIC_AUTH_PROXY_API_KEY: op://ci-cd/foam-staging/AUTH_PROXY_API_KEY
+        EXPO_PUBLIC_TWITCH_CLIENT_ID: op://ci-cd/foam-staging/TWITCH_CLIENT_ID
+        EXPO_PUBLIC_TWITCH_PROD_CLIENT_ID: op://ci-cd/foam-staging/TWITCH_PROD_CLIENT_ID
+        EXPO_PUBLIC_BUGSNAG_API_KEY: op://ci-cd/foam-staging/EXPO_PUBLIC_BUGSNAG_API_KEY
+        EXPO_PUBLIC_STATSIG_CLIENT_KEY: op://ci-cd/foam-staging/EXPO_PUBLIC_STATSIG_CLIENT_KEY

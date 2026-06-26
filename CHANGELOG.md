@@ -48,6 +48,7 @@
 - **app:** Fix import error
 - **infrastructure:** Fix metadata not showing
 - **app:** Offline banner
+- **app:** Fix auth after magic link support
 
 ### 🔧 Miscellaneous Tasks
 
