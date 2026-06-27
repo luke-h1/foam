@@ -69,7 +69,6 @@ const linkingMock: { addEventListener: jest.Mock; getInitialURL: jest.Mock } =
     getInitialURL: jest.fn(),
   });
 
-// The exact foam:// deep link the magic-link proxy redirects into the app.
 const magicUrl =
   'foam://auth?access_token=magic-access-token&refresh_token=magic-refresh-token&token_type=bearer&expires_in=14400';
 
@@ -132,18 +131,20 @@ describe('RouterEffects deep-link auth handling', () => {
     expect(mockedRouter.replace).toHaveBeenCalledTimes(1);
   });
 
-  test('does not re-read the initial URL or re-subscribe when loginWithTwitch identity changes', async () => {
+  test('does not re-read the initial URL or re-subscribe, and uses the latest loginWithTwitch, when its identity changes', async () => {
     linkingMock.getInitialURL.mockResolvedValue(magicUrl);
 
     const { rerender } = render(<RouterEffects />);
 
     await waitFor(() => expect(mockedRouter.replace).toHaveBeenCalledTimes(1));
 
-    // Mirror the real bug trigger: AuthContext re-renders with a brand-new
-    // loginWithTwitch function and a flipped isLoggedIn after login succeeds.
+    const nextLoginWithTwitch = jest.fn(async () => null);
+    const nextMagicUrl =
+      'foam://auth?access_token=magic-access-token-2&refresh_token=magic-refresh-token-2&token_type=bearer&expires_in=14400';
+
     mockedUseAuthContext.mockReturnValue(
       makeAuthContext({
-        loginWithTwitch: jest.fn(async () => null),
+        loginWithTwitch: nextLoginWithTwitch,
         authState: {
           isLoggedIn: true,
           isAnonAuth: false,
@@ -162,7 +163,11 @@ describe('RouterEffects deep-link auth handling', () => {
     expect(linkingMock.addEventListener).toHaveBeenCalledTimes(1);
     expect(removeSubscription).not.toHaveBeenCalled();
     expect(linkingMock.getInitialURL).toHaveBeenCalledTimes(1);
-    expect(mockedRouter.replace).toHaveBeenCalledTimes(1);
+
+    act(() => urlHandler?.({ url: nextMagicUrl }));
+    await waitFor(() => expect(nextLoginWithTwitch).toHaveBeenCalledTimes(1));
+
+    expect(loginWithTwitch).toHaveBeenCalledTimes(1);
   });
 
   test('deduplicates a magic link delivered twice to the warm url listener', async () => {

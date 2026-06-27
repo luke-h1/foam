@@ -134,23 +134,31 @@ export function RouterEffects() {
 
   useEffect(() => {
     const handledAuthUrls = new Set<string>();
+    const pendingAuthUrls = new Set<string>();
 
     async function handleIncomingUrl(url: string | null) {
       if (!url || !isAuthCallbackUrl(url)) {
         return;
       }
 
-      if (handledAuthUrls.has(url)) {
+      if (handledAuthUrls.has(url) || pendingAuthUrls.has(url)) {
         return;
       }
-      handledAuthUrls.add(url);
+      pendingAuthUrls.add(url);
 
-      const handled = await completeAuthWithCallbackUrl(
-        url,
-        loginWithTwitchRef.current,
-      );
-      if (handled) {
-        router.replace('/tabs/following');
+      try {
+        const handled = await completeAuthWithCallbackUrl(
+          url,
+          loginWithTwitchRef.current,
+        );
+        if (handled) {
+          handledAuthUrls.add(url);
+          router.replace('/tabs/following');
+        }
+      } catch (error) {
+        logger.main.warn('Failed to complete auth callback', error);
+      } finally {
+        pendingAuthUrls.delete(url);
       }
     }
 
