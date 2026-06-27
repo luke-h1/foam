@@ -12,6 +12,7 @@ import { useOnAppStateChange } from '@app/hooks/useOnAppStateChange';
 import { useOnReconnect } from '@app/hooks/useOnReconnect';
 import { usePopulateAuth } from '@app/hooks/usePopulateAuth';
 import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import {
   completeAuthWithCallbackUrl,
   isAuthCallbackUrl,
@@ -129,18 +130,27 @@ export function RouterEffects() {
     };
   }, [authState?.isLoggedIn, ready]);
 
+  const loginWithTwitchRef = useSyncRef(loginWithTwitch);
+
   useEffect(() => {
+    const handledAuthUrls = new Set<string>();
+
     async function handleIncomingUrl(url: string | null) {
-      if (!url) {
+      if (!url || !isAuthCallbackUrl(url)) {
         return;
       }
 
-      if (isAuthCallbackUrl(url)) {
-        const handled = await completeAuthWithCallbackUrl(url, loginWithTwitch);
-        if (handled) {
-          router.replace('/tabs/following');
-        }
+      if (handledAuthUrls.has(url)) {
         return;
+      }
+      handledAuthUrls.add(url);
+
+      const handled = await completeAuthWithCallbackUrl(
+        url,
+        loginWithTwitchRef.current,
+      );
+      if (handled) {
+        router.replace('/tabs/following');
       }
     }
 
@@ -159,7 +169,7 @@ export function RouterEffects() {
     return () => {
       linkingSubscription.remove();
     };
-  }, [loginWithTwitch, ready, authState?.isLoggedIn]);
+  }, [loginWithTwitchRef]);
 
   return null;
 }
