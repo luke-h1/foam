@@ -5,6 +5,7 @@ import {
   type AuthContextState,
   useAuthContext,
 } from '@app/context/AuthContext';
+import { isDeepLinkAuthInProgress } from '@app/navigators/deepLinkAuthState';
 
 import { usePopulateAuth } from '../usePopulateAuth';
 
@@ -18,8 +19,13 @@ jest.mock('@app/context/AuthContext', () => ({
   useAuthContext: jest.fn(),
 }));
 
+jest.mock('@app/navigators/deepLinkAuthState', () => ({
+  isDeepLinkAuthInProgress: jest.fn(() => false),
+}));
+
 const mockedRouter = jest.mocked(router);
 const mockedUseAuthContext = jest.mocked(useAuthContext);
+const mockedIsDeepLinkAuthInProgress = jest.mocked(isDeepLinkAuthInProgress);
 
 const baseContext: Omit<AuthContextState, 'authState'> = {
   loginWithTwitch: jest.fn(),
@@ -60,6 +66,7 @@ describe('usePopulateAuth', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
+    mockedIsDeepLinkAuthInProgress.mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -97,6 +104,25 @@ describe('usePopulateAuth', () => {
 
     expect(mockedRouter.replace).toHaveBeenCalledTimes(1);
     expect(mockedRouter.replace).toHaveBeenCalledWith('/tabs/following');
+  });
+
+  test('does not navigate on a magic-link login (RouterEffects handles it)', () => {
+    mockedIsDeepLinkAuthInProgress.mockReturnValue(true);
+
+    setAuthState(undefined);
+    const { rerender } = renderHook(() => usePopulateAuth());
+
+    setAuthState(anon);
+    rerender({});
+
+    setAuthState(loggedIn);
+    rerender({});
+
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    expect(mockedRouter.replace).not.toHaveBeenCalled();
   });
 
   test('does not navigate again while staying logged in (e.g. token refresh)', () => {

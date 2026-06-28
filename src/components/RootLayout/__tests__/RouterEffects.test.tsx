@@ -7,6 +7,10 @@ import {
   type AuthContextState,
   useAuthContext,
 } from '@app/context/AuthContext';
+import {
+  endDeepLinkAuth,
+  isDeepLinkAuthInProgress,
+} from '@app/navigators/deepLinkAuthState';
 
 import { RouterEffects } from '../RouterEffects';
 
@@ -101,6 +105,9 @@ const removeSubscription = jest.fn();
 
 describe('RouterEffects deep-link auth handling', () => {
   beforeEach(() => {
+    while (isDeepLinkAuthInProgress()) {
+      endDeepLinkAuth();
+    }
     urlHandler = undefined;
     removeSubscription.mockClear();
     loginWithTwitch.mockClear();
@@ -223,6 +230,33 @@ describe('RouterEffects deep-link auth handling', () => {
     expect(mockedRouter.replace).toHaveBeenCalledTimes(1);
   });
 
+  test('flags a deep-link auth as in progress while handling, then clears it', async () => {
+    let resolveLogin: (() => void) | undefined;
+    loginWithTwitch.mockImplementationOnce(
+      () =>
+        new Promise<null>(resolve => {
+          resolveLogin = () => resolve(null);
+        }),
+    );
+
+    render(<RouterEffects />);
+
+    await waitFor(() => expect(urlHandler).toBeDefined());
+    expect(isDeepLinkAuthInProgress()).toBe(false);
+
+    act(() => urlHandler?.({ url: magicUrl }));
+    await waitFor(() => expect(loginWithTwitch).toHaveBeenCalledTimes(1));
+
+    expect(isDeepLinkAuthInProgress()).toBe(true);
+
+    await act(async () => {
+      resolveLogin?.();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => expect(isDeepLinkAuthInProgress()).toBe(false));
+  });
+
   test('ignores non-auth deep links', async () => {
     render(<RouterEffects />);
 
@@ -235,5 +269,6 @@ describe('RouterEffects deep-link auth handling', () => {
 
     expect(loginWithTwitch).not.toHaveBeenCalled();
     expect(mockedRouter.replace).not.toHaveBeenCalled();
+    expect(isDeepLinkAuthInProgress()).toBe(false);
   });
 });

@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { router } from 'expo-router';
 
 import { useAuthContext } from '@app/context/AuthContext';
+import { isDeepLinkAuthInProgress } from '@app/navigators/deepLinkAuthState';
 
 export function usePopulateAuth() {
   const { authState } = useAuthContext();
@@ -21,6 +22,10 @@ export function usePopulateAuth() {
     // initial hydration on app open (undefined -> logged in) is already routed
     // by the index redirect, so navigating here too pushes to following twice.
     if (previousLoggedIn !== false || !authState.isLoggedIn) {
+      return undefined;
+    }
+
+    if (isDeepLinkAuthInProgress()) {
       return undefined;
     }
 

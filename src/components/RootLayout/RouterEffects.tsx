@@ -18,6 +18,10 @@ import {
   isAuthCallbackUrl,
 } from '@app/navigators/authLinking';
 import {
+  beginDeepLinkAuth,
+  endDeepLinkAuth,
+} from '@app/navigators/deepLinkAuthState';
+import {
   setNavigationReady,
   syncNavigationState,
 } from '@app/navigators/navigationUtilities';
@@ -149,6 +153,7 @@ export function RouterEffects() {
         return;
       }
       pendingAuthUrls.add(url);
+      beginDeepLinkAuth();
 
       try {
         const handled = await completeAuthWithCallbackUrl(
@@ -165,6 +170,7 @@ export function RouterEffects() {
         logger.main.warn('Failed to complete auth callback', error);
       } finally {
         pendingAuthUrls.delete(url);
+        endDeepLinkAuth();
       }
     }
 
