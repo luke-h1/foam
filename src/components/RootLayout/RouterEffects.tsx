@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Linking } from 'react-native';
 
 import * as QuickActions from 'expo-quick-actions';
@@ -12,10 +12,15 @@ import { useOnAppStateChange } from '@app/hooks/useOnAppStateChange';
 import { useOnReconnect } from '@app/hooks/useOnReconnect';
 import { usePopulateAuth } from '@app/hooks/usePopulateAuth';
 import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import {
   completeAuthWithCallbackUrl,
   isAuthCallbackUrl,
 } from '@app/navigators/authLinking';
+import {
+  beginDeepLinkAuth,
+  endDeepLinkAuth,
+} from '@app/navigators/deepLinkAuthState';
 import {
   setNavigationReady,
   syncNavigationState,
@@ -129,18 +134,43 @@ export function RouterEffects() {
     };
   }, [authState?.isLoggedIn, ready]);
 
+  const loginWithTwitchRef = useSyncRef(loginWithTwitch);
+  const handledAuthUrlsRef = useRef<Set<string>>(new Set());
+  const pendingAuthUrlsRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
+    const handledAuthUrls = handledAuthUrlsRef.current;
+    const pendingAuthUrls = pendingAuthUrlsRef.current;
+    let cancelled = false;
+    let initialUrlTimeout: ReturnType<typeof setTimeout> | undefined;
+
     async function handleIncomingUrl(url: string | null) {
-      if (!url) {
+      if (cancelled || !url || !isAuthCallbackUrl(url)) {
         return;
       }
 
-      if (isAuthCallbackUrl(url)) {
-        const handled = await completeAuthWithCallbackUrl(url, loginWithTwitch);
-        if (handled) {
-          router.replace('/tabs/following');
-        }
+      if (handledAuthUrls.has(url) || pendingAuthUrls.has(url)) {
         return;
+      }
+      pendingAuthUrls.add(url);
+      beginDeepLinkAuth();
+
+      try {
+        const handled = await completeAuthWithCallbackUrl(
+          url,
+          loginWithTwitchRef.current,
+        );
+        if (handled) {
+          handledAuthUrls.add(url);
+          if (!cancelled) {
+            router.replace('/tabs/following');
+          }
+        }
+      } catch (error) {
+        logger.main.warn('Failed to complete auth callback', error);
+      } finally {
+        pendingAuthUrls.delete(url);
+        endDeepLinkAuth();
       }
     }
 
@@ -149,17 +179,22 @@ export function RouterEffects() {
     });
 
     void Linking.getInitialURL().then((initialUrl: string | null) => {
-      if (initialUrl) {
-        setTimeout(() => {
-          void handleIncomingUrl(initialUrl);
-        }, 100);
+      if (cancelled || !initialUrl) {
+        return;
       }
+      initialUrlTimeout = setTimeout(() => {
+        void handleIncomingUrl(initialUrl);
+      }, 100);
     });
 
     return () => {
+      cancelled = true;
+      if (initialUrlTimeout) {
+        clearTimeout(initialUrlTimeout);
+      }
       linkingSubscription.remove();
     };
-  }, [loginWithTwitch, ready, authState?.isLoggedIn]);
+  }, [loginWithTwitchRef]);
 
   return null;
 }
