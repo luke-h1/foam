@@ -170,6 +170,7 @@ export const AuthContextProvider = ({
   const [user, setUser] = useState<UserInfoResponse | undefined>(undefined);
   const hasTimedOut = useRef(false);
   const userTokenRefreshInFlightRef = useRef(false);
+  const loginGenerationRef = useRef(0);
   const authStateRef = useRef(state.authState);
   authStateRef.current = state.authState;
 
@@ -222,6 +223,7 @@ export const AuthContextProvider = ({
   };
 
   const fetchAnonToken = async (overrideTestResult?: DefaultTokenResponse) => {
+    const generationAtStart = loginGenerationRef.current;
     try {
       let result = await twitchService.getDefaultToken();
 
@@ -233,6 +235,10 @@ export const AuthContextProvider = ({
             expires_in: 3600,
             token_type: 'bearer',
           };
+      }
+
+      if (loginGenerationRef.current !== generationAtStart) {
+        return;
       }
 
       const token = addExpirationTimestamp({
@@ -353,6 +359,7 @@ export const AuthContextProvider = ({
         storageKeys.user,
         JSON.stringify(twitchToken),
       );
+      loginGenerationRef.current += 1;
       setState({
         ready: true,
         authState: {
@@ -399,6 +406,7 @@ export const AuthContextProvider = ({
     });
 
     // we have succeeded
+    loginGenerationRef.current += 1;
     setState({
       ready: true,
       authState: {
