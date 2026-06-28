@@ -187,6 +187,42 @@ describe('RouterEffects deep-link auth handling', () => {
     expect(mockedRouter.replace).toHaveBeenCalledTimes(1);
   });
 
+  test('deduplicates a magic link delivered twice while the first login is still in flight', async () => {
+    let resolveLogin: (() => void) | undefined;
+    loginWithTwitch.mockImplementationOnce(
+      () =>
+        new Promise<null>(resolve => {
+          resolveLogin = () => resolve(null);
+        }),
+    );
+
+    render(<RouterEffects />);
+
+    await waitFor(() => expect(urlHandler).toBeDefined());
+
+    act(() => urlHandler?.({ url: magicUrl }));
+    await waitFor(() => expect(loginWithTwitch).toHaveBeenCalledTimes(1));
+
+    act(() => urlHandler?.({ url: magicUrl }));
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(loginWithTwitch).toHaveBeenCalledTimes(1);
+    expect(mockedRouter.replace).not.toHaveBeenCalled();
+
+    await act(async () => {
+      resolveLogin?.();
+      await Promise.resolve();
+    });
+
+    await waitFor(() =>
+      expect(mockedRouter.replace).toHaveBeenCalledWith('/tabs/following'),
+    );
+    expect(loginWithTwitch).toHaveBeenCalledTimes(1);
+    expect(mockedRouter.replace).toHaveBeenCalledTimes(1);
+  });
+
   test('ignores non-auth deep links', async () => {
     render(<RouterEffects />);
 

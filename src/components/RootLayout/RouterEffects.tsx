@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Linking } from 'react-native';
 
 import * as QuickActions from 'expo-quick-actions';
@@ -131,13 +131,17 @@ export function RouterEffects() {
   }, [authState?.isLoggedIn, ready]);
 
   const loginWithTwitchRef = useSyncRef(loginWithTwitch);
+  const handledAuthUrlsRef = useRef<Set<string>>(new Set());
+  const pendingAuthUrlsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    const handledAuthUrls = new Set<string>();
-    const pendingAuthUrls = new Set<string>();
+    const handledAuthUrls = handledAuthUrlsRef.current;
+    const pendingAuthUrls = pendingAuthUrlsRef.current;
+    let cancelled = false;
+    let initialUrlTimeout: ReturnType<typeof setTimeout> | undefined;
 
     async function handleIncomingUrl(url: string | null) {
-      if (!url || !isAuthCallbackUrl(url)) {
+      if (cancelled || !url || !isAuthCallbackUrl(url)) {
         return;
       }
 
@@ -153,7 +157,9 @@ export function RouterEffects() {
         );
         if (handled) {
           handledAuthUrls.add(url);
-          router.replace('/tabs/following');
+          if (!cancelled) {
+            router.replace('/tabs/following');
+          }
         }
       } catch (error) {
         logger.main.warn('Failed to complete auth callback', error);
@@ -167,14 +173,19 @@ export function RouterEffects() {
     });
 
     void Linking.getInitialURL().then((initialUrl: string | null) => {
-      if (initialUrl) {
-        setTimeout(() => {
-          void handleIncomingUrl(initialUrl);
-        }, 100);
+      if (cancelled || !initialUrl) {
+        return;
       }
+      initialUrlTimeout = setTimeout(() => {
+        void handleIncomingUrl(initialUrl);
+      }, 100);
     });
 
     return () => {
+      cancelled = true;
+      if (initialUrlTimeout) {
+        clearTimeout(initialUrlTimeout);
+      }
       linkingSubscription.remove();
     };
   }, [loginWithTwitchRef]);
