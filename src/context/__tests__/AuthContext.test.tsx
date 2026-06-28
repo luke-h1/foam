@@ -297,6 +297,132 @@ describe('AuthContext', () => {
     });
   });
 
+  test('does not clobber a magic-link login that completes before the anon bootstrap reaches the network', async () => {
+    const user: UserInfoResponse = {
+      id: '123',
+      login: 'magic_user',
+      display_name: 'Magic User',
+      type: '',
+      broadcaster_type: '',
+      description: '',
+      profile_image_url: '',
+      offline_image_url: '',
+      view_count: 0,
+      created_at: '',
+    };
+
+    let resolveStorage: ((value: null) => void) | undefined;
+    const storageGate = new Promise<null>(resolve => {
+      resolveStorage = resolve;
+    });
+    SecureStore.getItemAsync.mockReturnValue(storageGate);
+    twitchService.getDefaultToken.mockResolvedValue({
+      access_token: 'anon',
+      expires_in: 3600,
+      token_type: 'bearer',
+    });
+    twitchService.getUserInfo.mockResolvedValue(user);
+
+    const magicResponse: AuthSessionResult = {
+      type: 'success',
+      params: {},
+      url: 'foam://auth?access_token=magic-user-token&token_type=bearer&expires_in=14400',
+      errorCode: null,
+      error: undefined,
+      authentication: new TokenResponse({
+        accessToken: 'magic-user-token',
+        expiresIn: 14400,
+        tokenType: 'bearer',
+      }),
+    };
+
+    const { result } = renderHook(() => useAuthContext(), {
+      wrapper,
+      initialProps,
+    });
+
+    await act(async () => {
+      await result.current.loginWithTwitch(magicResponse);
+    });
+
+    expect(result.current.authState?.isLoggedIn).toBe(true);
+
+    await act(async () => {
+      resolveStorage?.(null);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(result.current.authState).toEqual({
+        isAnonAuth: false,
+        isLoggedIn: true,
+        token: result.current.authState?.token,
+      });
+      expect(result.current.authState?.token?.accessToken).toBe(
+        'magic-user-token',
+      );
+    });
+  });
+
+  test('falls back to anon when getUserInfo fails after login, despite the live-session guard', async () => {
+    SecureStore.getItemAsync.mockResolvedValue(null);
+    twitchService.getDefaultToken.mockResolvedValue({
+      access_token: 'anon-after-failed-login',
+      expires_in: 3600,
+      token_type: 'bearer',
+    });
+
+    let rejectUserInfo: ((reason: Error) => void) | undefined;
+    twitchService.getUserInfo.mockImplementationOnce(
+      () =>
+        new Promise<UserInfoResponse>((_, reject) => {
+          rejectUserInfo = reject;
+        }),
+    );
+
+    const magicResponse: AuthSessionResult = {
+      type: 'success',
+      params: {},
+      url: 'foam://auth?access_token=magic-user-token&token_type=bearer&expires_in=14400',
+      errorCode: null,
+      error: undefined,
+      authentication: new TokenResponse({
+        accessToken: 'magic-user-token',
+        expiresIn: 14400,
+        tokenType: 'bearer',
+      }),
+    };
+
+    const { result } = renderHook(() => useAuthContext(), {
+      wrapper,
+      initialProps,
+    });
+
+    await waitFor(() => expect(result.current.ready).toBe(true));
+
+    let loginPromise: Promise<null | undefined> | undefined;
+    await act(async () => {
+      loginPromise = result.current.loginWithTwitch(magicResponse);
+      await Promise.resolve();
+    });
+
+    expect(result.current.authState?.isLoggedIn).toBe(true);
+
+    await act(async () => {
+      rejectUserInfo?.(new Error('user info unavailable'));
+      await loginPromise;
+    });
+
+    await waitFor(() => {
+      expect(result.current.authState?.isAnonAuth).toBe(true);
+      expect(result.current.authState?.isLoggedIn).toBe(false);
+      expect(result.current.authState?.token?.accessToken).toBe(
+        'anon-after-failed-login',
+      );
+    });
+  });
+
   test('refreshes expired stored user token before falling back to anon auth', async () => {
     const user: UserInfoResponse = {
       id: '123',

@@ -170,7 +170,6 @@ export const AuthContextProvider = ({
   const [user, setUser] = useState<UserInfoResponse | undefined>(undefined);
   const hasTimedOut = useRef(false);
   const userTokenRefreshInFlightRef = useRef(false);
-  const loginGenerationRef = useRef(0);
   const authStateRef = useRef(state.authState);
   authStateRef.current = state.authState;
 
@@ -222,8 +221,10 @@ export const AuthContextProvider = ({
     });
   };
 
-  const fetchAnonToken = async (overrideTestResult?: DefaultTokenResponse) => {
-    const generationAtStart = loginGenerationRef.current;
+  const fetchAnonToken = async (
+    overrideTestResult?: DefaultTokenResponse,
+    options?: { force?: boolean },
+  ) => {
     try {
       let result = await twitchService.getDefaultToken();
 
@@ -237,7 +238,7 @@ export const AuthContextProvider = ({
           };
       }
 
-      if (loginGenerationRef.current !== generationAtStart) {
+      if (!options?.force && authStateRef.current?.isLoggedIn) {
         return;
       }
 
@@ -359,7 +360,6 @@ export const AuthContextProvider = ({
         storageKeys.user,
         JSON.stringify(twitchToken),
       );
-      loginGenerationRef.current += 1;
       setState({
         ready: true,
         authState: {
@@ -406,7 +406,6 @@ export const AuthContextProvider = ({
     });
 
     // we have succeeded
-    loginGenerationRef.current += 1;
     setState({
       ready: true,
       authState: {
@@ -429,16 +428,19 @@ export const AuthContextProvider = ({
       await SecureStore.setItemAsync(storageKeys.user, JSON.stringify(token));
     } catch (error) {
       logger.auth.error('Failed to get user info after login', error);
-      await doAnonAuth();
+      await doAnonAuth(undefined, { force: true });
     }
 
     return null;
   };
 
-  const doAnonAuth = async (token?: TwitchToken) => {
+  const doAnonAuth = async (
+    token?: TwitchToken,
+    options?: { force?: boolean },
+  ) => {
     if (!token?.accessToken) {
       // request a default token and set it in state
-      await fetchAnonToken();
+      await fetchAnonToken(undefined, options);
       return;
     }
 
@@ -446,7 +448,11 @@ export const AuthContextProvider = ({
     if (isTokenExpired(token)) {
       logger.auth.info('Anonymous token is expired, fetching new token');
       twitchApi.removeAuthToken();
-      await fetchAnonToken();
+      await fetchAnonToken(undefined, options);
+      return;
+    }
+
+    if (!options?.force && authStateRef.current?.isLoggedIn) {
       return;
     }
 
