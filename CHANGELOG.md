@@ -50,6 +50,7 @@
 - **app:** Offline banner
 - **app:** Fix auth after magic link support
 - **app:** Infinite push on magic link receive ([#674](https://github.com/lhowsam/foam/issues/674))
+- **app:** Magic link based tokens
 
 ### 🔧 Miscellaneous Tasks
 
