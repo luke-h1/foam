@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0-testflight
+## 1.0.0-internal
 
 ### ♻️ Refactor
 
@@ -49,6 +49,7 @@
 - **infrastructure:** Fix metadata not showing
 - **app:** Offline banner
 - **app:** Fix auth after magic link support
+- **app:** Infinite push on magic link receive ([#674](https://github.com/lhowsam/foam/issues/674))
 
 ### 🔧 Miscellaneous Tasks
 
@@ -61,8 +62,11 @@
 - **infrastructure:** Swap sentry org ([#658](https://github.com/lhowsam/foam/issues/658))
 - **app:** Tidy up delay options ([#667](https://github.com/lhowsam/foam/issues/667))
 - **app:** Analytics opt out + pii scrub ([#668](https://github.com/lhowsam/foam/issues/668))
+- **infrastructure:** Populate all env vars in ci ([#671](https://github.com/lhowsam/foam/issues/671))
+- **infrastructure:** Update vaults ([#673](https://github.com/lhowsam/foam/issues/673))
+- **app:** Improve search results ([#675](https://github.com/lhowsam/foam/issues/675))
 
-## 1.0.0-testflight
+## 1.0.0
 
 ### ⚡ Performance
 
