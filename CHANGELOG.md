@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0-internal
+## 1.0.0
 
 ### ♻️ Refactor
 
@@ -65,6 +65,8 @@
 - **infrastructure:** Populate all env vars in ci ([#671](https://github.com/lhowsam/foam/issues/671))
 - **infrastructure:** Update vaults ([#673](https://github.com/lhowsam/foam/issues/673))
 - **app:** Improve search results ([#675](https://github.com/lhowsam/foam/issues/675))
+- **docs:** Add pr template
+- **ai:** Add claude md
 
 ## 1.0.0
 
