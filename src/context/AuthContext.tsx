@@ -416,6 +416,12 @@ export const AuthContextProvider = ({
     });
 
     try {
+      // Magic-link / proxy-issued tokens are minted under a different Twitch
+      // client id than EXPO_PUBLIC_TWITCH_CLIENT_ID. Helix rejects /users when
+      // the Client-Id header doesn't match the token's client, so validate first
+      // (it syncs the header to the token's client id) before getUserInfo, the
+      // same order doAuth uses on restart.
+      await twitchService.validateToken(token.accessToken);
       const u = await twitchService.getUserInfo(token.accessToken);
       // Set token before setUser so any enabled queries (e.g. followed streams) use the correct token
       twitchApi.setAuthToken(token.accessToken);

@@ -365,6 +365,74 @@ describe('AuthContext', () => {
     });
   });
 
+  test('validates the magic-link token before getUserInfo so the Helix Client-Id is synced to the token client', async () => {
+    const user: UserInfoResponse = {
+      id: '123',
+      login: 'magic_user',
+      display_name: 'Magic User',
+      type: '',
+      broadcaster_type: '',
+      description: '',
+      profile_image_url: '',
+      offline_image_url: '',
+      view_count: 0,
+      created_at: '',
+    };
+
+    let resolveStorage: ((value: null) => void) | undefined;
+    const storageGate = new Promise<null>(resolve => {
+      resolveStorage = resolve;
+    });
+    SecureStore.getItemAsync.mockReturnValue(storageGate);
+    twitchService.getDefaultToken.mockResolvedValue({
+      access_token: 'anon',
+      expires_in: 3600,
+      token_type: 'bearer',
+    });
+    twitchService.validateToken.mockResolvedValue(true);
+    twitchService.getUserInfo.mockResolvedValue(user);
+
+    const magicResponse: AuthSessionResult = {
+      type: 'success',
+      params: {},
+      url: 'foam://auth?access_token=magic-user-token&token_type=bearer&expires_in=14400',
+      errorCode: null,
+      error: undefined,
+      authentication: new TokenResponse({
+        accessToken: 'magic-user-token',
+        expiresIn: 14400,
+        tokenType: 'bearer',
+      }),
+    };
+
+    const { result } = renderHook(() => useAuthContext(), {
+      wrapper,
+      initialProps,
+    });
+
+    await act(async () => {
+      await result.current.loginWithTwitch(magicResponse);
+    });
+
+    await act(async () => {
+      resolveStorage?.(null);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(result.current.authState?.isLoggedIn).toBe(true);
+    expect(twitchService.validateToken).toHaveBeenCalledWith(
+      'magic-user-token',
+    );
+    expect(twitchService.getUserInfo).toHaveBeenCalledWith('magic-user-token');
+    // Client-Id must be synced (validate) before the /users call (getUserInfo).
+    const validateOrder =
+      twitchService.validateToken.mock.invocationCallOrder.at(-1) ?? 0;
+    const getUserInfoOrder =
+      twitchService.getUserInfo.mock.invocationCallOrder.at(-1) ?? 0;
+    expect(validateOrder).toBeLessThan(getUserInfoOrder);
+  });
+
   test('falls back to anon when getUserInfo fails after login, despite the live-session guard', async () => {
     SecureStore.getItemAsync.mockResolvedValue(null);
     twitchService.getDefaultToken.mockResolvedValue({
