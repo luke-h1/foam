@@ -350,7 +350,7 @@ const en = {
     clearSearchHistory: 'Clear Search History',
     clearSearchHistoryConfirm:
       'Are you sure you want to clear all your recent searches?',
-    searchPlaceholder: 'Search channels, games, or categories',
+    searchPlaceholder: 'Search channels, games',
     channels: 'Channels',
     categories: 'Categories',
     suggested: 'SUGGESTED',

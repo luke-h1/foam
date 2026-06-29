@@ -1,4 +1,5 @@
 import {
+  type ReactNode,
   type RefObject,
   startTransition,
   useCallback,
@@ -10,11 +11,14 @@ import {
 } from 'react';
 import {
   type NativeSyntheticEvent,
+  type StyleProp,
   StyleSheet,
   type TextInputFocusEventData,
   View,
+  type ViewStyle,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { Pressable } from 'react-native-gesture-handler';
 import type { SearchBarCommands } from 'react-native-screens';
 
 import { ListRenderItem } from '@shopify/flash-list';
@@ -92,17 +96,10 @@ function getSearchResultKey(item: SearchItem) {
 }
 
 function sortSearchHistory(history: SearchHistoryItem[]) {
-  const sortedHistory: SearchHistoryItem[] = [];
-
-  for (const item of history) {
-    sortedHistory.push(item);
-  }
-
-  sortedHistory.sort(
+  // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks Array.prototype.toSorted (throws "undefined is not a function"); copy-then-sort is the safe equivalent
+  return [...history].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
-
-  return sortedHistory;
 }
 
 function getStoredSearchHistory() {
@@ -154,6 +151,38 @@ function writeSearchHistoryQuery(query: string) {
     SEARCH_HISTORY_STORAGE_KEY,
     sortSearchHistory(nextSearches),
   );
+}
+
+const isAndroid = process.env.EXPO_OS === 'android';
+
+function ResultRow({
+  children,
+  onPress,
+  style,
+}: {
+  children: ReactNode;
+  onPress: () => void;
+  style: StyleProp<ViewStyle>;
+}) {
+  return (
+    <Pressable
+      accessibilityRole='button'
+      onPress={onPress}
+      android_ripple={
+        isAndroid ? { color: 'rgba(255, 255, 255, 0.08)' } : undefined
+      }
+      style={({ pressed }) => [
+        style,
+        pressed && !isAndroid ? styles.rowPressed : null,
+      ]}
+    >
+      {children}
+    </Pressable>
+  );
+}
+
+function ResultSeparator() {
+  return <View style={styles.separator} />;
 }
 
 export function SearchScreen() {
@@ -242,10 +271,11 @@ export function SearchScreen() {
 
   const handleTextChange = useCallback(
     (text: string) => {
+      const normalizedText = text.trim();
       setState(state => ({ ...state, query: text }));
-      if (text.length > 2) {
-        void handleQuerySearch(text);
-      } else if (text.length === 0) {
+      if (normalizedText.length > 2) {
+        void handleQuerySearch(normalizedText);
+      } else if (normalizedText.length === 0) {
         startTransition(() => {
           setState(state => ({
             ...state,
@@ -326,14 +356,14 @@ export function SearchScreen() {
   const renderItem: ListRenderItem<SearchChannelResponse> = useCallback(
     ({ item }) => {
       return (
-        <Button
+        <ResultRow
           onPress={() => {
             router.push(`/streams/live-stream/${item.broadcaster_login}`);
           }}
           style={styles.resultItem}
         >
           <StreamerCard stream={item} />
-        </Button>
+        </ResultRow>
       );
     },
     [],
@@ -347,7 +377,7 @@ export function SearchScreen() {
           ?.replace('{height}', '294') ?? '';
 
       return (
-        <Button
+        <ResultRow
           onPress={() => handleCategoryPress(item.id)}
           style={styles.categoryResultItem}
         >
@@ -360,7 +390,7 @@ export function SearchScreen() {
               Open category
             </Text>
           </View>
-        </Button>
+        </ResultRow>
       );
     },
     [handleCategoryPress],
@@ -371,6 +401,7 @@ export function SearchScreen() {
       return (
         <Button
           key={item.query}
+          haptic='selection'
           style={styles.quickActionChip}
           onPress={() => handleQuickActionPress(item.query)}
         >
@@ -384,7 +415,7 @@ export function SearchScreen() {
   );
 
   const showSearchHistory =
-    searchResults.length === 0 && searchHistoryQueries.length > 0;
+    query.trim().length === 0 && searchHistoryQueries.length > 0;
 
   return (
     <View style={styles.container}>
@@ -408,22 +439,21 @@ export function SearchScreen() {
         selectedFilter={selectedFilter}
       />
       {showSearchHistory ? (
-        <View style={styles.historyContainer}>
-          <SearchHistoryV2
-            history={searchHistoryQueries}
-            onClearAll={handleSearchHistoryClearAll}
-            onSelectItem={handleSearchHistorySelect}
-            onClearItem={handleSearchHistoryClearItem}
-          />
-        </View>
-      ) : null}
-      <SearchResultsList
-        activeResults={activeResults}
-        listRef={listRef}
-        renderCategoryItem={renderCategoryItem}
-        renderItem={renderItem}
-        selectedFilter={selectedFilter}
-      />
+        <SearchHistoryV2
+          history={searchHistoryQueries}
+          onClearAll={handleSearchHistoryClearAll}
+          onSelectItem={handleSearchHistorySelect}
+          onClearItem={handleSearchHistoryClearItem}
+        />
+      ) : (
+        <SearchResultsList
+          activeResults={activeResults}
+          listRef={listRef}
+          renderCategoryItem={renderCategoryItem}
+          renderItem={renderItem}
+          selectedFilter={selectedFilter}
+        />
+      )}
     </View>
   );
 }
@@ -515,6 +545,7 @@ function SearchResultsList({
       }
       showsVerticalScrollIndicator={false}
       contentInsetAdjustmentBehavior='automatic'
+      ItemSeparatorComponent={ResultSeparator}
       data={activeResults}
       keyboardDismissMode='on-drag'
       keyboardShouldPersistTaps='handled'
@@ -550,7 +581,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: theme.space16,
     paddingHorizontal: theme.space20,
-    paddingVertical: 6,
+    paddingVertical: theme.space8,
   },
   container: {
     backgroundColor: theme.color.background.dark,
@@ -564,16 +595,11 @@ const styles = StyleSheet.create({
     paddingBottom: theme.space12,
     paddingTop: theme.space4,
   },
-  historyContainer: {
-    paddingHorizontal: theme.space20,
-  },
   quickActionChip: {
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.colorBorderSecondary,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius10,
-    borderWidth: 1,
-    paddingHorizontal: theme.space12,
+    borderRadius: theme.borderRadius999,
+    paddingHorizontal: theme.space16,
     paddingVertical: theme.space8,
   },
   quickActionTitle: {
@@ -590,10 +616,18 @@ const styles = StyleSheet.create({
   resultItem: {
     flexDirection: 'row',
     paddingHorizontal: theme.space20,
-    paddingVertical: 6,
+    paddingVertical: theme.space8,
   },
   resultsList: {
     flex: 1,
+  },
+  rowPressed: {
+    backgroundColor: theme.color.surfacePressed.dark,
+  },
+  separator: {
+    backgroundColor: theme.color.border.dark,
+    height: StyleSheet.hairlineWidth,
+    marginStart: 91,
   },
   sectionHeader: {
     gap: 2,
