@@ -148,7 +148,9 @@ describe('SearchScreen', () => {
 
     render(<SearchScreen />);
 
-    expect(screen.getByText('RECENT SEARCHES')).toBeOnTheScreen();
-    expect(screen.getByText('xqc')).toBeOnTheScreen();
+    // The history list is rendered with native @expo/ui views, whose text is
+    // exposed as props rather than findable Text nodes, so query by testID.
+    expect(screen.getByTestId('search-history')).toBeOnTheScreen();
+    expect(screen.getByTestId('search-history-item-xqc')).toBeOnTheScreen();
   });
 });
