@@ -32,8 +32,6 @@ interface SearchHistoryV2Props {
 }
 
 const SECONDARY = theme.color.textSecondary.dark;
-const PRIMARY = theme.color.text.dark;
-const ROW_BACKGROUND = theme.color.background.dark;
 
 // The list sits below the suggested chips and does not scroll; cap it so the
 // rows never run off-screen behind the floating search bar.
@@ -112,12 +110,14 @@ export function SearchHistoryV2({
                 onPress={() => onSelectItem(query)}
                 modifiers={[
                   buttonStyle('plain'),
-                  listRowBackground(ROW_BACKGROUND),
+                  listRowBackground(theme.color.background.dark),
                 ]}
               >
                 <HStack spacing={12}>
                   <Image systemName='clock' size={16} color={SECONDARY} />
-                  <Text modifiers={[foregroundStyle(PRIMARY)]}>{query}</Text>
+                  <Text modifiers={[foregroundStyle(theme.color.text.dark)]}>
+                    {query}
+                  </Text>
                   <Spacer />
                   <Image
                     systemName='arrow.up.left'

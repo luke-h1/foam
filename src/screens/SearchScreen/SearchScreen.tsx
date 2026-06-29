@@ -96,6 +96,7 @@ function getSearchResultKey(item: SearchItem) {
 }
 
 function sortSearchHistory(history: SearchHistoryItem[]) {
+  // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks Array.prototype.toSorted (throws "undefined is not a function"); copy-then-sort is the safe equivalent
   return [...history].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
@@ -153,7 +154,6 @@ function writeSearchHistoryQuery(query: string) {
 }
 
 const isAndroid = process.env.EXPO_OS === 'android';
-const ROW_RIPPLE = { color: 'rgba(255, 255, 255, 0.08)' };
 
 function ResultRow({
   children,
@@ -168,7 +168,9 @@ function ResultRow({
     <Pressable
       accessibilityRole='button'
       onPress={onPress}
-      android_ripple={isAndroid ? ROW_RIPPLE : undefined}
+      android_ripple={
+        isAndroid ? { color: 'rgba(255, 255, 255, 0.08)' } : undefined
+      }
       style={({ pressed }) => [
         style,
         pressed && !isAndroid ? styles.rowPressed : null,
@@ -269,10 +271,11 @@ export function SearchScreen() {
 
   const handleTextChange = useCallback(
     (text: string) => {
+      const normalizedText = text.trim();
       setState(state => ({ ...state, query: text }));
-      if (text.length > 2) {
-        void handleQuerySearch(text);
-      } else if (text.length === 0) {
+      if (normalizedText.length > 2) {
+        void handleQuerySearch(normalizedText);
+      } else if (normalizedText.length === 0) {
         startTransition(() => {
           setState(state => ({
             ...state,
