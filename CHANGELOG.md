@@ -54,6 +54,8 @@
 - **app:** Fix review comments ([#677](https://github.com/lhowsam/foam/issues/677))
 - **app:** Fix review comments
 - **app:** Unit tests
+- **app:** Delete acc
+- **app:** Delete acc
 
 ### 🔧 Miscellaneous Tasks
 
