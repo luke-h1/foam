@@ -100,8 +100,7 @@ Contact
 For any questions during review, please reach out via the contact details in the
 App Store Connect submission and we will respond promptly.
 
-
-In addition to this, we've addressed previous feedback on the following points 
+In addition to this, we've addressed previous feedback on the following points
 
 4.1(c) Copycats
 Foam is an independent third-party client for Twitch, not affiliated with Twitch
