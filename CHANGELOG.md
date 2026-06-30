@@ -52,6 +52,8 @@
 - **app:** Infinite push on magic link receive ([#674](https://github.com/lhowsam/foam/issues/674))
 - **app:** Magic link based tokens
 - **app:** Fix review comments ([#677](https://github.com/lhowsam/foam/issues/677))
+- **app:** Fix review comments
+- **app:** Unit tests
 
 ### 🔧 Miscellaneous Tasks
 
@@ -70,6 +72,7 @@
 - **docs:** Add pr template
 - **ai:** Add claude md
 - **docs:** Update app review notes
+- **infrastructure:** Change to self-hosted runner
 
 ## 1.0.0
 
