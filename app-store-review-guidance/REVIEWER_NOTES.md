@@ -1,7 +1,6 @@
 Thank you for reviewing Foam. These notes explains what the app does, how to
 sign in and the key flows worth checking.
 
-
 What Foam is
 
 Foam is a third-party mobile client for Twitch.tv. It offers a cleaner,
@@ -20,7 +19,6 @@ Main areas of the app
 - Search - find streamers and categories.
 - Settings - appearance, chat, and account options.
 
-
 How to sign in
 
 Foam signs users in through Twitch's own OAuth login, which enforces Twitch
@@ -38,14 +36,12 @@ Steps
 4. Safari shows a brief "Signing in…" page and prompts to **Open in Foam** - tap 'Open'.
 5. Foam opens, completes sign-in automatically, and lands on the Following tab as a logged-in user
 
-
 Browsing without signing in
 
 Most of the app works without an account. You can open the Top and
 Search tabs, watch any live stream, and read chat without logging in.
 Sign-in is only required for account-specific features (Following, sending chat
 messages etc.).
-
 
 What to check
 
@@ -54,7 +50,6 @@ What to check
 3. Search - search for a streamer or game and open a result.
 4. Sign in - follow the magic-link steps above and confirm the Following tab populates with the test account's followed channels.
 5. Settings - review appearance and chat settings; confirm the app can be signed out from here.
-
 
 Content & moderation notes
 
@@ -65,7 +60,6 @@ Content & moderation notes
 - The third-party emote sets (7TV/BTTV/FFZ) are user-installed cosmetic overlays
   fetched from those public services and rendered in chat.
 
-
 Test account
 
 - Account type: a dedicated, low-privilege Twitch account created solely for
@@ -74,7 +68,6 @@ Test account
   2FA, so static credentials alone cannot complete sign-in. The magic link
   completes the OAuth step on the reviewer's behalf using a securely stored token
   for this test account.
-
 
 Account deletion
 
@@ -89,7 +82,6 @@ Security and Privacy settings (https://www.twitch.tv/settings/security), where
 the user can disable or delete their Twitch account. The adjacent "Log out"
 option removes the saved Twitch token from the device.
 
-
 Privacy & tracking
 
 Foam does not track users as defined by App Tracking Transparency. It does not
@@ -100,12 +92,10 @@ device identifier, and can be turned off in Settings -> Other. Crash reporting
 (Sentry) is sent with PII scrubbed. The app's privacy manifest declares
 NSPrivacyTracking = false, so no ATT prompt is required.
 
-
 Background audio
 
 The app does not provide persistent background audio; the previously declared
 "audio" UIBackgroundMode has been removed.
-
 
 Contact
 
