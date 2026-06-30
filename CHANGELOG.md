@@ -51,6 +51,7 @@
 - **app:** Fix auth after magic link support
 - **app:** Infinite push on magic link receive ([#674](https://github.com/lhowsam/foam/issues/674))
 - **app:** Magic link based tokens
+- **app:** Fix review comments ([#677](https://github.com/lhowsam/foam/issues/677))
 
 ### 🔧 Miscellaneous Tasks
 
@@ -68,6 +69,7 @@
 - **app:** Improve search results ([#675](https://github.com/lhowsam/foam/issues/675))
 - **docs:** Add pr template
 - **ai:** Add claude md
+- **docs:** Update app review notes
 
 ## 1.0.0
 
