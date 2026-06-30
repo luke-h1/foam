@@ -83,8 +83,6 @@ Put new module-level observables in `observables/`. Put write helpers that call 
 
 - **Config plugins** — `@rnrepo/expo-config-plugin` (string in the `app.config.ts` `plugins` array).
 - **Font assets** — `@expo-google-fonts/source-code-pro` (referenced by file path in the `expo-font` config plugin, never imported).
-- **CLI binaries** — `@bugsnag/source-maps` (its `bugsnag-source-maps` bin is invoked by `scripts/bugsnag-upload.sh`).
-- **Native autolinking / codegen** — `@bugsnag/react-native-performance` (New-Arch native module with `codegenConfig`; kept as a direct exact-pin so codegen runs even though it also arrives transitively via `@bugsnag/expo-performance`).
 - **Build-cache providers** — `eas-build-cache-provider` (powers `expo.experiments.buildCacheProvider: 'eas'`).
 - **Auto-discovered devtools** — `@rozenite/expo-atlas-plugin`, `@rozenite/react-navigation-plugin` (Rozenite loads installed plugin packages without a JS import).
 

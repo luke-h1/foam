@@ -10,7 +10,6 @@ import { enableFreeze } from 'react-native-screens';
 
 import * as WebBrowser from 'expo-web-browser';
 
-import { init as initBugsnag } from '../lib/bugsnag';
 import { installGlobalErrorHandlers } from '../lib/global-error-handlers';
 import { init as initSentry } from '../lib/sentry';
 
@@ -23,7 +22,6 @@ enableFreeze(true);
 
 WebBrowser.maybeCompleteAuthSession();
 initSentry();
-initBugsnag();
 installGlobalErrorHandlers();
 
 export { default } from './defaultRootLayout';

@@ -559,6 +559,12 @@ const en = {
     sessionFooter:
       'Signing out removes your saved Twitch token from this device.',
     logOut: 'Log out',
+    deleteAccount: 'Delete Account',
+    deleteAccountMessage:
+      "Foam doesn't have its own accounts - you sign in with your Twitch account, which is managed by Twitch. To permanently delete your account, continue to Twitch's account settings. To just remove your saved login from this device, use Log out above.",
+    deleteAccountContinue: 'Continue to Twitch',
+    deleteAccountFooter:
+      "Account deletion is handled by Twitch. This opens Twitch's Security and Privacy settings, where you can disable or delete your account.",
     diagnostics: 'Diagnostics',
     appDiagnostics: 'App Diagnostics',
     appDiagnosticsDescription: 'Version, environment, and runtime details',

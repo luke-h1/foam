@@ -109,7 +109,6 @@ function MediaLinkCardComponent({
       ? t('media.by', { name: createdBy })
       : t('media.stvEmote');
   const mediaLabel = isTwitchClip ? t('media.twitchClip') : t('media.stvEmote');
-  const mediaIcon = isTwitchClip ? 'twitch' : 'stv';
   const mediaImageFit = isTwitchClip ? 'cover' : 'contain';
 
   if (layout === 'inline' && type === 'stvEmote') {
@@ -174,7 +173,15 @@ function MediaLinkCardComponent({
             />
           ) : (
             <View style={[styles.mediaThumbnail, styles.mediaThumbnailEmpty]}>
-              <BrandIcon name={mediaIcon} size='sm' />
+              {isTwitchClip ? (
+                <SymbolView
+                  name='play.tv.fill'
+                  size={16}
+                  tintColor={theme.colorPlum}
+                />
+              ) : (
+                <BrandIcon name='stv' size='sm' />
+              )}
             </View>
           )}
           {isTwitchClip ? (
@@ -189,7 +196,15 @@ function MediaLinkCardComponent({
         </View>
         <View style={styles.mediaInfo}>
           <View style={styles.mediaEyebrowRow}>
-            <BrandIcon name={mediaIcon} size='xs' />
+            {isTwitchClip ? (
+              <SymbolView
+                name='play.tv.fill'
+                size={12}
+                tintColor={theme.colorPlum}
+              />
+            ) : (
+              <BrandIcon name='stv' size='xs' />
+            )}
             <Text style={styles.mediaEyebrow}>{mediaLabel}</Text>
           </View>
           <Text

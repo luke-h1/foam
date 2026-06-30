@@ -76,6 +76,37 @@ Test account
   for this test account.
 
 
+Account deletion
+
+Foam has no accounts of its own - signing in uses Twitch's OAuth, and the only
+account involved is the user's Twitch account, which is owned and managed by
+Twitch. The in-app account deletion option is at:
+
+Settings tab -> Account (profile card) -> Delete Account
+
+Tapping it explains that account deletion is handled by Twitch and opens Twitch's
+Security and Privacy settings (https://www.twitch.tv/settings/security), where
+the user can disable or delete their Twitch account. The adjacent "Log out"
+option removes the saved Twitch token from the device.
+
+
+Privacy & tracking
+
+Foam does not track users as defined by App Tracking Transparency. It does not
+use the IDFA/advertising identifier, does not collect a Device ID for tracking,
+and does not share data with third-party advertisers or data brokers. Product
+analytics (Statsig) are first-party, keyed on the Twitch account ID rather than a
+device identifier, and can be turned off in Settings -> Other. Crash reporting
+(Sentry) is sent with PII scrubbed. The app's privacy manifest declares
+NSPrivacyTracking = false, so no ATT prompt is required.
+
+
+Background audio
+
+The app does not provide persistent background audio; the previously declared
+"audio" UIBackgroundMode has been removed.
+
+
 Contact
 
 For any questions during review, please reach out via the contact details in the

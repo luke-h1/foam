@@ -2,7 +2,6 @@ import { DimensionValue } from 'react-native';
 
 import { BttvIcon } from './svg/BttvIcon';
 import { StvIcon } from './svg/StvIcon';
-import { TwitchIcon } from './svg/TwitchIcon';
 
 const ICON_SIZES = {
   xs: { height: 12, width: 12 },
@@ -17,7 +16,6 @@ export type IconSize =
 
 export const BrandIcons = {
   stv: StvIcon,
-  twitch: TwitchIcon,
   bttv: BttvIcon,
 } as const;
 
