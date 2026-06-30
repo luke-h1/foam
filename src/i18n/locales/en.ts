@@ -739,7 +739,7 @@ const en = {
   },
 
   auth: {
-    eyebrow: 'FOAM FOR TWITCH',
+    eyebrow: 'FOAM',
     title: 'Sign in with Twitch',
     subtitle:
       'Open your followed channels, chat access, and third-party emotes in one place.',

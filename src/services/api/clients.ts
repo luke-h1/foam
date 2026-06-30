@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
 
 import { createApiClient } from './Client';
+import { fetchTwitchTokenClientId } from './twitchTokenClientId';
 
 export const mockServerUrl = Constants.expoConfig?.extra?.MOCK_SERVER_URL as
   | string
@@ -21,11 +22,28 @@ let currentTwitchClientId = envTwitchClientId;
 
 export const getTwitchClientId = () => currentTwitchClientId;
 
+async function recoverTwitchClientId(body: string): Promise<boolean> {
+  if (!body.includes('Client ID and OAuth token do not match')) {
+    return false;
+  }
+  const token = twitchApi.getAuthToken();
+  if (!token) {
+    return false;
+  }
+  const clientId = await fetchTwitchTokenClientId(token);
+  if (clientId && clientId !== currentTwitchClientId) {
+    setTwitchClientId(clientId);
+    return true;
+  }
+  return false;
+}
+
 export const twitchApi = createApiClient({
   baseURL: twitchApiBaseUrl,
   headers: { 'Client-ID': envTwitchClientId ?? '' },
   logPrefix: 'twitch',
   requiresAuth: true,
+  onUnauthorized: recoverTwitchClientId,
 });
 
 /**

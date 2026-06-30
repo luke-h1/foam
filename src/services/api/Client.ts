@@ -57,6 +57,12 @@ interface ClientOptions {
    * AUTH_READY_TIMEOUT_MS) instead of firing token-less on cold start.
    */
   requiresAuth?: boolean;
+  /**
+   * Called once with the error body when a request returns 401. Return true to
+   * indicate the auth state was repaired (e.g. a stale header re-synced) so the
+   * request is replayed once; false surfaces the original error.
+   */
+  onUnauthorized?: (body: string) => Promise<boolean>;
 }
 
 const DEFAULT_TIMEOUT_MS = 10_000;
@@ -68,6 +74,7 @@ export function createApiClient({
   logPrefix,
   timeout = DEFAULT_TIMEOUT_MS,
   requiresAuth = false,
+  onUnauthorized,
 }: ClientOptions) {
   let authToken: string | undefined;
   let resolveTokenReady: (() => void) | undefined;
@@ -108,6 +115,7 @@ export function createApiClient({
     method: string,
     path: string,
     options: RequestOptions & { data?: unknown } = {},
+    isRetry = false,
   ): Promise<T> {
     const { params, headers: extraHeaders = {}, data } = options;
 
@@ -238,6 +246,15 @@ export function createApiClient({
     });
 
     if (response.status >= 400) {
+      const body = await response.text().catch(() => '');
+
+      if (response.status === 401 && onUnauthorized && !isRetry) {
+        const recovered = await onUnauthorized(body);
+        if (recovered) {
+          return request<T>(method, path, options, true);
+        }
+      }
+
       const logFailure = response.status >= 500 ? log.error : log.warn;
       logFailure(`${method} ${path} ${response.status}`, {
         name: errorName,
@@ -254,23 +271,20 @@ export function createApiClient({
         action: 'response_error_status',
         ...context,
       });
-    } else {
-      log.info(`${method} ${context.endpoint ?? path} ${response.status}`, {
-        name: 'api_info',
-        action: 'response_ok',
-        service,
-        ...context,
-      });
-    }
 
-    if (!response.ok) {
-      const body = await response.text().catch(() => '');
       throw new ApiError(
         body || `${method} ${path} ${response.status}`,
         response.status,
         exceptionName,
       );
     }
+
+    log.info(`${method} ${context.endpoint ?? path} ${response.status}`, {
+      name: 'api_info',
+      action: 'response_ok',
+      service,
+      ...context,
+    });
 
     if (response.status === 204) {
       return undefined as T;

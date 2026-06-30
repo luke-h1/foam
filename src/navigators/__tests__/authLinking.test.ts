@@ -20,6 +20,19 @@ describe('authLinking magic-link sign in', () => {
     expect(isAuthCallbackUrl('foam://auth')).toBe(false);
   });
 
+  test('recognises a variant-scheme callback URL (non-prod builds)', () => {
+    expect(
+      isAuthCallbackUrl(
+        'foam-internal://auth?access_token=magic-access-token&token_type=bearer',
+      ),
+    ).toBe(true);
+    expect(
+      isAuthCallbackUrl(
+        'foam-dev://auth?access_token=magic-access-token&token_type=bearer',
+      ),
+    ).toBe(true);
+  });
+
   test('completes login from a magic-link URL and forwards the refresh token', async () => {
     const loginWithTwitch = jest.fn(
       async (_response: AuthSessionResult | null) => null,

@@ -211,4 +211,55 @@ describe('createApiClient', () => {
     expect(jest.mocked(logger.api.error)).toHaveBeenCalledTimes(1);
     expect(jest.mocked(logger.api.warn)).not.toHaveBeenCalled();
   });
+
+  test('replays the request once when onUnauthorized recovers a 401', async () => {
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse({ message: 'mismatch' }, 401))
+      .mockResolvedValueOnce(jsonResponse({ data: ['ok'] }));
+    const onUnauthorized = jest.fn().mockResolvedValue(true);
+    const client = createApiClient({
+      baseURL: 'https://api.test/helix',
+      onUnauthorized,
+    });
+
+    const result = await client.get('/users');
+
+    expect(result).toEqual({ data: ['ok'] });
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(onUnauthorized).toHaveBeenCalledTimes(1);
+    expect(onUnauthorized).toHaveBeenCalledWith(
+      JSON.stringify({ message: 'mismatch' }),
+    );
+    expect(jest.mocked(logger.api.warn)).not.toHaveBeenCalled();
+  });
+
+  test('surfaces the 401 when onUnauthorized declines to recover', async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ message: 'nope' }, 401));
+    const onUnauthorized = jest.fn().mockResolvedValue(false);
+    const client = createApiClient({
+      baseURL: 'https://api.test/helix',
+      onUnauthorized,
+    });
+
+    await expect(client.get('/users')).rejects.toBeInstanceOf(ApiError);
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(onUnauthorized).toHaveBeenCalledTimes(1);
+  });
+
+  test('replays at most once even if the retry also 401s', async () => {
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse({ message: 'mismatch' }, 401))
+      .mockResolvedValueOnce(jsonResponse({ message: 'mismatch' }, 401));
+    const onUnauthorized = jest.fn().mockResolvedValue(true);
+    const client = createApiClient({
+      baseURL: 'https://api.test/helix',
+      onUnauthorized,
+    });
+
+    await expect(client.get('/users')).rejects.toBeInstanceOf(ApiError);
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(onUnauthorized).toHaveBeenCalledTimes(1);
+  });
 });

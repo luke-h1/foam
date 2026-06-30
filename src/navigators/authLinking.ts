@@ -15,7 +15,7 @@ export type LoginWithTwitchFn = (
 ) => Promise<null | undefined>;
 
 const AUTH_CALLBACK_PATTERNS = [
-  /^foam:\/\//,
+  /^foam(-[a-z0-9]+)?:\/\//,
   /^https?:\/\/[^/]+\/auth(?:[?#/]|$)/,
   /^https?:\/\/([^/]+\.)?foam-app\.com\/auth/,
   /^https?:\/\/([^/]+\.)?foam-app\.com\/proxy/,
