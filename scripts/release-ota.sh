@@ -37,8 +37,6 @@ if [ ! -x "$dotenv_bin" ]; then
   exit 1
 fi
 
-export EXPO_PUBLIC_BUGSNAG_API_KEY="${EXPO_PUBLIC_BUGSNAG_API_KEY:-$("$dotenv_bin" -c "$variant" -p EXPO_PUBLIC_BUGSNAG_API_KEY 2>/dev/null || true)}"
-
 run_with_variant_env() {
   local sentry_release_value
   local sentry_dist_value
@@ -97,7 +95,5 @@ echo "Publishing OTA to $variant ($platform) using local dotenv cascade"
 run_with_variant_env eas "${args[@]}"
 
 run_with_sentry_upload_env bash -c 'source ./scripts/sentry-upload.sh; sentry_upload_ota_sourcemaps "$1"' _ "$ota_output_dir"
-
-run_with_sentry_upload_env bash -c 'source ./scripts/bugsnag-upload.sh; bugsnag_upload_ota_sourcemaps "$1"' _ "$ota_output_dir"
 
 ./scripts/save-fingerprint-cache.sh "$variant"

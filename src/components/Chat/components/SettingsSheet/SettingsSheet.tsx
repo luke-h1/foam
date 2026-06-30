@@ -3,8 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BottomSheet } from '@expo/ui/community/bottom-sheet';
-
+import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
 import type { SettingsSheetPreferenceFlags } from '@app/components/Chat/types/chatUiFlags';
 import {
   SettingsLinkRow,
@@ -123,11 +122,12 @@ const SettingsSheetComponent = ({
 
   return (
     <BottomSheet
-      index={isPresented ? 0 : -1}
+      isPresented={isPresented}
       onDismiss={onDismiss}
-      enablePanDownToClose
-      snapPoints={[`${CHAT_SETTINGS_SHEET_DETENT * 100}%`]}
-      backgroundStyle={{ backgroundColor: theme.color.surfaceSunken.dark }}
+      showDragIndicator
+      enableFixedSnapPoints
+      snapPoints={[{ fraction: CHAT_SETTINGS_SHEET_DETENT }]}
+      testID='chat-settings-sheet-modal'
     >
       <View style={styles.container} testID='chat-settings-sheet'>
         <View style={styles.header}>
@@ -142,7 +142,6 @@ const SettingsSheetComponent = ({
             styles.content,
             { paddingBottom: bottomInset + theme.space24 },
           ]}
-          nestedScrollEnabled
           showsVerticalScrollIndicator={false}
         >
           <SettingsSection

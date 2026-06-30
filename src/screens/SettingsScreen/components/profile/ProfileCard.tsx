@@ -13,6 +13,14 @@ import { useAuthContext } from '@app/context/AuthContext';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import i18next from '@app/i18n/i18next';
 import { theme } from '@app/styles/themes';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+
+/**
+ * Foam has no backend accounts - sign-in is Twitch OAuth - so account deletion
+ * is handled by Twitch. This is the Security & Privacy settings page that holds
+ * the "Disable or Delete My Account" option.
+ */
+const TWITCH_ACCOUNT_SETTINGS_URL = 'https://www.twitch.tv/settings/security';
 
 interface ProfileSectionProps {
   title?: string;
@@ -143,6 +151,17 @@ export function ProfileCard() {
             }, 300);
           })();
         },
+      },
+    ]);
+  };
+
+  const confirmDeleteAccount = () => {
+    Alert.alert(t('deleteAccount'), t('deleteAccountMessage'), [
+      { text: t('common:cancel'), style: 'cancel' },
+      {
+        text: t('deleteAccountContinue'),
+        style: 'destructive',
+        onPress: () => openLinkInBrowser(TWITCH_ACCOUNT_SETTINGS_URL),
       },
     ]);
   };
@@ -283,6 +302,22 @@ export function ProfileCard() {
           destructive
           showChevron={false}
           onPress={confirmLogout}
+        />
+      </ProfileSection>
+
+      <ProfileSection
+        footer={
+          <Text type='xxs' color='gray.textLow' style={styles.footerText}>
+            {t('deleteAccountFooter')}
+          </Text>
+        }
+      >
+        <ActionRow
+          title={t('deleteAccount')}
+          icon='trash.fill'
+          destructive
+          showChevron={false}
+          onPress={confirmDeleteAccount}
         />
       </ProfileSection>
     </ScrollView>

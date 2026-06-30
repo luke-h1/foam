@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native';
 
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import type { EmoteMenuIcon as EmoteMenuIconType } from '@app/components/Chat/components/EmoteSheet/util/emoteMenuData';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { isBrandIcon } from '@app/utils/typescript/type-guards/isBrandIcon';
@@ -42,6 +43,18 @@ export function EmoteMenuIcon({
       >
         FFZ
       </Text>
+    );
+  }
+
+  if (icon === 'twitch') {
+    return (
+      <SymbolView
+        name='play.tv.fill'
+        size={16}
+        tintColor={
+          isActive ? theme.color.text.dark : getProviderAccentColor(icon)
+        }
+      />
     );
   }
 

@@ -278,6 +278,7 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize18,
   },
   searchInput: {
+    backgroundColor: 'transparent',
     flex: 1,
   },
   searchWrap: {

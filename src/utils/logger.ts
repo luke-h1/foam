@@ -1,7 +1,6 @@
 import type { transportFunctionType } from 'react-native-logs';
 import { consoleTransport, logger as rnlogger } from 'react-native-logs';
 
-import { forwardLogToBugsnag } from '@app/lib/bugsnag';
 import type { LogMetadata } from '@app/lib/sentry';
 import { forwardLogToSentry } from '@app/lib/sentry';
 import { isRecord, sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
@@ -111,7 +110,6 @@ const createMonitoringTransport =
     };
 
     forwardLogToSentry(entry);
-    forwardLogToBugsnag(entry);
   };
 
 const monitoringTransport = createMonitoringTransport();

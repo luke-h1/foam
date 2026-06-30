@@ -85,9 +85,6 @@
   "dependencies": {
     "@babel/runtime": "^7.28.2",
     "@bacons/apple-colors": "^0.0.8",
-    "@bugsnag/expo": "^55.0.0",
-    "@bugsnag/expo-performance": "^54.0.0",
-    "@bugsnag/react-native-performance": "3.4.1",
     "@expo-google-fonts/instrument-serif": "^0.4.1",
     "@expo-google-fonts/montserrat": "^0.4.2",
     "@expo-google-fonts/source-code-pro": "^0.4.0",
@@ -182,7 +179,6 @@
     "@ast-grep/cli": "^0.43.0",
     "@babel/core": "^7.29.0",
     "@babel/preset-react": "^7.27.1",
-    "@bugsnag/source-maps": "^2.3.3",
     "@commitlint/cli": "21.0.2",
     "@commitlint/config-conventional": "21.0.2",
     "@eslint/js": "^9.39.4",

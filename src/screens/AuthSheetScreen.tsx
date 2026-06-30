@@ -5,7 +5,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 
-import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
@@ -84,7 +83,11 @@ export function AuthSheetScreen() {
             style={styles.buttonGradient}
           >
             <View style={styles.buttonIcon}>
-              <BrandIcon name='twitch' size='md' color={theme.colorWhite} />
+              <SymbolView
+                name='play.tv.fill'
+                size={20}
+                tintColor={theme.colorWhite}
+              />
             </View>
             <Text type='sm' color='gray.text' weight='bold'>
               {isPromptingAuth ? t('openingTwitch') : t('continueWithTwitch')}

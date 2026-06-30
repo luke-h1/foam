@@ -193,9 +193,6 @@ const config: ExpoConfig = {
     EXPO_PUBLIC_SENTRY_DSN: process.env.EXPO_PUBLIC_SENTRY_DSN,
     EXPO_PUBLIC_SENTRY_RELEASE: sentryRelease,
     EXPO_PUBLIC_SENTRY_DIST: sentryDist,
-    bugsnag: {
-      apiKey: process.env.EXPO_PUBLIC_BUGSNAG_API_KEY,
-    },
     MOCK_SERVER_URL: appConfig.mockServerUrl,
     ota: {
       criticalIndex: Number.parseInt(process.env.OTA_CRITICAL_INDEX ?? '0', 10),
@@ -351,7 +348,6 @@ const config: ExpoConfig = {
         'Foam uses your photo library to save downloaded clips, emotes, and badges so you can use them outside the app.',
       NSPhotoLibraryAddUsageDescription:
         'Foam saves downloaded clips, emotes, and badges to your photo library.',
-      UIBackgroundModes: ['audio'],
     },
     entitlements: enableICloudEntitlements
       ? {
