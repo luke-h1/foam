@@ -211,6 +211,7 @@ const config: ExpoConfig = {
     '@rnrepo/expo-config-plugin',
     'react-native-compressor',
     'expo-status-bar',
+    '@sentry/react-native',
     [
       '@sentry/react-native/expo',
       {
