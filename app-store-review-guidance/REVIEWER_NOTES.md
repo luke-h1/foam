@@ -1,8 +1,6 @@
 Thank you for reviewing Foam. These notes explains what the app does, how to
 sign in and the key flows worth checking.
 
-What Foam is
-
 Foam is a third-party mobile client for Twitch.tv. It offers a cleaner,
 faster way to browse and watch live Twitch streams on mobile, and adds support
 for the third-party chat emote extensions (7TV, BetterTTV, FrankerFaceZ) that
@@ -101,3 +99,67 @@ Contact
 
 For any questions during review, please reach out via the contact details in the
 App Store Connect submission and we will respond promptly.
+
+
+In addition to this, we've addressed previous feedback on the following points 
+
+4.1(c) Copycats
+Foam is an independent third-party client for Twitch, not affiliated with Twitch
+Interactive, Inc. The App Store name is changed from "Foam for Twitch" to
+"Foam: Streams & Chat" and no longer contains "Twitch". The icon is our own
+"Foam" mark with no Twitch logo or colors, and we removed the Twitch logo from
+in-app icons. "Twitch" now appears only as a descriptive reference to the
+service the app connects to.
+
+4 Design (iPad scrolling)
+The chatters and settings sheets could snap scroll back to the top on iPad when
+scrolling toward the controls below. We reworked these sheets so content scrolls
+fully and all controls stay reachable on iPad, with no scroll reset. Fixed in
+the next build.
+
+5.1.1(v) Account deletion
+Foam has no accounts of its own; sign-in uses Twitch OAuth, so the only account
+is the user's Twitch account, managed by Twitch. We added Settings -> Account ->
+Delete Account, which explains this and links directly to Twitch's Security and
+Privacy settings (https://www.twitch.tv/settings/security) to disable or delete
+the account. "Log out" removes the saved token from the device. A recording is
+in the App Review notes.
+
+5.1.2(i) Privacy / ATT
+Foam does not track users as defined by ATT: no IDFA, no Device ID used for
+tracking, and no sharing with advertisers or data brokers. Analytics (Statsig)
+are first-party, keyed on the Twitch account ID, and can be disabled in
+Settings -> Other. Crash reports (Sentry) are PII-scrubbed. Our privacy manifest
+sets NSPrivacyTracking = false, so no ATT prompt is required. We corrected the
+App Privacy info in App Store Connect so it no longer indicates tracking or
+Device ID collection.
+
+2.3.6 Age rating
+The app has no in-app Parental Controls or Age Assurance. We set "Age Assurance"
+to "None" on the App Information page.
+
+5.2.3 Third-party content
+Foam is a third-party Twitch client. All video, channel data, and chat come from
+Twitch's official public APIs and Twitch's own embedded player. The app does not
+host, store, re-host, restream, or circumvent the player or its advertising.
+Foam is a registered Twitch developer application under the Twitch Developer
+Services Agreement. The 7TV/BetterTTV/FrankerFaceZ emotes are optional
+user-installed cosmetic overlays from those public services. Supporting
+documentation is attached in App Review Information.
+
+1.2 User-generated content
+Chat is live third-party content delivered and moderated by Twitch; Foam does
+not host or generate it. Foam adds the required precautions: users must agree to
+Twitch's Terms/EULA (zero tolerance for objectionable content or abusive users)
+before signing in; users can report a message or user (opening Twitch's report
+flow); and users can block a user, instantly removing their messages and
+blocking further ones (managed in Settings -> Blocked Users). Users can also
+hide messages and add blocked terms. A recording of the EULA, report, and block
+flows is in the App Review notes.
+
+2.5.4 Background audio
+The app has no persistent background audio. We removed "audio" from
+UIBackgroundModes in Info.plist and removed the background-audio mention from
+the description. Fixed in the next build.
+
+Thank you - happy to provide anything further.

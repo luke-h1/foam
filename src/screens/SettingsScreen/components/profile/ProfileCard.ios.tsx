@@ -18,6 +18,14 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import i18next from '@app/i18n/i18next';
 import { theme } from '@app/styles/themes';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+
+/**
+ * Foam has no backend accounts - sign-in is Twitch OAuth - so account deletion
+ * is handled by Twitch. This is the Security & Privacy settings page that holds
+ * the "Disable or Delete My Account" option.
+ */
+const TWITCH_ACCOUNT_SETTINGS_URL = 'https://www.twitch.tv/settings/security';
 
 function formatMemberSince(createdAt?: string) {
   if (!createdAt) {
@@ -53,6 +61,17 @@ export function ProfileCard() {
             }, 300);
           })();
         },
+      },
+    ]);
+  };
+
+  const confirmDeleteAccount = () => {
+    Alert.alert(t('deleteAccount'), t('deleteAccountMessage'), [
+      { text: t('common:cancel'), style: 'cancel' },
+      {
+        text: t('deleteAccountContinue'),
+        style: 'destructive',
+        onPress: () => openLinkInBrowser(TWITCH_ACCOUNT_SETTINGS_URL),
       },
     ]);
   };
@@ -143,6 +162,16 @@ export function ProfileCard() {
             // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
             role='destructive'
             onPress={confirmLogout}
+          />
+        </Section>
+
+        <Section footer={<NativeText>{t('deleteAccountFooter')}</NativeText>}>
+          <Button
+            label={t('deleteAccount')}
+            systemImage='trash.fill'
+            // eslint-disable-next-line jsx-a11y/aria-role, react-doctor/aria-role -- SwiftUI Button role, not ARIA
+            role='destructive'
+            onPress={confirmDeleteAccount}
           />
         </Section>
       </Form>
