@@ -578,6 +578,13 @@ const en = {
       'Remove the Twitch WebView to isolate chat performance',
     disableChat: 'Disable Chat',
     disableChatDescription: 'Remove chat rendering to isolate the player',
+    featureFlags: 'Feature Flags',
+    sharedChat: 'Shared Chat',
+    sharedChatDescription:
+      'Show the source label and badge on messages relayed from another channel in a shared chat session',
+    enhancedVideoStability: 'Enhanced Video Stability',
+    enhancedVideoStabilityDescription:
+      'Automatically refresh the player to recover from silent stalls, video errors, and high latency',
     developerTools: 'Developer Tools',
     debug: 'Debug',
     debugDescription: 'Manual debug helpers and experiments',

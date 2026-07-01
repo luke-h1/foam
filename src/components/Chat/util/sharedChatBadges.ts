@@ -1,6 +1,7 @@
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchService } from '@app/services/twitch-service';
 import type { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
+import { getPreferences } from '@app/store/preferenceStore';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { findBadges } from '@app/utils/chat/findBadges';
@@ -154,7 +155,7 @@ export async function getSharedChatBadgeContext(
   sourceChannelBadges: SanitisedBadgeSet[] | null;
 }> {
   const sourceRoomId = getSharedChatSourceRoomId(userstate);
-  if (!sourceRoomId) {
+  if (!sourceRoomId || !getPreferences().sharedChatEnabled) {
     return {
       sourceBadge: null,
       sourceChannelBadges: null,
@@ -178,7 +179,7 @@ export function getCachedSharedChatBadgeContext(userstate: UserStateTags): {
   sourceChannelBadges: SanitisedBadgeSet[] | undefined;
 } | null {
   const sourceRoomId = getSharedChatSourceRoomId(userstate);
-  if (!sourceRoomId) {
+  if (!sourceRoomId || !getPreferences().sharedChatEnabled) {
     return null;
   }
 

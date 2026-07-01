@@ -374,6 +374,8 @@ const setPreferences = (showRecentMessages = true) => {
     landscapeChatWidth: null,
     customPlayerEnabled: true,
     analyticsEnabled: true,
+    sharedChatEnabled: true,
+    enhancedVideoStability: false,
     chatDelay: 0,
     update: jest.fn(),
   } satisfies ReturnType<typeof usePreferences>;

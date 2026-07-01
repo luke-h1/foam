@@ -45,6 +45,8 @@ const mockPreferences: Preferences = {
   landscapeChatWidth: null,
   customPlayerEnabled: true,
   analyticsEnabled: true,
+  sharedChatEnabled: true,
+  enhancedVideoStability: false,
 };
 
 jest.mock('@app/store/preferenceStore', () => ({

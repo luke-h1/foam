@@ -4,6 +4,7 @@ import type { WebViewMessageEvent } from 'react-native-webview';
 import { WebView } from 'react-native-webview';
 
 import { useWatchTimeTracking } from '@app/hooks/useWatchTimeTracking';
+import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { logger } from '@app/utils/logger';
 
@@ -270,6 +271,8 @@ export const StreamPlayer = memo(function StreamPlayer({
     webViewRef.current?.injectJavaScript(script);
   };
 
+  const enhancedVideoStability = usePreference('enhancedVideoStability');
+
   const {
     handleMessage,
     hasContentGate,
@@ -284,6 +287,7 @@ export const StreamPlayer = memo(function StreamPlayer({
     autoplay,
     channel,
     deferOverlayUntilUserUnmute,
+    enhancedStabilityEnabled: enhancedVideoStability,
     forceRefresh: remountEmbedWebView,
     initialMuted,
     onContentGateChange,

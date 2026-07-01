@@ -14,10 +14,17 @@ import type {
   StreamPlayerRef,
 } from './types';
 
+const STALL_RECOVERY_GRACE_MS = 4_000;
+const AUTO_REFRESH_WINDOW_MS = 120_000;
+const MAX_AUTO_REFRESHES_PER_WINDOW = 3;
+const HIGH_LATENCY_RECOVERY_S = 20;
+const HIGH_LATENCY_READINGS_BEFORE_RECOVERY = 3;
+
 interface UsePlayerBridgeOptions {
   autoplay: boolean;
   channel?: string;
   deferOverlayUntilUserUnmute: boolean;
+  enhancedStabilityEnabled: boolean;
   forceRefresh: () => void;
   initialMuted: boolean;
   onContentGateChange?: (hasGate: boolean) => void;
@@ -40,6 +47,7 @@ export function usePlayerBridge({
   autoplay,
   channel,
   deferOverlayUntilUserUnmute,
+  enhancedStabilityEnabled,
   forceRefresh,
   initialMuted,
   onContentGateChange,
@@ -91,6 +99,12 @@ export function usePlayerBridge({
   }
   const reportedFirstPlayingRef = useRef(false);
   const reportedPlaybackBlockedRef = useRef(false);
+  const stallRecoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const autoRefreshTimesRef = useRef<number[]>([]);
+  const highLatencyReadingsRef = useRef(0);
+  const stabilityGaveUpRef = useRef(false);
   const [prevPlayerSource, setPrevPlayerSource] = useState({
     autoplay,
     sourceKey,
@@ -108,6 +122,12 @@ export function usePlayerBridge({
     playerMountedAtRef.current = Date.now();
     reportedFirstPlayingRef.current = false;
     reportedPlaybackBlockedRef.current = false;
+    if (stallRecoveryTimerRef.current) {
+      clearTimeout(stallRecoveryTimerRef.current);
+      stallRecoveryTimerRef.current = null;
+    }
+    highLatencyReadingsRef.current = 0;
+    stabilityGaveUpRef.current = false;
     setOverlayUnlocked(false);
     userPausedRef.current = !autoplay;
     setPlayerStatus({
@@ -124,6 +144,48 @@ export function usePlayerBridge({
   }, []);
 
   useUnmountCallback(clearTransientPauseResume);
+
+  const clearStallRecoveryTimer = useCallback(() => {
+    if (stallRecoveryTimerRef.current) {
+      clearTimeout(stallRecoveryTimerRef.current);
+      stallRecoveryTimerRef.current = null;
+    }
+  }, []);
+
+  useUnmountCallback(clearStallRecoveryTimer);
+
+  const requestStabilityRefresh = (reason: string) => {
+    const now = Date.now();
+    const recent = autoRefreshTimesRef.current.filter(
+      timestamp => now - timestamp < AUTO_REFRESH_WINDOW_MS,
+    );
+    autoRefreshTimesRef.current = recent;
+
+    if (recent.length >= MAX_AUTO_REFRESHES_PER_WINDOW) {
+      if (!stabilityGaveUpRef.current) {
+        stabilityGaveUpRef.current = true;
+        logger.main.warn(
+          `enhanced stability gave up after ${recent.length} refreshes`,
+          { name: 'twitch_player_warning', channel, reason },
+        );
+      }
+      return;
+    }
+
+    recent.push(now);
+    highLatencyReadingsRef.current = 0;
+    countMetric('stream.stability_refresh', {
+      channel: channel ?? 'unknown',
+      reason,
+    });
+    logger.main.info(`enhanced stability refresh (${reason})`, {
+      name: 'twitch_player_info',
+      channel,
+      reason,
+      attempt: recent.length,
+    });
+    forceRefresh();
+  };
 
   const onContentGateChangeRef = useSyncRef(onContentGateChange);
   const notifyContentGateChange = (nextHasContentGate: boolean) => {
@@ -359,6 +421,8 @@ export function usePlayerBridge({
             clearTimeout(transientPauseResumeTimeoutRef.current);
             transientPauseResumeTimeoutRef.current = null;
           }
+          clearStallRecoveryTimer();
+          highLatencyReadingsRef.current = 0;
           if (!reportedFirstPlayingRef.current) {
             reportedFirstPlayingRef.current = true;
             countMetric('stream.playing', {
@@ -488,8 +552,16 @@ export function usePlayerBridge({
               elapsedMs: Date.now() - playerMountedAtRef.current,
             },
           );
+          if (enhancedStabilityEnabled && !stallRecoveryTimerRef.current) {
+            stallRecoveryTimerRef.current = setTimeout(() => {
+              stallRecoveryTimerRef.current = null;
+              requestStabilityRefresh('stall');
+            }, STALL_RECOVERY_GRACE_MS);
+          }
           break;
         case 'playbackRecovered':
+          clearStallRecoveryTimer();
+          highLatencyReadingsRef.current = 0;
           countMetric('stream.playback_recovered', {
             channel: channel ?? 'unknown',
           });
@@ -511,6 +583,10 @@ export function usePlayerBridge({
               elapsedMs: Date.now() - playerMountedAtRef.current,
             },
           );
+          if (enhancedStabilityEnabled) {
+            clearStallRecoveryTimer();
+            requestStabilityRefresh('videoElementError');
+          }
           break;
         case 'twitchAuthComplete':
           scheduleAuthCompletionReload();
@@ -532,6 +608,20 @@ export function usePlayerBridge({
               lastPlaybackLatencySecondsRef.current = latency;
               setPlaybackLatencySeconds(latency);
               onPlaybackLatencyChange?.(latency);
+            }
+
+            if (enhancedStabilityEnabled) {
+              if (latency >= HIGH_LATENCY_RECOVERY_S) {
+                highLatencyReadingsRef.current += 1;
+                if (
+                  highLatencyReadingsRef.current >=
+                  HIGH_LATENCY_READINGS_BEFORE_RECOVERY
+                ) {
+                  requestStabilityRefresh('highLatency');
+                }
+              } else {
+                highLatencyReadingsRef.current = 0;
+              }
             }
           }
           break;

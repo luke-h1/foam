@@ -141,20 +141,51 @@ to "None" on the App Information page.
 Foam is a third-party Twitch client. All video, channel data, and chat come from
 Twitch's official public APIs and Twitch's own embedded player. The app does not
 host, store, re-host, restream, or circumvent the player or its advertising.
-Foam is a registered Twitch developer application under the Twitch Developer
-Services Agreement. The 7TV/BetterTTV/FrankerFaceZ emotes are optional
-user-installed cosmetic overlays from those public services. Supporting
-documentation is attached in App Review Information.
+
+Foam has full rights to access Twitch's streaming, catalog, and discovery
+services. Twitch publicly authorizes third-party clients: any developer can
+register an application, receive Client ID/secret credentials, and access the
+same public APIs Twitch's own apps use. Foam is a registered Twitch developer
+application (foam-tv) and operates under, and in compliance with, the Twitch
+Developer Services Agreement (https://www.twitch.tv/p/en/legal/developer-agreement/),
+the Twitch Developer Terms, and the Twitch Terms of Service. These agreements
+grant Foam permission to access Twitch's video, channel data, and discovery
+services and to display Twitch's embedded player. Video is always served and
+counted by Twitch's own player, including its advertising - Foam neither strips
+ads nor rebroadcasts the stream.
+
+As documentary evidence that we hold the necessary rights and permissions, the
+App Review Information section includes: (1) a screenshot of the Twitch Developer
+Console showing Foam's registered developer application, and (2) the Twitch
+Developer Services Agreement under which that registration operates.
+
+The 7TV/BetterTTV/FrankerFaceZ emotes are optional user-installed cosmetic
+overlays fetched from those public services.
 
 1.2 User-generated content
 Chat is live third-party content delivered and moderated by Twitch; Foam does
-not host or generate it. Foam adds the required precautions: users must agree to
-Twitch's Terms/EULA (zero tolerance for objectionable content or abusive users)
-before signing in; users can report a message or user (opening Twitch's report
-flow); and users can block a user, instantly removing their messages and
-blocking further ones (managed in Settings -> Blocked Users). Users can also
-hide messages and add blocked terms. A recording of the EULA, report, and block
-flows is in the App Review notes.
+not host or generate it. Foam adds the required precautions:
+
+- EULA / terms: all chat and accounts belong to Twitch, and users agree to
+  Twitch's Terms of Service and Community Guidelines as part of Twitch's own
+  sign-in and account creation. Foam signs in exclusively through Twitch's OAuth
+  flow, so a user cannot reach chat without an existing Twitch account and its
+  accepted terms. Those terms carry a zero-tolerance policy for objectionable
+  content and abusive users (Twitch Terms:
+  https://www.twitch.tv/p/en/legal/terms-of-service/; Community Guidelines:
+  https://safety.twitch.tv/s/article/Community-Guidelines). Foam does not present
+  a separate EULA because it owns neither the accounts nor the content - both are
+  governed by Twitch's agreements that the user already accepted.
+- Filtering objectionable content: users can add blocked terms and hide
+  messages, filtering matching content out of their chat feed.
+- Flagging content: users can report a message or user, which opens Twitch's
+  report flow.
+- Blocking users: users can block a user, which instantly removes their existing
+  messages from the feed and blocks all further messages (managed in
+  Settings -> Blocked Users). Blocks are reported to Twitch, which acts on
+  objectionable-content reports and ejects offending users within 24 hours.
+
+A recording of the filter, report, and block flows is in the App Review notes.
 
 2.5.4 Background audio
 The app has no persistent background audio. We removed "audio" from

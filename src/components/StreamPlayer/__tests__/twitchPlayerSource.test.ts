@@ -122,6 +122,20 @@ describe('twitchPlayerSource', () => {
     );
   });
 
+  test('playback watchdog treats an active ad break like a pause', () => {
+    const script = buildRawTwitchPlayerBootstrapScript({
+      autoplay: true,
+      debug: false,
+      muted: false,
+    });
+
+    expect(script).toContain('function isAdActive()');
+    expect(script).toContain('[data-a-target="video-ad-label"]');
+    expect(script).toContain(
+      '!video || video.paused || userPaused || !startAllowed || isAdActive()',
+    );
+  });
+
   test('autoplay-ensure starts muted then raises the volume', () => {
     const script = buildTwitchAutoplayEnsureScript({ muted: false });
 
