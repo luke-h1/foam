@@ -530,6 +530,7 @@ jest.mock('@app/components/BottomSheet/BottomSheetProvider', () => ({
 jest.mock('@app/utils/device/deviceTier', () => ({
   getDeviceTier: () => 'high',
   isLowEndDevice: () => false,
+  getTotalDeviceMemoryBytes: () => 8 * 1024 * 1024 * 1024,
 }));
 
 jest.mock('sonner-native', () => ({

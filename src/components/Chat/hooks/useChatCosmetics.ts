@@ -6,29 +6,6 @@ import { fetchAndCacheUserCosmetics } from '@app/store/chat/actions/cosmetics';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { logger } from '@app/utils/logger';
 
-const MAX_CONCURRENT_COSMETIC_FETCHES = 4;
-let activeCosmeticFetches = 0;
-const cosmeticFetchQueue: (() => void)[] = [];
-
-function acquireCosmeticSlot(): Promise<void> {
-  if (activeCosmeticFetches < MAX_CONCURRENT_COSMETIC_FETCHES) {
-    activeCosmeticFetches += 1;
-    return Promise.resolve();
-  }
-  return new Promise(resolve => {
-    cosmeticFetchQueue.push(resolve);
-  });
-}
-
-function releaseCosmeticSlot(): void {
-  const next = cosmeticFetchQueue.shift();
-  if (next) {
-    next();
-  } else {
-    activeCosmeticFetches -= 1;
-  }
-}
-
 export function useChatCosmetics({
   channelId,
   userId,
@@ -89,7 +66,10 @@ export function useChatCosmetics({
 
     fetchedCosmeticsUsersRef.current.add(twitchUserId);
 
-    await acquireCosmeticSlot();
+    // The heavy network step (fetchAndCacheUserCosmetics) is concurrency-capped
+    // inside the cosmetics store now, so this path no longer needs its own
+    // limiter; get7tvUserId is cheap (in-memory resolved-id cache) and callers
+    // already throttle new users per hydration pass.
     try {
       logger.stvWs.info(`Fetching cosmetics for user ${twitchUserId}...`);
       const sevenTvUserId = await sevenTvService.get7tvUserId(twitchUserId);
@@ -108,8 +88,6 @@ export function useChatCosmetics({
         `Failed to fetch cosmetics for ${twitchUserId}:`,
         error,
       );
-    } finally {
-      releaseCosmeticSlot();
     }
   };
 

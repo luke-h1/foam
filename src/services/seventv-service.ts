@@ -104,6 +104,33 @@ type CachedSevenTvUserId = {
 
 const sevenTvUserIdRequests = new Map<string, Promise<string>>();
 
+// Positive twitch->7TV user-id resolutions cached in-memory so repeat lookups
+// within a session skip the synchronous MMKV read getCachedSevenTvUserId does on
+// the chat message/hydrate path. Bounded (FIFO) so it can never itself become an
+// unbounded structure; MMKV stays the durable, TTL'd source of truth. Only
+// positive resolutions are cached — negatives fall through so the 30-min MMKV
+// negative TTL still lets a newly-created 7TV account resolve.
+const MAX_RESOLVED_USER_ID_ENTRIES = 2000;
+const resolvedSevenTvUserIds = new Map<string, string>();
+
+function rememberResolvedSevenTvUserId(
+  twitchUserId: string,
+  userId: string,
+): void {
+  if (!userId) {
+    return;
+  }
+  if (resolvedSevenTvUserIds.has(twitchUserId)) {
+    resolvedSevenTvUserIds.delete(twitchUserId);
+  } else if (resolvedSevenTvUserIds.size >= MAX_RESOLVED_USER_ID_ENTRIES) {
+    const oldest = resolvedSevenTvUserIds.keys().next().value;
+    if (oldest !== undefined) {
+      resolvedSevenTvUserIds.delete(oldest);
+    }
+  }
+  resolvedSevenTvUserIds.set(twitchUserId, userId);
+}
+
 const getSevenTvUserIdStorageKey = (twitchUserId: string) =>
   `sevenTvUserId_${SEVEN_TV_USER_ID_CACHE_PREFIX}${twitchUserId}` as const;
 
@@ -138,6 +165,7 @@ function cacheSevenTvUserId(twitchUserId: string, userId: string) {
 
 export const clearSevenTvUserIdCache = () => {
   sevenTvUserIdRequests.clear();
+  resolvedSevenTvUserIds.clear();
   storageService.clearNamespace(SEVEN_TV_CACHE_NAMESPACE, 'sevenTvUserId_');
 };
 
@@ -240,8 +268,14 @@ function hasRenderableUrl(emote: { url: string }): boolean {
 
 export const sevenTvService = {
   get7tvUserId: async (twitchUserId: string): Promise<string> => {
+    const resolved = resolvedSevenTvUserIds.get(twitchUserId);
+    if (resolved !== undefined) {
+      return resolved;
+    }
+
     const cached = getCachedSevenTvUserId(twitchUserId);
     if (cached !== undefined) {
+      rememberResolvedSevenTvUserId(twitchUserId, cached);
       return cached;
     }
 
@@ -287,6 +321,7 @@ export const sevenTvService = {
 
       const userId = result ?? '';
       cacheSevenTvUserId(twitchUserId, userId);
+      rememberResolvedSevenTvUserId(twitchUserId, userId);
       return userId;
     })();
 

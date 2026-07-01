@@ -69,6 +69,34 @@ type CachedUserCosmetics = {
 const userCosmeticsRequests = new Map<string, Promise<string | null>>();
 const sessionCosmeticsCache = new Map<string, CachedUserCosmetics>();
 
+// Bounded concurrency for the per-user cosmetics network fetch. Entering a busy
+// channel fires an entitlement.create burst (plus the visible-message hydrate
+// path), each of which can call fetchAndCacheUserCosmetics; without a cap that
+// stormed the network with hundreds of parallel getUserCosmeticsGql requests on
+// channel entry. Limiting here covers every caller, not just the hydrate hook.
+const MAX_CONCURRENT_COSMETIC_FETCHES = 4;
+let activeCosmeticFetches = 0;
+const cosmeticFetchQueue: (() => void)[] = [];
+
+const acquireCosmeticFetchSlot = (): Promise<void> => {
+  if (activeCosmeticFetches < MAX_CONCURRENT_COSMETIC_FETCHES) {
+    activeCosmeticFetches += 1;
+    return Promise.resolve();
+  }
+  return new Promise<void>(resolve => {
+    cosmeticFetchQueue.push(resolve);
+  });
+};
+
+const releaseCosmeticFetchSlot = (): void => {
+  const next = cosmeticFetchQueue.shift();
+  if (next) {
+    next();
+  } else {
+    activeCosmeticFetches -= 1;
+  }
+};
+
 const cacheSessionCosmetics = (
   sevenTvUserId: string,
   cosmetics: CachedUserCosmetics,
@@ -181,6 +209,7 @@ export const fetchAndCacheUserCosmetics = async (
   }
 
   const request = (async () => {
+    await acquireCosmeticFetchSlot();
     try {
       const cosmetics = await sevenTvService.getUserCosmeticsGql(sevenTvUserId);
       if (!cosmetics) {
@@ -215,6 +244,8 @@ export const fetchAndCacheUserCosmetics = async (
         error,
       );
       return null;
+    } finally {
+      releaseCosmeticFetchSlot();
     }
   })();
 
