@@ -4,7 +4,7 @@ import { useChatTransientState } from '../useChatTransientState';
 
 test('clears visible-asset dedup guards when the channel changes', () => {
   const { result, rerender } = renderHook(
-    ({ channelId }) => useChatTransientState(channelId),
+    ({ channelId }: { channelId: string }) => useChatTransientState(channelId),
     { initialProps: { channelId: 'channel-a' } },
   );
 
@@ -21,7 +21,7 @@ test('clears visible-asset dedup guards when the channel changes', () => {
 
 test('keeps dedup guards intact while the channel stays the same', () => {
   const { result, rerender } = renderHook(
-    ({ channelId }) => useChatTransientState(channelId),
+    ({ channelId }: { channelId: string }) => useChatTransientState(channelId),
     { initialProps: { channelId: 'channel-a' } },
   );
 
