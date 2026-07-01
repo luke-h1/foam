@@ -338,10 +338,12 @@ export const theme = {
 
   borderRadius4: 4,
   borderRadius6: 6,
+  borderRadius8: 8,
   borderRadius10: 10,
   borderRadius12: 12,
   borderRadius14: 14,
   borderRadius16: 16,
+  borderRadius18: 18,
   borderRadius20: 20,
   borderRadius28: 28,
   borderRadius32: 32,

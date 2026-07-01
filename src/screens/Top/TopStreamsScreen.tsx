@@ -11,14 +11,12 @@ import Animated, {
 
 import type { ListRenderItem } from '@shopify/flash-list';
 
-import { Button } from '@app/components/Button/Button';
 import { AnimatedFlashList } from '@app/components/FlashList/AnimatedFlashList';
 import { FlashListRef } from '@app/components/FlashList/FlashList';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
+import { StreamListLayoutToggle } from '@app/components/StreamListLayoutToggle/StreamListLayoutToggle';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
-import { Text } from '@app/components/ui/Text/Text';
 import { useTopStreamsQuery } from '@app/hooks/queries/useTopStreamsQuery';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
@@ -36,60 +34,6 @@ import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfinite
 
 type StreamListLayout = Preferences['streamListLayout'];
 
-const STREAM_LIST_LAYOUT_OPTIONS: {
-  icon: SymbolViewProps['name'];
-  label: string;
-  value: StreamListLayout;
-}[] = [
-  { icon: 'list.bullet', label: 'Compact', value: 'compact' },
-  { icon: 'photo', label: 'Media', value: 'media' },
-];
-
-const StreamLayoutToggle = function StreamLayoutToggle({
-  value,
-  onChange,
-}: {
-  value: StreamListLayout;
-  onChange: (value: StreamListLayout) => void;
-}) {
-  return (
-    <View style={styles.layoutToggleRow}>
-      {STREAM_LIST_LAYOUT_OPTIONS.map(option => {
-        const active = value === option.value;
-
-        return (
-          <Button
-            key={option.value}
-            onPress={() => onChange(option.value)}
-            style={[
-              styles.layoutToggleButton,
-              active && styles.layoutToggleButtonActive,
-            ]}
-          >
-            <SymbolView
-              name={option.icon}
-              size={14}
-              tintColor={
-                active ? theme.color.text.dark : theme.color.textSecondary.dark
-              }
-            />
-            <Text
-              type='xxs'
-              weight='semibold'
-              style={[
-                styles.layoutToggleText,
-                active && styles.layoutToggleTextActive,
-              ]}
-            >
-              {option.label}
-            </Text>
-          </Button>
-        );
-      })}
-    </View>
-  );
-};
-
 interface TopStreamsListHeaderProps {
   streamListLayout: StreamListLayout;
   onChangeLayout: (layout: StreamListLayout) => void;
@@ -100,7 +44,12 @@ const TopStreamsListHeader = function TopStreamsListHeader({
   onChangeLayout,
 }: TopStreamsListHeaderProps) {
   return (
-    <StreamLayoutToggle value={streamListLayout} onChange={onChangeLayout} />
+    <View style={styles.layoutToggleRow}>
+      <StreamListLayoutToggle
+        value={streamListLayout}
+        onChange={onChangeLayout}
+      />
+    </View>
   );
 };
 
@@ -311,39 +260,10 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: theme.space20,
   },
-  layoutToggleButton: {
-    alignItems: 'center',
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.colorBorderSecondary,
-    // No continuous borderCurve here: combined with a pill radius larger
-    // than half the height it renders flattened, clipped-looking edges.
-    borderRadius: theme.borderRadius999,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  layoutToggleButtonActive: {
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.color.border.dark,
-  },
   layoutToggleRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.space8,
-    // Align with the stream cards (space16 + 5px card margin) and keep the
-    // gap to the first card tight. The top margin keeps the pills clear of
-    // the opaque segment header overlay, which otherwise crops their top
-    // corners at rest.
+    alignItems: 'flex-end',
     marginBottom: theme.space8,
     marginHorizontal: theme.space16,
     marginTop: theme.space8,
-  },
-  layoutToggleText: {
-    color: theme.color.textSecondary.dark,
-  },
-  layoutToggleTextActive: {
-    color: theme.color.text.dark,
   },
 });

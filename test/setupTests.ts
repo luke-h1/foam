@@ -62,6 +62,11 @@ jest.mock('@expo/ui/community/masked-view', () => {
   };
 });
 
+jest.mock('@expo/ui/swift-ui', () => ({
+  ...jest.requireActual('@expo/ui/swift-ui'),
+  useNativeState: (initial: unknown) => ({ value: initial }),
+}));
+
 /**
  * Polyfill for setImmediate which Sentry uses under the hood
  */

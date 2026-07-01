@@ -1,10 +1,18 @@
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import type { SavedPhrase } from '@app/store/preferenceStore';
 
 import { SavedPhrasesScreen } from '../SavedPhrasesScreen';
+
+const originalOS = Platform.OS;
+beforeAll(() => {
+  Platform.OS = 'android';
+});
+afterAll(() => {
+  Platform.OS = originalOS;
+});
 
 let mockSavedPhrases: SavedPhrase[] = [];
 const mockUpdate = jest.fn((payload: { savedPhrases?: SavedPhrase[] }) => {

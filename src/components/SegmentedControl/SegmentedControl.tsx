@@ -45,9 +45,5 @@ export function SegmentedControl({
 const styles = StyleSheet.create({
   container: {
     alignSelf: 'stretch',
-    borderColor: theme.colorBorderSecondary,
-    borderWidth: StyleSheet.hairlineWidth,
-    height: 36,
-    borderRadius: 999,
   },
 });

@@ -58,6 +58,13 @@ export interface RemoteConfigSchema {
 
 export type RemoteConfigKey = keyof RemoteConfigSchema;
 
+/**
+ * Release track a minimum version can be gated against. Derived from the
+ * schema so it stays in sync with the shape stored in Remote Config.
+ */
+export type MinimumVersionTrack =
+  keyof RemoteConfigSchema['minimumVersion']['ios'];
+
 type ConfigSource = 'default' | 'remote' | 'static';
 
 export type RemoteConfigEntry<T> = {

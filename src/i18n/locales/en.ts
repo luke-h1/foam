@@ -736,6 +736,8 @@ const en = {
     noBlockedUsers: 'No blocked users',
     noBlockedUsersDescription:
       'Accounts you block on Twitch will appear here for quick review.',
+    blockedUsersFooter:
+      'Unblocking restores normal Twitch interactions for that account.',
   },
 
   auth: {

@@ -17,16 +17,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { toast } from 'sonner-native';
 
-import { Button } from '@app/components/Button/Button';
 import { EditorialSectionHeader } from '@app/components/EditorialSectionHeader/EditorialSectionHeader';
 import { AnimatedFlashList } from '@app/components/FlashList/AnimatedFlashList';
 import { ListRenderItem } from '@app/components/FlashList/FlashList';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
+import { StreamListLayoutToggle } from '@app/components/StreamListLayoutToggle/StreamListLayoutToggle';
 import { useBottomTabOverflow } from '@app/components/TabBarBackground/useBottomTabOverflow';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
-import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useFollowedStreamsQuery } from '@app/hooks/queries/useFollowedStreamsQuery';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
@@ -130,10 +128,6 @@ export default function FollowingScreen() {
     updatePreferences({ streamListLayout: layout });
   };
 
-  const handleSetCompactLayout = () => setLayoutWithFade('compact');
-
-  const handleSetMediaLayout = () => setLayoutWithFade('media');
-
   if (!authState?.isLoggedIn) {
     return (
       <EmptyState
@@ -227,64 +221,10 @@ export default function FollowingScreen() {
             <View>
               <EditorialSectionHeader eyebrow='For you' />
               <View style={styles.layoutToggleRow}>
-                <Button
-                  onPress={handleSetCompactLayout}
-                  style={[
-                    styles.layoutToggleButton,
-                    streamListLayout === 'compact' &&
-                      styles.layoutToggleButtonActive,
-                  ]}
-                >
-                  <SymbolView
-                    name='list.bullet'
-                    size={14}
-                    tintColor={
-                      streamListLayout === 'compact'
-                        ? theme.color.text.dark
-                        : theme.color.textSecondary.dark
-                    }
-                  />
-                  <Text
-                    type='xxs'
-                    weight='semibold'
-                    style={[
-                      styles.layoutToggleText,
-                      streamListLayout === 'compact' &&
-                        styles.layoutToggleTextActive,
-                    ]}
-                  >
-                    Compact
-                  </Text>
-                </Button>
-                <Button
-                  onPress={handleSetMediaLayout}
-                  style={[
-                    styles.layoutToggleButton,
-                    streamListLayout === 'media' &&
-                      styles.layoutToggleButtonActive,
-                  ]}
-                >
-                  <SymbolView
-                    name='photo'
-                    size={14}
-                    tintColor={
-                      streamListLayout === 'media'
-                        ? theme.color.text.dark
-                        : theme.color.textSecondary.dark
-                    }
-                  />
-                  <Text
-                    type='xxs'
-                    weight='semibold'
-                    style={[
-                      styles.layoutToggleText,
-                      streamListLayout === 'media' &&
-                        styles.layoutToggleTextActive,
-                    ]}
-                  >
-                    Media
-                  </Text>
-                </Button>
+                <StreamListLayoutToggle
+                  value={streamListLayout}
+                  onChange={setLayoutWithFade}
+                />
               </View>
               <View style={styles.header} />
             </View>
@@ -332,34 +272,10 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: theme.space20,
   },
-  layoutToggleButton: {
-    alignItems: 'center',
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.colorBorderSecondary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  layoutToggleButtonActive: {
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.color.border.dark,
-  },
   layoutToggleRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.space8,
+    alignItems: 'flex-end',
     marginBottom: theme.space20,
     marginHorizontal: theme.space20,
-  },
-  layoutToggleText: {
-    color: theme.color.textSecondary.dark,
-  },
-  layoutToggleTextActive: {
-    color: theme.color.text.dark,
   },
   stateContainer: {
     alignItems: 'center',

@@ -1,39 +1,19 @@
-import { Modal as RNModal, Platform, StyleSheet, View } from 'react-native';
+import { Modal as RNModal, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import * as Application from 'expo-application';
 
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
-import {
-  RemoteConfigType,
-  useRemoteConfig,
-} from '@app/hooks/firebase/useRemoteConfig';
+import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { getStoreUrlAsync } from '@app/screens/DevTools/util/getStoreUrlAsync';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { isUpdateRequired } from '@app/utils/version/compareVersions';
+import { getMinimumVersion } from '@app/utils/version/getMinimumVersion';
 
 import { Variant } from '../../../app.config';
 import { Button } from '../Button/Button';
-
-function getMinimumVersion(variant: Variant, remoteConfig: RemoteConfigType) {
-  const platform = Platform.OS === 'ios' ? 'ios' : 'android';
-  const platformConfig = remoteConfig.minimumVersion.value[platform];
-
-  switch (variant) {
-    case 'development':
-      return platformConfig?.development ?? '';
-    case 'internal':
-      return platformConfig?.internal ?? '';
-    case 'testflight':
-      return platformConfig?.testflight ?? '';
-    case 'production':
-      return platformConfig?.production ?? '';
-    default:
-      return '';
-  }
-}
 
 async function handleUpdatePress() {
   const storeUrl = await getStoreUrlAsync();

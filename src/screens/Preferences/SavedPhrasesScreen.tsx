@@ -1,8 +1,27 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { Alert, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Platform, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
+import {
+  Button,
+  Host,
+  HStack,
+  List,
+  Section,
+  Spacer,
+  Text as NativeText,
+  TextField,
+  useNativeState,
+} from '@expo/ui/swift-ui';
+import {
+  buttonStyle,
+  foregroundStyle,
+  listStyle,
+  onSubmit,
+  submitLabel,
+  textInputAutocapitalization,
+} from '@expo/ui/swift-ui/modifiers';
 import { PressableScale } from 'pressto';
 
 import type {
@@ -61,7 +80,7 @@ function PhraseRow({
         accessibilityLabel={t('removePhrase')}
         accessibilityRole='button'
         onPress={handleRemove}
-        hitSlop={8}
+        hitSlop={11}
       >
         <SymbolView
           name='minus.circle.fill'
@@ -140,6 +159,7 @@ export function SavedPhrasesScreen() {
   const [inputValue, setInputValue] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const listRef = useRef<FlashListRef<SavedPhrase>>(null);
+  const phraseText = useNativeState('');
 
   useScrollToTop(listRef);
 
@@ -190,6 +210,59 @@ export function SavedPhrasesScreen() {
     [editingId, phrases, updatePreferences],
   );
 
+  const handleNativeSave = useCallback(() => {
+    const text = phraseText.value.trim();
+    phraseText.value = '';
+    if (!text) {
+      setEditingId(null);
+      return;
+    }
+
+    if (editingId) {
+      updatePreferences({
+        savedPhrases: phrases.map(phrase =>
+          phrase.id === editingId ? { ...phrase, text } : phrase,
+        ),
+      });
+      setEditingId(null);
+      void impact('light');
+      return;
+    }
+
+    if (phrases.some(phrase => phrase.text === text)) {
+      return;
+    }
+    updatePreferences({
+      savedPhrases: [...phrases, { id: `${Date.now()}_${text}`, text }],
+    });
+    void impact('light');
+  }, [editingId, phraseText, phrases, updatePreferences]);
+
+  const handleNativeEdit = useCallback(
+    (phrase: SavedPhrase) => {
+      setEditingId(phrase.id);
+      phraseText.value = phrase.text;
+    },
+    [phraseText],
+  );
+
+  const handleDeleteByIndex = useCallback(
+    (indices: number[]) => {
+      const removals = new Set(indices);
+      const removedEditing = indices.some(
+        index => phrases[index]?.id === editingId,
+      );
+      if (removedEditing) {
+        setEditingId(null);
+        phraseText.value = '';
+      }
+      updatePreferences({
+        savedPhrases: phrases.filter((_, index) => !removals.has(index)),
+      });
+    },
+    [editingId, phraseText, phrases, updatePreferences],
+  );
+
   const renderItem: ListRenderItem<SavedPhrase> = useCallback(
     ({ item }) => (
       <PhraseRow
@@ -212,6 +285,54 @@ export function SavedPhrasesScreen() {
   );
 
   const hasPhrases = phrases.length > 0;
+
+  if (Platform.OS === 'ios') {
+    return (
+      <Host style={styles.keyboardAvoid} colorScheme='dark'>
+        <List modifiers={[listStyle('insetGrouped')]}>
+          <Section>
+            <TextField
+              text={phraseText}
+              placeholder={t('addSavedPhrasePlaceholder')}
+              modifiers={[
+                textInputAutocapitalization('sentences'),
+                submitLabel('done'),
+                onSubmit(handleNativeSave),
+              ]}
+            />
+          </Section>
+          {hasPhrases ? (
+            <Section
+              footer={
+                <NativeText>
+                  {t('savedPhrasesFooter', { count: phrases.length })}
+                </NativeText>
+              }
+            >
+              <List.ForEach onDelete={handleDeleteByIndex}>
+                {phrases.map(phrase => (
+                  <Button
+                    key={phrase.id}
+                    onPress={() => handleNativeEdit(phrase)}
+                    modifiers={[buttonStyle('plain')]}
+                  >
+                    <HStack>
+                      <NativeText
+                        modifiers={[foregroundStyle(theme.color.text.dark)]}
+                      >
+                        {phrase.text}
+                      </NativeText>
+                      <Spacer />
+                    </HStack>
+                  </Button>
+                ))}
+              </List.ForEach>
+            </Section>
+          ) : null}
+        </List>
+      </Host>
+    );
+  }
 
   return (
     <KeyboardAvoidingView behavior='padding' style={styles.keyboardAvoid}>

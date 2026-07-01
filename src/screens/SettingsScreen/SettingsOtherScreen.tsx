@@ -51,11 +51,6 @@ export function SettingsOtherScreen() {
           </Section>
           <Section title={t('supportAndFeedback')}>
             <Button
-              label={t('aboutFoam')}
-              systemImage='info.circle'
-              onPress={() => router.push('/tabs/settings/about')}
-            />
-            <Button
               label={t('faq')}
               systemImage='questionmark.circle'
               onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
@@ -97,12 +92,6 @@ export function SettingsOtherScreen() {
         </SettingsSection>
 
         <SettingsSection title={t('supportAndFeedback')}>
-          <SettingsLinkRow
-            title={t('aboutFoam')}
-            subtitle={t('aboutFoamShortDescription')}
-            icon={{ icon: 'info.circle', color: theme.colorBlue }}
-            onPress={() => router.push('/tabs/settings/about')}
-          />
           <SettingsLinkRow
             title={t('faq')}
             subtitle={t('faqShortDescription')}

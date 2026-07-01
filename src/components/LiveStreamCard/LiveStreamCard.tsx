@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     backgroundColor: Color.zinc[900],
     borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius10,
+    borderRadius: theme.borderRadius16,
     borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     flexWrap: 'nowrap',
@@ -325,8 +325,8 @@ const styles = StyleSheet.create({
     marginVertical: theme.space4,
     minHeight: 112,
     overflow: 'hidden',
-    paddingHorizontal: theme.space12,
-    paddingVertical: theme.space12,
+    paddingHorizontal: theme.space8,
+    paddingVertical: theme.space8,
   },
   details: {
     flex: 1,
@@ -338,13 +338,13 @@ const styles = StyleSheet.create({
   },
   image: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius6,
+    borderRadius: theme.borderRadius8,
     height: 88,
     width: 132,
   },
   imageContainer: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius6,
+    borderRadius: theme.borderRadius8,
     flexShrink: 0,
     height: 88,
     marginRight: theme.space12,
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
   },
   imageWrapper: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius6,
+    borderRadius: theme.borderRadius8,
     height: 88,
     overflow: 'hidden',
     width: 132,
@@ -394,12 +394,12 @@ const styles = StyleSheet.create({
   mediaImage: {
     aspectRatio: 16 / 9,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius6,
+    borderRadius: theme.borderRadius12,
     width: '100%',
   },
   mediaImageShell: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius6,
+    borderRadius: theme.borderRadius12,
     overflow: 'hidden',
     position: 'relative',
     width: '100%',
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   mediaImageWrapper: {
     aspectRatio: 16 / 9,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius6,
+    borderRadius: theme.borderRadius12,
     overflow: 'hidden',
     width: '100%',
   },
