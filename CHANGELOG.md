@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0
+## 1.0.0-internal
 
 ### ♻️ Refactor
 
@@ -56,6 +56,9 @@
 - **app:** Unit tests
 - **app:** Delete acc
 - **app:** Delete acc
+- **app:** Fix sentry pods
+- **app:** Oom images ([#679](https://github.com/lhowsam/foam/issues/679))
+- **app:** Fix tsc
 
 ### 🔧 Miscellaneous Tasks
 
@@ -75,6 +78,8 @@
 - **ai:** Add claude md
 - **docs:** Update app review notes
 - **infrastructure:** Change to self-hosted runner
+- **app:** Update to expo 57 ([#678](https://github.com/lhowsam/foam/issues/678))
+- **app:** Sync lockfile with sentry deps ([#680](https://github.com/lhowsam/foam/issues/680))
 
 ## 1.0.0
 
