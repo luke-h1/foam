@@ -284,9 +284,7 @@ export type MonitoringWarningName = `${MonitoringEventPrefix}_warning`;
 export type MonitoringInfoName = `${MonitoringEventPrefix}_info`;
 
 export type MonitoringEventName =
-  | MonitoringErrorName
-  | MonitoringWarningName
-  | MonitoringInfoName;
+  MonitoringErrorName | MonitoringWarningName | MonitoringInfoName;
 
 export type LogMetadata = {
   name?: OpenStringUnion<MonitoringEventName>;

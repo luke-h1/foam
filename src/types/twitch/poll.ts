@@ -1,10 +1,5 @@
 export type ChannelPollStatus =
-  | 'active'
-  | 'completed'
-  | 'archived'
-  | 'terminated'
-  | 'moderated'
-  | 'invalid';
+  'active' | 'completed' | 'archived' | 'terminated' | 'moderated' | 'invalid';
 
 export interface TwitchPollChoice {
   id: string;

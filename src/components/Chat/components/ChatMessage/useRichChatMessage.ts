@@ -27,9 +27,9 @@ const MESSAGE_LONG_PRESS_DELAY_MS = 650;
 
 export function useRichChatMessage<
   TNoticeType extends NoticeVariants,
-  TVariant extends TNoticeType extends 'usernotice'
+  TVariant extends (TNoticeType extends 'usernotice'
     ? keyof UserNoticeVariantMap
-    : never = never,
+    : never) = never,
 >(props: RichChatMessageProps<TNoticeType, TVariant>) {
   const {
     userstate,

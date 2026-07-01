@@ -47,13 +47,11 @@ import {
 
 const authProxyBaseUrl =
   (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL as
-    | string
-    | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
+    string | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL;
 
 const authProxyApiKey =
   (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_KEY as
-    | string
-    | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY;
+    string | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY;
 
 interface Emote {
   format: string[];

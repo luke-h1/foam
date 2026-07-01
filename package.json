@@ -235,6 +235,7 @@
     "lint-staged": "^15.4.3",
     "only-allow": "^1.2.1",
     "oxlint": "^1.61.0",
+    "prettier": "^3.8.3",
     "react-native-performance": "6.0.0",
     "react-native-url-polyfill": "^2.0.0",
     "react-test-renderer": "19.2.3",

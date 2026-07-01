@@ -529,8 +529,7 @@ export const AuthContextProvider = ({
         try {
           // Try to parse as TwitchToken first (new format with issuedAt)
           const parsedAuthToken = JSON.parse(storedAuthToken) as
-            | TwitchToken
-            | TokenResponse;
+            TwitchToken | TokenResponse;
           await doAuth(parsedAuthToken);
         } catch (error) {
           logger.auth.error('Failed to parse stored user token', error);

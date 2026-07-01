@@ -13,9 +13,9 @@ export type EmotePressData = ParsedPart<'emote'>;
 export type BadgePressData = SanitisedBadgeSet;
 export type MessageActionData<
   TNoticeType extends NoticeVariants,
-  TVariant extends TNoticeType extends 'usernotice'
+  TVariant extends (TNoticeType extends 'usernotice'
     ? keyof UserNoticeVariantMap
-    : never = never,
+    : never) = never,
 > = {
   message: ParsedPart[];
   username?: string;
@@ -33,9 +33,9 @@ export interface UsernamePressData {
 
 export type RichChatMessageProps<
   TNoticeType extends NoticeVariants,
-  TVariant extends TNoticeType extends 'usernotice'
+  TVariant extends (TNoticeType extends 'usernotice'
     ? keyof UserNoticeVariantMap
-    : never = never,
+    : never) = never,
 > = ChatMessageType<TNoticeType, TVariant> & {
   broadcasterId?: string;
   style?: unknown;

@@ -21,9 +21,9 @@ export type {
 
 function ChatMessageComponent<
   TNoticeType extends NoticeVariants,
-  TVariant extends TNoticeType extends 'usernotice'
+  TVariant extends (TNoticeType extends 'usernotice'
     ? keyof UserNoticeVariantMap
-    : never = never,
+    : never) = never,
 >(props: RichChatMessageProps<TNoticeType, TVariant>) {
   const state = useRichChatMessage(props);
 

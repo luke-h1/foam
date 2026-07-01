@@ -54,9 +54,9 @@ export interface Bit {
 
 export interface ChatMessageType<
   TNoticeType extends NoticeVariants,
-  TVariant extends TNoticeType extends 'usernotice'
+  TVariant extends (TNoticeType extends 'usernotice'
     ? keyof UserNoticeVariantMap
-    : never = never,
+    : never) = never,
 > {
   id: string;
   userstate: UserStateTags;

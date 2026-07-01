@@ -48,8 +48,7 @@ describe('ChatList', () => {
       estimatedItemSize?: number;
       extraData?: unknown;
       maintainScrollAtEnd?:
-        | boolean
-        | { on: { dataChange?: boolean; itemLayout?: boolean } };
+        boolean | { on: { dataChange?: boolean; itemLayout?: boolean } };
       maintainScrollAtEndThreshold?: number;
       onEndReachedThreshold?: number;
       recycleItems?: boolean;

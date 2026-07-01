@@ -1,15 +1,7 @@
 import type { AppTheme } from './themes';
 
 export type Spacing =
-  | 'xs'
-  | 'sm'
-  | 'md'
-  | 'lg'
-  | 'xl'
-  | '2xl'
-  | '3xl'
-  | '4xl'
-  | '6xl';
+  'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '6xl';
 
 export interface MarginProps {
   m?: Spacing | number;

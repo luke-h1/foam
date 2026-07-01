@@ -2,10 +2,7 @@ import EventEmitter from 'eventemitter3';
 
 type UnlistenFn = () => void;
 type NetworkEventName =
-  | 'soft-reset'
-  | 'session-dropped'
-  | 'network-confirmed'
-  | 'network-lost';
+  'soft-reset' | 'session-dropped' | 'network-confirmed' | 'network-lost';
 
 const emitter = new EventEmitter();
 

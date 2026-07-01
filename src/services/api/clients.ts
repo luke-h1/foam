@@ -4,8 +4,7 @@ import { createApiClient } from './Client';
 import { fetchTwitchTokenClientId } from './twitchTokenClientId';
 
 export const mockServerUrl = Constants.expoConfig?.extra?.MOCK_SERVER_URL as
-  | string
-  | undefined;
+  string | undefined;
 
 export const isE2EMode = !!mockServerUrl;
 
@@ -15,8 +14,7 @@ const twitchApiBaseUrl = mockServerUrl
 
 const envTwitchClientId =
   (Constants.expoConfig?.extra?.EXPO_PUBLIC_TWITCH_CLIENT_ID as
-    | string
-    | undefined) ?? process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID;
+    string | undefined) ?? process.env.EXPO_PUBLIC_TWITCH_CLIENT_ID;
 
 let currentTwitchClientId = envTwitchClientId;
 
