@@ -127,6 +127,7 @@ export function usePlayerBridge({
       stallRecoveryTimerRef.current = null;
     }
     highLatencyReadingsRef.current = 0;
+    autoRefreshTimesRef.current = [];
     stabilityGaveUpRef.current = false;
     setOverlayUnlocked(false);
     userPausedRef.current = !autoplay;
@@ -162,6 +163,7 @@ export function usePlayerBridge({
     autoRefreshTimesRef.current = recent;
 
     if (recent.length >= MAX_AUTO_REFRESHES_PER_WINDOW) {
+      highLatencyReadingsRef.current = 0;
       if (!stabilityGaveUpRef.current) {
         stabilityGaveUpRef.current = true;
         logger.main.warn(

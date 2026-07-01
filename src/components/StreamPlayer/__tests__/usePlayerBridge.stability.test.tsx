@@ -141,4 +141,40 @@ describe('usePlayerBridge enhanced stability', () => {
 
     expect(forceRefresh).toHaveBeenCalledTimes(3);
   });
+
+  test('resets the auto-refresh window when the player source changes', () => {
+    const forceRefresh = jest.fn();
+    const { result, rerender } = renderHook(
+      (props: { sourceKey: string }) =>
+        usePlayerBridge({
+          autoplay: true,
+          channel: 'foo',
+          deferOverlayUntilUserUnmute: false,
+          enhancedStabilityEnabled: true,
+          forceRefresh,
+          initialMuted: true,
+          runJavaScript: jest.fn(),
+          scheduleAuthCompletionReload: jest.fn(),
+          sourceKey: props.sourceKey,
+          webViewKey: 0,
+        }),
+      { initialProps: { sourceKey: 'foo' } },
+    );
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      act(() => {
+        result.current.handleMessage(VIDEO_ERROR);
+      });
+    }
+    expect(forceRefresh).toHaveBeenCalledTimes(3);
+
+    act(() => {
+      rerender({ sourceKey: 'bar' });
+    });
+
+    act(() => {
+      result.current.handleMessage(VIDEO_ERROR);
+    });
+    expect(forceRefresh).toHaveBeenCalledTimes(4);
+  });
 });

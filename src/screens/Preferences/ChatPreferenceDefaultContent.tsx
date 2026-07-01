@@ -343,8 +343,6 @@ const styles = StyleSheet.create({
     marginTop: theme.space8,
   },
   settingsPreviewItem: {
-    borderBottomColor: theme.colorBorderSecondary,
-    borderBottomWidth: StyleSheet.hairlineWidth,
     padding: theme.space16,
   },
 });
