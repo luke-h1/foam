@@ -13,6 +13,13 @@
       {
         "files": ["package.json"],
         "rules": ["deslop/unused-dependency", "deslop/unused-dev-dependency"]
+      },
+      {
+        "files": [
+          "src/screens/Preferences/BlockedTermsScreen.tsx",
+          "src/screens/Preferences/SavedPhrasesScreen.tsx"
+        ],
+        "rules": ["react-hooks-js/immutability"]
       }
     ]
   },

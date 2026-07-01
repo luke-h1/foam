@@ -132,13 +132,75 @@ function InputSection({ value, onChangeText, onAdd }: InputSectionProps) {
   );
 }
 
+function NativeBlockedTermsList() {
+  const { t } = useTranslation('preferences');
+  const blockedTerms = usePreference('blockedTerms');
+  const updatePreferences = useUpdatePreferences();
+  const termText = useNativeState('');
+
+  const handleNativeAdd = useCallback(() => {
+    const normalised = termText.value.trim().toLowerCase();
+    termText.value = '';
+    if (!normalised || blockedTerms.includes(normalised)) {
+      return;
+    }
+    updatePreferences({ blockedTerms: [...blockedTerms, normalised] });
+    void impact('light');
+  }, [termText, blockedTerms, updatePreferences]);
+
+  const handleDeleteByIndex = useCallback(
+    (indices: number[]) => {
+      const removals = new Set(indices);
+      updatePreferences({
+        blockedTerms: blockedTerms.filter((_, index) => !removals.has(index)),
+      });
+    },
+    [blockedTerms, updatePreferences],
+  );
+
+  const hasTerms = blockedTerms.length > 0;
+
+  return (
+    <Host style={styles.keyboardAvoid} colorScheme='dark'>
+      <List modifiers={[listStyle('insetGrouped')]}>
+        <Section>
+          <TextField
+            text={termText}
+            placeholder={t('addTermPlaceholder')}
+            modifiers={[
+              autocorrectionDisabled(true),
+              textInputAutocapitalization('never'),
+              submitLabel('done'),
+              onSubmit(handleNativeAdd),
+            ]}
+          />
+        </Section>
+        {hasTerms ? (
+          <Section
+            footer={
+              <NativeText>
+                {t('termsFooter', { count: blockedTerms.length })}
+              </NativeText>
+            }
+          >
+            <List.ForEach onDelete={handleDeleteByIndex}>
+              {blockedTerms.map(term => (
+                <NativeText key={term}>{term}</NativeText>
+              ))}
+            </List.ForEach>
+          </Section>
+        ) : null}
+      </List>
+    </Host>
+  );
+}
+
 export function BlockedTermsScreen() {
   const { t } = useTranslation('preferences');
   const blockedTerms = usePreference('blockedTerms');
   const updatePreferences = useUpdatePreferences();
   const [inputValue, setInputValue] = useState('');
   const listRef = useRef<FlashListRef<string>>(null);
-  const termText = useNativeState('');
 
   useScrollToTop(listRef);
 
@@ -163,26 +225,6 @@ export function BlockedTermsScreen() {
     [blockedTerms, updatePreferences],
   );
 
-  const handleNativeAdd = useCallback(() => {
-    const normalised = termText.value.trim().toLowerCase();
-    termText.value = '';
-    if (!normalised || blockedTerms.includes(normalised)) {
-      return;
-    }
-    updatePreferences({ blockedTerms: [...blockedTerms, normalised] });
-    void impact('light');
-  }, [termText, blockedTerms, updatePreferences]);
-
-  const handleDeleteByIndex = useCallback(
-    (indices: number[]) => {
-      const removals = new Set(indices);
-      updatePreferences({
-        blockedTerms: blockedTerms.filter((_, index) => !removals.has(index)),
-      });
-    },
-    [blockedTerms, updatePreferences],
-  );
-
   const renderItem: ListRenderItem<string> = useCallback(
     ({ item }) => <TermRow term={item} onRemove={handleRemove} />,
     [handleRemove],
@@ -199,39 +241,7 @@ export function BlockedTermsScreen() {
   const hasTerms = blockedTerms.length > 0;
 
   if (Platform.OS === 'ios') {
-    return (
-      <Host style={styles.keyboardAvoid} colorScheme='dark'>
-        <List modifiers={[listStyle('insetGrouped')]}>
-          <Section>
-            <TextField
-              text={termText}
-              placeholder={t('addTermPlaceholder')}
-              modifiers={[
-                autocorrectionDisabled(true),
-                textInputAutocapitalization('never'),
-                submitLabel('done'),
-                onSubmit(handleNativeAdd),
-              ]}
-            />
-          </Section>
-          {hasTerms ? (
-            <Section
-              footer={
-                <NativeText>
-                  {t('termsFooter', { count: blockedTerms.length })}
-                </NativeText>
-              }
-            >
-              <List.ForEach onDelete={handleDeleteByIndex}>
-                {blockedTerms.map(term => (
-                  <NativeText key={term}>{term}</NativeText>
-                ))}
-              </List.ForEach>
-            </Section>
-          ) : null}
-        </List>
-      </Host>
-    );
+    return <NativeBlockedTermsList />;
   }
 
   return (

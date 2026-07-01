@@ -96,4 +96,24 @@ describe('SavedPhrasesScreen', () => {
       savedPhrases: [{ id: 'a', text: 'updated phrase' }],
     });
   });
+
+  describe('iOS native branch', () => {
+    beforeAll(() => {
+      Platform.OS = 'ios';
+    });
+    afterAll(() => {
+      Platform.OS = 'android';
+    });
+
+    // The @expo/ui/swift-ui primitives render as opaque native host views in
+    // jsdom, so their text is not queryable; this smoke-tests that the iOS-only
+    // NativeSavedPhrasesList branch mounts without crashing.
+    test('mounts the native list branch without crashing', () => {
+      mockSavedPhrases = [{ id: 'a', text: 'be right back' }];
+
+      render(<SavedPhrasesScreen />);
+
+      expect(screen.toJSON()).not.toBeNull();
+    });
+  });
 });
