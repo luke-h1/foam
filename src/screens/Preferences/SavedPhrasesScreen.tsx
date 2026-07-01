@@ -152,63 +152,14 @@ function InputSection({
   );
 }
 
-export function SavedPhrasesScreen() {
+function NativeSavedPhrasesList() {
   const { t } = useTranslation('preferences');
   const savedPhrases = usePreference('savedPhrases');
   const updatePreferences = useUpdatePreferences();
-  const [inputValue, setInputValue] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const listRef = useRef<FlashListRef<SavedPhrase>>(null);
   const phraseText = useNativeState('');
 
-  useScrollToTop(listRef);
-
   const phrases = useMemo(() => savedPhrases ?? [], [savedPhrases]);
-
-  const handleSave = useCallback(() => {
-    const text = inputValue.trim();
-    if (!text) return;
-
-    if (editingId) {
-      updatePreferences({
-        savedPhrases: phrases.map(phrase =>
-          phrase.id === editingId ? { ...phrase, text } : phrase,
-        ),
-      });
-      setEditingId(null);
-      setInputValue('');
-      void impact('light');
-      return;
-    }
-
-    if (phrases.some(phrase => phrase.text === text)) {
-      setInputValue('');
-      return;
-    }
-    updatePreferences({
-      savedPhrases: [...phrases, { id: `${Date.now()}_${text}`, text }],
-    });
-    setInputValue('');
-    void impact('light');
-  }, [editingId, inputValue, phrases, updatePreferences]);
-
-  const handleEdit = useCallback((phrase: SavedPhrase) => {
-    setEditingId(phrase.id);
-    setInputValue(phrase.text);
-  }, []);
-
-  const handleRemove = useCallback(
-    (id: string) => {
-      if (id === editingId) {
-        setEditingId(null);
-        setInputValue('');
-      }
-      updatePreferences({
-        savedPhrases: phrases.filter(phrase => phrase.id !== id),
-      });
-    },
-    [editingId, phrases, updatePreferences],
-  );
 
   const handleNativeSave = useCallback(() => {
     const text = phraseText.value.trim();
@@ -263,6 +214,112 @@ export function SavedPhrasesScreen() {
     [editingId, phraseText, phrases, updatePreferences],
   );
 
+  const hasPhrases = phrases.length > 0;
+
+  return (
+    <Host style={styles.keyboardAvoid} colorScheme='dark'>
+      <List modifiers={[listStyle('insetGrouped')]}>
+        <Section>
+          <TextField
+            text={phraseText}
+            placeholder={t('addSavedPhrasePlaceholder')}
+            modifiers={[
+              textInputAutocapitalization('sentences'),
+              submitLabel('done'),
+              onSubmit(handleNativeSave),
+            ]}
+          />
+        </Section>
+        {hasPhrases ? (
+          <Section
+            footer={
+              <NativeText>
+                {t('savedPhrasesFooter', { count: phrases.length })}
+              </NativeText>
+            }
+          >
+            <List.ForEach onDelete={handleDeleteByIndex}>
+              {phrases.map(phrase => (
+                <Button
+                  key={phrase.id}
+                  onPress={() => handleNativeEdit(phrase)}
+                  modifiers={[buttonStyle('plain')]}
+                >
+                  <HStack>
+                    <NativeText
+                      modifiers={[foregroundStyle(theme.color.text.dark)]}
+                    >
+                      {phrase.text}
+                    </NativeText>
+                    <Spacer />
+                  </HStack>
+                </Button>
+              ))}
+            </List.ForEach>
+          </Section>
+        ) : null}
+      </List>
+    </Host>
+  );
+}
+
+export function SavedPhrasesScreen() {
+  const { t } = useTranslation('preferences');
+  const savedPhrases = usePreference('savedPhrases');
+  const updatePreferences = useUpdatePreferences();
+  const [inputValue, setInputValue] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const listRef = useRef<FlashListRef<SavedPhrase>>(null);
+
+  useScrollToTop(listRef);
+
+  const phrases = useMemo(() => savedPhrases ?? [], [savedPhrases]);
+
+  const handleSave = useCallback(() => {
+    const text = inputValue.trim();
+    if (!text) return;
+
+    if (editingId) {
+      updatePreferences({
+        savedPhrases: phrases.map(phrase =>
+          phrase.id === editingId ? { ...phrase, text } : phrase,
+        ),
+      });
+      setEditingId(null);
+      setInputValue('');
+      void impact('light');
+      return;
+    }
+
+    if (phrases.some(phrase => phrase.text === text)) {
+      setInputValue('');
+      return;
+    }
+    updatePreferences({
+      savedPhrases: [...phrases, { id: `${Date.now()}_${text}`, text }],
+    });
+    setInputValue('');
+    void impact('light');
+  }, [editingId, inputValue, phrases, updatePreferences]);
+
+  const handleEdit = useCallback((phrase: SavedPhrase) => {
+    setEditingId(phrase.id);
+    setInputValue(phrase.text);
+  }, []);
+
+  const handleRemove = useCallback(
+    (id: string) => {
+      if (id === editingId) {
+        setEditingId(null);
+        setInputValue('');
+      }
+      updatePreferences({
+        savedPhrases: phrases.filter(phrase => phrase.id !== id),
+      });
+    },
+    [editingId, phrases, updatePreferences],
+  );
+
   const renderItem: ListRenderItem<SavedPhrase> = useCallback(
     ({ item }) => (
       <PhraseRow
@@ -287,51 +344,7 @@ export function SavedPhrasesScreen() {
   const hasPhrases = phrases.length > 0;
 
   if (Platform.OS === 'ios') {
-    return (
-      <Host style={styles.keyboardAvoid} colorScheme='dark'>
-        <List modifiers={[listStyle('insetGrouped')]}>
-          <Section>
-            <TextField
-              text={phraseText}
-              placeholder={t('addSavedPhrasePlaceholder')}
-              modifiers={[
-                textInputAutocapitalization('sentences'),
-                submitLabel('done'),
-                onSubmit(handleNativeSave),
-              ]}
-            />
-          </Section>
-          {hasPhrases ? (
-            <Section
-              footer={
-                <NativeText>
-                  {t('savedPhrasesFooter', { count: phrases.length })}
-                </NativeText>
-              }
-            >
-              <List.ForEach onDelete={handleDeleteByIndex}>
-                {phrases.map(phrase => (
-                  <Button
-                    key={phrase.id}
-                    onPress={() => handleNativeEdit(phrase)}
-                    modifiers={[buttonStyle('plain')]}
-                  >
-                    <HStack>
-                      <NativeText
-                        modifiers={[foregroundStyle(theme.color.text.dark)]}
-                      >
-                        {phrase.text}
-                      </NativeText>
-                      <Spacer />
-                    </HStack>
-                  </Button>
-                ))}
-              </List.ForEach>
-            </Section>
-          ) : null}
-        </List>
-      </Host>
-    );
+    return <NativeSavedPhrasesList />;
   }
 
   return (

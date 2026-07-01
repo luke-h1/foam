@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 
 import type {
+  MinimumVersionTrack,
   RemoteConfigEntry,
   RemoteConfigType,
 } from '@app/hooks/firebase/useRemoteConfig';
@@ -11,12 +12,15 @@ function entry<T>(value: T): RemoteConfigEntry<T> {
   return { raw: JSON.stringify(value), value, source: 'remote' };
 }
 
-function createRemoteConfig(
-  minimumVersion: RemoteConfigType['minimumVersion']['value'],
-): RemoteConfigType {
+function createRemoteConfig(minimumVersion: {
+  android?: Partial<Record<MinimumVersionTrack, string>>;
+  ios?: Partial<Record<MinimumVersionTrack, string>>;
+}): RemoteConfigType {
   return {
     splash: entry({ '7tvUnavailable': false, app: false }),
-    minimumVersion: entry(minimumVersion),
+    minimumVersion: entry(
+      minimumVersion as RemoteConfigType['minimumVersion']['value'],
+    ),
     statusPageUrl: entry('https://status.foam-app.com'),
     websiteUrl: entry('https://foam-app.com'),
     admins: entry([]),
@@ -76,16 +80,16 @@ describe('getMinimumVersion', () => {
     Platform.OS = 'ios';
     const partial = createRemoteConfig({
       android: {
-        development: '',
-        internal: '',
-        testflight: '',
-        production: '',
+        development: '1.0.0',
+        internal: '1.1.0',
+        testflight: '1.2.0',
+        production: '1.3.0',
       },
       ios: {
-        development: '',
-        internal: '',
-        testflight: '',
-        production: '',
+        development: '2.0.0',
+        internal: '2.1.0',
+        testflight: '2.2.0',
+        // production intentionally omitted to exercise the ?? '' fallback
       },
     });
 
