@@ -216,7 +216,7 @@ export function useChatSevenTvCallbacks({
             await fetchAndCacheUserCosmetics(sevenTvUserId);
           } else if (!getPaint(paintId) && sevenTvUserId) {
             logger.stvWs.debug(
-              'Skipping cosmetic fetch for entitlement - 10s limit exceeded',
+              'Skipping cosmetic fetch for entitlement - 5s limit exceeded',
             );
           }
 
@@ -232,7 +232,7 @@ export function useChatSevenTvCallbacks({
             await fetchAndCacheUserCosmetics(sevenTvUserId);
           } else if (!getBadge(badgeId) && sevenTvUserId) {
             logger.stvWs.debug(
-              'Skipping cosmetic fetch for entitlement - 10s limit exceeded',
+              'Skipping cosmetic fetch for entitlement - 5s limit exceeded',
             );
           }
 

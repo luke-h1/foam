@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { observable } from '@legendapp/state';
 import { useSelector } from '@legendapp/state/react';
@@ -84,6 +84,26 @@ export function useChatTransientState(channelId: string) {
       chatTransientState$[channelId]!.showOnlyMentions.get() ??
       defaultTransientState.showOnlyMentions,
   );
+
+  // The visible-asset dedup guards persist across channel switches (the refs are
+  // created once), so reset them when the channel changes — a new channel's
+  // messages/chatters shouldn't inherit the previous channel's hydration keys,
+  // and clearing keeps them from carrying stale entries between sessions.
+  useEffect(() => {
+    const personalEmoteUsers = visiblePersonalEmoteUsersRef.current;
+    const cosmeticUsers = visibleCosmeticUsersRef.current;
+    const hydratedKeys = hydratedVisibleAssetKeysRef.current;
+    return () => {
+      personalEmoteUsers.clear();
+      cosmeticUsers.clear();
+      hydratedKeys.clear();
+    };
+  }, [
+    channelId,
+    hydratedVisibleAssetKeysRef,
+    visibleCosmeticUsersRef,
+    visiblePersonalEmoteUsersRef,
+  ]);
 
   useUnmountCallback(() => {
     const highlightedReplyTimeout = highlightedReplyTargetTimeoutRef.current;

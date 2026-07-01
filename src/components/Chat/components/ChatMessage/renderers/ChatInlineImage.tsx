@@ -264,7 +264,11 @@ function ChatInlineImageComponent({
           ? rowVisibility.isVisible() && !chatScrollActivity.isActive()
           : true
       }
-      cachePolicy='memory-disk'
+      // The durable decoded copy lives in our own ImageRef cache (the `showRef`
+      // path). The `uri` fallback branch is transient (first occurrence / a
+      // failed ref), so keep it out of expo-image's in-memory cache to avoid a
+      // second session-long decoded-bitmap pool on top of the ImageRef cache.
+      cachePolicy={showRef ? 'memory-disk' : 'disk'}
       priority={priority}
       transition={transitionMs}
       onLoad={handleLoad}

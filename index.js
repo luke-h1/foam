@@ -15,18 +15,35 @@ if (__DEV__ && !process.env.EXPO_PUBLIC_REACT_PERF_TRACKS) {
   delete console.timeStamp;
 }
 
-// Bound expo-image's image cache. By default both tiers are unbounded
-// (maxMemoryCost/maxDiskSize: 0); under sustained chat raids the decoded working
-// set grew multi-GB and could get the app jettisoned. Cap the in-memory decoded
-// cache at 2GB (SDWebImage evicts least-recently-used past the limit, and
-// NSCache also drops under OS memory pressure) and the disk cache at 512MB.
+// Bound expo-image's in-memory decoded cache. By default both tiers are
+// unbounded (maxMemoryCost/maxDiskSize: 0); under sustained chat raids the
+// decoded working set grew until iOS jettisoned the app (std::bad_alloc /
+// WatchdogTermination in busy channels like caedrel). `maxMemoryCost` is in
+// BYTES (SDWebImage: "the bytes size held in memory"), so a flat 2GB let the
+// cache grow to ~2GB of decoded emote bitmaps on top of the video WebView and
+// JS heap. Scale it to the device instead: ~12% of physical RAM, clamped to
+// [96MB, 384MB], so smaller phones cap tighter and no device parks gigabytes of
+// decoded images. NSCache still self-purges under OS memory pressure.
 try {
+  const deviceInfo = require('react-native-device-info');
+  const DeviceInfo = deviceInfo.default ?? deviceInfo;
+  const totalMemoryBytes = DeviceInfo.getTotalMemorySync?.() ?? 0;
+  const MIN_MEMORY_CACHE_BYTES = 96 * 1024 * 1024;
+  const MAX_MEMORY_CACHE_BYTES = 384 * 1024 * 1024;
+  const scaled =
+    totalMemoryBytes > 0
+      ? Math.floor(totalMemoryBytes * 0.12)
+      : MAX_MEMORY_CACHE_BYTES;
+  const maxMemoryCost = Math.max(
+    MIN_MEMORY_CACHE_BYTES,
+    Math.min(MAX_MEMORY_CACHE_BYTES, scaled),
+  );
   require('expo-image').Image.configureCache({
-    maxMemoryCost: 2 * 1024 * 1024 * 1024,
+    maxMemoryCost,
     maxDiskSize: 512 * 1024 * 1024,
   });
 } catch {
-  // expo-image native module unavailable (e.g. web) — cache stays default.
+  // expo-image / device-info native module unavailable (e.g. web) — cache stays default.
 }
 
 require('expo-router/entry');

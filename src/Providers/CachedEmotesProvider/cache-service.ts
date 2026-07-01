@@ -12,12 +12,16 @@
  * just composites an already-decoded, size-bounded bitmap. Animated AVIFs keep
  * animating — the ref carries `isAnimated` and the view autoplays.
  */
-import { AppState } from 'react-native';
+import { AppState, type AppStateStatus } from 'react-native';
 
 import { Image, type ImageRef } from 'expo-image';
 
-import { getDeviceTier } from '@app/utils/device/deviceTier';
+import {
+  getDeviceTier,
+  getTotalDeviceMemoryBytes,
+} from '@app/utils/device/deviceTier';
 import { logger } from '@app/utils/logger';
+import ImageMemoryPressure from '@modules/image-memory-pressure/src/ImageMemoryPressureModule';
 
 const isLowTier = getDeviceTier() === 'low';
 
@@ -40,8 +44,23 @@ const MAX_ENTRIES = isLowTier ? 600 : 1200;
  * heap-growth OOM, FOAM-TV-MOBILE-BG). The byte budget is the primary bound;
  * MAX_ENTRIES is now a backstop. Heuristic — tune against an on-device
  * Instruments Allocations / vmmap capture.
+ *
+ * Derived from device RAM (~2.5%) rather than a flat per-tier constant so the
+ * working set scales down on smaller phones instead of every device sharing one
+ * ceiling. Clamped to the previous per-tier bounds as a floor/ceiling so
+ * behaviour is unchanged on the devices those constants were tuned for (a 12GB
+ * phone still lands at the 192MB high-tier ceiling) while a ~4GB phone gets
+ * ~100MB instead of the full 192MB.
  */
-const MAX_DECODED_BYTES = isLowTier ? 64 * 1024 * 1024 : 192 * 1024 * 1024;
+const MAX_DECODED_BYTES = (() => {
+  const ceil = isLowTier ? 64 * 1024 * 1024 : 192 * 1024 * 1024;
+  const floor = isLowTier ? 48 * 1024 * 1024 : 96 * 1024 * 1024;
+  const totalMemoryBytes = getTotalDeviceMemoryBytes();
+  if (totalMemoryBytes <= 0) {
+    return ceil;
+  }
+  return Math.max(floor, Math.min(ceil, Math.floor(totalMemoryBytes * 0.025)));
+})();
 const ANIMATED_BYTE_FACTOR = 8;
 
 const refs = new Map<string, ImageRef>();
@@ -403,13 +422,88 @@ export function trimCachedEmoteRefsForMemoryPressure(): void {
 let memoryPressureSubscribed = false;
 
 /**
+ * `memoryWarning` fires late (often after the allocation that tips the process
+ * over), so we also poll the real pre-jetsam headroom while foregrounded via the
+ * ImageMemoryPressure native module (os_proc_available_memory — bytes remaining before
+ * this process hits its iOS memory limit). When headroom drops below this bound
+ * we trim proactively instead of waiting for the OS signal. The module returns 0
+ * when unavailable (Android / web / before the native build ships), which
+ * disables the poll gracefully.
+ */
+const LOW_MEMORY_HEADROOM_BYTES = 200 * 1024 * 1024;
+const MEMORY_POLL_INTERVAL_MS = 5000;
+// Trimming can recur every poll under sustained pressure; throttle the Sentry
+// breadcrumb so a constrained session can't flood Logs while still surfacing
+// that pressure trims are happening.
+const MEMORY_PRESSURE_LOG_THROTTLE_MS = 60_000;
+
+let memoryMonitorTimer: ReturnType<typeof setInterval> | null = null;
+let lastMemoryPressureLogAt = 0;
+
+function pollMemoryHeadroom(): void {
+  let available = 0;
+  try {
+    available = ImageMemoryPressure.getAvailableMemory();
+  } catch {
+    return;
+  }
+  if (available <= 0 || available >= LOW_MEMORY_HEADROOM_BYTES) {
+    return;
+  }
+
+  // Date.now here (not a monotonic clock) only gates a log; a clock jump at
+  // worst drops or duplicates one breadcrumb.
+  const now = Date.now();
+  if (now - lastMemoryPressureLogAt >= MEMORY_PRESSURE_LOG_THROTTLE_MS) {
+    lastMemoryPressureLogAt = now;
+    logger.chat.warn('chat.emote.memory_pressure_trim', {
+      name: 'chat_resources_warning',
+      availableBytes: available,
+      decodedBytes: totalBytes,
+      decodedRefs: refs.size,
+    });
+  }
+  trimCachedEmoteRefsForMemoryPressure();
+}
+
+function startMemoryMonitor(): void {
+  if (memoryMonitorTimer !== null) {
+    return;
+  }
+  memoryMonitorTimer = setInterval(pollMemoryHeadroom, MEMORY_POLL_INTERVAL_MS);
+}
+
+function stopMemoryMonitor(): void {
+  if (memoryMonitorTimer !== null) {
+    clearInterval(memoryMonitorTimer);
+    memoryMonitorTimer = null;
+  }
+}
+
+function handleAppStateForMemory(nextAppState: AppStateStatus): void {
+  if (nextAppState === 'active') {
+    startMemoryMonitor();
+    return;
+  }
+  // background/inactive: proactively shed the unpinned working set while
+  // off-screen and stop polling so we don't run a timer in the background.
+  stopMemoryMonitor();
+  if (nextAppState === 'background') {
+    trimCachedEmoteRefsForMemoryPressure();
+  }
+}
+
+/**
  * Registered once for the app's lifetime (the cache outlives any single chat
- * mount). Two triggers:
+ * mount). Three triggers:
  * - iOS `memoryWarning`: late and unreliable before a fast OOM, so it can't be
  *   the only safety valve.
- * - Backgrounding: proactively shed the unpinned working set while the app is
- *   off-screen so a long single-channel session can't sit at the cap until the
- *   OS reclaims it. Refs re-decode lazily on the next render when foregrounded.
+ * - Proactive headroom poll (foreground, every 5s): trims before jetsam when the
+ *   ImageMemoryPressure module reports the process is close to its memory limit — the
+ *   safety valve `memoryWarning` is too late for.
+ * - Backgrounding: shed the unpinned working set while off-screen so a long
+ *   single-channel session can't sit at the cap until the OS reclaims it. Refs
+ *   re-decode lazily on the next render when foregrounded.
  * Android trim hooks would need a native onTrimMemory bridge — not wired here.
  */
 export function subscribeEmoteCacheMemoryPressure(): void {
@@ -421,11 +515,10 @@ export function subscribeEmoteCacheMemoryPressure(): void {
     'memoryWarning',
     trimCachedEmoteRefsForMemoryPressure,
   );
-  AppState.addEventListener('change', nextAppState => {
-    if (nextAppState === 'background') {
-      trimCachedEmoteRefsForMemoryPressure();
-    }
-  });
+  AppState.addEventListener('change', handleAppStateForMemory);
+  if (AppState.currentState === 'active') {
+    startMemoryMonitor();
+  }
 }
 
 export function getCachedEmoteStats(): {
