@@ -25,11 +25,16 @@ if (__DEV__ && !process.env.EXPO_PUBLIC_REACT_PERF_TRACKS) {
 // [96MB, 384MB], so smaller phones cap tighter and no device parks gigabytes of
 // decoded images. NSCache still self-purges under OS memory pressure.
 try {
-  const deviceInfo = require('react-native-device-info');
-  const DeviceInfo = deviceInfo.default ?? deviceInfo;
-  const totalMemoryBytes = DeviceInfo.getTotalMemorySync?.() ?? 0;
   const MIN_MEMORY_CACHE_BYTES = 96 * 1024 * 1024;
   const MAX_MEMORY_CACHE_BYTES = 384 * 1024 * 1024;
+  let totalMemoryBytes = 0;
+  try {
+    const deviceInfo = require('react-native-device-info');
+    const DeviceInfo = deviceInfo.default ?? deviceInfo;
+    totalMemoryBytes = DeviceInfo.getTotalMemorySync?.() ?? 0;
+  } catch {
+    // device-info unavailable — fall through to the fixed ceiling below.
+  }
   const scaled =
     totalMemoryBytes > 0
       ? Math.floor(totalMemoryBytes * 0.12)
@@ -43,7 +48,7 @@ try {
     maxDiskSize: 512 * 1024 * 1024,
   });
 } catch {
-  // expo-image / device-info native module unavailable (e.g. web) — cache stays default.
+  // expo-image unavailable (e.g. web) — cache stays default.
 }
 
 require('expo-router/entry');

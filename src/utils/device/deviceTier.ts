@@ -32,7 +32,7 @@ export function getDeviceTier(): DeviceTier {
   let tier: DeviceTier = 'high';
   try {
     const isLowRam = DeviceInfo.isLowRamDevice?.() === true;
-    const totalMemory = DeviceInfo.getTotalMemorySync?.() ?? 0;
+    const totalMemory = getTotalDeviceMemoryBytes();
     if (
       isLowRam ||
       // 3GB in bytes

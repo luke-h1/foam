@@ -15,6 +15,8 @@ import SDWebImage
  * Android needs no equivalent — Coil's memory cache is bounded by default.
  */
 public class ImageCacheLimitsAppDelegateSubscriber: ExpoAppDelegateSubscriber {
+  deinit {}
+
   public func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
