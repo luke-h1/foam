@@ -3,6 +3,7 @@ import { batch } from '@legendapp/state';
 import { clearChatStorePersistence } from '@app/lib/observablePersistence';
 import { startSpanAsync } from '@app/lib/sentry';
 import { sevenTvService } from '@app/services/seventv-service';
+import { twitchService } from '@app/services/twitch-service';
 import { getPreferences } from '@app/store/preferences/state';
 import type { SanitisedEmote } from '@app/types/emote';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
@@ -13,7 +14,10 @@ import {
   clearPersistedRecentMessages,
   RECENT_MESSAGES_PERSISTENCE_ENABLED,
 } from '../observables/recentMessagesPersistence';
-import type { ChannelCacheType } from '../types/constants';
+import type {
+  ChannelCacheType,
+  SubscriberChannelProfile,
+} from '../types/constants';
 import {
   BADGE_CACHE_DURATION,
   CACHE_DURATION,
@@ -150,6 +154,73 @@ export const getUserPersonalEmotes = (
 export const clearPersonalEmotesCache = () => {
   checkedUsersForPersonalEmotes.clear();
   personalEmoteFetchPromises.clear();
+};
+
+const subscriberProfileFetchesInFlight = new Set<string>();
+
+export const resolveSubscriberChannelProfiles = async (
+  channelId: string,
+): Promise<void> => {
+  if (subscriberProfileFetchesInFlight.has(channelId)) {
+    return;
+  }
+
+  const channelCache = chatStore$.persisted.channelCaches[channelId];
+  const cache = channelCache?.peek();
+
+  if (!channelCache || !cache) {
+    return;
+  }
+
+  const existingProfiles = cache.twitchSubscriberChannelProfiles ?? {};
+  const ownerIds = [
+    ...new Set(
+      (cache.twitchSubscriberEmotes ?? []).flatMap(emote =>
+        'owner_id' in emote && emote.owner_id ? [emote.owner_id] : [],
+      ),
+    ),
+  ].filter(ownerId => !existingProfiles[ownerId]);
+
+  if (ownerIds.length === 0) {
+    return;
+  }
+
+  subscriberProfileFetchesInFlight.add(channelId);
+  try {
+    const users = await twitchService.getUsersById(ownerIds);
+    const profiles: Record<string, SubscriberChannelProfile> = {};
+
+    users.forEach(user => {
+      if (user?.id) {
+        profiles[user.id] = {
+          name: user.display_name,
+          profileImageUrl: user.profile_image_url,
+        };
+      }
+    });
+
+    if (Object.keys(profiles).length === 0) {
+      return;
+    }
+
+    channelCache.twitchSubscriberChannelProfiles.set({
+      ...(channelCache.twitchSubscriberChannelProfiles.peek() ?? {}),
+      ...profiles,
+    });
+  } catch (error) {
+    logger.chat.warn('Failed to resolve subscriber channel profiles', {
+      name: 'chat_resources_warning',
+      error,
+      action: 'subscriber_channel_profiles_failed',
+      channel_id: channelId,
+      provider: 'twitch',
+      resource_type: 'emotes',
+      scope: 'channel',
+      screen: 'chat',
+    });
+  } finally {
+    subscriberProfileFetchesInFlight.delete(channelId);
+  }
 };
 
 export const clearChannelResources = () => {
@@ -388,7 +459,9 @@ const loadChannelResourcesInternal = async (
           });
           if (twitchUserId) {
             void notify7TVPresence(twitchUserId, channelId);
+            void fetchUserPersonalEmotes(twitchUserId, channelId);
           }
+          void resolveSubscriberChannelProfiles(channelId);
           return true;
         }
       }
@@ -505,6 +578,8 @@ const loadChannelResourcesInternal = async (
           : now,
       ...emoteResourceSets,
       twitchSubscriberEmotesUserId: twitchUserId ?? undefined,
+      twitchSubscriberChannelProfiles:
+        existingCache?.twitchSubscriberChannelProfiles ?? {},
       ...badgeResourceSets,
       sevenTvPersonalBadges: {},
       sevenTvPersonalEmotes: {},
@@ -524,7 +599,9 @@ const loadChannelResourcesInternal = async (
 
     if (twitchUserId) {
       void notify7TVPresence(twitchUserId, channelId);
+      void fetchUserPersonalEmotes(twitchUserId, channelId);
     }
+    void resolveSubscriberChannelProfiles(channelId);
 
     logger.chat.info('Loaded channel resources', {
       name: 'chat_resources_info',

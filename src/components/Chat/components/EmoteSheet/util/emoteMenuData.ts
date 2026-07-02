@@ -1,12 +1,12 @@
 import { BrandIconName } from '@app/components/BrandIcon/brandIconRegistry';
-import { emptyEmoteData } from '@app/store/chat/types/constants';
+import type { SubscriberChannelProfile } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 
 import type { EmotePickerItem } from '../EmoteSheet';
 
 export type EmoteMenuProviderId = '7TV' | 'Twitch' | 'FFZ' | 'BTTV' | 'Emoji';
 export type EmoteMenuIcon =
-  BrandIconName | 'twitch' | 'ffz' | `emoji:${string}`;
+  BrandIconName | 'twitch' | 'ffz' | `emoji:${string}` | `avatar:${string}`;
 
 export interface EmoteMenuSet {
   emotes: EmotePickerItem[];
@@ -39,9 +39,11 @@ export interface EmoteMenuDataInput {
   ffzGlobalEmotes?: SanitisedEmote[];
   sevenTvChannelEmotes?: SanitisedEmote[];
   sevenTvGlobalEmotes?: SanitisedEmote[];
+  sevenTvPersonalEmotes?: SanitisedEmote[];
   twitchChannelEmotes?: SanitisedEmote[];
   twitchGlobalEmotes?: SanitisedEmote[];
   twitchSubscriberEmotes?: SanitisedEmote[];
+  twitchSubscriberChannelProfiles?: Record<string, SubscriberChannelProfile>;
 }
 
 function chunk<TItem>(items: TItem[], size: number): TItem[][] {
@@ -141,6 +143,70 @@ function groupSevenTvSets(
     .sort((left, right) => left.title.localeCompare(right.title));
 }
 
+function groupSubscriberSets(
+  subscriberEmotes: SanitisedEmote[],
+  profiles: Record<string, SubscriberChannelProfile>,
+): EmoteMenuSet[] {
+  const byChannel = new Map<
+    string,
+    {
+      emotes: SanitisedEmote[];
+      profile: SubscriberChannelProfile;
+    }
+  >();
+  const ungrouped: SanitisedEmote[] = [];
+
+  subscriberEmotes.forEach(emote => {
+    const ownerId =
+      'owner_id' in emote && emote.owner_id ? emote.owner_id : null;
+    const profile = ownerId ? profiles[ownerId] : undefined;
+
+    if (!ownerId || !profile) {
+      ungrouped.push(emote);
+      return;
+    }
+
+    const existing = byChannel.get(ownerId);
+    if (existing) {
+      existing.emotes.push(emote);
+      return;
+    }
+
+    byChannel.set(ownerId, { profile, emotes: [emote] });
+  });
+
+  const channelSets: EmoteMenuSet[] = [];
+  byChannel.forEach(({ profile, emotes }, ownerId) => {
+    channelSets.push(
+      makeSet(
+        `twitch-sub-${ownerId}`,
+        'Twitch',
+        profile.name,
+        profile.profileImageUrl
+          ? `avatar:${profile.profileImageUrl}`
+          : 'twitch',
+        emotes,
+      ),
+    );
+  });
+
+  const sets = sortSets(channelSets);
+
+  if (ungrouped.length > 0) {
+    sets.push(
+      makeSet(
+        'twitch-user',
+        'Twitch',
+        'Subscribed Emotes',
+        'twitch',
+        ungrouped,
+      ),
+    );
+  }
+
+  return sets;
+}
+
 function createEmojiSets(emojis: string[]): EmoteMenuSet[] {
   const categories: {
     icon: `emoji:${string}`;
@@ -219,19 +285,23 @@ function filterSet(set: EmoteMenuSet, query: string): EmoteMenuSet | null {
 }
 
 export function buildEmoteMenuProviders(
-  input: EmoteMenuDataInput = emptyEmoteData,
+  input: EmoteMenuDataInput = {},
 ): EmoteMenuProvider[] {
   const sevenTvSets = [
+    makeSet(
+      '7tv-personal',
+      '7TV',
+      'Personal Emotes',
+      'stv',
+      input.sevenTvPersonalEmotes ?? [],
+    ),
     ...groupSevenTvSets('Channel', input.sevenTvChannelEmotes ?? []),
     ...groupSevenTvSets('Global', input.sevenTvGlobalEmotes ?? []),
   ];
-  const twitchSets = sortSets([
-    makeSet(
-      'twitch-user',
-      'Twitch',
-      'Subscribed Emotes',
-      'twitch',
+  const twitchSets = [
+    ...groupSubscriberSets(
       input.twitchSubscriberEmotes ?? [],
+      input.twitchSubscriberChannelProfiles ?? {},
     ),
     makeSet(
       'twitch-channel',
@@ -247,7 +317,7 @@ export function buildEmoteMenuProviders(
       'twitch',
       input.twitchGlobalEmotes ?? [],
     ),
-  ]).filter(set => set.emotes.length > 0);
+  ].filter(set => set.emotes.length > 0);
   const ffzSets = sortSets([
     makeSet(
       'ffz-channel',

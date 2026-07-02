@@ -5,6 +5,7 @@ import { ffzService } from '@app/services/ffz-service';
 import { sevenTvService } from '@app/services/seventv-service';
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchEmoteService } from '@app/services/twitch-emote-service';
+import { twitchService } from '@app/services/twitch-service';
 import type {
   BttvSanitisedEmote,
   FfzSanitisedEmote,
@@ -13,7 +14,11 @@ import type {
 } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
-import { loadChannelResources } from '../actions/channelLoad';
+import {
+  clearPersonalEmotesCache,
+  loadChannelResources,
+  resolveSubscriberChannelProfiles,
+} from '../actions/channelLoad';
 import { chatStore$ } from '../observables/chatStore';
 import { emptyEmoteData } from '../types/constants';
 
@@ -93,8 +98,15 @@ jest.mock('@app/services/seventv-service', () => ({
   sevenTvService: {
     get7tvUserId: jest.fn(),
     getEmoteSetId: jest.fn(),
+    getPersonalEmoteSet: jest.fn(),
     getSanitisedEmoteSet: jest.fn(),
     sendPresence: jest.fn(),
+  },
+}));
+
+jest.mock('@app/services/twitch-service', () => ({
+  twitchService: {
+    getUsersById: jest.fn(),
   },
 }));
 
@@ -147,6 +159,8 @@ const mockGetFfzGlobalBadges = jest.mocked(ffzService.getSanitisedGlobalBadges);
 const mockListChatterinoBadges = jest.mocked(
   chatterinoService.listSanitisedBadges,
 );
+const mockGetPersonalEmoteSet = jest.mocked(sevenTvService.getPersonalEmoteSet);
+const mockGetUsersById = jest.mocked(twitchService.getUsersById);
 
 const channelId = 'channel-1';
 const twitchUserId = 'user-1';
@@ -252,7 +266,10 @@ describe('loadChannelResources cache fallback', () => {
     chatStore$.persisted.channelCaches.set({});
     chatStore$.currentChannelId.set(null);
     chatStore$.loadingState.set('IDLE');
+    clearPersonalEmotesCache();
 
+    mockGetPersonalEmoteSet.mockResolvedValue([]);
+    mockGetUsersById.mockResolvedValue([]);
     mockGetEmoteSetId.mockResolvedValue('seven-set');
     mockGetSanitisedEmoteSet.mockImplementation(id =>
       Promise.resolve([sevenTvEmote(`seven-${id}`)]),
@@ -370,6 +387,23 @@ describe('loadChannelResources cache fallback', () => {
     expect(cache!.lastUpdated).toBe(9_000);
   });
 
+  test('fetches the personal emote set of the logged in user after a full load', async () => {
+    mockGetPersonalEmoteSet.mockResolvedValue([sevenTvEmote('personal-emote')]);
+
+    await expect(
+      loadChannelResources({ channelId, forceRefresh: true, twitchUserId }),
+    ).resolves.toBe(true);
+    await new Promise(resolve => {
+      setImmediate(resolve);
+    });
+
+    expect(mockGetPersonalEmoteSet).toHaveBeenCalledWith(twitchUserId);
+    const cache = chatStore$.persisted.channelCaches.peek()[channelId];
+    expect(ids(cache!.sevenTvPersonalEmotes[twitchUserId] ?? [])).toEqual([
+      'personal-emote',
+    ]);
+  });
+
   test('uses empty provider slices without crashing when provider requests reject with no cache', async () => {
     mockGetEmoteSetId.mockRejectedValue(new Error('TimeoutError'));
     mockGetSanitisedEmoteSet.mockRejectedValue(new Error('TimeoutError'));
@@ -397,5 +431,109 @@ describe('loadChannelResources cache fallback', () => {
     ]);
     expect(cache!.lastUpdated).toBe(10_000);
     expect(cache!.badgesLastUpdated).toBe(10_000);
+  });
+});
+
+describe('resolveSubscriberChannelProfiles', () => {
+  const profileUser = (id: string, displayName: string) => ({
+    broadcaster_type: '',
+    created_at: '',
+    description: '',
+    display_name: displayName,
+    id,
+    login: displayName.toLowerCase(),
+    offline_image_url: '',
+    profile_image_url: `https://cdn.example.com/${id}.png`,
+    type: '',
+    view_count: 0,
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    chatStore$.persisted.channelCaches.set({});
+  });
+
+  test('resolves and stores profiles for owner ids without one', async () => {
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...emptyEmoteData,
+        twitchSubscriberEmotes: [
+          { ...twitchEmote('emote1', 'Twitch Subscriber'), owner_id: '100' },
+          { ...twitchEmote('emote2', 'Twitch Subscriber'), owner_id: '200' },
+          twitchEmote('emote3', 'Twitch Subscriber'),
+        ],
+        twitchSubscriberChannelProfiles: {
+          '200': {
+            name: 'Cached',
+            profileImageUrl: 'https://cdn.example.com/cached.png',
+          },
+        },
+      },
+    });
+    mockGetUsersById.mockResolvedValue([profileUser('100', 'Zoil')]);
+
+    await resolveSubscriberChannelProfiles(channelId);
+
+    expect(mockGetUsersById).toHaveBeenCalledWith(['100']);
+    const cache = chatStore$.persisted.channelCaches.peek()[channelId];
+    expect(cache!.twitchSubscriberChannelProfiles).toEqual({
+      '100': {
+        name: 'Zoil',
+        profileImageUrl: 'https://cdn.example.com/100.png',
+      },
+      '200': {
+        name: 'Cached',
+        profileImageUrl: 'https://cdn.example.com/cached.png',
+      },
+    });
+  });
+
+  test('skips the lookup when every owner id already has a profile', async () => {
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...emptyEmoteData,
+        twitchSubscriberEmotes: [
+          { ...twitchEmote('emote1', 'Twitch Subscriber'), owner_id: '100' },
+        ],
+        twitchSubscriberChannelProfiles: {
+          '100': {
+            name: 'Zoil',
+            profileImageUrl: 'https://cdn.example.com/100.png',
+          },
+        },
+      },
+    });
+
+    await resolveSubscriberChannelProfiles(channelId);
+
+    expect(mockGetUsersById).not.toHaveBeenCalled();
+  });
+
+  test('keeps existing profiles when the profile lookup fails', async () => {
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...emptyEmoteData,
+        twitchSubscriberEmotes: [
+          { ...twitchEmote('emote1', 'Twitch Subscriber'), owner_id: '100' },
+        ],
+        twitchSubscriberChannelProfiles: {
+          '200': {
+            name: 'Cached',
+            profileImageUrl: 'https://cdn.example.com/cached.png',
+          },
+        },
+      },
+    });
+    mockGetUsersById.mockRejectedValue(new Error('TimeoutError'));
+
+    await resolveSubscriberChannelProfiles(channelId);
+
+    const cache = chatStore$.persisted.channelCaches.peek()[channelId];
+    expect(cache!.twitchSubscriberChannelProfiles).toEqual({
+      '200': {
+        name: 'Cached',
+        profileImageUrl: 'https://cdn.example.com/cached.png',
+      },
+    });
   });
 });

@@ -268,6 +268,17 @@ export const emoteSheetStyles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0,
   },
+  setRailAvatar: {
+    borderRadius: 12,
+    height: 24,
+    width: 24,
+  },
+  setRailAvatarContainer: {
+    borderRadius: 12,
+    height: 24,
+    overflow: 'hidden',
+    width: 24,
+  },
   setRailButton: {
     alignItems: 'center',
     backgroundColor: MENU_CARD,

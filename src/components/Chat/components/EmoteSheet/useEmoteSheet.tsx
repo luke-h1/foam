@@ -21,6 +21,7 @@ import {
   filterProviderSets,
   flattenProviderSets,
 } from '@app/components/Chat/components/EmoteSheet/util/emoteMenuData';
+import { useAuthContext } from '@app/context/AuthContext';
 import { cacheEmoteImages } from '@app/store/chat/actions/emoteImages';
 import { useCurrentEmoteData } from '@app/store/chat/react/selectors';
 import type { SanitisedEmote } from '@app/types/emote';
@@ -95,6 +96,7 @@ export function useEmoteSheet({
   // a spinner, then the lists build once the open is underway.
   const [contentReady, setContentReady] = useState(false);
 
+  const { user } = useAuthContext();
   const {
     bttvChannelEmotes,
     bttvGlobalEmotes,
@@ -102,10 +104,15 @@ export function useEmoteSheet({
     ffzGlobalEmotes,
     sevenTvChannelEmotes,
     sevenTvGlobalEmotes,
+    sevenTvPersonalEmotes,
     twitchChannelEmotes,
     twitchGlobalEmotes,
     twitchSubscriberEmotes,
+    twitchSubscriberChannelProfiles,
   } = useCurrentEmoteData();
+  const currentUserPersonalEmotes = user?.id
+    ? sevenTvPersonalEmotes[user.id]
+    : undefined;
 
   const gridWidth = sheetWidth - 16 * 2;
   const columns = Math.max(
@@ -137,9 +144,11 @@ export function useEmoteSheet({
             ffzGlobalEmotes,
             sevenTvChannelEmotes,
             sevenTvGlobalEmotes,
+            sevenTvPersonalEmotes: currentUserPersonalEmotes,
             twitchChannelEmotes,
             twitchGlobalEmotes,
             twitchSubscriberEmotes,
+            twitchSubscriberChannelProfiles,
             emojiSets: EMOJI_MENU_SECTIONS,
           })
         : EMPTY_PROVIDERS,
@@ -151,9 +160,11 @@ export function useEmoteSheet({
       ffzGlobalEmotes,
       sevenTvChannelEmotes,
       sevenTvGlobalEmotes,
+      currentUserPersonalEmotes,
       twitchChannelEmotes,
       twitchGlobalEmotes,
       twitchSubscriberEmotes,
+      twitchSubscriberChannelProfiles,
     ],
   );
 

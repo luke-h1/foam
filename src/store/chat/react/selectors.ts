@@ -18,6 +18,8 @@ type ChannelEmoteData = Pick<
   | 'twitchChannelEmotes'
   | 'twitchGlobalEmotes'
   | 'twitchSubscriberEmotes'
+  | 'twitchSubscriberChannelProfiles'
+  | 'sevenTvPersonalEmotes'
   | 'sevenTvChannelEmotes'
   | 'sevenTvGlobalEmotes'
   | 'ffzChannelEmotes'
@@ -33,11 +35,15 @@ type ChannelEmoteData = Pick<
 
 const EMPTY_EMOTES: SanitisedEmote[] = [];
 const EMPTY_BADGES: SanitisedBadgeSet[] = [];
+const EMPTY_SUBSCRIBER_PROFILES: NonNullable<
+  ChannelCacheType['twitchSubscriberChannelProfiles']
+> = {};
+const EMPTY_PERSONAL_EMOTES: ChannelCacheType['sevenTvPersonalEmotes'] = {};
 
 function resolveEmoteData(
   cache: ChannelEmoteData | undefined,
   preferences: ReturnType<typeof useEmoteRenderPreferences>,
-) {
+): ChannelEmoteData {
   if (!cache) {
     return emptyEmoteData;
   }
@@ -52,6 +58,11 @@ function resolveEmoteData(
     twitchSubscriberEmotes: preferences.showTwitchEmotes
       ? (cache.twitchSubscriberEmotes ?? [])
       : [],
+    twitchSubscriberChannelProfiles:
+      cache.twitchSubscriberChannelProfiles ?? EMPTY_SUBSCRIBER_PROFILES,
+    sevenTvPersonalEmotes: preferences.show7TvEmotes
+      ? (cache.sevenTvPersonalEmotes ?? EMPTY_PERSONAL_EMOTES)
+      : EMPTY_PERSONAL_EMOTES,
     sevenTvChannelEmotes: preferences.show7TvEmotes
       ? (cache.sevenTvChannelEmotes ?? [])
       : [],
@@ -100,6 +111,11 @@ function getChannelEmoteData(channelId: string | null): ChannelEmoteData {
     twitchGlobalEmotes: cache$?.twitchGlobalEmotes.get() ?? EMPTY_EMOTES,
     twitchSubscriberEmotes:
       cache$?.twitchSubscriberEmotes.get() ?? EMPTY_EMOTES,
+    twitchSubscriberChannelProfiles:
+      cache$?.twitchSubscriberChannelProfiles.get() ??
+      EMPTY_SUBSCRIBER_PROFILES,
+    sevenTvPersonalEmotes:
+      cache$?.sevenTvPersonalEmotes.get() ?? EMPTY_PERSONAL_EMOTES,
     sevenTvChannelEmotes: cache$?.sevenTvChannelEmotes.get() ?? EMPTY_EMOTES,
     sevenTvGlobalEmotes: cache$?.sevenTvGlobalEmotes.get() ?? EMPTY_EMOTES,
     ffzChannelEmotes: cache$?.ffzChannelEmotes.get() ?? EMPTY_EMOTES,

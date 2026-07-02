@@ -145,4 +145,23 @@ describe('twitchEmoteService', () => {
       { id: 'emote2', site: 'Twitch Subscriber' },
     ]);
   });
+
+  test('getSubscriberEmotes keeps the owner_id of each emote', async () => {
+    api.get.mockResolvedValue({
+      data: [
+        { ...makeTwitchEmote('emote1', 'subHype'), owner_id: '555' },
+        { ...makeTwitchEmote('emote2', 'subLove'), owner_id: '777' },
+      ],
+      pagination: {},
+    });
+
+    const result = await twitchEmoteService.getSubscriberEmotes('42');
+
+    expect(
+      result.map(emote => ({ id: emote.id, owner_id: emote.owner_id })),
+    ).toEqual([
+      { id: 'emote1', owner_id: '555' },
+      { id: 'emote2', owner_id: '777' },
+    ]);
+  });
 });

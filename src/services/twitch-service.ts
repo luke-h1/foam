@@ -552,6 +552,29 @@ export const twitchService = {
     return (result.data[0] as UserInfoResponse) ?? '';
   },
 
+  getUsersById: async (ids: string[]): Promise<UserInfoResponse[]> => {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    // Helix /users takes repeated id params (max 100 per request), which the
+    // shared client's comma-joining array serializer can't produce.
+    const batches: string[][] = [];
+    for (let i = 0; i < ids.length; i += 100) {
+      batches.push(ids.slice(i, i + 100));
+    }
+
+    const results = await Promise.all(
+      batches.map(batch =>
+        twitchApi.get<{ data: UserInfoResponse[] }>(
+          `/users?${batch.map(id => `id=${encodeURIComponent(id)}`).join('&')}`,
+        ),
+      ),
+    );
+
+    return results.flatMap(result => result.data ?? []);
+  },
+
   searchChannels: async (query: string): Promise<SearchChannelResponse[]> => {
     const result = await twitchApi.get<{ data: SearchChannelResponse[] }>(
       '/search/channels',

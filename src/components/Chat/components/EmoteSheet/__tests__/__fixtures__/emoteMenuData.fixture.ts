@@ -20,7 +20,7 @@ const defaultSevenTvMetadata = {
 export function createSevenTvMenuEmote(
   id: string,
   name: string,
-  site: '7TV Channel' | '7TV Global',
+  site: SevenTvSanitisedEmote['site'],
   overrides: Partial<SevenTvSanitisedEmote> = {},
 ): SevenTvSanitisedEmote {
   return {
@@ -46,7 +46,7 @@ export function createSevenTvMenuEmote(
 export function createTwitchMenuEmote(
   id: string,
   name: string,
-  site: 'Twitch Channel' | 'Twitch Global',
+  site: TwitchSanitisedEmote['site'],
   overrides: Partial<TwitchSanitisedEmote> = {},
 ): TwitchSanitisedEmote {
   return {
@@ -67,7 +67,11 @@ export function createMenuEmote(
   site: SanitisedEmote['site'],
   overrides: Partial<SanitisedEmote> = {},
 ): SanitisedEmote {
-  if (site === '7TV Channel' || site === '7TV Global') {
+  if (
+    site === '7TV Channel' ||
+    site === '7TV Global' ||
+    site === '7TV Personal'
+  ) {
     return createSevenTvMenuEmote(
       id,
       name,
@@ -76,7 +80,11 @@ export function createMenuEmote(
     );
   }
 
-  if (site === 'Twitch Channel' || site === 'Twitch Global') {
+  if (
+    site === 'Twitch Channel' ||
+    site === 'Twitch Global' ||
+    site === 'Twitch Subscriber'
+  ) {
     return createTwitchMenuEmote(
       id,
       name,

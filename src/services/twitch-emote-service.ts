@@ -35,26 +35,29 @@ function toTwitchImageUrl(
 }
 
 function sanitiseTwitchEmote(
-  emote: Pick<TwitchEmote, 'id' | 'name'>,
+  emote: Pick<TwitchEmote, 'id' | 'name'> & { owner_id?: string },
   site: TwitchSanitisedEmote['site'],
   creator: string | null,
 ): TwitchSanitisedEmote {
-  return buildSanitisedEmote({
-    id: emote.id,
-    name: emote.name,
-    site,
-    creator,
-    emoteLink: toTwitchImageUrl(emote.id),
-    originalName: emote.name,
-    animated: {
-      '2x': toTwitchImageUrl(emote.id, 'default', '2.0'),
-      '4x': toTwitchImageUrl(emote.id, 'default', '3.0'),
-    },
-    static: {
-      '2x': toTwitchImageUrl(emote.id, 'static', '2.0'),
-      '4x': toTwitchImageUrl(emote.id, 'static', '3.0'),
-    },
-  });
+  return {
+    ...buildSanitisedEmote({
+      id: emote.id,
+      name: emote.name,
+      site,
+      creator,
+      emoteLink: toTwitchImageUrl(emote.id),
+      originalName: emote.name,
+      animated: {
+        '2x': toTwitchImageUrl(emote.id, 'default', '2.0'),
+        '4x': toTwitchImageUrl(emote.id, 'default', '3.0'),
+      },
+      static: {
+        '2x': toTwitchImageUrl(emote.id, 'static', '2.0'),
+        '4x': toTwitchImageUrl(emote.id, 'static', '3.0'),
+      },
+    }),
+    owner_id: emote.owner_id,
+  };
 }
 
 export const twitchEmoteService = {

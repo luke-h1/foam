@@ -130,6 +130,11 @@ export type ChatLoadingState =
   | 'COMPLETED'
   | 'ERROR';
 
+export interface SubscriberChannelProfile {
+  name: string;
+  profileImageUrl: string;
+}
+
 export interface ChannelCacheType {
   emotes: SanitisedEmote[];
   badges: SanitisedBadgeSet[];
@@ -138,6 +143,12 @@ export interface ChannelCacheType {
   twitchGlobalEmotes: SanitisedEmote[];
   twitchSubscriberEmotes: SanitisedEmote[];
   twitchSubscriberEmotesUserId?: string;
+  /**
+   * Streamer display name + pfp for each unique owner_id found in
+   * twitchSubscriberEmotes; optional because persisted caches written
+   * before this field existed won't have it.
+   */
+  twitchSubscriberChannelProfiles?: Record<string, SubscriberChannelProfile>;
   sevenTvChannelEmotes: SanitisedEmote[];
   sevenTvGlobalEmotes: SanitisedEmote[];
   sevenTvPersonalEmotes: Record<string, SanitisedEmote[]>;
@@ -165,6 +176,7 @@ export const emptyEmoteData = {
   twitchGlobalEmotes: [],
   twitchSubscriberEmotes: [],
   twitchSubscriberEmotesUserId: undefined,
+  twitchSubscriberChannelProfiles: {},
   sevenTvChannelEmotes: [],
   sevenTvGlobalEmotes: [],
   sevenTvPersonalBadges: {},
