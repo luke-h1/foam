@@ -57,189 +57,21 @@ import { isLiquidGlassAvailable } from 'expo-glass-effect';
 
 import { useAccentColor } from '@app/context/AccentColorContext';
 import { colors } from '@app/styles/colors';
+import { RADIUS_VALUES, UIColor, UIRadius, UISize } from '@app/styles/ui';
+
 import {
-  getColorValue,
-  InputColorConfig,
-  RADIUS_VALUES,
-  UIColor,
-  UIRadius,
-  UISize,
-} from '@app/styles/ui';
+  getIosInputSubmitInvoker,
+  registerIosInputSubmitHandler,
+  unregisterIosInputSubmitHandler,
+} from './inputSubmitRegistry.ios';
+import {
+  generateVariantConfig,
+  generateVariantConfigFromBase,
+  type InputVariant,
+} from './inputVariants.ios';
 
-type InputVariant = 'outline' | 'soft' | 'subtle' | 'underline';
-
-const iosInputSubmitHandlers = new Map<string, () => void>();
-const iosInputSubmitInvokers = new Map<string, () => void>();
-
-function getIosInputSubmitInvoker(instanceId: string) {
-  const existingInvoker = iosInputSubmitInvokers.get(instanceId);
-  if (existingInvoker) {
-    return existingInvoker;
-  }
-
-  const invoker = () => {
-    iosInputSubmitHandlers.get(instanceId)?.();
-  };
-  iosInputSubmitInvokers.set(instanceId, invoker);
-  return invoker;
-}
 export type InputRef = TextFieldRef;
 export type InputSelection = { start: number; end: number };
-
-const generateVariantConfig = (
-  color: UIColor,
-  colorScheme: 'light' | 'dark',
-): Record<InputVariant, InputColorConfig> => {
-  const isDark = colorScheme === 'dark';
-
-  if (color === 'black') {
-    const bgColor = getColorValue('black', 50);
-    const borderColor = getColorValue('black', 50);
-    const placeholderColor = getColorValue('black', isDark ? 800 : 300);
-
-    return {
-      outline: {
-        backgroundColor: 'transparent',
-        borderColor,
-        textColor: getColorValue('black', 50),
-        placeholderColor,
-        borderWidth: 1,
-      },
-      soft: {
-        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
-        borderColor: 'transparent',
-        textColor: getColorValue('black', 50),
-        placeholderColor,
-        borderWidth: 0,
-      },
-      subtle: {
-        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
-        borderColor,
-        textColor: getColorValue('black', 50),
-        placeholderColor,
-        borderWidth: 1,
-      },
-      underline: {
-        backgroundColor: 'transparent',
-        borderColor,
-        textColor: getColorValue('black', 50),
-        placeholderColor,
-        borderWidth: 1,
-      },
-    };
-  }
-
-  if (color === 'white') {
-    const bgColor = getColorValue('white', 950);
-    const borderColor = getColorValue('white', 950);
-    const placeholderColor = getColorValue('white', isDark ? 800 : 300);
-
-    return {
-      outline: {
-        backgroundColor: 'transparent',
-        borderColor,
-        textColor: getColorValue('white', 950),
-        placeholderColor,
-        borderWidth: 1,
-      },
-      soft: {
-        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
-        borderColor: 'transparent',
-        textColor: getColorValue('white', 950),
-        placeholderColor,
-        borderWidth: 0,
-      },
-      subtle: {
-        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
-        borderColor,
-        textColor: getColorValue('white', 950),
-        placeholderColor,
-        borderWidth: 1,
-      },
-      underline: {
-        backgroundColor: 'transparent',
-        borderColor,
-        textColor: getColorValue('white', 950),
-        placeholderColor,
-        borderWidth: 1,
-      },
-    };
-  }
-
-  return {
-    outline: {
-      backgroundColor: 'transparent',
-      borderColor: getColorValue(color, isDark ? 500 : 600),
-      textColor: getColorValue(color, isDark ? 500 : 600),
-      placeholderColor: getColorValue(color, isDark ? 800 : 300),
-      borderWidth: 1,
-    },
-    soft: {
-      backgroundColor: `${getColorValue(color, isDark ? 500 : 600)}${
-        isDark ? '20' : '10'
-      }`,
-      borderColor: 'transparent',
-      textColor: getColorValue(color, isDark ? 500 : 600),
-      placeholderColor: getColorValue(color, isDark ? 800 : 300),
-      borderWidth: 0,
-    },
-    subtle: {
-      backgroundColor: `${getColorValue(color, isDark ? 500 : 600)}${
-        isDark ? '20' : '10'
-      }`,
-      borderColor: getColorValue(color, isDark ? 500 : 600),
-      textColor: getColorValue(color, isDark ? 500 : 600),
-      placeholderColor: getColorValue(color, isDark ? 800 : 300),
-      borderWidth: 1,
-    },
-    underline: {
-      backgroundColor: 'transparent',
-      borderColor: getColorValue(color, isDark ? 500 : 600),
-      textColor: getColorValue(color, isDark ? 500 : 600),
-      placeholderColor: getColorValue(color, isDark ? 800 : 300),
-      borderWidth: 1,
-    },
-  };
-};
-
-const generateVariantConfigFromBase = (
-  baseHex: string,
-  colorScheme: 'light' | 'dark',
-): Record<InputVariant, InputColorConfig> => {
-  const isDark = colorScheme === 'dark';
-  const placeholderColor = `${baseHex}${isDark ? '99' : '66'}`;
-
-  return {
-    outline: {
-      backgroundColor: 'transparent',
-      borderColor: baseHex,
-      textColor: baseHex,
-      placeholderColor,
-      borderWidth: 1,
-    },
-    soft: {
-      backgroundColor: `${baseHex}${isDark ? '20' : '10'}`,
-      borderColor: 'transparent',
-      textColor: baseHex,
-      placeholderColor,
-      borderWidth: 0,
-    },
-    subtle: {
-      backgroundColor: `${baseHex}${isDark ? '20' : '10'}`,
-      borderColor: baseHex,
-      textColor: baseHex,
-      placeholderColor,
-      borderWidth: 1,
-    },
-    underline: {
-      backgroundColor: 'transparent',
-      borderColor: baseHex,
-      textColor: baseHex,
-      placeholderColor,
-      borderWidth: 1,
-    },
-  };
-};
 
 export type ThemedInputProps = Omit<
   TextInputProps,
@@ -394,7 +226,7 @@ function useIosInputField({
 
   useLayoutEffect(() => {
     if (onSubmitEditing) {
-      iosInputSubmitHandlers.set(inputInstanceId, () => {
+      registerIosInputSubmitHandler(inputInstanceId, () => {
         const submittedText = nativeText.value;
         latestText.current = submittedText;
         onSubmitEditingRef.current?.(submittedText);
@@ -413,12 +245,11 @@ function useIosInputField({
         }
       });
     } else {
-      iosInputSubmitHandlers.delete(inputInstanceId);
+      unregisterIosInputSubmitHandler(inputInstanceId);
     }
 
     return () => {
-      iosInputSubmitHandlers.delete(inputInstanceId);
-      iosInputSubmitInvokers.delete(inputInstanceId);
+      unregisterIosInputSubmitHandler(inputInstanceId);
     };
   }, [inputInstanceId, nativeText, onSubmitEditing]);
 

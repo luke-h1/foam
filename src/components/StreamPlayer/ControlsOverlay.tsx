@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
   type SharedValue,
   useAnimatedStyle,
@@ -25,12 +25,10 @@ interface ControlsOverlayProps {
   opacity: SharedValue<number>;
   onBackPress?: () => void;
   onMutePress?: () => void;
-  onPipPress?: () => void;
   onPlayPausePress: () => void;
   onRefresh?: () => void;
   onSharePress?: () => void;
   paused: boolean;
-  showPip?: boolean;
   streamInfo?: StreamInfo;
 }
 
@@ -55,16 +53,13 @@ export function ControlsOverlay({
   opacity,
   onBackPress,
   onMutePress,
-  onPipPress,
   onPlayPausePress,
   onRefresh,
   onSharePress,
   paused,
-  showPip,
   streamInfo,
 }: ControlsOverlayProps) {
   const { t } = useTranslation(['stream', 'common']);
-  const showPipButton = showPip ?? Platform.OS === 'ios';
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isPortrait = windowHeight >= windowWidth;
@@ -268,18 +263,6 @@ export function ControlsOverlay({
                 size={18}
                 tintColor={theme.colorWhite}
               />
-            </Button>
-          </View>
-        )}
-
-        {showPipButton && onPipPress && (
-          <View style={styles.glassButton}>
-            <Button
-              label={t('pictureInPicture')}
-              style={styles.controlButton}
-              onPress={onPipPress}
-            >
-              <SymbolView name='pip' size={20} tintColor={theme.colorWhite} />
             </Button>
           </View>
         )}

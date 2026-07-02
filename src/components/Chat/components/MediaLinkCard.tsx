@@ -125,7 +125,10 @@ function MediaLinkCardComponent({
       <Pressable
         accessibilityRole='button'
         onPress={handlePress}
-        style={styles.inlineChip}
+        style={({ pressed }) => [
+          styles.inlineChip,
+          pressed && styles.inlineChipPressed,
+        ]}
       >
         {thumbnail ? (
           <Image
@@ -333,6 +336,9 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
     paddingHorizontal: 4,
     paddingVertical: 2,
+  },
+  inlineChipPressed: {
+    opacity: 0.7,
   },
   inlineThumbnail: {
     borderCurve: 'continuous',

@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { GestureDetector } from 'react-native-gesture-handler';
-import Animated from 'react-native-reanimated';
+import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
 
 import { BlurView } from 'expo-blur';
 import { SymbolView } from 'expo-symbols';
@@ -53,7 +53,11 @@ export const ChatInputSection = memo(
     return (
       <View style={styles.wrapper} testID='chat-input-bar'>
         {replyTo ? (
-          <View style={styles.replyShell}>
+          <Animated.View
+            entering={FadeInUp.duration(180)}
+            exiting={FadeOutDown.duration(140)}
+            style={styles.replyShell}
+          >
             <BlurView
               intensity={32}
               style={StyleSheet.absoluteFill}
@@ -92,7 +96,7 @@ export const ChatInputSection = memo(
             >
               <SymbolView tintColor={theme.colorWhite} name='xmark' size={16} />
             </PressableButton>
-          </View>
+          </Animated.View>
         ) : null}
 
         <GestureDetector gesture={composerGesture}>

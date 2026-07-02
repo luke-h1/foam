@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useMappingHelper } from '@shopify/flash-list';
 
@@ -132,17 +132,26 @@ export function useRichChatMessage<
   const compact = density === 'compact';
   const normalisedCurrentUsername =
     currentUsernameNormalized ?? normaliseUsername(currentUsername);
-  const effectiveHighlightedUserSet =
-    highlightedUserSet ??
-    new Set((highlightedUsers ?? []).map(normaliseUsername));
+  // Stable identities so the memoized span renderers can bail out when a row
+  // re-renders for reasons that don't change its body (highlight toggles,
+  // moderation updates).
+  const effectiveHighlightedUserSet = useMemo(
+    () =>
+      highlightedUserSet ??
+      new Set((highlightedUsers ?? []).map(normaliseUsername)),
+    [highlightedUserSet, highlightedUsers],
+  );
   const messageSenderKey = normaliseUsername(
     userstate.username || userstate.login || sender,
   );
   const isHighlightedSender =
     messageSenderKey.length > 0 &&
     effectiveHighlightedUserSet?.has(messageSenderKey);
-  const getPartKey = (part: ParsedPart, index: number) =>
-    getMappingKey(getPartIdentity(part, index), index);
+  const getPartKey = useCallback(
+    (part: ParsedPart, index: number) =>
+      getMappingKey(getPartIdentity(part, index), index),
+    [getMappingKey],
+  );
 
   const handleEmotePress = (part: EmotePressData) => {
     onEmotePress?.(part);
@@ -172,9 +181,9 @@ export function useRichChatMessage<
     [],
   );
 
-  const handleEmoteTouchStart = (part: EmotePressData) => {
+  const handleEmoteTouchStart = useCallback((part: EmotePressData) => {
     pressedEmotePartRef.current = part;
-  };
+  }, []);
 
   const closeEmoteActionSheet = () => {
     setSelectedEmoteAction(null);

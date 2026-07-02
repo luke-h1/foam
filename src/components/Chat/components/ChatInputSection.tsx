@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { GestureDetector } from 'react-native-gesture-handler';
-import Animated from 'react-native-reanimated';
+import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@app/components/Button/Button';
@@ -65,7 +65,11 @@ export const ChatInputSection = memo(
     return (
       <View style={styles.wrapper} testID='chat-input-bar'>
         {replyTo && (
-          <View style={styles.replyPreview}>
+          <Animated.View
+            entering={FadeInUp.duration(180)}
+            exiting={FadeOutDown.duration(140)}
+            style={styles.replyPreview}
+          >
             <View style={styles.replyIndicator} />
             <View style={styles.replyContent}>
               <View style={styles.replyLabelRow}>
@@ -104,7 +108,7 @@ export const ChatInputSection = memo(
                 tintColor={theme.colorGreyHoverAlpha}
               />
             </Button>
-          </View>
+          </Animated.View>
         )}
 
         <GestureDetector gesture={composerGesture}>

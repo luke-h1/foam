@@ -5,6 +5,7 @@ import { MediaLinkCard } from '@app/components/Chat/components/MediaLinkCard';
 import { StvEmoteEvent } from '@app/components/Chat/components/StvEmoteEvent';
 import { SubscriptionNotice } from '@app/components/Chat/components/usernotices/SubscriptionNotice';
 import { ViewerMileStoneNoticeComponent } from '@app/components/Chat/components/usernotices/ViewerMilestoneNotice';
+import { getChatColorStyle } from '@app/components/Chat/util/chatColorStyles';
 import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
 import { Text } from '@app/components/ui/Text/Text';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
@@ -193,7 +194,7 @@ export function useChatMessagePartRenderer({
               compact && styles.mentionCompact,
               getChatFontScaleStyle(fontScale, compact),
               isHighlightedMention && styles.mentionHighlighted,
-              { color: mentionColor },
+              getChatColorStyle(mentionColor),
               Boolean(moderationNotice) && styles.moderatedMessageText,
             ]}
           >

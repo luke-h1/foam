@@ -9,13 +9,13 @@ import {
   getSessionCacheString,
   setSessionCacheString,
 } from '@app/store/chat/actions/chatColorCaches';
+import { useIsHighlightedReplyTargetMessage } from '@app/store/chat/react/transientSelectors';
 import { useChatRowPreferences } from '@app/store/preferences/selectors';
 import { createRef } from '@app/test/createRef';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
 
 import { useChatRowRenderer } from '../useChatRowRenderer';
-import { useIsHighlightedReplyTargetMessage } from '../useChatTransientState';
 import {
   createChatMessage,
   createEmoteData,
@@ -89,7 +89,7 @@ jest.mock('@app/utils/chat/resolveMentionColor', () => ({
   resolveMentionColor: jest.fn(() => '#mention-color'),
 }));
 
-jest.mock('../useChatTransientState', () => ({
+jest.mock('@app/store/chat/react/transientSelectors', () => ({
   useIsHighlightedReplyTargetMessage: jest.fn(() => true),
 }));
 

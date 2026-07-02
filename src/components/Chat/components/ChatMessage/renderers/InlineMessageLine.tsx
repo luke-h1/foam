@@ -2,6 +2,7 @@ import { View } from 'react-native';
 import type { ReactNode } from 'react';
 
 import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
+import { getChatColorStyle } from '@app/components/Chat/util/chatColorStyles';
 import { Text } from '@app/components/ui/Text/Text';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
@@ -99,7 +100,7 @@ export function InlineMessageLine({
               compact ? styles.usernameTextCompact : styles.usernameText,
               fontScaleStyle,
               emoteLineStyle,
-              usernameColor ? { color: usernameColor } : null,
+              usernameColor ? getChatColorStyle(usernameColor) : null,
             ]}
           >
             {isAction ? `${username} ` : `${username}: `}

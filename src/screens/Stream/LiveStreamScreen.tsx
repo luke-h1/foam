@@ -1024,7 +1024,7 @@ const styles = StyleSheet.create({
   fullscreenChatControlButton: {
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.32)',
-    borderColor: 'rgba(255,255,255,0.10)',
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: StyleSheet.hairlineWidth,
@@ -1050,7 +1050,7 @@ const styles = StyleSheet.create({
   },
   videoUser: {
     color: theme.colorWhite,
-    fontSize: 16,
+    fontSize: theme.fontSize16,
     fontWeight: 'bold',
     marginTop: 20,
     textAlign: 'center',

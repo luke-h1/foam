@@ -72,6 +72,13 @@ export interface ChatMessageType<
   isSpecialNotice?: boolean;
   moderationNotice?: string;
   cachedSenderColor?: string;
+  /**
+   * Set on live PRIVMSGs at ingest: the body is still the single raw-text part
+   * and emote/badge resolution is deferred to commit (flush) time, so it only
+   * runs for messages that survive raid sampling. Stripped when the message is
+   * finalized for commit; the store never sees it.
+   */
+  pendingEmoteParse?: boolean;
   replyDisplayName: string;
   replyBody: string;
   parentColor?: string;

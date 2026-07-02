@@ -20,6 +20,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useScreenFocused } from '@app/hooks/useScreenFocused';
 import { theme } from '@app/styles/themes';
 
+import { SHIMMER_GRADIENT_COLORS } from './shimmerGradient';
+
 interface SkeletonProps {
   shimmer?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -79,11 +81,7 @@ function SkeletonShimmer({ containerWidth }: { containerWidth: number }) {
   return (
     <Animated.View pointerEvents='none' style={[styles.shimmer, animatedStyle]}>
       <LinearGradient
-        colors={[
-          'rgba(255,255,255,0)',
-          'rgba(255,255,255,0.18)',
-          'rgba(255,255,255,0)',
-        ]}
+        colors={SHIMMER_GRADIENT_COLORS}
         locations={[0, 0.5, 1]}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}

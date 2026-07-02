@@ -515,7 +515,6 @@ export const StreamPlayer = memo(function StreamPlayer({
           opacity={controlsOpacity}
           onBackPress={onBackPress}
           onMutePress={handleMutePress}
-          onPipPress={() => {}}
           onPlayPausePress={handlePlayPause}
           onRefresh={onRefresh ? handleRefresh : undefined}
           onSharePress={onSharePress}

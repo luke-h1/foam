@@ -4,6 +4,7 @@ import { CharityDonationNotice } from '@app/components/Chat/components/usernotic
 import { RitualNotice } from '@app/components/Chat/components/usernotices/RitualNotice';
 import { SubscriptionNotice } from '@app/components/Chat/components/usernotices/SubscriptionNotice';
 import { ViewerMileStoneNoticeComponent } from '@app/components/Chat/components/usernotices/ViewerMilestoneNotice';
+import { getChatColorStyle } from '@app/components/Chat/util/chatColorStyles';
 import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
 import { Text } from '@app/components/ui/Text/Text';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
@@ -77,7 +78,7 @@ export function ChatMessagePart({
           style={[
             styles.messageText,
             compact && styles.messageTextCompact,
-            textColor ? { color: textColor } : null,
+            textColor ? getChatColorStyle(textColor) : null,
             Boolean(moderationNotice) && styles.moderatedMessageText,
           ]}
         >
@@ -201,7 +202,7 @@ export function ChatMessagePart({
             styles.mention,
             compact && styles.mentionCompact,
             isHighlightedMention && styles.mentionHighlighted,
-            { color: mentionColor },
+            getChatColorStyle(mentionColor),
             Boolean(moderationNotice) && styles.moderatedMessageText,
           ]}
         >

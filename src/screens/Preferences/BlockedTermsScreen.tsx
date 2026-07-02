@@ -53,7 +53,10 @@ function TermRow({
         {
           text: t('remove'),
           style: 'destructive',
-          onPress: () => onRemove(term),
+          onPress: () => {
+            void impact('medium');
+            onRemove(term);
+          },
         },
       ],
     );
@@ -277,7 +280,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Color.zinc[800],
     borderCurve: 'continuous',
-    borderRadius: 18,
+    borderRadius: theme.borderRadius18,
     height: 36,
     justifyContent: 'center',
     width: 36,
@@ -315,7 +318,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     color: theme.colorWhite,
     flex: 1,
-    fontSize: 16,
+    fontSize: theme.fontSize16,
     height: 44,
     paddingHorizontal: theme.space16,
   },
@@ -349,7 +352,7 @@ const styles = StyleSheet.create({
   termText: {
     color: theme.colorWhite,
     flex: 1,
-    fontSize: 15,
+    fontSize: theme.fontSize14,
     lineHeight: 20,
     minWidth: 0,
   },

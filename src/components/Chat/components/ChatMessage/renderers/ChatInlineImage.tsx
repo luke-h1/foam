@@ -219,7 +219,13 @@ function ChatInlineImageComponent({
   );
 
   const rowVisibility = use(RowVisibilityContext);
-  const animated = sharedRef?.isAnimated === true;
+  // Prefer the kind encoded in the url over the ref's native isAnimated getter:
+  // that getter is a JSI hop per render, and only BTTV's bare url form actually
+  // needs it.
+  const urlKind = useMemo(() => describeEmoteUrl(sourceUrl).kind, [sourceUrl]);
+  const animated =
+    sharedRef != null &&
+    (urlKind === null ? sharedRef.isAnimated === true : urlKind === 'animated');
   const imageRef = useRef<ExpoImage>(null);
   useEffect(() => {
     if (!rowVisibility || !animated) {

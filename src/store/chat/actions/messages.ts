@@ -1,3 +1,5 @@
+import { batch } from '@legendapp/state';
+
 import { getPreferences } from '@app/store/preferenceStore';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
@@ -807,6 +809,17 @@ export const clearMessages = () => {
   clearMessageColorIndexes();
   clearMentionLoginIndex();
   chatStore$.messages.set([]);
+};
+
+/**
+ * Clears the window and appends the "chat was cleared" notice in one batch so
+ * observers never see the empty intermediate state.
+ */
+export const clearMessagesWithNotice = (notice: AnyChatMessageType) => {
+  batch(() => {
+    clearMessages();
+    addMessage(notice);
+  });
 };
 
 export const restoreRecentMessagesForChannel = (channelId: string): number => {

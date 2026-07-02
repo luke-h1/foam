@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { Linking } from 'react-native';
 
 import * as QuickActions from 'expo-quick-actions';
@@ -8,6 +8,7 @@ import { router, usePathname } from 'expo-router';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useClearExpiredStorageItems } from '@app/hooks/useClearExpiredStorageItems';
 import { useIcloudPreferenceSync } from '@app/hooks/useIcloudPreferenceSync';
+import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useOnAppStateChange } from '@app/hooks/useOnAppStateChange';
 import { useOnReconnect } from '@app/hooks/useOnReconnect';
 import { usePopulateAuth } from '@app/hooks/usePopulateAuth';
@@ -135,8 +136,8 @@ export function RouterEffects() {
   }, [authState?.isLoggedIn, ready]);
 
   const loginWithTwitchRef = useSyncRef(loginWithTwitch);
-  const handledAuthUrlsRef = useRef<Set<string>>(new Set());
-  const pendingAuthUrlsRef = useRef<Set<string>>(new Set());
+  const handledAuthUrlsRef = useLazyRef(() => new Set<string>());
+  const pendingAuthUrlsRef = useLazyRef(() => new Set<string>());
 
   useEffect(() => {
     const handledAuthUrls = handledAuthUrlsRef.current;
@@ -194,7 +195,7 @@ export function RouterEffects() {
       }
       linkingSubscription.remove();
     };
-  }, [loginWithTwitchRef]);
+  }, [handledAuthUrlsRef, loginWithTwitchRef, pendingAuthUrlsRef]);
 
   return null;
 }

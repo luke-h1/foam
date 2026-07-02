@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.color.border.dark,
     borderBottomWidth: 1,
     marginBottom: theme.space12,
-    marginHorizontal: theme.space20,
+    marginHorizontal: theme.space16,
     minHeight: theme.space12,
   },
   headerEyebrow: {
@@ -274,8 +274,8 @@ const styles = StyleSheet.create({
   },
   layoutToggleRow: {
     alignItems: 'flex-end',
-    marginBottom: theme.space20,
-    marginHorizontal: theme.space20,
+    marginBottom: theme.space8,
+    marginHorizontal: theme.space16,
   },
   stateContainer: {
     alignItems: 'center',

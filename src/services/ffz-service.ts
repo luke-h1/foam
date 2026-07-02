@@ -7,10 +7,10 @@ import type {
   FfzGlobalEmotesResponse,
 } from '@app/types/ffz/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { logger } from '@app/utils/logger';
 
 import { ffzApi } from './api/clients';
+import { buildSanitisedEmote } from './emote-provider';
 
 interface FFzErrorResponse {
   status: number;
@@ -41,21 +41,17 @@ function sanitiseFfzEmote(
         '4x': toFfzAnimatedUrl(emote.id, '4x'),
       }
     : staticVariants;
-  const imageVariants = createEmoteImageVariants({
-    animated: animatedVariants,
-    static: staticVariants,
-  });
 
   return {
-    name: emote.name,
-    id: emote.id.toString(),
-    url: animatedVariants['4x'],
-    static_url: staticVariants['4x'],
-    image_variants: imageVariants,
-    emote_link: `https://www.frankerfacez.com/emoticon/${emote.id}`,
-    creator,
-    site,
-    original_name: 'UNKNOWN',
+    ...buildSanitisedEmote({
+      id: emote.id.toString(),
+      name: emote.name,
+      site,
+      creator,
+      emoteLink: `https://www.frankerfacez.com/emoticon/${emote.id}`,
+      animated: animatedVariants,
+      static: staticVariants,
+    }),
     width: emote.width,
     height: emote.height,
     aspect_ratio: emote.height > 0 ? emote.width / emote.height : 1,

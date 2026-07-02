@@ -86,6 +86,7 @@ export function init() {
     hasDsn && (!__DEV__ || process.env.EXPO_PUBLIC_ENABLE_SENTRY === 'true');
 
   const debug = process.env.EXPO_PUBLIC_SENTRY_DEBUG === 'true';
+  const isProduction = appVariant === 'production';
 
   sentryStatus = {
     enabled,
@@ -126,10 +127,19 @@ export function init() {
     },
     ignoreErrors: ['Network request failed'],
     sampleRate: 1.0,
-    tracesSampleRate: 1.0,
+    /**
+     * Session replay records and encodes screenshots continuously and 100%
+     * tracing keeps span bookkeeping on every interaction; together they showed
+     * up in production JS-thread profiles as the base64/envelope encoders
+     * (~580s cumulative over 14 days). Production keeps errors at 100% but
+     * samples the always-on instruments down; internal/testflight/preview stay
+     * at 100% for full visibility. profilesSampleRate is relative to
+     * tracesSampleRate, so profiles still cover every sampled trace.
+     */
+    tracesSampleRate: isProduction ? 0.15 : 1.0,
     profilesSampleRate: 1.0,
     enableAutoPerformanceTracing: true,
-    replaysSessionSampleRate: 1.0,
+    replaysSessionSampleRate: isProduction ? 0.05 : 1.0,
     replaysOnErrorSampleRate: 1.0,
     integrations: [
       navigationIntegration,

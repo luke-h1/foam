@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: theme.space16,
-    paddingHorizontal: theme.space20,
+    paddingHorizontal: theme.space16,
     paddingVertical: theme.space8,
   },
   container: {
@@ -591,12 +591,12 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   header: {
-    paddingHorizontal: theme.space20,
+    paddingHorizontal: theme.space16,
     paddingBottom: theme.space12,
     paddingTop: theme.space4,
   },
   quickActionChip: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: theme.colorSurfaceAlpha,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     paddingHorizontal: theme.space16,
@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
   },
   resultItem: {
     flexDirection: 'row',
-    paddingHorizontal: theme.space20,
+    paddingHorizontal: theme.space16,
     paddingVertical: theme.space8,
   },
   resultsList: {

@@ -1,16 +1,20 @@
 import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 
 import { LiveBadge } from '@app/components/LiveBadge/LiveBadge';
 import { Text } from '@app/components/ui/Text/Text';
+import { impact } from '@app/lib/haptics';
 import { userQueryOptions } from '@app/lib/react-query/queries/twitch';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { Color } from '@app/styles/pallete';
 import { theme } from '@app/styles/themes';
 import type { TwitchStream } from '@app/types/twitch/stream';
+import { showActionMenu } from '@app/utils/actionMenu/showActionMenu';
+import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 import { elapsedStreamTime } from '@app/utils/string/elapsedStreamTime';
 import {
   formatViewCount,
@@ -36,8 +40,6 @@ const LANGUAGE_NAMES: Record<string, string> = {
   pt: 'Portuguese',
 };
 
-const TITLE_COLOR = 'rgba(244,244,245,0.86)';
-
 // Dedupe rapid double-taps that would push the same route twice (two stacked screens).
 const NAV_DEDUPE_MS = 1000;
 let lastNavPath = '';
@@ -54,6 +56,7 @@ function pushRouteOnce(path: string) {
 }
 
 function LiveStreamCard({ stream, layout = 'compact' }: Props) {
+  const { t } = useTranslation('common');
   const queryClient = useQueryClient();
   const thumbnailUrl = stream.thumbnail_url
     .replace('{width}', '1920')
@@ -95,6 +98,31 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
     pushRouteOnce(`/category/${stream.game_id}`);
   }, [stream.game_id]);
 
+  const handleLongPress = useCallback(() => {
+    void impact('medium');
+    showActionMenu({
+      title: stream.user_name,
+      actions: [
+        {
+          label: t('viewProfile'),
+          onPress: () =>
+            pushRouteOnce(`/streams/streamer-profile/${stream.user_login}`),
+        },
+        {
+          label: t('shareChannel'),
+          onPress: () => {
+            void shareDeepLink({
+              kind: 'liveStream',
+              login: stream.user_login,
+              displayName: stream.user_name,
+            });
+          },
+        },
+      ],
+      cancelLabel: t('cancel'),
+    });
+  }, [stream.user_login, stream.user_name, t]);
+
   const cardAccessibilityLabel = `${stream.user_name}, live, ${
     stream.game_name
   }, ${formatViewCount(stream.viewer_count)} watching, ${stream.title}`;
@@ -104,6 +132,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
       <Button
         onPress={handleStreamPress}
         onPressIn={handleStreamPressIn}
+        onLongPress={handleLongPress}
         label={cardAccessibilityLabel}
         style={styles.mediaCardWrapper}
       >
@@ -199,6 +228,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
     <Button
       onPress={handleStreamPress}
       onPressIn={handleStreamPressIn}
+      onLongPress={handleLongPress}
       label={cardAccessibilityLabel}
       style={styles.cardWrapper}
     >
@@ -309,7 +339,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   categoryText: {
-    color: Color.zinc[400],
+    color: Color.zinc[300],
     lineHeight: 16,
   },
   container: {
@@ -368,7 +398,7 @@ const styles = StyleSheet.create({
     top: theme.space12,
   },
   liveText: {
-    color: Color.zinc[400],
+    color: Color.zinc[300],
   },
   compactLiveBadge: {
     left: 6,
@@ -379,7 +409,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   mediaCategory: {
-    color: Color.zinc[400],
+    color: Color.zinc[300],
     lineHeight: 20,
   },
   mediaContainer: {
@@ -417,7 +447,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   mediaTitle: {
-    color: TITLE_COLOR,
+    color: Color.zinc[100],
     lineHeight: 19,
   },
   mediaUsername: {
@@ -436,7 +466,7 @@ const styles = StyleSheet.create({
     marginTop: theme.space4,
   },
   title: {
-    color: TITLE_COLOR,
+    color: Color.zinc[100],
     lineHeight: 19,
   },
   username: {
@@ -448,7 +478,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   viewersText: {
-    color: Color.zinc[400],
+    color: Color.zinc[300],
     flexShrink: 1,
   },
   viewerBadge: {

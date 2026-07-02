@@ -1,11 +1,15 @@
 import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { router } from 'expo-router';
 
 import { Text } from '@app/components/ui/Text/Text';
+import { impact } from '@app/lib/haptics';
 import { theme } from '@app/styles/themes';
 import type { Category } from '@app/types/twitch/category';
+import { showActionMenu } from '@app/utils/actionMenu/showActionMenu';
+import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 
 import { Button } from '../Button/Button';
 import { Image } from '../Image/Image';
@@ -27,9 +31,30 @@ export const CATEGORY_CARD_HEIGHT =
   IMAGE_HEIGHT + theme.space12 + TITLE_HEIGHT + theme.space16;
 
 export function CategoryCard({ category }: Props) {
+  const { t } = useTranslation('common');
   const handlePress = useCallback(() => {
     router.push(`/category/${category.id}`);
   }, [category.id]);
+
+  const handleLongPress = useCallback(() => {
+    void impact('medium');
+    showActionMenu({
+      title: category.name,
+      actions: [
+        {
+          label: t('shareCategory'),
+          onPress: () => {
+            void shareDeepLink({
+              kind: 'category',
+              id: category.id,
+              name: category.name,
+            });
+          },
+        },
+      ],
+      cancelLabel: t('cancel'),
+    });
+  }, [category.id, category.name, t]);
 
   if (!category?.id) {
     return null;
@@ -39,6 +64,7 @@ export function CategoryCard({ category }: Props) {
     <Button
       label={`${category.name} category`}
       onPress={handlePress}
+      onLongPress={handleLongPress}
       style={styles.container}
     >
       <View style={styles.wrapper}>

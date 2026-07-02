@@ -71,18 +71,16 @@ export function useChatMessageProcessing({
   visibleCosmeticUsersRef,
   visiblePersonalEmoteUsersRef,
 }: UseChatMessageProcessingOptions) {
-  const processMessageEmotes = useCallback(
+  const composeMessageWithEmotes = useCallback(
     (
       text: string,
       userstate: ReturnType<typeof createUserStateFromTags>,
       baseMessage: AnyChatMessageType,
       userId?: string,
-      countUnread = true,
-    ) => {
+    ): AnyChatMessageType => {
       const emoteData = getCurrentEmoteData(channelId);
       if (!emoteData) {
-        handleNewMessage(baseMessage, { countUnread });
-        return;
+        return baseMessage;
       }
 
       const hasEmotes =
@@ -98,8 +96,7 @@ export function useChatMessageProcessing({
         emoteData.ffzChannelEmotes.length > 0;
 
       if (!hasEmotes) {
-        handleNewMessage(baseMessage, { countUnread });
-        return;
+        return baseMessage;
       }
 
       try {
@@ -121,15 +118,6 @@ export function useChatMessageProcessing({
           sourceBadge: cachedSharedBadgeContext?.sourceBadge,
           sourceChannelBadges: cachedSharedBadgeContext?.sourceChannelBadges,
         });
-
-        handleNewMessage(
-          {
-            ...baseMessage,
-            message: replacedMessage,
-            badges,
-          },
-          { countUnread },
-        );
 
         if (cachedSharedBadgeContext?.isComplete === false) {
           void getSharedChatBadgeContext(userstate)
@@ -153,12 +141,67 @@ export function useChatMessageProcessing({
               logger.chat.debug('Failed to update shared chat badges:', error);
             });
         }
+
+        return {
+          ...baseMessage,
+          message: replacedMessage,
+          badges,
+        };
       } catch (error) {
         logger.chat.error('Error processing emotes:', error);
-        handleNewMessage(baseMessage, { countUnread });
+        return baseMessage;
       }
     },
-    [channelId, handleNewMessage, show7TvEmotes, userLogin],
+    [channelId, show7TvEmotes, userLogin],
+  );
+
+  const processMessageEmotes = useCallback(
+    (
+      text: string,
+      userstate: ReturnType<typeof createUserStateFromTags>,
+      baseMessage: AnyChatMessageType,
+      userId?: string,
+      countUnread = true,
+    ) => {
+      handleNewMessage(
+        composeMessageWithEmotes(text, userstate, baseMessage, userId),
+        { countUnread },
+      );
+    },
+    [composeMessageWithEmotes, handleNewMessage],
+  );
+
+  /**
+   * Live-path ingest: buffers the raw-text base message immediately and leaves
+   * emote/badge resolution to finalizeBufferedMessage at commit time, so raid
+   * messages that raid sampling drops never pay for a parse.
+   */
+  const enqueueLiveChatMessage = useCallback(
+    (baseMessage: AnyChatMessageType, countUnread = true) => {
+      handleNewMessage(
+        { ...baseMessage, pendingEmoteParse: true },
+        { countUnread },
+      );
+    },
+    [handleNewMessage],
+  );
+
+  const finalizeBufferedMessage = useCallback(
+    (message: AnyChatMessageType): AnyChatMessageType => {
+      if (!message.pendingEmoteParse) {
+        return message;
+      }
+      const base = { ...message };
+      delete base.pendingEmoteParse;
+      const text = replaceEmotesWithText(base.message).trimEnd();
+      return composeMessageWithEmotes(
+        text,
+        base.userstate,
+        base,
+        base.userstate['user-id'],
+      );
+    },
+    [composeMessageWithEmotes],
   );
 
   const reprocessVisibleMessageFromCache = useCallback(
@@ -280,6 +323,8 @@ export function useChatMessageProcessing({
   }, [messages$, processMessageEmotes]);
 
   return {
+    enqueueLiveChatMessage,
+    finalizeBufferedMessage,
     processMessageEmotes,
     reprocessAllMessages,
     handleViewableMessagesChange,

@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   },
   segmentBar: {
     backgroundColor: theme.color.background.dark,
-    paddingHorizontal: theme.space20,
+    paddingHorizontal: theme.space16,
   },
   tabViewWrapper: {
     flex: 1,

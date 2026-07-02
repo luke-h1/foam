@@ -7,18 +7,16 @@ import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
 import { countMetric } from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 
+import {
+  createStabilityRecovery,
+  type StabilityRecovery,
+} from './stabilityRecovery';
 import type {
   PlayerMessage,
   PlayerState,
   PlayerStatusState,
   StreamPlayerRef,
 } from './types';
-
-const STALL_RECOVERY_GRACE_MS = 4_000;
-const AUTO_REFRESH_WINDOW_MS = 120_000;
-const MAX_AUTO_REFRESHES_PER_WINDOW = 3;
-const HIGH_LATENCY_RECOVERY_S = 20;
-const HIGH_LATENCY_READINGS_BEFORE_RECOVERY = 3;
 
 interface UsePlayerBridgeOptions {
   autoplay: boolean;
@@ -99,12 +97,37 @@ export function usePlayerBridge({
   }
   const reportedFirstPlayingRef = useRef(false);
   const reportedPlaybackBlockedRef = useRef(false);
-  const stallRecoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-  const autoRefreshTimesRef = useRef<number[]>([]);
-  const highLatencyReadingsRef = useRef(0);
-  const stabilityGaveUpRef = useRef(false);
+  const channelRef = useSyncRef(channel);
+  const forceRefreshRef = useSyncRef(forceRefresh);
+  const stabilityRef = useRef<StabilityRecovery | null>(null);
+  if (stabilityRef.current === null) {
+    stabilityRef.current = createStabilityRecovery({
+      onRefresh: (reason, attempt) => {
+        countMetric('stream.stability_refresh', {
+          channel: channelRef.current ?? 'unknown',
+          reason,
+        });
+        logger.main.info(`enhanced stability refresh (${reason})`, {
+          name: 'twitch_player_info',
+          channel: channelRef.current,
+          reason,
+          attempt,
+        });
+        forceRefreshRef.current();
+      },
+      onGiveUp: (reason, refreshCount) => {
+        logger.main.warn(
+          `enhanced stability gave up after ${refreshCount} refreshes`,
+          {
+            name: 'twitch_player_warning',
+            channel: channelRef.current,
+            reason,
+          },
+        );
+      },
+    });
+  }
+  const stability = stabilityRef.current;
   const [prevPlayerSource, setPrevPlayerSource] = useState({
     autoplay,
     sourceKey,
@@ -122,13 +145,7 @@ export function usePlayerBridge({
     playerMountedAtRef.current = Date.now();
     reportedFirstPlayingRef.current = false;
     reportedPlaybackBlockedRef.current = false;
-    if (stallRecoveryTimerRef.current) {
-      clearTimeout(stallRecoveryTimerRef.current);
-      stallRecoveryTimerRef.current = null;
-    }
-    highLatencyReadingsRef.current = 0;
-    autoRefreshTimesRef.current = [];
-    stabilityGaveUpRef.current = false;
+    stability.reset();
     setOverlayUnlocked(false);
     userPausedRef.current = !autoplay;
     setPlayerStatus({
@@ -146,48 +163,11 @@ export function usePlayerBridge({
 
   useUnmountCallback(clearTransientPauseResume);
 
-  const clearStallRecoveryTimer = useCallback(() => {
-    if (stallRecoveryTimerRef.current) {
-      clearTimeout(stallRecoveryTimerRef.current);
-      stallRecoveryTimerRef.current = null;
-    }
+  const disposeStability = useCallback(() => {
+    stabilityRef.current?.dispose();
   }, []);
 
-  useUnmountCallback(clearStallRecoveryTimer);
-
-  const requestStabilityRefresh = (reason: string) => {
-    const now = Date.now();
-    const recent = autoRefreshTimesRef.current.filter(
-      timestamp => now - timestamp < AUTO_REFRESH_WINDOW_MS,
-    );
-    autoRefreshTimesRef.current = recent;
-
-    if (recent.length >= MAX_AUTO_REFRESHES_PER_WINDOW) {
-      highLatencyReadingsRef.current = 0;
-      if (!stabilityGaveUpRef.current) {
-        stabilityGaveUpRef.current = true;
-        logger.main.warn(
-          `enhanced stability gave up after ${recent.length} refreshes`,
-          { name: 'twitch_player_warning', channel, reason },
-        );
-      }
-      return;
-    }
-
-    recent.push(now);
-    highLatencyReadingsRef.current = 0;
-    countMetric('stream.stability_refresh', {
-      channel: channel ?? 'unknown',
-      reason,
-    });
-    logger.main.info(`enhanced stability refresh (${reason})`, {
-      name: 'twitch_player_info',
-      channel,
-      reason,
-      attempt: recent.length,
-    });
-    forceRefresh();
-  };
+  useUnmountCallback(disposeStability);
 
   const onContentGateChangeRef = useSyncRef(onContentGateChange);
   const notifyContentGateChange = (nextHasContentGate: boolean) => {
@@ -423,8 +403,7 @@ export function usePlayerBridge({
             clearTimeout(transientPauseResumeTimeoutRef.current);
             transientPauseResumeTimeoutRef.current = null;
           }
-          clearStallRecoveryTimer();
-          highLatencyReadingsRef.current = 0;
+          stability.notePlaying();
           if (!reportedFirstPlayingRef.current) {
             reportedFirstPlayingRef.current = true;
             countMetric('stream.playing', {
@@ -554,16 +533,12 @@ export function usePlayerBridge({
               elapsedMs: Date.now() - playerMountedAtRef.current,
             },
           );
-          if (enhancedStabilityEnabled && !stallRecoveryTimerRef.current) {
-            stallRecoveryTimerRef.current = setTimeout(() => {
-              stallRecoveryTimerRef.current = null;
-              requestStabilityRefresh('stall');
-            }, STALL_RECOVERY_GRACE_MS);
+          if (enhancedStabilityEnabled) {
+            stability.noteStalled();
           }
           break;
         case 'playbackRecovered':
-          clearStallRecoveryTimer();
-          highLatencyReadingsRef.current = 0;
+          stability.noteRecovered();
           countMetric('stream.playback_recovered', {
             channel: channel ?? 'unknown',
           });
@@ -586,8 +561,7 @@ export function usePlayerBridge({
             },
           );
           if (enhancedStabilityEnabled) {
-            clearStallRecoveryTimer();
-            requestStabilityRefresh('videoElementError');
+            stability.noteVideoError();
           }
           break;
         case 'twitchAuthComplete':
@@ -613,17 +587,7 @@ export function usePlayerBridge({
             }
 
             if (enhancedStabilityEnabled) {
-              if (latency >= HIGH_LATENCY_RECOVERY_S) {
-                highLatencyReadingsRef.current += 1;
-                if (
-                  highLatencyReadingsRef.current >=
-                  HIGH_LATENCY_READINGS_BEFORE_RECOVERY
-                ) {
-                  requestStabilityRefresh('highLatency');
-                }
-              } else {
-                highLatencyReadingsRef.current = 0;
-              }
+              stability.noteLatency(latency);
             }
           }
           break;
