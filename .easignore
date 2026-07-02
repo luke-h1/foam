@@ -10,10 +10,17 @@ node_modules/
 dist/
 web-build/
 action-build
-player-website/
 build-artifacts/
 artifacts/
 docs/
+
+# sibling workspaces: exclude their payload but keep the package.json
+# manifests so bun install can still resolve the workspace globs on
+# remote EAS builds
+src/player-website/*
+!src/player-website/package.json
+src/local-proxy/*
+!src/local-proxy/package.json
 # Native
 *.orig.*
 *.jks
@@ -41,9 +48,9 @@ yarn-error.*
 *.tsbuildinfo
 
 !.env.example
-/ios
-/android
-modules/*/android/build
+/src/foam/ios
+/src/foam/android
+src/foam/modules/*/android/build
 
 # Turborepo
 .turbo

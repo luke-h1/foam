@@ -35,15 +35,6 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-/ios
-/android
-
-# expo modules
-!modules/**/android/
-!modules/**/android/**
-!modules/**/ios/
-!modules/**/ios/**
-
 # Turborepo
 .turbo
 
@@ -124,8 +115,6 @@ traces
 .env.local
 
 sentry.options.json
-
-app-store-review-guidance/twitch-developer-console-proof.png
 
 
 !.vscode/settings.json

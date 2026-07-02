@@ -12,6 +12,6 @@ ios
 dist
 generated
 bun.lock
-player-website/.astro
-player-website/dist
-src/graphql/generated
+src/player-website/.astro
+src/player-website/dist
+src/foam/src/graphql/generated

@@ -16,15 +16,17 @@ const path = require('path');
 const config = getSentryExpoConfig(__dirname, { includeWebReplay: false });
 
 const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const excludedRootDirs = ['player-website', 'build-artifacts'].map(
-  dir => new RegExp(`${escapeRegExp(path.resolve(__dirname, dir))}[/\\\\].*`),
-);
+const excludedDirs = [
+  path.resolve(__dirname, '../player-website'),
+  path.resolve(__dirname, 'build-artifacts'),
+  path.resolve(__dirname, '../../build-artifacts'),
+].map(dir => new RegExp(`${escapeRegExp(dir)}[/\\\\].*`));
 
 config.resolver.blockList = [
   ...(Array.isArray(config.resolver.blockList)
     ? config.resolver.blockList
     : [config.resolver.blockList].filter(Boolean)),
-  ...excludedRootDirs,
+  ...excludedDirs,
 ];
 
 // This helps support certain popular third-party libraries

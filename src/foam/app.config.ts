@@ -3,6 +3,12 @@ import type { AppIconBadgeConfig } from 'app-icon-badge/types';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+// resolved rather than referenced as a 'node_modules/...' string because bun
+// workspaces hoist the package to the monorepo root node_modules
+const sourceCodeProDir = path.dirname(
+  require.resolve('@expo-google-fonts/source-code-pro/package.json'),
+);
+
 interface AppVariantConfig {
   name: string;
   icon: string;
@@ -250,9 +256,9 @@ const config: ExpoConfig = {
       'expo-font',
       {
         fonts: [
-          'node_modules/@expo-google-fonts/source-code-pro/400Regular',
-          'node_modules/@expo-google-fonts/source-code-pro/600SemiBold',
-          'node_modules/@expo-google-fonts/source-code-pro/700Bold',
+          path.join(sourceCodeProDir, '400Regular'),
+          path.join(sourceCodeProDir, '600SemiBold'),
+          path.join(sourceCodeProDir, '700Bold'),
         ],
         android: {
           permissions: [
@@ -265,15 +271,24 @@ const config: ExpoConfig = {
               fontFamily: 'SourceCodePro',
               fontDefinitions: [
                 {
-                  path: 'node_modules/@expo-google-fonts/source-code-pro/400Regular/SourceCodePro_400Regular.ttf',
+                  path: path.join(
+                    sourceCodeProDir,
+                    '400Regular/SourceCodePro_400Regular.ttf',
+                  ),
                   weight: 400,
                 },
                 {
-                  path: 'node_modules/@expo-google-fonts/source-code-pro/600SemiBold/SourceCodePro_600SemiBold.ttf',
+                  path: path.join(
+                    sourceCodeProDir,
+                    '600SemiBold/SourceCodePro_600SemiBold.ttf',
+                  ),
                   weight: 600,
                 },
                 {
-                  path: 'node_modules/@expo-google-fonts/source-code-pro/700Bold/SourceCodePro_700Bold.ttf',
+                  path: path.join(
+                    sourceCodeProDir,
+                    '700Bold/SourceCodePro_700Bold.ttf',
+                  ),
                   weight: 700,
                 },
               ],
