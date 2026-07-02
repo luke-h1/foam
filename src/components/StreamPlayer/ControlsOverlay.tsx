@@ -28,7 +28,9 @@ interface ControlsOverlayProps {
   onPlayPausePress: () => void;
   onRefresh?: () => void;
   onSharePress?: () => void;
+  onSleepTimerPress?: () => void;
   paused: boolean;
+  sleepTimerActive?: boolean;
   streamInfo?: StreamInfo;
 }
 
@@ -56,7 +58,9 @@ export function ControlsOverlay({
   onPlayPausePress,
   onRefresh,
   onSharePress,
+  onSleepTimerPress,
   paused,
+  sleepTimerActive,
   streamInfo,
 }: ControlsOverlayProps) {
   const { t } = useTranslation(['stream', 'common']);
@@ -246,6 +250,24 @@ export function ControlsOverlay({
                 name='arrow.clockwise'
                 size={18}
                 tintColor={theme.colorWhite}
+              />
+            </Button>
+          </View>
+        )}
+
+        {onSleepTimerPress && (
+          <View style={styles.glassButton}>
+            <Button
+              label={t('sleepTimer')}
+              style={styles.controlButton}
+              onPress={onSleepTimerPress}
+            >
+              <SymbolView
+                name='moon.zzz'
+                size={18}
+                tintColor={
+                  sleepTimerActive ? theme.colorPrimary : theme.colorWhite
+                }
               />
             </Button>
           </View>

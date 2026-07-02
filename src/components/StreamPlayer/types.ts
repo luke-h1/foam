@@ -190,6 +190,14 @@ export interface StreamPlayerProps {
    */
   onSharePress?: () => void;
   /**
+   * Callback when the sleep timer button is pressed in the overlay controls.
+   */
+  onSleepTimerPress?: () => void;
+  /**
+   * Whether a sleep timer is currently counting down; tints the overlay button.
+   */
+  sleepTimerActive?: boolean;
+  /**
    * Optional callback when the user taps the video area (e.g. to toggle chat in landscape).
    */
   onVideoAreaPress?: () => void;

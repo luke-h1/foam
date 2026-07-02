@@ -60,6 +60,7 @@ const MAP: Record<string, AndroidSymbol> = {
   'megaphone.fill': 'campaign',
   message: 'chat',
   'minus.circle.fill': 'remove_circle',
+  'moon.zzz': 'bedtime',
   nosign: 'block',
   'paintbrush.fill': 'brush',
   person: 'person',

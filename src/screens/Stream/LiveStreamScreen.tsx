@@ -63,6 +63,8 @@ import {
   initialLiveStreamScreenState,
   liveStreamScreenReducer,
 } from './liveStreamScreenReducer';
+import { showSleepTimerMenu } from './showSleepTimerMenu';
+import { useSleepTimer } from './useSleepTimer';
 
 interface LiveStreamScreenProps {
   id: string;
@@ -119,6 +121,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       }
     }, 120);
   }, []);
+  const sleepTimer = useSleepTimer({ onExpire: handleBack });
+  const handleSleepTimerPress = useCallback(() => {
+    showSleepTimerMenu(sleepTimer);
+  }, [sleepTimer]);
   const wasPlayingBeforeBackgroundRef = useRef(false);
   const normalizedLogin = id.trim().toLowerCase();
   const disableChat = usePreference('disableChat');
@@ -793,6 +799,8 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             onPlaybackLatencyChange={handlePlaybackLatencyChange}
             onReady={handlePlayerLoaded}
             onSharePress={resolvedChannelLogin ? handleSharePress : undefined}
+            onSleepTimerPress={handleSleepTimerPress}
+            sleepTimerActive={sleepTimer.isActive}
             onVideoAreaPress={isLandscape ? cycleLandscapeChatMode : undefined}
             onVideoAreaSwipeDown={isLandscape ? handleExitLandscape : undefined}
             onWebViewLoaded={handlePlayerLoaded}

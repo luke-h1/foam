@@ -122,12 +122,14 @@ export const StreamPlayer = memo(function StreamPlayer({
   onReady,
   onRefresh,
   onSharePress,
+  onSleepTimerPress,
   onVideoAreaPress,
   onVideoAreaSwipeDown,
   onWebViewLoaded,
   parent = 'www.twitch.tv',
   posterUrl,
   showOverlayControls = false,
+  sleepTimerActive,
   streamInfo,
   video,
   width,
@@ -518,7 +520,9 @@ export const StreamPlayer = memo(function StreamPlayer({
           onPlayPausePress={handlePlayPause}
           onRefresh={onRefresh ? handleRefresh : undefined}
           onSharePress={onSharePress}
+          onSleepTimerPress={onSleepTimerPress}
           paused={playerState.isPaused}
+          sleepTimerActive={sleepTimerActive}
           streamInfo={streamInfo}
         />
       )}
