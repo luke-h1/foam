@@ -4,7 +4,7 @@ source ./scripts/sentry-upload.sh
 
 variant="${1:-}"
 platform="${2:-ios}"
-dotenv_bin="${DOTENV_BIN:-./node_modules/.bin/dotenv}"
+dotenv_bin="${DOTENV_BIN:-$(resolve_workspace_bin dotenv)}"
 
 validate_deploy_args() {
   local command_name="$1"

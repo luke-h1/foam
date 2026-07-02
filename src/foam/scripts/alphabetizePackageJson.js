@@ -1,7 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 
-const packageJsonPaths = ['package.json'];
+const packageJsonPaths = [
+  'package.json',
+  '../../package.json',
+  '../local-proxy/package.json',
+  '../player-website/package.json',
+];
 
 packageJsonPaths.forEach(packageJsonPath => {
   const fullPath = path.join(__dirname, '..', packageJsonPath);

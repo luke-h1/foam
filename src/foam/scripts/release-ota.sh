@@ -30,7 +30,7 @@ case "$platform" in
     ;;
 esac
 
-dotenv_bin="${DOTENV_BIN:-./node_modules/.bin/dotenv}"
+dotenv_bin="${DOTENV_BIN:-$(resolve_workspace_bin dotenv)}"
 
 if [ ! -x "$dotenv_bin" ]; then
   echo "Missing dotenv CLI at $dotenv_bin. Run bun install first."

@@ -2,6 +2,18 @@
 
 set -euo pipefail
 
+# bun workspaces hoist transitive bins to the monorepo root node_modules,
+# so fall back one workspace up when the local .bin doesn't have it
+resolve_workspace_bin() {
+  local name="$1"
+
+  if [ -x "./node_modules/.bin/$name" ]; then
+    printf '%s\n' "./node_modules/.bin/$name"
+  else
+    printf '%s\n' "../../node_modules/.bin/$name"
+  fi
+}
+
 sentry_uploads_disabled() {
   [ "${SENTRY_DISABLE_AUTO_UPLOAD:-}" = "true" ] || [ "${SENTRY_DISABLE_UPLOAD:-}" = "true" ]
 }
@@ -60,7 +72,7 @@ sentry_dist() {
 }
 
 sentry_cli_bin() {
-  local bin="${SENTRY_CLI_BIN:-./node_modules/.bin/sentry-cli}"
+  local bin="${SENTRY_CLI_BIN:-$(resolve_workspace_bin sentry-cli)}"
 
   if [ ! -x "$bin" ]; then
     echo "Missing Sentry CLI at $bin. Run bun install first." >&2
@@ -71,7 +83,7 @@ sentry_cli_bin() {
 }
 
 sentry_expo_upload_sourcemaps_bin() {
-  local bin="${SENTRY_EXPO_UPLOAD_SOURCEMAPS_BIN:-./node_modules/.bin/sentry-expo-upload-sourcemaps}"
+  local bin="${SENTRY_EXPO_UPLOAD_SOURCEMAPS_BIN:-$(resolve_workspace_bin sentry-expo-upload-sourcemaps)}"
 
   if [ ! -x "$bin" ]; then
     echo "Missing Sentry Expo sourcemap uploader at $bin. Run bun install first." >&2
