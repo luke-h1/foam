@@ -28,6 +28,9 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+    defaults:
+      run:
+        working-directory: src/foam
     steps:
       - name: 🔎 Check for EXPO_TOKEN
         run: |

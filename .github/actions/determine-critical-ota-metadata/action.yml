@@ -27,6 +27,7 @@ runs:
     - name: Determine critical OTA metadata
       id: metadata
       shell: bash
+      working-directory: src/foam
       env:
         INPUTS_CRITICAL_UPDATE: ${{ inputs.critical_update }}
         GITHUB_EVENT_HEAD_COMMIT_MESSAGE: ${{ inputs.head_commit_message }}

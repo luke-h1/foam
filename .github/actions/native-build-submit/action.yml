@@ -20,10 +20,12 @@ runs:
   steps:
     - name: Prepare build artifacts dir
       shell: bash
+      working-directory: src/foam
       run: mkdir -p build-artifacts
 
     - name: Build and submit
       shell: bash
+      working-directory: src/foam
       env:
         VARIANT: ${{ inputs.variant }}
         PLATFORM: ${{ inputs.platform }}
@@ -103,7 +105,7 @@ runs:
           fi
 
           if [ -n "${SENTRY_AUTH_TOKEN:-}" ] && [ "${#dsym_paths[@]}" -gt 0 ]; then
-            ./node_modules/.bin/sentry-cli debug-files upload \
+            bunx sentry-cli debug-files upload \
               --org "${SENTRY_ORG:-foam-tv}" \
               --project "${SENTRY_PROJECT:-foam-tv-mobile}" \
               --include-sources \

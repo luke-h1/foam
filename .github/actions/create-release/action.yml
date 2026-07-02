@@ -143,7 +143,7 @@ runs:
         # Variant tags for the same version often point at the same commits as
         # this release. Ignore them so git-cliff applies --tag instead of
         # reusing the existing tag's name (WARN: There is already a tag ...).
-        IGNORE_TAGS="$(bunx tsx scripts/workflows/variant-cli.ts ignore-tags --version "$INPUTS_VERSION" --variant "$INPUTS_VARIANT")"
+        IGNORE_TAGS="$(bunx tsx src/foam/scripts/workflows/variant-cli.ts ignore-tags --version "$INPUTS_VERSION" --variant "$INPUTS_VARIANT")"
 
         if [ -z "$PREVIOUS_TAG" ]; then
           RELEASE_NOTES="Initial release"
@@ -196,7 +196,7 @@ runs:
         INPUTS_VARIANT: ${{ inputs.variant }}
         INPUTS_DEPLOYMENT_TYPE: ${{ inputs.deployment_type }}
       run: |
-        VARIANT_LABEL="$(bunx tsx scripts/workflows/variant-cli.ts label --variant "$INPUTS_VARIANT")"
+        VARIANT_LABEL="$(bunx tsx src/foam/scripts/workflows/variant-cli.ts label --variant "$INPUTS_VARIANT")"
 
         DEPLOYMENT_LABEL="Native Build"
         if [ "$INPUTS_DEPLOYMENT_TYPE" = "ota" ]; then

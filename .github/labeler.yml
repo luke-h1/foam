@@ -1,15 +1,16 @@
 app:
-  - '**/src/*'
-  - '**/*.js'
-  - '**/*.ts'
-  - '**/*.tsx'
+  - 'src/foam/**'
+
+website:
+  - 'src/player-website/**'
+
+proxy:
+  - 'src/local-proxy/**'
 
 Infrastructure:
-  - '**/terraform/*'
-  - '**/terraform/**/*'
+  - 'infrastructure/**'
   - '.github/*'
   - '.github/**/*'
-  - 'docker'
 
 Documentation:
   - 'README.md'

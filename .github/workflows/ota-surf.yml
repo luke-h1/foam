@@ -90,7 +90,7 @@ jobs:
             --non-interactive
           comment: false
           comment-id: surf-pr-${{ steps.pr.outputs.number }}
-          working-directory: ${{ github.workspace }}
+          working-directory: ${{ github.workspace }}/src/foam
 
       - name: 💬 Comment surf QR on PR
         if: steps.pr.outputs.should_run == 'true'

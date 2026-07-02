@@ -67,13 +67,16 @@ jobs:
       - name: 📌 Get version from app.config.ts
         id: get_version
         run: |
-          VERSION=$(grep "const VERSION = " app.config.ts | sed "s/const VERSION = '//g" | sed "s/';//g" | tr -d ' ')
+          VERSION=$(grep "const VERSION = " src/foam/app.config.ts | sed "s/const VERSION = '//g" | sed "s/';//g" | tr -d ' ')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "📌 App Version: $VERSION"
 
   test:
     name: 🧪 Test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/foam
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -95,6 +98,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    defaults:
+      run:
+        working-directory: src/foam
     outputs:
       fingerprint-changed: ${{ steps.compare.outputs.changed }}
       ios-fingerprint: ${{ steps.fingerprint.outputs.ios }}
@@ -191,6 +197,9 @@ jobs:
     if: needs['detect-changes'].outputs['deploy-type'] == 'build'
     runs-on: foam
     concurrency: eas-build-${{ inputs.variant || 'production' }}-${{ inputs.platform || 'ios' }}
+    defaults:
+      run:
+        working-directory: src/foam
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -262,6 +271,9 @@ jobs:
     if: needs['detect-changes'].outputs['deploy-type'] == 'ota'
     runs-on: ubuntu-latest
     concurrency: eas-update-${{ inputs.variant || 'production' }}-${{ inputs.platform || 'ios' }}
+    defaults:
+      run:
+        working-directory: src/foam
     outputs:
       ios_update_id: ${{ steps.publish.outputs.ios_update_id }}
       android_update_id: ${{ steps.publish.outputs.android_update_id }}
@@ -394,6 +406,7 @@ jobs:
 
       - name: 🏷️ Determine release tag
         id: release_tag
+        working-directory: src/foam
         run: >
           bunx tsx scripts/workflows/deploy-ota-or-native.ts final-tag
           --deploy-type "${NEEDS_DETECT_CHANGES_OUTPUTS_DEPLOY_TYPE}"
@@ -461,6 +474,9 @@ jobs:
     needs: [release]
     if: always() && needs.release.result == 'success' && !inputs.dry_run
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/foam
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6

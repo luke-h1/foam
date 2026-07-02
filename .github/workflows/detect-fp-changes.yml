@@ -50,16 +50,24 @@ jobs:
 
           CHANGED_ANY="false"
 
+          # base commits from before the monorepo migration keep the app at the repo root
+          BASE_DIR=".__pr_base__"
+          if [ -d "$BASE_DIR/src/foam" ]; then
+            BASE_DIR="$BASE_DIR/src/foam"
+          fi
+
           for VARIANT in production testflight internal; do
             echo "=== Variant: $VARIANT ==="
             export EXPO_PUBLIC_APP_VARIANT="$VARIANT"
 
             echo "Computing HEAD fingerprints..."
+            pushd src/foam >/dev/null
             HEAD_IOS="$(bunx expo-updates fingerprint:generate --platform ios | jq -r '.hash')"
             HEAD_ANDROID="$(bunx expo-updates fingerprint:generate --platform android | jq -r '.hash')"
+            popd >/dev/null
 
             echo "Computing BASE fingerprints..."
-            pushd .__pr_base__ >/dev/null
+            pushd "$BASE_DIR" >/dev/null
             export EXPO_PUBLIC_APP_VARIANT="$VARIANT"
             BASE_IOS="$(bunx expo-updates fingerprint:generate --platform ios | jq -r '.hash')"
             BASE_ANDROID="$(bunx expo-updates fingerprint:generate --platform android | jq -r '.hash')"

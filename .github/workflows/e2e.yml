@@ -31,6 +31,7 @@ jobs:
 
       - name: 🔍 Calculate fingerprint
         id: fingerprint
+        working-directory: src/foam
         run: |
           HASH=$(npx expo-updates fingerprint:generate --platform ios 2>/dev/null | jq -r '.hash' || echo "unknown-$(date +%s)")
           echo "hash=$HASH" >> $GITHUB_OUTPUT
@@ -72,7 +73,7 @@ jobs:
 
       - name: 📄 Decode Google Services file
         run: |
-          echo "$GOOGLE_SERVICES_IOS_PROD_BS4" | base64 -d > GoogleService-Info-prod.plist
+          echo "$GOOGLE_SERVICES_IOS_PROD_BS4" | base64 -d > src/foam/GoogleService-Info-prod.plist
 
       - name: Λ Setup EAS
         uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e
@@ -82,8 +83,9 @@ jobs:
           packager: bun
 
       - name: 📱 Build E2E app
+        working-directory: src/foam
         run: |
-          eas build --profile e2e --platform ios --local --non-interactive --output=e2e-build.tar.gz
+          eas build --profile e2e --platform ios --local --non-interactive --output="$GITHUB_WORKSPACE/e2e-build.tar.gz"
         env:
           EXPO_PUBLIC_APP_VARIANT: e2e
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -146,6 +148,7 @@ jobs:
 
       - name: 📦 Push OTA update (JS changes only)
         if: needs.build.result == 'skipped'
+        working-directory: src/foam
         run: |
           echo "🚀 Pushing OTA update for JS changes..."
           eas update --channel e2e --message "E2E: ${E2E_UPDATE_MESSAGE}" --non-interactive || true
@@ -183,11 +186,13 @@ jobs:
           xcrun simctl install booted "$APP_PATH"
 
       - name: 🚀 Start mock server
+        working-directory: src/foam
         run: |
           bun run e2e:mock-server &
           sleep 3
 
       - name: 🧪 Run Maestro tests
+        working-directory: src/foam
         run: |
           bun run e2e:test
         env:

@@ -17,6 +17,7 @@ runs:
   steps:
     - name: Save fingerprints for next run
       shell: bash
+      working-directory: src/foam
       env:
         VARIANT: ${{ inputs.variant }}
         IOS_FINGERPRINT: ${{ inputs.ios_fingerprint }}

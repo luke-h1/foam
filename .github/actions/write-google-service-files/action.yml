@@ -11,6 +11,7 @@ runs:
   steps:
     - name: Decode and write Google service files
       shell: bash
+      working-directory: src/foam
       env:
         VARIANT: ${{ inputs.variant }}
       run: |

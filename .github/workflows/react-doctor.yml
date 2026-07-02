@@ -23,6 +23,7 @@ jobs:
         uses: millionco/react-doctor@b612664043a9be414166e3c6a69b355e39a8dcf4 # v1.1.1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          directory: src/foam
           diff: ${{ github.base_ref }}
           fail-on: error
           annotations: true
