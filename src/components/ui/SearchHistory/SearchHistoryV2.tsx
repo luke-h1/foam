@@ -15,6 +15,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
+import { impact } from '@app/lib/haptics';
 import { theme } from '@app/styles/themes';
 
 const SWIPE_THRESHOLD = -80;
@@ -39,6 +40,11 @@ function SwipeableHistoryItem({
   const itemHeight = useSharedValue(HISTORY_ROW_HEIGHT);
   const opacity = useSharedValue(1);
 
+  const handleDelete = useCallback(() => {
+    void impact('light');
+    onDelete();
+  }, [onDelete]);
+
   const composedGesture = useMemo(() => {
     const panGesture = Gesture.Pan()
       .activeOffsetX([-10, 10])
@@ -56,7 +62,7 @@ function SwipeableHistoryItem({
           opacity.set(
             withTiming(0, { duration: 200 }, finished => {
               if (finished) {
-                scheduleOnRN(onDelete);
+                scheduleOnRN(handleDelete);
               }
             }),
           );
@@ -97,7 +103,7 @@ function SwipeableHistoryItem({
     });
 
     return Gesture.Race(panGesture, tapGesture);
-  }, [translateX, itemHeight, opacity, onDelete, onSelect]);
+  }, [translateX, itemHeight, opacity, handleDelete, onSelect]);
 
   const animatedRowStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.get() }],
@@ -136,7 +142,7 @@ function SwipeableHistoryItem({
         {/* Delete action background */}
         <Animated.View style={[styles.deleteAction, animatedDeleteStyle]}>
           <PressableArea
-            onPress={onDelete}
+            onPress={handleDelete}
             style={styles.deleteActionButton}
             hitSlop={8}
           >
@@ -205,7 +211,10 @@ export function SearchHistoryV2({
       {
         text: t('common:clearAll'),
         style: 'destructive',
-        onPress: onClearAll,
+        onPress: () => {
+          void impact('medium');
+          onClearAll();
+        },
       },
     ]);
   }, [onClearAll, t]);

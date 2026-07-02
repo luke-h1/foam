@@ -217,9 +217,7 @@ function ffzEmote(
 function twitchEmote(
   id: string,
   site:
-    | 'Twitch Channel'
-    | 'Twitch Global'
-    | 'Twitch Subscriber' = 'Twitch Channel',
+    'Twitch Channel' | 'Twitch Global' | 'Twitch Subscriber' = 'Twitch Channel',
 ): TwitchSanitisedEmote {
   return {
     creator: null,

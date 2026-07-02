@@ -59,8 +59,7 @@ describe('TwitchWsService EventSub response handling', () => {
     ).toEqual([]);
     expect(mockCreateEventSubscription).toHaveBeenCalledTimes(1);
     const warningPayload = mockWarn.mock.calls[0]?.[1] as
-      | Record<string, unknown>
-      | undefined;
+      Record<string, unknown> | undefined;
     expect({
       action: warningPayload?.action,
       event_type: warningPayload?.event_type,

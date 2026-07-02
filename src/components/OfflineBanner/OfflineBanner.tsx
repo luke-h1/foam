@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, {
   useAnimatedStyle,
@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { onlineManager } from '@tanstack/react-query';
 
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
 const BANNER_HEIGHT = 32;
@@ -41,7 +42,9 @@ export function OfflineBanner() {
       style={[styles.wrapper, { paddingTop: insets.top }, animatedStyle]}
     >
       <View style={styles.banner}>
-        <Text style={styles.text}>{t('noInternetConnection')}</Text>
+        <Text type='xxs' weight='semibold' style={styles.text}>
+          {t('noInternetConnection')}
+        </Text>
       </View>
     </Animated.View>
   );
@@ -64,8 +67,6 @@ const styles = StyleSheet.create({
   },
   text: {
     color: theme.colorBlack,
-    fontSize: 12,
-    fontWeight: '600',
     letterSpacing: 0.2,
   },
 });

@@ -7,6 +7,10 @@ import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
 import { countMetric } from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 
+import {
+  createStabilityRecovery,
+  type StabilityRecovery,
+} from './stabilityRecovery';
 import type {
   PlayerMessage,
   PlayerState,
@@ -18,6 +22,7 @@ interface UsePlayerBridgeOptions {
   autoplay: boolean;
   channel?: string;
   deferOverlayUntilUserUnmute: boolean;
+  enhancedStabilityEnabled: boolean;
   forceRefresh: () => void;
   initialMuted: boolean;
   onContentGateChange?: (hasGate: boolean) => void;
@@ -40,6 +45,7 @@ export function usePlayerBridge({
   autoplay,
   channel,
   deferOverlayUntilUserUnmute,
+  enhancedStabilityEnabled,
   forceRefresh,
   initialMuted,
   onContentGateChange,
@@ -91,6 +97,37 @@ export function usePlayerBridge({
   }
   const reportedFirstPlayingRef = useRef(false);
   const reportedPlaybackBlockedRef = useRef(false);
+  const channelRef = useSyncRef(channel);
+  const forceRefreshRef = useSyncRef(forceRefresh);
+  const stabilityRef = useRef<StabilityRecovery | null>(null);
+  if (stabilityRef.current === null) {
+    stabilityRef.current = createStabilityRecovery({
+      onRefresh: (reason, attempt) => {
+        countMetric('stream.stability_refresh', {
+          channel: channelRef.current ?? 'unknown',
+          reason,
+        });
+        logger.main.info(`enhanced stability refresh (${reason})`, {
+          name: 'twitch_player_info',
+          channel: channelRef.current,
+          reason,
+          attempt,
+        });
+        forceRefreshRef.current();
+      },
+      onGiveUp: (reason, refreshCount) => {
+        logger.main.warn(
+          `enhanced stability gave up after ${refreshCount} refreshes`,
+          {
+            name: 'twitch_player_warning',
+            channel: channelRef.current,
+            reason,
+          },
+        );
+      },
+    });
+  }
+  const stability = stabilityRef.current;
   const [prevPlayerSource, setPrevPlayerSource] = useState({
     autoplay,
     sourceKey,
@@ -108,6 +145,7 @@ export function usePlayerBridge({
     playerMountedAtRef.current = Date.now();
     reportedFirstPlayingRef.current = false;
     reportedPlaybackBlockedRef.current = false;
+    stability.reset();
     setOverlayUnlocked(false);
     userPausedRef.current = !autoplay;
     setPlayerStatus({
@@ -124,6 +162,12 @@ export function usePlayerBridge({
   }, []);
 
   useUnmountCallback(clearTransientPauseResume);
+
+  const disposeStability = useCallback(() => {
+    stabilityRef.current?.dispose();
+  }, []);
+
+  useUnmountCallback(disposeStability);
 
   const onContentGateChangeRef = useSyncRef(onContentGateChange);
   const notifyContentGateChange = (nextHasContentGate: boolean) => {
@@ -359,6 +403,7 @@ export function usePlayerBridge({
             clearTimeout(transientPauseResumeTimeoutRef.current);
             transientPauseResumeTimeoutRef.current = null;
           }
+          stability.notePlaying();
           if (!reportedFirstPlayingRef.current) {
             reportedFirstPlayingRef.current = true;
             countMetric('stream.playing', {
@@ -488,8 +533,12 @@ export function usePlayerBridge({
               elapsedMs: Date.now() - playerMountedAtRef.current,
             },
           );
+          if (enhancedStabilityEnabled) {
+            stability.noteStalled();
+          }
           break;
         case 'playbackRecovered':
+          stability.noteRecovered();
           countMetric('stream.playback_recovered', {
             channel: channel ?? 'unknown',
           });
@@ -511,6 +560,9 @@ export function usePlayerBridge({
               elapsedMs: Date.now() - playerMountedAtRef.current,
             },
           );
+          if (enhancedStabilityEnabled) {
+            stability.noteVideoError();
+          }
           break;
         case 'twitchAuthComplete':
           scheduleAuthCompletionReload();
@@ -532,6 +584,10 @@ export function usePlayerBridge({
               lastPlaybackLatencySecondsRef.current = latency;
               setPlaybackLatencySeconds(latency);
               onPlaybackLatencyChange?.(latency);
+            }
+
+            if (enhancedStabilityEnabled) {
+              stability.noteLatency(latency);
             }
           }
           break;

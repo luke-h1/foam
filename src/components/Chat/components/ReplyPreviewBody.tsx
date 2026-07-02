@@ -34,7 +34,7 @@ function ReplyPreviewBodyComponent({
               source={part.url}
               cacheVariant='emote'
               contentFit='contain'
-              transition={0}
+              transition={100}
               style={styles.emote}
             />
           );

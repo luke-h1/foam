@@ -14,7 +14,10 @@ const en = {
     notAvailable: 'N/A',
     save: 'Save',
     share: 'Share',
+    shareCategory: 'Share category',
+    shareChannel: 'Share channel',
     signIn: 'Sign In',
+    viewProfile: 'View profile',
     tryAgain: 'Try again',
     requestFailed: 'Something went wrong. Try again.',
     refresh: 'Refresh',
@@ -425,6 +428,8 @@ const en = {
     failedToFetchTopCategories: 'Failed to fetch top categories',
     noCategoriesFound: 'No categories found',
     noTopStreamsFound: 'No Top Streams found',
+    switchToMediaLayout: 'Switch to media layout',
+    switchToCompactLayout: 'Switch to compact layout',
   },
 
   tabs: {
@@ -576,6 +581,13 @@ const en = {
       'Remove the Twitch WebView to isolate chat performance',
     disableChat: 'Disable Chat',
     disableChatDescription: 'Remove chat rendering to isolate the player',
+    featureFlags: 'Feature Flags',
+    sharedChat: 'Shared Chat',
+    sharedChatDescription:
+      'Show the source label and badge on messages relayed from another channel in a shared chat session',
+    enhancedVideoStability: 'Enhanced Video Stability',
+    enhancedVideoStabilityDescription:
+      'Automatically refresh the player to recover from silent stalls, video errors, and high latency',
     developerTools: 'Developer Tools',
     debug: 'Debug',
     debugDescription: 'Manual debug helpers and experiments',
@@ -736,6 +748,8 @@ const en = {
     noBlockedUsers: 'No blocked users',
     noBlockedUsersDescription:
       'Accounts you block on Twitch will appear here for quick review.',
+    blockedUsersFooter:
+      'Unblocking restores normal Twitch interactions for that account.',
   },
 
   auth: {

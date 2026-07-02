@@ -6,6 +6,7 @@ import { act, fireEvent, render } from '@testing-library/react-native';
 
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
+import { preferences$ } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
@@ -856,5 +857,37 @@ describe('RichChatMessage', () => {
     expect(getByTestId('chat-message')).toHaveStyle({
       borderLeftWidth: 2,
     });
+  });
+});
+
+describe('RichChatMessage shared chat gating', () => {
+  afterEach(() => {
+    preferences$.sharedChatEnabled.set(true);
+  });
+
+  test('shows the shared-chat source label when the flag is enabled', () => {
+    preferences$.sharedChatEnabled.set(true);
+    const message = createMockMessage(
+      [{ type: 'text', content: 'from another channel' }],
+      {},
+      { isSharedChatDuplicated: true },
+    );
+
+    const { getByText } = render(<RichChatMessage {...message} />);
+
+    expect(getByText('Via shared chat')).toBeOnTheScreen();
+  });
+
+  test('hides the shared-chat source label when the flag is disabled', () => {
+    preferences$.sharedChatEnabled.set(false);
+    const message = createMockMessage(
+      [{ type: 'text', content: 'from another channel' }],
+      {},
+      { isSharedChatDuplicated: true },
+    );
+
+    const { queryByText } = render(<RichChatMessage {...message} />);
+
+    expect(queryByText('Via shared chat')).toBeNull();
   });
 });

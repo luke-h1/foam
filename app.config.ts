@@ -16,11 +16,7 @@ interface AppVariantConfig {
 }
 
 export type Variant =
-  | 'development'
-  | 'internal'
-  | 'testflight'
-  | 'e2e'
-  | 'production';
+  'development' | 'internal' | 'testflight' | 'e2e' | 'production';
 
 // https://docs.expo.dev/tutorial/eas/multiple-app-variants
 const VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {

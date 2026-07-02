@@ -1,8 +1,27 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { Alert, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Platform, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
+import {
+  Button,
+  Host,
+  HStack,
+  List,
+  Section,
+  Spacer,
+  Text as NativeText,
+  TextField,
+  useNativeState,
+} from '@expo/ui/swift-ui';
+import {
+  buttonStyle,
+  foregroundStyle,
+  listStyle,
+  onSubmit,
+  submitLabel,
+  textInputAutocapitalization,
+} from '@expo/ui/swift-ui/modifiers';
 import { PressableScale } from 'pressto';
 
 import type {
@@ -21,6 +40,10 @@ import {
 } from '@app/store/preferenceStore';
 import { Color } from '@app/styles/pallete';
 import { theme } from '@app/styles/themes';
+
+function createPhraseId(text: string) {
+  return `${Date.now()}_${text}`;
+}
 
 function PhraseRow({
   phrase,
@@ -43,7 +66,10 @@ function PhraseRow({
         {
           text: t('remove'),
           style: 'destructive',
-          onPress: () => onRemove(phrase.id),
+          onPress: () => {
+            void impact('medium');
+            onRemove(phrase.id);
+          },
         },
       ],
     );
@@ -61,7 +87,7 @@ function PhraseRow({
         accessibilityLabel={t('removePhrase')}
         accessibilityRole='button'
         onPress={handleRemove}
-        hitSlop={8}
+        hitSlop={11}
       >
         <SymbolView
           name='minus.circle.fill'
@@ -133,6 +159,113 @@ function InputSection({
   );
 }
 
+function NativeSavedPhrasesList() {
+  const { t } = useTranslation('preferences');
+  const savedPhrases = usePreference('savedPhrases');
+  const updatePreferences = useUpdatePreferences();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const phraseText = useNativeState('');
+
+  const phrases = useMemo(() => savedPhrases ?? [], [savedPhrases]);
+
+  const handleNativeSave = () => {
+    const text = phraseText.value.trim();
+    if (!text) return;
+
+    if (
+      phrases.some(phrase => phrase.id !== editingId && phrase.text === text)
+    ) {
+      phraseText.value = '';
+      return;
+    }
+
+    if (editingId) {
+      updatePreferences({
+        savedPhrases: phrases.map(phrase =>
+          phrase.id === editingId ? { ...phrase, text } : phrase,
+        ),
+      });
+      setEditingId(null);
+      phraseText.value = '';
+      void impact('light');
+      return;
+    }
+
+    updatePreferences({
+      savedPhrases: [...phrases, { id: createPhraseId(text), text }],
+    });
+    phraseText.value = '';
+    void impact('light');
+  };
+
+  const handleNativeEdit = (phrase: SavedPhrase) => {
+    setEditingId(phrase.id);
+    phraseText.value = phrase.text;
+  };
+
+  const handleDeleteByIndex = (indices: number[]) => {
+    const removals = new Set(indices);
+    const removedEditing = indices.some(
+      index => phrases[index]?.id === editingId,
+    );
+    if (removedEditing) {
+      setEditingId(null);
+      phraseText.value = '';
+    }
+    updatePreferences({
+      savedPhrases: phrases.filter((_, index) => !removals.has(index)),
+    });
+  };
+
+  const hasPhrases = phrases.length > 0;
+
+  return (
+    <Host style={styles.keyboardAvoid} colorScheme='dark'>
+      <List modifiers={[listStyle('insetGrouped')]}>
+        <Section>
+          <TextField
+            text={phraseText}
+            placeholder={t('addSavedPhrasePlaceholder')}
+            modifiers={[
+              textInputAutocapitalization('sentences'),
+              submitLabel('done'),
+              onSubmit(handleNativeSave),
+            ]}
+          />
+        </Section>
+        {hasPhrases ? (
+          <Section
+            footer={
+              <NativeText>
+                {t('savedPhrasesFooter', { count: phrases.length })}
+              </NativeText>
+            }
+          >
+            <List.ForEach onDelete={handleDeleteByIndex}>
+              {phrases.map(phrase => (
+                <Button
+                  key={phrase.id}
+                  onPress={() => handleNativeEdit(phrase)}
+                  modifiers={[buttonStyle('plain')]}
+                >
+                  <HStack>
+                    <NativeText
+                      modifiers={[foregroundStyle(theme.color.text.dark)]}
+                    >
+                      {phrase.text}
+                    </NativeText>
+                    <Spacer />
+                  </HStack>
+                </Button>
+              ))}
+            </List.ForEach>
+          </Section>
+        ) : null}
+      </List>
+    </Host>
+  );
+}
+
 export function SavedPhrasesScreen() {
   const { t } = useTranslation('preferences');
   const savedPhrases = usePreference('savedPhrases');
@@ -149,6 +282,13 @@ export function SavedPhrasesScreen() {
     const text = inputValue.trim();
     if (!text) return;
 
+    if (
+      phrases.some(phrase => phrase.id !== editingId && phrase.text === text)
+    ) {
+      setInputValue('');
+      return;
+    }
+
     if (editingId) {
       updatePreferences({
         savedPhrases: phrases.map(phrase =>
@@ -161,12 +301,8 @@ export function SavedPhrasesScreen() {
       return;
     }
 
-    if (phrases.some(phrase => phrase.text === text)) {
-      setInputValue('');
-      return;
-    }
     updatePreferences({
-      savedPhrases: [...phrases, { id: `${Date.now()}_${text}`, text }],
+      savedPhrases: [...phrases, { id: createPhraseId(text), text }],
     });
     setInputValue('');
     void impact('light');
@@ -213,6 +349,10 @@ export function SavedPhrasesScreen() {
 
   const hasPhrases = phrases.length > 0;
 
+  if (Platform.OS === 'ios') {
+    return <NativeSavedPhrasesList />;
+  }
+
   return (
     <KeyboardAvoidingView behavior='padding' style={styles.keyboardAvoid}>
       <FlashList
@@ -246,7 +386,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Color.zinc[800],
     borderCurve: 'continuous',
-    borderRadius: 18,
+    borderRadius: theme.borderRadius18,
     height: 36,
     justifyContent: 'center',
     width: 36,
@@ -284,7 +424,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     color: theme.colorWhite,
     flex: 1,
-    fontSize: 16,
+    fontSize: theme.fontSize16,
     height: 44,
     paddingHorizontal: theme.space16,
   },
@@ -312,7 +452,7 @@ const styles = StyleSheet.create({
   phraseText: {
     color: theme.colorWhite,
     flex: 1,
-    fontSize: 15,
+    fontSize: theme.fontSize14,
     lineHeight: 20,
     minWidth: 0,
   },

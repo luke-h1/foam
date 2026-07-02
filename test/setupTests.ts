@@ -62,6 +62,14 @@ jest.mock('@expo/ui/community/masked-view', () => {
   };
 });
 
+jest.mock('@expo/ui/swift-ui', () => {
+  const { useRef } = jest.requireActual('react');
+  return {
+    ...jest.requireActual('@expo/ui/swift-ui'),
+    useNativeState: (initial: unknown) => useRef({ value: initial }).current,
+  };
+});
+
 /**
  * Polyfill for setImmediate which Sentry uses under the hood
  */

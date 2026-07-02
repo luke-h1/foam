@@ -6,10 +6,7 @@ import type { EmotePickerItem } from '../EmoteSheet';
 
 export type EmoteMenuProviderId = '7TV' | 'Twitch' | 'FFZ' | 'BTTV' | 'Emoji';
 export type EmoteMenuIcon =
-  | BrandIconName
-  | 'twitch'
-  | 'ffz'
-  | `emoji:${string}`;
+  BrandIconName | 'twitch' | 'ffz' | `emoji:${string}`;
 
 export interface EmoteMenuSet {
   emotes: EmotePickerItem[];

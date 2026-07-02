@@ -49,7 +49,10 @@ function HighlightRow({
         {
           text: t('remove'),
           style: 'destructive',
-          onPress: () => onRemove(highlight.id),
+          onPress: () => {
+            void impact('medium');
+            onRemove(highlight.id);
+          },
         },
       ],
     );
@@ -239,7 +242,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Color.zinc[800],
     borderCurve: 'continuous',
-    borderRadius: 18,
+    borderRadius: theme.borderRadius18,
     height: 36,
     justifyContent: 'center',
     width: 36,
@@ -248,7 +251,7 @@ const styles = StyleSheet.create({
     backgroundColor: Color.zinc[50],
   },
   colorDot: {
-    borderRadius: 6,
+    borderRadius: theme.borderRadius6,
     height: 12,
     width: 12,
   },
@@ -282,7 +285,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     color: theme.colorWhite,
     flex: 1,
-    fontSize: 16,
+    fontSize: theme.fontSize16,
     height: 44,
     paddingHorizontal: theme.space16,
   },
@@ -310,7 +313,7 @@ const styles = StyleSheet.create({
   phraseText: {
     color: theme.colorWhite,
     flex: 1,
-    fontSize: 15,
+    fontSize: theme.fontSize14,
     lineHeight: 20,
     minWidth: 0,
   },

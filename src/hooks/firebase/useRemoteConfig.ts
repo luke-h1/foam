@@ -58,6 +58,9 @@ export interface RemoteConfigSchema {
 
 export type RemoteConfigKey = keyof RemoteConfigSchema;
 
+export type MinimumVersionTrack =
+  keyof RemoteConfigSchema['minimumVersion']['ios'];
+
 type ConfigSource = 'default' | 'remote' | 'static';
 
 export type RemoteConfigEntry<T> = {

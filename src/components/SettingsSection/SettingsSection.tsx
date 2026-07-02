@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { Children, Fragment, ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import type { SFSymbol } from 'sf-symbols-typescript';
@@ -55,7 +55,12 @@ export function SettingsSection({
       <View
         style={[styles.card, cardColor ? { backgroundColor: cardColor } : null]}
       >
-        {children}
+        {Children.toArray(children).map((child, index, rows) => (
+          <Fragment key={index}>
+            {child}
+            {index < rows.length - 1 ? <View style={styles.separator} /> : null}
+          </Fragment>
+        ))}
       </View>
 
       {footer ? <View style={styles.footer}>{footer}</View> : null}
@@ -203,7 +208,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: theme.color.backgroundSecondary.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.borderRadius18,
     overflow: 'hidden',
   },
   copy: {
@@ -217,6 +222,8 @@ const styles = StyleSheet.create({
   },
   iconWrap: {
     alignItems: 'center',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius6,
     height: 24,
     justifyContent: 'center',
     width: 24,
@@ -233,8 +240,6 @@ const styles = StyleSheet.create({
   },
   row: {
     alignItems: 'center',
-    borderBottomColor: theme.colorBorderSecondary,
-    borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space12,
     minHeight: 56,
@@ -246,8 +251,11 @@ const styles = StyleSheet.create({
     marginBottom: theme.space24,
   },
   sectionTitle: {
-    letterSpacing: 0.5,
     paddingHorizontal: theme.space16,
-    textTransform: 'uppercase',
+  },
+  separator: {
+    backgroundColor: theme.colorBorderSecondary,
+    height: StyleSheet.hairlineWidth,
+    marginLeft: theme.space16,
   },
 });

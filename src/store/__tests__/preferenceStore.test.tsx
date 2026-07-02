@@ -42,6 +42,8 @@ const basePreferences = {
   landscapeChatWidth: null,
   customPlayerEnabled: true,
   analyticsEnabled: true,
+  sharedChatEnabled: true,
+  enhancedVideoStability: false,
 } as const;
 
 describe('usePreferences', () => {

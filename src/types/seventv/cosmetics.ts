@@ -408,9 +408,7 @@ export interface SevenTvEventMap {
   'entitlement.update': ChangeMap<EntitlementCreate>;
   'entitlement.delete': { id: string };
   'entitlement.*':
-    | EntitlementCreate
-    | ChangeMap<EntitlementCreate>
-    | { id: string };
+    EntitlementCreate | ChangeMap<EntitlementCreate> | { id: string };
 }
 
 /**

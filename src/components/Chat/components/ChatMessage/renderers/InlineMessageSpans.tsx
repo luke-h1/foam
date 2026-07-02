@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react';
+import { memo, type ReactNode } from 'react';
 import type { StyleProp, TextStyle } from 'react-native';
 
 import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
+import { getChatColorStyle } from '@app/components/Chat/util/chatColorStyles';
 import { Text } from '@app/components/ui/Text/Text';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 
@@ -35,7 +36,7 @@ type InlineMessageSpansProps = Pick<
   textColor?: string;
 };
 
-export function InlineMessageSpans({
+function InlineMessageSpansComponent({
   compact,
   disableEmoteAnimations,
   effectiveHighlightedUserSet,
@@ -58,7 +59,7 @@ export function InlineMessageSpans({
     fontScaleStyle,
     emoteLineStyle,
   ];
-  const textColorStyle = textColor ? { color: textColor } : null;
+  const textColorStyle = textColor ? getChatColorStyle(textColor) : null;
   const spans: ReactNode[] = [];
   let pendingText: string | null = null;
   let pendingTextKey: ReturnType<typeof getPartKey> | null = null;
@@ -160,3 +161,5 @@ export function InlineMessageSpans({
 
   return <>{spans}</>;
 }
+
+export const InlineMessageSpans = memo(InlineMessageSpansComponent);

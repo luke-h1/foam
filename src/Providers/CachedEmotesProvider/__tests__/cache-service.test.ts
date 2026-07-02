@@ -21,9 +21,7 @@ import {
 } from '@app/Providers/CachedEmotesProvider/cache-service';
 
 const MAX_DECODED_BYTES_HIGH_TIER = 192 * 1024 * 1024;
-// Decodes are capped at maxPx (96 high-tier) per edge, so the per-entry cost is
-// 96*96*4 = 36KiB static or 8x that animated. The byte budget therefore keys off
-// isAnimated: ~682 animated refs fill the 192MiB budget before the 1200 count cap.
+// 192MiB / (96*96*4 bytes * 8 animated factor) ≈ 682 refs before the count cap.
 const HIGH_TIER_BYTE_BUDGET_ANIMATED_ENTRIES = 682;
 const animatedRef = () => ({ isAnimated: true }) as unknown as ImageRef;
 
@@ -156,7 +154,7 @@ describe('cache-service', () => {
   test('eviction drops the least-recently-touched unpinned ref', async () => {
     const urls = Array.from(
       { length: 1200 },
-      (_, i) => `https://cdn.7tv.app/emote/lru${i}/2x.avif`,
+      (_, i) => `https://cdn.7tv.app/emote/lru${i}/2x_static.avif`,
     );
     await warmCachedEmoteRefs(urls);
     expect(getCachedEmoteStats().decoded).toBe(1200);
@@ -164,7 +162,9 @@ describe('cache-service', () => {
     // Mark the oldest-decoded entry as most-recently-used.
     touchCachedEmoteRef(urls[0]!);
     // One more decode trips the cap and evicts the now-oldest unpinned entry.
-    await warmCachedEmoteRefs(['https://cdn.7tv.app/emote/lruExtra/2x.avif']);
+    await warmCachedEmoteRefs([
+      'https://cdn.7tv.app/emote/lruExtra/2x_static.avif',
+    ]);
 
     expect(getCachedEmoteStats().decoded).toBe(1200);
     expect(getCachedEmoteRef(urls[0]!)).toEqual({});

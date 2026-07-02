@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react-native';
 
+import type { BufferedMessage } from '@app/components/Chat/util/messageBuffer';
 import { addMessages } from '@app/store/chat/actions/messages';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 
@@ -571,6 +572,76 @@ describe('useChatMessages', () => {
 
       expect(onUnreadIncrement).toHaveBeenCalledTimes(1);
       expect(onUnreadIncrement).toHaveBeenCalledWith(600);
+    });
+  });
+
+  describe('Commit-time finalization', () => {
+    test('applies the finalizer to every committed message at flush', () => {
+      const finalizeMessageForCommit = jest.fn((message: BufferedMessage) => ({
+        ...message,
+        sender: 'Finalized',
+      }));
+      const { result } = renderHook(() =>
+        useChatMessages({ ...defaultOptions, finalizeMessageForCommit }),
+      );
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+        result.current.handleNewMessage(createMockMessage('2'));
+        jest.advanceTimersByTime(100);
+      });
+
+      expect(finalizeMessageForCommit).toHaveBeenCalledTimes(2);
+      const flushedMessages = getLastFlushedMessages();
+      expect(flushedMessages.map(message => message.sender)).toEqual([
+        'Finalized',
+        'Finalized',
+      ]);
+    });
+
+    test('raid-sampled messages are never finalized', () => {
+      const finalizeMessageForCommit = jest.fn(
+        (message: BufferedMessage) => message,
+      );
+      const { result } = renderHook(() =>
+        useChatMessages({ ...defaultOptions, finalizeMessageForCommit }),
+      );
+
+      act(() => {
+        for (let i = 0; i < 20; i += 1) {
+          result.current.handleNewMessage(createMockMessage(`${i}`));
+        }
+        jest.advanceTimersByTime(100);
+      });
+
+      expect(finalizeMessageForCommit).toHaveBeenCalledTimes(3);
+      expect(
+        getLastFlushedMessages().map(message => message.message_id),
+      ).toEqual(['17', '18', '19']);
+    });
+
+    test('force flush finalizes the drained backlog', () => {
+      const finalizeMessageForCommit = jest.fn((message: BufferedMessage) => ({
+        ...message,
+        sender: 'Finalized',
+      }));
+      const { result } = renderHook(() =>
+        useChatMessages({
+          ...defaultOptions,
+          isAtBottomRef: { current: false },
+          finalizeMessageForCommit,
+        }),
+      );
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+        result.current.forceFlush();
+      });
+
+      expect(finalizeMessageForCommit).toHaveBeenCalledTimes(1);
+      expect(getLastFlushedMessages().map(message => message.sender)).toEqual([
+        'Finalized',
+      ]);
     });
   });
 

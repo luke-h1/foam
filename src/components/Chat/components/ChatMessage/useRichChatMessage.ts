@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useMappingHelper } from '@shopify/flash-list';
 
@@ -12,6 +12,7 @@ import {
   isUserNoticeTags,
   normaliseUsername,
 } from '@app/components/Chat/util/richChatMessageHelpers';
+import { usePreference } from '@app/store/preferenceStore';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 import { findCustomHighlight } from '@app/utils/chat/customHighlights';
@@ -27,9 +28,9 @@ const MESSAGE_LONG_PRESS_DELAY_MS = 650;
 
 export function useRichChatMessage<
   TNoticeType extends NoticeVariants,
-  TVariant extends TNoticeType extends 'usernotice'
+  TVariant extends (TNoticeType extends 'usernotice'
     ? keyof UserNoticeVariantMap
-    : never = never,
+    : never) = never,
 >(props: RichChatMessageProps<TNoticeType, TVariant>) {
   const {
     userstate,
@@ -109,7 +110,9 @@ export function useRichChatMessage<
   const isChannelPointRedemption = messageDisplayIsChannelPointRedemption;
   const isAnnouncement = messageDisplayIsAnnouncement;
   const isHighlightedMessage = messageDisplayIsHighlightedMessage;
-  const isSharedChatDuplicated = messageDisplayIsSharedChatDuplicated;
+  const sharedChatEnabled = usePreference('sharedChatEnabled');
+  const isSharedChatDuplicated =
+    messageDisplayIsSharedChatDuplicated && sharedChatEnabled;
   const isTwitchSystemNotice = messageDisplayIsTwitchSystemNotice;
   const { getMappingKey } = useMappingHelper();
   const [selectedEmoteAction, setSelectedEmoteAction] =
@@ -130,17 +133,24 @@ export function useRichChatMessage<
   const compact = density === 'compact';
   const normalisedCurrentUsername =
     currentUsernameNormalized ?? normaliseUsername(currentUsername);
-  const effectiveHighlightedUserSet =
-    highlightedUserSet ??
-    new Set((highlightedUsers ?? []).map(normaliseUsername));
+  // Identity-stable so the memoized span renderers can bail out.
+  const effectiveHighlightedUserSet = useMemo(
+    () =>
+      highlightedUserSet ??
+      new Set((highlightedUsers ?? []).map(normaliseUsername)),
+    [highlightedUserSet, highlightedUsers],
+  );
   const messageSenderKey = normaliseUsername(
     userstate.username || userstate.login || sender,
   );
   const isHighlightedSender =
     messageSenderKey.length > 0 &&
     effectiveHighlightedUserSet?.has(messageSenderKey);
-  const getPartKey = (part: ParsedPart, index: number) =>
-    getMappingKey(getPartIdentity(part, index), index);
+  const getPartKey = useCallback(
+    (part: ParsedPart, index: number) =>
+      getMappingKey(getPartIdentity(part, index), index),
+    [getMappingKey],
+  );
 
   const handleEmotePress = (part: EmotePressData) => {
     onEmotePress?.(part);
@@ -170,9 +180,9 @@ export function useRichChatMessage<
     [],
   );
 
-  const handleEmoteTouchStart = (part: EmotePressData) => {
+  const handleEmoteTouchStart = useCallback((part: EmotePressData) => {
     pressedEmotePartRef.current = part;
-  };
+  }, []);
 
   const closeEmoteActionSheet = () => {
     setSelectedEmoteAction(null);

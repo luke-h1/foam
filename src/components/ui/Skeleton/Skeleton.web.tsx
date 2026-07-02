@@ -5,6 +5,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { theme } from '@app/styles/themes';
 
+import { SHIMMER_GRADIENT_COLORS } from './shimmerGradient';
+
 interface SkeletonProps {
   shimmer?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -20,11 +22,7 @@ export function Skeleton({ shimmer = true, style, testID }: SkeletonProps) {
           style={[styles.shimmer, shimmerAnimationStyle]}
         >
           <LinearGradient
-            colors={[
-              'rgba(255,255,255,0)',
-              'rgba(255,255,255,0.18)',
-              'rgba(255,255,255,0)',
-            ]}
+            colors={SHIMMER_GRADIENT_COLORS}
             locations={[0, 0.5, 1]}
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}

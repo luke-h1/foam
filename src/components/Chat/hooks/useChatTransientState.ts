@@ -1,57 +1,15 @@
 import { useCallback, useEffect, useRef } from 'react';
 
-import { observable } from '@legendapp/state';
-import { useSelector } from '@legendapp/state/react';
-
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
+import {
+  assignTransientState,
+  getTransientState,
+} from '@app/store/chat/actions/transientState';
+import { defaultTransientState } from '@app/store/chat/observables/chatTransientState';
+import { useTransientChannelFilters } from '@app/store/chat/react/transientSelectors';
 
 import type { AnyChatMessageType } from '../util/messageHandlers';
-
-interface ChatTransientChannelState {
-  hiddenPhrases: string[];
-  hiddenUsers: string[];
-  highlightedReplyTargetMessageId: string | null;
-  highlightedUsers: string[];
-  showOnlyMentions: boolean;
-}
-
-const defaultTransientState: ChatTransientChannelState = {
-  hiddenPhrases: [],
-  hiddenUsers: [],
-  highlightedReplyTargetMessageId: null,
-  highlightedUsers: [],
-  showOnlyMentions: false,
-};
-
-const chatTransientState$ = observable<
-  Partial<Record<string, ChatTransientChannelState>>
->({});
-
-function getTransientState(channelId: string): ChatTransientChannelState {
-  return chatTransientState$[channelId]!.peek() ?? defaultTransientState;
-}
-
-function assignTransientState(
-  channelId: string,
-  patch: Partial<ChatTransientChannelState>,
-) {
-  chatTransientState$[channelId]!.set({
-    ...getTransientState(channelId),
-    ...patch,
-  });
-}
-
-export function useIsHighlightedReplyTargetMessage(
-  channelId: string,
-  messageId: string,
-) {
-  return useSelector(
-    () =>
-      (chatTransientState$[channelId]!.highlightedReplyTargetMessageId.get() ??
-        null) === messageId,
-  );
-}
 
 export function useChatTransientState(channelId: string) {
   const visiblePersonalEmoteUsersRef = useLazyRef(() => new Set<string>());
@@ -64,26 +22,8 @@ export function useChatTransientState(channelId: string) {
   const highlightedReplyTargetTimeoutRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
-  const hiddenPhrases = useSelector(
-    () =>
-      chatTransientState$[channelId]!.hiddenPhrases.get() ??
-      defaultTransientState.hiddenPhrases,
-  );
-  const hiddenUsers = useSelector(
-    () =>
-      chatTransientState$[channelId]!.hiddenUsers.get() ??
-      defaultTransientState.hiddenUsers,
-  );
-  const highlightedUsers = useSelector(
-    () =>
-      chatTransientState$[channelId]!.highlightedUsers.get() ??
-      defaultTransientState.highlightedUsers,
-  );
-  const showOnlyMentions = useSelector(
-    () =>
-      chatTransientState$[channelId]!.showOnlyMentions.get() ??
-      defaultTransientState.showOnlyMentions,
-  );
+  const { hiddenPhrases, hiddenUsers, highlightedUsers, showOnlyMentions } =
+    useTransientChannelFilters(channelId);
 
   // The visible-asset dedup guards persist across channel switches (the refs are
   // created once), so reset them when the channel changes — a new channel's

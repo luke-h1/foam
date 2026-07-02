@@ -1,10 +1,18 @@
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import type { SavedPhrase } from '@app/store/preferenceStore';
 
 import { SavedPhrasesScreen } from '../SavedPhrasesScreen';
+
+const originalOS = Platform.OS;
+beforeAll(() => {
+  Platform.OS = 'android';
+});
+afterAll(() => {
+  Platform.OS = originalOS;
+});
 
 let mockSavedPhrases: SavedPhrase[] = [];
 const mockUpdate = jest.fn((payload: { savedPhrases?: SavedPhrase[] }) => {
@@ -86,6 +94,56 @@ describe('SavedPhrasesScreen', () => {
 
     expect(mockUpdate).toHaveBeenCalledWith({
       savedPhrases: [{ id: 'a', text: 'updated phrase' }],
+    });
+  });
+
+  test('rejects an edit that duplicates another phrase', () => {
+    mockSavedPhrases = [
+      { id: 'a', text: 'first phrase' },
+      { id: 'b', text: 'second phrase' },
+    ];
+
+    render(<SavedPhrasesScreen />);
+
+    fireEvent.press(screen.getByText('first phrase'));
+    fireEvent.changeText(
+      screen.getByDisplayValue('first phrase'),
+      'second phrase',
+    );
+    fireEvent(screen.getByDisplayValue('second phrase'), 'submitEditing');
+
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  test('saves an edit that keeps the phrase text unchanged', () => {
+    mockSavedPhrases = [{ id: 'a', text: 'same phrase' }];
+
+    render(<SavedPhrasesScreen />);
+
+    fireEvent.press(screen.getByText('same phrase'));
+    fireEvent(screen.getByDisplayValue('same phrase'), 'submitEditing');
+
+    expect(mockUpdate).toHaveBeenCalledWith({
+      savedPhrases: [{ id: 'a', text: 'same phrase' }],
+    });
+  });
+
+  describe('iOS native branch', () => {
+    beforeAll(() => {
+      Platform.OS = 'ios';
+    });
+    afterAll(() => {
+      Platform.OS = 'android';
+    });
+
+    // The @expo/ui/swift-ui primitives render as opaque native host views, so
+    // their text is not queryable in tests.
+    test('mounts the native list branch without crashing', () => {
+      mockSavedPhrases = [{ id: 'a', text: 'be right back' }];
+
+      render(<SavedPhrasesScreen />);
+
+      expect(screen.toJSON()).not.toBeNull();
     });
   });
 });

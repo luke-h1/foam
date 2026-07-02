@@ -86,6 +86,7 @@ export function init() {
     hasDsn && (!__DEV__ || process.env.EXPO_PUBLIC_ENABLE_SENTRY === 'true');
 
   const debug = process.env.EXPO_PUBLIC_SENTRY_DEBUG === 'true';
+  const isProduction = appVariant === 'production';
 
   sentryStatus = {
     enabled,
@@ -126,10 +127,15 @@ export function init() {
     },
     ignoreErrors: ['Network request failed'],
     sampleRate: 1.0,
-    tracesSampleRate: 1.0,
+    /**
+     * Replay/tracing encoders were a measured production JS-thread cost, so
+     * production samples them down while keeping errors at 100%.
+     * profilesSampleRate is relative to tracesSampleRate.
+     */
+    tracesSampleRate: isProduction ? 0.15 : 1.0,
     profilesSampleRate: 1.0,
     enableAutoPerformanceTracing: true,
-    replaysSessionSampleRate: 1.0,
+    replaysSessionSampleRate: isProduction ? 0.05 : 1.0,
     replaysOnErrorSampleRate: 1.0,
     integrations: [
       navigationIntegration,
@@ -284,9 +290,7 @@ export type MonitoringWarningName = `${MonitoringEventPrefix}_warning`;
 export type MonitoringInfoName = `${MonitoringEventPrefix}_info`;
 
 export type MonitoringEventName =
-  | MonitoringErrorName
-  | MonitoringWarningName
-  | MonitoringInfoName;
+  MonitoringErrorName | MonitoringWarningName | MonitoringInfoName;
 
 export type LogMetadata = {
   name?: OpenStringUnion<MonitoringEventName>;

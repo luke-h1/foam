@@ -12,11 +12,7 @@ import { logger } from '@app/utils/logger';
 import type { ChannelCacheType } from '../types/constants';
 
 export type ProviderName =
-  | 'bttv'
-  | 'chatterino'
-  | 'ffz'
-  | 'seven_tv'
-  | 'twitch';
+  'bttv' | 'chatterino' | 'ffz' | 'seven_tv' | 'twitch';
 export type ProviderResourceScope = 'channel' | 'global' | 'local' | 'personal';
 export type ProviderResourceType = 'badges' | 'emotes';
 

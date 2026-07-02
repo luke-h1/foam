@@ -54,9 +54,9 @@ export interface Bit {
 
 export interface ChatMessageType<
   TNoticeType extends NoticeVariants,
-  TVariant extends TNoticeType extends 'usernotice'
+  TVariant extends (TNoticeType extends 'usernotice'
     ? keyof UserNoticeVariantMap
-    : never = never,
+    : never) = never,
 > {
   id: string;
   userstate: UserStateTags;
@@ -72,6 +72,12 @@ export interface ChatMessageType<
   isSpecialNotice?: boolean;
   moderationNotice?: string;
   cachedSenderColor?: string;
+  /**
+   * Set on live PRIVMSGs at ingest while the emote/badge parse is deferred to
+   * commit time. Stripped when the message is finalized; the store never sees
+   * it.
+   */
+  pendingEmoteParse?: boolean;
   replyDisplayName: string;
   replyBody: string;
   parentColor?: string;

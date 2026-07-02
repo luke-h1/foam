@@ -11,8 +11,7 @@ const ICON_SIZES = {
 } as const;
 
 export type IconSize =
-  | keyof typeof ICON_SIZES
-  | { height: DimensionValue; width: DimensionValue };
+  keyof typeof ICON_SIZES | { height: DimensionValue; width: DimensionValue };
 
 export const BrandIcons = {
   stv: StvIcon,

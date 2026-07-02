@@ -1,8 +1,8 @@
 import type { BttvEmote } from '@app/types/bttv/emote';
 import type { BttvSanitisedEmote } from '@app/types/emote';
-import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 
 import { bttvCachedApi } from './api/clients';
+import { buildSanitisedEmote } from './emote-provider';
 
 interface BttvChannelEmoteSet {
   id: string;
@@ -50,21 +50,18 @@ function sanitiseBttvEmote(
         '3x': toBttvStaticEmoteUrl(emote.id, '3x'),
       }
     : animatedVariants;
-  const imageVariants = createEmoteImageVariants({
-    animated: animatedVariants,
-    static: staticVariants,
-  });
 
   return {
-    name: emote.code,
-    id: emote.id,
-    url: animatedVariants['3x'],
-    static_url: staticVariants['3x'],
-    image_variants: imageVariants,
-    emote_link: `https://betterttv.com/emotes/${emote.id}`,
-    original_name: emote.codeOriginal ?? 'UNKNOWN',
-    creator,
-    site,
+    ...buildSanitisedEmote({
+      id: emote.id,
+      name: emote.code,
+      site,
+      creator,
+      emoteLink: `https://betterttv.com/emotes/${emote.id}`,
+      originalName: emote.codeOriginal,
+      animated: animatedVariants,
+      static: staticVariants,
+    }),
     flags: bttvZeroWidthEmotes.includes(emote.code) ? 256 : undefined,
   };
 }

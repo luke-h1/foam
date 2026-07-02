@@ -20,6 +20,7 @@ import {
   getDeviceTier,
   getTotalDeviceMemoryBytes,
 } from '@app/utils/device/deviceTier';
+import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 import { logger } from '@app/utils/logger';
 import ImageMemoryPressure from '@modules/image-memory-pressure/src/ImageMemoryPressureModule';
 
@@ -81,26 +82,13 @@ const recentlyReleased = new Set<string>();
 let releaseRaceCount = 0;
 
 /**
- * Estimates the resident decoded-bitmap cost of a cached emote ref, in bytes.
- *
- * Reading the native ImageRef geometry getters (width/height/scale) is a
- * JSI->native hop each, and during a channel-load decode storm those reads are
- * the single hottest function on the JS thread (Sentry profiles: ~1.5s p75).
- * The decode is already bounded to maxPx per edge, so maxPx^2 is a tight upper
- * bound on the bitmap without touching the ref geometry. Only isAnimated is
- * read natively — it drives the {@link ANIMATED_BYTE_FACTOR} multiplier the
- * byte budget exists to bound.
- *
- * @param ref - The decoded ImageRef; only its `isAnimated` flag is read.
- * @param maxPx - The per-edge decode cap the ref was decoded under
- *   ({@link EMOTE_DECODE_MAX_PX}).
- * @returns Upper-bound byte cost, 8x larger for animated refs.
+ * Upper-bound decoded-bitmap cost without touching the ref: every native
+ * ImageRef getter is a JSI hop, and reading one here was a measured JS-thread
+ * hotspot during channel-load decode storms.
  */
-function estimateRefBytes(ref: ImageRef, maxPx: number): number {
+function estimateRefBytes(animated: boolean, maxPx: number): number {
   const pixelBytes = maxPx * maxPx * 4;
-  return Math.round(
-    ref.isAnimated ? pixelBytes * ANIMATED_BYTE_FACTOR : pixelBytes,
-  );
+  return Math.round(animated ? pixelBytes * ANIMATED_BYTE_FACTOR : pixelBytes);
 }
 
 function dropRefBytes(url: string): void {
@@ -308,7 +296,11 @@ async function runDecode(
     if (inflight.get(url) !== requestEpoch || requestEpoch !== cacheEpoch) {
       return;
     }
-    const cost = estimateRefBytes(ref, maxPx);
+    const kind = describeEmoteUrl(url).kind;
+    const cost = estimateRefBytes(
+      kind === null ? ref.isAnimated === true : kind === 'animated',
+      maxPx,
+    );
     evictUnpinnedToFit(cost);
     refs.set(url, ref);
     refBytes.set(url, cost);

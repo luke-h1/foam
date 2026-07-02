@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { Linking } from 'react-native';
 
 import * as QuickActions from 'expo-quick-actions';
@@ -8,6 +8,7 @@ import { router, usePathname } from 'expo-router';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useClearExpiredStorageItems } from '@app/hooks/useClearExpiredStorageItems';
 import { useIcloudPreferenceSync } from '@app/hooks/useIcloudPreferenceSync';
+import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useOnAppStateChange } from '@app/hooks/useOnAppStateChange';
 import { useOnReconnect } from '@app/hooks/useOnReconnect';
 import { usePopulateAuth } from '@app/hooks/usePopulateAuth';
@@ -135,8 +136,8 @@ export function RouterEffects() {
   }, [authState?.isLoggedIn, ready]);
 
   const loginWithTwitchRef = useSyncRef(loginWithTwitch);
-  const handledAuthUrlsRef = useRef<Set<string>>(new Set());
-  const pendingAuthUrlsRef = useRef<Set<string>>(new Set());
+  const handledAuthUrlsRef = useLazyRef(() => new Set<string>());
+  const pendingAuthUrlsRef = useLazyRef(() => new Set<string>());
 
   useEffect(() => {
     const handledAuthUrls = handledAuthUrlsRef.current;
@@ -155,6 +156,8 @@ export function RouterEffects() {
       pendingAuthUrls.add(url);
       beginDeepLinkAuth();
 
+      // Cleanup sits after the try/catch (it always runs; the catch swallows
+      // every error) because try/finally is a React Compiler bailout.
       try {
         const handled = await completeAuthWithCallbackUrl(
           url,
@@ -168,10 +171,9 @@ export function RouterEffects() {
         }
       } catch (error) {
         logger.main.warn('Failed to complete auth callback', error);
-      } finally {
-        pendingAuthUrls.delete(url);
-        endDeepLinkAuth();
       }
+      pendingAuthUrls.delete(url);
+      endDeepLinkAuth();
     }
 
     const linkingSubscription = Linking.addEventListener('url', ({ url }) => {
@@ -194,7 +196,7 @@ export function RouterEffects() {
       }
       linkingSubscription.remove();
     };
-  }, [loginWithTwitchRef]);
+  }, [handledAuthUrlsRef, loginWithTwitchRef, pendingAuthUrlsRef]);
 
   return null;
 }

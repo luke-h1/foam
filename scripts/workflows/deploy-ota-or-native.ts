@@ -283,9 +283,7 @@ function compareFingerprintsCommand(args: string[]): void {
 
 function decideDeployTypeCommand(args: string[]): void {
   const manualType = getRequiredArg(args, 'manual-type', 'auto') as
-    | 'auto'
-    | 'ota'
-    | 'build';
+    'auto' | 'ota' | 'build';
 
   const fingerprintChanged =
     getRequiredArg(args, 'fingerprint-changed', 'false') === 'true';

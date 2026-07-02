@@ -23,7 +23,13 @@ import { theme } from '@app/styles/themes';
 
 export function SettingsDevtoolsScreen() {
   const { t } = useTranslation('settings');
-  const { disableChat, disableStream, update } = usePreferences();
+  const {
+    disableChat,
+    disableStream,
+    sharedChatEnabled,
+    enhancedVideoStability,
+    update,
+  } = usePreferences();
   const scrollRef = useRef<ScrollView>(null);
 
   useScrollToTop(scrollRef);
@@ -59,6 +65,23 @@ export function SettingsDevtoolsScreen() {
             >
               <NativeText>{t('disableChat')}</NativeText>
               <NativeText>{t('disableChatDescription')}</NativeText>
+            </Toggle>
+          </Section>
+
+          <Section title={t('featureFlags')}>
+            <Toggle
+              isOn={sharedChatEnabled}
+              onIsOnChange={value => update({ sharedChatEnabled: value })}
+            >
+              <NativeText>{t('sharedChat')}</NativeText>
+              <NativeText>{t('sharedChatDescription')}</NativeText>
+            </Toggle>
+            <Toggle
+              isOn={enhancedVideoStability}
+              onIsOnChange={value => update({ enhancedVideoStability: value })}
+            >
+              <NativeText>{t('enhancedVideoStability')}</NativeText>
+              <NativeText>{t('enhancedVideoStabilityDescription')}</NativeText>
             </Toggle>
           </Section>
 
@@ -146,6 +169,26 @@ export function SettingsDevtoolsScreen() {
             icon={{ icon: 'message', color: theme.colorPlum }}
             value={disableChat}
             onValueChange={value => update({ disableChat: value })}
+          />
+        </SettingsSection>
+
+        <SettingsSection title={t('featureFlags')}>
+          <SettingsToggleRow
+            title={t('sharedChat')}
+            subtitle={t('sharedChatDescription')}
+            icon={{
+              icon: 'bubble.left.and.bubble.right',
+              color: theme.colorTeal,
+            }}
+            value={sharedChatEnabled}
+            onValueChange={value => update({ sharedChatEnabled: value })}
+          />
+          <SettingsToggleRow
+            title={t('enhancedVideoStability')}
+            subtitle={t('enhancedVideoStabilityDescription')}
+            icon={{ icon: 'wand.and.stars', color: theme.colorBlue }}
+            value={enhancedVideoStability}
+            onValueChange={value => update({ enhancedVideoStability: value })}
           />
         </SettingsSection>
 

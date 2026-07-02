@@ -1,8 +1,5 @@
 export type ChannelPredictionStatus =
-  | 'active'
-  | 'locked'
-  | 'resolved'
-  | 'canceled';
+  'active' | 'locked' | 'resolved' | 'canceled';
 
 export interface TwitchPredictionTopPredictor {
   user_id: string;

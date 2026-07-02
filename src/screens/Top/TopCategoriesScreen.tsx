@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   skeletonImage: {
     alignSelf: 'center',
     borderCurve: 'continuous',
-    borderRadius: 8,
+    borderRadius: theme.borderRadius8,
     height: 150,
     marginBottom: 8,
     width: 110,
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
   skeletonTitle: {
     alignSelf: 'center',
     borderCurve: 'continuous',
-    borderRadius: 4,
+    borderRadius: theme.borderRadius4,
     height: 40,
     marginBottom: theme.space16,
     width: 80,

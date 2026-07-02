@@ -1,8 +1,23 @@
 import { useCallback, useRef, useState } from 'react';
-import { Alert, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Platform, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
+import {
+  Host,
+  List,
+  Section,
+  Text as NativeText,
+  TextField,
+  useNativeState,
+} from '@expo/ui/swift-ui';
+import {
+  autocorrectionDisabled,
+  listStyle,
+  onSubmit,
+  submitLabel,
+  textInputAutocapitalization,
+} from '@expo/ui/swift-ui/modifiers';
 import { PressableScale } from 'pressto';
 
 import type {
@@ -38,7 +53,10 @@ function TermRow({
         {
           text: t('remove'),
           style: 'destructive',
-          onPress: () => onRemove(term),
+          onPress: () => {
+            void impact('medium');
+            onRemove(term);
+          },
         },
       ],
     );
@@ -49,7 +67,7 @@ function TermRow({
       <Text type='md' style={styles.termText} numberOfLines={1}>
         {term}
       </Text>
-      <PressableScale onPress={handleRemove} hitSlop={8}>
+      <PressableScale onPress={handleRemove} hitSlop={11}>
         <SymbolView
           name='minus.circle.fill'
           size={22}
@@ -117,6 +135,68 @@ function InputSection({ value, onChangeText, onAdd }: InputSectionProps) {
   );
 }
 
+function NativeBlockedTermsList() {
+  const { t } = useTranslation('preferences');
+  const blockedTerms = usePreference('blockedTerms');
+  const updatePreferences = useUpdatePreferences();
+  const termText = useNativeState('');
+
+  const handleNativeAdd = () => {
+    const normalised = termText.value.trim().toLowerCase();
+    if (!normalised) return;
+    if (blockedTerms.includes(normalised)) {
+      termText.value = '';
+      return;
+    }
+    updatePreferences({ blockedTerms: [...blockedTerms, normalised] });
+    termText.value = '';
+    void impact('light');
+  };
+
+  const handleDeleteByIndex = (indices: number[]) => {
+    const removals = new Set(indices);
+    updatePreferences({
+      blockedTerms: blockedTerms.filter((_, index) => !removals.has(index)),
+    });
+  };
+
+  const hasTerms = blockedTerms.length > 0;
+
+  return (
+    <Host style={styles.keyboardAvoid} colorScheme='dark'>
+      <List modifiers={[listStyle('insetGrouped')]}>
+        <Section>
+          <TextField
+            text={termText}
+            placeholder={t('addTermPlaceholder')}
+            modifiers={[
+              autocorrectionDisabled(true),
+              textInputAutocapitalization('never'),
+              submitLabel('done'),
+              onSubmit(handleNativeAdd),
+            ]}
+          />
+        </Section>
+        {hasTerms ? (
+          <Section
+            footer={
+              <NativeText>
+                {t('termsFooter', { count: blockedTerms.length })}
+              </NativeText>
+            }
+          >
+            <List.ForEach onDelete={handleDeleteByIndex}>
+              {blockedTerms.map(term => (
+                <NativeText key={term}>{term}</NativeText>
+              ))}
+            </List.ForEach>
+          </Section>
+        ) : null}
+      </List>
+    </Host>
+  );
+}
+
 export function BlockedTermsScreen() {
   const { t } = useTranslation('preferences');
   const blockedTerms = usePreference('blockedTerms');
@@ -162,6 +242,10 @@ export function BlockedTermsScreen() {
 
   const hasTerms = blockedTerms.length > 0;
 
+  if (Platform.OS === 'ios') {
+    return <NativeBlockedTermsList />;
+  }
+
   return (
     <KeyboardAvoidingView behavior='padding' style={styles.keyboardAvoid}>
       <FlashList
@@ -195,7 +279,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Color.zinc[800],
     borderCurve: 'continuous',
-    borderRadius: 18,
+    borderRadius: theme.borderRadius18,
     height: 36,
     justifyContent: 'center',
     width: 36,
@@ -233,7 +317,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     color: theme.colorWhite,
     flex: 1,
-    fontSize: 16,
+    fontSize: theme.fontSize16,
     height: 44,
     paddingHorizontal: theme.space16,
   },
@@ -267,7 +351,7 @@ const styles = StyleSheet.create({
   termText: {
     color: theme.colorWhite,
     flex: 1,
-    fontSize: 15,
+    fontSize: theme.fontSize14,
     lineHeight: 20,
     minWidth: 0,
   },

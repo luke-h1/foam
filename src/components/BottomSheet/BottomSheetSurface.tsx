@@ -1,11 +1,23 @@
 import { Platform, StyleSheet, View } from 'react-native';
 
 import { BlurView } from 'expo-blur';
+import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 
 import { theme } from '@app/styles/themes';
 
 export function BottomSheetSurface() {
   if (Platform.OS === 'ios') {
+    if (isLiquidGlassAvailable()) {
+      return (
+        <GlassView
+          glassEffectStyle='regular'
+          colorScheme='dark'
+          tintColor='rgba(11,15,20,0.35)'
+          style={[StyleSheet.absoluteFill, styles.surface]}
+        />
+      );
+    }
+
     return (
       <BlurView
         intensity={64}

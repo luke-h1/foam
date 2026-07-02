@@ -1,12 +1,11 @@
 import { type RefObject, useCallback, useRef } from 'react';
 
-import { batch } from '@legendapp/state';
-
 import { shouldProcessLiveMessage } from '@app/components/Chat/util/chatIngestRateLimiter';
 import { parseIrcMessage } from '@app/services/recent-messages-service';
 import {
   addMessage,
   clearMessages,
+  clearMessagesWithNotice,
   getMessageById,
   getMessageColor,
   moderateMessageById,
@@ -58,6 +57,10 @@ interface UseChatIrcHandlersOptions {
   moderateBufferedMessageById: (messageId: string, notice: string) => void;
   moderateBufferedMessagesByLogin: (login: string, notice: string) => void;
   removeBufferedMessagesByLogin: (login: string) => void;
+  enqueueLiveChatMessage: (
+    baseMessage: AnyChatMessageType,
+    countUnread?: boolean,
+  ) => void;
   processMessageEmotes: (
     text: string,
     userstate: ReturnType<typeof createUserStateFromTags>,
@@ -72,6 +75,7 @@ export function useChatIrcHandlers({
   channelId,
   channelName,
   clearLocalMessages,
+  enqueueLiveChatMessage,
   handleNewMessage,
   isMountedRef,
   isLoadingRecentMessagesRef,
@@ -94,17 +98,13 @@ export function useChatIrcHandlers({
 
   const handlePrivmsgMessage = useCallback(
     (tags: Record<string, string>, rawText: string, countUnread = true) => {
-      // Raid guard: drop excess live messages before the expensive emote/badge
-      // parse. Recent-message replay (countUnread === false) is never sampled.
+      // Recent-message replay (countUnread === false) is never flood-sampled.
       if (countUnread && !shouldProcessLiveMessage()) {
         return;
       }
       const { isAction, text } = parseActionMessage(rawText);
-      const userstate = createUserStateFromTags(tags);
       const replyParentMessageId = tags['reply-parent-msg-id'];
       const replyParentDisplayName = tags['reply-parent-display-name'];
-
-      const userId = tags['user-id'];
 
       let parentColor: string | undefined;
       if (replyParentDisplayName?.trim()) {
@@ -126,15 +126,22 @@ export function useChatIrcHandlers({
       });
       const messageWithParentColor = { ...baseMessage, parentColor };
 
+      // Live messages defer the emote/badge parse to commit time; replay
+      // parses eagerly since the whole batch commits at once.
+      if (countUnread) {
+        enqueueLiveChatMessage(messageWithParentColor, countUnread);
+        return;
+      }
+
       processMessageEmotes(
         text,
-        userstate,
+        createUserStateFromTags(tags),
         messageWithParentColor,
-        userId,
+        tags['user-id'],
         countUnread,
       );
     },
-    [channelId, channelName, processMessageEmotes],
+    [channelId, channelName, enqueueLiveChatMessage, processMessageEmotes],
   );
 
   const onMessage = useCallback(
@@ -254,10 +261,7 @@ export function useChatIrcHandlers({
 
       const systemMessage = createSystemMessage(channelName, systemMessageText);
 
-      batch(() => {
-        clearMessages();
-        addMessage(systemMessage);
-      });
+      clearMessagesWithNotice(systemMessage);
       setTimeout(() => {
         listRef.current?.scrollToEnd({ animated: false });
       }, 0);

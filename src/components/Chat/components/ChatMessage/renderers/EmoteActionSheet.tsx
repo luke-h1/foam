@@ -34,11 +34,7 @@ import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 
 type PartVariant = ParsedPart<'emote'>;
 type ActionId =
-  | 'copy-name'
-  | 'copy-url'
-  | 'copy-url-2x'
-  | 'copy-url-4x'
-  | 'preview';
+  'copy-name' | 'copy-url' | 'copy-url-2x' | 'copy-url-4x' | 'preview';
 
 const COPY_IMAGE_VARIANT_ACTIONS = [
   { id: 'copy-url-2x', scale: '2x' },

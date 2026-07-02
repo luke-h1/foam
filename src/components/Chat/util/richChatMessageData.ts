@@ -5,9 +5,9 @@ import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 
 export function toChatMessageData<
   TNoticeType extends NoticeVariants,
-  TVariant extends TNoticeType extends 'usernotice'
+  TVariant extends (TNoticeType extends 'usernotice'
     ? keyof UserNoticeVariantMap
-    : never = never,
+    : never) = never,
 >(
   props: RichChatMessageProps<TNoticeType, TVariant>,
 ): ChatMessageType<TNoticeType, TVariant> {

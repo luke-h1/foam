@@ -59,8 +59,7 @@ export type TwitchAnd7TVVariant = Extract<
 >;
 
 export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
-  | 'stv_emote_added'
-  | 'stv_emote_removed'
+  'stv_emote_added' | 'stv_emote_removed'
   ? {
       type: TType;
       stvEvents: {

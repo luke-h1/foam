@@ -1,7 +1,20 @@
 import { type RefObject, useCallback, useRef } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import {
+  Host,
+  List,
+  Section,
+  Text as NativeText,
+  VStack,
+} from '@expo/ui/swift-ui';
+import {
+  font,
+  foregroundStyle,
+  listStyle,
+  refreshable,
+} from '@expo/ui/swift-ui/modifiers';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
@@ -187,6 +200,7 @@ interface BlockedUsersListProps {
   isError: boolean;
   onRefresh: () => Promise<unknown>;
   onUnblock: (userId: string, userName: string) => void;
+  onUnblockDirect: (userId: string) => void;
 }
 
 function BlockedUsersList({
@@ -195,6 +209,7 @@ function BlockedUsersList({
   data,
   onRefresh,
   onUnblock,
+  onUnblockDirect,
 }: BlockedUsersListProps) {
   const { t } = useTranslation('preferences');
   const listRef = useRef(null);
@@ -252,6 +267,16 @@ function BlockedUsersList({
     );
   }
 
+  if (Platform.OS === 'ios') {
+    return (
+      <NativeBlockedUsersList
+        data={data}
+        onRefresh={onRefresh}
+        onUnblockDirect={onUnblockDirect}
+      />
+    );
+  }
+
   return (
     <BlockedUsersDataList
       data={data}
@@ -259,6 +284,68 @@ function BlockedUsersList({
       onRefresh={onRefresh}
       renderItem={renderItem}
     />
+  );
+}
+
+function NativeBlockedUsersList({
+  data,
+  onRefresh,
+  onUnblockDirect,
+}: {
+  data: UserBlockList[];
+  onRefresh: () => Promise<unknown>;
+  onUnblockDirect: (userId: string) => void;
+}) {
+  const { t } = useTranslation('preferences');
+
+  const handleDelete = (indices: number[]) => {
+    for (const index of indices) {
+      const user = data[index];
+      if (user) {
+        onUnblockDirect(user.user_id);
+      }
+    }
+  };
+
+  return (
+    <Host style={styles.content} colorScheme='dark'>
+      <List
+        modifiers={[
+          listStyle('insetGrouped'),
+          refreshable(async () => {
+            await onRefresh();
+          }),
+        ]}
+      >
+        <Section
+          title={t('blockedAccounts')}
+          footer={<NativeText>{t('blockedUsersFooter')}</NativeText>}
+        >
+          <List.ForEach onDelete={handleDelete}>
+            {data.map(user => (
+              <VStack key={user.user_id} alignment='leading' spacing={2}>
+                <NativeText
+                  modifiers={[
+                    foregroundStyle(theme.color.text.dark),
+                    font({ textStyle: 'body', weight: 'semibold' }),
+                  ]}
+                >
+                  {user.display_name}
+                </NativeText>
+                <NativeText
+                  modifiers={[
+                    foregroundStyle(theme.color.textSecondary.dark),
+                    font({ textStyle: 'footnote' }),
+                  ]}
+                >
+                  @{user.user_login}
+                </NativeText>
+              </VStack>
+            ))}
+          </List.ForEach>
+        </Section>
+      </List>
+    </Host>
   );
 }
 
@@ -273,6 +360,8 @@ function BlockedUsersDataList({
   onRefresh: () => Promise<unknown>;
   renderItem: ListRenderItem<UserBlockList>;
 }) {
+  const { t } = useTranslation('preferences');
+
   return (
     <View style={styles.content}>
       <FlashList
@@ -288,7 +377,7 @@ function BlockedUsersDataList({
         maintainVisibleContentPosition={{ disabled: true }}
         ListFooterComponent={
           <Text type='xxs' color='gray.textLow' style={styles.sectionFooter}>
-            Unblocking restores normal Twitch interactions for that account.
+            {t('blockedUsersFooter')}
           </Text>
         }
       />
@@ -379,6 +468,7 @@ export function BlockedUsersScreen() {
         isError={isError}
         onRefresh={onRefresh}
         onUnblock={handleUnblockRequest}
+        onUnblockDirect={unblockUser}
       />
     </View>
   );

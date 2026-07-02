@@ -638,6 +638,11 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
   var watchdogLastTime = -1;
   var stalledAtMs = 0;
   var stallReported = false;
+  function isAdActive() {
+    return !!document.querySelector(
+      '[data-a-target="video-ad-label"],[data-a-target="video-ad-countdown"],.video-player__ad-info-container,[data-test-selector="ad-banner-default-text-area__content"]'
+    );
+  }
   function startPlaybackWatchdog() {
     if (watchdogStarted) {
       return;
@@ -645,7 +650,7 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     watchdogStarted = true;
     setInterval(function() {
       var video = document.querySelector('video');
-      if (!video || video.paused || userPaused || !startAllowed) {
+      if (!video || video.paused || userPaused || !startAllowed || isAdActive()) {
         watchdogLastTime = video ? video.currentTime : -1;
         stalledAtMs = 0;
         stallReported = false;

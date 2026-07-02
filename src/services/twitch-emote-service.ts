@@ -1,9 +1,9 @@
 import type { TwitchSanitisedEmote } from '@app/types/emote';
 import type { PaginatedList } from '@app/types/twitch/api';
 import type { TwitchEmote } from '@app/types/twitch/emote';
-import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 
 import { twitchApi } from './api/clients';
+import { buildSanitisedEmote } from './emote-provider';
 import { twitchService } from './twitch-service';
 
 interface TwitchEmotePage {
@@ -39,7 +39,13 @@ function sanitiseTwitchEmote(
   site: TwitchSanitisedEmote['site'],
   creator: string | null,
 ): TwitchSanitisedEmote {
-  const imageVariants = createEmoteImageVariants({
+  return buildSanitisedEmote({
+    id: emote.id,
+    name: emote.name,
+    site,
+    creator,
+    emoteLink: toTwitchImageUrl(emote.id),
+    originalName: emote.name,
     animated: {
       '2x': toTwitchImageUrl(emote.id, 'default', '2.0'),
       '4x': toTwitchImageUrl(emote.id, 'default', '3.0'),
@@ -49,18 +55,6 @@ function sanitiseTwitchEmote(
       '4x': toTwitchImageUrl(emote.id, 'static', '3.0'),
     },
   });
-
-  return {
-    name: emote.name,
-    id: emote.id,
-    url: toTwitchImageUrl(emote.id),
-    static_url: toTwitchImageUrl(emote.id, 'static'),
-    image_variants: imageVariants,
-    emote_link: toTwitchImageUrl(emote.id),
-    creator,
-    original_name: emote.name,
-    site,
-  };
 }
 
 export const twitchEmoteService = {

@@ -25,11 +25,7 @@ import {
 import { logger } from '@app/utils/logger';
 
 export type EmoteLoadingStatus =
-  | 'idle'
-  | 'loading'
-  | 'success'
-  | 'error'
-  | 'cancelled';
+  'idle' | 'loading' | 'success' | 'error' | 'cancelled';
 
 interface UseChatEmoteLoaderOptions {
   channelId: string;

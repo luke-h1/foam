@@ -1,12 +1,17 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import { addMessage, clearMessages } from '@app/store/chat/actions/messages';
+import {
+  addMessage,
+  clearMessages,
+  clearMessagesWithNotice,
+} from '@app/store/chat/actions/messages';
 
 import { useChatIrcHandlers } from '../useChatIrcHandlers';
 
 jest.mock('@app/store/chat/actions/messages', () => ({
   addMessage: jest.fn(),
   clearMessages: jest.fn(),
+  clearMessagesWithNotice: jest.fn(),
   getMessageById: jest.fn(),
   getMessageColor: jest.fn(),
   moderateMessageById: jest.fn(),
@@ -26,18 +31,21 @@ jest.mock('@app/utils/logger', () => ({
 
 const mockAddMessage = jest.mocked(addMessage);
 const mockClearMessages = jest.mocked(clearMessages);
+const mockClearMessagesWithNotice = jest.mocked(clearMessagesWithNotice);
 
 function renderIrcHandlers({
   isLoadingRecentMessages = false,
   isMounted = true,
   messageCount = 0,
   clearLocalMessages = jest.fn(),
+  enqueueLiveChatMessage = jest.fn(),
   processMessageEmotes = jest.fn(),
 }: {
   isLoadingRecentMessages?: boolean;
   isMounted?: boolean;
   messageCount?: number;
   clearLocalMessages?: jest.Mock;
+  enqueueLiveChatMessage?: jest.Mock;
   processMessageEmotes?: jest.Mock;
 } = {}) {
   return renderHook(() =>
@@ -45,6 +53,7 @@ function renderIrcHandlers({
       channelId: 'channel-1',
       channelName: 'foam',
       clearLocalMessages,
+      enqueueLiveChatMessage,
       handleNewMessage: jest.fn(),
       isMountedRef: { current: isMounted },
       isLoadingRecentMessagesRef: { current: isLoadingRecentMessages },
@@ -108,8 +117,8 @@ describe('useChatIrcHandlers', () => {
   });
 
   test('strips the CTCP ACTION wrapper and flags /me messages', () => {
-    const processMessageEmotes = jest.fn();
-    const { result } = renderIrcHandlers({ processMessageEmotes });
+    const enqueueLiveChatMessage = jest.fn();
+    const { result } = renderIrcHandlers({ enqueueLiveChatMessage });
 
     act(() => {
       result.current.onMessage(
@@ -119,16 +128,15 @@ describe('useChatIrcHandlers', () => {
       );
     });
 
-    expect(processMessageEmotes).toHaveBeenCalledTimes(1);
-    const [text, , baseMessage] = processMessageEmotes.mock.calls[0] ?? [];
-    expect(text).toEqual('waves at chat');
+    expect(enqueueLiveChatMessage).toHaveBeenCalledTimes(1);
+    const [baseMessage] = enqueueLiveChatMessage.mock.calls[0] ?? [];
     expect(baseMessage.isAction).toEqual(true);
     expect(baseMessage.message[0].content).toEqual('waves at chat');
   });
 
   test('does not flag a normal message as an action', () => {
-    const processMessageEmotes = jest.fn();
-    const { result } = renderIrcHandlers({ processMessageEmotes });
+    const enqueueLiveChatMessage = jest.fn();
+    const { result } = renderIrcHandlers({ enqueueLiveChatMessage });
 
     act(() => {
       result.current.onMessage(
@@ -138,9 +146,30 @@ describe('useChatIrcHandlers', () => {
       );
     });
 
-    const [text, , baseMessage] = processMessageEmotes.mock.calls[0] ?? [];
-    expect(text).toEqual('hello world');
+    const [baseMessage] = enqueueLiveChatMessage.mock.calls[0] ?? [];
+    expect(baseMessage.message[0].content).toEqual('hello world');
     expect(baseMessage.isAction).toBeUndefined();
+  });
+
+  test('live messages defer the emote parse; replay parses eagerly', () => {
+    const enqueueLiveChatMessage = jest.fn();
+    const processMessageEmotes = jest.fn();
+    const { result } = renderIrcHandlers({
+      enqueueLiveChatMessage,
+      processMessageEmotes,
+    });
+
+    act(() => {
+      result.current.onMessage(
+        '#foam',
+        { 'display-name': 'Bob', login: 'bob' },
+        'live message',
+      );
+    });
+
+    expect(enqueueLiveChatMessage).toHaveBeenCalledTimes(1);
+    expect(enqueueLiveChatMessage.mock.calls[0]?.[1]).toEqual(true);
+    expect(processMessageEmotes).not.toHaveBeenCalled();
   });
 
   test('posts a system message announcing a timeout with a humanised duration', () => {
@@ -185,10 +214,11 @@ describe('useChatIrcHandlers', () => {
       result.current.onClearChat('#foam', {});
     });
 
-    const message = mockAddMessage.mock.calls[0]?.[0];
+    expect(mockAddMessage).not.toHaveBeenCalled();
+    const notice = mockClearMessagesWithNotice.mock.calls[0]?.[0];
     const content =
-      message?.message[0] && 'content' in message.message[0]
-        ? message.message[0].content
+      notice?.message[0] && 'content' in notice.message[0]
+        ? notice.message[0].content
         : undefined;
     expect(content).toEqual('Chat was cleared by a moderator');
   });

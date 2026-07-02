@@ -82,6 +82,8 @@ export interface Preferences {
    * created and no events are sent.
    */
   analyticsEnabled: boolean;
+  sharedChatEnabled: boolean;
+  enhancedVideoStability: boolean;
 }
 
 export const preferencesSchema = z.object({
@@ -126,6 +128,8 @@ export const preferencesSchema = z.object({
   landscapeChatWidth: z.number().nullable(),
   customPlayerEnabled: z.boolean(),
   analyticsEnabled: z.boolean(),
+  sharedChatEnabled: z.boolean(),
+  enhancedVideoStability: z.boolean(),
 }) satisfies z.ZodType<Preferences>;
 
 export const initialPreferences: Preferences = {
@@ -168,6 +172,8 @@ export const initialPreferences: Preferences = {
   landscapeChatWidth: null,
   customPlayerEnabled: true,
   analyticsEnabled: true,
+  sharedChatEnabled: true,
+  enhancedVideoStability: false,
 };
 
 ensureObservablePersistenceConfig();

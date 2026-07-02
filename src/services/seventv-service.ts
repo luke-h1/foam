@@ -22,7 +22,6 @@ import {
   UserPersonalEmotesQueryQuery,
   UserPersonalEmotesQueryQueryVariables,
 } from '@app/graphql/generated/gql';
-import { storageService } from '@app/lib/storage';
 import type {
   EmoteImageVariants,
   EmoteImageVariantSet,
@@ -46,6 +45,7 @@ import {
 } from '@app/utils/color/sevenTvPaintData';
 import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { logger } from '@app/utils/logger';
+import { sevenTvUserIdCache } from '@app/utils/seventv/sevenTvUserIdCache';
 
 import { sevenTvApi } from './api/clients';
 import { sevenTvV4Client } from './gql/client';
@@ -91,83 +91,49 @@ interface StvChannelEmotesResponse {
   };
 }
 
-const SEVEN_TV_USER_ID_CACHE_PREFIX = 'user-id:';
-// Keep persisted 7TV user ID lookups for at most 12 hours before resolving again.
-const SEVEN_TV_USER_ID_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
-const SEVEN_TV_USER_ID_NEGATIVE_CACHE_TTL_MS = 30 * 60 * 1000;
-const SEVEN_TV_CACHE_NAMESPACE = 'seven_tv_cache';
-
-type CachedSevenTvUserId = {
-  expiresAt: number;
-  userId: string;
-};
-
-const sevenTvUserIdRequests = new Map<string, Promise<string>>();
-
-// Positive twitch->7TV user-id resolutions cached in-memory so repeat lookups
-// within a session skip the synchronous MMKV read getCachedSevenTvUserId does on
-// the chat message/hydrate path. Bounded (FIFO) so it can never itself become an
-// unbounded structure; MMKV stays the durable, TTL'd source of truth. Only
-// positive resolutions are cached — negatives fall through so the 30-min MMKV
-// negative TTL still lets a newly-created 7TV account resolve.
-const MAX_RESOLVED_USER_ID_ENTRIES = 2000;
-const resolvedSevenTvUserIds = new Map<string, string>();
-
-function rememberResolvedSevenTvUserId(
-  twitchUserId: string,
-  userId: string,
-): void {
-  if (!userId) {
-    return;
-  }
-  if (resolvedSevenTvUserIds.has(twitchUserId)) {
-    resolvedSevenTvUserIds.delete(twitchUserId);
-  } else if (resolvedSevenTvUserIds.size >= MAX_RESOLVED_USER_ID_ENTRIES) {
-    const oldest = resolvedSevenTvUserIds.keys().next().value;
-    if (oldest !== undefined) {
-      resolvedSevenTvUserIds.delete(oldest);
-    }
-  }
-  resolvedSevenTvUserIds.set(twitchUserId, userId);
-}
-
-const getSevenTvUserIdStorageKey = (twitchUserId: string) =>
-  `sevenTvUserId_${SEVEN_TV_USER_ID_CACHE_PREFIX}${twitchUserId}` as const;
-
-function getCachedSevenTvUserId(twitchUserId: string): string | undefined {
-  const cached = storageService.getString<CachedSevenTvUserId>(
-    getSevenTvUserIdStorageKey(twitchUserId),
-    SEVEN_TV_CACHE_NAMESPACE,
-  );
-  if (!cached) {
-    return undefined;
-  }
-  return cached.userId;
-}
-
-function cacheSevenTvUserId(twitchUserId: string, userId: string) {
-  const cached: CachedSevenTvUserId = {
-    expiresAt:
-      Date.now() +
-      (userId
-        ? SEVEN_TV_USER_ID_CACHE_TTL_MS
-        : SEVEN_TV_USER_ID_NEGATIVE_CACHE_TTL_MS),
-    userId,
-  };
-
-  storageService.set(
-    getSevenTvUserIdStorageKey(twitchUserId),
-    cached,
-    SEVEN_TV_CACHE_NAMESPACE,
-    { expiry: new Date(cached.expiresAt) },
-  );
-}
-
 export const clearSevenTvUserIdCache = () => {
-  sevenTvUserIdRequests.clear();
-  resolvedSevenTvUserIds.clear();
-  storageService.clearNamespace(SEVEN_TV_CACHE_NAMESPACE, 'sevenTvUserId_');
+  sevenTvUserIdCache.clear();
 };
+
+async function fetchSevenTvUserId(
+  twitchUserId: string,
+): Promise<string | null> {
+  const { result, error } = await runCosmeticsQuery(
+    UserByConnectionDocument,
+    { platformId: twitchUserId },
+    responseText => {
+      'worklet';
+      const parsed = JSON.parse(responseText) as {
+        data?: UserByConnectionQuery;
+        errors?: { message?: string }[];
+      };
+      if (parsed.errors?.length) {
+        throw new Error(
+          parsed.errors.flatMap(e => e.message ?? []).join('; ') ||
+            '7TV GQL error',
+        );
+      }
+      return parsed.data?.users?.userByConnection?.id ?? '';
+    },
+  );
+
+  if (error) {
+    logger.stv.warn(
+      `Failed to resolve 7TV user for Twitch user ${twitchUserId}:`,
+      {
+        name: 'seven_tv_provider_warning',
+        error,
+        action: 'user_by_connection_failed',
+        provider: 'seven_tv',
+        resource_type: 'user',
+        twitch_user_id: twitchUserId,
+      },
+    );
+    return null;
+  }
+
+  return result ?? '';
+}
 
 function buildV4ImageVariants(images: readonly Image[]): EmoteImageVariants {
   const animated: EmoteImageVariantSet = {};
@@ -229,37 +195,40 @@ function sanitiseV4EmoteSet(
     totalCount: emoteSet.emotes.totalCount,
   };
 
-  return emoteSet.emotes.items
-    .map(item => {
-      const { emote } = item;
-      const bestImage = pickBestImage(emote.images);
-      const bestStaticImage = pickBestStaticImage(emote.images);
-      const imageVariants = buildV4ImageVariants(emote.images);
-      const width = bestImage?.width ?? 0;
-      const height = bestImage?.height ?? 0;
-      const zeroWidth = item.flags.zeroWidth || emote.flags.defaultZeroWidth;
+  const sanitisedEmotes: SevenTvSanitisedEmote[] = [];
+  for (const item of emoteSet.emotes.items) {
+    const { emote } = item;
+    const bestImage = pickBestImage(emote.images);
+    const bestStaticImage = pickBestStaticImage(emote.images);
+    const imageVariants = buildV4ImageVariants(emote.images);
+    const width = bestImage?.width ?? 0;
+    const height = bestImage?.height ?? 0;
+    const zeroWidth = item.flags.zeroWidth || emote.flags.defaultZeroWidth;
 
-      return {
-        name: item.alias,
-        id: emote.id,
-        url: bestImage?.url ?? '',
-        static_url: bestStaticImage?.url,
-        image_variants: imageVariants,
-        flags: zeroWidth ? 256 : 0,
-        original_name: emote.defaultName,
-        creator: emote.owner?.mainConnection?.platformDisplayName ?? null,
-        emote_link: `https://7tv.app/emotes/${emote.id}`,
-        site,
-        frame_count: bestImage?.frameCount ?? 1,
-        format: bestImage?.mime?.replace('image/', '') ?? 'webp',
-        aspect_ratio: height > 0 ? width / height : 1,
-        zero_width: zeroWidth,
-        width,
-        height,
-        set_metadata: setMetadata,
-      };
-    })
-    .filter(hasRenderableUrl);
+    const sanitised: SevenTvSanitisedEmote = {
+      name: item.alias,
+      id: emote.id,
+      url: bestImage?.url ?? '',
+      static_url: bestStaticImage?.url,
+      image_variants: imageVariants,
+      flags: zeroWidth ? 256 : 0,
+      original_name: emote.defaultName,
+      creator: emote.owner?.mainConnection?.platformDisplayName ?? null,
+      emote_link: `https://7tv.app/emotes/${emote.id}`,
+      site,
+      frame_count: bestImage?.frameCount ?? 1,
+      format: bestImage?.mime?.replace('image/', '') ?? 'webp',
+      aspect_ratio: height > 0 ? width / height : 1,
+      zero_width: zeroWidth,
+      width,
+      height,
+      set_metadata: setMetadata,
+    };
+    if (hasRenderableUrl(sanitised)) {
+      sanitisedEmotes.push(sanitised);
+    }
+  }
+  return sanitisedEmotes;
 }
 
 function hasRenderableUrl(emote: { url: string }): boolean {
@@ -267,71 +236,8 @@ function hasRenderableUrl(emote: { url: string }): boolean {
 }
 
 export const sevenTvService = {
-  get7tvUserId: async (twitchUserId: string): Promise<string> => {
-    const resolved = resolvedSevenTvUserIds.get(twitchUserId);
-    if (resolved !== undefined) {
-      return resolved;
-    }
-
-    const cached = getCachedSevenTvUserId(twitchUserId);
-    if (cached !== undefined) {
-      rememberResolvedSevenTvUserId(twitchUserId, cached);
-      return cached;
-    }
-
-    const pending = sevenTvUserIdRequests.get(twitchUserId);
-    if (pending) {
-      return pending;
-    }
-
-    const request = (async () => {
-      const { result, error } = await runCosmeticsQuery(
-        UserByConnectionDocument,
-        { platformId: twitchUserId },
-        responseText => {
-          'worklet';
-          const parsed = JSON.parse(responseText) as {
-            data?: UserByConnectionQuery;
-            errors?: { message?: string }[];
-          };
-          if (parsed.errors?.length) {
-            throw new Error(
-              parsed.errors.flatMap(e => e.message ?? []).join('; ') ||
-                '7TV GQL error',
-            );
-          }
-          return parsed.data?.users?.userByConnection?.id ?? '';
-        },
-      );
-
-      if (error) {
-        logger.stv.warn(
-          `Failed to resolve 7TV user for Twitch user ${twitchUserId}:`,
-          {
-            name: 'seven_tv_provider_warning',
-            error,
-            action: 'user_by_connection_failed',
-            provider: 'seven_tv',
-            resource_type: 'user',
-            twitch_user_id: twitchUserId,
-          },
-        );
-        return '';
-      }
-
-      const userId = result ?? '';
-      cacheSevenTvUserId(twitchUserId, userId);
-      rememberResolvedSevenTvUserId(twitchUserId, userId);
-      return userId;
-    })();
-
-    sevenTvUserIdRequests.set(twitchUserId, request);
-    try {
-      return await request;
-    } finally {
-      sevenTvUserIdRequests.delete(twitchUserId);
-    }
-  },
+  get7tvUserId: async (twitchUserId: string): Promise<string> =>
+    sevenTvUserIdCache.resolve(twitchUserId, fetchSevenTvUserId),
 
   getEmoteSetId: async (twitchUserId: string): Promise<string> => {
     const result = await sevenTvApi.get<StvChannelEmotesResponse>(
@@ -488,42 +394,43 @@ export const sevenTvService = {
       totalCount: personalEmoteSet.emotes.items.length,
     };
 
-    return personalEmoteSet.emotes.items
-      .map((item): SevenTvSanitisedEmote => {
-        const { emote } = item;
-        const emoteName = item.alias || emote.defaultName;
+    const sanitisedEmotes: SevenTvSanitisedEmote[] = [];
+    for (const item of personalEmoteSet.emotes.items) {
+      const { emote } = item;
+      const emoteName = item.alias || emote.defaultName;
 
-        const bestImage = pickBestImage(emote.images);
-        const bestStaticImage = pickBestStaticImage(emote.images);
-        const imageVariants = buildV4ImageVariants(emote.images);
+      const bestImage = pickBestImage(emote.images);
+      const bestStaticImage = pickBestStaticImage(emote.images);
+      const imageVariants = buildV4ImageVariants(emote.images);
 
-        const imgScale = bestImage?.scale ?? 1;
-        const imgWidth = bestImage ? Math.round(bestImage.width / imgScale) : 0;
-        const imgHeight = bestImage
-          ? Math.round(bestImage.height / imgScale)
-          : 0;
+      const imgScale = bestImage?.scale ?? 1;
+      const imgWidth = bestImage ? Math.round(bestImage.width / imgScale) : 0;
+      const imgHeight = bestImage ? Math.round(bestImage.height / imgScale) : 0;
 
-        return {
-          name: emoteName,
-          id: emote.id,
-          url: bestImage?.url ?? '',
-          static_url: bestStaticImage?.url,
-          image_variants: imageVariants,
-          flags: emote.flags.animated ? 1 : 0,
-          original_name: emote.defaultName,
-          creator: emote.owner?.mainConnection?.platformDisplayName ?? null,
-          emote_link: `https://7tv.app/emotes/${emote.id}`,
-          site: '7TV Personal',
-          frame_count: bestImage?.frameCount ?? 1,
-          format: bestImage?.mime?.replace('image/', '') ?? 'webp',
-          aspect_ratio: imgHeight > 0 ? imgWidth / imgHeight : 1,
-          zero_width: emote.flags.defaultZeroWidth,
-          width: imgWidth,
-          height: imgHeight,
-          set_metadata: setMetadata,
-        };
-      })
-      .filter(hasRenderableUrl);
+      const sanitised: SevenTvSanitisedEmote = {
+        name: emoteName,
+        id: emote.id,
+        url: bestImage?.url ?? '',
+        static_url: bestStaticImage?.url,
+        image_variants: imageVariants,
+        flags: emote.flags.animated ? 1 : 0,
+        original_name: emote.defaultName,
+        creator: emote.owner?.mainConnection?.platformDisplayName ?? null,
+        emote_link: `https://7tv.app/emotes/${emote.id}`,
+        site: '7TV Personal',
+        frame_count: bestImage?.frameCount ?? 1,
+        format: bestImage?.mime?.replace('image/', '') ?? 'webp',
+        aspect_ratio: imgHeight > 0 ? imgWidth / imgHeight : 1,
+        zero_width: emote.flags.defaultZeroWidth,
+        width: imgWidth,
+        height: imgHeight,
+        set_metadata: setMetadata,
+      };
+      if (hasRenderableUrl(sanitised)) {
+        sanitisedEmotes.push(sanitised);
+      }
+    }
+    return sanitisedEmotes;
   },
 
   /**

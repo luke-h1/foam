@@ -3,6 +3,7 @@ import type { StyleProp, TextStyle } from 'react-native';
 
 import { useSelector } from '@legendapp/state/react';
 
+import { getChatColorStyle } from '@app/components/Chat/util/chatColorStyles';
 import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
 import { Text } from '@app/components/ui/Text/Text';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
@@ -74,7 +75,7 @@ function MentionSpanComponent({
         fontScaleStyle,
         emoteLineStyle,
         isHighlightedMention && styles.mentionHighlighted,
-        { color: mentionColor },
+        getChatColorStyle(mentionColor),
       ]}
     >
       {mentionContent}

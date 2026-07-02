@@ -50,6 +50,11 @@ function shouldArmBottomContentAnchor(
 
 interface UseChatMessagesOptions {
   /**
+   * Applied to each message as it leaves the buffer for the store, so the
+   * live path can defer emote/badge parsing to commit time.
+   */
+  finalizeMessageForCommit?: (message: BufferedMessage) => BufferedMessage;
+  /**
    * Hold live messages this many ms before the render buffer (default 0 = no
    * delay).
    */
@@ -63,6 +68,7 @@ interface UseChatMessagesOptions {
 
 export const useChatMessages = (options: UseChatMessagesOptions) => {
   const {
+    finalizeMessageForCommit,
     getChatDelayMs,
     isAtBottomRef,
     isScrollingToBottomRef,
@@ -78,6 +84,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   const flushBufferRef = useRef<() => void>(() => {});
   const scheduleDelayTickRef = useRef<() => void>(() => {});
   const getChatDelayMsRef = useRef<() => number>(getChatDelayMs ?? (() => 0));
+  const finalizeMessageForCommitRef = useRef(finalizeMessageForCommit);
   const isFlushingRef = useRef(false);
   const pendingUnreadCountRef = useRef(0);
   // Set when a flush sees a raid-sized batch; slows the next live flush cadence.
@@ -85,6 +92,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
   useLayoutEffect(() => {
     getChatDelayMsRef.current = getChatDelayMs ?? (() => 0);
+    finalizeMessageForCommitRef.current = finalizeMessageForCommit;
   });
 
   const flushBuffer = useCallback(() => {
@@ -121,7 +129,10 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
         isScrollingToBottomRef,
       );
 
-      publishBufferedMessages(messagesToFlush);
+      const finalize = finalizeMessageForCommitRef.current;
+      publishBufferedMessages(
+        finalize ? messagesToFlush.map(finalize) : messagesToFlush,
+      );
 
       if (shouldMaintainBottom) {
         onBottomContentChange?.();
@@ -281,7 +292,10 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       isScrollingToBottomRef,
     );
 
-    publishBufferedMessages(bufferedMessages);
+    const finalize = finalizeMessageForCommitRef.current;
+    publishBufferedMessages(
+      finalize ? bufferedMessages.map(finalize) : bufferedMessages,
+    );
 
     if (shouldMaintainBottom) {
       onBottomContentChange?.();

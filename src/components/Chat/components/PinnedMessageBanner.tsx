@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';
 
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
@@ -35,7 +36,11 @@ export const PinnedMessageBanner = memo(
       : t('pinned.pinnedMessage');
 
     return (
-      <View style={styles.pinnedMessageBanner}>
+      <Animated.View
+        entering={FadeInUp.duration(200)}
+        exiting={FadeOutUp.duration(150)}
+        style={styles.pinnedMessageBanner}
+      >
         <View style={styles.pinnedIconShell}>
           <SymbolView name='mappin' tintColor={theme.colorWhite} size={16} />
         </View>
@@ -79,7 +84,7 @@ export const PinnedMessageBanner = memo(
             </Button>
           </View>
         ) : null}
-      </View>
+      </Animated.View>
     );
   },
 );

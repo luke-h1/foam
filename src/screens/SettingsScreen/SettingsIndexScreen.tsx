@@ -3,7 +3,7 @@ import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button, Form, Host, Section } from '@expo/ui/swift-ui';
+import { Button, Form, Host, Section, Text as UIText } from '@expo/ui/swift-ui';
 import { router } from 'expo-router';
 
 import {
@@ -21,6 +21,7 @@ import {
   isAdminLogin,
   isDevToolsEnabled,
 } from '@app/utils/devTools/devToolsGate';
+import { getBuildInfoLabel } from '@app/utils/version/buildInfoLabel';
 
 import { BuildStatus } from './components/BuildStatus';
 
@@ -125,7 +126,10 @@ export function SettingsIndexScreen() {
             />
           </Section>
 
-          <Section title={shouldShowDevTools ? t('developer') : t('more')}>
+          <Section
+            title={shouldShowDevTools ? t('developer') : t('more')}
+            footer={<UIText>{getBuildInfoLabel()}</UIText>}
+          >
             {shouldShowDevTools ? (
               <Button
                 label={t('devTools')}
