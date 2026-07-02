@@ -41,6 +41,10 @@ import {
 import { Color } from '@app/styles/pallete';
 import { theme } from '@app/styles/themes';
 
+function createPhraseId(text: string) {
+  return `${Date.now()}_${text}`;
+}
+
 function PhraseRow({
   phrase,
   isEditing,
@@ -185,7 +189,7 @@ function NativeSavedPhrasesList() {
       return;
     }
     updatePreferences({
-      savedPhrases: [...phrases, { id: `${Date.now()}_${text}`, text }],
+      savedPhrases: [...phrases, { id: createPhraseId(text), text }],
     });
     phraseText.value = '';
     void impact('light');
@@ -292,7 +296,7 @@ export function SavedPhrasesScreen() {
       return;
     }
     updatePreferences({
-      savedPhrases: [...phrases, { id: `${Date.now()}_${text}`, text }],
+      savedPhrases: [...phrases, { id: createPhraseId(text), text }],
     });
     setInputValue('');
     void impact('light');
