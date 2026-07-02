@@ -121,9 +121,8 @@ export function useChatSession({
     [chatDelay],
   );
 
-  // useChatMessages mounts before useChatMessageProcessing (which needs its
-  // handleNewMessage), so the commit-time finalizer arrives via a ref filled in
-  // below once the processing hook exists.
+  // Filled in below once useChatMessageProcessing exists; useChatMessages
+  // mounts first and needs the finalizer via a ref.
   const finalizeBufferedMessageRef = useRef<
     (message: AnyChatMessageType) => AnyChatMessageType
   >(message => message);
@@ -155,7 +154,6 @@ export function useChatSession({
     ),
   });
 
-  // Switching the delay off must release anything held; turning it on ensures a tick is pending.
   useEffect(() => {
     reconcileChatDelay();
   }, [chatDelay, reconcileChatDelay]);
@@ -166,8 +164,6 @@ export function useChatSession({
     user?.login ?? user?.display_name,
   );
 
-  // Live messages only (recent-message replays pass countUnread: false), so
-  // re-entering a chat never replays a burst of buzzes.
   const handleNewMessage: typeof enqueueChatMessage = useCallback(
     (message, options) => {
       const customHighlightRules = customHighlights ?? [];
@@ -271,8 +267,8 @@ export function useChatSession({
     sendChatCommand,
     getUserState,
   } = useTwitchChat({
-    // No channel ⇒ the IRC socket never connects (shouldConnect is false), so
-    // in perf mode the synthetic flood is the only thing feeding onMessage.
+    // Perf mode: no channel means the socket never connects and the synthetic
+    // flood is the only thing feeding onMessage.
     channel: syntheticTransport ? undefined : channelName,
     onMessage,
     onNotice,
@@ -313,7 +309,6 @@ export function useChatSession({
     processRecentIrcLine: handleRecentIrcMessage,
     isLoadingRecentMessagesRef,
     scrollChatToEnd: scrollToBottom,
-    // No real recent-message replay in perf mode — the flood seeds the scrollback.
     showRecentMessages: syntheticTransport ? false : showRecentMessages,
   });
 
@@ -327,7 +322,6 @@ export function useChatSession({
     sevenTvEmoteSetId,
   });
 
-  // undefined channelId ⇒ EventSub never subscribes (canSubscribe is false).
   useTwitchChannelPointsEventSub(syntheticTransport ? undefined : channelId);
 
   const connected =

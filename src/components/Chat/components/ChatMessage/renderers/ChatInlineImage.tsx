@@ -219,9 +219,8 @@ function ChatInlineImageComponent({
   );
 
   const rowVisibility = use(RowVisibilityContext);
-  // Prefer the kind encoded in the url over the ref's native isAnimated getter:
-  // that getter is a JSI hop per render, and only BTTV's bare url form actually
-  // needs it.
+  // The native isAnimated getter is a JSI hop per render; the url already
+  // encodes the kind for everything but BTTV's bare url form.
   const urlKind = useMemo(() => describeEmoteUrl(sourceUrl).kind, [sourceUrl]);
   const animated =
     sharedRef != null &&

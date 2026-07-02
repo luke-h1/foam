@@ -69,6 +69,10 @@ type CachedUserCosmetics = {
 const userCosmeticsRequests = new Map<string, Promise<string | null>>();
 const sessionCosmeticsCache = new Map<string, CachedUserCosmetics>();
 
+// Bumped by clearUserCosmeticsCache so in-flight fetches cannot write back
+// stale results.
+let cosmeticsCacheGeneration = 0;
+
 // Bounded concurrency for the per-user cosmetics network fetch. Entering a busy
 // channel fires an entitlement.create burst (plus the visible-message hydrate
 // path), each of which can call fetchAndCacheUserCosmetics; without a cap that
@@ -208,6 +212,7 @@ export const fetchAndCacheUserCosmetics = async (
     return pending;
   }
 
+  const requestGeneration = cosmeticsCacheGeneration;
   const request = (async () => {
     await acquireCosmeticFetchSlot();
     try {
@@ -235,8 +240,10 @@ export const fetchAndCacheUserCosmetics = async (
         ttvUserId: cosmetics.ttvUserId,
       };
 
-      setCachedUserCosmetics(sevenTvUserId, cachedCosmetics);
-      applyCachedUserCosmetics(cachedCosmetics);
+      if (cosmeticsCacheGeneration === requestGeneration) {
+        setCachedUserCosmetics(sevenTvUserId, cachedCosmetics);
+        applyCachedUserCosmetics(cachedCosmetics);
+      }
       return cosmetics.ttvUserId;
     } catch (error) {
       logger.stvWs.error(
@@ -258,6 +265,7 @@ export const fetchAndCacheUserCosmetics = async (
 };
 
 export const clearUserCosmeticsCache = () => {
+  cosmeticsCacheGeneration += 1;
   userCosmeticsRequests.clear();
   sessionCosmeticsCache.clear();
   clearSevenTvUserIdCache();

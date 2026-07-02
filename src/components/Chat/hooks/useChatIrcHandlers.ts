@@ -98,8 +98,7 @@ export function useChatIrcHandlers({
 
   const handlePrivmsgMessage = useCallback(
     (tags: Record<string, string>, rawText: string, countUnread = true) => {
-      // Flood guard: drop runaway live floods before any per-message work.
-      // Recent-message replay (countUnread === false) is never sampled.
+      // Recent-message replay (countUnread === false) is never flood-sampled.
       if (countUnread && !shouldProcessLiveMessage()) {
         return;
       }
@@ -127,9 +126,8 @@ export function useChatIrcHandlers({
       });
       const messageWithParentColor = { ...baseMessage, parentColor };
 
-      // Live messages defer the emote/badge parse to commit time (raid-sampled
-      // rows never pay for it); replay parses eagerly since the whole batch
-      // commits at once.
+      // Live messages defer the emote/badge parse to commit time; replay
+      // parses eagerly since the whole batch commits at once.
       if (countUnread) {
         enqueueLiveChatMessage(messageWithParentColor, countUnread);
         return;

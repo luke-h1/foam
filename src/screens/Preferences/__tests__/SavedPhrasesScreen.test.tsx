@@ -105,9 +105,8 @@ describe('SavedPhrasesScreen', () => {
       Platform.OS = 'android';
     });
 
-    // The @expo/ui/swift-ui primitives render as opaque native host views in
-    // jsdom, so their text is not queryable; this smoke-tests that the iOS-only
-    // NativeSavedPhrasesList branch mounts without crashing.
+    // The @expo/ui/swift-ui primitives render as opaque native host views, so
+    // their text is not queryable in tests.
     test('mounts the native list branch without crashing', () => {
       mockSavedPhrases = [{ id: 'a', text: 'be right back' }];
 

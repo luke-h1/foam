@@ -1,11 +1,8 @@
 import type { TextStyle } from 'react-native';
 
 /**
- * Interns `{ color }` text styles so hot chat spans (usernames, mentions,
- * action text) hand Fabric a stable style reference per colour instead of a
- * fresh object every render. Chat colours are a small set (Twitch's default
- * palette plus per-user customs), so the cache stays tiny; the bound is a
- * backstop against pathological custom-colour churn.
+ * Interns `{ color }` text styles so hot chat spans hand Fabric a stable style
+ * reference per colour instead of a fresh object every render.
  */
 const colorStyles = new Map<string, TextStyle>();
 const MAX_COLOR_STYLES = 512;

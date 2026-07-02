@@ -133,9 +133,7 @@ export function useRichChatMessage<
   const compact = density === 'compact';
   const normalisedCurrentUsername =
     currentUsernameNormalized ?? normaliseUsername(currentUsername);
-  // Stable identities so the memoized span renderers can bail out when a row
-  // re-renders for reasons that don't change its body (highlight toggles,
-  // moderation updates).
+  // Identity-stable so the memoized span renderers can bail out.
   const effectiveHighlightedUserSet = useMemo(
     () =>
       highlightedUserSet ??

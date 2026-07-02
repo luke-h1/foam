@@ -158,11 +158,10 @@ export type AuthContextProviderProps = {
   testResult?: DefaultTokenResponse;
 };
 
-export const AuthContextProvider = ({
-  children,
+function useAuthContextValue({
   enableTestResult,
   testResult,
-}: AuthContextProviderProps) => {
+}: Omit<AuthContextProviderProps, 'children'>): AuthContextState {
   const [state, setState] = useState<State>({
     ready: false,
   });
@@ -170,8 +169,7 @@ export const AuthContextProvider = ({
   const [user, setUser] = useState<UserInfoResponse | undefined>(undefined);
   const hasTimedOut = useRef(false);
   const userTokenRefreshInFlightRef = useRef(false);
-  const authStateRef = useRef(state.authState);
-  authStateRef.current = state.authState;
+  const authStateRef = useSyncRef(state.authState);
 
   const markAuthStateReadyFallback = (reason: string, error?: unknown) => {
     if (state.ready || hasTimedOut.current) {
@@ -639,6 +637,16 @@ export const AuthContextProvider = ({
     user,
     ready: state.ready,
   };
+
+  return contextState;
+}
+
+export const AuthContextProvider = ({
+  children,
+  enableTestResult,
+  testResult,
+}: AuthContextProviderProps) => {
+  const contextState = useAuthContextValue({ enableTestResult, testResult });
 
   return (
     <AuthContext.Provider value={contextState}>{children}</AuthContext.Provider>

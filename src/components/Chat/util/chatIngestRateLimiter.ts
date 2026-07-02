@@ -1,12 +1,6 @@
-// Caps how many LIVE messages enter the ingest pipeline per second. The
-// per-message cost this bounds is now cheap (IRC tags -> base message + buffer
-// insert); the expensive emote/badge parse is deferred to commit time and only
-// runs for rows that survive raid sampling, so this limiter is a flood
-// backstop for buffer/bookkeeping work rather than the display cap. 150/s is
-// 5x the old parse-at-ingest cap (30/s): scrollback during a raid is far more
-// complete, while a runaway flood still can't monopolise the JS thread. A
-// token bucket lets normal/busy chat through untouched and only samples
-// sustained floods.
+// Flood backstop on live-message ingest. The emote/badge parse is deferred to
+// commit time, so 150/s only bounds cheap buffer/bookkeeping work; the token
+// bucket lets normal/busy chat through untouched and samples sustained floods.
 const MAX_INGESTED_PER_SEC = 150;
 const BUCKET_SIZE = 30;
 

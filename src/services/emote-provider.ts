@@ -31,12 +31,6 @@ export interface ProviderSanitisedEmote<Site extends EmoteSite> {
   site: Site;
 }
 
-/**
- * Assembles the sanitised emote contract shared by the BTTV, FFZ and Twitch
- * providers: compacts the animated/static variant sets into `image_variants`,
- * picks the highest available scale for `url` and `static_url`, and defaults
- * `original_name` to 'UNKNOWN' when the provider does not supply one.
- */
 export function buildSanitisedEmote<Site extends EmoteSite>(
   source: EmoteProviderSource<Site>,
 ): ProviderSanitisedEmote<Site> {

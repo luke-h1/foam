@@ -128,13 +128,9 @@ export function init() {
     ignoreErrors: ['Network request failed'],
     sampleRate: 1.0,
     /**
-     * Session replay records and encodes screenshots continuously and 100%
-     * tracing keeps span bookkeeping on every interaction; together they showed
-     * up in production JS-thread profiles as the base64/envelope encoders
-     * (~580s cumulative over 14 days). Production keeps errors at 100% but
-     * samples the always-on instruments down; internal/testflight/preview stay
-     * at 100% for full visibility. profilesSampleRate is relative to
-     * tracesSampleRate, so profiles still cover every sampled trace.
+     * Replay/tracing encoders were a measured production JS-thread cost, so
+     * production samples them down while keeping errors at 100%.
+     * profilesSampleRate is relative to tracesSampleRate.
      */
     tracesSampleRate: isProduction ? 0.15 : 1.0,
     profilesSampleRate: 1.0,

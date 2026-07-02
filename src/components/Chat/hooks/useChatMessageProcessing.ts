@@ -171,11 +171,6 @@ export function useChatMessageProcessing({
     [composeMessageWithEmotes, handleNewMessage],
   );
 
-  /**
-   * Live-path ingest: buffers the raw-text base message immediately and leaves
-   * emote/badge resolution to finalizeBufferedMessage at commit time, so raid
-   * messages that raid sampling drops never pay for a parse.
-   */
   const enqueueLiveChatMessage = useCallback(
     (baseMessage: AnyChatMessageType, countUnread = true) => {
       handleNewMessage(

@@ -36,12 +36,6 @@ type InlineMessageSpansProps = Pick<
   textColor?: string;
 };
 
-/**
- * The span-building loop is O(parts) with a child element per emote/mention, so
- * the memo lets a row re-render (highlight toggle, moderation notice) skip
- * rebuilding a body whose inputs didn't change. Its props are kept
- * identity-stable in useRichChatMessage for exactly this reason.
- */
 function InlineMessageSpansComponent({
   compact,
   disableEmoteAnimations,

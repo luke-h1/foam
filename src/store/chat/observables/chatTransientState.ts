@@ -1,9 +1,7 @@
 import { observable } from '@legendapp/state';
 
 /**
- * Per-channel view-local chat state (hide/highlight filters, the flash-target
- * of a reply jump). Session-scoped and never persisted: it resets with the app,
- * not with the channel cache.
+ * Per-channel view-local chat state. Session-scoped and never persisted.
  */
 export interface ChatTransientChannelState {
   hiddenPhrases: string[];

@@ -13,8 +13,7 @@ interface ShowActionMenuOptions {
 
 /**
  * Present a native action menu: ActionSheetIOS on iOS, an Alert dialog on
- * Android. Used for long-press actions on cards where a full custom sheet
- * would be overkill.
+ * Android.
  */
 export function showActionMenu({
   actions,

@@ -82,22 +82,9 @@ const recentlyReleased = new Set<string>();
 let releaseRaceCount = 0;
 
 /**
- * Estimates the resident decoded-bitmap cost of a cached emote ref, in bytes.
- *
- * Reading ANY native ImageRef getter is a JSI->native hop, and during a
- * channel-load decode storm even the single remaining `isAnimated` read blocked
- * behind the native decode queue and was the hottest app function on the JS
- * thread (Sentry profiles: p75 ~330ms). The decode is already bounded to maxPx
- * per edge, so maxPx^2 is a tight upper bound on the bitmap without touching
- * the ref at all; animated-ness drives the {@link ANIMATED_BYTE_FACTOR}
- * multiplier the byte budget exists to bound, and the caller derives it from
- * the emote url (describeEmoteUrl), falling back to the native read only for
- * urls that don't encode their kind.
- *
- * @param animated - Whether the decoded image is animated.
- * @param maxPx - The per-edge decode cap the ref was decoded under
- *   ({@link EMOTE_DECODE_MAX_PX}).
- * @returns Upper-bound byte cost, 8x larger for animated refs.
+ * Upper-bound decoded-bitmap cost without touching the ref: every native
+ * ImageRef getter is a JSI hop, and reading one here was a measured JS-thread
+ * hotspot during channel-load decode storms.
  */
 function estimateRefBytes(animated: boolean, maxPx: number): number {
   const pixelBytes = maxPx * maxPx * 4;

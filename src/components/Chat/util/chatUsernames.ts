@@ -3,10 +3,8 @@ export function normaliseChatUsername(value?: string | null): string {
 }
 
 /**
- * Raw-text twin of the parsed-part mention check: true when any
- * whitespace-delimited @token normalises to `normalisedUser`. Used for mention
- * haptics on live messages whose emote parse is deferred to commit, where the
- * body is still a single text part with no mention parts to scan.
+ * Raw-text mention check for live messages whose emote parse is deferred to
+ * commit time, where there are no mention parts to scan yet.
  */
 export function textMentionsUser(
   text: string,

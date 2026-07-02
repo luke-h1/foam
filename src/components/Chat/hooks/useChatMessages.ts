@@ -50,10 +50,8 @@ function shouldArmBottomContentAnchor(
 
 interface UseChatMessagesOptions {
   /**
-   * Applied to each message as it leaves the buffer for the store. Lets the
-   * live path defer the emote/badge parse to commit time: only messages that
-   * survive raid sampling are finalized, so a 200 msg/s raid never parses more
-   * than the rows it actually renders.
+   * Applied to each message as it leaves the buffer for the store, so the
+   * live path can defer emote/badge parsing to commit time.
    */
   finalizeMessageForCommit?: (message: BufferedMessage) => BufferedMessage;
   /**

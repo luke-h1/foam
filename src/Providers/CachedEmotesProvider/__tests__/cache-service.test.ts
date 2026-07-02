@@ -21,10 +21,7 @@ import {
 } from '@app/Providers/CachedEmotesProvider/cache-service';
 
 const MAX_DECODED_BYTES_HIGH_TIER = 192 * 1024 * 1024;
-// Decodes are capped at maxPx (96 high-tier) per edge, so the per-entry cost is
-// 96*96*4 = 36KiB static or 8x that animated. The byte budget keys off the
-// animated-ness encoded in the url (native isAnimated only for urls that don't
-// encode it): ~682 animated refs fill the 192MiB budget before the 1200 count cap.
+// 192MiB / (96*96*4 bytes * 8 animated factor) ≈ 682 refs before the count cap.
 const HIGH_TIER_BYTE_BUDGET_ANIMATED_ENTRIES = 682;
 const animatedRef = () => ({ isAnimated: true }) as unknown as ImageRef;
 

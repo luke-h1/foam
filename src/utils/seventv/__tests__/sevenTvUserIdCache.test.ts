@@ -164,4 +164,31 @@ describe('sevenTvUserIdCache', () => {
     expect(userId).toEqual('stv-1');
     expect(fetchUserId.mock.calls).toEqual([['123'], ['123']]);
   });
+
+  test('a resolve in flight during clear does not repopulate the cache', async () => {
+    const storage = createFakeStorage();
+    const cache = createSevenTvUserIdCache(storage);
+    let resolveFetch: ((userId: string) => void) | undefined;
+    const fetchUserId = jest.fn(
+      () =>
+        new Promise<string>(resolve => {
+          resolveFetch = resolve;
+        }),
+    );
+
+    const inFlight = cache.resolve('123', fetchUserId);
+    cache.clear();
+    resolveFetch?.('stv-stale');
+
+    const inFlightResult = await inFlight;
+
+    expect(inFlightResult).toEqual('stv-stale');
+    expect(storage.backing).toEqual(new Map());
+
+    fetchUserId.mockImplementation(async () => 'stv-fresh');
+    const refetched = await cache.resolve('123', fetchUserId);
+
+    expect(refetched).toEqual('stv-fresh');
+    expect(fetchUserId.mock.calls).toEqual([['123'], ['123']]);
+  });
 });

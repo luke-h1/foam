@@ -14,16 +14,10 @@ interface StabilityRecoveryOptions {
 }
 
 /**
- * Decision core of the enhanced-video-stability feature: when a stall report,
- * video-element error, or sustained high latency should force a WebView
- * refresh, and when to give up because refreshing isn't helping.
- *
- * Pure state machine over an injectable clock: refreshes are capped per
- * rolling window so a genuinely broken stream can't remount the player in a
- * loop, a stall gets a grace period to self-recover before refreshing, and
- * high latency must persist across consecutive readings before it counts.
- * Side effects (metrics, logging, the actual remount) stay with the caller
- * via onRefresh/onGiveUp.
+ * Decides when a stall, video-element error, or sustained high latency should
+ * force a WebView refresh, and when to give up because refreshing isn't
+ * helping. Refreshes are capped per rolling window; side effects stay with the
+ * caller via onRefresh/onGiveUp.
  */
 export function createStabilityRecovery({
   now = Date.now,

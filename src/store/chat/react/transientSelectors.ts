@@ -21,8 +21,7 @@ function useTransientChannelField<K extends keyof typeof defaultTransientState>(
   field: K,
 ): (typeof defaultTransientState)[K] {
   return useSelector(() => {
-    // Indexing the observable with a generic key widens get() to the union of
-    // all field types, so narrow it back to the selected field's type.
+    // Indexing with a generic key widens get() to the union of field types.
     const value = chatTransientState$[channelId]![field].get() as
       (typeof defaultTransientState)[K] | undefined;
     return value ?? defaultTransientState[field];
@@ -30,9 +29,8 @@ function useTransientChannelField<K extends keyof typeof defaultTransientState>(
 }
 
 /**
- * Field-granular subscriptions so a change to one filter (e.g. hiding a user)
- * only re-renders consumers of that field, not everything reading the channel's
- * transient state.
+ * Field-granular subscriptions so a change to one filter only re-renders
+ * consumers of that field.
  */
 export function useTransientChannelFilters(channelId: string) {
   const hiddenPhrases = useTransientChannelField(channelId, 'hiddenPhrases');

@@ -811,11 +811,8 @@ export const clearMessages = () => {
   chatStore$.messages.set([]);
 };
 
-/**
- * Clears the window and appends the "chat was cleared" notice in one batch so
- * observers never see the empty intermediate state.
- */
 export const clearMessagesWithNotice = (notice: AnyChatMessageType) => {
+  // One batch so observers never see the empty intermediate state.
   batch(() => {
     clearMessages();
     addMessage(notice);

@@ -1,9 +1,6 @@
 type RateLimiterModule = typeof import('../chatIngestRateLimiter');
 
-/**
- * The limiter keeps its token bucket in module state, so each test loads a
- * fresh copy to start from a full bucket.
- */
+// The limiter keeps its token bucket in module state; load a fresh copy per test.
 const loadLimiter = (): RateLimiterModule => {
   let limiter: RateLimiterModule | undefined;
   jest.isolateModules(() => {

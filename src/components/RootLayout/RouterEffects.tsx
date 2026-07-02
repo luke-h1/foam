@@ -156,6 +156,8 @@ export function RouterEffects() {
       pendingAuthUrls.add(url);
       beginDeepLinkAuth();
 
+      // Cleanup sits after the try/catch (it always runs; the catch swallows
+      // every error) because try/finally is a React Compiler bailout.
       try {
         const handled = await completeAuthWithCallbackUrl(
           url,
@@ -169,10 +171,9 @@ export function RouterEffects() {
         }
       } catch (error) {
         logger.main.warn('Failed to complete auth callback', error);
-      } finally {
-        pendingAuthUrls.delete(url);
-        endDeepLinkAuth();
       }
+      pendingAuthUrls.delete(url);
+      endDeepLinkAuth();
     }
 
     const linkingSubscription = Linking.addEventListener('url', ({ url }) => {
