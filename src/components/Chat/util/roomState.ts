@@ -1,10 +1,4 @@
-export type ParsedRoomState = {
-  emoteOnly: boolean;
-  followersOnlyMinutes: number;
-  r9k: boolean;
-  slowSeconds: number;
-  subsOnly: boolean;
-};
+import type { ParsedRoomState } from '@app/store/chat/types/roomState';
 
 const ROOMSTATE_NOTICE_IDS = new Set([
   'emote_only_off',
@@ -118,4 +112,41 @@ export function describeRoomStateChanges(
   }
 
   return changes;
+}
+
+export interface RoomStateChip {
+  key: string;
+  label: string;
+}
+
+/**
+ * Compact chip labels for the active chat modes, shown above the composer.
+ * Inactive modes produce no chip.
+ */
+export function buildRoomStateChips(state: ParsedRoomState): RoomStateChip[] {
+  const chips: RoomStateChip[] = [];
+
+  if (state.slowSeconds > 0) {
+    chips.push({ key: 'slow', label: `Slow ${state.slowSeconds}s` });
+  }
+  if (state.followersOnlyMinutes === 0) {
+    chips.push({ key: 'followers', label: 'Followers-only' });
+  }
+  if (state.followersOnlyMinutes > 0) {
+    chips.push({
+      key: 'followers',
+      label: `Followers-only ${state.followersOnlyMinutes}m`,
+    });
+  }
+  if (state.emoteOnly) {
+    chips.push({ key: 'emote', label: 'Emote-only' });
+  }
+  if (state.subsOnly) {
+    chips.push({ key: 'subs', label: 'Sub-only' });
+  }
+  if (state.r9k) {
+    chips.push({ key: 'unique', label: 'Unique' });
+  }
+
+  return chips;
 }

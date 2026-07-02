@@ -13,6 +13,8 @@ import {
   removeMessageById,
   removeMessagesByLogin,
 } from '@app/store/chat/actions/messages';
+import { setChannelRoomState } from '@app/store/chat/actions/transientState';
+import type { ParsedRoomState } from '@app/store/chat/types/roomState';
 import { getPreferences } from '@app/store/preferenceStore';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import {
@@ -37,7 +39,6 @@ import {
 import {
   describeInitialRoomState,
   describeRoomStateChanges,
-  type ParsedRoomState,
   parseRoomStateTags,
   SUPPRESSED_NOTICE_IDS,
 } from '../util/roomState';
@@ -357,6 +358,7 @@ export function useChatIrcHandlers({
       const nextState = parseRoomStateTags(tags);
       const previousState = roomStateRef.current;
       roomStateRef.current = nextState;
+      setChannelRoomState(channelId, nextState);
 
       if (!previousState) {
         const initialDescription = describeInitialRoomState(nextState);
@@ -371,7 +373,7 @@ export function useChatIrcHandlers({
         appendSystemMessage(change);
       });
     },
-    [appendSystemMessage],
+    [appendSystemMessage, channelId],
   );
 
   const onReconnect = useCallback(() => {

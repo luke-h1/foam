@@ -9,6 +9,7 @@ import { ChatEmoteReprocessor } from './components/ChatEmoteReprocessor';
 import { ChatInputShell } from './components/ChatInputShell';
 import { ChatMessagePane } from './components/ChatMessagePane';
 import { ResumeScroll } from './components/ResumeScroll';
+import { RoomStateChips } from './components/RoomStateChips';
 import { useChat } from './hooks/useChat';
 import { styles } from './styles';
 
@@ -98,6 +99,7 @@ export const Chat = memo(
               offset={{ closed: -vm.insets.bottom }}
               style={styles.inputStickyView}
             >
+              <RoomStateChips channelId={channelId} />
               <ChatInputShell
                 ref={vm.inputShellRef}
                 channelId={channelId}
