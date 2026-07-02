@@ -182,8 +182,9 @@ not host or generate it. Foam adds the required precautions:
   report flow.
 - Blocking users: users can block a user, which instantly removes their existing
   messages from the feed and blocks all further messages (managed in
-  Settings -> Blocked Users). Blocks are reported to Twitch, which acts on
-  objectionable-content reports and ejects offending users within 24 hours.
+  Settings -> Blocked Users). Blocks are applied through Twitch's official block
+  API, and reported content is handled by Twitch's moderation process under its
+  Community Guidelines.
 
 A recording of the filter, report, and block flows is in the App Review notes.
 

@@ -326,12 +326,10 @@ export function useSeventvWs(
               const data = message.d as SevenTvEventData<'emote_set.update'>;
               const deps = getEmoteSyncDeps();
 
-              if (!isActiveEmoteSetUpdate(data, deps.expectedEmoteSetId)) {
-                return;
+              if (isActiveEmoteSetUpdate(data, deps.expectedEmoteSetId)) {
+                logger.stvWs.info(`💚 Received WS 'emote_set.update' event`);
+                handleEmoteSetUpdate(data, deps);
               }
-
-              logger.stvWs.info(`💚 Received WS 'emote_set.update' event`);
-              handleEmoteSetUpdate(data, deps);
               break;
             }
 

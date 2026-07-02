@@ -15,11 +15,8 @@ export function textMentionsUser(
   if (!normalisedUser) {
     return false;
   }
-  return text
-    .split(/\s+/)
-    .some(
-      token =>
-        token.startsWith('@') &&
-        normaliseChatUsername(token) === normalisedUser,
-    );
+  return text.split(/\s+/).some(token => {
+    const username = token.match(/^@([A-Za-z0-9_]+)/)?.[1];
+    return normaliseChatUsername(username) === normalisedUser;
+  });
 }

@@ -2,120 +2,69 @@ import { getColorValue, InputColorConfig, UIColor } from '@app/styles/ui';
 
 export type InputVariant = 'outline' | 'soft' | 'subtle' | 'underline';
 
+const buildVariants = (
+  mainColor: string,
+  placeholderColor: string,
+  softAlpha: string,
+): Record<InputVariant, InputColorConfig> => ({
+  outline: {
+    backgroundColor: 'transparent',
+    borderColor: mainColor,
+    textColor: mainColor,
+    placeholderColor,
+    borderWidth: 1,
+  },
+  soft: {
+    backgroundColor: `${mainColor}${softAlpha}`,
+    borderColor: 'transparent',
+    textColor: mainColor,
+    placeholderColor,
+    borderWidth: 0,
+  },
+  subtle: {
+    backgroundColor: `${mainColor}${softAlpha}`,
+    borderColor: mainColor,
+    textColor: mainColor,
+    placeholderColor,
+    borderWidth: 1,
+  },
+  underline: {
+    backgroundColor: 'transparent',
+    borderColor: mainColor,
+    textColor: mainColor,
+    placeholderColor,
+    borderWidth: 1,
+  },
+});
+
 export const generateVariantConfig = (
   color: UIColor,
   colorScheme: 'light' | 'dark',
 ): Record<InputVariant, InputColorConfig> => {
   const isDark = colorScheme === 'dark';
+  const softAlpha = isDark ? '20' : '10';
 
   if (color === 'black') {
-    const bgColor = getColorValue('black', 50);
-    const borderColor = getColorValue('black', 50);
-    const placeholderColor = getColorValue('black', isDark ? 800 : 300);
-
-    return {
-      outline: {
-        backgroundColor: 'transparent',
-        borderColor,
-        textColor: getColorValue('black', 50),
-        placeholderColor,
-        borderWidth: 1,
-      },
-      soft: {
-        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
-        borderColor: 'transparent',
-        textColor: getColorValue('black', 50),
-        placeholderColor,
-        borderWidth: 0,
-      },
-      subtle: {
-        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
-        borderColor,
-        textColor: getColorValue('black', 50),
-        placeholderColor,
-        borderWidth: 1,
-      },
-      underline: {
-        backgroundColor: 'transparent',
-        borderColor,
-        textColor: getColorValue('black', 50),
-        placeholderColor,
-        borderWidth: 1,
-      },
-    };
+    return buildVariants(
+      getColorValue('black', 50),
+      getColorValue('black', isDark ? 800 : 300),
+      softAlpha,
+    );
   }
 
   if (color === 'white') {
-    const bgColor = getColorValue('white', 950);
-    const borderColor = getColorValue('white', 950);
-    const placeholderColor = getColorValue('white', isDark ? 800 : 300);
-
-    return {
-      outline: {
-        backgroundColor: 'transparent',
-        borderColor,
-        textColor: getColorValue('white', 950),
-        placeholderColor,
-        borderWidth: 1,
-      },
-      soft: {
-        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
-        borderColor: 'transparent',
-        textColor: getColorValue('white', 950),
-        placeholderColor,
-        borderWidth: 0,
-      },
-      subtle: {
-        backgroundColor: `${bgColor}${isDark ? '20' : '10'}`,
-        borderColor,
-        textColor: getColorValue('white', 950),
-        placeholderColor,
-        borderWidth: 1,
-      },
-      underline: {
-        backgroundColor: 'transparent',
-        borderColor,
-        textColor: getColorValue('white', 950),
-        placeholderColor,
-        borderWidth: 1,
-      },
-    };
+    return buildVariants(
+      getColorValue('white', 950),
+      getColorValue('white', isDark ? 800 : 300),
+      softAlpha,
+    );
   }
 
-  return {
-    outline: {
-      backgroundColor: 'transparent',
-      borderColor: getColorValue(color, isDark ? 500 : 600),
-      textColor: getColorValue(color, isDark ? 500 : 600),
-      placeholderColor: getColorValue(color, isDark ? 800 : 300),
-      borderWidth: 1,
-    },
-    soft: {
-      backgroundColor: `${getColorValue(color, isDark ? 500 : 600)}${
-        isDark ? '20' : '10'
-      }`,
-      borderColor: 'transparent',
-      textColor: getColorValue(color, isDark ? 500 : 600),
-      placeholderColor: getColorValue(color, isDark ? 800 : 300),
-      borderWidth: 0,
-    },
-    subtle: {
-      backgroundColor: `${getColorValue(color, isDark ? 500 : 600)}${
-        isDark ? '20' : '10'
-      }`,
-      borderColor: getColorValue(color, isDark ? 500 : 600),
-      textColor: getColorValue(color, isDark ? 500 : 600),
-      placeholderColor: getColorValue(color, isDark ? 800 : 300),
-      borderWidth: 1,
-    },
-    underline: {
-      backgroundColor: 'transparent',
-      borderColor: getColorValue(color, isDark ? 500 : 600),
-      textColor: getColorValue(color, isDark ? 500 : 600),
-      placeholderColor: getColorValue(color, isDark ? 800 : 300),
-      borderWidth: 1,
-    },
-  };
+  return buildVariants(
+    getColorValue(color, isDark ? 500 : 600),
+    getColorValue(color, isDark ? 800 : 300),
+    softAlpha,
+  );
 };
 
 export const generateVariantConfigFromBase = (
@@ -123,36 +72,10 @@ export const generateVariantConfigFromBase = (
   colorScheme: 'light' | 'dark',
 ): Record<InputVariant, InputColorConfig> => {
   const isDark = colorScheme === 'dark';
-  const placeholderColor = `${baseHex}${isDark ? '99' : '66'}`;
 
-  return {
-    outline: {
-      backgroundColor: 'transparent',
-      borderColor: baseHex,
-      textColor: baseHex,
-      placeholderColor,
-      borderWidth: 1,
-    },
-    soft: {
-      backgroundColor: `${baseHex}${isDark ? '20' : '10'}`,
-      borderColor: 'transparent',
-      textColor: baseHex,
-      placeholderColor,
-      borderWidth: 0,
-    },
-    subtle: {
-      backgroundColor: `${baseHex}${isDark ? '20' : '10'}`,
-      borderColor: baseHex,
-      textColor: baseHex,
-      placeholderColor,
-      borderWidth: 1,
-    },
-    underline: {
-      backgroundColor: 'transparent',
-      borderColor: baseHex,
-      textColor: baseHex,
-      placeholderColor,
-      borderWidth: 1,
-    },
-  };
+  return buildVariants(
+    baseHex,
+    `${baseHex}${isDark ? '99' : '66'}`,
+    isDark ? '20' : '10',
+  );
 };

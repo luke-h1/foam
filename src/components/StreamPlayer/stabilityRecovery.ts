@@ -57,6 +57,7 @@ export function createStabilityRecovery({
       return;
     }
 
+    gaveUp = false;
     refreshTimes.push(at);
     onRefresh(reason, refreshTimes.length);
   };

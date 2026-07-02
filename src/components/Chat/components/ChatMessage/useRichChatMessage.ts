@@ -12,7 +12,7 @@ import {
   isUserNoticeTags,
   normaliseUsername,
 } from '@app/components/Chat/util/richChatMessageHelpers';
-import { getPreferences } from '@app/store/preferenceStore';
+import { usePreference } from '@app/store/preferenceStore';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 import { findCustomHighlight } from '@app/utils/chat/customHighlights';
@@ -110,8 +110,9 @@ export function useRichChatMessage<
   const isChannelPointRedemption = messageDisplayIsChannelPointRedemption;
   const isAnnouncement = messageDisplayIsAnnouncement;
   const isHighlightedMessage = messageDisplayIsHighlightedMessage;
+  const sharedChatEnabled = usePreference('sharedChatEnabled');
   const isSharedChatDuplicated =
-    messageDisplayIsSharedChatDuplicated && getPreferences().sharedChatEnabled;
+    messageDisplayIsSharedChatDuplicated && sharedChatEnabled;
   const isTwitchSystemNotice = messageDisplayIsTwitchSystemNotice;
   const { getMappingKey } = useMappingHelper();
   const [selectedEmoteAction, setSelectedEmoteAction] =

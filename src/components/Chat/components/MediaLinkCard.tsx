@@ -127,7 +127,7 @@ function MediaLinkCardComponent({
         onPress={handlePress}
         style={({ pressed }) => [
           styles.inlineChip,
-          pressed && styles.inlineChipPressed,
+          pressed && { opacity: 0.7 },
         ]}
       >
         {thumbnail ? (
@@ -336,9 +336,6 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
     paddingHorizontal: 4,
     paddingVertical: 2,
-  },
-  inlineChipPressed: {
-    opacity: 0.7,
   },
   inlineThumbnail: {
     borderCurve: 'continuous',

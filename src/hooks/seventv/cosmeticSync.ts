@@ -170,8 +170,12 @@ export function handleEntitlementUpdate(
               if (foundTtvUserId) {
                 ttvUserId = foundTtvUserId;
               }
-              paintId = user.style?.paint_id ?? null;
-              badgeId = user.style?.badge_id ?? null;
+              if (user.style?.paint_id) {
+                paintId = user.style.paint_id;
+              }
+              if (user.style?.badge_id) {
+                badgeId = user.style.badge_id;
+              }
             }
           }
         }
