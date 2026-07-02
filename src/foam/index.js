@@ -4,15 +4,22 @@ if (__DEV__ && !process.env.EXPO_PUBLIC_REACT_PERF_TRACKS) {
   // React's dev-only component performance tracks structuredClone every
   // rendered component's props into buffered performance.measure entries on
   // each commit. In busy chats this allocated ~100MB/s (GC pinned a core) and
-  // leaked ~50MB/min of retained entries. React gates the feature on
-  // console.timeStamp + performance.measure existing, so removing one disables
-  // it. Set EXPO_PUBLIC_REACT_PERF_TRACKS=1 when you want the tracks back for
-  // a React DevTools Performance session.
-  // Must be `delete`, not `= undefined`: react-native-worklets copies console
-  // via Object.entries and reads `.name` on every value, so an own property
-  // holding undefined crashes its init.
+  // leaked ~50MB/min of retained entries. React gates the feature by checking
+  // `typeof console.timeStamp === 'function'` ONCE and caching the result
+  // (ReactFabric-dev.js's `supportsUserTiming`), so a plain `delete` is racy:
+  // if anything re-creates `console.timeStamp` after the delete (or Fast
+  // Refresh re-runs this file against an already-initialized renderer whose
+  // `supportsUserTiming` was cached `true` before the delete), React ends up
+  // calling `console.timeStamp` while it's undefined -> "TypeError: undefined
+  // is not a function" during the very first render, which corrupts React's
+  // work loop into throwing "Should not already be working" right after.
+  // A permanent no-op keeps `supportsUserTiming` correctly false-equivalent
+  // (call is always safe) regardless of when React's renderer bundle reads
+  // it. Must be a real function, not `undefined`: react-native-worklets
+  // copies console via Object.entries and reads `.name` on every value, so an
+  // own property holding undefined crashes its init.
   // eslint-disable-next-line no-console
-  delete console.timeStamp;
+  console.timeStamp = function timeStamp() {};
 }
 
 // Bound expo-image's in-memory decoded cache. By default both tiers are
