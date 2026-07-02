@@ -14,6 +14,7 @@
     "format:fix": "bun run prettier:fix",
     "ios": "bun run --cwd src/foam ios",
     "lint": "bun run --cwd src/foam lint",
+    "prebuild": "bun run --cwd src/foam prebuild",
     "preinstall": "[ -n \"$CI\" ] || (only-allow bun && node ./src/foam/scripts/commit-hooks)",
     "prepare": "husky",
     "prettier:check": "prettier --check .",

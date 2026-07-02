@@ -38,7 +38,20 @@ The native Twitch app experience doesn't quite line up with the desktop experien
 
 # Project structure
 
-This is a [React Native app](https://reactnative.dev). This repository powers the mobile app and several [Expo app variants](https://docs.expo.dev/tutorial/eas/multiple-app-variants/) (see [`app.config.ts`](app.config.ts)):
+This repository is a [Bun workspaces](https://bun.com/docs/install/workspaces) monorepo:
+
+| Path                 | Package                | Description                                         |
+| -------------------- | ---------------------- | --------------------------------------------------- |
+| `src/foam`           | `foam`                 | The mobile app (Expo / React Native)                |
+| `src/player-website` | `@foam/player-website` | Astro player embed site, deployed to Vercel         |
+| `src/local-proxy`    | `@foam/local-proxy`    | Bun dev proxy for local Twitch auth                 |
+| `src/foam/patches`   | -                      | Bun `patchedDependencies` patch files               |
+| `infrastructure`     | -                      | AWS IAM policy config for the OTA/fingerprint cache |
+| `fastlane`           | -                      | App Store metadata assets (git submodule)           |
+
+Dependencies install once at the repo root with `bun install`. App commands run from `src/foam`, or through the root passthrough scripts (`bun run start`, `bun run ios`, `bun run android`, `bun run test`, `bun run lint`, `bun run ts:check`, `bun run prebuild`).
+
+The mobile app is a [React Native app](https://reactnative.dev) with several [Expo app variants](https://docs.expo.dev/tutorial/eas/multiple-app-variants/) (see [`app.config.ts`](src/foam/app.config.ts)):
 
 1. **`production`** — Store release app.
 2. **`testflight`** — Public TestFlight invite build (`foam-testflight`).
@@ -78,18 +91,18 @@ When changing chat rendering, parsing, scrolling, or scheduling, prefer measurin
 
 ## Legend State
 
-Chat state uses [Legend State](https://legendapp.com/open-source/state/) so frequent message, emote, badge, and cosmetic updates can avoid broad React re-renders. The chat store is split by responsibility under [`src/store/chat`](src/store/chat):
+Chat state uses [Legend State](https://legendapp.com/open-source/state/) so frequent message, emote, badge, and cosmetic updates can avoid broad React re-renders. The chat store is split by responsibility under [`src/store/chat`](src/foam/src/store/chat):
 
-- [`observables`](src/store/chat/observables) contains module-level observables such as `chatStore$`.
-- [`actions`](src/store/chat/actions) contains write helpers and pure transforms that read or mutate observables.
-- [`react`](src/store/chat/react) contains selector hooks for components.
-- [`types`](src/store/chat/types) contains shared chat contracts and constants.
+- [`observables`](src/foam/src/store/chat/observables) contains module-level observables such as `chatStore$`.
+- [`actions`](src/foam/src/store/chat/actions) contains write helpers and pure transforms that read or mutate observables.
+- [`react`](src/foam/src/store/chat/react) contains selector hooks for components.
+- [`types`](src/foam/src/store/chat/types) contains shared chat contracts and constants.
 
 Components should import those modules directly instead of importing `@legendapp/state` primitives themselves. Session-scoped render caches, such as mention colors and lightened colors, live on `chatStore$.sessionCaches`; persisted channel data, such as emotes, badges, recent messages, and provider fallback data, lives under `chatStore$.persisted`.
 
 ## Image caching
 
-Chat renders many repeated remote images: Twitch badges, third-party emotes, 7TV cosmetics, thumbnails, and preview assets. The shared [`Image`](src/components/Image/Image.tsx) wrapper and chat inline image renderer route those URLs through [`src/utils/image/image-cache.ts`](src/utils/image/image-cache.ts) before handing them to `expo-image` or `react-native-nitro-image`.
+Chat renders many repeated remote images: Twitch badges, third-party emotes, 7TV cosmetics, thumbnails, and preview assets. The shared [`Image`](src/foam/src/components/Image/Image.tsx) wrapper and chat inline image renderer route those URLs through [`src/utils/image/image-cache.ts`](src/foam/src/utils/image/image-cache.ts) before handing them to `expo-image` or `react-native-nitro-image`.
 
 The native cache stores files in Expo's cache directory under `chat-img-cache` and keeps an MMKV manifest keyed by source URL plus cache variant. Variants such as `emote`, `badge`, and `image` keep different asset classes from colliding. Downloads are deduplicated, priority queued (`visible`, `interactive`, `background`), capped at four concurrent downloads, and evicted by least-recent access when the cache exceeds 100 MB or 5000 records.
 
@@ -97,7 +110,7 @@ Visible chat assets are warmed aggressively. Incoming visible badge and emote UR
 
 ## Networking
 
-All outbound HTTP goes through [`createApiClient`](src/services/api/Client.ts), which produces one tagged client per upstream in [`src/services/api/clients.ts`](src/services/api/clients.ts): `twitchApi`, `bttvCachedApi`, `sevenTvApi`, `ffzApi`, and `streamElementsApi`. The factory centralizes the cross-cutting concerns so the per-service modules under [`src/services`](src/services) stay thin: case-insensitive header merging (Helix rejects duplicated `Client-Id` headers), bearer-token injection, a typed `ApiError` that carries the HTTP `status`, and Sentry recording for both network failures and non-2xx responses (fingerprinted per service + method + path + status so each broken endpoint is one issue).
+All outbound HTTP goes through [`createApiClient`](src/foam/src/services/api/Client.ts), which produces one tagged client per upstream in [`src/services/api/clients.ts`](src/foam/src/services/api/clients.ts): `twitchApi`, `bttvCachedApi`, `sevenTvApi`, `ffzApi`, and `streamElementsApi`. The factory centralizes the cross-cutting concerns so the per-service modules under [`src/services`](src/foam/src/services) stay thin: case-insensitive header merging (Helix rejects duplicated `Client-Id` headers), bearer-token injection, a typed `ApiError` that carries the HTTP `status`, and Sentry recording for both network failures and non-2xx responses (fingerprinted per service + method + path + status so each broken endpoint is one issue).
 
 ### Request timeouts
 
@@ -107,9 +120,9 @@ This matters because Foam depends on third-party emote and cosmetic services (7T
 
 ## Internationalization (i18n)
 
-Foam uses [i18next](https://www.i18next.com/) with [react-i18next](https://react.i18next.com/), initialized in [`src/i18n/i18next.ts`](src/i18n/i18next.ts). On launch the active language is detected from the device locale via `expo-localization`, falling back to `en` when the device language isn't in `supportedLanguages`.
+Foam uses [i18next](https://www.i18next.com/) with [react-i18next](https://react.i18next.com/), initialized in [`src/i18n/i18next.ts`](src/foam/src/i18n/i18next.ts). On launch the active language is detected from the device locale via `expo-localization`, falling back to `en` when the device language isn't in `supportedLanguages`.
 
-English (`src/i18n/locales/en.ts`) is the source of truth and currently the only shipped locale. Strings are grouped into namespaces (`common` is the default), including `chat`, `stream`, `settings`, `preferences`, `search`, `auth`, `onboarding`, `errors`, and `feedback`. Key typing comes from [`src/i18n/i18n.d.ts`](src/i18n/i18n.d.ts), which feeds the `en` resources into i18next's `CustomTypeOptions` so `t()` keys are autocompleted and type-checked.
+English (`src/i18n/locales/en.ts`) is the source of truth and currently the only shipped locale. Strings are grouped into namespaces (`common` is the default), including `chat`, `stream`, `settings`, `preferences`, `search`, `auth`, `onboarding`, `errors`, and `feedback`. Key typing comes from [`src/i18n/i18n.d.ts`](src/foam/src/i18n/i18n.d.ts), which feeds the `en` resources into i18next's `CustomTypeOptions` so `t()` keys are autocompleted and type-checked.
 
 Conventions:
 
@@ -163,19 +176,19 @@ See [Expo React Native project](https://docs.expo.dev/get-started/set-up-your-en
 
 <img src='.github/docs/twitch-settings.png' alt='Twitch app settings' />
 
-- Copy the client ID and client secret and paste them into a `.env` file in the root of the project. See `.env.example` for an example of what this file should look like
+- Copy the client ID and client secret and paste them into a `.env` file in `src/foam`. See `src/foam/.env.example` for an example of what this file should look like
 
 - If you're on Linux or windows, you'll need to setup Android studio and install a device to run the app.
 
 - If you're on Mac you can just use the iOS simulator (via Xcode) to run the app
 
 6. Start the local proxy server
-   The local proxy lives in `local-proxy/proxy.ts` and runs with Bun's HTTP server. It proxies authentication requests to Twitch because Twitch redirect URLs must use `http` or `https`. In TestFlight, TestTrack and production, the auth proxy is an AWS Lambda behind API Gateway.
+   The local proxy lives in `src/local-proxy/proxy.ts` and runs with Bun's HTTP server. It proxies authentication requests to Twitch because Twitch redirect URLs must use `http` or `https`. In TestFlight, TestTrack and production, the auth proxy is an AWS Lambda behind API Gateway.
 
-- `bun run start:proxy`
+- `bun run proxy`
 
-- If port `4000` is already in use, override it with `PORT=4100 bun run start:proxy`
-- If you need to bind a specific interface, set `HOST`, for example `HOST=127.0.0.1 PORT=4100 bun run start:proxy`
+- If port `4000` is already in use, override it with `PORT=4100 bun run proxy`
+- If you need to bind a specific interface, set `HOST`, for example `HOST=127.0.0.1 PORT=4100 bun run proxy`
 
 7. Install development build on your simulator
 
@@ -271,7 +284,7 @@ rm -rf ~/Library/Developer/Xcode/DerivedData/Foamdev-*
 
 This project enables Expo's [remote build cache](https://docs.expo.dev/guides/cache-builds-remotely/) via the EAS provider. When running `bun run ios` / `bun run android` (or `expo run:*`), Expo will look up a matching fingerprint on EAS and download a previously built binary if the native code hasn't changed — skipping a full local native build.
 
-Config lives in [`app.config.ts`](app.config.ts) under `expo.experiments.buildCacheProvider`, with `eas-build-cache-provider` declared as a devDependency. Make sure you're logged in with `eas login` and have an EAS project linked (already configured in `app.config.ts` via `extra.eas.projectId`).
+Config lives in [`app.config.ts`](src/foam/app.config.ts) under `expo.experiments.buildCacheProvider`, with `eas-build-cache-provider` declared as a devDependency. Make sure you're logged in with `eas login` and have an EAS project linked (already configured in `app.config.ts` via `extra.eas.projectId`).
 
 ## PR previews & channel surfing
 
@@ -315,7 +328,7 @@ To run the `production` variant of the app locally, you'll need to follow these 
 2. **Start the local proxy server** (if needed for local testing and not using the auth proxy lambda)
 
    ```bash
-   bun run start:proxy
+   bun run proxy
    ```
 
 3. **Run the production app**
@@ -372,7 +385,7 @@ If you want to test the exact production build that would be submitted to the st
 
 ## Running QA variants locally
 
-Use the same prerequisites as production (correct Google services files, env vars, signing), but point at the **internal** or **testflight** Firebase / config files from [`app.config.ts`](app.config.ts). Then run with the matching `APP_VARIANT`, for example:
+Use the same prerequisites as production (correct Google services files, env vars, signing), but point at the **internal** or **testflight** Firebase / config files from [`app.config.ts`](src/foam/app.config.ts). Then run with the matching `APP_VARIANT`, for example:
 
 ```bash
 APP_VARIANT=internal expo run:ios
@@ -426,7 +439,7 @@ Sometimes you may want to run the app on your device to check your changes, see 
 
 5. Navigate to signing & capabilities
 
-6. Select your team, ensure the bundle identifier matches the dev variant (for example `foam-tv-dev` from [`app.config.ts`](app.config.ts), or another unique id) and select your device from the dropdown `Foam > YourPhoneName`
+6. Select your team, ensure the bundle identifier matches the dev variant (for example `foam-tv-dev` from [`app.config.ts`](src/foam/app.config.ts), or another unique id) and select your device from the dropdown `Foam > YourPhoneName`
 
 7. Run a build by clicking the play button
 
@@ -721,7 +734,7 @@ You can inspect build history on the [EAS Builds dashboard](https://expo.dev/acc
 
 ## Versioning strategy
 
-- **Marketing / release tag version** — `VERSION` in [`app.config.ts`](app.config.ts) is read by `deploy-ota-or-native` for native release tags and changelog flow.
+- **Marketing / release tag version** — `VERSION` in [`app.config.ts`](src/foam/app.config.ts) is read by `deploy-ota-or-native` for native release tags and changelog flow.
 - **Store build numbers** — [`eas.json`](eas.json) sets `"appVersionSource": "remote"` so compatible native version fields are managed on Expo’s side for production builds (see [EAS app version](https://docs.expo.dev/build-reference/app-versions/)).
 
 ## Store assets (fastlane submodule)
