@@ -172,6 +172,13 @@ function NativeSavedPhrasesList() {
     const text = phraseText.value.trim();
     if (!text) return;
 
+    if (
+      phrases.some(phrase => phrase.id !== editingId && phrase.text === text)
+    ) {
+      phraseText.value = '';
+      return;
+    }
+
     if (editingId) {
       updatePreferences({
         savedPhrases: phrases.map(phrase =>
@@ -184,10 +191,6 @@ function NativeSavedPhrasesList() {
       return;
     }
 
-    if (phrases.some(phrase => phrase.text === text)) {
-      phraseText.value = '';
-      return;
-    }
     updatePreferences({
       savedPhrases: [...phrases, { id: createPhraseId(text), text }],
     });
@@ -279,6 +282,13 @@ export function SavedPhrasesScreen() {
     const text = inputValue.trim();
     if (!text) return;
 
+    if (
+      phrases.some(phrase => phrase.id !== editingId && phrase.text === text)
+    ) {
+      setInputValue('');
+      return;
+    }
+
     if (editingId) {
       updatePreferences({
         savedPhrases: phrases.map(phrase =>
@@ -291,10 +301,6 @@ export function SavedPhrasesScreen() {
       return;
     }
 
-    if (phrases.some(phrase => phrase.text === text)) {
-      setInputValue('');
-      return;
-    }
     updatePreferences({
       savedPhrases: [...phrases, { id: createPhraseId(text), text }],
     });

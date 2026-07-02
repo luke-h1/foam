@@ -143,7 +143,9 @@ export function createSevenTvUserIdCache(
       try {
         return await request;
       } finally {
-        sevenTvUserIdRequests.delete(twitchUserId);
+        if (sevenTvUserIdRequests.get(twitchUserId) === request) {
+          sevenTvUserIdRequests.delete(twitchUserId);
+        }
       }
     },
 

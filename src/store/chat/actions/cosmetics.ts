@@ -260,7 +260,9 @@ export const fetchAndCacheUserCosmetics = async (
   try {
     return await request;
   } finally {
-    userCosmeticsRequests.delete(sevenTvUserId);
+    if (userCosmeticsRequests.get(sevenTvUserId) === request) {
+      userCosmeticsRequests.delete(sevenTvUserId);
+    }
   }
 };
 

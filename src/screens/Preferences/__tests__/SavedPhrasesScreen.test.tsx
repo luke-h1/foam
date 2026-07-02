@@ -97,6 +97,37 @@ describe('SavedPhrasesScreen', () => {
     });
   });
 
+  test('rejects an edit that duplicates another phrase', () => {
+    mockSavedPhrases = [
+      { id: 'a', text: 'first phrase' },
+      { id: 'b', text: 'second phrase' },
+    ];
+
+    render(<SavedPhrasesScreen />);
+
+    fireEvent.press(screen.getByText('first phrase'));
+    fireEvent.changeText(
+      screen.getByDisplayValue('first phrase'),
+      'second phrase',
+    );
+    fireEvent(screen.getByDisplayValue('second phrase'), 'submitEditing');
+
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  test('saves an edit that keeps the phrase text unchanged', () => {
+    mockSavedPhrases = [{ id: 'a', text: 'same phrase' }];
+
+    render(<SavedPhrasesScreen />);
+
+    fireEvent.press(screen.getByText('same phrase'));
+    fireEvent(screen.getByDisplayValue('same phrase'), 'submitEditing');
+
+    expect(mockUpdate).toHaveBeenCalledWith({
+      savedPhrases: [{ id: 'a', text: 'same phrase' }],
+    });
+  });
+
   describe('iOS native branch', () => {
     beforeAll(() => {
       Platform.OS = 'ios';

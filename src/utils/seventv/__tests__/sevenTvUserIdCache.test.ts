@@ -191,4 +191,32 @@ describe('sevenTvUserIdCache', () => {
     expect(refetched).toEqual('stv-fresh');
     expect(fetchUserId.mock.calls).toEqual([['123'], ['123']]);
   });
+
+  test('a stale resolve settling after clear keeps deduping the newer request', async () => {
+    const storage = createFakeStorage();
+    const cache = createSevenTvUserIdCache(storage);
+    const pendingFetches: ((userId: string) => void)[] = [];
+    const fetchUserId = jest.fn(
+      () =>
+        new Promise<string>(resolve => {
+          pendingFetches.push(resolve);
+        }),
+    );
+
+    const stale = cache.resolve('123', fetchUserId);
+    cache.clear();
+    const fresh = cache.resolve('123', fetchUserId);
+
+    pendingFetches[0]?.('stv-stale');
+    await stale;
+
+    const deduped = cache.resolve('123', fetchUserId);
+    pendingFetches[1]?.('stv-fresh');
+
+    expect(await Promise.all([fresh, deduped])).toEqual([
+      'stv-fresh',
+      'stv-fresh',
+    ]);
+    expect(fetchUserId.mock.calls).toEqual([['123'], ['123']]);
+  });
 });

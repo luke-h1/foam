@@ -6,36 +6,41 @@ const buildVariants = (
   mainColor: string,
   placeholderColor: string,
   softAlpha: string,
-): Record<InputVariant, InputColorConfig> => ({
-  outline: {
-    backgroundColor: 'transparent',
-    borderColor: mainColor,
-    textColor: mainColor,
-    placeholderColor,
-    borderWidth: 1,
-  },
-  soft: {
-    backgroundColor: `${mainColor}${softAlpha}`,
-    borderColor: 'transparent',
-    textColor: mainColor,
-    placeholderColor,
-    borderWidth: 0,
-  },
-  subtle: {
-    backgroundColor: `${mainColor}${softAlpha}`,
-    borderColor: mainColor,
-    textColor: mainColor,
-    placeholderColor,
-    borderWidth: 1,
-  },
-  underline: {
-    backgroundColor: 'transparent',
-    borderColor: mainColor,
-    textColor: mainColor,
-    placeholderColor,
-    borderWidth: 1,
-  },
-});
+): Record<InputVariant, InputColorConfig> => {
+  const softBackground =
+    mainColor === 'transparent' ? 'transparent' : `${mainColor}${softAlpha}`;
+
+  return {
+    outline: {
+      backgroundColor: 'transparent',
+      borderColor: mainColor,
+      textColor: mainColor,
+      placeholderColor,
+      borderWidth: 1,
+    },
+    soft: {
+      backgroundColor: softBackground,
+      borderColor: 'transparent',
+      textColor: mainColor,
+      placeholderColor,
+      borderWidth: 0,
+    },
+    subtle: {
+      backgroundColor: softBackground,
+      borderColor: mainColor,
+      textColor: mainColor,
+      placeholderColor,
+      borderWidth: 1,
+    },
+    underline: {
+      backgroundColor: 'transparent',
+      borderColor: mainColor,
+      textColor: mainColor,
+      placeholderColor,
+      borderWidth: 1,
+    },
+  };
+};
 
 export const generateVariantConfig = (
   color: UIColor,
