@@ -24,6 +24,7 @@ runs:
         INPUTS_TAG: ${{ inputs.tag }}
         INPUTS_GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
+        git pull --rebase
         # Variant tags for the same version often point at the same commits as
         # this release. Ignore them so git-cliff applies --tag instead of
         # reusing the existing tag's name (WARN: There is already a tag ...).
