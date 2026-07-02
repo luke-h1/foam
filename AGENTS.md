@@ -87,3 +87,7 @@ Put new module-level observables in `observables/`. Put write helpers that call 
 - **Auto-discovered devtools** — `@rozenite/expo-atlas-plugin`, `@rozenite/react-navigation-plugin` (Rozenite loads installed plugin packages without a JS import).
 
 Because the rule is off for `package.json`, a genuinely unused dependency won't be flagged automatically — verify by hand when adding or removing deps.
+
+## React Doctor: useNativeState immutability override
+
+`react-hooks-js/immutability` is turned off for `BlockedTermsScreen.tsx` and `SavedPhrasesScreen.tsx` in `doctor.config.json`. Their iOS branches bind `@expo/ui/swift-ui` `useNativeState` values to SwiftUI text fields, and writing back through `state.value = ...` is that API's intended write path - the rule misreads those writes as mutation of an immutable hook value. Scope any future exemption to the specific files the same way rather than turning the rule off globally.
