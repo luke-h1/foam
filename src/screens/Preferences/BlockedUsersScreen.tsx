@@ -9,7 +9,12 @@ import {
   Text as NativeText,
   VStack,
 } from '@expo/ui/swift-ui';
-import { font, foregroundStyle, listStyle } from '@expo/ui/swift-ui/modifiers';
+import {
+  font,
+  foregroundStyle,
+  listStyle,
+  refreshable,
+} from '@expo/ui/swift-ui/modifiers';
 import { ListRenderItem } from '@shopify/flash-list';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
@@ -264,7 +269,11 @@ function BlockedUsersList({
 
   if (Platform.OS === 'ios') {
     return (
-      <NativeBlockedUsersList data={data} onUnblockDirect={onUnblockDirect} />
+      <NativeBlockedUsersList
+        data={data}
+        onRefresh={onRefresh}
+        onUnblockDirect={onUnblockDirect}
+      />
     );
   }
 
@@ -280,28 +289,34 @@ function BlockedUsersList({
 
 function NativeBlockedUsersList({
   data,
+  onRefresh,
   onUnblockDirect,
 }: {
   data: UserBlockList[];
+  onRefresh: () => Promise<unknown>;
   onUnblockDirect: (userId: string) => void;
 }) {
   const { t } = useTranslation('preferences');
 
-  const handleDelete = useCallback(
-    (indices: number[]) => {
-      for (const index of indices) {
-        const user = data[index];
-        if (user) {
-          onUnblockDirect(user.user_id);
-        }
+  const handleDelete = (indices: number[]) => {
+    for (const index of indices) {
+      const user = data[index];
+      if (user) {
+        onUnblockDirect(user.user_id);
       }
-    },
-    [data, onUnblockDirect],
-  );
+    }
+  };
 
   return (
     <Host style={styles.content} colorScheme='dark'>
-      <List modifiers={[listStyle('insetGrouped')]}>
+      <List
+        modifiers={[
+          listStyle('insetGrouped'),
+          refreshable(async () => {
+            await onRefresh();
+          }),
+        ]}
+      >
         <Section
           title={t('blockedAccounts')}
           footer={<NativeText>{t('blockedUsersFooter')}</NativeText>}

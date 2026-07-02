@@ -3,7 +3,7 @@ import { Platform, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 
-export function EmoteSheetIosBlur({ intensity }: { intensity: number }) {
+export function EmoteSheetIosBlur() {
   if (Platform.OS !== 'ios') {
     return null;
   }
@@ -19,10 +19,6 @@ export function EmoteSheetIosBlur({ intensity }: { intensity: number }) {
   }
 
   return (
-    <BlurView
-      intensity={intensity}
-      style={StyleSheet.absoluteFill}
-      tint='dark'
-    />
+    <BlurView intensity={32} style={StyleSheet.absoluteFill} tint='dark' />
   );
 }

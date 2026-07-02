@@ -164,13 +164,9 @@ function NativeSavedPhrasesList() {
 
   const phrases = useMemo(() => savedPhrases ?? [], [savedPhrases]);
 
-  const handleNativeSave = useCallback(() => {
+  const handleNativeSave = () => {
     const text = phraseText.value.trim();
-    phraseText.value = '';
-    if (!text) {
-      setEditingId(null);
-      return;
-    }
+    if (!text) return;
 
     if (editingId) {
       updatePreferences({
@@ -179,43 +175,40 @@ function NativeSavedPhrasesList() {
         ),
       });
       setEditingId(null);
+      phraseText.value = '';
       void impact('light');
       return;
     }
 
     if (phrases.some(phrase => phrase.text === text)) {
+      phraseText.value = '';
       return;
     }
     updatePreferences({
       savedPhrases: [...phrases, { id: `${Date.now()}_${text}`, text }],
     });
+    phraseText.value = '';
     void impact('light');
-  }, [editingId, phraseText, phrases, updatePreferences]);
+  };
 
-  const handleNativeEdit = useCallback(
-    (phrase: SavedPhrase) => {
-      setEditingId(phrase.id);
-      phraseText.value = phrase.text;
-    },
-    [phraseText],
-  );
+  const handleNativeEdit = (phrase: SavedPhrase) => {
+    setEditingId(phrase.id);
+    phraseText.value = phrase.text;
+  };
 
-  const handleDeleteByIndex = useCallback(
-    (indices: number[]) => {
-      const removals = new Set(indices);
-      const removedEditing = indices.some(
-        index => phrases[index]?.id === editingId,
-      );
-      if (removedEditing) {
-        setEditingId(null);
-        phraseText.value = '';
-      }
-      updatePreferences({
-        savedPhrases: phrases.filter((_, index) => !removals.has(index)),
-      });
-    },
-    [editingId, phraseText, phrases, updatePreferences],
-  );
+  const handleDeleteByIndex = (indices: number[]) => {
+    const removals = new Set(indices);
+    const removedEditing = indices.some(
+      index => phrases[index]?.id === editingId,
+    );
+    if (removedEditing) {
+      setEditingId(null);
+      phraseText.value = '';
+    }
+    updatePreferences({
+      savedPhrases: phrases.filter((_, index) => !removals.has(index)),
+    });
+  };
 
   const hasPhrases = phrases.length > 0;
 

@@ -141,25 +141,24 @@ function NativeBlockedTermsList() {
   const updatePreferences = useUpdatePreferences();
   const termText = useNativeState('');
 
-  const handleNativeAdd = useCallback(() => {
+  const handleNativeAdd = () => {
     const normalised = termText.value.trim().toLowerCase();
-    termText.value = '';
-    if (!normalised || blockedTerms.includes(normalised)) {
+    if (!normalised) return;
+    if (blockedTerms.includes(normalised)) {
+      termText.value = '';
       return;
     }
     updatePreferences({ blockedTerms: [...blockedTerms, normalised] });
+    termText.value = '';
     void impact('light');
-  }, [termText, blockedTerms, updatePreferences]);
+  };
 
-  const handleDeleteByIndex = useCallback(
-    (indices: number[]) => {
-      const removals = new Set(indices);
-      updatePreferences({
-        blockedTerms: blockedTerms.filter((_, index) => !removals.has(index)),
-      });
-    },
-    [blockedTerms, updatePreferences],
-  );
+  const handleDeleteByIndex = (indices: number[]) => {
+    const removals = new Set(indices);
+    updatePreferences({
+      blockedTerms: blockedTerms.filter((_, index) => !removals.has(index)),
+    });
+  };
 
   const hasTerms = blockedTerms.length > 0;
 

@@ -69,7 +69,7 @@ export function EmoteSheet({
           <View style={styles.sheetHandle} />
         </View>
         <View style={styles.header}>
-          <IosBlur intensity={32} />
+          <IosBlur />
           <ScrollView
             horizontal
             keyboardShouldPersistTaps='handled'
@@ -156,7 +156,7 @@ export function EmoteSheet({
                   { paddingBottom: theme.space8 + bottomInset },
                 ]}
               >
-                <IosBlur intensity={32} />
+                <IosBlur />
                 <LegendList
                   data={sheet.filteredSets}
                   horizontal
