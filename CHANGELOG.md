@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0-internal
+## 1.0.0
 
 ### ♻️ Refactor
 
@@ -59,6 +59,7 @@
 - **app:** Fix sentry pods
 - **app:** Oom images ([#679](https://github.com/lhowsam/foam/issues/679))
 - **app:** Fix tsc
+- **infrastructure:** Pull before commit changelog
 
 ### 🔧 Miscellaneous Tasks
 
