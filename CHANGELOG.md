@@ -80,6 +80,7 @@
 - **infrastructure:** Change to self-hosted runner
 - **app:** Update to expo 57 ([#678](https://github.com/lhowsam/foam/issues/678))
 - **app:** Sync lockfile with sentry deps ([#680](https://github.com/lhowsam/foam/issues/680))
+- **app:** Ui improvements ([#681](https://github.com/lhowsam/foam/issues/681))
 
 ## 1.0.0
 
