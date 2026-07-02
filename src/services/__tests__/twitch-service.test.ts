@@ -1,3 +1,4 @@
+import type { FollowedChannel } from '@app/types/twitch/channel';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 
 import { twitchApi } from '../api/clients';
@@ -63,5 +64,64 @@ describe('twitchService.getUsersById', () => {
     const secondUrl = api.get.mock.calls[1]?.[0] as string;
     expect(firstUrl.match(/id=/g)).toHaveLength(100);
     expect(secondUrl.match(/id=/g)).toHaveLength(50);
+  });
+});
+
+describe('twitchService.getFollowedChannels', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  function makeFollowedChannel(id: string): FollowedChannel {
+    return {
+      broadcaster_id: id,
+      broadcaster_login: `channel${id}`,
+      broadcaster_name: `Channel${id}`,
+      followed_at: '2024-01-01T00:00:00Z',
+    };
+  }
+
+  test('fetches a single page when no cursor is returned', async () => {
+    api.get.mockResolvedValue({ data: [makeFollowedChannel('1')] });
+
+    const result = await twitchService.getFollowedChannels('42');
+
+    expect(result).toEqual([makeFollowedChannel('1')]);
+    expect(api.get).toHaveBeenCalledTimes(1);
+    expect(api.get).toHaveBeenCalledWith('/channels/followed', {
+      params: { user_id: '42', first: 100 },
+    });
+  });
+
+  test('follows pagination cursors until exhausted', async () => {
+    api.get
+      .mockResolvedValueOnce({
+        data: [makeFollowedChannel('1')],
+        pagination: { cursor: 'abc' },
+      })
+      .mockResolvedValueOnce({ data: [makeFollowedChannel('2')] });
+
+    const result = await twitchService.getFollowedChannels('42');
+
+    expect(result).toEqual([
+      makeFollowedChannel('1'),
+      makeFollowedChannel('2'),
+    ]);
+    expect(api.get).toHaveBeenCalledTimes(2);
+    expect(api.get).toHaveBeenLastCalledWith('/channels/followed', {
+      params: { user_id: '42', first: 100, after: 'abc' },
+    });
+  });
+
+  test('stops paginating once the channel cap is reached', async () => {
+    const page = Array.from({ length: 100 }, (_, index) =>
+      makeFollowedChannel(String(index)),
+    );
+    api.get.mockResolvedValue({ data: page, pagination: { cursor: 'next' } });
+
+    const result = await twitchService.getFollowedChannels('42');
+
+    expect(result).toHaveLength(400);
+    expect(api.get).toHaveBeenCalledTimes(4);
   });
 });

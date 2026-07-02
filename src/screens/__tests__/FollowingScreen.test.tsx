@@ -128,9 +128,69 @@ describe('FollowingScreen', () => {
 
   test('shows empty state when no followed streams', async () => {
     twitchService.getFollowedStreams.mockResolvedValue([]);
+    twitchService.getFollowedChannels.mockResolvedValue([]);
 
     renderFollowingScreen({ loggedIn: true });
 
     expect(await screen.findByText('No one is live')).toBeOnTheScreen();
+  });
+
+  test('renders offline followed channels below live streams', async () => {
+    twitchService.getFollowedStreams.mockResolvedValue([mockStream]);
+    twitchService.getFollowedChannels.mockResolvedValue([
+      {
+        broadcaster_id: '111',
+        broadcaster_login: 'livestreamer',
+        broadcaster_name: 'LiveStreamer',
+        followed_at: '2024-01-01T00:00:00Z',
+      },
+      {
+        broadcaster_id: '222',
+        broadcaster_login: 'sleepystreamer',
+        broadcaster_name: 'SleepyStreamer',
+        followed_at: '2024-01-01T00:00:00Z',
+      },
+    ]);
+    twitchService.getUsersById.mockResolvedValue([
+      {
+        id: '222',
+        login: 'sleepystreamer',
+        display_name: 'SleepyStreamer',
+        type: '',
+        broadcaster_type: '',
+        description: '',
+        profile_image_url: 'https://example.com/sleepy.png',
+        offline_image_url: '',
+        view_count: 0,
+        created_at: '',
+      },
+    ]);
+
+    renderFollowingScreen({ loggedIn: true });
+
+    expect(await screen.findByText('SleepyStreamer')).toBeOnTheScreen();
+    expect(screen.getByText('Offline channels')).toBeOnTheScreen();
+    // The live channel is filtered out of the offline section, so its name
+    // appears only once (on the live stream card).
+    expect(screen.getAllByText('LiveStreamer')).toHaveLength(1);
+  });
+
+  test('renders offline channels when no followed streams are live', async () => {
+    twitchService.getFollowedStreams.mockResolvedValue([]);
+    twitchService.getFollowedChannels.mockResolvedValue([
+      {
+        broadcaster_id: '222',
+        broadcaster_login: 'sleepystreamer',
+        broadcaster_name: 'SleepyStreamer',
+        followed_at: '2024-01-01T00:00:00Z',
+      },
+    ]);
+    twitchService.getUsersById.mockResolvedValue([]);
+
+    renderFollowingScreen({ loggedIn: true });
+
+    expect(await screen.findByText('SleepyStreamer')).toBeOnTheScreen();
+    expect(screen.getByText('Offline channels')).toBeOnTheScreen();
+    expect(screen.queryByText('No one is live')).not.toBeOnTheScreen();
   });
 });

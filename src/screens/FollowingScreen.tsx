@@ -2,6 +2,7 @@ import {
   type ReactElement,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -22,10 +23,13 @@ import { AnimatedFlashList } from '@app/components/FlashList/AnimatedFlashList';
 import { ListRenderItem } from '@app/components/FlashList/FlashList';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
+import { MemoizedOfflineChannelRow } from '@app/components/OfflineChannelRow/OfflineChannelRow';
 import { StreamListLayoutToggle } from '@app/components/StreamListLayoutToggle/StreamListLayoutToggle';
 import { useBottomTabOverflow } from '@app/components/TabBarBackground/useBottomTabOverflow';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
+import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
+import { useFollowedChannelsQuery } from '@app/hooks/queries/useFollowedChannelsQuery';
 import { useFollowedStreamsQuery } from '@app/hooks/queries/useFollowedStreamsQuery';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
@@ -37,6 +41,7 @@ import {
 } from '@app/store/preferenceStore';
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
+import type { FollowedChannelWithProfile } from '@app/types/twitch/channel';
 import type { TwitchStream } from '@app/types/twitch/stream';
 
 export interface Section {
@@ -44,6 +49,11 @@ export interface Section {
   render: () => ReactElement;
   isTitle?: boolean;
 }
+
+type FollowingListItem =
+  | { type: 'stream'; stream: TwitchStream }
+  | { type: 'offlineHeader' }
+  | { type: 'offlineChannel'; channel: FollowedChannelWithProfile };
 
 export default function FollowingScreen() {
   const { t } = useTranslation(['stream', 'common']);
@@ -94,6 +104,43 @@ export default function FollowingScreen() {
   });
 
   const streamsArray = Array.isArray(streams) ? streams : [];
+
+  const { data: followedChannels } = useFollowedChannelsQuery(
+    user?.id as string,
+    {
+      enabled: !!user?.id,
+    },
+  );
+
+  const offlineChannels = useMemo(() => {
+    if (!Array.isArray(followedChannels) || !Array.isArray(streams)) {
+      return [];
+    }
+    const liveBroadcasterIds = new Set(streams.map(stream => stream.user_id));
+    return followedChannels.filter(
+      channel => !liveBroadcasterIds.has(channel.broadcaster_id),
+    );
+  }, [followedChannels, streams]);
+
+  const listItems = useMemo<FollowingListItem[]>(() => {
+    const items: FollowingListItem[] = streamsArray.map(stream => ({
+      type: 'stream',
+      stream,
+    }));
+    if (offlineChannels.length > 0) {
+      items.push({ type: 'offlineHeader' });
+      items.push(
+        ...offlineChannels.map(channel => ({
+          type: 'offlineChannel' as const,
+          channel,
+        })),
+      );
+    }
+    return items;
+    // streamsArray is a fresh array each render; streams is the stable query result.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streams, offlineChannels]);
+
   const hasShownErrorToast = useRef(false);
   const listRef = useRef(null);
 
@@ -111,8 +158,26 @@ export default function FollowingScreen() {
     }
   }, [isError, isFetched]);
 
-  const renderItem: ListRenderItem<TwitchStream> = ({ item }) => {
-    return <MemoizedLiveStreamCard stream={item} layout={streamListLayout} />;
+  const renderItem: ListRenderItem<FollowingListItem> = ({ item }) => {
+    switch (item.type) {
+      case 'stream':
+        return (
+          <MemoizedLiveStreamCard
+            stream={item.stream}
+            layout={streamListLayout}
+          />
+        );
+      case 'offlineHeader':
+        return (
+          <View style={styles.offlineHeaderRow}>
+            <Text type='md' weight='bold'>
+              {t('offlineChannels')}
+            </Text>
+          </View>
+        );
+      case 'offlineChannel':
+        return <MemoizedOfflineChannelRow channel={item.channel} />;
+    }
   };
 
   // Soft dip-and-recover fade when switching layouts so rows do not
@@ -194,7 +259,7 @@ export default function FollowingScreen() {
     );
   }
 
-  if (streamsArray.length === 0) {
+  if (streamsArray.length === 0 && offlineChannels.length === 0) {
     return (
       <EmptyState
         button={t('common:refresh')}
@@ -210,13 +275,19 @@ export default function FollowingScreen() {
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.listFade, layoutFadeStyle]}>
-        <AnimatedFlashList<TwitchStream>
+        <AnimatedFlashList<FollowingListItem>
           ref={listRef}
-          data={streamsArray}
-          keyExtractor={item => item.id}
+          data={listItems}
+          keyExtractor={item =>
+            item.type === 'stream'
+              ? `stream-${item.stream.id}`
+              : item.type === 'offlineChannel'
+                ? `offline-${item.channel.broadcaster_id}`
+                : 'offline-header'
+          }
           contentInsetAdjustmentBehavior='automatic'
           drawDistance={Platform.OS === 'ios' ? 500 : undefined}
-          getItemType={() => 'stream-card'}
+          getItemType={item => item.type}
           ListHeaderComponent={
             <View>
               <EditorialSectionHeader eyebrow='For you' />
@@ -276,6 +347,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     marginBottom: theme.space8,
     marginHorizontal: theme.space16,
+  },
+  offlineHeaderRow: {
+    borderTopColor: theme.color.border.dark,
+    borderTopWidth: 1,
+    marginHorizontal: theme.space16,
+    marginTop: theme.space16,
+    paddingBottom: theme.space8,
+    paddingTop: theme.space16,
   },
   stateContainer: {
     alignItems: 'center',

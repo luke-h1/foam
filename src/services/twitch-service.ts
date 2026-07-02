@@ -9,7 +9,11 @@ import type {
   RefreshTokenResponse,
 } from '@app/types/twitch/auth';
 import type { Category } from '@app/types/twitch/category';
-import type { Channel, SearchChannelResponse } from '@app/types/twitch/channel';
+import type {
+  Channel,
+  FollowedChannel,
+  SearchChannelResponse,
+} from '@app/types/twitch/channel';
 import type {
   TwitchPinnedChatMessage,
   TwitchSendChatMessageResult,
@@ -52,6 +56,10 @@ const authProxyBaseUrl =
 const authProxyApiKey =
   (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_KEY as
     string | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY;
+
+// Cap follow-list pagination so a pathological follow count (Helix allows
+// thousands) can't fan out into dozens of sequential requests on tab load.
+const MAX_FOLLOWED_CHANNELS = 400;
 
 interface Emote {
   format: string[];
@@ -525,6 +533,28 @@ export const twitchService = {
       },
     );
     return result.data;
+  },
+
+  getFollowedChannels: async (userId: string): Promise<FollowedChannel[]> => {
+    const channels: FollowedChannel[] = [];
+    let cursor: string | undefined;
+
+    do {
+      const result = await twitchApi.get<PaginatedList<FollowedChannel>>(
+        '/channels/followed',
+        {
+          params: {
+            user_id: userId,
+            first: 100,
+            ...(cursor && { after: cursor }),
+          },
+        },
+      );
+      channels.push(...result.data);
+      cursor = result.pagination?.cursor;
+    } while (cursor && channels.length < MAX_FOLLOWED_CHANNELS);
+
+    return channels;
   },
 
   getUserInfo: async (token: string): Promise<UserInfoResponse> => {

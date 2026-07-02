@@ -427,6 +427,8 @@ const en = {
     noOneIsLive: 'No one is live',
     noOneIsLiveDescription:
       'None of your followed streamers are live right now.',
+    offlineChannels: 'Offline channels',
+    viewOfflineChannel: 'View {{name}}',
     noCategories: 'No Categories',
     failedToFetchCategories: 'Failed to fetch categories',
     failedToFetchTopCategories: 'Failed to fetch top categories',

@@ -3,6 +3,7 @@ import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query';
 import { twitchService } from '@app/services/twitch-service';
 import type { PaginatedList } from '@app/types/twitch/api';
 import type { Category } from '@app/types/twitch/category';
+import type { FollowedChannelWithProfile } from '@app/types/twitch/channel';
 import type { TwitchClipsRequestParams } from '@app/types/twitch/clip';
 import type { TwitchStream } from '@app/types/twitch/stream';
 import type { UserBlockList, UserInfoResponse } from '@app/types/twitch/user';
@@ -45,6 +46,26 @@ export function followedStreamsQueryOptions(userId: string) {
     queryKey: twitchKeys.followedStreams(userId),
     staleTime: 30_000,
     queryFn: () => twitchService.getFollowedStreams(userId),
+  });
+}
+
+export function followedChannelsQueryOptions(userId: string) {
+  return queryOptions<FollowedChannelWithProfile[]>({
+    queryKey: twitchKeys.followedChannels(userId),
+    staleTime: 300_000,
+    queryFn: async () => {
+      const channels = await twitchService.getFollowedChannels(userId);
+      const users = await twitchService.getUsersById(
+        channels.map(channel => channel.broadcaster_id),
+      );
+      const profileImageById = new Map(
+        users.map(user => [user.id, user.profile_image_url]),
+      );
+      return channels.map(channel => ({
+        ...channel,
+        profile_image_url: profileImageById.get(channel.broadcaster_id),
+      }));
+    },
   });
 }
 
