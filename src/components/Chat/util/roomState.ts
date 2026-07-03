@@ -34,28 +34,64 @@ export function parseRoomStateTags(
   };
 }
 
+interface RoomStateModeStatus {
+  active: boolean;
+  /**
+   * Slow-mode seconds or followers-only minutes; undefined for plain on/off
+   * modes and for followers-only with no minimum follow age.
+   */
+  value?: number;
+}
+
+type RoomStateModeKey = 'emote' | 'subs' | 'unique' | 'slow' | 'followers';
+
+/**
+ * Single source of truth for which chat modes a room state activates, so the
+ * connect notice, change notifications, and composer chips cannot drift.
+ */
+function getRoomStateModes(
+  state: ParsedRoomState,
+): Record<RoomStateModeKey, RoomStateModeStatus> {
+  return {
+    emote: { active: state.emoteOnly },
+    subs: { active: state.subsOnly },
+    unique: { active: state.r9k },
+    slow: {
+      active: state.slowSeconds > 0,
+      value: state.slowSeconds > 0 ? state.slowSeconds : undefined,
+    },
+    followers: {
+      active: state.followersOnlyMinutes >= 0,
+      value:
+        state.followersOnlyMinutes > 0 ? state.followersOnlyMinutes : undefined,
+    },
+  };
+}
+
 export function describeInitialRoomState(
   state: ParsedRoomState,
 ): string | null {
+  const modes = getRoomStateModes(state);
   const activeModes: string[] = [];
 
-  if (state.emoteOnly) {
+  if (modes.emote.active) {
     activeModes.push('emote-only');
   }
-  if (state.subsOnly) {
+  if (modes.subs.active) {
     activeModes.push('subscribers-only');
   }
-  if (state.r9k) {
+  if (modes.unique.active) {
     activeModes.push('unique-chat');
   }
-  if (state.slowSeconds > 0) {
-    activeModes.push(`slow mode (${state.slowSeconds}s)`);
+  if (modes.slow.active) {
+    activeModes.push(`slow mode (${modes.slow.value}s)`);
   }
-  if (state.followersOnlyMinutes === 0) {
-    activeModes.push('followers-only');
-  }
-  if (state.followersOnlyMinutes > 0) {
-    activeModes.push(`followers-only (${state.followersOnlyMinutes}m)`);
+  if (modes.followers.active) {
+    activeModes.push(
+      modes.followers.value === undefined
+        ? 'followers-only'
+        : `followers-only (${modes.followers.value}m)`,
+    );
   }
 
   if (activeModes.length === 0) {
@@ -69,44 +105,54 @@ export function describeRoomStateChanges(
   previous: ParsedRoomState,
   next: ParsedRoomState,
 ): string[] {
+  const previousModes = getRoomStateModes(previous);
+  const nextModes = getRoomStateModes(next);
   const changes: string[] = [];
 
-  if (previous.emoteOnly !== next.emoteOnly) {
+  const changed = (key: RoomStateModeKey): boolean =>
+    previousModes[key].active !== nextModes[key].active ||
+    previousModes[key].value !== nextModes[key].value;
+
+  if (changed('emote')) {
     changes.push(
-      next.emoteOnly ? 'Emote-only mode enabled' : 'Emote-only mode disabled',
+      nextModes.emote.active
+        ? 'Emote-only mode enabled'
+        : 'Emote-only mode disabled',
     );
   }
 
-  if (previous.subsOnly !== next.subsOnly) {
+  if (changed('subs')) {
     changes.push(
-      next.subsOnly
+      nextModes.subs.active
         ? 'Subscribers-only mode enabled'
         : 'Subscribers-only mode disabled',
     );
   }
 
-  if (previous.r9k !== next.r9k) {
+  if (changed('unique')) {
     changes.push(
-      next.r9k ? 'Unique-chat mode enabled' : 'Unique-chat mode disabled',
+      nextModes.unique.active
+        ? 'Unique-chat mode enabled'
+        : 'Unique-chat mode disabled',
     );
   }
 
-  if (previous.slowSeconds !== next.slowSeconds) {
+  if (changed('slow')) {
     changes.push(
-      next.slowSeconds > 0
-        ? `Slow mode enabled (${next.slowSeconds}s)`
+      nextModes.slow.active
+        ? `Slow mode enabled (${nextModes.slow.value}s)`
         : 'Slow mode disabled',
     );
   }
 
-  if (previous.followersOnlyMinutes !== next.followersOnlyMinutes) {
-    if (next.followersOnlyMinutes < 0) {
+  if (changed('followers')) {
+    if (!nextModes.followers.active) {
       changes.push('Followers-only mode disabled');
-    } else if (next.followersOnlyMinutes === 0) {
+    } else if (nextModes.followers.value === undefined) {
       changes.push('Followers-only mode enabled');
     } else {
       changes.push(
-        `Followers-only mode enabled (${next.followersOnlyMinutes}m)`,
+        `Followers-only mode enabled (${nextModes.followers.value}m)`,
       );
     }
   }
@@ -124,27 +170,28 @@ export interface RoomStateChip {
  * Inactive modes produce no chip.
  */
 export function buildRoomStateChips(state: ParsedRoomState): RoomStateChip[] {
+  const modes = getRoomStateModes(state);
   const chips: RoomStateChip[] = [];
 
-  if (state.slowSeconds > 0) {
-    chips.push({ key: 'slow', label: `Slow ${state.slowSeconds}s` });
+  if (modes.slow.active) {
+    chips.push({ key: 'slow', label: `Slow ${modes.slow.value}s` });
   }
-  if (state.followersOnlyMinutes === 0) {
-    chips.push({ key: 'followers', label: 'Followers-only' });
-  }
-  if (state.followersOnlyMinutes > 0) {
+  if (modes.followers.active) {
     chips.push({
       key: 'followers',
-      label: `Followers-only ${state.followersOnlyMinutes}m`,
+      label:
+        modes.followers.value === undefined
+          ? 'Followers-only'
+          : `Followers-only ${modes.followers.value}m`,
     });
   }
-  if (state.emoteOnly) {
+  if (modes.emote.active) {
     chips.push({ key: 'emote', label: 'Emote-only' });
   }
-  if (state.subsOnly) {
+  if (modes.subs.active) {
     chips.push({ key: 'subs', label: 'Sub-only' });
   }
-  if (state.r9k) {
+  if (modes.unique.active) {
     chips.push({ key: 'unique', label: 'Unique' });
   }
 

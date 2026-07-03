@@ -42,7 +42,7 @@ import { useUserQuery } from '@app/hooks/queries/useUserQuery';
 import { useChannelPoll } from '@app/hooks/useChannelPoll';
 import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
 import { twitchService } from '@app/services/twitch-service';
-import { addCreatedClip } from '@app/store/createdClips/state';
+import { addCreatedClip } from '@app/store/createdClips/actions/createdClips';
 import {
   usePreference,
   useUpdatePreferences,

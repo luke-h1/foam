@@ -13,11 +13,9 @@ import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { twitchService } from '@app/services/twitch-service';
-import { useCreatedClips } from '@app/store/createdClips/selectors';
-import {
-  type CreatedClipRecord,
-  removeCreatedClip,
-} from '@app/store/createdClips/state';
+import { removeCreatedClip } from '@app/store/createdClips/actions/createdClips';
+import type { CreatedClipRecord } from '@app/store/createdClips/observables/createdClips';
+import { useCreatedClips } from '@app/store/createdClips/react/selectors';
 import { theme } from '@app/styles/themes';
 import type { TwitchClip } from '@app/types/twitch/clip';
 import { showActionMenu } from '@app/utils/actionMenu/showActionMenu';

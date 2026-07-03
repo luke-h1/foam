@@ -217,6 +217,33 @@ function normalizeDuration(durationSeconds: number | undefined) {
   return Math.max(1, Math.trunc(durationSeconds));
 }
 
+// Helix endpoints like /users and /clips take repeated id params (max 100 per
+// request), which the shared client's comma-joining array serializer can't
+// produce.
+async function fetchBatchedByIds<T>(
+  basePath: string,
+  ids: string[],
+): Promise<T[]> {
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const batches: string[][] = [];
+  for (let i = 0; i < ids.length; i += 100) {
+    batches.push(ids.slice(i, i + 100));
+  }
+
+  const results = await Promise.all(
+    batches.map(batch =>
+      twitchApi.get<{ data: T[] }>(
+        `${basePath}?${batch.map(id => `id=${encodeURIComponent(id)}`).join('&')}`,
+      ),
+    ),
+  );
+
+  return results.flatMap(result => result.data ?? []);
+}
+
 export function getPinnedChatMessageText(
   pinnedMessage: TwitchPinnedChatMessage,
 ): string {
@@ -597,28 +624,8 @@ export const twitchService = {
     return (result.data[0] as UserInfoResponse) ?? '';
   },
 
-  getUsersById: async (ids: string[]): Promise<UserInfoResponse[]> => {
-    if (ids.length === 0) {
-      return [];
-    }
-
-    // Helix /users takes repeated id params (max 100 per request), which the
-    // shared client's comma-joining array serializer can't produce.
-    const batches: string[][] = [];
-    for (let i = 0; i < ids.length; i += 100) {
-      batches.push(ids.slice(i, i + 100));
-    }
-
-    const results = await Promise.all(
-      batches.map(batch =>
-        twitchApi.get<{ data: UserInfoResponse[] }>(
-          `/users?${batch.map(id => `id=${encodeURIComponent(id)}`).join('&')}`,
-        ),
-      ),
-    );
-
-    return results.flatMap(result => result.data ?? []);
-  },
+  getUsersById: (ids: string[]): Promise<UserInfoResponse[]> =>
+    fetchBatchedByIds<UserInfoResponse>('/users', ids),
 
   searchChannels: async (query: string): Promise<SearchChannelResponse[]> => {
     const result = await twitchApi.get<{ data: SearchChannelResponse[] }>(
@@ -831,28 +838,8 @@ export const twitchService = {
     );
   },
 
-  getClipsByIds: async (ids: string[]): Promise<TwitchClip[]> => {
-    if (ids.length === 0) {
-      return [];
-    }
-
-    // Helix /clips takes repeated id params (max 100 per request), which the
-    // shared client's comma-joining array serializer can't produce.
-    const batches: string[][] = [];
-    for (let i = 0; i < ids.length; i += 100) {
-      batches.push(ids.slice(i, i + 100));
-    }
-
-    const results = await Promise.all(
-      batches.map(batch =>
-        twitchApi.get<{ data: TwitchClip[] }>(
-          `/clips?${batch.map(id => `id=${encodeURIComponent(id)}`).join('&')}`,
-        ),
-      ),
-    );
-
-    return results.flatMap(result => result.data ?? []);
-  },
+  getClipsByIds: (ids: string[]): Promise<TwitchClip[]> =>
+    fetchBatchedByIds<TwitchClip>('/clips', ids),
 
   getClips: async ({
     after,

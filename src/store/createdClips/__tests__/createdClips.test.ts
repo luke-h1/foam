@@ -1,10 +1,12 @@
 import {
   addCreatedClip,
-  type CreatedClipRecord,
-  createdClips$,
   MAX_CREATED_CLIPS,
   removeCreatedClip,
-} from '../state';
+} from '../actions/createdClips';
+import {
+  type CreatedClipRecord,
+  createdClips$,
+} from '../observables/createdClips';
 
 function makeRecord(id: string): CreatedClipRecord {
   return {
@@ -15,7 +17,7 @@ function makeRecord(id: string): CreatedClipRecord {
   };
 }
 
-describe('createdClips state', () => {
+describe('createdClips actions', () => {
   beforeEach(() => {
     createdClips$.clips.set([]);
   });

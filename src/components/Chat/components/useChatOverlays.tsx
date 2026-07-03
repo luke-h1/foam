@@ -15,8 +15,8 @@ import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { logger } from '@app/utils/logger';
 
-import { executeModCommand } from '../util/executeModCommand';
 import type { ModCommand } from '../util/modCommands';
+import { runModCommand } from '../util/runModCommand';
 import {
   BadgePressData,
   EmotePressData,
@@ -307,21 +307,7 @@ export function useChatOverlays({
   // through Helix; a 403 here just means the current user is not a moderator.
   const runModAction = useCallback(
     (command: ModCommand) => {
-      const moderatorId = currentUserId?.trim();
-      if (!moderatorId) {
-        toast.error(i18next.t('chat:modCommands.failed'));
-        return;
-      }
-      executeModCommand(command, { broadcasterId: channelId, moderatorId })
-        .then(successMessage => toast.success(successMessage))
-        .catch((error: unknown) => {
-          logger.chat.warn('Mod action failed', {
-            error,
-            command: command.type,
-            channel_id: channelId,
-          });
-          toast.error(i18next.t('chat:modCommands.failed'));
-        });
+      runModCommand(command, channelId, currentUserId);
     },
     [channelId, currentUserId],
   );
