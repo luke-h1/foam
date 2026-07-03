@@ -34,6 +34,10 @@ export interface UserStateTags {
   mod?: string;
   subscriber?: string;
   turbo?: string;
+  /**
+   * Total bits cheered in this message (PRIVMSG `bits` tag).
+   */
+  bits?: string;
   emotes?: string;
   'emote-sets'?: string;
   'first-msg'?: string;

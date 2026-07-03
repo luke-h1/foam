@@ -20,6 +20,7 @@ import {
   styles,
 } from '../RichChatMessage.styles';
 import type { EmotePressData } from '../RichChatMessage.types';
+import { CheermoteRenderer } from './CheermoteRenderer';
 import { EmoteRenderer } from './EmoteRenderer';
 
 export interface UseChatMessagePartRendererArgs {
@@ -146,6 +147,17 @@ export function useChatMessagePartRenderer({
             part={part}
             onEmoteTouchStart={onEmoteTouchStart}
             shouldOverlayPrevious={shouldOverlayPrevious}
+            targetSize={emoteTargetSize ?? (compact ? 26 : 30)}
+          />
+        );
+      }
+
+      case 'cheermote': {
+        return (
+          <CheermoteRenderer
+            disableAnimations={disableEmoteAnimations}
+            key={getPartKey(part, index)}
+            part={part}
             targetSize={emoteTargetSize ?? (compact ? 26 : 30)}
           />
         );

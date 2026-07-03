@@ -106,6 +106,7 @@ jest.mock('@app/services/seventv-service', () => ({
 
 jest.mock('@app/services/twitch-service', () => ({
   twitchService: {
+    getCheermotes: jest.fn().mockResolvedValue([]),
     getUsersById: jest.fn(),
   },
 }));

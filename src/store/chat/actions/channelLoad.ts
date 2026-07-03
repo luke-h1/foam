@@ -6,6 +6,12 @@ import { sevenTvService } from '@app/services/seventv-service';
 import { twitchService } from '@app/services/twitch-service';
 import { getPreferences } from '@app/store/preferences/state';
 import type { SanitisedEmote } from '@app/types/emote';
+import {
+  markChannelCheermotesFetchFailed,
+  markChannelCheermotesFetching,
+  setChannelCheermotes,
+  shouldFetchChannelCheermotes,
+} from '@app/utils/chat/cheermoteStore';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { logger } from '@app/utils/logger';
 
@@ -630,6 +636,30 @@ const loadChannelResourcesInternal = async (
   }
 };
 
+/**
+ * Fire-and-forget cheermote fetch; failures only log because cheer rendering
+ * degrades to plain text without them.
+ */
+export const loadChannelCheermotes = (channelId: string): void => {
+  if (!shouldFetchChannelCheermotes(channelId)) {
+    return;
+  }
+  markChannelCheermotesFetching(channelId);
+  twitchService.getCheermotes(channelId).then(
+    cheermotes => setChannelCheermotes(channelId, cheermotes),
+    (error: unknown) => {
+      markChannelCheermotesFetchFailed(channelId);
+      logger.chat.warn('Failed to load channel cheermotes', {
+        name: 'chat_resources_warning',
+        error,
+        action: 'cheermotes_failed',
+        channel_id: channelId,
+        screen: 'chat',
+      });
+    },
+  );
+};
+
 export const loadChannelResources = async (
   options: LoadChannelResourcesOptions | string,
   forceRefresh = false,
@@ -645,6 +675,8 @@ export const loadChannelResources = async (
     signal,
     twitchUserId,
   } = opts;
+
+  loadChannelCheermotes(channelId);
 
   return startSpanAsync(
     'load-channel-resources',

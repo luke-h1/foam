@@ -8,6 +8,7 @@ import type {
   DefaultTokenResponse,
   RefreshTokenResponse,
 } from '@app/types/twitch/auth';
+import type { TwitchCheermote } from '@app/types/twitch/bits';
 import type { Category } from '@app/types/twitch/category';
 import type {
   Channel,
@@ -529,6 +530,18 @@ export const twitchService = {
       {
         params: {
           user_id: userId,
+        },
+      },
+    );
+    return result.data;
+  },
+
+  getCheermotes: async (broadcasterId?: string): Promise<TwitchCheermote[]> => {
+    const result = await twitchApi.get<{ data: TwitchCheermote[] }>(
+      '/bits/cheermotes',
+      {
+        params: {
+          ...(broadcasterId && { broadcaster_id: broadcasterId }),
         },
       },
     );
