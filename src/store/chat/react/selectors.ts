@@ -58,8 +58,9 @@ function resolveEmoteData(
     twitchSubscriberEmotes: preferences.showTwitchEmotes
       ? (cache.twitchSubscriberEmotes ?? [])
       : [],
-    twitchSubscriberChannelProfiles:
-      cache.twitchSubscriberChannelProfiles ?? EMPTY_SUBSCRIBER_PROFILES,
+    twitchSubscriberChannelProfiles: preferences.showTwitchEmotes
+      ? (cache.twitchSubscriberChannelProfiles ?? EMPTY_SUBSCRIBER_PROFILES)
+      : EMPTY_SUBSCRIBER_PROFILES,
     sevenTvPersonalEmotes: preferences.show7TvEmotes
       ? (cache.sevenTvPersonalEmotes ?? EMPTY_PERSONAL_EMOTES)
       : EMPTY_PERSONAL_EMOTES,

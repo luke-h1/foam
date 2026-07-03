@@ -55,9 +55,11 @@ export function followedChannelsQueryOptions(userId: string) {
     staleTime: 300_000,
     queryFn: async () => {
       const channels = await twitchService.getFollowedChannels(userId);
-      const users = await twitchService.getUsersById(
-        channels.map(channel => channel.broadcaster_id),
-      );
+      // Profile images are an enrichment; if the lookup fails the rows fall
+      // back to text avatars rather than sinking the whole channel list.
+      const users = await twitchService
+        .getUsersById(channels.map(channel => channel.broadcaster_id))
+        .catch(() => []);
       const profileImageById = new Map(
         users.map(user => [user.id, user.profile_image_url]),
       );

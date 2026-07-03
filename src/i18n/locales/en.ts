@@ -8,6 +8,7 @@ const en = {
     delete: 'Delete',
     dismiss: 'Dismiss',
     goBack: 'Go back',
+    more: 'More',
     next: 'Next',
     noInternetConnection: 'No internet connection',
     done: 'Done',
@@ -445,6 +446,8 @@ const en = {
     sleepTimerMinutes: '{{minutes}} minutes',
     sleepTimerOff: 'Turn off',
     pictureInPicture: 'Picture in Picture',
+    pictureInPictureUnavailable:
+      'Picture in Picture is not available for this stream',
     twitchVideoPlayer: 'Twitch video player',
     failedToFetchFollowed: 'Failed to fetch followed streams',
     followingHeading: 'Your followed streams',

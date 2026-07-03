@@ -2,6 +2,9 @@ import { useCallback, useImperativeHandle, useRef, useState } from 'react';
 import type { Ref } from 'react';
 import type { WebViewMessageEvent } from 'react-native-webview';
 
+import i18next from 'i18next';
+import { toast } from 'sonner-native';
+
 import { useSyncRef } from '@app/hooks/useSyncRef';
 import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
 import { countMetric } from '@app/lib/sentry';
@@ -588,6 +591,7 @@ export function usePlayerBridge({
             name: 'twitch_player_warning',
             channel,
           });
+          toast.error(i18next.t('stream:pictureInPictureUnavailable'));
           break;
         case 'playbackStats': {
           const latency = message.payload.hlsLatencyBroadcaster;

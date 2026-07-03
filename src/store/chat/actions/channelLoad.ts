@@ -163,6 +163,10 @@ export const clearPersonalEmotesCache = () => {
 };
 
 const subscriberProfileFetchesInFlight = new Set<string>();
+// Owner ids Twitch has already been asked about; ids it never returns
+// (deleted/suspended accounts) would otherwise be re-requested on every
+// cached-path channel revisit.
+const attemptedSubscriberOwnerIds = new Set<string>();
 
 export const resolveSubscriberChannelProfiles = async (
   channelId: string,
@@ -185,7 +189,10 @@ export const resolveSubscriberChannelProfiles = async (
         'owner_id' in emote && emote.owner_id ? [emote.owner_id] : [],
       ),
     ),
-  ].filter(ownerId => !existingProfiles[ownerId]);
+  ].filter(
+    ownerId =>
+      !existingProfiles[ownerId] && !attemptedSubscriberOwnerIds.has(ownerId),
+  );
 
   if (ownerIds.length === 0) {
     return;
@@ -194,6 +201,7 @@ export const resolveSubscriberChannelProfiles = async (
   subscriberProfileFetchesInFlight.add(channelId);
   try {
     const users = await twitchService.getUsersById(ownerIds);
+    ownerIds.forEach(ownerId => attemptedSubscriberOwnerIds.add(ownerId));
     const profiles: Record<string, SubscriberChannelProfile> = {};
 
     users.forEach(user => {
@@ -209,8 +217,14 @@ export const resolveSubscriberChannelProfiles = async (
       return;
     }
 
+    // The cache entry may have been LRU-evicted during the fetch; writing
+    // through the keyed proxy would silently resurrect a stub entry.
+    const latestCache = channelCache.peek();
+    if (!latestCache) {
+      return;
+    }
     channelCache.twitchSubscriberChannelProfiles.set({
-      ...(channelCache.twitchSubscriberChannelProfiles.peek() ?? {}),
+      ...(latestCache.twitchSubscriberChannelProfiles ?? {}),
       ...profiles,
     });
   } catch (error) {
@@ -284,6 +298,12 @@ const loadChannelResourcesInternal = async (
     return false;
   }
   chatStore$.loadingState.set('LOADING');
+  if (shouldForceRefresh) {
+    // The full load below resets sevenTvPersonalEmotes to {}, so the checked
+    // set must forget those users or fetchUserPersonalEmotes short-circuits
+    // into the emptied cache until the channel is left and re-entered.
+    clearPersonalEmotesCache();
+  }
   try {
     const caches = chatStore$.persisted.channelCaches.peek();
     const existingCache = caches?.[channelId];

@@ -327,13 +327,14 @@ export function useChatIrcHandlers({
   const onPart = useCallback(() => {
     logger.chat.info('Parted from channel:', channelName);
     roomStateRef.current = null;
+    setChannelRoomState(channelId, null);
     if (isMountedRef?.current === false) {
       return;
     }
 
     clearMessages();
     clearLocalMessages();
-  }, [channelName, clearLocalMessages, isMountedRef]);
+  }, [channelId, channelName, clearLocalMessages, isMountedRef]);
 
   const onNotice = useCallback(
     (_channel: string, tags: Record<string, string>, messageText: string) => {
@@ -379,7 +380,8 @@ export function useChatIrcHandlers({
   const onReconnect = useCallback(() => {
     appendSystemMessage('Reconnecting to Twitch chat…');
     roomStateRef.current = null;
-  }, [appendSystemMessage]);
+    setChannelRoomState(channelId, null);
+  }, [appendSystemMessage, channelId]);
 
   const handleRecentIrcMessage = useCallback(
     async (line: string) => {

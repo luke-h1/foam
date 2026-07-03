@@ -108,12 +108,10 @@ export default function FollowingScreen() {
     [streams],
   );
 
-  const { data: followedChannels } = useFollowedChannelsQuery(
-    user?.id as string,
-    {
+  const { data: followedChannels, isLoading: isLoadingFollowedChannels } =
+    useFollowedChannelsQuery(user?.id as string, {
       enabled: !!user?.id,
-    },
-  );
+    });
 
   const offlineChannels = useMemo(() => {
     if (!Array.isArray(followedChannels)) {
@@ -252,6 +250,23 @@ export default function FollowingScreen() {
   }
 
   if (!streams) {
+    return (
+      <View style={styles.container}>
+        {Array.from({ length: 5 }).map((_, index) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <LiveStreamCardSkeleton key={index} layout={streamListLayout} />
+        ))}
+      </View>
+    );
+  }
+
+  // The offline list resolves after the streams query (two-step fetch), so
+  // wait for it before declaring nobody live or the empty state flashes.
+  if (
+    streamsArray.length === 0 &&
+    offlineChannels.length === 0 &&
+    isLoadingFollowedChannels
+  ) {
     return (
       <View style={styles.container}>
         {Array.from({ length: 5 }).map((_, index) => (

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface UseSleepTimerOptions {
   /**
@@ -58,5 +58,10 @@ export function useSleepTimer({ onExpire }: UseSleepTimerOptions): SleepTimer {
     return Math.max(1, Math.ceil((deadline - Date.now()) / 60_000));
   }, [deadline]);
 
-  return { cancel, getRemainingMinutes, isActive: deadline !== null, start };
+  // Stable identity so consumers can hold callbacks that only change when the
+  // timer state actually changes, not on every render of the owning screen.
+  return useMemo(
+    () => ({ cancel, getRemainingMinutes, isActive: deadline !== null, start }),
+    [cancel, deadline, getRemainingMinutes, start],
+  );
 }

@@ -156,6 +156,7 @@ export function useChatMessagePartRenderer({
         return (
           <CheermoteRenderer
             disableAnimations={disableEmoteAnimations}
+            isModerated={Boolean(moderationNotice)}
             key={getPartKey(part, index)}
             part={part}
             targetSize={emoteTargetSize ?? (compact ? 26 : 30)}
