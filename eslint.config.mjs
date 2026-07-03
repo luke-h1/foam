@@ -54,6 +54,10 @@ export default tseslint.config(
       'metro.config.js',
       'player-website/.astro/**',
       'player-website/dist/**',
+      // Untracked monorepo-migration leftovers; lint should not scan their
+      // build output while they sit inside this branch's working tree.
+      'src/foam/**',
+      'src/player-website/**',
       'src/graphql/generated/**',
     ],
   },
