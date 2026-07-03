@@ -70,6 +70,14 @@ export interface StreamPlayerRef {
    */
   setVolume: (volume: number) => void;
   /**
+   * Whether the embedded video is currently in system picture-in-picture.
+   */
+  isPictureInPicture: () => boolean;
+  /**
+   * Toggle iOS system picture-in-picture on the embedded video.
+   */
+  togglePictureInPicture: () => void;
+  /**
    * Release the underlying media (pause + drop the <video> source) so the
    * WebView can be torn down without an active AVPlayer wedging the transition.
    */
@@ -334,6 +342,8 @@ export type PlayerMessage =
       };
       type: 'videoElementError';
     }
+  | { type: 'pipChanged'; payload: { active: boolean } }
+  | { type: 'pipUnavailable' }
   | { type: 'playing' }
   | { type: 'ready' }
   | { type: 'trace'; payload: { step: string; detail?: string } }

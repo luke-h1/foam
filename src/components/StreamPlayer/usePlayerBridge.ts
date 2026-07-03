@@ -78,6 +78,8 @@ export function usePlayerBridge({
   });
   const [hasContentGate, setHasContentGate] = useState(false);
   const [overlayUnlocked, setOverlayUnlocked] = useState(false);
+  const [pipActive, setPipActive] = useState(false);
+  const pipActiveRef = useRef(false);
   const [playbackLatencySeconds, setPlaybackLatencySeconds] = useState<
     number | null
   >(null);
@@ -142,6 +144,8 @@ export function usePlayerBridge({
     setPrevPlayerSource({ autoplay, sourceKey, webViewKey });
     setPlaybackLatencySeconds(null);
     lastPlaybackLatencySecondsRef.current = null;
+    pipActiveRef.current = false;
+    setPipActive(false);
     playerMountedAtRef.current = Date.now();
     reportedFirstPlayingRef.current = false;
     reportedPlaybackBlockedRef.current = false;
@@ -256,6 +260,12 @@ export function usePlayerBridge({
     injectJS(`window.playerControls.setVolume(${volume})`);
   };
 
+  const togglePictureInPicture = useCallback(() => {
+    injectJS(
+      'if (window.__foamTogglePictureInPicture) { window.__foamTogglePictureInPicture(); }',
+    );
+  }, [injectJS]);
+
   const setChannel = (newChannel: string) => {
     injectJS(`window.playerControls.setChannel('${newChannel}')`);
   };
@@ -354,6 +364,8 @@ export function usePlayerBridge({
       setVideo: (videoId, timestamp) =>
         playerBridgeRef.current.setVideo(videoId, timestamp),
       setVolume: volume => playerBridgeRef.current.setVolume(volume),
+      isPictureInPicture: () => pipActiveRef.current,
+      togglePictureInPicture: () => togglePictureInPicture(),
       releaseMedia: () => {
         userPausedRef.current = true;
         clearTransientPauseResume();
@@ -366,7 +378,7 @@ export function usePlayerBridge({
         injectJS('window.__foamSyncToLive && window.__foamSyncToLive();'),
       unmute: () => playerBridgeRef.current.unmute(),
     }),
-    [clearTransientPauseResume, injectJS],
+    [clearTransientPauseResume, injectJS, togglePictureInPicture],
   );
 
   const handleMessage = (event: WebViewMessageEvent) => {
@@ -567,6 +579,16 @@ export function usePlayerBridge({
         case 'twitchAuthComplete':
           scheduleAuthCompletionReload();
           break;
+        case 'pipChanged':
+          pipActiveRef.current = message.payload.active;
+          setPipActive(message.payload.active);
+          break;
+        case 'pipUnavailable':
+          logger.main.warn('picture-in-picture unavailable on this player', {
+            name: 'twitch_player_warning',
+            channel,
+          });
+          break;
         case 'playbackStats': {
           const latency = message.payload.hlsLatencyBroadcaster;
           const hasUsableLiveLatency =
@@ -617,11 +639,13 @@ export function usePlayerBridge({
     hasContentGate,
     overlayUnlocked,
     pause,
+    pipActive,
     play,
     playbackLatencySeconds,
     playerState,
     playerStatus,
     resetPlayerStatus,
     setMuted,
+    togglePictureInPicture,
   };
 }

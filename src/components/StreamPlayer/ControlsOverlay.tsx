@@ -26,11 +26,13 @@ interface ControlsOverlayProps {
   onBackPress?: () => void;
   onCreateClipPress?: () => void;
   onMutePress?: () => void;
+  onPipPress?: () => void;
   onPlayPausePress: () => void;
   onRefresh?: () => void;
   onSharePress?: () => void;
   onSleepTimerPress?: () => void;
   paused: boolean;
+  pipActive?: boolean;
   sleepTimerActive?: boolean;
   streamInfo?: StreamInfo;
 }
@@ -57,11 +59,13 @@ export function ControlsOverlay({
   onBackPress,
   onCreateClipPress,
   onMutePress,
+  onPipPress,
   onPlayPausePress,
   onRefresh,
   onSharePress,
   onSleepTimerPress,
   paused,
+  pipActive,
   sleepTimerActive,
   streamInfo,
 }: ControlsOverlayProps) {
@@ -252,6 +256,22 @@ export function ControlsOverlay({
                 name='arrow.clockwise'
                 size={18}
                 tintColor={theme.colorWhite}
+              />
+            </Button>
+          </View>
+        )}
+
+        {onPipPress && (
+          <View style={styles.glassButton}>
+            <Button
+              label={t('pictureInPicture')}
+              style={styles.controlButton}
+              onPress={onPipPress}
+            >
+              <SymbolView
+                name='pip'
+                size={18}
+                tintColor={pipActive ? theme.colorPrimary : theme.colorWhite}
               />
             </Button>
           </View>

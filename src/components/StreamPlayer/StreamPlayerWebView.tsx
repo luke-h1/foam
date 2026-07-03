@@ -156,7 +156,7 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       allowsFullscreenVideo={false}
       allowsInlineMediaPlayback
       allowsAirPlayForMediaPlayback={false}
-      allowsPictureInPictureMediaPlayback={false}
+      allowsPictureInPictureMediaPlayback
       androidLayerType='hardware'
       cacheEnabled
       cacheMode='LOAD_CACHE_ELSE_NETWORK'

@@ -344,6 +344,9 @@ const config: ExpoConfig = {
         'Foam uses your photo library to save downloaded clips, emotes, and badges so you can use them outside the app.',
       NSPhotoLibraryAddUsageDescription:
         'Foam saves downloaded clips, emotes, and badges to your photo library.',
+      // Keeps the player's picture-in-picture window playing when the app
+      // backgrounds; without it iOS pauses the WKWebView's AVPlayer.
+      UIBackgroundModes: ['audio'],
     },
     entitlements: enableICloudEntitlements
       ? {

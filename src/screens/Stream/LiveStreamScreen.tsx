@@ -271,6 +271,12 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       if (!player) {
         return;
       }
+      // An active picture-in-picture window is exactly the case where playback
+      // should continue in the background, so leave the player alone.
+      if (player.isPictureInPicture()) {
+        wasPlayingBeforeBackgroundRef.current = false;
+        return;
+      }
       if (nextState === 'background') {
         wasPlayingBeforeBackgroundRef.current = !player.getPaused();
         player.pause();

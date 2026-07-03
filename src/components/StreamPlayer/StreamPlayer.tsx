@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { InteractionManager, StyleSheet, View } from 'react-native';
+import { InteractionManager, Platform, StyleSheet, View } from 'react-native';
 import type { WebViewMessageEvent } from 'react-native-webview';
 import { WebView } from 'react-native-webview';
 
@@ -22,6 +22,7 @@ import {
   buildTwitchContentGateAcceptScript,
   buildTwitchLatencyTrackerScript,
   buildTwitchLiveSyncScript,
+  buildTwitchPipBridgeScript,
   buildTwitchPlayerAudioDefaultScript,
   buildTwitchPlayerQualityDefaultScript,
   buildTwitchPlayerStateScript,
@@ -281,11 +282,13 @@ export const StreamPlayer = memo(function StreamPlayer({
     hasContentGate,
     overlayUnlocked,
     pause,
+    pipActive,
     play,
     playerState,
     playerStatus,
     resetPlayerStatus,
     setMuted,
+    togglePictureInPicture,
   } = usePlayerBridge({
     autoplay,
     channel,
@@ -372,7 +375,9 @@ export const StreamPlayer = memo(function StreamPlayer({
         '\n' +
         buildTwitchLiveSyncScript({})
       : '') +
-    (video ? '\n' + VOD_PROGRESS_TRACKER_SCRIPT : '');
+    (video ? '\n' + VOD_PROGRESS_TRACKER_SCRIPT : '') +
+    // iOS-only: WKWebView is the only WebView with a presentation-mode API.
+    (Platform.OS === 'ios' && !clip ? '\n' + buildTwitchPipBridgeScript() : '');
 
   // The tracker posts unsolicited `vodProgress` messages; capture those for
   // resume-on-reload and forward everything else to the player bridge.
@@ -520,10 +525,14 @@ export const StreamPlayer = memo(function StreamPlayer({
           onMutePress={handleMutePress}
           onPlayPausePress={handlePlayPause}
           onCreateClipPress={onCreateClipPress}
+          onPipPress={
+            Platform.OS === 'ios' && !clip ? togglePictureInPicture : undefined
+          }
           onRefresh={onRefresh ? handleRefresh : undefined}
           onSharePress={onSharePress}
           onSleepTimerPress={onSleepTimerPress}
           paused={playerState.isPaused}
+          pipActive={pipActive}
           sleepTimerActive={sleepTimerActive}
           streamInfo={streamInfo}
         />
