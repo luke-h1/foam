@@ -1,3 +1,5 @@
+import { PIP_ENABLED } from './pipFeature';
+
 // Twitch's player embed expects a VOD start offset as `XhYmZs`, not seconds.
 function formatTwitchTimeParam(totalSeconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(totalSeconds));
@@ -507,9 +509,9 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     try {
       video.playsInline = true;
       video.controls = false;
-      // PiP stays available: the native overlay's PiP button drives it via
+      // When enabled, the native overlay's PiP button drives PiP via
       // webkitSetPresentationMode.
-      video.disablePictureInPicture = false;
+      video.disablePictureInPicture = ${String(!PIP_ENABLED)};
       video.setAttribute('playsinline', '');
       video.setAttribute('webkit-playsinline', '');
       video.setAttribute('x-webkit-airplay', 'deny');

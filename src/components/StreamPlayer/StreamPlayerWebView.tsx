@@ -12,6 +12,7 @@ import { countMetric } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import { logger } from '@app/utils/logger';
 
+import { PIP_ENABLED } from './pipFeature';
 import { isAppUrl, isTwitchPassportCallbackUrl } from './twitchPlayerSource';
 
 type WebViewSource = ComponentProps<typeof WebView>['source'];
@@ -156,7 +157,7 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       allowsFullscreenVideo={false}
       allowsInlineMediaPlayback
       allowsAirPlayForMediaPlayback={false}
-      allowsPictureInPictureMediaPlayback
+      allowsPictureInPictureMediaPlayback={PIP_ENABLED}
       androidLayerType='hardware'
       cacheEnabled
       cacheMode='LOAD_CACHE_ELSE_NETWORK'

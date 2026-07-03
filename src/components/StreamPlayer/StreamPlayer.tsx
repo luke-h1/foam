@@ -10,6 +10,7 @@ import { logger } from '@app/utils/logger';
 
 import { Image } from '../Image/Image';
 import { ControlsOverlay } from './ControlsOverlay';
+import { PIP_ENABLED } from './pipFeature';
 import { DebugErrorOverlay, TouchBlockOverlay } from './StreamPlayerOverlays';
 import { StreamPlayerPoster } from './StreamPlayerPoster';
 import { StreamPlayerWebView } from './StreamPlayerWebView';
@@ -377,7 +378,9 @@ export const StreamPlayer = memo(function StreamPlayer({
       : '') +
     (video ? '\n' + VOD_PROGRESS_TRACKER_SCRIPT : '') +
     // iOS-only: WKWebView is the only WebView with a presentation-mode API.
-    (Platform.OS === 'ios' && !clip ? '\n' + buildTwitchPipBridgeScript() : '');
+    (PIP_ENABLED && Platform.OS === 'ios' && !clip
+      ? '\n' + buildTwitchPipBridgeScript()
+      : '');
 
   // The tracker posts unsolicited `vodProgress` messages; capture those for
   // resume-on-reload and forward everything else to the player bridge.
@@ -526,7 +529,9 @@ export const StreamPlayer = memo(function StreamPlayer({
           onPlayPausePress={handlePlayPause}
           onCreateClipPress={onCreateClipPress}
           onPipPress={
-            Platform.OS === 'ios' && !clip ? togglePictureInPicture : undefined
+            PIP_ENABLED && Platform.OS === 'ios' && !clip
+              ? togglePictureInPicture
+              : undefined
           }
           onRefresh={onRefresh ? handleRefresh : undefined}
           onSharePress={onSharePress}
