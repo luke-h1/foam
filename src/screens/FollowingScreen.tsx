@@ -103,7 +103,10 @@ export default function FollowingScreen() {
     refetch: refetchFollowingStreams,
   });
 
-  const streamsArray = Array.isArray(streams) ? streams : [];
+  const streamsArray = useMemo(
+    () => (Array.isArray(streams) ? streams : []),
+    [streams],
+  );
 
   const { data: followedChannels } = useFollowedChannelsQuery(
     user?.id as string,
@@ -113,14 +116,16 @@ export default function FollowingScreen() {
   );
 
   const offlineChannels = useMemo(() => {
-    if (!Array.isArray(followedChannels) || !Array.isArray(streams)) {
+    if (!Array.isArray(followedChannels)) {
       return [];
     }
-    const liveBroadcasterIds = new Set(streams.map(stream => stream.user_id));
+    const liveBroadcasterIds = new Set(
+      streamsArray.map(stream => stream.user_id),
+    );
     return followedChannels.filter(
       channel => !liveBroadcasterIds.has(channel.broadcaster_id),
     );
-  }, [followedChannels, streams]);
+  }, [followedChannels, streamsArray]);
 
   const listItems = useMemo<FollowingListItem[]>(() => {
     const items: FollowingListItem[] = streamsArray.map(stream => ({
@@ -137,9 +142,7 @@ export default function FollowingScreen() {
       );
     }
     return items;
-    // streamsArray is a fresh array each render; streams is the stable query result.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [streams, offlineChannels]);
+  }, [streamsArray, offlineChannels]);
 
   const hasShownErrorToast = useRef(false);
   const listRef = useRef(null);
