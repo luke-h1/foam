@@ -86,17 +86,30 @@ describe('applyCheermotesToParts', () => {
   test('handles multiple cheer tokens in one message', () => {
     const parts: ParsedPart[] = [{ type: 'text', content: 'Cheer1 Cheer100' }];
 
-    const result = applyCheermotesToParts(parts, makeCheermotes());
-
-    expect(
-      result.map(part => ({
-        type: part.type,
-        content: 'content' in part ? part.content : '',
-      })),
-    ).toEqual([
-      { type: 'cheermote', content: 'Cheer1' },
+    expect(applyCheermotesToParts(parts, makeCheermotes())).toEqual([
+      {
+        type: 'cheermote',
+        content: 'Cheer1',
+        cheermote: {
+          bits: 1,
+          color: '#979797',
+          prefix: 'Cheer',
+          static_url: 'https://cdn.example.com/cheer/1.png',
+          url: 'https://cdn.example.com/cheer/1.gif',
+        },
+      },
       { type: 'text', content: ' ' },
-      { type: 'cheermote', content: 'Cheer100' },
+      {
+        type: 'cheermote',
+        content: 'Cheer100',
+        cheermote: {
+          bits: 100,
+          color: '#9c3ee8',
+          prefix: 'Cheer',
+          static_url: 'https://cdn.example.com/cheer/100.png',
+          url: 'https://cdn.example.com/cheer/100.gif',
+        },
+      },
     ]);
   });
 });

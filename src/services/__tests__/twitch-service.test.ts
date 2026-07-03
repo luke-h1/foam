@@ -1,4 +1,6 @@
+import type { TwitchCheermote } from '@app/types/twitch/bits';
 import type { FollowedChannel } from '@app/types/twitch/channel';
+import type { TwitchClip } from '@app/types/twitch/clip';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 
 import { twitchApi } from '../api/clients';
@@ -70,6 +72,124 @@ describe('twitchService.getUsersById', () => {
     const secondUrl = api.get.mock.calls[1]?.[0] as string;
     expect(firstUrl.match(/id=/g)).toHaveLength(100);
     expect(secondUrl.match(/id=/g)).toHaveLength(50);
+  });
+});
+
+describe('twitchService.getClipsByIds', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  function makeClip(id: string): TwitchClip {
+    return {
+      id,
+      url: `https://clips.twitch.tv/${id}`,
+      embed_url: `https://clips.twitch.tv/embed?clip=${id}`,
+      broadcaster_id: '100',
+      broadcaster_name: 'Zoil',
+      creator_id: '200',
+      creator_name: 'Alet',
+      video_id: 'v1',
+      game_id: 'g1',
+      language: 'en',
+      title: `Clip ${id}`,
+      view_count: 10,
+      created_at: '2026-07-01T00:00:00Z',
+      thumbnail_url: `https://cdn.example.com/${id}.jpg`,
+      duration: 30,
+      vod_offset: 120,
+      is_featured: false,
+    };
+  }
+
+  test('returns an empty list without a request when no ids are given', async () => {
+    const result = await twitchService.getClipsByIds([]);
+
+    expect(result).toEqual([]);
+    expect(api.get).not.toHaveBeenCalled();
+  });
+
+  test('fetches clips with repeated id params in a single request', async () => {
+    api.get.mockResolvedValue({ data: [makeClip('a'), makeClip('b')] });
+
+    const result = await twitchService.getClipsByIds(['a', 'b']);
+
+    expect(api.get).toHaveBeenCalledTimes(1);
+    expect(api.get).toHaveBeenCalledWith('/clips?id=a&id=b');
+    expect(result).toEqual([makeClip('a'), makeClip('b')]);
+  });
+
+  test('splits requests into batches of 100 ids and flattens the pages', async () => {
+    const ids = Array.from({ length: 150 }, (_, index) => `clip${index + 1}`);
+    api.get
+      .mockResolvedValueOnce({ data: [makeClip('clip1')] })
+      .mockResolvedValueOnce({ data: [makeClip('clip101')] });
+
+    const result = await twitchService.getClipsByIds(ids);
+
+    expect(api.get).toHaveBeenCalledTimes(2);
+    const firstUrl = api.get.mock.calls[0]?.[0] as string;
+    const secondUrl = api.get.mock.calls[1]?.[0] as string;
+    expect(firstUrl.match(/id=/g)).toHaveLength(100);
+    expect(secondUrl.match(/id=/g)).toHaveLength(50);
+    expect(result).toEqual([makeClip('clip1'), makeClip('clip101')]);
+  });
+});
+
+describe('twitchService.getCheermotes', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  function makeCheermote(prefix: string): TwitchCheermote {
+    return {
+      prefix,
+      tiers: [
+        {
+          min_bits: 1,
+          id: '1',
+          color: '#979797',
+          images: {
+            dark: {
+              animated: { '1': `https://cdn.example.com/${prefix}/dark/1.gif` },
+              static: { '1': `https://cdn.example.com/${prefix}/dark/1.png` },
+            },
+            light: {
+              animated: {
+                '1': `https://cdn.example.com/${prefix}/light/1.gif`,
+              },
+              static: { '1': `https://cdn.example.com/${prefix}/light/1.png` },
+            },
+          },
+          can_cheer: true,
+          show_in_bits_card: true,
+        },
+      ],
+      type: 'global_first_party',
+      order: 1,
+      last_updated: '2026-07-01T00:00:00Z',
+      is_charitable: false,
+    };
+  }
+
+  test('fetches global cheermotes without a broadcaster id', async () => {
+    api.get.mockResolvedValue({ data: [makeCheermote('Cheer')] });
+
+    const result = await twitchService.getCheermotes();
+
+    expect(api.get).toHaveBeenCalledWith('/bits/cheermotes', { params: {} });
+    expect(result).toEqual([makeCheermote('Cheer')]);
+  });
+
+  test('passes the broadcaster id for channel cheermotes', async () => {
+    api.get.mockResolvedValue({ data: [makeCheermote('Pog')] });
+
+    const result = await twitchService.getCheermotes('42');
+
+    expect(api.get).toHaveBeenCalledWith('/bits/cheermotes', {
+      params: { broadcaster_id: '42' },
+    });
+    expect(result).toEqual([makeCheermote('Pog')]);
   });
 });
 
