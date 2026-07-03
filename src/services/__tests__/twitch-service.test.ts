@@ -9,7 +9,13 @@ jest.mock('../api/clients', () => ({
   isE2EMode: false,
   mockServerUrl: undefined,
   setTwitchClientId: jest.fn(),
-  twitchApi: { get: jest.fn(), post: jest.fn() },
+  twitchApi: {
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    patch: jest.fn(),
+    delete: jest.fn(),
+  },
 }));
 
 const api = jest.mocked(twitchApi);
@@ -151,5 +157,123 @@ describe('twitchService.createClip', () => {
     api.post.mockResolvedValue({ data: [] });
 
     await expect(twitchService.createClip('42')).resolves.toBeNull();
+  });
+});
+
+describe('twitchService moderation endpoints', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('banChatUser posts a timeout with duration and reason', async () => {
+    api.post.mockResolvedValue(undefined);
+
+    await twitchService.banChatUser('1', '2', '3', {
+      durationSeconds: 600,
+      reason: 'spam',
+    });
+
+    expect(api.post).toHaveBeenCalledWith(
+      '/moderation/bans',
+      { data: { user_id: '3', duration: 600, reason: 'spam' } },
+      { params: { broadcaster_id: '1', moderator_id: '2' } },
+    );
+  });
+
+  test('banChatUser posts a permanent ban without a duration', async () => {
+    api.post.mockResolvedValue(undefined);
+
+    await twitchService.banChatUser('1', '2', '3');
+
+    expect(api.post).toHaveBeenCalledWith(
+      '/moderation/bans',
+      { data: { user_id: '3' } },
+      { params: { broadcaster_id: '1', moderator_id: '2' } },
+    );
+  });
+
+  test('unbanChatUser deletes the ban', async () => {
+    api.delete.mockResolvedValue(undefined);
+
+    await twitchService.unbanChatUser('1', '2', '3');
+
+    expect(api.delete).toHaveBeenCalledWith('/moderation/bans', {
+      params: { broadcaster_id: '1', moderator_id: '2', user_id: '3' },
+    });
+  });
+
+  test('deleteChatMessage targets the message id', async () => {
+    api.delete.mockResolvedValue(undefined);
+
+    await twitchService.deleteChatMessage('1', '2', 'msg-9');
+
+    expect(api.delete).toHaveBeenCalledWith('/moderation/chat', {
+      params: { broadcaster_id: '1', moderator_id: '2', message_id: 'msg-9' },
+    });
+  });
+
+  test('warnChatUser posts the warning reason', async () => {
+    api.post.mockResolvedValue(undefined);
+
+    await twitchService.warnChatUser('1', '2', '3', 'be nice');
+
+    expect(api.post).toHaveBeenCalledWith(
+      '/moderation/warnings',
+      { data: { user_id: '3', reason: 'be nice' } },
+      { params: { broadcaster_id: '1', moderator_id: '2' } },
+    );
+  });
+
+  test('updateChatSettings patches only provided fields', async () => {
+    api.patch.mockResolvedValue(undefined);
+
+    await twitchService.updateChatSettings('1', '2', {
+      slow_mode: true,
+      slow_mode_wait_time: 30,
+    });
+
+    expect(api.patch).toHaveBeenCalledWith(
+      '/chat/settings',
+      { slow_mode: true, slow_mode_wait_time: 30 },
+      { params: { broadcaster_id: '1', moderator_id: '2' } },
+    );
+  });
+
+  test('updateShieldMode puts the active flag', async () => {
+    api.put.mockResolvedValue(undefined);
+
+    await twitchService.updateShieldMode('1', '2', true);
+
+    expect(api.put).toHaveBeenCalledWith(
+      '/moderation/shield_mode',
+      { is_active: true },
+      { params: { broadcaster_id: '1', moderator_id: '2' } },
+    );
+  });
+
+  test('sendChatAnnouncement posts the message', async () => {
+    api.post.mockResolvedValue(undefined);
+
+    await twitchService.sendChatAnnouncement('1', '2', 'drops enabled');
+
+    expect(api.post).toHaveBeenCalledWith(
+      '/chat/announcements',
+      { message: 'drops enabled' },
+      { params: { broadcaster_id: '1', moderator_id: '2' } },
+    );
+  });
+
+  test('sendShoutout posts the broadcaster pair', async () => {
+    api.post.mockResolvedValue(undefined);
+
+    await twitchService.sendShoutout('1', '9', '2');
+
+    expect(api.post).toHaveBeenCalledWith('/chat/shoutouts', undefined, {
+      params: {
+        from_broadcaster_id: '1',
+        to_broadcaster_id: '9',
+        moderator_id: '2',
+      },
+    });
   });
 });

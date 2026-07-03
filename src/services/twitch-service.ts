@@ -25,6 +25,7 @@ import type {
   TwitchClipsRequestParams,
   TwitchCreatedClip,
 } from '@app/types/twitch/clip';
+import type { TwitchChatSettingsPatch } from '@app/types/twitch/moderation';
 import type { TwitchHelixPoll } from '@app/types/twitch/poll';
 import type { TwitchHelixPrediction } from '@app/types/twitch/prediction';
 import type { TwitchStream } from '@app/types/twitch/stream';
@@ -686,6 +687,148 @@ export const twitchService = {
       },
     });
     return result.data[0] as TwitchClip;
+  },
+
+  /**
+   * @see https://dev.twitch.tv/docs/api/reference/#ban-user
+   * A duration makes it a timeout; without one the ban is permanent.
+   */
+  banChatUser: async (
+    broadcasterId: string,
+    moderatorId: string,
+    userId: string,
+    options?: { durationSeconds?: number; reason?: string },
+  ): Promise<void> => {
+    await twitchApi.post(
+      '/moderation/bans',
+      {
+        data: {
+          user_id: userId,
+          ...(options?.durationSeconds && {
+            duration: options.durationSeconds,
+          }),
+          ...(options?.reason && { reason: options.reason }),
+        },
+      },
+      {
+        params: {
+          broadcaster_id: broadcasterId,
+          moderator_id: moderatorId,
+        },
+      },
+    );
+  },
+
+  deleteChatMessage: async (
+    broadcasterId: string,
+    moderatorId: string,
+    messageId: string,
+  ): Promise<void> => {
+    await twitchApi.delete('/moderation/chat', {
+      params: {
+        broadcaster_id: broadcasterId,
+        moderator_id: moderatorId,
+        message_id: messageId,
+      },
+    });
+  },
+
+  unbanChatUser: async (
+    broadcasterId: string,
+    moderatorId: string,
+    userId: string,
+  ): Promise<void> => {
+    await twitchApi.delete('/moderation/bans', {
+      params: {
+        broadcaster_id: broadcasterId,
+        moderator_id: moderatorId,
+        user_id: userId,
+      },
+    });
+  },
+
+  warnChatUser: async (
+    broadcasterId: string,
+    moderatorId: string,
+    userId: string,
+    reason: string,
+  ): Promise<void> => {
+    await twitchApi.post(
+      '/moderation/warnings',
+      {
+        data: {
+          user_id: userId,
+          reason,
+        },
+      },
+      {
+        params: {
+          broadcaster_id: broadcasterId,
+          moderator_id: moderatorId,
+        },
+      },
+    );
+  },
+
+  sendChatAnnouncement: async (
+    broadcasterId: string,
+    moderatorId: string,
+    message: string,
+  ): Promise<void> => {
+    await twitchApi.post(
+      '/chat/announcements',
+      { message },
+      {
+        params: {
+          broadcaster_id: broadcasterId,
+          moderator_id: moderatorId,
+        },
+      },
+    );
+  },
+
+  sendShoutout: async (
+    fromBroadcasterId: string,
+    toBroadcasterId: string,
+    moderatorId: string,
+  ): Promise<void> => {
+    await twitchApi.post('/chat/shoutouts', undefined, {
+      params: {
+        from_broadcaster_id: fromBroadcasterId,
+        to_broadcaster_id: toBroadcasterId,
+        moderator_id: moderatorId,
+      },
+    });
+  },
+
+  updateChatSettings: async (
+    broadcasterId: string,
+    moderatorId: string,
+    patch: TwitchChatSettingsPatch,
+  ): Promise<void> => {
+    await twitchApi.patch('/chat/settings', patch, {
+      params: {
+        broadcaster_id: broadcasterId,
+        moderator_id: moderatorId,
+      },
+    });
+  },
+
+  updateShieldMode: async (
+    broadcasterId: string,
+    moderatorId: string,
+    isActive: boolean,
+  ): Promise<void> => {
+    await twitchApi.put(
+      '/moderation/shield_mode',
+      { is_active: isActive },
+      {
+        params: {
+          broadcaster_id: broadcasterId,
+          moderator_id: moderatorId,
+        },
+      },
+    );
   },
 
   getClipsByIds: async (ids: string[]): Promise<TwitchClip[]> => {

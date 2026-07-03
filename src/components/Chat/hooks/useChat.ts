@@ -184,7 +184,6 @@ export function useChat(
     refetchEmotes,
     reprocessAllMessages,
     scrollToBottom,
-    sendChatCommand,
     setHighlightedReplyTargetMessageId,
     shouldMaintainScrollAtEnd,
     showOnlyMentions,

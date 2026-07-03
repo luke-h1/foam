@@ -10,7 +10,10 @@ import {
 import { useWindowDimensions } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 
+import { toast } from 'sonner-native';
+
 import type { useAuthContext } from '@app/context/AuthContext';
+import i18next from '@app/i18n/i18next';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { findBadges } from '@app/utils/chat/findBadges';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
@@ -20,10 +23,12 @@ import { formatDate } from '@app/utils/date-time/date';
 import { logger } from '@app/utils/logger';
 
 import { useChatImageUpload } from '../hooks/useChatImageUpload';
+import { executeModCommand } from '../util/executeModCommand';
 import {
   type AnyChatMessageType,
   createUserStateFromTags,
 } from '../util/messageHandlers';
+import { parseModCommand } from '../util/modCommands';
 import type { ChatComposerHandle } from './ChatComposer/ChatComposer';
 import { ChatInputSection, type ReplyToData } from './ChatInputSection';
 
@@ -161,6 +166,33 @@ export const ChatInputShell = memo(function ChatInputShell({
 
     if (!isAuthenticated) {
       logger.chat.warn('Cannot send chat message while signed out');
+      return;
+    }
+
+    // Twitch dropped slash commands from IRC in 2023; known moderation
+    // commands run against Helix instead of going out as chat text.
+    const modCommand = parseModCommand(currentInput);
+    if (modCommand) {
+      clearDraft();
+      void KeyboardController.dismiss();
+      const moderatorId = user?.id?.trim();
+      if (!moderatorId) {
+        toast.error(i18next.t('chat:modCommands.failed'));
+        return;
+      }
+      executeModCommand(modCommand, {
+        broadcasterId: channelId,
+        moderatorId,
+      })
+        .then(successMessage => toast.success(successMessage))
+        .catch((error: unknown) => {
+          logger.chat.warn('Mod command failed', {
+            error,
+            command: modCommand.type,
+            channel_id: channelId,
+          });
+          toast.error(i18next.t('chat:modCommands.failed'));
+        });
       return;
     }
 

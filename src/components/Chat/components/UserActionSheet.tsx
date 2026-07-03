@@ -38,6 +38,7 @@ interface UserActionSheetProps {
   onBlockUser?: () => void;
   onReportUser?: () => void;
   onTimeoutUser?: () => void;
+  onWarnUser?: () => void;
   onBanUser?: () => void;
   username: string;
 }
@@ -112,6 +113,7 @@ function UserActionSheetComponent({
   onBlockUser,
   onReportUser,
   onTimeoutUser,
+  onWarnUser,
   onBanUser,
   username,
 }: UserActionSheetProps) {
@@ -181,6 +183,13 @@ function UserActionSheetComponent({
       : []),
     ...(canModerateChat && canModerateUser
       ? [
+          {
+            icon: 'exclamationmark.triangle' as const,
+            label: t('userActions.warnUser'),
+            onPress: onWarnUser,
+            subtitle: t('userActions.warnUserSubtitle'),
+            tone: 'warning' as const,
+          },
           {
             icon: 'clock' as const,
             label: t('userActions.timeoutUser'),

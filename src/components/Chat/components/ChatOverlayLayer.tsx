@@ -53,6 +53,7 @@ export interface ChatOverlayLayerProps {
   onSettingsReconnect: () => void;
   onSettingsRefetchEmotes: () => void;
   onTimeoutSelectedUser: () => void;
+  onWarnSelectedUser: () => void;
   onToggleChatDensity: () => void;
   onToggleHighlightOwnMentions: (value: boolean) => void;
   onToggleInlineReplyContext: (value: boolean) => void;
@@ -134,6 +135,7 @@ export const ChatOverlayLayer = memo(
     onSettingsReconnect,
     onSettingsRefetchEmotes,
     onTimeoutSelectedUser,
+    onWarnSelectedUser,
     onToggleChatDensity,
     onToggleHighlightOwnMentions,
     onToggleInlineReplyContext,
@@ -281,6 +283,7 @@ export const ChatOverlayLayer = memo(
             onBlockUser={canBlockSelectedUser ? onBlockSelectedUser : undefined}
             onReportUser={onReportSelectedUser}
             onTimeoutUser={onTimeoutSelectedUser}
+            onWarnUser={onWarnSelectedUser}
             onBanUser={onBanSelectedUser}
           />
         ) : null}
