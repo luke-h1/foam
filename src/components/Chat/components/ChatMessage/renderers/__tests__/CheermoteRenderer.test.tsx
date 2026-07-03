@@ -90,4 +90,15 @@ describe('CheermoteRenderer', () => {
 
     expect(renderedSourceUrl).toEqual('https://cdn.example.com/cheer/100.png');
   });
+
+  test('dims the container when the message is moderated', () => {
+    render(
+      <CheermoteRenderer
+        isModerated
+        part={makePart({ url: 'https://cdn.example.com/cheer/100.gif' })}
+      />,
+    );
+
+    expect(screen.root).toHaveStyle({ opacity: 0.4 });
+  });
 });

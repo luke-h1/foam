@@ -68,4 +68,43 @@ describe('showActionMenu', () => {
     buttons![0]!.onPress?.();
     expect(onPress).toHaveBeenCalledTimes(1);
   });
+
+  test('keeps a cancel button on every page when actions overflow on Android', () => {
+    Platform.OS = 'android';
+    const onFirst = jest.fn();
+    const onSecond = jest.fn();
+    const onThird = jest.fn();
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+
+    showActionMenu({
+      title: 'Warn user',
+      actions: [
+        { label: 'Spam', onPress: onFirst },
+        { label: 'Harassment', onPress: onSecond },
+        { label: 'Other', onPress: onThird },
+      ],
+      cancelLabel: 'Cancel',
+    });
+
+    const firstPageButtons = alertSpy.mock.calls[0]![2]!;
+    expect(
+      firstPageButtons.map(button => ({
+        text: button.text,
+        style: button.style,
+      })),
+    ).toEqual([
+      { text: 'Spam', style: undefined },
+      { text: 'More', style: undefined },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+
+    firstPageButtons[1]!.onPress?.();
+
+    const secondPageButtons = alertSpy.mock.calls[1]![2]!;
+    expect(secondPageButtons).toEqual([
+      { text: 'Harassment', onPress: onSecond },
+      { text: 'Other', onPress: onThird },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  });
 });

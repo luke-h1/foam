@@ -16,6 +16,7 @@ import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import {
   clearPersonalEmotesCache,
+  clearSubscriberProfilesCache,
   loadChannelResources,
   resolveSubscriberChannelProfiles,
 } from '../actions/channelLoad';
@@ -452,6 +453,7 @@ describe('resolveSubscriberChannelProfiles', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     chatStore$.persisted.channelCaches.set({});
+    clearSubscriberProfilesCache();
   });
 
   test('resolves and stores profiles for owner ids without one', async () => {
@@ -534,6 +536,60 @@ describe('resolveSubscriberChannelProfiles', () => {
       '200': {
         name: 'Cached',
         profileImageUrl: 'https://cdn.example.com/cached.png',
+      },
+    });
+  });
+
+  test('does not re-request owner ids Twitch never returned', async () => {
+    const seedCache = () => {
+      chatStore$.persisted.channelCaches.set({
+        [channelId]: {
+          ...emptyEmoteData,
+          twitchSubscriberEmotes: [
+            { ...twitchEmote('emote1', 'Twitch Subscriber'), owner_id: '100' },
+          ],
+        },
+      });
+    };
+    seedCache();
+    mockGetUsersById.mockResolvedValue([]);
+
+    await resolveSubscriberChannelProfiles(channelId);
+    await resolveSubscriberChannelProfiles(channelId);
+
+    expect(mockGetUsersById).toHaveBeenCalledTimes(1);
+  });
+
+  test('re-fetches attempted owner ids after the profiles cache is cleared', async () => {
+    const seedCache = () => {
+      chatStore$.persisted.channelCaches.set({
+        [channelId]: {
+          ...emptyEmoteData,
+          twitchSubscriberEmotes: [
+            { ...twitchEmote('emote1', 'Twitch Subscriber'), owner_id: '100' },
+          ],
+        },
+      });
+    };
+    seedCache();
+    mockGetUsersById.mockResolvedValue([profileUser('100', 'Zoil')]);
+
+    await resolveSubscriberChannelProfiles(channelId);
+
+    // Mirrors clearChatCosmeticsCache: the channel caches are emptied, so the
+    // attempted-owner negative cache must be reset alongside them.
+    seedCache();
+    clearSubscriberProfilesCache();
+
+    await resolveSubscriberChannelProfiles(channelId);
+
+    expect(mockGetUsersById).toHaveBeenCalledTimes(2);
+    expect(mockGetUsersById).toHaveBeenNthCalledWith(2, ['100']);
+    const cache = chatStore$.persisted.channelCaches.peek()[channelId];
+    expect(cache!.twitchSubscriberChannelProfiles).toEqual({
+      '100': {
+        name: 'Zoil',
+        profileImageUrl: 'https://cdn.example.com/100.png',
       },
     });
   });

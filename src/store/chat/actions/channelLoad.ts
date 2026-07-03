@@ -168,6 +168,10 @@ const subscriberProfileFetchesInFlight = new Set<string>();
 // cached-path channel revisit.
 const attemptedSubscriberOwnerIds = new Set<string>();
 
+export const clearSubscriberProfilesCache = () => {
+  attemptedSubscriberOwnerIds.clear();
+};
+
 export const resolveSubscriberChannelProfiles = async (
   channelId: string,
 ): Promise<void> => {
@@ -749,6 +753,10 @@ export const clearChatCosmeticsCache = (): void => {
   }
   clearUserCosmeticsCache();
   clearPersonalEmotesCache();
+  // The channel caches (and their subscriber profiles) were just emptied, so
+  // the negative cache must forget attempted owner ids or
+  // resolveSubscriberChannelProfiles never re-fetches them.
+  clearSubscriberProfilesCache();
   clearEmoteImageCache();
   void clearChatStorePersistence();
 };

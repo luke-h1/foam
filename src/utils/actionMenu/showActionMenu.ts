@@ -38,9 +38,10 @@ function showAndroidActionMenu(
     return;
   }
 
-  // Page the overflow behind a "More" button so no action is dropped.
-  const visible = actions.slice(0, MAX_ANDROID_ALERT_BUTTONS - 1);
-  const overflow = actions.slice(MAX_ANDROID_ALERT_BUTTONS - 1);
+  // Page the overflow behind a "More" button so no action is dropped, keeping
+  // a cancel slot reserved at every level.
+  const visible = actions.slice(0, MAX_ANDROID_ALERT_BUTTONS - 2);
+  const overflow = actions.slice(MAX_ANDROID_ALERT_BUTTONS - 2);
   Alert.alert(
     title,
     undefined,
@@ -53,6 +54,7 @@ function showAndroidActionMenu(
         text: i18next.t('common:more'),
         onPress: () => showAndroidActionMenu(title, overflow, cancelLabel),
       },
+      { text: cancelLabel, style: 'cancel' as const },
     ],
     { cancelable: true },
   );
