@@ -42,6 +42,7 @@ import { useUserQuery } from '@app/hooks/queries/useUserQuery';
 import { useChannelPoll } from '@app/hooks/useChannelPoll';
 import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
 import { twitchService } from '@app/services/twitch-service';
+import { addCreatedClip } from '@app/store/createdClips/state';
 import {
   usePreference,
   useUpdatePreferences,
@@ -796,6 +797,20 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     void twitchService
       .createClip(resolvedChannelId)
       .then(clip => {
+        if (!clip) {
+          toast.error(t('clipUnavailable'));
+          return;
+        }
+        addCreatedClip({
+          id: clip.id,
+          broadcasterLogin: resolvedChannelLogin ?? '',
+          broadcasterName:
+            stream?.user_name ??
+            user?.display_name ??
+            resolvedChannelLogin ??
+            '',
+          createdAt: Date.now(),
+        });
         toast.success(t('clipCreated'), {
           action: {
             label: t('editClip'),
@@ -813,7 +828,13 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       .finally(() => {
         isCreatingClipRef.current = false;
       });
-  }, [resolvedChannelId, t]);
+  }, [
+    resolvedChannelId,
+    resolvedChannelLogin,
+    stream?.user_name,
+    user?.display_name,
+    t,
+  ]);
 
   return (
     <View style={contentContainerStyle}>

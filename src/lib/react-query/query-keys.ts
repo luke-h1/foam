@@ -17,6 +17,8 @@ export const twitchKeys = {
   streamsByCategory: (categoryId: string) =>
     [...twitchKeys.all, 'streamsByCategory', categoryId] as const,
   clips: () => [...twitchKeys.all, 'clips'] as const,
+  clipsByIds: (ids: string[]) =>
+    [...twitchKeys.clips(), 'byIds', ids.join(',')] as const,
   clipsInfinite: (params: Omit<TwitchClipsRequestParams, 'after'>) =>
     [
       ...twitchKeys.clips(),

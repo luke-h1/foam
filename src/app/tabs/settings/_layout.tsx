@@ -52,6 +52,10 @@ export default function SettingsLayout() {
         options={{ title: t('chat'), headerBackTitle: t('settings') }}
       />
       <Stack.Screen
+        name='my-clips'
+        options={{ title: t('myClips'), headerBackTitle: t('settings') }}
+      />
+      <Stack.Screen
         name='debug'
         options={{ title: t('debug'), headerBackTitle: t('settings') }}
       />

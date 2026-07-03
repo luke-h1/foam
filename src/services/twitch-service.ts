@@ -661,8 +661,12 @@ export const twitchService = {
    * @see https://dev.twitch.tv/docs/api/reference/#create-clip
    * Requires the clips:edit scope. Twitch captures the clip asynchronously;
    * the returned edit_url is valid immediately, the clip itself shortly after.
+   * Returns null when Twitch accepts the request but produces no clip (e.g.
+   * clipping restricted on the channel or the stream just went offline).
    */
-  createClip: async (broadcasterId: string): Promise<TwitchCreatedClip> => {
+  createClip: async (
+    broadcasterId: string,
+  ): Promise<TwitchCreatedClip | null> => {
     const result = await twitchApi.post<{ data: TwitchCreatedClip[] }>(
       '/clips',
       undefined,
@@ -672,11 +676,7 @@ export const twitchService = {
         },
       },
     );
-    const clip = result.data[0];
-    if (!clip) {
-      throw new Error('Twitch returned no clip for create request');
-    }
-    return clip;
+    return result.data?.[0] ?? null;
   },
 
   getClip: async (id: string): Promise<TwitchClip> => {
@@ -686,6 +686,29 @@ export const twitchService = {
       },
     });
     return result.data[0] as TwitchClip;
+  },
+
+  getClipsByIds: async (ids: string[]): Promise<TwitchClip[]> => {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    // Helix /clips takes repeated id params (max 100 per request), which the
+    // shared client's comma-joining array serializer can't produce.
+    const batches: string[][] = [];
+    for (let i = 0; i < ids.length; i += 100) {
+      batches.push(ids.slice(i, i + 100));
+    }
+
+    const results = await Promise.all(
+      batches.map(batch =>
+        twitchApi.get<{ data: TwitchClip[] }>(
+          `/clips?${batch.map(id => `id=${encodeURIComponent(id)}`).join('&')}`,
+        ),
+      ),
+    );
+
+    return results.flatMap(result => result.data ?? []);
   },
 
   getClips: async ({

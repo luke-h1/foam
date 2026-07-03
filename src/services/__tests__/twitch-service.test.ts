@@ -147,11 +147,9 @@ describe('twitchService.createClip', () => {
     });
   });
 
-  test('throws when Twitch returns no clip', async () => {
+  test('returns null when Twitch produces no clip', async () => {
     api.post.mockResolvedValue({ data: [] });
 
-    await expect(twitchService.createClip('42')).rejects.toThrow(
-      'Twitch returned no clip for create request',
-    );
+    await expect(twitchService.createClip('42')).resolves.toBeNull();
   });
 });
