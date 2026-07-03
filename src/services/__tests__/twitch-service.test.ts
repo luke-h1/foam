@@ -9,7 +9,7 @@ jest.mock('../api/clients', () => ({
   isE2EMode: false,
   mockServerUrl: undefined,
   setTwitchClientId: jest.fn(),
-  twitchApi: { get: jest.fn() },
+  twitchApi: { get: jest.fn(), post: jest.fn() },
 }));
 
 const api = jest.mocked(twitchApi);
@@ -123,5 +123,35 @@ describe('twitchService.getFollowedChannels', () => {
 
     expect(result).toHaveLength(400);
     expect(api.get).toHaveBeenCalledTimes(4);
+  });
+});
+
+describe('twitchService.createClip', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('posts to /clips and returns the created clip', async () => {
+    api.post.mockResolvedValue({
+      data: [{ id: 'clip-1', edit_url: 'https://clips.twitch.tv/clip-1/edit' }],
+    });
+
+    const result = await twitchService.createClip('42');
+
+    expect(api.post).toHaveBeenCalledWith('/clips', undefined, {
+      params: { broadcaster_id: '42' },
+    });
+    expect(result).toEqual({
+      id: 'clip-1',
+      edit_url: 'https://clips.twitch.tv/clip-1/edit',
+    });
+  });
+
+  test('throws when Twitch returns no clip', async () => {
+    api.post.mockResolvedValue({ data: [] });
+
+    await expect(twitchService.createClip('42')).rejects.toThrow(
+      'Twitch returned no clip for create request',
+    );
   });
 });

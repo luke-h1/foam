@@ -24,6 +24,7 @@ interface ControlsOverlayProps {
    */
   opacity: SharedValue<number>;
   onBackPress?: () => void;
+  onCreateClipPress?: () => void;
   onMutePress?: () => void;
   onPlayPausePress: () => void;
   onRefresh?: () => void;
@@ -54,6 +55,7 @@ export function ControlsOverlay({
   muted,
   opacity,
   onBackPress,
+  onCreateClipPress,
   onMutePress,
   onPlayPausePress,
   onRefresh,
@@ -248,6 +250,22 @@ export function ControlsOverlay({
             >
               <SymbolView
                 name='arrow.clockwise'
+                size={18}
+                tintColor={theme.colorWhite}
+              />
+            </Button>
+          </View>
+        )}
+
+        {onCreateClipPress && (
+          <View style={styles.glassButton}>
+            <Button
+              label={t('createClip')}
+              style={styles.controlButton}
+              onPress={onCreateClipPress}
+            >
+              <SymbolView
+                name='scissors'
                 size={18}
                 tintColor={theme.colorWhite}
               />

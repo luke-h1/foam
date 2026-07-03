@@ -75,6 +75,7 @@ const MAP: Record<string, AndroidSymbol> = {
   'play.tv.fill': 'live_tv',
   plus: 'add',
   'questionmark.circle': 'help',
+  scissors: 'content_cut',
   'seventv.badge.missing': 'help',
   shield: 'shield',
   'slash.circle': 'block',

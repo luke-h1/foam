@@ -23,6 +23,7 @@ import type {
   TwitchClip,
   TwitchClipDownload,
   TwitchClipsRequestParams,
+  TwitchCreatedClip,
 } from '@app/types/twitch/clip';
 import type { TwitchHelixPoll } from '@app/types/twitch/poll';
 import type { TwitchHelixPrediction } from '@app/types/twitch/prediction';
@@ -656,6 +657,28 @@ export const twitchService = {
       },
     });
   },
+  /**
+   * @see https://dev.twitch.tv/docs/api/reference/#create-clip
+   * Requires the clips:edit scope. Twitch captures the clip asynchronously;
+   * the returned edit_url is valid immediately, the clip itself shortly after.
+   */
+  createClip: async (broadcasterId: string): Promise<TwitchCreatedClip> => {
+    const result = await twitchApi.post<{ data: TwitchCreatedClip[] }>(
+      '/clips',
+      undefined,
+      {
+        params: {
+          broadcaster_id: broadcasterId,
+        },
+      },
+    );
+    const clip = result.data[0];
+    if (!clip) {
+      throw new Error('Twitch returned no clip for create request');
+    }
+    return clip;
+  },
+
   getClip: async (id: string): Promise<TwitchClip> => {
     const result = await twitchApi.get<TwitchClipResponse>('/clips', {
       params: {

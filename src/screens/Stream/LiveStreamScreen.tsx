@@ -26,6 +26,7 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { router, useFocusEffect, useIsFocused } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { StatusBar } from 'expo-status-bar';
+import { toast } from 'sonner-native';
 
 import { Button } from '@app/components/Button/Button';
 import { ChannelPollCard } from '@app/components/ChannelPollCard/ChannelPollCard';
@@ -35,10 +36,12 @@ import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import type { StreamPlayerRef } from '@app/components/StreamPlayer/types';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
+import { useAuthContext } from '@app/context/AuthContext';
 import { useStreamQuery } from '@app/hooks/queries/useStreamQuery';
 import { useUserQuery } from '@app/hooks/queries/useUserQuery';
 import { useChannelPoll } from '@app/hooks/useChannelPoll';
 import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
+import { twitchService } from '@app/services/twitch-service';
 import {
   usePreference,
   useUpdatePreferences,
@@ -47,6 +50,8 @@ import { subscribeLiveSync } from '@app/store/stream/liveSyncBus';
 import { setMeasuredVideoLatencySeconds } from '@app/store/stream/videoLatency';
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import { logger } from '@app/utils/logger';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 
 import { ChatLatencyPill } from './ChatLatencyPill';
@@ -106,6 +111,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 }: LiveStreamScreenProps) {
   const { t } = useTranslation('stream');
   const isFocused = useIsFocused();
+  const { authState } = useAuthContext();
   const customPlayerEnabled = usePreference('customPlayerEnabled');
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
   useEffect(
@@ -778,6 +784,37 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     });
   }, [resolvedChannelLogin, stream?.user_name, user?.display_name]);
 
+  const isCreatingClipRef = useRef(false);
+  const canCreateClip = Boolean(
+    authState?.isLoggedIn && !authState.isAnonAuth && resolvedChannelId,
+  );
+  const handleCreateClipPress = useCallback(() => {
+    if (!resolvedChannelId || isCreatingClipRef.current) {
+      return;
+    }
+    isCreatingClipRef.current = true;
+    void twitchService
+      .createClip(resolvedChannelId)
+      .then(clip => {
+        toast.success(t('clipCreated'), {
+          action: {
+            label: t('editClip'),
+            onClick: () => openLinkInBrowser(clip.edit_url),
+          },
+        });
+      })
+      .catch((error: unknown) => {
+        logger.twitch.warn('Failed to create clip', {
+          error,
+          channel_id: resolvedChannelId,
+        });
+        toast.error(t('clipCreateFailed'));
+      })
+      .finally(() => {
+        isCreatingClipRef.current = false;
+      });
+  }, [resolvedChannelId, t]);
+
   return (
     <View style={contentContainerStyle}>
       <StatusBar style='light' />
@@ -798,6 +835,9 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             onPlay={handlePlayerLoaded}
             onPlaybackLatencyChange={handlePlaybackLatencyChange}
             onReady={handlePlayerLoaded}
+            onCreateClipPress={
+              canCreateClip ? handleCreateClipPress : undefined
+            }
             onSharePress={resolvedChannelLogin ? handleSharePress : undefined}
             onSleepTimerPress={handleSleepTimerPress}
             sleepTimerActive={sleepTimer.isActive}

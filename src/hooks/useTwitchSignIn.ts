@@ -30,7 +30,11 @@ const CHANNEL_SCOPES = [
   'channel:moderate',
 ] as const;
 
-const CLIP_SCOPES = ['channel:manage:clips', 'editor:manage:clips'] as const;
+const CLIP_SCOPES = [
+  'channel:manage:clips',
+  'editor:manage:clips',
+  'clips:edit',
+] as const;
 
 const CHAT_SCOPES = ['chat:read', 'chat:edit', 'user:write:chat'] as const;
 const MODERATOR_CHAT_SCOPES = [

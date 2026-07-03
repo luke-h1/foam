@@ -112,6 +112,7 @@ export const StreamPlayer = memo(function StreamPlayer({
   muted: initialMuted = false,
   onBackPress,
   onContentGateChange,
+  onCreateClipPress,
   onEnded,
   onError,
   onOffline,
@@ -518,6 +519,7 @@ export const StreamPlayer = memo(function StreamPlayer({
           onBackPress={onBackPress}
           onMutePress={handleMutePress}
           onPlayPausePress={handlePlayPause}
+          onCreateClipPress={onCreateClipPress}
           onRefresh={onRefresh ? handleRefresh : undefined}
           onSharePress={onSharePress}
           onSleepTimerPress={onSleepTimerPress}

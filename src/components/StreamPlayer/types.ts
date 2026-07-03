@@ -190,6 +190,10 @@ export interface StreamPlayerProps {
    */
   onSharePress?: () => void;
   /**
+   * Callback when the create clip button is pressed in the overlay controls.
+   */
+  onCreateClipPress?: () => void;
+  /**
    * Callback when the sleep timer button is pressed in the overlay controls.
    */
   onSleepTimerPress?: () => void;
