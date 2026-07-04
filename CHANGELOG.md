@@ -1,12 +1,11 @@
 # Changelog
 
-## 1.0.0-internal
+## 1.0.0
 
 ### ♻️ Refactor
 
 - **chat:** Improve bottom sheet
 - **infrastructure:** Improve GHA workflows ([#657](https://github.com/lhowsam/foam/issues/657))
-- **stream:** Memoize following list inputs for exhaustive deps
 
 ### ✨ Features
 
@@ -14,15 +13,7 @@
 - **app:** I8n ([#633](https://github.com/lhowsam/foam/issues/633))
 - **app:** Vod screen ([#644](https://github.com/lhowsam/foam/issues/644))
 - **app:** Improve chat settings ui
-- **emotes:** Split subscriber emotes by channel and add 7tv personal emotes to the picker
-- **player:** Add sleep timer to live and vod players
-- **stream:** Show offline followed channels below live streams
-- **chat:** Show roomstate mode chips above the composer
-- **chat:** Render cheermotes with tier-colored bit amounts
-- **stream:** Create clips from the live player
-- **stream:** My clips screen listing clips created in foam
-- **chat:** Helix mod suite with slash commands, warnings and shield mode
-- **player:** Ios picture-in-picture for the live player
+- **emotes:** Split subscriber emotes by channel and add 7tv personal emotes to the picker ([#686](https://github.com/lhowsam/foam/issues/686))
 
 ### 🐛 Bug Fixes
 
@@ -92,10 +83,6 @@
 - **app:** Update to expo 57 ([#678](https://github.com/lhowsam/foam/issues/678))
 - **app:** Sync lockfile with sentry deps ([#680](https://github.com/lhowsam/foam/issues/680))
 - **app:** Ui improvements ([#681](https://github.com/lhowsam/foam/issues/681))
-
-### 🧪 Testing
-
-- **chat:** Add emote menu mount and data pipeline perf measurements
 
 ## 1.0.0
 
