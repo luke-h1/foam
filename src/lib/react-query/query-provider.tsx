@@ -1,5 +1,5 @@
 import { PropsWithChildren } from 'react';
-import { AppState, type AppStateStatus, Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 import {
   focusManager,
@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-query';
 import { fetch } from 'expo/fetch';
 
+import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
 import {
   listenNetworkConfirmed,
   listenNetworkLost,
@@ -87,14 +88,9 @@ setInterval(() => {
 // @ts-expect-error - not all codepaths return a value
 focusManager.setEventListener(onFocus => {
   if (Platform.OS === 'ios' || Platform.OS === 'android') {
-    const subscription = AppState.addEventListener(
-      'change',
-      (status: AppStateStatus) => {
-        focusManager.setFocused(status === 'active');
-      },
-    );
-
-    return () => subscription.remove();
+    return subscribeToAppStateTransitions(({ current }) => {
+      focusManager.setFocused(current === 'active');
+    });
   }
   // eslint-disable-next-line no-undef
   if (typeof window !== 'undefined' && window.addEventListener) {

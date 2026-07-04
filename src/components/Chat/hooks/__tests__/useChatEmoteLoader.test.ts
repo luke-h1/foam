@@ -5,6 +5,7 @@ import {
   createTestUser,
 } from '@app/context/__tests__/__fixtures__/authContext.fixture';
 import { useAuthContext } from '@app/context/AuthContext';
+import type { LoadChannelResourcesOptions } from '@app/store/chat/actions/channelLoad';
 import {
   abortCurrentLoad,
   getCurrentEmoteData,
@@ -99,7 +100,9 @@ describe('useChatEmoteLoader', () => {
     await waitFor(() => {
       expect(result.current.status).toBe('success');
     });
-    expect(mockLoadChannelResources.mock.calls[0]?.[0]).toEqual({
+    expect(
+      mockLoadChannelResources.mock.calls[0]?.[0],
+    ).toEqual<LoadChannelResourcesOptions>({
       channelId: 'channel-1',
       forceRefresh: false,
       signal: controller.signal,
@@ -129,7 +132,9 @@ describe('useChatEmoteLoader', () => {
       await result.current.refetch();
     });
 
-    expect(mockLoadChannelResources.mock.calls[0]?.[0]).toEqual({
+    expect(
+      mockLoadChannelResources.mock.calls[0]?.[0],
+    ).toEqual<LoadChannelResourcesOptions>({
       channelId: 'channel-1',
       forceRefresh: true,
       signal: controller.signal,
@@ -156,7 +161,9 @@ describe('useChatEmoteLoader', () => {
     await waitFor(() => {
       expect(mockLoadChannelResources).toHaveBeenCalledTimes(2);
     });
-    expect(mockLoadChannelResources.mock.calls[1]?.[0]).toEqual({
+    expect(
+      mockLoadChannelResources.mock.calls[1]?.[0],
+    ).toEqual<LoadChannelResourcesOptions>({
       channelId: 'channel-1',
       forceRefresh: true,
       signal: controller.signal,

@@ -28,7 +28,6 @@ export function OTASection() {
       <Form.Text hintBoolean={Updates.isEmergencyLaunch}>
         Emergency Launch
       </Form.Text>
-      {/* <Form.Text hint={`${String(Updates.launchDuration?.toFixed(0))}ms`}> */}
       <Form.Text
         hint={
           Updates.launchDuration

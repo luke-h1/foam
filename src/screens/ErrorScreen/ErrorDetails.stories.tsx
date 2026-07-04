@@ -24,7 +24,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Mock error with component stack
 const mockErrorInfo: ErrorInfo = {
   componentStack: `
     in ErrorBoundary (at App.tsx:42)

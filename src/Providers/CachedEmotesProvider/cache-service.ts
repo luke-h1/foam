@@ -16,6 +16,7 @@ import { AppState, type AppStateStatus } from 'react-native';
 
 import { Image, type ImageRef } from 'expo-image';
 
+import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
 import {
   getDeviceTier,
   getTotalDeviceMemoryBytes,
@@ -507,7 +508,9 @@ export function subscribeEmoteCacheMemoryPressure(): void {
     'memoryWarning',
     trimCachedEmoteRefsForMemoryPressure,
   );
-  AppState.addEventListener('change', handleAppStateForMemory);
+  subscribeToAppStateTransitions(({ current }) => {
+    handleAppStateForMemory(current);
+  });
   if (AppState.currentState === 'active') {
     startMemoryMonitor();
   }
@@ -521,7 +524,9 @@ export function getCachedEmoteStats(): {
   return { decoded: refs.size, inflight: inflight.size, pinned: pinned.size };
 }
 
-/** Estimated resident decoded-bitmap bytes, for the chat-perf harness. */
+/**
+ * Estimated resident decoded-bitmap bytes, for the chat-perf harness.
+ */
 export function getCachedEmoteByteEstimate(): number {
   return totalBytes;
 }

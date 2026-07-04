@@ -9,6 +9,7 @@ import { twitchService } from '@app/services/twitch-service';
 import type {
   BttvSanitisedEmote,
   FfzSanitisedEmote,
+  SanitisedEmote,
   SevenTvSanitisedEmote,
   TwitchSanitisedEmote,
 } from '@app/types/emote';
@@ -21,6 +22,7 @@ import {
   resolveSubscriberChannelProfiles,
 } from '../actions/channelLoad';
 import { chatStore$ } from '../observables/chatStore';
+import type { SubscriberChannelProfile } from '../types/constants';
 import { emptyEmoteData } from '../types/constants';
 
 jest.mock('@legendapp/state/persist', () => ({
@@ -427,7 +429,7 @@ describe('loadChannelResources cache fallback', () => {
     expect(cache!.ffzGlobalEmotes).toEqual([]);
     expect(cache!.ffzChannelBadges).toEqual([]);
     expect(cache!.ffzGlobalBadges).toEqual([]);
-    expect(cache!.emotes).toEqual([
+    expect(cache!.emotes).toEqual<SanitisedEmote[]>([
       twitchEmote('twitch-channel-new'),
       twitchEmote('twitch-global-new', 'Twitch Global'),
     ]);
@@ -479,7 +481,9 @@ describe('resolveSubscriberChannelProfiles', () => {
 
     expect(mockGetUsersById).toHaveBeenCalledWith(['100']);
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
-    expect(cache!.twitchSubscriberChannelProfiles).toEqual({
+    expect(cache!.twitchSubscriberChannelProfiles).toEqual<
+      Record<string, SubscriberChannelProfile>
+    >({
       '100': {
         name: 'Zoil',
         profileImageUrl: 'https://cdn.example.com/100.png',
@@ -532,7 +536,9 @@ describe('resolveSubscriberChannelProfiles', () => {
     await resolveSubscriberChannelProfiles(channelId);
 
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
-    expect(cache!.twitchSubscriberChannelProfiles).toEqual({
+    expect(cache!.twitchSubscriberChannelProfiles).toEqual<
+      Record<string, SubscriberChannelProfile>
+    >({
       '200': {
         name: 'Cached',
         profileImageUrl: 'https://cdn.example.com/cached.png',
@@ -618,7 +624,87 @@ describe('resolveSubscriberChannelProfiles', () => {
     expect(mockGetUsersById).toHaveBeenCalledTimes(2);
     expect(mockGetUsersById).toHaveBeenNthCalledWith(2, ['100']);
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
-    expect(cache!.twitchSubscriberChannelProfiles).toEqual({
+    expect(cache!.twitchSubscriberChannelProfiles).toEqual<
+      Record<string, SubscriberChannelProfile>
+    >({
+      '100': {
+        name: 'Zoil',
+        profileImageUrl: 'https://cdn.example.com/100.png',
+      },
+    });
+  });
+
+  test('clearing the cache during an in-flight lookup does not block a refetch', async () => {
+    const seedCache = () => {
+      chatStore$.persisted.channelCaches.set({
+        [channelId]: {
+          ...emptyEmoteData,
+          twitchSubscriberEmotes: [
+            { ...twitchEmote('emote1', 'Twitch Subscriber'), owner_id: '100' },
+          ],
+        },
+      });
+    };
+    seedCache();
+
+    let resolveLookup!: (users: ReturnType<typeof profileUser>[]) => void;
+    mockGetUsersById.mockImplementationOnce(
+      () =>
+        new Promise(resolve => {
+          resolveLookup = resolve;
+        }),
+    );
+
+    const inFlight = resolveSubscriberChannelProfiles(channelId);
+
+    // Mirrors clearChatCosmeticsCache while the lookup is still on the wire.
+    chatStore$.persisted.channelCaches.set({});
+    clearSubscriberProfilesCache();
+
+    resolveLookup([profileUser('100', 'Zoil')]);
+    await inFlight;
+
+    seedCache();
+    mockGetUsersById.mockResolvedValue([profileUser('100', 'Zoil')]);
+
+    await resolveSubscriberChannelProfiles(channelId);
+
+    expect(mockGetUsersById).toHaveBeenCalledTimes(2);
+    const cache = chatStore$.persisted.channelCaches.peek()[channelId];
+    expect(cache!.twitchSubscriberChannelProfiles).toEqual<
+      Record<string, SubscriberChannelProfile>
+    >({
+      '100': {
+        name: 'Zoil',
+        profileImageUrl: 'https://cdn.example.com/100.png',
+      },
+    });
+  });
+
+  test('an owner resolved in one channel is still resolved for another channel', async () => {
+    const subscriberEmotes = [
+      { ...twitchEmote('emote1', 'Twitch Subscriber'), owner_id: '100' },
+    ];
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...emptyEmoteData,
+        twitchSubscriberEmotes: subscriberEmotes,
+      },
+      '999': {
+        ...emptyEmoteData,
+        twitchSubscriberEmotes: subscriberEmotes,
+      },
+    });
+    mockGetUsersById.mockResolvedValue([profileUser('100', 'Zoil')]);
+
+    await resolveSubscriberChannelProfiles(channelId);
+    await resolveSubscriberChannelProfiles('999');
+
+    expect(mockGetUsersById).toHaveBeenCalledTimes(2);
+    const cache = chatStore$.persisted.channelCaches.peek()['999'];
+    expect(cache!.twitchSubscriberChannelProfiles).toEqual<
+      Record<string, SubscriberChannelProfile>
+    >({
       '100': {
         name: 'Zoil',
         profileImageUrl: 'https://cdn.example.com/100.png',

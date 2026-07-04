@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { AppState, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -41,6 +41,7 @@ import { useStreamQuery } from '@app/hooks/queries/useStreamQuery';
 import { useUserQuery } from '@app/hooks/queries/useUserQuery';
 import { useChannelPoll } from '@app/hooks/useChannelPoll';
 import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
+import { useOnAppStateChange } from '@app/hooks/useOnAppStateChange';
 import { twitchService } from '@app/services/twitch-service';
 import { addCreatedClip } from '@app/store/createdClips/actions/createdClips';
 import {
@@ -265,31 +266,27 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
    * play state is captured so a player the user had already paused stays paused
    * on resume.
    */
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', nextState => {
-      const player = streamPlayerRef.current;
-      if (!player) {
-        return;
+  useOnAppStateChange(({ current }) => {
+    const player = streamPlayerRef.current;
+    if (!player) {
+      return;
+    }
+    // An active picture-in-picture window is exactly the case where playback
+    // should continue in the background, so leave the player alone.
+    if (player.isPictureInPicture()) {
+      wasPlayingBeforeBackgroundRef.current = false;
+      return;
+    }
+    if (current === 'background') {
+      wasPlayingBeforeBackgroundRef.current = !player.getPaused();
+      player.pause();
+    } else if (current === 'active') {
+      if (wasPlayingBeforeBackgroundRef.current) {
+        player.play();
       }
-      // An active picture-in-picture window is exactly the case where playback
-      // should continue in the background, so leave the player alone.
-      if (player.isPictureInPicture()) {
-        wasPlayingBeforeBackgroundRef.current = false;
-        return;
-      }
-      if (nextState === 'background') {
-        wasPlayingBeforeBackgroundRef.current = !player.getPaused();
-        player.pause();
-      } else if (nextState === 'active') {
-        if (wasPlayingBeforeBackgroundRef.current) {
-          player.play();
-        }
-        wasPlayingBeforeBackgroundRef.current = false;
-      }
-    });
-
-    return () => subscription.remove();
-  }, []);
+      wasPlayingBeforeBackgroundRef.current = false;
+    }
+  });
 
   const commitLandscapeChatWidth = useCallback(
     (width: number) => {

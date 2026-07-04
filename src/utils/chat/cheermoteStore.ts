@@ -1,4 +1,5 @@
 import type { TwitchCheermote } from '@app/types/twitch/bits';
+import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
 
 export interface CheermoteTier {
   color: string;
@@ -17,8 +18,7 @@ export type ChannelCheermotes = Map<string, CheermoteTier[]>;
 const CHEERMOTE_TTL_MS = 30 * 60 * 1000;
 
 const cheermotesByChannel = new Map<string, ChannelCheermotes>();
-const fetchedAtByChannel = new Map<string, number>();
-const inflightChannels = new Set<string>();
+const cheermoteFetchGuard = createFetchOnceGuard({ ttlMs: CHEERMOTE_TTL_MS });
 
 function pickImageUrl(images: Record<string, string>): string {
   return images['2'] ?? images['1'] ?? Object.values(images)[0] ?? '';
@@ -51,8 +51,7 @@ export function setChannelCheermotes(
   });
 
   cheermotesByChannel.set(channelId, byPrefix);
-  fetchedAtByChannel.set(channelId, Date.now());
-  inflightChannels.delete(channelId);
+  cheermoteFetchGuard.markFetched(channelId);
 }
 
 export function getChannelCheermotes(
@@ -79,24 +78,27 @@ export function resolveCheermoteTier(
   return resolved;
 }
 
-export function shouldFetchChannelCheermotes(channelId: string): boolean {
-  if (inflightChannels.has(channelId)) {
-    return false;
+/**
+ * Fetches and stores a channel's cheermotes at most once per TTL window,
+ * deduping while a fetch is in flight. A rejected fetcher propagates to the
+ * caller and leaves the channel immediately retryable.
+ */
+export function fetchChannelCheermotes(
+  channelId: string,
+  fetcher: () => Promise<TwitchCheermote[]>,
+): Promise<void> {
+  if (!cheermoteFetchGuard.shouldFetch(channelId)) {
+    return Promise.resolve();
   }
-  const fetchedAt = fetchedAtByChannel.get(channelId);
-  return fetchedAt === undefined || Date.now() - fetchedAt >= CHEERMOTE_TTL_MS;
-}
-
-export function markChannelCheermotesFetching(channelId: string): void {
-  inflightChannels.add(channelId);
-}
-
-export function markChannelCheermotesFetchFailed(channelId: string): void {
-  inflightChannels.delete(channelId);
+  return cheermoteFetchGuard.run(channelId, async ctx => {
+    const cheermotes = await fetcher();
+    if (ctx.stillCurrent()) {
+      setChannelCheermotes(channelId, cheermotes);
+    }
+  });
 }
 
 export function clearCheermotes(): void {
   cheermotesByChannel.clear();
-  fetchedAtByChannel.clear();
-  inflightChannels.clear();
+  cheermoteFetchGuard.clear();
 }

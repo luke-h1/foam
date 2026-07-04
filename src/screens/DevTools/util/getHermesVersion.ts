@@ -8,10 +8,6 @@ export function getHermesVersion() {
   const HERMES_VERSION = HERMES_RUNTIME['OSS Release Version'];
   const isStaticHermes = HERMES_RUNTIME['Static Hermes'];
 
-  if (!HERMES_RUNTIME) {
-    return null;
-  }
-
   if (isStaticHermes) {
     return `${HERMES_VERSION} (hermes)`;
   }

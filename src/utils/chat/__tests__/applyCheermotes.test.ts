@@ -26,7 +26,9 @@ describe('applyCheermotesToParts', () => {
       { type: 'text', content: 'Cheer100 great play' },
     ];
 
-    expect(applyCheermotesToParts(parts, makeCheermotes())).toEqual([
+    expect(applyCheermotesToParts(parts, makeCheermotes())).toEqual<
+      ParsedPart[]
+    >([
       {
         type: 'cheermote',
         content: 'Cheer100',
@@ -45,7 +47,9 @@ describe('applyCheermotesToParts', () => {
   test('matches prefixes case-insensitively and keeps surrounding text', () => {
     const parts: ParsedPart[] = [{ type: 'text', content: 'gg cheer5 wp' }];
 
-    expect(applyCheermotesToParts(parts, makeCheermotes())).toEqual([
+    expect(applyCheermotesToParts(parts, makeCheermotes())).toEqual<
+      ParsedPart[]
+    >([
       { type: 'text', content: 'gg ' },
       {
         type: 'cheermote',
@@ -86,7 +90,9 @@ describe('applyCheermotesToParts', () => {
   test('handles multiple cheer tokens in one message', () => {
     const parts: ParsedPart[] = [{ type: 'text', content: 'Cheer1 Cheer100' }];
 
-    expect(applyCheermotesToParts(parts, makeCheermotes())).toEqual([
+    expect(applyCheermotesToParts(parts, makeCheermotes())).toEqual<
+      ParsedPart[]
+    >([
       {
         type: 'cheermote',
         content: 'Cheer1',

@@ -1,7 +1,6 @@
 // eslint-disable-next-line no-restricted-imports
 import { Text, View } from 'react-native';
 
-// Mock all icon sets
 const createMockIconSet = (name: string) => {
   const IconComponent = ({ ...props }: { [key: string]: unknown }) => (
     <View testID={`icon-${name}`} {...props}>
@@ -27,5 +26,4 @@ export default {
   EvilIcons: createMockIconSet('EvilIcons'),
   Octicons: createMockIconSet('Octicons'),
   Zocial: createMockIconSet('Zocial'),
-  // Add any other icon sets you use
 };

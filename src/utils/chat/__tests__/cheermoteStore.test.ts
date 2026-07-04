@@ -1,13 +1,12 @@
 import type { TwitchCheermote } from '@app/types/twitch/bits';
 
+import type { CheermoteTier } from '../cheermoteStore';
 import {
   clearCheermotes,
+  fetchChannelCheermotes,
   getChannelCheermotes,
-  markChannelCheermotesFetchFailed,
-  markChannelCheermotesFetching,
   resolveCheermoteTier,
   setChannelCheermotes,
-  shouldFetchChannelCheermotes,
 } from '../cheermoteStore';
 
 function makeCheermote(prefix: string): TwitchCheermote {
@@ -62,7 +61,7 @@ describe('cheermoteStore', () => {
     setChannelCheermotes('123', [makeCheermote('Cheer')]);
 
     const cheermotes = getChannelCheermotes('123');
-    expect(cheermotes?.get('cheer')).toEqual([
+    expect(cheermotes?.get('cheer')).toEqual<CheermoteTier[]>([
       {
         color: '#979797',
         minBits: 1,
@@ -95,20 +94,69 @@ describe('cheermoteStore', () => {
     expect(resolveCheermoteTier(tiers, 0)).toBeUndefined();
   });
 
-  test('fetch guard dedupes inflight fetches and honours completion', () => {
-    expect(shouldFetchChannelCheermotes('123')).toEqual(true);
+  test('fetchChannelCheermotes dedupes in-flight fetches and stores the result', async () => {
+    let resolveFetch!: (value: TwitchCheermote[]) => void;
+    const fetcher = jest.fn(
+      () =>
+        new Promise<TwitchCheermote[]>(resolve => {
+          resolveFetch = resolve;
+        }),
+    );
 
-    markChannelCheermotesFetching('123');
-    expect(shouldFetchChannelCheermotes('123')).toEqual(false);
+    const first = fetchChannelCheermotes('123', fetcher);
+    const second = fetchChannelCheermotes('123', fetcher);
 
-    setChannelCheermotes('123', [makeCheermote('Cheer')]);
-    expect(shouldFetchChannelCheermotes('123')).toEqual(false);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+
+    resolveFetch([makeCheermote('Cheer')]);
+    await first;
+    await second;
+
+    expect(getChannelCheermotes('123')?.has('cheer')).toEqual(true);
   });
 
-  test('fetch guard allows a retry after a failed fetch', () => {
-    markChannelCheermotesFetching('123');
-    markChannelCheermotesFetchFailed('123');
+  test('fetchChannelCheermotes does not refetch a stored channel', async () => {
+    const fetcher = jest.fn(() => Promise.resolve([makeCheermote('Cheer')]));
 
-    expect(shouldFetchChannelCheermotes('123')).toEqual(true);
+    await fetchChannelCheermotes('123', fetcher);
+    await fetchChannelCheermotes('123', fetcher);
+
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  test('fetchChannelCheermotes allows a retry after a failed fetch', async () => {
+    const failing = jest.fn(() => Promise.reject(new Error('network')));
+
+    await expect(fetchChannelCheermotes('123', failing)).rejects.toThrow(
+      'network',
+    );
+
+    const succeeding = jest.fn(() => Promise.resolve([makeCheermote('Cheer')]));
+    await fetchChannelCheermotes('123', succeeding);
+
+    expect(succeeding).toHaveBeenCalledTimes(1);
+    expect(getChannelCheermotes('123')?.has('cheer')).toEqual(true);
+  });
+
+  test('clearCheermotes during an in-flight fetch drops the stale result', async () => {
+    let resolveFetch!: (value: TwitchCheermote[]) => void;
+    const pending = fetchChannelCheermotes(
+      '123',
+      () =>
+        new Promise<TwitchCheermote[]>(resolve => {
+          resolveFetch = resolve;
+        }),
+    );
+
+    clearCheermotes();
+    resolveFetch([makeCheermote('Cheer')]);
+    await pending;
+
+    expect(getChannelCheermotes('123')).toBeUndefined();
+
+    const fetcher = jest.fn(() => Promise.resolve([makeCheermote('Cheer')]));
+    await fetchChannelCheermotes('123', fetcher);
+
+    expect(fetcher).toHaveBeenCalledTimes(1);
   });
 });

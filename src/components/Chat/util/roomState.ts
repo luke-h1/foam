@@ -43,56 +43,100 @@ interface RoomStateModeStatus {
   value?: number;
 }
 
-type RoomStateModeKey = 'emote' | 'subs' | 'unique' | 'slow' | 'followers';
+interface RoomStateModeDefinition {
+  getStatus: (state: ParsedRoomState) => RoomStateModeStatus;
+  activeSummary: (value: number | undefined) => string;
+  enabledNotice: (value: number | undefined) => string;
+  disabledNotice: string;
+  chipLabel: (value: number | undefined) => string;
+  /**
+   * Composer chips render in ascending chipOrder, which differs from the
+   * table's notice order.
+   */
+  chipOrder: number;
+}
 
 /**
- * Single source of truth for which chat modes a room state activates, so the
- * connect notice, change notifications, and composer chips cannot drift.
+ * Single source of truth for the chat modes a room state activates. Table
+ * order is the notice order; the join summary, change notices, and composer
+ * chips all derive from it, so adding a mode is one new entry here.
  */
-function getRoomStateModes(
-  state: ParsedRoomState,
-): Record<RoomStateModeKey, RoomStateModeStatus> {
-  return {
-    emote: { active: state.emoteOnly },
-    subs: { active: state.subsOnly },
-    unique: { active: state.r9k },
-    slow: {
+const ROOM_STATE_MODES = {
+  emote: {
+    getStatus: state => ({ active: state.emoteOnly }),
+    activeSummary: () => 'emote-only',
+    enabledNotice: () => 'Emote-only mode enabled',
+    disabledNotice: 'Emote-only mode disabled',
+    chipLabel: () => 'Emote-only',
+    chipOrder: 2,
+  },
+  subs: {
+    getStatus: state => ({ active: state.subsOnly }),
+    activeSummary: () => 'subscribers-only',
+    enabledNotice: () => 'Subscribers-only mode enabled',
+    disabledNotice: 'Subscribers-only mode disabled',
+    chipLabel: () => 'Sub-only',
+    chipOrder: 3,
+  },
+  unique: {
+    getStatus: state => ({ active: state.r9k }),
+    activeSummary: () => 'unique-chat',
+    enabledNotice: () => 'Unique-chat mode enabled',
+    disabledNotice: 'Unique-chat mode disabled',
+    chipLabel: () => 'Unique',
+    chipOrder: 4,
+  },
+  slow: {
+    getStatus: state => ({
       active: state.slowSeconds > 0,
       value: state.slowSeconds > 0 ? state.slowSeconds : undefined,
-    },
-    followers: {
+    }),
+    activeSummary: value => `slow mode (${value}s)`,
+    enabledNotice: value => `Slow mode enabled (${value}s)`,
+    disabledNotice: 'Slow mode disabled',
+    chipLabel: value => `Slow ${value}s`,
+    chipOrder: 0,
+  },
+  followers: {
+    getStatus: state => ({
       active: state.followersOnlyMinutes >= 0,
       value:
         state.followersOnlyMinutes > 0 ? state.followersOnlyMinutes : undefined,
-    },
-  };
+    }),
+    activeSummary: value =>
+      value === undefined ? 'followers-only' : `followers-only (${value}m)`,
+    enabledNotice: value =>
+      value === undefined
+        ? 'Followers-only mode enabled'
+        : `Followers-only mode enabled (${value}m)`,
+    disabledNotice: 'Followers-only mode disabled',
+    chipLabel: value =>
+      value === undefined ? 'Followers-only' : `Followers-only ${value}m`,
+    chipOrder: 1,
+  },
+} satisfies Record<string, RoomStateModeDefinition>;
+
+type RoomStateModeKey = keyof typeof ROOM_STATE_MODES;
+
+function getModeDefinition(key: RoomStateModeKey): RoomStateModeDefinition {
+  return ROOM_STATE_MODES[key];
 }
+
+const MODE_KEYS = Object.keys(ROOM_STATE_MODES) as RoomStateModeKey[];
+
+// eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks Array.prototype.toSorted (throws "undefined is not a function"); copy-then-sort is the safe equivalent
+const CHIP_ORDERED_MODE_KEYS = [...MODE_KEYS].sort(
+  (a, b) => getModeDefinition(a).chipOrder - getModeDefinition(b).chipOrder,
+);
 
 export function describeInitialRoomState(
   state: ParsedRoomState,
 ): string | null {
-  const modes = getRoomStateModes(state);
-  const activeModes: string[] = [];
-
-  if (modes.emote.active) {
-    activeModes.push('emote-only');
-  }
-  if (modes.subs.active) {
-    activeModes.push('subscribers-only');
-  }
-  if (modes.unique.active) {
-    activeModes.push('unique-chat');
-  }
-  if (modes.slow.active) {
-    activeModes.push(`slow mode (${modes.slow.value}s)`);
-  }
-  if (modes.followers.active) {
-    activeModes.push(
-      modes.followers.value === undefined
-        ? 'followers-only'
-        : `followers-only (${modes.followers.value}m)`,
-    );
-  }
+  const activeModes = MODE_KEYS.flatMap(key => {
+    const mode = getModeDefinition(key);
+    const status = mode.getStatus(state);
+    return status.active ? [mode.activeSummary(status.value)] : [];
+  });
 
   if (activeModes.length === 0) {
     return null;
@@ -105,59 +149,24 @@ export function describeRoomStateChanges(
   previous: ParsedRoomState,
   next: ParsedRoomState,
 ): string[] {
-  const previousModes = getRoomStateModes(previous);
-  const nextModes = getRoomStateModes(next);
-  const changes: string[] = [];
+  return MODE_KEYS.flatMap(key => {
+    const mode = getModeDefinition(key);
+    const previousStatus = mode.getStatus(previous);
+    const nextStatus = mode.getStatus(next);
 
-  const changed = (key: RoomStateModeKey): boolean =>
-    previousModes[key].active !== nextModes[key].active ||
-    previousModes[key].value !== nextModes[key].value;
-
-  if (changed('emote')) {
-    changes.push(
-      nextModes.emote.active
-        ? 'Emote-only mode enabled'
-        : 'Emote-only mode disabled',
-    );
-  }
-
-  if (changed('subs')) {
-    changes.push(
-      nextModes.subs.active
-        ? 'Subscribers-only mode enabled'
-        : 'Subscribers-only mode disabled',
-    );
-  }
-
-  if (changed('unique')) {
-    changes.push(
-      nextModes.unique.active
-        ? 'Unique-chat mode enabled'
-        : 'Unique-chat mode disabled',
-    );
-  }
-
-  if (changed('slow')) {
-    changes.push(
-      nextModes.slow.active
-        ? `Slow mode enabled (${nextModes.slow.value}s)`
-        : 'Slow mode disabled',
-    );
-  }
-
-  if (changed('followers')) {
-    if (!nextModes.followers.active) {
-      changes.push('Followers-only mode disabled');
-    } else if (nextModes.followers.value === undefined) {
-      changes.push('Followers-only mode enabled');
-    } else {
-      changes.push(
-        `Followers-only mode enabled (${nextModes.followers.value}m)`,
-      );
+    if (
+      previousStatus.active === nextStatus.active &&
+      previousStatus.value === nextStatus.value
+    ) {
+      return [];
     }
-  }
 
-  return changes;
+    return [
+      nextStatus.active
+        ? mode.enabledNotice(nextStatus.value)
+        : mode.disabledNotice,
+    ];
+  });
 }
 
 export interface RoomStateChip {
@@ -170,30 +179,9 @@ export interface RoomStateChip {
  * Inactive modes produce no chip.
  */
 export function buildRoomStateChips(state: ParsedRoomState): RoomStateChip[] {
-  const modes = getRoomStateModes(state);
-  const chips: RoomStateChip[] = [];
-
-  if (modes.slow.active) {
-    chips.push({ key: 'slow', label: `Slow ${modes.slow.value}s` });
-  }
-  if (modes.followers.active) {
-    chips.push({
-      key: 'followers',
-      label:
-        modes.followers.value === undefined
-          ? 'Followers-only'
-          : `Followers-only ${modes.followers.value}m`,
-    });
-  }
-  if (modes.emote.active) {
-    chips.push({ key: 'emote', label: 'Emote-only' });
-  }
-  if (modes.subs.active) {
-    chips.push({ key: 'subs', label: 'Sub-only' });
-  }
-  if (modes.unique.active) {
-    chips.push({ key: 'unique', label: 'Unique' });
-  }
-
-  return chips;
+  return CHIP_ORDERED_MODE_KEYS.flatMap(key => {
+    const mode = getModeDefinition(key);
+    const status = mode.getStatus(state);
+    return status.active ? [{ key, label: mode.chipLabel(status.value) }] : [];
+  });
 }

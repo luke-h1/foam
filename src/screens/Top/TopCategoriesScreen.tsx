@@ -110,7 +110,7 @@ export function TopCategoriesScreen({
     );
   }
 
-  if (!showSkeleton && isError) {
+  if (isError) {
     return (
       <View style={styles.wrapper}>
         <EmptyState

@@ -103,7 +103,6 @@ export const ffzService = {
       if ('room' in result) {
         const { room } = result;
 
-        // Process VIP badge
         if (room.vip_badge && Object.keys(room.vip_badge).length > 0) {
           const maxKey = Math.max(...Object.keys(room.vip_badge).map(Number));
           const maxUrl = room.vip_badge[maxKey.toString()] as string;
@@ -119,7 +118,6 @@ export const ffzService = {
           });
         }
 
-        // Process mod badge
         if (room.mod_urls && Object.keys(room.mod_urls).length > 0) {
           const maxKey = Math.max(...Object.keys(room.mod_urls).map(Number));
           const maxUrl = room.mod_urls[maxKey.toString()] as string;
@@ -135,7 +133,6 @@ export const ffzService = {
           });
         }
 
-        // Process user badges
         if (room.user_badges) {
           Object.entries(room.user_badges).forEach(([badge, users]) => {
             users.forEach(user => {

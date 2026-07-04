@@ -1,4 +1,4 @@
-import { parseModCommand } from '../modCommands';
+import { type ModCommand, parseModCommand } from '../modCommands';
 
 describe('parseModCommand', () => {
   test('returns null for plain messages and unknown commands', () => {
@@ -9,7 +9,7 @@ describe('parseModCommand', () => {
   });
 
   test('parses /timeout with defaults', () => {
-    expect(parseModCommand('/timeout zoil')).toEqual({
+    expect(parseModCommand('/timeout zoil')).toEqual<ModCommand>({
       type: 'timeout',
       login: 'zoil',
       durationSeconds: 600,
@@ -17,7 +17,7 @@ describe('parseModCommand', () => {
   });
 
   test('parses /timeout with duration and reason', () => {
-    expect(parseModCommand('/timeout @Zoil 30 calm down')).toEqual({
+    expect(parseModCommand('/timeout @Zoil 30 calm down')).toEqual<ModCommand>({
       type: 'timeout',
       login: 'zoil',
       durationSeconds: 30,
@@ -26,20 +26,22 @@ describe('parseModCommand', () => {
   });
 
   test('treats a non-numeric second argument as part of the reason', () => {
-    expect(parseModCommand('/timeout zoil spamming links')).toEqual({
-      type: 'timeout',
-      login: 'zoil',
-      durationSeconds: 600,
-      reason: 'spamming links',
-    });
+    expect(parseModCommand('/timeout zoil spamming links')).toEqual<ModCommand>(
+      {
+        type: 'timeout',
+        login: 'zoil',
+        durationSeconds: 600,
+        reason: 'spamming links',
+      },
+    );
   });
 
   test('parses /ban with and without a reason', () => {
-    expect(parseModCommand('/ban zoil')).toEqual({
+    expect(parseModCommand('/ban zoil')).toEqual<ModCommand>({
       type: 'ban',
       login: 'zoil',
     });
-    expect(parseModCommand('/ban zoil hate speech')).toEqual({
+    expect(parseModCommand('/ban zoil hate speech')).toEqual<ModCommand>({
       type: 'ban',
       login: 'zoil',
       reason: 'hate speech',
@@ -47,18 +49,20 @@ describe('parseModCommand', () => {
   });
 
   test('parses /unban and /untimeout', () => {
-    expect(parseModCommand('/unban zoil')).toEqual({
+    expect(parseModCommand('/unban zoil')).toEqual<ModCommand>({
       type: 'unban',
       login: 'zoil',
     });
-    expect(parseModCommand('/untimeout zoil')).toEqual({
+    expect(parseModCommand('/untimeout zoil')).toEqual<ModCommand>({
       type: 'unban',
       login: 'zoil',
     });
   });
 
   test('parses /warn only when a reason is present', () => {
-    expect(parseModCommand('/warn zoil watch the language')).toEqual({
+    expect(
+      parseModCommand('/warn zoil watch the language'),
+    ).toEqual<ModCommand>({
       type: 'warn',
       login: 'zoil',
       reason: 'watch the language',
@@ -67,36 +71,38 @@ describe('parseModCommand', () => {
   });
 
   test('parses /announce with the full message', () => {
-    expect(parseModCommand('/announce drops are enabled!')).toEqual({
-      type: 'announce',
-      message: 'drops are enabled!',
-    });
+    expect(parseModCommand('/announce drops are enabled!')).toEqual<ModCommand>(
+      {
+        type: 'announce',
+        message: 'drops are enabled!',
+      },
+    );
     expect(parseModCommand('/announce')).toBeNull();
   });
 
   test('parses /shoutout and its /so alias', () => {
-    expect(parseModCommand('/shoutout zoil')).toEqual({
+    expect(parseModCommand('/shoutout zoil')).toEqual<ModCommand>({
       type: 'shoutout',
       login: 'zoil',
     });
-    expect(parseModCommand('/so @Zoil')).toEqual({
+    expect(parseModCommand('/so @Zoil')).toEqual<ModCommand>({
       type: 'shoutout',
       login: 'zoil',
     });
   });
 
   test('parses slow mode commands', () => {
-    expect(parseModCommand('/slow')).toEqual({
+    expect(parseModCommand('/slow')).toEqual<ModCommand>({
       type: 'chatMode',
       label: 'Slow mode (30s)',
       patch: { slow_mode: true, slow_mode_wait_time: 30 },
     });
-    expect(parseModCommand('/slow 120')).toEqual({
+    expect(parseModCommand('/slow 120')).toEqual<ModCommand>({
       type: 'chatMode',
       label: 'Slow mode (120s)',
       patch: { slow_mode: true, slow_mode_wait_time: 120 },
     });
-    expect(parseModCommand('/slowoff')).toEqual({
+    expect(parseModCommand('/slowoff')).toEqual<ModCommand>({
       type: 'chatMode',
       label: 'Slow mode off',
       patch: { slow_mode: false },
@@ -104,17 +110,17 @@ describe('parseModCommand', () => {
   });
 
   test('parses follower mode commands', () => {
-    expect(parseModCommand('/followers 10')).toEqual({
+    expect(parseModCommand('/followers 10')).toEqual<ModCommand>({
       type: 'chatMode',
       label: 'Followers-only mode',
       patch: { follower_mode: true, follower_mode_duration: 10 },
     });
-    expect(parseModCommand('/followers')).toEqual({
+    expect(parseModCommand('/followers')).toEqual<ModCommand>({
       type: 'chatMode',
       label: 'Followers-only mode',
       patch: { follower_mode: true, follower_mode_duration: 0 },
     });
-    expect(parseModCommand('/followersoff')).toEqual({
+    expect(parseModCommand('/followersoff')).toEqual<ModCommand>({
       type: 'chatMode',
       label: 'Followers-only mode off',
       patch: { follower_mode: false },
@@ -122,17 +128,17 @@ describe('parseModCommand', () => {
   });
 
   test('parses the remaining chat mode toggles', () => {
-    expect(parseModCommand('/subscribers')).toEqual({
+    expect(parseModCommand('/subscribers')).toEqual<ModCommand>({
       type: 'chatMode',
       label: 'Subscribers-only mode',
       patch: { subscriber_mode: true },
     });
-    expect(parseModCommand('/emoteonlyoff')).toEqual({
+    expect(parseModCommand('/emoteonlyoff')).toEqual<ModCommand>({
       type: 'chatMode',
       label: 'Emote-only mode off',
       patch: { emote_mode: false },
     });
-    expect(parseModCommand('/uniquechat')).toEqual({
+    expect(parseModCommand('/uniquechat')).toEqual<ModCommand>({
       type: 'chatMode',
       label: 'Unique-chat mode',
       patch: { unique_chat_mode: true },
@@ -140,11 +146,11 @@ describe('parseModCommand', () => {
   });
 
   test('parses shield mode commands', () => {
-    expect(parseModCommand('/shield')).toEqual({
+    expect(parseModCommand('/shield')).toEqual<ModCommand>({
       type: 'shield',
       active: true,
     });
-    expect(parseModCommand('/shieldoff')).toEqual({
+    expect(parseModCommand('/shieldoff')).toEqual<ModCommand>({
       type: 'shield',
       active: false,
     });

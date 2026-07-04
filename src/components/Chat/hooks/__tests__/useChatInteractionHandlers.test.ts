@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react-native';
 
+import type { ReplyToData } from '@app/components/Chat/components/ChatInputSection';
 import type { ChatInputShellHandle } from '@app/components/Chat/components/ChatInputShell';
 import type { EmotePressData } from '@app/components/Chat/components/ChatMessage/RichChatMessage.types';
 import type { ChatOverlayOpeners } from '@app/components/Chat/components/useChatOverlays';
@@ -110,7 +111,7 @@ describe('useChatComposerActions', () => {
 
     expect(fetchUserCosmetics).toHaveBeenCalledWith('viewer-user');
     expect(mockGetMessageById).toHaveBeenCalledWith('reply-1');
-    expect(inputShell.setReplyTo.mock.calls[0]?.[0]).toEqual({
+    expect(inputShell.setReplyTo.mock.calls[0]?.[0]).toEqual<ReplyToData>({
       color: '#00ff00',
       message: 'replying with Kappa',
       messageParts: replyMessage.message,

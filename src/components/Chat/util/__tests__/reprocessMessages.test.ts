@@ -218,7 +218,9 @@ describe('reprocessMessages', () => {
     });
 
     test('should return empty array for empty input', () => {
-      expect(filterMessagesForReprocessing([])).toEqual([]);
+      expect(filterMessagesForReprocessing([])).toEqual<AnyChatMessageType[]>(
+        [],
+      );
     });
 
     test('should return all messages if none are system or notice', () => {

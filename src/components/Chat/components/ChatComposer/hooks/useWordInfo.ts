@@ -6,7 +6,7 @@ interface UseWordInfoProps {
 }
 
 export function useWordInfo({ text, cursorPosition }: UseWordInfoProps) {
-  const wordInfo = getCurrentWordAndType(text ?? '', cursorPosition);
+  const wordInfo = getCurrentWordAndType(text, cursorPosition);
   const isUserMention =
     wordInfo.word.startsWith('@') && wordInfo.word.length > 1;
   const isEmoteSearch =

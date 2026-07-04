@@ -40,9 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return nextState.error !== nextProps.error;
   }
 
-  // if an error in a child is encountered, this will run
   override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // catch any errors in any components and re-render with error-message
     this.setState({
       error,
       errorInfo,
@@ -59,13 +57,11 @@ export class ErrorBoundary extends Component<Props, State> {
     });
   }
 
-  // reset the error back to null
   resetError = () => {
     this.props.onReset();
     this.setState({ error: null, errorInfo: null });
   };
 
-  // Only enable if we're catching errors in the right environment
   isEnabled(): boolean {
     return (
       this.props.catchErrors === 'always' ||
@@ -74,7 +70,6 @@ export class ErrorBoundary extends Component<Props, State> {
     );
   }
 
-  // render an error UI if there's an error; otherwise, render children
   override render(): ReactNode {
     return this.isEnabled() && this.state.error ? (
       <ErrorDetails

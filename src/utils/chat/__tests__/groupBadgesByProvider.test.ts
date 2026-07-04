@@ -1,5 +1,6 @@
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
+import type { BadgeProviderSection } from '../groupBadgesByProvider';
 import { groupBadgesByProvider } from '../groupBadgesByProvider';
 
 function badge(overrides: Partial<SanitisedBadgeSet>): SanitisedBadgeSet {
@@ -43,6 +44,6 @@ describe('groupBadgesByProvider', () => {
   });
 
   test('returns an empty list when there are no badges', () => {
-    expect(groupBadgesByProvider([], 5)).toEqual([]);
+    expect(groupBadgesByProvider([], 5)).toEqual<BadgeProviderSection[]>([]);
   });
 });

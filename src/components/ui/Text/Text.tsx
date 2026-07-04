@@ -71,7 +71,6 @@ export interface TextProps extends RNTextProps, MarginProps {
   align?: 'left' | 'center' | 'right';
 }
 
-// Font weight mapping
 const weightMap: Record<TextWeight, TextStyle['fontWeight']> = {
   black: '900',
   bold: '700',
@@ -84,7 +83,6 @@ const weightMap: Record<TextWeight, TextStyle['fontWeight']> = {
   ultralight: '100',
 };
 
-// Size styles with fontSize and lineHeight
 const sizeStyles = StyleSheet.create({
   '10xl': { fontSize: 128, lineHeight: 154 },
   '11xl': { fontSize: 160, lineHeight: 192 },
@@ -126,7 +124,6 @@ export function Text({
   children,
   style,
   ref,
-  // Margin props
   m,
   mb,
   ml,

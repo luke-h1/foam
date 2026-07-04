@@ -191,7 +191,7 @@ describe('reconcileSettledSpecs', () => {
       existingCache: undefined,
     });
 
-    expect(reconciled.get('twitchChannelEmotes')).toEqual([
+    expect(reconciled.get('twitchChannelEmotes')).toEqual<SanitisedEmote[]>([
       emote('a'),
       emote('b'),
     ]);
@@ -210,7 +210,9 @@ describe('reconcileSettledSpecs', () => {
       existingCache,
     });
 
-    expect(reconciled.get('twitchChannelEmotes')).toEqual([emote('cached')]);
+    expect(reconciled.get('twitchChannelEmotes')).toEqual<SanitisedEmote[]>([
+      emote('cached'),
+    ]);
   });
 
   test('yields an empty slice when a fetch rejects with no cache', () => {

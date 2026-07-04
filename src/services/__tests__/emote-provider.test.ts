@@ -1,3 +1,4 @@
+import type { ProviderSanitisedEmote } from '../emote-provider';
 import { buildSanitisedEmote } from '../emote-provider';
 
 describe('buildSanitisedEmote', () => {
@@ -19,7 +20,7 @@ describe('buildSanitisedEmote', () => {
       },
     });
 
-    expect(result).toEqual({
+    expect(result).toEqual<ProviderSanitisedEmote<'BTTV'>>({
       id: 'emote1',
       name: 'catJAM',
       url: 'https://cdn.example/emote1/animated/3x',
@@ -56,7 +57,7 @@ describe('buildSanitisedEmote', () => {
       },
     });
 
-    expect(result).toEqual({
+    expect(result).toEqual<ProviderSanitisedEmote<'Global FFZ'>>({
       id: '128054',
       name: 'OMEGALUL',
       url: 'https://cdn.example/128054/animated/4',
@@ -90,7 +91,7 @@ describe('buildSanitisedEmote', () => {
       },
     });
 
-    expect(result).toEqual({
+    expect(result).toEqual<ProviderSanitisedEmote<'FFZ'>>({
       id: 'emote2',
       name: 'StaticOnly',
       url: 'https://cdn.example/emote2/static/4x',
@@ -126,7 +127,7 @@ describe('buildSanitisedEmote', () => {
       },
     });
 
-    expect(result).toEqual({
+    expect(result).toEqual<ProviderSanitisedEmote<'Twitch Global'>>({
       id: 'emote3',
       name: 'Sparse',
       url: 'https://cdn.example/emote3/animated/4x',

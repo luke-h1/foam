@@ -49,7 +49,6 @@ export function parseIrcMessage(line: string): IrcMessage | null {
   let tags: Record<string, string> | undefined;
   let prefix: string | undefined;
 
-  // Parse tags
   if (remaining.startsWith('@')) {
     const tagEnd = remaining.indexOf(' ');
     if (tagEnd === -1) {
@@ -60,7 +59,6 @@ export function parseIrcMessage(line: string): IrcMessage | null {
     remaining = remaining.substring(tagEnd + 1).trim();
   }
 
-  // Parse prefix
   if (remaining.startsWith(':')) {
     const prefixEnd = remaining.indexOf(' ');
     if (prefixEnd === -1) {

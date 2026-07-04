@@ -64,6 +64,20 @@ describe('storageService expiry', () => {
     jest.setSystemTime(new Date('2026-01-01T00:00:30.000Z'));
     expect(storageService.getString('previous_searches')).toBeNull();
   });
+
+  test('clearExpired sweeps expired keys and keeps unexpired ones', () => {
+    storageService.set('previous_searches', ['kappa'], undefined, {
+      expiry: new Date('2026-01-01T00:01:00.000Z'),
+    });
+    storageService.set('sevenTvUserId_1', 'a', 'seven_tv_cache');
+
+    jest.setSystemTime(new Date('2026-01-01T00:02:00.000Z'));
+    storageService.clearExpired();
+
+    expect(storageService.getAllKeys()).toEqual([
+      'FOAM_V1_seven_tv_cache_sevenTvUserId_1',
+    ]);
+  });
 });
 
 describe('storageService namespaces', () => {

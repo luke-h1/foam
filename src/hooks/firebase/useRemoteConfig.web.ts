@@ -23,9 +23,6 @@ export interface RemoteConfigSchema {
     };
   };
 
-  /**
-   * Url
-   */
   statusPageUrl: string;
   websiteUrl: string;
   admins: string[];

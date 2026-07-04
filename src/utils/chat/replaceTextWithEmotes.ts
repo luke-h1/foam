@@ -405,7 +405,6 @@ export function replaceTextWithEmotes({
       }
     });
 
-    // logger.chat.debug('Final replaced parts:', replacedParts);
     return replacedParts;
   } catch (error) {
     logger.chat.error('Error replacing words with emotes:', error);

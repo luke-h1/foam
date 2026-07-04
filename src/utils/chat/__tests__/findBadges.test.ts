@@ -1,6 +1,7 @@
 import { twitchSanitisedChannelBadges } from '@app/services/__fixtures__/badges/twitch/twitchSanitisedChannelBadges.fixture';
 import { twitchSanitisedGlobalBadges } from '@app/services/__fixtures__/badges/twitch/twitchSanitisedGlobalBadges.fixture';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import { findBadges } from '../findBadges';
 
@@ -38,7 +39,7 @@ describe('findBadges', () => {
           userstate,
         });
 
-        expect(result).toEqual([
+        expect(result).toEqual<SanitisedBadgeSet[]>([
           {
             id: badge.id,
             title: badge.title,
@@ -84,7 +85,7 @@ describe('findBadges', () => {
           userstate,
         });
 
-        expect(result).toEqual([
+        expect(result).toEqual<SanitisedBadgeSet[]>([
           {
             id: badge.id,
             title: badge.title,
@@ -147,7 +148,7 @@ describe('findBadges', () => {
         userstate,
       });
 
-      expect(result).toEqual([sourceSubscriberBadge]);
+      expect(result).toEqual<SanitisedBadgeSet[]>([sourceSubscriberBadge]);
     });
 
     test('uses source badges when the source room is the current room', () => {
@@ -199,7 +200,7 @@ describe('findBadges', () => {
         userstate,
       });
 
-      expect(result).toEqual([sourceSubscriberBadge]);
+      expect(result).toEqual<SanitisedBadgeSet[]>([sourceSubscriberBadge]);
     });
 
     test('prefers one channel badge over global fallback for the same raw badge', () => {
@@ -248,7 +249,7 @@ describe('findBadges', () => {
         userstate,
       });
 
-      expect(result).toEqual([channelBadge]);
+      expect(result).toEqual<SanitisedBadgeSet[]>([channelBadge]);
     });
   });
 });

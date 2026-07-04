@@ -1,5 +1,8 @@
 import { parsePreferencesPayload } from '@app/lib/icloud-sync';
-import { initialPreferences } from '@app/store/preferenceStore';
+import {
+  initialPreferences,
+  type Preferences,
+} from '@app/store/preferenceStore';
 import { logger } from '@app/utils/logger';
 
 const warnSpy = jest.spyOn(logger.main, 'warn').mockImplementation(() => {});
@@ -19,7 +22,7 @@ describe('parsePreferencesPayload', () => {
 
     const result = parsePreferencesPayload(JSON.stringify(legacyBlob));
 
-    expect(result).toEqual({
+    expect(result).toEqual<Preferences>({
       ...initialPreferences,
       updatedAt: 123,
       chatTimestamps: true,
@@ -38,7 +41,7 @@ describe('parsePreferencesPayload', () => {
 
     const result = parsePreferencesPayload(JSON.stringify(blob));
 
-    expect(result).toEqual(blob);
+    expect(result).toEqual<Preferences>(blob);
   });
 
   test('discards a blob whose existing field has the wrong type', () => {

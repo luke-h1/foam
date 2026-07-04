@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     backgroundColor: Color.zinc[900],
     borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
+    borderRadius: theme.borderRadius10,
     borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     flexWrap: 'nowrap',
@@ -368,13 +368,13 @@ const styles = StyleSheet.create({
   },
   image: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius8,
+    borderRadius: theme.borderRadius6,
     height: 88,
     width: 132,
   },
   imageContainer: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius8,
+    borderRadius: theme.borderRadius6,
     flexShrink: 0,
     height: 88,
     marginRight: theme.space12,
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
   },
   imageWrapper: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius8,
+    borderRadius: theme.borderRadius6,
     height: 88,
     overflow: 'hidden',
     width: 132,
@@ -424,12 +424,12 @@ const styles = StyleSheet.create({
   mediaImage: {
     aspectRatio: 16 / 9,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.borderRadius8,
     width: '100%',
   },
   mediaImageShell: {
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.borderRadius8,
     overflow: 'hidden',
     position: 'relative',
     width: '100%',
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
   mediaImageWrapper: {
     aspectRatio: 16 / 9,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
+    borderRadius: theme.borderRadius8,
     overflow: 'hidden',
     width: '100%',
   },
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
   viewerBadge: {
     backgroundColor: 'rgba(0,0,0,0.68)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius6,
+    borderRadius: theme.borderRadius4,
     bottom: theme.space12,
     left: theme.space12,
     paddingHorizontal: 8,

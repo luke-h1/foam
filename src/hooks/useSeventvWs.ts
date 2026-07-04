@@ -19,22 +19,17 @@ import {
   SevenTvWsMessage,
 } from '@app/types/seventv/cosmetics';
 import { logger } from '@app/utils/logger';
-
 import {
-  type CosmeticSyncDeps,
-  handleCosmeticCreate,
-  handleCosmeticDelete,
-  handleCosmeticUpdate,
-  handleEntitlementCreate,
-  handleEntitlementDelete,
-  handleEntitlementUpdate,
-} from './seventv/cosmeticSync';
-import {
-  type EmoteSyncDeps,
+  buildCosmeticCreateSubscribeMessage,
+  buildEmoteSetUpdateSubscribeMessage,
+  buildEmoteSetUpdateUnsubscribeMessage,
+  buildEntitlementCreateSubscribeMessage,
   type EmoteUpdateCallbackData,
-  handleEmoteSetUpdate,
-  isActiveEmoteSetUpdate,
-} from './seventv/emoteSync';
+  type HandledSevenTvEventType,
+  interpretSeventvWsMessage,
+  type SeventvWsDecision,
+} from '@app/utils/seventv/seventvWsInterpreter';
+
 import { ReadyState } from './ws/constants';
 import { useWebsocket } from './ws/useWebsocket';
 
@@ -86,6 +81,17 @@ type UseSeventvWsReturn = {
 
 const DEFAULT_URL = 'wss://events.7tv.io/v3';
 const ID_WAIT_TIMEOUT = 30000; // 30 seconds
+
+function logEventHandlerError(
+  eventType: HandledSevenTvEventType,
+  error: unknown,
+) {
+  if (eventType === 'emote_set.update') {
+    logger.stvWs.error('Error handling emote set update:', error);
+  } else {
+    logger.chat.error(`Error handling ${eventType}:`, error);
+  }
+}
 
 function getSevenTvChatScreenFromPathname(pathname: string | null) {
   if (!pathname) {
@@ -146,23 +152,6 @@ export function useSeventvWs(
     return isOnChatScreen && hasRequiredIds;
   })();
 
-  const getEmoteSyncDeps = (): EmoteSyncDeps => ({
-    expectedEmoteSetId:
-      sevenTvEmoteSetIdRef.current || currentEmoteSetIdRef.current,
-    connectionTimestamp: connectionTimestampRef.current,
-    channelId: twitchChannelIdRef.current,
-    onEmoteUpdate: emoteCallbackRef.current,
-  });
-
-  const getCosmeticSyncDeps = (): CosmeticSyncDeps => ({
-    onCosmeticCreate: cosmeticCallbackRef.current,
-    onCosmeticUpdate: cosmeticUpdateCallbackRef.current,
-    onCosmeticDelete: cosmeticDeleteCallbackRef.current,
-    onEntitlementCreate: entitlementCallbackRef.current,
-    onEntitlementUpdate: entitlementUpdateCallbackRef.current,
-    onEntitlementDelete: entitlementDeleteCallbackRef.current,
-  });
-
   const sendSubscription = (
     emoteSetId: string,
     sendJsonMessage: (msg: unknown) => void,
@@ -170,39 +159,15 @@ export function useSeventvWs(
     logger.stvWs.info(`💚 Attempting to subscribe to emote set: ${emoteSetId}`);
 
     if (twitchChannelIdRef.current) {
-      const entitlementSubscriptionMessage: SevenTvWsMessage<
-        never,
-        'entitlement.create'
-      > = {
-        op: 35,
-        t: Date.now(),
-        d: {
-          type: 'entitlement.create',
-          condition: {
-            id: twitchChannelIdRef.current,
-            platform: 'TWITCH',
-            ctx: 'channel',
-          },
-        },
-      };
-
-      sendJsonMessage(entitlementSubscriptionMessage);
+      sendJsonMessage(
+        buildEntitlementCreateSubscribeMessage(
+          twitchChannelIdRef.current,
+          Date.now(),
+        ),
+      );
     }
 
-    const emoteSetSubscriptionMessage: SevenTvWsMessage<
-      never,
-      'emote_set.update'
-    > = {
-      op: 35,
-      d: {
-        type: 'emote_set.update',
-        condition: {
-          object_id: emoteSetId,
-        },
-      },
-    };
-
-    sendJsonMessage(emoteSetSubscriptionMessage);
+    sendJsonMessage(buildEmoteSetUpdateSubscribeMessage(emoteSetId));
 
     logger.stvWs.info(
       `✅ Successfully sent subscription for emote set: ${emoteSetId}`,
@@ -226,40 +191,18 @@ export function useSeventvWs(
     }
 
     if (twitchChannelIdRef.current) {
-      const subscribeEntitlementMessage: SevenTvWsMessage<
-        never,
-        'entitlement.create'
-      > = {
-        op: 35,
-        t: Date.now(),
-        d: {
-          type: 'entitlement.create',
-          condition: {
-            platform: 'TWITCH',
-            ctx: 'channel',
-            id: twitchChannelIdRef.current,
-          },
-        },
-      };
-
-      const subscribeCosmeticCreateMessage: SevenTvWsMessage<
-        never,
-        'cosmetic.create'
-      > = {
-        op: 35,
-        t: Date.now(),
-        d: {
-          type: 'cosmetic.create',
-          condition: {
-            platform: 'TWITCH',
-            ctx: 'channel',
-            id: twitchChannelIdRef.current,
-          },
-        },
-      };
-
-      sendJsonMessage(subscribeEntitlementMessage);
-      sendJsonMessage(subscribeCosmeticCreateMessage);
+      sendJsonMessage(
+        buildEntitlementCreateSubscribeMessage(
+          twitchChannelIdRef.current,
+          Date.now(),
+        ),
+      );
+      sendJsonMessage(
+        buildCosmeticCreateSubscribeMessage(
+          twitchChannelIdRef.current,
+          Date.now(),
+        ),
+      );
       logger.stvWs.info(
         '💚 Subscribed to entitlement.create and cosmetic.create events',
       );
@@ -282,22 +225,213 @@ export function useSeventvWs(
     }
 
     if (sevenTvEmoteSetIdRef.current) {
-      const subscribeEmoteSetMessage: SevenTvWsMessage<
-        never,
-        'emote_set.update'
-      > = {
-        op: 35,
-        t: Date.now(),
-        d: {
-          type: 'emote_set.update',
-          condition: {
-            object_id: sevenTvEmoteSetIdRef.current,
-          },
-        },
-      };
-
-      sendJsonMessage(subscribeEmoteSetMessage);
+      sendJsonMessage(
+        buildEmoteSetUpdateSubscribeMessage(
+          sevenTvEmoteSetIdRef.current,
+          Date.now(),
+        ),
+      );
       logger.stvWs.info('💚 Subscribed to emote_set.update events');
+    }
+  };
+
+  const executeDecision = (decision: SeventvWsDecision) => {
+    switch (decision.type) {
+      case 'applyEmoteUpdate': {
+        logger.stvWs.info(`💚 Received WS 'emote_set.update' event`);
+        logger.stvWs.info(
+          `💚 Processing emote set update: +${decision.added.length} -${decision.removed.length} emotes`,
+        );
+        try {
+          emoteCallbackRef.current?.({
+            added: decision.added,
+            removed: decision.removed,
+            channelId: decision.channelId,
+          });
+        } catch (error) {
+          logEventHandlerError('emote_set.update', error);
+        }
+        break;
+      }
+
+      case 'ignoreEmoteSetUpdate': {
+        if (decision.reason === 'differentEmoteSet') {
+          logger.stvWs.debug(
+            `Ignoring 7TV emote_set.update for ${decision.receivedEmoteSetId}; active set is ${decision.expectedEmoteSetId}`,
+          );
+        } else if (decision.reason === 'historicalEvent') {
+          logger.stvWs.info(`💚 Received WS 'emote_set.update' event`);
+          logger.stvWs.info(
+            '💚 Ignoring potential historical emote set update event (within buffer period)',
+          );
+        } else if (decision.reason === 'noChanges') {
+          logger.stvWs.info(`💚 Received WS 'emote_set.update' event`);
+        }
+        break;
+      }
+
+      case 'applyCosmeticCreate': {
+        try {
+          cosmeticCallbackRef.current?.({
+            cosmetic: decision.cosmetic,
+            kind: decision.kind,
+          });
+        } catch (error) {
+          logEventHandlerError('cosmetic.create', error);
+        }
+        break;
+      }
+
+      case 'ignoreCosmeticCreate': {
+        break;
+      }
+
+      case 'applyEntitlementCreate': {
+        logger.stvWs.info(`💚 Received WS 'entitlement.create' event`);
+        logger.stvWs.info(
+          `Entitlement create: ${decision.kind} for user ${decision.userDisplayName} (ttv: ${decision.ttvUserId}, paint: ${decision.paintId}, badge: ${decision.badgeId})`,
+        );
+        try {
+          entitlementCallbackRef.current?.({
+            entitlement: decision.entitlement,
+            kind: decision.kind,
+            ttvUserId: decision.ttvUserId,
+            paintId: decision.paintId,
+            badgeId: decision.badgeId,
+          });
+        } catch (error) {
+          logEventHandlerError('entitlement.create', error);
+        }
+        break;
+      }
+
+      case 'applyCosmeticUpdate': {
+        logger.stvWs.info(`💚 Received WS 'cosmetic.update' event`);
+        try {
+          cosmeticUpdateCallbackRef.current?.({
+            changes: decision.changes,
+            kind: decision.kind,
+          });
+        } catch (error) {
+          logEventHandlerError('cosmetic.update', error);
+        }
+        break;
+      }
+
+      case 'applyCosmeticDelete': {
+        logger.stvWs.info(`💚 Received WS 'cosmetic.delete' event`);
+        try {
+          cosmeticDeleteCallbackRef.current?.({
+            cosmeticId: decision.cosmeticId,
+          });
+        } catch (error) {
+          logEventHandlerError('cosmetic.delete', error);
+        }
+        break;
+      }
+
+      case 'applyEntitlementUpdate': {
+        logger.stvWs.info(`💚 Received WS 'entitlement.update' event`);
+        try {
+          entitlementUpdateCallbackRef.current?.({
+            changes: decision.changes,
+            ttvUserId: decision.ttvUserId,
+            paintId: decision.paintId,
+            badgeId: decision.badgeId,
+          });
+        } catch (error) {
+          logEventHandlerError('entitlement.update', error);
+        }
+        break;
+      }
+
+      case 'applyEntitlementDelete': {
+        logger.stvWs.info(`💚 Received WS 'entitlement.delete' event`);
+        try {
+          entitlementDeleteCallbackRef.current?.({
+            entitlementId: decision.entitlementId,
+            ttvUserId: decision.ttvUserId,
+          });
+        } catch (error) {
+          logEventHandlerError('entitlement.delete', error);
+        }
+        break;
+      }
+
+      case 'eventInterpretationFailed': {
+        if (decision.eventType !== 'cosmetic.create') {
+          logger.stvWs.info(`💚 Received WS '${decision.eventType}' event`);
+        }
+        logEventHandlerError(decision.eventType, decision.error);
+        break;
+      }
+
+      case 'unhandledEventType': {
+        logger.stvWs.debug(
+          `[DEFAULT CASE] Unhandled event type: ${decision.eventType}`,
+        );
+        break;
+      }
+
+      case 'notifyEvent': {
+        if (eventCallbackRef.current) {
+          eventCallbackRef.current(decision.eventType, decision.data);
+        }
+        break;
+      }
+
+      case 'ignoreDispatch': {
+        if (decision.reason === 'missingEventData') {
+          logger.stvWs.error('message.d is undefined or null');
+        } else {
+          logger.stvWs.error('message.d does not have expected structure');
+        }
+        break;
+      }
+
+      case 'heartbeat': {
+        logger.stvWs.info(
+          `💚 Received WS heartbeat event. Total received: ${decision.count}`,
+        );
+        break;
+      }
+
+      case 'ack': {
+        logger.stvWs.info(`💚 Received WS ACK event: ${decision.command}`);
+        break;
+      }
+
+      case 'hello': {
+        logger.stvWs.info(`💚 Received WS hello/ACK event`);
+        break;
+      }
+
+      case 'invalidSubscriptionCondition': {
+        logger.stvWs.warn(
+          `💚 Received invalid subscription condition: ${JSON.stringify(
+            decision.payload,
+          )}`,
+          {
+            name: 'seven_tv_ws_warning',
+            action: 'invalid_subscription_condition',
+            channel_id: twitchChannelIdRef.current,
+            provider: 'seven_tv',
+            screen: currentScreen,
+            seven_tv_emote_set_id: sevenTvEmoteSetIdRef.current,
+          },
+        );
+        break;
+      }
+
+      case 'serverRequest': {
+        logger.stvWs.info(`💚 Received server req connection`);
+        break;
+      }
+
+      case 'unhandledOp': {
+        logger.stvWs.debug(`Unhandled op code ${decision.op}`);
+        break;
+      }
     }
   };
 
@@ -309,140 +443,15 @@ export function useSeventvWs(
 
       logger.stvWs.debug('[handleMessage] op:', message.op);
 
-      switch (message.op) {
-        case 0: {
-          if (!message.d) {
-            logger.stvWs.error('message.d is undefined or null');
-            break;
-          }
+      const decisions = interpretSeventvWsMessage(message, {
+        expectedEmoteSetId:
+          sevenTvEmoteSetIdRef.current || currentEmoteSetIdRef.current,
+        connectionTimestamp: connectionTimestampRef.current,
+        channelId: twitchChannelIdRef.current,
+        now: Date.now(),
+      });
 
-          if (typeof message.d !== 'object' || !('type' in message.d)) {
-            logger.stvWs.error('message.d does not have expected structure');
-            break;
-          }
-
-          switch (message.d.type) {
-            case 'emote_set.update': {
-              const data = message.d as SevenTvEventData<'emote_set.update'>;
-              const deps = getEmoteSyncDeps();
-
-              if (isActiveEmoteSetUpdate(data, deps.expectedEmoteSetId)) {
-                logger.stvWs.info(`💚 Received WS 'emote_set.update' event`);
-                handleEmoteSetUpdate(data, deps);
-              }
-              break;
-            }
-
-            case 'cosmetic.create': {
-              handleCosmeticCreate(
-                message.d as SevenTvEventData<'cosmetic.create'>,
-                getCosmeticSyncDeps(),
-              );
-              break;
-            }
-
-            case 'entitlement.create': {
-              logger.stvWs.info(`💚 Received WS 'entitlement.create' event`);
-              handleEntitlementCreate(
-                message.d as SevenTvEventData<'entitlement.create'>,
-                getCosmeticSyncDeps(),
-              );
-              break;
-            }
-
-            case 'cosmetic.update': {
-              logger.stvWs.info(`💚 Received WS 'cosmetic.update' event`);
-              handleCosmeticUpdate(
-                message.d as SevenTvEventData<'cosmetic.update'>,
-                getCosmeticSyncDeps(),
-              );
-              break;
-            }
-
-            case 'cosmetic.delete': {
-              logger.stvWs.info(`💚 Received WS 'cosmetic.delete' event`);
-              handleCosmeticDelete(
-                message.d as SevenTvEventData<'cosmetic.delete'>,
-                getCosmeticSyncDeps(),
-              );
-              break;
-            }
-
-            case 'entitlement.update': {
-              logger.stvWs.info(`💚 Received WS 'entitlement.update' event`);
-              handleEntitlementUpdate(
-                message.d as SevenTvEventData<'entitlement.update'>,
-                getCosmeticSyncDeps(),
-              );
-              break;
-            }
-
-            case 'entitlement.delete': {
-              logger.stvWs.info(`💚 Received WS 'entitlement.delete' event`);
-              handleEntitlementDelete(
-                message.d as SevenTvEventData<'entitlement.delete'>,
-                getCosmeticSyncDeps(),
-              );
-              break;
-            }
-
-            default: {
-              logger.stvWs.debug(
-                `[DEFAULT CASE] Unhandled event type: ${message.d.type}`,
-              );
-              break;
-            }
-          }
-
-          if (eventCallbackRef.current) {
-            eventCallbackRef.current(message.d.type, message.d);
-          }
-          break;
-        }
-
-        case 2: {
-          logger.stvWs.info(
-            `💚 Received WS heartbeat event. Total received: ${message.d.count}`,
-          );
-          break;
-        }
-
-        case 5: {
-          logger.stvWs.info(`💚 Received WS ACK event: ${message.d.command}`);
-          break;
-        }
-
-        case 1: {
-          logger.stvWs.info(`💚 Received WS hello/ACK event`);
-          break;
-        }
-
-        case 6: {
-          logger.stvWs.warn(
-            `💚 Received invalid subscription condition: ${JSON.stringify(
-              message.d,
-            )}`,
-            {
-              name: 'seven_tv_ws_warning',
-              action: 'invalid_subscription_condition',
-              channel_id: twitchChannelIdRef.current,
-              provider: 'seven_tv',
-              screen: currentScreen,
-              seven_tv_emote_set_id: sevenTvEmoteSetIdRef.current,
-            },
-          );
-          break;
-        }
-
-        case 7: {
-          logger.stvWs.info(`💚 Received server req connection`);
-          break;
-        }
-
-        default: {
-          logger.stvWs.debug(`Unhandled op code ${message.op}`);
-        }
-      }
+      decisions.forEach(executeDecision);
     } catch (e) {
       logger.stvWs.warn(
         `Failed to parse STV message ${JSON.stringify(e, null, 2)}`,
@@ -545,17 +554,9 @@ export function useSeventvWs(
       currentEmoteSetIdRef.current !== emoteSetId &&
       ws.readyState === WebSocket.OPEN
     ) {
-      const unsubscribeMessage: SevenTvWsMessage<never, 'emote_set.update'> = {
-        op: 36,
-        d: {
-          type: 'emote_set.update',
-          condition: {
-            object_id: currentEmoteSetIdRef.current,
-          },
-        },
-      };
-
-      sendJsonMessage(unsubscribeMessage);
+      sendJsonMessage(
+        buildEmoteSetUpdateUnsubscribeMessage(currentEmoteSetIdRef.current),
+      );
       activeSubscriptionsRef.current.delete(currentEmoteSetIdRef.current);
     }
 
@@ -577,17 +578,9 @@ export function useSeventvWs(
       currentEmoteSetIdRef.current &&
       ws.readyState === WebSocket.OPEN
     ) {
-      const unsubscribeMessage: SevenTvWsMessage<never, 'emote_set.update'> = {
-        op: 36,
-        d: {
-          type: 'emote_set.update',
-          condition: {
-            object_id: currentEmoteSetIdRef.current,
-          },
-        },
-      };
-
-      sendJsonMessage(unsubscribeMessage);
+      sendJsonMessage(
+        buildEmoteSetUpdateUnsubscribeMessage(currentEmoteSetIdRef.current),
+      );
       activeSubscriptionsRef.current.delete(currentEmoteSetIdRef.current);
     }
 

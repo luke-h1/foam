@@ -34,7 +34,7 @@ packageJsonPaths.forEach(packageJsonPath => {
         'utf8',
         e => {
           if (e) {
-            console.error(`Error writing ${fullPath}:`, exports);
+            console.error(`Error writing ${fullPath}:`, e);
           } else {
             console.log(
               `Dependencies in ${fullPath} alphabetized successfully.`,

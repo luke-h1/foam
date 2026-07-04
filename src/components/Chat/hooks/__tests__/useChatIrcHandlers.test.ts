@@ -5,6 +5,7 @@ import {
   clearMessages,
   clearMessagesWithNotice,
 } from '@app/store/chat/actions/messages';
+import { setChannelRoomState } from '@app/store/chat/actions/transientState';
 
 import { useChatIrcHandlers } from '../useChatIrcHandlers';
 
@@ -20,6 +21,10 @@ jest.mock('@app/store/chat/actions/messages', () => ({
   removeMessagesByLogin: jest.fn(),
 }));
 
+jest.mock('@app/store/chat/actions/transientState', () => ({
+  setChannelRoomState: jest.fn(),
+}));
+
 jest.mock('@app/utils/logger', () => ({
   logger: {
     chat: {
@@ -32,6 +37,15 @@ jest.mock('@app/utils/logger', () => ({
 const mockAddMessage = jest.mocked(addMessage);
 const mockClearMessages = jest.mocked(clearMessages);
 const mockClearMessagesWithNotice = jest.mocked(clearMessagesWithNotice);
+const mockSetChannelRoomState = jest.mocked(setChannelRoomState);
+
+function addedSystemMessageContents(): (string | undefined)[] {
+  return mockAddMessage.mock.calls.map(([message]) =>
+    message?.message[0] && 'content' in message.message[0]
+      ? message.message[0].content
+      : undefined,
+  );
+}
 
 function renderIrcHandlers({
   isLoadingRecentMessages = false,
@@ -248,5 +262,87 @@ describe('useChatIrcHandlers', () => {
 
     expect(mockClearMessages).toHaveBeenCalledTimes(1);
     expect(clearLocalMessages).toHaveBeenCalledTimes(1);
+  });
+
+  test('syncs the observable and summarises modes on the first ROOMSTATE', () => {
+    const { result } = renderIrcHandlers();
+
+    act(() => {
+      result.current.onRoomState('#foam', {
+        'followers-only': '10',
+        slow: '30',
+      });
+    });
+
+    expect(mockSetChannelRoomState).toHaveBeenCalledTimes(1);
+    expect(mockSetChannelRoomState).toHaveBeenCalledWith('channel-1', {
+      emoteOnly: false,
+      followersOnlyMinutes: 10,
+      r9k: false,
+      slowSeconds: 30,
+      subsOnly: false,
+    });
+    expect(addedSystemMessageContents()).toEqual([
+      'Chat modes active: slow mode (30s), followers-only (10m)',
+    ]);
+  });
+
+  test('announces only the delta on subsequent ROOMSTATE updates', () => {
+    const { result } = renderIrcHandlers();
+
+    act(() => {
+      result.current.onRoomState('#foam', { slow: '30' });
+    });
+    mockAddMessage.mockClear();
+
+    act(() => {
+      result.current.onRoomState('#foam', { emote_only: '1', slow: '0' });
+    });
+
+    expect(addedSystemMessageContents()).toEqual([
+      'Emote-only mode enabled',
+      'Slow mode disabled',
+    ]);
+  });
+
+  test('part clears the room state and resets the diff baseline', () => {
+    const { result } = renderIrcHandlers();
+
+    act(() => {
+      result.current.onRoomState('#foam', { slow: '30' });
+    });
+
+    act(() => {
+      result.current.onPart();
+    });
+
+    expect(mockSetChannelRoomState).toHaveBeenLastCalledWith('channel-1', null);
+    mockAddMessage.mockClear();
+
+    act(() => {
+      result.current.onRoomState('#foam', { slow: '30' });
+    });
+
+    expect(addedSystemMessageContents()).toEqual([
+      'Chat modes active: slow mode (30s)',
+    ]);
+  });
+
+  test('reconnect clears the room state and announces the reconnect', () => {
+    const { result } = renderIrcHandlers();
+
+    act(() => {
+      result.current.onRoomState('#foam', { slow: '30' });
+    });
+    mockAddMessage.mockClear();
+
+    act(() => {
+      result.current.onReconnect();
+    });
+
+    expect(mockSetChannelRoomState).toHaveBeenLastCalledWith('channel-1', null);
+    expect(addedSystemMessageContents()).toEqual([
+      'Reconnecting to Twitch chat…',
+    ]);
   });
 });

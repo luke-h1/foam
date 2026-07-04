@@ -1,3 +1,4 @@
+import type { TwemojiResult } from '../splitTextWithTwemoji';
 import { splitTextWithTwemoji } from '../splitTextWithTwemoji';
 
 const TWEMOJI_BASE =
@@ -5,7 +6,7 @@ const TWEMOJI_BASE =
 
 describe('splitTextWithTwemoji', () => {
   test('splits plain text and emoji into segments', () => {
-    expect(splitTextWithTwemoji('hello 😀 world')).toEqual([
+    expect(splitTextWithTwemoji('hello 😀 world')).toEqual<TwemojiResult>([
       { text: 'hello' },
       { emoji: '😀', image: `${TWEMOJI_BASE}/1f600.svg` },
       { text: 'world' },
@@ -13,13 +14,13 @@ describe('splitTextWithTwemoji', () => {
   });
 
   test('returns a single text segment when there are no emoji', () => {
-    expect(splitTextWithTwemoji('just words')).toEqual([
+    expect(splitTextWithTwemoji('just words')).toEqual<TwemojiResult>([
       { text: 'just words' },
     ]);
   });
 
   test('consumes the U+FE0F variation selector instead of leaking it into the next text segment', () => {
-    expect(splitTextWithTwemoji('hi ❤️ there')).toEqual([
+    expect(splitTextWithTwemoji('hi ❤️ there')).toEqual<TwemojiResult>([
       { text: 'hi' },
       { emoji: '❤️', image: `${TWEMOJI_BASE}/2764.svg` },
       { text: 'there' },
@@ -29,7 +30,7 @@ describe('splitTextWithTwemoji', () => {
   test('does not corrupt surrounding text for keycap sequences', () => {
     const result = splitTextWithTwemoji('press 1️⃣ now');
 
-    expect(result).toEqual([
+    expect(result).toEqual<TwemojiResult>([
       { text: 'press' },
       { emoji: '1️⃣', image: `${TWEMOJI_BASE}/31-20e3.svg` },
       { text: 'now' },
@@ -37,7 +38,7 @@ describe('splitTextWithTwemoji', () => {
   });
 
   test('handles repeated variation-selector emoji', () => {
-    expect(splitTextWithTwemoji('❤️❤️')).toEqual([
+    expect(splitTextWithTwemoji('❤️❤️')).toEqual<TwemojiResult>([
       { emoji: '❤️', image: `${TWEMOJI_BASE}/2764.svg` },
       { emoji: '❤️', image: `${TWEMOJI_BASE}/2764.svg` },
     ]);

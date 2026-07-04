@@ -1,6 +1,6 @@
 import type { TwitchCheermote } from '@app/types/twitch/bits';
 import type { FollowedChannel } from '@app/types/twitch/channel';
-import type { TwitchClip } from '@app/types/twitch/clip';
+import type { TwitchClip, TwitchCreatedClip } from '@app/types/twitch/clip';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 
 import { twitchApi } from '../api/clients';
@@ -116,7 +116,7 @@ describe('twitchService.getClipsByIds', () => {
 
     expect(api.get).toHaveBeenCalledTimes(1);
     expect(api.get).toHaveBeenCalledWith('/clips?id=a&id=b');
-    expect(result).toEqual([makeClip('a'), makeClip('b')]);
+    expect(result).toEqual<TwitchClip[]>([makeClip('a'), makeClip('b')]);
   });
 
   test('splits requests into batches of 100 ids and flattens the pages', async () => {
@@ -132,7 +132,10 @@ describe('twitchService.getClipsByIds', () => {
     const secondUrl = api.get.mock.calls[1]?.[0] as string;
     expect(firstUrl.match(/id=/g)).toHaveLength(100);
     expect(secondUrl.match(/id=/g)).toHaveLength(50);
-    expect(result).toEqual([makeClip('clip1'), makeClip('clip101')]);
+    expect(result).toEqual<TwitchClip[]>([
+      makeClip('clip1'),
+      makeClip('clip101'),
+    ]);
   });
 });
 
@@ -178,7 +181,7 @@ describe('twitchService.getCheermotes', () => {
     const result = await twitchService.getCheermotes();
 
     expect(api.get).toHaveBeenCalledWith('/bits/cheermotes', { params: {} });
-    expect(result).toEqual([makeCheermote('Cheer')]);
+    expect(result).toEqual<TwitchCheermote[]>([makeCheermote('Cheer')]);
   });
 
   test('passes the broadcaster id for channel cheermotes', async () => {
@@ -189,7 +192,7 @@ describe('twitchService.getCheermotes', () => {
     expect(api.get).toHaveBeenCalledWith('/bits/cheermotes', {
       params: { broadcaster_id: '42' },
     });
-    expect(result).toEqual([makeCheermote('Pog')]);
+    expect(result).toEqual<TwitchCheermote[]>([makeCheermote('Pog')]);
   });
 });
 
@@ -212,7 +215,7 @@ describe('twitchService.getFollowedChannels', () => {
 
     const result = await twitchService.getFollowedChannels('42');
 
-    expect(result).toEqual([makeFollowedChannel('1')]);
+    expect(result).toEqual<FollowedChannel[]>([makeFollowedChannel('1')]);
     expect(api.get).toHaveBeenCalledTimes(1);
     expect(api.get).toHaveBeenCalledWith('/channels/followed', {
       params: { user_id: '42', first: 100 },
@@ -229,7 +232,7 @@ describe('twitchService.getFollowedChannels', () => {
 
     const result = await twitchService.getFollowedChannels('42');
 
-    expect(result).toEqual([
+    expect(result).toEqual<FollowedChannel[]>([
       makeFollowedChannel('1'),
       makeFollowedChannel('2'),
     ]);
@@ -267,7 +270,7 @@ describe('twitchService.createClip', () => {
     expect(api.post).toHaveBeenCalledWith('/clips', undefined, {
       params: { broadcaster_id: '42' },
     });
-    expect(result).toEqual({
+    expect(result).toEqual<TwitchCreatedClip>({
       id: 'clip-1',
       edit_url: 'https://clips.twitch.tv/clip-1/edit',
     });

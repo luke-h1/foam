@@ -73,11 +73,9 @@ interface UseTwitchChatOptions {
   onUserState?: (channel: string, tags: Record<string, string>) => void;
   onGlobalUserState?: (tags: Record<string, string>) => void;
   onWelcome?: () => void;
-  // Filtering options
   blockedUsers?: { userLogin: string }[];
   mutedWords?: string[];
   matchWholeWord?: boolean;
-  // User state callback - called when user state is received after sending a message
   onUserStateAfterSend?: (tags: Record<string, string>) => void;
 }
 
@@ -115,9 +113,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
   const previousTokenRef = useRef<string | undefined>(undefined);
 
-  /**
-   * Send IRC command
-   */
   const sendIrcCommand = useCallback((command: string, ...params: string[]) => {
     let message = command;
     if (params.length > 0) {
@@ -159,7 +154,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     return channelFormatted;
   };
 
-  // Join a channel
   const joinChannel = useCallback(
     (channelName: string) => {
       if (!channelName) {
@@ -186,9 +180,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     [joinedChannelsRef, pendingJoinChannelsRef, sendIrcCommand],
   );
 
-  /**
-   * Authenticate with Twitch IRC
-   */
   const authenticate = useCallback(() => {
     const hasUserLogin = Boolean(user?.login?.trim());
     const accessToken = authState?.token?.accessToken?.trim();
@@ -226,9 +217,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     }
   }, [authState, user, sendIrcCommand, channel, joinChannel]);
 
-  /**
-   * Part from a channel
-   */
   const partChannel = (channelName: string) => {
     if (!channelName) {
       return;
@@ -288,7 +276,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
           const username = tagsRecord['display-name'] || tagsRecord.login;
 
           if (channelName && messageText) {
-            // Filter blocked users (unless moderator or channel owner)
             const isMod = tagsRecord.mod === '1';
             const isChannelOwner =
               channelName.slice(1).toLowerCase() === user?.login?.toLowerCase();
@@ -304,7 +291,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
               return;
             }
 
-            // Filter muted words
             if (containsMutedWords(messageText, mutedWords, matchWholeWord)) {
               logger.chat.debug(`Filtered message containing muted words`);
               return;
@@ -337,7 +323,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
           const channelName = params[0];
           const messageText = params[1];
 
-          // Check for welcome message
           if (messageText && messageText.includes('Welcome, GLHF!')) {
             logger.chat.info('✅ Welcome message received');
             optionsRef.current.onWelcome?.();
@@ -664,7 +649,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const partChannelRef = useRef(partChannel);
   partChannelRef.current = partChannel;
 
-  // Join/part channel when it changes
   useEffect(() => {
     if (!shouldConnect || !isAuthenticatedRef.current) {
       return;
@@ -705,9 +689,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     };
   }, [joinedChannelsRef, pendingJoinChannelsRef]);
 
-  /**
-   * Send a chat message
-   */
   const sendMessage = (
     channelName: string,
     message: string,
@@ -730,7 +711,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       replyParentMsgBody,
     };
 
-    // Build PRIVMSG command with optional reply tags
     // Twitch IRC format: @reply-parent-msg-id=<id>;reply-parent-display-name=<name>;reply-parent-msg-body=<body> PRIVMSG #channel :message
     let privmsgCommand = 'PRIVMSG';
     if (replyParentMsgId) {
@@ -778,9 +758,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     sendMessage(channelFormatted, actionMessage);
   };
 
-  /**
-   * Get current user state
-   */
   const getUserState = useCallback((): Record<string, string> => {
     return { ...userStateRef.current };
   }, []);

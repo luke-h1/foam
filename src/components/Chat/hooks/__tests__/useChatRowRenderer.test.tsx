@@ -13,6 +13,7 @@ import { useIsHighlightedReplyTargetMessage } from '@app/store/chat/react/transi
 import { useChatRowPreferences } from '@app/store/preferences/selectors';
 import { createRef } from '@app/test/createRef';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
 
 import { useChatRowRenderer } from '../useChatRowRenderer';
@@ -285,7 +286,7 @@ describe('useChatRowRenderer', () => {
       onUsernamePress,
     });
 
-    expect(props.parseTextForEmotes('OMEGALUL')).toEqual([
+    expect(props.parseTextForEmotes('OMEGALUL')).toEqual<ParsedPart[]>([
       { type: 'text', content: 'parsed:OMEGALUL' },
     ]);
     expect(mockProcessEmotesWorklet.mock.calls[0]?.[0].inputString).toBe(

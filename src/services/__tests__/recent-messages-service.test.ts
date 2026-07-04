@@ -1,3 +1,5 @@
+import type { ParsedIrcMessage } from '@app/types/chat/recentMessages';
+
 import { parseIrcMessage } from '../recent-messages-service';
 
 describe('recent-messages-service', () => {
@@ -6,7 +8,7 @@ describe('recent-messages-service', () => {
       '@display-name=icelys;id=msg-1;historical=1 :icelys!icelys@icelys.tmi.twitch.tv PRIVMSG #pajlada FeelsBadMan',
     );
 
-    expect(parsed).toEqual({
+    expect(parsed).toEqual<ParsedIrcMessage>({
       tags: {
         'display-name': 'icelys',
         id: 'msg-1',
@@ -30,7 +32,7 @@ describe('recent-messages-service', () => {
   test('parses IRC tag flags and ignores empty tag keys', () => {
     const parsed = parseIrcMessage('@historical;=ignored;id=msg-3 PING');
 
-    expect(parsed).toEqual({
+    expect(parsed).toEqual<ParsedIrcMessage>({
       tags: {
         historical: '',
         id: 'msg-3',

@@ -1,3 +1,4 @@
+import type { TwitchSanitisedEmote } from '@app/types/emote';
 import type { TwitchEmote } from '@app/types/twitch/emote';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 
@@ -71,7 +72,7 @@ describe('twitchEmoteService', () => {
     const result = await twitchEmoteService.getGlobalEmotes();
 
     expect(api.get).toHaveBeenCalledWith('/chat/emotes/global');
-    expect(result).toEqual([
+    expect(result).toEqual<TwitchSanitisedEmote[]>([
       {
         name: 'Kappa',
         id: '25',

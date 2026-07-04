@@ -18,7 +18,6 @@ export function parseBadges(badgesString?: string): {
   const badgesRaw = badgesString || '';
 
   if (badgesRaw) {
-    // Split by comma and parse each badge
     const badgeList = badgesRaw.split(',');
     badgeList.forEach(badge => {
       if (badge) {

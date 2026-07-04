@@ -72,7 +72,7 @@ export const twitchBadgeService = {
       if (Object.keys(badgeSet).length > 0) {
         badgeSet.versions.forEach(version => {
           sanitisedBadges.push({
-            id: `${badgeSet.set_id}_${version.id}`, // set set_id as id
+            id: `${badgeSet.set_id}_${version.id}`,
             url: version.image_url_4x,
             title: version.title,
             type: 'Twitch Global Badge',

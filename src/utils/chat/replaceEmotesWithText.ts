@@ -32,14 +32,8 @@ export function replaceEmotesWithText(parts: ParsedPart[]): string {
           return part.content ? `${part.content} ` : '';
 
         case 'text':
-          /**
-           * Return content as is
-           */
           return getParsedPartStringContent(part);
 
-        /**
-         * Our custom types
-         */
         case 'notice':
         case 'stvEmote':
         case 'stv_emote_added':

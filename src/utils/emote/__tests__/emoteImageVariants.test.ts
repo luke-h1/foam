@@ -1,6 +1,7 @@
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type {
   BttvSanitisedEmote,
+  EmoteImageVariants,
   FfzSanitisedEmote,
   SevenTvSanitisedEmote,
 } from '@app/types/emote';
@@ -72,14 +73,14 @@ describe('emote image variants', () => {
         },
         static: {},
       }),
-    ).toEqual({
+    ).toEqual<EmoteImageVariants>({
       animated: {
         '4x': 'https://example.com/4x.webp',
         '2x': 'https://example.com/2x.webp',
       },
     });
 
-    expect(createEmoteImageVariants({})).toEqual({});
+    expect(createEmoteImageVariants({})).toEqual<EmoteImageVariants>({});
   });
 
   test('picks preferred, alternate, and fallback URLs', () => {

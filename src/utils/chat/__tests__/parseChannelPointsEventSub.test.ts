@@ -1,3 +1,4 @@
+import type { ParsedChannelPointsRedemption } from '../parseChannelPointsEventSub';
 import {
   eventSubEventFromMessage,
   parseChannelPointsEventSubEvent,
@@ -14,7 +15,7 @@ describe('parseChannelPointsEventSub', () => {
           cost: 500,
         },
       }),
-    ).toEqual({
+    ).toEqual<ParsedChannelPointsRedemption>({
       rewardId: 'reward-tts',
       channelId: '67890',
       title: 'Chinese TTS',
@@ -31,7 +32,7 @@ describe('parseChannelPointsEventSub', () => {
           cost: 100,
         },
       }),
-    ).toEqual({
+    ).toEqual<ParsedChannelPointsRedemption>({
       rewardId: 'gigantified-emote-message',
       channelId: '67890',
       title: 'Gigantify an Emote',

@@ -1,3 +1,6 @@
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
+
+import type { MentionChatter } from '../resolveMentionLogin';
 import {
   applyMentionLoginCasing,
   clearMentionLoginIndex,
@@ -36,7 +39,7 @@ describe('resolveMentionLogin', () => {
     });
     registerMentionLogin('SomeOtherUser');
 
-    expect(searchMentionChatters('bun', 5)).toEqual([
+    expect(searchMentionChatters('bun', 5)).toEqual<MentionChatter[]>([
       {
         login: 'BungleXO',
         userId: '123',
@@ -54,7 +57,10 @@ describe('resolveMentionLogin', () => {
       { type: 'text', content: ' high hopes' },
     ]);
 
-    expect(parts[0]).toEqual({ type: 'mention', content: '@BungleXO' });
+    expect(parts[0]).toEqual<ParsedPart>({
+      type: 'mention',
+      content: '@BungleXO',
+    });
   });
 
   test('getAllMentionChatters returns every registered chatter with roles', () => {
@@ -80,7 +86,7 @@ describe('resolveMentionLogin', () => {
       left.login.localeCompare(right.login),
     );
 
-    expect(chatters).toEqual([
+    expect(chatters).toEqual<MentionChatter[]>([
       { login: 'a_mod', userId: '2', color: '#00ff00', role: 'moderator' },
       { login: 'streamer', userId: '1', color: '#ff0000', role: 'broadcaster' },
       { login: 'viewer', userId: '3', color: '#0000ff', role: undefined },
@@ -96,7 +102,7 @@ describe('resolveMentionLogin', () => {
     });
     registerMentionChatter({ login: 'a_mod' });
 
-    expect(getAllMentionChatters()).toEqual([
+    expect(getAllMentionChatters()).toEqual<MentionChatter[]>([
       { login: 'a_mod', userId: '2', color: '#00ff00', role: 'moderator' },
     ]);
   });

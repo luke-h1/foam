@@ -17,6 +17,7 @@ import {
   updatePaint,
 } from '@app/store/chat/actions/cosmetics';
 import type { BadgeData, PaintData } from '@app/types/seventv/cosmetics';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
 
 import { useChatSevenTvCallbacks } from '../useChatSevenTvCallbacks';
@@ -261,7 +262,7 @@ describe('useChatSevenTvCallbacks', () => {
       });
 
       expect(getBadge).toHaveBeenCalled();
-      expect(mockAddBadge.mock.calls[0]?.[0]).toEqual({
+      expect(mockAddBadge.mock.calls[0]?.[0]).toEqual<SanitisedBadgeSet>({
         id: 'badge-id',
         provider: '7tv',
         set: 'badge-id',
@@ -397,7 +398,7 @@ describe('useChatSevenTvCallbacks', () => {
         );
       });
 
-      expect(mockUpdateBadge.mock.calls[0]?.[0]).toEqual({
+      expect(mockUpdateBadge.mock.calls[0]?.[0]).toEqual<SanitisedBadgeSet>({
         id: 'badge-1',
         provider: '7tv',
         set: 'badge-1',
@@ -405,7 +406,7 @@ describe('useChatSevenTvCallbacks', () => {
         type: '7TV Badge',
         url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
       });
-      expect(mockAddBadge.mock.calls[0]?.[0]).toEqual({
+      expect(mockAddBadge.mock.calls[0]?.[0]).toEqual<SanitisedBadgeSet>({
         id: 'badge-2',
         provider: '7tv',
         set: 'badge-2',

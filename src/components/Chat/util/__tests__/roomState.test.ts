@@ -5,6 +5,7 @@ import {
   describeInitialRoomState,
   describeRoomStateChanges,
   parseRoomStateTags,
+  type RoomStateChip,
   SUPPRESSED_NOTICE_IDS,
 } from '../roomState';
 
@@ -39,7 +40,7 @@ describe('roomState', () => {
           slow: '15',
           'subs-only': '1',
         }),
-      ).toEqual({
+      ).toEqual<ParsedRoomState>({
         emoteOnly: true,
         followersOnlyMinutes: 10,
         r9k: true,
@@ -210,7 +211,7 @@ describe('roomState', () => {
 
   describe('buildRoomStateChips', () => {
     test('returns no chips when no modes are active', () => {
-      expect(buildRoomStateChips(emptyRoomState)).toEqual([]);
+      expect(buildRoomStateChips(emptyRoomState)).toEqual<RoomStateChip[]>([]);
     });
 
     test('builds a chip per active mode', () => {
@@ -222,7 +223,7 @@ describe('roomState', () => {
           slowSeconds: 30,
           subsOnly: true,
         }),
-      ).toEqual([
+      ).toEqual<RoomStateChip[]>([
         { key: 'slow', label: 'Slow 30s' },
         { key: 'followers', label: 'Followers-only 10m' },
         { key: 'emote', label: 'Emote-only' },
@@ -237,7 +238,9 @@ describe('roomState', () => {
           ...emptyRoomState,
           followersOnlyMinutes: 0,
         }),
-      ).toEqual([{ key: 'followers', label: 'Followers-only' }]);
+      ).toEqual<RoomStateChip[]>([
+        { key: 'followers', label: 'Followers-only' },
+      ]);
     });
   });
 });

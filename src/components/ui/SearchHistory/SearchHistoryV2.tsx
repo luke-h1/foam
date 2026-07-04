@@ -49,14 +49,12 @@ function SwipeableHistoryItem({
     const panGesture = Gesture.Pan()
       .activeOffsetX([-10, 10])
       .onUpdate(event => {
-        // Only allow left swipe
         if (event.translationX < 0) {
           translateX.set(event.translationX);
         }
       })
       .onEnd(event => {
         if (event.translationX < DELETE_THRESHOLD) {
-          // Full swipe - delete
           translateX.set(withTiming(-400, { duration: 200 }));
           itemHeight.set(withTiming(0, { duration: 200 }));
           opacity.set(
@@ -67,7 +65,6 @@ function SwipeableHistoryItem({
             }),
           );
         } else if (event.translationX < SWIPE_THRESHOLD) {
-          // Partial swipe - show delete button
           translateX.set(
             withSpring(-ACTION_WIDTH, {
               damping: 20,
@@ -76,7 +73,6 @@ function SwipeableHistoryItem({
             }),
           );
         } else {
-          // Snap back
           translateX.set(
             withSpring(0, {
               damping: 20,
@@ -89,7 +85,6 @@ function SwipeableHistoryItem({
 
     const tapGesture = Gesture.Tap().onEnd(() => {
       if (translateX.get() < -40) {
-        // If swiped, tap snaps back
         translateX.set(
           withSpring(0, {
             damping: 20,
@@ -139,7 +134,6 @@ function SwipeableHistoryItem({
   return (
     <Animated.View style={animatedContainerStyle}>
       <View style={styles.itemContainer}>
-        {/* Delete action background */}
         <Animated.View style={[styles.deleteAction, animatedDeleteStyle]}>
           <PressableArea
             onPress={handleDelete}
@@ -161,7 +155,6 @@ function SwipeableHistoryItem({
           </PressableArea>
         </Animated.View>
 
-        {/* Swipeable row */}
         <GestureDetector gesture={composedGesture}>
           <Animated.View style={[styles.historyItem, animatedRowStyle]}>
             <SymbolView

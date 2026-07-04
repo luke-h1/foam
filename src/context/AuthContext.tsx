@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { AppState, InteractionManager } from 'react-native';
+import { InteractionManager } from 'react-native';
 
 import { AuthSessionResult, TokenResponse } from 'expo-auth-session';
 import { toast } from 'sonner-native';
@@ -23,6 +23,7 @@ import { twitchApi } from '@app/services/api/clients';
 import { twitchService } from '@app/services/twitch-service';
 import type { DefaultTokenResponse } from '@app/types/twitch/auth';
 import type { UserInfoResponse } from '@app/types/twitch/user';
+import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
 import * as SecureStore from '@app/utils/authentication/secureStore';
 import {
   addExpirationTimestamp,
@@ -351,7 +352,6 @@ function useAuthContextValue({
       twitchApi.setAuthToken(twitchToken.accessToken);
       setUser(u);
 
-      // Prefetch initial data after first interactions
       queueInitialDataPrefetch(u.id);
 
       await SecureStore.setItemAsync(
@@ -403,7 +403,6 @@ function useAuthContextValue({
       refreshToken: parsedToken.refreshToken,
     });
 
-    // we have succeeded
     setState({
       ready: true,
       authState: {
@@ -443,7 +442,6 @@ function useAuthContextValue({
     options?: { force?: boolean },
   ) => {
     if (!token?.accessToken) {
-      // request a default token and set it in state
       await fetchAnonToken(undefined, options);
       return;
     }
@@ -600,10 +598,9 @@ function useAuthContextValue({
       refreshIfNeeded('scheduled');
     }, USER_TOKEN_REFRESH_POLL_INTERVAL_MS);
 
-    const appStateSubscription = AppState.addEventListener(
-      'change',
-      nextAppState => {
-        if (nextAppState === 'active') {
+    const unsubscribeAppState = subscribeToAppStateTransitions(
+      ({ current }) => {
+        if (current === 'active') {
           refreshIfNeeded('app_active');
         }
       },
@@ -611,7 +608,7 @@ function useAuthContextValue({
 
     return () => {
       clearInterval(refreshInterval);
-      appStateSubscription.remove();
+      unsubscribeAppState();
     };
   }, [refreshCurrentUserTokenRef, state.authState]);
 

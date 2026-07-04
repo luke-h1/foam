@@ -14,7 +14,6 @@ import {
   removeMessagesByLogin,
 } from '@app/store/chat/actions/messages';
 import { setChannelRoomState } from '@app/store/chat/actions/transientState';
-import type { ParsedRoomState } from '@app/store/chat/types/roomState';
 import { getPreferences } from '@app/store/preferenceStore';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import {
@@ -36,12 +35,12 @@ import {
   createUserNoticeMessage,
   createUserStateFromTags,
 } from '../util/messageHandlers';
+import { SUPPRESSED_NOTICE_IDS } from '../util/roomState';
 import {
-  describeInitialRoomState,
-  describeRoomStateChanges,
-  parseRoomStateTags,
-  SUPPRESSED_NOTICE_IDS,
-} from '../util/roomState';
+  createRoomStateTracker,
+  type RoomStateTracker,
+  type RoomStateUpdate,
+} from '../util/roomStateTracker';
 
 interface UseChatIrcHandlersOptions {
   channelId: string;
@@ -88,13 +87,25 @@ export function useChatIrcHandlers({
   removeBufferedMessageById,
   removeBufferedMessagesByLogin,
 }: UseChatIrcHandlersOptions) {
-  const roomStateRef = useRef<ParsedRoomState | null>(null);
+  const roomStateTrackerRef = useRef<RoomStateTracker | null>(null);
+  const roomStateTracker = (roomStateTrackerRef.current ??=
+    createRoomStateTracker());
 
   const appendSystemMessage = useCallback(
     (content: string) => {
       addMessage(createSystemMessage(channelName, content));
     },
     [channelName],
+  );
+
+  const applyRoomStateUpdate = useCallback(
+    (update: RoomStateUpdate) => {
+      setChannelRoomState(channelId, update.state);
+      update.notices.forEach(notice => {
+        appendSystemMessage(notice);
+      });
+    },
+    [appendSystemMessage, channelId],
   );
 
   const handlePrivmsgMessage = useCallback(
@@ -326,15 +337,20 @@ export function useChatIrcHandlers({
 
   const onPart = useCallback(() => {
     logger.chat.info('Parted from channel:', channelName);
-    roomStateRef.current = null;
-    setChannelRoomState(channelId, null);
+    applyRoomStateUpdate(roomStateTracker.reset());
     if (isMountedRef?.current === false) {
       return;
     }
 
     clearMessages();
     clearLocalMessages();
-  }, [channelId, channelName, clearLocalMessages, isMountedRef]);
+  }, [
+    applyRoomStateUpdate,
+    channelName,
+    clearLocalMessages,
+    isMountedRef,
+    roomStateTracker,
+  ]);
 
   const onNotice = useCallback(
     (_channel: string, tags: Record<string, string>, messageText: string) => {
@@ -356,32 +372,15 @@ export function useChatIrcHandlers({
 
   const onRoomState = useCallback(
     (_channel: string, tags: Record<string, string>) => {
-      const nextState = parseRoomStateTags(tags);
-      const previousState = roomStateRef.current;
-      roomStateRef.current = nextState;
-      setChannelRoomState(channelId, nextState);
-
-      if (!previousState) {
-        const initialDescription = describeInitialRoomState(nextState);
-        if (initialDescription) {
-          appendSystemMessage(initialDescription);
-        }
-        return;
-      }
-
-      const changes = describeRoomStateChanges(previousState, nextState);
-      changes.forEach(change => {
-        appendSystemMessage(change);
-      });
+      applyRoomStateUpdate(roomStateTracker.ingest(tags));
     },
-    [appendSystemMessage, channelId],
+    [applyRoomStateUpdate, roomStateTracker],
   );
 
   const onReconnect = useCallback(() => {
     appendSystemMessage('Reconnecting to Twitch chat…');
-    roomStateRef.current = null;
-    setChannelRoomState(channelId, null);
-  }, [appendSystemMessage, channelId]);
+    applyRoomStateUpdate(roomStateTracker.reset());
+  }, [appendSystemMessage, applyRoomStateUpdate, roomStateTracker]);
 
   const handleRecentIrcMessage = useCallback(
     async (line: string) => {

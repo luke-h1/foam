@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { Alert, AppState, AppStateStatus, Platform } from 'react-native';
+import { Alert, Platform } from 'react-native';
 
 import { nativeBuildVersion } from 'expo-application';
 import * as Updates from 'expo-updates';
@@ -16,6 +16,10 @@ import {
 import i18next from '@app/i18n/i18next';
 import { countOtaMetric } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
+import {
+  isForegroundTransition,
+  subscribeToAppStateTransitions,
+} from '@app/utils/appState/appStateTransitions';
 import { logger } from '@app/utils/logger';
 
 const MINIMUM_MINIMIZE_TIME = 15 * 60e3; // 15 minutes
@@ -53,7 +57,6 @@ async function setExtraParams() {
 export function useOTAUpdates() {
   const shouldReceiveUpdates = isEnabled && !__DEV__;
   const isProduction = process.env.EXPO_PUBLIC_APP_VARIANT === 'production';
-  const appState = useRef<AppStateStatus>('active');
   const lastMinimize = useRef(0);
   const ranInitialCheck = useRef(false);
   const handledPendingUpdate = useRef(false);
@@ -267,67 +270,62 @@ export function useOTAUpdates() {
       return;
     }
 
-    const subscription = AppState.addEventListener(
-      'change',
-      async nextAppState => {
-        if (
-          appState.current.match(/inactive|background/) &&
-          nextAppState === 'active'
-        ) {
-          const shouldUpdate =
-            isProduction ||
-            lastMinimize.current <= Date.now() - MINIMUM_MINIMIZE_TIME;
+    const unsubscribe = subscribeToAppStateTransitions(async transition => {
+      if (isForegroundTransition(transition)) {
+        const shouldUpdate =
+          isProduction ||
+          lastMinimize.current <= Date.now() - MINIMUM_MINIMIZE_TIME;
 
-          if (shouldUpdate) {
-            if (getIsUpdatePending()) {
-              if (isProduction) {
-                logger.main.info(
-                  'App foregrounded with pending update, reloading',
-                  {
-                    name: 'ota_updates_service_info',
-                    category: 'ota',
-                    action: 'foreground_auto_reload',
-                    timeSinceMinimize: Date.now() - lastMinimize.current,
-                    isProduction,
-                  },
-                );
-
-                countOtaMetric('ota.update.applied', {
+        if (shouldUpdate) {
+          if (getIsUpdatePending()) {
+            if (isProduction) {
+              logger.main.info(
+                'App foregrounded with pending update, reloading',
+                {
+                  name: 'ota_updates_service_info',
                   category: 'ota',
-                  environment: isProduction ? 'production' : 'non-production',
-                  platform: Platform.OS,
-                  method: 'auto_on_foreground',
-                  channel: Updates.channel || 'unknown',
-                });
+                  action: 'foreground_auto_reload',
+                  timeSinceMinimize: Date.now() - lastMinimize.current,
+                  isProduction,
+                },
+              );
 
-                await applyUpdateRef.current();
-              } else {
-                promptAndReloadRef.current();
-              }
-            } else {
-              logger.main.info('App foregrounded, checking for updates', {
-                name: 'ota_updates_service_info',
+              countOtaMetric('ota.update.applied', {
                 category: 'ota',
-                action: 'foreground_check_for_updates',
-                timeSinceMinimize: Date.now() - lastMinimize.current,
-                isProduction,
+                environment: isProduction ? 'production' : 'non-production',
+                platform: Platform.OS,
+                method: 'auto_on_foreground',
+                channel: Updates.channel || 'unknown',
               });
 
-              void checkForUpdatesRef.current();
+              await applyUpdateRef.current();
+            } else {
+              promptAndReloadRef.current();
             }
+          } else {
+            logger.main.info('App foregrounded, checking for updates', {
+              name: 'ota_updates_service_info',
+              category: 'ota',
+              action: 'foreground_check_for_updates',
+              timeSinceMinimize: Date.now() - lastMinimize.current,
+              isProduction,
+            });
+
+            void checkForUpdatesRef.current();
           }
         }
+      }
 
-        appState.current = nextAppState;
-
-        if (nextAppState === 'inactive' || nextAppState === 'background') {
-          lastMinimize.current = Date.now();
-        }
-      },
-    );
+      if (
+        transition.current === 'inactive' ||
+        transition.current === 'background'
+      ) {
+        lastMinimize.current = Date.now();
+      }
+    });
 
     return () => {
-      subscription.remove();
+      unsubscribe();
     };
   }, [isProduction]);
 }

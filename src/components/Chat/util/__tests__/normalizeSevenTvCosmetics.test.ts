@@ -6,6 +6,7 @@ import type {
   PaintStop,
 } from '@app/types/seventv/cosmetics';
 import type { SevenTvHost } from '@app/types/seventv/emotes';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import {
   badgeUrlFromHost,
@@ -148,7 +149,7 @@ describe('normalizeSevenTvCosmetics', () => {
         ]),
       });
       const result = sanitise7TvBadge(badgeData);
-      expect(result).toEqual({
+      expect(result).toEqual<SanitisedBadgeSet>({
         id: 'badge-id',
         url: 'https://cdn.7tv.app/badge/badge-id/4x.png',
         type: '7TV Badge',
@@ -259,7 +260,7 @@ describe('normalizeSevenTvCosmetics', () => {
       expect(paint.shape).toBe('ellipse');
       expect(paint.layers.length).toBe(2);
       expect(paint.layers[1]?.function).toBe('LINEAR_GRADIENT');
-      expect(paint.stops).toEqual({
+      expect(paint.stops).toEqual<IndexedCollection<PaintStop>>({
         0: { at: 0, color: 0xffffffff },
         1: { at: 1, color: 0x000000ff },
         length: 2,
