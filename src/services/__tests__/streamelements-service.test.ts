@@ -9,7 +9,7 @@ jest.mock('../api/clients', () => ({
 
 const api = jest.mocked(streamElementsApi);
 
-const mockStats = {
+const mockStats: StreamElementsChatStats = {
   channel: 'shroud',
   totalMessages: 69134962,
   uniqueChatters: 118560,

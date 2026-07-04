@@ -18,7 +18,7 @@ describe('parsePreferencesPayload', () => {
       updatedAt: 123,
       chatTimestamps: true,
       blockedTerms: ['kappa'],
-    };
+    } satisfies Preferences;
 
     const result = parsePreferencesPayload(JSON.stringify(legacyBlob));
 
@@ -33,7 +33,7 @@ describe('parsePreferencesPayload', () => {
   });
 
   test('returns a complete valid blob unchanged', () => {
-    const blob = {
+    const blob: Preferences = {
       ...initialPreferences,
       updatedAt: 456,
       analyticsEnabled: false,

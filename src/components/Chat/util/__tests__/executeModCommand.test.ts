@@ -1,7 +1,10 @@
 import { twitchService } from '@app/services/twitch-service';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 
-import { executeModCommand } from '../executeModCommand';
+import {
+  executeModCommand,
+  type ModCommandContext,
+} from '../executeModCommand';
 
 jest.mock('@app/services/twitch-service', () => ({
   twitchService: {
@@ -18,7 +21,10 @@ jest.mock('@app/services/twitch-service', () => ({
 
 const service = jest.mocked(twitchService);
 
-const context = { broadcasterId: 'channel-1', moderatorId: 'mod-1' };
+const context = {
+  broadcasterId: 'channel-1',
+  moderatorId: 'mod-1',
+} satisfies ModCommandContext;
 
 function makeUser(id: string): UserInfoResponse {
   return {

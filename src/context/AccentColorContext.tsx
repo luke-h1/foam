@@ -68,7 +68,7 @@ export function AccentColorProvider({
     accentHex,
     setAccentHex: setSelectedHex,
     getBackgroundColor,
-  };
+  } satisfies AccentColorContextValue;
 
   return (
     <AccentColorContext.Provider value={contextValue}>
@@ -77,7 +77,7 @@ export function AccentColorProvider({
   );
 }
 
-export function useAccentColor() {
+export function useAccentColor(): AccentColorContextValue {
   const ctx = use(AccentColorContext);
   const colorScheme = useColorScheme();
 

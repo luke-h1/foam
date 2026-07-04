@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import * as AC from '@bacons/apple-colors';
+import type { ReloadScreenOptions } from 'expo-updates';
 import * as Updates from 'expo-updates';
 
 import * as Form from '@app/components/Form/Form';
@@ -24,7 +25,7 @@ const OTA_RELOAD_SCREEN_OPTIONS = {
     color: theme.colorPrimary,
     size: 'large' as const,
   },
-};
+} satisfies ReloadScreenOptions;
 
 async function reloadOtaWithScreen() {
   await Updates.reloadAsync({

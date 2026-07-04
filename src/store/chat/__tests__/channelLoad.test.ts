@@ -10,10 +10,12 @@ import type {
   BttvSanitisedEmote,
   FfzSanitisedEmote,
   SanitisedEmote,
+  SevenTvEmoteSetMetadata,
   SevenTvSanitisedEmote,
   TwitchSanitisedEmote,
 } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import type { UserInfoResponse } from '@app/types/twitch/user';
 
 import {
   clearPersonalEmotesCache,
@@ -177,7 +179,7 @@ const sevenTvSetMetadata = {
   kind: EmoteSetKind.Normal,
   updatedAt: '2025-01-01T00:00:00.000+00:00',
   totalCount: 1,
-};
+} satisfies SevenTvEmoteSetMetadata;
 
 function sevenTvEmote(id: string): SevenTvSanitisedEmote {
   return {
@@ -439,7 +441,7 @@ describe('loadChannelResources cache fallback', () => {
 });
 
 describe('resolveSubscriberChannelProfiles', () => {
-  const profileUser = (id: string, displayName: string) => ({
+  const profileUser = (id: string, displayName: string): UserInfoResponse => ({
     broadcaster_type: '',
     created_at: '',
     description: '',

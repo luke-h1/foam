@@ -20,6 +20,8 @@ import {
   LegendList,
   type LegendListRef,
   type LegendListRenderItemProps,
+  type MaintainScrollAtEndOptions,
+  type ViewabilityConfig,
 } from '@legendapp/list/react-native';
 
 import {
@@ -40,13 +42,13 @@ const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
   // Skip viewability churn for rows that only flash past during a fling.
   minimumViewTime: 100,
-};
+} satisfies ViewabilityConfig;
 // Re-pin to the end on new messages (dataChange) and when an already-rendered
 // row grows after its real height is measured (itemLayout) — the latter keeps
 // an under-estimated emote/username row from staying clipped at the bottom.
 const CHAT_MAINTAIN_SCROLL_AT_END = {
   on: { dataChange: true, itemLayout: true },
-};
+} satisfies MaintainScrollAtEndOptions;
 const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
 const CHAT_RECYCLE_ITEMS = true;
 

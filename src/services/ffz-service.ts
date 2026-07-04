@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import type { FfzSanitisedEmote } from '@app/types/emote';
+import type { EmoteImageVariantSet, FfzSanitisedEmote } from '@app/types/emote';
 import type { FfzBadgesResponse } from '@app/types/ffz/badge';
 import type {
   FfzChannelEmotesResponse,
@@ -34,8 +34,8 @@ function sanitiseFfzEmote(
   const staticVariants = {
     '2x': emote.urls['2'] || toFfzStaticUrl(emote.id, '2x'),
     '4x': emote.urls['4'] || toFfzStaticUrl(emote.id, '4x'),
-  };
-  const animatedVariants = emote.animated
+  } satisfies EmoteImageVariantSet;
+  const animatedVariants: EmoteImageVariantSet = emote.animated
     ? {
         '2x': toFfzAnimatedUrl(emote.id, '2x'),
         '4x': toFfzAnimatedUrl(emote.id, '4x'),

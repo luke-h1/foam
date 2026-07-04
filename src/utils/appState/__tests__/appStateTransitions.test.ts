@@ -109,7 +109,7 @@ describe('appStateTransitions', () => {
     expect(listener).toHaveBeenCalledWith({
       previous: 'active',
       current: 'background',
-    });
+    } satisfies AppStateTransition);
   });
 
   test('unsubscribing one listener twice leaves other listeners subscribed', () => {

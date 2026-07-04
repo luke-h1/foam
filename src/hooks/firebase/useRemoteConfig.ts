@@ -137,7 +137,7 @@ function buildConfigFromDefaults(): RemoteConfigType {
           raw,
           value: parseValue(key, raw),
           source: 'default',
-        },
+        } satisfies RemoteConfigEntry<RemoteConfigSchema[RemoteConfigKey]>,
       ];
     }),
   ) as RemoteConfigType;
@@ -204,7 +204,7 @@ function readRemoteConfig(): RemoteConfigType {
             raw,
             value: parseValue(key as RemoteConfigKey, raw),
             source: entry.getSource(),
-          },
+          } satisfies RemoteConfigEntry<RemoteConfigSchema[RemoteConfigKey]>,
         ],
       ];
     }),

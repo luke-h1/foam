@@ -7,6 +7,8 @@ import {
 
 import { storageService as _storageService } from '@app/lib/storage';
 import { twitchService as _twitchService } from '@app/services/twitch-service';
+import type { Category } from '@app/types/twitch/category';
+import type { SearchChannelResponse } from '@app/types/twitch/channel';
 
 import { SearchScreen } from '../SearchScreen';
 
@@ -65,7 +67,7 @@ jest.mock('@app/components/SegmentedControl/SegmentedControl', () => ({
 const twitchService = jest.mocked(_twitchService);
 const storageService = jest.mocked(_storageService);
 
-const mockChannel = {
+const mockChannel: SearchChannelResponse = {
   id: 'ch1',
   broadcaster_login: 'streamer1',
   broadcaster_language: 'en',
@@ -80,7 +82,7 @@ const mockChannel = {
   started_at: new Date().toISOString(),
 };
 
-const mockCategoryResult = {
+const mockCategoryResult: Category = {
   id: 'cat1',
   name: 'Just Chatting',
   box_art_url: 'https://example.com/art.jpg',

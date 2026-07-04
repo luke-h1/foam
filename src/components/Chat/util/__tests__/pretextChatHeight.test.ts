@@ -1,5 +1,8 @@
 import type { AnyChatMessageType } from '../messageHandlers';
-import { estimateChatMessageHeightWithPretext } from '../pretextChatHeight';
+import {
+  estimateChatMessageHeightWithPretext,
+  type PretextChatHeightOptions,
+} from '../pretextChatHeight';
 import { createChatMessageFixture } from './__fixtures__/chatMessage.fixture';
 
 function createMessage(
@@ -68,7 +71,7 @@ describe('estimateChatMessageHeightWithPretext', () => {
       density: 'comfortable',
       showInlineReplyContext: true,
       showTimestamp: false,
-    } as const;
+    } as const satisfies PretextChatHeightOptions;
     const shortReplyHeight = estimateChatMessageHeightWithPretext(
       createMessage({
         id: 'msg-reply-short',

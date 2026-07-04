@@ -3,6 +3,7 @@ import type { ChannelRefreshPlan } from '@app/store/chat/actions/channelRefreshP
 import { planChannelRefresh } from '@app/store/chat/actions/channelRefreshPlan';
 import type { ChannelCacheType } from '@app/store/chat/types/constants';
 import { emptyEmoteData } from '@app/store/chat/types/constants';
+import type { SevenTvSanitisedEmote } from '@app/types/emote';
 
 const NOW = Date.parse('2026-01-01T12:00:00.000Z');
 const HOUR_MS = 60 * 60 * 1000;
@@ -32,7 +33,7 @@ const emote = {
   url: 'https://example.com/e1.webp',
   width: 32,
   zero_width: false,
-} as const;
+} as const satisfies SevenTvSanitisedEmote;
 
 const freshCache = (
   overrides?: Partial<ChannelCacheType>,

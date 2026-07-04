@@ -1,5 +1,6 @@
 /* eslint-disable camelcase */
 import type { ChatMessageType } from '@app/store/chat/types/constants';
+import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { generateNonce } from '@app/utils/string/generateNonce';
@@ -18,7 +19,7 @@ export function generateStvEmoteNotice({
   const message_id = generateNonce();
   const message_nonce = generateNonce();
   const id = `${message_id}_${message_nonce}`;
-  const userstate = {
+  const userstate: UserStateTags = {
     'reply-parent-msg-id': '',
     'reply-parent-msg-body': '',
     'reply-parent-display-name': '',

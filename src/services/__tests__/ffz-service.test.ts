@@ -1,5 +1,9 @@
 import type { FfzSanitisedEmote } from '@app/types/emote';
-import type { FfzEmoticon } from '@app/types/ffz/emote';
+import type {
+  FfzChannelEmotesResponse,
+  FfzEmoticon,
+  FfzGlobalEmotesResponse,
+} from '@app/types/ffz/emote';
 
 import { ffzApi } from '../api/clients';
 import { ffzService } from '../ffz-service';
@@ -58,7 +62,7 @@ describe('ffzService', () => {
         '3': { id: 3, _type: 0, title: 'Global', emoticons: [staticEmote] },
       },
       users: {},
-    });
+    } satisfies FfzGlobalEmotesResponse);
 
     const result = await ffzService.getSanitisedGlobalEmotes();
 
@@ -101,7 +105,7 @@ describe('ffzService', () => {
           emoticons: [animatedEmote],
         },
       },
-    });
+    } satisfies FfzChannelEmotesResponse);
 
     const result = await ffzService.getSanitisedChannelEmotes('123');
 

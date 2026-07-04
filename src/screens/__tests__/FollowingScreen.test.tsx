@@ -7,6 +7,7 @@ import { render as baseRender, screen } from '@testing-library/react-native';
 import { AuthContextTestProvider } from '@app/context/AuthContext';
 import FollowingScreen from '@app/screens/FollowingScreen';
 import { twitchService as _twitchService } from '@app/services/twitch-service';
+import type { TwitchStream } from '@app/types/twitch/stream';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 
 jest.mock('@app/services/twitch-service');
@@ -29,7 +30,7 @@ const mockUser: UserInfoResponse = {
   created_at: '',
 };
 
-const mockStream = {
+const mockStream: TwitchStream = {
   id: '1',
   user_id: '111',
   user_login: 'livestreamer',

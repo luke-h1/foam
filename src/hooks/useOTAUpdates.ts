@@ -10,6 +10,7 @@ import {
   isEnabled,
   latestContext,
   reloadAsync,
+  type ReloadScreenOptions,
   setExtraParamAsync,
 } from 'expo-updates';
 
@@ -32,7 +33,7 @@ const OTA_RELOAD_SCREEN_OPTIONS = {
     color: theme.colorPrimary,
     size: 'large' as const,
   },
-};
+} satisfies ReloadScreenOptions;
 
 const getIsUpdatePending = () => latestContext.isUpdatePending;
 

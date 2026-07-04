@@ -2,6 +2,7 @@ import { screen } from '@testing-library/react-native';
 
 import { twitchService as _twitchService } from '@app/services/twitch-service';
 import render from '@app/test/render';
+import type { TwitchStream } from '@app/types/twitch/stream';
 
 import { TopStreamsScreen } from '../TopStreamsScreen';
 
@@ -10,7 +11,7 @@ jest.mock('expo-symbols', () => ({ SymbolView: () => null }));
 
 const twitchService = jest.mocked(_twitchService);
 
-const mockStream = {
+const mockStream: TwitchStream = {
   id: '1',
   user_id: '100',
   user_login: 'streamer1',

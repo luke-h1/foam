@@ -96,7 +96,7 @@ function buildConfigFromDefaults(): RemoteConfigType {
           raw,
           value: parseValue(key, raw),
           source: 'static',
-        },
+        } satisfies RemoteConfigEntry<RemoteConfigSchema[RemoteConfigKey]>,
       ];
     }),
   ) as RemoteConfigType;
