@@ -8,6 +8,8 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { applyEnvironmentLabelsToChangelogHeadings } from '../scripts/workflows/changelog-headings';
+import { normalizeChangelogFile } from '../scripts/workflows/changelog-headings-cli';
 import {
   buildChatPerformanceComment,
   buildCurrentTable,
@@ -277,6 +279,179 @@ Rollout Percentage  25%
         'target_percentage must be an integer between 1 and 100.',
       );
     });
+  });
+});
+
+describe('changelog headings', () => {
+  test('adds environment labels for generated release headings', () => {
+    const source = [
+      '# Changelog',
+      '',
+      '## 1.2.3',
+      '### Changes',
+      '- changelog item',
+      '## 1.2.3-internal',
+      '### Changes',
+      '- internal changelog item',
+      '## 1.2.3-testflight',
+      '### Changes',
+      '- testflight changelog item',
+      '## 1.2.3-preview',
+      '### Changes',
+      '- preview changelog item',
+      '',
+      '## 1.2.2',
+      '- old changelog item',
+    ].join('\n');
+
+    expect(applyEnvironmentLabelsToChangelogHeadings(source)).toEqual(
+      [
+        '# Changelog',
+        '',
+        '## 1.2.3 (Production)',
+        '### Changes',
+        '- changelog item',
+        '## 1.2.3 (Internal)',
+        '### Changes',
+        '- internal changelog item',
+        '## 1.2.3 (TestFlight)',
+        '### Changes',
+        '- testflight changelog item',
+        '## 1.2.3 (Preview)',
+        '### Changes',
+        '- preview changelog item',
+        '',
+        '## 1.2.2 (Production)',
+        '- old changelog item',
+      ].join('\n'),
+    );
+  });
+
+  test('leaves non-version headings untouched', () => {
+    const source = [
+      '# Changelog',
+      '',
+      '## [unreleased]',
+      '### Changes',
+      '- local item',
+      '### Notes',
+      '- details',
+    ].join('\n');
+
+    expect(applyEnvironmentLabelsToChangelogHeadings(source)).toEqual(source);
+  });
+
+  test('normalizes version headings that include a leading v', () => {
+    expect(applyEnvironmentLabelsToChangelogHeadings('## v1.2.3\n')).toEqual(
+      '## 1.2.3 (Production)',
+    );
+  });
+
+  test('preserves already labeled environment headings', () => {
+    expect(
+      applyEnvironmentLabelsToChangelogHeadings(
+        [
+          '# Changelog',
+          '## 1.2.3 (Internal)',
+          '## 1.2.3-testflight',
+          '## 1.2.2 (Production)',
+          '## 1.2.2',
+        ].join('\n'),
+      ),
+    ).toEqual(
+      [
+        '# Changelog',
+        '## 1.2.3 (Internal)',
+        '## 1.2.3 (TestFlight)',
+        '## 1.2.2 (Production)',
+        '## 1.2.2 (Production)',
+      ].join('\n'),
+    );
+  });
+
+  test('is idempotent on already normalized content', () => {
+    const source = ['## 1.2.3 (Internal)', '## 1.2.2-testflight'].join('\n');
+
+    const normalized = applyEnvironmentLabelsToChangelogHeadings(source);
+
+    expect(applyEnvironmentLabelsToChangelogHeadings(normalized)).toEqual(
+      normalized,
+    );
+  });
+});
+
+describe('changelog generation', () => {
+  test('normalizes generated changelog markdown written to a file', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'foam-changelog-generation-'));
+    const changelogPath = join(tempDir, 'CHANGELOG.md');
+    const generatedChangelog = [
+      '# Changelog',
+      '',
+      '## 1.0.0-internal',
+      '### Added',
+      '- internal-only item',
+      '## 1.0.0-testflight',
+      '### Fixed',
+      '- testflight item',
+      '## 1.0.0',
+      '### Changed',
+      '- production item',
+      '## 1.0.0-preview',
+      '### Fixed',
+      '- preview item',
+      '## [Unreleased]',
+      '- future change',
+    ].join('\n');
+    const expectedChangelog = [
+      '# Changelog',
+      '',
+      '## 1.0.0 (Internal)',
+      '### Added',
+      '- internal-only item',
+      '## 1.0.0 (TestFlight)',
+      '### Fixed',
+      '- testflight item',
+      '## 1.0.0 (Production)',
+      '### Changed',
+      '- production item',
+      '## 1.0.0 (Preview)',
+      '### Fixed',
+      '- preview item',
+      '## [Unreleased]',
+      '- future change',
+    ].join('\n');
+
+    try {
+      writeFileSync(changelogPath, generatedChangelog, 'utf8');
+      const normalized = normalizeChangelogFile(changelogPath);
+
+      expect(normalized).toEqual(expectedChangelog);
+      expect(readFileSync(changelogPath, 'utf8')).toEqual(expectedChangelog);
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  test('is stable when run over an already generated changelog file', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'foam-changelog-generation-'));
+    const changelogPath = join(tempDir, 'CHANGELOG.md');
+    const generatedChangelog = [
+      '# Changelog',
+      '',
+      '## 1.0.0 (Internal)',
+      '### Added',
+      '- already normalized',
+    ].join('\n');
+
+    try {
+      writeFileSync(changelogPath, generatedChangelog, 'utf8');
+      const normalized = normalizeChangelogFile(changelogPath);
+
+      expect(normalized).toEqual(generatedChangelog);
+      expect(readFileSync(changelogPath, 'utf8')).toEqual(generatedChangelog);
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 });
 
