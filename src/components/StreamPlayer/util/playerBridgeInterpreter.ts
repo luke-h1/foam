@@ -162,7 +162,11 @@ export function interpretPlayerMessage(
     case 'offline':
       return [{ type: 'notifyOffline' }];
     case 'stateUpdate': {
-      const { payload } = message;
+      const payload = message.payload;
+      if (!payload) {
+        return [];
+      }
+
       const isTransientAutoplayPause =
         payload.isPaused && shouldResumeTransientPause;
       const actions: PlayerBridgeAction[] = [
@@ -184,8 +188,14 @@ export function interpretPlayerMessage(
       return actions;
     }
     case 'currentTime':
+      if (!message.payload || message.payload.time === undefined) {
+        return [];
+      }
       return [{ type: 'resolveCurrentTime', seconds: message.payload.time }];
     case 'duration':
+      if (!message.payload || message.payload.duration === undefined) {
+        return [];
+      }
       return [{ type: 'resolveDuration', seconds: message.payload.duration }];
     case 'trace':
       return [
@@ -254,6 +264,10 @@ export function interpretPlayerMessage(
       return actions;
     }
     case 'playbackStalled': {
+      if (!message.payload) {
+        return [];
+      }
+
       const actions: PlayerBridgeAction[] = [
         {
           type: 'log',
@@ -277,6 +291,9 @@ export function interpretPlayerMessage(
       return actions;
     }
     case 'playbackRecovered':
+      if (!message.payload) {
+        return [];
+      }
       return [
         { type: 'notifyStability', event: 'recovered' },
         {
@@ -300,6 +317,10 @@ export function interpretPlayerMessage(
         },
       ];
     case 'videoElementError': {
+      if (!message.payload) {
+        return [];
+      }
+
       const actions: PlayerBridgeAction[] = [
         {
           type: 'log',
@@ -325,6 +346,9 @@ export function interpretPlayerMessage(
     case 'twitchAuthComplete':
       return [{ type: 'scheduleAuthCompletionReload' }];
     case 'pipChanged':
+      if (!message.payload) {
+        return [];
+      }
       return [{ type: 'setPipActive', active: message.payload.active }];
     case 'pipUnavailable':
       return [
@@ -342,6 +366,10 @@ export function interpretPlayerMessage(
         { type: 'showPipUnavailableToast' },
       ];
     case 'playbackStats': {
+      if (!message.payload) {
+        return [];
+      }
+
       const latency = message.payload.hlsLatencyBroadcaster;
       const hasUsableLiveLatency =
         typeof latency === 'number' &&
@@ -370,6 +398,10 @@ export function interpretPlayerMessage(
       return actions;
     }
     case 'muteState': {
+      if (!message.payload) {
+        return [];
+      }
+
       const { muted, volume } = message.payload;
       const actions: PlayerBridgeAction[] = [
         { type: 'applyMuteState', muted, volume },

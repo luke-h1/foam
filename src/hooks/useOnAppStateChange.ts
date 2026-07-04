@@ -14,11 +14,11 @@ export function useOnAppStateChange(
   const onTransitionRef = useRef(onTransition);
   onTransitionRef.current = onTransition;
 
-  useEffect(
-    () =>
-      subscribeToAppStateTransitions(transition => {
-        onTransitionRef.current(transition);
-      }),
-    [],
-  );
+  useEffect(() => {
+    const unsubscribe = subscribeToAppStateTransitions(transition => {
+      onTransitionRef.current(transition);
+    });
+
+    return unsubscribe;
+  }, []);
 }

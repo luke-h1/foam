@@ -428,6 +428,14 @@ export function useSeventvWs(
         break;
       }
 
+      case 'reconnect': {
+        logger.stvWs.info(`💚 Received server reconnect request`);
+        const ws = getWebSocket();
+        ws.close(4003, '7tv reconnect requested');
+        hasInitialSubscriptionsRef.current = false;
+        break;
+      }
+
       case 'unhandledOp': {
         logger.stvWs.debug(`Unhandled op code ${decision.op}`);
         break;

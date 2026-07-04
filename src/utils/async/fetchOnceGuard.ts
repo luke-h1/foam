@@ -56,6 +56,12 @@ export const createFetchOnceGuard = (
 ): FetchOnceGuard => {
   const { ttlMs, maxConcurrent } = options;
 
+  if (maxConcurrent !== undefined && maxConcurrent < 1) {
+    throw new RangeError(
+      'createFetchOnceGuard: maxConcurrent must be greater than or equal to 1',
+    );
+  }
+
   const inFlight = new Map<string, Promise<unknown>>();
   const fetchedAt = new Map<string, number>();
   let generation = 0;

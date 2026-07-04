@@ -1,4 +1,4 @@
-import { type RefObject, useCallback, useRef } from 'react';
+import { type RefObject, useCallback, useMemo } from 'react';
 
 import { shouldProcessLiveMessage } from '@app/components/Chat/util/chatIngestRateLimiter';
 import { parseIrcMessage } from '@app/services/recent-messages-service';
@@ -87,9 +87,10 @@ export function useChatIrcHandlers({
   removeBufferedMessageById,
   removeBufferedMessagesByLogin,
 }: UseChatIrcHandlersOptions) {
-  const roomStateTrackerRef = useRef<RoomStateTracker | null>(null);
-  const roomStateTracker = (roomStateTrackerRef.current ??=
-    createRoomStateTracker());
+  const roomStateTracker: RoomStateTracker = useMemo(
+    () => createRoomStateTracker(),
+    [],
+  );
 
   const appendSystemMessage = useCallback(
     (content: string) => {

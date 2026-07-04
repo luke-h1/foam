@@ -842,15 +842,13 @@ describe('interpretSeventvWsMessage', () => {
       ]);
     });
 
-    test('flags unhandled op codes', () => {
+    test('returns reconnect decision for op 4', () => {
       const decisions = interpretSeventvWsMessage(
         coerceMessage({ op: 4 }),
         createContext(),
       );
 
-      expect(decisions).toEqual<SeventvWsDecision[]>([
-        { type: 'unhandledOp', op: 4 },
-      ]);
+      expect(decisions).toEqual<SeventvWsDecision[]>([{ type: 'reconnect' }]);
     });
   });
 });

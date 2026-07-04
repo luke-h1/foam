@@ -39,7 +39,7 @@ class TwitchWsService {
    */
   private static url: string = 'wss://eventsub.wss.twitch.tv/ws';
 
-  private static sessionId: string = '';
+  public static sessionId: string = '';
 
   /**
    * Valid values are between 10 and 600
@@ -571,10 +571,6 @@ class TwitchWsService {
     );
 
     await Promise.race([Promise.allSettled(cleanupPromises), cleanupTimeout]);
-  }
-
-  public get sessionId(): string {
-    return TwitchWsService.sessionId;
   }
 
   /**

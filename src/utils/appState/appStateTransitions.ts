@@ -1,6 +1,8 @@
 import { AppState } from 'react-native';
 import type { AppStateStatus, NativeEventSubscription } from 'react-native';
 
+import { logger } from '@app/utils/logger';
+
 export interface AppStateTransition {
   previous: AppStateStatus;
   current: AppStateStatus;
@@ -20,7 +22,22 @@ function handleAppStateChange(nextState: AppStateStatus): void {
   };
   trackedState = nextState;
   for (const listener of [...listeners]) {
-    listener(transition);
+    try {
+      void Promise.resolve(listener(transition)).catch(error =>
+        logger.main.warn(
+          'AppState transition listener returned a rejected promise',
+          {
+            action: 'app_state_transition_listener_rejected',
+            error,
+          },
+        ),
+      );
+    } catch (error) {
+      logger.main.warn('AppState transition listener threw', {
+        action: 'app_state_transition_listener_error',
+        error,
+      });
+    }
   }
 }
 

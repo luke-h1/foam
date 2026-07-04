@@ -260,6 +260,15 @@ describe('interpretPlayerMessage', () => {
         },
       ]);
     });
+
+    test('ignores a stateUpdate message without a payload', () => {
+      expect(
+        interpretPlayerMessage(
+          JSON.parse('{"type":"stateUpdate"}') as PlayerMessage,
+          createBridgeContext(),
+        ),
+      ).toEqual<PlayerBridgeAction[]>([]);
+    });
   });
 
   describe('time queries', () => {
@@ -283,6 +292,42 @@ describe('interpretPlayerMessage', () => {
       ).toEqual<PlayerBridgeAction[]>([
         { type: 'resolveDuration', seconds: 3600 },
       ]);
+    });
+
+    test('ignores currentTime when payload is missing', () => {
+      expect(
+        interpretPlayerMessage(
+          JSON.parse('{"type":"currentTime"}') as PlayerMessage,
+          createBridgeContext(),
+        ),
+      ).toEqual<PlayerBridgeAction[]>([]);
+    });
+
+    test('ignores currentTime when time is missing from the payload', () => {
+      expect(
+        interpretPlayerMessage(
+          JSON.parse('{"type":"currentTime","payload":{}}') as PlayerMessage,
+          createBridgeContext(),
+        ),
+      ).toEqual<PlayerBridgeAction[]>([]);
+    });
+
+    test('ignores duration when payload is missing', () => {
+      expect(
+        interpretPlayerMessage(
+          JSON.parse('{"type":"duration"}') as PlayerMessage,
+          createBridgeContext(),
+        ),
+      ).toEqual<PlayerBridgeAction[]>([]);
+    });
+
+    test('ignores duration when duration is missing from the payload', () => {
+      expect(
+        interpretPlayerMessage(
+          JSON.parse('{"type":"duration","payload":{}}') as PlayerMessage,
+          createBridgeContext(),
+        ),
+      ).toEqual<PlayerBridgeAction[]>([]);
     });
   });
 
@@ -513,6 +558,15 @@ describe('interpretPlayerMessage', () => {
 
       expect(actions.map(action => action.type)).toEqual(['log']);
     });
+
+    test('ignores playbackStalled when payload is missing', () => {
+      expect(
+        interpretPlayerMessage(
+          JSON.parse('{"type":"playbackStalled"}') as PlayerMessage,
+          createBridgeContext(),
+        ),
+      ).toEqual<PlayerBridgeAction[]>([]);
+    });
   });
 
   describe('playbackRecovered', () => {
@@ -544,6 +598,15 @@ describe('interpretPlayerMessage', () => {
           ],
         },
       ]);
+    });
+
+    test('ignores playbackRecovered when payload is missing', () => {
+      expect(
+        interpretPlayerMessage(
+          JSON.parse('{"type":"playbackRecovered"}') as PlayerMessage,
+          createBridgeContext(),
+        ),
+      ).toEqual<PlayerBridgeAction[]>([]);
     });
   });
 
@@ -623,6 +686,15 @@ describe('interpretPlayerMessage', () => {
         },
       ]);
     });
+
+    test('ignores videoElementError when payload is missing', () => {
+      expect(
+        interpretPlayerMessage(
+          JSON.parse('{"type":"videoElementError"}') as PlayerMessage,
+          createBridgeContext(),
+        ),
+      ).toEqual<PlayerBridgeAction[]>([]);
+    });
   });
 
   describe('twitchAuthComplete', () => {
@@ -646,6 +718,15 @@ describe('interpretPlayerMessage', () => {
           createBridgeContext(),
         ),
       ).toEqual<PlayerBridgeAction[]>([{ type: 'setPipActive', active: true }]);
+    });
+
+    test('ignores pipChanged when payload is missing', () => {
+      expect(
+        interpretPlayerMessage(
+          JSON.parse('{"type":"pipChanged"}') as PlayerMessage,
+          createBridgeContext(),
+        ),
+      ).toEqual<PlayerBridgeAction[]>([]);
     });
   });
 
@@ -753,6 +834,15 @@ describe('interpretPlayerMessage', () => {
         ),
       ).toEqual<PlayerBridgeAction[]>([]);
     });
+
+    test('ignores playbackStats when payload is missing', () => {
+      expect(
+        interpretPlayerMessage(
+          JSON.parse('{"type":"playbackStats"}') as PlayerMessage,
+          createBridgeContext(),
+        ),
+      ).toEqual<PlayerBridgeAction[]>([]);
+    });
   });
 
   describe('muteState', () => {
@@ -799,6 +889,15 @@ describe('interpretPlayerMessage', () => {
       ).toEqual<PlayerBridgeAction[]>([
         { type: 'applyMuteState', muted: false, volume: 1 },
       ]);
+    });
+
+    test('ignores muteState when payload is missing', () => {
+      expect(
+        interpretPlayerMessage(
+          JSON.parse('{"type":"muteState"}') as PlayerMessage,
+          createBridgeContext(),
+        ),
+      ).toEqual<PlayerBridgeAction[]>([]);
     });
   });
 

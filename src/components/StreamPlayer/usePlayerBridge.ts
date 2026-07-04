@@ -46,6 +46,10 @@ interface UsePlayerBridgeOptions {
   webViewKey: number;
 }
 
+function assertUnreachableAction(action: never): never {
+  throw new Error(`Unhandled PlayerBridgeAction: ${JSON.stringify(action)}`);
+}
+
 export function usePlayerBridge({
   autoplay,
   channel,
@@ -514,6 +518,8 @@ export function usePlayerBridge({
       case 'unlockOverlay':
         setOverlayUnlocked(true);
         break;
+      default:
+        assertUnreachableAction(action);
     }
   };
 

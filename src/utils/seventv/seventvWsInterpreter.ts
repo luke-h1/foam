@@ -105,6 +105,7 @@ export type SeventvWsDecision =
       payload: { code: number; message: string };
     }
   | { type: 'serverRequest' }
+  | { type: 'reconnect' }
   | { type: 'unhandledOp'; op: number };
 
 function toSanitisedSevenTvEmote(
@@ -511,6 +512,9 @@ export function interpretSeventvWsMessage(
 
     case 7:
       return [{ type: 'serverRequest' }];
+
+    case 4:
+      return [{ type: 'reconnect' }];
 
     default:
       return [{ type: 'unhandledOp', op: message.op }];
