@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0-testflight
+## 1.0.0
 
 ### ♻️ Refactor
 
@@ -84,7 +84,7 @@
 - **app:** Sync lockfile with sentry deps ([#680](https://github.com/lhowsam/foam/issues/680))
 - **app:** Ui improvements ([#681](https://github.com/lhowsam/foam/issues/681))
 
-## 1.0.0-testflight
+## 1.0.0
 
 ### ⚡ Performance
 
