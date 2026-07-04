@@ -190,7 +190,12 @@ export const resolveSubscriberChannelProfiles = async (
   const ownerIds = [
     ...new Set(
       (cache.twitchSubscriberEmotes ?? []).flatMap(emote =>
-        'owner_id' in emote && emote.owner_id ? [emote.owner_id] : [],
+        // Helix /chat/emotes/user also returns global emotes with sentinel
+        // owner ids like "twitch"; a non-numeric id 400s the whole batched
+        // /users request, so only real user ids may enter the lookup.
+        'owner_id' in emote && emote.owner_id && /^\d+$/.test(emote.owner_id)
+          ? [emote.owner_id]
+          : [],
       ),
     ),
   ].filter(

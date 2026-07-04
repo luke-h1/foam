@@ -540,6 +540,38 @@ describe('resolveSubscriberChannelProfiles', () => {
     });
   });
 
+  test('excludes non-numeric owner ids from the profile lookup', async () => {
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...emptyEmoteData,
+        twitchSubscriberEmotes: [
+          { ...twitchEmote('emote1', 'Twitch Subscriber'), owner_id: 'twitch' },
+          { ...twitchEmote('emote2', 'Twitch Subscriber'), owner_id: '100' },
+        ],
+      },
+    });
+    mockGetUsersById.mockResolvedValue([profileUser('100', 'Zoil')]);
+
+    await resolveSubscriberChannelProfiles(channelId);
+
+    expect(mockGetUsersById).toHaveBeenCalledWith(['100']);
+  });
+
+  test('skips the lookup entirely when only sentinel owner ids exist', async () => {
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...emptyEmoteData,
+        twitchSubscriberEmotes: [
+          { ...twitchEmote('emote1', 'Twitch Subscriber'), owner_id: 'twitch' },
+        ],
+      },
+    });
+
+    await resolveSubscriberChannelProfiles(channelId);
+
+    expect(mockGetUsersById).not.toHaveBeenCalled();
+  });
+
   test('does not re-request owner ids Twitch never returned', async () => {
     const seedCache = () => {
       chatStore$.persisted.channelCaches.set({
