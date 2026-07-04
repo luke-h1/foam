@@ -3,6 +3,7 @@ import {
   queueMentionLoginsFromParts,
   resetMentionLoginResolver,
 } from '@app/utils/chat/mentionLoginResolver';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getMentionLogin } from '@app/utils/chat/resolveMentionLogin';
 
 jest.mock('@app/services/api/clients', () => ({
@@ -50,7 +51,7 @@ jest.mock('@app/utils/chat/resolveMentionLogin', () => ({
 const mockGet = jest.mocked(twitchApi.get);
 const mockGetMentionLogin = jest.mocked(getMentionLogin);
 
-function mentionPart(content: string) {
+function mentionPart(content: string): ParsedPart<'mention'> {
   return { type: 'mention', content };
 }
 

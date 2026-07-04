@@ -135,7 +135,6 @@ export const searchChannels = (query: string): SearchChannelResponse[] => {
 export const getFollowedStreams = (
   _userId: string,
 ): PaginatedList<TwitchStream> => {
-  // Return first 3 streams as "followed" streams
   return {
     data: mockStreams.slice(0, 3),
     pagination: undefined,

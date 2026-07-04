@@ -5,6 +5,7 @@ import {
 } from '@app/components/Chat/hooks/__tests__/__fixtures__/useChat.fixture';
 import { createUserStateFromTags } from '@app/components/Chat/util/messageHandlers';
 import { getUserPersonalEmotes } from '@app/store/chat/actions/channelLoad';
+import type { SanitisedEmote } from '@app/types/emote';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 
 import { resolveMessageEmoteParts } from '../resolveMessageEmoteParts';
@@ -60,7 +61,9 @@ describe('resolveMessageEmoteParts subscriber scoping', () => {
       userstate,
     });
 
-    expect(lastWorkletArgs().twitchSubscriberEmotes).toEqual([subscriberEmote]);
+    expect(lastWorkletArgs().twitchSubscriberEmotes).toEqual<SanitisedEmote[]>([
+      subscriberEmote,
+    ]);
   });
 
   test('omits the channel subscriber emotes for other senders', () => {
@@ -78,7 +81,9 @@ describe('resolveMessageEmoteParts subscriber scoping', () => {
       userstate,
     });
 
-    expect(lastWorkletArgs().twitchSubscriberEmotes).toEqual([]);
+    expect(lastWorkletArgs().twitchSubscriberEmotes).toEqual<SanitisedEmote[]>(
+      [],
+    );
   });
 });
 
@@ -99,7 +104,9 @@ describe('resolveMessageEmoteParts personal emotes', () => {
     });
 
     expect(mockGetUserPersonalEmotes).toHaveBeenCalledWith('user-1', channelId);
-    expect(lastWorkletArgs().sevenTvPersonalEmotes).toEqual([personalEmote]);
+    expect(lastWorkletArgs().sevenTvPersonalEmotes).toEqual<SanitisedEmote[]>([
+      personalEmote,
+    ]);
   });
 
   test('skips personal emote lookup when 7TV emotes are disabled', () => {
@@ -116,6 +123,8 @@ describe('resolveMessageEmoteParts personal emotes', () => {
     });
 
     expect(mockGetUserPersonalEmotes).not.toHaveBeenCalled();
-    expect(lastWorkletArgs().sevenTvPersonalEmotes).toEqual([]);
+    expect(lastWorkletArgs().sevenTvPersonalEmotes).toEqual<SanitisedEmote[]>(
+      [],
+    );
   });
 });

@@ -24,6 +24,8 @@ import {
   type AnyChatMessageType,
   createUserStateFromTags,
 } from '../util/messageHandlers';
+import { parseModCommand } from '../util/modCommands';
+import { runModCommand } from '../util/runModCommand';
 import type { ChatComposerHandle } from './ChatComposer/ChatComposer';
 import { ChatInputSection, type ReplyToData } from './ChatInputSection';
 
@@ -161,6 +163,16 @@ export const ChatInputShell = memo(function ChatInputShell({
 
     if (!isAuthenticated) {
       logger.chat.warn('Cannot send chat message while signed out');
+      return;
+    }
+
+    // Twitch dropped slash commands from IRC in 2023; known moderation
+    // commands run against Helix instead of going out as chat text.
+    const modCommand = parseModCommand(currentInput);
+    if (modCommand) {
+      clearDraft();
+      void KeyboardController.dismiss();
+      runModCommand(modCommand, channelId, user?.id);
       return;
     }
 

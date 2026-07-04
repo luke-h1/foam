@@ -188,6 +188,12 @@ export function SettingsIndexScreen() {
             onPress={() => router.push('/tabs/settings/saved-phrases')}
           />
           <SettingsLinkRow
+            title={t('myClips')}
+            subtitle={t('myClipsDescription')}
+            icon={{ icon: 'scissors', color: theme.colorViolet }}
+            onPress={() => router.push('/tabs/settings/my-clips')}
+          />
+          <SettingsLinkRow
             title={t('cache')}
             subtitle={t('cacheDescription')}
             icon={{ icon: 'externaldrive', color: theme.colorPrimary }}

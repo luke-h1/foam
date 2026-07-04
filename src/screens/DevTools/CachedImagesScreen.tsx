@@ -252,7 +252,7 @@ function CachedImagesListHeader({
             styles.tabButton,
             activeTab === 'paints' && styles.tabButtonActive,
             activeTab === 'paints' && {
-              backgroundColor: theme.colorViolet || theme.colorOrange,
+              backgroundColor: theme.colorViolet,
             },
           ]}
         >
@@ -267,7 +267,6 @@ function CachedImagesListHeader({
         </Button>
       </View>
 
-      {/* Cache Location (only show for images) */}
       {activeTab === 'images' && (
         <View style={styles.pathContainer}>
           <Text style={styles.pathLabel}>{t('cacheLocation')}</Text>
@@ -277,7 +276,6 @@ function CachedImagesListHeader({
         </View>
       )}
 
-      {/* Action Buttons */}
       <View style={styles.actions}>
         <Button onPress={onRefresh} style={styles.button}>
           <Text style={styles.buttonText}>{t('refresh')}</Text>

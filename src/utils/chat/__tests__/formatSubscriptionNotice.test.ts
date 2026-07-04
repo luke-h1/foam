@@ -4,6 +4,7 @@ import {
   createSubscriptionTags,
   createViewerMilestoneTags,
 } from '@app/types/chat/irc-tags/__fixtures__/userNoticeTags.fixture';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import {
   createCharityDonationPart,
@@ -25,7 +26,7 @@ describe('formatSubscriptionNotice', () => {
       }),
     );
 
-    expect(part).toEqual({
+    expect(part).toEqual<ParsedPart<'sub'>>({
       type: 'sub',
       subscriptionEvent: {
         msgId: 'sub',
@@ -53,7 +54,7 @@ describe('formatSubscriptionNotice', () => {
       'Still here!',
     );
 
-    expect(part).toEqual({
+    expect(part).toEqual<ParsedPart<'resub'>>({
       type: 'resub',
       subscriptionEvent: {
         msgId: 'resub',
@@ -93,7 +94,7 @@ describe('formatSubscriptionNotice', () => {
       'msg-param-donation-currency': 'USD',
     });
 
-    expect(part).toEqual({
+    expect(part).toEqual<ParsedPart<'charitydonation'>>({
       type: 'charitydonation',
       displayName: 'Donor',
       charityName: 'Example Charity',
@@ -111,7 +112,7 @@ describe('formatSubscriptionNotice', () => {
       'msg-param-ritual-name': 'new_chatter',
     });
 
-    expect(part).toEqual({
+    expect(part).toEqual<ParsedPart<'ritual'>>({
       type: 'ritual',
       displayName: 'Viewer',
       ritualName: 'new_chatter',
@@ -132,7 +133,7 @@ describe('formatSubscriptionNotice', () => {
       }),
     );
 
-    expect(part).toEqual({
+    expect(part).toEqual<ParsedPart<'anongift'>>({
       type: 'anongift',
       subscriptionEvent: {
         msgId: 'subgift',
@@ -156,7 +157,7 @@ describe('formatSubscriptionNotice', () => {
       'msg-param-cumulative-months': '6',
     });
 
-    expect(part).toEqual({
+    expect(part).toEqual<ParsedPart<'primepaidupgrade'>>({
       type: 'primepaidupgrade',
       subscriptionEvent: {
         msgId: 'primepaidupgrade',

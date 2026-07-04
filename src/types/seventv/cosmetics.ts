@@ -93,23 +93,6 @@ export interface PaintStop {
 }
 
 /**
- * Converts a 7TV packed RGBA color integer to its individual channel components.
- *
- * Uses unsigned right shift (`>>>`) to correctly handle signed 32-bit integers,
- * which is necessary because JavaScript stores numbers as 64-bit floats but
- * bitwise operations convert to 32-bit signed integers.
- *
- * @param color - The packed RGBA color as a 32-bit signed integer.
- * @returns An object containing the red, middle, blue, and alpha channel values (0-255).
- *
- * @example
- * ```typescript
- * const { r, g, b, a } = sevenTvColorToRgba(-1675056641);
- * // Result: { r: 156, g: 89, b: 182, a: 255 } (purple, fully opaque)
- * ```
- */
-
-/**
  * Defines the type of gradient or fill function used by a 7TV paint cosmetic.
  *
  * - `LINEAR_GRADIENT`: A gradient that transitions colors along a straight line at a specified angle.

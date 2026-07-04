@@ -2,6 +2,7 @@ import { PropsWithChildren, useEffect, useRef } from 'react';
 
 import {
   StatsigProviderRN,
+  type StatsigUser,
   useStatsigClient,
 } from '@statsig/react-native-bindings';
 import { usePathname } from 'expo-router';
@@ -53,7 +54,7 @@ export function AnalyticsProvider({ children }: PropsWithChildren) {
           twitchDisplayName: user.display_name,
         }
       : {},
-  };
+  } satisfies StatsigUser;
 
   return (
     <StatsigProviderRN sdkKey={statsigClientKey} user={statsigUser}>

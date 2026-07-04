@@ -46,7 +46,6 @@ interface UseChatSurfaceOptions {
   refetchEmotes: () => Promise<void>;
   reprocessAllMessages: () => void;
   scrollToBottom: () => void;
-  sendChatCommand: (channel: string, message: string) => void;
   setHighlightedReplyTargetMessageId: (
     value: string | null | ((current: string | null) => string | null),
   ) => void;
@@ -77,7 +76,6 @@ export function useChatSurface({
   refetchEmotes,
   reprocessAllMessages,
   scrollToBottom,
-  sendChatCommand,
   setHighlightedReplyTargetMessageId,
   shouldMaintainScrollAtEnd,
   showOnlyMentions,
@@ -177,7 +175,6 @@ export function useChatSurface({
     appendMentionToComposer,
     canModerateChat,
     channelId,
-    channelName,
     currentUserId: user?.id,
     disableEmoteAnimations: preferences.disableEmoteAnimations,
     handleReply,
@@ -202,7 +199,6 @@ export function useChatSurface({
     onUnpinPinnedMessage: handleUnpinPinnedMessage,
     pinnedMessageBusy,
     pinnedMessageId,
-    sendChatCommand,
     showInlineReplyContext: preferences.showInlineReplyContext,
     showTimestamps: preferences.chatTimestamps,
     showUnreadJumpPill: preferences.showUnreadJumpPill,

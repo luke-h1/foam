@@ -13,6 +13,7 @@ import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin';
 
 import { styles } from '../RichChatMessage.styles';
+import { CheermoteRenderer } from './CheermoteRenderer';
 import { EmoteRenderer } from './EmoteRenderer';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 
@@ -157,6 +158,17 @@ export function ChatMessagePart({
         />
       );
     }
+
+    case 'cheermote':
+      return (
+        <CheermoteRenderer
+          disableAnimations={disableEmoteAnimations}
+          isModerated={Boolean(moderationNotice)}
+          key={getPartKey(part, index)}
+          part={part}
+          targetSize={emoteTargetSize ?? (compact ? 26 : 30)}
+        />
+      );
 
     case 'mention': {
       const mentionContent = formatMentionContent(

@@ -31,9 +31,6 @@ export function useCachedEmote(
     () => getCachedEmoteRef(url),
     () => null,
   );
-  // Lazily decode on first use (the ref subscription above re-renders when
-  // ready); once decoded, mark it recently-used so eviction keeps hot emotes.
-
   /**
    * Lazily decode on first use (the ref subscription above re-renders when
    * ready); once decoded, mark it recently-used so eviction keeps hot emotes.

@@ -1,3 +1,4 @@
+import type { TwitchSanitisedEmote } from '@app/types/emote';
 import type { TwitchEmote } from '@app/types/twitch/emote';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 
@@ -71,7 +72,7 @@ describe('twitchEmoteService', () => {
     const result = await twitchEmoteService.getGlobalEmotes();
 
     expect(api.get).toHaveBeenCalledWith('/chat/emotes/global');
-    expect(result).toEqual([
+    expect(result).toEqual<TwitchSanitisedEmote[]>([
       {
         name: 'Kappa',
         id: '25',
@@ -143,6 +144,25 @@ describe('twitchEmoteService', () => {
     expect(result.map(emote => ({ id: emote.id, site: emote.site }))).toEqual([
       { id: 'emote1', site: 'Twitch Subscriber' },
       { id: 'emote2', site: 'Twitch Subscriber' },
+    ]);
+  });
+
+  test('getSubscriberEmotes keeps the owner_id of each emote', async () => {
+    api.get.mockResolvedValue({
+      data: [
+        { ...makeTwitchEmote('emote1', 'subHype'), owner_id: '555' },
+        { ...makeTwitchEmote('emote2', 'subLove'), owner_id: '777' },
+      ],
+      pagination: {},
+    });
+
+    const result = await twitchEmoteService.getSubscriberEmotes('42');
+
+    expect(
+      result.map(emote => ({ id: emote.id, owner_id: emote.owner_id })),
+    ).toEqual([
+      { id: 'emote1', owner_id: '555' },
+      { id: 'emote2', owner_id: '777' },
     ]);
   });
 });

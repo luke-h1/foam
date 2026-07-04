@@ -4,6 +4,8 @@ import {
 } from '@app/store/chat/actions/channelLoad';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import { applyCheermotesToParts } from '@app/utils/chat/applyCheermotes';
+import { getChannelCheermotes } from '@app/utils/chat/cheermoteStore';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
@@ -60,7 +62,7 @@ export function resolveMessageEmoteParts({
       ? [...twitchTaggedSubscriberEmotes, ...twitchSubscriberEmotes]
       : twitchSubscriberEmotes;
 
-  return processEmotesWorklet({
+  const parts = processEmotesWorklet({
     inputString: text,
     userstate,
     emojiEmotes: chatStore$.emojis.peek(),
@@ -75,4 +77,17 @@ export function resolveMessageEmoteParts({
     bttvChannelEmotes: emoteData.bttvChannelEmotes,
     bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
   });
+
+  // The worklet caches parsed parts by text alone, so bits handling stays
+  // outside it: applyCheermotesToParts returns a fresh array and never
+  // mutates the cached one.
+  const bits = Number.parseInt(userstate.bits ?? '', 10);
+  if (Number.isFinite(bits) && bits > 0) {
+    const cheermotes = getChannelCheermotes(channelId);
+    if (cheermotes) {
+      return applyCheermotesToParts(parts, cheermotes);
+    }
+  }
+
+  return parts;
 }

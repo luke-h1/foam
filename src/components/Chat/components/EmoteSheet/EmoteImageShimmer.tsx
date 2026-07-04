@@ -11,15 +11,24 @@ import Animated, {
 
 import { LinearGradient } from 'expo-linear-gradient';
 
+import { useScreenFocused } from '@app/hooks/useScreenFocused';
+
 import { emoteSheetStyles as styles } from './emoteSheetStyles';
 
 const SHIMMER_DURATION_MS = 1200;
 
 export function EmoteImageShimmer({ size }: { size: number }) {
+  const focused = useScreenFocused();
   const progress = useSharedValue(0);
   const shimmerWidth = Math.max(18, Math.round(size * 0.72));
 
   useEffect(() => {
+    if (!focused) {
+      cancelAnimation(progress);
+      return;
+    }
+
+    progress.set(0);
     progress.set(
       withRepeat(
         withTiming(1, {
@@ -34,7 +43,7 @@ export function EmoteImageShimmer({ size }: { size: number }) {
     return () => {
       cancelAnimation(progress);
     };
-  }, [progress]);
+  }, [focused, progress]);
 
   const shimmerStyle = useAnimatedStyle(() => ({
     transform: [

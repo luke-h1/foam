@@ -150,7 +150,7 @@ export function ScreenHeader({
     if (subtitleType) {
       return subtitleType;
     }
-    return size === 'compact' ? 'xs' : 'xs';
+    return 'xs';
   };
 
   const titleTypeValue = getTitleType();
@@ -210,7 +210,6 @@ export function ScreenHeader({
           </View>
         )}
 
-        {/* Hero content */}
         <View
           style={[
             styles.heroContent,

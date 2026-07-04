@@ -45,3 +45,11 @@ export function useTransientChannelFilters(channelId: string) {
   );
   return { hiddenPhrases, hiddenUsers, highlightedUsers, showOnlyMentions };
 }
+
+/**
+ * Latest ROOMSTATE-derived chat modes for a channel, or null before the first
+ * ROOMSTATE arrives.
+ */
+export function useChannelRoomState(channelId: string) {
+  return useTransientChannelField(channelId, 'roomState');
+}

@@ -1,7 +1,10 @@
-import { createShakeDetector } from '../shakeDetection';
+import {
+  type AccelerometerSample,
+  createShakeDetector,
+} from '../shakeDetection';
 
-const REST = { x: 0, y: 0, z: 1 };
-const SPIKE = { x: 2, y: 1.5, z: 1 };
+const REST: AccelerometerSample = { x: 0, y: 0, z: 1 };
+const SPIKE: AccelerometerSample = { x: 2, y: 1.5, z: 1 };
 
 describe('createShakeDetector', () => {
   test('ignores a device at rest', () => {

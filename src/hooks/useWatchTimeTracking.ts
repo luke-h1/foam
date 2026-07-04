@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { AppState } from 'react-native';
 
 import {
   maybeRequestStoreReview,
   recordWatchTime,
 } from '@app/lib/expo-store-review';
+import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
 
 /**
  * Accumulates foreground stream watch time for the store-review prompt
@@ -25,8 +25,8 @@ export function useWatchTimeTracking(): void {
       }
     };
 
-    const subscription = AppState.addEventListener('change', status => {
-      if (status === 'active') {
+    const unsubscribe = subscribeToAppStateTransitions(({ current }) => {
+      if (current === 'active') {
         segmentStartRef.current ??= Date.now();
       } else {
         flushSegment();
@@ -34,7 +34,7 @@ export function useWatchTimeTracking(): void {
     });
 
     return () => {
-      subscription.remove();
+      unsubscribe();
       flushSegment();
       void maybeRequestStoreReview();
     };

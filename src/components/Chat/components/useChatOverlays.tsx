@@ -10,9 +10,13 @@ import { queryClient } from '@app/lib/react-query/query-client';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { twitchService } from '@app/services/twitch-service';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
+import { showActionMenu } from '@app/utils/actionMenu/showActionMenu';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
+import { logger } from '@app/utils/logger';
 
+import type { ModCommand } from '../util/modCommands';
+import { runModCommand } from '../util/runModCommand';
 import {
   BadgePressData,
   EmotePressData,
@@ -37,7 +41,6 @@ interface UseChatOverlaysParams {
   appendMentionToComposer: (username: string) => void;
   canModerateChat: boolean;
   channelId: string;
-  channelName: string;
   currentUserId?: string;
   disableEmoteAnimations: boolean;
   handleReply: (message: ChatMessageType<'usernotice'>) => void;
@@ -62,7 +65,6 @@ interface UseChatOverlaysParams {
   onUnpinPinnedMessage: () => void;
   pinnedMessageBusy: boolean;
   pinnedMessageId?: string;
-  sendChatCommand: (channel: string, message: string) => void;
   showInlineReplyContext: boolean;
   showTimestamps: boolean;
   showUnreadJumpPill: boolean;
@@ -101,7 +103,6 @@ export function useChatOverlays({
   appendMentionToComposer,
   canModerateChat,
   channelId,
-  channelName,
   currentUserId,
   disableEmoteAnimations,
   handleReply,
@@ -126,7 +127,6 @@ export function useChatOverlays({
   onUnpinPinnedMessage,
   pinnedMessageBusy,
   pinnedMessageId,
-  sendChatCommand,
   showInlineReplyContext,
   showTimestamps,
   showUnreadJumpPill,
@@ -303,20 +303,40 @@ export function useChatOverlays({
     patchOverlay({ selectedMessage: null });
   }, [hidePhraseFromView, patchOverlay, selectedMessage]);
 
+  // Twitch dropped slash commands from IRC in 2023, so moderation actions go
+  // through Helix; a 403 here just means the current user is not a moderator.
+  const runModAction = useCallback(
+    (command: ModCommand) => {
+      runModCommand(command, channelId, currentUserId);
+    },
+    [channelId, currentUserId],
+  );
+
   const handleActionSheetDeleteMessage = useCallback(() => {
     const messageId = selectedMessage?.messageData.message_id?.trim();
-    if (!messageId) {
+    const moderatorId = currentUserId?.trim();
+    if (!messageId || !moderatorId) {
       return;
     }
 
-    sendChatCommand(channelName, `/delete ${messageId}`);
-    toast.success(i18next.t('chat:userActions.deleteCommandSent'));
+    twitchService
+      .deleteChatMessage(channelId, moderatorId, messageId)
+      .then(() =>
+        toast.success(i18next.t('chat:userActions.deleteCommandSent')),
+      )
+      .catch((error: unknown) => {
+        logger.chat.warn('Failed to delete chat message', {
+          error,
+          channel_id: channelId,
+        });
+        toast.error(i18next.t('chat:modCommands.failed'));
+      });
     patchOverlay({ selectedMessage: null });
   }, [
-    channelName,
+    channelId,
+    currentUserId,
     patchOverlay,
     selectedMessage?.messageData.message_id,
-    sendChatCommand,
   ]);
 
   const handleActionSheetPinMessage = useCallback(() => {
@@ -354,15 +374,13 @@ export function useChatOverlays({
       return;
     }
 
-    sendChatCommand(channelName, `/timeout ${target} 600`);
-    toast.success(`Timeout command sent for ${target}`);
+    runModAction({ type: 'timeout', login: target, durationSeconds: 600 });
     patchOverlay({ selectedMessage: null });
   }, [
-    channelName,
     patchOverlay,
+    runModAction,
     selectedMessage?.login,
     selectedMessage?.username,
-    sendChatCommand,
   ]);
 
   const handleActionSheetBanUser = useCallback(() => {
@@ -372,15 +390,13 @@ export function useChatOverlays({
       return;
     }
 
-    sendChatCommand(channelName, `/ban ${target}`);
-    toast.success(`Ban command sent for ${target}`);
+    runModAction({ type: 'ban', login: target });
     patchOverlay({ selectedMessage: null });
   }, [
-    channelName,
     patchOverlay,
+    runModAction,
     selectedMessage?.login,
     selectedMessage?.username,
-    sendChatCommand,
   ]);
 
   const handleMentionSelectedUser = useCallback(() => {
@@ -420,10 +436,9 @@ export function useChatOverlays({
       return;
     }
 
-    sendChatCommand(channelName, `/timeout ${target} 600`);
-    toast.success(`Timeout command sent for ${target}`);
+    runModAction({ type: 'timeout', login: target, durationSeconds: 600 });
     patchOverlay({ selectedUser: null });
-  }, [channelName, patchOverlay, selectedUser, sendChatCommand]);
+  }, [patchOverlay, runModAction, selectedUser]);
 
   const handleBanSelectedUser = useCallback(() => {
     const target =
@@ -432,10 +447,44 @@ export function useChatOverlays({
       return;
     }
 
-    sendChatCommand(channelName, `/ban ${target}`);
-    toast.success(`Ban command sent for ${target}`);
+    runModAction({ type: 'ban', login: target });
     patchOverlay({ selectedUser: null });
-  }, [channelName, patchOverlay, selectedUser, sendChatCommand]);
+  }, [patchOverlay, runModAction, selectedUser]);
+
+  const handleWarnSelectedUser = useCallback(() => {
+    const target =
+      selectedUser?.login?.trim() || selectedUser?.username?.trim();
+    if (!target) {
+      return;
+    }
+
+    const warnWithReason = (reason: string) => {
+      runModAction({ type: 'warn', login: target, reason });
+      patchOverlay({ selectedUser: null });
+    };
+
+    showActionMenu({
+      title: i18next.t('chat:userActions.warnReasonTitle', { name: target }),
+      actions: [
+        {
+          label: i18next.t('chat:userActions.warnReasonSpam'),
+          onPress: () =>
+            warnWithReason(i18next.t('chat:userActions.warnReasonSpam')),
+        },
+        {
+          label: i18next.t('chat:userActions.warnReasonHarassment'),
+          onPress: () =>
+            warnWithReason(i18next.t('chat:userActions.warnReasonHarassment')),
+        },
+        {
+          label: i18next.t('chat:userActions.warnReasonRules'),
+          onPress: () =>
+            warnWithReason(i18next.t('chat:userActions.warnReasonRules')),
+        },
+      ],
+      cancelLabel: i18next.t('common:cancel'),
+    });
+  }, [patchOverlay, runModAction, selectedUser]);
 
   // Twitch has no public report API; the report form is web-only.
   const handleReportSelectedUser = useCallback(() => {
@@ -540,6 +589,7 @@ export function useChatOverlays({
       onActionSheetUnpinPinnedMessage={handleActionSheetUnpinPinnedMessage}
       onActionSheetTimeoutUser={handleActionSheetTimeoutUser}
       onBanSelectedUser={handleBanSelectedUser}
+      onWarnSelectedUser={handleWarnSelectedUser}
       canBlockSelectedUser={canBlockSelectedUser}
       onBlockSelectedUser={handleBlockSelectedUser}
       onReportSelectedUser={handleReportSelectedUser}

@@ -1,8 +1,11 @@
+import type { ParsedRoomState } from '@app/store/chat/types/roomState';
+
 import {
+  buildRoomStateChips,
   describeInitialRoomState,
   describeRoomStateChanges,
-  type ParsedRoomState,
   parseRoomStateTags,
+  type RoomStateChip,
   SUPPRESSED_NOTICE_IDS,
 } from '../roomState';
 
@@ -37,7 +40,7 @@ describe('roomState', () => {
           slow: '15',
           'subs-only': '1',
         }),
-      ).toEqual({
+      ).toEqual<ParsedRoomState>({
         emoteOnly: true,
         followersOnlyMinutes: 10,
         r9k: true,
@@ -203,6 +206,41 @@ describe('roomState', () => {
       expect(SUPPRESSED_NOTICE_IDS.has('slow_on')).toBe(true);
       expect(SUPPRESSED_NOTICE_IDS.has('delete_message_success')).toBe(true);
       expect(SUPPRESSED_NOTICE_IDS.has('msg_banned')).toBe(false);
+    });
+  });
+
+  describe('buildRoomStateChips', () => {
+    test('returns no chips when no modes are active', () => {
+      expect(buildRoomStateChips(emptyRoomState)).toEqual<RoomStateChip[]>([]);
+    });
+
+    test('builds a chip per active mode', () => {
+      expect(
+        buildRoomStateChips({
+          emoteOnly: true,
+          followersOnlyMinutes: 10,
+          r9k: true,
+          slowSeconds: 30,
+          subsOnly: true,
+        }),
+      ).toEqual<RoomStateChip[]>([
+        { key: 'slow', label: 'Slow 30s' },
+        { key: 'followers', label: 'Followers-only 10m' },
+        { key: 'emote', label: 'Emote-only' },
+        { key: 'subs', label: 'Sub-only' },
+        { key: 'unique', label: 'Unique' },
+      ]);
+    });
+
+    test('labels zero-minute followers-only without a duration', () => {
+      expect(
+        buildRoomStateChips({
+          ...emptyRoomState,
+          followersOnlyMinutes: 0,
+        }),
+      ).toEqual<RoomStateChip[]>([
+        { key: 'followers', label: 'Followers-only' },
+      ]);
     });
   });
 });

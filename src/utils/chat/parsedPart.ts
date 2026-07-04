@@ -49,6 +49,10 @@ export type PartVariant =
    * Notice event
    */
   | 'notice'
+  /**
+   * Bits cheer token, e.g. Cheer100
+   */
+  | 'cheermote'
   | 'stv_emote_added'
   | 'stv_emote_removed'
   | TwitchNotices;
@@ -192,32 +196,47 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
                           login: string;
                           displayName: string;
                         }
-                      : /**
-                         * Normal message
-                         */
-                        Pick<
-                          Partial<SanitisedEmote>,
-                          | 'creator'
-                          | 'emote_link'
-                          | 'image_variants'
-                          | 'original_name'
-                          | 'site'
-                          | 'static_url'
-                          | 'url'
-                        > & {
-                          id?: string;
-                          name?: string;
-                          flags?: number;
-                          type: TType;
-                          content: string;
-                          color?: string;
-                          width?: number;
-                          height?: number;
-                          aspect_ratio?: number;
-                          zero_width?: boolean;
-
-                          /**
-                           * Used for emote and twitch clip previews
+                      : TType extends 'cheermote'
+                        ? {
+                            type: TType;
+                            /**
+                             * The original cheer token, e.g. "Cheer100".
+                             */
+                            content: string;
+                            cheermote: {
+                              bits: number;
+                              color: string;
+                              prefix: string;
+                              static_url: string;
+                              url: string;
+                            };
+                          }
+                        : /**
+                           * Normal message
                            */
-                          thumbnail?: string;
-                        };
+                          Pick<
+                            Partial<SanitisedEmote>,
+                            | 'creator'
+                            | 'emote_link'
+                            | 'image_variants'
+                            | 'original_name'
+                            | 'site'
+                            | 'static_url'
+                            | 'url'
+                          > & {
+                            id?: string;
+                            name?: string;
+                            flags?: number;
+                            type: TType;
+                            content: string;
+                            color?: string;
+                            width?: number;
+                            height?: number;
+                            aspect_ratio?: number;
+                            zero_width?: boolean;
+
+                            /**
+                             * Used for emote and twitch clip previews
+                             */
+                            thumbnail?: string;
+                          };

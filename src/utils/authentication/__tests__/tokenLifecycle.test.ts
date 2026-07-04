@@ -117,7 +117,7 @@ describe('normaliseTwitchToken', () => {
       refreshToken: 'refresh',
     });
 
-    expect(normaliseTwitchToken(raw)).toEqual({
+    expect(normaliseTwitchToken(raw)).toEqual<TwitchToken>({
       accessToken: 'access',
       expiresIn: 3600,
       tokenType: 'bearer',
@@ -155,7 +155,7 @@ describe('refreshStoredUserToken', () => {
 
     expect(
       await refreshStoredUserToken(token({ refreshToken: 'old-refresh' }), 'x'),
-    ).toEqual({
+    ).toEqual<TwitchToken>({
       accessToken: 'new-access',
       expiresIn: 7200,
       tokenType: 'bearer',

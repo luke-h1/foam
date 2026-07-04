@@ -2,6 +2,7 @@ import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { SanitisedEmote } from '@app/types/emote';
 
 import { processEmotesWorklet } from '../emoteProcessor';
+import type { ParsedPart } from '../parsedPart';
 import {
   clearMentionLoginIndex,
   registerMentionLogin,
@@ -149,7 +150,7 @@ describe('processEmotesWorklet', () => {
       inputString: 'https://tetr.io/#WLBR',
     });
 
-    expect(result).toEqual([
+    expect(result).toEqual<ParsedPart[]>([
       {
         type: 'link',
         content: 'https://tetr.io/#WLBR',
@@ -171,7 +172,9 @@ describe('processEmotesWorklet', () => {
       sevenTvChannelEmotes: [curtisEmote],
     });
 
-    expect(lowerCaseResult).toEqual([{ type: 'text', content: 'curtis' }]);
+    expect(lowerCaseResult).toEqual<ParsedPart[]>([
+      { type: 'text', content: 'curtis' },
+    ]);
     expect(pickFields(exactCaseResult[0], ['type', 'name'])).toEqual({
       type: 'emote',
       name: 'Curtis',
@@ -201,7 +204,9 @@ describe('processEmotesWorklet', () => {
       type: 'emote',
       name: 'This',
     });
-    expect(originalNameResult).toEqual([{ type: 'text', content: 'THIS' }]);
+    expect(originalNameResult).toEqual<ParsedPart[]>([
+      { type: 'text', content: 'THIS' },
+    ]);
   });
 
   test('prefers personal and subscriber emotes over base emotes', () => {
@@ -357,6 +362,8 @@ describe('processEmotesWorklet', () => {
       id: 'personal-middle-a',
       type: 'emote',
     });
-    expect(secondResult).toEqual([{ type: 'text', content: 'MiddleA' }]);
+    expect(secondResult).toEqual<ParsedPart[]>([
+      { type: 'text', content: 'MiddleA' },
+    ]);
   });
 });

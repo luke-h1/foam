@@ -1,3 +1,5 @@
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
+
 import {
   addMessage,
   addMessages,
@@ -138,7 +140,7 @@ describe('chatStore messages', () => {
     ]);
 
     expect(chatStore$.messages.peek()).not.toBe(before);
-    expect(getMessageById('msg-1')?.message).toEqual([
+    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
       { type: 'text', content: 'updated' },
     ]);
   });
@@ -150,7 +152,7 @@ describe('chatStore messages', () => {
     ]);
 
     expect(chatStore$.messages.peek()).toHaveLength(1);
-    expect(getMessageById('msg-1')?.message).toEqual([
+    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
       { type: 'text', content: 'historical' },
     ]);
   });
@@ -160,7 +162,7 @@ describe('chatStore messages', () => {
 
     moderateMessageById('msg-1', 'Deleted');
 
-    expect(getMessageById('msg-1')?.message).toEqual([
+    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
       { type: 'text', content: 'peepoHappy—Deleted' },
     ]);
     expect(getMessageById('msg-1')?.moderationNotice).toBe('Deleted');
@@ -180,10 +182,10 @@ describe('chatStore messages', () => {
 
     moderateMessagesByLogin('tester', 'Timed out (1s)');
 
-    expect(getMessageById('msg-1')?.message).toEqual([
+    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
       { type: 'text', content: 'first—Timed out (1s)' },
     ]);
-    expect(getMessageById('msg-2')?.message).toEqual([
+    expect(getMessageById('msg-2')?.message).toEqual<ParsedPart[]>([
       { type: 'text', content: 'second' },
     ]);
   });
@@ -309,7 +311,7 @@ describe('chatStore messages', () => {
       },
     ]);
 
-    expect(getMessageById('msg-1')?.message).toEqual([
+    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
       { type: 'text', content: 'hydrated' },
     ]);
     expect(
@@ -320,7 +322,7 @@ describe('chatStore messages', () => {
 
     expect(
       chatStore$.recentMessagesByChannel.peek()['channel-1']?.[0]?.message,
-    ).toEqual([{ type: 'text', content: 'hydrated' }]);
+    ).toEqual<ParsedPart[]>([{ type: 'text', content: 'hydrated' }]);
 
     jest.useRealTimers();
   });
@@ -334,10 +336,10 @@ describe('chatStore messages', () => {
     ]);
 
     expect(chatStore$.messages.peek()).not.toBe(before);
-    expect(getMessageById('msg-1')?.message).toEqual([
+    expect(getMessageById('msg-1')?.message).toEqual<ParsedPart[]>([
       { type: 'text', content: 'first' },
     ]);
-    expect(getMessageById('msg-2')?.message).toEqual([
+    expect(getMessageById('msg-2')?.message).toEqual<ParsedPart[]>([
       { type: 'text', content: 'second' },
     ]);
   });
@@ -404,7 +406,7 @@ describe('chatStore messages', () => {
     expect(messages[0]?.message_id).toBe('msg-50');
     expect(messages.at(-1)?.message_id).toBe(`msg-${lastId}`);
     expect(getMessageById('msg-0')).toBeUndefined();
-    expect(getMessageById(`msg-${lastId}`)?.message).toEqual([
+    expect(getMessageById(`msg-${lastId}`)?.message).toEqual<ParsedPart[]>([
       { type: 'text', content: `${lastId}` },
     ]);
   });
@@ -431,7 +433,7 @@ describe('chatStore messages', () => {
     expect(getMessageById('msg-9')).toBeUndefined();
 
     const survivor = cap - 50;
-    expect(getMessageById(`msg-${survivor}`)?.message).toEqual([
+    expect(getMessageById(`msg-${survivor}`)?.message).toEqual<ParsedPart[]>([
       { type: 'text', content: `${survivor}` },
     ]);
 
@@ -440,7 +442,7 @@ describe('chatStore messages', () => {
     expect(getMessageById(`msg-${survivor}`)?.moderationNotice).toBe(
       'Timed out (10s)',
     );
-    expect(getMessageById(`msg-${survivor}`)?.message).toEqual([
+    expect(getMessageById(`msg-${survivor}`)?.message).toEqual<ParsedPart[]>([
       { type: 'text', content: `${survivor}—Timed out (10s)` },
     ]);
     expect(

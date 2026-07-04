@@ -13,7 +13,6 @@ import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVaria
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import { CHAT_INLINE_EMOTE_SCALE } from '@app/utils/emote/resolveEmoteScale';
 
-// Track preloaded URLs to avoid duplicate preloads
 const preloadedUrls = new Set<string>();
 const MAX_PRELOADED_CACHE = 500;
 
@@ -39,8 +38,6 @@ function getDisplayEmoteCacheUrls(emote: SanitisedEmote): string[] {
 
 /**
  * Preload a batch of emotes in the background
- * @param emotes - Array of emotes to preload
- * @param limit - Max number of emotes to preload (default: 50)
  */
 export async function preloadEmotes(
   emotes: SanitisedEmote[],
@@ -77,7 +74,6 @@ export async function preloadEmotes(
     return;
   }
 
-  // Preload in parallel batches of 10 to avoid overwhelming the network
   const BATCH_SIZE = 10;
   const batches: string[][] = [];
   for (let i = 0; i < toPreload.length; i += BATCH_SIZE) {
@@ -95,7 +91,6 @@ export async function preloadEmotes(
     }
   }
 
-  // Prevent unbounded cache growth
   if (preloadedUrls.size > MAX_PRELOADED_CACHE) {
     const urls = Array.from(preloadedUrls);
     const toRemove = urls.slice(0, preloadedUrls.size - MAX_PRELOADED_CACHE);
@@ -120,7 +115,6 @@ export async function preloadGlobalEmotes(emoteData: {
     ...(emoteData.ffzGlobalEmotes || []),
   ];
 
-  // Preload top 100 global emotes
   await preloadEmotes(allGlobal, 100);
 }
 
@@ -140,7 +134,6 @@ export async function preloadChannelEmotes(emoteData: {
     ...(emoteData.twitchChannelEmotes || []),
   ];
 
-  // Preload top 50 channel emotes
   await preloadEmotes(allChannel, 50);
 }
 

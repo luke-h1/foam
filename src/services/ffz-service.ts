@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import type { FfzSanitisedEmote } from '@app/types/emote';
+import type { EmoteImageVariantSet, FfzSanitisedEmote } from '@app/types/emote';
 import type { FfzBadgesResponse } from '@app/types/ffz/badge';
 import type {
   FfzChannelEmotesResponse,
@@ -34,8 +34,8 @@ function sanitiseFfzEmote(
   const staticVariants = {
     '2x': emote.urls['2'] || toFfzStaticUrl(emote.id, '2x'),
     '4x': emote.urls['4'] || toFfzStaticUrl(emote.id, '4x'),
-  };
-  const animatedVariants = emote.animated
+  } satisfies EmoteImageVariantSet;
+  const animatedVariants: EmoteImageVariantSet = emote.animated
     ? {
         '2x': toFfzAnimatedUrl(emote.id, '2x'),
         '4x': toFfzAnimatedUrl(emote.id, '4x'),
@@ -103,7 +103,6 @@ export const ffzService = {
       if ('room' in result) {
         const { room } = result;
 
-        // Process VIP badge
         if (room.vip_badge && Object.keys(room.vip_badge).length > 0) {
           const maxKey = Math.max(...Object.keys(room.vip_badge).map(Number));
           const maxUrl = room.vip_badge[maxKey.toString()] as string;
@@ -119,7 +118,6 @@ export const ffzService = {
           });
         }
 
-        // Process mod badge
         if (room.mod_urls && Object.keys(room.mod_urls).length > 0) {
           const maxKey = Math.max(...Object.keys(room.mod_urls).map(Number));
           const maxUrl = room.mod_urls[maxKey.toString()] as string;
@@ -135,7 +133,6 @@ export const ffzService = {
           });
         }
 
-        // Process user badges
         if (room.user_badges) {
           Object.entries(room.user_badges).forEach(([badge, users]) => {
             users.forEach(user => {

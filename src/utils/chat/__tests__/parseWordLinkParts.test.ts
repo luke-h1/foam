@@ -1,10 +1,12 @@
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
+
 import { parseWordLinkParts } from '../replaceTextWithEmotes';
 
 describe('parseWordLinkParts', () => {
   test('parses generic https URLs as link parts', () => {
     expect(
       parseWordLinkParts('https://www.youtube.com/watch?v=dQw4w9WgXcQ'),
-    ).toEqual([
+    ).toEqual<ParsedPart[]>([
       {
         type: 'link',
         content: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
@@ -14,17 +16,21 @@ describe('parseWordLinkParts', () => {
   });
 
   test('parses http URLs as link parts', () => {
-    expect(parseWordLinkParts('http://example.com/path')).toEqual([
-      {
-        type: 'link',
-        content: 'http://example.com/path',
-        url: 'http://example.com/path',
-      },
-    ]);
+    expect(parseWordLinkParts('http://example.com/path')).toEqual<ParsedPart[]>(
+      [
+        {
+          type: 'link',
+          content: 'http://example.com/path',
+          url: 'http://example.com/path',
+        },
+      ],
+    );
   });
 
   test('splits trailing punctuation from URLs', () => {
-    expect(parseWordLinkParts('https://youtu.be/abc123,')).toEqual([
+    expect(parseWordLinkParts('https://youtu.be/abc123,')).toEqual<
+      ParsedPart[]
+    >([
       {
         type: 'link',
         content: 'https://youtu.be/abc123',
@@ -37,7 +43,7 @@ describe('parseWordLinkParts', () => {
   test('still parses 7TV emote links as stvEmote parts', () => {
     expect(
       parseWordLinkParts('https://7tv.app/emotes/64f8a1b0c4b8c8f8f8f8f8f8'),
-    ).toEqual([
+    ).toEqual<ParsedPart[]>([
       {
         type: 'stvEmote',
         content: 'https://7tv.app/emotes/64f8a1b0c4b8c8f8f8f8f8f8',
@@ -47,7 +53,9 @@ describe('parseWordLinkParts', () => {
   });
 
   test('still parses Twitch clip links as twitchClip parts', () => {
-    expect(parseWordLinkParts('https://clips.twitch.tv/CoolClipSlug')).toEqual([
+    expect(parseWordLinkParts('https://clips.twitch.tv/CoolClipSlug')).toEqual<
+      ParsedPart[]
+    >([
       {
         type: 'twitchClip',
         content: 'https://clips.twitch.tv/CoolClipSlug',

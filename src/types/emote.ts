@@ -72,6 +72,7 @@ export interface TwitchSanitisedEmote extends SanitisedEmoteBase {
   width?: number;
   height?: number;
   actor?: StvUser;
+  owner_id?: string;
 }
 
 export interface EmojiSanitisedEmote extends SanitisedEmoteBase {

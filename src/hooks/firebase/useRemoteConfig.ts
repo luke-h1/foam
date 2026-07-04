@@ -42,9 +42,6 @@ export interface RemoteConfigSchema {
     };
   };
 
-  /**
-   * Url
-   */
   statusPageUrl: string;
   websiteUrl: string;
   admins: string[];
@@ -83,7 +80,6 @@ export const defaultRemoteConfig = {
   experiments: '{}',
 } satisfies Record<RemoteConfigKey, string>;
 
-// Keys that contain JSON and need parsing
 const jsonKeys: RemoteConfigKey[] = [
   'splash',
   'minimumVersion',
@@ -125,7 +121,6 @@ function parseValue<K extends RemoteConfigKey>(
       logger.remoteConfig.error(`Failed to parse JSON for key: ${key}`, {
         raw,
       });
-      // Return parsed default as fallback
       return JSON.parse(defaultRemoteConfig[key]) as RemoteConfigSchema[K];
     }
   }
@@ -142,7 +137,7 @@ function buildConfigFromDefaults(): RemoteConfigType {
           raw,
           value: parseValue(key, raw),
           source: 'default',
-        },
+        } satisfies RemoteConfigEntry<RemoteConfigSchema[RemoteConfigKey]>,
       ];
     }),
   ) as RemoteConfigType;
@@ -209,7 +204,7 @@ function readRemoteConfig(): RemoteConfigType {
             raw,
             value: parseValue(key as RemoteConfigKey, raw),
             source: entry.getSource(),
-          },
+          } satisfies RemoteConfigEntry<RemoteConfigSchema[RemoteConfigKey]>,
         ],
       ];
     }),

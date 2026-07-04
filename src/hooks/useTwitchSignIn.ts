@@ -30,12 +30,24 @@ const CHANNEL_SCOPES = [
   'channel:moderate',
 ] as const;
 
-const CLIP_SCOPES = ['channel:manage:clips', 'editor:manage:clips'] as const;
+const CLIP_SCOPES = [
+  'channel:manage:clips',
+  'editor:manage:clips',
+  'clips:edit',
+] as const;
 
 const CHAT_SCOPES = ['chat:read', 'chat:edit', 'user:write:chat'] as const;
 const MODERATOR_CHAT_SCOPES = [
   'moderator:read:chat_messages',
   'moderator:manage:chat_messages',
+] as const;
+const MODERATION_SCOPES = [
+  'moderator:manage:banned_users',
+  'moderator:manage:shield_mode',
+  'moderator:manage:announcements',
+  'moderator:manage:shoutouts',
+  'moderator:manage:warnings',
+  'moderator:manage:chat_settings',
 ] as const;
 const WHISPER_SCOPES = ['whispers:read', 'whispers:edit'] as const;
 
@@ -95,6 +107,7 @@ export function useTwitchSignIn(options: UseTwitchSignInOptions = {}) {
         ...USER_SCOPES,
         ...CHAT_SCOPES,
         ...MODERATOR_CHAT_SCOPES,
+        ...MODERATION_SCOPES,
         ...WHISPER_SCOPES,
         ...CHANNEL_SCOPES,
         ...CLIP_SCOPES,

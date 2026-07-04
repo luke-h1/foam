@@ -23,20 +23,6 @@ export interface IndexedCollection<T> {
 }
 
 /**
- * Type guard to check if a value is an IndexedCollection.
- *
- * @typeParam T - The expected type of items in the collection.
- * @param value - The value to check.
- * @returns `true` if the value is an IndexedCollection, `false` otherwise.
- *
- * @example
- * ```typescript
- * if (isIndexedCollection<PaintStop>(data.stops)) {
- *   const stopsArray = indexedCollectionToArray(data.stops);
- * }
- * ```
- */
-/**
  * Converts an IndexedCollection to a standard TypeScript array.
  *
  * This utility handles the conversion from 7TV's object-based array format

@@ -110,9 +110,10 @@ export const storageService = {
   },
 
   getAllKeys(namespacePrefix?: NamespacePrefixes): string[] {
-    return storage
-      .getAllKeys()
-      .filter(key => key.startsWith(`${NAMESPACE}_${namespacePrefix}`));
+    const prefix = namespacePrefix
+      ? `${NAMESPACE}_${namespacePrefix}`
+      : NAMESPACE;
+    return storage.getAllKeys().filter(key => key.startsWith(prefix));
   },
 
   clearExpired(): void {

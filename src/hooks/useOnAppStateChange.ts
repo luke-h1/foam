@@ -1,25 +1,24 @@
-import { useEffect } from 'react';
-import { AppState, Platform } from 'react-native';
-import type { AppStateStatus } from 'react-native';
+import { useEffect, useRef } from 'react';
 
-import { focusManager } from '@tanstack/react-query';
-
-const onAppStateChange = (status: AppStateStatus) => {
-  if (Platform.OS !== 'web') {
-    focusManager.setFocused(status === 'active');
-  }
-};
+import type { AppStateTransition } from '@app/utils/appState/appStateTransitions';
+import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
 
 /**
- * Simple hook that triggers an update
- * when the app state changes.
- * in order for react-query to refetch
- * on app focus
+ * Runs `onTransition` on every app-state change with the previous and
+ * current state. The latest callback is always invoked; the underlying
+ * subscription lives for the component's lifetime.
  */
-export const useOnAppStateChange = () => {
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', onAppStateChange);
+export function useOnAppStateChange(
+  onTransition: (transition: AppStateTransition) => void,
+): void {
+  const onTransitionRef = useRef(onTransition);
+  onTransitionRef.current = onTransition;
 
-    return () => subscription.remove();
+  useEffect(() => {
+    const unsubscribe = subscribeToAppStateTransitions(transition => {
+      onTransitionRef.current(transition);
+    });
+
+    return unsubscribe;
   }, []);
-};
+}

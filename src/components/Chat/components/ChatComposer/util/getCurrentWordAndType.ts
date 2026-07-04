@@ -3,13 +3,11 @@ import { getCurrentWordInfo } from './getCurrentWordInfo';
 
 export const getCurrentWordAndType = (text: string, cursorPosition: number) => {
   const wordInfo = getCurrentWordInfo(text, cursorPosition);
-  const safeWord = wordInfo.word ?? '';
-  const isUserMention = safeWord.startsWith('@');
+  const isUserMention = wordInfo.word.startsWith('@');
 
   return {
     ...wordInfo,
-    word: safeWord,
     type: isUserMention ? 'user' : ('emote' as SuggestionType),
-    searchTerm: isUserMention ? safeWord.slice(1) : safeWord,
+    searchTerm: isUserMention ? wordInfo.word.slice(1) : wordInfo.word,
   };
 };

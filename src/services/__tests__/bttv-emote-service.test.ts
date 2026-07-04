@@ -1,4 +1,5 @@
 import type { BttvEmote } from '@app/types/bttv/emote';
+import type { BttvSanitisedEmote } from '@app/types/emote';
 
 import { bttvCachedApi } from '../api/clients';
 import { bttvEmoteService } from '../bttv-emote-service';
@@ -40,7 +41,7 @@ describe('bttvEmoteService', () => {
     const result = await bttvEmoteService.getSanitisedGlobalEmotes();
 
     expect(api.get).toHaveBeenCalledWith('/emotes/global');
-    expect(result).toEqual([
+    expect(result).toEqual<BttvSanitisedEmote[]>([
       {
         name: 'catJAM',
         id: 'emote1',
@@ -70,7 +71,7 @@ describe('bttvEmoteService', () => {
 
     const result = await bttvEmoteService.getSanitisedGlobalEmotes();
 
-    expect(result).toEqual([
+    expect(result).toEqual<BttvSanitisedEmote[]>([
       {
         name: 'cvHazmat',
         id: 'emote2',

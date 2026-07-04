@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { ImageStyle, StyleSheet, View, ViewStyle } from 'react-native';
 
 import { theme } from '@app/styles/themes';
 
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
   },
 });
 
-function getImageSizeStyle(size: NonNullable<Props['size']>) {
+function getImageSizeStyle(size: NonNullable<Props['size']>): ImageStyle {
   switch (size) {
     case 'lg':
       return { height: 100, width: 130 };

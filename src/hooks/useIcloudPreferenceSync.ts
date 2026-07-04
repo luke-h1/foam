@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { AppState, InteractionManager } from 'react-native';
+import { InteractionManager } from 'react-native';
 
 import { useObserveEffect } from '@legendapp/state/react';
 
@@ -14,6 +14,7 @@ import {
   preferences$,
   replacePreferences,
 } from '@app/store/preferenceStore';
+import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
 import { logger } from '@app/utils/logger';
 
 export function useIcloudPreferenceSync() {
@@ -62,8 +63,8 @@ export function useIcloudPreferenceSync() {
 
     queueRemoteSync();
 
-    const subscription = AppState.addEventListener('change', state => {
-      if (state === 'active') {
+    const unsubscribe = subscribeToAppStateTransitions(({ current }) => {
+      if (current === 'active') {
         queueRemoteSync();
       }
     });
@@ -71,7 +72,7 @@ export function useIcloudPreferenceSync() {
     return () => {
       cancelled = true;
       pendingSync?.cancel();
-      subscription.remove();
+      unsubscribe();
     };
   }, []);
 

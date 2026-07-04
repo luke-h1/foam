@@ -7,7 +7,6 @@ export function angleToPoints(angle: number): {
   start: { x: number; y: number };
   end: { x: number; y: number };
 } {
-  // Convert CSS angle to radians
   // CSS: 0deg = bottom to top, clockwise positive
   // We need to convert to coordinate points where (0,0) is top-left
   const rad = ((angle - 90) * Math.PI) / 180;

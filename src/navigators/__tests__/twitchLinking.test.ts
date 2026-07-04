@@ -1,37 +1,51 @@
-import { parseTwitchUrl, twitchLinkToAppPath } from '../twitchLinking';
+import {
+  parseTwitchUrl,
+  type TwitchLink,
+  twitchLinkToAppPath,
+} from '../twitchLinking';
 
 describe('parseTwitchUrl', () => {
   test('parses Twitch clip URLs', () => {
-    expect(parseTwitchUrl('https://clips.twitch.tv/CoolClipSlug')).toEqual({
+    expect(
+      parseTwitchUrl('https://clips.twitch.tv/CoolClipSlug'),
+    ).toEqual<TwitchLink>({
       type: 'clip',
       clipId: 'CoolClipSlug',
     });
     expect(
       parseTwitchUrl('https://www.twitch.tv/cohhcarnage/clip/CoolClipSlug'),
-    ).toEqual({
+    ).toEqual<TwitchLink>({
       type: 'clip',
       channelLogin: 'cohhcarnage',
       clipId: 'CoolClipSlug',
     });
-    expect(parseTwitchUrl('https://www.twitch.tv/clip/CoolClipSlug')).toEqual({
+    expect(
+      parseTwitchUrl('https://www.twitch.tv/clip/CoolClipSlug'),
+    ).toEqual<TwitchLink>({
       type: 'clip',
       clipId: 'CoolClipSlug',
     });
   });
 
   test('still parses channels and VODs', () => {
-    expect(parseTwitchUrl('https://www.twitch.tv/cohhcarnage')).toEqual({
+    expect(
+      parseTwitchUrl('https://www.twitch.tv/cohhcarnage'),
+    ).toEqual<TwitchLink>({
       type: 'channel',
       channelLogin: 'cohhcarnage',
     });
-    expect(parseTwitchUrl('https://www.twitch.tv/videos/123')).toEqual({
+    expect(
+      parseTwitchUrl('https://www.twitch.tv/videos/123'),
+    ).toEqual<TwitchLink>({
       type: 'vod',
       videoId: '123',
     });
   });
 
   test('parses a channel /about URL as a profile link', () => {
-    expect(parseTwitchUrl('https://www.twitch.tv/cohhcarnage/about')).toEqual({
+    expect(
+      parseTwitchUrl('https://www.twitch.tv/cohhcarnage/about'),
+    ).toEqual<TwitchLink>({
       type: 'profile',
       channelLogin: 'cohhcarnage',
     });

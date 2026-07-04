@@ -1,5 +1,8 @@
 import type { BttvEmote } from '@app/types/bttv/emote';
-import type { BttvSanitisedEmote } from '@app/types/emote';
+import type {
+  BttvSanitisedEmote,
+  EmoteImageVariantSet,
+} from '@app/types/emote';
 
 import { bttvCachedApi } from './api/clients';
 import { buildSanitisedEmote } from './emote-provider';
@@ -43,8 +46,8 @@ function sanitiseBttvEmote(
   const animatedVariants = {
     '2x': toBttvEmoteUrl(emote.id, '2x'),
     '3x': toBttvEmoteUrl(emote.id, '3x'),
-  };
-  const staticVariants = emote.animated
+  } satisfies EmoteImageVariantSet;
+  const staticVariants: EmoteImageVariantSet = emote.animated
     ? {
         '2x': toBttvStaticEmoteUrl(emote.id, '2x'),
         '3x': toBttvStaticEmoteUrl(emote.id, '3x'),

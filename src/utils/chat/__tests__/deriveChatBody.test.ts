@@ -1,3 +1,4 @@
+import type { MessageStructure } from '@app/utils/chat/deriveChatBody';
 import {
   deriveChatBody,
   getMessageStructure,
@@ -24,7 +25,7 @@ describe('getMessageStructure', () => {
   test('treats text, mention, link and non-zero-width emotes as inline', () => {
     const message = [text('hello '), mention('@forsen'), link('https://x.y')];
 
-    expect(getMessageStructure(message)).toEqual({
+    expect(getMessageStructure(message)).toEqual<MessageStructure>({
       canBeInline: true,
       containsEmotes: false,
     });
@@ -33,7 +34,7 @@ describe('getMessageStructure', () => {
   test('flags emote presence and keeps a plain emote inline', () => {
     const message = [text('nice '), emote('Kappa')];
 
-    expect(getMessageStructure(message)).toEqual({
+    expect(getMessageStructure(message)).toEqual<MessageStructure>({
       canBeInline: true,
       containsEmotes: true,
     });
@@ -42,7 +43,7 @@ describe('getMessageStructure', () => {
   test('a zero-width emote breaks inline flow', () => {
     const message = [emote('Kappa'), emote('RainTime', true)];
 
-    expect(getMessageStructure(message)).toEqual({
+    expect(getMessageStructure(message)).toEqual<MessageStructure>({
       canBeInline: false,
       containsEmotes: true,
     });
@@ -51,7 +52,7 @@ describe('getMessageStructure', () => {
   test('a notice part is not inlineable', () => {
     const message = [ritual()];
 
-    expect(getMessageStructure(message)).toEqual({
+    expect(getMessageStructure(message)).toEqual<MessageStructure>({
       canBeInline: false,
       containsEmotes: false,
     });

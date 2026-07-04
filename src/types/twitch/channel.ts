@@ -4,6 +4,17 @@ export interface Channel {
   broadcasterName: string;
 }
 
+export interface FollowedChannel {
+  broadcaster_id: string;
+  broadcaster_login: string;
+  broadcaster_name: string;
+  followed_at: string;
+}
+
+export interface FollowedChannelWithProfile extends FollowedChannel {
+  profile_image_url?: string;
+}
+
 export interface SearchChannelResponse {
   broadcaster_language: string;
   broadcaster_login: string;

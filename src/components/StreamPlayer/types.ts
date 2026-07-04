@@ -70,6 +70,14 @@ export interface StreamPlayerRef {
    */
   setVolume: (volume: number) => void;
   /**
+   * Whether the embedded video is currently in system picture-in-picture.
+   */
+  isPictureInPicture: () => boolean;
+  /**
+   * Toggle iOS system picture-in-picture on the embedded video.
+   */
+  togglePictureInPicture: () => void;
+  /**
    * Release the underlying media (pause + drop the <video> source) so the
    * WebView can be torn down without an active AVPlayer wedging the transition.
    */
@@ -189,6 +197,18 @@ export interface StreamPlayerProps {
    * Callback when the share button is pressed in the overlay controls.
    */
   onSharePress?: () => void;
+  /**
+   * Callback when the create clip button is pressed in the overlay controls.
+   */
+  onCreateClipPress?: () => void;
+  /**
+   * Callback when the sleep timer button is pressed in the overlay controls.
+   */
+  onSleepTimerPress?: () => void;
+  /**
+   * Whether a sleep timer is currently counting down; tints the overlay button.
+   */
+  sleepTimerActive?: boolean;
   /**
    * Optional callback when the user taps the video area (e.g. to toggle chat in landscape).
    */
@@ -322,6 +342,8 @@ export type PlayerMessage =
       };
       type: 'videoElementError';
     }
+  | { type: 'pipChanged'; payload: { active: boolean } }
+  | { type: 'pipUnavailable' }
   | { type: 'playing' }
   | { type: 'ready' }
   | { type: 'trace'; payload: { step: string; detail?: string } }

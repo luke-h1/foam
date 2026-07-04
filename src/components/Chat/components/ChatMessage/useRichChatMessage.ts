@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useMappingHelper } from '@shopify/flash-list';
 
+import type { ChatMessageDisplayFlags } from '@app/components/Chat/types/chatUiFlags';
 import { hasSharedChannelPointsMessage } from '@app/components/Chat/util/channelPointsSharedMessage';
 import { getAnnouncementAccentColor } from '@app/components/Chat/util/getAnnouncementAccentColor';
 import { toChatMessageData } from '@app/components/Chat/util/richChatMessageData';
@@ -18,6 +19,7 @@ import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 import { findCustomHighlight } from '@app/utils/chat/customHighlights';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 
+import type { UseChatMessagePartRendererArgs } from './renderers/useChatMessagePartRenderer';
 import type {
   BadgePressData,
   EmotePressData,
@@ -89,7 +91,7 @@ export function useRichChatMessage<
     ...(topLevelIsHighlightedMessageTarget !== undefined
       ? { isHighlightedMessageTarget: topLevelIsHighlightedMessageTarget }
       : {}),
-  };
+  } satisfies ChatMessageDisplayFlags;
 
   const {
     disableEmoteAnimations = false,
@@ -218,7 +220,7 @@ export function useRichChatMessage<
     normalisedCurrentUsername,
     noticeTags: isUserNoticeTags(notice_tags) ? notice_tags : undefined,
     parseTextForEmotes,
-  };
+  } satisfies UseChatMessagePartRendererArgs;
 
   const {
     hasSubscriptionNotice,

@@ -1,7 +1,8 @@
 import { useCallback, useRef } from 'react';
-import { AppState, type AppStateStatus } from 'react-native';
 
 import { useFocusEffect } from 'expo-router';
+
+import { subscribeToAppForeground } from '@app/utils/appState/appStateTransitions';
 
 interface UseRefetchOnForegroundOptions {
   enabled?: boolean;
@@ -12,7 +13,6 @@ export function useRefetchOnForeground({
   enabled = true,
   refetch,
 }: UseRefetchOnForegroundOptions) {
-  const previousStateRef = useRef<AppStateStatus>(AppState.currentState);
   const refetchRef = useRef(refetch);
 
   refetchRef.current = refetch;
@@ -28,19 +28,9 @@ export function useRefetchOnForeground({
       // tab after a long pause) ensure data is refreshed.
       void refetchRef.current();
 
-      const subscription = AppState.addEventListener('change', nextState => {
-        const previousState = previousStateRef.current;
-        previousStateRef.current = nextState;
-
-        if (
-          nextState === 'active' &&
-          (previousState === 'background' || previousState === 'inactive')
-        ) {
-          void refetchRef.current();
-        }
+      return subscribeToAppForeground(() => {
+        void refetchRef.current();
       });
-
-      return () => subscription.remove();
     }, [enabled]),
   );
 }

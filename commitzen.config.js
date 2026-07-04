@@ -30,7 +30,6 @@ module.exports = {
     {
       value: 'release',
       name: 'release:\tRelease a new version (e.g., 0.0.2)',
-      // You can add further logic here to enforce the version format if necessary
     },
   ],
   scopes,

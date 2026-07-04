@@ -11,6 +11,7 @@ import {
 } from '@app/services/seventv-service';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
 import {
   convertV4PaintToPaintData,
   type V4Badge,
@@ -66,40 +67,13 @@ type CachedUserCosmetics = {
   ttvUserId: string | null;
 };
 
-const userCosmeticsRequests = new Map<string, Promise<string | null>>();
 const sessionCosmeticsCache = new Map<string, CachedUserCosmetics>();
 
-// Bumped by clearUserCosmeticsCache so in-flight fetches cannot write back
-// stale results.
-let cosmeticsCacheGeneration = 0;
-
-// Bounded concurrency for the per-user cosmetics network fetch. Entering a busy
-// channel fires an entitlement.create burst (plus the visible-message hydrate
-// path), each of which can call fetchAndCacheUserCosmetics; without a cap that
-// stormed the network with hundreds of parallel getUserCosmeticsGql requests on
-// channel entry. Limiting here covers every caller, not just the hydrate hook.
-const MAX_CONCURRENT_COSMETIC_FETCHES = 4;
-let activeCosmeticFetches = 0;
-const cosmeticFetchQueue: (() => void)[] = [];
-
-const acquireCosmeticFetchSlot = (): Promise<void> => {
-  if (activeCosmeticFetches < MAX_CONCURRENT_COSMETIC_FETCHES) {
-    activeCosmeticFetches += 1;
-    return Promise.resolve();
-  }
-  return new Promise<void>(resolve => {
-    cosmeticFetchQueue.push(resolve);
-  });
-};
-
-const releaseCosmeticFetchSlot = (): void => {
-  const next = cosmeticFetchQueue.shift();
-  if (next) {
-    next();
-  } else {
-    activeCosmeticFetches -= 1;
-  }
-};
+// Bounded concurrency: entering a busy channel fires an entitlement.create
+// burst (plus the visible-message hydrate path), each of which can call
+// fetchAndCacheUserCosmetics; without a cap that stormed the network with
+// hundreds of parallel getUserCosmeticsGql requests on channel entry.
+const userCosmeticsFetchGuard = createFetchOnceGuard({ maxConcurrent: 4 });
 
 const cacheSessionCosmetics = (
   sevenTvUserId: string,
@@ -207,14 +181,7 @@ export const fetchAndCacheUserCosmetics = async (
     return cached.ttvUserId;
   }
 
-  const pending = userCosmeticsRequests.get(sevenTvUserId);
-  if (pending) {
-    return pending;
-  }
-
-  const requestGeneration = cosmeticsCacheGeneration;
-  const request = (async () => {
-    await acquireCosmeticFetchSlot();
+  return userCosmeticsFetchGuard.run(sevenTvUserId, async ctx => {
     try {
       const cosmetics = await sevenTvService.getUserCosmeticsGql(sevenTvUserId);
       if (!cosmetics) {
@@ -240,7 +207,7 @@ export const fetchAndCacheUserCosmetics = async (
         ttvUserId: cosmetics.ttvUserId,
       };
 
-      if (cosmeticsCacheGeneration === requestGeneration) {
+      if (ctx.stillCurrent()) {
         setCachedUserCosmetics(sevenTvUserId, cachedCosmetics);
         applyCachedUserCosmetics(cachedCosmetics);
       }
@@ -251,24 +218,12 @@ export const fetchAndCacheUserCosmetics = async (
         error,
       );
       return null;
-    } finally {
-      releaseCosmeticFetchSlot();
     }
-  })();
-
-  userCosmeticsRequests.set(sevenTvUserId, request);
-  try {
-    return await request;
-  } finally {
-    if (userCosmeticsRequests.get(sevenTvUserId) === request) {
-      userCosmeticsRequests.delete(sevenTvUserId);
-    }
-  }
+  });
 };
 
 export const clearUserCosmeticsCache = () => {
-  cosmeticsCacheGeneration += 1;
-  userCosmeticsRequests.clear();
+  userCosmeticsFetchGuard.clear();
   sessionCosmeticsCache.clear();
   clearSevenTvUserIdCache();
   storageService.clearNamespace(

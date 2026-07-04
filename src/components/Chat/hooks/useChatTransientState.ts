@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
@@ -8,6 +8,7 @@ import {
 } from '@app/store/chat/actions/transientState';
 import { defaultTransientState } from '@app/store/chat/observables/chatTransientState';
 import { useTransientChannelFilters } from '@app/store/chat/react/transientSelectors';
+import { usePreference } from '@app/store/preferenceStore';
 
 import type { AnyChatMessageType } from '../util/messageHandlers';
 
@@ -22,8 +23,20 @@ export function useChatTransientState(channelId: string) {
   const highlightedReplyTargetTimeoutRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
-  const { hiddenPhrases, hiddenUsers, highlightedUsers, showOnlyMentions } =
-    useTransientChannelFilters(channelId);
+  const {
+    hiddenPhrases: transientHiddenPhrases,
+    hiddenUsers,
+    highlightedUsers,
+    showOnlyMentions,
+  } = useTransientChannelFilters(channelId);
+  const blockedTerms = usePreference('blockedTerms');
+
+  // Stable identity: a fresh array here breaks ChatMessagePane's memo on every
+  // render and re-runs the visible-message filter over the whole list.
+  const hiddenPhrases = useMemo(
+    () => [...transientHiddenPhrases, ...blockedTerms],
+    [transientHiddenPhrases, blockedTerms],
+  );
 
   // The visible-asset dedup guards persist across channel switches (the refs are
   // created once), so reset them when the channel changes — a new channel's

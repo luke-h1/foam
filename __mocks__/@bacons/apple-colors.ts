@@ -1,6 +1,3 @@
-// Mock for @bacons/apple-colors
-// Provides mock color values for Jest tests
-
 export const systemBlue = '#007AFF';
 export const systemGreen = '#34C759';
 export const systemRed = '#FF3B30';

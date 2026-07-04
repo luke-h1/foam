@@ -1,6 +1,11 @@
 import { createChatMessage } from '@app/components/Chat/hooks/__tests__/__fixtures__/useChat.fixture';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
-import { type BufferedMessage, createMessageBuffer } from '../messageBuffer';
+import {
+  type AddResult,
+  type BufferedMessage,
+  createMessageBuffer,
+} from '../messageBuffer';
 
 jest.mock('@app/store/chat/actions/messages', () => ({
   getMaxChatMessages: jest.fn(() => 1000),
@@ -22,8 +27,14 @@ describe('createMessageBuffer add/drain', () => {
   test('appends new messages and drains them in order, clearing the buffer', () => {
     const buffer = createMessageBuffer(() => 1000);
 
-    expect(buffer.add(message('a'))).toEqual({ added: true, dropped: 0 });
-    expect(buffer.add(message('b'))).toEqual({ added: true, dropped: 0 });
+    expect(buffer.add(message('a'))).toEqual<AddResult>({
+      added: true,
+      dropped: 0,
+    });
+    expect(buffer.add(message('b'))).toEqual<AddResult>({
+      added: true,
+      dropped: 0,
+    });
     expect(buffer.size()).toBe(2);
 
     const drained = buffer.drain();
@@ -37,7 +48,7 @@ describe('createMessageBuffer add/drain', () => {
     buffer.add(message('a', { cachedSenderColor: 'red' }));
     const result = buffer.add(message('a', { cachedSenderColor: 'blue' }));
 
-    expect(result).toEqual({ added: false, dropped: 0 });
+    expect(result).toEqual<AddResult>({ added: false, dropped: 0 });
     expect(buffer.size()).toBe(1);
     expect(buffer.drain()[0]!.cachedSenderColor).toBe('red');
   });
@@ -49,7 +60,7 @@ describe('createMessageBuffer add/drain', () => {
     buffer.add(message('b'));
     const result = buffer.add(message('c'));
 
-    expect(result).toEqual({ added: true, dropped: 1 });
+    expect(result).toEqual<AddResult>({ added: true, dropped: 1 });
     expect(buffer.drain().map(m => m.message_id)).toEqual(['b', 'c']);
   });
 });
@@ -80,7 +91,7 @@ describe('createMessageBuffer edits', () => {
     buffer.moderateById('a', 'Deleted by a moderator');
 
     const [moderated] = buffer.drain();
-    expect(moderated!.message).toEqual([
+    expect(moderated!.message).toEqual<ParsedPart[]>([
       { type: 'text', content: 'a—Deleted by a moderator' },
     ]);
     expect(moderated!.moderationNotice).toBe('Deleted by a moderator');

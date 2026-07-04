@@ -19,7 +19,9 @@ import {
   createViewerMilestoneTags,
 } from '@app/types/chat/irc-tags/__fixtures__/userNoticeTags.fixture';
 import type { BaseUserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { getCachedChannelPointRewardTitle } from '@app/utils/chat/channelPointRewardTitleStore';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import {
   createBaseMessage,
@@ -133,7 +135,7 @@ describe('messageHandlers', () => {
       expect(result.channel).toBe('testchannel');
       expect(result.sender).toBe('TestUser');
       expect(result.message_id).toBe('msg-123');
-      expect(result.message).toEqual([
+      expect(result.message).toEqual<ParsedPart[]>([
         { type: 'text', content: 'Hello world!' },
       ]);
     });
@@ -304,7 +306,7 @@ describe('messageHandlers', () => {
 
       expect(result.notice_tags?.['msg-id']).toBe('raid');
       expect(result.isTwitchSystemNotice).toBe(true);
-      expect(result.message).toEqual([
+      expect(result.message).toEqual<ParsedPart[]>([
         { type: 'text', content: '500 raiders from RaidLeader have joined!' },
       ]);
     });
@@ -417,7 +419,7 @@ describe('messageHandlers', () => {
 
       expect(result.notice_tags?.['msg-id']).toBe('bitsbadgetier');
       expect(result.isTwitchSystemNotice).toBe(true);
-      expect(result.message).toEqual([
+      expect(result.message).toEqual<ParsedPart[]>([
         { type: 'text', content: 'Cheerer earned the 1,000 Bits badge!' },
       ]);
     });
@@ -437,7 +439,7 @@ describe('messageHandlers', () => {
 
       expect(result.notice_tags?.['msg-id']).toBe('unraid');
       expect(result.isTwitchSystemNotice).toBe(true);
-      expect(result.message).toEqual([
+      expect(result.message).toEqual<ParsedPart[]>([
         { type: 'text', content: 'The raid has been cancelled.' },
       ]);
     });
@@ -457,7 +459,7 @@ describe('messageHandlers', () => {
 
       expect(result.notice_tags?.['msg-id']).toBe('sharedchatnotice');
       expect(result.isTwitchSystemNotice).toBe(true);
-      expect(result.message).toEqual([
+      expect(result.message).toEqual<ParsedPart[]>([
         {
           type: 'text',
           content: 'Shared chat connected with partner channel.',
@@ -482,7 +484,7 @@ describe('messageHandlers', () => {
 
       expect(result.notice_tags?.['msg-id']).toBe('modiversary');
       expect(result.isTwitchSystemNotice).toBe(true);
-      expect(result.message).toEqual([
+      expect(result.message).toEqual<ParsedPart[]>([
         {
           type: 'text',
           content: 'ModUser is celebrating 24 months as a moderator!',
@@ -506,7 +508,7 @@ describe('messageHandlers', () => {
 
       expect(result.notice_tags?.['msg-id']).toBe('modiversary');
       expect(result.isTwitchSystemNotice).toBe(true);
-      expect(result.message).toEqual([
+      expect(result.message).toEqual<ParsedPart[]>([
         {
           type: 'text',
           content:
@@ -530,7 +532,7 @@ describe('messageHandlers', () => {
       expect(result.isTwitchSystemNotice).toBeUndefined();
       expect(result.sender).toBe('Gekon');
       expect(result.userstate.username).toBe('Gekon');
-      expect(result.message).toEqual([
+      expect(result.message).toEqual<ParsedPart[]>([
         {
           type: 'text',
           content: 'this is an announcement to bait him',
@@ -551,7 +553,7 @@ describe('messageHandlers', () => {
       expect(result.isChannelPointRedemption).toBe(true);
       expect(result.isTwitchSystemNotice).toBeUndefined();
       expect(result.sender).toBe('HighlightedUser');
-      expect(result.message).toEqual([
+      expect(result.message).toEqual<ParsedPart[]>([
         { type: 'text', content: 'this message is highlighted' },
       ]);
     });
@@ -659,11 +661,11 @@ describe('messageHandlers', () => {
         text: '',
       });
 
-      expect(result.message).toEqual([
+      expect(result.message).toEqual<ParsedPart[]>([
         { type: 'text', content: 'Some unknown notice' },
       ]);
       expect(result.isTwitchSystemNotice).toBe(true);
-      expect(result.badges).toEqual([]);
+      expect(result.badges).toEqual<SanitisedBadgeSet[]>([]);
     });
   });
 
@@ -676,7 +678,7 @@ describe('messageHandlers', () => {
 
       expect(result.channel).toBe('testchannel');
       expect(result.sender).toBe('System');
-      expect(result.message).toEqual([
+      expect(result.message).toEqual<ParsedPart[]>([
         { type: 'text', content: 'Connection established' },
       ]);
     });
@@ -693,7 +695,6 @@ describe('messageHandlers', () => {
       const result1 = createSystemMessage('channel', 'Message 1');
       const result2 = createSystemMessage('channel', 'Message 2');
 
-      // IDs should start with 'system-'
       expect(result1.message_id).toMatch(/^system-/);
       expect(result2.message_id).toMatch(/^system-/);
     });
@@ -701,7 +702,7 @@ describe('messageHandlers', () => {
     test('should have empty badges', () => {
       const result = createSystemMessage('testchannel', 'Test');
 
-      expect(result.badges).toEqual([]);
+      expect(result.badges).toEqual<SanitisedBadgeSet[]>([]);
     });
   });
 });

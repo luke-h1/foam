@@ -8,7 +8,12 @@ import {
   hasSubscribers,
   removeSubscriber,
 } from './manage-subscribers';
-import { Options, sharedWebSockets, type WebSocketEventMap } from './types';
+import {
+  Options,
+  sharedWebSockets,
+  type Subscriber,
+  type WebSocketEventMap,
+} from './types';
 
 export const createOrJoinSocket = (
   webSocketRef: RefObject<WebSocket | null>,
@@ -34,7 +39,7 @@ export const createOrJoinSocket = (
       optionsRef,
       reconnectCount,
       reconnect: startRef,
-    };
+    } satisfies Subscriber;
 
     addSubscriber(url, subscriber);
     webSocketRef.current = sharedWebSockets[url];

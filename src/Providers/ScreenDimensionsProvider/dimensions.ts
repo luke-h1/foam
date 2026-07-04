@@ -1,6 +1,5 @@
 import { Resolution } from '@app/hooks/useScale';
 
-// Create an alias for better readability
 export type Dimensions = Resolution;
 
 export type DisplayMode = 'PORTRAIT' | 'LANDSCAPE';

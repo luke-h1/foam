@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native';
 
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import type { EmoteMenuIcon as EmoteMenuIconType } from '@app/components/Chat/components/EmoteSheet/util/emoteMenuData';
+import { Image } from '@app/components/Image/Image';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
@@ -28,6 +29,17 @@ export function EmoteMenuIcon({
   icon,
   isActive,
 }: EmoteMenuIconProps) {
+  if (icon.startsWith('avatar:')) {
+    return (
+      <Image
+        source={icon.slice(7)}
+        style={styles.avatarIcon}
+        containerStyle={styles.avatarIconContainer}
+        transition={100}
+      />
+    );
+  }
+
   if (icon.startsWith('emoji:')) {
     return <Text style={styles.emojiIconText}>{icon.slice(6)}</Text>;
   }
@@ -74,6 +86,17 @@ export function EmoteMenuIcon({
 }
 
 const styles = StyleSheet.create({
+  avatarIcon: {
+    borderRadius: 12,
+    height: 24,
+    width: 24,
+  },
+  avatarIconContainer: {
+    borderRadius: 12,
+    height: 24,
+    overflow: 'hidden',
+    width: 24,
+  },
   emojiIconText: {
     fontSize: 16,
   },

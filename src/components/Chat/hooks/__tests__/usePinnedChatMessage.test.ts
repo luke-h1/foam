@@ -7,6 +7,7 @@ import {
 } from '@app/services/twitch-service';
 import type { TwitchPinnedChatMessage } from '@app/types/twitch/chat';
 
+import type { PinnedChatMessageViewModel } from '../usePinnedChatMessage';
 import { usePinnedChatMessage } from '../usePinnedChatMessage';
 import {
   createChatMessage,
@@ -87,7 +88,7 @@ describe('usePinnedChatMessage', () => {
     const { result } = renderPinnedMessage();
 
     await waitFor(() => {
-      expect(result.current.pinnedMessage).toEqual({
+      expect(result.current.pinnedMessage).toEqual<PinnedChatMessageViewModel>({
         expiresAt: '2026-06-08T13:00:00.000Z',
         messageId: 'api-pin-1',
         pinnedByName: 'PinningMod',
@@ -137,7 +138,7 @@ describe('usePinnedChatMessage', () => {
       moderatorId: 'moderator-1',
     });
     expect(mockToastSuccess).toHaveBeenCalledWith('Message pinned');
-    expect(result.current.pinnedMessage).toEqual({
+    expect(result.current.pinnedMessage).toEqual<PinnedChatMessageViewModel>({
       expiresAt: '2026-06-08T13:00:00.000Z',
       messageId: 'api-pin-1',
       pinnedByName: 'PinningMod',

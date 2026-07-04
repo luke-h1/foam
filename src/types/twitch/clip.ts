@@ -24,6 +24,11 @@ export interface TwitchClipDownload {
   portrait_download_url: string | null;
 }
 
+export interface TwitchCreatedClip {
+  id: string;
+  edit_url: string;
+}
+
 export interface TwitchClipsRequestParams {
   broadcasterId: string;
   after?: string;

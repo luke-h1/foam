@@ -1,6 +1,10 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import { replacePreferences, usePreferences } from '../preferenceStore';
+import {
+  type Preferences,
+  replacePreferences,
+  usePreferences,
+} from '../preferenceStore';
 
 const basePreferences = {
   updatedAt: 1,
@@ -44,7 +48,7 @@ const basePreferences = {
   analyticsEnabled: true,
   sharedChatEnabled: true,
   enhancedVideoStability: false,
-} as const;
+} as const satisfies Preferences;
 
 describe('usePreferences', () => {
   beforeEach(() => {

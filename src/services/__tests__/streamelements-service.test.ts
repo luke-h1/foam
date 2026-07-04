@@ -1,3 +1,5 @@
+import type { StreamElementsChatStats } from '@app/types/streamelements/stats';
+
 import { streamElementsApi } from '../api/clients';
 import { streamElementsService } from '../streamelements-service';
 
@@ -7,7 +9,7 @@ jest.mock('../api/clients', () => ({
 
 const api = jest.mocked(streamElementsApi);
 
-const mockStats = {
+const mockStats: StreamElementsChatStats = {
   channel: 'shroud',
   totalMessages: 69134962,
   uniqueChatters: 118560,
@@ -29,7 +31,7 @@ describe('streamElementsService.getChatStats', () => {
     const result = await streamElementsService.getChatStats('shroud');
 
     expect(api.get).toHaveBeenCalledWith('/chatstats/shroud/stats');
-    expect(result).toEqual(mockStats);
+    expect(result).toEqual<StreamElementsChatStats>(mockStats);
   });
 
   test('url-encodes the channel name in the request path', async () => {

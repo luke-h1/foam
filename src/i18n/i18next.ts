@@ -11,7 +11,7 @@ export const defaultNS = 'common';
 export const fallbackLanguage = 'en';
 export const supportedLanguages = ['en'] as const;
 
-const supported = supportedLanguages as unknown as string[];
+const supported: readonly string[] = supportedLanguages;
 
 function detectFromDevice(): string {
   const deviceLanguage = getLocales()[0]?.languageCode;

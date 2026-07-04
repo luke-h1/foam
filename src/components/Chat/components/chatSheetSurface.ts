@@ -1,3 +1,5 @@
+import type { ViewStyle } from 'react-native';
+
 import { theme } from '@app/styles/themes';
 
 export const chatSheetSurface = {
@@ -5,4 +7,4 @@ export const chatSheetSurface = {
   borderTopLeftRadius: theme.borderRadius28,
   borderTopRightRadius: theme.borderRadius28,
   overflow: 'hidden',
-} as const;
+} as const satisfies ViewStyle;

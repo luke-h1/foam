@@ -3,6 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { toast } from 'sonner-native';
 
 import { kappaService } from '@app/services/kappa-service';
+import type { KappaUploadAsset } from '@app/types/kappa/upload';
 
 import { useChatImageUpload } from '../useChatImageUpload';
 
@@ -60,7 +61,7 @@ test('uploads the picked image without requesting media library permission', asy
 
   expect(mockRequestPermissions).not.toHaveBeenCalled();
   expect(mockUpload).toHaveBeenCalledTimes(1);
-  expect(mockUpload.mock.calls[0]?.[0]).toEqual({
+  expect(mockUpload.mock.calls[0]?.[0]).toEqual<KappaUploadAsset>({
     uri: 'file:///tmp/photo.jpg',
     fileName: 'photo.jpg',
     mimeType: 'image/jpeg',

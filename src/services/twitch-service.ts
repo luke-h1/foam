@@ -8,8 +8,13 @@ import type {
   DefaultTokenResponse,
   RefreshTokenResponse,
 } from '@app/types/twitch/auth';
+import type { TwitchCheermote } from '@app/types/twitch/bits';
 import type { Category } from '@app/types/twitch/category';
-import type { Channel, SearchChannelResponse } from '@app/types/twitch/channel';
+import type {
+  Channel,
+  FollowedChannel,
+  SearchChannelResponse,
+} from '@app/types/twitch/channel';
 import type {
   TwitchPinnedChatMessage,
   TwitchSendChatMessageResult,
@@ -18,7 +23,9 @@ import type {
   TwitchClip,
   TwitchClipDownload,
   TwitchClipsRequestParams,
+  TwitchCreatedClip,
 } from '@app/types/twitch/clip';
+import type { TwitchChatSettingsPatch } from '@app/types/twitch/moderation';
 import type { TwitchHelixPoll } from '@app/types/twitch/poll';
 import type { TwitchHelixPrediction } from '@app/types/twitch/prediction';
 import type { TwitchStream } from '@app/types/twitch/stream';
@@ -52,6 +59,10 @@ const authProxyBaseUrl =
 const authProxyApiKey =
   (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_KEY as
     string | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY;
+
+// Cap follow-list pagination so a pathological follow count (Helix allows
+// thousands) can't fan out into dozens of sequential requests on tab load.
+const MAX_FOLLOWED_CHANNELS = 400;
 
 interface Emote {
   format: string[];
@@ -204,6 +215,33 @@ function normalizeDuration(durationSeconds: number | undefined) {
   }
 
   return Math.max(1, Math.trunc(durationSeconds));
+}
+
+// Helix endpoints like /users and /clips take repeated id params (max 100 per
+// request), which the shared client's comma-joining array serializer can't
+// produce.
+async function fetchBatchedByIds<T>(
+  basePath: string,
+  ids: string[],
+): Promise<T[]> {
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const batches: string[][] = [];
+  for (let i = 0; i < ids.length; i += 100) {
+    batches.push(ids.slice(i, i + 100));
+  }
+
+  const results = await Promise.all(
+    batches.map(batch =>
+      twitchApi.get<{ data: T[] }>(
+        `${basePath}?${batch.map(id => `id=${encodeURIComponent(id)}`).join('&')}`,
+      ),
+    ),
+  );
+
+  return results.flatMap(result => result.data ?? []);
 }
 
 export function getPinnedChatMessageText(
@@ -527,6 +565,40 @@ export const twitchService = {
     return result.data;
   },
 
+  getCheermotes: async (broadcasterId?: string): Promise<TwitchCheermote[]> => {
+    const result = await twitchApi.get<{ data: TwitchCheermote[] }>(
+      '/bits/cheermotes',
+      {
+        params: {
+          ...(broadcasterId && { broadcaster_id: broadcasterId }),
+        },
+      },
+    );
+    return result.data;
+  },
+
+  getFollowedChannels: async (userId: string): Promise<FollowedChannel[]> => {
+    const channels: FollowedChannel[] = [];
+    let cursor: string | undefined;
+
+    do {
+      const result = await twitchApi.get<PaginatedList<FollowedChannel>>(
+        '/channels/followed',
+        {
+          params: {
+            user_id: userId,
+            first: 100,
+            ...(cursor && { after: cursor }),
+          },
+        },
+      );
+      channels.push(...result.data);
+      cursor = result.pagination?.cursor;
+    } while (cursor && channels.length < MAX_FOLLOWED_CHANNELS);
+
+    return channels;
+  },
+
   getUserInfo: async (token: string): Promise<UserInfoResponse> => {
     const result = await twitchApi.get<{ data: UserInfoResponse[] }>('/users', {
       headers: {
@@ -551,6 +623,9 @@ export const twitchService = {
 
     return (result.data[0] as UserInfoResponse) ?? '';
   },
+
+  getUsersById: (ids: string[]): Promise<UserInfoResponse[]> =>
+    fetchBatchedByIds<UserInfoResponse>('/users', ids),
 
   searchChannels: async (query: string): Promise<SearchChannelResponse[]> => {
     const result = await twitchApi.get<{ data: SearchChannelResponse[] }>(
@@ -590,6 +665,28 @@ export const twitchService = {
       },
     });
   },
+  /**
+   * @see https://dev.twitch.tv/docs/api/reference/#create-clip
+   * Requires the clips:edit scope. Twitch captures the clip asynchronously;
+   * the returned edit_url is valid immediately, the clip itself shortly after.
+   * Returns null when Twitch accepts the request but produces no clip (e.g.
+   * clipping restricted on the channel or the stream just went offline).
+   */
+  createClip: async (
+    broadcasterId: string,
+  ): Promise<TwitchCreatedClip | null> => {
+    const result = await twitchApi.post<{ data: TwitchCreatedClip[] }>(
+      '/clips',
+      undefined,
+      {
+        params: {
+          broadcaster_id: broadcasterId,
+        },
+      },
+    );
+    return result.data?.[0] ?? null;
+  },
+
   getClip: async (id: string): Promise<TwitchClip> => {
     const result = await twitchApi.get<TwitchClipResponse>('/clips', {
       params: {
@@ -598,6 +695,151 @@ export const twitchService = {
     });
     return result.data[0] as TwitchClip;
   },
+
+  /**
+   * @see https://dev.twitch.tv/docs/api/reference/#ban-user
+   * A duration makes it a timeout; without one the ban is permanent.
+   */
+  banChatUser: async (
+    broadcasterId: string,
+    moderatorId: string,
+    userId: string,
+    options?: { durationSeconds?: number; reason?: string },
+  ): Promise<void> => {
+    await twitchApi.post(
+      '/moderation/bans',
+      {
+        data: {
+          user_id: userId,
+          ...(options?.durationSeconds && {
+            duration: options.durationSeconds,
+          }),
+          ...(options?.reason && { reason: options.reason }),
+        },
+      },
+      {
+        params: {
+          broadcaster_id: broadcasterId,
+          moderator_id: moderatorId,
+        },
+      },
+    );
+  },
+
+  deleteChatMessage: async (
+    broadcasterId: string,
+    moderatorId: string,
+    messageId: string,
+  ): Promise<void> => {
+    await twitchApi.delete('/moderation/chat', {
+      params: {
+        broadcaster_id: broadcasterId,
+        moderator_id: moderatorId,
+        message_id: messageId,
+      },
+    });
+  },
+
+  unbanChatUser: async (
+    broadcasterId: string,
+    moderatorId: string,
+    userId: string,
+  ): Promise<void> => {
+    await twitchApi.delete('/moderation/bans', {
+      params: {
+        broadcaster_id: broadcasterId,
+        moderator_id: moderatorId,
+        user_id: userId,
+      },
+    });
+  },
+
+  warnChatUser: async (
+    broadcasterId: string,
+    moderatorId: string,
+    userId: string,
+    reason: string,
+  ): Promise<void> => {
+    await twitchApi.post(
+      '/moderation/warnings',
+      {
+        data: {
+          user_id: userId,
+          reason,
+        },
+      },
+      {
+        params: {
+          broadcaster_id: broadcasterId,
+          moderator_id: moderatorId,
+        },
+      },
+    );
+  },
+
+  sendChatAnnouncement: async (
+    broadcasterId: string,
+    moderatorId: string,
+    message: string,
+  ): Promise<void> => {
+    await twitchApi.post(
+      '/chat/announcements',
+      { message },
+      {
+        params: {
+          broadcaster_id: broadcasterId,
+          moderator_id: moderatorId,
+        },
+      },
+    );
+  },
+
+  sendShoutout: async (
+    fromBroadcasterId: string,
+    toBroadcasterId: string,
+    moderatorId: string,
+  ): Promise<void> => {
+    await twitchApi.post('/chat/shoutouts', undefined, {
+      params: {
+        from_broadcaster_id: fromBroadcasterId,
+        to_broadcaster_id: toBroadcasterId,
+        moderator_id: moderatorId,
+      },
+    });
+  },
+
+  updateChatSettings: async (
+    broadcasterId: string,
+    moderatorId: string,
+    patch: TwitchChatSettingsPatch,
+  ): Promise<void> => {
+    await twitchApi.patch('/chat/settings', patch, {
+      params: {
+        broadcaster_id: broadcasterId,
+        moderator_id: moderatorId,
+      },
+    });
+  },
+
+  updateShieldMode: async (
+    broadcasterId: string,
+    moderatorId: string,
+    isActive: boolean,
+  ): Promise<void> => {
+    await twitchApi.put(
+      '/moderation/shield_mode',
+      { is_active: isActive },
+      {
+        params: {
+          broadcaster_id: broadcasterId,
+          moderator_id: moderatorId,
+        },
+      },
+    );
+  },
+
+  getClipsByIds: (ids: string[]): Promise<TwitchClip[]> =>
+    fetchBatchedByIds<TwitchClip>('/clips', ids),
 
   getClips: async ({
     after,

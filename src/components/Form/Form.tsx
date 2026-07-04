@@ -429,7 +429,7 @@ export const FormFont = {
     fontSize: 17,
     fontWeight: '600',
   },
-};
+} satisfies Record<string, TextStyle>;
 
 export function Section({
   children,

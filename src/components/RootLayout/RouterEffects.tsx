@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect } from 'react';
-import { Linking } from 'react-native';
+import { Linking, Platform } from 'react-native';
 
+import { focusManager } from '@tanstack/react-query';
 import * as QuickActions from 'expo-quick-actions';
 import type { RouterAction } from 'expo-quick-actions/router';
 import { router, usePathname } from 'expo-router';
@@ -73,7 +74,11 @@ export function RouterEffects() {
   const { authState, loginWithTwitch, ready } = useAuthContext();
   const { recoveredFromError, setRecoveredFromError } = useRecoveredFromError();
 
-  useOnAppStateChange();
+  useOnAppStateChange(({ current }) => {
+    if (Platform.OS !== 'web') {
+      focusManager.setFocused(current === 'active');
+    }
+  });
   useOnReconnect();
   useClearExpiredStorageItems();
   useIcloudPreferenceSync();

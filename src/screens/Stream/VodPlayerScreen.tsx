@@ -14,6 +14,8 @@ import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { theme } from '@app/styles/themes';
 
 import { getLiveStreamLayoutMetrics } from './liveStreamLayout';
+import { showSleepTimerMenu } from './showSleepTimerMenu';
+import { useSleepTimer } from './useSleepTimer';
 
 interface VodPlayerScreenProps {
   id: string;
@@ -26,6 +28,13 @@ const KEEP_AWAKE_TAG = 'vod-player';
 export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
   const { t } = useTranslation(['stream', 'common']);
   const insets = useSafeAreaInsets();
+  const sleepTimer = useSleepTimer({
+    onExpire: () => {
+      if (router.canGoBack()) {
+        router.back();
+      }
+    },
+  });
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const { isLandscape, layoutHeight, portraitTopInset, screenWidth } =
     getLiveStreamLayoutMetrics({
@@ -109,6 +118,18 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
           },
         ]}
       >
+        <IconButton
+          icon={{
+            type: 'symbol',
+            name: 'moon.zzz',
+            size: 18,
+            color: sleepTimer.isActive ? theme.colorPrimary : undefined,
+          }}
+          label={t('sleepTimer')}
+          onPress={() => showSleepTimerMenu(sleepTimer)}
+          size='2xl'
+          style={styles.closeButton}
+        />
         <IconButton
           icon={{ type: 'symbol', name: 'xmark', size: 18 }}
           label={t('closeVod')}

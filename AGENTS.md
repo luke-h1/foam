@@ -8,6 +8,8 @@ Partial object matchers are tempting because they make tests quicker to write, b
 
 When a test cares about an object contract, write the object out and compare it with `toEqual`. If only part of a large object matters, pull those fields into a smaller object first, then use `toEqual` on that smaller object. The point is to make the shape obvious to the next person reading the test.
 
+When the expected object has a meaningful type, pass it as the matcher's type parameter: `expect(profile).toEqual<SubscriberChannelProfile>({ ... })`. The compiler then checks the expected literal against the real contract, so a renamed or mistyped field fails at typecheck time instead of reading as an intentional extra key. Skip the parameter for primitives and shapes with no named type worth pinning.
+
 ## Test Functions
 
 Use `test()` to declare unit tests, not `it()`. Keep this consistent across every spec so the test files read the same way.

@@ -23,9 +23,6 @@ export interface RemoteConfigSchema {
     };
   };
 
-  /**
-   * Url
-   */
   statusPageUrl: string;
   websiteUrl: string;
   admins: string[];
@@ -99,7 +96,7 @@ function buildConfigFromDefaults(): RemoteConfigType {
           raw,
           value: parseValue(key, raw),
           source: 'static',
-        },
+        } satisfies RemoteConfigEntry<RemoteConfigSchema[RemoteConfigKey]>,
       ];
     }),
   ) as RemoteConfigType;

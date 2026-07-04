@@ -39,7 +39,7 @@ class TwitchWsService {
    */
   private static url: string = 'wss://eventsub.wss.twitch.tv/ws';
 
-  private static sessionId: string = '';
+  public static sessionId: string = '';
 
   /**
    * Valid values are between 10 and 600
@@ -133,9 +133,6 @@ class TwitchWsService {
       }
       TwitchWsService.clearKeepaliveTimer();
 
-      /**
-       * Attempt to reconnect if its not a normal closure
-       */
       if (event.code !== 1000 && !TwitchWsService.isReconnecting) {
         TwitchWsService.attemptReconnect();
       }
@@ -213,14 +210,7 @@ class TwitchWsService {
 
     logger.twitchWs.info(`🟣 EventSub session established: ${session.id}`);
 
-    /**
-     * Reset and begin keep alive monitoring
-     */
     TwitchWsService.resetKeepaliveTimer();
-
-    /**
-     * Re-subscribe to any events that had callbacks registered
-     */
     TwitchWsService.resubscribeToEvents();
   }
 
@@ -242,9 +232,6 @@ class TwitchWsService {
       `🟣 EventSub notification: ${JSON.stringify(subscriptionType, null, 2)}`,
     );
 
-    /**
-     * Trigger any registered callbacks
-     */
     const callbacks = TwitchWsService.eventCallbacks.get(subscriptionType);
 
     if (callbacks) {
@@ -259,9 +246,6 @@ class TwitchWsService {
       });
     }
 
-    /**
-     * Reset keep-alive timer
-     */
     TwitchWsService.resetKeepaliveTimer();
   }
 
@@ -282,7 +266,6 @@ class TwitchWsService {
     TwitchWsService.isReconnecting = true;
 
     /**
-     * Close the current connection and re-connect
      * TODO: we may need to emit or expose this so that we can
      * display a message in chat to say we're reconnecting
      */
@@ -310,7 +293,7 @@ class TwitchWsService {
   private static resetKeepaliveTimer(): void {
     TwitchWsService.clearKeepaliveTimer();
 
-    const timeoutInMs = (TwitchWsService.keepaliveTimeout + 5) * 1000; // 5s
+    const timeoutInMs = (TwitchWsService.keepaliveTimeout + 5) * 1000;
 
     TwitchWsService.keepaliveTimer = setTimeout(() => {
       logger.twitchWs.warn(
@@ -406,7 +389,6 @@ class TwitchWsService {
           source: 'twitch_ws_service',
         },
       );
-      // Remove the callback if subscription failed
       TwitchWsService.removeEventListener(eventType, callback);
     }
   }
@@ -510,7 +492,6 @@ class TwitchWsService {
         response.data.map(sub => ({ type: sub.type, id: sub.id })),
       );
 
-      // Update our local tracking
       response.data.forEach(subscription => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
@@ -559,7 +540,7 @@ class TwitchWsService {
           '💜 Subscription cleanup timed out, continuing...',
         );
         resolve();
-      }, 5000); // 5 second timeout
+      }, 5000);
     });
 
     const cleanupPromises = subscriptionIds.map(subscriptionId =>
@@ -589,12 +570,7 @@ class TwitchWsService {
       })(),
     );
 
-    // Race between cleanup and timeout
     await Promise.race([Promise.allSettled(cleanupPromises), cleanupTimeout]);
-  }
-
-  public get sessionId(): string {
-    return this.sessionId;
   }
 
   /**

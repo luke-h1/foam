@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { AppState, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -26,6 +26,7 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { router, useFocusEffect, useIsFocused } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { StatusBar } from 'expo-status-bar';
+import { toast } from 'sonner-native';
 
 import { Button } from '@app/components/Button/Button';
 import { ChannelPollCard } from '@app/components/ChannelPollCard/ChannelPollCard';
@@ -35,10 +36,14 @@ import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import type { StreamPlayerRef } from '@app/components/StreamPlayer/types';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
+import { useAuthContext } from '@app/context/AuthContext';
 import { useStreamQuery } from '@app/hooks/queries/useStreamQuery';
 import { useUserQuery } from '@app/hooks/queries/useUserQuery';
 import { useChannelPoll } from '@app/hooks/useChannelPoll';
 import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
+import { useOnAppStateChange } from '@app/hooks/useOnAppStateChange';
+import { twitchService } from '@app/services/twitch-service';
+import { addCreatedClip } from '@app/store/createdClips/actions/createdClips';
 import {
   usePreference,
   useUpdatePreferences,
@@ -47,6 +52,8 @@ import { subscribeLiveSync } from '@app/store/stream/liveSyncBus';
 import { setMeasuredVideoLatencySeconds } from '@app/store/stream/videoLatency';
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
+import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import { logger } from '@app/utils/logger';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 
 import { ChatLatencyPill } from './ChatLatencyPill';
@@ -63,6 +70,8 @@ import {
   initialLiveStreamScreenState,
   liveStreamScreenReducer,
 } from './liveStreamScreenReducer';
+import { showSleepTimerMenu } from './showSleepTimerMenu';
+import { useSleepTimer } from './useSleepTimer';
 
 interface LiveStreamScreenProps {
   id: string;
@@ -104,6 +113,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 }: LiveStreamScreenProps) {
   const { t } = useTranslation('stream');
   const isFocused = useIsFocused();
+  const { authState } = useAuthContext();
   const customPlayerEnabled = usePreference('customPlayerEnabled');
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
   useEffect(
@@ -119,6 +129,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       }
     }, 120);
   }, []);
+  const sleepTimer = useSleepTimer({ onExpire: handleBack });
+  const handleSleepTimerPress = useCallback(() => {
+    showSleepTimerMenu(sleepTimer);
+  }, [sleepTimer]);
   const wasPlayingBeforeBackgroundRef = useRef(false);
   const normalizedLogin = id.trim().toLowerCase();
   const disableChat = usePreference('disableChat');
@@ -252,25 +266,27 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
    * play state is captured so a player the user had already paused stays paused
    * on resume.
    */
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', nextState => {
-      const player = streamPlayerRef.current;
-      if (!player) {
-        return;
+  useOnAppStateChange(({ current }) => {
+    const player = streamPlayerRef.current;
+    if (!player) {
+      return;
+    }
+    // An active picture-in-picture window is exactly the case where playback
+    // should continue in the background, so leave the player alone.
+    if (player.isPictureInPicture()) {
+      wasPlayingBeforeBackgroundRef.current = false;
+      return;
+    }
+    if (current === 'background') {
+      wasPlayingBeforeBackgroundRef.current = !player.getPaused();
+      player.pause();
+    } else if (current === 'active') {
+      if (wasPlayingBeforeBackgroundRef.current) {
+        player.play();
       }
-      if (nextState === 'background') {
-        wasPlayingBeforeBackgroundRef.current = !player.getPaused();
-        player.pause();
-      } else if (nextState === 'active') {
-        if (wasPlayingBeforeBackgroundRef.current) {
-          player.play();
-        }
-        wasPlayingBeforeBackgroundRef.current = false;
-      }
-    });
-
-    return () => subscription.remove();
-  }, []);
+      wasPlayingBeforeBackgroundRef.current = false;
+    }
+  });
 
   const commitLandscapeChatWidth = useCallback(
     (width: number) => {
@@ -772,6 +788,57 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     });
   }, [resolvedChannelLogin, stream?.user_name, user?.display_name]);
 
+  const isCreatingClipRef = useRef(false);
+  const canCreateClip = Boolean(
+    authState?.isLoggedIn && !authState.isAnonAuth && resolvedChannelId,
+  );
+  const handleCreateClipPress = useCallback(() => {
+    if (!resolvedChannelId || isCreatingClipRef.current) {
+      return;
+    }
+    isCreatingClipRef.current = true;
+    void twitchService
+      .createClip(resolvedChannelId)
+      .then(clip => {
+        if (!clip) {
+          toast.error(t('clipUnavailable'));
+          return;
+        }
+        addCreatedClip({
+          id: clip.id,
+          broadcasterLogin: resolvedChannelLogin ?? '',
+          broadcasterName:
+            stream?.user_name ??
+            user?.display_name ??
+            resolvedChannelLogin ??
+            '',
+          createdAt: Date.now(),
+        });
+        toast.success(t('clipCreated'), {
+          action: {
+            label: t('editClip'),
+            onClick: () => openLinkInBrowser(clip.edit_url),
+          },
+        });
+      })
+      .catch((error: unknown) => {
+        logger.twitch.warn('Failed to create clip', {
+          error,
+          channel_id: resolvedChannelId,
+        });
+        toast.error(t('clipCreateFailed'));
+      })
+      .finally(() => {
+        isCreatingClipRef.current = false;
+      });
+  }, [
+    resolvedChannelId,
+    resolvedChannelLogin,
+    stream?.user_name,
+    user?.display_name,
+    t,
+  ]);
+
   return (
     <View style={contentContainerStyle}>
       <StatusBar style='light' />
@@ -792,7 +859,12 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             onPlay={handlePlayerLoaded}
             onPlaybackLatencyChange={handlePlaybackLatencyChange}
             onReady={handlePlayerLoaded}
+            onCreateClipPress={
+              canCreateClip ? handleCreateClipPress : undefined
+            }
             onSharePress={resolvedChannelLogin ? handleSharePress : undefined}
+            onSleepTimerPress={handleSleepTimerPress}
+            sleepTimerActive={sleepTimer.isActive}
             onVideoAreaPress={isLandscape ? cycleLandscapeChatMode : undefined}
             onVideoAreaSwipeDown={isLandscape ? handleExitLandscape : undefined}
             onWebViewLoaded={handlePlayerLoaded}

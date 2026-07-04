@@ -22,10 +22,7 @@ const ScreenDimensionsContext = createContext<
  */
 
 export const ScreenDimensionsProvider = ({ children }: PropsWithChildren) => {
-  // This is a recommended (and responsive) way to obtain screen dimensions siześ
   const window = useWindowDimensions();
-
-  // Calculate display mode based on the window dimensions
   const displayMode = mode(window);
 
   const contextValue: ScreenDimensionsContextDataType = {

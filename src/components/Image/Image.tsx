@@ -11,9 +11,6 @@ import { logger } from '@app/utils/logger';
 
 import type { ImageProps } from './Image.types';
 
-/**
- * Extract URL from various source formats
- */
 function getSourceUrl(source: ImageProps['source']): string | null {
   if (typeof source === 'string') {
     return source;

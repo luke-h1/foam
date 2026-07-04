@@ -1,11 +1,16 @@
+import type { InputColorConfig } from '@app/styles/ui';
+
 import {
   generateVariantConfig,
   generateVariantConfigFromBase,
+  type InputVariant,
 } from '../inputVariants.ios';
 
 describe('generateVariantConfig', () => {
   test('returns palette configs for purple in dark mode', () => {
-    expect(generateVariantConfig('purple', 'dark')).toEqual({
+    expect(generateVariantConfig('purple', 'dark')).toEqual<
+      Record<InputVariant, InputColorConfig>
+    >({
       outline: {
         backgroundColor: 'transparent',
         borderColor: '#a855f7',
@@ -38,7 +43,9 @@ describe('generateVariantConfig', () => {
   });
 
   test('returns palette configs for purple in light mode', () => {
-    expect(generateVariantConfig('purple', 'light')).toEqual({
+    expect(generateVariantConfig('purple', 'light')).toEqual<
+      Record<InputVariant, InputColorConfig>
+    >({
       outline: {
         backgroundColor: 'transparent',
         borderColor: '#9333ea',
@@ -71,7 +78,9 @@ describe('generateVariantConfig', () => {
   });
 
   test('returns grayscale configs for black in light mode', () => {
-    expect(generateVariantConfig('black', 'light')).toEqual({
+    expect(generateVariantConfig('black', 'light')).toEqual<
+      Record<InputVariant, InputColorConfig>
+    >({
       outline: {
         backgroundColor: 'transparent',
         borderColor: '#000000',
@@ -104,7 +113,9 @@ describe('generateVariantConfig', () => {
   });
 
   test('does not append alpha suffixes to transparent', () => {
-    expect(generateVariantConfig('transparent', 'dark')).toEqual({
+    expect(generateVariantConfig('transparent', 'dark')).toEqual<
+      Record<InputVariant, InputColorConfig>
+    >({
       outline: {
         backgroundColor: 'transparent',
         borderColor: 'transparent',
@@ -137,7 +148,9 @@ describe('generateVariantConfig', () => {
   });
 
   test('returns grayscale configs for white in dark mode', () => {
-    expect(generateVariantConfig('white', 'dark')).toEqual({
+    expect(generateVariantConfig('white', 'dark')).toEqual<
+      Record<InputVariant, InputColorConfig>
+    >({
       outline: {
         backgroundColor: 'transparent',
         borderColor: '#FFFFFF',
@@ -172,7 +185,9 @@ describe('generateVariantConfig', () => {
 
 describe('generateVariantConfigFromBase', () => {
   test('returns accent-derived configs in dark mode', () => {
-    expect(generateVariantConfigFromBase('#8f43ee', 'dark')).toEqual({
+    expect(generateVariantConfigFromBase('#8f43ee', 'dark')).toEqual<
+      Record<InputVariant, InputColorConfig>
+    >({
       outline: {
         backgroundColor: 'transparent',
         borderColor: '#8f43ee',
@@ -205,7 +220,9 @@ describe('generateVariantConfigFromBase', () => {
   });
 
   test('returns accent-derived configs in light mode', () => {
-    expect(generateVariantConfigFromBase('#8f43ee', 'light')).toEqual({
+    expect(generateVariantConfigFromBase('#8f43ee', 'light')).toEqual<
+      Record<InputVariant, InputColorConfig>
+    >({
       outline: {
         backgroundColor: 'transparent',
         borderColor: '#8f43ee',

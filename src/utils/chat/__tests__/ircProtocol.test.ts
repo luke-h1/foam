@@ -1,3 +1,4 @@
+import type { IrcMessage } from '../ircProtocol';
 import { parseIrcMessage, parseIrcTags } from '../ircProtocol';
 
 describe('parseIrcTags', () => {
@@ -31,7 +32,7 @@ describe('parseIrcMessage', () => {
   });
 
   test('parses a PING with a trailing param', () => {
-    expect(parseIrcMessage('PING :tmi.twitch.tv')).toEqual({
+    expect(parseIrcMessage('PING :tmi.twitch.tv')).toEqual<IrcMessage>({
       tags: undefined,
       prefix: undefined,
       command: 'PING',
@@ -44,7 +45,7 @@ describe('parseIrcMessage', () => {
       parseIrcMessage(
         '@display-name=Foo;color=#FF0000 :foo!foo@foo.tmi.twitch.tv PRIVMSG #bar :hello world',
       ),
-    ).toEqual({
+    ).toEqual<IrcMessage>({
       tags: { 'display-name': 'Foo', color: '#FF0000' },
       prefix: 'foo!foo@foo.tmi.twitch.tv',
       command: 'PRIVMSG',
@@ -53,7 +54,7 @@ describe('parseIrcMessage', () => {
   });
 
   test('parses a prefixed command with no params', () => {
-    expect(parseIrcMessage(':tmi.twitch.tv RECONNECT')).toEqual({
+    expect(parseIrcMessage(':tmi.twitch.tv RECONNECT')).toEqual<IrcMessage>({
       tags: undefined,
       prefix: 'tmi.twitch.tv',
       command: 'RECONNECT',

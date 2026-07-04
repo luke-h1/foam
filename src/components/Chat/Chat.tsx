@@ -1,15 +1,29 @@
-import { memo } from 'react';
+import { memo, useCallback, useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useAuthContext } from '@app/context/AuthContext';
 import { BenchFrameProbe } from '@app/dev/imageBenchmark/BenchFrameProbe.gate';
 import { CachedEmotesProvider } from '@app/Providers/CachedEmotesProvider/CachedEmotesProvider';
+import { setChatFrontTrimSuspended } from '@app/store/chat/actions/messages';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import {
+  useChatRenderPreferences,
+  useUpdatePreferences,
+} from '@app/store/preferenceStore';
 
 import { ChatEmoteReprocessor } from './components/ChatEmoteReprocessor';
+import type { ChatInputShellHandle } from './components/ChatInputShell';
 import { ChatInputShell } from './components/ChatInputShell';
+import type { ChatListRef } from './components/ChatList';
 import { ChatMessagePane } from './components/ChatMessagePane';
 import { ResumeScroll } from './components/ResumeScroll';
-import { useChat } from './hooks/useChat';
+import { RoomStateChips } from './components/RoomStateChips';
+import { useChatScroll } from './hooks/useChatScroll';
+import { useChatSession } from './hooks/useChatSession';
+import { useChatSurface } from './hooks/useChatSurface';
+import { useChatTransientState } from './hooks/useChatTransientState';
 import { styles } from './styles';
 
 export interface ChatProps {
@@ -33,7 +47,154 @@ export const Chat = memo(
     transparent = false,
     syntheticTransport = false,
   }: ChatProps) => {
-    const vm = useChat(channelId, channelName, syntheticTransport);
+    const { user } = useAuthContext();
+    const preferences = useChatRenderPreferences();
+    const updatePreferences = useUpdatePreferences();
+    const insets = useSafeAreaInsets();
+    const messages$ = chatStore$.messages;
+    const currentUsername = user?.login ?? user?.display_name;
+
+    const {
+      handleClearFilters,
+      handleToggleShowOnlyMentions,
+      hiddenPhrases,
+      hiddenUsers,
+      hidePhraseFromView,
+      hideUserFromView,
+      highlightedReplyTargetTimeoutRef,
+      highlightedUsers,
+      hydratedVisibleAssetKeysRef,
+      pendingVisibleMessagesRef,
+      setHighlightedReplyTargetMessageId,
+      showOnlyMentions,
+      toggleHighlightedUser,
+      visibleAssetHydrationTimerRef,
+      visibleCosmeticUsersRef,
+      visiblePersonalEmoteUsersRef,
+    } = useChatTransientState(channelId);
+    const listRef = useRef<ChatListRef | null>(null);
+    const inputShellRef = useRef<ChatInputShellHandle>(null);
+
+    const getMessagesLength = useCallback(
+      () => messages$.peek().length,
+      [messages$],
+    );
+
+    const {
+      isAtBottom,
+      isAtBottomRef,
+      isScrollingToBottom,
+      isScrollingToBottomRef,
+      isUserActivelyScrolling,
+      shouldMaintainScrollAtEnd,
+      unreadCount,
+      setUnreadCount,
+      handleScroll,
+      handleScrollBeginDrag,
+      handleScrollEndDrag,
+      handleMomentumScrollBegin,
+      handleMomentumScrollEnd,
+      handleEndReached,
+      handleContentSizeChange,
+      scrollToBottom,
+      maintainBottomAfterContentChange,
+      cleanup: cleanupScroll,
+    } = useChatScroll({
+      listRef,
+      getMessagesLength,
+    });
+
+    // While scrolled up (maintainVisibleContentPosition active) pause front-trim
+    // of the message window so removing the oldest rows can't re-anchor the list
+    // to the top; trimming resumes when the user returns to the bottom.
+    useEffect(() => {
+      setChatFrontTrimSuspended(!shouldMaintainScrollAtEnd);
+      return () => {
+        setChatFrontTrimSuspended(false);
+      };
+    }, [shouldMaintainScrollAtEnd]);
+
+    const {
+      connected,
+      emoteLoadStatus,
+      fetchUserCosmetics,
+      forceFlush,
+      getUserState,
+      handleViewableMessagesChange,
+      isChatConnected,
+      joinChannel,
+      partChannel,
+      processedMessageIdsRef,
+      processMessageEmotes,
+      refetchEmotes,
+      reprocessAllMessages,
+      sendMessage,
+      twitchConnectionState,
+    } = useChatSession({
+      channelId,
+      channelName,
+      cleanupScroll,
+      hydratedVisibleAssetKeysRef,
+      isAtBottomRef,
+      isScrollingToBottomRef,
+      isUserActivelyScrolling,
+      listRef,
+      maintainBottomAfterContentChange,
+      pendingVisibleMessagesRef,
+      preferences,
+      scrollToBottom,
+      setUnreadCount,
+      syntheticTransport,
+      user,
+      visibleAssetHydrationTimerRef,
+      visibleCosmeticUsersRef,
+      visiblePersonalEmoteUsersRef,
+    });
+
+    const {
+      chatAssetPreferenceKey,
+      getItemType,
+      handleOpenEmoteSheet,
+      handleOpenSettingsSheet,
+      handleRefreshCommand,
+      handleRefreshPinnedMessage,
+      handleResumeScrollToBottom,
+      handleUnpinPinnedMessage,
+      keyExtractor,
+      listContentStyle,
+      messageListExtraData,
+      overlaysElement,
+      paneFlags,
+      pinnedMessage,
+      pinnedMessageBusy,
+      renderItem,
+    } = useChatSurface({
+      channelId,
+      channelName,
+      fetchUserCosmetics,
+      forceFlush,
+      getUserState,
+      hiddenUsers,
+      hidePhraseFromView,
+      hideUserFromView,
+      highlightedReplyTargetTimeoutRef,
+      highlightedUsers,
+      inputShellRef,
+      joinChannel,
+      listRef,
+      partChannel,
+      preferences,
+      refetchEmotes,
+      reprocessAllMessages,
+      scrollToBottom,
+      setHighlightedReplyTargetMessageId,
+      shouldMaintainScrollAtEnd,
+      showOnlyMentions,
+      toggleHighlightedUser,
+      twitchConnectionState,
+      updatePreferences,
+      user,
+    });
 
     return (
       <CachedEmotesProvider channelId={channelId}>
@@ -41,80 +202,81 @@ export const Chat = memo(
           style={[
             styles.wrapper,
             transparent && styles.wrapperTransparent,
-            applyTopInset && { paddingTop: vm.insets.top },
+            applyTopInset && { paddingTop: insets.top },
           ]}
         >
           {syntheticTransport ? <BenchFrameProbe /> : null}
           <ChatEmoteReprocessor
             channelId={channelId}
-            emoteLoadStatus={vm.emoteLoadStatus}
-            messages$={vm.messages$}
-            processedMessageIdsRef={vm.processedMessageIdsRef}
-            reprocessKey={vm.chatAssetPreferenceKey}
+            emoteLoadStatus={emoteLoadStatus}
+            messages$={messages$}
+            processedMessageIdsRef={processedMessageIdsRef}
+            reprocessKey={chatAssetPreferenceKey}
           />
           <View style={styles.keyboardAvoidingView}>
             <View style={styles.chatContainer}>
               <ChatMessagePane
                 channelId={channelId}
                 channelName={channelName}
-                currentUsername={vm.currentUsername}
-                hiddenUsers={vm.hiddenUsers}
-                hiddenPhrases={vm.hiddenPhrases}
-                highlightedUsers={vm.highlightedUsers}
-                paneFlags={vm.paneFlags}
-                listRef={vm.listRef}
-                handleScroll={vm.handleScroll}
-                handleScrollBeginDrag={vm.handleScrollBeginDrag}
-                handleScrollEndDrag={vm.handleScrollEndDrag}
-                handleMomentumScrollBegin={vm.handleMomentumScrollBegin}
-                handleMomentumScrollEnd={vm.handleMomentumScrollEnd}
-                handleEndReached={vm.handleEndReached}
-                handleContentSizeChange={vm.handleContentSizeChange}
-                renderItem={vm.renderItem}
-                keyExtractor={vm.keyExtractor}
-                getItemType={vm.getItemType}
-                listContentStyle={vm.listContentStyle}
-                messageListExtraData={vm.messageListExtraData}
-                onClearFilters={vm.handleClearFilters}
-                onRefreshPinnedMessage={vm.handleRefreshPinnedMessage}
-                onToggleShowOnlyMentions={vm.handleToggleShowOnlyMentions}
-                onUnpinPinnedMessage={vm.handleUnpinPinnedMessage}
-                onViewableMessagesChange={vm.handleViewableMessagesChange}
-                pinnedMessage={vm.pinnedMessage}
-                pinnedMessageBusy={vm.pinnedMessageBusy}
+                currentUsername={currentUsername}
+                hiddenUsers={hiddenUsers}
+                hiddenPhrases={hiddenPhrases}
+                highlightedUsers={highlightedUsers}
+                paneFlags={paneFlags}
+                listRef={listRef}
+                handleScroll={handleScroll}
+                handleScrollBeginDrag={handleScrollBeginDrag}
+                handleScrollEndDrag={handleScrollEndDrag}
+                handleMomentumScrollBegin={handleMomentumScrollBegin}
+                handleMomentumScrollEnd={handleMomentumScrollEnd}
+                handleEndReached={handleEndReached}
+                handleContentSizeChange={handleContentSizeChange}
+                renderItem={renderItem}
+                keyExtractor={keyExtractor}
+                getItemType={getItemType}
+                listContentStyle={listContentStyle}
+                messageListExtraData={messageListExtraData}
+                onClearFilters={handleClearFilters}
+                onRefreshPinnedMessage={handleRefreshPinnedMessage}
+                onToggleShowOnlyMentions={handleToggleShowOnlyMentions}
+                onUnpinPinnedMessage={handleUnpinPinnedMessage}
+                onViewableMessagesChange={handleViewableMessagesChange}
+                pinnedMessage={pinnedMessage}
+                pinnedMessageBusy={pinnedMessageBusy}
               />
 
-              {vm.preferences.showUnreadJumpPill &&
-              !vm.isAtBottom &&
-              !vm.isScrollingToBottom ? (
+              {preferences.showUnreadJumpPill &&
+              !isAtBottom &&
+              !isScrollingToBottom ? (
                 <ResumeScroll
-                  unreadCount={vm.unreadCount}
-                  onScrollToBottom={vm.handleResumeScrollToBottom}
+                  unreadCount={unreadCount}
+                  onScrollToBottom={handleResumeScrollToBottom}
                 />
               ) : null}
             </View>
 
             <KeyboardStickyView
-              offset={{ closed: -vm.insets.bottom }}
+              offset={{ closed: -insets.bottom }}
               style={styles.inputStickyView}
             >
+              <RoomStateChips channelId={channelId} />
               <ChatInputShell
-                ref={vm.inputShellRef}
+                ref={inputShellRef}
                 channelId={channelId}
                 channelName={channelName}
-                connected={vm.connected}
-                getUserState={vm.getUserState}
-                isChatConnected={vm.isChatConnected}
-                onOpenEmoteSheet={vm.handleOpenEmoteSheet}
-                onOpenSettingsSheet={vm.handleOpenSettingsSheet}
-                onRefreshCommand={vm.handleRefreshCommand}
-                processMessageEmotes={vm.processMessageEmotes}
-                sendMessage={vm.sendMessage}
-                user={vm.user}
+                connected={connected}
+                getUserState={getUserState}
+                isChatConnected={isChatConnected}
+                onOpenEmoteSheet={handleOpenEmoteSheet}
+                onOpenSettingsSheet={handleOpenSettingsSheet}
+                onRefreshCommand={handleRefreshCommand}
+                processMessageEmotes={processMessageEmotes}
+                sendMessage={sendMessage}
+                user={user}
               />
             </KeyboardStickyView>
 
-            {vm.overlaysElement}
+            {overlaysElement}
           </View>
         </View>
       </CachedEmotesProvider>
