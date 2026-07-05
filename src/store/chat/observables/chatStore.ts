@@ -51,6 +51,10 @@ export interface ChatStoreState {
   sessionCaches: {
     mentionColors: Record<string, { value: string; expiresAt: number }>;
     lightenedColors: Record<string, { value: string; expiresAt: number }>;
+    // getChatRowItemType runs per row on every list data change; caching the
+    // two-peek paints/userPaintIds traversal per user avoids re-walking those
+    // observables for every row on every render.
+    userPaintFlags: Record<string, boolean>;
   };
   sharedChatBadgeCaches: {
     sourceBadges: Record<
@@ -111,6 +115,7 @@ const initialChatStoreState: ChatStoreState = {
   sessionCaches: {
     mentionColors: {},
     lightenedColors: {},
+    userPaintFlags: {},
   },
   sharedChatBadgeCaches: {
     sourceBadges: {},
@@ -150,14 +155,28 @@ const hydrateDeferredChatState = () => {
   // Rehydrate the 7TV cosmetic maps from the previous session's MMKV snapshot
   // so paints/badges render on launch instead of waiting for the event API to
   // re-stream every entitlement. The websocket still corrects and extends
-  // this live (create/update/delete).
+  // this live (create/update/delete). It can also outrace this deferred
+  // hydration, so in-memory entries win over the snapshot, same as the
+  // recent-messages hydration below.
   const persistedCosmetics = loadPersistedCosmetics();
   if (persistedCosmetics) {
     batch(() => {
-      chatStore$.paints.set(persistedCosmetics.paints);
-      chatStore$.badges.set(persistedCosmetics.badges);
-      chatStore$.userPaintIds.set(persistedCosmetics.userPaintIds);
-      chatStore$.userBadgeIds.set(persistedCosmetics.userBadgeIds);
+      chatStore$.paints.set({
+        ...persistedCosmetics.paints,
+        ...chatStore$.paints.peek(),
+      });
+      chatStore$.badges.set({
+        ...persistedCosmetics.badges,
+        ...chatStore$.badges.peek(),
+      });
+      chatStore$.userPaintIds.set({
+        ...persistedCosmetics.userPaintIds,
+        ...chatStore$.userPaintIds.peek(),
+      });
+      chatStore$.userBadgeIds.set({
+        ...persistedCosmetics.userBadgeIds,
+        ...chatStore$.userBadgeIds.peek(),
+      });
     });
   }
 

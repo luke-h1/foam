@@ -59,8 +59,9 @@ function getThumbnailRequestSize(size?: Props['size']): {
 } {
   switch (size) {
     case 'sm':
+      return { width: '160', height: '90' };
     case 'md':
-      return { width: '320', height: '180' };
+      return { width: '200', height: '112' };
     case 'lg':
       return { width: '480', height: '270' };
     case 'xl':

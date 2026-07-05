@@ -142,9 +142,19 @@ export const buildSubscriberEmoteSpec = ({
       : Promise.resolve([]),
 });
 
+/**
+ * Cap on how much of the overall resource-fetch timeout the 7TV set-id lookup
+ * may consume when `sevenTvSetId` is still pending. Without this, a slow id
+ * lookup could eat the whole `RESOURCE_FETCH_TIMEOUT_MS` window and leave no
+ * time for the actual emote-set fetch, timing it out for a reason unrelated
+ * to the emote-set request itself.
+ */
+export const SEVEN_TV_SET_ID_LOOKUP_BUDGET_MS = 3000;
+
 export const buildEmoteResourceSpecs = ({
   channelId,
   sevenTvSetId,
+  sevenTvSetIdFallback = 'global',
   twitchUserId,
 }: {
   channelId: string;
@@ -154,6 +164,12 @@ export const buildEmoteResourceSpecs = ({
    * immediately instead of waiting a full round trip behind the id lookup.
    */
   sevenTvSetId: string | Promise<string>;
+  /**
+   * Used if `sevenTvSetId` is still pending after
+   * `SEVEN_TV_SET_ID_LOOKUP_BUDGET_MS`, so the lookup can't consume the
+   * emote-set fetch's whole timeout budget.
+   */
+  sevenTvSetIdFallback?: string;
   twitchUserId?: string;
 }): EmoteResourceSpec[] => [
   {
@@ -164,7 +180,18 @@ export const buildEmoteResourceSpecs = ({
     resourceType: 'emotes',
     scope: 'channel',
     warningName: 'seven_tv_emotes_warning',
-    fetch: async () => sevenTvService.getSanitisedEmoteSet(await sevenTvSetId),
+    fetch: async () => {
+      const resolvedSetId = await Promise.race([
+        Promise.resolve(sevenTvSetId),
+        new Promise<string>(resolve => {
+          setTimeout(
+            () => resolve(sevenTvSetIdFallback),
+            SEVEN_TV_SET_ID_LOOKUP_BUDGET_MS,
+          );
+        }),
+      ]);
+      return sevenTvService.getSanitisedEmoteSet(resolvedSetId);
+    },
   },
   {
     key: 'sevenTvGlobalEmotes',

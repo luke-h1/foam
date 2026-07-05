@@ -102,13 +102,17 @@ export function usePreference<K extends keyof Preferences>(
   return useSelector(() => preferences$[key].get()) as Preferences[K];
 }
 
+function updatePreferences(payload: Partial<Preferences>): void {
+  preferences$.assign({
+    ...payload,
+    updatedAt: Date.now(),
+  });
+}
+
+// A stable module-level function reference (preferences$ never changes), so
+// callers that pass this through memo()'d children keep their bailout.
 export function useUpdatePreferences(): (
   payload: Partial<Preferences>,
 ) => void {
-  return (payload: Partial<Preferences>) => {
-    preferences$.assign({
-      ...payload,
-      updatedAt: Date.now(),
-    });
-  };
+  return updatePreferences;
 }

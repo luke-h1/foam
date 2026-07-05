@@ -111,6 +111,20 @@ subscribeToAppStateTransitions(({ current }) => {
   }
 });
 
+// Fallback in case an AppState 'change' event is dropped — this is a known,
+// occasional issue on some Android OEMs/versions and would otherwise leave
+// polling stopped indefinitely after a missed foreground transition.
+// start/stopConnectivityPolling are both idempotent, so this just reconciles
+// against the actual current state rather than trusting event delivery alone.
+const APP_STATE_RECONCILE_INTERVAL_MS = 15_000;
+setInterval(() => {
+  if (AppState.currentState === 'active') {
+    startConnectivityPolling();
+  } else {
+    stopConnectivityPolling();
+  }
+}, APP_STATE_RECONCILE_INTERVAL_MS);
+
 // @ts-expect-error - not all codepaths return a value
 focusManager.setEventListener(onFocus => {
   if (Platform.OS === 'ios' || Platform.OS === 'android') {

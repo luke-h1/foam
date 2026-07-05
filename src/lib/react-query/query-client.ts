@@ -80,7 +80,6 @@ const createQueryClient = () => {
         // memoize on `data`, and a new array reference on every focus refetch
         // rebuilds them for nothing.
         retry: 2,
-        retryDelay: attempt => Math.min(1000 * 2 ** attempt, 30_000),
       },
     },
   });

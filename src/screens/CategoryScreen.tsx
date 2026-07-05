@@ -16,12 +16,12 @@ import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { Text } from '@app/components/ui/Text/Text';
 import { useCategoryQuery } from '@app/hooks/queries/useCategoryQuery';
 import { useStreamsByCategoryQuery } from '@app/hooks/queries/useStreamsByCategoryQuery';
+import { useFlattenedInfiniteQuery } from '@app/hooks/useFlattenedInfiniteQuery';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 import type { Category } from '@app/types/twitch/category';
 import type { TwitchStream } from '@app/types/twitch/stream';
-import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 import { formatViewCount } from '@app/utils/string/formatViewCount';
 
@@ -108,10 +108,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
     isFetchingNextPage,
   });
 
-  const allStreams = useMemo(
-    () => flattenInfiniteQueryPages(streams?.pages),
-    [streams?.pages],
-  );
+  const allStreams = useFlattenedInfiniteQuery(streams?.pages);
   const totalViewers = useMemo(
     () => allStreams.reduce((acc, stream) => acc + stream.viewer_count, 0),
     [allStreams],

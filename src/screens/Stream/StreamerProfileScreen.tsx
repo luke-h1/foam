@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useRef, useState } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,6 +23,7 @@ import { useStreamElementsStatsQuery } from '@app/hooks/queries/useStreamelement
 import { useUserQuery } from '@app/hooks/queries/useUserQuery';
 import { useVideosQuery } from '@app/hooks/queries/useVideosQuery';
 import { useDownloadTwitchClip } from '@app/hooks/useDownloadTwitchClip';
+import { useFlattenedInfiniteQuery } from '@app/hooks/useFlattenedInfiniteQuery';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import i18next from '@app/i18n/i18next';
@@ -31,7 +32,6 @@ import type { StreamElementsChatStats } from '@app/types/streamelements/stats';
 import type { TwitchClip } from '@app/types/twitch/clip';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 import type { TwitchVideo } from '@app/types/twitch/video';
-import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 import {
   formatViewCount,
@@ -460,14 +460,8 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
     enabled: Boolean(user?.login),
   });
 
-  const clips = useMemo(
-    () => flattenInfiniteQueryPages(clipsQuery.data?.pages),
-    [clipsQuery.data?.pages],
-  );
-  const vods = useMemo(
-    () => flattenInfiniteQueryPages(videosQuery.data?.pages),
-    [videosQuery.data?.pages],
-  );
+  const clips = useFlattenedInfiniteQuery(clipsQuery.data?.pages);
+  const vods = useFlattenedInfiniteQuery(videosQuery.data?.pages);
 
   const cardWidth =
     Platform.OS === 'web' && windowWidth >= 820

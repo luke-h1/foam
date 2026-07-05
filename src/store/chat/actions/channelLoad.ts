@@ -499,6 +499,7 @@ const loadChannelResourcesInternal = async (
     const emoteSpecs = buildEmoteResourceSpecs({
       channelId,
       sevenTvSetId: sevenTvSetIdPromise,
+      sevenTvSetIdFallback: fallbackSevenTvSetId,
       twitchUserId,
     });
     const badgeSpecs = buildBadgeResourceSpecs({ channelId });

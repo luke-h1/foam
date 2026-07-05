@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, {
@@ -20,6 +20,7 @@ import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { useStreamProfilePictures } from '@app/hooks/queries/useStreamProfilePictures';
 import { useTopStreamsQuery } from '@app/hooks/queries/useTopStreamsQuery';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
+import { useFlattenedInfiniteQuery } from '@app/hooks/useFlattenedInfiniteQuery';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
@@ -31,7 +32,6 @@ import {
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
 import type { TwitchStream } from '@app/types/twitch/stream';
-import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 
 type StreamListLayout = Preferences['streamListLayout'];
 
@@ -115,10 +115,7 @@ export function TopStreamsScreen({
     [streamListLayout],
   );
 
-  const flattenedStreams = useMemo(
-    () => flattenInfiniteQueryPages(streams?.pages),
-    [streams?.pages],
-  );
+  const flattenedStreams = useFlattenedInfiniteQuery(streams?.pages);
   const allStreams = useStreamProfilePictures(
     flattenedStreams,
     streamListLayout === 'media',

@@ -90,6 +90,7 @@ export function clearSessionCache(bucket?: SessionCacheBucket): void {
   chatStore$.sessionCaches.set({
     mentionColors: {},
     lightenedColors: {},
+    userPaintFlags: chatStore$.sessionCaches.userPaintFlags.peek(),
   });
 }
 
