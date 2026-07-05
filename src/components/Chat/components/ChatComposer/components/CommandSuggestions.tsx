@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexDirection: 'row',
     gap: theme.space12,
-    minHeight: 48,
+    minHeight: COMMAND_SUGGESTION_ITEM_SIZE,
     paddingHorizontal: theme.space12,
     paddingVertical: theme.space8,
   },

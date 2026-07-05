@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     minHeight: 38,
-    minWidth: 128,
+    minWidth: COMMAND_SUGGESTION_ITEM_SIZE,
     paddingHorizontal: 8,
     paddingVertical: 5,
   },
