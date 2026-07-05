@@ -138,8 +138,7 @@ export function TopStreamsScreen({
     />
   );
 
-  const showSkeleton =
-    refreshing || isLoading || (isFetching && allStreams.length === 0);
+  const showSkeleton = isLoading || (isFetching && allStreams.length === 0);
 
   if (showSkeleton) {
     return (
