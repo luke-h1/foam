@@ -1,3 +1,5 @@
+import { InteractionManager } from 'react-native';
+
 import { batch, observable, when } from '@legendapp/state';
 import { persistObservable } from '@legendapp/state/persist';
 
@@ -94,7 +96,10 @@ const initialChatStoreState: ChatStoreState = {
   recentMessagesByChannel: {},
   loadingState: 'IDLE',
   currentChannelId: null,
-  emojis: getEmojiEmotes(getPreferences().emojiStyle),
+  // Seeded empty and hydrated after first interactions — building the full
+  // emoji emote set is thousands of allocations and this module loads with
+  // the root layout, before the first chat screen can possibly need it.
+  emojis: [],
   bits: [],
   messages: [],
   mentionLoginRevision: 0,
@@ -117,36 +122,59 @@ ensureObservablePersistenceConfig();
 
 export const chatStore$ = observable<ChatStoreState>(initialChatStoreState);
 
-// Rehydrate the 7TV cosmetic maps from the previous session's MMKV snapshot so
-// paints/badges render immediately on launch instead of waiting for the event
-// API to re-stream every entitlement. The websocket still corrects and extends
-// this live (create/update/delete).
-const persistedCosmetics = loadPersistedCosmetics();
-if (persistedCosmetics) {
-  batch(() => {
-    chatStore$.paints.set(persistedCosmetics.paints);
-    chatStore$.badges.set(persistedCosmetics.badges);
-    chatStore$.userPaintIds.set(persistedCosmetics.userPaintIds);
-    chatStore$.userBadgeIds.set(persistedCosmetics.userBadgeIds);
-  });
-}
-
 const persistedState$ = persistObservable(chatStore$.persisted, {
   local: createObservablePersistenceLocalConfig(CHAT_STORE_PERSISTENCE_KEY),
 });
 
-if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
-  // Native: seed from the per-channel MMKV keys (writes are handled per-channel
-  // in the message-sync path, not via Legend State, so a sync only re-serializes
-  // the active channel instead of every cached channel — issue #594).
-  chatStore$.recentMessagesByChannel.set(loadPersistedRecentMessages());
-} else {
+if (!RECENT_MESSAGES_PERSISTENCE_ENABLED) {
   persistObservable(chatStore$.recentMessagesByChannel, {
     local: createObservablePersistenceLocalConfig(
       CHAT_RECENT_MESSAGES_PERSISTENCE_KEY,
     ),
   });
 }
+
+/**
+ * Chat-only hydration deferred off the startup critical path: the emoji emote
+ * set, the 7TV cosmetics snapshot, and the per-channel recent-message caches
+ * are all pure JS-thread work (allocation plus blocking MMKV `JSON.parse`)
+ * for screens the app does not boot into — the entry route redirects to the
+ * stream tabs, not chat. Runs after first interactions, well before a user
+ * can navigate into a chat.
+ */
+const hydrateDeferredChatState = () => {
+  if (chatStore$.emojis.peek().length === 0) {
+    chatStore$.emojis.set(getEmojiEmotes(getPreferences().emojiStyle));
+  }
+
+  // Rehydrate the 7TV cosmetic maps from the previous session's MMKV snapshot
+  // so paints/badges render on launch instead of waiting for the event API to
+  // re-stream every entitlement. The websocket still corrects and extends
+  // this live (create/update/delete).
+  const persistedCosmetics = loadPersistedCosmetics();
+  if (persistedCosmetics) {
+    batch(() => {
+      chatStore$.paints.set(persistedCosmetics.paints);
+      chatStore$.badges.set(persistedCosmetics.badges);
+      chatStore$.userPaintIds.set(persistedCosmetics.userPaintIds);
+      chatStore$.userBadgeIds.set(persistedCosmetics.userBadgeIds);
+    });
+  }
+
+  if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
+    // Native: seed from the per-channel MMKV keys (writes are handled
+    // per-channel in the message-sync path, not via Legend State, so a sync
+    // only re-serializes the active channel instead of every cached channel —
+    // issue #594). Channels already live in memory win over the snapshot in
+    // case a chat was joined before this deferred hydration ran.
+    chatStore$.recentMessagesByChannel.set({
+      ...loadPersistedRecentMessages(),
+      ...chatStore$.recentMessagesByChannel.peek(),
+    });
+  }
+};
+
+InteractionManager.runAfterInteractions(hydrateDeferredChatState);
 
 // Recent messages used to live inside `persisted`; drop the stale field from
 // old installs so channelCaches writes stop re-serializing it.
