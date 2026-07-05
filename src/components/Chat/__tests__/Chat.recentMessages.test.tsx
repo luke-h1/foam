@@ -4,6 +4,7 @@ import { recentMessagesService } from '@app/services/recent-messages-service';
 import {
   addMessage,
   clearMessages,
+  getMaxChatMessages,
   moderateMessagesByLogin,
   removeMessageById,
   restoreRecentMessagesForChannel,
@@ -431,6 +432,7 @@ describe('Chat recent messages', () => {
     expect(mockedGetRecentMessages).toHaveBeenCalledWith(
       'foam',
       expect.any(AbortSignal),
+      getMaxChatMessages(),
     );
     expect(
       handleNewMessage.mock.calls.map(([message, options]) => ({

@@ -50,6 +50,9 @@ function MediaLinkCardComponent({
           return sevenTvService.getEmote(emoteId);
         },
         enabled: type === 'stvEmote',
+        // Emote and clip metadata is effectively immutable, so recycled chat
+        // rows must not refetch it on every remount past the default 30s.
+        staleTime: Infinity,
       },
       {
         queryKey: ['twitchClip', url],
@@ -60,6 +63,7 @@ function MediaLinkCardComponent({
           return twitchService.getClip(twitchClipId);
         },
         enabled: type === 'twitchClip' && Boolean(twitchClipId),
+        staleTime: Infinity,
       },
     ],
   });
