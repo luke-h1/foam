@@ -41,8 +41,20 @@ export const ChatInputSection = memo(
     const { composerAnimatedStyle, composerGesture } =
       useComposerDismissGesture();
 
+    // `/refresh` clears the local emote/badge caches and refetches them — a
+    // purely client-side action, so it stays available to everyone, including
+    // signed-out users, unlike sending a message.
+    const trimmedInput = messageInput.trim();
+    const isRefreshCommand = trimmedInput.toLowerCase() === '/refresh';
+
     const canSend =
-      messageInput.trim().length > 0 && isAuthenticated && !isSending;
+      trimmedInput.length > 0 &&
+      (isAuthenticated || isRefreshCommand) &&
+      !isSending;
+
+    // Editable even when signed out so anyone can type the client-side
+    // `/refresh` command; message sending is still gated by `canSend`.
+    const composerEditable = true;
     const { t } = useTranslation('chat');
     const inputPlaceholder = !isAuthenticated
       ? t('composer.signInToSend')
@@ -109,7 +121,7 @@ export const ChatInputSection = memo(
                   onSubmit={onSubmit}
                   onPressAdd={onOpenEmoteSheet}
                   placeholder={inputPlaceholder}
-                  editable={isAuthenticated}
+                  editable={composerEditable}
                   canSend={canSend}
                   prioritizeChannelEmotes
                 />
