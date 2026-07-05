@@ -1,1 +1,1 @@
-export type SuggestionType = 'emote' | 'user';
+export type SuggestionType = 'emote' | 'user' | 'command';

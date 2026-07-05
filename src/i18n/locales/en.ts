@@ -107,6 +107,7 @@ const en = {
       sendAndPinMessage: 'Send and pin message',
       emotes: 'Emotes',
       mention: 'Mention',
+      commands: 'Commands',
       attachImage: 'Attach image',
     },
     imageUpload: {
