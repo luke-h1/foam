@@ -618,21 +618,21 @@ function useAuthContextValue({
   // changes when auth state actually changes — this provider wraps the whole
   // app and self-updates on a refresh poll and app foreground, so an
   // unmemoized value re-renders every consumer on each of those ticks.
-  const stableLoginWithTwitch = useCallback(
+  const loginWithTwitchCallback = useCallback(
     (...args: Parameters<AuthContextState['loginWithTwitch']>) =>
       loginWithTwitchRef.current(...args),
     [loginWithTwitchRef],
   );
-  const stablePopulateAuthState = useCallback(
+  const populateAuthStateCallback = useCallback(
     () => populateAuthStateRef.current(),
     [populateAuthStateRef],
   );
-  const stableFetchAnonToken = useCallback(
+  const fetchAnonTokenCallback = useCallback(
     (testResult?: DefaultTokenResponse) =>
       fetchAnonTokenRef.current(testResult),
     [fetchAnonTokenRef],
   );
-  const stableLogout = useCallback(async () => {
+  const logout = useCallback(async () => {
     await Promise.all([
       SecureStore.deleteItemAsync(storageKeys.user),
       SecureStore.deleteItemAsync(storageKeys.anon),
@@ -650,10 +650,10 @@ function useAuthContextValue({
   const contextState: AuthContextState = useMemo(
     () => ({
       authState: state.authState,
-      loginWithTwitch: stableLoginWithTwitch,
-      populateAuthState: stablePopulateAuthState,
-      logout: stableLogout,
-      fetchAnonToken: stableFetchAnonToken,
+      loginWithTwitch: loginWithTwitchCallback,
+      populateAuthState: populateAuthStateCallback,
+      logout,
+      fetchAnonToken: fetchAnonTokenCallback,
       user,
       ready: state.ready,
     }),
@@ -661,10 +661,10 @@ function useAuthContextValue({
       state.authState,
       state.ready,
       user,
-      stableLoginWithTwitch,
-      stablePopulateAuthState,
-      stableLogout,
-      stableFetchAnonToken,
+      loginWithTwitchCallback,
+      populateAuthStateCallback,
+      logout,
+      fetchAnonTokenCallback,
     ],
   );
 

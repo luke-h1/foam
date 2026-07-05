@@ -228,11 +228,9 @@ export default function FollowingScreen() {
     [streamListLayout, layoutFade, updatePreferences],
   );
 
-  // FollowingListHeader is memo()'d and its props are stable (a primitive plus
-  // the useCallback above), so recreating this element per render is a no-op —
-  // memo bails out before re-rendering the header subtree. Wrapping it in
-  // useMemo here would run JSX before the early return below, which the
-  // rerender-memo-before-early-return lint rule (rightly) flags.
+  // Inline (not useMemo): FollowingListHeader is memo()'d with stable props, so
+  // recreating this element is a no-op, and a useMemo here would build JSX
+  // before the early return below (rerender-memo-before-early-return).
   const listHeader = (
     <FollowingListHeader
       streamListLayout={streamListLayout}
