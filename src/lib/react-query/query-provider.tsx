@@ -117,7 +117,17 @@ subscribeToAppStateTransitions(({ current }) => {
 // start/stopConnectivityPolling are both idempotent, so this just reconciles
 // against the actual current state rather than trusting event delivery alone.
 const APP_STATE_RECONCILE_INTERVAL_MS = 15_000;
-setInterval(() => {
+
+// Stored on globalThis and cleared before re-arming so a module re-evaluation
+// (Fast Refresh in dev) can't leak a second interval. In production the module
+// is evaluated once.
+const globalWithReconcile = globalThis as typeof globalThis & {
+  __foamAppStateReconcileInterval?: ReturnType<typeof setInterval>;
+};
+if (globalWithReconcile.__foamAppStateReconcileInterval) {
+  clearInterval(globalWithReconcile.__foamAppStateReconcileInterval);
+}
+globalWithReconcile.__foamAppStateReconcileInterval = setInterval(() => {
   if (AppState.currentState === 'active') {
     startConnectivityPolling();
   } else {
