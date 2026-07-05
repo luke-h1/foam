@@ -12,13 +12,36 @@ export interface ChatRowItemTypeOptions {
   showInlineReplyContext?: boolean;
 }
 
+// getItemType runs per row on every list data change, so cache the two-peek
+// observable traversal per user and invalidate when the cosmetic maps change.
+const userPaintFlagCache = new Map<string, boolean>();
+let paintCacheInvalidatorAttached = false;
+
+function ensurePaintCacheInvalidator(): void {
+  if (paintCacheInvalidatorAttached) {
+    return;
+  }
+  paintCacheInvalidatorAttached = true;
+  chatStore$.userPaintIds.onChange(() => userPaintFlagCache.clear());
+  chatStore$.paints.onChange(() => userPaintFlagCache.clear());
+}
+
 function hasUserPaint(userId?: string): boolean {
   if (!userId) {
     return false;
   }
 
+  ensurePaintCacheInvalidator();
+
+  const cached = userPaintFlagCache.get(userId);
+  if (cached !== undefined) {
+    return cached;
+  }
+
   const paintId = chatStore$.userPaintIds[userId]?.peek();
-  return Boolean(paintId && chatStore$.paints[paintId]?.peek());
+  const result = Boolean(paintId && chatStore$.paints[paintId]?.peek());
+  userPaintFlagCache.set(userId, result);
+  return result;
 }
 
 function resolveBodyVariant(item: AnyChatMessageType): ChatBodyVariant {

@@ -339,8 +339,11 @@ const syncRecentMessagesForCurrentChannel = (
     return;
   }
 
+  // Hold the reference only — persistRecentMessagesForChannel slices to
+  // MAX_RECENT_MESSAGES at flush time, so slicing here on every deferred
+  // sync (~10/s under load) would be redundant allocation.
   pendingRecentMessagesChannelId = currentChannelId;
-  pendingRecentMessages = nextMessages.slice(-MAX_RECENT_MESSAGES);
+  pendingRecentMessages = nextMessages;
 
   if (recentMessagesSyncTimer) {
     return;
