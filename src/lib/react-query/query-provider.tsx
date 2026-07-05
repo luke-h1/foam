@@ -77,13 +77,39 @@ function checkIsOnlineIfNeeded() {
   });
 }
 
-setInterval(() => {
-  if (AppState.currentState === 'active') {
+// Only poll connectivity while the app is foregrounded — a lifetime interval
+// keeps waking the JS thread in the background for work the guard skips.
+let connectivityPollInterval: ReturnType<typeof setInterval> | undefined;
+
+function startConnectivityPolling() {
+  if (connectivityPollInterval) {
+    return;
+  }
+  connectivityPollInterval = setInterval(() => {
     if (!onlineManager.isOnline() || isNetworkStateUnclear) {
       checkIsOnlineIfNeeded();
     }
+  }, 2000);
+}
+
+function stopConnectivityPolling() {
+  if (connectivityPollInterval) {
+    clearInterval(connectivityPollInterval);
+    connectivityPollInterval = undefined;
   }
-}, 2000);
+}
+
+if (AppState.currentState === 'active') {
+  startConnectivityPolling();
+}
+
+subscribeToAppStateTransitions(({ current }) => {
+  if (current === 'active') {
+    startConnectivityPolling();
+  } else {
+    stopConnectivityPolling();
+  }
+});
 
 // @ts-expect-error - not all codepaths return a value
 focusManager.setEventListener(onFocus => {
