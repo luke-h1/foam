@@ -77,13 +77,63 @@ function checkIsOnlineIfNeeded() {
   });
 }
 
-setInterval(() => {
-  if (AppState.currentState === 'active') {
+// Only poll connectivity while the app is foregrounded — a lifetime interval
+// keeps waking the JS thread in the background for work the guard skips.
+let connectivityPollInterval: ReturnType<typeof setInterval> | undefined;
+
+function startConnectivityPolling() {
+  if (connectivityPollInterval) {
+    return;
+  }
+  connectivityPollInterval = setInterval(() => {
     if (!onlineManager.isOnline() || isNetworkStateUnclear) {
       checkIsOnlineIfNeeded();
     }
+  }, 2000);
+}
+
+function stopConnectivityPolling() {
+  if (connectivityPollInterval) {
+    clearInterval(connectivityPollInterval);
+    connectivityPollInterval = undefined;
   }
-}, 2000);
+}
+
+if (AppState.currentState === 'active') {
+  startConnectivityPolling();
+}
+
+subscribeToAppStateTransitions(({ current }) => {
+  if (current === 'active') {
+    startConnectivityPolling();
+  } else {
+    stopConnectivityPolling();
+  }
+});
+
+// Fallback in case an AppState 'change' event is dropped — this is a known,
+// occasional issue on some Android OEMs/versions and would otherwise leave
+// polling stopped indefinitely after a missed foreground transition.
+// start/stopConnectivityPolling are both idempotent, so this just reconciles
+// against the actual current state rather than trusting event delivery alone.
+const APP_STATE_RECONCILE_INTERVAL_MS = 15_000;
+
+// Stored on globalThis and cleared before re-arming so a module re-evaluation
+// (Fast Refresh in dev) can't leak a second interval. In production the module
+// is evaluated once.
+const globalWithReconcile = globalThis as typeof globalThis & {
+  __foamAppStateReconcileInterval?: ReturnType<typeof setInterval>;
+};
+if (globalWithReconcile.__foamAppStateReconcileInterval) {
+  clearInterval(globalWithReconcile.__foamAppStateReconcileInterval);
+}
+globalWithReconcile.__foamAppStateReconcileInterval = setInterval(() => {
+  if (AppState.currentState === 'active') {
+    startConnectivityPolling();
+  } else {
+    stopConnectivityPolling();
+  }
+}, APP_STATE_RECONCILE_INTERVAL_MS);
 
 // @ts-expect-error - not all codepaths return a value
 focusManager.setEventListener(onFocus => {

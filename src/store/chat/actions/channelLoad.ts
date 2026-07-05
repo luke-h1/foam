@@ -7,6 +7,7 @@ import { twitchService } from '@app/services/twitch-service';
 import { getPreferences } from '@app/store/preferences/state';
 import type { SanitisedEmote } from '@app/types/emote';
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
+import { getChatterinoBadges } from '@app/utils/chat/chatterinoBadges';
 import { fetchChannelCheermotes } from '@app/utils/chat/cheermoteStore';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { logger } from '@app/utils/logger';
@@ -18,15 +19,17 @@ import {
 } from '../observables/recentMessagesPersistence';
 import type {
   ChannelCacheType,
+  SanitisedBadgeSet,
   SubscriberChannelProfile,
 } from '../types/constants';
-import { emptyEmoteData } from '../types/constants';
+import { emptyResolvedEmoteData } from '../types/constants';
 import { planChannelRefresh } from './channelRefreshPlan';
 import {
   type BadgeResourceSets,
   buildBadgeResourceSpecs,
   buildEmoteResourceSpecs,
   buildSubscriberEmoteSpec,
+  clearGlobalResourceCache,
   combineUniqueById,
   deduplicateById,
   type EmoteResourceSets,
@@ -299,6 +302,9 @@ const loadChannelResourcesInternal = async (
     // set must forget those users or fetchUserPersonalEmotes short-circuits
     // into the emptied cache until the channel is left and re-entered.
     clearPersonalEmotesCache();
+    // An explicit refresh should re-download global provider data too, not
+    // serve it from the session cache.
+    clearGlobalResourceCache();
   }
   try {
     const caches = chatStore$.persisted.channelCaches.peek();
@@ -414,7 +420,6 @@ const loadChannelResourcesInternal = async (
           twitchGlobalBadges: badgeByKey.get('twitchGlobalBadges') ?? [],
           ffzGlobalBadges: badgeByKey.get('ffzGlobalBadges') ?? [],
           ffzChannelBadges: badgeByKey.get('ffzChannelBadges') ?? [],
-          chatterinoBadges: badgeByKey.get('chatterinoBadges') ?? [],
         };
 
         const allBadges = combineUniqueById(
@@ -472,30 +477,30 @@ const loadChannelResourcesInternal = async (
       return false;
     }
 
-    let sevenTvSetId = existingCache?.sevenTvEmoteSetId ?? 'global';
-
-    try {
-      sevenTvSetId = await sevenTvService.getEmoteSetId(channelId);
-    } catch (error) {
-      logger.chat.warn('Failed to resolve 7TV emote set ID', {
-        name: 'seven_tv_emotes_warning',
-        error,
-        action: 'emote_set_id_failed',
-        channel_id: channelId,
-        provider: 'seven_tv',
-        resource_type: 'emotes',
-        scope: 'channel',
-        screen: 'chat',
+    // Only the 7TV channel-emote fetch needs the set id, so resolve it as a
+    // promise the spec awaits internally — the other 13 resource fetches
+    // start immediately instead of stalling a full round trip behind it.
+    const fallbackSevenTvSetId = existingCache?.sevenTvEmoteSetId ?? 'global';
+    const sevenTvSetIdPromise = sevenTvService
+      .getEmoteSetId(channelId)
+      .catch((error: unknown) => {
+        logger.chat.warn('Failed to resolve 7TV emote set ID', {
+          name: 'seven_tv_emotes_warning',
+          error,
+          action: 'emote_set_id_failed',
+          channel_id: channelId,
+          provider: 'seven_tv',
+          resource_type: 'emotes',
+          scope: 'channel',
+          screen: 'chat',
+        });
+        return fallbackSevenTvSetId;
       });
-    }
-
-    if (exitIfAborted(signal, true)) {
-      return false;
-    }
 
     const emoteSpecs = buildEmoteResourceSpecs({
       channelId,
-      sevenTvSetId,
+      sevenTvSetId: sevenTvSetIdPromise,
+      sevenTvSetIdFallback: fallbackSevenTvSetId,
       twitchUserId,
     });
     const badgeSpecs = buildBadgeResourceSpecs({ channelId });
@@ -513,6 +518,10 @@ const loadChannelResourcesInternal = async (
     if (exitIfAborted(signal, true)) {
       return false;
     }
+
+    // Settled (or about to settle behind the same client timeout) by the time
+    // the resource fetches above have finished.
+    const sevenTvSetId = await sevenTvSetIdPromise;
 
     reportResourceResults({
       channelId,
@@ -541,7 +550,6 @@ const loadChannelResourcesInternal = async (
       twitchGlobalBadges: badgeByKey.get('twitchGlobalBadges') ?? [],
       ffzGlobalBadges: badgeByKey.get('ffzGlobalBadges') ?? [],
       ffzChannelBadges: badgeByKey.get('ffzChannelBadges') ?? [],
-      chatterinoBadges: badgeByKey.get('chatterinoBadges') ?? [],
     };
 
     const allEmotes = combineUniqueById(
@@ -697,6 +705,7 @@ export const clearCache = (channelId?: string) => {
       chatStore$.currentChannelId.set(null);
       chatStore$.loadingState.set('IDLE');
     });
+    clearGlobalResourceCache();
   }
 };
 
@@ -718,65 +727,69 @@ export const clearChatCosmeticsCache = (): void => {
   clearPersonalEmotesCache();
   clearSubscriberProfilesCache();
   clearEmoteImageCache();
+  clearGlobalResourceCache();
   void clearChatStorePersistence();
 };
+
+const NO_EMOTES: SanitisedEmote[] = [];
+const NO_BADGES: SanitisedBadgeSet[] = [];
 
 export const getCurrentEmoteData = (channelId?: string) => {
   const targetChannelId = channelId ?? chatStore$.currentChannelId.peek();
   if (!targetChannelId) {
-    return emptyEmoteData;
+    return emptyResolvedEmoteData;
   }
   const caches = chatStore$.persisted.channelCaches.peek();
   const cache = caches?.[targetChannelId];
   if (!cache) {
-    return emptyEmoteData;
+    return emptyResolvedEmoteData;
   }
 
   const preferences = getPreferences();
 
   return {
     twitchChannelEmotes: preferences.showTwitchEmotes
-      ? (cache.twitchChannelEmotes ?? [])
-      : [],
+      ? (cache.twitchChannelEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     twitchGlobalEmotes: preferences.showTwitchEmotes
-      ? (cache.twitchGlobalEmotes ?? [])
-      : [],
+      ? (cache.twitchGlobalEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     twitchSubscriberEmotes: preferences.showTwitchEmotes
-      ? (cache.twitchSubscriberEmotes ?? [])
-      : [],
+      ? (cache.twitchSubscriberEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     sevenTvChannelEmotes: preferences.show7TvEmotes
-      ? (cache.sevenTvChannelEmotes ?? [])
-      : [],
+      ? (cache.sevenTvChannelEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     sevenTvGlobalEmotes: preferences.show7TvEmotes
-      ? (cache.sevenTvGlobalEmotes ?? [])
-      : [],
+      ? (cache.sevenTvGlobalEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     ffzChannelEmotes: preferences.showFFzEmotes
-      ? (cache.ffzChannelEmotes ?? [])
-      : [],
+      ? (cache.ffzChannelEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     ffzGlobalEmotes: preferences.showFFzEmotes
-      ? (cache.ffzGlobalEmotes ?? [])
-      : [],
+      ? (cache.ffzGlobalEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     bttvGlobalEmotes: preferences.showBttvEmotes
-      ? (cache.bttvGlobalEmotes ?? [])
-      : [],
+      ? (cache.bttvGlobalEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     bttvChannelEmotes: preferences.showBttvEmotes
-      ? (cache.bttvChannelEmotes ?? [])
-      : [],
+      ? (cache.bttvChannelEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     twitchChannelBadges: preferences.showTwitchBadges
-      ? (cache.twitchChannelBadges ?? [])
-      : [],
+      ? (cache.twitchChannelBadges ?? NO_BADGES)
+      : NO_BADGES,
     twitchGlobalBadges: preferences.showTwitchBadges
-      ? (cache.twitchGlobalBadges ?? [])
-      : [],
+      ? (cache.twitchGlobalBadges ?? NO_BADGES)
+      : NO_BADGES,
     ffzChannelBadges: preferences.showFFzBadges
-      ? (cache.ffzChannelBadges ?? [])
-      : [],
+      ? (cache.ffzChannelBadges ?? NO_BADGES)
+      : NO_BADGES,
     ffzGlobalBadges: preferences.showFFzBadges
-      ? (cache.ffzGlobalBadges ?? [])
-      : [],
+      ? (cache.ffzGlobalBadges ?? NO_BADGES)
+      : NO_BADGES,
     chatterinoBadges: preferences.showChatterinoEmotes
-      ? (cache.chatterinoBadges ?? [])
-      : [],
+      ? getChatterinoBadges()
+      : NO_BADGES,
   };
 };
 

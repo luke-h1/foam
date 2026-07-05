@@ -2,7 +2,9 @@ import {
   createContext,
   ReactNode,
   use,
+  useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -612,28 +614,59 @@ function useAuthContextValue({
     };
   }, [refreshCurrentUserTokenRef, state.authState]);
 
-  const contextState: AuthContextState = {
-    authState: state.authState,
-    loginWithTwitch: (...args) => loginWithTwitchRef.current(...args),
-    populateAuthState: () => populateAuthStateRef.current(),
-    logout: async () => {
-      await Promise.all([
-        SecureStore.deleteItemAsync(storageKeys.user),
-        SecureStore.deleteItemAsync(storageKeys.anon),
-      ]);
-      setState({ ready: true });
-      setUser(undefined);
-      twitchApi.removeAuthToken();
-      await Promise.all([
-        queryClient.invalidateQueries(),
-        queryClient.resetQueries(),
-        doAnonAuthRef.current(),
-      ]);
-    },
-    fetchAnonToken: testResult => fetchAnonTokenRef.current(testResult),
-    user,
-    ready: state.ready,
-  };
+  // The ref-backed callbacks are identity-stable so the context value only
+  // changes when auth state actually changes — this provider wraps the whole
+  // app and self-updates on a refresh poll and app foreground, so an
+  // unmemoized value re-renders every consumer on each of those ticks.
+  const loginWithTwitchCallback = useCallback(
+    (...args: Parameters<AuthContextState['loginWithTwitch']>) =>
+      loginWithTwitchRef.current(...args),
+    [loginWithTwitchRef],
+  );
+  const populateAuthStateCallback = useCallback(
+    () => populateAuthStateRef.current(),
+    [populateAuthStateRef],
+  );
+  const fetchAnonTokenCallback = useCallback(
+    (testResult?: DefaultTokenResponse) =>
+      fetchAnonTokenRef.current(testResult),
+    [fetchAnonTokenRef],
+  );
+  const logout = useCallback(async () => {
+    await Promise.all([
+      SecureStore.deleteItemAsync(storageKeys.user),
+      SecureStore.deleteItemAsync(storageKeys.anon),
+    ]);
+    setState({ ready: true });
+    setUser(undefined);
+    twitchApi.removeAuthToken();
+    await Promise.all([
+      queryClient.invalidateQueries(),
+      queryClient.resetQueries(),
+      doAnonAuthRef.current(),
+    ]);
+  }, [doAnonAuthRef]);
+
+  const contextState: AuthContextState = useMemo(
+    () => ({
+      authState: state.authState,
+      loginWithTwitch: loginWithTwitchCallback,
+      populateAuthState: populateAuthStateCallback,
+      logout,
+      fetchAnonToken: fetchAnonTokenCallback,
+      user,
+      ready: state.ready,
+    }),
+    [
+      state.authState,
+      state.ready,
+      user,
+      loginWithTwitchCallback,
+      populateAuthStateCallback,
+      logout,
+      fetchAnonTokenCallback,
+    ],
+  );
 
   return contextState;
 }

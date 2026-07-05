@@ -1,4 +1,5 @@
 import {
+  memo,
   type ReactElement,
   useCallback,
   useEffect,
@@ -31,6 +32,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useFollowedChannelsQuery } from '@app/hooks/queries/useFollowedChannelsQuery';
 import { useFollowedStreamsQuery } from '@app/hooks/queries/useFollowedStreamsQuery';
+import { useStreamProfilePictures } from '@app/hooks/queries/useStreamProfilePictures';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import i18next from '@app/i18n/i18next';
@@ -54,6 +56,27 @@ type FollowingListItem =
   | { type: 'stream'; stream: TwitchStream }
   | { type: 'offlineHeader' }
   | { type: 'offlineChannel'; channel: FollowedChannelWithProfile };
+
+const FollowingListHeader = memo(function FollowingListHeader({
+  streamListLayout,
+  onChangeLayout,
+}: {
+  streamListLayout: 'compact' | 'media';
+  onChangeLayout: (layout: 'compact' | 'media') => void;
+}) {
+  return (
+    <View>
+      <EditorialSectionHeader eyebrow='For you' />
+      <View style={styles.layoutToggleRow}>
+        <StreamListLayoutToggle
+          value={streamListLayout}
+          onChange={onChangeLayout}
+        />
+      </View>
+      <View style={styles.header} />
+    </View>
+  );
+});
 
 export default function FollowingScreen() {
   const { t } = useTranslation(['stream', 'common']);
@@ -94,8 +117,9 @@ export default function FollowingScreen() {
     retry: 2,
     retryDelay: (attemptIndex: number) =>
       Math.min(1000 * 2 ** attemptIndex, 3000),
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    // Focus/foreground refreshes are handled by useRefetchOnForeground below;
+    // stacking refetchOnMount/refetchOnWindowFocus on top forced a network
+    // request on every tab switch regardless of staleness.
   });
 
   useRefetchOnForeground({
@@ -103,9 +127,13 @@ export default function FollowingScreen() {
     refetch: refetchFollowingStreams,
   });
 
-  const streamsArray = useMemo(
+  const rawStreamsArray = useMemo(
     () => (Array.isArray(streams) ? streams : []),
     [streams],
+  );
+  const streamsArray = useStreamProfilePictures(
+    rawStreamsArray,
+    streamListLayout === 'media',
   );
 
   const { data: followedChannels, isLoading: isLoadingFollowedChannels } =
@@ -159,40 +187,56 @@ export default function FollowingScreen() {
     }
   }, [isError, isFetched]);
 
-  const renderItem: ListRenderItem<FollowingListItem> = ({ item }) => {
-    switch (item.type) {
-      case 'stream':
-        return (
-          <MemoizedLiveStreamCard
-            stream={item.stream}
-            layout={streamListLayout}
-          />
-        );
-      case 'offlineHeader':
-        return (
-          <View style={styles.offlineHeaderRow}>
-            <Text type='md' weight='bold'>
-              {t('offlineChannels')}
-            </Text>
-          </View>
-        );
-      case 'offlineChannel':
-        return <MemoizedOfflineChannelRow channel={item.channel} />;
-    }
-  };
+  const renderItem: ListRenderItem<FollowingListItem> = useCallback(
+    ({ item }) => {
+      switch (item.type) {
+        case 'stream':
+          return (
+            <MemoizedLiveStreamCard
+              stream={item.stream}
+              layout={streamListLayout}
+            />
+          );
+        case 'offlineHeader':
+          return (
+            <View style={styles.offlineHeaderRow}>
+              <Text type='md' weight='bold'>
+                {t('offlineChannels')}
+              </Text>
+            </View>
+          );
+        case 'offlineChannel':
+          return <MemoizedOfflineChannelRow channel={item.channel} />;
+      }
+    },
+    [streamListLayout, t],
+  );
 
   // Soft dip-and-recover fade when switching layouts so rows do not
   // hard-cut between shapes.
-  const setLayoutWithFade = (layout: 'compact' | 'media') => {
-    if (layout === streamListLayout) {
-      return;
-    }
-    layoutFade.set(0.35);
-    layoutFade.set(
-      withTiming(1, { duration: motion.medium, easing: motion.easing.out }),
-    );
-    updatePreferences({ streamListLayout: layout });
-  };
+  const setLayoutWithFade = useCallback(
+    (layout: 'compact' | 'media') => {
+      if (layout === streamListLayout) {
+        return;
+      }
+      layoutFade.set(0.35);
+      layoutFade.set(
+        withTiming(1, { duration: motion.medium, easing: motion.easing.out }),
+      );
+      updatePreferences({ streamListLayout: layout });
+    },
+    [streamListLayout, layoutFade, updatePreferences],
+  );
+
+  // Inline (not useMemo): FollowingListHeader is memo()'d with stable props, so
+  // recreating this element is a no-op, and a useMemo here would build JSX
+  // before the early return below (rerender-memo-before-early-return).
+  const listHeader = (
+    <FollowingListHeader
+      streamListLayout={streamListLayout}
+      onChangeLayout={setLayoutWithFade}
+    />
+  );
 
   if (!authState?.isLoggedIn) {
     return (
@@ -306,18 +350,7 @@ export default function FollowingScreen() {
           contentInsetAdjustmentBehavior='automatic'
           drawDistance={Platform.OS === 'ios' ? 500 : undefined}
           getItemType={item => item.type}
-          ListHeaderComponent={
-            <View>
-              <EditorialSectionHeader eyebrow='For you' />
-              <View style={styles.layoutToggleRow}>
-                <StreamListLayoutToggle
-                  value={streamListLayout}
-                  onChange={setLayoutWithFade}
-                />
-              </View>
-              <View style={styles.header} />
-            </View>
-          }
+          ListHeaderComponent={listHeader}
           contentContainerStyle={[
             styles.listContent,
             {

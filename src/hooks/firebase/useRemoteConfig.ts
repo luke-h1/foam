@@ -18,7 +18,7 @@ const remoteConfig = getRemoteConfig(getApp());
 let remoteConfigFetchPromise: Promise<boolean> | null = null;
 
 void setConfigSettings(remoteConfig, {
-  minimumFetchIntervalMillis: 300,
+  minimumFetchIntervalMillis: __DEV__ ? 60 * 1000 : 5 * 60 * 1000,
 });
 
 export interface RemoteConfigSchema {

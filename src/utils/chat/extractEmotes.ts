@@ -9,6 +9,8 @@ function toTwitchTaggedEmoteUrl(
   return `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/${format}/dark/${scale}`;
 }
 
+const SURROGATE_PAIR_REGEX = /[\uD800-\uDFFF]/;
+
 const extractEmotes = (
   emotes: Record<string, string[]> | undefined,
   message: string,
@@ -16,7 +18,10 @@ const extractEmotes = (
   if (!emotes) {
     return [];
   }
-  const graphemes = [...message];
+  // The emotes tag indexes by code point. For the common all-BMP message a
+  // code-point index equals the UTF-16 index, so slice the string directly and
+  // only pay the full code-point expansion when surrogate pairs are present.
+  const graphemes = SURROGATE_PAIR_REGEX.test(message) ? [...message] : null;
   const imageVariantsByEmoteId = new Map<
     string,
     TwitchSanitisedEmote['image_variants']
@@ -26,7 +31,9 @@ const extractEmotes = (
     positions.map(position => {
       const [start, end] = position.split('-').map(Number);
 
-      const name = graphemes.slice(start, (end as number) + 1).join('');
+      const name = graphemes
+        ? graphemes.slice(start, (end as number) + 1).join('')
+        : message.slice(start, (end as number) + 1);
       let imageVariants = imageVariantsByEmoteId.get(emoteId);
       if (!imageVariants) {
         imageVariants = createEmoteImageVariants({

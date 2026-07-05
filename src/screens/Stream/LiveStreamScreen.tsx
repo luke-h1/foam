@@ -32,6 +32,7 @@ import { Button } from '@app/components/Button/Button';
 import { ChannelPollCard } from '@app/components/ChannelPollCard/ChannelPollCard';
 import { ChannelPredictionCard } from '@app/components/ChannelPredictionCard/ChannelPredictionCard';
 import { Chat } from '@app/components/Chat/Chat';
+import { MEDIA_THUMBNAIL_SIZE } from '@app/components/LiveStreamCard/thumbnailSizes';
 import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import type { StreamPlayerRef } from '@app/components/StreamPlayer/types';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
@@ -742,14 +743,14 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       ? styles.overlayChatContainer
       : undefined;
 
-  // Matches the live-stream card's request size so the loading poster is an
-  // instant cache hit when arriving from the stream list.
+  // Matches the media-layout live-stream card's request size so the loading
+  // poster is an instant cache hit when arriving from the stream list.
   const posterUrl = useMemo(
     () =>
       stream?.thumbnail_url
         ? stream.thumbnail_url
-            .replace('{width}', '1920')
-            .replace('{height}', '1080')
+            .replace('{width}', MEDIA_THUMBNAIL_SIZE.width)
+            .replace('{height}', MEDIA_THUMBNAIL_SIZE.height)
         : undefined,
     [stream?.thumbnail_url],
   );

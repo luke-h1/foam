@@ -88,8 +88,7 @@ export function TopCategoriesScreen({
   }, [refetch, refreshing$]);
 
   const allCategories = flattenInfiniteQueryPages(categories?.pages);
-  const showSkeleton =
-    isLoading || refreshing || (isFetching && allCategories.length === 0);
+  const showSkeleton = isLoading || (isFetching && allCategories.length === 0);
 
   if (showSkeleton) {
     return (
@@ -139,6 +138,7 @@ export function TopCategoriesScreen({
       listRef={listRef}
       onEndReached={handleLoadMore}
       onRefresh={onRefresh}
+      refreshing={refreshing}
       renderTopCategoryItem={renderTopCategoryItem}
       scrollHandler={scrollHandler}
     />
@@ -151,6 +151,7 @@ function TopCategoriesList({
   listRef,
   onEndReached,
   onRefresh,
+  refreshing,
   renderTopCategoryItem,
   scrollHandler,
 }: {
@@ -159,6 +160,7 @@ function TopCategoriesList({
   listRef: RefObject<FlashListRef<Category> | null>;
   onEndReached: () => void;
   onRefresh: () => void;
+  refreshing: boolean;
   renderTopCategoryItem: ListRenderItem<Category>;
   scrollHandler: ReturnType<typeof useAnimatedScrollHandler>;
 }) {
@@ -181,6 +183,7 @@ function TopCategoriesList({
         onEndReachedThreshold={0.4}
         onScroll={scrollHandler}
         onRefresh={onRefresh}
+        refreshing={refreshing}
       />
     </View>
   );

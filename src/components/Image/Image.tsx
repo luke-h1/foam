@@ -94,6 +94,13 @@ export const Image = function Image({
     };
   }, [cachePriority, cacheVariant, diskCachedUrl, shouldUseFileCache, url]);
 
+  // When the wrapper's own file cache is handling persistence, keep
+  // expo-image to memory caching — otherwise the same bytes land on disk
+  // twice (expo-image's disk cache for the remote fetch plus our MMKV-
+  // manifested file cache), burning through both caches' eviction budgets.
+  const resolvedCachePolicy =
+    cachePolicy ?? (shouldUseFileCache ? 'memory' : undefined);
+
   const handleError = (event: ImageErrorEventData) => {
     const host = getHostname(resolvedUrl);
     logger.main.warn('image.load_failed', {
@@ -121,7 +128,7 @@ export const Image = function Image({
         source={resolvedSource}
         style={style}
         contentFit={contentFit}
-        cachePolicy={cachePolicy}
+        cachePolicy={resolvedCachePolicy}
         transition={transition}
         decodeFormat='rgb'
         recyclingKey={recyclingKey ?? resolvedUrl ?? undefined}

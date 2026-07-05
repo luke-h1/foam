@@ -2,13 +2,12 @@ import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 
 import { LiveBadge } from '@app/components/LiveBadge/LiveBadge';
 import { Text } from '@app/components/ui/Text/Text';
 import { impact } from '@app/lib/haptics';
-import { userQueryOptions } from '@app/lib/react-query/queries/twitch';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { Color } from '@app/styles/pallete';
 import { theme } from '@app/styles/themes';
@@ -24,6 +23,7 @@ import {
 import { Button } from '../Button/Button';
 import { Image } from '../Image/Image';
 import { PressableArea } from '../PressableArea/PressableArea';
+import { COMPACT_THUMBNAIL_SIZE, MEDIA_THUMBNAIL_SIZE } from './thumbnailSizes';
 
 interface Props {
   stream: TwitchStream;
@@ -58,24 +58,18 @@ function pushRouteOnce(path: string) {
 function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   const { t } = useTranslation('common');
   const queryClient = useQueryClient();
+  const thumbnailSize =
+    layout === 'media' ? MEDIA_THUMBNAIL_SIZE : COMPACT_THUMBNAIL_SIZE;
   const thumbnailUrl = stream.thumbnail_url
-    .replace('{width}', '1920')
-    .replace('{height}', '1080');
+    .replace('{width}', thumbnailSize.width)
+    .replace('{height}', thumbnailSize.height);
 
   const avatarInitial = stream.user_name.trim().charAt(0).toUpperCase();
 
-  const { data: streamerInfo } = useQuery({
-    ...userQueryOptions(stream.user_login),
-    enabled: layout === 'media' && !stream.profilePicture,
-  });
-  const profilePicture =
-    stream.profilePicture ?? streamerInfo?.profile_image_url;
-  const languageLabel =
-    stream.tags?.find(tag =>
-      Object.values(LANGUAGE_NAMES).some(
-        language => language.toLowerCase() === tag.toLowerCase(),
-      ),
-    ) ?? LANGUAGE_NAMES[stream.language];
+  // Media-layout avatars come pre-batched on the stream via
+  // useStreamProfilePictures at the list level — one /users request per
+  // screen instead of one per visible card.
+  const profilePicture = stream.profilePicture;
 
   const handleStreamPressIn = useCallback(() => {
     router.prefetch(`/streams/live-stream/${stream.user_login}`);
@@ -128,6 +122,15 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   }, ${formatViewCount(stream.viewer_count)} watching, ${stream.title}`;
 
   if (layout === 'media') {
+    // Only the media layout renders the language, so keep the tag scan out of
+    // the (default) compact path.
+    const languageLabel =
+      stream.tags?.find(tag =>
+        Object.values(LANGUAGE_NAMES).some(
+          language => language.toLowerCase() === tag.toLowerCase(),
+        ),
+      ) ?? LANGUAGE_NAMES[stream.language];
+
     return (
       <Button
         onPress={handleStreamPress}

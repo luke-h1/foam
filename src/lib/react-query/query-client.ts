@@ -75,9 +75,11 @@ const createQueryClient = () => {
         networkMode: 'offlineFirst',
         refetchOnWindowFocus: false,
         refetchOnReconnect: true,
-        structuralSharing: false,
-        retry: 3,
-        retryDelay: 3000,
+        // structuralSharing stays at its default (true) so refetches that
+        // return identical payloads keep referential identity — list screens
+        // memoize on `data`, and a new array reference on every focus refetch
+        // rebuilds them for nothing.
+        retry: 2,
       },
     },
   });

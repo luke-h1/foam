@@ -267,13 +267,45 @@ export const getPaint = (paintId: string): PaintData | undefined =>
 const getUserPaintId = (ttvUserId: string): string | undefined =>
   chatStore$.userPaintIds[ttvUserId]?.peek();
 
+let userPaintFlagInvalidatorAttached = false;
+
+/**
+ * getChatRowItemType calls `hasUserPaint` once per visible row on every list
+ * data change, so the paints/userPaintIds traversal below is cached per user
+ * id and cleared wholesale whenever either map changes structurally.
+ */
+function ensureUserPaintFlagInvalidator(): void {
+  if (userPaintFlagInvalidatorAttached) {
+    return;
+  }
+  userPaintFlagInvalidatorAttached = true;
+  const clear = () => chatStore$.sessionCaches.userPaintFlags.set({});
+  chatStore$.userPaintIds.onChange(clear);
+  chatStore$.paints.onChange(clear);
+}
+
 export const hasUserPaint = (ttvUserId?: string): boolean => {
   if (!ttvUserId) {
     return false;
   }
 
+  ensureUserPaintFlagInvalidator();
+
+  const cached = chatStore$.sessionCaches.userPaintFlags[ttvUserId]?.peek();
+  if (cached !== undefined) {
+    return cached;
+  }
+
   const paintId = getUserPaintId(ttvUserId);
-  return Boolean(paintId && getPaint(paintId));
+  const result = Boolean(paintId && getPaint(paintId));
+
+  const flags = chatStore$.sessionCaches.userPaintFlags;
+  if (Object.keys(flags.peek()).length >= MAX_COSMETIC_ENTRIES) {
+    flags.set({});
+  }
+  flags[ttvUserId]?.set(result);
+
+  return result;
 };
 
 export const addBadge = (badge: SanitisedBadgeSet) => {

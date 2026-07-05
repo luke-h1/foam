@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import {
   useCurrentEmoteData,
   useEmojis,
@@ -84,6 +86,13 @@ function buildSearchableEmotes(
   return uniqueEmotes;
 }
 
+function matchesSearch(entry: SearchableEmote, lowerSearch: string): boolean {
+  return (
+    entry.lowerName.includes(lowerSearch) ||
+    (entry.lowerOriginalName?.includes(lowerSearch) ?? false)
+  );
+}
+
 export function useEmoteSuggestions({
   searchTerm,
   maxSuggestions = 50,
@@ -101,8 +110,23 @@ export function useEmoteSuggestions({
   } = useCurrentEmoteData();
   const emojis = useEmojis();
 
-  const searchableEmotes = buildSearchableEmotes(
-    {
+  const searchableEmotes = useMemo(
+    () =>
+      buildSearchableEmotes(
+        {
+          sevenTvChannelEmotes,
+          sevenTvGlobalEmotes,
+          twitchChannelEmotes,
+          twitchGlobalEmotes,
+          bttvChannelEmotes,
+          bttvGlobalEmotes,
+          ffzChannelEmotes,
+          ffzGlobalEmotes,
+          emojis,
+        },
+        prioritizeChannelEmotes,
+      ),
+    [
       sevenTvChannelEmotes,
       sevenTvGlobalEmotes,
       twitchChannelEmotes,
@@ -112,25 +136,33 @@ export function useEmoteSuggestions({
       ffzChannelEmotes,
       ffzGlobalEmotes,
       emojis,
-    },
-    prioritizeChannelEmotes,
+      prioritizeChannelEmotes,
+    ],
   );
 
-  const allEmotes = searchableEmotes.map(entry => entry.emote);
+  const allEmotes = useMemo(
+    () => searchableEmotes.map(entry => entry.emote),
+    [searchableEmotes],
+  );
 
   const trimmedSearch = searchTerm.trim();
   const lowerSearch = trimmedSearch.toLowerCase();
-  const filteredEmotes =
-    trimmedSearch.length < 1
-      ? []
-      : searchableEmotes
-          .filter(
-            entry =>
-              entry.lowerName.includes(lowerSearch) ||
-              entry.lowerOriginalName?.includes(lowerSearch),
-          )
-          .slice(0, maxSuggestions)
-          .map(entry => entry.emote);
+  const filteredEmotes = useMemo(() => {
+    if (lowerSearch.length < 1) {
+      return [];
+    }
+
+    const matches: SanitisedEmote[] = [];
+    for (const entry of searchableEmotes) {
+      if (matchesSearch(entry, lowerSearch)) {
+        matches.push(entry.emote);
+        if (matches.length >= maxSuggestions) {
+          break;
+        }
+      }
+    }
+    return matches;
+  }, [lowerSearch, maxSuggestions, searchableEmotes]);
 
   return {
     filteredEmotes,

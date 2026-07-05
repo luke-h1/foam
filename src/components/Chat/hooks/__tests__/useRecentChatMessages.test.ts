@@ -13,6 +13,7 @@ jest.mock('@app/services/recent-messages-service', () => ({
 }));
 
 jest.mock('@app/store/chat/actions/messages', () => ({
+  getMaxChatMessages: jest.fn(() => 150),
   restoreRecentMessagesForChannel: jest.fn(),
 }));
 

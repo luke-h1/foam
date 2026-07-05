@@ -2,7 +2,7 @@ import {
   type ChatBodyVariant,
   getChatBodyInfo,
 } from '@app/components/Chat/util/richChatMessageHelpers';
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { hasUserPaint } from '@app/store/chat/actions/cosmetics';
 
 import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
 import { isRenderableChatMessage } from './chatMessages';
@@ -10,15 +10,6 @@ import type { AnyChatMessageType } from './messageHandlers';
 
 export interface ChatRowItemTypeOptions {
   showInlineReplyContext?: boolean;
-}
-
-function hasUserPaint(userId?: string): boolean {
-  if (!userId) {
-    return false;
-  }
-
-  const paintId = chatStore$.userPaintIds[userId]?.peek();
-  return Boolean(paintId && chatStore$.paints[paintId]?.peek());
 }
 
 function resolveBodyVariant(item: AnyChatMessageType): ChatBodyVariant {

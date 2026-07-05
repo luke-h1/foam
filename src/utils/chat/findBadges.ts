@@ -67,19 +67,100 @@ const getRawTwitchBadges = (userstate: UserStateTags): string => {
   return userstate['badges-raw'] || '';
 };
 
+/**
+ * findBadges runs once per message (and again per visible message during 7TV
+ * hydration reprocessing), so linear scans over the badge arrays add up fast —
+ * the flattened Chatterino list alone holds thousands of entries, almost none
+ * of which match a given chatter. Index each array once per array identity
+ * (the arrays are stable until the channel's badge data is refetched) so every
+ * per-message lookup is a single Map hit.
+ */
+const badgeSetIndexCache = new WeakMap<
+  SanitisedBadgeSet[],
+  ReadonlyMap<string, SanitisedBadgeSet>
+>();
+
+const getBadgeSetIndex = (
+  badges: SanitisedBadgeSet[],
+): ReadonlyMap<string, SanitisedBadgeSet> => {
+  let index = badgeSetIndexCache.get(badges);
+  if (!index) {
+    const map = new Map<string, SanitisedBadgeSet>();
+    badges.forEach(badge => {
+      const key = `${badge.set}/${badge.id}`;
+      if (!map.has(key)) {
+        map.set(key, badge);
+      }
+    });
+    badgeSetIndexCache.set(badges, map);
+    index = map;
+  }
+  return index;
+};
+
+const badgeUserIdIndexCache = new WeakMap<
+  SanitisedBadgeSet[],
+  ReadonlyMap<string, SanitisedBadgeSet>
+>();
+
+const getBadgeUserIdIndex = (
+  badges: SanitisedBadgeSet[],
+): ReadonlyMap<string, SanitisedBadgeSet> => {
+  let index = badgeUserIdIndexCache.get(badges);
+  if (!index) {
+    const map = new Map<string, SanitisedBadgeSet>();
+    badges.forEach(badge => {
+      if (!map.has(badge.id)) {
+        map.set(badge.id, badge);
+      }
+    });
+    badgeUserIdIndexCache.set(badges, map);
+    index = map;
+  }
+  return index;
+};
+
+const badgeOwnerIndexCache = new WeakMap<
+  SanitisedBadgeSet[],
+  ReadonlyMap<string, SanitisedBadgeSet[]>
+>();
+
+const getBadgeOwnerIndex = (
+  badges: SanitisedBadgeSet[],
+): ReadonlyMap<string, SanitisedBadgeSet[]> => {
+  let index = badgeOwnerIndexCache.get(badges);
+  if (!index) {
+    const map = new Map<string, SanitisedBadgeSet[]>();
+    badges.forEach(badge => {
+      if (!badge.owner_username) {
+        return;
+      }
+      const existing = map.get(badge.owner_username);
+      if (existing) {
+        existing.push(badge);
+      } else {
+        map.set(badge.owner_username, [badge]);
+      }
+    });
+    badgeOwnerIndexCache.set(badges, map);
+    index = map;
+  }
+  return index;
+};
+
 const findTwitchChannelBadge = (
   twitchChannelBadges: SanitisedBadgeSet[],
   set: string,
   version: string,
 ): SanitisedBadgeSet | undefined =>
-  twitchChannelBadges.find(b => b.set === set && b.id === version);
+  getBadgeSetIndex(twitchChannelBadges).get(`${set}/${version}`);
 
 const findTwitchGlobalBadge = (
   twitchGlobalBadges: SanitisedBadgeSet[],
   set: string,
   version: string,
 ): SanitisedBadgeSet | undefined =>
-  twitchGlobalBadges.find(b => b.set === set && b.id === `${set}_${version}`);
+  getBadgeSetIndex(twitchGlobalBadges).get(`${set}/${set}_${version}`);
 
 export function findBadges({
   userstate,
@@ -123,9 +204,9 @@ export function findBadges({
     });
   }
 
-  const globalFfzBadges = ffzGlobalBadges.filter(
-    b => b.owner_username === userstate.username,
-  );
+  const globalFfzBadges = userstate.username
+    ? (getBadgeOwnerIndex(ffzGlobalBadges).get(userstate.username) ?? [])
+    : [];
 
   globalFfzBadges.forEach(b => {
     addBadgeIfMissing(badges, {
@@ -158,9 +239,9 @@ export function findBadges({
     }
   }
 
-  const chatterinoBadge = chatterinoBadges.find(
-    b => b.id === userstate['user-id'],
-  );
+  const chatterinoBadge = userstate['user-id']
+    ? getBadgeUserIdIndex(chatterinoBadges).get(userstate['user-id'])
+    : undefined;
 
   if (chatterinoBadge) {
     addBadgeIfMissing(badges, chatterinoBadge);

@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Alert } from 'react-native';
 
 import { useObservable, useSelector } from '@legendapp/state/react';
@@ -639,8 +639,8 @@ export function useChatOverlays({
     />
   );
 
-  return {
-    openers: {
+  const openers = useMemo(
+    () => ({
       openBadge,
       openChattersSheet,
       openEmotePreview,
@@ -649,7 +649,21 @@ export function useChatOverlays({
       openSavedPhrasesSheet,
       openSettingsSheet,
       openUserActions,
-    },
+    }),
+    [
+      openBadge,
+      openChattersSheet,
+      openEmotePreview,
+      openEmoteSheet,
+      openMessageActions,
+      openSavedPhrasesSheet,
+      openSettingsSheet,
+      openUserActions,
+    ],
+  );
+
+  return {
+    openers,
     overlaysElement,
   };
 }

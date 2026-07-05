@@ -33,6 +33,14 @@ export function userQueryOptions(userId: string) {
   });
 }
 
+export function usersByIdsQueryOptions(userIds: string[]) {
+  return queryOptions<UserInfoResponse[]>({
+    queryKey: twitchKeys.usersByIds(userIds),
+    staleTime: 300_000,
+    queryFn: () => twitchService.getUsersById(userIds),
+  });
+}
+
 export function categoryQueryOptions(categoryId: string) {
   return queryOptions<Category>({
     queryKey: twitchKeys.category(categoryId),

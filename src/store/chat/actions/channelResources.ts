@@ -1,6 +1,5 @@
 import type { MonitoringWarningName } from '@app/lib/sentry';
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
-import { chatterinoService } from '@app/services/chatterino-service';
 import { ffzService } from '@app/services/ffz-service';
 import { sevenTvService } from '@app/services/seventv-service';
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
@@ -11,8 +10,7 @@ import { logger } from '@app/utils/logger';
 
 import type { ChannelCacheType } from '../types/constants';
 
-export type ProviderName =
-  'bttv' | 'chatterino' | 'ffz' | 'seven_tv' | 'twitch';
+export type ProviderName = 'bttv' | 'ffz' | 'seven_tv' | 'twitch';
 export type ProviderResourceScope = 'channel' | 'global' | 'local' | 'personal';
 export type ProviderResourceType = 'badges' | 'emotes';
 
@@ -56,7 +54,6 @@ export type EmoteCacheKey =
   | 'twitchSubscriberEmotes';
 
 export type BadgeCacheKey =
-  | 'chatterinoBadges'
   | 'ffzChannelBadges'
   | 'ffzGlobalBadges'
   | 'twitchChannelBadges'
@@ -86,6 +83,42 @@ export const combineUniqueById = <T extends Identifiable>(
   ...itemGroups: readonly T[][]
 ): T[] => deduplicateById(itemGroups.flat());
 
+/**
+ * Global (channel-independent) provider data is identical for every channel,
+ * so re-downloading it on each channel join wastes a round trip per provider.
+ * Cache the successful fetch per session with a TTL matching the cached-path
+ * badge refresh window; failures are never cached, so the next join retries.
+ */
+const GLOBAL_RESOURCE_TTL_MS = 60 * 60 * 1000;
+
+const globalResourceCache = new Map<
+  string,
+  { fetchedAt: number; promise: Promise<Identifiable[]> }
+>();
+
+export const clearGlobalResourceCache = (): void => {
+  globalResourceCache.clear();
+};
+
+const fetchGlobalResourceOnce = <T extends Identifiable>(
+  key: string,
+  fetcher: () => Promise<T[]>,
+): Promise<T[]> => {
+  const now = Date.now();
+  const cached = globalResourceCache.get(key);
+  if (cached && now - cached.fetchedAt < GLOBAL_RESOURCE_TTL_MS) {
+    return cached.promise as Promise<T[]>;
+  }
+  const promise = fetcher().catch((error: unknown) => {
+    if (globalResourceCache.get(key)?.promise === promise) {
+      globalResourceCache.delete(key);
+    }
+    throw error;
+  });
+  globalResourceCache.set(key, { fetchedAt: now, promise });
+  return promise as Promise<T[]>;
+};
+
 export const buildSubscriberEmoteSpec = ({
   channelId,
   twitchUserId,
@@ -106,13 +139,34 @@ export const buildSubscriberEmoteSpec = ({
       : Promise.resolve([]),
 });
 
+/**
+ * Cap on how much of the overall resource-fetch timeout the 7TV set-id lookup
+ * may consume when `sevenTvSetId` is still pending. Without this, a slow id
+ * lookup could eat the whole `RESOURCE_FETCH_TIMEOUT_MS` window and leave no
+ * time for the actual emote-set fetch, timing it out for a reason unrelated
+ * to the emote-set request itself.
+ */
+export const SEVEN_TV_SET_ID_LOOKUP_BUDGET_MS = 3000;
+
 export const buildEmoteResourceSpecs = ({
   channelId,
   sevenTvSetId,
+  sevenTvSetIdFallback = 'global',
   twitchUserId,
 }: {
   channelId: string;
-  sevenTvSetId: string;
+  /**
+   * Only the 7TV channel-emote fetch depends on the set id, so it may be
+   * passed as a pending promise — every other resource fetch starts
+   * immediately instead of waiting a full round trip behind the id lookup.
+   */
+  sevenTvSetId: string | Promise<string>;
+  /**
+   * Used if `sevenTvSetId` is still pending after
+   * `SEVEN_TV_SET_ID_LOOKUP_BUDGET_MS`, so the lookup can't consume the
+   * emote-set fetch's whole timeout budget.
+   */
+  sevenTvSetIdFallback?: string;
   twitchUserId?: string;
 }): EmoteResourceSpec[] => [
   {
@@ -123,7 +177,18 @@ export const buildEmoteResourceSpecs = ({
     resourceType: 'emotes',
     scope: 'channel',
     warningName: 'seven_tv_emotes_warning',
-    fetch: () => sevenTvService.getSanitisedEmoteSet(sevenTvSetId),
+    fetch: async () => {
+      const resolvedSetId = await Promise.race([
+        Promise.resolve(sevenTvSetId),
+        new Promise<string>(resolve => {
+          setTimeout(
+            () => resolve(sevenTvSetIdFallback),
+            SEVEN_TV_SET_ID_LOOKUP_BUDGET_MS,
+          );
+        }),
+      ]);
+      return sevenTvService.getSanitisedEmoteSet(resolvedSetId);
+    },
   },
   {
     key: 'sevenTvGlobalEmotes',
@@ -133,7 +198,10 @@ export const buildEmoteResourceSpecs = ({
     resourceType: 'emotes',
     scope: 'global',
     warningName: 'seven_tv_emotes_warning',
-    fetch: () => sevenTvService.getSanitisedEmoteSet('global'),
+    fetch: () =>
+      fetchGlobalResourceOnce('seven_tv_global_emotes', () =>
+        sevenTvService.getSanitisedEmoteSet('global'),
+      ),
   },
   {
     key: 'twitchChannelEmotes',
@@ -153,7 +221,10 @@ export const buildEmoteResourceSpecs = ({
     resourceType: 'emotes',
     scope: 'global',
     warningName: 'twitch_emotes_warning',
-    fetch: () => twitchEmoteService.getGlobalEmotes(),
+    fetch: () =>
+      fetchGlobalResourceOnce('twitch_global_emotes', () =>
+        twitchEmoteService.getGlobalEmotes(),
+      ),
   },
   buildSubscriberEmoteSpec({ channelId, twitchUserId }),
   {
@@ -164,7 +235,10 @@ export const buildEmoteResourceSpecs = ({
     resourceType: 'emotes',
     scope: 'global',
     warningName: 'bttv_emotes_warning',
-    fetch: () => bttvEmoteService.getSanitisedGlobalEmotes(),
+    fetch: () =>
+      fetchGlobalResourceOnce('bttv_global_emotes', () =>
+        bttvEmoteService.getSanitisedGlobalEmotes(),
+      ),
   },
   {
     key: 'bttvChannelEmotes',
@@ -194,7 +268,10 @@ export const buildEmoteResourceSpecs = ({
     resourceType: 'emotes',
     scope: 'global',
     warningName: 'ffz_emotes_warning',
-    fetch: () => ffzService.getSanitisedGlobalEmotes(),
+    fetch: () =>
+      fetchGlobalResourceOnce('ffz_global_emotes', () =>
+        ffzService.getSanitisedGlobalEmotes(),
+      ),
   },
 ];
 
@@ -221,7 +298,10 @@ export const buildBadgeResourceSpecs = ({
     resourceType: 'badges',
     scope: 'global',
     warningName: 'twitch_badges_warning',
-    fetch: () => twitchBadgeService.listSanitisedGlobalBadges(),
+    fetch: () =>
+      fetchGlobalResourceOnce('twitch_global_badges', () =>
+        twitchBadgeService.listSanitisedGlobalBadges(),
+      ),
   },
   {
     key: 'ffzGlobalBadges',
@@ -231,7 +311,10 @@ export const buildBadgeResourceSpecs = ({
     resourceType: 'badges',
     scope: 'global',
     warningName: 'ffz_badges_warning',
-    fetch: () => ffzService.getSanitisedGlobalBadges(),
+    fetch: () =>
+      fetchGlobalResourceOnce('ffz_global_badges', () =>
+        ffzService.getSanitisedGlobalBadges(),
+      ),
   },
   {
     key: 'ffzChannelBadges',
@@ -242,16 +325,6 @@ export const buildBadgeResourceSpecs = ({
     scope: 'channel',
     warningName: 'ffz_badges_warning',
     fetch: () => ffzService.getSanitisedChannelBadges(channelId),
-  },
-  {
-    key: 'chatterinoBadges',
-    name: 'chatterino_badges',
-    label: 'Chatterino badges',
-    provider: 'chatterino',
-    resourceType: 'badges',
-    scope: 'local',
-    warningName: 'chatterino_badges_warning',
-    fetch: () => Promise.resolve(chatterinoService.listSanitisedBadges()),
   },
 ];
 

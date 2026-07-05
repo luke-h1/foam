@@ -23,6 +23,7 @@ import {
   loadChannelResources,
   resolveSubscriberChannelProfiles,
 } from '../actions/channelLoad';
+import { clearGlobalResourceCache } from '../actions/channelResources';
 import { chatStore$ } from '../observables/chatStore';
 import type { SubscriberChannelProfile } from '../types/constants';
 import { emptyEmoteData } from '../types/constants';
@@ -273,6 +274,7 @@ describe('loadChannelResources cache fallback', () => {
     chatStore$.currentChannelId.set(null);
     chatStore$.loadingState.set('IDLE');
     clearPersonalEmotesCache();
+    clearGlobalResourceCache();
 
     mockGetPersonalEmoteSet.mockResolvedValue([]);
     mockGetUsersById.mockResolvedValue([]);

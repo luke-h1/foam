@@ -87,9 +87,11 @@ export const recentMessagesService = {
   getRecentMessages: async (
     channelName: string,
     signal?: AbortSignal,
+    limit?: number,
   ): Promise<string[]> => {
+    const query = limit && limit > 0 ? `?limit=${limit}` : '';
     const response = await fetch(
-      `${RECENT_MESSAGES_URL}/${encodeURIComponent(channelName)}`,
+      `${RECENT_MESSAGES_URL}/${encodeURIComponent(channelName)}${query}`,
       { signal },
     );
 
