@@ -7,6 +7,7 @@ import { twitchService } from '@app/services/twitch-service';
 import { getPreferences } from '@app/store/preferences/state';
 import type { SanitisedEmote } from '@app/types/emote';
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
+import { getChatterinoBadges } from '@app/utils/chat/chatterinoBadges';
 import { fetchChannelCheermotes } from '@app/utils/chat/cheermoteStore';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { logger } from '@app/utils/logger';
@@ -18,9 +19,10 @@ import {
 } from '../observables/recentMessagesPersistence';
 import type {
   ChannelCacheType,
+  SanitisedBadgeSet,
   SubscriberChannelProfile,
 } from '../types/constants';
-import { emptyEmoteData } from '../types/constants';
+import { emptyResolvedEmoteData } from '../types/constants';
 import { planChannelRefresh } from './channelRefreshPlan';
 import {
   type BadgeResourceSets,
@@ -418,7 +420,6 @@ const loadChannelResourcesInternal = async (
           twitchGlobalBadges: badgeByKey.get('twitchGlobalBadges') ?? [],
           ffzGlobalBadges: badgeByKey.get('ffzGlobalBadges') ?? [],
           ffzChannelBadges: badgeByKey.get('ffzChannelBadges') ?? [],
-          chatterinoBadges: badgeByKey.get('chatterinoBadges') ?? [],
         };
 
         const allBadges = combineUniqueById(
@@ -549,7 +550,6 @@ const loadChannelResourcesInternal = async (
       twitchGlobalBadges: badgeByKey.get('twitchGlobalBadges') ?? [],
       ffzGlobalBadges: badgeByKey.get('ffzGlobalBadges') ?? [],
       ffzChannelBadges: badgeByKey.get('ffzChannelBadges') ?? [],
-      chatterinoBadges: badgeByKey.get('chatterinoBadges') ?? [],
     };
 
     const allEmotes = combineUniqueById(
@@ -731,62 +731,65 @@ export const clearChatCosmeticsCache = (): void => {
   void clearChatStorePersistence();
 };
 
+const NO_EMOTES: SanitisedEmote[] = [];
+const NO_BADGES: SanitisedBadgeSet[] = [];
+
 export const getCurrentEmoteData = (channelId?: string) => {
   const targetChannelId = channelId ?? chatStore$.currentChannelId.peek();
   if (!targetChannelId) {
-    return emptyEmoteData;
+    return emptyResolvedEmoteData;
   }
   const caches = chatStore$.persisted.channelCaches.peek();
   const cache = caches?.[targetChannelId];
   if (!cache) {
-    return emptyEmoteData;
+    return emptyResolvedEmoteData;
   }
 
   const preferences = getPreferences();
 
   return {
     twitchChannelEmotes: preferences.showTwitchEmotes
-      ? (cache.twitchChannelEmotes ?? [])
-      : [],
+      ? (cache.twitchChannelEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     twitchGlobalEmotes: preferences.showTwitchEmotes
-      ? (cache.twitchGlobalEmotes ?? [])
-      : [],
+      ? (cache.twitchGlobalEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     twitchSubscriberEmotes: preferences.showTwitchEmotes
-      ? (cache.twitchSubscriberEmotes ?? [])
-      : [],
+      ? (cache.twitchSubscriberEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     sevenTvChannelEmotes: preferences.show7TvEmotes
-      ? (cache.sevenTvChannelEmotes ?? [])
-      : [],
+      ? (cache.sevenTvChannelEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     sevenTvGlobalEmotes: preferences.show7TvEmotes
-      ? (cache.sevenTvGlobalEmotes ?? [])
-      : [],
+      ? (cache.sevenTvGlobalEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     ffzChannelEmotes: preferences.showFFzEmotes
-      ? (cache.ffzChannelEmotes ?? [])
-      : [],
+      ? (cache.ffzChannelEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     ffzGlobalEmotes: preferences.showFFzEmotes
-      ? (cache.ffzGlobalEmotes ?? [])
-      : [],
+      ? (cache.ffzGlobalEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     bttvGlobalEmotes: preferences.showBttvEmotes
-      ? (cache.bttvGlobalEmotes ?? [])
-      : [],
+      ? (cache.bttvGlobalEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     bttvChannelEmotes: preferences.showBttvEmotes
-      ? (cache.bttvChannelEmotes ?? [])
-      : [],
+      ? (cache.bttvChannelEmotes ?? NO_EMOTES)
+      : NO_EMOTES,
     twitchChannelBadges: preferences.showTwitchBadges
-      ? (cache.twitchChannelBadges ?? [])
-      : [],
+      ? (cache.twitchChannelBadges ?? NO_BADGES)
+      : NO_BADGES,
     twitchGlobalBadges: preferences.showTwitchBadges
-      ? (cache.twitchGlobalBadges ?? [])
-      : [],
+      ? (cache.twitchGlobalBadges ?? NO_BADGES)
+      : NO_BADGES,
     ffzChannelBadges: preferences.showFFzBadges
-      ? (cache.ffzChannelBadges ?? [])
-      : [],
+      ? (cache.ffzChannelBadges ?? NO_BADGES)
+      : NO_BADGES,
     ffzGlobalBadges: preferences.showFFzBadges
-      ? (cache.ffzGlobalBadges ?? [])
-      : [],
+      ? (cache.ffzGlobalBadges ?? NO_BADGES)
+      : NO_BADGES,
     chatterinoBadges: preferences.showChatterinoEmotes
-      ? (cache.chatterinoBadges ?? [])
-      : [],
+      ? getChatterinoBadges()
+      : NO_BADGES,
   };
 };
 

@@ -161,7 +161,6 @@ export interface ChannelCacheType {
   twitchGlobalBadges: SanitisedBadgeSet[];
   ffzGlobalBadges: SanitisedBadgeSet[];
   ffzChannelBadges: SanitisedBadgeSet[];
-  chatterinoBadges: SanitisedBadgeSet[];
   sevenTvEmoteSetId?: string;
   badgesLastUpdated?: number;
 }
@@ -194,5 +193,14 @@ export const emptyEmoteData = {
   lastUpdated: 0,
   badgesLastUpdated: 0,
   sevenTvEmoteSetId: undefined,
-  chatterinoBadges: [],
 } satisfies ChannelCacheType;
+
+/**
+ * Consumer-facing emote-data shape: channel-cache fields plus the
+ * chatterinoBadges set, which is resolved from the bundled table at read time
+ * rather than stored per channel.
+ */
+export const emptyResolvedEmoteData = {
+  ...emptyEmoteData,
+  chatterinoBadges: [] as SanitisedBadgeSet[],
+};

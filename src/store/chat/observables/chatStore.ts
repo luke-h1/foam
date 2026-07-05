@@ -196,7 +196,10 @@ const hydrateDeferredChatState = () => {
 InteractionManager.runAfterInteractions(hydrateDeferredChatState);
 
 // Recent messages used to live inside `persisted`; drop the stale field from
-// old installs so channelCaches writes stop re-serializing it.
+// old installs so channelCaches writes stop re-serializing it. Chatterino
+// badges likewise used to be stored per channel (~4,100 entries each) but are
+// now resolved from the bundled table at read time; strip them from old
+// caches so every future channelCaches write stops re-serializing them.
 when(persistedState$?._state?.isLoadedLocal, () => {
   const persisted = chatStore$.persisted.peek() as {
     recentMessagesByChannel?: unknown;
@@ -207,6 +210,25 @@ when(persistedState$?._state?.isLoadedLocal, () => {
         recentMessagesByChannel: { delete: () => void };
       }
     ).recentMessagesByChannel.delete();
+  }
+
+  const caches = chatStore$.persisted.channelCaches.peek() ?? {};
+  const staleChannelIds: string[] = [];
+  for (const [id, cache] of Object.entries(caches)) {
+    if ('chatterinoBadges' in cache) {
+      staleChannelIds.push(id);
+    }
+  }
+  if (staleChannelIds.length > 0) {
+    batch(() => {
+      for (const id of staleChannelIds) {
+        (
+          chatStore$.persisted.channelCaches[id] as unknown as {
+            chatterinoBadges: { delete: () => void };
+          }
+        ).chatterinoBadges.delete();
+      }
+    });
   }
 });
 

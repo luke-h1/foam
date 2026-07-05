@@ -1,6 +1,5 @@
 import type { MonitoringWarningName } from '@app/lib/sentry';
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
-import { chatterinoService } from '@app/services/chatterino-service';
 import { ffzService } from '@app/services/ffz-service';
 import { sevenTvService } from '@app/services/seventv-service';
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
@@ -11,8 +10,7 @@ import { logger } from '@app/utils/logger';
 
 import type { ChannelCacheType } from '../types/constants';
 
-export type ProviderName =
-  'bttv' | 'chatterino' | 'ffz' | 'seven_tv' | 'twitch';
+export type ProviderName = 'bttv' | 'ffz' | 'seven_tv' | 'twitch';
 export type ProviderResourceScope = 'channel' | 'global' | 'local' | 'personal';
 export type ProviderResourceType = 'badges' | 'emotes';
 
@@ -56,7 +54,6 @@ export type EmoteCacheKey =
   | 'twitchSubscriberEmotes';
 
 export type BadgeCacheKey =
-  | 'chatterinoBadges'
   | 'ffzChannelBadges'
   | 'ffzGlobalBadges'
   | 'twitchChannelBadges'
@@ -328,16 +325,6 @@ export const buildBadgeResourceSpecs = ({
     scope: 'channel',
     warningName: 'ffz_badges_warning',
     fetch: () => ffzService.getSanitisedChannelBadges(channelId),
-  },
-  {
-    key: 'chatterinoBadges',
-    name: 'chatterino_badges',
-    label: 'Chatterino badges',
-    provider: 'chatterino',
-    resourceType: 'badges',
-    scope: 'local',
-    warningName: 'chatterino_badges_warning',
-    fetch: () => Promise.resolve(chatterinoService.listSanitisedBadges()),
   },
 ];
 

@@ -16,9 +16,6 @@ import {
 } from '../channelResources';
 
 jest.mock('@app/services/bttv-emote-service', () => ({ bttvEmoteService: {} }));
-jest.mock('@app/services/chatterino-service', () => ({
-  chatterinoService: {},
-}));
 jest.mock('@app/services/ffz-service', () => ({ ffzService: {} }));
 jest.mock('@app/services/seventv-service', () => ({ sevenTvService: {} }));
 jest.mock('@app/services/twitch-badge-service', () => ({
@@ -96,7 +93,6 @@ describe('buildBadgeResourceSpecs', () => {
       'twitchGlobalBadges',
       'ffzGlobalBadges',
       'ffzChannelBadges',
-      'chatterinoBadges',
     ]);
   });
 });
