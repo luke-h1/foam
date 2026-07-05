@@ -18,6 +18,8 @@ export const LiveStreamImage = memo(function LiveStreamImage({
   style,
   thumbnail,
 }: Props) {
+  const { width, height } = getThumbnailRequestSize(size);
+
   return (
     <View style={[styles.imageContainer, style]}>
       {thumbnail ? (
@@ -25,8 +27,8 @@ export const LiveStreamImage = memo(function LiveStreamImage({
           testID='LiveStreamImage-image'
           contentFit='contain'
           source={thumbnail
-            .replace('{width}', '2560')
-            .replace('{height}', '1080')}
+            .replace('{width}', width)
+            .replace('{height}', height)}
           style={[styles.image, size && getImageSizeStyle(size)]}
           transition={animated ? 300 : 0}
         />
@@ -44,6 +46,28 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 });
+
+/**
+ * Twitch preview URLs are `{width}x{height}` templates, so request a 16:9
+ * variant close to the rendered size (~3x the largest display width for
+ * high-density screens) instead of a full 2560x1080 frame for a small
+ * thumbnail.
+ */
+function getThumbnailRequestSize(size?: Props['size']): {
+  width: string;
+  height: string;
+} {
+  switch (size) {
+    case 'sm':
+    case 'md':
+      return { width: '320', height: '180' };
+    case 'lg':
+      return { width: '480', height: '270' };
+    case 'xl':
+    default:
+      return { width: '640', height: '360' };
+  }
+}
 
 function getImageSizeStyle(size: NonNullable<Props['size']>): ImageStyle {
   switch (size) {
