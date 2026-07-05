@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, {
@@ -17,6 +17,7 @@ import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStrea
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { StreamListLayoutToggle } from '@app/components/StreamListLayoutToggle/StreamListLayoutToggle';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
+import { useStreamProfilePictures } from '@app/hooks/queries/useStreamProfilePictures';
 import { useTopStreamsQuery } from '@app/hooks/queries/useTopStreamsQuery';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
@@ -39,7 +40,7 @@ interface TopStreamsListHeaderProps {
   onChangeLayout: (layout: StreamListLayout) => void;
 }
 
-const TopStreamsListHeader = function TopStreamsListHeader({
+const TopStreamsListHeader = memo(function TopStreamsListHeader({
   streamListLayout,
   onChangeLayout,
 }: TopStreamsListHeaderProps) {
@@ -51,7 +52,7 @@ const TopStreamsListHeader = function TopStreamsListHeader({
       />
     </View>
   );
-};
+});
 
 interface TopStreamsScreenProps {
   contentTopInset?: number;
@@ -107,18 +108,31 @@ export function TopStreamsScreen({
     setRefreshing(false);
   }, [refetch]);
 
-  const renderItem: ListRenderItem<TwitchStream> = ({ item }) => {
-    return <MemoizedLiveStreamCard stream={item} layout={streamListLayout} />;
-  };
+  const renderItem: ListRenderItem<TwitchStream> = useCallback(
+    ({ item }) => (
+      <MemoizedLiveStreamCard stream={item} layout={streamListLayout} />
+    ),
+    [streamListLayout],
+  );
 
-  const allStreams = flattenInfiniteQueryPages(streams?.pages);
+  const flattenedStreams = useMemo(
+    () => flattenInfiniteQueryPages(streams?.pages),
+    [streams?.pages],
+  );
+  const allStreams = useStreamProfilePictures(
+    flattenedStreams,
+    streamListLayout === 'media',
+  );
 
-  const handleLayoutChange = (layout: StreamListLayout) => {
-    if (layout === streamListLayout) {
-      return;
-    }
-    updatePreferences({ streamListLayout: layout });
-  };
+  const handleLayoutChange = useCallback(
+    (layout: StreamListLayout) => {
+      if (layout === streamListLayout) {
+        return;
+      }
+      updatePreferences({ streamListLayout: layout });
+    },
+    [streamListLayout, updatePreferences],
+  );
 
   const listHeader = (
     <TopStreamsListHeader

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -263,7 +263,10 @@ function StreamerProfileHeader({
   );
 }
 
-function VodCard({
+// Memoized so the regex/Date formatting below only re-runs for cards whose
+// props actually changed — extraData ticks (tab captions, download state)
+// re-render the list wrapper, not every visible card.
+const VodCard = memo(function VodCard({
   vod,
   width,
   fallbackImage,
@@ -306,9 +309,9 @@ function VodCard({
       </Button>
     </View>
   );
-}
+});
 
-function ClipCard({
+const ClipCard = memo(function ClipCard({
   clip,
   downloading,
   onDownload,
@@ -372,7 +375,7 @@ function ClipCard({
       </View>
     </View>
   );
-}
+});
 
 function ProfileTabEmptyState({
   activeTab,
@@ -457,8 +460,14 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
     enabled: Boolean(user?.login),
   });
 
-  const clips = flattenInfiniteQueryPages(clipsQuery.data?.pages);
-  const vods = flattenInfiniteQueryPages(videosQuery.data?.pages);
+  const clips = useMemo(
+    () => flattenInfiniteQueryPages(clipsQuery.data?.pages),
+    [clipsQuery.data?.pages],
+  );
+  const vods = useMemo(
+    () => flattenInfiniteQueryPages(videosQuery.data?.pages),
+    [videosQuery.data?.pages],
+  );
 
   const cardWidth =
     Platform.OS === 'web' && windowWidth >= 820
@@ -477,37 +486,46 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
     isFetchingNextPage: videosQuery.isFetchingNextPage,
   });
 
-  const handleDownload = (clip: TwitchClip) => {
-    download(
-      { clip },
-      {
-        onError: error => toast.error(error.message),
-        onSuccess: () => toast.success(i18next.t('stream:clipSaved')),
-      },
-    );
-  };
+  const handleDownload = useCallback(
+    (clip: TwitchClip) => {
+      download(
+        { clip },
+        {
+          onError: error => toast.error(error.message),
+          onSuccess: () => toast.success(i18next.t('stream:clipSaved')),
+        },
+      );
+    },
+    [download],
+  );
 
-  const renderItem: ListRenderItem<ProfileListItem> = ({ item }) => {
-    if (activeTab === 'clips') {
-      const clip = item as TwitchClip;
+  const vodFallbackImage =
+    user?.offline_image_url ?? user?.profile_image_url ?? '';
+
+  const renderItem: ListRenderItem<ProfileListItem> = useCallback(
+    ({ item }) => {
+      if (activeTab === 'clips') {
+        const clip = item as TwitchClip;
+        return (
+          <ClipCard
+            clip={clip}
+            downloading={downloadingClipId === clip.id}
+            onDownload={handleDownload}
+            width={cardWidth}
+          />
+        );
+      }
+
       return (
-        <ClipCard
-          clip={clip}
-          downloading={downloadingClipId === clip.id}
-          onDownload={handleDownload}
+        <VodCard
+          vod={item as TwitchVideo}
           width={cardWidth}
+          fallbackImage={vodFallbackImage}
         />
       );
-    }
-
-    return (
-      <VodCard
-        vod={item as TwitchVideo}
-        width={cardWidth}
-        fallbackImage={user?.offline_image_url ?? user?.profile_image_url ?? ''}
-      />
-    );
-  };
+    },
+    [activeTab, cardWidth, downloadingClipId, handleDownload, vodFallbackImage],
+  );
 
   const isVods = activeTab === 'vods';
   const items = isVods ? vods : clips;

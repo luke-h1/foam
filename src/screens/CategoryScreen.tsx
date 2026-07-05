@@ -1,4 +1,4 @@
-import { FC, memo, useRef } from 'react';
+import { FC, memo, useMemo, useRef } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -108,10 +108,13 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
     isFetchingNextPage,
   });
 
-  const allStreams = flattenInfiniteQueryPages(streams?.pages);
-  const totalViewers = allStreams.reduce(
-    (acc, stream) => acc + stream.viewer_count,
-    0,
+  const allStreams = useMemo(
+    () => flattenInfiniteQueryPages(streams?.pages),
+    [streams?.pages],
+  );
+  const totalViewers = useMemo(
+    () => allStreams.reduce((acc, stream) => acc + stream.viewer_count, 0),
+    [allStreams],
   );
 
   if (isCategoryLoading || isLoadingStreams) {

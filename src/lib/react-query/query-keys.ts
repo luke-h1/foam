@@ -6,6 +6,8 @@ export const twitchKeys = {
   stream: (userLogin: string) =>
     [...twitchKeys.all, 'stream', userLogin] as const,
   user: (userId: string) => [...twitchKeys.all, 'user', userId] as const,
+  usersByIds: (userIds: string[]) =>
+    [...twitchKeys.all, 'usersByIds', userIds.join(',')] as const,
   category: (categoryId: string) =>
     [...twitchKeys.all, 'category', categoryId] as const,
   followedStreams: (userId: string) =>
