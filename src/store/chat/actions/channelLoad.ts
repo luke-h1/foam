@@ -27,6 +27,7 @@ import {
   buildBadgeResourceSpecs,
   buildEmoteResourceSpecs,
   buildSubscriberEmoteSpec,
+  clearGlobalResourceCache,
   combineUniqueById,
   deduplicateById,
   type EmoteResourceSets,
@@ -299,6 +300,9 @@ const loadChannelResourcesInternal = async (
     // set must forget those users or fetchUserPersonalEmotes short-circuits
     // into the emptied cache until the channel is left and re-entered.
     clearPersonalEmotesCache();
+    // An explicit refresh should re-download global provider data too, not
+    // serve it from the session cache.
+    clearGlobalResourceCache();
   }
   try {
     const caches = chatStore$.persisted.channelCaches.peek();
@@ -472,30 +476,29 @@ const loadChannelResourcesInternal = async (
       return false;
     }
 
-    let sevenTvSetId = existingCache?.sevenTvEmoteSetId ?? 'global';
-
-    try {
-      sevenTvSetId = await sevenTvService.getEmoteSetId(channelId);
-    } catch (error) {
-      logger.chat.warn('Failed to resolve 7TV emote set ID', {
-        name: 'seven_tv_emotes_warning',
-        error,
-        action: 'emote_set_id_failed',
-        channel_id: channelId,
-        provider: 'seven_tv',
-        resource_type: 'emotes',
-        scope: 'channel',
-        screen: 'chat',
+    // Only the 7TV channel-emote fetch needs the set id, so resolve it as a
+    // promise the spec awaits internally — the other 13 resource fetches
+    // start immediately instead of stalling a full round trip behind it.
+    const fallbackSevenTvSetId = existingCache?.sevenTvEmoteSetId ?? 'global';
+    const sevenTvSetIdPromise = sevenTvService
+      .getEmoteSetId(channelId)
+      .catch((error: unknown) => {
+        logger.chat.warn('Failed to resolve 7TV emote set ID', {
+          name: 'seven_tv_emotes_warning',
+          error,
+          action: 'emote_set_id_failed',
+          channel_id: channelId,
+          provider: 'seven_tv',
+          resource_type: 'emotes',
+          scope: 'channel',
+          screen: 'chat',
+        });
+        return fallbackSevenTvSetId;
       });
-    }
-
-    if (exitIfAborted(signal, true)) {
-      return false;
-    }
 
     const emoteSpecs = buildEmoteResourceSpecs({
       channelId,
-      sevenTvSetId,
+      sevenTvSetId: sevenTvSetIdPromise,
       twitchUserId,
     });
     const badgeSpecs = buildBadgeResourceSpecs({ channelId });
@@ -513,6 +516,10 @@ const loadChannelResourcesInternal = async (
     if (exitIfAborted(signal, true)) {
       return false;
     }
+
+    // Settled (or about to settle behind the same client timeout) by the time
+    // the resource fetches above have finished.
+    const sevenTvSetId = await sevenTvSetIdPromise;
 
     reportResourceResults({
       channelId,
@@ -697,6 +704,7 @@ export const clearCache = (channelId?: string) => {
       chatStore$.currentChannelId.set(null);
       chatStore$.loadingState.set('IDLE');
     });
+    clearGlobalResourceCache();
   }
 };
 
@@ -718,6 +726,7 @@ export const clearChatCosmeticsCache = (): void => {
   clearPersonalEmotesCache();
   clearSubscriberProfilesCache();
   clearEmoteImageCache();
+  clearGlobalResourceCache();
   void clearChatStorePersistence();
 };
 
