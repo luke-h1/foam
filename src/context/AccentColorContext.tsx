@@ -1,4 +1,10 @@
-import React, { createContext, use, useState } from 'react';
+import React, {
+  createContext,
+  use,
+  useCallback,
+  useMemo,
+  useState,
+} from 'react';
 import { useColorScheme } from 'react-native';
 
 import { colors } from '@app/styles/colors';
@@ -49,7 +55,7 @@ export function AccentColorProvider({
 
   const accentHex = selectedHex ?? colors[scheme].tint;
 
-  const getBackgroundColor = () => {
+  const getBackgroundColor = useCallback(() => {
     if (!selectedHex) {
       return colors[scheme].background;
     }
@@ -62,13 +68,19 @@ export function AccentColorProvider({
     return matchedFamily
       ? getColorValue(matchedFamily, targetShade)
       : colors[scheme].background;
-  };
+  }, [selectedHex, scheme]);
 
-  const contextValue = {
-    accentHex,
-    setAccentHex: setSelectedHex,
-    getBackgroundColor,
-  } satisfies AccentColorContextValue;
+  // Memoized so consumers (the chat composer and input among them) only
+  // re-render when the accent actually changes, not on every provider render.
+  const contextValue = useMemo(
+    () =>
+      ({
+        accentHex,
+        setAccentHex: setSelectedHex,
+        getBackgroundColor,
+      }) satisfies AccentColorContextValue,
+    [accentHex, getBackgroundColor],
+  );
 
   return (
     <AccentColorContext.Provider value={contextValue}>

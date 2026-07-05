@@ -89,9 +89,6 @@ export function usePlayerBridge({
   const [overlayUnlocked, setOverlayUnlocked] = useState(false);
   const [pipActive, setPipActive] = useState(false);
   const pipActiveRef = useRef(false);
-  const [playbackLatencySeconds, setPlaybackLatencySeconds] = useState<
-    number | null
-  >(null);
   const currentTimeResolverRef = useRef<((value: number) => void) | null>(null);
   const durationResolverRef = useRef<((value: number) => void) | null>(null);
   const userPausedRef = useRef(!autoplay);
@@ -151,7 +148,6 @@ export function usePlayerBridge({
     prevPlayerSource.webViewKey !== webViewKey
   ) {
     setPrevPlayerSource({ autoplay, sourceKey, webViewKey });
-    setPlaybackLatencySeconds(null);
     lastPlaybackLatencySecondsRef.current = null;
     pipActiveRef.current = false;
     setPipActive(false);
@@ -465,9 +461,11 @@ export function usePlayerBridge({
       case 'notifyStabilityLatency':
         stability.noteLatency(action.latencySeconds);
         break;
+      // Latency display flows through the videoLatencyDisplay$ observable via
+      // onPlaybackLatencyChange — holding it in React state here re-rendered
+      // the whole player subtree on every ~4s latency tick for nothing.
       case 'publishLatency':
         lastPlaybackLatencySecondsRef.current = action.latencySeconds;
-        setPlaybackLatencySeconds(action.latencySeconds);
         onPlaybackLatencyChange?.(action.latencySeconds);
         break;
       case 'resolveCurrentTime':
@@ -553,7 +551,6 @@ export function usePlayerBridge({
     pause,
     pipActive,
     play,
-    playbackLatencySeconds,
     playerState,
     playerStatus,
     resetPlayerStatus,
