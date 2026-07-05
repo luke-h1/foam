@@ -54,8 +54,8 @@ jest.mock('@app/store/chat/observables/chatStore', () => ({
     mentionLoginRevision: {
       peek: jest.fn(() => 7),
     },
-    paints: {},
-    userPaintIds: {},
+    paints: { onChange: jest.fn() },
+    userPaintIds: { onChange: jest.fn() },
   },
 }));
 
