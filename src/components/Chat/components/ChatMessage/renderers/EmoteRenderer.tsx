@@ -96,10 +96,80 @@ export const EmoteRenderer = memo(
           priority='normal'
           transitionMs={0}
         />
+        {part.overlaid?.map(overlay => (
+          <OverlaidEmoteImage
+            key={overlay.id ?? overlay.content}
+            baseHeight={height}
+            baseWidth={width}
+            disableAnimations={disableAnimations}
+            overlay={overlay}
+            targetSize={targetSize}
+          />
+        ))}
       </View>
     );
   },
 );
+
+/**
+ * A zero-width emote composited over its base emote, centered the way the
+ * 7TV extension stacks overlays.
+ */
+function OverlaidEmoteImage({
+  baseHeight,
+  baseWidth,
+  disableAnimations,
+  overlay,
+  targetSize,
+}: {
+  baseHeight: number;
+  baseWidth: number;
+  disableAnimations: boolean;
+  overlay: NonNullable<PartVariant['overlaid']>[number];
+  targetSize: number;
+}) {
+  const { height, width } = calculateAspectRatio(
+    overlay.width || 20,
+    overlay.height || 20,
+    targetSize,
+  );
+  const displayUrl = getDisplayEmoteUrl({
+    image_variants: overlay.image_variants,
+    url: overlay.url,
+    static_url: overlay.static_url,
+    disableAnimations,
+    preferredScale: CHAT_INLINE_EMOTE_SCALE,
+  });
+
+  if (!displayUrl) {
+    return null;
+  }
+
+  return (
+    <ChatInlineImage
+      sourceUrl={displayUrl}
+      style={getOverlayEmoteStyle(baseWidth, baseHeight, width, height)}
+      priority='normal'
+      transitionMs={0}
+    />
+  );
+}
+
+function getOverlayEmoteStyle(
+  baseWidth: number,
+  baseHeight: number,
+  width: number,
+  height: number,
+) {
+  return {
+    position: 'absolute' as const,
+    left: Math.round((baseWidth - width) / 2),
+    top: Math.round((baseHeight - height) / 2),
+    width,
+    height,
+    zIndex: 2,
+  };
+}
 
 function getEmoteImageStyle(width: number, height: number) {
   return {

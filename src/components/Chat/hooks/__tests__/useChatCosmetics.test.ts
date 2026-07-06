@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { sevenTvService } from '@app/services/seventv-service';
 import { fetchAndCacheUserCosmetics } from '@app/store/chat/actions/cosmetics';
+import { requestUserCosmetics } from '@app/store/chat/actions/cosmeticsBridge';
 
 import { useChatCosmetics } from '../useChatCosmetics';
 
@@ -17,6 +18,10 @@ jest.mock('@app/services/seventv-service', () => ({
 
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
   fetchAndCacheUserCosmetics: jest.fn(() => Promise.resolve()),
+}));
+
+jest.mock('@app/store/chat/actions/cosmeticsBridge', () => ({
+  requestUserCosmetics: jest.fn(() => Promise.resolve()),
 }));
 
 jest.mock('@app/store/chat/observables/chatStore', () => ({
@@ -38,6 +43,7 @@ jest.mock('@app/utils/logger', () => ({
 
 const mockGetSevenTvUserId = jest.mocked(sevenTvService.get7tvUserId);
 const mockFetchAndCacheUserCosmetics = jest.mocked(fetchAndCacheUserCosmetics);
+const mockRequestUserCosmetics = jest.mocked(requestUserCosmetics);
 
 const mockChatStore = jest.requireMock('@app/store/chat/observables/chatStore')
   .chatStore$ as {
@@ -73,16 +79,12 @@ describe('useChatCosmetics', () => {
     });
     mockGetSevenTvUserId.mockResolvedValue('7tv-user-1');
     mockFetchAndCacheUserCosmetics.mockResolvedValue(null);
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
+    mockRequestUserCosmetics.mockResolvedValue(undefined);
   });
 
   test('fetches current user cosmetics after mount', async () => {
     renderHook(() =>
       useChatCosmetics({
-        channelId: 'channel-1',
         userId: 'current-user',
       }),
     );
@@ -93,36 +95,18 @@ describe('useChatCosmetics', () => {
     });
   });
 
-  test('limits opportunistic cosmetic fetches to the initial chat window', async () => {
-    jest.useFakeTimers({ now: new Date('2026-06-08T12:00:00.000Z') });
+  test('queues chatters on the bridge batcher', async () => {
     const { result } = renderHook(() =>
       useChatCosmetics({
-        channelId: 'channel-window',
         userId: null,
       }),
     );
 
-    expect(result.current.canFetchCosmetics()).toBe(true);
-
-    act(() => {
-      jest.advanceTimersByTime(5001);
-    });
-
-    expect(result.current.canFetchCosmetics()).toBe(false);
-
     await act(async () => {
-      await result.current.fetchUserCosmetics('late-user');
+      await result.current.fetchUserCosmetics('chatter-1');
     });
 
-    expect(mockGetSevenTvUserId).not.toHaveBeenCalledWith('late-user');
-
-    await act(async () => {
-      await result.current.fetchUserCosmetics('allowed-user', {
-        allowAfterInitialWindow: true,
-      });
-    });
-
-    expect(mockGetSevenTvUserId).toHaveBeenCalledWith('allowed-user');
+    expect(mockRequestUserCosmetics.mock.calls).toEqual([['chatter-1']]);
   });
 
   test('does not refetch users that already have cached paint and badge cosmetics', async () => {
@@ -133,7 +117,6 @@ describe('useChatCosmetics', () => {
     });
     const { result } = renderHook(() =>
       useChatCosmetics({
-        channelId: 'channel-1',
         userId: null,
       }),
     );
@@ -142,8 +125,7 @@ describe('useChatCosmetics', () => {
       await result.current.fetchUserCosmetics('cached-user');
     });
 
-    expect(mockGetSevenTvUserId).not.toHaveBeenCalledWith('cached-user');
-    expect(mockFetchAndCacheUserCosmetics).not.toHaveBeenCalled();
+    expect(mockRequestUserCosmetics).not.toHaveBeenCalled();
     expect(
       result.current.fetchedCosmeticsUsersRef.current.has('cached-user'),
     ).toBe(true);
@@ -156,7 +138,6 @@ describe('useChatCosmetics', () => {
     });
     const { result } = renderHook(() =>
       useChatCosmetics({
-        channelId: 'channel-1',
         userId: null,
       }),
     );
@@ -169,7 +150,7 @@ describe('useChatCosmetics', () => {
       });
     });
 
-    expect(mockGetSevenTvUserId.mock.calls).toEqual([
+    expect(mockRequestUserCosmetics.mock.calls).toEqual([
       ['retry-user'],
       ['retry-user'],
     ]);

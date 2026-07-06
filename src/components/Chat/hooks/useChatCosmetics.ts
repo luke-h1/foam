@@ -1,38 +1,18 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { sevenTvService } from '@app/services/seventv-service';
 import { fetchAndCacheUserCosmetics } from '@app/store/chat/actions/cosmetics';
+import { requestUserCosmetics } from '@app/store/chat/actions/cosmeticsBridge';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { logger } from '@app/utils/logger';
 
-export function useChatCosmetics({
-  channelId,
-  userId,
-}: {
-  channelId: string;
-  userId?: string | null;
-}) {
+export function useChatCosmetics({ userId }: { userId?: string | null }) {
   const fetchedCosmeticsUsersRef = useLazyRef(() => new Set<string>());
-  const chatStartTimeRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    chatStartTimeRef.current = Date.now();
-  }, [channelId]);
-
-  const canFetchCosmetics = useCallback((): boolean => {
-    const chatStartTime = chatStartTimeRef.current;
-    if (!chatStartTime) {
-      return true;
-    }
-
-    return (Date.now() - chatStartTime) / 1000 <= 5;
-  }, []);
 
   const fetchUserCosmetics = async (
     twitchUserId: string,
     options: {
-      allowAfterInitialWindow?: boolean;
       retryMissingBadge?: boolean;
     } = {},
   ) => {
@@ -41,17 +21,6 @@ export function useChatCosmetics({
       fetchedCosmeticsUsersRef.current.has(twitchUserId) &&
       (!options.retryMissingBadge || existingBadgeId)
     ) {
-      return;
-    }
-
-    if (!options.allowAfterInitialWindow && !canFetchCosmetics()) {
-      const chatStartTime = chatStartTimeRef.current;
-      const elapsedSeconds = chatStartTime
-        ? (Date.now() - chatStartTime) / 1000
-        : 0;
-      logger.stvWs.debug(
-        `Skipping cosmetic fetch for ${twitchUserId} - chat has been active for ${elapsedSeconds.toFixed(1)}s (limit: 5s)`,
-      );
       return;
     }
 
@@ -66,23 +35,11 @@ export function useChatCosmetics({
 
     fetchedCosmeticsUsersRef.current.add(twitchUserId);
 
-    // The heavy network step (fetchAndCacheUserCosmetics) is concurrency-capped
-    // inside the cosmetics store now, so this path no longer needs its own
-    // limiter; get7tvUserId is cheap (in-memory resolved-id cache) and callers
-    // already throttle new users per hydration pass.
+    // The bridge batcher coalesces every user queued in the same window into
+    // one request and applies the returned dispatches to the store; the await
+    // lets callers re-check the cosmetic maps once the batch has landed.
     try {
-      logger.stvWs.info(`Fetching cosmetics for user ${twitchUserId}...`);
-      const sevenTvUserId = await sevenTvService.get7tvUserId(twitchUserId);
-
-      if (sevenTvUserId) {
-        logger.stvWs.info(
-          `Got 7TV user ID ${sevenTvUserId} for Twitch user ${twitchUserId}`,
-        );
-        await fetchAndCacheUserCosmetics(sevenTvUserId);
-        logger.stvWs.info(`Finished fetching cosmetics for ${twitchUserId}`);
-      } else {
-        logger.stvWs.debug(`No 7TV user ID found for ${twitchUserId}`);
-      }
+      await requestUserCosmetics(twitchUserId);
     } catch (error) {
       logger.stvWs.debug(
         `Failed to fetch cosmetics for ${twitchUserId}:`,
@@ -121,7 +78,6 @@ export function useChatCosmetics({
   }, [userId]);
 
   return {
-    canFetchCosmetics,
     fetchedCosmeticsUsersRef,
     fetchUserCosmetics,
   };

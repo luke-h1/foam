@@ -3,7 +3,6 @@ import {
   chatTransientState$,
   defaultTransientState,
 } from '../observables/chatTransientState';
-import type { ParsedRoomState } from '../types/roomState';
 
 export function getTransientState(
   channelId: string,
@@ -19,11 +18,4 @@ export function assignTransientState(
     ...getTransientState(channelId),
     ...patch,
   });
-}
-
-export function setChannelRoomState(
-  channelId: string,
-  roomState: ParsedRoomState | null,
-): void {
-  assignTransientState(channelId, { roomState });
 }

@@ -17,6 +17,7 @@ import {
 } from '@app/utils/string/createHitSlop';
 import { truncate } from '@app/utils/string/truncate';
 
+import { isRefreshCommand } from '../util/slashCommandDefinitions';
 import { ChatComposer } from './ChatComposer/ChatComposer';
 import type {
   ChatInputSectionProps,
@@ -51,8 +52,12 @@ export const ChatInputSection = memo(
     const { composerAnimatedStyle, composerGesture } =
       useComposerDismissGesture();
 
+    const trimmedInput = messageInput.trim();
+    // /refresh is purely client-side, so it works signed out
+    const isRefresh = isRefreshCommand(messageInput);
+
     const canSend = Boolean(
-      messageInput.trim() && isAuthenticated && !isSending,
+      trimmedInput && (isAuthenticated || isRefresh) && !isSending,
     );
 
     const { t } = useTranslation('chat');
@@ -128,7 +133,7 @@ export const ChatInputSection = memo(
                   onSubmit={onSubmit}
                   onPressAdd={onOpenEmoteSheet}
                   placeholder={inputPlaceholder}
-                  editable={isAuthenticated}
+                  editable
                   canSend={canSend}
                   prioritizeChannelEmotes
                 />

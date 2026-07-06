@@ -10,8 +10,6 @@ import { countMetric } from '@app/lib/sentry';
 import {
   addBadge,
   addPaint,
-  getBadge,
-  getPaint,
   removeBadge,
   removePaint,
   removeUserBadge,
@@ -21,18 +19,20 @@ import {
   updateBadge,
   updatePaint,
 } from '@app/store/chat/actions/cosmetics';
+import {
+  applyCosmeticCreateEvent,
+  applyEntitlementCreateEvent,
+} from '@app/store/chat/actions/cosmeticsBridge';
+import {
+  findPersonalEmoteSetOwner,
+  refreshUserPersonalEmotes,
+} from '@app/store/chat/actions/personalEmotes';
 import type { SanitisedEmote } from '@app/types/emote';
-import type {
-  BadgeCosmetic,
-  BadgeData,
-  PaintCosmetic,
-  PaintData,
-} from '@app/types/seventv/cosmetics';
+import type { BadgeData, PaintData } from '@app/types/seventv/cosmetics';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
 import { logger } from '@app/utils/logger';
 
 import {
-  get7TvCosmeticId,
   sanitise7TvBadge,
   toPaintWithId,
 } from '../util/normalizeSevenTvCosmetics';
@@ -48,18 +48,6 @@ function getDataFromChangeValue(entry: unknown): unknown {
 
 function shouldSuppressEmoteNotice(emote: SanitisedEmote): boolean {
   return emote.name?.toLowerCase().includes('nnys') ?? false;
-}
-
-function isBadgeCosmetic(
-  cosmetic: BadgeCosmetic | PaintCosmetic,
-): cosmetic is BadgeCosmetic {
-  return cosmetic.object.kind === 'BADGE';
-}
-
-function isPaintCosmetic(
-  cosmetic: BadgeCosmetic | PaintCosmetic,
-): cosmetic is PaintCosmetic {
-  return cosmetic.object.kind === 'PAINT';
 }
 
 function isBadgeData(data: unknown): data is BadgeData & { ref_id?: string } {
@@ -86,30 +74,11 @@ function onCosmeticCreate(data: CosmeticCreateCallbackData) {
   if (!data.cosmetic?.object) {
     return;
   }
-  const { cosmetic } = data;
+  applyCosmeticCreateEvent(data.cosmetic, data.kind);
+}
 
-  if (data.kind === 'BADGE' && isBadgeCosmetic(cosmetic)) {
-    const badgeData = cosmetic.object.data;
-    const badgeId = get7TvCosmeticId(badgeData);
-    if (getBadge(badgeId)) {
-      return;
-    }
-    const sanitised = sanitise7TvBadge(badgeData, badgeId);
-    addBadge(sanitised);
-    logger.stvWs.info(
-      `Added badge to cache: ${badgeData.name} (id: ${badgeId})`,
-    );
-  } else if (data.kind === 'PAINT' && isPaintCosmetic(cosmetic)) {
-    const paintData = cosmetic.object.data;
-    const paintWithId = toPaintWithId(paintData);
-    if (getPaint(paintWithId.id)) {
-      return;
-    }
-    addPaint(paintWithId);
-    logger.stvWs.info(
-      `Added paint to cache: ${paintData.name} (id: ${paintWithId.id})`,
-    );
-  }
+function onEntitlementCreate(data: EntitlementCreateCallbackData) {
+  applyEntitlementCreateEvent(data, { requestMissingDefinitions: true });
 }
 
 function onCosmeticDelete(data: CosmeticDeleteCallbackData) {
@@ -145,15 +114,11 @@ export function useChatSevenTvCallbacks({
   channelId,
   channelName,
   sevenTvEmoteSetId,
-  canFetchCosmetics,
-  fetchAndCacheUserCosmetics,
   updateSevenTvEmotes,
   onEmoteNotice,
 }: {
   channelId: string;
   sevenTvEmoteSetId: string | undefined;
-  canFetchCosmetics: () => boolean;
-  fetchAndCacheUserCosmetics: (sevenTvUserId: string) => Promise<unknown>;
   updateSevenTvEmotes: (
     cId: string,
     added: SanitisedEmote[],
@@ -203,46 +168,13 @@ export function useChatSevenTvCallbacks({
     });
   };
 
-  const onEntitlementCreate = (data: EntitlementCreateCallbackData) => {
-    const { entitlement } = data;
-    const cosmeticId = entitlement.object.ref_id;
-    const sevenTvUserId = entitlement.object.user.id;
-
-    const run = async () => {
-      if (entitlement.object.kind === 'PAINT') {
-        const paintId = cosmeticId || data.paintId;
-        if (paintId) {
-          if (!getPaint(paintId) && sevenTvUserId && canFetchCosmetics()) {
-            await fetchAndCacheUserCosmetics(sevenTvUserId);
-          } else if (!getPaint(paintId) && sevenTvUserId) {
-            logger.stvWs.debug(
-              'Skipping cosmetic fetch for entitlement - 5s limit exceeded',
-            );
-          }
-
-          if (data.ttvUserId) {
-            setUserPaint(data.ttvUserId, paintId);
-          }
-        }
-      }
-      if (entitlement.object.kind === 'BADGE') {
-        const badgeId = cosmeticId || data.badgeId;
-        if (badgeId) {
-          if (!getBadge(badgeId) && sevenTvUserId && canFetchCosmetics()) {
-            await fetchAndCacheUserCosmetics(sevenTvUserId);
-          } else if (!getBadge(badgeId) && sevenTvUserId) {
-            logger.stvWs.debug(
-              'Skipping cosmetic fetch for entitlement - 5s limit exceeded',
-            );
-          }
-
-          if (data.ttvUserId) {
-            setUserBadge(data.ttvUserId, badgeId);
-          }
-        }
-      }
-    };
-    void run();
+  // An emote_set.update for a set that is not the channel's active one is a
+  // chatter's personal set; refresh the owner's cached personal emotes.
+  const onEmoteSetUpdateForOtherSet = (emoteSetId: string) => {
+    const ownerTtvUserId = findPersonalEmoteSetOwner(channelId, emoteSetId);
+    if (ownerTtvUserId) {
+      void refreshUserPersonalEmotes(ownerTtvUserId, channelId);
+    }
   };
 
   const onCosmeticUpdate = (data: CosmeticUpdateCallbackData) => {
@@ -355,6 +287,7 @@ export function useChatSevenTvCallbacks({
 
   return {
     onEmoteUpdate,
+    onEmoteSetUpdateForOtherSet,
     onCosmeticCreate,
     onEntitlementCreate,
     onCosmeticUpdate,

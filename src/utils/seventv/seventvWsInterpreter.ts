@@ -29,6 +29,7 @@ export interface SeventvWsInterpreterContext {
 
 export type HandledSevenTvEventType =
   | 'emote_set.update'
+  | 'user.update'
   | 'cosmetic.create'
   | 'cosmetic.update'
   | 'cosmetic.delete'
@@ -48,10 +49,8 @@ export type SeventvWsDecision =
       reason: 'inactiveEmoteSet' | 'historicalEvent' | 'noChanges';
     }
   | {
-      type: 'ignoreEmoteSetUpdate';
-      reason: 'differentEmoteSet';
-      receivedEmoteSetId: string;
-      expectedEmoteSetId: string;
+      type: 'emoteSetUpdateForOtherSet';
+      emoteSetId: string;
     }
   | {
       type: 'applyCosmeticCreate';
@@ -83,6 +82,13 @@ export type SeventvWsDecision =
     }
   | { type: 'applyEntitlementDelete'; entitlementId: string; ttvUserId: null }
   | {
+      type: 'applyEmoteSetSwitch';
+      oldSetId: string | null;
+      newSetId: string;
+      newSetName: string | null;
+    }
+  | { type: 'ignoreUserUpdate'; reason: 'noEmoteSetChange' | 'historicalEvent' }
+  | {
       type: 'eventInterpretationFailed';
       eventType: HandledSevenTvEventType;
       error: unknown;
@@ -99,7 +105,17 @@ export type SeventvWsDecision =
     }
   | { type: 'heartbeat'; count: number }
   | { type: 'ack'; command: string }
-  | { type: 'hello' }
+  | {
+      type: 'resumeAck';
+      success: boolean;
+      dispatchesReplayed: number;
+      subscriptionsRestored: number;
+    }
+  | {
+      type: 'hello';
+      sessionId: string | null;
+      heartbeatIntervalMs: number | null;
+    }
   | {
       type: 'invalidSubscriptionCondition';
       payload: { code: number; message: string };
@@ -175,16 +191,17 @@ function interpretEmoteSetUpdate(
   const receivedEmoteSetId = data.body.id;
   const { expectedEmoteSetId } = context;
 
-  if (!expectedEmoteSetId || !receivedEmoteSetId) {
+  if (!receivedEmoteSetId) {
     return { type: 'ignoreEmoteSetUpdate', reason: 'inactiveEmoteSet' };
   }
 
-  if (receivedEmoteSetId !== expectedEmoteSetId) {
+  // Updates for a set other than the channel's active one are usually a
+  // chatter's personal emote set; hand the set id to the caller so it can
+  // refresh the matching personal set instead of dropping the event.
+  if (!expectedEmoteSetId || receivedEmoteSetId !== expectedEmoteSetId) {
     return {
-      type: 'ignoreEmoteSetUpdate',
-      reason: 'differentEmoteSet',
-      receivedEmoteSetId,
-      expectedEmoteSetId,
+      type: 'emoteSetUpdateForOtherSet',
+      emoteSetId: receivedEmoteSetId,
     };
   }
 
@@ -426,6 +443,57 @@ function interpretEntitlementDelete(
   }
 }
 
+/**
+ * A `user.update` for the channel owner carries the active emote set switch
+ * as a nested change: `updated[key=connections].value[key=emote_set]` with
+ * `{id, name}` old/new values. Anything else on the user object is ignored.
+ */
+function interpretUserUpdate(
+  data: SevenTvEventData<'user.update'>,
+  context: SeventvWsInterpreterContext,
+): SeventvWsDecision {
+  try {
+    // Same replay guard as emote_set.update: dispatches replayed right after
+    // a reconnect/RESUME describe switches that already happened.
+    if (context.connectionTimestamp) {
+      const timeSinceConnection = context.now - context.connectionTimestamp;
+
+      if (timeSinceConnection < HISTORICAL_EVENT_BUFFER) {
+        return { type: 'ignoreUserUpdate', reason: 'historicalEvent' };
+      }
+    }
+
+    const updated = data.body.updated ?? [];
+    for (const entry of updated) {
+      if (entry.key !== 'connections' || !Array.isArray(entry.value)) {
+        continue;
+      }
+      for (const nested of entry.value) {
+        if (nested.key !== 'emote_set') {
+          continue;
+        }
+        const newSet = nested.value as { id?: string; name?: string } | null;
+        const oldSet = nested.old_value as { id?: string } | null;
+        if (newSet?.id && newSet.id !== oldSet?.id) {
+          return {
+            type: 'applyEmoteSetSwitch',
+            oldSetId: oldSet?.id ?? null,
+            newSetId: newSet.id,
+            newSetName: newSet.name ?? null,
+          };
+        }
+      }
+    }
+    return { type: 'ignoreUserUpdate', reason: 'noEmoteSetChange' };
+  } catch (error) {
+    return {
+      type: 'eventInterpretationFailed',
+      eventType: 'user.update',
+      error,
+    };
+  }
+}
+
 function interpretDispatchEvent(
   data: SevenTvEventData<SevenTvEventType>,
   context: SeventvWsInterpreterContext,
@@ -467,6 +535,12 @@ function interpretDispatchEvent(
         data as SevenTvEventData<'entitlement.delete'>,
       );
 
+    case 'user.update':
+      return interpretUserUpdate(
+        data as SevenTvEventData<'user.update'>,
+        context,
+      );
+
     default:
       return { type: 'unhandledEventType', eventType: data.type };
   }
@@ -501,11 +575,33 @@ export function interpretSeventvWsMessage(
     case 2:
       return [{ type: 'heartbeat', count: message.d.count }];
 
-    case 5:
+    case 5: {
+      if (message.d.command === 'RESUME') {
+        const resumeData = message.d.data as {
+          success?: boolean;
+          dispatches_replayed?: number;
+          subscriptions_restored?: number;
+        } | null;
+        return [
+          {
+            type: 'resumeAck',
+            success: resumeData?.success === true,
+            dispatchesReplayed: resumeData?.dispatches_replayed ?? 0,
+            subscriptionsRestored: resumeData?.subscriptions_restored ?? 0,
+          },
+        ];
+      }
       return [{ type: 'ack', command: message.d.command }];
+    }
 
     case 1:
-      return [{ type: 'hello' }];
+      return [
+        {
+          type: 'hello',
+          sessionId: message.d?.session_id ?? null,
+          heartbeatIntervalMs: message.d?.heartbeat_interval ?? null,
+        },
+      ];
 
     case 6:
       return [{ type: 'invalidSubscriptionCondition', payload: message.d }];
@@ -519,6 +615,15 @@ export function interpretSeventvWsMessage(
     default:
       return [{ type: 'unhandledOp', op: message.op }];
   }
+}
+
+export function buildResumeMessage(sessionId: string): SevenTvWsMessage<never> {
+  return {
+    op: 34,
+    d: {
+      session_id: sessionId,
+    },
+  };
 }
 
 export function buildEntitlementCreateSubscribeMessage(
@@ -594,6 +699,66 @@ export function buildEmoteSetUpdateUnsubscribeMessage(
       type: 'emote_set.update',
       condition: {
         object_id: emoteSetId,
+      },
+    },
+  };
+}
+
+export function buildEntitlementCreateUnsubscribeMessage(
+  channelId: string,
+): SevenTvWsMessage<never, 'entitlement.create'> {
+  return {
+    op: 36,
+    d: {
+      type: 'entitlement.create',
+      condition: {
+        platform: 'TWITCH',
+        ctx: 'channel',
+        id: channelId,
+      },
+    },
+  };
+}
+
+export function buildCosmeticCreateUnsubscribeMessage(
+  channelId: string,
+): SevenTvWsMessage<never, 'cosmetic.create'> {
+  return {
+    op: 36,
+    d: {
+      type: 'cosmetic.create',
+      condition: {
+        platform: 'TWITCH',
+        ctx: 'channel',
+        id: channelId,
+      },
+    },
+  };
+}
+
+export function buildUserUpdateSubscribeMessage(
+  sevenTvUserId: string,
+): SevenTvWsMessage<never, 'user.update'> {
+  return {
+    op: 35,
+    d: {
+      type: 'user.update',
+      condition: {
+        object_id: sevenTvUserId,
+      },
+    },
+  };
+}
+
+export function buildUserUpdateUnsubscribeMessage(
+  sevenTvUserId: string,
+): SevenTvWsMessage<never, 'user.update'> {
+  return {
+    op: 36,
+    d: {
+      type: 'user.update',
+      condition: {
+        object_id: sevenTvUserId,
       },
     },
   };

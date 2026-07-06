@@ -15,14 +15,23 @@ export function replaceEmotesWithText(parts: ParsedPart[]): string {
   return parts
     .map(part => {
       switch (part.type) {
-        case 'emote':
+        case 'emote': {
           /**
            * Use the channel-facing text: the parsed `content` is the alias as it
            * appears in this channel (or the emoji character), so reconstructed
            * text matches what was shown rather than the emote's global
-           * original_name.
+           * original_name. Overlaid zero-width emotes were stripped from the
+           * part list during composition, so restore their words here.
            */
-          return getParsedPartStringContent(part);
+          const baseText = getParsedPartStringContent(part);
+          const overlaidText = (part.overlaid ?? [])
+            .flatMap(overlay => {
+              const overlayText = getParsedPartStringContent(overlay);
+              return overlayText ? [overlayText] : [];
+            })
+            .join(' ');
+          return overlaidText ? `${baseText} ${overlaidText}` : baseText;
+        }
 
         case 'mention':
           /**

@@ -11,6 +11,7 @@ import { getChatterinoBadges } from '@app/utils/chat/chatterinoBadges';
 import { fetchChannelCheermotes } from '@app/utils/chat/cheermoteStore';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { logger } from '@app/utils/logger';
+import { getSevenTvSessionId } from '@app/utils/seventv/sevenTvSessionId';
 
 import { chatStore$, limitChannelCaches } from '../observables/chatStore';
 import {
@@ -38,7 +39,12 @@ import {
   settleSpecs,
 } from './channelResources';
 import { clearUserCosmeticsCache } from './cosmetics';
+import { clearBridgeCosmeticsState } from './cosmeticsBridge';
 import { clearEmoteImageCache } from './emoteImages';
+import {
+  clearPersonalEmotesCache,
+  fetchUserPersonalEmotes,
+} from './personalEmotes';
 
 const channelLoadAbort = (() => {
   let current: AbortController | null = null;
@@ -78,74 +84,14 @@ const exitIfAborted = (
   return true;
 };
 
-const personalEmotesGuard = createFetchOnceGuard();
-
-export const fetchUserPersonalEmotes = async (
-  twitchUserId: string,
-  channelId: string,
-): Promise<SanitisedEmote[]> => {
-  if (personalEmotesGuard.hasFetched(twitchUserId)) {
-    const cache = chatStore$.persisted.channelCaches[channelId]?.peek();
-    return cache?.sevenTvPersonalEmotes?.[twitchUserId] || [];
-  }
-  const cache = chatStore$.persisted.channelCaches[channelId]?.peek();
-
-  if (cache?.sevenTvPersonalEmotes?.[twitchUserId]?.length) {
-    personalEmotesGuard.markFetched(twitchUserId);
-    return cache.sevenTvPersonalEmotes[twitchUserId];
-  }
-
-  return personalEmotesGuard.run(twitchUserId, async ctx => {
-    try {
-      const personalEmotes =
-        await sevenTvService.getPersonalEmoteSet(twitchUserId);
-      ctx.markFetched();
-
-      if (personalEmotes.length > 0 && ctx.stillCurrent()) {
-        const channelCache = chatStore$.persisted.channelCaches[channelId];
-
-        if (channelCache) {
-          const currentPersonalEmotes =
-            channelCache.sevenTvPersonalEmotes?.peek() || {};
-          channelCache.sevenTvPersonalEmotes.set({
-            ...currentPersonalEmotes,
-            [twitchUserId]: personalEmotes,
-          });
-        }
-      }
-      return personalEmotes;
-    } catch (error) {
-      logger.stv.warn(
-        `Failed to fetch personal emotes for user ${twitchUserId}:`,
-        {
-          name: 'seven_tv_emotes_warning',
-          error,
-          action: 'personal_emotes_failed',
-          channel_id: channelId,
-          provider: 'seven_tv',
-          resource_type: 'emotes',
-          scope: 'personal',
-          screen: 'chat',
-          twitch_user_id: twitchUserId,
-        },
-      );
-      ctx.markFetched();
-      return [];
-    }
-  });
-};
-
-export const getUserPersonalEmotes = (
-  twitchUserId: string,
-  channelId: string,
-): SanitisedEmote[] => {
-  const cache = chatStore$.persisted.channelCaches[channelId]?.peek();
-  return cache?.sevenTvPersonalEmotes?.[twitchUserId] || [];
-};
-
-export const clearPersonalEmotesCache = () => {
-  personalEmotesGuard.clear();
-};
+export {
+  clearPersonalEmotesCache,
+  fetchUserPersonalEmotes,
+  findPersonalEmoteSetOwner,
+  getUserPersonalEmotes,
+  handlePersonalEmoteSetEntitlement,
+  refreshUserPersonalEmotes,
+} from './personalEmotes';
 
 // Runs are keyed by channel id; stamps are keyed by owner id, and only owner
 // ids Twitch never returns (deleted/suspended accounts) get stamped. Those
@@ -249,12 +195,13 @@ export const clearChannelResources = () => {
     chatStore$.emojis.set(getEmojiEmotes(getPreferences().emojiStyle));
     chatStore$.bits.set([]);
   });
-  personalEmotesGuard.clear();
+  clearPersonalEmotesCache();
 };
 
 export const notify7TVPresence = async (
   twitchUserId: string | undefined,
   twitchChannelId: string,
+  options: { passive: boolean } = { passive: true },
 ): Promise<void> => {
   if (!twitchUserId || !twitchChannelId) {
     return;
@@ -265,7 +212,12 @@ export const notify7TVPresence = async (
     if (!sevenTvUserId) {
       return;
     }
-    await sevenTvService.sendPresence(twitchChannelId, sevenTvUserId);
+    await sevenTvService.sendPresence(twitchChannelId, sevenTvUserId, {
+      passive: options.passive,
+      sessionId: options.passive
+        ? (getSevenTvSessionId() ?? undefined)
+        : undefined,
+    });
   } catch (error) {
     logger.stvWs.warn(`Failed to notify 7TV about presence: ${String(error)}`, {
       name: 'seven_tv_presence_warning',
@@ -278,6 +230,53 @@ export const notify7TVPresence = async (
       twitch_user_id: twitchUserId,
     });
   }
+};
+
+// Session-lifetime per-channel bookkeeping maps stay bounded like every
+// other per-key guard in the chat store; 100 channels comfortably exceeds a
+// realistic session while capping marathon channel-hopping growth.
+const MAX_TRACKED_CHANNEL_ENTRIES = 100;
+
+function setBoundedChannelEntry<V>(
+  map: Map<string, V>,
+  channelId: string,
+  value: V,
+): void {
+  if (!map.has(channelId) && map.size >= MAX_TRACKED_CHANNEL_ENTRIES) {
+    const oldest = map.keys().next().value;
+    if (oldest !== undefined) {
+      map.delete(oldest);
+    }
+  }
+  map.set(channelId, value);
+}
+
+// 7TV rebroadcasts entitlements to the whole channel on every active
+// presence, so cap writes per channel the same way the official extension
+// does.
+const ACTIVE_PRESENCE_MIN_INTERVAL_MS = 10_000;
+const lastActivePresenceAt = new Map<string, number>();
+
+/**
+ * Broadcast the user's presence to the channel when they chat, which makes
+ * 7TV push this user's entitlements (paint/badge/personal emotes) to every
+ * other client subscribed to the channel.
+ */
+export const notify7TVActivePresence = async (
+  twitchUserId: string | undefined,
+  twitchChannelId: string,
+): Promise<void> => {
+  if (!twitchUserId || !twitchChannelId) {
+    return;
+  }
+
+  const lastSentAt = lastActivePresenceAt.get(twitchChannelId);
+  if (lastSentAt && Date.now() - lastSentAt < ACTIVE_PRESENCE_MIN_INTERVAL_MS) {
+    return;
+  }
+  setBoundedChannelEntry(lastActivePresenceAt, twitchChannelId, Date.now());
+
+  await notify7TVPresence(twitchUserId, twitchChannelId, { passive: false });
 };
 
 export interface LoadChannelResourcesOptions {
@@ -724,6 +723,7 @@ export const clearChatCosmeticsCache = (): void => {
     clearPersistedRecentMessages();
   }
   clearUserCosmeticsCache();
+  clearBridgeCosmeticsState();
   clearPersonalEmotesCache();
   clearSubscriberProfilesCache();
   clearEmoteImageCache();
@@ -801,6 +801,83 @@ export const getSevenTvEmoteSetId = (channelId?: string): string | null => {
   const caches = chatStore$.persisted.channelCaches.peek();
   const cache = caches?.[targetChannelId];
   return cache?.sevenTvEmoteSetId ?? null;
+};
+
+// Guards the check-fetch-assign sequence below: rapid consecutive switches
+// (or a replayed dispatch) race their fetches, and without this the slower
+// fetch's assign would win, leaving the cache on a stale set.
+const latestRequestedEmoteSetByChannel = new Map<string, string>();
+
+/**
+ * Swap the channel's active 7TV emote set after a live `user.update` says the
+ * broadcaster switched sets — replaces the cached channel set wholesale
+ * instead of waiting for the user to leave and re-enter the channel.
+ */
+export const switchSevenTvEmoteSet = async (
+  channelId: string,
+  newSetId: string,
+): Promise<boolean> => {
+  const channelCache = chatStore$.persisted.channelCaches[channelId];
+  if (!channelCache?.peek()) {
+    return false;
+  }
+  if (channelCache.peek()?.sevenTvEmoteSetId === newSetId) {
+    return false;
+  }
+
+  setBoundedChannelEntry(latestRequestedEmoteSetByChannel, channelId, newSetId);
+
+  try {
+    // eslint-disable-next-line react-doctor/async-defer-await -- the guard below checks state that can only go stale DURING this await; reordering would defeat it
+    const newEmotes = await sevenTvService.getSanitisedEmoteSet(newSetId);
+    if (latestRequestedEmoteSetByChannel.get(channelId) !== newSetId) {
+      return false;
+    }
+    const latest = channelCache.peek();
+    if (!latest) {
+      return false;
+    }
+
+    const oldSetEmoteIds = new Set(
+      (latest.sevenTvChannelEmotes ?? []).map(emote => emote.id),
+    );
+    const emotesWithoutOldSet = (latest.emotes ?? []).filter(
+      emote => !oldSetEmoteIds.has(emote.id),
+    );
+
+    channelCache.assign({
+      sevenTvEmoteSetId: newSetId,
+      sevenTvChannelEmotes: newEmotes,
+      emotes: deduplicateById([...newEmotes, ...emotesWithoutOldSet]),
+      lastUpdated: Date.now(),
+    });
+
+    logger.chat.info('Switched 7TV channel emote set', {
+      name: 'seven_tv_emotes_info',
+      action: 'emote_set_switched',
+      channel_id: channelId,
+      emote_count: newEmotes.length,
+      provider: 'seven_tv',
+      resource_type: 'emotes',
+      scope: 'channel',
+      screen: 'chat',
+      seven_tv_emote_set_id: newSetId,
+    });
+    return true;
+  } catch (error) {
+    logger.chat.warn('Failed to switch 7TV channel emote set', {
+      name: 'seven_tv_emotes_warning',
+      error,
+      action: 'emote_set_switch_failed',
+      channel_id: channelId,
+      provider: 'seven_tv',
+      resource_type: 'emotes',
+      scope: 'channel',
+      screen: 'chat',
+      seven_tv_emote_set_id: newSetId,
+    });
+    return false;
+  }
 };
 
 export const updateSevenTvEmotes = (

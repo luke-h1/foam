@@ -366,4 +366,96 @@ describe('processEmotesWorklet', () => {
       { type: 'text', content: 'MiddleA' },
     ]);
   });
+
+  test('attaches consecutive zero-width emotes to the preceding emote as overlays', () => {
+    const baseEmote = createEmote({ id: 'base-emote', name: 'peepoHappy' });
+    const snowEmote = createEmote({
+      id: 'zw-snow',
+      name: 'SoSnowy',
+      zero_width: true,
+    });
+    const coldEmote = createEmote({
+      id: 'zw-cold',
+      name: 'IceCold',
+      zero_width: true,
+    });
+
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'peepoHappy SoSnowy IceCold',
+      sevenTvChannelEmotes: [baseEmote, snowEmote, coldEmote],
+    });
+
+    expect(result).toHaveLength(1);
+    expect(pickFields(result[0], ['id', 'type'])).toEqual({
+      id: 'base-emote',
+      type: 'emote',
+    });
+    const overlaid =
+      result[0]?.type === 'emote' ? (result[0].overlaid ?? []) : [];
+    expect(overlaid.map(overlay => overlay.id)).toEqual(['zw-snow', 'zw-cold']);
+  });
+
+  test('keeps a zero-width emote standalone when nothing precedes it', () => {
+    const snowEmote = createEmote({
+      id: 'zw-snow',
+      name: 'SoSnowy',
+      zero_width: true,
+    });
+
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'SoSnowy hello',
+      sevenTvChannelEmotes: [snowEmote],
+    });
+
+    expect(pickFields(result[0], ['id', 'type', 'zero_width'])).toEqual({
+      id: 'zw-snow',
+      type: 'emote',
+      zero_width: true,
+    });
+  });
+
+  test('hides BTTV backward modifiers before an emote', () => {
+    const baseEmote = createEmote({ id: 'base-emote', name: 'peepoHappy' });
+
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'w! peepoHappy',
+      sevenTvChannelEmotes: [baseEmote],
+    });
+
+    expect(result.map(part => pickFields(part, ['type', 'content']))).toEqual([
+      { type: 'emote', content: 'peepoHappy' },
+    ]);
+  });
+
+  test('keeps modifier-looking words that do not precede an emote', () => {
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'w! hello',
+    });
+
+    expect(result.map(part => pickFields(part, ['type', 'content']))).toEqual([
+      { type: 'text', content: 'w!' },
+      { type: 'text', content: ' ' },
+      { type: 'text', content: 'hello' },
+    ]);
+  });
+
+  test('hides ffz modifier words after an emote', () => {
+    const baseEmote = createEmote({ id: 'base-emote', name: 'peepoHappy' });
+
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'peepoHappy ffzHyper done',
+      sevenTvChannelEmotes: [baseEmote],
+    });
+
+    expect(result.map(part => pickFields(part, ['type', 'content']))).toEqual([
+      { type: 'emote', content: 'peepoHappy' },
+      { type: 'text', content: ' ' },
+      { type: 'text', content: 'done' },
+    ]);
+  });
 });

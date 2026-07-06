@@ -14,6 +14,7 @@ import { theme } from '@app/styles/themes';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { truncate } from '@app/utils/string/truncate';
 
+import { isRefreshCommand } from '../util/slashCommandDefinitions';
 import { ChatComposer } from './ChatComposer/ChatComposer';
 import type { ChatInputSectionProps } from './chatInputSectionTypes';
 import { ComposerIconButton } from './ComposerIconButton';
@@ -41,8 +42,13 @@ export const ChatInputSection = memo(
     const { composerAnimatedStyle, composerGesture } =
       useComposerDismissGesture();
 
+    const trimmedInput = messageInput.trim();
+    // /refresh is purely client-side, so it works signed out
+    const isRefresh = isRefreshCommand(messageInput);
+
     const canSend =
-      messageInput.trim().length > 0 && isAuthenticated && !isSending;
+      trimmedInput.length > 0 && (isAuthenticated || isRefresh) && !isSending;
+
     const { t } = useTranslation('chat');
     const inputPlaceholder = !isAuthenticated
       ? t('composer.signInToSend')
@@ -109,7 +115,7 @@ export const ChatInputSection = memo(
                   onSubmit={onSubmit}
                   onPressAdd={onOpenEmoteSheet}
                   placeholder={inputPlaceholder}
-                  editable={isAuthenticated}
+                  editable
                   canSend={canSend}
                   prioritizeChannelEmotes
                 />

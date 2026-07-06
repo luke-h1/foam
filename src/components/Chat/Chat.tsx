@@ -19,7 +19,6 @@ import { ChatInputShell } from './components/ChatInputShell';
 import type { ChatListRef } from './components/ChatList';
 import { ChatMessagePane } from './components/ChatMessagePane';
 import { ResumeScroll } from './components/ResumeScroll';
-import { RoomStateChips } from './components/RoomStateChips';
 import { useChatScroll } from './hooks/useChatScroll';
 import { useChatSession } from './hooks/useChatSession';
 import { useChatSurface } from './hooks/useChatSurface';
@@ -259,7 +258,6 @@ export const Chat = memo(
               offset={{ closed: -insets.bottom }}
               style={styles.inputStickyView}
             >
-              <RoomStateChips channelId={channelId} />
               <ChatInputShell
                 ref={inputShellRef}
                 channelId={channelId}

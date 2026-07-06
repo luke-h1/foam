@@ -210,7 +210,8 @@ const config: ExpoConfig = {
     [
       '@sentry/react-native/expo',
       {
-        useNativeInit: true,
+        // RNSentrySDK.start() segfaults when sentry.options.json has no DSN
+        useNativeInit: Boolean(process.env.EXPO_PUBLIC_SENTRY_DSN),
         options: {
           dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
         },
@@ -323,7 +324,9 @@ const config: ExpoConfig = {
   experiments: {
     reactCompiler: true,
     tsconfigPaths: true,
-    buildCacheProvider: 'eas',
+    ...(process.env.DISABLE_EAS_BUILD_CACHE
+      ? {}
+      : { buildCacheProvider: 'eas' as const }),
   },
   web: {},
   ios: {

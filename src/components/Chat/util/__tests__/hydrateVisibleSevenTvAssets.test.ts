@@ -183,7 +183,6 @@ describe('hydrateVisibleSevenTvAssets', () => {
     });
 
     expect(fetchUserCosmetics).toHaveBeenCalledWith('twitch-user', {
-      allowAfterInitialWindow: true,
       retryMissingBadge: true,
     });
     expect(reprocessMessage).toHaveBeenCalledWith(message);

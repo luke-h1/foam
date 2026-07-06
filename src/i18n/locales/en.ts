@@ -94,6 +94,7 @@ const en = {
       chatModeUpdated: '{{mode}} applied',
       shieldOn: 'Shield mode enabled',
       shieldOff: 'Shield mode disabled',
+      usage: 'Usage: /{{name}} {{argHint}}',
     },
     composer: {
       sendAMessage: 'Send a message...',
@@ -107,6 +108,7 @@ const en = {
       sendAndPinMessage: 'Send and pin message',
       emotes: 'Emotes',
       mention: 'Mention',
+      commands: 'Commands',
       attachImage: 'Attach image',
     },
     imageUpload: {

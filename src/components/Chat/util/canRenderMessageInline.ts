@@ -20,6 +20,8 @@ export function canRenderMessageInline(
       part.type === 'text' ||
       part.type === 'mention' ||
       part.type === 'link' ||
-      (part.type === 'emote' && !part.zero_width),
+      // Overlaid zero-width emotes render absolutely positioned, which a
+      // single Text element cannot host.
+      (part.type === 'emote' && !part.zero_width && !part.overlaid?.length),
   );
 }

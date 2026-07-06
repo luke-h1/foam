@@ -10,6 +10,9 @@ import {
 import { useWindowDimensions } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 
+import i18next from 'i18next';
+import { toast } from 'sonner-native';
+
 import type { useAuthContext } from '@app/context/AuthContext';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { findBadges } from '@app/utils/chat/findBadges';
@@ -26,6 +29,10 @@ import {
 } from '../util/messageHandlers';
 import { parseModCommand } from '../util/modCommands';
 import { runModCommand } from '../util/runModCommand';
+import {
+  findSlashCommandDefinition,
+  isRefreshCommand,
+} from '../util/slashCommandDefinitions';
 import type { ChatComposerHandle } from './ChatComposer/ChatComposer';
 import { ChatInputSection, type ReplyToData } from './ChatInputSection';
 
@@ -102,16 +109,12 @@ export const ChatInputShell = memo(function ChatInputShell({
     setDraft(createEmptyDraft());
   }, []);
 
-  const handleComposerTextChange = useCallback(
-    (text: string) => {
-      if (!isAuthenticated) {
-        return;
-      }
-      messageInputRef.current = text;
-      setDraft(prev => ({ ...prev, messageInput: text }));
-    },
-    [isAuthenticated],
-  );
+  // Also runs signed out: the composer stays editable so anyone can type
+  // /refresh, and the sign-out effect below resets the draft.
+  const handleComposerTextChange = useCallback((text: string) => {
+    messageInputRef.current = text;
+    setDraft(prev => ({ ...prev, messageInput: text }));
+  }, []);
 
   const writeComposerText = useCallback((next: string) => {
     messageInputRef.current = next;
@@ -154,7 +157,7 @@ export const ChatInputShell = memo(function ChatInputShell({
       return;
     }
 
-    if (currentInput.trim().toLowerCase() === '/refresh') {
+    if (isRefreshCommand(currentInput)) {
       onRefreshCommand();
       clearDraft();
       void KeyboardController.dismiss();
@@ -174,6 +177,25 @@ export const ChatInputShell = memo(function ChatInputShell({
       void KeyboardController.dismiss();
       runModCommand(modCommand, channelId, user?.id);
       return;
+    }
+
+    // A known command with missing/invalid args parses to null; surface the
+    // usage instead of letting it fall through to IRC as plain chat text,
+    // where Twitch answers with an "Unrecognized command" notice.
+    if (currentInput.trim().startsWith('/')) {
+      const [commandName = ''] = currentInput.trim().slice(1).split(/\s+/);
+      const definition = findSlashCommandDefinition(commandName);
+      if (definition) {
+        toast.error(
+          i18next
+            .t('chat:modCommands.usage', {
+              name: definition.name,
+              argHint: definition.argHint ?? '',
+            })
+            .trimEnd(),
+        );
+        return;
+      }
     }
 
     if (!isChatConnected()) {

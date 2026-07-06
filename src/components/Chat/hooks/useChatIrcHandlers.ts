@@ -13,7 +13,6 @@ import {
   removeMessageById,
   removeMessagesByLogin,
 } from '@app/store/chat/actions/messages';
-import { setChannelRoomState } from '@app/store/chat/actions/transientState';
 import { getPreferences } from '@app/store/preferenceStore';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import {
@@ -101,12 +100,11 @@ export function useChatIrcHandlers({
 
   const applyRoomStateUpdate = useCallback(
     (update: RoomStateUpdate) => {
-      setChannelRoomState(channelId, update.state);
       update.notices.forEach(notice => {
         appendSystemMessage(notice);
       });
     },
-    [appendSystemMessage, channelId],
+    [appendSystemMessage],
   );
 
   const handlePrivmsgMessage = useCallback(

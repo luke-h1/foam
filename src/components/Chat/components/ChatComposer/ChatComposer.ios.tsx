@@ -9,6 +9,7 @@ import { theme } from '@app/styles/themes';
 import { ComposerIconButton } from '../ComposerIconButton';
 import { COMPOSER_INPUT_MIN_HEIGHT } from '../composerSizing';
 import { chatComposerStyles } from './chatComposerStyles';
+import { CommandSuggestionRail } from './CommandSuggestionRail';
 import { EmoteSuggestionRail } from './EmoteSuggestionRail';
 import {
   type ChatComposerHandle,
@@ -58,6 +59,7 @@ function ChatComposerComponent({
     setIsFocused,
     showUserRail,
     showEmoteRail,
+    showCommandRail,
     wordInfo,
     submitEnabled,
     handleChangeText,
@@ -65,6 +67,7 @@ function ChatComposerComponent({
     handleSubmit,
     handleEmotePress,
     handleUserSelect,
+    handleCommandSelect,
   } = useChatComposerController({
     onChangeText,
     onSubmit,
@@ -92,6 +95,13 @@ function ChatComposerComponent({
           handleUserSelect={handleUserSelect}
           maxSuggestions={maxSuggestions}
           searchTerm={wordInfo.word}
+        />
+      ) : null}
+      {showCommandRail ? (
+        <CommandSuggestionRail
+          handleCommandSelect={handleCommandSelect}
+          maxSuggestions={maxSuggestions}
+          searchTerm={wordInfo.searchTerm}
         />
       ) : null}
 

@@ -5,8 +5,6 @@ import { countMetric } from '@app/lib/sentry';
 import {
   addBadge,
   addPaint,
-  getBadge,
-  getPaint,
   removeBadge,
   removePaint,
   removeUserBadge,
@@ -16,6 +14,10 @@ import {
   updateBadge,
   updatePaint,
 } from '@app/store/chat/actions/cosmetics';
+import {
+  applyCosmeticCreateEvent,
+  applyEntitlementCreateEvent,
+} from '@app/store/chat/actions/cosmeticsBridge';
 import type { BadgeData, PaintData } from '@app/types/seventv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
@@ -41,8 +43,6 @@ import {
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
   addBadge: jest.fn(),
   addPaint: jest.fn(),
-  getBadge: jest.fn(),
-  getPaint: jest.fn(),
   removeBadge: jest.fn(),
   removePaint: jest.fn(),
   removeUserBadge: jest.fn(),
@@ -51,6 +51,11 @@ jest.mock('@app/store/chat/actions/cosmetics', () => ({
   setUserPaint: jest.fn(),
   updateBadge: jest.fn(),
   updatePaint: jest.fn(),
+}));
+
+jest.mock('@app/store/chat/actions/cosmeticsBridge', () => ({
+  applyCosmeticCreateEvent: jest.fn(),
+  applyEntitlementCreateEvent: jest.fn(),
 }));
 
 jest.mock('@app/utils/logger', () => ({
@@ -83,24 +88,21 @@ jest.mock('@app/utils/emote/stv/generateSevenTvEmoteNotice', () => ({
   })),
 }));
 
-const mockGetBadge = jest.mocked(getBadge);
-const mockGetPaint = jest.mocked(getPaint);
 const mockAddBadge = jest.mocked(addBadge);
-const mockAddPaint = jest.mocked(addPaint);
 const mockUpdateBadge = jest.mocked(updateBadge);
 const mockCountMetric = jest.mocked(countMetric);
+const mockApplyCosmeticCreateEvent = jest.mocked(applyCosmeticCreateEvent);
+const mockApplyEntitlementCreateEvent = jest.mocked(
+  applyEntitlementCreateEvent,
+);
 
 const mockUpdateSevenTvEmotes = jest.fn();
-const mockFetchAndCacheUserCosmetics = jest.fn().mockResolvedValue(undefined);
-const mockCanFetchCosmetics = jest.fn().mockReturnValue(true);
 const mockOnEmoteNotice = jest.fn();
 
 const defaultProps = {
   channelId: 'twitch-123',
   channelName: 'testchannel',
   sevenTvEmoteSetId: 'emote-set-1',
-  canFetchCosmetics: mockCanFetchCosmetics,
-  fetchAndCacheUserCosmetics: mockFetchAndCacheUserCosmetics,
   updateSevenTvEmotes: mockUpdateSevenTvEmotes,
   onEmoteNotice: mockOnEmoteNotice,
 };
@@ -108,8 +110,6 @@ const defaultProps = {
 describe('useChatSevenTvCallbacks', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetBadge.mockReturnValue(undefined);
-    mockGetPaint.mockReturnValue(undefined);
   });
 
   describe('return shape', () => {
@@ -241,81 +241,89 @@ describe('useChatSevenTvCallbacks', () => {
         result.current.onCosmeticCreate({ kind: 'BADGE', cosmetic: {} });
       });
 
-      expect(addBadge).not.toHaveBeenCalled();
-      expect(addPaint).not.toHaveBeenCalled();
+      expect(applyCosmeticCreateEvent).not.toHaveBeenCalled();
     });
 
-    test('adds badge when kind is BADGE and badge not in cache', () => {
+    test('delegates badge creates to applyCosmeticCreateEvent', () => {
       const { result } = renderHook(() =>
         useChatSevenTvCallbacks(defaultProps),
       );
-      const badgeData = createBadgeData({
-        id: 'badge-id',
-        name: 'Badge',
-        tooltip: 'Tip',
-      });
+      const data = createBadgeCosmeticCreateData(
+        createBadgeData({
+          id: 'badge-id',
+          name: 'Badge',
+          tooltip: 'Tip',
+        }),
+      );
 
       act(() => {
-        result.current.onCosmeticCreate(
-          createBadgeCosmeticCreateData(badgeData),
-        );
+        result.current.onCosmeticCreate(data);
       });
 
-      expect(getBadge).toHaveBeenCalled();
-      expect(mockAddBadge.mock.calls[0]?.[0]).toEqual<SanitisedBadgeSet>({
-        id: 'badge-id',
-        provider: '7tv',
-        set: 'badge-id',
-        title: 'Tip',
-        type: '7TV Badge',
-        url: 'https://cdn.7tv.app/badge/badge-id/4x.webp',
-      });
+      expect(mockApplyCosmeticCreateEvent.mock.calls).toEqual([
+        [data.cosmetic, 'BADGE'],
+      ]);
     });
 
-    test('does not add badge when getBadge already returns truthy', () => {
-      mockGetBadge.mockReturnValue({
-        id: 'badge-id',
-        set: 'badge-id',
-        title: 'Badge',
-        type: '7TV Badge',
-        url: 'https://cdn.7tv.app/badge/badge-id/4x.webp',
-      });
+    test('delegates paint creates to applyCosmeticCreateEvent', () => {
       const { result } = renderHook(() =>
         useChatSevenTvCallbacks(defaultProps),
       );
-      const badgeData = createBadgeData({
-        id: 'badge-id',
-        name: 'Badge',
-        host: { url: 'https://cdn.7tv.app', files: [] },
-      });
+      const data = createPaintCosmeticCreateData(
+        createPaintInput({
+          id: 'paint-id',
+          name: 'Paint',
+          color: 0xff0000ff,
+        }),
+      );
 
       act(() => {
-        result.current.onCosmeticCreate(
-          createBadgeCosmeticCreateData(badgeData),
-        );
+        result.current.onCosmeticCreate(data);
       });
 
-      expect(addBadge).not.toHaveBeenCalled();
+      expect(mockApplyCosmeticCreateEvent.mock.calls).toEqual([
+        [data.cosmetic, 'PAINT'],
+      ]);
     });
+  });
 
-    test('adds paint when kind is PAINT and paint not in cache', () => {
+  describe('onEntitlementCreate', () => {
+    test('delegates to applyEntitlementCreateEvent with missing-definition requests enabled', () => {
       const { result } = renderHook(() =>
         useChatSevenTvCallbacks(defaultProps),
       );
-      const paintData = createPaintInput({
-        id: 'paint-id',
-        name: 'Paint',
-        color: 0xff0000ff,
-      });
+      const data = {
+        entitlement: {
+          id: 'entitlement-1',
+          kind: 0,
+          object: {
+            id: 'entitlement-1',
+            kind: 'BADGE' as const,
+            ref_id: 'badge-1',
+            user: {
+              id: 'stv-user-1',
+              username: 'user',
+              display_name: 'User',
+              avatar_url: '',
+              style: {},
+              role_ids: { length: 0 },
+              connections: { length: 0 },
+            },
+          },
+        },
+        kind: 'BADGE' as const,
+        ttvUserId: 'ttv-1',
+        paintId: null,
+        badgeId: 'badge-1',
+      };
 
       act(() => {
-        result.current.onCosmeticCreate(
-          createPaintCosmeticCreateData(paintData),
-        );
+        result.current.onEntitlementCreate(data);
       });
 
-      expect(getPaint).toHaveBeenCalled();
-      expect(mockAddPaint.mock.calls[0]?.[0]).toEqual(toPaintWithId(paintData));
+      expect(mockApplyEntitlementCreateEvent.mock.calls).toEqual([
+        [data, { requestMissingDefinitions: true }],
+      ]);
     });
   });
 

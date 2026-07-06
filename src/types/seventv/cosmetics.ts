@@ -412,6 +412,27 @@ export interface SevenTvEventData<
 /**
  * Generic WebSocket message type for SevenTV
  */
+/**
+ * Condition shape for Subscribe (op 35) / Unsubscribe (op 36) payloads.
+ * Creation events filter by platform context; everything else filters on a
+ * specific object id.
+ */
+type SevenTvSubscriptionCondition<TEventType> = TEventType extends
+  'entitlement.create' | 'cosmetic.create'
+  ? {
+      /**
+       * valid fields in the condition depend on the subscription type
+       * though in most cases except creations, object_id is acceptable
+       * to filter for a specific object.
+       */
+      platform?: 'TWITCH';
+      ctx?: 'channel';
+      id?: string;
+    }
+  : {
+      object_id: string;
+    };
+
 export type SevenTvWsMessage<TData = unknown, TEventType = SevenTvEventType> =
   /**
    * Dispatch - event data
@@ -482,9 +503,10 @@ export type SevenTvWsMessage<TData = unknown, TEventType = SevenTvEventType> =
          */
         command: string;
         /**
-         * the data sent by the client
+         * command-specific payload; the client-sent data echoed back for
+         * SUBSCRIBE/UNSUBSCRIBE, or a result object for RESUME
          */
-        data: string;
+        data: unknown;
       };
       t: number;
       s: number;
@@ -513,8 +535,8 @@ export type SevenTvWsMessage<TData = unknown, TEventType = SevenTvEventType> =
          */
         session_id: string;
       };
-      t: number;
-      s: number;
+      t?: number;
+      s?: number;
     }
 
   /**
@@ -542,20 +564,7 @@ export type SevenTvWsMessage<TData = unknown, TEventType = SevenTvEventType> =
       op: 35;
       d: {
         type: TEventType;
-        condition: TEventType extends 'entitlement.create' | 'cosmetic.create'
-          ? {
-              /**
-               * valid fields in the condition depend on the subscription type
-               * though in most cases except creations, object_id is acceptable
-               * to filter for a specific object.
-               */
-              platform?: 'TWITCH';
-              ctx?: 'channel';
-              id?: string;
-            }
-          : {
-              object_id: string;
-            };
+        condition: SevenTvSubscriptionCondition<TEventType>;
       };
       t?: number;
       s?: never;
@@ -567,8 +576,6 @@ export type SevenTvWsMessage<TData = unknown, TEventType = SevenTvEventType> =
       op: 36;
       d: {
         type: TEventType;
-        condition: {
-          object_id: string;
-        };
+        condition: SevenTvSubscriptionCondition<TEventType>;
       };
     };

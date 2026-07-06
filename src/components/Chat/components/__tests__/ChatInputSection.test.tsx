@@ -74,4 +74,59 @@ describe('ChatInputSection', () => {
       editable: true,
     });
   });
+
+  function renderWithConnection(props: {
+    messageInput: string;
+    isAuthenticated: boolean;
+  }) {
+    render(
+      <SafeAreaProvider
+        initialMetrics={{
+          frame: { x: 0, y: 0, width: 390, height: 844 },
+          insets: { bottom: 0, left: 0, right: 0, top: 0 },
+        }}
+      >
+        <ChatInputSection
+          messageInput={props.messageInput}
+          onChangeText={jest.fn()}
+          onSubmit={jest.fn()}
+          onOpenEmoteSheet={jest.fn()}
+          onOpenSettingsSheet={jest.fn()}
+          replyTo={null}
+          onClearReply={jest.fn()}
+          connection={{
+            isConnected: true,
+            isAuthenticated: props.isAuthenticated,
+            isSending: false,
+          }}
+        />
+      </SafeAreaProvider>,
+    );
+    return mockChatComposer.mock.calls[0]?.[0] as {
+      canSend?: boolean;
+      editable?: boolean;
+    };
+  }
+
+  test('keeps the composer editable and allows /refresh when signed out', () => {
+    const props = renderWithConnection({
+      messageInput: '/refresh',
+      isAuthenticated: false,
+    });
+    expect({ canSend: props.canSend, editable: props.editable }).toEqual({
+      canSend: true,
+      editable: true,
+    });
+  });
+
+  test('blocks sending a normal message when signed out', () => {
+    const props = renderWithConnection({
+      messageInput: 'hello there',
+      isAuthenticated: false,
+    });
+    expect({ canSend: props.canSend, editable: props.editable }).toEqual({
+      canSend: false,
+      editable: true,
+    });
+  });
 });

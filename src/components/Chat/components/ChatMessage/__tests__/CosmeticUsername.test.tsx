@@ -5,6 +5,7 @@ import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
 import { PaintedUsername } from '../CosmeticUsername/CosmeticUsername';
+import { PaintLayerTiledImage } from '../CosmeticUsername/PaintLayerTiledImage';
 
 jest.mock('expo-image', () => {
   const React = jest.requireActual('react');
@@ -146,7 +147,7 @@ describe('PaintedUsername', () => {
       expect(getAllByText('UrlPaint:').length).toBeGreaterThanOrEqual(1);
     });
 
-    test('should render URL paint as a repeated asset image', () => {
+    test('should render URL paint as a tiled Skia layer when repeating', () => {
       const urlPaint = createPaintData({
         function: 'URL',
         image_url: 'https://cdn.7tv.app/paint/test/2x.webp',
@@ -157,11 +158,10 @@ describe('PaintedUsername', () => {
         <PaintedUsername username='AssetRepeat' paint={urlPaint} />,
       );
 
-      const paintImage = UNSAFE_getByType(Image);
-      expect(paintImage.props.source).toEqual({
-        uri: 'https://cdn.7tv.app/paint/test/2x.webp',
-      });
-      expect(paintImage.props.contentFit).toBe('none');
+      const tiledLayer = UNSAFE_getByType(PaintLayerTiledImage);
+      expect(tiledLayer.props.imageUrl).toBe(
+        'https://cdn.7tv.app/paint/test/2x.webp',
+      );
     });
 
     test('should stretch a non-repeating URL paint to fill the glyph box', () => {

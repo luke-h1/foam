@@ -9,6 +9,7 @@ import { useAccentColor } from '@app/context/AccentColorContext';
 import { theme } from '@app/styles/themes';
 
 import { chatComposerStyles as styles } from './chatComposerStyles';
+import { CommandSuggestionRail } from './CommandSuggestionRail';
 import { EmoteSuggestionRail } from './EmoteSuggestionRail';
 import {
   type ChatComposerHandle,
@@ -61,6 +62,7 @@ function ChatComposerComponent({
     setIsFocused,
     showUserRail,
     showEmoteRail,
+    showCommandRail,
     wordInfo,
     submitEnabled,
     handleChangeText,
@@ -68,6 +70,7 @@ function ChatComposerComponent({
     handleSubmit,
     handleEmotePress,
     handleUserSelect,
+    handleCommandSelect,
   } = useChatComposerController({
     onChangeText,
     onSubmit,
@@ -95,6 +98,13 @@ function ChatComposerComponent({
           handleUserSelect={handleUserSelect}
           maxSuggestions={maxSuggestions}
           searchTerm={wordInfo.word}
+        />
+      ) : null}
+      {showCommandRail ? (
+        <CommandSuggestionRail
+          handleCommandSelect={handleCommandSelect}
+          maxSuggestions={maxSuggestions}
+          searchTerm={wordInfo.searchTerm}
         />
       ) : null}
 

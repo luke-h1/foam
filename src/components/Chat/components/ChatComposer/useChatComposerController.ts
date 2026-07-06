@@ -1,5 +1,6 @@
 import { type Ref, useCallback, useImperativeHandle, useState } from 'react';
 
+import type { SlashCommandDefinition } from '@app/components/Chat/util/slashCommandDefinitions';
 import { impact } from '@app/lib/haptics';
 import type { ChatUser } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
@@ -41,13 +42,15 @@ export function useChatComposerController({
   const hasText = text.length > 0;
   const submitEnabled = canSend ?? hasText;
 
-  const { wordInfo, isUserMention, isEmoteSearch } = useWordInfo({
-    text,
-    cursorPosition,
-  });
+  const { wordInfo, isUserMention, isEmoteSearch, isCommandSearch } =
+    useWordInfo({
+      text,
+      cursorPosition,
+    });
 
   const showUserRail = isFocused && isUserMention && wordInfo.word.length > 1;
   const showEmoteRail = isFocused && isEmoteSearch && wordInfo.word.length > 0;
+  const showCommandRail = isFocused && isCommandSearch;
 
   const writeText = useCallback(
     (next: string, nextCursor?: number) => {
@@ -116,6 +119,17 @@ export function useChatComposerController({
     [text, wordInfo.end, wordInfo.start, writeText],
   );
 
+  const handleCommandSelect = useCallback(
+    (command: SlashCommandDefinition) => {
+      const beforeWord = text.substring(0, wordInfo.start);
+      const afterWord = text.substring(wordInfo.end);
+      const newText = `${beforeWord}/${command.name} ${afterWord}`;
+      const newCursor = wordInfo.start + command.name.length + 2;
+      writeText(newText, newCursor);
+    },
+    [text, wordInfo.end, wordInfo.start, writeText],
+  );
+
   return {
     text,
     selection,
@@ -123,6 +137,7 @@ export function useChatComposerController({
     setIsFocused,
     showUserRail,
     showEmoteRail,
+    showCommandRail,
     wordInfo,
     submitEnabled,
     handleChangeText,
@@ -130,5 +145,6 @@ export function useChatComposerController({
     handleSubmit,
     handleEmotePress,
     handleUserSelect,
+    handleCommandSelect,
   };
 }

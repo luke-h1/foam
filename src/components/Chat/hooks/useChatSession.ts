@@ -16,6 +16,7 @@ import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useTwitchChannelPointsEventSub } from '@app/hooks/useTwitchChannelPointsEventSub';
 import { ReadyState } from '@app/hooks/ws/constants';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
+import { notify7TVActivePresence } from '@app/store/chat/actions/channelLoad';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import {
   type ChatRenderPreferences,
@@ -100,11 +101,9 @@ export function useChatSession({
     });
   }, [channelName, user?.id, user?.login]);
 
-  const { canFetchCosmetics, fetchedCosmeticsUsersRef, fetchUserCosmetics } =
-    useChatCosmetics({
-      channelId,
-      userId: user?.id,
-    });
+  const { fetchedCosmeticsUsersRef, fetchUserCosmetics } = useChatCosmetics({
+    userId: user?.id,
+  });
 
   const {
     status: emoteLoadStatus,
@@ -313,7 +312,6 @@ export function useChatSession({
   });
 
   useSevenTvChatRuntime({
-    canFetchCosmetics,
     channelId,
     channelName,
     currentEmoteSetIdRef,
@@ -321,6 +319,16 @@ export function useChatSession({
     handleNewMessage,
     sevenTvEmoteSetId,
   });
+
+  // Broadcasting presence when the user actually chats is how 7TV pushes this
+  // user's cosmetics to everyone else in the channel (rate limited inside).
+  const sendMessageWithPresence: typeof sendMessage = useCallback(
+    (...args) => {
+      void notify7TVActivePresence(user?.id, channelId);
+      return sendMessage(...args);
+    },
+    [channelId, sendMessage, user?.id],
+  );
 
   useTwitchChannelPointsEventSub(syntheticTransport ? undefined : channelId);
 
@@ -342,7 +350,7 @@ export function useChatSession({
     refetchEmotes,
     reprocessAllMessages,
     sendChatCommand,
-    sendMessage,
+    sendMessage: sendMessageWithPresence,
     twitchConnectionState,
   };
 }

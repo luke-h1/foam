@@ -236,6 +236,13 @@ export type ParsedPart<TType extends PartVariant = PartVariant> = TType extends
                             zero_width?: boolean;
 
                             /**
+                             * Zero-width emotes stacked over this emote;
+                             * rendered centered on top of it instead of as
+                             * standalone parts.
+                             */
+                            overlaid?: ParsedPart<'emote'>[];
+
+                            /**
                              * Used for emote and twitch clip previews
                              */
                             thumbnail?: string;
