@@ -5,7 +5,6 @@ import {
   clearMessages,
   clearMessagesWithNotice,
 } from '@app/store/chat/actions/messages';
-import { setChannelRoomState } from '@app/store/chat/actions/transientState';
 
 import { useChatIrcHandlers } from '../useChatIrcHandlers';
 
@@ -21,10 +20,6 @@ jest.mock('@app/store/chat/actions/messages', () => ({
   removeMessagesByLogin: jest.fn(),
 }));
 
-jest.mock('@app/store/chat/actions/transientState', () => ({
-  setChannelRoomState: jest.fn(),
-}));
-
 jest.mock('@app/utils/logger', () => ({
   logger: {
     chat: {
@@ -37,7 +32,6 @@ jest.mock('@app/utils/logger', () => ({
 const mockAddMessage = jest.mocked(addMessage);
 const mockClearMessages = jest.mocked(clearMessages);
 const mockClearMessagesWithNotice = jest.mocked(clearMessagesWithNotice);
-const mockSetChannelRoomState = jest.mocked(setChannelRoomState);
 
 function addedSystemMessageContents(): (string | undefined)[] {
   return mockAddMessage.mock.calls.map(([message]) =>
@@ -264,7 +258,7 @@ describe('useChatIrcHandlers', () => {
     expect(clearLocalMessages).toHaveBeenCalledTimes(1);
   });
 
-  test('syncs the observable and summarises modes on the first ROOMSTATE', () => {
+  test('summarises modes on the first ROOMSTATE', () => {
     const { result } = renderIrcHandlers();
 
     act(() => {
@@ -274,14 +268,6 @@ describe('useChatIrcHandlers', () => {
       });
     });
 
-    expect(mockSetChannelRoomState).toHaveBeenCalledTimes(1);
-    expect(mockSetChannelRoomState).toHaveBeenCalledWith('channel-1', {
-      emoteOnly: false,
-      followersOnlyMinutes: 10,
-      r9k: false,
-      slowSeconds: 30,
-      subsOnly: false,
-    });
     expect(addedSystemMessageContents()).toEqual([
       'Chat modes active: slow mode (30s), followers-only (10m)',
     ]);
@@ -305,7 +291,7 @@ describe('useChatIrcHandlers', () => {
     ]);
   });
 
-  test('part clears the room state and resets the diff baseline', () => {
+  test('part resets the room state diff baseline', () => {
     const { result } = renderIrcHandlers();
 
     act(() => {
@@ -316,7 +302,6 @@ describe('useChatIrcHandlers', () => {
       result.current.onPart();
     });
 
-    expect(mockSetChannelRoomState).toHaveBeenLastCalledWith('channel-1', null);
     mockAddMessage.mockClear();
 
     act(() => {
@@ -328,7 +313,7 @@ describe('useChatIrcHandlers', () => {
     ]);
   });
 
-  test('reconnect clears the room state and announces the reconnect', () => {
+  test('reconnect resets the room state and announces the reconnect', () => {
     const { result } = renderIrcHandlers();
 
     act(() => {
@@ -340,7 +325,6 @@ describe('useChatIrcHandlers', () => {
       result.current.onReconnect();
     });
 
-    expect(mockSetChannelRoomState).toHaveBeenLastCalledWith('channel-1', null);
     expect(addedSystemMessageContents()).toEqual([
       'Reconnecting to Twitch chat…',
     ]);

@@ -48,18 +48,12 @@ interface RoomStateModeDefinition {
   activeSummary: (value: number | undefined) => string;
   enabledNotice: (value: number | undefined) => string;
   disabledNotice: string;
-  chipLabel: (value: number | undefined) => string;
-  /**
-   * Composer chips render in ascending chipOrder, which differs from the
-   * table's notice order.
-   */
-  chipOrder: number;
 }
 
 /**
  * Single source of truth for the chat modes a room state activates. Table
- * order is the notice order; the join summary, change notices, and composer
- * chips all derive from it, so adding a mode is one new entry here.
+ * order is the notice order; the join summary and change notices derive from
+ * it, so adding a mode is one new entry here.
  */
 const ROOM_STATE_MODES = {
   emote: {
@@ -67,24 +61,18 @@ const ROOM_STATE_MODES = {
     activeSummary: () => 'emote-only',
     enabledNotice: () => 'Emote-only mode enabled',
     disabledNotice: 'Emote-only mode disabled',
-    chipLabel: () => 'Emote-only',
-    chipOrder: 2,
   },
   subs: {
     getStatus: state => ({ active: state.subsOnly }),
     activeSummary: () => 'subscribers-only',
     enabledNotice: () => 'Subscribers-only mode enabled',
     disabledNotice: 'Subscribers-only mode disabled',
-    chipLabel: () => 'Sub-only',
-    chipOrder: 3,
   },
   unique: {
     getStatus: state => ({ active: state.r9k }),
     activeSummary: () => 'unique-chat',
     enabledNotice: () => 'Unique-chat mode enabled',
     disabledNotice: 'Unique-chat mode disabled',
-    chipLabel: () => 'Unique',
-    chipOrder: 4,
   },
   slow: {
     getStatus: state => ({
@@ -94,8 +82,6 @@ const ROOM_STATE_MODES = {
     activeSummary: value => `slow mode (${value}s)`,
     enabledNotice: value => `Slow mode enabled (${value}s)`,
     disabledNotice: 'Slow mode disabled',
-    chipLabel: value => `Slow ${value}s`,
-    chipOrder: 0,
   },
   followers: {
     getStatus: state => ({
@@ -110,9 +96,6 @@ const ROOM_STATE_MODES = {
         ? 'Followers-only mode enabled'
         : `Followers-only mode enabled (${value}m)`,
     disabledNotice: 'Followers-only mode disabled',
-    chipLabel: value =>
-      value === undefined ? 'Followers-only' : `Followers-only ${value}m`,
-    chipOrder: 1,
   },
 } satisfies Record<string, RoomStateModeDefinition>;
 
@@ -123,11 +106,6 @@ function getModeDefinition(key: RoomStateModeKey): RoomStateModeDefinition {
 }
 
 const MODE_KEYS = Object.keys(ROOM_STATE_MODES) as RoomStateModeKey[];
-
-// eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks Array.prototype.toSorted (throws "undefined is not a function"); copy-then-sort is the safe equivalent
-const CHIP_ORDERED_MODE_KEYS = [...MODE_KEYS].sort(
-  (a, b) => getModeDefinition(a).chipOrder - getModeDefinition(b).chipOrder,
-);
 
 export function describeInitialRoomState(
   state: ParsedRoomState,
@@ -166,22 +144,5 @@ export function describeRoomStateChanges(
         ? mode.enabledNotice(nextStatus.value)
         : mode.disabledNotice,
     ];
-  });
-}
-
-export interface RoomStateChip {
-  key: string;
-  label: string;
-}
-
-/**
- * Compact chip labels for the active chat modes, shown above the composer.
- * Inactive modes produce no chip.
- */
-export function buildRoomStateChips(state: ParsedRoomState): RoomStateChip[] {
-  return CHIP_ORDERED_MODE_KEYS.flatMap(key => {
-    const mode = getModeDefinition(key);
-    const status = mode.getStatus(state);
-    return status.active ? [{ key, label: mode.chipLabel(status.value) }] : [];
   });
 }

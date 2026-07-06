@@ -63,3 +63,17 @@ export const SLASH_COMMAND_DEFINITIONS: SlashCommandDefinition[] = [
   { name: 'shieldoff', description: 'Disable Shield Mode' },
   { name: 'refresh', description: 'Refresh emotes and badges' },
 ];
+
+/**
+ * Looks up a definition by command name or alias (without the leading slash),
+ * case-insensitively. Returns undefined for unknown commands.
+ */
+export function findSlashCommandDefinition(
+  command: string,
+): SlashCommandDefinition | undefined {
+  const lower = command.toLowerCase();
+  return SLASH_COMMAND_DEFINITIONS.find(
+    definition =>
+      definition.name === lower || definition.aliases?.includes(lower),
+  );
+}
