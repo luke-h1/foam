@@ -110,7 +110,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
     expect(didReprocess).toBe(true);
   });
 
-  test('drops the per-user guard when a personal emote lookup fails so a later pass retries', async () => {
+  test('keeps the per-user guard when a personal emote lookup fails so a busy channel does not refetch every pass', async () => {
     const message = createMessage();
     const personalEmoteUsers = new Set<string>();
     const fetchUserPersonalEmotes = jest.fn().mockResolvedValue(null);
@@ -129,7 +129,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
     });
 
     expect(fetchUserPersonalEmotes).toHaveBeenCalledTimes(1);
-    expect(personalEmoteUsers.has('twitch-user')).toBe(false);
+    expect(personalEmoteUsers.has('twitch-user')).toBe(true);
   });
 
   test('keeps the per-user guard when a user genuinely has no personal emotes', async () => {

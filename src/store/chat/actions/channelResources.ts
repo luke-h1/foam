@@ -466,3 +466,34 @@ export const reportResourceResults = ({
     ...counts,
   });
 };
+
+export const PROVIDER_DISPLAY_NAMES: Record<ProviderName, string> = {
+  bttv: 'BTTV',
+  ffz: 'FFZ',
+  seven_tv: '7TV',
+  twitch: 'Twitch',
+};
+
+/**
+ * Distinct human-readable provider names whose resource fetch rejected, in a
+ * stable order, for surfacing a single "couldn't load X" chat notice.
+ */
+export const collectFailedProviderLabels = (
+  settled: readonly AnySettledSpec[],
+): string[] => {
+  const failed = new Set<ProviderName>();
+  settled.forEach(({ result, spec }) => {
+    if (result.status === 'rejected') {
+      failed.add(spec.provider);
+    }
+  });
+  const labels: string[] = [];
+  for (const provider of Object.keys(
+    PROVIDER_DISPLAY_NAMES,
+  ) as ProviderName[]) {
+    if (failed.has(provider)) {
+      labels.push(PROVIDER_DISPLAY_NAMES[provider]);
+    }
+  }
+  return labels;
+};

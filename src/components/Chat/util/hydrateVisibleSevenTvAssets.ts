@@ -175,11 +175,7 @@ export async function hydrateVisibleSevenTvAssets({
         boundedSetAdd(personalEmoteUsers, userId, MAX_VISIBLE_USER_GUARDS);
         pending.push(
           fetchUserPersonalEmotes(userId, channelId).then(emotes => {
-            if (emotes === null) {
-              personalEmoteUsers.delete(userId);
-              return undefined;
-            }
-            if (emotes.length > 0) {
+            if (emotes && emotes.length > 0) {
               return reprocessIfChanged(message);
             }
             return undefined;

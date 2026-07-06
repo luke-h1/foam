@@ -1,5 +1,7 @@
 import { batch } from '@legendapp/state';
 
+import { createSystemMessage } from '@app/components/Chat/util/messageHandlers';
+import i18next from '@app/i18n/i18next';
 import { clearChatStorePersistence } from '@app/lib/observablePersistence';
 import { startSpanAsync } from '@app/lib/sentry';
 import { sevenTvService } from '@app/services/seventv-service';
@@ -31,6 +33,7 @@ import {
   buildEmoteResourceSpecs,
   buildSubscriberEmoteSpec,
   clearGlobalResourceCache,
+  collectFailedProviderLabels,
   combineUniqueById,
   deduplicateById,
   type EmoteResourceSets,
@@ -41,6 +44,7 @@ import {
 import { clearUserCosmeticsCache } from './cosmetics';
 import { clearBridgeCosmeticsState } from './cosmeticsBridge';
 import { clearEmoteImageCache } from './emoteImages';
+import { addMessage } from './messages';
 import {
   clearPersonalEmotesCache,
   fetchUserPersonalEmotes,
@@ -601,6 +605,21 @@ const loadChannelResourcesInternal = async (
       chatStore$.loadingState.set('COMPLETED');
     });
 
+    const failedProviders = collectFailedProviderLabels([
+      ...emoteSettled,
+      ...badgeSettled,
+    ]);
+    if (failedProviders.length > 0) {
+      addMessage(
+        createSystemMessage(
+          channelId,
+          i18next.t('chat:providerLoadFailed', {
+            providers: failedProviders.join(', '),
+          }),
+        ),
+      );
+    }
+
     if (twitchUserId) {
       void notify7TVPresence(twitchUserId, channelId);
       void fetchUserPersonalEmotes(twitchUserId, channelId);
@@ -903,24 +922,23 @@ export const updateSevenTvEmotes = (
 
   const currentEmotes = cache.sevenTvChannelEmotes ?? [];
   const addedById = new Map(added.map(emote => [emote.id, emote]));
-  const appended = new Set<string>();
+  const removedIds = new Set(removed.map((r: SanitisedEmote) => r.id));
   const updatedEmotes: SanitisedEmote[] = [];
 
   currentEmotes.forEach((emote: SanitisedEmote) => {
     const replacement = addedById.get(emote.id);
     if (replacement) {
       updatedEmotes.push(replacement);
-      appended.add(replacement.id);
+      addedById.delete(emote.id);
       return;
     }
-    if (removed.some((r: SanitisedEmote) => r.id === emote.id)) {
-      return;
+    if (!removedIds.has(emote.id)) {
+      updatedEmotes.push(emote);
     }
-    updatedEmotes.push(emote);
   });
 
-  added.forEach(emote => {
-    if (!appended.has(emote.id)) {
+  addedById.forEach(emote => {
+    if (!removedIds.has(emote.id)) {
       updatedEmotes.push(emote);
     }
   });

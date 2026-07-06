@@ -444,6 +444,41 @@ describe('loadChannelResources cache fallback', () => {
     expect(cache!.lastUpdated).toBe(0);
     expect(cache!.badgesLastUpdated).toBe(0);
   });
+
+  test('posts a system message naming the providers whose fetch failed', async () => {
+    chatStore$.messages.set([]);
+
+    mockGetBttvGlobalEmotes.mockRejectedValue(new Error('TimeoutError'));
+    mockGetBttvChannelEmotes.mockRejectedValue(new Error('TimeoutError'));
+    mockGetFfzGlobalBadges.mockRejectedValue(new Error('TimeoutError'));
+
+    await expect(loadChannelResources({ channelId })).resolves.toBe(true);
+
+    const systemMessages = chatStore$.messages
+      .peek()
+      .filter(message => message.sender === 'System');
+    expect(systemMessages).toHaveLength(1);
+
+    const text = systemMessages[0]!.message
+      .flatMap(part => (part.type === 'text' ? [part.content] : []))
+      .join('');
+    expect(text).toContain('BTTV');
+    expect(text).toContain('FFZ');
+    expect(text).toContain('falling back to cached emotes/badges');
+    expect(text).not.toContain('Twitch');
+    expect(text).not.toContain('7TV');
+  });
+
+  test('posts no system message when every provider fetch succeeds', async () => {
+    chatStore$.messages.set([]);
+
+    await expect(loadChannelResources({ channelId })).resolves.toBe(true);
+
+    const systemMessages = chatStore$.messages
+      .peek()
+      .filter(message => message.sender === 'System');
+    expect(systemMessages).toEqual([]);
+  });
 });
 
 describe('resolveSubscriberChannelProfiles', () => {

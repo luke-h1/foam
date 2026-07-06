@@ -55,12 +55,11 @@ export function globalEmotesQueryOptions() {
         ffzGlobalEmotes: ffzGlobalEmotes ?? [],
         sevenTvGlobalEmotes: sevenTvGlobalEmotes ?? [],
         twitchGlobalEmotes: twitchGlobalEmotes ?? [],
-        partial: [
-          sevenTvGlobalEmotes,
-          twitchGlobalEmotes,
-          bttvGlobalEmotes,
-          ffzGlobalEmotes,
-        ].some(result => result === null),
+        partial:
+          sevenTvGlobalEmotes === null ||
+          twitchGlobalEmotes === null ||
+          bttvGlobalEmotes === null ||
+          ffzGlobalEmotes === null,
       };
     },
   });
@@ -69,15 +68,21 @@ export function globalEmotesQueryOptions() {
 export function globalBadgesQueryOptions() {
   return queryOptions<SanitisedBadgeSet[]>({
     queryKey: emoteKeys.globalBadges(),
-    staleTime: GLOBAL_STALE_TIME,
-    queryFn: () => twitchBadgeService.listSanitisedGlobalBadges(),
+    staleTime: query =>
+      query.state.data?.length ? GLOBAL_STALE_TIME : PARTIAL_STALE_TIME,
+    queryFn: async () =>
+      (await fetchOrNull(() =>
+        twitchBadgeService.listSanitisedGlobalBadges(),
+      )) ?? [],
   });
 }
 
 export function sevenTvBadgesQueryOptions() {
   return queryOptions<SanitisedBadgeSet[]>({
     queryKey: emoteKeys.sevenTvBadges(),
-    staleTime: GLOBAL_STALE_TIME,
-    queryFn: () => sevenTvService.fetchAllBadges(),
+    staleTime: query =>
+      query.state.data?.length ? GLOBAL_STALE_TIME : PARTIAL_STALE_TIME,
+    queryFn: async () =>
+      (await fetchOrNull(() => sevenTvService.fetchAllBadges())) ?? [],
   });
 }

@@ -1,5 +1,6 @@
+import { EmoteSetKind } from '@app/graphql/generated/gql';
 import { sevenTvService } from '@app/services/seventv-service';
-import type { SanitisedEmote } from '@app/types/emote';
+import type { SevenTvSanitisedEmote } from '@app/types/emote';
 
 import {
   clearPersonalEmotesCache,
@@ -49,17 +50,31 @@ const mockGetPersonalEmoteSet = jest.mocked(sevenTvService.getPersonalEmoteSet);
 const channelId = '123';
 const twitchUserId = 'user-1';
 
-const personalEmote: SanitisedEmote = {
+const personalEmote: SevenTvSanitisedEmote = {
   id: 'emote-1',
   name: 'catJAM',
   url: 'https://cdn.7tv.app/emote/emote-1/2x.avif',
   original_name: 'catJAM',
   creator: null,
   emote_link: 'https://7tv.app/emotes/emote-1',
-  site: '7TV Personal Emotes',
+  site: '7TV Personal',
+  frame_count: 1,
+  format: 'avif',
+  flags: 0,
+  aspect_ratio: 1,
+  zero_width: false,
   height: 32,
   width: 32,
-} as SanitisedEmote;
+  set_metadata: {
+    setId: 'set-1',
+    setName: 'Personal Emotes',
+    capacity: null,
+    ownerId: null,
+    kind: EmoteSetKind.Personal,
+    updatedAt: '',
+    totalCount: 1,
+  },
+};
 
 describe('fetchUserPersonalEmotes', () => {
   beforeEach(() => {
@@ -78,7 +93,7 @@ describe('fetchUserPersonalEmotes', () => {
 
     const result = await fetchUserPersonalEmotes(twitchUserId, channelId);
 
-    expect(result).toEqual<SanitisedEmote[]>([personalEmote]);
+    expect(result).toEqual<SevenTvSanitisedEmote[]>([personalEmote]);
     expect(mockGetPersonalEmoteSet).toHaveBeenCalledTimes(1);
   });
 
@@ -89,7 +104,7 @@ describe('fetchUserPersonalEmotes', () => {
     const second = await fetchUserPersonalEmotes(twitchUserId, channelId);
 
     expect(first).toBeNull();
-    expect(second).toEqual<SanitisedEmote[]>([]);
+    expect(second).toEqual<SevenTvSanitisedEmote[]>([]);
     expect(mockGetPersonalEmoteSet).toHaveBeenCalledTimes(1);
   });
 });
