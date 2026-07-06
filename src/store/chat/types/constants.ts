@@ -167,7 +167,10 @@ export interface ChannelCacheType {
 
 export const MAX_CACHED_CHANNELS = 20;
 export const MAX_COSMETIC_ENTRIES = 500;
-export const CACHE_DURATION = 24 * 60 * 60 * 1000; // 1 day
+// Matches the 7TV browser extension's channel/emote-set TTL, so a slice that
+// loaded with a hole (provider blip, timeout) heals within the hour instead
+// of persisting for a day.
+export const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 export const BADGE_CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
 export const emptyEmoteData = {

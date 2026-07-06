@@ -7,10 +7,15 @@ import { chatStore$ } from '../observables/chatStore';
 
 const personalEmotesGuard = createFetchOnceGuard();
 
+/**
+ * Resolves to the user's personal emotes, or `null` when the lookup failed —
+ * callers that keep their own per-user dedup must treat `null` as "retry
+ * later", not "has no personal emotes".
+ */
 export const fetchUserPersonalEmotes = async (
   twitchUserId: string,
   channelId: string,
-): Promise<SanitisedEmote[]> => {
+): Promise<SanitisedEmote[] | null> => {
   if (personalEmotesGuard.hasFetched(twitchUserId)) {
     const cache = chatStore$.persisted.channelCaches[channelId]?.peek();
     return cache?.sevenTvPersonalEmotes?.[twitchUserId] || [];
@@ -47,8 +52,11 @@ export const fetchUserPersonalEmotes = async (
           twitch_user_id: twitchUserId,
         },
       );
-      ctx.markFetched();
-      return [];
+      // Deliberately not marked fetched: a failed lookup would otherwise
+      // negative-cache the user for the whole session, so their personal
+      // emotes could never appear. `null` (unlike a genuine empty set) tells
+      // callers to drop their own dedup guard for this user too.
+      return null;
     }
   });
 };

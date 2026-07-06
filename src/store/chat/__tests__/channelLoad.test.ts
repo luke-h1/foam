@@ -23,6 +23,7 @@ import {
   loadChannelResources,
   resolveSubscriberChannelProfiles,
   switchSevenTvEmoteSet,
+  updateSevenTvEmotes,
 } from '../actions/channelLoad';
 import { clearGlobalResourceCache } from '../actions/channelResources';
 import { chatStore$ } from '../observables/chatStore';
@@ -438,8 +439,10 @@ describe('loadChannelResources cache fallback', () => {
       twitchEmote('twitch-channel-new'),
       twitchEmote('twitch-global-new', 'Twitch Global'),
     ]);
-    expect(cache!.lastUpdated).toBe(10_000);
-    expect(cache!.badgesLastUpdated).toBe(10_000);
+    // A first load with failed slices must stay stale-stamped so the next
+    // join retries the holes instead of serving them for the cache duration.
+    expect(cache!.lastUpdated).toBe(0);
+    expect(cache!.badgesLastUpdated).toBe(0);
   });
 });
 
@@ -775,5 +778,84 @@ describe('switchSevenTvEmoteSet', () => {
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
     expect(cache!.sevenTvEmoteSetId).toBe('set-c');
     expect(ids(cache!.sevenTvChannelEmotes)).toEqual(['emote-c']);
+  });
+});
+
+describe('updateSevenTvEmotes', () => {
+  const channelId = 'live-update-channel';
+
+  const seed = (channelEmotes: SevenTvSanitisedEmote[]) => {
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...emptyEmoteData,
+        badges: [],
+        badgesLastUpdated: 1_000,
+        emotes: channelEmotes,
+        lastUpdated: 1_000,
+        sevenTvChannelEmotes: channelEmotes,
+        sevenTvEmoteSetId: 'set-a',
+      },
+    });
+  };
+
+  const renamed = (id: string, name: string): SevenTvSanitisedEmote => ({
+    ...sevenTvEmote(id),
+    name,
+    original_name: name,
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('appends genuinely new emotes to the end of the set', () => {
+    seed([sevenTvEmote('emote-a'), sevenTvEmote('emote-b')]);
+
+    updateSevenTvEmotes(channelId, [sevenTvEmote('emote-c')], []);
+
+    const cache = chatStore$.persisted.channelCaches.peek()[channelId];
+    expect(ids(cache!.sevenTvChannelEmotes)).toEqual([
+      'emote-a',
+      'emote-b',
+      'emote-c',
+    ]);
+  });
+
+  test('removes pulled emotes while preserving the order of the rest', () => {
+    seed([
+      sevenTvEmote('emote-a'),
+      sevenTvEmote('emote-b'),
+      sevenTvEmote('emote-c'),
+    ]);
+
+    updateSevenTvEmotes(channelId, [], [sevenTvEmote('emote-b')]);
+
+    const cache = chatStore$.persisted.channelCaches.peek()[channelId];
+    expect(ids(cache!.sevenTvChannelEmotes)).toEqual(['emote-a', 'emote-c']);
+  });
+
+  test('replaces a renamed emote in place instead of moving it to the end', () => {
+    seed([
+      sevenTvEmote('emote-a'),
+      sevenTvEmote('emote-b'),
+      sevenTvEmote('emote-c'),
+    ]);
+
+    // A rename arrives as a (removed old-id, added same-id) pair.
+    updateSevenTvEmotes(
+      channelId,
+      [renamed('emote-b', 'emote-b-renamed')],
+      [sevenTvEmote('emote-b')],
+    );
+
+    const cache = chatStore$.persisted.channelCaches.peek()[channelId];
+    expect(ids(cache!.sevenTvChannelEmotes)).toEqual([
+      'emote-a',
+      'emote-b',
+      'emote-c',
+    ]);
+    expect(
+      cache!.sevenTvChannelEmotes.find(emote => emote.id === 'emote-b')?.name,
+    ).toBe('emote-b-renamed');
   });
 });

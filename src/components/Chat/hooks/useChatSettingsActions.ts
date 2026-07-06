@@ -2,7 +2,10 @@ import { useCallback, useRef } from 'react';
 
 import { createSystemMessage } from '@app/components/Chat/util/messageHandlers';
 import i18next from '@app/i18n/i18next';
-import { clearCache } from '@app/store/chat/actions/channelLoad';
+import {
+  clearCache,
+  invalidateChannelCache,
+} from '@app/store/chat/actions/channelLoad';
 import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
 import { addMessage } from '@app/store/chat/actions/messages';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
@@ -102,6 +105,10 @@ export function useChatSettingsActions({
   const handleSettingsRefetchEmotes = useCallback(() => {
     void (async () => {
       try {
+        // Stale-stamp rather than delete: the reload must refetch everything,
+        // but the cached slices stay behind as the fallback if a provider
+        // fetch fails mid-refresh.
+        invalidateChannelCache(channelId);
         await refetchEmotesRef.current();
         reprocessAllMessagesRef.current();
         announceRefresh();
@@ -109,12 +116,12 @@ export function useChatSettingsActions({
         logger.chat.error('Failed to refetch emotes:', error);
       }
     })();
-  }, [announceRefresh]);
+  }, [announceRefresh, channelId]);
 
   const handleRefreshCommand = useCallback(() => {
     void (async () => {
       try {
-        clearCache(channelId);
+        invalidateChannelCache(channelId);
         clearUserCosmeticsCache();
         await clearImageCache(channelId);
         await refetchEmotesRef.current();

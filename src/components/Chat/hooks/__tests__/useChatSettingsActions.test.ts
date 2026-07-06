@@ -1,6 +1,9 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
-import { clearCache } from '@app/store/chat/actions/channelLoad';
+import {
+  clearCache,
+  invalidateChannelCache,
+} from '@app/store/chat/actions/channelLoad';
 import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
 import {
   getPreferences,
@@ -12,6 +15,7 @@ import { useChatSettingsActions } from '../useChatSettingsActions';
 
 jest.mock('@app/store/chat/actions/channelLoad', () => ({
   clearCache: jest.fn(),
+  invalidateChannelCache: jest.fn(),
 }));
 
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
@@ -32,6 +36,7 @@ jest.mock('@app/utils/logger', () => ({
 }));
 
 const mockClearCache = jest.mocked(clearCache);
+const mockInvalidateChannelCache = jest.mocked(invalidateChannelCache);
 const mockClearImageCache = jest.mocked(clearImageCache);
 const mockClearUserCosmeticsCache = jest.mocked(clearUserCosmeticsCache);
 
@@ -122,7 +127,7 @@ describe('useChatSettingsActions', () => {
     );
   });
 
-  test('settings refetch reloads emotes then reprocesses rendered messages', async () => {
+  test('settings refetch invalidates the channel cache, reloads emotes, then reprocesses rendered messages', async () => {
     const { hook, refetchEmotes, reprocessAllMessages } =
       renderSettingsActions();
 
@@ -134,6 +139,28 @@ describe('useChatSettingsActions', () => {
       expect(refetchEmotes).toHaveBeenCalledTimes(1);
       expect(reprocessAllMessages).toHaveBeenCalledTimes(1);
     });
+    expect(mockInvalidateChannelCache).toHaveBeenCalledWith('channel-1');
+    // Stale-stamped, not deleted: the cached slices must survive as the
+    // fallback if a provider fetch fails during the reload.
+    expect(mockClearCache).not.toHaveBeenCalled();
+  });
+
+  test('refresh command invalidates caches without deleting the channel cache entry', async () => {
+    const { hook, refetchEmotes, reprocessAllMessages } =
+      renderSettingsActions();
+
+    act(() => {
+      hook.result.current.handleRefreshCommand();
+    });
+
+    await waitFor(() => {
+      expect(refetchEmotes).toHaveBeenCalledTimes(1);
+      expect(reprocessAllMessages).toHaveBeenCalledTimes(1);
+    });
+    expect(mockInvalidateChannelCache).toHaveBeenCalledWith('channel-1');
+    expect(mockClearImageCache).toHaveBeenCalledWith('channel-1');
+    expect(mockClearUserCosmeticsCache).toHaveBeenCalledTimes(1);
+    expect(mockClearCache).not.toHaveBeenCalled();
   });
 
   test('settings reconnect parts immediately and rejoins after the reconnect delay', () => {
