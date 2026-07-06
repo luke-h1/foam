@@ -1,5 +1,7 @@
 import { batch } from '@legendapp/state';
 
+import { createSystemMessage } from '@app/components/Chat/util/messageHandlers';
+import i18next from '@app/i18n/i18next';
 import { clearChatStorePersistence } from '@app/lib/observablePersistence';
 import { startSpanAsync } from '@app/lib/sentry';
 import { sevenTvService } from '@app/services/seventv-service';
@@ -31,6 +33,7 @@ import {
   buildEmoteResourceSpecs,
   buildSubscriberEmoteSpec,
   clearGlobalResourceCache,
+  collectFailedProviderLabels,
   combineUniqueById,
   deduplicateById,
   type EmoteResourceSets,
@@ -41,6 +44,7 @@ import {
 import { clearUserCosmeticsCache } from './cosmetics';
 import { clearBridgeCosmeticsState } from './cosmeticsBridge';
 import { clearEmoteImageCache } from './emoteImages';
+import { addMessage } from './messages';
 import {
   clearPersonalEmotesCache,
   fetchUserPersonalEmotes,
@@ -574,14 +578,12 @@ const loadChannelResourcesInternal = async (
     const channelData: ChannelCacheType = {
       emotes: allEmotes,
       badges: allBadges,
-      lastUpdated:
-        hasEmoteResourceFailure && existingCache
-          ? existingCache.lastUpdated
-          : now,
-      badgesLastUpdated:
-        hasBadgeResourceFailure && existingCache
-          ? existingCache.badgesLastUpdated
-          : now,
+      lastUpdated: hasEmoteResourceFailure
+        ? (existingCache?.lastUpdated ?? 0)
+        : now,
+      badgesLastUpdated: hasBadgeResourceFailure
+        ? (existingCache?.badgesLastUpdated ?? 0)
+        : now,
       ...emoteResourceSets,
       twitchSubscriberEmotesUserId: twitchUserId ?? undefined,
       twitchSubscriberChannelProfiles:
@@ -602,6 +604,21 @@ const loadChannelResourcesInternal = async (
       );
       chatStore$.loadingState.set('COMPLETED');
     });
+
+    const failedProviders = collectFailedProviderLabels([
+      ...emoteSettled,
+      ...badgeSettled,
+    ]);
+    if (failedProviders.length > 0) {
+      addMessage(
+        createSystemMessage(
+          channelId,
+          i18next.t('chat:providerLoadFailed', {
+            providers: failedProviders.join(', '),
+          }),
+        ),
+      );
+    }
 
     if (twitchUserId) {
       void notify7TVPresence(twitchUserId, channelId);
@@ -684,6 +701,14 @@ export const loadChannelResources = async (
       ),
     { channel_id: channelId, force_refresh: shouldForceRefresh },
   );
+};
+
+export const invalidateChannelCache = (channelId: string): void => {
+  const channelCache = chatStore$.persisted.channelCaches[channelId];
+  if (!channelCache?.peek()) {
+    return;
+  }
+  channelCache.assign({ lastUpdated: 0, badgesLastUpdated: 0 });
 };
 
 export const clearCache = (channelId?: string) => {
@@ -896,11 +921,28 @@ export const updateSevenTvEmotes = (
   }
 
   const currentEmotes = cache.sevenTvChannelEmotes ?? [];
-  const emotesAfterRemoval = currentEmotes.filter(
-    (emote: SanitisedEmote) =>
-      !removed.some((r: SanitisedEmote) => r.id === emote.id),
-  );
-  const updatedEmotes = [...emotesAfterRemoval, ...added];
+  const addedById = new Map(added.map(emote => [emote.id, emote]));
+  const removedIds = new Set(removed.map((r: SanitisedEmote) => r.id));
+  const updatedEmotes: SanitisedEmote[] = [];
+
+  currentEmotes.forEach((emote: SanitisedEmote) => {
+    const replacement = addedById.get(emote.id);
+    if (replacement) {
+      updatedEmotes.push(replacement);
+      addedById.delete(emote.id);
+      return;
+    }
+    if (!removedIds.has(emote.id)) {
+      updatedEmotes.push(emote);
+    }
+  });
+
+  addedById.forEach(emote => {
+    if (!removedIds.has(emote.id)) {
+      updatedEmotes.push(emote);
+    }
+  });
+
   batch(() => {
     const channelCache = chatStore$.persisted.channelCaches[channelId];
     if (channelCache) {

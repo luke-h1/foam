@@ -1,11 +1,15 @@
 # Changelog
 
-## 1.0.0
+## 1.0.0 (Internal)
 
 ### ♻️ Refactor
 
 - **chat:** Improve bottom sheet
 - **infrastructure:** Improve GHA workflows ([#657](https://github.com/lhowsam/foam/issues/657))
+
+### ⚡ Performance
+
+- **chat:** Index badge lookups and trim per-message hot-path work ([#689](https://github.com/lhowsam/foam/issues/689))
 
 ### ✨ Features
 
@@ -14,6 +18,7 @@
 - **app:** Vod screen ([#644](https://github.com/lhowsam/foam/issues/644))
 - **app:** Improve chat settings ui
 - **emotes:** Split subscriber emotes by channel and add 7tv personal emotes to the picker ([#686](https://github.com/lhowsam/foam/issues/686))
+- **chat:** Add slash command autocomplete to composer ([#688](https://github.com/lhowsam/foam/issues/688))
 
 ### 🐛 Bug Fixes
 
@@ -61,6 +66,7 @@
 - **app:** Oom images ([#679](https://github.com/lhowsam/foam/issues/679))
 - **app:** Fix tsc
 - **infrastructure:** Pull before commit changelog
+- **infrastructure:** Per env changelogs ([#687](https://github.com/lhowsam/foam/issues/687))
 
 ### 🔧 Miscellaneous Tasks
 
@@ -84,7 +90,7 @@
 - **app:** Sync lockfile with sentry deps ([#680](https://github.com/lhowsam/foam/issues/680))
 - **app:** Ui improvements ([#681](https://github.com/lhowsam/foam/issues/681))
 
-## 1.0.0
+## 1.0.0 (TestFlight)
 
 ### ⚡ Performance
 
@@ -110,14 +116,14 @@
 
 - **test:** Full e2e coverage
 
-## 0.0.42-internal
+## 0.0.42 (Internal)
 
 ### 🐛 Bug Fixes
 
 - **app:** Sentry initialization
 - **app:** Sentry initialization
 
-## 0.0.42-testflight
+## 0.0.42 (TestFlight)
 
 ### ♻️ Refactor
 
@@ -151,7 +157,7 @@
 - **app:** Update rozenite ([#612](https://github.com/lhowsam/foam/issues/612))
 - **infrastructure:** Update action versions ([#618](https://github.com/lhowsam/foam/issues/618))
 
-## 0.0.41
+## 0.0.41 (Production)
 
 ### ♻️ Refactor
 
@@ -176,7 +182,7 @@
 - **app:** Release 0.0.41
 - **tooling:** Update commitlint
 
-## 0.0.40
+## 0.0.40 (Production)
 
 ### ♻️ Refactor
 
@@ -347,7 +353,7 @@
 - **infrastructure:** Slack noti fix
 - **infrastructure:** Fix deploy-ota-or-native
 
-## 0.0.39
+## 0.0.39 (Production)
 
 ### ♻️ Refactor
 
@@ -418,7 +424,7 @@
 - **app:** Refresh agents
 - **app:** Automate changelog ([#474](https://github.com/lhowsam/foam/issues/474))
 
-## 0.0.38
+## 0.0.38 (Production)
 
 ### ✨ Features
 
@@ -449,7 +455,7 @@
 - **app:** Testing native update
 - **app:** Testing OTA
 
-## 0.0.36
+## 0.0.36 (Production)
 
 ### ✨ Features
 
@@ -461,7 +467,7 @@
 - **infrastructure:** OTA
 - **infrastructure:** OTA
 
-## 0.0.37
+## 0.0.37 (Production)
 
 ### ♻️ Refactor
 
@@ -509,7 +515,7 @@
 - **app:** Add .easignore
 - **infrastructure:** Test self hosted runner ([#454](https://github.com/lhowsam/foam/issues/454))
 
-## 0.0.34
+## 0.0.34 (Production)
 
 ### ♻️ Refactor
 
@@ -533,7 +539,7 @@
 - **app:** Fix storybook
 - **app:** Install expo-insights
 
-## 0.0.33
+## 0.0.33 (Production)
 
 ### ♻️ Refactor
 
@@ -569,7 +575,7 @@
 - **tooling:** Patch expo-file-system tsc ([#418](https://github.com/lhowsam/foam/issues/418))
 - **sentry:** Adjust sentry rates ([#419](https://github.com/lhowsam/foam/issues/419))
 
-## 0.0.32
+## 0.0.32 (Production)
 
 ### 🐛 Bug Fixes
 
@@ -586,7 +592,7 @@
 - **ci:** Add deploy-testflight self-hosted workflow
 - **infrastructure:** Tidy up ci/cd ([#385](https://github.com/lhowsam/foam/issues/385))
 
-## 0.0.31
+## 0.0.31 (Production)
 
 ### 🐛 Bug Fixes
 
@@ -599,7 +605,7 @@
 - **app:** Add expo-atlas
 - Add refined plugin
 
-## 0.0.30
+## 0.0.30 (Production)
 
 ### ✨ Features
 
@@ -616,7 +622,7 @@
 - **infrastructure:** Preview set up
 - **infrastructure:** Remove dead code
 
-## 0.0.29
+## 0.0.29 (Production)
 
 ### ✨ Features
 
@@ -636,7 +642,7 @@
 - **app:** Tidy up caching code
 - Revert deploy.sh
 
-## 0.0.27
+## 0.0.27 (Production)
 
 ### ♻️ Refactor
 
@@ -656,7 +662,7 @@
 
 - **documentation:** Update setup docs ([#329](https://github.com/lhowsam/foam/issues/329))
 
-## 0.0.26
+## 0.0.26 (Production)
 
 ### ✨ Features
 
@@ -670,7 +676,7 @@
 
 - **app:** Remove auth loading screen ([#314](https://github.com/lhowsam/foam/issues/314))
 
-## 0.0.25
+## 0.0.25 (Production)
 
 ### ♻️ Refactor
 
@@ -700,7 +706,7 @@
 - **app:** Update deps ([#310](https://github.com/lhowsam/foam/issues/310))
 - **app:** Update core RN deps ([#311](https://github.com/lhowsam/foam/issues/311))
 
-## 0.0.24
+## 0.0.24 (Production)
 
 ### ✨ Features
 
@@ -713,7 +719,7 @@
 - **app:** Fix diagnostics screen
 - **chat:** Improve sheet typography
 
-## 0.0.23
+## 0.0.23 (Production)
 
 ### ✨ Features
 
@@ -723,7 +729,7 @@
 
 - Update .gitignore
 
-## 0.0.22
+## 0.0.22 (Production)
 
 ### ✨ Features
 
@@ -741,7 +747,7 @@
 - Fix build
 - **docs:** Update .env.example
 
-## 0.0.21
+## 0.0.21 (Production)
 
 ### ✨ Features
 
@@ -756,7 +762,7 @@
 
 - **infrastructure:** Add OTA ci/cd
 
-## 0.0.20
+## 0.0.20 (Production)
 
 ### ✨ Features
 
@@ -774,13 +780,13 @@
 - **app:** Compress images
 - **app:** Compress Images
 
-## 0.0.19
+## 0.0.19 (Production)
 
 ### ✨ Features
 
 - **app:** Add react-query devtools
 
-## 0.0.18
+## 0.0.18 (Production)
 
 ### 🐛 Bug Fixes
 
@@ -790,13 +796,13 @@
 
 - **auth:** Improve auth tests
 
-## 0.0.17
+## 0.0.17 (Production)
 
 ### 🔧 Miscellaneous Tasks
 
 - **app:** Refactor online manager
 
-## 0.0.16
+## 0.0.16 (Production)
 
 ### ✨ Features
 
@@ -806,13 +812,13 @@
 
 - **app:** Fix auth ctx persistence issues
 
-## 0.0.15
+## 0.0.15 (Production)
 
 ### 🐛 Bug Fixes
 
 - **app:** Fix auth crashes
 
-## 0.0.14
+## 0.0.14 (Production)
 
 ### ✨ Features
 
@@ -831,7 +837,7 @@
 - **ci:** Test alternate ci/cd workflow
 - **ci:** Test alternate ci/cd workflow
 
-## 0.0.13
+## 0.0.13 (Production)
 
 ### ♻️ Refactor
 
@@ -848,19 +854,19 @@
 - **app:** Debug auth issues
 - **app:** Debug auth issues
 
-## 0.0.12
+## 0.0.12 (Production)
 
 ### 🔧 Miscellaneous Tasks
 
 - **app:** Debug auth
 
-## 0.0.11
+## 0.0.11 (Production)
 
 ### 🐛 Bug Fixes
 
 - **app:** Speculative crash fix around fonts
 
-## 0.0.9
+## 0.0.9 (Production)
 
 ### ✨ Features
 
@@ -872,13 +878,13 @@
 
 - **app:** Comment out fb
 
-## 0.0.8
+## 0.0.8 (Production)
 
 ### 🐛 Bug Fixes
 
 - **app:** Fix crash on start
 
-## 0.0.7
+## 0.0.7 (Production)
 
 ### 🔧 Miscellaneous Tasks
 
@@ -886,37 +892,37 @@
 - **app:** Debug release
 - **app:** Debug release
 
-## 0.0.6
+## 0.0.6 (Production)
 
 ### 🔧 Miscellaneous Tasks
 
 - **app:** Debug release
 
-## 0.0.5
+## 0.0.5 (Production)
 
 ### 🐛 Bug Fixes
 
 - **app:** Navigation state in prod
 
-## 0.0.4
+## 0.0.4 (Production)
 
 ### ✨ Features
 
 - **app:** Debug screen
 
-## 0.0.3
+## 0.0.3 (Production)
 
 ### 🐛 Bug Fixes
 
 - **app:** Fix commmitlint
 
-## 0.0.2
+## 0.0.2 (Production)
 
 ### 🔧 Miscellaneous Tasks
 
 - **app:** Gs services file
 
-## 0.0.1
+## 0.0.1 (Production)
 
 ### ♻️ Refactor
 

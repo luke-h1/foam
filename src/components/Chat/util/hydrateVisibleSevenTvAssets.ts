@@ -20,7 +20,7 @@ type HydrateVisibleSevenTvAssetsParams = {
   fetchUserPersonalEmotes: (
     twitchUserId: string,
     channelId: string,
-  ) => Promise<SanitisedEmote[]>;
+  ) => Promise<SanitisedEmote[] | null>;
   getUserBadge: (twitchUserId: string) => SanitisedBadgeSet | null;
   fetchUserCosmetics: (
     twitchUserId: string,
@@ -175,7 +175,7 @@ export async function hydrateVisibleSevenTvAssets({
         boundedSetAdd(personalEmoteUsers, userId, MAX_VISIBLE_USER_GUARDS);
         pending.push(
           fetchUserPersonalEmotes(userId, channelId).then(emotes => {
-            if (emotes.length > 0) {
+            if (emotes && emotes.length > 0) {
               return reprocessIfChanged(message);
             }
             return undefined;

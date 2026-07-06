@@ -41,8 +41,8 @@ const freshCache = (
   ...emptyEmoteData,
   sevenTvChannelEmotes: [emote],
   sevenTvEmoteSetId: 'set-1',
-  lastUpdated: NOW - HOUR_MS,
-  badgesLastUpdated: NOW - 30 * 60 * 1000,
+  lastUpdated: NOW - 30 * 60 * 1000,
+  badgesLastUpdated: NOW - 15 * 60 * 1000,
   ...overrides,
 });
 
@@ -72,7 +72,7 @@ describe('planChannelRefresh', () => {
   test('plans a full load once the cache outlives the cache duration', () => {
     expect(
       planChannelRefresh({
-        cache: freshCache({ lastUpdated: NOW - 24 * HOUR_MS }),
+        cache: freshCache({ lastUpdated: NOW - HOUR_MS }),
         forceRefresh: false,
         now: NOW,
       }),
@@ -88,8 +88,8 @@ describe('planChannelRefresh', () => {
       }),
     ).toEqual<ChannelRefreshPlan>({
       kind: 'cached',
-      cacheAgeMs: HOUR_MS,
-      badgeCacheAgeMs: 30 * 60 * 1000,
+      cacheAgeMs: 30 * 60 * 1000,
+      badgeCacheAgeMs: 15 * 60 * 1000,
       fetchEmoteSetId: false,
       fetchSubscriberEmotes: false,
       refreshBadges: false,
@@ -152,7 +152,7 @@ describe('planChannelRefresh', () => {
     const plan = planChannelRefresh({
       cache: freshCache({
         badgesLastUpdated: undefined,
-        lastUpdated: NOW - 2 * HOUR_MS,
+        lastUpdated: NOW - 45 * 60 * 1000,
       }),
       forceRefresh: false,
       now: NOW,
@@ -160,11 +160,11 @@ describe('planChannelRefresh', () => {
 
     expect(plan).toEqual<ChannelRefreshPlan>({
       kind: 'cached',
-      cacheAgeMs: 2 * HOUR_MS,
-      badgeCacheAgeMs: 2 * HOUR_MS,
+      cacheAgeMs: 45 * 60 * 1000,
+      badgeCacheAgeMs: 45 * 60 * 1000,
       fetchEmoteSetId: false,
       fetchSubscriberEmotes: false,
-      refreshBadges: true,
+      refreshBadges: false,
     });
   });
 });

@@ -10,7 +10,7 @@ const personalEmotesGuard = createFetchOnceGuard();
 export const fetchUserPersonalEmotes = async (
   twitchUserId: string,
   channelId: string,
-): Promise<SanitisedEmote[]> => {
+): Promise<SanitisedEmote[] | null> => {
   if (personalEmotesGuard.hasFetched(twitchUserId)) {
     const cache = chatStore$.persisted.channelCaches[channelId]?.peek();
     return cache?.sevenTvPersonalEmotes?.[twitchUserId] || [];
@@ -33,6 +33,7 @@ export const fetchUserPersonalEmotes = async (
       }
       return personalEmotes;
     } catch (error) {
+      ctx.markFetched();
       logger.stv.warn(
         `Failed to fetch personal emotes for user ${twitchUserId}:`,
         {
@@ -47,8 +48,7 @@ export const fetchUserPersonalEmotes = async (
           twitch_user_id: twitchUserId,
         },
       );
-      ctx.markFetched();
-      return [];
+      return null;
     }
   });
 };

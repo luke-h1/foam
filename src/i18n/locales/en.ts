@@ -30,6 +30,8 @@ const en = {
 
   chat: {
     emotesRefreshed: 'Refreshed emotes and badges',
+    providerLoadFailed:
+      "Couldn't load emotes and badges from {{providers}}, falling back to cached emotes/badges",
     messageActions: {
       eyebrow: 'Selected message',
       title: 'Message Actions',
