@@ -12,10 +12,6 @@ import { emoteKeys } from '../query-keys';
 
 const GLOBAL_STALE_TIME = 60 * 60 * 1000;
 
-/**
- * Freshness window when at least one provider failed, so the hole is retried
- * on the next mount instead of being cached as complete for the full hour.
- */
 const PARTIAL_STALE_TIME = 60 * 1000;
 
 export interface GlobalEmoteData {
@@ -23,10 +19,6 @@ export interface GlobalEmoteData {
   ffzGlobalEmotes: SanitisedEmote[];
   sevenTvGlobalEmotes: SanitisedEmote[];
   twitchGlobalEmotes: SanitisedEmote[];
-  /**
-   * True when any provider fetch failed and its slice is an empty
-   * placeholder rather than a real result.
-   */
   partial: boolean;
 }
 
@@ -74,8 +66,6 @@ export function globalEmotesQueryOptions() {
   });
 }
 
-// Badge fetch failures propagate so react-query retries them with backoff —
-// swallowing them into [] would cache the empty result as fresh for an hour.
 export function globalBadgesQueryOptions() {
   return queryOptions<SanitisedBadgeSet[]>({
     queryKey: emoteKeys.globalBadges(),

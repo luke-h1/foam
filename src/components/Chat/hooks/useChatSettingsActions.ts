@@ -105,9 +105,6 @@ export function useChatSettingsActions({
   const handleSettingsRefetchEmotes = useCallback(() => {
     void (async () => {
       try {
-        // Stale-stamp rather than delete: the reload must refetch everything,
-        // but the cached slices stay behind as the fallback if a provider
-        // fetch fails mid-refresh.
         invalidateChannelCache(channelId);
         await refetchEmotesRef.current();
         reprocessAllMessagesRef.current();

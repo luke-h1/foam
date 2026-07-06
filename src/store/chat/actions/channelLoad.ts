@@ -574,10 +574,6 @@ const loadChannelResourcesInternal = async (
     const channelData: ChannelCacheType = {
       emotes: allEmotes,
       badges: allBadges,
-      // A load with any failed slice must not stamp the cache fresh: on a
-      // first visit there is no prior stamp to keep, so 0 marks the cache
-      // stale and the next join retries instead of serving the hole for the
-      // whole cache duration.
       lastUpdated: hasEmoteResourceFailure
         ? (existingCache?.lastUpdated ?? 0)
         : now,
@@ -688,12 +684,6 @@ export const loadChannelResources = async (
   );
 };
 
-/**
- * Mark a channel's cached resources stale without discarding them: the next
- * load runs a full refetch, but the cached slices remain available as the
- * failure fallback, so a provider that errors (for example a 7TV outage)
- * keeps serving the previous emotes instead of dropping them.
- */
 export const invalidateChannelCache = (channelId: string): void => {
   const channelCache = chatStore$.persisted.channelCaches[channelId];
   if (!channelCache?.peek()) {
@@ -912,12 +902,6 @@ export const updateSevenTvEmotes = (
   }
 
   const currentEmotes = cache.sevenTvChannelEmotes ?? [];
-  // Match the extension's emote_set.update semantics: a rename arrives as a
-  // (removed old-id, added same-id) pair, so replacing in place at the
-  // existing index preserves set order instead of shuffling the emote to the
-  // end. Ids present in `added` are indexed so a genuine remove+re-add and a
-  // rename both resolve to an in-place swap; only ids not already in the set
-  // are appended.
   const addedById = new Map(added.map(emote => [emote.id, emote]));
   const appended = new Set<string>();
   const updatedEmotes: SanitisedEmote[] = [];
