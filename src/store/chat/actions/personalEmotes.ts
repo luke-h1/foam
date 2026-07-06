@@ -33,6 +33,7 @@ export const fetchUserPersonalEmotes = async (
       }
       return personalEmotes;
     } catch (error) {
+      ctx.markFetched();
       logger.stv.warn(
         `Failed to fetch personal emotes for user ${twitchUserId}:`,
         {
