@@ -19,7 +19,8 @@ export function PaintLayerTiledImage({
       ? 'repeat'
       : canvasRepeat;
   const webBackgroundStyle = {
-    backgroundImage: `url(${imageUrl})`,
+    // Quoted so CDN URLs with parentheses/whitespace stay valid CSS.
+    backgroundImage: `url("${imageUrl.replace(/"/g, '%22')}")`,
     backgroundRepeat: cssRepeat,
   } as unknown as ViewStyle;
 

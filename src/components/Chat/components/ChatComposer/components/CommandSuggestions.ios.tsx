@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -54,6 +54,10 @@ export const CommandSuggestions = memo(function CommandSuggestions({
   suggestionScale,
   suggestionTranslateY,
 }: CommandSuggestionsProps) {
+  const extraData = useMemo<CommandSuggestionListExtra>(
+    () => ({ onPress: handleCommandSelect }),
+    [handleCommandSelect],
+  );
   const suggestionStyle = {
     opacity: suggestionOpacity,
     transform: [
@@ -75,7 +79,7 @@ export const CommandSuggestions = memo(function CommandSuggestions({
           estimatedItemSize={COMMAND_SUGGESTION_ITEM_SIZE}
           keyExtractor={item => item.name}
           keyboardShouldPersistTaps='handled'
-          extraData={{ onPress: handleCommandSelect }}
+          extraData={extraData}
           renderItem={renderCommandSuggestionItem}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}

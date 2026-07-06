@@ -29,7 +29,10 @@ import {
 } from '../util/messageHandlers';
 import { parseModCommand } from '../util/modCommands';
 import { runModCommand } from '../util/runModCommand';
-import { findSlashCommandDefinition } from '../util/slashCommandDefinitions';
+import {
+  findSlashCommandDefinition,
+  isRefreshCommand,
+} from '../util/slashCommandDefinitions';
 import type { ChatComposerHandle } from './ChatComposer/ChatComposer';
 import { ChatInputSection, type ReplyToData } from './ChatInputSection';
 
@@ -106,16 +109,12 @@ export const ChatInputShell = memo(function ChatInputShell({
     setDraft(createEmptyDraft());
   }, []);
 
-  const handleComposerTextChange = useCallback(
-    (text: string) => {
-      if (!isAuthenticated) {
-        return;
-      }
-      messageInputRef.current = text;
-      setDraft(prev => ({ ...prev, messageInput: text }));
-    },
-    [isAuthenticated],
-  );
+  // Also runs signed out: the composer stays editable so anyone can type
+  // /refresh, and the sign-out effect below resets the draft.
+  const handleComposerTextChange = useCallback((text: string) => {
+    messageInputRef.current = text;
+    setDraft(prev => ({ ...prev, messageInput: text }));
+  }, []);
 
   const writeComposerText = useCallback((next: string) => {
     messageInputRef.current = next;
@@ -158,7 +157,7 @@ export const ChatInputShell = memo(function ChatInputShell({
       return;
     }
 
-    if (currentInput.trim().toLowerCase() === '/refresh') {
+    if (isRefreshCommand(currentInput)) {
       onRefreshCommand();
       clearDraft();
       void KeyboardController.dismiss();

@@ -62,12 +62,9 @@ function writePersonalEmotes(
   if (!channelCache?.peek()) {
     return;
   }
-  const currentPersonalEmotes =
-    channelCache.sevenTvPersonalEmotes?.peek() || {};
-  channelCache.sevenTvPersonalEmotes.set({
-    ...currentPersonalEmotes,
-    [twitchUserId]: personalEmotes,
-  });
+  // Keyed child set so concurrent writes for other users are not clobbered
+  // by rebuilding the whole record.
+  channelCache.sevenTvPersonalEmotes[twitchUserId]?.set(personalEmotes);
 }
 
 export const getUserPersonalEmotes = (

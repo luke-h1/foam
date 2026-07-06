@@ -148,18 +148,27 @@ function OverlaidEmoteImage({
   return (
     <ChatInlineImage
       sourceUrl={displayUrl}
-      style={{
-        position: 'absolute',
-        left: Math.round((baseWidth - width) / 2),
-        top: Math.round((baseHeight - height) / 2),
-        width,
-        height,
-        zIndex: 2,
-      }}
+      style={getOverlayEmoteStyle(baseWidth, baseHeight, width, height)}
       priority='normal'
       transitionMs={0}
     />
   );
+}
+
+function getOverlayEmoteStyle(
+  baseWidth: number,
+  baseHeight: number,
+  width: number,
+  height: number,
+) {
+  return {
+    position: 'absolute' as const,
+    left: Math.round((baseWidth - width) / 2),
+    top: Math.round((baseHeight - height) / 2),
+    width,
+    height,
+    zIndex: 2,
+  };
 }
 
 function getEmoteImageStyle(width: number, height: number) {

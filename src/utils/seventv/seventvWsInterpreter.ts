@@ -87,7 +87,7 @@ export type SeventvWsDecision =
       newSetId: string;
       newSetName: string | null;
     }
-  | { type: 'ignoreUserUpdate'; reason: 'noEmoteSetChange' }
+  | { type: 'ignoreUserUpdate'; reason: 'noEmoteSetChange' | 'historicalEvent' }
   | {
       type: 'eventInterpretationFailed';
       eventType: HandledSevenTvEventType;
@@ -450,8 +450,19 @@ function interpretEntitlementDelete(
  */
 function interpretUserUpdate(
   data: SevenTvEventData<'user.update'>,
+  context: SeventvWsInterpreterContext,
 ): SeventvWsDecision {
   try {
+    // Same replay guard as emote_set.update: dispatches replayed right after
+    // a reconnect/RESUME describe switches that already happened.
+    if (context.connectionTimestamp) {
+      const timeSinceConnection = context.now - context.connectionTimestamp;
+
+      if (timeSinceConnection < HISTORICAL_EVENT_BUFFER) {
+        return { type: 'ignoreUserUpdate', reason: 'historicalEvent' };
+      }
+    }
+
     const updated = data.body.updated ?? [];
     for (const entry of updated) {
       if (entry.key !== 'connections' || !Array.isArray(entry.value)) {
@@ -525,7 +536,10 @@ function interpretDispatchEvent(
       );
 
     case 'user.update':
-      return interpretUserUpdate(data as SevenTvEventData<'user.update'>);
+      return interpretUserUpdate(
+        data as SevenTvEventData<'user.update'>,
+        context,
+      );
 
     default:
       return { type: 'unhandledEventType', eventType: data.type };

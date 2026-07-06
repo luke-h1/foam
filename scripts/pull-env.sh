@@ -33,13 +33,18 @@ for bin in op jq; do
 done
 [ -f "$example_file" ] || { echo "error: $example_file not found." >&2; exit 2; }
 
+# Keep stderr out of the captured JSON: an `op` warning on a successful call
+# would otherwise corrupt the payload and make jq report fields as missing.
 get_item_json() {
-  local json
-  if ! json="$(op item get "$1" --vault "$vault" --format json --reveal 2>&1)"; then
+  local json err_file
+  err_file="$(mktemp)"
+  if ! json="$(op item get "$1" --vault "$vault" --format json --reveal 2>"$err_file")"; then
     echo "error: cannot read item '$1' in vault '$vault'. Are you signed in? (eval \"\$(op signin)\")" >&2
-    echo "$json" >&2
+    cat "$err_file" >&2
+    rm -f "$err_file"
     exit 2
   fi
+  rm -f "$err_file"
   printf '%s' "$json"
 }
 
@@ -87,6 +92,7 @@ done <"$example_file"
 
 if [ -f "$env_file" ]; then
   cp "$env_file" "$env_file.bak"
+  chmod 600 "$env_file.bak"
   echo "Backed up existing .env to .env.bak"
 fi
 printf '%s' "$output" >"$env_file"

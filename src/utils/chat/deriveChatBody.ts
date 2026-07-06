@@ -70,6 +70,14 @@ function normaliseLogin(value?: string): string {
   return value?.trim().replace(/^@/, '').toLowerCase() ?? '';
 }
 
+/**
+ * Standalone zero-width emotes and attached overlays both need the
+ * flex-wrap renderer; absolute positioning breaks inside a Text.
+ */
+function emoteBreaksInline(part: ParsedPart<'emote'>): boolean {
+  return Boolean(part.zero_width || part.overlaid?.length);
+}
+
 export function getMessageStructure(message: ParsedPart[]): MessageStructure {
   const cached = structureCache.get(message);
   if (cached) {
@@ -81,9 +89,7 @@ export function getMessageStructure(message: ParsedPart[]): MessageStructure {
   for (const part of message) {
     if (part.type === 'emote') {
       containsEmotes = true;
-      // Standalone zero-width emotes and attached overlays both need the
-      // flex-wrap renderer; absolute positioning breaks inside a Text.
-      if (part.zero_width || part.overlaid?.length) {
+      if (emoteBreaksInline(part)) {
         canBeInline = false;
       }
     } else if (
@@ -166,9 +172,7 @@ function scanChatBody(message: ParsedPart[]): ChatBodyScan {
       }
       case 'emote':
         containsEmotes = true;
-        // Standalone zero-width emotes and attached overlays both need the
-        // flex-wrap renderer; absolute positioning breaks inside a Text.
-        if (part.zero_width || part.overlaid?.length) {
+        if (emoteBreaksInline(part)) {
           canBeInline = false;
         }
         break;

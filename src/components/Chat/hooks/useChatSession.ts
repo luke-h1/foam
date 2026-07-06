@@ -322,10 +322,13 @@ export function useChatSession({
 
   // Broadcasting presence when the user actually chats is how 7TV pushes this
   // user's cosmetics to everyone else in the channel (rate limited inside).
-  const sendMessageWithPresence: typeof sendMessage = (...args) => {
-    void notify7TVActivePresence(user?.id, channelId);
-    return sendMessage(...args);
-  };
+  const sendMessageWithPresence: typeof sendMessage = useCallback(
+    (...args) => {
+      void notify7TVActivePresence(user?.id, channelId);
+      return sendMessage(...args);
+    },
+    [channelId, sendMessage, user?.id],
+  );
 
   useTwitchChannelPointsEventSub(syntheticTransport ? undefined : channelId);
 

@@ -854,6 +854,41 @@ describe('interpretSeventvWsMessage', () => {
       ]);
     });
 
+    test('suppresses a user.update replayed right after reconnect', () => {
+      const event = coerceEvent<'user.update'>({
+        type: 'user.update',
+        body: {
+          id: 'stv-owner-1',
+          kind: 1,
+          updated: [
+            {
+              key: 'connections',
+              index: 0,
+              old_value: null,
+              value: [
+                {
+                  key: 'emote_set',
+                  index: 0,
+                  old_value: { id: 'set-old', name: 'Old Set' },
+                  value: { id: 'set-new', name: 'New Set' },
+                },
+              ],
+            },
+          ],
+        },
+      });
+
+      const decisions = interpretSeventvWsMessage(
+        createDispatchMessage(event),
+        createContext({ connectionTimestamp: FIXTURE_NOW - 5000 }),
+      );
+
+      expect(decisions).toEqual<SeventvWsDecision[]>([
+        { type: 'ignoreUserUpdate', reason: 'historicalEvent' },
+        { type: 'notifyEvent', eventType: 'user.update', data: event },
+      ]);
+    });
+
     test('interprets an ack message', () => {
       const decisions = interpretSeventvWsMessage(
         coerceMessage({

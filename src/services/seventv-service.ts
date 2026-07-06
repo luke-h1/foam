@@ -351,7 +351,10 @@ export const sevenTvService = {
     return sevenTvApi.post(`/users/${userId}/presences`, {
       kind: 1,
       passive: options.passive,
-      session_id: options.passive ? options.sessionId : undefined,
+      // Coalesce so a missing EventAPI session still serialises the field;
+      // JSON.stringify drops undefined and 7TV expects session_id on
+      // passive presence.
+      session_id: options.passive ? (options.sessionId ?? '') : undefined,
       data: {
         platform: 'TWITCH',
         id: String(channelId),

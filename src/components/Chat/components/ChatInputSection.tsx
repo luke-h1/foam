@@ -17,6 +17,7 @@ import {
 } from '@app/utils/string/createHitSlop';
 import { truncate } from '@app/utils/string/truncate';
 
+import { isRefreshCommand } from '../util/slashCommandDefinitions';
 import { ChatComposer } from './ChatComposer/ChatComposer';
 import type {
   ChatInputSectionProps,
@@ -53,10 +54,10 @@ export const ChatInputSection = memo(
 
     const trimmedInput = messageInput.trim();
     // /refresh is purely client-side, so it works signed out
-    const isRefreshCommand = trimmedInput.toLowerCase() === '/refresh';
+    const isRefresh = isRefreshCommand(messageInput);
 
     const canSend = Boolean(
-      trimmedInput && (isAuthenticated || isRefreshCommand) && !isSending,
+      trimmedInput && (isAuthenticated || isRefresh) && !isSending,
     );
 
     const { t } = useTranslation('chat');

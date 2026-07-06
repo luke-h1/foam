@@ -265,16 +265,5 @@ export function imageRepeatFromCanvasRepeat(
   canvasRepeat: PaintCanvasRepeat,
   layerRepeat: boolean,
 ): 'cover' | 'contain' | 'fill' | 'none' | 'scale-down' {
-  if (
-    layerRepeat ||
-    canvasRepeat === 'repeat' ||
-    canvasRepeat === 'repeat-x' ||
-    canvasRepeat === 'repeat-y' ||
-    canvasRepeat === 'round' ||
-    canvasRepeat === 'space'
-  ) {
-    return 'none';
-  }
-
-  return 'fill';
+  return isTilingCanvasRepeat(canvasRepeat, layerRepeat) ? 'none' : 'fill';
 }

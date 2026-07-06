@@ -14,6 +14,7 @@ import { theme } from '@app/styles/themes';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { truncate } from '@app/utils/string/truncate';
 
+import { isRefreshCommand } from '../util/slashCommandDefinitions';
 import { ChatComposer } from './ChatComposer/ChatComposer';
 import type { ChatInputSectionProps } from './chatInputSectionTypes';
 import { ComposerIconButton } from './ComposerIconButton';
@@ -43,12 +44,10 @@ export const ChatInputSection = memo(
 
     const trimmedInput = messageInput.trim();
     // /refresh is purely client-side, so it works signed out
-    const isRefreshCommand = trimmedInput.toLowerCase() === '/refresh';
+    const isRefresh = isRefreshCommand(messageInput);
 
     const canSend =
-      trimmedInput.length > 0 &&
-      (isAuthenticated || isRefreshCommand) &&
-      !isSending;
+      trimmedInput.length > 0 && (isAuthenticated || isRefresh) && !isSending;
 
     const { t } = useTranslation('chat');
     const inputPlaceholder = !isAuthenticated
