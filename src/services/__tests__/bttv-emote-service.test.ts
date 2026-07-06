@@ -92,6 +92,7 @@ describe('bttvEmoteService', () => {
         creator: null,
         site: 'Global BTTV',
         flags: 256,
+        zero_width: true,
       },
     ]);
   });

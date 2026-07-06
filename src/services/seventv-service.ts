@@ -30,6 +30,8 @@ import type {
 } from '@app/types/emote';
 import type {
   PaintData,
+  SevenTvEventData,
+  SevenTvEventType,
   UserCosmeticsInfo,
 } from '@app/types/seventv/cosmetics';
 import type {
@@ -333,16 +335,47 @@ export const sevenTvService = {
     };
   },
 
-  sendPresence: async (channelId: string, userId: string) => {
+  /**
+   * Write a presence for the user in a channel.
+   *
+   * Passive presence (with the EventAPI session id) makes 7TV push the user's
+   * own entitlements to just that session. Active presence (passive: false)
+   * makes 7TV broadcast the user's entitlements to every client subscribed to
+   * the channel, which is how other viewers see this user's cosmetics.
+   */
+  sendPresence: async (
+    channelId: string,
+    userId: string,
+    options: { passive: boolean; sessionId?: string },
+  ) => {
     return sevenTvApi.post(`/users/${userId}/presences`, {
       kind: 1,
-      passive: true,
-      session_id: '',
+      passive: options.passive,
+      session_id: options.passive ? options.sessionId : undefined,
       data: {
         platform: 'TWITCH',
         id: String(channelId),
       },
     });
+  },
+
+  /**
+   * Bulk cosmetics lookup via the EventAPI bridge. Returns the same dispatch
+   * payloads (cosmetic.create / entitlement.create) the WebSocket would push,
+   * for every identified user, in one request.
+   * @param twitchUserIds - Twitch user IDs to look up
+   */
+  fetchBridgedCosmetics: async (
+    twitchUserIds: string[],
+  ): Promise<SevenTvEventData<SevenTvEventType>[]> => {
+    if (twitchUserIds.length === 0) {
+      return [];
+    }
+    const events = await sevenTvApi.post<SevenTvEventData<SevenTvEventType>[]>(
+      '/bridge/event-api',
+      { identifiers: twitchUserIds.map(id => `id:${id}`) },
+    );
+    return Array.isArray(events) ? events : [];
   },
 
   /**

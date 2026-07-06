@@ -257,6 +257,83 @@ function hasNonAsciiChar(word: string): boolean {
   return false;
 }
 
+// BTTV render-hint modifiers (wide/flip) written immediately before an emote.
+// Foam does not support the transforms, so the tokens are hidden, matching
+// the 7TV extension's default behavior.
+const BACKWARD_EMOTE_MODIFIERS = new Set(['w!', 'h!', 'v!']);
+
+function isWhitespacePart(part: ParsedPart): boolean {
+  return part.type === 'text' && /^\s+$/.test(part.content);
+}
+
+/**
+ * Post-pass mirroring the 7TV extension's tokenizer composition rules:
+ * - a zero-width emote attaches to the emote before it as an overlay instead
+ *   of rendering as its own part, so stacks like `emote SoSnowy IceCold`
+ *   composite over the base emote
+ * - BTTV backward modifiers (`w!`/`h!`/`v!`) before an emote and FFZ `ffz*`
+ *   modifier words after an emote are hidden
+ */
+function applyEmoteCompositionPass(parts: ParsedPart[]): ParsedPart[] {
+  const out: ParsedPart[] = [];
+
+  for (let index = 0; index < parts.length; index += 1) {
+    const part = parts[index];
+    if (!part) {
+      // eslint-disable-next-line no-continue
+      continue;
+    }
+
+    if (part.type === 'emote' && part.zero_width) {
+      let anchor = out.length - 1;
+      while (anchor >= 0 && isWhitespacePart(out[anchor] as ParsedPart)) {
+        anchor -= 1;
+      }
+      const base = anchor >= 0 ? out[anchor] : undefined;
+      if (base && base.type === 'emote' && !base.zero_width) {
+        out.length = anchor + 1;
+        base.overlaid = [...(base.overlaid ?? []), part];
+        // eslint-disable-next-line no-continue
+        continue;
+      }
+    }
+
+    const content =
+      part.type === 'emote' || part.type === 'text' ? part.content.trim() : '';
+
+    if (content && BACKWARD_EMOTE_MODIFIERS.has(content)) {
+      let next = index + 1;
+      while (
+        next < parts.length &&
+        isWhitespacePart(parts[next] as ParsedPart)
+      ) {
+        next += 1;
+      }
+      if (parts[next]?.type === 'emote') {
+        index = next - 1;
+        // eslint-disable-next-line no-continue
+        continue;
+      }
+    }
+
+    if (content.startsWith('ffz') && content.length > 3) {
+      let anchor = out.length - 1;
+      while (anchor >= 0 && isWhitespacePart(out[anchor] as ParsedPart)) {
+        anchor -= 1;
+      }
+      if (anchor >= 0 && out[anchor]?.type === 'emote') {
+        out.length = anchor + 1;
+        // eslint-disable-next-line no-continue
+        continue;
+      }
+    }
+
+    out.push(part);
+  }
+
+  return out;
+}
+
 export const processEmotesWorklet = (
   params: EmoteProcessorParams,
 ): ParsedPart[] => {
@@ -423,7 +500,9 @@ export const processEmotesWorklet = (
     }
   }
 
-  const resolvedResult = applyMentionLoginCasing(result);
+  const resolvedResult = applyMentionLoginCasing(
+    applyEmoteCompositionPass(result),
+  );
   queueMentionLoginsFromParts(resolvedResult);
 
   cache.set(cacheKey, resolvedResult);

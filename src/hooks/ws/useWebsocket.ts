@@ -187,6 +187,14 @@ export const useWebsocket = (
     return undefined;
   }, [url, stringifiedQueryParams, optionsCache]);
 
+  // Tear down the current socket (if any) and start a fresh connection.
+  // Lets callers revive a connection whose automatic retries were exhausted,
+  // e.g. when the app returns to the foreground after a long network outage.
+  const reconnect = useCallback(() => {
+    reconnectCount.current = 0;
+    startRef.current();
+  }, []);
+
   return {
     sendMessage,
     sendJsonMessage,
@@ -194,5 +202,6 @@ export const useWebsocket = (
     lastJsonMessage,
     readyState: readyStateFromUrl,
     getWebSocket,
+    reconnect,
   };
 };

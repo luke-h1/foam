@@ -25,7 +25,6 @@ interface UseChatSurfaceOptions {
   fetchUserCosmetics: (
     twitchUserId: string,
     options?: {
-      allowAfterInitialWindow?: boolean;
       retryMissingBadge?: boolean;
     },
   ) => Promise<void>;

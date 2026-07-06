@@ -22,6 +22,7 @@ import {
   clearSubscriberProfilesCache,
   loadChannelResources,
   resolveSubscriberChannelProfiles,
+  switchSevenTvEmoteSet,
 } from '../actions/channelLoad';
 import { clearGlobalResourceCache } from '../actions/channelResources';
 import { chatStore$ } from '../observables/chatStore';
@@ -714,5 +715,65 @@ describe('resolveSubscriberChannelProfiles', () => {
         profileImageUrl: 'https://cdn.example.com/100.png',
       },
     });
+  });
+});
+
+describe('switchSevenTvEmoteSet', () => {
+  const channelId = 'switch-channel';
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...emptyEmoteData,
+        badges: [],
+        badgesLastUpdated: 1_000,
+        emotes: [sevenTvEmote('emote-a')],
+        lastUpdated: 1_000,
+        sevenTvChannelEmotes: [sevenTvEmote('emote-a')],
+        sevenTvEmoteSetId: 'set-a',
+      },
+    });
+  });
+
+  test('replaces the cached channel set with the new set', async () => {
+    mockGetSanitisedEmoteSet.mockResolvedValue([sevenTvEmote('emote-b')]);
+
+    await expect(switchSevenTvEmoteSet(channelId, 'set-b')).resolves.toBe(true);
+
+    const cache = chatStore$.persisted.channelCaches.peek()[channelId];
+    expect(cache!.sevenTvEmoteSetId).toBe('set-b');
+    expect(ids(cache!.sevenTvChannelEmotes)).toEqual(['emote-b']);
+    expect(ids(cache!.emotes)).toEqual(['emote-b']);
+  });
+
+  test('no-ops when the cache already points at the requested set', async () => {
+    await expect(switchSevenTvEmoteSet(channelId, 'set-a')).resolves.toBe(
+      false,
+    );
+    expect(mockGetSanitisedEmoteSet).not.toHaveBeenCalled();
+  });
+
+  test('discards a stale fetch when a newer switch supersedes it', async () => {
+    let resolveSetB!: (emotes: SevenTvSanitisedEmote[]) => void;
+    const setBFetch = new Promise<SevenTvSanitisedEmote[]>(resolve => {
+      resolveSetB = resolve;
+    });
+    mockGetSanitisedEmoteSet.mockImplementation(setId =>
+      setId === 'set-b'
+        ? setBFetch
+        : Promise.resolve([sevenTvEmote('emote-c')]),
+    );
+
+    const switchToB = switchSevenTvEmoteSet(channelId, 'set-b');
+    const switchToC = switchSevenTvEmoteSet(channelId, 'set-c');
+
+    await expect(switchToC).resolves.toBe(true);
+    resolveSetB([sevenTvEmote('emote-b')]);
+    await expect(switchToB).resolves.toBe(false);
+
+    const cache = chatStore$.persisted.channelCaches.peek()[channelId];
+    expect(cache!.sevenTvEmoteSetId).toBe('set-c');
+    expect(ids(cache!.sevenTvChannelEmotes)).toEqual(['emote-c']);
   });
 });

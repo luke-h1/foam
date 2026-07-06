@@ -9,6 +9,7 @@ import {
   buildEmoteSetUpdateSubscribeMessage,
   buildEmoteSetUpdateUnsubscribeMessage,
   buildEntitlementCreateSubscribeMessage,
+  buildResumeMessage,
   HISTORICAL_EVENT_BUFFER,
   interpretSeventvWsMessage,
   type SeventvWsDecision,
@@ -244,16 +245,14 @@ describe('interpretSeventvWsMessage', () => {
 
       expect(decisions).toEqual<SeventvWsDecision[]>([
         {
-          type: 'ignoreEmoteSetUpdate',
-          reason: 'differentEmoteSet',
-          receivedEmoteSetId: 'other-set',
-          expectedEmoteSetId: 'set-1',
+          type: 'emoteSetUpdateForOtherSet',
+          emoteSetId: 'other-set',
         },
         { type: 'notifyEvent', eventType: 'emote_set.update', data: event },
       ]);
     });
 
-    test('ignores updates when no active emote set is known', () => {
+    test('routes updates to the other-set path when no active emote set is known', () => {
       const event = createEmoteSetUpdateEvent({
         id: 'set-1',
         pushed: [
@@ -269,7 +268,7 @@ describe('interpretSeventvWsMessage', () => {
       );
 
       expect(decisions).toEqual<SeventvWsDecision[]>([
-        { type: 'ignoreEmoteSetUpdate', reason: 'inactiveEmoteSet' },
+        { type: 'emoteSetUpdateForOtherSet', emoteSetId: 'set-1' },
         { type: 'notifyEvent', eventType: 'emote_set.update', data: event },
       ]);
     });
@@ -787,6 +786,74 @@ describe('interpretSeventvWsMessage', () => {
       ]);
     });
 
+    test('interprets a user.update emote set switch', () => {
+      const event = coerceEvent<'user.update'>({
+        type: 'user.update',
+        body: {
+          id: 'stv-owner-1',
+          kind: 1,
+          updated: [
+            {
+              key: 'connections',
+              index: 0,
+              old_value: null,
+              value: [
+                {
+                  key: 'emote_set',
+                  index: 0,
+                  old_value: { id: 'set-old', name: 'Old Set' },
+                  value: { id: 'set-new', name: 'New Set' },
+                },
+              ],
+            },
+          ],
+        },
+      });
+
+      const decisions = interpretSeventvWsMessage(
+        createDispatchMessage(event),
+        createContext(),
+      );
+
+      expect(decisions).toEqual<SeventvWsDecision[]>([
+        {
+          type: 'applyEmoteSetSwitch',
+          oldSetId: 'set-old',
+          newSetId: 'set-new',
+          newSetName: 'New Set',
+        },
+        { type: 'notifyEvent', eventType: 'user.update', data: event },
+      ]);
+    });
+
+    test('ignores user.update events without an emote set change', () => {
+      const event = coerceEvent<'user.update'>({
+        type: 'user.update',
+        body: {
+          id: 'stv-owner-1',
+          kind: 1,
+          updated: [
+            {
+              key: 'style',
+              index: 0,
+              old_value: null,
+              value: [],
+            },
+          ],
+        },
+      });
+
+      const decisions = interpretSeventvWsMessage(
+        createDispatchMessage(event),
+        createContext(),
+      );
+
+      expect(decisions).toEqual<SeventvWsDecision[]>([
+        { type: 'ignoreUserUpdate', reason: 'noEmoteSetChange' },
+        { type: 'notifyEvent', eventType: 'user.update', data: event },
+      ]);
+    });
+
     test('interprets an ack message', () => {
       const decisions = interpretSeventvWsMessage(
         coerceMessage({
@@ -809,7 +876,81 @@ describe('interpretSeventvWsMessage', () => {
         createContext(),
       );
 
-      expect(decisions).toEqual<SeventvWsDecision[]>([{ type: 'hello' }]);
+      expect(decisions).toEqual<SeventvWsDecision[]>([
+        { type: 'hello', sessionId: null, heartbeatIntervalMs: null },
+      ]);
+    });
+
+    test('carries the session id from a hello payload', () => {
+      const decisions = interpretSeventvWsMessage(
+        coerceMessage({
+          op: 1,
+          d: {
+            heartbeat_interval: 25000,
+            session_id: 'session-1',
+            subscription_limit: 500,
+            instance: { name: 'event-api-1', population: 1 },
+          },
+        }),
+        createContext(),
+      );
+
+      expect(decisions).toEqual<SeventvWsDecision[]>([
+        {
+          type: 'hello',
+          sessionId: 'session-1',
+          heartbeatIntervalMs: 25000,
+        },
+      ]);
+    });
+
+    test('interprets a RESUME ack with its replay counts', () => {
+      const decisions = interpretSeventvWsMessage(
+        coerceMessage({
+          op: 5,
+          d: {
+            command: 'RESUME',
+            data: {
+              success: true,
+              dispatches_replayed: 4,
+              subscriptions_restored: 3,
+            },
+          },
+          t: FIXTURE_NOW,
+          s: 2,
+        }),
+        createContext(),
+      );
+
+      expect(decisions).toEqual<SeventvWsDecision[]>([
+        {
+          type: 'resumeAck',
+          success: true,
+          dispatchesReplayed: 4,
+          subscriptionsRestored: 3,
+        },
+      ]);
+    });
+
+    test('interprets a failed RESUME ack', () => {
+      const decisions = interpretSeventvWsMessage(
+        coerceMessage({
+          op: 5,
+          d: { command: 'RESUME', data: { success: false } },
+          t: FIXTURE_NOW,
+          s: 2,
+        }),
+        createContext(),
+      );
+
+      expect(decisions).toEqual<SeventvWsDecision[]>([
+        {
+          type: 'resumeAck',
+          success: false,
+          dispatchesReplayed: 0,
+          subscriptionsRestored: 0,
+        },
+      ]);
     });
 
     test('interprets an invalid subscription condition message', () => {
@@ -854,6 +995,15 @@ describe('interpretSeventvWsMessage', () => {
 });
 
 describe('subscription payload builders', () => {
+  test('builds a resume message', () => {
+    expect(buildResumeMessage('session-1')).toEqual<SevenTvWsMessage<never>>({
+      op: 34,
+      d: {
+        session_id: 'session-1',
+      },
+    });
+  });
+
   test('builds an entitlement.create subscribe message', () => {
     expect(
       buildEntitlementCreateSubscribeMessage('12345', FIXTURE_NOW),

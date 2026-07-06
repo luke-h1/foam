@@ -60,6 +60,7 @@ export type WebSocketHookReturn<T = WebSocketEventMap['message']> = {
   lastJsonMessage: unknown;
   readyState: ReadyState;
   getWebSocket: () => WebSocket;
+  reconnect: () => void;
 };
 
 type WebSocketCloseEvent = CloseEvent;

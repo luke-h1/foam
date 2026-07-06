@@ -4,7 +4,6 @@ import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import type { AnyChatMessageType } from './messageHandlers';
 
 type FetchUserCosmeticsOptions = {
-  allowAfterInitialWindow?: boolean;
   retryMissingBadge?: boolean;
 };
 
@@ -191,7 +190,6 @@ export async function hydrateVisibleSevenTvAssets({
         boundedSetAdd(cosmeticUsers, userId, MAX_VISIBLE_USER_GUARDS);
         pending.push(
           fetchUserCosmetics(userId, {
-            allowAfterInitialWindow: true,
             retryMissingBadge: true,
           }).then(() => {
             if (getUserBadge(userId)) {

@@ -13,10 +13,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import type { PaintLayerData } from '@app/types/seventv/cosmetics';
 
+import { PaintLayerTiledImage } from './PaintLayerTiledImage';
 import {
   buildLayerGradientConfig,
   getLayerLayoutStyle,
   imageRepeatFromCanvasRepeat,
+  isTilingCanvasRepeat,
 } from './util/paintLayer';
 
 interface PaintLayerBackgroundProps {
@@ -54,6 +56,16 @@ export function PaintLayerBackground({
   };
 
   if (isAssetPaint) {
+    if (isTilingCanvasRepeat(layer.canvas_repeat, layer.repeat)) {
+      return (
+        <View style={[styles.layer, layoutStyle]}>
+          <PaintLayerTiledImage
+            canvasRepeat={layer.canvas_repeat}
+            imageUrl={layer.image_url}
+          />
+        </View>
+      );
+    }
     return (
       <View style={[styles.layer, layoutStyle]}>
         <Image

@@ -81,7 +81,9 @@ export function getMessageStructure(message: ParsedPart[]): MessageStructure {
   for (const part of message) {
     if (part.type === 'emote') {
       containsEmotes = true;
-      if (part.zero_width) {
+      // Standalone zero-width emotes and attached overlays both need the
+      // flex-wrap renderer; absolute positioning breaks inside a Text.
+      if (part.zero_width || part.overlaid?.length) {
         canBeInline = false;
       }
     } else if (
@@ -164,7 +166,9 @@ function scanChatBody(message: ParsedPart[]): ChatBodyScan {
       }
       case 'emote':
         containsEmotes = true;
-        if (part.zero_width) {
+        // Standalone zero-width emotes and attached overlays both need the
+        // flex-wrap renderer; absolute positioning breaks inside a Text.
+        if (part.zero_width || part.overlaid?.length) {
           canBeInline = false;
         }
         break;

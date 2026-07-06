@@ -49,6 +49,18 @@ describe('getMessageStructure', () => {
     });
   });
 
+  test('an emote carrying zero-width overlays breaks inline flow', () => {
+    const base = emote('Kappa');
+    if (base.type === 'emote') {
+      base.overlaid = [emote('SoSnowy', true) as ParsedPart<'emote'>];
+    }
+
+    expect(getMessageStructure([text('gg '), base])).toEqual<MessageStructure>({
+      canBeInline: false,
+      containsEmotes: true,
+    });
+  });
+
   test('a notice part is not inlineable', () => {
     const message = [ritual()];
 

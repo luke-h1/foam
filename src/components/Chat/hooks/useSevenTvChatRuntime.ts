@@ -1,20 +1,20 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
 
 import { useSeventvWs } from '@app/hooks/useSeventvWs';
 import { ReadyState } from '@app/hooks/ws/constants';
+import { sevenTvService } from '@app/services/seventv-service';
 import {
   getSevenTvEmoteSetId,
+  switchSevenTvEmoteSet,
   updateSevenTvEmotes,
 } from '@app/store/chat/actions/channelLoad';
-import { fetchAndCacheUserCosmetics } from '@app/store/chat/actions/cosmetics';
 import { logger } from '@app/utils/logger';
 
 import type { AnyChatMessageType } from '../util/messageHandlers';
 import { useChatSevenTvCallbacks } from './useChatSevenTvCallbacks';
 
 export function useSevenTvChatRuntime({
-  canFetchCosmetics,
   channelId,
   channelName,
   currentEmoteSetIdRef,
@@ -22,7 +22,6 @@ export function useSevenTvChatRuntime({
   handleNewMessage,
   sevenTvEmoteSetId,
 }: {
-  canFetchCosmetics: () => boolean;
   channelId: string;
   channelName: string;
   currentEmoteSetIdRef: MutableRefObject<string | null>;
@@ -37,11 +36,61 @@ export function useSevenTvChatRuntime({
     channelId,
     channelName,
     sevenTvEmoteSetId,
-    canFetchCosmetics,
-    fetchAndCacheUserCosmetics,
     updateSevenTvEmotes,
     onEmoteNotice: handleNewMessage,
   });
+
+  // The channel owner's 7TV user id backs the user.update subscription that
+  // detects live emote-set switches; the channel id is the owner's Twitch id.
+  // Keyed by channel so a stale resolution never leaks across a channel hop.
+  const [resolvedOwner, setResolvedOwner] = useState<{
+    channelId: string;
+    sevenTvUserId?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!channelId) {
+      return;
+    }
+    let cancelled = false;
+    void sevenTvService
+      .get7tvUserId(channelId)
+      .then(sevenTvUserId => {
+        if (!cancelled) {
+          setResolvedOwner({
+            channelId,
+            sevenTvUserId: sevenTvUserId || undefined,
+          });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setResolvedOwner({ channelId, sevenTvUserId: undefined });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [channelId]);
+
+  const sevenTvChannelUserId =
+    resolvedOwner?.channelId === channelId
+      ? resolvedOwner.sevenTvUserId
+      : undefined;
+
+  const subscribeToChannelRef = useRef<(emoteSetId: string) => void>(() => {});
+  const emoteSetIdRefForSwitch = currentEmoteSetIdRef;
+
+  const onEmoteSetSwitch = ({ newSetId }: { newSetId: string }) => {
+    void (async () => {
+      const switched = await switchSevenTvEmoteSet(channelId, newSetId);
+      if (!switched) {
+        return;
+      }
+      emoteSetIdRefForSwitch.current = newSetId;
+      subscribeToChannelRef.current(newSetId);
+    })();
+  };
 
   const {
     subscribeToChannel,
@@ -50,10 +99,11 @@ export function useSevenTvChatRuntime({
     readyState,
   } = useSeventvWs({
     ...sevenTvCallbacks,
+    sevenTvChannelUserId,
+    onEmoteSetSwitch,
     onEvent: eventType => logger.stvWs.debug(`SevenTV event: ${eventType}`),
   });
   const wsConnected = readyState === ReadyState.OPEN && isConnected();
-  const subscribeToChannelRef = useRef(subscribeToChannel);
   const unsubscribeFromChannelRef = useRef(unsubscribeFromChannel);
   subscribeToChannelRef.current = subscribeToChannel;
   unsubscribeFromChannelRef.current = unsubscribeFromChannel;

@@ -24,7 +24,18 @@ interface BttvChannelEmoteSet {
   sharedEmotes: BttvEmote[];
 }
 
-const bttvZeroWidthEmotes = ['cvHazmat', 'cvMask'];
+// BTTV zero-width emotes have no flag in the API; this is the hardcoded list
+// the official 7TV extension overlays.
+const bttvZeroWidthEmotes = [
+  'SoSnowy',
+  'IceCold',
+  'SantaHat',
+  'TopHat',
+  'ReinDeer',
+  'CandyCane',
+  'cvMask',
+  'cvHazmat',
+];
 
 function toBttvEmoteUrl(emoteId: string, scale: '2x' | '3x'): string {
   return `https://cdn.betterttv.net/emote/${emoteId}/${scale}`;
@@ -54,6 +65,8 @@ function sanitiseBttvEmote(
       }
     : animatedVariants;
 
+  const zeroWidth = bttvZeroWidthEmotes.includes(emote.code);
+
   return {
     ...buildSanitisedEmote({
       id: emote.id,
@@ -65,7 +78,8 @@ function sanitiseBttvEmote(
       animated: animatedVariants,
       static: staticVariants,
     }),
-    flags: bttvZeroWidthEmotes.includes(emote.code) ? 256 : undefined,
+    flags: zeroWidth ? 256 : undefined,
+    zero_width: zeroWidth || undefined,
   };
 }
 

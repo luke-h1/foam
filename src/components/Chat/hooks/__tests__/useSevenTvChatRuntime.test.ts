@@ -58,7 +58,6 @@ function renderRuntime({
       useSevenTvChatRuntime(props),
     {
       initialProps: {
-        canFetchCosmetics: jest.fn(() => true),
         channelId: 'channel-1',
         channelName: 'foam',
         currentEmoteSetIdRef,
@@ -107,7 +106,6 @@ describe('useSevenTvChatRuntime', () => {
     mockGetSevenTvEmoteSetId.mockReturnValue('set-2');
 
     hook.rerender({
-      canFetchCosmetics: jest.fn(() => true),
       channelId: 'channel-2',
       channelName: 'foam',
       currentEmoteSetIdRef,

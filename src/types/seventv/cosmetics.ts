@@ -482,9 +482,10 @@ export type SevenTvWsMessage<TData = unknown, TEventType = SevenTvEventType> =
          */
         command: string;
         /**
-         * the data sent by the client
+         * command-specific payload; the client-sent data echoed back for
+         * SUBSCRIBE/UNSUBSCRIBE, or a result object for RESUME
          */
-        data: string;
+        data: unknown;
       };
       t: number;
       s: number;
@@ -513,8 +514,8 @@ export type SevenTvWsMessage<TData = unknown, TEventType = SevenTvEventType> =
          */
         session_id: string;
       };
-      t: number;
-      s: number;
+      t?: number;
+      s?: number;
     }
 
   /**
@@ -567,8 +568,14 @@ export type SevenTvWsMessage<TData = unknown, TEventType = SevenTvEventType> =
       op: 36;
       d: {
         type: TEventType;
-        condition: {
-          object_id: string;
-        };
+        condition: TEventType extends 'entitlement.create' | 'cosmetic.create'
+          ? {
+              platform?: 'TWITCH';
+              ctx?: 'channel';
+              id?: string;
+            }
+          : {
+              object_id: string;
+            };
       };
     };

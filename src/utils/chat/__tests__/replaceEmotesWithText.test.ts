@@ -144,4 +144,20 @@ describe('replaceEmotesWithText', () => {
     expect(result).toEqual('Added event');
     expect(result).not.toContain('[object Object]');
   });
+
+  test('restores overlaid zero-width emote names', () => {
+    const result = replaceEmotesWithText([
+      {
+        type: 'emote',
+        content: 'peepoHappy',
+        overlaid: [
+          { type: 'emote', content: 'SoSnowy' },
+          { type: 'emote', content: 'IceCold' },
+        ],
+      },
+      { type: 'text', content: ' hi' },
+    ]);
+
+    expect(result).toBe('peepoHappy SoSnowy IceCold hi');
+  });
 });
