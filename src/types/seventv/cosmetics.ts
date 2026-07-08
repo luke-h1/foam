@@ -361,6 +361,10 @@ export interface EntitlementDeleteCallbackData {
   ttvUserId: string | null;
 }
 
+export interface EntitlementResetCallbackData {
+  sevenTvUserId: string;
+}
+
 export interface SevenTvEventMap {
   // Cosmetics
   'cosmetic.create': CosmeticCreate;
@@ -390,6 +394,7 @@ export interface SevenTvEventMap {
   'entitlement.create': EntitlementCreate;
   'entitlement.update': ChangeMap<EntitlementCreate>;
   'entitlement.delete': { id: string };
+  'entitlement.reset': { id: string };
   'entitlement.*':
     EntitlementCreate | ChangeMap<EntitlementCreate> | { id: string };
 }

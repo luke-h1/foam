@@ -1,7 +1,23 @@
 import { storageService } from '@app/lib/storage';
 import { sevenTvService } from '@app/services/seventv-service';
-import { requestUserCosmeticsViaPresence } from '@app/store/chat/actions/cosmetics';
+import {
+  getUserBadge,
+  requestUserCosmeticsViaPresence,
+} from '@app/store/chat/actions/cosmetics';
 import { getSevenTvSessionId } from '@app/utils/seventv/sevenTvSessionId';
+
+jest.mock('@app/components/Chat/util/normalizeSevenTvCosmetics', () => ({
+  buildSevenTvBadgeImageUrl: jest.fn(
+    (badgeId: string) => `https://cdn.7tv.app/badge/${badgeId}/4x.webp`,
+  ),
+  normalizeSevenTvBadge: jest.fn((badge: Record<string, unknown>) => badge),
+}));
+
+jest.mock('@app/store/chat/actions/missingBadges', () => ({
+  clearAllMissingBadges: jest.fn(),
+  clearMissingBadge: jest.fn(),
+  reportMissingBadge: jest.fn(),
+}));
 
 jest.mock('@app/services/seventv-service', () => ({
   sevenTvService: {
@@ -27,8 +43,23 @@ jest.mock('@app/lib/storage', () => ({
 jest.mock('@app/store/chat/observables/chatStore', () => ({
   chatStore$: {
     currentChannelId: { peek: jest.fn(() => 'channel-1') },
+    badges: {},
+    userBadgeIds: {},
   },
 }));
+
+import { reportMissingBadge } from '@app/store/chat/actions/missingBadges';
+import { chatStore$ } from '@app/store/chat/observables/chatStore';
+
+type MockObservableValue<T> = {
+  peek: jest.Mock<T, []>;
+  set: jest.Mock<void, [T]>;
+};
+
+const mockChatStore = chatStore$ as unknown as {
+  badges: Record<string, MockObservableValue<unknown>>;
+  userBadgeIds: Record<string, MockObservableValue<string>>;
+};
 
 jest.mock('@app/store/chat/observables/cosmeticsPersistence', () => ({
   writePersistedCosmetics: jest.fn(),
@@ -51,6 +82,78 @@ const mockGetUserCosmeticsGql = jest.mocked(sevenTvService.getUserCosmeticsGql);
 const mockSendPresence = jest.mocked(sevenTvService.sendPresence);
 const mockGetSessionId = jest.mocked(getSevenTvSessionId);
 const mockGetString = jest.mocked(storageService.getString);
+const mockReportMissingBadge = jest.mocked(reportMissingBadge);
+
+describe('getUserBadge', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    Object.keys(mockChatStore.userBadgeIds).forEach(key => {
+      delete mockChatStore.userBadgeIds[key];
+    });
+    Object.keys(mockChatStore.badges).forEach(key => {
+      delete mockChatStore.badges[key];
+    });
+  });
+
+  test('returns undefined when the user has no badge binding', () => {
+    expect(getUserBadge('ttv-1')).toBeUndefined();
+  });
+
+  test('returns the stored badge definition when present', () => {
+    const badge = {
+      id: 'badge-1',
+      url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
+      type: '7TV Badge',
+      title: 'Supporter',
+      set: 'badge-1',
+      provider: '7tv',
+    };
+    mockChatStore.userBadgeIds['ttv-1'] = {
+      peek: jest.fn(() => 'badge-1'),
+      set: jest.fn(),
+    };
+    mockChatStore.badges['badge-1'] = {
+      peek: jest.fn(() => badge),
+      set: jest.fn(),
+    };
+
+    expect(getUserBadge('ttv-1')).toEqual(badge);
+    expect(mockReportMissingBadge).not.toHaveBeenCalled();
+  });
+
+  test('returns undefined and tracks the missing definition when bound but not loaded', () => {
+    mockChatStore.userBadgeIds['ttv-scummy'] = {
+      peek: jest.fn(() => '01GAF994D8000E8VNG1S1RMTBC'),
+      set: jest.fn(),
+    };
+
+    expect(getUserBadge('ttv-scummy')).toBeUndefined();
+    expect(mockReportMissingBadge.mock.calls).toEqual([
+      ['01GAF994D8000E8VNG1S1RMTBC', 'ttv-scummy'],
+    ]);
+  });
+
+  test('returns undefined when the stored definition has an empty url', () => {
+    mockChatStore.userBadgeIds['ttv-1'] = {
+      peek: jest.fn(() => 'badge-1'),
+      set: jest.fn(),
+    };
+    mockChatStore.badges['badge-1'] = {
+      peek: jest.fn(() => ({
+        id: 'badge-1',
+        url: '',
+        type: '7TV Badge',
+        title: 'Supporter',
+        set: 'badge-1',
+        provider: '7tv',
+      })),
+      set: jest.fn(),
+    };
+
+    expect(getUserBadge('ttv-1')).toBeUndefined();
+    expect(mockReportMissingBadge.mock.calls).toEqual([['badge-1', 'ttv-1']]);
+  });
+});
 
 describe('requestUserCosmeticsViaPresence', () => {
   beforeEach(() => {

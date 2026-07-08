@@ -722,6 +722,28 @@ describe('interpretSeventvWsMessage', () => {
     });
   });
 
+  describe('entitlement.reset', () => {
+    test('returns applyEntitlementReset with the 7TV user id', () => {
+      const event: SevenTvEventData<'entitlement.reset'> = {
+        type: 'entitlement.reset',
+        body: { id: 'stv-user-1' },
+      };
+
+      const decisions = interpretSeventvWsMessage(
+        createDispatchMessage(event),
+        createContext(),
+      );
+
+      expect(decisions).toEqual<SeventvWsDecision[]>([
+        {
+          type: 'applyEntitlementReset',
+          sevenTvUserId: 'stv-user-1',
+        },
+        { type: 'notifyEvent', eventType: 'entitlement.reset', data: event },
+      ]);
+    });
+  });
+
   describe('dispatch validation', () => {
     test('ignores a dispatch with a null payload and does not notify', () => {
       const decisions = interpretSeventvWsMessage(

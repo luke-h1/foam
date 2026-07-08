@@ -30,6 +30,8 @@ import type {
 } from '@app/types/emote';
 import type {
   PaintData,
+  SevenTvEventData,
+  SevenTvEventType,
   UserCosmeticsInfo,
 } from '@app/types/seventv/cosmetics';
 import type {
@@ -331,6 +333,27 @@ export const sevenTvService = {
           }
         : null,
     };
+  },
+
+  /**
+   * Bulk EventAPI bridge lookup. Identifiers must be Twitch logins as
+   * `username:<login>`; numeric `id:` identifiers are rejected by the API.
+   *
+   * The live endpoint only synthesises `cosmetic.create` AVATAR dispatches for
+   * users with an active profile picture. It does not replay paint, badge, or
+   * entitlement events, so this cannot backfill chat cosmetics.
+   */
+  fetchBridgedCosmetics: async (
+    twitchLogins: string[],
+  ): Promise<SevenTvEventData<SevenTvEventType>[]> => {
+    if (twitchLogins.length === 0) {
+      return [];
+    }
+    const events = await sevenTvApi.post<SevenTvEventData<SevenTvEventType>[]>(
+      '/bridge/event-api',
+      { identifiers: twitchLogins.map(login => `username:${login}`) },
+    );
+    return Array.isArray(events) ? events : [];
   },
 
   /**

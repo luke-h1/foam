@@ -165,7 +165,14 @@ export const useChatEmoteLoader = ({
     lastCosmeticsCacheVersionRef.current = cosmeticsCacheVersion;
 
     if (enabled && channelId) {
-      if (cacheCleared) {
+      const hasChannelCache = Boolean(
+        chatStore$.persisted.channelCaches[channelId]?.peek(),
+      );
+      const shouldForceRefresh =
+        cacheCleared ||
+        (currentChannelRef.current === channelId && !hasChannelCache);
+
+      if (cacheCleared || shouldForceRefresh) {
         currentChannelRef.current = null;
         void loadEmotesRef.current(true);
       } else if (currentChannelRef.current !== channelId) {

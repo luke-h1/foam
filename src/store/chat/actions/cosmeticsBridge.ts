@@ -13,13 +13,41 @@ import { chatStore$ } from '../observables/chatStore';
 import {
   addBadge,
   addPaint,
-  fetchUserCosmeticsByTwitchId,
   getBadge,
   getPaint,
+  removeUserBadge,
+  removeUserPaint,
   setUserBadge,
   setUserPaint,
+  syncCachedUserCosmeticsFromStore,
 } from './cosmetics';
 import { handlePersonalEmoteSetEntitlement } from './personalEmotes';
+
+const MAX_SEVEN_TV_USER_LINK_ENTRIES = 2000;
+const twitchIdsBySevenTvUserId = new Map<string, Set<string>>();
+const sevenTvUserIdByTwitchId = new Map<string, string>();
+
+function rememberSevenTvUserTwitchLink(
+  sevenTvUserId: string,
+  twitchUserId: string,
+): void {
+  sevenTvUserIdByTwitchId.set(twitchUserId, sevenTvUserId);
+  let twitchIds = twitchIdsBySevenTvUserId.get(sevenTvUserId);
+  if (!twitchIds) {
+    if (twitchIdsBySevenTvUserId.size >= MAX_SEVEN_TV_USER_LINK_ENTRIES) {
+      const oldest = twitchIdsBySevenTvUserId.keys().next().value;
+      if (oldest !== undefined) {
+        twitchIdsBySevenTvUserId.get(oldest)?.forEach(twitchId => {
+          sevenTvUserIdByTwitchId.delete(twitchId);
+        });
+        twitchIdsBySevenTvUserId.delete(oldest);
+      }
+    }
+    twitchIds = new Set();
+    twitchIdsBySevenTvUserId.set(sevenTvUserId, twitchIds);
+  }
+  twitchIds.add(twitchUserId);
+}
 
 export const applyCosmeticCreateEvent = (
   cosmetic: CosmeticCreate,
@@ -48,42 +76,53 @@ export const applyCosmeticCreateEvent = (
   }
 };
 
+function bindEmoteSetStyleCosmetics(
+  ttvUserId: string,
+  paintId: string | null,
+  badgeId: string | null,
+): void {
+  if (paintId) {
+    setUserPaint(ttvUserId, paintId);
+  }
+  if (badgeId) {
+    setUserBadge(ttvUserId, badgeId);
+  }
+}
+
 /**
- * Bind an entitlement to its Twitch user. Fetches missing definitions over GQL
- * when `requestMissingDefinitions` is true.
+ * Bind an entitlement to its Twitch user. Paint and badge definitions are
+ * expected from `cosmetic.create` WebSocket events.
  */
-export const applyEntitlementCreateEvent = (
-  data: {
-    entitlement: EntitlementCreate;
-    kind: 'BADGE' | 'PAINT' | 'EMOTE_SET';
-    ttvUserId: string | null;
-    paintId: string | null;
-    badgeId: string | null;
-  },
-  options: { requestMissingDefinitions: boolean },
-): void => {
+export const applyEntitlementCreateEvent = (data: {
+  entitlement: EntitlementCreate;
+  kind: 'BADGE' | 'PAINT' | 'EMOTE_SET';
+  ttvUserId: string | null;
+  paintId: string | null;
+  badgeId: string | null;
+}): void => {
   const { entitlement, kind, ttvUserId } = data;
   const cosmeticId = entitlement.object.ref_id;
+  const sevenTvUserId = entitlement.object.user?.id;
+
+  if (ttvUserId && sevenTvUserId) {
+    rememberSevenTvUserTwitchLink(sevenTvUserId, ttvUserId);
+  }
+
+  if (kind === 'EMOTE_SET' && ttvUserId) {
+    bindEmoteSetStyleCosmetics(ttvUserId, data.paintId, data.badgeId);
+  }
 
   if (kind === 'PAINT') {
     const paintId = cosmeticId || data.paintId;
-    if (!paintId || !ttvUserId) {
-      return;
-    }
-    setUserPaint(ttvUserId, paintId);
-    if (!getPaint(paintId) && options.requestMissingDefinitions) {
-      void fetchUserCosmeticsByTwitchId(ttvUserId);
+    if (paintId && ttvUserId) {
+      setUserPaint(ttvUserId, paintId);
     }
   }
 
   if (kind === 'BADGE') {
     const badgeId = cosmeticId || data.badgeId;
-    if (!badgeId || !ttvUserId) {
-      return;
-    }
-    setUserBadge(ttvUserId, badgeId);
-    if (!getBadge(badgeId) && options.requestMissingDefinitions) {
-      void fetchUserCosmeticsByTwitchId(ttvUserId);
+    if (badgeId && ttvUserId) {
+      setUserBadge(ttvUserId, badgeId);
     }
   }
 
@@ -94,4 +133,76 @@ export const applyEntitlementCreateEvent = (
       chatStore$.currentChannelId.peek(),
     );
   }
+
+  if (ttvUserId && sevenTvUserId) {
+    syncCachedUserCosmeticsFromStore(sevenTvUserId, ttvUserId);
+  }
+};
+
+/**
+ * Clear paint and badge bindings for every Twitch account linked to a 7TV user.
+ */
+export const applyEntitlementResetEvent = (sevenTvUserId: string): void => {
+  const twitchIds = twitchIdsBySevenTvUserId.get(sevenTvUserId);
+  if (!twitchIds) {
+    return;
+  }
+
+  twitchIds.forEach(twitchUserId => {
+    removeUserPaint(twitchUserId);
+    removeUserBadge(twitchUserId);
+    syncCachedUserCosmeticsFromStore(sevenTvUserId, twitchUserId);
+  });
+  twitchIdsBySevenTvUserId.delete(sevenTvUserId);
+  logger.stvWs.info(`Reset entitlements for 7TV user: ${sevenTvUserId}`);
+};
+
+function syncUserCosmeticsCacheForTwitchUser(ttvUserId: string): void {
+  const sevenTvUserId = sevenTvUserIdByTwitchId.get(ttvUserId);
+  if (sevenTvUserId) {
+    syncCachedUserCosmeticsFromStore(sevenTvUserId, ttvUserId);
+  }
+}
+
+export const applyEntitlementUpdateEvent = (data: {
+  ttvUserId: string | null;
+  paintId: string | null;
+  badgeId: string | null;
+}): void => {
+  const { ttvUserId, paintId, badgeId } = data;
+  if (!ttvUserId) {
+    return;
+  }
+
+  if (paintId) {
+    setUserPaint(ttvUserId, paintId);
+  } else {
+    removeUserPaint(ttvUserId);
+  }
+
+  if (badgeId) {
+    setUserBadge(ttvUserId, badgeId);
+  } else {
+    removeUserBadge(ttvUserId);
+  }
+
+  syncUserCosmeticsCacheForTwitchUser(ttvUserId);
+};
+
+export const applyEntitlementDeleteEvent = (data: {
+  ttvUserId: string | null;
+}): void => {
+  if (!data.ttvUserId) {
+    return;
+  }
+
+  removeUserPaint(data.ttvUserId);
+  removeUserBadge(data.ttvUserId);
+  syncUserCosmeticsCacheForTwitchUser(data.ttvUserId);
+  logger.stvWs.info(`Removed entitlements for user: ${data.ttvUserId}`);
+};
+
+export const clearEntitlementUserLinkState = (): void => {
+  twitchIdsBySevenTvUserId.clear();
+  sevenTvUserIdByTwitchId.clear();
 };

@@ -44,6 +44,11 @@ export interface ChatStoreState {
   messages: AnyChatMessageType[];
   mentionLoginRevision: number;
   cosmeticsCacheVersion: number;
+  /**
+   * Incremented when per-user cosmetic bindings or badge definitions change so
+   * chat messages can re-resolve badges without reloading channel emote data.
+   */
+  cosmeticBindingsVersion: number;
   paints: Record<string, PaintData>;
   userPaintIds: Record<string, string>;
   badges: Record<string, SanitisedBadgeSet>;
@@ -108,6 +113,7 @@ const initialChatStoreState: ChatStoreState = {
   messages: [],
   mentionLoginRevision: 0,
   cosmeticsCacheVersion: 0,
+  cosmeticBindingsVersion: 0,
   paints: {},
   userPaintIds: {},
   badges: {},

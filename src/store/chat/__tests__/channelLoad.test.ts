@@ -18,6 +18,7 @@ import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 
 import {
+  clearCache,
   clearPersonalEmotesCache,
   clearSubscriberProfilesCache,
   loadChannelResources,
@@ -464,9 +465,79 @@ describe('loadChannelResources cache fallback', () => {
       .join('');
     expect(text).toContain('BTTV');
     expect(text).toContain('FFZ');
-    expect(text).toContain('falling back to cached emotes/badges');
+    expect(text).toContain("Couldn't load emotes and badges");
+    expect(text).not.toContain('falling back');
     expect(text).not.toContain('Twitch');
     expect(text).not.toContain('7TV');
+  });
+
+  test('posts a fallback system message when failed providers still have cached slices', async () => {
+    chatStore$.messages.set([]);
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...emptyEmoteData,
+        badges: [badge('ffz-global-badge-cached')],
+        badgesLastUpdated: 2_000,
+        bttvGlobalEmotes: [bttvEmote('bttv-global-cached', 'Global BTTV')],
+        emotes: [
+          bttvEmote('bttv-global-cached', 'Global BTTV'),
+          twitchEmote('existing-emote'),
+        ],
+        ffzGlobalBadges: [badge('ffz-global-badge-cached')],
+        lastUpdated: 9_000,
+        twitchChannelEmotes: [twitchEmote('existing-emote')],
+      },
+    });
+
+    mockGetBttvGlobalEmotes.mockRejectedValue(new Error('TimeoutError'));
+    mockGetFfzGlobalBadges.mockRejectedValue(new Error('TimeoutError'));
+
+    await expect(
+      loadChannelResources({ channelId, forceRefresh: true, twitchUserId }),
+    ).resolves.toBe(true);
+
+    const systemMessages = chatStore$.messages
+      .peek()
+      .filter(message => message.sender === 'System');
+    expect(systemMessages).toHaveLength(1);
+
+    const text = systemMessages[0]!.message
+      .flatMap(part => (part.type === 'text' ? [part.content] : []))
+      .join('');
+    expect(text).toContain('BTTV');
+    expect(text).toContain('FFZ');
+    expect(text).toContain('falling back to cached emotes/badges');
+  });
+
+  test('posts a system message when stale badge refresh requests reject', async () => {
+    chatStore$.messages.set([]);
+    jest.spyOn(Date, 'now').mockReturnValue(3_700_000);
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...emptyEmoteData,
+        badges: [badge('ffz-global-badge-cached')],
+        badgesLastUpdated: 0,
+        emotes: [twitchEmote('existing-emote')],
+        ffzGlobalBadges: [badge('ffz-global-badge-cached')],
+        lastUpdated: 9_000,
+        twitchChannelEmotes: [twitchEmote('existing-emote')],
+      },
+    });
+
+    mockGetFfzGlobalBadges.mockRejectedValue(new Error('TimeoutError'));
+
+    await expect(loadChannelResources({ channelId })).resolves.toBe(true);
+
+    const systemMessages = chatStore$.messages
+      .peek()
+      .filter(message => message.sender === 'System');
+    expect(systemMessages).toHaveLength(1);
+
+    const text = systemMessages[0]!.message
+      .flatMap(part => (part.type === 'text' ? [part.content] : []))
+      .join('');
+    expect(text).toContain('FFZ');
+    expect(text).toContain('falling back to cached emotes/badges');
   });
 
   test('posts no system message when every provider fetch succeeds', async () => {
@@ -478,6 +549,25 @@ describe('loadChannelResources cache fallback', () => {
       .peek()
       .filter(message => message.sender === 'System');
     expect(systemMessages).toEqual([]);
+  });
+
+  test('clearCache bumps cosmeticsCacheVersion so the emote loader refetches', () => {
+    chatStore$.cosmeticsCacheVersion.set(3);
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...emptyEmoteData,
+        emotes: [twitchEmote('existing-emote')],
+        lastUpdated: 9_000,
+        twitchChannelEmotes: [twitchEmote('existing-emote')],
+      },
+    });
+
+    clearCache(channelId);
+
+    expect(chatStore$.cosmeticsCacheVersion.peek()).toBe(4);
+    expect(
+      chatStore$.persisted.channelCaches.peek()[channelId],
+    ).toBeUndefined();
   });
 });
 

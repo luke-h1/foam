@@ -251,5 +251,87 @@ describe('findBadges', () => {
 
       expect(result).toEqual<SanitisedBadgeSet[]>([channelBadge]);
     });
+
+    test('falls back to global subscriber badges when the channel tier has no url', () => {
+      const channelSubscriberBadge = {
+        id: '12',
+        url: '',
+        type: 'Twitch Subscriber Badge',
+        title: 'Broken Channel Sub',
+        set: 'subscriber',
+      } as const;
+
+      const globalSubscriberBadge = {
+        id: 'subscriber_12',
+        url: 'https://example.com/global-sub.png',
+        type: 'Twitch Global Badge',
+        title: '12-Month Subscriber',
+        set: 'subscriber',
+      } as const;
+
+      const userstate: UserStateTags = {
+        'badges-raw': 'subscriber/12',
+        badges: {
+          subscriber: '12',
+        },
+        'user-id': '123456789',
+        username: 'testuser',
+        'display-name': 'TestUser',
+        color: '#FF0000',
+        mod: 'false',
+        subscriber: 'false',
+        turbo: 'false',
+        'user-type': '',
+        'reply-parent-display-name': '',
+        'reply-parent-msg-body': '',
+        'reply-parent-msg-id': '',
+        'reply-parent-user-login': '',
+      };
+
+      const result = findBadges({
+        twitchGlobalBadges: [globalSubscriberBadge],
+        chatterinoBadges: [],
+        chatUsers: [],
+        ffzChannelBadges: [],
+        ffzGlobalBadges: [],
+        twitchChannelBadges: [channelSubscriberBadge],
+        userstate,
+      });
+
+      expect(result).toEqual<SanitisedBadgeSet[]>([globalSubscriberBadge]);
+    });
+
+    test('omits twitch badges when neither channel nor global urls resolve', () => {
+      const userstate: UserStateTags = {
+        'badges-raw': 'subscriber/12',
+        badges: {
+          subscriber: '12',
+        },
+        'user-id': '123456789',
+        username: 'testuser',
+        'display-name': 'TestUser',
+        color: '#FF0000',
+        mod: 'false',
+        subscriber: 'false',
+        turbo: 'false',
+        'user-type': '',
+        'reply-parent-display-name': '',
+        'reply-parent-msg-body': '',
+        'reply-parent-msg-id': '',
+        'reply-parent-user-login': '',
+      };
+
+      const result = findBadges({
+        twitchGlobalBadges: [],
+        chatterinoBadges: [],
+        chatUsers: [],
+        ffzChannelBadges: [],
+        ffzGlobalBadges: [],
+        twitchChannelBadges: [],
+        userstate,
+      });
+
+      expect(result).toEqual<SanitisedBadgeSet[]>([]);
+    });
   });
 });

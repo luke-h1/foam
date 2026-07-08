@@ -37,6 +37,7 @@ import {
   combineUniqueById,
   deduplicateById,
   type EmoteResourceSets,
+  hadCachedResourcesForFailedSpecs,
   reconcileSettledSpecs,
   reportResourceResults,
   settleSpecs,
@@ -86,6 +87,32 @@ const exitIfAborted = (
   }
   return true;
 };
+
+type ProviderFailureSettled = Parameters<
+  typeof collectFailedProviderLabels
+>[0][number];
+
+function notifyProviderLoadFailures(
+  channelId: string,
+  settled: readonly ProviderFailureSettled[],
+  existingCache: ChannelCacheType | undefined,
+): void {
+  const failedProviders = collectFailedProviderLabels(settled);
+  if (failedProviders.length === 0) {
+    return;
+  }
+
+  const hadCache = hadCachedResourcesForFailedSpecs(existingCache, settled);
+  addMessage(
+    createSystemMessage(
+      channelId,
+      i18next.t(
+        hadCache ? 'chat:providerLoadFailed' : 'chat:providerLoadFailedNoCache',
+        { providers: failedProviders.join(', ') },
+      ),
+    ),
+  );
+}
 
 export {
   clearPersonalEmotesCache,
@@ -375,6 +402,8 @@ const loadChannelResourcesInternal = async (
           trigger: 'cached_subscriber_emotes_refresh',
         });
 
+        notifyProviderLoadFailures(channelId, subscriberSettled, existingCache);
+
         const subscriberResult = subscriberSettled[0]?.result;
         const subscriberEmotes =
           subscriberResult?.status === 'fulfilled'
@@ -411,6 +440,8 @@ const loadChannelResourcesInternal = async (
           settled: badgeSettled,
           trigger: 'cached_badges_refresh',
         });
+
+        notifyProviderLoadFailures(channelId, badgeSettled, existingCache);
 
         const badgeByKey = reconcileSettledSpecs(badgeSettled, {
           channelId,
@@ -604,20 +635,11 @@ const loadChannelResourcesInternal = async (
       chatStore$.loadingState.set('COMPLETED');
     });
 
-    const failedProviders = collectFailedProviderLabels([
-      ...emoteSettled,
-      ...badgeSettled,
-    ]);
-    if (failedProviders.length > 0) {
-      addMessage(
-        createSystemMessage(
-          channelId,
-          i18next.t('chat:providerLoadFailed', {
-            providers: failedProviders.join(', '),
-          }),
-        ),
-      );
-    }
+    notifyProviderLoadFailures(
+      channelId,
+      [...emoteSettled, ...badgeSettled],
+      existingCache,
+    );
 
     if (twitchUserId) {
       void notify7TVPresence(twitchUserId, channelId);
@@ -647,6 +669,9 @@ const loadChannelResourcesInternal = async (
       channel_id: channelId,
       screen: 'chat',
     });
+    addMessage(
+      createSystemMessage(channelId, i18next.t('chat:channelResourcesFailed')),
+    );
     chatStore$.loadingState.set('ERROR');
     return false;
   }
@@ -721,6 +746,8 @@ export const clearCache = (channelId?: string) => {
         chatStore$.currentChannelId.set(null);
       }
     });
+    clearGlobalResourceCache();
+    chatStore$.cosmeticsCacheVersion.set(version => version + 1);
   } else {
     batch(() => {
       chatStore$.persisted.channelCaches.set({});
@@ -729,6 +756,7 @@ export const clearCache = (channelId?: string) => {
       chatStore$.loadingState.set('IDLE');
     });
     clearGlobalResourceCache();
+    chatStore$.cosmeticsCacheVersion.set(version => version + 1);
   }
 };
 

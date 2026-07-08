@@ -1,7 +1,9 @@
-import { memo, useCallback, useEffect, useRef } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import { View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { useSelector } from '@legendapp/state/react';
 
 import { useAuthContext } from '@app/context/AuthContext';
 import { BenchFrameProbe } from '@app/dev/imageBenchmark/BenchFrameProbe.gate';
@@ -195,6 +197,14 @@ export const Chat = memo(
       user,
     });
 
+    const cosmeticBindingsVersion = useSelector(() =>
+      chatStore$.cosmeticBindingsVersion.get(),
+    );
+    const emoteReprocessKey = useMemo(
+      () => `${chatAssetPreferenceKey}|${cosmeticBindingsVersion}`,
+      [chatAssetPreferenceKey, cosmeticBindingsVersion],
+    );
+
     return (
       <CachedEmotesProvider channelId={channelId}>
         <View
@@ -210,7 +220,7 @@ export const Chat = memo(
             emoteLoadStatus={emoteLoadStatus}
             messages$={messages$}
             processedMessageIdsRef={processedMessageIdsRef}
-            reprocessKey={chatAssetPreferenceKey}
+            reprocessKey={emoteReprocessKey}
           />
           <View style={styles.keyboardAvoidingView}>
             <View style={styles.chatContainer}>

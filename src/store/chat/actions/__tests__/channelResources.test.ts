@@ -6,8 +6,10 @@ import { logger } from '@app/utils/logger';
 import {
   buildBadgeResourceSpecs,
   buildEmoteResourceSpecs,
+  collectFailedProviderLabels,
   type EmoteCacheKey,
   type EmoteResourceSpec,
+  hadCachedResourcesForFailedSpecs,
   reconcileSettledSpecs,
   reportResourceResults,
   ResourceFetchTimeoutError,
@@ -254,5 +256,50 @@ describe('reportResourceResults', () => {
 
     expect(logger.chat.warn).toHaveBeenCalledTimes(1);
     expect(logger.chat.info).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('hadCachedResourcesForFailedSpecs', () => {
+  test('returns true when a rejected spec still has cached items', () => {
+    const settled: SettledSpec<EmoteCacheKey, SanitisedEmote>[] = [
+      {
+        spec: spec('twitchChannelEmotes'),
+        result: { status: 'rejected', reason: new Error('boom') },
+      },
+    ];
+    const existingCache: ChannelCacheType = {
+      ...emptyEmoteData,
+      twitchChannelEmotes: [emote('cached')],
+    };
+
+    expect(hadCachedResourcesForFailedSpecs(existingCache, settled)).toBe(true);
+  });
+
+  test('returns false when a rejected spec has no cached fallback', () => {
+    const settled: SettledSpec<EmoteCacheKey, SanitisedEmote>[] = [
+      {
+        spec: spec('twitchChannelEmotes'),
+        result: { status: 'rejected', reason: new Error('boom') },
+      },
+    ];
+
+    expect(hadCachedResourcesForFailedSpecs(undefined, settled)).toBe(false);
+  });
+});
+
+describe('collectFailedProviderLabels', () => {
+  test('returns stable provider labels for rejected resources', () => {
+    const settled: SettledSpec<EmoteCacheKey, SanitisedEmote>[] = [
+      {
+        spec: spec('bttvGlobalEmotes'),
+        result: { status: 'rejected', reason: new Error('boom') },
+      },
+      {
+        spec: spec('twitchChannelEmotes'),
+        result: { status: 'fulfilled', value: [emote('ok')] },
+      },
+    ];
+
+    expect(collectFailedProviderLabels(settled)).toEqual(['BTTV']);
   });
 });
