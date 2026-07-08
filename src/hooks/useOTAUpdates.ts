@@ -15,7 +15,6 @@ import {
 } from 'expo-updates';
 
 import i18next from '@app/i18n/i18next';
-import { queryClient } from '@app/lib/react-query/query-client';
 import { countOtaMetric } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import {
@@ -26,13 +25,6 @@ import { logger } from '@app/utils/logger';
 
 const MINIMUM_MINIMIZE_TIME = 15 * 60e3; // 15 minutes
 const INITIAL_CHECK_DELAY = 3e3; // 3 seconds
-
-// reloadAsync() invalidates the JS runtime; an in-flight expo/fetch request
-// still settling on a background queue then destroys its JSI Promise/Object
-// against the dead runtime and crashes (EXC_BAD_ACCESS in ~Pointer, #699). We
-// cancel queries to abort their AbortController-backed fetches, then wait this
-// long for the native teardown to drain before reloading.
-const RELOAD_DRAIN_DELAY = 250; // ms
 
 const OTA_RELOAD_SCREEN_OPTIONS = {
   backgroundColor: theme.color.background.dark,
@@ -147,16 +139,9 @@ export function useOTAUpdates() {
 
   const applyUpdate = useCallback(async () => {
     try {
-      /* eslint-disable react-doctor/async-parallel -- must stay sequential; parallelising reintroduces #699 */
-      await queryClient.cancelQueries();
-      await new Promise<void>(resolve => {
-        setTimeout(resolve, RELOAD_DRAIN_DELAY);
-      });
-
       await reloadAsync({
         reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
       });
-      /* eslint-enable react-doctor/async-parallel */
     } catch (error) {
       const parsedError =
         error instanceof Error ? error : new Error(String(error));
@@ -215,8 +200,6 @@ export function useOTAUpdates() {
   checkForUpdatesRef.current = checkForUpdates;
   const promptAndReloadRef = useRef(promptAndReload);
   promptAndReloadRef.current = promptAndReload;
-  const applyUpdateRef = useRef(applyUpdate);
-  applyUpdateRef.current = applyUpdate;
 
   useEffect(() => {
     if (!shouldReceiveUpdates || ranInitialCheck.current) {
@@ -286,7 +269,7 @@ export function useOTAUpdates() {
       return;
     }
 
-    const unsubscribe = subscribeToAppStateTransitions(async transition => {
+    const unsubscribe = subscribeToAppStateTransitions(transition => {
       if (isForegroundTransition(transition)) {
         const shouldUpdate =
           isProduction ||
@@ -295,26 +278,28 @@ export function useOTAUpdates() {
         if (shouldUpdate) {
           if (getIsUpdatePending()) {
             if (isProduction) {
+              // Do not force a reload here: reloadAsync() races the reconnect
+              // refetch burst that fires on the same foreground and tears down
+              // the runtime mid-fetch (#699). The update is already downloaded,
+              // so expo-updates applies it on the next cold start.
               logger.main.info(
-                'App foregrounded with pending update, reloading',
+                'App foregrounded with pending update, deferring to cold start',
                 {
                   name: 'ota_updates_service_info',
                   category: 'ota',
-                  action: 'foreground_auto_reload',
+                  action: 'foreground_defer_to_cold_start',
                   timeSinceMinimize: Date.now() - lastMinimize.current,
                   isProduction,
                 },
               );
 
-              countOtaMetric('ota.update.applied', {
+              countOtaMetric('ota.update.deferred', {
                 category: 'ota',
                 environment: isProduction ? 'production' : 'non-production',
                 platform: Platform.OS,
-                method: 'auto_on_foreground',
+                method: 'cold_start',
                 channel: Updates.channel || 'unknown',
               });
-
-              await applyUpdateRef.current();
             } else {
               promptAndReloadRef.current();
             }

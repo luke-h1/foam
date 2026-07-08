@@ -307,7 +307,8 @@ export type OtaMetrics =
   | 'ota.update.fetched'
   | 'ota.update.pending'
   | 'ota.update.alert_shown'
-  | 'ota.update.applied';
+  | 'ota.update.applied'
+  | 'ota.update.deferred';
 
 const RESERVED_LOG_META_KEYS = new Set([
   'name',
