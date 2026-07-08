@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1 (Internal)
+### 🐛 Bug Fixes
+
+- **chat:** Send 7tv bridge cosmetics lookups by username ([#694](https://github.com/lhowsam/foam/issues/694))
+
 ## 1.0.1 (Production)
 ### ♻️ Refactor
 
