@@ -1,11 +1,7 @@
 # Changelog
 
-## 1.0.1 (Internal)
-### 🐛 Bug Fixes
-
-- **chat:** Send 7tv bridge cosmetics lookups by username ([#694](https://github.com/lhowsam/foam/issues/694))
-
 ## 1.0.1 (Production)
+
 ### ♻️ Refactor
 
 - **chat:** Improve bottom sheet
@@ -101,7 +97,18 @@
 - **app:** Ui improvements ([#681](https://github.com/lhowsam/foam/issues/681))
 - **infrastructure:** Add OTA compat check
 
-## 1.0.0 (TestFlight)
+## 1.0.1 (TestFlight)
+
+### 🐛 Bug Fixes
+
+- **chat:** Send 7tv bridge cosmetics lookups by username ([#694](https://github.com/lhowsam/foam/issues/694))
+
+## 1.0.1 (Internal)
+
+_No changes in this build beyond the TestFlight build._
+
+## 1.0.0 (Production)
+
 ### ⚡ Performance
 
 - **chat:** Cut emote + badge perf overhead ([#626](https://github.com/lhowsam/foam/issues/626))
@@ -126,13 +133,16 @@
 
 - **test:** Full e2e coverage
 
-## 0.0.42 (Internal)
-### 🐛 Bug Fixes
+## 1.0.0 (TestFlight)
 
-- **app:** Sentry initialization
-- **app:** Sentry initialization
+_No changes in this build beyond the Production build._
+
+## 1.0.0 (Internal)
+
+_No changes in this build beyond the TestFlight build._
 
 ## 0.0.42 (TestFlight)
+
 ### ♻️ Refactor
 
 - **app:** Native feel + folder org ([#616](https://github.com/lhowsam/foam/issues/616))
@@ -165,7 +175,15 @@
 - **app:** Update rozenite ([#612](https://github.com/lhowsam/foam/issues/612))
 - **infrastructure:** Update action versions ([#618](https://github.com/lhowsam/foam/issues/618))
 
+## 0.0.42 (Internal)
+
+### 🐛 Bug Fixes
+
+- **app:** Sentry initialization
+- **app:** Sentry initialization
+
 ## 0.0.41 (Production)
+
 ### ♻️ Refactor
 
 - **app:** Perf improvements ([#602](https://github.com/lhowsam/foam/issues/602))
@@ -190,6 +208,7 @@
 - **tooling:** Update commitlint
 
 ## 0.0.40 (Production)
+
 ### ♻️ Refactor
 
 - **app:** Blank screen during splash
@@ -360,6 +379,7 @@
 - **infrastructure:** Fix deploy-ota-or-native
 
 ## 0.0.39 (Production)
+
 ### ♻️ Refactor
 
 - **chat:** Move to v4 stv ([#485](https://github.com/lhowsam/foam/issues/485))
@@ -430,6 +450,7 @@
 - **app:** Automate changelog ([#474](https://github.com/lhowsam/foam/issues/474))
 
 ## 0.0.38 (Production)
+
 ### ✨ Features
 
 - **app:** 7tv paints ([#460](https://github.com/lhowsam/foam/issues/460))
@@ -460,6 +481,7 @@
 - **app:** Testing OTA
 
 ## 0.0.36 (Production)
+
 ### ✨ Features
 
 - **infrastructure:** Tidy up release tag
@@ -471,6 +493,7 @@
 - **infrastructure:** OTA
 
 ## 0.0.37 (Production)
+
 ### ♻️ Refactor
 
 - **app:** Remove screen wrapper ([#437](https://github.com/lhowsam/foam/issues/437))
@@ -518,6 +541,7 @@
 - **infrastructure:** Test self hosted runner ([#454](https://github.com/lhowsam/foam/issues/454))
 
 ## 0.0.34 (Production)
+
 ### ♻️ Refactor
 
 - **app:** Rework error screen
@@ -541,6 +565,7 @@
 - **app:** Install expo-insights
 
 ## 0.0.33 (Production)
+
 ### ♻️ Refactor
 
 - **app:** Social-app style query provider ([#420](https://github.com/lhowsam/foam/issues/420))
@@ -576,6 +601,7 @@
 - **sentry:** Adjust sentry rates ([#419](https://github.com/lhowsam/foam/issues/419))
 
 ## 0.0.32 (Production)
+
 ### 🐛 Bug Fixes
 
 - **app:** Improve perf of profilePicture query
@@ -592,6 +618,7 @@
 - **infrastructure:** Tidy up ci/cd ([#385](https://github.com/lhowsam/foam/issues/385))
 
 ## 0.0.31 (Production)
+
 ### 🐛 Bug Fixes
 
 - **app:** Remove barrel imports for services ([#374](https://github.com/lhowsam/foam/issues/374))
@@ -604,6 +631,7 @@
 - Add refined plugin
 
 ## 0.0.30 (Production)
+
 ### ✨ Features
 
 - **app:** Listen for WS changes in chat ([#364](https://github.com/lhowsam/foam/issues/364))
@@ -620,6 +648,7 @@
 - **infrastructure:** Remove dead code
 
 ## 0.0.29 (Production)
+
 ### ✨ Features
 
 - **chat:** Improve image caching performance ([#354](https://github.com/lhowsam/foam/issues/354))
@@ -639,6 +668,7 @@
 - Revert deploy.sh
 
 ## 0.0.27 (Production)
+
 ### ♻️ Refactor
 
 - **app:** Kebab-case services ([#315](https://github.com/lhowsam/foam/issues/315))
@@ -658,6 +688,7 @@
 - **documentation:** Update setup docs ([#329](https://github.com/lhowsam/foam/issues/329))
 
 ## 0.0.26 (Production)
+
 ### ✨ Features
 
 - **app:** Custom switch component ([#313](https://github.com/lhowsam/foam/issues/313))
@@ -671,6 +702,7 @@
 - **app:** Remove auth loading screen ([#314](https://github.com/lhowsam/foam/issues/314))
 
 ## 0.0.25 (Production)
+
 ### ♻️ Refactor
 
 - **app:** Tidy up entrypoint ([#302](https://github.com/lhowsam/foam/issues/302))
@@ -700,6 +732,7 @@
 - **app:** Update core RN deps ([#311](https://github.com/lhowsam/foam/issues/311))
 
 ## 0.0.24 (Production)
+
 ### ✨ Features
 
 - **chat:** Chat wrap up tasks ([#288](https://github.com/lhowsam/foam/issues/288))
@@ -712,6 +745,7 @@
 - **chat:** Improve sheet typography
 
 ## 0.0.23 (Production)
+
 ### ✨ Features
 
 - **app:** Add start activity module ([#283](https://github.com/lhowsam/foam/issues/283))
@@ -721,6 +755,7 @@
 - Update .gitignore
 
 ## 0.0.22 (Production)
+
 ### ✨ Features
 
 - **chat:** Chat other tasks ([#257](https://github.com/lhowsam/foam/issues/257))
@@ -738,6 +773,7 @@
 - **docs:** Update .env.example
 
 ## 0.0.21 (Production)
+
 ### ✨ Features
 
 - **app:** Chat parsing
@@ -752,6 +788,7 @@
 - **infrastructure:** Add OTA ci/cd
 
 ## 0.0.20 (Production)
+
 ### ✨ Features
 
 - **ui:** Add style helpers
@@ -769,11 +806,13 @@
 - **app:** Compress Images
 
 ## 0.0.19 (Production)
+
 ### ✨ Features
 
 - **app:** Add react-query devtools
 
 ## 0.0.18 (Production)
+
 ### 🐛 Bug Fixes
 
 - **app:** Fix toasts + settings modal
@@ -783,11 +822,13 @@
 - **auth:** Improve auth tests
 
 ## 0.0.17 (Production)
+
 ### 🔧 Miscellaneous Tasks
 
 - **app:** Refactor online manager
 
 ## 0.0.16 (Production)
+
 ### ✨ Features
 
 - **app:** Add cheaper deploy workflow
@@ -797,11 +838,13 @@
 - **app:** Fix auth ctx persistence issues
 
 ## 0.0.15 (Production)
+
 ### 🐛 Bug Fixes
 
 - **app:** Fix auth crashes
 
 ## 0.0.14 (Production)
+
 ### ✨ Features
 
 - **app:** Add diangostics table
@@ -820,6 +863,7 @@
 - **ci:** Test alternate ci/cd workflow
 
 ## 0.0.13 (Production)
+
 ### ♻️ Refactor
 
 - **app:** Settings screen
@@ -836,16 +880,19 @@
 - **app:** Debug auth issues
 
 ## 0.0.12 (Production)
+
 ### 🔧 Miscellaneous Tasks
 
 - **app:** Debug auth
 
 ## 0.0.11 (Production)
+
 ### 🐛 Bug Fixes
 
 - **app:** Speculative crash fix around fonts
 
 ## 0.0.9 (Production)
+
 ### ✨ Features
 
 - **app:** Add nr logging
@@ -857,11 +904,13 @@
 - **app:** Comment out fb
 
 ## 0.0.8 (Production)
+
 ### 🐛 Bug Fixes
 
 - **app:** Fix crash on start
 
 ## 0.0.7 (Production)
+
 ### 🔧 Miscellaneous Tasks
 
 - **app:** Debug release
@@ -869,31 +918,37 @@
 - **app:** Debug release
 
 ## 0.0.6 (Production)
+
 ### 🔧 Miscellaneous Tasks
 
 - **app:** Debug release
 
 ## 0.0.5 (Production)
+
 ### 🐛 Bug Fixes
 
 - **app:** Navigation state in prod
 
 ## 0.0.4 (Production)
+
 ### ✨ Features
 
 - **app:** Debug screen
 
 ## 0.0.3 (Production)
+
 ### 🐛 Bug Fixes
 
 - **app:** Fix commmitlint
 
 ## 0.0.2 (Production)
+
 ### 🔧 Miscellaneous Tasks
 
 - **app:** Gs services file
 
 ## 0.0.1 (Production)
+
 ### ♻️ Refactor
 
 - **app:** Refactor landscape utils

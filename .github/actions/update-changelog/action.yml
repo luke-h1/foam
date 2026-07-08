@@ -30,8 +30,9 @@ runs:
 
         ~/.cargo/bin/git-cliff --config cliff.toml --tag "$INPUTS_TAG" --ignore-tags "$IGNORE_TAGS" -o CHANGELOG.md
 
-        bunx prettier --write CHANGELOG.md
+        GIT_CLIFF_BIN="$HOME/.cargo/bin/git-cliff" bunx tsx scripts/workflows/changelog-per-env-cli.ts CHANGELOG.md "$INPUTS_TAG"
         bunx tsx scripts/workflows/changelog-headings-cli.ts CHANGELOG.md
+        bunx prettier --write CHANGELOG.md
 
         if git diff --quiet CHANGELOG.md 2>/dev/null; then
           echo "CHANGELOG.md has not changed"

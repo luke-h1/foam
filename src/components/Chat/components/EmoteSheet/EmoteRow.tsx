@@ -1,10 +1,11 @@
+import { memo } from 'react';
 import { View } from 'react-native';
 
 import { EmoteCell } from './EmoteCell';
 import { emoteSheetStyles as styles } from './emoteSheetStyles';
 import type { EmotePickerItem } from './emoteSheetTypes';
 
-export function EmoteRow({
+function EmoteRowComponent({
   cellSize,
   items,
   onPress,
@@ -26,3 +27,5 @@ export function EmoteRow({
     </View>
   );
 }
+
+export const EmoteRow = memo(EmoteRowComponent);

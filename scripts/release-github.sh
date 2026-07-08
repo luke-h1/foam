@@ -164,6 +164,7 @@ if [ "$no_push" = "false" ]; then
 fi
 
 "$git_cliff_bin" --config cliff.toml --tag "$tag" --ignore-tags "" -o CHANGELOG.md
+GIT_CLIFF_BIN="$git_cliff_bin" bunx tsx scripts/workflows/changelog-per-env-cli.ts CHANGELOG.md "$tag"
 bunx tsx scripts/workflows/changelog-headings-cli.ts CHANGELOG.md
 
 bunx prettier --write CHANGELOG.md

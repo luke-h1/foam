@@ -11,6 +11,15 @@ import { join } from 'node:path';
 import { applyEnvironmentLabelsToChangelogHeadings } from '../scripts/workflows/changelog-headings';
 import { normalizeChangelogFile } from '../scripts/workflows/changelog-headings-cli';
 import {
+  compareVersions,
+  type GitCliffContext,
+  parseReleaseTag,
+  planPerEnvironmentSections,
+  type ReleaseTag,
+  rewritePerEnvironmentSections,
+  type VersionPlan,
+} from '../scripts/workflows/changelog-per-env';
+import {
   buildChatPerformanceComment,
   buildCurrentTable,
   buildHighlightedSummary,
@@ -452,6 +461,248 @@ describe('changelog generation', () => {
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }
+  });
+});
+
+describe('changelog per-environment sections', () => {
+  const RELEASE_TAGS: ReleaseTag[] = [
+    { tag: '0.0.9', version: '0.0.9', environment: 'production', commit: 'c0' },
+    {
+      tag: '1.0.0-testflight',
+      version: '1.0.0',
+      environment: 'testflight',
+      commit: 'c1',
+    },
+    {
+      tag: '1.0.0-internal',
+      version: '1.0.0',
+      environment: 'internal',
+      commit: 'c1',
+    },
+    { tag: '1.0.0', version: '1.0.0', environment: 'production', commit: 'c2' },
+    { tag: '1.0.1', version: '1.0.1', environment: 'production', commit: 'c3' },
+    {
+      tag: '1.0.1-testflight',
+      version: '1.0.1',
+      environment: 'testflight',
+      commit: 'c4',
+    },
+    {
+      tag: '1.0.1-internal',
+      version: '1.0.1',
+      environment: 'internal',
+      commit: 'c4',
+    },
+  ];
+
+  function fakeGitCliffContext(
+    commitOrder: string[],
+    releaseTags: ReleaseTag[],
+  ): GitCliffContext {
+    const indexOf = (commit: string): number => commitOrder.indexOf(commit);
+    return {
+      headCommit: () => commitOrder[commitOrder.length - 1] ?? '',
+      listReleaseTags: () => releaseTags,
+      listAllTagCommits: () =>
+        releaseTags.map(tag => ({ tag: tag.tag, commit: tag.commit })),
+      isAncestor: (ancestor, descendant) =>
+        indexOf(ancestor) <= indexOf(descendant),
+      renderRange: (baselineCommit, headCommit, tag) => {
+        if (indexOf(headCommit) <= indexOf(baselineCommit)) {
+          return '';
+        }
+        return `## ${tag}\n\n### Test\n\n- ${tag} content`;
+      },
+    };
+  }
+
+  test('parses release tags into version and environment', () => {
+    expect(parseReleaseTag('1.0.1')).toEqual({
+      tag: '1.0.1',
+      version: '1.0.1',
+      environment: 'production',
+    });
+    expect(parseReleaseTag('1.0.1-internal')).toEqual({
+      tag: '1.0.1-internal',
+      version: '1.0.1',
+      environment: 'internal',
+    });
+    expect(parseReleaseTag('v0.0.37')).toEqual({
+      tag: 'v0.0.37',
+      version: '0.0.37',
+      environment: 'production',
+    });
+    expect(parseReleaseTag('ota-deadbeef')).toEqual(null);
+  });
+
+  test('orders versions numerically rather than lexically', () => {
+    expect(compareVersions('0.0.42', '1.0.0')).toBeLessThan(0);
+    expect(compareVersions('1.0.10', '1.0.2')).toBeGreaterThan(0);
+    expect(compareVersions('1.0.1', '1.0.1')).toEqual(0);
+  });
+
+  test('plans one section per channel, baselined against the channel below', () => {
+    const plans = planPerEnvironmentSections(
+      RELEASE_TAGS,
+      fakeGitCliffContext(['c0', 'c1', 'c2', 'c3', 'c4'], RELEASE_TAGS)
+        .isAncestor,
+    );
+
+    expect(plans).toEqual<VersionPlan[]>([
+      {
+        version: '1.0.0',
+        sections: [
+          {
+            tag: '1.0.0',
+            environment: 'production',
+            headCommit: 'c2',
+            baselineCommit: 'c0',
+            baselineDescription: 'the 0.0.9 release',
+          },
+          {
+            tag: '1.0.0-testflight',
+            environment: 'testflight',
+            headCommit: 'c1',
+            baselineCommit: 'c2',
+            baselineDescription: 'the Production build',
+          },
+          {
+            tag: '1.0.0-internal',
+            environment: 'internal',
+            headCommit: 'c1',
+            baselineCommit: 'c1',
+            baselineDescription: 'the TestFlight build',
+          },
+        ],
+      },
+      {
+        version: '1.0.1',
+        sections: [
+          {
+            tag: '1.0.1',
+            environment: 'production',
+            headCommit: 'c3',
+            baselineCommit: 'c2',
+            baselineDescription: 'the 1.0.0 release',
+          },
+          {
+            tag: '1.0.1-testflight',
+            environment: 'testflight',
+            headCommit: 'c4',
+            baselineCommit: 'c3',
+            baselineDescription: 'the Production build',
+          },
+          {
+            tag: '1.0.1-internal',
+            environment: 'internal',
+            headCommit: 'c4',
+            baselineCommit: 'c4',
+            baselineDescription: 'the TestFlight build',
+          },
+        ],
+      },
+    ]);
+  });
+
+  test('rewrites collapsed sections into full per-channel sections with placeholders', () => {
+    const generated = [
+      '# Changelog',
+      '',
+      '## 1.0.1',
+      '### Collapsed',
+      '- collapsed 1.0.1 body',
+      '## 1.0.0-testflight',
+      '### Collapsed',
+      '- collapsed 1.0.0 body',
+      '## 0.0.9',
+      '### Fixed',
+      '- single channel item',
+      '## ota-deadbeef',
+      '### OTA',
+      '- ota item',
+    ].join('\n');
+
+    const rewritten = rewritePerEnvironmentSections(
+      generated,
+      fakeGitCliffContext(['c0', 'c1', 'c2', 'c3', 'c4'], RELEASE_TAGS),
+    );
+
+    expect(rewritten).toEqual(
+      [
+        '# Changelog',
+        '',
+        '## 1.0.1',
+        '',
+        '### Test',
+        '',
+        '- 1.0.1 content',
+        '',
+        '## 1.0.1-testflight',
+        '',
+        '### Test',
+        '',
+        '- 1.0.1-testflight content',
+        '',
+        '## 1.0.1-internal',
+        '',
+        '_No changes in this build beyond the TestFlight build._',
+        '',
+        '## 1.0.0',
+        '',
+        '### Test',
+        '',
+        '- 1.0.0 content',
+        '',
+        '## 1.0.0-testflight',
+        '',
+        '_No changes in this build beyond the Production build._',
+        '',
+        '## 1.0.0-internal',
+        '',
+        '_No changes in this build beyond the TestFlight build._',
+        '',
+        '## 0.0.9',
+        '### Fixed',
+        '- single channel item',
+        '## ota-deadbeef',
+        '### OTA',
+        '- ota item',
+      ].join('\n'),
+    );
+  });
+
+  test('leaves the changelog untouched when no version reached two channels', () => {
+    const singleChannelTags: ReleaseTag[] = [
+      {
+        tag: '0.0.9',
+        version: '0.0.9',
+        environment: 'production',
+        commit: 'c0',
+      },
+      {
+        tag: '0.0.10',
+        version: '0.0.10',
+        environment: 'production',
+        commit: 'c1',
+      },
+    ];
+    const generated = [
+      '# Changelog',
+      '',
+      '## 0.0.10',
+      '### Fixed',
+      '- a fix',
+      '## 0.0.9',
+      '### Fixed',
+      '- older fix',
+    ].join('\n');
+
+    const rewritten = rewritePerEnvironmentSections(
+      generated,
+      fakeGitCliffContext(['c0', 'c1'], singleChannelTags),
+    );
+
+    expect(rewritten).toEqual(generated);
   });
 });
 
