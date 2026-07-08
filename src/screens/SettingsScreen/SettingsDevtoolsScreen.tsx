@@ -117,6 +117,11 @@ export function SettingsDevtoolsScreen() {
               onPress={() => router.push('/dev-tools/chat-perf')}
             />
             <Button
+              label={t('envVars')}
+              systemImage='doc.text'
+              onPress={() => router.push('/dev-tools/env-vars')}
+            />
+            <Button
               label={t('channelSurfing')}
               systemImage='antenna.radiowaves.left.and.right'
               onPress={() => router.push('/tabs/settings/channel-surfing')}
@@ -231,6 +236,12 @@ export function SettingsDevtoolsScreen() {
             subtitle={t('chatPerfBurstTestDescription')}
             icon={{ icon: 'bolt.horizontal', color: theme.colorOrange }}
             onPress={() => router.push('/dev-tools/chat-perf')}
+          />
+          <SettingsLinkRow
+            title={t('envVars')}
+            subtitle={t('envVarsDescription')}
+            icon={{ icon: 'doc.text', color: theme.colorTeal }}
+            onPress={() => router.push('/dev-tools/env-vars')}
           />
           <SettingsLinkRow
             title={t('channelSurfing')}

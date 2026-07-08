@@ -41,6 +41,10 @@ export default function DevToolsLayout() {
         name='chat-perf'
         options={{ title: t('chatPerf'), headerBackTitle: t('devTools') }}
       />
+      <Stack.Screen
+        name='env-vars'
+        options={{ title: t('envVars'), headerBackTitle: t('devTools') }}
+      />
     </Stack>
   );
 }
