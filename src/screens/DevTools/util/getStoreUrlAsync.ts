@@ -5,6 +5,13 @@ import * as Application from 'expo-application';
 import { getAppStoreLink } from './getAppStoreLink';
 
 /**
+ * The production bundle ID — the only one with an App Store listing.
+ * All other variants (foam-tv-internal, foam-tv-testflight, foam-tv-dev, etc.)
+ * should be directed to TestFlight instead.
+ */
+const PRODUCTION_BUNDLE_ID = 'foam-tv';
+
+/**
  * Get the appropriate store URL based on the platform and release type.
  * - iOS TestFlight builds will open TestFlight
  * - iOS App Store builds will open the App Store
@@ -18,7 +25,13 @@ export async function getStoreUrlAsync() {
       releaseType !== Application.ApplicationReleaseType.APP_STORE &&
       releaseType !== Application.ApplicationReleaseType.SIMULATOR;
 
-    if (isTestFlight) {
+    // Non-production bundle IDs (internal, testflight, dev, e2e variants) share the
+    // App Store signing certificate, so getIosApplicationReleaseTypeAsync() returns
+    // APP_STORE for them too — making isTestFlight unreliable on its own.
+    // Guard with the bundle ID to ensure only the real production build hits the App Store.
+    const isProductionBuild = Application.applicationId === PRODUCTION_BUNDLE_ID;
+
+    if (isTestFlight || !isProductionBuild) {
       const testFlightUrl = 'itms-beta://';
       const canOpen = await Linking.canOpenURL(testFlightUrl);
       if (canOpen) {
