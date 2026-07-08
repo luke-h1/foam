@@ -147,9 +147,7 @@ export function useOTAUpdates() {
 
   const applyUpdate = useCallback(async () => {
     try {
-      // Deliberately sequential: abort in-flight fetches, let the native
-      // teardown drain, then reload. Parallelising would reintroduce #699.
-      /* eslint-disable react-doctor/async-parallel */
+      /* eslint-disable react-doctor/async-parallel -- must stay sequential; parallelising reintroduces #699 */
       await queryClient.cancelQueries();
       await new Promise<void>(resolve => {
         setTimeout(resolve, RELOAD_DRAIN_DELAY);
