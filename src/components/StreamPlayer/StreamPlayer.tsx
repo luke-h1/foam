@@ -21,6 +21,7 @@ import {
   buildTwitchChromeHiderScript,
   buildTwitchClipPlayerUrl,
   buildTwitchContentGateAcceptScript,
+  buildTwitchContentGateWatcherScript,
   buildTwitchLatencyTrackerScript,
   buildTwitchLiveSyncScript,
   buildTwitchPipBridgeScript,
@@ -367,7 +368,12 @@ export const StreamPlayer = memo(function StreamPlayer({
       ? '\n' +
         buildTwitchChromeHiderScript() +
         '\n' +
-        buildTwitchPlayerStateScript()
+        buildTwitchPlayerStateScript() +
+        // Custom player only: the WebView is non-interactive while foam draws
+        // its own controls, so a login-required content gate can't be tapped.
+        // Watch for it and re-enable interaction when one appears.
+        '\n' +
+        buildTwitchContentGateWatcherScript()
       : '') +
     // Live + custom-player only: read broadcaster latency for the chat pill and seek to live at start.
     (showOverlayControls && !clip && !video

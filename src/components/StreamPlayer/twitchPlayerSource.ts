@@ -1140,6 +1140,73 @@ true;`;
 }
 
 /**
+ * Reports whether a login-required content-classification gate is blocking the
+ * player. The anonymous mature gate is auto-dismissed by
+ * `buildTwitchContentGateAcceptScript` (it clicks the continue button), but some
+ * restricted content forces a "you must log in or create an account to continue"
+ * gate that has no continue button - only login/create-account links. On the
+ * custom player the WebView is normally non-interactive (foam draws its own
+ * controls over it), so those links can't be tapped. Posting
+ * `contentGateDetected { hasContentGate: true }` flips the WebView back to
+ * interactive so the user can reach them, and `false` once the gate clears.
+ */
+export function buildTwitchContentGateWatcherScript(): string {
+  return `
+(function() {
+  if (window.__foamContentGateWatcherInstalled) { return true; }
+  window.__foamContentGateWatcherInstalled = true;
+
+  var GATE_SELECTOR = '[data-a-target*="content-classification-gate"]';
+  var lastReported = null;
+
+  function post(hasGate) {
+    if (lastReported === hasGate) { return; }
+    lastReported = hasGate;
+    try {
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'contentGateDetected',
+        payload: { hasContentGate: hasGate }
+      }));
+    } catch (e) {}
+  }
+
+  // The gate overlay container and its buttons both match GATE_SELECTOR; pick
+  // the container (the accept script targets the button, so the container comes
+  // first in document order and is never itself a <button>).
+  function findGate() {
+    var candidates = document.querySelectorAll(GATE_SELECTOR);
+    for (var i = 0; i < candidates.length; i++) {
+      if (candidates[i].tagName !== 'BUTTON') { return candidates[i]; }
+    }
+    return null;
+  }
+
+  // A gate blocks only when it can't be auto-accepted: the anonymous mature gate
+  // carries a continue button (which the accept script clicks), whereas the
+  // login-required gate has none, so it stays up until the user logs in.
+  function isBlockingGate() {
+    var gate = findGate();
+    if (!gate) { return false; }
+    return !gate.querySelector('button[data-a-target*="content-classification-gate"]');
+  }
+
+  function check() {
+    post(isBlockingGate());
+  }
+
+  check();
+  var observer = new MutationObserver(check);
+  observer.observe(document.body || document.documentElement, {
+    childList: true,
+    subtree: true
+  });
+  setInterval(check, 1000);
+  return true;
+})();
+true;`;
+}
+
+/**
  * Hides the stock player's chrome so only the video shows when foam draws its
  * own overlay controls: hides .top-bar, .player-controls and
  * #channel-player-disclosures, re-applying them as the .video-player__overlay

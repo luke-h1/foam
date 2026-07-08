@@ -5,6 +5,7 @@ import {
   buildTwitchCaptionHiderScript,
   buildTwitchClipPlayerUrl,
   buildTwitchContentGateAcceptScript,
+  buildTwitchContentGateWatcherScript,
   buildTwitchLatencyTrackerScript,
   buildTwitchLiveSyncScript,
   buildTwitchOverlayHideScript,
@@ -21,6 +22,26 @@ describe('twitchPlayerSource', () => {
       'asyncQuerySelector(\'button[data-a-target*="content-classification-gate"]\', 10000)',
     );
     expect(script).toContain('button.click()');
+  });
+
+  test('content-gate watcher reports a login-required gate so the WebView becomes tappable', () => {
+    const script = buildTwitchContentGateWatcherScript();
+
+    // Finds the gate overlay by the same wildcard the accept script uses.
+    expect(script).toContain(
+      'var GATE_SELECTOR = \'[data-a-target*="content-classification-gate"]\'',
+    );
+    // A gate blocks only when it has no auto-clickable continue button - i.e. it
+    // requires login - so the anonymous mature gate (auto-accepted elsewhere) is
+    // never reported as blocking.
+    expect(script).toContain(
+      '!gate.querySelector(\'button[data-a-target*="content-classification-gate"]\')',
+    );
+    // Posts the bridge message the player uses to re-enable WebView interaction.
+    expect(script).toContain("type: 'contentGateDetected'");
+    expect(script).toContain('hasContentGate: hasGate');
+    // Only posts on a change, so the bridge isn't spammed every tick.
+    expect(script).toContain('if (lastReported === hasGate) { return; }');
   });
 
   test('latency tracker drives the video-stats menu and reads the latency node', () => {
