@@ -42,6 +42,17 @@ describe('twitchPlayerSource', () => {
     expect(script).toContain('hasContentGate: hasGate');
     // Only posts on a change, so the bridge isn't spammed every tick.
     expect(script).toContain('if (lastReported === hasGate) { return; }');
+    // Stays interactive across the whole login flow: tapping the gate's login
+    // link navigates off player.twitch.tv, and the WebView must stay tappable so
+    // the user can type/paste credentials.
+    expect(script).toContain(
+      "window.location.hostname.indexOf('player.twitch.tv') === -1",
+    );
+    expect(script).toContain('isInAuthFlow() || isBlockingGate()');
+    // Only the top frame reports, so a login subframe can't race it.
+    expect(script).toContain(
+      'if (window.top !== window.self) { return true; }',
+    );
   });
 
   test('latency tracker drives the video-stats menu and reads the latency node', () => {

@@ -1153,6 +1153,8 @@ true;`;
 export function buildTwitchContentGateWatcherScript(): string {
   return `
 (function() {
+  // Only the top frame drives interaction; a subframe reporting would race it.
+  if (window.top !== window.self) { return true; }
   if (window.__foamContentGateWatcherInstalled) { return true; }
   window.__foamContentGateWatcherInstalled = true;
 
@@ -1190,8 +1192,21 @@ export function buildTwitchContentGateWatcherScript(): string {
     return !gate.querySelector('button[data-a-target*="content-classification-gate"]');
   }
 
+  // The player embed lives on player.twitch.tv; any other host means the gate's
+  // "log in"/"create an account" link has navigated the WebView into Twitch's
+  // auth flow. Keep interaction on for that whole interstitial so the user can
+  // type and paste credentials - it only clears once we're back on the embed
+  // and the gate is gone.
+  function isInAuthFlow() {
+    try {
+      return window.location.hostname.indexOf('player.twitch.tv') === -1;
+    } catch (e) {
+      return false;
+    }
+  }
+
   function check() {
-    post(isBlockingGate());
+    post(isInAuthFlow() || isBlockingGate());
   }
 
   check();
