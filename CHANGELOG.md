@@ -134,7 +134,6 @@
 ### 🐛 Bug Fixes
 
 - **app:** Sentry initialization
-- **app:** Sentry initialization
 
 ## 0.0.42 (TestFlight)
 
@@ -927,7 +926,7 @@
 
 ### 🐛 Bug Fixes
 
-- **app:** Fix commmitlint
+- **app:** Fix commitlint
 
 ## 0.0.2 (Production)
 
