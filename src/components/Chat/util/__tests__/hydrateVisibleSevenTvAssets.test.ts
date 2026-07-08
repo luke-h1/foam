@@ -226,7 +226,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
       reprocessMessage,
     });
 
-    expect(fetchUserCosmetics).toHaveBeenCalledWith('twitch-user', {
+    expect(fetchUserCosmetics).toHaveBeenCalledWith('twitch-user', 'Sender', {
       retryMissingBadge: true,
     });
     expect(reprocessMessage).toHaveBeenCalledWith(message);

@@ -137,29 +137,38 @@ describe('requestUserCosmetics', () => {
   });
 
   test('coalesces users queued in the same window into one bridge request', async () => {
-    const first = requestUserCosmetics('ttv-1');
-    const second = requestUserCosmetics('ttv-2');
+    const first = requestUserCosmetics('ttv-1', 'login-1');
+    const second = requestUserCosmetics('ttv-2', 'login-2');
 
     jest.advanceTimersByTime(500);
     await Promise.all([first, second]);
 
     expect(mockFetchBridgedCosmetics.mock.calls).toEqual([
-      [['ttv-1', 'ttv-2']],
+      [['login-1', 'login-2']],
     ]);
   });
 
+  test('skips users without a login', async () => {
+    const request = requestUserCosmetics('ttv-1', '');
+
+    jest.advanceTimersByTime(500);
+    await request;
+
+    expect(mockFetchBridgedCosmetics).not.toHaveBeenCalled();
+  });
+
   test('dedupes repeat requests for the same user', async () => {
-    const first = requestUserCosmetics('ttv-1');
-    const second = requestUserCosmetics('ttv-1');
+    const first = requestUserCosmetics('ttv-1', 'login-1');
+    const second = requestUserCosmetics('ttv-1', 'login-1');
 
     jest.advanceTimersByTime(500);
     await Promise.all([first, second]);
 
-    const third = requestUserCosmetics('ttv-1');
+    const third = requestUserCosmetics('ttv-1', 'login-1');
     jest.advanceTimersByTime(500);
     await third;
 
-    expect(mockFetchBridgedCosmetics.mock.calls).toEqual([[['ttv-1']]]);
+    expect(mockFetchBridgedCosmetics.mock.calls).toEqual([[['login-1']]]);
   });
 
   test('applies returned cosmetic and entitlement dispatches to the store', async () => {
@@ -168,7 +177,7 @@ describe('requestUserCosmetics', () => {
       createBadgeEntitlementCreateEvent('badge-1', 'ttv-1'),
     ]);
 
-    const request = requestUserCosmetics('ttv-1');
+    const request = requestUserCosmetics('ttv-1', 'login-1');
     jest.advanceTimersByTime(500);
     await request;
 
@@ -194,7 +203,7 @@ describe('requestUserCosmetics', () => {
       } as unknown as SevenTvEventData<SevenTvEventType>,
     ]);
 
-    const request = requestUserCosmetics('ttv-1');
+    const request = requestUserCosmetics('ttv-1', 'login-1');
     jest.advanceTimersByTime(500);
     await request;
 
@@ -208,17 +217,17 @@ describe('requestUserCosmetics', () => {
   test('allows retrying users from a failed bridge request', async () => {
     mockFetchBridgedCosmetics.mockRejectedValueOnce(new Error('network'));
 
-    const failed = requestUserCosmetics('ttv-1');
+    const failed = requestUserCosmetics('ttv-1', 'login-1');
     jest.advanceTimersByTime(500);
     await failed;
 
-    const retried = requestUserCosmetics('ttv-1');
+    const retried = requestUserCosmetics('ttv-1', 'login-1');
     jest.advanceTimersByTime(500);
     await retried;
 
     expect(mockFetchBridgedCosmetics.mock.calls).toEqual([
-      [['ttv-1']],
-      [['ttv-1']],
+      [['login-1']],
+      [['login-1']],
     ]);
   });
 });
@@ -253,7 +262,7 @@ describe('applyEntitlementCreateEvent', () => {
     expect(mockSetUserBadge.mock.calls).toEqual([['ttv-1', 'badge-1']]);
 
     jest.advanceTimersByTime(500);
-    expect(mockFetchBridgedCosmetics.mock.calls).toEqual([[['ttv-1']]]);
+    expect(mockFetchBridgedCosmetics.mock.calls).toEqual([[['user']]]);
   });
 
   test('does not queue a bridge lookup when the definition is already loaded', () => {
@@ -327,6 +336,6 @@ describe('applyEntitlementCreateEvent', () => {
     expect(mockSetUserPaint.mock.calls).toEqual([['ttv-1', 'paint-1']]);
 
     jest.advanceTimersByTime(500);
-    expect(mockFetchBridgedCosmetics.mock.calls).toEqual([[['ttv-1']]]);
+    expect(mockFetchBridgedCosmetics.mock.calls).toEqual([[['user']]]);
   });
 });

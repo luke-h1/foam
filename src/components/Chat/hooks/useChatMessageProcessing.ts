@@ -48,6 +48,7 @@ interface UseChatMessageProcessingOptions {
   maintainBottomAfterContentChange: () => void;
   fetchUserCosmetics: (
     twitchUserId: string,
+    login: string,
     options?: {
       retryMissingBadge?: boolean;
     },

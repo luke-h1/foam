@@ -24,6 +24,7 @@ interface UseChatSurfaceOptions {
   channelName: string;
   fetchUserCosmetics: (
     twitchUserId: string,
+    login: string,
     options?: {
       retryMissingBadge?: boolean;
     },
