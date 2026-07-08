@@ -5,6 +5,7 @@ import type {
   FfzGlobalEmotesResponse,
 } from '@app/types/ffz/emote';
 
+import { ApiError } from '../api/Client';
 import { ffzApi } from '../api/clients';
 import { ffzService } from '../ffz-service';
 
@@ -145,6 +146,22 @@ describe('ffzService', () => {
     });
 
     const result = await ffzService.getSanitisedChannelEmotes('999');
+
+    expect(result).toEqual([]);
+  });
+
+  test('getSanitisedChannelEmotes returns an empty list when the API throws a 404', async () => {
+    api.get.mockRejectedValue(new ApiError('No such room', 404, 'FFZApiError'));
+
+    const result = await ffzService.getSanitisedChannelEmotes('999');
+
+    expect(result).toEqual([]);
+  });
+
+  test('getSanitisedChannelBadges returns an empty list when the API throws a 404', async () => {
+    api.get.mockRejectedValue(new ApiError('No such room', 404, 'FFZApiError'));
+
+    const result = await ffzService.getSanitisedChannelBadges('999');
 
     expect(result).toEqual([]);
   });

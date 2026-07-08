@@ -9,6 +9,7 @@ import type {
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { logger } from '@app/utils/logger';
 
+import { ApiError } from './api/Client';
 import { ffzApi } from './api/clients';
 import { buildSanitisedEmote } from './emote-provider';
 
@@ -16,6 +17,16 @@ interface FFzErrorResponse {
   status: number;
   error: string;
   message: string;
+}
+
+/**
+ * FFZ returns a 404 "No such room" for any channel that has never configured
+ * FFZ. That is an expected, benign outcome - the channel simply has no FFZ
+ * emotes or badges - so callers treat it as an empty result rather than a
+ * failure to log and re-throw.
+ */
+function isNoSuchRoomError(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 404;
 }
 
 function toFfzStaticUrl(emoteId: number, scale: '2x' | '4x'): string {
@@ -152,6 +163,9 @@ export const ffzService = {
 
       return sanitisedBadges;
     } catch (error) {
+      if (isNoSuchRoomError(error)) {
+        return [];
+      }
       logger.ffz.warn('Failed to fetch channel FFZ badges', {
         name: 'ffz_badges_warning',
         error,
@@ -188,6 +202,9 @@ export const ffzService = {
       }
       return [];
     } catch (error) {
+      if (isNoSuchRoomError(error)) {
+        return [];
+      }
       logger.ffz.warn(`Failed to fetch channel FFZ emotes for ${channelId}`, {
         name: 'ffz_emotes_warning',
         error,

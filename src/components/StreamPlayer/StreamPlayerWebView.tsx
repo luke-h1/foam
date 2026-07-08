@@ -178,7 +178,10 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       setSupportMultipleWindows={false}
       sharedCookiesEnabled
       thirdPartyCookiesEnabled
-      textInteractionEnabled={false}
+      // Text interaction (selection + the paste callout) is off while foam owns
+      // the chrome, but must be on when a content gate hands control back to
+      // Twitch so the user can paste into the login form.
+      textInteractionEnabled={allowsTwitchInteraction}
       originWhitelist={['*']}
       source={source}
       injectedJavaScript={injectedJavaScript}
