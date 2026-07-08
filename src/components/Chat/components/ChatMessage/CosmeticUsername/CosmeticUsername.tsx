@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import {
   Platform,
   type StyleProp,
@@ -7,6 +7,11 @@ import {
   View,
 } from 'react-native';
 
+import {
+  isNativePaintedUsernameAvailable,
+  NativePaintedUsernameView,
+  serializeNativePaintDefinition,
+} from '@modules/painted-username/src';
 import { useSelector } from '@legendapp/state/react';
 
 import { Text } from '@app/components/ui/Text/Text';
@@ -49,7 +54,7 @@ interface PaintedUsernameWithPaintProps {
   usernameTextStyle?: StyleProp<TextStyle>;
 }
 
-function PaintedUsernameWithPaint({
+function JsPaintedUsernameWithPaint({
   displayUsername,
   fallbackColor,
   paint,
@@ -68,20 +73,6 @@ function PaintedUsernameWithPaint({
     usernameTextStyle,
     paintTextStyle,
   ] as StyleProp<TextStyle>;
-
-  if (Platform.OS === 'web') {
-    return (
-      <View style={styles.paintedWrapper}>
-        <PaintedUsernameMaskedFill
-          displayUsername={displayUsername}
-          fallbackColor={fallbackColor}
-          paint={paint}
-          maskTextStyle={maskTextStyle}
-          sevenTvPaintDropShadows={sevenTvPaintDropShadows}
-        />
-      </View>
-    );
-  }
 
   const underlayShadows = [
     ...dropShadows.map(shadow => ({ shadow, source: 'drop' as const })),
@@ -116,6 +107,63 @@ function PaintedUsernameWithPaint({
       ) : null}
     </View>
   );
+}
+
+function NativePaintedUsernameWithPaint({
+  displayUsername,
+  fallbackColor,
+  paint,
+  sevenTvPaintDropShadows,
+  usernameTextStyle,
+}: PaintedUsernameWithPaintProps) {
+  const paintTextStyle = buildPaintUsernameTextStyle(paint);
+  const serializedPaint = useMemo(
+    () => serializeNativePaintDefinition(paint, sevenTvPaintDropShadows),
+    [paint, sevenTvPaintDropShadows],
+  );
+  const fontWeight = String(paintTextStyle.fontWeight ?? '700');
+
+  return (
+    <NativePaintedUsernameView
+      text={displayUsername}
+      paint={serializedPaint}
+      fallbackColor={fallbackColor}
+      fontSize={chatLineMetrics.comfortable.fontSize}
+      lineHeight={chatLineMetrics.comfortable.lineHeight}
+      fontWeight={fontWeight}
+      textTransform={paintTextStyle.textTransform}
+      style={[styles.paintedWrapper, usernameTextStyle]}
+    />
+  );
+}
+
+function PaintedUsernameWithPaint(props: PaintedUsernameWithPaintProps) {
+  if (Platform.OS === 'web') {
+    const paintTextStyle = buildPaintUsernameTextStyle(props.paint);
+    const maskTextStyle = [
+      styles.maskText,
+      props.usernameTextStyle,
+      paintTextStyle,
+    ] as StyleProp<TextStyle>;
+
+    return (
+      <View style={styles.paintedWrapper}>
+        <PaintedUsernameMaskedFill
+          displayUsername={props.displayUsername}
+          fallbackColor={props.fallbackColor}
+          paint={props.paint}
+          maskTextStyle={maskTextStyle}
+          sevenTvPaintDropShadows={props.sevenTvPaintDropShadows}
+        />
+      </View>
+    );
+  }
+
+  if (isNativePaintedUsernameAvailable) {
+    return <NativePaintedUsernameWithPaint {...props} />;
+  }
+
+  return <JsPaintedUsernameWithPaint {...props} />;
 }
 
 function PaintedUsernameComponent({

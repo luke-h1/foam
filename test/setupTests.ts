@@ -316,6 +316,18 @@ jest.mock('react-native-webview', () => {
   };
 });
 
+jest.mock('@modules/painted-username/src', () => {
+  const actual = jest.requireActual(
+    '@modules/painted-username/src/serializeNativePaintDefinition',
+  );
+
+  return {
+    ...actual,
+    NativePaintedUsernameView: jest.requireActual('react-native').View,
+    isNativePaintedUsernameAvailable: false,
+  };
+});
+
 jest.doMock('react-native', () => {
   const React = require('react');
   const createHostComponent = (hostName: string) =>
