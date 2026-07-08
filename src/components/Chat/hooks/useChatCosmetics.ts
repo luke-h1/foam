@@ -12,6 +12,7 @@ export function useChatCosmetics({ userId }: { userId?: string | null }) {
 
   const fetchUserCosmetics = async (
     twitchUserId: string,
+    login: string,
     options: {
       retryMissingBadge?: boolean;
     } = {},
@@ -33,13 +34,17 @@ export function useChatCosmetics({ userId }: { userId?: string | null }) {
       return;
     }
 
+    if (!login) {
+      return;
+    }
+
     fetchedCosmeticsUsersRef.current.add(twitchUserId);
 
     // The bridge batcher coalesces every user queued in the same window into
     // one request and applies the returned dispatches to the store; the await
     // lets callers re-check the cosmetic maps once the batch has landed.
     try {
-      await requestUserCosmetics(twitchUserId);
+      await requestUserCosmetics(twitchUserId, login);
     } catch (error) {
       logger.stvWs.debug(
         `Failed to fetch cosmetics for ${twitchUserId}:`,

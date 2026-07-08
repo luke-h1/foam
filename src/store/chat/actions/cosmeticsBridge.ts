@@ -32,18 +32,45 @@ import { handlePersonalEmoteSetEntitlement } from './personalEmotes';
 const BRIDGE_FLUSH_DELAY_MS = 500;
 const MAX_IDENTIFIERS_PER_REQUEST = 100;
 
+// The bridge validates every identifier and rejects the whole request if one
+// is malformed, so a single bad login would drop the entire batch. Mirror the
+// bridge's own `username:` rule and skip logins that cannot match it.
+const VALID_BRIDGE_LOGIN = /^[a-zA-Z0-9_]{1,100}$/;
+
 // Session dedup so entitlement bursts and repeated hydration passes cannot
 // re-request the same user; bounded the same way as the other per-chatter
 // guards so a marathon session cannot grow it unbounded.
 const MAX_REQUESTED_USER_ENTRIES = 2000;
 const requestedUsers = new Map<string, Promise<void>>();
 
-let pendingUserIds = new Set<string>();
+// Maps each queued Twitch user id to the login the bridge is queried with. The
+// store keys on the Twitch id, but the bridge identifier must be the login
+// (`username:<login>`), so both are carried until the batch flushes.
+let pendingUsers = new Map<string, string>();
 let pendingFlush: {
   promise: Promise<void>;
   resolve: () => void;
   timer: ReturnType<typeof setTimeout>;
 } | null = null;
+
+/**
+ * Pull the Twitch login from an entitlement's user connections so a missing
+ * definition can be re-fetched through the bridge by `username:<login>`.
+ */
+const findTwitchLogin = (
+  connections: EntitlementCreate['object']['user']['connections'] | undefined,
+): string | null => {
+  if (!connections) {
+    return null;
+  }
+  for (let i = 0; i < connections.length; i += 1) {
+    const conn = connections[i];
+    if (conn?.platform === 'TWITCH') {
+      return conn.username ?? null;
+    }
+  }
+  return null;
+};
 
 export const applyCosmeticCreateEvent = (
   cosmetic: CosmeticCreate,
@@ -91,6 +118,7 @@ export const applyEntitlementCreateEvent = (
 ): void => {
   const { entitlement, kind, ttvUserId } = data;
   const cosmeticId = entitlement.object.ref_id;
+  const login = findTwitchLogin(entitlement.object.user.connections);
 
   if (kind === 'PAINT') {
     const paintId = cosmeticId || data.paintId;
@@ -98,8 +126,8 @@ export const applyEntitlementCreateEvent = (
       return;
     }
     setUserPaint(ttvUserId, paintId);
-    if (!getPaint(paintId) && options.requestMissingDefinitions) {
-      void requestUserCosmetics(ttvUserId);
+    if (!getPaint(paintId) && options.requestMissingDefinitions && login) {
+      void requestUserCosmetics(ttvUserId, login);
     }
   }
 
@@ -109,8 +137,8 @@ export const applyEntitlementCreateEvent = (
       return;
     }
     setUserBadge(ttvUserId, badgeId);
-    if (!getBadge(badgeId) && options.requestMissingDefinitions) {
-      void requestUserCosmetics(ttvUserId);
+    if (!getBadge(badgeId) && options.requestMissingDefinitions && login) {
+      void requestUserCosmetics(ttvUserId, login);
     }
   }
 
@@ -148,16 +176,20 @@ const applyBridgeDecision = (decision: SeventvWsDecision): void => {
   }
 };
 
-const flushPendingUsers = async (userIds: string[]): Promise<void> => {
+const flushPendingUsers = async (
+  users: [twitchUserId: string, login: string][],
+): Promise<void> => {
   for (
     let start = 0;
-    start < userIds.length;
+    start < users.length;
     start += MAX_IDENTIFIERS_PER_REQUEST
   ) {
-    const chunk = userIds.slice(start, start + MAX_IDENTIFIERS_PER_REQUEST);
+    const chunk = users.slice(start, start + MAX_IDENTIFIERS_PER_REQUEST);
     try {
       // eslint-disable-next-line react-doctor/async-await-in-loop -- chunks run sequentially to keep one bridge request in flight at a time
-      const events = await sevenTvService.fetchBridgedCosmetics(chunk);
+      const events = await sevenTvService.fetchBridgedCosmetics(
+        chunk.map(([, login]) => login),
+      );
       batch(() => {
         events.forEach(event => {
           const decisions = interpretSeventvWsMessage(
@@ -174,7 +206,7 @@ const flushPendingUsers = async (userIds: string[]): Promise<void> => {
       });
     } catch (error) {
       // Forget failed ids so a later hydration pass can retry them.
-      chunk.forEach(id => requestedUsers.delete(id));
+      chunk.forEach(([id]) => requestedUsers.delete(id));
       logger.stv.warn('7TV bridge cosmetics request failed', {
         name: 'seven_tv_cosmetics_warning',
         error,
@@ -192,10 +224,20 @@ const flushPendingUsers = async (userIds: string[]): Promise<void> => {
  * promise resolves once the batch containing the user has been applied to the
  * store, so callers can re-check the cosmetic maps afterwards.
  */
-export const requestUserCosmetics = (twitchUserId: string): Promise<void> => {
+export const requestUserCosmetics = (
+  twitchUserId: string,
+  login: string,
+): Promise<void> => {
   const existing = requestedUsers.get(twitchUserId);
   if (existing) {
     return existing;
+  }
+
+  // The bridge is queried by `username:<login>`, so a user without a usable
+  // login cannot be looked up; skip rather than send an identifier the bridge
+  // rejects (which would fail the whole batch, not just this user).
+  if (!VALID_BRIDGE_LOGIN.test(login)) {
+    return Promise.resolve();
   }
 
   if (!pendingFlush) {
@@ -204,16 +246,16 @@ export const requestUserCosmetics = (twitchUserId: string): Promise<void> => {
       resolve = promiseResolve;
     });
     const timer = setTimeout(() => {
-      const userIds = Array.from(pendingUserIds);
+      const users = Array.from(pendingUsers.entries());
       const flush = pendingFlush;
-      pendingUserIds = new Set();
+      pendingUsers = new Map();
       pendingFlush = null;
-      void flushPendingUsers(userIds).finally(() => flush?.resolve());
+      void flushPendingUsers(users).finally(() => flush?.resolve());
     }, BRIDGE_FLUSH_DELAY_MS);
     pendingFlush = { promise, resolve, timer };
   }
 
-  pendingUserIds.add(twitchUserId);
+  pendingUsers.set(twitchUserId, login);
   requestedUsers.set(twitchUserId, pendingFlush.promise);
   if (requestedUsers.size > MAX_REQUESTED_USER_ENTRIES) {
     const oldest = requestedUsers.keys().next().value;
@@ -231,6 +273,6 @@ export const clearBridgeCosmeticsState = (): void => {
     pendingFlush.resolve();
     pendingFlush = null;
   }
-  pendingUserIds = new Set();
+  pendingUsers = new Map();
   requestedUsers.clear();
 };

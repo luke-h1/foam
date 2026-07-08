@@ -239,7 +239,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   };
 
   const handleIrcMessage = (message: IrcMessage) => {
-    const { command, tags, params } = message;
+    const { command, tags, params, prefix } = message;
     const tagsRecord = tags ?? {};
 
     switch (command) {
@@ -273,6 +273,12 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         if (params.length >= 2 && tags) {
           const channelName = params[0];
           const messageText = params[1];
+          // PRIVMSG tags carry no `login`; the canonical Twitch login is the
+          // nick in the IRC prefix (`nick!user@host`). Localised display names
+          // are not the login, so derive it from the prefix instead.
+          if (!tagsRecord.login && prefix) {
+            tagsRecord.login = prefix.split('!')[0] ?? '';
+          }
           const username = tagsRecord['display-name'] || tagsRecord.login;
 
           if (channelName && messageText) {
