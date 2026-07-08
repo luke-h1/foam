@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
@@ -24,7 +25,7 @@ interface EmoteMenuIconProps {
   isActive: boolean;
 }
 
-export function EmoteMenuIcon({
+function EmoteMenuIconComponent({
   fallbackLabel,
   icon,
   isActive,
@@ -84,6 +85,8 @@ export function EmoteMenuIcon({
     <Text style={styles.fallbackIconLabel}>{fallbackLabel}</Text>
   ) : null;
 }
+
+export const EmoteMenuIcon = memo(EmoteMenuIconComponent);
 
 const styles = StyleSheet.create({
   avatarIcon: {

@@ -17,7 +17,7 @@ export function renderSetRailItem({
   return (
     <SetRailButton
       isActive={set.id === activeSetId}
-      onPress={() => onScrollToSet(set.id)}
+      onScrollToSet={onScrollToSet}
       set={set}
     />
   );

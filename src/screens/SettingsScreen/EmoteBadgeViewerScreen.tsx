@@ -162,7 +162,7 @@ function EmotesTab({
           <ProviderChip
             key={provider.id}
             isActive={provider.id === effectiveActiveProviderId}
-            onPress={() => setActiveProviderId(provider.id)}
+            onSelect={setActiveProviderId}
             provider={provider}
           />
         ))}

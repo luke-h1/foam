@@ -80,20 +80,6 @@ export const emoteSheetStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emoteImageLoading: {
-    opacity: 0,
-  },
-  emoteImagePlaceholder: {
-    backgroundColor: MENU_CARD,
-    borderColor: MENU_BORDER,
-    borderCurve: 'continuous',
-    borderRadius: 8,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: 'hidden',
-  },
-  emoteImageShimmer: {
-    opacity: 0.9,
-  },
   emoteRow: {
     flexDirection: 'row',
     gap: 4,

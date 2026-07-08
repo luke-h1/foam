@@ -82,7 +82,7 @@ export function EmoteSheet({
               <ProviderChip
                 key={provider.id}
                 isActive={provider.id === sheet.activeProviderId}
-                onPress={() => sheet.handleProviderPress(provider.id)}
+                onSelect={sheet.handleProviderPress}
                 provider={provider}
               />
             ))}
@@ -140,7 +140,11 @@ export function EmoteSheet({
                         (sheet.filteredSets.length > 1 ? 0 : bottomInset),
                     },
                   ]}
-                  drawDistance={96}
+                  /**
+                   * Buffer ~4 rows above and below so fast flings
+                   * has cells already pre-rendered
+                   */
+                  drawDistance={(sheet.cellSize + 4) * 4}
                   recycleItems
                   showsVerticalScrollIndicator={false}
                   nestedScrollEnabled

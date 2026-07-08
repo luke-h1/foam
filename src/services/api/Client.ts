@@ -1,5 +1,4 @@
-import { fetch } from 'expo/fetch';
-
+import { fetch } from '@app/lib/expoFetch';
 import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
 import { type MonitoringErrorName, startSpanAsync } from '@app/lib/sentry';
 import { type AllowedPrefix, logger } from '@app/utils/logger';
