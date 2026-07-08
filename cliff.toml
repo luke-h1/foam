@@ -47,12 +47,9 @@ split_commits = false
 # Use topological order for tags (based on git commit graph, not alphabetical).
 topo_order = true
 
-# Only native release tags are changelog boundaries. OTA tags
-# (`ota-<variant>-<version>-<run>`) are deliberately excluded so the commits an
-# OTA shipped fold into the next native release's notes instead of rendering as
-# their own noisy sections - an OTA is a patch within a version, not a new
-# version. The OTA tags still exist in git for hotfix base resolution
-# (scripts/hotfix.sh); they just aren't release boundaries here.
+# Only native release tags are changelog boundaries. OTA tags (`ota-*`) are
+# excluded so their commits fold into the next native release instead of
+# rendering as their own sections. See README "How OTA updates are tracked".
 tag_pattern = "^v?[0-9]+\\.[0-9]+\\.[0-9]+(-(internal|testflight|preview))?$"
 
 date_order = false
