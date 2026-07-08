@@ -24,7 +24,11 @@ interface FFzErrorResponse {
  * that is a benign empty result, not a failure worth logging.
  */
 function isNoSuchRoomError(error: unknown): boolean {
-  return error instanceof ApiError && error.status === 404;
+  return (
+    error instanceof ApiError &&
+    error.status === 404 &&
+    error.message.includes('No such room')
+  );
 }
 
 function toFfzStaticUrl(emoteId: number, scale: '2x' | '4x'): string {

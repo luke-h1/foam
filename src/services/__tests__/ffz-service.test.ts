@@ -165,4 +165,20 @@ describe('ffzService', () => {
 
     expect(result).toEqual([]);
   });
+
+  test('getSanitisedChannelEmotes rethrows a 404 that is not a "No such room" error', async () => {
+    api.get.mockRejectedValue(new ApiError('Not Found', 404, 'FFZApiError'));
+
+    await expect(ffzService.getSanitisedChannelEmotes('999')).rejects.toThrow(
+      'Not Found',
+    );
+  });
+
+  test('getSanitisedChannelBadges rethrows a 404 that is not a "No such room" error', async () => {
+    api.get.mockRejectedValue(new ApiError('Not Found', 404, 'FFZApiError'));
+
+    await expect(ffzService.getSanitisedChannelBadges('999')).rejects.toThrow(
+      'Not Found',
+    );
+  });
 });
