@@ -34,6 +34,10 @@ export function useChatCosmetics({ userId }: { userId?: string | null }) {
       return;
     }
 
+    if (!login) {
+      return;
+    }
+
     fetchedCosmeticsUsersRef.current.add(twitchUserId);
 
     // The bridge batcher coalesces every user queued in the same window into

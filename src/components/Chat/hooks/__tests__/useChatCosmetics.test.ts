@@ -111,6 +111,31 @@ describe('useChatCosmetics', () => {
     ]);
   });
 
+  test('does not mark a user fetched when no login is available', async () => {
+    const { result } = renderHook(() =>
+      useChatCosmetics({
+        userId: null,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.fetchUserCosmetics('chatter-1', '');
+    });
+
+    expect(mockRequestUserCosmetics).not.toHaveBeenCalled();
+    expect(
+      result.current.fetchedCosmeticsUsersRef.current.has('chatter-1'),
+    ).toBe(false);
+
+    await act(async () => {
+      await result.current.fetchUserCosmetics('chatter-1', 'chatter-login');
+    });
+
+    expect(mockRequestUserCosmetics.mock.calls).toEqual([
+      ['chatter-1', 'chatter-login'],
+    ]);
+  });
+
   test('does not refetch users that already have cached paint and badge cosmetics', async () => {
     setCachedCosmetics({
       badgeId: 'badge-1',
