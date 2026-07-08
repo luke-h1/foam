@@ -206,6 +206,30 @@ jobs:
           STEPS_FP_OUTPUTS_BASE_ANDROID_INTERNAL: ${{ steps.fp.outputs.base_android_internal }}
           STEPS_FP_OUTPUTS_HEAD_ANDROID_INTERNAL: ${{ steps.fp.outputs.head_android_internal }}
 
+      - name: 🏷️ Label PR with OTA vs native verdict
+        env:
+          GH_TOKEN: ${{ secrets.PR_COMMENT_GITHUB_TOKEN || github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          CHANGED: ${{ steps.fp.outputs.changed }}
+        run: |
+          set -euo pipefail
+
+          # A fingerprint change on any variant/platform means the PR cannot ship
+          # as an OTA update and needs a fresh native build. Reflect that as a
+          # single, mutually-exclusive label so the verdict is visible in the PR
+          # list without opening the fingerprint comment.
+          if [ "$CHANGED" = "true" ]; then
+            add_label="native-build-required"
+            remove_label="ota-compatible"
+          else
+            add_label="ota-compatible"
+            remove_label="native-build-required"
+          fi
+
+          gh pr edit "$PR_NUMBER" --repo "$REPO" --remove-label "$remove_label" 2>/dev/null || true
+          gh pr edit "$PR_NUMBER" --repo "$REPO" --add-label "$add_label"
+
       - name: 🧹 Clean up worktree
         if: always()
         run: git worktree remove --force .__pr_base__ || true

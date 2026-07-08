@@ -45,11 +45,15 @@ filter_unconventional = false
 split_commits = false
 
 # Use topological order for tags (based on git commit graph, not alphabetical).
-# Critical for OTA tags with UUIDs that don't sort chronologically.
 topo_order = true
 
-# Match both semver tags (native builds) and OTA tags (ota-<uuid> or ota-0.0.38-27)
-tag_pattern = "^(v?[0-9]+\\.[0-9]+\\.[0-9]+.*|ota-.+)$"
+# Only native release tags are changelog boundaries. OTA tags
+# (`ota-<variant>-<version>-<run>`) are deliberately excluded so the commits an
+# OTA shipped fold into the next native release's notes instead of rendering as
+# their own noisy sections - an OTA is a patch within a version, not a new
+# version. The OTA tags still exist in git for hotfix base resolution
+# (scripts/hotfix.sh); they just aren't release boundaries here.
+tag_pattern = "^v?[0-9]+\\.[0-9]+\\.[0-9]+(-(internal|testflight|preview))?$"
 
 date_order = false
 

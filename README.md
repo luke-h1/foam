@@ -28,6 +28,7 @@ The native Twitch app experience doesn't quite line up with the desktop experien
 - [Contributing](#contributing)
 - [CI/CD](#cicd)
 - [Release process](#release-process)
+  - [Hotfixing](#hotfix--cherry-pick-releases)
 - [Testers management](#testers-management)
 - [Debugging](#debugging)
 - [Managing access to the project and associated services](#managing-access-to-the-project-and-associated-services)
@@ -440,18 +441,18 @@ If you get an error such as `no development servers found` then this means the l
 
 Pull requests run checks in [`.github/workflows/`](.github/workflows/):
 
-| Workflow                                                             | Trigger                                                                               | Purpose                                                                                                                   |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| [`typescript.yml`](.github/workflows/typescript.yml)                 | Pull requests                                                                         | Runs `bun run ts:check`.                                                                                                  |
-| [`lint.yml`](.github/workflows/lint.yml)                             | Pull requests                                                                         | Runs ESLint with `bun run lint`.                                                                                          |
-| [`prettier.yml`](.github/workflows/prettier.yml)                     | Pull requests                                                                         | Runs Prettier with `bun run format:check`.                                                                                |
-| [`cz.yml`](.github/workflows/cz.yml)                                 | Pull requests                                                                         | Runs commitlint from `HEAD^1`.                                                                                            |
-| [`jest.yml`](.github/workflows/jest.yml)                             | Pull requests                                                                         | Placeholder Jest workflow; currently echoes `bun run test` instead of executing it.                                       |
-| [`detect-fp-changes.yml`](.github/workflows/detect-fp-changes.yml)   | Pull requests                                                                         | Compares Expo native fingerprints for `production`, `testflight`, and `internal` against the PR base and comments on PRs. |
-| [`label.yml`](.github/workflows/label.yml)                           | Pull requests                                                                         | Applies labels via [labeler](https://github.com/actions/labeler).                                                         |
-| [`anti-slop.yml`](.github/workflows/anti-slop.yml)                   | Pull requests via `pull_request_target`                                               | Runs `peakoss/anti-slop`, exempts draft PRs, and adds the `slop` label on failure.                                        |
-| [`self-hosted-runner.yml`](.github/workflows/self-hosted-runner.yml) | Pull requests with the `self-hosted-test` label, or manual dispatch in `luke-h1/foam` | Runs `bun run lint` on the self-hosted `foam` runner.                                                                     |
-| [`zizmor.yml`](.github/workflows/zizmor.yml)                         | Pull requests targeting `main`, and pushes to `main`                                  | Audits GitHub Actions workflows for security issues with [zizmor](https://github.com/zizmorcore/zizmor).                  |
+| Workflow                                                             | Trigger                                                                               | Purpose                                                                                                                                                                                                                            |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`typescript.yml`](.github/workflows/typescript.yml)                 | Pull requests                                                                         | Runs `bun run ts:check`.                                                                                                                                                                                                           |
+| [`lint.yml`](.github/workflows/lint.yml)                             | Pull requests                                                                         | Runs ESLint with `bun run lint`.                                                                                                                                                                                                   |
+| [`prettier.yml`](.github/workflows/prettier.yml)                     | Pull requests                                                                         | Runs Prettier with `bun run format:check`.                                                                                                                                                                                         |
+| [`cz.yml`](.github/workflows/cz.yml)                                 | Pull requests                                                                         | Runs commitlint from `HEAD^1`.                                                                                                                                                                                                     |
+| [`jest.yml`](.github/workflows/jest.yml)                             | Pull requests                                                                         | Placeholder Jest workflow; currently echoes `bun run test` instead of executing it.                                                                                                                                                |
+| [`detect-fp-changes.yml`](.github/workflows/detect-fp-changes.yml)   | Pull requests                                                                         | Compares Expo native fingerprints for `production`, `testflight`, and `internal` against the PR base, comments on the PR, and applies the mutually-exclusive `ota-compatible` / `native-build-required` label based on the result. |
+| [`label.yml`](.github/workflows/label.yml)                           | Pull requests                                                                         | Applies labels via [labeler](https://github.com/actions/labeler).                                                                                                                                                                  |
+| [`anti-slop.yml`](.github/workflows/anti-slop.yml)                   | Pull requests via `pull_request_target`                                               | Runs `peakoss/anti-slop`, exempts draft PRs, and adds the `slop` label on failure.                                                                                                                                                 |
+| [`self-hosted-runner.yml`](.github/workflows/self-hosted-runner.yml) | Pull requests with the `self-hosted-test` label, or manual dispatch in `luke-h1/foam` | Runs `bun run lint` on the self-hosted `foam` runner.                                                                                                                                                                              |
+| [`zizmor.yml`](.github/workflows/zizmor.yml)                         | Pull requests targeting `main`, and pushes to `main`                                  | Audits GitHub Actions workflows for security issues with [zizmor](https://github.com/zizmorcore/zizmor).                                                                                                                           |
 
 Scheduled [CodeQL](.github/workflows/codeql.yml) runs weekly on the default branch.
 
@@ -514,14 +515,14 @@ Additional build profiles (for example `e2e`) are used for Maestro E2E runs and 
 
 Production delivery is automated on the default branch. Internal, TestFlight, and forced production deploys can also be kicked off manually from GitHub Actions.
 
-| Workflow                                                                 | Trigger                                                                                                                                                                    | What it does                                                                                                                                                                                                                                                                                                                                                                                                            |
-| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`deploy-ota-or-native.yml`](.github/workflows/deploy-ota-or-native.yml) | Push to `main`, or **Run workflow** with `variant`, `deploy_type`, `platform`, `dry_run`, and `critical_update` inputs. Pushes default to `production`, `auto`, and `ios`. | Runs `bun run test:ci` and `bun run ts:check`, compares cached native fingerprints for the selected variant, then either publishes an OTA with `eas update --channel <variant>` using the local environment or runs local `eas build` + `eas submit`. OTA deploys update `CHANGELOG.md`; native deploys update `CHANGELOG.md` and create a GitHub Release. Sends Slack notifications when release metadata is produced. |
-| [`eas-deploy.yml`](.github/workflows/eas-deploy.yml)                     | **Run workflow** with `variant` (`production`, `testflight`, `internal`) and `platform` (`all`, `ios`, `android`).                                                         | Runs the matching `bun run build:<variant>:<platform>` cloud EAS build script. The package scripts use `--no-wait`; iOS production and TestFlight scripts auto-submit. Requires `EXPO_TOKEN`.                                                                                                                                                                                                                           |
-| [`rollout-ota.yml`](.github/workflows/rollout-ota.yml)                   | **Run workflow** with an OTA update group id and target rollout percentage.                                                                                                | Fetches the current rollout state and progresses an existing rollout with `eas update:edit --rollout-percentage`.                                                                                                                                                                                                                                                                                                       |
-| [`rollback-ota.yml`](.github/workflows/rollback-ota.yml)                 | **Run workflow** with `channel`, `rollback_target`, and `platform`.                                                                                                        | Rolls the selected channel back to `embedded` by runtime version, or republishes a previous OTA update group to the selected channel.                                                                                                                                                                                                                                                                                   |
-| [`e2e.yml`](.github/workflows/e2e.yml)                                   | **Run workflow** with optional `force_rebuild`.                                                                                                                            | Fingerprints the iOS `e2e` profile on the self-hosted `foam` runner, restores or builds a cached local EAS `.app`, optionally pushes an `e2e` OTA when the build is skipped, then runs the Maestro flows on `macos-latest`.                                                                                                                                                                                             |
-| [`clear-cache.yml`](.github/workflows/clear-cache.yml)                   | **Run workflow**.                                                                                                                                                          | Deletes GitHub Actions caches while preserving OTA fingerprint and production OTA id caches.                                                                                                                                                                                                                                                                                                                            |
+| Workflow                                                                 | Trigger                                                                                                                                                                    | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`deploy-ota-or-native.yml`](.github/workflows/deploy-ota-or-native.yml) | Push to `main`, or **Run workflow** with `variant`, `deploy_type`, `platform`, `dry_run`, and `critical_update` inputs. Pushes default to `production`, `auto`, and `ios`. | Runs `bun run test:ci` and `bun run ts:check`, compares cached native fingerprints for the selected variant, then either publishes an OTA with `eas update --channel <variant>` using the local environment or runs local `eas build` + `eas submit`. OTA deploys push an `ota-<variant>-<version>-<run>` tag marking the live commit (see [How OTA updates are tracked](#how-ota-updates-are-tracked)); native deploys update `CHANGELOG.md`, push the semver tag, and create a GitHub Release. Sends Slack notifications when release metadata is produced. |
+| [`eas-deploy.yml`](.github/workflows/eas-deploy.yml)                     | **Run workflow** with `variant` (`production`, `testflight`, `internal`) and `platform` (`all`, `ios`, `android`).                                                         | Runs the matching `bun run build:<variant>:<platform>` cloud EAS build script. The package scripts use `--no-wait`; iOS production and TestFlight scripts auto-submit. Requires `EXPO_TOKEN`.                                                                                                                                                                                                                                                                                                                                                                 |
+| [`rollout-ota.yml`](.github/workflows/rollout-ota.yml)                   | **Run workflow** with an OTA update group id and target rollout percentage.                                                                                                | Fetches the current rollout state and progresses an existing rollout with `eas update:edit --rollout-percentage`.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| [`rollback-ota.yml`](.github/workflows/rollback-ota.yml)                 | **Run workflow** with `channel`, `rollback_target`, and `platform`.                                                                                                        | Rolls the selected channel back to `embedded` by runtime version, or republishes a previous OTA update group to the selected channel.                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| [`e2e.yml`](.github/workflows/e2e.yml)                                   | **Run workflow** with optional `force_rebuild`.                                                                                                                            | Fingerprints the iOS `e2e` profile on the self-hosted `foam` runner, restores or builds a cached local EAS `.app`, optionally pushes an `e2e` OTA when the build is skipped, then runs the Maestro flows on `macos-latest`.                                                                                                                                                                                                                                                                                                                                   |
+| [`clear-cache.yml`](.github/workflows/clear-cache.yml)                   | **Run workflow**.                                                                                                                                                          | Deletes GitHub Actions caches while preserving OTA fingerprint and production OTA id caches.                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 There is also a draft [EAS Workflows](https://docs.expo.dev/eas/workflows/get-started/) file at [`.eas/deploy-prod.yml`](.eas/deploy-prod.yml) (mostly commented / experimental); **GitHub Actions above are the source of truth** for how this repo deploys today.
 
@@ -723,6 +724,88 @@ You can inspect build history on the [EAS Builds dashboard](https://expo.dev/acc
 
 - **Marketing / release tag version** — `VERSION` in [`app.config.ts`](app.config.ts) is read by `deploy-ota-or-native` for native release tags and changelog flow.
 - **Store build numbers** — [`eas.json`](eas.json) sets `"appVersionSource": "remote"` so compatible native version fields are managed on Expo’s side for production builds (see [EAS app version](https://docs.expo.dev/build-reference/app-versions/)).
+
+## How OTA updates are tracked
+
+An OTA update ships new JS/assets on top of an existing native build **without** bumping `VERSION`, so `1.0.0` can accumulate several OTAs before the next native release. To keep track of what's actually live on each channel, [`deploy-ota-or-native.yml`](.github/workflows/deploy-ota-or-native.yml) tags every OTA publish:
+
+```
+ota-<variant>-<version>-<run>     e.g. ota-production-1.0.1-457
+```
+
+- The tag sits on the exact commit the OTA was published from, so the highest-numbered `ota-<variant>-<version>-*` tag is the commit currently live on that channel. That's the signal the [hotfix flow](#hotfix--cherry-pick-releases) branches from. (We tag rather than read the commit back from EAS because EAS only guarantees the git SHA in the `--emit-metadata` bundle file, not in `eas update:list` JSON.)
+- The EAS update group id goes in the tag's **annotation**, not the name, so the tag stays sortable and readable.
+- These tags are **not** changelog boundaries. [`cliff.toml`](cliff.toml)'s `tag_pattern` matches native release tags only, so the commits an OTA shipped fold into the **next native release's** notes rather than rendering as their own `## ota-…` sections — an OTA is a patch within a version, not a new version. This is the common Expo/community pattern (native releases get changelog sections; OTAs fold under the runtime version they target).
+- Naming and delivery mirror [SemVer build metadata](https://semver.org/#spec-item-10) semantics ("same version, different delivery"); we use `-` separators instead of `+` so git-cliff and `sort` handle the tags cleanly.
+
+## Hotfix / cherry-pick releases
+
+Runbook for shipping a critical fix to an already-released build when `main` has moved on with unrelated work. You cut the fix from what is _live_, take only the fix commit(s), ship, and tag it separately — without dragging in unrelated `main` changes.
+
+**When to use:** a released build (production, TestFlight, or internal) needs an urgent fix and you cannot ship the current `main` tip (it has unreleased or native-incompatible work).
+
+**Prerequisites:**
+
+- A clean working tree (`git status` shows nothing to commit).
+- The fix already merged to `main`, or ready to author on the hotfix branch — you need the commit SHA(s) to cherry-pick.
+- Deploy credentials in your `.env` (same ones as [Deploy flows](#deploy-flows): `FOAM_AWS_FINGERPRINT_*`, `GITHUB_RELEASE_TOKEN`, `EXPO_TOKEN`).
+- The base tag of the build you're patching (`1.0.0`, `1.0.0-internal`, or `1.0.0-testflight`).
+
+> [!IMPORTANT]
+> The base is **whatever is live on the channel, not the native tag.** OTA updates ship on top of a native release without bumping the version, so after a few OTAs the live code is _ahead_ of the `1.0.0` tag. Branching from the bare native tag would drop every OTA since and regress users — worse, an OTA-compatible native hotfix would be immediately overwritten by the newer OTA still sitting on the channel. `hotfix.sh` resolves the live commit for you (the latest `ota-<variant>-<version>-*` tag, see [How OTA updates are tracked](#how-ota-updates-are-tracked)), falling back to the native tag only when no OTAs shipped on that version.
+
+### Steps
+
+1. **Land the fix on `main`.** Merge the fix PR as normal and note the commit SHA(s). If it genuinely can't go to `main`, skip this and author the commit on the hotfix branch in step 2.
+   - _Verify:_ you have the SHA(s) to cherry-pick (`git log --oneline -5 origin/main`).
+
+2. **Create the hotfix branch and cherry-pick.** Run:
+
+   ```sh
+   bun run hotfix -- <base-tag> <commit-sha> [<commit-sha> ...]
+   # e.g. bun run hotfix -- 1.0.0 4f086c92
+   ```
+
+   [`scripts/hotfix.sh`](scripts/hotfix.sh) fetches tags, resolves the commit currently live on the channel, creates `hotfix/<base-tag>` from it, and cherry-picks your SHA(s). Pass `--base <ref>` to pin the base yourself (e.g. a release from before OTA tagging existed — the script prints the `eas update:list` command to find that commit).
+   - _Verify:_ the script prints `branching from the live commit '<ota-tag>'` (or the fallback warning), you're on branch `hotfix/<base-tag>`, and `git log --oneline` shows your fix on top.
+   - _On conflict:_ resolve it, `git cherry-pick --continue`, then continue.
+
+3. **Bump `VERSION`** in [`app.config.ts`](app.config.ts) — usually a patch bump (`1.0.0` → `1.0.1`) so the hotfix gets its own tag and a clean changelog range.
+   - _Verify:_ `grep "const VERSION" app.config.ts` shows the new version.
+
+4. **Decide OTA vs native.** Run `bun run ota:check`, then ship off the branch:
+
+   ```sh
+   # Fingerprint unchanged (OTA-eligible):
+   bun run ota -- <variant> <platform> "hotfix: <summary>"
+
+   # Fingerprint changed (native build required):
+   bun run deploy -- <variant> <platform> --no-push
+   ```
+
+   `--no-push` stops the deploy committing the changelog or pushing to `main`. Alternatively run [`eas-deploy.yml`](.github/workflows/eas-deploy.yml) with the branch set to `hotfix/<base-tag>` — it's branch-agnostic and won't touch `main`.
+   - _Verify:_ EAS shows the new update/build for the target channel; install it and confirm the fix.
+
+5. **Tag the hotfix and push only the tag.** Cutting the tag off the branch keeps the hotfix history isolated (rather than letting `release-github.sh` push the changelog to `main`):
+
+   ```sh
+   version="$(grep "const VERSION = " app.config.ts | sed "s/const VERSION = '//; s/';//" | tr -d ' ')"
+   tag="$version" # or "${version}-internal" / "${version}-testflight"
+   git tag -a "$tag" -m "Hotfix build: $tag"
+   git push origin "refs/tags/$tag"
+   ```
+
+   Then create the GitHub Release (`gh release create "$tag"`), or run `bun run release:github <variant> --no-push` to regenerate and review the changelog locally first.
+   - _Verify:_ `git ls-remote --tags origin | grep "$tag"` shows the pushed tag.
+
+6. **Reconcile with `main`.** If the fix and version bump aren't already on `main` (step 1), open a PR to bring them back so the next regular release includes the hotfix and versions stay monotonic.
+   - _Verify:_ `git log origin/main` contains the fix and the version bump.
+
+### Rollback
+
+- **Bad OTA:** roll the channel back with [`rollback-ota.yml`](.github/workflows/rollback-ota.yml) (to `embedded` or a previous update group), or halt a staged rollout with [`rollout-ota.yml`](.github/workflows/rollout-ota.yml).
+- **Bad native build:** you can't unship a store binary — ship a follow-up hotfix. For TestFlight/internal, expire the build in App Store Connect / Play Console.
+- **Abandon before shipping:** `git cherry-pick --abort` (mid-pick), then `git switch main && git branch -D hotfix/<base-tag>`. Delete a pushed tag with `git push origin :refs/tags/<tag>`.
 
 ## Store assets (fastlane submodule)
 

@@ -416,6 +416,45 @@ jobs:
           deployment_type: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && 'ota' || 'native' }}
           commit_changelog: 'true'
 
+      - name: 🏷️ Tag OTA update
+        if: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.LUKE_H1_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.release_tag.outputs.tag }}
+          VARIANT: ${{ inputs.variant || 'production' }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+          UPDATE_GROUP_ID: ${{ needs.ota.outputs.update_group_id }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          # Mark the commit this OTA shipped from so a hotfix can branch from the
+          # code that is actually live on the channel (not the older native tag).
+          # The tag name stays sortable; the EAS update group id goes in the
+          # annotation. cliff.toml excludes ota-* tags, so this never pollutes the
+          # changelog. See scripts/hotfix.sh.
+          AUTH_HEADER="$(printf 'luke-h1:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
+          git_authed() {
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${AUTH_HEADER}" "$@"
+          }
+
+          git_authed fetch --tags origin 2>/dev/null || true
+
+          if git tag -l "$TAG" | grep -qx "$TAG"; then
+            echo "Tag $TAG already exists; skipping"
+            exit 0
+          fi
+
+          git tag -a "$TAG" \
+            -m "OTA update: ${TAG}" \
+            -m "Variant: ${VARIANT}" \
+            -m "Version: ${VERSION}" \
+            -m "Commit: ${COMMIT_SHA}" \
+            -m "EAS update group: ${UPDATE_GROUP_ID:-unknown}"
+
+          git_authed push "https://github.com/${GITHUB_REPOSITORY}.git" "refs/tags/${TAG}"
+          echo "🏷️ Tagged OTA update as ${TAG}"
+
       - name: Check for release notes file
         id: check_release_notes
         run: |
