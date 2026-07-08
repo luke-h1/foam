@@ -109,7 +109,7 @@ describe('useChatComposerActions', () => {
       hook.result.current.handleReply(replyMessage);
     });
 
-    expect(fetchUserCosmetics).toHaveBeenCalledWith('viewer-user');
+    expect(fetchUserCosmetics).toHaveBeenCalledWith('viewer-user', 'viewer');
     expect(mockGetMessageById).toHaveBeenCalledWith('reply-1');
     expect(inputShell.setReplyTo.mock.calls[0]?.[0]).toEqual<ReplyToData>({
       color: '#00ff00',

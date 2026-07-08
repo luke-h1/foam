@@ -30,7 +30,7 @@ export function useChatComposerActions({
 
       const twitchUserId = message.userstate['user-id'];
       if (twitchUserId) {
-        void fetchUserCosmetics(twitchUserId, message.userstate.username || '');
+        void fetchUserCosmetics(twitchUserId, message.userstate.login || '');
       }
 
       inputShellRef.current?.setReplyTo({

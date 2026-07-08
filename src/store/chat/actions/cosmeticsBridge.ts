@@ -32,6 +32,11 @@ import { handlePersonalEmoteSetEntitlement } from './personalEmotes';
 const BRIDGE_FLUSH_DELAY_MS = 500;
 const MAX_IDENTIFIERS_PER_REQUEST = 100;
 
+// The bridge validates every identifier and rejects the whole request if one
+// is malformed, so a single bad login would drop the entire batch. Mirror the
+// bridge's own `username:` rule and skip logins that cannot match it.
+const VALID_BRIDGE_LOGIN = /^[a-zA-Z0-9_]{1,100}$/;
+
 // Session dedup so entitlement bursts and repeated hydration passes cannot
 // re-request the same user; bounded the same way as the other per-chatter
 // guards so a marathon session cannot grow it unbounded.
@@ -228,9 +233,10 @@ export const requestUserCosmetics = (
     return existing;
   }
 
-  // The bridge is queried by `username:<login>`, so a user without a login
-  // cannot be looked up; skip rather than send an identifier the bridge rejects.
-  if (!login) {
+  // The bridge is queried by `username:<login>`, so a user without a usable
+  // login cannot be looked up; skip rather than send an identifier the bridge
+  // rejects (which would fail the whole batch, not just this user).
+  if (!VALID_BRIDGE_LOGIN.test(login)) {
     return Promise.resolve();
   }
 
