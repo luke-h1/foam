@@ -1172,9 +1172,8 @@ export function buildTwitchContentGateWatcherScript(): string {
     } catch (e) {}
   }
 
-  // The gate overlay container and its buttons both match GATE_SELECTOR; pick
-  // the container (the accept script targets the button, so the container comes
-  // first in document order and is never itself a <button>).
+  // The overlay container and its buttons both match GATE_SELECTOR; return the
+  // container, which is never itself a <button>.
   function findGate() {
     var candidates = document.querySelectorAll(GATE_SELECTOR);
     for (var i = 0; i < candidates.length; i++) {
@@ -1183,20 +1182,16 @@ export function buildTwitchContentGateWatcherScript(): string {
     return null;
   }
 
-  // A gate blocks only when it can't be auto-accepted: the anonymous mature gate
-  // carries a continue button (which the accept script clicks), whereas the
-  // login-required gate has none, so it stays up until the user logs in.
+  // Blocks only when it has no continue button: the mature gate carries one
+  // (auto-clicked by the accept script), the login-required gate does not.
   function isBlockingGate() {
     var gate = findGate();
     if (!gate) { return false; }
     return !gate.querySelector('button[data-a-target*="content-classification-gate"]');
   }
 
-  // The player embed lives on player.twitch.tv; any other host means the gate's
-  // "log in"/"create an account" link has navigated the WebView into Twitch's
-  // auth flow. Keep interaction on for that whole interstitial so the user can
-  // type and paste credentials - it only clears once we're back on the embed
-  // and the gate is gone.
+  // Any host other than the player embed means the gate's login link navigated
+  // into Twitch's auth flow; keep interaction on until we're back on the embed.
   function isInAuthFlow() {
     try {
       return window.location.hostname.indexOf('player.twitch.tv') === -1;

@@ -172,22 +172,16 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       // don't delay the overlay's tap.
       pointerEvents={allowsTwitchInteraction ? 'auto' : 'none'}
       scrollEnabled={allowsTwitchInteraction}
-      // Both of these are baked into the WKWebView at creation and never
-      // re-applied on prop updates, so they can't be gated on the live
-      // allowsTwitchInteraction. Keep them permissive: during playback
-      // pointerEvents='none' blocks touches from reaching the WebView anyway,
-      // and when a content gate hands control to Twitch's login the fields must
-      // be focusable and typeable (keyboard without a prior user gesture).
+      // Baked into the WKWebView config at creation and never re-applied on
+      // prop updates, so these can't track the live allowsTwitchInteraction.
+      // Kept permissive so the content gate's login form is focusable/typeable;
+      // pointerEvents='none' keeps the WebView inert during normal playback.
       keyboardDisplayRequiresUserAction={false}
       setBuiltInZoomControls={false}
       setDisplayZoomControls={false}
       setSupportMultipleWindows={false}
       sharedCookiesEnabled
       thirdPartyCookiesEnabled
-      // Applied to the WKWebView config at creation only (never on live
-      // updates), so it can't track allowsTwitchInteraction. Left on so the
-      // login form the content gate hands off to is selectable/pasteable;
-      // pointerEvents='none' keeps it inert during normal playback.
       textInteractionEnabled
       originWhitelist={['*']}
       source={source}

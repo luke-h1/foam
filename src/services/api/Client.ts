@@ -255,22 +255,32 @@ export function createApiClient({
         }
       }
 
-      const logFailure = response.status >= 500 ? log.error : log.warn;
-      logFailure(`${method} ${path} ${response.status}`, {
-        name: errorName,
-        exceptionName,
-        tags: {
-          service,
-          method,
-          status: String(response.status),
-          endpoint: String(context.endpoint ?? path),
-        },
-        // Group by service + method + path + status so each broken endpoint
-        // creates exactly one Sentry issue regardless of query params.
-        fingerprint: [service, method, path, String(response.status)],
-        action: 'response_error_status',
-        ...context,
-      });
+      // FFZ returns 404 "No such room" for channels that have never configured
+      // FFZ; it's a benign empty result the caller handles, so don't log it (and
+      // don't forward it to Sentry).
+      const isExpectedFfzNoRoom =
+        service === 'ffz' &&
+        response.status === 404 &&
+        body.includes('No such room');
+
+      if (!isExpectedFfzNoRoom) {
+        const logFailure = response.status >= 500 ? log.error : log.warn;
+        logFailure(`${method} ${path} ${response.status}`, {
+          name: errorName,
+          exceptionName,
+          tags: {
+            service,
+            method,
+            status: String(response.status),
+            endpoint: String(context.endpoint ?? path),
+          },
+          // Group by service + method + path + status so each broken endpoint
+          // creates exactly one Sentry issue regardless of query params.
+          fingerprint: [service, method, path, String(response.status)],
+          action: 'response_error_status',
+          ...context,
+        });
+      }
 
       throw new ApiError(
         body || `${method} ${path} ${response.status}`,

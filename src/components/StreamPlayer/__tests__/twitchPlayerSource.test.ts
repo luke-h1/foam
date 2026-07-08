@@ -27,7 +27,6 @@ describe('twitchPlayerSource', () => {
   test('content-gate watcher reports a login-required gate so the WebView becomes tappable', () => {
     const script = buildTwitchContentGateWatcherScript();
 
-    // Finds the gate overlay by the same wildcard the accept script uses.
     expect(script).toContain(
       'var GATE_SELECTOR = \'[data-a-target*="content-classification-gate"]\'',
     );
@@ -40,11 +39,15 @@ describe('twitchPlayerSource', () => {
     // Posts the bridge message the player uses to re-enable WebView interaction.
     expect(script).toContain("type: 'contentGateDetected'");
     expect(script).toContain('hasContentGate: hasGate');
+
     // Only posts on a change, so the bridge isn't spammed every tick.
     expect(script).toContain('if (lastReported === hasGate) { return; }');
-    // Stays interactive across the whole login flow: tapping the gate's login
-    // link navigates off player.twitch.tv, and the WebView must stay tappable so
-    // the user can type/paste credentials.
+
+    /**
+     * Stays interactive across the whole login flow: tapping the gate's login
+     * link navigates off player.twitch.tv, and the WebView must stay tappable so
+     * the user can type/paste credentials.
+     */
     expect(script).toContain(
       "window.location.hostname.indexOf('player.twitch.tv') === -1",
     );

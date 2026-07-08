@@ -20,10 +20,8 @@ interface FFzErrorResponse {
 }
 
 /**
- * FFZ returns a 404 "No such room" for any channel that has never configured
- * FFZ. That is an expected, benign outcome - the channel simply has no FFZ
- * emotes or badges - so callers treat it as an empty result rather than a
- * failure to log and re-throw.
+ * FFZ returns a 404 "No such room" for channels that have never configured FFZ;
+ * that is a benign empty result, not a failure worth logging.
  */
 function isNoSuchRoomError(error: unknown): boolean {
   return error instanceof ApiError && error.status === 404;
