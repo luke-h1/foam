@@ -41,6 +41,7 @@ function startPendingFetch(callerSignal?: AbortSignal): DeferredFetch {
 
 afterEach(() => {
   mockFetch.mockReset();
+  drainInFlightExpoFetches();
 });
 
 test('drain aborts an in-flight request and resolves once it settles', async () => {
