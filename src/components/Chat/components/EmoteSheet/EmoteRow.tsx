@@ -1,6 +1,8 @@
 import { memo, useCallback } from 'react';
 import { type GestureResponderEvent, Pressable } from 'react-native';
 
+import { selection } from '@app/lib/haptics';
+
 import { EmoteCell } from './EmoteCell';
 import { EMOTE_CELL_GAP } from './emoteSheetLayout';
 import { emoteSheetStyles as styles } from './emoteSheetStyles';
@@ -21,6 +23,7 @@ function EmoteRowComponent({
       const index = Math.floor(event.nativeEvent.locationX / stride);
       const item = items[index];
       if (item !== undefined) {
+        void selection();
         onPress(item);
       }
     },

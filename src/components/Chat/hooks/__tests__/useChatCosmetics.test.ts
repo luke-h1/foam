@@ -1,8 +1,10 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { sevenTvService } from '@app/services/seventv-service';
-import { fetchAndCacheUserCosmetics } from '@app/store/chat/actions/cosmetics';
-import { requestUserCosmetics } from '@app/store/chat/actions/cosmeticsBridge';
+import {
+  fetchAndCacheUserCosmetics,
+  requestUserCosmeticsViaPresence,
+} from '@app/store/chat/actions/cosmetics';
 
 import { useChatCosmetics } from '../useChatCosmetics';
 
@@ -18,10 +20,7 @@ jest.mock('@app/services/seventv-service', () => ({
 
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
   fetchAndCacheUserCosmetics: jest.fn(() => Promise.resolve()),
-}));
-
-jest.mock('@app/store/chat/actions/cosmeticsBridge', () => ({
-  requestUserCosmetics: jest.fn(() => Promise.resolve()),
+  requestUserCosmeticsViaPresence: jest.fn(() => Promise.resolve()),
 }));
 
 jest.mock('@app/store/chat/observables/chatStore', () => ({
@@ -43,7 +42,9 @@ jest.mock('@app/utils/logger', () => ({
 
 const mockGetSevenTvUserId = jest.mocked(sevenTvService.get7tvUserId);
 const mockFetchAndCacheUserCosmetics = jest.mocked(fetchAndCacheUserCosmetics);
-const mockRequestUserCosmetics = jest.mocked(requestUserCosmetics);
+const mockRequestUserCosmeticsViaPresence = jest.mocked(
+  requestUserCosmeticsViaPresence,
+);
 
 const mockChatStore = jest.requireMock('@app/store/chat/observables/chatStore')
   .chatStore$ as {
@@ -79,7 +80,7 @@ describe('useChatCosmetics', () => {
     });
     mockGetSevenTvUserId.mockResolvedValue('7tv-user-1');
     mockFetchAndCacheUserCosmetics.mockResolvedValue(null);
-    mockRequestUserCosmetics.mockResolvedValue(undefined);
+    mockRequestUserCosmeticsViaPresence.mockResolvedValue(undefined);
   });
 
   test('fetches current user cosmetics after mount', async () => {
@@ -95,7 +96,7 @@ describe('useChatCosmetics', () => {
     });
   });
 
-  test('queues chatters on the bridge batcher', async () => {
+  test('requests chatter cosmetics through the presence push', async () => {
     const { result } = renderHook(() =>
       useChatCosmetics({
         userId: null,
@@ -103,37 +104,15 @@ describe('useChatCosmetics', () => {
     );
 
     await act(async () => {
-      await result.current.fetchUserCosmetics('chatter-1', 'chatter-login');
+      await result.current.fetchUserCosmetics('chatter-1');
     });
 
-    expect(mockRequestUserCosmetics.mock.calls).toEqual([
-      ['chatter-1', 'chatter-login'],
+    expect(mockRequestUserCosmeticsViaPresence.mock.calls).toEqual([
+      ['chatter-1'],
     ]);
-  });
-
-  test('does not mark a user fetched when no login is available', async () => {
-    const { result } = renderHook(() =>
-      useChatCosmetics({
-        userId: null,
-      }),
-    );
-
-    await act(async () => {
-      await result.current.fetchUserCosmetics('chatter-1', '');
-    });
-
-    expect(mockRequestUserCosmetics).not.toHaveBeenCalled();
     expect(
       result.current.fetchedCosmeticsUsersRef.current.has('chatter-1'),
-    ).toBe(false);
-
-    await act(async () => {
-      await result.current.fetchUserCosmetics('chatter-1', 'chatter-login');
-    });
-
-    expect(mockRequestUserCosmetics.mock.calls).toEqual([
-      ['chatter-1', 'chatter-login'],
-    ]);
+    ).toBe(true);
   });
 
   test('does not refetch users that already have cached paint and badge cosmetics', async () => {
@@ -149,10 +128,10 @@ describe('useChatCosmetics', () => {
     );
 
     await act(async () => {
-      await result.current.fetchUserCosmetics('cached-user', 'cached-login');
+      await result.current.fetchUserCosmetics('cached-user');
     });
 
-    expect(mockRequestUserCosmetics).not.toHaveBeenCalled();
+    expect(mockRequestUserCosmeticsViaPresence).not.toHaveBeenCalled();
     expect(
       result.current.fetchedCosmeticsUsersRef.current.has('cached-user'),
     ).toBe(true);
@@ -170,16 +149,16 @@ describe('useChatCosmetics', () => {
     );
 
     await act(async () => {
-      await result.current.fetchUserCosmetics('retry-user', 'retry-login');
-      await result.current.fetchUserCosmetics('retry-user', 'retry-login');
-      await result.current.fetchUserCosmetics('retry-user', 'retry-login', {
+      await result.current.fetchUserCosmetics('retry-user');
+      await result.current.fetchUserCosmetics('retry-user');
+      await result.current.fetchUserCosmetics('retry-user', {
         retryMissingBadge: true,
       });
     });
 
-    expect(mockRequestUserCosmetics.mock.calls).toEqual([
-      ['retry-user', 'retry-login'],
-      ['retry-user', 'retry-login'],
+    expect(mockRequestUserCosmeticsViaPresence.mock.calls).toEqual([
+      ['retry-user'],
+      ['retry-user'],
     ]);
   });
 });

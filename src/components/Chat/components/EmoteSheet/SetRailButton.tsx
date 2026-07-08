@@ -18,6 +18,7 @@ function SetRailButtonComponent({
 }) {
   return (
     <Button
+      haptic='selection'
       style={[styles.setRailButton, isActive && styles.setRailButtonActive]}
       onPress={() => onScrollToSet(set.id)}
     >

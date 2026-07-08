@@ -318,6 +318,38 @@ describe('ChatInlineImage loading shimmer', () => {
   });
 });
 
+describe('ChatInlineImage load watchdog', () => {
+  beforeEach(() => {
+    mockSharedRef = null;
+    mockImageProps = null;
+    jest.useFakeTimers();
+  });
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.clearAllMocks();
+  });
+
+  test('routes a silently-hung load (no onLoad or onError) through the error path', () => {
+    const base = 'https://cdn.7tv.app/emote/watchdog';
+    render(<ChatInlineImage sourceUrl={`${base}/4x.webp`} style={{}} />);
+
+    expect(mockImageProps?.recyclingKey).toEqual(`${base}/4x.webp#0`);
+
+    act(() => jest.advanceTimersByTime(12000));
+    expect(mockImageProps?.recyclingKey).toEqual(`${base}/4x.avif#0`);
+  });
+
+  test('a load that resolves before the watchdog fires cancels it', () => {
+    const sourceUrl = 'https://cdn.7tv.app/emote/ok/2x.avif';
+    render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
+
+    act(() => mockImageProps?.onLoad?.());
+    act(() => jest.advanceTimersByTime(12000));
+
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
+  });
+});
+
 describe('ChatInlineImage shared-ref recovery', () => {
   beforeEach(() => {
     mockSharedRef = null;

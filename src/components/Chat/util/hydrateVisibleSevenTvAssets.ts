@@ -24,7 +24,6 @@ type HydrateVisibleSevenTvAssetsParams = {
   getUserBadge: (twitchUserId: string) => SanitisedBadgeSet | null;
   fetchUserCosmetics: (
     twitchUserId: string,
-    login: string,
     options?: FetchUserCosmeticsOptions,
   ) => Promise<void>;
   hydratePersonalEmotes?: boolean;
@@ -190,7 +189,7 @@ export async function hydrateVisibleSevenTvAssets({
         cosmeticFetchesStarted += 1;
         boundedSetAdd(cosmeticUsers, userId, MAX_VISIBLE_USER_GUARDS);
         pending.push(
-          fetchUserCosmetics(userId, message.userstate.login ?? '', {
+          fetchUserCosmetics(userId, {
             retryMissingBadge: true,
           }).then(() => {
             if (getUserBadge(userId)) {

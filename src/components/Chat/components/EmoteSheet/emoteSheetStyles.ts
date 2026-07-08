@@ -54,9 +54,6 @@ export const emoteSheetStyles = StyleSheet.create({
     paddingTop: 8,
     width: '100%',
   },
-  emojiIconText: {
-    fontSize: theme.fontSize18,
-  },
   emojiText: {
     lineHeight: undefined,
   },
@@ -66,19 +63,6 @@ export const emoteSheetStyles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     padding: 3,
-  },
-  emoteCellInner: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  emoteImage: {
-    alignSelf: 'center',
-  },
-  emoteImageContainer: {
-    ...StyleSheet.absoluteFill,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   emoteRow: {
     flexDirection: 'row',
@@ -101,19 +85,6 @@ export const emoteSheetStyles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: theme.fontSize18,
     fontWeight: '700',
-  },
-  fallbackIconLabel: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize11,
-    fontWeight: '800',
-    letterSpacing: 0,
-  },
-  ffzTextIcon: {
-    color: theme.colorPrimary,
-    letterSpacing: 0,
-  },
-  ffzTextIconActive: {
-    color: theme.color.text.dark,
   },
   header: {
     backgroundColor: MENU_HEADER_BACKGROUND,
@@ -248,11 +219,12 @@ export const emoteSheetStyles = StyleSheet.create({
     width: 24,
   },
   setHeaderTitle: {
-    color: theme.color.text.dark,
+    color: theme.color.textSecondary.dark,
     flex: 1,
-    fontSize: theme.fontSize14,
+    fontSize: theme.fontSize12,
     fontWeight: '600',
-    letterSpacing: 0,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
   },
   setRailAvatar: {
     borderRadius: 12,
@@ -267,11 +239,9 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   setRailButton: {
     alignItems: 'center',
-    backgroundColor: MENU_CARD,
-    borderColor: MENU_BORDER,
+    backgroundColor: 'transparent',
     borderCurve: 'continuous',
-    borderRadius: 10,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 16,
     height: 40,
     justifyContent: 'center',
     minWidth: 40,
@@ -279,7 +249,6 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   setRailButtonActive: {
     backgroundColor: MENU_CARD_ACTIVE,
-    borderColor: MENU_BORDER_ACTIVE,
   },
   setRailEmoji: {
     fontSize: theme.fontSize16,

@@ -24,6 +24,7 @@ function ProviderChipComponent({
 }: ProviderChipProps) {
   return (
     <Button
+      haptic='selection'
       style={[styles.providerChip, isActive && styles.providerChipActive]}
       onPress={() => onSelect(provider.id)}
     >

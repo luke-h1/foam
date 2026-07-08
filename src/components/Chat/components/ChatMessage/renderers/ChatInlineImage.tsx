@@ -4,6 +4,7 @@ import {
   use,
   useCallback,
   useEffect,
+  useEffectEvent,
   useMemo,
   useRef,
   useState,
@@ -19,6 +20,7 @@ import {
 import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
 
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
+import { runAnimationCommand } from '@app/lib/expo-image/runAnimationCommand';
 import {
   evictCachedEmoteRef,
   getCachedEmoteByteEstimate,
@@ -46,27 +48,10 @@ import { ChatImageShimmer } from './ChatImageShimmer';
 const MAX_RELOAD_ATTEMPTS = 8;
 const RELOAD_BASE_DELAY_MS = 400;
 const RELOAD_MAX_DELAY_MS = 8000;
-
 /**
- * expo-image's startAnimating/stopAnimating are async native calls. Once
- * LegendList recycles a row's view out from under the ref they reject with
- * "Unable to find the 'ImageView' view with tag" — and because the callers
- * fire-and-forget, that became an unhandled rejection (FOAM-TV-MOBILE-AH). A
- * detached view has nothing to animate, so swallow it.
+ * Route silent hangs (no onLoad/onError) through the error path after this long.
  */
-function runAnimationCommand(
-  image: ExpoImage | null,
-  command: 'startAnimating' | 'stopAnimating',
-): void {
-  try {
-    const result = image?.[command]?.() as Promise<unknown> | undefined;
-    if (result && typeof result.catch === 'function') {
-      result.catch(() => {});
-    }
-  } catch {
-    // synchronous throw from an already-detached view — same story
-  }
-}
+const LOAD_WATCHDOG_MS = 12000;
 
 interface ChatInlineImageProps {
   containerStyle?: StyleProp<ViewStyle>;
@@ -217,6 +202,15 @@ function ChatInlineImageComponent({
     },
     [candidateIndex, candidateUrl, fallbackChain, showRef, sourceUrl],
   );
+
+  const onWatchdogTimeout = useEffectEvent(() => handleError());
+  useEffect(() => {
+    if (showRef || status !== 'loading') {
+      return undefined;
+    }
+    const timer = setTimeout(onWatchdogTimeout, LOAD_WATCHDOG_MS);
+    return () => clearTimeout(timer);
+  }, [showRef, status, candidateUrl, reloadNonce]);
 
   const rowVisibility = use(RowVisibilityContext);
   // The native isAnimated getter is a JSI hop per render; the url already
