@@ -45,7 +45,7 @@ jobs:
           if [ -n "${PR_BASE_SHA}" ]; then
             BASE_SHA="${PR_BASE_SHA}"
           else
-            git fetch --no-tags --depth=0 origin main
+            git fetch --no-tags origin main
             BASE_SHA="$(git merge-base HEAD origin/main)"
           fi
           echo "Base commit: ${BASE_SHA}"
