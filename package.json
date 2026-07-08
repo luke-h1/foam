@@ -53,6 +53,7 @@
     "lint:fix": "eslint . --fix",
     "metadata:push": "EXPO_PUBLIC_APP_VARIANT=production eas metadata:push --profile production",
     "ota": "./scripts/release-ota.sh",
+    "ota:check": "./scripts/ota-compat-check.sh",
     "perf:chat:ios": "bash scripts/perf/capture-chat-instruments.sh",
     "perf:chat:ios:export": "bash scripts/perf/export-instruments-trace.sh",
     "perf:chat:rn": "bash scripts/perf/capture-chat-react-devtools.sh",
