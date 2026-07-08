@@ -310,6 +310,7 @@ const en = {
     devTools: 'Dev Tools',
     diagnostics: 'Diagnostics',
     emotesAndBadges: 'Emotes & Badges',
+    envVars: 'Environment Variables',
     faq: 'FAQ',
     following: 'Following',
     highlights: 'Highlights',
@@ -648,6 +649,8 @@ const en = {
     chatPerfBurstTest: 'Chat Perf (burst test)',
     chatPerfBurstTestDescription:
       'real cinna chat + synthetic burst flood + live FPS readout',
+    envVars: 'Environment Variables',
+    envVarsDescription: 'Inspect the EXPO_PUBLIC_ vars baked into this build',
     channelSurfing: 'Channel Surfing',
     channelSurfingDescription:
       'Load an EAS Update from a different channel or PR branch',
@@ -860,6 +863,12 @@ const en = {
   },
 
   devTools: {
+    revealSecrets: 'Reveal secrets',
+    hideSecrets: 'Hide secrets',
+    envVarsNote:
+      'Only variables referenced as EXPO_PUBLIC_* are inlined into the app bundle. Other .env entries (AWS keys, GitHub tokens) never reach the app. Tap a row to copy its value.',
+    envVarsCount: '{{set}} of {{total}} set',
+    envVarUndefined: 'undefined',
     enterChannel: 'Enter a channel',
     enterChannelHint: 'e.g. pr-123, internal, testflight',
     noUpdateFound: 'No update found',
