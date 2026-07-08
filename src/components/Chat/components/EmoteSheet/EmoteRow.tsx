@@ -15,9 +15,6 @@ function EmoteRowComponent({
   items: EmotePickerItem[];
   onPress: (item: EmotePickerItem) => void;
 }) {
-  // One Pressable per row instead of one per cell: on a busy sheet this drops
-  // the recycled window from N gesture handlers per row to one. The tapped
-  // emote is resolved from the touch x-position against the fixed cell stride.
   const handlePress = useCallback(
     (event: GestureResponderEvent) => {
       const stride = cellSize + EMOTE_CELL_GAP;

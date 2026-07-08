@@ -35,8 +35,10 @@ export function fetch(...[input, init]: ExpoFetchParams): ExpoFetchReturn {
   const controller = new AbortController();
   controllers.add(controller);
 
-  // Chain the caller's signal into ours so caller-side aborts still work while
-  // we retain a central handle to abort on drain.
+  /**
+   * Chain the caller's signal into ours so caller-side aborts still work while
+   * we retain a central handle to abort on drain.
+   */
   const callerSignal = init?.signal ?? undefined;
   const onCallerAbort = () => {
     controller.abort();
@@ -84,8 +86,10 @@ export async function drainInFlightExpoFetches(): Promise<void> {
     ]);
   }
 
-  // Yield a macrotask so the native NativeResponse state transitions (and the
-  // JSI Promise releases they trigger) flush on the JS thread before the caller
-  // tears the runtime down.
+  /**
+   *  Yield a macrotask so the native NativeResponse state transitions (and the
+   * JSI Promise releases they trigger) flush on the JS thread before the caller
+   * tears the runtime down.
+   */
   await nextMacrotask();
 }
