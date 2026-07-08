@@ -92,12 +92,12 @@ function getEnvVars(): EnvVar[] {
   ];
 }
 
-function copyEnvVar(entry: EnvVar): void {
+async function copyEnvVar(entry: EnvVar): Promise<void> {
   if (entry.value == null) {
     return;
   }
+  await Clipboard.setStringAsync(String(entry.value));
   void impact('light');
-  void Clipboard.setStringAsync(String(entry.value));
 }
 
 function maskValue(value: string): string {
@@ -109,7 +109,7 @@ function maskValue(value: string): string {
 
 export function EnvVarsScreen() {
   const [revealed, setRevealed] = useState(false);
-  const envVars = useMemo(getEnvVars, []);
+  const envVars = useMemo(() => getEnvVars(), []);
 
   const setCount = envVars.filter(
     v => v.value != null && v.value !== '',
@@ -171,7 +171,9 @@ export function EnvVarsScreen() {
             return (
               <Pressable
                 key={entry.key}
-                onPress={() => copyEnvVar(entry)}
+                onPress={() => {
+                  void copyEnvVar(entry);
+                }}
                 disabled={!isSet}
                 style={[styles.item, !isLast && styles.itemBorder]}
               >
