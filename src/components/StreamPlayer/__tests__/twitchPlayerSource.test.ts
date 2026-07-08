@@ -51,7 +51,16 @@ describe('twitchPlayerSource', () => {
     expect(script).toContain(
       "window.location.hostname.indexOf('player.twitch.tv') === -1",
     );
-    expect(script).toContain('isInAuthFlow() || isBlockingGate()');
+    expect(script).toContain('return isInAuthFlow() || isBlockingGate();');
+    /**
+     * Tapping the login link removes the gate before window.location updates to
+     * the auth host, so a synchronous clear would disable the WebView just as the
+     * login form appears. Once interactive, the clear is deferred and re-checked
+     * so a pending navigation can settle before interaction is handed back.
+     */
+    expect(script).toContain('if (lastReported === true) {');
+    expect(script).toContain('clearTimer = setTimeout(function() {');
+    expect(script).toContain('if (!isActive()) { post(false); }');
     // Only the top frame reports, so a login subframe can't race it.
     expect(script).toContain(
       'if (window.top !== window.self) { return true; }',
