@@ -88,5 +88,8 @@ export const EmoteCell = memo(EmoteCellComponent, (prev, next) => {
   if (typeof prev.item === 'string' || typeof next.item === 'string') {
     return prev.item === next.item;
   }
-  return prev.item.id === next.item.id;
+  return (
+    prev.item.id === next.item.id &&
+    getEmoteCellDisplayUrl(prev.item) === getEmoteCellDisplayUrl(next.item)
+  );
 });

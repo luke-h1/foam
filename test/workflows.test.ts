@@ -517,17 +517,19 @@ describe('changelog per-environment sections', () => {
   }
 
   test('parses release tags into version and environment', () => {
-    expect(parseReleaseTag('1.0.1')).toEqual({
+    expect(parseReleaseTag('1.0.1')).toEqual<Omit<ReleaseTag, 'commit'>>({
       tag: '1.0.1',
       version: '1.0.1',
       environment: 'production',
     });
-    expect(parseReleaseTag('1.0.1-internal')).toEqual({
+    expect(parseReleaseTag('1.0.1-internal')).toEqual<
+      Omit<ReleaseTag, 'commit'>
+    >({
       tag: '1.0.1-internal',
       version: '1.0.1',
       environment: 'internal',
     });
-    expect(parseReleaseTag('v0.0.37')).toEqual({
+    expect(parseReleaseTag('v0.0.37')).toEqual<Omit<ReleaseTag, 'commit'>>({
       tag: 'v0.0.37',
       version: '0.0.37',
       environment: 'production',

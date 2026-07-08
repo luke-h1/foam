@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.1 (Internal)
+
+### 🐛 Bug Fixes
+
+- **chat:** Send 7tv bridge cosmetics lookups by username ([#694](https://github.com/lhowsam/foam/issues/694))
+
 ## 1.0.1 (Production)
 
 ### ♻️ Refactor
@@ -97,17 +103,7 @@
 - **app:** Ui improvements ([#681](https://github.com/lhowsam/foam/issues/681))
 - **infrastructure:** Add OTA compat check
 
-## 1.0.1 (TestFlight)
-
-### 🐛 Bug Fixes
-
-- **chat:** Send 7tv bridge cosmetics lookups by username ([#694](https://github.com/lhowsam/foam/issues/694))
-
-## 1.0.1 (Internal)
-
-_No changes in this build beyond the TestFlight build._
-
-## 1.0.0 (Production)
+## 1.0.0 (TestFlight)
 
 ### ⚡ Performance
 
@@ -133,13 +129,12 @@ _No changes in this build beyond the TestFlight build._
 
 - **test:** Full e2e coverage
 
-## 1.0.0 (TestFlight)
+## 0.0.42 (Internal)
 
-_No changes in this build beyond the Production build._
+### 🐛 Bug Fixes
 
-## 1.0.0 (Internal)
-
-_No changes in this build beyond the TestFlight build._
+- **app:** Sentry initialization
+- **app:** Sentry initialization
 
 ## 0.0.42 (TestFlight)
 
@@ -174,13 +169,6 @@ _No changes in this build beyond the TestFlight build._
 
 - **app:** Update rozenite ([#612](https://github.com/lhowsam/foam/issues/612))
 - **infrastructure:** Update action versions ([#618](https://github.com/lhowsam/foam/issues/618))
-
-## 0.0.42 (Internal)
-
-### 🐛 Bug Fixes
-
-- **app:** Sentry initialization
-- **app:** Sentry initialization
 
 ## 0.0.41 (Production)
 

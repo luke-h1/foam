@@ -202,6 +202,38 @@ describe('createApiClient', () => {
     expect(jest.mocked(logger.api.error)).not.toHaveBeenCalled();
   });
 
+  test('does not log the benign FFZ "No such room" 404', async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse(
+        { status: 404, error: 'Not Found', message: 'No such room' },
+        404,
+      ),
+    );
+    const client = createApiClient({
+      baseURL: 'https://api.frankerfacez.com/v1',
+      logPrefix: 'ffz',
+    });
+
+    await expect(client.get('/room/id/999')).rejects.toBeInstanceOf(ApiError);
+
+    expect(jest.mocked(logger.ffz.warn)).not.toHaveBeenCalled();
+    expect(jest.mocked(logger.ffz.error)).not.toHaveBeenCalled();
+  });
+
+  test('still logs other FFZ 404s that are not "No such room"', async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({ message: 'Not Found' }, 404),
+    );
+    const client = createApiClient({
+      baseURL: 'https://api.frankerfacez.com/v1',
+      logPrefix: 'ffz',
+    });
+
+    await expect(client.get('/set/global')).rejects.toBeInstanceOf(ApiError);
+
+    expect(jest.mocked(logger.ffz.warn)).toHaveBeenCalledTimes(1);
+  });
+
   test('logs 5xx failures at error level', async () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({ message: 'boom' }, 500));
     const client = createApiClient({ baseURL: 'https://api.test/helix' });
