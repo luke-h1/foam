@@ -15,6 +15,7 @@ import {
 } from 'expo-updates';
 
 import i18next from '@app/i18n/i18next';
+import { queryClient } from '@app/lib/react-query/query-client';
 import { countOtaMetric } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import {
@@ -25,6 +26,13 @@ import { logger } from '@app/utils/logger';
 
 const MINIMUM_MINIMIZE_TIME = 15 * 60e3; // 15 minutes
 const INITIAL_CHECK_DELAY = 3e3; // 3 seconds
+
+// reloadAsync() invalidates the JS runtime; an in-flight expo/fetch request
+// still settling on a background queue then destroys its JSI Promise/Object
+// against the dead runtime and crashes (EXC_BAD_ACCESS in ~Pointer, #699). We
+// cancel queries to abort their AbortController-backed fetches, then wait this
+// long for the native teardown to drain before reloading.
+const RELOAD_DRAIN_DELAY = 250; // ms
 
 const OTA_RELOAD_SCREEN_OPTIONS = {
   backgroundColor: theme.color.background.dark,
@@ -139,9 +147,18 @@ export function useOTAUpdates() {
 
   const applyUpdate = useCallback(async () => {
     try {
+      // Deliberately sequential: abort in-flight fetches, let the native
+      // teardown drain, then reload. Parallelising would reintroduce #699.
+      /* eslint-disable react-doctor/async-parallel */
+      await queryClient.cancelQueries();
+      await new Promise<void>(resolve => {
+        setTimeout(resolve, RELOAD_DRAIN_DELAY);
+      });
+
       await reloadAsync({
         reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
       });
+      /* eslint-enable react-doctor/async-parallel */
     } catch (error) {
       const parsedError =
         error instanceof Error ? error : new Error(String(error));
