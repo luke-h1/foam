@@ -200,8 +200,6 @@ export function useOTAUpdates() {
   checkForUpdatesRef.current = checkForUpdates;
   const promptAndReloadRef = useRef(promptAndReload);
   promptAndReloadRef.current = promptAndReload;
-  const applyUpdateRef = useRef(applyUpdate);
-  applyUpdateRef.current = applyUpdate;
 
   useEffect(() => {
     if (!shouldReceiveUpdates || ranInitialCheck.current) {
@@ -271,7 +269,7 @@ export function useOTAUpdates() {
       return;
     }
 
-    const unsubscribe = subscribeToAppStateTransitions(async transition => {
+    const unsubscribe = subscribeToAppStateTransitions(transition => {
       if (isForegroundTransition(transition)) {
         const shouldUpdate =
           isProduction ||
@@ -280,26 +278,28 @@ export function useOTAUpdates() {
         if (shouldUpdate) {
           if (getIsUpdatePending()) {
             if (isProduction) {
+              // Do not force a reload here: reloadAsync() races the reconnect
+              // refetch burst that fires on the same foreground and tears down
+              // the runtime mid-fetch (#699). The update is already downloaded,
+              // so expo-updates applies it on the next cold start.
               logger.main.info(
-                'App foregrounded with pending update, reloading',
+                'App foregrounded with pending update, deferring to cold start',
                 {
                   name: 'ota_updates_service_info',
                   category: 'ota',
-                  action: 'foreground_auto_reload',
+                  action: 'foreground_defer_to_cold_start',
                   timeSinceMinimize: Date.now() - lastMinimize.current,
                   isProduction,
                 },
               );
 
-              countOtaMetric('ota.update.applied', {
+              countOtaMetric('ota.update.deferred', {
                 category: 'ota',
                 environment: isProduction ? 'production' : 'non-production',
                 platform: Platform.OS,
-                method: 'auto_on_foreground',
+                method: 'cold_start',
                 channel: Updates.channel || 'unknown',
               });
-
-              await applyUpdateRef.current();
             } else {
               promptAndReloadRef.current();
             }
