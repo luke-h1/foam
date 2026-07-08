@@ -15,6 +15,7 @@ import {
 } from 'expo-updates';
 
 import i18next from '@app/i18n/i18next';
+import { drainInFlightExpoFetches } from '@app/lib/expoFetch';
 import { countOtaMetric } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import {
@@ -36,6 +37,10 @@ const OTA_RELOAD_SCREEN_OPTIONS = {
 } satisfies ReloadScreenOptions;
 
 const getIsUpdatePending = () => latestContext.isUpdatePending;
+
+function toError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(String(error));
+}
 
 export type OTAUpdateUrgency = 'normal' | 'critical';
 
@@ -122,12 +127,9 @@ export function useOTAUpdates() {
         });
       }
     } catch (error) {
-      const parsedError =
-        error instanceof Error ? error : new Error(String(error));
-
       logger.main.error('OTA update check failed', {
         name: 'ota_updates_service_error',
-        error: parsedError,
+        error: toError(error),
         category: 'OTAUpdatesService',
         action: 'check_failed',
         isProduction,
@@ -139,16 +141,19 @@ export function useOTAUpdates() {
 
   const applyUpdate = useCallback(async () => {
     try {
+      /**
+       * Settle any in-flight expo/fetch requests before reloadAsync frees the
+       * JS runtime; a native response resolving against a torn-down runtime
+       * crashes in facebook::jsi::Pointer::~Pointer (FOAM-TV-MOBILE-16, #699).
+       */
+      await drainInFlightExpoFetches();
       await reloadAsync({
         reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
       });
     } catch (error) {
-      const parsedError =
-        error instanceof Error ? error : new Error(String(error));
-
       logger.main.error('OTA update reload failed', {
         name: 'ota_updates_service_error',
-        error: parsedError,
+        error: toError(error),
         category: 'OTAUpdatesService',
         action: 'reload_failed',
         isProduction,
@@ -270,59 +275,66 @@ export function useOTAUpdates() {
     }
 
     const unsubscribe = subscribeToAppStateTransitions(transition => {
-      if (isForegroundTransition(transition)) {
-        const shouldUpdate =
-          isProduction ||
-          lastMinimize.current <= Date.now() - MINIMUM_MINIMIZE_TIME;
-
-        if (shouldUpdate) {
-          if (getIsUpdatePending()) {
-            if (isProduction) {
-              // Do not force a reload here: reloadAsync() races the reconnect
-              // refetch burst that fires on the same foreground and tears down
-              // the runtime mid-fetch (#699). The update is already downloaded,
-              // so expo-updates applies it on the next cold start.
-              logger.main.info(
-                'App foregrounded with pending update, deferring to cold start',
-                {
-                  name: 'ota_updates_service_info',
-                  category: 'ota',
-                  action: 'foreground_defer_to_cold_start',
-                  timeSinceMinimize: Date.now() - lastMinimize.current,
-                  isProduction,
-                },
-              );
-
-              countOtaMetric('ota.update.deferred', {
-                category: 'ota',
-                environment: isProduction ? 'production' : 'non-production',
-                platform: Platform.OS,
-                method: 'cold_start',
-                channel: Updates.channel || 'unknown',
-              });
-            } else {
-              promptAndReloadRef.current();
-            }
-          } else {
-            logger.main.info('App foregrounded, checking for updates', {
-              name: 'ota_updates_service_info',
-              category: 'ota',
-              action: 'foreground_check_for_updates',
-              timeSinceMinimize: Date.now() - lastMinimize.current,
-              isProduction,
-            });
-
-            void checkForUpdatesRef.current();
-          }
-        }
-      }
-
       if (
         transition.current === 'inactive' ||
         transition.current === 'background'
       ) {
         lastMinimize.current = Date.now();
+        return;
       }
+
+      if (!isForegroundTransition(transition)) {
+        return;
+      }
+
+      const shouldUpdate =
+        isProduction ||
+        lastMinimize.current <= Date.now() - MINIMUM_MINIMIZE_TIME;
+
+      if (!shouldUpdate) {
+        return;
+      }
+
+      if (!getIsUpdatePending()) {
+        logger.main.info('App foregrounded, checking for updates', {
+          name: 'ota_updates_service_info',
+          category: 'ota',
+          action: 'foreground_check_for_updates',
+          timeSinceMinimize: Date.now() - lastMinimize.current,
+          isProduction,
+        });
+
+        void checkForUpdatesRef.current();
+        return;
+      }
+
+      if (!isProduction) {
+        promptAndReloadRef.current();
+        return;
+      }
+
+      // Do not force a reload here: reloadAsync() races the reconnect
+      // refetch burst that fires on the same foreground and tears down
+      // the runtime mid-fetch (#699). The update is already downloaded,
+      // so expo-updates applies it on the next cold start.
+      logger.main.info(
+        'App foregrounded with pending update, deferring to cold start',
+        {
+          name: 'ota_updates_service_info',
+          category: 'ota',
+          action: 'foreground_defer_to_cold_start',
+          timeSinceMinimize: Date.now() - lastMinimize.current,
+          isProduction,
+        },
+      );
+
+      countOtaMetric('ota.update.deferred', {
+        category: 'ota',
+        environment: isProduction ? 'production' : 'non-production',
+        platform: Platform.OS,
+        method: 'cold_start',
+        channel: Updates.channel || 'unknown',
+      });
     });
 
     return () => {

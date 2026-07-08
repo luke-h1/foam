@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 import { Button } from '@app/components/Button/Button';
 import type { EmoteMenuSet } from '@app/components/Chat/components/EmoteSheet/util/emoteMenuData';
 import { Image } from '@app/components/Image/Image';
@@ -5,19 +7,20 @@ import { Text } from '@app/components/ui/Text/Text';
 
 import { emoteSheetStyles as styles } from './emoteSheetStyles';
 
-export function SetRailButton({
+function SetRailButtonComponent({
   isActive,
-  onPress,
+  onScrollToSet,
   set,
 }: {
   isActive: boolean;
-  onPress: () => void;
+  onScrollToSet: (setId: string) => void;
   set: EmoteMenuSet;
 }) {
   return (
     <Button
+      haptic='selection'
       style={[styles.setRailButton, isActive && styles.setRailButtonActive]}
-      onPress={onPress}
+      onPress={() => onScrollToSet(set.id)}
     >
       {set.icon.startsWith('emoji:') ? (
         <Text style={styles.setRailEmoji}>{set.icon.slice(6)}</Text>
@@ -38,3 +41,5 @@ export function SetRailButton({
     </Button>
   );
 }
+
+export const SetRailButton = memo(SetRailButtonComponent);

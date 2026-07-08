@@ -14,78 +14,34 @@ import { useQuery } from '@tanstack/react-query';
 
 import { logger } from '@app/utils/logger';
 
+import {
+  buildRemoteConfigFromDefaults,
+  defaultRemoteConfig,
+  parseRemoteConfigValue,
+  type RemoteConfigEntry,
+  type RemoteConfigKey,
+  type RemoteConfigSchema,
+  type RemoteConfigType,
+  type UseRemoteConfigResult,
+} from './remoteConfigModel';
+
+export type {
+  BundleUpdateButtonEnabled,
+  MinimumVersionTrack,
+  RemoteConfigEntry,
+  RemoteConfigKey,
+  RemoteConfigSchema,
+  RemoteConfigType,
+  UseRemoteConfigResult,
+} from './remoteConfigModel';
+export { defaultRemoteConfig } from './remoteConfigModel';
+
 const remoteConfig = getRemoteConfig(getApp());
 let remoteConfigFetchPromise: Promise<boolean> | null = null;
 
 void setConfigSettings(remoteConfig, {
   minimumFetchIntervalMillis: __DEV__ ? 60 * 1000 : 5 * 60 * 1000,
 });
-
-export interface RemoteConfigSchema {
-  splash: { '7tvUnavailable': boolean; app: boolean };
-
-  /**
-   * Minimum version of the app required per platform and track
-   */
-  minimumVersion: {
-    android: {
-      development: string;
-      internal: string;
-      testflight: string;
-      production: string;
-    };
-    ios: {
-      development: string;
-      internal: string;
-      testflight: string;
-      production: string;
-    };
-  };
-
-  statusPageUrl: string;
-  websiteUrl: string;
-  admins: string[];
-
-  /**
-   * A/B test variant assignments keyed by experiment name. Firebase A/B Testing
-   * sets this per user; the client reads it via `useExperiment`.
-   */
-  experiments: Record<string, string>;
-}
-
-export type RemoteConfigKey = keyof RemoteConfigSchema;
-
-export type MinimumVersionTrack =
-  keyof RemoteConfigSchema['minimumVersion']['ios'];
-
-type ConfigSource = 'default' | 'remote' | 'static';
-
-export type RemoteConfigEntry<T> = {
-  raw: string;
-  value: T;
-  source: ConfigSource;
-};
-
-export type RemoteConfigType = {
-  [K in RemoteConfigKey]: RemoteConfigEntry<RemoteConfigSchema[K]>;
-};
-
-export const defaultRemoteConfig = {
-  splash: '{"7tvUnavailable": false, "app": false}',
-  minimumVersion:
-    '{"android": {"development": "0.0.0", "internal": "0.0.0", "testflight": "0.0.0", "production": "0.0.0"}, "ios": {"development": "0.0.0", "internal": "0.0.0", "testflight": "0.0.0", "production": "0.0.0"}}',
-  statusPageUrl: 'https://status.foam-app.com',
-  websiteUrl: 'https://foam-app.com',
-  admins: '[]',
-  experiments: '{}',
-} satisfies Record<RemoteConfigKey, string>;
-
-const jsonKeys: RemoteConfigKey[] = [
-  'splash',
-  'minimumVersion',
-  'admins',
-  'experiments',
-];
 
 function getErrorMessage(error: unknown): string | null {
   if (error instanceof Error) {
@@ -110,49 +66,9 @@ function isRemoteConfigCancellation(error: unknown): boolean {
   return message?.includes('cancelled') ?? false;
 }
 
-function parseValue<K extends RemoteConfigKey>(
-  key: K,
-  raw: string,
-): RemoteConfigSchema[K] {
-  if (jsonKeys.includes(key)) {
-    try {
-      return JSON.parse(raw) as RemoteConfigSchema[K];
-    } catch {
-      logger.remoteConfig.error(`Failed to parse JSON for key: ${key}`, {
-        raw,
-      });
-      return JSON.parse(defaultRemoteConfig[key]) as RemoteConfigSchema[K];
-    }
-  }
-  return raw as RemoteConfigSchema[K];
-}
-
-function buildConfigFromDefaults(): RemoteConfigType {
-  return Object.fromEntries(
-    (Object.keys(defaultRemoteConfig) as RemoteConfigKey[]).map(key => {
-      const raw = defaultRemoteConfig[key];
-      return [
-        key,
-        {
-          raw,
-          value: parseValue(key, raw),
-          source: 'default',
-        } satisfies RemoteConfigEntry<RemoteConfigSchema[RemoteConfigKey]>,
-      ];
-    }),
-  ) as RemoteConfigType;
-}
-
 setDefaults(remoteConfig, defaultRemoteConfig).catch(e => {
   logger.remoteConfig.error('Failed to set default remote config values', e);
 });
-
-export type UseRemoteConfigResult = {
-  config: RemoteConfigType;
-  refetch: () => Promise<boolean>;
-  isRefetching: boolean;
-  isLoading: boolean;
-};
 
 async function fetchRemoteConfig(): Promise<boolean> {
   if (remoteConfigFetchPromise) {
@@ -202,7 +118,7 @@ function readRemoteConfig(): RemoteConfigType {
           key,
           {
             raw,
-            value: parseValue(key as RemoteConfigKey, raw),
+            value: parseRemoteConfigValue(key as RemoteConfigKey, raw),
             source: entry.getSource(),
           } satisfies RemoteConfigEntry<RemoteConfigSchema[RemoteConfigKey]>,
         ],
@@ -215,7 +131,7 @@ export function useRemoteConfig(): UseRemoteConfigResult {
   const [isManualRefetching, setIsManualRefetching] = useState(false);
 
   const {
-    data: config = buildConfigFromDefaults(),
+    data: config = buildRemoteConfigFromDefaults('default'),
     refetch: refetchQuery,
     isFetching,
     isFetched,
@@ -226,7 +142,7 @@ export function useRemoteConfig(): UseRemoteConfigResult {
       return readRemoteConfig();
     },
     staleTime: 5 * 60 * 1000,
-    initialData: buildConfigFromDefaults,
+    initialData: () => buildRemoteConfigFromDefaults('default'),
     // Without this, initialData (admins: []) counts as fresh for staleTime, so
     // queryFn never runs on mount and the real config is never fetched/read.
     // Backdating it marks the defaults stale immediately so we fetch on mount.

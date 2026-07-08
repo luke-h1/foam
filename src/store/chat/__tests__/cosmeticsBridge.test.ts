@@ -1,37 +1,31 @@
-import { sevenTvService } from '@app/services/seventv-service';
 import {
-  addBadge,
+  fetchUserCosmeticsByTwitchId,
   getBadge,
   getPaint,
   setUserBadge,
   setUserPaint,
 } from '@app/store/chat/actions/cosmetics';
-import {
-  applyEntitlementCreateEvent,
-  clearBridgeCosmeticsState,
-  requestUserCosmetics,
-} from '@app/store/chat/actions/cosmeticsBridge';
-import type {
-  BadgeData,
-  EntitlementCreate,
-  SevenTvEventData,
-  SevenTvEventType,
-} from '@app/types/seventv/cosmetics';
-import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-
-jest.mock('@app/services/seventv-service', () => ({
-  sevenTvService: {
-    fetchBridgedCosmetics: jest.fn(),
-  },
-}));
+import { applyEntitlementCreateEvent } from '@app/store/chat/actions/cosmeticsBridge';
+import type { EntitlementCreate } from '@app/types/seventv/cosmetics';
 
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
   addBadge: jest.fn(),
   addPaint: jest.fn(),
+  fetchUserCosmeticsByTwitchId: jest.fn(() => Promise.resolve()),
   getBadge: jest.fn(),
   getPaint: jest.fn(),
   setUserBadge: jest.fn(),
   setUserPaint: jest.fn(),
+}));
+
+jest.mock('@app/store/chat/actions/personalEmotes', () => ({
+  handlePersonalEmoteSetEntitlement: jest.fn(),
+}));
+
+jest.mock('@app/store/chat/observables/chatStore', () => ({
+  chatStore$: {
+    currentChannelId: { peek: jest.fn(() => 'channel-1') },
+  },
 }));
 
 jest.mock('@app/utils/logger', () => ({
@@ -41,40 +35,13 @@ jest.mock('@app/utils/logger', () => ({
   },
 }));
 
-const mockFetchBridgedCosmetics = jest.mocked(
-  sevenTvService.fetchBridgedCosmetics,
+const mockFetchUserCosmeticsByTwitchId = jest.mocked(
+  fetchUserCosmeticsByTwitchId,
 );
-const mockAddBadge = jest.mocked(addBadge);
 const mockGetBadge = jest.mocked(getBadge);
 const mockGetPaint = jest.mocked(getPaint);
 const mockSetUserBadge = jest.mocked(setUserBadge);
 const mockSetUserPaint = jest.mocked(setUserPaint);
-
-function createBadgeData(id: string): BadgeData {
-  return {
-    id,
-    name: `Badge ${id}`,
-    tooltip: `Badge ${id}`,
-    host: { url: `https://cdn.7tv.app/badge/${id}`, files: [] },
-  };
-}
-
-function createBadgeCosmeticCreateEvent(
-  badgeId: string,
-): SevenTvEventData<SevenTvEventType> {
-  return {
-    type: 'cosmetic.create',
-    body: {
-      id: badgeId,
-      kind: 0,
-      object: {
-        id: badgeId,
-        kind: 'BADGE',
-        data: createBadgeData(badgeId),
-      },
-    },
-  };
-}
 
 function createBadgeEntitlement(
   badgeId: string,
@@ -111,152 +78,14 @@ function createBadgeEntitlement(
   };
 }
 
-function createBadgeEntitlementCreateEvent(
-  badgeId: string,
-  ttvUserId: string,
-): SevenTvEventData<SevenTvEventType> {
-  return {
-    type: 'entitlement.create',
-    body: createBadgeEntitlement(badgeId, ttvUserId),
-  };
-}
-
-describe('requestUserCosmetics', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    jest.useFakeTimers();
-    clearBridgeCosmeticsState();
-    mockFetchBridgedCosmetics.mockResolvedValue([]);
-    mockGetBadge.mockReturnValue(undefined);
-    mockGetPaint.mockReturnValue(undefined);
-  });
-
-  afterEach(() => {
-    clearBridgeCosmeticsState();
-    jest.useRealTimers();
-  });
-
-  test('coalesces users queued in the same window into one bridge request', async () => {
-    const first = requestUserCosmetics('ttv-1', 'login1');
-    const second = requestUserCosmetics('ttv-2', 'login2');
-
-    jest.advanceTimersByTime(500);
-    await Promise.all([first, second]);
-
-    expect(mockFetchBridgedCosmetics.mock.calls).toEqual([
-      [['login1', 'login2']],
-    ]);
-  });
-
-  test('skips users without a login', async () => {
-    const request = requestUserCosmetics('ttv-1', '');
-
-    jest.advanceTimersByTime(500);
-    await request;
-
-    expect(mockFetchBridgedCosmetics).not.toHaveBeenCalled();
-  });
-
-  test('skips logins the bridge would reject so one bad id cannot fail the batch', async () => {
-    const request = requestUserCosmetics('ttv-1', 'ネオ');
-
-    jest.advanceTimersByTime(500);
-    await request;
-
-    expect(mockFetchBridgedCosmetics).not.toHaveBeenCalled();
-  });
-
-  test('dedupes repeat requests for the same user', async () => {
-    const first = requestUserCosmetics('ttv-1', 'login1');
-    const second = requestUserCosmetics('ttv-1', 'login1');
-
-    jest.advanceTimersByTime(500);
-    await Promise.all([first, second]);
-
-    const third = requestUserCosmetics('ttv-1', 'login1');
-    jest.advanceTimersByTime(500);
-    await third;
-
-    expect(mockFetchBridgedCosmetics.mock.calls).toEqual([[['login1']]]);
-  });
-
-  test('applies returned cosmetic and entitlement dispatches to the store', async () => {
-    mockFetchBridgedCosmetics.mockResolvedValue([
-      createBadgeCosmeticCreateEvent('badge-1'),
-      createBadgeEntitlementCreateEvent('badge-1', 'ttv-1'),
-    ]);
-
-    const request = requestUserCosmetics('ttv-1', 'login1');
-    jest.advanceTimersByTime(500);
-    await request;
-
-    expect(mockAddBadge.mock.calls[0]?.[0]).toEqual<SanitisedBadgeSet>({
-      id: 'badge-1',
-      provider: '7tv',
-      set: 'badge-1',
-      title: 'Badge badge-1',
-      type: '7TV Badge',
-      url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
-    });
-    expect(mockSetUserBadge.mock.calls).toEqual([['ttv-1', 'badge-1']]);
-  });
-
-  test('logs bridge events that fail interpretation', async () => {
-    const { logger } = jest.requireMock('@app/utils/logger') as {
-      logger: { stv: { warn: jest.Mock } };
-    };
-    mockFetchBridgedCosmetics.mockResolvedValue([
-      {
-        type: 'cosmetic.create',
-        body: null,
-      } as unknown as SevenTvEventData<SevenTvEventType>,
-    ]);
-
-    const request = requestUserCosmetics('ttv-1', 'login1');
-    jest.advanceTimersByTime(500);
-    await request;
-
-    expect(
-      logger.stv.warn.mock.calls.some(
-        call => call[0] === 'Failed to interpret 7TV bridge event',
-      ),
-    ).toBe(true);
-  });
-
-  test('allows retrying users from a failed bridge request', async () => {
-    mockFetchBridgedCosmetics.mockRejectedValueOnce(new Error('network'));
-
-    const failed = requestUserCosmetics('ttv-1', 'login1');
-    jest.advanceTimersByTime(500);
-    await failed;
-
-    const retried = requestUserCosmetics('ttv-1', 'login1');
-    jest.advanceTimersByTime(500);
-    await retried;
-
-    expect(mockFetchBridgedCosmetics.mock.calls).toEqual([
-      [['login1']],
-      [['login1']],
-    ]);
-  });
-});
-
 describe('applyEntitlementCreateEvent', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.useFakeTimers();
-    clearBridgeCosmeticsState();
-    mockFetchBridgedCosmetics.mockResolvedValue([]);
     mockGetBadge.mockReturnValue(undefined);
     mockGetPaint.mockReturnValue(undefined);
   });
 
-  afterEach(() => {
-    clearBridgeCosmeticsState();
-    jest.useRealTimers();
-  });
-
-  test('binds the badge and queues a bridge lookup when the definition is missing', () => {
+  test('binds the badge and fetches cosmetics over v4 GQL when the definition is missing', () => {
     applyEntitlementCreateEvent(
       {
         entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
@@ -269,12 +98,10 @@ describe('applyEntitlementCreateEvent', () => {
     );
 
     expect(mockSetUserBadge.mock.calls).toEqual([['ttv-1', 'badge-1']]);
-
-    jest.advanceTimersByTime(500);
-    expect(mockFetchBridgedCosmetics.mock.calls).toEqual([[['user']]]);
+    expect(mockFetchUserCosmeticsByTwitchId.mock.calls).toEqual([['ttv-1']]);
   });
 
-  test('does not queue a bridge lookup when the definition is already loaded', () => {
+  test('does not fetch when the badge definition is already loaded', () => {
     mockGetBadge.mockReturnValue({
       id: 'badge-1',
       provider: '7tv',
@@ -296,12 +123,10 @@ describe('applyEntitlementCreateEvent', () => {
     );
 
     expect(mockSetUserBadge.mock.calls).toEqual([['ttv-1', 'badge-1']]);
-
-    jest.advanceTimersByTime(500);
-    expect(mockFetchBridgedCosmetics).not.toHaveBeenCalled();
+    expect(mockFetchUserCosmeticsByTwitchId).not.toHaveBeenCalled();
   });
 
-  test('never queues bridge lookups when applying bridge responses', () => {
+  test('never fetches when requestMissingDefinitions is false', () => {
     applyEntitlementCreateEvent(
       {
         entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
@@ -314,12 +139,10 @@ describe('applyEntitlementCreateEvent', () => {
     );
 
     expect(mockSetUserBadge.mock.calls).toEqual([['ttv-1', 'badge-1']]);
-
-    jest.advanceTimersByTime(500);
-    expect(mockFetchBridgedCosmetics).not.toHaveBeenCalled();
+    expect(mockFetchUserCosmeticsByTwitchId).not.toHaveBeenCalled();
   });
 
-  test('binds paints and requests missing paint definitions', () => {
+  test('binds paints and fetches missing paint definitions over v4 GQL', () => {
     const entitlement: EntitlementCreate = {
       id: 'entitlement-paint-1',
       kind: 0,
@@ -343,8 +166,6 @@ describe('applyEntitlementCreateEvent', () => {
     );
 
     expect(mockSetUserPaint.mock.calls).toEqual([['ttv-1', 'paint-1']]);
-
-    jest.advanceTimersByTime(500);
-    expect(mockFetchBridgedCosmetics.mock.calls).toEqual([[['user']]]);
+    expect(mockFetchUserCosmeticsByTwitchId.mock.calls).toEqual([['ttv-1']]);
   });
 });

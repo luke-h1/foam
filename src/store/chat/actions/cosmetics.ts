@@ -17,6 +17,7 @@ import {
   type V4Badge,
 } from '@app/utils/color/sevenTvPaintData';
 import { logger } from '@app/utils/logger';
+import { getSevenTvSessionId } from '@app/utils/seventv/sevenTvSessionId';
 
 import { chatStore$ } from '../observables/chatStore';
 import { writePersistedCosmetics } from '../observables/cosmeticsPersistence';
@@ -220,6 +221,44 @@ export const fetchAndCacheUserCosmetics = async (
       return null;
     }
   });
+};
+
+/**
+ * Fetch a chatter's cosmetics via v4 GQL from their Twitch id. Used when a
+ * WebSocket entitlement arrives without its cosmetic definition.
+ */
+export const fetchUserCosmeticsByTwitchId = async (
+  twitchUserId: string,
+): Promise<void> => {
+  const sevenTvUserId = await sevenTvService.get7tvUserId(twitchUserId);
+  if (sevenTvUserId) {
+    await fetchAndCacheUserCosmetics(sevenTvUserId);
+  }
+};
+
+/**
+ * Request a chatter's cosmetics via a passive 7TV presence write. Falls back to
+ * v4 GQL when there is no live EventAPI session.
+ */
+export const requestUserCosmeticsViaPresence = async (
+  twitchUserId: string,
+): Promise<void> => {
+  const sevenTvUserId = await sevenTvService.get7tvUserId(twitchUserId);
+  if (!sevenTvUserId) {
+    return;
+  }
+
+  const sessionId = getSevenTvSessionId();
+  const channelId = chatStore$.currentChannelId.peek();
+  if (sessionId && channelId) {
+    await sevenTvService.sendPresence(channelId, sevenTvUserId, {
+      passive: true,
+      sessionId,
+    });
+    return;
+  }
+
+  await fetchAndCacheUserCosmetics(sevenTvUserId);
 };
 
 export const clearUserCosmeticsCache = () => {

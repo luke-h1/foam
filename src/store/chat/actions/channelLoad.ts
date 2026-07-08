@@ -42,7 +42,6 @@ import {
   settleSpecs,
 } from './channelResources';
 import { clearUserCosmeticsCache } from './cosmetics';
-import { clearBridgeCosmeticsState } from './cosmeticsBridge';
 import { clearEmoteImageCache } from './emoteImages';
 import { addMessage } from './messages';
 import {
@@ -748,7 +747,6 @@ export const clearChatCosmeticsCache = (): void => {
     clearPersistedRecentMessages();
   }
   clearUserCosmeticsCache();
-  clearBridgeCosmeticsState();
   clearPersonalEmotesCache();
   clearSubscriberProfilesCache();
   clearEmoteImageCache();

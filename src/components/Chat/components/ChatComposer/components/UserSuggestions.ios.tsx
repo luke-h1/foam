@@ -56,7 +56,7 @@ function UserSuggestionItem({
           },
         ]}
       />
-      <Text style={styles.userSuggestionText}>@{user.name}</Text>
+      <Text style={styles.userSuggestionText}>{user.name}</Text>
     </Button>
   );
 }

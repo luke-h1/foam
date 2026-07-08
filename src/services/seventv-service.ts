@@ -30,8 +30,6 @@ import type {
 } from '@app/types/emote';
 import type {
   PaintData,
-  SevenTvEventData,
-  SevenTvEventType,
   UserCosmeticsInfo,
 } from '@app/types/seventv/cosmetics';
 import type {
@@ -360,31 +358,6 @@ export const sevenTvService = {
         id: String(channelId),
       },
     });
-  },
-
-  /**
-   * Bulk cosmetics lookup via the EventAPI bridge. Returns the same dispatch
-   * payloads (cosmetic.create / entitlement.create) the WebSocket would push,
-   * for every identified user, in one request.
-   *
-   * Identifiers use the `username:<twitch-login>` form. The bridge's `id:`
-   * identifier refers to a 7TV user id, not a Twitch id, so a Twitch numeric
-   * id sent as `id:` is rejected ("invalid bridge body identifier"). The login
-   * is the identifier we always have to hand from chat, and the returned
-   * dispatches still carry the Twitch connection id so the store keys correctly.
-   * @param twitchLogins - Twitch login names to look up
-   */
-  fetchBridgedCosmetics: async (
-    twitchLogins: string[],
-  ): Promise<SevenTvEventData<SevenTvEventType>[]> => {
-    if (twitchLogins.length === 0) {
-      return [];
-    }
-    const events = await sevenTvApi.post<SevenTvEventData<SevenTvEventType>[]>(
-      '/bridge/event-api',
-      { identifiers: twitchLogins.map(login => `username:${login}`) },
-    );
-    return Array.isArray(events) ? events : [];
   },
 
   /**

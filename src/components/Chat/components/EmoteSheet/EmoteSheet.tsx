@@ -13,6 +13,7 @@ import { renderSetRailItem } from './EmoteSheetSetRailItem';
 import { emoteSheetStyles as styles } from './emoteSheetStyles';
 import type { EmotePickerItem } from './emoteSheetTypes';
 import { ProviderChip } from './ProviderChip';
+import { emoteSheetScrollActivity } from './util/emoteSheetScrollActivity';
 
 export type { EmotePickerItem };
 import { useRef, useState } from 'react';
@@ -29,8 +30,6 @@ interface EmoteSheetProps {
   onDismiss: () => void;
   onEmoteSelect?: (item: EmotePickerItem) => void;
 }
-
-const IosBlur = EmoteSheetIosBlur;
 
 export function EmoteSheet({
   isPresented,
@@ -69,7 +68,7 @@ export function EmoteSheet({
           <View style={styles.sheetHandle} />
         </View>
         <View style={styles.header}>
-          <IosBlur />
+          <EmoteSheetIosBlur />
           <ScrollView
             horizontal
             keyboardShouldPersistTaps='handled'
@@ -82,7 +81,7 @@ export function EmoteSheet({
               <ProviderChip
                 key={provider.id}
                 isActive={provider.id === sheet.activeProviderId}
-                onPress={() => sheet.handleProviderPress(provider.id)}
+                onSelect={sheet.handleProviderPress}
                 provider={provider}
               />
             ))}
@@ -132,6 +131,8 @@ export function EmoteSheet({
                   }
                   onViewableItemsChanged={sheet.onViewableItemsChanged}
                   viewabilityConfig={sheet.viewabilityConfig}
+                  onScroll={emoteSheetScrollActivity.poke}
+                  scrollEventThrottle={16}
                   contentContainerStyle={[
                     styles.listContent,
                     {
@@ -140,8 +141,7 @@ export function EmoteSheet({
                         (sheet.filteredSets.length > 1 ? 0 : bottomInset),
                     },
                   ]}
-                  drawDistance={96}
-                  recycleItems
+                  drawDistance={(sheet.cellSize + 4) * 8}
                   showsVerticalScrollIndicator={false}
                   nestedScrollEnabled
                   style={styles.list}
@@ -156,7 +156,7 @@ export function EmoteSheet({
                   { paddingBottom: theme.space8 + bottomInset },
                 ]}
               >
-                <IosBlur />
+                <EmoteSheetIosBlur />
                 <LegendList
                   data={sheet.filteredSets}
                   horizontal

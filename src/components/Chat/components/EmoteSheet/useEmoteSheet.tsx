@@ -22,19 +22,19 @@ import {
   flattenProviderSets,
 } from '@app/components/Chat/components/EmoteSheet/util/emoteMenuData';
 import { useAuthContext } from '@app/context/AuthContext';
-import { cacheEmoteImages } from '@app/store/chat/actions/emoteImages';
 import { useCurrentEmoteData } from '@app/store/chat/react/selectors';
 import type { SanitisedEmote } from '@app/types/emote';
 
 import { EmoteRow } from './EmoteRow';
-import { EMOTE_SHEET_DETENT } from './emoteSheetLayout';
 import type { EmotePickerItem } from './emoteSheetTypes';
 import { SetHeader } from './SetHeader';
+import { emoteSheetScrollActivity } from './util/emoteSheetScrollActivity';
+import { prefetchEmotePickerImages } from './util/prefetchEmotePickerImages';
 
 const EMPTY_PROVIDERS: EmoteMenuProvider[] = [];
 
 const EMOTE_WARMUP_DELAY_MS = 250;
-const MAX_WARMUP_EMOTES = 3;
+const PROVIDER_WARMUP_ROWS = 4;
 const EMOTE_SHEET_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 10,
   minimumViewTime: 50,
@@ -82,18 +82,14 @@ export function useEmoteSheet({
   emoteListRef: React.RefObject<LegendListRef | null>;
   layoutWidth: number;
 }) {
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const { width: screenWidth } = useWindowDimensions();
   const sheetWidth = layoutWidth > 0 ? layoutWidth : screenWidth;
-  const sheetHeight = Math.round(screenHeight * EMOTE_SHEET_DETENT);
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const [activeProviderId, setActiveProviderId] =
     useState<EmoteMenuProviderId | null>(null);
   const [activeSetId, setActiveSetId] = useState<string | null>(null);
-  // The provider/emote build below is O(all emotes) — grouping, sorting and
-  // flattening thousands of 7TV emotes. Running it in the mount render blocks the
-  // sheet's present, so we hold it off for one frame: the sheet animates in with
-  // a spinner, then the lists build once the open is underway.
+  // Defer the O(all emotes) provider build until after the sheet has presented.
   const [contentReady, setContentReady] = useState(false);
 
   const { user } = useAuthContext();
@@ -195,45 +191,70 @@ export function useEmoteSheet({
     emoteListRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, [deferredSearchQuery, effectiveActiveProviderId, emoteListRef]);
 
-  const { items: listItems, setStartIndices } = useMemo(
+  const { items: listItems, setStartIndexById } = useMemo(
     () => flattenProviderSets(filteredSets, columns),
     [filteredSets, columns],
   );
 
   useEffect(() => {
-    if (!isPresented) {
+    if (!isPresented || providers.length === 0) {
       return undefined;
     }
 
-    const visibleSet =
-      filteredSets.find(set => set.id === effectiveActiveSetId) ??
-      filteredSets[0];
-    const preloadVisibleEmotes =
-      visibleSet?.emotes
-        .filter((item): item is SanitisedEmote => typeof item === 'object')
-        .slice(0, Math.min(columns, MAX_WARMUP_EMOTES)) ?? [];
-
-    if (preloadVisibleEmotes.length === 0) {
-      return undefined;
-    }
+    const orderedProviders = [
+      ...providers.filter(
+        provider => provider.id === effectiveActiveProviderId,
+      ),
+      ...providers.filter(
+        provider => provider.id !== effectiveActiveProviderId,
+      ),
+    ];
 
     const controller = new AbortController();
     const warmupTimer = setTimeout(() => {
-      void cacheEmoteImages(
-        preloadVisibleEmotes,
-        controller.signal,
-        'background',
-      );
+      void (async () => {
+        for (const provider of orderedProviders) {
+          if (controller.signal.aborted) {
+            return;
+          }
+
+          const isActiveProvider = provider.id === effectiveActiveProviderId;
+          const limit =
+            columns *
+            (isActiveProvider
+              ? PROVIDER_WARMUP_ROWS * 3
+              : PROVIDER_WARMUP_ROWS);
+
+          const emotes: SanitisedEmote[] = [];
+          for (const set of provider.sets) {
+            for (const item of set.emotes) {
+              if (typeof item === 'object') {
+                emotes.push(item);
+                if (emotes.length >= limit) {
+                  break;
+                }
+              }
+            }
+            if (emotes.length >= limit) {
+              break;
+            }
+          }
+
+          // eslint-disable-next-line react-doctor/async-await-in-loop -- serialize providers so background prefetch never floods the download queue
+          await prefetchEmotePickerImages(emotes, controller.signal);
+        }
+      })();
     }, EMOTE_WARMUP_DELAY_MS);
 
     return () => {
       clearTimeout(warmupTimer);
       controller.abort();
     };
-  }, [effectiveActiveSetId, columns, filteredSets, isPresented]);
+  }, [isPresented, providers, columns, effectiveActiveProviderId]);
 
   const handleDismiss = useCallback(() => {
     setSearchQuery('');
+    emoteSheetScrollActivity.reset();
     onDismiss();
   }, [onDismiss]);
 
@@ -246,9 +267,8 @@ export function useEmoteSheet({
 
   const handleScrollToSet = useCallback(
     (setId: string) => {
-      const index =
-        setStartIndices[filteredSets.findIndex(set => set.id === setId)];
-      if (typeof index !== 'number') {
+      const index = setStartIndexById.get(setId);
+      if (index === undefined) {
         return;
       }
 
@@ -258,7 +278,7 @@ export function useEmoteSheet({
         animated: true,
       });
     },
-    [setStartIndices, filteredSets, emoteListRef],
+    [setStartIndexById, emoteListRef],
   );
 
   const handleProviderPress = useCallback((providerId: EmoteMenuProviderId) => {
@@ -302,8 +322,6 @@ export function useEmoteSheet({
     [],
   );
 
-  const viewabilityConfig = EMOTE_SHEET_VIEWABILITY_CONFIG;
-
   const renderItem = useCallback(
     ({ item }: LegendListRenderItemProps<EmoteMenuListItem>) => {
       if (item.type === 'header') {
@@ -344,10 +362,8 @@ export function useEmoteSheet({
     providers,
     renderItem,
     searchQuery,
-    sheetHeight,
-    sheetWidth,
     showEmpty,
     showPlaceholder,
-    viewabilityConfig,
+    viewabilityConfig: EMOTE_SHEET_VIEWABILITY_CONFIG,
   };
 }

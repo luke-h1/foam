@@ -242,6 +242,16 @@ jest.mock('react-native-reanimated', () => {
     },
     interpolate: jest.fn((value: unknown) => value),
     interpolateColor: jest.fn((value: unknown) => value),
+    makeMutable: (value: unknown) => {
+      const sv = {
+        value,
+        get: () => sv.value,
+        set: (v: unknown) => {
+          sv.value = v;
+        },
+      };
+      return sv;
+    },
     runOnJS: (fn: (...args: unknown[]) => unknown) => fn,
     runOnUI: (fn: (...args: unknown[]) => unknown) => fn,
     useAnimatedReaction: jest.fn(),

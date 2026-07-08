@@ -16,6 +16,7 @@ import { Button } from '@app/components/Button/Button';
 import { Input } from '@app/components/ui/Input/Input';
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
+import { drainInFlightExpoFetches } from '@app/lib/expoFetch';
 import { theme } from '@app/styles/themes';
 
 export function ChannelSurfingScreen() {
@@ -47,7 +48,11 @@ export function ChannelSurfingScreen() {
         setBusy(false);
         return;
       }
+      // Strictly ordered: fetch the update, then drain in-flight fetches, then
+      // reload. Draining must happen only before the runtime is torn down.
+      // eslint-disable-next-line react-doctor/async-parallel
       await fetchUpdateAsync();
+      await drainInFlightExpoFetches();
       await reloadAsync();
     } catch (err) {
       setBusy(false);
@@ -71,6 +76,7 @@ export function ChannelSurfingScreen() {
             setBusy(true);
             try {
               setUpdateRequestHeadersOverride(null);
+              await drainInFlightExpoFetches();
               await reloadAsync();
             } catch (err) {
               setBusy(false);

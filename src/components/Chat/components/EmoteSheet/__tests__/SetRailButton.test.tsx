@@ -18,7 +18,7 @@ describe('SetRailButton', () => {
     render(
       <SetRailButton
         isActive={false}
-        onPress={jest.fn()}
+        onScrollToSet={jest.fn()}
         set={createEmoteMenuSet('avatar:https://cdn.example.com/zoil.png')}
       />,
     );
@@ -32,7 +32,7 @@ describe('SetRailButton', () => {
     render(
       <SetRailButton
         isActive={false}
-        onPress={jest.fn()}
+        onScrollToSet={jest.fn()}
         set={createEmoteMenuSet('emoji:😀')}
       />,
     );
@@ -45,7 +45,7 @@ describe('SetRailButton', () => {
     render(
       <SetRailButton
         isActive={false}
-        onPress={jest.fn()}
+        onScrollToSet={jest.fn()}
         set={createEmoteMenuSet('twitch')}
       />,
     );

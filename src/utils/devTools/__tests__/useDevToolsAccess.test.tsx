@@ -33,6 +33,7 @@ function createRemoteConfigResult(
   isLoading = false,
 ): UseRemoteConfigResult {
   const config: RemoteConfigType = {
+    updateAppButtonAllowedUsers: entry([]),
     splash: entry({ '7tvUnavailable': false, app: false }),
     minimumVersion: entry({
       android: {
@@ -52,6 +53,15 @@ function createRemoteConfigResult(
     websiteUrl: entry('https://foam-app.com'),
     admins: entry(admins),
     experiments: entry({}),
+    bundleButtonEnabled: entry({
+      ios: {
+        development: false,
+        internal: true,
+        testflight: false,
+        production: false,
+        e2e: false,
+      },
+    }),
   };
 
   return { config, refetch: jest.fn(), isRefetching: false, isLoading };

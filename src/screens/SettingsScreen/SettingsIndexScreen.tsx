@@ -13,9 +13,11 @@ import {
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
+import { useAppUpdate } from '@app/hooks/useAppUpdate';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { openLicenseList } from '@app/lib/legal';
 import { theme } from '@app/styles/themes';
+import { isUpdateAppButtonAllowed } from '@app/utils/appUpdate/isUpdateAppButtonAllowed';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import {
   isAdminLogin,
@@ -29,18 +31,32 @@ function handleSendFeedback() {
   router.push('/feedback');
 }
 
+const variant = process.env.EXPO_PUBLIC_APP_VARIANT;
+
 export function SettingsIndexScreen() {
   const { user } = useAuthContext();
   const { config } = useRemoteConfig();
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
+  const { openStore, updateBundle } = useAppUpdate();
   const shouldShowDevTools =
     isDevToolsEnabled || isAdminLogin(user?.login, config.admins.value);
   const { t } = useTranslation('settings');
 
   useScrollToTop(scrollRef);
 
-  const { statusPageUrl, websiteUrl } = config;
+  const {
+    statusPageUrl,
+    websiteUrl,
+    bundleButtonEnabled: configBundleButtonEnabled,
+  } = config;
+
+  const bundleButtonEnabled = configBundleButtonEnabled.value.ios[variant];
+  const canSeeUpdateAppButton = isUpdateAppButtonAllowed(
+    user?.login,
+    config.updateAppButtonAllowedUsers.value,
+  );
+
   if (Platform.OS === 'ios') {
     return (
       <Host style={styles.iosHost}>
@@ -125,6 +141,25 @@ export function SettingsIndexScreen() {
               onPress={() => openLicenseList(t('ossLicenses'))}
             />
           </Section>
+
+          {canSeeUpdateAppButton || bundleButtonEnabled ? (
+            <Section title={t('appUpdates')}>
+              {canSeeUpdateAppButton ? (
+                <Button
+                  label={t('updateApp')}
+                  systemImage='arrow.down.app'
+                  onPress={openStore}
+                />
+              ) : null}
+              {bundleButtonEnabled ? (
+                <Button
+                  label={t('updateBundle')}
+                  systemImage='arrow.triangle.2.circlepath'
+                  onPress={updateBundle}
+                />
+              ) : null}
+            </Section>
+          ) : null}
 
           <Section
             title={shouldShowDevTools ? t('developer') : t('more')}
@@ -259,6 +294,26 @@ export function SettingsIndexScreen() {
             subtitle={t('ossLicensesDescription')}
             icon={{ icon: 'doc.text', color: theme.colorViolet }}
             onPress={() => openLicenseList(t('ossLicenses'))}
+          />
+        </SettingsSection>
+
+        <SettingsSection title={t('appUpdates')}>
+          {canSeeUpdateAppButton ? (
+            <SettingsLinkRow
+              title={t('updateApp')}
+              subtitle={t('updateAppDescription')}
+              icon={{ icon: 'arrow.down.app', color: theme.colorTeal }}
+              onPress={openStore}
+            />
+          ) : null}
+          <SettingsLinkRow
+            title={t('updateBundle')}
+            subtitle={t('updateBundleDescription')}
+            icon={{
+              icon: 'arrow.triangle.2.circlepath',
+              color: theme.colorBlue,
+            }}
+            onPress={updateBundle}
           />
         </SettingsSection>
 

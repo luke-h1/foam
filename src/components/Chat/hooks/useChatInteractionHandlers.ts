@@ -20,7 +20,7 @@ export function useChatComposerActions({
   fetchUserCosmetics,
   inputShellRef,
 }: {
-  fetchUserCosmetics: (twitchUserId: string, login: string) => Promise<void>;
+  fetchUserCosmetics: (twitchUserId: string) => Promise<void>;
   inputShellRef: RefObject<ChatInputShellHandle | null>;
 }) {
   const handleReply = useCallback(
@@ -30,7 +30,7 @@ export function useChatComposerActions({
 
       const twitchUserId = message.userstate['user-id'];
       if (twitchUserId) {
-        void fetchUserCosmetics(twitchUserId, message.userstate.login || '');
+        void fetchUserCosmetics(twitchUserId);
       }
 
       inputShellRef.current?.setReplyTo({

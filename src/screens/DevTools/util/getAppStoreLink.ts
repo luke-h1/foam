@@ -1,5 +1,4 @@
-import { fetch } from 'expo/fetch';
-
+import { fetch } from '@app/lib/expoFetch';
 import { storageService } from '@app/lib/storage';
 
 type AppStoreLookupResponse = {

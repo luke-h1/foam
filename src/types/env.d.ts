@@ -1,3 +1,5 @@
+import { Variant } from '../../app.config';
+
 declare global {
   namespace NodeJS {
     interface ProcessEnv {
@@ -14,6 +16,8 @@ declare global {
       EXPO_PUBLIC_ENABLE_WDYR: boolean;
       EXPO_PUBLIC_WITH_STORYBOOK: boolean;
       EXPO_PUBLIC_WITH_ROZENITE: boolean;
+
+      EXPO_PUBLIC_APP_VARIANT: Variant;
 
       MOCK_SERVER_PORT: number;
     }

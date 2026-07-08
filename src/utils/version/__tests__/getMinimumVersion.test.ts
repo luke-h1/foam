@@ -17,6 +17,7 @@ function createRemoteConfig(minimumVersion: {
   ios?: Partial<Record<MinimumVersionTrack, string>>;
 }): RemoteConfigType {
   return {
+    updateAppButtonAllowedUsers: entry([]),
     splash: entry({ '7tvUnavailable': false, app: false }),
     minimumVersion: entry(
       minimumVersion as RemoteConfigType['minimumVersion']['value'],
@@ -25,6 +26,15 @@ function createRemoteConfig(minimumVersion: {
     websiteUrl: entry('https://foam-app.com'),
     admins: entry([]),
     experiments: entry({}),
+    bundleButtonEnabled: entry({
+      ios: {
+        development: false,
+        internal: true,
+        testflight: false,
+        production: false,
+        e2e: false,
+      },
+    }),
   };
 }
 
