@@ -79,7 +79,7 @@ describe('useChatScroll', () => {
   const getMessagesLength = (length: number) => () => length;
 
   describe('scroll activity signal (emote animation pause)', () => {
-    test('programmatic auto-scroll does not flag activity; a user drag does', () => {
+    test('programmatic auto-scroll and drag-scroll do not flag activity; momentum does', () => {
       chatScrollActivity.reset();
       const { ref: listRef } = createMockListRef();
       const { result } = renderHook(() =>
@@ -99,6 +99,17 @@ describe('useChatScroll', () => {
       act(() => {
         result.current.handleScrollBeginDrag(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
+        );
+        result.current.handleScroll(
+          createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
+        );
+      });
+      expect(chatScrollActivity.isActive()).toBe(false);
+
+      act(() => {
+        result.current.handleMomentumScrollBegin();
+        result.current.handleScroll(
+          createScrollEvent({ y: 400 }, { height: 500 }, { height: 2000 }),
         );
       });
       expect(chatScrollActivity.isActive()).toBe(true);

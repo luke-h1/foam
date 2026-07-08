@@ -62,6 +62,7 @@ function computePaintLayers(paint: PaintData): PaintLayerData[] {
       canvas_repeat: 'unset',
       at: null,
       size: null,
+      opacity: 1,
     },
   ];
 }
@@ -223,6 +224,18 @@ function computeLayerGradientConfig(
   let stops = indexedCollectionToArray<PaintStop>(layer.stops)
     .slice()
     .sort((a, b) => a.at - b.at);
+
+  // Qt/CSS hard-edge stops share a position; nudge later stops forward slightly.
+  let lastStop = -1;
+  stops = stops.map(stop => {
+    let at = stop.at;
+    if (at <= lastStop) {
+      at = lastStop + 0.0000001;
+    }
+    lastStop = at;
+    return at === stop.at ? stop : { ...stop, at };
+  });
+
   if (layer.repeat) {
     stops = expandRepeatingStops(stops);
   }

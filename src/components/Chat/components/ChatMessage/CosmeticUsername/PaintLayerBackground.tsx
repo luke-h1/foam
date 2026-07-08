@@ -43,6 +43,11 @@ export function PaintLayerBackground({
   const isAssetPaint = layer.function === 'URL' && Boolean(layer.image_url);
   const isEllipse = layer.shape === 'ellipse';
   const useSvgLinear = layer.function === 'LINEAR_GRADIENT' && layer.repeat;
+  const layerOpacity = layer.opacity ?? 1;
+  const layerContainerStyle =
+    layerOpacity < 1
+      ? [styles.layer, layoutStyle, { opacity: layerOpacity }]
+      : [styles.layer, layoutStyle];
 
   const handleLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
@@ -58,7 +63,7 @@ export function PaintLayerBackground({
   if (isAssetPaint) {
     if (isTilingCanvasRepeat(layer.canvas_repeat, layer.repeat)) {
       return (
-        <View style={[styles.layer, layoutStyle]}>
+        <View style={layerContainerStyle}>
           <PaintLayerTiledImage
             canvasRepeat={layer.canvas_repeat}
             imageUrl={layer.image_url}
@@ -67,7 +72,7 @@ export function PaintLayerBackground({
       );
     }
     return (
-      <View style={[styles.layer, layoutStyle]}>
+      <View style={layerContainerStyle}>
         <Image
           contentFit={imageRepeatFromCanvasRepeat(
             layer.canvas_repeat,
@@ -92,7 +97,7 @@ export function PaintLayerBackground({
     const ry = isEllipse ? halfH * Math.SQRT2 : farthestCorner;
 
     return (
-      <View style={[styles.layer, layoutStyle]} onLayout={handleLayout}>
+      <View style={layerContainerStyle} onLayout={handleLayout}>
         {layerSize ? (
           <Svg width='100%' height='100%' style={styles.fill}>
             <Defs>
@@ -131,7 +136,7 @@ export function PaintLayerBackground({
   if (useSvgLinear) {
     const { start, end } = gradientConfig;
     return (
-      <View style={[styles.layer, layoutStyle]}>
+      <View style={layerContainerStyle}>
         <Svg width='100%' height='100%' style={styles.fill}>
           <Defs>
             <SvgLinearGradient
@@ -163,7 +168,7 @@ export function PaintLayerBackground({
   }
 
   return (
-    <View style={[styles.layer, layoutStyle]}>
+    <View style={layerContainerStyle}>
       <LinearGradient
         colors={gradientConfig.colors as [string, string, ...string[]]}
         locations={gradientConfig.locations as [number, number, ...number[]]}

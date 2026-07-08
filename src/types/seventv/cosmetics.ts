@@ -130,6 +130,10 @@ export interface PaintLayerData {
   canvas_repeat: PaintCanvasRepeat;
   at: [number, number] | null;
   size: [number, number] | null;
+  /**
+   * Layer opacity from the v4 paint definition (0–1).
+   */
+  opacity: number;
 }
 
 export interface PaintTextStroke {

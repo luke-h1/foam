@@ -347,9 +347,22 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
   scheduleCosmeticsPersist();
 };
 
+function mergePaintDefinition(
+  incoming: PaintData,
+  existing: PaintData | undefined,
+): PaintData {
+  if (!existing?.textStyle || incoming.textStyle) {
+    return incoming;
+  }
+
+  return { ...incoming, textStyle: existing.textStyle };
+}
+
 export const addPaint = (paint: PaintData) => {
   if (paint.id) {
-    chatStore$.paints[paint.id]?.set(paint);
+    const existing = chatStore$.paints[paint.id]?.peek();
+    const merged = mergePaintDefinition(paint, existing);
+    chatStore$.paints[paint.id]?.set(merged);
     scheduleCosmeticsPersist();
     refreshCachedUserCosmeticsForDefinition(paint.id);
   }
@@ -518,7 +531,9 @@ export const removeUserBadge = (ttvUserId: string) => {
 
 export const updatePaint = (paint: PaintData) => {
   if (paint.id) {
-    chatStore$.paints[paint.id]?.set(paint);
+    const existing = chatStore$.paints[paint.id]?.peek();
+    const merged = mergePaintDefinition(paint, existing);
+    chatStore$.paints[paint.id]?.set(merged);
     refreshCachedUserCosmeticsForDefinition(paint.id);
   }
 };

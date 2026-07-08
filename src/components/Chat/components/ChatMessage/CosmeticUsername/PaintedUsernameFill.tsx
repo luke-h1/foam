@@ -25,8 +25,14 @@ export function PaintedUsernameFill({
   textStyle,
 }: PaintedUsernameFillProps) {
   const layers = getPaintLayers(paint);
-  const baseColor =
-    paint.color === null ? fallbackColor : sevenTvColorToCss(paint.color);
+  let baseColor = fallbackColor;
+  if (paint.color !== null) {
+    baseColor = sevenTvColorToCss(paint.color);
+  } else if (layers.some(layer => layer.function === 'URL')) {
+    baseColor = fallbackColor;
+  } else if (layers.length > 0) {
+    baseColor = 'transparent';
+  }
 
   return (
     <View style={styles.stack}>

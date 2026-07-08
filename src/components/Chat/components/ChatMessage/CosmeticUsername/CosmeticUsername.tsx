@@ -1,18 +1,23 @@
 import { memo } from 'react';
-import { type StyleProp, StyleSheet, TextStyle, View } from 'react-native';
+import {
+  Platform,
+  type StyleProp,
+  StyleSheet,
+  TextStyle,
+  View,
+} from 'react-native';
 
 import { useSelector } from '@legendapp/state/react';
 
-import { useChatScrollActive } from '@app/components/Chat/util/useChatScrollActive';
 import { Text } from '@app/components/ui/Text/Text';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
-import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
 import { chatLineMetrics } from '../RichChatMessage.styles';
 import { PaintedUsernameDropShadowLayer } from './PaintedUsernameDropShadowLayer';
 import { PaintedUsernameMaskedFill } from './PaintedUsernameMaskedFill';
+import { PaintedUsernameStrokeLayer } from './PaintedUsernameStrokeLayer';
 import {
   DEFAULT_PAINT_DROP_SHADOW_MODE,
   getPaintDropShadows,
@@ -23,7 +28,7 @@ import {
   buildPaintUsernameTextStyle,
   getPaintTextShadows,
   getPaintTextStroke,
-  paintStrokeToShadow,
+  scaleNativeDropShadow,
 } from './util/paintTextStyle';
 
 interface PaintedUsernameProps {
@@ -51,9 +56,10 @@ function PaintedUsernameWithPaint({
   sevenTvPaintDropShadows,
   usernameTextStyle,
 }: PaintedUsernameWithPaintProps) {
-  const dropShadowMode = sevenTvPaintDropShadows;
   const paintTextStyle = buildPaintUsernameTextStyle(paint);
-  const dropShadows = getPaintDropShadows(paint, dropShadowMode);
+  const dropShadows = getPaintDropShadows(paint, sevenTvPaintDropShadows).map(
+    scaleNativeDropShadow,
+  );
   const textShadows = getPaintTextShadows(paint);
   const stroke = getPaintTextStroke(paint);
 
@@ -63,14 +69,23 @@ function PaintedUsernameWithPaint({
     paintTextStyle,
   ] as StyleProp<TextStyle>;
 
-  // Layer order mirrors the extension's CSS compositing: drop-shadow filter
-  // furthest back, then text-shadows, then the stroke, then the painted fill.
+  if (Platform.OS === 'web') {
+    return (
+      <View style={styles.paintedWrapper}>
+        <PaintedUsernameMaskedFill
+          displayUsername={displayUsername}
+          fallbackColor={fallbackColor}
+          paint={paint}
+          maskTextStyle={maskTextStyle}
+          sevenTvPaintDropShadows={sevenTvPaintDropShadows}
+        />
+      </View>
+    );
+  }
+
   const underlayShadows = [
-    ...dropShadows.map(shadow => ({ shadow, source: 'drop' })),
-    ...textShadows.map(shadow => ({ shadow, source: 'text' })),
-    ...(stroke
-      ? [{ shadow: paintStrokeToShadow(stroke), source: 'stroke' }]
-      : []),
+    ...dropShadows.map(shadow => ({ shadow, source: 'drop' as const })),
+    ...textShadows.map(shadow => ({ shadow, source: 'text' as const })),
   ];
 
   return (
@@ -90,7 +105,15 @@ function PaintedUsernameWithPaint({
         fallbackColor={fallbackColor}
         paint={paint}
         maskTextStyle={maskTextStyle}
+        sevenTvPaintDropShadows={sevenTvPaintDropShadows}
       />
+      {stroke ? (
+        <PaintedUsernameStrokeLayer
+          displayUsername={displayUsername}
+          maskTextStyle={maskTextStyle}
+          stroke={stroke}
+        />
+      ) : null}
     </View>
   );
 }
@@ -116,7 +139,6 @@ function PaintedUsernameComponent({
     return paintId ? chatStore$.paints[paintId]?.get() : null;
   });
   const paint = paintProp ?? storePaint ?? null;
-  const isScrolling = useChatScrollActive();
 
   if (!paint) {
     return (
@@ -132,33 +154,10 @@ function PaintedUsernameComponent({
     );
   }
 
-  const solidFallback =
-    paint.color === null ? fallbackColor : sevenTvColorToCss(paint.color);
-
-  // During an active fling, render the username in its dominant solid colour
-  // and skip the per-row MaskedView offscreen pass + gradient/SVG/image fill
-  // layers; the full painted fill returns when the list settles (~150ms),
-  // mirroring how animated emotes pause decode during scroll. This sheds the
-  // offscreen render passes at the moment the Core Animation render encoder is
-  // most pressured (FOAM-TV-MOBILE-BJ render-commit OOM).
-  if (isScrolling) {
-    return (
-      <Text
-        style={[
-          styles.plainUsername,
-          { color: solidFallback },
-          usernameTextStyle,
-        ]}
-      >
-        {displayUsername}
-      </Text>
-    );
-  }
-
   return (
     <PaintedUsernameWithPaint
       displayUsername={displayUsername}
-      fallbackColor={solidFallback}
+      fallbackColor={fallbackColor}
       paint={paint}
       sevenTvPaintDropShadows={sevenTvPaintDropShadows}
       usernameTextStyle={usernameTextStyle}
@@ -174,6 +173,7 @@ const styles = StyleSheet.create({
   },
   paintedWrapper: {
     alignSelf: 'flex-start',
+    overflow: 'visible',
     position: 'relative',
   },
   plainUsername: {

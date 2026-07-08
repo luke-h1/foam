@@ -91,6 +91,7 @@ const convertV4Layer = (
   layer: V4Paint['data']['layers'][number],
 ): PaintGradientLayer | null => {
   const { ty } = layer;
+  const opacity = layer.opacity;
   // eslint-disable-next-line no-underscore-dangle
   switch (ty.__typename) {
     case 'PaintLayerTypeLinearGradient':
@@ -104,6 +105,7 @@ const convertV4Layer = (
         })),
         canvas_repeat: '',
         size: [1, 1],
+        opacity,
       };
     case 'PaintLayerTypeRadialGradient':
       return {
@@ -117,6 +119,7 @@ const convertV4Layer = (
         })),
         canvas_repeat: '',
         size: [1, 1],
+        opacity,
       };
     case 'PaintLayerTypeSingleColor': {
       const packed = packRgba(ty.color);
@@ -128,6 +131,7 @@ const convertV4Layer = (
         ],
         canvas_repeat: '',
         size: [1, 1],
+        opacity,
       };
     }
     case 'PaintLayerTypeImage':
@@ -137,6 +141,7 @@ const convertV4Layer = (
         stops: [],
         canvas_repeat: '',
         size: [1, 1],
+        opacity,
       };
     default:
       return null;

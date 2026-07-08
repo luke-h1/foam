@@ -105,7 +105,6 @@ export const useChatScroll = ({
   const handleScrollBeginDrag = (
     e: NativeSyntheticEvent<NativeScrollEvent>,
   ) => {
-    chatScrollActivity.poke();
     clearScrollToBottomTimers();
     clearBottomContentAnchor();
     isDraggingRef.current = true;
@@ -142,6 +141,7 @@ export const useChatScroll = ({
 
   const handleMomentumScrollBegin = useCallback(() => {
     isMomentumScrollingRef.current = true;
+    chatScrollActivity.poke();
     if (scrollEndDragSettleRef.current) {
       clearTimeout(scrollEndDragSettleRef.current);
       scrollEndDragSettleRef.current = null;
@@ -176,7 +176,7 @@ export const useChatScroll = ({
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       lastScrollEventAtRef.current = Date.now();
-      if (isDraggingRef.current || isMomentumScrollingRef.current) {
+      if (isMomentumScrollingRef.current) {
         chatScrollActivity.poke();
       }
       const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
