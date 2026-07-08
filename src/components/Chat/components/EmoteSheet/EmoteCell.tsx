@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { View } from 'react-native';
 
 import { Button } from '@app/components/Button/Button';
@@ -26,7 +26,7 @@ function getEmoteCellDisplayUrl(item: Exclude<EmotePickerItem, string>) {
   );
 }
 
-export function EmoteCell({
+function EmoteCellComponent({
   cellSize,
   item,
   onPress,
@@ -80,3 +80,16 @@ export function EmoteCell({
     </Button>
   );
 }
+
+export const EmoteCell = memo(EmoteCellComponent, (prev, next) => {
+  if (prev.cellSize !== next.cellSize || prev.onPress !== next.onPress) {
+    return false;
+  }
+  if (typeof prev.item === 'string' || typeof next.item === 'string') {
+    return prev.item === next.item;
+  }
+  return (
+    prev.item.id === next.item.id &&
+    getEmoteCellDisplayUrl(prev.item) === getEmoteCellDisplayUrl(next.item)
+  );
+});
