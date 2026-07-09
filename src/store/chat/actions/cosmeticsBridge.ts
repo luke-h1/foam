@@ -231,11 +231,13 @@ export const applyEntitlementDeleteEvent = (data: {
 }): void => {
   const rememberedLink = twitchIdByEntitlementId.get(data.entitlementId);
   const ttvUserId = data.ttvUserId ?? rememberedLink?.twitchUserId ?? null;
-  if (!ttvUserId) {
+  // Without a remembered kind we cannot tell paint from badge; clearing both
+  // would drop the user's remaining cosmetic after an eviction or late delete.
+  if (!ttvUserId || !rememberedLink) {
     return;
   }
 
-  switch (rememberedLink?.kind) {
+  switch (rememberedLink.kind) {
     case 'PAINT':
       removeUserPaint(ttvUserId);
       break;
@@ -243,10 +245,6 @@ export const applyEntitlementDeleteEvent = (data: {
       removeUserBadge(ttvUserId);
       break;
     case 'EMOTE_SET':
-      break;
-    default:
-      removeUserPaint(ttvUserId);
-      removeUserBadge(ttvUserId);
       break;
   }
 

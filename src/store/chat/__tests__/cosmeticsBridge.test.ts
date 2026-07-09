@@ -438,4 +438,33 @@ describe('applyEntitlementDeleteEvent', () => {
     expect(mockRemoveUserPaint).not.toHaveBeenCalled();
     expect(mockRemoveUserBadge.mock.calls).toEqual([['ttv-1']]);
   });
+
+  test('does not clear paint or badge when an evicted entitlement delete still has a twitch user id', () => {
+    for (let index = 0; index <= 2000; index += 1) {
+      applyEntitlementCreateEvent({
+        entitlement: createBadgeEntitlement(
+          `badge-${index}`,
+          'ttv-1',
+          `entitlement-${index}`,
+        ),
+        kind: 'BADGE',
+        ttvUserId: 'ttv-1',
+        paintId: null,
+        badgeId: `badge-${index}`,
+      });
+    }
+
+    mockRemoveUserPaint.mockClear();
+    mockRemoveUserBadge.mockClear();
+    mockSyncCachedUserCosmeticsFromStore.mockClear();
+
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-0',
+      ttvUserId: 'ttv-1',
+    });
+
+    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
+    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
+    expect(mockSyncCachedUserCosmeticsFromStore).not.toHaveBeenCalled();
+  });
 });
