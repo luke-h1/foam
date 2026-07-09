@@ -27,6 +27,23 @@ type PaintCssBackground = {
 };
 
 /**
+ * Web-only paint styles that RN's TextStyle type does not declare.
+ */
+export type PaintCssTextStyle = Omit<TextStyle, 'filter' | 'textShadow'> & {
+  backgroundClip?: string;
+  WebkitBackgroundClip?: string;
+  WebkitTextFillColor?: string;
+  backgroundImage?: string;
+  backgroundPosition?: string;
+  backgroundSize?: string;
+  backgroundRepeat?: string;
+  filter?: string;
+  textShadow?: string;
+  WebkitTextStrokeWidth?: string;
+  WebkitTextStrokeColor?: string;
+};
+
+/**
  * Mirrors `createGradientFromPaint` in the 7TV extension.
  */
 function cssGradientFunction(layer: PaintLayerData): string {
@@ -36,7 +53,7 @@ function cssGradientFunction(layer: PaintLayerData): string {
     .map(stop => `${sevenTvColorToCss(stop.color)} ${stop.at * 100}%`);
 
   if (layer.function === 'URL') {
-    return layer.image_url ? `url("${layer.image_url}")` : 'none';
+    return layer.image_url ? `url('${layer.image_url}')` : 'none';
   }
 
   const prefix = layer.repeat ? 'repeating-' : '';
@@ -95,7 +112,7 @@ export function buildPaintCssTextStyle(
   paint: PaintData,
   fallbackColor: string,
   dropShadowMode: PaintDropShadowMode,
-): TextStyle {
+): PaintCssTextStyle {
   const backgrounds = buildPaintCssBackgrounds(paint);
   const paintTextStyle = buildPaintUsernameTextStyle(paint);
   const textShadows = getPaintTextShadows(paint);
@@ -112,12 +129,10 @@ export function buildPaintCssTextStyle(
   const paintCssColor =
     paint.color !== null ? sevenTvColorToCss(paint.color) : undefined;
 
-  const style: TextStyle = {
+  const style = {
     ...paintTextStyle,
     backgroundClip: 'text',
-    // @ts-expect-error RN web accepts vendor-prefixed clip properties.
     WebkitBackgroundClip: 'text',
-    // @ts-expect-error RN web accepts vendor-prefixed fill properties.
     WebkitTextFillColor: 'transparent',
     fontWeight: paintTextStyle.fontWeight ?? '700',
     ...(paintCssColor
@@ -139,13 +154,11 @@ export function buildPaintCssTextStyle(
       : {}),
     ...(stroke
       ? {
-          // @ts-expect-error RN web maps vendor-prefixed stroke properties.
           WebkitTextStrokeWidth: `${stroke.width}px`,
-          // @ts-expect-error RN web maps vendor-prefixed stroke properties.
           WebkitTextStrokeColor: sevenTvColorToCss(stroke.color),
         }
       : {}),
-  };
+  } as PaintCssTextStyle;
 
   // `fallbackColor` is only used when the paint has no layer stops; keep the
   // parameter so callers can pass the username tint without a second lookup.
@@ -196,12 +209,12 @@ export function buildPaintCssInlineStyle(
   if (style.textShadow) {
     declarations.push(`text-shadow: ${String(style.textShadow)}`);
   }
-  if ('WebkitTextStrokeWidth' in style && style.WebkitTextStrokeWidth) {
+  if (style.WebkitTextStrokeWidth) {
     declarations.push(
       `-webkit-text-stroke-width: ${String(style.WebkitTextStrokeWidth)}`,
     );
   }
-  if ('WebkitTextStrokeColor' in style && style.WebkitTextStrokeColor) {
+  if (style.WebkitTextStrokeColor) {
     declarations.push(
       `-webkit-text-stroke-color: ${String(style.WebkitTextStrokeColor)}`,
     );

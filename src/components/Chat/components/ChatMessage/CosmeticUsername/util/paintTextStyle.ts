@@ -8,10 +8,13 @@ import type {
 } from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
-// Paint-pure derivations, memoised on the paint object so every user wearing a
-// shared paint reuses one computed result (the 7TV extension computes each
-// paint's style once, not per user). WeakMap-keyed so entries drop with the
-// paint; no eviction needed.
+/**
+ * CSS `filter: drop-shadow()` glow reads much larger than RN `textShadowRadius`
+ * at the same numeric radius. Chatterino 7TV uses the same multiplier to match
+ * the browser extension on native Qt filters.
+ */
+export const NATIVE_DROP_SHADOW_RADIUS_MULTIPLIER = 3;
+
 const textStyleCache = new WeakMap<PaintData, TextStyle>();
 const textShadowsCache = new WeakMap<PaintData, PaintShadow[]>();
 
@@ -84,4 +87,19 @@ export function paintStrokeToShadow(stroke: PaintTextStroke): PaintShadow {
 
 export function paintShadowTextColor(shadow: PaintShadow): string {
   return sevenTvColorToCss(shadow.color);
+}
+
+/**
+ * Scales paint drop-shadow radius on native so glow layers match the extension.
+ */
+export function scaleNativeDropShadow(shadow: PaintShadow): PaintShadow {
+  const radius = shadow.radius ?? 0;
+  if (radius <= 0) {
+    return shadow;
+  }
+
+  return {
+    ...shadow,
+    radius: radius * NATIVE_DROP_SHADOW_RADIUS_MULTIPLIER,
+  };
 }

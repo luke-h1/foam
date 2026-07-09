@@ -1,7 +1,10 @@
 import { useMemo } from 'react';
 import { Platform, StyleSheet, useWindowDimensions } from 'react-native';
 
-import RenderHTML, { type CustomTextualRenderer } from '@native-html/render';
+import RenderHTML, {
+  type CustomTextualRenderer,
+  type MixedStyleDeclaration,
+} from '@native-html/render';
 
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
@@ -75,26 +78,27 @@ export function PaintedUsernameHtml({
     [displayUsername, inlineCss, paint.id],
   );
 
-  const flatMetrics = StyleSheet.flatten(usernameMetricsStyle) ?? {};
+  const tagsStyles = useMemo((): Record<string, MixedStyleDeclaration> => {
+    const { overflow: _overflow, ...flatMetrics } =
+      StyleSheet.flatten(usernameMetricsStyle) ?? {};
 
-  const tagsStyles = useMemo(
-    () =>
-      Platform.OS === 'web'
-        ? {
-            span: {
-              ...flatMetrics,
-              ...buildPaintCssTextStyle(
-                paint,
-                fallbackColor,
-                sevenTvPaintDropShadows,
-              ),
-            },
-          }
-        : {
-            span: flatMetrics,
-          },
-    [fallbackColor, flatMetrics, paint, sevenTvPaintDropShadows],
-  );
+    if (Platform.OS === 'web') {
+      return {
+        span: {
+          ...flatMetrics,
+          ...buildPaintCssTextStyle(
+            paint,
+            fallbackColor,
+            sevenTvPaintDropShadows,
+          ),
+        } as MixedStyleDeclaration,
+      };
+    }
+
+    return {
+      span: flatMetrics as MixedStyleDeclaration,
+    };
+  }, [fallbackColor, paint, sevenTvPaintDropShadows, usernameMetricsStyle]);
 
   const renderers = useMemo(
     () =>
