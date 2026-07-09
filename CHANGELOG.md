@@ -27,6 +27,12 @@
 - **ai:** Add Codex PR review workflow and mention trigger ([#712](https://github.com/lhowsam/foam/issues/712))
 - **app:** Simplify hot paths and remote-config Twitch embed parent ([#707](https://github.com/lhowsam/foam/issues/707))
 
+## 1.0.2 (Internal)
+
+### 🔧 Miscellaneous Tasks
+
+- **stream:** Gate embed changes via ff ([#713](https://github.com/lhowsam/foam/issues/713))
+
 ## 1.0.1 (Production)
 
 ### ♻️ Refactor
