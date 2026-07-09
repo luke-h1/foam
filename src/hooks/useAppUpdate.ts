@@ -6,7 +6,6 @@ import type { ReloadScreenOptions } from 'expo-updates';
 import * as Updates from 'expo-updates';
 import { toast } from 'sonner-native';
 
-import { drainInFlightExpoFetches } from '@app/lib/expoFetch';
 import { ENV_SUPPORTS_OTA } from '@app/screens/DevTools/util/envSupportsOta';
 import { getStoreUrlAsync } from '@app/screens/DevTools/util/getStoreUrlAsync';
 import { theme } from '@app/styles/themes';
@@ -69,18 +68,9 @@ export function useAppUpdate() {
           action: {
             label: t('bundleRestart'),
             onClick: () => {
-              void (async () => {
-                /**
-                 * Settle in-flight expo/fetch requests before reloadAsync frees
-                 * the JS runtime; a native response resolving against a
-                 * torn-down runtime crashes in Pointer::~Pointer
-                 * (FOAM-TV-MOBILE-16).
-                 */
-                await drainInFlightExpoFetches();
-                await Updates.reloadAsync({
-                  reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
-                });
-              })();
+              void Updates.reloadAsync({
+                reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
+              });
             },
           },
         });

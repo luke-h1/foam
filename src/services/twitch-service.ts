@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
+import { fetch } from 'expo/fetch';
 import Constants from 'expo-constants';
 
-import { fetch } from '@app/lib/expoFetch';
 import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
 import type { PaginatedList } from '@app/types/twitch/api';
 import type {
