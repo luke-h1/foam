@@ -270,6 +270,59 @@ describe('applyEntitlementUpdateEvent', () => {
       'ttv-1',
     ]);
   });
+
+  test('does not remove existing cosmetics when an update omits paint or badge ids', () => {
+    applyEntitlementCreateEvent({
+      entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
+      kind: 'BADGE',
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-1',
+    });
+    applyEntitlementCreateEvent({
+      entitlement: {
+        id: 'entitlement-paint-1',
+        kind: 0,
+        object: {
+          id: 'entitlement-paint-1',
+          kind: 'PAINT',
+          ref_id: 'paint-1',
+          user: createBadgeEntitlement('badge-1', 'ttv-1').object.user,
+        },
+      },
+      kind: 'PAINT',
+      ttvUserId: 'ttv-1',
+      paintId: 'paint-1',
+      badgeId: null,
+    });
+
+    mockRemoveUserPaint.mockClear();
+    mockRemoveUserBadge.mockClear();
+    mockSyncCachedUserCosmeticsFromStore.mockClear();
+
+    applyEntitlementUpdateEvent({
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: null,
+    });
+
+    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
+    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
+    expect(mockSyncCachedUserCosmeticsFromStore).not.toHaveBeenCalled();
+
+    applyEntitlementUpdateEvent({
+      ttvUserId: 'ttv-1',
+      paintId: 'paint-2',
+      badgeId: null,
+    });
+
+    expect(mockSetUserPaint.mock.calls.at(-1)).toEqual(['ttv-1', 'paint-2']);
+    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
+    expect(mockSyncCachedUserCosmeticsFromStore.mock.calls.at(-1)).toEqual([
+      'stv-user-1',
+      'ttv-1',
+    ]);
+  });
 });
 
 describe('applyEntitlementDeleteEvent', () => {

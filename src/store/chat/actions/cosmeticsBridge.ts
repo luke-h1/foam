@@ -223,19 +223,19 @@ export const applyEntitlementUpdateEvent = (data: {
     return;
   }
 
+  // Null means "not present in this update", not "unequip". Removals come
+  // through entitlement.delete / entitlement.reset.
   if (paintId) {
     setUserPaint(ttvUserId, paintId);
-  } else {
-    removeUserPaint(ttvUserId);
   }
 
   if (badgeId) {
     setUserBadge(ttvUserId, badgeId);
-  } else {
-    removeUserBadge(ttvUserId);
   }
 
-  syncUserCosmeticsCacheForTwitchUser(ttvUserId);
+  if (paintId || badgeId) {
+    syncUserCosmeticsCacheForTwitchUser(ttvUserId);
+  }
 };
 
 export const applyEntitlementDeleteEvent = (data: {
