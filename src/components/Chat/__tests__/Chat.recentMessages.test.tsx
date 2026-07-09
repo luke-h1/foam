@@ -114,6 +114,9 @@ jest.mock('@app/store/chat/actions/channelLoad', () => ({
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
   fetchAndCacheUserCosmetics: jest.fn(),
   getUserBadge: jest.fn(),
+  getUserBadgeId: jest.fn(),
+  hasUserPaint: jest.fn(() => false),
+  requestUserCosmeticsViaPresence: jest.fn(() => Promise.resolve()),
 }));
 
 jest.mock('@app/store/chat/react/selectors', () => ({
@@ -123,6 +126,9 @@ jest.mock('@app/store/chat/react/selectors', () => ({
 
 jest.mock('@app/store/chat/observables/chatStore', () => ({
   chatStore$: {
+    cosmeticBindingsVersion: {
+      get: jest.fn(() => 0),
+    },
     currentChannelId: {
       set: jest.fn(),
     },

@@ -5,6 +5,7 @@ import {
   fetchAndCacheUserCosmetics,
   getUserBadge,
   getUserBadgeId,
+  getUserPaintId,
   hasUserPaint,
   requestUserCosmeticsViaPresence,
 } from '@app/store/chat/actions/cosmetics';
@@ -21,6 +22,7 @@ jest.mock('@app/store/chat/actions/cosmetics', () => ({
   fetchAndCacheUserCosmetics: jest.fn(),
   getUserBadge: jest.fn(),
   getUserBadgeId: jest.fn(),
+  getUserPaintId: jest.fn(),
   hasUserPaint: jest.fn(),
   requestUserCosmeticsViaPresence: jest.fn(() => Promise.resolve()),
 }));
@@ -31,31 +33,15 @@ jest.mock('@app/utils/logger', () => ({
   },
 }));
 
-type MockObservableValue<T> = {
-  peek: jest.Mock<T | undefined, []>;
-};
-
-jest.mock('@app/store/chat/observables/chatStore', () => ({
-  chatStore$: {
-    userBadgeIds: {},
-    userPaintIds: {},
-  },
-}));
-
 const mockGet7tvUserId = jest.mocked(sevenTvService.get7tvUserId);
 const mockFetchAndCacheUserCosmetics = jest.mocked(fetchAndCacheUserCosmetics);
 const mockGetUserBadge = jest.mocked(getUserBadge);
 const mockGetUserBadgeId = jest.mocked(getUserBadgeId);
+const mockGetUserPaintId = jest.mocked(getUserPaintId);
 const mockHasUserPaint = jest.mocked(hasUserPaint);
 const mockRequestUserCosmeticsViaPresence = jest.mocked(
   requestUserCosmeticsViaPresence,
 );
-
-const mockChatStore = jest.requireMock('@app/store/chat/observables/chatStore')
-  .chatStore$ as {
-  userBadgeIds: Record<string, MockObservableValue<string>>;
-  userPaintIds: Record<string, MockObservableValue<string>>;
-};
 
 function setCachedCosmetics({
   badgeId,
@@ -66,12 +52,12 @@ function setCachedCosmetics({
   paintId?: string;
   twitchUserId: string;
 }) {
-  mockChatStore.userBadgeIds[twitchUserId] = {
-    peek: jest.fn(() => badgeId),
-  };
-  mockChatStore.userPaintIds[twitchUserId] = {
-    peek: jest.fn(() => paintId),
-  };
+  mockGetUserBadgeId.mockImplementation(userId =>
+    userId === twitchUserId ? badgeId : undefined,
+  );
+  mockGetUserPaintId.mockImplementation(userId =>
+    userId === twitchUserId ? paintId : undefined,
+  );
 }
 
 describe('useChatCosmetics', () => {
@@ -81,13 +67,8 @@ describe('useChatCosmetics', () => {
     mockFetchAndCacheUserCosmetics.mockResolvedValue('ttv-self');
     mockGetUserBadge.mockReturnValue(undefined);
     mockGetUserBadgeId.mockReturnValue(undefined);
+    mockGetUserPaintId.mockReturnValue(undefined);
     mockHasUserPaint.mockReturnValue(false);
-    Object.keys(mockChatStore.userBadgeIds).forEach(key => {
-      delete mockChatStore.userBadgeIds[key];
-    });
-    Object.keys(mockChatStore.userPaintIds).forEach(key => {
-      delete mockChatStore.userPaintIds[key];
-    });
   });
 
   test('bootstraps the signed-in user cosmetics on mount', async () => {

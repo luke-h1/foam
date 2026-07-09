@@ -6,18 +6,18 @@ import {
   fetchAndCacheUserCosmetics,
   getUserBadge,
   getUserBadgeId,
+  getUserPaintId,
   hasUserPaint,
   requestUserCosmeticsViaPresence,
 } from '@app/store/chat/actions/cosmetics';
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { logger } from '@app/utils/logger';
 
 function hasRenderableCosmetics(twitchUserId: string): boolean {
-  const badgeId = chatStore$.userBadgeIds[twitchUserId]?.peek();
+  const badgeId = getUserBadgeId(twitchUserId);
   const renderableBadge = badgeId
     ? getUserBadge(twitchUserId)?.url?.trim()
     : undefined;
-  const paintId = chatStore$.userPaintIds[twitchUserId]?.peek();
+  const paintId = getUserPaintId(twitchUserId);
 
   return Boolean(paintId && renderableBadge);
 }
@@ -62,7 +62,7 @@ export function useChatCosmetics(options: { userId?: string | null } = {}) {
       retryMissingBadge?: boolean;
     } = {},
   ) => {
-    const existingBadgeId = chatStore$.userBadgeIds[twitchUserId]?.peek();
+    const existingBadgeId = getUserBadgeId(twitchUserId);
     const renderableBadge = existingBadgeId
       ? getUserBadge(twitchUserId)?.url?.trim()
       : undefined;
@@ -79,8 +79,15 @@ export function useChatCosmetics(options: { userId?: string | null } = {}) {
       return;
     }
 
-    await requestUserCosmeticsViaPresence(twitchUserId);
-    fetchedCosmeticsUsersRef.current.add(twitchUserId);
+    try {
+      await requestUserCosmeticsViaPresence(twitchUserId);
+      fetchedCosmeticsUsersRef.current.add(twitchUserId);
+    } catch (error) {
+      logger.stv.debug(
+        `Failed to fetch cosmetics for user ${twitchUserId}:`,
+        error instanceof Error ? error.message : error,
+      );
+    }
   };
 
   return {

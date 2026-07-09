@@ -172,7 +172,7 @@ export const useChatEmoteLoader = ({
         cacheCleared ||
         (currentChannelRef.current === channelId && !hasChannelCache);
 
-      if (cacheCleared || shouldForceRefresh) {
+      if (shouldForceRefresh) {
         currentChannelRef.current = null;
         void loadEmotesRef.current(true);
       } else if (currentChannelRef.current !== channelId) {

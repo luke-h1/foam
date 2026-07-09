@@ -4,6 +4,7 @@ import {
   getUserBadge,
   requestUserCosmeticsViaPresence,
 } from '@app/store/chat/actions/cosmetics';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { getSevenTvSessionId } from '@app/utils/seventv/sevenTvSessionId';
 
 jest.mock('@app/components/Chat/util/normalizeSevenTvCosmetics', () => ({
@@ -100,7 +101,7 @@ describe('getUserBadge', () => {
   });
 
   test('returns the stored badge definition when present', () => {
-    const badge = {
+    const badge: SanitisedBadgeSet = {
       id: 'badge-1',
       url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
       type: '7TV Badge',
@@ -117,7 +118,7 @@ describe('getUserBadge', () => {
       set: jest.fn(),
     };
 
-    expect(getUserBadge('ttv-1')).toEqual(badge);
+    expect(getUserBadge('ttv-1')).toEqual<SanitisedBadgeSet>(badge);
     expect(mockReportMissingBadge).not.toHaveBeenCalled();
   });
 

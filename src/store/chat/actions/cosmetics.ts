@@ -186,6 +186,17 @@ function getUserCosmeticsCacheExpiry(hasCosmetics: boolean): number {
   );
 }
 
+function resolveRenderableBadge(
+  badgeId: string | null,
+): SanitisedBadgeSet | undefined {
+  if (!badgeId) {
+    return undefined;
+  }
+
+  const badge = getBadge(badgeId);
+  return badge?.url?.trim() ? badge : undefined;
+}
+
 function buildCachedUserCosmeticsFromStore(
   ttvUserId: string,
 ): CachedUserCosmetics {
@@ -193,7 +204,7 @@ function buildCachedUserCosmeticsFromStore(
   const badgeId = chatStore$.userBadgeIds[ttvUserId]?.peek() ?? null;
 
   return {
-    badge: badgeId ? getBadge(badgeId) : undefined,
+    badge: resolveRenderableBadge(badgeId),
     badgeId,
     expiresAt: getUserCosmeticsCacheExpiry(Boolean(paintId || badgeId)),
     paint: paintId ? getPaint(paintId) : undefined,
@@ -358,7 +369,7 @@ export const addPaint = (paint: PaintData) => {
 export const getPaint = (paintId: string): PaintData | undefined =>
   chatStore$.paints[paintId]?.peek();
 
-const getUserPaintId = (ttvUserId: string): string | undefined =>
+export const getUserPaintId = (ttvUserId: string): string | undefined =>
   chatStore$.userPaintIds[ttvUserId]?.peek();
 
 let userPaintFlagInvalidatorAttached = false;
@@ -538,8 +549,13 @@ export const removePaint = (paintId: string) => {
 
 export const removeUserPaint = (ttvUserId: string) => {
   const current = chatStore$.userPaintIds.peek();
+  if (!(ttvUserId in current)) {
+    return;
+  }
+
   const { [ttvUserId]: _, ...rest } = current;
   chatStore$.userPaintIds.set(rest);
+  bumpCosmeticBindingsVersion();
 };
 
 export const clearPaints = () => {

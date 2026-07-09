@@ -39,4 +39,13 @@ describe('sevenTvService.fetchBridgedCosmetics', () => {
       sevenTvService.fetchBridgedCosmetics(['cinna']),
     ).resolves.toEqual([]);
   });
+
+  test('returns bridge events unchanged when the API responds with an array', async () => {
+    const events = [{ type: 'cosmetic.create', body: { id: 'abc' } }];
+    mockSevenTvApiPost.mockResolvedValue(events);
+
+    await expect(
+      sevenTvService.fetchBridgedCosmetics(['cinna']),
+    ).resolves.toEqual(events);
+  });
 });

@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -200,10 +200,7 @@ export const Chat = memo(
     const cosmeticBindingsVersion = useSelector(() =>
       chatStore$.cosmeticBindingsVersion.get(),
     );
-    const emoteReprocessKey = useMemo(
-      () => `${chatAssetPreferenceKey}|${cosmeticBindingsVersion}`,
-      [chatAssetPreferenceKey, cosmeticBindingsVersion],
-    );
+    const emoteReprocessKey = `${chatAssetPreferenceKey}|${cosmeticBindingsVersion}`;
 
     return (
       <CachedEmotesProvider channelId={channelId}>

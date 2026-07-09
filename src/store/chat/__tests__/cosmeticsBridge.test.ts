@@ -15,6 +15,7 @@ import {
   clearEntitlementUserLinkState,
 } from '@app/store/chat/actions/cosmeticsBridge';
 import { handlePersonalEmoteSetEntitlement } from '@app/store/chat/actions/personalEmotes';
+import type { EntitlementCreate } from '@app/types/seventv/cosmetics';
 
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
   addBadge: jest.fn(),
@@ -243,7 +244,32 @@ describe('applyEntitlementDeleteEvent', () => {
       badgeId: 'badge-1',
     });
 
-    applyEntitlementDeleteEvent({ ttvUserId: 'ttv-1' });
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-badge-1',
+      ttvUserId: 'ttv-1',
+    });
+
+    expect(mockRemoveUserPaint.mock.calls).toEqual([['ttv-1']]);
+    expect(mockRemoveUserBadge.mock.calls).toEqual([['ttv-1']]);
+    expect(mockSyncCachedUserCosmeticsFromStore.mock.calls.at(-1)).toEqual([
+      'stv-user-1',
+      'ttv-1',
+    ]);
+  });
+
+  test('resolves the twitch user from a remembered entitlement id when delete arrives without one', () => {
+    applyEntitlementCreateEvent({
+      entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
+      kind: 'BADGE',
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-1',
+    });
+
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-badge-1',
+      ttvUserId: null,
+    });
 
     expect(mockRemoveUserPaint.mock.calls).toEqual([['ttv-1']]);
     expect(mockRemoveUserBadge.mock.calls).toEqual([['ttv-1']]);
