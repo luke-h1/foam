@@ -47,12 +47,14 @@ import {
   type S3Copier,
   saveEntries,
 } from '../scripts/workflows/s3Cache';
+import { buildSentrySizeAnalysisUploadArgs } from '../scripts/workflows/sentrySizeAnalysis';
 import {
   appendVariant,
   getVariantMeta,
   ignoreTagsPattern,
   isVariant,
   sentryDistFor,
+  sentrySizeAnalysisBuildConfigurationFor,
   variantLabel,
 } from '../scripts/workflows/variant';
 
@@ -796,6 +798,18 @@ describe('variant', () => {
     expect(sentryDistFor('testflight')).toBe('foam-tv-testflight');
   });
 
+  test('maps each deploy variant to a Sentry Size Analysis build configuration', () => {
+    expect(sentrySizeAnalysisBuildConfigurationFor('production')).toEqual(
+      'Release-production',
+    );
+    expect(sentrySizeAnalysisBuildConfigurationFor('internal')).toEqual(
+      'Release-internal',
+    );
+    expect(sentrySizeAnalysisBuildConfigurationFor('testflight')).toEqual(
+      'Release-testflight',
+    );
+  });
+
   test('maps each variant to its release label', () => {
     expect(variantLabel('production')).toBe('Production');
     expect(variantLabel('testflight')).toBe('TestFlight');
@@ -832,6 +846,69 @@ describe('variant', () => {
         '^1\\.2\\.3-(internal|preview)$',
       );
     });
+  });
+});
+
+describe('sentrySizeAnalysis', () => {
+  test('builds sentry-cli upload args with org, project, and variant build configuration', () => {
+    expect(
+      buildSentrySizeAnalysisUploadArgs({
+        artifactPath: './build-artifacts/app.aab',
+        variant: 'production',
+      }),
+    ).toEqual([
+      'build',
+      'upload',
+      './build-artifacts/app.aab',
+      '--org',
+      'foam-tv',
+      '--project',
+      'foam-tv-mobile',
+      '--build-configuration',
+      'Release-production',
+    ]);
+  });
+
+  test('includes optional VCS metadata when provided', () => {
+    expect(
+      buildSentrySizeAnalysisUploadArgs({
+        artifactPath: './build-artifacts/app.ipa',
+        variant: 'internal',
+        org: 'custom-org',
+        project: 'custom-project',
+        headSha: 'abc123',
+        baseSha: 'def456',
+        vcsProvider: 'github',
+        headRepoName: 'org/repo',
+        headRef: 'feature-branch',
+        baseRef: 'main',
+        prNumber: '42',
+      }),
+    ).toEqual([
+      'build',
+      'upload',
+      './build-artifacts/app.ipa',
+      '--org',
+      'custom-org',
+      '--project',
+      'custom-project',
+      '--build-configuration',
+      'Release-internal',
+      '--head-sha',
+      'abc123',
+      '--base-sha',
+      'def456',
+      '--vcs-provider',
+      'github',
+      '--head-repo-name',
+      'org/repo',
+      '--head-ref',
+      'feature-branch',
+      '--base-ref',
+      'main',
+      '--pr-number',
+      '42',
+    ]);
   });
 });
 

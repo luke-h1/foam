@@ -115,6 +115,11 @@ runs:
             echo "Skipping Sentry dSYM upload because SENTRY_AUTH_TOKEN is not set"
           fi
 
+          # shellcheck source=scripts/sentry-upload.sh
+          source ./scripts/sentry-upload.sh
+          size_analysis_path="$(sentry_find_ios_size_analysis_artifact "$ipa_path" "$build_marker")"
+          sentry_upload_size_analysis "$size_analysis_path"
+
           bun run eas submit -p ios --profile "$VARIANT" --non-interactive --path ./build-artifacts/app.ipa
         }
 
@@ -128,6 +133,11 @@ runs:
             EXPO_PUBLIC_SENTRY_RELEASE="${EXPO_PUBLIC_SENTRY_RELEASE}" \
             EXPO_PUBLIC_SENTRY_DIST="${EXPO_PUBLIC_SENTRY_DIST}" \
             bun run eas build --platform android --profile "$VARIANT" --non-interactive --local --output=./build-artifacts/app.aab
+
+          # shellcheck source=scripts/sentry-upload.sh
+          source ./scripts/sentry-upload.sh
+          sentry_upload_size_analysis ./build-artifacts/app.aab
+
           bun run eas submit -p android --profile "$VARIANT" --non-interactive --path ./build-artifacts/app.aab
         }
 
