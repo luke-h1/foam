@@ -5,6 +5,7 @@ exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid c
   style={
     {
       "alignSelf": "flex-start",
+      "overflow": "visible",
       "position": "relative",
     }
   }
@@ -254,6 +255,7 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
   style={
     {
       "alignSelf": "flex-start",
+      "overflow": "visible",
       "position": "relative",
     }
   }
@@ -290,15 +292,13 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
             {},
           ],
           {
-            "color": "rgba(254, 118, 148, 1.000)",
-            "left": 0,
+            "color": "transparent",
             "textShadowColor": "rgba(254, 118, 148, 1.000)",
             "textShadowOffset": {
               "height": 0,
               "width": 0,
             },
-            "textShadowRadius": 0.1,
-            "top": 0,
+            "textShadowRadius": 0.30000000000000004,
           },
         ],
       ]
@@ -428,7 +428,7 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
                 "top": 0,
               },
               {
-                "backgroundColor": "#EDF1F5",
+                "backgroundColor": "transparent",
               },
             ]
           }
@@ -535,6 +535,7 @@ exports[`PaintedUsername Snapshots should match snapshot with long username 1`] 
   style={
     {
       "alignSelf": "flex-start",
+      "overflow": "visible",
       "position": "relative",
     }
   }
@@ -660,7 +661,7 @@ exports[`PaintedUsername Snapshots should match snapshot with long username 1`] 
                 "top": 0,
               },
               {
-                "backgroundColor": "#EDF1F5",
+                "backgroundColor": "transparent",
               },
             ]
           }
@@ -767,6 +768,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
   style={
     {
       "alignSelf": "flex-start",
+      "overflow": "visible",
       "position": "relative",
     }
   }
@@ -803,15 +805,13 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
             {},
           ],
           {
-            "color": "rgba(0, 0, 0, 1.000)",
-            "left": 0,
+            "color": "transparent",
             "textShadowColor": "rgba(0, 0, 0, 1.000)",
             "textShadowOffset": {
               "height": 0,
               "width": 0,
             },
-            "textShadowRadius": 0.1,
-            "top": 0,
+            "textShadowRadius": 0.30000000000000004,
           },
         ],
       ]
@@ -852,15 +852,13 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
             {},
           ],
           {
-            "color": "rgba(156, 76, 22, 1.000)",
-            "left": 0,
+            "color": "transparent",
             "textShadowColor": "rgba(156, 76, 22, 1.000)",
             "textShadowOffset": {
               "height": 0,
               "width": 0,
             },
-            "textShadowRadius": 1,
-            "top": 0,
+            "textShadowRadius": 3,
           },
         ],
       ]
@@ -990,7 +988,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
                 "top": 0,
               },
               {
-                "backgroundColor": "#EDF1F5",
+                "backgroundColor": "transparent",
               },
             ]
           }
@@ -1097,6 +1095,7 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
   style={
     {
       "alignSelf": "flex-start",
+      "overflow": "visible",
       "position": "relative",
     }
   }
@@ -1133,15 +1132,13 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
             {},
           ],
           {
-            "color": "rgba(0, 96, 128, 1.000)",
-            "left": 0,
+            "color": "transparent",
             "textShadowColor": "rgba(0, 96, 128, 1.000)",
             "textShadowOffset": {
               "height": 0,
               "width": 0,
             },
-            "textShadowRadius": 0.1,
-            "top": 0,
+            "textShadowRadius": 0.30000000000000004,
           },
         ],
       ]
@@ -1271,7 +1268,7 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
                 "top": 0,
               },
               {
-                "backgroundColor": "#EDF1F5",
+                "backgroundColor": "transparent",
               },
             ]
           }

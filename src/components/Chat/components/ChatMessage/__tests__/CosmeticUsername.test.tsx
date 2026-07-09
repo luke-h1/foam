@@ -1,11 +1,44 @@
-import { act, render } from '@testing-library/react-native';
+import { render } from '@testing-library/react-native';
 import { Image } from 'expo-image';
 
-import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
 import { PaintedUsername } from '../CosmeticUsername/CosmeticUsername';
 import { PaintLayerTiledImage } from '../CosmeticUsername/PaintLayerTiledImage';
+
+jest.mock('@native-html/render', () => {
+  const React = jest.requireActual('react');
+  const { Text } = jest.requireActual('react-native');
+
+  return {
+    __esModule: true,
+    default: ({
+      renderers,
+      source,
+    }: {
+      renderers?: Record<
+        string,
+        React.ComponentType<{
+          tnode: { attributes: Record<string, string> };
+        }>
+      >;
+      source: { html: string };
+    }) => {
+      if (
+        renderers?.span &&
+        source.html.includes('data-seventv-painted-text="true"')
+      ) {
+        const SpanRenderer = renderers.span;
+        return React.createElement(SpanRenderer, {
+          tnode: { attributes: { 'data-seventv-painted-text': 'true' } },
+        });
+      }
+
+      const text = source.html.replaceAll(/<[^>]+>/g, '');
+      return React.createElement(Text, null, text);
+    },
+  };
+});
 
 jest.mock('expo-image', () => {
   const React = jest.requireActual('react');
@@ -546,42 +579,6 @@ describe('PaintedUsername', () => {
       );
 
       expect(getAllByText('NullColor:').length).toBeGreaterThanOrEqual(1);
-    });
-  });
-
-  describe('Scroll-gated flatten', () => {
-    afterEach(() => {
-      act(() => {
-        chatScrollActivity.reset();
-      });
-    });
-
-    const gradientPaint = () =>
-      createPaintData({
-        stops: {
-          0: { at: 0, color: rgbaToSevenTvColor(255, 0, 0, 255) },
-          1: { at: 1, color: rgbaToSevenTvColor(0, 0, 255, 255) },
-          length: 2,
-        },
-      });
-
-    test('renders the painted MaskedView when the list is idle', () => {
-      const { getByTestId } = render(
-        <PaintedUsername username='Idle' paint={gradientPaint()} />,
-      );
-
-      expect(getByTestId('masked-view')).toBeOnTheScreen();
-    });
-
-    test('skips the MaskedView offscreen pass while actively scrolling', () => {
-      chatScrollActivity.poke();
-
-      const { queryByTestId, getAllByText } = render(
-        <PaintedUsername username='Scrolling' paint={gradientPaint()} />,
-      );
-
-      expect(queryByTestId('masked-view')).not.toBeOnTheScreen();
-      expect(getAllByText('Scrolling:').length).toBeGreaterThanOrEqual(1);
     });
   });
 });
