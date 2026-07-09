@@ -62,12 +62,13 @@ const mockHandlePersonalEmoteSetEntitlement = jest.mocked(
 function createBadgeEntitlement(
   badgeId: string,
   ttvUserId: string,
+  entitlementId = `entitlement-${badgeId}`,
 ): EntitlementCreate {
   return {
-    id: `entitlement-${badgeId}`,
+    id: entitlementId,
     kind: 0,
     object: {
-      id: `entitlement-${badgeId}`,
+      id: entitlementId,
       kind: 'BADGE',
       ref_id: badgeId,
       user: {
@@ -215,6 +216,28 @@ describe('applyEntitlementResetEvent', () => {
 
     expect(mockSyncCachedUserCosmeticsFromStore).not.toHaveBeenCalled();
   });
+
+  test('forgets remembered entitlement ids when entitlements reset', () => {
+    applyEntitlementCreateEvent({
+      entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
+      kind: 'BADGE',
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-1',
+    });
+
+    applyEntitlementResetEvent('stv-user-1');
+    mockRemoveUserPaint.mockClear();
+    mockRemoveUserBadge.mockClear();
+
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-badge-1',
+      ttvUserId: null,
+    });
+
+    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
+    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
+  });
 });
 
 describe('applyEntitlementUpdateEvent', () => {
@@ -298,5 +321,40 @@ describe('applyEntitlementDeleteEvent', () => {
       'stv-user-1',
       'ttv-1',
     ]);
+  });
+
+  test('evicts the oldest remembered entitlement id at the link cap', () => {
+    for (let index = 0; index <= 2000; index += 1) {
+      applyEntitlementCreateEvent({
+        entitlement: createBadgeEntitlement(
+          `badge-${index}`,
+          'ttv-1',
+          `entitlement-${index}`,
+        ),
+        kind: 'BADGE',
+        ttvUserId: 'ttv-1',
+        paintId: null,
+        badgeId: `badge-${index}`,
+      });
+    }
+
+    mockRemoveUserPaint.mockClear();
+    mockRemoveUserBadge.mockClear();
+
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-0',
+      ttvUserId: null,
+    });
+
+    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
+    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
+
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-2000',
+      ttvUserId: null,
+    });
+
+    expect(mockRemoveUserPaint.mock.calls).toEqual([['ttv-1']]);
+    expect(mockRemoveUserBadge.mock.calls).toEqual([['ttv-1']]);
   });
 });

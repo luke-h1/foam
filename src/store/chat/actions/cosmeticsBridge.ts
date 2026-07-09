@@ -28,6 +28,38 @@ const twitchIdsBySevenTvUserId = new Map<string, Set<string>>();
 const sevenTvUserIdByTwitchId = new Map<string, string>();
 const twitchIdByEntitlementId = new Map<string, string>();
 
+function forgetEntitlementIdsForTwitchUsers(
+  twitchUserIds: Iterable<string>,
+): void {
+  const twitchIds = new Set(twitchUserIds);
+  if (twitchIds.size === 0) {
+    return;
+  }
+
+  for (const [entitlementId, twitchUserId] of twitchIdByEntitlementId) {
+    if (twitchIds.has(twitchUserId)) {
+      twitchIdByEntitlementId.delete(entitlementId);
+    }
+  }
+}
+
+function rememberEntitlementTwitchLink(
+  entitlementId: string,
+  twitchUserId: string,
+): void {
+  if (
+    twitchIdByEntitlementId.size >= MAX_SEVEN_TV_USER_LINK_ENTRIES &&
+    !twitchIdByEntitlementId.has(entitlementId)
+  ) {
+    const oldest = twitchIdByEntitlementId.keys().next().value;
+    if (oldest !== undefined) {
+      twitchIdByEntitlementId.delete(oldest);
+    }
+  }
+
+  twitchIdByEntitlementId.set(entitlementId, twitchUserId);
+}
+
 function rememberSevenTvUserTwitchLink(
   sevenTvUserId: string,
   twitchUserId: string,
@@ -38,9 +70,13 @@ function rememberSevenTvUserTwitchLink(
     if (twitchIdsBySevenTvUserId.size >= MAX_SEVEN_TV_USER_LINK_ENTRIES) {
       const oldest = twitchIdsBySevenTvUserId.keys().next().value;
       if (oldest !== undefined) {
-        twitchIdsBySevenTvUserId.get(oldest)?.forEach(twitchId => {
+        const evictedTwitchIds = twitchIdsBySevenTvUserId.get(oldest);
+        evictedTwitchIds?.forEach(twitchId => {
           sevenTvUserIdByTwitchId.delete(twitchId);
         });
+        if (evictedTwitchIds) {
+          forgetEntitlementIdsForTwitchUsers(evictedTwitchIds);
+        }
         twitchIdsBySevenTvUserId.delete(oldest);
       }
     }
@@ -110,7 +146,7 @@ export const applyEntitlementCreateEvent = (data: {
   }
 
   if (ttvUserId && entitlement.id) {
-    twitchIdByEntitlementId.set(entitlement.id, ttvUserId);
+    rememberEntitlementTwitchLink(entitlement.id, ttvUserId);
   }
 
   if (kind === 'EMOTE_SET' && ttvUserId) {
@@ -159,6 +195,7 @@ export const applyEntitlementResetEvent = (sevenTvUserId: string): void => {
     syncCachedUserCosmeticsFromStore(sevenTvUserId, twitchUserId);
     sevenTvUserIdByTwitchId.delete(twitchUserId);
   });
+  forgetEntitlementIdsForTwitchUsers(twitchIds);
   twitchIdsBySevenTvUserId.delete(sevenTvUserId);
   logger.stvWs.info(`Reset entitlements for 7TV user: ${sevenTvUserId}`);
 };
