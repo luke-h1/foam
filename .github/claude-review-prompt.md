@@ -12,6 +12,30 @@ List rendering is performance-critical (the Chat). Changes to Chat messages, Cha
 
 For each finding, state the scenario in one or two sentences, cite file:line, and mark severity (blocking / non-blocking). If you are uncertain but the potential impact is high (crash on startup, broken auth, performance problems), include it and say what you are uncertain about. Otherwise, prefer silence over guessing.
 
-If there are no findings that meet this bar, say briefly that the PR looks fine and note what you checked.
+Use the output format below for every review.
 
-Post your review as a single top-level PR comment. Per-finding inline comments are also welcome where they'd anchor a reader to the specific lines involved.
+## Output format
+
+Write the review as one block per finding. Separate blocks with a line containing only `---REVIEW_COMMENT---` (before the first block and between blocks). Do not combine multiple findings into one block or wrap them in a single narrative comment.
+
+Each block must use this shape:
+
+```
+Severity: blocking | non-blocking
+Location: path/to/file:line
+Finding:
+One or two sentences: the concrete scenario and the issue.
+```
+
+If there are no findings that meet the bar, emit exactly one block:
+
+```
+Severity: none
+Location: n/a
+Finding:
+Brief note that the PR looks fine and what you checked.
+```
+
+When posting to GitHub, create one top-level PR comment per block. Do not merge blocks into a single comment. Per-finding inline review comments are welcome in addition when they anchor a reader to specific lines.
+
+When your output is consumed by CI automation, follow the block format exactly and do not add prose outside these blocks.
