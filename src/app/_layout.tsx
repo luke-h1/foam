@@ -1,4 +1,3 @@
-import '../lib/installTrackedExpoFetch';
 import '../utils/performance/wdyr';
 import 'expo-dev-client';
 import '../i18n/i18next';

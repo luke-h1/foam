@@ -8,7 +8,6 @@ import * as Updates from 'expo-updates';
 
 import * as Form from '@app/components/Form/Form';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
-import { drainInFlightExpoFetches } from '@app/lib/expoFetch';
 import { theme } from '@app/styles/themes';
 import { logger } from '@app/utils/logger';
 
@@ -29,7 +28,6 @@ const OTA_RELOAD_SCREEN_OPTIONS = {
 } satisfies ReloadScreenOptions;
 
 async function reloadOtaWithScreen() {
-  await drainInFlightExpoFetches();
   await Updates.reloadAsync({
     reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
   });

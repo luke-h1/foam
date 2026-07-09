@@ -1,4 +1,3 @@
-import { fetch } from '@app/lib/expoFetch';
 import { deriveFromResponseOnWorklet } from '@app/lib/offThreadJson';
 
 /**

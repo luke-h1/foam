@@ -1,4 +1,3 @@
-import { fetch } from '@app/lib/expoFetch';
 import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
 import type { ParsedIrcMessage } from '@app/types/chat/recentMessages';
 
