@@ -1,5 +1,3 @@
-import { useMemo } from 'react';
-
 import { format as formatter } from 'date-fns/format';
 import { formatRelative } from 'date-fns/formatRelative';
 import { isValid } from 'date-fns/isValid';
@@ -23,7 +21,7 @@ export const FormattedDate = ({
   testId,
   parseFormat,
 }: Props) => {
-  const now = useMemo(() => new Date(), []);
+  const now = new Date();
 
   let parsedDate: Date;
 

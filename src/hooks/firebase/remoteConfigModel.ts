@@ -46,6 +46,11 @@ export interface RemoteConfigSchema {
    * sets this per user; the client reads it via `useExperiment`.
    */
   experiments: Record<string, string>;
+
+  /**
+   * `parent` query parameter for Twitch embed URLs.
+   */
+  twitchPlayerEmbedParent: string;
 }
 
 export type RemoteConfigKey = keyof RemoteConfigSchema;
@@ -79,6 +84,7 @@ export const defaultRemoteConfig = {
   experiments: '{}',
   bundleButtonEnabled:
     '{ "ios": { "development": false, "internal": true, "testflight": false, "production": false, "e2e": false }}',
+  twitchPlayerEmbedParent: 'www.twitch.tv',
 } satisfies Record<RemoteConfigKey, string>;
 
 const jsonKeys: RemoteConfigKey[] = [

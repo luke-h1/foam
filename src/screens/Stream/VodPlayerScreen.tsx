@@ -11,6 +11,7 @@ import { StatusBar } from 'expo-status-bar';
 import { IconButton } from '@app/components/IconButton/IconButton';
 import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
+import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { theme } from '@app/styles/themes';
 
 import { getLiveStreamLayoutMetrics } from './liveStreamLayout';
@@ -28,6 +29,7 @@ const KEEP_AWAKE_TAG = 'vod-player';
 export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
   const { t } = useTranslation(['stream', 'common']);
   const insets = useSafeAreaInsets();
+  const { config } = useRemoteConfig();
   const sleepTimer = useSleepTimer({
     onExpire: () => {
       if (router.canGoBack()) {
@@ -101,7 +103,7 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
       >
         <StreamPlayer
           video={id}
-          parent='www.twitch.tv'
+          parent={config.twitchPlayerEmbedParent.value}
           autoplay
           muted={false}
           height='100%'

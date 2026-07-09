@@ -20,6 +20,7 @@ import {
 import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
 
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
+import { resolveUseAppleWebpCodec } from '@app/lib/expo-image/resolveUseAppleWebpCodec';
 import { runAnimationCommand } from '@app/lib/expo-image/runAnimationCommand';
 import {
   evictCachedEmoteRef,
@@ -55,8 +56,25 @@ const LOAD_WATCHDOG_MS = 12000;
 
 interface ChatInlineImageProps {
   containerStyle?: StyleProp<ViewStyle>;
+  /**
+   * Max backoff-retry attempts after the whole fallback chain is exhausted.
+   * Defaults to {@link MAX_RELOAD_ATTEMPTS} for emote URLs whose CDN variants
+   * routinely have transient flakiness worth riding out. Callers rendering
+   * assets with stable, single-URL sources (e.g. badges) can pass `0` to fail
+   * immediately and stop the ~36s of on-screen "loading" state that a dead URL
+   * would otherwise produce.
+   */
+  maxRetryAttempts?: number;
   priority?: 'low' | 'normal' | 'high';
   resizeMode?: 'contain' | 'cover' | 'stretch';
+  /**
+   * When `false`, no shimmer is rendered while the image is loading — the slot
+   * just stays empty until the image resolves or is given up on. Use for tiny
+   * assets (badges) where a pulsing box is more distracting than helpful.
+   *
+   * @default true
+   */
+  showLoadingShimmer?: boolean;
   sourceUrl: string;
   style: StyleProp<ImageStyle>;
   testID?: string;
@@ -65,8 +83,10 @@ interface ChatInlineImageProps {
 
 function ChatInlineImageComponent({
   containerStyle,
+  maxRetryAttempts = MAX_RELOAD_ATTEMPTS,
   priority = 'high',
   resizeMode = 'contain',
+  showLoadingShimmer = true,
   sourceUrl,
   style,
   testID,
@@ -157,7 +177,7 @@ function ChatInlineImageComponent({
 
       // Every format/size has 404'd. Patiently backoff-retry the smallest
       // candidate — the one most likely to exist — to ride out a transient blip.
-      if (retryCountRef.current >= MAX_RELOAD_ATTEMPTS) {
+      if (retryCountRef.current >= maxRetryAttempts) {
         const descriptor = describeEmoteUrl(candidateUrl);
         const cache = getCachedEmoteStats();
         logger.chat.warn('chat.emote.load_failed', {
@@ -200,7 +220,14 @@ function ChatInlineImageComponent({
         setReloadNonce(nonce => nonce + 1);
       }, delay);
     },
-    [candidateIndex, candidateUrl, fallbackChain, showRef, sourceUrl],
+    [
+      candidateIndex,
+      candidateUrl,
+      fallbackChain,
+      maxRetryAttempts,
+      showRef,
+      sourceUrl,
+    ],
   );
 
   const onWatchdogTimeout = useEffectEvent(() => handleError());
@@ -246,7 +273,8 @@ function ChatInlineImageComponent({
   // Show the shimmer only while there's nothing real to display yet: a decoded
   // sharedRef is instant, so cached emotes (the busy-chat common case) never
   // shimmer and stay on the bare-image fast path with no extra Fabric node.
-  const overlayVisible = sharedRef == null && status !== 'loaded';
+  const overlayVisible =
+    showLoadingShimmer && sharedRef == null && status !== 'loaded';
 
   // Render the decoded sharedRef whenever it's available and hasn't failed to
   // display; otherwise render the current fallback variant's uri.
@@ -268,6 +296,7 @@ function ChatInlineImageComponent({
       // failed ref), so keep it out of expo-image's in-memory cache to avoid a
       // second session-long decoded-bitmap pool on top of the ImageRef cache.
       cachePolicy={showRef ? 'memory-disk' : 'disk'}
+      useAppleWebpCodec={resolveUseAppleWebpCodec(urlKind)}
       priority={priority}
       transition={transitionMs}
       onLoad={handleLoad}

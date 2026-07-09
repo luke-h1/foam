@@ -5,10 +5,10 @@ import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
 
 import { BlurView } from 'expo-blur';
-import { SymbolView } from 'expo-symbols';
 
 import { Button as PressableButton } from '@app/components/Button/Button';
 import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/CosmeticUsername';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import { lightenColor } from '@app/utils/color/lightenColor';

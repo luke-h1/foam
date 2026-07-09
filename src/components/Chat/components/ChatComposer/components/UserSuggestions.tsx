@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -68,6 +68,11 @@ export const UserSuggestions = memo(function UserSuggestions({
   handleUserSelect,
 }: UserSuggestionsProps) {
   const { t } = useTranslation('chat');
+  const extraData = useMemo(
+    () => ({ onPress: handleUserSelect }),
+    [handleUserSelect],
+  );
+
   if (!showUserSuggestions || users.length === 0) {
     return null;
   }
@@ -82,7 +87,7 @@ export const UserSuggestions = memo(function UserSuggestions({
           estimatedItemSize={USER_SUGGESTION_ITEM_SIZE}
           keyExtractor={user => user.userId}
           keyboardShouldPersistTaps='handled'
-          extraData={{ onPress: handleUserSelect }}
+          extraData={extraData}
           renderItem={renderUserSuggestionItem}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.userSuggestionScroll}

@@ -65,6 +65,8 @@ export function ChatMessageBadges({
             compact && styles.badgeCompact,
             Boolean(moderationNotice) && styles.moderatedBadge,
           ]}
+          maxRetryAttempts={0}
+          showLoadingShimmer={false}
         />
       </ChatMessagePressable>,
     );

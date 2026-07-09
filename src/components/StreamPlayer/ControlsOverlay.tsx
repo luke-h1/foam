@@ -43,14 +43,9 @@ interface OverlayMetricsState {
 
 import { useTranslation } from 'react-i18next';
 
-import { formatDuration } from './formatStreamDuration';
+import { formatViewCount } from '@app/utils/string/formatViewCount';
 
-function formatViewerCount(count?: number): string {
-  if (!count) {
-    return '0';
-  }
-  return count.toLocaleString();
-}
+import { formatDuration } from './formatStreamDuration';
 
 export function ControlsOverlay({
   isVisible,
@@ -218,7 +213,7 @@ export function ControlsOverlay({
                 tintColor={theme.colorWhite}
               />
               <Text style={styles.viewerCountText}>
-                {formatViewerCount(streamInfo?.viewerCount)}
+                {formatViewCount(streamInfo?.viewerCount)}
               </Text>
             </View>
           </View>

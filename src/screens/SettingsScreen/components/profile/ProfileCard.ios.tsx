@@ -11,9 +11,9 @@ import {
   Text as NativeText,
 } from '@expo/ui/swift-ui';
 import { router } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
 
 import { Image } from '@app/components/Image/Image';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import i18next from '@app/i18n/i18next';

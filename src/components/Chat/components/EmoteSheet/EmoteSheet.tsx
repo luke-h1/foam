@@ -16,7 +16,7 @@ import { ProviderChip } from './ProviderChip';
 import { emoteSheetScrollActivity } from './util/emoteSheetScrollActivity';
 
 export type { EmotePickerItem };
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LayoutChangeEvent } from 'react-native';
 
@@ -54,6 +54,14 @@ export function EmoteSheet({
       setLayoutWidth(current => (current === nextWidth ? current : nextWidth));
     }
   };
+
+  const setRailExtraData = useMemo(
+    () => ({
+      activeSetId: sheet.activeSetId,
+      onScrollToSet: sheet.handleScrollToSet,
+    }),
+    [sheet.activeSetId, sheet.handleScrollToSet],
+  );
 
   return (
     <BottomSheet
@@ -165,10 +173,7 @@ export function EmoteSheet({
                   keyExtractor={set => set.id}
                   nestedScrollEnabled
                   renderItem={renderSetRailItem}
-                  extraData={{
-                    activeSetId: sheet.activeSetId,
-                    onScrollToSet: sheet.handleScrollToSet,
-                  }}
+                  extraData={setRailExtraData}
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.categoryBarContent}
                 />
