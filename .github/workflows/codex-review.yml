@@ -87,6 +87,8 @@ jobs:
           prompt_file=".github/codex/review-run.md"
           review_prompt=".github/claude-review-prompt.md"
 
+          mkdir -p "$(dirname "$prompt_file")"
+
           if [ "$TRIGGERED_BY" = "mention" ]; then
             {
               cat "$review_prompt"
