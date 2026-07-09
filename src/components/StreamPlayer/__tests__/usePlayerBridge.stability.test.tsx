@@ -2,6 +2,8 @@ import type { WebViewMessageEvent } from 'react-native-webview';
 
 import { act, renderHook } from '@testing-library/react-native';
 
+import { countMetric } from '@app/lib/sentry';
+
 import type { PlayerMessage } from '../types';
 import { usePlayerBridge } from '../usePlayerBridge';
 
@@ -10,6 +12,8 @@ jest.mock('@app/lib/sentry', () => ({
   endSpan: jest.fn(),
   startInactiveSpan: jest.fn(),
 }));
+
+const mockCountMetric = jest.mocked(countMetric);
 
 jest.mock('@app/utils/logger', () => ({
   logger: {
@@ -143,6 +147,50 @@ describe('usePlayerBridge enhanced stability', () => {
     }
 
     expect(forceRefresh).toHaveBeenCalledTimes(3);
+  });
+
+  test('keeps recording load metrics after the player source changes', () => {
+    const { result, rerender } = renderHook(
+      (props: { sourceKey: string }) =>
+        usePlayerBridge({
+          autoplay: true,
+          channel: 'foo',
+          contentKind: 'live',
+          deferOverlayUntilUserUnmute: false,
+          enhancedStabilityEnabled: true,
+          forceRefresh: jest.fn(),
+          initialMuted: true,
+          runJavaScript: jest.fn(),
+          scheduleAuthCompletionReload: jest.fn(),
+          sourceKey: props.sourceKey,
+          webViewKey: 0,
+        }),
+      { initialProps: { sourceKey: 'foo' } },
+    );
+
+    act(() => {
+      rerender({ sourceKey: 'bar' });
+    });
+    mockCountMetric.mockClear();
+
+    act(() => {
+      result.current.noteWebViewPlaybackStarted();
+    });
+
+    const startCall = mockCountMetric.mock.calls.find(
+      ([name]) => name === 'stream.player.start',
+    );
+    expect(startCall).toEqual([
+      'stream.player.start',
+      {
+        autoplay: true,
+        channel: 'foo',
+        content_kind: 'live',
+        elapsed_ms: 0,
+        outcome: 'started',
+        start_source: 'webview_loaded',
+      },
+    ]);
   });
 
   test('resets the auto-refresh window when the player source changes', () => {

@@ -214,11 +214,16 @@ export function usePlayerBridge({
 
   useUnmountCallback(disposeStability);
 
+  // Dispose only on unmount. beginLoad() already retires the previous session via
+  // cancelActiveSession() on every loadKey change, and it runs in the render body
+  // before this cleanup would fire - keying the effect on loadKey would dispose the
+  // freshly-started session right after it was created, dropping load metrics for
+  // every stream after the first.
   useEffect(() => {
     return () => {
       telemetry.dispose();
     };
-  }, [loadKey, telemetry]);
+  }, [telemetry]);
 
   const onContentGateChangeRef = useSyncRef(onContentGateChange);
   const notifyContentGateChange = (nextHasContentGate: boolean) => {
