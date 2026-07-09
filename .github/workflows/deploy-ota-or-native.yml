@@ -40,6 +40,14 @@ on:
         required: false
         type: boolean
         default: false
+      runner:
+        description: 'Runner to use for non-build jobs (use foam when github-hosted runners are degraded)'
+        required: false
+        type: choice
+        default: 'github-hosted'
+        options:
+          - github-hosted
+          - foam
 
 env:
   EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -54,7 +62,7 @@ concurrency:
 jobs:
   prepare:
     name: 📋 Prepare
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
     outputs:
       version: ${{ steps.get_version.outputs.version }}
       tag: ${{ steps.get_version.outputs.tag }}
@@ -73,7 +81,7 @@ jobs:
 
   test:
     name: 🧪 Test
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -92,7 +100,7 @@ jobs:
   detect-changes:
     name: 🔍 Detect Changes
     needs: [prepare, test]
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
     permissions:
       contents: read
     outputs:
@@ -260,7 +268,7 @@ jobs:
     name: 📦 OTA Update
     needs: [prepare, detect-changes]
     if: needs['detect-changes'].outputs['deploy-type'] == 'ota'
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
     concurrency: eas-update-${{ inputs.variant || 'production' }}-${{ inputs.platform || 'ios' }}
     outputs:
       ios_update_id: ${{ steps.publish.outputs.ios_update_id }}
@@ -367,7 +375,7 @@ jobs:
     name: 📝 Changelog / Release
     needs: [prepare, detect-changes, build, ota]
     if: always() && needs['detect-changes'].result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.ota.result == 'success' || needs.ota.result == 'skipped') && !inputs.dry_run
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
     permissions:
       contents: write
       pull-requests: write
@@ -460,7 +468,7 @@ jobs:
     name: 📢 Slack Notification
     needs: [release]
     if: always() && needs.release.result == 'success' && !inputs.dry_run
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
