@@ -32,6 +32,10 @@ const en = {
     emotesRefreshed: 'Refreshed emotes and badges',
     providerLoadFailed:
       "Couldn't load emotes and badges from {{providers}}, falling back to cached emotes/badges",
+    providerLoadFailedNoCache:
+      "Couldn't load emotes and badges from {{providers}}",
+    channelResourcesFailed:
+      "Couldn't load channel emotes and badges. Try refreshing.",
     messageActions: {
       eyebrow: 'Selected message',
       title: 'Message Actions',

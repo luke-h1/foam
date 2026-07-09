@@ -123,7 +123,6 @@ export function useEmoteReprocessing({
       const replacedBadges = findBadges({
         userstate: msg.userstate,
         chatterinoBadges: emoteData.chatterinoBadges,
-        chatUsers: [],
         ffzChannelBadges: emoteData.ffzChannelBadges,
         ffzGlobalBadges: emoteData.ffzGlobalBadges,
         twitchChannelBadges: emoteData.twitchChannelBadges,

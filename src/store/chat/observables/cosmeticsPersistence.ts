@@ -4,7 +4,7 @@ import type { PaintData, SanitisedBadgeSet } from '../types/constants';
 
 const COSMETICS_SNAPSHOT_KEY = 'sevenTvCosmeticsSnapshot_v1';
 const COSMETICS_NAMESPACE = 'seven_tv_cache';
-const SNAPSHOT_TTL_MS = 24 * 60 * 60 * 1000;
+const SNAPSHOT_TTL_MS = 2 * 60 * 60 * 1000;
 const MAX_PERSISTED_PAINTS = 750;
 const MAX_PERSISTED_BADGES = 750;
 const MAX_PERSISTED_ENTITLEMENTS = 500;

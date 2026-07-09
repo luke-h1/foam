@@ -4,34 +4,77 @@ import { useLazyRef } from '@app/hooks/useLazyRef';
 import { sevenTvService } from '@app/services/seventv-service';
 import {
   fetchAndCacheUserCosmetics,
+  getUserBadge,
+  getUserBadgeId,
+  getUserPaintId,
   requestUserCosmeticsViaPresence,
 } from '@app/store/chat/actions/cosmetics';
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { logger } from '@app/utils/logger';
 
-export function useChatCosmetics({ userId }: { userId?: string | null }) {
+function hasRenderableCosmetics(twitchUserId: string): boolean {
+  const badgeId = getUserBadgeId(twitchUserId);
+  const renderableBadge = badgeId
+    ? getUserBadge(twitchUserId)?.url?.trim()
+    : undefined;
+  const paintId = getUserPaintId(twitchUserId);
+
+  return Boolean(paintId || renderableBadge);
+}
+
+export function useChatCosmetics(options: { userId?: string | null } = {}) {
+  const { userId } = options;
   const fetchedCosmeticsUsersRef = useLazyRef(() => new Set<string>());
+
+  useEffect(() => {
+    if (!userId) {
+      return;
+    }
+
+    if (hasRenderableCosmetics(userId)) {
+      return;
+    }
+
+    let cancelled = false;
+    void sevenTvService
+      .get7tvUserId(userId)
+      .then(sevenTvUserId => {
+        if (cancelled || !sevenTvUserId) {
+          return null;
+        }
+        return fetchAndCacheUserCosmetics(sevenTvUserId);
+      })
+      .catch(error => {
+        logger.stv.debug(
+          `No 7TV cosmetics for current user ${userId}:`,
+          error instanceof Error ? error.message : error,
+        );
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   const fetchUserCosmetics = async (
     twitchUserId: string,
-    options: {
+    fetchOptions: {
       retryMissingBadge?: boolean;
     } = {},
   ) => {
-    const existingBadgeId = chatStore$.userBadgeIds[twitchUserId]?.peek();
+    const existingBadgeId = getUserBadgeId(twitchUserId);
+    const renderableBadge = existingBadgeId
+      ? getUserBadge(twitchUserId)?.url?.trim()
+      : undefined;
+
     if (
       fetchedCosmeticsUsersRef.current.has(twitchUserId) &&
-      (!options.retryMissingBadge || existingBadgeId)
+      (!fetchOptions.retryMissingBadge || renderableBadge || !existingBadgeId)
     ) {
       return;
     }
 
-    const existingPaintId = chatStore$.userPaintIds[twitchUserId]?.peek();
-    if (existingPaintId && existingBadgeId) {
+    if (hasRenderableCosmetics(twitchUserId)) {
       fetchedCosmeticsUsersRef.current.add(twitchUserId);
-      logger.stvWs.debug(
-        `User ${twitchUserId} already has paint and badge cosmetics`,
-      );
       return;
     }
 
@@ -40,41 +83,12 @@ export function useChatCosmetics({ userId }: { userId?: string | null }) {
     try {
       await requestUserCosmeticsViaPresence(twitchUserId);
     } catch (error) {
-      logger.stvWs.debug(
-        `Failed to fetch cosmetics for ${twitchUserId}:`,
-        error,
+      logger.stv.debug(
+        `Failed to fetch cosmetics for user ${twitchUserId}:`,
+        error instanceof Error ? error.message : error,
       );
     }
   };
-
-  useEffect(() => {
-    if (!userId) {
-      return;
-    }
-
-    let cancelled = false;
-
-    void (async () => {
-      try {
-        const sevenTvUserId = await sevenTvService.get7tvUserId(userId);
-
-        if (cancelled || !sevenTvUserId) {
-          return;
-        }
-
-        await fetchAndCacheUserCosmetics(sevenTvUserId);
-        logger.stvWs.info(`Fetched cosmetics for current user: ${userId}`);
-      } catch (error) {
-        if (!cancelled) {
-          logger.stvWs.warn('Failed to fetch current user cosmetics:', error);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [userId]);
 
   return {
     fetchedCosmeticsUsersRef,

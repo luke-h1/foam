@@ -3,14 +3,14 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { sevenTvService } from '@app/services/seventv-service';
 import {
   fetchAndCacheUserCosmetics,
+  getUserBadge,
+  getUserBadgeId,
+  getUserPaintId,
   requestUserCosmeticsViaPresence,
 } from '@app/store/chat/actions/cosmetics';
 
 import { useChatCosmetics } from '../useChatCosmetics';
-
-type MockObservableValue<T> = {
-  peek: jest.Mock<T | undefined, []>;
-};
+import { setCachedCosmetics } from './__fixtures__/useChatCosmetics.fixture';
 
 jest.mock('@app/services/seventv-service', () => ({
   sevenTvService: {
@@ -19,84 +19,114 @@ jest.mock('@app/services/seventv-service', () => ({
 }));
 
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
-  fetchAndCacheUserCosmetics: jest.fn(() => Promise.resolve()),
+  fetchAndCacheUserCosmetics: jest.fn(),
+  getUserBadge: jest.fn(),
+  getUserBadgeId: jest.fn(),
+  getUserPaintId: jest.fn(),
   requestUserCosmeticsViaPresence: jest.fn(() => Promise.resolve()),
-}));
-
-jest.mock('@app/store/chat/observables/chatStore', () => ({
-  chatStore$: {
-    userBadgeIds: {},
-    userPaintIds: {},
-  },
 }));
 
 jest.mock('@app/utils/logger', () => ({
   logger: {
-    stvWs: {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-    },
+    stv: { debug: jest.fn() },
   },
 }));
 
-const mockGetSevenTvUserId = jest.mocked(sevenTvService.get7tvUserId);
+const mockGet7tvUserId = jest.mocked(sevenTvService.get7tvUserId);
 const mockFetchAndCacheUserCosmetics = jest.mocked(fetchAndCacheUserCosmetics);
+const mockGetUserBadge = jest.mocked(getUserBadge);
+const mockGetUserBadgeId = jest.mocked(getUserBadgeId);
+const mockGetUserPaintId = jest.mocked(getUserPaintId);
 const mockRequestUserCosmeticsViaPresence = jest.mocked(
   requestUserCosmeticsViaPresence,
 );
 
-const mockChatStore = jest.requireMock('@app/store/chat/observables/chatStore')
-  .chatStore$ as {
-  userBadgeIds: Record<string, MockObservableValue<string>>;
-  userPaintIds: Record<string, MockObservableValue<string>>;
-};
-
-function setCachedCosmetics({
-  badgeId,
-  paintId,
-  twitchUserId,
-}: {
-  badgeId?: string;
-  paintId?: string;
-  twitchUserId: string;
-}) {
-  mockChatStore.userBadgeIds[twitchUserId] = {
-    peek: jest.fn(() => badgeId),
-  };
-  mockChatStore.userPaintIds[twitchUserId] = {
-    peek: jest.fn(() => paintId),
-  };
-}
-
 describe('useChatCosmetics', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.keys(mockChatStore.userBadgeIds).forEach(key => {
-      delete mockChatStore.userBadgeIds[key];
-    });
-    Object.keys(mockChatStore.userPaintIds).forEach(key => {
-      delete mockChatStore.userPaintIds[key];
-    });
-    mockGetSevenTvUserId.mockResolvedValue('7tv-user-1');
-    mockFetchAndCacheUserCosmetics.mockResolvedValue(null);
-    mockRequestUserCosmeticsViaPresence.mockResolvedValue(undefined);
+    mockGet7tvUserId.mockResolvedValue('7tv-user-1');
+    mockFetchAndCacheUserCosmetics.mockResolvedValue('ttv-self');
+    mockGetUserBadge.mockReturnValue(undefined);
+    mockGetUserBadgeId.mockReturnValue(undefined);
+    mockGetUserPaintId.mockReturnValue(undefined);
   });
 
-  test('fetches current user cosmetics after mount', async () => {
+  test('bootstraps the signed-in user cosmetics on mount', async () => {
     renderHook(() =>
       useChatCosmetics({
-        userId: 'current-user',
+        userId: 'ttv-self',
       }),
     );
 
     await waitFor(() => {
-      expect(mockGetSevenTvUserId).toHaveBeenCalledWith('current-user');
-      expect(mockFetchAndCacheUserCosmetics).toHaveBeenCalledWith('7tv-user-1');
+      expect(mockGet7tvUserId.mock.calls).toEqual([['ttv-self']]);
+      expect(mockFetchAndCacheUserCosmetics.mock.calls).toEqual([
+        ['7tv-user-1'],
+      ]);
     });
   });
 
-  test('requests chatter cosmetics through the presence push', async () => {
+  test('skips self bootstrap when paint and badge bindings are already known', async () => {
+    setCachedCosmetics(
+      {
+        getUserBadgeId: mockGetUserBadgeId,
+        getUserPaintId: mockGetUserPaintId,
+      },
+      {
+        badgeId: 'badge-1',
+        paintId: 'paint-1',
+        twitchUserId: 'ttv-self',
+      },
+    );
+    mockGetUserBadge.mockReturnValue({
+      id: 'badge-1',
+      url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
+      type: '7TV Badge',
+      title: 'Supporter',
+      set: 'badge-1',
+      provider: '7tv',
+    });
+
+    renderHook(() =>
+      useChatCosmetics({
+        userId: 'ttv-self',
+      }),
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(mockFetchAndCacheUserCosmetics).not.toHaveBeenCalled();
+  });
+
+  test('skips self bootstrap when only paint is known', async () => {
+    setCachedCosmetics(
+      {
+        getUserBadgeId: mockGetUserBadgeId,
+        getUserPaintId: mockGetUserPaintId,
+      },
+      {
+        paintId: 'paint-1',
+        twitchUserId: 'ttv-self',
+      },
+    );
+
+    renderHook(() =>
+      useChatCosmetics({
+        userId: 'ttv-self',
+      }),
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(mockGet7tvUserId).not.toHaveBeenCalled();
+    expect(mockFetchAndCacheUserCosmetics).not.toHaveBeenCalled();
+  });
+
+  test('requests cosmetics via passive presence for visible chatters', async () => {
     const { result } = renderHook(() =>
       useChatCosmetics({
         userId: null,
@@ -115,12 +145,27 @@ describe('useChatCosmetics', () => {
     ).toBe(true);
   });
 
-  test('does not refetch users that already have cached paint and badge cosmetics', async () => {
-    setCachedCosmetics({
-      badgeId: 'badge-1',
-      paintId: 'paint-1',
-      twitchUserId: 'cached-user',
+  test('does not refetch users that already have cached paint and renderable badge cosmetics', async () => {
+    setCachedCosmetics(
+      {
+        getUserBadgeId: mockGetUserBadgeId,
+        getUserPaintId: mockGetUserPaintId,
+      },
+      {
+        badgeId: 'badge-1',
+        paintId: 'paint-1',
+        twitchUserId: 'cached-user',
+      },
+    );
+    mockGetUserBadge.mockReturnValue({
+      id: 'badge-1',
+      url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
+      type: '7TV Badge',
+      title: 'Supporter',
+      set: 'badge-1',
+      provider: '7tv',
     });
+
     const { result } = renderHook(() =>
       useChatCosmetics({
         userId: null,
@@ -137,11 +182,51 @@ describe('useChatCosmetics', () => {
     ).toBe(true);
   });
 
-  test('retries a previously fetched user when retryMissingBadge is requested and no badge is cached', async () => {
-    setCachedCosmetics({
-      paintId: 'paint-1',
-      twitchUserId: 'retry-user',
+  test('does not refetch paint-only users when retryMissingBadge is requested', async () => {
+    setCachedCosmetics(
+      {
+        getUserBadgeId: mockGetUserBadgeId,
+        getUserPaintId: mockGetUserPaintId,
+      },
+      {
+        paintId: 'paint-1',
+        twitchUserId: 'paint-only-user',
+      },
+    );
+    mockGetUserBadge.mockReturnValue(undefined);
+
+    const { result } = renderHook(() =>
+      useChatCosmetics({
+        userId: null,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.fetchUserCosmetics('paint-only-user');
+      await result.current.fetchUserCosmetics('paint-only-user', {
+        retryMissingBadge: true,
+      });
     });
+
+    expect(mockRequestUserCosmeticsViaPresence.mock.calls).toEqual([]);
+    expect(
+      result.current.fetchedCosmeticsUsersRef.current.has('paint-only-user'),
+    ).toBe(true);
+  });
+
+  test('retries a previously fetched user when retryMissingBadge is requested and a badge binding lacks a renderable definition', async () => {
+    setCachedCosmetics(
+      {
+        getUserBadgeId: mockGetUserBadgeId,
+        getUserPaintId: mockGetUserPaintId,
+      },
+      {
+        badgeId: 'badge-1',
+        twitchUserId: 'retry-user',
+      },
+    );
+    mockGetUserBadge.mockReturnValue(undefined);
+
     const { result } = renderHook(() =>
       useChatCosmetics({
         userId: null,
@@ -160,5 +245,60 @@ describe('useChatCosmetics', () => {
       ['retry-user'],
       ['retry-user'],
     ]);
+    expect(
+      result.current.fetchedCosmeticsUsersRef.current.has('retry-user'),
+    ).toBe(true);
+  });
+
+  test('does not refetch users that already have cached paint-only cosmetics', async () => {
+    setCachedCosmetics(
+      {
+        getUserBadgeId: mockGetUserBadgeId,
+        getUserPaintId: mockGetUserPaintId,
+      },
+      {
+        paintId: 'paint-1',
+        twitchUserId: 'paint-only-user',
+      },
+    );
+
+    const { result } = renderHook(() =>
+      useChatCosmetics({
+        userId: null,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.fetchUserCosmetics('paint-only-user');
+    });
+
+    expect(mockRequestUserCosmeticsViaPresence).not.toHaveBeenCalled();
+    expect(
+      result.current.fetchedCosmeticsUsersRef.current.has('paint-only-user'),
+    ).toBe(true);
+  });
+
+  test('does not retry users whose cosmetics fetch failed', async () => {
+    mockRequestUserCosmeticsViaPresence.mockRejectedValue(
+      new Error('presence failed'),
+    );
+
+    const { result } = renderHook(() =>
+      useChatCosmetics({
+        userId: null,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.fetchUserCosmetics('failed-user');
+      await result.current.fetchUserCosmetics('failed-user');
+    });
+
+    expect(mockRequestUserCosmeticsViaPresence.mock.calls).toEqual([
+      ['failed-user'],
+    ]);
+    expect(
+      result.current.fetchedCosmeticsUsersRef.current.has('failed-user'),
+    ).toBe(true);
   });
 });

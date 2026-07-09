@@ -44,6 +44,11 @@ export interface ChatStoreState {
   messages: AnyChatMessageType[];
   mentionLoginRevision: number;
   cosmeticsCacheVersion: number;
+  /**
+   * Incremented when per-user cosmetic bindings or badge definitions change so
+   * chat messages can re-resolve badges without reloading channel emote data.
+   */
+  cosmeticBindingsVersion: number;
   paints: Record<string, PaintData>;
   userPaintIds: Record<string, string>;
   badges: Record<string, SanitisedBadgeSet>;
@@ -64,6 +69,21 @@ export interface ChatStoreState {
     channelBadges: Record<
       string,
       { value: SanitisedBadgeSet[]; expiresAt: number }
+    >;
+  };
+  /**
+   * Session-scoped 7TV identity/entitlement lookup tables used by the
+   * cosmetics WebSocket bridge. Kept on the store (rather than as
+   * module-level Maps) so their lifecycle sits with the rest of the chat
+   * session state and clears with it. `Object.keys` iteration order gives
+   * FIFO for the entitlement id cap.
+   */
+  sevenTvUserLinks: {
+    twitchIdsBySevenTvUserId: Record<string, string[]>;
+    sevenTvUserIdByTwitchId: Record<string, string>;
+    twitchIdByEntitlementId: Record<
+      string,
+      { kind: 'BADGE' | 'PAINT' | 'EMOTE_SET'; twitchUserId: string }
     >;
   };
 }
@@ -108,6 +128,7 @@ const initialChatStoreState: ChatStoreState = {
   messages: [],
   mentionLoginRevision: 0,
   cosmeticsCacheVersion: 0,
+  cosmeticBindingsVersion: 0,
   paints: {},
   userPaintIds: {},
   badges: {},
@@ -120,6 +141,11 @@ const initialChatStoreState: ChatStoreState = {
   sharedChatBadgeCaches: {
     sourceBadges: {},
     channelBadges: {},
+  },
+  sevenTvUserLinks: {
+    twitchIdsBySevenTvUserId: {},
+    sevenTvUserIdByTwitchId: {},
+    twitchIdByEntitlementId: {},
   },
 };
 

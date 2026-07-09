@@ -8,6 +8,7 @@ import { BenchFrameProbe } from '@app/dev/imageBenchmark/BenchFrameProbe.gate';
 import { CachedEmotesProvider } from '@app/Providers/CachedEmotesProvider/CachedEmotesProvider';
 import { setChatFrontTrimSuspended } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { useCosmeticBindingsVersion } from '@app/store/chat/react/selectors';
 import {
   useChatRenderPreferences,
   useUpdatePreferences,
@@ -195,6 +196,9 @@ export const Chat = memo(
       user,
     });
 
+    const cosmeticBindingsVersion = useCosmeticBindingsVersion();
+    const emoteReprocessKey = `${chatAssetPreferenceKey}|${cosmeticBindingsVersion}`;
+
     return (
       <CachedEmotesProvider channelId={channelId}>
         <View
@@ -210,7 +214,7 @@ export const Chat = memo(
             emoteLoadStatus={emoteLoadStatus}
             messages$={messages$}
             processedMessageIdsRef={processedMessageIdsRef}
-            reprocessKey={chatAssetPreferenceKey}
+            reprocessKey={emoteReprocessKey}
           />
           <View style={styles.keyboardAvoidingView}>
             <View style={styles.chatContainer}>

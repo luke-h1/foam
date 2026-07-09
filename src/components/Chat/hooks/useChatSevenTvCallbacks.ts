@@ -4,6 +4,7 @@ import type {
   CosmeticUpdateCallbackData,
   EntitlementCreateCallbackData,
   EntitlementDeleteCallbackData,
+  EntitlementResetCallbackData,
   EntitlementUpdateCallbackData,
 } from '@app/hooks/useSeventvWs';
 import { countMetric } from '@app/lib/sentry';
@@ -12,16 +13,15 @@ import {
   addPaint,
   removeBadge,
   removePaint,
-  removeUserBadge,
-  removeUserPaint,
-  setUserBadge,
-  setUserPaint,
   updateBadge,
   updatePaint,
 } from '@app/store/chat/actions/cosmetics';
 import {
   applyCosmeticCreateEvent,
   applyEntitlementCreateEvent,
+  applyEntitlementDeleteEvent,
+  applyEntitlementResetEvent,
+  applyEntitlementUpdateEvent,
 } from '@app/store/chat/actions/cosmeticsBridge';
 import {
   findPersonalEmoteSetOwner,
@@ -78,7 +78,11 @@ function onCosmeticCreate(data: CosmeticCreateCallbackData) {
 }
 
 function onEntitlementCreate(data: EntitlementCreateCallbackData) {
-  applyEntitlementCreateEvent(data, { requestMissingDefinitions: true });
+  applyEntitlementCreateEvent(data);
+}
+
+function onEntitlementReset(data: EntitlementResetCallbackData) {
+  applyEntitlementResetEvent(data.sevenTvUserId);
 }
 
 function onCosmeticDelete(data: CosmeticDeleteCallbackData) {
@@ -88,26 +92,11 @@ function onCosmeticDelete(data: CosmeticDeleteCallbackData) {
 }
 
 function onEntitlementUpdate(data: EntitlementUpdateCallbackData) {
-  if (data.ttvUserId) {
-    if (data.paintId) {
-      setUserPaint(data.ttvUserId, data.paintId);
-    } else {
-      removeUserPaint(data.ttvUserId);
-    }
-    if (data.badgeId) {
-      setUserBadge(data.ttvUserId, data.badgeId);
-    } else {
-      removeUserBadge(data.ttvUserId);
-    }
-  }
+  applyEntitlementUpdateEvent(data);
 }
 
 function onEntitlementDelete(data: EntitlementDeleteCallbackData) {
-  if (data.ttvUserId) {
-    removeUserPaint(data.ttvUserId);
-    removeUserBadge(data.ttvUserId);
-    logger.stvWs.info(`Removed entitlements for user: ${data.ttvUserId}`);
-  }
+  applyEntitlementDeleteEvent(data);
 }
 
 export function useChatSevenTvCallbacks({
@@ -290,6 +279,7 @@ export function useChatSevenTvCallbacks({
     onEmoteSetUpdateForOtherSet,
     onCosmeticCreate,
     onEntitlementCreate,
+    onEntitlementReset,
     onCosmeticUpdate,
     onCosmeticDelete,
     onEntitlementUpdate,

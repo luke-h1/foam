@@ -213,7 +213,6 @@ export function getMessageBadges({
   const foundBadges = findBadges({
     userstate,
     chatterinoBadges: emoteData.chatterinoBadges,
-    chatUsers: [],
     ffzChannelBadges: emoteData.ffzChannelBadges,
     ffzGlobalBadges: emoteData.ffzGlobalBadges,
     twitchChannelBadges: sourceChannelBadges ?? emoteData.twitchChannelBadges,

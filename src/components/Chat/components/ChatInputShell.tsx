@@ -248,7 +248,6 @@ export const ChatInputShell = memo(function ChatInputShell({
       ? findBadges({
           userstate: optimisticUserstate,
           chatterinoBadges: emoteData.chatterinoBadges,
-          chatUsers: [],
           ffzChannelBadges: emoteData.ffzChannelBadges,
           ffzGlobalBadges: emoteData.ffzGlobalBadges,
           twitchChannelBadges: emoteData.twitchChannelBadges,

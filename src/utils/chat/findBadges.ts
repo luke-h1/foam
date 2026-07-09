@@ -1,6 +1,5 @@
 import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
-import type { ChatUser } from '@app/store/chat/types/constants';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
@@ -10,7 +9,6 @@ interface FindBadgesParams {
   twitchGlobalBadges: SanitisedBadgeSet[];
   ffzGlobalBadges: SanitisedBadgeSet[];
   ffzChannelBadges: SanitisedBadgeSet[];
-  chatUsers: ChatUser[];
   chatterinoBadges: SanitisedBadgeSet[];
 }
 
@@ -41,19 +39,24 @@ const addBadge = (
   badge: SanitisedBadgeSet,
   fallbackType: SanitisedBadgeSet['type'],
 ): void => {
-  if (hasBadge(badges, badge)) {
+  const normalizedBadge = normalizeSevenTvBadge(badge);
+  if (!normalizedBadge.url?.trim()) {
+    return;
+  }
+
+  if (hasBadge(badges, normalizedBadge)) {
     return;
   }
 
   badges.push({
-    title: badge.title,
-    url: badge.url,
-    type: badge.type || fallbackType,
-    set: badge.set || '',
-    id: badge.id,
-    color: badge.color,
-    owner_username: badge.owner_username,
-    ...(badge.provider ? { provider: badge.provider } : {}),
+    title: normalizedBadge.title,
+    url: normalizedBadge.url,
+    type: normalizedBadge.type || fallbackType,
+    set: normalizedBadge.set || '',
+    id: normalizedBadge.id,
+    color: normalizedBadge.color,
+    owner_username: normalizedBadge.owner_username,
+    ...(normalizedBadge.provider ? { provider: normalizedBadge.provider } : {}),
   });
 };
 
@@ -167,7 +170,6 @@ export function findBadges({
   twitchChannelBadges,
   twitchGlobalBadges,
   ffzGlobalBadges,
-  chatUsers,
   chatterinoBadges,
 }: FindBadgesParams): SanitisedBadgeSet[] {
   const badges: SanitisedBadgeSet[] = [];
@@ -187,7 +189,7 @@ export function findBadges({
         version,
       );
 
-      if (channelBadge) {
+      if (channelBadge?.url?.trim()) {
         addBadge(badges, channelBadge, 'Twitch Channel Badge');
         return;
       }
@@ -198,7 +200,7 @@ export function findBadges({
         version,
       );
 
-      if (globalBadge) {
+      if (globalBadge?.url?.trim()) {
         addBadge(badges, globalBadge, 'Twitch Global Badge');
       }
     });
@@ -219,18 +221,6 @@ export function findBadges({
       owner_username: b.owner_username,
     });
   });
-
-  const stvUser = chatUsers.find(u => u.name === `@${userstate.username}`);
-
-  if (stvUser && stvUser.cosmetics?.badge_id) {
-    const stvBadge = stvUser.cosmetics.badges.find(
-      b => b.id === stvUser.cosmetics?.badge_id,
-    );
-
-    if (stvBadge) {
-      addBadgeIfMissing(badges, stvBadge);
-    }
-  }
 
   if (userstate['user-id']) {
     const storeBadge = getUserBadge(userstate['user-id']);

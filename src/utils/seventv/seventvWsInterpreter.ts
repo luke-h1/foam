@@ -35,7 +35,8 @@ export type HandledSevenTvEventType =
   | 'cosmetic.delete'
   | 'entitlement.create'
   | 'entitlement.update'
-  | 'entitlement.delete';
+  | 'entitlement.delete'
+  | 'entitlement.reset';
 
 export type SeventvWsDecision =
   | {
@@ -81,6 +82,7 @@ export type SeventvWsDecision =
       badgeId: string | null;
     }
   | { type: 'applyEntitlementDelete'; entitlementId: string; ttvUserId: null }
+  | { type: 'applyEntitlementReset'; sevenTvUserId: string }
   | {
       type: 'applyEmoteSetSwitch';
       oldSetId: string | null;
@@ -443,6 +445,23 @@ function interpretEntitlementDelete(
   }
 }
 
+function interpretEntitlementReset(
+  data: SevenTvEventData<'entitlement.reset'>,
+): SeventvWsDecision {
+  try {
+    return {
+      type: 'applyEntitlementReset',
+      sevenTvUserId: data.body.id,
+    };
+  } catch (error) {
+    return {
+      type: 'eventInterpretationFailed',
+      eventType: 'entitlement.reset',
+      error,
+    };
+  }
+}
+
 /**
  * A `user.update` for the channel owner carries the active emote set switch
  * as a nested change: `updated[key=connections].value[key=emote_set]` with
@@ -533,6 +552,11 @@ function interpretDispatchEvent(
     case 'entitlement.delete':
       return interpretEntitlementDelete(
         data as SevenTvEventData<'entitlement.delete'>,
+      );
+
+    case 'entitlement.reset':
+      return interpretEntitlementReset(
+        data as SevenTvEventData<'entitlement.reset'>,
       );
 
     case 'user.update':

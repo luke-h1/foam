@@ -497,3 +497,25 @@ export const collectFailedProviderLabels = (
   }
   return labels;
 };
+
+/**
+ * True when at least one rejected resource spec still has a non-empty slice in
+ * the channel cache to fall back to.
+ */
+export const hadCachedResourcesForFailedSpecs = (
+  existingCache: ChannelCacheType | undefined,
+  settled: readonly AnySettledSpec[],
+): boolean => {
+  if (!existingCache) {
+    return false;
+  }
+
+  return settled.some(({ result, spec }) => {
+    if (result.status !== 'rejected') {
+      return false;
+    }
+
+    const cached = existingCache[spec.key as keyof ChannelCacheType];
+    return Array.isArray(cached) && cached.length > 0;
+  });
+};

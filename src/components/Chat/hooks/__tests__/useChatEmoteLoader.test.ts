@@ -171,6 +171,37 @@ describe('useChatEmoteLoader', () => {
     });
   });
 
+  test('force-refetches when the active channel cache disappears without a version bump', async () => {
+    const controller = arrangeAbortController();
+    const { result, rerender } = renderHook(
+      ({ enabled }: { enabled: boolean }) =>
+        useChatEmoteLoader({ channelId: 'channel-1', enabled }),
+      { initialProps: { enabled: true } },
+    );
+
+    await waitFor(() => {
+      expect(result.current.status).toBe('success');
+    });
+    expect(mockLoadChannelResources).toHaveBeenCalledTimes(1);
+
+    chatStore$.persisted.channelCaches.set({});
+
+    rerender({ enabled: false });
+    rerender({ enabled: true });
+
+    await waitFor(() => {
+      expect(mockLoadChannelResources).toHaveBeenCalledTimes(2);
+    });
+    expect(
+      mockLoadChannelResources.mock.calls[1]?.[0],
+    ).toEqual<LoadChannelResourcesOptions>({
+      channelId: 'channel-1',
+      forceRefresh: true,
+      signal: controller.signal,
+      twitchUserId: 'viewer-id',
+    });
+  });
+
   test('cancel aborts the active load and marks the hook cancelled while mounted', () => {
     const { result } = renderHook(() =>
       useChatEmoteLoader({ channelId: 'channel-1', enabled: false }),

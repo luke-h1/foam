@@ -142,8 +142,9 @@ export function EmoteSheet({
                     },
                   ]}
                   drawDistance={(sheet.cellSize + 4) * 8}
-                  showsVerticalScrollIndicator={false}
+                  showsVerticalScrollIndicator
                   nestedScrollEnabled
+                  indicatorStyle='white' // todo - once we have light theme, adjust this
                   style={styles.list}
                 />
               )}

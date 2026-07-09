@@ -7,16 +7,14 @@ import {
   addPaint,
   removeBadge,
   removePaint,
-  removeUserBadge,
-  removeUserPaint,
-  setUserBadge,
-  setUserPaint,
   updateBadge,
   updatePaint,
 } from '@app/store/chat/actions/cosmetics';
 import {
   applyCosmeticCreateEvent,
   applyEntitlementCreateEvent,
+  applyEntitlementDeleteEvent,
+  applyEntitlementUpdateEvent,
 } from '@app/store/chat/actions/cosmeticsBridge';
 import type { BadgeData, PaintData } from '@app/types/seventv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
@@ -56,6 +54,9 @@ jest.mock('@app/store/chat/actions/cosmetics', () => ({
 jest.mock('@app/store/chat/actions/cosmeticsBridge', () => ({
   applyCosmeticCreateEvent: jest.fn(),
   applyEntitlementCreateEvent: jest.fn(),
+  applyEntitlementDeleteEvent: jest.fn(),
+  applyEntitlementResetEvent: jest.fn(),
+  applyEntitlementUpdateEvent: jest.fn(),
 }));
 
 jest.mock('@app/utils/logger', () => ({
@@ -288,7 +289,7 @@ describe('useChatSevenTvCallbacks', () => {
   });
 
   describe('onEntitlementCreate', () => {
-    test('delegates to applyEntitlementCreateEvent with missing-definition requests enabled', () => {
+    test('delegates to applyEntitlementCreateEvent', () => {
       const { result } = renderHook(() =>
         useChatSevenTvCallbacks(defaultProps),
       );
@@ -321,9 +322,7 @@ describe('useChatSevenTvCallbacks', () => {
         result.current.onEntitlementCreate(data);
       });
 
-      expect(mockApplyEntitlementCreateEvent.mock.calls).toEqual([
-        [data, { requestMissingDefinitions: true }],
-      ]);
+      expect(mockApplyEntitlementCreateEvent.mock.calls).toEqual([[data]]);
     });
   });
 
@@ -456,59 +455,36 @@ describe('useChatSevenTvCallbacks', () => {
   });
 
   describe('onEntitlementUpdate', () => {
-    test('sets user paint and badge when ttvUserId and ids provided', () => {
+    test('delegates entitlement updates to the bridge', () => {
+      const updateData = createEntitlementUpdateData({
+        ttvUserId: 'ttv-1',
+        paintId: 'paint-1',
+        badgeId: 'badge-1',
+      });
       const { result } = renderHook(() =>
         useChatSevenTvCallbacks(defaultProps),
       );
 
       act(() => {
-        result.current.onEntitlementUpdate(
-          createEntitlementUpdateData({
-            ttvUserId: 'ttv-1',
-            paintId: 'paint-1',
-            badgeId: 'badge-1',
-          }),
-        );
+        result.current.onEntitlementUpdate(updateData);
       });
 
-      expect(setUserPaint).toHaveBeenCalledWith('ttv-1', 'paint-1');
-      expect(setUserBadge).toHaveBeenCalledWith('ttv-1', 'badge-1');
-    });
-
-    test('removes user paint/badge when ids are null', () => {
-      const { result } = renderHook(() =>
-        useChatSevenTvCallbacks(defaultProps),
-      );
-
-      act(() => {
-        result.current.onEntitlementUpdate(
-          createEntitlementUpdateData({
-            ttvUserId: 'ttv-1',
-            paintId: null,
-            badgeId: null,
-          }),
-        );
-      });
-
-      expect(removeUserPaint).toHaveBeenCalledWith('ttv-1');
-      expect(removeUserBadge).toHaveBeenCalledWith('ttv-1');
+      expect(applyEntitlementUpdateEvent).toHaveBeenCalledWith(updateData);
     });
   });
 
   describe('onEntitlementDelete', () => {
-    test('removes user paint and badge for ttvUserId', () => {
+    test('delegates entitlement deletes to the bridge', () => {
+      const deleteData = createEntitlementDeleteData({ ttvUserId: 'ttv-1' });
       const { result } = renderHook(() =>
         useChatSevenTvCallbacks(defaultProps),
       );
 
       act(() => {
-        result.current.onEntitlementDelete(
-          createEntitlementDeleteData({ ttvUserId: 'ttv-1' }),
-        );
+        result.current.onEntitlementDelete(deleteData);
       });
 
-      expect(removeUserPaint).toHaveBeenCalledWith('ttv-1');
-      expect(removeUserBadge).toHaveBeenCalledWith('ttv-1');
+      expect(applyEntitlementDeleteEvent).toHaveBeenCalledWith(deleteData);
     });
   });
 });

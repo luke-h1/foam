@@ -1,32 +1,65 @@
 import {
-  fetchUserCosmeticsByTwitchId,
   getBadge,
   getPaint,
+  removeUserBadge,
+  removeUserPaint,
   setUserBadge,
   setUserPaint,
+  syncCachedUserCosmeticsFromStore,
 } from '@app/store/chat/actions/cosmetics';
-import { applyEntitlementCreateEvent } from '@app/store/chat/actions/cosmeticsBridge';
+import {
+  applyEntitlementCreateEvent,
+  applyEntitlementDeleteEvent,
+  applyEntitlementResetEvent,
+  applyEntitlementUpdateEvent,
+  clearEntitlementUserLinkState,
+} from '@app/store/chat/actions/cosmeticsBridge';
+import { handlePersonalEmoteSetEntitlement } from '@app/store/chat/actions/personalEmotes';
 import type { EntitlementCreate } from '@app/types/seventv/cosmetics';
+
+import { createBadgeEntitlement } from './__fixtures__/cosmeticsBridge.fixture';
 
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
   addBadge: jest.fn(),
   addPaint: jest.fn(),
-  fetchUserCosmeticsByTwitchId: jest.fn(() => Promise.resolve()),
   getBadge: jest.fn(),
   getPaint: jest.fn(),
+  removeUserBadge: jest.fn(),
+  removeUserPaint: jest.fn(),
   setUserBadge: jest.fn(),
   setUserPaint: jest.fn(),
+  syncCachedUserCosmeticsFromStore: jest.fn(),
 }));
 
 jest.mock('@app/store/chat/actions/personalEmotes', () => ({
   handlePersonalEmoteSetEntitlement: jest.fn(),
 }));
 
-jest.mock('@app/store/chat/observables/chatStore', () => ({
-  chatStore$: {
-    currentChannelId: { peek: jest.fn(() => 'channel-1') },
-  },
-}));
+jest.mock('@app/store/chat/observables/chatStore', () => {
+  const createRecordObservable = <T>(initial: Record<string, T>) => {
+    let value: Record<string, T> = initial;
+    return {
+      peek: () => value,
+      set: (next: Record<string, T>) => {
+        value = next;
+      },
+    };
+  };
+
+  return {
+    chatStore$: {
+      currentChannelId: { peek: jest.fn(() => 'channel-1') },
+      sevenTvUserLinks: {
+        twitchIdsBySevenTvUserId: createRecordObservable<string[]>({}),
+        sevenTvUserIdByTwitchId: createRecordObservable<string>({}),
+        twitchIdByEntitlementId: createRecordObservable<{
+          kind: 'BADGE' | 'PAINT' | 'EMOTE_SET';
+          twitchUserId: string;
+        }>({}),
+      },
+    },
+  };
+});
 
 jest.mock('@app/utils/logger', () => ({
   logger: {
@@ -35,114 +68,28 @@ jest.mock('@app/utils/logger', () => ({
   },
 }));
 
-const mockFetchUserCosmeticsByTwitchId = jest.mocked(
-  fetchUserCosmeticsByTwitchId,
-);
 const mockGetBadge = jest.mocked(getBadge);
 const mockGetPaint = jest.mocked(getPaint);
 const mockSetUserBadge = jest.mocked(setUserBadge);
 const mockSetUserPaint = jest.mocked(setUserPaint);
-
-function createBadgeEntitlement(
-  badgeId: string,
-  ttvUserId: string,
-): EntitlementCreate {
-  return {
-    id: `entitlement-${badgeId}`,
-    kind: 0,
-    object: {
-      id: `entitlement-${badgeId}`,
-      kind: 'BADGE',
-      ref_id: badgeId,
-      user: {
-        id: 'stv-user-1',
-        username: 'user',
-        display_name: 'User',
-        avatar_url: '',
-        style: { badge_id: badgeId },
-        role_ids: { length: 0 },
-        connections: {
-          0: {
-            id: ttvUserId,
-            platform: 'TWITCH',
-            username: 'user',
-            display_name: 'User',
-            linked_at: 0,
-            emote_capacity: 0,
-            emote_set_id: '',
-          },
-          length: 1,
-        },
-      },
-    },
-  };
-}
+const mockSyncCachedUserCosmeticsFromStore = jest.mocked(
+  syncCachedUserCosmeticsFromStore,
+);
+const mockRemoveUserBadge = jest.mocked(removeUserBadge);
+const mockRemoveUserPaint = jest.mocked(removeUserPaint);
+const mockHandlePersonalEmoteSetEntitlement = jest.mocked(
+  handlePersonalEmoteSetEntitlement,
+);
 
 describe('applyEntitlementCreateEvent', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    clearEntitlementUserLinkState();
     mockGetBadge.mockReturnValue(undefined);
     mockGetPaint.mockReturnValue(undefined);
   });
 
-  test('binds the badge and fetches cosmetics over v4 GQL when the definition is missing', () => {
-    applyEntitlementCreateEvent(
-      {
-        entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
-        kind: 'BADGE',
-        ttvUserId: 'ttv-1',
-        paintId: null,
-        badgeId: 'badge-1',
-      },
-      { requestMissingDefinitions: true },
-    );
-
-    expect(mockSetUserBadge.mock.calls).toEqual([['ttv-1', 'badge-1']]);
-    expect(mockFetchUserCosmeticsByTwitchId.mock.calls).toEqual([['ttv-1']]);
-  });
-
-  test('does not fetch when the badge definition is already loaded', () => {
-    mockGetBadge.mockReturnValue({
-      id: 'badge-1',
-      provider: '7tv',
-      set: 'badge-1',
-      title: 'Badge',
-      type: '7TV Badge',
-      url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
-    });
-
-    applyEntitlementCreateEvent(
-      {
-        entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
-        kind: 'BADGE',
-        ttvUserId: 'ttv-1',
-        paintId: null,
-        badgeId: 'badge-1',
-      },
-      { requestMissingDefinitions: true },
-    );
-
-    expect(mockSetUserBadge.mock.calls).toEqual([['ttv-1', 'badge-1']]);
-    expect(mockFetchUserCosmeticsByTwitchId).not.toHaveBeenCalled();
-  });
-
-  test('never fetches when requestMissingDefinitions is false', () => {
-    applyEntitlementCreateEvent(
-      {
-        entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
-        kind: 'BADGE',
-        ttvUserId: 'ttv-1',
-        paintId: null,
-        badgeId: 'badge-1',
-      },
-      { requestMissingDefinitions: false },
-    );
-
-    expect(mockSetUserBadge.mock.calls).toEqual([['ttv-1', 'badge-1']]);
-    expect(mockFetchUserCosmeticsByTwitchId).not.toHaveBeenCalled();
-  });
-
-  test('binds paints and fetches missing paint definitions over v4 GQL', () => {
+  test('binds paints without fetching missing definitions', () => {
     const entitlement: EntitlementCreate = {
       id: 'entitlement-paint-1',
       kind: 0,
@@ -154,18 +101,390 @@ describe('applyEntitlementCreateEvent', () => {
       },
     };
 
-    applyEntitlementCreateEvent(
-      {
-        entitlement,
-        kind: 'PAINT',
-        ttvUserId: 'ttv-1',
-        paintId: 'paint-1',
-        badgeId: null,
-      },
-      { requestMissingDefinitions: true },
-    );
+    applyEntitlementCreateEvent({
+      entitlement,
+      kind: 'PAINT',
+      ttvUserId: 'ttv-1',
+      paintId: 'paint-1',
+      badgeId: null,
+    });
 
     expect(mockSetUserPaint.mock.calls).toEqual([['ttv-1', 'paint-1']]);
-    expect(mockFetchUserCosmeticsByTwitchId.mock.calls).toEqual([['ttv-1']]);
+  });
+
+  test('binds the badge without issuing an HTTP cosmetics fetch', () => {
+    applyEntitlementCreateEvent({
+      entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
+      kind: 'BADGE',
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-1',
+    });
+
+    expect(mockSetUserBadge.mock.calls).toEqual([['ttv-1', 'badge-1']]);
+    expect(mockSyncCachedUserCosmeticsFromStore.mock.calls).toEqual([
+      ['stv-user-1', 'ttv-1'],
+    ]);
+  });
+
+  test('binds style paint and badge on EMOTE_SET entitlements', () => {
+    const entitlement: EntitlementCreate = {
+      id: 'entitlement-emote-set-1',
+      kind: 0,
+      object: {
+        id: 'entitlement-emote-set-1',
+        kind: 'EMOTE_SET',
+        ref_id: 'emote-set-1',
+        user: createBadgeEntitlement('badge-1', 'ttv-scummy').object.user,
+      },
+    };
+
+    applyEntitlementCreateEvent({
+      entitlement,
+      kind: 'EMOTE_SET',
+      ttvUserId: 'ttv-scummy',
+      paintId: 'paint-1',
+      badgeId: 'badge-scummy',
+    });
+
+    expect(mockSetUserPaint.mock.calls).toEqual([['ttv-scummy', 'paint-1']]);
+    expect(mockSetUserBadge.mock.calls).toEqual([
+      ['ttv-scummy', 'badge-scummy'],
+    ]);
+    expect(mockHandlePersonalEmoteSetEntitlement.mock.calls).toEqual([
+      ['ttv-scummy', 'emote-set-1', 'channel-1'],
+    ]);
+  });
+});
+
+describe('applyEntitlementResetEvent', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    clearEntitlementUserLinkState();
+  });
+
+  test('clears paint and badge bindings for linked Twitch users', () => {
+    applyEntitlementCreateEvent({
+      entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
+      kind: 'BADGE',
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-1',
+    });
+
+    applyEntitlementResetEvent('stv-user-1');
+
+    expect(mockRemoveUserPaint.mock.calls).toEqual([['ttv-1']]);
+    expect(mockRemoveUserBadge.mock.calls).toEqual([['ttv-1']]);
+    expect(mockSyncCachedUserCosmeticsFromStore.mock.calls).toEqual([
+      ['stv-user-1', 'ttv-1'],
+      ['stv-user-1', 'ttv-1'],
+    ]);
+  });
+
+  test('clears reverse 7TV user links when entitlements reset', () => {
+    applyEntitlementCreateEvent({
+      entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
+      kind: 'BADGE',
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-1',
+    });
+
+    applyEntitlementResetEvent('stv-user-1');
+    mockSyncCachedUserCosmeticsFromStore.mockClear();
+
+    applyEntitlementUpdateEvent({
+      ttvUserId: 'ttv-1',
+      paintId: 'paint-1',
+      badgeId: null,
+    });
+
+    expect(mockSyncCachedUserCosmeticsFromStore).not.toHaveBeenCalled();
+  });
+
+  test('forgets remembered entitlement ids when entitlements reset', () => {
+    applyEntitlementCreateEvent({
+      entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
+      kind: 'BADGE',
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-1',
+    });
+
+    applyEntitlementResetEvent('stv-user-1');
+    mockRemoveUserPaint.mockClear();
+    mockRemoveUserBadge.mockClear();
+
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-badge-1',
+      ttvUserId: null,
+    });
+
+    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
+    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
+  });
+
+  test('forgets every remembered entitlement id for a user when entitlements reset', () => {
+    applyEntitlementCreateEvent({
+      entitlement: createBadgeEntitlement('badge-1', 'ttv-1', 'entitlement-1'),
+      kind: 'BADGE',
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-1',
+    });
+    applyEntitlementCreateEvent({
+      entitlement: createBadgeEntitlement('badge-2', 'ttv-1', 'entitlement-2'),
+      kind: 'BADGE',
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-2',
+    });
+
+    applyEntitlementResetEvent('stv-user-1');
+    mockRemoveUserPaint.mockClear();
+    mockRemoveUserBadge.mockClear();
+
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-1',
+      ttvUserId: null,
+    });
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-2',
+      ttvUserId: null,
+    });
+
+    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
+    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
+  });
+});
+
+describe('applyEntitlementUpdateEvent', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    clearEntitlementUserLinkState();
+  });
+
+  test('updates bindings and syncs the per-user cache', () => {
+    applyEntitlementCreateEvent({
+      entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
+      kind: 'BADGE',
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-1',
+    });
+
+    applyEntitlementUpdateEvent({
+      ttvUserId: 'ttv-1',
+      paintId: 'paint-1',
+      badgeId: 'badge-2',
+    });
+
+    expect(mockSetUserPaint.mock.calls).toEqual([['ttv-1', 'paint-1']]);
+    expect(mockSetUserBadge.mock.calls).toEqual([
+      ['ttv-1', 'badge-1'],
+      ['ttv-1', 'badge-2'],
+    ]);
+    expect(mockSyncCachedUserCosmeticsFromStore.mock.calls.at(-1)).toEqual([
+      'stv-user-1',
+      'ttv-1',
+    ]);
+  });
+
+  test('does not remove existing cosmetics when an update omits paint or badge ids', () => {
+    applyEntitlementCreateEvent({
+      entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
+      kind: 'BADGE',
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-1',
+    });
+    applyEntitlementCreateEvent({
+      entitlement: {
+        id: 'entitlement-paint-1',
+        kind: 0,
+        object: {
+          id: 'entitlement-paint-1',
+          kind: 'PAINT',
+          ref_id: 'paint-1',
+          user: createBadgeEntitlement('badge-1', 'ttv-1').object.user,
+        },
+      },
+      kind: 'PAINT',
+      ttvUserId: 'ttv-1',
+      paintId: 'paint-1',
+      badgeId: null,
+    });
+
+    mockRemoveUserPaint.mockClear();
+    mockRemoveUserBadge.mockClear();
+    mockSyncCachedUserCosmeticsFromStore.mockClear();
+
+    applyEntitlementUpdateEvent({
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: null,
+    });
+
+    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
+    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
+    expect(mockSyncCachedUserCosmeticsFromStore).not.toHaveBeenCalled();
+
+    applyEntitlementUpdateEvent({
+      ttvUserId: 'ttv-1',
+      paintId: 'paint-2',
+      badgeId: null,
+    });
+
+    expect(mockSetUserPaint.mock.calls.at(-1)).toEqual(['ttv-1', 'paint-2']);
+    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
+    expect(mockSyncCachedUserCosmeticsFromStore.mock.calls.at(-1)).toEqual([
+      'stv-user-1',
+      'ttv-1',
+    ]);
+  });
+});
+
+describe('applyEntitlementDeleteEvent', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    clearEntitlementUserLinkState();
+  });
+
+  test('clears only the badge binding for a remembered badge entitlement delete', () => {
+    applyEntitlementCreateEvent({
+      entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
+      kind: 'BADGE',
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-1',
+    });
+
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-badge-1',
+      ttvUserId: 'ttv-1',
+    });
+
+    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
+    expect(mockRemoveUserBadge.mock.calls).toEqual([['ttv-1']]);
+    expect(mockSyncCachedUserCosmeticsFromStore.mock.calls.at(-1)).toEqual([
+      'stv-user-1',
+      'ttv-1',
+    ]);
+  });
+
+  test('clears only the badge binding when delete resolves the twitch user from a remembered entitlement id', () => {
+    applyEntitlementCreateEvent({
+      entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
+      kind: 'BADGE',
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-1',
+    });
+
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-badge-1',
+      ttvUserId: null,
+    });
+
+    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
+    expect(mockRemoveUserBadge.mock.calls).toEqual([['ttv-1']]);
+    expect(mockSyncCachedUserCosmeticsFromStore.mock.calls.at(-1)).toEqual([
+      'stv-user-1',
+      'ttv-1',
+    ]);
+  });
+
+  test('clears only the paint binding for a remembered paint entitlement delete', () => {
+    const entitlement: EntitlementCreate = {
+      id: 'entitlement-paint-1',
+      kind: 0,
+      object: {
+        id: 'entitlement-paint-1',
+        kind: 'PAINT',
+        ref_id: 'paint-1',
+        user: createBadgeEntitlement('badge-1', 'ttv-1').object.user,
+      },
+    };
+
+    applyEntitlementCreateEvent({
+      entitlement,
+      kind: 'PAINT',
+      ttvUserId: 'ttv-1',
+      paintId: 'paint-1',
+      badgeId: null,
+    });
+
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-paint-1',
+      ttvUserId: null,
+    });
+
+    expect(mockRemoveUserPaint.mock.calls).toEqual([['ttv-1']]);
+    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
+  });
+
+  test('evicts the oldest remembered entitlement id at the link cap', () => {
+    for (let index = 0; index <= 2000; index += 1) {
+      applyEntitlementCreateEvent({
+        entitlement: createBadgeEntitlement(
+          `badge-${index}`,
+          'ttv-1',
+          `entitlement-${index}`,
+        ),
+        kind: 'BADGE',
+        ttvUserId: 'ttv-1',
+        paintId: null,
+        badgeId: `badge-${index}`,
+      });
+    }
+
+    mockRemoveUserPaint.mockClear();
+    mockRemoveUserBadge.mockClear();
+
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-0',
+      ttvUserId: null,
+    });
+
+    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
+    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
+
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-2000',
+      ttvUserId: null,
+    });
+
+    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
+    expect(mockRemoveUserBadge.mock.calls).toEqual([['ttv-1']]);
+  });
+
+  test('does not clear paint or badge when an evicted entitlement delete still has a twitch user id', () => {
+    for (let index = 0; index <= 2000; index += 1) {
+      applyEntitlementCreateEvent({
+        entitlement: createBadgeEntitlement(
+          `badge-${index}`,
+          'ttv-1',
+          `entitlement-${index}`,
+        ),
+        kind: 'BADGE',
+        ttvUserId: 'ttv-1',
+        paintId: null,
+        badgeId: `badge-${index}`,
+      });
+    }
+
+    mockRemoveUserPaint.mockClear();
+    mockRemoveUserBadge.mockClear();
+    mockSyncCachedUserCosmeticsFromStore.mockClear();
+
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-0',
+      ttvUserId: 'ttv-1',
+    });
+
+    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
+    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
+    expect(mockSyncCachedUserCosmeticsFromStore).not.toHaveBeenCalled();
   });
 });

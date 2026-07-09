@@ -14,6 +14,7 @@ import {
   EntitlementCreate,
   type EntitlementCreateCallbackData,
   type EntitlementDeleteCallbackData,
+  type EntitlementResetCallbackData,
   type EntitlementUpdateCallbackData,
   SevenTvEventData,
   SevenTvEventType,
@@ -51,6 +52,7 @@ export type {
   EntitlementCreate,
   EntitlementCreateCallbackData,
   EntitlementDeleteCallbackData,
+  EntitlementResetCallbackData,
   EntitlementUpdateCallbackData,
   SevenTvEventData,
   SevenTvEventType,
@@ -72,6 +74,7 @@ interface UseSeventvWsOptions {
   onEntitlementCreate?: (data: EntitlementCreateCallbackData) => void;
   onEntitlementUpdate?: (data: EntitlementUpdateCallbackData) => void;
   onEntitlementDelete?: (data: EntitlementDeleteCallbackData) => void;
+  onEntitlementReset?: (data: EntitlementResetCallbackData) => void;
   onEvent?: (
     eventType: SevenTvEventType,
     data: SevenTvEventData<SevenTvEventType>,
@@ -150,6 +153,7 @@ export function useSeventvWs(
   const entitlementCallbackRef = useRef(options?.onEntitlementCreate);
   const entitlementUpdateCallbackRef = useRef(options?.onEntitlementUpdate);
   const entitlementDeleteCallbackRef = useRef(options?.onEntitlementDelete);
+  const entitlementResetCallbackRef = useRef(options?.onEntitlementReset);
   const eventCallbackRef = useRef(options?.onEvent);
   const connectionTimestampRef = useRef<number | null>(null);
   const pathname = usePathname();
@@ -237,6 +241,7 @@ export function useSeventvWs(
   entitlementCallbackRef.current = options?.onEntitlementCreate;
   entitlementUpdateCallbackRef.current = options?.onEntitlementUpdate;
   entitlementDeleteCallbackRef.current = options?.onEntitlementDelete;
+  entitlementResetCallbackRef.current = options?.onEntitlementReset;
   eventCallbackRef.current = options?.onEvent;
   twitchChannelIdRef.current = options?.twitchChannelId;
   sevenTvEmoteSetIdRef.current = options?.sevenTvEmoteSetId;
@@ -507,6 +512,18 @@ export function useSeventvWs(
           });
         } catch (error) {
           logEventHandlerError('entitlement.delete', error);
+        }
+        break;
+      }
+
+      case 'applyEntitlementReset': {
+        logger.stvWs.info(`💚 Received WS 'entitlement.reset' event`);
+        try {
+          entitlementResetCallbackRef.current?.({
+            sevenTvUserId: decision.sevenTvUserId,
+          });
+        } catch (error) {
+          logEventHandlerError('entitlement.reset', error);
         }
         break;
       }
