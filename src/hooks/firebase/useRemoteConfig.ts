@@ -107,21 +107,16 @@ async function fetchRemoteConfig(): Promise<boolean> {
 function readRemoteConfig(): RemoteConfigType {
   const allConfig = getAll(remoteConfig);
   return Object.fromEntries(
-    Object.entries(allConfig).flatMap(([key, entry]) => {
-      if (!(key in defaultRemoteConfig)) {
-        return [];
-      }
-
-      const raw = entry.asString();
+    (Object.keys(defaultRemoteConfig) as RemoteConfigKey[]).map(key => {
+      const entry = allConfig[key];
+      const raw = entry?.asString() ?? defaultRemoteConfig[key];
       return [
-        [
-          key,
-          {
-            raw,
-            value: parseRemoteConfigValue(key as RemoteConfigKey, raw),
-            source: entry.getSource(),
-          } satisfies RemoteConfigEntry<RemoteConfigSchema[RemoteConfigKey]>,
-        ],
+        key,
+        {
+          raw,
+          value: parseRemoteConfigValue(key, raw),
+          source: entry?.getSource() ?? 'default',
+        } satisfies RemoteConfigEntry<RemoteConfigSchema[RemoteConfigKey]>,
       ];
     }),
   ) as RemoteConfigType;
