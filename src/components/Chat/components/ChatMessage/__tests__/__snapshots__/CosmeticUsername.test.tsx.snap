@@ -5,6 +5,7 @@ exports[`PaintedUsername Snapshots should match snapshot with URL paint (solid c
   style={
     {
       "alignSelf": "flex-start",
+      "overflow": "visible",
       "position": "relative",
     }
   }
@@ -254,6 +255,7 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
   style={
     {
       "alignSelf": "flex-start",
+      "overflow": "visible",
       "position": "relative",
     }
   }
@@ -297,7 +299,7 @@ exports[`PaintedUsername Snapshots should match snapshot with linear gradient pa
               "height": 0,
               "width": 0,
             },
-            "textShadowRadius": 0.1,
+            "textShadowRadius": 0.30000000000000004,
             "top": 0,
           },
         ],
@@ -535,6 +537,7 @@ exports[`PaintedUsername Snapshots should match snapshot with long username 1`] 
   style={
     {
       "alignSelf": "flex-start",
+      "overflow": "visible",
       "position": "relative",
     }
   }
@@ -767,6 +770,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
   style={
     {
       "alignSelf": "flex-start",
+      "overflow": "visible",
       "position": "relative",
     }
   }
@@ -810,7 +814,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
               "height": 0,
               "width": 0,
             },
-            "textShadowRadius": 0.1,
+            "textShadowRadius": 0.30000000000000004,
             "top": 0,
           },
         ],
@@ -859,7 +863,7 @@ exports[`PaintedUsername Snapshots should match snapshot with multiple shadows 1
               "height": 0,
               "width": 0,
             },
-            "textShadowRadius": 1,
+            "textShadowRadius": 3,
             "top": 0,
           },
         ],
@@ -1097,6 +1101,7 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
   style={
     {
       "alignSelf": "flex-start",
+      "overflow": "visible",
       "position": "relative",
     }
   }
@@ -1140,7 +1145,7 @@ exports[`PaintedUsername Snapshots should match snapshot with radial gradient pa
               "height": 0,
               "width": 0,
             },
-            "textShadowRadius": 0.1,
+            "textShadowRadius": 0.30000000000000004,
             "top": 0,
           },
         ],

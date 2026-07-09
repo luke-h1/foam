@@ -19,11 +19,8 @@ const textStyleCache = new WeakMap<PaintData, TextStyle>();
 const textShadowsCache = new WeakMap<PaintData, PaintShadow[]>();
 
 /**
- * Styles that change glyph shape (weight, transform). These must be applied
- * to the mask text, the fill sizer, and every shadow underlay so all layers
- * share identical metrics. Stroke and shadows are rendered as separate
- * underlay layers instead, matching the extension's compositing order
- * (shadow behind stroke behind fill).
+ * Styles that change glyph shape (weight, transform). Applied to every painted
+ * username layer so mask, fill, and shadow copies share identical metrics.
  */
 export function buildPaintUsernameTextStyle(paint: PaintData): TextStyle {
   const cached = textStyleCache.get(paint);
@@ -70,19 +67,6 @@ export function getPaintTextShadows(paint: PaintData): PaintShadow[] {
 export function getPaintTextStroke(paint: PaintData): PaintTextStroke | null {
   const stroke = paint.textStyle?.stroke;
   return stroke?.width ? stroke : null;
-}
-
-/**
- * Approximates -webkit-text-stroke with a same-position glyph copy in the
- * stroke color, blurred outward by the stroke width.
- */
-export function paintStrokeToShadow(stroke: PaintTextStroke): PaintShadow {
-  return {
-    color: stroke.color,
-    radius: stroke.width,
-    x_offset: 0,
-    y_offset: 0,
-  };
 }
 
 export function paintShadowTextColor(shadow: PaintShadow): string {
