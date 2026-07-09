@@ -1,0 +1,217 @@
+name: Cursor review
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+concurrency:
+  group: cursor-${{ github.event.pull_request.number }}-${{ github.event.review.id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  cursor:
+    # Runs automatically once Sentry finishes reviewing (its bot submits a PR review).
+    if: |
+      github.repository == 'luke-h1/foam' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.draft == false &&
+      startsWith(github.event.review.user.login, 'sentry') &&
+      github.event.review.user.type == 'Bot' &&
+      (
+        vars.CURSOR_REVIEW_ENABLED == 'true' ||
+        contains(github.event.pull_request.labels.*.name, 'cursor-review')
+      )
+    runs-on: ubuntu-latest
+    outputs:
+      pr_number: ${{ steps.context.outputs.pr_number }}
+      head_sha: ${{ steps.context.outputs.head_sha }}
+    steps:
+      - name: Resolve pull request context
+        id: context
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            core.setOutput('pr_number', String(context.payload.pull_request.number));
+            core.setOutput('head_sha', context.payload.pull_request.head.sha);
+            core.setOutput('ref', `refs/pull/${context.payload.pull_request.number}/merge`);
+
+      - name: Checkout pull request
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          ref: ${{ steps.context.outputs.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Build Cursor prompt
+        env:
+          SENTRY_REVIEW_BODY: ${{ github.event.review.body }}
+        run: |
+          set -euo pipefail
+          prompt_file=".github/cursor/review-run.md"
+          review_prompt=".github/claude-review-prompt.md"
+
+          mkdir -p "$(dirname "$prompt_file")"
+          cp "$review_prompt" "$prompt_file"
+
+          if [ -n "${SENTRY_REVIEW_BODY:-}" ]; then
+            {
+              printf '\n\n## Sentry has already reviewed this PR\n\n'
+              printf 'Sentry posted the review below. Do not repeat its findings; build on them and cover what it missed.\n\n%s\n' "$SENTRY_REVIEW_BODY"
+            } >> "$prompt_file"
+          fi
+
+      - name: Load secrets
+        uses: 1password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259 # v4.0.0
+        with:
+          export-env: true
+          version: 2.34.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          CURSOR_API_KEY: op://ci-cd/foam-mobile-production/CURSOR_API_KEY
+
+      - name: Install Cursor CLI
+        run: |
+          set -euo pipefail
+          curl https://cursor.com/install -fsS | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Run Cursor
+        id: run_cursor
+        run: |
+          set -euo pipefail
+          cursor-agent \
+            --force \
+            --model composer-2.5 \
+            --output-format text \
+            -p "$(cat .github/cursor/review-run.md)" \
+            | tee cursor-output.md
+
+      - name: Upload Cursor output
+        if: steps.run_cursor.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cursor-output
+          path: cursor-output.md
+          if-no-files-found: ignore
+
+  post_feedback:
+    name: Post Cursor feedback
+    runs-on: ubuntu-latest
+    needs: cursor
+    if: needs.cursor.result == 'success'
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Download Cursor output
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: cursor-output
+
+      - name: Post Cursor comments
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const outputPath = path.join(process.env.GITHUB_WORKSPACE, 'cursor-output.md');
+            if (!fs.existsSync(outputPath)) {
+              core.info('No cursor-output.md found; skipping comments.');
+              return;
+            }
+
+            const content = fs.readFileSync(outputPath, 'utf8').trim();
+            if (!content) {
+              core.info('Empty cursor output; skipping comments.');
+              return;
+            }
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number = Number(process.env.PR_NUMBER);
+            const commit_id = process.env.HEAD_SHA;
+
+            const delimiter = '---REVIEW_COMMENT---';
+            const blocks = content
+              .split(delimiter)
+              .map((block) => block.trim())
+              .filter(Boolean);
+
+            // Parse one "Severity/Location/Finding" block into structured fields.
+            const parseBlock = (block) => {
+              const severity = (block.match(/^Severity:\s*(.+)$/im) || [])[1]?.trim() || '';
+              const location = (block.match(/^Location:\s*(.+)$/im) || [])[1]?.trim() || '';
+              const finding = (block.split(/^Finding:\s*$/im)[1] || block).trim();
+              let file = null;
+              let line = null;
+              const m = location.match(/^(.+?):(\d+)(?:-(\d+))?$/);
+              if (m) {
+                file = m[1].trim();
+                // Anchor a range to its last line, matching how review comments attach.
+                line = Number(m[3] || m[2]);
+              }
+              return { severity, location, finding, file, line, raw: block };
+            };
+
+            const parsed = (blocks.length > 0 ? blocks : [content]).map(parseBlock);
+
+            // The "no findings" case: single top-level note, no inline anchoring.
+            const onlyNone =
+              parsed.length === 1 && /^none$/i.test(parsed[0].severity);
+            if (onlyNone) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pull_number,
+                body: `## Cursor review\n\n${parsed[0].raw}`,
+              });
+              return;
+            }
+
+            const formatBody = (f) => {
+              const sev = f.severity ? `**${f.severity}**` : 'finding';
+              return `**Cursor review** - ${sev}\n\n${f.finding}`;
+            };
+
+            for (const f of parsed) {
+              const anchorable = f.file && Number.isFinite(f.line);
+              if (anchorable) {
+                try {
+                  await github.rest.pulls.createReviewComment({
+                    owner,
+                    repo,
+                    pull_number,
+                    commit_id,
+                    path: f.file,
+                    line: f.line,
+                    side: 'RIGHT',
+                    body: formatBody(f),
+                  });
+                  continue;
+                } catch (err) {
+                  // Line isn't part of the diff (422) or otherwise unattachable;
+                  // fall through to a top-level comment so the finding is not lost.
+                  core.warning(
+                    `Inline comment failed for ${f.location}: ${err.message}. Posting as top-level comment.`,
+                  );
+                }
+              }
+
+              const heading = f.location
+                ? `## Cursor review\n\n**Location:** \`${f.location}\``
+                : '## Cursor review';
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pull_number,
+                body: `${heading}\n\n${formatBody(f)}`,
+              });
+            }
+        env:
+          PR_NUMBER: ${{ needs.cursor.outputs.pr_number }}
+          HEAD_SHA: ${{ needs.cursor.outputs.head_sha }}

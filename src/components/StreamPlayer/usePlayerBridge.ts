@@ -1,4 +1,10 @@
-import { useCallback, useImperativeHandle, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import type { Ref } from 'react';
 import type { WebViewMessageEvent } from 'react-native-webview';
 
@@ -10,6 +16,11 @@ import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
 import { countMetric } from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 
+import {
+  createPlayerTelemetry,
+  type PlayerContentKind,
+  type PlayerTelemetry,
+} from './playerTelemetry';
 import {
   createStabilityRecovery,
   type StabilityRecovery,
@@ -26,6 +37,8 @@ import { interpretPlayerMessage } from './util/playerBridgeInterpreter';
 interface UsePlayerBridgeOptions {
   autoplay: boolean;
   channel?: string;
+  clip?: string;
+  contentKind: PlayerContentKind;
   deferOverlayUntilUserUnmute: boolean;
   enhancedStabilityEnabled: boolean;
   forceRefresh: () => void;
@@ -43,6 +56,7 @@ interface UsePlayerBridgeOptions {
   runJavaScript: (script: string) => void;
   scheduleAuthCompletionReload: () => void;
   sourceKey: string;
+  video?: string;
   webViewKey: number;
 }
 
@@ -53,6 +67,8 @@ function assertUnreachableAction(action: never): never {
 export function usePlayerBridge({
   autoplay,
   channel,
+  clip,
+  contentKind,
   deferOverlayUntilUserUnmute,
   enhancedStabilityEnabled,
   forceRefresh,
@@ -70,6 +86,7 @@ export function usePlayerBridge({
   runJavaScript,
   scheduleAuthCompletionReload,
   sourceKey,
+  video,
   webViewKey,
 }: UsePlayerBridgeOptions) {
   const [playerState, setPlayerState] = useState<PlayerState>({
@@ -136,6 +153,25 @@ export function usePlayerBridge({
     });
   }
   const stability = stabilityRef.current;
+  const telemetryRef = useRef<PlayerTelemetry | null>(null);
+  if (telemetryRef.current === null) {
+    telemetryRef.current = createPlayerTelemetry();
+  }
+  const telemetry = telemetryRef.current;
+  const activeLoadKeyRef = useRef<string | null>(null);
+  const loadKey = `${sourceKey}:${webViewKey}`;
+
+  if (activeLoadKeyRef.current !== loadKey) {
+    activeLoadKeyRef.current = loadKey;
+    telemetry.beginLoad({
+      autoplay,
+      channel,
+      clip,
+      contentKind,
+      video,
+    });
+  }
+
   const [prevPlayerSource, setPrevPlayerSource] = useState({
     autoplay,
     sourceKey,
@@ -177,6 +213,14 @@ export function usePlayerBridge({
   }, []);
 
   useUnmountCallback(disposeStability);
+
+  // Dispose on unmount only; beginLoad() already retires the prior session on each
+  // load, so keying this on loadKey would kill the freshly-started one.
+  useEffect(() => {
+    return () => {
+      telemetry.dispose();
+    };
+  }, [telemetry]);
 
   const onContentGateChangeRef = useSyncRef(onContentGateChange);
   const notifyContentGateChange = (nextHasContentGate: boolean) => {
@@ -426,6 +470,15 @@ export function usePlayerBridge({
       case 'markPlaybackBlockedReported':
         reportedPlaybackBlockedRef.current = true;
         break;
+      case 'recordLoadFailed':
+        telemetry.noteLoadFailed(action.reason, action.error);
+        break;
+      case 'recordPlaybackFreeze':
+        telemetry.noteFreeze({ stalled_ms: action.stalledMs });
+        break;
+      case 'recordPlaybackStarted':
+        telemetry.notePlaybackStarted(action.startSource);
+        break;
       case 'notifyEnded':
         onEnded?.();
         break;
@@ -547,6 +600,9 @@ export function usePlayerBridge({
   return {
     handleMessage,
     hasContentGate,
+    noteWebViewLoadFailed: telemetry.noteLoadFailed,
+    noteWebViewPlaybackStarted: () =>
+      telemetry.notePlaybackStarted('webview_loaded'),
     overlayUnlocked,
     pause,
     pipActive,

@@ -3,6 +3,7 @@ import type { WebViewProps } from 'react-native-webview';
 
 import { act, render } from '@testing-library/react-native';
 
+import type { LogMetadata } from '@app/lib/sentry';
 import { logger } from '@app/utils/logger';
 
 const mockInjectJavaScript = jest.fn();
@@ -45,7 +46,22 @@ jest.mock('react-native/Libraries/Interaction/InteractionManager', () => ({
 
 jest.mock('@app/lib/sentry', () => ({
   countMetric: jest.fn(),
+  endSpan: jest.fn(),
   forwardLogToSentry: jest.fn(),
+  startInactiveSpan: jest.fn(),
+}));
+
+jest.mock('@app/hooks/firebase/useRemoteConfig', () => ({
+  useRemoteConfig: jest.fn(() => ({
+    config: {
+      twitchPlayerEmbedParent: {
+        value: 'www.twitch.tv',
+      },
+    },
+    refetch: jest.fn(),
+    isRefetching: false,
+    isLoading: false,
+  })),
 }));
 
 jest.mock('react-native-safe-area-context', () => ({
@@ -100,7 +116,7 @@ describe('StreamPlayer component messaging', () => {
     const onPlaybackLatencyChange = jest.fn();
     const onPlay = jest.fn();
     const onReady = jest.fn();
-    const warnSpy = jest.spyOn(logger.main, 'warn').mockImplementation();
+    const warnSpy = jest.spyOn(logger.main, 'error').mockImplementation();
 
     render(
       <StreamPlayer
@@ -123,6 +139,7 @@ describe('StreamPlayer component messaging', () => {
     );
 
     sendPlayerMessage('ready');
+    sendPlayerMessage('error', { message: 'embed failed' });
     sendPlayerMessage('play');
     sendPlayerMessage('playing');
     sendPlayerMessage('pause');
@@ -132,7 +149,6 @@ describe('StreamPlayer component messaging', () => {
     sendPlayerMessage('contentGateDetected', { hasContentGate: true });
     sendPlayerMessage('playbackStats', { hlsLatencyBroadcaster: 3.4 });
     sendPlayerMessage('muteState', { muted: false, volume: 1 });
-    sendPlayerMessage('error', { message: 'embed failed' });
 
     expect(onReady).toHaveBeenCalledTimes(1);
     expect(onPlay).toHaveBeenCalledTimes(1);
@@ -143,10 +159,26 @@ describe('StreamPlayer component messaging', () => {
     expect(onContentGateChange).toHaveBeenCalledWith(true);
     expect(onPlaybackLatencyChange).toHaveBeenCalledWith(3.4);
     expect(onError).toHaveBeenCalledWith('embed failed');
-    expect(warnSpy).toHaveBeenCalledWith(
-      '[StreamPlayer:embed ERROR]',
-      'embed failed',
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    const embedErrorMetadata = warnSpy.mock.calls[0]?.[1] as
+      LogMetadata | undefined;
+    expect(warnSpy.mock.calls[0]?.[0]).toBe(
+      '[StreamPlayer:embed ERROR] embed failed',
     );
+    expect(embedErrorMetadata).toEqual<LogMetadata>({
+      name: 'twitch_player_error',
+      exceptionName: 'StreamPlayerEmbedError',
+      fingerprint: ['stream-player-embed-error'],
+      channel: 'cohhcarnage',
+      message: 'embed failed',
+      elapsedMs: embedErrorMetadata?.elapsedMs,
+      autoplay: false,
+      content_kind: 'live',
+      elapsed_ms: embedErrorMetadata?.elapsed_ms,
+      outcome: 'failed',
+      reason: 'embed_error',
+    });
+    expect(typeof embedErrorMetadata?.elapsedMs).toBe('number');
   });
 
   test('resumes autoplay after a transient player pause', () => {

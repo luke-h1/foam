@@ -222,9 +222,9 @@ export interface StreamPlayerProps {
    */
   onWebViewLoaded?: () => void;
   /**
-   * Parent domain for Twitch embed. Must be an HTTPS domain you added in the
-   * Twitch Developer Console (e.g. foam-app.com). We send Referer/Origin so Twitch validates.
-   * @default 'foam-app.com'
+   * Parent domain for Twitch embed. On native, {@link StreamPlayer} reads
+   * `twitchPlayerEmbedParent` from remote config instead. Web uses this prop
+   * (or the page hostname) when no remote config is available.
    */
   parent?: string;
   /**

@@ -65,6 +65,7 @@ describe('interpretPlayerMessage', () => {
         { type: 'cancelTransientResume' },
         { type: 'notifyStability', event: 'playing' },
         { type: 'markFirstPlayingReported' },
+        { type: 'recordPlaybackStarted', startSource: 'bridge_playing' },
         {
           type: 'countMetric',
           name: 'stream.playing',
@@ -106,21 +107,40 @@ describe('interpretPlayerMessage', () => {
     });
 
     test('falls back to an unknown channel tag when no channel is set', () => {
-      const actions = interpretPlayerMessage(
-        { type: 'playing' },
-        createBridgeContext({ channel: undefined }),
-      );
-
-      const metric = actions.find(action => action.type === 'countMetric');
-      expect(metric).toEqual<PlayerBridgeAction>({
-        type: 'countMetric',
-        name: 'stream.playing',
-        attributes: {
-          autoplay: true,
-          channel: 'unknown',
-          component: 'StreamPlayer',
+      expect(
+        interpretPlayerMessage(
+          { type: 'playing' },
+          createBridgeContext({ channel: undefined }),
+        ),
+      ).toEqual<PlayerBridgeAction[]>([
+        { type: 'cancelTransientResume' },
+        { type: 'notifyStability', event: 'playing' },
+        { type: 'markFirstPlayingReported' },
+        { type: 'recordPlaybackStarted', startSource: 'bridge_playing' },
+        {
+          type: 'countMetric',
+          name: 'stream.playing',
+          attributes: {
+            autoplay: true,
+            channel: 'unknown',
+            component: 'StreamPlayer',
+          },
         },
-      });
+        {
+          type: 'log',
+          level: 'info',
+          message: 'first playing',
+          args: [
+            {
+              name: 'twitch_player_info',
+              channel: undefined,
+              elapsedMs: 2_500,
+            },
+          ],
+        },
+        { type: 'setPaused', isPaused: false },
+        { type: 'notifyPlay' },
+      ]);
     });
   });
 
@@ -366,7 +386,15 @@ describe('interpretPlayerMessage', () => {
   });
 
   describe('error', () => {
-    test('logs and notifies with the embed error message', () => {
+    test('records load failure, logs and notifies with the embed error message', () => {
+      const embedErrorMetadata = {
+        name: 'twitch_player_error',
+        exceptionName: 'StreamPlayerEmbedError',
+        fingerprint: ['stream-player-embed-error'],
+        channel: 'sodapoppin',
+        elapsedMs: 2_500,
+        message: 'embed exploded',
+      };
       expect(
         interpretPlayerMessage(
           { type: 'error', payload: { message: 'embed exploded' } },
@@ -374,16 +402,29 @@ describe('interpretPlayerMessage', () => {
         ),
       ).toEqual<PlayerBridgeAction[]>([
         {
+          type: 'recordLoadFailed',
+          reason: 'embed_error',
+          error: embedErrorMetadata,
+        },
+        {
           type: 'log',
           level: 'warn',
-          message: '[StreamPlayer:embed ERROR]',
-          args: ['embed exploded'],
+          message: '[StreamPlayer:embed ERROR] embed exploded',
+          args: [embedErrorMetadata],
         },
         { type: 'notifyError', message: 'embed exploded' },
       ]);
     });
 
     test('falls back to a generic message when the payload is missing', () => {
+      const embedErrorMetadata = {
+        name: 'twitch_player_error',
+        exceptionName: 'StreamPlayerEmbedError',
+        fingerprint: ['stream-player-embed-error'],
+        channel: 'sodapoppin',
+        elapsedMs: 2_500,
+        message: 'Unknown embed error',
+      };
       expect(
         interpretPlayerMessage(
           JSON.parse('{"type":"error"}') as PlayerMessage,
@@ -391,10 +432,15 @@ describe('interpretPlayerMessage', () => {
         ),
       ).toEqual<PlayerBridgeAction[]>([
         {
+          type: 'recordLoadFailed',
+          reason: 'embed_error',
+          error: embedErrorMetadata,
+        },
+        {
           type: 'log',
           level: 'warn',
-          message: '[StreamPlayer:embed ERROR]',
-          args: [undefined],
+          message: '[StreamPlayer:embed ERROR] Unknown embed error',
+          args: [embedErrorMetadata],
         },
         { type: 'notifyError', message: 'Unknown embed error' },
       ]);
@@ -529,6 +575,10 @@ describe('interpretPlayerMessage', () => {
         PlayerBridgeAction[]
       >([
         {
+          type: 'recordPlaybackFreeze',
+          stalledMs: 6000,
+        },
+        {
           type: 'log',
           level: 'error',
           message: 'playback stalled for 6000ms',
@@ -556,7 +606,30 @@ describe('interpretPlayerMessage', () => {
         createBridgeContext({ enhancedStabilityEnabled: false }),
       );
 
-      expect(actions.map(action => action.type)).toEqual(['log']);
+      expect(actions).toEqual<PlayerBridgeAction[]>([
+        {
+          type: 'recordPlaybackFreeze',
+          stalledMs: 6000,
+        },
+        {
+          type: 'log',
+          level: 'error',
+          message: 'playback stalled for 6000ms',
+          args: [
+            {
+              name: 'twitch_player_error',
+              exceptionName: 'StreamPlaybackStalled',
+              fingerprint: ['stream-playback-stalled'],
+              channel: 'sodapoppin',
+              currentTime: 10,
+              networkState: 2,
+              readyState: 2,
+              stalledMs: 6000,
+              elapsedMs: 2_500,
+            },
+          ],
+        },
+      ]);
     });
 
     test('ignores playbackStalled when payload is missing', () => {
