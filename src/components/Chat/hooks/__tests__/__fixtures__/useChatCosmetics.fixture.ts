@@ -1,6 +1,10 @@
 type CachedCosmeticsMocks = {
-  getUserBadgeId: jest.Mock<string | undefined, [string]>;
-  getUserPaintId: jest.Mock<string | undefined, [string]>;
+  getUserBadgeId: jest.MockedFunction<
+    (ttvUserId: string) => string | undefined
+  >;
+  getUserPaintId: jest.MockedFunction<
+    (ttvUserId: string) => string | undefined
+  >;
 };
 
 export function setCachedCosmetics(
