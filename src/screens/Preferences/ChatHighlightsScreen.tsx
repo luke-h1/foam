@@ -32,6 +32,8 @@ const HIGHLIGHT_COLORS = [
   theme.colorRed,
 ] as const;
 
+const EMPTY_HIGHLIGHTS: CustomHighlight[] = [];
+
 function HighlightRow({
   highlight,
   onRemove,
@@ -164,7 +166,7 @@ export function ChatHighlightsScreen() {
 
   useScrollToTop(listRef);
 
-  const highlights = customHighlights ?? [];
+  const highlights = customHighlights ?? EMPTY_HIGHLIGHTS;
 
   const handleAdd = useCallback(() => {
     const phrase = normaliseHighlightPhrase(inputValue);

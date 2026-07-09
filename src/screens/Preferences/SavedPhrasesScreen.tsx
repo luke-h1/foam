@@ -45,6 +45,8 @@ function createPhraseId(text: string) {
   return `${Date.now()}_${text}`;
 }
 
+const EMPTY_PHRASES: SavedPhrase[] = [];
+
 function PhraseRow({
   phrase,
   isEditing,
@@ -166,7 +168,7 @@ function NativeSavedPhrasesList() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const phraseText = useNativeState('');
 
-  const phrases = savedPhrases ?? [];
+  const phrases = savedPhrases ?? EMPTY_PHRASES;
 
   const handleNativeSave = () => {
     const text = phraseText.value.trim();
@@ -276,7 +278,7 @@ export function SavedPhrasesScreen() {
 
   useScrollToTop(listRef);
 
-  const phrases = savedPhrases ?? [];
+  const phrases = savedPhrases ?? EMPTY_PHRASES;
 
   const handleSave = useCallback(() => {
     const text = inputValue.trim();
