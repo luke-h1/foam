@@ -98,21 +98,21 @@ describe('findBadges', () => {
     );
 
     test('uses source badges for shared chat messages', () => {
-      const sourceSubscriberBadge = {
+      const sourceSubscriberBadge: SanitisedBadgeSet = {
         id: '3',
         url: 'https://example.com/source-sub.png',
         type: 'Twitch Subscriber Badge',
         title: 'Source 3-Month Subscriber',
         set: 'subscriber',
-      } as const;
+      };
 
-      const targetSubscriberBadge = {
+      const targetSubscriberBadge: SanitisedBadgeSet = {
         id: '1',
         url: 'https://example.com/target-sub.png',
         type: 'Twitch Subscriber Badge',
         title: 'Target Subscriber',
         set: 'subscriber',
-      } as const;
+      };
 
       const userstate: UserStateTags = {
         'badges-raw': 'subscriber/1',
@@ -149,21 +149,21 @@ describe('findBadges', () => {
     });
 
     test('uses source badges when the source room is the current room', () => {
-      const sourceSubscriberBadge = {
+      const sourceSubscriberBadge: SanitisedBadgeSet = {
         id: '3',
         url: 'https://example.com/source-sub.png',
         type: 'Twitch Subscriber Badge',
         title: 'Source 3-Month Subscriber',
         set: 'subscriber',
-      } as const;
+      };
 
-      const targetSubscriberBadge = {
+      const targetSubscriberBadge: SanitisedBadgeSet = {
         id: '1',
         url: 'https://example.com/target-sub.png',
         type: 'Twitch Subscriber Badge',
         title: 'Target Subscriber',
         set: 'subscriber',
-      } as const;
+      };
 
       const userstate: UserStateTags = {
         'badges-raw': 'subscriber/1',
@@ -200,21 +200,21 @@ describe('findBadges', () => {
     });
 
     test('prefers one channel badge over global fallback for the same raw badge', () => {
-      const channelBadge = {
+      const channelBadge: SanitisedBadgeSet = {
         id: '1000',
         url: 'https://example.com/channel-bits.png',
         type: 'Twitch Bit Badge',
         title: 'Channel Cheer 1000',
         set: 'bits',
-      } as const;
+      };
 
-      const globalBadge = {
+      const globalBadge: SanitisedBadgeSet = {
         id: 'bits_1000',
         url: 'https://example.com/global-bits.png',
         type: 'Twitch Global Badge',
         title: 'Global Cheer 1000',
         set: 'bits',
-      } as const;
+      };
 
       const userstate: UserStateTags = {
         'badges-raw': 'bits/1000',
@@ -248,21 +248,21 @@ describe('findBadges', () => {
     });
 
     test('falls back to global subscriber badges when the channel tier has no url', () => {
-      const channelSubscriberBadge = {
+      const channelSubscriberBadge: SanitisedBadgeSet = {
         id: '12',
         url: '',
         type: 'Twitch Subscriber Badge',
         title: 'Broken Channel Sub',
         set: 'subscriber',
-      } as const;
+      };
 
-      const globalSubscriberBadge = {
+      const globalSubscriberBadge: SanitisedBadgeSet = {
         id: 'subscriber_12',
         url: 'https://example.com/global-sub.png',
         type: 'Twitch Global Badge',
         title: '12-Month Subscriber',
         set: 'subscriber',
-      } as const;
+      };
 
       const userstate: UserStateTags = {
         'badges-raw': 'subscriber/12',

@@ -119,19 +119,6 @@ export const applyCosmeticCreateEvent = (
   }
 };
 
-function bindEmoteSetStyleCosmetics(
-  ttvUserId: string,
-  paintId: string | null,
-  badgeId: string | null,
-): void {
-  if (paintId) {
-    setUserPaint(ttvUserId, paintId);
-  }
-  if (badgeId) {
-    setUserBadge(ttvUserId, badgeId);
-  }
-}
-
 /**
  * Bind an entitlement to its Twitch user. Paint and badge definitions are
  * expected from `cosmetic.create` WebSocket events.
@@ -156,7 +143,12 @@ export const applyEntitlementCreateEvent = (data: {
   }
 
   if (kind === 'EMOTE_SET' && ttvUserId) {
-    bindEmoteSetStyleCosmetics(ttvUserId, data.paintId, data.badgeId);
+    if (data.paintId) {
+      setUserPaint(ttvUserId, data.paintId);
+    }
+    if (data.badgeId) {
+      setUserBadge(ttvUserId, data.badgeId);
+    }
   }
 
   if (kind === 'PAINT') {
@@ -223,8 +215,6 @@ export const applyEntitlementUpdateEvent = (data: {
     return;
   }
 
-  // Null means "not present in this update", not "unequip". Removals come
-  // through entitlement.delete / entitlement.reset.
   if (paintId) {
     setUserPaint(ttvUserId, paintId);
   }
