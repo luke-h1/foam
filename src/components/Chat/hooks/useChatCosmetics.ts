@@ -7,7 +7,6 @@ import {
   getUserBadge,
   getUserBadgeId,
   getUserPaintId,
-  hasUserPaint,
   requestUserCosmeticsViaPresence,
 } from '@app/store/chat/actions/cosmetics';
 import { logger } from '@app/utils/logger';
@@ -31,7 +30,7 @@ export function useChatCosmetics(options: { userId?: string | null } = {}) {
       return;
     }
 
-    if (hasUserPaint(userId) && getUserBadgeId(userId)) {
+    if (hasRenderableCosmetics(userId)) {
       return;
     }
 

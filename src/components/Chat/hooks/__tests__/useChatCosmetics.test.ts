@@ -6,7 +6,6 @@ import {
   getUserBadge,
   getUserBadgeId,
   getUserPaintId,
-  hasUserPaint,
   requestUserCosmeticsViaPresence,
 } from '@app/store/chat/actions/cosmetics';
 
@@ -23,7 +22,6 @@ jest.mock('@app/store/chat/actions/cosmetics', () => ({
   getUserBadge: jest.fn(),
   getUserBadgeId: jest.fn(),
   getUserPaintId: jest.fn(),
-  hasUserPaint: jest.fn(),
   requestUserCosmeticsViaPresence: jest.fn(() => Promise.resolve()),
 }));
 
@@ -38,7 +36,6 @@ const mockFetchAndCacheUserCosmetics = jest.mocked(fetchAndCacheUserCosmetics);
 const mockGetUserBadge = jest.mocked(getUserBadge);
 const mockGetUserBadgeId = jest.mocked(getUserBadgeId);
 const mockGetUserPaintId = jest.mocked(getUserPaintId);
-const mockHasUserPaint = jest.mocked(hasUserPaint);
 const mockRequestUserCosmeticsViaPresence = jest.mocked(
   requestUserCosmeticsViaPresence,
 );
@@ -68,7 +65,6 @@ describe('useChatCosmetics', () => {
     mockGetUserBadge.mockReturnValue(undefined);
     mockGetUserBadgeId.mockReturnValue(undefined);
     mockGetUserPaintId.mockReturnValue(undefined);
-    mockHasUserPaint.mockReturnValue(false);
   });
 
   test('bootstraps the signed-in user cosmetics on mount', async () => {
@@ -87,8 +83,19 @@ describe('useChatCosmetics', () => {
   });
 
   test('skips self bootstrap when paint and badge bindings are already known', async () => {
-    mockHasUserPaint.mockReturnValue(true);
-    mockGetUserBadgeId.mockReturnValue('badge-1');
+    setCachedCosmetics({
+      badgeId: 'badge-1',
+      paintId: 'paint-1',
+      twitchUserId: 'ttv-self',
+    });
+    mockGetUserBadge.mockReturnValue({
+      id: 'badge-1',
+      url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
+      type: '7TV Badge',
+      title: 'Supporter',
+      set: 'badge-1',
+      provider: '7tv',
+    });
 
     renderHook(() =>
       useChatCosmetics({
@@ -100,6 +107,26 @@ describe('useChatCosmetics', () => {
       await Promise.resolve();
     });
 
+    expect(mockFetchAndCacheUserCosmetics).not.toHaveBeenCalled();
+  });
+
+  test('skips self bootstrap when only paint is known', async () => {
+    setCachedCosmetics({
+      paintId: 'paint-1',
+      twitchUserId: 'ttv-self',
+    });
+
+    renderHook(() =>
+      useChatCosmetics({
+        userId: 'ttv-self',
+      }),
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(mockGet7tvUserId).not.toHaveBeenCalled();
     expect(mockFetchAndCacheUserCosmetics).not.toHaveBeenCalled();
   });
 
