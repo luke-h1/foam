@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.0.2 (TestFlight)
+
+### ✨ Features
+
+- **devtools:** Add environment variables viewer ([#698](https://github.com/lhowsam/foam/issues/698))
+
+### 🐛 Bug Fixes
+
+- **player:** Make login-required content gate tappable on custom player ([#697](https://github.com/lhowsam/foam/issues/697))
+- **app:** Emote menu perf ([#695](https://github.com/lhowsam/foam/issues/695))
+- **updates:** Drain in-flight fetches before applying an OTA update ([#701](https://github.com/lhowsam/foam/issues/701))
+- **app:** V1 mop up ([#702](https://github.com/lhowsam/foam/issues/702))
+- **devtools:** Prevent App Store lookup for non-production iOS builds ([#703](https://github.com/lhowsam/foam/issues/703))
+- **chat:** Fix 7TV badges/cosmetics loading and emote sheet ([#704](https://github.com/lhowsam/foam/issues/704))
+- **updates:** Patch expo-modules-jsi for OTA reload JSI crash ([#706](https://github.com/lhowsam/foam/issues/706))
+- **infrastructure:** Fix size analysis upload step
+- **infrastructure:** Fix tsc
+- **ai:** Improve adversarial agent loops
+
+### 🔧 Miscellaneous Tasks
+
+- **infrastructure:** Add runner input ([#705](https://github.com/lhowsam/foam/issues/705))
+- **ai:** Add claude review prompt ([#709](https://github.com/lhowsam/foam/issues/709))
+- **infrastructure:** Wire Sentry Size Analysis into native builds ([#708](https://github.com/lhowsam/foam/issues/708))
+- **ai:** Add Codex PR review workflow and mention trigger ([#712](https://github.com/lhowsam/foam/issues/712))
+- **app:** Simplify hot paths and remote-config Twitch embed parent ([#707](https://github.com/lhowsam/foam/issues/707))
+
 ## 1.0.1 (Production)
 
 ### ♻️ Refactor
