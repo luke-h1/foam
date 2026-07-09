@@ -84,15 +84,16 @@ jobs:
           TRIGGERED_BY: ${{ steps.context.outputs.triggered_by }}
         run: |
           set -euo pipefail
-          prompt_file=".github/codex/prompts/review-run.md"
+          prompt_file=".github/codex/review-run.md"
+          review_prompt=".github/claude-review-prompt.md"
 
           if [ "$TRIGGERED_BY" = "mention" ]; then
             {
-              cat .github/codex/prompts/review.md
+              cat "$review_prompt"
               printf '\n\n## Triggering comment\n\n%s\n' "$MENTION_COMMENT"
             } > "$prompt_file"
           else
-            cp .github/codex/prompts/review.md "$prompt_file"
+            cp "$review_prompt" "$prompt_file"
           fi
 
       - name: Run Codex
@@ -100,7 +101,7 @@ jobs:
         uses: openai/codex-action@52fe01ec70a42f454c9d2ebd47598f9fd6893d56 # v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          prompt-file: .github/codex/prompts/review-run.md
+          prompt-file: .github/codex/review-run.md
           sandbox: read-only
           safety-strategy: drop-sudo
           output-file: codex-output.md
