@@ -20,6 +20,7 @@ import {
 import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
 
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
+import { resolveUseAppleWebpCodec } from '@app/lib/expo-image/resolveUseAppleWebpCodec';
 import { runAnimationCommand } from '@app/lib/expo-image/runAnimationCommand';
 import {
   evictCachedEmoteRef,
@@ -272,8 +273,6 @@ function ChatInlineImageComponent({
   // Show the shimmer only while there's nothing real to display yet: a decoded
   // sharedRef is instant, so cached emotes (the busy-chat common case) never
   // shimmer and stay on the bare-image fast path with no extra Fabric node.
-  // Callers can suppress the overlay entirely (badges) to avoid a pulsing box
-  // on a tiny slot that a failed load would otherwise leave up indefinitely.
   const overlayVisible =
     showLoadingShimmer && sharedRef == null && status !== 'loaded';
 
@@ -297,13 +296,7 @@ function ChatInlineImageComponent({
       // failed ref), so keep it out of expo-image's in-memory cache to avoid a
       // second session-long decoded-bitmap pool on top of the ImageRef cache.
       cachePolicy={showRef ? 'memory-disk' : 'disk'}
-      // expo-image's Apple WebP codec is faster and lighter but plays animated
-      // WebP at the wrong framerate (see docs on `useAppleWebpCodec`). Chat
-      // emotes are dominated by animated 7TV WebPs, so force the standards-
-      // compliant libwebp path for known-animated urls to restore full FPS —
-      // and leave the fast Apple codec on for badges / static emotes where the
-      // framerate bug can't apply.
-      useAppleWebpCodec={urlKind === 'animated' ? false : undefined}
+      useAppleWebpCodec={resolveUseAppleWebpCodec(urlKind)}
       priority={priority}
       transition={transitionMs}
       onLoad={handleLoad}
