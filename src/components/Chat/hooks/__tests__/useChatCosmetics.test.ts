@@ -230,4 +230,28 @@ describe('useChatCosmetics', () => {
       result.current.fetchedCosmeticsUsersRef.current.has('paint-only-user'),
     ).toBe(true);
   });
+
+  test('does not retry users whose cosmetics fetch failed', async () => {
+    mockRequestUserCosmeticsViaPresence.mockRejectedValue(
+      new Error('presence failed'),
+    );
+
+    const { result } = renderHook(() =>
+      useChatCosmetics({
+        userId: null,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.fetchUserCosmetics('failed-user');
+      await result.current.fetchUserCosmetics('failed-user');
+    });
+
+    expect(mockRequestUserCosmeticsViaPresence.mock.calls).toEqual([
+      ['failed-user'],
+    ]);
+    expect(
+      result.current.fetchedCosmeticsUsersRef.current.has('failed-user'),
+    ).toBe(true);
+  });
 });

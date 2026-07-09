@@ -194,6 +194,27 @@ describe('applyEntitlementResetEvent', () => {
       ['stv-user-1', 'ttv-1'],
     ]);
   });
+
+  test('clears reverse 7TV user links when entitlements reset', () => {
+    applyEntitlementCreateEvent({
+      entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
+      kind: 'BADGE',
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-1',
+    });
+
+    applyEntitlementResetEvent('stv-user-1');
+    mockSyncCachedUserCosmeticsFromStore.mockClear();
+
+    applyEntitlementUpdateEvent({
+      ttvUserId: 'ttv-1',
+      paintId: 'paint-1',
+      badgeId: null,
+    });
+
+    expect(mockSyncCachedUserCosmeticsFromStore).not.toHaveBeenCalled();
+  });
 });
 
 describe('applyEntitlementUpdateEvent', () => {

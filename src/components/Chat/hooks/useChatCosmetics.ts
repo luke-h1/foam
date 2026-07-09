@@ -79,9 +79,10 @@ export function useChatCosmetics(options: { userId?: string | null } = {}) {
       return;
     }
 
+    fetchedCosmeticsUsersRef.current.add(twitchUserId);
+
     try {
       await requestUserCosmeticsViaPresence(twitchUserId);
-      fetchedCosmeticsUsersRef.current.add(twitchUserId);
     } catch (error) {
       logger.stv.debug(
         `Failed to fetch cosmetics for user ${twitchUserId}:`,

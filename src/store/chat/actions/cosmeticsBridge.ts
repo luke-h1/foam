@@ -157,6 +157,7 @@ export const applyEntitlementResetEvent = (sevenTvUserId: string): void => {
     removeUserPaint(twitchUserId);
     removeUserBadge(twitchUserId);
     syncCachedUserCosmeticsFromStore(sevenTvUserId, twitchUserId);
+    sevenTvUserIdByTwitchId.delete(twitchUserId);
   });
   twitchIdsBySevenTvUserId.delete(sevenTvUserId);
   logger.stvWs.info(`Reset entitlements for 7TV user: ${sevenTvUserId}`);
