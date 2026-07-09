@@ -66,6 +66,10 @@ build_ios() {
   fi
 
   run_sentry_helper sentry_upload_dsyms "${dsym_search_paths[@]}"
+
+  local size_analysis_path
+  size_analysis_path="$(sentry_find_ios_size_analysis_artifact "$ipa_path" "$build_marker")"
+  run_sentry_helper sentry_upload_size_analysis "$size_analysis_path"
 }
 
 build_android() {
@@ -86,6 +90,8 @@ build_android() {
     echo "Unable to find an Android artifact at $artifact_path"
     exit 1
   fi
+
+  run_sentry_helper sentry_upload_size_analysis "$artifact_path"
 }
 
 case "$platform" in

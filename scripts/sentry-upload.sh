@@ -59,6 +59,71 @@ sentry_dist() {
   sentry_dist_for_variant
 }
 
+sentry_size_analysis_build_configuration() {
+  local app_variant="${EXPO_PUBLIC_APP_VARIANT:-${variant:-${VARIANT:-development}}}"
+  printf 'Release-%s\n' "$app_variant"
+}
+
+sentry_find_ios_size_analysis_artifact() {
+  local ipa_path="$1"
+  local build_marker="$2"
+  local xcode_archive_root="${IOS_ARCHIVE_ROOT:-$HOME/Library/Developer/Xcode/Archives}"
+  local xcarchive_path=""
+
+  if [ -d "$xcode_archive_root" ] && [ -f "$build_marker" ]; then
+    xcarchive_path="$(
+      find "$xcode_archive_root" \
+        -type d \
+        -name '*.xcarchive' \
+        -newer "$build_marker" \
+        -print0 2>/dev/null \
+        | xargs -0 ls -td 2>/dev/null \
+        | head -1 \
+        || true
+    )"
+  fi
+
+  if [ -n "$xcarchive_path" ] && [ -e "$xcarchive_path" ]; then
+    printf '%s\n' "$xcarchive_path"
+    return
+  fi
+
+  printf '%s\n' "$ipa_path"
+}
+
+sentry_upload_size_analysis() {
+  local artifact_path="$1"
+
+  if sentry_uploads_disabled; then
+    echo "Skipping Sentry Size Analysis upload because Sentry uploads are disabled"
+    return 0
+  fi
+
+  if ! sentry_has_auth_token; then
+    echo "Skipping Sentry Size Analysis upload because SENTRY_AUTH_TOKEN is not set"
+    return 0
+  fi
+
+  if [ ! -e "$artifact_path" ]; then
+    echo "Skipping Sentry Size Analysis upload because $artifact_path does not exist"
+    return 0
+  fi
+
+  local bin
+  bin="$(sentry_cli_bin)"
+
+  local build_configuration
+  build_configuration="$(sentry_size_analysis_build_configuration)"
+
+  echo "Uploading Sentry Size Analysis build from $artifact_path ($build_configuration)"
+  SENTRY_URL="${SENTRY_URL:-https://sentry.io/}" \
+    SENTRY_LOAD_DOTENV="${SENTRY_LOAD_DOTENV:-0}" \
+    sentry_run_upload "$bin" build upload "$artifact_path" \
+      --org "${SENTRY_ORG:-foam-tv}" \
+      --project "${SENTRY_PROJECT:-foam-tv-mobile}" \
+      --build-configuration "$build_configuration"
+}
+
 sentry_cli_bin() {
   local bin="${SENTRY_CLI_BIN:-./node_modules/.bin/sentry-cli}"
 
