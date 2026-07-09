@@ -71,16 +71,22 @@ sentry_find_ios_size_analysis_artifact() {
   local xcarchive_path=""
 
   if [ -d "$xcode_archive_root" ] && [ -f "$build_marker" ]; then
-    xcarchive_path="$(
+    local -a archives=()
+    while IFS= read -r -d '' archive; do
+      archives+=("$archive")
+    done < <(
       find "$xcode_archive_root" \
         -type d \
         -name '*.xcarchive' \
         -newer "$build_marker" \
-        -print0 2>/dev/null \
-        | xargs -0 --no-run-if-empty ls -td 2>/dev/null \
-        | head -1 \
-        || true
-    )"
+        -print0 2>/dev/null || true
+    )
+
+    if [ "${#archives[@]}" -gt 0 ]; then
+      xcarchive_path="$(
+        printf '%s\0' "${archives[@]}" | xargs -0 ls -td 2>/dev/null | head -1 || true
+      )"
+    fi
   fi
 
   if [ -n "$xcarchive_path" ] && [ "$xcarchive_path" != "." ] && [ -e "$xcarchive_path" ]; then
