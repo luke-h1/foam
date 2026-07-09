@@ -227,7 +227,9 @@ export const syncCachedUserCosmeticsFromStore = (
 };
 
 function refreshCachedUserCosmeticsForDefinition(cosmeticId: string): void {
-  for (const [sevenTvUserId, cached] of sessionCosmeticsCache.entries()) {
+  for (const [sevenTvUserId, cached] of Array.from(
+    sessionCosmeticsCache.entries(),
+  )) {
     if (
       cached.ttvUserId &&
       (cached.paintId === cosmeticId || cached.badgeId === cosmeticId)
