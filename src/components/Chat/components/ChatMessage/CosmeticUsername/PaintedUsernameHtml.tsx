@@ -1,5 +1,11 @@
 import { useMemo } from 'react';
-import { Platform, StyleSheet, useWindowDimensions } from 'react-native';
+import {
+  Platform,
+  StyleSheet,
+  useWindowDimensions,
+  type StyleProp,
+  type TextStyle,
+} from 'react-native';
 
 import RenderHTML, {
   type CustomTextualRenderer,
@@ -8,11 +14,9 @@ import RenderHTML, {
 
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
+import { chatLineMetrics } from '../RichChatMessage.styles';
 import { PaintedUsernameNativeLayers } from './PaintedUsernameNativeLayers';
-import {
-  type PaintedUsernameRenderContextValue,
-  PaintedUsernameRenderProvider,
-} from './PaintedUsernameRenderContext';
+import { PaintedUsernameRenderProvider } from './PaintedUsernameRenderContext';
 import {
   buildPaintCssInlineStyle,
   buildPaintCssTextStyle,
@@ -43,9 +47,8 @@ interface PaintedUsernameHtmlProps {
   displayUsername: string;
   fallbackColor: string;
   paint: PaintData;
-  renderContext: PaintedUsernameRenderContextValue;
   sevenTvPaintDropShadows: PaintDropShadowMode;
-  usernameMetricsStyle: PaintedUsernameRenderContextValue['usernameTextStyle'];
+  usernameTextStyle?: StyleProp<TextStyle>;
 }
 
 /**
@@ -60,11 +63,30 @@ export function PaintedUsernameHtml({
   displayUsername,
   fallbackColor,
   paint,
-  renderContext,
   sevenTvPaintDropShadows,
-  usernameMetricsStyle,
+  usernameTextStyle,
 }: PaintedUsernameHtmlProps) {
   const { width } = useWindowDimensions();
+  const renderContext = useMemo(
+    () => ({
+      displayUsername,
+      fallbackColor,
+      paint,
+      sevenTvPaintDropShadows,
+      usernameTextStyle,
+    }),
+    [
+      displayUsername,
+      fallbackColor,
+      paint,
+      sevenTvPaintDropShadows,
+      usernameTextStyle,
+    ],
+  );
+  const usernameMetricsStyle = useMemo(
+    () => [styles.maskText, usernameTextStyle] as StyleProp<TextStyle>,
+    [usernameTextStyle],
+  );
   const inlineCss = buildPaintCssInlineStyle(
     paint,
     fallbackColor,
@@ -73,7 +95,7 @@ export function PaintedUsernameHtml({
 
   const source = useMemo(
     () => ({
-      html: `<span class="seventv-painted-content seventv-paint" data-seventv-paint-id="${paint.id}" data-seventv-painted-text="true" style="${inlineCss}">${escapeHtml(displayUsername)}</span>`,
+      html: `<span class="seventv-painted-content seventv-paint" data-seventv-paint-id="${escapeHtml(paint.id)}" data-seventv-painted-text="true" style="${inlineCss}">${escapeHtml(displayUsername)}</span>`,
     }),
     [displayUsername, inlineCss, paint.id],
   );
@@ -122,3 +144,11 @@ export function PaintedUsernameHtml({
     </PaintedUsernameRenderProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  maskText: {
+    ...chatLineMetrics.comfortable,
+    color: 'black',
+    fontWeight: 'bold',
+  },
+});

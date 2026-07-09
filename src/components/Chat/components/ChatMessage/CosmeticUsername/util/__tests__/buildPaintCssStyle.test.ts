@@ -3,6 +3,7 @@ import type { PaintData } from '@app/types/seventv/cosmetics';
 import {
   buildPaintCssInlineStyle,
   buildPaintCssTextStyle,
+  type PaintCssTextStyle,
 } from '../buildPaintCssStyle';
 
 function rgbaToSevenTvColor(
@@ -73,7 +74,7 @@ const roseGoldPaint: PaintData = {
 
 describe('buildPaintCssTextStyle', () => {
   test('clips gradient backgrounds to text and stacks drop-shadow filters', () => {
-    expect(buildPaintCssTextStyle(roseGoldPaint, '#ffffff', 1)).toEqual({
+    expect(buildPaintCssTextStyle(roseGoldPaint, '#ffffff', 1)).toEqual<PaintCssTextStyle>({
       backgroundClip: 'text',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
