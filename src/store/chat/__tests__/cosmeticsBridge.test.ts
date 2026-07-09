@@ -35,11 +35,31 @@ jest.mock('@app/store/chat/actions/personalEmotes', () => ({
   handlePersonalEmoteSetEntitlement: jest.fn(),
 }));
 
-jest.mock('@app/store/chat/observables/chatStore', () => ({
-  chatStore$: {
-    currentChannelId: { peek: jest.fn(() => 'channel-1') },
-  },
-}));
+jest.mock('@app/store/chat/observables/chatStore', () => {
+  const createRecordObservable = <T>(initial: Record<string, T>) => {
+    let value: Record<string, T> = initial;
+    return {
+      peek: () => value,
+      set: (next: Record<string, T>) => {
+        value = next;
+      },
+    };
+  };
+
+  return {
+    chatStore$: {
+      currentChannelId: { peek: jest.fn(() => 'channel-1') },
+      sevenTvUserLinks: {
+        twitchIdsBySevenTvUserId: createRecordObservable<string[]>({}),
+        sevenTvUserIdByTwitchId: createRecordObservable<string>({}),
+        twitchIdByEntitlementId: createRecordObservable<{
+          kind: 'BADGE' | 'PAINT' | 'EMOTE_SET';
+          twitchUserId: string;
+        }>({}),
+      },
+    },
+  };
+});
 
 jest.mock('@app/utils/logger', () => ({
   logger: {

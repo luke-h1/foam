@@ -1,6 +1,7 @@
 import { storageService } from '@app/lib/storage';
 import { sevenTvService } from '@app/services/seventv-service';
 import {
+  type CachedUserCosmetics,
   getUserBadge,
   requestUserCosmeticsViaPresence,
   syncCachedUserCosmeticsFromStore,
@@ -204,24 +205,25 @@ describe('syncCachedUserCosmeticsFromStore', () => {
 
     syncCachedUserCosmeticsFromStore('stv-user-1', 'ttv-1');
 
+    const expectedCosmetics: CachedUserCosmetics = {
+      badge: {
+        id: 'badge-1',
+        provider: '7tv',
+        set: 'badge-1',
+        title: 'Supporter',
+        type: '7TV Badge',
+        url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
+      },
+      badgeId: 'badge-1',
+      expiresAt: Date.now() + TWO_HOURS_MS,
+      paint: undefined,
+      paintId: null,
+      ttvUserId: 'ttv-1',
+    };
     expect(mockSet.mock.calls).toEqual([
       [
         'sevenTvUserCosmetics_user-cosmetics:stv-user-1',
-        {
-          badge: {
-            id: 'badge-1',
-            provider: '7tv',
-            set: 'badge-1',
-            title: 'Supporter',
-            type: '7TV Badge',
-            url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
-          },
-          badgeId: 'badge-1',
-          expiresAt: Date.now() + TWO_HOURS_MS,
-          paint: undefined,
-          paintId: null,
-          ttvUserId: 'ttv-1',
-        },
+        expectedCosmetics,
         'seven_tv_cache',
         { expiry: new Date(Date.now() + TWO_HOURS_MS) },
       ],
@@ -231,17 +233,18 @@ describe('syncCachedUserCosmeticsFromStore', () => {
   test('writes a 30m negative-cache expiry when the user has no cosmetic bindings', () => {
     syncCachedUserCosmeticsFromStore('stv-user-1', 'ttv-1');
 
+    const expectedCosmetics: CachedUserCosmetics = {
+      badge: undefined,
+      badgeId: null,
+      expiresAt: Date.now() + THIRTY_MINUTES_MS,
+      paint: undefined,
+      paintId: null,
+      ttvUserId: 'ttv-1',
+    };
     expect(mockSet.mock.calls).toEqual([
       [
         'sevenTvUserCosmetics_user-cosmetics:stv-user-1',
-        {
-          badge: undefined,
-          badgeId: null,
-          expiresAt: Date.now() + THIRTY_MINUTES_MS,
-          paint: undefined,
-          paintId: null,
-          ttvUserId: 'ttv-1',
-        },
+        expectedCosmetics,
         'seven_tv_cache',
         { expiry: new Date(Date.now() + THIRTY_MINUTES_MS) },
       ],

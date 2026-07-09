@@ -24,12 +24,12 @@ import {
 import { handlePersonalEmoteSetEntitlement } from './personalEmotes';
 
 const MAX_SEVEN_TV_USER_LINK_ENTRIES = 2000;
-const twitchIdsBySevenTvUserId = new Map<string, Set<string>>();
-const sevenTvUserIdByTwitchId = new Map<string, string>();
-const twitchIdByEntitlementId = new Map<
-  string,
-  { kind: 'BADGE' | 'PAINT' | 'EMOTE_SET'; twitchUserId: string }
->();
+
+const entitlementLinks$ = chatStore$.sevenTvUserLinks.twitchIdByEntitlementId;
+const twitchIdsBySevenTvUserId$ =
+  chatStore$.sevenTvUserLinks.twitchIdsBySevenTvUserId;
+const sevenTvUserIdByTwitchId$ =
+  chatStore$.sevenTvUserLinks.sevenTvUserIdByTwitchId;
 
 function forgetEntitlementIdsForTwitchUsers(
   twitchUserIds: Iterable<string>,
@@ -39,12 +39,18 @@ function forgetEntitlementIdsForTwitchUsers(
     return;
   }
 
-  for (const [entitlementId, link] of Array.from(
-    twitchIdByEntitlementId.entries(),
-  )) {
+  const current = entitlementLinks$.peek();
+  const next: typeof current = {};
+  let changed = false;
+  for (const [entitlementId, link] of Object.entries(current)) {
     if (twitchIds.has(link.twitchUserId)) {
-      twitchIdByEntitlementId.delete(entitlementId);
+      changed = true;
+      continue;
     }
+    next[entitlementId] = link;
+  }
+  if (changed) {
+    entitlementLinks$.set(next);
   }
 }
 
@@ -53,43 +59,56 @@ function rememberEntitlementTwitchLink(
   twitchUserId: string,
   kind: 'BADGE' | 'PAINT' | 'EMOTE_SET',
 ): void {
-  if (
-    twitchIdByEntitlementId.size >= MAX_SEVEN_TV_USER_LINK_ENTRIES &&
-    !twitchIdByEntitlementId.has(entitlementId)
-  ) {
-    const oldest = twitchIdByEntitlementId.keys().next().value;
-    if (oldest !== undefined) {
-      twitchIdByEntitlementId.delete(oldest);
+  const current = entitlementLinks$.peek();
+  const alreadyPresent = entitlementId in current;
+
+  const next: typeof current = { ...current };
+  if (!alreadyPresent) {
+    const oldest = Object.keys(next)[0];
+    if (
+      oldest !== undefined &&
+      Object.keys(next).length >= MAX_SEVEN_TV_USER_LINK_ENTRIES
+    ) {
+      delete next[oldest];
     }
   }
-
-  twitchIdByEntitlementId.set(entitlementId, { kind, twitchUserId });
+  next[entitlementId] = { kind, twitchUserId };
+  entitlementLinks$.set(next);
 }
 
 function rememberSevenTvUserTwitchLink(
   sevenTvUserId: string,
   twitchUserId: string,
 ): void {
-  sevenTvUserIdByTwitchId.set(twitchUserId, sevenTvUserId);
-  let twitchIds = twitchIdsBySevenTvUserId.get(sevenTvUserId);
-  if (!twitchIds) {
-    if (twitchIdsBySevenTvUserId.size >= MAX_SEVEN_TV_USER_LINK_ENTRIES) {
-      const oldest = twitchIdsBySevenTvUserId.keys().next().value;
-      if (oldest !== undefined) {
-        const evictedTwitchIds = twitchIdsBySevenTvUserId.get(oldest);
-        if (evictedTwitchIds) {
-          evictedTwitchIds.forEach(twitchId => {
-            sevenTvUserIdByTwitchId.delete(twitchId);
-          });
-          forgetEntitlementIdsForTwitchUsers(evictedTwitchIds);
-        }
-        twitchIdsBySevenTvUserId.delete(oldest);
+  const reverse = { ...sevenTvUserIdByTwitchId$.peek() };
+  reverse[twitchUserId] = sevenTvUserId;
+
+  const forward = { ...twitchIdsBySevenTvUserId$.peek() };
+  let existing = forward[sevenTvUserId];
+  if (!existing) {
+    const oldest = Object.keys(forward)[0];
+    if (
+      oldest !== undefined &&
+      Object.keys(forward).length >= MAX_SEVEN_TV_USER_LINK_ENTRIES
+    ) {
+      const evictedTwitchIds = forward[oldest];
+      if (evictedTwitchIds) {
+        evictedTwitchIds.forEach((twitchId: string) => {
+          delete reverse[twitchId];
+        });
+        forgetEntitlementIdsForTwitchUsers(evictedTwitchIds);
       }
+      delete forward[oldest];
     }
-    twitchIds = new Set();
-    twitchIdsBySevenTvUserId.set(sevenTvUserId, twitchIds);
+    existing = [];
+    forward[sevenTvUserId] = existing;
   }
-  twitchIds.add(twitchUserId);
+  if (!existing.includes(twitchUserId)) {
+    forward[sevenTvUserId] = [...existing, twitchUserId];
+  }
+
+  sevenTvUserIdByTwitchId$.set(reverse);
+  twitchIdsBySevenTvUserId$.set(forward);
 }
 
 export const applyCosmeticCreateEvent = (
@@ -179,24 +198,31 @@ export const applyEntitlementCreateEvent = (data: {
 };
 
 export const applyEntitlementResetEvent = (sevenTvUserId: string): void => {
-  const twitchIds = twitchIdsBySevenTvUserId.get(sevenTvUserId);
-  if (!twitchIds) {
+  const forward = twitchIdsBySevenTvUserId$.peek();
+  const twitchIds = forward[sevenTvUserId];
+  if (!twitchIds || twitchIds.length === 0) {
     return;
   }
 
+  const reverseNext = { ...sevenTvUserIdByTwitchId$.peek() };
   twitchIds.forEach(twitchUserId => {
     removeUserPaint(twitchUserId);
     removeUserBadge(twitchUserId);
     syncCachedUserCosmeticsFromStore(sevenTvUserId, twitchUserId);
-    sevenTvUserIdByTwitchId.delete(twitchUserId);
+    delete reverseNext[twitchUserId];
   });
   forgetEntitlementIdsForTwitchUsers(twitchIds);
-  twitchIdsBySevenTvUserId.delete(sevenTvUserId);
+
+  const forwardNext = { ...forward };
+  delete forwardNext[sevenTvUserId];
+
+  sevenTvUserIdByTwitchId$.set(reverseNext);
+  twitchIdsBySevenTvUserId$.set(forwardNext);
   logger.stvWs.info(`Reset entitlements for 7TV user: ${sevenTvUserId}`);
 };
 
 function syncUserCosmeticsCacheForTwitchUser(ttvUserId: string): void {
-  const sevenTvUserId = sevenTvUserIdByTwitchId.get(ttvUserId);
+  const sevenTvUserId = sevenTvUserIdByTwitchId$.peek()[ttvUserId];
   if (sevenTvUserId) {
     syncCachedUserCosmeticsFromStore(sevenTvUserId, ttvUserId);
   }
@@ -229,7 +255,8 @@ export const applyEntitlementDeleteEvent = (data: {
   entitlementId: string;
   ttvUserId: string | null;
 }): void => {
-  const rememberedLink = twitchIdByEntitlementId.get(data.entitlementId);
+  const current = entitlementLinks$.peek();
+  const rememberedLink = current[data.entitlementId];
   const ttvUserId = data.ttvUserId ?? rememberedLink?.twitchUserId ?? null;
   // Without a remembered kind we cannot tell paint from badge; clearing both
   // would drop the user's remaining cosmetic after an eviction or late delete.
@@ -249,12 +276,14 @@ export const applyEntitlementDeleteEvent = (data: {
   }
 
   syncUserCosmeticsCacheForTwitchUser(ttvUserId);
-  twitchIdByEntitlementId.delete(data.entitlementId);
+  const next = { ...current };
+  delete next[data.entitlementId];
+  entitlementLinks$.set(next);
   logger.stvWs.info(`Removed entitlements for user: ${ttvUserId}`);
 };
 
 export const clearEntitlementUserLinkState = (): void => {
-  twitchIdsBySevenTvUserId.clear();
-  sevenTvUserIdByTwitchId.clear();
-  twitchIdByEntitlementId.clear();
+  twitchIdsBySevenTvUserId$.set({});
+  sevenTvUserIdByTwitchId$.set({});
+  entitlementLinks$.set({});
 };

@@ -63,7 +63,7 @@ const USER_COSMETICS_CACHE_TTL_MS = 2 * 60 * 60 * 1000;
 const USER_COSMETICS_NEGATIVE_CACHE_TTL_MS = 30 * 60 * 1000;
 const SEVEN_TV_CACHE_NAMESPACE = 'seven_tv_cache';
 
-type CachedUserCosmetics = {
+export type CachedUserCosmetics = {
   badge?: SanitisedBadgeSet;
   badgeId: string | null;
   expiresAt: number;
@@ -177,36 +177,21 @@ function setCachedUserCosmetics(
   );
 }
 
-function getUserCosmeticsCacheExpiry(hasCosmetics: boolean): number {
-  return (
-    Date.now() +
-    (hasCosmetics
-      ? USER_COSMETICS_CACHE_TTL_MS
-      : USER_COSMETICS_NEGATIVE_CACHE_TTL_MS)
-  );
-}
-
-function resolveRenderableBadge(
-  badgeId: string | null,
-): SanitisedBadgeSet | undefined {
-  if (!badgeId) {
-    return undefined;
-  }
-
-  const badge = getBadge(badgeId);
-  return badge?.url?.trim() ? badge : undefined;
-}
-
 function buildCachedUserCosmeticsFromStore(
   ttvUserId: string,
 ): CachedUserCosmetics {
   const paintId = chatStore$.userPaintIds[ttvUserId]?.peek() ?? null;
   const badgeId = chatStore$.userBadgeIds[ttvUserId]?.peek() ?? null;
+  const badge = badgeId ? getBadge(badgeId) : undefined;
 
   return {
-    badge: resolveRenderableBadge(badgeId),
+    badge: badge?.url?.trim() ? badge : undefined,
     badgeId,
-    expiresAt: getUserCosmeticsCacheExpiry(Boolean(paintId || badgeId)),
+    expiresAt:
+      Date.now() +
+      (paintId || badgeId
+        ? USER_COSMETICS_CACHE_TTL_MS
+        : USER_COSMETICS_NEGATIVE_CACHE_TTL_MS),
     paint: paintId ? getPaint(paintId) : undefined,
     paintId,
     ttvUserId,
@@ -264,7 +249,11 @@ export const fetchAndCacheUserCosmetics = async (
       const cachedCosmetics: CachedUserCosmetics = {
         badge,
         badgeId: cosmetics.badgeId,
-        expiresAt: getUserCosmeticsCacheExpiry(Boolean(paint || badge)),
+        expiresAt:
+          Date.now() +
+          (paint || badge
+            ? USER_COSMETICS_CACHE_TTL_MS
+            : USER_COSMETICS_NEGATIVE_CACHE_TTL_MS),
         paint,
         paintId: cosmetics.paintId,
         ttvUserId: cosmetics.ttvUserId,

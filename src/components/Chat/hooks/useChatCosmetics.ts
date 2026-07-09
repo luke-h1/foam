@@ -57,7 +57,7 @@ export function useChatCosmetics(options: { userId?: string | null } = {}) {
 
   const fetchUserCosmetics = async (
     twitchUserId: string,
-    options: {
+    fetchOptions: {
       retryMissingBadge?: boolean;
     } = {},
   ) => {
@@ -68,7 +68,7 @@ export function useChatCosmetics(options: { userId?: string | null } = {}) {
 
     if (
       fetchedCosmeticsUsersRef.current.has(twitchUserId) &&
-      (!options.retryMissingBadge || renderableBadge || !existingBadgeId)
+      (!fetchOptions.retryMissingBadge || renderableBadge || !existingBadgeId)
     ) {
       return;
     }
