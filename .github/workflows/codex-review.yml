@@ -1,0 +1,112 @@
+name: Codex review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: codex-${{ github.event.pull_request.number || github.event.issue.number }}-${{ github.event.comment.id || 'pr' }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  codex:
+    if: |
+      (github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        github.event.pull_request.draft == false) ||
+      (
+        github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request != null &&
+        contains(github.event.comment.body, '@codex') &&
+        !endsWith(github.event.comment.user.login, '[bot]') &&
+        github.event.comment.user.type != 'Bot'
+      )
+    runs-on: ubuntu-latest
+    outputs:
+      final_message: ${{ steps.run_codex.outputs.final-message }}
+      pr_number: ${{ steps.context.outputs.pr_number }}
+      triggered_by: ${{ steps.context.outputs.triggered_by }}
+    steps:
+      - name: Resolve pull request context
+        id: context
+        uses: actions/github-script@ed597411d8f924073f0cc3c2241fb702e7404e0 # v8
+        with:
+          script: |
+            if (context.eventName === 'pull_request') {
+              core.setOutput('pr_number', String(context.payload.pull_request.number));
+              core.setOutput('ref', `refs/pull/${context.payload.pull_request.number}/merge`);
+              core.setOutput('triggered_by', 'pull_request');
+              return;
+            }
+
+            core.setOutput('pr_number', String(context.payload.issue.number));
+            core.setOutput('ref', `refs/pull/${context.payload.issue.number}/merge`);
+            core.setOutput('triggered_by', 'mention');
+
+      - name: Checkout pull request
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          ref: ${{ steps.context.outputs.ref }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Build Codex prompt
+        env:
+          MENTION_COMMENT: ${{ github.event.comment.body }}
+          TRIGGERED_BY: ${{ steps.context.outputs.triggered_by }}
+        run: |
+          set -euo pipefail
+
+          if [ "$TRIGGERED_BY" = "mention" ]; then
+            {
+              cat .github/codex/prompts/review.md
+              printf '\n\n## Triggering comment\n\n%s\n' "$MENTION_COMMENT"
+            } > /tmp/codex-prompt.md
+          else
+            cp .github/codex/prompts/review.md /tmp/codex-prompt.md
+          fi
+
+      - name: Run Codex
+        id: run_codex
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: /tmp/codex-prompt.md
+          sandbox: read-only
+          safety-strategy: drop-sudo
+          output-file: codex-output.md
+
+  post_feedback:
+    name: Post Codex feedback
+    runs-on: ubuntu-latest
+    needs: codex
+    if: needs.codex.outputs.final_message != ''
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Post Codex comment
+        uses: actions/github-script@ed597411d8f924073f0cc3c2241fb702e7404e0 # v8
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const header =
+              process.env.TRIGGERED_BY === 'mention'
+                ? '## Codex reply\n\n'
+                : '## Codex review\n\n';
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: Number(process.env.PR_NUMBER),
+              body: `${header}${process.env.CODEX_FINAL_MESSAGE}`,
+            });
+        env:
+          CODEX_FINAL_MESSAGE: ${{ needs.codex.outputs.final_message }}
+          PR_NUMBER: ${{ needs.codex.outputs.pr_number }}
+          TRIGGERED_BY: ${{ needs.codex.outputs.triggered_by }}
