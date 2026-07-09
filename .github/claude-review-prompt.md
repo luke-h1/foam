@@ -27,6 +27,8 @@ Finding:
 One or two sentences: the concrete scenario and the issue.
 ```
 
+`Location` must point at a single line (or a `start-end` range) in a file that is part of this PR's diff, using the file's path relative to the repo root. CI anchors an inline review comment to that exact line, so the line must be one that appears in the diff (an added or changed line on the right-hand side). If a finding spans a range, write `path/to/file:10-14`; CI anchors the comment to the last line of the range. Do not point at a line that is unchanged and absent from the diff — if you cannot tie a finding to a diff line, leave `Location` as `n/a` and CI will post it as a top-level comment instead.
+
 If there are no findings that meet the bar, emit exactly one block:
 
 ```
@@ -36,6 +38,4 @@ Finding:
 Brief note that the PR looks fine and what you checked.
 ```
 
-When posting to GitHub, create one top-level PR comment per block. Do not merge blocks into a single comment. Per-finding inline review comments are welcome in addition when they anchor a reader to specific lines.
-
-When your output is consumed by CI automation, follow the block format exactly and do not add prose outside these blocks.
+When your output is consumed by CI automation, follow the block format exactly and do not add prose outside these blocks. CI turns each block into an inline review comment on the cited line, matching how the Sentry bot annotates the diff; blocks with no anchorable line become top-level PR comments.

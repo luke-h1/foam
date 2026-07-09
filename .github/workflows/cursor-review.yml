@@ -27,6 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       pr_number: ${{ steps.context.outputs.pr_number }}
+      head_sha: ${{ steps.context.outputs.head_sha }}
     steps:
       - name: Resolve pull request context
         id: context
@@ -34,6 +35,7 @@ jobs:
         with:
           script: |
             core.setOutput('pr_number', String(context.payload.pull_request.number));
+            core.setOutput('head_sha', context.payload.pull_request.head.sha);
             core.setOutput('ref', `refs/pull/${context.payload.pull_request.number}/merge`);
 
       - name: Checkout pull request
@@ -129,21 +131,87 @@ jobs:
               return;
             }
 
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pull_number = Number(process.env.PR_NUMBER);
+            const commit_id = process.env.HEAD_SHA;
+
             const delimiter = '---REVIEW_COMMENT---';
             const blocks = content
               .split(delimiter)
               .map((block) => block.trim())
               .filter(Boolean);
 
-            const comments = blocks.length > 0 ? blocks : [content];
+            // Parse one "Severity/Location/Finding" block into structured fields.
+            const parseBlock = (block) => {
+              const severity = (block.match(/^Severity:\s*(.+)$/im) || [])[1]?.trim() || '';
+              const location = (block.match(/^Location:\s*(.+)$/im) || [])[1]?.trim() || '';
+              const finding = (block.split(/^Finding:\s*$/im)[1] || block).trim();
+              let file = null;
+              let line = null;
+              const m = location.match(/^(.+?):(\d+)(?:-(\d+))?$/);
+              if (m) {
+                file = m[1].trim();
+                // Anchor a range to its last line, matching how review comments attach.
+                line = Number(m[3] || m[2]);
+              }
+              return { severity, location, finding, file, line, raw: block };
+            };
 
-            for (const block of comments) {
+            const parsed = (blocks.length > 0 ? blocks : [content]).map(parseBlock);
+
+            // The "no findings" case: single top-level note, no inline anchoring.
+            const onlyNone =
+              parsed.length === 1 && /^none$/i.test(parsed[0].severity);
+            if (onlyNone) {
               await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: Number(process.env.PR_NUMBER),
-                body: `## Cursor review\n\n${block}`,
+                owner,
+                repo,
+                issue_number: pull_number,
+                body: `## Cursor review\n\n${parsed[0].raw}`,
+              });
+              return;
+            }
+
+            const formatBody = (f) => {
+              const sev = f.severity ? `**${f.severity}**` : 'finding';
+              return `**Cursor review** - ${sev}\n\n${f.finding}`;
+            };
+
+            for (const f of parsed) {
+              const anchorable = f.file && Number.isFinite(f.line);
+              if (anchorable) {
+                try {
+                  await github.rest.pulls.createReviewComment({
+                    owner,
+                    repo,
+                    pull_number,
+                    commit_id,
+                    path: f.file,
+                    line: f.line,
+                    side: 'RIGHT',
+                    body: formatBody(f),
+                  });
+                  continue;
+                } catch (err) {
+                  // Line isn't part of the diff (422) or otherwise unattachable;
+                  // fall through to a top-level comment so the finding is not lost.
+                  core.warning(
+                    `Inline comment failed for ${f.location}: ${err.message}. Posting as top-level comment.`,
+                  );
+                }
+              }
+
+              const heading = f.location
+                ? `## Cursor review\n\n**Location:** \`${f.location}\``
+                : '## Cursor review';
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pull_number,
+                body: `${heading}\n\n${formatBody(f)}`,
               });
             }
         env:
           PR_NUMBER: ${{ needs.cursor.outputs.pr_number }}
+          HEAD_SHA: ${{ needs.cursor.outputs.head_sha }}
