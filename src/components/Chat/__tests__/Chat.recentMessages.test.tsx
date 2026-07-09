@@ -115,6 +115,7 @@ jest.mock('@app/store/chat/actions/cosmetics', () => ({
   fetchAndCacheUserCosmetics: jest.fn(),
   getUserBadge: jest.fn(),
   getUserBadgeId: jest.fn(),
+  getUserPaintId: jest.fn(),
   hasUserPaint: jest.fn(() => false),
   requestUserCosmeticsViaPresence: jest.fn(() => Promise.resolve()),
 }));
