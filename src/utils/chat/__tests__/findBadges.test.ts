@@ -1,120 +1,80 @@
 import { twitchSanitisedChannelBadges } from '@app/services/__fixtures__/badges/twitch/twitchSanitisedChannelBadges.fixture';
 import { twitchSanitisedGlobalBadges } from '@app/services/__fixtures__/badges/twitch/twitchSanitisedGlobalBadges.fixture';
-import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import { findBadges } from '../findBadges';
 
+const emptyBadgeSources = {
+  chatterinoBadges: [] as SanitisedBadgeSet[],
+  ffzChannelBadges: [] as SanitisedBadgeSet[],
+  ffzGlobalBadges: [] as SanitisedBadgeSet[],
+};
+
 describe('findBadges', () => {
   describe('twitch', () => {
+    const sourceSubscriberBadge: SanitisedBadgeSet = {
+      id: '3',
+      url: 'https://example.com/source-sub.png',
+      type: 'Twitch Subscriber Badge',
+      title: 'Source 3-Month Subscriber',
+      set: 'subscriber',
+    };
+
+    const targetSubscriberBadge: SanitisedBadgeSet = {
+      id: '1',
+      url: 'https://example.com/target-sub.png',
+      type: 'Twitch Subscriber Badge',
+      title: 'Target Subscriber',
+      set: 'subscriber',
+    };
+
     test.each(twitchSanitisedGlobalBadges)(
       'Should find global badge %s',
       badge => {
-        const userstate: UserStateTags = {
+        const userstate = createUserStateTags({
           'badges-raw': `${badge.set}/${badge.id.split('_').pop()}`,
           badges: {
             [badge.set]: badge.id.split('_').pop(),
           },
           'user-id': '123456789',
-          username: 'testuser',
-          'display-name': 'TestUser',
-          color: '#FF0000',
-          mod: 'false',
-          subscriber: 'false',
-          turbo: 'false',
-          'user-type': '',
-          'reply-parent-display-name': '',
-          'reply-parent-msg-body': '',
-          'reply-parent-msg-id': '',
-          'reply-parent-user-login': '',
-        };
+        });
 
         const result = findBadges({
+          ...emptyBadgeSources,
           twitchGlobalBadges: twitchSanitisedGlobalBadges,
-          chatterinoBadges: [],
-          ffzChannelBadges: [],
-          ffzGlobalBadges: [],
           twitchChannelBadges: [],
           userstate,
         });
 
-        expect(result).toEqual<SanitisedBadgeSet[]>([
-          {
-            id: badge.id,
-            title: badge.title,
-            url: badge.url,
-            type: badge.type,
-            set: badge.set,
-            color: badge.color,
-            owner_username: badge.owner_username,
-          },
-        ]);
+        expect(result).toEqual<SanitisedBadgeSet[]>([badge]);
       },
     );
 
     test.each(twitchSanitisedChannelBadges)(
       'should find channel badge %s',
       badge => {
-        const userstate: UserStateTags = {
+        const userstate = createUserStateTags({
           'badges-raw': `${badge.set}/${badge.id.split('_').pop()}`,
           badges: {
             [badge.set]: badge.id.split('_').pop(),
           },
           'user-id': '123456789',
-          username: 'testuser',
-          'display-name': 'TestUser',
-          color: '#FF0000',
-          mod: 'false',
-          subscriber: 'false',
-          turbo: 'false',
-          'user-type': '',
-          'reply-parent-display-name': '',
-          'reply-parent-msg-body': '',
-          'reply-parent-msg-id': '',
-          'reply-parent-user-login': '',
-        };
+        });
 
         const result = findBadges({
+          ...emptyBadgeSources,
           twitchGlobalBadges: [],
-          chatterinoBadges: [],
-          ffzChannelBadges: [],
-          ffzGlobalBadges: [],
           twitchChannelBadges: twitchSanitisedChannelBadges,
           userstate,
         });
 
-        expect(result).toEqual<SanitisedBadgeSet[]>([
-          {
-            id: badge.id,
-            title: badge.title,
-            url: badge.url,
-            type: badge.type,
-            set: badge.set,
-            color: badge.color,
-            owner_username: badge.owner_username,
-          },
-        ]);
+        expect(result).toEqual<SanitisedBadgeSet[]>([badge]);
       },
     );
 
     test('uses source badges for shared chat messages', () => {
-      const sourceSubscriberBadge: SanitisedBadgeSet = {
-        id: '3',
-        url: 'https://example.com/source-sub.png',
-        type: 'Twitch Subscriber Badge',
-        title: 'Source 3-Month Subscriber',
-        set: 'subscriber',
-      };
-
-      const targetSubscriberBadge: SanitisedBadgeSet = {
-        id: '1',
-        url: 'https://example.com/target-sub.png',
-        type: 'Twitch Subscriber Badge',
-        title: 'Target Subscriber',
-        set: 'subscriber',
-      };
-
-      const userstate: UserStateTags = {
+      const userstate = createUserStateTags({
         'badges-raw': 'subscriber/1',
         'room-id': 'target-room',
         'source-room-id': 'source-room',
@@ -123,24 +83,11 @@ describe('findBadges', () => {
           subscriber: '1',
         },
         'user-id': '123456789',
-        username: 'testuser',
-        'display-name': 'TestUser',
-        color: '#FF0000',
-        mod: 'false',
-        subscriber: 'false',
-        turbo: 'false',
-        'user-type': '',
-        'reply-parent-display-name': '',
-        'reply-parent-msg-body': '',
-        'reply-parent-msg-id': '',
-        'reply-parent-user-login': '',
-      };
+      });
 
       const result = findBadges({
+        ...emptyBadgeSources,
         twitchGlobalBadges: [],
-        chatterinoBadges: [],
-        ffzChannelBadges: [],
-        ffzGlobalBadges: [],
         twitchChannelBadges: [targetSubscriberBadge, sourceSubscriberBadge],
         userstate,
       });
@@ -149,23 +96,7 @@ describe('findBadges', () => {
     });
 
     test('uses source badges when the source room is the current room', () => {
-      const sourceSubscriberBadge: SanitisedBadgeSet = {
-        id: '3',
-        url: 'https://example.com/source-sub.png',
-        type: 'Twitch Subscriber Badge',
-        title: 'Source 3-Month Subscriber',
-        set: 'subscriber',
-      };
-
-      const targetSubscriberBadge: SanitisedBadgeSet = {
-        id: '1',
-        url: 'https://example.com/target-sub.png',
-        type: 'Twitch Subscriber Badge',
-        title: 'Target Subscriber',
-        set: 'subscriber',
-      };
-
-      const userstate: UserStateTags = {
+      const userstate = createUserStateTags({
         'badges-raw': 'subscriber/1',
         'room-id': 'source-room',
         'source-room-id': 'source-room',
@@ -174,24 +105,11 @@ describe('findBadges', () => {
           subscriber: '1',
         },
         'user-id': '123456789',
-        username: 'testuser',
-        'display-name': 'TestUser',
-        color: '#FF0000',
-        mod: 'false',
-        subscriber: 'false',
-        turbo: 'false',
-        'user-type': '',
-        'reply-parent-display-name': '',
-        'reply-parent-msg-body': '',
-        'reply-parent-msg-id': '',
-        'reply-parent-user-login': '',
-      };
+      });
 
       const result = findBadges({
+        ...emptyBadgeSources,
         twitchGlobalBadges: [],
-        chatterinoBadges: [],
-        ffzChannelBadges: [],
-        ffzGlobalBadges: [],
         twitchChannelBadges: [targetSubscriberBadge, sourceSubscriberBadge],
         userstate,
       });
@@ -216,30 +134,17 @@ describe('findBadges', () => {
         set: 'bits',
       };
 
-      const userstate: UserStateTags = {
+      const userstate = createUserStateTags({
         'badges-raw': 'bits/1000',
         badges: {
           bits: '1000',
         },
         'user-id': '123456789',
-        username: 'testuser',
-        'display-name': 'TestUser',
-        color: '#FF0000',
-        mod: 'false',
-        subscriber: 'false',
-        turbo: 'false',
-        'user-type': '',
-        'reply-parent-display-name': '',
-        'reply-parent-msg-body': '',
-        'reply-parent-msg-id': '',
-        'reply-parent-user-login': '',
-      };
+      });
 
       const result = findBadges({
+        ...emptyBadgeSources,
         twitchGlobalBadges: [globalBadge],
-        chatterinoBadges: [],
-        ffzChannelBadges: [],
-        ffzGlobalBadges: [],
         twitchChannelBadges: [channelBadge],
         userstate,
       });
@@ -264,30 +169,17 @@ describe('findBadges', () => {
         set: 'subscriber',
       };
 
-      const userstate: UserStateTags = {
+      const userstate = createUserStateTags({
         'badges-raw': 'subscriber/12',
         badges: {
           subscriber: '12',
         },
         'user-id': '123456789',
-        username: 'testuser',
-        'display-name': 'TestUser',
-        color: '#FF0000',
-        mod: 'false',
-        subscriber: 'false',
-        turbo: 'false',
-        'user-type': '',
-        'reply-parent-display-name': '',
-        'reply-parent-msg-body': '',
-        'reply-parent-msg-id': '',
-        'reply-parent-user-login': '',
-      };
+      });
 
       const result = findBadges({
+        ...emptyBadgeSources,
         twitchGlobalBadges: [globalSubscriberBadge],
-        chatterinoBadges: [],
-        ffzChannelBadges: [],
-        ffzGlobalBadges: [],
         twitchChannelBadges: [channelSubscriberBadge],
         userstate,
       });
@@ -296,30 +188,17 @@ describe('findBadges', () => {
     });
 
     test('omits twitch badges when neither channel nor global urls resolve', () => {
-      const userstate: UserStateTags = {
+      const userstate = createUserStateTags({
         'badges-raw': 'subscriber/12',
         badges: {
           subscriber: '12',
         },
         'user-id': '123456789',
-        username: 'testuser',
-        'display-name': 'TestUser',
-        color: '#FF0000',
-        mod: 'false',
-        subscriber: 'false',
-        turbo: 'false',
-        'user-type': '',
-        'reply-parent-display-name': '',
-        'reply-parent-msg-body': '',
-        'reply-parent-msg-id': '',
-        'reply-parent-user-login': '',
-      };
+      });
 
       const result = findBadges({
+        ...emptyBadgeSources,
         twitchGlobalBadges: [],
-        chatterinoBadges: [],
-        ffzChannelBadges: [],
-        ffzGlobalBadges: [],
         twitchChannelBadges: [],
         userstate,
       });

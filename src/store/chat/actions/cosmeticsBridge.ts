@@ -77,10 +77,10 @@ function rememberSevenTvUserTwitchLink(
       const oldest = twitchIdsBySevenTvUserId.keys().next().value;
       if (oldest !== undefined) {
         const evictedTwitchIds = twitchIdsBySevenTvUserId.get(oldest);
-        evictedTwitchIds?.forEach(twitchId => {
-          sevenTvUserIdByTwitchId.delete(twitchId);
-        });
         if (evictedTwitchIds) {
+          evictedTwitchIds.forEach(twitchId => {
+            sevenTvUserIdByTwitchId.delete(twitchId);
+          });
           forgetEntitlementIdsForTwitchUsers(evictedTwitchIds);
         }
         twitchIdsBySevenTvUserId.delete(oldest);
@@ -178,9 +178,6 @@ export const applyEntitlementCreateEvent = (data: {
   }
 };
 
-/**
- * Clear paint and badge bindings for every Twitch account linked to a 7TV user.
- */
 export const applyEntitlementResetEvent = (sevenTvUserId: string): void => {
   const twitchIds = twitchIdsBySevenTvUserId.get(sevenTvUserId);
   if (!twitchIds) {
