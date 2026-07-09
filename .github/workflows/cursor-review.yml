@@ -85,7 +85,7 @@ jobs:
             --model composer-2.5 \
             --output-format text \
             -p "$(cat .github/cursor/review-run.md)" \
-            > cursor-output.md
+            | tee cursor-output.md
 
       - name: Upload Cursor output
         if: steps.run_cursor.outcome == 'success'

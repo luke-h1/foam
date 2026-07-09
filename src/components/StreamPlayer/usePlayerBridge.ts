@@ -159,7 +159,7 @@ export function usePlayerBridge({
   }
   const telemetry = telemetryRef.current;
   const activeLoadKeyRef = useRef<string | null>(null);
-  const loadKey = `${sourceKey}:${webViewKey}:${autoplay}:${channel ?? ''}:${clip ?? ''}:${contentKind}:${video ?? ''}`;
+  const loadKey = `${sourceKey}:${webViewKey}`;
 
   if (activeLoadKeyRef.current !== loadKey) {
     activeLoadKeyRef.current = loadKey;
@@ -214,11 +214,8 @@ export function usePlayerBridge({
 
   useUnmountCallback(disposeStability);
 
-  // Dispose only on unmount. beginLoad() already retires the previous session via
-  // cancelActiveSession() on every loadKey change, and it runs in the render body
-  // before this cleanup would fire - keying the effect on loadKey would dispose the
-  // freshly-started session right after it was created, dropping load metrics for
-  // every stream after the first.
+  // Dispose on unmount only; beginLoad() already retires the prior session on each
+  // load, so keying this on loadKey would kill the freshly-started one.
   useEffect(() => {
     return () => {
       telemetry.dispose();

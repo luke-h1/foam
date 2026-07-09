@@ -71,6 +71,31 @@ function loadFailureLogMessage(reason: string | undefined, error: unknown) {
   return `player failed to load: ${reason ?? 'unknown'}`;
 }
 
+function reasonFailureMetadata(reason: string | undefined) {
+  if (reason === 'webview_error') {
+    return {
+      exceptionName: 'StreamPlayerWebViewError',
+      fingerprint: ['stream-player-webview-error'],
+    };
+  }
+  if (reason?.startsWith('http_')) {
+    return {
+      exceptionName: 'StreamPlayerHttpError',
+      fingerprint: ['stream-player-http-error'],
+    };
+  }
+  if (reason === 'load_timeout') {
+    return {
+      exceptionName: 'StreamPlayerLoadTimeout',
+      fingerprint: ['stream-player-load-timeout'],
+    };
+  }
+  return {
+    exceptionName: 'StreamPlayerLoadFailed',
+    fingerprint: ['stream-player-load-failed'],
+  };
+}
+
 function loadFailureLogMetadata(
   reason: string | undefined,
   error: unknown,
@@ -83,30 +108,9 @@ function loadFailureLogMetadata(
     };
   }
 
-  const reasonFailure =
-    reason === 'webview_error'
-      ? {
-          exceptionName: 'StreamPlayerWebViewError',
-          fingerprint: ['stream-player-webview-error'],
-        }
-      : reason?.startsWith('http_')
-        ? {
-            exceptionName: 'StreamPlayerHttpError',
-            fingerprint: ['stream-player-http-error'],
-          }
-        : {
-            exceptionName:
-              reason === 'load_timeout'
-                ? 'StreamPlayerLoadTimeout'
-                : 'StreamPlayerLoadFailed',
-            fingerprint: [
-              `stream-player-load-${reason === 'load_timeout' ? 'timeout' : 'failed'}`,
-            ],
-          };
-
   return {
     name: 'twitch_player_error',
-    ...reasonFailure,
+    ...reasonFailureMetadata(reason),
     error,
     ...telemetryAttrs,
   };
