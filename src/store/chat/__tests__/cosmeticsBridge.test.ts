@@ -238,6 +238,39 @@ describe('applyEntitlementResetEvent', () => {
     expect(mockRemoveUserPaint).not.toHaveBeenCalled();
     expect(mockRemoveUserBadge).not.toHaveBeenCalled();
   });
+
+  test('forgets every remembered entitlement id for a user when entitlements reset', () => {
+    applyEntitlementCreateEvent({
+      entitlement: createBadgeEntitlement('badge-1', 'ttv-1', 'entitlement-1'),
+      kind: 'BADGE',
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-1',
+    });
+    applyEntitlementCreateEvent({
+      entitlement: createBadgeEntitlement('badge-2', 'ttv-1', 'entitlement-2'),
+      kind: 'BADGE',
+      ttvUserId: 'ttv-1',
+      paintId: null,
+      badgeId: 'badge-2',
+    });
+
+    applyEntitlementResetEvent('stv-user-1');
+    mockRemoveUserPaint.mockClear();
+    mockRemoveUserBadge.mockClear();
+
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-1',
+      ttvUserId: null,
+    });
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-2',
+      ttvUserId: null,
+    });
+
+    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
+    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
+  });
 });
 
 describe('applyEntitlementUpdateEvent', () => {

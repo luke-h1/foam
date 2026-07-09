@@ -36,7 +36,9 @@ function forgetEntitlementIdsForTwitchUsers(
     return;
   }
 
-  for (const [entitlementId, twitchUserId] of twitchIdByEntitlementId) {
+  for (const [entitlementId, twitchUserId] of Array.from(
+    twitchIdByEntitlementId.entries(),
+  )) {
     if (twitchIds.has(twitchUserId)) {
       twitchIdByEntitlementId.delete(entitlementId);
     }
