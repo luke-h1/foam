@@ -34,9 +34,12 @@ function upload(args: string[]): void {
     org,
     project,
   });
-  const { command, args } = resolveSentryCliInvocation(sentryCli, uploadArgs);
+  const { command, args: cliArgs } = resolveSentryCliInvocation(
+    sentryCli,
+    uploadArgs,
+  );
 
-  runTool(command, args, {
+  runTool(command, cliArgs, {
     env: {
       ...process.env,
       SENTRY_AUTH_TOKEN: authToken,
