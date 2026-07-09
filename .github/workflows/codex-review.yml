@@ -2,12 +2,18 @@ name: Codex review
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, labeled]
   issue_comment:
     types: [created]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Pull request number to review
+        required: true
+        type: string
 
 concurrency:
-  group: codex-${{ github.event.pull_request.number || github.event.issue.number }}-${{ github.event.comment.id || 'pr' }}
+  group: codex-${{ github.event.pull_request.number || github.event.issue.number || inputs.pr_number }}-${{ github.event.comment.id || github.event_name }}
   cancel-in-progress: true
 
 permissions:
@@ -16,15 +22,24 @@ permissions:
 jobs:
   codex:
     if: |
-      (github.event_name == 'pull_request' &&
-        github.event.pull_request.head.repo.full_name == github.repository &&
-        github.event.pull_request.draft == false) ||
-      (
-        github.event_name == 'issue_comment' &&
-        github.event.issue.pull_request != null &&
-        contains(github.event.comment.body, '@codex') &&
-        !endsWith(github.event.comment.user.login, '[bot]') &&
-        github.event.comment.user.type != 'Bot'
+      github.repository == 'luke-h1/foam' && (
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event_name == 'issue_comment' &&
+          github.event.issue.pull_request != null &&
+          contains(github.event.comment.body, '@codex') &&
+          !endsWith(github.event.comment.user.login, '[bot]') &&
+          github.event.comment.user.type != 'Bot'
+        ) ||
+        (
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          github.event.pull_request.draft == false &&
+          (
+            vars.CODEX_REVIEW_ENABLED == 'true' ||
+            contains(github.event.pull_request.labels.*.name, 'codex-review')
+          )
+        )
       )
     runs-on: ubuntu-latest
     outputs:
@@ -37,6 +52,14 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f0cc3c2241fb702e7404e0 # v8
         with:
           script: |
+            if (context.eventName === 'workflow_dispatch') {
+              const prNumber = context.payload.inputs.pr_number;
+              core.setOutput('pr_number', String(prNumber));
+              core.setOutput('ref', `refs/pull/${prNumber}/merge`);
+              core.setOutput('triggered_by', 'workflow_dispatch');
+              return;
+            }
+
             if (context.eventName === 'pull_request') {
               core.setOutput('pr_number', String(context.payload.pull_request.number));
               core.setOutput('ref', `refs/pull/${context.payload.pull_request.number}/merge`);
