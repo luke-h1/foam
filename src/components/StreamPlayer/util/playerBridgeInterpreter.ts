@@ -39,6 +39,12 @@ export type PlayerBridgeAction =
     }
   | { type: 'markFirstPlayingReported' }
   | { type: 'markPlaybackBlockedReported' }
+  | { type: 'recordLoadFailed'; reason: string; error?: unknown }
+  | { type: 'recordPlaybackFreeze'; stalledMs: number }
+  | {
+      type: 'recordPlaybackStarted';
+      startSource: 'bridge_playing';
+    }
   | { type: 'notifyEnded' }
   | { type: 'notifyError'; message: string }
   | { type: 'notifyOffline' }
@@ -121,6 +127,7 @@ export function interpretPlayerMessage(
       if (!context.reportedFirstPlaying) {
         actions.push(
           { type: 'markFirstPlayingReported' },
+          { type: 'recordPlaybackStarted', startSource: 'bridge_playing' },
           {
             type: 'countMetric',
             name: 'stream.playing',
@@ -206,19 +213,27 @@ export function interpretPlayerMessage(
           args: [message.payload?.step ?? '?', message.payload?.detail ?? ''],
         },
       ];
-    case 'error':
+    case 'error': {
+      const embedMessage = message.payload?.message ?? 'Unknown embed error';
       return [
         {
-          type: 'log',
-          level: 'warn',
-          message: '[StreamPlayer:embed ERROR]',
-          args: [message.payload?.message ?? message.payload],
+          type: 'recordLoadFailed',
+          reason: 'embed_error',
+          error: {
+            name: 'twitch_player_error',
+            exceptionName: 'StreamPlayerEmbedError',
+            fingerprint: ['stream-player-embed-error'],
+            channel: context.channel,
+            elapsedMs,
+            message: embedMessage,
+          },
         },
         {
           type: 'notifyError',
-          message: message.payload?.message ?? 'Unknown embed error',
+          message: embedMessage,
         },
       ];
+    }
     case 'contentGateDetected':
       return [
         {
@@ -269,6 +284,10 @@ export function interpretPlayerMessage(
       }
 
       const actions: PlayerBridgeAction[] = [
+        {
+          type: 'recordPlaybackFreeze',
+          stalledMs: message.payload.stalledMs,
+        },
         {
           type: 'log',
           level: 'error',

@@ -33,6 +33,7 @@ interface StreamPlayerWebViewProps {
   onError?: (error: string) => void;
   onHttpError: (error: { statusCode: number; url: string }) => void;
   onLoadEnd?: (url: string) => void;
+  onLoadFailed?: (reason: string, error: unknown) => void;
   onMessage: ComponentProps<typeof WebView>['onMessage'];
   onOpenWindow?: ComponentProps<typeof WebView>['onOpenWindow'];
   onWebViewLoaded?: () => void;
@@ -57,6 +58,7 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
   onError,
   onHttpError,
   onLoadEnd,
+  onLoadFailed,
   onMessage,
   onOpenWindow,
   onWebViewLoaded,
@@ -82,20 +84,7 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
 
   const handleWebViewError = (event: { nativeEvent: WebViewError }) => {
     const { nativeEvent } = event;
-    logger.main.error(
-      `StreamPlayer WebView error: ${nativeEvent.description}`,
-      {
-        name: 'stream_error',
-        error: nativeEvent,
-        category: 'Stream',
-        action: 'webview_error',
-        code: nativeEvent.code,
-        description: nativeEvent.description,
-        url: nativeEvent.url,
-        channel,
-      },
-    );
-
+    onLoadFailed?.('webview_error', nativeEvent);
     onError?.(nativeEvent.description);
   };
 
@@ -106,20 +95,7 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       statusCode: nativeEvent.statusCode,
     });
 
-    logger.main.error(
-      `StreamPlayer HTTP error: ${nativeEvent.statusCode} ${nativeEvent.description}`,
-      {
-        name: 'stream_error',
-        error: nativeEvent,
-        category: 'Stream',
-        action: 'webview_http_error',
-        statusCode: nativeEvent.statusCode,
-        description: nativeEvent.description,
-        url: nativeEvent.url,
-        channel,
-      },
-    );
-
+    onLoadFailed?.(`http_${nativeEvent.statusCode}`, nativeEvent);
     onError?.(`HTTP ${nativeEvent.statusCode}: ${nativeEvent.description}`);
   };
 

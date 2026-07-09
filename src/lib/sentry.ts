@@ -246,6 +246,44 @@ export async function startSpanAsync<T>(
   return Sentry.startSpan({ name, op, attributes }, fn);
 }
 
+export type Span = Sentry.Span;
+
+export type SpanOutcome = 'ok' | 'error' | 'cancelled';
+
+/**
+ * Starts a span that is not automatically bound to the current scope. Use this
+ * for multi-step work (e.g. player load) that finishes outside the call stack
+ * that created the span.
+ */
+export function startInactiveSpan(
+  name: string,
+  op: string,
+  attributes?: Record<string, string | number | boolean>,
+): Sentry.Span | undefined {
+  init();
+  if (!sentryStatus.enabled) {
+    return undefined;
+  }
+  return Sentry.startInactiveSpan({ name, op, attributes });
+}
+
+export function endSpan(
+  span: Sentry.Span | undefined,
+  outcome: SpanOutcome,
+): void {
+  if (!span) {
+    return;
+  }
+  if (outcome === 'ok') {
+    span.setStatus({ code: 1, message: 'ok' });
+  } else if (outcome === 'error') {
+    span.setStatus({ code: 2, message: 'internal_error' });
+  } else {
+    span.setStatus({ code: 2, message: 'cancelled' });
+  }
+  span.end();
+}
+
 type MonitoringEventPrefix =
   | 'api'
   | 'auth'

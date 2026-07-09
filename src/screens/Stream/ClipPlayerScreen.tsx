@@ -7,7 +7,6 @@ import { router } from 'expo-router';
 import { IconButton } from '@app/components/IconButton/IconButton';
 import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
-import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { theme } from '@app/styles/themes';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 
@@ -18,7 +17,6 @@ interface ClipPlayerScreenProps {
 export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
   const { t } = useTranslation(['stream', 'common']);
   const insets = useSafeAreaInsets();
-  const { config } = useRemoteConfig();
 
   if (!id) {
     return (
@@ -35,7 +33,6 @@ export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
     <View style={styles.container}>
       <StreamPlayer
         clip={id}
-        parent={config.twitchPlayerEmbedParent.value}
         autoplay
         muted={false}
         height='100%'

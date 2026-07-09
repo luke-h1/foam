@@ -35,7 +35,17 @@ Look for the originating spec, in this order:
 
 Anything in the repo that documents how code should be written, such as `CODING_STANDARDS.md` or `CONTRIBUTING.md`.
 
-### 4. Spawn both sub-agents in parallel
+### 4. Run static checks
+
+Run the repo's automated gates in parallel (adapt script names if `package.json` differs):
+
+- `bun run prettier:check` — formatting
+- `bun run lint:check` — ESLint
+- `bun run ts:check` — TypeScript (`tsc --noEmit`)
+
+Capture stdout/stderr for any failing command. If all three pass, note that briefly. Do not fix failures here — report them under `## Tooling` in step 6.
+
+### 5. Spawn both sub-agents in parallel
 
 Send a single message with two `Agent` tool calls. Use the `general-purpose` subagent for both.
 
@@ -53,11 +63,13 @@ Send a single message with two `Agent` tool calls. Use the `general-purpose` sub
 
 If the spec is missing, skip the Spec sub-agent and note this in the final report.
 
-### 5. Aggregate
+### 6. Aggregate
+
+Present the tooling results under `## Tooling` (pass/fail per command, with the relevant output for failures).
 
 Present the two reports under `## Standards` and `## Spec` headings, verbatim or lightly cleaned. Do **not** merge or rerank findings — the two axes are deliberately separate (see _Why two axes_).
 
-End with a one-line summary: total findings per axis, and the worst issue _within each axis_ (if any). Don't pick a single winner across axes — that's the reranking the separation exists to prevent.
+End with a one-line summary: tooling pass/fail, total findings per axis, and the worst issue _within each axis_ (if any). Don't pick a single winner across axes — that's the reranking the separation exists to prevent.
 
 ## Why two axes
 

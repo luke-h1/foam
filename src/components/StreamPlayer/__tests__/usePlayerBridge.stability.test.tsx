@@ -7,6 +7,8 @@ import { usePlayerBridge } from '../usePlayerBridge';
 
 jest.mock('@app/lib/sentry', () => ({
   countMetric: jest.fn(),
+  endSpan: jest.fn(),
+  startInactiveSpan: jest.fn(),
 }));
 
 jest.mock('@app/utils/logger', () => ({
@@ -49,6 +51,7 @@ function renderBridge(
     usePlayerBridge({
       autoplay: true,
       channel: 'foo',
+      contentKind: 'live',
       deferOverlayUntilUserUnmute: false,
       enhancedStabilityEnabled,
       forceRefresh,
@@ -149,6 +152,7 @@ describe('usePlayerBridge enhanced stability', () => {
         usePlayerBridge({
           autoplay: true,
           channel: 'foo',
+          contentKind: 'live',
           deferOverlayUntilUserUnmute: false,
           enhancedStabilityEnabled: true,
           forceRefresh,

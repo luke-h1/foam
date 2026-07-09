@@ -3,6 +3,7 @@ import { InteractionManager, Platform, StyleSheet, View } from 'react-native';
 import type { WebViewMessageEvent } from 'react-native-webview';
 import { WebView } from 'react-native-webview';
 
+import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useWatchTimeTracking } from '@app/hooks/useWatchTimeTracking';
 import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
@@ -11,6 +12,7 @@ import { logger } from '@app/utils/logger';
 import { Image } from '../Image/Image';
 import { ControlsOverlay } from './ControlsOverlay';
 import { PIP_ENABLED } from './pipFeature';
+import { PLAYER_LOAD_TIMEOUT_MS } from './playerTelemetry';
 import { DebugErrorOverlay, TouchBlockOverlay } from './StreamPlayerOverlays';
 import { StreamPlayerPoster } from './StreamPlayerPoster';
 import { StreamPlayerWebView } from './StreamPlayerWebView';
@@ -107,8 +109,6 @@ true;
  * frame is already on screen before the loading frame fades away.
  */
 const POSTER_HIDE_DELAY_MS = 450;
-// Never strand the poster over the player if the page errors before load-end.
-const POSTER_SAFETY_TIMEOUT_MS = 9000;
 
 export const StreamPlayer = memo(function StreamPlayer({
   autoplay = true,
@@ -134,7 +134,6 @@ export const StreamPlayer = memo(function StreamPlayer({
   onVideoAreaPress,
   onVideoAreaSwipeDown,
   onWebViewLoaded,
-  parent = 'www.twitch.tv',
   posterUrl,
   showOverlayControls = false,
   sleepTimerActive,
@@ -143,6 +142,8 @@ export const StreamPlayer = memo(function StreamPlayer({
   width,
   ref,
 }: StreamPlayerProps) {
+  const { config } = useRemoteConfig();
+  const embedParent = config.twitchPlayerEmbedParent.value;
   const webViewRef = useRef<WebView>(null);
   const needsInitRef = useRef(true);
   const authCompletionReloadTimeoutRef = useRef<ReturnType<
@@ -222,7 +223,7 @@ export const StreamPlayer = memo(function StreamPlayer({
     };
   }, []);
 
-  const sourceKey = `${channel ?? ''}|${clip ?? ''}|${video ?? ''}|${parent}|${autoplay}|${initialMuted}|${deferOverlayUntilUserUnmute}`;
+  const sourceKey = `${channel ?? ''}|${clip ?? ''}|${video ?? ''}|${embedParent}|${autoplay}|${initialMuted}|${deferOverlayUntilUserUnmute}`;
 
   const generation = `${sourceKey}|${webViewKey}`;
   generationRef.current = generation;
@@ -249,7 +250,7 @@ export const StreamPlayer = memo(function StreamPlayer({
   useEffect(() => {
     const timeout = setTimeout(
       () => setLoadedGeneration(generationRef.current),
-      POSTER_SAFETY_TIMEOUT_MS,
+      PLAYER_LOAD_TIMEOUT_MS,
     );
     return () => clearTimeout(timeout);
   }, [sourceKey, webViewKey]);
@@ -295,10 +296,13 @@ export const StreamPlayer = memo(function StreamPlayer({
   };
 
   const enhancedVideoStability = usePreference('enhancedVideoStability');
+  const contentKind = clip ? 'clip' : video ? 'vod' : 'live';
 
   const {
     handleMessage,
     hasContentGate,
+    noteWebViewLoadFailed,
+    noteWebViewPlaybackStarted,
     overlayUnlocked,
     pause,
     pipActive,
@@ -311,6 +315,8 @@ export const StreamPlayer = memo(function StreamPlayer({
   } = usePlayerBridge({
     autoplay,
     channel,
+    clip,
+    contentKind,
     deferOverlayUntilUserUnmute,
     enhancedStabilityEnabled: enhancedVideoStability,
     forceRefresh: remountEmbedWebView,
@@ -331,10 +337,12 @@ export const StreamPlayer = memo(function StreamPlayer({
     runJavaScript,
     scheduleAuthCompletionReload,
     sourceKey,
+    video,
     webViewKey,
   });
 
   const channelName = channel || 'twitch';
+  const awaitBridgePlaybackStart = showOverlayControls && !clip;
   /**
    * Memoised so the URL only changes when the source or a remount (webViewKey)
    * does — never on an incidental re-render (e.g. the layout nudge), which
@@ -347,7 +355,7 @@ export const StreamPlayer = memo(function StreamPlayer({
         ? {
             uri: buildTwitchClipPlayerUrl({
               clip,
-              parent,
+              parent: embedParent,
               autoplay,
               muted: initialMuted,
             }),
@@ -356,14 +364,14 @@ export const StreamPlayer = memo(function StreamPlayer({
             uri: buildRawTwitchPlayerUrl({
               channel: channelName,
               video,
-              parent,
+              parent: embedParent,
               autoplay,
               muted: initialMuted,
               timeSeconds: video ? resumeTimeRef.current : undefined,
             }),
           },
     // eslint-disable-next-line react-hooks/exhaustive-deps, react-doctor/exhaustive-deps
-    [clip, channelName, video, parent, autoplay, initialMuted, webViewKey],
+    [clip, channelName, video, embedParent, autoplay, initialMuted, webViewKey],
   );
 
   /**
@@ -514,8 +522,12 @@ export const StreamPlayer = memo(function StreamPlayer({
           opaque={!showBehindThumbnail}
           onError={onError}
           onHttpError={handleWebViewHttpError}
+          onLoadFailed={noteWebViewLoadFailed}
           onMessage={handleWebViewMessage}
           onWebViewLoaded={() => {
+            if (!awaitBridgePlaybackStart) {
+              noteWebViewPlaybackStarted();
+            }
             handleBridgePlaying();
             // Kick autoplay off the WebView-ready signal so the stream starts without a tap.
             if (autoplay && !clip) {
