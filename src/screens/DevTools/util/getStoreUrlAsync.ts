@@ -29,7 +29,8 @@ export async function getStoreUrlAsync() {
     // App Store signing certificate, so getIosApplicationReleaseTypeAsync() returns
     // APP_STORE for them too — making isTestFlight unreliable on its own.
     // Guard with the bundle ID to ensure only the real production build hits the App Store.
-    const isProductionBuild = Application.applicationId === PRODUCTION_BUNDLE_ID;
+    const isProductionBuild =
+      Application.applicationId === PRODUCTION_BUNDLE_ID;
 
     if (isTestFlight || !isProductionBuild) {
       const testFlightUrl = 'itms-beta://';
