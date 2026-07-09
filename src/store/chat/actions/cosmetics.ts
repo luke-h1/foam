@@ -494,11 +494,25 @@ export const getUserBadgeId = (ttvUserId: string): string | undefined =>
   chatStore$.userBadgeIds[ttvUserId]?.peek();
 
 export const updateBadge = (badge: SanitisedBadgeSet) => {
-  if (badge.id) {
-    const cell = chatStore$.badges[badge.id];
-    cell?.set(badge);
-    refreshCachedUserCosmeticsForDefinition(badge.id);
+  if (!badge.id) {
+    return;
   }
+
+  const normalizedBadge = normalizeSevenTvBadge(badge);
+  if (!normalizedBadge.url?.trim()) {
+    return;
+  }
+
+  const cell = chatStore$.badges[badge.id];
+  const previousUrl = cell?.peek()?.url?.trim();
+  cell?.set(normalizedBadge);
+  clearMissingBadge(badge.id);
+
+  if (previousUrl !== normalizedBadge.url.trim()) {
+    bumpCosmeticBindingsVersion();
+  }
+
+  refreshCachedUserCosmeticsForDefinition(badge.id);
 };
 
 export const removeBadge = (badgeId: string) => {

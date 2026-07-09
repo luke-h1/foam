@@ -153,9 +153,35 @@ describe('useChatCosmetics', () => {
     ).toBe(true);
   });
 
-  test('retries a previously fetched user when retryMissingBadge is requested and no renderable badge exists', async () => {
+  test('does not refetch paint-only users when retryMissingBadge is requested', async () => {
     setCachedCosmetics({
       paintId: 'paint-1',
+      twitchUserId: 'paint-only-user',
+    });
+    mockGetUserBadge.mockReturnValue(undefined);
+
+    const { result } = renderHook(() =>
+      useChatCosmetics({
+        userId: null,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.fetchUserCosmetics('paint-only-user');
+      await result.current.fetchUserCosmetics('paint-only-user', {
+        retryMissingBadge: true,
+      });
+    });
+
+    expect(mockRequestUserCosmeticsViaPresence.mock.calls).toEqual([]);
+    expect(
+      result.current.fetchedCosmeticsUsersRef.current.has('paint-only-user'),
+    ).toBe(true);
+  });
+
+  test('retries a previously fetched user when retryMissingBadge is requested and a badge binding lacks a renderable definition', async () => {
+    setCachedCosmetics({
+      badgeId: 'badge-1',
       twitchUserId: 'retry-user',
     });
     mockGetUserBadge.mockReturnValue(undefined);
@@ -180,6 +206,28 @@ describe('useChatCosmetics', () => {
     ]);
     expect(
       result.current.fetchedCosmeticsUsersRef.current.has('retry-user'),
+    ).toBe(true);
+  });
+
+  test('does not refetch users that already have cached paint-only cosmetics', async () => {
+    setCachedCosmetics({
+      paintId: 'paint-1',
+      twitchUserId: 'paint-only-user',
+    });
+
+    const { result } = renderHook(() =>
+      useChatCosmetics({
+        userId: null,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.fetchUserCosmetics('paint-only-user');
+    });
+
+    expect(mockRequestUserCosmeticsViaPresence).not.toHaveBeenCalled();
+    expect(
+      result.current.fetchedCosmeticsUsersRef.current.has('paint-only-user'),
     ).toBe(true);
   });
 });

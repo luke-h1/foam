@@ -347,6 +347,8 @@ const loadChannelResourcesInternal = async (
     });
 
     if (plan.kind === 'cached' && existingCache) {
+      const cachedRefreshSettled: ProviderFailureSettled[] = [];
+
       if (plan.fetchEmoteSetId) {
         if (exitIfAborted(signal, true)) {
           return false;
@@ -402,7 +404,7 @@ const loadChannelResourcesInternal = async (
           trigger: 'cached_subscriber_emotes_refresh',
         });
 
-        notifyProviderLoadFailures(channelId, subscriberSettled, existingCache);
+        cachedRefreshSettled.push(...subscriberSettled);
 
         const subscriberResult = subscriberSettled[0]?.result;
         const subscriberEmotes =
@@ -441,7 +443,7 @@ const loadChannelResourcesInternal = async (
           trigger: 'cached_badges_refresh',
         });
 
-        notifyProviderLoadFailures(channelId, badgeSettled, existingCache);
+        cachedRefreshSettled.push(...badgeSettled);
 
         const badgeByKey = reconcileSettledSpecs(badgeSettled, {
           channelId,
@@ -492,6 +494,13 @@ const loadChannelResourcesInternal = async (
           screen: 'chat',
         });
       }
+
+      notifyProviderLoadFailures(
+        channelId,
+        cachedRefreshSettled,
+        existingCache,
+      );
+
       batch(() => {
         chatStore$.currentChannelId.set(channelId);
         chatStore$.loadingState.set('COMPLETED');

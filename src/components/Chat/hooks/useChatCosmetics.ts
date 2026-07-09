@@ -19,7 +19,7 @@ function hasRenderableCosmetics(twitchUserId: string): boolean {
     : undefined;
   const paintId = getUserPaintId(twitchUserId);
 
-  return Boolean(paintId && renderableBadge);
+  return Boolean(paintId || renderableBadge);
 }
 
 export function useChatCosmetics(options: { userId?: string | null } = {}) {
@@ -69,7 +69,7 @@ export function useChatCosmetics(options: { userId?: string | null } = {}) {
 
     if (
       fetchedCosmeticsUsersRef.current.has(twitchUserId) &&
-      (!options.retryMissingBadge || renderableBadge)
+      (!options.retryMissingBadge || renderableBadge || !existingBadgeId)
     ) {
       return;
     }
