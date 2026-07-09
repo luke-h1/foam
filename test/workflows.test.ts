@@ -47,7 +47,10 @@ import {
   type S3Copier,
   saveEntries,
 } from '../scripts/workflows/s3Cache';
-import { buildSentrySizeAnalysisUploadArgs } from '../scripts/workflows/sentrySizeAnalysis';
+import {
+  buildSentrySizeAnalysisUploadArgs,
+  resolveSentryCliInvocation,
+} from '../scripts/workflows/sentrySizeAnalysis';
 import {
   appendVariant,
   getVariantMeta,
@@ -909,6 +912,56 @@ describe('sentrySizeAnalysis', () => {
       '--pr-number',
       '42',
     ]);
+  });
+
+  test('wraps sentry-cli with arch -arm64 on Rosetta macOS runners', () => {
+    const originalPlatform = process.platform;
+    const originalArch = process.arch;
+
+    Object.defineProperty(process, 'platform', { value: 'darwin' });
+    Object.defineProperty(process, 'arch', { value: 'x64' });
+
+    expect(
+      resolveSentryCliInvocation('./node_modules/.bin/sentry-cli', [
+        'build',
+        'upload',
+        './build-artifacts/app.ipa',
+      ]),
+    ).toEqual({
+      command: 'arch',
+      args: [
+        '-arm64',
+        './node_modules/.bin/sentry-cli',
+        'build',
+        'upload',
+        './build-artifacts/app.ipa',
+      ],
+    });
+
+    Object.defineProperty(process, 'platform', { value: originalPlatform });
+    Object.defineProperty(process, 'arch', { value: originalArch });
+  });
+
+  test('keeps sentry-cli invocation unchanged on native arm64 macOS', () => {
+    const originalPlatform = process.platform;
+    const originalArch = process.arch;
+
+    Object.defineProperty(process, 'platform', { value: 'darwin' });
+    Object.defineProperty(process, 'arch', { value: 'arm64' });
+
+    expect(
+      resolveSentryCliInvocation('./node_modules/.bin/sentry-cli', [
+        'build',
+        'upload',
+        './build-artifacts/app.aab',
+      ]),
+    ).toEqual({
+      command: './node_modules/.bin/sentry-cli',
+      args: ['build', 'upload', './build-artifacts/app.aab'],
+    });
+
+    Object.defineProperty(process, 'platform', { value: originalPlatform });
+    Object.defineProperty(process, 'arch', { value: originalArch });
   });
 });
 

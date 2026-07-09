@@ -18,6 +18,33 @@ export type SentrySizeAnalysisUploadOptions = {
   prNumber?: string;
 };
 
+export type SentryCliInvocation = {
+  command: string;
+  args: string[];
+};
+
+/**
+ * Sentry Size Analysis converts IPA/XCArchive on macOS and requires a native
+ * arm64 sentry-cli process. Self-hosted runners often execute under Rosetta
+ * (x86_64) even on Apple Silicon hardware.
+ */
+export function resolveSentryCliInvocation(
+  sentryCli: string,
+  uploadArgs: string[],
+): SentryCliInvocation {
+  if (process.platform === 'darwin' && process.arch === 'x64') {
+    return {
+      command: 'arch',
+      args: ['-arm64', sentryCli, ...uploadArgs],
+    };
+  }
+
+  return {
+    command: sentryCli,
+    args: uploadArgs,
+  };
+}
+
 export function buildSentrySizeAnalysisUploadArgs(
   options: SentrySizeAnalysisUploadOptions,
 ): string[] {

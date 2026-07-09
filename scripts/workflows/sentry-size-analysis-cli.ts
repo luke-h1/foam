@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 
 import {
   buildSentrySizeAnalysisUploadArgs,
+  resolveSentryCliInvocation,
   SENTRY_SIZE_ANALYSIS_DEFAULT_ORG,
   SENTRY_SIZE_ANALYSIS_DEFAULT_PROJECT,
 } from './sentrySizeAnalysis';
@@ -33,13 +34,14 @@ function upload(args: string[]): void {
     org,
     project,
   });
+  const { command, args } = resolveSentryCliInvocation(sentryCli, uploadArgs);
 
-  runTool(sentryCli, uploadArgs, {
+  runTool(command, args, {
     env: {
       ...process.env,
       SENTRY_AUTH_TOKEN: authToken,
       SENTRY_LOAD_DOTENV: '0',
-      SENTRY_URL: process.env.SENTRY_URL ?? 'https://sentry.io/',
+      SENTRY_URL: process.env.SENTRY_URL ?? 'https://sentry.io',
     },
     stdio: 'inherit',
   });

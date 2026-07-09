@@ -130,6 +130,10 @@ sentry_find_ios_size_analysis_artifact() {
   printf '%s\n' "$ipa_path"
 }
 
+sentry_host_supports_arm64() {
+  [ "$(uname -s)" = "Darwin" ] && arch -arm64 /usr/bin/true 2>/dev/null
+}
+
 sentry_upload_size_analysis() {
   local artifact_path="$1"
 
@@ -148,19 +152,36 @@ sentry_upload_size_analysis() {
     return 0
   fi
 
+  if [ "$(uname -s)" = "Darwin" ] && [ "$(uname -m)" = "x86_64" ] && ! sentry_host_supports_arm64; then
+    echo "Skipping Sentry Size Analysis upload because XCArchive and IPA uploads require Apple Silicon"
+    return 0
+  fi
+
   local bin
   bin="$(sentry_cli_bin)"
 
   local build_configuration
   build_configuration="$(sentry_size_analysis_build_configuration)"
 
+  local -a upload_args=(
+    build upload "$artifact_path"
+    --org "${SENTRY_ORG:-foam-tv}"
+    --project "${SENTRY_PROJECT:-foam-tv-mobile}"
+    --build-configuration "$build_configuration"
+  )
+
   echo "Uploading Sentry Size Analysis build from $artifact_path ($build_configuration)"
-  SENTRY_URL="${SENTRY_URL:-https://sentry.io/}" \
+
+  if [ "$(uname -s)" = "Darwin" ] && [ "$(uname -m)" = "x86_64" ]; then
+    SENTRY_URL="${SENTRY_URL:-https://sentry.io}" \
+      SENTRY_LOAD_DOTENV="${SENTRY_LOAD_DOTENV:-0}" \
+      sentry_run_upload arch -arm64 "$bin" "${upload_args[@]}"
+    return $?
+  fi
+
+  SENTRY_URL="${SENTRY_URL:-https://sentry.io}" \
     SENTRY_LOAD_DOTENV="${SENTRY_LOAD_DOTENV:-0}" \
-    sentry_run_upload "$bin" build upload "$artifact_path" \
-      --org "${SENTRY_ORG:-foam-tv}" \
-      --project "${SENTRY_PROJECT:-foam-tv-mobile}" \
-      --build-configuration "$build_configuration"
+    sentry_run_upload "$bin" "${upload_args[@]}"
 }
 
 sentry_cli_bin() {
@@ -252,7 +273,7 @@ sentry_upload_dsyms() {
   dist="$(sentry_dist)"
 
   echo "Uploading Sentry dSYMs from ${dsym_paths[*]}"
-  SENTRY_URL="${SENTRY_URL:-https://sentry.io/}" \
+  SENTRY_URL="${SENTRY_URL:-https://sentry.io}" \
     SENTRY_LOAD_DOTENV="${SENTRY_LOAD_DOTENV:-0}" \
     SENTRY_RELEASE="$release" \
     SENTRY_DIST="$dist" \
@@ -301,7 +322,7 @@ sentry_upload_ota_sourcemaps() {
   echo "Uploading Sentry OTA source maps from $output_dir"
   SENTRY_ORG="${SENTRY_ORG:-foam-tv}" \
     SENTRY_PROJECT="${SENTRY_PROJECT:-foam-tv-mobile}" \
-    SENTRY_URL="${SENTRY_URL:-https://sentry.io/}" \
+    SENTRY_URL="${SENTRY_URL:-https://sentry.io}" \
     SENTRY_LOAD_DOTENV="${SENTRY_LOAD_DOTENV:-0}" \
     SENTRY_RELEASE="$release" \
     SENTRY_DIST="$dist" \
