@@ -6,8 +6,8 @@ import {
   onlineManager,
   QueryClientProvider,
 } from '@tanstack/react-query';
+import { fetch } from 'expo/fetch';
 
-import { fetch } from '@app/lib/expoFetch';
 import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
 import {
   listenNetworkConfirmed,

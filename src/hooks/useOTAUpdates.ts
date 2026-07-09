@@ -15,7 +15,6 @@ import {
 } from 'expo-updates';
 
 import i18next from '@app/i18n/i18next';
-import { drainInFlightExpoFetches } from '@app/lib/expoFetch';
 import { countOtaMetric } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 import {
@@ -141,12 +140,6 @@ export function useOTAUpdates() {
 
   const applyUpdate = useCallback(async () => {
     try {
-      /**
-       * Settle any in-flight expo/fetch requests before reloadAsync frees the
-       * JS runtime; a native response resolving against a torn-down runtime
-       * crashes in facebook::jsi::Pointer::~Pointer (FOAM-TV-MOBILE-16, #699).
-       */
-      await drainInFlightExpoFetches();
       await reloadAsync({
         reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
       });
