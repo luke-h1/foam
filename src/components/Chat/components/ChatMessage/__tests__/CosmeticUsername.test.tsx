@@ -6,40 +6,6 @@ import type { PaintData } from '@app/types/seventv/cosmetics';
 import { PaintedUsername } from '../CosmeticUsername/CosmeticUsername';
 import { PaintLayerTiledImage } from '../CosmeticUsername/PaintLayerTiledImage';
 
-jest.mock('@native-html/render', () => {
-  const React = jest.requireActual('react');
-  const { Text } = jest.requireActual('react-native');
-
-  return {
-    __esModule: true,
-    default: ({
-      renderers,
-      source,
-    }: {
-      renderers?: Record<
-        string,
-        React.ComponentType<{
-          tnode: { attributes: Record<string, string> };
-        }>
-      >;
-      source: { html: string };
-    }) => {
-      if (
-        renderers?.span &&
-        source.html.includes('data-seventv-painted-text="true"')
-      ) {
-        const SpanRenderer = renderers.span;
-        return React.createElement(SpanRenderer, {
-          tnode: { attributes: { 'data-seventv-painted-text': 'true' } },
-        });
-      }
-
-      const text = source.html.replaceAll(/<[^>]+>/g, '');
-      return React.createElement(Text, null, text);
-    },
-  };
-});
-
 jest.mock('expo-image', () => {
   const React = jest.requireActual('react');
   const { View } = jest.requireActual('react-native');
