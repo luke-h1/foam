@@ -26,7 +26,10 @@ import { handlePersonalEmoteSetEntitlement } from './personalEmotes';
 const MAX_SEVEN_TV_USER_LINK_ENTRIES = 2000;
 const twitchIdsBySevenTvUserId = new Map<string, Set<string>>();
 const sevenTvUserIdByTwitchId = new Map<string, string>();
-const twitchIdByEntitlementId = new Map<string, string>();
+const twitchIdByEntitlementId = new Map<
+  string,
+  { kind: 'BADGE' | 'PAINT' | 'EMOTE_SET'; twitchUserId: string }
+>();
 
 function forgetEntitlementIdsForTwitchUsers(
   twitchUserIds: Iterable<string>,
@@ -36,10 +39,10 @@ function forgetEntitlementIdsForTwitchUsers(
     return;
   }
 
-  for (const [entitlementId, twitchUserId] of Array.from(
+  for (const [entitlementId, link] of Array.from(
     twitchIdByEntitlementId.entries(),
   )) {
-    if (twitchIds.has(twitchUserId)) {
+    if (twitchIds.has(link.twitchUserId)) {
       twitchIdByEntitlementId.delete(entitlementId);
     }
   }
@@ -48,6 +51,7 @@ function forgetEntitlementIdsForTwitchUsers(
 function rememberEntitlementTwitchLink(
   entitlementId: string,
   twitchUserId: string,
+  kind: 'BADGE' | 'PAINT' | 'EMOTE_SET',
 ): void {
   if (
     twitchIdByEntitlementId.size >= MAX_SEVEN_TV_USER_LINK_ENTRIES &&
@@ -59,7 +63,7 @@ function rememberEntitlementTwitchLink(
     }
   }
 
-  twitchIdByEntitlementId.set(entitlementId, twitchUserId);
+  twitchIdByEntitlementId.set(entitlementId, { kind, twitchUserId });
 }
 
 function rememberSevenTvUserTwitchLink(
@@ -148,7 +152,7 @@ export const applyEntitlementCreateEvent = (data: {
   }
 
   if (ttvUserId && entitlement.id) {
-    rememberEntitlementTwitchLink(entitlement.id, ttvUserId);
+    rememberEntitlementTwitchLink(entitlement.id, ttvUserId, kind);
   }
 
   if (kind === 'EMOTE_SET' && ttvUserId) {
@@ -238,14 +242,27 @@ export const applyEntitlementDeleteEvent = (data: {
   entitlementId: string;
   ttvUserId: string | null;
 }): void => {
-  const ttvUserId =
-    data.ttvUserId ?? twitchIdByEntitlementId.get(data.entitlementId) ?? null;
+  const rememberedLink = twitchIdByEntitlementId.get(data.entitlementId);
+  const ttvUserId = data.ttvUserId ?? rememberedLink?.twitchUserId ?? null;
   if (!ttvUserId) {
     return;
   }
 
-  removeUserPaint(ttvUserId);
-  removeUserBadge(ttvUserId);
+  switch (rememberedLink?.kind) {
+    case 'PAINT':
+      removeUserPaint(ttvUserId);
+      break;
+    case 'BADGE':
+      removeUserBadge(ttvUserId);
+      break;
+    case 'EMOTE_SET':
+      break;
+    default:
+      removeUserPaint(ttvUserId);
+      removeUserBadge(ttvUserId);
+      break;
+  }
+
   syncUserCosmeticsCacheForTwitchUser(ttvUserId);
   twitchIdByEntitlementId.delete(data.entitlementId);
   logger.stvWs.info(`Removed entitlements for user: ${ttvUserId}`);

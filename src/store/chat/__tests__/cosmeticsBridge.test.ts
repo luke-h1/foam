@@ -17,6 +17,8 @@ import {
 import { handlePersonalEmoteSetEntitlement } from '@app/store/chat/actions/personalEmotes';
 import type { EntitlementCreate } from '@app/types/seventv/cosmetics';
 
+import { createBadgeEntitlement } from './__fixtures__/cosmeticsBridge.fixture';
+
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
   addBadge: jest.fn(),
   addPaint: jest.fn(),
@@ -58,42 +60,6 @@ const mockRemoveUserPaint = jest.mocked(removeUserPaint);
 const mockHandlePersonalEmoteSetEntitlement = jest.mocked(
   handlePersonalEmoteSetEntitlement,
 );
-
-function createBadgeEntitlement(
-  badgeId: string,
-  ttvUserId: string,
-  entitlementId = `entitlement-${badgeId}`,
-): EntitlementCreate {
-  return {
-    id: entitlementId,
-    kind: 0,
-    object: {
-      id: entitlementId,
-      kind: 'BADGE',
-      ref_id: badgeId,
-      user: {
-        id: 'stv-user-1',
-        username: 'user',
-        display_name: 'User',
-        avatar_url: '',
-        style: { badge_id: badgeId },
-        role_ids: { length: 0 },
-        connections: {
-          0: {
-            id: ttvUserId,
-            platform: 'TWITCH',
-            username: 'user',
-            display_name: 'User',
-            linked_at: 0,
-            emote_capacity: 0,
-            emote_set_id: '',
-          },
-          length: 1,
-        },
-      },
-    },
-  };
-}
 
 describe('applyEntitlementCreateEvent', () => {
   beforeEach(() => {
@@ -312,7 +278,7 @@ describe('applyEntitlementDeleteEvent', () => {
     clearEntitlementUserLinkState();
   });
 
-  test('clears bindings and syncs the per-user cache', () => {
+  test('clears only the badge binding for a remembered badge entitlement delete', () => {
     applyEntitlementCreateEvent({
       entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
       kind: 'BADGE',
@@ -326,7 +292,7 @@ describe('applyEntitlementDeleteEvent', () => {
       ttvUserId: 'ttv-1',
     });
 
-    expect(mockRemoveUserPaint.mock.calls).toEqual([['ttv-1']]);
+    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
     expect(mockRemoveUserBadge.mock.calls).toEqual([['ttv-1']]);
     expect(mockSyncCachedUserCosmeticsFromStore.mock.calls.at(-1)).toEqual([
       'stv-user-1',
@@ -334,7 +300,7 @@ describe('applyEntitlementDeleteEvent', () => {
     ]);
   });
 
-  test('resolves the twitch user from a remembered entitlement id when delete arrives without one', () => {
+  test('clears only the badge binding when delete resolves the twitch user from a remembered entitlement id', () => {
     applyEntitlementCreateEvent({
       entitlement: createBadgeEntitlement('badge-1', 'ttv-1'),
       kind: 'BADGE',
@@ -348,12 +314,41 @@ describe('applyEntitlementDeleteEvent', () => {
       ttvUserId: null,
     });
 
-    expect(mockRemoveUserPaint.mock.calls).toEqual([['ttv-1']]);
+    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
     expect(mockRemoveUserBadge.mock.calls).toEqual([['ttv-1']]);
     expect(mockSyncCachedUserCosmeticsFromStore.mock.calls.at(-1)).toEqual([
       'stv-user-1',
       'ttv-1',
     ]);
+  });
+
+  test('clears only the paint binding for a remembered paint entitlement delete', () => {
+    const entitlement: EntitlementCreate = {
+      id: 'entitlement-paint-1',
+      kind: 0,
+      object: {
+        id: 'entitlement-paint-1',
+        kind: 'PAINT',
+        ref_id: 'paint-1',
+        user: createBadgeEntitlement('badge-1', 'ttv-1').object.user,
+      },
+    };
+
+    applyEntitlementCreateEvent({
+      entitlement,
+      kind: 'PAINT',
+      ttvUserId: 'ttv-1',
+      paintId: 'paint-1',
+      badgeId: null,
+    });
+
+    applyEntitlementDeleteEvent({
+      entitlementId: 'entitlement-paint-1',
+      ttvUserId: null,
+    });
+
+    expect(mockRemoveUserPaint.mock.calls).toEqual([['ttv-1']]);
+    expect(mockRemoveUserBadge).not.toHaveBeenCalled();
   });
 
   test('evicts the oldest remembered entitlement id at the link cap', () => {
@@ -387,7 +382,7 @@ describe('applyEntitlementDeleteEvent', () => {
       ttvUserId: null,
     });
 
-    expect(mockRemoveUserPaint.mock.calls).toEqual([['ttv-1']]);
+    expect(mockRemoveUserPaint).not.toHaveBeenCalled();
     expect(mockRemoveUserBadge.mock.calls).toEqual([['ttv-1']]);
   });
 });

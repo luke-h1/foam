@@ -3,13 +3,12 @@ import { View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useSelector } from '@legendapp/state/react';
-
 import { useAuthContext } from '@app/context/AuthContext';
 import { BenchFrameProbe } from '@app/dev/imageBenchmark/BenchFrameProbe.gate';
 import { CachedEmotesProvider } from '@app/Providers/CachedEmotesProvider/CachedEmotesProvider';
 import { setChatFrontTrimSuspended } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { useCosmeticBindingsVersion } from '@app/store/chat/react/selectors';
 import {
   useChatRenderPreferences,
   useUpdatePreferences,
@@ -197,9 +196,7 @@ export const Chat = memo(
       user,
     });
 
-    const cosmeticBindingsVersion = useSelector(() =>
-      chatStore$.cosmeticBindingsVersion.get(),
-    );
+    const cosmeticBindingsVersion = useCosmeticBindingsVersion();
     const emoteReprocessKey = `${chatAssetPreferenceKey}|${cosmeticBindingsVersion}`;
 
     return (

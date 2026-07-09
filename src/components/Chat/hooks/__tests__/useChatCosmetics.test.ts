@@ -10,6 +10,7 @@ import {
 } from '@app/store/chat/actions/cosmetics';
 
 import { useChatCosmetics } from '../useChatCosmetics';
+import { setCachedCosmetics } from './__fixtures__/useChatCosmetics.fixture';
 
 jest.mock('@app/services/seventv-service', () => ({
   sevenTvService: {
@@ -40,23 +41,6 @@ const mockRequestUserCosmeticsViaPresence = jest.mocked(
   requestUserCosmeticsViaPresence,
 );
 
-function setCachedCosmetics({
-  badgeId,
-  paintId,
-  twitchUserId,
-}: {
-  badgeId?: string;
-  paintId?: string;
-  twitchUserId: string;
-}) {
-  mockGetUserBadgeId.mockImplementation(userId =>
-    userId === twitchUserId ? badgeId : undefined,
-  );
-  mockGetUserPaintId.mockImplementation(userId =>
-    userId === twitchUserId ? paintId : undefined,
-  );
-}
-
 describe('useChatCosmetics', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -83,11 +67,17 @@ describe('useChatCosmetics', () => {
   });
 
   test('skips self bootstrap when paint and badge bindings are already known', async () => {
-    setCachedCosmetics({
-      badgeId: 'badge-1',
-      paintId: 'paint-1',
-      twitchUserId: 'ttv-self',
-    });
+    setCachedCosmetics(
+      {
+        getUserBadgeId: mockGetUserBadgeId,
+        getUserPaintId: mockGetUserPaintId,
+      },
+      {
+        badgeId: 'badge-1',
+        paintId: 'paint-1',
+        twitchUserId: 'ttv-self',
+      },
+    );
     mockGetUserBadge.mockReturnValue({
       id: 'badge-1',
       url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
@@ -111,10 +101,16 @@ describe('useChatCosmetics', () => {
   });
 
   test('skips self bootstrap when only paint is known', async () => {
-    setCachedCosmetics({
-      paintId: 'paint-1',
-      twitchUserId: 'ttv-self',
-    });
+    setCachedCosmetics(
+      {
+        getUserBadgeId: mockGetUserBadgeId,
+        getUserPaintId: mockGetUserPaintId,
+      },
+      {
+        paintId: 'paint-1',
+        twitchUserId: 'ttv-self',
+      },
+    );
 
     renderHook(() =>
       useChatCosmetics({
@@ -150,11 +146,17 @@ describe('useChatCosmetics', () => {
   });
 
   test('does not refetch users that already have cached paint and renderable badge cosmetics', async () => {
-    setCachedCosmetics({
-      badgeId: 'badge-1',
-      paintId: 'paint-1',
-      twitchUserId: 'cached-user',
-    });
+    setCachedCosmetics(
+      {
+        getUserBadgeId: mockGetUserBadgeId,
+        getUserPaintId: mockGetUserPaintId,
+      },
+      {
+        badgeId: 'badge-1',
+        paintId: 'paint-1',
+        twitchUserId: 'cached-user',
+      },
+    );
     mockGetUserBadge.mockReturnValue({
       id: 'badge-1',
       url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
@@ -181,10 +183,16 @@ describe('useChatCosmetics', () => {
   });
 
   test('does not refetch paint-only users when retryMissingBadge is requested', async () => {
-    setCachedCosmetics({
-      paintId: 'paint-1',
-      twitchUserId: 'paint-only-user',
-    });
+    setCachedCosmetics(
+      {
+        getUserBadgeId: mockGetUserBadgeId,
+        getUserPaintId: mockGetUserPaintId,
+      },
+      {
+        paintId: 'paint-1',
+        twitchUserId: 'paint-only-user',
+      },
+    );
     mockGetUserBadge.mockReturnValue(undefined);
 
     const { result } = renderHook(() =>
@@ -207,10 +215,16 @@ describe('useChatCosmetics', () => {
   });
 
   test('retries a previously fetched user when retryMissingBadge is requested and a badge binding lacks a renderable definition', async () => {
-    setCachedCosmetics({
-      badgeId: 'badge-1',
-      twitchUserId: 'retry-user',
-    });
+    setCachedCosmetics(
+      {
+        getUserBadgeId: mockGetUserBadgeId,
+        getUserPaintId: mockGetUserPaintId,
+      },
+      {
+        badgeId: 'badge-1',
+        twitchUserId: 'retry-user',
+      },
+    );
     mockGetUserBadge.mockReturnValue(undefined);
 
     const { result } = renderHook(() =>
@@ -237,10 +251,16 @@ describe('useChatCosmetics', () => {
   });
 
   test('does not refetch users that already have cached paint-only cosmetics', async () => {
-    setCachedCosmetics({
-      paintId: 'paint-1',
-      twitchUserId: 'paint-only-user',
-    });
+    setCachedCosmetics(
+      {
+        getUserBadgeId: mockGetUserBadgeId,
+        getUserPaintId: mockGetUserPaintId,
+      },
+      {
+        paintId: 'paint-1',
+        twitchUserId: 'paint-only-user',
+      },
+    );
 
     const { result } = renderHook(() =>
       useChatCosmetics({

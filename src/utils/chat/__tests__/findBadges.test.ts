@@ -32,7 +32,6 @@ describe('findBadges', () => {
         const result = findBadges({
           twitchGlobalBadges: twitchSanitisedGlobalBadges,
           chatterinoBadges: [],
-          chatUsers: [],
           ffzChannelBadges: [],
           ffzGlobalBadges: [],
           twitchChannelBadges: [],
@@ -78,7 +77,6 @@ describe('findBadges', () => {
         const result = findBadges({
           twitchGlobalBadges: [],
           chatterinoBadges: [],
-          chatUsers: [],
           ffzChannelBadges: [],
           ffzGlobalBadges: [],
           twitchChannelBadges: twitchSanitisedChannelBadges,
@@ -141,7 +139,6 @@ describe('findBadges', () => {
       const result = findBadges({
         twitchGlobalBadges: [],
         chatterinoBadges: [],
-        chatUsers: [],
         ffzChannelBadges: [],
         ffzGlobalBadges: [],
         twitchChannelBadges: [targetSubscriberBadge, sourceSubscriberBadge],
@@ -193,7 +190,6 @@ describe('findBadges', () => {
       const result = findBadges({
         twitchGlobalBadges: [],
         chatterinoBadges: [],
-        chatUsers: [],
         ffzChannelBadges: [],
         ffzGlobalBadges: [],
         twitchChannelBadges: [targetSubscriberBadge, sourceSubscriberBadge],
@@ -242,7 +238,6 @@ describe('findBadges', () => {
       const result = findBadges({
         twitchGlobalBadges: [globalBadge],
         chatterinoBadges: [],
-        chatUsers: [],
         ffzChannelBadges: [],
         ffzGlobalBadges: [],
         twitchChannelBadges: [channelBadge],
@@ -291,7 +286,6 @@ describe('findBadges', () => {
       const result = findBadges({
         twitchGlobalBadges: [globalSubscriberBadge],
         chatterinoBadges: [],
-        chatUsers: [],
         ffzChannelBadges: [],
         ffzGlobalBadges: [],
         twitchChannelBadges: [channelSubscriberBadge],
@@ -324,7 +318,6 @@ describe('findBadges', () => {
       const result = findBadges({
         twitchGlobalBadges: [],
         chatterinoBadges: [],
-        chatUsers: [],
         ffzChannelBadges: [],
         ffzGlobalBadges: [],
         twitchChannelBadges: [],

@@ -1,6 +1,5 @@
 import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
-import type { ChatUser } from '@app/store/chat/types/constants';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
@@ -10,7 +9,6 @@ interface FindBadgesParams {
   twitchGlobalBadges: SanitisedBadgeSet[];
   ffzGlobalBadges: SanitisedBadgeSet[];
   ffzChannelBadges: SanitisedBadgeSet[];
-  chatUsers: ChatUser[];
   chatterinoBadges: SanitisedBadgeSet[];
 }
 
@@ -172,7 +170,6 @@ export function findBadges({
   twitchChannelBadges,
   twitchGlobalBadges,
   ffzGlobalBadges,
-  chatUsers,
   chatterinoBadges,
 }: FindBadgesParams): SanitisedBadgeSet[] {
   const badges: SanitisedBadgeSet[] = [];
@@ -224,18 +221,6 @@ export function findBadges({
       owner_username: b.owner_username,
     });
   });
-
-  const stvUser = chatUsers.find(u => u.name === `@${userstate.username}`);
-
-  if (stvUser && stvUser.cosmetics?.badge_id) {
-    const stvBadge = stvUser.cosmetics.badges.find(
-      b => b.id === stvUser.cosmetics?.badge_id,
-    );
-
-    if (stvBadge) {
-      addBadgeIfMissing(badges, stvBadge);
-    }
-  }
 
   if (userstate['user-id']) {
     const storeBadge = getUserBadge(userstate['user-id']);

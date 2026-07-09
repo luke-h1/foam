@@ -151,3 +151,5 @@ export const useChannelEmoteData = (channelId: string | null) => {
 };
 
 export const usePaints = () => useSelector(chatStore$.paints);
+export const useCosmeticBindingsVersion = () =>
+  useSelector(chatStore$.cosmeticBindingsVersion);
