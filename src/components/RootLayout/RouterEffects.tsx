@@ -11,7 +11,7 @@ import { useClearExpiredStorageItems } from '@app/hooks/useClearExpiredStorageIt
 import { useIcloudPreferenceSync } from '@app/hooks/useIcloudPreferenceSync';
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useOnAppStateChange } from '@app/hooks/useOnAppStateChange';
-import { useOnReconnect } from '@app/hooks/useOnReconnect';
+import '@app/hooks/useOnReconnect';
 import { usePopulateAuth } from '@app/hooks/usePopulateAuth';
 import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
 import { useSyncRef } from '@app/hooks/useSyncRef';
@@ -79,7 +79,6 @@ export function RouterEffects() {
       focusManager.setFocused(current === 'active');
     }
   });
-  useOnReconnect();
   useClearExpiredStorageItems();
   useIcloudPreferenceSync();
   usePopulateAuth();

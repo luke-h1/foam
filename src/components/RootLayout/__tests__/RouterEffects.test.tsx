@@ -39,9 +39,7 @@ jest.mock('@app/hooks/useIcloudPreferenceSync', () => ({
 jest.mock('@app/hooks/useOnAppStateChange', () => ({
   useOnAppStateChange: jest.fn(),
 }));
-jest.mock('@app/hooks/useOnReconnect', () => ({
-  useOnReconnect: jest.fn(),
-}));
+jest.mock('@app/hooks/useOnReconnect', () => ({}));
 jest.mock('@app/hooks/usePopulateAuth', () => ({
   usePopulateAuth: jest.fn(),
 }));
