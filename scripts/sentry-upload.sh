@@ -64,6 +64,41 @@ sentry_size_analysis_build_configuration() {
   printf 'Release-%s\n' "$app_variant"
 }
 
+sentry_path_mtime() {
+  local path="$1"
+
+  if stat -f %m "$path" >/dev/null 2>&1; then
+    stat -f %m "$path"
+    return
+  fi
+
+  stat -c %Y "$path" 2>/dev/null || printf '0\n'
+}
+
+sentry_newest_xcarchive() {
+  local newest=""
+  local newest_mtime=0
+  local archive
+
+  for archive in "$@"; do
+    local info_plist="$archive/Info.plist"
+
+    if [ ! -f "$info_plist" ]; then
+      continue
+    fi
+
+    local mtime
+    mtime="$(sentry_path_mtime "$info_plist")"
+
+    if [ "$mtime" -gt "$newest_mtime" ]; then
+      newest_mtime="$mtime"
+      newest="$archive"
+    fi
+  done
+
+  printf '%s\n' "$newest"
+}
+
 sentry_find_ios_size_analysis_artifact() {
   local ipa_path="$1"
   local build_marker="$2"
@@ -83,9 +118,7 @@ sentry_find_ios_size_analysis_artifact() {
     )
 
     if [ "${#archives[@]}" -gt 0 ]; then
-      xcarchive_path="$(
-        printf '%s\0' "${archives[@]}" | xargs -0 ls -td 2>/dev/null | head -1 || true
-      )"
+      xcarchive_path="$(sentry_newest_xcarchive "${archives[@]}")"
     fi
   fi
 
