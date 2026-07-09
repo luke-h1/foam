@@ -1,11 +1,5 @@
 # Changelog
 
-## 1.0.1 (Internal)
-
-### 🐛 Bug Fixes
-
-- **chat:** Send 7tv bridge cosmetics lookups by username ([#694](https://github.com/lhowsam/foam/issues/694))
-
 ## 1.0.1 (Production)
 
 ### ♻️ Refactor
@@ -103,7 +97,17 @@
 - **app:** Ui improvements ([#681](https://github.com/lhowsam/foam/issues/681))
 - **infrastructure:** Add OTA compat check
 
-## 1.0.0 (TestFlight)
+## 1.0.1 (TestFlight)
+
+### 🐛 Bug Fixes
+
+- **chat:** Send 7tv bridge cosmetics lookups by username ([#694](https://github.com/lhowsam/foam/issues/694))
+
+## 1.0.1 (Internal)
+
+_No changes in this build beyond the TestFlight build._
+
+## 1.0.0 (Production)
 
 ### ⚡ Performance
 
@@ -129,11 +133,13 @@
 
 - **test:** Full e2e coverage
 
-## 0.0.42 (Internal)
+## 1.0.0 (TestFlight)
 
-### 🐛 Bug Fixes
+_No changes in this build beyond the Production build._
 
-- **app:** Sentry initialization
+## 1.0.0 (Internal)
+
+_No changes in this build beyond the TestFlight build._
 
 ## 0.0.42 (TestFlight)
 
@@ -168,6 +174,13 @@
 
 - **app:** Update rozenite ([#612](https://github.com/lhowsam/foam/issues/612))
 - **infrastructure:** Update action versions ([#618](https://github.com/lhowsam/foam/issues/618))
+
+## 0.0.42 (Internal)
+
+### 🐛 Bug Fixes
+
+- **app:** Sentry initialization
+- **app:** Sentry initialization
 
 ## 0.0.41 (Production)
 
@@ -926,7 +939,7 @@
 
 ### 🐛 Bug Fixes
 
-- **app:** Fix commitlint
+- **app:** Fix commmitlint
 
 ## 0.0.2 (Production)
 
