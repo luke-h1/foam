@@ -74,7 +74,9 @@ const roseGoldPaint: PaintData = {
 
 describe('buildPaintCssTextStyle', () => {
   test('clips gradient backgrounds to text and stacks drop-shadow filters', () => {
-    expect(buildPaintCssTextStyle(roseGoldPaint, '#ffffff', 1)).toEqual<PaintCssTextStyle>({
+    expect(
+      buildPaintCssTextStyle(roseGoldPaint, '#ffffff', 1),
+    ).toEqual<PaintCssTextStyle>({
       backgroundClip: 'text',
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
