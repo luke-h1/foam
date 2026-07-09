@@ -77,13 +77,13 @@ sentry_find_ios_size_analysis_artifact() {
         -name '*.xcarchive' \
         -newer "$build_marker" \
         -print0 2>/dev/null \
-        | xargs -0 ls -td 2>/dev/null \
+        | xargs -0 --no-run-if-empty ls -td 2>/dev/null \
         | head -1 \
         || true
     )"
   fi
 
-  if [ -n "$xcarchive_path" ] && [ -e "$xcarchive_path" ]; then
+  if [ -n "$xcarchive_path" ] && [ "$xcarchive_path" != "." ] && [ -e "$xcarchive_path" ]; then
     printf '%s\n' "$xcarchive_path"
     return
   fi
