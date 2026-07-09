@@ -25,6 +25,12 @@ const controllers = new Set<AbortController>();
  */
 const DRAIN_TIMEOUT_MS = 1_500;
 
+/**
+ * Extra event-loop turns after aborted requests settle so NativeResponse can
+ * release its JSI Promise handles on the JS thread before reloadAsync runs.
+ */
+const DRAIN_MACROTASK_YIELDS = 3;
+
 function nextMacrotask(): Promise<void> {
   return new Promise<void>(resolve => {
     setTimeout(resolve, 0);
@@ -87,9 +93,35 @@ export async function drainInFlightExpoFetches(): Promise<void> {
   }
 
   /**
-   *  Yield a macrotask so the native NativeResponse state transitions (and the
-   * JSI Promise releases they trigger) flush on the JS thread before the caller
+   * Yield macrotasks so native NativeResponse state transitions (and the JSI
+   * Promise releases they trigger) flush on the JS thread before the caller
    * tears the runtime down.
    */
-  await nextMacrotask();
+  for (let i = 0; i < DRAIN_MACROTASK_YIELDS; i += 1) {
+    await nextMacrotask();
+  }
+}
+
+let trackedFetchInstalled = false;
+
+/**
+ * SDK 57 replaces `globalThis.fetch` with `expo/fetch`. Any bare `fetch()` call
+ * bypasses the in-flight tracker unless we re-wrap the global. Install once at
+ * app startup, before other modules issue network requests.
+ */
+export function installTrackedExpoFetch(): void {
+  if (trackedFetchInstalled) {
+    return;
+  }
+
+  const useRnFetch =
+    process.env.EXPO_PUBLIC_USE_RN_FETCH === '1' ||
+    process.env.EXPO_PUBLIC_USE_RN_FETCH === 'true';
+
+  if (useRnFetch || typeof globalThis.fetch === 'undefined') {
+    return;
+  }
+
+  globalThis.fetch = fetch as typeof globalThis.fetch;
+  trackedFetchInstalled = true;
 }

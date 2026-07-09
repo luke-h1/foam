@@ -1,4 +1,8 @@
-import { drainInFlightExpoFetches, fetch } from '@app/lib/expoFetch';
+import {
+  drainInFlightExpoFetches,
+  fetch,
+  installTrackedExpoFetch,
+} from '@app/lib/expoFetch';
 
 const mockFetch = jest.fn();
 
@@ -63,6 +67,21 @@ test('drain aborts an in-flight request and resolves once it settles', async () 
 
 test('drain resolves when there are no in-flight requests', async () => {
   await expect(drainInFlightExpoFetches()).resolves.toBeUndefined();
+});
+
+test('installTrackedExpoFetch wraps globalThis.fetch once', () => {
+  const original = globalThis.fetch;
+
+  installTrackedExpoFetch();
+  const firstWrap = globalThis.fetch;
+
+  installTrackedExpoFetch();
+  const secondWrap = globalThis.fetch;
+
+  expect(firstWrap).toBe(fetch);
+  expect(secondWrap).toBe(firstWrap);
+
+  globalThis.fetch = original;
 });
 
 test('a caller abort still aborts the underlying request', async () => {
