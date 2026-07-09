@@ -163,16 +163,41 @@ describe('createPlayerTelemetry', () => {
     );
   });
 
-  test('ignores load failures after playback has started', () => {
+  test('logs a late error without a load metric after playback has started', () => {
     const telemetry = createPlayerTelemetry();
     telemetry.beginLoad(basePlayerTelemetryContext);
     telemetry.notePlaybackStarted('webview_loaded');
 
     jest.clearAllMocks();
-    telemetry.noteLoadFailed('embed_error');
+    const lateError = new Error('network down mid-playback');
+    telemetry.noteLoadFailed('webview_error', lateError);
 
-    expect(countMetric).not.toHaveBeenCalled();
-    expect(logger.main.error).not.toHaveBeenCalled();
+    expect(countMetric).not.toHaveBeenCalledWith(
+      'stream.player.load_failed',
+      expect.anything(),
+    );
+    expect(countMetric).toHaveBeenCalledWith('stream.player.late_error', {
+      autoplay: true,
+      channel: 'sodapoppin',
+      content_kind: 'live',
+      outcome: 'failed',
+      reason: 'webview_error',
+    });
+    expect(endSpan).not.toHaveBeenCalled();
+    expect(logger.main.error).toHaveBeenCalledWith(
+      'player failed to load: webview_error',
+      {
+        name: 'twitch_player_error',
+        exceptionName: 'StreamPlayerWebViewError',
+        fingerprint: ['stream-player-webview-error'],
+        error: lateError,
+        autoplay: true,
+        channel: 'sodapoppin',
+        content_kind: 'live',
+        outcome: 'failed',
+        reason: 'webview_error',
+      },
+    );
   });
 
   test('counts freeze events with stall duration', () => {
