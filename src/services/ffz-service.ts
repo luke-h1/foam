@@ -76,13 +76,15 @@ export const ffzService = {
     try {
       const result = await ffzApi.get<FfzGlobalEmotesResponse>('/set/global');
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-      const sanitisedSet = result.sets[
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        result.default_sets[0]
-      ].emoticons.map<FfzSanitisedEmote>((emote: FfzEmoticon) =>
-        sanitiseFfzEmote(emote, 'Global FFZ', 'UNKNOWN'),
+      const defaultSetId = String(result.default_sets[0]);
+      const defaultSet = result.sets[defaultSetId];
+      if (!defaultSet) {
+        return [];
+      }
+
+      const sanitisedSet = defaultSet.emoticons.map<FfzSanitisedEmote>(
+        (emote: FfzEmoticon) =>
+          sanitiseFfzEmote(emote, 'Global FFZ', 'UNKNOWN'),
       );
 
       return sanitisedSet as FfzSanitisedEmote[];

@@ -40,6 +40,10 @@ const LANGUAGE_NAMES: Record<string, string> = {
   pt: 'Portuguese',
 };
 
+const LANGUAGE_VALUE_SET = new Set(
+  Object.values(LANGUAGE_NAMES).map(language => language.toLowerCase()),
+);
+
 // Dedupe rapid double-taps that would push the same route twice (two stacked screens).
 const NAV_DEDUPE_MS = 1000;
 let lastNavPath = '';
@@ -125,11 +129,8 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
     // Only the media layout renders the language, so keep the tag scan out of
     // the (default) compact path.
     const languageLabel =
-      stream.tags?.find(tag =>
-        Object.values(LANGUAGE_NAMES).some(
-          language => language.toLowerCase() === tag.toLowerCase(),
-        ),
-      ) ?? LANGUAGE_NAMES[stream.language];
+      stream.tags?.find(tag => LANGUAGE_VALUE_SET.has(tag.toLowerCase())) ??
+      LANGUAGE_NAMES[stream.language];
 
     return (
       <Button

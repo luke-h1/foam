@@ -1,10 +1,11 @@
-import { memo, useEffect, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 import { View } from 'react-native';
 
 import { Image as ExpoImage } from 'expo-image';
 
 import { Text } from '@app/components/ui/Text/Text';
 import { runAnimationCommand } from '@app/lib/expo-image/runAnimationCommand';
+import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 
 import { emoteSheetStyles as styles } from './emoteSheetStyles';
 import type { EmotePickerItem } from './emoteSheetTypes';
@@ -21,6 +22,12 @@ function EmoteCellComponent({
   const innerSize = Math.round(cellSize * 0.78);
   const dimensions = { height: innerSize, width: innerSize };
   const imageRef = useRef<ExpoImage>(null);
+  const displayUrl =
+    typeof item === 'string' ? null : getEmotePickerDisplayUrl(item);
+  const urlKind = useMemo(
+    () => (displayUrl ? describeEmoteUrl(displayUrl).kind : null),
+    [displayUrl],
+  );
 
   useEffect(() => {
     if (typeof item === 'string') {
@@ -61,12 +68,17 @@ function EmoteCellComponent({
     >
       <ExpoImage
         ref={imageRef}
-        source={getEmotePickerDisplayUrl(item)}
+        source={displayUrl}
         style={dimensions}
         contentFit='contain'
         cachePolicy='memory-disk'
         decodeFormat='rgb'
-        useAppleWebpCodec
+        // Apple's WebP codec plays animated WebPs at the wrong framerate
+        // (see expo-image `useAppleWebpCodec` docs). Force the standards-
+        // compliant libwebp path for animated urls so the picker preview
+        // matches how the emote will actually play in chat, and keep the
+        // faster/lighter Apple codec for static ones.
+        useAppleWebpCodec={urlKind === 'animated' ? false : true}
         autoplay={!emoteSheetScrollActivity.isActive()}
         priority='low'
         transition={0}

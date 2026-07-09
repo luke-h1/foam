@@ -316,6 +316,50 @@ describe('ChatInlineImage loading shimmer', () => {
 
     expect(screen.queryByTestId('chat-image-shimmer')).not.toBeOnTheScreen();
   });
+
+  test('showLoadingShimmer=false suppresses the overlay on an uncached load', () => {
+    mockSharedRef = null;
+    render(
+      <ChatInlineImage
+        sourceUrl='https://static-cdn.jtvnw.net/badges/v1/foo/1'
+        style={{}}
+        showLoadingShimmer={false}
+      />,
+    );
+
+    expect(screen.queryByTestId('chat-image-shimmer')).not.toBeOnTheScreen();
+  });
+});
+
+describe('ChatInlineImage maxRetryAttempts', () => {
+  beforeEach(() => {
+    mockSharedRef = null;
+    mockImageProps = null;
+    jest.useFakeTimers();
+  });
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.clearAllMocks();
+  });
+
+  test('maxRetryAttempts=0 fails immediately on a single-url source without any backoff retry', () => {
+    const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/foo/1';
+    render(
+      <ChatInlineImage sourceUrl={sourceUrl} style={{}} maxRetryAttempts={0} />,
+    );
+
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
+
+    act(() => mockImageProps?.onError?.());
+
+    // No timer was scheduled — advancing time doesn't bump the reload nonce.
+    act(() => jest.advanceTimersByTime(60_000));
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
+
+    // The warning fires immediately because retries are disabled.
+    expect(warnMock).toHaveBeenCalledTimes(1);
+    expect(warnMock.mock.calls[0]?.[0]).toEqual('chat.emote.load_failed');
+  });
 });
 
 describe('ChatInlineImage load watchdog', () => {

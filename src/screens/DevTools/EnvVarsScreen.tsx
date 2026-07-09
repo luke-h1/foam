@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import * as AC from '@bacons/apple-colors';
@@ -92,6 +92,8 @@ function getEnvVars(): EnvVar[] {
   ];
 }
 
+const ENV_VARS = getEnvVars();
+
 async function copyEnvVar(entry: EnvVar): Promise<void> {
   if (entry.value == null) {
     return;
@@ -109,7 +111,7 @@ function maskValue(value: string): string {
 
 export function EnvVarsScreen() {
   const [revealed, setRevealed] = useState(false);
-  const envVars = useMemo(() => getEnvVars(), []);
+  const envVars = ENV_VARS;
 
   const setCount = envVars.filter(
     v => v.value != null && v.value !== '',

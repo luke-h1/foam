@@ -24,16 +24,18 @@ export function OfflineBanner() {
 
   useEffect(() => {
     return onlineManager.subscribe(isOnline => {
-      progress.value = withTiming(isOnline ? 0 : 1, {
-        duration: ANIM_DURATION,
-      });
+      progress.set(
+        withTiming(isOnline ? 0 : 1, {
+          duration: ANIM_DURATION,
+        }),
+      );
     });
   }, [progress]);
 
   const totalHeight = insets.top + BANNER_HEIGHT;
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: (progress.value - 1) * totalHeight }],
+    transform: [{ translateY: (progress.get() - 1) * totalHeight }],
   }));
 
   return (

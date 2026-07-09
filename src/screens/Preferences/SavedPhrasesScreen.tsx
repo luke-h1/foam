@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Alert, Platform, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
@@ -166,7 +166,7 @@ function NativeSavedPhrasesList() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const phraseText = useNativeState('');
 
-  const phrases = useMemo(() => savedPhrases ?? [], [savedPhrases]);
+  const phrases = savedPhrases ?? [];
 
   const handleNativeSave = () => {
     const text = phraseText.value.trim();
@@ -276,7 +276,7 @@ export function SavedPhrasesScreen() {
 
   useScrollToTop(listRef);
 
-  const phrases = useMemo(() => savedPhrases ?? [], [savedPhrases]);
+  const phrases = savedPhrases ?? [];
 
   const handleSave = useCallback(() => {
     const text = inputValue.trim();

@@ -65,6 +65,13 @@ export function ChatMessageBadges({
             compact && styles.badgeCompact,
             Boolean(moderationNotice) && styles.moderatedBadge,
           ]}
+          // Badge urls are stable per-provider (Twitch/FFZ/7TV) and don't have
+          // the transient variant-availability flakiness that emote CDNs do —
+          // a badge that 404s once will 404 forever, so skip the ~36s backoff
+          // retry cycle and drop the shimmer overlay. A dead badge just stays
+          // an empty slot next to the username instead of a pulsing box.
+          maxRetryAttempts={0}
+          showLoadingShimmer={false}
         />
       </ChatMessagePressable>,
     );

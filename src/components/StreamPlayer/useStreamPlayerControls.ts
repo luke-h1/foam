@@ -48,23 +48,23 @@ export function useStreamPlayerControls({
     clearAutoHide();
     controlsTimeoutRef.current = setTimeout(() => {
       controlsTimeoutRef.current = null;
-      controlsTarget.value = 0;
-      controlsOpacity.value = withTiming(0, CONTROLS_FADE);
+      controlsTarget.set(0);
+      controlsOpacity.set(withTiming(0, CONTROLS_FADE));
       setControlsVisible(false);
     }, CONTROLS_AUTO_HIDE_MS);
   }, [clearAutoHide, controlsOpacity, controlsTarget]);
 
   const forceHideControls = useCallback(() => {
     clearAutoHide();
-    controlsTarget.value = 0;
-    controlsOpacity.value = withTiming(0, CONTROLS_FADE);
+    controlsTarget.set(0);
+    controlsOpacity.set(withTiming(0, CONTROLS_FADE));
     setControlsVisible(false);
   }, [clearAutoHide, controlsOpacity, controlsTarget]);
 
   // Reveal the controls from JS and reset the auto-hide timer.
   const revealControls = useCallback(() => {
-    controlsTarget.value = 1;
-    controlsOpacity.value = withTiming(1, CONTROLS_FADE);
+    controlsTarget.set(1);
+    controlsOpacity.set(withTiming(1, CONTROLS_FADE));
     setControlsVisible(true);
     armAutoHide();
   }, [armAutoHide, controlsOpacity, controlsTarget]);
@@ -117,9 +117,9 @@ export function useStreamPlayerControls({
 
         const tapTime = Date.now();
         // Toggle visually on the UI thread, then hand bookkeeping to JS.
-        const nextShown = controlsTarget.value > 0.5 ? 0 : 1;
-        controlsTarget.value = nextShown;
-        controlsOpacity.value = withTiming(nextShown, CONTROLS_FADE);
+        const nextShown = controlsTarget.get() > 0.5 ? 0 : 1;
+        controlsTarget.set(nextShown);
+        controlsOpacity.set(withTiming(nextShown, CONTROLS_FADE));
         scheduleOnRN(handleTapSettled, nextShown === 1, tapTime);
       });
 

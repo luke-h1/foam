@@ -38,6 +38,7 @@ import type { StreamPlayerRef } from '@app/components/StreamPlayer/types';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
+import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useStreamQuery } from '@app/hooks/queries/useStreamQuery';
 import { useUserQuery } from '@app/hooks/queries/useUserQuery';
 import { useChannelPoll } from '@app/hooks/useChannelPoll';
@@ -116,6 +117,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   const isFocused = useIsFocused();
   const { authState } = useAuthContext();
   const customPlayerEnabled = usePreference('customPlayerEnabled');
+  const { config } = useRemoteConfig();
   const streamPlayerRef = useRef<StreamPlayerRef>(null);
   useEffect(
     () => subscribeLiveSync(() => streamPlayerRef.current?.syncToLive()),
@@ -851,6 +853,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           <StreamPlayer
             ref={streamPlayerRef}
             channel={resolvedChannelLogin}
+            parent={config.twitchPlayerEmbedParent.value}
             height='100%'
             width='100%'
             autoplay

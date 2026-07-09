@@ -15,14 +15,15 @@ import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import { useTopCategoriesQuery } from '@app/hooks/queries/useTopCategoriesQuery';
+import { useFlattenedInfiniteQuery } from '@app/hooks/useFlattenedInfiniteQuery';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 import type { Category } from '@app/types/twitch/category';
-import { flattenInfiniteQueryPages } from '@app/utils/pagination/flattenInfiniteQueryPages';
 
 const SKELETON_COUNT = 9;
+const SKELETON_DATA = Array.from({ length: SKELETON_COUNT });
 const SKELETON_COLUMNS = 3;
 const TOP_CATEGORY_SKELETON_KEY_PREFIX = 'skeleton-';
 
@@ -48,7 +49,6 @@ export function TopCategoriesScreen({
   const refreshing$ = useObservable(false);
   const refreshing = useSelector(refreshing$);
   const listRef = useRef<FlashListRef<Category>>(null);
-  const skeletonData = Array.from({ length: SKELETON_COUNT });
 
   useScrollToTop(listRef);
 
@@ -87,7 +87,7 @@ export function TopCategoriesScreen({
     refreshing$.set(false);
   }, [refetch, refreshing$]);
 
-  const allCategories = flattenInfiniteQueryPages(categories?.pages);
+  const allCategories = useFlattenedInfiniteQuery(categories?.pages);
   const showSkeleton = isLoading || (isFetching && allCategories.length === 0);
 
   if (showSkeleton) {
@@ -96,7 +96,7 @@ export function TopCategoriesScreen({
         <FlashList
           getItemType={() => 'category-skeleton'}
           contentInsetAdjustmentBehavior='automatic'
-          data={skeletonData}
+          data={SKELETON_DATA}
           keyExtractor={(_, idx) => `${TOP_CATEGORY_SKELETON_KEY_PREFIX}${idx}`}
           numColumns={SKELETON_COLUMNS}
           renderItem={renderTopCategorySkeletonItem}

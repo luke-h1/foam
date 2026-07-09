@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Alert, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
@@ -164,7 +164,7 @@ export function ChatHighlightsScreen() {
 
   useScrollToTop(listRef);
 
-  const highlights = useMemo(() => customHighlights ?? [], [customHighlights]);
+  const highlights = customHighlights ?? [];
 
   const handleAdd = useCallback(() => {
     const phrase = normaliseHighlightPhrase(inputValue);
