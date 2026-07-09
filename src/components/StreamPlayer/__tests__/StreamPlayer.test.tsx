@@ -165,7 +165,7 @@ describe('StreamPlayer component messaging', () => {
     expect(warnSpy.mock.calls[0]?.[0]).toBe(
       '[StreamPlayer:embed ERROR] embed failed',
     );
-    expect(embedErrorMetadata).toEqual({
+    expect(embedErrorMetadata).toEqual<LogMetadata>({
       name: 'twitch_player_error',
       exceptionName: 'StreamPlayerEmbedError',
       fingerprint: ['stream-player-embed-error'],

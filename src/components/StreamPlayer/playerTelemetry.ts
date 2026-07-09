@@ -114,6 +114,7 @@ function loadFailureLogMetadata(
 
 export function createPlayerTelemetry() {
   let session: ActiveLoadSession | null = null;
+  let lastAttributes: PlayerTelemetryContext | null = null;
 
   function clearLoadTimeout() {
     if (session?.timeoutHandle) {
@@ -175,6 +176,7 @@ export function createPlayerTelemetry() {
   return {
     beginLoad(attributes: PlayerTelemetryContext) {
       cancelActiveSession();
+      lastAttributes = attributes;
 
       const startedAtMs = Date.now();
       session = {
@@ -221,10 +223,11 @@ export function createPlayerTelemetry() {
     },
 
     noteFreeze(payload: Record<string, string | number | boolean>) {
-      const context = session?.attributes ?? {
-        autoplay: true,
-        contentKind: 'live' as const,
-      };
+      const context = session?.attributes ??
+        lastAttributes ?? {
+          autoplay: true,
+          contentKind: 'live' as const,
+        };
       countMetric('stream.player.freeze', {
         ...metricAttributes(context),
         ...payload,

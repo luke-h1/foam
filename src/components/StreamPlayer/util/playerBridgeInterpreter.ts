@@ -215,18 +215,25 @@ export function interpretPlayerMessage(
       ];
     case 'error': {
       const embedMessage = message.payload?.message ?? 'Unknown embed error';
+      const embedErrorMetadata = {
+        name: 'twitch_player_error',
+        exceptionName: 'StreamPlayerEmbedError',
+        fingerprint: ['stream-player-embed-error'],
+        channel: context.channel,
+        elapsedMs,
+        message: embedMessage,
+      };
       return [
         {
           type: 'recordLoadFailed',
           reason: 'embed_error',
-          error: {
-            name: 'twitch_player_error',
-            exceptionName: 'StreamPlayerEmbedError',
-            fingerprint: ['stream-player-embed-error'],
-            channel: context.channel,
-            elapsedMs,
-            message: embedMessage,
-          },
+          error: embedErrorMetadata,
+        },
+        {
+          type: 'log',
+          level: 'warn',
+          message: `[StreamPlayer:embed ERROR] ${embedMessage}`,
+          args: [embedErrorMetadata],
         },
         {
           type: 'notifyError',

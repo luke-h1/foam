@@ -158,6 +158,20 @@ export function usePlayerBridge({
     telemetryRef.current = createPlayerTelemetry();
   }
   const telemetry = telemetryRef.current;
+  const activeLoadKeyRef = useRef<string | null>(null);
+  const loadKey = `${sourceKey}:${webViewKey}:${autoplay}:${channel ?? ''}:${clip ?? ''}:${contentKind}:${video ?? ''}`;
+
+  if (activeLoadKeyRef.current !== loadKey) {
+    activeLoadKeyRef.current = loadKey;
+    telemetry.beginLoad({
+      autoplay,
+      channel,
+      clip,
+      contentKind,
+      video,
+    });
+  }
+
   const [prevPlayerSource, setPrevPlayerSource] = useState({
     autoplay,
     sourceKey,
@@ -201,26 +215,10 @@ export function usePlayerBridge({
   useUnmountCallback(disposeStability);
 
   useEffect(() => {
-    telemetry.beginLoad({
-      autoplay,
-      channel,
-      clip,
-      contentKind,
-      video,
-    });
     return () => {
       telemetry.dispose();
     };
-  }, [
-    autoplay,
-    channel,
-    clip,
-    contentKind,
-    sourceKey,
-    telemetry,
-    video,
-    webViewKey,
-  ]);
+  }, [loadKey, telemetry]);
 
   const onContentGateChangeRef = useSyncRef(onContentGateChange);
   const notifyContentGateChange = (nextHasContentGate: boolean) => {

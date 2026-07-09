@@ -189,6 +189,29 @@ describe('createPlayerTelemetry', () => {
     });
   });
 
+  test('keeps playback attributes on freeze metrics after load completes', () => {
+    const telemetry = createPlayerTelemetry();
+    telemetry.beginLoad({
+      ...basePlayerTelemetryContext,
+      contentKind: 'vod',
+      video: '12345',
+    });
+
+    jest.setSystemTime(1_500);
+    telemetry.notePlaybackStarted('bridge_playing');
+    jest.clearAllMocks();
+
+    telemetry.noteFreeze({ stalled_ms: 6000 });
+
+    expect(countMetric).toHaveBeenCalledWith('stream.player.freeze', {
+      autoplay: true,
+      channel: 'sodapoppin',
+      content_kind: 'vod',
+      video: '12345',
+      stalled_ms: 6000,
+    });
+  });
+
   test('only records playback start once per load session', () => {
     const telemetry = createPlayerTelemetry();
     telemetry.beginLoad(basePlayerTelemetryContext);

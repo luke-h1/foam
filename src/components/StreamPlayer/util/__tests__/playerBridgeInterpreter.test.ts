@@ -386,7 +386,15 @@ describe('interpretPlayerMessage', () => {
   });
 
   describe('error', () => {
-    test('records load failure and notifies with the embed error message', () => {
+    test('records load failure, logs and notifies with the embed error message', () => {
+      const embedErrorMetadata = {
+        name: 'twitch_player_error',
+        exceptionName: 'StreamPlayerEmbedError',
+        fingerprint: ['stream-player-embed-error'],
+        channel: 'sodapoppin',
+        elapsedMs: 2_500,
+        message: 'embed exploded',
+      };
       expect(
         interpretPlayerMessage(
           { type: 'error', payload: { message: 'embed exploded' } },
@@ -396,20 +404,27 @@ describe('interpretPlayerMessage', () => {
         {
           type: 'recordLoadFailed',
           reason: 'embed_error',
-          error: {
-            name: 'twitch_player_error',
-            exceptionName: 'StreamPlayerEmbedError',
-            fingerprint: ['stream-player-embed-error'],
-            channel: 'sodapoppin',
-            elapsedMs: 2_500,
-            message: 'embed exploded',
-          },
+          error: embedErrorMetadata,
+        },
+        {
+          type: 'log',
+          level: 'warn',
+          message: '[StreamPlayer:embed ERROR] embed exploded',
+          args: [embedErrorMetadata],
         },
         { type: 'notifyError', message: 'embed exploded' },
       ]);
     });
 
     test('falls back to a generic message when the payload is missing', () => {
+      const embedErrorMetadata = {
+        name: 'twitch_player_error',
+        exceptionName: 'StreamPlayerEmbedError',
+        fingerprint: ['stream-player-embed-error'],
+        channel: 'sodapoppin',
+        elapsedMs: 2_500,
+        message: 'Unknown embed error',
+      };
       expect(
         interpretPlayerMessage(
           JSON.parse('{"type":"error"}') as PlayerMessage,
@@ -419,14 +434,13 @@ describe('interpretPlayerMessage', () => {
         {
           type: 'recordLoadFailed',
           reason: 'embed_error',
-          error: {
-            name: 'twitch_player_error',
-            exceptionName: 'StreamPlayerEmbedError',
-            fingerprint: ['stream-player-embed-error'],
-            channel: 'sodapoppin',
-            elapsedMs: 2_500,
-            message: 'Unknown embed error',
-          },
+          error: embedErrorMetadata,
+        },
+        {
+          type: 'log',
+          level: 'warn',
+          message: '[StreamPlayer:embed ERROR] Unknown embed error',
+          args: [embedErrorMetadata],
         },
         { type: 'notifyError', message: 'Unknown embed error' },
       ]);
