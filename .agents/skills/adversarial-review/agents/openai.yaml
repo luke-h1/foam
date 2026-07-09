@@ -1,0 +1,4 @@
+interface:
+  display_name: "Adversarial Review"
+  short_description: "Split-context Bugbot + security + contract review with serialized findings"
+  default_prompt: "Use $adversarial-review after implementing changes or when finishing a ticket — run react-doctor --scope changed plus three parallel readonly reviewers, write findings to .claude/reviews/, then fix blocking issues."

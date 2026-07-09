@@ -20,13 +20,7 @@ else
 fi
 
 SKILLS=(
-    "bunx skills add https://github.com/expo/skills --skill building-native-ui"
-    "bunx skills add https://github.com/expo/skills --skill native-data-fetching"
-    "bunx skills add https://github.com/expo/skills --skill upgrading-expo"
-    "bunx skills add https://github.com/expo/skills --skill expo-dev-client"
-    "bunx skills add https://github.com/expo/skills --skill expo-deployment"
-    "bunx skills add https://github.com/expo/skills --skill expo-cicd-workflows"
-    "bunx skills add https://github.com/expo/skills --skill use-dom"
+    "bunx skills add https://github.com/expo/skills"
     "bunx skills add https://github.com/vercel-labs/agent-skills --skill vercel-react-native-skills"
     "bunx skills add https://github.com/callstackincubator/agent-skills --skill react-native-best-practices"
     "bunx skills add https://github.com/dammyjay93/interface-design --skill interface-design"
@@ -34,6 +28,10 @@ SKILLS=(
     "bunx skills add react-navigation/skills"
     "bunx skills add mattpocock/skills"
     "bunx skills add software-mansion-labs/skills"
+    "bunx skills add getsentry/sentry-for-ai --skill sentry-workflow"
+    "bunx skills add getsentry/cli --skill sentry-cli"
+    "bunx skills add obra/superpowers --skill verification-before-completion"
+    "bunx skills add tovimx/maestro-mobile-testing-skill --skill maestro-mobile-testing"
 )
 
 for cmd in "${SKILLS[@]}"; do
