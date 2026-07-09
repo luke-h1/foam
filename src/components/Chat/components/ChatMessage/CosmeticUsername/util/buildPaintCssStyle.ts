@@ -110,7 +110,7 @@ function buildPaintCssBackgrounds(paint: PaintData): PaintCssBackground[] {
  */
 export function buildPaintCssTextStyle(
   paint: PaintData,
-  fallbackColor: string,
+  _fallbackColor: string,
   dropShadowMode: PaintDropShadowMode,
 ): PaintCssTextStyle {
   const backgrounds = buildPaintCssBackgrounds(paint);
@@ -159,10 +159,6 @@ export function buildPaintCssTextStyle(
         }
       : {}),
   } as PaintCssTextStyle;
-
-  // `fallbackColor` is only used when the paint has no layer stops; keep the
-  // parameter so callers can pass the username tint without a second lookup.
-  void fallbackColor;
 
   return style;
 }
