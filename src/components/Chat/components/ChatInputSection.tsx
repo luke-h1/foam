@@ -34,6 +34,9 @@ import { useComposerDismissGesture } from './useComposerDismissGesture';
 
 export type { ReplyToData };
 
+const replyPreviewEntering = chatEntranceSpring(FadeInUp);
+const replyPreviewExiting = FadeOutDown.duration(140);
+
 export const ChatInputSection = memo(
   ({
     connection,
@@ -72,8 +75,8 @@ export const ChatInputSection = memo(
       <View style={styles.wrapper} testID='chat-input-bar'>
         {replyTo && (
           <Animated.View
-            entering={chatEntranceSpring(FadeInUp)}
-            exiting={FadeOutDown.duration(140)}
+            entering={replyPreviewEntering}
+            exiting={replyPreviewExiting}
             style={styles.replyPreview}
           >
             <View style={styles.replyIndicator} />

@@ -12,6 +12,9 @@ import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
 import { styles } from '../styles';
 import { chatEntranceSpring } from '../util/chatEntranceSpring';
 
+const pinnedBannerEntering = chatEntranceSpring(FadeInUp);
+const pinnedBannerExiting = FadeOutUp.duration(150);
+
 export const PinnedMessageBanner = memo(
   ({
     canModerateChat,
@@ -38,8 +41,8 @@ export const PinnedMessageBanner = memo(
 
     return (
       <Animated.View
-        entering={chatEntranceSpring(FadeInUp)}
-        exiting={FadeOutUp.duration(150)}
+        entering={pinnedBannerEntering}
+        exiting={pinnedBannerExiting}
         style={styles.pinnedMessageBanner}
       >
         <View style={styles.pinnedIconShell}>
