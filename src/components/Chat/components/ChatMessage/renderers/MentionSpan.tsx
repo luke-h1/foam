@@ -14,10 +14,11 @@ import { styles } from '../RichChatMessage.styles';
 
 interface MentionSpanProps {
   content: string;
-  baseTextStyle: StyleProp<TextStyle>;
-  fontScaleStyle: StyleProp<TextStyle>;
+  baseTextStyle?: StyleProp<TextStyle>;
+  fontScaleStyle?: StyleProp<TextStyle>;
   emoteLineStyle?: StyleProp<TextStyle>;
   compact?: boolean;
+  isModerated?: boolean;
   getMentionColor?: (username: string) => string;
   effectiveHighlightedUserSet?: ReadonlySet<string>;
   normalisedCurrentUsername?: string;
@@ -37,6 +38,7 @@ function MentionSpanComponent({
   fontScaleStyle,
   emoteLineStyle,
   compact,
+  isModerated,
   getMentionColor,
   effectiveHighlightedUserSet,
   normalisedCurrentUsername,
@@ -45,6 +47,9 @@ function MentionSpanComponent({
   useSelector(chatStore$.mentionLoginRevision);
 
   const mentionContent = formatMentionContent(content);
+  if (!mentionContent.trim()) {
+    return null;
+  }
   const mentionedUsername = mentionContent.replace(/^@/, '').trim();
   const normalisedMentionedUsername = normaliseUsername(mentionedUsername);
   const isReplyTargetMention = Boolean(
@@ -76,6 +81,7 @@ function MentionSpanComponent({
         emoteLineStyle,
         isHighlightedMention && styles.mentionHighlighted,
         getChatColorStyle(mentionColor),
+        isModerated && styles.moderatedMessageText,
       ]}
     >
       {mentionContent}

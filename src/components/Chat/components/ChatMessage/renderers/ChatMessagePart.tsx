@@ -5,16 +5,14 @@ import { RitualNotice } from '@app/components/Chat/components/usernotices/Ritual
 import { SubscriptionNotice } from '@app/components/Chat/components/usernotices/SubscriptionNotice';
 import { ViewerMileStoneNoticeComponent } from '@app/components/Chat/components/usernotices/ViewerMilestoneNotice';
 import { getChatColorStyle } from '@app/components/Chat/util/chatColorStyles';
-import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
 import { Text } from '@app/components/ui/Text/Text';
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
-import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin';
 
 import { styles } from '../RichChatMessage.styles';
 import { CheermoteRenderer } from './CheermoteRenderer';
 import { EmoteRenderer } from './EmoteRenderer';
+import { MentionSpan } from './MentionSpan';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 
 type ChatMessagePartProps = Omit<UseChatMessagePartRendererArgs, 'message'> & {
@@ -171,55 +169,24 @@ export function ChatMessagePart({
       );
 
     case 'mention': {
-      const mentionContent = formatMentionContent(
-        getParsedPartStringContent(part),
-      );
-      if (!mentionContent.trim()) {
-        return null;
-      }
-
-      const mentionedUsername = mentionContent.replace(/^@/, '').trim();
-      const normalisedMentionedUsername = normaliseUsername(mentionedUsername);
-      const isReplyTargetMention = Boolean(
-        replyPlainMentionTarget &&
-        normalisedMentionedUsername === replyPlainMentionTarget,
-      );
-
-      if (isReplyTargetMention) {
-        return (
-          <Text
-            key={getPartKey(part, index)}
-            color='gray.text'
-            style={[
-              styles.messageText,
-              compact && styles.messageTextCompact,
-              Boolean(moderationNotice) && styles.moderatedMessageText,
-            ]}
-          >
-            {mentionContent}
-          </Text>
-        );
-      }
-      const mentionColor = getMentionColor
-        ? getMentionColor(mentionedUsername)
-        : generateRandomTwitchColor(mentionedUsername);
-      const isHighlightedMention =
-        effectiveHighlightedUserSet?.has(normalisedMentionedUsername) ||
-        normalisedCurrentUsername === normalisedMentionedUsername;
-
+      // MentionSpan self-subscribes to mentionLoginRevision, so a resolved
+      // login/colour updates this span without touching the row.
       return (
-        <Text
+        <MentionSpan
           key={getPartKey(part, index)}
-          style={[
-            styles.mention,
-            compact && styles.mentionCompact,
-            isHighlightedMention && styles.mentionHighlighted,
-            getChatColorStyle(mentionColor),
+          content={getParsedPartStringContent(part)}
+          baseTextStyle={[
+            styles.messageText,
+            compact && styles.messageTextCompact,
             Boolean(moderationNotice) && styles.moderatedMessageText,
           ]}
-        >
-          {mentionContent}
-        </Text>
+          compact={compact}
+          isModerated={Boolean(moderationNotice)}
+          getMentionColor={getMentionColor}
+          effectiveHighlightedUserSet={effectiveHighlightedUserSet}
+          normalisedCurrentUsername={normalisedCurrentUsername}
+          replyPlainMentionTarget={replyPlainMentionTarget}
+        />
       );
     }
 
