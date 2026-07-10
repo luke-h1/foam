@@ -215,6 +215,7 @@ export const Chat = memo(
             messages$={messages$}
             processedMessageIdsRef={processedMessageIdsRef}
             reprocessKey={emoteReprocessKey}
+            userLogin={user?.login}
           />
           <View style={styles.keyboardAvoidingView}>
             <View style={styles.chatContainer}>
