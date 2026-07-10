@@ -111,9 +111,16 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   // reads it once readyState is OPEN, by which point onOpen has set it.
   const lastActivityAtRef = useRef(0);
   // True while a heartbeat/foreground PING is outstanding. Any inbound line
-  // clears it (a live socket answers, or is already busy); if it survives to the
-  // next heartbeat tick the socket is half-open and we reconnect.
+  // clears it (a live socket answers, or is already busy); if it survives past
+  // its deadline the socket is half-open and we reconnect.
   const awaitingPongRef = useRef(false);
+  // When the outstanding probe's PING was sent. The heartbeat and the
+  // foreground liveness check share awaitingPongRef, so each needs to know how
+  // old the pending probe actually is before declaring the socket dead — a
+  // flushed heartbeat tick right after resume must not tear down a socket whose
+  // probe is milliseconds old.
+  const probeSentAtRef = useRef(0);
+  const probeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sendIrcMessageRef = useRef<((message: string) => void) | null>(null);
   const messageBufferRef = useRef<string>('');
   const userStateRef = useRef<Record<string, string>>({});
@@ -640,10 +647,27 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       return;
     }
 
+    if (awaitingPongRef.current) {
+      // A probe is already in flight with its own deadline (AppState and the
+      // network-regain listener often fire together on resume) — don't stack a
+      // second PING and a second close timer on top of it.
+      return;
+    }
+
     awaitingPongRef.current = true;
+    const sentAt = Date.now();
+    probeSentAtRef.current = sentAt;
     sendIrcCommand('PING', 'tmi.twitch.tv');
-    setTimeout(() => {
+    if (probeTimeoutRef.current) {
+      clearTimeout(probeTimeoutRef.current);
+    }
+    probeTimeoutRef.current = setTimeout(() => {
+      probeTimeoutRef.current = null;
       if (!shouldConnectRef.current || !awaitingPongRef.current) {
+        return;
+      }
+      if (probeSentAtRef.current !== sentAt) {
+        // A newer probe superseded this one; its own deadline governs.
         return;
       }
       const currentSocket = getWebSocketRef.current();
@@ -671,8 +695,12 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       const action = getHeartbeatAction({
         isOpen: readyState === ReadyState.OPEN,
         awaitingPong: awaitingPongRef.current,
+        msSinceProbeSent: awaitingPongRef.current
+          ? Date.now() - probeSentAtRef.current
+          : null,
         msSinceLastActivity: Date.now() - lastActivityAtRef.current,
         intervalMs: CHAT_HEARTBEAT_INTERVAL_MS,
+        probeDeadlineMs: CHAT_FOREGROUND_LIVENESS_DEADLINE_MS,
       });
 
       if (action === 'wait') {
@@ -680,7 +708,8 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       }
 
       if (action === 'reconnect') {
-        // A probe from last tick went unanswered — the socket is half-open.
+        // The outstanding probe went unanswered past its deadline — the
+        // socket is half-open.
         const idleMs = Date.now() - lastActivityAtRef.current;
         logger.chat.warn(
           '💬 Twitch IRC PING unanswered past heartbeat, forcing reconnect',
@@ -694,6 +723,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       }
 
       awaitingPongRef.current = true;
+      probeSentAtRef.current = Date.now();
       sendIrcCommand('PING', 'tmi.twitch.tv');
     }, CHAT_HEARTBEAT_INTERVAL_MS);
 
@@ -730,6 +760,10 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     return () => {
       unsubscribeAppState();
       networkSubscription.remove();
+      if (probeTimeoutRef.current) {
+        clearTimeout(probeTimeoutRef.current);
+        probeTimeoutRef.current = null;
+      }
     };
   }, [shouldConnect]);
 

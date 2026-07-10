@@ -30,7 +30,10 @@ function getReconnectDelayWithJitter(
   attempt: number,
   baseInterval: number,
 ): number {
-  return getReconnectDelay(attempt, baseInterval) + Math.random() * RECONNECT_MAX_JITTER_MS;
+  return (
+    getReconnectDelay(attempt, baseInterval) +
+    Math.random() * RECONNECT_MAX_JITTER_MS
+  );
 }
 
 export interface Setters {
