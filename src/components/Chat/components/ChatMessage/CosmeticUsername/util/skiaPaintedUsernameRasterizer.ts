@@ -24,7 +24,13 @@ import type {
 } from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
-import { getPaintDropShadows, getPaintLayers } from './paintLayer';
+import {
+  getPaintDropShadows,
+  getPaintLayers,
+  isTilingCanvasRepeat,
+  type PaintLayerTileMode,
+  paintLayerTileModes,
+} from './paintLayer';
 import { getPaintTextShadows, getPaintTextStroke } from './paintTextStyle';
 import {
   cssDropShadowSigma,
@@ -522,6 +528,12 @@ export interface PaintBitmaps {
   maskImage: SkImage | null;
   animatedUrl: string | null;
   animatedRect: LogicalRect | null;
+  /**
+   * Set when the image layer tiles its texture (CSS `background-repeat`) rather
+   * than stretching to fill: the live renderer draws it through a repeating
+   * image shader across the glyph mask instead of a single `fit='fill'` image.
+   */
+  animatedTile: { tx: PaintLayerTileMode; ty: PaintLayerTileMode } | null;
   width: number;
   height: number;
   insets: { left: number; top: number; right: number; bottom: number };
@@ -579,9 +591,13 @@ export function getPaintBitmaps(
   let maskImage: SkImage | null = null;
   let animatedUrl: string | null = null;
   let animatedRect: LogicalRect | null = null;
+  let animatedTile: PaintBitmaps['animatedTile'] = null;
 
   if (imageLayer) {
     animatedUrl = skiaDecodableLayerUrl(imageLayer.image_url);
+    if (isTilingCanvasRepeat(imageLayer.canvas_repeat, imageLayer.repeat)) {
+      animatedTile = paintLayerTileModes(imageLayer.canvas_repeat);
+    }
     const maskSurface = Skia.Surface.Make(
       layout.surfaceWidthPx,
       layout.surfaceHeightPx,
@@ -616,6 +632,7 @@ export function getPaintBitmaps(
     maskImage,
     animatedUrl,
     animatedRect,
+    animatedTile,
     width: layout.surfaceWidthPx / scale,
     height: layout.surfaceHeightPx / scale,
     insets: {

@@ -3,10 +3,13 @@ import { PixelRatio } from 'react-native';
 
 import {
   Canvas,
+  Fill,
   Image,
+  ImageShader,
   Mask,
   useAnimatedImageValue,
   useFonts,
+  useImage,
 } from '@shopify/react-native-skia';
 
 import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/RichChatMessage.styles';
@@ -43,13 +46,20 @@ interface PaintedUsernameSkiaProps {
 
 /**
  * Canvas for a resolved paint: the cached static composite as one bitmap, plus
- * (for image-layer paints) the texture overlaid through the glyph mask. The
- * overlay frame comes from `useAnimatedImageValue`, which advances on the UI
- * thread, so animated paints animate at the texture's own frame rate with no
- * per-frame JS and no re-rasterizing.
+ * (for image-layer paints) the texture overlaid through the glyph mask. Stretch
+ * layers animate via `useAnimatedImageValue`, advancing on the UI thread so the
+ * texture runs at its own frame rate with no per-frame JS and no re-rasterizing;
+ * tiling layers (CSS `background-repeat`) draw a repeating image shader across
+ * the mask instead, matching the native `PaintLayerTiledImage` path.
  */
 function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
-  const animatedFrame = useAnimatedImageValue(bitmaps.animatedUrl ?? undefined);
+  const { animatedTile } = bitmaps;
+  const animatedFrame = useAnimatedImageValue(
+    animatedTile ? undefined : (bitmaps.animatedUrl ?? undefined),
+  );
+  const tiledImage = useImage(
+    animatedTile ? (bitmaps.animatedUrl ?? undefined) : undefined,
+  );
 
   const maskNode = useMemo(
     () =>
@@ -67,6 +77,36 @@ function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
   );
 
   const { width, height, insets, staticImage, animatedRect } = bitmaps;
+
+  // Tiling and stretch overlays are mutually exclusive (keyed on animatedTile),
+  // so at most one renders. The tiling branch guards on the decoded image so the
+  // masked Fill never paints its default (opaque black) before the texture loads.
+  const tiledOverlay =
+    maskNode && animatedTile && tiledImage ? (
+      <Mask mode='alpha' mask={maskNode}>
+        <Fill>
+          <ImageShader
+            image={tiledImage}
+            tx={animatedTile.tx}
+            ty={animatedTile.ty}
+          />
+        </Fill>
+      </Mask>
+    ) : null;
+
+  const stretchOverlay =
+    maskNode && !animatedTile && animatedRect ? (
+      <Mask mode='alpha' mask={maskNode}>
+        <Image
+          image={animatedFrame}
+          x={animatedRect.x}
+          y={animatedRect.y}
+          width={animatedRect.width}
+          height={animatedRect.height}
+          fit='fill'
+        />
+      </Mask>
+    ) : null;
 
   return (
     <Canvas
@@ -87,18 +127,8 @@ function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
         height={height}
         fit='fill'
       />
-      {maskNode && animatedRect ? (
-        <Mask mode='alpha' mask={maskNode}>
-          <Image
-            image={animatedFrame}
-            x={animatedRect.x}
-            y={animatedRect.y}
-            width={animatedRect.width}
-            height={animatedRect.height}
-            fit='fill'
-          />
-        </Mask>
-      ) : null}
+      {tiledOverlay}
+      {stretchOverlay}
     </Canvas>
   );
 }

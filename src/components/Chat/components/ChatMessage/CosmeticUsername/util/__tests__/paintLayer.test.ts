@@ -1,9 +1,16 @@
 import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
-import type { PaintData, PaintShadow } from '@app/types/seventv/cosmetics';
+import type {
+  PaintCanvasRepeat,
+  PaintData,
+  PaintShadow,
+} from '@app/types/seventv/cosmetics';
 
 import {
   DEFAULT_PAINT_DROP_SHADOW_MODE,
   getPaintDropShadows,
+  isTilingCanvasRepeat,
+  type PaintLayerTileMode,
+  paintLayerTileModes,
 } from '../paintLayer';
 
 const firstShadow: PaintShadow = {
@@ -75,5 +82,58 @@ describe('getPaintDropShadows', () => {
       firstShadow,
       secondShadow,
     ]);
+  });
+});
+
+describe('isTilingCanvasRepeat', () => {
+  test('layer.repeat forces tiling regardless of canvas_repeat', () => {
+    expect(isTilingCanvasRepeat('unset', true)).toBe(true);
+    expect(isTilingCanvasRepeat('no-repeat', true)).toBe(true);
+  });
+
+  test('tiling canvas_repeat values tile without layer.repeat', () => {
+    const tiling: PaintCanvasRepeat[] = [
+      'repeat',
+      'repeat-x',
+      'repeat-y',
+      'round',
+      'space',
+    ];
+    for (const canvasRepeat of tiling) {
+      expect(isTilingCanvasRepeat(canvasRepeat, false)).toBe(true);
+    }
+  });
+
+  test('non-tiling canvas_repeat values stretch to fill', () => {
+    const nonTiling: PaintCanvasRepeat[] = ['', 'no-repeat', 'revert', 'unset'];
+    for (const canvasRepeat of nonTiling) {
+      expect(isTilingCanvasRepeat(canvasRepeat, false)).toBe(false);
+    }
+  });
+});
+
+describe('paintLayerTileModes', () => {
+  test('repeat-x tiles horizontally and clamps to transparent vertically', () => {
+    expect(paintLayerTileModes('repeat-x')).toEqual<{
+      tx: PaintLayerTileMode;
+      ty: PaintLayerTileMode;
+    }>({ tx: 'repeat', ty: 'decal' });
+  });
+
+  test('repeat-y tiles vertically and clamps to transparent horizontally', () => {
+    expect(paintLayerTileModes('repeat-y')).toEqual<{
+      tx: PaintLayerTileMode;
+      ty: PaintLayerTileMode;
+    }>({ tx: 'decal', ty: 'repeat' });
+  });
+
+  test('every other repeat mode tiles both axes', () => {
+    const bothAxes: PaintCanvasRepeat[] = ['repeat', 'round', 'space', 'unset'];
+    for (const canvasRepeat of bothAxes) {
+      expect(paintLayerTileModes(canvasRepeat)).toEqual<{
+        tx: PaintLayerTileMode;
+        ty: PaintLayerTileMode;
+      }>({ tx: 'repeat', ty: 'repeat' });
+    }
   });
 });
