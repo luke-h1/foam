@@ -58,9 +58,11 @@ html, body {
   margin: 0;
   padding: 0;
   background: transparent;
-  /* The paint rule's "color: inherit" must resolve to the username's
-     fallback color, exactly as the extension's span inherits it. */
+  /* The paint rule's "color: inherit" / "font-weight: inherit" must resolve to
+     the username's fallback colour and chat's bold weight, exactly as the
+     extension's span inherits them from the chat message context. */
   color: ${fallbackColor};
+  font-weight: 700;
 }
 .painted {
   display: inline-block;

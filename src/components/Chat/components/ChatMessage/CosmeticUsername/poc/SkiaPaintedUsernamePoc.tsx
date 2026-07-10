@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { PixelRatio } from 'react-native';
 
 import { useFonts } from '@shopify/react-native-skia';
@@ -9,14 +9,23 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
-import { rasterizePaintedUsername } from './skiaPaintedUsernameRasterizer';
+import {
+  type RasterizedPaintedUsername,
+  rasterizePaintedUsername,
+} from './skiaPaintedUsernameRasterizer';
 
-// The chat renders painted usernames in Montserrat 700 (Text weight 'bold');
-// loading the same face into Skia keeps glyph shapes and metrics identical to
-// the RN Text path, so the raster drops in without shifting layout.
+// The chat renders painted usernames in Montserrat 700; loading that face keeps
+// glyph shapes and metrics identical to the RN Text path. The lighter/heavier
+// faces cover paints that set an explicit `textStyle.weight`, which the
+// extension renders as `weight * 100`; Skia then shapes from the matching face.
 const skiaFontSource = {
   Montserrat: [
+    require('@expo-google-fonts/montserrat/400Regular/Montserrat_400Regular.ttf'),
+    require('@expo-google-fonts/montserrat/500Medium/Montserrat_500Medium.ttf'),
+    require('@expo-google-fonts/montserrat/600SemiBold/Montserrat_600SemiBold.ttf'),
     require('@expo-google-fonts/montserrat/700Bold/Montserrat_700Bold.ttf'),
+    require('@expo-google-fonts/montserrat/800ExtraBold/Montserrat_800ExtraBold.ttf'),
+    require('@expo-google-fonts/montserrat/900Black/Montserrat_900Black.ttf'),
   ],
 };
 
@@ -40,12 +49,18 @@ export function SkiaPaintedUsernamePoc({
   fallbackColor = theme.color.text.dark,
 }: SkiaPaintedUsernamePocProps) {
   const fontProvider = useFonts(skiaFontSource);
+  const [raster, setRaster] = useState<RasterizedPaintedUsername | null>(null);
 
-  const raster = useMemo(() => {
+  useEffect(() => {
     if (!fontProvider) {
-      return null;
+      return;
     }
-    return rasterizePaintedUsername({
+    // Image (URL) layers decode asynchronously, so rasterization is async. The
+    // `active` guard drops results from a superseded paint; until the new
+    // raster lands the previous frame stays (chat keys a row per user, so a
+    // given instance keeps one paint for its lifetime).
+    let active = true;
+    rasterizePaintedUsername({
       displayUsername: username,
       paint,
       fallbackColor,
@@ -53,7 +68,20 @@ export function SkiaPaintedUsernamePoc({
       pixelRatio: PixelRatio.get(),
       fontProvider,
       fontFamily: 'Montserrat',
-    });
+    })
+      .then(
+        result => result,
+        () => null,
+      )
+      .then(result => {
+        if (active) {
+          setRaster(result);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, [fontProvider, username, paint, fallbackColor]);
 
   if (!raster) {

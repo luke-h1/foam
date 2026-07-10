@@ -1,4 +1,5 @@
 import type {
+  SkImage,
   SkImageFilter,
   SkPaint,
   SkShader,
@@ -6,7 +7,10 @@ import type {
 } from '@shopify/react-native-skia';
 import {
   ClipOp,
+  FilterMode,
+  FontWeight,
   ImageFormat,
+  MipmapMode,
   PaintStyle,
   Skia,
   TileMode,
@@ -76,6 +80,14 @@ const LAYOUT_WIDTH = 8192;
 // A Gaussian's visible falloff is ~3 standard deviations.
 const BLUR_EXTENT_SIGMAS = 3;
 
+/**
+ * CSS gradients interpolate their colour stops in premultiplied sRGBA
+ * (css-images-3 §3.4.1); Skia's gradient factories take this as flag `1`, so
+ * passing it matches the browser's stop blending, including alpha stops where
+ * unpremultiplied interpolation would grey the midpoints.
+ */
+const GRADIENT_PREMUL_FLAG = 1;
+
 function sortedLayerStops(layer: PaintLayerData): PaintStop[] {
   return indexedCollectionToArray<PaintStop>(layer.stops)
     .slice()
@@ -137,6 +149,8 @@ function layerShader(layer: PaintLayerData, rect: LayerRect): SkShader | null {
       colors,
       positions,
       tileMode,
+      undefined,
+      GRADIENT_PREMUL_FLAG,
     );
   }
 
@@ -173,6 +187,7 @@ function layerShader(layer: PaintLayerData, rect: LayerRect): SkShader | null {
       positions,
       TileMode.Repeat,
       localMatrix,
+      GRADIENT_PREMUL_FLAG,
     );
   }
 
@@ -183,7 +198,44 @@ function layerShader(layer: PaintLayerData, rect: LayerRect): SkShader | null {
     positions,
     TileMode.Clamp,
     localMatrix,
+    GRADIENT_PREMUL_FLAG,
   );
+}
+
+/**
+ * Image (URL) layer as a Skia shader: the decoded bitmap scaled to fill its
+ * layer rect (these paints use `background-size: 100% 100%`) and clamped, so
+ * it shows through the glyphs like the extension's `url(...)` background under
+ * `background-clip: text`.
+ */
+function imageLayerShader(image: SkImage, rect: LayerRect): SkShader {
+  const matrix = Skia.Matrix();
+  matrix.translate(rect.x, rect.y);
+  matrix.scale(rect.width / image.width(), rect.height / image.height());
+  return image.makeShaderOptions(
+    TileMode.Clamp,
+    TileMode.Clamp,
+    FilterMode.Linear,
+    MipmapMode.None,
+    matrix,
+  );
+}
+
+/**
+ * Decode a paint image layer to an `SkImage`, or null if the URL is empty or
+ * the format can't be decoded (animated / AVIF layers may not decode; the
+ * caller then leaves that layer unpainted and flags `skippedImageLayers`).
+ */
+async function decodePaintLayerImage(url: string): Promise<SkImage | null> {
+  if (!url) {
+    return null;
+  }
+  try {
+    const data = await Skia.Data.fromURI(url);
+    return Skia.Image.MakeImageFromEncoded(data);
+  } catch {
+    return null;
+  }
 }
 
 interface ShadowExtents {
@@ -239,7 +291,7 @@ function shadowExtents(
   return extents;
 }
 
-export function rasterizePaintedUsername({
+export async function rasterizePaintedUsername({
   displayUsername,
   paint,
   fallbackColor,
@@ -247,7 +299,7 @@ export function rasterizePaintedUsername({
   pixelRatio,
   fontProvider,
   fontFamily,
-}: RasterizePaintedUsernameOptions): RasterizedPaintedUsername | null {
+}: RasterizePaintedUsernameOptions): Promise<RasterizedPaintedUsername | null> {
   const transform = paint.textStyle?.transform;
   const text =
     transform === 'uppercase'
@@ -256,21 +308,44 @@ export function rasterizePaintedUsername({
         ? displayUsername.toLocaleLowerCase()
         : displayUsername;
 
+  // Decode image (URL) layers up front; the rest of the raster is synchronous.
+  const layers = getPaintLayers(paint);
+  const decodedImages = new Map<string, SkImage>();
+  const decodeTasks: Promise<void>[] = [];
+  for (const layer of layers) {
+    if (layer.function !== 'URL') {
+      continue;
+    }
+    decodeTasks.push(
+      decodePaintLayerImage(layer.image_url).then(image => {
+        if (image) {
+          decodedImages.set(layer.image_url, image);
+        }
+      }),
+    );
+  }
+  await Promise.all(decodeTasks);
+
   const scale = pixelRatio;
   const fontSizePx = fontSize * scale;
+  // The extension renders paint weight as `weight * 100`; with no explicit
+  // weight the painted span inherits chat's bold (700). Skia shapes glyphs
+  // from the matching registered face, so a heavier paint reads heavier here.
+  const fontWeight: FontWeight = paint.textStyle?.weight
+    ? ((paint.textStyle.weight * 100) as FontWeight)
+    : FontWeight.Bold;
 
   const buildParagraph = (fillPaint: SkPaint) => {
+    const skiaTextStyle = {
+      fontFamilies: [fontFamily],
+      fontSize: fontSizePx,
+      fontStyle: { weight: fontWeight },
+    };
     const builder = Skia.ParagraphBuilder.Make(
-      {
-        maxLines: 1,
-        textStyle: { fontFamilies: [fontFamily], fontSize: fontSizePx },
-      },
+      { maxLines: 1, textStyle: skiaTextStyle },
       fontProvider,
     );
-    builder.pushStyle(
-      { fontFamilies: [fontFamily], fontSize: fontSizePx },
-      fillPaint,
-    );
+    builder.pushStyle(skiaTextStyle, fillPaint);
     builder.addText(text);
     const paragraph = builder.build();
     paragraph.layout(LAYOUT_WIDTH);
@@ -349,17 +424,6 @@ export function rasterizePaintedUsername({
     canvas.restore();
   }
 
-  // -webkit-text-stroke centres the stroke on the glyph outline; the fill
-  // drawn on top covers the inner half, leaving width/2 visible outside,
-  // which a centred Skia stroke of the same width reproduces.
-  if (stroke) {
-    const strokePaint = Skia.Paint();
-    strokePaint.setStyle(PaintStyle.Stroke);
-    strokePaint.setStrokeWidth(stroke.width * scale);
-    strokePaint.setColor(skColor(stroke.color));
-    drawGlyphs(strokePaint);
-  }
-
   // background-color: currentcolor sits beneath the background-image stack.
   const basePaint = Skia.Paint();
   basePaint.setColor(
@@ -368,13 +432,11 @@ export function rasterizePaintedUsername({
   drawGlyphs(basePaint);
 
   // background-image lists the topmost layer first, so draw back-to-front.
-  const layers = getPaintLayers(paint);
+  // Gradient layers become gradient shaders; image (URL) layers become a
+  // bitmap shader scaled to the layer rect, both clipped to the glyphs, the
+  // way `background-clip: text` shows each background through the text.
   let skippedImageLayers = false;
   for (const layer of [...layers].reverse()) {
-    if (layer.function === 'URL') {
-      skippedImageLayers = true;
-      continue;
-    }
     const rect = layerRectInBox(
       layer.at,
       layer.size,
@@ -387,7 +449,17 @@ export function rasterizePaintedUsername({
       width: rect.width,
       height: rect.height,
     };
-    const shader = layerShader(layer, canvasRect);
+    let shader: SkShader | null;
+    if (layer.function === 'URL') {
+      const image = decodedImages.get(layer.image_url);
+      if (!image) {
+        skippedImageLayers = true;
+        continue;
+      }
+      shader = imageLayerShader(image, canvasRect);
+    } else {
+      shader = layerShader(layer, canvasRect);
+    }
     if (!shader) {
       continue;
     }
@@ -406,6 +478,18 @@ export function rasterizePaintedUsername({
     );
     drawGlyphs(fillPaint);
     canvas.restore();
+  }
+
+  // -webkit-text-stroke paints over the fill (WebKit's default paint order),
+  // centred on the glyph outline, so a centred Skia stroke of the same width
+  // drawn last reproduces it, and staying inside the drop-shadow layer keeps
+  // the stroke part of the shadow silhouette.
+  if (stroke) {
+    const strokePaint = Skia.Paint();
+    strokePaint.setStyle(PaintStyle.Stroke);
+    strokePaint.setStrokeWidth(stroke.width * scale);
+    strokePaint.setColor(skColor(stroke.color));
+    drawGlyphs(strokePaint);
   }
 
   canvas.restore();
