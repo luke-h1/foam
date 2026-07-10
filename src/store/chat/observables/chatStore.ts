@@ -71,21 +71,6 @@ export interface ChatStoreState {
       { value: SanitisedBadgeSet[]; expiresAt: number }
     >;
   };
-  /**
-   * Session-scoped 7TV identity/entitlement lookup tables used by the
-   * cosmetics WebSocket bridge. Kept on the store (rather than as
-   * module-level Maps) so their lifecycle sits with the rest of the chat
-   * session state and clears with it. `Object.keys` iteration order gives
-   * FIFO for the entitlement id cap.
-   */
-  sevenTvUserLinks: {
-    twitchIdsBySevenTvUserId: Record<string, string[]>;
-    sevenTvUserIdByTwitchId: Record<string, string>;
-    twitchIdByEntitlementId: Record<
-      string,
-      { kind: 'BADGE' | 'PAINT' | 'EMOTE_SET'; twitchUserId: string }
-    >;
-  };
 }
 
 export const limitChannelCaches = (
@@ -141,11 +126,6 @@ const initialChatStoreState: ChatStoreState = {
   sharedChatBadgeCaches: {
     sourceBadges: {},
     channelBadges: {},
-  },
-  sevenTvUserLinks: {
-    twitchIdsBySevenTvUserId: {},
-    sevenTvUserIdByTwitchId: {},
-    twitchIdByEntitlementId: {},
   },
 };
 
