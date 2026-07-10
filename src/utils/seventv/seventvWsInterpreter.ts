@@ -9,7 +9,7 @@ import type {
   SevenTvEventType,
   SevenTvWsMessage,
 } from '@app/types/seventv/cosmetics';
-import type { SevenTvEmote } from '@app/types/seventv/emotes';
+import type { SevenTvEmote, SevenTvFile } from '@app/types/seventv/emotes';
 import type { StvUser } from '@app/types/seventv/users';
 
 export const HISTORICAL_EVENT_BUFFER = 10000; // 10 seconds
@@ -126,16 +126,54 @@ export type SeventvWsDecision =
   | { type: 'reconnect' }
   | { type: 'unhandledOp'; op: number };
 
+/**
+ * The EventAPI advertises several encodes per emote. Prefer avif at the largest
+ * scale (best size/quality, and the url form the CDN expects), but fall back to
+ * webp so an emote whose host only ships webp still resolves real dimensions —
+ * otherwise width/height collapse to 0 and a non-square emote renders as a 1:1
+ * square at the wrong width. As a last resort take the widest encode that
+ * carries dimensions so the aspect ratio is at least correct.
+ */
+const SEVEN_TV_FILE_PREFERENCE = [
+  '4x.avif',
+  '3x.avif',
+  '2x.avif',
+  '1x.avif',
+  '4x.webp',
+  '3x.webp',
+  '2x.webp',
+  '1x.webp',
+] as const;
+
+function pickBestSevenTvFile(
+  files: readonly SevenTvFile[],
+): SevenTvFile | undefined {
+  const byName = new Map(files.map(file => [file.name, file]));
+  for (const name of SEVEN_TV_FILE_PREFERENCE) {
+    const match = byName.get(name);
+    if (match) {
+      return match;
+    }
+  }
+  let widest: SevenTvFile | undefined;
+  for (const file of files) {
+    if (
+      file.width > 0 &&
+      file.height > 0 &&
+      (!widest || file.width > widest.width)
+    ) {
+      widest = file;
+    }
+  }
+  return widest;
+}
+
 function toSanitisedSevenTvEmote(
   emote: SevenTvEmote,
   actor: StvUser | undefined,
   now: number,
 ): SanitisedEmote {
-  const bestFile =
-    emote.data.host.files.find(file => file.name === '4x.avif') ||
-    emote.data.host.files.find(file => file.name === '3x.avif') ||
-    emote.data.host.files.find(file => file.name === '2x.avif') ||
-    emote.data.host.files.find(file => file.name === '1x.avif');
+  const bestFile = pickBestSevenTvFile(emote.data.host.files);
 
   return {
     name: emote.name,

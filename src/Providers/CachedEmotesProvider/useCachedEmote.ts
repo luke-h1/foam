@@ -7,6 +7,7 @@ import type { ImageRef } from 'expo-image';
 import {
   EMOTE_DECODE_MAX_PX,
   ensureCachedEmoteRef,
+  getCachedEmoteAspectRatio,
   getCachedEmoteRef,
   subscribeCachedEmoteRef,
   touchCachedEmoteRef,
@@ -43,4 +44,24 @@ export function useCachedEmote(
     }
   }, [url, maxPx, ref]);
   return ref;
+}
+
+/**
+ * Subscribes to the intrinsic aspect ratio (width / height) of the decoded emote
+ * for `url`, returning `null` until it decodes. Only pass a url for emotes whose
+ * provider doesn't advertise dimensions (Twitch, BTTV, and 7TV encodes that
+ * arrive without size metadata); pass `null` when reliable dimensions are
+ * already known so the hook stays inert. This piggybacks on the decode kicked
+ * off by {@link useCachedEmote}, so it never triggers a decode of its own.
+ */
+export function useCachedEmoteAspectRatio(url: string | null): number | null {
+  const subscribe = useCallback(
+    (cb: () => void) => (url ? subscribeCachedEmoteRef(url, cb) : () => {}),
+    [url],
+  );
+  return useSyncExternalStore(
+    subscribe,
+    () => (url ? getCachedEmoteAspectRatio(url) : null),
+    () => null,
+  );
 }

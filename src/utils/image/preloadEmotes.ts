@@ -115,7 +115,10 @@ export async function preloadGlobalEmotes(emoteData: {
     ...(emoteData.ffzGlobalEmotes || []),
   ];
 
-  await preloadEmotes(allGlobal, 100);
+  // Kept in step with the shared-ref warm limits (useCachedEmotes) so channel
+  // entry doesn't fire two large, overlapping decode storms that together
+  // starve on-screen animated emotes. The long tail warms on-demand instead.
+  await preloadEmotes(allGlobal, 64);
 }
 
 /**
@@ -134,7 +137,9 @@ export async function preloadChannelEmotes(emoteData: {
     ...(emoteData.twitchChannelEmotes || []),
   ];
 
-  await preloadEmotes(allChannel, 50);
+  // Trimmed alongside the shared-ref warm limits to shrink the channel-entry
+  // decode storm that starves on-screen animated emotes (see useCachedEmotes).
+  await preloadEmotes(allChannel, 32);
 }
 
 /**
