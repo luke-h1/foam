@@ -13,7 +13,7 @@ import { sevenTvColorToRgba } from './sevenTvColorToRgba';
  * @example
  * ```typescript
  * const cssColor = sevenTvColorToCss(-1675056641);
- * // Result: "rgba(156, 89, 182, 1.00)"
+ * // Result: "rgba(156, 40, 169, 1.000)"
  * ```
  */
 export function sevenTvColorToCss(color: SevenTvColor): string {

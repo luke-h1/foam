@@ -9,6 +9,7 @@ import { twitchService } from '@app/services/twitch-service';
 import { getPreferences } from '@app/store/preferences/state';
 import type { SanitisedEmote } from '@app/types/emote';
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
+import { getBttvBadges } from '@app/utils/chat/bttvBadges';
 import { getChatterinoBadges } from '@app/utils/chat/chatterinoBadges';
 import { fetchChannelCheermotes } from '@app/utils/chat/cheermoteStore';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
@@ -850,6 +851,7 @@ export const getCurrentEmoteData = (channelId?: string) => {
     chatterinoBadges: preferences.showChatterinoEmotes
       ? getChatterinoBadges()
       : NO_BADGES,
+    bttvBadges: preferences.showBttvBadges ? getBttvBadges() : NO_BADGES,
   };
 };
 

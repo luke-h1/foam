@@ -6,6 +6,7 @@ import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { findBadges } from '../findBadges';
 
 const emptyBadgeSources = {
+  bttvBadges: [] as SanitisedBadgeSet[],
   chatterinoBadges: [] as SanitisedBadgeSet[],
   ffzChannelBadges: [] as SanitisedBadgeSet[],
   ffzGlobalBadges: [] as SanitisedBadgeSet[],
@@ -198,6 +199,133 @@ describe('findBadges', () => {
 
       const result = findBadges({
         ...emptyBadgeSources,
+        twitchGlobalBadges: [],
+        twitchChannelBadges: [],
+        userstate,
+      });
+
+      expect(result).toEqual<SanitisedBadgeSet[]>([]);
+    });
+  });
+
+  describe('ffz mod/vip fallback', () => {
+    const ffzModBadge: SanitisedBadgeSet = {
+      id: 'mod_badge',
+      url: 'https://example.com/ffz-mod.png',
+      title: 'Moderator',
+      color: '#1ac9a2',
+      owner_username: 'channel-id',
+      set: 'mod',
+      type: 'FFZ channel badge',
+    };
+
+    const ffzVipBadge: SanitisedBadgeSet = {
+      id: 'vip_badge',
+      url: 'https://example.com/ffz-vip.png',
+      title: 'VIP',
+      color: '#ff0000',
+      owner_username: 'channel-id',
+      set: 'vip',
+      type: 'FFZ channel badge',
+    };
+
+    test('replaces the Twitch moderator badge with the FFZ channel mod badge', () => {
+      const userstate = createUserStateTags({
+        'badges-raw': 'moderator/1',
+        badges: { moderator: '1' },
+        'user-id': '123456789',
+      });
+
+      const result = findBadges({
+        ...emptyBadgeSources,
+        ffzChannelBadges: [ffzModBadge, ffzVipBadge],
+        twitchGlobalBadges: [
+          {
+            id: 'moderator_1',
+            url: 'https://example.com/twitch-mod.png',
+            type: 'Twitch Global Badge',
+            title: 'Moderator',
+            set: 'moderator',
+          },
+        ],
+        twitchChannelBadges: [],
+        userstate,
+      });
+
+      expect(result).toEqual<SanitisedBadgeSet[]>([ffzModBadge]);
+    });
+
+    test('keeps the Twitch moderator badge when no FFZ mod badge exists', () => {
+      const twitchModBadge: SanitisedBadgeSet = {
+        id: 'moderator_1',
+        url: 'https://example.com/twitch-mod.png',
+        type: 'Twitch Global Badge',
+        title: 'Moderator',
+        set: 'moderator',
+      };
+
+      const userstate = createUserStateTags({
+        'badges-raw': 'moderator/1',
+        badges: { moderator: '1' },
+        'user-id': '123456789',
+      });
+
+      const result = findBadges({
+        ...emptyBadgeSources,
+        twitchGlobalBadges: [twitchModBadge],
+        twitchChannelBadges: [],
+        userstate,
+      });
+
+      expect(result).toEqual<SanitisedBadgeSet[]>([twitchModBadge]);
+    });
+  });
+
+  describe('bttv', () => {
+    test('appends the BTTV badge matched by the chatter user id', () => {
+      const bttvBadge: SanitisedBadgeSet = {
+        id: '123456789',
+        url: 'https://cdn.betterttv.net/badges/developer.svg',
+        title: 'NightDev Developer',
+        set: 'bttv',
+        type: 'BTTV Badge',
+        provider: 'bttv',
+      };
+
+      const userstate = createUserStateTags({
+        'badges-raw': '',
+        'user-id': '123456789',
+      });
+
+      const result = findBadges({
+        ...emptyBadgeSources,
+        bttvBadges: [bttvBadge],
+        twitchGlobalBadges: [],
+        twitchChannelBadges: [],
+        userstate,
+      });
+
+      expect(result).toEqual<SanitisedBadgeSet[]>([bttvBadge]);
+    });
+
+    test('does not add a BTTV badge for a chatter without one', () => {
+      const bttvBadge: SanitisedBadgeSet = {
+        id: '999',
+        url: 'https://cdn.betterttv.net/badges/developer.svg',
+        title: 'NightDev Developer',
+        set: 'bttv',
+        type: 'BTTV Badge',
+        provider: 'bttv',
+      };
+
+      const userstate = createUserStateTags({
+        'badges-raw': '',
+        'user-id': '123456789',
+      });
+
+      const result = findBadges({
+        ...emptyBadgeSources,
+        bttvBadges: [bttvBadge],
         twitchGlobalBadges: [],
         twitchChannelBadges: [],
         userstate,

@@ -179,10 +179,12 @@ describe('emote image variants', () => {
         animated: {
           '4x': 'https://cdn.frankerfacez.com/emote/1234/animated/4',
           '2x': 'https://cdn.frankerfacez.com/emote/1234/animated/2',
+          '1x': 'https://cdn.frankerfacez.com/emote/1234/animated/1',
         },
         static: {
           '4x': 'https://cdn.frankerfacez.com/emote/1234/4',
           '2x': 'https://cdn.frankerfacez.com/emote/1234/2',
+          '1x': 'https://cdn.frankerfacez.com/emote/1234/1',
         },
       },
       static_url: 'https://cdn.frankerfacez.com/emote/1234/4',
@@ -203,10 +205,12 @@ describe('emote image variants', () => {
         animated: {
           '4x': 'https://cdn.7tv.app/emote/abc/4x.webp',
           '2x': 'https://cdn.7tv.app/emote/abc/2x.webp',
+          '1x': 'https://cdn.7tv.app/emote/abc/1x.webp',
         },
         static: {
           '4x': 'https://cdn.7tv.app/emote/abc/4x_static.webp',
           '2x': 'https://cdn.7tv.app/emote/abc/2x_static.webp',
+          '1x': 'https://cdn.7tv.app/emote/abc/1x_static.webp',
         },
       },
       static_url: 'https://cdn.7tv.app/emote/abc/4x_static.webp',
