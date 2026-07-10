@@ -11,7 +11,6 @@ import {
   SendMessage,
   sharedWebSockets,
   WebSocketHookReturn,
-  WebSocketMessage,
 } from './types';
 
 export const useWebsocket = (
@@ -30,7 +29,6 @@ export const useWebsocket = (
   const websocketRef = useRef<WebSocket | null>(null);
   const startRef = useRef<() => void>(() => {});
   const reconnectCount = useRef<number>(0);
-  const messageQueue = useRef<WebSocketMessage[]>([]);
   const webSocketProxy = useRef<WebSocket | null>(null);
   const optionsCache = useRef<Options>({});
   optionsCache.current = options;
@@ -52,6 +50,11 @@ export const useWebsocket = (
     ? JSON.stringify(options.queryParams)
     : null;
 
+  // Messages sent while the socket is not OPEN are dropped: both consumers
+  // (IRC chat, 7TV EventAPI) gate their sends on readyState and re-issue
+  // state on open/reconnect, and the old internal queue here was never
+  // drained, so "queued" messages leaked per send without ever being
+  // delivered.
   const sendMessage: SendMessage = useCallback(message => {
     if (
       websocketRef.current &&
@@ -59,8 +62,6 @@ export const useWebsocket = (
       websocketRef.current.readyState === ReadyState.OPEN
     ) {
       websocketRef.current.send(message);
-    } else {
-      messageQueue.current.push(message);
     }
   }, []);
 
