@@ -285,23 +285,30 @@ jest.mock('react-native-reanimated', () => {
     withSpring: identityAnimation,
     withTiming: identityAnimation,
     ...Object.fromEntries(
-      ['FadeIn', 'FadeInUp', 'FadeInDown', 'FadeOut', 'SlideInDown'].map(
-        name => {
-          const builder: Record<string, unknown> = {};
-          for (const method of [
-            'duration',
-            'delay',
-            'easing',
-            'springify',
-            'damping',
-            'stiffness',
-            'build',
-          ]) {
-            builder[method] = () => builder;
-          }
-          return [name, builder];
-        },
-      ),
+      [
+        'FadeIn',
+        'FadeInUp',
+        'FadeInDown',
+        'FadeOut',
+        'FadeOutUp',
+        'FadeOutDown',
+        'SlideInDown',
+      ].map(name => {
+        const builder: Record<string, unknown> = {};
+        for (const method of [
+          'duration',
+          'delay',
+          'easing',
+          'springify',
+          'damping',
+          'stiffness',
+          'mass',
+          'build',
+        ]) {
+          builder[method] = () => builder;
+        }
+        return [name, builder];
+      }),
     ),
   };
 });
