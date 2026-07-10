@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { View } from 'react-native';
 
 import { Text } from '@app/components/ui/Text/Text';
+import { useCachedEmoteAspectRatio } from '@app/Providers/CachedEmotesProvider/useCachedEmote';
 import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
@@ -30,11 +31,6 @@ export const EmoteRenderer = memo(
     shouldOverlayPrevious = false,
     targetSize = 30,
   }: EmoteRendererProps) => {
-    const { height, width } = calculateAspectRatio(
-      part.width || 20,
-      part.height || 20,
-      targetSize,
-    );
     const displayUrl = getDisplayEmoteUrl({
       image_variants: part.image_variants,
       url: part.url,
@@ -42,6 +38,21 @@ export const EmoteRenderer = memo(
       disableAnimations,
       preferredScale: CHAT_INLINE_EMOTE_SCALE,
     });
+
+    // Twitch and BTTV don't advertise emote dimensions, and some 7TV encodes
+    // arrive without size metadata too, so the box would default to 1:1 and a
+    // non-square emote renders letterboxed at the wrong width. When metadata is
+    // missing, size from the decoded emote's true aspect ratio instead — it's
+    // usually already known for warm channel emotes (no visible shift) and lands
+    // via the subscription once the emote decodes otherwise.
+    const measuredRatio = useCachedEmoteAspectRatio(
+      part.width && part.height ? null : displayUrl,
+    );
+
+    const { height, width } =
+      part.width && part.height
+        ? calculateAspectRatio(part.width, part.height, targetSize)
+        : calculateAspectRatio(measuredRatio ?? 1, 1, targetSize);
     // No Pressable: long-press is detected by the row's timer, this just
     // records which emote the touch started on. A busy screen renders
     // hundreds of emotes, so each Pressable's gesture machinery added up.

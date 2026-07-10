@@ -228,6 +228,56 @@ describe('interpretSeventvWsMessage', () => {
       ]);
     });
 
+    test('resolves real dimensions from a webp encode when the host ships no avif', () => {
+      const webpOnlyEmote = createSevenTvEmote({
+        id: 'emote-webp',
+        name: 'wideEmote',
+        files: [
+          createSevenTvFile({
+            name: '1x.webp',
+            width: 96,
+            height: 32,
+            format: 'WEBP',
+          }),
+          createSevenTvFile({
+            name: '4x.webp',
+            width: 384,
+            height: 128,
+            frame_count: 30,
+            format: 'WEBP',
+          }),
+        ],
+      });
+      const event = createEmoteSetUpdateEvent({
+        id: 'set-1',
+        pushed: [createPushedChange(webpOnlyEmote)],
+      });
+
+      const decisions = interpretSeventvWsMessage(
+        createDispatchMessage(event),
+        createContext(),
+      );
+
+      const decision = decisions[0];
+      if (decision?.type !== 'applyEmoteUpdate') {
+        throw new Error(`expected applyEmoteUpdate, got ${decision?.type}`);
+      }
+      const added = decision.added[0];
+      // Only the size/url resolution matters here — a webp-only emote must not
+      // collapse to 0x0 (which renders as a 1:1 square at the wrong width).
+      expect({
+        url: added?.url,
+        width: added?.width,
+        height: added?.height,
+        aspect_ratio: added?.aspect_ratio,
+      }).toEqual({
+        url: 'https://cdn.7tv.app/emote/emote-webp/4x.webp',
+        width: 384,
+        height: 128,
+        aspect_ratio: 3,
+      });
+    });
+
     test('ignores updates for a different emote set but still notifies the raw event', () => {
       const event = createEmoteSetUpdateEvent({
         id: 'other-set',

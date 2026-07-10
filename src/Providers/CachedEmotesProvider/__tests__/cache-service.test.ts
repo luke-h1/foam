@@ -10,6 +10,7 @@ import { Image, type ImageRef } from 'expo-image';
 import {
   clearCachedEmoteRefs,
   ensureCachedEmoteRef,
+  getCachedEmoteAspectRatio,
   getCachedEmoteByteEstimate,
   getCachedEmoteRef,
   getCachedEmoteStats,
@@ -50,6 +51,44 @@ describe('cache-service', () => {
 
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(getCachedEmoteRef(url)).toBeNull();
+  });
+
+  test('records the decoded emote aspect ratio so the renderer can size a dimensionless emote', async () => {
+    const url = 'https://cdn.7tv.app/emote/wide/4x.webp';
+    loadAsync.mockResolvedValueOnce({
+      width: 96,
+      height: 32,
+    } as unknown as ImageRef);
+
+    expect(getCachedEmoteAspectRatio(url)).toBeNull();
+
+    await warmCachedEmoteRefs([url]);
+
+    expect(getCachedEmoteAspectRatio(url)).toBe(3);
+  });
+
+  test('does not record an aspect ratio when the decoded ref has no dimensions', async () => {
+    const url = 'https://cdn.7tv.app/emote/nodims/1x.avif';
+    loadAsync.mockResolvedValueOnce({} as ImageRef);
+
+    await warmCachedEmoteRefs([url]);
+
+    expect(getCachedEmoteAspectRatio(url)).toBeNull();
+  });
+
+  test('drops the recorded aspect ratio when the emote is evicted', async () => {
+    const url = 'https://cdn.7tv.app/emote/evictme/4x.webp';
+    loadAsync.mockResolvedValueOnce({
+      width: 64,
+      height: 32,
+    } as unknown as ImageRef);
+
+    await warmCachedEmoteRefs([url]);
+    expect(getCachedEmoteAspectRatio(url)).toBe(2);
+
+    releaseChannelEmoteRefs();
+
+    expect(getCachedEmoteAspectRatio(url)).toBeNull();
   });
 
   test('subscribers that have unsubscribed are not notified on clear', () => {

@@ -67,6 +67,13 @@ const ANIMATED_BYTE_FACTOR = 8;
 
 const refs = new Map<string, ImageRef>();
 const refBytes = new Map<string, number>();
+/**
+ * Intrinsic aspect ratio (logical width / height) captured off each decoded ref,
+ * so the renderer can size emotes whose provider doesn't advertise dimensions.
+ * Warm-decoded channel emotes usually have this before they first render, so the
+ * common case corrects with no visible layout shift.
+ */
+const refAspect = new Map<string, number>();
 let totalBytes = 0;
 const pinned = new Set<string>();
 /**
@@ -98,6 +105,7 @@ function dropRefBytes(url: string): void {
     totalBytes -= cost;
     refBytes.delete(url);
   }
+  refAspect.delete(url);
 }
 
 const pendingReleases: { url: string; ref: ImageRef }[] = [];
@@ -244,6 +252,15 @@ export function getCachedEmoteRef(url: string): ImageRef | null {
 }
 
 /**
+ * Intrinsic aspect ratio (width / height) of the decoded emote, or `null` if it
+ * hasn't been decoded yet. Used to correct the layout box for emotes whose
+ * provider doesn't advertise dimensions (Twitch, BTTV).
+ */
+export function getCachedEmoteAspectRatio(url: string): number | null {
+  return refAspect.get(url) ?? null;
+}
+
+/**
  * Re-inserts the entry at the end of the Map so eviction (which scans insertion
  * order) drops the least-recently-rendered ref, not the oldest-decoded one.
  * Kept out of getCachedEmoteRef so the useSyncExternalStore snapshot stays pure.
@@ -306,6 +323,12 @@ async function runDecode(
     refs.set(url, ref);
     refBytes.set(url, cost);
     totalBytes += cost;
+    // Reading width/height off the ref is a JSI hop, but it's a one-off right
+    // after the (far costlier) decode, and lets a dimensionless emote render at
+    // its true aspect ratio instead of a 1:1 box.
+    if (ref.width > 0 && ref.height > 0) {
+      refAspect.set(url, ref.width / ref.height);
+    }
     if (pin) {
       pinned.add(url);
     }
@@ -393,6 +416,7 @@ export function clearCachedEmoteRefs(): void {
   }
   refs.clear();
   refBytes.clear();
+  refAspect.clear();
   totalBytes = 0;
   inflight.clear();
   pinned.clear();
