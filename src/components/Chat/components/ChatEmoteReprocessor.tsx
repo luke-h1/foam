@@ -2,6 +2,7 @@ import { memo, RefObject } from 'react';
 
 import { useChannelEmoteData } from '@app/store/chat/react/selectors';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import { usePreference } from '@app/store/preferenceStore';
 
 import { useEmoteReprocessing } from '../hooks/useEmoteReprocessing';
 
@@ -12,14 +13,17 @@ export const ChatEmoteReprocessor = memo(
     messages$,
     processedMessageIdsRef,
     reprocessKey,
+    userLogin,
   }: {
     channelId: string;
     emoteLoadStatus: string;
     messages$: { peek: () => AnyChatMessageType[] };
     processedMessageIdsRef: RefObject<Set<string>>;
     reprocessKey: string;
+    userLogin?: string | null;
   }) => {
     const channelEmoteData = useChannelEmoteData(channelId);
+    const show7TvEmotes = usePreference('show7TvEmotes');
 
     useEmoteReprocessing({
       channelId,
@@ -28,6 +32,8 @@ export const ChatEmoteReprocessor = memo(
       emoteLoadStatus,
       processedMessageIdsRef,
       reprocessKey,
+      show7TvEmotes,
+      userLogin,
     });
 
     return null;

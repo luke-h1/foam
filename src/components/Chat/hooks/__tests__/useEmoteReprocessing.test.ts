@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react-native';
 
 import type { AnyChatMessageType } from '@app/components/Chat/util/messageHandlers';
+import { resolveMessageEmoteParts } from '@app/components/Chat/util/resolveMessageEmoteParts';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { updateMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
@@ -28,14 +29,14 @@ jest.mock('@app/store/chat/observables/chatStore', () => ({
   },
 }));
 
-jest.mock('@app/utils/chat/emoteProcessor', () => {
+jest.mock('@app/components/Chat/util/resolveMessageEmoteParts', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports -- Jest mock factory runs before module imports
   const {
     createEmotePart,
   } = require('@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture');
   return {
-    processEmotesWorklet: jest.fn((x: { inputString: string }) => [
-      createEmotePart(x.inputString, { id: 'e1', url: '' }),
+    resolveMessageEmoteParts: jest.fn((x: { text: string }) => [
+      createEmotePart(x.text, { id: 'e1', url: '' }),
     ]),
   };
 });
@@ -46,6 +47,7 @@ jest.mock('@app/utils/chat/findBadges', () => ({
 
 const mockGetCurrentEmoteData = jest.mocked(getCurrentEmoteData);
 const mockUpdateMessages = jest.mocked(updateMessages);
+const mockResolveMessageEmoteParts = jest.mocked(resolveMessageEmoteParts);
 const mockEmojisPeek = jest.mocked(chatStore$.emojis.peek);
 
 function createTextOnlyMessage(
@@ -98,6 +100,9 @@ describe('useEmoteReprocessing', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockEmojisPeek.mockReturnValue([]);
+    mockResolveMessageEmoteParts.mockImplementation((x: { text: string }) => [
+      createEmotePart(x.text, { id: 'e1', url: '' }),
+    ]);
     processedMessageIdsRef.current.clear();
   });
 
@@ -113,6 +118,7 @@ describe('useEmoteReprocessing', () => {
         messages$: { peek },
         emoteLoadStatus: 'loading',
         processedMessageIdsRef,
+        show7TvEmotes: true,
       }),
     );
 
@@ -134,6 +140,7 @@ describe('useEmoteReprocessing', () => {
         messages$: { peek },
         emoteLoadStatus: 'success',
         processedMessageIdsRef,
+        show7TvEmotes: true,
       }),
     );
 
@@ -165,6 +172,7 @@ describe('useEmoteReprocessing', () => {
         messages$: { peek },
         emoteLoadStatus: 'success',
         processedMessageIdsRef,
+        show7TvEmotes: true,
       }),
     );
 
@@ -183,6 +191,7 @@ describe('useEmoteReprocessing', () => {
         messages$: { peek },
         emoteLoadStatus: 'success',
         processedMessageIdsRef,
+        show7TvEmotes: true,
       }),
     );
 
@@ -191,6 +200,36 @@ describe('useEmoteReprocessing', () => {
       expectMessageUpdate('msg-1', 'nonce-1'),
     ]);
     expect(processedMessageIdsRef.current.has('msg-1')).toBe(true);
+  });
+
+  test('forwards the sender scope to the shared resolver', () => {
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
+    const msg1 = createTextOnlyMessage('msg-1', 'nonce-1', 'plaska');
+    const peek = jest.fn().mockReturnValue([msg1]);
+
+    renderHook(() =>
+      useEmoteReprocessing({
+        channelId,
+        channelEmoteData: emoteDataWithEmotes,
+        messages$: { peek },
+        emoteLoadStatus: 'success',
+        processedMessageIdsRef,
+        show7TvEmotes: true,
+        userLogin: 'me',
+      }),
+    );
+
+    // The sender's userId, the 7TV toggle and the current login all reach the
+    // resolver so scoped personal / subscriber emotes resolve on reprocess.
+    expect(mockResolveMessageEmoteParts).toHaveBeenCalledWith({
+      channelId,
+      emoteData: emoteDataWithEmotes,
+      show7TvEmotes: true,
+      text: 'plaska',
+      userId: '1',
+      userLogin: 'me',
+      userstate: msg1.userstate,
+    });
   });
 
   test('yields between large reprocessing batches', () => {
@@ -208,6 +247,7 @@ describe('useEmoteReprocessing', () => {
         messages$: { peek },
         emoteLoadStatus: 'success',
         processedMessageIdsRef,
+        show7TvEmotes: true,
       }),
     );
 
@@ -225,9 +265,7 @@ describe('useEmoteReprocessing', () => {
 
   test('skips equivalent reprocessed message parts and badges', () => {
     const existingParts = [createEmotePart('Kappa', { id: 'e1', url: '' })];
-    jest
-      .requireMock('@app/utils/chat/emoteProcessor')
-      .processEmotesWorklet.mockReturnValueOnce(existingParts);
+    mockResolveMessageEmoteParts.mockReturnValueOnce(existingParts);
     mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
     const msg1 = {
       ...createTextOnlyMessage('msg-1', 'nonce-1', 'Kappa'),
@@ -242,6 +280,7 @@ describe('useEmoteReprocessing', () => {
         messages$: { peek },
         emoteLoadStatus: 'success',
         processedMessageIdsRef,
+        show7TvEmotes: true,
       }),
     );
 
@@ -268,6 +307,7 @@ describe('useEmoteReprocessing', () => {
         messages$: { peek },
         emoteLoadStatus: 'success',
         processedMessageIdsRef,
+        show7TvEmotes: true,
       }),
     );
 
@@ -275,6 +315,29 @@ describe('useEmoteReprocessing', () => {
     expect(mockUpdateMessages).toHaveBeenCalledWith([
       expectMessageUpdate('msg-1', 'nonce-1'),
     ]);
+  });
+
+  test('skips messages without a userstate', () => {
+    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
+    const noUserstate = {
+      ...createTextOnlyMessage('msg-1', 'nonce-1', 'hello'),
+      userstate: undefined,
+    } as unknown as AnyChatMessageType;
+    const peek = jest.fn().mockReturnValue([noUserstate]);
+
+    renderHook(() =>
+      useEmoteReprocessing({
+        channelId,
+        channelEmoteData: emoteDataWithEmotes,
+        messages$: { peek },
+        emoteLoadStatus: 'success',
+        processedMessageIdsRef,
+        show7TvEmotes: true,
+      }),
+    );
+
+    expect(mockResolveMessageEmoteParts).not.toHaveBeenCalled();
+    expect(mockUpdateMessages).not.toHaveBeenCalled();
   });
 
   test('skips messages already in processedMessageIdsRef', () => {
@@ -290,6 +353,7 @@ describe('useEmoteReprocessing', () => {
         messages$: { peek },
         emoteLoadStatus: 'success',
         processedMessageIdsRef,
+        show7TvEmotes: true,
       }),
     );
 
@@ -315,6 +379,7 @@ describe('useEmoteReprocessing', () => {
         messages$: { peek },
         emoteLoadStatus: 'success',
         processedMessageIdsRef,
+        show7TvEmotes: true,
       }),
     );
 
@@ -348,6 +413,7 @@ describe('useEmoteReprocessing', () => {
           emoteLoadStatus: 'success',
           processedMessageIdsRef,
           reprocessKey,
+          show7TvEmotes: true,
         }),
       {
         initialProps: {
@@ -380,6 +446,7 @@ describe('useEmoteReprocessing', () => {
         messages$: { peek },
         emoteLoadStatus: 'success',
         processedMessageIdsRef,
+        show7TvEmotes: true,
       }),
     );
 

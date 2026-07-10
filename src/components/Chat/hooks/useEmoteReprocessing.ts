@@ -4,11 +4,11 @@ import type { MutableRefObject } from 'react';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { updateMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { findBadges } from '@app/utils/chat/findBadges';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import type { AnyChatMessageType } from '../util/messageHandlers';
+import { resolveMessageEmoteParts } from '../util/resolveMessageEmoteParts';
 
 const EMOTE_REPROCESS_BATCH_DELAY_MS = 32;
 const EMOTE_REPROCESS_BATCH_SIZE = 6;
@@ -20,6 +20,8 @@ export function useEmoteReprocessing({
   emoteLoadStatus,
   processedMessageIdsRef,
   reprocessKey,
+  show7TvEmotes,
+  userLogin,
 }: {
   channelId: string;
   channelEmoteData: unknown;
@@ -27,6 +29,8 @@ export function useEmoteReprocessing({
   emoteLoadStatus: string;
   processedMessageIdsRef: MutableRefObject<Set<string>>;
   reprocessKey?: string;
+  show7TvEmotes: boolean;
+  userLogin?: string | null;
 }) {
   const previousReprocessKeyRef = useRef(reprocessKey);
 
@@ -69,7 +73,7 @@ export function useEmoteReprocessing({
     let pendingUpdates: Parameters<typeof updateMessages>[0] = [];
 
     const processMessage = (msg?: AnyChatMessageType) => {
-      if (!msg?.message_id || !Array.isArray(msg.message)) {
+      if (!msg?.message_id || !Array.isArray(msg.message) || !msg.userstate) {
         return;
       }
 
@@ -106,18 +110,17 @@ export function useEmoteReprocessing({
         return;
       }
 
-      const replacedMessage = processEmotesWorklet({
-        inputString: textContent.trimEnd(),
+      // Route through the shared resolver (not the worklet directly) so the
+      // sender's 7TV personal emotes and tagged subscriber emotes still resolve;
+      // otherwise an emote resolved on ingest downgrades back to text here.
+      const replacedMessage = resolveMessageEmoteParts({
+        channelId,
+        emoteData,
+        show7TvEmotes,
+        text: textContent.trimEnd(),
+        userId: msg.userstate['user-id'],
+        userLogin,
         userstate: msg.userstate,
-        emojiEmotes: chatStore$.emojis.peek(),
-        sevenTvGlobalEmotes: emoteData.sevenTvGlobalEmotes,
-        sevenTvChannelEmotes: emoteData.sevenTvChannelEmotes,
-        twitchGlobalEmotes: emoteData.twitchGlobalEmotes,
-        twitchChannelEmotes: emoteData.twitchChannelEmotes,
-        ffzChannelEmotes: emoteData.ffzChannelEmotes,
-        ffzGlobalEmotes: emoteData.ffzGlobalEmotes,
-        bttvChannelEmotes: emoteData.bttvChannelEmotes,
-        bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
       });
 
       const replacedBadges = findBadges({
@@ -186,6 +189,8 @@ export function useEmoteReprocessing({
     emoteLoadStatus,
     processedMessageIdsRef,
     reprocessKey,
+    show7TvEmotes,
+    userLogin,
   ]);
 }
 
