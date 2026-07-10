@@ -182,6 +182,7 @@
     "@legendapp/state@2.1.15": "patches/@legendapp%2Fstate@2.1.15.patch",
     "expo-modules-jsi@57.0.0": "patches/expo-modules-jsi@57.0.0.patch",
     "expo-image@57.0.0": "patches/expo-image@57.0.0.patch",
+    "@sentry/core@10.57.0": "patches/@sentry%2Fcore@10.57.0.patch",
   },
   "packages": {
     "@adobe/css-tools": ["@adobe/css-tools@4.5.0", "", {}, "sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q=="],

@@ -1,0 +1,67 @@
+diff --git a/build/cjs/instrument/console.js b/build/cjs/instrument/console.js
+index 94fec90d95df191519a1dc6f22222405e4822349..b5abec0db6b42155a1e9632061eaaf1a8152f385 100644
+--- a/build/cjs/instrument/console.js
++++ b/build/cjs/instrument/console.js
+@@ -24,14 +24,21 @@ function addConsoleInstrumentationFilter(filter) {
+     }
+   };
+ }
++// PATCH(foam): mirror of getsentry/sentry-javascript#21959. A copy of the SDK
++// must wrap each console level at most once: re-wrapping overwrites
++// originalConsoleMethods[level] with a function that itself reads
++// originalConsoleMethods[level], so calling through to the "original" recurses
++// until RangeError: Maximum call stack size exceeded (sentry-react-native#6420).
++const instrumentedLevels = new Set();
+ function instrumentConsole() {
+   if (!("console" in worldwide.GLOBAL_OBJ)) {
+     return;
+   }
+   debugLogger.CONSOLE_LEVELS.forEach(function(level) {
+-    if (!(level in worldwide.GLOBAL_OBJ.console)) {
++    if (instrumentedLevels.has(level) || !(level in worldwide.GLOBAL_OBJ.console)) {
+       return;
+     }
++    instrumentedLevels.add(level);
+     object.fill(worldwide.GLOBAL_OBJ.console, level, function(originalConsoleMethod) {
+       debugLogger.originalConsoleMethods[level] = originalConsoleMethod;
+       return function(...args) {
+@@ -51,4 +58,5 @@ function instrumentConsole() {
+ 
+ exports.addConsoleInstrumentationFilter = addConsoleInstrumentationFilter;
+ exports.addConsoleInstrumentationHandler = addConsoleInstrumentationHandler;
++exports.instrumentConsole = instrumentConsole;
+ //# sourceMappingURL=console.js.map
+diff --git a/build/esm/instrument/console.js b/build/esm/instrument/console.js
+index 60eebcf4dcce4a60a27acaeba5c646939f03814e..912d947515aaae2004c920135f55fd00352c04dd 100644
+--- a/build/esm/instrument/console.js
++++ b/build/esm/instrument/console.js
+@@ -22,14 +22,21 @@ function addConsoleInstrumentationFilter(filter) {
+     }
+   };
+ }
++// PATCH(foam): mirror of getsentry/sentry-javascript#21959. A copy of the SDK
++// must wrap each console level at most once: re-wrapping overwrites
++// originalConsoleMethods[level] with a function that itself reads
++// originalConsoleMethods[level], so calling through to the "original" recurses
++// until RangeError: Maximum call stack size exceeded (sentry-react-native#6420).
++const instrumentedLevels = new Set();
+ function instrumentConsole() {
+   if (!("console" in GLOBAL_OBJ)) {
+     return;
+   }
+   CONSOLE_LEVELS.forEach(function(level) {
+-    if (!(level in GLOBAL_OBJ.console)) {
++    if (instrumentedLevels.has(level) || !(level in GLOBAL_OBJ.console)) {
+       return;
+     }
++    instrumentedLevels.add(level);
+     fill(GLOBAL_OBJ.console, level, function(originalConsoleMethod) {
+       originalConsoleMethods[level] = originalConsoleMethod;
+       return function(...args) {
+@@ -47,5 +54,5 @@ function instrumentConsole() {
+   });
+ }
+ 
+-export { addConsoleInstrumentationFilter, addConsoleInstrumentationHandler };
++export { addConsoleInstrumentationFilter, addConsoleInstrumentationHandler, instrumentConsole };
+ //# sourceMappingURL=console.js.map

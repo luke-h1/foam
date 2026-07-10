@@ -12,6 +12,7 @@ import * as WebBrowser from 'expo-web-browser';
 
 import { installGlobalErrorHandlers } from '../lib/global-error-handlers';
 import { init as initSentry } from '../lib/sentry';
+import { sweepOversizedSentryEnvelopes } from '../lib/sentryCacheSweep';
 
 configureReanimatedLogger({
   level: ReanimatedLogLevel.error,
@@ -21,6 +22,7 @@ configureReanimatedLogger({
 enableFreeze(true);
 
 WebBrowser.maybeCompleteAuthSession();
+sweepOversizedSentryEnvelopes();
 initSentry();
 installGlobalErrorHandlers();
 
