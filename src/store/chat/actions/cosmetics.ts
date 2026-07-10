@@ -34,6 +34,28 @@ export const bumpCosmeticBindingsVersion = (): void => {
   chatStore$.cosmeticBindingsVersion.set(version => version + 1);
 };
 
+const COSMETIC_BINDINGS_BUMP_COALESCE_MS = 1000;
+let cosmeticBindingsBumpTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Coalesced version bump for late-arriving badge data. Every bump changes
+ * Chat's emoteReprocessKey, which clears the processed-message set and
+ * restarts the full-window reprocess from message zero — so per-entitlement
+ * bumps during a channel-entry burst restarted it once per newly sighted
+ * badged chatter and it never finished in busy channels. One trailing bump
+ * per window folds a burst into a single restart; visible rows do not wait on
+ * this, the visible-asset hydrate path re-parses them directly.
+ */
+const scheduleCosmeticBindingsBump = (): void => {
+  if (cosmeticBindingsBumpTimer) {
+    return;
+  }
+  cosmeticBindingsBumpTimer = setTimeout(() => {
+    cosmeticBindingsBumpTimer = null;
+    bumpCosmeticBindingsVersion();
+  }, COSMETIC_BINDINGS_BUMP_COALESCE_MS);
+};
+
 const COSMETICS_PERSIST_DEBOUNCE_MS = 4000;
 let cosmeticsPersistTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -325,9 +347,14 @@ export const clearUserCosmeticsCache = () => {
   bumpCosmeticBindingsVersion();
 };
 
+// Paint bindings never bump cosmeticBindingsVersion: painted usernames
+// subscribe to userPaintIds/paints directly (CosmeticUsername useSelector),
+// and the message reprocess pass that the version key restarts only re-parses
+// emotes and badges — it never reads paints. Bumping here restarted a
+// full-window reprocess once per newly sighted painted chatter for zero
+// rendered difference.
 export const setUserPaint = (ttvUserId: string, paintId: string): void => {
   const current = chatStore$.userPaintIds.peek();
-  const previousPaintId = current[ttvUserId];
 
   if (
     !(ttvUserId in current) &&
@@ -342,15 +369,31 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
     chatStore$.userPaintIds[ttvUserId]?.set(paintId);
   }
 
-  if (previousPaintId !== paintId) {
-    bumpCosmeticBindingsVersion();
-  }
-
   scheduleCosmeticsPersist();
 };
 
+/**
+ * Popular paints re-arrive with a fresh object identity for every wearer
+ * sighting (GQL conversion / MMKV round-trip both construct new objects).
+ * Storing an equal-content copy would rotate the WeakMap-keyed paint layer
+ * caches and re-sync every cached wearer to MMKV — O(wearers²) during
+ * entitlement bursts — for no observable change, so no-op writes are dropped
+ * here. Both sides serialize from the same deterministic constructors, so
+ * stringify equality is a safe deep compare; a false mismatch only falls back
+ * to the unconditional write.
+ */
+const isSamePaintDefinition = (
+  previous: PaintData | undefined,
+  next: PaintData,
+): boolean =>
+  previous != null &&
+  (previous === next || JSON.stringify(previous) === JSON.stringify(next));
+
 export const addPaint = (paint: PaintData) => {
   if (paint.id) {
+    if (isSamePaintDefinition(chatStore$.paints[paint.id]?.peek(), paint)) {
+      return;
+    }
     chatStore$.paints[paint.id]?.set(paint);
     scheduleCosmeticsPersist();
     refreshCachedUserCosmeticsForDefinition(paint.id);
@@ -404,6 +447,26 @@ export const hasUserPaint = (ttvUserId?: string): boolean => {
   return result;
 };
 
+/**
+ * Same rationale as `isSamePaintDefinition`: badge definitions re-arrive per
+ * wearer sighting with fresh identity, and an equal-content rewrite would
+ * re-sync every cached wearer to MMKV. Badges are flat, so field comparison
+ * is enough.
+ */
+const isSameBadgeDefinition = (
+  previous: SanitisedBadgeSet | undefined,
+  next: SanitisedBadgeSet,
+): boolean =>
+  previous != null &&
+  previous.id === next.id &&
+  previous.url === next.url &&
+  previous.type === next.type &&
+  previous.title === next.title &&
+  previous.set === next.set &&
+  previous.provider === next.provider &&
+  previous.color === next.color &&
+  previous.owner_username === next.owner_username;
+
 export const addBadge = (badge: SanitisedBadgeSet) => {
   if (!badge.id) {
     return;
@@ -415,13 +478,18 @@ export const addBadge = (badge: SanitisedBadgeSet) => {
   }
 
   const cell = chatStore$.badges[badge.id];
-  const previousUrl = cell?.peek()?.url?.trim();
-  cell?.set(normalizedBadge);
+  const previous = cell?.peek();
   clearMissingBadge(badge.id);
+  if (isSameBadgeDefinition(previous, normalizedBadge)) {
+    return;
+  }
+
+  const previousUrl = previous?.url?.trim();
+  cell?.set(normalizedBadge);
   scheduleCosmeticsPersist();
 
   if (previousUrl !== normalizedBadge.url.trim()) {
-    bumpCosmeticBindingsVersion();
+    scheduleCosmeticBindingsBump();
   }
 
   refreshCachedUserCosmeticsForDefinition(badge.id);
@@ -459,7 +527,7 @@ export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
   }
 
   if (previousBadgeId !== badgeId) {
-    bumpCosmeticBindingsVersion();
+    scheduleCosmeticBindingsBump();
   }
 
   scheduleCosmeticsPersist();
@@ -495,12 +563,17 @@ export const updateBadge = (badge: SanitisedBadgeSet) => {
   }
 
   const cell = chatStore$.badges[badge.id];
-  const previousUrl = cell?.peek()?.url?.trim();
-  cell?.set(normalizedBadge);
+  const previous = cell?.peek();
   clearMissingBadge(badge.id);
+  if (isSameBadgeDefinition(previous, normalizedBadge)) {
+    return;
+  }
+
+  const previousUrl = previous?.url?.trim();
+  cell?.set(normalizedBadge);
 
   if (previousUrl !== normalizedBadge.url.trim()) {
-    bumpCosmeticBindingsVersion();
+    scheduleCosmeticBindingsBump();
   }
 
   refreshCachedUserCosmeticsForDefinition(badge.id);
@@ -529,11 +602,14 @@ export const removeUserBadge = (ttvUserId: string) => {
 
   const { [ttvUserId]: _, ...rest } = current;
   chatStore$.userBadgeIds.set(rest);
-  bumpCosmeticBindingsVersion();
+  scheduleCosmeticBindingsBump();
 };
 
 export const updatePaint = (paint: PaintData) => {
   if (paint.id) {
+    if (isSamePaintDefinition(chatStore$.paints[paint.id]?.peek(), paint)) {
+      return;
+    }
     chatStore$.paints[paint.id]?.set(paint);
     refreshCachedUserCosmeticsForDefinition(paint.id);
   }
@@ -560,7 +636,6 @@ export const removeUserPaint = (ttvUserId: string) => {
 
   const { [ttvUserId]: _, ...rest } = current;
   chatStore$.userPaintIds.set(rest);
-  bumpCosmeticBindingsVersion();
 };
 
 export const clearPaints = () => {
