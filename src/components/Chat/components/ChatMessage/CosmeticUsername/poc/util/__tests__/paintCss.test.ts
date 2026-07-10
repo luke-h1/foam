@@ -5,6 +5,7 @@ import {
   buildPaintCssDeclarations,
   type PaintCssDeclarations,
   paintCssDeclarationsToBlock,
+  webKitSafeLayerImageUrl,
 } from '../paintCss';
 
 // Packed 7TV colors: RRGGBBAA as a signed 32-bit integer.
@@ -128,7 +129,7 @@ describe('buildPaintCssDeclarations', () => {
       layers: toIndexed([
         makeLayer({
           function: 'URL',
-          image_url: 'https://cdn.7tv.app/paint.webp',
+          image_url: 'https://cdn.7tv.app/paint/01ABC/layer/01DEF/4x.webp',
           size: [1, 1],
           canvas_repeat: 'no-repeat',
         }),
@@ -149,7 +150,8 @@ describe('buildPaintCssDeclarations', () => {
 
     expect(buildPaintCssDeclarations(paint)).toEqual<PaintCssDeclarations>({
       color: 'inherit',
-      backgroundImage: 'url(https://cdn.7tv.app/paint.webp)',
+      backgroundImage:
+        'url(https://cdn.7tv.app/paint/01ABC/layer/01DEF/4x.avif)',
       backgroundPosition: '0% 0%',
       backgroundSize: '100% 100%',
       backgroundRepeat: 'no-repeat',
@@ -179,6 +181,38 @@ describe('buildPaintCssDeclarations', () => {
       textShadow: 'unset',
       textTransform: 'unset',
     });
+  });
+});
+
+describe('webKitSafeLayerImageUrl', () => {
+  test('rewrites a 7TV CDN paint-layer webp to its avif sibling', () => {
+    expect(
+      webKitSafeLayerImageUrl(
+        'https://cdn.7tv.app/paint/01ABC/layer/01DEF/4x.webp',
+      ),
+    ).toEqual('https://cdn.7tv.app/paint/01ABC/layer/01DEF/4x.avif');
+  });
+
+  test('preserves a trailing query string', () => {
+    expect(
+      webKitSafeLayerImageUrl(
+        'https://cdn.7tv.app/paint/01ABC/layer/01DEF/4x.webp?v=2',
+      ),
+    ).toEqual('https://cdn.7tv.app/paint/01ABC/layer/01DEF/4x.avif?v=2');
+  });
+
+  test('leaves avif and non-webp layer URLs untouched', () => {
+    expect(
+      webKitSafeLayerImageUrl(
+        'https://cdn.7tv.app/paint/01ABC/layer/01DEF/4x.avif',
+      ),
+    ).toEqual('https://cdn.7tv.app/paint/01ABC/layer/01DEF/4x.avif');
+  });
+
+  test('leaves webp URLs from other hosts untouched', () => {
+    expect(webKitSafeLayerImageUrl('https://example.com/x.webp')).toEqual(
+      'https://example.com/x.webp',
+    );
   });
 });
 

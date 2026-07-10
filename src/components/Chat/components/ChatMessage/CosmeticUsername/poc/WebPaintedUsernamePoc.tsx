@@ -19,11 +19,15 @@ interface WebPaintedUsernamePocProps {
  * (gradient stack clipped via background-clip: text, drop-shadow filter
  * chain) inside a live WebView, sized from the span's measured rect.
  *
- * This is the fidelity reference — WebKit/Chromium computes the CSS — not a
+ * This is the fidelity reference (WebKit/Chromium computes the CSS), not a
  * shippable chat renderer: one web content process per row is far too heavy
- * for the virtualized list. The production shape is a single shared offscreen
- * WebView that snapshots to a cached bitmap; live WebViews would only ever be
- * defensible for the handful of non-virtualized surfaces (user card).
+ * for the virtualized list, and no amount of prop tuning removes that ceiling
+ * (an Expo DOM component is the same WebView underneath, so it doesn't help).
+ * The production shape is a single shared offscreen WebView that snapshots to
+ * a cached bitmap; a live WebView is only defensible on non-virtualized
+ * surfaces (the user card). The props below shave what can be shaved: hardware
+ * compositing, no scroll/zoom/multi-window machinery, and `pointerEvents:none`
+ * so the layer never eats the row's tap-to-open-profile.
  */
 export function WebPaintedUsernamePoc({
   username,
@@ -48,6 +52,9 @@ export function WebPaintedUsernamePoc({
 
   return (
     <View
+      pointerEvents='none'
+      collapsable={false}
+      renderToHardwareTextureAndroid
       style={{
         width: size?.width ?? 160,
         height: size?.height ?? chatLineMetrics.comfortable.lineHeight,
@@ -57,6 +64,13 @@ export function WebPaintedUsernamePoc({
         source={{ html }}
         originWhitelist={['*']}
         scrollEnabled={false}
+        nestedScrollEnabled={false}
+        overScrollMode='never'
+        setSupportMultipleWindows={false}
+        automaticallyAdjustContentInsets={false}
+        androidLayerType='hardware'
+        showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
         style={{ backgroundColor: 'transparent' }}
         containerStyle={{ backgroundColor: 'transparent' }}
         onMessage={event => {
