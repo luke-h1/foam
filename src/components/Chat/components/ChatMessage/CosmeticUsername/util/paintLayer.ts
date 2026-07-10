@@ -70,9 +70,13 @@ export function paintShadowKey(shadow: PaintShadow): string {
   return `paint-drop-shadow-${shadow.color}-${shadow.x_offset}-${shadow.y_offset}-${shadow.radius}`;
 }
 
+/**
+ * Mirrors the extension's `dropShadowRender` setting: 0 = no shadows,
+ * 1 = first shadow only, 2 = all shadows.
+ */
 export type PaintDropShadowMode = 0 | 1 | 2;
 
-export const DEFAULT_PAINT_DROP_SHADOW_MODE = 1 as const;
+export const DEFAULT_PAINT_DROP_SHADOW_MODE = 2 as const;
 
 const paintDropShadowsCache = new WeakMap<PaintData, PaintShadow[]>();
 
@@ -95,7 +99,7 @@ export function getPaintDropShadows(
   }
 
   const shadows = getAllPaintDropShadows(paint);
-  if (mode === 2) {
+  if (mode === 1) {
     return shadows.slice(0, 1);
   }
 
