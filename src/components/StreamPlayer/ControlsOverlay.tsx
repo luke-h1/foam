@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  type StyleProp,
+  StyleSheet,
+  type TextStyle,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Animated, {
   type SharedValue,
   useAnimatedStyle,
@@ -13,7 +20,9 @@ import { LiveBadge } from '@app/components/LiveBadge/LiveBadge';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
+import { formatViewCount } from '@app/utils/string/formatViewCount';
 
+import { formatDuration } from './formatStreamDuration';
 import type { StreamInfo } from './types';
 
 interface ControlsOverlayProps {
@@ -37,15 +46,34 @@ interface ControlsOverlayProps {
   streamInfo?: StreamInfo;
 }
 
-interface OverlayMetricsState {
-  duration: string;
+function StreamDurationLabel({
+  isVisible,
+  startedAt,
+  style,
+}: {
+  isVisible: boolean;
+  startedAt?: string;
+  style?: StyleProp<TextStyle>;
+}) {
+  const [duration, setDuration] = useState('0:00');
+
+  useEffect(() => {
+    if (!isVisible || !startedAt) {
+      return;
+    }
+
+    const updateDuration = () => {
+      setDuration(formatDuration(startedAt));
+    };
+
+    updateDuration();
+
+    const interval = setInterval(updateDuration, 1000);
+    return () => clearInterval(interval);
+  }, [isVisible, startedAt]);
+
+  return <Text style={style}>{startedAt ? duration : '0:00'}</Text>;
 }
-
-import { useTranslation } from 'react-i18next';
-
-import { formatViewCount } from '@app/utils/string/formatViewCount';
-
-import { formatDuration } from './formatStreamDuration';
 
 export function ControlsOverlay({
   isVisible,
@@ -70,34 +98,6 @@ export function ControlsOverlay({
   const isPortrait = windowHeight >= windowWidth;
   const headerTopOffset = isPortrait ? theme.space12 : insets.top + 8;
   const bottomOffset = isPortrait ? theme.space8 : insets.bottom + 12;
-  const [metrics, setMetrics] = useState<OverlayMetricsState>({
-    duration: '0:00',
-  });
-
-  useEffect(() => {
-    if (!isVisible || !streamInfo?.startedAt) {
-      return;
-    }
-
-    const updateDuration = () => {
-      const nextDuration = formatDuration(streamInfo.startedAt);
-      setMetrics(previous =>
-        previous.duration === nextDuration
-          ? previous
-          : {
-              ...previous,
-              duration: nextDuration,
-            },
-      );
-    };
-
-    updateDuration();
-
-    const interval = setInterval(updateDuration, 1000);
-    return () => clearInterval(interval);
-  }, [isVisible, streamInfo?.startedAt]);
-
-  const durationLabel = streamInfo?.startedAt ? metrics.duration : '0:00';
 
   // box-none while visible: empty-area taps fall through to the video gesture, only buttons
   // capture touches; 'none' while hidden so buttons don't swallow the reveal tap.
@@ -192,14 +192,14 @@ export function ControlsOverlay({
             style={[styles.liveRail, isPortrait && styles.liveRailPortrait]}
           >
             <LiveBadge label={t('live')} />
-            <Text
+            <StreamDurationLabel
+              isVisible={isVisible}
+              startedAt={streamInfo?.startedAt}
               style={[
                 styles.durationText,
                 isPortrait && styles.durationTextPortrait,
               ]}
-            >
-              {durationLabel}
-            </Text>
+            />
             <View
               style={[
                 styles.viewerCountRow,

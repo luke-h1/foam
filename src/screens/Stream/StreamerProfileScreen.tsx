@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -44,7 +44,9 @@ interface StreamerProfileScreenProps {
 
 type ProfileTab = 'vods' | 'clips';
 
-type ProfileListItem = TwitchClip | TwitchVideo;
+type ProfileListItem =
+  | { kind: 'clip'; clip: TwitchClip }
+  | { kind: 'vod'; vod: TwitchVideo };
 
 function getClipThumbnailUrl(clip: TwitchClip) {
   return clip.thumbnail_url
@@ -498,12 +500,11 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
 
   const renderItem: ListRenderItem<ProfileListItem> = useCallback(
     ({ item }) => {
-      if (activeTab === 'clips') {
-        const clip = item as TwitchClip;
+      if (item.kind === 'clip') {
         return (
           <ClipCard
-            clip={clip}
-            downloading={downloadingClipId === clip.id}
+            clip={item.clip}
+            downloading={downloadingClipId === item.clip.id}
             onDownload={handleDownload}
             width={cardWidth}
           />
@@ -512,17 +513,23 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
 
       return (
         <VodCard
-          vod={item as TwitchVideo}
+          vod={item.vod}
           width={cardWidth}
           fallbackImage={vodFallbackImage}
         />
       );
     },
-    [activeTab, cardWidth, downloadingClipId, handleDownload, vodFallbackImage],
+    [cardWidth, downloadingClipId, handleDownload, vodFallbackImage],
   );
 
   const isVods = activeTab === 'vods';
-  const items = isVods ? vods : clips;
+  const items = useMemo(
+    (): ProfileListItem[] =>
+      isVods
+        ? vods.map(vod => ({ kind: 'vod' as const, vod }))
+        : clips.map(clip => ({ kind: 'clip' as const, clip })),
+    [clips, isVods, vods],
+  );
   const isTabLoading = isVods ? videosQuery.isLoading : clipsQuery.isLoading;
   const isTabError = isVods ? videosQuery.isError : clipsQuery.isError;
   const handleLoadMore = isVods ? handleLoadMoreVods : handleLoadMoreClips;
@@ -575,8 +582,10 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
           />
         }
         renderItem={renderItem}
-        keyExtractor={item => item.id}
-        getItemType={() => activeTab}
+        keyExtractor={item =>
+          item.kind === 'clip' ? item.clip.id : item.vod.id
+        }
+        getItemType={item => item.kind}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.4}

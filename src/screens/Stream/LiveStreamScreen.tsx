@@ -60,11 +60,11 @@ import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 import { ChatLatencyPill } from './ChatLatencyPill';
 import {
   clampLandscapeChatWidth,
+  getLandscapeChatWidthBounds,
   getLiveStreamChatDimensions,
   getLiveStreamLayoutMetrics,
   getLiveStreamVideoDimensions,
   getNextChatCycleAction,
-  LANDSCAPE_CHAT_MIN_WIDTH,
   type LandscapeChatCycleAction,
 } from './liveStreamLayout';
 import {
@@ -89,8 +89,6 @@ const KEEP_AWAKE_TAG = 'live-stream';
 const LANDSCAPE_CHAT_CONTROLS_TOP_OFFSET = 60;
 const CHAT_CONNECTION_FALLBACK_MS = 10_000;
 const CHAT_TOGGLE_DEBOUNCE_MS = 450;
-const MAX_OVERLAY_CHAT_FRACTION = 0.68;
-const MAX_SIDEBAR_CHAT_FRACTION = 0.55;
 
 const LANDSCAPE_CHAT_CLOSE_WIDTH_FRACTION = 0.55;
 const LANDSCAPE_CHAT_CLOSE_VELOCITY = 900;
@@ -623,15 +621,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           resizeHandleOpacity.set(1);
         })
         .onUpdate(event => {
-          const maxFraction =
-            fullscreenChatMode === 'overlay'
-              ? MAX_OVERLAY_CHAT_FRACTION
-              : MAX_SIDEBAR_CHAT_FRACTION;
-          const minWidth = Math.min(
-            LANDSCAPE_CHAT_MIN_WIDTH,
-            contentWidth * 0.42,
+          const { maxWidth } = getLandscapeChatWidthBounds(
+            contentWidth,
+            fullscreenChatMode,
           );
-          const maxWidth = Math.max(minWidth, contentWidth * maxFraction);
           const nextWidth = Math.min(
             maxWidth,
             Math.max(0, resizeStartWidth.get() - event.translationX),
@@ -643,9 +636,9 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           }
         })
         .onEnd(event => {
-          const minWidth = Math.min(
-            LANDSCAPE_CHAT_MIN_WIDTH,
-            contentWidth * 0.42,
+          const { minWidth } = getLandscapeChatWidthBounds(
+            contentWidth,
+            fullscreenChatMode,
           );
           const closeWidth = minWidth * LANDSCAPE_CHAT_CLOSE_WIDTH_FRACTION;
           const width = chatWidth.get();

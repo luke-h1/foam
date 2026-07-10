@@ -99,6 +99,21 @@ function createEmptyOverlayState(channelId: string): ChatOverlayState {
   };
 }
 
+const TIMEOUT_DURATION_OPTIONS = [
+  { labelKey: 'chat:userActions.timeoutDuration10Seconds', seconds: 10 },
+  { labelKey: 'chat:userActions.timeoutDuration1Minute', seconds: 60 },
+  { labelKey: 'chat:userActions.timeoutDuration10Minutes', seconds: 600 },
+  { labelKey: 'chat:userActions.timeoutDuration30Minutes', seconds: 1800 },
+  { labelKey: 'chat:userActions.timeoutDuration1Hour', seconds: 3600 },
+  { labelKey: 'chat:userActions.timeoutDuration1Day', seconds: 86400 },
+] as const satisfies readonly { labelKey: string; seconds: number }[];
+
+function resolveModTarget(
+  selection: { login?: string; username?: string } | null | undefined,
+): string | undefined {
+  return selection?.login?.trim() || selection?.username?.trim() || undefined;
+}
+
 export function useChatOverlays({
   appendMentionToComposer,
   canModerateChat,
@@ -224,15 +239,13 @@ export function useChatOverlays({
 
   const selectedMessageId = selectedMessage?.messageData.message_id?.trim();
   const canModerateSelectedMessageUser = Boolean(
-    selectedMessage?.login?.trim() || selectedMessage?.username?.trim(),
+    resolveModTarget(selectedMessage),
   );
   const canDeleteSelectedMessage = Boolean(selectedMessageId);
   const canPinSelectedMessage = Boolean(
     !pinnedMessageBusy && selectedMessageId,
   );
-  const canModerateSelectedUser = Boolean(
-    selectedUser?.login?.trim() || selectedUser?.username.trim(),
-  );
+  const canModerateSelectedUser = Boolean(resolveModTarget(selectedUser));
 
   const handleEmoteSheetDidDismiss = useCallback(() => {
     patchOverlay({ isEmoteSheetMounted: false });
@@ -367,37 +380,60 @@ export function useChatOverlays({
     patchOverlay({ selectedMessage: null });
   }, [onUnpinPinnedMessage, patchOverlay]);
 
-  const handleActionSheetTimeoutUser = useCallback(() => {
-    const target =
-      selectedMessage?.login?.trim() || selectedMessage?.username?.trim();
-    if (!target) {
-      return;
-    }
+  const banSelection = useCallback(
+    (
+      selection: { login?: string; username?: string } | null,
+      clearPatch: { selectedMessage: null } | { selectedUser: null },
+    ) => {
+      const target = resolveModTarget(selection);
+      if (!target) {
+        return;
+      }
 
-    runModAction({ type: 'timeout', login: target, durationSeconds: 600 });
-    patchOverlay({ selectedMessage: null });
-  }, [
-    patchOverlay,
-    runModAction,
-    selectedMessage?.login,
-    selectedMessage?.username,
-  ]);
+      runModAction({ type: 'ban', login: target });
+      patchOverlay(clearPatch);
+    },
+    [patchOverlay, runModAction],
+  );
+
+  const promptTimeoutDuration = useCallback(
+    (
+      selection: { login?: string; username?: string } | null,
+      clearPatch: { selectedMessage: null } | { selectedUser: null },
+    ) => {
+      const target = resolveModTarget(selection);
+      if (!target) {
+        return;
+      }
+
+      showActionMenu({
+        title: i18next.t('chat:userActions.timeoutDurationTitle', {
+          name: target,
+        }),
+        actions: TIMEOUT_DURATION_OPTIONS.map(option => ({
+          label: i18next.t(option.labelKey),
+          onPress: () => {
+            runModAction({
+              type: 'timeout',
+              login: target,
+              durationSeconds: option.seconds,
+            });
+            patchOverlay(clearPatch);
+          },
+        })),
+        cancelLabel: i18next.t('common:cancel'),
+      });
+    },
+    [patchOverlay, runModAction],
+  );
+
+  const handleActionSheetTimeoutUser = useCallback(() => {
+    promptTimeoutDuration(selectedMessage, { selectedMessage: null });
+  }, [promptTimeoutDuration, selectedMessage]);
 
   const handleActionSheetBanUser = useCallback(() => {
-    const target =
-      selectedMessage?.login?.trim() || selectedMessage?.username?.trim();
-    if (!target) {
-      return;
-    }
-
-    runModAction({ type: 'ban', login: target });
-    patchOverlay({ selectedMessage: null });
-  }, [
-    patchOverlay,
-    runModAction,
-    selectedMessage?.login,
-    selectedMessage?.username,
-  ]);
+    banSelection(selectedMessage, { selectedMessage: null });
+  }, [banSelection, selectedMessage]);
 
   const handleMentionSelectedUser = useCallback(() => {
     if (!selectedUser?.username) {
@@ -430,30 +466,15 @@ export function useChatOverlays({
   }, [patchOverlay, selectedUser, toggleHighlightedUser]);
 
   const handleTimeoutSelectedUser = useCallback(() => {
-    const target =
-      selectedUser?.login?.trim() || selectedUser?.username?.trim();
-    if (!target) {
-      return;
-    }
-
-    runModAction({ type: 'timeout', login: target, durationSeconds: 600 });
-    patchOverlay({ selectedUser: null });
-  }, [patchOverlay, runModAction, selectedUser]);
+    promptTimeoutDuration(selectedUser, { selectedUser: null });
+  }, [promptTimeoutDuration, selectedUser]);
 
   const handleBanSelectedUser = useCallback(() => {
-    const target =
-      selectedUser?.login?.trim() || selectedUser?.username?.trim();
-    if (!target) {
-      return;
-    }
-
-    runModAction({ type: 'ban', login: target });
-    patchOverlay({ selectedUser: null });
-  }, [patchOverlay, runModAction, selectedUser]);
+    banSelection(selectedUser, { selectedUser: null });
+  }, [banSelection, selectedUser]);
 
   const handleWarnSelectedUser = useCallback(() => {
-    const target =
-      selectedUser?.login?.trim() || selectedUser?.username?.trim();
+    const target = resolveModTarget(selectedUser);
     if (!target) {
       return;
     }
@@ -488,9 +509,7 @@ export function useChatOverlays({
 
   // Twitch has no public report API; the report form is web-only.
   const handleReportSelectedUser = useCallback(() => {
-    const target = (
-      selectedUser?.login?.trim() || selectedUser?.username?.trim()
-    )?.toLowerCase();
+    const target = resolveModTarget(selectedUser)?.toLowerCase();
     if (!target) {
       return;
     }

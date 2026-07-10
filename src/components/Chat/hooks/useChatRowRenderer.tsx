@@ -276,6 +276,7 @@ export function useChatRowRenderer({
   const onBadgePressRef = useRef(onBadgePress);
   const onEmotePressRef = useRef(onEmotePress);
   const onMessageLongPressRef = useRef(onMessageLongPress);
+  const onUsernamePressRef = useRef(onUsernamePress);
   const parseTextForEmotesRef = useRef(parseTextForEmotes);
 
   const highlightedUserSet = useMemo(
@@ -390,6 +391,7 @@ export function useChatRowRenderer({
     onBadgePressRef.current = onBadgePress;
     onEmotePressRef.current = onEmotePress;
     onMessageLongPressRef.current = onMessageLongPress;
+    onUsernamePressRef.current = onUsernamePress;
     parseTextForEmotesRef.current = parseTextForEmotes;
     handleReplyContextPressRef.current = handleReplyContextPress;
   });
@@ -424,7 +426,7 @@ export function useChatRowRenderer({
           onEmotePress={onEmotePressRef.current}
           onMessageLongPress={onMessageLongPressRef.current}
           onReplyContextPress={handleReplyContextPressRef.current}
-          onUsernamePress={onUsernamePress}
+          onUsernamePress={onUsernamePressRef.current}
           parseTextForEmotes={parseTextForEmotesRef.current}
         />
       );
@@ -437,7 +439,6 @@ export function useChatRowRenderer({
       displayFlags,
       getMentionColor,
       highlightedUserSet,
-      onUsernamePress,
       preferences.chatDensity,
     ],
   );

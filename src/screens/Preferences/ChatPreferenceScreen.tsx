@@ -6,7 +6,6 @@ import { theme } from '@app/styles/themes';
 
 import { ChatPreferenceDefaultContent } from './ChatPreferenceDefaultContent';
 import { ChatPreferenceNativeForm } from './ChatPreferenceNativeForm';
-import { useChatPreferenceScreenState } from './useChatPreferenceScreenState';
 
 export function ChatPreferenceScreen() {
   if (Platform.OS === 'ios') {
@@ -17,7 +16,6 @@ export function ChatPreferenceScreen() {
 }
 
 export function ChatPreferenceScrollContent() {
-  const state = useChatPreferenceScreenState();
   const scrollRef = useRef<ScrollView>(null);
 
   useScrollToTop(scrollRef);
@@ -30,7 +28,7 @@ export function ChatPreferenceScrollContent() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.content}
     >
-      <ChatPreferenceDefaultContent {...state} />
+      <ChatPreferenceDefaultContent />
     </ScrollView>
   );
 }
