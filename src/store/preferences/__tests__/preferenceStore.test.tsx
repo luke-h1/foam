@@ -45,7 +45,7 @@ const basePreferences = {
   analyticsEnabled: true,
   sharedChatEnabled: true,
   enhancedVideoStability: false,
-  sevenTvPaintRenderer: 'native',
+  sevenTvPaintRenderer: 'auto',
 } as const satisfies Preferences;
 
 describe('usePreferences', () => {

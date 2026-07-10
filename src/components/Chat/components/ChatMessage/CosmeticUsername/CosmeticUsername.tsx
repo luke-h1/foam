@@ -5,6 +5,7 @@ import { useSelector } from '@legendapp/state/react';
 
 import { useChatScrollActive } from '@app/components/Chat/util/useChatScrollActive';
 import { Text } from '@app/components/ui/Text/Text';
+import { useExperiment } from '@app/lib/experiments/useExperiment';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { preferences$ } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
@@ -120,9 +121,18 @@ function PaintedUsernameComponent({
   });
   const paint = paintProp ?? storePaint ?? null;
   const isScrolling = useChatScrollActive();
-  const paintRenderer = useSelector(() =>
+  // The dev override wins when set; 'auto' defers to the rollout experiment
+  // (skia for the assigned cohort, native otherwise). WebView is dev-only.
+  const paintRendererOverride = useSelector(() =>
     preferences$.sevenTvPaintRenderer.get(),
   );
+  const rendererExperiment = useExperiment('paintedUsernameRenderer');
+  const paintRenderer =
+    paintRendererOverride !== 'auto'
+      ? paintRendererOverride
+      : rendererExperiment === 'skia'
+        ? 'skia'
+        : 'native';
 
   if (!paint) {
     return (
@@ -161,15 +171,16 @@ function PaintedUsernameComponent({
     );
   }
 
-  // Parity POC renderers (PR #716), selectable from the dev-tools Feature
-  // Flags section; both ignore usernameTextStyle and render at the default
-  // chat metrics.
+  // Skia renders the paint offscreen and caches the bitmap; the WebView is a
+  // dev-only reference (a web process per row). Production reaches Skia through
+  // the `paintedUsernameRenderer` experiment; the dev flag can force either.
   if (paintRenderer === 'skia') {
     return (
       <SkiaPaintedUsernamePoc
         username={displayUsername}
         paint={paint}
         fallbackColor={solidFallback}
+        fontSize={StyleSheet.flatten(usernameTextStyle)?.fontSize}
       />
     );
   }

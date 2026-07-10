@@ -38,6 +38,11 @@ interface SkiaPaintedUsernamePocProps {
   username: string;
   paint: PaintData;
   fallbackColor?: string;
+  /**
+   * Glyph size in points; defaults to the chat row metric. Passed through so
+   * painted names render at the right size outside chat (composer, user card).
+   */
+  fontSize?: number;
 }
 
 /**
@@ -117,6 +122,7 @@ export function SkiaPaintedUsernamePoc({
   username,
   paint,
   fallbackColor = theme.color.text.dark,
+  fontSize = chatLineMetrics.comfortable.fontSize,
 }: SkiaPaintedUsernamePocProps) {
   const fontProvider = useFonts(skiaFontSource);
 
@@ -127,13 +133,13 @@ export function SkiaPaintedUsernamePoc({
             displayUsername: username,
             paint,
             fallbackColor,
-            fontSize: chatLineMetrics.comfortable.fontSize,
+            fontSize,
             pixelRatio: PixelRatio.get(),
             fontProvider,
             fontFamily: 'Montserrat',
           })
         : null,
-    [fontProvider, username, paint, fallbackColor],
+    [fontProvider, username, paint, fallbackColor, fontSize],
   );
 
   if (!bitmaps) {
