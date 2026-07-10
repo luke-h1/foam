@@ -188,6 +188,15 @@ function getBaseCollection({
     const firstKey = baseCollectionCache.keys().next().value;
     if (firstKey) {
       baseCollectionCache.delete(firstKey);
+      // Scoped lookups close over their base collection, so any cached for the
+      // evicted key would pin its maps in memory and can never be hit again
+      // (their keys embed the now-retired base key).
+      const evictedPrefix = `${firstKey}:`;
+      scopedLookupCache.forEach((_, scopedKey) => {
+        if (scopedKey.startsWith(evictedPrefix)) {
+          scopedLookupCache.delete(scopedKey);
+        }
+      });
     }
   }
   baseCollectionCache.set(cacheKey, collection);

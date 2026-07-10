@@ -74,12 +74,31 @@ export function isPrivmsgLine(line: string): boolean {
 }
 
 /**
+ * Escape a value for an outbound IRCv3 tag (the inverse of `unescapeIrcTag`):
+ * `\`→`\\`, `;`→`\:`, space→`\s`, CR→`\r`, LF→`\n`. Backslashes are escaped
+ * first so the later passes never double-escape their own output.
+ */
+function escapeIrcTagValue(value: string): string {
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\:')
+    .replace(/ /g, '\\s')
+    .replace(/\r/g, '\\r')
+    .replace(/\n/g, '\\n');
+}
+
+/**
  * Build the outbound PRIVMSG line, optionally as a reply. Only
  * `reply-parent-msg-id` may be attached client→server: Twitch populates the
  * display-name/body reply tags itself on the broadcast side, and sending them
  * raw corrupts the line - the first space in a multi-word parent body
  * terminates the IRCv3 tag section, so the server reads the rest of the body
  * as the command and silently drops the reply.
+ *
+ * CR/LF in the message body are collapsed to a single space: IRC is
+ * line-delimited, so an embedded newline (pasted multi-line text) would
+ * otherwise terminate the PRIVMSG early and send the remainder as a raw IRC
+ * command.
  */
 export function buildPrivmsgLine({
   channel,
@@ -94,9 +113,9 @@ export function buildPrivmsgLine({
   replyParentMsgId?: string;
 }): string {
   const command = replyParentMsgId
-    ? `@reply-parent-msg-id=${replyParentMsgId} PRIVMSG`
+    ? `@reply-parent-msg-id=${escapeIrcTagValue(replyParentMsgId)} PRIVMSG`
     : 'PRIVMSG';
-  return `${command} ${channel} :${message}`;
+  return `${command} ${channel} :${message.replace(/[\r\n]+/g, ' ')}`;
 }
 
 /**
