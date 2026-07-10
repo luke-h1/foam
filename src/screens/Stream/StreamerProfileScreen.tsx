@@ -45,8 +45,7 @@ interface StreamerProfileScreenProps {
 type ProfileTab = 'vods' | 'clips';
 
 type ProfileListItem =
-  | { kind: 'clip'; clip: TwitchClip }
-  | { kind: 'vod'; vod: TwitchVideo };
+  { kind: 'clip'; clip: TwitchClip } | { kind: 'vod'; vod: TwitchVideo };
 
 function getClipThumbnailUrl(clip: TwitchClip) {
   return clip.thumbnail_url

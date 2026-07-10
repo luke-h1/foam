@@ -51,7 +51,9 @@ describe('CheermoteRenderer', () => {
       />,
     );
 
-    expect(lastRenderedSourceUrl()).toBe('https://cdn.example.com/cheer/100.gif');
+    expect(lastRenderedSourceUrl()).toBe(
+      'https://cdn.example.com/cheer/100.gif',
+    );
     expect(screen.getByText('100')).toBeOnTheScreen();
     expect(screen.queryByText('Cheer100')).not.toBeOnTheScreen();
   });
@@ -67,7 +69,9 @@ describe('CheermoteRenderer', () => {
       />,
     );
 
-    expect(lastRenderedSourceUrl()).toBe('https://cdn.example.com/cheer/100.gif');
+    expect(lastRenderedSourceUrl()).toBe(
+      'https://cdn.example.com/cheer/100.gif',
+    );
   });
 
   test('prefers the static url when animations are disabled', () => {
@@ -81,7 +85,9 @@ describe('CheermoteRenderer', () => {
       />,
     );
 
-    expect(lastRenderedSourceUrl()).toBe('https://cdn.example.com/cheer/100.png');
+    expect(lastRenderedSourceUrl()).toBe(
+      'https://cdn.example.com/cheer/100.png',
+    );
   });
 
   test('falls back to the static url when no animated url exists', () => {
@@ -91,7 +97,9 @@ describe('CheermoteRenderer', () => {
       />,
     );
 
-    expect(lastRenderedSourceUrl()).toBe('https://cdn.example.com/cheer/100.png');
+    expect(lastRenderedSourceUrl()).toBe(
+      'https://cdn.example.com/cheer/100.png',
+    );
   });
 
   test('dims the container when the message is moderated', () => {

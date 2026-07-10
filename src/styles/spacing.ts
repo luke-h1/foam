@@ -68,7 +68,10 @@ export function getMargin(theme: AppTheme) {
   };
 }
 
-function buildMargin(theme: AppTheme, { m, mb, ml, mr, mt, mx, my }: MarginProps) {
+function buildMargin(
+  theme: AppTheme,
+  { m, mb, ml, mr, mt, mx, my }: MarginProps,
+) {
   return {
     ...(resolveSpacingValue(theme, m) !== undefined
       ? { margin: resolveSpacingValue(theme, m) }

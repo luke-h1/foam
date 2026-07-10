@@ -55,9 +55,9 @@ describe('findCustomHighlight', () => {
   test('ignores rules with an empty phrase', () => {
     const emptyPhraseRules = [{ id: '9', phrase: '', color: '#f87171' }];
 
-    expect(findCustomHighlight(textMessage('anything'), emptyPhraseRules)).toEqual(
-      undefined,
-    );
+    expect(
+      findCustomHighlight(textMessage('anything'), emptyPhraseRules),
+    ).toEqual(undefined);
   });
 
   test('matches a phrase that appears inside a word', () => {

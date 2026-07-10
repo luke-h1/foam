@@ -16,9 +16,9 @@ describe('unescapeIrcTag', () => {
   });
 
   test('decodes a full system-msg', () => {
-    expect(
-      unescapeIrcTag('ModUser\\sis\\scelebrating\\s24\\smonths!'),
-    ).toBe('ModUser is celebrating 24 months!');
+    expect(unescapeIrcTag('ModUser\\sis\\scelebrating\\s24\\smonths!')).toBe(
+      'ModUser is celebrating 24 months!',
+    );
   });
 
   test('consumes an escaped backslash as one unit (no double-decode)', () => {

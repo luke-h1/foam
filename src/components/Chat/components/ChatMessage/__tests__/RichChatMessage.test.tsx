@@ -796,7 +796,8 @@ describe('RichChatMessage', () => {
         value: '5',
         content: '',
         // Stored parts hold already-unescaped system-msg (parseIrcTags decodes).
-        systemMsg: 'TestUser watched 5 consecutive streams and sparked a watch streak!',
+        systemMsg:
+          'TestUser watched 5 consecutive streams and sparked a watch streak!',
         login: 'testuser',
         displayName: 'TestUser',
       },

@@ -6,10 +6,7 @@ import { runModCommand } from '@app/components/Chat/util/runModCommand';
 import render from '@app/test/render';
 import { showActionMenu } from '@app/utils/actionMenu/showActionMenu';
 
-import {
-  type ChatOverlayOpeners,
-  useChatOverlays,
-} from '../useChatOverlays';
+import { type ChatOverlayOpeners, useChatOverlays } from '../useChatOverlays';
 
 interface CapturedLayerProps {
   onBanSelectedUser: () => void;

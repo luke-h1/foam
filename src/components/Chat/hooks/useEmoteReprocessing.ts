@@ -44,7 +44,9 @@ export function useEmoteReprocessing({
     if (previousReprocessKeyRef.current !== reprocessKey) {
       processedMessageIdsRef.current.clear();
       previousReprocessKeyRef.current = reprocessKey;
-    } else if (processedMessageIdsRef.current.size > MAX_PROCESSED_MESSAGE_IDS) {
+    } else if (
+      processedMessageIdsRef.current.size > MAX_PROCESSED_MESSAGE_IDS
+    ) {
       processedMessageIdsRef.current.clear();
     }
 
