@@ -1,5 +1,9 @@
 import type { IrcMessage } from '../ircProtocol';
-import { parseIrcMessage, parseIrcTags } from '../ircProtocol';
+import {
+  buildPrivmsgLine,
+  parseIrcMessage,
+  parseIrcTags,
+} from '../ircProtocol';
 
 describe('parseIrcTags', () => {
   test('returns an empty map for an empty string', () => {
@@ -89,5 +93,40 @@ describe('parseIrcMessage', () => {
 
   test('returns null for a tags-only line with no following space', () => {
     expect(parseIrcMessage('@only-tags')).toBeNull();
+  });
+});
+
+describe('buildPrivmsgLine', () => {
+  test('builds a plain message line', () => {
+    expect(buildPrivmsgLine({ channel: '#bar', message: 'hello world' })).toBe(
+      'PRIVMSG #bar :hello world',
+    );
+  });
+
+  test('attaches only the reply parent id tag on replies', () => {
+    expect(
+      buildPrivmsgLine({
+        channel: '#bar',
+        message: 'hi back',
+        replyParentMsgId: 'abc-123',
+      }),
+    ).toBe('@reply-parent-msg-id=abc-123 PRIVMSG #bar :hi back');
+  });
+
+  test('reply lines survive a round-trip through the parser', () => {
+    // Regression: the display-name/body reply tags used to be sent raw, so a
+    // multi-word parent body terminated the tag section at its first space and
+    // the server read the rest of the body as the command.
+    const line = buildPrivmsgLine({
+      channel: '#bar',
+      message: 'hi back',
+      replyParentMsgId: 'abc-123',
+    });
+    expect(parseIrcMessage(line)).toEqual<IrcMessage>({
+      tags: { 'reply-parent-msg-id': 'abc-123' },
+      prefix: undefined,
+      command: 'PRIVMSG',
+      params: ['#bar', 'hi back'],
+    });
   });
 });

@@ -44,6 +44,32 @@ export function parseIrcTags(tagString: string): Record<string, string> {
 }
 
 /**
+ * Build the outbound PRIVMSG line, optionally as a reply. Only
+ * `reply-parent-msg-id` may be attached client→server: Twitch populates the
+ * display-name/body reply tags itself on the broadcast side, and sending them
+ * raw corrupts the line — the first space in a multi-word parent body
+ * terminates the IRCv3 tag section, so the server reads the rest of the body
+ * as the command and silently drops the reply.
+ */
+export function buildPrivmsgLine({
+  channel,
+  message,
+  replyParentMsgId,
+}: {
+  /**
+   * Already formatted with its `#` prefix.
+   */
+  channel: string;
+  message: string;
+  replyParentMsgId?: string;
+}): string {
+  const command = replyParentMsgId
+    ? `@reply-parent-msg-id=${replyParentMsgId} PRIVMSG`
+    : 'PRIVMSG';
+  return `${command} ${channel} :${message}`;
+}
+
+/**
  * Parse a raw Twitch IRC line (`[@tags] [:prefix] COMMAND params [:trailing]`)
  * into its parts. Returns null for blank or structurally invalid lines.
  */

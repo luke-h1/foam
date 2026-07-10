@@ -12,7 +12,11 @@ import {
   containsMutedWords,
   isUserBlocked,
 } from '@app/utils/chat/chatMessageFilters';
-import { type IrcMessage, parseIrcMessage } from '@app/utils/chat/ircProtocol';
+import {
+  type IrcMessage,
+  buildPrivmsgLine,
+  parseIrcMessage,
+} from '@app/utils/chat/ircProtocol';
 import { logger } from '@app/utils/logger';
 
 import { ReadyState } from '../hooks/ws/constants';
@@ -862,23 +866,11 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       replyParentMsgBody,
     };
 
-    // Twitch IRC format: @reply-parent-msg-id=<id>;reply-parent-display-name=<name>;reply-parent-msg-body=<body> PRIVMSG #channel :message
-    let privmsgCommand = 'PRIVMSG';
-    if (replyParentMsgId) {
-      const tags: string[] = [`reply-parent-msg-id=${replyParentMsgId}`];
-
-      if (replyParentDisplayName) {
-        tags.push(`reply-parent-display-name=${replyParentDisplayName}`);
-      }
-
-      if (replyParentMsgBody) {
-        tags.push(`reply-parent-msg-body=${replyParentMsgBody}`);
-      }
-
-      privmsgCommand = `@${tags.join(';')} ${privmsgCommand}`;
-    }
-
-    const fullMessage = `${privmsgCommand} ${channelFormatted} :${message}`;
+    const fullMessage = buildPrivmsgLine({
+      channel: channelFormatted,
+      message,
+      replyParentMsgId,
+    });
     logger.chat.debug(`Sending PRIVMSG: ${fullMessage.substring(0, 100)}...`);
     sendWebSocketMessage(`${fullMessage}\r\n`);
   };
