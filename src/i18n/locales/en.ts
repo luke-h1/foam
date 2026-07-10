@@ -651,6 +651,12 @@ const en = {
     enhancedVideoStability: 'Enhanced Video Stability',
     enhancedVideoStabilityDescription:
       'Automatically refresh the player to recover from silent stalls, video errors, and high latency',
+    paintRenderer: '7TV Paint Renderer',
+    paintRendererDescription:
+      'Render username paints with the shipping native renderer or a parity POC (offscreen Skia raster or live WebView)',
+    paintRendererNative: 'Native',
+    paintRendererSkia: 'Skia',
+    paintRendererWebview: 'WebView',
     developerTools: 'Developer Tools',
     debug: 'Debug',
     debugDescription: 'Manual debug helpers and experiments',
