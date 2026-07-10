@@ -10,6 +10,7 @@ export interface SanitisedBadgeSet {
     | 'Twitch Global Badge'
     | 'FFZ Badge'
     | 'FFZ Channel Badge'
+    | 'BTTV Badge'
     | '7TV Badge'
   >;
   title: string;

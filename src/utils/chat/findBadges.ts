@@ -9,6 +9,7 @@ interface FindBadgesParams {
   twitchGlobalBadges: SanitisedBadgeSet[];
   ffzGlobalBadges: SanitisedBadgeSet[];
   ffzChannelBadges: SanitisedBadgeSet[];
+  bttvBadges: SanitisedBadgeSet[];
   chatterinoBadges: SanitisedBadgeSet[];
 }
 
@@ -169,10 +170,19 @@ export function findBadges({
   userstate,
   twitchChannelBadges,
   twitchGlobalBadges,
+  ffzChannelBadges,
   ffzGlobalBadges,
+  bttvBadges,
   chatterinoBadges,
 }: FindBadgesParams): SanitisedBadgeSet[] {
   const badges: SanitisedBadgeSet[] = [];
+
+  // Channels with custom FFZ mod/VIP badge art replace the default Twitch
+  // moderator/VIP badge with the FFZ one (mirrors the 7TV extension). The
+  // FFZ channel badge set indexes these as `mod/mod_badge` and `vip/vip_badge`.
+  const ffzChannelBadgeIndex = getBadgeSetIndex(ffzChannelBadges);
+  const ffzModBadge = ffzChannelBadgeIndex.get('mod/mod_badge');
+  const ffzVipBadge = ffzChannelBadgeIndex.get('vip/vip_badge');
 
   const rawTwitchBadges = getRawTwitchBadges(userstate);
 
@@ -180,6 +190,16 @@ export function findBadges({
     rawTwitchBadges.split(',').forEach(rawBadge => {
       const [set, version] = rawBadge.split('/');
       if (!set || !version) {
+        return;
+      }
+
+      if (set === 'moderator' && version === '1' && ffzModBadge?.url?.trim()) {
+        addBadge(badges, ffzModBadge, 'FFZ channel badge');
+        return;
+      }
+
+      if (set === 'vip' && version === '1' && ffzVipBadge?.url?.trim()) {
+        addBadge(badges, ffzVipBadge, 'FFZ channel badge');
         return;
       }
 
@@ -227,6 +247,14 @@ export function findBadges({
     if (storeBadge) {
       addBadgeIfMissing(badges, storeBadge);
     }
+  }
+
+  const bttvBadge = userstate['user-id']
+    ? getBadgeUserIdIndex(bttvBadges).get(userstate['user-id'])
+    : undefined;
+
+  if (bttvBadge) {
+    addBadgeIfMissing(badges, bttvBadge);
   }
 
   const chatterinoBadge = userstate['user-id']

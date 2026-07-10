@@ -203,4 +203,5 @@ export const emptyEmoteData = {
 export const emptyResolvedEmoteData = {
   ...emptyEmoteData,
   chatterinoBadges: [] as SanitisedBadgeSet[],
+  bttvBadges: [] as SanitisedBadgeSet[],
 };
