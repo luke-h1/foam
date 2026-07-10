@@ -2,6 +2,7 @@ import {
   memo,
   type Ref,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -146,9 +147,18 @@ export const ChatInputShell = memo(function ChatInputShell({
   if (prevIsAuthenticated !== isAuthenticated) {
     setPrevIsAuthenticated(isAuthenticated);
     if (!isAuthenticated) {
-      clearDraft();
+      setDraft(createEmptyDraft());
     }
   }
+
+  // The native composer owns its text, so sign-out also clears it
+  // imperatively; setText is a side effect and must run after commit.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      messageInputRef.current = '';
+      chatInputRef.current?.setText('');
+    }
+  }, [isAuthenticated]);
 
   const handleSendMessage = useCallback(() => {
     const currentInput = messageInputRef.current;
