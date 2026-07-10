@@ -11,10 +11,8 @@ import {
   buildTwitchLiveSyncScript,
   buildTwitchOverlayHideScript,
   buildTwitchPlayerAudioDefaultScript,
-  DEFAULT_TWITCH_EMBED_PARENT,
   isAppUrl,
   isTwitchPassportCallbackUrl,
-  resolveTwitchEmbedParent,
 } from '../twitchPlayerSource';
 
 describe('twitchPlayerSource', () => {
@@ -269,29 +267,6 @@ describe('twitchPlayerSource', () => {
     ).toBe(
       'https://clips.twitch.tv/embed?clip=AnimatedOptimisticWasabiVoteNay&parent=www.twitch.tv&autoplay=true&muted=false&preload=metadata',
     );
-  });
-
-  test('resolveTwitchEmbedParent reads remote config but holds the parent to www.twitch.tv', () => {
-    // The known-good host is honoured, including URL and casing variants.
-    expect(resolveTwitchEmbedParent('www.twitch.tv')).toBe('www.twitch.tv');
-    expect(resolveTwitchEmbedParent('WWW.Twitch.TV')).toBe('www.twitch.tv');
-    expect(resolveTwitchEmbedParent('https://www.twitch.tv/')).toBe(
-      'www.twitch.tv',
-    );
-
-    // Any other value - the misconfiguration that broke the embed - is coerced
-    // back to the known-good host instead of reaching Twitch as-is.
-    expect(resolveTwitchEmbedParent('foam-app.com')).toBe('www.twitch.tv');
-    expect(resolveTwitchEmbedParent('https://foam-app.com/')).toBe(
-      'www.twitch.tv',
-    );
-    expect(resolveTwitchEmbedParent('')).toBe('www.twitch.tv');
-    expect(resolveTwitchEmbedParent('   ')).toBe('www.twitch.tv');
-    expect(resolveTwitchEmbedParent(undefined)).toBe('www.twitch.tv');
-    expect(resolveTwitchEmbedParent(null)).toBe('www.twitch.tv');
-    expect(resolveTwitchEmbedParent('has spaces')).toBe('www.twitch.tv');
-    expect(resolveTwitchEmbedParent('bad_domain!')).toBe('www.twitch.tv');
-    expect(DEFAULT_TWITCH_EMBED_PARENT).toBe('www.twitch.tv');
   });
 
   test('embed-error watcher reports Twitch misconfigured pages with the parent value', () => {

@@ -35,7 +35,6 @@ function createRemoteConfig(minimumVersion: {
         e2e: false,
       },
     }),
-    twitchPlayerEmbedParent: entry('www.twitch.tv'),
   };
 }
 

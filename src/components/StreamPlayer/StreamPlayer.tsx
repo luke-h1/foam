@@ -3,7 +3,6 @@ import { InteractionManager, Platform, StyleSheet, View } from 'react-native';
 import type { WebViewMessageEvent } from 'react-native-webview';
 import { WebView } from 'react-native-webview';
 
-import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useWatchTimeTracking } from '@app/hooks/useWatchTimeTracking';
 import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
@@ -31,7 +30,6 @@ import {
   buildTwitchPlayerAudioDefaultScript,
   buildTwitchPlayerQualityDefaultScript,
   buildTwitchPlayerStateScript,
-  resolveTwitchEmbedParent,
 } from './twitchPlayerSource';
 import type { StreamPlayerProps } from './types';
 import { usePlayerBridge } from './usePlayerBridge';
@@ -144,13 +142,10 @@ export const StreamPlayer = memo(function StreamPlayer({
   width,
   ref,
 }: StreamPlayerProps) {
-  const { config } = useRemoteConfig();
-  // Read the parent from remote config but hold it to the known-good host: a
-  // blank or malformed `parent` makes Twitch render "this embed is
+  // Twitch's embed `parent`, hardcoded to Twitch's own domain, which its embed
+  // always accepts. A blank or invalid value makes Twitch render "this embed is
   // misconfigured" and breaks every stream.
-  const embedParent = resolveTwitchEmbedParent(
-    config.twitchPlayerEmbedParent.value,
-  );
+  const embedParent = 'www.twitch.tv';
   const webViewRef = useRef<WebView>(null);
   const needsInitRef = useRef(true);
   const authCompletionReloadTimeoutRef = useRef<ReturnType<

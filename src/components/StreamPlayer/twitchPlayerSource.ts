@@ -1,49 +1,5 @@
 import { PIP_ENABLED } from './pipFeature';
 
-/**
- * Fallback Twitch embed `parent`. Twitch always accepts its own domain, so this
- * keeps the player working even when remote config supplies an empty or invalid
- * value.
- */
-export const DEFAULT_TWITCH_EMBED_PARENT = 'www.twitch.tv';
-
-/**
- * Resolves the Twitch embed `parent`. We read the remote-config value but hold
- * it to the known-good host: Twitch renders "Whoops, this embed is
- * misconfigured" when `parent` is empty or is not an allowed domain, so any
- * value that does not normalise to {@link DEFAULT_TWITCH_EMBED_PARENT} is
- * coerced back to it. This keeps the embed working even if a blank or malformed
- * value is pushed to remote config, while still accepting URL/casing variants
- * of the expected host (e.g. `https://www.twitch.tv/`, `WWW.Twitch.TV`).
- */
-export function resolveTwitchEmbedParent(
-  raw: string | null | undefined,
-): string {
-  if (typeof raw !== 'string') {
-    return DEFAULT_TWITCH_EMBED_PARENT;
-  }
-
-  let host = raw.trim();
-
-  // A full URL (e.g. https://www.twitch.tv/) reduces to its hostname.
-  if (host.includes('://')) {
-    try {
-      host = new URL(host).hostname;
-    } catch {
-      return DEFAULT_TWITCH_EMBED_PARENT;
-    }
-  } else {
-    // Drop any path/port/query a bare value might still carry.
-    host = host.replace(/[/:?].*$/, '');
-  }
-
-  host = host.trim().toLowerCase();
-  // Only the known-good host is accepted; anything else falls back to it.
-  return host === DEFAULT_TWITCH_EMBED_PARENT
-    ? host
-    : DEFAULT_TWITCH_EMBED_PARENT;
-}
-
 // Twitch's player embed expects a VOD start offset as `XhYmZs`, not seconds.
 function formatTwitchTimeParam(totalSeconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(totalSeconds));
