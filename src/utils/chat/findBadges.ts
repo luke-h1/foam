@@ -177,9 +177,7 @@ export function findBadges({
 }: FindBadgesParams): SanitisedBadgeSet[] {
   const badges: SanitisedBadgeSet[] = [];
 
-  // Channels with custom FFZ mod/VIP badge art replace the default Twitch
-  // moderator/VIP badge with the FFZ one (mirrors the 7TV extension). The
-  // FFZ channel badge set indexes these as `mod/mod_badge` and `vip/vip_badge`.
+  // Custom FFZ channel art overrides the default Twitch mod/VIP badge.
   const ffzChannelBadgeIndex = getBadgeSetIndex(ffzChannelBadges);
   const ffzModBadge = ffzChannelBadgeIndex.get('mod/mod_badge');
   const ffzVipBadge = ffzChannelBadgeIndex.get('vip/vip_badge');

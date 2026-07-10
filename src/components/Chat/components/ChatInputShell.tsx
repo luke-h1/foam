@@ -2,7 +2,6 @@ import {
   memo,
   type Ref,
   useCallback,
-  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -102,6 +101,8 @@ export const ChatInputShell = memo(function ChatInputShell({
   const { messageInput, replyTo } = draft;
   const messageInputRef = useRef(messageInput);
   const isAuthenticated = Boolean(user?.id && user?.login);
+  const [prevIsAuthenticated, setPrevIsAuthenticated] =
+    useState(isAuthenticated);
 
   const clearDraft = useCallback(() => {
     messageInputRef.current = '';
@@ -109,8 +110,6 @@ export const ChatInputShell = memo(function ChatInputShell({
     setDraft(createEmptyDraft());
   }, []);
 
-  // Also runs signed out: the composer stays editable so anyone can type
-  // /refresh, and the sign-out effect below resets the draft.
   const handleComposerTextChange = useCallback((text: string) => {
     messageInputRef.current = text;
     setDraft(prev => ({ ...prev, messageInput: text }));
@@ -144,12 +143,12 @@ export const ChatInputShell = memo(function ChatInputShell({
     setDraft(prev => ({ ...prev, replyTo: null }));
   }, []);
 
-  useEffect(() => {
+  if (prevIsAuthenticated !== isAuthenticated) {
+    setPrevIsAuthenticated(isAuthenticated);
     if (!isAuthenticated) {
-      // eslint-disable-next-line react-doctor/no-derived-state -- draft is user input (not derivable); this resets it AND imperatively clears the native composer (setText) on sign-out
       clearDraft();
     }
-  }, [clearDraft, isAuthenticated]);
+  }
 
   const handleSendMessage = useCallback(() => {
     const currentInput = messageInputRef.current;

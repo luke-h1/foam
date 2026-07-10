@@ -117,11 +117,6 @@ export const bttvEmoteService = {
     return [...sharedEmotes, ...channelEmotes];
   },
 
-  /**
-   * BTTV serves one global list of user badges (developer/supporter/etc.),
-   * each keyed to its owner's Twitch user id. The finder matches a chatter's
-   * user id against the badge id.
-   */
   getSanitisedGlobalBadges: async (): Promise<SanitisedBadgeSet[]> => {
     const result = await bttvCachedApi.get<BttvBadge[]>('/badges');
 
