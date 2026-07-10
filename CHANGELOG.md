@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.2 (TestFlight)
+## 1.0.2 (Production)
 
 ### ✨ Features
 
@@ -26,6 +26,11 @@
 - **infrastructure:** Wire Sentry Size Analysis into native builds ([#708](https://github.com/lhowsam/foam/issues/708))
 - **ai:** Add Codex PR review workflow and mention trigger ([#712](https://github.com/lhowsam/foam/issues/712))
 - **app:** Simplify hot paths and remote-config Twitch embed parent ([#707](https://github.com/lhowsam/foam/issues/707))
+- **stream:** Gate embed changes via ff ([#713](https://github.com/lhowsam/foam/issues/713))
+
+## 1.0.2 (TestFlight)
+
+_No changes in this build beyond the Production build._
 
 ## 1.0.2 (Internal)
 
