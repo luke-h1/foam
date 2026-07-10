@@ -1,8 +1,13 @@
-import { useEffect, useState } from 'react';
-import { PixelRatio } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
 
-import { useFonts } from '@shopify/react-native-skia';
-import { Image } from 'expo-image';
+import type { SkPicture } from '@shopify/react-native-skia';
+import {
+  Canvas,
+  createPicture,
+  Picture,
+  Skia,
+  useFonts,
+} from '@shopify/react-native-skia';
 
 import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/RichChatMessage.styles';
 import { Text } from '@app/components/ui/Text/Text';
@@ -10,8 +15,11 @@ import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
 import {
-  type RasterizedPaintedUsername,
-  rasterizePaintedUsername,
+  buildPaintLayout,
+  decodePaintLayerImages,
+  drawPaintedUsername,
+  type PaintUsernameLayout,
+  type RasterizePaintedUsernameOptions,
 } from './skiaPaintedUsernameRasterizer';
 
 // The chat renders painted usernames in Montserrat 700; loading that face keeps
@@ -29,6 +37,10 @@ const skiaFontSource = {
   ],
 };
 
+// Frame ticker floor: never redraw faster than ~30fps even if a texture claims
+// a shorter frame duration, to bound the per-frame paragraph re-shaping cost.
+const MIN_FRAME_MS = 33;
+
 interface SkiaPaintedUsernamePocProps {
   username: string;
   paint: PaintData;
@@ -36,12 +48,14 @@ interface SkiaPaintedUsernamePocProps {
 }
 
 /**
- * POC: renders a painted username by rasterizing it once with Skia
- * (`rasterizePaintedUsername`) and displaying the bitmap via expo-image —
- * the production shape would cache the bitmap per (paint, username, fontSize)
- * like an emote. Negative margins collapse the shadow overflow margin so the
- * glyph box aligns with neighbouring text, the way CSS lets `drop-shadow()`
- * paint outside the layout box.
+ * POC: renders a painted username with a live Skia canvas. Static paints draw
+ * one picture; animated image (URL) layers advance their frames on a ticker and
+ * re-record the picture, so the paint genuinely animates like the extension
+ * instead of freezing on a still. Negative margins collapse the shadow overflow
+ * margin so the glyph box aligns with neighbouring text.
+ *
+ * The canvas is retina-backed, so layout/draw run in logical units
+ * (`pixelRatio: 1`); the native backing supplies the device scale.
  */
 export function SkiaPaintedUsernamePoc({
   username,
@@ -49,42 +63,91 @@ export function SkiaPaintedUsernamePoc({
   fallbackColor = theme.color.text.dark,
 }: SkiaPaintedUsernamePocProps) {
   const fontProvider = useFonts(skiaFontSource);
-  const [raster, setRaster] = useState<RasterizedPaintedUsername | null>(null);
+  const [picture, setPicture] = useState<SkPicture | null>(null);
+
+  const opts = useMemo<RasterizePaintedUsernameOptions | null>(
+    () =>
+      fontProvider
+        ? {
+            displayUsername: username,
+            paint,
+            fallbackColor,
+            fontSize: chatLineMetrics.comfortable.fontSize,
+            pixelRatio: 1,
+            fontProvider,
+            fontFamily: 'Montserrat',
+          }
+        : null,
+    [fontProvider, username, paint, fallbackColor],
+  );
+
+  const layout = useMemo<PaintUsernameLayout | null>(
+    () => (opts ? buildPaintLayout(opts) : null),
+    [opts],
+  );
 
   useEffect(() => {
-    if (!fontProvider) {
+    if (!opts || !layout) {
       return;
     }
-    // Image (URL) layers decode asynchronously, so rasterization is async. The
-    // `active` guard drops results from a superseded paint; until the new
-    // raster lands the previous frame stays (chat keys a row per user, so a
-    // given instance keeps one paint for its lifetime).
     let active = true;
-    rasterizePaintedUsername({
-      displayUsername: username,
-      paint,
-      fallbackColor,
-      fontSize: chatLineMetrics.comfortable.fontSize,
-      pixelRatio: PixelRatio.get(),
-      fontProvider,
-      fontFamily: 'Montserrat',
-    })
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const bounds = Skia.XYWHRect(
+      0,
+      0,
+      layout.surfaceWidthPx,
+      layout.surfaceHeightPx,
+    );
+
+    decodePaintLayerImages(paint)
       .then(
-        result => result,
+        decoded => decoded,
         () => null,
       )
-      .then(result => {
-        if (active) {
-          setRaster(result);
+      .then(decoded => {
+        if (!active || !decoded) {
+          return;
         }
+        const record = () =>
+          createPicture(
+            canvas => drawPaintedUsername(canvas, opts, layout, decoded.frames),
+            bounds,
+          );
+        setPicture(record());
+
+        if (decoded.animated.size === 0) {
+          return;
+        }
+        const tick = () => {
+          if (!active) {
+            return;
+          }
+          let nextDelay = 100;
+          for (const [url, animated] of decoded.animated) {
+            const delay = animated.decodeNextFrame();
+            const frame = animated.getCurrentFrame();
+            if (frame) {
+              decoded.frames.set(url, frame);
+            }
+            if (delay > 0) {
+              nextDelay = Math.min(nextDelay, delay);
+            }
+          }
+          setPicture(record());
+          timer = setTimeout(tick, Math.max(nextDelay, MIN_FRAME_MS));
+        };
+        timer = setTimeout(tick, MIN_FRAME_MS);
       });
 
     return () => {
       active = false;
+      if (timer) {
+        clearTimeout(timer);
+      }
     };
-  }, [fontProvider, username, paint, fallbackColor]);
+  }, [opts, layout, paint]);
 
-  if (!raster) {
+  if (!layout || !picture) {
     return (
       <Text style={{ ...chatLineMetrics.comfortable, color: fallbackColor }}>
         {username}
@@ -93,16 +156,17 @@ export function SkiaPaintedUsernamePoc({
   }
 
   return (
-    <Image
-      source={{ uri: raster.uri }}
+    <Canvas
       style={{
-        width: raster.width,
-        height: raster.height,
-        marginLeft: -raster.insets.left,
-        marginTop: -raster.insets.top,
-        marginRight: -raster.insets.right,
-        marginBottom: -raster.insets.bottom,
+        width: layout.surfaceWidthPx,
+        height: layout.surfaceHeightPx,
+        marginLeft: -layout.insetsPx.left,
+        marginTop: -layout.insetsPx.top,
+        marginRight: -layout.insetsPx.right,
+        marginBottom: -layout.insetsPx.bottom,
       }}
-    />
+    >
+      <Picture picture={picture} />
+    </Canvas>
   );
 }

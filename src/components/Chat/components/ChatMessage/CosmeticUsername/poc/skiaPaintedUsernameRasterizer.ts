@@ -1,4 +1,6 @@
 import type {
+  SkAnimatedImage,
+  SkCanvas,
   SkImage,
   SkImageFilter,
   SkPaint,
@@ -22,6 +24,7 @@ import type {
   PaintLayerData,
   PaintShadow,
   PaintStop,
+  PaintTextStroke,
 } from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
@@ -119,6 +122,7 @@ function layerShader(layer: PaintLayerData, rect: LayerRect): SkShader | null {
   const positions = repeats
     ? stops.map(stop => (stop.at - firstAt) / period)
     : stops.map(stop => stop.at);
+
   const tileMode = repeats ? TileMode.Repeat : TileMode.Clamp;
 
   if (layer.function === 'LINEAR_GRADIENT') {
@@ -222,20 +226,75 @@ function imageLayerShader(image: SkImage, rect: LayerRect): SkShader {
 }
 
 /**
- * Decode a paint image layer to an `SkImage`, or null if the URL is empty or
- * the format can't be decoded (animated / AVIF layers may not decode; the
- * caller then leaves that layer unpainted and flags `skippedImageLayers`).
+ * Decoded image (URL) layers for a paint, keyed by layer url:
+ * - `frames` holds the current-frame `SkImage` for every decodable layer (the
+ *   only frame for stills), which is what the draw pass samples.
+ * - `animated` holds the `SkAnimatedImage` decoder for multi-frame textures;
+ *   the live renderer advances these and refreshes `frames` each tick.
+ *
+ * Paint textures ship as animated WebP, which the still decoder rejects, so we
+ * decode through the animated decoder and treat frameCount <= 1 as a still.
  */
-async function decodePaintLayerImage(url: string): Promise<SkImage | null> {
-  if (!url) {
-    return null;
+export interface DecodedPaintImages {
+  frames: Map<string, SkImage>;
+  animated: Map<string, SkAnimatedImage>;
+}
+
+/**
+ * Skia decodes WebP (still and animated) reliably but not AVIF, and
+ * `pickBestImage` prefers AVIF for static image layers, so swap 7TV CDN AVIF
+ * layer urls to their WebP sibling (same path, always served) before decoding.
+ * Animated layers already resolve to WebP, so this only rescues static ones.
+ */
+function skiaDecodableLayerUrl(url: string): string {
+  return url.replace(
+    /^(https:\/\/cdn\.7tv\.app\/paint\/[^?\s]+)\.avif(\?\S*)?$/,
+    '$1.webp$2',
+  );
+}
+
+export async function decodePaintLayerImages(
+  paint: PaintData,
+): Promise<DecodedPaintImages> {
+  const frames = new Map<string, SkImage>();
+  const animated = new Map<string, SkAnimatedImage>();
+  const tasks: Promise<void>[] = [];
+
+  for (const layer of getPaintLayers(paint)) {
+    if (layer.function !== 'URL' || !layer.image_url) {
+      continue;
+    }
+    // Draw looks layers up by their original url; decode from a Skia-friendly one.
+    const url = layer.image_url;
+    tasks.push(
+      (async () => {
+        try {
+          const data = await Skia.Data.fromURI(skiaDecodableLayerUrl(url));
+          const anim = Skia.AnimatedImage.MakeAnimatedImageFromEncoded(data);
+          if (anim && anim.getFrameCount() > 1) {
+            animated.set(url, anim);
+            const frame = anim.getCurrentFrame();
+            if (frame) {
+              frames.set(url, frame);
+            }
+            return;
+          }
+          const still =
+            Skia.Image.MakeImageFromEncoded(data) ??
+            anim?.getCurrentFrame() ??
+            null;
+          if (still) {
+            frames.set(url, still);
+          }
+        } catch {
+          // Undecodable layer: left out of the maps, drawn as skipped.
+        }
+      })(),
+    );
   }
-  try {
-    const data = await Skia.Data.fromURI(url);
-    return Skia.Image.MakeImageFromEncoded(data);
-  } catch {
-    return null;
-  }
+
+  await Promise.all(tasks);
+  return { frames, animated };
 }
 
 interface ShadowExtents {
@@ -291,69 +350,83 @@ function shadowExtents(
   return extents;
 }
 
-export async function rasterizePaintedUsername({
-  displayUsername,
-  paint,
-  fallbackColor,
-  fontSize,
-  pixelRatio,
-  fontProvider,
-  fontFamily,
-}: RasterizePaintedUsernameOptions): Promise<RasterizedPaintedUsername | null> {
+/**
+ * Measured, paint-derived geometry for one painted username, in device pixels.
+ * Independent of the (possibly animating) image frames, so it is computed once
+ * and reused for every drawn frame by the live renderer.
+ */
+export interface PaintUsernameLayout {
+  text: string;
+  scale: number;
+  fontSizePx: number;
+  fontWeight: FontWeight;
+  glyphWidthPx: number;
+  glyphHeightPx: number;
+  dropShadows: PaintShadow[];
+  textShadows: PaintShadow[];
+  stroke: PaintTextStroke | null;
+  layers: PaintLayerData[];
+  originX: number;
+  originY: number;
+  surfaceWidthPx: number;
+  surfaceHeightPx: number;
+  insetsPx: { left: number; top: number; right: number; bottom: number };
+}
+
+function paintUsernameText(paint: PaintData, displayUsername: string): string {
   const transform = paint.textStyle?.transform;
-  const text =
-    transform === 'uppercase'
-      ? displayUsername.toLocaleUpperCase()
-      : transform === 'lowercase'
-        ? displayUsername.toLocaleLowerCase()
-        : displayUsername;
-
-  // Decode image (URL) layers up front; the rest of the raster is synchronous.
-  const layers = getPaintLayers(paint);
-  const decodedImages = new Map<string, SkImage>();
-  const decodeTasks: Promise<void>[] = [];
-  for (const layer of layers) {
-    if (layer.function !== 'URL') {
-      continue;
-    }
-    decodeTasks.push(
-      decodePaintLayerImage(layer.image_url).then(image => {
-        if (image) {
-          decodedImages.set(layer.image_url, image);
-        }
-      }),
-    );
+  if (transform === 'uppercase') {
+    return displayUsername.toLocaleUpperCase();
   }
-  await Promise.all(decodeTasks);
+  if (transform === 'lowercase') {
+    return displayUsername.toLocaleLowerCase();
+  }
+  return displayUsername;
+}
 
+function buildUsernameParagraph(
+  opts: RasterizePaintedUsernameOptions,
+  layout: Pick<PaintUsernameLayout, 'text' | 'fontSizePx' | 'fontWeight'>,
+  fillPaint: SkPaint,
+) {
+  const skiaTextStyle = {
+    fontFamilies: [opts.fontFamily],
+    fontSize: layout.fontSizePx,
+    fontStyle: { weight: layout.fontWeight },
+  };
+  const builder = Skia.ParagraphBuilder.Make(
+    { maxLines: 1, textStyle: skiaTextStyle },
+    opts.fontProvider,
+  );
+  builder.pushStyle(skiaTextStyle, fillPaint);
+  builder.addText(layout.text);
+  const paragraph = builder.build();
+  paragraph.layout(LAYOUT_WIDTH);
+  return paragraph;
+}
+
+/**
+ * Measure the glyph box and shadow overflow for a paint. Frame-independent, so
+ * the live renderer calls it once and reuses the result across every frame.
+ */
+export function buildPaintLayout(
+  opts: RasterizePaintedUsernameOptions,
+): PaintUsernameLayout | null {
+  const { paint, displayUsername, fontSize, pixelRatio } = opts;
   const scale = pixelRatio;
-  const fontSizePx = fontSize * scale;
   // The extension renders paint weight as `weight * 100`; with no explicit
   // weight the painted span inherits chat's bold (700). Skia shapes glyphs
   // from the matching registered face, so a heavier paint reads heavier here.
   const fontWeight: FontWeight = paint.textStyle?.weight
     ? ((paint.textStyle.weight * 100) as FontWeight)
     : FontWeight.Bold;
-
-  const buildParagraph = (fillPaint: SkPaint) => {
-    const skiaTextStyle = {
-      fontFamilies: [fontFamily],
-      fontSize: fontSizePx,
-      fontStyle: { weight: fontWeight },
-    };
-    const builder = Skia.ParagraphBuilder.Make(
-      { maxLines: 1, textStyle: skiaTextStyle },
-      fontProvider,
-    );
-    builder.pushStyle(skiaTextStyle, fillPaint);
-    builder.addText(text);
-    const paragraph = builder.build();
-    paragraph.layout(LAYOUT_WIDTH);
-    return paragraph;
+  const partial = {
+    text: paintUsernameText(paint, displayUsername),
+    fontSizePx: fontSize * scale,
+    fontWeight,
   };
 
-  const measurePaint = Skia.Paint();
-  const measured = buildParagraph(measurePaint);
+  const measured = buildUsernameParagraph(opts, partial, Skia.Paint());
   const glyphWidthPx = Math.ceil(measured.getLongestLine());
   const glyphHeightPx = Math.ceil(measured.getHeight());
   if (glyphWidthPx === 0 || glyphHeightPx === 0) {
@@ -365,31 +438,58 @@ export async function rasterizePaintedUsername({
   const stroke = getPaintTextStroke(paint);
   const extents = shadowExtents(dropShadows, textShadows, stroke?.width ?? 0);
 
-  const insetLeftPx = Math.ceil(extents.left * scale);
-  const insetTopPx = Math.ceil(extents.top * scale);
-  const insetRightPx = Math.ceil(extents.right * scale);
-  const insetBottomPx = Math.ceil(extents.bottom * scale);
-  const surfaceWidth = glyphWidthPx + insetLeftPx + insetRightPx;
-  const surfaceHeight = glyphHeightPx + insetTopPx + insetBottomPx;
+  const insetsPx = {
+    left: Math.ceil(extents.left * scale),
+    top: Math.ceil(extents.top * scale),
+    right: Math.ceil(extents.right * scale),
+    bottom: Math.ceil(extents.bottom * scale),
+  };
 
-  const surface = Skia.Surface.Make(surfaceWidth, surfaceHeight);
-  if (!surface) {
-    return null;
-  }
+  return {
+    ...partial,
+    scale,
+    glyphWidthPx,
+    glyphHeightPx,
+    dropShadows,
+    textShadows,
+    stroke,
+    layers: getPaintLayers(paint),
+    originX: insetsPx.left,
+    originY: insetsPx.top,
+    surfaceWidthPx: glyphWidthPx + insetsPx.left + insetsPx.right,
+    surfaceHeightPx: glyphHeightPx + insetsPx.top + insetsPx.bottom,
+    insetsPx,
+  };
+}
 
-  const canvas = surface.getCanvas();
-  const originX = insetLeftPx;
-  const originY = insetTopPx;
-
+/**
+ * Draw one painted username onto `canvas` using `frames` for image (URL)
+ * layers. Shared by the offscreen raster and the live canvas so a static and
+ * an animated render are pixel-identical apart from which image frame is
+ * sampled. Returns whether any image layer was undecodable and skipped.
+ */
+export function drawPaintedUsername(
+  canvas: SkCanvas,
+  opts: RasterizePaintedUsernameOptions,
+  layout: PaintUsernameLayout,
+  frames: Map<string, SkImage>,
+): { skippedImageLayers: boolean } {
+  const { paint, fallbackColor } = opts;
+  const { scale, glyphWidthPx, glyphHeightPx, originX, originY } = layout;
+  const measurePaint = Skia.Paint();
   const drawGlyphs = (fillPaint: SkPaint) => {
-    buildParagraph(fillPaint).paint(canvas, originX, originY);
+    buildUsernameParagraph(opts, layout, fillPaint).paint(
+      canvas,
+      originX,
+      originY,
+    );
   };
 
   // CSS `filter: drop-shadow(a) drop-shadow(b)` applies b to a's output
   // (source + shadow), so the filters nest rather than stack; the whole
   // element render — text-shadows, stroke, and fill — is the chain's source.
   let dropShadowChain: SkImageFilter | null = null;
-  for (const shadow of dropShadows) {
+  for (const shadow of layout.dropShadows) {
     dropShadowChain = Skia.ImageFilter.MakeDropShadow(
       shadow.x_offset * scale,
       shadow.y_offset * scale,
@@ -407,7 +507,7 @@ export async function rasterizePaintedUsername({
 
   // text-shadow list: each shadow is drawn independently beneath the glyphs,
   // first-listed on top.
-  for (const shadow of [...textShadows].reverse()) {
+  for (const shadow of [...layout.textShadows].reverse()) {
     const shadowLayerPaint = Skia.Paint();
     shadowLayerPaint.setImageFilter(
       Skia.ImageFilter.MakeDropShadowOnly(
@@ -436,7 +536,7 @@ export async function rasterizePaintedUsername({
   // bitmap shader scaled to the layer rect, both clipped to the glyphs, the
   // way `background-clip: text` shows each background through the text.
   let skippedImageLayers = false;
-  for (const layer of [...layers].reverse()) {
+  for (const layer of [...layout.layers].reverse()) {
     const rect = layerRectInBox(
       layer.at,
       layer.size,
@@ -451,7 +551,7 @@ export async function rasterizePaintedUsername({
     };
     let shader: SkShader | null;
     if (layer.function === 'URL') {
-      const image = decodedImages.get(layer.image_url);
+      const image = frames.get(layer.image_url);
       if (!image) {
         skippedImageLayers = true;
         continue;
@@ -484,28 +584,55 @@ export async function rasterizePaintedUsername({
   // centred on the glyph outline, so a centred Skia stroke of the same width
   // drawn last reproduces it, and staying inside the drop-shadow layer keeps
   // the stroke part of the shadow silhouette.
-  if (stroke) {
+  if (layout.stroke) {
     const strokePaint = Skia.Paint();
     strokePaint.setStyle(PaintStyle.Stroke);
-    strokePaint.setStrokeWidth(stroke.width * scale);
-    strokePaint.setColor(skColor(stroke.color));
+    strokePaint.setStrokeWidth(layout.stroke.width * scale);
+    strokePaint.setColor(skColor(layout.stroke.color));
     drawGlyphs(strokePaint);
   }
 
   canvas.restore();
+  return { skippedImageLayers };
+}
+
+export async function rasterizePaintedUsername(
+  opts: RasterizePaintedUsernameOptions,
+): Promise<RasterizedPaintedUsername | null> {
+  const layout = buildPaintLayout(opts);
+  if (!layout) {
+    return null;
+  }
+
+  const { frames } = await decodePaintLayerImages(opts.paint);
+  const surface = Skia.Surface.Make(
+    layout.surfaceWidthPx,
+    layout.surfaceHeightPx,
+  );
+  if (!surface) {
+    return null;
+  }
+
+  const { skippedImageLayers } = drawPaintedUsername(
+    surface.getCanvas(),
+    opts,
+    layout,
+    frames,
+  );
 
   const image = surface.makeImageSnapshot();
   const uri = `data:image/png;base64,${image.encodeToBase64(ImageFormat.PNG, 100)}`;
+  const { scale } = layout;
 
   return {
     uri,
-    width: surfaceWidth / scale,
-    height: surfaceHeight / scale,
+    width: layout.surfaceWidthPx / scale,
+    height: layout.surfaceHeightPx / scale,
     insets: {
-      left: insetLeftPx / scale,
-      top: insetTopPx / scale,
-      right: insetRightPx / scale,
-      bottom: insetBottomPx / scale,
+      left: layout.insetsPx.left / scale,
+      top: layout.insetsPx.top / scale,
+      right: layout.insetsPx.right / scale,
+      bottom: layout.insetsPx.bottom / scale,
     },
     skippedImageLayers,
   };

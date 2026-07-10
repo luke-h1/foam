@@ -9,22 +9,41 @@ import {
 import { Text } from '@app/components/ui/Text/Text';
 import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
 import type { PaintData } from '@app/types/seventv/cosmetics';
-import { convertV4PaintToPaintData } from '@app/utils/color/sevenTvPaintData';
+import {
+  convertV4PaintToPaintData,
+  type SevenTvPaintSource,
+} from '@app/utils/color/sevenTvPaintData';
 
 import { sevenTvPaintsFixture } from './__fixtures__/sevenTvPaints.fixture';
 import { PaintedUsername } from './CosmeticUsername/CosmeticUsername';
 import { SkiaPaintedUsernamePoc } from './CosmeticUsername/poc/SkiaPaintedUsernamePoc';
 import { WebPaintedUsernamePoc } from './CosmeticUsername/poc/WebPaintedUsernamePoc';
 
-// Shadow-bearing paints are where the current renderer diverges most from the
-// extension, so the gallery compares those. Capped because every row mounts a
-// live WebView; the web column is a fidelity reference, not a list renderer.
+// Every row mounts a live WebView (a web-content process), so the galleries are
+// capped; the web column is a fidelity reference, not a list renderer.
 const GALLERY_SIZE = 16;
 
 const shadowPaints = sevenTvPaintsFixture
   .map(convertV4PaintToPaintData)
   .filter(paint => indexedCollectionToArray(paint.shadows).length > 0)
   .slice(0, GALLERY_SIZE);
+
+// A paint is animated when an image layer has a multi-frame texture; frameCount
+// only survives on the raw fixture (conversion drops it), so classify first.
+// These are the paints Skia's static raster can't match, so they get their own
+// comparison gallery.
+function isAnimatedPaint(paint: SevenTvPaintSource): boolean {
+  return paint.data.layers.some(
+    layer =>
+      layer.ty.__typename === 'PaintLayerTypeImage' &&
+      layer.ty.images.some(image => image.frameCount > 1),
+  );
+}
+
+const animatedPaints = sevenTvPaintsFixture
+  .filter(isAnimatedPaint)
+  .slice(0, GALLERY_SIZE)
+  .map(convertV4PaintToPaintData);
 
 function ComparisonRow({ paint }: { paint: PaintData }) {
   return (
@@ -91,10 +110,10 @@ const renderComparisonRow: ListRenderItem<PaintData> = ({ item }) => (
   <ComparisonRow paint={item} />
 );
 
-function ShadowPaintsGallery() {
+function Gallery({ data }: { data: PaintData[] }) {
   return (
     <FlashList<PaintData>
-      data={shadowPaints}
+      data={data}
       renderItem={renderComparisonRow}
       keyExtractor={paint => paint.id}
       ListHeaderComponent={ColumnHeaders}
@@ -107,5 +126,12 @@ export const ShadowPaints: Story = {
   args: {
     paint: shadowPaints[0] as PaintData,
   },
-  render: () => <ShadowPaintsGallery />,
+  render: () => <Gallery data={shadowPaints} />,
+};
+
+export const AnimatedPaints: Story = {
+  args: {
+    paint: animatedPaints[0] as PaintData,
+  },
+  render: () => <Gallery data={animatedPaints} />,
 };
