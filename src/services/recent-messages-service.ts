@@ -1,5 +1,6 @@
 import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
 import type { ParsedIrcMessage } from '@app/types/chat/recentMessages';
+import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 
 const RECENT_MESSAGES_URL =
   'https://recent-messages.robotty.de/api/v2/recent-messages';
@@ -27,7 +28,9 @@ function parseTags(tagString: string): Record<string, string> {
       return;
     }
 
-    tags[key] = part.slice(separatorIndex + 1);
+    // Unescape here so recent-messages tags match live IRC tags (both are the
+    // single decode point); downstream consumers must not unescape again.
+    tags[key] = unescapeIrcTag(part.slice(separatorIndex + 1));
   });
 
   return tags;

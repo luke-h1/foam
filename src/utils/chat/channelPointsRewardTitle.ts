@@ -1,8 +1,6 @@
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 
-import { unescapeIrcTag } from './unescapeIrcTag';
-
 const HIGHLIGHT_MY_MESSAGE_REWARD_TITLE = 'Highlight My Message';
 
 export type ChannelPointsRewardTags = Record<
@@ -42,7 +40,7 @@ export function isHighlightMyMessageTags(
 export function channelPointsRewardTitleFromSystemMsg(
   systemMsg: string,
 ): string | undefined {
-  const line = unescapeIrcTag(systemMsg).trim();
+  const line = systemMsg.trim();
   const redeemedMarker = 'redeemed ';
   const redeemedIndex = line.toLowerCase().indexOf(redeemedMarker);
 
@@ -64,7 +62,7 @@ export function channelPointsRewardTitleFromTags(
   const raw =
     tags['msg-param-custom-reward-title'] ?? tags['msg-param-reward-title'];
   if (typeof raw === 'string') {
-    const title = unescapeIrcTag(raw).trim();
+    const title = raw.trim();
     if (title) {
       return title;
     }

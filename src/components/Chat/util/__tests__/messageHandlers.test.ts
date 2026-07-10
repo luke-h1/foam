@@ -19,6 +19,7 @@ import {
   createViewerMilestoneTags,
 } from '@app/types/chat/irc-tags/__fixtures__/userNoticeTags.fixture';
 import type { BaseUserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { getCachedChannelPointRewardTitle } from '@app/utils/chat/channelPointRewardTitleStore';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
@@ -56,9 +57,21 @@ describe('messageHandlers', () => {
 
       const result = createUserStateFromTags(tags);
 
-      expect(result.username).toBe('TestUser');
-      expect(result.login).toBe('testuser');
-      expect(result.color).toBe('#FF5500');
+      expect(result).toEqual<UserStateTags>({
+        'display-name': 'TestUser',
+        login: 'testuser',
+        username: 'TestUser',
+        color: '#FF5500',
+        'badges-raw': 'subscriber/12,premium/1',
+        badges: { subscriber: '12', premium: '1' },
+        mod: '0',
+        subscriber: '1',
+        'user-type': undefined,
+        'reply-parent-msg-id': '',
+        'reply-parent-msg-body': '',
+        'reply-parent-display-name': '',
+        'reply-parent-user-login': '',
+      });
     });
 
     test('should handle missing display-name by using login', () => {
@@ -68,9 +81,18 @@ describe('messageHandlers', () => {
 
       const result = createUserStateFromTags(tags);
 
-      // When display-name is missing, username falls back to login
-      expect(result.username).toBe('testuser');
-      expect(result.login).toBe('testuser');
+      // When display-name is missing, username falls back to login.
+      expect(result).toEqual<UserStateTags>({
+        login: 'testuser',
+        username: 'testuser',
+        'badges-raw': '',
+        badges: {},
+        'user-type': undefined,
+        'reply-parent-msg-id': '',
+        'reply-parent-msg-body': '',
+        'reply-parent-display-name': '',
+        'reply-parent-user-login': '',
+      });
     });
 
     test('should handle missing login by using lowercase display-name', () => {
@@ -80,8 +102,18 @@ describe('messageHandlers', () => {
 
       const result = createUserStateFromTags(tags);
 
-      expect(result.username).toBe('TestUser');
-      expect(result.login).toBe('testuser');
+      expect(result).toEqual<UserStateTags>({
+        'display-name': 'TestUser',
+        login: 'testuser',
+        username: 'TestUser',
+        'badges-raw': '',
+        badges: {},
+        'user-type': undefined,
+        'reply-parent-msg-id': '',
+        'reply-parent-msg-body': '',
+        'reply-parent-display-name': '',
+        'reply-parent-user-login': '',
+      });
     });
 
     test('should include reply parent information', () => {
@@ -96,10 +128,19 @@ describe('messageHandlers', () => {
 
       const result = createUserStateFromTags(tags);
 
-      expect(result['reply-parent-msg-id']).toBe('parent-123');
-      expect(result['reply-parent-msg-body']).toBe('Hello world');
-      expect(result['reply-parent-display-name']).toBe('ParentUser');
-      expect(result['reply-parent-user-login']).toBe('parentuser');
+      const replyFields = {
+        'reply-parent-msg-id': result['reply-parent-msg-id'],
+        'reply-parent-msg-body': result['reply-parent-msg-body'],
+        'reply-parent-display-name': result['reply-parent-display-name'],
+        'reply-parent-user-login': result['reply-parent-user-login'],
+      };
+
+      expect(replyFields).toEqual({
+        'reply-parent-msg-id': 'parent-123',
+        'reply-parent-msg-body': 'Hello world',
+        'reply-parent-display-name': 'ParentUser',
+        'reply-parent-user-login': 'parentuser',
+      });
     });
 
     test('should default reply fields to empty strings', () => {
@@ -110,10 +151,19 @@ describe('messageHandlers', () => {
 
       const result = createUserStateFromTags(tags);
 
-      expect(result['reply-parent-msg-id']).toBe('');
-      expect(result['reply-parent-msg-body']).toBe('');
-      expect(result['reply-parent-display-name']).toBe('');
-      expect(result['reply-parent-user-login']).toBe('');
+      const replyFields = {
+        'reply-parent-msg-id': result['reply-parent-msg-id'],
+        'reply-parent-msg-body': result['reply-parent-msg-body'],
+        'reply-parent-display-name': result['reply-parent-display-name'],
+        'reply-parent-user-login': result['reply-parent-user-login'],
+      };
+
+      expect(replyFields).toEqual({
+        'reply-parent-msg-id': '',
+        'reply-parent-msg-body': '',
+        'reply-parent-display-name': '',
+        'reply-parent-user-login': '',
+      });
     });
   });
 
@@ -152,11 +202,11 @@ describe('messageHandlers', () => {
       };
 
       const result = createBaseMessage(params);
-      const firstMessage = result.message[0];
 
-      expect(
-        firstMessage && 'content' in firstMessage && firstMessage.content,
-      ).toBe('Hello world!');
+      expect(result.message[0]).toEqual<ParsedPart>({
+        type: 'text',
+        content: 'Hello world!',
+      });
     });
 
     test('should mark Highlight My Message PRIVMSG tags as highlighted', () => {
@@ -392,12 +442,10 @@ describe('messageHandlers', () => {
       expect(result.notice_tags?.['msg-id']).toBe('rewardgift');
       expect(result.isChannelPointRedemption).not.toBe(true);
       expect(result.isTwitchSystemNotice).toBe(true);
-      expect(result.message[0]?.type).toBe('text');
-      expect(
-        result.message[0] && 'content' in result.message[0]
-          ? result.message[0].content
-          : '',
-      ).toBe('RewardUser redeemed Hydrate');
+      expect(result.message[0]).toEqual<ParsedPart>({
+        type: 'text',
+        content: 'RewardUser redeemed Hydrate',
+      });
       expect(getCachedChannelPointRewardTitle('67890', 'reward-123')).toBe(
         'Hydrate',
       );
@@ -472,8 +520,8 @@ describe('messageHandlers', () => {
         'display-name': 'ModUser',
         login: 'moduser',
         'msg-param-months': '24',
-        'system-msg':
-          'ModUser\\sis\\scelebrating\\s24\\smonths\\sas\\sa\\smoderator!',
+        // Tags reach handlers already IRCv3-unescaped (parseIrcTags decodes).
+        'system-msg': 'ModUser is celebrating 24 months as a moderator!',
       });
 
       const result = createUserNoticeMessage({

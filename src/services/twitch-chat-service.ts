@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useRef } from 'react';
 
+import * as Network from 'expo-network';
+
 import { useAuthContext } from '@app/context/AuthContext';
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { isE2EMode } from '@app/services/api/clients';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
+import { getHeartbeatAction } from '@app/utils/chat/chatHeartbeat';
 import {
   containsMutedWords,
   isUserBlocked,
@@ -19,12 +23,20 @@ import { useWebsocket } from '../hooks/ws/useWebsocket';
  * (Wi-Fi↔cellular handoff, NAT/idle timeout, background→foreground) frequently
  * fires no close event: the WebSocket sits in OPEN forever, no messages arrive,
  * and the reconnect path never runs — chat silently stops while the app still
- * believes it is connected. Send our own PING on an interval (Twitch answers
- * with PONG, which counts as inbound activity) and force a reconnect if the
- * server has gone quiet for longer than the timeout.
+ * believes it is connected. Once the socket has been quiet for an interval we
+ * send our own PING and mark that we are awaiting a PONG; if the next tick still
+ * hasn't seen any inbound line (PONG or otherwise) the socket is dead and we
+ * force a reconnect. A busy channel proves liveness through its own traffic, so
+ * it never needs to probe. React Native's WebSocket exposes no ping frames, so
+ * this application-level PING/PONG is the only half-open detector available.
  */
-const CHAT_HEARTBEAT_INTERVAL_MS = 60_000;
-const CHAT_HEARTBEAT_TIMEOUT_MS = 150_000;
+const CHAT_HEARTBEAT_INTERVAL_MS = 30_000;
+/**
+ * After returning to the foreground or regaining connectivity, probe the socket
+ * and reconnect if Twitch does not answer within this window — far faster than
+ * waiting for the next heartbeat tick to notice a suspended socket is dead.
+ */
+const CHAT_FOREGROUND_LIVENESS_DEADLINE_MS = 5_000;
 
 const TWITCH_CHAT_URL = isE2EMode
   ? 'ws://localhost:6667'
@@ -98,6 +110,10 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   // Seeded on open and refreshed on every inbound line; the heartbeat only
   // reads it once readyState is OPEN, by which point onOpen has set it.
   const lastActivityAtRef = useRef(0);
+  // True while a heartbeat/foreground PING is outstanding. Any inbound line
+  // clears it (a live socket answers, or is already busy); if it survives to the
+  // next heartbeat tick the socket is half-open and we reconnect.
+  const awaitingPongRef = useRef(false);
   const sendIrcMessageRef = useRef<((message: string) => void) | null>(null);
   const messageBufferRef = useRef<string>('');
   const userStateRef = useRef<Record<string, string>>({});
@@ -505,6 +521,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const handleMessage = (event: MessageEvent) => {
     try {
       lastActivityAtRef.current = Date.now();
+      // Any inbound line proves the socket is alive, so a pending probe is
+      // satisfied (Twitch's PONG arrives as a normal inbound line).
+      awaitingPongRef.current = false;
       const text = `${messageBufferRef.current}${event.data as string}`;
       let cursor = 0;
 
@@ -543,6 +562,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     isAuthenticatedRef.current = false;
     joinedChannelsRef.current.clear();
     lastActivityAtRef.current = Date.now();
+    awaitingPongRef.current = false;
 
     authenticate();
   }, [authenticate, joinedChannelsRef]);
@@ -572,6 +592,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     getWebSocket,
     sendMessage: sendWebSocketMessage,
     readyState,
+    reconnect,
   } = useWebsocket(
     shouldConnect ? TWITCH_CHAT_URL : null,
     {
@@ -595,6 +616,51 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   // Reconnect chat when token changes (e.g. after 401 refresh) so we authenticate with the new token.
   const getWebSocketRef = useRef(getWebSocket);
   getWebSocketRef.current = getWebSocket;
+  const reconnectRef = useRef(reconnect);
+  reconnectRef.current = reconnect;
+  const shouldConnectRef = useRef(shouldConnect);
+  shouldConnectRef.current = shouldConnect;
+
+  // Probe an OPEN-but-possibly-half-open socket after the app returns to the
+  // foreground or regains connectivity: send a PING and, if Twitch has not
+  // answered within a short deadline, force a reconnect. If the socket isn't
+  // OPEN (its automatic retries may have been exhausted during a long
+  // background/outage), revive it directly.
+  const verifyChatLiveness = () => {
+    if (!shouldConnectRef.current) {
+      return;
+    }
+
+    const socket = getWebSocketRef.current();
+    if (socket.readyState !== WebSocket.OPEN) {
+      logger.chat.info(
+        '💬 Twitch IRC not open on resume, restarting connection',
+      );
+      reconnectRef.current();
+      return;
+    }
+
+    awaitingPongRef.current = true;
+    sendIrcCommand('PING', 'tmi.twitch.tv');
+    setTimeout(() => {
+      if (!shouldConnectRef.current || !awaitingPongRef.current) {
+        return;
+      }
+      const currentSocket = getWebSocketRef.current();
+      if (currentSocket.readyState !== WebSocket.OPEN) {
+        return;
+      }
+      logger.chat.warn(
+        '💬 Twitch IRC liveness probe unanswered after resume, forcing reconnect',
+        { name: 'twitch_chat_warning' },
+      );
+      awaitingPongRef.current = false;
+      lastActivityAtRef.current = Date.now();
+      currentSocket.close(4004, 'chat liveness probe timeout');
+    }, CHAT_FOREGROUND_LIVENESS_DEADLINE_MS);
+  };
+  const verifyChatLivenessRef = useRef(verifyChatLiveness);
+  verifyChatLivenessRef.current = verifyChatLiveness;
 
   useEffect(() => {
     if (!shouldConnect) {
@@ -602,25 +668,70 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     }
 
     const interval = setInterval(() => {
-      if (readyState !== ReadyState.OPEN) {
+      const action = getHeartbeatAction({
+        isOpen: readyState === ReadyState.OPEN,
+        awaitingPong: awaitingPongRef.current,
+        msSinceLastActivity: Date.now() - lastActivityAtRef.current,
+        intervalMs: CHAT_HEARTBEAT_INTERVAL_MS,
+      });
+
+      if (action === 'wait') {
         return;
       }
-      const idleMs = Date.now() - lastActivityAtRef.current;
-      if (idleMs >= CHAT_HEARTBEAT_TIMEOUT_MS) {
+
+      if (action === 'reconnect') {
+        // A probe from last tick went unanswered — the socket is half-open.
+        const idleMs = Date.now() - lastActivityAtRef.current;
         logger.chat.warn(
-          '💬 Twitch IRC idle past heartbeat timeout, forcing reconnect',
+          '💬 Twitch IRC PING unanswered past heartbeat, forcing reconnect',
           { name: 'twitch_chat_warning', idleMs },
         );
         // Bump the marker so we don't re-close before the reconnect lands.
+        awaitingPongRef.current = false;
         lastActivityAtRef.current = Date.now();
         getWebSocketRef.current().close(4002, 'chat heartbeat timeout');
         return;
       }
+
+      awaitingPongRef.current = true;
       sendIrcCommand('PING', 'tmi.twitch.tv');
     }, CHAT_HEARTBEAT_INTERVAL_MS);
 
     return () => clearInterval(interval);
   }, [shouldConnect, readyState, sendIrcCommand]);
+
+  // Chat has no proactive recovery on its own: a suspended or network-flapped
+  // socket often stays OPEN with no close event, so without this it would take
+  // a full heartbeat cycle to notice. Re-verify liveness the moment the app
+  // returns to the foreground or connectivity is regained.
+  useEffect(() => {
+    if (!shouldConnect) {
+      return;
+    }
+
+    const unsubscribeAppState = subscribeToAppStateTransitions(
+      ({ previous, current }) => {
+        if (current === 'active' && previous !== 'active') {
+          verifyChatLivenessRef.current();
+        }
+      },
+    );
+
+    let wasConnected = true;
+    const networkSubscription = Network.addNetworkStateListener(state => {
+      const isConnected = Boolean(state.isConnected);
+      // Only act on the regain edge; a steady connection needn't re-probe.
+      if (isConnected && !wasConnected) {
+        verifyChatLivenessRef.current();
+      }
+      wasConnected = isConnected;
+    });
+
+    return () => {
+      unsubscribeAppState();
+      networkSubscription.remove();
+    };
+  }, [shouldConnect]);
 
   useEffect(() => {
     const currentToken = authState?.token?.accessToken;

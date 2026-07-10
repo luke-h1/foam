@@ -1,3 +1,5 @@
+import { unescapeIrcTag } from './unescapeIrcTag';
+
 export interface IrcMessage {
   tags?: Record<string, string>;
   prefix?: string;
@@ -7,7 +9,10 @@ export interface IrcMessage {
 
 /**
  * Parse the `key=value;key2=value2` IRCv3 tag string into a map. Values may be
- * empty and may themselves contain `=`.
+ * empty and may themselves contain `=`. Values are IRCv3-unescaped here so the
+ * rest of the app never sees `\s`/`\:` escapes — this is the single place tags
+ * are decoded, so downstream consumers must not unescape again (that would
+ * corrupt values containing a literal backslash).
  */
 export function parseIrcTags(tagString: string): Record<string, string> {
   const tags: Record<string, string> = {};
@@ -24,7 +29,9 @@ export function parseIrcTags(tagString: string): Record<string, string> {
     const key = keyValue[0] ?? '';
 
     if (key) {
-      tags[key] = keyValue.length > 1 ? keyValue.slice(1).join('=') : '';
+      tags[key] = unescapeIrcTag(
+        keyValue.length > 1 ? keyValue.slice(1).join('=') : '',
+      );
     }
 
     if (separatorIndex === -1) {

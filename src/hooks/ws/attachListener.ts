@@ -21,6 +21,18 @@ export function getReconnectDelay(
   return Math.round(baseInterval * Math.min(1.5 ** (attempt - 1), 8));
 }
 
+// Spread reconnect attempts by up to a quarter-second so a mass disconnect
+// (Twitch-side blip, network flap) doesn't have every client retry in lockstep.
+// Kept out of getReconnectDelay so that stays pure/deterministic for its tests.
+const RECONNECT_MAX_JITTER_MS = 250;
+
+function getReconnectDelayWithJitter(
+  attempt: number,
+  baseInterval: number,
+): number {
+  return getReconnectDelay(attempt, baseInterval) + Math.random() * RECONNECT_MAX_JITTER_MS;
+}
+
 export interface Setters {
   setLastMessage: (message: WebSocketEventMap['message']) => void;
   setReadyState: (readyState: ReadyState) => void;
@@ -77,7 +89,10 @@ export function attachListeners(
         optionsRef.current.reconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS;
 
       if (reconnectCount.current < reconnectAttempts) {
-        const delay = getReconnectDelay(reconnectCount.current, baseInterval);
+        const delay = getReconnectDelayWithJitter(
+          reconnectCount.current,
+          baseInterval,
+        );
         reconnectTimeout = setTimeout(() => {
           reconnectCount.current += 1;
           reconnect();
@@ -101,7 +116,10 @@ export function attachListeners(
         optionsRef.current.reconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS;
 
       if (reconnectCount.current < reconnectAttempts) {
-        const delay = getReconnectDelay(reconnectCount.current, baseInterval);
+        const delay = getReconnectDelayWithJitter(
+          reconnectCount.current,
+          baseInterval,
+        );
         reconnectTimeout = setTimeout(() => {
           reconnectCount.current += 1;
           reconnect();
