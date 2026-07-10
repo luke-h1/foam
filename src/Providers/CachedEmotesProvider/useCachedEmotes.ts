@@ -11,8 +11,15 @@ import { releaseChannelEmoteRefs, warmCachedEmoteRefs } from './cache-service';
 export type CachedEmotesLoadingState = 'IDLE' | 'WARMING' | 'WARMED';
 
 const WARM_BATCH_SIZE = 24;
-const WARM_LIMIT = 96;
-const GLOBAL_WARM_LIMIT = 128;
+/**
+ * How many emotes to eagerly decode into the shared ref cache on channel entry.
+ * Decodes are capped at 8 concurrent, so these counts set the warm storm's
+ * *duration*, and while it runs it starves the per-frame decoding of an animated
+ * emote that's on screen (it plays choppy until the storm drains). Warm the
+ * common set; the long tail decodes on-demand. Tune against the Chat Perf harness.
+ */
+const WARM_LIMIT = 64;
+const GLOBAL_WARM_LIMIT = 64;
 
 function collectDisplayUrls(emotes: SanitisedEmote[], limit: number): string[] {
   const urls = new Set<string>();
