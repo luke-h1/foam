@@ -207,7 +207,12 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/lib/sentry.ts'],
+    files: [
+      'src/lib/sentry.ts',
+      'src/lib/sentryImageSpans.ts',
+      'src/lib/__tests__/sentryImageSpans.test.ts',
+      'src/lib/__tests__/sentry.test.ts',
+    ],
     rules: {
       'no-restricted-imports': 'off',
     },

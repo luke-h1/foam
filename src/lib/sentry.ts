@@ -8,10 +8,10 @@ import {
   init as initSentry,
   mobileReplayIntegration,
   reactNativeTracingIntegration,
-  wrapExpoImage,
 } from '@sentry/react-native';
 import { Image as ExpoImage } from 'expo-image';
 
+import { instrumentExpoImageLoads } from '@app/lib/sentryImageSpans';
 import { sanitiseLogValue } from '@app/utils/log/sanitiseLogValue';
 import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
 import type { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
@@ -130,10 +130,12 @@ export function init() {
     /**
      * Replay/tracing encoders were a measured production JS-thread cost, so
      * production samples them down while keeping errors at 100%.
-     * profilesSampleRate is relative to tracesSampleRate.
+     *
+     * Trace profiling (profilesSampleRate) is deliberately not set: oversized
+     * profile envelopes wedged the native transport and OOM-crashed the app
+     * (FOAM-TV-MOBILE-1C).
      */
     tracesSampleRate: isProduction ? 0.15 : 1.0,
-    profilesSampleRate: 1.0,
     enableAutoPerformanceTracing: true,
     replaysSessionSampleRate: isProduction ? 0.05 : 1.0,
     replaysOnErrorSampleRate: 1.0,
@@ -162,7 +164,7 @@ export function init() {
     },
   });
 
-  wrapExpoImage(ExpoImage);
+  instrumentExpoImageLoads(ExpoImage);
 
   didInitializeSentry = true;
 }
