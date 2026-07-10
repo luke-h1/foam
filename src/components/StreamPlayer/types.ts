@@ -222,9 +222,8 @@ export interface StreamPlayerProps {
    */
   onWebViewLoaded?: () => void;
   /**
-   * Parent domain for Twitch embed. On native, {@link StreamPlayer} reads
-   * `twitchPlayerEmbedParent` from remote config instead. Web uses this prop
-   * (or the page hostname) when no remote config is available.
+   * Parent domain for the Twitch embed. Used by the web player only; native
+   * hardcodes `www.twitch.tv`, the domain Twitch's embed always accepts.
    */
   parent?: string;
   /**
@@ -349,4 +348,8 @@ export type PlayerMessage =
   | { type: 'trace'; payload: { step: string; detail?: string } }
   | { type: 'twitchAuthComplete' }
   | { type: 'error'; payload: { message: string } }
+  | {
+      type: 'embedMisconfigured';
+      payload: { message: string; parent: string | null };
+    }
   | { type: 'muteState'; payload: { muted: boolean; volume: number } };

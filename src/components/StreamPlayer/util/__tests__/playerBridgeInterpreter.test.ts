@@ -447,6 +447,100 @@ describe('interpretPlayerMessage', () => {
     });
   });
 
+  describe('embedMisconfigured', () => {
+    test('records a dedicated load failure, metric, log and notify with the bad parent', () => {
+      const embedErrorMetadata = {
+        name: 'twitch_player_error',
+        exceptionName: 'StreamPlayerEmbedMisconfigured',
+        fingerprint: ['stream-player-embed-misconfigured'],
+        channel: 'sodapoppin',
+        embedParent: '',
+        elapsedMs: 2_500,
+        message: 'Whoops, this embed is misconfigured',
+      };
+      expect(
+        interpretPlayerMessage(
+          {
+            type: 'embedMisconfigured',
+            payload: {
+              message: 'Whoops, this embed is misconfigured',
+              parent: '',
+            },
+          },
+          createBridgeContext(),
+        ),
+      ).toEqual<PlayerBridgeAction[]>([
+        {
+          type: 'recordLoadFailed',
+          reason: 'embed_misconfigured',
+          error: embedErrorMetadata,
+        },
+        {
+          type: 'countMetric',
+          name: 'stream.embed_misconfigured',
+          attributes: {
+            channel: 'sodapoppin',
+            embed_parent: '',
+          },
+        },
+        {
+          type: 'log',
+          level: 'warn',
+          message:
+            '[StreamPlayer:embed MISCONFIGURED] Whoops, this embed is misconfigured',
+          args: [embedErrorMetadata],
+        },
+        {
+          type: 'notifyError',
+          message: 'Whoops, this embed is misconfigured',
+        },
+      ]);
+    });
+
+    test('falls back to unknown parent and a generic message when the payload is missing', () => {
+      const embedErrorMetadata = {
+        name: 'twitch_player_error',
+        exceptionName: 'StreamPlayerEmbedMisconfigured',
+        fingerprint: ['stream-player-embed-misconfigured'],
+        channel: 'sodapoppin',
+        embedParent: 'unknown',
+        elapsedMs: 2_500,
+        message: 'Whoops, this embed is misconfigured',
+      };
+      expect(
+        interpretPlayerMessage(
+          JSON.parse('{"type":"embedMisconfigured"}') as PlayerMessage,
+          createBridgeContext(),
+        ),
+      ).toEqual<PlayerBridgeAction[]>([
+        {
+          type: 'recordLoadFailed',
+          reason: 'embed_misconfigured',
+          error: embedErrorMetadata,
+        },
+        {
+          type: 'countMetric',
+          name: 'stream.embed_misconfigured',
+          attributes: {
+            channel: 'sodapoppin',
+            embed_parent: 'unknown',
+          },
+        },
+        {
+          type: 'log',
+          level: 'warn',
+          message:
+            '[StreamPlayer:embed MISCONFIGURED] Whoops, this embed is misconfigured',
+          args: [embedErrorMetadata],
+        },
+        {
+          type: 'notifyError',
+          message: 'Whoops, this embed is misconfigured',
+        },
+      ]);
+    });
+  });
+
   describe('contentGateDetected', () => {
     test('propagates the gate flag', () => {
       expect(

@@ -51,19 +51,6 @@ jest.mock('@app/lib/sentry', () => ({
   startInactiveSpan: jest.fn(),
 }));
 
-jest.mock('@app/hooks/firebase/useRemoteConfig', () => ({
-  useRemoteConfig: jest.fn(() => ({
-    config: {
-      twitchPlayerEmbedParent: {
-        value: 'www.twitch.tv',
-      },
-    },
-    refetch: jest.fn(),
-    isRefetching: false,
-    isLoading: false,
-  })),
-}));
-
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({
     bottom: 0,

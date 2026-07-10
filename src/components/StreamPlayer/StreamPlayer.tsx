@@ -3,7 +3,6 @@ import { InteractionManager, Platform, StyleSheet, View } from 'react-native';
 import type { WebViewMessageEvent } from 'react-native-webview';
 import { WebView } from 'react-native-webview';
 
-import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { useWatchTimeTracking } from '@app/hooks/useWatchTimeTracking';
 import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
@@ -24,6 +23,7 @@ import {
   buildTwitchClipPlayerUrl,
   buildTwitchContentGateAcceptScript,
   buildTwitchContentGateWatcherScript,
+  buildTwitchEmbedErrorWatcherScript,
   buildTwitchLatencyTrackerScript,
   buildTwitchLiveSyncScript,
   buildTwitchPipBridgeScript,
@@ -142,8 +142,10 @@ export const StreamPlayer = memo(function StreamPlayer({
   width,
   ref,
 }: StreamPlayerProps) {
-  const { config } = useRemoteConfig();
-  const embedParent = config.twitchPlayerEmbedParent.value;
+  // Twitch's embed `parent`, hardcoded to Twitch's own domain, which its embed
+  // always accepts. A blank or invalid value makes Twitch render "this embed is
+  // misconfigured" and breaks every stream.
+  const embedParent = 'www.twitch.tv';
   const webViewRef = useRef<WebView>(null);
   const needsInitRef = useRef(true);
   const authCompletionReloadTimeoutRef = useRef<ReturnType<
@@ -386,6 +388,11 @@ export const StreamPlayer = memo(function StreamPlayer({
    */
   const injectedJavaScript =
     TWITCH_AUTH_HELPER_SCRIPT +
+    '\n' +
+    // Detect Twitch's "this embed is misconfigured" error page (bad parent) on
+    // every player kind so a broken embed reports to Sentry instead of only
+    // timing out.
+    buildTwitchEmbedErrorWatcherScript() +
     '\n' +
     buildTwitchContentGateAcceptScript() +
     '\n' +

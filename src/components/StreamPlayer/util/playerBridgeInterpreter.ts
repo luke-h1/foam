@@ -241,6 +241,45 @@ export function interpretPlayerMessage(
         },
       ];
     }
+    case 'embedMisconfigured': {
+      const embedParent = message.payload?.parent ?? 'unknown';
+      const embedMessage =
+        message.payload?.message ?? 'Whoops, this embed is misconfigured';
+      const embedErrorMetadata = {
+        name: 'twitch_player_error',
+        exceptionName: 'StreamPlayerEmbedMisconfigured',
+        fingerprint: ['stream-player-embed-misconfigured'],
+        channel: context.channel,
+        embedParent,
+        elapsedMs,
+        message: embedMessage,
+      };
+      return [
+        {
+          type: 'recordLoadFailed',
+          reason: 'embed_misconfigured',
+          error: embedErrorMetadata,
+        },
+        {
+          type: 'countMetric',
+          name: 'stream.embed_misconfigured',
+          attributes: {
+            channel: context.channel ?? 'unknown',
+            embed_parent: embedParent,
+          },
+        },
+        {
+          type: 'log',
+          level: 'warn',
+          message: `[StreamPlayer:embed MISCONFIGURED] ${embedMessage}`,
+          args: [embedErrorMetadata],
+        },
+        {
+          type: 'notifyError',
+          message: embedMessage,
+        },
+      ];
+    }
     case 'contentGateDetected':
       return [
         {

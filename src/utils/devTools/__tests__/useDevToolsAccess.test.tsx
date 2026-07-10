@@ -62,7 +62,6 @@ function createRemoteConfigResult(
         e2e: false,
       },
     }),
-    twitchPlayerEmbedParent: entry('www.twitch.tv'),
   };
 
   return { config, refetch: jest.fn(), isRefetching: false, isLoading };
