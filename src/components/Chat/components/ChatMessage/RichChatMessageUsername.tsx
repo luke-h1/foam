@@ -1,9 +1,34 @@
+import type { StyleProp, TextStyle } from 'react-native';
+
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { lightenColor } from '@app/utils/color/lightenColor';
 
 import { ChatMessagePressable } from './ChatMessagePressable';
 import { PaintedUsername } from './CosmeticUsername/CosmeticUsername';
 import { styles } from './RichChatMessage.styles';
+
+// A fresh style array here would defeat memo(PaintedUsername) on every parent
+// render; the four combinations are static, so pick from a lookup instead.
+const usernameTextStyles: Record<
+  'comfortable' | 'comfortableModerated' | 'compact' | 'compactModerated',
+  StyleProp<TextStyle>
+> = {
+  comfortable: [styles.usernameText],
+  comfortableModerated: [styles.usernameText, styles.moderatedUsernameText],
+  compact: [styles.usernameTextCompact],
+  compactModerated: [styles.usernameTextCompact, styles.moderatedUsernameText],
+};
+
+function getUsernameTextStyle(compact: boolean, isModerated: boolean) {
+  if (compact) {
+    return isModerated
+      ? usernameTextStyles.compactModerated
+      : usernameTextStyles.compact;
+  }
+  return isModerated
+    ? usernameTextStyles.comfortableModerated
+    : usernameTextStyles.comfortable;
+}
 
 interface RichChatMessageUsernameProps {
   cachedSenderColor?: string;
@@ -38,10 +63,7 @@ export function RichChatMessageUsername({
       username={username}
       userId={userId}
       fallbackColor={fallbackColor}
-      usernameTextStyle={[
-        compact ? styles.usernameTextCompact : styles.usernameText,
-        isModerated && styles.moderatedUsernameText,
-      ]}
+      usernameTextStyle={getUsernameTextStyle(compact, isModerated)}
     />
   );
 

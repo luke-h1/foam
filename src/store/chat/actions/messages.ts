@@ -122,6 +122,8 @@ const prepareMessagePartsForStore = (
   });
 };
 
+let nextMessageSeq = 0;
+
 const prepareMessageForStore = (
   message: AnyChatMessageType,
 ): AnyChatMessageType => {
@@ -130,9 +132,11 @@ const prepareMessageForStore = (
     message,
     getUserMessageColor,
   );
+  nextMessageSeq += 1;
   return {
     ...message,
     id: messageKey,
+    seq: nextMessageSeq,
     ...(cachedSenderColor ? { cachedSenderColor } : {}),
     message: prepareMessagePartsForStore(
       message.message_id,

@@ -11,6 +11,10 @@ import type { ReactNode } from 'react';
 
 import { createHitslop } from '@app/utils/string/createHitSlop';
 
+// Default-parameter expressions re-run per render, and this component mounts
+// several times per chat row — hoist the common hit slop.
+const DEFAULT_HIT_SLOP = createHitslop(8);
+
 interface ChatMessagePressableProps {
   accessibilityLabel?: string;
   children: ReactNode;
@@ -26,7 +30,7 @@ function ChatMessagePressableComponent({
   accessibilityLabel,
   children,
   disabled,
-  hitSlop = createHitslop(8),
+  hitSlop = DEFAULT_HIT_SLOP,
   onLongPress,
   onPress,
   style,

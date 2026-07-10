@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { MediaLinkCard } from '@app/components/Chat/components/MediaLinkCard';
 import { StvEmoteEvent } from '@app/components/Chat/components/StvEmoteEvent';
 import { CharityDonationNotice } from '@app/components/Chat/components/usernotices/CharityDonationNotice';
@@ -41,6 +43,19 @@ export function ChatMessagePart({
   textColor,
   part,
 }: ChatMessagePartProps) {
+  // Memoize the sub-notice body parse so re-renders reuse the same parts
+  // array and SubscriptionNotice's memo holds (a sub train re-rendering its
+  // window re-parsed every notice body inline).
+  const subMessage =
+    'subscriptionEvent' in part ? part.subscriptionEvent?.message : undefined;
+  const parsedSubMessage = useMemo(
+    () =>
+      subMessage && parseTextForEmotes
+        ? parseTextForEmotes(subMessage)
+        : undefined,
+    [subMessage, parseTextForEmotes],
+  );
+
   if (mode === 'system' && part.type === 'text') {
     const content = getParsedPartStringContent(part);
     const isRaidNotice =
@@ -207,12 +222,6 @@ export function ChatMessagePart({
     case 'anongiftpaidupgrade':
     case 'anongift':
     case 'primepaidupgrade': {
-      const subMessage = part.subscriptionEvent?.message;
-      const parsedSubMessage =
-        subMessage && parseTextForEmotes
-          ? parseTextForEmotes(subMessage)
-          : undefined;
-
       if (noticeTags) {
         return (
           <SubscriptionNotice
