@@ -40,9 +40,10 @@ function isAnimatedPaint(paint: SevenTvPaintSource): boolean {
   );
 }
 
+// Every animated paint; the FlashList virtualizes rows so only the visible
+// live WebViews/canvases mount at once.
 const animatedPaints = sevenTvPaintsFixture
   .filter(isAnimatedPaint)
-  .slice(0, GALLERY_SIZE)
   .map(convertV4PaintToPaintData);
 
 function ComparisonRow({ paint }: { paint: PaintData }) {

@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { PixelRatio } from 'react-native';
 
-import type { SkPicture } from '@shopify/react-native-skia';
 import {
   Canvas,
-  createPicture,
-  Picture,
-  Skia,
+  Image,
+  Mask,
+  useAnimatedImageValue,
   useFonts,
 } from '@shopify/react-native-skia';
 
@@ -15,11 +15,8 @@ import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
 import {
-  buildPaintLayout,
-  decodePaintLayerImages,
-  drawPaintedUsername,
-  type PaintUsernameLayout,
-  type RasterizePaintedUsernameOptions,
+  getPaintBitmaps,
+  type PaintBitmaps,
 } from './skiaPaintedUsernameRasterizer';
 
 // The chat renders painted usernames in Montserrat 700; loading that face keeps
@@ -37,10 +34,6 @@ const skiaFontSource = {
   ],
 };
 
-// Frame ticker floor: never redraw faster than ~30fps even if a texture claims
-// a shorter frame duration, to bound the per-frame paragraph re-shaping cost.
-const MIN_FRAME_MS = 33;
-
 interface SkiaPaintedUsernamePocProps {
   username: string;
   paint: PaintData;
@@ -48,14 +41,77 @@ interface SkiaPaintedUsernamePocProps {
 }
 
 /**
- * POC: renders a painted username with a live Skia canvas. Static paints draw
- * one picture; animated image (URL) layers advance their frames on a ticker and
- * re-record the picture, so the paint genuinely animates like the extension
- * instead of freezing on a still. Negative margins collapse the shadow overflow
- * margin so the glyph box aligns with neighbouring text.
- *
- * The canvas is retina-backed, so layout/draw run in logical units
- * (`pixelRatio: 1`); the native backing supplies the device scale.
+ * Canvas for a resolved paint: the cached static composite as one bitmap, plus
+ * (for image-layer paints) the texture overlaid through the glyph mask. The
+ * overlay frame comes from `useAnimatedImageValue`, which advances on the UI
+ * thread, so animated paints animate at the texture's own frame rate with no
+ * per-frame JS and no re-rasterizing.
+ */
+function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
+  // Static (single-frame) textures resolve to their one frame; animated ones
+  // advance. A null source yields a null frame.
+  const animatedFrame = useAnimatedImageValue(bitmaps.animatedUrl ?? undefined);
+
+  // Stable across renders (bitmaps is memoised upstream), so the Mask child
+  // doesn't rebuild its glyph-coverage node while the overlay updates.
+  const maskNode = useMemo(
+    () =>
+      bitmaps.maskImage ? (
+        <Image
+          image={bitmaps.maskImage}
+          x={0}
+          y={0}
+          width={bitmaps.width}
+          height={bitmaps.height}
+          fit='fill'
+        />
+      ) : null,
+    [bitmaps],
+  );
+
+  const { width, height, insets, staticImage, animatedRect } = bitmaps;
+
+  return (
+    <Canvas
+      style={{
+        width,
+        height,
+        marginLeft: -insets.left,
+        marginTop: -insets.top,
+        marginRight: -insets.right,
+        marginBottom: -insets.bottom,
+      }}
+    >
+      <Image
+        image={staticImage}
+        x={0}
+        y={0}
+        width={width}
+        height={height}
+        fit='fill'
+      />
+      {maskNode && animatedRect ? (
+        <Mask mode='alpha' mask={maskNode}>
+          <Image
+            image={animatedFrame}
+            x={animatedRect.x}
+            y={animatedRect.y}
+            width={animatedRect.width}
+            height={animatedRect.height}
+            fit='fill'
+          />
+        </Mask>
+      ) : null}
+    </Canvas>
+  );
+}
+
+/**
+ * POC: renders a painted username with Skia. The static composite (gradients,
+ * base fill, drop shadows) is baked once into a cached bitmap and reused across
+ * mounts and every user wearing the paint; image-layer paints animate their
+ * texture on the UI thread. Negative margins collapse the shadow overflow
+ * margin so the glyphs align with neighbouring text.
  */
 export function SkiaPaintedUsernamePoc({
   username,
@@ -63,91 +119,24 @@ export function SkiaPaintedUsernamePoc({
   fallbackColor = theme.color.text.dark,
 }: SkiaPaintedUsernamePocProps) {
   const fontProvider = useFonts(skiaFontSource);
-  const [picture, setPicture] = useState<SkPicture | null>(null);
 
-  const opts = useMemo<RasterizePaintedUsernameOptions | null>(
+  const bitmaps = useMemo(
     () =>
       fontProvider
-        ? {
+        ? getPaintBitmaps({
             displayUsername: username,
             paint,
             fallbackColor,
             fontSize: chatLineMetrics.comfortable.fontSize,
-            pixelRatio: 1,
+            pixelRatio: PixelRatio.get(),
             fontProvider,
             fontFamily: 'Montserrat',
-          }
+          })
         : null,
     [fontProvider, username, paint, fallbackColor],
   );
 
-  const layout = useMemo<PaintUsernameLayout | null>(
-    () => (opts ? buildPaintLayout(opts) : null),
-    [opts],
-  );
-
-  useEffect(() => {
-    if (!opts || !layout) {
-      return;
-    }
-    let active = true;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const bounds = Skia.XYWHRect(
-      0,
-      0,
-      layout.surfaceWidthPx,
-      layout.surfaceHeightPx,
-    );
-
-    decodePaintLayerImages(paint)
-      .then(
-        decoded => decoded,
-        () => null,
-      )
-      .then(decoded => {
-        if (!active || !decoded) {
-          return;
-        }
-        const record = () =>
-          createPicture(
-            canvas => drawPaintedUsername(canvas, opts, layout, decoded.frames),
-            bounds,
-          );
-        setPicture(record());
-
-        if (decoded.animated.size === 0) {
-          return;
-        }
-        const tick = () => {
-          if (!active) {
-            return;
-          }
-          let nextDelay = 100;
-          for (const [url, animated] of decoded.animated) {
-            const delay = animated.decodeNextFrame();
-            const frame = animated.getCurrentFrame();
-            if (frame) {
-              decoded.frames.set(url, frame);
-            }
-            if (delay > 0) {
-              nextDelay = Math.min(nextDelay, delay);
-            }
-          }
-          setPicture(record());
-          timer = setTimeout(tick, Math.max(nextDelay, MIN_FRAME_MS));
-        };
-        timer = setTimeout(tick, MIN_FRAME_MS);
-      });
-
-    return () => {
-      active = false;
-      if (timer) {
-        clearTimeout(timer);
-      }
-    };
-  }, [opts, layout, paint]);
-
-  if (!layout || !picture) {
+  if (!bitmaps) {
     return (
       <Text style={{ ...chatLineMetrics.comfortable, color: fallbackColor }}>
         {username}
@@ -155,18 +144,5 @@ export function SkiaPaintedUsernamePoc({
     );
   }
 
-  return (
-    <Canvas
-      style={{
-        width: layout.surfaceWidthPx,
-        height: layout.surfaceHeightPx,
-        marginLeft: -layout.insetsPx.left,
-        marginTop: -layout.insetsPx.top,
-        marginRight: -layout.insetsPx.right,
-        marginBottom: -layout.insetsPx.bottom,
-      }}
-    >
-      <Picture picture={picture} />
-    </Canvas>
-  );
+  return <PaintBitmapCanvas bitmaps={bitmaps} />;
 }

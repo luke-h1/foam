@@ -637,3 +637,136 @@ export async function rasterizePaintedUsername(
     skippedImageLayers,
   };
 }
+
+interface LogicalRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Cache-friendly render inputs for a painted username. `staticImage` bakes
+ * everything except the (first) image layer — gradients, base fill, drop
+ * shadows, all glyph-clipped — into one bitmap reused across mounts and every
+ * user wearing the paint. Image-layer paints additionally return `maskImage`
+ * (glyph coverage) plus the layer's url/rect so the live renderer can overlay
+ * the animated texture through the mask; `useAnimatedImageValue` drives its
+ * frames on the UI thread, so the static bitmap never re-rasterizes.
+ *
+ * All sizes are logical points. `staticImage`/`maskImage` are baked at device
+ * pixels and drawn into the logical box, so they stay crisp on retina.
+ */
+export interface PaintBitmaps {
+  staticImage: SkImage;
+  maskImage: SkImage | null;
+  animatedUrl: string | null;
+  animatedRect: LogicalRect | null;
+  width: number;
+  height: number;
+  insets: { left: number; top: number; right: number; bottom: number };
+}
+
+// Bounded LRU of baked bitmaps keyed by (paint, username, size, scale). Each
+// entry is a few small SkImages (~tens of KB); the cap keeps a raid's worth of
+// distinct painted usernames without unbounded native-memory growth.
+const MAX_CACHED_PAINT_BITMAPS = 256;
+const paintBitmapCache = new Map<string, PaintBitmaps>();
+
+function paintBitmapCacheKey(opts: RasterizePaintedUsernameOptions): string {
+  return `${opts.paint.id}|${opts.displayUsername}|${opts.fontSize}|${opts.pixelRatio}`;
+}
+
+/**
+ * Build (or return the cached) render inputs for a painted username. Pure and
+ * synchronous — no image decode — because the static bitmap deliberately omits
+ * the image layer, which the live renderer loads via `useAnimatedImageValue`.
+ */
+export function getPaintBitmaps(
+  opts: RasterizePaintedUsernameOptions,
+): PaintBitmaps | null {
+  const key = paintBitmapCacheKey(opts);
+  const cached = paintBitmapCache.get(key);
+  if (cached) {
+    return cached;
+  }
+
+  const layout = buildPaintLayout(opts);
+  if (!layout) {
+    return null;
+  }
+
+  const staticSurface = Skia.Surface.Make(
+    layout.surfaceWidthPx,
+    layout.surfaceHeightPx,
+  );
+  if (!staticSurface) {
+    return null;
+  }
+  // Empty frame map: image layers are skipped here and overlaid live instead.
+  drawPaintedUsername(staticSurface.getCanvas(), opts, layout, new Map());
+  const staticImage = staticSurface.makeImageSnapshot();
+
+  const { scale } = layout;
+  const imageLayer = layout.layers.find(
+    layer => layer.function === 'URL' && layer.image_url,
+  );
+
+  let maskImage: SkImage | null = null;
+  let animatedUrl: string | null = null;
+  let animatedRect: LogicalRect | null = null;
+
+  if (imageLayer) {
+    animatedUrl = skiaDecodableLayerUrl(imageLayer.image_url);
+    const maskSurface = Skia.Surface.Make(
+      layout.surfaceWidthPx,
+      layout.surfaceHeightPx,
+    );
+    if (maskSurface) {
+      const whitePaint = Skia.Paint();
+      whitePaint.setColor(Skia.Color('white'));
+      buildUsernameParagraph(opts, layout, whitePaint).paint(
+        maskSurface.getCanvas(),
+        layout.originX,
+        layout.originY,
+      );
+      maskImage = maskSurface.makeImageSnapshot();
+    }
+    const rect = layerRectInBox(
+      imageLayer.at,
+      imageLayer.size,
+      layout.glyphWidthPx,
+      layout.glyphHeightPx,
+    );
+    animatedRect = {
+      x: (layout.originX + rect.x) / scale,
+      y: (layout.originY + rect.y) / scale,
+      width: rect.width / scale,
+      height: rect.height / scale,
+    };
+  }
+
+  const bitmaps: PaintBitmaps = {
+    staticImage,
+    maskImage,
+    animatedUrl,
+    animatedRect,
+    width: layout.surfaceWidthPx / scale,
+    height: layout.surfaceHeightPx / scale,
+    insets: {
+      left: layout.insetsPx.left / scale,
+      top: layout.insetsPx.top / scale,
+      right: layout.insetsPx.right / scale,
+      bottom: layout.insetsPx.bottom / scale,
+    },
+  };
+
+  if (paintBitmapCache.size >= MAX_CACHED_PAINT_BITMAPS) {
+    const oldest = paintBitmapCache.keys().next().value;
+    if (oldest !== undefined) {
+      paintBitmapCache.delete(oldest);
+    }
+  }
+  paintBitmapCache.set(key, bitmaps);
+  return bitmaps;
+}
