@@ -1745,11 +1745,12 @@ export function buildTwitchEmbedErrorWatcherScript(): string {
   if (window.__foamEmbedErrorWatcherInstalled) { return true; }
   window.__foamEmbedErrorWatcherInstalled = true;
 
-  var reported = false;
   var checks = 0;
   var timer = null;
+  var stopped = false;
 
   function stop() {
+    stopped = true;
     if (timer) { clearInterval(timer); timer = null; }
   }
 
@@ -1762,7 +1763,7 @@ export function buildTwitchEmbedErrorWatcherScript(): string {
   }
 
   function check() {
-    if (reported) { return; }
+    if (stopped) { return; }
     checks += 1;
     // A real player <video> means the embed loaded; nothing to watch for.
     if (document.querySelector('video')) {
@@ -1771,7 +1772,6 @@ export function buildTwitchEmbedErrorWatcherScript(): string {
     }
     var text = (document.body && document.body.textContent || '').toLowerCase();
     if (text.indexOf('embed is misconfigured') !== -1) {
-      reported = true;
       stop();
       try {
         window.ReactNativeWebView.postMessage(JSON.stringify({
@@ -1788,8 +1788,12 @@ export function buildTwitchEmbedErrorWatcherScript(): string {
     if (checks >= 15) { stop(); }
   }
 
+  // Poll only if the synchronous check did not already resolve, so a same-tick
+  // hit (error/video/timeout) never leaves an interval running unclearable.
   check();
-  timer = setInterval(check, 1000);
+  if (!stopped) {
+    timer = setInterval(check, 1000);
+  }
   return true;
 })();
 true;`;

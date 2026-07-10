@@ -287,6 +287,10 @@ describe('twitchPlayerSource', () => {
     expect(script).toContain(
       'if (window.top !== window.self) { return true; }',
     );
+    // The poll is only started when the synchronous check has not already
+    // resolved, so a same-tick hit never leaves an unclearable interval.
+    expect(script).toContain('if (!stopped) {');
+    expect(script).toContain('timer = setInterval(check, 1000)');
   });
 
   test('detects app and Twitch passport callback URLs', () => {
