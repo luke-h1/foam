@@ -274,13 +274,6 @@ export function imageRepeatFromCanvasRepeat(
 
 export type PaintLayerTileMode = 'clamp' | 'decal' | 'mirror' | 'repeat';
 
-/**
- * Skia x/y tile modes for a tiling layer's `canvas_repeat`. `repeat-x` /
- * `repeat-y` tile one axis and clamp-to-transparent (`decal`) on the other;
- * everything else tiles both axes. `round`/`space` stretch or pad tiles in CSS,
- * but plain repetition is the closest Skia equivalent and matches how the
- * texture is meant to fill.
- */
 export function paintLayerTileModes(canvasRepeat: PaintCanvasRepeat): {
   tx: PaintLayerTileMode;
   ty: PaintLayerTileMode;

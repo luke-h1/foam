@@ -6,7 +6,7 @@ import { useSelector } from '@legendapp/state/react';
 import { useChatScrollActive } from '@app/components/Chat/util/useChatScrollActive';
 import { Text } from '@app/components/ui/Text/Text';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { preferences$ } from '@app/store/preferenceStore';
+import { usePaintRenderer } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
@@ -122,9 +122,7 @@ function PaintedUsernameComponent({
   });
   const paint = paintProp ?? storePaint ?? null;
   const isScrolling = useChatScrollActive();
-  const paintRenderer = useSelector(() =>
-    preferences$.sevenTvPaintRenderer.get(),
-  );
+  const paintRenderer = usePaintRenderer();
 
   if (!paint) {
     return (

@@ -528,11 +528,6 @@ export interface PaintBitmaps {
   maskImage: SkImage | null;
   animatedUrl: string | null;
   animatedRect: LogicalRect | null;
-  /**
-   * Set when the image layer tiles its texture (CSS `background-repeat`) rather
-   * than stretching to fill: the live renderer draws it through a repeating
-   * image shader across the glyph mask instead of a single `fit='fill'` image.
-   */
   animatedTile: { tx: PaintLayerTileMode; ty: PaintLayerTileMode } | null;
   width: number;
   height: number;
@@ -545,8 +540,21 @@ export interface PaintBitmaps {
 const MAX_CACHED_PAINT_BITMAPS = 256;
 const paintBitmapCache = new Map<string, PaintBitmaps>();
 
+let nextPaintRevision = 1;
+const paintRevisions = new WeakMap<PaintData, number>();
+
+function paintRevision(paint: PaintData): number {
+  let revision = paintRevisions.get(paint);
+  if (revision === undefined) {
+    revision = nextPaintRevision;
+    nextPaintRevision += 1;
+    paintRevisions.set(paint, revision);
+  }
+  return revision;
+}
+
 function paintBitmapCacheKey(opts: RasterizePaintedUsernameOptions): string {
-  return `${opts.paint.id}|${opts.displayUsername}|${opts.fontSize}|${opts.pixelRatio}`;
+  return `${opts.paint.id}|${paintRevision(opts.paint)}|${opts.displayUsername}|${opts.fontSize}|${opts.pixelRatio}`;
 }
 
 /**
