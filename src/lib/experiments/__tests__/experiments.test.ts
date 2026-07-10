@@ -22,18 +22,4 @@ describe('resolveExperimentVariant', () => {
       }),
     ).toEqual('control');
   });
-
-  test('resolves the painted-username renderer experiment', () => {
-    expect(
-      resolveExperimentVariant('paintedUsernameRenderer', {
-        paintedUsernameRenderer: 'skia',
-      }),
-    ).toEqual('skia');
-  });
-
-  test('painted-username renderer defaults to control (native)', () => {
-    expect(resolveExperimentVariant('paintedUsernameRenderer', {})).toEqual(
-      'control',
-    );
-  });
 });

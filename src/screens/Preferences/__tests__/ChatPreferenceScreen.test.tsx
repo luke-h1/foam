@@ -47,7 +47,7 @@ const mockPreferences: Preferences = {
   analyticsEnabled: true,
   sharedChatEnabled: true,
   enhancedVideoStability: false,
-  sevenTvPaintRenderer: 'auto',
+  sevenTvPaintRenderer: 'native',
 };
 
 jest.mock('@app/store/preferenceStore', () => ({

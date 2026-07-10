@@ -19,8 +19,6 @@ import { PaintedUsername } from './CosmeticUsername/CosmeticUsername';
 import { PaintedUsernameSkia } from './CosmeticUsername/PaintedUsernameSkia';
 import { PaintedUsernameWebView } from './CosmeticUsername/PaintedUsernameWebView';
 
-// Every row mounts a live WebView (a web-content process), so the galleries are
-// capped; the web column is a fidelity reference, not a list renderer.
 const GALLERY_SIZE = 16;
 
 const shadowPaints = sevenTvPaintsFixture
@@ -28,10 +26,6 @@ const shadowPaints = sevenTvPaintsFixture
   .filter(paint => indexedCollectionToArray(paint.shadows).length > 0)
   .slice(0, GALLERY_SIZE);
 
-// A paint is animated when an image layer has a multi-frame texture; frameCount
-// only survives on the raw fixture (conversion drops it), so classify first.
-// These are the paints Skia's static raster can't match, so they get their own
-// comparison gallery.
 function isAnimatedPaint(paint: SevenTvPaintSource): boolean {
   return paint.data.layers.some(
     layer =>
@@ -40,8 +34,6 @@ function isAnimatedPaint(paint: SevenTvPaintSource): boolean {
   );
 }
 
-// Every animated paint; the FlashList virtualizes rows so only the visible
-// live WebViews/canvases mount at once.
 const animatedPaints = sevenTvPaintsFixture
   .filter(isAnimatedPaint)
   .map(convertV4PaintToPaintData);

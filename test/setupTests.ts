@@ -505,8 +505,6 @@ jest.mock('expo/fetch');
 
 jest.mock('pressto');
 
-// Default experiments to their control variant so component tests don't need a
-// remote-config query client and stay deterministic.
 jest.mock('@app/lib/experiments/useExperiment', () => ({
   useExperiment: () => 'control',
 }));

@@ -25,7 +25,7 @@ export type ChatFontScale = 'small' | 'default' | 'large';
 export type ChatTimestampFormat = '24h' | '12h';
 export type DeletedMessageStyle = 'notice' | 'hidden';
 export type ChatScrollbackLength = 150 | 200 | 250;
-export type SevenTvPaintRenderer = 'auto' | 'native' | 'skia' | 'webview';
+export type SevenTvPaintRenderer = 'native' | 'skia' | 'webview';
 
 export interface Preferences {
   updatedAt: number;
@@ -85,12 +85,7 @@ export interface Preferences {
   analyticsEnabled: boolean;
   sharedChatEnabled: boolean;
   enhancedVideoStability: boolean;
-  /**
-   * Dev override for the 7TV paint renderer. 'auto' defers to the
-   * `paintedUsernameRenderer` experiment (native unless assigned skia); the
-   * other values force a renderer for QA. 'webview' is a dev-only reference and
-   * is never assigned in production.
-   */
+
   sevenTvPaintRenderer: SevenTvPaintRenderer;
 }
 
@@ -138,7 +133,7 @@ export const preferencesSchema = z.object({
   analyticsEnabled: z.boolean(),
   sharedChatEnabled: z.boolean(),
   enhancedVideoStability: z.boolean(),
-  sevenTvPaintRenderer: z.enum(['auto', 'native', 'skia', 'webview']),
+  sevenTvPaintRenderer: z.enum(['native', 'skia', 'webview']),
 }) satisfies z.ZodType<Preferences>;
 
 export const initialPreferences: Preferences = {
@@ -183,7 +178,7 @@ export const initialPreferences: Preferences = {
   analyticsEnabled: true,
   sharedChatEnabled: true,
   enhancedVideoStability: false,
-  sevenTvPaintRenderer: 'auto',
+  sevenTvPaintRenderer: 'native',
 };
 
 ensureObservablePersistenceConfig();
@@ -196,6 +191,10 @@ persistObservable(preferences$, {
 // The 'text' stream list layout was removed; migrate old persisted values.
 if ((preferences$.streamListLayout.peek() as string) === 'text') {
   preferences$.streamListLayout.set('compact');
+}
+
+if ((preferences$.sevenTvPaintRenderer.peek() as string) === 'auto') {
+  preferences$.sevenTvPaintRenderer.set('native');
 }
 
 export function getPreferences(): Preferences {

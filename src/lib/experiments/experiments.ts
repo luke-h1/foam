@@ -15,16 +15,6 @@ const EXPERIMENTS = {
     variants: ['control', 'compact'],
     control: 'control',
   },
-  /**
-   * Renderer for 7TV cosmetic paints on usernames. `control` keeps the native
-   * masked-fill renderer; `skia` uses the offscreen-cached Skia renderer with
-   * live animated textures. Gated so it can roll out gradually and be reverted
-   * from Remote Config if it regresses on real devices.
-   */
-  paintedUsernameRenderer: {
-    variants: ['control', 'skia'],
-    control: 'control',
-  },
 } as const satisfies Record<string, ExperimentDefinition>;
 
 export type ExperimentName = keyof typeof EXPERIMENTS;

@@ -882,8 +882,7 @@ const en = {
   devTools: {
     paintRenderer: '7TV Paint Renderer',
     paintRendererDescription:
-      'Override the username paint renderer for QA. Auto defers to the rollout experiment; WebView is a dev-only reference.',
-    paintRendererAuto: 'Auto',
+      'Choose the username paint renderer. WebView is a dev-only reference.',
     paintRendererNative: 'Native',
     paintRendererSkia: 'Skia',
     paintRendererWebview: 'WebView',

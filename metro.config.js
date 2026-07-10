@@ -36,11 +36,6 @@ config.transformer = {
   inlineRequires: true,
 };
 
-// Keep this in sync with the variants StorybookRoute mounts StorybookScreen
-// in (development | internal | e2e). If the route mounts Storybook but this
-// transformer is off, require.context in storybook.requires.ts never resolves
-// and the screen has no stories. EXPO_PUBLIC_WITH_STORYBOOK is a manual
-// override for any other variant.
 const storybookVariants = ['development', 'internal', 'e2e'];
 const configWithStorybook = withStorybook(config, {
   enabled:

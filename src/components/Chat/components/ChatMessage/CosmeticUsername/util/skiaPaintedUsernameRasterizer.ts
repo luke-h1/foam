@@ -137,9 +137,11 @@ function layerShader(layer: PaintLayerData, rect: LayerRect): SkShader | null {
   };
   const circleRadius = farthestCornerCircleRadius(rect.width, rect.height);
 
-  // CSS ellipse gradients are circles stretched to the box's aspect ratio;
-  // Skia only draws circular gradients, so stretch via a local matrix
-  // around the centre.
+  /**
+   * CSS ellipse gradients are circles stretched to the box's aspect ratio;
+   * Skia only draws circular gradients, so stretch via a local matrix
+   * around centre
+   */
   let localMatrix;
   let radius = circleRadius;
   if (layer.shape === 'ellipse') {
@@ -152,9 +154,11 @@ function layerShader(layer: PaintLayerData, rect: LayerRect): SkShader | null {
   }
 
   if (repeats) {
-    // An equal-centre two-point conical gradient runs between two radii, so
-    // rings tile inward and outward from the stop span like CSS's
-    // repeating-radial-gradient.
+    /**
+     * An equal-centre two-point conical gradient runs between two radii, so
+     * rings tile inward and outward from the stop span like CSS's
+     * repeating-radial-gradient
+     */
     return Skia.Shader.MakeTwoPointConicalGradient(
       center,
       radius * firstAt,
@@ -309,9 +313,12 @@ function buildPaintLayout(
 ): PaintUsernameLayout | null {
   const { paint, displayUsername, fontSize, pixelRatio } = opts;
   const scale = pixelRatio;
-  // The extension renders paint weight as `weight * 100`; with no explicit
-  // weight the painted span inherits chat's bold (700). Skia shapes glyphs
-  // from the matching registered face, so a heavier paint reads heavier here.
+
+  /**
+   * The extension renders paint weight as `weight * 100`; with no explicit
+   * weight the painted span inherits chat's bold (700). Skia shapes glyphs
+   * from the matching registered face, so a heavier paint reads heavier here.
+   */
   const fontWeight: FontWeight = paint.textStyle?.weight
     ? ((paint.textStyle.weight * 100) as FontWeight)
     : FontWeight.Bold;
@@ -382,6 +389,12 @@ function drawPaintedUsername(
   // CSS `filter: drop-shadow(a) drop-shadow(b)` applies b to a's output
   // (source + shadow), so the filters nest rather than stack; the whole
   // element render — text-shadows, stroke, and fill — is the chain's source.
+
+  /**
+   * CSS `filter: drop-shadow(a) drop-shadow(b)` applies b to a's output
+   *  (source + shadow), so the filters nest rather than stack; the whole
+   * element render — text-shadows, stroke, and fill — is the chain's source.
+   */
   let dropShadowChain: SkImageFilter | null = null;
   for (const shadow of layout.dropShadows) {
     dropShadowChain = Skia.ImageFilter.MakeDropShadow(
@@ -399,8 +412,10 @@ function drawPaintedUsername(
   }
   canvas.saveLayer(dropShadowChain ? chainPaint : undefined);
 
-  // text-shadow list: each shadow is drawn independently beneath the glyphs,
-  // first-listed on top.
+  /**
+   * each shadow is drawn independently beneath the glyphs,
+   * first-listed on top.
+   */
   for (const shadow of [...layout.textShadows].reverse()) {
     const shadowLayerPaint = Skia.Paint();
     shadowLayerPaint.setImageFilter(
@@ -418,16 +433,17 @@ function drawPaintedUsername(
     canvas.restore();
   }
 
-  // background-color: currentcolor sits beneath the background-image stack.
   const basePaint = Skia.Paint();
   basePaint.setColor(
     paint.color === null ? Skia.Color(fallbackColor) : skColor(paint.color),
   );
   drawGlyphs(basePaint);
 
-  // background-image lists the topmost layer first, so draw back-to-front.
-  // Gradient layers become gradient shaders clipped to the glyphs; image (URL)
-  // layers are drawn live over the cached composite, so skip them here.
+  /**
+   * background-image lists the topmost layer first, so draw back-to-front.
+   * Gradient layers become gradient shaders clipped to the glyphs; image (URL)
+   * layers are drawn live over the cached composite, so skip them here.
+   */
   for (const layer of [...layout.layers].reverse()) {
     if (layer.function === 'URL') {
       continue;
@@ -465,10 +481,12 @@ function drawPaintedUsername(
     canvas.restore();
   }
 
-  // -webkit-text-stroke paints over the fill (WebKit's default paint order),
-  // centred on the glyph outline, so a centred Skia stroke of the same width
-  // drawn last reproduces it, and staying inside the drop-shadow layer keeps
-  // the stroke part of the shadow silhouette.
+  /**
+   * -webkit-text-stroke paints over the fill (WebKit's default paint order),
+   * centred on the glyph outline, so a centred Skia stroke of the same width
+   * drawn last reproduces it, and staying inside the drop-shadow layer keeps
+   * the stroke part of the shadow silhouette.
+   */
   if (layout.stroke) {
     const strokePaint = Skia.Paint();
     strokePaint.setStyle(PaintStyle.Stroke);
@@ -509,9 +527,9 @@ export interface PaintBitmaps {
   insets: { left: number; top: number; right: number; bottom: number };
 }
 
-// Bounded LRU of baked bitmaps keyed by (paint, username, size, scale). Each
-// entry is a few small SkImages (~tens of KB); the cap keeps a raid's worth of
-// distinct painted usernames without unbounded native-memory growth.
+/**
+ * Bounded LRU ok bitmaps
+ */
 const MAX_CACHED_PAINT_BITMAPS = 256;
 const paintBitmapCache = new Map<string, PaintBitmaps>();
 
@@ -547,8 +565,10 @@ export function getPaintBitmaps(
   }
   drawPaintedUsername(staticSurface.getCanvas(), opts, layout);
   const staticImage = staticSurface.makeImageSnapshot();
-  // The snapshot owns its pixels; free the transient surface immediately rather
-  // than waiting for GC (the cached SkImages stay alive for the renderer).
+
+  /**
+   * snapshot owns the pixels. dont wait for GC
+   */
   staticSurface.dispose();
 
   const { scale } = layout;

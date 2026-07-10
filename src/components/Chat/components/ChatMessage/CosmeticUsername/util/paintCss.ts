@@ -80,9 +80,11 @@ function cssLayer(layer: PaintLayerData): CssLayer {
 
   return {
     image,
-    // The extension emits empty strings when a layer has no explicit
-    // position/size; in a standalone document that would invalidate the whole
-    // comma-separated list, so emit the CSS initial values instead.
+    /**
+     * extension emits empty strings when a layer has no explicit
+     * position/size; in a standalone document that would invalidate the whole
+     * comma-separated list, so emit the CSS initial values instead.
+     */
     position: layer.at
       ? `${layer.at[0] * 100}% ${layer.at[1] * 100}%`
       : '0% 0%',

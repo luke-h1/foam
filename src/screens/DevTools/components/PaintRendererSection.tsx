@@ -13,7 +13,6 @@ import {
 import { theme } from '@app/styles/themes';
 
 const PAINT_RENDERER_OPTIONS = [
-  { labelKey: 'paintRendererAuto', value: 'auto' },
   { labelKey: 'paintRendererNative', value: 'native' },
   { labelKey: 'paintRendererSkia', value: 'skia' },
   { labelKey: 'paintRendererWebview', value: 'webview' },
@@ -22,11 +21,6 @@ const PAINT_RENDERER_OPTIONS = [
   value: SevenTvPaintRenderer;
 }[];
 
-/**
- * Dev-only override for the 7TV paint renderer, surfaced in the debug menu.
- * 'auto' defers to the `paintedUsernameRenderer` rollout experiment; the other
- * values force a renderer for QA (webview is a reference, not shippable).
- */
 export function PaintRendererSection() {
   const { t } = useTranslation('devTools');
   const { sevenTvPaintRenderer, update } = usePreferences();

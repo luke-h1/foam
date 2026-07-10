@@ -5,7 +5,6 @@ import { useSelector } from '@legendapp/state/react';
 
 import { useChatScrollActive } from '@app/components/Chat/util/useChatScrollActive';
 import { Text } from '@app/components/ui/Text/Text';
-import { useExperiment } from '@app/lib/experiments/useExperiment';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { preferences$ } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
@@ -67,8 +66,10 @@ function PaintedUsernameWithPaint({
     paintTextStyle,
   ] as StyleProp<TextStyle>;
 
-  // Layer order mirrors the extension's CSS compositing: drop-shadow filter
-  // furthest back, then text-shadows, then the stroke, then the painted fill.
+  /**
+   * order matters: drop-shadow filter furthest back, then text-shadows,
+   * then the stroke, then the painted fill.
+   */
   const underlayShadows = [
     ...dropShadows.map(shadow => ({ shadow, source: 'drop' })),
     ...textShadows.map(shadow => ({ shadow, source: 'text' })),
@@ -81,7 +82,7 @@ function PaintedUsernameWithPaint({
     <View style={styles.paintedWrapper}>
       {underlayShadows.map(({ shadow, source }, index) => (
         <PaintedUsernameDropShadowLayer
-          // Static, never-reordered list; index disambiguates identical shadows.
+          // Static, never-reordered list
           // eslint-disable-next-line react-doctor/no-array-index-as-key
           key={`${source}-${index}-${paintShadowKey(shadow)}`}
           displayUsername={displayUsername}
@@ -121,18 +122,9 @@ function PaintedUsernameComponent({
   });
   const paint = paintProp ?? storePaint ?? null;
   const isScrolling = useChatScrollActive();
-  // The dev override wins when set; 'auto' defers to the rollout experiment
-  // (skia for the assigned cohort, native otherwise). WebView is dev-only.
-  const paintRendererOverride = useSelector(() =>
+  const paintRenderer = useSelector(() =>
     preferences$.sevenTvPaintRenderer.get(),
   );
-  const rendererExperiment = useExperiment('paintedUsernameRenderer');
-  const paintRenderer =
-    paintRendererOverride !== 'auto'
-      ? paintRendererOverride
-      : rendererExperiment === 'skia'
-        ? 'skia'
-        : 'native';
 
   if (!paint) {
     return (
@@ -151,18 +143,9 @@ function PaintedUsernameComponent({
   const solidFallback =
     paint.color === null ? fallbackColor : sevenTvColorToCss(paint.color);
 
-  // Moderated rows carry a line-through/muted style via usernameTextStyle that
-  // the Skia/WebView renderers can't bake, so route them to the native renderer
-  // (which applies the style to the mask) regardless of the selected renderer.
   const flatUsernameStyle = StyleSheet.flatten(usernameTextStyle);
   const isModerated = flatUsernameStyle?.textDecorationLine === 'line-through';
 
-  // During an active fling, render the username in its dominant solid colour
-  // and skip the per-row MaskedView offscreen pass + gradient/SVG/image fill
-  // layers; the full painted fill returns when the list settles (~150ms),
-  // mirroring how animated emotes pause decode during scroll. This sheds the
-  // offscreen render passes at the moment the Core Animation render encoder is
-  // most pressured (FOAM-TV-MOBILE-BJ render-commit OOM).
   if (isScrolling) {
     return (
       <Text
@@ -177,9 +160,6 @@ function PaintedUsernameComponent({
     );
   }
 
-  // Skia renders the paint offscreen and caches the bitmap; the WebView is a
-  // dev-only reference (a web process per row). Production reaches Skia through
-  // the `paintedUsernameRenderer` experiment; the dev flag can force either.
   if (paintRenderer === 'skia' && !isModerated) {
     return (
       <PaintedUsernameSkia

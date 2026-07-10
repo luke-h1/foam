@@ -19,10 +19,6 @@ import {
   type PaintBitmaps,
 } from './util/skiaPaintedUsernameRasterizer';
 
-// The chat renders painted usernames in Montserrat 700; loading that face keeps
-// glyph shapes and metrics identical to the RN Text path. The lighter/heavier
-// faces cover paints that set an explicit `textStyle.weight`, which the
-// extension renders as `weight * 100`; Skia then shapes from the matching face.
 const skiaFontSource = {
   Montserrat: [
     require('@expo-google-fonts/montserrat/400Regular/Montserrat_400Regular.ttf'),
@@ -53,12 +49,8 @@ interface PaintedUsernameSkiaProps {
  * per-frame JS and no re-rasterizing.
  */
 function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
-  // Static (single-frame) textures resolve to their one frame; animated ones
-  // advance. A null source yields a null frame.
   const animatedFrame = useAnimatedImageValue(bitmaps.animatedUrl ?? undefined);
 
-  // Stable across renders (bitmaps is memoised upstream), so the Mask child
-  // doesn't rebuild its glyph-coverage node while the overlay updates.
   const maskNode = useMemo(
     () =>
       bitmaps.maskImage ? (
