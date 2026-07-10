@@ -15,9 +15,6 @@ const EMOTE_SUGGESTION_ITEM_SIZE = 44;
 interface EmoteSuggestionsProps {
   emotes: SanitisedEmote[];
   handleEmotePress: (set: SanitisedEmote) => void;
-  suggestionOpacity: number;
-  suggestionScale: number;
-  suggestionTranslateY: number;
 }
 
 function createRenderEmoteSuggestionItem(
@@ -55,28 +52,14 @@ function EmoteSuggestionTile({
 export const EmoteSuggestions = memo(function EmoteSuggestions({
   emotes,
   handleEmotePress,
-  suggestionOpacity,
-  suggestionScale,
-  suggestionTranslateY,
 }: EmoteSuggestionsProps) {
   const renderItem = useMemo(
     () => createRenderEmoteSuggestionItem(handleEmotePress),
     [handleEmotePress],
   );
-  const suggestionStyle = {
-    opacity: suggestionOpacity,
-    transform: [
-      { scale: suggestionScale },
-      { translateY: suggestionTranslateY },
-    ],
-  };
-
-  if (suggestionOpacity === 0) {
-    return null;
-  }
 
   return (
-    <View style={[styles.suggestionsWrapper, suggestionStyle]}>
+    <View style={styles.suggestionsWrapper}>
       <View style={styles.suggestionsContainer}>
         <LegendList
           data={emotes}

@@ -16,9 +16,6 @@ const COMMAND_SUGGESTION_ITEM_SIZE = 128;
 interface CommandSuggestionsProps {
   commands: SlashCommandDefinition[];
   handleCommandSelect: (command: SlashCommandDefinition) => void;
-  suggestionOpacity: number;
-  suggestionScale: number;
-  suggestionTranslateY: number;
 }
 
 type CommandSuggestionListExtra = {
@@ -50,28 +47,14 @@ function CommandSuggestionItem({
 export const CommandSuggestions = memo(function CommandSuggestions({
   commands,
   handleCommandSelect,
-  suggestionOpacity,
-  suggestionScale,
-  suggestionTranslateY,
 }: CommandSuggestionsProps) {
   const extraData = useMemo<CommandSuggestionListExtra>(
     () => ({ onPress: handleCommandSelect }),
     [handleCommandSelect],
   );
-  const suggestionStyle = {
-    opacity: suggestionOpacity,
-    transform: [
-      { scale: suggestionScale },
-      { translateY: suggestionTranslateY },
-    ],
-  };
-
-  if (suggestionOpacity === 0) {
-    return null;
-  }
 
   return (
-    <View style={[styles.suggestionsWrapper, suggestionStyle]}>
+    <View style={styles.suggestionsWrapper}>
       <View style={styles.suggestionsContainer}>
         <LegendList
           data={commands}

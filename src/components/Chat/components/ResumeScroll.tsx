@@ -1,11 +1,22 @@
 import { memo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
+
+// A gentle overshoot (damping ratio ~0.78) so the pill springs up from the
+// bottom edge and settles - an inviting "arrival" for an affordance the user
+// can tap, without the distracting bounce of an under-damped spring. Reanimated
+// disables both when the system "Reduce Motion" setting is on.
+const resumeEntering = FadeInDown.springify()
+  .damping(17)
+  .stiffness(200)
+  .mass(0.6);
+const resumeExiting = FadeOutDown.duration(150);
 
 export interface ResumeScrollProps {
   unreadCount: number;
@@ -19,8 +30,16 @@ function ResumeScrollComponent({
   const { t } = useTranslation('chat');
 
   return (
-    <View style={styles.resumeButtonContainer}>
-      <Button style={styles.resumeButton} onPress={onScrollToBottom}>
+    <Animated.View
+      style={styles.resumeButtonContainer}
+      entering={resumeEntering}
+      exiting={resumeExiting}
+    >
+      <Button
+        style={styles.resumeButton}
+        onPress={onScrollToBottom}
+        haptic='light'
+      >
         <SymbolView
           name='arrow.down'
           size={16}
@@ -31,7 +50,7 @@ function ResumeScrollComponent({
           <Text style={styles.resumeCount}> {unreadCount}</Text>
         )}
       </Button>
-    </View>
+    </Animated.View>
   );
 }
 

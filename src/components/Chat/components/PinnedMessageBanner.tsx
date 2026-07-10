@@ -37,7 +37,7 @@ export const PinnedMessageBanner = memo(
 
     return (
       <Animated.View
-        entering={FadeInUp.duration(200)}
+        entering={FadeInUp.springify().damping(22).stiffness(240).mass(0.55)}
         exiting={FadeOutUp.duration(150)}
         style={styles.pinnedMessageBanner}
       >

@@ -71,7 +71,10 @@ export const ChatInputSection = memo(
       <View style={styles.wrapper} testID='chat-input-bar'>
         {replyTo && (
           <Animated.View
-            entering={FadeInUp.duration(180)}
+            entering={FadeInUp.springify()
+              .damping(22)
+              .stiffness(240)
+              .mass(0.55)}
             exiting={FadeOutDown.duration(140)}
             style={styles.replyPreview}
           >
