@@ -151,6 +151,12 @@ function PaintedUsernameComponent({
   const solidFallback =
     paint.color === null ? fallbackColor : sevenTvColorToCss(paint.color);
 
+  // Moderated rows carry a line-through/muted style via usernameTextStyle that
+  // the Skia/WebView renderers can't bake, so route them to the native renderer
+  // (which applies the style to the mask) regardless of the selected renderer.
+  const flatUsernameStyle = StyleSheet.flatten(usernameTextStyle);
+  const isModerated = flatUsernameStyle?.textDecorationLine === 'line-through';
+
   // During an active fling, render the username in its dominant solid colour
   // and skip the per-row MaskedView offscreen pass + gradient/SVG/image fill
   // layers; the full painted fill returns when the list settles (~150ms),
@@ -174,18 +180,18 @@ function PaintedUsernameComponent({
   // Skia renders the paint offscreen and caches the bitmap; the WebView is a
   // dev-only reference (a web process per row). Production reaches Skia through
   // the `paintedUsernameRenderer` experiment; the dev flag can force either.
-  if (paintRenderer === 'skia') {
+  if (paintRenderer === 'skia' && !isModerated) {
     return (
       <PaintedUsernameSkia
         username={displayUsername}
         paint={paint}
         fallbackColor={solidFallback}
-        fontSize={StyleSheet.flatten(usernameTextStyle)?.fontSize}
+        fontSize={flatUsernameStyle?.fontSize}
       />
     );
   }
 
-  if (paintRenderer === 'webview') {
+  if (paintRenderer === 'webview' && !isModerated) {
     return (
       <PaintedUsernameWebView
         username={displayUsername}

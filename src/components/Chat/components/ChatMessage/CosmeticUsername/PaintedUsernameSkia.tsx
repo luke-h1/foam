@@ -125,6 +125,7 @@ export function PaintedUsernameSkia({
   fontSize = chatLineMetrics.comfortable.fontSize,
 }: PaintedUsernameSkiaProps) {
   const fontProvider = useFonts(skiaFontSource);
+  const pixelRatio = PixelRatio.get();
 
   const bitmaps = useMemo(
     () =>
@@ -134,12 +135,12 @@ export function PaintedUsernameSkia({
             paint,
             fallbackColor,
             fontSize,
-            pixelRatio: PixelRatio.get(),
+            pixelRatio,
             fontProvider,
             fontFamily: 'Montserrat',
           })
         : null,
-    [fontProvider, username, paint, fallbackColor, fontSize],
+    [fontProvider, username, paint, fallbackColor, fontSize, pixelRatio],
   );
 
   if (!bitmaps) {

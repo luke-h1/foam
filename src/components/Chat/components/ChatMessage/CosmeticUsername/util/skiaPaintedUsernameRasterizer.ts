@@ -547,6 +547,9 @@ export function getPaintBitmaps(
   }
   drawPaintedUsername(staticSurface.getCanvas(), opts, layout);
   const staticImage = staticSurface.makeImageSnapshot();
+  // The snapshot owns its pixels; free the transient surface immediately rather
+  // than waiting for GC (the cached SkImages stay alive for the renderer).
+  staticSurface.dispose();
 
   const { scale } = layout;
   const imageLayer = layout.layers.find(
@@ -572,6 +575,7 @@ export function getPaintBitmaps(
         layout.originY,
       );
       maskImage = maskSurface.makeImageSnapshot();
+      maskSurface.dispose();
     }
     const rect = layerRectInBox(
       imageLayer.at,

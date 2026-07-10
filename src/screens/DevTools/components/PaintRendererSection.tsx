@@ -64,7 +64,11 @@ export function PaintRendererSection() {
           label={t('paintRenderer')}
           systemImage='paintbrush.fill'
           selection={sevenTvPaintRenderer}
-          onSelectionChange={value => update({ sevenTvPaintRenderer: value })}
+          onSelectionChange={value => {
+            if (PAINT_RENDERER_OPTIONS.some(option => option.value === value)) {
+              update({ sevenTvPaintRenderer: value });
+            }
+          }}
         >
           {PAINT_RENDERER_OPTIONS.map(option => (
             <NativeText key={option.value} modifiers={[tag(option.value)]}>
