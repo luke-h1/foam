@@ -8,10 +8,8 @@ import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
-// A gentle overshoot (damping ratio ~0.78) so the pill springs up from the
-// bottom edge and settles - an inviting "arrival" for an affordance the user
-// can tap, without the distracting bounce of an under-damped spring. Reanimated
-// disables both when the system "Reduce Motion" setting is on.
+// Gentle overshoot (damping ratio ~0.78) for a tappable affordance without
+// a distracting bounce.
 const resumeEntering = FadeInDown.springify()
   .damping(17)
   .stiffness(200)
