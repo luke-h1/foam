@@ -4,14 +4,15 @@ import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { CheermoteRenderer } from '../CheermoteRenderer';
 
-let renderedSourceUrl: string | null = null;
+const mockChatInlineImage = jest.fn<null, [{ sourceUrl: string }]>();
 
 jest.mock('../ChatInlineImage', () => ({
-  ChatInlineImage: ({ sourceUrl }: { sourceUrl: string }) => {
-    renderedSourceUrl = sourceUrl;
-    return null;
-  },
+  ChatInlineImage: (props: { sourceUrl: string }) => mockChatInlineImage(props),
 }));
+
+function lastRenderedSourceUrl(): string | undefined {
+  return mockChatInlineImage.mock.calls.at(-1)?.[0].sourceUrl;
+}
 
 function makePart(overrides?: {
   static_url?: string;
@@ -32,14 +33,15 @@ function makePart(overrides?: {
 
 describe('CheermoteRenderer', () => {
   beforeEach(() => {
-    renderedSourceUrl = null;
+    mockChatInlineImage.mockReset();
+    mockChatInlineImage.mockReturnValue(null);
   });
 
   test('falls back to the raw cheer token when no url resolves', () => {
     render(<CheermoteRenderer part={makePart()} />);
 
     expect(screen.getByText('Cheer100')).toBeOnTheScreen();
-    expect(renderedSourceUrl).toBeNull();
+    expect(mockChatInlineImage).not.toHaveBeenCalled();
   });
 
   test('renders the cheermote image with the bits amount', () => {
@@ -49,7 +51,7 @@ describe('CheermoteRenderer', () => {
       />,
     );
 
-    expect(renderedSourceUrl).toEqual('https://cdn.example.com/cheer/100.gif');
+    expect(lastRenderedSourceUrl()).toBe('https://cdn.example.com/cheer/100.gif');
     expect(screen.getByText('100')).toBeOnTheScreen();
     expect(screen.queryByText('Cheer100')).not.toBeOnTheScreen();
   });
@@ -57,6 +59,7 @@ describe('CheermoteRenderer', () => {
   test('prefers the animated url when animations are enabled', () => {
     render(
       <CheermoteRenderer
+        disableAnimations={false}
         part={makePart({
           static_url: 'https://cdn.example.com/cheer/100.png',
           url: 'https://cdn.example.com/cheer/100.gif',
@@ -64,7 +67,7 @@ describe('CheermoteRenderer', () => {
       />,
     );
 
-    expect(renderedSourceUrl).toEqual('https://cdn.example.com/cheer/100.gif');
+    expect(lastRenderedSourceUrl()).toBe('https://cdn.example.com/cheer/100.gif');
   });
 
   test('prefers the static url when animations are disabled', () => {
@@ -78,7 +81,7 @@ describe('CheermoteRenderer', () => {
       />,
     );
 
-    expect(renderedSourceUrl).toEqual('https://cdn.example.com/cheer/100.png');
+    expect(lastRenderedSourceUrl()).toBe('https://cdn.example.com/cheer/100.png');
   });
 
   test('falls back to the static url when no animated url exists', () => {
@@ -88,7 +91,7 @@ describe('CheermoteRenderer', () => {
       />,
     );
 
-    expect(renderedSourceUrl).toEqual('https://cdn.example.com/cheer/100.png');
+    expect(lastRenderedSourceUrl()).toBe('https://cdn.example.com/cheer/100.png');
   });
 
   test('dims the container when the message is moderated', () => {
@@ -99,6 +102,8 @@ describe('CheermoteRenderer', () => {
       />,
     );
 
-    expect(screen.root).toHaveStyle({ opacity: 0.4 });
+    expect(screen.getByTestId('cheermote-container')).toHaveStyle({
+      opacity: 0.4,
+    });
   });
 });

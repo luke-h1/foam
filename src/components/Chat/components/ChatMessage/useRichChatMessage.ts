@@ -26,7 +26,7 @@ import type {
   RichChatMessageProps,
 } from './RichChatMessage.types';
 
-const MESSAGE_LONG_PRESS_DELAY_MS = 650;
+export const MESSAGE_LONG_PRESS_DELAY_MS = 650;
 
 export function useRichChatMessage<
   TNoticeType extends NoticeVariants,

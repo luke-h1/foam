@@ -102,18 +102,20 @@ export function UserChatBody({
   const { canBeInline, containsEmotes: bodyContainsEmotes } =
     getMessageStructure(message);
   const canFlowInline = canBeInline && !isModerated;
-  const renderInline = canFlowInline && !hasPaint;
+  // Emotes must never render as attachments inside a <Text>: a <Text> can only
+  // give an inline emote a fixed line height, which baseline-aligns and clips
+  // the top of the image. Any message containing an emote therefore takes the
+  // flex-wrap ChatMessageBody path, where the emote is a real view and the row
+  // grows to its full intended size. Text-only messages keep the cheaper
+  // single-<Text> inline path.
+  const renderInline = canFlowInline && !hasPaint && !bodyContainsEmotes;
   const inlineUsernameColor =
     cachedSenderColor ??
     (userstateColor ? lightenColor(userstateColor) : undefined) ??
     (username ? lightenColor(generateRandomTwitchColor(username)) : undefined);
   const actionColor = isAction ? inlineUsernameColor : undefined;
-  const bodyCanFlowInline = canFlowInline && !renderInline;
-  const bodyEmoteLineStyle = bodyContainsEmotes
-    ? compact
-      ? styles.messageTextEmoteLineCompact
-      : styles.messageTextEmoteLine
-    : undefined;
+  const bodyCanFlowInline =
+    canFlowInline && !renderInline && !bodyContainsEmotes;
 
   return (
     <View style={styles.messageColumn}>
@@ -225,7 +227,6 @@ export function UserChatBody({
                 styles.messageText,
                 compact && styles.messageTextCompact,
                 getChatFontScaleStyle(rendererArgs.fontScale, compact),
-                bodyEmoteLineStyle,
               ]}
             >
               <InlineMessageSpans
@@ -233,7 +234,6 @@ export function UserChatBody({
                 compact={compact}
                 message={message as InlineFlowPart[]}
                 replyPlainMentionTarget={replyPlainMentionTarget}
-                emoteLineStyle={bodyEmoteLineStyle}
                 textColor={actionColor}
               />
             </Text>
