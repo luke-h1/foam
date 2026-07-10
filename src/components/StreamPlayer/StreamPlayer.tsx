@@ -24,12 +24,14 @@ import {
   buildTwitchClipPlayerUrl,
   buildTwitchContentGateAcceptScript,
   buildTwitchContentGateWatcherScript,
+  buildTwitchEmbedErrorWatcherScript,
   buildTwitchLatencyTrackerScript,
   buildTwitchLiveSyncScript,
   buildTwitchPipBridgeScript,
   buildTwitchPlayerAudioDefaultScript,
   buildTwitchPlayerQualityDefaultScript,
   buildTwitchPlayerStateScript,
+  resolveTwitchEmbedParent,
 } from './twitchPlayerSource';
 import type { StreamPlayerProps } from './types';
 import { usePlayerBridge } from './usePlayerBridge';
@@ -143,7 +145,12 @@ export const StreamPlayer = memo(function StreamPlayer({
   ref,
 }: StreamPlayerProps) {
   const { config } = useRemoteConfig();
-  const embedParent = config.twitchPlayerEmbedParent.value;
+  // Read the parent from remote config but hold it to the known-good host: a
+  // blank or malformed `parent` makes Twitch render "this embed is
+  // misconfigured" and breaks every stream.
+  const embedParent = resolveTwitchEmbedParent(
+    config.twitchPlayerEmbedParent.value,
+  );
   const webViewRef = useRef<WebView>(null);
   const needsInitRef = useRef(true);
   const authCompletionReloadTimeoutRef = useRef<ReturnType<
@@ -386,6 +393,11 @@ export const StreamPlayer = memo(function StreamPlayer({
    */
   const injectedJavaScript =
     TWITCH_AUTH_HELPER_SCRIPT +
+    '\n' +
+    // Detect Twitch's "this embed is misconfigured" error page (bad parent) on
+    // every player kind so a broken embed reports to Sentry instead of only
+    // timing out.
+    buildTwitchEmbedErrorWatcherScript() +
     '\n' +
     buildTwitchContentGateAcceptScript() +
     '\n' +

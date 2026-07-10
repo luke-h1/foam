@@ -1,5 +1,49 @@
 import { PIP_ENABLED } from './pipFeature';
 
+/**
+ * Fallback Twitch embed `parent`. Twitch always accepts its own domain, so this
+ * keeps the player working even when remote config supplies an empty or invalid
+ * value.
+ */
+export const DEFAULT_TWITCH_EMBED_PARENT = 'www.twitch.tv';
+
+/**
+ * Resolves the Twitch embed `parent`. We read the remote-config value but hold
+ * it to the known-good host: Twitch renders "Whoops, this embed is
+ * misconfigured" when `parent` is empty or is not an allowed domain, so any
+ * value that does not normalise to {@link DEFAULT_TWITCH_EMBED_PARENT} is
+ * coerced back to it. This keeps the embed working even if a blank or malformed
+ * value is pushed to remote config, while still accepting URL/casing variants
+ * of the expected host (e.g. `https://www.twitch.tv/`, `WWW.Twitch.TV`).
+ */
+export function resolveTwitchEmbedParent(
+  raw: string | null | undefined,
+): string {
+  if (typeof raw !== 'string') {
+    return DEFAULT_TWITCH_EMBED_PARENT;
+  }
+
+  let host = raw.trim();
+
+  // A full URL (e.g. https://www.twitch.tv/) reduces to its hostname.
+  if (host.includes('://')) {
+    try {
+      host = new URL(host).hostname;
+    } catch {
+      return DEFAULT_TWITCH_EMBED_PARENT;
+    }
+  } else {
+    // Drop any path/port/query a bare value might still carry.
+    host = host.replace(/[/:?].*$/, '');
+  }
+
+  host = host.trim().toLowerCase();
+  // Only the known-good host is accepted; anything else falls back to it.
+  return host === DEFAULT_TWITCH_EMBED_PARENT
+    ? host
+    : DEFAULT_TWITCH_EMBED_PARENT;
+}
+
 // Twitch's player embed expects a VOD start offset as `XhYmZs`, not seconds.
 function formatTwitchTimeParam(totalSeconds: number): string {
   const safeSeconds = Math.max(0, Math.floor(totalSeconds));
@@ -1723,6 +1767,73 @@ export function buildTwitchPlayerStateScript(): string {
     subtree: true
   });
 
+  return true;
+})();
+true;`;
+}
+
+/**
+ * Detects Twitch's "Whoops, this embed is misconfigured" error page and posts
+ * an `embedMisconfigured` bridge message so the native side can surface it to
+ * Sentry with the offending `parent` value. Twitch serves this as a bare error
+ * document (no player `<video>`) when the embed `parent` is empty or is not an
+ * allowed domain; without this watcher the failure only shows up as a generic
+ * load timeout. Polls briefly at load and stops as soon as a real player
+ * `<video>` appears, so the healthy player's large DOM is never scanned.
+ */
+export function buildTwitchEmbedErrorWatcherScript(): string {
+  return `
+(function() {
+  // Only the top frame owns the embed URL; a subframe reporting would duplicate.
+  if (window.top !== window.self) { return true; }
+  if (window.__foamEmbedErrorWatcherInstalled) { return true; }
+  window.__foamEmbedErrorWatcherInstalled = true;
+
+  var reported = false;
+  var checks = 0;
+  var timer = null;
+
+  function stop() {
+    if (timer) { clearInterval(timer); timer = null; }
+  }
+
+  function readParent() {
+    try {
+      return new URLSearchParams(window.location.search).get('parent');
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function check() {
+    if (reported) { return; }
+    checks += 1;
+    // A real player <video> means the embed loaded; nothing to watch for.
+    if (document.querySelector('video')) {
+      stop();
+      return;
+    }
+    var text = (document.body && document.body.textContent || '').toLowerCase();
+    if (text.indexOf('embed is misconfigured') !== -1) {
+      reported = true;
+      stop();
+      try {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'embedMisconfigured',
+          payload: {
+            message: 'Whoops, this embed is misconfigured',
+            parent: readParent()
+          }
+        }));
+      } catch (e) {}
+      return;
+    }
+    // The error appears at load; give up after ~15s so this never lingers.
+    if (checks >= 15) { stop(); }
+  }
+
+  check();
+  timer = setInterval(check, 1000);
   return true;
 })();
 true;`;

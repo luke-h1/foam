@@ -349,4 +349,8 @@ export type PlayerMessage =
   | { type: 'trace'; payload: { step: string; detail?: string } }
   | { type: 'twitchAuthComplete' }
   | { type: 'error'; payload: { message: string } }
+  | {
+      type: 'embedMisconfigured';
+      payload: { message: string; parent: string | null };
+    }
   | { type: 'muteState'; payload: { muted: boolean; volume: number } };

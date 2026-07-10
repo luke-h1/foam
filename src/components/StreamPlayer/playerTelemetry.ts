@@ -65,6 +65,9 @@ function loadFailureLogMessage(reason: string | undefined, error: unknown) {
   if (reason === 'embed_error' && isPlayerErrorMetadata(error)) {
     return `[StreamPlayer:embed ERROR] ${String(error.message ?? 'Unknown embed error')}`;
   }
+  if (reason === 'embed_misconfigured' && isPlayerErrorMetadata(error)) {
+    return `[StreamPlayer:embed MISCONFIGURED] ${String(error.message ?? 'Whoops, this embed is misconfigured')}`;
+  }
   if (reason === 'load_timeout') {
     return `player failed to load within ${PLAYER_LOAD_TIMEOUT_MS}ms`;
   }
