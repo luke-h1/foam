@@ -10,6 +10,7 @@ import { theme } from '@app/styles/themes';
 
 import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
 import { styles } from '../styles';
+import { chatEntranceSpring } from '../util/chatEntranceSpring';
 
 export const PinnedMessageBanner = memo(
   ({
@@ -37,7 +38,7 @@ export const PinnedMessageBanner = memo(
 
     return (
       <Animated.View
-        entering={FadeInUp.springify().damping(22).stiffness(240).mass(0.55)}
+        entering={chatEntranceSpring(FadeInUp)}
         exiting={FadeOutUp.duration(150)}
         style={styles.pinnedMessageBanner}
       >
