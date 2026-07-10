@@ -40,7 +40,7 @@ let cosmeticBindingsBumpTimer: ReturnType<typeof setTimeout> | null = null;
 /**
  * Coalesced version bump for late-arriving badge data. Every bump changes
  * Chat's emoteReprocessKey, which clears the processed-message set and
- * restarts the full-window reprocess from message zero — so per-entitlement
+ * restarts the full-window reprocess from message zero, so per-entitlement
  * bumps during a channel-entry burst restarted it once per newly sighted
  * badged chatter and it never finished in busy channels. One trailing bump
  * per window folds a burst into a single restart; visible rows do not wait on
@@ -350,7 +350,7 @@ export const clearUserCosmeticsCache = () => {
 // Paint bindings never bump cosmeticBindingsVersion: painted usernames
 // subscribe to userPaintIds/paints directly (CosmeticUsername useSelector),
 // and the message reprocess pass that the version key restarts only re-parses
-// emotes and badges — it never reads paints. Bumping here restarted a
+// emotes and badges, not paints. Bumping here restarted a
 // full-window reprocess once per newly sighted painted chatter for zero
 // rendered difference.
 export const setUserPaint = (ttvUserId: string, paintId: string): void => {
@@ -376,8 +376,8 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
  * Popular paints re-arrive with a fresh object identity for every wearer
  * sighting (GQL conversion / MMKV round-trip both construct new objects).
  * Storing an equal-content copy would rotate the WeakMap-keyed paint layer
- * caches and re-sync every cached wearer to MMKV — O(wearers²) during
- * entitlement bursts — for no observable change, so no-op writes are dropped
+ * caches and re-sync every cached wearer to MMKV (O(wearers²) during
+ * entitlement bursts) for no observable change, so no-op writes are dropped
  * here. Both sides serialize from the same deterministic constructors, so
  * stringify equality is a safe deep compare; a false mismatch only falls back
  * to the unconditional write.
