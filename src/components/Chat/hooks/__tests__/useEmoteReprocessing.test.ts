@@ -148,23 +148,43 @@ describe('useEmoteReprocessing', () => {
     expect(mockUpdateMessages).not.toHaveBeenCalled();
   });
 
-  test('does nothing when emote data has no emotes', () => {
-    mockGetCurrentEmoteData.mockReturnValue(
-      createEmoteData({
-        ...emoteDataWithEmotes,
-        sevenTvGlobalEmotes: [],
-        sevenTvChannelEmotes: [],
-        twitchGlobalEmotes: [],
-        twitchChannelEmotes: [],
-        bttvGlobalEmotes: [],
-        bttvChannelEmotes: [],
-        ffzGlobalEmotes: [],
-        ffzChannelEmotes: [],
-      }),
-    );
+  const emptyEmoteData = createEmoteData({
+    sevenTvGlobalEmotes: [],
+    sevenTvChannelEmotes: [],
+    twitchGlobalEmotes: [],
+    twitchChannelEmotes: [],
+    bttvGlobalEmotes: [],
+    bttvChannelEmotes: [],
+    ffzGlobalEmotes: [],
+    ffzChannelEmotes: [],
+  });
+
+  test('does nothing when there are no emotes and 7TV emotes are disabled', () => {
+    mockGetCurrentEmoteData.mockReturnValue(emptyEmoteData);
     const peek = jest
       .fn()
       .mockReturnValue([createTextOnlyMessage('1', 'n1', 'hello')]);
+    renderHook(() =>
+      useEmoteReprocessing({
+        channelId,
+        channelEmoteData: {},
+        messages$: { peek },
+        emoteLoadStatus: 'success',
+        processedMessageIdsRef,
+        show7TvEmotes: false,
+      }),
+    );
+
+    expect(mockUpdateMessages).not.toHaveBeenCalled();
+  });
+
+  test('still reprocesses a personal-emote-only channel when 7TV emotes are enabled', () => {
+    // Personal 7TV emotes live outside the channel emote data, so an empty
+    // channel set must not gate the reprocess pass off when 7TV is enabled.
+    mockGetCurrentEmoteData.mockReturnValue(emptyEmoteData);
+    const peek = jest
+      .fn()
+      .mockReturnValue([createTextOnlyMessage('1', 'n1', 'plaska')]);
     renderHook(() =>
       useEmoteReprocessing({
         channelId,
@@ -176,7 +196,10 @@ describe('useEmoteReprocessing', () => {
       }),
     );
 
-    expect(mockUpdateMessages).not.toHaveBeenCalled();
+    expect(mockResolveMessageEmoteParts).toHaveBeenCalledTimes(1);
+    expect(mockUpdateMessages).toHaveBeenCalledWith([
+      expectMessageUpdate('1', 'n1'),
+    ]);
   });
 
   test('reprocesses text-only unprocessed messages and calls updateMessages', () => {

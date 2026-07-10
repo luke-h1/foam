@@ -42,8 +42,8 @@ const mockUpdateMessages = jest.mocked(updateMessages);
 
 const channelId = 'channel-1';
 
-// A channel emote so the reprocess pass's "does this channel have any emotes?"
-// gate passes; `plaska` itself is only ever reachable via the personal set.
+// Only used to keep the reprocess gate open in the 7TV-disabled case below;
+// `plaska` itself always resolves via the personal set, never this emote.
 const channelKappa = createSevenTvEmote({ id: 'kappa', name: 'Kappa' });
 const personalPlaska = createSevenTvEmote({
   id: 'plaska-id',
@@ -101,9 +101,9 @@ function renderReprocess(
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockGetCurrentEmoteData.mockReturnValue(
-    createEmoteData({ sevenTvChannelEmotes: [channelKappa] }),
-  );
+  // Empty channel emote data: `plaska` is reachable only via the personal set,
+  // so these tests also prove a personal-emote-only channel still reprocesses.
+  mockGetCurrentEmoteData.mockReturnValue(createEmoteData());
   mockGetUserPersonalEmotes.mockReturnValue([personalPlaska]);
 });
 
@@ -114,7 +114,7 @@ beforeEach(() => {
 function ingestParts(text: string): ParsedPart[] {
   return resolveMessageEmoteParts({
     channelId,
-    emoteData: createEmoteData({ sevenTvChannelEmotes: [channelKappa] }),
+    emoteData: createEmoteData(),
     show7TvEmotes: true,
     text,
     userId: 'sender-1',
@@ -171,7 +171,11 @@ describe('useEmoteReprocessing personal 7TV emotes', () => {
 
   test('downgrades to text only when 7TV emotes are turned off', () => {
     // With the toggle off the personal set is intentionally dropped, so the
-    // emote falls back to text - the behaviour the reprocess gate should honour.
+    // emote falls back to text. A channel emote keeps the reprocess gate open
+    // (7TV off no longer holds it open on its own) so the resolver still runs.
+    mockGetCurrentEmoteData.mockReturnValue(
+      createEmoteData({ sevenTvChannelEmotes: [channelKappa] }),
+    );
     renderReprocess(createMessage(ingestParts('plaska')), {
       show7TvEmotes: false,
     });

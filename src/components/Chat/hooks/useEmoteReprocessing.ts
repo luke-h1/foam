@@ -51,6 +51,9 @@ export function useEmoteReprocessing({
     }
 
     const hasEmotes =
+      // Personal 7TV emotes are per-sender, not part of the channel emote data,
+      // so a personal-emote-only channel would otherwise skip reprocessing.
+      show7TvEmotes ||
       chatStore$.emojis.peek().length > 0 ||
       emoteData.sevenTvGlobalEmotes.length > 0 ||
       emoteData.sevenTvChannelEmotes.length > 0 ||
