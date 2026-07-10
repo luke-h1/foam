@@ -1,5 +1,6 @@
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
+import { generateRandomTwitchColor } from '../generateRandomTwitchColor';
 import type { MentionChatter } from '../resolveMentionLogin';
 import {
   applyMentionLoginCasing,
@@ -46,7 +47,13 @@ describe('resolveMentionLogin', () => {
         color: '#9147ff',
       },
     ]);
-    expect(searchMentionChatters('some', 5)[0]?.login).toBe('SomeOtherUser');
+    expect(searchMentionChatters('some', 5)).toEqual<MentionChatter[]>([
+      {
+        login: 'SomeOtherUser',
+        userId: 'someotheruser',
+        color: generateRandomTwitchColor('SomeOtherUser'),
+      },
+    ]);
   });
 
   test('applyMentionLoginCasing rewrites mention parts when canonical login is known', () => {

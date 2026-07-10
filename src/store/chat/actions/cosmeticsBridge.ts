@@ -23,7 +23,7 @@ import {
 } from './cosmetics';
 import { handlePersonalEmoteSetEntitlement } from './personalEmotes';
 
-const MAX_SEVEN_TV_USER_LINK_ENTRIES = 2000;
+export const MAX_SEVEN_TV_USER_LINK_ENTRIES = 2000;
 
 const entitlementLinks$ = chatStore$.sevenTvUserLinks.twitchIdByEntitlementId;
 const twitchIdsBySevenTvUserId$ =

@@ -4,7 +4,7 @@ import type { TwitchClip, TwitchCreatedClip } from '@app/types/twitch/clip';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 
 import { twitchApi } from '../api/clients';
-import { twitchService } from '../twitch-service';
+import { MAX_FOLLOWED_CHANNELS, twitchService } from '../twitch-service';
 
 jest.mock('../api/clients', () => ({
   getTwitchClientId: jest.fn(() => 'client-id'),
@@ -68,10 +68,16 @@ describe('twitchService.getUsersById', () => {
     await twitchService.getUsersById(ids);
 
     expect(api.get).toHaveBeenCalledTimes(2);
-    const firstUrl = api.get.mock.calls[0]?.[0] as string;
-    const secondUrl = api.get.mock.calls[1]?.[0] as string;
-    expect(firstUrl.match(/id=/g)).toHaveLength(100);
-    expect(secondUrl.match(/id=/g)).toHaveLength(50);
+    const firstBatch = `/users?${ids
+      .slice(0, 100)
+      .map(id => `id=${id}`)
+      .join('&')}`;
+    const secondBatch = `/users?${ids
+      .slice(100)
+      .map(id => `id=${id}`)
+      .join('&')}`;
+    expect(api.get).toHaveBeenNthCalledWith(1, firstBatch);
+    expect(api.get).toHaveBeenNthCalledWith(2, secondBatch);
   });
 });
 
@@ -128,10 +134,16 @@ describe('twitchService.getClipsByIds', () => {
     const result = await twitchService.getClipsByIds(ids);
 
     expect(api.get).toHaveBeenCalledTimes(2);
-    const firstUrl = api.get.mock.calls[0]?.[0] as string;
-    const secondUrl = api.get.mock.calls[1]?.[0] as string;
-    expect(firstUrl.match(/id=/g)).toHaveLength(100);
-    expect(secondUrl.match(/id=/g)).toHaveLength(50);
+    const firstBatch = `/clips?${ids
+      .slice(0, 100)
+      .map(id => `id=${id}`)
+      .join('&')}`;
+    const secondBatch = `/clips?${ids
+      .slice(100)
+      .map(id => `id=${id}`)
+      .join('&')}`;
+    expect(api.get).toHaveBeenNthCalledWith(1, firstBatch);
+    expect(api.get).toHaveBeenNthCalledWith(2, secondBatch);
     expect(result).toEqual<TwitchClip[]>([
       makeClip('clip1'),
       makeClip('clip101'),
@@ -243,15 +255,36 @@ describe('twitchService.getFollowedChannels', () => {
   });
 
   test('stops paginating once the channel cap is reached', async () => {
-    const page = Array.from({ length: 100 }, (_, index) =>
+    const pageSize = 100;
+    const page = Array.from({ length: pageSize }, (_, index) =>
       makeFollowedChannel(String(index)),
     );
     api.get.mockResolvedValue({ data: page, pagination: { cursor: 'next' } });
 
     const result = await twitchService.getFollowedChannels('42');
 
-    expect(result).toHaveLength(400);
-    expect(api.get).toHaveBeenCalledTimes(4);
+    expect(result).toHaveLength(MAX_FOLLOWED_CHANNELS);
+    expect(api.get).toHaveBeenCalledTimes(MAX_FOLLOWED_CHANNELS / pageSize);
+  });
+
+  test('stops paginating when a cursor page returns no further cursor', async () => {
+    api.get
+      .mockResolvedValueOnce({
+        data: [makeFollowedChannel('1')],
+        pagination: { cursor: 'abc' },
+      })
+      .mockResolvedValueOnce({
+        data: [makeFollowedChannel('2')],
+        pagination: {},
+      });
+
+    const result = await twitchService.getFollowedChannels('42');
+
+    expect(result).toEqual<FollowedChannel[]>([
+      makeFollowedChannel('1'),
+      makeFollowedChannel('2'),
+    ]);
+    expect(api.get).toHaveBeenCalledTimes(2);
   });
 });
 

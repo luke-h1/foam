@@ -867,8 +867,8 @@ describe('useChatScroll', () => {
   });
 
   describe('Cleanup', () => {
-    test('should clear timeouts on cleanup', () => {
-      const { ref: listRef } = createMockListRef();
+    test('should stop the scroll-to-bottom retry interval on cleanup', () => {
+      const { ref: listRef, mocks } = createMockListRef();
 
       const { result } = renderHook(() =>
         useChatScroll({
@@ -882,13 +882,21 @@ describe('useChatScroll', () => {
       });
 
       expect(result.current.isScrollingToBottom).toBe(true);
+      // scrollToBottom fires one immediate scroll, then arms a 50ms retry
+      // interval and a 300ms settle timeout.
+      expect(mocks.scrollToEnd).toHaveBeenCalledTimes(1);
 
       act(() => {
         result.current.cleanup();
       });
 
-      // Timeout should be cleared, but we can't easily verify this
-      // Just ensure cleanup doesn't throw
+      act(() => {
+        // Advance well past several retry ticks and the settle window; with the
+        // interval cleared no further scrollToEnd should fire.
+        jest.advanceTimersByTime(500);
+      });
+
+      expect(mocks.scrollToEnd).toHaveBeenCalledTimes(1);
     });
   });
 });

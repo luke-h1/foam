@@ -80,13 +80,13 @@ describe('mentionLoginResolver', () => {
     await jest.advanceTimersByTimeAsync(400);
 
     expect(mockGet).toHaveBeenCalledTimes(1);
-    const url = mockGet.mock.calls[0]?.[0] as string;
+    const url = mockGet.mock.calls[0]?.[0];
 
-    expect(url).not.toContain('%2C');
-    expect(url).not.toContain(',');
-    expect(url).toContain('login=zzzsleepyboyx');
-    expect(url).toContain('login=erobb221');
-    expect(url).toContain('login=dylansoyboy');
+    const logins = new URLSearchParams(url?.split('?')[1] ?? '')
+      .getAll('login')
+      .sort();
+
+    expect(logins).toEqual(['dylansoyboy', 'erobb221', 'zzzsleepyboyx']);
   });
 
   test('does not request Helix when every mention is punctuation-only', async () => {

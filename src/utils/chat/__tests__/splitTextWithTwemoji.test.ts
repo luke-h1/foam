@@ -48,8 +48,13 @@ describe('splitTextWithTwemoji', () => {
     const family = '👨‍👩‍👧';
     const result = splitTextWithTwemoji(`look ${family}!`);
 
-    expect(result[0]).toEqual({ text: 'look' });
-    expect(result[1]?.emoji).toBe(family);
-    expect(result[2]).toEqual({ text: '!' });
+    expect(result).toEqual<TwemojiResult>([
+      { text: 'look' },
+      {
+        emoji: family,
+        image: `${TWEMOJI_BASE}/1f468-200d-1f469-200d-1f467.svg`,
+      },
+      { text: '!' },
+    ]);
   });
 });

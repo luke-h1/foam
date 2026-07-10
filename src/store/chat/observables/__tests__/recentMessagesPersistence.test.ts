@@ -1,4 +1,6 @@
+import { createChatMessageFixture } from '@app/components/Chat/util/__tests__/__fixtures__/chatMessage.fixture';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import { createTextPart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
 
 import {
   clearPersistedRecentMessages,
@@ -12,14 +14,15 @@ import {
 // jest applies automatically for node_modules.
 const { __resetMMKV } = require('react-native-mmkv');
 
+// Build via the shared fixture so the round-trip serializes the full real chat
+// message shape (userstate tags included), not a five-field stub.
 const makeMessage = (id: string): AnyChatMessageType =>
-  ({
+  createChatMessageFixture({
+    id: `${id}_${id}-nonce`,
     message_id: id,
     message_nonce: `${id}-nonce`,
-    sender: 'tester',
-    message: [{ type: 'text', content: id }],
-    userstate: {},
-  }) as unknown as AnyChatMessageType;
+    message: [createTextPart(id)],
+  });
 
 beforeEach(() => {
   __resetMMKV();

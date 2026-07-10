@@ -43,6 +43,23 @@ jest.mock('@app/lib/storage', () => ({
   },
 }));
 
+type MockObservableValue<T> = {
+  peek: jest.Mock<T, []>;
+  set: jest.Mock<void, [T]>;
+};
+
+// A typed partial mirroring the slice of the real chatStore$ observable API the
+// cosmetics actions touch (index -> {peek,set} cells). Reading the mock back
+// through jest.requireMock with this type keeps the handle honest without an
+// `as unknown as` reshape of the real observable type.
+type MockChatStore = {
+  currentChannelId: { peek: jest.Mock<string, []> };
+  badges: Record<string, MockObservableValue<unknown>>;
+  paints: Record<string, MockObservableValue<unknown>>;
+  userBadgeIds: Record<string, MockObservableValue<string | null>>;
+  userPaintIds: Record<string, MockObservableValue<string | null>>;
+};
+
 jest.mock('@app/store/chat/observables/chatStore', () => ({
   chatStore$: {
     currentChannelId: { peek: jest.fn(() => 'channel-1') },
@@ -54,19 +71,10 @@ jest.mock('@app/store/chat/observables/chatStore', () => ({
 }));
 
 import { reportMissingBadge } from '@app/store/chat/actions/missingBadges';
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
 
-type MockObservableValue<T> = {
-  peek: jest.Mock<T, []>;
-  set: jest.Mock<void, [T]>;
-};
-
-const mockChatStore = chatStore$ as unknown as {
-  badges: Record<string, MockObservableValue<unknown>>;
-  paints: Record<string, MockObservableValue<unknown>>;
-  userBadgeIds: Record<string, MockObservableValue<string | null>>;
-  userPaintIds: Record<string, MockObservableValue<string | null>>;
-};
+const { chatStore$: mockChatStore } = jest.requireMock<{
+  chatStore$: MockChatStore;
+}>('@app/store/chat/observables/chatStore');
 
 jest.mock('@app/store/chat/observables/cosmeticsPersistence', () => ({
   writePersistedCosmetics: jest.fn(),

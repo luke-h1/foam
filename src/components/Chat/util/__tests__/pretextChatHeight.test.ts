@@ -39,6 +39,9 @@ describe('estimateChatMessageHeightWithPretext', () => {
     );
 
     expect(height).toBeGreaterThanOrEqual(32);
+    // Single compact emote row (30pt line) plus meta-row + reply chrome sums
+    // to exactly 48 at the default (1x) font scale.
+    expect(height).toBe(48);
   });
 
   test('adds space for inline reply context rows', () => {

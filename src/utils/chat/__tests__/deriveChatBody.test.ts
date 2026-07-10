@@ -8,7 +8,7 @@ import type { ParsedPart } from '@app/utils/chat/parsedPart';
 const text = (content: string): ParsedPart => ({ type: 'text', content });
 const mention = (content: string): ParsedPart => ({ type: 'mention', content });
 const link = (content: string): ParsedPart => ({ type: 'link', content });
-const emote = (name: string, zeroWidth = false): ParsedPart => ({
+const emote = (name: string, zeroWidth = false): ParsedPart<'emote'> => ({
   type: 'emote',
   content: name,
   name,
@@ -19,6 +19,53 @@ const ritual = (): ParsedPart => ({
   displayName: 'forsen',
   ritualName: 'new_chatter',
   systemMsg: 'forsen is new here',
+});
+const raid = (): ParsedPart => ({
+  type: 'raid',
+  content: 'forsen is raiding with a party of 100',
+});
+const subscription = (): ParsedPart => ({
+  type: 'sub',
+  subscriptionEvent: {
+    msgId: 'sub',
+    displayName: 'forsen',
+    plan: '1000',
+  },
+});
+const charityDonation = (): ParsedPart => ({
+  type: 'charitydonation',
+  displayName: 'forsen',
+  charityName: 'Save the Kappa',
+  amount: '500',
+  currency: 'USD',
+  systemMsg: 'forsen donated $5.00',
+});
+const stvEmoteEvent = (): ParsedPart<'stv_emote_added'> => ({
+  type: 'stv_emote_added',
+  stvEvents: {
+    type: 'added',
+    data: {
+      id: '123',
+      name: 'FeelsDankMan',
+      url: 'https://example.com/dank.png',
+      original_name: 'FeelsDankMan',
+      site: 'BTTV',
+      creator: null,
+      emote_link: '',
+      width: 32,
+      height: 32,
+    },
+  },
+});
+const viewerMilestone = (): ParsedPart => ({
+  type: 'viewermilestone',
+  category: 'watch-streak',
+  reward: '',
+  value: '20',
+  content: '',
+  systemMsg: 'forsen watched 20 consecutive streams',
+  login: 'forsen',
+  displayName: 'forsen',
 });
 
 describe('getMessageStructure', () => {
@@ -51,9 +98,7 @@ describe('getMessageStructure', () => {
 
   test('an emote carrying zero-width overlays breaks inline flow', () => {
     const base = emote('Kappa');
-    if (base.type === 'emote') {
-      base.overlaid = [emote('SoSnowy', true) as ParsedPart<'emote'>];
-    }
+    base.overlaid = [emote('SoSnowy', true)];
 
     expect(getMessageStructure([text('gg '), base])).toEqual<MessageStructure>({
       canBeInline: false,
@@ -101,6 +146,30 @@ describe('deriveChatBody', () => {
 
   test('detects notice variants from parts', () => {
     expect(deriveChatBody([ritual()]).variant).toBe('ritual');
+  });
+
+  test('detects the subscription variant from a sub part', () => {
+    expect(deriveChatBody([subscription()]).variant).toBe('subscription');
+  });
+
+  test('detects the charity_donation variant from a charity part', () => {
+    expect(deriveChatBody([charityDonation()]).variant).toBe(
+      'charity_donation',
+    );
+  });
+
+  test('detects the stv_emote_event variant from an stv emote part', () => {
+    expect(deriveChatBody([stvEmoteEvent()]).variant).toBe('stv_emote_event');
+  });
+
+  test('detects the viewer_milestone variant from a milestone part', () => {
+    expect(deriveChatBody([viewerMilestone()]).variant).toBe(
+      'viewer_milestone',
+    );
+  });
+
+  test('has no dedicated variant for a raid part and falls back to user_chat', () => {
+    expect(deriveChatBody([raid()]).variant).toBe('user_chat');
   });
 
   test('defaults to user_chat', () => {
