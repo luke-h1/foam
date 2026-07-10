@@ -59,12 +59,25 @@ function trackImageSpan<T>(
     return run();
   }
 
+  // Only the first of deadline/settlement may report the span: the span's
+  // status is read when the parent transaction ends, so a late setStatus after
+  // the deadline fired would rewrite deadline_exceeded to ok.
+  let settled = false;
+
   const deadline = setTimeout(() => {
+    if (settled) {
+      return;
+    }
+    settled = true;
     span.setStatus({ code: 2, message: 'deadline_exceeded' });
     span.end();
   }, IMAGE_SPAN_DEADLINE_MS);
 
   const finish = (ok: boolean) => {
+    if (settled) {
+      return;
+    }
+    settled = true;
     clearTimeout(deadline);
     span.setStatus(
       ok ? { code: 1, message: 'ok' } : { code: 2, message: 'internal_error' },
