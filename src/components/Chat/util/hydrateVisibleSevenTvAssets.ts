@@ -34,6 +34,19 @@ type HydrateVisibleSevenTvAssetsParams = {
 const MAX_PERSONAL_EMOTE_FETCHES_PER_PASS = 3;
 const MAX_COSMETIC_FETCHES_PER_PASS = 3;
 
+// When bulk cosmetics land (channel entry, presence burst) every visible
+// message has cached assets at once, and re-parsing a whole screenful in a
+// single tick was the top chat hotspot in Sentry (p75 157ms). Reprocessing is
+// sliced to a few messages per event-loop turn — same cadence as the
+// full-window reprocess batches — so frames can interleave.
+const REPROCESS_BATCH_SIZE = 6;
+const REPROCESS_BATCH_DELAY_MS = 32;
+
+const waitBetweenReprocessBatches = () =>
+  new Promise<void>(resolve => {
+    setTimeout(resolve, REPROCESS_BATCH_DELAY_MS);
+  });
+
 // These dedup guards live in refs that persist for the whole channel session, so
 // they must be bounded or they grow one entry per message / per chatter until the
 // app is jettisoned (busy channels like caedrel churn tens of thousands over 20
@@ -146,6 +159,8 @@ export async function hydrateVisibleSevenTvAssets({
     return reprocessMessage(message);
   };
 
+  const cachedAssetMessages: AnyChatMessageType[] = [];
+
   messages.forEach(message => {
     const userId = message.userstate['user-id'];
     if (!userId || !canHydrateMessage(message)) {
@@ -162,7 +177,7 @@ export async function hydrateVisibleSevenTvAssets({
       cachedBadge ||
       isMissingSharedChatSourceBadge(message)
     ) {
-      pending.push(Promise.resolve(reprocessIfChanged(message)));
+      cachedAssetMessages.push(message);
     }
 
     if (
@@ -201,6 +216,19 @@ export async function hydrateVisibleSevenTvAssets({
       }
     }
   });
+
+  for (let index = 0; index < cachedAssetMessages.length; index += 1) {
+    if (index > 0 && index % REPROCESS_BATCH_SIZE === 0) {
+      // The serialized await is the point: batches must not start until the
+      // previous turn yielded, or the whole screenful parses in one tick.
+      // eslint-disable-next-line react-doctor/async-await-in-loop
+      await waitBetweenReprocessBatches();
+    }
+    const message = cachedAssetMessages[index];
+    if (message) {
+      pending.push(Promise.resolve(reprocessIfChanged(message)));
+    }
+  }
 
   await Promise.all(pending);
 

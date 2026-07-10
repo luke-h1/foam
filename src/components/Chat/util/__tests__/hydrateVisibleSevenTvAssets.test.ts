@@ -324,4 +324,54 @@ describe('hydrateVisibleSevenTvAssets', () => {
     expect(firstPassDidReprocess).toBe(true);
     expect(secondPassDidReprocess).toBe(false);
   });
+
+  // When bulk cosmetics land, every visible message has cached assets and the
+  // whole screenful used to re-parse synchronously in a single tick (Sentry #1
+  // chat hotspot, p75 157ms). The reprocess calls must be spread across
+  // event-loop turns so frames can interleave.
+  test('spreads cached-asset reprocessing across event-loop turns', async () => {
+    const messages = Array.from({ length: 24 }, (_, index) =>
+      createMessageForUser(`turn-user-${index}`),
+    );
+
+    let turn = 0;
+    let tickerActive = true;
+    const tick = () => {
+      turn += 1;
+      if (tickerActive) {
+        setTimeout(tick, 0);
+      }
+    };
+    setTimeout(tick, 0);
+
+    const reprocessTurns: number[] = [];
+
+    await hydrateVisibleSevenTvAssets({
+      channelId: 'channel-id',
+      messages,
+      hydratedMessageKeys: new Set(),
+      personalEmoteUsers: new Set(),
+      cosmeticUsers: new Set(
+        Array.from({ length: 24 }, (_, index) => `turn-user-${index}`),
+      ),
+      getUserPersonalEmotes: jest.fn(() => []),
+      fetchUserPersonalEmotes: jest.fn().mockResolvedValue([]),
+      getUserBadge: jest.fn(() => sevenTvBadge),
+      fetchUserCosmetics: jest.fn(),
+      reprocessMessage: () => {
+        reprocessTurns.push(turn);
+      },
+      hydratePersonalEmotes: false,
+    });
+    tickerActive = false;
+
+    const chunkSizes = new Map<number, number>();
+    for (const reprocessTurn of reprocessTurns) {
+      chunkSizes.set(reprocessTurn, (chunkSizes.get(reprocessTurn) ?? 0) + 1);
+    }
+    const maxSyncChunk = Math.max(...chunkSizes.values());
+
+    expect(reprocessTurns).toHaveLength(24);
+    expect(maxSyncChunk).toBeLessThanOrEqual(6);
+  });
 });
