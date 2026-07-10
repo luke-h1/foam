@@ -445,10 +445,15 @@ export function useSeventvWs(
       }
 
       case 'applyEntitlementCreate': {
-        logger.stvWs.info(`💚 Received WS 'entitlement.create' event`);
-        logger.stvWs.info(
-          `Entitlement create: ${decision.kind} for user ${decision.userDisplayName} (ttv: ${decision.ttvUserId}, paint: ${decision.paintId}, badge: ${decision.badgeId})`,
-        );
+        if (__DEV__) {
+          // Entitlement bursts arrive at hundreds per channel entry; release
+          // severity drops info logs anyway, so don't build the template
+          // strings there.
+          logger.stvWs.info(`💚 Received WS 'entitlement.create' event`);
+          logger.stvWs.info(
+            `Entitlement create: ${decision.kind} for user ${decision.userDisplayName} (ttv: ${decision.ttvUserId}, paint: ${decision.paintId}, badge: ${decision.badgeId})`,
+          );
+        }
         try {
           entitlementCallbackRef.current?.({
             entitlement: decision.entitlement,

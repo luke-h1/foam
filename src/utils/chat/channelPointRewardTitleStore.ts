@@ -7,9 +7,27 @@ import {
   channelPointsRewardTitleFromTags,
 } from './channelPointsRewardTitle';
 
+// One short string per distinct (broadcaster, reward) ever seen — capped so a
+// multi-channel marathon session can't accumulate them forever.
+const MAX_REWARD_TITLE_ENTRIES = 500;
+
 const channelPointRewardTitleCache = new Map<string, string>();
 const rewardIdOnlyCache = new Map<string, string>();
 const rewardTitleRevision$ = observable(0);
+
+function boundedMapSet(
+  map: Map<string, string>,
+  key: string,
+  value: string,
+): void {
+  if (!map.has(key) && map.size >= MAX_REWARD_TITLE_ENTRIES) {
+    const oldest = map.keys().next().value;
+    if (oldest !== undefined) {
+      map.delete(oldest);
+    }
+  }
+  map.set(key, value);
+}
 
 function channelPointRewardCacheKey(
   broadcasterId: string,
@@ -60,11 +78,12 @@ export function cacheChannelPointRewardTitle(
     return;
   }
 
-  channelPointRewardTitleCache.set(
+  boundedMapSet(
+    channelPointRewardTitleCache,
     channelPointRewardCacheKey(broadcasterId, rewardId),
     trimmed,
   );
-  rewardIdOnlyCache.set(rewardId, trimmed);
+  boundedMapSet(rewardIdOnlyCache, rewardId, trimmed);
   notifyChannelPointRewardTitleListeners();
 }
 

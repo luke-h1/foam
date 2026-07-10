@@ -11,6 +11,13 @@ import {
 } from '@app/store/chat/actions/cosmetics';
 import { logger } from '@app/utils/logger';
 
+import { boundedSetAdd } from '../util/hydrateVisibleSevenTvAssets';
+
+// Grows one entry per distinct chatter for the whole channel session (only
+// cleared on unmount); bounded like the hydrate-path guards so a multi-hour
+// stay in a busy channel can't accumulate tens of thousands of id strings.
+const MAX_FETCHED_COSMETICS_USERS = 500;
+
 function hasRenderableCosmetics(twitchUserId: string): boolean {
   const badgeId = getUserBadgeId(twitchUserId);
   const renderableBadge = badgeId
@@ -74,7 +81,11 @@ export function useChatCosmetics(options: { userId?: string | null } = {}) {
     }
 
     if (hasRenderableCosmetics(twitchUserId)) {
-      fetchedCosmeticsUsersRef.current.add(twitchUserId);
+      boundedSetAdd(
+        fetchedCosmeticsUsersRef.current,
+        twitchUserId,
+        MAX_FETCHED_COSMETICS_USERS,
+      );
       return;
     }
 

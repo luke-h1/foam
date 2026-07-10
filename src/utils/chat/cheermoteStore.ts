@@ -17,6 +17,10 @@ export type ChannelCheermotes = Map<string, CheermoteTier[]>;
 // session (refreshed after the TTL) is plenty.
 const CHEERMOTE_TTL_MS = 30 * 60 * 1000;
 
+// One entry per channel ever visited; FIFO-capped so a multi-hour session
+// hopping many channels doesn't accumulate them for the app's lifetime.
+const MAX_CHEERMOTE_CHANNELS = 20;
+
 const cheermotesByChannel = new Map<string, ChannelCheermotes>();
 const cheermoteFetchGuard = createFetchOnceGuard({ ttlMs: CHEERMOTE_TTL_MS });
 
@@ -50,6 +54,18 @@ export function setChannelCheermotes(
     }
   });
 
+  if (
+    !cheermotesByChannel.has(channelId) &&
+    cheermotesByChannel.size >= MAX_CHEERMOTE_CHANNELS
+  ) {
+    const oldest = cheermotesByChannel.keys().next().value;
+    if (oldest !== undefined) {
+      cheermotesByChannel.delete(oldest);
+      // Drop the guard too, or a revisit within the TTL would skip the fetch
+      // and leave the evicted channel with no cheermotes.
+      cheermoteFetchGuard.clearKey(oldest);
+    }
+  }
   cheermotesByChannel.set(channelId, byPrefix);
   cheermoteFetchGuard.markFetched(channelId);
 }

@@ -61,7 +61,11 @@ const MAX_VISIBLE_USER_GUARDS = 5000;
  * drops the oldest so the guard stays bounded without losing dedup for recent
  * (still on-screen) entries.
  */
-function boundedSetAdd(set: Set<string>, key: string, max: number): void {
+export function boundedSetAdd(
+  set: Set<string>,
+  key: string,
+  max: number,
+): void {
   set.add(key);
   if (set.size <= max) {
     return;
