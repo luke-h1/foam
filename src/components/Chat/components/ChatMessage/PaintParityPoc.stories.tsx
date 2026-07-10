@@ -16,8 +16,8 @@ import {
 
 import { sevenTvPaintsFixture } from './__fixtures__/sevenTvPaints.fixture';
 import { PaintedUsername } from './CosmeticUsername/CosmeticUsername';
-import { SkiaPaintedUsernamePoc } from './CosmeticUsername/poc/SkiaPaintedUsernamePoc';
-import { WebPaintedUsernamePoc } from './CosmeticUsername/poc/WebPaintedUsernamePoc';
+import { PaintedUsernameSkia } from './CosmeticUsername/PaintedUsernameSkia';
+import { PaintedUsernameWebView } from './CosmeticUsername/PaintedUsernameWebView';
 
 // Every row mounts a live WebView (a web-content process), so the galleries are
 // capped; the web column is a fidelity reference, not a list renderer.
@@ -57,10 +57,10 @@ function ComparisonRow({ paint }: { paint: PaintData }) {
           <PaintedUsername paint={paint} showColon={false} username='Preview' />
         </View>
         <View style={{ flex: 1 }}>
-          <SkiaPaintedUsernamePoc paint={paint} username='Preview' />
+          <PaintedUsernameSkia paint={paint} username='Preview' />
         </View>
         <View style={{ flex: 1 }}>
-          <WebPaintedUsernamePoc paint={paint} username='Preview' />
+          <PaintedUsernameWebView paint={paint} username='Preview' />
         </View>
       </View>
     </View>

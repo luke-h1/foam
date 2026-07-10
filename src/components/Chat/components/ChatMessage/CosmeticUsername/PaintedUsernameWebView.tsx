@@ -8,19 +8,20 @@ import type { PaintData } from '@app/types/seventv/cosmetics';
 
 import { buildPaintedUsernameHtml } from './util/paintHtml';
 
-interface WebPaintedUsernamePocProps {
+interface PaintedUsernameWebViewProps {
   username: string;
   paint: PaintData;
   fallbackColor?: string;
 }
 
 /**
- * POC: renders a painted username with the extension's actual CSS pipeline
- * (gradient stack clipped via background-clip: text, drop-shadow filter
- * chain) inside a live WebView, sized from the span's measured rect.
+ * Renders a painted username with the extension's actual CSS pipeline (gradient
+ * stack clipped via background-clip: text, drop-shadow filter chain) inside a
+ * live WebView, sized from the span's measured rect.
  *
- * This is the fidelity reference (WebKit/Chromium computes the CSS), not a
- * shippable chat renderer: one web content process per row is far too heavy
+ * Dev-only fidelity reference (WebKit/Chromium computes the CSS), reachable via
+ * the paint-renderer dev override — not a shippable chat renderer: one web
+ * content process per row is far too heavy
  * for the virtualized list, and no amount of prop tuning removes that ceiling
  * (an Expo DOM component is the same WebView underneath, so it doesn't help).
  * The production shape is a single shared offscreen WebView that snapshots to
@@ -29,11 +30,11 @@ interface WebPaintedUsernamePocProps {
  * compositing, no scroll/zoom/multi-window machinery, and `pointerEvents:none`
  * so the layer never eats the row's tap-to-open-profile.
  */
-export function WebPaintedUsernamePoc({
+export function PaintedUsernameWebView({
   username,
   paint,
   fallbackColor = theme.color.text.dark,
-}: WebPaintedUsernamePocProps) {
+}: PaintedUsernameWebViewProps) {
   const [size, setSize] = useState<{ width: number; height: number } | null>(
     null,
   );

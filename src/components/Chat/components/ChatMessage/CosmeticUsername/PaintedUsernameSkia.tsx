@@ -17,7 +17,7 @@ import type { PaintData } from '@app/types/seventv/cosmetics';
 import {
   getPaintBitmaps,
   type PaintBitmaps,
-} from './skiaPaintedUsernameRasterizer';
+} from './util/skiaPaintedUsernameRasterizer';
 
 // The chat renders painted usernames in Montserrat 700; loading that face keeps
 // glyph shapes and metrics identical to the RN Text path. The lighter/heavier
@@ -34,7 +34,7 @@ const skiaFontSource = {
   ],
 };
 
-interface SkiaPaintedUsernamePocProps {
+interface PaintedUsernameSkiaProps {
   username: string;
   paint: PaintData;
   fallbackColor?: string;
@@ -112,18 +112,18 @@ function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
 }
 
 /**
- * POC: renders a painted username with Skia. The static composite (gradients,
- * base fill, drop shadows) is baked once into a cached bitmap and reused across
+ * Renders a painted username with Skia. The static composite (gradients, base
+ * fill, drop shadows) is baked once into a cached bitmap and reused across
  * mounts and every user wearing the paint; image-layer paints animate their
  * texture on the UI thread. Negative margins collapse the shadow overflow
  * margin so the glyphs align with neighbouring text.
  */
-export function SkiaPaintedUsernamePoc({
+export function PaintedUsernameSkia({
   username,
   paint,
   fallbackColor = theme.color.text.dark,
   fontSize = chatLineMetrics.comfortable.fontSize,
-}: SkiaPaintedUsernamePocProps) {
+}: PaintedUsernameSkiaProps) {
   const fontProvider = useFonts(skiaFontSource);
 
   const bitmaps = useMemo(

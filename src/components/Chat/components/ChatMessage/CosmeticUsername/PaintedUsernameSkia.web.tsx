@@ -3,16 +3,16 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
-interface SkiaPaintedUsernamePocProps {
+interface PaintedUsernameSkiaProps {
   username: string;
   paint: PaintData;
   fallbackColor?: string;
 }
 
-export function SkiaPaintedUsernamePoc({
+export function PaintedUsernameSkia({
   username,
   fallbackColor = theme.color.text.dark,
-}: SkiaPaintedUsernamePocProps) {
+}: PaintedUsernameSkiaProps) {
   return (
     <Text
       style={{

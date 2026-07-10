@@ -24,11 +24,8 @@ import type {
 } from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
-import { getPaintDropShadows, getPaintLayers } from '../util/paintLayer';
-import {
-  getPaintTextShadows,
-  getPaintTextStroke,
-} from '../util/paintTextStyle';
+import { getPaintDropShadows, getPaintLayers } from './paintLayer';
+import { getPaintTextShadows, getPaintTextStroke } from './paintTextStyle';
 import {
   cssDropShadowSigma,
   cssLinearGradientLine,
@@ -36,7 +33,7 @@ import {
   farthestCornerEllipseRadii,
   type LayerRect,
   layerRectInBox,
-} from './util/skiaPaintGeometry';
+} from './skiaPaintGeometry';
 
 export interface RasterizePaintedUsernameOptions {
   displayUsername: string;

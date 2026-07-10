@@ -15,8 +15,8 @@ import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 import { chatLineMetrics } from '../RichChatMessage.styles';
 import { PaintedUsernameDropShadowLayer } from './PaintedUsernameDropShadowLayer';
 import { PaintedUsernameMaskedFill } from './PaintedUsernameMaskedFill';
-import { SkiaPaintedUsernamePoc } from './poc/SkiaPaintedUsernamePoc';
-import { WebPaintedUsernamePoc } from './poc/WebPaintedUsernamePoc';
+import { PaintedUsernameSkia } from './PaintedUsernameSkia';
+import { PaintedUsernameWebView } from './PaintedUsernameWebView';
 import {
   DEFAULT_PAINT_DROP_SHADOW_MODE,
   getPaintDropShadows,
@@ -176,7 +176,7 @@ function PaintedUsernameComponent({
   // the `paintedUsernameRenderer` experiment; the dev flag can force either.
   if (paintRenderer === 'skia') {
     return (
-      <SkiaPaintedUsernamePoc
+      <PaintedUsernameSkia
         username={displayUsername}
         paint={paint}
         fallbackColor={solidFallback}
@@ -187,7 +187,7 @@ function PaintedUsernameComponent({
 
   if (paintRenderer === 'webview') {
     return (
-      <WebPaintedUsernamePoc
+      <PaintedUsernameWebView
         username={displayUsername}
         paint={paint}
         fallbackColor={solidFallback}
