@@ -24,13 +24,16 @@ export function parseIrcTags(tagString: string): Record<string, string> {
   while (start <= tagString.length) {
     const separatorIndex = tagString.indexOf(';', start);
     const endIndex = separatorIndex === -1 ? tagString.length : separatorIndex;
-    const part = tagString.slice(start, endIndex);
-    const keyValue = part.split('=');
-    const key = keyValue[0] ?? '';
+    // Split on the first `=` only (values may contain `=`) with two slices —
+    // this runs ~20 times per message at up to 100 msg/s, and the previous
+    // split/slice/join allocated three intermediates per tag.
+    const equalsIndex = tagString.indexOf('=', start);
+    const hasValue = equalsIndex !== -1 && equalsIndex < endIndex;
+    const key = tagString.slice(start, hasValue ? equalsIndex : endIndex);
 
     if (key) {
       tags[key] = unescapeIrcTag(
-        keyValue.length > 1 ? keyValue.slice(1).join('=') : '',
+        hasValue ? tagString.slice(equalsIndex + 1, endIndex) : '',
       );
     }
 
@@ -41,6 +44,33 @@ export function parseIrcTags(tagString: string): Record<string, string> {
   }
 
   return tags;
+}
+
+/**
+ * Cheap, allocation-free check for whether a raw IRC line is a PRIVMSG,
+ * skipping the optional tag and prefix sections. Used to consult the flood
+ * limiter before paying for the full ~20-tag parse — above the ingest cap
+ * every dropped message previously cost a complete `parseIrcMessage`.
+ * Tag values escape spaces as `\s` on the wire, so the first space reliably
+ * ends each section.
+ */
+export function isPrivmsgLine(line: string): boolean {
+  let index = 0;
+  if (line.charCodeAt(index) === 64 /* @ */) {
+    const spaceIndex = line.indexOf(' ', index);
+    if (spaceIndex === -1) {
+      return false;
+    }
+    index = spaceIndex + 1;
+  }
+  if (line.charCodeAt(index) === 58 /* : */) {
+    const spaceIndex = line.indexOf(' ', index);
+    if (spaceIndex === -1) {
+      return false;
+    }
+    index = spaceIndex + 1;
+  }
+  return line.startsWith('PRIVMSG ', index);
 }
 
 /**
@@ -74,11 +104,11 @@ export function buildPrivmsgLine({
  * into its parts. Returns null for blank or structurally invalid lines.
  */
 export function parseIrcMessage(line: string): IrcMessage | null {
-  if (!line.trim()) {
+  let remaining = line.trim();
+  if (!remaining) {
     return null;
   }
 
-  let remaining = line.trim();
   let tags: Record<string, string> | undefined;
   let prefix: string | undefined;
 

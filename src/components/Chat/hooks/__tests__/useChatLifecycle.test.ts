@@ -5,7 +5,7 @@ import {
   clearChannelResources,
   clearPersonalEmotesCache,
 } from '@app/store/chat/actions/channelLoad';
-import { clearPaints } from '@app/store/chat/actions/cosmetics';
+import { clearPaintBindings } from '@app/store/chat/actions/cosmetics';
 import { clearMessages } from '@app/store/chat/actions/messages';
 
 import { useChatLifecycle } from '../useChatLifecycle';
@@ -19,7 +19,7 @@ jest.mock('@app/store/chat/actions/messages', () => ({
   clearMessages: jest.fn(),
 }));
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
-  clearPaints: jest.fn(),
+  clearPaintBindings: jest.fn(),
 }));
 
 describe('useChatLifecycle', () => {
@@ -128,7 +128,7 @@ describe('useChatLifecycle', () => {
       expect(abortCurrentLoad).toHaveBeenCalled();
       expect(cancelEmoteLoad).toHaveBeenCalled();
       expect(clearChannelResources).toHaveBeenCalled();
-      expect(clearPaints).toHaveBeenCalled();
+      expect(clearPaintBindings).toHaveBeenCalled();
       expect(clearPersonalEmotesCache).toHaveBeenCalled();
       expect(clearMessages).not.toHaveBeenCalled();
       expect(clearLocalMessages).toHaveBeenCalled();

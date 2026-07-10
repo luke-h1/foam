@@ -8,13 +8,15 @@ import { isE2EMode } from '@app/services/api/clients';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
 import { getHeartbeatAction } from '@app/utils/chat/chatHeartbeat';
+import { shouldProcessLiveMessage } from '@app/utils/chat/chatIngestRateLimiter';
 import {
   containsMutedWords,
   isUserBlocked,
 } from '@app/utils/chat/chatMessageFilters';
 import {
-  type IrcMessage,
   buildPrivmsgLine,
+  type IrcMessage,
+  isPrivmsgLine,
   parseIrcMessage,
 } from '@app/utils/chat/ircProtocol';
 import { logger } from '@app/utils/logger';
@@ -309,19 +311,24 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
           const username = tagsRecord['display-name'] || tagsRecord.login;
 
           if (channelName && messageText) {
-            const isMod = tagsRecord.mod === '1';
-            const isChannelOwner =
-              channelName.slice(1).toLowerCase() === user?.login?.toLowerCase();
+            // The mod/owner exemption strings are only needed when a blocklist
+            // exists — skip the per-message lowercasing otherwise.
+            if (blockedUsers.length > 0) {
+              const isMod = tagsRecord.mod === '1';
+              const isChannelOwner =
+                channelName.slice(1).toLowerCase() ===
+                user?.login?.toLowerCase();
 
-            if (
-              !isMod &&
-              !isChannelOwner &&
-              isUserBlocked(username, blockedUsers)
-            ) {
-              logger.chat.debug(
-                `Filtered message from blocked user: ${username}`,
-              );
-              return;
+              if (
+                !isMod &&
+                !isChannelOwner &&
+                isUserBlocked(username, blockedUsers)
+              ) {
+                logger.chat.debug(
+                  `Filtered message from blocked user: ${username}`,
+                );
+                return;
+              }
             }
 
             if (containsMutedWords(messageText, mutedWords, matchWholeWord)) {
@@ -553,6 +560,15 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
         if (line === 'PING :tmi.twitch.tv') {
           sendIrcCommand('PONG', 'tmi.twitch.tv');
+          continue;
+        }
+
+        // Flood backstop, consulted before the full tag parse so dropped
+        // messages cost almost nothing. Only PRIVMSG lines consume tokens;
+        // control lines (CLEARCHAT, ROOMSTATE, USERNOTICE…) always pass.
+        // Replay is unaffected — it flows through the recent-messages path,
+        // never this socket.
+        if (isPrivmsgLine(line) && !shouldProcessLiveMessage()) {
           continue;
         }
 

@@ -90,15 +90,17 @@ export function useEmoteReprocessing({
         return;
       }
 
-      const hasUnparsedMention = msg.message.some(
-        part => part.type === 'text' && /(?:^|\s)@[\w-]+/.test(part.content),
-      );
-
-      if (
-        processedMessageIdsRef.current.has(msg.message_id) &&
-        !hasUnparsedMention
-      ) {
-        return;
+      if (processedMessageIdsRef.current.has(msg.message_id)) {
+        // Already-processed messages get one more look only when a text part
+        // still carries a raw @mention (its login resolved after the last
+        // pass). The regex runs behind the membership check — running it
+        // first scanned every text part of every message on every effect run.
+        const hasUnparsedMention = msg.message.some(
+          part => part.type === 'text' && /(?:^|\s)@[\w-]+/.test(part.content),
+        );
+        if (!hasUnparsedMention) {
+          return;
+        }
       }
 
       const textContent = getReprocessableText(msg.message);

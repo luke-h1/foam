@@ -2,19 +2,32 @@ import { storageService } from '@app/lib/storage';
 
 import type { PaintData, SanitisedBadgeSet } from '../types/constants';
 
-const COSMETICS_SNAPSHOT_KEY = 'sevenTvCosmeticsSnapshot_v1';
+// Definitions (paints/badges — large objects, rarely change once the
+// equal-content guards are past) and bindings (user→cosmetic id pairs — tiny,
+// change per newly sighted chatter) are persisted under separate keys so the
+// frequent binding syncs stop re-serializing up to 750 full paint definitions
+// every debounce window.
+const COSMETICS_DEFINITIONS_KEY = 'sevenTvCosmeticDefinitions_v1';
+const COSMETICS_BINDINGS_KEY = 'sevenTvCosmeticBindings_v1';
+const LEGACY_COSMETICS_SNAPSHOT_KEY = 'sevenTvCosmeticsSnapshot_v1';
 const COSMETICS_NAMESPACE = 'seven_tv_cache';
 const SNAPSHOT_TTL_MS = 2 * 60 * 60 * 1000;
 const MAX_PERSISTED_PAINTS = 750;
 const MAX_PERSISTED_BADGES = 750;
 const MAX_PERSISTED_ENTITLEMENTS = 500;
 
-export interface CosmeticsSnapshot {
+export interface CosmeticDefinitionsSnapshot {
   paints: Record<string, PaintData>;
   badges: Record<string, SanitisedBadgeSet>;
+}
+
+export interface CosmeticBindingsSnapshot {
   userPaintIds: Record<string, string>;
   userBadgeIds: Record<string, string>;
 }
+
+export type CosmeticsSnapshot = CosmeticDefinitionsSnapshot &
+  CosmeticBindingsSnapshot;
 
 function capRecord<T>(
   record: Record<string, T>,
@@ -29,29 +42,64 @@ function capRecord<T>(
 
 export function loadPersistedCosmetics(): CosmeticsSnapshot | null {
   try {
-    const snapshot = storageService.getString<CosmeticsSnapshot>(
-      COSMETICS_SNAPSHOT_KEY,
+    const definitions = storageService.getString<CosmeticDefinitionsSnapshot>(
+      COSMETICS_DEFINITIONS_KEY,
       COSMETICS_NAMESPACE,
     );
-    if (!snapshot) {
+    const bindings = storageService.getString<CosmeticBindingsSnapshot>(
+      COSMETICS_BINDINGS_KEY,
+      COSMETICS_NAMESPACE,
+    );
+    if (definitions || bindings) {
+      return {
+        paints: definitions?.paints ?? {},
+        badges: definitions?.badges ?? {},
+        userPaintIds: bindings?.userPaintIds ?? {},
+        userBadgeIds: bindings?.userBadgeIds ?? {},
+      };
+    }
+
+    // Pre-split installs persisted one combined snapshot; read it once as a
+    // migration path — the next persist writes the split keys.
+    const legacy = storageService.getString<CosmeticsSnapshot>(
+      LEGACY_COSMETICS_SNAPSHOT_KEY,
+      COSMETICS_NAMESPACE,
+    );
+    if (!legacy) {
       return null;
     }
     return {
-      paints: snapshot.paints ?? {},
-      badges: snapshot.badges ?? {},
-      userPaintIds: snapshot.userPaintIds ?? {},
-      userBadgeIds: snapshot.userBadgeIds ?? {},
+      paints: legacy.paints ?? {},
+      badges: legacy.badges ?? {},
+      userPaintIds: legacy.userPaintIds ?? {},
+      userBadgeIds: legacy.userBadgeIds ?? {},
     };
   } catch {
     return null;
   }
 }
 
-export function writePersistedCosmetics(snapshot: CosmeticsSnapshot): void {
+export function writePersistedCosmeticDefinitions(
+  snapshot: CosmeticDefinitionsSnapshot,
+): void {
   try {
-    const capped: CosmeticsSnapshot = {
+    const capped: CosmeticDefinitionsSnapshot = {
       paints: capRecord(snapshot.paints, MAX_PERSISTED_PAINTS),
       badges: capRecord(snapshot.badges, MAX_PERSISTED_BADGES),
+    };
+    storageService.set(COSMETICS_DEFINITIONS_KEY, capped, COSMETICS_NAMESPACE, {
+      expiry: new Date(Date.now() + SNAPSHOT_TTL_MS),
+    });
+  } catch {
+    // Persistence is best-effort; never let a cache write break cosmetics.
+  }
+}
+
+export function writePersistedCosmeticBindings(
+  snapshot: CosmeticBindingsSnapshot,
+): void {
+  try {
+    const capped: CosmeticBindingsSnapshot = {
       userPaintIds: capRecord(
         snapshot.userPaintIds,
         MAX_PERSISTED_ENTITLEMENTS,
@@ -61,7 +109,7 @@ export function writePersistedCosmetics(snapshot: CosmeticsSnapshot): void {
         MAX_PERSISTED_ENTITLEMENTS,
       ),
     };
-    storageService.set(COSMETICS_SNAPSHOT_KEY, capped, COSMETICS_NAMESPACE, {
+    storageService.set(COSMETICS_BINDINGS_KEY, capped, COSMETICS_NAMESPACE, {
       expiry: new Date(Date.now() + SNAPSHOT_TTL_MS),
     });
   } catch {

@@ -77,7 +77,8 @@ const { chatStore$: mockChatStore } = jest.requireMock<{
 }>('@app/store/chat/observables/chatStore');
 
 jest.mock('@app/store/chat/observables/cosmeticsPersistence', () => ({
-  writePersistedCosmetics: jest.fn(),
+  writePersistedCosmeticBindings: jest.fn(),
+  writePersistedCosmeticDefinitions: jest.fn(),
 }));
 
 jest.mock('@app/utils/logger', () => ({

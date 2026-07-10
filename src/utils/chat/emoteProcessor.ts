@@ -27,7 +27,13 @@ const cache = new Map<string, ParsedPart[]>();
 const MAX_CACHE_SIZE = 1000;
 const emoteArrayIds = new WeakMap<SanitisedEmote[], number>();
 const baseCollectionCache = new Map<string, EmoteCollection>();
-const MAX_BASE_COLLECTION_CACHE_SIZE = 64;
+// Each collection holds three Maps spanning every emote of all nine providers
+// (4-8k entries each), and its key changes whenever ANY provider array gets a
+// new identity — 7TV emote_set.update events do that continually in active
+// channels, so a large cap pins superseded emote universes (tens of MB on
+// low-end devices) that no lookup will ever touch again. Only the current
+// collection is hot; a rebuild on miss is one pass over the arrays.
+const MAX_BASE_COLLECTION_CACHE_SIZE = 4;
 const scopedLookupCache = new Map<
   string,
   (name: string) => SanitisedEmote | undefined

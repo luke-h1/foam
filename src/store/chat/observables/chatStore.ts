@@ -54,8 +54,6 @@ export interface ChatStoreState {
   badges: Record<string, SanitisedBadgeSet>;
   userBadgeIds: Record<string, string>;
   sessionCaches: {
-    mentionColors: Record<string, { value: string; expiresAt: number }>;
-    lightenedColors: Record<string, { value: string; expiresAt: number }>;
     // getChatRowItemType runs per row on every list data change; caching the
     // two-peek paints/userPaintIds traversal per user avoids re-walking those
     // observables for every row on every render.
@@ -119,8 +117,6 @@ const initialChatStoreState: ChatStoreState = {
   badges: {},
   userBadgeIds: {},
   sessionCaches: {
-    mentionColors: {},
-    lightenedColors: {},
     userPaintFlags: {},
   },
   sharedChatBadgeCaches: {
