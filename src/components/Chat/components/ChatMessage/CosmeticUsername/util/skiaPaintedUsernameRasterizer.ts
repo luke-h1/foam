@@ -85,7 +85,7 @@ function skColor(color: number): Float32Array {
  * gradients keep CSS's absolute stop phase: the shader spans the
  * [first, last] stop range with normalized positions and tiles from there
  * (`TileMode.Repeat`), which is exactly what `repeating-linear-gradient` /
- * `repeating-radial-gradient` do — no stop-expansion approximation.
+ * `repeating-radial-gradient` do - no stop-expansion approximation.
  */
 function layerShader(layer: PaintLayerData, rect: LayerRect): SkShader | null {
   const stops = sortedLayerStops(layer);
@@ -211,8 +211,8 @@ interface ShadowExtents {
 
 /**
  * How far outside the glyph box the shadows can paint (CSS px). Chained
- * `drop-shadow()`s compound — each filter shadows the previous filter's
- * output, shadow included — so extents accumulate through the chain rather
+ * `drop-shadow()`s compound - each filter shadows the previous filter's
+ * output, shadow included - so extents accumulate through the chain rather
  * than taking a per-shadow max.
  */
 function shadowExtents(
@@ -392,14 +392,10 @@ function drawPaintedUsername(
     );
   };
 
-  // CSS `filter: drop-shadow(a) drop-shadow(b)` applies b to a's output
-  // (source + shadow), so the filters nest rather than stack; the whole
-  // element render — text-shadows, stroke, and fill — is the chain's source.
-
   /**
    * CSS `filter: drop-shadow(a) drop-shadow(b)` applies b to a's output
-   *  (source + shadow), so the filters nest rather than stack; the whole
-   * element render — text-shadows, stroke, and fill — is the chain's source.
+   * (source + shadow), so the filters nest rather than stack; the whole
+   * element render - text-shadows, stroke, and fill - is the chain's source.
    */
   let dropShadowChain: SkImageFilter | null = null;
   for (const shadow of layout.dropShadows) {
@@ -419,8 +415,8 @@ function drawPaintedUsername(
   canvas.saveLayer(dropShadowChain ? chainPaint : undefined);
 
   /**
-   * each shadow is drawn independently beneath the glyphs,
-   * first-listed on top.
+   * Each text-shadow is drawn independently beneath the glyphs, first-listed
+   * on top (CSS paint order).
    */
   for (const shadow of [...layout.textShadows].reverse()) {
     const shadowLayerPaint = Skia.Paint();
@@ -446,7 +442,7 @@ function drawPaintedUsername(
   drawGlyphs(basePaint);
 
   /**
-   * background-image lists the topmost layer first, so draw back-to-front.
+   * `background-image` lists the topmost layer first, so draw back-to-front.
    * Gradient layers become gradient shaders clipped to the glyphs; image (URL)
    * layers are drawn live over the cached composite, so skip them here.
    */
@@ -513,8 +509,8 @@ interface LogicalRect {
 
 /**
  * Cache-friendly render inputs for a painted username. `staticImage` bakes
- * everything except the (first) image layer — gradients, base fill, drop
- * shadows, all glyph-clipped — into one bitmap reused across mounts and every
+ * everything except the (first) image layer - gradients, base fill, drop
+ * shadows, all glyph-clipped - into one bitmap reused across mounts and every
  * user wearing the paint. Image-layer paints additionally return `maskImage`
  * (glyph coverage) plus the layer's url/rect so the live renderer can overlay
  * the animated texture through the mask; `useAnimatedImageValue` drives its
@@ -535,7 +531,9 @@ export interface PaintBitmaps {
 }
 
 /**
- * Bounded LRU ok bitmaps
+ * Bounded LRU: caps the cache at ~256 paint bitmaps (paint x user x fontSize
+ * x pixelRatio). 7TV serves a few hundred paints in total; 256 covers the
+ * working set of a chat session without letting the map grow unbounded.
  */
 const MAX_CACHED_PAINT_BITMAPS = 256;
 const paintBitmapCache = new Map<string, PaintBitmaps>();
@@ -559,7 +557,7 @@ function paintBitmapCacheKey(opts: RasterizePaintedUsernameOptions): string {
 
 /**
  * Build (or return the cached) render inputs for a painted username. Pure and
- * synchronous — no image decode — because the static bitmap deliberately omits
+ * synchronous - no image decode - because the static bitmap deliberately omits
  * the image layer, which the live renderer loads via `useAnimatedImageValue`.
  */
 export function getPaintBitmaps(
@@ -587,7 +585,8 @@ export function getPaintBitmaps(
   const staticImage = staticSurface.makeImageSnapshot();
 
   /**
-   * snapshot owns the pixels. dont wait for GC
+   * The snapshot owns its pixels once made; dispose the surface immediately
+   * rather than waiting for GC to reclaim it.
    */
   staticSurface.dispose();
 

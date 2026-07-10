@@ -12,8 +12,8 @@ export interface LinearGradientLine {
 /**
  * CSS linear-gradient line for a box (css-images-3 §3.1.1): the line passes
  * through the box centre at `angle` (0deg = to top, clockwise positive), and
- * its length is `|W*sin(a)| + |H*cos(a)|` — the box's projection onto the
- * gradient direction — so the 0% and 100% stops land exactly where a browser
+ * its length is `|W*sin(a)| + |H*cos(a)|` - the box's projection onto the
+ * gradient direction - so the 0% and 100% stops land exactly where a browser
  * puts them, including on diagonal angles where the endpoints sit outside
  * the box.
  */
