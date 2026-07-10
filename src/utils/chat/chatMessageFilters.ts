@@ -1,5 +1,5 @@
 // Both filters run for every incoming PRIVMSG (up to ~100/s in busy chats), so
-// the lowercased forms of the preference lists are cached per array identity —
+// the lowercased forms of the preference lists are cached per array identity -
 // the lists only get a new identity when the preference actually changes.
 const blockedLoginSets = new WeakMap<{ userLogin: string }[], Set<string>>();
 const lowercasedMutedWords = new WeakMap<string[], string[]>();

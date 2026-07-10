@@ -15,6 +15,12 @@ import { logger } from '@app/utils/logger';
  */
 const MAX_TILED_PAINT_IMAGES = 24;
 
+/**
+ * Values are `SkImage` on success and `null` on a failed fetch/decode. The
+ * `null` acts as a negative-cache sentinel so `loadImage`'s `.has(url)` guard
+ * short-circuits future attempts - without it a broken paint URL would retry
+ * on every render for every row wearing that paint.
+ */
 const imagesByUrl = new Map<string, SkImage | null>();
 const pendingUrls = new Set<string>();
 const listenersByUrl = new Map<string, Set<() => void>>();
@@ -56,6 +62,9 @@ function loadImage(url: string): void {
     })
     .catch(error => {
       pendingUrls.delete(url);
+      evictIfNeeded();
+      imagesByUrl.set(url, null);
+      notify(url);
       logger.chat.warn('Failed to load tiled paint texture:', { url, error });
     });
 }

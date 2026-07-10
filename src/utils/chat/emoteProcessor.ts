@@ -29,7 +29,7 @@ const emoteArrayIds = new WeakMap<SanitisedEmote[], number>();
 const baseCollectionCache = new Map<string, EmoteCollection>();
 // Each collection holds three Maps spanning every emote of all nine providers
 // (4-8k entries each), and its key changes whenever ANY provider array gets a
-// new identity — 7TV emote_set.update events do that continually in active
+// new identity - 7TV emote_set.update events do that continually in active
 // channels, so a large cap pins superseded emote universes (tens of MB on
 // low-end devices) that no lookup will ever touch again. Only the current
 // collection is hot; a rebuild on miss is one pass over the arrays.
@@ -252,7 +252,7 @@ function createScopedEmoteLookup(
 }
 
 // Emoji hexcode keys always include a code point above 0x7F, so pure-ASCII
-// words (the vast majority of chat words) can never match the emoji map —
+// words (the vast majority of chat words) can never match the emoji map -
 // skip the per-word code-point expansion for them.
 function hasNonAsciiChar(word: string): boolean {
   for (let i = 0; i < word.length; i += 1) {

@@ -103,7 +103,7 @@ const initialChatStoreState: ChatStoreState = {
   recentMessagesByChannel: {},
   loadingState: 'IDLE',
   currentChannelId: null,
-  // Seeded empty and hydrated after first interactions — building the full
+  // Seeded empty and hydrated after first interactions - building the full
   // emoji emote set is thousands of allocations and this module loads with
   // the root layout, before the first chat screen can possibly need it.
   emojis: [],
@@ -145,7 +145,7 @@ if (!RECENT_MESSAGES_PERSISTENCE_ENABLED) {
  * Chat-only hydration deferred off the startup critical path: the emoji emote
  * set, the 7TV cosmetics snapshot, and the per-channel recent-message caches
  * are all pure JS-thread work (allocation plus blocking MMKV `JSON.parse`)
- * for screens the app does not boot into — the entry route redirects to the
+ * for screens the app does not boot into - the entry route redirects to the
  * stream tabs, not chat. Runs after first interactions, well before a user
  * can navigate into a chat.
  */
@@ -185,7 +185,7 @@ const hydrateDeferredChatState = () => {
   if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
     // Native: seed from the per-channel MMKV keys (writes are handled
     // per-channel in the message-sync path, not via Legend State, so a sync
-    // only re-serializes the active channel instead of every cached channel —
+    // only re-serializes the active channel instead of every cached channel -
     // issue #594). Channels already live in memory win over the snapshot in
     // case a chat was joined before this deferred hydration ran.
     chatStore$.recentMessagesByChannel.set({

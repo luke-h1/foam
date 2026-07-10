@@ -55,7 +55,7 @@ function getClipThumbnailUrl(clip: TwitchClip) {
 
 function getVodThumbnailUrl(vod: TwitchVideo, fallback: string) {
   // In-progress recordings (the broadcast is still live) have no generated
-  // thumbnail yet — Twitch returns an empty string or a `_404_processing`
+  // thumbnail yet - Twitch returns an empty string or a `_404_processing`
   // placeholder on vod-secure that responds 403. Fall back to the channel art.
   if (!vod.thumbnail_url || /_404|404_processing/.test(vod.thumbnail_url)) {
     return fallback;
@@ -265,7 +265,7 @@ function StreamerProfileHeader({
 }
 
 // Memoized so the regex/Date formatting below only re-runs for cards whose
-// props actually changed — extraData ticks (tab captions, download state)
+// props actually changed - extraData ticks (tab captions, download state)
 // re-render the list wrapper, not every visible card.
 const VodCard = memo(function VodCard({
   vod,

@@ -10,7 +10,7 @@ export interface IrcMessage {
 /**
  * Parse the `key=value;key2=value2` IRCv3 tag string into a map. Values may be
  * empty and may themselves contain `=`. Values are IRCv3-unescaped here so the
- * rest of the app never sees `\s`/`\:` escapes — this is the single place tags
+ * rest of the app never sees `\s`/`\:` escapes - this is the single place tags
  * are decoded, so downstream consumers must not unescape again (that would
  * corrupt values containing a literal backslash).
  */
@@ -24,7 +24,7 @@ export function parseIrcTags(tagString: string): Record<string, string> {
   while (start <= tagString.length) {
     const separatorIndex = tagString.indexOf(';', start);
     const endIndex = separatorIndex === -1 ? tagString.length : separatorIndex;
-    // Split on the first `=` only (values may contain `=`) with two slices —
+    // Split on the first `=` only (values may contain `=`) with two slices -
     // this runs ~20 times per message at up to 100 msg/s, and the previous
     // split/slice/join allocated three intermediates per tag.
     const equalsIndex = tagString.indexOf('=', start);
@@ -49,7 +49,7 @@ export function parseIrcTags(tagString: string): Record<string, string> {
 /**
  * Cheap, allocation-free check for whether a raw IRC line is a PRIVMSG,
  * skipping the optional tag and prefix sections. Used to consult the flood
- * limiter before paying for the full ~20-tag parse — above the ingest cap
+ * limiter before paying for the full ~20-tag parse - above the ingest cap
  * every dropped message previously cost a complete `parseIrcMessage`.
  * Tag values escape spaces as `\s` on the wire, so the first space reliably
  * ends each section.
@@ -77,7 +77,7 @@ export function isPrivmsgLine(line: string): boolean {
  * Build the outbound PRIVMSG line, optionally as a reply. Only
  * `reply-parent-msg-id` may be attached client→server: Twitch populates the
  * display-name/body reply tags itself on the broadcast side, and sending them
- * raw corrupts the line — the first space in a multi-word parent body
+ * raw corrupts the line - the first space in a multi-word parent body
  * terminates the IRCv3 tag section, so the server reads the rest of the body
  * as the command and silently drops the reply.
  */

@@ -1,12 +1,12 @@
 /**
  * Short-lived render caches for chat colours. These are read imperatively on
  * the raw ingest path (`resolveCachedSenderColor`, up to ~100 msg/s) and
- * mid-render (`getMentionColor`), never subscribed — so they are plain Maps
+ * mid-render (`getMentionColor`), never subscribed - so they are plain Maps
  * per the chat-state rule, not observables whose every write cloned and
  * key-diffed the whole bucket.
  *
  * `lightenedColors` memoizes `lightenColor(color)`, a pure function of the
- * key, so entries never expire — the size cap alone bounds memory. The old
+ * key, so entries never expire - the size cap alone bounds memory. The old
  * 30s TTL only created churn: at steady state every colour re-expired and
  * re-triggered a clone + recompute + prune cycle.
  *

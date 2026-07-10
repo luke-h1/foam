@@ -28,7 +28,7 @@ import { useWebsocket } from '../hooks/ws/useWebsocket';
  * Twitch IRC PINGs roughly every 5 min and we PONG, but a half-open socket
  * (Wi-Fi↔cellular handoff, NAT/idle timeout, background→foreground) frequently
  * fires no close event: the WebSocket sits in OPEN forever, no messages arrive,
- * and the reconnect path never runs — chat silently stops while the app still
+ * and the reconnect path never runs - chat silently stops while the app still
  * believes it is connected. Once the socket has been quiet for an interval we
  * send our own PING and mark that we are awaiting a PONG; if the next tick still
  * hasn't seen any inbound line (PONG or otherwise) the socket is dead and we
@@ -39,7 +39,7 @@ import { useWebsocket } from '../hooks/ws/useWebsocket';
 const CHAT_HEARTBEAT_INTERVAL_MS = 30_000;
 /**
  * After returning to the foreground or regaining connectivity, probe the socket
- * and reconnect if Twitch does not answer within this window — far faster than
+ * and reconnect if Twitch does not answer within this window - far faster than
  * waiting for the next heartbeat tick to notice a suspended socket is dead.
  */
 const CHAT_FOREGROUND_LIVENESS_DEADLINE_MS = 5_000;
@@ -122,7 +122,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const awaitingPongRef = useRef(false);
   // When the outstanding probe's PING was sent. The heartbeat and the
   // foreground liveness check share awaitingPongRef, so each needs to know how
-  // old the pending probe actually is before declaring the socket dead — a
+  // old the pending probe actually is before declaring the socket dead - a
   // flushed heartbeat tick right after resume must not tear down a socket whose
   // probe is milliseconds old.
   const probeSentAtRef = useRef(0);
@@ -312,7 +312,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
           if (channelName && messageText) {
             // The mod/owner exemption strings are only needed when a blocklist
-            // exists — skip the per-message lowercasing otherwise.
+            // exists - skip the per-message lowercasing otherwise.
             if (blockedUsers.length > 0) {
               const isMod = tagsRecord.mod === '1';
               const isChannelOwner =
@@ -566,7 +566,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         // Flood backstop, consulted before the full tag parse so dropped
         // messages cost almost nothing. Only PRIVMSG lines consume tokens;
         // control lines (CLEARCHAT, ROOMSTATE, USERNOTICE…) always pass.
-        // Replay is unaffected — it flows through the recent-messages path,
+        // Replay is unaffected - it flows through the recent-messages path,
         // never this socket.
         if (isPrivmsgLine(line) && !shouldProcessLiveMessage()) {
           continue;
@@ -669,7 +669,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
     if (awaitingPongRef.current) {
       // A probe is already in flight with its own deadline (AppState and the
-      // network-regain listener often fire together on resume) — don't stack a
+      // network-regain listener often fire together on resume) - don't stack a
       // second PING and a second close timer on top of it.
       return;
     }
@@ -728,7 +728,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       }
 
       if (action === 'reconnect') {
-        // The outstanding probe went unanswered past its deadline — the
+        // The outstanding probe went unanswered past its deadline - the
         // socket is half-open.
         const idleMs = Date.now() - lastActivityAtRef.current;
         logger.chat.warn(

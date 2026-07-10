@@ -27,7 +27,7 @@ export const MAX_SEVEN_TV_USER_LINK_ENTRIES = 2000;
 
 // Session-scoped 7TV identity/entitlement lookup tables. These are consumed
 // only inside this module (never subscribed by components), and every
-// entitlement event in a join burst writes them — as observables each write
+// entitlement event in a join burst writes them - as observables each write
 // cloned and key-diffed the whole ~2000-entry record, so they stay plain Maps.
 // Map insertion order gives FIFO for the caps.
 const entitlementLinks = new Map<

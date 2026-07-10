@@ -726,7 +726,7 @@ describe('useChatScroll', () => {
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(2);
 
       // Even after the hydration anchor window expires, a content-size change
-      // while still pinned to the bottom keeps the newest row fully visible —
+      // while still pinned to the bottom keeps the newest row fully visible -
       // otherwise an under-estimated emote/username row stays clipped at the
       // viewport bottom.
       act(() => {

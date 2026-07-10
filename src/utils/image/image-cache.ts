@@ -243,7 +243,7 @@ function sortTasks(): void {
 
 function drainQueue(): void {
   // Sort once per drain, and only when something was enqueued since the last
-  // sort — shift() preserves order, so re-sorting per dequeue was O(N² log N)
+  // sort - shift() preserves order, so re-sorting per dequeue was O(N² log N)
   // across a burst of N enqueued downloads.
   if (taskQueueDirty) {
     taskQueueDirty = false;

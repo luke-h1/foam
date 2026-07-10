@@ -28,7 +28,7 @@ describe('chatColorCaches', () => {
     jest.useRealTimers();
   });
 
-  test('lightened colours never expire — they memoize a pure function', () => {
+  test('lightened colours never expire - they memoize a pure function', () => {
     jest.useFakeTimers();
     setSessionCacheString('lightenedColors', '#ff0000', 'rgb(255, 0, 0)');
 

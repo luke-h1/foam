@@ -520,7 +520,7 @@ describe('PaintedUsername', () => {
     test('keeps a visible solid-colour username behind the mask when idle', () => {
       // The MaskedView paints the gradient over an in-flow solid username. If
       // that offscreen pass drops out on a settling row, the solid username must
-      // still be visible — otherwise the row reserves its space but renders a
+      // still be visible - otherwise the row reserves its space but renders a
       // blank gap where the name should be. Guard the fallback stays opaque.
       const fallbackColor = '#1AC9A2';
 

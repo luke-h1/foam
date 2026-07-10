@@ -154,7 +154,7 @@ export const useChannelEmoteData = (channelId: string | null) => {
  * Change trigger for the full-window emote reprocess. Deliberately excludes
  * `sevenTvPersonalEmotes` (and subscriber channel profiles): both are written
  * per hydrated chatter by the visible-message hydrate path, which re-parses
- * the affected rows itself — tracking them here re-ran the whole-window
+ * the affected rows itself - tracking them here re-ran the whole-window
  * reprocess effect once per newly hydrated chatter in a busy channel.
  */
 export const useChannelEmoteDataForReprocess = (channelId: string | null) => {

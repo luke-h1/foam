@@ -42,7 +42,7 @@ describe('parseIrcTags', () => {
 
   test('does not double-decode a literal backslash', () => {
     // Raw `\\s` is an escaped backslash followed by a literal `s`, i.e. `\s`
-    // as text — not a space. A second decode pass would corrupt it to a space.
+    // as text - not a space. A second decode pass would corrupt it to a space.
     expect(parseIrcTags('ban-reason=path\\\\sfoo')).toEqual({
       'ban-reason': 'path\\sfoo',
     });

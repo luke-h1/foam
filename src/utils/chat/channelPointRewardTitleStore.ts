@@ -7,7 +7,7 @@ import {
   channelPointsRewardTitleFromTags,
 } from './channelPointsRewardTitle';
 
-// One short string per distinct (broadcaster, reward) ever seen — capped so a
+// One short string per distinct (broadcaster, reward) ever seen - capped so a
 // multi-channel marathon session can't accumulate them forever.
 const MAX_REWARD_TITLE_ENTRIES = 500;
 
@@ -57,7 +57,7 @@ function pendingKey(login: string, rewardId: string): string {
 
 /**
  * Subscribe a component to reward-title resolutions. Returns the current
- * revision; the value itself is meaningless — it only forces a re-render when a
+ * revision; the value itself is meaningless - it only forces a re-render when a
  * newly resolved title may change what a row should display.
  */
 export function useChannelPointRewardTitleRevision(): number {

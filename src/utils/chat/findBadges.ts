@@ -73,7 +73,7 @@ const getRawTwitchBadges = (userstate: UserStateTags): string => {
 
 /**
  * findBadges runs once per message (and again per visible message during 7TV
- * hydration reprocessing), so linear scans over the badge arrays add up fast —
+ * hydration reprocessing), so linear scans over the badge arrays add up fast -
  * the flattened Chatterino list alone holds thousands of entries, almost none
  * of which match a given chatter. Index each array once per array identity
  * (the arrays are stable until the channel's badge data is refetched) so every

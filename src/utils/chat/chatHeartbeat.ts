@@ -6,7 +6,7 @@ export type HeartbeatAction = 'reconnect' | 'probe' | 'wait';
  * OS suspend) can sit in OPEN forever with no close event. Each tick:
  *
  * - `wait` when the socket isn't open, when it has had inbound traffic within
- *   the last interval (a busy channel proves its own liveness — no probe
+ *   the last interval (a busy channel proves its own liveness - no probe
  *   needed), or when a probe is outstanding but still within its answer
  *   deadline.
  * - `probe` when the socket has gone quiet: send a PING and start awaiting a

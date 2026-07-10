@@ -44,7 +44,7 @@ const CHAT_VIEWABILITY_CONFIG = {
   minimumViewTime: 100,
 } satisfies ViewabilityConfig;
 // Re-pin to the end on new messages (dataChange) and when an already-rendered
-// row grows after its real height is measured (itemLayout) — the latter keeps
+// row grows after its real height is measured (itemLayout) - the latter keeps
 // an under-estimated emote/username row from staying clipped at the bottom.
 const CHAT_MAINTAIN_SCROLL_AT_END = {
   on: { dataChange: true, itemLayout: true },

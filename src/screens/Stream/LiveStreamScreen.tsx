@@ -83,7 +83,7 @@ const LANDSCAPE_CHAT_RESIZE_FAIL_DISTANCE = 12;
 const LANDSCAPE_CHAT_DIVIDER_RESTING_OPACITY = 0.55;
 
 // Hold the screen awake while watching so playback isn't interrupted by the
-// idle-timer auto-lock — which kicks in aggressively under Low Power Mode.
+// idle-timer auto-lock - which kicks in aggressively under Low Power Mode.
 const KEEP_AWAKE_TAG = 'live-stream';
 
 const LANDSCAPE_CHAT_CONTROLS_TOP_OFFSET = 60;
@@ -260,7 +260,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
    *
    * `inactive` fires for transient interruptions (Control Center / notification
    * pulldown, call banner, Face ID, app-switcher peek) that don't background the
-   * app — pausing on those left the player stopped with nothing to resume it,
+   * app - pausing on those left the player stopped with nothing to resume it,
    * which read as the intermittent pausing this effect fixes. The pre-background
    * play state is captured so a player the user had already paused stays paused
    * on resume.
@@ -492,7 +492,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     LANDSCAPE_CHAT_DIVIDER_RESTING_OPACITY,
   );
   // Layout inputs mirrored as shared values so the animated styles read one set the effect
-  // updates atomically — reading JS values directly caused a one-frame rotation flicker.
+  // updates atomically - reading JS values directly caused a one-frame rotation flicker.
   const landscapeSV = useSharedValue(isLandscape ? 1 : 0);
   const insetLeftSV = useSharedValue(landscapeInsetLeft);
   const topInsetSV = useSharedValue(portraitTopInset);
@@ -536,7 +536,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       chatHeight.set(effectiveChatHeight);
 
       // Chat is only hidden in landscape; in portrait always show it. Snap straight to place
-      // on rotation (no reveal) — the old rAF fade made rapid rotation crawl over several frames.
+      // on rotation (no reveal) - the old rAF fade made rapid rotation crawl over several frames.
       if (!isLandscapeChatHidden) {
         chatOpacity.set(1);
         chatTranslateX.set(0);

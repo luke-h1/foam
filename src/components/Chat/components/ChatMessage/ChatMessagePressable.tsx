@@ -12,7 +12,7 @@ import type { ReactNode } from 'react';
 import { createHitslop } from '@app/utils/string/createHitSlop';
 
 // Default-parameter expressions re-run per render, and this component mounts
-// several times per chat row — hoist the common hit slop.
+// several times per chat row - hoist the common hit slop.
 const DEFAULT_HIT_SLOP = createHitslop(8);
 
 interface ChatMessagePressableProps {

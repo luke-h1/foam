@@ -343,7 +343,7 @@ const syncRecentMessagesForCurrentChannel = (
     return;
   }
 
-  // Hold the reference only — persistRecentMessagesForChannel slices to
+  // Hold the reference only - persistRecentMessagesForChannel slices to
   // MAX_RECENT_MESSAGES at flush time, so slicing here on every deferred
   // sync (~10/s under load) would be redundant allocation.
   pendingRecentMessagesChannelId = currentChannelId;
@@ -549,7 +549,7 @@ export const addMessage = (message?: AnyChatMessageType) => {
   if (trimmedKeyCount === droppedMessages.length) {
     indexAppendedMessages([storedMessage], nextMessageIndex, droppedMessages);
   } else {
-    // Key order diverged from the window (shouldn't happen) — resync fully.
+    // Key order diverged from the window (shouldn't happen) - resync fully.
     rebuildMessageIndexes(nextMessages);
   }
 
@@ -598,7 +598,7 @@ export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {
       droppedMessages,
     );
   } else {
-    // Key order diverged from the window (shouldn't happen) — resync fully.
+    // Key order diverged from the window (shouldn't happen) - resync fully.
     rebuildMessageIndexes(nextMessages);
   }
 

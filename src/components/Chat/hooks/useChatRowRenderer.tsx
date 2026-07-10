@@ -326,7 +326,7 @@ export function useChatRowRenderer({
   );
   // Note: mentionLoginRevision is intentionally excluded. It bumps ~every 400ms
   // as @mention logins resolve from Helix; including it re-rendered every visible
-  // row each time (the dominant frame-drop source in mention-heavy chat — busy
+  // row each time (the dominant frame-drop source in mention-heavy chat - busy
   // chat went from ~57fps to a flat 60fps once removed). Mention spans subscribe
   // to the revision themselves (MentionSpan), so only those spans re-render.
   const messageListExtraData = useMemo(
