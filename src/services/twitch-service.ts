@@ -2,7 +2,7 @@
 import { fetch } from 'expo/fetch';
 import Constants from 'expo-constants';
 
-import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
+import { parseJsonOnWorklet } from '@app/lib/offThreadJson/parseJsonOnWorklet';
 import type { PaginatedList } from '@app/types/twitch/api';
 import type {
   DefaultTokenResponse,

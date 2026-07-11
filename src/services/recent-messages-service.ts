@@ -1,4 +1,4 @@
-import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
+import { parseJsonOnWorklet } from '@app/lib/offThreadJson/parseJsonOnWorklet';
 import type { ParsedIrcMessage } from '@app/types/chat/recentMessages';
 import { parseIrcTags } from '@app/utils/chat/ircProtocol/parseIrcTags';
 
