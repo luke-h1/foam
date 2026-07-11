@@ -58,15 +58,15 @@ import { logger } from '@app/utils/logger';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 
 import { ChatLatencyPill } from './ChatLatencyPill';
+import { clampLandscapeChatWidth } from './liveStreamLayout/clampLandscapeChatWidth';
+import { getLandscapeChatWidthBounds } from './liveStreamLayout/getLandscapeChatWidthBounds';
+import { getLiveStreamChatDimensions } from './liveStreamLayout/getLiveStreamChatDimensions';
+import { getLiveStreamLayoutMetrics } from './liveStreamLayout/getLiveStreamLayoutMetrics';
+import { getLiveStreamVideoDimensions } from './liveStreamLayout/getLiveStreamVideoDimensions';
 import {
-  clampLandscapeChatWidth,
-  getLandscapeChatWidthBounds,
-  getLiveStreamChatDimensions,
-  getLiveStreamLayoutMetrics,
-  getLiveStreamVideoDimensions,
   getNextChatCycleAction,
   type LandscapeChatCycleAction,
-} from './liveStreamLayout';
+} from './liveStreamLayout/getNextChatCycleAction';
 import {
   initialLiveStreamScreenState,
   liveStreamScreenReducer,
