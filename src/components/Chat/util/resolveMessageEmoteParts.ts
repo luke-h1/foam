@@ -10,7 +10,7 @@ import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes/extractEmotesFromTag';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
-import { normaliseChatUsername } from './chatUsernames';
+import { normaliseChatUsername } from './chatUsernames/normaliseChatUsername';
 
 type EmoteData = ReturnType<typeof getCurrentEmoteData>;
 

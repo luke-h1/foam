@@ -40,7 +40,7 @@ import {
   isRenderableChatMessage,
 } from '../util/chatMessages';
 import { getChatRowItemType } from '../util/chatRowItemType';
-import { normaliseChatUsername } from '../util/chatUsernames';
+import { normaliseChatUsername } from '../util/chatUsernames/normaliseChatUsername';
 import type { AnyChatMessageType } from '../util/messageHandlers';
 
 const chatRowKeyExtractor = (item: AnyChatMessageType) =>

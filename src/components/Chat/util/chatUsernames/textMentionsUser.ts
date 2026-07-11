@@ -1,6 +1,4 @@
-export function normaliseChatUsername(value?: string | null): string {
-  return value?.trim().replace(/^@/, '').toLowerCase() ?? '';
-}
+import { normaliseChatUsername } from '@app/components/Chat/util/chatUsernames/normaliseChatUsername';
 
 /**
  * Raw-text mention check for live messages whose emote parse is deferred to

@@ -29,7 +29,8 @@ import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin/regi
 
 import type { ChatListRef } from '../components/ChatList';
 import { resolveEffectiveChatDelayMs } from '../util/chatDelay';
-import { normaliseChatUsername, textMentionsUser } from '../util/chatUsernames';
+import { normaliseChatUsername } from '../util/chatUsernames/normaliseChatUsername';
+import { textMentionsUser } from '../util/chatUsernames/textMentionsUser';
 import { triggerMentionHaptic } from '../util/mentionHaptics';
 import type { AnyChatMessageType } from '../util/messageHandlers';
 import { useChatCosmetics } from './useChatCosmetics';
