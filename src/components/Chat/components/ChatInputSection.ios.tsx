@@ -14,7 +14,7 @@ import { theme } from '@app/styles/themes';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { truncate } from '@app/utils/string/truncate';
 
-import { isRefreshCommand } from '../util/slashCommandDefinitions';
+import { isRefreshCommand } from '../util/slashCommandDefinitions/isRefreshCommand';
 import { ChatComposer } from './ChatComposer/ChatComposer';
 import type { ChatInputSectionProps } from './chatInputSectionTypes';
 import { ComposerIconButton } from './ComposerIconButton';

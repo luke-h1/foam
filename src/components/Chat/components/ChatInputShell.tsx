@@ -29,10 +29,8 @@ import {
 } from '../util/messageHandlers';
 import { parseModCommand } from '../util/modCommands';
 import { runModCommand } from '../util/runModCommand';
-import {
-  findSlashCommandDefinition,
-  isRefreshCommand,
-} from '../util/slashCommandDefinitions';
+import { findSlashCommandDefinition } from '../util/slashCommandDefinitions/findSlashCommandDefinition';
+import { isRefreshCommand } from '../util/slashCommandDefinitions/isRefreshCommand';
 import type { ChatComposerHandle } from './ChatComposer/ChatComposer';
 import { ChatInputSection, type ReplyToData } from './ChatInputSection';
 

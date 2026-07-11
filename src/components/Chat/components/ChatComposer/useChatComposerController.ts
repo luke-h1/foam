@@ -1,6 +1,6 @@
 import { type Ref, useCallback, useImperativeHandle, useState } from 'react';
 
-import type { SlashCommandDefinition } from '@app/components/Chat/util/slashCommandDefinitions';
+import type { SlashCommandDefinition } from '@app/components/Chat/util/slashCommandDefinitions/types';
 import { impact } from '@app/lib/haptics';
 import type { ChatUser } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';

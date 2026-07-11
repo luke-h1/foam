@@ -1,21 +1,4 @@
-export const REFRESH_COMMAND = '/refresh';
-
-/**
- * True when the input invokes `/refresh`. Matches on the first token so
- * trailing text is tolerated, mirroring how `parseModCommand` treats other
- * argument-less commands like `/slowoff`.
- */
-export function isRefreshCommand(input: string): boolean {
-  const [firstToken = ''] = input.trim().toLowerCase().split(/\s+/);
-  return firstToken === REFRESH_COMMAND;
-}
-
-export interface SlashCommandDefinition {
-  name: string;
-  aliases?: string[];
-  description: string;
-  argHint?: string;
-}
+import type { SlashCommandDefinition } from '@app/components/Chat/util/slashCommandDefinitions/types';
 
 /**
  * Declarative list mirroring the commands `parseModCommand` recognises.
@@ -75,17 +58,3 @@ export const SLASH_COMMAND_DEFINITIONS: SlashCommandDefinition[] = [
   { name: 'shieldoff', description: 'Disable Shield Mode' },
   { name: 'refresh', description: 'Refresh emotes and badges' },
 ];
-
-/**
- * Looks up a definition by command name or alias (without the leading slash),
- * case-insensitively. Returns undefined for unknown commands.
- */
-export function findSlashCommandDefinition(
-  command: string,
-): SlashCommandDefinition | undefined {
-  const lower = command.toLowerCase();
-  return SLASH_COMMAND_DEFINITIONS.find(
-    definition =>
-      definition.name === lower || definition.aliases?.includes(lower),
-  );
-}

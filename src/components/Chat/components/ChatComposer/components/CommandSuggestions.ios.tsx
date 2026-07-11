@@ -7,7 +7,7 @@ import {
 } from '@legendapp/list/react-native';
 
 import { Button } from '@app/components/Button/Button';
-import type { SlashCommandDefinition } from '@app/components/Chat/util/slashCommandDefinitions';
+import type { SlashCommandDefinition } from '@app/components/Chat/util/slashCommandDefinitions/types';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 

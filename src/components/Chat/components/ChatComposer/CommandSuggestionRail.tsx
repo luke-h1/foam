@@ -2,7 +2,7 @@ import { useDeferredValue } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import type { SlashCommandDefinition } from '@app/components/Chat/util/slashCommandDefinitions';
+import type { SlashCommandDefinition } from '@app/components/Chat/util/slashCommandDefinitions/types';
 
 import { CommandSuggestions } from './components/CommandSuggestions';
 import { useCommandSuggestions } from './hooks/useCommandSuggestions';

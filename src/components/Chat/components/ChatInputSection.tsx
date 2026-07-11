@@ -18,7 +18,7 @@ import {
 import { truncate } from '@app/utils/string/truncate';
 
 import { chatEntranceSpring } from '../util/chatEntranceSpring';
-import { isRefreshCommand } from '../util/slashCommandDefinitions';
+import { isRefreshCommand } from '../util/slashCommandDefinitions/isRefreshCommand';
 import { ChatComposer } from './ChatComposer/ChatComposer';
 import type {
   ChatInputSectionProps,
