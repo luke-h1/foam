@@ -15,10 +15,6 @@ const EXPERIMENTS = {
     variants: ['control', 'compact'],
     control: 'control',
   },
-  sevenTvPaintRenderer: {
-    variants: ['control', 'skia'],
-    control: 'control',
-  },
 } as const satisfies Record<string, ExperimentDefinition>;
 
 export type ExperimentName = keyof typeof EXPERIMENTS;

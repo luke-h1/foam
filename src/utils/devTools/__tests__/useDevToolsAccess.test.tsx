@@ -53,6 +53,7 @@ function createRemoteConfigResult(
     websiteUrl: entry('https://foam-app.com'),
     admins: entry(admins),
     experiments: entry({}),
+    sevenTvPaintRenderer: entry<'off' | 'native' | 'skia'>('native'),
     bundleButtonEnabled: entry({
       ios: {
         development: false,

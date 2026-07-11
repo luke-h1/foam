@@ -46,6 +46,8 @@ export interface RemoteConfigSchema {
    * sets this per user; the client reads it via `useExperiment`.
    */
   experiments: Record<string, string>;
+
+  sevenTvPaintRenderer: 'off' | 'native' | 'skia';
 }
 
 export type RemoteConfigKey = keyof RemoteConfigSchema;
@@ -77,6 +79,7 @@ export const defaultRemoteConfig = {
   admins: '[]',
   updateAppButtonAllowedUsers: '[]',
   experiments: '{}',
+  sevenTvPaintRenderer: 'native',
   bundleButtonEnabled:
     '{ "ios": { "development": false, "internal": true, "testflight": false, "production": false, "e2e": false }}',
 } satisfies Record<RemoteConfigKey, string>;

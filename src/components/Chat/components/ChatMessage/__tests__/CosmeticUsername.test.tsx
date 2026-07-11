@@ -4,6 +4,7 @@ import { act, render } from '@testing-library/react-native';
 import { Image } from 'expo-image';
 
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
+import { paintRendererFlag$ } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
@@ -79,6 +80,36 @@ describe('PaintedUsername', () => {
   });
 
   describe('Rendering', () => {
+    test('renders the plain username in the chat colour when the renderer flag is off', () => {
+      paintRendererFlag$.set('off');
+      try {
+        const linearPaint = createPaintData({
+          function: 'LINEAR_GRADIENT',
+          angle: 90,
+          stops: {
+            0: { at: 0, color: rgbaToSevenTvColor(255, 0, 0, 255) },
+            1: { at: 1, color: rgbaToSevenTvColor(0, 0, 255, 255) },
+            length: 2,
+          },
+        });
+
+        const { getAllByText, queryByTestId } = render(
+          <PaintedUsername
+            username='OffUser'
+            paint={linearPaint}
+            fallbackColor='#12AB34'
+          />,
+        );
+
+        expect(queryByTestId('masked-view')).not.toBeOnTheScreen();
+        expect(
+          hasVisibleUsernameInColor(getAllByText('OffUser:'), '#12AB34'),
+        ).toBe(true);
+      } finally {
+        paintRendererFlag$.set('native');
+      }
+    });
+
     test('renders the plain username in the fallback colour when no paint provided', () => {
       const { getAllByText, queryByTestId } = render(
         <PaintedUsername username='TestUser' fallbackColor='#FF0000' />,

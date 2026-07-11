@@ -3,7 +3,6 @@ import { persistObservable } from '@legendapp/state/persist';
 import { useSelector } from '@legendapp/state/react';
 import { z } from 'zod';
 
-import { paintRendererRollout$ } from '@app/lib/experiments/paintRendererRollout';
 import {
   createObservablePersistenceLocalConfig,
   ensureObservablePersistenceConfig,
@@ -27,7 +26,8 @@ export type ChatFontScale = 'small' | 'default' | 'large';
 export type ChatTimestampFormat = '24h' | '12h';
 export type DeletedMessageStyle = 'notice' | 'hidden';
 export type ChatScrollbackLength = 150 | 200 | 250;
-export type SevenTvPaintRenderer = 'native' | 'skia' | 'webview';
+export type SevenTvPaintRenderer = 'off' | 'native' | 'skia' | 'webview';
+export type PaintRendererFlag = 'off' | 'native' | 'skia';
 
 export interface Preferences {
   updatedAt: number;
@@ -135,7 +135,7 @@ export const preferencesSchema = z.object({
   analyticsEnabled: z.boolean(),
   sharedChatEnabled: z.boolean(),
   enhancedVideoStability: z.boolean(),
-  sevenTvPaintRenderer: z.enum(['native', 'skia', 'webview']),
+  sevenTvPaintRenderer: z.enum(['off', 'native', 'skia', 'webview']),
 }) satisfies z.ZodType<Preferences>;
 
 export const initialPreferences: Preferences = {
@@ -186,6 +186,8 @@ export const initialPreferences: Preferences = {
 ensureObservablePersistenceConfig();
 
 export const preferences$ = observable(initialPreferences);
+
+export const paintRendererFlag$ = observable<PaintRendererFlag>('native');
 const persistedPreferences$ = persistObservable(preferences$, {
   local: createObservablePersistenceLocalConfig(PREFERENCES_PERSISTENCE_KEY),
 });
@@ -209,7 +211,7 @@ export function usePaintRenderer(): SevenTvPaintRenderer {
   return useSelector(() =>
     isDevToolsEnabled
       ? preferences$.sevenTvPaintRenderer.get()
-      : paintRendererRollout$.get(),
+      : paintRendererFlag$.get(),
   );
 }
 

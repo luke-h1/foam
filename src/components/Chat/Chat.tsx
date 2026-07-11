@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuthContext } from '@app/context/AuthContext';
 import { BenchFrameProbe } from '@app/dev/imageBenchmark/BenchFrameProbe.gate';
-import { useSyncPaintRendererExperiment } from '@app/lib/experiments/useSyncPaintRendererExperiment';
+import { useSyncPaintRendererFlag } from '@app/hooks/firebase/useSyncPaintRendererFlag';
 import { CachedEmotesProvider } from '@app/Providers/CachedEmotesProvider/CachedEmotesProvider';
 import { setChatFrontTrimSuspended } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
@@ -197,7 +197,7 @@ export const Chat = memo(
       user,
     });
 
-    useSyncPaintRendererExperiment();
+    useSyncPaintRendererFlag();
     const cosmeticBindingsVersion = useCosmeticBindingsVersion();
     const emoteReprocessKey = `${chatAssetPreferenceKey}|${cosmeticBindingsVersion}`;
 

@@ -14,6 +14,7 @@ import { theme } from '@app/styles/themes';
 import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
 
 const PAINT_RENDERER_OPTIONS = [
+  { labelKey: 'paintRendererOff', value: 'off' },
   { labelKey: 'paintRendererNative', value: 'native' },
   { labelKey: 'paintRendererSkia', value: 'skia' },
   { labelKey: 'paintRendererWebview', value: 'webview' },

@@ -45,6 +45,7 @@ interface PaintedUsernameWithPaintProps {
   fontSize?: number;
   isModerated: boolean;
   paint: PaintData;
+  plainColor: string;
   sevenTvPaintDropShadows: PaintDropShadowMode;
   usernameTextStyle?: StyleProp<TextStyle>;
 }
@@ -55,6 +56,7 @@ function PaintedUsernameWithPaint({
   fontSize,
   isModerated,
   paint,
+  plainColor,
   sevenTvPaintDropShadows,
   usernameTextStyle,
 }: PaintedUsernameWithPaintProps) {
@@ -64,6 +66,16 @@ function PaintedUsernameWithPaint({
    */
   const isScrolling = useChatScrollActive();
   const paintRenderer = usePaintRenderer();
+
+  if (paintRenderer === 'off') {
+    return (
+      <Text
+        style={[styles.plainUsername, { color: plainColor }, usernameTextStyle]}
+      >
+        {displayUsername}
+      </Text>
+    );
+  }
 
   // During an active fling, render the username in its dominant solid colour
   // and skip the per-row MaskedView offscreen pass + gradient/SVG/image fill
@@ -200,6 +212,7 @@ function PaintedUsernameComponent({
       fontSize={flatUsernameStyle?.fontSize}
       isModerated={isModerated}
       paint={paint}
+      plainColor={fallbackColor}
       sevenTvPaintDropShadows={sevenTvPaintDropShadows}
       usernameTextStyle={usernameTextStyle}
     />
