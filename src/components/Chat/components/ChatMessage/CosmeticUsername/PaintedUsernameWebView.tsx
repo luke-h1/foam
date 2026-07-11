@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/RichChatMessage.styles';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
@@ -40,11 +41,14 @@ export function PaintedUsernameWebView({
       pointerEvents='none'
       collapsable={false}
       renderToHardwareTextureAndroid
-      style={{
-        width: size?.width ?? 160,
-        height: size?.height ?? chatLineMetrics.comfortable.lineHeight,
-      }}
+      style={[
+        styles.root,
+        size ? { width: size.width, height: size.height } : null,
+      ]}
     >
+      {size ? null : (
+        <Text style={[styles.sizer, { color: fallbackColor }]}>{username}</Text>
+      )}
       <WebView
         source={{ html }}
         originWhitelist={['*']}
@@ -56,8 +60,11 @@ export function PaintedUsernameWebView({
         androidLayerType='hardware'
         showsHorizontalScrollIndicator={false}
         showsVerticalScrollIndicator={false}
-        style={{ backgroundColor: 'transparent' }}
-        containerStyle={{ backgroundColor: 'transparent' }}
+        style={styles.webView}
+        containerStyle={[
+          styles.webViewContainer,
+          size ? null : styles.webViewUnmeasured,
+        ]}
         onMessage={event => {
           try {
             const measured = JSON.parse(event.nativeEvent.data) as {
@@ -76,3 +83,27 @@ export function PaintedUsernameWebView({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    alignSelf: 'flex-start',
+  },
+  sizer: {
+    ...chatLineMetrics.comfortable,
+    fontWeight: 'bold',
+  },
+  webView: {
+    backgroundColor: 'transparent',
+  },
+  webViewContainer: {
+    backgroundColor: 'transparent',
+  },
+  webViewUnmeasured: {
+    bottom: 0,
+    left: 0,
+    opacity: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+});
