@@ -1,4 +1,4 @@
-import { getPaintLayers } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintLayer';
+import { getPaintLayers } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintLayer/getPaintLayers';
 import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
 import type {
   PaintData,

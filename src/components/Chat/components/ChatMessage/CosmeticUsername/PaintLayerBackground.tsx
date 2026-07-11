@@ -14,12 +14,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import type { PaintLayerData } from '@app/types/seventv/cosmetics';
 
 import { PaintLayerTiledImage } from './PaintLayerTiledImage';
-import {
-  buildLayerGradientConfig,
-  getLayerLayoutStyle,
-  imageRepeatFromCanvasRepeat,
-  isTilingCanvasRepeat,
-} from './util/paintLayer';
+import { buildLayerGradientConfig } from './util/paintLayer/buildLayerGradientConfig';
+import { getLayerLayoutStyle } from './util/paintLayer/getLayerLayoutStyle';
+import { imageRepeatFromCanvasRepeat } from './util/paintLayer/imageRepeatFromCanvasRepeat';
+import { isTilingCanvasRepeat } from './util/paintLayer/isTilingCanvasRepeat';
 
 interface PaintLayerBackgroundProps {
   fallbackColor: string;

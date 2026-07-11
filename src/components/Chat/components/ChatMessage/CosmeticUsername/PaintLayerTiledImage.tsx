@@ -4,7 +4,7 @@ import { Canvas, Fill, ImageShader } from '@shopify/react-native-skia';
 
 import type { PaintCanvasRepeat } from '@app/types/seventv/cosmetics';
 
-import { paintLayerTileModes } from './util/paintLayer';
+import { paintLayerTileModes } from './util/paintLayer/paintLayerTileModes';
 import { useTiledPaintImage } from './util/tiledPaintImageCache';
 
 interface PaintLayerTiledImageProps {

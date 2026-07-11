@@ -5,7 +5,7 @@ import type { PaintData } from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
 import { PaintLayerBackground } from './PaintLayerBackground';
-import { getPaintLayers } from './util/paintLayer';
+import { getPaintLayers } from './util/paintLayer/getPaintLayers';
 
 interface PaintedUsernameFillProps {
   displayUsername: string;

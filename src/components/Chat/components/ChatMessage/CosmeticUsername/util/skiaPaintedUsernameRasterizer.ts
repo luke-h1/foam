@@ -26,13 +26,13 @@ import type {
 } from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
+import { getPaintDropShadows } from './paintLayer/getPaintDropShadows';
+import { getPaintLayers } from './paintLayer/getPaintLayers';
+import { isTilingCanvasRepeat } from './paintLayer/isTilingCanvasRepeat';
 import {
-  getPaintDropShadows,
-  getPaintLayers,
-  isTilingCanvasRepeat,
   type PaintLayerTileMode,
   paintLayerTileModes,
-} from './paintLayer';
+} from './paintLayer/paintLayerTileModes';
 import { getPaintTextShadows, getPaintTextStroke } from './paintTextStyle';
 import {
   cssDropShadowSigma,

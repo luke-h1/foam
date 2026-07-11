@@ -16,12 +16,12 @@ import { PaintedUsernameDropShadowLayer } from './PaintedUsernameDropShadowLayer
 import { PaintedUsernameMaskedFill } from './PaintedUsernameMaskedFill';
 import { PaintedUsernameSkia } from './PaintedUsernameSkia';
 import { PaintedUsernameWebView } from './PaintedUsernameWebView';
+import { DEFAULT_PAINT_DROP_SHADOW_MODE } from './util/paintLayer/DEFAULT_PAINT_DROP_SHADOW_MODE';
 import {
-  DEFAULT_PAINT_DROP_SHADOW_MODE,
   getPaintDropShadows,
   type PaintDropShadowMode,
-  paintShadowKey,
-} from './util/paintLayer';
+} from './util/paintLayer/getPaintDropShadows';
+import { paintShadowKey } from './util/paintLayer/paintShadowKey';
 import {
   buildPaintUsernameTextStyle,
   getPaintTextShadows,
