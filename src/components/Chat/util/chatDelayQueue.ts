@@ -1,10 +1,8 @@
-import {
-  type BufferedMessage,
-  createModeratedBufferMessage,
-  getBufferedMessageLogin,
-  normaliseLogin,
-  normaliseMessageId,
-} from './bufferedMessageOps';
+import { createModeratedBufferMessage } from './bufferedMessageOps/createModeratedBufferMessage';
+import { getBufferedMessageLogin } from './bufferedMessageOps/getBufferedMessageLogin';
+import { normaliseLogin } from './bufferedMessageOps/normaliseLogin';
+import { normaliseMessageId } from './bufferedMessageOps/normaliseMessageId';
+import type { BufferedMessage } from './bufferedMessageOps/types';
 
 export interface DelayedChatMessage {
   countUnread: boolean;

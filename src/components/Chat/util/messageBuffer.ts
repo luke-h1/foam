@@ -1,15 +1,13 @@
 import { getMaxChatMessages } from '@app/store/chat/actions/messages';
 
-import {
-  type BufferedMessage,
-  createModeratedBufferMessage,
-  getBufferedMessageKey,
-  getBufferedMessageLogin,
-  normaliseLogin,
-  normaliseMessageId,
-} from './bufferedMessageOps';
+import { createModeratedBufferMessage } from './bufferedMessageOps/createModeratedBufferMessage';
+import { getBufferedMessageKey } from './bufferedMessageOps/getBufferedMessageKey';
+import { getBufferedMessageLogin } from './bufferedMessageOps/getBufferedMessageLogin';
+import { normaliseLogin } from './bufferedMessageOps/normaliseLogin';
+import { normaliseMessageId } from './bufferedMessageOps/normaliseMessageId';
+import type { BufferedMessage } from './bufferedMessageOps/types';
 
-export type { BufferedMessage } from './bufferedMessageOps';
+export type { BufferedMessage } from './bufferedMessageOps/types';
 
 export type AddResult = {
   /**
