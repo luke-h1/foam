@@ -1,4 +1,4 @@
-import { AnyChatMessageType } from '@app/components/Chat/util/messageHandlers';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 
 import { filterMessagesForReprocessing } from '../filterMessagesForReprocessing';
 import {

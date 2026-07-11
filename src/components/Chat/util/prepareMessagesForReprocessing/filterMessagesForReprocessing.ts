@@ -1,4 +1,5 @@
-import { AnyChatMessageType } from '../messageHandlers';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+
 import { shouldReprocessMessage } from './shouldReprocessMessage';
 
 export function filterMessagesForReprocessing(

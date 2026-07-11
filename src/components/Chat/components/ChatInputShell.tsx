@@ -15,6 +15,7 @@ import { toast } from 'sonner-native';
 
 import type { useAuthContext } from '@app/context/AuthContext';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { findBadges } from '@app/utils/chat/findBadges';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { parseActionCommand } from '@app/utils/chat/parseActionMessage/parseActionCommand';
@@ -23,10 +24,7 @@ import { formatDate } from '@app/utils/date-time/date';
 import { logger } from '@app/utils/logger';
 
 import { useChatImageUpload } from '../hooks/useChatImageUpload';
-import {
-  type AnyChatMessageType,
-  createUserStateFromTags,
-} from '../util/messageHandlers';
+import { createUserStateFromTags } from '../util/messageHandlers/createUserStateFromTags';
 import { parseModCommand } from '../util/modCommands';
 import { runModCommand } from '../util/runModCommand';
 import { findSlashCommandDefinition } from '../util/slashCommandDefinitions/findSlashCommandDefinition';

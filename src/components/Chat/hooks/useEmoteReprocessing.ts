@@ -4,10 +4,10 @@ import type { RefObject } from 'react';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { updateMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { findBadges } from '@app/utils/chat/findBadges';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
-import type { AnyChatMessageType } from '../util/messageHandlers';
 import { resolveMessageEmoteParts } from '../util/resolveMessageEmoteParts';
 
 const EMOTE_REPROCESS_BATCH_DELAY_MS = 32;

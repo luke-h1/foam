@@ -1,10 +1,10 @@
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import {
   createEmotePart,
   createMentionPart,
   createTextPart,
 } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
 
-import { AnyChatMessageType } from '../messageHandlers';
 import {
   createMockMessage,
   createNoticeMessage,

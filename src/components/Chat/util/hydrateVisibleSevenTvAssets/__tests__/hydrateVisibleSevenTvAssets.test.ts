@@ -1,6 +1,6 @@
 import { hydrateVisibleSevenTvAssets } from '@app/components/Chat/util/hydrateVisibleSevenTvAssets';
-import type { AnyChatMessageType } from '@app/components/Chat/util/messageHandlers';
 import { EmoteSetKind } from '@app/graphql/generated/gql';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';

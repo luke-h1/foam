@@ -29,9 +29,9 @@ import {
   type ViewableMessageToken,
 } from '@app/components/Chat/util/getViewableChatMessages';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 
 import { getChatMessageListKey } from '../util/chatMessages/getChatMessageListKey';
-import type { AnyChatMessageType } from '../util/messageHandlers';
 
 /**
  * Roughly seven rows of lookahead; at 96 fast flings outran the renderer and

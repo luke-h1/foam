@@ -1,4 +1,5 @@
-import type { AnyChatMessageType } from '../messageHandlers';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+
 import {
   estimateChatMessageHeightWithPretext,
   type PretextChatHeightOptions,

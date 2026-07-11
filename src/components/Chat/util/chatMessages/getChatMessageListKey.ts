@@ -1,6 +1,6 @@
 import { isRenderableChatMessage } from '@app/components/Chat/util/chatMessages/isRenderableChatMessage';
 import { normaliseMessageField } from '@app/components/Chat/util/chatMessages/normaliseMessageField';
-import type { AnyChatMessageType } from '@app/components/Chat/util/messageHandlers';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 
 const fallbackMessageKeys = new WeakMap<object, string>();
 let fallbackMessageKeyId = 0;

@@ -13,13 +13,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@app/components/ui/Text/Text';
 import { useMessages } from '@app/store/chat/react/selectors';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { theme } from '@app/styles/themes';
 import { logger } from '@app/utils/logger';
 
 import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
 import { styles } from '../styles';
 import type { ChatPaneFlags } from '../types/chatUiFlags';
-import type { AnyChatMessageType } from '../util/messageHandlers';
 import { getVisibleMessages } from '../util/visibleMessages';
 import {
   ChatList,

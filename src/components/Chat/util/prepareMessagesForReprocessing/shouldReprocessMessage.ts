@@ -1,4 +1,4 @@
-import { AnyChatMessageType } from '../messageHandlers';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 
 export function shouldReprocessMessage(msg: AnyChatMessageType): boolean {
   if (msg.sender === 'System') {

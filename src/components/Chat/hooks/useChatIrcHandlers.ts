@@ -12,6 +12,7 @@ import {
   removeMessageById,
   removeMessagesByLogin,
 } from '@app/store/chat/actions/messages';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { getPreferences } from '@app/store/preferenceStore';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import {
@@ -25,14 +26,11 @@ import { logger } from '@app/utils/logger';
 import type { ChatListRef } from '../components/ChatList';
 import { formatModerationSystemMessage } from '../util/formatModerationSystemMessage';
 import { formatNoticeMessage } from '../util/formatNoticeMessage';
-import {
-  type AnyChatMessageType,
-  coerceUserNoticeTags,
-  createBaseMessage,
-  createSystemMessage,
-  createUserNoticeMessage,
-  createUserStateFromTags,
-} from '../util/messageHandlers';
+import { coerceUserNoticeTags } from '../util/messageHandlers/coerceUserNoticeTags';
+import { createBaseMessage } from '../util/messageHandlers/createBaseMessage';
+import { createSystemMessage } from '../util/messageHandlers/createSystemMessage';
+import { createUserNoticeMessage } from '../util/messageHandlers/createUserNoticeMessage';
+import { createUserStateFromTags } from '../util/messageHandlers/createUserStateFromTags';
 import { SUPPRESSED_NOTICE_IDS } from '../util/roomState/SUPPRESSED_NOTICE_IDS';
 import {
   createRoomStateTracker,

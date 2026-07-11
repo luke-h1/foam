@@ -1,5 +1,6 @@
 import { PixelRatio } from 'react-native';
 
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { theme } from '@app/styles/themes';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
@@ -14,7 +15,6 @@ import { measureNaturalWidth } from './expoPretext/measureNaturalWidth';
 import { prepareInlineFlow } from './expoPretext/prepareInlineFlow';
 import { prepareWithSegments } from './expoPretext/prepareWithSegments';
 import type { InlineFlowItem, TextStyle } from './expoPretext/types';
-import type { AnyChatMessageType } from './messageHandlers';
 
 /**
  *  Inline emote messages render the whole Text at the emote line height

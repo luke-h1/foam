@@ -4,8 +4,8 @@ import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { act, renderHook } from '@testing-library/react-native';
 
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
-import type { AnyChatMessageType } from '@app/components/Chat/util/messageHandlers';
 import { FlashListRef } from '@app/components/FlashList/FlashList';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createRef } from '@app/test/createRef';
 
 import { useChatScroll } from '../useChatScroll';

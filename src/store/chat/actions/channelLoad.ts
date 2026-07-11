@@ -1,6 +1,6 @@
 import { batch } from '@legendapp/state';
 
-import { createSystemMessage } from '@app/components/Chat/util/messageHandlers';
+import { createSystemMessage } from '@app/components/Chat/util/messageHandlers/createSystemMessage';
 import i18next from '@app/i18n/i18next';
 import { clearChatStorePersistence } from '@app/lib/observablePersistence';
 import { startSpanAsync } from '@app/lib/sentry';

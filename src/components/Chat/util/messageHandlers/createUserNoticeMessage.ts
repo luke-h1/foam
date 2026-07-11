@@ -2,36 +2,23 @@ import type {
   AnyChatMessageType,
   ChatMessageType,
 } from '@app/store/chat/types/constants';
-import { getPreferences } from '@app/store/preferenceStore';
-import { Color } from '@app/styles/pallete';
 import {
   UserNoticeTags,
   UserNoticeTagsByVariant,
   ViewerMilestoneTags,
 } from '@app/types/chat/irc-tags/usernotice';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import {
-  enrichChannelPointPrivmsgTags,
-  ingestChannelPointRewardTags,
-} from '@app/utils/chat/channelPointRewardTitleStore';
-import { isHighlightMyMessageTags } from '@app/utils/chat/channelPointsRewardTitle/isHighlightMyMessageTags';
+import { ingestChannelPointRewardTags } from '@app/utils/chat/channelPointRewardTitleStore';
 import { createCharityDonationPart } from '@app/utils/chat/formatSubscriptionNotice/createCharityDonationPart';
 import { createRitualPart } from '@app/utils/chat/formatSubscriptionNotice/createRitualPart';
 import { createSubscriptionPart } from '@app/utils/chat/formatSubscriptionNotice/createSubscriptionPart';
 import { createViewerMilestonePart } from '@app/utils/chat/formatSubscriptionNotice/createViewerMilestonePart';
-import { parseBadges } from '@app/utils/chat/parseBadges';
 import { isSharedChatDuplicatedNotice } from '@app/utils/chat/userNoticeMsgIds/isSharedChatDuplicatedNotice';
 import { isSubscriptionUserNotice } from '@app/utils/chat/userNoticeMsgIds/isSubscriptionUserNotice';
-import { formatDate } from '@app/utils/date-time/date';
 import { generateNonce } from '@app/utils/string/generateNonce';
 
-export type { AnyChatMessageType };
-
-export function coerceUserNoticeTags(
-  tags: Record<string, string>,
-): UserNoticeTags {
-  return tags as UserNoticeTags;
-}
+import { createChatTimestampFromTags } from './createChatTimestampFromTags';
+import { createUserStateFromTags } from './createUserStateFromTags';
 
 function toStringTagRecord(tags: UserNoticeTags): Record<string, string> {
   const result: Record<string, string> = {};
@@ -44,85 +31,6 @@ function toStringTagRecord(tags: UserNoticeTags): Record<string, string> {
 
   return result;
 }
-
-interface CreateBaseMessageParams {
-  tags: Record<string, string>;
-  channelName: string;
-  text: string;
-  broadcasterId?: string;
-  isAction?: boolean;
-}
-
-function createChatTimestamp(date: Date | number = Date.now()): string {
-  const format =
-    getPreferences().chatTimestampFormat === '12h' ? 'h:mm a' : 'HH:mm';
-  return formatDate(date, format);
-}
-
-function createChatTimestampFromTags(tags: { 'tmi-sent-ts'?: string }): string {
-  const sentTs = tags['tmi-sent-ts'];
-  if (sentTs) {
-    const parsed = Number.parseInt(sentTs, 10);
-    if (Number.isFinite(parsed)) {
-      return createChatTimestamp(parsed);
-    }
-  }
-
-  return createChatTimestamp();
-}
-
-export const createUserStateFromTags = (
-  tags: Record<string, string>,
-): UserStateTags => {
-  const badgeData = parseBadges(tags.badges);
-
-  return {
-    ...tags,
-    username: tags['display-name'] || tags.login || '',
-    login: tags.login || tags['display-name']?.toLowerCase() || '',
-    'badges-raw': badgeData['badges-raw'],
-    badges: badgeData.badges,
-    'reply-parent-msg-id': tags['reply-parent-msg-id'] || '',
-    'reply-parent-msg-body': tags['reply-parent-msg-body'] || '',
-    'reply-parent-display-name': tags['reply-parent-display-name'] || '',
-    'reply-parent-user-login': tags['reply-parent-user-login'] || '',
-    'user-type': tags['user-type'],
-  } as UserStateTags;
-};
-
-export const createBaseMessage = ({
-  tags,
-  channelName,
-  text,
-  broadcasterId,
-  isAction,
-}: CreateBaseMessageParams): ChatMessageType<'usernotice'> => {
-  const enrichedTags = enrichChannelPointPrivmsgTags(tags, broadcasterId);
-  const userstate = createUserStateFromTags(enrichedTags);
-  const messageId = userstate.id || '0';
-  const messageNonce = messageId !== '0' ? messageId : generateNonce();
-  const isHighlightedMessage = isHighlightMyMessageTags(enrichedTags);
-
-  return {
-    id: `${messageId}_${messageNonce}`,
-    userstate,
-    message: [{ type: 'text', content: text.trimEnd() }],
-    badges: [],
-    channel: channelName,
-    message_id: messageId,
-    message_nonce: messageNonce,
-    timestamp: createChatTimestampFromTags(tags),
-    sender: userstate.username || '',
-    parentDisplayName: tags['reply-parent-display-name'] || '',
-    replyDisplayName: tags['reply-parent-user-login'] || '',
-    replyBody: tags['reply-parent-msg-body'] || '',
-    parentColor: undefined,
-    isChannelPointRedemption:
-      Boolean(enrichedTags['custom-reward-id']) || isHighlightedMessage,
-    ...(isHighlightedMessage ? { isHighlightedMessage: true } : {}),
-    ...(isAction ? { isAction: true } : {}),
-  };
-};
 
 const createSystemNoticeText = (tags: UserNoticeTags, text: string): string => {
   const systemLine =
@@ -452,47 +360,4 @@ export const createUserNoticeMessage = ({
       };
     }
   }
-};
-
-export const createSystemMessage = (
-  channelName: string,
-  content: string,
-): AnyChatMessageType => {
-  const messageId = `system-${Date.now()}`;
-  const messageNonce = generateNonce();
-
-  return {
-    id: `${messageId}_${messageNonce}`,
-    userstate: {
-      'display-name': 'System',
-      login: 'system',
-      username: 'System',
-      'user-id': '',
-      id: '',
-      color: Color.grayscale[500],
-      badges: {},
-      'badges-raw': '',
-      'user-type': '',
-      mod: '0',
-      subscriber: '0',
-      turbo: '0',
-      'emote-sets': '',
-      'reply-parent-msg-id': '',
-      'reply-parent-msg-body': '',
-      'reply-parent-display-name': '',
-      'reply-parent-user-login': '',
-    },
-    message: [{ type: 'text', content }],
-    badges: [],
-    channel: channelName,
-    message_id: messageId,
-    message_nonce: messageNonce,
-    timestamp: createChatTimestamp(),
-    sender: 'System',
-    parentDisplayName: '',
-    replyDisplayName: '',
-    replyBody: '',
-    parentColor: undefined,
-    isSpecialNotice: true,
-  };
 };

@@ -9,6 +9,7 @@ import {
 import { getUserMessageColor } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { useIsHighlightedReplyTargetMessage } from '@app/store/chat/react/transientSelectors';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import type {
   ChatFontScale,
   CustomHighlight,
@@ -39,7 +40,6 @@ import { getChatMessageListKey } from '../util/chatMessages/getChatMessageListKe
 import { isRenderableChatMessage } from '../util/chatMessages/isRenderableChatMessage';
 import { getChatRowItemType } from '../util/chatRowItemType';
 import { normaliseChatUsername } from '../util/chatUsernames/normaliseChatUsername';
-import type { AnyChatMessageType } from '../util/messageHandlers';
 
 const chatRowKeyExtractor = (item: AnyChatMessageType) =>
   getChatMessageListKey(item);

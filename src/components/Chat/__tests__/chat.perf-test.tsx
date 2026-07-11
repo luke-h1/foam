@@ -6,12 +6,12 @@ import { render } from '@testing-library/react-native';
 import { measureFunction, measureRenders } from 'reassure';
 
 import type { ChatMessageType } from '@app/store/chat/types/constants';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { ChatList } from '../components/ChatList';
 import { RichChatMessage } from '../components/ChatMessage/RichChatMessage';
-import type { AnyChatMessageType } from '../util/messageHandlers';
 import { estimateChatMessageHeightWithPretext } from '../util/pretextChatHeight';
 import { getVisibleMessages } from '../util/visibleMessages';
 

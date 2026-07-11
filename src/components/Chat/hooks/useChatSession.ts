@@ -18,6 +18,7 @@ import { ReadyState } from '@app/hooks/ws/constants';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
 import { notify7TVActivePresence } from '@app/store/chat/actions/channelLoad';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import {
   type ChatRenderPreferences,
   usePreference,
@@ -32,7 +33,6 @@ import { resolveEffectiveChatDelayMs } from '../util/chatDelay';
 import { normaliseChatUsername } from '../util/chatUsernames/normaliseChatUsername';
 import { textMentionsUser } from '../util/chatUsernames/textMentionsUser';
 import { triggerMentionHaptic } from '../util/mentionHaptics';
-import type { AnyChatMessageType } from '../util/messageHandlers';
 import { useChatCosmetics } from './useChatCosmetics';
 import { useChatEmoteLoader } from './useChatEmoteLoader';
 import { useChatIrcHandlers } from './useChatIrcHandlers';

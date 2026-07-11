@@ -1,5 +1,5 @@
 import { normaliseMessageField } from '@app/components/Chat/util/chatMessages/normaliseMessageField';
-import type { AnyChatMessageType } from '@app/components/Chat/util/messageHandlers';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 
 export function isRenderableChatMessage(
   message: AnyChatMessageType | undefined,

@@ -1,7 +1,7 @@
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { logger } from '@app/utils/logger';
 
-import { AnyChatMessageType } from './messageHandlers';
 import { extractTextFromMessage } from './prepareMessagesForReprocessing/extractTextFromMessage';
 import { filterMessagesForReprocessing } from './prepareMessagesForReprocessing/filterMessagesForReprocessing';
 
