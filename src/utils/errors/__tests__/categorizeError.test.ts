@@ -20,9 +20,15 @@ describe('categorizeError', () => {
 });
 
 describe('getFriendlyErrorMessage', () => {
-  test('returns distinct copy per category', () => {
-    expect(getFriendlyErrorMessage('network')).not.toEqual(
-      getFriendlyErrorMessage('crash'),
+  test('returns the network copy for a network error', () => {
+    expect(getFriendlyErrorMessage('network')).toEqual(
+      'Foam could not reach Twitch. Check your connection, then try again.',
+    );
+  });
+
+  test('returns the crash copy for a crash error', () => {
+    expect(getFriendlyErrorMessage('crash')).toEqual(
+      'Try resetting or restarting the app. If the issue persists, send feedback so we can look into it.',
     );
   });
 });

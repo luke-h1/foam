@@ -39,6 +39,7 @@ describe('estimateChatMessageHeightWithPretext', () => {
     );
 
     expect(height).toBeGreaterThanOrEqual(32);
+    expect(height).toBe(48);
   });
 
   test('adds space for inline reply context rows', () => {

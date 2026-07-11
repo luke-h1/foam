@@ -1,7 +1,10 @@
+import { StyleSheet } from 'react-native';
+
 import { act, render } from '@testing-library/react-native';
 import { Image } from 'expo-image';
 
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
+import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
 import { PaintedUsername } from '../CosmeticUsername/CosmeticUsername';
@@ -53,28 +56,56 @@ const createPaintData = (overrides: Partial<PaintData> = {}): PaintData => ({
   ...overrides,
 });
 
+/**
+ * The username is rendered several times in the painted tree (the in-flow
+ * solid base, the mask glyph, the hidden fill sizer, and any shadow layers).
+ * The one the viewer actually sees as the base colour is the in-flow solid
+ * Text: it carries `expectedColor` and is not the opacity:0 sizer. Asserting
+ * on it verifies the paint's base colour resolved correctly, not merely that
+ * the username string rendered somewhere.
+ */
+const hasVisibleUsernameInColor = (
+  nodes: ReturnType<ReturnType<typeof render>['getAllByText']>,
+  expectedColor: string,
+): boolean =>
+  nodes.some(node => {
+    const style = StyleSheet.flatten(node.props.style) ?? {};
+    return style.color === expectedColor && style.opacity !== 0;
+  });
+
 describe('PaintedUsername', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe('Rendering', () => {
-    test('should render username with fallback color when no paint provided', () => {
-      const { getAllByText } = render(
+    test('renders the plain username in the fallback colour when no paint provided', () => {
+      const { getAllByText, queryByTestId } = render(
         <PaintedUsername username='TestUser' fallbackColor='#FF0000' />,
       );
 
-      // Username appears in both mask and content
-      expect(getAllByText('TestUser:').length).toBeGreaterThanOrEqual(1);
+      // No paint means no MaskedView offscreen pass: just the solid username.
+      expect(queryByTestId('masked-view')).not.toBeOnTheScreen();
+      expect(
+        hasVisibleUsernameInColor(getAllByText('TestUser:'), '#FF0000'),
+      ).toBe(true);
     });
 
-    test('should render username with default white fallback color', () => {
-      const { getAllByText } = render(<PaintedUsername username='TestUser' />);
+    test('falls back to the theme default colour when none is provided', () => {
+      const { getAllByText, queryByTestId } = render(
+        <PaintedUsername username='TestUser' />,
+      );
 
-      expect(getAllByText('TestUser:').length).toBeGreaterThanOrEqual(1);
+      expect(queryByTestId('masked-view')).not.toBeOnTheScreen();
+      expect(
+        hasVisibleUsernameInColor(
+          getAllByText('TestUser:'),
+          theme.color.text.dark,
+        ),
+      ).toBe(true);
     });
 
-    test('should render username with linear gradient paint', () => {
+    test('renders the masked painted fill for a linear gradient paint', () => {
       const linearPaint = createPaintData({
         function: 'LINEAR_GRADIENT',
         angle: 90,
@@ -85,14 +116,15 @@ describe('PaintedUsername', () => {
         },
       });
 
-      const { getAllByText } = render(
+      const { getByTestId } = render(
         <PaintedUsername username='GradientUser' paint={linearPaint} />,
       );
 
-      expect(getAllByText('GradientUser:').length).toBeGreaterThanOrEqual(1);
+      // The painted branch was taken (not the plain-text fallback path).
+      expect(getByTestId('masked-view')).toBeOnTheScreen();
     });
 
-    test('should render username with radial gradient paint', () => {
+    test('renders the masked painted fill for a radial gradient paint', () => {
       const radialPaint = createPaintData({
         function: 'RADIAL_GRADIENT',
         stops: {
@@ -102,27 +134,36 @@ describe('PaintedUsername', () => {
         },
       });
 
-      const { getAllByText } = render(
+      const { getByTestId } = render(
         <PaintedUsername username='RadialUser' paint={radialPaint} />,
       );
 
-      expect(getAllByText('RadialUser:').length).toBeGreaterThanOrEqual(1);
+      expect(getByTestId('masked-view')).toBeOnTheScreen();
     });
 
-    test('should append colon to username', () => {
-      const { getAllByText } = render(<PaintedUsername username='UserName' />);
+    test('appends a colon to the username', () => {
+      const { getByText } = render(<PaintedUsername username='UserName' />);
 
-      expect(getAllByText('UserName:').length).toBeGreaterThanOrEqual(1);
+      expect(getByText('UserName:')).toBeOnTheScreen();
+    });
+
+    test('omits the colon when showColon is false', () => {
+      const { getByText, queryByText } = render(
+        <PaintedUsername username='UserName' showColon={false} />,
+      );
+
+      expect(getByText('UserName')).toBeOnTheScreen();
+      expect(queryByText('UserName:')).not.toBeOnTheScreen();
     });
   });
 
   describe('Gradient Configuration', () => {
-    test('should handle paint with empty stops by using fallback color', () => {
+    test('paints the solid fallback colour behind the mask when stops are empty', () => {
       const emptyStopsPaint = createPaintData({
         stops: { length: 0 },
       });
 
-      const { getAllByText } = render(
+      const { getAllByText, getByTestId } = render(
         <PaintedUsername
           username='EmptyStops'
           paint={emptyStopsPaint}
@@ -130,21 +171,33 @@ describe('PaintedUsername', () => {
         />,
       );
 
-      expect(getAllByText('EmptyStops:').length).toBeGreaterThanOrEqual(1);
+      expect(getByTestId('masked-view')).toBeOnTheScreen();
+      // With no gradient stops the base colour must resolve to the fallback so
+      // the glyphs are never left transparent.
+      expect(
+        hasVisibleUsernameInColor(getAllByText('EmptyStops:'), '#1AC9A2'),
+      ).toBe(true);
     });
 
-    test('should handle URL paint function', () => {
+    test("resolves a URL paint's solid base colour from the packed color field", () => {
       const urlPaint = createPaintData({
         function: 'URL',
         color: rgbaToSevenTvColor(255, 128, 0, 255),
         image_url: 'https://example.com/paint.png',
       });
 
-      const { getAllByText } = render(
+      const { getAllByText, getByTestId } = render(
         <PaintedUsername username='UrlPaint' paint={urlPaint} />,
       );
 
-      expect(getAllByText('UrlPaint:').length).toBeGreaterThanOrEqual(1);
+      expect(getByTestId('masked-view')).toBeOnTheScreen();
+      // 7TV packs RGBA as 0xRRGGBBAA; the base colour is the CSS rgba() form.
+      expect(
+        hasVisibleUsernameInColor(
+          getAllByText('UrlPaint:'),
+          'rgba(255, 128, 0, 1.000)',
+        ),
+      ).toBe(true);
     });
 
     test('should render URL paint as a tiled Skia layer when repeating', () => {
@@ -179,7 +232,7 @@ describe('PaintedUsername', () => {
       expect(paintImage.props.contentFit).toBe('fill');
     });
 
-    test('should handle single stop gradient by duplicating color', () => {
+    test('renders the masked fill for a single-stop gradient', () => {
       const singleStopPaint = createPaintData({
         stops: {
           0: { at: 0.5, color: rgbaToSevenTvColor(128, 0, 128, 255) },
@@ -187,14 +240,14 @@ describe('PaintedUsername', () => {
         },
       });
 
-      const { getAllByText } = render(
+      const { getByTestId } = render(
         <PaintedUsername username='SingleStop' paint={singleStopPaint} />,
       );
 
-      expect(getAllByText('SingleStop:').length).toBeGreaterThanOrEqual(1);
+      expect(getByTestId('masked-view')).toBeOnTheScreen();
     });
 
-    test('should handle multi-stop gradient', () => {
+    test('renders the masked fill for a multi-stop gradient', () => {
       const multiStopPaint = createPaintData({
         angle: 45,
         stops: {
@@ -207,11 +260,11 @@ describe('PaintedUsername', () => {
         },
       });
 
-      const { getAllByText } = render(
+      const { getByTestId } = render(
         <PaintedUsername username='Rainbow' paint={multiStopPaint} />,
       );
 
-      expect(getAllByText('Rainbow:').length).toBeGreaterThanOrEqual(1);
+      expect(getByTestId('masked-view')).toBeOnTheScreen();
     });
   });
 
@@ -234,11 +287,11 @@ describe('PaintedUsername', () => {
         },
       });
 
-      const { getAllByText } = render(
+      const { getByTestId } = render(
         <PaintedUsername username='ShadowUser' paint={paintWithShadow} />,
       );
 
-      expect(getAllByText('ShadowUser:').length).toBeGreaterThanOrEqual(1);
+      expect(getByTestId('masked-view')).toBeOnTheScreen();
     });
 
     test('should handle paint with multiple shadows (uses first)', () => {
@@ -265,14 +318,14 @@ describe('PaintedUsername', () => {
         },
       });
 
-      const { getAllByText } = render(
+      const { getByTestId } = render(
         <PaintedUsername
           username='MultipleShadows'
           paint={paintWithMultipleShadows}
         />,
       );
 
-      expect(getAllByText('MultipleShadows:').length).toBeGreaterThanOrEqual(1);
+      expect(getByTestId('masked-view')).toBeOnTheScreen();
     });
 
     test('should handle paint with no shadows', () => {
@@ -285,17 +338,21 @@ describe('PaintedUsername', () => {
         shadows: { length: 0 },
       });
 
-      const { getAllByText } = render(
+      const { getByTestId } = render(
         <PaintedUsername username='NoShadow' paint={paintWithoutShadow} />,
       );
 
-      expect(getAllByText('NoShadow:').length).toBeGreaterThanOrEqual(1);
+      expect(getByTestId('masked-view')).toBeOnTheScreen();
     });
   });
 
   describe('Angle Handling', () => {
+    // NOTE: exact gradient angle->coordinate math is asserted at the unit level
+    // in the paintLayer helper tests. Here we only guard that every angle keeps
+    // the paint on the masked-gradient render path (a NaN/throw in the angle
+    // math would collapse it to the plain-text fallback, dropping masked-view).
     test.each([0, 45, 90, 135, 180, 225, 270, 315])(
-      'should handle angle %d degrees',
+      'keeps the masked gradient render path at %d degrees',
       angle => {
         const anglePaint = createPaintData({
           angle,
@@ -306,15 +363,15 @@ describe('PaintedUsername', () => {
           },
         });
 
-        const { getAllByText } = render(
+        const { getByTestId } = render(
           <PaintedUsername username={`Angle${angle}`} paint={anglePaint} />,
         );
 
-        expect(getAllByText(`Angle${angle}:`).length).toBeGreaterThanOrEqual(1);
+        expect(getByTestId('masked-view')).toBeOnTheScreen();
       },
     );
 
-    test('should handle undefined angle (defaults to 0)', () => {
+    test('renders the masked gradient when the angle is undefined', () => {
       const noAnglePaint = createPaintData({
         angle: undefined,
         stops: {
@@ -324,17 +381,17 @@ describe('PaintedUsername', () => {
         },
       });
 
-      const { getAllByText } = render(
+      const { getByTestId } = render(
         <PaintedUsername username='NoAngle' paint={noAnglePaint} />,
       );
 
-      expect(getAllByText('NoAngle:').length).toBeGreaterThanOrEqual(1);
+      expect(getByTestId('masked-view')).toBeOnTheScreen();
     });
   });
 
   describe('Store Lookup', () => {
-    test('should return null paint when userId not in store', () => {
-      const { getAllByText } = render(
+    test('renders the plain fallback when the userId is absent from the store', () => {
+      const { getAllByText, queryByTestId } = render(
         <PaintedUsername
           username='UnknownUser'
           userId='unknown-user-id'
@@ -342,10 +399,14 @@ describe('PaintedUsername', () => {
         />,
       );
 
-      expect(getAllByText('UnknownUser:').length).toBeGreaterThanOrEqual(1);
+      // A store miss must not paint: no masked pass, plain fallback colour.
+      expect(queryByTestId('masked-view')).not.toBeOnTheScreen();
+      expect(
+        hasVisibleUsernameInColor(getAllByText('UnknownUser:'), '#CCCCCC'),
+      ).toBe(true);
     });
 
-    test('should prefer paint prop over userId lookup', () => {
+    test('prefers the paint prop over the userId store lookup', () => {
       const directPaint = createPaintData({
         id: 'direct-paint',
         name: 'Direct Paint',
@@ -356,7 +417,7 @@ describe('PaintedUsername', () => {
         },
       });
 
-      const { getAllByText } = render(
+      const { getByTestId } = render(
         <PaintedUsername
           username='DirectPaint'
           paint={directPaint}
@@ -364,174 +425,37 @@ describe('PaintedUsername', () => {
         />,
       );
 
-      expect(getAllByText('DirectPaint:').length).toBeGreaterThanOrEqual(1);
-    });
-  });
-
-  describe('Snapshots', () => {
-    test('should match snapshot with fallback color only', () => {
-      const { toJSON } = render(
-        <PaintedUsername username='FallbackUser' fallbackColor='#9B59B6' />,
-      );
-
-      expect(toJSON()).toMatchSnapshot();
-    });
-
-    test('should match snapshot with linear gradient paint', () => {
-      const roseGold = createPaintData({
-        id: 'rose-gold',
-        name: 'Rose Gold',
-        angle: 90,
-        stops: {
-          0: { at: 0, color: rgbaToSevenTvColor(254, 118, 148, 255) },
-          1: { at: 0.5, color: rgbaToSevenTvColor(255, 200, 180, 255) },
-          2: { at: 1, color: rgbaToSevenTvColor(255, 77, 115, 255) },
-          length: 3,
-        },
-        shadows: {
-          0: {
-            color: rgbaToSevenTvColor(254, 118, 148, 255),
-            radius: 0.1,
-            x_offset: 0,
-            y_offset: 0,
-          },
-          length: 1,
-        },
-      });
-
-      const { toJSON } = render(
-        <PaintedUsername username='RoseGoldUser' paint={roseGold} />,
-      );
-
-      expect(toJSON()).toMatchSnapshot();
-    });
-
-    test('should match snapshot with radial gradient paint', () => {
-      const flowerchild = createPaintData({
-        id: 'flowerchild',
-        name: 'Flowerchild',
-        function: 'RADIAL_GRADIENT',
-        stops: {
-          0: { at: 0, color: rgbaToSevenTvColor(100, 200, 220, 255) },
-          1: { at: 0.5, color: rgbaToSevenTvColor(0, 150, 180, 255) },
-          2: { at: 1, color: rgbaToSevenTvColor(0, 96, 128, 255) },
-          length: 3,
-        },
-        shadows: {
-          0: {
-            color: rgbaToSevenTvColor(0, 96, 128, 255),
-            radius: 0.1,
-            x_offset: 0,
-            y_offset: 0,
-          },
-          length: 1,
-        },
-      });
-
-      const { toJSON } = render(
-        <PaintedUsername username='FlowerchildUser' paint={flowerchild} />,
-      );
-
-      expect(toJSON()).toMatchSnapshot();
-    });
-
-    test('should match snapshot with URL paint (solid color fallback)', () => {
-      const urlPaint = createPaintData({
-        id: 'url-paint',
-        name: 'URL Paint',
-        function: 'URL',
-        color: rgbaToSevenTvColor(255, 165, 0, 255),
-        image_url: 'https://example.com/paint.png',
-      });
-
-      const { toJSON } = render(
-        <PaintedUsername username='UrlPaintUser' paint={urlPaint} />,
-      );
-
-      expect(toJSON()).toMatchSnapshot();
-    });
-
-    test('should match snapshot with multiple shadows', () => {
-      const divisionPaint = createPaintData({
-        id: 'division',
-        name: 'Division',
-        angle: 90,
-        stops: {
-          0: { at: 0, color: rgbaToSevenTvColor(156, 76, 22, 255) },
-          1: { at: 0.5, color: rgbaToSevenTvColor(200, 120, 50, 255) },
-          2: { at: 1, color: rgbaToSevenTvColor(130, 60, 15, 255) },
-          length: 3,
-        },
-        shadows: {
-          0: {
-            color: rgbaToSevenTvColor(0, 0, 0, 255),
-            radius: 0.1,
-            x_offset: 0,
-            y_offset: 0,
-          },
-          1: {
-            color: rgbaToSevenTvColor(156, 76, 22, 255),
-            radius: 1,
-            x_offset: 0,
-            y_offset: 0,
-          },
-          length: 2,
-        },
-      });
-
-      const { toJSON } = render(
-        <PaintedUsername username='DivisionUser' paint={divisionPaint} />,
-      );
-
-      expect(toJSON()).toMatchSnapshot();
-    });
-
-    test('should match snapshot with long username', () => {
-      const magma = createPaintData({
-        id: 'magma',
-        name: 'Magma',
-        angle: 90,
-        stops: {
-          0: { at: 0, color: rgbaToSevenTvColor(196, 57, 1, 255) },
-          1: { at: 0.5, color: rgbaToSevenTvColor(255, 150, 50, 255) },
-          2: { at: 1, color: rgbaToSevenTvColor(196, 57, 1, 255) },
-          length: 3,
-        },
-      });
-
-      const { toJSON } = render(
-        <PaintedUsername
-          username='VeryLongUsernameForTestingPurposes'
-          paint={magma}
-        />,
-      );
-
-      expect(toJSON()).toMatchSnapshot();
+      // The explicit paint prop wins, so the masked painted fill renders.
+      expect(getByTestId('masked-view')).toBeOnTheScreen();
     });
   });
 
   describe('Edge Cases', () => {
-    test('should handle empty username', () => {
-      const { getAllByText } = render(<PaintedUsername username='' />);
+    test('keeps a visible colon-only label for an empty username', () => {
+      const { getByText, queryByTestId } = render(
+        <PaintedUsername username='' fallbackColor='#CCCCCC' />,
+      );
 
-      expect(getAllByText(':').length).toBeGreaterThanOrEqual(1);
+      // Guards the blank-row regression: an empty name must still show ": ".
+      expect(queryByTestId('masked-view')).not.toBeOnTheScreen();
+      expect(getByText(':')).toBeOnTheScreen();
     });
 
-    test('should handle special characters in username', () => {
-      const { getAllByText } = render(
+    test('renders special characters verbatim', () => {
+      const { getByText } = render(
         <PaintedUsername username='User_Name-123' />,
       );
 
-      expect(getAllByText('User_Name-123:').length).toBeGreaterThanOrEqual(1);
+      expect(getByText('User_Name-123:')).toBeOnTheScreen();
     });
 
-    test('should handle unicode characters in username', () => {
-      const { getAllByText } = render(<PaintedUsername username='用户名' />);
+    test('renders unicode characters verbatim', () => {
+      const { getByText } = render(<PaintedUsername username='用户名' />);
 
-      expect(getAllByText('用户名:').length).toBeGreaterThanOrEqual(1);
+      expect(getByText('用户名:')).toBeOnTheScreen();
     });
 
-    test('should handle paint with null color field', () => {
+    test('uses the fallback colour when the paint color field is null', () => {
       const paintWithNullColor = createPaintData({
         color: null,
         stops: {
@@ -541,11 +465,19 @@ describe('PaintedUsername', () => {
         },
       });
 
-      const { getAllByText } = render(
-        <PaintedUsername username='NullColor' paint={paintWithNullColor} />,
+      const { getAllByText, getByTestId } = render(
+        <PaintedUsername
+          username='NullColor'
+          paint={paintWithNullColor}
+          fallbackColor='#1AC9A2'
+        />,
       );
 
-      expect(getAllByText('NullColor:').length).toBeGreaterThanOrEqual(1);
+      expect(getByTestId('masked-view')).toBeOnTheScreen();
+      // color === null must resolve the base to the supplied fallback.
+      expect(
+        hasVisibleUsernameInColor(getAllByText('NullColor:'), '#1AC9A2'),
+      ).toBe(true);
     });
   });
 
@@ -576,12 +508,36 @@ describe('PaintedUsername', () => {
     test('skips the MaskedView offscreen pass while actively scrolling', () => {
       chatScrollActivity.poke();
 
-      const { queryByTestId, getAllByText } = render(
+      const { queryByTestId, getByText } = render(
         <PaintedUsername username='Scrolling' paint={gradientPaint()} />,
       );
 
       expect(queryByTestId('masked-view')).not.toBeOnTheScreen();
-      expect(getAllByText('Scrolling:').length).toBeGreaterThanOrEqual(1);
+      // Flattened during the fling: a single plain solid username, no mask.
+      expect(getByText('Scrolling:')).toBeOnTheScreen();
+    });
+
+    test('keeps a visible solid-colour username behind the mask when idle', () => {
+      // The MaskedView paints the gradient over an in-flow solid username. If
+      // that offscreen pass drops out on a settling row, the solid username must
+      // still be visible - otherwise the row reserves its space but renders a
+      // blank gap where the name should be. Guard the fallback stays opaque.
+      const fallbackColor = '#1AC9A2';
+
+      const { getAllByText } = render(
+        <PaintedUsername
+          username='Idle'
+          paint={gradientPaint()}
+          fallbackColor={fallbackColor}
+        />,
+      );
+
+      const hasVisibleSolidUsername = getAllByText('Idle:').some(node => {
+        const style = StyleSheet.flatten(node.props.style) ?? {};
+        return style.color === fallbackColor && style.opacity !== 0;
+      });
+
+      expect(hasVisibleSolidUsername).toBe(true);
     });
   });
 });

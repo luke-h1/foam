@@ -1,5 +1,10 @@
 import type { IrcMessage } from '../ircProtocol';
-import { parseIrcMessage, parseIrcTags } from '../ircProtocol';
+import {
+  buildPrivmsgLine,
+  isPrivmsgLine,
+  parseIrcMessage,
+  parseIrcTags,
+} from '../ircProtocol';
 
 describe('parseIrcTags', () => {
   test('returns an empty map for an empty string', () => {
@@ -22,6 +27,31 @@ describe('parseIrcTags', () => {
 
   test('preserves "=" inside a value', () => {
     expect(parseIrcTags('emotes=25:0-4=5')).toEqual({ emotes: '25:0-4=5' });
+  });
+
+  test('unescapes IRCv3 escape sequences in values', () => {
+    expect(
+      parseIrcTags(
+        'system-msg=ModUser\\sis\\scelebrating\\s24\\smonths\\sas\\sa\\smoderator!;msg-param-reward-title=Say\\shi\\s:)',
+      ),
+    ).toEqual({
+      'system-msg': 'ModUser is celebrating 24 months as a moderator!',
+      'msg-param-reward-title': 'Say hi :)',
+    });
+  });
+
+  test('does not double-decode a literal backslash', () => {
+    // Raw `\\s` is an escaped backslash followed by a literal `s`, i.e. `\s`
+    // as text - not a space. A second decode pass would corrupt it to a space.
+    expect(parseIrcTags('ban-reason=path\\\\sfoo')).toEqual({
+      'ban-reason': 'path\\sfoo',
+    });
+  });
+
+  test('leaves the structural colons in the emotes tag untouched', () => {
+    expect(parseIrcTags('emotes=25:0-4,6-10/1902:12-16')).toEqual({
+      emotes: '25:0-4,6-10/1902:12-16',
+    });
   });
 });
 
@@ -64,5 +94,101 @@ describe('parseIrcMessage', () => {
 
   test('returns null for a tags-only line with no following space', () => {
     expect(parseIrcMessage('@only-tags')).toBeNull();
+  });
+});
+
+describe('isPrivmsgLine', () => {
+  test('detects a tagged, prefixed PRIVMSG', () => {
+    expect(
+      isPrivmsgLine(
+        '@badges=;color=#FF0000 :foo!foo@foo.tmi.twitch.tv PRIVMSG #bar :hello',
+      ),
+    ).toBe(true);
+  });
+
+  test('detects a bare PRIVMSG', () => {
+    expect(isPrivmsgLine('PRIVMSG #bar :hello')).toBe(true);
+  });
+
+  test('rejects control commands', () => {
+    expect(
+      isPrivmsgLine('@ban-duration=600 :tmi.twitch.tv CLEARCHAT #bar :foo'),
+    ).toBe(false);
+    expect(isPrivmsgLine(':tmi.twitch.tv RECONNECT')).toBe(false);
+  });
+
+  test('is not fooled by PRIVMSG inside a message body', () => {
+    expect(
+      isPrivmsgLine(':tmi.twitch.tv NOTICE #bar :try PRIVMSG #chan :hi'),
+    ).toBe(false);
+  });
+
+  test('rejects malformed tag-only lines', () => {
+    expect(isPrivmsgLine('@only-tags')).toBe(false);
+  });
+});
+
+describe('buildPrivmsgLine', () => {
+  test('builds a plain message line', () => {
+    expect(buildPrivmsgLine({ channel: '#bar', message: 'hello world' })).toBe(
+      'PRIVMSG #bar :hello world',
+    );
+  });
+
+  test('attaches only the reply parent id tag on replies', () => {
+    expect(
+      buildPrivmsgLine({
+        channel: '#bar',
+        message: 'hi back',
+        replyParentMsgId: 'abc-123',
+      }),
+    ).toBe('@reply-parent-msg-id=abc-123 PRIVMSG #bar :hi back');
+  });
+
+  test('collapses embedded newlines so the body cannot inject a second IRC line', () => {
+    expect(
+      buildPrivmsgLine({
+        channel: '#bar',
+        message: 'hello\r\nJOIN #other\nPRIVMSG #other :pwn',
+      }),
+    ).toBe('PRIVMSG #bar :hello JOIN #other PRIVMSG #other :pwn');
+  });
+
+  test('escapes the reply parent id so it cannot break out of the tag section', () => {
+    expect(
+      buildPrivmsgLine({
+        channel: '#bar',
+        message: 'hi back',
+        replyParentMsgId: 'abc 123;evil=1\\',
+      }),
+    ).toBe('@reply-parent-msg-id=abc\\s123\\:evil=1\\\\ PRIVMSG #bar :hi back');
+  });
+
+  test('escaped reply parent ids survive a round-trip through the parser', () => {
+    const line = buildPrivmsgLine({
+      channel: '#bar',
+      message: 'hi back',
+      replyParentMsgId: 'abc 123;evil=1\\',
+    });
+    expect(parseIrcMessage(line)?.tags).toEqual({
+      'reply-parent-msg-id': 'abc 123;evil=1\\',
+    });
+  });
+
+  test('reply lines survive a round-trip through the parser', () => {
+    // Regression: the display-name/body reply tags used to be sent raw, so a
+    // multi-word parent body terminated the tag section at its first space and
+    // the server read the rest of the body as the command.
+    const line = buildPrivmsgLine({
+      channel: '#bar',
+      message: 'hi back',
+      replyParentMsgId: 'abc-123',
+    });
+    expect(parseIrcMessage(line)).toEqual<IrcMessage>({
+      tags: { 'reply-parent-msg-id': 'abc-123' },
+      prefix: undefined,
+      command: 'PRIVMSG',
+      params: ['#bar', 'hi back'],
+    });
   });
 });

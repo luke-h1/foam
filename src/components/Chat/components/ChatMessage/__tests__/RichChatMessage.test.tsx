@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable camelcase */
 import type { ReactTestInstance } from 'react-test-renderer';
 
@@ -15,6 +14,7 @@ import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { lightenColor } from '@app/utils/color/lightenColor';
 
 import { RichChatMessage } from '../RichChatMessage';
+import { MESSAGE_LONG_PRESS_DELAY_MS } from '../useRichChatMessage';
 
 jest.mock('@app/utils/date-time/date', () => ({
   formatDate: jest.fn(() => '12:00'),
@@ -75,8 +75,6 @@ const createMockMessage = (
     ...overrides,
   };
 };
-
-const MESSAGE_LONG_PRESS_DELAY_MS = 650;
 
 function fireMessageLongPress(element: ReactTestInstance) {
   jest.useFakeTimers();
@@ -144,6 +142,7 @@ describe('RichChatMessage', () => {
     const malformedMessage: ParsedPart[] = [
       {
         type: 'text',
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- deliberately malformed payload
         // @ts-expect-error malformed IRC payload should not render as visible text
         content: { text: 'bad payload' },
       },
@@ -155,7 +154,7 @@ describe('RichChatMessage', () => {
     expect(queryByText('[object Object]')).toBeNull();
   });
 
-  test('reserves blank badge slots without rendering blank text bars', () => {
+  test('does not render a blank slot for a badge without a url', () => {
     const message = createMockMessage(
       [{ type: 'text', content: '' }],
       {},
@@ -173,11 +172,9 @@ describe('RichChatMessage', () => {
       },
     );
 
-    const { getByTestId, queryByTestId } = render(
-      <RichChatMessage {...message} />,
-    );
+    const { queryByTestId } = render(<RichChatMessage {...message} />);
 
-    expect(getByTestId('chat-badge-placeholder')).toBeOnTheScreen();
+    expect(queryByTestId('chat-badge-placeholder')).toBeNull();
     expect(queryByTestId('chat-text-placeholder')).toBeNull();
   });
 
@@ -575,6 +572,42 @@ describe('RichChatMessage', () => {
 
       expect(getByTestId('emote-renderer')).toBeOnTheScreen();
     });
+
+    test('renders emotes as flex views, never nested inside a Text', () => {
+      // An emote nested in a <Text> can only be given a fixed line height,
+      // which baseline-aligns and clips the top of the image. Messages with
+      // emotes must take the flex-wrap path so the row grows to the emote's
+      // full intended size. See UserChatBody renderInline gating.
+      const emoteData: ParsedPart<'emote'> = {
+        type: 'emote',
+        content: 'Kappa',
+        original_name: 'Kappa',
+        name: 'Kappa',
+        id: '25',
+        url: 'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/1.0',
+        site: 'Twitch Channel',
+      };
+
+      const message = createMockMessage([
+        { type: 'text', content: 'look ' },
+        emoteData,
+      ]);
+
+      const { getByTestId } = render(
+        <RichChatMessage
+          {...message}
+          onReply={mockOnReply}
+          onEmotePress={mockOnEmotePress}
+        />,
+      );
+
+      let ancestor: ReactTestInstance | null =
+        getByTestId('emote-renderer').parent;
+      while (ancestor) {
+        expect(ancestor.type).not.toBe('Text');
+        ancestor = ancestor.parent;
+      }
+    });
   });
 
   describe('First Message Indicator', () => {
@@ -615,7 +648,7 @@ describe('RichChatMessage', () => {
         <RichChatMessage {...message} onReply={mockOnReply} />,
       );
 
-      expect(getAllByText('ColoredUser:').length).toBeGreaterThan(0);
+      expect(getAllByText('ColoredUser:')).toHaveLength(1);
     });
 
     test('should NOT display username when not provided', () => {
@@ -734,6 +767,7 @@ describe('RichChatMessage', () => {
     );
 
     expect(getByTestId('chat-message')).toHaveStyle({
+      borderLeftColor: 'rgba(145, 71, 255, 0.38)',
       borderLeftWidth: 2,
     });
   });
@@ -761,8 +795,9 @@ describe('RichChatMessage', () => {
         reward: '450',
         value: '5',
         content: '',
+        // Stored parts hold already-unescaped system-msg (parseIrcTags decodes).
         systemMsg:
-          'TestUser\\swatched\\s5\\sconsecutive\\sstreams\\sand\\ssparked\\sa\\swatch\\sstreak!',
+          'TestUser watched 5 consecutive streams and sparked a watch streak!',
         login: 'testuser',
         displayName: 'TestUser',
       },

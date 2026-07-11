@@ -122,6 +122,7 @@ jest.mock('@app/store/chat/actions/cosmetics', () => ({
 
 jest.mock('@app/store/chat/react/selectors', () => ({
   useChannelEmoteData: jest.fn(() => null),
+  useChannelEmoteDataForReprocess: jest.fn(() => null),
   useCosmeticBindingsVersion: jest.fn(() => 0),
   useMessages: jest.fn(() => []),
 }));
@@ -385,6 +386,7 @@ const setPreferences = (showRecentMessages = true) => {
     analyticsEnabled: true,
     sharedChatEnabled: true,
     enhancedVideoStability: false,
+    sevenTvPaintRenderer: 'native',
     chatDelay: 0,
     update: jest.fn(),
   } satisfies ReturnType<typeof usePreferences>;

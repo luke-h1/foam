@@ -521,7 +521,7 @@ const loadChannelResourcesInternal = async (
     }
 
     // Only the 7TV channel-emote fetch needs the set id, so resolve it as a
-    // promise the spec awaits internally — the other 13 resource fetches
+    // promise the spec awaits internally - the other 13 resource fetches
     // start immediately instead of stalling a full round trip behind it.
     const fallbackSevenTvSetId = existingCache?.sevenTvEmoteSetId ?? 'global';
     const sevenTvSetIdPromise = sevenTvService
@@ -872,7 +872,7 @@ const latestRequestedEmoteSetByChannel = new Map<string, string>();
 
 /**
  * Swap the channel's active 7TV emote set after a live `user.update` says the
- * broadcaster switched sets — replaces the cached channel set wholesale
+ * broadcaster switched sets - replaces the cached channel set wholesale
  * instead of waiting for the user to leave and re-enter the channel.
  */
 export const switchSevenTvEmoteSet = async (

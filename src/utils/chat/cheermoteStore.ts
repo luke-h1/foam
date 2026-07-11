@@ -8,14 +8,11 @@ export interface CheermoteTier {
   url: string;
 }
 
-/**
- * Lowercased cheer prefix -> tiers sorted by ascending min_bits.
- */
 export type ChannelCheermotes = Map<string, CheermoteTier[]>;
 
-// Session cache; cheermote sets change rarely, so a fetch per channel per
-// session (refreshed after the TTL) is plenty.
 const CHEERMOTE_TTL_MS = 30 * 60 * 1000;
+
+const MAX_CHEERMOTE_CHANNELS = 20;
 
 const cheermotesByChannel = new Map<string, ChannelCheermotes>();
 const cheermoteFetchGuard = createFetchOnceGuard({ ttlMs: CHEERMOTE_TTL_MS });
@@ -50,6 +47,16 @@ export function setChannelCheermotes(
     }
   });
 
+  if (
+    !cheermotesByChannel.has(channelId) &&
+    cheermotesByChannel.size >= MAX_CHEERMOTE_CHANNELS
+  ) {
+    const oldest = cheermotesByChannel.keys().next().value;
+    if (oldest !== undefined) {
+      cheermotesByChannel.delete(oldest);
+      cheermoteFetchGuard.clearKey(oldest);
+    }
+  }
   cheermotesByChannel.set(channelId, byPrefix);
   cheermoteFetchGuard.markFetched(channelId);
 }
@@ -60,9 +67,6 @@ export function getChannelCheermotes(
   return cheermotesByChannel.get(channelId);
 }
 
-/**
- * Highest tier whose min_bits threshold the cheered amount reaches.
- */
 export function resolveCheermoteTier(
   tiers: CheermoteTier[],
   bits: number,
@@ -78,11 +82,6 @@ export function resolveCheermoteTier(
   return resolved;
 }
 
-/**
- * Fetches and stores a channel's cheermotes at most once per TTL window,
- * deduping while a fetch is in flight. A rejected fetcher propagates to the
- * caller and leaves the channel immediately retryable.
- */
 export function fetchChannelCheermotes(
   channelId: string,
   fetcher: () => Promise<TwitchCheermote[]>,

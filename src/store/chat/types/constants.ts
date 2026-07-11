@@ -59,6 +59,13 @@ export interface ChatMessageType<
     : never) = never,
 > {
   id: string;
+  /**
+   * Monotonic per-session arrival number, assigned when the message enters the
+   * store. Unlike a list index it never shifts when the window front-trims, so
+   * derivations like alternating-row parity stay stable for a message's whole
+   * lifetime.
+   */
+  seq?: number;
   userstate: UserStateTags;
   message: ParsedPart[];
   badges: SanitisedBadgeSet[];

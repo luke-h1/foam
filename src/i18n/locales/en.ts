@@ -73,8 +73,15 @@ const en = {
       blockUserSubtitle: 'Block on Twitch',
       blockUserConfirm: 'Are you sure you want to block {{name}}?',
       block: 'Block',
-      timeoutUser: 'Timeout for 10m',
+      timeoutUser: 'Timeout…',
       timeoutUserSubtitle: 'Temporary moderation',
+      timeoutDurationTitle: 'Timeout {{name}}',
+      timeoutDuration10Seconds: '10 seconds',
+      timeoutDuration1Minute: '1 minute',
+      timeoutDuration10Minutes: '10 minutes',
+      timeoutDuration30Minutes: '30 minutes',
+      timeoutDuration1Hour: '1 hour',
+      timeoutDuration1Day: '24 hours',
       warnUser: 'Warn User',
       warnUserSubtitle: 'Send an official chat warning',
       warnReasonTitle: 'Warn {{name}}',
@@ -372,7 +379,7 @@ const en = {
     submit: 'Send',
     submitting: 'Sending…',
     successTitle: 'Thanks for the feedback!',
-    success: 'Your feedback was sent — we appreciate it.',
+    success: 'Your feedback was sent - we appreciate it.',
     error: "Couldn't send your feedback. Please try again.",
     emptyMessage: 'Please enter a message first.',
   },
@@ -874,12 +881,18 @@ const en = {
   onboarding: {
     title: 'Welcome to foam',
     description:
-      'The fastest way to watch Twitch — browse live streams, explore categories, and follow your favourite creators.',
+      'The fastest way to watch Twitch - browse live streams, explore categories, and follow your favourite creators.',
     getStarted: 'Get started',
     skip: 'Skip',
   },
 
   devTools: {
+    paintRenderer: '7TV Paint Renderer',
+    paintRendererDescription:
+      'Choose the username paint renderer. WebView is a dev-only reference.',
+    paintRendererNative: 'Native',
+    paintRendererSkia: 'Skia',
+    paintRendererWebview: 'WebView',
     revealSecrets: 'Reveal secrets',
     hideSecrets: 'Hide secrets',
     envVarsNote:
@@ -908,7 +921,7 @@ const en = {
     surfToChannel: 'Surf to channel',
     resetToBuildChannel: 'Reset to build channel',
     surfFootnote:
-      'A bad update on the chosen channel can leave the app unable to start. If that happens, force-quit and reopen — the build channel is restored on next launch via the embedded bundle.',
+      'A bad update on the chosen channel can leave the app unable to start. If that happens, force-quit and reopen - the build channel is restored on next launch via the embedded bundle.',
     clearStorageConfirm: 'Clear storage?',
     clearStorageMessage: 'This will wipe {{namespace}}',
     clear: 'Clear',
@@ -1008,7 +1021,7 @@ const en = {
       'Sends a message event and waits for the network flush, confirming Sentry capture works end-to-end from this build.',
     sending: 'Sending…',
     deliveryConfirmed: 'Delivered ✓ (event {{id}})',
-    deliveryFailed: 'Flush failed — event was not confirmed sent.',
+    deliveryFailed: 'Flush failed - event was not confirmed sent.',
     throwTestError: 'Throw test error',
     throwTestErrorDescription:
       'Sends an unhandled JavaScript error through the app error boundary and Sentry wrapper.',

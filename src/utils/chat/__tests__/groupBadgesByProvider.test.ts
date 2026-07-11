@@ -16,19 +16,19 @@ function badge(overrides: Partial<SanitisedBadgeSet>): SanitisedBadgeSet {
 
 describe('groupBadgesByProvider', () => {
   test('groups badges into provider sections in a fixed order', () => {
+    const ffzBadge = badge({ id: 'ffz-1', type: 'FFZ Badge', provider: 'ffz' });
+    const twitchBadge = badge({ id: 'twitch-1', type: 'Twitch Global Badge' });
+    const stvBadge = badge({ id: 'stv-1', type: '7TV Badge', provider: '7tv' });
+
     const sections = groupBadgesByProvider(
-      [
-        badge({ id: 'ffz-1', type: 'FFZ Badge', provider: 'ffz' }),
-        badge({ id: 'twitch-1', type: 'Twitch Global Badge' }),
-        badge({ id: 'stv-1', type: '7TV Badge', provider: '7tv' }),
-      ],
+      [ffzBadge, twitchBadge, stvBadge],
       5,
     );
 
-    expect(sections.map(section => section.title)).toEqual([
-      'Twitch',
-      '7TV',
-      'FrankerFaceZ',
+    expect(sections).toEqual<BadgeProviderSection[]>([
+      { key: 'twitch', title: 'Twitch', data: [[twitchBadge]] },
+      { key: 'seventv', title: '7TV', data: [[stvBadge]] },
+      { key: 'ffz', title: 'FrankerFaceZ', data: [[ffzBadge]] },
     ]);
   });
 

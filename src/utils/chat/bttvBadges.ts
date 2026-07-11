@@ -4,6 +4,11 @@ import { logger } from '@app/utils/logger';
 
 let cachedBadges: SanitisedBadgeSet[] = [];
 let fetchStarted = false;
+let onBadgesLoaded: (() => void) | null = null;
+
+export function setOnBttvBadgesLoaded(callback: () => void): void {
+  onBadgesLoaded = callback;
+}
 
 function loadBttvBadges(): void {
   fetchStarted = true;
@@ -11,6 +16,9 @@ function loadBttvBadges(): void {
     .getSanitisedGlobalBadges()
     .then(badges => {
       cachedBadges = badges;
+      if (badges.length > 0) {
+        onBadgesLoaded?.();
+      }
     })
     .catch(error => {
       // Reset so a later read retries instead of being stuck on the empty list.

@@ -24,4 +24,25 @@ describe('calculateAspectRatio', () => {
       height: 100,
     });
   });
+
+  test('returns a zero-width box when width is 0', () => {
+    expect(calculateAspectRatio(0, 100, 50)).toEqual({
+      width: 0,
+      height: 50,
+    });
+  });
+
+  test('falls back to a square when height is not positive', () => {
+    expect(calculateAspectRatio(100, 0, 50)).toEqual({
+      width: 50,
+      height: 50,
+    });
+  });
+
+  test('falls back to a square for a negative height', () => {
+    expect(calculateAspectRatio(100, -20, 50)).toEqual({
+      width: 50,
+      height: 50,
+    });
+  });
 });
