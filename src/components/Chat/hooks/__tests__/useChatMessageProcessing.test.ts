@@ -17,7 +17,7 @@ import { updateMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { useChatHydrationPreferences } from '@app/store/preferences/selectors';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
-import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes';
+import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes/extractEmotesFromTag';
 
 import { useChatMessageProcessing } from '../useChatMessageProcessing';
 import {
@@ -60,7 +60,7 @@ jest.mock('@app/utils/chat/emoteProcessor', () => ({
   ]),
 }));
 
-jest.mock('@app/utils/chat/extractEmotes', () => ({
+jest.mock('@app/utils/chat/extractEmotes/extractEmotesFromTag', () => ({
   extractEmotesFromTag: jest.fn(() => []),
 }));
 

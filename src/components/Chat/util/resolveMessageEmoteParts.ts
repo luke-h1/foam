@@ -7,7 +7,7 @@ import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { applyCheermotesToParts } from '@app/utils/chat/applyCheermotes';
 import { getChannelCheermotes } from '@app/utils/chat/cheermoteStore';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
-import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes';
+import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes/extractEmotesFromTag';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { normaliseChatUsername } from './chatUsernames';

@@ -9,7 +9,7 @@ import type {
 } from '@app/types/emote';
 
 import { processEmotesWorklet } from '../emoteProcessor';
-import { extractEmotesFromTag } from '../extractEmotes';
+import { extractEmotesFromTag } from '../extractEmotes/extractEmotesFromTag';
 import { findEmotesInText } from '../findEmotesInText';
 import { replaceTextWithEmotes } from '../replaceTextWithEmotes';
 

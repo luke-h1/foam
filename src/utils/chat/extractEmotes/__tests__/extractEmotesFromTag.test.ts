@@ -1,15 +1,8 @@
 import type { TwitchSanitisedEmote } from '@app/types/emote';
 
-import { extractEmotesFromTag, parseTwitchEmotesTag } from '../extractEmotes';
+import { extractEmotesFromTag } from '../extractEmotesFromTag';
 
 describe('extractEmotes', () => {
-  test('parses Twitch IRC emote tags with multiple emotes and positions', () => {
-    expect(parseTwitchEmotesTag('25:0-4,12-16/1902:6-10')).toEqual({
-      '25': ['0-4', '12-16'],
-      '1902': ['6-10'],
-    });
-  });
-
   test('applies emote positions by code point when the message has surrogate pairs', () => {
     // Twitch indexes the emotes tag by Unicode code point, not UTF-16 unit.
     // "😀" (U+1F600) is one code point but two UTF-16 units, so "Kappa" sits at
