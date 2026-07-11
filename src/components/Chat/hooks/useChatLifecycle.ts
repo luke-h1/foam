@@ -8,9 +8,9 @@ import {
   clearPersonalEmotesCache,
 } from '@app/store/chat/actions/channelLoad';
 import { clearMentionSessionCaches } from '@app/store/chat/actions/chatColorCaches';
-import { clearPaints } from '@app/store/chat/actions/cosmetics';
+import { clearPaintBindings } from '@app/store/chat/actions/cosmetics';
 import { clearMessages } from '@app/store/chat/actions/messages';
-import { resetMentionLoginResolver } from '@app/utils/chat/mentionLoginResolver';
+import { resetMentionLoginResolver } from '@app/utils/chat/mentionLoginResolver/resetMentionLoginResolver';
 
 type PartChannel = (channelName: string) => void;
 
@@ -88,7 +88,7 @@ export function useChatLifecycle({
     abortCurrentLoad();
     lifecycle.cancelEmoteLoad();
     clearChannelResources();
-    clearPaints();
+    clearPaintBindings();
     clearPersonalEmotesCache();
     lifecycle.fetchedCosmeticsUsersRef.current.clear();
     lifecycle.processedMessageIdsRef.current.clear();

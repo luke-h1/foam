@@ -1,8 +1,19 @@
 diff --git a/persist-plugins/mmkv.js b/persist-plugins/mmkv.js
-index 8380fd33f9471919851b54cdabcefe7c6867c11f..c570847efcdc2b251caea1e57b1630c8fbfb3aa3 100644
+index 8380fd33f9471919851b54cdabcefe7c6867c11f..ad93b34b8f1e3addcd095ca7da18d40813d692f1 100644
 --- a/persist-plugins/mmkv.js
 +++ b/persist-plugins/mmkv.js
-@@ -12,7 +12,7 @@ class ObservablePersistMMKV {
+@@ -6,13 +6,18 @@ var reactNativeMmkv = require('react-native-mmkv');
+ const symbolDefault = Symbol();
+ const MetadataSuffix = '__m';
+ const { safeParse, safeStringify } = state.internal;
++// PATCH(foam): @legendapp/state 2.x targets react-native-mmkv 3.x; foam runs
++// mmkv 4.x (Nitro), which replaced `new MMKV(config)` with the `createMMKV()`
++// factory, renamed `delete(key)` to `remove(key)`, and renamed the
++// `MMKVConfiguration` type to `Configuration`. The patch migrates this
++// plugin's calls in place; drop it if Legend State ships mmkv v4 support.
+ class ObservablePersistMMKV {
+     constructor() {
+         this.data = {};
          this.storages = new Map([
              [
                  symbolDefault,
@@ -11,7 +22,7 @@ index 8380fd33f9471919851b54cdabcefe7c6867c11f..c570847efcdc2b251caea1e57b1630c8
                      id: `obsPersist`,
                  }),
              ],
-@@ -52,7 +52,7 @@ class ObservablePersistMMKV {
+@@ -52,7 +57,7 @@ class ObservablePersistMMKV {
      deleteTable(table, config) {
          const storage = this.getStorage(config);
          delete this.data[table];
@@ -20,7 +31,7 @@ index 8380fd33f9471919851b54cdabcefe7c6867c11f..c570847efcdc2b251caea1e57b1630c8
      }
      deleteMetadata(table, config) {
          this.deleteTable(table + MetadataSuffix, config);
-@@ -64,7 +64,7 @@ class ObservablePersistMMKV {
+@@ -64,7 +69,7 @@ class ObservablePersistMMKV {
              const key = JSON.stringify(mmkv);
              let storage = this.storages.get(key);
              if (!storage) {
@@ -29,7 +40,7 @@ index 8380fd33f9471919851b54cdabcefe7c6867c11f..c570847efcdc2b251caea1e57b1630c8
                  this.storages.set(key, storage);
              }
              return storage;
-@@ -89,7 +89,7 @@ class ObservablePersistMMKV {
+@@ -89,7 +94,7 @@ class ObservablePersistMMKV {
              }
          }
          else {
@@ -39,17 +50,25 @@ index 8380fd33f9471919851b54cdabcefe7c6867c11f..c570847efcdc2b251caea1e57b1630c8
      }
  }
 diff --git a/persist-plugins/mmkv.mjs b/persist-plugins/mmkv.mjs
-index b9558f860b7ed371413b909a433356a587fe9e63..1323b1f37a9dae0472f5ed3caf0f30e8bdb76c9c 100644
+index b9558f860b7ed371413b909a433356a587fe9e63..c8bfaf4e1b2d2073195ff52cc2f5cc00246759db 100644
 --- a/persist-plugins/mmkv.mjs
 +++ b/persist-plugins/mmkv.mjs
-@@ -1,5 +1,5 @@
+@@ -1,16 +1,21 @@
  import { setAtPath, internal } from '@legendapp/state';
 -import { MMKV } from 'react-native-mmkv';
 +import { createMMKV } from 'react-native-mmkv';
  
  const symbolDefault = Symbol();
  const MetadataSuffix = '__m';
-@@ -10,7 +10,7 @@ class ObservablePersistMMKV {
+ const { safeParse, safeStringify } = internal;
++// PATCH(foam): @legendapp/state 2.x targets react-native-mmkv 3.x; foam runs
++// mmkv 4.x (Nitro), which replaced `new MMKV(config)` with the `createMMKV()`
++// factory, renamed `delete(key)` to `remove(key)`, and renamed the
++// `MMKVConfiguration` type to `Configuration`. The patch migrates this
++// plugin's calls in place; drop it if Legend State ships mmkv v4 support.
+ class ObservablePersistMMKV {
+     constructor() {
+         this.data = {};
          this.storages = new Map([
              [
                  symbolDefault,
@@ -58,7 +77,7 @@ index b9558f860b7ed371413b909a433356a587fe9e63..1323b1f37a9dae0472f5ed3caf0f30e8
                      id: `obsPersist`,
                  }),
              ],
-@@ -50,7 +50,7 @@ class ObservablePersistMMKV {
+@@ -50,7 +55,7 @@ class ObservablePersistMMKV {
      deleteTable(table, config) {
          const storage = this.getStorage(config);
          delete this.data[table];
@@ -67,7 +86,7 @@ index b9558f860b7ed371413b909a433356a587fe9e63..1323b1f37a9dae0472f5ed3caf0f30e8
      }
      deleteMetadata(table, config) {
          this.deleteTable(table + MetadataSuffix, config);
-@@ -62,7 +62,7 @@ class ObservablePersistMMKV {
+@@ -62,7 +67,7 @@ class ObservablePersistMMKV {
              const key = JSON.stringify(mmkv);
              let storage = this.storages.get(key);
              if (!storage) {
@@ -76,7 +95,7 @@ index b9558f860b7ed371413b909a433356a587fe9e63..1323b1f37a9dae0472f5ed3caf0f30e8
                  this.storages.set(key, storage);
              }
              return storage;
-@@ -87,7 +87,7 @@ class ObservablePersistMMKV {
+@@ -87,7 +92,7 @@ class ObservablePersistMMKV {
              }
          }
          else {
@@ -86,11 +105,12 @@ index b9558f860b7ed371413b909a433356a587fe9e63..1323b1f37a9dae0472f5ed3caf0f30e8
      }
  }
 diff --git a/src/observableInterfaces.d.ts b/src/observableInterfaces.d.ts
-index 95846d39c1cadde4ce2e896678be01da2d461b74..18b325eacbd2826987fe8cb884fddc6dc010e94d 100644
+index 95846d39c1cadde4ce2e896678be01da2d461b74..3c03819fc144f0f6a010c86cf0affdb66e301a42 100644
 --- a/src/observableInterfaces.d.ts
 +++ b/src/observableInterfaces.d.ts
-@@ -1,4 +1,4 @@
+@@ -1,4 +1,5 @@
 -import type { MMKVConfiguration } from 'react-native-mmkv';
++// PATCH(foam): react-native-mmkv 4.x renamed `MMKVConfiguration` to `Configuration`.
 +import type { Configuration as MMKVConfiguration } from 'react-native-mmkv';
  import type { AsyncStorageStatic } from '@react-native-async-storage/async-storage';
  import type { DatabaseReference, Query } from 'firebase/database';

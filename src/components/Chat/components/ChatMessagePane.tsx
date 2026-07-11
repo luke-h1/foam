@@ -13,13 +13,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@app/components/ui/Text/Text';
 import { useMessages } from '@app/store/chat/react/selectors';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { theme } from '@app/styles/themes';
 import { logger } from '@app/utils/logger';
 
 import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
 import { styles } from '../styles';
 import type { ChatPaneFlags } from '../types/chatUiFlags';
-import type { AnyChatMessageType } from '../util/messageHandlers';
 import { getVisibleMessages } from '../util/visibleMessages';
 import {
   ChatList,
@@ -95,8 +95,8 @@ export const ChatMessagePane = memo(
       shouldMaintainScrollAtEnd,
       showOnlyMentions,
     } = paneFlags;
-    const storedMessages = useMessages() as AnyChatMessageType[];
-    const rawMessages = storedMessages;
+    // Legend's selector types sparse arrays; the store always holds dense messages.
+    const rawMessages = useMessages() as AnyChatMessageType[];
     const hasMessages = rawMessages.length > 0;
     const hasEverHadMessagesRef = useRef(false);
     const lastEmptyLogAtRef = useRef<number>(0);

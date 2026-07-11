@@ -19,11 +19,7 @@ interface State {
 }
 
 /**
- * This component handles whenever the user encounters a JS error in the
- * app. It follows the "error boundary" pattern in React. We're using a
- * class component because according to the documentation, only class
- * components can be error boundaries.
- * - [React Error Boundaries](https://reactjs.org/docs/error-boundaries.html)
+ * Class error boundary — required by React for catch/recover UI.
  */
 export class ErrorBoundary extends Component<Props, State> {
   override state: Omit<ErrorDetailsProps, 'onReset'> = {
@@ -32,12 +28,10 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   override shouldComponentUpdate(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    nextProps: Readonly<any>,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    nextState: Readonly<any>,
+    _nextProps: Readonly<Props>,
+    nextState: Readonly<State>,
   ): boolean {
-    return nextState.error !== nextProps.error;
+    return nextState.error !== this.state.error;
   }
 
   override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {

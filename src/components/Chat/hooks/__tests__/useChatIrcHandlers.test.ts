@@ -239,7 +239,7 @@ describe('useChatIrcHandlers', () => {
     });
 
     act(() => {
-      result.current.onPart();
+      result.current.onPart('#foam');
     });
 
     expect(mockClearMessages).not.toHaveBeenCalled();
@@ -251,7 +251,50 @@ describe('useChatIrcHandlers', () => {
     const { result } = renderIrcHandlers({ clearLocalMessages });
 
     act(() => {
-      result.current.onPart();
+      result.current.onPart('#foam');
+    });
+
+    expect(mockClearMessages).toHaveBeenCalledTimes(1);
+    expect(clearLocalMessages).toHaveBeenCalledTimes(1);
+  });
+
+  test('ignores a stale part for a previously watched channel', () => {
+    const clearLocalMessages = jest.fn();
+    const { result } = renderIrcHandlers({ clearLocalMessages });
+
+    act(() => {
+      result.current.onPart('#previouschannel');
+    });
+
+    expect(mockClearMessages).not.toHaveBeenCalled();
+    expect(clearLocalMessages).not.toHaveBeenCalled();
+  });
+
+  test('stale part does not reset the room state diff baseline', () => {
+    const { result } = renderIrcHandlers();
+
+    act(() => {
+      result.current.onRoomState('#foam', { slow: '30' });
+    });
+    mockAddMessage.mockClear();
+
+    act(() => {
+      result.current.onPart('#previouschannel');
+    });
+
+    act(() => {
+      result.current.onRoomState('#foam', { slow: '30' });
+    });
+
+    expect(addedSystemMessageContents()).toEqual([]);
+  });
+
+  test('matches the parted channel case-insensitively and without the # prefix', () => {
+    const clearLocalMessages = jest.fn();
+    const { result } = renderIrcHandlers({ clearLocalMessages });
+
+    act(() => {
+      result.current.onPart('#FOAM');
     });
 
     expect(mockClearMessages).toHaveBeenCalledTimes(1);
@@ -299,7 +342,7 @@ describe('useChatIrcHandlers', () => {
     });
 
     act(() => {
-      result.current.onPart();
+      result.current.onPart('#foam');
     });
 
     mockAddMessage.mockClear();

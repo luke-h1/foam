@@ -6,17 +6,15 @@ import type { ChatMessageDisplayFlags } from '@app/components/Chat/types/chatUiF
 import { hasSharedChannelPointsMessage } from '@app/components/Chat/util/channelPointsSharedMessage';
 import { getAnnouncementAccentColor } from '@app/components/Chat/util/getAnnouncementAccentColor';
 import { toChatMessageData } from '@app/components/Chat/util/richChatMessageData';
-import {
-  getAnnouncementColorParam,
-  getChatBodyInfo,
-  getPartIdentity,
-  isUserNoticeTags,
-  normaliseUsername,
-} from '@app/components/Chat/util/richChatMessageHelpers';
+import { getAnnouncementColorParam } from '@app/components/Chat/util/richChatMessageHelpers/getAnnouncementColorParam';
+import { getChatBodyInfo } from '@app/components/Chat/util/richChatMessageHelpers/getChatBodyInfo';
+import { getPartIdentity } from '@app/components/Chat/util/richChatMessageHelpers/getPartIdentity';
+import { isUserNoticeTags } from '@app/components/Chat/util/richChatMessageHelpers/isUserNoticeTags';
+import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers/normaliseUsername';
 import { usePreference } from '@app/store/preferenceStore';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
-import { findCustomHighlight } from '@app/utils/chat/customHighlights';
+import { findCustomHighlight } from '@app/utils/chat/customHighlights/findCustomHighlight';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import type { UseChatMessagePartRendererArgs } from './renderers/useChatMessagePartRenderer';
@@ -26,7 +24,7 @@ import type {
   RichChatMessageProps,
 } from './RichChatMessage.types';
 
-const MESSAGE_LONG_PRESS_DELAY_MS = 650;
+export const MESSAGE_LONG_PRESS_DELAY_MS = 650;
 
 export function useRichChatMessage<
   TNoticeType extends NoticeVariants,
@@ -124,7 +122,7 @@ export function useRichChatMessage<
   );
   // Set from each emote's onTouchStart (which bubbles before the row's), so
   // the single row-level long-press timer can open the emote sheet without a
-  // Pressable per emote — busy rows used to mount hundreds of them.
+  // Pressable per emote (busy rows would mount hundreds of them).
   const pressedEmotePartRef = useRef<EmotePressData | null>(null);
 
   useEffect(() => {

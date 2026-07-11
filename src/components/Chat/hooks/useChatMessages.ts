@@ -14,12 +14,10 @@ import {
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 
 import { createChatDelayQueue } from '../util/chatDelayQueue';
-import {
-  pickFlushDelay,
-  sampleLiveCommit,
-  SCROLL_DEFERRED_FLUSH_RETRY_MS,
-  shouldEnterRaidFlushMode,
-} from '../util/chatFlushCadence';
+import { pickFlushDelay } from '../util/chatFlushCadence/pickFlushDelay';
+import { sampleLiveCommit } from '../util/chatFlushCadence/sampleLiveCommit';
+import { SCROLL_DEFERRED_FLUSH_RETRY_MS } from '../util/chatFlushCadence/SCROLL_DEFERRED_FLUSH_RETRY_MS';
+import { shouldEnterRaidFlushMode } from '../util/chatFlushCadence/shouldEnterRaidFlushMode';
 import {
   type BufferedMessage,
   createMessageBuffer,

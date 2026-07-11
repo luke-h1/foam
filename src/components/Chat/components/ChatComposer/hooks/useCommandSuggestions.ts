@@ -1,4 +1,4 @@
-import { SLASH_COMMAND_DEFINITIONS } from '@app/components/Chat/util/slashCommandDefinitions';
+import { SLASH_COMMAND_DEFINITIONS } from '@app/components/Chat/util/slashCommandDefinitions/SLASH_COMMAND_DEFINITIONS';
 
 interface UseCommandSuggestionsProps {
   searchTerm: string;

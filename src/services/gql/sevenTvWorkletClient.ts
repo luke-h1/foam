@@ -1,4 +1,4 @@
-import { deriveFromResponseOnWorklet } from '@app/lib/offThreadJson';
+import { deriveFromResponseOnWorklet } from '@app/lib/offThreadJson/deriveFromResponseOnWorklet';
 
 /**
  * Runs a 7TV GraphQL query and derives the result from the response on the UI

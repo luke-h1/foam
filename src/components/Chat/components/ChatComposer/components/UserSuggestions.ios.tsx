@@ -11,6 +11,11 @@ import { Text } from '@app/components/ui/Text/Text';
 import type { ChatUser } from '@app/store/chat/types/constants';
 import { theme } from '@app/styles/themes';
 
+import {
+  suggestionRailColors,
+  suggestionRailStyles,
+} from '../suggestionRailStyles';
+
 const USER_SUGGESTION_ITEM_SIZE = 128;
 
 interface UserSuggestionsProps {
@@ -76,8 +81,8 @@ export const UserSuggestions = memo(function UserSuggestions({
   }
 
   return (
-    <View style={styles.userSuggestionsWrapper}>
-      <View style={styles.userSuggestionsContainer}>
+    <View style={suggestionRailStyles.compactWrapper}>
+      <View style={suggestionRailStyles.compactContainer}>
         <LegendList
           data={users}
           horizontal
@@ -96,16 +101,17 @@ export const UserSuggestions = memo(function UserSuggestions({
 
 const styles = StyleSheet.create({
   userColorDot: {
+    borderCurve: 'continuous',
     borderRadius: 999,
     height: 7,
     width: 7,
   },
   userSuggestionItem: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: suggestionRailColors.chipBackground,
+    borderColor: suggestionRailColors.chipBorder,
     borderCurve: 'continuous',
-    borderRadius: 14,
+    borderRadius: theme.borderRadius14,
     borderWidth: 1,
     flexDirection: 'row',
     gap: theme.space8,
@@ -118,27 +124,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   userSuggestionText: {
-    color: theme.color.text.dark,
+    color: suggestionRailColors.text,
     fontSize: theme.fontSize14,
     fontWeight: '500',
     maxWidth: 150,
-  },
-  userSuggestionsContainer: {
-    backgroundColor: 'rgba(28,28,30,0.94)',
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderCurve: 'continuous',
-    borderRadius: 14,
-    borderWidth: 1,
-    paddingBottom: 4,
-    paddingHorizontal: 4,
-    paddingTop: 4,
-    boxShadow: '0 6px 12px rgba(0, 0, 0, 0.16)',
-    alignSelf: 'flex-start',
-    maxWidth: '100%',
-  },
-  userSuggestionsWrapper: {
-    marginBottom: 6,
-    maxWidth: '100%',
-    zIndex: 2,
   },
 });

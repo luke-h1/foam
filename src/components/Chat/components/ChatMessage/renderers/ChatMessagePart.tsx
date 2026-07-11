@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { MediaLinkCard } from '@app/components/Chat/components/MediaLinkCard';
 import { StvEmoteEvent } from '@app/components/Chat/components/StvEmoteEvent';
 import { CharityDonationNotice } from '@app/components/Chat/components/usernotices/CharityDonationNotice';
@@ -5,16 +7,14 @@ import { RitualNotice } from '@app/components/Chat/components/usernotices/Ritual
 import { SubscriptionNotice } from '@app/components/Chat/components/usernotices/SubscriptionNotice';
 import { ViewerMileStoneNoticeComponent } from '@app/components/Chat/components/usernotices/ViewerMilestoneNotice';
 import { getChatColorStyle } from '@app/components/Chat/util/chatColorStyles';
-import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
 import { Text } from '@app/components/ui/Text/Text';
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
-import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin';
 
 import { styles } from '../RichChatMessage.styles';
 import { CheermoteRenderer } from './CheermoteRenderer';
 import { EmoteRenderer } from './EmoteRenderer';
+import { MentionSpan } from './MentionSpan';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 
 type ChatMessagePartProps = Omit<UseChatMessagePartRendererArgs, 'message'> & {
@@ -43,6 +43,25 @@ export function ChatMessagePart({
   textColor,
   part,
 }: ChatMessagePartProps) {
+  const subMessage =
+    'subscriptionEvent' in part ? part.subscriptionEvent?.message : undefined;
+  const parsedSubMessage = useMemo(
+    () =>
+      subMessage && parseTextForEmotes
+        ? parseTextForEmotes(subMessage)
+        : undefined,
+    [subMessage, parseTextForEmotes],
+  );
+
+  const mentionBaseTextStyle = useMemo(
+    () => [
+      styles.messageText,
+      compact && styles.messageTextCompact,
+      Boolean(moderationNotice) && styles.moderatedMessageText,
+    ],
+    [compact, moderationNotice],
+  );
+
   if (mode === 'system' && part.type === 'text') {
     const content = getParsedPartStringContent(part);
     const isRaidNotice =
@@ -171,55 +190,18 @@ export function ChatMessagePart({
       );
 
     case 'mention': {
-      const mentionContent = formatMentionContent(
-        getParsedPartStringContent(part),
-      );
-      if (!mentionContent.trim()) {
-        return null;
-      }
-
-      const mentionedUsername = mentionContent.replace(/^@/, '').trim();
-      const normalisedMentionedUsername = normaliseUsername(mentionedUsername);
-      const isReplyTargetMention = Boolean(
-        replyPlainMentionTarget &&
-        normalisedMentionedUsername === replyPlainMentionTarget,
-      );
-
-      if (isReplyTargetMention) {
-        return (
-          <Text
-            key={getPartKey(part, index)}
-            color='gray.text'
-            style={[
-              styles.messageText,
-              compact && styles.messageTextCompact,
-              Boolean(moderationNotice) && styles.moderatedMessageText,
-            ]}
-          >
-            {mentionContent}
-          </Text>
-        );
-      }
-      const mentionColor = getMentionColor
-        ? getMentionColor(mentionedUsername)
-        : generateRandomTwitchColor(mentionedUsername);
-      const isHighlightedMention =
-        effectiveHighlightedUserSet?.has(normalisedMentionedUsername) ||
-        normalisedCurrentUsername === normalisedMentionedUsername;
-
       return (
-        <Text
+        <MentionSpan
           key={getPartKey(part, index)}
-          style={[
-            styles.mention,
-            compact && styles.mentionCompact,
-            isHighlightedMention && styles.mentionHighlighted,
-            getChatColorStyle(mentionColor),
-            Boolean(moderationNotice) && styles.moderatedMessageText,
-          ]}
-        >
-          {mentionContent}
-        </Text>
+          content={getParsedPartStringContent(part)}
+          baseTextStyle={mentionBaseTextStyle}
+          compact={compact}
+          isModerated={Boolean(moderationNotice)}
+          getMentionColor={getMentionColor}
+          effectiveHighlightedUserSet={effectiveHighlightedUserSet}
+          normalisedCurrentUsername={normalisedCurrentUsername}
+          replyPlainMentionTarget={replyPlainMentionTarget}
+        />
       );
     }
 
@@ -240,12 +222,6 @@ export function ChatMessagePart({
     case 'anongiftpaidupgrade':
     case 'anongift':
     case 'primepaidupgrade': {
-      const subMessage = part.subscriptionEvent?.message;
-      const parsedSubMessage =
-        subMessage && parseTextForEmotes
-          ? parseTextForEmotes(subMessage)
-          : undefined;
-
       if (noticeTags) {
         return (
           <SubscriptionNotice

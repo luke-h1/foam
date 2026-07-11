@@ -1,7 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Image as ExpoImage, type ImageErrorEventData } from 'expo-image';
+import {
+  Image as ExpoImage,
+  type ImageErrorEventData,
+  type ImageLoadEventData,
+} from 'expo-image';
 
 import {
   cacheImageFromUrl,
@@ -51,6 +55,13 @@ export const Image = function Image({
   ...props
 }: ImageProps) {
   const url = getSourceUrl(source);
+  /**
+   * Once the remote source has rendered, swapping to the freshly downloaded
+   * file:// URI would make the native view fetch/decode the same bytes a
+   * second time and replay the fade transition - the disk copy serves the
+   * NEXT mount instead (getCachedImageUri resolves it synchronously then).
+   */
+  const loadedRemoteUrlRef = useRef<string | null>(null);
   const shouldUseFileCache = cacheToFile && process.env.NODE_ENV !== 'test';
   const diskCachedUrl =
     url && shouldUseFileCache
@@ -83,7 +94,11 @@ export const Image = function Image({
       signal: controller.signal,
       variant: cacheVariant,
     }).then(cachedUrl => {
-      if (!cancelled && cachedUrl !== url) {
+      if (
+        !cancelled &&
+        cachedUrl !== url &&
+        loadedRemoteUrlRef.current !== url
+      ) {
         setDownloadedCache({ sourceUrl: url, cachedUrl });
       }
     });
@@ -94,12 +109,21 @@ export const Image = function Image({
     };
   }, [cachePriority, cacheVariant, diskCachedUrl, shouldUseFileCache, url]);
 
-  // When the wrapper's own file cache is handling persistence, keep
-  // expo-image to memory caching — otherwise the same bytes land on disk
-  // twice (expo-image's disk cache for the remote fetch plus our MMKV-
-  // manifested file cache), burning through both caches' eviction budgets.
+  /**
+   * When the wrapper's own file cache is handling persistence, keep
+   * expo-image to memory caching - otherwise the same bytes land on disk
+   * twice (expo-image's disk cache for the remote fetch plus our MMKV-
+   * manifested file cache), burning through both caches' eviction budgets.
+   */
   const resolvedCachePolicy =
     cachePolicy ?? (shouldUseFileCache ? 'memory' : undefined);
+
+  const handleLoad = (event: ImageLoadEventData) => {
+    if (!fileCachedUrl) {
+      loadedRemoteUrlRef.current = url;
+    }
+    props.onLoad?.(event);
+  };
 
   const handleError = (event: ImageErrorEventData) => {
     const host = getHostname(resolvedUrl);
@@ -131,9 +155,15 @@ export const Image = function Image({
         cachePolicy={resolvedCachePolicy}
         transition={transition}
         decodeFormat='rgb'
-        recyclingKey={recyclingKey ?? resolvedUrl ?? undefined}
+        /**
+         * Keyed on the ORIGINAL url: keying on the resolved url flipped the
+         * recycling identity when the disk-cache swap landed, forcing a
+         * needless teardown of the native image.
+         */
+        recyclingKey={recyclingKey ?? url ?? undefined}
         useAppleWebpCodec
         placeholderContentFit={placeholderContentFit ?? 'cover'}
+        onLoad={handleLoad}
         onError={handleError}
         onLoadStart={onLoadStart}
         onLoadEnd={onLoadEnd}

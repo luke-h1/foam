@@ -15,22 +15,20 @@ import { PLAYER_LOAD_TIMEOUT_MS } from './playerTelemetry';
 import { DebugErrorOverlay, TouchBlockOverlay } from './StreamPlayerOverlays';
 import { StreamPlayerPoster } from './StreamPlayerPoster';
 import { StreamPlayerWebView } from './StreamPlayerWebView';
-import {
-  buildRawTwitchPlayerUrl,
-  buildTwitchAutoplayEnsureScript,
-  buildTwitchCaptionHiderScript,
-  buildTwitchChromeHiderScript,
-  buildTwitchClipPlayerUrl,
-  buildTwitchContentGateAcceptScript,
-  buildTwitchContentGateWatcherScript,
-  buildTwitchEmbedErrorWatcherScript,
-  buildTwitchLatencyTrackerScript,
-  buildTwitchLiveSyncScript,
-  buildTwitchPipBridgeScript,
-  buildTwitchPlayerAudioDefaultScript,
-  buildTwitchPlayerQualityDefaultScript,
-  buildTwitchPlayerStateScript,
-} from './twitchPlayerSource';
+import { buildRawTwitchPlayerUrl } from './twitchPlayerSource/buildRawTwitchPlayerUrl';
+import { buildTwitchAutoplayEnsureScript } from './twitchPlayerSource/buildTwitchAutoplayEnsureScript';
+import { buildTwitchCaptionHiderScript } from './twitchPlayerSource/buildTwitchCaptionHiderScript';
+import { buildTwitchChromeHiderScript } from './twitchPlayerSource/buildTwitchChromeHiderScript';
+import { buildTwitchClipPlayerUrl } from './twitchPlayerSource/buildTwitchClipPlayerUrl';
+import { buildTwitchContentGateAcceptScript } from './twitchPlayerSource/buildTwitchContentGateAcceptScript';
+import { buildTwitchContentGateWatcherScript } from './twitchPlayerSource/buildTwitchContentGateWatcherScript';
+import { buildTwitchEmbedErrorWatcherScript } from './twitchPlayerSource/buildTwitchEmbedErrorWatcherScript';
+import { buildTwitchLatencyTrackerScript } from './twitchPlayerSource/buildTwitchLatencyTrackerScript';
+import { buildTwitchLiveSyncScript } from './twitchPlayerSource/buildTwitchLiveSyncScript';
+import { buildTwitchPipBridgeScript } from './twitchPlayerSource/buildTwitchPipBridgeScript';
+import { buildTwitchPlayerAudioDefaultScript } from './twitchPlayerSource/buildTwitchPlayerAudioDefaultScript';
+import { buildTwitchPlayerQualityDefaultScript } from './twitchPlayerSource/buildTwitchPlayerQualityDefaultScript';
+import { buildTwitchPlayerStateScript } from './twitchPlayerSource/buildTwitchPlayerStateScript';
 import type { StreamPlayerProps } from './types';
 import { usePlayerBridge } from './usePlayerBridge';
 import { useStreamPlayerControls } from './useStreamPlayerControls';
@@ -298,7 +296,12 @@ export const StreamPlayer = memo(function StreamPlayer({
   };
 
   const enhancedVideoStability = usePreference('enhancedVideoStability');
-  const contentKind = clip ? 'clip' : video ? 'vod' : 'live';
+  let contentKind: 'clip' | 'vod' | 'live' = 'live';
+  if (clip) {
+    contentKind = 'clip';
+  } else if (video) {
+    contentKind = 'vod';
+  }
 
   const {
     handleMessage,

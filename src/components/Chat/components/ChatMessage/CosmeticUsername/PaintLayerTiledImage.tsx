@@ -4,54 +4,38 @@ import {
   Canvas,
   Fill,
   ImageShader,
-  useImage,
+  useAnimatedImageValue,
 } from '@shopify/react-native-skia';
 
 import type { PaintCanvasRepeat } from '@app/types/seventv/cosmetics';
+
+import { paintLayerTileModes } from './util/paintLayer/paintLayerTileModes';
 
 interface PaintLayerTiledImageProps {
   canvasRepeat: PaintCanvasRepeat;
   imageUrl: string;
 }
 
-type SkiaTileMode = 'clamp' | 'decal' | 'mirror' | 'repeat';
-
-function tileModes(canvasRepeat: PaintCanvasRepeat): {
-  tx: SkiaTileMode;
-  ty: SkiaTileMode;
-} {
-  // `round`/`space` stretch or pad tiles in CSS; plain repetition is the
-  // closest Skia equivalent and matches how the texture is meant to fill.
-  switch (canvasRepeat) {
-    case 'repeat-x':
-      return { tx: 'repeat', ty: 'decal' };
-    case 'repeat-y':
-      return { tx: 'decal', ty: 'repeat' };
-    default:
-      return { tx: 'repeat', ty: 'repeat' };
-  }
-}
-
 /**
- * Tiling counterpart to the plain expo-image layer: CSS `background-repeat`
- * paints tile their texture across the username, which expo-image cannot do,
- * so tiled layers render through a Skia image shader instead.
+ * Skia image-shader tiling for CSS `background-repeat` paint layers.
+ * Uses `useAnimatedImageValue` so animated tile textures advance on the UI
+ * thread the same way stretch image layers do.
  */
 export function PaintLayerTiledImage({
   canvasRepeat,
   imageUrl,
 }: PaintLayerTiledImageProps) {
-  const image = useImage(imageUrl);
-  if (!image) {
+  const animatedFrame = useAnimatedImageValue(imageUrl);
+  if (!animatedFrame) {
     return null;
   }
 
-  const { tx, ty } = tileModes(canvasRepeat);
+  const { tx, ty } = paintLayerTileModes(canvasRepeat);
 
   return (
     <Canvas style={StyleSheet.absoluteFill}>
       <Fill>
-        <ImageShader image={image} tx={tx} ty={ty} />
+        <ImageShader image={animatedFrame} tx={tx} ty={ty} />
       </Fill>
     </Canvas>
   );

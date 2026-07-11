@@ -1,0 +1,1 @@
+export const LANDSCAPE_CHAT_MIN_WIDTH = 200;

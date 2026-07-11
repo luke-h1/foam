@@ -12,6 +12,11 @@ import { Text } from '@app/components/ui/Text/Text';
 import type { ChatUser } from '@app/store/chat/types/constants';
 import { theme } from '@app/styles/themes';
 
+import {
+  suggestionRailColors,
+  suggestionRailStyles,
+} from '../suggestionRailStyles';
+
 const USER_SUGGESTION_ITEM_SIZE = 40;
 
 interface UserSuggestionsProps {
@@ -78,9 +83,11 @@ export const UserSuggestions = memo(function UserSuggestions({
   }
 
   return (
-    <View style={styles.userSuggestionsWrapper}>
-      <View style={styles.userSuggestionsContainer}>
-        <Text style={styles.headerLabel}>{t('composer.mention')}</Text>
+    <View style={suggestionRailStyles.richWrapper}>
+      <View style={suggestionRailStyles.richContainer}>
+        <Text style={suggestionRailStyles.headerLabel}>
+          {t('composer.mention')}
+        </Text>
         <LegendList
           data={users}
           horizontal
@@ -98,23 +105,16 @@ export const UserSuggestions = memo(function UserSuggestions({
 });
 
 const styles = StyleSheet.create({
-  headerLabel: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize12,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-    paddingBottom: theme.space8,
-    textTransform: 'uppercase',
-  },
   userColorDot: {
+    borderCurve: 'continuous',
     borderRadius: 999,
     height: 7,
     width: 7,
   },
   userSuggestionItem: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.dark,
-    borderColor: theme.colorBorderSecondary,
+    backgroundColor: suggestionRailColors.chipBackground,
+    borderColor: suggestionRailColors.chipBorder,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: 1,
@@ -128,24 +128,8 @@ const styles = StyleSheet.create({
     paddingRight: theme.space8,
   },
   userSuggestionText: {
-    color: theme.color.text.dark,
+    color: suggestionRailColors.text,
     fontSize: theme.fontSize14,
     fontWeight: '600',
-  },
-  userSuggestionsContainer: {
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.colorBorderSecondary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius28,
-    borderWidth: 1,
-    paddingHorizontal: theme.space12,
-    paddingBottom: theme.space12,
-    paddingTop: theme.space12,
-    boxShadow: '0 6px 12px rgba(0, 0, 0, 0.18)',
-  },
-  userSuggestionsWrapper: {
-    marginBottom: theme.space8,
-    width: '100%',
-    zIndex: 2,
   },
 });

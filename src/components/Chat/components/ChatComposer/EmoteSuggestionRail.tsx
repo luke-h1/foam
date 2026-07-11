@@ -1,11 +1,15 @@
 import { useDeferredValue } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import type { SanitisedEmote } from '@app/types/emote';
 
 import { EmoteSuggestions } from './components/EmoteSuggestions';
 import { useEmoteSuggestions } from './hooks/useEmoteSuggestions';
-import { useSuggestionAnimations } from './hooks/useSuggestionAnimations';
+import {
+  suggestionRailEntering,
+  suggestionRailExiting,
+} from './suggestionRailAnimations';
 
 interface EmoteSuggestionRailProps {
   handleEmotePress: (emote: SanitisedEmote) => void;
@@ -27,24 +31,21 @@ export function EmoteSuggestionRail({
     prioritizeChannelEmotes,
   });
 
-  const { opacity, scale, translateY } = useSuggestionAnimations({
-    shouldShow: filteredEmotes.length > 0,
-  });
-
   if (filteredEmotes.length === 0) {
     return null;
   }
 
   return (
-    <View style={styles.suggestionRail}>
+    <Animated.View
+      style={styles.suggestionRail}
+      entering={suggestionRailEntering}
+      exiting={suggestionRailExiting}
+    >
       <EmoteSuggestions
         emotes={filteredEmotes}
         handleEmotePress={handleEmotePress}
-        suggestionOpacity={opacity}
-        suggestionScale={scale}
-        suggestionTranslateY={translateY}
       />
-    </View>
+    </Animated.View>
   );
 }
 

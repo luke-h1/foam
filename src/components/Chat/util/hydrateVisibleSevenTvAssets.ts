@@ -1,7 +1,8 @@
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
-import type { AnyChatMessageType } from './messageHandlers';
+import { boundedSetAdd } from './hydrateVisibleSevenTvAssets/boundedSetAdd';
 
 type FetchUserCosmeticsOptions = {
   retryMissingBadge?: boolean;
@@ -29,37 +30,25 @@ type HydrateVisibleSevenTvAssetsParams = {
   hydratePersonalEmotes?: boolean;
   hydrateCosmetics?: boolean;
   reprocessMessage: (message: AnyChatMessageType) => void | Promise<void>;
+  /**
+   * Return false to abort a pass after unmount / channel hop.
+   */
+  shouldContinue?: () => boolean;
 };
 
 const MAX_PERSONAL_EMOTE_FETCHES_PER_PASS = 3;
 const MAX_COSMETIC_FETCHES_PER_PASS = 3;
-
-// These dedup guards live in refs that persist for the whole channel session, so
-// they must be bounded or they grow one entry per message / per chatter until the
-// app is jettisoned (busy channels like caedrel churn tens of thousands over 20
-// min). The hydration-key guard comfortably covers the visible window + trim
-// headroom; the per-user guards are backed by sessionCosmeticsCache + MMKV, so
-// evicting a long-departed chatter only means a cheap cache-hit refetch.
+const REPROCESS_BATCH_SIZE = 6;
+const REPROCESS_BATCH_DELAY_MS = 32;
 const MAX_HYDRATED_MESSAGE_KEYS = 2000;
 const MAX_VISIBLE_USER_GUARDS = 5000;
 
-/**
- * Insertion-ordered add with a FIFO cap: once the set is full, adding a new key
- * drops the oldest so the guard stays bounded without losing dedup for recent
- * (still on-screen) entries.
- */
-function boundedSetAdd(set: Set<string>, key: string, max: number): void {
-  set.add(key);
-  if (set.size <= max) {
-    return;
-  }
-  const oldest = set.values().next().value;
-  if (oldest !== undefined) {
-    set.delete(oldest);
-  }
-}
+const waitBetweenReprocessBatches = () =>
+  new Promise<void>(resolve => {
+    setTimeout(resolve, REPROCESS_BATCH_DELAY_MS);
+  });
 
-function canHydrateMessage(message: AnyChatMessageType): boolean {
+export function canHydrateMessage(message: AnyChatMessageType): boolean {
   if (message.sender === 'System') {
     return false;
   }
@@ -105,6 +94,10 @@ function getHydrationKey({
   ].join('|');
 }
 
+function shouldAbort(shouldContinue?: () => boolean): boolean {
+  return shouldContinue?.() === false;
+}
+
 export async function hydrateVisibleSevenTvAssets({
   channelId,
   messages,
@@ -118,6 +111,7 @@ export async function hydrateVisibleSevenTvAssets({
   hydratePersonalEmotes = true,
   hydrateCosmetics = true,
   reprocessMessage,
+  shouldContinue,
 }: HydrateVisibleSevenTvAssetsParams): Promise<boolean> {
   const pending: Promise<void>[] = [];
   let personalEmoteFetchesStarted = 0;
@@ -125,6 +119,10 @@ export async function hydrateVisibleSevenTvAssets({
   let didScheduleReprocess = false;
 
   const reprocessIfChanged = (message: AnyChatMessageType) => {
+    if (shouldAbort(shouldContinue)) {
+      return undefined;
+    }
+
     const userId = message.userstate['user-id'];
     if (!userId) {
       return undefined;
@@ -146,10 +144,12 @@ export async function hydrateVisibleSevenTvAssets({
     return reprocessMessage(message);
   };
 
-  messages.forEach(message => {
+  const cachedAssetMessages: AnyChatMessageType[] = [];
+
+  for (const message of messages) {
     const userId = message.userstate['user-id'];
     if (!userId || !canHydrateMessage(message)) {
-      return;
+      continue;
     }
 
     const cachedPersonalEmotes = hydratePersonalEmotes
@@ -162,45 +162,62 @@ export async function hydrateVisibleSevenTvAssets({
       cachedBadge ||
       isMissingSharedChatSourceBadge(message)
     ) {
-      pending.push(Promise.resolve(reprocessIfChanged(message)));
+      cachedAssetMessages.push(message);
     }
 
     if (
       hydratePersonalEmotes &&
       cachedPersonalEmotes.length === 0 &&
-      !personalEmoteUsers.has(userId)
+      !personalEmoteUsers.has(userId) &&
+      personalEmoteFetchesStarted < MAX_PERSONAL_EMOTE_FETCHES_PER_PASS
     ) {
-      if (personalEmoteFetchesStarted < MAX_PERSONAL_EMOTE_FETCHES_PER_PASS) {
-        personalEmoteFetchesStarted += 1;
-        boundedSetAdd(personalEmoteUsers, userId, MAX_VISIBLE_USER_GUARDS);
-        pending.push(
-          fetchUserPersonalEmotes(userId, channelId).then(emotes => {
-            if (emotes && emotes.length > 0) {
-              return reprocessIfChanged(message);
-            }
-            return undefined;
-          }),
-        );
-      }
+      personalEmoteFetchesStarted += 1;
+      boundedSetAdd(personalEmoteUsers, userId, MAX_VISIBLE_USER_GUARDS);
+      pending.push(
+        fetchUserPersonalEmotes(userId, channelId).then(emotes => {
+          if (emotes && emotes.length > 0) {
+            return reprocessIfChanged(message);
+          }
+          return undefined;
+        }),
+      );
     }
 
-    if (hydrateCosmetics && !cachedBadge && !cosmeticUsers.has(userId)) {
-      if (cosmeticFetchesStarted < MAX_COSMETIC_FETCHES_PER_PASS) {
-        cosmeticFetchesStarted += 1;
-        boundedSetAdd(cosmeticUsers, userId, MAX_VISIBLE_USER_GUARDS);
-        pending.push(
-          fetchUserCosmetics(userId, {
-            retryMissingBadge: true,
-          }).then(() => {
-            if (getUserBadge(userId)) {
-              return reprocessIfChanged(message);
-            }
-            return undefined;
-          }),
-        );
-      }
+    if (
+      hydrateCosmetics &&
+      !cachedBadge &&
+      !cosmeticUsers.has(userId) &&
+      cosmeticFetchesStarted < MAX_COSMETIC_FETCHES_PER_PASS
+    ) {
+      cosmeticFetchesStarted += 1;
+      boundedSetAdd(cosmeticUsers, userId, MAX_VISIBLE_USER_GUARDS);
+      pending.push(
+        fetchUserCosmetics(userId, {
+          retryMissingBadge: true,
+        }).then(() => {
+          if (getUserBadge(userId)) {
+            return reprocessIfChanged(message);
+          }
+          return undefined;
+        }),
+      );
     }
-  });
+  }
+
+  for (let index = 0; index < cachedAssetMessages.length; index += 1) {
+    if (index > 0 && index % REPROCESS_BATCH_SIZE === 0) {
+      // Yield between batches so a full screenful does not parse in one tick.
+      // eslint-disable-next-line react-doctor/async-await-in-loop
+      await waitBetweenReprocessBatches();
+    }
+    if (shouldAbort(shouldContinue)) {
+      break;
+    }
+    const message = cachedAssetMessages[index];
+    if (message) {
+      pending.push(Promise.resolve(reprocessIfChanged(message)));
+    }
+  }
 
   await Promise.all(pending);
 

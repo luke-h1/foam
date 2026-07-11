@@ -21,6 +21,18 @@ export function getReconnectDelay(
   return Math.round(baseInterval * Math.min(1.5 ** (attempt - 1), 8));
 }
 
+const RECONNECT_MAX_JITTER_MS = 250;
+
+function getReconnectDelayWithJitter(
+  attempt: number,
+  baseInterval: number,
+): number {
+  return (
+    getReconnectDelay(attempt, baseInterval) +
+    Math.random() * RECONNECT_MAX_JITTER_MS
+  );
+}
+
 export interface Setters {
   setLastMessage: (message: WebSocketEventMap['message']) => void;
   setReadyState: (readyState: ReadyState) => void;
@@ -67,17 +79,17 @@ export function attachListeners(
     optionsRef.current.onClose?.(event);
     setReadyState(ReadyState.CLOSED);
 
-    if (
-      optionsRef.current.shouldReconnect &&
-      optionsRef.current.shouldReconnect(event)
-    ) {
+    if (optionsRef.current.shouldReconnect?.(event)) {
       const reconnectAttempts =
         optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
       const baseInterval =
         optionsRef.current.reconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS;
 
       if (reconnectCount.current < reconnectAttempts) {
-        const delay = getReconnectDelay(reconnectCount.current, baseInterval);
+        const delay = getReconnectDelayWithJitter(
+          reconnectCount.current,
+          baseInterval,
+        );
         reconnectTimeout = setTimeout(() => {
           reconnectCount.current += 1;
           reconnect();
@@ -101,7 +113,10 @@ export function attachListeners(
         optionsRef.current.reconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS;
 
       if (reconnectCount.current < reconnectAttempts) {
-        const delay = getReconnectDelay(reconnectCount.current, baseInterval);
+        const delay = getReconnectDelayWithJitter(
+          reconnectCount.current,
+          baseInterval,
+        );
         reconnectTimeout = setTimeout(() => {
           reconnectCount.current += 1;
           reconnect();

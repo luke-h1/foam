@@ -35,11 +35,7 @@ function collectDisplayUrls(emotes: SanitisedEmote[], limit: number): string[] {
       static_url: emote.static_url,
       preferredScale: CHAT_INLINE_EMOTE_SCALE,
     });
-    // Don't eagerly warm animated emotes: decoding their multi-frame working set
-    // is the bulk of the entry storm and the main thing starving the on-screen
-    // animated emote's own frames. They decode on-demand when they first appear
-    // (that decode preempts warm, so it's still prompt); static emotes stay warm
-    // for an instant first paint.
+    // Skip animated emotes: multi-frame decode is the entry storm; they warm on first paint.
     if (url && describeEmoteUrl(url).kind !== 'animated') {
       urls.add(url);
     }

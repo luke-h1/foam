@@ -1,6 +1,6 @@
 import { memo, RefObject } from 'react';
 
-import { useChannelEmoteData } from '@app/store/chat/react/selectors';
+import { useChannelEmoteDataForReprocess } from '@app/store/chat/react/selectors';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { usePreference } from '@app/store/preferenceStore';
 
@@ -22,7 +22,7 @@ export const ChatEmoteReprocessor = memo(
     reprocessKey: string;
     userLogin?: string | null;
   }) => {
-    const channelEmoteData = useChannelEmoteData(channelId);
+    const channelEmoteData = useChannelEmoteDataForReprocess(channelId);
     const show7TvEmotes = usePreference('show7TvEmotes');
 
     useEmoteReprocessing({

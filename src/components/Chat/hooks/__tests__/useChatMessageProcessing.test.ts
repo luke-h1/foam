@@ -2,11 +2,9 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { hydrateVisibleSevenTvAssets } from '@app/components/Chat/util/hydrateVisibleSevenTvAssets';
 import { reprocessMessages } from '@app/components/Chat/util/reprocessMessages';
-import {
-  getCachedSharedChatBadgeContext,
-  getMessageBadges,
-  getSharedChatBadgeContext,
-} from '@app/components/Chat/util/sharedChatBadges';
+import { getCachedSharedChatBadgeContext } from '@app/components/Chat/util/sharedChatBadges/getCachedSharedChatBadgeContext';
+import { getMessageBadges } from '@app/components/Chat/util/sharedChatBadges/getMessageBadges';
+import { getSharedChatBadgeContext } from '@app/components/Chat/util/sharedChatBadges/getSharedChatBadgeContext';
 import {
   fetchUserPersonalEmotes,
   getCurrentEmoteData,
@@ -15,9 +13,10 @@ import {
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import { updateMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { usePersonalEmotesVersion } from '@app/store/chat/react/selectors';
 import { useChatHydrationPreferences } from '@app/store/preferences/selectors';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
-import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes';
+import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes/extractEmotesFromTag';
 
 import { useChatMessageProcessing } from '../useChatMessageProcessing';
 import {
@@ -50,6 +49,10 @@ jest.mock('@app/store/chat/observables/chatStore', () => ({
   },
 }));
 
+jest.mock('@app/store/chat/react/selectors', () => ({
+  usePersonalEmotesVersion: jest.fn(() => 0),
+}));
+
 jest.mock('@app/store/preferences/selectors', () => ({
   useChatHydrationPreferences: jest.fn(),
 }));
@@ -60,7 +63,7 @@ jest.mock('@app/utils/chat/emoteProcessor', () => ({
   ]),
 }));
 
-jest.mock('@app/utils/chat/extractEmotes', () => ({
+jest.mock('@app/utils/chat/extractEmotes/extractEmotesFromTag', () => ({
   extractEmotesFromTag: jest.fn(() => []),
 }));
 
@@ -72,9 +75,18 @@ jest.mock('../../util/reprocessMessages', () => ({
   reprocessMessages: jest.fn(),
 }));
 
-jest.mock('../../util/sharedChatBadges', () => ({
-  getCachedSharedChatBadgeContext: jest.fn(),
+jest.mock(
+  '../../util/sharedChatBadges/getCachedSharedChatBadgeContext',
+  () => ({
+    getCachedSharedChatBadgeContext: jest.fn(),
+  }),
+);
+
+jest.mock('../../util/sharedChatBadges/getMessageBadges', () => ({
   getMessageBadges: jest.fn(() => []),
+}));
+
+jest.mock('../../util/sharedChatBadges/getSharedChatBadgeContext', () => ({
   getSharedChatBadgeContext: jest.fn(() =>
     Promise.resolve({
       sourceBadge: undefined,
@@ -112,6 +124,7 @@ const mockUpdateMessages = jest.mocked(updateMessages);
 const mockUseChatHydrationPreferences = jest.mocked(
   useChatHydrationPreferences,
 );
+const mockUsePersonalEmotesVersion = jest.mocked(usePersonalEmotesVersion);
 
 function renderMessageProcessing() {
   const handleNewMessage = jest.fn();
@@ -181,6 +194,7 @@ describe('useChatMessageProcessing', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useRealTimers();
+    mockUsePersonalEmotesVersion.mockReturnValue(0);
     mockUseChatHydrationPreferences.mockReturnValue({
       disableEmoteAnimations: true,
       show7TvEmotes: true,
@@ -370,6 +384,59 @@ describe('useChatMessageProcessing', () => {
     });
     expect(refs.pendingVisibleMessagesRef.current).toEqual([]);
     expect(maintainBottomAfterContentChange).toHaveBeenCalledTimes(1);
+  });
+
+  test('re-hydrates the currently visible messages when the personal emotes version bumps', async () => {
+    jest.useFakeTimers();
+    const visibleMessage = createChatMessage({
+      tags: {
+        id: 'visible-1',
+        'user-id': 'visible-user',
+      },
+      text: 'visible OMEGALUL',
+    });
+    const { hook, refs } = renderMessageProcessing();
+
+    act(() => {
+      hook.result.current.handleViewableMessagesChange([visibleMessage]);
+    });
+    await act(async () => {
+      jest.advanceTimersByTime(150);
+      await Promise.resolve();
+    });
+
+    expect(mockHydrateVisibleSevenTvAssets).toHaveBeenCalledTimes(1);
+    refs.hydratedVisibleAssetKeysRef.current.add('stale-hydration-key');
+
+    mockUsePersonalEmotesVersion.mockReturnValue(1);
+    act(() => {
+      hook.rerender(undefined);
+    });
+
+    expect(refs.hydratedVisibleAssetKeysRef.current).toEqual(new Set());
+
+    await act(async () => {
+      jest.advanceTimersByTime(150);
+      await Promise.resolve();
+    });
+
+    expect(mockHydrateVisibleSevenTvAssets).toHaveBeenCalledTimes(2);
+    expect(
+      mockHydrateVisibleSevenTvAssets.mock.calls[1]?.[0]?.messages.map(
+        message => message.message_id,
+      ),
+    ).toEqual(['visible-1']);
+  });
+
+  test('does not schedule a hydration pass for the mount-time personal emotes version', () => {
+    jest.useFakeTimers();
+    const { refs } = renderMessageProcessing();
+
+    expect(refs.visibleAssetHydrationTimerRef.current).toBeNull();
+
+    jest.advanceTimersByTime(150);
+
+    expect(mockHydrateVisibleSevenTvAssets).not.toHaveBeenCalled();
   });
 
   test('reprocessAllMessages delegates the current buffered store snapshot', () => {

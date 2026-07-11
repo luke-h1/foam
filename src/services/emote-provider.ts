@@ -3,10 +3,8 @@ import type {
   EmoteImageVariantSet,
   EmoteSite,
 } from '@app/types/emote';
-import {
-  createEmoteImageVariants,
-  pickEmoteVariantUrl,
-} from '@app/utils/emote/emoteImageVariants';
+import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants/createEmoteImageVariants';
+import { pickEmoteVariantUrl } from '@app/utils/emote/emoteImageVariants/pickEmoteVariantUrl';
 
 export interface EmoteProviderSource<Site extends EmoteSite> {
   id: string;

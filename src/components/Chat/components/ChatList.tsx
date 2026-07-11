@@ -29,12 +29,14 @@ import {
   type ViewableMessageToken,
 } from '@app/components/Chat/util/getViewableChatMessages';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 
-import { getChatMessageListKey } from '../util/chatMessages';
-import type { AnyChatMessageType } from '../util/messageHandlers';
+import { getChatMessageListKey } from '../util/chatMessages/getChatMessageListKey';
 
-// Roughly seven rows of lookahead; at 96 fast flings outran the renderer and
-// showed skeleton rows.
+/**
+ * Roughly seven rows of lookahead; at 96 fast flings outran the renderer and
+ * showed skeleton rows.
+ */
 const CHAT_DRAW_DISTANCE = 250;
 const CHAT_ESTIMATED_ITEM_SIZE = 44;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
@@ -43,14 +45,21 @@ const CHAT_VIEWABILITY_CONFIG = {
   // Skip viewability churn for rows that only flash past during a fling.
   minimumViewTime: 100,
 } satisfies ViewabilityConfig;
-// Re-pin to the end on new messages (dataChange) and when an already-rendered
-// row grows after its real height is measured (itemLayout) — the latter keeps
-// an under-estimated emote/username row from staying clipped at the bottom.
+
+/**
+ * Re-pin to the end on new messages (dataChange) and when an already-rendered
+ * row grows after its real height is measured (itemLayout) - the latter keeps
+ * an under-estimated emote/username row from staying clipped at the bottom.
+ */
 const CHAT_MAINTAIN_SCROLL_AT_END = {
   on: { dataChange: true, itemLayout: true },
 } satisfies MaintainScrollAtEndOptions;
 const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
-const CHAT_RECYCLE_ITEMS = true;
+
+/**
+ * Off: recycling crashed on iOS when rows updated while scrolled.
+ */
+const CHAT_RECYCLE_ITEMS = false;
 
 function ChatListRowSkeleton({ index }: { index: number }) {
   return (
@@ -133,8 +142,10 @@ export const ChatList = memo(
       onViewableMessagesChangeRef.current = onViewableMessagesChange;
     });
 
-    // Stable identity required: LegendList re-runs setupViewability whenever
-    // onViewableItemsChanged identity changes, tearing down viewability state.
+    /**
+     * Stable identity required: LegendList re-runs setupViewability whenever
+     * onViewableItemsChanged identity changes, tearing down viewability state.
+     */
     const onViewableItemsChanged = useCallback(
       ({ viewableItems }: { viewableItems: ViewableMessageToken[] }) => {
         const callback = onViewableMessagesChangeRef.current;
@@ -179,12 +190,11 @@ export const ChatList = memo(
         data={data}
         ref={listRef}
         drawDistance={CHAT_DRAW_DISTANCE}
-        // v3 has no per-item estimate hook; rows are measured on layout, so a
-        // single initial hint is all that's needed (the pretext estimator no
-        // longer feeds the list).
+        /**
+         * v3 has no per-item estimate hook; rows are measured on layout, so a
+         * single initial hint is all that's needed.
+         */
         estimatedItemSize={CHAT_ESTIMATED_ITEM_SIZE}
-        // Disabled due repeated iOS crashes ("attempt to recycle mounted view")
-        // when rows are updated while actively scrolled.
         recycleItems={CHAT_RECYCLE_ITEMS}
         keyExtractor={keyExtractor}
         getItemType={getItemType}
@@ -225,6 +235,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   skeletonBadge: {
+    borderCurve: 'continuous',
     borderRadius: 999,
     height: 12,
     width: 12,

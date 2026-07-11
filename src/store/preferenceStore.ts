@@ -1,4 +1,4 @@
-import { observable } from '@legendapp/state';
+import { observable, when } from '@legendapp/state';
 import { persistObservable } from '@legendapp/state/persist';
 import { useSelector } from '@legendapp/state/react';
 import { z } from 'zod';
@@ -9,6 +9,7 @@ import {
   PREFERENCES_PERSISTENCE_KEY,
 } from '@app/lib/observablePersistence';
 import { Theme } from '@app/styles/themes';
+import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
 
 export interface CustomHighlight {
   id: string;
@@ -25,6 +26,8 @@ export type ChatFontScale = 'small' | 'default' | 'large';
 export type ChatTimestampFormat = '24h' | '12h';
 export type DeletedMessageStyle = 'notice' | 'hidden';
 export type ChatScrollbackLength = 150 | 200 | 250;
+export type SevenTvPaintRenderer = 'off' | 'native' | 'skia' | 'webview';
+export type PaintRendererFlag = 'off' | 'native' | 'skia';
 
 export interface Preferences {
   updatedAt: number;
@@ -84,6 +87,7 @@ export interface Preferences {
   analyticsEnabled: boolean;
   sharedChatEnabled: boolean;
   enhancedVideoStability: boolean;
+  sevenTvPaintRenderer: SevenTvPaintRenderer;
 }
 
 export const preferencesSchema = z.object({
@@ -130,6 +134,7 @@ export const preferencesSchema = z.object({
   analyticsEnabled: z.boolean(),
   sharedChatEnabled: z.boolean(),
   enhancedVideoStability: z.boolean(),
+  sevenTvPaintRenderer: z.enum(['off', 'native', 'skia', 'webview']),
 }) satisfies z.ZodType<Preferences>;
 
 export const initialPreferences: Preferences = {
@@ -174,22 +179,40 @@ export const initialPreferences: Preferences = {
   analyticsEnabled: true,
   sharedChatEnabled: true,
   enhancedVideoStability: false,
+  sevenTvPaintRenderer: 'native',
 };
 
 ensureObservablePersistenceConfig();
 
 export const preferences$ = observable(initialPreferences);
-persistObservable(preferences$, {
+
+export const paintRendererFlag$ = observable<PaintRendererFlag>('native');
+const persistedPreferences$ = persistObservable(preferences$, {
   local: createObservablePersistenceLocalConfig(PREFERENCES_PERSISTENCE_KEY),
 });
 
-// The 'text' stream list layout was removed; migrate old persisted values.
-if ((preferences$.streamListLayout.peek() as string) === 'text') {
-  preferences$.streamListLayout.set('compact');
-}
+when(persistedPreferences$?._state?.isLoadedLocal, () => {
+  // The 'text' stream list layout was removed; migrate old persisted values.
+  if ((preferences$.streamListLayout.peek() as string) === 'text') {
+    preferences$.streamListLayout.set('compact');
+  }
+
+  if ((preferences$.sevenTvPaintRenderer.peek() as string) === 'auto') {
+    preferences$.sevenTvPaintRenderer.set('native');
+  }
+});
 
 export function getPreferences(): Preferences {
   return preferences$.peek();
+}
+
+export function usePaintRenderer(): SevenTvPaintRenderer {
+  return useSelector(() => {
+    if (isDevToolsEnabled) {
+      return preferences$.sevenTvPaintRenderer.get();
+    }
+    return paintRendererFlag$.get();
+  });
 }
 
 export function usePreferences(): Preferences & {

@@ -8,10 +8,8 @@ import type { TwitchClipsRequestParams } from '@app/types/twitch/clip';
 import type { TwitchStream } from '@app/types/twitch/stream';
 import type { UserBlockList, UserInfoResponse } from '@app/types/twitch/user';
 import type { TwitchVideosRequestParams } from '@app/types/twitch/video';
-import {
-  getNextPageParam,
-  getPreviousPageParam,
-} from '@app/utils/pagination/pagination';
+import { getNextPageParam } from '@app/utils/pagination/getNextPageParam';
+import { getPreviousPageParam } from '@app/utils/pagination/getPreviousPageParam';
 
 import { twitchKeys } from '../query-keys';
 

@@ -149,7 +149,6 @@ function InnerList({
   const { hasSubscribers, refreshing, refresh } = useContext(RefreshContext);
   const navigation = useNavigation();
 
-  // Set navigation title using React Navigation
   useEffect(() => {
     if (navigationTitle) {
       navigation.setOptions({ title: navigationTitle });
@@ -336,7 +335,6 @@ export function Link({
         );
       }
       const wrappedTextChildren = Children.map(children, child => {
-        // Filter out empty children
         if (!child) {
           return null;
         }
@@ -345,8 +343,6 @@ export function Link({
             <RNText
               style={mergedStyleProp<TextStyle>(
                 { ...font, color: AppleColors.link },
-
-                // @ts-ignore
                 props.style,
               )}
             >
@@ -393,7 +389,6 @@ export function Link({
   return (
     <Pressable
       onPress={onPress}
-      // @ts-ignore
       style={({ pressed }) => [
         mergedStyleProp<TextStyle>(font, props.style),
         { opacity: pressed ? 0.7 : 1 },
@@ -478,7 +473,6 @@ export function Section({
       ...child.props,
     };
 
-    // Set the hint for the hintBoolean prop.
     if (resolvedProps.hintBoolean != null) {
       resolvedProps.hint ??= resolvedProps.hintBoolean ? (
         <SymbolView
@@ -490,7 +484,6 @@ export function Section({
       );
     }
 
-    // Extract onPress from child
     const originalOnPress = resolvedProps.onPress;
     const originalOnLongPress = resolvedProps.onLongPress;
     let wrapsFormItem = false;
@@ -526,7 +519,6 @@ export function Section({
         }
 
         return Children.map(resolvedProps.hint, child => {
-          // Filter out empty children
           if (!child) {
             return null;
           }
@@ -568,7 +560,6 @@ export function Section({
       const wrappedTextChildren = Children.map(
         resolvedProps.children,
         linkChild => {
-          // Filter out empty children
           if (!linkChild) {
             return null;
           }
@@ -592,7 +583,6 @@ export function Section({
         }
 
         return Children.map(resolvedProps.hint, child => {
-          // Filter out empty children
           if (!child) {
             return null;
           }
@@ -819,10 +809,11 @@ function SystemImageView({
     return systemImage;
   }
 
-  // @ts-ignore
   const symbolProps: SystemImageCustomProps =
-    typeof systemImage === 'object' && 'name' in systemImage
-      ? systemImage
+    typeof systemImage === 'object' &&
+    systemImage !== null &&
+    'name' in systemImage
+      ? (systemImage as SystemImageCustomProps)
       : { name: systemImage as SymbolViewProps['name'] };
 
   return (
@@ -845,24 +836,22 @@ function LinkChevronIcon({
 }) {
   const size = process.env.EXPO_OS === 'ios' ? 14 : 24;
 
-  if (systemImage) {
-    if (typeof systemImage !== 'string') {
-      if (isValidElement(systemImage)) {
-        return systemImage;
-      }
-      const symbolProps: SystemImageCustomProps =
-        typeof systemImage === 'object' && 'name' in systemImage
-          ? systemImage
-          : { name: systemImage as SymbolViewProps['name'] };
-
-      return (
-        <SymbolView
-          name={symbolProps.name}
-          size={symbolProps.size ?? size}
-          tintColor={symbolProps.color ?? AppleColors.tertiaryLabel}
-        />
-      );
+  if (systemImage && typeof systemImage !== 'string') {
+    if (isValidElement(systemImage)) {
+      return systemImage;
     }
+    const symbolProps: SystemImageCustomProps =
+      typeof systemImage === 'object' && 'name' in systemImage
+        ? systemImage
+        : { name: systemImage as SymbolViewProps['name'] };
+
+    return (
+      <SymbolView
+        name={symbolProps.name}
+        size={symbolProps.size ?? size}
+        tintColor={symbolProps.color ?? AppleColors.tertiaryLabel}
+      />
+    );
   }
 
   const resolvedName =
@@ -873,9 +862,6 @@ function LinkChevronIcon({
       name={resolvedName as SymbolViewProps['name']}
       size={size}
       weight='bold'
-      // from xcode, not sure which color is the exact match
-      // #BFBFBF
-      // #9D9DA0
       tintColor={AppleColors.tertiaryLabel}
     />
   );
@@ -886,15 +872,18 @@ function Separator() {
     <View
       style={{
         marginStart: 60,
-        borderBottomWidth: 0.5, //StyleSheet.hairlineWidth,
-        marginTop: -0.5, // -StyleSheet.hairlineWidth,
+        borderBottomWidth: 0.5,
+        marginTop: -0.5,
         borderBottomColor: Colors.separator,
       }}
     />
   );
 }
 
-function mergedStyles(style: ViewStyle | TextStyle, props: any) {
+function mergedStyles(
+  style: ViewStyle | TextStyle,
+  props: { style?: StyleProp<ViewStyle | TextStyle> },
+) {
   return mergedStyleProp(style, props.style);
 }
 
@@ -911,18 +900,26 @@ export function mergedStyleProp<TStyle extends ViewStyle | TextStyle>(
   return [style, styleProps];
 }
 
-function extractStyle(styleProp: any, key: string) {
+function extractStyle<K extends keyof TextStyle>(
+  styleProp: StyleProp<TextStyle> | undefined,
+  key: K,
+): TextStyle[K] | undefined {
   if (styleProp == null) {
     return undefined;
   }
   if (Array.isArray(styleProp)) {
-    // @ts-ignore
-    return styleProp.find(style => {
-      return style[key] != null;
-    })?.[key];
+    for (const entry of styleProp) {
+      if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+        const value = (entry as TextStyle)[key];
+        if (value != null) {
+          return value;
+        }
+      }
+    }
+    return undefined;
   }
   if (typeof styleProp === 'object') {
-    return styleProp?.[key];
+    return styleProp[key];
   }
-  return null;
+  return undefined;
 }

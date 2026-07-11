@@ -29,7 +29,7 @@ import i18next from '@app/i18n/i18next';
 import { theme } from '@app/styles/themes';
 import type { EmoteImageScale } from '@app/types/emote';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
-import { deriveEmoteImageVariantsFromUrl } from '@app/utils/emote/emoteImageVariants';
+import { deriveEmoteImageVariantsFromUrl } from '@app/utils/emote/emoteImageVariants/deriveEmoteImageVariantsFromUrl';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 
 type PartVariant = ParsedPart<'emote'>;

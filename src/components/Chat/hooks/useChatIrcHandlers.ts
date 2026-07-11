@@ -1,6 +1,5 @@
 import { type RefObject, useCallback, useMemo } from 'react';
 
-import { shouldProcessLiveMessage } from '@app/components/Chat/util/chatIngestRateLimiter';
 import { parseIrcMessage } from '@app/services/recent-messages-service';
 import {
   addMessage,
@@ -13,6 +12,7 @@ import {
   removeMessageById,
   removeMessagesByLogin,
 } from '@app/store/chat/actions/messages';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { getPreferences } from '@app/store/preferenceStore';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import {
@@ -26,15 +26,12 @@ import { logger } from '@app/utils/logger';
 import type { ChatListRef } from '../components/ChatList';
 import { formatModerationSystemMessage } from '../util/formatModerationSystemMessage';
 import { formatNoticeMessage } from '../util/formatNoticeMessage';
-import {
-  type AnyChatMessageType,
-  coerceUserNoticeTags,
-  createBaseMessage,
-  createSystemMessage,
-  createUserNoticeMessage,
-  createUserStateFromTags,
-} from '../util/messageHandlers';
-import { SUPPRESSED_NOTICE_IDS } from '../util/roomState';
+import { coerceUserNoticeTags } from '../util/messageHandlers/coerceUserNoticeTags';
+import { createBaseMessage } from '../util/messageHandlers/createBaseMessage';
+import { createSystemMessage } from '../util/messageHandlers/createSystemMessage';
+import { createUserNoticeMessage } from '../util/messageHandlers/createUserNoticeMessage';
+import { createUserStateFromTags } from '../util/messageHandlers/createUserStateFromTags';
+import { SUPPRESSED_NOTICE_IDS } from '../util/roomState/SUPPRESSED_NOTICE_IDS';
 import {
   createRoomStateTracker,
   type RoomStateTracker,
@@ -109,10 +106,6 @@ export function useChatIrcHandlers({
 
   const handlePrivmsgMessage = useCallback(
     (tags: Record<string, string>, rawText: string, countUnread = true) => {
-      // Recent-message replay (countUnread === false) is never flood-sampled.
-      if (countUnread && !shouldProcessLiveMessage()) {
-        return;
-      }
       const { isAction, text } = parseActionMessage(rawText);
       const replyParentMessageId = tags['reply-parent-msg-id'];
       const replyParentDisplayName = tags['reply-parent-display-name'];
@@ -137,8 +130,6 @@ export function useChatIrcHandlers({
       });
       const messageWithParentColor = { ...baseMessage, parentColor };
 
-      // Live messages defer the emote/badge parse to commit time; replay
-      // parses eagerly since the whole batch commits at once.
       if (countUnread) {
         enqueueLiveChatMessage(messageWithParentColor, countUnread);
         return;
@@ -334,22 +325,39 @@ export function useChatIrcHandlers({
     appendSystemMessage(`Connected to ${channelName}'s room`);
   }, [appendSystemMessage, channelName, isLoadingRecentMessagesRef, messages$]);
 
-  const onPart = useCallback(() => {
-    logger.chat.info('Parted from channel:', channelName);
-    applyRoomStateUpdate(roomStateTracker.reset());
-    if (isMountedRef?.current === false) {
-      return;
-    }
+  const onPart = useCallback(
+    (channel: string) => {
+      /**
+       * The IRC service reuses one socket across channel switches, so a PART
+       * echo for the previous room can arrive after the next room has already
+       * joined and restored history. Only a PART for this handler's own room
+       * may reset the roomstate baseline or clear messages.
+       */
+      const partedChannel = channel.replace(/^#/, '').toLowerCase();
+      if (partedChannel !== channelName.toLowerCase()) {
+        logger.chat.info(
+          `Ignoring stale PART for ${channel} while in ${channelName}`,
+        );
+        return;
+      }
 
-    clearMessages();
-    clearLocalMessages();
-  }, [
-    applyRoomStateUpdate,
-    channelName,
-    clearLocalMessages,
-    isMountedRef,
-    roomStateTracker,
-  ]);
+      logger.chat.info('Parted from channel:', channelName);
+      applyRoomStateUpdate(roomStateTracker.reset());
+      if (isMountedRef?.current === false) {
+        return;
+      }
+
+      clearMessages();
+      clearLocalMessages();
+    },
+    [
+      applyRoomStateUpdate,
+      channelName,
+      clearLocalMessages,
+      isMountedRef,
+      roomStateTracker,
+    ],
+  );
 
   const onNotice = useCallback(
     (_channel: string, tags: Record<string, string>, messageText: string) => {

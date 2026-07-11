@@ -58,15 +58,15 @@ import { logger } from '@app/utils/logger';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 
 import { ChatLatencyPill } from './ChatLatencyPill';
+import { clampLandscapeChatWidth } from './liveStreamLayout/clampLandscapeChatWidth';
+import { getLandscapeChatWidthBounds } from './liveStreamLayout/getLandscapeChatWidthBounds';
+import { getLiveStreamChatDimensions } from './liveStreamLayout/getLiveStreamChatDimensions';
+import { getLiveStreamLayoutMetrics } from './liveStreamLayout/getLiveStreamLayoutMetrics';
+import { getLiveStreamVideoDimensions } from './liveStreamLayout/getLiveStreamVideoDimensions';
 import {
-  clampLandscapeChatWidth,
-  getLiveStreamChatDimensions,
-  getLiveStreamLayoutMetrics,
-  getLiveStreamVideoDimensions,
   getNextChatCycleAction,
-  LANDSCAPE_CHAT_MIN_WIDTH,
   type LandscapeChatCycleAction,
-} from './liveStreamLayout';
+} from './liveStreamLayout/getNextChatCycleAction';
 import {
   initialLiveStreamScreenState,
   liveStreamScreenReducer,
@@ -83,14 +83,12 @@ const LANDSCAPE_CHAT_RESIZE_FAIL_DISTANCE = 12;
 const LANDSCAPE_CHAT_DIVIDER_RESTING_OPACITY = 0.55;
 
 // Hold the screen awake while watching so playback isn't interrupted by the
-// idle-timer auto-lock — which kicks in aggressively under Low Power Mode.
+// idle-timer auto-lock - which kicks in aggressively under Low Power Mode.
 const KEEP_AWAKE_TAG = 'live-stream';
 
 const LANDSCAPE_CHAT_CONTROLS_TOP_OFFSET = 60;
 const CHAT_CONNECTION_FALLBACK_MS = 10_000;
 const CHAT_TOGGLE_DEBOUNCE_MS = 450;
-const MAX_OVERLAY_CHAT_FRACTION = 0.68;
-const MAX_SIDEBAR_CHAT_FRACTION = 0.55;
 
 const LANDSCAPE_CHAT_CLOSE_WIDTH_FRACTION = 0.55;
 const LANDSCAPE_CHAT_CLOSE_VELOCITY = 900;
@@ -262,7 +260,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
    *
    * `inactive` fires for transient interruptions (Control Center / notification
    * pulldown, call banner, Face ID, app-switcher peek) that don't background the
-   * app — pausing on those left the player stopped with nothing to resume it,
+   * app - pausing on those left the player stopped with nothing to resume it,
    * which read as the intermittent pausing this effect fixes. The pre-background
    * play state is captured so a player the user had already paused stays paused
    * on resume.
@@ -494,7 +492,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     LANDSCAPE_CHAT_DIVIDER_RESTING_OPACITY,
   );
   // Layout inputs mirrored as shared values so the animated styles read one set the effect
-  // updates atomically — reading JS values directly caused a one-frame rotation flicker.
+  // updates atomically - reading JS values directly caused a one-frame rotation flicker.
   const landscapeSV = useSharedValue(isLandscape ? 1 : 0);
   const insetLeftSV = useSharedValue(landscapeInsetLeft);
   const topInsetSV = useSharedValue(portraitTopInset);
@@ -538,7 +536,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       chatHeight.set(effectiveChatHeight);
 
       // Chat is only hidden in landscape; in portrait always show it. Snap straight to place
-      // on rotation (no reveal) — the old rAF fade made rapid rotation crawl over several frames.
+      // on rotation (no reveal) - the old rAF fade made rapid rotation crawl over several frames.
       if (!isLandscapeChatHidden) {
         chatOpacity.set(1);
         chatTranslateX.set(0);
@@ -623,15 +621,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           resizeHandleOpacity.set(1);
         })
         .onUpdate(event => {
-          const maxFraction =
-            fullscreenChatMode === 'overlay'
-              ? MAX_OVERLAY_CHAT_FRACTION
-              : MAX_SIDEBAR_CHAT_FRACTION;
-          const minWidth = Math.min(
-            LANDSCAPE_CHAT_MIN_WIDTH,
-            contentWidth * 0.42,
+          const { maxWidth } = getLandscapeChatWidthBounds(
+            contentWidth,
+            fullscreenChatMode,
           );
-          const maxWidth = Math.max(minWidth, contentWidth * maxFraction);
           const nextWidth = Math.min(
             maxWidth,
             Math.max(0, resizeStartWidth.get() - event.translationX),
@@ -643,9 +636,9 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           }
         })
         .onEnd(event => {
-          const minWidth = Math.min(
-            LANDSCAPE_CHAT_MIN_WIDTH,
-            contentWidth * 0.42,
+          const { minWidth } = getLandscapeChatWidthBounds(
+            contentWidth,
+            fullscreenChatMode,
           );
           const closeWidth = minWidth * LANDSCAPE_CHAT_CLOSE_WIDTH_FRACTION;
           const width = chatWidth.get();

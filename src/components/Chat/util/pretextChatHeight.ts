@@ -1,5 +1,6 @@
 import { PixelRatio } from 'react-native';
 
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { theme } from '@app/styles/themes';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
@@ -9,15 +10,11 @@ import {
 } from '../components/ChatMessage/RichChatMessage.styles';
 import { canRenderMessageInline } from './canRenderMessageInline';
 import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
-import {
-  type InlineFlowItem,
-  measureInlineFlow,
-  measureNaturalWidth,
-  prepareInlineFlow,
-  prepareWithSegments,
-  type TextStyle,
-} from './expoPretext';
-import type { AnyChatMessageType } from './messageHandlers';
+import { measureInlineFlow } from './expoPretext/measureInlineFlow';
+import { measureNaturalWidth } from './expoPretext/measureNaturalWidth';
+import { prepareInlineFlow } from './expoPretext/prepareInlineFlow';
+import { prepareWithSegments } from './expoPretext/prepareWithSegments';
+import type { InlineFlowItem, TextStyle } from './expoPretext/types';
 
 /**
  *  Inline emote messages render the whole Text at the emote line height
@@ -504,24 +501,34 @@ function getEstimatedEmoteSize(
 function getMessagePartsFingerprint(
   message: AnyChatMessageType['message'],
 ): string {
-  return message
-    .map(part => {
-      switch (part.type) {
-        case 'text':
-          return `t${part.content.length}`;
-        case 'mention':
-          return `m${part.content.length}`;
-        case 'emote':
-          return `e${part.zero_width ? 'z' : 'n'}${part.width ?? 0}x${part.height ?? 0}`;
-        case 'stvEmote':
-          return `s${part.zero_width ? 'z' : 'n'}${part.width ?? 0}x${part.height ?? 0}`;
-        case 'twitchClip':
-          return 'c';
-        default:
-          return part.type.slice(0, 1);
-      }
-    })
-    .join(',');
+  let fingerprint = '';
+  for (let index = 0; index < message.length; index += 1) {
+    if (index > 0) {
+      fingerprint += ',';
+    }
+    const part = message[index]!;
+    switch (part.type) {
+      case 'text':
+        fingerprint += `t${part.content.length}`;
+        break;
+      case 'mention':
+        fingerprint += `m${part.content.length}`;
+        break;
+      case 'emote':
+        fingerprint += `e${part.zero_width ? 'z' : 'n'}${part.width ?? 0}x${part.height ?? 0}`;
+        break;
+      case 'stvEmote':
+        fingerprint += `s${part.zero_width ? 'z' : 'n'}${part.width ?? 0}x${part.height ?? 0}`;
+        break;
+      case 'twitchClip':
+        fingerprint += 'c';
+        break;
+      default:
+        fingerprint += part.type.slice(0, 1);
+        break;
+    }
+  }
+  return fingerprint;
 }
 
 function getCacheKey(

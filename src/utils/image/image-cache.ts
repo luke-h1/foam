@@ -54,6 +54,7 @@ const manifestStorage = createMMKV({
 const manifest = new Map<string, CacheRecord>();
 const inFlight = new Map<string, Promise<string>>();
 const taskQueue: DownloadTask[] = [];
+let taskQueueDirty = false;
 
 let activeDownloads = 0;
 let sequence = 0;
@@ -107,6 +108,8 @@ function getRecordStorageKey(key: string): string {
   return `${RECORD_PREFIX}${key}`;
 }
 
+let manifestTotalBytes = 0;
+
 function hydrateManifest(): void {
   if (hydrated) {
     return;
@@ -124,6 +127,8 @@ function hydrateManifest(): void {
 
     try {
       const record = JSON.parse(raw) as CacheRecord;
+      const previous = manifest.get(record.key);
+      manifestTotalBytes += record.size - (previous?.size ?? 0);
       manifest.set(record.key, record);
     } catch {
       manifestStorage.remove(storageKey);
@@ -134,6 +139,8 @@ function hydrateManifest(): void {
 }
 
 function persistRecord(record: CacheRecord): void {
+  const previous = manifest.get(record.key);
+  manifestTotalBytes += record.size - (previous?.size ?? 0);
   manifest.set(record.key, record);
   manifestStorage.set(getRecordStorageKey(record.key), JSON.stringify(record));
 }
@@ -146,6 +153,7 @@ function removeRecord(key: string): void {
   if (!record) {
     return;
   }
+  manifestTotalBytes -= record.size;
   verifiedFiles.delete(record.uri);
   try {
     const file = new File(record.uri);
@@ -177,11 +185,13 @@ function touchRecord(record: CacheRecord): string {
   return record.uri;
 }
 
-// getCachedImageUri runs during render for every chat emote and badge, and
-// File.exists is a synchronous syscall on the JS thread. Trust a successful
-// stat for a while instead of re-statting per render; eviction still
-// self-heals once the verification expires, and removeRecord /
-// clearSessionCache invalidate immediately.
+/**
+ * getCachedImageUri runs during render for every chat emote and badge, and
+ * File.exists is a synchronous syscall on the JS thread. Trust a successful
+ * stat for a while instead of re-statting per render; eviction still
+ * self-heals once the verification expires, and removeRecord /
+ * clearSessionCache invalidate immediately.
+ */
 const FILE_VERIFICATION_TTL_MS = 10 * 60 * 1000;
 const verifiedFiles = new Map<string, number>();
 
@@ -231,8 +241,15 @@ function sortTasks(): void {
 }
 
 function drainQueue(): void {
-  while (activeDownloads < DOWNLOAD_CONCURRENCY && taskQueue.length > 0) {
+  /**
+   * Sort once per drain, and only when something was enqueued since the last
+   * sort - shift() preserves order across dequeues.
+   */
+  if (taskQueueDirty) {
+    taskQueueDirty = false;
     sortTasks();
+  }
+  while (activeDownloads < DOWNLOAD_CONCURRENCY && taskQueue.length > 0) {
     const task = taskQueue.shift();
     if (!task) {
       return;
@@ -277,6 +294,7 @@ function enqueueDownload(
       sequence: (sequence += 1),
       url,
     });
+    taskQueueDirty = true;
     drainQueue();
   });
   inFlight.set(key, promise);
@@ -284,20 +302,23 @@ function enqueueDownload(
 }
 
 function evictIfNeeded(protectedKey: string): void {
-  const records = Array.from(manifest.values());
-  let totalBytes = records.reduce((acc, record) => acc + record.size, 0);
-  if (totalBytes <= MAX_CACHE_BYTES && records.length <= MAX_CACHE_RECORDS) {
+  if (
+    manifestTotalBytes <= MAX_CACHE_BYTES &&
+    manifest.size <= MAX_CACHE_RECORDS
+  ) {
     return;
   }
 
-  records
+  Array.from(manifest.values())
     .filter(record => record.key !== protectedKey)
     .sort((a, b) => a.lastAccessed - b.lastAccessed)
     .forEach(record => {
-      if (totalBytes <= MAX_CACHE_BYTES && manifest.size <= MAX_CACHE_RECORDS) {
+      if (
+        manifestTotalBytes <= MAX_CACHE_BYTES &&
+        manifest.size <= MAX_CACHE_RECORDS
+      ) {
         return;
       }
-      totalBytes -= record.size;
       removeRecord(record.key);
     });
 }

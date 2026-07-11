@@ -1,6 +1,6 @@
 import { createChatMessage } from '@app/components/Chat/hooks/__tests__/__fixtures__/useChat.fixture';
 
-import type { BufferedMessage } from '../bufferedMessageOps';
+import type { BufferedMessage } from '../bufferedMessageOps/types';
 import { createChatDelayQueue } from '../chatDelayQueue';
 
 jest.mock('@app/utils/chat/replaceEmotesWithText', () => ({

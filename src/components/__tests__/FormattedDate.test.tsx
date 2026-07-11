@@ -49,13 +49,17 @@ describe('FormattedDate', () => {
   describe('invalid date', () => {
     test('does not render with string date', () => {
       render(<FormattedDate value='not a date' />);
-      expect(screen.queryByText('')).not.toBeOnTheScreen();
+
+      // FormattedDate returns null for an invalid date, so nothing is rendered
+      // and the raw input string is never shown.
+      expect(screen.root).toBeEmptyElement();
+      expect(screen.queryByText('not a date')).not.toBeOnTheScreen();
     });
 
     test('does not render with Date', () => {
       render(<FormattedDate value={new Date('not a date')} />);
 
-      expect(screen.queryByText('')).not.toBeOnTheScreen();
+      expect(screen.root).toBeEmptyElement();
     });
   });
 });

@@ -1,10 +1,10 @@
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
+import { parseWordLinkParts } from '@app/utils/chat/replaceTextWithEmotes/parseWordLinkParts';
 
-import { queueMentionLoginsFromParts } from './mentionLoginResolver';
+import { queueMentionLoginsFromParts } from './mentionLoginResolver/queueMentionLoginsFromParts';
 import type { ParsedPart } from './parsedPart';
-import { parseWordLinkParts } from './replaceTextWithEmotes';
-import { applyMentionLoginCasing } from './resolveMentionLogin';
+import { applyMentionLoginCasing } from './resolveMentionLogin/applyMentionLoginCasing';
 import { stripInvisibleChars } from './stripInvisibleChars';
 
 interface EmoteProcessorParams {
@@ -27,7 +27,8 @@ const cache = new Map<string, ParsedPart[]>();
 const MAX_CACHE_SIZE = 1000;
 const emoteArrayIds = new WeakMap<SanitisedEmote[], number>();
 const baseCollectionCache = new Map<string, EmoteCollection>();
-const MAX_BASE_COLLECTION_CACHE_SIZE = 64;
+
+const MAX_BASE_COLLECTION_CACHE_SIZE = 4;
 const scopedLookupCache = new Map<
   string,
   (name: string) => SanitisedEmote | undefined
@@ -38,10 +39,6 @@ type EmoteCollection = {
   cacheKey: string;
   emojiMap: ReadonlyMap<string, SanitisedEmote>;
   emoteMap: ReadonlyMap<string, SanitisedEmote>;
-  // Lowercased name/original_name -> emote, in emoteMap priority order, so a
-  // mention like "@forsen" resolves with one Map lookup instead of a full
-  // scan + per-emote toLowerCase on every @word of every message.
-  mentionEmoteMap: ReadonlyMap<string, SanitisedEmote>;
 };
 
 let nextEmoteArrayId = 0;
@@ -161,27 +158,17 @@ function getBaseCollection({
     }
   });
 
-  const mentionEmoteMap = new Map<string, SanitisedEmote>();
-  emoteMap.forEach(emote => {
-    const lowerName = emote.name.trimEnd().toLowerCase();
-    if (lowerName && !mentionEmoteMap.has(lowerName)) {
-      mentionEmoteMap.set(lowerName, emote);
-    }
-
-    const alternateName = emote.original_name?.trim();
-    if (alternateName) {
-      const lowerAlternateName = alternateName.toLowerCase();
-      if (!mentionEmoteMap.has(lowerAlternateName)) {
-        mentionEmoteMap.set(lowerAlternateName, emote);
-      }
-    }
-  });
-
-  const collection = { cacheKey, emojiMap, emoteMap, mentionEmoteMap };
+  const collection = { cacheKey, emojiMap, emoteMap };
   if (baseCollectionCache.size >= MAX_BASE_COLLECTION_CACHE_SIZE) {
     const firstKey = baseCollectionCache.keys().next().value;
     if (firstKey) {
       baseCollectionCache.delete(firstKey);
+      const evictedPrefix = `${firstKey}:`;
+      scopedLookupCache.forEach((_, scopedKey) => {
+        if (scopedKey.startsWith(evictedPrefix)) {
+          scopedLookupCache.delete(scopedKey);
+        }
+      });
     }
   }
   baseCollectionCache.set(cacheKey, collection);
@@ -246,7 +233,7 @@ function createScopedEmoteLookup(
 }
 
 // Emoji hexcode keys always include a code point above 0x7F, so pure-ASCII
-// words (the vast majority of chat words) can never match the emoji map —
+// words (the vast majority of chat words) can never match the emoji map -
 // skip the per-word code-point expansion for them.
 function hasNonAsciiChar(word: string): boolean {
   for (let i = 0; i < word.length; i += 1) {
@@ -257,23 +244,12 @@ function hasNonAsciiChar(word: string): boolean {
   return false;
 }
 
-// BTTV render-hint modifiers (wide/flip) written immediately before an emote.
-// Foam does not support the transforms, so the tokens are hidden, matching
-// the 7TV extension's default behavior.
 const BACKWARD_EMOTE_MODIFIERS = new Set(['w!', 'h!', 'v!']);
 
 function isWhitespacePart(part: ParsedPart): boolean {
   return part.type === 'text' && /^\s+$/.test(part.content);
 }
 
-/**
- * Post-pass mirroring the 7TV extension's tokenizer composition rules:
- * - a zero-width emote attaches to the emote before it as an overlay instead
- *   of rendering as its own part, so stacks like `emote SoSnowy IceCold`
- *   composite over the base emote
- * - BTTV backward modifiers (`w!`/`h!`/`v!`) before an emote and FFZ `ffz*`
- *   modifier words after an emote are hidden
- */
 function applyEmoteCompositionPass(parts: ParsedPart[]): ParsedPart[] {
   const out: ParsedPart[] = [];
 
@@ -290,9 +266,16 @@ function applyEmoteCompositionPass(parts: ParsedPart[]): ParsedPart[] {
         anchor -= 1;
       }
       const base = anchor >= 0 ? out[anchor] : undefined;
-      if (base && base.type === 'emote' && !base.zero_width) {
+      if (base?.type === 'emote' && !base.zero_width) {
         out.length = anchor + 1;
-        base.overlaid = [...(base.overlaid ?? []), part];
+        // Skip duplicate overlay ids (double decode + darkened alpha).
+        const overlaid = base.overlaid ?? [];
+        const alreadyStacked =
+          base.id === part.id ||
+          overlaid.some(overlay => overlay.id === part.id);
+        if (!alreadyStacked) {
+          base.overlaid = [...overlaid, part];
+        }
         // eslint-disable-next-line no-continue
         continue;
       }
@@ -413,31 +396,6 @@ export const processEmotesWorklet = (
 
     if (word.startsWith('@')) {
       const mentionText = word.endsWith(' ') ? word.trimEnd() : word;
-      const mentionTarget = mentionText.slice(1).trimEnd().toLowerCase();
-      const emoteInMention = mentionTarget
-        ? baseCollection.mentionEmoteMap.get(mentionTarget)
-        : undefined;
-
-      if (emoteInMention) {
-        result.push({
-          id: emoteInMention.id,
-          name: emoteInMention.name,
-          type: 'emote',
-          content: emoteInMention.name,
-          creator: emoteInMention.creator || '',
-          emote_link: emoteInMention.emote_link || '',
-          original_name: emoteInMention.original_name || '',
-          site: emoteInMention.site || '',
-          static_url: emoteInMention.static_url,
-          thumbnail: emoteInMention.url,
-          url: emoteInMention.url,
-          width: emoteInMention.width,
-          height: emoteInMention.height,
-          aspect_ratio: emoteInMention.aspect_ratio,
-          zero_width: emoteInMention.zero_width,
-        });
-      }
-
       result.push({
         type: 'mention',
         content: mentionText,
@@ -492,10 +450,8 @@ export const processEmotesWorklet = (
   }
 
   if (cache.size >= MAX_CACHE_SIZE) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const firstKey = cache.keys().next().value;
-    if (firstKey) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    if (firstKey !== undefined) {
       cache.delete(firstKey);
     }
   }

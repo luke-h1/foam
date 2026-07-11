@@ -1,0 +1,76 @@
+import type { PaintData } from '@app/types/seventv/cosmetics';
+
+import { buildPaintCssDeclarations } from './paintCss/buildPaintCssDeclarations';
+import { paintCssDeclarationsToBlock } from './paintCss/paintCssDeclarationsToBlock';
+
+export interface PaintedUsernameHtmlOptions {
+  displayUsername: string;
+  paint: PaintData;
+  fallbackColor: string;
+  fontSize: number;
+  lineHeight: number;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * Standalone document matching the extension's painted span. The measure
+ * script reports the span rect so the host can size itself; drop-shadow
+ * paints outside that rect, like the extension. Body color/font-weight are
+ * the inherit context for the paint rule's `color` / `font-weight: inherit`.
+ */
+export function buildPaintedUsernameHtml({
+  displayUsername,
+  paint,
+  fallbackColor,
+  fontSize,
+  lineHeight,
+}: PaintedUsernameHtmlOptions): string {
+  const paintCss = paintCssDeclarationsToBlock(
+    buildPaintCssDeclarations(paint),
+  );
+
+  return `<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: ${fallbackColor};
+  font-weight: 700;
+}
+.painted {
+  display: inline-block;
+  white-space: nowrap;
+  font-family: Montserrat, -apple-system, sans-serif;
+  font-size: ${fontSize}px;
+  line-height: ${lineHeight}px;
+  font-weight: 700;
+  background-color: currentcolor;
+  -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+${paintCss}
+}
+</style>
+</head>
+<body>
+<span id="painted" class="painted">${escapeHtml(displayUsername)}</span>
+<script>
+  var rect = document.getElementById('painted').getBoundingClientRect();
+  window.ReactNativeWebView.postMessage(
+    JSON.stringify({ width: rect.width, height: rect.height })
+  );
+</script>
+</body>
+</html>`;
+}

@@ -20,6 +20,10 @@ import { useKeepAwake } from 'expo-keep-awake';
 import { useLocalSearchParams } from 'expo-router';
 
 import { Chat } from '@app/components/Chat/Chat';
+import {
+  type ChatHotspotResult,
+  runChatHotspotBenchmarks,
+} from '@app/dev/chatHotspotBench/scenarios';
 import { SUITE_TOTAL_MS } from '@app/dev/imageBenchmark/chatPerfSuite';
 import { LiveChatPerfOverlay } from '@app/dev/imageBenchmark/LiveChatPerfOverlay';
 import {
@@ -76,6 +80,9 @@ export function ChatPerfScreen() {
     phaseCountdownMs,
     totalCountdownMs,
   } = useChatPerfSuite();
+  const [hotspotBusy, setHotspotBusy] = useState(false);
+  const [hotspotStatus, setHotspotStatus] = useState('idle');
+  const [hotspotResults, setHotspotResults] = useState<ChatHotspotResult[]>([]);
   const progressStyle = useAnimatedStyle(() => {
     const pct = Math.max(
       0,
@@ -110,6 +117,29 @@ export function ChatPerfScreen() {
     resetFloodReplay();
     setSyntheticChatControl(SYNTHETIC_PRESETS[key]!);
     setFlood(key);
+  };
+
+  const runHotspots = async () => {
+    if (hotspotBusy || suite.running) {
+      return;
+    }
+    setHotspotBusy(true);
+    setHotspotResults([]);
+    setHotspotStatus('preparing…');
+    // Pause any live flood so ingest/clearMessages measurements stay clean.
+    setSyntheticChatControl(SYNTHETIC_PRESETS.off!);
+    resetFloodReplay();
+    setFlood('off');
+    try {
+      const results = await runChatHotspotBenchmarks({
+        onProgress: name => setHotspotStatus(name),
+      });
+      setHotspotResults(results);
+      setHotspotStatus('done');
+    } catch (error) {
+      setHotspotStatus(`error: ${String(error)}`);
+    }
+    setHotspotBusy(false);
   };
 
   const totalSecs = Math.round(SUITE_TOTAL_MS / 1000);
@@ -162,8 +192,21 @@ export function ChatPerfScreen() {
             style={styles.runBtn}
             onPress={runSuite}
             testID='suite-run'
+            disabled={hotspotBusy}
           >
             <Text style={styles.runText}>▶ Run Full Suite · {totalSecs}s</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.hotspotBtn, hotspotBusy && styles.btnOff]}
+            onPress={() => void runHotspots()}
+            testID='hotspot-run'
+            disabled={hotspotBusy}
+          >
+            <Text style={styles.runText}>
+              {hotspotBusy
+                ? `⏱ ${hotspotStatus}`
+                : '⏱ Run hotspot microbenches'}
+            </Text>
           </Pressable>
           <View style={styles.group}>
             {Object.keys(SYNTHETIC_PRESETS).map(key => (
@@ -172,6 +215,7 @@ export function ChatPerfScreen() {
                 style={[styles.chip, flood === key && styles.chipFlood]}
                 onPress={() => setPreset(key)}
                 testID={`perf-flood-${key}`}
+                disabled={hotspotBusy}
               >
                 <Text style={styles.chipText}>{key}</Text>
               </Pressable>
@@ -201,6 +245,28 @@ export function ChatPerfScreen() {
         </View>
       ) : null}
 
+      {hotspotResults.length > 0 ? (
+        <View style={styles.results}>
+          <Text style={styles.hotspotHeading}>Hotspots (ms · mean/med)</Text>
+          <HotspotResultRow
+            header
+            cells={['scenario', 'mean', 'med', 'min', 'max']}
+          />
+          {hotspotResults.map(result => (
+            <HotspotResultRow
+              key={result.id}
+              cells={[
+                result.name,
+                String(result.meanMs),
+                String(result.medianMs),
+                String(result.minMs),
+                String(result.maxMs),
+              ]}
+            />
+          ))}
+        </View>
+      ) : null}
+
       <View style={styles.chat}>
         <Chat
           channelId={CINNA.channelId}
@@ -214,6 +280,7 @@ export function ChatPerfScreen() {
 }
 
 const RESULT_COLUMNS = ['phase', 'ui-fps', 'ui-jank', 'js-fps', 'drop%'];
+const HOTSPOT_COLUMNS = ['scenario', 'mean', 'med', 'min', 'max'];
 
 function ResultRow({ cells, header }: { cells: string[]; header?: boolean }) {
   return (
@@ -234,6 +301,31 @@ function ResultRow({ cells, header }: { cells: string[]; header?: boolean }) {
   );
 }
 
+function HotspotResultRow({
+  cells,
+  header,
+}: {
+  cells: string[];
+  header?: boolean;
+}) {
+  return (
+    <View style={styles.resRow}>
+      {HOTSPOT_COLUMNS.map((col, i) => (
+        <Text
+          key={col}
+          style={[
+            styles.resCell,
+            i === 0 && styles.hotspotCellFirst,
+            header && styles.resHeader,
+          ]}
+        >
+          {cells[i]}
+        </Text>
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#000' },
   controls: { paddingHorizontal: 8, paddingTop: 8, gap: 8 },
@@ -244,6 +336,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
+  hotspotBtn: {
+    backgroundColor: '#355',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  btnOff: { opacity: 0.5 },
   runText: {
     color: '#fff',
     fontSize: 14,
@@ -301,6 +400,13 @@ const styles = StyleSheet.create({
   countdownSubRow: { flexDirection: 'row', alignItems: 'baseline' },
   countdownInput: { padding: 0 },
   results: { paddingHorizontal: 10, paddingVertical: 4 },
+  hotspotHeading: {
+    color: '#9cf',
+    fontSize: 11,
+    fontFamily: 'Menlo',
+    fontWeight: '700',
+    marginBottom: 2,
+  },
   resRow: { flexDirection: 'row', paddingVertical: 2 },
   resCell: {
     flex: 1,
@@ -310,6 +416,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   resCellFirst: { flex: 1.6, textAlign: 'left' },
+  hotspotCellFirst: { flex: 2.4, textAlign: 'left' },
   resHeader: { color: '#fff', fontWeight: '700' },
   chat: { flex: 1, marginTop: 4 },
 });

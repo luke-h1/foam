@@ -18,20 +18,21 @@ import { ReadyState } from '@app/hooks/ws/constants';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
 import { notify7TVActivePresence } from '@app/store/chat/actions/channelLoad';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import {
   type ChatRenderPreferences,
   usePreference,
 } from '@app/store/preferenceStore';
 import type { UserInfoResponse } from '@app/types/twitch/user';
-import { findCustomHighlight } from '@app/utils/chat/customHighlights';
+import { findCustomHighlight } from '@app/utils/chat/customHighlights/findCustomHighlight';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
-import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin';
+import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin/registerMentionChatter';
 
 import type { ChatListRef } from '../components/ChatList';
 import { resolveEffectiveChatDelayMs } from '../util/chatDelay';
-import { normaliseChatUsername, textMentionsUser } from '../util/chatUsernames';
+import { normaliseChatUsername } from '../util/chatUsernames/normaliseChatUsername';
+import { textMentionsUser } from '../util/chatUsernames/textMentionsUser';
 import { triggerMentionHaptic } from '../util/mentionHaptics';
-import type { AnyChatMessageType } from '../util/messageHandlers';
 import { useChatCosmetics } from './useChatCosmetics';
 import { useChatEmoteLoader } from './useChatEmoteLoader';
 import { useChatIrcHandlers } from './useChatIrcHandlers';

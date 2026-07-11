@@ -5,7 +5,8 @@ import type { PaintData } from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
 import { PaintLayerBackground } from './PaintLayerBackground';
-import { getPaintLayers } from './util/paintLayer';
+import { getPaintLayers } from './util/paintLayer/getPaintLayers';
+import { withPaintLayerKeys } from './util/paintLayer/paintLayerKey';
 
 interface PaintedUsernameFillProps {
   displayUsername: string;
@@ -25,18 +26,19 @@ export function PaintedUsernameFill({
   textStyle,
 }: PaintedUsernameFillProps) {
   const layers = getPaintLayers(paint);
+  const keyedLayers = withPaintLayerKeys([...layers].reverse());
   const baseColor =
     paint.color === null ? fallbackColor : sevenTvColorToCss(paint.color);
 
   return (
     <View style={styles.stack}>
       <View style={[styles.baseColor, { backgroundColor: baseColor }]} />
-      {[...layers].reverse().map((layer, index) => (
+      {keyedLayers.map(({ layer, key, layerIndex }) => (
         <PaintLayerBackground
-          key={`${layer.function}-${layer.angle}-${index}`}
+          key={key}
           fallbackColor={fallbackColor}
           layer={layer}
-          layerIndex={index}
+          layerIndex={layerIndex}
         />
       ))}
       <Text style={[textStyle, styles.hiddenText]}>{displayUsername}</Text>

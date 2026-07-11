@@ -1,4 +1,6 @@
-import { type ChannelCheermotes, resolveCheermoteTier } from './cheermoteStore';
+import { resolveCheermoteTier } from '@app/utils/chat/cheermoteStore/resolveCheermoteTier';
+import { type ChannelCheermotes } from '@app/utils/chat/cheermoteStore/types';
+
 import type { ParsedPart } from './parsedPart';
 
 const CHEER_TOKEN_REGEX = /^([A-Za-z]+)(\d+)$/;

@@ -219,9 +219,9 @@ function BadgeRowView({
 }) {
   return (
     <View style={styles.badgeRow}>
-      {row.map((badge, index) => (
+      {row.map(badge => (
         <BadgeCell
-          key={`${badge.provider ?? 'twitch'}-${badge.id}-${index}`}
+          key={`${badge.provider ?? 'twitch'}-${badge.id}`}
           badge={badge}
           onPress={onPress}
         />

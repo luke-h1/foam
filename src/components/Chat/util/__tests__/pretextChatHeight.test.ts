@@ -1,4 +1,5 @@
-import type { AnyChatMessageType } from '../messageHandlers';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+
 import {
   estimateChatMessageHeightWithPretext,
   type PretextChatHeightOptions,
@@ -39,6 +40,7 @@ describe('estimateChatMessageHeightWithPretext', () => {
     );
 
     expect(height).toBeGreaterThanOrEqual(32);
+    expect(height).toBe(48);
   });
 
   test('adds space for inline reply context rows', () => {

@@ -72,7 +72,7 @@ describe('ChatList', () => {
       maintainScrollAtEnd: { on: { dataChange: true, itemLayout: true } },
       maintainScrollAtEndThreshold: 0.1,
       maintainVisibleContentPosition: undefined,
-      recycleItems: true,
+      recycleItems: false,
       onEndReachedThreshold: 0.02,
       viewabilityConfig: {
         itemVisiblePercentThreshold: 1,

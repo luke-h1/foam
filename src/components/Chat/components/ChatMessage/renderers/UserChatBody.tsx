@@ -5,13 +5,13 @@ import { useSelector } from '@legendapp/state/react';
 
 import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
 import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
-import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
+import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers/normaliseUsername';
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { getMessageStructure } from '@app/utils/chat/deriveChatBody';
+import { getMessageStructure } from '@app/utils/chat/deriveChatBody/getMessageStructure';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { lightenColor } from '@app/utils/color/lightenColor';
 
@@ -102,18 +102,14 @@ export function UserChatBody({
   const { canBeInline, containsEmotes: bodyContainsEmotes } =
     getMessageStructure(message);
   const canFlowInline = canBeInline && !isModerated;
-  const renderInline = canFlowInline && !hasPaint;
+  const renderInline = canFlowInline && !hasPaint && !bodyContainsEmotes;
   const inlineUsernameColor =
     cachedSenderColor ??
     (userstateColor ? lightenColor(userstateColor) : undefined) ??
     (username ? lightenColor(generateRandomTwitchColor(username)) : undefined);
   const actionColor = isAction ? inlineUsernameColor : undefined;
-  const bodyCanFlowInline = canFlowInline && !renderInline;
-  const bodyEmoteLineStyle = bodyContainsEmotes
-    ? compact
-      ? styles.messageTextEmoteLineCompact
-      : styles.messageTextEmoteLine
-    : undefined;
+  const bodyCanFlowInline =
+    canFlowInline && !renderInline && !bodyContainsEmotes;
 
   return (
     <View style={styles.messageColumn}>
@@ -225,7 +221,6 @@ export function UserChatBody({
                 styles.messageText,
                 compact && styles.messageTextCompact,
                 getChatFontScaleStyle(rendererArgs.fontScale, compact),
-                bodyEmoteLineStyle,
               ]}
             >
               <InlineMessageSpans
@@ -233,7 +228,6 @@ export function UserChatBody({
                 compact={compact}
                 message={message as InlineFlowPart[]}
                 replyPlainMentionTarget={replyPlainMentionTarget}
-                emoteLineStyle={bodyEmoteLineStyle}
                 textColor={actionColor}
               />
             </Text>

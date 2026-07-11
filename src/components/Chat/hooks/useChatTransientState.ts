@@ -8,9 +8,8 @@ import {
 } from '@app/store/chat/actions/transientState';
 import { defaultTransientState } from '@app/store/chat/observables/chatTransientState';
 import { useTransientChannelFilters } from '@app/store/chat/react/transientSelectors';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { usePreference } from '@app/store/preferenceStore';
-
-import type { AnyChatMessageType } from '../util/messageHandlers';
 
 export function useChatTransientState(channelId: string) {
   const visiblePersonalEmoteUsersRef = useLazyRef(() => new Set<string>());

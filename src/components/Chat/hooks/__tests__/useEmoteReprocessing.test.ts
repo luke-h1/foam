@@ -1,10 +1,10 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import type { AnyChatMessageType } from '@app/components/Chat/util/messageHandlers';
 import { resolveMessageEmoteParts } from '@app/components/Chat/util/resolveMessageEmoteParts';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { updateMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import { createEmotePart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
 
@@ -77,12 +77,15 @@ function createTextOnlyMessage(
   };
 }
 
-const expectMessageUpdate = (id: string, nonce: string) => ({
+const expectMessageUpdate = (
+  id: string,
+  nonce: string,
+  resolvedText: string,
+) => ({
   messageId: id,
   messageNonce: nonce,
   updates: {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    message: expect.any(Array),
+    message: [createEmotePart(resolvedText, { id: 'e1', url: '' })],
     badges: [],
   },
 });
@@ -198,7 +201,7 @@ describe('useEmoteReprocessing', () => {
 
     expect(mockResolveMessageEmoteParts).toHaveBeenCalledTimes(1);
     expect(mockUpdateMessages).toHaveBeenCalledWith([
-      expectMessageUpdate('1', 'n1'),
+      expectMessageUpdate('1', 'n1', 'plaska'),
     ]);
   });
 
@@ -220,7 +223,7 @@ describe('useEmoteReprocessing', () => {
 
     expect(mockGetCurrentEmoteData).toHaveBeenCalledWith(channelId);
     expect(mockUpdateMessages).toHaveBeenCalledWith([
-      expectMessageUpdate('msg-1', 'nonce-1'),
+      expectMessageUpdate('msg-1', 'nonce-1', 'hello world'),
     ]);
     expect(processedMessageIdsRef.current.has('msg-1')).toBe(true);
   });
@@ -257,33 +260,36 @@ describe('useEmoteReprocessing', () => {
 
   test('yields between large reprocessing batches', () => {
     jest.useFakeTimers();
-    mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
-    const messages = Array.from({ length: 30 }, (_, index) =>
-      createTextOnlyMessage(`msg-${index}`, `nonce-${index}`, 'hello world'),
-    );
-    const peek = jest.fn().mockReturnValue(messages);
+    try {
+      mockGetCurrentEmoteData.mockReturnValue(emoteDataWithEmotes);
+      const messages = Array.from({ length: 30 }, (_, index) =>
+        createTextOnlyMessage(`msg-${index}`, `nonce-${index}`, 'hello world'),
+      );
+      const peek = jest.fn().mockReturnValue(messages);
 
-    renderHook(() =>
-      useEmoteReprocessing({
-        channelId,
-        channelEmoteData: emoteDataWithEmotes,
-        messages$: { peek },
-        emoteLoadStatus: 'success',
-        processedMessageIdsRef,
-        show7TvEmotes: true,
-      }),
-    );
+      renderHook(() =>
+        useEmoteReprocessing({
+          channelId,
+          channelEmoteData: emoteDataWithEmotes,
+          messages$: { peek },
+          emoteLoadStatus: 'success',
+          processedMessageIdsRef,
+          show7TvEmotes: true,
+        }),
+      );
 
-    expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
-    expect(mockUpdateMessages.mock.calls[0]?.[0]).toHaveLength(6);
+      expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
+      expect(mockUpdateMessages.mock.calls[0]?.[0]).toHaveLength(6);
 
-    act(() => {
-      jest.runOnlyPendingTimers();
-    });
+      act(() => {
+        jest.runOnlyPendingTimers();
+      });
 
-    expect(mockUpdateMessages).toHaveBeenCalledTimes(2);
-    expect(mockUpdateMessages.mock.calls[1]?.[0]).toHaveLength(6);
-    jest.useRealTimers();
+      expect(mockUpdateMessages).toHaveBeenCalledTimes(2);
+      expect(mockUpdateMessages.mock.calls[1]?.[0]).toHaveLength(6);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   test('skips equivalent reprocessed message parts and badges', () => {
@@ -336,7 +342,7 @@ describe('useEmoteReprocessing', () => {
 
     expect(mockUpdateMessages).toHaveBeenCalledTimes(1);
     expect(mockUpdateMessages).toHaveBeenCalledWith([
-      expectMessageUpdate('msg-1', 'nonce-1'),
+      expectMessageUpdate('msg-1', 'nonce-1', 'hello'),
     ]);
   });
 
@@ -450,7 +456,7 @@ describe('useEmoteReprocessing', () => {
     rerender({ reprocessKey: 'google' });
 
     expect(mockUpdateMessages).toHaveBeenCalledWith([
-      expectMessageUpdate('1', 'n1'),
+      expectMessageUpdate('1', 'n1', 'hi Kappa'),
     ]);
   });
 

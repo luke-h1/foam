@@ -36,6 +36,8 @@ import { NAMESPACE, storageService } from '@app/lib/storage';
 import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 
+import { PaintRendererSection } from './components/PaintRendererSection';
+
 function handleClearDebugStorage() {
   Alert.alert(
     i18next.t('devTools:clearStorageConfirm'),
@@ -166,6 +168,8 @@ export function DebugScreen() {
             />
           </Section>
 
+          <PaintRendererSection />
+
           <Section title={t('usernameToId')}>
             <TextField
               placeholder={t('usernamePlaceholder')}
@@ -259,6 +263,8 @@ export function DebugScreen() {
               danger
             />
           </SettingsSection>
+
+          <PaintRendererSection />
 
           <SettingsSection title={t('usernameToId')}>
             <View style={styles.inputRow}>

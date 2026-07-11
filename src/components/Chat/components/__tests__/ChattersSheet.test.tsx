@@ -3,10 +3,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { fireEvent } from '@testing-library/react-native';
 
 import render from '@app/test/render';
-import {
-  clearMentionLoginIndex,
-  registerMentionChatter,
-} from '@app/utils/chat/resolveMentionLogin';
+import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { clearMentionLoginIndex } from '@app/utils/chat/resolveMentionLogin/clearMentionLoginIndex';
+import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin/registerMentionChatter';
 
 import {
   ChattersSheet,
@@ -137,7 +136,7 @@ describe('ChattersSheet', () => {
 
     fireEvent.press(getByText('MentionOnly'));
     expect(onSelectChatter).toHaveBeenCalledWith({
-      color: expect.any(String),
+      color: generateRandomTwitchColor('MentionOnly'),
       login: 'mentiononly',
       userId: undefined,
       username: 'MentionOnly',

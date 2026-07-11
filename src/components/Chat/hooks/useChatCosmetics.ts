@@ -11,14 +11,19 @@ import {
 } from '@app/store/chat/actions/cosmetics';
 import { logger } from '@app/utils/logger';
 
-function hasRenderableCosmetics(twitchUserId: string): boolean {
-  const badgeId = getUserBadgeId(twitchUserId);
-  const renderableBadge = badgeId
-    ? getUserBadge(twitchUserId)?.url?.trim()
-    : undefined;
-  const paintId = getUserPaintId(twitchUserId);
+import { boundedSetAdd } from '../util/hydrateVisibleSevenTvAssets/boundedSetAdd';
 
-  return Boolean(paintId || renderableBadge);
+const MAX_FETCHED_COSMETICS_USERS = 500;
+
+function getRenderableBadgeUrl(twitchUserId: string): string | undefined {
+  const badgeId = getUserBadgeId(twitchUserId);
+  return badgeId ? getUserBadge(twitchUserId)?.url?.trim() : undefined;
+}
+
+function hasRenderableCosmetics(twitchUserId: string): boolean {
+  return Boolean(
+    getUserPaintId(twitchUserId) || getRenderableBadgeUrl(twitchUserId),
+  );
 }
 
 export function useChatCosmetics(options: { userId?: string | null } = {}) {
@@ -26,11 +31,7 @@ export function useChatCosmetics(options: { userId?: string | null } = {}) {
   const fetchedCosmeticsUsersRef = useLazyRef(() => new Set<string>());
 
   useEffect(() => {
-    if (!userId) {
-      return;
-    }
-
-    if (hasRenderableCosmetics(userId)) {
+    if (!userId || hasRenderableCosmetics(userId)) {
       return;
     }
 
@@ -62,9 +63,7 @@ export function useChatCosmetics(options: { userId?: string | null } = {}) {
     } = {},
   ) => {
     const existingBadgeId = getUserBadgeId(twitchUserId);
-    const renderableBadge = existingBadgeId
-      ? getUserBadge(twitchUserId)?.url?.trim()
-      : undefined;
+    const renderableBadge = getRenderableBadgeUrl(twitchUserId);
 
     if (
       fetchedCosmeticsUsersRef.current.has(twitchUserId) &&
@@ -74,11 +73,19 @@ export function useChatCosmetics(options: { userId?: string | null } = {}) {
     }
 
     if (hasRenderableCosmetics(twitchUserId)) {
-      fetchedCosmeticsUsersRef.current.add(twitchUserId);
+      boundedSetAdd(
+        fetchedCosmeticsUsersRef.current,
+        twitchUserId,
+        MAX_FETCHED_COSMETICS_USERS,
+      );
       return;
     }
 
-    fetchedCosmeticsUsersRef.current.add(twitchUserId);
+    boundedSetAdd(
+      fetchedCosmeticsUsersRef.current,
+      twitchUserId,
+      MAX_FETCHED_COSMETICS_USERS,
+    );
 
     try {
       await requestUserCosmeticsViaPresence(twitchUserId);

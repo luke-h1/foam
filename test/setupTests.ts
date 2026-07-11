@@ -44,6 +44,18 @@ function canvasKitStub(): any {
 }
 (global as any).CanvasKit = canvasKitStub();
 
+/**
+ * Package jestSetup's Mock omits `useAnimatedImageValue`; tiled/stretch paint
+ * overlays need it so animated URL layers don't throw in unit tests.
+ */
+{
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const skia = require('@shopify/react-native-skia') as Record<string, unknown>;
+  if (typeof skia.useAnimatedImageValue !== 'function') {
+    skia.useAnimatedImageValue = () => ({});
+  }
+}
+
 jest.mock('expo-font');
 jest.mock('expo-asset');
 jest.mock('react-native-vector-icons');
@@ -285,23 +297,30 @@ jest.mock('react-native-reanimated', () => {
     withSpring: identityAnimation,
     withTiming: identityAnimation,
     ...Object.fromEntries(
-      ['FadeIn', 'FadeInUp', 'FadeInDown', 'FadeOut', 'SlideInDown'].map(
-        name => {
-          const builder: Record<string, unknown> = {};
-          for (const method of [
-            'duration',
-            'delay',
-            'easing',
-            'springify',
-            'damping',
-            'stiffness',
-            'build',
-          ]) {
-            builder[method] = () => builder;
-          }
-          return [name, builder];
-        },
-      ),
+      [
+        'FadeIn',
+        'FadeInUp',
+        'FadeInDown',
+        'FadeOut',
+        'FadeOutUp',
+        'FadeOutDown',
+        'SlideInDown',
+      ].map(name => {
+        const builder: Record<string, unknown> = {};
+        for (const method of [
+          'duration',
+          'delay',
+          'easing',
+          'springify',
+          'damping',
+          'stiffness',
+          'mass',
+          'build',
+        ]) {
+          builder[method] = () => builder;
+        }
+        return [name, builder];
+      }),
     ),
   };
 });

@@ -71,6 +71,32 @@ export interface TextProps extends RNTextProps, MarginProps {
   align?: 'left' | 'center' | 'right';
 }
 
+const margin = getMargin(theme);
+
+const italicFontMap: Record<TextWeight, string> = {
+  ultralight: theme.fontFamilyLightItalic,
+  thin: theme.fontFamilyLightItalic,
+  light: theme.fontFamilyLightItalic,
+  normal: theme.fontFamilyRegularItalic,
+  medium: theme.fontFamilyItalic,
+  semibold: theme.fontFamilySemiBoldItalic,
+  bold: theme.fontFamilyBoldItalic,
+  heavy: theme.fontFamilyHeavyItalic,
+  black: theme.fontFamilyBlackItalic,
+};
+
+const uprightFontMap: Record<TextWeight, string> = {
+  ultralight: theme.fontFamilyLight,
+  thin: theme.fontFamilyLight,
+  light: theme.fontFamilyLight,
+  normal: theme.fontFamilyRegular,
+  medium: theme.fontFamily,
+  semibold: theme.fontFamilySemiBold,
+  bold: theme.fontFamilyBold,
+  heavy: theme.fontFamilyHeavy,
+  black: theme.fontFamilyBlack,
+};
+
 const weightMap: Record<TextWeight, TextStyle['fontWeight']> = {
   black: '900',
   bold: '700',
@@ -145,10 +171,10 @@ export function Text({
   const resolvedFontFamily = getFontFamily(variant, weight, italic);
 
   const textStyle: TextStyle = {
-    ...getMargin(theme)({ m, mb, ml, mr, mt, mx, my }),
+    ...margin({ m, mb, ml, mr, mt, mx, my }),
     color: resolvedColor,
     fontFamily: resolvedFontFamily,
-    fontStyle: variant === 'mono' ? (italic ? 'italic' : 'normal') : 'normal',
+    fontStyle: variant === 'mono' && italic ? 'italic' : 'normal',
     fontVariant: tabular ? ['tabular-nums'] : undefined,
     fontWeight: variant === 'mono' ? weightMap[weight] : undefined,
     textAlign: align,
@@ -182,29 +208,5 @@ function getFontFamily(
       : 'InstrumentSerif_400Regular';
   }
 
-  const fontMap: Record<TextWeight, string> = italic
-    ? {
-        ultralight: theme.fontFamilyLightItalic,
-        thin: theme.fontFamilyLightItalic,
-        light: theme.fontFamilyLightItalic,
-        normal: theme.fontFamilyRegularItalic,
-        medium: theme.fontFamilyItalic,
-        semibold: theme.fontFamilySemiBoldItalic,
-        bold: theme.fontFamilyBoldItalic,
-        heavy: theme.fontFamilyHeavyItalic,
-        black: theme.fontFamilyBlackItalic,
-      }
-    : {
-        ultralight: theme.fontFamilyLight,
-        thin: theme.fontFamilyLight,
-        light: theme.fontFamilyLight,
-        normal: theme.fontFamilyRegular,
-        medium: theme.fontFamily,
-        semibold: theme.fontFamilySemiBold,
-        bold: theme.fontFamilyBold,
-        heavy: theme.fontFamilyHeavy,
-        black: theme.fontFamilyBlack,
-      };
-
-  return fontMap[weight];
+  return italic ? italicFontMap[weight] : uprightFontMap[weight];
 }

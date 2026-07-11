@@ -3,7 +3,7 @@ import {
   createEmoteData,
   createTwitchEmote,
 } from '@app/components/Chat/hooks/__tests__/__fixtures__/useChat.fixture';
-import { createUserStateFromTags } from '@app/components/Chat/util/messageHandlers';
+import { createUserStateFromTags } from '@app/components/Chat/util/messageHandlers/createUserStateFromTags';
 import { getUserPersonalEmotes } from '@app/store/chat/actions/channelLoad';
 import type { SanitisedEmote } from '@app/types/emote';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';

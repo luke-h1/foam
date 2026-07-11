@@ -1,6 +1,7 @@
 import type { SanitisedEmote } from '@app/types/emote';
+import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 
-import { replaceTextWithEmotes } from '../replaceTextWithEmotes';
+import type { ParsedPart } from '../parsedPart';
 
 const emptyParams = {
   userstate: null,
@@ -46,17 +47,19 @@ describe('replaceTextWithEmotes image variants', () => {
       bttvChannelEmotes: [emote],
     });
 
-    expect(
-      result.map(part => ({
-        content: 'content' in part ? part.content : undefined,
-        image_variants: part.type === 'emote' ? part.image_variants : undefined,
-        type: part.type,
-      })),
-    ).toEqual([
+    expect(result).toEqual<ParsedPart[]>([
       {
-        content: 'VariantDance',
-        image_variants: emote.image_variants,
         type: 'emote',
+        content: 'VariantDance',
+        id: 'variant-emote',
+        name: 'VariantDance',
+        original_name: 'VariantDance',
+        creator: null,
+        emote_link: 'https://example.com/emote',
+        url: 'https://example.com/animated-4x.webp',
+        static_url: 'https://example.com/static-4x.webp',
+        image_variants: emote.image_variants,
+        site: 'BTTV',
       },
     ]);
   });
@@ -78,24 +81,32 @@ describe('replaceTextWithEmotes image variants', () => {
       ],
     });
 
-    const [emotePart] = result;
-    expect({
-      content:
-        emotePart && 'content' in emotePart ? emotePart.content : undefined,
-      static3x:
-        emotePart?.type === 'emote'
-          ? emotePart.image_variants?.static?.['3x']
-          : undefined,
-      static_url:
-        emotePart?.type === 'emote' ? emotePart.static_url : undefined,
-      type: emotePart?.type,
-    }).toEqual({
-      content: 'catJAM',
-      static3x:
-        'https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/3x.png',
-      static_url:
-        'https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/3x.png',
-      type: 'emote',
-    });
+    expect(result).toEqual<ParsedPart[]>([
+      {
+        type: 'emote',
+        content: 'catJAM',
+        id: '5f1b0186cf6d2144653d2970',
+        name: 'catJAM',
+        original_name: 'catJAM',
+        creator: null,
+        emote_link: 'https://betterttv.com/emotes/5f1b0186cf6d2144653d2970',
+        url: 'https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/3x',
+        static_url:
+          'https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/3x.png',
+        image_variants: {
+          animated: {
+            '1x': 'https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/1x',
+            '2x': 'https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/2x',
+            '3x': 'https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/3x',
+          },
+          static: {
+            '1x': 'https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/1x.png',
+            '2x': 'https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/2x.png',
+            '3x': 'https://cdn.betterttv.net/emote/5f1b0186cf6d2144653d2970/3x.png',
+          },
+        },
+        site: 'BTTV',
+      },
+    ]);
   });
 });

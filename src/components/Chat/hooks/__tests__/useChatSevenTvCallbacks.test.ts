@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import { toPaintWithId } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
+import { toPaintWithId } from '@app/components/Chat/util/normalizeSevenTvCosmetics/toPaintWithId';
 import { countMetric } from '@app/lib/sentry';
 import {
   addBadge,

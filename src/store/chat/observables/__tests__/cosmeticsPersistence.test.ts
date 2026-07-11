@@ -3,7 +3,8 @@ import type { PaintData } from '@app/store/chat/types/constants';
 import {
   type CosmeticsSnapshot,
   loadPersistedCosmetics,
-  writePersistedCosmetics,
+  writePersistedCosmeticBindings,
+  writePersistedCosmeticDefinitions,
 } from '../cosmeticsPersistence';
 
 const mockBackingStore = new Map<string, unknown>();
@@ -32,16 +33,6 @@ const makePaint = (id: string): PaintData => ({
   stops: { length: 0 },
 });
 
-const emptySnapshot = (
-  overrides: Partial<CosmeticsSnapshot> = {},
-): CosmeticsSnapshot => ({
-  paints: {},
-  badges: {},
-  userPaintIds: {},
-  userBadgeIds: {},
-  ...overrides,
-});
-
 describe('cosmeticsPersistence', () => {
   beforeEach(() => {
     mockBackingStore.clear();
@@ -52,14 +43,15 @@ describe('cosmeticsPersistence', () => {
     expect(loadPersistedCosmetics()).toBeNull();
   });
 
-  test('round-trips paints and entitlements', () => {
-    writePersistedCosmetics(
-      emptySnapshot({
-        paints: { 'paint-1': makePaint('paint-1') },
-        userPaintIds: { 'user-1': 'paint-1' },
-        userBadgeIds: { 'user-1': 'badge-1' },
-      }),
-    );
+  test('round-trips paints and entitlements across the split keys', () => {
+    writePersistedCosmeticDefinitions({
+      paints: { 'paint-1': makePaint('paint-1') },
+      badges: {},
+    });
+    writePersistedCosmeticBindings({
+      userPaintIds: { 'user-1': 'paint-1' },
+      userBadgeIds: { 'user-1': 'badge-1' },
+    });
 
     const loaded = loadPersistedCosmetics();
 
@@ -68,13 +60,83 @@ describe('cosmeticsPersistence', () => {
     expect(loaded?.userBadgeIds).toEqual({ 'user-1': 'badge-1' });
   });
 
+  test('loads bindings alone when definitions were never written', () => {
+    writePersistedCosmeticBindings({
+      userPaintIds: { 'user-1': 'paint-1' },
+      userBadgeIds: {},
+    });
+
+    expect(loadPersistedCosmetics()).toEqual<CosmeticsSnapshot>({
+      paints: {},
+      badges: {},
+      userPaintIds: { 'user-1': 'paint-1' },
+      userBadgeIds: {},
+    });
+  });
+
+  test('falls back to the legacy combined snapshot key', () => {
+    mockBackingStore.set('sevenTvCosmeticsSnapshot_v1', {
+      paints: { 'paint-1': makePaint('paint-1') },
+      badges: {},
+      userPaintIds: { 'user-1': 'paint-1' },
+      userBadgeIds: {},
+    });
+
+    expect(loadPersistedCosmetics()).toEqual<CosmeticsSnapshot>({
+      paints: { 'paint-1': makePaint('paint-1') },
+      badges: {},
+      userPaintIds: { 'user-1': 'paint-1' },
+      userBadgeIds: {},
+    });
+  });
+
+  test('fills missing bindings from the legacy snapshot when only definitions were split-written', () => {
+    mockBackingStore.set('sevenTvCosmeticsSnapshot_v1', {
+      paints: { 'paint-legacy': makePaint('paint-legacy') },
+      badges: {},
+      userPaintIds: { 'user-1': 'paint-legacy' },
+      userBadgeIds: { 'user-1': 'badge-1' },
+    });
+    writePersistedCosmeticDefinitions({
+      paints: { 'paint-1': makePaint('paint-1') },
+      badges: {},
+    });
+
+    expect(loadPersistedCosmetics()).toEqual<CosmeticsSnapshot>({
+      paints: { 'paint-1': makePaint('paint-1') },
+      badges: {},
+      userPaintIds: { 'user-1': 'paint-legacy' },
+      userBadgeIds: { 'user-1': 'badge-1' },
+    });
+  });
+
+  test('fills missing definitions from the legacy snapshot when only bindings were split-written', () => {
+    mockBackingStore.set('sevenTvCosmeticsSnapshot_v1', {
+      paints: { 'paint-legacy': makePaint('paint-legacy') },
+      badges: {},
+      userPaintIds: { 'user-1': 'paint-legacy' },
+      userBadgeIds: {},
+    });
+    writePersistedCosmeticBindings({
+      userPaintIds: { 'user-2': 'paint-legacy' },
+      userBadgeIds: {},
+    });
+
+    expect(loadPersistedCosmetics()).toEqual<CosmeticsSnapshot>({
+      paints: { 'paint-legacy': makePaint('paint-legacy') },
+      badges: {},
+      userPaintIds: { 'user-2': 'paint-legacy' },
+      userBadgeIds: {},
+    });
+  });
+
   test('caps the persisted paint map to the most recent entries', () => {
     const paints: Record<string, PaintData> = {};
     for (let i = 0; i < 800; i += 1) {
       paints[`paint-${i}`] = makePaint(`paint-${i}`);
     }
 
-    writePersistedCosmetics(emptySnapshot({ paints }));
+    writePersistedCosmeticDefinitions({ paints, badges: {} });
 
     const loaded = loadPersistedCosmetics();
     const ids = Object.keys(loaded?.paints ?? {});

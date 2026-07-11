@@ -49,13 +49,12 @@ export interface ChatStoreState {
    * chat messages can re-resolve badges without reloading channel emote data.
    */
   cosmeticBindingsVersion: number;
+  personalEmotesVersion: number;
   paints: Record<string, PaintData>;
   userPaintIds: Record<string, string>;
   badges: Record<string, SanitisedBadgeSet>;
   userBadgeIds: Record<string, string>;
   sessionCaches: {
-    mentionColors: Record<string, { value: string; expiresAt: number }>;
-    lightenedColors: Record<string, { value: string; expiresAt: number }>;
     // getChatRowItemType runs per row on every list data change; caching the
     // two-peek paints/userPaintIds traversal per user avoids re-walking those
     // observables for every row on every render.
@@ -69,21 +68,6 @@ export interface ChatStoreState {
     channelBadges: Record<
       string,
       { value: SanitisedBadgeSet[]; expiresAt: number }
-    >;
-  };
-  /**
-   * Session-scoped 7TV identity/entitlement lookup tables used by the
-   * cosmetics WebSocket bridge. Kept on the store (rather than as
-   * module-level Maps) so their lifecycle sits with the rest of the chat
-   * session state and clears with it. `Object.keys` iteration order gives
-   * FIFO for the entitlement id cap.
-   */
-  sevenTvUserLinks: {
-    twitchIdsBySevenTvUserId: Record<string, string[]>;
-    sevenTvUserIdByTwitchId: Record<string, string>;
-    twitchIdByEntitlementId: Record<
-      string,
-      { kind: 'BADGE' | 'PAINT' | 'EMOTE_SET'; twitchUserId: string }
     >;
   };
 }
@@ -120,7 +104,7 @@ const initialChatStoreState: ChatStoreState = {
   recentMessagesByChannel: {},
   loadingState: 'IDLE',
   currentChannelId: null,
-  // Seeded empty and hydrated after first interactions — building the full
+  // Seeded empty and hydrated after first interactions - building the full
   // emoji emote set is thousands of allocations and this module loads with
   // the root layout, before the first chat screen can possibly need it.
   emojis: [],
@@ -129,23 +113,17 @@ const initialChatStoreState: ChatStoreState = {
   mentionLoginRevision: 0,
   cosmeticsCacheVersion: 0,
   cosmeticBindingsVersion: 0,
+  personalEmotesVersion: 0,
   paints: {},
   userPaintIds: {},
   badges: {},
   userBadgeIds: {},
   sessionCaches: {
-    mentionColors: {},
-    lightenedColors: {},
     userPaintFlags: {},
   },
   sharedChatBadgeCaches: {
     sourceBadges: {},
     channelBadges: {},
-  },
-  sevenTvUserLinks: {
-    twitchIdsBySevenTvUserId: {},
-    sevenTvUserIdByTwitchId: {},
-    twitchIdByEntitlementId: {},
   },
 };
 
@@ -169,7 +147,7 @@ if (!RECENT_MESSAGES_PERSISTENCE_ENABLED) {
  * Chat-only hydration deferred off the startup critical path: the emoji emote
  * set, the 7TV cosmetics snapshot, and the per-channel recent-message caches
  * are all pure JS-thread work (allocation plus blocking MMKV `JSON.parse`)
- * for screens the app does not boot into — the entry route redirects to the
+ * for screens the app does not boot into - the entry route redirects to the
  * stream tabs, not chat. Runs after first interactions, well before a user
  * can navigate into a chat.
  */
@@ -209,7 +187,7 @@ const hydrateDeferredChatState = () => {
   if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
     // Native: seed from the per-channel MMKV keys (writes are handled
     // per-channel in the message-sync path, not via Legend State, so a sync
-    // only re-serializes the active channel instead of every cached channel —
+    // only re-serializes the active channel instead of every cached channel -
     // issue #594). Channels already live in memory win over the snapshot in
     // case a chat was joined before this deferred hydration ran.
     chatStore$.recentMessagesByChannel.set({

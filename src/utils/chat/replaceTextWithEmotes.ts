@@ -1,19 +1,14 @@
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
-import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
-
-import { logger } from '../logger';
-import {
-  findEmotesInText,
-  type FindEmotesInTextReturn,
-  getSortedEmoteNames,
-} from './findEmotesInText';
-import type { ParsedPart } from './parsedPart';
-import { sanitizeInput } from './sanitizeInput';
-import { splitTextWithTwemoji } from './splitTextWithTwemoji';
-import { stripInvisibleChars } from './stripInvisibleChars';
-
-export type { FindEmotesInTextReturn };
+import { findEmotesInText } from '@app/utils/chat/findEmotesInText';
+import { getEmoteMatchIndex } from '@app/utils/chat/findEmotesInText/getEmoteMatchIndex';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
+import { parseWordLinkParts } from '@app/utils/chat/replaceTextWithEmotes/parseWordLinkParts';
+import { sanitizeInput } from '@app/utils/chat/sanitizeInput';
+import { splitTextWithTwemoji } from '@app/utils/chat/splitTextWithTwemoji';
+import { stripInvisibleChars } from '@app/utils/chat/stripInvisibleChars';
+import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants/withResolvedEmoteImageVariants';
+import { logger } from '@app/utils/logger';
 
 function decodeEmojiToUnified(emoji: string): string {
   return [...emoji]
@@ -26,132 +21,154 @@ function decodeEmojiToUnified(emoji: string): string {
     .join('-');
 }
 
-export const SEVENTV_EMOTE_LINK_REGEX =
-  /https?:\/\/(?:www\.)?7tv\.app\/emotes\/([a-zA-Z0-9]+)/i;
-const TWITCH_CLIP_REGEX =
-  /https?:\/\/(?:www\.)?clips\.twitch\.tv\/([a-zA-Z0-9_-]+)/i;
+/**
+ * Lets `Kappa!` / `Pog,` hit the Map path instead of findEmotesInText.
+ */
+const TRAILING_EMOTE_PUNCTUATION = /[.,!?)}:;'"\\|/]+$/;
 
-const TWITCH_CHANNEL_CLIP_REGEX =
-  /https?:\/\/(?:www\.)?twitch\.tv\/(?:[a-zA-Z0-9_]+\/)?clip\/([a-zA-Z0-9_-]+)/i;
-
-export function getTwitchClipIdFromUrl(url: string): string | null {
-  const twitchClipMatch = url.match(TWITCH_CLIP_REGEX);
-  const twitchChannelClipMatch = url.match(TWITCH_CHANNEL_CLIP_REGEX);
-
-  return twitchClipMatch?.[1] ?? twitchChannelClipMatch?.[1] ?? null;
-}
-
-const GENERIC_HTTP_URL_REGEX = /^https?:\/\//i;
-const TRAILING_URL_PUNCTUATION = new Set('.,!?;:\'"\\)]}>'.split(''));
-
-function splitTrailingUrlPunctuation(word: string): {
-  urlCandidate: string;
+function splitTrailingEmotePunctuation(word: string): {
+  core: string;
   trailing: string;
 } {
-  let end = word.length;
-
-  while (end > 0 && TRAILING_URL_PUNCTUATION.has(word[end - 1] ?? '')) {
-    end -= 1;
+  const match = TRAILING_EMOTE_PUNCTUATION.exec(word);
+  if (!match || match.index === 0) {
+    return { core: word, trailing: '' };
   }
 
   return {
-    urlCandidate: word.slice(0, end),
-    trailing: word.slice(end),
+    core: word.slice(0, match.index),
+    trailing: match[0],
   };
 }
 
-export function parseWordLinkParts(word: string): ParsedPart[] | null {
-  if (!word || /\s+/.test(word)) {
-    return null;
+type EmoteLookupCollection = {
+  emoteMap: Map<string, SanitisedEmote>;
+  emojiMap: Map<string, SanitisedEmote>;
+};
+
+type EmoteProviderLists = {
+  emojiEmotes: SanitisedEmote[];
+  sevenTvGlobalEmotes: SanitisedEmote[];
+  sevenTvChannelEmotes: SanitisedEmote[];
+  sevenTvPersonalEmotes: SanitisedEmote[];
+  twitchGlobalEmotes: SanitisedEmote[];
+  twitchChannelEmotes: SanitisedEmote[];
+  twitchSubscriberEmotes: SanitisedEmote[];
+  ffzChannelEmotes: SanitisedEmote[];
+  ffzGlobalEmotes: SanitisedEmote[];
+  bttvChannelEmotes: SanitisedEmote[];
+  bttvGlobalEmotes: SanitisedEmote[];
+};
+
+const EMPTY_EMOTES: SanitisedEmote[] = [];
+const emoteArrayIds = new WeakMap<SanitisedEmote[], number>();
+const lookupCollectionCache = new Map<string, EmoteLookupCollection>();
+const MAX_LOOKUP_COLLECTION_CACHE_SIZE = 4;
+let nextEmoteArrayId = 0;
+
+function getEmoteArrayId(emotes: SanitisedEmote[]): number {
+  let id = emoteArrayIds.get(emotes);
+  if (id === undefined) {
+    nextEmoteArrayId += 1;
+    id = nextEmoteArrayId;
+    emoteArrayIds.set(emotes, id);
   }
+  return id;
+}
 
-  const { urlCandidate, trailing } = splitTrailingUrlPunctuation(word);
-
-  if (!GENERIC_HTTP_URL_REGEX.test(urlCandidate)) {
-    return null;
-  }
-
-  const trailingTextPart: ParsedPart[] = trailing
-    ? [{ type: 'text', content: trailing }]
-    : [];
-
-  const sevenTvMatch = urlCandidate.match(SEVENTV_EMOTE_LINK_REGEX);
-  if (sevenTvMatch) {
-    return [
-      {
-        type: 'stvEmote',
-        content: urlCandidate,
-        url: urlCandidate,
-      },
-      ...trailingTextPart,
-    ];
-  }
-
-  const clipId = getTwitchClipIdFromUrl(urlCandidate);
-  if (clipId) {
-    return [
-      {
-        type: 'twitchClip',
-        content: urlCandidate,
-        url: urlCandidate,
-      },
-      ...trailingTextPart,
-    ];
-  }
-
+function getLookupCollectionKey(lists: EmoteProviderLists): string {
   return [
-    {
-      type: 'link',
-      content: urlCandidate,
-      url: urlCandidate,
-    },
-    ...trailingTextPart,
-  ];
+    getEmoteArrayId(lists.emojiEmotes),
+    getEmoteArrayId(lists.sevenTvGlobalEmotes),
+    getEmoteArrayId(lists.sevenTvChannelEmotes),
+    getEmoteArrayId(lists.sevenTvPersonalEmotes),
+    getEmoteArrayId(lists.twitchGlobalEmotes),
+    getEmoteArrayId(lists.twitchChannelEmotes),
+    getEmoteArrayId(lists.twitchSubscriberEmotes),
+    getEmoteArrayId(lists.ffzChannelEmotes),
+    getEmoteArrayId(lists.ffzGlobalEmotes),
+    getEmoteArrayId(lists.bttvChannelEmotes),
+    getEmoteArrayId(lists.bttvGlobalEmotes),
+  ].join('|');
 }
 
-function findEmoteMatchingMention(
-  mentionText: string,
-  emotes: Iterable<SanitisedEmote>,
-): SanitisedEmote | undefined {
-  if (!mentionText.startsWith('@')) {
-    return undefined;
-  }
+function buildLookupCollection(
+  lists: EmoteProviderLists,
+): EmoteLookupCollection {
+  const emoteMap = new Map<string, SanitisedEmote>();
+  const emojiMap = new Map<string, SanitisedEmote>();
 
-  const mentionTarget = mentionText.slice(1).trimEnd().toLowerCase();
-  if (!mentionTarget) {
-    return undefined;
-  }
-
-  for (const emote of emotes) {
-    const emoteName = emote.name.trimEnd();
-    if (emoteName.toLowerCase() === mentionTarget) {
-      return emote;
+  const registerScopedEmote = (emote: SanitisedEmote) => {
+    const resolved = withResolvedEmoteImageVariants(emote);
+    if (!emoteMap.has(emote.name)) {
+      emoteMap.set(emote.name, resolved);
     }
-
     const alternateName = emote.original_name?.trim();
-    if (alternateName && alternateName.toLowerCase() === mentionTarget) {
-      return emote;
+    if (
+      alternateName &&
+      alternateName !== emote.name &&
+      !emoteMap.has(alternateName)
+    ) {
+      emoteMap.set(alternateName, resolved);
     }
-  }
+  };
 
-  return undefined;
+  const registerGlobalEmote = (emote: SanitisedEmote) => {
+    const resolved = withResolvedEmoteImageVariants(emote);
+    if (!emoteMap.has(emote.name)) {
+      emoteMap.set(emote.name, resolved);
+    }
+
+    if (resolved.site === 'Emoji') {
+      const emojiHexcode = resolved.emoji_hexcode ?? resolved.id;
+      if (!emojiMap.has(emojiHexcode)) {
+        emojiMap.set(emojiHexcode, resolved);
+      }
+    }
+  };
+
+  // Personal / subscriber / channel first, then globals.
+  lists.sevenTvPersonalEmotes.forEach(registerScopedEmote);
+  lists.twitchSubscriberEmotes.forEach(registerScopedEmote);
+  lists.sevenTvChannelEmotes.forEach(registerScopedEmote);
+  lists.twitchChannelEmotes.forEach(registerScopedEmote);
+  lists.ffzChannelEmotes.forEach(registerScopedEmote);
+  lists.bttvChannelEmotes.forEach(registerScopedEmote);
+  lists.emojiEmotes.forEach(registerGlobalEmote);
+  lists.sevenTvGlobalEmotes.forEach(registerGlobalEmote);
+  lists.twitchGlobalEmotes.forEach(registerGlobalEmote);
+  lists.ffzGlobalEmotes.forEach(registerGlobalEmote);
+  lists.bttvGlobalEmotes.forEach(registerGlobalEmote);
+
+  return { emoteMap, emojiMap };
 }
 
-/**
- * Problems to fix:
- * emotes in replies
- * test that all emotes work
- * unit test
- * clean up
- */
+function getLookupCollection(lists: EmoteProviderLists): EmoteLookupCollection {
+  const cacheKey = getLookupCollectionKey(lists);
+  const cached = lookupCollectionCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const collection = buildLookupCollection(lists);
+  if (lookupCollectionCache.size >= MAX_LOOKUP_COLLECTION_CACHE_SIZE) {
+    const oldestKey = lookupCollectionCache.keys().next().value;
+    if (oldestKey) {
+      lookupCollectionCache.delete(oldestKey);
+    }
+  }
+  lookupCollectionCache.set(cacheKey, collection);
+  return collection;
+}
+
 export function replaceTextWithEmotes({
   inputString,
-  emojiEmotes = [],
+  emojiEmotes = EMPTY_EMOTES,
   sevenTvChannelEmotes,
   sevenTvGlobalEmotes,
-  sevenTvPersonalEmotes = [],
+  sevenTvPersonalEmotes = EMPTY_EMOTES,
   twitchGlobalEmotes,
-  twitchSubscriberEmotes = [],
+  twitchSubscriberEmotes = EMPTY_EMOTES,
   bttvChannelEmotes,
   bttvGlobalEmotes,
   ffzChannelEmotes,
@@ -177,64 +194,22 @@ export function replaceTextWithEmotes({
     return [{ type: 'text', content: inputString }];
   }
 
-  const emoteMap = new Map<string, SanitisedEmote>();
-  const emojiMap = new Map<string, SanitisedEmote>();
-
-  const channelEmotes = [
-    ...sevenTvChannelEmotes,
-    ...twitchChannelEmotes,
-    ...ffzChannelEmotes,
-    ...bttvChannelEmotes,
-  ] as const;
-
-  const globalEmotes = [
-    ...emojiEmotes,
-    ...sevenTvGlobalEmotes,
-    ...twitchGlobalEmotes,
-    ...ffzGlobalEmotes,
-    ...bttvGlobalEmotes,
-  ] as const;
-
-  const registerEmoteLookup = (emote: SanitisedEmote) => {
-    const resolved = withResolvedEmoteImageVariants(emote);
-    if (!emoteMap.has(emote.name)) {
-      emoteMap.set(emote.name, resolved);
-    }
-    const alternateName = emote.original_name?.trim();
-    if (
-      alternateName &&
-      alternateName !== emote.name &&
-      !emoteMap.has(alternateName)
-    ) {
-      emoteMap.set(alternateName, resolved);
-    }
-  };
-
-  // Add sender-scoped emotes first (highest priority).
-  sevenTvPersonalEmotes.forEach(registerEmoteLookup);
-
-  twitchSubscriberEmotes.forEach(registerEmoteLookup);
-
-  // Add channel emotes, only if not already set by personal emotes
-  channelEmotes.forEach(registerEmoteLookup);
-
-  // add global emotes, only if not already set by personal or channel emotes
-  globalEmotes.forEach(emote => {
-    const resolvedEmote = withResolvedEmoteImageVariants(emote);
-    if (!emoteMap.has(emote.name)) {
-      emoteMap.set(emote.name, resolvedEmote);
-    }
-
-    if (resolvedEmote.site === 'Emoji') {
-      const emojiHexcode = resolvedEmote.emoji_hexcode ?? resolvedEmote.id;
-      if (!emojiMap.has(emojiHexcode)) {
-        emojiMap.set(emojiHexcode, resolvedEmote);
-      }
-    }
+  const { emoteMap, emojiMap } = getLookupCollection({
+    emojiEmotes,
+    sevenTvGlobalEmotes,
+    sevenTvChannelEmotes,
+    sevenTvPersonalEmotes,
+    twitchGlobalEmotes,
+    twitchChannelEmotes,
+    twitchSubscriberEmotes,
+    ffzChannelEmotes,
+    ffzGlobalEmotes,
+    bttvChannelEmotes,
+    bttvGlobalEmotes,
   });
 
   const sanitizedInput = stripInvisibleChars(sanitizeInput(inputString));
-  const sortedEmoteNames = getSortedEmoteNames(emoteMap);
+  const matchIndex = getEmoteMatchIndex(emoteMap);
 
   try {
     const splitParts = splitTextWithTwemoji(sanitizedInput);
@@ -275,19 +250,13 @@ export function replaceTextWithEmotes({
             height: foundEmote.height,
           });
         } else if (emoji && !emoji.includes('\uFFFD')) {
-          /**
-           * No emote found - only include if not a replacement character (encoding issue)
-           * U+FFFD (�) indicates invalid/malformed unicode
-           */
           replacedParts.push({
             type: 'text',
             content: emoji,
           });
-          // Otherwise skip - don't render broken unicode
         }
       } else if (text) {
-        // Strip U+FFFD (replacement character = invalid/malformed unicode from IRC)
-        // and the whitespace immediately surrounding it before word-splitting.
+        // Strip U+FFFD and surrounding whitespace before word-splitting.
         const textSegments = text.split(/\s*�+\s*/);
         for (const segment of textSegments) {
           if (!segment) continue;
@@ -298,45 +267,15 @@ export function replaceTextWithEmotes({
 
               let mentionText = fullMention;
               let mentionTrailing = '';
-              let emoteInMention = findEmoteMatchingMention(
-                fullMention,
-                emoteMap.values(),
-              );
-
-              if (!emoteInMention) {
-                const loginMatch = fullMention.match(/^@[a-zA-Z0-9_]+/);
-                if (loginMatch && loginMatch[0] !== fullMention) {
-                  mentionText = loginMatch[0];
-                  mentionTrailing = fullMention.slice(mentionText.length);
-                  emoteInMention = findEmoteMatchingMention(
-                    mentionText,
-                    emoteMap.values(),
-                  );
-                }
+              const loginMatch = fullMention.match(/^@[a-zA-Z0-9_]+/);
+              if (loginMatch && loginMatch[0] !== fullMention) {
+                mentionText = loginMatch[0];
+                mentionTrailing = fullMention.slice(mentionText.length);
               }
 
-              if (emoteInMention) {
-                replacedParts.push({
-                  type: 'emote',
-                  content: emoteInMention.name,
-                  creator: emoteInMention.creator,
-                  emote_link: emoteInMention.emote_link,
-                  image_variants: emoteInMention.image_variants,
-                  original_name: emoteInMention.original_name,
-                  static_url: emoteInMention.static_url,
-                  url: emoteInMention.url,
-                  thumbnail: emoteInMention.url,
-                  site: emoteInMention.site,
-                  aspect_ratio: emoteInMention.aspect_ratio,
-                  zero_width: emoteInMention.zero_width,
-                  width: emoteInMention.width,
-                  height: emoteInMention.height,
-                });
-              }
               replacedParts.push({
                 type: 'mention',
                 content: mentionText,
-                ...emoteInMention,
               });
               if (mentionTrailing) {
                 replacedParts.push({
@@ -353,51 +292,64 @@ export function replaceTextWithEmotes({
               const linkParts = parseWordLinkParts(word);
               if (linkParts) {
                 replacedParts.push(...linkParts);
-              } else {
-                // Fast path: direct Map lookup for standalone emote words
-                const directEmote = emoteMap.get(word);
+                return;
+              }
 
-                if (directEmote) {
+              const directEmote = emoteMap.get(word);
+              if (directEmote) {
+                replacedParts.push({
+                  type: 'emote',
+                  content: word,
+                  ...directEmote,
+                });
+                return;
+              }
+
+              const { core, trailing } = splitTrailingEmotePunctuation(word);
+              const punctuatedEmote =
+                trailing && core ? emoteMap.get(core) : undefined;
+              if (punctuatedEmote) {
+                replacedParts.push({
+                  type: 'emote',
+                  content: core,
+                  ...punctuatedEmote,
+                });
+                replacedParts.push({
+                  type: 'text',
+                  content: trailing,
+                });
+                return;
+              }
+
+              const foundEmotes = findEmotesInText(word, emoteMap, matchIndex);
+              if (foundEmotes.length === 0) {
+                replacedParts.push({
+                  type: 'text',
+                  content: word,
+                });
+                return;
+              }
+
+              let lastIndex = 0;
+              foundEmotes.forEach(({ emote, start, end }) => {
+                if (start > lastIndex) {
                   replacedParts.push({
-                    type: 'emote',
-                    content: word,
-                    ...directEmote,
+                    type: 'text',
+                    content: word.slice(lastIndex, start),
                   });
-                } else {
-                  const foundEmotes = findEmotesInText(
-                    word,
-                    emoteMap,
-                    sortedEmoteNames,
-                  );
-                  if (foundEmotes.length > 0) {
-                    let lastIndex = 0;
-                    foundEmotes.forEach(({ emote, start, end }) => {
-                      if (start > lastIndex) {
-                        replacedParts.push({
-                          type: 'text',
-                          content: word.slice(lastIndex, start),
-                        });
-                      }
-                      replacedParts.push({
-                        type: 'emote',
-                        content: word.slice(start, end),
-                        ...emote,
-                      });
-                      lastIndex = end;
-                    });
-                    if (lastIndex < word.length) {
-                      replacedParts.push({
-                        type: 'text',
-                        content: word.slice(lastIndex),
-                      });
-                    }
-                  } else {
-                    replacedParts.push({
-                      type: 'text',
-                      content: word,
-                    });
-                  }
                 }
+                replacedParts.push({
+                  type: 'emote',
+                  content: word.slice(start, end),
+                  ...emote,
+                });
+                lastIndex = end;
+              });
+              if (lastIndex < word.length) {
+                replacedParts.push({
+                  type: 'text',
+                  content: word.slice(lastIndex),
+                });
               }
             }
           });

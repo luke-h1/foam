@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuthContext } from '@app/context/AuthContext';
 import { BenchFrameProbe } from '@app/dev/imageBenchmark/BenchFrameProbe.gate';
+import { useSyncPaintRendererFlag } from '@app/hooks/firebase/useSyncPaintRendererFlag';
 import { CachedEmotesProvider } from '@app/Providers/CachedEmotesProvider/CachedEmotesProvider';
 import { setChatFrontTrimSuspended } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
@@ -196,6 +197,7 @@ export const Chat = memo(
       user,
     });
 
+    useSyncPaintRendererFlag();
     const cosmeticBindingsVersion = useCosmeticBindingsVersion();
     const emoteReprocessKey = `${chatAssetPreferenceKey}|${cosmeticBindingsVersion}`;
 
@@ -264,6 +266,7 @@ export const Chat = memo(
               style={styles.inputStickyView}
             >
               <ChatInputShell
+                key={user?.id ?? 'signed-out'}
                 ref={inputShellRef}
                 channelId={channelId}
                 channelName={channelName}

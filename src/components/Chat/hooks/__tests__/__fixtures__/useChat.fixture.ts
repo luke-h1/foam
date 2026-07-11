@@ -1,4 +1,4 @@
-import { createBaseMessage } from '@app/components/Chat/util/messageHandlers';
+import { createBaseMessage } from '@app/components/Chat/util/messageHandlers/createBaseMessage';
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
@@ -94,6 +94,7 @@ export function createEmoteData(
     ffzChannelBadges: [],
     ffzGlobalBadges: [],
     chatterinoBadges: [],
+    bttvBadges: [],
     ...overrides,
   };
 }

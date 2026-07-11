@@ -10,14 +10,13 @@ import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
 import type { SanitisedEmote } from '@app/types/emote';
 
+import { suggestionRailStyles } from '../suggestionRailStyles';
+
 const EMOTE_SUGGESTION_ITEM_SIZE = 44;
 
 interface EmoteSuggestionsProps {
   emotes: SanitisedEmote[];
   handleEmotePress: (set: SanitisedEmote) => void;
-  suggestionOpacity: number;
-  suggestionScale: number;
-  suggestionTranslateY: number;
 }
 
 function createRenderEmoteSuggestionItem(
@@ -55,29 +54,15 @@ function EmoteSuggestionTile({
 export const EmoteSuggestions = memo(function EmoteSuggestions({
   emotes,
   handleEmotePress,
-  suggestionOpacity,
-  suggestionScale,
-  suggestionTranslateY,
 }: EmoteSuggestionsProps) {
   const renderItem = useMemo(
     () => createRenderEmoteSuggestionItem(handleEmotePress),
     [handleEmotePress],
   );
-  const suggestionStyle = {
-    opacity: suggestionOpacity,
-    transform: [
-      { scale: suggestionScale },
-      { translateY: suggestionTranslateY },
-    ],
-  };
-
-  if (suggestionOpacity === 0) {
-    return null;
-  }
 
   return (
-    <View style={[styles.suggestionsWrapper, suggestionStyle]}>
-      <View style={styles.suggestionsContainer}>
+    <View style={suggestionRailStyles.compactWrapper}>
+      <View style={suggestionRailStyles.compactContainer}>
         <LegendList
           data={emotes}
           horizontal
@@ -113,23 +98,5 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     minHeight: 44,
     minWidth: 44,
-  },
-  suggestionsContainer: {
-    backgroundColor: 'rgba(28,28,30,0.94)',
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderCurve: 'continuous',
-    borderRadius: 14,
-    borderWidth: 1,
-    paddingBottom: 4,
-    paddingHorizontal: 4,
-    paddingTop: 4,
-    boxShadow: '0 6px 12px rgba(0, 0, 0, 0.16)',
-    alignSelf: 'flex-start',
-    maxWidth: '100%',
-  },
-  suggestionsWrapper: {
-    marginBottom: 6,
-    maxWidth: '100%',
-    zIndex: 2,
   },
 });

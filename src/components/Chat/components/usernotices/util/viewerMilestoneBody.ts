@@ -1,5 +1,3 @@
-import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
-
 export function resolveViewerMilestoneBody({
   content,
   systemMsg,
@@ -13,7 +11,7 @@ export function resolveViewerMilestoneBody({
     return trimmedContent;
   }
 
-  return unescapeIrcTag(systemMsg).trim();
+  return systemMsg.trim();
 }
 
 export function splitViewerMilestoneLead(

@@ -10,7 +10,7 @@ import { parseBadges } from '@app/utils/chat/parseBadges';
 import type { ChatInputShellHandle } from '../components/ChatInputShell';
 import type { ChatListRef } from '../components/ChatList';
 import { useChatOverlays } from '../components/useChatOverlays';
-import { normaliseChatUsername } from '../util/chatUsernames';
+import { normaliseChatUsername } from '../util/chatUsernames/normaliseChatUsername';
 import {
   useChatComposerActions,
   useChatOverlayActions,

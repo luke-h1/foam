@@ -11,7 +11,6 @@ import {
   SendMessage,
   sharedWebSockets,
   WebSocketHookReturn,
-  WebSocketMessage,
 } from './types';
 
 export const useWebsocket = (
@@ -30,7 +29,6 @@ export const useWebsocket = (
   const websocketRef = useRef<WebSocket | null>(null);
   const startRef = useRef<() => void>(() => {});
   const reconnectCount = useRef<number>(0);
-  const messageQueue = useRef<WebSocketMessage[]>([]);
   const webSocketProxy = useRef<WebSocket | null>(null);
   const optionsCache = useRef<Options>({});
   optionsCache.current = options;
@@ -52,6 +50,7 @@ export const useWebsocket = (
     ? JSON.stringify(options.queryParams)
     : null;
 
+  // Non-OPEN sends are dropped; consumers re-issue on open/reconnect.
   const sendMessage: SendMessage = useCallback(message => {
     if (
       websocketRef.current &&
@@ -59,8 +58,6 @@ export const useWebsocket = (
       websocketRef.current.readyState === ReadyState.OPEN
     ) {
       websocketRef.current.send(message);
-    } else {
-      messageQueue.current.push(message);
     }
   }, []);
 

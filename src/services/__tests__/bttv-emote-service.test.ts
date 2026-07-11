@@ -1,5 +1,7 @@
+import type { BttvBadge } from '@app/types/bttv/badge';
 import type { BttvEmote } from '@app/types/bttv/emote';
 import type { BttvSanitisedEmote } from '@app/types/emote';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import { bttvCachedApi } from '../api/clients';
 import { bttvEmoteService } from '../bttv-emote-service';
@@ -49,10 +51,12 @@ describe('bttvEmoteService', () => {
         static_url: 'https://cdn.betterttv.net/emote/emote1/3x.png',
         image_variants: {
           animated: {
+            '1x': 'https://cdn.betterttv.net/emote/emote1/1x',
             '2x': 'https://cdn.betterttv.net/emote/emote1/2x',
             '3x': 'https://cdn.betterttv.net/emote/emote1/3x',
           },
           static: {
+            '1x': 'https://cdn.betterttv.net/emote/emote1/1x.png',
             '2x': 'https://cdn.betterttv.net/emote/emote1/2x.png',
             '3x': 'https://cdn.betterttv.net/emote/emote1/3x.png',
           },
@@ -79,10 +83,12 @@ describe('bttvEmoteService', () => {
         static_url: 'https://cdn.betterttv.net/emote/emote2/3x',
         image_variants: {
           animated: {
+            '1x': 'https://cdn.betterttv.net/emote/emote2/1x',
             '2x': 'https://cdn.betterttv.net/emote/emote2/2x',
             '3x': 'https://cdn.betterttv.net/emote/emote2/3x',
           },
           static: {
+            '1x': 'https://cdn.betterttv.net/emote/emote2/1x',
             '2x': 'https://cdn.betterttv.net/emote/emote2/2x',
             '3x': 'https://cdn.betterttv.net/emote/emote2/3x',
           },
@@ -116,5 +122,40 @@ describe('bttvEmoteService', () => {
       { id: 'emote2', creator: null },
     ]);
     expect(result.map(emote => emote.site)).toEqual(['BTTV', 'BTTV']);
+  });
+
+  test('getSanitisedGlobalBadges maps badges and skips entries missing badge data', async () => {
+    const fullBadge: BttvBadge = {
+      id: 'badge1',
+      name: 'developer_badge',
+      displayName: 'Developer',
+      providerId: 'twitch-user-1',
+      badge: {
+        type: 1,
+        description: 'BTTV Developer',
+        svg: 'https://cdn.betterttv.net/badges/developer.svg',
+      },
+    };
+    const badgeWithoutArtwork: BttvBadge = {
+      id: 'badge2',
+      name: 'bare_badge',
+      displayName: 'Bare',
+      providerId: 'twitch-user-2',
+    };
+    api.get.mockResolvedValue([fullBadge, badgeWithoutArtwork]);
+
+    const result = await bttvEmoteService.getSanitisedGlobalBadges();
+
+    expect(api.get).toHaveBeenCalledWith('/badges');
+    expect(result).toEqual<SanitisedBadgeSet[]>([
+      {
+        id: 'twitch-user-1',
+        set: 'bttv',
+        type: 'BTTV Badge',
+        title: 'BTTV Developer',
+        url: 'https://cdn.betterttv.net/badges/developer.svg',
+        provider: 'bttv',
+      },
+    ]);
   });
 });

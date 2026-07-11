@@ -26,6 +26,7 @@ function createRemoteConfig(minimumVersion: {
     websiteUrl: entry('https://foam-app.com'),
     admins: entry([]),
     experiments: entry({}),
+    sevenTvPaintRenderer: entry<'off' | 'native' | 'skia'>('native'),
     bundleButtonEnabled: entry({
       ios: {
         development: false,

@@ -9,6 +9,7 @@ import {
 import { getUserMessageColor } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { useIsHighlightedReplyTargetMessage } from '@app/store/chat/react/transientSelectors';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import type {
   ChatFontScale,
   CustomHighlight,
@@ -18,8 +19,10 @@ import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
 
-import type { ChatListRef } from '../components/ChatList';
-import type { ChatListRenderItemInfo } from '../components/ChatList';
+import type {
+  ChatListRef,
+  ChatListRenderItemInfo,
+} from '../components/ChatList';
 import {
   type BadgePressData,
   type EmotePressData,
@@ -33,13 +36,10 @@ import {
 } from '../components/ChatMessage/rowVisibility';
 import { styles } from '../styles';
 import type { ChatRowDisplayFlags } from '../types/chatUiFlags';
-import {
-  getChatMessageListKey,
-  isRenderableChatMessage,
-} from '../util/chatMessages';
+import { getChatMessageListKey } from '../util/chatMessages/getChatMessageListKey';
+import { isRenderableChatMessage } from '../util/chatMessages/isRenderableChatMessage';
 import { getChatRowItemType } from '../util/chatRowItemType';
-import { normaliseChatUsername } from '../util/chatUsernames';
-import type { AnyChatMessageType } from '../util/messageHandlers';
+import { normaliseChatUsername } from '../util/chatUsernames/normaliseChatUsername';
 
 const chatRowKeyExtractor = (item: AnyChatMessageType) =>
   getChatMessageListKey(item);
@@ -126,9 +126,9 @@ const ChatMessageRow = function ChatMessageRow({
     msg.message_id,
   );
   const rowVisibility = useRowVisibility();
-  const isAlternatingRow = showAlternatingChatRows && index % 2 === 1;
-  // Keep a stable identity for unchanged rows: a fresh object here would
-  // defeat RichChatMessage's memo on every parent-driven re-render.
+  const isAlternatingRow =
+    showAlternatingChatRows && (msg.seq ?? index) % 2 === 1;
+
   const messageDisplay = useMemo(
     () => ({
       disableEmoteAnimations,
@@ -276,6 +276,7 @@ export function useChatRowRenderer({
   const onBadgePressRef = useRef(onBadgePress);
   const onEmotePressRef = useRef(onEmotePress);
   const onMessageLongPressRef = useRef(onMessageLongPress);
+  const onUsernamePressRef = useRef(onUsernamePress);
   const parseTextForEmotesRef = useRef(parseTextForEmotes);
 
   const highlightedUserSet = useMemo(
@@ -320,7 +321,7 @@ export function useChatRowRenderer({
   );
   // Note: mentionLoginRevision is intentionally excluded. It bumps ~every 400ms
   // as @mention logins resolve from Helix; including it re-rendered every visible
-  // row each time (the dominant frame-drop source in mention-heavy chat — busy
+  // row each time (the dominant frame-drop source in mention-heavy chat - busy
   // chat went from ~57fps to a flat 60fps once removed). Mention spans subscribe
   // to the revision themselves (MentionSpan), so only those spans re-render.
   const messageListExtraData = useMemo(
@@ -390,6 +391,7 @@ export function useChatRowRenderer({
     onBadgePressRef.current = onBadgePress;
     onEmotePressRef.current = onEmotePress;
     onMessageLongPressRef.current = onMessageLongPress;
+    onUsernamePressRef.current = onUsernamePress;
     parseTextForEmotesRef.current = parseTextForEmotes;
     handleReplyContextPressRef.current = handleReplyContextPress;
   });
@@ -424,7 +426,7 @@ export function useChatRowRenderer({
           onEmotePress={onEmotePressRef.current}
           onMessageLongPress={onMessageLongPressRef.current}
           onReplyContextPress={handleReplyContextPressRef.current}
-          onUsernamePress={onUsernamePress}
+          onUsernamePress={onUsernamePressRef.current}
           parseTextForEmotes={parseTextForEmotesRef.current}
         />
       );
@@ -437,7 +439,6 @@ export function useChatRowRenderer({
       displayFlags,
       getMentionColor,
       highlightedUserSet,
-      onUsernamePress,
       preferences.chatDensity,
     ],
   );

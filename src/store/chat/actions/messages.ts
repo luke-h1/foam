@@ -3,14 +3,12 @@ import { batch } from '@legendapp/state';
 import { getPreferences } from '@app/store/preferenceStore';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
-import {
-  type ChatterRole,
-  clearMentionLoginIndex,
-  registerMentionChatter,
-  registerMentionLogin,
-  registerMentionLoginsFromParts,
-  registerMentionLoginsFromSender,
-} from '@app/utils/chat/resolveMentionLogin';
+import { clearMentionLoginIndex } from '@app/utils/chat/resolveMentionLogin/clearMentionLoginIndex';
+import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin/registerMentionChatter';
+import { registerMentionLogin } from '@app/utils/chat/resolveMentionLogin/registerMentionLogin';
+import { registerMentionLoginsFromParts } from '@app/utils/chat/resolveMentionLogin/registerMentionLoginsFromParts';
+import { registerMentionLoginsFromSender } from '@app/utils/chat/resolveMentionLogin/registerMentionLoginsFromSender';
+import { type ChatterRole } from '@app/utils/chat/resolveMentionLogin/types';
 
 import { chatStore$ } from '../observables/chatStore';
 import {
@@ -122,6 +120,8 @@ const prepareMessagePartsForStore = (
   });
 };
 
+let nextMessageSeq = 0;
+
 const prepareMessageForStore = (
   message: AnyChatMessageType,
 ): AnyChatMessageType => {
@@ -130,9 +130,11 @@ const prepareMessageForStore = (
     message,
     getUserMessageColor,
   );
+  nextMessageSeq += 1;
   return {
     ...message,
     id: messageKey,
+    seq: nextMessageSeq,
     ...(cachedSenderColor ? { cachedSenderColor } : {}),
     message: prepareMessagePartsForStore(
       message.message_id,
@@ -339,7 +341,7 @@ const syncRecentMessagesForCurrentChannel = (
     return;
   }
 
-  // Hold the reference only — persistRecentMessagesForChannel slices to
+  // Hold the reference only - persistRecentMessagesForChannel slices to
   // MAX_RECENT_MESSAGES at flush time, so slicing here on every deferred
   // sync (~10/s under load) would be redundant allocation.
   pendingRecentMessagesChannelId = currentChannelId;
@@ -545,7 +547,7 @@ export const addMessage = (message?: AnyChatMessageType) => {
   if (trimmedKeyCount === droppedMessages.length) {
     indexAppendedMessages([storedMessage], nextMessageIndex, droppedMessages);
   } else {
-    // Key order diverged from the window (shouldn't happen) — resync fully.
+    // Key order diverged from the window (shouldn't happen) - resync fully.
     rebuildMessageIndexes(nextMessages);
   }
 
@@ -594,7 +596,7 @@ export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {
       droppedMessages,
     );
   } else {
-    // Key order diverged from the window (shouldn't happen) — resync fully.
+    // Key order diverged from the window (shouldn't happen) - resync fully.
     rebuildMessageIndexes(nextMessages);
   }
 

@@ -116,7 +116,7 @@ function ChatInlineImageComponent({
 
   const isCurrentUrl = load.url === sourceUrl;
   const showRef = sharedRef != null && failedRefUrl !== sourceUrl;
-  const candidateIndex = showRef ? 0 : isCurrentUrl ? load.index : 0;
+  const candidateIndex = !showRef && isCurrentUrl ? load.index : 0;
   const status = isCurrentUrl ? load.status : 'loading';
 
   const candidateUrl =

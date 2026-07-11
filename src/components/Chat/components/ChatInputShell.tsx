@@ -2,7 +2,6 @@ import {
   memo,
   type Ref,
   useCallback,
-  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -15,24 +14,20 @@ import { toast } from 'sonner-native';
 
 import type { useAuthContext } from '@app/context/AuthContext';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { findBadges } from '@app/utils/chat/findBadges';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { parseActionCommand } from '@app/utils/chat/parseActionMessage';
+import { parseActionCommand } from '@app/utils/chat/parseActionMessage/parseActionCommand';
 import { parseBadges } from '@app/utils/chat/parseBadges';
 import { formatDate } from '@app/utils/date-time/date';
 import { logger } from '@app/utils/logger';
 
 import { useChatImageUpload } from '../hooks/useChatImageUpload';
-import {
-  type AnyChatMessageType,
-  createUserStateFromTags,
-} from '../util/messageHandlers';
+import { createUserStateFromTags } from '../util/messageHandlers/createUserStateFromTags';
 import { parseModCommand } from '../util/modCommands';
 import { runModCommand } from '../util/runModCommand';
-import {
-  findSlashCommandDefinition,
-  isRefreshCommand,
-} from '../util/slashCommandDefinitions';
+import { findSlashCommandDefinition } from '../util/slashCommandDefinitions/findSlashCommandDefinition';
+import { isRefreshCommand } from '../util/slashCommandDefinitions/isRefreshCommand';
 import type { ChatComposerHandle } from './ChatComposer/ChatComposer';
 import { ChatInputSection, type ReplyToData } from './ChatInputSection';
 
@@ -102,15 +97,12 @@ export const ChatInputShell = memo(function ChatInputShell({
   const { messageInput, replyTo } = draft;
   const messageInputRef = useRef(messageInput);
   const isAuthenticated = Boolean(user?.id && user?.login);
-
   const clearDraft = useCallback(() => {
     messageInputRef.current = '';
     chatInputRef.current?.setText('');
     setDraft(createEmptyDraft());
   }, []);
 
-  // Also runs signed out: the composer stays editable so anyone can type
-  // /refresh, and the sign-out effect below resets the draft.
   const handleComposerTextChange = useCallback((text: string) => {
     messageInputRef.current = text;
     setDraft(prev => ({ ...prev, messageInput: text }));
@@ -143,13 +135,6 @@ export const ChatInputShell = memo(function ChatInputShell({
   const handleClearReply = useCallback(() => {
     setDraft(prev => ({ ...prev, replyTo: null }));
   }, []);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      // eslint-disable-next-line react-doctor/no-derived-state -- draft is user input (not derivable); this resets it AND imperatively clears the native composer (setText) on sign-out
-      clearDraft();
-    }
-  }, [clearDraft, isAuthenticated]);
 
   const handleSendMessage = useCallback(() => {
     const currentInput = messageInputRef.current;
@@ -247,6 +232,7 @@ export const ChatInputShell = memo(function ChatInputShell({
     const userBadges = emoteData
       ? findBadges({
           userstate: optimisticUserstate,
+          bttvBadges: emoteData.bttvBadges,
           chatterinoBadges: emoteData.chatterinoBadges,
           ffzChannelBadges: emoteData.ffzChannelBadges,
           ffzGlobalBadges: emoteData.ffzGlobalBadges,

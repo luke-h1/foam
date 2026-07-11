@@ -1,5 +1,9 @@
+import type {
+  ChannelCheermotes,
+  CheermoteTier,
+} from '@app/utils/chat/cheermoteStore/types';
+
 import { applyCheermotesToParts } from '../applyCheermotes';
-import type { ChannelCheermotes, CheermoteTier } from '../cheermoteStore';
 import type { ParsedPart } from '../parsedPart';
 
 const tier1: CheermoteTier = {
@@ -85,6 +89,34 @@ describe('applyCheermotesToParts', () => {
     const result = applyCheermotesToParts(parts, makeCheermotes());
 
     expect(result).toBe(parts);
+  });
+
+  test('selects the highest tier at or below the cheered bits', () => {
+    const parts: ParsedPart[] = [{ type: 'text', content: 'Cheer50' }];
+
+    expect(applyCheermotesToParts(parts, makeCheermotes())).toEqual<
+      ParsedPart[]
+    >([
+      {
+        type: 'cheermote',
+        content: 'Cheer50',
+        cheermote: {
+          bits: 50,
+          color: '#979797',
+          prefix: 'Cheer',
+          static_url: 'https://cdn.example.com/cheer/1.png',
+          url: 'https://cdn.example.com/cheer/1.gif',
+        },
+      },
+    ]);
+  });
+
+  test('leaves malformed cheer tokens as plain text', () => {
+    const parts: ParsedPart[] = [
+      { type: 'text', content: 'Cheer 100 Cheer1.5' },
+    ];
+
+    expect(applyCheermotesToParts(parts, makeCheermotes())).toBe(parts);
   });
 
   test('handles multiple cheer tokens in one message', () => {

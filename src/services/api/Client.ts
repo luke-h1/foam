@@ -1,6 +1,6 @@
 import { fetch } from 'expo/fetch';
 
-import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
+import { parseJsonOnWorklet } from '@app/lib/offThreadJson/parseJsonOnWorklet';
 import { type MonitoringErrorName, startSpanAsync } from '@app/lib/sentry';
 import { type AllowedPrefix, logger } from '@app/utils/logger';
 

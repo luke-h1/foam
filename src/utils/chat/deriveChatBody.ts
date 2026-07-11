@@ -1,25 +1,10 @@
+import { emoteBreaksInline } from '@app/utils/chat/deriveChatBody/emoteBreaksInline';
+import { structureCache } from '@app/utils/chat/deriveChatBody/structureCache';
+import {
+  ChatBodyVariant,
+  MessageStructure,
+} from '@app/utils/chat/deriveChatBody/types';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
-
-export type ChatBodyVariant =
-  | 'twitch_system_notice'
-  | 'raid'
-  | 'announcement'
-  | 'subscription'
-  | 'charity_donation'
-  | 'ritual'
-  | 'stv_emote_event'
-  | 'viewer_milestone'
-  | 'app_system_sender'
-  | 'user_chat';
-
-export interface MessageStructure {
-  /**
-   * Every part fits in a single Text (Twitch-web style inline wrap) — ignores
-   * paint/moderation, which the caller ANDs in cheaply at render time.
-   */
-  canBeInline: boolean;
-  containsEmotes: boolean;
-}
 
 export interface ChatBodyDerived extends MessageStructure {
   variant: ChatBodyVariant;
@@ -64,46 +49,9 @@ interface ChatBodyScan extends MessageStructure {
 }
 
 const scanCache = new WeakMap<ParsedPart[], ChatBodyScan>();
-const structureCache = new WeakMap<ParsedPart[], MessageStructure>();
 
 function normaliseLogin(value?: string): string {
   return value?.trim().replace(/^@/, '').toLowerCase() ?? '';
-}
-
-/**
- * Standalone zero-width emotes and attached overlays both need the
- * flex-wrap renderer; absolute positioning breaks inside a Text.
- */
-function emoteBreaksInline(part: ParsedPart<'emote'>): boolean {
-  return Boolean(part.zero_width || part.overlaid?.length);
-}
-
-export function getMessageStructure(message: ParsedPart[]): MessageStructure {
-  const cached = structureCache.get(message);
-  if (cached) {
-    return cached;
-  }
-
-  let canBeInline = true;
-  let containsEmotes = false;
-  for (const part of message) {
-    if (part.type === 'emote') {
-      containsEmotes = true;
-      if (emoteBreaksInline(part)) {
-        canBeInline = false;
-      }
-    } else if (
-      part.type !== 'text' &&
-      part.type !== 'mention' &&
-      part.type !== 'link'
-    ) {
-      canBeInline = false;
-    }
-  }
-
-  const structure: MessageStructure = { canBeInline, containsEmotes };
-  structureCache.set(message, structure);
-  return structure;
 }
 
 function resolveChatBodyVariant(

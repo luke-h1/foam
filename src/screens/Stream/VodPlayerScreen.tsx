@@ -13,7 +13,7 @@ import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { theme } from '@app/styles/themes';
 
-import { getLiveStreamLayoutMetrics } from './liveStreamLayout';
+import { getLiveStreamLayoutMetrics } from './liveStreamLayout/getLiveStreamLayoutMetrics';
 import { showSleepTimerMenu } from './showSleepTimerMenu';
 import { useSleepTimer } from './useSleepTimer';
 

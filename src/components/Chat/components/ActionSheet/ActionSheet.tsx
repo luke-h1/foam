@@ -188,44 +188,44 @@ function ActionSheetComponent(props: Props) {
       });
     }
 
-    if (canModerateChat) {
-      if (canPinMessage && !isPinnedMessageBusy) {
-        if (isPinnedMessage) {
-          items.push(
-            {
-              id: 'update-pin',
-              label: t('messageActions.refreshPin'),
-              subtitle: t('messageActions.refreshPinSubtitle'),
-              tone: 'accent',
-              onPress: () => {
-                handleUpdatePinnedMessage?.();
-                onClose();
-              },
-            },
-            {
-              id: 'unpin-message',
-              label: t('messageActions.unpinMessage'),
-              subtitle: t('messageActions.unpinMessageSubtitle'),
-              onPress: () => {
-                handleUnpinMessage?.();
-                onClose();
-              },
-            },
-          );
-        } else {
-          items.push({
-            id: 'pin-message',
-            label: t('messageActions.pinMessage'),
-            subtitle: t('messageActions.pinMessageSubtitle'),
+    if (canModerateChat && canPinMessage && !isPinnedMessageBusy) {
+      if (isPinnedMessage) {
+        items.push(
+          {
+            id: 'update-pin',
+            label: t('messageActions.refreshPin'),
+            subtitle: t('messageActions.refreshPinSubtitle'),
             tone: 'accent',
             onPress: () => {
-              handlePinMessage?.();
+              handleUpdatePinnedMessage?.();
               onClose();
             },
-          });
-        }
+          },
+          {
+            id: 'unpin-message',
+            label: t('messageActions.unpinMessage'),
+            subtitle: t('messageActions.unpinMessageSubtitle'),
+            onPress: () => {
+              handleUnpinMessage?.();
+              onClose();
+            },
+          },
+        );
+      } else {
+        items.push({
+          id: 'pin-message',
+          label: t('messageActions.pinMessage'),
+          subtitle: t('messageActions.pinMessageSubtitle'),
+          tone: 'accent',
+          onPress: () => {
+            handlePinMessage?.();
+            onClose();
+          },
+        });
       }
+    }
 
+    if (canModerateChat) {
       if (canDeleteMessage) {
         items.push({
           id: 'delete-message',

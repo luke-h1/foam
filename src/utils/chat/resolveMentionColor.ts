@@ -1,6 +1,6 @@
 import { getUserMessageColor } from '@app/store/chat/actions/messages';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { cachedLighten } from '@app/utils/chat/resolveCachedSenderColor';
+import { cachedLighten } from '@app/utils/chat/resolveCachedSenderColor/cachedLighten';
 
 export function resolveMentionColor(mentionUsername: string): string {
   const stripped = mentionUsername.replace(/^@/, '').trim();

@@ -84,7 +84,7 @@ jobs:
           set -euo pipefail
           cursor-agent \
             --force \
-            --model composer-2.5 \
+            --model grok-4.5-xhigh \
             --output-format text \
             -p "$(cat .github/cursor/review-run.md)" \
             | tee cursor-output.md

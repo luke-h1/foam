@@ -2,7 +2,7 @@
 import { fetch } from 'expo/fetch';
 import Constants from 'expo-constants';
 
-import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
+import { parseJsonOnWorklet } from '@app/lib/offThreadJson/parseJsonOnWorklet';
 import type { PaginatedList } from '@app/types/twitch/api';
 import type {
   DefaultTokenResponse,
@@ -62,7 +62,7 @@ const authProxyApiKey =
 
 // Cap follow-list pagination so a pathological follow count (Helix allows
 // thousands) can't fan out into dozens of sequential requests on tab load.
-const MAX_FOLLOWED_CHANNELS = 400;
+export const MAX_FOLLOWED_CHANNELS = 400;
 
 interface Emote {
   format: string[];

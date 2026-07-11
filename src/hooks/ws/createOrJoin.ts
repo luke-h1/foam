@@ -47,13 +47,10 @@ export const createOrJoinSocket = (
     return () => {
       removeSubscriber(url, subscriber);
       if (!hasSubscribers(url)) {
-        try {
-          if (sharedWebSockets[url]) {
-            sharedWebSockets[url].onclose = () => {};
-            sharedWebSockets[url].close();
-          }
-        } catch {
-          // Ignore error
+        const socket = sharedWebSockets[url];
+        if (socket) {
+          socket.onclose = () => {};
+          socket.close();
         }
         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         delete sharedWebSockets[url];

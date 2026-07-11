@@ -1,12 +1,10 @@
-import {
-  type ChatBodyVariant,
-  getChatBodyInfo,
-} from '@app/components/Chat/util/richChatMessageHelpers';
+import { getChatBodyInfo } from '@app/components/Chat/util/richChatMessageHelpers/getChatBodyInfo';
 import { hasUserPaint } from '@app/store/chat/actions/cosmetics';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { ChatBodyVariant } from '@app/utils/chat/deriveChatBody/types';
 
 import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
-import { isRenderableChatMessage } from './chatMessages';
-import type { AnyChatMessageType } from './messageHandlers';
+import { isRenderableChatMessage } from './chatMessages/isRenderableChatMessage';
 
 export interface ChatRowItemTypeOptions {
   showInlineReplyContext?: boolean;

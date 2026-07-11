@@ -8,18 +8,20 @@ import {
 } from '@legendapp/list/react-native';
 
 import { Button } from '@app/components/Button/Button';
-import type { SlashCommandDefinition } from '@app/components/Chat/util/slashCommandDefinitions';
+import type { SlashCommandDefinition } from '@app/components/Chat/util/slashCommandDefinitions/types';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
+
+import {
+  suggestionRailColors,
+  suggestionRailStyles,
+} from '../suggestionRailStyles';
 
 const COMMAND_SUGGESTION_ITEM_SIZE = 48;
 
 interface CommandSuggestionsProps {
   commands: SlashCommandDefinition[];
   handleCommandSelect: (command: SlashCommandDefinition) => void;
-  suggestionOpacity: number;
-  suggestionScale: number;
-  suggestionTranslateY: number;
 }
 
 type CommandSuggestionListExtra = {
@@ -62,31 +64,19 @@ function CommandSuggestionItem({
 export const CommandSuggestions = memo(function CommandSuggestions({
   commands,
   handleCommandSelect,
-  suggestionOpacity,
-  suggestionScale,
-  suggestionTranslateY,
 }: CommandSuggestionsProps) {
   const { t } = useTranslation('chat');
   const extraData = useMemo<CommandSuggestionListExtra>(
     () => ({ onPress: handleCommandSelect }),
     [handleCommandSelect],
   );
-  const suggestionStyle = {
-    opacity: suggestionOpacity,
-    transform: [
-      { scale: suggestionScale },
-      { translateY: suggestionTranslateY },
-    ],
-  };
-
-  if (suggestionOpacity === 0) {
-    return null;
-  }
 
   return (
-    <View style={[styles.suggestionsWrapper, suggestionStyle]}>
-      <View style={styles.suggestionsContainer}>
-        <Text style={styles.headerLabel}>{t('composer.commands')}</Text>
+    <View style={suggestionRailStyles.richWrapper}>
+      <View style={suggestionRailStyles.richContainer}>
+        <Text style={suggestionRailStyles.headerLabel}>
+          {t('composer.commands')}
+        </Text>
         <LegendList
           data={commands}
           horizontal
@@ -105,27 +95,20 @@ export const CommandSuggestions = memo(function CommandSuggestions({
 
 const styles = StyleSheet.create({
   commandDescription: {
-    color: theme.color.textSecondary.dark,
+    color: suggestionRailColors.secondaryText,
     flexShrink: 1,
     fontSize: theme.fontSize12,
-    marginTop: 1,
   },
   commandName: {
+    color: suggestionRailColors.text,
     flexShrink: 1,
     fontSize: theme.fontSize14,
     fontWeight: '600',
   },
   commandTextContainer: {
+    gap: 1,
     justifyContent: 'center',
     minWidth: 0,
-  },
-  headerLabel: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize12,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-    paddingBottom: theme.space8,
-    textTransform: 'uppercase',
   },
   scrollContent: {
     gap: theme.space8,
@@ -133,8 +116,8 @@ const styles = StyleSheet.create({
   },
   suggestionItem: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.dark,
-    borderColor: theme.colorBorderSecondary,
+    backgroundColor: suggestionRailColors.chipBackground,
+    borderColor: suggestionRailColors.chipBorder,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: 1,
@@ -143,21 +126,5 @@ const styles = StyleSheet.create({
     minHeight: COMMAND_SUGGESTION_ITEM_SIZE,
     paddingHorizontal: theme.space12,
     paddingVertical: theme.space8,
-  },
-  suggestionsContainer: {
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.colorBorderSecondary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius28,
-    borderWidth: 1,
-    paddingHorizontal: theme.space12,
-    paddingTop: theme.space12,
-    paddingBottom: theme.space12,
-    boxShadow: '0 6px 12px rgba(0, 0, 0, 0.18)',
-  },
-  suggestionsWrapper: {
-    marginBottom: theme.space8,
-    width: '100%',
-    zIndex: 2,
   },
 });

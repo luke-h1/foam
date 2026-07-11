@@ -21,7 +21,7 @@ import {
 } from '@app/store/preferenceStore';
 import { Color } from '@app/styles/pallete';
 import { theme } from '@app/styles/themes';
-import { normaliseHighlightPhrase } from '@app/utils/chat/customHighlights';
+import { normaliseHighlightPhrase } from '@app/utils/chat/customHighlights/normaliseHighlightPhrase';
 
 const HIGHLIGHT_COLORS = [
   theme.colorPrimary,

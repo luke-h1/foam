@@ -28,8 +28,10 @@ export const StreamPlayerPoster = memo(function StreamPlayerPoster({
   posterUrl,
   visible,
 }: StreamPlayerPosterProps) {
-  const [rendered, setRendered] = useState(true);
-  const opacity = useSharedValue(1);
+  // Stay mounted through the fade-out, then drop so LoadingState's withRepeat
+  // spinner and the poster bitmap are not left idle for the watch session.
+  const [rendered, setRendered] = useState(visible);
+  const opacity = useSharedValue(visible ? 1 : 0);
 
   useEffect(() => {
     if (visible) {
@@ -38,8 +40,6 @@ export const StreamPlayerPoster = memo(function StreamPlayerPoster({
       return;
     }
 
-    // Fade the loading frame out over the now-playing video, then drop it from
-    // the tree so it stops compositing over the WebView.
     opacity.set(
       withTiming(0, { duration: FADE_OUT_MS }, finished => {
         if (finished) {
@@ -49,7 +49,9 @@ export const StreamPlayerPoster = memo(function StreamPlayerPoster({
     );
   }, [visible, opacity]);
 
-  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.get() }));
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.get(),
+  }));
 
   if (!rendered) {
     return null;

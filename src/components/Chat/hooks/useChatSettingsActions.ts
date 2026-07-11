@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
 
-import { createSystemMessage } from '@app/components/Chat/util/messageHandlers';
+import { createSystemMessage } from '@app/components/Chat/util/messageHandlers/createSystemMessage';
 import i18next from '@app/i18n/i18next';
 import {
   clearCache,
@@ -25,12 +25,8 @@ interface UseChatSettingsActionsOptions {
 }
 
 function handleClearSevenTvCosmeticsCache() {
-  try {
-    clearUserCosmeticsCache();
-    logger.chat.info('7TV cosmetic cache cleared successfully');
-  } catch (error) {
-    logger.chat.error('Failed to clear 7TV cosmetic cache:', error);
-  }
+  clearUserCosmeticsCache();
+  logger.chat.info('7TV cosmetic cache cleared successfully');
 }
 
 export function useChatSettingsActions({
@@ -67,22 +63,18 @@ export function useChatSettingsActions({
   chatDensityRef.current = chatDensity;
 
   const handleClearChatCache = useCallback(() => {
-    try {
-      clearCache(channelId);
-      logger.chat.info('Chat cache cleared successfully');
-    } catch (error) {
-      logger.chat.error('Failed to clear chat cache:', error);
-    }
+    clearCache(channelId);
+    logger.chat.info('Chat cache cleared successfully');
   }, [channelId]);
 
   const handleClearImageCache = useCallback(async () => {
     try {
-      await clearImageCache(channelId);
+      await clearImageCache();
       logger.chat.info('Image cache cleared successfully');
     } catch (error) {
       logger.chat.error('Failed to clear image cache:', error);
     }
-  }, [channelId]);
+  }, []);
 
   const handleDebugClearImageCache = useCallback(() => {
     void handleClearImageCache();
@@ -120,7 +112,7 @@ export function useChatSettingsActions({
       try {
         invalidateChannelCache(channelId);
         clearUserCosmeticsCache();
-        await clearImageCache(channelId);
+        await clearImageCache();
         await refetchEmotesRef.current();
         reprocessAllMessagesRef.current();
         announceRefresh();

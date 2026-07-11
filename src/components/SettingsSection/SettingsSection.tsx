@@ -1,4 +1,4 @@
-import { Children, Fragment, ReactNode } from 'react';
+import { Children, Fragment, isValidElement, ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import type { SFSymbol } from 'sf-symbols-typescript';
@@ -56,7 +56,9 @@ export function SettingsSection({
         style={[styles.card, cardColor ? { backgroundColor: cardColor } : null]}
       >
         {Children.toArray(children).map((child, index, rows) => (
-          <Fragment key={index}>
+          <Fragment
+            key={isValidElement(child) ? String(child.key) : 'settings-row'}
+          >
             {child}
             {index < rows.length - 1 ? <View style={styles.separator} /> : null}
           </Fragment>

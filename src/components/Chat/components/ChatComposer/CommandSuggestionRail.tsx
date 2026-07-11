@@ -1,11 +1,15 @@
 import { useDeferredValue } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
+import Animated from 'react-native-reanimated';
 
-import type { SlashCommandDefinition } from '@app/components/Chat/util/slashCommandDefinitions';
+import type { SlashCommandDefinition } from '@app/components/Chat/util/slashCommandDefinitions/types';
 
 import { CommandSuggestions } from './components/CommandSuggestions';
 import { useCommandSuggestions } from './hooks/useCommandSuggestions';
-import { useSuggestionAnimations } from './hooks/useSuggestionAnimations';
+import {
+  suggestionRailEntering,
+  suggestionRailExiting,
+} from './suggestionRailAnimations';
 
 interface CommandSuggestionRailProps {
   handleCommandSelect: (command: SlashCommandDefinition) => void;
@@ -24,24 +28,21 @@ export function CommandSuggestionRail({
     maxSuggestions,
   });
 
-  const { opacity, scale, translateY } = useSuggestionAnimations({
-    shouldShow: filteredCommands.length > 0,
-  });
-
   if (filteredCommands.length === 0) {
     return null;
   }
 
   return (
-    <View style={styles.suggestionRail}>
+    <Animated.View
+      style={styles.suggestionRail}
+      entering={suggestionRailEntering}
+      exiting={suggestionRailExiting}
+    >
       <CommandSuggestions
         commands={filteredCommands}
         handleCommandSelect={handleCommandSelect}
-        suggestionOpacity={opacity}
-        suggestionScale={scale}
-        suggestionTranslateY={translateY}
       />
-    </View>
+    </Animated.View>
   );
 }
 

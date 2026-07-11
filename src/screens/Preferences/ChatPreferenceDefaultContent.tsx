@@ -15,7 +15,6 @@ import {
   DensityPreview,
   EmojiStylePreview,
   PreviewLabel,
-  ProviderPreviewItem,
 } from './ChatPreferencePreviewWidgets';
 import { ChatPreferenceSegmentedSettingsRow } from './ChatPreferenceSettingsRows';
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
@@ -29,53 +28,48 @@ import {
   TIMESTAMP_FORMAT_OPTIONS,
 } from './chatPreferenceTypes';
 import { ChatProviderPreferenceSections } from './ChatProviderPreferenceSections';
-import type { useChatPreferenceScreenState } from './useChatPreferenceScreenState';
+import { useChatPreferenceScreenState } from './useChatPreferenceScreenState';
 
-type ChatPreferenceScreenState = ReturnType<
-  typeof useChatPreferenceScreenState
->;
-
-type ChatPreferenceDefaultContentProps = ChatPreferenceScreenState;
-
-export function ChatPreferenceDefaultContent({
-  chatDelayIndex,
-  chatMentionHaptics,
-  deletedStyleIndex,
-  densityIndex,
-  emojiIndex,
-  fontScaleIndex,
-  previewFontScale,
-  handleChatDelayChange,
-  handleChatDelayValueChange,
-  handleDeletedStyleChange,
-  handleDeletedStyleValueChange,
-  handleFontScaleChange,
-  handleFontScaleValueChange,
-  handleScrollbackChange,
-  handleScrollbackValueChange,
-  handleTimestampFormatChange,
-  handleTimestampFormatValueChange,
-  ignoreClearChat,
-  scrollbackIndex,
-  timestampFormatIndex,
-  emojiLabels,
-  emojiPreviewEmotes,
-  handleAlternatingRowsToggle,
-  handleContextToggle,
-  handleDensityChange,
-  handleDensityValueChange,
-  handleDisableEmoteAnimationsToggle,
-  handleEmojiStyleChange,
-  handleEmojiStyleChangeByIndex,
-  handleProviderToggle,
-  previewAlternatingRows,
-  previewContext,
-  previewDensity,
-  previewDisableEmoteAnimations,
-  previewProviders,
-  showRecentMessages,
-  update,
-}: ChatPreferenceDefaultContentProps) {
+export function ChatPreferenceDefaultContent() {
+  const {
+    chatDelayIndex,
+    chatMentionHaptics,
+    deletedStyleIndex,
+    densityIndex,
+    emojiIndex,
+    fontScaleIndex,
+    previewFontScale,
+    handleChatDelayChange,
+    handleChatDelayValueChange,
+    handleDeletedStyleChange,
+    handleDeletedStyleValueChange,
+    handleFontScaleChange,
+    handleFontScaleValueChange,
+    handleScrollbackChange,
+    handleScrollbackValueChange,
+    handleTimestampFormatChange,
+    handleTimestampFormatValueChange,
+    ignoreClearChat,
+    scrollbackIndex,
+    timestampFormatIndex,
+    emojiLabels,
+    emojiPreviewEmotes,
+    handleAlternatingRowsToggle,
+    handleContextToggle,
+    handleDensityChange,
+    handleDensityValueChange,
+    handleDisableEmoteAnimationsToggle,
+    handleEmojiStyleChange,
+    handleEmojiStyleChangeByIndex,
+    handleProviderToggle,
+    previewAlternatingRows,
+    previewContext,
+    previewDensity,
+    previewDisableEmoteAnimations,
+    previewProviders,
+    showRecentMessages,
+    update,
+  } = useChatPreferenceScreenState();
   const { t } = useTranslation('preferences');
 
   return (
@@ -305,7 +299,6 @@ export function ChatPreferenceDefaultContent({
       <ChatProviderPreferenceSections
         previewProviders={previewProviders}
         onProviderToggle={handleProviderToggle}
-        ProviderPreviewItem={ProviderPreviewItem}
       />
 
       <SettingsSection

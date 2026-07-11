@@ -9,9 +9,9 @@ import {
   switchSevenTvEmoteSet,
   updateSevenTvEmotes,
 } from '@app/store/chat/actions/channelLoad';
+import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { logger } from '@app/utils/logger';
 
-import type { AnyChatMessageType } from '../util/messageHandlers';
 import { useChatSevenTvCallbacks } from './useChatSevenTvCallbacks';
 
 export function useSevenTvChatRuntime({
