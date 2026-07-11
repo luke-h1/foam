@@ -12,6 +12,16 @@ import { logger } from '@app/utils/logger';
  */
 let cachedBadges: SanitisedBadgeSet[] = [];
 let fetchStarted = false;
+let onBadgesLoaded: (() => void) | null = null;
+
+/**
+ * The fetch resolves after the first viewport has already parsed with an
+ * empty list; the chat store registers a badge-reprocess trigger here so
+ * those rows backfill.
+ */
+export function setOnBttvBadgesLoaded(callback: () => void): void {
+  onBadgesLoaded = callback;
+}
 
 function loadBttvBadges(): void {
   fetchStarted = true;
@@ -19,6 +29,9 @@ function loadBttvBadges(): void {
     .getSanitisedGlobalBadges()
     .then(badges => {
       cachedBadges = badges;
+      if (badges.length > 0) {
+        onBadgesLoaded?.();
+      }
     })
     .catch(error => {
       // BTTV badges are cosmetic, so a fetch miss is non-fatal; clear the flag

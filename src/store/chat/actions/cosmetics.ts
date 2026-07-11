@@ -12,6 +12,7 @@ import {
 import type { PaintData } from '@app/types/seventv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
+import { setOnBttvBadgesLoaded } from '@app/utils/chat/bttvBadges';
 import {
   convertV4PaintToPaintData,
   type V4Badge,
@@ -59,6 +60,13 @@ const scheduleCosmeticBindingsBump = (): void => {
     bumpCosmeticBindingsVersion();
   }, COSMETIC_BINDINGS_BUMP_COALESCE_MS);
 };
+
+/**
+ * BTTV's global badge list is another late-arriving badge source: rows parsed
+ * before the fetch lands resolve no BTTV badges, so its load triggers the
+ * same coalesced reprocess.
+ */
+setOnBttvBadgesLoaded(scheduleCosmeticBindingsBump);
 
 const COSMETICS_PERSIST_DEBOUNCE_MS = 4000;
 let cosmeticsPersistTimer: ReturnType<typeof setTimeout> | null = null;
@@ -656,6 +664,7 @@ export const removeBadge = (badgeId: string) => {
       ),
     ),
   );
+  scheduleCosmeticsPersist();
 };
 
 export const removeUserBadge = (ttvUserId: string) => {
@@ -666,6 +675,7 @@ export const removeUserBadge = (ttvUserId: string) => {
 
   const { [ttvUserId]: _, ...rest } = current;
   chatStore$.userBadgeIds.set(rest);
+  scheduleCosmeticsPersist('bindings');
   scheduleCosmeticBindingsBump();
 };
 
@@ -691,6 +701,7 @@ export const removePaint = (paintId: string) => {
       ),
     ),
   );
+  scheduleCosmeticsPersist();
 };
 
 export const removeUserPaint = (ttvUserId: string) => {
@@ -701,6 +712,7 @@ export const removeUserPaint = (ttvUserId: string) => {
 
   const { [ttvUserId]: _, ...rest } = current;
   chatStore$.userPaintIds.set(rest);
+  scheduleCosmeticsPersist('bindings');
 };
 
 export const clearPaints = () => {
@@ -708,6 +720,7 @@ export const clearPaints = () => {
     chatStore$.paints.set({});
     chatStore$.userPaintIds.set({});
   });
+  scheduleCosmeticsPersist();
 };
 
 /**
@@ -720,6 +733,7 @@ export const clearPaints = () => {
  */
 export const clearPaintBindings = () => {
   chatStore$.userPaintIds.set({});
+  scheduleCosmeticsPersist('bindings');
 };
 
 export const clearSevenTvBadges = () => {
@@ -727,6 +741,7 @@ export const clearSevenTvBadges = () => {
     chatStore$.badges.set({});
     chatStore$.userBadgeIds.set({});
   });
+  scheduleCosmeticsPersist();
 };
 
 const clearPaintsAndBadges = () => {
