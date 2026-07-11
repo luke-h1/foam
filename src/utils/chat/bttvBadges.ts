@@ -2,9 +2,14 @@ import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { logger } from '@app/utils/logger';
 
+const INITIAL_RETRY_DELAY_MS = 10_000;
+const MAX_RETRY_DELAY_MS = 5 * 60 * 1000;
+
 let cachedBadges: SanitisedBadgeSet[] = [];
 let fetchStarted = false;
 let onBadgesLoaded: (() => void) | null = null;
+let retryDelayMs = INITIAL_RETRY_DELAY_MS;
+let nextRetryAt = 0;
 
 export function setOnBttvBadgesLoaded(callback: () => void): void {
   onBadgesLoaded = callback;
@@ -16,6 +21,7 @@ function loadBttvBadges(): void {
     .getSanitisedGlobalBadges()
     .then(badges => {
       cachedBadges = badges;
+      retryDelayMs = INITIAL_RETRY_DELAY_MS;
       if (badges.length > 0) {
         onBadgesLoaded?.();
       }
@@ -23,6 +29,8 @@ function loadBttvBadges(): void {
     .catch(error => {
       // Reset so a later read retries instead of being stuck on the empty list.
       fetchStarted = false;
+      nextRetryAt = Date.now() + retryDelayMs;
+      retryDelayMs = Math.min(retryDelayMs * 2, MAX_RETRY_DELAY_MS);
       logger.chat.warn('Failed to fetch BTTV badges', { error });
     });
 }
@@ -32,7 +40,7 @@ function loadBttvBadges(): void {
  * first call kicks off the fetch and returns an empty list until it lands.
  */
 export function getBttvBadges(): SanitisedBadgeSet[] {
-  if (!fetchStarted) {
+  if (!fetchStarted && Date.now() >= nextRetryAt) {
     loadBttvBadges();
   }
   return cachedBadges;

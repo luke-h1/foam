@@ -63,20 +63,53 @@ describe('getBttvBadges', () => {
     expect(onLoaded).not.toHaveBeenCalled();
   });
 
-  test('retries on the next read after a failed fetch without firing the callback', async () => {
+  test('retries after the backoff window elapses without firing the callback early', async () => {
+    jest.useFakeTimers();
     getSanitisedGlobalBadges.mockRejectedValueOnce(new Error('network'));
     const onLoaded = jest.fn();
     setOnBttvBadgesLoaded(onLoaded);
 
     getBttvBadges();
-    await flush();
+    await jest.advanceTimersByTimeAsync(0);
     expect(onLoaded).not.toHaveBeenCalled();
 
     getSanitisedGlobalBadges.mockResolvedValue([badge]);
+    jest.advanceTimersByTime(10_000);
     getBttvBadges();
-    await flush();
+    await jest.advanceTimersByTimeAsync(0);
 
     expect(getBttvBadges()).toEqual<SanitisedBadgeSet[]>([badge]);
     expect(onLoaded).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
+  });
+
+  test('does not refetch inside the backoff window and doubles it per failure', async () => {
+    jest.useFakeTimers();
+    getSanitisedGlobalBadges.mockRejectedValue(new Error('network'));
+
+    getBttvBadges();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(getSanitisedGlobalBadges).toHaveBeenCalledTimes(1);
+
+    getBttvBadges();
+    getBttvBadges();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(getSanitisedGlobalBadges).toHaveBeenCalledTimes(1);
+
+    jest.advanceTimersByTime(10_000);
+    getBttvBadges();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(getSanitisedGlobalBadges).toHaveBeenCalledTimes(2);
+
+    jest.advanceTimersByTime(10_000);
+    getBttvBadges();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(getSanitisedGlobalBadges).toHaveBeenCalledTimes(2);
+
+    jest.advanceTimersByTime(10_000);
+    getBttvBadges();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(getSanitisedGlobalBadges).toHaveBeenCalledTimes(3);
+    jest.useRealTimers();
   });
 });
