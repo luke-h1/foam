@@ -55,9 +55,15 @@ function setTimedCacheValue<T>(
   key: string,
   value: T,
 ): void {
+  const now = Date.now();
+  cache.forEach((entry, entryKey) => {
+    if (entry.expiresAt <= now) {
+      cache.delete(entryKey);
+    }
+  });
   cache.set(key, {
     value,
-    expiresAt: Date.now() + SHARED_CHAT_BADGE_CACHE_TTL,
+    expiresAt: now + SHARED_CHAT_BADGE_CACHE_TTL,
   });
 }
 
@@ -212,6 +218,7 @@ export function getMessageBadges({
 }): SanitisedBadgeSet[] {
   const foundBadges = findBadges({
     userstate,
+    bttvBadges: emoteData.bttvBadges,
     chatterinoBadges: emoteData.chatterinoBadges,
     ffzChannelBadges: emoteData.ffzChannelBadges,
     ffzGlobalBadges: emoteData.ffzGlobalBadges,

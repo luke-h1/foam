@@ -22,7 +22,6 @@ import {
   createViewerMilestonePart,
 } from '@app/utils/chat/formatSubscriptionNotice';
 import { parseBadges } from '@app/utils/chat/parseBadges';
-import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 import {
   isSharedChatDuplicatedNotice,
   isSubscriptionUserNotice,
@@ -120,7 +119,7 @@ export const createBaseMessage = ({
     sender: userstate.username || '',
     parentDisplayName: tags['reply-parent-display-name'] || '',
     replyDisplayName: tags['reply-parent-user-login'] || '',
-    replyBody: unescapeIrcTag(tags['reply-parent-msg-body'] || ''),
+    replyBody: tags['reply-parent-msg-body'] || '',
     parentColor: undefined,
     isChannelPointRedemption:
       Boolean(enrichedTags['custom-reward-id']) || isHighlightedMessage,
@@ -130,9 +129,8 @@ export const createBaseMessage = ({
 };
 
 const createSystemNoticeText = (tags: UserNoticeTags, text: string): string => {
-  const rawSystem =
+  const systemLine =
     typeof tags['system-msg'] === 'string' ? tags['system-msg'] : '';
-  const systemLine = unescapeIrcTag(rawSystem);
   const userLine = text.trimEnd();
 
   return [systemLine, userLine]
@@ -205,11 +203,10 @@ export const createUserNoticeMessage = ({
         ? tags['reply-parent-display-name']
         : '',
     replyDisplayName: tags['reply-parent-user-login'] || '',
-    replyBody: unescapeIrcTag(
+    replyBody:
       typeof tags['reply-parent-msg-body'] === 'string'
         ? tags['reply-parent-msg-body']
         : '',
-    ),
     ...userstateTags,
   };
 

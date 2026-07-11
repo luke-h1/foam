@@ -1,6 +1,5 @@
 import { type RefObject, useCallback, useMemo } from 'react';
 
-import { shouldProcessLiveMessage } from '@app/components/Chat/util/chatIngestRateLimiter';
 import { parseIrcMessage } from '@app/services/recent-messages-service';
 import {
   addMessage,
@@ -109,10 +108,6 @@ export function useChatIrcHandlers({
 
   const handlePrivmsgMessage = useCallback(
     (tags: Record<string, string>, rawText: string, countUnread = true) => {
-      // Recent-message replay (countUnread === false) is never flood-sampled.
-      if (countUnread && !shouldProcessLiveMessage()) {
-        return;
-      }
       const { isAction, text } = parseActionMessage(rawText);
       const replyParentMessageId = tags['reply-parent-msg-id'];
       const replyParentDisplayName = tags['reply-parent-display-name'];
@@ -137,8 +132,6 @@ export function useChatIrcHandlers({
       });
       const messageWithParentColor = { ...baseMessage, parentColor };
 
-      // Live messages defer the emote/badge parse to commit time; replay
-      // parses eagerly since the whole batch commits at once.
       if (countUnread) {
         enqueueLiveChatMessage(messageWithParentColor, countUnread);
         return;

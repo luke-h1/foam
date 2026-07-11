@@ -1,4 +1,3 @@
-import { View } from 'react-native';
 import type { Key, ReactNode } from 'react';
 
 import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
@@ -32,20 +31,6 @@ export function ChatMessageBadges({
   for (const badge of badges) {
     const normalizedBadge = normalizeSevenTvBadge(badge);
     if (!normalizedBadge.url?.trim()) {
-      renderedBadges.push(
-        <View
-          key={getMappingKey(
-            `missing-badge-${normalizedBadge.set}-${normalizedBadge.id}-${normalizedBadge.type}`,
-            index,
-          )}
-          style={[
-            styles.badge,
-            compact && styles.badgeCompact,
-            Boolean(moderationNotice) && styles.moderatedBadge,
-          ]}
-          testID='chat-badge-placeholder'
-        />,
-      );
       index += 1;
       continue;
     }

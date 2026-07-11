@@ -11,6 +11,8 @@ import type { ReactNode } from 'react';
 
 import { createHitslop } from '@app/utils/string/createHitSlop';
 
+const DEFAULT_HIT_SLOP = createHitslop(8);
+
 interface ChatMessagePressableProps {
   accessibilityLabel?: string;
   children: ReactNode;
@@ -26,7 +28,7 @@ function ChatMessagePressableComponent({
   accessibilityLabel,
   children,
   disabled,
-  hitSlop = createHitslop(8),
+  hitSlop = DEFAULT_HIT_SLOP,
   onLongPress,
   onPress,
   style,
@@ -50,8 +52,6 @@ function ChatMessagePressableComponent({
       hitSlop={hitSlop}
       onLongPress={onLongPress}
       onPress={onPress}
-      // Style-function form: pressed feedback with no state or re-render,
-      // cheap enough for hundreds of chat rows.
       style={({ pressed }) => [style, pressed && pressedStyle]}
       testID={testID}
     >

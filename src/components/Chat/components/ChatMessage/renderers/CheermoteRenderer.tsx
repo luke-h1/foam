@@ -29,7 +29,10 @@ export const CheermoteRenderer = memo(
     }
 
     return (
-      <View style={[styles.container, isModerated && styles.moderated]}>
+      <View
+        testID='cheermote-container'
+        style={[styles.container, isModerated && styles.moderated]}
+      >
         <ChatInlineImage
           sourceUrl={sourceUrl}
           style={{ width: targetSize, height: targetSize }}

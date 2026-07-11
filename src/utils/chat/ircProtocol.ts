@@ -1,3 +1,5 @@
+import { unescapeIrcTag } from './unescapeIrcTag';
+
 export interface IrcMessage {
   tags?: Record<string, string>;
   prefix?: string;
@@ -5,10 +7,6 @@ export interface IrcMessage {
   params: string[];
 }
 
-/**
- * Parse the `key=value;key2=value2` IRCv3 tag string into a map. Values may be
- * empty and may themselves contain `=`.
- */
 export function parseIrcTags(tagString: string): Record<string, string> {
   const tags: Record<string, string> = {};
   if (!tagString) {
@@ -19,12 +17,18 @@ export function parseIrcTags(tagString: string): Record<string, string> {
   while (start <= tagString.length) {
     const separatorIndex = tagString.indexOf(';', start);
     const endIndex = separatorIndex === -1 ? tagString.length : separatorIndex;
-    const part = tagString.slice(start, endIndex);
-    const keyValue = part.split('=');
-    const key = keyValue[0] ?? '';
+    /**
+     * Split on the first `=` only (values may contain `=`) with two slices -
+     * ~20 runs per message at up to 100 msg/s, keep it allocation-light.
+     */
+    const equalsIndex = tagString.indexOf('=', start);
+    const hasValue = equalsIndex !== -1 && equalsIndex < endIndex;
+    const key = tagString.slice(start, hasValue ? equalsIndex : endIndex);
 
     if (key) {
-      tags[key] = keyValue.length > 1 ? keyValue.slice(1).join('=') : '';
+      tags[key] = unescapeIrcTag(
+        hasValue ? tagString.slice(equalsIndex + 1, endIndex) : '',
+      );
     }
 
     if (separatorIndex === -1) {
@@ -36,16 +40,67 @@ export function parseIrcTags(tagString: string): Record<string, string> {
   return tags;
 }
 
+export function isPrivmsgLine(line: string): boolean {
+  let index = 0;
+  if (line.charCodeAt(index) === 64 /* @ */) {
+    const spaceIndex = line.indexOf(' ', index);
+    if (spaceIndex === -1) {
+      return false;
+    }
+    index = spaceIndex + 1;
+  }
+  if (line.charCodeAt(index) === 58 /* : */) {
+    const spaceIndex = line.indexOf(' ', index);
+    if (spaceIndex === -1) {
+      return false;
+    }
+    index = spaceIndex + 1;
+  }
+  return line.startsWith('PRIVMSG ', index);
+}
+
+/**
+ * Escape a value for an outbound IRCv3 tag (the inverse of `unescapeIrcTag`):
+ * `\`→`\\`, `;`→`\:`, space→`\s`, CR→`\r`, LF→`\n`. Backslashes are escaped
+ * first so the later passes never double-escape their own output.
+ */
+function escapeIrcTagValue(value: string): string {
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\:')
+    .replace(/ /g, '\\s')
+    .replace(/\r/g, '\\r')
+    .replace(/\n/g, '\\n');
+}
+
+export function buildPrivmsgLine({
+  channel,
+  message,
+  replyParentMsgId,
+}: {
+  /**
+   * Already formatted with its `#` prefix.
+   */
+  channel: string;
+  message: string;
+  replyParentMsgId?: string;
+}): string {
+  const command = replyParentMsgId
+    ? `@reply-parent-msg-id=${escapeIrcTagValue(replyParentMsgId)} PRIVMSG`
+    : 'PRIVMSG';
+  return `${command} ${channel} :${message.replace(/[\r\n]+/g, ' ')}`;
+}
+
 /**
  * Parse a raw Twitch IRC line (`[@tags] [:prefix] COMMAND params [:trailing]`)
  * into its parts. Returns null for blank or structurally invalid lines.
  */
 export function parseIrcMessage(line: string): IrcMessage | null {
-  if (!line.trim()) {
+  let remaining = line.trim();
+  if (!remaining) {
     return null;
   }
 
-  let remaining = line.trim();
   let tags: Record<string, string> | undefined;
   let prefix: string | undefined;
 

@@ -29,26 +29,32 @@ type HydrateVisibleSevenTvAssetsParams = {
   hydratePersonalEmotes?: boolean;
   hydrateCosmetics?: boolean;
   reprocessMessage: (message: AnyChatMessageType) => void | Promise<void>;
+  /**
+   * Polled between reprocess slices; return false to stop a pass whose
+   * surface unmounted or hopped channels mid-flight.
+   */
+  shouldContinue?: () => boolean;
 };
 
 const MAX_PERSONAL_EMOTE_FETCHES_PER_PASS = 3;
 const MAX_COSMETIC_FETCHES_PER_PASS = 3;
 
-// These dedup guards live in refs that persist for the whole channel session, so
-// they must be bounded or they grow one entry per message / per chatter until the
-// app is jettisoned (busy channels like caedrel churn tens of thousands over 20
-// min). The hydration-key guard comfortably covers the visible window + trim
-// headroom; the per-user guards are backed by sessionCosmeticsCache + MMKV, so
-// evicting a long-departed chatter only means a cheap cache-hit refetch.
+const REPROCESS_BATCH_SIZE = 6;
+const REPROCESS_BATCH_DELAY_MS = 32;
+
+const waitBetweenReprocessBatches = () =>
+  new Promise<void>(resolve => {
+    setTimeout(resolve, REPROCESS_BATCH_DELAY_MS);
+  });
+
 const MAX_HYDRATED_MESSAGE_KEYS = 2000;
 const MAX_VISIBLE_USER_GUARDS = 5000;
 
-/**
- * Insertion-ordered add with a FIFO cap: once the set is full, adding a new key
- * drops the oldest so the guard stays bounded without losing dedup for recent
- * (still on-screen) entries.
- */
-function boundedSetAdd(set: Set<string>, key: string, max: number): void {
+export function boundedSetAdd(
+  set: Set<string>,
+  key: string,
+  max: number,
+): void {
   set.add(key);
   if (set.size <= max) {
     return;
@@ -118,6 +124,7 @@ export async function hydrateVisibleSevenTvAssets({
   hydratePersonalEmotes = true,
   hydrateCosmetics = true,
   reprocessMessage,
+  shouldContinue,
 }: HydrateVisibleSevenTvAssetsParams): Promise<boolean> {
   const pending: Promise<void>[] = [];
   let personalEmoteFetchesStarted = 0;
@@ -125,6 +132,10 @@ export async function hydrateVisibleSevenTvAssets({
   let didScheduleReprocess = false;
 
   const reprocessIfChanged = (message: AnyChatMessageType) => {
+    if (shouldContinue && !shouldContinue()) {
+      return undefined;
+    }
+
     const userId = message.userstate['user-id'];
     if (!userId) {
       return undefined;
@@ -146,6 +157,8 @@ export async function hydrateVisibleSevenTvAssets({
     return reprocessMessage(message);
   };
 
+  const cachedAssetMessages: AnyChatMessageType[] = [];
+
   messages.forEach(message => {
     const userId = message.userstate['user-id'];
     if (!userId || !canHydrateMessage(message)) {
@@ -162,7 +175,7 @@ export async function hydrateVisibleSevenTvAssets({
       cachedBadge ||
       isMissingSharedChatSourceBadge(message)
     ) {
-      pending.push(Promise.resolve(reprocessIfChanged(message)));
+      cachedAssetMessages.push(message);
     }
 
     if (
@@ -201,6 +214,22 @@ export async function hydrateVisibleSevenTvAssets({
       }
     }
   });
+
+  for (let index = 0; index < cachedAssetMessages.length; index += 1) {
+    if (index > 0 && index % REPROCESS_BATCH_SIZE === 0) {
+      // The serialized await is the point: batches must not start until the
+      // previous turn yielded, or the whole screenful parses in one tick.
+      // eslint-disable-next-line react-doctor/async-await-in-loop
+      await waitBetweenReprocessBatches();
+    }
+    if (shouldContinue && !shouldContinue()) {
+      break;
+    }
+    const message = cachedAssetMessages[index];
+    if (message) {
+      pending.push(Promise.resolve(reprocessIfChanged(message)));
+    }
+  }
 
   await Promise.all(pending);
 
