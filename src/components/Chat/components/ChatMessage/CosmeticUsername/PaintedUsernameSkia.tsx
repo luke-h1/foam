@@ -3,10 +3,13 @@ import { PixelRatio } from 'react-native';
 
 import {
   Canvas,
+  Fill,
   Image,
+  ImageShader,
   Mask,
   useAnimatedImageValue,
   useFonts,
+  useImage,
 } from '@shopify/react-native-skia';
 
 import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/RichChatMessage.styles';
@@ -49,7 +52,13 @@ interface PaintedUsernameSkiaProps {
  * per-frame JS and no re-rasterizing.
  */
 function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
-  const animatedFrame = useAnimatedImageValue(bitmaps.animatedUrl ?? undefined);
+  const { animatedTile } = bitmaps;
+  const animatedFrame = useAnimatedImageValue(
+    animatedTile ? undefined : (bitmaps.animatedUrl ?? undefined),
+  );
+  const tiledImage = useImage(
+    animatedTile ? (bitmaps.animatedUrl ?? undefined) : undefined,
+  );
 
   const maskNode = useMemo(
     () =>
@@ -67,6 +76,33 @@ function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
   );
 
   const { width, height, insets, staticImage, animatedRect } = bitmaps;
+
+  const tiledOverlay =
+    maskNode && animatedTile && tiledImage ? (
+      <Mask mode='alpha' mask={maskNode}>
+        <Fill>
+          <ImageShader
+            image={tiledImage}
+            tx={animatedTile.tx}
+            ty={animatedTile.ty}
+          />
+        </Fill>
+      </Mask>
+    ) : null;
+
+  const stretchOverlay =
+    maskNode && !animatedTile && animatedRect ? (
+      <Mask mode='alpha' mask={maskNode}>
+        <Image
+          image={animatedFrame}
+          x={animatedRect.x}
+          y={animatedRect.y}
+          width={animatedRect.width}
+          height={animatedRect.height}
+          fit='fill'
+        />
+      </Mask>
+    ) : null;
 
   return (
     <Canvas
@@ -87,18 +123,8 @@ function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
         height={height}
         fit='fill'
       />
-      {maskNode && animatedRect ? (
-        <Mask mode='alpha' mask={maskNode}>
-          <Image
-            image={animatedFrame}
-            x={animatedRect.x}
-            y={animatedRect.y}
-            width={animatedRect.width}
-            height={animatedRect.height}
-            fit='fill'
-          />
-        </Mask>
-      ) : null}
+      {tiledOverlay}
+      {stretchOverlay}
     </Canvas>
   );
 }

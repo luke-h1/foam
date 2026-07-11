@@ -22,7 +22,7 @@ export interface LayerGradientConfig {
 // A paint is shared by paint_id across every user wearing it (mirroring the
 // 7TV extension, which builds one CSS rule per paint and reuses it for all
 // users). These derivations are pure functions of the paint, so memoise them
-// on the paint object — every painted row that shares a paint then reuses the
+// on the paint object - every painted row that shares a paint then reuses the
 // same computed layers/gradient configs instead of rebuilding them per render.
 // WeakMap-keyed so entries drop with the paint object; no eviction needed.
 const paintLayersCache = new WeakMap<PaintData, PaintLayerData[]>();
@@ -189,7 +189,7 @@ function expandRepeatingStops(stops: PaintStop[]): PaintStop[] {
   return expanded;
 }
 
-// Keyed on the (memoised, stable) layer object, then on fallbackColor — the
+// Keyed on the (memoised, stable) layer object, then on fallbackColor - the
 // only per-call input. Repeating-gradient stop expansion + sorting + colour
 // conversion are the heaviest paint work; sharing the result across every user
 // wearing the paint is the main per-render saving.
@@ -270,4 +270,20 @@ export function imageRepeatFromCanvasRepeat(
   layerRepeat: boolean,
 ): 'cover' | 'contain' | 'fill' | 'none' | 'scale-down' {
   return isTilingCanvasRepeat(canvasRepeat, layerRepeat) ? 'none' : 'fill';
+}
+
+export type PaintLayerTileMode = 'clamp' | 'decal' | 'mirror' | 'repeat';
+
+export function paintLayerTileModes(canvasRepeat: PaintCanvasRepeat): {
+  tx: PaintLayerTileMode;
+  ty: PaintLayerTileMode;
+} {
+  switch (canvasRepeat) {
+    case 'repeat-x':
+      return { tx: 'repeat', ty: 'decal' };
+    case 'repeat-y':
+      return { tx: 'decal', ty: 'repeat' };
+    default:
+      return { tx: 'repeat', ty: 'repeat' };
+  }
 }

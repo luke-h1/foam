@@ -4,16 +4,9 @@ import { Redirect } from 'expo-router';
 
 import { useAuthContext } from '@app/context/AuthContext';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
+import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
 
-/**
- * Dev tooling is only reachable in development, internal, and e2e builds.
- * Production and TestFlight builds must not expose debug screens, even via
- * deep links (App Review guideline 2.3.1 — hidden features).
- */
-export const isDevToolsEnabled =
-  process.env.EXPO_PUBLIC_APP_VARIANT === 'development' ||
-  process.env.EXPO_PUBLIC_APP_VARIANT === 'internal' ||
-  process.env.EXPO_PUBLIC_APP_VARIANT === 'e2e';
+export { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
 
 function normaliseLogin(value?: string | null): string {
   return value?.trim().toLowerCase() ?? '';

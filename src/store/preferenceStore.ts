@@ -1,4 +1,4 @@
-import { observable } from '@legendapp/state';
+import { observable, when } from '@legendapp/state';
 import { persistObservable } from '@legendapp/state/persist';
 import { useSelector } from '@legendapp/state/react';
 import { z } from 'zod';
@@ -9,6 +9,7 @@ import {
   PREFERENCES_PERSISTENCE_KEY,
 } from '@app/lib/observablePersistence';
 import { Theme } from '@app/styles/themes';
+import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
 
 export interface CustomHighlight {
   id: string;
@@ -184,21 +185,29 @@ export const initialPreferences: Preferences = {
 ensureObservablePersistenceConfig();
 
 export const preferences$ = observable(initialPreferences);
-persistObservable(preferences$, {
+const persistedPreferences$ = persistObservable(preferences$, {
   local: createObservablePersistenceLocalConfig(PREFERENCES_PERSISTENCE_KEY),
 });
 
-// The 'text' stream list layout was removed; migrate old persisted values.
-if ((preferences$.streamListLayout.peek() as string) === 'text') {
-  preferences$.streamListLayout.set('compact');
-}
+when(persistedPreferences$?._state?.isLoadedLocal, () => {
+  // The 'text' stream list layout was removed; migrate old persisted values.
+  if ((preferences$.streamListLayout.peek() as string) === 'text') {
+    preferences$.streamListLayout.set('compact');
+  }
 
-if ((preferences$.sevenTvPaintRenderer.peek() as string) === 'auto') {
-  preferences$.sevenTvPaintRenderer.set('native');
-}
+  if ((preferences$.sevenTvPaintRenderer.peek() as string) === 'auto') {
+    preferences$.sevenTvPaintRenderer.set('native');
+  }
+});
 
 export function getPreferences(): Preferences {
   return preferences$.peek();
+}
+
+export function usePaintRenderer(): SevenTvPaintRenderer {
+  return useSelector(() =>
+    isDevToolsEnabled ? preferences$.sevenTvPaintRenderer.get() : 'native',
+  );
 }
 
 export function usePreferences(): Preferences & {

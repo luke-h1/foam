@@ -76,6 +76,9 @@ function cssLayer(layer: PaintLayerData): CssLayer {
     case 'URL':
       image = `url(${webKitSafeLayerImageUrl(layer.image_url)})`;
       break;
+    default:
+      image = 'none';
+      break;
   }
 
   return {
