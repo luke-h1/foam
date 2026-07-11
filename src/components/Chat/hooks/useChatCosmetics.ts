@@ -11,7 +11,7 @@ import {
 } from '@app/store/chat/actions/cosmetics';
 import { logger } from '@app/utils/logger';
 
-import { boundedSetAdd } from '../util/hydrateVisibleSevenTvAssets';
+import { boundedSetAdd } from '../util/hydrateVisibleSevenTvAssets/boundedSetAdd';
 
 const MAX_FETCHED_COSMETICS_USERS = 500;
 

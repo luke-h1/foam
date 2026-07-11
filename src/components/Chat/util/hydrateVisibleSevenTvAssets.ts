@@ -1,6 +1,7 @@
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
+import { boundedSetAdd } from './hydrateVisibleSevenTvAssets/boundedSetAdd';
 import type { AnyChatMessageType } from './messageHandlers';
 
 type FetchUserCosmeticsOptions = {
@@ -49,21 +50,6 @@ const waitBetweenReprocessBatches = () =>
 
 const MAX_HYDRATED_MESSAGE_KEYS = 2000;
 const MAX_VISIBLE_USER_GUARDS = 5000;
-
-export function boundedSetAdd(
-  set: Set<string>,
-  key: string,
-  max: number,
-): void {
-  set.add(key);
-  if (set.size <= max) {
-    return;
-  }
-  const oldest = set.values().next().value;
-  if (oldest !== undefined) {
-    set.delete(oldest);
-  }
-}
 
 function canHydrateMessage(message: AnyChatMessageType): boolean {
   if (message.sender === 'System') {
