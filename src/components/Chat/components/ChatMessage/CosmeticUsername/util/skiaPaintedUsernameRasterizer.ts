@@ -33,7 +33,8 @@ import {
   type PaintLayerTileMode,
   paintLayerTileModes,
 } from './paintLayer/paintLayerTileModes';
-import { getPaintTextShadows, getPaintTextStroke } from './paintTextStyle';
+import { getPaintTextShadows } from './paintTextStyle/getPaintTextShadows';
+import { getPaintTextStroke } from './paintTextStyle/getPaintTextStroke';
 import {
   cssDropShadowSigma,
   cssLinearGradientLine,

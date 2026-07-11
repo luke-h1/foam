@@ -1,19 +1,12 @@
 import type { TextStyle } from 'react-native';
 
-import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
-import type {
-  PaintData,
-  PaintShadow,
-  PaintTextStroke,
-} from '@app/types/seventv/cosmetics';
-import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
+import type { PaintData } from '@app/types/seventv/cosmetics';
 
 // Paint-pure derivations, memoised on the paint object so every user wearing a
 // shared paint reuses one computed result (the 7TV extension computes each
 // paint's style once, not per user). WeakMap-keyed so entries drop with the
 // paint; no eviction needed.
 const textStyleCache = new WeakMap<PaintData, TextStyle>();
-const textShadowsCache = new WeakMap<PaintData, PaintShadow[]>();
 
 /**
  * Styles that change glyph shape (weight, transform). These must be applied
@@ -51,37 +44,4 @@ function computePaintUsernameTextStyle(paint: PaintData): TextStyle {
   }
 
   return style;
-}
-
-export function getPaintTextShadows(paint: PaintData): PaintShadow[] {
-  const cached = textShadowsCache.get(paint);
-  if (cached) {
-    return cached;
-  }
-  const shadows = paint.textStyle?.shadows;
-  const result = shadows ? indexedCollectionToArray(shadows) : [];
-  textShadowsCache.set(paint, result);
-  return result;
-}
-
-export function getPaintTextStroke(paint: PaintData): PaintTextStroke | null {
-  const stroke = paint.textStyle?.stroke;
-  return stroke?.width ? stroke : null;
-}
-
-/**
- * Approximates -webkit-text-stroke with a same-position glyph copy in the
- * stroke color, blurred outward by the stroke width.
- */
-export function paintStrokeToShadow(stroke: PaintTextStroke): PaintShadow {
-  return {
-    color: stroke.color,
-    radius: stroke.width,
-    x_offset: 0,
-    y_offset: 0,
-  };
-}
-
-export function paintShadowTextColor(shadow: PaintShadow): string {
-  return sevenTvColorToCss(shadow.color);
 }

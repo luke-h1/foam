@@ -22,12 +22,10 @@ import {
   type PaintDropShadowMode,
 } from './util/paintLayer/getPaintDropShadows';
 import { paintShadowKey } from './util/paintLayer/paintShadowKey';
-import {
-  buildPaintUsernameTextStyle,
-  getPaintTextShadows,
-  getPaintTextStroke,
-  paintStrokeToShadow,
-} from './util/paintTextStyle';
+import { buildPaintUsernameTextStyle } from './util/paintTextStyle/buildPaintUsernameTextStyle';
+import { getPaintTextShadows } from './util/paintTextStyle/getPaintTextShadows';
+import { getPaintTextStroke } from './util/paintTextStyle/getPaintTextStroke';
+import { paintStrokeToShadow } from './util/paintTextStyle/paintStrokeToShadow';
 
 interface PaintedUsernameProps {
   username: string;

@@ -3,7 +3,7 @@ import { type StyleProp, StyleSheet, TextStyle } from 'react-native';
 import { Text } from '@app/components/ui/Text/Text';
 import type { PaintShadow } from '@app/types/seventv/cosmetics';
 
-import { paintShadowTextColor } from './util/paintTextStyle';
+import { paintShadowTextColor } from './util/paintTextStyle/paintShadowTextColor';
 
 interface PaintedUsernameDropShadowLayerProps {
   displayUsername: string;
