@@ -228,7 +228,8 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
 
   var lastPostedPlaybackLatency = undefined;
   function emitPlaybackStats() {
-    var statsText = document.querySelector('[aria-label="Latency To Broadcaster"]')?.textContent || '';
+    var statsNode = document.querySelector('[aria-label="Latency To Broadcaster"]');
+    var statsText = (statsNode && statsNode.textContent) || '';
     var latency = Number.parseFloat(statsText);
     var nextLatency = Number.isFinite(latency) ? latency : null;
     if (
