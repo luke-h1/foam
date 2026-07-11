@@ -6,8 +6,8 @@ import { logger } from '../logger';
 import {
   findEmotesInText,
   type FindEmotesInTextReturn,
-  getSortedEmoteNames,
-} from './findEmotesInText';
+} from './findEmotesInText/findEmotesInText';
+import { getSortedEmoteNames } from './findEmotesInText/getSortedEmoteNames';
 import type { ParsedPart } from './parsedPart';
 import { sanitizeInput } from './sanitizeInput';
 import { splitTextWithTwemoji } from './splitTextWithTwemoji';

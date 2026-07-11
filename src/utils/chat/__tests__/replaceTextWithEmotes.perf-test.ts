@@ -10,7 +10,7 @@ import type {
 
 import { processEmotesWorklet } from '../emoteProcessor';
 import { extractEmotesFromTag } from '../extractEmotes/extractEmotesFromTag';
-import { findEmotesInText } from '../findEmotesInText';
+import { findEmotesInText } from '../findEmotesInText/findEmotesInText';
 import { replaceTextWithEmotes } from '../replaceTextWithEmotes';
 
 const MEASURE_OPTIONS = {

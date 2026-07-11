@@ -1,4 +1,5 @@
 import type { SanitisedEmote } from '@app/types/emote';
+import { getSortedEmoteNames } from '@app/utils/chat/findEmotesInText/getSortedEmoteNames';
 
 export interface FindEmotesInTextReturn {
   emote: SanitisedEmote;
@@ -7,12 +8,6 @@ export interface FindEmotesInTextReturn {
 }
 
 const DELIMITER_REGEX = /[\s,.!?()[\]{}<>:;'"\\]/;
-
-export function getSortedEmoteNames(
-  emoteMap: Map<string, SanitisedEmote>,
-): string[] {
-  return Array.from(emoteMap.keys()).sort((a, b) => b.length - a.length);
-}
 
 export function findEmotesInText(
   text: string,
