@@ -11,12 +11,12 @@ import { getHeartbeatAction } from '@app/utils/chat/chatHeartbeat';
 import { shouldProcessLiveMessage } from '@app/utils/chat/chatIngestRateLimiter';
 import { containsMutedWords } from '@app/utils/chat/chatMessageFilters/containsMutedWords';
 import { isUserBlocked } from '@app/utils/chat/chatMessageFilters/isUserBlocked';
+import { buildPrivmsgLine } from '@app/utils/chat/ircProtocol/buildPrivmsgLine';
+import { isPrivmsgLine } from '@app/utils/chat/ircProtocol/isPrivmsgLine';
 import {
-  buildPrivmsgLine,
   type IrcMessage,
-  isPrivmsgLine,
   parseIrcMessage,
-} from '@app/utils/chat/ircProtocol';
+} from '@app/utils/chat/ircProtocol/parseIrcMessage';
 import { logger } from '@app/utils/logger';
 
 import { ReadyState } from '../hooks/ws/constants';

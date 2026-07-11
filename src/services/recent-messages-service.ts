@@ -1,6 +1,6 @@
 import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
 import type { ParsedIrcMessage } from '@app/types/chat/recentMessages';
-import { parseIrcTags } from '@app/utils/chat/ircProtocol';
+import { parseIrcTags } from '@app/utils/chat/ircProtocol/parseIrcTags';
 
 const RECENT_MESSAGES_URL =
   'https://recent-messages.robotty.de/api/v2/recent-messages';
