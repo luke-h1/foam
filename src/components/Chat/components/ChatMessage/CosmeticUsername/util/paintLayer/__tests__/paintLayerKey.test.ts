@@ -2,9 +2,7 @@ import type { PaintLayerData } from '@app/types/seventv/cosmetics';
 
 import { withPaintLayerKeys } from '../paintLayerKey';
 
-function layer(
-  overrides: Partial<PaintLayerData> = {},
-): PaintLayerData {
+function layer(overrides: Partial<PaintLayerData> = {}): PaintLayerData {
   return {
     function: 'LINEAR_GRADIENT',
     stops: { length: 0 },
@@ -28,14 +26,14 @@ describe('withPaintLayerKeys', () => {
     ];
 
     const keyed = withPaintLayerKeys(layers);
+    const keys = keyed.map(entry => entry.key);
 
-    expect(keyed.map(entry => entry.key)).toEqual([
-      keyed[0].key,
-      keyed[1].key,
-      `${keyed[0].key}#1`,
-    ]);
-    expect(keyed[0].key).not.toEqual(keyed[1].key);
-    expect(keyed[0].key.includes('45')).toBe(true);
-    expect(keyed[2].key.endsWith('#1')).toBe(true);
+    expect(keys).toHaveLength(3);
+    const [first, second, third] = keys as [string, string, string];
+
+    expect(keys).toEqual([first, second, `${first}#1`]);
+    expect(first).not.toEqual(second);
+    expect(first.includes('45')).toBe(true);
+    expect(third.endsWith('#1')).toBe(true);
   });
 });

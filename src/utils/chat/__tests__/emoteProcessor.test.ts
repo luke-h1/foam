@@ -131,9 +131,7 @@ describe('processEmotesWorklet', () => {
       sevenTvChannelEmotes: [waveEmote],
     });
 
-    expect(
-      result.map(part => pickFields(part, ['type', 'content'])),
-    ).toEqual([
+    expect(result.map(part => pickFields(part, ['type', 'content']))).toEqual([
       { type: 'mention', content: '@Wave' },
       { type: 'text', content: ' ' },
       { type: 'text', content: 'hello' },
@@ -148,9 +146,7 @@ describe('processEmotesWorklet', () => {
       sevenTvChannelEmotes: [waveEmote],
     });
 
-    expect(
-      result.map(part => pickFields(part, ['type', 'content'])),
-    ).toEqual([
+    expect(result.map(part => pickFields(part, ['type', 'content']))).toEqual([
       { type: 'emote', content: 'Wave' },
       { type: 'text', content: ' ' },
       { type: 'text', content: 'hello' },
