@@ -381,13 +381,30 @@ function buildPaintLayout(
 /**
  * Draw the static composite for a painted username onto `canvas`: text-shadows,
  * base fill, gradient layers, and stroke, wrapped in the drop-shadow chain.
- * Image (URL) layers are overlaid live over the cached bitmap, so they are
- * skipped here.
+ * Image (URL) layers are omitted — they composite live so animated textures
+ * can advance without re-baking.
  */
 function drawPaintedUsername(
   canvas: SkCanvas,
   opts: RasterizePaintedUsernameOptions,
   layout: PaintUsernameLayout,
+  options: {
+    includeDropShadows: boolean;
+    includeTextShadows: boolean;
+    includeBaseFill: boolean;
+    /**
+     * Gradient layers to draw (already in back-to-front order), or null to
+     * draw every non-URL layer from the layout back-to-front.
+     */
+    gradientLayers: PaintLayerData[] | null;
+    includeStroke: boolean;
+  } = {
+    includeDropShadows: true,
+    includeTextShadows: true,
+    includeBaseFill: true,
+    gradientLayers: null,
+    includeStroke: true,
+  },
 ): void {
   const { paint, fallbackColor } = opts;
   const { scale, glyphWidthPx, glyphHeightPx, originX, originY } = layout;
@@ -406,15 +423,17 @@ function drawPaintedUsername(
    * element render - text-shadows, stroke, and fill - is the chain's source.
    */
   let dropShadowChain: SkImageFilter | null = null;
-  for (const shadow of layout.dropShadows) {
-    dropShadowChain = Skia.ImageFilter.MakeDropShadow(
-      shadow.x_offset * scale,
-      shadow.y_offset * scale,
-      cssDropShadowSigma(shadow.radius) * scale,
-      cssDropShadowSigma(shadow.radius) * scale,
-      skColor(shadow.color),
-      dropShadowChain,
-    );
+  if (options.includeDropShadows) {
+    for (const shadow of layout.dropShadows) {
+      dropShadowChain = Skia.ImageFilter.MakeDropShadow(
+        shadow.x_offset * scale,
+        shadow.y_offset * scale,
+        cssDropShadowSigma(shadow.radius) * scale,
+        cssDropShadowSigma(shadow.radius) * scale,
+        skColor(shadow.color),
+        dropShadowChain,
+      );
+    }
   }
   const chainPaint = Skia.Paint();
   if (dropShadowChain) {
@@ -426,35 +445,42 @@ function drawPaintedUsername(
    * Each text-shadow is drawn independently beneath the glyphs, first-listed
    * on top (CSS paint order).
    */
-  for (const shadow of [...layout.textShadows].reverse()) {
-    const shadowLayerPaint = Skia.Paint();
-    shadowLayerPaint.setImageFilter(
-      Skia.ImageFilter.MakeDropShadowOnly(
-        shadow.x_offset * scale,
-        shadow.y_offset * scale,
-        cssDropShadowSigma(shadow.radius) * scale,
-        cssDropShadowSigma(shadow.radius) * scale,
-        skColor(shadow.color),
-        null,
-      ),
-    );
-    canvas.saveLayer(shadowLayerPaint);
-    drawGlyphs(measurePaint);
-    canvas.restore();
+  if (options.includeTextShadows) {
+    for (const shadow of [...layout.textShadows].reverse()) {
+      const shadowLayerPaint = Skia.Paint();
+      shadowLayerPaint.setImageFilter(
+        Skia.ImageFilter.MakeDropShadowOnly(
+          shadow.x_offset * scale,
+          shadow.y_offset * scale,
+          cssDropShadowSigma(shadow.radius) * scale,
+          cssDropShadowSigma(shadow.radius) * scale,
+          skColor(shadow.color),
+          null,
+        ),
+      );
+      canvas.saveLayer(shadowLayerPaint);
+      drawGlyphs(measurePaint);
+      canvas.restore();
+    }
   }
 
-  const basePaint = Skia.Paint();
-  basePaint.setColor(
-    paint.color === null ? Skia.Color(fallbackColor) : skColor(paint.color),
-  );
-  drawGlyphs(basePaint);
+  if (options.includeBaseFill) {
+    const basePaint = Skia.Paint();
+    basePaint.setColor(
+      paint.color === null ? Skia.Color(fallbackColor) : skColor(paint.color),
+    );
+    drawGlyphs(basePaint);
+  }
 
   /**
    * `background-image` lists the topmost layer first, so draw back-to-front.
-   * Gradient layers become gradient shaders clipped to the glyphs; image (URL)
-   * layers are drawn live over the cached composite, so skip them here.
+   * Image (URL) layers composite live; only gradient shaders are baked here.
    */
-  for (const layer of [...layout.layers].reverse()) {
+  const gradientsToDraw =
+    options.gradientLayers ??
+    [...layout.layers].reverse().filter(layer => layer.function !== 'URL');
+
+  for (const layer of gradientsToDraw) {
     if (layer.function === 'URL') {
       continue;
     }
@@ -497,7 +523,7 @@ function drawPaintedUsername(
    * drawn last reproduces it, and staying inside the drop-shadow layer keeps
    * the stroke part of the shadow silhouette.
    */
-  if (layout.stroke) {
+  if (options.includeStroke && layout.stroke) {
     const strokePaint = Skia.Paint();
     strokePaint.setStyle(PaintStyle.Stroke);
     strokePaint.setStrokeWidth(layout.stroke.width * scale);
@@ -506,6 +532,23 @@ function drawPaintedUsername(
   }
 
   canvas.restore();
+}
+
+function snapshotPaintSurface(
+  layout: PaintUsernameLayout,
+  draw: (canvas: SkCanvas) => void,
+): SkImage | null {
+  const surface = Skia.Surface.Make(
+    layout.surfaceWidthPx,
+    layout.surfaceHeightPx,
+  );
+  if (!surface) {
+    return null;
+  }
+  draw(surface.getCanvas());
+  const image = surface.makeImageSnapshot();
+  surface.dispose();
+  return image;
 }
 
 interface LogicalRect {
@@ -522,25 +565,80 @@ export interface PaintImageLayer {
 }
 
 /**
- * Cache-friendly render inputs for a painted username. `staticImage` bakes
- * everything except the image layers - gradients, base fill, drop
- * shadows, all glyph-clipped - into one bitmap reused across mounts and every
- * user wearing the paint. Image-layer paints additionally return `maskImage`
- * (glyph coverage) plus each layer's url and rect/tile so the live renderer
- * can overlay the animated textures through the mask; `useAnimatedImageValue`
- * drives their frames on the UI thread, so the static bitmap never
- * re-rasterizes.
+ * One step of the live composite after the foundation bitmap. Gradients that
+ * sit above a URL layer must bake into their own slot so they paint after the
+ * live texture; stroke is a separate top slot so URL overlays cannot hide it.
+ */
+export type PaintLayerSlot =
+  | { kind: 'url'; layer: PaintImageLayer }
+  | { kind: 'baked'; image: SkImage };
+
+/**
+ * Cache-friendly render inputs for a painted username. `staticImage` is the
+ * foundation (drop shadows, text-shadows, base fill). When the paint has URL
+ * layers, `layerSlots` holds back-to-front URL overlays and baked gradient
+ * runs so CSS stacking order is preserved, and `strokeImage` paints the
+ * -webkit-text-stroke above every layer. Without URL layers, gradients and
+ * stroke stay inside `staticImage` and the slot/stroke fields are empty.
  *
- * All sizes are logical points. `staticImage`/`maskImage` are baked at device
- * pixels and drawn into the logical box, so they stay crisp on retina.
+ * All sizes are logical points. Bitmaps are baked at device pixels and drawn
+ * into the logical box, so they stay crisp on retina.
  */
 export interface PaintBitmaps {
   staticImage: SkImage;
   maskImage: SkImage | null;
+  layerSlots: PaintLayerSlot[];
+  strokeImage: SkImage | null;
+  /**
+   * URL layers in back-to-front order (same as `layerSlots` url entries).
+   * Kept for callers that only need the live texture list.
+   */
   imageLayers: PaintImageLayer[];
   width: number;
   height: number;
   insets: { left: number; top: number; right: number; bottom: number };
+}
+
+function toPaintImageLayer(
+  layer: PaintLayerData,
+  layout: Pick<
+    PaintUsernameLayout,
+    | 'glyphWidthPx'
+    | 'glyphHeightPx'
+    | 'originX'
+    | 'originY'
+    | 'scale'
+  >,
+): PaintImageLayer | null {
+  if (layer.function !== 'URL' || !layer.image_url) {
+    return null;
+  }
+  const url = skiaDecodableLayerUrl(layer.image_url);
+
+  if (isTilingCanvasRepeat(layer.canvas_repeat, layer.repeat)) {
+    return {
+      url,
+      rect: null,
+      tile: paintLayerTileModes(layer.canvas_repeat),
+    };
+  }
+
+  const rect = layerRectInBox(
+    layer.at,
+    layer.size,
+    layout.glyphWidthPx,
+    layout.glyphHeightPx,
+  );
+  return {
+    url,
+    rect: {
+      x: (layout.originX + rect.x) / layout.scale,
+      y: (layout.originY + rect.y) / layout.scale,
+      width: rect.width / layout.scale,
+      height: rect.height / layout.scale,
+    },
+    tile: null,
+  };
 }
 
 export function buildPaintImageLayers(
@@ -557,39 +655,92 @@ export function buildPaintImageLayers(
   const imageLayers: PaintImageLayer[] = [];
 
   for (const layer of [...layout.layers].reverse()) {
-    if (layer.function !== 'URL' || !layer.image_url) {
-      continue;
+    const imageLayer = toPaintImageLayer(layer, layout);
+    if (imageLayer) {
+      imageLayers.push(imageLayer);
     }
-    const url = skiaDecodableLayerUrl(layer.image_url);
-
-    if (isTilingCanvasRepeat(layer.canvas_repeat, layer.repeat)) {
-      imageLayers.push({
-        url,
-        rect: null,
-        tile: paintLayerTileModes(layer.canvas_repeat),
-      });
-      continue;
-    }
-
-    const rect = layerRectInBox(
-      layer.at,
-      layer.size,
-      layout.glyphWidthPx,
-      layout.glyphHeightPx,
-    );
-    imageLayers.push({
-      url,
-      rect: {
-        x: (layout.originX + rect.x) / layout.scale,
-        y: (layout.originY + rect.y) / layout.scale,
-        width: rect.width / layout.scale,
-        height: rect.height / layout.scale,
-      },
-      tile: null,
-    });
   }
 
   return imageLayers;
+}
+
+/**
+ * Walk paint layers back-to-front. Contiguous gradient runs bake into one
+ * slot; each URL becomes a live overlay slot so a gradient listed above a URL
+ * still composites on top of that texture.
+ */
+export function planPaintLayerSlotKinds(
+  layers: PaintLayerData[],
+): ('url' | 'baked')[] {
+  const kinds: ('url' | 'baked')[] = [];
+  let pendingGradients = false;
+
+  const flushGradients = () => {
+    if (!pendingGradients) {
+      return;
+    }
+    pendingGradients = false;
+    kinds.push('baked');
+  };
+
+  for (const layer of [...layers].reverse()) {
+    if (layer.function === 'URL') {
+      flushGradients();
+      if (layer.image_url) {
+        kinds.push('url');
+      }
+      continue;
+    }
+    pendingGradients = true;
+  }
+  flushGradients();
+
+  return kinds;
+}
+
+function buildPaintLayerSlots(
+  opts: RasterizePaintedUsernameOptions,
+  layout: PaintUsernameLayout,
+): { layerSlots: PaintLayerSlot[]; imageLayers: PaintImageLayer[] } {
+  const layerSlots: PaintLayerSlot[] = [];
+  const imageLayers: PaintImageLayer[] = [];
+  let gradientBatch: PaintLayerData[] = [];
+
+  const flushGradients = () => {
+    if (gradientBatch.length === 0) {
+      return;
+    }
+    const batch = gradientBatch;
+    gradientBatch = [];
+    const baked = snapshotPaintSurface(layout, canvas => {
+      drawPaintedUsername(canvas, opts, layout, {
+        includeDropShadows: false,
+        includeTextShadows: false,
+        includeBaseFill: false,
+        gradientLayers: batch,
+        includeStroke: false,
+      });
+    });
+    if (baked) {
+      layerSlots.push({ kind: 'baked', image: baked });
+    }
+  };
+
+  for (const layer of [...layout.layers].reverse()) {
+    if (layer.function === 'URL') {
+      flushGradients();
+      const imageLayer = toPaintImageLayer(layer, layout);
+      if (imageLayer) {
+        imageLayers.push(imageLayer);
+        layerSlots.push({ kind: 'url', layer: imageLayer });
+      }
+      continue;
+    }
+    gradientBatch.push(layer);
+  }
+  flushGradients();
+
+  return { layerSlots, imageLayers };
 }
 
 /**
@@ -632,8 +783,9 @@ function paintBitmapCacheKey(opts: RasterizePaintedUsernameOptions): string {
 
 /**
  * Build (or return the cached) render inputs for a painted username. Pure and
- * synchronous - no image decode - because the static bitmap deliberately omits
- * the image layers, which the live renderer loads via `useAnimatedImageValue`.
+ * synchronous - no image decode - because URL layers load live via
+ * `useAnimatedImageValue`. When URLs are present, gradients that stack above
+ * them bake into separate slots and stroke is a top bitmap so CSS order holds.
  */
 export function getPaintBitmaps(
   opts: RasterizePaintedUsernameOptions,
@@ -656,24 +808,52 @@ export function getPaintBitmaps(
     return null;
   }
 
-  const staticSurface = Skia.Surface.Make(
-    layout.surfaceWidthPx,
-    layout.surfaceHeightPx,
+  const hasUrlLayers = layout.layers.some(
+    layer => layer.function === 'URL' && Boolean(layer.image_url),
   );
-  if (!staticSurface) {
-    return null;
-  }
-  drawPaintedUsername(staticSurface.getCanvas(), opts, layout);
-  const staticImage = staticSurface.makeImageSnapshot();
 
-  /**
-   * The snapshot owns its pixels once made; dispose the surface immediately
-   * rather than waiting for GC to reclaim it.
-   */
-  staticSurface.dispose();
+  let staticImage: SkImage | null;
+  let layerSlots: PaintLayerSlot[] = [];
+  let imageLayers: PaintImageLayer[] = [];
+  let strokeImage: SkImage | null = null;
+
+  if (hasUrlLayers) {
+    staticImage = snapshotPaintSurface(layout, canvas => {
+      drawPaintedUsername(canvas, opts, layout, {
+        includeDropShadows: true,
+        includeTextShadows: true,
+        includeBaseFill: true,
+        gradientLayers: [],
+        includeStroke: false,
+      });
+    });
+    if (!staticImage) {
+      return null;
+    }
+
+    ({ layerSlots, imageLayers } = buildPaintLayerSlots(opts, layout));
+
+    if (layout.stroke) {
+      strokeImage = snapshotPaintSurface(layout, canvas => {
+        drawPaintedUsername(canvas, opts, layout, {
+          includeDropShadows: false,
+          includeTextShadows: false,
+          includeBaseFill: false,
+          gradientLayers: [],
+          includeStroke: true,
+        });
+      });
+    }
+  } else {
+    staticImage = snapshotPaintSurface(layout, canvas => {
+      drawPaintedUsername(canvas, opts, layout);
+    });
+    if (!staticImage) {
+      return null;
+    }
+  }
 
   const { scale } = layout;
-  const imageLayers = buildPaintImageLayers(layout);
 
   let maskImage: SkImage | null = null;
 
@@ -698,6 +878,8 @@ export function getPaintBitmaps(
   const bitmaps: PaintBitmaps = {
     staticImage,
     maskImage,
+    layerSlots,
+    strokeImage,
     imageLayers,
     width: layout.surfaceWidthPx / scale,
     height: layout.surfaceHeightPx / scale,

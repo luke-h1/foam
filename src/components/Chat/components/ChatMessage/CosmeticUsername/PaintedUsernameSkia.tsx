@@ -19,6 +19,7 @@ import {
   getPaintBitmaps,
   type PaintBitmaps,
   type PaintImageLayer,
+  type PaintLayerSlot,
 } from './util/skiaPaintedUsernameRasterizer';
 import { useSkiaPaintFontProvider } from './util/skiaPaintFonts';
 
@@ -46,45 +47,6 @@ function paintMaskNode(bitmaps: PaintBitmaps): ReactNode {
       height={bitmaps.height}
       fit='fill'
     />
-  );
-}
-
-/**
- * Canvas for a resolved paint: the cached static composite as one bitmap, plus
- * (for image-layer paints) the texture overlay passed in by the wrappers
- * below. Negative margins collapse the shadow overflow margin so the glyphs
- * align with neighbouring text.
- */
-function PaintBitmapCanvas({
-  bitmaps,
-  overlay,
-}: {
-  bitmaps: PaintBitmaps;
-  overlay?: ReactNode;
-}) {
-  const { width, height, insets, staticImage } = bitmaps;
-
-  return (
-    <Canvas
-      style={{
-        width,
-        height,
-        marginLeft: -insets.left,
-        marginTop: -insets.top,
-        marginRight: -insets.right,
-        marginBottom: -insets.bottom,
-      }}
-    >
-      <Image
-        image={staticImage}
-        x={0}
-        y={0}
-        width={width}
-        height={height}
-        fit='fill'
-      />
-      {overlay}
-    </Canvas>
   );
 }
 
@@ -155,17 +117,20 @@ function paintImageLayerKey(layer: PaintImageLayer): string {
   ].join('|');
 }
 
-function renderPaintImageLayerOverlay(
+function renderUrlLayerOverlay(
   layer: PaintImageLayer,
   index: number,
   maskNode: ReactNode,
 ): ReactNode {
+  if (!maskNode) {
+    return null;
+  }
   if (layer.tile) {
     return (
       <TiledPaintLayerOverlay
         // Static, never-reordered list
         // eslint-disable-next-line react-doctor/no-array-index-as-key
-        key={`${index}|${paintImageLayerKey(layer)}`}
+        key={`url-${index}|${paintImageLayerKey(layer)}`}
         url={layer.url}
         tile={layer.tile}
         maskNode={maskNode}
@@ -177,7 +142,7 @@ function renderPaintImageLayerOverlay(
       <StretchPaintLayerOverlay
         // Static, never-reordered list
         // eslint-disable-next-line react-doctor/no-array-index-as-key
-        key={`${index}|${paintImageLayerKey(layer)}`}
+        key={`url-${index}|${paintImageLayerKey(layer)}`}
         url={layer.url}
         rect={layer.rect}
         maskNode={maskNode}
@@ -187,23 +152,105 @@ function renderPaintImageLayerOverlay(
   return null;
 }
 
-function ImageLayerPaintCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
-  const maskNode = paintMaskNode(bitmaps);
-
-  const overlay = maskNode
-    ? bitmaps.imageLayers.map((layer, index) =>
-        renderPaintImageLayerOverlay(layer, index, maskNode),
-      )
-    : null;
-
-  return <PaintBitmapCanvas bitmaps={bitmaps} overlay={overlay} />;
+function renderLayerSlot(
+  slot: PaintLayerSlot,
+  index: number,
+  bitmaps: PaintBitmaps,
+  maskNode: ReactNode,
+): ReactNode {
+  if (slot.kind === 'baked') {
+    return (
+      <Image
+        // Static, never-reordered list
+        // eslint-disable-next-line react-doctor/no-array-index-as-key
+        key={`baked-${index}`}
+        image={slot.image}
+        x={0}
+        y={0}
+        width={bitmaps.width}
+        height={bitmaps.height}
+        fit='fill'
+      />
+    );
+  }
+  return renderUrlLayerOverlay(slot.layer, index, maskNode);
 }
 
 /**
- * Renders a painted username with Skia. The static composite (gradients, base
- * fill, drop shadows) is baked once into a cached bitmap and reused across
- * mounts and every user wearing the paint; image-layer paints animate their
- * texture on the UI thread.
+ * Foundation → back-to-front layer slots (URL overlays interleaved with baked
+ * gradients) → stroke on top so CSS stacking and -webkit-text-stroke hold.
+ */
+function ImageLayerPaintCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
+  const { width, height, insets, staticImage, layerSlots, strokeImage } =
+    bitmaps;
+  const maskNode = paintMaskNode(bitmaps);
+
+  return (
+    <Canvas
+      style={{
+        width,
+        height,
+        marginLeft: -insets.left,
+        marginTop: -insets.top,
+        marginRight: -insets.right,
+        marginBottom: -insets.bottom,
+      }}
+    >
+      <Image
+        image={staticImage}
+        x={0}
+        y={0}
+        width={width}
+        height={height}
+        fit='fill'
+      />
+      {layerSlots.map((slot, index) =>
+        renderLayerSlot(slot, index, bitmaps, maskNode),
+      )}
+      {strokeImage ? (
+        <Image
+          image={strokeImage}
+          x={0}
+          y={0}
+          width={width}
+          height={height}
+          fit='fill'
+        />
+      ) : null}
+    </Canvas>
+  );
+}
+
+function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
+  const { width, height, insets, staticImage } = bitmaps;
+
+  return (
+    <Canvas
+      style={{
+        width,
+        height,
+        marginLeft: -insets.left,
+        marginTop: -insets.top,
+        marginRight: -insets.right,
+        marginBottom: -insets.bottom,
+      }}
+    >
+      <Image
+        image={staticImage}
+        x={0}
+        y={0}
+        width={width}
+        height={height}
+        fit='fill'
+      />
+    </Canvas>
+  );
+}
+
+/**
+ * Renders a painted username with Skia. The foundation (shadows, base fill) is
+ * baked once; URL textures animate on the UI thread in z-order with any
+ * gradients that stack above them, and stroke composites last.
  */
 export function PaintedUsernameSkia({
   username,
