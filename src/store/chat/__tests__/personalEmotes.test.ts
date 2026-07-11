@@ -5,6 +5,7 @@ import type { SevenTvSanitisedEmote } from '@app/types/emote';
 import {
   clearPersonalEmotesCache,
   fetchUserPersonalEmotes,
+  refreshUserPersonalEmotes,
 } from '../actions/personalEmotes';
 import { chatStore$ } from '../observables/chatStore';
 import { emptyEmoteData } from '../types/constants';
@@ -106,5 +107,37 @@ describe('fetchUserPersonalEmotes', () => {
     expect(first).toBeNull();
     expect(second).toEqual<SevenTvSanitisedEmote[]>([]);
     expect(mockGetPersonalEmoteSet).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('personalEmotesVersion', () => {
+  beforeEach(() => {
+    mockGetPersonalEmoteSet.mockReset();
+    clearPersonalEmotesCache();
+    chatStore$.persisted.channelCaches.set({
+      [channelId]: {
+        ...structuredClone(emptyEmoteData),
+        lastUpdated: 1_000,
+      },
+    });
+  });
+
+  test('bumps when a write changes the cached emote id sequence', async () => {
+    mockGetPersonalEmoteSet.mockResolvedValueOnce([personalEmote]);
+    const versionBefore = chatStore$.personalEmotesVersion.peek();
+
+    await fetchUserPersonalEmotes(twitchUserId, channelId);
+
+    expect(chatStore$.personalEmotesVersion.peek()).toBe(versionBefore + 1);
+  });
+
+  test('does not bump when a write leaves the emote id sequence unchanged', async () => {
+    mockGetPersonalEmoteSet.mockResolvedValue([personalEmote]);
+    await refreshUserPersonalEmotes(twitchUserId, channelId);
+    const versionBefore = chatStore$.personalEmotesVersion.peek();
+
+    await refreshUserPersonalEmotes(twitchUserId, channelId);
+
+    expect(chatStore$.personalEmotesVersion.peek()).toBe(versionBefore);
   });
 });

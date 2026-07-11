@@ -62,9 +62,19 @@ function writePersonalEmotes(
   if (!channelCache?.peek()) {
     return;
   }
+  const previousEmotes =
+    channelCache.sevenTvPersonalEmotes[twitchUserId]?.peek() ?? [];
+  const emoteIdsChanged =
+    previousEmotes.length !== personalEmotes.length ||
+    personalEmotes.some(
+      (emote, index) => emote.id !== previousEmotes[index]?.id,
+    );
   // Keyed child set so concurrent writes for other users are not clobbered
   // by rebuilding the whole record.
   channelCache.sevenTvPersonalEmotes[twitchUserId]?.set(personalEmotes);
+  if (emoteIdsChanged) {
+    chatStore$.personalEmotesVersion.set(version => version + 1);
+  }
 }
 
 export const getUserPersonalEmotes = (

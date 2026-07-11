@@ -178,3 +178,5 @@ export const useChannelEmoteDataForReprocess = (channelId: string | null) => {
 export const usePaints = () => useSelector(chatStore$.paints);
 export const useCosmeticBindingsVersion = () =>
   useSelector(chatStore$.cosmeticBindingsVersion);
+export const usePersonalEmotesVersion = () =>
+  useSelector(chatStore$.personalEmotesVersion);
