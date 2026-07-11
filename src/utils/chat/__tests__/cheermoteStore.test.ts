@@ -179,4 +179,30 @@ describe('cheermoteStore', () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
     expect(getChannelCheermotes('channel-0')?.has('cheer')).toBe(true);
   });
+
+  test('re-setting an existing channel refreshes its position so eviction takes the oldest untouched channel', () => {
+    for (let index = 0; index < 20; index += 1) {
+      setChannelCheermotes(`channel-${index}`, [makeCheermote('Cheer')]);
+    }
+
+    setChannelCheermotes('channel-0', [makeCheermote('Cheer')]);
+    setChannelCheermotes('channel-20', [makeCheermote('Cheer')]);
+
+    expect(getChannelCheermotes('channel-0')?.has('cheer')).toBe(true);
+    expect(getChannelCheermotes('channel-1')).toBeUndefined();
+    expect(getChannelCheermotes('channel-20')?.has('cheer')).toBe(true);
+  });
+
+  test('reading a channel refreshes its position so eviction takes the oldest unread channel', () => {
+    for (let index = 0; index < 20; index += 1) {
+      setChannelCheermotes(`channel-${index}`, [makeCheermote('Cheer')]);
+    }
+
+    expect(getChannelCheermotes('channel-0')?.has('cheer')).toBe(true);
+    setChannelCheermotes('channel-20', [makeCheermote('Cheer')]);
+
+    expect(getChannelCheermotes('channel-0')?.has('cheer')).toBe(true);
+    expect(getChannelCheermotes('channel-1')).toBeUndefined();
+    expect(getChannelCheermotes('channel-20')?.has('cheer')).toBe(true);
+  });
 });

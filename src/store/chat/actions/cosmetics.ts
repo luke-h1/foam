@@ -99,6 +99,7 @@ export const scheduleCosmeticsPersist = (
 
 const USER_COSMETICS_CACHE_PREFIX = 'user-cosmetics:';
 
+// Keep persisted 7TV user cosmetics for at most 2 hours before refetching.
 const USER_COSMETICS_CACHE_TTL_MS = 2 * 60 * 60 * 1000;
 const USER_COSMETICS_NEGATIVE_CACHE_TTL_MS = 30 * 60 * 1000;
 const SEVEN_TV_CACHE_NAMESPACE = 'seven_tv_cache';
@@ -238,6 +239,9 @@ function buildCachedUserCosmeticsFromStore(
   };
 }
 
+/**
+ * Mirror live chatStore bindings into the per-user GQL cache after a 7TV push.
+ */
 export const syncCachedUserCosmeticsFromStore = (
   sevenTvUserId: string,
   ttvUserId: string,
@@ -311,6 +315,10 @@ export const fetchAndCacheUserCosmetics = async (
   });
 };
 
+/**
+ * Fetch a chatter's cosmetics via v4 GQL from their Twitch id. Used when a
+ * WebSocket entitlement arrives without its cosmetic definition.
+ */
 export const fetchUserCosmeticsByTwitchId = async (
   twitchUserId: string,
 ): Promise<void> => {
@@ -320,6 +328,10 @@ export const fetchUserCosmeticsByTwitchId = async (
   }
 };
 
+/**
+ * Request a chatter's cosmetics via a passive 7TV presence write. Falls back to
+ * v4 GQL when there is no live EventAPI session.
+ */
 export const requestUserCosmeticsViaPresence = async (
   twitchUserId: string,
 ): Promise<void> => {
@@ -427,6 +439,12 @@ export const getUserPaintId = (ttvUserId: string): string | undefined =>
 
 let userPaintFlagInvalidatorAttached = false;
 
+/**
+ * getChatRowItemType calls `hasUserPaint` once per visible row on every list
+ * data change, so the paints/userPaintIds traversal below is cached per user
+ * id: a binding change invalidates just that user, a paint definition change
+ * clears the cache wholesale.
+ */
 function ensureUserPaintFlagInvalidator(): void {
   if (userPaintFlagInvalidatorAttached) {
     return;
@@ -542,6 +560,10 @@ export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
     chatStore$.userBadgeIds[ttvUserId]?.set(badgeId);
   }
 
+  /**
+   * Surface entitlements that reference a badge we have not loaded a
+   * definition for yet (e.g. the cosmetic.create has not arrived).
+   */
   if (!getBadge(badgeId)) {
     reportMissingBadge(badgeId, ttvUserId);
   }

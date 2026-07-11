@@ -316,6 +316,10 @@ export function useChatOverlays({
     patchOverlay({ selectedMessage: null });
   }, [hidePhraseFromView, patchOverlay, selectedMessage]);
 
+  /**
+   * Twitch dropped slash commands from IRC in 2023, so moderation actions go
+   * through Helix; a 403 here just means the current user is not a moderator.
+   */
   const runModAction = useCallback(
     (command: ModCommand) => {
       runModCommand(command, channelId, currentUserId);
@@ -505,6 +509,7 @@ export function useChatOverlays({
     });
   }, [patchOverlay, runModAction, selectedUser]);
 
+  // Twitch has no public report API; the report form is web-only.
   const handleReportSelectedUser = useCallback(() => {
     const target = resolveModTarget(selectedUser)?.toLowerCase();
     if (!target) {

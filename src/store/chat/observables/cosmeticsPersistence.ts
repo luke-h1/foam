@@ -45,11 +45,6 @@ export function loadPersistedCosmetics(): CosmeticsSnapshot | null {
       COSMETICS_BINDINGS_KEY,
       COSMETICS_NAMESPACE,
     );
-    /**
-     * After the legacy->split upgrade the first debounced write can touch a
-     * single split key, so a missing half still falls back to the legacy
-     * combined snapshot until its own key is written.
-     */
     const legacy =
       definitions && bindings
         ? null

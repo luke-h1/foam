@@ -7,6 +7,10 @@ export interface IrcMessage {
   params: string[];
 }
 
+/**
+ * Parse the `key=value;key2=value2` IRCv3 tag string into a map, unescaping
+ * each value. Values may be empty and may themselves contain `=`.
+ */
 export function parseIrcTags(tagString: string): Record<string, string> {
   const tags: Record<string, string> = {};
   if (!tagString) {
