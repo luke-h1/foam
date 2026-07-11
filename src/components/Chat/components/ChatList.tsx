@@ -30,7 +30,7 @@ import {
 } from '@app/components/Chat/util/getViewableChatMessages';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 
-import { getChatMessageListKey } from '../util/chatMessages';
+import { getChatMessageListKey } from '../util/chatMessages/getChatMessageListKey';
 import type { AnyChatMessageType } from '../util/messageHandlers';
 
 /**

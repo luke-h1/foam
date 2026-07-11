@@ -1,24 +1,9 @@
-import type { AnyChatMessageType } from './messageHandlers';
+import { isRenderableChatMessage } from '@app/components/Chat/util/chatMessages/isRenderableChatMessage';
+import { normaliseMessageField } from '@app/components/Chat/util/chatMessages/normaliseMessageField';
+import type { AnyChatMessageType } from '@app/components/Chat/util/messageHandlers';
 
 const fallbackMessageKeys = new WeakMap<object, string>();
 let fallbackMessageKeyId = 0;
-
-function normaliseMessageField(value: string | undefined): string {
-  return value?.trim() ?? '';
-}
-
-export function isRenderableChatMessage(
-  message: AnyChatMessageType | undefined,
-): message is AnyChatMessageType {
-  if (!message) {
-    return false;
-  }
-
-  return Boolean(
-    normaliseMessageField(message.message_id) &&
-    normaliseMessageField(message.message_nonce),
-  );
-}
 
 export function getChatMessageListKey(
   message: AnyChatMessageType | undefined,

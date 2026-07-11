@@ -5,7 +5,7 @@ import {
 import { hasUserPaint } from '@app/store/chat/actions/cosmetics';
 
 import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
-import { isRenderableChatMessage } from './chatMessages';
+import { isRenderableChatMessage } from './chatMessages/isRenderableChatMessage';
 import type { AnyChatMessageType } from './messageHandlers';
 
 export interface ChatRowItemTypeOptions {

@@ -35,10 +35,8 @@ import {
 } from '../components/ChatMessage/rowVisibility';
 import { styles } from '../styles';
 import type { ChatRowDisplayFlags } from '../types/chatUiFlags';
-import {
-  getChatMessageListKey,
-  isRenderableChatMessage,
-} from '../util/chatMessages';
+import { getChatMessageListKey } from '../util/chatMessages/getChatMessageListKey';
+import { isRenderableChatMessage } from '../util/chatMessages/isRenderableChatMessage';
 import { getChatRowItemType } from '../util/chatRowItemType';
 import { normaliseChatUsername } from '../util/chatUsernames/normaliseChatUsername';
 import type { AnyChatMessageType } from '../util/messageHandlers';
