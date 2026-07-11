@@ -15,15 +15,9 @@ interface PaintedUsernameMaskedFillProps {
 }
 
 /**
- * Clips the painted gradient/texture fill to the username glyphs.
- *
- * Uses Expo UI's MaskedView (SwiftUI `.mask` on iOS, Compose `BlendMode.DstIn`
- * on Android) rather than @react-native-masked-view, whose legacy Paper view
- * manager reparents React-managed children (`self.maskView` + `addSubview`)
- * under Fabric interop. Under fast painted-row churn on busy channels that
- * left a deleted view still mounted, tripping RCTComponentViewRegistry's
- * "Attempt to recycle a mounted view" assertion (SIGABRT in debug, a native
- * use-after-free in release).
+ * Clips the painted fill to the username glyphs via Expo UI MaskedView
+ * (SwiftUI `.mask` / Compose `DstIn`). Avoids @react-native-masked-view's
+ * Fabric recycle SIGABRT under painted-row churn.
  */
 export function PaintedUsernameMaskedFill({
   displayUsername,

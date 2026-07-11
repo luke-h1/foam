@@ -296,7 +296,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       }
 
       case 'PRIVMSG': {
-        // Chat message received
         if (params.length >= 2 && tags) {
           const channelName = params[0];
           const messageText = params[1];
@@ -334,9 +333,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
               return;
             }
 
-            // logger.chat.debug(
-            //   `PRIVMSG in ${channelName}: ${messageText.substring(0, 50)}...`,
-            // );
             optionsRef.current.onMessage?.(
               channelName,
               tagsRecord,
@@ -356,7 +352,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       }
 
       case 'NOTICE': {
-        // Server notices (e.g., connection messages, errors)
         if (params.length >= 2 && tags) {
           const channelName = params[0];
           const messageText = params[1];
@@ -402,7 +397,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       }
 
       case 'CLEARCHAT': {
-        // User timeout/ban
         if (params.length >= 1 && tags) {
           const channelName = params[0];
           const username = params[1]; // May be empty for full chat clear
@@ -446,7 +440,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       }
 
       case 'ROOMSTATE': {
-        // Room state changes (slow mode, followers-only, etc.)
         if (params.length >= 1 && tags) {
           const channelName = params[0];
 
@@ -460,7 +453,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       }
 
       case 'USERSTATE': {
-        // User's state in the channel (sent after JOIN or after sending a message)
         if (params.length >= 1 && tags) {
           const channelName = params[0];
 
@@ -469,7 +461,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
             logger.chat.debug(`USERSTATE in ${channelName}`);
             userStateRef.current = tagsRecord;
 
-            // If we have a pending message, this USERSTATE might be for it
             if (pendingMessageRef.current && tagsRecord['msg-id']) {
               logger.chat.debug(
                 `Received USERSTATE after sending message: ${tagsRecord['msg-id']}`,
@@ -485,7 +476,6 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       }
 
       case 'GLOBALUSERSTATE': {
-        // Global user state (includes emote sets)
         logger.chat.debug('GLOBALUSERSTATE received');
         userStateRef.current = tagsRecord;
         optionsRef.current.onGlobalUserState?.(tagsRecord);

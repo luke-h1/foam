@@ -29,7 +29,7 @@ export function usePopulateAuth() {
       return undefined;
     }
 
-    // Use a small delay to ensure the router tree has mounted
+    // Defer until the next macrotask so the router tree is mounted.
     const timer = setTimeout(() => {
       router.replace('/tabs/following');
     }, 0);

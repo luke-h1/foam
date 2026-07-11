@@ -296,7 +296,12 @@ export const StreamPlayer = memo(function StreamPlayer({
   };
 
   const enhancedVideoStability = usePreference('enhancedVideoStability');
-  const contentKind = clip ? 'clip' : video ? 'vod' : 'live';
+  let contentKind: 'clip' | 'vod' | 'live' = 'live';
+  if (clip) {
+    contentKind = 'clip';
+  } else if (video) {
+    contentKind = 'vod';
+  }
 
   const {
     handleMessage,

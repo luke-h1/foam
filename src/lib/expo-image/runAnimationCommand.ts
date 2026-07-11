@@ -14,6 +14,6 @@ export function runAnimationCommand(
       result.catch(() => {});
     }
   } catch {
-    /* empty */
+    // Recycled expo-image view may already be detached.
   }
 }

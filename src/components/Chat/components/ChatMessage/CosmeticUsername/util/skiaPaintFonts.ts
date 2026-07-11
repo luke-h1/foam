@@ -46,11 +46,8 @@ function loadFontProvider(): void {
 }
 
 /**
- * Shared Montserrat provider for the Skia paint rasterizer. RN Skia's
- * `useFonts` fetches and parses every listed face per component instance, so
- * each painted chat row (and every remount after a scroll-shed cycle) would
- * redo six typeface decodes; the faces never change, so load them once and
- * share the provider across all rows.
+ * Shared Montserrat provider for Skia paints. `useFonts` would re-decode six
+ * faces per painted row (and every scroll-shed remount); load once and share.
  */
 export function useSkiaPaintFontProvider(): SkTypefaceFontProvider | null {
   const provider = useSyncExternalStore(

@@ -448,7 +448,6 @@ function useAuthContextValue({
       return;
     }
 
-    // Check if token is expired based on timestamp (faster than API call)
     if (isTokenExpired(token)) {
       logger.auth.info('Anonymous token is expired, fetching new token');
       twitchApi.removeAuthToken();

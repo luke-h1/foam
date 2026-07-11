@@ -18,14 +18,16 @@ const usernameTextStyles: Record<
 };
 
 function getUsernameTextStyle(compact: boolean, isModerated: boolean) {
-  if (compact) {
-    return isModerated
-      ? usernameTextStyles.compactModerated
-      : usernameTextStyles.compact;
+  if (compact && isModerated) {
+    return usernameTextStyles.compactModerated;
   }
-  return isModerated
-    ? usernameTextStyles.comfortableModerated
-    : usernameTextStyles.comfortable;
+  if (compact) {
+    return usernameTextStyles.compact;
+  }
+  if (isModerated) {
+    return usernameTextStyles.comfortableModerated;
+  }
+  return usernameTextStyles.comfortable;
 }
 
 interface RichChatMessageUsernameProps {

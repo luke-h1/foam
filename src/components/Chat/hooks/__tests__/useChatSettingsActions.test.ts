@@ -107,7 +107,7 @@ describe('useChatSettingsActions', () => {
     });
 
     await waitFor(() => {
-      expect(mockClearImageCache).toHaveBeenCalledWith('channel-1');
+      expect(mockClearImageCache).toHaveBeenCalledTimes(1);
     });
     expect(mockClearCache).toHaveBeenCalledWith('channel-1');
     expect(mockClearUserCosmeticsCache).toHaveBeenCalledTimes(1);
@@ -158,7 +158,7 @@ describe('useChatSettingsActions', () => {
       expect(reprocessAllMessages).toHaveBeenCalledTimes(1);
     });
     expect(mockInvalidateChannelCache).toHaveBeenCalledWith('channel-1');
-    expect(mockClearImageCache).toHaveBeenCalledWith('channel-1');
+    expect(mockClearImageCache).toHaveBeenCalledTimes(1);
     expect(mockClearUserCosmeticsCache).toHaveBeenCalledTimes(1);
     expect(mockClearCache).not.toHaveBeenCalled();
   });

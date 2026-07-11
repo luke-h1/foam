@@ -20,15 +20,10 @@ function escapeHtml(value: string): string {
 }
 
 /**
- * Standalone document reproducing the extension's painted span: the per-paint
- * rule from `buildPaintCssDeclarations` on top of the
- * `.seventv-painted-content` base class (`background-color: currentcolor`
- * under the gradient stack, gradients clipped to glyphs via
- * `background-clip: text`, forced weight 700).
-
- * The measurement script reports the span's rect so the host view can size
- * itself; the drop-shadow filter paints outside that rect, matching how the
- * extension lets shadows overflow the username's layout box.
+ * Standalone document matching the extension's painted span. The measure
+ * script reports the span rect so the host can size itself; drop-shadow
+ * paints outside that rect, like the extension. Body color/font-weight are
+ * the inherit context for the paint rule's `color` / `font-weight: inherit`.
  */
 export function buildPaintedUsernameHtml({
   displayUsername,
@@ -50,9 +45,6 @@ html, body {
   margin: 0;
   padding: 0;
   background: transparent;
-  /* The paint rule's "color: inherit" / "font-weight: inherit" must resolve to
-     the username's fallback colour and chat's bold weight, exactly as the
-     extension's span inherits them from the chat message context. */
   color: ${fallbackColor};
   font-weight: 700;
 }
@@ -67,8 +59,6 @@ html, body {
   -webkit-text-fill-color: transparent;
   -webkit-background-clip: text !important;
   background-clip: text !important;
-}
-.painted {
 ${paintCss}
 }
 </style>

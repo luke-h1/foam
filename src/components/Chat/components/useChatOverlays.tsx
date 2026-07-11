@@ -317,8 +317,7 @@ export function useChatOverlays({
   }, [hidePhraseFromView, patchOverlay, selectedMessage]);
 
   /**
-   * Twitch dropped slash commands from IRC in 2023, so moderation actions go
-   * through Helix; a 403 here just means the current user is not a moderator.
+   * Twitch dropped IRC slash commands in 2023; Helix 403 = not a mod.
    */
   const runModAction = useCallback(
     (command: ModCommand) => {
@@ -385,7 +384,7 @@ export function useChatOverlays({
   const banSelection = useCallback(
     (
       selection: { login?: string; username?: string } | null,
-      clearPatch: { selectedMessage: null } | { selectedUser: null },
+      clear: () => void,
     ) => {
       const target = resolveModTarget(selection);
       if (!target) {
@@ -393,15 +392,15 @@ export function useChatOverlays({
       }
 
       runModAction({ type: 'ban', login: target });
-      patchOverlay(clearPatch);
+      clear();
     },
-    [patchOverlay, runModAction],
+    [runModAction],
   );
 
   const promptTimeoutDuration = useCallback(
     (
       selection: { login?: string; username?: string } | null,
-      clearPatch: { selectedMessage: null } | { selectedUser: null },
+      clear: () => void,
     ) => {
       const target = resolveModTarget(selection);
       if (!target) {
@@ -420,22 +419,26 @@ export function useChatOverlays({
               login: target,
               durationSeconds: option.seconds,
             });
-            patchOverlay(clearPatch);
+            clear();
           },
         })),
         cancelLabel: i18next.t('common:cancel'),
       });
     },
-    [patchOverlay, runModAction],
+    [runModAction],
   );
 
   const handleActionSheetTimeoutUser = useCallback(() => {
-    promptTimeoutDuration(selectedMessage, { selectedMessage: null });
-  }, [promptTimeoutDuration, selectedMessage]);
+    promptTimeoutDuration(selectedMessage, () =>
+      patchOverlay({ selectedMessage: null }),
+    );
+  }, [patchOverlay, promptTimeoutDuration, selectedMessage]);
 
   const handleActionSheetBanUser = useCallback(() => {
-    banSelection(selectedMessage, { selectedMessage: null });
-  }, [banSelection, selectedMessage]);
+    banSelection(selectedMessage, () =>
+      patchOverlay({ selectedMessage: null }),
+    );
+  }, [banSelection, patchOverlay, selectedMessage]);
 
   const handleMentionSelectedUser = useCallback(() => {
     if (!selectedUser?.username) {
@@ -468,12 +471,14 @@ export function useChatOverlays({
   }, [patchOverlay, selectedUser, toggleHighlightedUser]);
 
   const handleTimeoutSelectedUser = useCallback(() => {
-    promptTimeoutDuration(selectedUser, { selectedUser: null });
-  }, [promptTimeoutDuration, selectedUser]);
+    promptTimeoutDuration(selectedUser, () =>
+      patchOverlay({ selectedUser: null }),
+    );
+  }, [patchOverlay, promptTimeoutDuration, selectedUser]);
 
   const handleBanSelectedUser = useCallback(() => {
-    banSelection(selectedUser, { selectedUser: null });
-  }, [banSelection, selectedUser]);
+    banSelection(selectedUser, () => patchOverlay({ selectedUser: null }));
+  }, [banSelection, patchOverlay, selectedUser]);
 
   const handleWarnSelectedUser = useCallback(() => {
     const target = resolveModTarget(selectedUser);

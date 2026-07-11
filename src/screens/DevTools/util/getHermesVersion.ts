@@ -1,15 +1,19 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-export function getHermesVersion() {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  const HERMES_RUNTIME = global.HermesInternal?.getRuntimeProperties?.() ?? {};
-  const HERMES_VERSION = HERMES_RUNTIME['OSS Release Version'];
-  const isStaticHermes = HERMES_RUNTIME['Static Hermes'];
+type HermesRuntimeProperties = {
+  'OSS Release Version'?: string;
+  'Static Hermes'?: boolean;
+};
 
-  if (isStaticHermes) {
-    return `${HERMES_VERSION} (hermes)`;
+type HermesInternal = {
+  getRuntimeProperties?: () => HermesRuntimeProperties;
+};
+
+export function getHermesVersion(): string | undefined {
+  const hermes = (globalThis as { HermesInternal?: HermesInternal })
+    .HermesInternal;
+  const runtime = hermes?.getRuntimeProperties?.() ?? {};
+  const version = runtime['OSS Release Version'];
+  if (runtime['Static Hermes']) {
+    return `${version} (hermes)`;
   }
-  return HERMES_VERSION as string;
+  return version;
 }

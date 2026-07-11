@@ -97,11 +97,7 @@ export function useEmoteReprocessing({
       }
 
       if (processedMessageIdsRef.current.has(msg.message_id)) {
-        /**
-         * Re-check only when a text part still carries a raw @mention (its
-         * login resolved after the last pass); keep the regex behind the
-         * membership check.
-         */
+        // Re-check only when a text part still has a raw @mention.
         const hasUnparsedMention = msg.message.some(
           part => part.type === 'text' && /(?:^|\s)@[\w-]+/.test(part.content),
         );
@@ -122,9 +118,7 @@ export function useEmoteReprocessing({
         return;
       }
 
-      // Route through the shared resolver (not the worklet directly) so the
-      // sender's 7TV personal emotes and tagged subscriber emotes still resolve;
-      // otherwise an emote resolved on ingest downgrades back to text here.
+      // Shared resolver keeps personal / tagged sub emotes from downgrading to text.
       const replacedMessage = resolveMessageEmoteParts({
         channelId,
         emoteData,

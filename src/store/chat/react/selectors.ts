@@ -151,6 +151,9 @@ export const useChannelEmoteData = (channelId: string | null) => {
 };
 
 export const useChannelEmoteDataForReprocess = (channelId: string | null) => {
+  // Omits sevenTvPersonalEmotes on purpose: that map churns per chatter and
+  // would re-storm the channel reprocess. Personal emotes hydrate via
+  // hydrateVisibleSevenTvAssets instead.
   return useSelector(() => {
     if (!channelId) {
       return null;

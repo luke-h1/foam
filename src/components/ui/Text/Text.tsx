@@ -174,7 +174,7 @@ export function Text({
     ...margin({ m, mb, ml, mr, mt, mx, my }),
     color: resolvedColor,
     fontFamily: resolvedFontFamily,
-    fontStyle: variant === 'mono' ? (italic ? 'italic' : 'normal') : 'normal',
+    fontStyle: variant === 'mono' && italic ? 'italic' : 'normal',
     fontVariant: tabular ? ['tabular-nums'] : undefined,
     fontWeight: variant === 'mono' ? weightMap[weight] : undefined,
     textAlign: align,

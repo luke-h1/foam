@@ -50,10 +50,7 @@ export const useWebsocket = (
     ? JSON.stringify(options.queryParams)
     : null;
 
-  /**
-   * Non-OPEN sends are dropped: both consumers gate on readyState and
-   * re-issue state on open/reconnect, so nothing needs queueing.
-   */
+  // Non-OPEN sends are dropped; consumers re-issue on open/reconnect.
   const sendMessage: SendMessage = useCallback(message => {
     if (
       websocketRef.current &&

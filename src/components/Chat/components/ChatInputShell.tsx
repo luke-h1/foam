@@ -148,8 +148,7 @@ export const ChatInputShell = memo(function ChatInputShell({
   }
 
   /**
-   * The native composer owns its text, so sign-out also clears it
-   * imperatively; setText is a side effect and must run after commit.
+   * Native composer owns its text; clear it imperatively after sign-out commit.
    */
   useEffect(() => {
     if (!isAuthenticated) {

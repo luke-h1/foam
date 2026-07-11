@@ -5,22 +5,12 @@ import { Skia, type SkImage } from '@shopify/react-native-skia';
 import { logger } from '@app/utils/logger';
 
 /**
- * Shared decode cache for tiled paint textures. Skia's `useImage` fetches and
- * decodes per component instance, so every row wearing the same image paint
- * (and every remount after a scroll-shed cycle) redid the download + decode.
- * The texture population is tiny (one per distinct tiled 7TV paint on screen),
- * so entries are cached by URL and shared across rows; eviction drops the
- * oldest entry and lets Skia's finalizer reclaim the pixels once the last row
- * using it unmounts.
+ * Shared decode cache for tiled paint textures. Skia's `useImage` decodes per
+ * instance; this shares one decode per URL across rows. Failed URLs are
+ * negative-cached for `NEGATIVE_RETRY_DELAY_MS` so a broken paint does not
+ * retry on every render.
  */
 const MAX_TILED_PAINT_IMAGES = 24;
-
-/**
- * Values are `SkImage` on success and `null` on a failed fetch/decode. The
- * `null` acts as a negative-cache sentinel so a broken paint URL doesn't
- * retry on every render for every row wearing that paint; it expires after
- * `NEGATIVE_RETRY_DELAY_MS`.
- */
 const NEGATIVE_RETRY_DELAY_MS = 60_000;
 
 const imagesByUrl = new Map<string, SkImage | null>();
@@ -37,7 +27,6 @@ function evictIfNeeded(): void {
     return;
   }
   for (const oldest of imagesByUrl.keys()) {
-    // Prefer evicting a texture no mounted row is watching.
     if (!listenersByUrl.get(oldest)?.size) {
       imagesByUrl.delete(oldest);
       failedAtByUrl.delete(oldest);
@@ -66,6 +55,7 @@ function loadImage(url: string): void {
     imagesByUrl.delete(url);
     failedAtByUrl.delete(url);
   }
+
   pendingUrls.add(url);
   Skia.Data.fromURI(url)
     .then(data => {
@@ -107,10 +97,6 @@ function subscribe(url: string, listener: () => void): () => void {
 }
 
 export function useTiledPaintImage(url: string): SkImage | null {
-  /**
-   * Stable per-url identity: useSyncExternalStore re-subscribes whenever the
-   * subscribe reference changes.
-   */
   const subscribeToUrl = useCallback(
     (listener: () => void) => subscribe(url, listener),
     [url],

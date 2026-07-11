@@ -13,9 +13,7 @@ interface PaintLayerTiledImageProps {
 }
 
 /**
- * Tiling counterpart to the plain expo-image layer: CSS `background-repeat`
- * paints tile their texture across the username, which expo-image cannot do,
- * so tiled layers render through a Skia image shader instead.
+ * Skia image-shader tiling for CSS `background-repeat` paint layers.
  */
 export function PaintLayerTiledImage({
   canvasRepeat,

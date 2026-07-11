@@ -31,27 +31,24 @@ type HydrateVisibleSevenTvAssetsParams = {
   hydrateCosmetics?: boolean;
   reprocessMessage: (message: AnyChatMessageType) => void | Promise<void>;
   /**
-   * Polled between reprocess slices; return false to stop a pass whose
-   * surface unmounted or hopped channels mid-flight.
+   * Return false to abort a pass after unmount / channel hop.
    */
   shouldContinue?: () => boolean;
 };
 
 const MAX_PERSONAL_EMOTE_FETCHES_PER_PASS = 3;
 const MAX_COSMETIC_FETCHES_PER_PASS = 3;
-
 const REPROCESS_BATCH_SIZE = 6;
 const REPROCESS_BATCH_DELAY_MS = 32;
+const MAX_HYDRATED_MESSAGE_KEYS = 2000;
+const MAX_VISIBLE_USER_GUARDS = 5000;
 
 const waitBetweenReprocessBatches = () =>
   new Promise<void>(resolve => {
     setTimeout(resolve, REPROCESS_BATCH_DELAY_MS);
   });
 
-const MAX_HYDRATED_MESSAGE_KEYS = 2000;
-const MAX_VISIBLE_USER_GUARDS = 5000;
-
-function canHydrateMessage(message: AnyChatMessageType): boolean {
+export function canHydrateMessage(message: AnyChatMessageType): boolean {
   if (message.sender === 'System') {
     return false;
   }
@@ -97,6 +94,10 @@ function getHydrationKey({
   ].join('|');
 }
 
+function shouldAbort(shouldContinue?: () => boolean): boolean {
+  return shouldContinue?.() === false;
+}
+
 export async function hydrateVisibleSevenTvAssets({
   channelId,
   messages,
@@ -118,7 +119,7 @@ export async function hydrateVisibleSevenTvAssets({
   let didScheduleReprocess = false;
 
   const reprocessIfChanged = (message: AnyChatMessageType) => {
-    if (shouldContinue && !shouldContinue()) {
+    if (shouldAbort(shouldContinue)) {
       return undefined;
     }
 
@@ -145,10 +146,10 @@ export async function hydrateVisibleSevenTvAssets({
 
   const cachedAssetMessages: AnyChatMessageType[] = [];
 
-  messages.forEach(message => {
+  for (const message of messages) {
     const userId = message.userstate['user-id'];
     if (!userId || !canHydrateMessage(message)) {
-      return;
+      continue;
     }
 
     const cachedPersonalEmotes = hydratePersonalEmotes
@@ -167,48 +168,49 @@ export async function hydrateVisibleSevenTvAssets({
     if (
       hydratePersonalEmotes &&
       cachedPersonalEmotes.length === 0 &&
-      !personalEmoteUsers.has(userId)
+      !personalEmoteUsers.has(userId) &&
+      personalEmoteFetchesStarted < MAX_PERSONAL_EMOTE_FETCHES_PER_PASS
     ) {
-      if (personalEmoteFetchesStarted < MAX_PERSONAL_EMOTE_FETCHES_PER_PASS) {
-        personalEmoteFetchesStarted += 1;
-        boundedSetAdd(personalEmoteUsers, userId, MAX_VISIBLE_USER_GUARDS);
-        pending.push(
-          fetchUserPersonalEmotes(userId, channelId).then(emotes => {
-            if (emotes && emotes.length > 0) {
-              return reprocessIfChanged(message);
-            }
-            return undefined;
-          }),
-        );
-      }
+      personalEmoteFetchesStarted += 1;
+      boundedSetAdd(personalEmoteUsers, userId, MAX_VISIBLE_USER_GUARDS);
+      pending.push(
+        fetchUserPersonalEmotes(userId, channelId).then(emotes => {
+          if (emotes && emotes.length > 0) {
+            return reprocessIfChanged(message);
+          }
+          return undefined;
+        }),
+      );
     }
 
-    if (hydrateCosmetics && !cachedBadge && !cosmeticUsers.has(userId)) {
-      if (cosmeticFetchesStarted < MAX_COSMETIC_FETCHES_PER_PASS) {
-        cosmeticFetchesStarted += 1;
-        boundedSetAdd(cosmeticUsers, userId, MAX_VISIBLE_USER_GUARDS);
-        pending.push(
-          fetchUserCosmetics(userId, {
-            retryMissingBadge: true,
-          }).then(() => {
-            if (getUserBadge(userId)) {
-              return reprocessIfChanged(message);
-            }
-            return undefined;
-          }),
-        );
-      }
+    if (
+      hydrateCosmetics &&
+      !cachedBadge &&
+      !cosmeticUsers.has(userId) &&
+      cosmeticFetchesStarted < MAX_COSMETIC_FETCHES_PER_PASS
+    ) {
+      cosmeticFetchesStarted += 1;
+      boundedSetAdd(cosmeticUsers, userId, MAX_VISIBLE_USER_GUARDS);
+      pending.push(
+        fetchUserCosmetics(userId, {
+          retryMissingBadge: true,
+        }).then(() => {
+          if (getUserBadge(userId)) {
+            return reprocessIfChanged(message);
+          }
+          return undefined;
+        }),
+      );
     }
-  });
+  }
 
   for (let index = 0; index < cachedAssetMessages.length; index += 1) {
     if (index > 0 && index % REPROCESS_BATCH_SIZE === 0) {
-      // The serialized await is the point: batches must not start until the
-      // previous turn yielded, or the whole screenful parses in one tick.
+      // Yield between batches so a full screenful does not parse in one tick.
       // eslint-disable-next-line react-doctor/async-await-in-loop
       await waitBetweenReprocessBatches();
     }
-    if (shouldContinue && !shouldContinue()) {
+    if (shouldAbort(shouldContinue)) {
       break;
     }
     const message = cachedAssetMessages[index];

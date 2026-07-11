@@ -41,6 +41,7 @@ interface PaintedUsernameWithPaintProps {
   displayUsername: string;
   fallbackColor: string;
   fontSize?: number;
+  lineHeight?: number;
   isModerated: boolean;
   paint: PaintData;
   plainColor: string;
@@ -52,16 +53,14 @@ function PaintedUsernameWithPaint({
   displayUsername,
   fallbackColor,
   fontSize,
+  lineHeight,
   isModerated,
   paint,
   plainColor,
   sevenTvPaintDropShadows,
   usernameTextStyle,
 }: PaintedUsernameWithPaintProps) {
-  /**
-   * Subscribed here (painted usernames only) - in the parent it would
-   * re-render every visible row twice per fling.
-   */
+  // Painted rows only - in the parent this re-renders every visible row twice per fling.
   const isScrolling = useChatScrollActive();
   const paintRenderer = usePaintRenderer();
 
@@ -75,12 +74,8 @@ function PaintedUsernameWithPaint({
     );
   }
 
-  // During an active fling, render the username in its dominant solid colour
-  // and skip the per-row MaskedView offscreen pass + gradient/SVG/image fill
-  // layers; the full painted fill returns when the list settles (~150ms),
-  // mirroring how animated emotes pause decode during scroll. This sheds the
-  // offscreen render passes at the moment the Core Animation render encoder is
-  // most pressured (FOAM-TV-MOBILE-BJ render-commit OOM).
+  // Solid colour during fling: skip MaskedView/gradient/SVG/image layers while
+  // the render encoder is pressured (FOAM-TV-MOBILE-BJ). Full paint returns ~150ms after settle.
   if (isScrolling) {
     return (
       <Text
@@ -112,6 +107,8 @@ function PaintedUsernameWithPaint({
         username={displayUsername}
         paint={paint}
         fallbackColor={fallbackColor}
+        fontSize={fontSize}
+        lineHeight={lineHeight}
       />
     );
   }
@@ -127,10 +124,7 @@ function PaintedUsernameWithPaint({
     paintTextStyle,
   ] as StyleProp<TextStyle>;
 
-  /**
-   * order matters: drop-shadow filter furthest back, then text-shadows,
-   * then the stroke, then the painted fill.
-   */
+  // Back to front: drop-shadows, text-shadows, stroke, then painted fill.
   const underlayShadows = [
     ...dropShadows.map(shadow => ({ shadow, source: 'drop' })),
     ...textShadows.map(shadow => ({ shadow, source: 'text' })),
@@ -208,6 +202,7 @@ function PaintedUsernameComponent({
       displayUsername={displayUsername}
       fallbackColor={solidFallback}
       fontSize={flatUsernameStyle?.fontSize}
+      lineHeight={flatUsernameStyle?.lineHeight}
       isModerated={isModerated}
       paint={paint}
       plainColor={fallbackColor}

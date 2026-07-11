@@ -87,7 +87,6 @@ export interface Preferences {
   analyticsEnabled: boolean;
   sharedChatEnabled: boolean;
   enhancedVideoStability: boolean;
-
   sevenTvPaintRenderer: SevenTvPaintRenderer;
 }
 
@@ -208,11 +207,12 @@ export function getPreferences(): Preferences {
 }
 
 export function usePaintRenderer(): SevenTvPaintRenderer {
-  return useSelector(() =>
-    isDevToolsEnabled
-      ? preferences$.sevenTvPaintRenderer.get()
-      : paintRendererFlag$.get(),
-  );
+  return useSelector(() => {
+    if (isDevToolsEnabled) {
+      return preferences$.sevenTvPaintRenderer.get();
+    }
+    return paintRendererFlag$.get();
+  });
 }
 
 export function usePreferences(): Preferences & {

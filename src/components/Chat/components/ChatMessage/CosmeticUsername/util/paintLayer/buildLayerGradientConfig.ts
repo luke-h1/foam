@@ -21,10 +21,8 @@ function solidGradientConfig(color: string): LayerGradientConfig {
 }
 
 /**
- * Repeating CSS gradients tile the stop span in both directions while keeping
- * the stops' absolute phase (a span of [0.4, 0.6] produces tiles at
- * ..., [0.0, 0.2], [0.2, 0.4], [0.4, 0.6], [0.6, 0.8], ...). react-native-svg
- * has no native spreadMethod support, so expand the pattern to cover [0, 1].
+ * Expand repeating-gradient stops across [0, 1] (no SVG spreadMethod).
+ * Keeps absolute stop phase (e.g. [0.4, 0.6] tiles at …, 0.2–0.4, 0.4–0.6, …).
  */
 function expandRepeatingStops(stops: PaintStop[]): PaintStop[] {
   if (stops.length === 0) {

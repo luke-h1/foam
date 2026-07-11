@@ -40,7 +40,6 @@ import { getChatMessageListKey } from '../util/chatMessages/getChatMessageListKe
 const CHAT_DRAW_DISTANCE = 250;
 const CHAT_ESTIMATED_ITEM_SIZE = 44;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
-
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
   // Skip viewability churn for rows that only flash past during a fling.
@@ -55,12 +54,10 @@ const CHAT_VIEWABILITY_CONFIG = {
 const CHAT_MAINTAIN_SCROLL_AT_END = {
   on: { dataChange: true, itemLayout: true },
 } satisfies MaintainScrollAtEndOptions;
-
 const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
 
 /**
- * Keep recycling off: it repeatedly crashed on iOS ("attempt to recycle
- * mounted view") when rows updated while actively scrolled.
+ * Off: recycling crashed on iOS when rows updated while scrolled.
  */
 const CHAT_RECYCLE_ITEMS = false;
 

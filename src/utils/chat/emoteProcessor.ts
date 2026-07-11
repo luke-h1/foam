@@ -285,10 +285,7 @@ function applyEmoteCompositionPass(parts: ParsedPart[]): ParsedPart[] {
       const base = anchor >= 0 ? out[anchor] : undefined;
       if (base?.type === 'emote' && !base.zero_width) {
         out.length = anchor + 1;
-        // Skip re-stacking an emote id already in the stack: overlays all
-        // composite at the base position, so a duplicate anywhere doubles
-        // decode/GPU work and darkens semi-transparent art. The duplicate is
-        // still consumed (not rendered standalone).
+        // Skip duplicate overlay ids (double decode + darkened alpha).
         const overlaid = base.overlaid ?? [];
         const alreadyStacked =
           base.id === part.id ||
@@ -495,10 +492,8 @@ export const processEmotesWorklet = (
   }
 
   if (cache.size >= MAX_CACHE_SIZE) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const firstKey = cache.keys().next().value;
-    if (firstKey) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    if (firstKey !== undefined) {
       cache.delete(firstKey);
     }
   }

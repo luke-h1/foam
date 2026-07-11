@@ -15,14 +15,15 @@ import { boundedSetAdd } from '../util/hydrateVisibleSevenTvAssets/boundedSetAdd
 
 const MAX_FETCHED_COSMETICS_USERS = 500;
 
-function hasRenderableCosmetics(twitchUserId: string): boolean {
+function getRenderableBadgeUrl(twitchUserId: string): string | undefined {
   const badgeId = getUserBadgeId(twitchUserId);
-  const renderableBadge = badgeId
-    ? getUserBadge(twitchUserId)?.url?.trim()
-    : undefined;
-  const paintId = getUserPaintId(twitchUserId);
+  return badgeId ? getUserBadge(twitchUserId)?.url?.trim() : undefined;
+}
 
-  return Boolean(paintId || renderableBadge);
+function hasRenderableCosmetics(twitchUserId: string): boolean {
+  return Boolean(
+    getUserPaintId(twitchUserId) || getRenderableBadgeUrl(twitchUserId),
+  );
 }
 
 export function useChatCosmetics(options: { userId?: string | null } = {}) {
@@ -30,11 +31,7 @@ export function useChatCosmetics(options: { userId?: string | null } = {}) {
   const fetchedCosmeticsUsersRef = useLazyRef(() => new Set<string>());
 
   useEffect(() => {
-    if (!userId) {
-      return;
-    }
-
-    if (hasRenderableCosmetics(userId)) {
+    if (!userId || hasRenderableCosmetics(userId)) {
       return;
     }
 
@@ -66,9 +63,7 @@ export function useChatCosmetics(options: { userId?: string | null } = {}) {
     } = {},
   ) => {
     const existingBadgeId = getUserBadgeId(twitchUserId);
-    const renderableBadge = existingBadgeId
-      ? getUserBadge(twitchUserId)?.url?.trim()
-      : undefined;
+    const renderableBadge = getRenderableBadgeUrl(twitchUserId);
 
     if (
       fetchedCosmeticsUsersRef.current.has(twitchUserId) &&
@@ -86,7 +81,11 @@ export function useChatCosmetics(options: { userId?: string | null } = {}) {
       return;
     }
 
-    fetchedCosmeticsUsersRef.current.add(twitchUserId);
+    boundedSetAdd(
+      fetchedCosmeticsUsersRef.current,
+      twitchUserId,
+      MAX_FETCHED_COSMETICS_USERS,
+    );
 
     try {
       await requestUserCosmeticsViaPresence(twitchUserId);

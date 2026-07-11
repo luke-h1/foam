@@ -10,12 +10,16 @@ export function useSyncPaintRendererFlag(): void {
   const flag = config.sevenTvPaintRenderer.value;
 
   useEffect(() => {
-    if (flag === 'off') {
-      paintRendererFlag$.set('off');
-      return;
+    switch (flag) {
+      case 'off':
+        paintRendererFlag$.set('off');
+        break;
+      case 'skia':
+        paintRendererFlag$.set(Platform.OS === 'web' ? 'native' : 'skia');
+        break;
+      default:
+        paintRendererFlag$.set('native');
+        break;
     }
-    paintRendererFlag$.set(
-      flag === 'skia' && Platform.OS !== 'web' ? 'skia' : 'native',
-    );
   }, [flag]);
 }

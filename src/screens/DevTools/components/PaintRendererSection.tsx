@@ -23,6 +23,10 @@ const PAINT_RENDERER_OPTIONS = [
   value: SevenTvPaintRenderer;
 }[];
 
+function isPaintRenderer(value: string): value is SevenTvPaintRenderer {
+  return PAINT_RENDERER_OPTIONS.some(option => option.value === value);
+}
+
 export function PaintRendererSection() {
   const { t } = useTranslation('devTools');
   const { sevenTvPaintRenderer, update } = usePreferences();
@@ -30,29 +34,6 @@ export function PaintRendererSection() {
   if (!isDevToolsEnabled) {
     return null;
   }
-
-  const selectedIndex = PAINT_RENDERER_OPTIONS.findIndex(
-    option => option.value === sevenTvPaintRenderer,
-  );
-
-  const handleChange = (event: {
-    nativeEvent: { selectedSegmentIndex: number };
-  }) => {
-    const next =
-      PAINT_RENDERER_OPTIONS[event.nativeEvent.selectedSegmentIndex]?.value;
-    if (next) {
-      update({ sevenTvPaintRenderer: next });
-    }
-  };
-
-  const handleValueChange = (value: string) => {
-    const selected = PAINT_RENDERER_OPTIONS.find(
-      option => t(option.labelKey) === value,
-    );
-    if (selected) {
-      update({ sevenTvPaintRenderer: selected.value });
-    }
-  };
 
   if (Platform.OS === 'ios') {
     return (
@@ -65,7 +46,7 @@ export function PaintRendererSection() {
           systemImage='paintbrush.fill'
           selection={sevenTvPaintRenderer}
           onSelectionChange={value => {
-            if (PAINT_RENDERER_OPTIONS.some(option => option.value === value)) {
+            if (isPaintRenderer(value)) {
               update({ sevenTvPaintRenderer: value });
             }
           }}
@@ -80,14 +61,32 @@ export function PaintRendererSection() {
     );
   }
 
+  const selectedIndex = PAINT_RENDERER_OPTIONS.findIndex(
+    option => option.value === sevenTvPaintRenderer,
+  );
+
   return (
     <SettingsSection title={t('paintRenderer')}>
       <ChatPreferenceSegmentedSettingsRow
         title={t('paintRenderer')}
         subtitle={t('paintRendererDescription')}
         icon={{ icon: 'paintbrush.fill', color: theme.colorPlum }}
-        onChange={handleChange}
-        onValueChange={handleValueChange}
+        onChange={event => {
+          const next =
+            PAINT_RENDERER_OPTIONS[event.nativeEvent.selectedSegmentIndex]
+              ?.value;
+          if (next) {
+            update({ sevenTvPaintRenderer: next });
+          }
+        }}
+        onValueChange={value => {
+          const selected = PAINT_RENDERER_OPTIONS.find(
+            option => t(option.labelKey) === value,
+          );
+          if (selected) {
+            update({ sevenTvPaintRenderer: selected.value });
+          }
+        }}
         selectedIndex={selectedIndex}
         values={PAINT_RENDERER_OPTIONS.map(option => t(option.labelKey))}
       />

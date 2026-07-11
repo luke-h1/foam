@@ -271,10 +271,7 @@ export function useSeventvWs(
     logger.stvWs.info(`💚 Attempting to subscribe to emote set: ${emoteSetId}`);
 
     if (twitchChannelIdRef.current) {
-      /**
-       * Switching channels on a live socket: drop the previous channel's
-       * entitlement/cosmetic/user streams before subscribing the new one.
-       */
+      // Live socket channel hop: unsubscribe previous channel-scoped streams first.
       if (
         subscribedChannelIdRef.current &&
         subscribedChannelIdRef.current !== twitchChannelIdRef.current

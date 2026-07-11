@@ -8,14 +8,9 @@ import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
-/**
- * Gentle overshoot (damping ratio ~0.78) for a tappable affordance without
- * a distracting bounce.
- */
-const resumeEntering = FadeInDown.springify()
-  .damping(17)
-  .stiffness(200)
-  .mass(0.6);
+import { chatAffordanceSpring } from '../util/chatEntranceSpring';
+
+const resumeEntering = chatAffordanceSpring(FadeInDown);
 const resumeExiting = FadeOutDown.duration(150);
 
 export interface ResumeScrollProps {

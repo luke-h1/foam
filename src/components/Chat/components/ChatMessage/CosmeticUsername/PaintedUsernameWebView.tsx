@@ -13,27 +13,56 @@ interface PaintedUsernameWebViewProps {
   username: string;
   paint: PaintData;
   fallbackColor?: string;
+  fontSize?: number;
+  lineHeight?: number;
 }
 
+/**
+ * Remounts when `html` changes so measured size cannot stick to a prior paint.
+ */
 export function PaintedUsernameWebView({
   username,
   paint,
   fallbackColor = theme.color.text.dark,
+  fontSize = chatLineMetrics.comfortable.fontSize,
+  lineHeight = chatLineMetrics.comfortable.lineHeight,
 }: PaintedUsernameWebViewProps) {
-  const [size, setSize] = useState<{ width: number; height: number } | null>(
-    null,
-  );
-
   const html = useMemo(
     () =>
       buildPaintedUsernameHtml({
         displayUsername: username,
         paint,
         fallbackColor,
-        fontSize: chatLineMetrics.comfortable.fontSize,
-        lineHeight: chatLineMetrics.comfortable.lineHeight,
+        fontSize,
+        lineHeight,
       }),
-    [username, paint, fallbackColor],
+    [username, paint, fallbackColor, fontSize, lineHeight],
+  );
+
+  return (
+    <MeasuredPaintedUsernameWebView
+      key={html}
+      html={html}
+      username={username}
+      fallbackColor={fallbackColor}
+      fontSize={fontSize}
+    />
+  );
+}
+
+function MeasuredPaintedUsernameWebView({
+  html,
+  username,
+  fallbackColor,
+  fontSize,
+}: {
+  html: string;
+  username: string;
+  fallbackColor: string;
+  fontSize: number;
+}) {
+  const [size, setSize] = useState<{ width: number; height: number } | null>(
+    null,
   );
 
   return (
@@ -47,7 +76,9 @@ export function PaintedUsernameWebView({
       ]}
     >
       {size ? null : (
-        <Text style={[styles.sizer, { color: fallbackColor }]}>{username}</Text>
+        <Text style={[styles.sizer, { color: fallbackColor, fontSize }]}>
+          {username}
+        </Text>
       )}
       <WebView
         source={{ html }}
@@ -76,7 +107,7 @@ export function PaintedUsernameWebView({
               height: Math.ceil(measured.height),
             });
           } catch {
-            // Ignore
+            // Ignore malformed measure payloads.
           }
         }}
       />
