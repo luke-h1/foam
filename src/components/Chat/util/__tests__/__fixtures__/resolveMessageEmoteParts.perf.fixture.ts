@@ -1,6 +1,8 @@
 import type { SanitisedEmote } from '@app/types/emote';
+import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 export const emptyEmotes: SanitisedEmote[] = [];
+export const emptyBadges: SanitisedBadgeSet[] = [];
 
 function createBttvEmote(index: number): SanitisedEmote {
   const id = `bttv-${index}`;
@@ -67,6 +69,12 @@ export const denseEmoteData = {
   ffzGlobalEmotes: emptyEmotes,
   bttvChannelEmotes: bttvEmotes.filter(emote => emote.site === 'BTTV'),
   bttvGlobalEmotes: bttvEmotes.filter(emote => emote.site === 'Global BTTV'),
+  twitchChannelBadges: emptyBadges,
+  twitchGlobalBadges: emptyBadges,
+  ffzChannelBadges: emptyBadges,
+  ffzGlobalBadges: emptyBadges,
+  chatterinoBadges: emptyBadges,
+  bttvBadges: emptyBadges,
 };
 
 export const reprocessChatLines = Array.from({ length: 120 }, (_, index) => {

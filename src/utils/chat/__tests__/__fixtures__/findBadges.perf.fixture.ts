@@ -11,7 +11,6 @@ export function createChatterinoBadge(index: number): SanitisedBadgeSet {
     type: 'Chatterino Badge',
     title: `Chatterino ${index}`,
     set: 'chatterino',
-    provider: 'chatterino',
     owner_username: `chatter${index}`,
   };
 }
