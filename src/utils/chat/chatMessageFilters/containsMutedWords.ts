@@ -1,18 +1,4 @@
-const blockedLoginSets = new WeakMap<{ userLogin: string }[], Set<string>>();
 const lowercasedMutedWords = new WeakMap<string[], string[]>();
-
-function getBlockedLoginSet(
-  blockedUsers: { userLogin: string }[],
-): Set<string> {
-  let set = blockedLoginSets.get(blockedUsers);
-  if (!set) {
-    set = new Set(
-      blockedUsers.map(blockedUser => blockedUser.userLogin.toLowerCase()),
-    );
-    blockedLoginSets.set(blockedUsers, set);
-  }
-  return set;
-}
 
 function getLowercasedMutedWords(mutedWords: string[]): string[] {
   let lowered = lowercasedMutedWords.get(mutedWords);
@@ -21,16 +7,6 @@ function getLowercasedMutedWords(mutedWords: string[]): string[] {
     lowercasedMutedWords.set(mutedWords, lowered);
   }
   return lowered;
-}
-
-export function isUserBlocked(
-  username: string | undefined,
-  blockedUsers: { userLogin: string }[],
-): boolean {
-  if (!username || blockedUsers.length === 0) {
-    return false;
-  }
-  return getBlockedLoginSet(blockedUsers).has(username.toLowerCase());
 }
 
 export function containsMutedWords(

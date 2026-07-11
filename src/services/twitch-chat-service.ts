@@ -9,10 +9,8 @@ import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
 import { getHeartbeatAction } from '@app/utils/chat/chatHeartbeat';
 import { shouldProcessLiveMessage } from '@app/utils/chat/chatIngestRateLimiter';
-import {
-  containsMutedWords,
-  isUserBlocked,
-} from '@app/utils/chat/chatMessageFilters';
+import { containsMutedWords } from '@app/utils/chat/chatMessageFilters/containsMutedWords';
+import { isUserBlocked } from '@app/utils/chat/chatMessageFilters/isUserBlocked';
 import {
   buildPrivmsgLine,
   type IrcMessage,
