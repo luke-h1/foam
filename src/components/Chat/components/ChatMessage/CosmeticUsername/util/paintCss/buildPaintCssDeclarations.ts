@@ -7,27 +7,8 @@ import type {
 } from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
-/**
- * Camel-cased CSS declarations for one paint, mirroring the rule the 7TV
- * extension writes per paint in `updatePaintStyle` (Extension
- * src/composable/useCosmetics.ts) plus the `.seventv-painted-content` base
- * class from its global stylesheet. Values follow the extension's fallbacks
- * (`inherit` / `unset`) so a WebView given these declarations renders the
- * same computed style as the extension's painted span.
- */
-export interface PaintCssDeclarations {
-  color: string;
-  backgroundImage: string;
-  backgroundPosition: string;
-  backgroundSize: string;
-  backgroundRepeat: string;
-  filter: string;
-  fontWeight: string;
-  webkitTextStrokeWidth: string;
-  webkitTextStrokeColor: string;
-  textShadow: string;
-  textTransform: string;
-}
+import type { PaintCssDeclarations } from './types';
+import { webKitSafeLayerImageUrl } from './webKitSafeLayerImageUrl';
 
 type CssLayer = {
   image: string;
@@ -40,22 +21,6 @@ function sortedLayerStops(layer: PaintLayerData): PaintStop[] {
   return indexedCollectionToArray<PaintStop>(layer.stops)
     .slice()
     .sort((a, b) => a.at - b.at);
-}
-
-/**
- * WKWebView's WebP image reader fails to decode some animated 7TV paint
- * textures (`makeImagePlus ... 'WEBP'-_reader->initImage failed err=-50`),
- * leaving the layer blank and logging the error. Its AVIF reader decodes the
- * same source and 7TV serves an `.avif` sibling at the same path, so hand the
- * WebView AVIF. Chromium (the extension's own engine, and any headless-Chrome
- * oracle) decodes both, so the render stays faithful. Only rewrites 7TV CDN
- * paint-layer URLs; every other URL is returned untouched.
- */
-export function webKitSafeLayerImageUrl(url: string): string {
-  return url.replace(
-    /^(https:\/\/cdn\.7tv\.app\/paint\/[^?\s]+)\.webp(\?\S*)?$/,
-    '$1.avif$2',
-  );
 }
 
 function cssStopList(stops: PaintStop[]): string {
@@ -138,22 +103,4 @@ export function buildPaintCssDeclarations(
         .join(', ') || 'unset',
     textTransform: textStyle?.transform ?? 'unset',
   };
-}
-
-export function paintCssDeclarationsToBlock(
-  declarations: PaintCssDeclarations,
-): string {
-  return [
-    `color: ${declarations.color};`,
-    `background-image: ${declarations.backgroundImage};`,
-    `background-position: ${declarations.backgroundPosition};`,
-    `background-size: ${declarations.backgroundSize};`,
-    `background-repeat: ${declarations.backgroundRepeat};`,
-    `filter: ${declarations.filter};`,
-    `font-weight: ${declarations.fontWeight};`,
-    `-webkit-text-stroke-width: ${declarations.webkitTextStrokeWidth};`,
-    `-webkit-text-stroke-color: ${declarations.webkitTextStrokeColor};`,
-    `text-shadow: ${declarations.textShadow};`,
-    `text-transform: ${declarations.textTransform};`,
-  ].join('\n');
 }

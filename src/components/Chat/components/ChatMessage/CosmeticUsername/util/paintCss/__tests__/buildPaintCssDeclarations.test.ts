@@ -1,58 +1,13 @@
-import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
-import type { PaintData, PaintLayerData } from '@app/types/seventv/cosmetics';
-
+import { buildPaintCssDeclarations } from '../buildPaintCssDeclarations';
+import type { PaintCssDeclarations } from '../types';
 import {
-  buildPaintCssDeclarations,
-  type PaintCssDeclarations,
-  paintCssDeclarationsToBlock,
-  webKitSafeLayerImageUrl,
-} from '../paintCss';
-
-// Packed 7TV colors: RRGGBBAA as a signed 32-bit integer.
-const RED = -16776961; // 0xFF0000FF
-const BLUE = 65535; // 0x0000FFFF
-const HALF_BLACK = 128; // 0x00000080
-
-function toIndexed<T>(items: T[]): IndexedCollection<T> {
-  const collection: IndexedCollection<T> = { length: items.length };
-  items.forEach((item, index) => {
-    collection[index] = item;
-  });
-  return collection;
-}
-
-function makeLayer(overrides: Partial<PaintLayerData>): PaintLayerData {
-  return {
-    function: 'LINEAR_GRADIENT',
-    stops: { length: 0 },
-    angle: 0,
-    shape: 'circle',
-    repeat: false,
-    image_url: '',
-    canvas_repeat: '',
-    at: null,
-    size: null,
-    ...overrides,
-  };
-}
-
-function makePaint(overrides: Partial<PaintData>): PaintData {
-  return {
-    id: 'paint-1',
-    name: 'Test Paint',
-    color: null,
-    layers: { length: 0 },
-    shadows: { length: 0 },
-    textStyle: null,
-    function: 'LINEAR_GRADIENT',
-    repeat: false,
-    angle: 0,
-    shape: 'circle',
-    image_url: '',
-    stops: { length: 0 },
-    ...overrides,
-  };
-}
+  BLUE,
+  HALF_BLACK,
+  makeLayer,
+  makePaint,
+  RED,
+  toIndexed,
+} from './__fixtures__/paintCss.fixture';
 
 describe('buildPaintCssDeclarations', () => {
   test('linear gradient layer with a drop shadow', () => {
@@ -181,61 +136,5 @@ describe('buildPaintCssDeclarations', () => {
       textShadow: 'unset',
       textTransform: 'unset',
     });
-  });
-});
-
-describe('webKitSafeLayerImageUrl', () => {
-  test('rewrites a 7TV CDN paint-layer webp to its avif sibling', () => {
-    expect(
-      webKitSafeLayerImageUrl(
-        'https://cdn.7tv.app/paint/01ABC/layer/01DEF/4x.webp',
-      ),
-    ).toEqual('https://cdn.7tv.app/paint/01ABC/layer/01DEF/4x.avif');
-  });
-
-  test('preserves a trailing query string', () => {
-    expect(
-      webKitSafeLayerImageUrl(
-        'https://cdn.7tv.app/paint/01ABC/layer/01DEF/4x.webp?v=2',
-      ),
-    ).toEqual('https://cdn.7tv.app/paint/01ABC/layer/01DEF/4x.avif?v=2');
-  });
-
-  test('leaves avif and non-webp layer URLs untouched', () => {
-    expect(
-      webKitSafeLayerImageUrl(
-        'https://cdn.7tv.app/paint/01ABC/layer/01DEF/4x.avif',
-      ),
-    ).toEqual('https://cdn.7tv.app/paint/01ABC/layer/01DEF/4x.avif');
-  });
-
-  test('leaves webp URLs from other hosts untouched', () => {
-    expect(webKitSafeLayerImageUrl('https://example.com/x.webp')).toEqual(
-      'https://example.com/x.webp',
-    );
-  });
-});
-
-describe('paintCssDeclarationsToBlock', () => {
-  test('emits one declaration per line in the extension rule order', () => {
-    const block = paintCssDeclarationsToBlock(
-      buildPaintCssDeclarations(makePaint({})),
-    );
-
-    expect(block).toEqual(
-      [
-        'color: inherit;',
-        'background-image: none;',
-        'background-position: 0% 0%;',
-        'background-size: auto;',
-        'background-repeat: unset;',
-        'filter: inherit;',
-        'font-weight: inherit;',
-        '-webkit-text-stroke-width: inherit;',
-        '-webkit-text-stroke-color: inherit;',
-        'text-shadow: unset;',
-        'text-transform: unset;',
-      ].join('\n'),
-    );
   });
 });

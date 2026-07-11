@@ -1,9 +1,7 @@
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
-import {
-  buildPaintCssDeclarations,
-  paintCssDeclarationsToBlock,
-} from './paintCss';
+import { buildPaintCssDeclarations } from './paintCss/buildPaintCssDeclarations';
+import { paintCssDeclarationsToBlock } from './paintCss/paintCssDeclarationsToBlock';
 
 export interface PaintedUsernameHtmlOptions {
   displayUsername: string;
