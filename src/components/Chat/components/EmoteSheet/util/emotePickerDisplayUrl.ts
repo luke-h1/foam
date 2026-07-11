@@ -1,5 +1,5 @@
 import type { SanitisedEmote } from '@app/types/emote';
-import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
+import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants/withResolvedEmoteImageVariants';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import { EMOTE_PICKER_SCALE } from '@app/utils/emote/resolveEmoteScale';
 

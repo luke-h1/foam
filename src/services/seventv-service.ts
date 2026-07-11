@@ -43,7 +43,7 @@ import { convertV4PaintToPaintData } from '@app/utils/color/sevenTvPaintData/con
 import { pickAnimatedFormat } from '@app/utils/color/sevenTvPaintData/pickAnimatedFormat';
 import { pickBestFormat } from '@app/utils/color/sevenTvPaintData/pickBestFormat';
 import { pickBestImage } from '@app/utils/color/sevenTvPaintData/pickBestImage';
-import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
+import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants/createEmoteImageVariants';
 import { logger } from '@app/utils/logger';
 import { sevenTvUserIdCache } from '@app/utils/seventv/sevenTvUserIdCache';
 

@@ -1,6 +1,6 @@
 import type { TwitchSanitisedEmote } from '@app/types/emote';
 import { parseTwitchEmotesTag } from '@app/utils/chat/extractEmotes/parseTwitchEmotesTag';
-import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
+import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants/createEmoteImageVariants';
 
 function toTwitchTaggedEmoteUrl(
   emoteId: string,

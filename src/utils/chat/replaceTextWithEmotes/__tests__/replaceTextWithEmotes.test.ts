@@ -10,7 +10,7 @@ import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userS
 import type { SanitisedEmote } from '@app/types/emote';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
-import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
+import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants/withResolvedEmoteImageVariants';
 
 describe('replaceTextWithEmotesV2', () => {
   const defaultEmoteSets: {

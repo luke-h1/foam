@@ -1,5 +1,5 @@
 import type { SanitisedEmote } from '@app/types/emote';
-import { getEmoteImageCacheUrls } from '@app/utils/emote/emoteImageVariants';
+import { getEmoteImageCacheUrls } from '@app/utils/emote/emoteImageVariants/getEmoteImageCacheUrls';
 import type { CacheImageOptions } from '@app/utils/image/image-cache';
 import {
   clearSessionCache,

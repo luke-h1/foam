@@ -1,9 +1,7 @@
 import type { SanitisedEmote } from '@app/types/emote';
 
-import {
-  getEmoteImageCacheUrls,
-  withResolvedEmoteImageVariants,
-} from '../emoteImageVariants';
+import { getEmoteImageCacheUrls } from '../emoteImageVariants/getEmoteImageCacheUrls';
+import { withResolvedEmoteImageVariants } from '../emoteImageVariants/withResolvedEmoteImageVariants';
 import { getDisplayEmoteUrl } from '../getDisplayEmoteUrl';
 
 describe('getDisplayEmoteUrl', () => {

@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import type { EmoteImageScale, EmoteImageVariants } from '@app/types/emote';
 
-import { pickEmoteVariantUrl } from './emoteImageVariants';
+import { pickEmoteVariantUrl } from './emoteImageVariants/pickEmoteVariantUrl';
 
 export function getDisplayEmoteUrl({
   image_variants,

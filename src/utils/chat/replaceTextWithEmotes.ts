@@ -7,7 +7,7 @@ import { parseWordLinkParts } from '@app/utils/chat/replaceTextWithEmotes/parseW
 import { sanitizeInput } from '@app/utils/chat/sanitizeInput';
 import { splitTextWithTwemoji } from '@app/utils/chat/splitTextWithTwemoji';
 import { stripInvisibleChars } from '@app/utils/chat/stripInvisibleChars';
-import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
+import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants/withResolvedEmoteImageVariants';
 import { logger } from '@app/utils/logger';
 
 function decodeEmojiToUnified(emoji: string): string {
