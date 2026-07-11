@@ -12,7 +12,7 @@ import {
 import type { PaintData } from '@app/types/seventv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
-import { setOnBttvBadgesLoaded } from '@app/utils/chat/bttvBadges';
+import { setOnBttvBadgesLoaded } from '@app/utils/chat/bttvBadges/setOnBttvBadgesLoaded';
 import {
   convertV4PaintToPaintData,
   type V4Badge,

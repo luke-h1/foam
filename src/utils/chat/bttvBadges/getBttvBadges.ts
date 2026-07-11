@@ -1,5 +1,6 @@
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { onBadgesLoaded } from '@app/utils/chat/bttvBadges/onBadgesLoaded';
 import { logger } from '@app/utils/logger';
 
 const INITIAL_RETRY_DELAY_MS = 10_000;
@@ -7,13 +8,8 @@ const MAX_RETRY_DELAY_MS = 5 * 60 * 1000;
 
 let cachedBadges: SanitisedBadgeSet[] = [];
 let fetchStarted = false;
-let onBadgesLoaded: (() => void) | null = null;
 let retryDelayMs = INITIAL_RETRY_DELAY_MS;
 let nextRetryAt = 0;
-
-export function setOnBttvBadgesLoaded(callback: () => void): void {
-  onBadgesLoaded = callback;
-}
 
 function loadBttvBadges(): void {
   fetchStarted = true;
@@ -23,7 +19,7 @@ function loadBttvBadges(): void {
       cachedBadges = badges;
       retryDelayMs = INITIAL_RETRY_DELAY_MS;
       if (badges.length > 0) {
-        onBadgesLoaded?.();
+        onBadgesLoaded.current?.();
       }
     })
     .catch(error => {

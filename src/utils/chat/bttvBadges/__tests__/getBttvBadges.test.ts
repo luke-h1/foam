@@ -1,6 +1,7 @@
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
-import type * as BttvBadges from '../bttvBadges';
+import type * as GetBttvBadges from '../getBttvBadges';
+import type * as SetOnBttvBadgesLoaded from '../setOnBttvBadgesLoaded';
 
 jest.mock('@app/services/bttv-emote-service', () => ({
   bttvEmoteService: {
@@ -17,8 +18,8 @@ const badge: SanitisedBadgeSet = {
   url: 'https://cdn.betterttv.net/tags/developer.svg',
 };
 
-let getBttvBadges: typeof BttvBadges.getBttvBadges;
-let setOnBttvBadgesLoaded: typeof BttvBadges.setOnBttvBadgesLoaded;
+let getBttvBadges: typeof GetBttvBadges.getBttvBadges;
+let setOnBttvBadgesLoaded: typeof SetOnBttvBadgesLoaded.setOnBttvBadgesLoaded;
 let getSanitisedGlobalBadges: jest.Mock;
 
 function flush(): Promise<void> {
@@ -30,8 +31,9 @@ function flush(): Promise<void> {
 describe('getBttvBadges', () => {
   beforeEach(() => {
     jest.resetModules();
-    const module: typeof BttvBadges = require('../bttvBadges');
-    ({ getBttvBadges, setOnBttvBadgesLoaded } = module);
+    ({ getBttvBadges } = require('../getBttvBadges') as typeof GetBttvBadges);
+    ({ setOnBttvBadgesLoaded } =
+      require('../setOnBttvBadgesLoaded') as typeof SetOnBttvBadgesLoaded);
     const { bttvEmoteService } = require('@app/services/bttv-emote-service');
     getSanitisedGlobalBadges = jest.mocked(
       bttvEmoteService.getSanitisedGlobalBadges,
