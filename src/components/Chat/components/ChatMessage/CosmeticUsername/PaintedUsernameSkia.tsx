@@ -161,12 +161,15 @@ function paintImageLayerKey(layer: PaintImageLayer): string {
 
 function renderPaintImageLayerOverlay(
   layer: PaintImageLayer,
+  index: number,
   maskNode: ReactNode,
 ): ReactNode {
   if (layer.tile) {
     return (
       <TiledPaintLayerOverlay
-        key={paintImageLayerKey(layer)}
+        // Static, never-reordered list
+        // eslint-disable-next-line react-doctor/no-array-index-as-key
+        key={`${index}|${paintImageLayerKey(layer)}`}
         url={layer.url}
         tile={layer.tile}
         maskNode={maskNode}
@@ -176,7 +179,9 @@ function renderPaintImageLayerOverlay(
   if (layer.rect) {
     return (
       <StretchPaintLayerOverlay
-        key={paintImageLayerKey(layer)}
+        // Static, never-reordered list
+        // eslint-disable-next-line react-doctor/no-array-index-as-key
+        key={`${index}|${paintImageLayerKey(layer)}`}
         url={layer.url}
         rect={layer.rect}
         maskNode={maskNode}
@@ -190,8 +195,8 @@ function ImageLayerPaintCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
   const maskNode = paintMaskNode(bitmaps);
 
   const overlay = maskNode
-    ? bitmaps.imageLayers.map(layer =>
-        renderPaintImageLayerOverlay(layer, maskNode),
+    ? bitmaps.imageLayers.map((layer, index) =>
+        renderPaintImageLayerOverlay(layer, index, maskNode),
       )
     : null;
 
