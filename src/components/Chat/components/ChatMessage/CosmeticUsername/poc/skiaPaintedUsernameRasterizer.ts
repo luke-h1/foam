@@ -1,5 +1,4 @@
 import type {
-  SkAnimatedImage,
   SkCanvas,
   SkImage,
   SkImageFilter,
@@ -9,10 +8,7 @@ import type {
 } from '@shopify/react-native-skia';
 import {
   ClipOp,
-  FilterMode,
   FontWeight,
-  ImageFormat,
-  MipmapMode,
   PaintStyle,
   Skia,
   TileMode,
@@ -54,26 +50,6 @@ export interface RasterizePaintedUsernameOptions {
   pixelRatio: number;
   fontProvider: SkTypefaceFontProvider;
   fontFamily: string;
-}
-
-export interface RasterizedPaintedUsername {
-  uri: string;
-  /**
-   * Full bitmap size in logical pixels, including the shadow overflow margin.
-   */
-  width: number;
-  height: number;
-  /**
-   * Logical-pixel inset from the bitmap edge to the glyph box, so callers can
-   * overlap the margin and keep the glyphs aligned with neighbouring text
-   * (CSS lets drop shadows paint outside the layout box).
-   */
-  insets: { left: number; top: number; right: number; bottom: number };
-  /**
-   * True when the paint had image (URL) layers, which this POC does not
-   * rasterize; the fill falls back to the layers beneath them.
-   */
-  skippedImageLayers: boolean;
 }
 
 // Wide enough that a username never wraps; shared by the measuring and
@@ -207,94 +183,16 @@ function layerShader(layer: PaintLayerData, rect: LayerRect): SkShader | null {
 }
 
 /**
- * Image (URL) layer as a Skia shader: the decoded bitmap scaled to fill its
- * layer rect (these paints use `background-size: 100% 100%`) and clamped, so
- * it shows through the glyphs like the extension's `url(...)` background under
- * `background-clip: text`.
- */
-function imageLayerShader(image: SkImage, rect: LayerRect): SkShader {
-  const matrix = Skia.Matrix();
-  matrix.translate(rect.x, rect.y);
-  matrix.scale(rect.width / image.width(), rect.height / image.height());
-  return image.makeShaderOptions(
-    TileMode.Clamp,
-    TileMode.Clamp,
-    FilterMode.Linear,
-    MipmapMode.None,
-    matrix,
-  );
-}
-
-/**
- * Decoded image (URL) layers for a paint, keyed by layer url:
- * - `frames` holds the current-frame `SkImage` for every decodable layer (the
- *   only frame for stills), which is what the draw pass samples.
- * - `animated` holds the `SkAnimatedImage` decoder for multi-frame textures;
- *   the live renderer advances these and refreshes `frames` each tick.
- *
- * Paint textures ship as animated WebP, which the still decoder rejects, so we
- * decode through the animated decoder and treat frameCount <= 1 as a still.
- */
-export interface DecodedPaintImages {
-  frames: Map<string, SkImage>;
-  animated: Map<string, SkAnimatedImage>;
-}
-
-/**
  * Skia decodes WebP (still and animated) reliably but not AVIF, and
  * `pickBestImage` prefers AVIF for static image layers, so swap 7TV CDN AVIF
- * layer urls to their WebP sibling (same path, always served) before decoding.
- * Animated layers already resolve to WebP, so this only rescues static ones.
+ * layer urls to their WebP sibling (same path, always served). Animated layers
+ * already resolve to WebP, so this only rescues static ones.
  */
 function skiaDecodableLayerUrl(url: string): string {
   return url.replace(
     /^(https:\/\/cdn\.7tv\.app\/paint\/[^?\s]+)\.avif(\?\S*)?$/,
     '$1.webp$2',
   );
-}
-
-export async function decodePaintLayerImages(
-  paint: PaintData,
-): Promise<DecodedPaintImages> {
-  const frames = new Map<string, SkImage>();
-  const animated = new Map<string, SkAnimatedImage>();
-  const tasks: Promise<void>[] = [];
-
-  for (const layer of getPaintLayers(paint)) {
-    if (layer.function !== 'URL' || !layer.image_url) {
-      continue;
-    }
-    // Draw looks layers up by their original url; decode from a Skia-friendly one.
-    const url = layer.image_url;
-    tasks.push(
-      (async () => {
-        try {
-          const data = await Skia.Data.fromURI(skiaDecodableLayerUrl(url));
-          const anim = Skia.AnimatedImage.MakeAnimatedImageFromEncoded(data);
-          if (anim && anim.getFrameCount() > 1) {
-            animated.set(url, anim);
-            const frame = anim.getCurrentFrame();
-            if (frame) {
-              frames.set(url, frame);
-            }
-            return;
-          }
-          const still =
-            Skia.Image.MakeImageFromEncoded(data) ??
-            anim?.getCurrentFrame() ??
-            null;
-          if (still) {
-            frames.set(url, still);
-          }
-        } catch {
-          // Undecodable layer: left out of the maps, drawn as skipped.
-        }
-      })(),
-    );
-  }
-
-  await Promise.all(tasks);
-  return { frames, animated };
 }
 
 interface ShadowExtents {
@@ -355,7 +253,7 @@ function shadowExtents(
  * Independent of the (possibly animating) image frames, so it is computed once
  * and reused for every drawn frame by the live renderer.
  */
-export interface PaintUsernameLayout {
+interface PaintUsernameLayout {
   text: string;
   scale: number;
   fontSizePx: number;
@@ -409,7 +307,7 @@ function buildUsernameParagraph(
  * Measure the glyph box and shadow overflow for a paint. Frame-independent, so
  * the live renderer calls it once and reuses the result across every frame.
  */
-export function buildPaintLayout(
+function buildPaintLayout(
   opts: RasterizePaintedUsernameOptions,
 ): PaintUsernameLayout | null {
   const { paint, displayUsername, fontSize, pixelRatio } = opts;
@@ -463,17 +361,16 @@ export function buildPaintLayout(
 }
 
 /**
- * Draw one painted username onto `canvas` using `frames` for image (URL)
- * layers. Shared by the offscreen raster and the live canvas so a static and
- * an animated render are pixel-identical apart from which image frame is
- * sampled. Returns whether any image layer was undecodable and skipped.
+ * Draw the static composite for a painted username onto `canvas`: text-shadows,
+ * base fill, gradient layers, and stroke, wrapped in the drop-shadow chain.
+ * Image (URL) layers are overlaid live over the cached bitmap, so they are
+ * skipped here.
  */
-export function drawPaintedUsername(
+function drawPaintedUsername(
   canvas: SkCanvas,
   opts: RasterizePaintedUsernameOptions,
   layout: PaintUsernameLayout,
-  frames: Map<string, SkImage>,
-): { skippedImageLayers: boolean } {
+): void {
   const { paint, fallbackColor } = opts;
   const { scale, glyphWidthPx, glyphHeightPx, originX, originY } = layout;
   const measurePaint = Skia.Paint();
@@ -532,11 +429,12 @@ export function drawPaintedUsername(
   drawGlyphs(basePaint);
 
   // background-image lists the topmost layer first, so draw back-to-front.
-  // Gradient layers become gradient shaders; image (URL) layers become a
-  // bitmap shader scaled to the layer rect, both clipped to the glyphs, the
-  // way `background-clip: text` shows each background through the text.
-  let skippedImageLayers = false;
+  // Gradient layers become gradient shaders clipped to the glyphs; image (URL)
+  // layers are drawn live over the cached composite, so skip them here.
   for (const layer of [...layout.layers].reverse()) {
+    if (layer.function === 'URL') {
+      continue;
+    }
     const rect = layerRectInBox(
       layer.at,
       layer.size,
@@ -549,17 +447,7 @@ export function drawPaintedUsername(
       width: rect.width,
       height: rect.height,
     };
-    let shader: SkShader | null;
-    if (layer.function === 'URL') {
-      const image = frames.get(layer.image_url);
-      if (!image) {
-        skippedImageLayers = true;
-        continue;
-      }
-      shader = imageLayerShader(image, canvasRect);
-    } else {
-      shader = layerShader(layer, canvasRect);
-    }
+    const shader = layerShader(layer, canvasRect);
     if (!shader) {
       continue;
     }
@@ -593,39 +481,120 @@ export function drawPaintedUsername(
   }
 
   canvas.restore();
-  return { skippedImageLayers };
 }
 
-export async function rasterizePaintedUsername(
+interface LogicalRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Cache-friendly render inputs for a painted username. `staticImage` bakes
+ * everything except the (first) image layer — gradients, base fill, drop
+ * shadows, all glyph-clipped — into one bitmap reused across mounts and every
+ * user wearing the paint. Image-layer paints additionally return `maskImage`
+ * (glyph coverage) plus the layer's url/rect so the live renderer can overlay
+ * the animated texture through the mask; `useAnimatedImageValue` drives its
+ * frames on the UI thread, so the static bitmap never re-rasterizes.
+ *
+ * All sizes are logical points. `staticImage`/`maskImage` are baked at device
+ * pixels and drawn into the logical box, so they stay crisp on retina.
+ */
+export interface PaintBitmaps {
+  staticImage: SkImage;
+  maskImage: SkImage | null;
+  animatedUrl: string | null;
+  animatedRect: LogicalRect | null;
+  width: number;
+  height: number;
+  insets: { left: number; top: number; right: number; bottom: number };
+}
+
+// Bounded LRU of baked bitmaps keyed by (paint, username, size, scale). Each
+// entry is a few small SkImages (~tens of KB); the cap keeps a raid's worth of
+// distinct painted usernames without unbounded native-memory growth.
+const MAX_CACHED_PAINT_BITMAPS = 256;
+const paintBitmapCache = new Map<string, PaintBitmaps>();
+
+function paintBitmapCacheKey(opts: RasterizePaintedUsernameOptions): string {
+  return `${opts.paint.id}|${opts.displayUsername}|${opts.fontSize}|${opts.pixelRatio}`;
+}
+
+/**
+ * Build (or return the cached) render inputs for a painted username. Pure and
+ * synchronous — no image decode — because the static bitmap deliberately omits
+ * the image layer, which the live renderer loads via `useAnimatedImageValue`.
+ */
+export function getPaintBitmaps(
   opts: RasterizePaintedUsernameOptions,
-): Promise<RasterizedPaintedUsername | null> {
+): PaintBitmaps | null {
+  const key = paintBitmapCacheKey(opts);
+  const cached = paintBitmapCache.get(key);
+  if (cached) {
+    return cached;
+  }
+
   const layout = buildPaintLayout(opts);
   if (!layout) {
     return null;
   }
 
-  const { frames } = await decodePaintLayerImages(opts.paint);
-  const surface = Skia.Surface.Make(
+  const staticSurface = Skia.Surface.Make(
     layout.surfaceWidthPx,
     layout.surfaceHeightPx,
   );
-  if (!surface) {
+  if (!staticSurface) {
     return null;
   }
+  drawPaintedUsername(staticSurface.getCanvas(), opts, layout);
+  const staticImage = staticSurface.makeImageSnapshot();
 
-  const { skippedImageLayers } = drawPaintedUsername(
-    surface.getCanvas(),
-    opts,
-    layout,
-    frames,
+  const { scale } = layout;
+  const imageLayer = layout.layers.find(
+    layer => layer.function === 'URL' && layer.image_url,
   );
 
-  const image = surface.makeImageSnapshot();
-  const uri = `data:image/png;base64,${image.encodeToBase64(ImageFormat.PNG, 100)}`;
-  const { scale } = layout;
+  let maskImage: SkImage | null = null;
+  let animatedUrl: string | null = null;
+  let animatedRect: LogicalRect | null = null;
 
-  return {
-    uri,
+  if (imageLayer) {
+    animatedUrl = skiaDecodableLayerUrl(imageLayer.image_url);
+    const maskSurface = Skia.Surface.Make(
+      layout.surfaceWidthPx,
+      layout.surfaceHeightPx,
+    );
+    if (maskSurface) {
+      const whitePaint = Skia.Paint();
+      whitePaint.setColor(Skia.Color('white'));
+      buildUsernameParagraph(opts, layout, whitePaint).paint(
+        maskSurface.getCanvas(),
+        layout.originX,
+        layout.originY,
+      );
+      maskImage = maskSurface.makeImageSnapshot();
+    }
+    const rect = layerRectInBox(
+      imageLayer.at,
+      imageLayer.size,
+      layout.glyphWidthPx,
+      layout.glyphHeightPx,
+    );
+    animatedRect = {
+      x: (layout.originX + rect.x) / scale,
+      y: (layout.originY + rect.y) / scale,
+      width: rect.width / scale,
+      height: rect.height / scale,
+    };
+  }
+
+  const bitmaps: PaintBitmaps = {
+    staticImage,
+    maskImage,
+    animatedUrl,
+    animatedRect,
     width: layout.surfaceWidthPx / scale,
     height: layout.surfaceHeightPx / scale,
     insets: {
@@ -634,6 +603,14 @@ export async function rasterizePaintedUsername(
       right: layout.insetsPx.right / scale,
       bottom: layout.insetsPx.bottom / scale,
     },
-    skippedImageLayers,
   };
+
+  if (paintBitmapCache.size >= MAX_CACHED_PAINT_BITMAPS) {
+    const oldest = paintBitmapCache.keys().next().value;
+    if (oldest !== undefined) {
+      paintBitmapCache.delete(oldest);
+    }
+  }
+  paintBitmapCache.set(key, bitmaps);
+  return bitmaps;
 }
