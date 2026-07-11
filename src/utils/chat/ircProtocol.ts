@@ -25,8 +25,8 @@ export function parseIrcTags(tagString: string): Record<string, string> {
     const separatorIndex = tagString.indexOf(';', start);
     const endIndex = separatorIndex === -1 ? tagString.length : separatorIndex;
     // Split on the first `=` only (values may contain `=`) with two slices -
-    // this runs ~20 times per message at up to 100 msg/s, and the previous
-    // split/slice/join allocated three intermediates per tag.
+    // this runs ~20 times per message at up to 100 msg/s, so it must stay
+    // allocation-light.
     const equalsIndex = tagString.indexOf('=', start);
     const hasValue = equalsIndex !== -1 && equalsIndex < endIndex;
     const key = tagString.slice(start, hasValue ? equalsIndex : endIndex);

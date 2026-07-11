@@ -52,9 +52,7 @@ export const useWebsocket = (
 
   // Messages sent while the socket is not OPEN are dropped: both consumers
   // (IRC chat, 7TV EventAPI) gate their sends on readyState and re-issue
-  // state on open/reconnect, and the old internal queue here was never
-  // drained, so "queued" messages leaked per send without ever being
-  // delivered.
+  // state on open/reconnect, so nothing needs queueing here.
   const sendMessage: SendMessage = useCallback(message => {
     if (
       websocketRef.current &&

@@ -52,8 +52,9 @@ function PaintedUsernameWithPaint({
   usernameTextStyle,
 }: PaintedUsernameWithPaintProps) {
   // This subscription lives here (mounted only for painted usernames) rather
-  // than in the parent, where it re-rendered every visible row twice per fling
-  // (start + settle) even though unpainted rows produce identical output.
+  // than in the parent, where it would re-render every visible row twice per
+  // fling (start + settle) even though unpainted rows produce identical
+  // output.
   const isScrolling = useChatScrollActive();
 
   // During an active fling, render the username in its dominant solid colour

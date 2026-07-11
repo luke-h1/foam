@@ -55,10 +55,10 @@ function setTimedCacheValue<T>(
   key: string,
   value: T,
 ): void {
-  // TTL expiry was previously only enforced on read, so source rooms never
-  // looked up again kept their entries (profile-image badge objects) for the
-  // app's lifetime. Inserts are rare (one per newly seen shared-chat partner),
-  // so sweep here.
+  // Sweep expired entries on insert: reads only evict the key they touch, so
+  // source rooms never looked up again would otherwise keep their entries
+  // (profile-image badge objects) for the app's lifetime. Inserts are rare
+  // (one per newly seen shared-chat partner), so the full sweep is cheap.
   const now = Date.now();
   cache.forEach((entry, entryKey) => {
     if (entry.expiresAt <= now) {

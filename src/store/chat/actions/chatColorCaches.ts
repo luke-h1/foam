@@ -2,15 +2,13 @@
  * Short-lived render caches for chat colours. These are read imperatively on
  * the raw ingest path (`resolveCachedSenderColor`, up to ~100 msg/s) and
  * mid-render (`getMentionColor`), never subscribed - so they are plain Maps
- * per the chat-state rule, not observables whose every write cloned and
- * key-diffed the whole bucket.
+ * per the chat-state rule; an observable write would clone and key-diff the
+ * whole bucket on every message.
  *
  * `lightenedColors` memoizes `lightenColor(color)`, a pure function of the
- * key, so entries never expire - the size cap alone bounds memory. The old
- * 30s TTL only created churn: at steady state every colour re-expired and
- * re-triggered a clone + recompute + prune cycle.
+ * key, so entries never expire - the size cap alone bounds memory.
  *
- * `mentionColors` keeps the TTL as a staleness backstop (a chatter's colour
+ * `mentionColors` keeps a TTL as a staleness backstop (a chatter's colour
  * can change mid-session) on top of the explicit clear the mention resolver
  * issues when logins resolve.
  */

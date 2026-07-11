@@ -124,7 +124,7 @@ export function useRichChatMessage<
   );
   // Set from each emote's onTouchStart (which bubbles before the row's), so
   // the single row-level long-press timer can open the emote sheet without a
-  // Pressable per emote - busy rows used to mount hundreds of them.
+  // Pressable per emote (busy rows would mount hundreds of them).
   const pressedEmotePartRef = useRef<EmotePressData | null>(null);
 
   useEffect(() => {
