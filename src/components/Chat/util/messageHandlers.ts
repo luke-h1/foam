@@ -22,10 +22,8 @@ import {
   createViewerMilestonePart,
 } from '@app/utils/chat/formatSubscriptionNotice';
 import { parseBadges } from '@app/utils/chat/parseBadges';
-import {
-  isSharedChatDuplicatedNotice,
-  isSubscriptionUserNotice,
-} from '@app/utils/chat/userNoticeMsgIds';
+import { isSharedChatDuplicatedNotice } from '@app/utils/chat/userNoticeMsgIds/isSharedChatDuplicatedNotice';
+import { isSubscriptionUserNotice } from '@app/utils/chat/userNoticeMsgIds/isSubscriptionUserNotice';
 import { formatDate } from '@app/utils/date-time/date';
 import { generateNonce } from '@app/utils/string/generateNonce';
 
