@@ -16,14 +16,30 @@ import { SettingsSheet } from './SettingsSheet/SettingsSheet';
 import { UserActionSheet } from './UserActionSheet';
 
 export interface ChatOverlayLayerProps {
-  canDeleteSelectedMessage: boolean;
   canModerateChat: boolean;
-  canModerateSelectedMessageUser: boolean;
-  canBlockSelectedUser: boolean;
-  canModerateSelectedUser: boolean;
-  canPinSelectedMessage: boolean;
   highlightedUsers: string[];
   hiddenUsers: string[];
+  /**
+   * Which lazily-created sheets are currently mounted.
+   */
+  mountedSheets: {
+    chatters: boolean;
+    emote: boolean;
+    savedPhrases: boolean;
+    settings: boolean;
+  };
+  /**
+   * Viewer permissions for actions on the selected message and user.
+   */
+  selectedMessageActions: {
+    canDelete: boolean;
+    canModerateUser: boolean;
+    canPin: boolean;
+  };
+  selectedUserActions: {
+    canBlock: boolean;
+    canModerate: boolean;
+  };
   onActionSheetBanUser: () => void;
   onActionSheetCopy: () => void;
   onActionSheetDeleteMessage: () => void;
@@ -62,28 +78,22 @@ export interface ChatOverlayLayerProps {
   onSavedPhrasesSheetDidDismiss: () => void;
   onSelectChatter: (chatter: UsernamePressData) => void;
   onSelectSavedPhrase: (text: string) => void;
-  shouldRenderChattersSheet: boolean;
-  shouldRenderSavedPhrasesSheet: boolean;
   selectedBadge: BadgePressData | null;
   selectedEmote: EmotePressData | null;
   selectedMessage: MessageActionData<'usernotice'> | null;
   selectedUser: UsernamePressData | null;
-  shouldRenderSettingsSheet: boolean;
-  shouldRenderEmoteSheet: boolean;
   pinnedMessageBusy: boolean;
   pinnedMessageId?: string;
 }
 
 export const ChatOverlayLayer = memo(
   ({
-    canDeleteSelectedMessage,
     canModerateChat,
-    canModerateSelectedMessageUser,
-    canBlockSelectedUser,
-    canModerateSelectedUser,
-    canPinSelectedMessage,
     highlightedUsers,
     hiddenUsers,
+    mountedSheets,
+    selectedMessageActions,
+    selectedUserActions,
     onActionSheetBanUser,
     onActionSheetCopy,
     onActionSheetDeleteMessage,
@@ -104,8 +114,6 @@ export const ChatOverlayLayer = memo(
     onSavedPhrasesSheetDidDismiss,
     onSelectChatter,
     onSelectSavedPhrase,
-    shouldRenderChattersSheet,
-    shouldRenderSavedPhrasesSheet,
     onClearChatCache,
     onClearImageCache,
     onClearSevenTvCosmeticsCache,
@@ -128,24 +136,22 @@ export const ChatOverlayLayer = memo(
     selectedEmote,
     selectedMessage,
     selectedUser,
-    shouldRenderSettingsSheet,
-    shouldRenderEmoteSheet,
     pinnedMessageBusy,
     pinnedMessageId,
   }: ChatOverlayLayerProps) => {
     return (
       <>
-        {shouldRenderEmoteSheet ? (
+        {mountedSheets.emote ? (
           <EmoteSheet
-            isPresented={shouldRenderEmoteSheet}
+            isPresented={mountedSheets.emote}
             onDismiss={onEmoteSheetDidDismiss}
             onEmoteSelect={onEmoteSelect}
           />
         ) : null}
 
-        {shouldRenderSettingsSheet ? (
+        {mountedSheets.settings ? (
           <SettingsSheet
-            isPresented={shouldRenderSettingsSheet}
+            isPresented={mountedSheets.settings}
             onClearChatCache={onClearChatCache}
             onClearImageCache={onClearImageCache}
             onClearSevenTvCosmeticsCache={onClearSevenTvCosmeticsCache}
@@ -157,17 +163,17 @@ export const ChatOverlayLayer = memo(
           />
         ) : null}
 
-        {shouldRenderChattersSheet ? (
+        {mountedSheets.chatters ? (
           <ChattersSheet
-            isPresented={shouldRenderChattersSheet}
+            isPresented={mountedSheets.chatters}
             onDismiss={onChattersSheetDidDismiss}
             onSelectChatter={onSelectChatter}
           />
         ) : null}
 
-        {shouldRenderSavedPhrasesSheet ? (
+        {mountedSheets.savedPhrases ? (
           <SavedPhrasesSheet
-            isPresented={shouldRenderSavedPhrasesSheet}
+            isPresented={mountedSheets.savedPhrases}
             onDismiss={onSavedPhrasesSheetDidDismiss}
             onSelectPhrase={onSelectSavedPhrase}
           />
@@ -207,9 +213,9 @@ export const ChatOverlayLayer = memo(
             onTimeoutUser={onActionSheetTimeoutUser}
             onBanUser={onActionSheetBanUser}
             canModerateChat={canModerateChat}
-            canDeleteMessage={canDeleteSelectedMessage}
-            canPinMessage={canPinSelectedMessage}
-            canModerateUser={canModerateSelectedMessageUser}
+            canDeleteMessage={selectedMessageActions.canDelete}
+            canPinMessage={selectedMessageActions.canPin}
+            canModerateUser={selectedMessageActions.canModerateUser}
             isPinnedMessage={
               pinnedMessageId === selectedMessage.messageData.message_id
             }
@@ -234,7 +240,7 @@ export const ChatOverlayLayer = memo(
             }}
             moderation={{
               canModerateChat,
-              canModerateUser: canModerateSelectedUser,
+              canModerateUser: selectedUserActions.canModerate,
             }}
             onClose={onCloseSelectedUser}
             username={selectedUser.username}
@@ -245,7 +251,9 @@ export const ChatOverlayLayer = memo(
             onCopyUsername={onCopySelectedUsername}
             onHideUser={onHideSelectedUser}
             onHighlightUser={onHighlightSelectedUser}
-            onBlockUser={canBlockSelectedUser ? onBlockSelectedUser : undefined}
+            onBlockUser={
+              selectedUserActions.canBlock ? onBlockSelectedUser : undefined
+            }
             onReportUser={onReportSelectedUser}
             onTimeoutUser={onTimeoutSelectedUser}
             onWarnUser={onWarnSelectedUser}

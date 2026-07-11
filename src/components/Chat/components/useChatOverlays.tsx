@@ -571,15 +571,50 @@ export function useChatOverlays({
     [onInsertEmote, patchOverlay],
   );
 
+  const mountedSheets = useMemo(
+    () => ({
+      chatters: isChattersSheetMounted,
+      emote: isEmoteSheetMounted,
+      savedPhrases: isSavedPhrasesSheetMounted,
+      settings: isSettingsSheetMounted,
+    }),
+    [
+      isChattersSheetMounted,
+      isEmoteSheetMounted,
+      isSavedPhrasesSheetMounted,
+      isSettingsSheetMounted,
+    ],
+  );
+
+  const selectedMessageActions = useMemo(
+    () => ({
+      canDelete: canDeleteSelectedMessage,
+      canModerateUser: canModerateSelectedMessageUser,
+      canPin: canPinSelectedMessage,
+    }),
+    [
+      canDeleteSelectedMessage,
+      canModerateSelectedMessageUser,
+      canPinSelectedMessage,
+    ],
+  );
+
+  const selectedUserActions = useMemo(
+    () => ({
+      canBlock: canBlockSelectedUser,
+      canModerate: canModerateSelectedUser,
+    }),
+    [canBlockSelectedUser, canModerateSelectedUser],
+  );
+
   const overlaysElement = (
     <ChatOverlayLayer
-      canDeleteSelectedMessage={canDeleteSelectedMessage}
       canModerateChat={canModerateChat}
-      canModerateSelectedMessageUser={canModerateSelectedMessageUser}
-      canModerateSelectedUser={canModerateSelectedUser}
-      canPinSelectedMessage={canPinSelectedMessage}
       highlightedUsers={highlightedUsers}
       hiddenUsers={hiddenUsers}
+      mountedSheets={mountedSheets}
+      selectedMessageActions={selectedMessageActions}
+      selectedUserActions={selectedUserActions}
       onActionSheetBanUser={handleActionSheetBanUser}
       onActionSheetCopy={handleActionSheetCopy}
       onActionSheetDeleteMessage={handleActionSheetDeleteMessage}
@@ -593,7 +628,6 @@ export function useChatOverlays({
       onActionSheetTimeoutUser={handleActionSheetTimeoutUser}
       onBanSelectedUser={handleBanSelectedUser}
       onWarnSelectedUser={handleWarnSelectedUser}
-      canBlockSelectedUser={canBlockSelectedUser}
       onBlockSelectedUser={handleBlockSelectedUser}
       onReportSelectedUser={handleReportSelectedUser}
       onClearChatCache={onClearChatCache}
@@ -623,10 +657,6 @@ export function useChatOverlays({
       onSavedPhrasesSheetDidDismiss={handleSavedPhrasesSheetDidDismiss}
       onSelectChatter={handleSelectChatter}
       onSelectSavedPhrase={handleSelectSavedPhrase}
-      shouldRenderChattersSheet={isChattersSheetMounted}
-      shouldRenderSavedPhrasesSheet={isSavedPhrasesSheetMounted}
-      shouldRenderSettingsSheet={isSettingsSheetMounted}
-      shouldRenderEmoteSheet={isEmoteSheetMounted}
       pinnedMessageBusy={pinnedMessageBusy}
       pinnedMessageId={pinnedMessageId}
     />
