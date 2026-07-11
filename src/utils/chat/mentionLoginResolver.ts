@@ -6,11 +6,9 @@ import type { UserInfoResponse } from '@app/types/twitch/user';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { logger } from '@app/utils/logger';
 
-import {
-  getMentionLogin,
-  registerMentionChatter,
-  registerMentionLogin,
-} from './resolveMentionLogin';
+import { getMentionLogin } from './resolveMentionLogin/getMentionLogin';
+import { registerMentionChatter } from './resolveMentionLogin/registerMentionChatter';
+import { registerMentionLogin } from './resolveMentionLogin/registerMentionLogin';
 
 const pendingLogins = new Set<string>();
 let flushTimer: ReturnType<typeof setTimeout> | null = null;

@@ -4,7 +4,7 @@ import { parseWordLinkParts } from '@app/utils/chat/replaceTextWithEmotes/parseW
 
 import { queueMentionLoginsFromParts } from './mentionLoginResolver';
 import type { ParsedPart } from './parsedPart';
-import { applyMentionLoginCasing } from './resolveMentionLogin';
+import { applyMentionLoginCasing } from './resolveMentionLogin/applyMentionLoginCasing';
 import { stripInvisibleChars } from './stripInvisibleChars';
 
 interface EmoteProcessorParams {

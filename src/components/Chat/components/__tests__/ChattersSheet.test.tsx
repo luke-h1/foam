@@ -4,10 +4,8 @@ import { fireEvent } from '@testing-library/react-native';
 
 import render from '@app/test/render';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import {
-  clearMentionLoginIndex,
-  registerMentionChatter,
-} from '@app/utils/chat/resolveMentionLogin';
+import { clearMentionLoginIndex } from '@app/utils/chat/resolveMentionLogin/clearMentionLoginIndex';
+import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin/registerMentionChatter';
 
 import {
   ChattersSheet,

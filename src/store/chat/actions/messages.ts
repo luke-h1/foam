@@ -3,14 +3,12 @@ import { batch } from '@legendapp/state';
 import { getPreferences } from '@app/store/preferenceStore';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
-import {
-  type ChatterRole,
-  clearMentionLoginIndex,
-  registerMentionChatter,
-  registerMentionLogin,
-  registerMentionLoginsFromParts,
-  registerMentionLoginsFromSender,
-} from '@app/utils/chat/resolveMentionLogin';
+import { clearMentionLoginIndex } from '@app/utils/chat/resolveMentionLogin/clearMentionLoginIndex';
+import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin/registerMentionChatter';
+import { registerMentionLogin } from '@app/utils/chat/resolveMentionLogin/registerMentionLogin';
+import { registerMentionLoginsFromParts } from '@app/utils/chat/resolveMentionLogin/registerMentionLoginsFromParts';
+import { registerMentionLoginsFromSender } from '@app/utils/chat/resolveMentionLogin/registerMentionLoginsFromSender';
+import { type ChatterRole } from '@app/utils/chat/resolveMentionLogin/types';
 
 import { chatStore$ } from '../observables/chatStore';
 import {

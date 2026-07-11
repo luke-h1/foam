@@ -3,10 +3,8 @@ import type { SanitisedEmote } from '@app/types/emote';
 
 import { processEmotesWorklet } from '../emoteProcessor';
 import type { ParsedPart } from '../parsedPart';
-import {
-  clearMentionLoginIndex,
-  registerMentionLogin,
-} from '../resolveMentionLogin';
+import { clearMentionLoginIndex } from '../resolveMentionLogin/clearMentionLoginIndex';
+import { registerMentionLogin } from '../resolveMentionLogin/registerMentionLogin';
 
 const pickFields = (value: unknown, keys: readonly string[]) =>
   Object.fromEntries(

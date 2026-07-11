@@ -12,11 +12,11 @@ import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Input } from '@app/components/ui/Input/Input';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
+import { getAllMentionChatters } from '@app/utils/chat/resolveMentionLogin/getAllMentionChatters';
 import {
   type ChatterRole,
-  getAllMentionChatters,
   type MentionChatter,
-} from '@app/utils/chat/resolveMentionLogin';
+} from '@app/utils/chat/resolveMentionLogin/types';
 
 import type { UsernamePressData } from '../ChatMessage/RichChatMessage.types';
 import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';

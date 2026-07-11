@@ -8,7 +8,7 @@ import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelp
 import { Text } from '@app/components/ui/Text/Text';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin';
+import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin/formatMentionContent';
 
 import { styles } from '../RichChatMessage.styles';
 

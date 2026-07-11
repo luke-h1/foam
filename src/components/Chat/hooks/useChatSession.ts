@@ -25,7 +25,7 @@ import {
 import type { UserInfoResponse } from '@app/types/twitch/user';
 import { findCustomHighlight } from '@app/utils/chat/customHighlights/findCustomHighlight';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
-import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin';
+import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin/registerMentionChatter';
 
 import type { ChatListRef } from '../components/ChatList';
 import { resolveEffectiveChatDelayMs } from '../util/chatDelay';

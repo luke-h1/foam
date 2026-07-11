@@ -4,7 +4,7 @@ import {
   resetMentionLoginResolver,
 } from '@app/utils/chat/mentionLoginResolver';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
-import { getMentionLogin } from '@app/utils/chat/resolveMentionLogin';
+import { getMentionLogin } from '@app/utils/chat/resolveMentionLogin/getMentionLogin';
 
 jest.mock('@app/services/api/clients', () => ({
   twitchApi: {
@@ -42,9 +42,15 @@ jest.mock('@app/utils/logger', () => ({
   },
 }));
 
-jest.mock('@app/utils/chat/resolveMentionLogin', () => ({
+jest.mock('@app/utils/chat/resolveMentionLogin/getMentionLogin', () => ({
   getMentionLogin: jest.fn((login: string) => login.toLowerCase()),
+}));
+
+jest.mock('@app/utils/chat/resolveMentionLogin/registerMentionChatter', () => ({
   registerMentionChatter: jest.fn(),
+}));
+
+jest.mock('@app/utils/chat/resolveMentionLogin/registerMentionLogin', () => ({
   registerMentionLogin: jest.fn(),
 }));
 
