@@ -33,7 +33,7 @@ import {
   createUserNoticeMessage,
   createUserStateFromTags,
 } from '../util/messageHandlers';
-import { SUPPRESSED_NOTICE_IDS } from '../util/roomState';
+import { SUPPRESSED_NOTICE_IDS } from '../util/roomState/SUPPRESSED_NOTICE_IDS';
 import {
   createRoomStateTracker,
   type RoomStateTracker,

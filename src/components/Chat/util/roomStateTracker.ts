@@ -1,10 +1,8 @@
 import type { ParsedRoomState } from '@app/store/chat/types/roomState';
 
-import {
-  describeInitialRoomState,
-  describeRoomStateChanges,
-  parseRoomStateTags,
-} from './roomState';
+import { describeInitialRoomState } from './roomState/describeInitialRoomState';
+import { describeRoomStateChanges } from './roomState/describeRoomStateChanges';
+import { parseRoomStateTags } from './roomState/parseRoomStateTags';
 
 export interface RoomStateUpdate {
   state: ParsedRoomState | null;
