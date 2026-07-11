@@ -9,9 +9,8 @@ import { twitchTvSanitisedEmoteSetGlobalFixture } from '@app/services/__fixtures
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import type { SanitisedEmote } from '@app/types/emote';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
+import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
-
-import { replaceTextWithEmotes } from '../replaceTextWithEmotes';
 
 describe('replaceTextWithEmotesV2', () => {
   const defaultEmoteSets: {

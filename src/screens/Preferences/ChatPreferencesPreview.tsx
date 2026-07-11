@@ -18,7 +18,7 @@ import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { type SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { type ParsedPart } from '@app/utils/chat/parsedPart';
-import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes/replaceTextWithEmotes';
+import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 
 import { chatPreferencePreviewFixtures } from './chatPreferencePreviewFixtures';
 

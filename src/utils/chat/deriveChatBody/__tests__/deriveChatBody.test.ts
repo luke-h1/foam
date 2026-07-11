@@ -1,4 +1,5 @@
-import { deriveChatBody } from '../deriveChatBody';
+import { deriveChatBody } from '@app/utils/chat/deriveChatBody';
+
 import {
   charityDonation,
   emote,

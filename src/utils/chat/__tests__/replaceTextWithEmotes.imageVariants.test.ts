@@ -1,5 +1,5 @@
 import type { SanitisedEmote } from '@app/types/emote';
-import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes/replaceTextWithEmotes';
+import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 
 import type { ParsedPart } from '../parsedPart';
 

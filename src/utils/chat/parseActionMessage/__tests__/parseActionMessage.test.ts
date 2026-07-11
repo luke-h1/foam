@@ -1,4 +1,5 @@
-import { parseActionMessage } from '../parseActionMessage';
+import { parseActionMessage } from '@app/utils/chat/parseActionMessage';
+
 import type { ParsedActionMessage } from '../types';
 
 const ctcp = (text: string) =>

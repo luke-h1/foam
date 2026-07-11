@@ -7,11 +7,11 @@ import type {
   SanitisedEmote,
   TwitchSanitisedEmote,
 } from '@app/types/emote';
-import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes/replaceTextWithEmotes';
+import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 
 import { processEmotesWorklet } from '../emoteProcessor';
 import { extractEmotesFromTag } from '../extractEmotes/extractEmotesFromTag';
-import { findEmotesInText } from '../findEmotesInText/findEmotesInText';
+import { findEmotesInText } from '../findEmotesInText';
 
 const MEASURE_OPTIONS = {
   runs: 5,
