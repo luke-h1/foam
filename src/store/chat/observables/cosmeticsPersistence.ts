@@ -45,27 +45,26 @@ export function loadPersistedCosmetics(): CosmeticsSnapshot | null {
       COSMETICS_BINDINGS_KEY,
       COSMETICS_NAMESPACE,
     );
-    if (definitions || bindings) {
-      return {
-        paints: definitions?.paints ?? {},
-        badges: definitions?.badges ?? {},
-        userPaintIds: bindings?.userPaintIds ?? {},
-        userBadgeIds: bindings?.userBadgeIds ?? {},
-      };
-    }
-
-    const legacy = storageService.getString<CosmeticsSnapshot>(
-      LEGACY_COSMETICS_SNAPSHOT_KEY,
-      COSMETICS_NAMESPACE,
-    );
-    if (!legacy) {
+    /**
+     * After the legacy->split upgrade the first debounced write can touch a
+     * single split key, so a missing half still falls back to the legacy
+     * combined snapshot until its own key is written.
+     */
+    const legacy =
+      definitions && bindings
+        ? null
+        : storageService.getString<CosmeticsSnapshot>(
+            LEGACY_COSMETICS_SNAPSHOT_KEY,
+            COSMETICS_NAMESPACE,
+          );
+    if (!definitions && !bindings && !legacy) {
       return null;
     }
     return {
-      paints: legacy.paints ?? {},
-      badges: legacy.badges ?? {},
-      userPaintIds: legacy.userPaintIds ?? {},
-      userBadgeIds: legacy.userBadgeIds ?? {},
+      paints: definitions?.paints ?? legacy?.paints ?? {},
+      badges: definitions?.badges ?? legacy?.badges ?? {},
+      userPaintIds: bindings?.userPaintIds ?? legacy?.userPaintIds ?? {},
+      userBadgeIds: bindings?.userBadgeIds ?? legacy?.userBadgeIds ?? {},
     };
   } catch {
     return null;

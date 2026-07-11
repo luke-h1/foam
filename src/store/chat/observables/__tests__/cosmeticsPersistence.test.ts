@@ -90,6 +90,46 @@ describe('cosmeticsPersistence', () => {
     });
   });
 
+  test('fills missing bindings from the legacy snapshot when only definitions were split-written', () => {
+    mockBackingStore.set('sevenTvCosmeticsSnapshot_v1', {
+      paints: { 'paint-legacy': makePaint('paint-legacy') },
+      badges: {},
+      userPaintIds: { 'user-1': 'paint-legacy' },
+      userBadgeIds: { 'user-1': 'badge-1' },
+    });
+    writePersistedCosmeticDefinitions({
+      paints: { 'paint-1': makePaint('paint-1') },
+      badges: {},
+    });
+
+    expect(loadPersistedCosmetics()).toEqual<CosmeticsSnapshot>({
+      paints: { 'paint-1': makePaint('paint-1') },
+      badges: {},
+      userPaintIds: { 'user-1': 'paint-legacy' },
+      userBadgeIds: { 'user-1': 'badge-1' },
+    });
+  });
+
+  test('fills missing definitions from the legacy snapshot when only bindings were split-written', () => {
+    mockBackingStore.set('sevenTvCosmeticsSnapshot_v1', {
+      paints: { 'paint-legacy': makePaint('paint-legacy') },
+      badges: {},
+      userPaintIds: { 'user-1': 'paint-legacy' },
+      userBadgeIds: {},
+    });
+    writePersistedCosmeticBindings({
+      userPaintIds: { 'user-2': 'paint-legacy' },
+      userBadgeIds: {},
+    });
+
+    expect(loadPersistedCosmetics()).toEqual<CosmeticsSnapshot>({
+      paints: { 'paint-legacy': makePaint('paint-legacy') },
+      badges: {},
+      userPaintIds: { 'user-2': 'paint-legacy' },
+      userBadgeIds: {},
+    });
+  });
+
   test('caps the persisted paint map to the most recent entries', () => {
     const paints: Record<string, PaintData> = {};
     for (let i = 0; i < 800; i += 1) {
