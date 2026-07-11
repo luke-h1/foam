@@ -1,11 +1,10 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
 
 import { theme } from '@app/styles/themes';
 
@@ -28,32 +27,22 @@ export const StreamPlayerPoster = memo(function StreamPlayerPoster({
   posterUrl,
   visible,
 }: StreamPlayerPosterProps) {
-  const [rendered, setRendered] = useState(true);
-  const opacity = useSharedValue(1);
+  const opacity = useSharedValue(visible ? 1 : 0);
 
   useEffect(() => {
     if (visible) {
-      setRendered(true);
       opacity.set(1);
       return;
     }
 
-    // Fade the loading frame out over the now-playing video, then drop it from
-    // the tree so it stops compositing over the WebView.
-    opacity.set(
-      withTiming(0, { duration: FADE_OUT_MS }, finished => {
-        if (finished) {
-          scheduleOnRN(setRendered, false);
-        }
-      }),
-    );
+    // Fade the loading frame out over the now-playing video. Opacity 0 leaves
+    // the node mounted but non-compositing for practical purposes.
+    opacity.set(withTiming(0, { duration: FADE_OUT_MS }));
   }, [visible, opacity]);
 
-  const animatedStyle = useAnimatedStyle(() => ({ opacity: opacity.get() }));
-
-  if (!rendered) {
-    return null;
-  }
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.get(),
+  }));
 
   return (
     <Animated.View

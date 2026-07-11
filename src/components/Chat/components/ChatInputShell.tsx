@@ -2,7 +2,6 @@ import {
   memo,
   type Ref,
   useCallback,
-  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -136,15 +135,6 @@ export const ChatInputShell = memo(function ChatInputShell({
   const handleClearReply = useCallback(() => {
     setDraft(prev => ({ ...prev, replyTo: null }));
   }, []);
-
-  /**
-   * Native composer owns its text; clear draft + native value after sign-out.
-   */
-  useEffect(() => {
-    if (!isAuthenticated) {
-      clearDraft();
-    }
-  }, [clearDraft, isAuthenticated]);
 
   const handleSendMessage = useCallback(() => {
     const currentInput = messageInputRef.current;

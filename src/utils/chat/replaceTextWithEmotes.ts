@@ -21,22 +21,6 @@ function decodeEmojiToUnified(emoji: string): string {
     .join('-');
 }
 
-function findEmoteMatchingMention(
-  mentionText: string,
-  mentionEmoteMap: ReadonlyMap<string, SanitisedEmote>,
-): SanitisedEmote | undefined {
-  if (!mentionText.startsWith('@')) {
-    return undefined;
-  }
-
-  const mentionTarget = mentionText.slice(1).trimEnd().toLowerCase();
-  if (!mentionTarget) {
-    return undefined;
-  }
-
-  return mentionEmoteMap.get(mentionTarget);
-}
-
 /**
  * Lets `Kappa!` / `Pog,` hit the Map path instead of findEmotesInText.
  */
@@ -60,7 +44,6 @@ function splitTrailingEmotePunctuation(word: string): {
 type EmoteLookupCollection = {
   emoteMap: Map<string, SanitisedEmote>;
   emojiMap: Map<string, SanitisedEmote>;
-  mentionEmoteMap: Map<string, SanitisedEmote>;
 };
 
 type EmoteProviderLists = {
@@ -114,28 +97,11 @@ function buildLookupCollection(
 ): EmoteLookupCollection {
   const emoteMap = new Map<string, SanitisedEmote>();
   const emojiMap = new Map<string, SanitisedEmote>();
-  const mentionEmoteMap = new Map<string, SanitisedEmote>();
-
-  const registerMentionAliases = (emote: SanitisedEmote) => {
-    const lowerName = emote.name.trimEnd().toLowerCase();
-    if (lowerName && !mentionEmoteMap.has(lowerName)) {
-      mentionEmoteMap.set(lowerName, emote);
-    }
-
-    const alternateName = emote.original_name?.trim();
-    if (alternateName) {
-      const lowerAlternate = alternateName.toLowerCase();
-      if (!mentionEmoteMap.has(lowerAlternate)) {
-        mentionEmoteMap.set(lowerAlternate, emote);
-      }
-    }
-  };
 
   const registerScopedEmote = (emote: SanitisedEmote) => {
     const resolved = withResolvedEmoteImageVariants(emote);
     if (!emoteMap.has(emote.name)) {
       emoteMap.set(emote.name, resolved);
-      registerMentionAliases(resolved);
     }
     const alternateName = emote.original_name?.trim();
     if (
@@ -151,7 +117,6 @@ function buildLookupCollection(
     const resolved = withResolvedEmoteImageVariants(emote);
     if (!emoteMap.has(emote.name)) {
       emoteMap.set(emote.name, resolved);
-      registerMentionAliases(resolved);
     }
 
     if (resolved.site === 'Emoji') {
@@ -175,7 +140,7 @@ function buildLookupCollection(
   lists.ffzGlobalEmotes.forEach(registerGlobalEmote);
   lists.bttvGlobalEmotes.forEach(registerGlobalEmote);
 
-  return { emoteMap, emojiMap, mentionEmoteMap };
+  return { emoteMap, emojiMap };
 }
 
 function getLookupCollection(lists: EmoteProviderLists): EmoteLookupCollection {
@@ -229,7 +194,7 @@ export function replaceTextWithEmotes({
     return [{ type: 'text', content: inputString }];
   }
 
-  const { emoteMap, emojiMap, mentionEmoteMap } = getLookupCollection({
+  const { emoteMap, emojiMap } = getLookupCollection({
     emojiEmotes,
     sevenTvGlobalEmotes,
     sevenTvChannelEmotes,
@@ -302,45 +267,15 @@ export function replaceTextWithEmotes({
 
               let mentionText = fullMention;
               let mentionTrailing = '';
-              let emoteInMention = findEmoteMatchingMention(
-                fullMention,
-                mentionEmoteMap,
-              );
-
-              if (!emoteInMention) {
-                const loginMatch = fullMention.match(/^@[a-zA-Z0-9_]+/);
-                if (loginMatch && loginMatch[0] !== fullMention) {
-                  mentionText = loginMatch[0];
-                  mentionTrailing = fullMention.slice(mentionText.length);
-                  emoteInMention = findEmoteMatchingMention(
-                    mentionText,
-                    mentionEmoteMap,
-                  );
-                }
+              const loginMatch = fullMention.match(/^@[a-zA-Z0-9_]+/);
+              if (loginMatch && loginMatch[0] !== fullMention) {
+                mentionText = loginMatch[0];
+                mentionTrailing = fullMention.slice(mentionText.length);
               }
 
-              if (emoteInMention) {
-                replacedParts.push({
-                  type: 'emote',
-                  content: emoteInMention.name,
-                  creator: emoteInMention.creator,
-                  emote_link: emoteInMention.emote_link,
-                  image_variants: emoteInMention.image_variants,
-                  original_name: emoteInMention.original_name,
-                  static_url: emoteInMention.static_url,
-                  url: emoteInMention.url,
-                  thumbnail: emoteInMention.url,
-                  site: emoteInMention.site,
-                  aspect_ratio: emoteInMention.aspect_ratio,
-                  zero_width: emoteInMention.zero_width,
-                  width: emoteInMention.width,
-                  height: emoteInMention.height,
-                });
-              }
               replacedParts.push({
                 type: 'mention',
                 content: mentionText,
-                ...emoteInMention,
               });
               if (mentionTrailing) {
                 replacedParts.push({

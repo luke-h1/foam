@@ -39,7 +39,6 @@ type EmoteCollection = {
   cacheKey: string;
   emojiMap: ReadonlyMap<string, SanitisedEmote>;
   emoteMap: ReadonlyMap<string, SanitisedEmote>;
-  mentionEmoteMap: ReadonlyMap<string, SanitisedEmote>;
 };
 
 let nextEmoteArrayId = 0;
@@ -159,23 +158,7 @@ function getBaseCollection({
     }
   });
 
-  const mentionEmoteMap = new Map<string, SanitisedEmote>();
-  emoteMap.forEach(emote => {
-    const lowerName = emote.name.trimEnd().toLowerCase();
-    if (lowerName && !mentionEmoteMap.has(lowerName)) {
-      mentionEmoteMap.set(lowerName, emote);
-    }
-
-    const alternateName = emote.original_name?.trim();
-    if (alternateName) {
-      const lowerAlternateName = alternateName.toLowerCase();
-      if (!mentionEmoteMap.has(lowerAlternateName)) {
-        mentionEmoteMap.set(lowerAlternateName, emote);
-      }
-    }
-  });
-
-  const collection = { cacheKey, emojiMap, emoteMap, mentionEmoteMap };
+  const collection = { cacheKey, emojiMap, emoteMap };
   if (baseCollectionCache.size >= MAX_BASE_COLLECTION_CACHE_SIZE) {
     const firstKey = baseCollectionCache.keys().next().value;
     if (firstKey) {
@@ -413,31 +396,6 @@ export const processEmotesWorklet = (
 
     if (word.startsWith('@')) {
       const mentionText = word.endsWith(' ') ? word.trimEnd() : word;
-      const mentionTarget = mentionText.slice(1).trimEnd().toLowerCase();
-      const emoteInMention = mentionTarget
-        ? baseCollection.mentionEmoteMap.get(mentionTarget)
-        : undefined;
-
-      if (emoteInMention) {
-        result.push({
-          id: emoteInMention.id,
-          name: emoteInMention.name,
-          type: 'emote',
-          content: emoteInMention.name,
-          creator: emoteInMention.creator || '',
-          emote_link: emoteInMention.emote_link || '',
-          original_name: emoteInMention.original_name || '',
-          site: emoteInMention.site || '',
-          static_url: emoteInMention.static_url,
-          thumbnail: emoteInMention.url,
-          url: emoteInMention.url,
-          width: emoteInMention.width,
-          height: emoteInMention.height,
-          aspect_ratio: emoteInMention.aspect_ratio,
-          zero_width: emoteInMention.zero_width,
-        });
-      }
-
       result.push({
         type: 'mention',
         content: mentionText,

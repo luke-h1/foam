@@ -123,7 +123,7 @@ describe('processEmotesWorklet', () => {
     ]);
   });
 
-  test('renders @EmoteName as emote when the mention matches the emote name', () => {
+  test('keeps @EmoteName as a mention even when EmoteName is an emote', () => {
     const waveEmote = createEmote({ id: 'wave-emote', name: 'Wave' });
     const result = processEmotesWorklet({
       ...emptyParams,
@@ -131,15 +131,30 @@ describe('processEmotesWorklet', () => {
       sevenTvChannelEmotes: [waveEmote],
     });
 
-    expect(pickFields(result[0], ['type', 'name', 'content'])).toEqual({
-      type: 'emote',
-      name: 'Wave',
-      content: 'Wave',
+    expect(
+      result.map(part => pickFields(part, ['type', 'content'])),
+    ).toEqual([
+      { type: 'mention', content: '@Wave' },
+      { type: 'text', content: ' ' },
+      { type: 'text', content: 'hello' },
+    ]);
+  });
+
+  test('matches bare EmoteName as an emote', () => {
+    const waveEmote = createEmote({ id: 'wave-emote', name: 'Wave' });
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'Wave hello',
+      sevenTvChannelEmotes: [waveEmote],
     });
-    expect(pickFields(result[1], ['type', 'content'])).toEqual({
-      type: 'mention',
-      content: '@Wave',
-    });
+
+    expect(
+      result.map(part => pickFields(part, ['type', 'content'])),
+    ).toEqual([
+      { type: 'emote', content: 'Wave' },
+      { type: 'text', content: ' ' },
+      { type: 'text', content: 'hello' },
+    ]);
   });
 
   test('parses https URLs as purple link parts', () => {

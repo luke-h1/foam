@@ -117,6 +117,25 @@ describe('replaceTextWithEmotesV2', () => {
     ]);
   });
 
+  test('keeps @EmoteName as a mention even when EmoteName is an emote', () => {
+    const result = replaceTextWithEmotes({
+      inputString: '@Kappa hello',
+      ...defaultEmoteSets,
+      userstate: defaultUserState,
+    });
+
+    expect(
+      result.map(part => ({
+        type: part.type,
+        content: 'content' in part ? part.content : undefined,
+      })),
+    ).toEqual([
+      { type: 'mention', content: '@Kappa' },
+      { type: 'text', content: ' ' },
+      { type: 'text', content: 'hello' },
+    ]);
+  });
+
   test('should split trailing punctuation off a mention', () => {
     const result = replaceTextWithEmotes({
       inputString: '@someUser, hello',

@@ -266,6 +266,7 @@ export const Chat = memo(
               style={styles.inputStickyView}
             >
               <ChatInputShell
+                key={user?.id ?? 'signed-out'}
                 ref={inputShellRef}
                 channelId={channelId}
                 channelName={channelName}
