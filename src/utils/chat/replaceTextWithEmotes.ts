@@ -23,7 +23,7 @@ function decodeEmojiToUnified(emoji: string): string {
 
 function findEmoteMatchingMention(
   mentionText: string,
-  emotes: Iterable<SanitisedEmote>,
+  mentionEmoteMap: ReadonlyMap<string, SanitisedEmote>,
 ): SanitisedEmote | undefined {
   if (!mentionText.startsWith('@')) {
     return undefined;
@@ -34,19 +34,28 @@ function findEmoteMatchingMention(
     return undefined;
   }
 
-  for (const emote of emotes) {
-    const emoteName = emote.name.trimEnd();
-    if (emoteName.toLowerCase() === mentionTarget) {
-      return emote;
-    }
+  return mentionEmoteMap.get(mentionTarget);
+}
 
-    const alternateName = emote.original_name?.trim();
-    if (alternateName && alternateName.toLowerCase() === mentionTarget) {
-      return emote;
-    }
+/**
+ * Strip trailing delimiter punctuation so `Kappa!` / `Pog,` can hit the
+ * direct Map path instead of the dense findEmotesInText scan.
+ */
+const TRAILING_EMOTE_PUNCTUATION = /[.,!?)}:;'"\\|/]+$/;
+
+function splitTrailingEmotePunctuation(word: string): {
+  core: string;
+  trailing: string;
+} {
+  const match = TRAILING_EMOTE_PUNCTUATION.exec(word);
+  if (!match || match.index === 0) {
+    return { core: word, trailing: '' };
   }
 
-  return undefined;
+  return {
+    core: word.slice(0, match.index),
+    trailing: match[0],
+  };
 }
 
 /**
@@ -91,6 +100,7 @@ export function replaceTextWithEmotes({
 
   const emoteMap = new Map<string, SanitisedEmote>();
   const emojiMap = new Map<string, SanitisedEmote>();
+  const mentionEmoteMap = new Map<string, SanitisedEmote>();
 
   const channelEmotes = [
     ...sevenTvChannelEmotes,
@@ -107,10 +117,26 @@ export function replaceTextWithEmotes({
     ...bttvGlobalEmotes,
   ] as const;
 
+  const registerMentionAliases = (emote: SanitisedEmote) => {
+    const lowerName = emote.name.trimEnd().toLowerCase();
+    if (lowerName && !mentionEmoteMap.has(lowerName)) {
+      mentionEmoteMap.set(lowerName, emote);
+    }
+
+    const alternateName = emote.original_name?.trim();
+    if (alternateName) {
+      const lowerAlternate = alternateName.toLowerCase();
+      if (!mentionEmoteMap.has(lowerAlternate)) {
+        mentionEmoteMap.set(lowerAlternate, emote);
+      }
+    }
+  };
+
   const registerEmoteLookup = (emote: SanitisedEmote) => {
     const resolved = withResolvedEmoteImageVariants(emote);
     if (!emoteMap.has(emote.name)) {
       emoteMap.set(emote.name, resolved);
+      registerMentionAliases(resolved);
     }
     const alternateName = emote.original_name?.trim();
     if (
@@ -135,6 +161,7 @@ export function replaceTextWithEmotes({
     const resolvedEmote = withResolvedEmoteImageVariants(emote);
     if (!emoteMap.has(emote.name)) {
       emoteMap.set(emote.name, resolvedEmote);
+      registerMentionAliases(resolvedEmote);
     }
 
     if (resolvedEmote.site === 'Emoji') {
@@ -212,7 +239,7 @@ export function replaceTextWithEmotes({
               let mentionTrailing = '';
               let emoteInMention = findEmoteMatchingMention(
                 fullMention,
-                emoteMap.values(),
+                mentionEmoteMap,
               );
 
               if (!emoteInMention) {
@@ -222,7 +249,7 @@ export function replaceTextWithEmotes({
                   mentionTrailing = fullMention.slice(mentionText.length);
                   emoteInMention = findEmoteMatchingMention(
                     mentionText,
-                    emoteMap.values(),
+                    mentionEmoteMap,
                   );
                 }
               }
@@ -276,38 +303,55 @@ export function replaceTextWithEmotes({
                     ...directEmote,
                   });
                 } else {
-                  const foundEmotes = findEmotesInText(
-                    word,
-                    emoteMap,
-                    sortedEmoteNames,
-                  );
-                  if (foundEmotes.length > 0) {
-                    let lastIndex = 0;
-                    foundEmotes.forEach(({ emote, start, end }) => {
-                      if (start > lastIndex) {
-                        replacedParts.push({
-                          type: 'text',
-                          content: word.slice(lastIndex, start),
-                        });
-                      }
-                      replacedParts.push({
-                        type: 'emote',
-                        content: word.slice(start, end),
-                        ...emote,
-                      });
-                      lastIndex = end;
+                  const { core, trailing } =
+                    splitTrailingEmotePunctuation(word);
+                  const punctuatedEmote =
+                    trailing && core ? emoteMap.get(core) : undefined;
+
+                  if (punctuatedEmote) {
+                    replacedParts.push({
+                      type: 'emote',
+                      content: core,
+                      ...punctuatedEmote,
                     });
-                    if (lastIndex < word.length) {
-                      replacedParts.push({
-                        type: 'text',
-                        content: word.slice(lastIndex),
-                      });
-                    }
-                  } else {
                     replacedParts.push({
                       type: 'text',
-                      content: word,
+                      content: trailing,
                     });
+                  } else {
+                    const foundEmotes = findEmotesInText(
+                      word,
+                      emoteMap,
+                      sortedEmoteNames,
+                    );
+                    if (foundEmotes.length > 0) {
+                      let lastIndex = 0;
+                      foundEmotes.forEach(({ emote, start, end }) => {
+                        if (start > lastIndex) {
+                          replacedParts.push({
+                            type: 'text',
+                            content: word.slice(lastIndex, start),
+                          });
+                        }
+                        replacedParts.push({
+                          type: 'emote',
+                          content: word.slice(start, end),
+                          ...emote,
+                        });
+                        lastIndex = end;
+                      });
+                      if (lastIndex < word.length) {
+                        replacedParts.push({
+                          type: 'text',
+                          content: word.slice(lastIndex),
+                        });
+                      }
+                    } else {
+                      replacedParts.push({
+                        type: 'text',
+                        content: word,
+                      });
+                    }
                   }
                 }
               }
