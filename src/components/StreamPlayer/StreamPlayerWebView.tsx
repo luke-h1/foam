@@ -13,7 +13,8 @@ import { theme } from '@app/styles/themes';
 import { logger } from '@app/utils/logger';
 
 import { PIP_ENABLED } from './pipFeature';
-import { isAppUrl, isTwitchPassportCallbackUrl } from './twitchPlayerSource';
+import { isAppUrl } from './twitchPlayerSource/isAppUrl';
+import { isTwitchPassportCallbackUrl } from './twitchPlayerSource/isTwitchPassportCallbackUrl';
 
 type WebViewSource = ComponentProps<typeof WebView>['source'];
 
