@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { PixelRatio } from 'react-native';
 
 import {
@@ -8,7 +8,6 @@ import {
   ImageShader,
   Mask,
   useAnimatedImageValue,
-  useFonts,
   useImage,
 } from '@shopify/react-native-skia';
 
@@ -21,17 +20,7 @@ import {
   getPaintBitmaps,
   type PaintBitmaps,
 } from './util/skiaPaintedUsernameRasterizer';
-
-const skiaFontSource = {
-  Montserrat: [
-    require('@expo-google-fonts/montserrat/400Regular/Montserrat_400Regular.ttf'),
-    require('@expo-google-fonts/montserrat/500Medium/Montserrat_500Medium.ttf'),
-    require('@expo-google-fonts/montserrat/600SemiBold/Montserrat_600SemiBold.ttf'),
-    require('@expo-google-fonts/montserrat/700Bold/Montserrat_700Bold.ttf'),
-    require('@expo-google-fonts/montserrat/800ExtraBold/Montserrat_800ExtraBold.ttf'),
-    require('@expo-google-fonts/montserrat/900Black/Montserrat_900Black.ttf'),
-  ],
-};
+import { useSkiaPaintFontProvider } from './util/skiaPaintFonts';
 
 interface PaintedUsernameSkiaProps {
   username: string;
@@ -44,65 +33,36 @@ interface PaintedUsernameSkiaProps {
   fontSize?: number;
 }
 
+function paintMaskNode(bitmaps: PaintBitmaps): ReactNode {
+  if (!bitmaps.maskImage) {
+    return null;
+  }
+  return (
+    <Image
+      image={bitmaps.maskImage}
+      x={0}
+      y={0}
+      width={bitmaps.width}
+      height={bitmaps.height}
+      fit='fill'
+    />
+  );
+}
+
 /**
  * Canvas for a resolved paint: the cached static composite as one bitmap, plus
- * (for image-layer paints) the texture overlaid through the glyph mask. The
- * overlay frame comes from `useAnimatedImageValue`, which advances on the UI
- * thread, so animated paints animate at the texture's own frame rate with no
- * per-frame JS and no re-rasterizing.
+ * (for image-layer paints) the texture overlay passed in by the wrappers
+ * below. Negative margins collapse the shadow overflow margin so the glyphs
+ * align with neighbouring text.
  */
-function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
-  const { animatedTile } = bitmaps;
-  const animatedFrame = useAnimatedImageValue(
-    animatedTile ? undefined : (bitmaps.animatedUrl ?? undefined),
-  );
-  const tiledImage = useImage(
-    animatedTile ? (bitmaps.animatedUrl ?? undefined) : undefined,
-  );
-
-  const maskNode = useMemo(
-    () =>
-      bitmaps.maskImage ? (
-        <Image
-          image={bitmaps.maskImage}
-          x={0}
-          y={0}
-          width={bitmaps.width}
-          height={bitmaps.height}
-          fit='fill'
-        />
-      ) : null,
-    [bitmaps],
-  );
-
-  const { width, height, insets, staticImage, animatedRect } = bitmaps;
-
-  const tiledOverlay =
-    maskNode && animatedTile && tiledImage ? (
-      <Mask mode='alpha' mask={maskNode}>
-        <Fill>
-          <ImageShader
-            image={tiledImage}
-            tx={animatedTile.tx}
-            ty={animatedTile.ty}
-          />
-        </Fill>
-      </Mask>
-    ) : null;
-
-  const stretchOverlay =
-    maskNode && !animatedTile && animatedRect ? (
-      <Mask mode='alpha' mask={maskNode}>
-        <Image
-          image={animatedFrame}
-          x={animatedRect.x}
-          y={animatedRect.y}
-          width={animatedRect.width}
-          height={animatedRect.height}
-          fit='fill'
-        />
-      </Mask>
-    ) : null;
+function PaintBitmapCanvas({
+  bitmaps,
+  overlay,
+}: {
+  bitmaps: PaintBitmaps;
+  overlay?: ReactNode;
+}) {
+  const { width, height, insets, staticImage } = bitmaps;
 
   return (
     <Canvas
@@ -123,18 +83,64 @@ function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
         height={height}
         fit='fill'
       />
-      {tiledOverlay}
-      {stretchOverlay}
+      {overlay}
     </Canvas>
   );
+}
+
+function TiledPaintCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
+  const tiledImage = useImage(bitmaps.animatedUrl);
+  const maskNode = paintMaskNode(bitmaps);
+
+  const overlay =
+    maskNode && bitmaps.animatedTile && tiledImage ? (
+      <Mask mode='alpha' mask={maskNode}>
+        <Fill>
+          <ImageShader
+            image={tiledImage}
+            tx={bitmaps.animatedTile.tx}
+            ty={bitmaps.animatedTile.ty}
+          />
+        </Fill>
+      </Mask>
+    ) : null;
+
+  return <PaintBitmapCanvas bitmaps={bitmaps} overlay={overlay} />;
+}
+
+/**
+ * The overlay frame comes from `useAnimatedImageValue`, which advances on the
+ * UI thread, so animated paints animate at the texture's own frame rate with
+ * no per-frame JS and no re-rasterizing. Its Reanimated frame callback runs
+ * every frame for as long as the component is mounted, which is why this
+ * wrapper only mounts for stretch-rendered image layers.
+ */
+function AnimatedPaintCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
+  const animatedFrame = useAnimatedImageValue(bitmaps.animatedUrl ?? undefined);
+  const maskNode = paintMaskNode(bitmaps);
+
+  const overlay =
+    maskNode && bitmaps.animatedRect ? (
+      <Mask mode='alpha' mask={maskNode}>
+        <Image
+          image={animatedFrame}
+          x={bitmaps.animatedRect.x}
+          y={bitmaps.animatedRect.y}
+          width={bitmaps.animatedRect.width}
+          height={bitmaps.animatedRect.height}
+          fit='fill'
+        />
+      </Mask>
+    ) : null;
+
+  return <PaintBitmapCanvas bitmaps={bitmaps} overlay={overlay} />;
 }
 
 /**
  * Renders a painted username with Skia. The static composite (gradients, base
  * fill, drop shadows) is baked once into a cached bitmap and reused across
  * mounts and every user wearing the paint; image-layer paints animate their
- * texture on the UI thread. Negative margins collapse the shadow overflow
- * margin so the glyphs align with neighbouring text.
+ * texture on the UI thread.
  */
 export function PaintedUsernameSkia({
   username,
@@ -142,7 +148,7 @@ export function PaintedUsernameSkia({
   fallbackColor = theme.color.text.dark,
   fontSize = chatLineMetrics.comfortable.fontSize,
 }: PaintedUsernameSkiaProps) {
-  const fontProvider = useFonts(skiaFontSource);
+  const fontProvider = useSkiaPaintFontProvider();
   const pixelRatio = PixelRatio.get();
 
   const bitmaps = useMemo(
@@ -163,9 +169,24 @@ export function PaintedUsernameSkia({
 
   if (!bitmaps) {
     return (
-      <Text style={{ ...chatLineMetrics.comfortable, color: fallbackColor }}>
+      <Text
+        style={{
+          ...chatLineMetrics.comfortable,
+          fontSize,
+          fontWeight: 'bold',
+          color: fallbackColor,
+        }}
+      >
         {username}
       </Text>
+    );
+  }
+
+  if (bitmaps.animatedUrl) {
+    return bitmaps.animatedTile ? (
+      <TiledPaintCanvas bitmaps={bitmaps} />
+    ) : (
+      <AnimatedPaintCanvas bitmaps={bitmaps} />
     );
   }
 

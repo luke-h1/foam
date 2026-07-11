@@ -566,6 +566,12 @@ export function getPaintBitmaps(
   const key = paintBitmapCacheKey(opts);
   const cached = paintBitmapCache.get(key);
   if (cached) {
+    /**
+     * Map iteration order is insertion order, so re-inserting on hit keeps
+     * eviction least-recently-used rather than first-inserted.
+     */
+    paintBitmapCache.delete(key);
+    paintBitmapCache.set(key, cached);
     return cached;
   }
 
