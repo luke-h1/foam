@@ -17,6 +17,7 @@ import {
   type V4Badge,
 } from '@app/utils/color/sevenTvPaintData';
 import { logger } from '@app/utils/logger';
+import { deepEqualJson } from '@app/utils/object/deepEqualJson';
 import { getSevenTvSessionId } from '@app/utils/seventv/sevenTvSessionId';
 
 import { chatStore$ } from '../observables/chatStore';
@@ -405,18 +406,15 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
  * Storing an equal-content copy would rotate the WeakMap-keyed paint layer
  * caches and re-sync every cached wearer to MMKV - O(wearers²) during
  * entitlement bursts - for no observable change, so no-op writes are dropped
- * here. Both sides serialize from the same deterministic constructors, so
- * stringify equality is a safe deep compare; a false mismatch only falls back
- * to the unconditional write.
+ * here. The comparison is structural (key-order insensitive) so it holds
+ * regardless of which constructor built each side.
  */
 const isSamePaintDefinition = (
   previous: PaintData | undefined,
   next: PaintData,
-): boolean =>
-  previous != null &&
-  (previous === next || JSON.stringify(previous) === JSON.stringify(next));
+): boolean => previous != null && deepEqualJson(previous, next);
 
-// Paint definitions are large (gradient stops, shadow chains) and now survive
+// Paint definitions are large (gradient stops, shadow chains) and survive
 // channel hops, so bound the in-memory map: on overflow, drop definitions no
 // current binding references. Matches the persisted-snapshot cap.
 const MAX_PAINT_DEFINITIONS = 750;
