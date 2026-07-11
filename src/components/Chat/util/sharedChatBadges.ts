@@ -55,9 +55,19 @@ function setTimedCacheValue<T>(
   key: string,
   value: T,
 ): void {
+  // TTL expiry was previously only enforced on read, so source rooms never
+  // looked up again kept their entries (profile-image badge objects) for the
+  // app's lifetime. Inserts are rare (one per newly seen shared-chat partner),
+  // so sweep here.
+  const now = Date.now();
+  cache.forEach((entry, entryKey) => {
+    if (entry.expiresAt <= now) {
+      cache.delete(entryKey);
+    }
+  });
   cache.set(key, {
     value,
-    expiresAt: Date.now() + SHARED_CHAT_BADGE_CACHE_TTL,
+    expiresAt: now + SHARED_CHAT_BADGE_CACHE_TTL,
   });
 }
 
@@ -212,6 +222,7 @@ export function getMessageBadges({
 }): SanitisedBadgeSet[] {
   const foundBadges = findBadges({
     userstate,
+    bttvBadges: emoteData.bttvBadges,
     chatterinoBadges: emoteData.chatterinoBadges,
     ffzChannelBadges: emoteData.ffzChannelBadges,
     ffzGlobalBadges: emoteData.ffzGlobalBadges,

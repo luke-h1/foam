@@ -51,9 +51,33 @@ function PaintedUsernameWithPaint({
   sevenTvPaintDropShadows,
   usernameTextStyle,
 }: PaintedUsernameWithPaintProps) {
-  const dropShadowMode = sevenTvPaintDropShadows;
+  // This subscription lives here (mounted only for painted usernames) rather
+  // than in the parent, where it re-rendered every visible row twice per fling
+  // (start + settle) even though unpainted rows produce identical output.
+  const isScrolling = useChatScrollActive();
+
+  // During an active fling, render the username in its dominant solid colour
+  // and skip the per-row MaskedView offscreen pass + gradient/SVG/image fill
+  // layers; the full painted fill returns when the list settles (~150ms),
+  // mirroring how animated emotes pause decode during scroll. This sheds the
+  // offscreen render passes at the moment the Core Animation render encoder is
+  // most pressured (FOAM-TV-MOBILE-BJ render-commit OOM).
+  if (isScrolling) {
+    return (
+      <Text
+        style={[
+          styles.plainUsername,
+          { color: fallbackColor },
+          usernameTextStyle,
+        ]}
+      >
+        {displayUsername}
+      </Text>
+    );
+  }
+
   const paintTextStyle = buildPaintUsernameTextStyle(paint);
-  const dropShadows = getPaintDropShadows(paint, dropShadowMode);
+  const dropShadows = getPaintDropShadows(paint, sevenTvPaintDropShadows);
   const textShadows = getPaintTextShadows(paint);
   const stroke = getPaintTextStroke(paint);
 
@@ -116,7 +140,6 @@ function PaintedUsernameComponent({
     return paintId ? chatStore$.paints[paintId]?.get() : null;
   });
   const paint = paintProp ?? storePaint ?? null;
-  const isScrolling = useChatScrollActive();
 
   if (!paint) {
     return (
@@ -134,26 +157,6 @@ function PaintedUsernameComponent({
 
   const solidFallback =
     paint.color === null ? fallbackColor : sevenTvColorToCss(paint.color);
-
-  // During an active fling, render the username in its dominant solid colour
-  // and skip the per-row MaskedView offscreen pass + gradient/SVG/image fill
-  // layers; the full painted fill returns when the list settles (~150ms),
-  // mirroring how animated emotes pause decode during scroll. This sheds the
-  // offscreen render passes at the moment the Core Animation render encoder is
-  // most pressured (FOAM-TV-MOBILE-BJ render-commit OOM).
-  if (isScrolling) {
-    return (
-      <Text
-        style={[
-          styles.plainUsername,
-          { color: solidFallback },
-          usernameTextStyle,
-        ]}
-      >
-        {displayUsername}
-      </Text>
-    );
-  }
 
   return (
     <PaintedUsernameWithPaint

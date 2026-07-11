@@ -14,10 +14,11 @@ import { styles } from '../RichChatMessage.styles';
 
 interface MentionSpanProps {
   content: string;
-  baseTextStyle: StyleProp<TextStyle>;
-  fontScaleStyle: StyleProp<TextStyle>;
+  baseTextStyle?: StyleProp<TextStyle>;
+  fontScaleStyle?: StyleProp<TextStyle>;
   emoteLineStyle?: StyleProp<TextStyle>;
   compact?: boolean;
+  isModerated?: boolean;
   getMentionColor?: (username: string) => string;
   effectiveHighlightedUserSet?: ReadonlySet<string>;
   normalisedCurrentUsername?: string;
@@ -27,7 +28,7 @@ interface MentionSpanProps {
 /**
  * A single @mention span. It subscribes to `mentionLoginRevision` itself so that
  * when a mention's canonical login/colour resolves from Helix, ONLY the visible
- * mention spans re-render — not every chat row. Keeping the revision out of the
+ * mention spans re-render - not every chat row. Keeping the revision out of the
  * list's `extraData` (which would re-render the whole window on every resolve)
  * is the difference between ~57fps and a flat 60fps in mention-heavy chat.
  */
@@ -37,6 +38,7 @@ function MentionSpanComponent({
   fontScaleStyle,
   emoteLineStyle,
   compact,
+  isModerated,
   getMentionColor,
   effectiveHighlightedUserSet,
   normalisedCurrentUsername,
@@ -45,6 +47,9 @@ function MentionSpanComponent({
   useSelector(chatStore$.mentionLoginRevision);
 
   const mentionContent = formatMentionContent(content);
+  if (!mentionContent.trim()) {
+    return null;
+  }
   const mentionedUsername = mentionContent.replace(/^@/, '').trim();
   const normalisedMentionedUsername = normaliseUsername(mentionedUsername);
   const isReplyTargetMention = Boolean(
@@ -76,6 +81,7 @@ function MentionSpanComponent({
         emoteLineStyle,
         isHighlightedMention && styles.mentionHighlighted,
         getChatColorStyle(mentionColor),
+        isModerated && styles.moderatedMessageText,
       ]}
     >
       {mentionContent}

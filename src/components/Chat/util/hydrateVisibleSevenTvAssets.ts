@@ -37,8 +37,8 @@ const MAX_COSMETIC_FETCHES_PER_PASS = 3;
 // When bulk cosmetics land (channel entry, presence burst) every visible
 // message has cached assets at once, and re-parsing a whole screenful in a
 // single tick was the top chat hotspot in Sentry (p75 157ms). Reprocessing is
-// sliced to a few messages per event-loop turn (same cadence as the
-// full-window reprocess batches) so frames can interleave.
+// sliced to a few messages per event-loop turn - same cadence as the
+// full-window reprocess batches - so frames can interleave.
 const REPROCESS_BATCH_SIZE = 6;
 const REPROCESS_BATCH_DELAY_MS = 32;
 
@@ -61,7 +61,11 @@ const MAX_VISIBLE_USER_GUARDS = 5000;
  * drops the oldest so the guard stays bounded without losing dedup for recent
  * (still on-screen) entries.
  */
-function boundedSetAdd(set: Set<string>, key: string, max: number): void {
+export function boundedSetAdd(
+  set: Set<string>,
+  key: string,
+  max: number,
+): void {
   set.add(key);
   if (set.size <= max) {
     return;

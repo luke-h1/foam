@@ -52,7 +52,7 @@ describe('Moderator action sheets', () => {
     );
 
     expect(queryByText('Delete Message')).toBeNull();
-    expect(queryByText('Timeout for 10m')).toBeNull();
+    expect(queryByText('Timeout…')).toBeNull();
     expect(queryByText('Ban User')).toBeNull();
 
     rerender(
@@ -74,7 +74,7 @@ describe('Moderator action sheets', () => {
     fireEvent.press(getByText('Delete Message'));
     expect(onDeleteMessage).toHaveBeenCalledTimes(1);
 
-    fireEvent.press(getByText('Timeout for 10m'));
+    fireEvent.press(getByText('Timeout…'));
     expect(onTimeoutUser).toHaveBeenCalledTimes(1);
 
     fireEvent.press(getByText('Ban User'));
@@ -99,7 +99,7 @@ describe('Moderator action sheets', () => {
     );
 
     expect(queryByText('Delete Message')).toBeNull();
-    expect(queryByText('Timeout for 10m')).toBeOnTheScreen();
+    expect(queryByText('Timeout…')).toBeOnTheScreen();
     expect(queryByText('Ban User')).toBeOnTheScreen();
   });
 
@@ -175,7 +175,7 @@ describe('Moderator action sheets', () => {
       />,
     );
 
-    expect(queryByText('Timeout for 10m')).toBeNull();
+    expect(queryByText('Timeout…')).toBeNull();
     expect(queryByText('Ban User')).toBeNull();
 
     rerender(
@@ -198,7 +198,7 @@ describe('Moderator action sheets', () => {
       />,
     );
 
-    fireEvent.press(getByText('Timeout for 10m'));
+    fireEvent.press(getByText('Timeout…'));
     expect(onTimeoutUser).toHaveBeenCalledTimes(1);
 
     fireEvent.press(getByText('Ban User'));
@@ -226,7 +226,7 @@ describe('Moderator action sheets', () => {
       />,
     );
 
-    expect(queryByText('Timeout for 10m')).toBeNull();
+    expect(queryByText('Timeout…')).toBeNull();
     expect(queryByText('Ban User')).toBeNull();
   });
 

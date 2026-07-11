@@ -122,6 +122,7 @@ jest.mock('@app/store/chat/actions/cosmetics', () => ({
 
 jest.mock('@app/store/chat/react/selectors', () => ({
   useChannelEmoteData: jest.fn(() => null),
+  useChannelEmoteDataForReprocess: jest.fn(() => null),
   useCosmeticBindingsVersion: jest.fn(() => 0),
   useMessages: jest.fn(() => []),
 }));

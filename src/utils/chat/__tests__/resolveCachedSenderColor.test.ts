@@ -50,6 +50,6 @@ describe('resolveCachedSenderColor', () => {
     const second = resolveCachedSenderColor(message);
 
     expect(first).toBe(second);
-    expect(first).toMatch(/^rgb\(/);
+    expect(first).toBe('rgb(26, 255, 26)');
   });
 });

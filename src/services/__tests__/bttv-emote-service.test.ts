@@ -49,10 +49,12 @@ describe('bttvEmoteService', () => {
         static_url: 'https://cdn.betterttv.net/emote/emote1/3x.png',
         image_variants: {
           animated: {
+            '1x': 'https://cdn.betterttv.net/emote/emote1/1x',
             '2x': 'https://cdn.betterttv.net/emote/emote1/2x',
             '3x': 'https://cdn.betterttv.net/emote/emote1/3x',
           },
           static: {
+            '1x': 'https://cdn.betterttv.net/emote/emote1/1x.png',
             '2x': 'https://cdn.betterttv.net/emote/emote1/2x.png',
             '3x': 'https://cdn.betterttv.net/emote/emote1/3x.png',
           },
@@ -79,10 +81,12 @@ describe('bttvEmoteService', () => {
         static_url: 'https://cdn.betterttv.net/emote/emote2/3x',
         image_variants: {
           animated: {
+            '1x': 'https://cdn.betterttv.net/emote/emote2/1x',
             '2x': 'https://cdn.betterttv.net/emote/emote2/2x',
             '3x': 'https://cdn.betterttv.net/emote/emote2/3x',
           },
           static: {
+            '1x': 'https://cdn.betterttv.net/emote/emote2/1x',
             '2x': 'https://cdn.betterttv.net/emote/emote2/2x',
             '3x': 'https://cdn.betterttv.net/emote/emote2/3x',
           },

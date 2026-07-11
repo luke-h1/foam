@@ -1,6 +1,5 @@
 import { type RefObject, useCallback, useMemo } from 'react';
 
-import { shouldProcessLiveMessage } from '@app/components/Chat/util/chatIngestRateLimiter';
 import { parseIrcMessage } from '@app/services/recent-messages-service';
 import {
   addMessage,
@@ -109,10 +108,9 @@ export function useChatIrcHandlers({
 
   const handlePrivmsgMessage = useCallback(
     (tags: Record<string, string>, rawText: string, countUnread = true) => {
-      // Recent-message replay (countUnread === false) is never flood-sampled.
-      if (countUnread && !shouldProcessLiveMessage()) {
-        return;
-      }
+      // Live flood sampling happens upstream in twitch-chat-service, before
+      // the raw line is even tag-parsed; replay (countUnread === false) flows
+      // through here directly and is never flood-sampled.
       const { isAction, text } = parseActionMessage(rawText);
       const replyParentMessageId = tags['reply-parent-msg-id'];
       const replyParentDisplayName = tags['reply-parent-display-name'];

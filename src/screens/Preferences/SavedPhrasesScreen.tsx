@@ -47,6 +47,47 @@ function createPhraseId(text: string) {
 
 const EMPTY_PHRASES: SavedPhrase[] = [];
 
+type SavePhraseResult = 'added' | 'duplicate' | 'edited' | 'empty';
+
+function useSavedPhrases() {
+  const savedPhrases = usePreference('savedPhrases');
+  const updatePreferences = useUpdatePreferences();
+
+  const phrases = savedPhrases ?? EMPTY_PHRASES;
+
+  const savePhrase = (
+    rawText: string,
+    editingId: string | null,
+  ): SavePhraseResult => {
+    const text = rawText.trim();
+    if (!text) return 'empty';
+
+    if (
+      phrases.some(phrase => phrase.id !== editingId && phrase.text === text)
+    ) {
+      return 'duplicate';
+    }
+
+    if (editingId) {
+      updatePreferences({
+        savedPhrases: phrases.map(phrase =>
+          phrase.id === editingId ? { ...phrase, text } : phrase,
+        ),
+      });
+      void impact('light');
+      return 'edited';
+    }
+
+    updatePreferences({
+      savedPhrases: [...phrases, { id: createPhraseId(text), text }],
+    });
+    void impact('light');
+    return 'added';
+  };
+
+  return { phrases, savePhrase, updatePreferences };
+}
+
 function PhraseRow({
   phrase,
   isEditing,
@@ -163,41 +204,18 @@ function InputSection({
 
 function NativeSavedPhrasesList() {
   const { t } = useTranslation('preferences');
-  const savedPhrases = usePreference('savedPhrases');
-  const updatePreferences = useUpdatePreferences();
+  const { phrases, savePhrase, updatePreferences } = useSavedPhrases();
   const [editingId, setEditingId] = useState<string | null>(null);
   const phraseText = useNativeState('');
 
-  const phrases = savedPhrases ?? EMPTY_PHRASES;
-
   const handleNativeSave = () => {
-    const text = phraseText.value.trim();
-    if (!text) return;
+    const result = savePhrase(phraseText.value, editingId);
+    if (result === 'empty') return;
 
-    if (
-      phrases.some(phrase => phrase.id !== editingId && phrase.text === text)
-    ) {
-      phraseText.value = '';
-      return;
-    }
-
-    if (editingId) {
-      updatePreferences({
-        savedPhrases: phrases.map(phrase =>
-          phrase.id === editingId ? { ...phrase, text } : phrase,
-        ),
-      });
-      setEditingId(null);
-      phraseText.value = '';
-      void impact('light');
-      return;
-    }
-
-    updatePreferences({
-      savedPhrases: [...phrases, { id: createPhraseId(text), text }],
-    });
     phraseText.value = '';
-    void impact('light');
+    if (result === 'edited') {
+      setEditingId(null);
+    }
   };
 
   const handleNativeEdit = (phrase: SavedPhrase) => {
@@ -270,45 +288,22 @@ function NativeSavedPhrasesList() {
 
 export function SavedPhrasesScreen() {
   const { t } = useTranslation('preferences');
-  const savedPhrases = usePreference('savedPhrases');
-  const updatePreferences = useUpdatePreferences();
+  const { phrases, savePhrase, updatePreferences } = useSavedPhrases();
   const [inputValue, setInputValue] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const listRef = useRef<FlashListRef<SavedPhrase>>(null);
 
   useScrollToTop(listRef);
 
-  const phrases = savedPhrases ?? EMPTY_PHRASES;
+  const handleSave = () => {
+    const result = savePhrase(inputValue, editingId);
+    if (result === 'empty') return;
 
-  const handleSave = useCallback(() => {
-    const text = inputValue.trim();
-    if (!text) return;
-
-    if (
-      phrases.some(phrase => phrase.id !== editingId && phrase.text === text)
-    ) {
-      setInputValue('');
-      return;
-    }
-
-    if (editingId) {
-      updatePreferences({
-        savedPhrases: phrases.map(phrase =>
-          phrase.id === editingId ? { ...phrase, text } : phrase,
-        ),
-      });
-      setEditingId(null);
-      setInputValue('');
-      void impact('light');
-      return;
-    }
-
-    updatePreferences({
-      savedPhrases: [...phrases, { id: createPhraseId(text), text }],
-    });
     setInputValue('');
-    void impact('light');
-  }, [editingId, inputValue, phrases, updatePreferences]);
+    if (result === 'edited') {
+      setEditingId(null);
+    }
+  };
 
   const handleEdit = useCallback((phrase: SavedPhrase) => {
     setEditingId(phrase.id);

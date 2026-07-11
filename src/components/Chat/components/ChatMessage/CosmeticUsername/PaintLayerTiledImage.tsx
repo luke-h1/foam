@@ -1,13 +1,10 @@
 import { StyleSheet } from 'react-native';
 
-import {
-  Canvas,
-  Fill,
-  ImageShader,
-  useImage,
-} from '@shopify/react-native-skia';
+import { Canvas, Fill, ImageShader } from '@shopify/react-native-skia';
 
 import type { PaintCanvasRepeat } from '@app/types/seventv/cosmetics';
+
+import { useTiledPaintImage } from './util/tiledPaintImageCache';
 
 interface PaintLayerTiledImageProps {
   canvasRepeat: PaintCanvasRepeat;
@@ -41,7 +38,7 @@ export function PaintLayerTiledImage({
   canvasRepeat,
   imageUrl,
 }: PaintLayerTiledImageProps) {
-  const image = useImage(imageUrl);
+  const image = useTiledPaintImage(imageUrl);
   if (!image) {
     return null;
   }

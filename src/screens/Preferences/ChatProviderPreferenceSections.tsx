@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { SFSymbol } from 'sf-symbols-typescript';
@@ -10,24 +9,17 @@ import {
 import type { AndroidSymbol } from '@app/components/ui/Icon/Icon';
 import { theme } from '@app/styles/themes';
 
-type PreviewProvider = '7tv' | 'bttv' | 'ffz' | 'twitch';
+import { ProviderPreviewItem } from './ChatPreferencePreviewWidgets';
+import type {
+  PreviewProvider,
+  ProviderPreviewKey,
+  ProviderPreviewValue,
+} from './chatPreferenceTypes';
 
 const EMOTES_ICON: SFSymbol = 'face.smiling';
 const EMOTES_ANDROID_ICON: AndroidSymbol = 'sentiment_satisfied';
 const BADGES_ICON: SFSymbol = 'rosette';
 const BADGES_ANDROID_ICON: AndroidSymbol = 'military_tech';
-
-type ProviderPreviewKey =
-  | 'show7TvEmotes'
-  | 'show7tvBadges'
-  | 'showBttvEmotes'
-  | 'showBttvBadges'
-  | 'showFFzEmotes'
-  | 'showFFzBadges'
-  | 'showTwitchEmotes'
-  | 'showTwitchBadges';
-
-type ProviderPreviewValue = Record<ProviderPreviewKey, boolean>;
 
 const PROVIDER_PREFERENCE_SECTIONS = [
   {
@@ -85,20 +77,12 @@ const PROVIDER_PREFERENCE_SECTIONS = [
   title: string;
 }[];
 
-type ProviderPreviewItemProps = {
-  enabled: boolean;
-  provider: PreviewProvider;
-  variant: 'badges' | 'emotes';
-};
-
 export function ChatProviderPreferenceSections({
   onProviderToggle,
   previewProviders,
-  ProviderPreviewItem,
 }: {
   previewProviders: ProviderPreviewValue;
   onProviderToggle: (key: ProviderPreviewKey, value: boolean) => void;
-  ProviderPreviewItem: (props: ProviderPreviewItemProps) => ReactNode;
 }) {
   const { t } = useTranslation('preferences');
 

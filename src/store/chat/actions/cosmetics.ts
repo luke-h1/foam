@@ -20,7 +20,10 @@ import { logger } from '@app/utils/logger';
 import { getSevenTvSessionId } from '@app/utils/seventv/sevenTvSessionId';
 
 import { chatStore$ } from '../observables/chatStore';
-import { writePersistedCosmetics } from '../observables/cosmeticsPersistence';
+import {
+  writePersistedCosmeticBindings,
+  writePersistedCosmeticDefinitions,
+} from '../observables/cosmeticsPersistence';
 import { MAX_COSMETIC_ENTRIES } from '../types/constants';
 import {
   clearAllMissingBadges,
@@ -40,7 +43,7 @@ let cosmeticBindingsBumpTimer: ReturnType<typeof setTimeout> | null = null;
 /**
  * Coalesced version bump for late-arriving badge data. Every bump changes
  * Chat's emoteReprocessKey, which clears the processed-message set and
- * restarts the full-window reprocess from message zero, so per-entitlement
+ * restarts the full-window reprocess from message zero - so per-entitlement
  * bumps during a channel-entry burst restarted it once per newly sighted
  * badged chatter and it never finished in busy channels. One trailing bump
  * per window folds a burst into a single restart; visible rows do not wait on
@@ -58,24 +61,44 @@ const scheduleCosmeticBindingsBump = (): void => {
 
 const COSMETICS_PERSIST_DEBOUNCE_MS = 4000;
 let cosmeticsPersistTimer: ReturnType<typeof setTimeout> | null = null;
+let cosmeticDefinitionsDirty = false;
+let cosmeticBindingsDirty = false;
 
 /**
  * Debounced MMKV snapshot of the cosmetic maps. Cosmetics arrive in a burst as
  * a channel loads; coalescing into one write per quiet window keeps this off
- * the hot path and avoids repeated whole-map serialization.
+ * the hot path. Definitions and bindings persist under separate keys so the
+ * steady per-chatter binding syncs stop re-serializing hundreds of full paint
+ * definitions - the flush writes only the group(s) that actually changed.
  */
-export const scheduleCosmeticsPersist = (): void => {
+export const scheduleCosmeticsPersist = (
+  kind: 'definitions' | 'bindings' | 'both' = 'both',
+): void => {
+  if (kind !== 'bindings') {
+    cosmeticDefinitionsDirty = true;
+  }
+  if (kind !== 'definitions') {
+    cosmeticBindingsDirty = true;
+  }
   if (cosmeticsPersistTimer) {
     return;
   }
   cosmeticsPersistTimer = setTimeout(() => {
     cosmeticsPersistTimer = null;
-    writePersistedCosmetics({
-      paints: chatStore$.paints.peek(),
-      badges: chatStore$.badges.peek(),
-      userPaintIds: chatStore$.userPaintIds.peek(),
-      userBadgeIds: chatStore$.userBadgeIds.peek(),
-    });
+    if (cosmeticDefinitionsDirty) {
+      cosmeticDefinitionsDirty = false;
+      writePersistedCosmeticDefinitions({
+        paints: chatStore$.paints.peek(),
+        badges: chatStore$.badges.peek(),
+      });
+    }
+    if (cosmeticBindingsDirty) {
+      cosmeticBindingsDirty = false;
+      writePersistedCosmeticBindings({
+        userPaintIds: chatStore$.userPaintIds.peek(),
+        userBadgeIds: chatStore$.userBadgeIds.peek(),
+      });
+    }
   }, COSMETICS_PERSIST_DEBOUNCE_MS);
 };
 
@@ -354,7 +377,7 @@ export const clearUserCosmeticsCache = () => {
 // Paint bindings never bump cosmeticBindingsVersion: painted usernames
 // subscribe to userPaintIds/paints directly (CosmeticUsername useSelector),
 // and the message reprocess pass that the version key restarts only re-parses
-// emotes and badges, not paints. Bumping here restarted a
+// emotes and badges - it never reads paints. Bumping here restarted a
 // full-window reprocess once per newly sighted painted chatter for zero
 // rendered difference.
 export const setUserPaint = (ttvUserId: string, paintId: string): void => {
@@ -373,15 +396,15 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
     chatStore$.userPaintIds[ttvUserId]?.set(paintId);
   }
 
-  scheduleCosmeticsPersist();
+  scheduleCosmeticsPersist('bindings');
 };
 
 /**
  * Popular paints re-arrive with a fresh object identity for every wearer
  * sighting (GQL conversion / MMKV round-trip both construct new objects).
  * Storing an equal-content copy would rotate the WeakMap-keyed paint layer
- * caches and re-sync every cached wearer to MMKV (O(wearers²) during
- * entitlement bursts) for no observable change, so no-op writes are dropped
+ * caches and re-sync every cached wearer to MMKV - O(wearers²) during
+ * entitlement bursts - for no observable change, so no-op writes are dropped
  * here. Both sides serialize from the same deterministic constructors, so
  * stringify equality is a safe deep compare; a false mismatch only falls back
  * to the unconditional write.
@@ -393,13 +416,35 @@ const isSamePaintDefinition = (
   previous != null &&
   (previous === next || JSON.stringify(previous) === JSON.stringify(next));
 
+// Paint definitions are large (gradient stops, shadow chains) and now survive
+// channel hops, so bound the in-memory map: on overflow, drop definitions no
+// current binding references. Matches the persisted-snapshot cap.
+const MAX_PAINT_DEFINITIONS = 750;
+
+const sweepUnreferencedPaints = () => {
+  const paints = chatStore$.paints.peek();
+  const paintIds = Object.keys(paints);
+  if (paintIds.length < MAX_PAINT_DEFINITIONS) {
+    return;
+  }
+  const referenced = new Set(Object.values(chatStore$.userPaintIds.peek()));
+  const next: typeof paints = {};
+  paintIds.forEach(paintId => {
+    if (referenced.has(paintId)) {
+      next[paintId] = paints[paintId] as PaintData;
+    }
+  });
+  chatStore$.paints.set(next);
+};
+
 export const addPaint = (paint: PaintData) => {
   if (paint.id) {
     if (isSamePaintDefinition(chatStore$.paints[paint.id]?.peek(), paint)) {
       return;
     }
+    sweepUnreferencedPaints();
     chatStore$.paints[paint.id]?.set(paint);
-    scheduleCosmeticsPersist();
+    scheduleCosmeticsPersist('definitions');
     refreshCachedUserCosmeticsForDefinition(paint.id);
   }
 };
@@ -423,7 +468,23 @@ function ensureUserPaintFlagInvalidator(): void {
   }
   userPaintFlagInvalidatorAttached = true;
   const clear = () => chatStore$.sessionCaches.userPaintFlags.set({});
-  chatStore$.userPaintIds.onChange(clear);
+  // Binding changes almost always touch a single user (a keyed setUserPaint
+  // write per newly sighted painted chatter), so drop only that user's flag -
+  // a wholesale clear here reset the cache exactly when getChatRowItemType is
+  // hottest. Whole-map replacements (trim, clearPaints) have an empty path
+  // and still wipe everything.
+  chatStore$.userPaintIds.onChange(({ changes }) => {
+    for (const change of changes) {
+      const changedUserId = change.path[0];
+      if (typeof changedUserId !== 'string') {
+        clear();
+        return;
+      }
+      chatStore$.sessionCaches.userPaintFlags[changedUserId]?.delete();
+    }
+  });
+  // Definition changes can affect any wearer; they are rare after the
+  // equal-content guard in addPaint, so wholesale is fine.
   chatStore$.paints.onChange(clear);
 }
 
@@ -490,7 +551,7 @@ export const addBadge = (badge: SanitisedBadgeSet) => {
 
   const previousUrl = previous?.url?.trim();
   cell?.set(normalizedBadge);
-  scheduleCosmeticsPersist();
+  scheduleCosmeticsPersist('definitions');
 
   if (previousUrl !== normalizedBadge.url.trim()) {
     scheduleCosmeticBindingsBump();
@@ -534,7 +595,7 @@ export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
     scheduleCosmeticBindingsBump();
   }
 
-  scheduleCosmeticsPersist();
+  scheduleCosmeticsPersist('bindings');
 };
 
 export const getUserBadge = (
@@ -647,6 +708,18 @@ export const clearPaints = () => {
     chatStore$.paints.set({});
     chatStore$.userPaintIds.set({});
   });
+};
+
+/**
+ * Channel-hop clear: drops per-user bindings but keeps the id-keyed paint
+ * definitions. Definitions are global (the same paint renders identically in
+ * every channel) and rebuilding them on re-entry re-created every definition
+ * with fresh identity - rotating the WeakMap-keyed paint layer caches and
+ * re-running the wearer sync for users the app knew seconds ago. The
+ * definition map is bounded by the unreferenced-paint sweep in `addPaint`.
+ */
+export const clearPaintBindings = () => {
+  chatStore$.userPaintIds.set({});
 };
 
 export const clearSevenTvBadges = () => {

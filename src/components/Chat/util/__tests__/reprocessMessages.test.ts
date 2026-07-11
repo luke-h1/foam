@@ -354,8 +354,8 @@ describe('reprocessMessages', () => {
 
       expect(processMessageEmotes).toHaveBeenCalledWith(
         'Check this OMEGALUL',
-        expect.anything(),
-        expect.anything(),
+        message.userstate,
+        message,
       );
     });
   });

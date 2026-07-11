@@ -23,13 +23,19 @@ import {
 } from './cosmetics';
 import { handlePersonalEmoteSetEntitlement } from './personalEmotes';
 
-const MAX_SEVEN_TV_USER_LINK_ENTRIES = 2000;
+export const MAX_SEVEN_TV_USER_LINK_ENTRIES = 2000;
 
-const entitlementLinks$ = chatStore$.sevenTvUserLinks.twitchIdByEntitlementId;
-const twitchIdsBySevenTvUserId$ =
-  chatStore$.sevenTvUserLinks.twitchIdsBySevenTvUserId;
-const sevenTvUserIdByTwitchId$ =
-  chatStore$.sevenTvUserLinks.sevenTvUserIdByTwitchId;
+// Session-scoped 7TV identity/entitlement lookup tables. These are consumed
+// only inside this module (never subscribed by components), and every
+// entitlement event in a join burst writes them - as observables each write
+// cloned and key-diffed the whole ~2000-entry record, so they stay plain Maps.
+// Map insertion order gives FIFO for the caps.
+const entitlementLinks = new Map<
+  string,
+  { kind: 'BADGE' | 'PAINT' | 'EMOTE_SET'; twitchUserId: string }
+>();
+const twitchIdsBySevenTvUserId = new Map<string, string[]>();
+const sevenTvUserIdByTwitchId = new Map<string, string>();
 
 function forgetEntitlementIdsForTwitchUsers(
   twitchUserIds: Iterable<string>,
@@ -39,18 +45,10 @@ function forgetEntitlementIdsForTwitchUsers(
     return;
   }
 
-  const current = entitlementLinks$.peek();
-  const next: typeof current = {};
-  let changed = false;
-  for (const [entitlementId, link] of Object.entries(current)) {
+  for (const [entitlementId, link] of entitlementLinks) {
     if (twitchIds.has(link.twitchUserId)) {
-      changed = true;
-      continue;
+      entitlementLinks.delete(entitlementId);
     }
-    next[entitlementId] = link;
-  }
-  if (changed) {
-    entitlementLinks$.set(next);
   }
 }
 
@@ -59,56 +57,45 @@ function rememberEntitlementTwitchLink(
   twitchUserId: string,
   kind: 'BADGE' | 'PAINT' | 'EMOTE_SET',
 ): void {
-  const current = entitlementLinks$.peek();
-  const alreadyPresent = entitlementId in current;
-
-  const next: typeof current = { ...current };
-  if (!alreadyPresent) {
-    const oldest = Object.keys(next)[0];
-    if (
-      oldest !== undefined &&
-      Object.keys(next).length >= MAX_SEVEN_TV_USER_LINK_ENTRIES
-    ) {
-      delete next[oldest];
+  if (
+    !entitlementLinks.has(entitlementId) &&
+    entitlementLinks.size >= MAX_SEVEN_TV_USER_LINK_ENTRIES
+  ) {
+    const oldest = entitlementLinks.keys().next().value;
+    if (oldest !== undefined) {
+      entitlementLinks.delete(oldest);
     }
   }
-  next[entitlementId] = { kind, twitchUserId };
-  entitlementLinks$.set(next);
+  entitlementLinks.set(entitlementId, { kind, twitchUserId });
 }
 
 function rememberSevenTvUserTwitchLink(
   sevenTvUserId: string,
   twitchUserId: string,
 ): void {
-  const reverse = { ...sevenTvUserIdByTwitchId$.peek() };
-  reverse[twitchUserId] = sevenTvUserId;
+  sevenTvUserIdByTwitchId.set(twitchUserId, sevenTvUserId);
 
-  const forward = { ...twitchIdsBySevenTvUserId$.peek() };
-  let existing = forward[sevenTvUserId];
+  let existing = twitchIdsBySevenTvUserId.get(sevenTvUserId);
   if (!existing) {
-    const oldest = Object.keys(forward)[0];
-    if (
-      oldest !== undefined &&
-      Object.keys(forward).length >= MAX_SEVEN_TV_USER_LINK_ENTRIES
-    ) {
-      const evictedTwitchIds = forward[oldest];
-      if (evictedTwitchIds) {
-        evictedTwitchIds.forEach((twitchId: string) => {
-          delete reverse[twitchId];
-        });
-        forgetEntitlementIdsForTwitchUsers(evictedTwitchIds);
+    if (twitchIdsBySevenTvUserId.size >= MAX_SEVEN_TV_USER_LINK_ENTRIES) {
+      const oldest = twitchIdsBySevenTvUserId.keys().next().value;
+      if (oldest !== undefined) {
+        const evictedTwitchIds = twitchIdsBySevenTvUserId.get(oldest);
+        if (evictedTwitchIds) {
+          evictedTwitchIds.forEach(twitchId => {
+            sevenTvUserIdByTwitchId.delete(twitchId);
+          });
+          forgetEntitlementIdsForTwitchUsers(evictedTwitchIds);
+        }
+        twitchIdsBySevenTvUserId.delete(oldest);
       }
-      delete forward[oldest];
     }
     existing = [];
-    forward[sevenTvUserId] = existing;
+    twitchIdsBySevenTvUserId.set(sevenTvUserId, existing);
   }
   if (!existing.includes(twitchUserId)) {
-    forward[sevenTvUserId] = [...existing, twitchUserId];
+    existing.push(twitchUserId);
   }
-
-  sevenTvUserIdByTwitchId$.set(reverse);
-  twitchIdsBySevenTvUserId$.set(forward);
 }
 
 export const applyCosmeticCreateEvent = (
@@ -198,31 +185,24 @@ export const applyEntitlementCreateEvent = (data: {
 };
 
 export const applyEntitlementResetEvent = (sevenTvUserId: string): void => {
-  const forward = twitchIdsBySevenTvUserId$.peek();
-  const twitchIds = forward[sevenTvUserId];
+  const twitchIds = twitchIdsBySevenTvUserId.get(sevenTvUserId);
   if (!twitchIds || twitchIds.length === 0) {
     return;
   }
 
-  const reverseNext = { ...sevenTvUserIdByTwitchId$.peek() };
   twitchIds.forEach(twitchUserId => {
     removeUserPaint(twitchUserId);
     removeUserBadge(twitchUserId);
     syncCachedUserCosmeticsFromStore(sevenTvUserId, twitchUserId);
-    delete reverseNext[twitchUserId];
+    sevenTvUserIdByTwitchId.delete(twitchUserId);
   });
   forgetEntitlementIdsForTwitchUsers(twitchIds);
-
-  const forwardNext = { ...forward };
-  delete forwardNext[sevenTvUserId];
-
-  sevenTvUserIdByTwitchId$.set(reverseNext);
-  twitchIdsBySevenTvUserId$.set(forwardNext);
+  twitchIdsBySevenTvUserId.delete(sevenTvUserId);
   logger.stvWs.info(`Reset entitlements for 7TV user: ${sevenTvUserId}`);
 };
 
 function syncUserCosmeticsCacheForTwitchUser(ttvUserId: string): void {
-  const sevenTvUserId = sevenTvUserIdByTwitchId$.peek()[ttvUserId];
+  const sevenTvUserId = sevenTvUserIdByTwitchId.get(ttvUserId);
   if (sevenTvUserId) {
     syncCachedUserCosmeticsFromStore(sevenTvUserId, ttvUserId);
   }
@@ -255,8 +235,7 @@ export const applyEntitlementDeleteEvent = (data: {
   entitlementId: string;
   ttvUserId: string | null;
 }): void => {
-  const current = entitlementLinks$.peek();
-  const rememberedLink = current[data.entitlementId];
+  const rememberedLink = entitlementLinks.get(data.entitlementId);
   const ttvUserId = data.ttvUserId ?? rememberedLink?.twitchUserId ?? null;
   // Without a remembered kind we cannot tell paint from badge; clearing both
   // would drop the user's remaining cosmetic after an eviction or late delete.
@@ -276,14 +255,12 @@ export const applyEntitlementDeleteEvent = (data: {
   }
 
   syncUserCosmeticsCacheForTwitchUser(ttvUserId);
-  const next = { ...current };
-  delete next[data.entitlementId];
-  entitlementLinks$.set(next);
+  entitlementLinks.delete(data.entitlementId);
   logger.stvWs.info(`Removed entitlements for user: ${ttvUserId}`);
 };
 
 export const clearEntitlementUserLinkState = (): void => {
-  twitchIdsBySevenTvUserId$.set({});
-  sevenTvUserIdByTwitchId$.set({});
-  entitlementLinks$.set({});
+  twitchIdsBySevenTvUserId.clear();
+  sevenTvUserIdByTwitchId.clear();
+  entitlementLinks.clear();
 };

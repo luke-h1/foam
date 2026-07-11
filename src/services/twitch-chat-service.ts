@@ -1,14 +1,24 @@
 import { useCallback, useEffect, useRef } from 'react';
 
+import * as Network from 'expo-network';
+
 import { useAuthContext } from '@app/context/AuthContext';
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { isE2EMode } from '@app/services/api/clients';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
+import { getHeartbeatAction } from '@app/utils/chat/chatHeartbeat';
+import { shouldProcessLiveMessage } from '@app/utils/chat/chatIngestRateLimiter';
 import {
   containsMutedWords,
   isUserBlocked,
 } from '@app/utils/chat/chatMessageFilters';
-import { type IrcMessage, parseIrcMessage } from '@app/utils/chat/ircProtocol';
+import {
+  buildPrivmsgLine,
+  type IrcMessage,
+  isPrivmsgLine,
+  parseIrcMessage,
+} from '@app/utils/chat/ircProtocol';
 import { logger } from '@app/utils/logger';
 
 import { ReadyState } from '../hooks/ws/constants';
@@ -18,13 +28,21 @@ import { useWebsocket } from '../hooks/ws/useWebsocket';
  * Twitch IRC PINGs roughly every 5 min and we PONG, but a half-open socket
  * (Wi-Fi↔cellular handoff, NAT/idle timeout, background→foreground) frequently
  * fires no close event: the WebSocket sits in OPEN forever, no messages arrive,
- * and the reconnect path never runs — chat silently stops while the app still
- * believes it is connected. Send our own PING on an interval (Twitch answers
- * with PONG, which counts as inbound activity) and force a reconnect if the
- * server has gone quiet for longer than the timeout.
+ * and the reconnect path never runs - chat silently stops while the app still
+ * believes it is connected. Once the socket has been quiet for an interval we
+ * send our own PING and mark that we are awaiting a PONG; if the next tick still
+ * hasn't seen any inbound line (PONG or otherwise) the socket is dead and we
+ * force a reconnect. A busy channel proves liveness through its own traffic, so
+ * it never needs to probe. React Native's WebSocket exposes no ping frames, so
+ * this application-level PING/PONG is the only half-open detector available.
  */
-const CHAT_HEARTBEAT_INTERVAL_MS = 60_000;
-const CHAT_HEARTBEAT_TIMEOUT_MS = 150_000;
+const CHAT_HEARTBEAT_INTERVAL_MS = 30_000;
+/**
+ * After returning to the foreground or regaining connectivity, probe the socket
+ * and reconnect if Twitch does not answer within this window - far faster than
+ * waiting for the next heartbeat tick to notice a suspended socket is dead.
+ */
+const CHAT_FOREGROUND_LIVENESS_DEADLINE_MS = 5_000;
 
 const TWITCH_CHAT_URL = isE2EMode
   ? 'ws://localhost:6667'
@@ -98,6 +116,17 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   // Seeded on open and refreshed on every inbound line; the heartbeat only
   // reads it once readyState is OPEN, by which point onOpen has set it.
   const lastActivityAtRef = useRef(0);
+  // True while a heartbeat/foreground PING is outstanding. Any inbound line
+  // clears it (a live socket answers, or is already busy); if it survives past
+  // its deadline the socket is half-open and we reconnect.
+  const awaitingPongRef = useRef(false);
+  // When the outstanding probe's PING was sent. The heartbeat and the
+  // foreground liveness check share awaitingPongRef, so each needs to know how
+  // old the pending probe actually is before declaring the socket dead - a
+  // flushed heartbeat tick right after resume must not tear down a socket whose
+  // probe is milliseconds old.
+  const probeSentAtRef = useRef(0);
+  const probeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sendIrcMessageRef = useRef<((message: string) => void) | null>(null);
   const messageBufferRef = useRef<string>('');
   const userStateRef = useRef<Record<string, string>>({});
@@ -282,19 +311,24 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
           const username = tagsRecord['display-name'] || tagsRecord.login;
 
           if (channelName && messageText) {
-            const isMod = tagsRecord.mod === '1';
-            const isChannelOwner =
-              channelName.slice(1).toLowerCase() === user?.login?.toLowerCase();
+            // The mod/owner exemption strings are only needed when a blocklist
+            // exists - skip the per-message lowercasing otherwise.
+            if (blockedUsers.length > 0) {
+              const isMod = tagsRecord.mod === '1';
+              const isChannelOwner =
+                channelName.slice(1).toLowerCase() ===
+                user?.login?.toLowerCase();
 
-            if (
-              !isMod &&
-              !isChannelOwner &&
-              isUserBlocked(username, blockedUsers)
-            ) {
-              logger.chat.debug(
-                `Filtered message from blocked user: ${username}`,
-              );
-              return;
+              if (
+                !isMod &&
+                !isChannelOwner &&
+                isUserBlocked(username, blockedUsers)
+              ) {
+                logger.chat.debug(
+                  `Filtered message from blocked user: ${username}`,
+                );
+                return;
+              }
             }
 
             if (containsMutedWords(messageText, mutedWords, matchWholeWord)) {
@@ -505,6 +539,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const handleMessage = (event: MessageEvent) => {
     try {
       lastActivityAtRef.current = Date.now();
+      // Any inbound line proves the socket is alive, so a pending probe is
+      // satisfied (Twitch's PONG arrives as a normal inbound line).
+      awaitingPongRef.current = false;
       const text = `${messageBufferRef.current}${event.data as string}`;
       let cursor = 0;
 
@@ -526,6 +563,15 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
           continue;
         }
 
+        // Flood backstop, consulted before the full tag parse so dropped
+        // messages cost almost nothing. Only PRIVMSG lines consume tokens;
+        // control lines (CLEARCHAT, ROOMSTATE, USERNOTICE…) always pass.
+        // Replay is unaffected - it flows through the recent-messages path,
+        // never this socket.
+        if (isPrivmsgLine(line) && !shouldProcessLiveMessage()) {
+          continue;
+        }
+
         const ircMessage = parseIrcMessage(line);
         if (ircMessage) {
           handleIrcMessage(ircMessage);
@@ -543,6 +589,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     isAuthenticatedRef.current = false;
     joinedChannelsRef.current.clear();
     lastActivityAtRef.current = Date.now();
+    awaitingPongRef.current = false;
 
     authenticate();
   }, [authenticate, joinedChannelsRef]);
@@ -572,6 +619,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     getWebSocket,
     sendMessage: sendWebSocketMessage,
     readyState,
+    reconnect,
   } = useWebsocket(
     shouldConnect ? TWITCH_CHAT_URL : null,
     {
@@ -595,6 +643,68 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   // Reconnect chat when token changes (e.g. after 401 refresh) so we authenticate with the new token.
   const getWebSocketRef = useRef(getWebSocket);
   getWebSocketRef.current = getWebSocket;
+  const reconnectRef = useRef(reconnect);
+  reconnectRef.current = reconnect;
+  const shouldConnectRef = useRef(shouldConnect);
+  shouldConnectRef.current = shouldConnect;
+
+  // Probe an OPEN-but-possibly-half-open socket after the app returns to the
+  // foreground or regains connectivity: send a PING and, if Twitch has not
+  // answered within a short deadline, force a reconnect. If the socket isn't
+  // OPEN (its automatic retries may have been exhausted during a long
+  // background/outage), revive it directly.
+  const verifyChatLiveness = () => {
+    if (!shouldConnectRef.current) {
+      return;
+    }
+
+    const socket = getWebSocketRef.current();
+    if (socket.readyState !== WebSocket.OPEN) {
+      logger.chat.info(
+        '💬 Twitch IRC not open on resume, restarting connection',
+      );
+      reconnectRef.current();
+      return;
+    }
+
+    if (awaitingPongRef.current) {
+      // A probe is already in flight with its own deadline (AppState and the
+      // network-regain listener often fire together on resume) - don't stack a
+      // second PING and a second close timer on top of it.
+      return;
+    }
+
+    awaitingPongRef.current = true;
+    const sentAt = Date.now();
+    probeSentAtRef.current = sentAt;
+    sendIrcCommand('PING', 'tmi.twitch.tv');
+    if (probeTimeoutRef.current) {
+      clearTimeout(probeTimeoutRef.current);
+    }
+    probeTimeoutRef.current = setTimeout(() => {
+      probeTimeoutRef.current = null;
+      if (!shouldConnectRef.current || !awaitingPongRef.current) {
+        return;
+      }
+      if (probeSentAtRef.current !== sentAt) {
+        // A newer probe superseded this one; its own deadline governs.
+        return;
+      }
+      const currentSocket = getWebSocketRef.current();
+      if (currentSocket.readyState !== WebSocket.OPEN) {
+        return;
+      }
+      logger.chat.warn(
+        '💬 Twitch IRC liveness probe unanswered after resume, forcing reconnect',
+        { name: 'twitch_chat_warning' },
+      );
+      awaitingPongRef.current = false;
+      lastActivityAtRef.current = Date.now();
+      currentSocket.close(4004, 'chat liveness probe timeout');
+    }, CHAT_FOREGROUND_LIVENESS_DEADLINE_MS);
+  };
+  const verifyChatLivenessRef = useRef(verifyChatLiveness);
+  verifyChatLivenessRef.current = verifyChatLiveness;
 
   useEffect(() => {
     if (!shouldConnect) {
@@ -602,25 +712,80 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     }
 
     const interval = setInterval(() => {
-      if (readyState !== ReadyState.OPEN) {
+      const action = getHeartbeatAction({
+        isOpen: readyState === ReadyState.OPEN,
+        awaitingPong: awaitingPongRef.current,
+        msSinceProbeSent: awaitingPongRef.current
+          ? Date.now() - probeSentAtRef.current
+          : null,
+        msSinceLastActivity: Date.now() - lastActivityAtRef.current,
+        intervalMs: CHAT_HEARTBEAT_INTERVAL_MS,
+        probeDeadlineMs: CHAT_FOREGROUND_LIVENESS_DEADLINE_MS,
+      });
+
+      if (action === 'wait') {
         return;
       }
-      const idleMs = Date.now() - lastActivityAtRef.current;
-      if (idleMs >= CHAT_HEARTBEAT_TIMEOUT_MS) {
+
+      if (action === 'reconnect') {
+        // The outstanding probe went unanswered past its deadline - the
+        // socket is half-open.
+        const idleMs = Date.now() - lastActivityAtRef.current;
         logger.chat.warn(
-          '💬 Twitch IRC idle past heartbeat timeout, forcing reconnect',
+          '💬 Twitch IRC PING unanswered past heartbeat, forcing reconnect',
           { name: 'twitch_chat_warning', idleMs },
         );
         // Bump the marker so we don't re-close before the reconnect lands.
+        awaitingPongRef.current = false;
         lastActivityAtRef.current = Date.now();
         getWebSocketRef.current().close(4002, 'chat heartbeat timeout');
         return;
       }
+
+      awaitingPongRef.current = true;
+      probeSentAtRef.current = Date.now();
       sendIrcCommand('PING', 'tmi.twitch.tv');
     }, CHAT_HEARTBEAT_INTERVAL_MS);
 
     return () => clearInterval(interval);
   }, [shouldConnect, readyState, sendIrcCommand]);
+
+  // Chat has no proactive recovery on its own: a suspended or network-flapped
+  // socket often stays OPEN with no close event, so without this it would take
+  // a full heartbeat cycle to notice. Re-verify liveness the moment the app
+  // returns to the foreground or connectivity is regained.
+  useEffect(() => {
+    if (!shouldConnect) {
+      return;
+    }
+
+    const unsubscribeAppState = subscribeToAppStateTransitions(
+      ({ previous, current }) => {
+        if (current === 'active' && previous !== 'active') {
+          verifyChatLivenessRef.current();
+        }
+      },
+    );
+
+    let wasConnected = true;
+    const networkSubscription = Network.addNetworkStateListener(state => {
+      const isConnected = Boolean(state.isConnected);
+      // Only act on the regain edge; a steady connection needn't re-probe.
+      if (isConnected && !wasConnected) {
+        verifyChatLivenessRef.current();
+      }
+      wasConnected = isConnected;
+    });
+
+    return () => {
+      unsubscribeAppState();
+      networkSubscription.remove();
+      if (probeTimeoutRef.current) {
+        clearTimeout(probeTimeoutRef.current);
+        probeTimeoutRef.current = null;
+      }
+    };
+  }, [shouldConnect]);
 
   useEffect(() => {
     const currentToken = authState?.token?.accessToken;
@@ -717,23 +882,11 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       replyParentMsgBody,
     };
 
-    // Twitch IRC format: @reply-parent-msg-id=<id>;reply-parent-display-name=<name>;reply-parent-msg-body=<body> PRIVMSG #channel :message
-    let privmsgCommand = 'PRIVMSG';
-    if (replyParentMsgId) {
-      const tags: string[] = [`reply-parent-msg-id=${replyParentMsgId}`];
-
-      if (replyParentDisplayName) {
-        tags.push(`reply-parent-display-name=${replyParentDisplayName}`);
-      }
-
-      if (replyParentMsgBody) {
-        tags.push(`reply-parent-msg-body=${replyParentMsgBody}`);
-      }
-
-      privmsgCommand = `@${tags.join(';')} ${privmsgCommand}`;
-    }
-
-    const fullMessage = `${privmsgCommand} ${channelFormatted} :${message}`;
+    const fullMessage = buildPrivmsgLine({
+      channel: channelFormatted,
+      message,
+      replyParentMsgId,
+    });
     logger.chat.debug(`Sending PRIVMSG: ${fullMessage.substring(0, 100)}...`);
     sendWebSocketMessage(`${fullMessage}\r\n`);
   };

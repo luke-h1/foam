@@ -33,7 +33,16 @@ export function PaintedUsernameMaskedFill({
 }: PaintedUsernameMaskedFillProps) {
   return (
     <View style={styles.root}>
-      <Text style={[maskTextStyle, styles.sizer]}>{displayUsername}</Text>
+      {/* Solid-colour username in the paint's base colour, laid out in-flow so
+          it reserves the row's space. The MaskedView paints the gradient/texture
+          fill directly on top (its base layer is opaque, so it fully covers this
+          within the glyphs). If that offscreen mask pass drops out - a recycled
+          row settling after a fling, when the render encoder is most pressured -
+          this stays visible instead of leaving a blank gap where the username
+          should be. Mirrors the web fallback (PaintedUsernameMaskedFill.web). */}
+      <Text style={[maskTextStyle, { color: fallbackColor }]}>
+        {displayUsername}
+      </Text>
       <MaskedView
         style={StyleSheet.absoluteFill}
         maskElement={
@@ -65,8 +74,5 @@ const styles = StyleSheet.create({
   root: {
     alignSelf: 'flex-start',
     position: 'relative',
-  },
-  sizer: {
-    opacity: 0,
   },
 });

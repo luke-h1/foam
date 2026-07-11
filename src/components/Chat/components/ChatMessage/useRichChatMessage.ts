@@ -26,7 +26,7 @@ import type {
   RichChatMessageProps,
 } from './RichChatMessage.types';
 
-const MESSAGE_LONG_PRESS_DELAY_MS = 650;
+export const MESSAGE_LONG_PRESS_DELAY_MS = 650;
 
 export function useRichChatMessage<
   TNoticeType extends NoticeVariants,
@@ -124,7 +124,7 @@ export function useRichChatMessage<
   );
   // Set from each emote's onTouchStart (which bubbles before the row's), so
   // the single row-level long-press timer can open the emote sheet without a
-  // Pressable per emote — busy rows used to mount hundreds of them.
+  // Pressable per emote - busy rows used to mount hundreds of them.
   const pressedEmotePartRef = useRef<EmotePressData | null>(null);
 
   useEffect(() => {

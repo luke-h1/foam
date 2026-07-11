@@ -1,7 +1,18 @@
-import { chatStore$ } from '../observables/chatStore';
-
 /**
- * Short-lived render caches — not persisted, trimmed aggressively for memory.
+ * Short-lived render caches for chat colours. These are read imperatively on
+ * the raw ingest path (`resolveCachedSenderColor`, up to ~100 msg/s) and
+ * mid-render (`getMentionColor`), never subscribed - so they are plain Maps
+ * per the chat-state rule, not observables whose every write cloned and
+ * key-diffed the whole bucket.
+ *
+ * `lightenedColors` memoizes `lightenColor(color)`, a pure function of the
+ * key, so entries never expire - the size cap alone bounds memory. The old
+ * 30s TTL only created churn: at steady state every colour re-expired and
+ * re-triggered a clone + recompute + prune cycle.
+ *
+ * `mentionColors` keeps the TTL as a staleness backstop (a chatter's colour
+ * can change mid-session) on top of the explicit clear the mention resolver
+ * issues when logins resolve.
  */
 export const CHAT_SESSION_CACHE_TTL_MS = 30_000;
 
@@ -17,29 +28,25 @@ const MAX_SESSION_CACHE_SIZES: Record<SessionCacheBucket, number> = {
   lightenedColors: 200,
 };
 
-function getBucket(bucket: SessionCacheBucket) {
-  return chatStore$.sessionCaches[bucket];
-}
+const buckets: Record<SessionCacheBucket, Map<string, TimedStringEntry>> = {
+  mentionColors: new Map(),
+  lightenedColors: new Map(),
+};
 
-function readBucket(
-  bucket: SessionCacheBucket,
-): Record<string, TimedStringEntry> {
-  return getBucket(bucket).peek() ?? {};
-}
+const NEVER_EXPIRES = Number.POSITIVE_INFINITY;
 
 export function getSessionCacheString(
   bucket: SessionCacheBucket,
   key: string,
 ): string | undefined {
-  const entry = readBucket(bucket)[key];
+  const entries = buckets[bucket];
+  const entry = entries.get(key);
   if (!entry) {
     return undefined;
   }
 
   if (entry.expiresAt <= Date.now()) {
-    const next = { ...readBucket(bucket) };
-    delete next[key];
-    getBucket(bucket).set(next);
+    entries.delete(key);
     return undefined;
   }
 
@@ -51,47 +58,39 @@ export function setSessionCacheString(
   key: string,
   value: string,
 ): void {
-  getBucket(bucket).set({
-    ...readBucket(bucket),
-    [key]: {
-      value,
-      expiresAt: Date.now() + CHAT_SESSION_CACHE_TTL_MS,
-    },
+  const entries = buckets[bucket];
+  entries.set(key, {
+    value,
+    expiresAt:
+      bucket === 'lightenedColors'
+        ? NEVER_EXPIRES
+        : Date.now() + CHAT_SESSION_CACHE_TTL_MS,
   });
-  pruneSessionCache(bucket);
-}
 
-function pruneSessionCache(bucket: SessionCacheBucket): void {
-  const now = Date.now();
-  const entries = Object.entries(readBucket(bucket)).filter(
-    ([, entry]) => entry.expiresAt > now,
-  );
   const maxSize = MAX_SESSION_CACHE_SIZES[bucket];
-
-  if (entries.length <= maxSize) {
-    if (entries.length !== Object.keys(readBucket(bucket)).length) {
-      getBucket(bucket).set(Object.fromEntries(entries));
-    }
+  if (entries.size <= maxSize) {
     return;
   }
-
-  entries.sort((left, right) => left[1].expiresAt - right[1].expiresAt);
-  getBucket(bucket).set(
-    Object.fromEntries(entries.slice(entries.length - maxSize)),
-  );
+  // Rare overflow path: drop oldest-inserted entries down to the cap.
+  const dropCount = entries.size - maxSize;
+  let dropped = 0;
+  for (const oldestKey of entries.keys()) {
+    if (dropped >= dropCount) {
+      break;
+    }
+    entries.delete(oldestKey);
+    dropped += 1;
+  }
 }
 
 export function clearSessionCache(bucket?: SessionCacheBucket): void {
   if (bucket) {
-    getBucket(bucket).set({});
+    buckets[bucket].clear();
     return;
   }
 
-  chatStore$.sessionCaches.set({
-    mentionColors: {},
-    lightenedColors: {},
-    userPaintFlags: chatStore$.sessionCaches.userPaintFlags.peek(),
-  });
+  buckets.mentionColors.clear();
+  buckets.lightenedColors.clear();
 }
 
 export function clearMentionSessionCaches(): void {

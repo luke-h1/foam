@@ -31,6 +31,31 @@ jest.mock('@app/utils/logger', () => ({
 const mockGetSevenTvEmoteSetId = jest.mocked(getSevenTvEmoteSetId);
 const mockUseSeventvWs = jest.mocked(useSeventvWs);
 
+// The runtime never reads `ws`; this yields a WebSocket-typed handle without an
+// `as unknown as` reshape, and without opening a real jsdom socket.
+const createWebSocketStub = (): WebSocket => Object.create(WebSocket.prototype);
+
+function makeWsReturn({
+  readyState,
+  wsConnected,
+  subscribeToChannel,
+  unsubscribeFromChannel,
+}: {
+  readyState: ReadyState;
+  wsConnected: boolean;
+  subscribeToChannel: jest.Mock;
+  unsubscribeFromChannel: jest.Mock;
+}): ReturnType<typeof useSeventvWs> {
+  return {
+    getConnectionState: jest.fn(() => 'CONNECTED'),
+    isConnected: jest.fn(() => wsConnected),
+    readyState,
+    subscribeToChannel,
+    unsubscribeFromChannel,
+    ws: createWebSocketStub(),
+  };
+}
+
 function renderRuntime({
   currentEmoteSetIdRef = { current: null },
   emoteLoadStatus = 'success',
@@ -44,14 +69,14 @@ function renderRuntime({
 } = {}) {
   const subscribeToChannel = jest.fn();
   const unsubscribeFromChannel = jest.fn();
-  mockUseSeventvWs.mockReturnValue({
-    getConnectionState: jest.fn(() => 'CONNECTED'),
-    isConnected: jest.fn(() => wsConnected),
-    readyState,
-    subscribeToChannel,
-    unsubscribeFromChannel,
-    ws: null as unknown as WebSocket,
-  });
+  mockUseSeventvWs.mockReturnValue(
+    makeWsReturn({
+      readyState,
+      wsConnected,
+      subscribeToChannel,
+      unsubscribeFromChannel,
+    }),
+  );
 
   const hook = renderHook(
     (props: Parameters<typeof useSevenTvChatRuntime>[0]) =>
@@ -96,6 +121,51 @@ describe('useSevenTvChatRuntime', () => {
 
     expect(disconnected.subscribeToChannel.mock.calls).toEqual([]);
     expect(loading.subscribeToChannel.mock.calls).toEqual([]);
+  });
+
+  test('subscribes exactly once when the websocket reconnects from closed to open', () => {
+    const currentEmoteSetIdRef = { current: null };
+    // One stable pair of ws handlers across both connection states so the call
+    // count accumulates and we can prove no double-subscribe on reconnect.
+    const subscribeToChannel = jest.fn();
+    const unsubscribeFromChannel = jest.fn();
+    mockUseSeventvWs.mockReturnValue(
+      makeWsReturn({
+        readyState: ReadyState.CLOSED,
+        wsConnected: false,
+        subscribeToChannel,
+        unsubscribeFromChannel,
+      }),
+    );
+
+    const props = {
+      channelId: 'channel-1',
+      channelName: 'foam',
+      currentEmoteSetIdRef,
+      emoteLoadStatus: 'success',
+      handleNewMessage: jest.fn(),
+      sevenTvEmoteSetId: 'set-from-loader',
+    };
+    const hook = renderHook(
+      (p: Parameters<typeof useSevenTvChatRuntime>[0]) =>
+        useSevenTvChatRuntime(p),
+      { initialProps: props },
+    );
+
+    expect(subscribeToChannel.mock.calls).toEqual([]);
+
+    mockUseSeventvWs.mockReturnValue(
+      makeWsReturn({
+        readyState: ReadyState.OPEN,
+        wsConnected: true,
+        subscribeToChannel,
+        unsubscribeFromChannel,
+      }),
+    );
+    hook.rerender({ ...props });
+
+    expect(subscribeToChannel.mock.calls).toEqual([['set-1']]);
+    expect(currentEmoteSetIdRef.current).toBe('set-1');
   });
 
   test('unsubscribes the previous set before subscribing to a changed emote set', () => {

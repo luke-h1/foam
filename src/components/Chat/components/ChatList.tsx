@@ -44,7 +44,7 @@ const CHAT_VIEWABILITY_CONFIG = {
   minimumViewTime: 100,
 } satisfies ViewabilityConfig;
 // Re-pin to the end on new messages (dataChange) and when an already-rendered
-// row grows after its real height is measured (itemLayout) — the latter keeps
+// row grows after its real height is measured (itemLayout) - the latter keeps
 // an under-estimated emote/username row from staying clipped at the bottom.
 const CHAT_MAINTAIN_SCROLL_AT_END = {
   on: { dataChange: true, itemLayout: true },
@@ -183,8 +183,9 @@ export const ChatList = memo(
         // single initial hint is all that's needed (the pretext estimator no
         // longer feeds the list).
         estimatedItemSize={CHAT_ESTIMATED_ITEM_SIZE}
-        // Disabled due repeated iOS crashes ("attempt to recycle mounted view")
-        // when rows are updated while actively scrolled.
+        // Re-enabled after the "attempt to recycle mounted view" iOS crash was
+        // fixed (c4c18ac8); if that crash resurfaces, flip CHAT_RECYCLE_ITEMS
+        // off rather than deleting the plumbing.
         recycleItems={CHAT_RECYCLE_ITEMS}
         keyExtractor={keyExtractor}
         getItemType={getItemType}

@@ -76,10 +76,12 @@ describe('ffzService', () => {
         static_url: 'https://cdn.frankerfacez.com/emote/128054/4',
         image_variants: {
           animated: {
+            '1x': 'https://cdn.frankerfacez.com/emote/128054/1',
             '2x': 'https://cdn.frankerfacez.com/emote/128054/2',
             '4x': 'https://cdn.frankerfacez.com/emote/128054/4',
           },
           static: {
+            '1x': 'https://cdn.frankerfacez.com/emote/128054/1',
             '2x': 'https://cdn.frankerfacez.com/emote/128054/2',
             '4x': 'https://cdn.frankerfacez.com/emote/128054/4',
           },
@@ -119,10 +121,12 @@ describe('ffzService', () => {
         static_url: 'https://cdn.frankerfacez.com/emote/720507/4',
         image_variants: {
           animated: {
+            '1x': 'https://cdn.frankerfacez.com/emote/720507/animated/1',
             '2x': 'https://cdn.frankerfacez.com/emote/720507/animated/2',
             '4x': 'https://cdn.frankerfacez.com/emote/720507/animated/4',
           },
           static: {
+            '1x': 'https://cdn.frankerfacez.com/emote/720507/1',
             '2x': 'https://cdn.frankerfacez.com/emote/720507/2',
             '4x': 'https://cdn.frankerfacez.com/emote/720507/4',
           },

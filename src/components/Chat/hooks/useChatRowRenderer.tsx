@@ -126,7 +126,12 @@ const ChatMessageRow = function ChatMessageRow({
     msg.message_id,
   );
   const rowVisibility = useRowVisibility();
-  const isAlternatingRow = showAlternatingChatRows && index % 2 === 1;
+  // Stripe on the message's arrival seq, not the list index: a front-trim
+  // shifts every index, and whenever the trim count was odd an index-based
+  // stripe flipped parity for the entire mounted window, defeating
+  // RichChatMessage's memo on roughly half of all flushes.
+  const isAlternatingRow =
+    showAlternatingChatRows && (msg.seq ?? index) % 2 === 1;
   // Keep a stable identity for unchanged rows: a fresh object here would
   // defeat RichChatMessage's memo on every parent-driven re-render.
   const messageDisplay = useMemo(
@@ -276,6 +281,7 @@ export function useChatRowRenderer({
   const onBadgePressRef = useRef(onBadgePress);
   const onEmotePressRef = useRef(onEmotePress);
   const onMessageLongPressRef = useRef(onMessageLongPress);
+  const onUsernamePressRef = useRef(onUsernamePress);
   const parseTextForEmotesRef = useRef(parseTextForEmotes);
 
   const highlightedUserSet = useMemo(
@@ -320,7 +326,7 @@ export function useChatRowRenderer({
   );
   // Note: mentionLoginRevision is intentionally excluded. It bumps ~every 400ms
   // as @mention logins resolve from Helix; including it re-rendered every visible
-  // row each time (the dominant frame-drop source in mention-heavy chat — busy
+  // row each time (the dominant frame-drop source in mention-heavy chat - busy
   // chat went from ~57fps to a flat 60fps once removed). Mention spans subscribe
   // to the revision themselves (MentionSpan), so only those spans re-render.
   const messageListExtraData = useMemo(
@@ -390,6 +396,7 @@ export function useChatRowRenderer({
     onBadgePressRef.current = onBadgePress;
     onEmotePressRef.current = onEmotePress;
     onMessageLongPressRef.current = onMessageLongPress;
+    onUsernamePressRef.current = onUsernamePress;
     parseTextForEmotesRef.current = parseTextForEmotes;
     handleReplyContextPressRef.current = handleReplyContextPress;
   });
@@ -424,7 +431,7 @@ export function useChatRowRenderer({
           onEmotePress={onEmotePressRef.current}
           onMessageLongPress={onMessageLongPressRef.current}
           onReplyContextPress={handleReplyContextPressRef.current}
-          onUsernamePress={onUsernamePress}
+          onUsernamePress={onUsernamePressRef.current}
           parseTextForEmotes={parseTextForEmotesRef.current}
         />
       );
@@ -437,7 +444,6 @@ export function useChatRowRenderer({
       displayFlags,
       getMentionColor,
       highlightedUserSet,
-      onUsernamePress,
       preferences.chatDensity,
     ],
   );

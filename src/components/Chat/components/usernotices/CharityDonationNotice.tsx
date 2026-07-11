@@ -4,7 +4,6 @@ import { View } from 'react-native';
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
-import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 
 import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';
 import { styles } from '../ChatMessage/RichChatMessage.styles';
@@ -16,7 +15,7 @@ interface CharityDonationNoticeProps {
 
 function CharityDonationNoticeComponent({ part }: CharityDonationNoticeProps) {
   const displayName = part.displayName?.trim();
-  const systemMsg = unescapeIrcTag(part.systemMsg);
+  const systemMsg = part.systemMsg;
   const message = part.message?.trim();
   const donationSummary = `donated ${part.amount} to ${part.charityName}`;
 

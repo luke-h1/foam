@@ -27,7 +27,13 @@ const cache = new Map<string, ParsedPart[]>();
 const MAX_CACHE_SIZE = 1000;
 const emoteArrayIds = new WeakMap<SanitisedEmote[], number>();
 const baseCollectionCache = new Map<string, EmoteCollection>();
-const MAX_BASE_COLLECTION_CACHE_SIZE = 64;
+// Each collection holds three Maps spanning every emote of all nine providers
+// (4-8k entries each), and its key changes whenever ANY provider array gets a
+// new identity - 7TV emote_set.update events do that continually in active
+// channels, so a large cap pins superseded emote universes (tens of MB on
+// low-end devices) that no lookup will ever touch again. Only the current
+// collection is hot; a rebuild on miss is one pass over the arrays.
+const MAX_BASE_COLLECTION_CACHE_SIZE = 4;
 const scopedLookupCache = new Map<
   string,
   (name: string) => SanitisedEmote | undefined
@@ -182,6 +188,15 @@ function getBaseCollection({
     const firstKey = baseCollectionCache.keys().next().value;
     if (firstKey) {
       baseCollectionCache.delete(firstKey);
+      // Scoped lookups close over their base collection, so any cached for the
+      // evicted key would pin its maps in memory and can never be hit again
+      // (their keys embed the now-retired base key).
+      const evictedPrefix = `${firstKey}:`;
+      scopedLookupCache.forEach((_, scopedKey) => {
+        if (scopedKey.startsWith(evictedPrefix)) {
+          scopedLookupCache.delete(scopedKey);
+        }
+      });
     }
   }
   baseCollectionCache.set(cacheKey, collection);
@@ -246,7 +261,7 @@ function createScopedEmoteLookup(
 }
 
 // Emoji hexcode keys always include a code point above 0x7F, so pure-ASCII
-// words (the vast majority of chat words) can never match the emoji map —
+// words (the vast majority of chat words) can never match the emoji map -
 // skip the per-word code-point expansion for them.
 function hasNonAsciiChar(word: string): boolean {
   for (let i = 0; i < word.length; i += 1) {
@@ -292,7 +307,17 @@ function applyEmoteCompositionPass(parts: ParsedPart[]): ParsedPart[] {
       const base = anchor >= 0 ? out[anchor] : undefined;
       if (base && base.type === 'emote' && !base.zero_width) {
         out.length = anchor + 1;
-        base.overlaid = [...(base.overlaid ?? []), part];
+        // Don't stack the same emote id twice in a row: `SoSnowy SoSnowy`
+        // would otherwise composite two identical overlays pixel-perfect,
+        // doubling decode/GPU work and darkening semi-transparent overlays.
+        // The duplicate is still consumed (not rendered standalone).
+        const overlaid = base.overlaid ?? [];
+        const lastOverlaidId = overlaid.length
+          ? overlaid[overlaid.length - 1]?.id
+          : base.id;
+        if (lastOverlaidId !== part.id) {
+          base.overlaid = [...overlaid, part];
+        }
         // eslint-disable-next-line no-continue
         continue;
       }

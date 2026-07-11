@@ -39,6 +39,29 @@ describe('parseChannelPointsEventSub', () => {
     });
   });
 
+  test('returns undefined when the reward is missing', () => {
+    expect(
+      parseChannelPointsEventSubEvent({ broadcaster_user_id: '67890' }),
+    ).toBeUndefined();
+  });
+
+  test('returns undefined when the reward is not an object', () => {
+    expect(
+      parseChannelPointsEventSubEvent({
+        broadcaster_user_id: '67890',
+        reward: 'reward-tts',
+      }),
+    ).toBeUndefined();
+  });
+
+  test('returns undefined when the channel id is missing', () => {
+    expect(
+      parseChannelPointsEventSubEvent({
+        reward: { id: 'reward-tts', title: 'Chinese TTS' },
+      }),
+    ).toBeUndefined();
+  });
+
   test('eventSubEventFromMessage reads payload.event', () => {
     const event = {
       broadcaster_user_id: '67890',

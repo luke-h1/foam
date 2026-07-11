@@ -23,7 +23,17 @@ describe('resolveMentionColor', () => {
   test('falls back to deterministic palette when user has not chatted', () => {
     const color = resolveMentionColor('@SomeUser');
 
-    expect(color).toMatch(/^rgb\(/);
+    expect(color).toBe('rgb(255, 105, 180)');
     expect(getUserMessageColor).toHaveBeenCalledWith('SomeUser');
+  });
+
+  test('returns a colour without consulting chat history for empty input', () => {
+    expect(resolveMentionColor('')).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
+    expect(getUserMessageColor).not.toHaveBeenCalled();
+  });
+
+  test('returns a colour without consulting chat history for @-only input', () => {
+    expect(resolveMentionColor('@')).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
+    expect(getUserMessageColor).not.toHaveBeenCalled();
   });
 });

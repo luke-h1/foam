@@ -12,6 +12,12 @@ import { resolveMessageEmoteParts } from '../util/resolveMessageEmoteParts';
 
 const EMOTE_REPROCESS_BATCH_DELAY_MS = 32;
 const EMOTE_REPROCESS_BATCH_SIZE = 6;
+// The processed-id set is only cleared on reprocess-key changes, but each
+// effect run (7TV emote_set.update, etc.) can add a window's worth of ids -
+// multi-hour stays in one busy channel accumulated ~1MB/hr of id strings.
+// Overflow resets the set; the equality checks make the one extra full pass
+// cheap.
+const MAX_PROCESSED_MESSAGE_IDS = 5000;
 
 export function useEmoteReprocessing({
   channelId,
@@ -38,6 +44,10 @@ export function useEmoteReprocessing({
     if (previousReprocessKeyRef.current !== reprocessKey) {
       processedMessageIdsRef.current.clear();
       previousReprocessKeyRef.current = reprocessKey;
+    } else if (
+      processedMessageIdsRef.current.size > MAX_PROCESSED_MESSAGE_IDS
+    ) {
+      processedMessageIdsRef.current.clear();
     }
 
     if (emoteLoadStatus !== 'success') {
@@ -90,15 +100,17 @@ export function useEmoteReprocessing({
         return;
       }
 
-      const hasUnparsedMention = msg.message.some(
-        part => part.type === 'text' && /(?:^|\s)@[\w-]+/.test(part.content),
-      );
-
-      if (
-        processedMessageIdsRef.current.has(msg.message_id) &&
-        !hasUnparsedMention
-      ) {
-        return;
+      if (processedMessageIdsRef.current.has(msg.message_id)) {
+        // Already-processed messages get one more look only when a text part
+        // still carries a raw @mention (its login resolved after the last
+        // pass). The regex runs behind the membership check - running it
+        // first scanned every text part of every message on every effect run.
+        const hasUnparsedMention = msg.message.some(
+          part => part.type === 'text' && /(?:^|\s)@[\w-]+/.test(part.content),
+        );
+        if (!hasUnparsedMention) {
+          return;
+        }
       }
 
       const textContent = getReprocessableText(msg.message);
@@ -128,6 +140,7 @@ export function useEmoteReprocessing({
 
       const replacedBadges = findBadges({
         userstate: msg.userstate,
+        bttvBadges: emoteData.bttvBadges,
         chatterinoBadges: emoteData.chatterinoBadges,
         ffzChannelBadges: emoteData.ffzChannelBadges,
         ffzGlobalBadges: emoteData.ffzGlobalBadges,

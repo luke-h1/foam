@@ -550,5 +550,61 @@ describe('SubscriptionNotice', () => {
 
       expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
     });
+
+    test('renders a unicode/emoji display name verbatim', () => {
+      const part: ParsedPart<'sub'> = {
+        type: 'sub',
+        subscriptionEvent: {
+          msgId: 'sub',
+          displayName: '日本語ユーザー🎉',
+          plan: '2000',
+          planName: 'Tier 1',
+        },
+      };
+
+      render(<SubscriptionNotice part={part} />);
+
+      expect(screen.getByText('日本語ユーザー🎉')).toBeOnTheScreen();
+      expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
+    });
+
+    test('renders a very long display name without dropping characters', () => {
+      const longDisplayName = 'A'.repeat(200);
+      const part: ParsedPart<'sub'> = {
+        type: 'sub',
+        subscriptionEvent: {
+          msgId: 'sub',
+          displayName: longDisplayName,
+          plan: '2000',
+          planName: 'Tier 1',
+        },
+      };
+
+      render(<SubscriptionNotice part={part} />);
+
+      expect(screen.getByText(longDisplayName)).toBeOnTheScreen();
+      expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
+    });
+
+    test('renders no subscriber message row when the message field is undefined', () => {
+      const part: ParsedPart<'sub'> = {
+        type: 'sub',
+        subscriptionEvent: {
+          msgId: 'sub',
+          displayName: 'NoMessageUser',
+          plan: '2000',
+          planName: 'Tier 1',
+          message: undefined,
+        },
+      };
+
+      render(<SubscriptionNotice part={part} />);
+
+      expect(screen.getByText('NoMessageUser')).toBeOnTheScreen();
+      expect(screen.getByText(/Subscribed/)).toBeOnTheScreen();
+      expect(
+        screen.queryByText('Thanks for the great content!'),
+      ).not.toBeOnTheScreen();
+    });
   });
 });

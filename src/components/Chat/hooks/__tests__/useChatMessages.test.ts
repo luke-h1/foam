@@ -1,7 +1,10 @@
 import { act, renderHook } from '@testing-library/react-native';
 
 import type { BufferedMessage } from '@app/components/Chat/util/messageBuffer';
-import { addMessages } from '@app/store/chat/actions/messages';
+import {
+  addMessages,
+  getMaxChatMessages,
+} from '@app/store/chat/actions/messages';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 
 import { useChatMessages } from '../useChatMessages';
@@ -12,6 +15,9 @@ jest.mock('@app/store/chat/actions/messages', () => ({
 }));
 
 const mockAddMessages = jest.mocked(addMessages);
+// The buffer/unread caps track getMaxChatMessages(); derive the expected bounds
+// from the mocked value so they stay in step if that cap changes.
+const MAX_BUFFERED = getMaxChatMessages();
 
 function getLastFlushedMessages(): ChatMessageType<never>[] {
   const lastCall = mockAddMessages.mock.calls.at(-1);
@@ -505,13 +511,17 @@ describe('useChatMessages', () => {
     test('caps pending messages when flushing is delayed', () => {
       const { result } = renderHook(() => useChatMessages(scrolledUpOptions));
 
+      // Push one buffer's worth past the cap so the oldest overflow is trimmed.
+      const overflow = 100;
+      const pushCount = MAX_BUFFERED + overflow;
+
       act(() => {
-        for (let i = 0; i < 700; i += 1) {
+        for (let i = 0; i < pushCount; i += 1) {
           result.current.handleNewMessage(createMockMessage(`${i}`));
         }
       });
 
-      expect(result.current.getBufferSize()).toBe(600);
+      expect(result.current.getBufferSize()).toBe(MAX_BUFFERED);
 
       act(() => {
         // Scrolled up uses the backlog flush interval (250ms).
@@ -521,9 +531,13 @@ describe('useChatMessages', () => {
       const firstCall = mockAddMessages.mock.calls[0];
       const flushedMessages = firstCall?.[0] ?? [];
 
-      expect(flushedMessages).toHaveLength(600);
-      expect(flushedMessages[0]?.message_id).toBe('100');
-      expect(flushedMessages.at(-1)?.message_id).toBe('699');
+      expect(flushedMessages).toHaveLength(MAX_BUFFERED);
+      // The oldest `overflow` messages are dropped, so the first retained id is
+      // `pushCount - MAX_BUFFERED` and the last is `pushCount - 1`.
+      expect(flushedMessages[0]?.message_id).toBe(
+        `${pushCount - MAX_BUFFERED}`,
+      );
+      expect(flushedMessages.at(-1)?.message_id).toBe(`${pushCount - 1}`);
     });
 
     test('samples a live raid at the bottom to the newest rows per flush', () => {
@@ -563,15 +577,18 @@ describe('useChatMessages', () => {
         }),
       );
 
+      const pushCount = MAX_BUFFERED + 100;
+
       act(() => {
-        for (let i = 0; i < 700; i += 1) {
+        for (let i = 0; i < pushCount; i += 1) {
           result.current.handleNewMessage(createMockMessage(`${i}`));
         }
         jest.advanceTimersByTime(250);
       });
 
+      // Unread tracks the retained buffer, which is capped at MAX_BUFFERED.
       expect(onUnreadIncrement).toHaveBeenCalledTimes(1);
-      expect(onUnreadIncrement).toHaveBeenCalledWith(600);
+      expect(onUnreadIncrement).toHaveBeenCalledWith(MAX_BUFFERED);
     });
   });
 
