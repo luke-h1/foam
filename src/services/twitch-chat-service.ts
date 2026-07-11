@@ -768,6 +768,13 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     );
 
     let wasConnected = true;
+    void Network.getNetworkStateAsync()
+      .then(state => {
+        wasConnected = Boolean(state.isConnected);
+      })
+      .catch(() => {
+        // Ignore
+      });
     const networkSubscription = Network.addNetworkStateListener(state => {
       const isConnected = Boolean(state.isConnected);
       // Only act on the regain edge; a steady connection needn't re-probe.

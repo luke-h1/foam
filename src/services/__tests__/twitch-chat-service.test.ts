@@ -1,4 +1,5 @@
 import { act, renderHook } from '@testing-library/react-native';
+import * as Network from 'expo-network';
 
 import { ReadyState } from '@app/hooks/ws/constants';
 import type { Options } from '@app/hooks/ws/types';
@@ -24,6 +25,7 @@ jest.mock('@app/utils/appState/appStateTransitions', () => ({
 
 jest.mock('expo-network', () => ({
   addNetworkStateListener: jest.fn(() => ({ remove: jest.fn() })),
+  getNetworkStateAsync: jest.fn(() => Promise.resolve({ isConnected: true })),
 }));
 
 jest.mock('@app/utils/logger', () => ({
@@ -38,6 +40,10 @@ jest.mock('@app/utils/logger', () => ({
 }));
 
 const mockedUseWebsocket = jest.mocked(useWebsocket);
+const mockedAddNetworkStateListener = jest.mocked(
+  Network.addNetworkStateListener,
+);
+const mockedGetNetworkStateAsync = jest.mocked(Network.getNetworkStateAsync);
 const mockedSubscribeToAppStateTransitions = jest.mocked(
   subscribeToAppStateTransitions,
 );
@@ -141,6 +147,45 @@ describe('useTwitchChat foreground liveness probe', () => {
 
     expect(close).not.toHaveBeenCalled();
     expect(reconnect).not.toHaveBeenCalled();
+  });
+
+  test('probes on the first connectivity regain after mounting offline', async () => {
+    mockedGetNetworkStateAsync.mockResolvedValueOnce({ isConnected: false });
+    renderConnectedChatHook();
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(0);
+    });
+
+    const networkListener =
+      mockedAddNetworkStateListener.mock.calls.at(-1)?.[0];
+    if (!networkListener) {
+      throw new Error('useTwitchChat did not subscribe to network state');
+    }
+
+    act(() => {
+      networkListener({ isConnected: true });
+    });
+
+    expect(sendMessage).toHaveBeenCalledWith('PING tmi.twitch.tv\r\n');
+  });
+
+  test('does not probe on a network event when connectivity never dropped', async () => {
+    renderConnectedChatHook();
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(0);
+    });
+
+    const networkListener =
+      mockedAddNetworkStateListener.mock.calls.at(-1)?.[0];
+    if (!networkListener) {
+      throw new Error('useTwitchChat did not subscribe to network state');
+    }
+
+    act(() => {
+      networkListener({ isConnected: true });
+    });
+
+    expect(sendMessage).not.toHaveBeenCalled();
   });
 
   test('revives a non-open socket immediately on foreground instead of probing', () => {
