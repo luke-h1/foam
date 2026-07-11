@@ -1,9 +1,7 @@
 import { batch } from '@legendapp/state';
 
-import {
-  buildSevenTvBadgeImageUrl,
-  normalizeSevenTvBadge,
-} from '@app/components/Chat/util/normalizeSevenTvCosmetics';
+import { buildSevenTvBadgeImageUrl } from '@app/components/Chat/util/normalizeSevenTvCosmetics/buildSevenTvBadgeImageUrl';
+import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics/normalizeSevenTvBadge';
 import { storageService } from '@app/lib/storage';
 import {
   clearSevenTvUserIdCache,

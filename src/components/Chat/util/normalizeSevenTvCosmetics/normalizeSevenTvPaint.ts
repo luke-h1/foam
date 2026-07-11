@@ -1,6 +1,5 @@
 import type { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import type {
-  BadgeData,
   PaintCanvasRepeat,
   PaintData,
   PaintFunction,
@@ -10,159 +9,9 @@ import type {
   PaintStop,
   PaintTextStyle,
 } from '@app/types/seventv/cosmetics';
-import type { SevenTvHost } from '@app/types/seventv/emotes';
-import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
-const ZERO_ID = '00000000000000000000000000';
-const SEVEN_TV_BADGE_CDN_BASE = 'https://cdn.7tv.app/badge';
-
-function badgeFileName(file: SevenTvHost['files'][number]): string {
-  if (/\.(webp|png|avif|gif|jpe?g)$/i.test(file.name)) {
-    return file.name;
-  }
-
-  const format = file.format?.replace(/^\./, '') || 'webp';
-  return `${file.name}.${format}`;
-}
-
-const BADGE_SCALE_ORDER = ['4x', '3x', '2x', '1x'] as const;
-
-function fileMatchesBadgeScale(
-  file: SevenTvHost['files'][number],
-  scale: (typeof BADGE_SCALE_ORDER)[number],
-): boolean {
-  return (
-    file.name === scale ||
-    file.name.startsWith(`${scale}.`) ||
-    file.static_name === scale
-  );
-}
-
-function indexBadgeFilesByScale(
-  files: SevenTvHost['files'],
-): Map<(typeof BADGE_SCALE_ORDER)[number], SevenTvHost['files'][number]> {
-  const filesByScale = new Map<
-    (typeof BADGE_SCALE_ORDER)[number],
-    SevenTvHost['files'][number]
-  >();
-
-  for (const file of files) {
-    for (const scale of BADGE_SCALE_ORDER) {
-      if (fileMatchesBadgeScale(file, scale) && !filesByScale.has(scale)) {
-        filesByScale.set(scale, file);
-      }
-    }
-  }
-
-  return filesByScale;
-}
-
-function pickBestBadgeFile(
-  files: SevenTvHost['files'] | undefined,
-): SevenTvHost['files'][number] | undefined {
-  if (!files?.length) {
-    return undefined;
-  }
-
-  const filesByScale = indexBadgeFilesByScale(files);
-
-  for (const scale of BADGE_SCALE_ORDER) {
-    const match = filesByScale.get(scale);
-    if (match) {
-      return match;
-    }
-  }
-
-  return files[files.length - 1] ?? files[0];
-}
-
-export function buildSevenTvBadgeImageUrl(
-  badgeId: string,
-  host?: SevenTvHost,
-): string {
-  const file = pickBestBadgeFile(host?.files);
-  if (file && host?.url) {
-    return `${host.url.replace(/\/$/, '')}/${badgeFileName(file)}`;
-  }
-
-  return `${SEVEN_TV_BADGE_CDN_BASE}/${badgeId}/4x.webp`;
-}
-
-export function badgeUrlFromHost(host: SevenTvHost, badgeId?: string): string {
-  if (badgeId) {
-    return buildSevenTvBadgeImageUrl(badgeId, host);
-  }
-
-  const file = pickBestBadgeFile(host.files);
-  if (file && host.url) {
-    return `${host.url.replace(/\/$/, '')}/${badgeFileName(file)}`;
-  }
-
-  return host.url;
-}
-
-export function get7TvCosmeticId(
-  data: { id: string } & { ref_id?: string },
-): string {
-  return data.id === ZERO_ID && data.ref_id ? data.ref_id : data.id;
-}
-
-function isSevenTvBadge(badge: SanitisedBadgeSet): boolean {
-  return badge.provider === '7tv' || badge.type === '7TV Badge';
-}
-
-export function normalizeSevenTvBadge(
-  badge: SanitisedBadgeSet,
-): SanitisedBadgeSet {
-  if (!isSevenTvBadge(badge) || !badge.id) {
-    return badge;
-  }
-
-  if (
-    badge.url.includes('/badge/') &&
-    /\.(webp|png|avif|gif|jpe?g)(?:$|\?)/i.test(badge.url)
-  ) {
-    return badge;
-  }
-
-  return {
-    ...badge,
-    url: buildSevenTvBadgeImageUrl(badge.id),
-  };
-}
-
-export function sanitise7TvBadge(
-  badgeData: BadgeData & { ref_id?: string },
-  id?: string,
-): SanitisedBadgeSet {
-  const badgeId = id ?? get7TvCosmeticId(badgeData);
-  return normalizeSevenTvBadge({
-    id: badgeId,
-    url: badgeUrlFromHost(badgeData.host, badgeId),
-    type: '7TV Badge' as const,
-    title: badgeData.tooltip || badgeData.name,
-    set: badgeId,
-    provider: '7tv',
-  });
-}
-
-export type PaintGradientLayer = {
-  function: PaintFunction;
-  canvas_repeat?: string;
-  size?: [number, number] | null;
-  at?: [number, number];
-  stops?: IndexedCollection<PaintStop> | PaintStop[];
-  image_url?: string;
-  shape?: string;
-  angle?: number;
-  repeat?: boolean;
-};
-
-export type RawSevenTvPaintInput = Partial<PaintData> & {
-  id: string;
-  ref_id?: string;
-  gradients?: PaintGradientLayer[];
-};
+import { get7TvCosmeticId } from './get7TvCosmeticId';
+import type { PaintGradientLayer, RawSevenTvPaintInput } from './types';
 
 function isPaintGradientArray(
   gradients: RawSevenTvPaintInput['gradients'],
@@ -400,8 +249,4 @@ export function normalizeSevenTvPaint(raw: RawSevenTvPaintInput): PaintData {
     textStyle,
     ...flat,
   };
-}
-
-export function toPaintWithId(paintData: RawSevenTvPaintInput): PaintData {
-  return normalizeSevenTvPaint(paintData);
 }

@@ -9,12 +9,21 @@ import {
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { getSevenTvSessionId } from '@app/utils/seventv/sevenTvSessionId';
 
-jest.mock('@app/components/Chat/util/normalizeSevenTvCosmetics', () => ({
-  buildSevenTvBadgeImageUrl: jest.fn(
-    (badgeId: string) => `https://cdn.7tv.app/badge/${badgeId}/4x.webp`,
-  ),
-  normalizeSevenTvBadge: jest.fn((badge: Record<string, unknown>) => badge),
-}));
+jest.mock(
+  '@app/components/Chat/util/normalizeSevenTvCosmetics/buildSevenTvBadgeImageUrl',
+  () => ({
+    buildSevenTvBadgeImageUrl: jest.fn(
+      (badgeId: string) => `https://cdn.7tv.app/badge/${badgeId}/4x.webp`,
+    ),
+  }),
+);
+
+jest.mock(
+  '@app/components/Chat/util/normalizeSevenTvCosmetics/normalizeSevenTvBadge',
+  () => ({
+    normalizeSevenTvBadge: jest.fn((badge: Record<string, unknown>) => badge),
+  }),
+);
 
 jest.mock('@app/store/chat/actions/missingBadges', () => ({
   clearAllMissingBadges: jest.fn(),

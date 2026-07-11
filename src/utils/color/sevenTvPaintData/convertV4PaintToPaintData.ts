@@ -1,7 +1,5 @@
-import {
-  normalizeSevenTvPaint,
-  type PaintGradientLayer,
-} from '@app/components/Chat/util/normalizeSevenTvCosmetics';
+import { normalizeSevenTvPaint } from '@app/components/Chat/util/normalizeSevenTvCosmetics/normalizeSevenTvPaint';
+import type { PaintGradientLayer } from '@app/components/Chat/util/normalizeSevenTvCosmetics/types';
 import { PaintRadialGradientShape } from '@app/graphql/generated/gql';
 import { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import type { PaintData, PaintShadow } from '@app/types/seventv/cosmetics';

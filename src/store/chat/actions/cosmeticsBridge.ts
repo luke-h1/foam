@@ -1,8 +1,6 @@
-import {
-  get7TvCosmeticId,
-  sanitise7TvBadge,
-  toPaintWithId,
-} from '@app/components/Chat/util/normalizeSevenTvCosmetics';
+import { get7TvCosmeticId } from '@app/components/Chat/util/normalizeSevenTvCosmetics/get7TvCosmeticId';
+import { sanitise7TvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics/sanitise7TvBadge';
+import { toPaintWithId } from '@app/components/Chat/util/normalizeSevenTvCosmetics/toPaintWithId';
 import type {
   CosmeticCreate,
   EntitlementCreate,

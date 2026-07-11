@@ -1,6 +1,6 @@
 import type { Key, ReactNode } from 'react';
 
-import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
+import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics/normalizeSevenTvBadge';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import { ChatMessagePressable } from '../ChatMessagePressable';

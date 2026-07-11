@@ -1,4 +1,4 @@
-import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
+import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics/normalizeSevenTvBadge';
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';

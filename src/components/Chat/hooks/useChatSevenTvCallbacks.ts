@@ -32,10 +32,8 @@ import type { BadgeData, PaintData } from '@app/types/seventv/cosmetics';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
 import { logger } from '@app/utils/logger';
 
-import {
-  sanitise7TvBadge,
-  toPaintWithId,
-} from '../util/normalizeSevenTvCosmetics';
+import { sanitise7TvBadge } from '../util/normalizeSevenTvCosmetics/sanitise7TvBadge';
+import { toPaintWithId } from '../util/normalizeSevenTvCosmetics/toPaintWithId';
 
 function getDataFromChangeValue(entry: unknown): unknown {
   if (typeof entry !== 'object' || entry === null || !('value' in entry)) {
