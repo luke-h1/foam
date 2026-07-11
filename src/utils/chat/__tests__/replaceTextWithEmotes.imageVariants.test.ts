@@ -1,7 +1,7 @@
 import type { SanitisedEmote } from '@app/types/emote';
+import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes/replaceTextWithEmotes';
 
 import type { ParsedPart } from '../parsedPart';
-import { replaceTextWithEmotes } from '../replaceTextWithEmotes';
 
 const emptyParams = {
   userstate: null,

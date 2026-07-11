@@ -1,4 +1,4 @@
-import { getTwitchClipIdFromUrl } from '../replaceTextWithEmotes';
+import { getTwitchClipIdFromUrl } from '@app/utils/chat/replaceTextWithEmotes/getTwitchClipIdFromUrl';
 
 describe('getTwitchClipIdFromUrl', () => {
   test('extracts clip slugs from Twitch clip URL shapes', () => {

@@ -1,6 +1,6 @@
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
-import { parseWordLinkParts } from '../replaceTextWithEmotes';
+import { parseWordLinkParts } from '../parseWordLinkParts';
 
 describe('parseWordLinkParts', () => {
   test('parses generic https URLs as link parts', () => {

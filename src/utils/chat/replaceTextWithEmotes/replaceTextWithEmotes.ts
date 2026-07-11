@@ -1,19 +1,14 @@
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
+import { findEmotesInText } from '@app/utils/chat/findEmotesInText/findEmotesInText';
+import { getSortedEmoteNames } from '@app/utils/chat/findEmotesInText/getSortedEmoteNames';
+import type { ParsedPart } from '@app/utils/chat/parsedPart';
+import { parseWordLinkParts } from '@app/utils/chat/replaceTextWithEmotes/parseWordLinkParts';
+import { sanitizeInput } from '@app/utils/chat/sanitizeInput';
+import { splitTextWithTwemoji } from '@app/utils/chat/splitTextWithTwemoji';
+import { stripInvisibleChars } from '@app/utils/chat/stripInvisibleChars';
 import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
-
-import { logger } from '../logger';
-import {
-  findEmotesInText,
-  type FindEmotesInTextReturn,
-} from './findEmotesInText/findEmotesInText';
-import { getSortedEmoteNames } from './findEmotesInText/getSortedEmoteNames';
-import type { ParsedPart } from './parsedPart';
-import { sanitizeInput } from './sanitizeInput';
-import { splitTextWithTwemoji } from './splitTextWithTwemoji';
-import { stripInvisibleChars } from './stripInvisibleChars';
-
-export type { FindEmotesInTextReturn };
+import { logger } from '@app/utils/logger';
 
 function decodeEmojiToUnified(emoji: string): string {
   return [...emoji]
@@ -24,89 +19,6 @@ function decodeEmojiToUnified(emoji: string): string {
         : '';
     })
     .join('-');
-}
-
-export const SEVENTV_EMOTE_LINK_REGEX =
-  /https?:\/\/(?:www\.)?7tv\.app\/emotes\/([a-zA-Z0-9]+)/i;
-const TWITCH_CLIP_REGEX =
-  /https?:\/\/(?:www\.)?clips\.twitch\.tv\/([a-zA-Z0-9_-]+)/i;
-
-const TWITCH_CHANNEL_CLIP_REGEX =
-  /https?:\/\/(?:www\.)?twitch\.tv\/(?:[a-zA-Z0-9_]+\/)?clip\/([a-zA-Z0-9_-]+)/i;
-
-export function getTwitchClipIdFromUrl(url: string): string | null {
-  const twitchClipMatch = url.match(TWITCH_CLIP_REGEX);
-  const twitchChannelClipMatch = url.match(TWITCH_CHANNEL_CLIP_REGEX);
-
-  return twitchClipMatch?.[1] ?? twitchChannelClipMatch?.[1] ?? null;
-}
-
-const GENERIC_HTTP_URL_REGEX = /^https?:\/\//i;
-const TRAILING_URL_PUNCTUATION = new Set('.,!?;:\'"\\)]}>'.split(''));
-
-function splitTrailingUrlPunctuation(word: string): {
-  urlCandidate: string;
-  trailing: string;
-} {
-  let end = word.length;
-
-  while (end > 0 && TRAILING_URL_PUNCTUATION.has(word[end - 1] ?? '')) {
-    end -= 1;
-  }
-
-  return {
-    urlCandidate: word.slice(0, end),
-    trailing: word.slice(end),
-  };
-}
-
-export function parseWordLinkParts(word: string): ParsedPart[] | null {
-  if (!word || /\s+/.test(word)) {
-    return null;
-  }
-
-  const { urlCandidate, trailing } = splitTrailingUrlPunctuation(word);
-
-  if (!GENERIC_HTTP_URL_REGEX.test(urlCandidate)) {
-    return null;
-  }
-
-  const trailingTextPart: ParsedPart[] = trailing
-    ? [{ type: 'text', content: trailing }]
-    : [];
-
-  const sevenTvMatch = urlCandidate.match(SEVENTV_EMOTE_LINK_REGEX);
-  if (sevenTvMatch) {
-    return [
-      {
-        type: 'stvEmote',
-        content: urlCandidate,
-        url: urlCandidate,
-      },
-      ...trailingTextPart,
-    ];
-  }
-
-  const clipId = getTwitchClipIdFromUrl(urlCandidate);
-  if (clipId) {
-    return [
-      {
-        type: 'twitchClip',
-        content: urlCandidate,
-        url: urlCandidate,
-      },
-      ...trailingTextPart,
-    ];
-  }
-
-  return [
-    {
-      type: 'link',
-      content: urlCandidate,
-      url: urlCandidate,
-    },
-    ...trailingTextPart,
-  ];
 }
 
 function findEmoteMatchingMention(

@@ -1,5 +1,6 @@
+import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes/replaceTextWithEmotes';
+
 import type { ParsedPart } from '../parsedPart';
-import { replaceTextWithEmotes } from '../replaceTextWithEmotes';
 import { createEmojiEmote } from './__fixtures__/emojiEmote.fixture';
 
 describe('emoji shortcode parsing', () => {
