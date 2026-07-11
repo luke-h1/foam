@@ -1,7 +1,4 @@
-import {
-  formatModerationSystemMessage,
-  formatTimeoutDuration,
-} from '../formatModerationSystemMessage';
+import { formatTimeoutDuration } from '../formatTimeoutDuration';
 
 describe('formatTimeoutDuration', () => {
   test('renders whole-minute and whole-hour timeouts as a single unit', () => {
@@ -21,19 +18,5 @@ describe('formatTimeoutDuration', () => {
     expect(formatTimeoutDuration(0)).toEqual('0s');
     expect(formatTimeoutDuration(-5)).toEqual('0s');
     expect(formatTimeoutDuration(Number.NaN)).toEqual('0s');
-  });
-});
-
-describe('formatModerationSystemMessage', () => {
-  test('announces a timeout with its humanised duration', () => {
-    expect(formatModerationSystemMessage('baduser', 1200)).toEqual(
-      'baduser has been timed out for 20m',
-    );
-  });
-
-  test('announces a permanent ban when there is no duration', () => {
-    expect(formatModerationSystemMessage('baduser')).toEqual(
-      'baduser has been permanently banned',
-    );
   });
 });
