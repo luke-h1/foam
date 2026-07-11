@@ -505,6 +505,10 @@ jest.mock('expo/fetch');
 
 jest.mock('pressto');
 
+jest.mock('@app/lib/experiments/useExperiment', () => ({
+  useExperiment: () => 'control',
+}));
+
 jest.mock('@app/components/BottomSheet/BottomSheet', () => {
   const React = require('react');
   const { View } = require('react-native');

@@ -36,10 +36,11 @@ config.transformer = {
   inlineRequires: true,
 };
 
+const storybookVariants = ['development', 'internal', 'e2e'];
 const configWithStorybook = withStorybook(config, {
   enabled:
     process.env.EXPO_PUBLIC_WITH_STORYBOOK === 'true' ||
-    process.env.APP_VARIANT === 'internal',
+    storybookVariants.includes(process.env.EXPO_PUBLIC_APP_VARIANT),
 });
 
 module.exports = withRozenite(configWithStorybook, {

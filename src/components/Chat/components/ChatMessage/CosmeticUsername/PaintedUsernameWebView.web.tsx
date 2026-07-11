@@ -3,16 +3,16 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
-interface WebPaintedUsernamePocProps {
+interface PaintedUsernameWebViewProps {
   username: string;
   paint: PaintData;
   fallbackColor?: string;
 }
 
-export function WebPaintedUsernamePoc({
+export function PaintedUsernameWebView({
   username,
   fallbackColor = theme.color.text.dark,
-}: WebPaintedUsernamePocProps) {
+}: PaintedUsernameWebViewProps) {
   return (
     <Text
       style={{

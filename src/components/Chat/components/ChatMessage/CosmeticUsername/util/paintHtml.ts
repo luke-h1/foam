@@ -27,13 +27,7 @@ function escapeHtml(value: string): string {
  * `.seventv-painted-content` base class (`background-color: currentcolor`
  * under the gradient stack, gradients clipped to glyphs via
  * `background-clip: text`, forced weight 700).
- *
- * `font-family: Montserrat` resolves on iOS because the app's expo-font
- * config plugin registers the family with the OS and WKWebView sees
- * OS-registered fonts; the Android system WebView cannot see app fonts and
- * falls back to sans-serif. A production rasterizer would embed the face as
- * a base64 `@font-face` instead.
- *
+
  * The measurement script reports the span's rect so the host view can size
  * itself; the drop-shadow filter paints outside that rect, matching how the
  * extension lets shadows overflow the username's layout box.

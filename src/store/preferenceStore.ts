@@ -85,11 +85,7 @@ export interface Preferences {
   analyticsEnabled: boolean;
   sharedChatEnabled: boolean;
   enhancedVideoStability: boolean;
-  /**
-   * Renderer for 7TV cosmetic paints on usernames. 'native' is the shipping
-   * masked-fill renderer; 'skia' and 'webview' are the parity POCs from
-   * PR #716 (offscreen Skia raster / live WebView running the extension CSS).
-   */
+
   sevenTvPaintRenderer: SevenTvPaintRenderer;
 }
 
@@ -195,6 +191,10 @@ persistObservable(preferences$, {
 // The 'text' stream list layout was removed; migrate old persisted values.
 if ((preferences$.streamListLayout.peek() as string) === 'text') {
   preferences$.streamListLayout.set('compact');
+}
+
+if ((preferences$.sevenTvPaintRenderer.peek() as string) === 'auto') {
+  preferences$.sevenTvPaintRenderer.set('native');
 }
 
 export function getPreferences(): Preferences {

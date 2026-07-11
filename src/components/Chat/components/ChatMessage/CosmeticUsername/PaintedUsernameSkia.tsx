@@ -17,12 +17,8 @@ import type { PaintData } from '@app/types/seventv/cosmetics';
 import {
   getPaintBitmaps,
   type PaintBitmaps,
-} from './skiaPaintedUsernameRasterizer';
+} from './util/skiaPaintedUsernameRasterizer';
 
-// The chat renders painted usernames in Montserrat 700; loading that face keeps
-// glyph shapes and metrics identical to the RN Text path. The lighter/heavier
-// faces cover paints that set an explicit `textStyle.weight`, which the
-// extension renders as `weight * 100`; Skia then shapes from the matching face.
 const skiaFontSource = {
   Montserrat: [
     require('@expo-google-fonts/montserrat/400Regular/Montserrat_400Regular.ttf'),
@@ -34,10 +30,15 @@ const skiaFontSource = {
   ],
 };
 
-interface SkiaPaintedUsernamePocProps {
+interface PaintedUsernameSkiaProps {
   username: string;
   paint: PaintData;
   fallbackColor?: string;
+  /**
+   * Glyph size in points; defaults to the chat row metric. Passed through so
+   * painted names render at the right size outside chat (composer, user card).
+   */
+  fontSize?: number;
 }
 
 /**
@@ -48,12 +49,8 @@ interface SkiaPaintedUsernamePocProps {
  * per-frame JS and no re-rasterizing.
  */
 function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
-  // Static (single-frame) textures resolve to their one frame; animated ones
-  // advance. A null source yields a null frame.
   const animatedFrame = useAnimatedImageValue(bitmaps.animatedUrl ?? undefined);
 
-  // Stable across renders (bitmaps is memoised upstream), so the Mask child
-  // doesn't rebuild its glyph-coverage node while the overlay updates.
   const maskNode = useMemo(
     () =>
       bitmaps.maskImage ? (
@@ -107,18 +104,20 @@ function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
 }
 
 /**
- * POC: renders a painted username with Skia. The static composite (gradients,
- * base fill, drop shadows) is baked once into a cached bitmap and reused across
+ * Renders a painted username with Skia. The static composite (gradients, base
+ * fill, drop shadows) is baked once into a cached bitmap and reused across
  * mounts and every user wearing the paint; image-layer paints animate their
  * texture on the UI thread. Negative margins collapse the shadow overflow
  * margin so the glyphs align with neighbouring text.
  */
-export function SkiaPaintedUsernamePoc({
+export function PaintedUsernameSkia({
   username,
   paint,
   fallbackColor = theme.color.text.dark,
-}: SkiaPaintedUsernamePocProps) {
+  fontSize = chatLineMetrics.comfortable.fontSize,
+}: PaintedUsernameSkiaProps) {
   const fontProvider = useFonts(skiaFontSource);
+  const pixelRatio = PixelRatio.get();
 
   const bitmaps = useMemo(
     () =>
@@ -127,13 +126,13 @@ export function SkiaPaintedUsernamePoc({
             displayUsername: username,
             paint,
             fallbackColor,
-            fontSize: chatLineMetrics.comfortable.fontSize,
-            pixelRatio: PixelRatio.get(),
+            fontSize,
+            pixelRatio,
             fontProvider,
             fontFamily: 'Montserrat',
           })
         : null,
-    [fontProvider, username, paint, fallbackColor],
+    [fontProvider, username, paint, fallbackColor, fontSize, pixelRatio],
   );
 
   if (!bitmaps) {
