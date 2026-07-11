@@ -1,8 +1,5 @@
-import type { ParsedChannelPointsRedemption } from '../parseChannelPointsEventSub';
-import {
-  eventSubEventFromMessage,
-  parseChannelPointsEventSubEvent,
-} from '../parseChannelPointsEventSub';
+import type { ParsedChannelPointsRedemption } from '../parseChannelPointsEventSubEvent';
+import { parseChannelPointsEventSubEvent } from '../parseChannelPointsEventSubEvent';
 
 describe('parseChannelPointsEventSub', () => {
   test('parses custom reward redemption event', () => {
@@ -60,27 +57,5 @@ describe('parseChannelPointsEventSub', () => {
         reward: { id: 'reward-tts', title: 'Chinese TTS' },
       }),
     ).toBeUndefined();
-  });
-
-  test('eventSubEventFromMessage reads payload.event', () => {
-    const event = {
-      broadcaster_user_id: '67890',
-      reward: { id: 'reward-1', title: 'Hydrate' },
-    };
-
-    expect(
-      eventSubEventFromMessage({
-        payload: { event },
-      }),
-    ).toEqual(event);
-  });
-
-  test('eventSubEventFromMessage prefers top-level event', () => {
-    expect(
-      eventSubEventFromMessage({
-        event: { id: 'top-level' },
-        payload: { event: { id: 'payload-level' } },
-      }),
-    ).toEqual({ id: 'top-level' });
   });
 });

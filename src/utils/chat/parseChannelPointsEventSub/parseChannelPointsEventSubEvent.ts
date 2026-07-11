@@ -15,28 +15,6 @@ const AUTOMATIC_REWARD_IDS: Record<string, string> = {
   SEND_GIGANTIFIED_EMOTE: 'gigantified-emote-message',
 };
 
-export function eventSubEventFromMessage(message: {
-  event?: Record<string, unknown>;
-  payload?: unknown;
-}): Record<string, unknown> | undefined {
-  if (message.event) {
-    return message.event;
-  }
-
-  if (
-    message.payload &&
-    typeof message.payload === 'object' &&
-    'event' in message.payload
-  ) {
-    const payloadEvent = (
-      message.payload as { event?: Record<string, unknown> }
-    ).event;
-    return payloadEvent;
-  }
-
-  return undefined;
-}
-
 function titleFromAutomaticRewardType(
   rewardType: string | undefined,
 ): string | undefined {
