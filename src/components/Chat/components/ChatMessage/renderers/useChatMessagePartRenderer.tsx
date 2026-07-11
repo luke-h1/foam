@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import type { Key } from 'react';
 
@@ -54,6 +55,19 @@ export function useChatMessagePartRenderer({
   replyPlainMentionTarget,
   emoteTargetSize,
 }: UseChatMessagePartRendererArgs) {
+  /**
+   * Stable array identity so MentionSpan's memo() holds across row re-renders.
+   */
+  const mentionBaseTextStyle = useMemo(
+    () => [
+      styles.messageText,
+      compact && styles.messageTextCompact,
+      getChatFontScaleStyle(fontScale, compact),
+      Boolean(moderationNotice) && styles.moderatedMessageText,
+    ],
+    [compact, fontScale, moderationNotice],
+  );
+
   const renderMessagePart = (part: ParsedPart, index: number): ReactNode => {
     switch (part.type) {
       case 'text': {
@@ -168,12 +182,7 @@ export function useChatMessagePartRenderer({
           <MentionSpan
             key={getPartKey(part, index)}
             content={getParsedPartStringContent(part)}
-            baseTextStyle={[
-              styles.messageText,
-              compact && styles.messageTextCompact,
-              getChatFontScaleStyle(fontScale, compact),
-              Boolean(moderationNotice) && styles.moderatedMessageText,
-            ]}
+            baseTextStyle={mentionBaseTextStyle}
             fontScaleStyle={getChatFontScaleStyle(fontScale, compact)}
             compact={compact}
             isModerated={Boolean(moderationNotice)}

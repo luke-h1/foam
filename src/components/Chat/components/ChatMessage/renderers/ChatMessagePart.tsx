@@ -56,6 +56,18 @@ export function ChatMessagePart({
     [subMessage, parseTextForEmotes],
   );
 
+  /**
+   * Stable array identity so MentionSpan's memo() holds across row re-renders.
+   */
+  const mentionBaseTextStyle = useMemo(
+    () => [
+      styles.messageText,
+      compact && styles.messageTextCompact,
+      Boolean(moderationNotice) && styles.moderatedMessageText,
+    ],
+    [compact, moderationNotice],
+  );
+
   if (mode === 'system' && part.type === 'text') {
     const content = getParsedPartStringContent(part);
     const isRaidNotice =
@@ -190,11 +202,7 @@ export function ChatMessagePart({
         <MentionSpan
           key={getPartKey(part, index)}
           content={getParsedPartStringContent(part)}
-          baseTextStyle={[
-            styles.messageText,
-            compact && styles.messageTextCompact,
-            Boolean(moderationNotice) && styles.moderatedMessageText,
-          ]}
+          baseTextStyle={mentionBaseTextStyle}
           compact={compact}
           isModerated={Boolean(moderationNotice)}
           getMentionColor={getMentionColor}

@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 
 import { Skia, type SkImage } from '@shopify/react-native-skia';
 
@@ -85,8 +85,16 @@ function subscribe(url: string, listener: () => void): () => void {
 }
 
 export function useTiledPaintImage(url: string): SkImage | null {
+  /**
+   * Stable per-url identity: useSyncExternalStore re-subscribes whenever the
+   * subscribe reference changes.
+   */
+  const subscribeToUrl = useCallback(
+    (listener: () => void) => subscribe(url, listener),
+    [url],
+  );
   const image = useSyncExternalStore(
-    listener => subscribe(url, listener),
+    subscribeToUrl,
     () => imagesByUrl.get(url) ?? null,
   );
   if (!image) {
