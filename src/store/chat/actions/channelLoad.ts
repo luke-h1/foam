@@ -11,7 +11,7 @@ import type { SanitisedEmote } from '@app/types/emote';
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
 import { getBttvBadges } from '@app/utils/chat/bttvBadges';
 import { getChatterinoBadges } from '@app/utils/chat/chatterinoBadges';
-import { fetchChannelCheermotes } from '@app/utils/chat/cheermoteStore';
+import { fetchChannelCheermotes } from '@app/utils/chat/cheermoteStore/fetchChannelCheermotes';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { logger } from '@app/utils/logger';
 import { getSevenTvSessionId } from '@app/utils/seventv/sevenTvSessionId';

@@ -1,5 +1,9 @@
+import type {
+  ChannelCheermotes,
+  CheermoteTier,
+} from '@app/utils/chat/cheermoteStore/types';
+
 import { applyCheermotesToParts } from '../applyCheermotes';
-import type { ChannelCheermotes, CheermoteTier } from '../cheermoteStore';
 import type { ParsedPart } from '../parsedPart';
 
 const tier1: CheermoteTier = {
