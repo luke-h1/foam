@@ -98,7 +98,6 @@ const styles = StyleSheet.create({
     color: suggestionRailColors.secondaryText,
     flexShrink: 1,
     fontSize: theme.fontSize12,
-    marginTop: 1,
   },
   commandName: {
     color: suggestionRailColors.text,
@@ -107,6 +106,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   commandTextContainer: {
+    gap: 1,
     justifyContent: 'center',
     minWidth: 0,
   },

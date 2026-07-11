@@ -235,6 +235,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   skeletonBadge: {
+    borderCurve: 'continuous',
     borderRadius: 999,
     height: 12,
     width: 12,

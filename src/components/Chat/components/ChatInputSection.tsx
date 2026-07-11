@@ -262,6 +262,7 @@ const styles = StyleSheet.create({
   swipeHandle: {
     alignSelf: 'center',
     backgroundColor: theme.colorGreyHoverAlpha,
+    borderCurve: 'continuous',
     borderRadius: 999,
     height: 4,
     marginBottom: 2,

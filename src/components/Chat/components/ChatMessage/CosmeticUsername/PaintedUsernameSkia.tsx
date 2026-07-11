@@ -21,7 +21,6 @@ import {
   type PaintImageLayer,
 } from './util/skiaPaintedUsernameRasterizer';
 import { useSkiaPaintFontProvider } from './util/skiaPaintFonts';
-import { useTiledPaintImage } from './util/tiledPaintImageCache';
 
 interface PaintedUsernameSkiaProps {
   username: string;
@@ -89,6 +88,10 @@ function PaintBitmapCanvas({
   );
 }
 
+/**
+ * Overlay frame from `useAnimatedImageValue` — advances on the UI thread for
+ * both stretch and tiled URL layers (animated WebP/GIF included).
+ */
 function TiledPaintLayerOverlay({
   url,
   tile,
@@ -98,28 +101,21 @@ function TiledPaintLayerOverlay({
   tile: NonNullable<PaintImageLayer['tile']>;
   maskNode: ReactNode;
 }) {
-  const tiledImage = useTiledPaintImage(url);
+  const animatedFrame = useAnimatedImageValue(url);
 
-  if (!tiledImage) {
+  if (!animatedFrame) {
     return null;
   }
 
   return (
     <Mask mode='alpha' mask={maskNode}>
       <Fill>
-        <ImageShader image={tiledImage} tx={tile.tx} ty={tile.ty} />
+        <ImageShader image={animatedFrame} tx={tile.tx} ty={tile.ty} />
       </Fill>
     </Mask>
   );
 }
 
-/**
- * The overlay frame comes from `useAnimatedImageValue`, which advances on the
- * UI thread, so animated paints animate at the texture's own frame rate with
- * no per-frame JS and no re-rasterizing. Its Reanimated frame callback runs
- * every frame for as long as the component is mounted, which is why this
- * wrapper only mounts for stretch-rendered image layers.
- */
 function StretchPaintLayerOverlay({
   url,
   rect,

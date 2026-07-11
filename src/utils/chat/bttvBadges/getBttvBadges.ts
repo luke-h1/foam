@@ -11,22 +11,29 @@ let fetchStarted = false;
 let retryDelayMs = INITIAL_RETRY_DELAY_MS;
 let nextRetryAt = 0;
 
+function scheduleRetry(): void {
+  fetchStarted = false;
+  nextRetryAt = Date.now() + retryDelayMs;
+  retryDelayMs = Math.min(retryDelayMs * 2, MAX_RETRY_DELAY_MS);
+}
+
 function loadBttvBadges(): void {
   fetchStarted = true;
   bttvEmoteService
     .getSanitisedGlobalBadges()
     .then(badges => {
       cachedBadges = badges;
-      retryDelayMs = INITIAL_RETRY_DELAY_MS;
       if (badges.length > 0) {
+        retryDelayMs = INITIAL_RETRY_DELAY_MS;
         onBadgesLoaded.current?.();
+        return;
       }
+      // Empty success can be transient CDN/API flakiness — back off and retry
+      // instead of sticking on fetchStarted forever with no loaded callback.
+      scheduleRetry();
     })
     .catch(error => {
-      // Reset so a later read retries instead of being stuck on the empty list.
-      fetchStarted = false;
-      nextRetryAt = Date.now() + retryDelayMs;
-      retryDelayMs = Math.min(retryDelayMs * 2, MAX_RETRY_DELAY_MS);
+      scheduleRetry();
       logger.chat.warn('Failed to fetch BTTV badges', { error });
     });
 }

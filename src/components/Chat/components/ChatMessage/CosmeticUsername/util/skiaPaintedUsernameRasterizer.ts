@@ -26,6 +26,11 @@ import type {
 } from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
+import {
+  clearPaintBitmapCache,
+  MAX_CACHED_PAINT_BITMAPS,
+  paintBitmapCache,
+} from './paintBitmapCacheLifecycle';
 import { getPaintDropShadows } from './paintLayer/getPaintDropShadows';
 import { getPaintLayers } from './paintLayer/getPaintLayers';
 import { isTilingCanvasRepeat } from './paintLayer/isTilingCanvasRepeat';
@@ -592,8 +597,7 @@ export function buildPaintImageLayers(
  * x pixelRatio). 7TV serves a few hundred paints in total; 256 covers the
  * working set of a chat session without letting the map grow unbounded.
  */
-const MAX_CACHED_PAINT_BITMAPS = 256;
-const paintBitmapCache = new Map<string, PaintBitmaps>();
+export { clearPaintBitmapCache };
 
 let memoryWarningSubscribed = false;
 
@@ -603,7 +607,7 @@ function subscribeToMemoryWarnings(): void {
   }
   memoryWarningSubscribed = true;
   AppState.addEventListener('memoryWarning', () => {
-    paintBitmapCache.clear();
+    clearPaintBitmapCache();
   });
 }
 
@@ -636,7 +640,7 @@ export function getPaintBitmaps(
 ): PaintBitmaps | null {
   subscribeToMemoryWarnings();
   const key = paintBitmapCacheKey(opts);
-  const cached = paintBitmapCache.get(key);
+  const cached = paintBitmapCache.get(key) as PaintBitmaps | undefined;
   if (cached) {
     /**
      * Map iteration order is insertion order, so re-inserting on hit keeps

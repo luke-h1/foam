@@ -172,6 +172,7 @@ const styles = StyleSheet.create({
   replyIndicator: {
     alignSelf: 'stretch',
     backgroundColor: theme.colorViolet,
+    borderCurve: 'continuous',
     borderRadius: 999,
     width: 3,
   },

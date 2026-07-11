@@ -101,6 +101,7 @@ export const UserSuggestions = memo(function UserSuggestions({
 
 const styles = StyleSheet.create({
   userColorDot: {
+    borderCurve: 'continuous',
     borderRadius: 999,
     height: 7,
     width: 7,
