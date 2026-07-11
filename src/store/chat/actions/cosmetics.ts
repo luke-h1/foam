@@ -13,10 +13,8 @@ import type { PaintData } from '@app/types/seventv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
 import { setOnBttvBadgesLoaded } from '@app/utils/chat/bttvBadges/setOnBttvBadgesLoaded';
-import {
-  convertV4PaintToPaintData,
-  type V4Badge,
-} from '@app/utils/color/sevenTvPaintData';
+import { convertV4PaintToPaintData } from '@app/utils/color/sevenTvPaintData/convertV4PaintToPaintData';
+import { type V4Badge } from '@app/utils/color/sevenTvPaintData/types';
 import { logger } from '@app/utils/logger';
 import { deepEqualJson } from '@app/utils/object/deepEqualJson';
 import { getSevenTvSessionId } from '@app/utils/seventv/sevenTvSessionId';

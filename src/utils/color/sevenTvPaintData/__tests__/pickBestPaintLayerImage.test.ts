@@ -1,6 +1,6 @@
 import type { Image } from '@app/graphql/generated/gql';
 
-import { pickBestPaintLayerImage } from '../sevenTvPaintData';
+import { pickBestPaintLayerImage } from '../pickBestPaintLayerImage';
 
 const makeImage = (overrides: Partial<Image>): Image => ({
   __typename: 'Image',

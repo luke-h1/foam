@@ -39,12 +39,10 @@ import type {
   SevenTvEmotePreview,
 } from '@app/types/seventv/emotes';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import {
-  convertV4PaintToPaintData,
-  pickAnimatedFormat,
-  pickBestFormat,
-  pickBestImage,
-} from '@app/utils/color/sevenTvPaintData';
+import { convertV4PaintToPaintData } from '@app/utils/color/sevenTvPaintData/convertV4PaintToPaintData';
+import { pickAnimatedFormat } from '@app/utils/color/sevenTvPaintData/pickAnimatedFormat';
+import { pickBestFormat } from '@app/utils/color/sevenTvPaintData/pickBestFormat';
+import { pickBestImage } from '@app/utils/color/sevenTvPaintData/pickBestImage';
 import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants';
 import { logger } from '@app/utils/logger';
 import { sevenTvUserIdCache } from '@app/utils/seventv/sevenTvUserIdCache';

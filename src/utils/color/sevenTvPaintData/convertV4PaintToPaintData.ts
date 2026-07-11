@@ -2,21 +2,14 @@ import {
   normalizeSevenTvPaint,
   type PaintGradientLayer,
 } from '@app/components/Chat/util/normalizeSevenTvCosmetics';
-import {
-  type Image,
-  PaintRadialGradientShape,
-  type UserCosmeticsQuery,
-} from '@app/graphql/generated/gql';
+import { PaintRadialGradientShape } from '@app/graphql/generated/gql';
 import { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import type { PaintData, PaintShadow } from '@app/types/seventv/cosmetics';
-
-type V4User = NonNullable<UserCosmeticsQuery['users']['user']>;
-
-export type V4Paint = NonNullable<V4User['style']['activePaint']>;
-
-export type V4Badge = NonNullable<V4User['style']['activeBadge']>;
-
-export type SevenTvPaintSource = Pick<V4Paint, 'id' | 'name' | 'data'>;
+import { pickBestPaintLayerImage } from '@app/utils/color/sevenTvPaintData/pickBestPaintLayerImage';
+import type {
+  SevenTvPaintSource,
+  V4Paint,
+} from '@app/utils/color/sevenTvPaintData/types';
 
 const packRgba = (color: {
   r: number;
@@ -26,66 +19,6 @@ const packRgba = (color: {
 }): number =>
   // eslint-disable-next-line no-bitwise
   ((color.r << 24) | (color.g << 16) | (color.b << 8) | color.a) >>> 0;
-
-/**
- * Pick the best format from a set of images at the same scale.
- * Prefers AVIF > WebP > first available.
- */
-export function pickBestFormat(imgs: Image[]): Image | undefined {
-  return (
-    imgs.find(img => img.mime === 'image/avif') ??
-    imgs.find(img => img.mime === 'image/webp') ??
-    imgs[0]
-  );
-}
-
-export function pickBestImage(images: readonly Image[]): Image | undefined {
-  const scales = [4, 3, 2, 1];
-
-  return scales.reduce<Image | undefined>((found, targetScale) => {
-    if (found) {
-      return found;
-    }
-
-    const atScale = images.filter(img => img.scale === targetScale);
-    if (atScale.length === 0) {
-      return undefined;
-    }
-
-    const animated = atScale.filter(img => img.frameCount > 1);
-    return animated.length > 0
-      ? pickBestFormat(animated)
-      : pickBestFormat(atScale);
-  }, undefined);
-}
-
-export function pickAnimatedFormat(imgs: Image[]): Image | undefined {
-  return (
-    imgs.find(img => img.mime === 'image/webp') ??
-    imgs.find(img => img.mime === 'image/gif') ??
-    imgs.find(img => img.mime === 'image/avif') ??
-    imgs[0]
-  );
-}
-
-/**
- * Pick the image URL for a paint's image layer. Animated paints prefer an
- * animated format expo-image can loop; static paints fall back to pickBestImage.
- */
-export function pickBestPaintLayerImage(
-  images: readonly Image[],
-): Image | undefined {
-  for (const targetScale of [4, 3, 2, 1]) {
-    const animatedAtScale = images.filter(
-      img => img.scale === targetScale && img.frameCount > 1,
-    );
-    if (animatedAtScale.length > 0) {
-      return pickAnimatedFormat(animatedAtScale);
-    }
-  }
-
-  return pickBestImage(images);
-}
 
 const convertV4Layer = (
   layer: V4Paint['data']['layers'][number],

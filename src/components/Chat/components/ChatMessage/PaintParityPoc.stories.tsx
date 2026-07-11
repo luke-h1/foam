@@ -9,10 +9,8 @@ import {
 import { Text } from '@app/components/ui/Text/Text';
 import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
 import type { PaintData } from '@app/types/seventv/cosmetics';
-import {
-  convertV4PaintToPaintData,
-  type SevenTvPaintSource,
-} from '@app/utils/color/sevenTvPaintData';
+import { convertV4PaintToPaintData } from '@app/utils/color/sevenTvPaintData/convertV4PaintToPaintData';
+import { type SevenTvPaintSource } from '@app/utils/color/sevenTvPaintData/types';
 
 import { sevenTvPaintsFixture } from './__fixtures__/sevenTvPaints.fixture';
 import { PaintedUsername } from './CosmeticUsername/CosmeticUsername';
