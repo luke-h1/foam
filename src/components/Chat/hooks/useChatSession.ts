@@ -23,7 +23,7 @@ import {
   usePreference,
 } from '@app/store/preferenceStore';
 import type { UserInfoResponse } from '@app/types/twitch/user';
-import { findCustomHighlight } from '@app/utils/chat/customHighlights';
+import { findCustomHighlight } from '@app/utils/chat/customHighlights/findCustomHighlight';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin';
 

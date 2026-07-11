@@ -1,9 +1,6 @@
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
-import {
-  findCustomHighlight,
-  normaliseHighlightPhrase,
-} from '../customHighlights';
+import { findCustomHighlight } from '../findCustomHighlight';
 
 const rules = [
   { id: '1', phrase: 'pog', color: '#facc15' },
@@ -13,12 +10,6 @@ const rules = [
 function textMessage(content: string): ParsedPart[] {
   return [{ type: 'text', content }];
 }
-
-describe('normaliseHighlightPhrase', () => {
-  test('trims and lowercases', () => {
-    expect(normaliseHighlightPhrase('  PogChamp  ')).toEqual('pogchamp');
-  });
-});
 
 describe('findCustomHighlight', () => {
   test('matches case-insensitively against message text', () => {

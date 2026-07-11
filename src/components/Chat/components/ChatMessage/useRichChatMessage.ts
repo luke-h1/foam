@@ -16,7 +16,7 @@ import {
 import { usePreference } from '@app/store/preferenceStore';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
-import { findCustomHighlight } from '@app/utils/chat/customHighlights';
+import { findCustomHighlight } from '@app/utils/chat/customHighlights/findCustomHighlight';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import type { UseChatMessagePartRendererArgs } from './renderers/useChatMessagePartRenderer';

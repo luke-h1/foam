@@ -23,10 +23,6 @@ function getMessageText(message: ParsedPart[]): string {
   return text;
 }
 
-export function normaliseHighlightPhrase(phrase: string): string {
-  return phrase.trim().toLowerCase();
-}
-
 export function findCustomHighlight(
   message: ParsedPart[],
   rules: CustomHighlight[],
