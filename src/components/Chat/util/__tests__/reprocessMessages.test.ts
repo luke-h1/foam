@@ -1,17 +1,15 @@
-import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import {
   createEmotePart,
   createMentionPart,
   createTextPart,
 } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
-import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { AnyChatMessageType } from '../messageHandlers';
 import {
-  extractTextFromMessage,
-  filterMessagesForReprocessing,
-  shouldReprocessMessage,
-} from '../prepareMessagesForReprocessing';
+  createMockMessage,
+  createNoticeMessage,
+  createSystemMessage,
+} from '../prepareMessagesForReprocessing/__tests__/__fixtures__/prepareMessagesForReprocessing.fixture';
 import { reprocessMessages } from '../reprocessMessages';
 
 jest.mock('@app/utils/logger', () => ({
@@ -22,58 +20,6 @@ jest.mock('@app/utils/logger', () => ({
     },
   },
 }));
-
-const createMockUserstate = (
-  displayName = 'TestUser',
-): AnyChatMessageType['userstate'] =>
-  createUserStateTags({
-    'display-name': displayName,
-    login: displayName.toLowerCase(),
-    username: displayName,
-    'user-id': '123456',
-    id: 'msg-123',
-    color: '#FF0000',
-  });
-
-const createMockMessage = (
-  overrides: Partial<AnyChatMessageType> = {},
-): AnyChatMessageType => ({
-  id: 'msg-123_nonce-123',
-  message_id: 'msg-123',
-  message_nonce: 'nonce-123',
-  message: [createTextPart('Hello world')],
-  channel: 'testchannel',
-  sender: 'TestUser',
-  badges: [],
-  userstate: createMockUserstate(),
-  parentDisplayName: '',
-  replyDisplayName: '',
-  replyBody: '',
-  ...overrides,
-});
-
-const createSystemMessage = (): AnyChatMessageType =>
-  createMockMessage({
-    sender: 'System',
-    message: [createTextPart('System message')],
-    userstate: {
-      ...createMockUserstate('System'),
-      login: 'system',
-    },
-  });
-
-const createNoticeMessage = (): AnyChatMessageType => ({
-  ...createMockMessage(),
-  notice_tags: {
-    'msg-id': 'sub',
-    'msg-param-sub-plan': '1000',
-    'msg-param-cumulative-months': '1',
-    'msg-param-should-share-streak': '0',
-    'msg-param-streak-months': '1',
-    'msg-param-sub-plan-name': 'Tier 1',
-  },
-  sender: 'SubUser',
-});
 
 const createMessageWithEmotes = (): AnyChatMessageType =>
   createMockMessage({
@@ -103,260 +49,117 @@ describe('reprocessMessages', () => {
     jest.clearAllMocks();
   });
 
-  describe('shouldReprocessMessage', () => {
-    test('should return true for regular user messages', () => {
-      const message = createMockMessage();
-      expect(shouldReprocessMessage(message)).toBe(true);
-    });
+  test('should call processMessageEmotes for each valid message', () => {
+    const messages = [
+      createMockMessage({ message_id: '1' }),
+      createMockMessage({ message_id: '2' }),
+    ];
+    const processMessageEmotes = jest.fn();
 
-    test('should return false for system messages', () => {
-      const message = createSystemMessage();
-      expect(shouldReprocessMessage(message)).toBe(false);
-    });
+    reprocessMessages(messages, processMessageEmotes);
 
-    test('should return false for notice messages', () => {
-      const message = createNoticeMessage();
-      expect(shouldReprocessMessage(message)).toBe(false);
-    });
-
-    test('should return true for messages without notice_tags', () => {
-      const message = createMockMessage();
-      expect(shouldReprocessMessage(message)).toBe(true);
-    });
+    expect(processMessageEmotes).toHaveBeenCalledTimes(2);
   });
 
-  describe('extractTextFromMessage', () => {
-    test('should extract text from text-only message', () => {
-      const message: ParsedPart[] = [{ type: 'text', content: 'Hello world' }];
-      expect(extractTextFromMessage(message)).toBe('Hello world');
-    });
+  test('should not call processMessageEmotes for system messages', () => {
+    const messages = [createSystemMessage()];
+    const processMessageEmotes = jest.fn();
 
-    test('should convert emotes back to text', () => {
-      const message: ParsedPart[] = [
-        { type: 'text', content: 'Hello ' },
-        {
-          type: 'emote',
-          content: 'Kappa',
-          name: 'Kappa',
-          original_name: 'Kappa',
-          id: 'emote-1',
-          url: 'https://example.com/kappa.png',
-        },
-        { type: 'text', content: ' World' },
-      ];
-      expect(extractTextFromMessage(message)).toBe('Hello Kappa World');
-    });
+    reprocessMessages(messages, processMessageEmotes);
 
-    test('should preserve mentions', () => {
-      const message: ParsedPart[] = [
-        { type: 'text', content: 'Hello ' },
-        {
-          type: 'mention',
-          content: '@user',
-          color: '#FF0000',
-        },
-        { type: 'text', content: ' World' },
-      ];
-      expect(extractTextFromMessage(message)).toBe('Hello @user  World');
-    });
-
-    test('should handle empty message array', () => {
-      expect(extractTextFromMessage([])).toBe('');
-    });
-
-    test('should handle multiple emotes', () => {
-      const message: ParsedPart[] = [
-        {
-          type: 'emote',
-          content: 'Kappa',
-          name: 'Kappa',
-          original_name: 'Kappa',
-          id: 'emote-1',
-          url: 'https://example.com/kappa.png',
-        },
-        { type: 'text', content: ' ' },
-        {
-          type: 'emote',
-          content: 'PogChamp',
-          name: 'PogChamp',
-          original_name: 'PogChamp',
-          id: 'emote-2',
-          url: 'https://example.com/pogchamp.png',
-        },
-      ];
-      expect(extractTextFromMessage(message)).toBe('Kappa PogChamp');
-    });
+    expect(processMessageEmotes).not.toHaveBeenCalled();
   });
 
-  describe('filterMessagesForReprocessing', () => {
-    test('should filter out system messages', () => {
-      const messages = [
-        createMockMessage({ message_id: '1' }),
-        createSystemMessage(),
-        createMockMessage({ message_id: '2' }),
-      ];
+  test('should not call processMessageEmotes for notice messages', () => {
+    const messages = [createNoticeMessage()];
+    const processMessageEmotes = jest.fn();
 
-      const result = filterMessagesForReprocessing(messages);
+    reprocessMessages(messages, processMessageEmotes);
 
-      expect(result).toHaveLength(2);
-      expect(result.every(m => m.sender !== 'System')).toBe(true);
-    });
-
-    test('should filter out notice messages', () => {
-      const messages = [
-        createMockMessage({ message_id: '1' }),
-        createNoticeMessage(),
-        createMockMessage({ message_id: '2' }),
-      ];
-
-      const result = filterMessagesForReprocessing(messages);
-
-      expect(result).toHaveLength(2);
-      expect(result.every(m => !('notice_tags' in m && m.notice_tags))).toBe(
-        true,
-      );
-    });
-
-    test('should return empty array for empty input', () => {
-      expect(filterMessagesForReprocessing([])).toEqual<AnyChatMessageType[]>(
-        [],
-      );
-    });
-
-    test('should return all messages if none are system or notice', () => {
-      const messages = [
-        createMockMessage({ message_id: '1' }),
-        createMockMessage({ message_id: '2' }),
-        createMockMessage({ message_id: '3' }),
-      ];
-
-      const result = filterMessagesForReprocessing(messages);
-
-      expect(result).toHaveLength(3);
-    });
-
-    test('should return empty array if all are system or notice', () => {
-      const messages = [createSystemMessage(), createNoticeMessage()];
-
-      const result = filterMessagesForReprocessing(messages);
-
-      expect(result).toHaveLength(0);
-    });
+    expect(processMessageEmotes).not.toHaveBeenCalled();
   });
 
-  describe('reprocessMessages', () => {
-    test('should call processMessageEmotes for each valid message', () => {
-      const messages = [
-        createMockMessage({ message_id: '1' }),
-        createMockMessage({ message_id: '2' }),
-      ];
-      const processMessageEmotes = jest.fn();
+  test('should pass correct arguments to processMessageEmotes', () => {
+    const message = createMessageWithEmotes();
+    const processMessageEmotes = jest.fn();
 
-      reprocessMessages(messages, processMessageEmotes);
+    reprocessMessages([message], processMessageEmotes);
 
-      expect(processMessageEmotes).toHaveBeenCalledTimes(2);
+    expect(processMessageEmotes).toHaveBeenCalledWith(
+      'Hello Kappa World',
+      message.userstate,
+      message,
+    );
+  });
+
+  test('should handle empty message array', () => {
+    const processMessageEmotes = jest.fn();
+
+    reprocessMessages([], processMessageEmotes);
+
+    expect(processMessageEmotes).not.toHaveBeenCalled();
+  });
+
+  test('should skip messages with empty text content', () => {
+    const message = createMockMessage({
+      message: [createTextPart('   ')],
     });
+    const processMessageEmotes = jest.fn();
 
-    test('should not call processMessageEmotes for system messages', () => {
-      const messages = [createSystemMessage()];
-      const processMessageEmotes = jest.fn();
+    reprocessMessages([message], processMessageEmotes);
 
-      reprocessMessages(messages, processMessageEmotes);
+    expect(processMessageEmotes).not.toHaveBeenCalled();
+  });
 
-      expect(processMessageEmotes).not.toHaveBeenCalled();
+  test('should process messages with mentions', () => {
+    const message = createMessageWithMention();
+    const processMessageEmotes = jest.fn();
+
+    reprocessMessages([message], processMessageEmotes);
+
+    expect(processMessageEmotes).toHaveBeenCalledWith(
+      'Hello @username  how are you?',
+      message.userstate,
+      message,
+    );
+  });
+
+  test('should process mixed message types correctly', () => {
+    const messages = [
+      createMockMessage({ message_id: '1' }),
+      createSystemMessage(),
+      createMessageWithEmotes(),
+      createNoticeMessage(),
+      createMessageWithMention(),
+    ];
+    const processMessageEmotes = jest.fn();
+
+    reprocessMessages(messages, processMessageEmotes);
+
+    // Should only process 3: regular message, message with emotes, message with mention
+    expect(processMessageEmotes).toHaveBeenCalledTimes(3);
+  });
+
+  test('should extract original emote names when reprocessing', () => {
+    const message = createMockMessage({
+      message: [
+        createTextPart('Check this '),
+        createEmotePart('OMEGALUL', {
+          name: 'OMEGALUL',
+          original_name: 'OMEGALUL',
+          id: 'emote-7tv',
+          url: 'https://cdn.7tv.app/emote/123.webp',
+        }),
+      ],
     });
+    const processMessageEmotes = jest.fn();
 
-    test('should not call processMessageEmotes for notice messages', () => {
-      const messages = [createNoticeMessage()];
-      const processMessageEmotes = jest.fn();
+    reprocessMessages([message], processMessageEmotes);
 
-      reprocessMessages(messages, processMessageEmotes);
-
-      expect(processMessageEmotes).not.toHaveBeenCalled();
-    });
-
-    test('should pass correct arguments to processMessageEmotes', () => {
-      const message = createMessageWithEmotes();
-      const processMessageEmotes = jest.fn();
-
-      reprocessMessages([message], processMessageEmotes);
-
-      expect(processMessageEmotes).toHaveBeenCalledWith(
-        'Hello Kappa World',
-        message.userstate,
-        message,
-      );
-    });
-
-    test('should handle empty message array', () => {
-      const processMessageEmotes = jest.fn();
-
-      reprocessMessages([], processMessageEmotes);
-
-      expect(processMessageEmotes).not.toHaveBeenCalled();
-    });
-
-    test('should skip messages with empty text content', () => {
-      const message = createMockMessage({
-        message: [createTextPart('   ')],
-      });
-      const processMessageEmotes = jest.fn();
-
-      reprocessMessages([message], processMessageEmotes);
-
-      expect(processMessageEmotes).not.toHaveBeenCalled();
-    });
-
-    test('should process messages with mentions', () => {
-      const message = createMessageWithMention();
-      const processMessageEmotes = jest.fn();
-
-      reprocessMessages([message], processMessageEmotes);
-
-      expect(processMessageEmotes).toHaveBeenCalledWith(
-        'Hello @username  how are you?',
-        message.userstate,
-        message,
-      );
-    });
-
-    test('should process mixed message types correctly', () => {
-      const messages = [
-        createMockMessage({ message_id: '1' }),
-        createSystemMessage(),
-        createMessageWithEmotes(),
-        createNoticeMessage(),
-        createMessageWithMention(),
-      ];
-      const processMessageEmotes = jest.fn();
-
-      reprocessMessages(messages, processMessageEmotes);
-
-      // Should only process 3: regular message, message with emotes, message with mention
-      expect(processMessageEmotes).toHaveBeenCalledTimes(3);
-    });
-
-    test('should extract original emote names when reprocessing', () => {
-      const message = createMockMessage({
-        message: [
-          createTextPart('Check this '),
-          createEmotePart('OMEGALUL', {
-            name: 'OMEGALUL',
-            original_name: 'OMEGALUL',
-            id: 'emote-7tv',
-            url: 'https://cdn.7tv.app/emote/123.webp',
-          }),
-        ],
-      });
-      const processMessageEmotes = jest.fn();
-
-      reprocessMessages([message], processMessageEmotes);
-
-      expect(processMessageEmotes).toHaveBeenCalledWith(
-        'Check this OMEGALUL',
-        message.userstate,
-        message,
-      );
-    });
+    expect(processMessageEmotes).toHaveBeenCalledWith(
+      'Check this OMEGALUL',
+      message.userstate,
+      message,
+    );
   });
 });
