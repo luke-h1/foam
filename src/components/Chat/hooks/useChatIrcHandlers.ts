@@ -325,22 +325,39 @@ export function useChatIrcHandlers({
     appendSystemMessage(`Connected to ${channelName}'s room`);
   }, [appendSystemMessage, channelName, isLoadingRecentMessagesRef, messages$]);
 
-  const onPart = useCallback(() => {
-    logger.chat.info('Parted from channel:', channelName);
-    applyRoomStateUpdate(roomStateTracker.reset());
-    if (isMountedRef?.current === false) {
-      return;
-    }
+  const onPart = useCallback(
+    (channel: string) => {
+      /**
+       * The IRC service reuses one socket across channel switches, so a PART
+       * echo for the previous room can arrive after the next room has already
+       * joined and restored history. Only a PART for this handler's own room
+       * may reset the roomstate baseline or clear messages.
+       */
+      const partedChannel = channel.replace(/^#/, '').toLowerCase();
+      if (partedChannel !== channelName.toLowerCase()) {
+        logger.chat.info(
+          `Ignoring stale PART for ${channel} while in ${channelName}`,
+        );
+        return;
+      }
 
-    clearMessages();
-    clearLocalMessages();
-  }, [
-    applyRoomStateUpdate,
-    channelName,
-    clearLocalMessages,
-    isMountedRef,
-    roomStateTracker,
-  ]);
+      logger.chat.info('Parted from channel:', channelName);
+      applyRoomStateUpdate(roomStateTracker.reset());
+      if (isMountedRef?.current === false) {
+        return;
+      }
+
+      clearMessages();
+      clearLocalMessages();
+    },
+    [
+      applyRoomStateUpdate,
+      channelName,
+      clearLocalMessages,
+      isMountedRef,
+      roomStateTracker,
+    ],
+  );
 
   const onNotice = useCallback(
     (_channel: string, tags: Record<string, string>, messageText: string) => {
