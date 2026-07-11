@@ -29,13 +29,15 @@ describe('ChatList', () => {
         extraData={{ showTimestamps: false }}
         listRef={listRef}
         shouldMaintainScrollAtEnd
-        handleScroll={jest.fn()}
-        handleScrollBeginDrag={jest.fn()}
-        handleScrollEndDrag={jest.fn()}
-        handleMomentumScrollBegin={jest.fn()}
-        handleMomentumScrollEnd={jest.fn()}
-        handleEndReached={jest.fn()}
-        handleContentSizeChange={jest.fn()}
+        scrollHandlers={{
+          onContentSizeChange: jest.fn(),
+          onEndReached: jest.fn(),
+          onMomentumScrollBegin: jest.fn(),
+          onMomentumScrollEnd: jest.fn(),
+          onScroll: jest.fn(),
+          onScrollBeginDrag: jest.fn(),
+          onScrollEndDrag: jest.fn(),
+        }}
         renderItem={jest.fn()}
         keyExtractor={jest.fn()}
         getItemType={jest.fn()}
@@ -96,13 +98,15 @@ describe('ChatList', () => {
         data={[visibleMessage]}
         listRef={listRef}
         shouldMaintainScrollAtEnd
-        handleScroll={jest.fn()}
-        handleScrollBeginDrag={jest.fn()}
-        handleScrollEndDrag={jest.fn()}
-        handleMomentumScrollBegin={jest.fn()}
-        handleMomentumScrollEnd={jest.fn()}
-        handleEndReached={jest.fn()}
-        handleContentSizeChange={jest.fn()}
+        scrollHandlers={{
+          onContentSizeChange: jest.fn(),
+          onEndReached: jest.fn(),
+          onMomentumScrollBegin: jest.fn(),
+          onMomentumScrollEnd: jest.fn(),
+          onScroll: jest.fn(),
+          onScrollBeginDrag: jest.fn(),
+          onScrollEndDrag: jest.fn(),
+        }}
         renderItem={jest.fn()}
         keyExtractor={jest.fn()}
         getItemType={jest.fn()}
@@ -140,13 +144,15 @@ describe('ChatList', () => {
         data={[visibleMessage]}
         listRef={listRef}
         shouldMaintainScrollAtEnd
-        handleScroll={jest.fn()}
-        handleScrollBeginDrag={jest.fn()}
-        handleScrollEndDrag={jest.fn()}
-        handleMomentumScrollBegin={jest.fn()}
-        handleMomentumScrollEnd={jest.fn()}
-        handleEndReached={jest.fn()}
-        handleContentSizeChange={jest.fn()}
+        scrollHandlers={{
+          onContentSizeChange: jest.fn(),
+          onEndReached: jest.fn(),
+          onMomentumScrollBegin: jest.fn(),
+          onMomentumScrollEnd: jest.fn(),
+          onScroll: jest.fn(),
+          onScrollBeginDrag: jest.fn(),
+          onScrollEndDrag: jest.fn(),
+        }}
         renderItem={jest.fn()}
         keyExtractor={jest.fn()}
         getItemType={jest.fn()}
@@ -176,13 +182,15 @@ describe('ChatList', () => {
         data={[]}
         listRef={listRef}
         shouldMaintainScrollAtEnd
-        handleScroll={jest.fn()}
-        handleScrollBeginDrag={jest.fn()}
-        handleScrollEndDrag={jest.fn()}
-        handleMomentumScrollBegin={jest.fn()}
-        handleMomentumScrollEnd={jest.fn()}
-        handleEndReached={jest.fn()}
-        handleContentSizeChange={jest.fn()}
+        scrollHandlers={{
+          onContentSizeChange: jest.fn(),
+          onEndReached: jest.fn(),
+          onMomentumScrollBegin: jest.fn(),
+          onMomentumScrollEnd: jest.fn(),
+          onScroll: jest.fn(),
+          onScrollBeginDrag: jest.fn(),
+          onScrollEndDrag: jest.fn(),
+        }}
         renderItem={jest.fn(() => null)}
         keyExtractor={jest.fn()}
         getItemType={jest.fn()}
@@ -212,13 +220,15 @@ describe('ChatList', () => {
         data={[]}
         listRef={listRef}
         shouldMaintainScrollAtEnd={false}
-        handleScroll={jest.fn()}
-        handleScrollBeginDrag={jest.fn()}
-        handleScrollEndDrag={jest.fn()}
-        handleMomentumScrollBegin={jest.fn()}
-        handleMomentumScrollEnd={jest.fn()}
-        handleEndReached={jest.fn()}
-        handleContentSizeChange={jest.fn()}
+        scrollHandlers={{
+          onContentSizeChange: jest.fn(),
+          onEndReached: jest.fn(),
+          onMomentumScrollBegin: jest.fn(),
+          onMomentumScrollEnd: jest.fn(),
+          onScroll: jest.fn(),
+          onScrollBeginDrag: jest.fn(),
+          onScrollEndDrag: jest.fn(),
+        }}
         renderItem={jest.fn()}
         keyExtractor={jest.fn()}
         getItemType={jest.fn()}
@@ -238,20 +248,22 @@ describe('ChatList', () => {
 
   test('passes content-size change handler through to LegendList', () => {
     const listRef = { current: null };
-    const handleContentSizeChange = jest.fn();
+    const onContentSizeChange = jest.fn();
 
     render(
       <ChatList
         data={[]}
         listRef={listRef}
         shouldMaintainScrollAtEnd
-        handleScroll={jest.fn()}
-        handleScrollBeginDrag={jest.fn()}
-        handleScrollEndDrag={jest.fn()}
-        handleMomentumScrollBegin={jest.fn()}
-        handleMomentumScrollEnd={jest.fn()}
-        handleEndReached={jest.fn()}
-        handleContentSizeChange={handleContentSizeChange}
+        scrollHandlers={{
+          onContentSizeChange,
+          onEndReached: jest.fn(),
+          onMomentumScrollBegin: jest.fn(),
+          onMomentumScrollEnd: jest.fn(),
+          onScroll: jest.fn(),
+          onScrollBeginDrag: jest.fn(),
+          onScrollEndDrag: jest.fn(),
+        }}
         renderItem={jest.fn()}
         keyExtractor={jest.fn()}
         getItemType={jest.fn()}
@@ -263,6 +275,6 @@ describe('ChatList', () => {
       onContentSizeChange?: () => void;
     };
 
-    expect(props.onContentSizeChange).toBe(handleContentSizeChange);
+    expect(props.onContentSizeChange).toBe(onContentSizeChange);
   });
 });

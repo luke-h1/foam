@@ -1,4 +1,4 @@
-import { RefObject, useCallback, useRef, useState } from 'react';
+import { RefObject, useCallback, useMemo, useRef, useState } from 'react';
 import { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 
 import { chatScrollActivity } from '../util/chatScrollActivity';
@@ -102,24 +102,25 @@ export const useChatScroll = ({
     listRef.current?.scrollToEnd?.({ animated: false });
   }, [listRef]);
 
-  const handleScrollBeginDrag = (
-    e: NativeSyntheticEvent<NativeScrollEvent>,
-  ) => {
-    chatScrollActivity.poke();
-    clearScrollToBottomTimers();
-    clearBottomContentAnchor();
-    isDraggingRef.current = true;
-    isMomentumScrollingRef.current = false;
-    isScrollingToBottomRef.current = false;
-    setIsScrollingToBottom(false);
-    shouldMaintainScrollAtEndRef.current = false;
-    setShouldMaintainScrollAtEnd(false);
-    lastOffsetYRef.current = e.nativeEvent.contentOffset.y;
-    if (scrollEndDragSettleRef.current) {
-      clearTimeout(scrollEndDragSettleRef.current);
-      scrollEndDragSettleRef.current = null;
-    }
-  };
+  const handleScrollBeginDrag = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      chatScrollActivity.poke();
+      clearScrollToBottomTimers();
+      clearBottomContentAnchor();
+      isDraggingRef.current = true;
+      isMomentumScrollingRef.current = false;
+      isScrollingToBottomRef.current = false;
+      setIsScrollingToBottom(false);
+      shouldMaintainScrollAtEndRef.current = false;
+      setShouldMaintainScrollAtEnd(false);
+      lastOffsetYRef.current = e.nativeEvent.contentOffset.y;
+      if (scrollEndDragSettleRef.current) {
+        clearTimeout(scrollEndDragSettleRef.current);
+        scrollEndDragSettleRef.current = null;
+      }
+    },
+    [clearBottomContentAnchor, clearScrollToBottomTimers],
+  );
 
   /**
    * Don't re-enable immediately: a fling fires onMomentumScrollBegin within
@@ -381,6 +382,31 @@ export const useChatScroll = ({
     }
   }, [clearBottomContentAnchor, clearScrollToBottomTimers]);
 
+  /**
+   * List-facing scroll events under their LegendList prop names, grouped so
+   * they travel the component tree as one stable prop.
+   */
+  const scrollHandlers = useMemo(
+    () => ({
+      onContentSizeChange: handleContentSizeChange,
+      onEndReached: markAtBottom,
+      onMomentumScrollBegin: handleMomentumScrollBegin,
+      onMomentumScrollEnd: handleMomentumScrollEnd,
+      onScroll: handleScroll,
+      onScrollBeginDrag: handleScrollBeginDrag,
+      onScrollEndDrag: handleScrollEndDrag,
+    }),
+    [
+      handleContentSizeChange,
+      markAtBottom,
+      handleMomentumScrollBegin,
+      handleMomentumScrollEnd,
+      handleScroll,
+      handleScrollBeginDrag,
+      handleScrollEndDrag,
+    ],
+  );
+
   return {
     isAtBottom,
     isAtBottomRef,
@@ -390,13 +416,7 @@ export const useChatScroll = ({
     shouldMaintainScrollAtEnd,
     unreadCount,
     setUnreadCount,
-    handleScroll,
-    handleScrollBeginDrag,
-    handleScrollEndDrag,
-    handleMomentumScrollBegin,
-    handleMomentumScrollEnd,
-    handleEndReached: markAtBottom,
-    handleContentSizeChange,
+    scrollHandlers,
     scrollToBottom,
     maintainBottomAfterContentChange,
     incrementUnread,

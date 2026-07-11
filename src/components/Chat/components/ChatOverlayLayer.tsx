@@ -22,7 +22,6 @@ export interface ChatOverlayLayerProps {
   canBlockSelectedUser: boolean;
   canModerateSelectedUser: boolean;
   canPinSelectedMessage: boolean;
-  disableEmoteAnimations: boolean;
   highlightedUsers: string[];
   hiddenUsers: string[];
   onActionSheetBanUser: () => void;
@@ -54,11 +53,6 @@ export interface ChatOverlayLayerProps {
   onSettingsRefetchEmotes: () => void;
   onTimeoutSelectedUser: () => void;
   onWarnSelectedUser: () => void;
-  onToggleChatDensity: () => void;
-  onToggleHighlightOwnMentions: (value: boolean) => void;
-  onToggleInlineReplyContext: (value: boolean) => void;
-  onToggleShowTimestamps: (value: boolean) => void;
-  onToggleShowUnreadJumpPill: (value: boolean) => void;
   onBanSelectedUser: () => void;
   onBlockSelectedUser: () => void;
   onReportSelectedUser: () => void;
@@ -78,11 +72,6 @@ export interface ChatOverlayLayerProps {
   shouldRenderEmoteSheet: boolean;
   pinnedMessageBusy: boolean;
   pinnedMessageId?: string;
-  chatDensity: 'comfortable' | 'compact';
-  highlightOwnMentions: boolean;
-  showInlineReplyContext: boolean;
-  showTimestamps: boolean;
-  showUnreadJumpPill: boolean;
 }
 
 export const ChatOverlayLayer = memo(
@@ -93,7 +82,6 @@ export const ChatOverlayLayer = memo(
     canBlockSelectedUser,
     canModerateSelectedUser,
     canPinSelectedMessage,
-    disableEmoteAnimations,
     highlightedUsers,
     hiddenUsers,
     onActionSheetBanUser,
@@ -136,11 +124,6 @@ export const ChatOverlayLayer = memo(
     onSettingsRefetchEmotes,
     onTimeoutSelectedUser,
     onWarnSelectedUser,
-    onToggleChatDensity,
-    onToggleHighlightOwnMentions,
-    onToggleInlineReplyContext,
-    onToggleShowTimestamps,
-    onToggleShowUnreadJumpPill,
     selectedBadge,
     selectedEmote,
     selectedMessage,
@@ -149,11 +132,6 @@ export const ChatOverlayLayer = memo(
     shouldRenderEmoteSheet,
     pinnedMessageBusy,
     pinnedMessageId,
-    chatDensity,
-    highlightOwnMentions,
-    showInlineReplyContext,
-    showTimestamps,
-    showUnreadJumpPill,
   }: ChatOverlayLayerProps) => {
     return (
       <>
@@ -168,13 +146,6 @@ export const ChatOverlayLayer = memo(
         {shouldRenderSettingsSheet ? (
           <SettingsSheet
             isPresented={shouldRenderSettingsSheet}
-            preferenceFlags={{
-              chatDensity,
-              highlightOwnMentions,
-              showInlineReplyContext,
-              showTimestamps,
-              showUnreadJumpPill,
-            }}
             onClearChatCache={onClearChatCache}
             onClearImageCache={onClearImageCache}
             onClearSevenTvCosmeticsCache={onClearSevenTvCosmeticsCache}
@@ -183,11 +154,6 @@ export const ChatOverlayLayer = memo(
             onOpenSavedPhrases={onOpenSavedPhrases}
             onRefetchEmotes={onSettingsRefetchEmotes}
             onReconnect={onSettingsReconnect}
-            onToggleChatDensity={onToggleChatDensity}
-            onToggleHighlightOwnMentions={onToggleHighlightOwnMentions}
-            onToggleInlineReplyContext={onToggleInlineReplyContext}
-            onToggleShowTimestamps={onToggleShowTimestamps}
-            onToggleShowUnreadJumpPill={onToggleShowUnreadJumpPill}
           />
         ) : null}
 
@@ -217,7 +183,6 @@ export const ChatOverlayLayer = memo(
 
         {selectedEmote ? (
           <EmotePreviewSheet
-            disableAnimations={disableEmoteAnimations}
             visible
             onClose={onCloseSelectedEmote}
             selectedEmote={selectedEmote}
@@ -230,17 +195,17 @@ export const ChatOverlayLayer = memo(
             onClose={onCloseSelectedMessage}
             username={selectedMessage.username}
             messagePreview={selectedMessage.message}
-            handleReply={onActionSheetReply}
-            handleCopy={onActionSheetCopy}
-            handleHidePhrase={onActionSheetHidePhrase}
-            handleHideUser={onActionSheetHideUser}
-            handleHighlightUser={onActionSheetHighlightUser}
-            handlePinMessage={onActionSheetPinMessage}
-            handleUpdatePinnedMessage={onActionSheetUpdatePinnedMessage}
-            handleUnpinMessage={onActionSheetUnpinPinnedMessage}
-            handleDeleteMessage={onActionSheetDeleteMessage}
-            handleTimeoutUser={onActionSheetTimeoutUser}
-            handleBanUser={onActionSheetBanUser}
+            onReply={onActionSheetReply}
+            onCopy={onActionSheetCopy}
+            onHidePhrase={onActionSheetHidePhrase}
+            onHideUser={onActionSheetHideUser}
+            onHighlightUser={onActionSheetHighlightUser}
+            onPinMessage={onActionSheetPinMessage}
+            onUpdatePinnedMessage={onActionSheetUpdatePinnedMessage}
+            onUnpinMessage={onActionSheetUnpinPinnedMessage}
+            onDeleteMessage={onActionSheetDeleteMessage}
+            onTimeoutUser={onActionSheetTimeoutUser}
+            onBanUser={onActionSheetBanUser}
             canModerateChat={canModerateChat}
             canDeleteMessage={canDeleteSelectedMessage}
             canPinMessage={canPinSelectedMessage}

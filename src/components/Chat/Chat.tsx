@@ -10,10 +10,7 @@ import { CachedEmotesProvider } from '@app/Providers/CachedEmotesProvider/Cached
 import { setChatFrontTrimSuspended } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { useCosmeticBindingsVersion } from '@app/store/chat/react/selectors';
-import {
-  useChatRenderPreferences,
-  useUpdatePreferences,
-} from '@app/store/preferenceStore';
+import { useChatRenderPreferences } from '@app/store/preferenceStore';
 
 import { ChatEmoteReprocessor } from './components/ChatEmoteReprocessor';
 import type { ChatInputShellHandle } from './components/ChatInputShell';
@@ -50,7 +47,6 @@ export const Chat = memo(
   }: ChatProps) => {
     const { user } = useAuthContext();
     const preferences = useChatRenderPreferences();
-    const updatePreferences = useUpdatePreferences();
     const insets = useSafeAreaInsets();
     const messages$ = chatStore$.messages;
     const currentUsername = user?.login ?? user?.display_name;
@@ -90,13 +86,7 @@ export const Chat = memo(
       shouldMaintainScrollAtEnd,
       unreadCount,
       setUnreadCount,
-      handleScroll,
-      handleScrollBeginDrag,
-      handleScrollEndDrag,
-      handleMomentumScrollBegin,
-      handleMomentumScrollEnd,
-      handleEndReached,
-      handleContentSizeChange,
+      scrollHandlers,
       scrollToBottom,
       maintainBottomAfterContentChange,
       cleanup: cleanupScroll,
@@ -193,7 +183,6 @@ export const Chat = memo(
       showOnlyMentions,
       toggleHighlightedUser,
       twitchConnectionState,
-      updatePreferences,
       user,
     });
 
@@ -230,13 +219,7 @@ export const Chat = memo(
                 highlightedUsers={highlightedUsers}
                 paneFlags={paneFlags}
                 listRef={listRef}
-                handleScroll={handleScroll}
-                handleScrollBeginDrag={handleScrollBeginDrag}
-                handleScrollEndDrag={handleScrollEndDrag}
-                handleMomentumScrollBegin={handleMomentumScrollBegin}
-                handleMomentumScrollEnd={handleMomentumScrollEnd}
-                handleEndReached={handleEndReached}
-                handleContentSizeChange={handleContentSizeChange}
+                scrollHandlers={scrollHandlers}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
                 getItemType={getItemType}

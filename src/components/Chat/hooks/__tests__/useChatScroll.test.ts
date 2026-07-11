@@ -90,14 +90,14 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 1900 }, { height: 500 }, { height: 2000 }),
         );
       });
       expect(chatScrollActivity.isActive()).toBe(false);
 
       act(() => {
-        result.current.handleScrollBeginDrag(
+        result.current.scrollHandlers.onScrollBeginDrag(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
       });
@@ -138,12 +138,14 @@ describe('useChatScroll', () => {
         }),
       );
 
-      expect(typeof result.current.handleScroll).toBe('function');
+      expect(typeof result.current.scrollHandlers.onScroll).toBe('function');
       expect(typeof result.current.scrollToBottom).toBe('function');
       expect(typeof result.current.maintainBottomAfterContentChange).toBe(
         'function',
       );
-      expect(typeof result.current.handleContentSizeChange).toBe('function');
+      expect(typeof result.current.scrollHandlers.onContentSizeChange).toBe(
+        'function',
+      );
       expect(typeof result.current.cleanup).toBe('function');
       expect(typeof result.current.incrementUnread).toBe('function');
     });
@@ -162,10 +164,10 @@ describe('useChatScroll', () => {
 
       // Scrolled up: y=500, view 500, content 2000 -> distanceFromEnd = 1000.
       act(() => {
-        result.current.handleScrollBeginDrag(
+        result.current.scrollHandlers.onScrollBeginDrag(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
       });
@@ -192,7 +194,7 @@ describe('useChatScroll', () => {
       expect(result.current.shouldMaintainScrollAtEnd).toBe(true);
 
       act(() => {
-        result.current.handleScrollBeginDrag(
+        result.current.scrollHandlers.onScrollBeginDrag(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
       });
@@ -201,7 +203,7 @@ describe('useChatScroll', () => {
       expect(result.current.shouldMaintainScrollAtEnd).toBe(false);
 
       act(() => {
-        result.current.handleScrollEndDrag();
+        result.current.scrollHandlers.onScrollEndDrag();
       });
 
       // End-drag re-enables after a settle window so a fling's
@@ -224,10 +226,10 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
-        result.current.handleScrollBeginDrag(
+        result.current.scrollHandlers.onScrollBeginDrag(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
       });
@@ -238,7 +240,7 @@ describe('useChatScroll', () => {
 
       // Scrolled to end: y=1500, view 500, content 2000 -> distanceFromEnd = 0.
       act(() => {
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
       });
@@ -260,7 +262,7 @@ describe('useChatScroll', () => {
 
       // Near end: y=1440 -> distanceFromEnd = 60.
       act(() => {
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 1440 }, { height: 500 }, { height: 2000 }),
         );
       });
@@ -281,17 +283,17 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
       });
       expect(result.current.isAtBottom).toBe(true);
 
       act(() => {
-        result.current.handleScrollBeginDrag(
+        result.current.scrollHandlers.onScrollBeginDrag(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 1440 }, { height: 500 }, { height: 2000 }),
         );
       });
@@ -311,14 +313,14 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
       });
       expect(result.current.isAtBottom).toBe(true);
 
       act(() => {
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2200 }),
         );
       });
@@ -338,14 +340,14 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
       });
       expect(result.current.isAtBottom).toBe(true);
 
       act(() => {
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 1500 }, { height: 380 }, { height: 2000 }),
         );
       });
@@ -365,10 +367,10 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
-        result.current.handleScrollBeginDrag(
+        result.current.scrollHandlers.onScrollBeginDrag(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
       });
@@ -378,10 +380,10 @@ describe('useChatScroll', () => {
       expect(result.current.isAtBottom).toBe(false);
 
       act(() => {
-        result.current.handleScrollBeginDrag(
+        result.current.scrollHandlers.onScrollBeginDrag(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2200 }),
         );
       });
@@ -408,10 +410,10 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
-        result.current.handleScrollBeginDrag(
+        result.current.scrollHandlers.onScrollBeginDrag(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
       });
@@ -449,10 +451,10 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
-        result.current.handleScrollBeginDrag(
+        result.current.scrollHandlers.onScrollBeginDrag(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
       });
@@ -465,7 +467,7 @@ describe('useChatScroll', () => {
       expect(result.current.unreadCount).toBe(5);
 
       act(() => {
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
       });
@@ -487,10 +489,10 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
-        result.current.handleScrollBeginDrag(
+        result.current.scrollHandlers.onScrollBeginDrag(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
       });
@@ -505,7 +507,7 @@ describe('useChatScroll', () => {
       expect(result.current.unreadCount).toBe(260);
 
       act(() => {
-        result.current.handleEndReached();
+        result.current.scrollHandlers.onEndReached();
       });
 
       expect(result.current.isAtBottom).toBe(true);
@@ -568,10 +570,10 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
-        result.current.handleScrollBeginDrag(
+        result.current.scrollHandlers.onScrollBeginDrag(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
       });
@@ -655,7 +657,7 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
       });
@@ -720,7 +722,7 @@ describe('useChatScroll', () => {
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(1);
 
       act(() => {
-        result.current.handleContentSizeChange();
+        result.current.scrollHandlers.onContentSizeChange();
       });
 
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(2);
@@ -731,7 +733,7 @@ describe('useChatScroll', () => {
       // viewport bottom.
       act(() => {
         jest.advanceTimersByTime(600);
-        result.current.handleContentSizeChange();
+        result.current.scrollHandlers.onContentSizeChange();
       });
 
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(3);
@@ -779,7 +781,7 @@ describe('useChatScroll', () => {
 
       act(() => {
         result.current.maintainBottomAfterContentChange();
-        result.current.handleContentSizeChange();
+        result.current.scrollHandlers.onContentSizeChange();
         jest.advanceTimersByTime(0);
       });
 
@@ -801,7 +803,7 @@ describe('useChatScroll', () => {
       // bottom. The newest row must still be re-revealed after its real (often
       // under-estimated) height is measured.
       act(() => {
-        result.current.handleContentSizeChange();
+        result.current.scrollHandlers.onContentSizeChange();
       });
 
       expect(mocks.scrollToEnd).toHaveBeenCalledTimes(1);
@@ -818,14 +820,14 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
-        result.current.handleScrollBeginDrag(
+        result.current.scrollHandlers.onScrollBeginDrag(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
         result.current.maintainBottomAfterContentChange();
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
-        result.current.handleContentSizeChange();
+        result.current.scrollHandlers.onContentSizeChange();
         jest.advanceTimersByTime(0);
       });
 
@@ -843,10 +845,10 @@ describe('useChatScroll', () => {
       );
 
       act(() => {
-        result.current.handleScrollBeginDrag(
+        result.current.scrollHandlers.onScrollBeginDrag(
           createScrollEvent({ y: 1500 }, { height: 500 }, { height: 2000 }),
         );
-        result.current.handleScroll(
+        result.current.scrollHandlers.onScroll(
           createScrollEvent({ y: 500 }, { height: 500 }, { height: 2000 }),
         );
       });
@@ -858,7 +860,7 @@ describe('useChatScroll', () => {
 
       act(() => {
         result.current.maintainBottomAfterContentChange();
-        result.current.handleContentSizeChange();
+        result.current.scrollHandlers.onContentSizeChange();
         jest.advanceTimersByTime(0);
       });
 

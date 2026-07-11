@@ -12,7 +12,7 @@ import { convertV4PaintToPaintData } from '@app/utils/color/sevenTvPaintData/con
 import { type SevenTvPaintSource } from '@app/utils/color/sevenTvPaintData/types';
 
 import { sevenTvPaintsFixture } from './__fixtures__/sevenTvPaints.fixture';
-import { PaintedUsername } from './CosmeticUsername/CosmeticUsername';
+import { PaintedUsername } from './CosmeticUsername/PaintedUsername';
 
 // A paint is animated when it has an image layer with a multi-frame texture.
 // frameCount only survives on the raw fixture (conversion drops it), so classify

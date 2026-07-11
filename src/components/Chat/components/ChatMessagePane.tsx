@@ -1,11 +1,5 @@
 import { memo, useEffect, useMemo, useRef } from 'react';
-import {
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
-  type StyleProp,
-  View,
-  type ViewStyle,
-} from 'react-native';
+import { type StyleProp, View, type ViewStyle } from 'react-native';
 import type { RefObject } from 'react';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { KeyboardController } from 'react-native-keyboard-controller';
@@ -25,6 +19,7 @@ import {
   ChatList,
   type ChatListRef,
   type ChatListRenderItem,
+  type ChatListScrollHandlers,
 } from './ChatList';
 import { ChatViewControls } from './ChatViewControls';
 import { PinnedMessageBanner } from './PinnedMessageBanner';
@@ -38,13 +33,7 @@ export interface ChatMessagePaneProps {
   highlightedUsers: string[];
   paneFlags: ChatPaneFlags;
   listRef: RefObject<ChatListRef | null>;
-  handleScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
-  handleScrollBeginDrag: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
-  handleScrollEndDrag: () => void;
-  handleMomentumScrollBegin: () => void;
-  handleMomentumScrollEnd: () => void;
-  handleEndReached: () => void;
-  handleContentSizeChange: () => void;
+  scrollHandlers: ChatListScrollHandlers;
   renderItem: ChatListRenderItem;
   keyExtractor: (item: AnyChatMessageType, index: number) => string;
   getItemType: (item: AnyChatMessageType) => string;
@@ -69,13 +58,7 @@ export const ChatMessagePane = memo(
     highlightedUsers,
     paneFlags,
     listRef,
-    handleScroll,
-    handleScrollBeginDrag,
-    handleScrollEndDrag,
-    handleMomentumScrollBegin,
-    handleMomentumScrollEnd,
-    handleEndReached,
-    handleContentSizeChange,
+    scrollHandlers,
     renderItem,
     keyExtractor,
     getItemType,
@@ -223,13 +206,7 @@ export const ChatMessagePane = memo(
               data={listData}
               listRef={listRef}
               shouldMaintainScrollAtEnd={shouldMaintainScrollAtEnd}
-              handleScroll={handleScroll}
-              handleScrollBeginDrag={handleScrollBeginDrag}
-              handleScrollEndDrag={handleScrollEndDrag}
-              handleMomentumScrollBegin={handleMomentumScrollBegin}
-              handleMomentumScrollEnd={handleMomentumScrollEnd}
-              handleEndReached={handleEndReached}
-              handleContentSizeChange={handleContentSizeChange}
+              scrollHandlers={scrollHandlers}
               renderItem={renderItem}
               keyExtractor={keyExtractor}
               getItemType={getItemType}

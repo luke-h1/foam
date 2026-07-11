@@ -52,7 +52,6 @@ interface UseChatSurfaceOptions {
   showOnlyMentions: boolean;
   toggleHighlightedUser: (username?: string) => void;
   twitchConnectionState: ReadyState;
-  updatePreferences: (patch: Record<string, unknown>) => void;
   user?: UserInfoResponse;
 }
 
@@ -80,7 +79,6 @@ export function useChatSurface({
   showOnlyMentions,
   toggleHighlightedUser,
   twitchConnectionState,
-  updatePreferences,
   user,
 }: UseChatSurfaceOptions) {
   const messages$ = chatStore$.messages;
@@ -146,28 +144,21 @@ export function useChatSurface({
 
   const {
     handleClearChatCache,
-    handleDebugClearImageCache,
+    handleClearImageCache,
     handleClearSevenTvCosmeticsCache,
     handleResumeScrollToBottom,
     handleSettingsReconnect,
     handleSettingsRefetchEmotes,
     handleRefreshCommand,
-    handleToggleChatDensity,
-    handleToggleHighlightOwnMentions,
-    handleToggleInlineReplyContext,
-    handleToggleShowTimestamps,
-    handleToggleShowUnreadJumpPill,
   } = useChatSettingsActions({
     channelId,
     channelName,
-    chatDensity: preferences.chatDensity,
     forceFlush,
     joinChannel,
     partChannel,
     refetchEmotes,
     reprocessAllMessages,
     scrollToBottom,
-    updatePreferences,
   });
 
   const { openers, overlaysElement } = useChatOverlays({
@@ -175,7 +166,6 @@ export function useChatSurface({
     canModerateChat,
     channelId,
     currentUserId: user?.id,
-    disableEmoteAnimations: preferences.disableEmoteAnimations,
     handleReply,
     hiddenUsers,
     highlightedUsers,
@@ -183,26 +173,16 @@ export function useChatSurface({
     hideUserFromView,
     insertPhraseToComposer,
     onClearChatCache: handleClearChatCache,
-    onClearImageCache: handleDebugClearImageCache,
+    onClearImageCache: handleClearImageCache,
     onClearSevenTvCosmeticsCache: handleClearSevenTvCosmeticsCache,
     onInsertEmote: handleEmoteSelect,
     onPinMessage: handlePinMessage,
     onRefreshPinnedMessage: handleRefreshPinnedMessage,
     onSettingsReconnect: handleSettingsReconnect,
     onSettingsRefetchEmotes: handleSettingsRefetchEmotes,
-    onToggleChatDensity: handleToggleChatDensity,
-    onToggleHighlightOwnMentions: handleToggleHighlightOwnMentions,
-    onToggleInlineReplyContext: handleToggleInlineReplyContext,
-    onToggleShowTimestamps: handleToggleShowTimestamps,
-    onToggleShowUnreadJumpPill: handleToggleShowUnreadJumpPill,
     onUnpinPinnedMessage: handleUnpinPinnedMessage,
     pinnedMessageBusy,
     pinnedMessageId,
-    showInlineReplyContext: preferences.showInlineReplyContext,
-    showTimestamps: preferences.chatTimestamps,
-    showUnreadJumpPill: preferences.showUnreadJumpPill,
-    chatDensity: preferences.chatDensity,
-    highlightOwnMentions: preferences.highlightOwnMentions,
     toggleHighlightedUser,
   });
 
@@ -220,12 +200,10 @@ export function useChatSurface({
       canModerateChat,
       connected: twitchConnectionState === ReadyState.OPEN,
       showOnlyMentions,
-      showTimestamps: preferences.chatTimestamps,
       shouldMaintainScrollAtEnd,
     }),
     [
       canModerateChat,
-      preferences.chatTimestamps,
       shouldMaintainScrollAtEnd,
       showOnlyMentions,
       twitchConnectionState,
@@ -260,7 +238,7 @@ export function useChatSurface({
     getItemType,
     handleClearChatCache,
     handleClearSevenTvCosmeticsCache,
-    handleDebugClearImageCache,
+    handleClearImageCache,
     handleEmoteSelect,
     handleOpenEmoteSheet,
     handleOpenSettingsSheet,
@@ -272,11 +250,6 @@ export function useChatSurface({
     handleResumeScrollToBottom,
     handleSettingsReconnect,
     handleSettingsRefetchEmotes,
-    handleToggleChatDensity,
-    handleToggleHighlightOwnMentions,
-    handleToggleInlineReplyContext,
-    handleToggleShowTimestamps,
-    handleToggleShowUnreadJumpPill,
     handleUnpinPinnedMessage,
     keyExtractor,
     listContentStyle,

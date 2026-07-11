@@ -8,7 +8,7 @@ import { paintRendererFlag$ } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
-import { PaintedUsername } from '../CosmeticUsername/CosmeticUsername';
+import { PaintedUsername } from '../CosmeticUsername/PaintedUsername';
 import { PaintLayerTiledImage } from '../CosmeticUsername/PaintLayerTiledImage';
 
 jest.mock('expo-image', () => {

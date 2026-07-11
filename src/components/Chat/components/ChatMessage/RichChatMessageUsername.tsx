@@ -4,7 +4,7 @@ import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchC
 import { lightenColor } from '@app/utils/color/lightenColor';
 
 import { ChatMessagePressable } from './ChatMessagePressable';
-import { PaintedUsername } from './CosmeticUsername/CosmeticUsername';
+import { PaintedUsername } from './CosmeticUsername/PaintedUsername';
 import { styles } from './RichChatMessage.styles';
 
 const usernameTextStyles: Record<

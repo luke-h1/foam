@@ -93,17 +93,21 @@ export type ChatListRenderItem = (
   info: ChatListRenderItemInfo,
 ) => ReactElement | null;
 
+export interface ChatListScrollHandlers {
+  onContentSizeChange: () => void;
+  onEndReached: () => void;
+  onMomentumScrollBegin: () => void;
+  onMomentumScrollEnd: () => void;
+  onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  onScrollBeginDrag: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  onScrollEndDrag: () => void;
+}
+
 interface ChatListProps {
   data: AnyChatMessageType[];
   listRef: RefObject<ChatListRef | null>;
   shouldMaintainScrollAtEnd: boolean;
-  handleScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
-  handleScrollBeginDrag: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
-  handleScrollEndDrag: () => void;
-  handleMomentumScrollBegin: () => void;
-  handleMomentumScrollEnd: () => void;
-  handleEndReached: () => void;
-  handleContentSizeChange: () => void;
+  scrollHandlers: ChatListScrollHandlers;
   renderItem: ChatListRenderItem;
   keyExtractor: (item: AnyChatMessageType, index: number) => string;
   getItemType: (item: AnyChatMessageType) => string;
@@ -117,13 +121,7 @@ export const ChatList = memo(
     data,
     listRef,
     shouldMaintainScrollAtEnd,
-    handleScroll,
-    handleScrollBeginDrag,
-    handleScrollEndDrag,
-    handleMomentumScrollBegin,
-    handleMomentumScrollEnd,
-    handleEndReached,
-    handleContentSizeChange,
+    scrollHandlers,
     renderItem,
     keyExtractor,
     getItemType,
@@ -205,14 +203,14 @@ export const ChatList = memo(
           shouldMaintainScrollAtEnd ? CHAT_MAINTAIN_SCROLL_AT_END : false
         }
         maintainScrollAtEndThreshold={CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD}
-        onScroll={handleScroll}
-        onScrollBeginDrag={handleScrollBeginDrag}
-        onScrollEndDrag={handleScrollEndDrag}
-        onMomentumScrollBegin={handleMomentumScrollBegin}
-        onMomentumScrollEnd={handleMomentumScrollEnd}
-        onEndReached={handleEndReached}
+        onScroll={scrollHandlers.onScroll}
+        onScrollBeginDrag={scrollHandlers.onScrollBeginDrag}
+        onScrollEndDrag={scrollHandlers.onScrollEndDrag}
+        onMomentumScrollBegin={scrollHandlers.onMomentumScrollBegin}
+        onMomentumScrollEnd={scrollHandlers.onMomentumScrollEnd}
+        onEndReached={scrollHandlers.onEndReached}
         onEndReachedThreshold={CHAT_END_REACHED_THRESHOLD}
-        onContentSizeChange={handleContentSizeChange}
+        onContentSizeChange={scrollHandlers.onContentSizeChange}
         renderItem={renderLegendItem}
         extraData={extraData}
         style={styles.list}

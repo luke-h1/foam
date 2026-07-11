@@ -7,7 +7,7 @@ import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 
 import { Button as PressableButton } from '@app/components/Button/Button';
-import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/CosmeticUsername';
+import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/PaintedUsername';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
