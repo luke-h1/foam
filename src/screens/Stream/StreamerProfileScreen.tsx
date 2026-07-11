@@ -497,13 +497,21 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   const vodFallbackImage =
     user?.offline_image_url ?? user?.profile_image_url ?? '';
 
+  /**
+   * Read through a ref so renderItem stays referentially stable across
+   * download-state changes; the extraData tick below re-renders the visible
+   * cards with the fresh value.
+   */
+  const downloadingClipIdRef = useRef(downloadingClipId);
+  downloadingClipIdRef.current = downloadingClipId;
+
   const renderItem: ListRenderItem<ProfileListItem> = useCallback(
     ({ item }) => {
       if (item.kind === 'clip') {
         return (
           <ClipCard
             clip={item.clip}
-            downloading={downloadingClipId === item.clip.id}
+            downloading={downloadingClipIdRef.current === item.clip.id}
             onDownload={handleDownload}
             width={cardWidth}
           />
@@ -518,7 +526,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
         />
       );
     },
-    [cardWidth, downloadingClipId, handleDownload, vodFallbackImage],
+    [cardWidth, handleDownload, vodFallbackImage],
   );
 
   const isVods = activeTab === 'vods';

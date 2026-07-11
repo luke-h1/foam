@@ -11,16 +11,18 @@ import {
 } from '@app/components/ui/Icon/Icon';
 import {
   Children,
-  cloneElement,
   ComponentProps,
-  createContext,
   FC,
   Fragment,
-  isValidElement,
   ReactNode,
   Ref,
+  cloneElement,
+  createContext,
+  isValidElement,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -66,7 +68,7 @@ const RefreshContextProvider: FC<{
   const [subscriberCount, setSubscriberCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
-  const subscribe = (cb: RefreshCallback) => {
+  const subscribe = useCallback((cb: RefreshCallback) => {
     subscribersRef.current.add(cb);
     setSubscriberCount(count => count + 1);
 
@@ -74,9 +76,9 @@ const RefreshContextProvider: FC<{
       subscribersRef.current.delete(cb);
       setSubscriberCount(count => count - 1);
     };
-  };
+  }, []);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     const subscribers = Array.from(subscribersRef.current);
     if (subscribers.length === 0) {
       return;
@@ -88,17 +90,20 @@ const RefreshContextProvider: FC<{
     } finally {
       setRefreshing(false);
     }
-  };
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({
+      subscribe,
+      refresh,
+      refreshing,
+      hasSubscribers: subscriberCount > 0,
+    }),
+    [subscribe, refresh, refreshing, subscriberCount],
+  );
 
   return (
-    <RefreshContext.Provider
-      value={{
-        subscribe,
-        refresh,
-        refreshing,
-        hasSubscribers: subscriberCount > 0,
-      }}
-    >
+    <RefreshContext.Provider value={contextValue}>
       {children}
     </RefreshContext.Provider>
   );

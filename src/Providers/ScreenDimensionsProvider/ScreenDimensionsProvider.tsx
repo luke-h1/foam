@@ -1,4 +1,4 @@
-import { createContext, PropsWithChildren } from 'react';
+import { createContext, PropsWithChildren, useMemo } from 'react';
 import { useWindowDimensions } from 'react-native';
 
 import { Dimensions, DisplayMode, mode } from './dimensions';
@@ -23,15 +23,17 @@ const ScreenDimensionsContext = createContext<
 
 export const ScreenDimensionsProvider = ({ children }: PropsWithChildren) => {
   const window = useWindowDimensions();
-  const displayMode = mode(window);
 
-  const contextValue: ScreenDimensionsContextDataType = {
-    dimensions: {
-      width: Math.ceil(window.width),
-      height: Math.ceil(window.height),
-    },
-    displayMode,
-  };
+  const contextValue = useMemo<ScreenDimensionsContextDataType>(
+    () => ({
+      dimensions: {
+        width: Math.ceil(window.width),
+        height: Math.ceil(window.height),
+      },
+      displayMode: mode(window),
+    }),
+    [window],
+  );
 
   return (
     <ScreenDimensionsContext.Provider value={contextValue}>

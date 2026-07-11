@@ -2,8 +2,6 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, {
-  SharedValue,
-  useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -54,15 +52,7 @@ const TopStreamsListHeader = memo(function TopStreamsListHeader({
   );
 });
 
-interface TopStreamsScreenProps {
-  contentTopInset?: number;
-  scrollY?: SharedValue<number>;
-}
-
-export function TopStreamsScreen({
-  contentTopInset = 0,
-  scrollY,
-}: TopStreamsScreenProps = {}) {
+export function TopStreamsScreen() {
   const { t } = useTranslation('stream');
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const streamListLayout = usePreference('streamListLayout');
@@ -70,14 +60,6 @@ export function TopStreamsScreen({
   const listRef = useRef<FlashListRef<TwitchStream>>(null);
 
   useScrollToTop(listRef);
-
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: event => {
-      if (scrollY) {
-        scrollY.set(event.contentOffset.y);
-      }
-    },
-  });
 
   const {
     data: streams,
@@ -142,7 +124,7 @@ export function TopStreamsScreen({
 
   if (showSkeleton) {
     return (
-      <View style={[styles.container, { paddingTop: contentTopInset }]}>
+      <View style={styles.container}>
         {Array.from({ length: 5 }).map((_, index) => (
           // eslint-disable-next-line react/no-array-index-key
           <LiveStreamCardSkeleton key={index} layout={streamListLayout} />
@@ -177,7 +159,6 @@ export function TopStreamsScreen({
 
   return (
     <TopStreamsList
-      contentTopInset={contentTopInset}
       debouncedHandleLoadMore={debouncedHandleLoadMore}
       listHeader={listHeader}
       listRef={listRef}
@@ -185,14 +166,12 @@ export function TopStreamsScreen({
       refreshing={refreshing}
       remainingStreams={allStreams}
       renderItem={renderItem}
-      scrollHandler={scrollHandler}
       streamListLayout={streamListLayout}
     />
   );
 }
 
 function TopStreamsList({
-  contentTopInset,
   debouncedHandleLoadMore,
   listHeader,
   listRef,
@@ -200,10 +179,8 @@ function TopStreamsList({
   refreshing,
   remainingStreams,
   renderItem,
-  scrollHandler,
   streamListLayout,
 }: {
-  contentTopInset: number;
   debouncedHandleLoadMore: () => void;
   listHeader: React.ReactElement;
   listRef: React.RefObject<FlashListRef<TwitchStream> | null>;
@@ -211,7 +188,6 @@ function TopStreamsList({
   refreshing: boolean;
   remainingStreams: TwitchStream[];
   renderItem: ListRenderItem<TwitchStream>;
-  scrollHandler: ReturnType<typeof useAnimatedScrollHandler>;
   streamListLayout: StreamListLayout;
 }) {
   const listFadeStyle = useLayoutSwitchFade(streamListLayout);
@@ -229,14 +205,10 @@ function TopStreamsList({
         keyExtractor={item => item.id}
         getItemType={() => 'stream-item'}
         drawDistance={500}
-        contentContainerStyle={[
-          styles.listContent,
-          { paddingTop: contentTopInset },
-        ]}
+        contentContainerStyle={styles.listContent}
         ListHeaderComponent={listHeader}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={debouncedHandleLoadMore}
-        onScroll={scrollHandler}
         refreshing={refreshing}
         onEndReachedThreshold={0.3}
         onRefresh={onRefresh}
