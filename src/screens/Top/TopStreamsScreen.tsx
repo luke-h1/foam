@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, {
   useAnimatedStyle,
@@ -124,12 +124,17 @@ export function TopStreamsScreen() {
 
   if (showSkeleton) {
     return (
-      <View style={styles.container}>
-        {Array.from({ length: 5 }).map((_, index) => (
-          // eslint-disable-next-line react/no-array-index-key
-          <LiveStreamCardSkeleton key={index} layout={streamListLayout} />
-        ))}
-      </View>
+      <ScrollView
+        contentInsetAdjustmentBehavior='automatic'
+        scrollEnabled={false}
+        style={styles.container}
+      >
+        <LiveStreamCardSkeleton layout={streamListLayout} />
+        <LiveStreamCardSkeleton layout={streamListLayout} />
+        <LiveStreamCardSkeleton layout={streamListLayout} />
+        <LiveStreamCardSkeleton layout={streamListLayout} />
+        <LiveStreamCardSkeleton layout={streamListLayout} />
+      </ScrollView>
     );
   }
 

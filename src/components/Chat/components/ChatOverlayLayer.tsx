@@ -19,18 +19,12 @@ export interface ChatOverlayLayerProps {
   canModerateChat: boolean;
   highlightedUsers: string[];
   hiddenUsers: string[];
-  /**
-   * Which lazily-created sheets are currently mounted.
-   */
   mountedSheets: {
     chatters: boolean;
     emote: boolean;
     savedPhrases: boolean;
     settings: boolean;
   };
-  /**
-   * Viewer permissions for actions on the selected message and user.
-   */
   selectedMessageActions: {
     canDelete: boolean;
     canModerateUser: boolean;

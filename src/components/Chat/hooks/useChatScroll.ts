@@ -382,10 +382,6 @@ export const useChatScroll = ({
     }
   }, [clearBottomContentAnchor, clearScrollToBottomTimers]);
 
-  /**
-   * List-facing scroll events under their LegendList prop names, grouped so
-   * they travel the component tree as one stable prop.
-   */
   const scrollHandlers = useMemo(
     () => ({
       onContentSizeChange: handleContentSizeChange,

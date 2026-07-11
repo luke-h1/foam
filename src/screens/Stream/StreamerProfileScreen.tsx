@@ -502,11 +502,6 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   const vodFallbackImage =
     user?.offline_image_url ?? user?.profile_image_url ?? '';
 
-  /**
-   * Download state reaches rows through FlashList's extraData so renderItem
-   * stays referentially stable while visible cards still re-render with the
-   * fresh value.
-   */
   const listExtraData = useMemo<ProfileListExtraData>(
     () => ({ activeTab, downloadingClipId }),
     [activeTab, downloadingClipId],
