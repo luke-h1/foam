@@ -17,6 +17,7 @@ import {
 } from '@app/utils/string/createHitSlop';
 import { truncate } from '@app/utils/string/truncate';
 
+import { chatEntranceSpring } from '../util/chatEntranceSpring';
 import { isRefreshCommand } from '../util/slashCommandDefinitions';
 import { ChatComposer } from './ChatComposer/ChatComposer';
 import type {
@@ -32,6 +33,9 @@ import { ReplyPreviewBody } from './ReplyPreviewBody';
 import { useComposerDismissGesture } from './useComposerDismissGesture';
 
 export type { ReplyToData };
+
+const replyPreviewEntering = chatEntranceSpring(FadeInUp);
+const replyPreviewExiting = FadeOutDown.duration(140);
 
 export const ChatInputSection = memo(
   ({
@@ -71,8 +75,8 @@ export const ChatInputSection = memo(
       <View style={styles.wrapper} testID='chat-input-bar'>
         {replyTo && (
           <Animated.View
-            entering={FadeInUp.duration(180)}
-            exiting={FadeOutDown.duration(140)}
+            entering={replyPreviewEntering}
+            exiting={replyPreviewExiting}
             style={styles.replyPreview}
           >
             <View style={styles.replyIndicator} />

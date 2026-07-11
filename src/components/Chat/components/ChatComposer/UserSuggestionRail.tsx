@@ -1,10 +1,15 @@
 import { useDeferredValue } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import type { ChatUser } from '@app/store/chat/types/constants';
 
 import { UserSuggestions } from './components/UserSuggestions';
 import { useUserSuggestions } from './hooks/useUserSuggestions';
+import {
+  suggestionRailEntering,
+  suggestionRailExiting,
+} from './suggestionRailAnimations';
 
 interface UserSuggestionRailProps {
   handleUserSelect: (user: ChatUser) => void;
@@ -33,13 +38,17 @@ export function UserSuggestionRail({
   }
 
   return (
-    <View style={styles.suggestionRail}>
+    <Animated.View
+      style={styles.suggestionRail}
+      entering={suggestionRailEntering}
+      exiting={suggestionRailExiting}
+    >
       <UserSuggestions
         users={validUsers}
         showUserSuggestions
         handleUserSelect={handleUserSelect}
       />
-    </View>
+    </Animated.View>
   );
 }
 
