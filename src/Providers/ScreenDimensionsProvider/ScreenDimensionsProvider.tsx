@@ -22,17 +22,17 @@ const ScreenDimensionsContext = createContext<
  */
 
 export const ScreenDimensionsProvider = ({ children }: PropsWithChildren) => {
-  const window = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
 
   const contextValue = useMemo<ScreenDimensionsContextDataType>(
     () => ({
       dimensions: {
-        width: Math.ceil(window.width),
-        height: Math.ceil(window.height),
+        width: Math.ceil(width),
+        height: Math.ceil(height),
       },
-      displayMode: mode(window),
+      displayMode: mode({ width, height }),
     }),
-    [window],
+    [width, height],
   );
 
   return (

@@ -27,6 +27,7 @@ import {
   updateSevenTvEmotes,
 } from '../actions/channelLoad';
 import { clearGlobalResourceCache } from '../actions/channelResources';
+import { clearMessages } from '../actions/messages';
 import { chatStore$ } from '../observables/chatStore';
 import type { SubscriberChannelProfile } from '../types/constants';
 import { emptyEmoteData } from '../types/constants';
@@ -447,7 +448,7 @@ describe('loadChannelResources cache fallback', () => {
   });
 
   test('posts a system message naming the providers whose fetch failed', async () => {
-    chatStore$.messages.set([]);
+    clearMessages();
 
     mockGetBttvGlobalEmotes.mockRejectedValue(new Error('TimeoutError'));
     mockGetBttvChannelEmotes.mockRejectedValue(new Error('TimeoutError'));
@@ -472,7 +473,7 @@ describe('loadChannelResources cache fallback', () => {
   });
 
   test('posts a fallback system message when failed providers still have cached slices', async () => {
-    chatStore$.messages.set([]);
+    clearMessages();
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
         ...emptyEmoteData,
@@ -510,7 +511,7 @@ describe('loadChannelResources cache fallback', () => {
   });
 
   test('posts a system message when stale badge refresh requests reject', async () => {
-    chatStore$.messages.set([]);
+    clearMessages();
     jest.spyOn(Date, 'now').mockReturnValue(3_700_000);
     chatStore$.persisted.channelCaches.set({
       [channelId]: {
@@ -541,7 +542,7 @@ describe('loadChannelResources cache fallback', () => {
   });
 
   test('posts no system message when every provider fetch succeeds', async () => {
-    chatStore$.messages.set([]);
+    clearMessages();
 
     await expect(loadChannelResources({ channelId })).resolves.toBe(true);
 
