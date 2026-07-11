@@ -7,7 +7,7 @@ export interface BttvBadge {
    * this id.
    */
   providerId: string;
-  badge: {
+  badge?: {
     type: number;
     description: string;
     svg: string;

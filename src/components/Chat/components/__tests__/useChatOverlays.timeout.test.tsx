@@ -2,15 +2,19 @@ import { useEffect } from 'react';
 
 import { act } from '@testing-library/react-native';
 
+import { createMessageActionData } from '@app/components/Chat/hooks/__tests__/__fixtures__/useChat.fixture';
 import { runModCommand } from '@app/components/Chat/util/runModCommand';
 import render from '@app/test/render';
 import { showActionMenu } from '@app/utils/actionMenu/showActionMenu';
 
+import type { UsernamePressData } from '../ChatMessage/RichChatMessage';
 import { type ChatOverlayOpeners, useChatOverlays } from '../useChatOverlays';
 
 interface CapturedLayerProps {
+  onActionSheetTimeoutUser: () => void;
   onBanSelectedUser: () => void;
   onTimeoutSelectedUser: () => void;
+  selectedMessage: { username?: string } | null;
   selectedUser: { username: string } | null;
 }
 
@@ -151,7 +155,7 @@ describe('useChatOverlays moderation targets', () => {
     expect(mockLayerProps?.selectedUser).toBeNull();
   });
 
-  test('cancelling the duration menu keeps the user selected and runs nothing', () => {
+  test('opening the duration menu keeps the user selected until a duration is chosen', () => {
     const layerProps = renderOverlaysWithSelectedUser();
 
     act(() => {
@@ -159,10 +163,56 @@ describe('useChatOverlays moderation targets', () => {
     });
 
     expect(runModCommandMock).not.toHaveBeenCalled();
-    expect(mockLayerProps?.selectedUser).toEqual({
+    expect(mockLayerProps?.selectedUser).toEqual<UsernamePressData>({
       login: 'viewer',
       username: 'Viewer',
     });
+  });
+
+  test('timeout from the message sheet targets the author and clears the message selection', () => {
+    let openers: ChatOverlayOpeners | undefined;
+    render(
+      <Harness
+        onReady={ready => {
+          openers = ready;
+        }}
+      />,
+    );
+    if (!openers) {
+      throw new Error('useChatOverlays openers were not captured');
+    }
+    const readyOpeners = openers;
+
+    act(() => {
+      readyOpeners.openMessageActions(createMessageActionData());
+    });
+    if (!mockLayerProps) {
+      throw new Error('ChatOverlayLayer props were not captured');
+    }
+
+    act(() => {
+      mockLayerProps?.onActionSheetTimeoutUser();
+    });
+
+    const menu = showActionMenuMock.mock.calls.at(0)?.[0];
+    if (!menu) {
+      throw new Error('showActionMenu was not called with options');
+    }
+    const oneMinute = menu.actions[1];
+    if (!oneMinute) {
+      throw new Error('expected a 1 minute duration option');
+    }
+    act(() => {
+      oneMinute.onPress();
+    });
+
+    expect(runModCommandMock).toHaveBeenCalledTimes(1);
+    expect(runModCommandMock.mock.calls[0]).toEqual([
+      { type: 'timeout', login: 'Viewer', durationSeconds: 60 },
+      'channel-1',
+      'mod-1',
+    ]);
+    expect(mockLayerProps?.selectedMessage).toBeNull();
   });
 
   test('ban runs immediately without a duration menu', () => {

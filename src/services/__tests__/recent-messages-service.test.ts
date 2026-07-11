@@ -29,6 +29,22 @@ describe('recent-messages-service', () => {
     expect(parsed?.params).toEqual(['#foam', 'hello chat']);
   });
 
+  test('unescapes IRCv3 tag values in replayed lines', () => {
+    const parsed = parseIrcMessage(
+      '@msg-id=resub;system-msg=5\\smonths\\:\\sPog\\\\s :tmi.twitch.tv USERNOTICE #foam :resubbed',
+    );
+
+    expect(parsed).toEqual<ParsedIrcMessage>({
+      tags: {
+        'msg-id': 'resub',
+        'system-msg': '5 months; Pog\\s',
+      },
+      prefix: 'tmi.twitch.tv',
+      command: 'USERNOTICE',
+      params: ['#foam', 'resubbed'],
+    });
+  });
+
   test('parses IRC tag flags and ignores empty tag keys', () => {
     const parsed = parseIrcMessage('@historical;=ignored;id=msg-3 PING');
 

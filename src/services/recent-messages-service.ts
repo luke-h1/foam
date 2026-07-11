@@ -1,6 +1,6 @@
 import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
 import type { ParsedIrcMessage } from '@app/types/chat/recentMessages';
-import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
+import { parseIrcTags } from '@app/utils/chat/ircProtocol';
 
 const RECENT_MESSAGES_URL =
   'https://recent-messages.robotty.de/api/v2/recent-messages';
@@ -10,29 +10,6 @@ type RecentMessagesResponse = {
   error?: unknown;
   error_code?: unknown;
 };
-
-function parseTags(tagString: string): Record<string, string> {
-  const tags: Record<string, string> = {};
-
-  tagString.split(';').forEach(part => {
-    const separatorIndex = part.indexOf('=');
-    if (separatorIndex < 0) {
-      if (part) {
-        tags[part] = '';
-      }
-      return;
-    }
-
-    const key = part.slice(0, separatorIndex);
-    if (!key) {
-      return;
-    }
-
-    tags[key] = unescapeIrcTag(part.slice(separatorIndex + 1));
-  });
-
-  return tags;
-}
 
 export function parseIrcMessage(line: string): ParsedIrcMessage | null {
   if (!line.trim()) {
@@ -49,7 +26,7 @@ export function parseIrcMessage(line: string): ParsedIrcMessage | null {
       return null;
     }
 
-    tags = parseTags(remaining.slice(1, tagEnd));
+    tags = parseIrcTags(remaining.slice(1, tagEnd));
     remaining = remaining.slice(tagEnd + 1).trim();
   }
 
