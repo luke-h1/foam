@@ -79,6 +79,54 @@ describe('processEmotesWorklet zero-width overlays', () => {
     ]);
   });
 
+  test('consumes every duplicate in a three-in-a-row zero-width run', () => {
+    const peepoHappy = createEmote({ id: 'base-emote', name: 'peepoHappy' });
+    const soSnowy = createEmote({
+      id: 'zw-snow',
+      name: 'SoSnowy',
+      zero_width: true,
+    });
+
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'peepoHappy SoSnowy SoSnowy SoSnowy',
+      sevenTvChannelEmotes: [peepoHappy, soSnowy],
+    });
+
+    expect(result).toHaveLength(1);
+    const base = result[0] as ParsedPart<'emote'>;
+    expect((base.overlaid ?? []).map(overlay => overlay.id)).toEqual([
+      'zw-snow',
+    ]);
+  });
+
+  test('consumes a duplicate zero-width emote separated by another overlay', () => {
+    const peepoHappy = createEmote({ id: 'base-emote', name: 'peepoHappy' });
+    const soSnowy = createEmote({
+      id: 'zw-snow',
+      name: 'SoSnowy',
+      zero_width: true,
+    });
+    const iceCold = createEmote({
+      id: 'zw-cold',
+      name: 'IceCold',
+      zero_width: true,
+    });
+
+    const result = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'peepoHappy SoSnowy IceCold SoSnowy',
+      sevenTvChannelEmotes: [peepoHappy, soSnowy, iceCold],
+    });
+
+    expect(result).toHaveLength(1);
+    const base = result[0] as ParsedPart<'emote'>;
+    expect((base.overlaid ?? []).map(overlay => overlay.id)).toEqual([
+      'zw-snow',
+      'zw-cold',
+    ]);
+  });
+
   test('stacks distinct zero-width emotes onto the preceding base emote', () => {
     const peepoHappy = createEmote({ id: 'base-emote', name: 'peepoHappy' });
     const soSnowy = createEmote({

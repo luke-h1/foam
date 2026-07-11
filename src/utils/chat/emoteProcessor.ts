@@ -285,15 +285,15 @@ function applyEmoteCompositionPass(parts: ParsedPart[]): ParsedPart[] {
       const base = anchor >= 0 ? out[anchor] : undefined;
       if (base?.type === 'emote' && !base.zero_width) {
         out.length = anchor + 1;
-        // Don't stack the same emote id twice in a row: `SoSnowy SoSnowy`
-        // would otherwise composite two identical overlays pixel-perfect,
-        // doubling decode/GPU work and darkening semi-transparent overlays.
-        // The duplicate is still consumed (not rendered standalone).
+        // Skip re-stacking an emote id already in the stack: overlays all
+        // composite at the base position, so a duplicate anywhere doubles
+        // decode/GPU work and darkens semi-transparent art. The duplicate is
+        // still consumed (not rendered standalone).
         const overlaid = base.overlaid ?? [];
-        const lastOverlaidId = overlaid.length
-          ? overlaid[overlaid.length - 1]?.id
-          : base.id;
-        if (lastOverlaidId !== part.id) {
+        const alreadyStacked =
+          base.id === part.id ||
+          overlaid.some(overlay => overlay.id === part.id);
+        if (!alreadyStacked) {
           base.overlaid = [...overlaid, part];
         }
         // eslint-disable-next-line no-continue

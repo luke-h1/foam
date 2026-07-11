@@ -177,6 +177,7 @@ export function findBadges({
 }: FindBadgesParams): SanitisedBadgeSet[] {
   const badges: SanitisedBadgeSet[] = [];
 
+  // Custom FFZ channel art overrides the default Twitch mod/VIP badge.
   const ffzChannelBadgeIndex = getBadgeSetIndex(ffzChannelBadges);
   const ffzModBadge = ffzChannelBadgeIndex.get('mod/mod_badge');
   const ffzVipBadge = ffzChannelBadgeIndex.get('vip/vip_badge');

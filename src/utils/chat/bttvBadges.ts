@@ -21,11 +21,16 @@ function loadBttvBadges(): void {
       }
     })
     .catch(error => {
+      // Reset so a later read retries instead of being stuck on the empty list.
       fetchStarted = false;
       logger.chat.warn('Failed to fetch BTTV badges', { error });
     });
 }
 
+/**
+ * Synchronous accessor so the per-message badge resolver never awaits: the
+ * first call kicks off the fetch and returns an empty list until it lands.
+ */
 export function getBttvBadges(): SanitisedBadgeSet[] {
   if (!fetchStarted) {
     loadBttvBadges();

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import type { SanitisedEmote } from '@app/types/emote';
+import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import { CHAT_INLINE_EMOTE_SCALE } from '@app/utils/emote/resolveEmoteScale';
 import { logger } from '@app/utils/logger';
@@ -12,11 +13,12 @@ export type CachedEmotesLoadingState = 'IDLE' | 'WARMING' | 'WARMED';
 
 const WARM_BATCH_SIZE = 24;
 /**
- * How many emotes to eagerly decode into the shared ref cache on channel entry.
- * Decodes are capped at 8 concurrent, so these counts set the warm storm's
- * *duration*, and while it runs it starves the per-frame decoding of an animated
- * emote that's on screen (it plays choppy until the storm drains). Warm the
- * common set; the long tail decodes on-demand. Tune against the Chat Perf harness.
+ * How many static emotes to eagerly decode into the shared ref cache on channel
+ * entry. Decodes are capped at 8 concurrent, so these counts set the warm
+ * storm's *duration*, and while it runs it starves the per-frame decoding of an
+ * animated emote that's on screen (it plays choppy until the storm drains). Warm
+ * the common set; the long tail decodes on-demand. Tune against the Chat Perf
+ * harness.
  */
 const WARM_LIMIT = 64;
 const GLOBAL_WARM_LIMIT = 64;
@@ -33,7 +35,12 @@ function collectDisplayUrls(emotes: SanitisedEmote[], limit: number): string[] {
       static_url: emote.static_url,
       preferredScale: CHAT_INLINE_EMOTE_SCALE,
     });
-    if (url) {
+    // Don't eagerly warm animated emotes: decoding their multi-frame working set
+    // is the bulk of the entry storm and the main thing starving the on-screen
+    // animated emote's own frames. They decode on-demand when they first appear
+    // (that decode preempts warm, so it's still prompt); static emotes stay warm
+    // for an instant first paint.
+    if (url && describeEmoteUrl(url).kind !== 'animated') {
       urls.add(url);
     }
   }

@@ -102,6 +102,8 @@ export const ChatInputShell = memo(function ChatInputShell({
   const { messageInput, replyTo } = draft;
   const messageInputRef = useRef(messageInput);
   const isAuthenticated = Boolean(user?.id && user?.login);
+  const [prevIsAuthenticated, setPrevIsAuthenticated] =
+    useState(isAuthenticated);
 
   const clearDraft = useCallback(() => {
     messageInputRef.current = '';
@@ -109,8 +111,6 @@ export const ChatInputShell = memo(function ChatInputShell({
     setDraft(createEmptyDraft());
   }, []);
 
-  // Also runs signed out: the composer stays editable so anyone can type
-  // /refresh, and the sign-out effect below resets the draft.
   const handleComposerTextChange = useCallback((text: string) => {
     messageInputRef.current = text;
     setDraft(prev => ({ ...prev, messageInput: text }));
@@ -144,12 +144,21 @@ export const ChatInputShell = memo(function ChatInputShell({
     setDraft(prev => ({ ...prev, replyTo: null }));
   }, []);
 
+  if (prevIsAuthenticated !== isAuthenticated) {
+    setPrevIsAuthenticated(isAuthenticated);
+    if (!isAuthenticated) {
+      setDraft(createEmptyDraft());
+    }
+  }
+
+  // The native composer owns its text, so sign-out also clears it
+  // imperatively; setText is a side effect and must run after commit.
   useEffect(() => {
     if (!isAuthenticated) {
-      // eslint-disable-next-line react-doctor/no-derived-state -- draft is user input (not derivable); this resets it AND imperatively clears the native composer (setText) on sign-out
-      clearDraft();
+      messageInputRef.current = '';
+      chatInputRef.current?.setText('');
     }
-  }, [clearDraft, isAuthenticated]);
+  }, [isAuthenticated]);
 
   const handleSendMessage = useCallback(() => {
     const currentInput = messageInputRef.current;
