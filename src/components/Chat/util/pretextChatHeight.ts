@@ -9,14 +9,11 @@ import {
 } from '../components/ChatMessage/RichChatMessage.styles';
 import { canRenderMessageInline } from './canRenderMessageInline';
 import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
-import {
-  type InlineFlowItem,
-  measureInlineFlow,
-  measureNaturalWidth,
-  prepareInlineFlow,
-  prepareWithSegments,
-  type TextStyle,
-} from './expoPretext';
+import { measureInlineFlow } from './expoPretext/measureInlineFlow';
+import { measureNaturalWidth } from './expoPretext/measureNaturalWidth';
+import { prepareInlineFlow } from './expoPretext/prepareInlineFlow';
+import { prepareWithSegments } from './expoPretext/prepareWithSegments';
+import type { InlineFlowItem, TextStyle } from './expoPretext/types';
 import type { AnyChatMessageType } from './messageHandlers';
 
 /**
