@@ -12,15 +12,20 @@ import {
 import type { PaintData } from '@app/types/seventv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
+import { setOnBttvBadgesLoaded } from '@app/utils/chat/bttvBadges';
 import {
   convertV4PaintToPaintData,
   type V4Badge,
 } from '@app/utils/color/sevenTvPaintData';
 import { logger } from '@app/utils/logger';
+import { deepEqualJson } from '@app/utils/object/deepEqualJson';
 import { getSevenTvSessionId } from '@app/utils/seventv/sevenTvSessionId';
 
 import { chatStore$ } from '../observables/chatStore';
-import { writePersistedCosmetics } from '../observables/cosmeticsPersistence';
+import {
+  writePersistedCosmeticBindings,
+  writePersistedCosmeticDefinitions,
+} from '../observables/cosmeticsPersistence';
 import { MAX_COSMETIC_ENTRIES } from '../types/constants';
 import {
   clearAllMissingBadges,
@@ -34,31 +39,66 @@ export const bumpCosmeticBindingsVersion = (): void => {
   chatStore$.cosmeticBindingsVersion.set(version => version + 1);
 };
 
+const COSMETIC_BINDINGS_BUMP_COALESCE_MS = 1000;
+let cosmeticBindingsBumpTimer: ReturnType<typeof setTimeout> | null = null;
+
+const scheduleCosmeticBindingsBump = (): void => {
+  if (cosmeticBindingsBumpTimer) {
+    return;
+  }
+  cosmeticBindingsBumpTimer = setTimeout(() => {
+    cosmeticBindingsBumpTimer = null;
+    bumpCosmeticBindingsVersion();
+  }, COSMETIC_BINDINGS_BUMP_COALESCE_MS);
+};
+
+setOnBttvBadgesLoaded(scheduleCosmeticBindingsBump);
+
 const COSMETICS_PERSIST_DEBOUNCE_MS = 4000;
 let cosmeticsPersistTimer: ReturnType<typeof setTimeout> | null = null;
+let cosmeticDefinitionsDirty = false;
+let cosmeticBindingsDirty = false;
 
 /**
  * Debounced MMKV snapshot of the cosmetic maps. Cosmetics arrive in a burst as
  * a channel loads; coalescing into one write per quiet window keeps this off
- * the hot path and avoids repeated whole-map serialization.
+ * the hot path. Definitions and bindings persist under separate keys so the
+ * steady per-chatter binding syncs stop re-serializing hundreds of full paint
+ * definitions - the flush writes only the group(s) that actually changed.
  */
-export const scheduleCosmeticsPersist = (): void => {
+export const scheduleCosmeticsPersist = (
+  kind: 'definitions' | 'bindings' | 'both' = 'both',
+): void => {
+  if (kind !== 'bindings') {
+    cosmeticDefinitionsDirty = true;
+  }
+  if (kind !== 'definitions') {
+    cosmeticBindingsDirty = true;
+  }
   if (cosmeticsPersistTimer) {
     return;
   }
   cosmeticsPersistTimer = setTimeout(() => {
     cosmeticsPersistTimer = null;
-    writePersistedCosmetics({
-      paints: chatStore$.paints.peek(),
-      badges: chatStore$.badges.peek(),
-      userPaintIds: chatStore$.userPaintIds.peek(),
-      userBadgeIds: chatStore$.userBadgeIds.peek(),
-    });
+    if (cosmeticDefinitionsDirty) {
+      cosmeticDefinitionsDirty = false;
+      writePersistedCosmeticDefinitions({
+        paints: chatStore$.paints.peek(),
+        badges: chatStore$.badges.peek(),
+      });
+    }
+    if (cosmeticBindingsDirty) {
+      cosmeticBindingsDirty = false;
+      writePersistedCosmeticBindings({
+        userPaintIds: chatStore$.userPaintIds.peek(),
+        userBadgeIds: chatStore$.userBadgeIds.peek(),
+      });
+    }
   }, COSMETICS_PERSIST_DEBOUNCE_MS);
 };
 
 const USER_COSMETICS_CACHE_PREFIX = 'user-cosmetics:';
-// Keep persisted 7TV user cosmetics for at most 2 hours before refetching.
+
 const USER_COSMETICS_CACHE_TTL_MS = 2 * 60 * 60 * 1000;
 const USER_COSMETICS_NEGATIVE_CACHE_TTL_MS = 30 * 60 * 1000;
 const SEVEN_TV_CACHE_NAMESPACE = 'seven_tv_cache';
@@ -198,9 +238,6 @@ function buildCachedUserCosmeticsFromStore(
   };
 }
 
-/**
- * Mirror live chatStore bindings into the per-user GQL cache after a 7TV push.
- */
 export const syncCachedUserCosmeticsFromStore = (
   sevenTvUserId: string,
   ttvUserId: string,
@@ -274,10 +311,6 @@ export const fetchAndCacheUserCosmetics = async (
   });
 };
 
-/**
- * Fetch a chatter's cosmetics via v4 GQL from their Twitch id. Used when a
- * WebSocket entitlement arrives without its cosmetic definition.
- */
 export const fetchUserCosmeticsByTwitchId = async (
   twitchUserId: string,
 ): Promise<void> => {
@@ -287,10 +320,6 @@ export const fetchUserCosmeticsByTwitchId = async (
   }
 };
 
-/**
- * Request a chatter's cosmetics via a passive 7TV presence write. Falls back to
- * v4 GQL when there is no live EventAPI session.
- */
 export const requestUserCosmeticsViaPresence = async (
   twitchUserId: string,
 ): Promise<void> => {
@@ -313,6 +342,10 @@ export const requestUserCosmeticsViaPresence = async (
 };
 
 export const clearUserCosmeticsCache = () => {
+  if (cosmeticBindingsBumpTimer) {
+    clearTimeout(cosmeticBindingsBumpTimer);
+    cosmeticBindingsBumpTimer = null;
+  }
   userCosmeticsFetchGuard.clear();
   sessionCosmeticsCache.clear();
   clearSevenTvUserIdCache();
@@ -327,7 +360,6 @@ export const clearUserCosmeticsCache = () => {
 
 export const setUserPaint = (ttvUserId: string, paintId: string): void => {
   const current = chatStore$.userPaintIds.peek();
-  const previousPaintId = current[ttvUserId];
 
   if (
     !(ttvUserId in current) &&
@@ -342,17 +374,47 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
     chatStore$.userPaintIds[ttvUserId]?.set(paintId);
   }
 
-  if (previousPaintId !== paintId) {
-    bumpCosmeticBindingsVersion();
-  }
+  scheduleCosmeticsPersist('bindings');
+};
 
-  scheduleCosmeticsPersist();
+/**
+ * Popular paints re-arrive with a fresh object identity per wearer sighting
+ * (GQL conversion / MMKV round-trip both construct new objects). Storing an
+ * equal-content copy rotates the WeakMap-keyed paint layer caches and
+ * re-syncs every cached wearer to MMKV - O(wearers²) during entitlement
+ * bursts - so no-op writes are dropped via structural compare.
+ */
+const isSamePaintDefinition = (
+  previous: PaintData | undefined,
+  next: PaintData,
+): boolean => previous != null && deepEqualJson(previous, next);
+
+const MAX_PAINT_DEFINITIONS = 750;
+
+const sweepUnreferencedPaints = () => {
+  const paints = chatStore$.paints.peek();
+  const paintIds = Object.keys(paints);
+  if (paintIds.length < MAX_PAINT_DEFINITIONS) {
+    return;
+  }
+  const referenced = new Set(Object.values(chatStore$.userPaintIds.peek()));
+  const next: typeof paints = {};
+  paintIds.forEach(paintId => {
+    if (referenced.has(paintId)) {
+      next[paintId] = paints[paintId] as PaintData;
+    }
+  });
+  chatStore$.paints.set(next);
 };
 
 export const addPaint = (paint: PaintData) => {
   if (paint.id) {
+    if (isSamePaintDefinition(chatStore$.paints[paint.id]?.peek(), paint)) {
+      return;
+    }
+    sweepUnreferencedPaints();
     chatStore$.paints[paint.id]?.set(paint);
-    scheduleCosmeticsPersist();
+    scheduleCosmeticsPersist('definitions');
     refreshCachedUserCosmeticsForDefinition(paint.id);
   }
 };
@@ -365,18 +427,22 @@ export const getUserPaintId = (ttvUserId: string): string | undefined =>
 
 let userPaintFlagInvalidatorAttached = false;
 
-/**
- * getChatRowItemType calls `hasUserPaint` once per visible row on every list
- * data change, so the paints/userPaintIds traversal below is cached per user
- * id and cleared wholesale whenever either map changes structurally.
- */
 function ensureUserPaintFlagInvalidator(): void {
   if (userPaintFlagInvalidatorAttached) {
     return;
   }
   userPaintFlagInvalidatorAttached = true;
   const clear = () => chatStore$.sessionCaches.userPaintFlags.set({});
-  chatStore$.userPaintIds.onChange(clear);
+  chatStore$.userPaintIds.onChange(({ changes }) => {
+    for (const change of changes) {
+      const changedUserId = change.path[0];
+      if (typeof changedUserId !== 'string') {
+        clear();
+        return;
+      }
+      chatStore$.sessionCaches.userPaintFlags[changedUserId]?.delete();
+    }
+  });
   chatStore$.paints.onChange(clear);
 }
 
@@ -404,6 +470,25 @@ export const hasUserPaint = (ttvUserId?: string): boolean => {
   return result;
 };
 
+/**
+ * Same rationale as `isSamePaintDefinition`: badge definitions re-arrive per
+ * wearer sighting with fresh identity, and an equal-content rewrite would
+ * re-sync every cached wearer to MMKV. Badges are flat, so field comparison
+ * is enough.
+ */
+const isSameBadgeDefinition = (
+  previous: SanitisedBadgeSet | undefined,
+  next: SanitisedBadgeSet,
+): boolean =>
+  previous?.id === next.id &&
+  previous.url === next.url &&
+  previous.type === next.type &&
+  previous.title === next.title &&
+  previous.set === next.set &&
+  previous.provider === next.provider &&
+  previous.color === next.color &&
+  previous.owner_username === next.owner_username;
+
 export const addBadge = (badge: SanitisedBadgeSet) => {
   if (!badge.id) {
     return;
@@ -415,13 +500,18 @@ export const addBadge = (badge: SanitisedBadgeSet) => {
   }
 
   const cell = chatStore$.badges[badge.id];
-  const previousUrl = cell?.peek()?.url?.trim();
-  cell?.set(normalizedBadge);
+  const previous = cell?.peek();
   clearMissingBadge(badge.id);
-  scheduleCosmeticsPersist();
+  if (isSameBadgeDefinition(previous, normalizedBadge)) {
+    return;
+  }
+
+  const previousUrl = previous?.url?.trim();
+  cell?.set(normalizedBadge);
+  scheduleCosmeticsPersist('definitions');
 
   if (previousUrl !== normalizedBadge.url.trim()) {
-    bumpCosmeticBindingsVersion();
+    scheduleCosmeticBindingsBump();
   }
 
   refreshCachedUserCosmeticsForDefinition(badge.id);
@@ -452,17 +542,15 @@ export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
     chatStore$.userBadgeIds[ttvUserId]?.set(badgeId);
   }
 
-  // Surface entitlements that reference a badge we have not loaded a
-  // definition for yet (e.g. the cosmetic.create has not arrived).
   if (!getBadge(badgeId)) {
     reportMissingBadge(badgeId, ttvUserId);
   }
 
   if (previousBadgeId !== badgeId) {
-    bumpCosmeticBindingsVersion();
+    scheduleCosmeticBindingsBump();
   }
 
-  scheduleCosmeticsPersist();
+  scheduleCosmeticsPersist('bindings');
 };
 
 export const getUserBadge = (
@@ -495,12 +583,18 @@ export const updateBadge = (badge: SanitisedBadgeSet) => {
   }
 
   const cell = chatStore$.badges[badge.id];
-  const previousUrl = cell?.peek()?.url?.trim();
-  cell?.set(normalizedBadge);
+  const previous = cell?.peek();
   clearMissingBadge(badge.id);
+  if (isSameBadgeDefinition(previous, normalizedBadge)) {
+    return;
+  }
+
+  const previousUrl = previous?.url?.trim();
+  cell?.set(normalizedBadge);
+  scheduleCosmeticsPersist('definitions');
 
   if (previousUrl !== normalizedBadge.url.trim()) {
-    bumpCosmeticBindingsVersion();
+    scheduleCosmeticBindingsBump();
   }
 
   refreshCachedUserCosmeticsForDefinition(badge.id);
@@ -519,6 +613,7 @@ export const removeBadge = (badgeId: string) => {
       ),
     ),
   );
+  scheduleCosmeticsPersist();
 };
 
 export const removeUserBadge = (ttvUserId: string) => {
@@ -529,12 +624,17 @@ export const removeUserBadge = (ttvUserId: string) => {
 
   const { [ttvUserId]: _, ...rest } = current;
   chatStore$.userBadgeIds.set(rest);
-  bumpCosmeticBindingsVersion();
+  scheduleCosmeticsPersist('bindings');
+  scheduleCosmeticBindingsBump();
 };
 
 export const updatePaint = (paint: PaintData) => {
   if (paint.id) {
+    if (isSamePaintDefinition(chatStore$.paints[paint.id]?.peek(), paint)) {
+      return;
+    }
     chatStore$.paints[paint.id]?.set(paint);
+    scheduleCosmeticsPersist('definitions');
     refreshCachedUserCosmeticsForDefinition(paint.id);
   }
 };
@@ -550,6 +650,7 @@ export const removePaint = (paintId: string) => {
       ),
     ),
   );
+  scheduleCosmeticsPersist();
 };
 
 export const removeUserPaint = (ttvUserId: string) => {
@@ -560,7 +661,7 @@ export const removeUserPaint = (ttvUserId: string) => {
 
   const { [ttvUserId]: _, ...rest } = current;
   chatStore$.userPaintIds.set(rest);
-  bumpCosmeticBindingsVersion();
+  scheduleCosmeticsPersist('bindings');
 };
 
 export const clearPaints = () => {
@@ -568,6 +669,12 @@ export const clearPaints = () => {
     chatStore$.paints.set({});
     chatStore$.userPaintIds.set({});
   });
+  scheduleCosmeticsPersist();
+};
+
+export const clearPaintBindings = () => {
+  chatStore$.userPaintIds.set({});
+  scheduleCosmeticsPersist('bindings');
 };
 
 export const clearSevenTvBadges = () => {
@@ -575,6 +682,7 @@ export const clearSevenTvBadges = () => {
     chatStore$.badges.set({});
     chatStore$.userBadgeIds.set({});
   });
+  scheduleCosmeticsPersist();
 };
 
 const clearPaintsAndBadges = () => {

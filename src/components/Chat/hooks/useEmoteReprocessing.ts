@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { updateMessages } from '@app/store/chat/actions/messages';
@@ -12,6 +12,8 @@ import { resolveMessageEmoteParts } from '../util/resolveMessageEmoteParts';
 
 const EMOTE_REPROCESS_BATCH_DELAY_MS = 32;
 const EMOTE_REPROCESS_BATCH_SIZE = 6;
+
+const MAX_PROCESSED_MESSAGE_IDS = 5000;
 
 export function useEmoteReprocessing({
   channelId,
@@ -27,7 +29,7 @@ export function useEmoteReprocessing({
   channelEmoteData: unknown;
   messages$: { peek: () => AnyChatMessageType[] };
   emoteLoadStatus: string;
-  processedMessageIdsRef: MutableRefObject<Set<string>>;
+  processedMessageIdsRef: RefObject<Set<string>>;
   reprocessKey?: string;
   show7TvEmotes: boolean;
   userLogin?: string | null;
@@ -38,6 +40,10 @@ export function useEmoteReprocessing({
     if (previousReprocessKeyRef.current !== reprocessKey) {
       processedMessageIdsRef.current.clear();
       previousReprocessKeyRef.current = reprocessKey;
+    } else if (
+      processedMessageIdsRef.current.size > MAX_PROCESSED_MESSAGE_IDS
+    ) {
+      processedMessageIdsRef.current.clear();
     }
 
     if (emoteLoadStatus !== 'success') {
@@ -90,15 +96,18 @@ export function useEmoteReprocessing({
         return;
       }
 
-      const hasUnparsedMention = msg.message.some(
-        part => part.type === 'text' && /(?:^|\s)@[\w-]+/.test(part.content),
-      );
-
-      if (
-        processedMessageIdsRef.current.has(msg.message_id) &&
-        !hasUnparsedMention
-      ) {
-        return;
+      if (processedMessageIdsRef.current.has(msg.message_id)) {
+        /**
+         * Re-check only when a text part still carries a raw @mention (its
+         * login resolved after the last pass); keep the regex behind the
+         * membership check.
+         */
+        const hasUnparsedMention = msg.message.some(
+          part => part.type === 'text' && /(?:^|\s)@[\w-]+/.test(part.content),
+        );
+        if (!hasUnparsedMention) {
+          return;
+        }
       }
 
       const textContent = getReprocessableText(msg.message);
@@ -128,6 +137,7 @@ export function useEmoteReprocessing({
 
       const replacedBadges = findBadges({
         userstate: msg.userstate,
+        bttvBadges: emoteData.bttvBadges,
         chatterinoBadges: emoteData.chatterinoBadges,
         ffzChannelBadges: emoteData.ffzChannelBadges,
         ffzGlobalBadges: emoteData.ffzGlobalBadges,
@@ -204,7 +214,7 @@ function areBadgesEqual(
   if (previous === next) {
     return true;
   }
-  if (!previous || !next || previous.length !== next.length) {
+  if (!previous || previous.length !== next?.length) {
     return false;
   }
 
@@ -293,7 +303,7 @@ function areParsedPartsEqual(
   if (previous === next) {
     return true;
   }
-  if (!previous || !next || previous.length !== next.length) {
+  if (!previous || previous.length !== next?.length) {
     return false;
   }
 

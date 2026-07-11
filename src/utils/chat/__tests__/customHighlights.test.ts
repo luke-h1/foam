@@ -52,6 +52,20 @@ describe('findCustomHighlight', () => {
     expect(findCustomHighlight([], rules)).toEqual(undefined);
   });
 
+  test('ignores rules with an empty phrase', () => {
+    const emptyPhraseRules = [{ id: '9', phrase: '', color: '#f87171' }];
+
+    expect(
+      findCustomHighlight(textMessage('anything'), emptyPhraseRules),
+    ).toEqual(undefined);
+  });
+
+  test('matches a phrase that appears inside a word', () => {
+    expect(findCustomHighlight(textMessage('pogchamp'), rules)).toEqual(
+      rules[0],
+    );
+  });
+
   test('invalidates the cached match when the rules change', () => {
     const message = textMessage('pog');
     expect(findCustomHighlight(message, rules)).toEqual(rules[0]);

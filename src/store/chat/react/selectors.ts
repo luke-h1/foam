@@ -150,6 +150,31 @@ export const useChannelEmoteData = (channelId: string | null) => {
   return resolveEmoteData(cache, preferences);
 };
 
+export const useChannelEmoteDataForReprocess = (channelId: string | null) => {
+  return useSelector(() => {
+    if (!channelId) {
+      return null;
+    }
+    const cache$ = chatStore$.persisted.channelCaches[channelId];
+    return {
+      twitchChannelEmotes: cache$?.twitchChannelEmotes.get() ?? EMPTY_EMOTES,
+      twitchGlobalEmotes: cache$?.twitchGlobalEmotes.get() ?? EMPTY_EMOTES,
+      twitchSubscriberEmotes:
+        cache$?.twitchSubscriberEmotes.get() ?? EMPTY_EMOTES,
+      sevenTvChannelEmotes: cache$?.sevenTvChannelEmotes.get() ?? EMPTY_EMOTES,
+      sevenTvGlobalEmotes: cache$?.sevenTvGlobalEmotes.get() ?? EMPTY_EMOTES,
+      ffzChannelEmotes: cache$?.ffzChannelEmotes.get() ?? EMPTY_EMOTES,
+      ffzGlobalEmotes: cache$?.ffzGlobalEmotes.get() ?? EMPTY_EMOTES,
+      bttvGlobalEmotes: cache$?.bttvGlobalEmotes.get() ?? EMPTY_EMOTES,
+      bttvChannelEmotes: cache$?.bttvChannelEmotes.get() ?? EMPTY_EMOTES,
+      twitchChannelBadges: cache$?.twitchChannelBadges.get() ?? EMPTY_BADGES,
+      twitchGlobalBadges: cache$?.twitchGlobalBadges.get() ?? EMPTY_BADGES,
+      ffzChannelBadges: cache$?.ffzChannelBadges.get() ?? EMPTY_BADGES,
+      ffzGlobalBadges: cache$?.ffzGlobalBadges.get() ?? EMPTY_BADGES,
+    };
+  });
+};
+
 export const usePaints = () => useSelector(chatStore$.paints);
 export const useCosmeticBindingsVersion = () =>
   useSelector(chatStore$.cosmeticBindingsVersion);

@@ -138,7 +138,8 @@ describe('sweepOversizedSentryEnvelopes', () => {
   });
 
   test('does nothing when no sentry cache directory exists', () => {
-    expect(() => sweepOversizedSentryEnvelopes()).not.toThrow();
+    sweepOversizedSentryEnvelopes();
+
     expect(fileSystemMock.deletedUris()).toEqual([]);
   });
 

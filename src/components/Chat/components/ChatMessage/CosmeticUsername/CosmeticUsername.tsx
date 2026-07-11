@@ -42,6 +42,8 @@ interface PaintedUsernameProps {
 interface PaintedUsernameWithPaintProps {
   displayUsername: string;
   fallbackColor: string;
+  fontSize?: number;
+  isModerated: boolean;
   paint: PaintData;
   sevenTvPaintDropShadows: PaintDropShadowMode;
   usernameTextStyle?: StyleProp<TextStyle>;
@@ -50,13 +52,62 @@ interface PaintedUsernameWithPaintProps {
 function PaintedUsernameWithPaint({
   displayUsername,
   fallbackColor,
+  fontSize,
+  isModerated,
   paint,
   sevenTvPaintDropShadows,
   usernameTextStyle,
 }: PaintedUsernameWithPaintProps) {
-  const dropShadowMode = sevenTvPaintDropShadows;
+  /**
+   * Subscribed here (painted usernames only) - in the parent it would
+   * re-render every visible row twice per fling.
+   */
+  const isScrolling = useChatScrollActive();
+  const paintRenderer = usePaintRenderer();
+
+  // During an active fling, render the username in its dominant solid colour
+  // and skip the per-row MaskedView offscreen pass + gradient/SVG/image fill
+  // layers; the full painted fill returns when the list settles (~150ms),
+  // mirroring how animated emotes pause decode during scroll. This sheds the
+  // offscreen render passes at the moment the Core Animation render encoder is
+  // most pressured (FOAM-TV-MOBILE-BJ render-commit OOM).
+  if (isScrolling) {
+    return (
+      <Text
+        style={[
+          styles.plainUsername,
+          { color: fallbackColor },
+          usernameTextStyle,
+        ]}
+      >
+        {displayUsername}
+      </Text>
+    );
+  }
+
+  if (paintRenderer === 'skia' && !isModerated) {
+    return (
+      <PaintedUsernameSkia
+        username={displayUsername}
+        paint={paint}
+        fallbackColor={fallbackColor}
+        fontSize={fontSize}
+      />
+    );
+  }
+
+  if (paintRenderer === 'webview' && !isModerated) {
+    return (
+      <PaintedUsernameWebView
+        username={displayUsername}
+        paint={paint}
+        fallbackColor={fallbackColor}
+      />
+    );
+  }
+
   const paintTextStyle = buildPaintUsernameTextStyle(paint);
-  const dropShadows = getPaintDropShadows(paint, dropShadowMode);
+  const dropShadows = getPaintDropShadows(paint, sevenTvPaintDropShadows);
   const textShadows = getPaintTextShadows(paint);
   const stroke = getPaintTextStroke(paint);
 
@@ -121,8 +172,6 @@ function PaintedUsernameComponent({
     return paintId ? chatStore$.paints[paintId]?.get() : null;
   });
   const paint = paintProp ?? storePaint ?? null;
-  const isScrolling = useChatScrollActive();
-  const paintRenderer = usePaintRenderer();
 
   if (!paint) {
     return (
@@ -144,45 +193,12 @@ function PaintedUsernameComponent({
   const flatUsernameStyle = StyleSheet.flatten(usernameTextStyle);
   const isModerated = flatUsernameStyle?.textDecorationLine === 'line-through';
 
-  if (isScrolling) {
-    return (
-      <Text
-        style={[
-          styles.plainUsername,
-          { color: solidFallback },
-          usernameTextStyle,
-        ]}
-      >
-        {displayUsername}
-      </Text>
-    );
-  }
-
-  if (paintRenderer === 'skia' && !isModerated) {
-    return (
-      <PaintedUsernameSkia
-        username={displayUsername}
-        paint={paint}
-        fallbackColor={solidFallback}
-        fontSize={flatUsernameStyle?.fontSize}
-      />
-    );
-  }
-
-  if (paintRenderer === 'webview' && !isModerated) {
-    return (
-      <PaintedUsernameWebView
-        username={displayUsername}
-        paint={paint}
-        fallbackColor={solidFallback}
-      />
-    );
-  }
-
   return (
     <PaintedUsernameWithPaint
       displayUsername={displayUsername}
       fallbackColor={solidFallback}
+      fontSize={flatUsernameStyle?.fontSize}
+      isModerated={isModerated}
       paint={paint}
       sevenTvPaintDropShadows={sevenTvPaintDropShadows}
       usernameTextStyle={usernameTextStyle}

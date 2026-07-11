@@ -98,6 +98,28 @@ function EmptyState() {
   );
 }
 
+type AddTermResult = 'added' | 'duplicate' | 'empty';
+
+function useBlockedTerms() {
+  const blockedTerms = usePreference('blockedTerms');
+  const updatePreferences = useUpdatePreferences();
+
+  const addTerm = (rawText: string): AddTermResult => {
+    const normalised = rawText.trim().toLowerCase();
+    if (!normalised) return 'empty';
+
+    if (blockedTerms.includes(normalised)) {
+      return 'duplicate';
+    }
+
+    updatePreferences({ blockedTerms: [...blockedTerms, normalised] });
+    void impact('light');
+    return 'added';
+  };
+
+  return { addTerm, blockedTerms, updatePreferences };
+}
+
 interface InputSectionProps {
   value: string;
   onChangeText: (text: string) => void;
@@ -137,20 +159,13 @@ function InputSection({ value, onChangeText, onAdd }: InputSectionProps) {
 
 function NativeBlockedTermsList() {
   const { t } = useTranslation('preferences');
-  const blockedTerms = usePreference('blockedTerms');
-  const updatePreferences = useUpdatePreferences();
+  const { addTerm, blockedTerms, updatePreferences } = useBlockedTerms();
   const termText = useNativeState('');
 
   const handleNativeAdd = () => {
-    const normalised = termText.value.trim().toLowerCase();
-    if (!normalised) return;
-    if (blockedTerms.includes(normalised)) {
+    if (addTerm(termText.value) !== 'empty') {
       termText.value = '';
-      return;
     }
-    updatePreferences({ blockedTerms: [...blockedTerms, normalised] });
-    termText.value = '';
-    void impact('light');
   };
 
   const handleDeleteByIndex = (indices: number[]) => {
@@ -199,24 +214,17 @@ function NativeBlockedTermsList() {
 
 export function BlockedTermsScreen() {
   const { t } = useTranslation('preferences');
-  const blockedTerms = usePreference('blockedTerms');
-  const updatePreferences = useUpdatePreferences();
+  const { addTerm, blockedTerms, updatePreferences } = useBlockedTerms();
   const [inputValue, setInputValue] = useState('');
   const listRef = useRef<FlashListRef<string>>(null);
 
   useScrollToTop(listRef);
 
-  const handleAdd = useCallback(() => {
-    const normalised = inputValue.trim().toLowerCase();
-    if (!normalised) return;
-    if (blockedTerms.includes(normalised)) {
+  const handleAdd = () => {
+    if (addTerm(inputValue) !== 'empty') {
       setInputValue('');
-      return;
     }
-    updatePreferences({ blockedTerms: [...blockedTerms, normalised] });
-    setInputValue('');
-    void impact('light');
-  }, [inputValue, blockedTerms, updatePreferences]);
+  };
 
   const handleRemove = useCallback(
     (term: string) => {

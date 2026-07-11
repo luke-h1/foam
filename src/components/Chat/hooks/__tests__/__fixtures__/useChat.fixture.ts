@@ -94,6 +94,7 @@ export function createEmoteData(
     ffzChannelBadges: [],
     ffzGlobalBadges: [],
     chatterinoBadges: [],
+    bttvBadges: [],
     ...overrides,
   };
 }

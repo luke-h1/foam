@@ -358,10 +358,25 @@ describe('processEmotesWorklet', () => {
       ],
     });
 
-    expect(pickFields(firstResult[0], ['id', 'type'])).toEqual({
-      id: 'personal-middle-a',
-      type: 'emote',
-    });
+    expect(firstResult).toEqual<ParsedPart[]>([
+      {
+        type: 'emote',
+        content: 'MiddleA',
+        id: 'personal-middle-a',
+        name: 'MiddleA',
+        original_name: 'MiddleA',
+        creator: '',
+        emote_link: 'https://example.com/personal-middle-a',
+        url: 'https://example.com/personal-middle-a.avif',
+        static_url: undefined,
+        thumbnail: 'https://example.com/personal-middle-a.avif',
+        site: '7TV Personal',
+        aspect_ratio: 1,
+        zero_width: false,
+        width: 32,
+        height: 32,
+      },
+    ]);
     expect(secondResult).toEqual<ParsedPart[]>([
       { type: 'text', content: 'MiddleA' },
     ]);
@@ -386,14 +401,61 @@ describe('processEmotesWorklet', () => {
       sevenTvChannelEmotes: [baseEmote, snowEmote, coldEmote],
     });
 
-    expect(result).toHaveLength(1);
-    expect(pickFields(result[0], ['id', 'type'])).toEqual({
-      id: 'base-emote',
-      type: 'emote',
-    });
-    const overlaid =
-      result[0]?.type === 'emote' ? (result[0].overlaid ?? []) : [];
-    expect(overlaid.map(overlay => overlay.id)).toEqual(['zw-snow', 'zw-cold']);
+    expect(result).toEqual<ParsedPart[]>([
+      {
+        type: 'emote',
+        content: 'peepoHappy',
+        id: 'base-emote',
+        name: 'peepoHappy',
+        original_name: 'peepoHappy',
+        creator: '',
+        emote_link: 'https://example.com/base-emote',
+        url: 'https://example.com/base-emote.avif',
+        static_url: undefined,
+        thumbnail: 'https://example.com/base-emote.avif',
+        site: '7TV Channel',
+        aspect_ratio: 1,
+        zero_width: false,
+        width: 32,
+        height: 32,
+        overlaid: [
+          {
+            type: 'emote',
+            content: 'SoSnowy',
+            id: 'zw-snow',
+            name: 'SoSnowy',
+            original_name: 'SoSnowy',
+            creator: '',
+            emote_link: 'https://example.com/zw-snow',
+            url: 'https://example.com/zw-snow.avif',
+            static_url: undefined,
+            thumbnail: 'https://example.com/zw-snow.avif',
+            site: '7TV Channel',
+            aspect_ratio: 1,
+            zero_width: true,
+            width: 32,
+            height: 32,
+          },
+          {
+            type: 'emote',
+            content: 'IceCold',
+            id: 'zw-cold',
+            name: 'IceCold',
+            original_name: 'IceCold',
+            creator: '',
+            emote_link: 'https://example.com/zw-cold',
+            url: 'https://example.com/zw-cold.avif',
+            static_url: undefined,
+            thumbnail: 'https://example.com/zw-cold.avif',
+            site: '7TV Channel',
+            aspect_ratio: 1,
+            zero_width: true,
+            width: 32,
+            height: 32,
+          },
+        ],
+      },
+    ]);
   });
 
   test('keeps a zero-width emote standalone when nothing precedes it', () => {

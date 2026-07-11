@@ -8,8 +8,6 @@ import {
   type ListRenderItem,
 } from '@shopify/flash-list';
 
-import { FlashListWithRefresh } from './FlashListWithRefresh';
-
 export type { FlashListRef, ListRenderItem };
 
 export type FlashListProps<TItem = unknown> = ShopifyFlashListProps<TItem> & {
@@ -23,15 +21,14 @@ export function FlashList<TItem>({
   refreshControl,
   ...props
 }: FlashListProps<TItem> & { ref?: Ref<FlashListRef<TItem>> }) {
-  if (refreshControl) {
-    return (
-      <ShopifyFlashList ref={ref} refreshControl={refreshControl} {...props} />
-    );
-  }
-
-  if (onRefresh && Platform.OS !== 'android') {
-    return <FlashListWithRefresh onRefresh={onRefresh} ref={ref} {...props} />;
-  }
-
-  return <ShopifyFlashList ref={ref} {...props} />;
+  return (
+    <ShopifyFlashList
+      ref={ref}
+      refreshControl={refreshControl}
+      onRefresh={
+        !refreshControl && Platform.OS !== 'android' ? onRefresh : undefined
+      }
+      {...props}
+    />
+  );
 }

@@ -33,7 +33,9 @@ export function PaintedUsernameMaskedFill({
 }: PaintedUsernameMaskedFillProps) {
   return (
     <View style={styles.root}>
-      <Text style={[maskTextStyle, styles.sizer]}>{displayUsername}</Text>
+      <Text style={[maskTextStyle, { color: fallbackColor }]}>
+        {displayUsername}
+      </Text>
       <MaskedView
         style={StyleSheet.absoluteFill}
         maskElement={
@@ -65,8 +67,5 @@ const styles = StyleSheet.create({
   root: {
     alignSelf: 'flex-start',
     position: 'relative',
-  },
-  sizer: {
-    opacity: 0,
   },
 });

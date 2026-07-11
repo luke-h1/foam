@@ -1,7 +1,28 @@
-/**
- * Whether an incoming chat message's author is on the viewer's block list.
- * Case-insensitive on login.
- */
+const blockedLoginSets = new WeakMap<{ userLogin: string }[], Set<string>>();
+const lowercasedMutedWords = new WeakMap<string[], string[]>();
+
+function getBlockedLoginSet(
+  blockedUsers: { userLogin: string }[],
+): Set<string> {
+  let set = blockedLoginSets.get(blockedUsers);
+  if (!set) {
+    set = new Set(
+      blockedUsers.map(blockedUser => blockedUser.userLogin.toLowerCase()),
+    );
+    blockedLoginSets.set(blockedUsers, set);
+  }
+  return set;
+}
+
+function getLowercasedMutedWords(mutedWords: string[]): string[] {
+  let lowered = lowercasedMutedWords.get(mutedWords);
+  if (!lowered) {
+    lowered = mutedWords.map(mutedWord => mutedWord.toLowerCase());
+    lowercasedMutedWords.set(mutedWords, lowered);
+  }
+  return lowered;
+}
+
 export function isUserBlocked(
   username: string | undefined,
   blockedUsers: { userLogin: string }[],
@@ -9,17 +30,9 @@ export function isUserBlocked(
   if (!username || blockedUsers.length === 0) {
     return false;
   }
-  return blockedUsers.some(
-    blockedUser =>
-      blockedUser.userLogin.toLowerCase() === username.toLowerCase(),
-  );
+  return getBlockedLoginSet(blockedUsers).has(username.toLowerCase());
 }
 
-/**
- * Whether a message matches the viewer's muted words. With `matchWholeWord` the
- * message is split on spaces and each token is compared; otherwise the whole
- * message is compared as a single token.
- */
 export function containsMutedWords(
   message: string,
   mutedWords: string[],
@@ -29,11 +42,12 @@ export function containsMutedWords(
     return false;
   }
 
+  const lowered = getLowercasedMutedWords(mutedWords);
   const messageLower = message.toLowerCase();
-  const words = matchWholeWord ? messageLower.split(' ') : [messageLower];
+  if (!matchWholeWord) {
+    return lowered.some(mutedWord => messageLower.includes(mutedWord));
+  }
 
-  return mutedWords.some(mutedWord => {
-    const mutedWordLower = mutedWord.toLowerCase();
-    return words.some(word => word === mutedWordLower);
-  });
+  const words = new Set(messageLower.split(' '));
+  return lowered.some(mutedWord => words.has(mutedWord));
 }

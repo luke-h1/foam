@@ -31,12 +31,22 @@ function isNoSuchRoomError(error: unknown): boolean {
   );
 }
 
-function toFfzStaticUrl(emoteId: number, scale: '2x' | '4x'): string {
-  return `https://cdn.frankerfacez.com/emote/${emoteId}/${scale === '2x' ? '2' : '4'}`;
+function ffzScaleSlug(scale: '1x' | '2x' | '4x'): '1' | '2' | '4' {
+  if (scale === '2x') {
+    return '2';
+  }
+  if (scale === '4x') {
+    return '4';
+  }
+  return '1';
 }
 
-function toFfzAnimatedUrl(emoteId: number, scale: '2x' | '4x'): string {
-  return `https://cdn.frankerfacez.com/emote/${emoteId}/animated/${scale === '2x' ? '2' : '4'}`;
+function toFfzStaticUrl(emoteId: number, scale: '1x' | '2x' | '4x'): string {
+  return `https://cdn.frankerfacez.com/emote/${emoteId}/${ffzScaleSlug(scale)}`;
+}
+
+function toFfzAnimatedUrl(emoteId: number, scale: '1x' | '2x' | '4x'): string {
+  return `https://cdn.frankerfacez.com/emote/${emoteId}/animated/${ffzScaleSlug(scale)}`;
 }
 
 function sanitiseFfzEmote(
@@ -45,11 +55,13 @@ function sanitiseFfzEmote(
   creator: string | null,
 ): FfzSanitisedEmote {
   const staticVariants = {
+    '1x': emote.urls['1'] || toFfzStaticUrl(emote.id, '1x'),
     '2x': emote.urls['2'] || toFfzStaticUrl(emote.id, '2x'),
     '4x': emote.urls['4'] || toFfzStaticUrl(emote.id, '4x'),
   } satisfies EmoteImageVariantSet;
   const animatedVariants: EmoteImageVariantSet = emote.animated
     ? {
+        '1x': toFfzAnimatedUrl(emote.id, '1x'),
         '2x': toFfzAnimatedUrl(emote.id, '2x'),
         '4x': toFfzAnimatedUrl(emote.id, '4x'),
       }

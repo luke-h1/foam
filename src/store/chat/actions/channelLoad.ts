@@ -9,6 +9,7 @@ import { twitchService } from '@app/services/twitch-service';
 import { getPreferences } from '@app/store/preferences/state';
 import type { SanitisedEmote } from '@app/types/emote';
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
+import { getBttvBadges } from '@app/utils/chat/bttvBadges';
 import { getChatterinoBadges } from '@app/utils/chat/chatterinoBadges';
 import { fetchChannelCheermotes } from '@app/utils/chat/cheermoteStore';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
@@ -520,7 +521,7 @@ const loadChannelResourcesInternal = async (
     }
 
     // Only the 7TV channel-emote fetch needs the set id, so resolve it as a
-    // promise the spec awaits internally — the other 13 resource fetches
+    // promise the spec awaits internally - the other 13 resource fetches
     // start immediately instead of stalling a full round trip behind it.
     const fallbackSevenTvSetId = existingCache?.sevenTvEmoteSetId ?? 'global';
     const sevenTvSetIdPromise = sevenTvService
@@ -850,6 +851,7 @@ export const getCurrentEmoteData = (channelId?: string) => {
     chatterinoBadges: preferences.showChatterinoEmotes
       ? getChatterinoBadges()
       : NO_BADGES,
+    bttvBadges: preferences.showBttvBadges ? getBttvBadges() : NO_BADGES,
   };
 };
 
@@ -870,7 +872,7 @@ const latestRequestedEmoteSetByChannel = new Map<string, string>();
 
 /**
  * Swap the channel's active 7TV emote set after a live `user.update` says the
- * broadcaster switched sets — replaces the cached channel set wholesale
+ * broadcaster switched sets - replaces the cached channel set wholesale
  * instead of waiting for the user to leave and re-enter the channel.
  */
 export const switchSevenTvEmoteSet = async (

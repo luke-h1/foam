@@ -102,18 +102,14 @@ export function UserChatBody({
   const { canBeInline, containsEmotes: bodyContainsEmotes } =
     getMessageStructure(message);
   const canFlowInline = canBeInline && !isModerated;
-  const renderInline = canFlowInline && !hasPaint;
+  const renderInline = canFlowInline && !hasPaint && !bodyContainsEmotes;
   const inlineUsernameColor =
     cachedSenderColor ??
     (userstateColor ? lightenColor(userstateColor) : undefined) ??
     (username ? lightenColor(generateRandomTwitchColor(username)) : undefined);
   const actionColor = isAction ? inlineUsernameColor : undefined;
-  const bodyCanFlowInline = canFlowInline && !renderInline;
-  const bodyEmoteLineStyle = bodyContainsEmotes
-    ? compact
-      ? styles.messageTextEmoteLineCompact
-      : styles.messageTextEmoteLine
-    : undefined;
+  const bodyCanFlowInline =
+    canFlowInline && !renderInline && !bodyContainsEmotes;
 
   return (
     <View style={styles.messageColumn}>
@@ -225,7 +221,6 @@ export function UserChatBody({
                 styles.messageText,
                 compact && styles.messageTextCompact,
                 getChatFontScaleStyle(rendererArgs.fontScale, compact),
-                bodyEmoteLineStyle,
               ]}
             >
               <InlineMessageSpans
@@ -233,7 +228,6 @@ export function UserChatBody({
                 compact={compact}
                 message={message as InlineFlowPart[]}
                 replyPlainMentionTarget={replyPlainMentionTarget}
-                emoteLineStyle={bodyEmoteLineStyle}
                 textColor={actionColor}
               />
             </Text>

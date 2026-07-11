@@ -96,23 +96,25 @@ describe('cheermoteStore', () => {
 
   test('fetchChannelCheermotes dedupes in-flight fetches and stores the result', async () => {
     let resolveFetch!: (value: TwitchCheermote[]) => void;
-    const fetcher = jest.fn(
+    const first = fetchChannelCheermotes(
+      '123',
       () =>
         new Promise<TwitchCheermote[]>(resolve => {
           resolveFetch = resolve;
         }),
     );
-
-    const first = fetchChannelCheermotes('123', fetcher);
-    const second = fetchChannelCheermotes('123', fetcher);
-
-    expect(fetcher).toHaveBeenCalledTimes(1);
+    // A second in-flight call must reuse the first fetch, so its own fetcher
+    // never runs and never lands its distinct result.
+    const second = fetchChannelCheermotes('123', () =>
+      Promise.resolve([makeCheermote('Bonk')]),
+    );
 
     resolveFetch([makeCheermote('Cheer')]);
     await first;
     await second;
 
-    expect(getChannelCheermotes('123')?.has('cheer')).toEqual(true);
+    const stored = getChannelCheermotes('123');
+    expect([...(stored?.keys() ?? [])]).toEqual(['cheer']);
   });
 
   test('fetchChannelCheermotes does not refetch a stored channel', async () => {
@@ -135,7 +137,7 @@ describe('cheermoteStore', () => {
     await fetchChannelCheermotes('123', succeeding);
 
     expect(succeeding).toHaveBeenCalledTimes(1);
-    expect(getChannelCheermotes('123')?.has('cheer')).toEqual(true);
+    expect(getChannelCheermotes('123')?.has('cheer')).toBe(true);
   });
 
   test('clearCheermotes during an in-flight fetch drops the stale result', async () => {
@@ -158,5 +160,23 @@ describe('cheermoteStore', () => {
     await fetchChannelCheermotes('123', fetcher);
 
     expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  test('evicts the oldest channel and its fetch guard once at capacity', async () => {
+    for (let index = 0; index < 20; index += 1) {
+      setChannelCheermotes(`channel-${index}`, [makeCheermote('Cheer')]);
+    }
+
+    setChannelCheermotes('channel-20', [makeCheermote('Cheer')]);
+
+    expect(getChannelCheermotes('channel-0')).toBeUndefined();
+    expect(getChannelCheermotes('channel-1')?.has('cheer')).toBe(true);
+    expect(getChannelCheermotes('channel-20')?.has('cheer')).toBe(true);
+
+    const fetcher = jest.fn(() => Promise.resolve([makeCheermote('Cheer')]));
+    await fetchChannelCheermotes('channel-0', fetcher);
+
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(getChannelCheermotes('channel-0')?.has('cheer')).toBe(true);
   });
 });

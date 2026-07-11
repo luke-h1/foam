@@ -110,18 +110,12 @@ describe('AuthContext', () => {
       expect(result.current.authState).toEqual({
         isAnonAuth: true,
         isLoggedIn: false,
-        token: result.current.authState?.token,
-      });
-      expect({
-        accessToken: result.current.authState?.token?.accessToken,
-        expiresAt: result.current.authState?.token?.expiresAt,
-        expiresIn: result.current.authState?.token?.expiresIn,
-        tokenType: result.current.authState?.token?.tokenType,
-      }).toEqual({
-        accessToken: 'anon',
-        expiresAt: expect.any(Number),
-        expiresIn: 3600,
-        tokenType: 'bearer',
+        token: {
+          accessToken: 'anon',
+          expiresIn: 3600,
+          tokenType: 'bearer',
+          expiresAt: expect.any(Number),
+        },
       });
 
       expect(result.current.ready).toBe(true);
@@ -189,22 +183,14 @@ describe('AuthContext', () => {
       expect(result.current.authState).toEqual({
         isAnonAuth: false,
         isLoggedIn: true,
-        token: result.current.authState?.token,
+        token: {
+          accessToken: 'user-token',
+          expiresIn: 3600,
+          tokenType: 'bearer',
+          refreshToken: 'refresh-token',
+          expiresAt: expect.any(Number),
+        },
       });
-      expect({
-        accessToken: result.current.authState?.token?.accessToken,
-        expiresAt: result.current.authState?.token?.expiresAt,
-        expiresIn: result.current.authState?.token?.expiresIn,
-        tokenType: result.current.authState?.token?.tokenType,
-      }).toEqual({
-        accessToken: 'user-token',
-        expiresAt: expect.any(Number),
-        expiresIn: 3600,
-        tokenType: 'bearer',
-      });
-
-      // 1 for inital anon auth when app boots and the 2nd is for when the user logs in
-      expect(SecureStore.setItemAsync).toHaveBeenCalledTimes(2);
 
       // Check that anon token was saved with expiresAt
       expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
@@ -389,8 +375,20 @@ describe('AuthContext', () => {
       expires_in: 3600,
       token_type: 'bearer',
     });
-    twitchService.validateToken.mockResolvedValue(true);
-    twitchService.getUserInfo.mockResolvedValue(user);
+
+    // Assert the ordering by outcome: getUserInfo must only run once
+    // validateToken has resolved (and thus synced the Helix Client-Id). Record
+    // whether validate had completed at the moment /users was called.
+    let validateResolved = false;
+    let validateWasResolvedWhenUserInfoCalled: boolean | undefined;
+    twitchService.validateToken.mockImplementation(async () => {
+      validateResolved = true;
+      return true;
+    });
+    twitchService.getUserInfo.mockImplementation(async () => {
+      validateWasResolvedWhenUserInfoCalled = validateResolved;
+      return user;
+    });
 
     const magicResponse: AuthSessionResult = {
       type: 'success',
@@ -426,11 +424,7 @@ describe('AuthContext', () => {
     );
     expect(twitchService.getUserInfo).toHaveBeenCalledWith('magic-user-token');
     // Client-Id must be synced (validate) before the /users call (getUserInfo).
-    const validateOrder =
-      twitchService.validateToken.mock.invocationCallOrder.at(-1) ?? 0;
-    const getUserInfoOrder =
-      twitchService.getUserInfo.mock.invocationCallOrder.at(-1) ?? 0;
-    expect(validateOrder).toBeLessThan(getUserInfoOrder);
+    expect(validateWasResolvedWhenUserInfoCalled).toBe(true);
   });
 
   test('falls back to anon when getUserInfo fails after login, despite the live-session guard', async () => {

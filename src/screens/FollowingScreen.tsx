@@ -1,12 +1,4 @@
-import {
-  memo,
-  type ReactElement,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, {
@@ -46,16 +38,32 @@ import { theme } from '@app/styles/themes';
 import type { FollowedChannelWithProfile } from '@app/types/twitch/channel';
 import type { TwitchStream } from '@app/types/twitch/stream';
 
-export interface Section {
-  key: string;
-  render: () => ReactElement;
-  isTitle?: boolean;
-}
-
 type FollowingListItem =
   | { type: 'stream'; stream: TwitchStream }
   | { type: 'offlineHeader' }
   | { type: 'offlineChannel'; channel: FollowedChannelWithProfile };
+
+function FollowingSkeleton({
+  showHeader,
+  streamListLayout,
+}: {
+  showHeader?: boolean;
+  streamListLayout: 'compact' | 'media';
+}) {
+  return (
+    <View style={styles.container}>
+      {showHeader && (
+        <View style={styles.header}>
+          <View style={styles.headerEyebrow} />
+        </View>
+      )}
+      {Array.from({ length: 5 }).map((_, index) => (
+        // eslint-disable-next-line react/no-array-index-key
+        <LiveStreamCardSkeleton key={index} layout={streamListLayout} />
+      ))}
+    </View>
+  );
+}
 
 const FollowingListHeader = memo(function FollowingListHeader({
   streamListLayout,
@@ -255,17 +263,7 @@ export default function FollowingScreen() {
     isLoading || (isFetching && streamsArray.length === 0);
 
   if (showLoadingSkeleton) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.headerEyebrow} />
-        </View>
-        {Array.from({ length: 5 }).map((_, index) => (
-          // eslint-disable-next-line react/no-array-index-key
-          <LiveStreamCardSkeleton key={index} layout={streamListLayout} />
-        ))}
-      </View>
-    );
+    return <FollowingSkeleton showHeader streamListLayout={streamListLayout} />;
   }
 
   if (!user?.id) {
@@ -293,32 +291,15 @@ export default function FollowingScreen() {
     );
   }
 
-  if (!streams) {
-    return (
-      <View style={styles.container}>
-        {Array.from({ length: 5 }).map((_, index) => (
-          // eslint-disable-next-line react/no-array-index-key
-          <LiveStreamCardSkeleton key={index} layout={streamListLayout} />
-        ))}
-      </View>
-    );
-  }
-
   // The offline list resolves after the streams query (two-step fetch), so
   // wait for it before declaring nobody live or the empty state flashes.
   if (
-    streamsArray.length === 0 &&
-    offlineChannels.length === 0 &&
-    isLoadingFollowedChannels
+    !streams ||
+    (streamsArray.length === 0 &&
+      offlineChannels.length === 0 &&
+      isLoadingFollowedChannels)
   ) {
-    return (
-      <View style={styles.container}>
-        {Array.from({ length: 5 }).map((_, index) => (
-          // eslint-disable-next-line react/no-array-index-key
-          <LiveStreamCardSkeleton key={index} layout={streamListLayout} />
-        ))}
-      </View>
-    );
+    return <FollowingSkeleton streamListLayout={streamListLayout} />;
   }
 
   if (streamsArray.length === 0 && offlineChannels.length === 0) {

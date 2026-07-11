@@ -50,15 +50,26 @@ export function getLiveStreamChatLeft({
   return isLandscape ? Math.max(0, screenWidth - chatWidth) : 0;
 }
 
+export function getLandscapeChatWidthBounds(
+  screenWidth: number,
+  mode: FullscreenChatMode,
+): { minWidth: number; maxWidth: number } {
+  'worklet';
+
+  const minWidth = Math.min(LANDSCAPE_CHAT_MIN_WIDTH, screenWidth * 0.42);
+  const maxFraction =
+    mode === 'overlay' ? MAX_OVERLAY_CHAT_FRACTION : MAX_SIDEBAR_CHAT_FRACTION;
+  const maxWidth = Math.max(minWidth, screenWidth * maxFraction);
+
+  return { maxWidth, minWidth };
+}
+
 export function clampLandscapeChatWidth(
   width: number,
   screenWidth: number,
   mode: FullscreenChatMode,
 ): number {
-  const minWidth = Math.min(LANDSCAPE_CHAT_MIN_WIDTH, screenWidth * 0.42);
-  const maxFraction =
-    mode === 'overlay' ? MAX_OVERLAY_CHAT_FRACTION : MAX_SIDEBAR_CHAT_FRACTION;
-  const maxWidth = Math.max(minWidth, screenWidth * maxFraction);
+  const { maxWidth, minWidth } = getLandscapeChatWidthBounds(screenWidth, mode);
 
   return Math.min(maxWidth, Math.max(minWidth, width));
 }

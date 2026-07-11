@@ -24,7 +24,11 @@ import {
 const MAX_DECODED_BYTES_HIGH_TIER = 192 * 1024 * 1024;
 // 192MiB / (96*96*4 bytes * 8 animated factor) ≈ 682 refs before the count cap.
 const HIGH_TIER_BYTE_BUDGET_ANIMATED_ENTRIES = 682;
-const animatedRef = () => ({ isAnimated: true }) as unknown as ImageRef;
+
+const makeImageRef = (overrides: Partial<ImageRef> = {}): ImageRef =>
+  ({ ...overrides }) as ImageRef;
+
+const animatedRef = () => makeImageRef({ isAnimated: true });
 
 const loadAsync = jest.mocked(Image.loadAsync);
 
@@ -55,10 +59,7 @@ describe('cache-service', () => {
 
   test('records the decoded emote aspect ratio so the renderer can size a dimensionless emote', async () => {
     const url = 'https://cdn.7tv.app/emote/wide/4x.webp';
-    loadAsync.mockResolvedValueOnce({
-      width: 96,
-      height: 32,
-    } as unknown as ImageRef);
+    loadAsync.mockResolvedValueOnce(makeImageRef({ width: 96, height: 32 }));
 
     expect(getCachedEmoteAspectRatio(url)).toBeNull();
 
@@ -78,10 +79,7 @@ describe('cache-service', () => {
 
   test('drops the recorded aspect ratio when the emote is evicted', async () => {
     const url = 'https://cdn.7tv.app/emote/evictme/4x.webp';
-    loadAsync.mockResolvedValueOnce({
-      width: 64,
-      height: 32,
-    } as unknown as ImageRef);
+    loadAsync.mockResolvedValueOnce(makeImageRef({ width: 64, height: 32 }));
 
     await warmCachedEmoteRefs([url]);
     expect(getCachedEmoteAspectRatio(url)).toBe(2);

@@ -1,5 +1,6 @@
 import { parseJsonOnWorklet } from '@app/lib/offThreadJson';
 import type { ParsedIrcMessage } from '@app/types/chat/recentMessages';
+import { unescapeIrcTag } from '@app/utils/chat/unescapeIrcTag';
 
 const RECENT_MESSAGES_URL =
   'https://recent-messages.robotty.de/api/v2/recent-messages';
@@ -27,7 +28,7 @@ function parseTags(tagString: string): Record<string, string> {
       return;
     }
 
-    tags[key] = part.slice(separatorIndex + 1);
+    tags[key] = unescapeIrcTag(part.slice(separatorIndex + 1));
   });
 
   return tags;
@@ -73,8 +74,10 @@ export function parseIrcMessage(line: string): ParsedIrcMessage | null {
   const trailingIndex = paramParts.findIndex(part => part.startsWith(':'));
 
   if (trailingIndex >= 0) {
-    params.push(...paramParts.slice(0, trailingIndex));
-    params.push(paramParts.slice(trailingIndex).join(' ').slice(1));
+    params.push(
+      ...paramParts.slice(0, trailingIndex),
+      paramParts.slice(trailingIndex).join(' ').slice(1),
+    );
   } else {
     params.push(...paramParts);
   }
@@ -83,7 +86,6 @@ export function parseIrcMessage(line: string): ParsedIrcMessage | null {
 }
 
 export const recentMessagesService = {
-  /* istanbul ignore next: network wrapper intentionally remains untested. */
   getRecentMessages: async (
     channelName: string,
     signal?: AbortSignal,

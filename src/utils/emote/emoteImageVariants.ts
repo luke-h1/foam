@@ -169,10 +169,12 @@ export function deriveEmoteImageVariantsFromUrl(
     const id = bttvMatch[1];
     return createEmoteImageVariants({
       animated: {
+        '1x': `https://cdn.betterttv.net/emote/${id}/1x`,
         '2x': `https://cdn.betterttv.net/emote/${id}/2x`,
         '3x': `https://cdn.betterttv.net/emote/${id}/3x`,
       },
       static: {
+        '1x': `https://cdn.betterttv.net/emote/${id}/1x.png`,
         '2x': `https://cdn.betterttv.net/emote/${id}/2x.png`,
         '3x': `https://cdn.betterttv.net/emote/${id}/3x.png`,
       },
@@ -184,10 +186,12 @@ export function deriveEmoteImageVariantsFromUrl(
     const id = ffzMatch[1];
     return createEmoteImageVariants({
       animated: {
+        '1x': `https://cdn.frankerfacez.com/emote/${id}/animated/1`,
         '2x': `https://cdn.frankerfacez.com/emote/${id}/animated/2`,
         '4x': `https://cdn.frankerfacez.com/emote/${id}/animated/4`,
       },
       static: {
+        '1x': `https://cdn.frankerfacez.com/emote/${id}/1`,
         '2x': `https://cdn.frankerfacez.com/emote/${id}/2`,
         '4x': `https://cdn.frankerfacez.com/emote/${id}/4`,
       },
@@ -200,10 +204,12 @@ export function deriveEmoteImageVariantsFromUrl(
     const extension = sevenTvMatch[3];
     return createEmoteImageVariants({
       animated: {
+        '1x': `https://cdn.7tv.app/emote/${id}/1x.${extension}`,
         '2x': `https://cdn.7tv.app/emote/${id}/2x.${extension}`,
         '4x': `https://cdn.7tv.app/emote/${id}/4x.${extension}`,
       },
       static: {
+        '1x': `https://cdn.7tv.app/emote/${id}/1x_static.${extension}`,
         '2x': `https://cdn.7tv.app/emote/${id}/2x_static.${extension}`,
         '4x': `https://cdn.7tv.app/emote/${id}/4x_static.${extension}`,
       },
