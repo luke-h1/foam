@@ -1,17 +1,6 @@
-import {
-  UserNoticeTags,
-  ViewerMilestoneTags,
-} from '@app/types/chat/irc-tags/usernotice';
-import { formatCharityAmount } from '@app/utils/chat/formatCharityAmount';
+import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import { getTagValue } from '@app/utils/chat/formatSubscriptionNotice/getTagValue';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
-
-function getTagValue(
-  tags: Record<string, string | boolean | undefined>,
-  key: string,
-): string {
-  const value = tags[key];
-  return typeof value === 'string' ? value : '';
-}
 
 function getTagNumber(
   tags: Record<string, string | boolean | undefined>,
@@ -339,79 +328,4 @@ export function createSubscriptionPart(
       };
     }
   }
-}
-
-export function createViewerMilestonePart(
-  tags: ViewerMilestoneTags,
-  messageText?: string,
-): ParsedPart<'viewermilestone'> {
-  const category = getTagValue(tags, 'msg-param-category');
-  const reward = getTagValue(tags, 'msg-param-copoReward');
-  const value = getTagValue(tags, 'msg-param-value');
-  const content = messageText || '';
-
-  const systemMsg = tags['system-msg'] ?? '';
-  const login = tags.login ?? '';
-  const displayName = tags['display-name'] ?? '';
-
-  let constructedMessage = '';
-  if (category === 'watch-streak' && displayName && value) {
-    const streamCount = parseInt(value, 10);
-    const streamText = streamCount === 1 ? 'stream' : 'streams';
-    constructedMessage = `${displayName} watched ${value} consecutive ${streamText} and sparked a watch streak!`;
-  } else if (systemMsg) {
-    constructedMessage = systemMsg;
-  }
-
-  return {
-    type: 'viewermilestone',
-    category,
-    reward,
-    value,
-    content,
-    systemMsg: constructedMessage || systemMsg,
-    login,
-    displayName,
-  };
-}
-
-export function createCharityDonationPart(
-  tags: UserNoticeTags,
-  messageText?: string,
-): ParsedPart<'charitydonation'> {
-  const currency = getTagValue(tags, 'msg-param-donation-currency') || 'USD';
-  const systemMsg =
-    typeof tags['system-msg'] === 'string' ? tags['system-msg'] : '';
-
-  return {
-    type: 'charitydonation',
-    displayName:
-      getTagValue(tags, 'display-name') || getTagValue(tags, 'login') || '',
-    charityName: getTagValue(tags, 'msg-param-charity-name') || 'charity',
-    amount: formatCharityAmount(
-      getTagValue(tags, 'msg-param-donation-amount'),
-      getTagValue(tags, 'msg-param-exponent'),
-      currency,
-    ),
-    currency,
-    systemMsg,
-    message: messageText || undefined,
-  };
-}
-
-export function createRitualPart(
-  tags: UserNoticeTags,
-  messageText?: string,
-): ParsedPart<'ritual'> {
-  const systemMsg =
-    typeof tags['system-msg'] === 'string' ? tags['system-msg'] : '';
-
-  return {
-    type: 'ritual',
-    displayName:
-      getTagValue(tags, 'display-name') || getTagValue(tags, 'login') || '',
-    ritualName: getTagValue(tags, 'msg-param-ritual-name'),
-    systemMsg,
-    message: messageText || undefined,
-  };
 }

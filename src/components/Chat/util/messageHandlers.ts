@@ -15,12 +15,10 @@ import {
   ingestChannelPointRewardTags,
 } from '@app/utils/chat/channelPointRewardTitleStore';
 import { isHighlightMyMessageTags } from '@app/utils/chat/channelPointsRewardTitle';
-import {
-  createCharityDonationPart,
-  createRitualPart,
-  createSubscriptionPart,
-  createViewerMilestonePart,
-} from '@app/utils/chat/formatSubscriptionNotice';
+import { createCharityDonationPart } from '@app/utils/chat/formatSubscriptionNotice/createCharityDonationPart';
+import { createRitualPart } from '@app/utils/chat/formatSubscriptionNotice/createRitualPart';
+import { createSubscriptionPart } from '@app/utils/chat/formatSubscriptionNotice/createSubscriptionPart';
+import { createViewerMilestonePart } from '@app/utils/chat/formatSubscriptionNotice/createViewerMilestonePart';
 import { parseBadges } from '@app/utils/chat/parseBadges';
 import { isSharedChatDuplicatedNotice } from '@app/utils/chat/userNoticeMsgIds/isSharedChatDuplicatedNotice';
 import { isSubscriptionUserNotice } from '@app/utils/chat/userNoticeMsgIds/isSubscriptionUserNotice';
