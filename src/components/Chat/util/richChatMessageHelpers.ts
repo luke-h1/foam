@@ -1,6 +1,6 @@
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-import type { ChatBodyVariant } from '@app/utils/chat/deriveChatBody';
-import { deriveChatBody } from '@app/utils/chat/deriveChatBody';
+import { deriveChatBody } from '@app/utils/chat/deriveChatBody/deriveChatBody';
+import type { ChatBodyVariant } from '@app/utils/chat/deriveChatBody/types';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 export type { ChatBodyVariant };
