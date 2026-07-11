@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -25,25 +25,19 @@ interface EmoteSuggestionsProps {
   handleEmotePress: (set: SanitisedEmote) => void;
 }
 
-function createRenderEmoteSuggestionItem(
-  onPress: (emote: SanitisedEmote) => void,
-) {
-  return function RenderEmoteSuggestionItem({
-    item,
-  }: LegendListRenderItemProps<SanitisedEmote>) {
-    return <EmoteSuggestionItem item={item} onPress={onPress} />;
-  };
-}
-
-function EmoteSuggestionItem({
+const EmoteSuggestionItem = memo(function EmoteSuggestionItem({
   item,
   onPress,
 }: {
   item: SanitisedEmote;
   onPress: (emote: SanitisedEmote) => void;
 }) {
+  const handlePress = useCallback(() => {
+    onPress(item);
+  }, [item, onPress]);
+
   return (
-    <Button style={styles.suggestionItem} onPress={() => onPress(item)}>
+    <Button style={styles.suggestionItem} onPress={handlePress}>
       <Image
         source={item.url}
         cacheVariant='emote'
@@ -60,15 +54,18 @@ function EmoteSuggestionItem({
       </View>
     </Button>
   );
-}
+});
 
 export const EmoteSuggestions = memo(function EmoteSuggestions({
   emotes,
   handleEmotePress,
 }: EmoteSuggestionsProps) {
   const { t } = useTranslation('chat');
-  const renderItem = useMemo(
-    () => createRenderEmoteSuggestionItem(handleEmotePress),
+
+  const renderItem = useCallback(
+    ({ item }: LegendListRenderItemProps<SanitisedEmote>) => (
+      <EmoteSuggestionItem item={item} onPress={handleEmotePress} />
+    ),
     [handleEmotePress],
   );
 

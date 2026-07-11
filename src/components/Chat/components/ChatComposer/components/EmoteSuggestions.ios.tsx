@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -19,25 +19,19 @@ interface EmoteSuggestionsProps {
   handleEmotePress: (set: SanitisedEmote) => void;
 }
 
-function createRenderEmoteSuggestionItem(
-  onPress: (emote: SanitisedEmote) => void,
-) {
-  return function RenderEmoteSuggestionItem({
-    item,
-  }: LegendListRenderItemProps<SanitisedEmote>) {
-    return <EmoteSuggestionTile item={item} onPress={onPress} />;
-  };
-}
-
-function EmoteSuggestionTile({
+const EmoteSuggestionTile = memo(function EmoteSuggestionTile({
   item,
   onPress,
 }: {
   item: SanitisedEmote;
   onPress: (emote: SanitisedEmote) => void;
 }) {
+  const handlePress = useCallback(() => {
+    onPress(item);
+  }, [item, onPress]);
+
   return (
-    <Button onPress={() => onPress(item)} style={styles.suggestionItem}>
+    <Button onPress={handlePress} style={styles.suggestionItem}>
       <View style={styles.emoteTile}>
         <Image
           contentFit='contain'
@@ -49,14 +43,16 @@ function EmoteSuggestionTile({
       </View>
     </Button>
   );
-}
+});
 
 export const EmoteSuggestions = memo(function EmoteSuggestions({
   emotes,
   handleEmotePress,
 }: EmoteSuggestionsProps) {
-  const renderItem = useMemo(
-    () => createRenderEmoteSuggestionItem(handleEmotePress),
+  const renderItem = useCallback(
+    ({ item }: LegendListRenderItemProps<SanitisedEmote>) => (
+      <EmoteSuggestionTile item={item} onPress={handleEmotePress} />
+    ),
     [handleEmotePress],
   );
 
