@@ -7,7 +7,6 @@ import {
   Image,
   ImageShader,
   Mask,
-  useAnimatedImageValue,
 } from '@shopify/react-native-skia';
 
 import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/RichChatMessage.styles';
@@ -15,6 +14,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
+import { useSharedPaintAnimationFrame } from './util/sharedPaintAnimationFrames';
 import {
   getPaintBitmaps,
   type PaintBitmaps,
@@ -51,8 +51,9 @@ function paintMaskNode(bitmaps: PaintBitmaps): ReactNode {
 }
 
 /**
- * Overlay frame from `useAnimatedImageValue` — advances on the UI thread for
- * both stretch and tiled URL layers (animated WebP/GIF included).
+ * Overlay frame from the shared per-URL animation clock — advances on the UI
+ * thread for both stretch and tiled URL layers (animated WebP/GIF included),
+ * in phase with every other row using the same paint texture.
  */
 function TiledPaintLayerOverlay({
   url,
@@ -63,11 +64,7 @@ function TiledPaintLayerOverlay({
   tile: NonNullable<PaintImageLayer['tile']>;
   maskNode: ReactNode;
 }) {
-  const animatedFrame = useAnimatedImageValue(url);
-
-  if (!animatedFrame) {
-    return null;
-  }
+  const animatedFrame = useSharedPaintAnimationFrame(url);
 
   return (
     <Mask mode='alpha' mask={maskNode}>
@@ -87,11 +84,7 @@ function StretchPaintLayerOverlay({
   rect: NonNullable<PaintImageLayer['rect']>;
   maskNode: ReactNode;
 }) {
-  const animatedFrame = useAnimatedImageValue(url);
-
-  if (!animatedFrame) {
-    return null;
-  }
+  const animatedFrame = useSharedPaintAnimationFrame(url);
 
   return (
     <Mask mode='alpha' mask={maskNode}>

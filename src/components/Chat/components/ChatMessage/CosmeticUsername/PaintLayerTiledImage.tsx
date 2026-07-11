@@ -1,15 +1,11 @@
 import { StyleSheet } from 'react-native';
 
-import {
-  Canvas,
-  Fill,
-  ImageShader,
-  useAnimatedImageValue,
-} from '@shopify/react-native-skia';
+import { Canvas, Fill, ImageShader } from '@shopify/react-native-skia';
 
 import type { PaintCanvasRepeat } from '@app/types/seventv/cosmetics';
 
 import { paintLayerTileModes } from './util/paintLayer/paintLayerTileModes';
+import { useSharedPaintAnimationFrame } from './util/sharedPaintAnimationFrames';
 
 interface PaintLayerTiledImageProps {
   canvasRepeat: PaintCanvasRepeat;
@@ -18,17 +14,14 @@ interface PaintLayerTiledImageProps {
 
 /**
  * Skia image-shader tiling for CSS `background-repeat` paint layers.
- * Uses `useAnimatedImageValue` so animated tile textures advance on the UI
- * thread the same way stretch image layers do.
+ * Uses the shared per-URL animation clock so animated tile textures advance
+ * on the UI thread in phase with every other row showing the same paint.
  */
 export function PaintLayerTiledImage({
   canvasRepeat,
   imageUrl,
 }: PaintLayerTiledImageProps) {
-  const animatedFrame = useAnimatedImageValue(imageUrl);
-  if (!animatedFrame) {
-    return null;
-  }
+  const animatedFrame = useSharedPaintAnimationFrame(imageUrl);
 
   const { tx, ty } = paintLayerTileModes(canvasRepeat);
 
