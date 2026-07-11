@@ -25,6 +25,7 @@ import { useObserveEffect } from '@legendapp/state/react';
 import * as Font from 'expo-font';
 import { activateKeepAwakeAsync } from 'expo-keep-awake';
 
+import { PlayerWebViewPrewarm } from '@app/components/StreamPlayer/PlayerWebViewPrewarm';
 import { recordAppSession } from '@app/lib/expo-store-review';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { preferences$ } from '@app/store/preferenceStore';
@@ -110,5 +111,10 @@ export function RootLayoutShell() {
     },
   );
 
-  return <RootLayoutNav />;
+  return (
+    <>
+      <RootLayoutNav />
+      <PlayerWebViewPrewarm />
+    </>
+  );
 }
