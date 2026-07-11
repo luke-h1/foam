@@ -1,15 +1,6 @@
-import {
-  channelPointsRewardTitleFromSystemMsg,
-  channelPointsRewardTitleFromTags,
-} from '../channelPointsRewardTitle';
+import { channelPointsRewardTitleFromTags } from '../channelPointsRewardTitleFromTags';
 
-describe('channelPointsRewardTitle', () => {
-  test('parses reward title from system-msg', () => {
-    expect(
-      channelPointsRewardTitleFromSystemMsg('testUser redeemed Chinese TTS'),
-    ).toBe('Chinese TTS');
-  });
-
+describe('channelPointsRewardTitleFromTags', () => {
   test('prefers msg-param-custom-reward-title over system-msg', () => {
     expect(
       channelPointsRewardTitleFromTags({

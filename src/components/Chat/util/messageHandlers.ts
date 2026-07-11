@@ -14,7 +14,7 @@ import {
   enrichChannelPointPrivmsgTags,
   ingestChannelPointRewardTags,
 } from '@app/utils/chat/channelPointRewardTitleStore';
-import { isHighlightMyMessageTags } from '@app/utils/chat/channelPointsRewardTitle';
+import { isHighlightMyMessageTags } from '@app/utils/chat/channelPointsRewardTitle/isHighlightMyMessageTags';
 import { createCharityDonationPart } from '@app/utils/chat/formatSubscriptionNotice/createCharityDonationPart';
 import { createRitualPart } from '@app/utils/chat/formatSubscriptionNotice/createRitualPart';
 import { createSubscriptionPart } from '@app/utils/chat/formatSubscriptionNotice/createSubscriptionPart';

@@ -6,11 +6,9 @@ import {
   resolveChannelPointRewardTitle,
   useChannelPointRewardTitleRevision,
 } from '@app/utils/chat/channelPointRewardTitleStore';
-import {
-  channelPointsRewardTitleFieldsFromUserstate,
-  channelPointsRewardTitleFromTags,
-  channelPointsRewardTitleFromUserstate,
-} from '@app/utils/chat/channelPointsRewardTitle';
+import { channelPointsRewardTitleFieldsFromUserstate } from '@app/utils/chat/channelPointsRewardTitle/channelPointsRewardTitleFieldsFromUserstate';
+import { channelPointsRewardTitleFromTags } from '@app/utils/chat/channelPointsRewardTitle/channelPointsRewardTitleFromTags';
+import { channelPointsRewardTitleFromUserstate } from '@app/utils/chat/channelPointsRewardTitle/channelPointsRewardTitleFromUserstate';
 
 import { styles } from '../RichChatMessage.styles';
 import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';

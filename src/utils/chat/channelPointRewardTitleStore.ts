@@ -1,11 +1,11 @@
 import { observable } from '@legendapp/state';
 import { useSelector } from '@legendapp/state/react';
 
+import { channelPointsRewardTitleFromTags } from '@app/utils/chat/channelPointsRewardTitle/channelPointsRewardTitleFromTags';
 import {
   type ChannelPointsRewardTags,
   type ChannelPointsRewardTagSource,
-  channelPointsRewardTitleFromTags,
-} from './channelPointsRewardTitle';
+} from '@app/utils/chat/channelPointsRewardTitle/types';
 
 const MAX_REWARD_TITLE_ENTRIES = 100;
 
