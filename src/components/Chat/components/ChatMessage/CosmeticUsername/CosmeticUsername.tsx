@@ -6,6 +6,7 @@ import { useSelector } from '@legendapp/state/react';
 import { useChatScrollActive } from '@app/components/Chat/util/useChatScrollActive';
 import { Text } from '@app/components/ui/Text/Text';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { preferences$ } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
@@ -13,6 +14,8 @@ import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 import { chatLineMetrics } from '../RichChatMessage.styles';
 import { PaintedUsernameDropShadowLayer } from './PaintedUsernameDropShadowLayer';
 import { PaintedUsernameMaskedFill } from './PaintedUsernameMaskedFill';
+import { SkiaPaintedUsernamePoc } from './poc/SkiaPaintedUsernamePoc';
+import { WebPaintedUsernamePoc } from './poc/WebPaintedUsernamePoc';
 import {
   DEFAULT_PAINT_DROP_SHADOW_MODE,
   getPaintDropShadows,
@@ -117,6 +120,9 @@ function PaintedUsernameComponent({
   });
   const paint = paintProp ?? storePaint ?? null;
   const isScrolling = useChatScrollActive();
+  const paintRenderer = useSelector(() =>
+    preferences$.sevenTvPaintRenderer.get(),
+  );
 
   if (!paint) {
     return (
@@ -152,6 +158,29 @@ function PaintedUsernameComponent({
       >
         {displayUsername}
       </Text>
+    );
+  }
+
+  // Parity POC renderers (PR #716), selectable from the dev-tools Feature
+  // Flags section; both ignore usernameTextStyle and render at the default
+  // chat metrics.
+  if (paintRenderer === 'skia') {
+    return (
+      <SkiaPaintedUsernamePoc
+        username={displayUsername}
+        paint={paint}
+        fallbackColor={solidFallback}
+      />
+    );
+  }
+
+  if (paintRenderer === 'webview') {
+    return (
+      <WebPaintedUsernamePoc
+        username={displayUsername}
+        paint={paint}
+        fallbackColor={solidFallback}
+      />
     );
   }
 

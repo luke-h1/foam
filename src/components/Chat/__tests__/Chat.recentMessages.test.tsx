@@ -385,6 +385,7 @@ const setPreferences = (showRecentMessages = true) => {
     analyticsEnabled: true,
     sharedChatEnabled: true,
     enhancedVideoStability: false,
+    sevenTvPaintRenderer: 'native',
     chatDelay: 0,
     update: jest.fn(),
   } satisfies ReturnType<typeof usePreferences>;
