@@ -259,10 +259,10 @@ export function useChatMessageProcessing({
     [channelId, show7TvEmotes, userLogin],
   );
 
-  // A hydration pass sleeps between reprocess slices, so it can outlive the
-  // viewability event that started it. The epoch cancels passes that belong
-  // to an unmounted surface or a previous channel, and the active-pass chain
-  // serializes passes so the per-turn slice cap holds across them.
+  /**
+   * Passes sleep between reprocess slices: the epoch cancels them on
+   * unmount/channel hop, chaining keeps the per-turn slice cap intact.
+   */
   const hydrationEpochRef = useRef(0);
   const activeHydrationPassRef = useRef<Promise<void> | null>(null);
 

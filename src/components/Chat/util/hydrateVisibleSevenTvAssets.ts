@@ -30,9 +30,8 @@ type HydrateVisibleSevenTvAssetsParams = {
   hydrateCosmetics?: boolean;
   reprocessMessage: (message: AnyChatMessageType) => void | Promise<void>;
   /**
-   * Polled between reprocess slices and before every deferred reprocess: a
-   * pass spans multiple event-loop turns, so the chat surface can unmount or
-   * hop channels while it sleeps. Return false to stop reprocessing.
+   * Polled between reprocess slices; return false to stop a pass whose
+   * surface unmounted or hopped channels mid-flight.
    */
   shouldContinue?: () => boolean;
 };

@@ -375,9 +375,10 @@ describe('hydrateVisibleSevenTvAssets', () => {
     expect(maxSyncChunk).toBeLessThanOrEqual(6);
   });
 
-  // A pass sleeps between reprocess slices, so the chat surface can unmount
-  // or hop channels while it is mid-flight. Once shouldContinue reports the
-  // pass is stale, the remaining slices must not run.
+  /**
+   * The surface can unmount or hop channels while a pass sleeps between
+   * slices; stale passes must not keep reprocessing.
+   */
   test('stops cached-asset reprocessing once shouldContinue returns false', async () => {
     const messages = Array.from({ length: 24 }, (_, index) =>
       createMessageForUser(`cancel-user-${index}`),

@@ -51,10 +51,10 @@ function PaintedUsernameWithPaint({
   sevenTvPaintDropShadows,
   usernameTextStyle,
 }: PaintedUsernameWithPaintProps) {
-  // This subscription lives here (mounted only for painted usernames) rather
-  // than in the parent, where it would re-render every visible row twice per
-  // fling (start + settle) even though unpainted rows produce identical
-  // output.
+  /**
+   * Subscribed here (painted usernames only) - in the parent it would
+   * re-render every visible row twice per fling.
+   */
   const isScrolling = useChatScrollActive();
 
   // During an active fling, render the username in its dominant solid colour

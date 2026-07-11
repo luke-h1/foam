@@ -12,11 +12,11 @@ import { resolveMessageEmoteParts } from '../util/resolveMessageEmoteParts';
 
 const EMOTE_REPROCESS_BATCH_DELAY_MS = 32;
 const EMOTE_REPROCESS_BATCH_SIZE = 6;
-// The processed-id set is only cleared on reprocess-key changes, but each
-// effect run (7TV emote_set.update, etc.) can add a window's worth of ids -
-// unbounded, a multi-hour stay in one busy channel accumulates ~1MB/hr of id
-// strings. Overflow resets the set; the equality checks make the one extra
-// full pass cheap.
+/**
+ * Only cleared on reprocess-key changes; unbounded it grows ~1MB/hr in a
+ * busy channel. Overflow resets the set - the equality checks make the
+ * extra full pass cheap.
+ */
 const MAX_PROCESSED_MESSAGE_IDS = 5000;
 
 export function useEmoteReprocessing({
@@ -101,10 +101,11 @@ export function useEmoteReprocessing({
       }
 
       if (processedMessageIdsRef.current.has(msg.message_id)) {
-        // Already-processed messages get one more look only when a text part
-        // still carries a raw @mention (its login resolved after the last
-        // pass). The regex runs behind the membership check - running it
-        // first would scan every text part of every message per effect run.
+        /**
+         * Re-check only when a text part still carries a raw @mention (its
+         * login resolved after the last pass); keep the regex behind the
+         * membership check.
+         */
         const hasUnparsedMention = msg.message.some(
           part => part.type === 'text' && /(?:^|\s)@[\w-]+/.test(part.content),
         );

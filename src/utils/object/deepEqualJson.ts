@@ -1,8 +1,5 @@
 /**
- * Structural equality for JSON-shaped values (plain objects, arrays,
- * primitives, null). Unlike stringify comparison it is insensitive to object
- * key order. A property explicitly set to `undefined` only compares equal to
- * another explicit `undefined`, not to a missing key.
+ * Key-order-insensitive structural equality for JSON-shaped values.
  */
 export function deepEqualJson(a: unknown, b: unknown): boolean {
   if (a === b) {

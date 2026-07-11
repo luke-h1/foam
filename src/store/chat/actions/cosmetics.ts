@@ -401,22 +401,22 @@ export const setUserPaint = (ttvUserId: string, paintId: string): void => {
 };
 
 /**
- * Popular paints re-arrive with a fresh object identity for every wearer
- * sighting (GQL conversion / MMKV round-trip both construct new objects).
- * Storing an equal-content copy would rotate the WeakMap-keyed paint layer
- * caches and re-sync every cached wearer to MMKV - O(wearers²) during
- * entitlement bursts - for no observable change, so no-op writes are dropped
- * here. The comparison is structural (key-order insensitive) so it holds
- * regardless of which constructor built each side.
+ * Popular paints re-arrive with a fresh object identity per wearer sighting
+ * (GQL conversion / MMKV round-trip both construct new objects). Storing an
+ * equal-content copy rotates the WeakMap-keyed paint layer caches and
+ * re-syncs every cached wearer to MMKV - O(wearers²) during entitlement
+ * bursts - so no-op writes are dropped via structural compare.
  */
 const isSamePaintDefinition = (
   previous: PaintData | undefined,
   next: PaintData,
 ): boolean => previous != null && deepEqualJson(previous, next);
 
-// Paint definitions are large (gradient stops, shadow chains) and survive
-// channel hops, so bound the in-memory map: on overflow, drop definitions no
-// current binding references. Matches the persisted-snapshot cap.
+/**
+ * Paint definitions are large (gradient stops, shadow chains) and survive
+ * channel hops, so bound the in-memory map: on overflow, drop definitions no
+ * current binding references. Matches the persisted-snapshot cap.
+ */
 const MAX_PAINT_DEFINITIONS = 750;
 
 const sweepUnreferencedPaints = () => {

@@ -242,8 +242,10 @@ function sortTasks(): void {
 }
 
 function drainQueue(): void {
-  // Sort once per drain, and only when something was enqueued since the last
-  // sort - shift() preserves order across dequeues.
+  /**
+   * Sort once per drain, and only when something was enqueued since the last
+   * sort - shift() preserves order across dequeues.
+   */
   if (taskQueueDirty) {
     taskQueueDirty = false;
     sortTasks();

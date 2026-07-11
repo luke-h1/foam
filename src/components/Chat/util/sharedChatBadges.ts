@@ -55,10 +55,10 @@ function setTimedCacheValue<T>(
   key: string,
   value: T,
 ): void {
-  // Sweep expired entries on insert: reads only evict the key they touch, so
-  // source rooms never looked up again would otherwise keep their entries
-  // (profile-image badge objects) for the app's lifetime. Inserts are rare
-  // (one per newly seen shared-chat partner), so the full sweep is cheap.
+  /**
+   * Reads only evict the key they touch, so sweep on insert - inserts are
+   * rare (one per newly seen shared-chat partner).
+   */
   const now = Date.now();
   cache.forEach((entry, entryKey) => {
     if (entry.expiresAt <= now) {
