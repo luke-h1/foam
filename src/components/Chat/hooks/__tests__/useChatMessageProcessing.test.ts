@@ -2,11 +2,9 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { hydrateVisibleSevenTvAssets } from '@app/components/Chat/util/hydrateVisibleSevenTvAssets';
 import { reprocessMessages } from '@app/components/Chat/util/reprocessMessages';
-import {
-  getCachedSharedChatBadgeContext,
-  getMessageBadges,
-  getSharedChatBadgeContext,
-} from '@app/components/Chat/util/sharedChatBadges';
+import { getCachedSharedChatBadgeContext } from '@app/components/Chat/util/sharedChatBadges/getCachedSharedChatBadgeContext';
+import { getMessageBadges } from '@app/components/Chat/util/sharedChatBadges/getMessageBadges';
+import { getSharedChatBadgeContext } from '@app/components/Chat/util/sharedChatBadges/getSharedChatBadgeContext';
 import {
   fetchUserPersonalEmotes,
   getCurrentEmoteData,
@@ -72,9 +70,18 @@ jest.mock('../../util/reprocessMessages', () => ({
   reprocessMessages: jest.fn(),
 }));
 
-jest.mock('../../util/sharedChatBadges', () => ({
-  getCachedSharedChatBadgeContext: jest.fn(),
+jest.mock(
+  '../../util/sharedChatBadges/getCachedSharedChatBadgeContext',
+  () => ({
+    getCachedSharedChatBadgeContext: jest.fn(),
+  }),
+);
+
+jest.mock('../../util/sharedChatBadges/getMessageBadges', () => ({
   getMessageBadges: jest.fn(() => []),
+}));
+
+jest.mock('../../util/sharedChatBadges/getSharedChatBadgeContext', () => ({
   getSharedChatBadgeContext: jest.fn(() =>
     Promise.resolve({
       sourceBadge: undefined,

@@ -1,54 +1,26 @@
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchService } from '@app/services/twitch-service';
-import type { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { getPreferences } from '@app/store/preferenceStore';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { findBadges } from '@app/utils/chat/findBadges';
 import { logger } from '@app/utils/logger';
+
+import { getSharedChatSourceRoomId } from './getSharedChatSourceRoomId';
+import { getTimedCacheValue } from './getTimedCacheValue';
+import { sharedChatChannelBadgesCache } from './sharedChatChannelBadgesCache';
+import { sharedChatSourceBadgeCache } from './sharedChatSourceBadgeCache';
+import type { TimedCacheEntry } from './types';
 
 const SHARED_CHAT_BADGE_CACHE_TTL = 60 * 60 * 1000;
 
-type TimedCacheEntry<T> = {
-  value: T;
-  expiresAt: number;
-};
-
-const sharedChatSourceBadgeCache = new Map<
-  string,
-  TimedCacheEntry<SanitisedBadgeSet | null>
->();
 const sharedChatSourceBadgePromises = new Map<
   string,
   Promise<SanitisedBadgeSet | null>
->();
-const sharedChatChannelBadgesCache = new Map<
-  string,
-  TimedCacheEntry<SanitisedBadgeSet[]>
 >();
 const sharedChatChannelBadgePromises = new Map<
   string,
   Promise<SanitisedBadgeSet[]>
 >();
-
-type ChatEmoteData = NonNullable<ReturnType<typeof getCurrentEmoteData>>;
-
-function getTimedCacheValue<T>(
-  cache: Map<string, TimedCacheEntry<T>>,
-  key: string,
-): T | undefined {
-  const cached = cache.get(key);
-  if (!cached) {
-    return undefined;
-  }
-
-  if (cached.expiresAt <= Date.now()) {
-    cache.delete(key);
-    return undefined;
-  }
-
-  return cached.value;
-}
 
 function setTimedCacheValue<T>(
   cache: Map<string, TimedCacheEntry<T>>,
@@ -65,17 +37,6 @@ function setTimedCacheValue<T>(
     value,
     expiresAt: now + SHARED_CHAT_BADGE_CACHE_TTL,
   });
-}
-
-function getSharedChatSourceRoomId(
-  userstate: UserStateTags,
-): string | undefined {
-  const sourceRoomId = userstate['source-room-id'];
-  if (!sourceRoomId) {
-    return undefined;
-  }
-
-  return sourceRoomId;
 }
 
 async function getSharedChatSourceBadge(
@@ -177,61 +138,4 @@ export async function getSharedChatBadgeContext(
     sourceBadge,
     sourceChannelBadges,
   };
-}
-
-export function getCachedSharedChatBadgeContext(userstate: UserStateTags): {
-  isComplete: boolean;
-  sourceBadge: SanitisedBadgeSet | null | undefined;
-  sourceChannelBadges: SanitisedBadgeSet[] | undefined;
-} | null {
-  const sourceRoomId = getSharedChatSourceRoomId(userstate);
-  if (!sourceRoomId || !getPreferences().sharedChatEnabled) {
-    return null;
-  }
-
-  const sourceBadge = getTimedCacheValue(
-    sharedChatSourceBadgeCache,
-    sourceRoomId,
-  );
-  const sourceChannelBadges = getTimedCacheValue(
-    sharedChatChannelBadgesCache,
-    sourceRoomId,
-  );
-
-  return {
-    isComplete: sourceBadge !== undefined && sourceChannelBadges !== undefined,
-    sourceBadge,
-    sourceChannelBadges,
-  };
-}
-
-export function getMessageBadges({
-  emoteData,
-  sourceBadge,
-  sourceChannelBadges,
-  userstate,
-}: {
-  emoteData: ChatEmoteData;
-  sourceBadge?: SanitisedBadgeSet | null;
-  sourceChannelBadges?: SanitisedBadgeSet[] | null;
-  userstate: UserStateTags;
-}): SanitisedBadgeSet[] {
-  const foundBadges = findBadges({
-    userstate,
-    bttvBadges: emoteData.bttvBadges,
-    chatterinoBadges: emoteData.chatterinoBadges,
-    ffzChannelBadges: emoteData.ffzChannelBadges,
-    ffzGlobalBadges: emoteData.ffzGlobalBadges,
-    twitchChannelBadges: sourceChannelBadges ?? emoteData.twitchChannelBadges,
-    twitchGlobalBadges: emoteData.twitchGlobalBadges,
-  });
-
-  if (!sourceBadge) {
-    return foundBadges;
-  }
-
-  return [
-    sourceBadge,
-    ...foundBadges.filter(badge => badge.set !== sourceBadge.set),
-  ];
 }

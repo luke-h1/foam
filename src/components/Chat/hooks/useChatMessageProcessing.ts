@@ -19,11 +19,9 @@ import {
 } from '../util/messageHandlers';
 import { reprocessMessages } from '../util/reprocessMessages';
 import { resolveMessageEmoteParts } from '../util/resolveMessageEmoteParts';
-import {
-  getCachedSharedChatBadgeContext,
-  getMessageBadges,
-  getSharedChatBadgeContext,
-} from '../util/sharedChatBadges';
+import { getCachedSharedChatBadgeContext } from '../util/sharedChatBadges/getCachedSharedChatBadgeContext';
+import { getMessageBadges } from '../util/sharedChatBadges/getMessageBadges';
+import { getSharedChatBadgeContext } from '../util/sharedChatBadges/getSharedChatBadgeContext';
 
 const VISIBLE_ASSET_HYDRATION_DELAY_MS = 150;
 
