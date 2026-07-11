@@ -1,3 +1,5 @@
+import { AppState } from 'react-native';
+
 import type {
   SkCanvas,
   SkImage,
@@ -538,6 +540,18 @@ export interface PaintBitmaps {
 const MAX_CACHED_PAINT_BITMAPS = 256;
 const paintBitmapCache = new Map<string, PaintBitmaps>();
 
+let memoryWarningSubscribed = false;
+
+function subscribeToMemoryWarnings(): void {
+  if (memoryWarningSubscribed) {
+    return;
+  }
+  memoryWarningSubscribed = true;
+  AppState.addEventListener('memoryWarning', () => {
+    paintBitmapCache.clear();
+  });
+}
+
 let nextPaintRevision = 1;
 const paintRevisions = new WeakMap<PaintData, number>();
 
@@ -552,7 +566,9 @@ function paintRevision(paint: PaintData): number {
 }
 
 function paintBitmapCacheKey(opts: RasterizePaintedUsernameOptions): string {
-  return `${opts.paint.id}|${paintRevision(opts.paint)}|${opts.displayUsername}|${opts.fontSize}|${opts.pixelRatio}`;
+  const fallbackPart =
+    opts.paint.color === null ? `|${opts.fallbackColor}` : '';
+  return `${opts.paint.id}|${paintRevision(opts.paint)}|${opts.displayUsername}|${opts.fontSize}|${opts.pixelRatio}${fallbackPart}`;
 }
 
 /**
@@ -563,6 +579,7 @@ function paintBitmapCacheKey(opts: RasterizePaintedUsernameOptions): string {
 export function getPaintBitmaps(
   opts: RasterizePaintedUsernameOptions,
 ): PaintBitmaps | null {
+  subscribeToMemoryWarnings();
   const key = paintBitmapCacheKey(opts);
   const cached = paintBitmapCache.get(key);
   if (cached) {

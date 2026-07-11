@@ -17,11 +17,14 @@ const MAX_TILED_PAINT_IMAGES = 24;
 
 /**
  * Values are `SkImage` on success and `null` on a failed fetch/decode. The
- * `null` acts as a negative-cache sentinel so `loadImage`'s `.has(url)` guard
- * short-circuits future attempts - without it a broken paint URL would retry
- * on every render for every row wearing that paint.
+ * `null` acts as a negative-cache sentinel so a broken paint URL doesn't
+ * retry on every render for every row wearing that paint; it expires after
+ * `NEGATIVE_RETRY_DELAY_MS`.
  */
+const NEGATIVE_RETRY_DELAY_MS = 60_000;
+
 const imagesByUrl = new Map<string, SkImage | null>();
+const failedAtByUrl = new Map<string, number>();
 const pendingUrls = new Set<string>();
 const listenersByUrl = new Map<string, Set<() => void>>();
 
@@ -37,18 +40,31 @@ function evictIfNeeded(): void {
     // Prefer evicting a texture no mounted row is watching.
     if (!listenersByUrl.get(oldest)?.size) {
       imagesByUrl.delete(oldest);
+      failedAtByUrl.delete(oldest);
       return;
     }
   }
   const first = imagesByUrl.keys().next().value;
   if (first !== undefined) {
     imagesByUrl.delete(first);
+    failedAtByUrl.delete(first);
   }
 }
 
 function loadImage(url: string): void {
-  if (imagesByUrl.has(url) || pendingUrls.has(url)) {
+  if (!url || pendingUrls.has(url)) {
     return;
+  }
+  if (imagesByUrl.has(url)) {
+    const failedAt = failedAtByUrl.get(url);
+    if (
+      failedAt === undefined ||
+      Date.now() - failedAt < NEGATIVE_RETRY_DELAY_MS
+    ) {
+      return;
+    }
+    imagesByUrl.delete(url);
+    failedAtByUrl.delete(url);
   }
   pendingUrls.add(url);
   Skia.Data.fromURI(url)
@@ -58,12 +74,14 @@ function loadImage(url: string): void {
       pendingUrls.delete(url);
       evictIfNeeded();
       imagesByUrl.set(url, image);
+      failedAtByUrl.delete(url);
       notify(url);
     })
     .catch(error => {
       pendingUrls.delete(url);
       evictIfNeeded();
       imagesByUrl.set(url, null);
+      failedAtByUrl.set(url, Date.now());
       notify(url);
       logger.chat.warn('Failed to load tiled paint texture:', { url, error });
     });

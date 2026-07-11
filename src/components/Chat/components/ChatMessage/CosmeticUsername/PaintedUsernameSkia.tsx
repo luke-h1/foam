@@ -8,7 +8,6 @@ import {
   ImageShader,
   Mask,
   useAnimatedImageValue,
-  useImage,
 } from '@shopify/react-native-skia';
 
 import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/RichChatMessage.styles';
@@ -21,6 +20,7 @@ import {
   type PaintBitmaps,
 } from './util/skiaPaintedUsernameRasterizer';
 import { useSkiaPaintFontProvider } from './util/skiaPaintFonts';
+import { useTiledPaintImage } from './util/tiledPaintImageCache';
 
 interface PaintedUsernameSkiaProps {
   username: string;
@@ -89,7 +89,7 @@ function PaintBitmapCanvas({
 }
 
 function TiledPaintCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
-  const tiledImage = useImage(bitmaps.animatedUrl);
+  const tiledImage = useTiledPaintImage(bitmaps.animatedUrl ?? '');
   const maskNode = paintMaskNode(bitmaps);
 
   const overlay =
