@@ -33,7 +33,9 @@ export function createIngestMessage(
   };
 }
 
-/** Near-full window seed + burst that forces front-trim on a capped store. */
+/**
+ * Near-full window seed + burst that forces front-trim on a capped store.
+ */
 export const INGEST_SEED_COUNT = 120;
 export const INGEST_BURST_COUNT = 80;
 

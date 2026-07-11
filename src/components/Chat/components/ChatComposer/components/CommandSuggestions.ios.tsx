@@ -11,6 +11,11 @@ import type { SlashCommandDefinition } from '@app/components/Chat/util/slashComm
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
+import {
+  suggestionRailColors,
+  suggestionRailStyles,
+} from '../suggestionRailStyles';
+
 const COMMAND_SUGGESTION_ITEM_SIZE = 128;
 
 interface CommandSuggestionsProps {
@@ -54,8 +59,8 @@ export const CommandSuggestions = memo(function CommandSuggestions({
   );
 
   return (
-    <View style={styles.suggestionsWrapper}>
-      <View style={styles.suggestionsContainer}>
+    <View style={suggestionRailStyles.compactWrapper}>
+      <View style={suggestionRailStyles.compactContainer}>
         <LegendList
           data={commands}
           horizontal
@@ -74,7 +79,7 @@ export const CommandSuggestions = memo(function CommandSuggestions({
 
 const styles = StyleSheet.create({
   commandName: {
-    color: theme.color.text.dark,
+    color: suggestionRailColors.text,
     fontSize: theme.fontSize14,
     fontWeight: '500',
     maxWidth: 150,
@@ -84,32 +89,14 @@ const styles = StyleSheet.create({
   },
   suggestionItem: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: suggestionRailColors.chipBackground,
+    borderColor: suggestionRailColors.chipBorder,
     borderCurve: 'continuous',
-    borderRadius: 14,
+    borderRadius: theme.borderRadius14,
     borderWidth: 1,
     minHeight: 38,
     minWidth: COMMAND_SUGGESTION_ITEM_SIZE,
     paddingHorizontal: 8,
     paddingVertical: 5,
-  },
-  suggestionsContainer: {
-    backgroundColor: 'rgba(28,28,30,0.94)',
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderCurve: 'continuous',
-    borderRadius: 14,
-    borderWidth: 1,
-    paddingBottom: 4,
-    paddingHorizontal: 4,
-    paddingTop: 4,
-    boxShadow: '0 6px 12px rgba(0, 0, 0, 0.16)',
-    alignSelf: 'flex-start',
-    maxWidth: '100%',
-  },
-  suggestionsWrapper: {
-    marginBottom: 6,
-    maxWidth: '100%',
-    zIndex: 2,
   },
 });

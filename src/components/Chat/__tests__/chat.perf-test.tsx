@@ -304,6 +304,13 @@ describe('chat performance', () => {
           showInlineReplyContext: true,
           showTimestamp: true,
         });
+      }
+    }, MEASURE_OPTIONS);
+  });
+
+  test('estimates comfortable chat row heights with pretext', async () => {
+    await measureFunction(() => {
+      for (const message of virtualizedRows) {
         estimateChatMessageHeightWithPretext(message, {
           containerWidth: 390,
           density: 'comfortable',

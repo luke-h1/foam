@@ -139,4 +139,27 @@ describe('PaintedUsernameWebView', () => {
 
     expect(screen.getByText('PaintUser')).toBeOnTheScreen();
   });
+
+  test('keeps the fallback sizer when the webview posts a non-positive size', () => {
+    render(
+      <PaintedUsernameWebView
+        username='PaintUser'
+        paint={paint}
+        fallbackColor='#FF0000'
+      />,
+    );
+
+    sendSizeMessage(0, 21);
+
+    expect(screen.getByText('PaintUser')).toBeOnTheScreen();
+
+    const rootStyle = StyleSheet.flatten(screen.root.props.style);
+    expect({
+      height: rootStyle.height,
+      width: rootStyle.width,
+    }).toEqual({
+      height: undefined,
+      width: undefined,
+    });
+  });
 });

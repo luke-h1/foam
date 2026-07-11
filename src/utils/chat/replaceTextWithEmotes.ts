@@ -1,7 +1,7 @@
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
 import { findEmotesInText } from '@app/utils/chat/findEmotesInText';
-import { getSortedEmoteNames } from '@app/utils/chat/findEmotesInText/getSortedEmoteNames';
+import { getEmoteMatchIndex } from '@app/utils/chat/findEmotesInText/getEmoteMatchIndex';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { parseWordLinkParts } from '@app/utils/chat/replaceTextWithEmotes/parseWordLinkParts';
 import { sanitizeInput } from '@app/utils/chat/sanitizeInput';
@@ -38,8 +38,7 @@ function findEmoteMatchingMention(
 }
 
 /**
- * Strip trailing delimiter punctuation so `Kappa!` / `Pog,` can hit the
- * direct Map path instead of the dense findEmotesInText scan.
+ * Lets `Kappa!` / `Pog,` hit the Map path instead of findEmotesInText.
  */
 const TRAILING_EMOTE_PUNCTUATION = /[.,!?)}:;'"\\|/]+$/;
 
@@ -58,21 +57,153 @@ function splitTrailingEmotePunctuation(word: string): {
   };
 }
 
-/**
- * Problems to fix:
- * emotes in replies
- * test that all emotes work
- * unit test
- * clean up
- */
+type EmoteLookupCollection = {
+  emoteMap: Map<string, SanitisedEmote>;
+  emojiMap: Map<string, SanitisedEmote>;
+  mentionEmoteMap: Map<string, SanitisedEmote>;
+};
+
+type EmoteProviderLists = {
+  emojiEmotes: SanitisedEmote[];
+  sevenTvGlobalEmotes: SanitisedEmote[];
+  sevenTvChannelEmotes: SanitisedEmote[];
+  sevenTvPersonalEmotes: SanitisedEmote[];
+  twitchGlobalEmotes: SanitisedEmote[];
+  twitchChannelEmotes: SanitisedEmote[];
+  twitchSubscriberEmotes: SanitisedEmote[];
+  ffzChannelEmotes: SanitisedEmote[];
+  ffzGlobalEmotes: SanitisedEmote[];
+  bttvChannelEmotes: SanitisedEmote[];
+  bttvGlobalEmotes: SanitisedEmote[];
+};
+
+const EMPTY_EMOTES: SanitisedEmote[] = [];
+const emoteArrayIds = new WeakMap<SanitisedEmote[], number>();
+const lookupCollectionCache = new Map<string, EmoteLookupCollection>();
+const MAX_LOOKUP_COLLECTION_CACHE_SIZE = 4;
+let nextEmoteArrayId = 0;
+
+function getEmoteArrayId(emotes: SanitisedEmote[]): number {
+  let id = emoteArrayIds.get(emotes);
+  if (id === undefined) {
+    nextEmoteArrayId += 1;
+    id = nextEmoteArrayId;
+    emoteArrayIds.set(emotes, id);
+  }
+  return id;
+}
+
+function getLookupCollectionKey(lists: EmoteProviderLists): string {
+  return [
+    getEmoteArrayId(lists.emojiEmotes),
+    getEmoteArrayId(lists.sevenTvGlobalEmotes),
+    getEmoteArrayId(lists.sevenTvChannelEmotes),
+    getEmoteArrayId(lists.sevenTvPersonalEmotes),
+    getEmoteArrayId(lists.twitchGlobalEmotes),
+    getEmoteArrayId(lists.twitchChannelEmotes),
+    getEmoteArrayId(lists.twitchSubscriberEmotes),
+    getEmoteArrayId(lists.ffzChannelEmotes),
+    getEmoteArrayId(lists.ffzGlobalEmotes),
+    getEmoteArrayId(lists.bttvChannelEmotes),
+    getEmoteArrayId(lists.bttvGlobalEmotes),
+  ].join('|');
+}
+
+function buildLookupCollection(
+  lists: EmoteProviderLists,
+): EmoteLookupCollection {
+  const emoteMap = new Map<string, SanitisedEmote>();
+  const emojiMap = new Map<string, SanitisedEmote>();
+  const mentionEmoteMap = new Map<string, SanitisedEmote>();
+
+  const registerMentionAliases = (emote: SanitisedEmote) => {
+    const lowerName = emote.name.trimEnd().toLowerCase();
+    if (lowerName && !mentionEmoteMap.has(lowerName)) {
+      mentionEmoteMap.set(lowerName, emote);
+    }
+
+    const alternateName = emote.original_name?.trim();
+    if (alternateName) {
+      const lowerAlternate = alternateName.toLowerCase();
+      if (!mentionEmoteMap.has(lowerAlternate)) {
+        mentionEmoteMap.set(lowerAlternate, emote);
+      }
+    }
+  };
+
+  const registerScopedEmote = (emote: SanitisedEmote) => {
+    const resolved = withResolvedEmoteImageVariants(emote);
+    if (!emoteMap.has(emote.name)) {
+      emoteMap.set(emote.name, resolved);
+      registerMentionAliases(resolved);
+    }
+    const alternateName = emote.original_name?.trim();
+    if (
+      alternateName &&
+      alternateName !== emote.name &&
+      !emoteMap.has(alternateName)
+    ) {
+      emoteMap.set(alternateName, resolved);
+    }
+  };
+
+  const registerGlobalEmote = (emote: SanitisedEmote) => {
+    const resolved = withResolvedEmoteImageVariants(emote);
+    if (!emoteMap.has(emote.name)) {
+      emoteMap.set(emote.name, resolved);
+      registerMentionAliases(resolved);
+    }
+
+    if (resolved.site === 'Emoji') {
+      const emojiHexcode = resolved.emoji_hexcode ?? resolved.id;
+      if (!emojiMap.has(emojiHexcode)) {
+        emojiMap.set(emojiHexcode, resolved);
+      }
+    }
+  };
+
+  // Personal / subscriber / channel first, then globals.
+  lists.sevenTvPersonalEmotes.forEach(registerScopedEmote);
+  lists.twitchSubscriberEmotes.forEach(registerScopedEmote);
+  lists.sevenTvChannelEmotes.forEach(registerScopedEmote);
+  lists.twitchChannelEmotes.forEach(registerScopedEmote);
+  lists.ffzChannelEmotes.forEach(registerScopedEmote);
+  lists.bttvChannelEmotes.forEach(registerScopedEmote);
+  lists.emojiEmotes.forEach(registerGlobalEmote);
+  lists.sevenTvGlobalEmotes.forEach(registerGlobalEmote);
+  lists.twitchGlobalEmotes.forEach(registerGlobalEmote);
+  lists.ffzGlobalEmotes.forEach(registerGlobalEmote);
+  lists.bttvGlobalEmotes.forEach(registerGlobalEmote);
+
+  return { emoteMap, emojiMap, mentionEmoteMap };
+}
+
+function getLookupCollection(lists: EmoteProviderLists): EmoteLookupCollection {
+  const cacheKey = getLookupCollectionKey(lists);
+  const cached = lookupCollectionCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const collection = buildLookupCollection(lists);
+  if (lookupCollectionCache.size >= MAX_LOOKUP_COLLECTION_CACHE_SIZE) {
+    const oldestKey = lookupCollectionCache.keys().next().value;
+    if (oldestKey) {
+      lookupCollectionCache.delete(oldestKey);
+    }
+  }
+  lookupCollectionCache.set(cacheKey, collection);
+  return collection;
+}
+
 export function replaceTextWithEmotes({
   inputString,
-  emojiEmotes = [],
+  emojiEmotes = EMPTY_EMOTES,
   sevenTvChannelEmotes,
   sevenTvGlobalEmotes,
-  sevenTvPersonalEmotes = [],
+  sevenTvPersonalEmotes = EMPTY_EMOTES,
   twitchGlobalEmotes,
-  twitchSubscriberEmotes = [],
+  twitchSubscriberEmotes = EMPTY_EMOTES,
   bttvChannelEmotes,
   bttvGlobalEmotes,
   ffzChannelEmotes,
@@ -98,82 +229,22 @@ export function replaceTextWithEmotes({
     return [{ type: 'text', content: inputString }];
   }
 
-  const emoteMap = new Map<string, SanitisedEmote>();
-  const emojiMap = new Map<string, SanitisedEmote>();
-  const mentionEmoteMap = new Map<string, SanitisedEmote>();
-
-  const channelEmotes = [
-    ...sevenTvChannelEmotes,
-    ...twitchChannelEmotes,
-    ...ffzChannelEmotes,
-    ...bttvChannelEmotes,
-  ] as const;
-
-  const globalEmotes = [
-    ...emojiEmotes,
-    ...sevenTvGlobalEmotes,
-    ...twitchGlobalEmotes,
-    ...ffzGlobalEmotes,
-    ...bttvGlobalEmotes,
-  ] as const;
-
-  const registerMentionAliases = (emote: SanitisedEmote) => {
-    const lowerName = emote.name.trimEnd().toLowerCase();
-    if (lowerName && !mentionEmoteMap.has(lowerName)) {
-      mentionEmoteMap.set(lowerName, emote);
-    }
-
-    const alternateName = emote.original_name?.trim();
-    if (alternateName) {
-      const lowerAlternate = alternateName.toLowerCase();
-      if (!mentionEmoteMap.has(lowerAlternate)) {
-        mentionEmoteMap.set(lowerAlternate, emote);
-      }
-    }
-  };
-
-  const registerEmoteLookup = (emote: SanitisedEmote) => {
-    const resolved = withResolvedEmoteImageVariants(emote);
-    if (!emoteMap.has(emote.name)) {
-      emoteMap.set(emote.name, resolved);
-      registerMentionAliases(resolved);
-    }
-    const alternateName = emote.original_name?.trim();
-    if (
-      alternateName &&
-      alternateName !== emote.name &&
-      !emoteMap.has(alternateName)
-    ) {
-      emoteMap.set(alternateName, resolved);
-    }
-  };
-
-  // Add sender-scoped emotes first (highest priority).
-  sevenTvPersonalEmotes.forEach(registerEmoteLookup);
-
-  twitchSubscriberEmotes.forEach(registerEmoteLookup);
-
-  // Add channel emotes, only if not already set by personal emotes
-  channelEmotes.forEach(registerEmoteLookup);
-
-  // add global emotes, only if not already set by personal or channel emotes
-  globalEmotes.forEach(emote => {
-    const resolvedEmote = withResolvedEmoteImageVariants(emote);
-    if (!emoteMap.has(emote.name)) {
-      emoteMap.set(emote.name, resolvedEmote);
-      registerMentionAliases(resolvedEmote);
-    }
-
-    if (resolvedEmote.site === 'Emoji') {
-      const emojiHexcode = resolvedEmote.emoji_hexcode ?? resolvedEmote.id;
-      if (!emojiMap.has(emojiHexcode)) {
-        emojiMap.set(emojiHexcode, resolvedEmote);
-      }
-    }
+  const { emoteMap, emojiMap, mentionEmoteMap } = getLookupCollection({
+    emojiEmotes,
+    sevenTvGlobalEmotes,
+    sevenTvChannelEmotes,
+    sevenTvPersonalEmotes,
+    twitchGlobalEmotes,
+    twitchChannelEmotes,
+    twitchSubscriberEmotes,
+    ffzChannelEmotes,
+    ffzGlobalEmotes,
+    bttvChannelEmotes,
+    bttvGlobalEmotes,
   });
 
   const sanitizedInput = stripInvisibleChars(sanitizeInput(inputString));
-  const sortedEmoteNames = getSortedEmoteNames(emoteMap);
+  const matchIndex = getEmoteMatchIndex(emoteMap);
 
   try {
     const splitParts = splitTextWithTwemoji(sanitizedInput);
@@ -214,19 +285,13 @@ export function replaceTextWithEmotes({
             height: foundEmote.height,
           });
         } else if (emoji && !emoji.includes('\uFFFD')) {
-          /**
-           * No emote found - only include if not a replacement character (encoding issue)
-           * U+FFFD (�) indicates invalid/malformed unicode
-           */
           replacedParts.push({
             type: 'text',
             content: emoji,
           });
-          // Otherwise skip - don't render broken unicode
         }
       } else if (text) {
-        // Strip U+FFFD (replacement character = invalid/malformed unicode from IRC)
-        // and the whitespace immediately surrounding it before word-splitting.
+        // Strip U+FFFD and surrounding whitespace before word-splitting.
         const textSegments = text.split(/\s*�+\s*/);
         for (const segment of textSegments) {
           if (!segment) continue;
@@ -292,68 +357,64 @@ export function replaceTextWithEmotes({
               const linkParts = parseWordLinkParts(word);
               if (linkParts) {
                 replacedParts.push(...linkParts);
-              } else {
-                // Fast path: direct Map lookup for standalone emote words
-                const directEmote = emoteMap.get(word);
+                return;
+              }
 
-                if (directEmote) {
+              const directEmote = emoteMap.get(word);
+              if (directEmote) {
+                replacedParts.push({
+                  type: 'emote',
+                  content: word,
+                  ...directEmote,
+                });
+                return;
+              }
+
+              const { core, trailing } = splitTrailingEmotePunctuation(word);
+              const punctuatedEmote =
+                trailing && core ? emoteMap.get(core) : undefined;
+              if (punctuatedEmote) {
+                replacedParts.push({
+                  type: 'emote',
+                  content: core,
+                  ...punctuatedEmote,
+                });
+                replacedParts.push({
+                  type: 'text',
+                  content: trailing,
+                });
+                return;
+              }
+
+              const foundEmotes = findEmotesInText(word, emoteMap, matchIndex);
+              if (foundEmotes.length === 0) {
+                replacedParts.push({
+                  type: 'text',
+                  content: word,
+                });
+                return;
+              }
+
+              let lastIndex = 0;
+              foundEmotes.forEach(({ emote, start, end }) => {
+                if (start > lastIndex) {
                   replacedParts.push({
-                    type: 'emote',
-                    content: word,
-                    ...directEmote,
+                    type: 'text',
+                    content: word.slice(lastIndex, start),
                   });
-                } else {
-                  const { core, trailing } =
-                    splitTrailingEmotePunctuation(word);
-                  const punctuatedEmote =
-                    trailing && core ? emoteMap.get(core) : undefined;
-
-                  if (punctuatedEmote) {
-                    replacedParts.push({
-                      type: 'emote',
-                      content: core,
-                      ...punctuatedEmote,
-                    });
-                    replacedParts.push({
-                      type: 'text',
-                      content: trailing,
-                    });
-                  } else {
-                    const foundEmotes = findEmotesInText(
-                      word,
-                      emoteMap,
-                      sortedEmoteNames,
-                    );
-                    if (foundEmotes.length > 0) {
-                      let lastIndex = 0;
-                      foundEmotes.forEach(({ emote, start, end }) => {
-                        if (start > lastIndex) {
-                          replacedParts.push({
-                            type: 'text',
-                            content: word.slice(lastIndex, start),
-                          });
-                        }
-                        replacedParts.push({
-                          type: 'emote',
-                          content: word.slice(start, end),
-                          ...emote,
-                        });
-                        lastIndex = end;
-                      });
-                      if (lastIndex < word.length) {
-                        replacedParts.push({
-                          type: 'text',
-                          content: word.slice(lastIndex),
-                        });
-                      }
-                    } else {
-                      replacedParts.push({
-                        type: 'text',
-                        content: word,
-                      });
-                    }
-                  }
                 }
+                replacedParts.push({
+                  type: 'emote',
+                  content: word.slice(start, end),
+                  ...emote,
+                });
+                lastIndex = end;
+              });
+              if (lastIndex < word.length) {
+                replacedParts.push({
+                  type: 'text',
+                  content: word.slice(lastIndex),
+                });
               }
             }
           });

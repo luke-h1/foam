@@ -501,24 +501,34 @@ function getEstimatedEmoteSize(
 function getMessagePartsFingerprint(
   message: AnyChatMessageType['message'],
 ): string {
-  return message
-    .map(part => {
-      switch (part.type) {
-        case 'text':
-          return `t${part.content.length}`;
-        case 'mention':
-          return `m${part.content.length}`;
-        case 'emote':
-          return `e${part.zero_width ? 'z' : 'n'}${part.width ?? 0}x${part.height ?? 0}`;
-        case 'stvEmote':
-          return `s${part.zero_width ? 'z' : 'n'}${part.width ?? 0}x${part.height ?? 0}`;
-        case 'twitchClip':
-          return 'c';
-        default:
-          return part.type.slice(0, 1);
-      }
-    })
-    .join(',');
+  let fingerprint = '';
+  for (let index = 0; index < message.length; index += 1) {
+    if (index > 0) {
+      fingerprint += ',';
+    }
+    const part = message[index]!;
+    switch (part.type) {
+      case 'text':
+        fingerprint += `t${part.content.length}`;
+        break;
+      case 'mention':
+        fingerprint += `m${part.content.length}`;
+        break;
+      case 'emote':
+        fingerprint += `e${part.zero_width ? 'z' : 'n'}${part.width ?? 0}x${part.height ?? 0}`;
+        break;
+      case 'stvEmote':
+        fingerprint += `s${part.zero_width ? 'z' : 'n'}${part.width ?? 0}x${part.height ?? 0}`;
+        break;
+      case 'twitchClip':
+        fingerprint += 'c';
+        break;
+      default:
+        fingerprint += part.type.slice(0, 1);
+        break;
+    }
+  }
+  return fingerprint;
 }
 
 function getCacheKey(

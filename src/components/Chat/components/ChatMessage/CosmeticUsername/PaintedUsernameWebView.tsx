@@ -102,10 +102,12 @@ function MeasuredPaintedUsernameWebView({
               width: number;
               height: number;
             };
-            setSize({
-              width: Math.ceil(measured.width),
-              height: Math.ceil(measured.height),
-            });
+            const width = Math.ceil(measured.width);
+            const height = Math.ceil(measured.height);
+            if (width <= 0 || height <= 0) {
+              return;
+            }
+            setSize({ width, height });
           } catch {
             // Ignore malformed measure payloads.
           }
