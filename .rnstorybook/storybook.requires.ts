@@ -3,7 +3,7 @@
 import {
   start,
   updateView,
-  View,
+  type View,
   type Features,
 } from '@storybook/react-native';
 

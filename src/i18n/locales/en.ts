@@ -887,6 +887,12 @@ const en = {
   },
 
   devTools: {
+    paintRenderer: '7TV Paint Renderer',
+    paintRendererDescription:
+      'Choose the username paint renderer. WebView is a dev-only reference.',
+    paintRendererNative: 'Native',
+    paintRendererSkia: 'Skia',
+    paintRendererWebview: 'WebView',
     revealSecrets: 'Reveal secrets',
     hideSecrets: 'Hide secrets',
     envVarsNote:

@@ -4,29 +4,12 @@ import { Canvas, Fill, ImageShader } from '@shopify/react-native-skia';
 
 import type { PaintCanvasRepeat } from '@app/types/seventv/cosmetics';
 
+import { paintLayerTileModes } from './util/paintLayer';
 import { useTiledPaintImage } from './util/tiledPaintImageCache';
 
 interface PaintLayerTiledImageProps {
   canvasRepeat: PaintCanvasRepeat;
   imageUrl: string;
-}
-
-type SkiaTileMode = 'clamp' | 'decal' | 'mirror' | 'repeat';
-
-function tileModes(canvasRepeat: PaintCanvasRepeat): {
-  tx: SkiaTileMode;
-  ty: SkiaTileMode;
-} {
-  // `round`/`space` stretch or pad tiles in CSS; plain repetition is the
-  // closest Skia equivalent and matches how the texture is meant to fill.
-  switch (canvasRepeat) {
-    case 'repeat-x':
-      return { tx: 'repeat', ty: 'decal' };
-    case 'repeat-y':
-      return { tx: 'decal', ty: 'repeat' };
-    default:
-      return { tx: 'repeat', ty: 'repeat' };
-  }
 }
 
 /**
@@ -43,7 +26,7 @@ export function PaintLayerTiledImage({
     return null;
   }
 
-  const { tx, ty } = tileModes(canvasRepeat);
+  const { tx, ty } = paintLayerTileModes(canvasRepeat);
 
   return (
     <Canvas style={StyleSheet.absoluteFill}>
