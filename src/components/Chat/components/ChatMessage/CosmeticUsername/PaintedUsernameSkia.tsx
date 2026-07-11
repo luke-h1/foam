@@ -131,6 +131,10 @@ function StretchPaintLayerOverlay({
 }) {
   const animatedFrame = useAnimatedImageValue(url);
 
+  if (!animatedFrame) {
+    return null;
+  }
+
   return (
     <Mask mode='alpha' mask={maskNode}>
       <Image

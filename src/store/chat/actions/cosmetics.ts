@@ -366,6 +366,13 @@ export const clearUserCosmeticsCache = () => {
   bumpCosmeticBindingsVersion();
 };
 
+/**
+ * Paint wearer bindings are read live from `chatStore$.userPaintIds` /
+ * `paints` in `PaintedUsername` and `UserChatBody`, so they must not bump
+ * `cosmeticBindingsVersion` (that restart is for badge rows baked into
+ * messages). Bumping here reintroduced a reprocess storm on entitlement
+ * bursts - see cosmeticsChurn.test.ts.
+ */
 export const setUserPaint = (ttvUserId: string, paintId: string): void => {
   const current = chatStore$.userPaintIds.peek();
 
@@ -671,6 +678,10 @@ export const removePaint = (paintId: string) => {
   scheduleCosmeticsPersist();
 };
 
+/**
+ * Live Legend selectors drop the paint without a bindings-version bump —
+ * same rationale as `setUserPaint`.
+ */
 export const removeUserPaint = (ttvUserId: string) => {
   const current = chatStore$.userPaintIds.peek();
   if (!(ttvUserId in current)) {
