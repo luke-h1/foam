@@ -358,6 +358,10 @@ export const requestUserCosmeticsViaPresence = async (
 };
 
 export const clearUserCosmeticsCache = () => {
+  if (cosmeticBindingsBumpTimer) {
+    clearTimeout(cosmeticBindingsBumpTimer);
+    cosmeticBindingsBumpTimer = null;
+  }
   userCosmeticsFetchGuard.clear();
   sessionCosmeticsCache.clear();
   clearSevenTvUserIdCache();
