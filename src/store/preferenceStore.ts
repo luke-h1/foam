@@ -3,6 +3,7 @@ import { persistObservable } from '@legendapp/state/persist';
 import { useSelector } from '@legendapp/state/react';
 import { z } from 'zod';
 
+import { paintRendererRollout$ } from '@app/lib/experiments/paintRendererRollout';
 import {
   createObservablePersistenceLocalConfig,
   ensureObservablePersistenceConfig,
@@ -206,7 +207,9 @@ export function getPreferences(): Preferences {
 
 export function usePaintRenderer(): SevenTvPaintRenderer {
   return useSelector(() =>
-    isDevToolsEnabled ? preferences$.sevenTvPaintRenderer.get() : 'native',
+    isDevToolsEnabled
+      ? preferences$.sevenTvPaintRenderer.get()
+      : paintRendererRollout$.get(),
   );
 }
 

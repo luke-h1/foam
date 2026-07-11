@@ -11,6 +11,7 @@ import {
   usePreferences,
 } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
+import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
 
 const PAINT_RENDERER_OPTIONS = [
   { labelKey: 'paintRendererNative', value: 'native' },
@@ -24,6 +25,10 @@ const PAINT_RENDERER_OPTIONS = [
 export function PaintRendererSection() {
   const { t } = useTranslation('devTools');
   const { sevenTvPaintRenderer, update } = usePreferences();
+
+  if (!isDevToolsEnabled) {
+    return null;
+  }
 
   const selectedIndex = PAINT_RENDERER_OPTIONS.findIndex(
     option => option.value === sevenTvPaintRenderer,

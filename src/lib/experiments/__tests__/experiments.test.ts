@@ -23,3 +23,24 @@ describe('resolveExperimentVariant', () => {
     ).toEqual('control');
   });
 });
+
+describe('sevenTvPaintRenderer experiment', () => {
+  test('resolves the skia variant when assigned', () => {
+    expect(
+      resolveExperimentVariant('sevenTvPaintRenderer', {
+        sevenTvPaintRenderer: 'skia',
+      }),
+    ).toEqual('skia');
+  });
+
+  test('falls back to control when unassigned or unknown', () => {
+    expect(resolveExperimentVariant('sevenTvPaintRenderer', {})).toEqual(
+      'control',
+    );
+    expect(
+      resolveExperimentVariant('sevenTvPaintRenderer', {
+        sevenTvPaintRenderer: 'webview',
+      }),
+    ).toEqual('control');
+  });
+});

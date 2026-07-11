@@ -43,6 +43,14 @@ jest.mock('@app/utils/devTools/devToolsGate', () => ({
   useDevToolsAccess: () => 'denied',
 }));
 
+/**
+ * The chat surface resolves the paint-renderer experiment through
+ * react-query + remote config; stub it so the suite needs no QueryClient.
+ */
+jest.mock('@app/lib/experiments/useSyncPaintRendererExperiment', () => ({
+  useSyncPaintRendererExperiment: jest.fn(),
+}));
+
 jest.mock('@app/hooks/useSeventvWs', () => ({
   useSeventvWs: () => ({
     subscribeToChannel: jest.fn(),
