@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { updateMessages } from '@app/store/chat/actions/messages';
@@ -12,11 +12,7 @@ import { resolveMessageEmoteParts } from '../util/resolveMessageEmoteParts';
 
 const EMOTE_REPROCESS_BATCH_DELAY_MS = 32;
 const EMOTE_REPROCESS_BATCH_SIZE = 6;
-/**
- * Only cleared on reprocess-key changes; unbounded it grows ~1MB/hr in a
- * busy channel. Overflow resets the set - the equality checks make the
- * extra full pass cheap.
- */
+
 const MAX_PROCESSED_MESSAGE_IDS = 5000;
 
 export function useEmoteReprocessing({
@@ -33,7 +29,7 @@ export function useEmoteReprocessing({
   channelEmoteData: unknown;
   messages$: { peek: () => AnyChatMessageType[] };
   emoteLoadStatus: string;
-  processedMessageIdsRef: MutableRefObject<Set<string>>;
+  processedMessageIdsRef: RefObject<Set<string>>;
   reprocessKey?: string;
   show7TvEmotes: boolean;
   userLogin?: string | null;
@@ -218,7 +214,7 @@ function areBadgesEqual(
   if (previous === next) {
     return true;
   }
-  if (!previous || !next || previous.length !== next.length) {
+  if (!previous || previous.length !== next?.length) {
     return false;
   }
 
@@ -307,7 +303,7 @@ function areParsedPartsEqual(
   if (previous === next) {
     return true;
   }
-  if (!previous || !next || previous.length !== next.length) {
+  if (!previous || previous.length !== next?.length) {
     return false;
   }
 

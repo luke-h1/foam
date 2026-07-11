@@ -28,8 +28,6 @@ function parseTags(tagString: string): Record<string, string> {
       return;
     }
 
-    // Unescape here so recent-messages tags match live IRC tags (both are the
-    // single decode point); downstream consumers must not unescape again.
     tags[key] = unescapeIrcTag(part.slice(separatorIndex + 1));
   });
 
@@ -76,8 +74,10 @@ export function parseIrcMessage(line: string): ParsedIrcMessage | null {
   const trailingIndex = paramParts.findIndex(part => part.startsWith(':'));
 
   if (trailingIndex >= 0) {
-    params.push(...paramParts.slice(0, trailingIndex));
-    params.push(paramParts.slice(trailingIndex).join(' ').slice(1));
+    params.push(
+      ...paramParts.slice(0, trailingIndex),
+      paramParts.slice(trailingIndex).join(' ').slice(1),
+    );
   } else {
     params.push(...paramParts);
   }
@@ -86,7 +86,6 @@ export function parseIrcMessage(line: string): ParsedIrcMessage | null {
 }
 
 export const recentMessagesService = {
-  /* istanbul ignore next: network wrapper intentionally remains untested. */
   getRecentMessages: async (
     channelName: string,
     signal?: AbortSignal,

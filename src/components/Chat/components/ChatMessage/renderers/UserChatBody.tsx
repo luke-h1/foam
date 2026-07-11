@@ -102,12 +102,6 @@ export function UserChatBody({
   const { canBeInline, containsEmotes: bodyContainsEmotes } =
     getMessageStructure(message);
   const canFlowInline = canBeInline && !isModerated;
-  // Emotes must never render as attachments inside a <Text>: a <Text> can only
-  // give an inline emote a fixed line height, which baseline-aligns and clips
-  // the top of the image. Any message containing an emote therefore takes the
-  // flex-wrap ChatMessageBody path, where the emote is a real view and the row
-  // grows to its full intended size. Text-only messages keep the cheaper
-  // single-<Text> inline path.
   const renderInline = canFlowInline && !hasPaint && !bodyContainsEmotes;
   const inlineUsernameColor =
     cachedSenderColor ??

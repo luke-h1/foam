@@ -1,6 +1,3 @@
-// Both filters run for every incoming PRIVMSG (up to ~100/s in busy chats), so
-// the lowercased forms of the preference lists are cached per array identity -
-// the lists only get a new identity when the preference actually changes.
 const blockedLoginSets = new WeakMap<{ userLogin: string }[], Set<string>>();
 const lowercasedMutedWords = new WeakMap<string[], string[]>();
 
@@ -26,10 +23,6 @@ function getLowercasedMutedWords(mutedWords: string[]): string[] {
   return lowered;
 }
 
-/**
- * Whether an incoming chat message's author is on the viewer's block list.
- * Case-insensitive on login.
- */
 export function isUserBlocked(
   username: string | undefined,
   blockedUsers: { userLogin: string }[],
@@ -40,11 +33,6 @@ export function isUserBlocked(
   return getBlockedLoginSet(blockedUsers).has(username.toLowerCase());
 }
 
-/**
- * Whether a message matches the viewer's muted words. With `matchWholeWord`
- * the message is split on spaces and each token is compared; otherwise a
- * muted word matches anywhere in the message as a substring.
- */
 export function containsMutedWords(
   message: string,
   mutedWords: string[],
@@ -60,6 +48,6 @@ export function containsMutedWords(
     return lowered.some(mutedWord => messageLower.includes(mutedWord));
   }
 
-  const words = messageLower.split(' ');
-  return lowered.some(mutedWord => words.includes(mutedWord));
+  const words = new Set(messageLower.split(' '));
+  return lowered.some(mutedWord => words.has(mutedWord));
 }

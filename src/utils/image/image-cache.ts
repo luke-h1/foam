@@ -108,9 +108,6 @@ function getRecordStorageKey(key: string): string {
   return `${RECORD_PREFIX}${key}`;
 }
 
-// Running total of manifest bytes, maintained at every mutation so eviction
-// checks don't reduce over the full (up to 5000-record) manifest per
-// completed download.
 let manifestTotalBytes = 0;
 
 function hydrateManifest(): void {
@@ -188,11 +185,6 @@ function touchRecord(record: CacheRecord): string {
   return record.uri;
 }
 
-// getCachedImageUri runs during render for every chat emote and badge, and
-// File.exists is a synchronous syscall on the JS thread. Trust a successful
-// stat for a while instead of re-statting per render; eviction still
-// self-heals once the verification expires, and removeRecord /
-// clearSessionCache invalidate immediately.
 const FILE_VERIFICATION_TTL_MS = 10 * 60 * 1000;
 const verifiedFiles = new Map<string, number>();
 

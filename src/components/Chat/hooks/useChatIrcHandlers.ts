@@ -108,9 +108,6 @@ export function useChatIrcHandlers({
 
   const handlePrivmsgMessage = useCallback(
     (tags: Record<string, string>, rawText: string, countUnread = true) => {
-      // Live flood sampling happens upstream in twitch-chat-service, before
-      // the raw line is even tag-parsed; replay (countUnread === false) flows
-      // through here directly and is never flood-sampled.
       const { isAction, text } = parseActionMessage(rawText);
       const replyParentMessageId = tags['reply-parent-msg-id'];
       const replyParentDisplayName = tags['reply-parent-display-name'];
@@ -135,8 +132,6 @@ export function useChatIrcHandlers({
       });
       const messageWithParentColor = { ...baseMessage, parentColor };
 
-      // Live messages defer the emote/badge parse to commit time; replay
-      // parses eagerly since the whole batch commits at once.
       if (countUnread) {
         enqueueLiveChatMessage(messageWithParentColor, countUnread);
         return;

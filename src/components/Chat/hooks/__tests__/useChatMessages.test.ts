@@ -15,8 +15,6 @@ jest.mock('@app/store/chat/actions/messages', () => ({
 }));
 
 const mockAddMessages = jest.mocked(addMessages);
-// The buffer/unread caps track getMaxChatMessages(); derive the expected bounds
-// from the mocked value so they stay in step if that cap changes.
 const MAX_BUFFERED = getMaxChatMessages();
 
 function getLastFlushedMessages(): ChatMessageType<never>[] {
@@ -99,8 +97,6 @@ describe('useChatMessages', () => {
     });
 
     test('should return referentially stable handlers across re-renders', () => {
-      // Downstream IRC handlers list these in their useCallback deps; a fresh
-      // identity per render would rebuild every chat handler on each render.
       const { result, rerender } = renderHook(() =>
         useChatMessages(defaultOptions),
       );
@@ -477,9 +473,6 @@ describe('useChatMessages', () => {
   });
 
   describe('High volume', () => {
-    // Reading history (scrolled up): a delayed flush must commit the whole
-    // backlog so nothing the store would keep is lost. Raid sampling only
-    // applies at the bottom (see the test below it).
     const scrolledUpOptions = {
       ...defaultOptions,
       isAtBottomRef: { current: false },
@@ -532,8 +525,6 @@ describe('useChatMessages', () => {
       const flushedMessages = firstCall?.[0] ?? [];
 
       expect(flushedMessages).toHaveLength(MAX_BUFFERED);
-      // The oldest `overflow` messages are dropped, so the first retained id is
-      // `pushCount - MAX_BUFFERED` and the last is `pushCount - 1`.
       expect(flushedMessages[0]?.message_id).toBe(
         `${pushCount - MAX_BUFFERED}`,
       );
@@ -548,7 +539,6 @@ describe('useChatMessages', () => {
         }),
       );
 
-      // A burst of 50 messages lands in one flush window while following live.
       act(() => {
         for (let i = 0; i < 50; i += 1) {
           result.current.handleNewMessage(createMockMessage(`${i}`));

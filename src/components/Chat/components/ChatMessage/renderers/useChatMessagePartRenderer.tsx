@@ -55,9 +55,6 @@ export function useChatMessagePartRenderer({
   replyPlainMentionTarget,
   emoteTargetSize,
 }: UseChatMessagePartRendererArgs) {
-  /**
-   * Stable array identity so MentionSpan's memo() holds across row re-renders.
-   */
   const mentionBaseTextStyle = useMemo(
     () => [
       styles.messageText,
@@ -176,8 +173,6 @@ export function useChatMessagePartRenderer({
       }
 
       case 'mention': {
-        // MentionSpan self-subscribes to mentionLoginRevision, so a resolved
-        // login/colour updates this span without touching the row.
         return (
           <MentionSpan
             key={getPartKey(part, index)}

@@ -2,8 +2,6 @@ import { subMinutes } from 'date-fns';
 
 import { elapsedStreamTime } from '../string/elapsedStreamTime';
 
-// Pin "now" so the two new Date() reads (in the test and inside the function)
-// can't straddle a minute boundary and truncate a diff by one minute.
 const NOW = new Date('2026-07-10T12:00:00.000Z');
 
 describe('elapsedStreamTime', () => {

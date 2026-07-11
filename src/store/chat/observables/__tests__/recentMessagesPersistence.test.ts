@@ -10,12 +10,8 @@ import {
   writePersistedRecentMessagesForChannel,
 } from '../recentMessagesPersistence';
 
-// Uses the Map-backed mock at <rootDir>/__mocks__/react-native-mmkv.js, which
-// jest applies automatically for node_modules.
 const { __resetMMKV } = require('react-native-mmkv');
 
-// Build via the shared fixture so the round-trip serializes the full real chat
-// message shape (userstate tags included), not a five-field stub.
 const makeMessage = (id: string): AnyChatMessageType =>
   createChatMessageFixture({
     id: `${id}_${id}-nonce`,
@@ -82,7 +78,6 @@ describe('recentMessagesPersistence', () => {
 
   test('drops a channel whose stored value is corrupt', () => {
     writePersistedRecentMessagesForChannel('channel-a', [makeMessage('a1')]);
-    // Corrupt the channel-b entry directly via the underlying store.
     const { createMMKV } = require('react-native-mmkv');
     createMMKV({ id: 'chat-recent-messages' }).set('channel-b', '{not json');
 

@@ -42,15 +42,6 @@ export const bumpCosmeticBindingsVersion = (): void => {
 const COSMETIC_BINDINGS_BUMP_COALESCE_MS = 1000;
 let cosmeticBindingsBumpTimer: ReturnType<typeof setTimeout> | null = null;
 
-/**
- * Coalesced version bump for late-arriving badge data. Every bump changes
- * Chat's emoteReprocessKey, which clears the processed-message set and
- * restarts the full-window reprocess from message zero - so per-entitlement
- * bumps during a channel-entry burst restarted it once per newly sighted
- * badged chatter and it never finished in busy channels. One trailing bump
- * per window folds a burst into a single restart; visible rows do not wait on
- * this, the visible-asset hydrate path re-parses them directly.
- */
 const scheduleCosmeticBindingsBump = (): void => {
   if (cosmeticBindingsBumpTimer) {
     return;
@@ -61,11 +52,6 @@ const scheduleCosmeticBindingsBump = (): void => {
   }, COSMETIC_BINDINGS_BUMP_COALESCE_MS);
 };
 
-/**
- * BTTV's global badge list is another late-arriving badge source: rows parsed
- * before the fetch lands resolve no BTTV badges, so its load triggers the
- * same coalesced reprocess.
- */
 setOnBttvBadgesLoaded(scheduleCosmeticBindingsBump);
 
 const COSMETICS_PERSIST_DEBOUNCE_MS = 4000;
@@ -112,7 +98,7 @@ export const scheduleCosmeticsPersist = (
 };
 
 const USER_COSMETICS_CACHE_PREFIX = 'user-cosmetics:';
-// Keep persisted 7TV user cosmetics for at most 2 hours before refetching.
+
 const USER_COSMETICS_CACHE_TTL_MS = 2 * 60 * 60 * 1000;
 const USER_COSMETICS_NEGATIVE_CACHE_TTL_MS = 30 * 60 * 1000;
 const SEVEN_TV_CACHE_NAMESPACE = 'seven_tv_cache';
@@ -252,9 +238,6 @@ function buildCachedUserCosmeticsFromStore(
   };
 }
 
-/**
- * Mirror live chatStore bindings into the per-user GQL cache after a 7TV push.
- */
 export const syncCachedUserCosmeticsFromStore = (
   sevenTvUserId: string,
   ttvUserId: string,
@@ -328,10 +311,6 @@ export const fetchAndCacheUserCosmetics = async (
   });
 };
 
-/**
- * Fetch a chatter's cosmetics via v4 GQL from their Twitch id. Used when a
- * WebSocket entitlement arrives without its cosmetic definition.
- */
 export const fetchUserCosmeticsByTwitchId = async (
   twitchUserId: string,
 ): Promise<void> => {
@@ -341,10 +320,6 @@ export const fetchUserCosmeticsByTwitchId = async (
   }
 };
 
-/**
- * Request a chatter's cosmetics via a passive 7TV presence write. Falls back to
- * v4 GQL when there is no live EventAPI session.
- */
 export const requestUserCosmeticsViaPresence = async (
   twitchUserId: string,
 ): Promise<void> => {
@@ -383,12 +358,6 @@ export const clearUserCosmeticsCache = () => {
   bumpCosmeticBindingsVersion();
 };
 
-// Paint bindings never bump cosmeticBindingsVersion: painted usernames
-// subscribe to userPaintIds/paints directly (CosmeticUsername useSelector),
-// and the message reprocess pass that the version key restarts only re-parses
-// emotes and badges - it never reads paints. Bumping here restarted a
-// full-window reprocess once per newly sighted painted chatter for zero
-// rendered difference.
 export const setUserPaint = (ttvUserId: string, paintId: string): void => {
   const current = chatStore$.userPaintIds.peek();
 
@@ -420,11 +389,6 @@ const isSamePaintDefinition = (
   next: PaintData,
 ): boolean => previous != null && deepEqualJson(previous, next);
 
-/**
- * Paint definitions are large (gradient stops, shadow chains) and survive
- * channel hops, so bound the in-memory map: on overflow, drop definitions no
- * current binding references. Matches the persisted-snapshot cap.
- */
 const MAX_PAINT_DEFINITIONS = 750;
 
 const sweepUnreferencedPaints = () => {
@@ -463,22 +427,12 @@ export const getUserPaintId = (ttvUserId: string): string | undefined =>
 
 let userPaintFlagInvalidatorAttached = false;
 
-/**
- * getChatRowItemType calls `hasUserPaint` once per visible row on every list
- * data change, so the paints/userPaintIds traversal below is cached per user
- * id and cleared wholesale whenever either map changes structurally.
- */
 function ensureUserPaintFlagInvalidator(): void {
   if (userPaintFlagInvalidatorAttached) {
     return;
   }
   userPaintFlagInvalidatorAttached = true;
   const clear = () => chatStore$.sessionCaches.userPaintFlags.set({});
-  // Binding changes almost always touch a single user (a keyed setUserPaint
-  // write per newly sighted painted chatter), so drop only that user's flag -
-  // a wholesale clear here reset the cache exactly when getChatRowItemType is
-  // hottest. Whole-map replacements (trim, clearPaints) have an empty path
-  // and still wipe everything.
   chatStore$.userPaintIds.onChange(({ changes }) => {
     for (const change of changes) {
       const changedUserId = change.path[0];
@@ -489,8 +443,6 @@ function ensureUserPaintFlagInvalidator(): void {
       chatStore$.sessionCaches.userPaintFlags[changedUserId]?.delete();
     }
   });
-  // Definition changes can affect any wearer; they are rare after the
-  // equal-content guard in addPaint, so wholesale is fine.
   chatStore$.paints.onChange(clear);
 }
 
@@ -528,8 +480,7 @@ const isSameBadgeDefinition = (
   previous: SanitisedBadgeSet | undefined,
   next: SanitisedBadgeSet,
 ): boolean =>
-  previous != null &&
-  previous.id === next.id &&
+  previous?.id === next.id &&
   previous.url === next.url &&
   previous.type === next.type &&
   previous.title === next.title &&
@@ -591,8 +542,6 @@ export const setUserBadge = (ttvUserId: string, badgeId: string): void => {
     chatStore$.userBadgeIds[ttvUserId]?.set(badgeId);
   }
 
-  // Surface entitlements that reference a badge we have not loaded a
-  // definition for yet (e.g. the cosmetic.create has not arrived).
   if (!getBadge(badgeId)) {
     reportMissingBadge(badgeId, ttvUserId);
   }
@@ -723,14 +672,6 @@ export const clearPaints = () => {
   scheduleCosmeticsPersist();
 };
 
-/**
- * Channel-hop clear: drops per-user bindings but keeps the id-keyed paint
- * definitions. Definitions are global (the same paint renders identically in
- * every channel) and rebuilding them on re-entry re-created every definition
- * with fresh identity - rotating the WeakMap-keyed paint layer caches and
- * re-running the wearer sync for users the app knew seconds ago. The
- * definition map is bounded by the unreferenced-paint sweep in `addPaint`.
- */
 export const clearPaintBindings = () => {
   chatStore$.userPaintIds.set({});
   scheduleCosmeticsPersist('bindings');

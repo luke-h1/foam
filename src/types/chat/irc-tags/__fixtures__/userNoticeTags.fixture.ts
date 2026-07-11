@@ -253,8 +253,6 @@ export function createModiversaryTags(
     ...createBaseUserNoticeTags({
       'display-name': 'ModUser',
       login: 'moduser',
-      // Post-parse form: tags are IRCv3-unescaped in parseIrcTags before
-      // handlers ever see them (the parser is the single decode point).
       'system-msg': 'ModUser is celebrating 24 months as a moderator!',
     }),
     'msg-id': 'modiversary',

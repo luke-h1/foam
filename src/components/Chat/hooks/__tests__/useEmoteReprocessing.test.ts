@@ -85,9 +85,6 @@ const expectMessageUpdate = (
   messageId: id,
   messageNonce: nonce,
   updates: {
-    // The resolver mock rewrites the whole message to a single emote part keyed
-    // by the reprocessed text, so assert those concrete parts rather than "an
-    // array of anything".
     message: [createEmotePart(resolvedText, { id: 'e1', url: '' })],
     badges: [],
   },

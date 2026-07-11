@@ -7,8 +7,6 @@ import { ChatMessagePressable } from './ChatMessagePressable';
 import { PaintedUsername } from './CosmeticUsername/CosmeticUsername';
 import { styles } from './RichChatMessage.styles';
 
-// A fresh style array here would defeat memo(PaintedUsername) on every parent
-// render; the four combinations are static, so pick from a lookup instead.
 const usernameTextStyles: Record<
   'comfortable' | 'comfortableModerated' | 'compact' | 'compactModerated',
   StyleProp<TextStyle>

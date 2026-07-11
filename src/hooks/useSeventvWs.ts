@@ -105,14 +105,17 @@ type UseSeventvWsReturn = {
 
 const DEFAULT_URL = 'wss://events.7tv.io/v3';
 const ID_WAIT_TIMEOUT = 30000; // 30 seconds
+
 // If the RESUME ack never arrives, fall back to fresh subscriptions.
 const RESUME_ACK_TIMEOUT = 5000;
+
 // Mobile sockets go half-open without firing onclose; treat prolonged
 // heartbeat silence as a dead connection and close so reconnect + RESUME
 // kicks in (same lesson as the IRC socket's PING watchdog).
 const DEFAULT_HEARTBEAT_INTERVAL_MS = 30000;
 const HEARTBEAT_WATCHDOG_TICK_MS = 10000;
 const MISSED_HEARTBEATS_BEFORE_RECONNECT = 3;
+
 // Per-outage retry budget; the counter resets on every successful open and
 // a foreground transition force-revives an exhausted socket anyway.
 const RECONNECT_ATTEMPTS = 60;
@@ -210,7 +213,7 @@ export function useSeventvWs(
     sendJsonMessage: (msg: unknown) => void,
   ) => {
     const ws = getWebSocket();
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
+    if (ws?.readyState !== WebSocket.OPEN) {
       subscribedChannelIdRef.current = null;
       subscribedOwnerIdRef.current = null;
       return;
@@ -268,8 +271,6 @@ export function useSeventvWs(
     logger.stvWs.info(`💚 Attempting to subscribe to emote set: ${emoteSetId}`);
 
     if (twitchChannelIdRef.current) {
-      // Switching channels on a live socket: drop the previous channel's
-      // entitlement/cosmetic/user streams before subscribing the new one.
       if (
         subscribedChannelIdRef.current &&
         subscribedChannelIdRef.current !== twitchChannelIdRef.current
@@ -717,7 +718,7 @@ export function useSeventvWs(
         stopHeartbeatWatchdog();
         heartbeatWatchdogRef.current = setInterval(() => {
           const ws = getWebSocket();
-          if (!ws || ws.readyState !== WebSocket.OPEN) {
+          if (ws?.readyState !== WebSocket.OPEN) {
             return;
           }
           const silenceMs = Date.now() - lastMessageAtRef.current;

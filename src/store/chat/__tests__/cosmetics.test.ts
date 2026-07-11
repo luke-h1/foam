@@ -48,10 +48,6 @@ type MockObservableValue<T> = {
   set: jest.Mock<void, [T]>;
 };
 
-// A typed partial mirroring the slice of the real chatStore$ observable API the
-// cosmetics actions touch (index -> {peek,set} cells). Reading the mock back
-// through jest.requireMock with this type keeps the handle honest without an
-// `as unknown as` reshape of the real observable type.
 type MockChatStore = {
   currentChannelId: { peek: jest.Mock<string, []> };
   badges: Record<string, MockObservableValue<unknown>>;

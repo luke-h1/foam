@@ -20,9 +20,6 @@ import type { EntitlementCreate } from '@app/types/seventv/cosmetics';
 
 import { createBadgeEntitlement } from './__fixtures__/cosmeticsBridge.fixture';
 
-// Back the binding setters/removers with a real per-user map so tests can assert
-// the resulting paint/badge binding state via getUserPaintId/getUserBadgeId
-// rather than inspecting the setter call arrays.
 const mockUserPaintBindings = new Map<string, string>();
 const mockUserBadgeBindings = new Map<string, string>();
 

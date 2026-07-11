@@ -1,7 +1,5 @@
 import { generateRandomTwitchColor } from '../generateRandomTwitchColor';
 
-// The full palette is the contract callers rely on; the module keeps it private
-// so it is pinned here to guard against a colour being added, removed, or moved.
 const TWITCH_COLORS = [
   '#0000FF',
   '#8A2BE2',

@@ -34,11 +34,6 @@ jest.mock('@app/utils/seventv/sevenTvSessionId', () => ({
 const PAINT_ID = 'paint-popular';
 const BADGE_ID = 'badge-popular';
 
-/**
- * Fresh-identity copy of the same paint definition, matching what
- * convertV4PaintToPaintData / an MMKV JSON round-trip produce for every
- * wearer sighting of the same popular paint.
- */
 function buildPaint(): PaintData {
   return {
     id: PAINT_ID,
@@ -84,14 +79,6 @@ function resetStore() {
   jest.mocked(storageService.set).mockClear();
 }
 
-/**
- * Simulates the channel-entry entitlement burst for `userCount` chatters all
- * wearing the same paint + badge: per sighting, the fetch/cache-hit path runs
- * addPaint/addBadge with a fresh-identity copy of the same definition, binds
- * the user, then mirrors the binding into the per-user GQL cache
- * (syncCachedUserCosmeticsFromStore), exactly as fetchAndCacheUserCosmetics /
- * applyCachedUserCosmetics do.
- */
 function runEntitlementBurst(userCount: number): void {
   for (let index = 0; index < userCount; index += 1) {
     const ttvUserId = `ttv-user-${index}`;
@@ -115,18 +102,12 @@ describe('cosmetics entitlement-burst churn', () => {
     jest.useRealTimers();
   });
 
-  // Baseline before the no-op definition guard: 100 wearers of one paint +
-  // badge caused 10,000 synchronous MMKV writes (every addPaint/addBadge
-  // rescanned the session cache and re-synced every earlier wearer).
   test('a 100-wearer burst writes each wearer cache entry exactly once', () => {
     runEntitlementBurst(100);
 
     expect(jest.mocked(storageService.set).mock.calls).toHaveLength(100);
   });
 
-  // Baseline before the guard: every addPaint stored a fresh object, so the
-  // WeakMap-keyed paint layer caches (paintLayersCache et al.) were rotated on
-  // every wearer sighting and painted-name renders recomputed from cold.
   test('re-adding an equal paint definition keeps the stored object identity', () => {
     addPaint(buildPaint());
     const stored = chatStore$.paints[PAINT_ID]?.peek();
@@ -154,10 +135,6 @@ describe('cosmetics entitlement-burst churn', () => {
     expect(chatStore$.paints[PAINT_ID]?.peek()).toEqual<PaintData>(recolored);
   });
 
-  // Baseline before coalescing: the same burst bumped cosmeticBindingsVersion
-  // 200 times (once per paint binding + once per badge binding), each bump
-  // clearing the processed-message set and restarting the full-window
-  // reprocess from message zero.
   test('a 100-wearer burst causes at most one reprocess restart, from badges only', () => {
     runEntitlementBurst(100);
 

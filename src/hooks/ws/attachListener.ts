@@ -21,9 +21,6 @@ export function getReconnectDelay(
   return Math.round(baseInterval * Math.min(1.5 ** (attempt - 1), 8));
 }
 
-// Spread reconnect attempts by up to a quarter-second so a mass disconnect
-// (Twitch-side blip, network flap) doesn't have every client retry in lockstep.
-// Kept out of getReconnectDelay so that stays pure/deterministic for its tests.
 const RECONNECT_MAX_JITTER_MS = 250;
 
 function getReconnectDelayWithJitter(
@@ -82,10 +79,7 @@ export function attachListeners(
     optionsRef.current.onClose?.(event);
     setReadyState(ReadyState.CLOSED);
 
-    if (
-      optionsRef.current.shouldReconnect &&
-      optionsRef.current.shouldReconnect(event)
-    ) {
+    if (optionsRef.current.shouldReconnect?.(event)) {
       const reconnectAttempts =
         optionsRef.current.reconnectAttempts ?? DEFAULT_RECONNECT_LIMIT;
       const baseInterval =

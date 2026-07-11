@@ -31,8 +31,6 @@ jest.mock('@app/utils/logger', () => ({
 const mockGetSevenTvEmoteSetId = jest.mocked(getSevenTvEmoteSetId);
 const mockUseSeventvWs = jest.mocked(useSeventvWs);
 
-// The runtime never reads `ws`; this yields a WebSocket-typed handle without an
-// `as unknown as` reshape, and without opening a real jsdom socket.
 const createWebSocketStub = (): WebSocket => Object.create(WebSocket.prototype);
 
 function makeWsReturn({
@@ -196,7 +194,7 @@ describe('useSevenTvChatRuntime', () => {
     hook.unmount();
 
     expect(unsubscribeFromChannel.mock.calls).toEqual([[]]);
-    expect(currentEmoteSetIdRef.current).toBe(null);
+    expect(currentEmoteSetIdRef.current).toBeNull();
   });
 
   test('passes chat callback wiring into the websocket hook', () => {

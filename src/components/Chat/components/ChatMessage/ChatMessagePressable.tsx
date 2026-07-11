@@ -11,8 +11,6 @@ import type { ReactNode } from 'react';
 
 import { createHitslop } from '@app/utils/string/createHitSlop';
 
-// Default-parameter expressions re-run per render, and this component mounts
-// several times per chat row - hoist the common hit slop.
 const DEFAULT_HIT_SLOP = createHitslop(8);
 
 interface ChatMessagePressableProps {
@@ -54,8 +52,6 @@ function ChatMessagePressableComponent({
       hitSlop={hitSlop}
       onLongPress={onLongPress}
       onPress={onPress}
-      // Style-function form: pressed feedback with no state or re-render,
-      // cheap enough for hundreds of chat rows.
       style={({ pressed }) => [style, pressed && pressedStyle]}
       testID={testID}
     >

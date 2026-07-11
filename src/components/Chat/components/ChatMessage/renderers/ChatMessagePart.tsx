@@ -43,9 +43,6 @@ export function ChatMessagePart({
   textColor,
   part,
 }: ChatMessagePartProps) {
-  // Memoize the sub-notice body parse so re-renders reuse the same parts
-  // array and SubscriptionNotice's memo holds (a sub train re-rendering its
-  // window re-parsed every notice body inline).
   const subMessage =
     'subscriptionEvent' in part ? part.subscriptionEvent?.message : undefined;
   const parsedSubMessage = useMemo(
@@ -56,9 +53,6 @@ export function ChatMessagePart({
     [subMessage, parseTextForEmotes],
   );
 
-  /**
-   * Stable array identity so MentionSpan's memo() holds across row re-renders.
-   */
   const mentionBaseTextStyle = useMemo(
     () => [
       styles.messageText,
@@ -196,8 +190,6 @@ export function ChatMessagePart({
       );
 
     case 'mention': {
-      // MentionSpan self-subscribes to mentionLoginRevision, so a resolved
-      // login/colour updates this span without touching the row.
       return (
         <MentionSpan
           key={getPartKey(part, index)}

@@ -63,7 +63,6 @@ export function setSessionCacheString(
   if (entries.size <= maxSize) {
     return;
   }
-  // Rare overflow path: drop oldest-inserted entries down to the cap.
   const dropCount = entries.size - maxSize;
   let dropped = 0;
   for (const oldestKey of entries.keys()) {

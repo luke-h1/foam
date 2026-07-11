@@ -55,10 +55,6 @@ function setTimedCacheValue<T>(
   key: string,
   value: T,
 ): void {
-  /**
-   * Reads only evict the key they touch, so sweep on insert - inserts are
-   * rare (one per newly seen shared-chat partner).
-   */
   const now = Date.now();
   cache.forEach((entry, entryKey) => {
     if (entry.expiresAt <= now) {

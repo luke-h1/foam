@@ -27,12 +27,7 @@ const cache = new Map<string, ParsedPart[]>();
 const MAX_CACHE_SIZE = 1000;
 const emoteArrayIds = new WeakMap<SanitisedEmote[], number>();
 const baseCollectionCache = new Map<string, EmoteCollection>();
-// Each collection holds three Maps spanning every emote of all nine providers
-// (4-8k entries each), and its key changes whenever ANY provider array gets a
-// new identity - 7TV emote_set.update events do that continually in active
-// channels, so a large cap pins superseded emote universes (tens of MB on
-// low-end devices) that no lookup will ever touch again. Only the current
-// collection is hot; a rebuild on miss is one pass over the arrays.
+
 const MAX_BASE_COLLECTION_CACHE_SIZE = 4;
 const scopedLookupCache = new Map<
   string,
@@ -44,9 +39,6 @@ type EmoteCollection = {
   cacheKey: string;
   emojiMap: ReadonlyMap<string, SanitisedEmote>;
   emoteMap: ReadonlyMap<string, SanitisedEmote>;
-  // Lowercased name/original_name -> emote, in emoteMap priority order, so a
-  // mention like "@forsen" resolves with one Map lookup instead of a full
-  // scan + per-emote toLowerCase on every @word of every message.
   mentionEmoteMap: ReadonlyMap<string, SanitisedEmote>;
 };
 
@@ -188,9 +180,6 @@ function getBaseCollection({
     const firstKey = baseCollectionCache.keys().next().value;
     if (firstKey) {
       baseCollectionCache.delete(firstKey);
-      // Scoped lookups close over their base collection, so any cached for the
-      // evicted key would pin its maps in memory and can never be hit again
-      // (their keys embed the now-retired base key).
       const evictedPrefix = `${firstKey}:`;
       scopedLookupCache.forEach((_, scopedKey) => {
         if (scopedKey.startsWith(evictedPrefix)) {
@@ -272,23 +261,12 @@ function hasNonAsciiChar(word: string): boolean {
   return false;
 }
 
-// BTTV render-hint modifiers (wide/flip) written immediately before an emote.
-// Foam does not support the transforms, so the tokens are hidden, matching
-// the 7TV extension's default behavior.
 const BACKWARD_EMOTE_MODIFIERS = new Set(['w!', 'h!', 'v!']);
 
 function isWhitespacePart(part: ParsedPart): boolean {
   return part.type === 'text' && /^\s+$/.test(part.content);
 }
 
-/**
- * Post-pass mirroring the 7TV extension's tokenizer composition rules:
- * - a zero-width emote attaches to the emote before it as an overlay instead
- *   of rendering as its own part, so stacks like `emote SoSnowy IceCold`
- *   composite over the base emote
- * - BTTV backward modifiers (`w!`/`h!`/`v!`) before an emote and FFZ `ffz*`
- *   modifier words after an emote are hidden
- */
 function applyEmoteCompositionPass(parts: ParsedPart[]): ParsedPart[] {
   const out: ParsedPart[] = [];
 
@@ -305,7 +283,7 @@ function applyEmoteCompositionPass(parts: ParsedPart[]): ParsedPart[] {
         anchor -= 1;
       }
       const base = anchor >= 0 ? out[anchor] : undefined;
-      if (base && base.type === 'emote' && !base.zero_width) {
+      if (base?.type === 'emote' && !base.zero_width) {
         out.length = anchor + 1;
         // Don't stack the same emote id twice in a row: `SoSnowy SoSnowy`
         // would otherwise composite two identical overlays pixel-perfect,

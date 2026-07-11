@@ -33,24 +33,21 @@ import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import { getChatMessageListKey } from '../util/chatMessages';
 import type { AnyChatMessageType } from '../util/messageHandlers';
 
-// Roughly seven rows of lookahead; at 96 fast flings outran the renderer and
-// showed skeleton rows.
 const CHAT_DRAW_DISTANCE = 250;
 const CHAT_ESTIMATED_ITEM_SIZE = 44;
 const CHAT_END_REACHED_THRESHOLD = 0.02;
+
 const CHAT_VIEWABILITY_CONFIG = {
   itemVisiblePercentThreshold: 1,
-  // Skip viewability churn for rows that only flash past during a fling.
   minimumViewTime: 100,
 } satisfies ViewabilityConfig;
-// Re-pin to the end on new messages (dataChange) and when an already-rendered
-// row grows after its real height is measured (itemLayout) - the latter keeps
-// an under-estimated emote/username row from staying clipped at the bottom.
+
 const CHAT_MAINTAIN_SCROLL_AT_END = {
   on: { dataChange: true, itemLayout: true },
 } satisfies MaintainScrollAtEndOptions;
+
 const CHAT_MAINTAIN_SCROLL_AT_END_THRESHOLD = 0.1;
-const CHAT_RECYCLE_ITEMS = true;
+const CHAT_RECYCLE_ITEMS = false;
 
 function ChatListRowSkeleton({ index }: { index: number }) {
   return (
@@ -133,8 +130,6 @@ export const ChatList = memo(
       onViewableMessagesChangeRef.current = onViewableMessagesChange;
     });
 
-    // Stable identity required: LegendList re-runs setupViewability whenever
-    // onViewableItemsChanged identity changes, tearing down viewability state.
     const onViewableItemsChanged = useCallback(
       ({ viewableItems }: { viewableItems: ViewableMessageToken[] }) => {
         const callback = onViewableMessagesChangeRef.current;
@@ -179,13 +174,7 @@ export const ChatList = memo(
         data={data}
         ref={listRef}
         drawDistance={CHAT_DRAW_DISTANCE}
-        // v3 has no per-item estimate hook; rows are measured on layout, so a
-        // single initial hint is all that's needed (the pretext estimator no
-        // longer feeds the list).
         estimatedItemSize={CHAT_ESTIMATED_ITEM_SIZE}
-        // Re-enabled after the "attempt to recycle mounted view" iOS crash was
-        // fixed (c4c18ac8); if that crash resurfaces, flip CHAT_RECYCLE_ITEMS
-        // off rather than deleting the plumbing.
         recycleItems={CHAT_RECYCLE_ITEMS}
         keyExtractor={keyExtractor}
         getItemType={getItemType}

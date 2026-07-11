@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import type { MutableRefObject } from 'react';
+import type { RefObject } from 'react';
 
 import {
   fetchUserPersonalEmotes,
@@ -37,14 +37,14 @@ interface UseChatMessageProcessingOptions {
   show7TvEmotes: boolean;
   show7tvBadges: boolean;
   userLogin?: string | null;
-  hydratedVisibleAssetKeysRef: MutableRefObject<Set<string>>;
-  visiblePersonalEmoteUsersRef: MutableRefObject<Set<string>>;
-  visibleCosmeticUsersRef: MutableRefObject<Set<string>>;
-  pendingVisibleMessagesRef: MutableRefObject<AnyChatMessageType[]>;
-  visibleAssetHydrationTimerRef: MutableRefObject<ReturnType<
+  hydratedVisibleAssetKeysRef: RefObject<Set<string>>;
+  visiblePersonalEmoteUsersRef: RefObject<Set<string>>;
+  visibleCosmeticUsersRef: RefObject<Set<string>>;
+  pendingVisibleMessagesRef: RefObject<AnyChatMessageType[]>;
+  visibleAssetHydrationTimerRef: RefObject<ReturnType<
     typeof setTimeout
   > | null>;
-  isAtBottomRef: MutableRefObject<boolean>;
+  isAtBottomRef: RefObject<boolean>;
   maintainBottomAfterContentChange: () => void;
   fetchUserCosmetics: (
     twitchUserId: string,
@@ -259,10 +259,6 @@ export function useChatMessageProcessing({
     [channelId, show7TvEmotes, userLogin],
   );
 
-  /**
-   * Passes sleep between reprocess slices: the epoch cancels them on
-   * unmount/channel hop, chaining keeps the per-turn slice cap intact.
-   */
   const hydrationEpochRef = useRef(0);
   const activeHydrationPassRef = useRef<Promise<void> | null>(null);
 

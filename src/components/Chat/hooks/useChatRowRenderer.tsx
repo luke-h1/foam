@@ -18,8 +18,10 @@ import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
 
-import type { ChatListRef } from '../components/ChatList';
-import type { ChatListRenderItemInfo } from '../components/ChatList';
+import type {
+  ChatListRef,
+  ChatListRenderItemInfo,
+} from '../components/ChatList';
 import {
   type BadgePressData,
   type EmotePressData,
@@ -126,14 +128,9 @@ const ChatMessageRow = function ChatMessageRow({
     msg.message_id,
   );
   const rowVisibility = useRowVisibility();
-  // Stripe on the message's arrival seq, not the list index: a front-trim
-  // shifts every index, and whenever the trim count was odd an index-based
-  // stripe flipped parity for the entire mounted window, defeating
-  // RichChatMessage's memo on roughly half of all flushes.
   const isAlternatingRow =
     showAlternatingChatRows && (msg.seq ?? index) % 2 === 1;
-  // Keep a stable identity for unchanged rows: a fresh object here would
-  // defeat RichChatMessage's memo on every parent-driven re-render.
+
   const messageDisplay = useMemo(
     () => ({
       disableEmoteAnimations,

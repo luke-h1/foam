@@ -2,11 +2,6 @@ import { storageService } from '@app/lib/storage';
 
 import type { PaintData, SanitisedBadgeSet } from '../types/constants';
 
-// Definitions (paints/badges - large objects, rarely change once the
-// equal-content guards are past) and bindings (user→cosmetic id pairs - tiny,
-// change per newly sighted chatter) are persisted under separate keys so the
-// frequent binding syncs stop re-serializing up to 750 full paint definitions
-// every debounce window.
 const COSMETICS_DEFINITIONS_KEY = 'sevenTvCosmeticDefinitions_v1';
 const COSMETICS_BINDINGS_KEY = 'sevenTvCosmeticBindings_v1';
 const LEGACY_COSMETICS_SNAPSHOT_KEY = 'sevenTvCosmeticsSnapshot_v1';
@@ -59,8 +54,6 @@ export function loadPersistedCosmetics(): CosmeticsSnapshot | null {
       };
     }
 
-    // Pre-split installs persisted one combined snapshot; read it once as a
-    // migration path - the next persist writes the split keys.
     const legacy = storageService.getString<CosmeticsSnapshot>(
       LEGACY_COSMETICS_SNAPSHOT_KEY,
       COSMETICS_NAMESPACE,
@@ -91,7 +84,7 @@ export function writePersistedCosmeticDefinitions(
       expiry: new Date(Date.now() + SNAPSHOT_TTL_MS),
     });
   } catch {
-    // Persistence is best-effort; never let a cache write break cosmetics.
+    // Ignore
   }
 }
 
@@ -113,6 +106,6 @@ export function writePersistedCosmeticBindings(
       expiry: new Date(Date.now() + SNAPSHOT_TTL_MS),
     });
   } catch {
-    // Persistence is best-effort; never let a cache write break cosmetics.
+    // Ignore
   }
 }

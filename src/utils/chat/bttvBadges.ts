@@ -2,23 +2,10 @@ import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { logger } from '@app/utils/logger';
 
-/**
- * BTTV publishes one global list of user badges (developer, supporter, etc.),
- * each keyed to its owner's Twitch user id. Unlike the per-channel badge sets,
- * it is fetched once and cached for the app session (like the bundled
- * Chatterino table). getBttvBadges() stays synchronous so the per-message badge
- * resolver never awaits: the first call kicks off the fetch and returns an empty
- * list until it lands, after which BTTV badges start resolving.
- */
 let cachedBadges: SanitisedBadgeSet[] = [];
 let fetchStarted = false;
 let onBadgesLoaded: (() => void) | null = null;
 
-/**
- * The fetch resolves after the first viewport has already parsed with an
- * empty list; the chat store registers a badge-reprocess trigger here so
- * those rows backfill.
- */
 export function setOnBttvBadgesLoaded(callback: () => void): void {
   onBadgesLoaded = callback;
 }
@@ -34,8 +21,6 @@ function loadBttvBadges(): void {
       }
     })
     .catch(error => {
-      // BTTV badges are cosmetic, so a fetch miss is non-fatal; clear the flag
-      // so a later read retries instead of being stuck on the empty list.
       fetchStarted = false;
       logger.chat.warn('Failed to fetch BTTV badges', { error });
     });
