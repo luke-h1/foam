@@ -29,6 +29,12 @@ type HydrateVisibleSevenTvAssetsParams = {
   hydratePersonalEmotes?: boolean;
   hydrateCosmetics?: boolean;
   reprocessMessage: (message: AnyChatMessageType) => void | Promise<void>;
+  /**
+   * Polled between reprocess slices and before every deferred reprocess: a
+   * pass spans multiple event-loop turns, so the chat surface can unmount or
+   * hop channels while it sleeps. Return false to stop reprocessing.
+   */
+  shouldContinue?: () => boolean;
 };
 
 const MAX_PERSONAL_EMOTE_FETCHES_PER_PASS = 3;
@@ -135,6 +141,7 @@ export async function hydrateVisibleSevenTvAssets({
   hydratePersonalEmotes = true,
   hydrateCosmetics = true,
   reprocessMessage,
+  shouldContinue,
 }: HydrateVisibleSevenTvAssetsParams): Promise<boolean> {
   const pending: Promise<void>[] = [];
   let personalEmoteFetchesStarted = 0;
@@ -142,6 +149,10 @@ export async function hydrateVisibleSevenTvAssets({
   let didScheduleReprocess = false;
 
   const reprocessIfChanged = (message: AnyChatMessageType) => {
+    if (shouldContinue && !shouldContinue()) {
+      return undefined;
+    }
+
     const userId = message.userstate['user-id'];
     if (!userId) {
       return undefined;
@@ -227,6 +238,9 @@ export async function hydrateVisibleSevenTvAssets({
       // previous turn yielded, or the whole screenful parses in one tick.
       // eslint-disable-next-line react-doctor/async-await-in-loop
       await waitBetweenReprocessBatches();
+    }
+    if (shouldContinue && !shouldContinue()) {
+      break;
     }
     const message = cachedAssetMessages[index];
     if (message) {

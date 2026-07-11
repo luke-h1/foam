@@ -374,4 +374,38 @@ describe('hydrateVisibleSevenTvAssets', () => {
     expect(reprocessTurns).toHaveLength(24);
     expect(maxSyncChunk).toBeLessThanOrEqual(6);
   });
+
+  // A pass sleeps between reprocess slices, so the chat surface can unmount
+  // or hop channels while it is mid-flight. Once shouldContinue reports the
+  // pass is stale, the remaining slices must not run.
+  test('stops cached-asset reprocessing once shouldContinue returns false', async () => {
+    const messages = Array.from({ length: 24 }, (_, index) =>
+      createMessageForUser(`cancel-user-${index}`),
+    );
+
+    const reprocessMessage = jest.fn();
+    let cancelled = false;
+    setTimeout(() => {
+      cancelled = true;
+    }, 0);
+
+    await hydrateVisibleSevenTvAssets({
+      channelId: 'channel-id',
+      messages,
+      hydratedMessageKeys: new Set(),
+      personalEmoteUsers: new Set(),
+      cosmeticUsers: new Set(
+        Array.from({ length: 24 }, (_, index) => `cancel-user-${index}`),
+      ),
+      getUserPersonalEmotes: jest.fn(() => []),
+      fetchUserPersonalEmotes: jest.fn().mockResolvedValue([]),
+      getUserBadge: jest.fn(() => sevenTvBadge),
+      fetchUserCosmetics: jest.fn(),
+      reprocessMessage,
+      hydratePersonalEmotes: false,
+      shouldContinue: () => !cancelled,
+    });
+
+    expect(reprocessMessage).toHaveBeenCalledTimes(6);
+  });
 });

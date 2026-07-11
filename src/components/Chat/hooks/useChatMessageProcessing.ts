@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type { MutableRefObject } from 'react';
 
 import {
@@ -259,6 +259,19 @@ export function useChatMessageProcessing({
     [channelId, show7TvEmotes, userLogin],
   );
 
+  // A hydration pass sleeps between reprocess slices, so it can outlive the
+  // viewability event that started it. The epoch cancels passes that belong
+  // to an unmounted surface or a previous channel, and the active-pass chain
+  // serializes passes so the per-turn slice cap holds across them.
+  const hydrationEpochRef = useRef(0);
+  const activeHydrationPassRef = useRef<Promise<void> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      hydrationEpochRef.current += 1;
+    };
+  }, [channelId]);
+
   const handleViewableMessagesChange = useCallback(
     (visibleMessages: AnyChatMessageType[]) => {
       pendingVisibleMessagesRef.current = visibleMessages;
@@ -266,32 +279,55 @@ export function useChatMessageProcessing({
         return;
       }
 
+      const epoch = hydrationEpochRef.current;
+
       visibleAssetHydrationTimerRef.current = setTimeout(() => {
         visibleAssetHydrationTimerRef.current = null;
-        const messages = pendingVisibleMessagesRef.current;
-        pendingVisibleMessagesRef.current = [];
-        const shouldMaintainBottom = isAtBottomRef.current;
 
-        void hydrateVisibleSevenTvAssets({
-          channelId,
-          messages,
-          hydratedMessageKeys: hydratedVisibleAssetKeysRef.current,
-          personalEmoteUsers: visiblePersonalEmoteUsersRef.current,
-          cosmeticUsers: visibleCosmeticUsersRef.current,
-          getUserPersonalEmotes,
-          fetchUserPersonalEmotes,
-          getUserBadge: twitchUserId => getUserBadge(twitchUserId) ?? null,
-          fetchUserCosmetics,
-          hydratePersonalEmotes: show7TvEmotes,
-          hydrateCosmetics: show7tvBadges,
-          reprocessMessage: reprocessVisibleMessageFromCache,
-        }).then(didReprocessMessages => {
-          if (
-            didReprocessMessages &&
-            shouldMaintainBottom &&
-            isAtBottomRef.current
-          ) {
-            maintainBottomAfterContentChange();
+        const previousPass =
+          activeHydrationPassRef.current ?? Promise.resolve();
+        const pass = previousPass
+          .then(() => {
+            if (hydrationEpochRef.current !== epoch) {
+              return undefined;
+            }
+
+            const messages = pendingVisibleMessagesRef.current;
+            pendingVisibleMessagesRef.current = [];
+            const shouldMaintainBottom = isAtBottomRef.current;
+
+            return hydrateVisibleSevenTvAssets({
+              channelId,
+              messages,
+              hydratedMessageKeys: hydratedVisibleAssetKeysRef.current,
+              personalEmoteUsers: visiblePersonalEmoteUsersRef.current,
+              cosmeticUsers: visibleCosmeticUsersRef.current,
+              getUserPersonalEmotes,
+              fetchUserPersonalEmotes,
+              getUserBadge: twitchUserId => getUserBadge(twitchUserId) ?? null,
+              fetchUserCosmetics,
+              hydratePersonalEmotes: show7TvEmotes,
+              hydrateCosmetics: show7tvBadges,
+              reprocessMessage: reprocessVisibleMessageFromCache,
+              shouldContinue: () => hydrationEpochRef.current === epoch,
+            }).then(didReprocessMessages => {
+              if (
+                didReprocessMessages &&
+                shouldMaintainBottom &&
+                isAtBottomRef.current
+              ) {
+                maintainBottomAfterContentChange();
+              }
+            });
+          })
+          .catch(error => {
+            logger.chat.debug('Visible-asset hydration pass failed:', error);
+          });
+
+        activeHydrationPassRef.current = pass;
+        void pass.then(() => {
+          if (activeHydrationPassRef.current === pass) {
+            activeHydrationPassRef.current = null;
           }
         });
       }, VISIBLE_ASSET_HYDRATION_DELAY_MS);
