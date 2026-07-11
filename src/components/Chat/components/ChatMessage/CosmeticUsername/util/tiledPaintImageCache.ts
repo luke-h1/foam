@@ -74,7 +74,11 @@ function loadImage(url: string): void {
       pendingUrls.delete(url);
       evictIfNeeded();
       imagesByUrl.set(url, image);
-      failedAtByUrl.delete(url);
+      if (image) {
+        failedAtByUrl.delete(url);
+      } else {
+        failedAtByUrl.set(url, Date.now());
+      }
       notify(url);
     })
     .catch(error => {

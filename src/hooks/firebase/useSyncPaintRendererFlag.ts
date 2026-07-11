@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Platform } from 'react-native';
 
 import { paintRendererFlag$ } from '@app/store/preferenceStore';
 
@@ -9,6 +10,12 @@ export function useSyncPaintRendererFlag(): void {
   const flag = config.sevenTvPaintRenderer.value;
 
   useEffect(() => {
-    paintRendererFlag$.set(flag === 'skia' || flag === 'off' ? flag : 'native');
+    if (flag === 'off') {
+      paintRendererFlag$.set('off');
+      return;
+    }
+    paintRendererFlag$.set(
+      flag === 'skia' && Platform.OS !== 'web' ? 'skia' : 'native',
+    );
   }, [flag]);
 }
