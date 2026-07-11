@@ -589,9 +589,12 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       );
       isAuthenticatedRef.current = false;
       joinedChannelsRef.current.clear();
+      pendingJoinChannelsRef.current.clear();
+      // Drop queued sends — reconnect must not flush commands from a dead socket.
+      pendingIrcMessagesRef.current = [];
       messageBufferRef.current = '';
     },
-    [joinedChannelsRef],
+    [joinedChannelsRef, pendingJoinChannelsRef],
   );
 
   const handleWebSocketError = handleTwitchChatWebSocketError;

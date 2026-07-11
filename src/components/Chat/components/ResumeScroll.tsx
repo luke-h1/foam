@@ -8,9 +8,9 @@ import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
-import { chatAffordanceSpring } from '../util/chatEntranceSpring';
+import { chatEntranceSpring } from '../util/chatEntranceSpring';
 
-const resumeEntering = chatAffordanceSpring(FadeInDown);
+const resumeEntering = chatEntranceSpring(FadeInDown);
 const resumeExiting = FadeOutDown.duration(150);
 
 export interface ResumeScrollProps {

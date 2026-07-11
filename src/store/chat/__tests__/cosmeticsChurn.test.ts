@@ -2,6 +2,7 @@ import { storageService } from '@app/lib/storage';
 import {
   addBadge,
   addPaint,
+  removeBadge,
   setUserBadge,
   setUserPaint,
   syncCachedUserCosmeticsFromStore,
@@ -163,5 +164,19 @@ describe('cosmetics entitlement-burst churn', () => {
     jest.advanceTimersByTime(1000);
 
     expect(chatStore$.cosmeticBindingsVersion.peek()).toEqual(0);
+  });
+
+  test('removing a badge definition schedules a bindings bump for baked rows', () => {
+    addBadge(buildBadge());
+    setUserBadge('ttv-user-0', BADGE_ID);
+    jest.advanceTimersByTime(1000);
+    expect(chatStore$.cosmeticBindingsVersion.peek()).toEqual(1);
+
+    removeBadge(BADGE_ID);
+    jest.advanceTimersByTime(1000);
+
+    expect(chatStore$.cosmeticBindingsVersion.peek()).toEqual(2);
+    expect(chatStore$.badges.peek()).toEqual({});
+    expect(chatStore$.userBadgeIds.peek()).toEqual({});
   });
 });

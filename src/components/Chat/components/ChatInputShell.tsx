@@ -98,9 +98,6 @@ export const ChatInputShell = memo(function ChatInputShell({
   const { messageInput, replyTo } = draft;
   const messageInputRef = useRef(messageInput);
   const isAuthenticated = Boolean(user?.id && user?.login);
-  const [prevIsAuthenticated, setPrevIsAuthenticated] =
-    useState(isAuthenticated);
-
   const clearDraft = useCallback(() => {
     messageInputRef.current = '';
     chatInputRef.current?.setText('');
@@ -140,22 +137,14 @@ export const ChatInputShell = memo(function ChatInputShell({
     setDraft(prev => ({ ...prev, replyTo: null }));
   }, []);
 
-  if (prevIsAuthenticated !== isAuthenticated) {
-    setPrevIsAuthenticated(isAuthenticated);
-    if (!isAuthenticated) {
-      setDraft(createEmptyDraft());
-    }
-  }
-
   /**
-   * Native composer owns its text; clear it imperatively after sign-out commit.
+   * Native composer owns its text; clear draft + native value after sign-out.
    */
   useEffect(() => {
     if (!isAuthenticated) {
-      messageInputRef.current = '';
-      chatInputRef.current?.setText('');
+      clearDraft();
     }
-  }, [isAuthenticated]);
+  }, [clearDraft, isAuthenticated]);
 
   const handleSendMessage = useCallback(() => {
     const currentInput = messageInputRef.current;

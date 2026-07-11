@@ -14,6 +14,7 @@ import { theme } from '@app/styles/themes';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { truncate } from '@app/utils/string/truncate';
 
+import { chatEntranceSpring } from '../util/chatEntranceSpring';
 import { isRefreshCommand } from '../util/slashCommandDefinitions/isRefreshCommand';
 import { ChatComposer } from './ChatComposer/ChatComposer';
 import type { ChatInputSectionProps } from './chatInputSectionTypes';
@@ -24,6 +25,8 @@ import { useComposerDismissGesture } from './useComposerDismissGesture';
 
 export type { ReplyToData } from './chatInputSectionTypes';
 
+const replyPreviewEntering = chatEntranceSpring(FadeInUp);
+const replyPreviewExiting = FadeOutDown.duration(140);
 export const ChatInputSection = memo(
   ({
     connection,
@@ -60,8 +63,8 @@ export const ChatInputSection = memo(
       <View style={styles.wrapper} testID='chat-input-bar'>
         {replyTo ? (
           <Animated.View
-            entering={FadeInUp.duration(180)}
-            exiting={FadeOutDown.duration(140)}
+            entering={replyPreviewEntering}
+            exiting={replyPreviewExiting}
             style={styles.replyShell}
           >
             <BlurView

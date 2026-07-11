@@ -627,6 +627,10 @@ export const updateBadge = (badge: SanitisedBadgeSet) => {
 
 export const removeBadge = (badgeId: string) => {
   const currentBadges = chatStore$.badges.peek();
+  if (!(badgeId in currentBadges)) {
+    return;
+  }
+
   const { [badgeId]: _, ...remainingBadges } = currentBadges;
   chatStore$.badges.set(remainingBadges);
   const currentUserBadgeIds = chatStore$.userBadgeIds.peek();
@@ -639,6 +643,8 @@ export const removeBadge = (badgeId: string) => {
     ),
   );
   scheduleCosmeticsPersist();
+  // Badge art is baked into message rows — bump so visible rows reprocess.
+  scheduleCosmeticBindingsBump();
 };
 
 export const removeUserBadge = (ttvUserId: string) => {
@@ -664,8 +670,16 @@ export const updatePaint = (paint: PaintData) => {
   }
 };
 
+/**
+ * Paint definitions are live-bound in `PaintedUsername` — no bindings bump.
+ * Cleared wearer ids drop via Legend selectors without a chat reprocess.
+ */
 export const removePaint = (paintId: string) => {
   const currentPaints = chatStore$.paints.peek();
+  if (!(paintId in currentPaints)) {
+    return;
+  }
+
   const { [paintId]: _, ...remainingPaints } = currentPaints;
   chatStore$.paints.set(remainingPaints);
   chatStore$.userPaintIds.set(
@@ -712,6 +726,7 @@ export const clearSevenTvBadges = () => {
     chatStore$.userBadgeIds.set({});
   });
   scheduleCosmeticsPersist();
+  scheduleCosmeticBindingsBump();
 };
 
 const clearPaintsAndBadges = () => {
