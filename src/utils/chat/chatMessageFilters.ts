@@ -41,9 +41,9 @@ export function isUserBlocked(
 }
 
 /**
- * Whether a message matches the viewer's muted words. With `matchWholeWord` the
- * message is split on spaces and each token is compared; otherwise the whole
- * message is compared as a single token.
+ * Whether a message matches the viewer's muted words. With `matchWholeWord`
+ * the message is split on spaces and each token is compared; otherwise a
+ * muted word matches anywhere in the message as a substring.
  */
 export function containsMutedWords(
   message: string,
@@ -57,7 +57,7 @@ export function containsMutedWords(
   const lowered = getLowercasedMutedWords(mutedWords);
   const messageLower = message.toLowerCase();
   if (!matchWholeWord) {
-    return lowered.includes(messageLower);
+    return lowered.some(mutedWord => messageLower.includes(mutedWord));
   }
 
   const words = messageLower.split(' ');

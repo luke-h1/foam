@@ -35,8 +35,12 @@ describe('containsMutedWords', () => {
     expect(containsMutedWords('spoilers ahead', ['spoiler'], true)).toBe(false);
   });
 
-  test('compares the whole message when not matching whole words', () => {
+  test('matches a substring anywhere when not matching whole words', () => {
     expect(containsMutedWords('spoiler', ['spoiler'], false)).toBe(true);
-    expect(containsMutedWords('spoiler ahead', ['spoiler'], false)).toBe(false);
+    expect(containsMutedWords('spoiler ahead', ['spoiler'], false)).toBe(true);
+    expect(containsMutedWords('big SPOILERS ahead', ['spoiler'], false)).toBe(
+      true,
+    );
+    expect(containsMutedWords('spoiled ahead', ['spoiler'], false)).toBe(false);
   });
 });
