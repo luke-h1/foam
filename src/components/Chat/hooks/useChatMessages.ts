@@ -11,7 +11,7 @@ import {
   addMessages,
   getUserMessageColor,
 } from '@app/store/chat/actions/messages';
-import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
+import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor/resolveCachedSenderColor';
 
 import { createChatDelayQueue } from '../util/chatDelayQueue';
 import {
