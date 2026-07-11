@@ -161,4 +161,22 @@ describe('cheermoteStore', () => {
 
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
+
+  test('evicts the oldest channel and its fetch guard once at capacity', async () => {
+    for (let index = 0; index < 20; index += 1) {
+      setChannelCheermotes(`channel-${index}`, [makeCheermote('Cheer')]);
+    }
+
+    setChannelCheermotes('channel-20', [makeCheermote('Cheer')]);
+
+    expect(getChannelCheermotes('channel-0')).toBeUndefined();
+    expect(getChannelCheermotes('channel-1')?.has('cheer')).toBe(true);
+    expect(getChannelCheermotes('channel-20')?.has('cheer')).toBe(true);
+
+    const fetcher = jest.fn(() => Promise.resolve([makeCheermote('Cheer')]));
+    await fetchChannelCheermotes('channel-0', fetcher);
+
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(getChannelCheermotes('channel-0')?.has('cheer')).toBe(true);
+  });
 });
