@@ -708,6 +708,41 @@ describe('useChatMessages', () => {
       expect(getLastFlushedMessages().map(m => m.message_id)).toEqual(['1']);
     });
 
+    test('a live message arriving after the delay collapses to zero waits behind held messages', () => {
+      let delayMs = 5000;
+      const { result } = renderHook(() =>
+        useChatMessages({ ...defaultOptions, getChatDelayMs: () => delayMs }),
+      );
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+      });
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+
+      delayMs = 0;
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('2'));
+      });
+      act(() => {
+        jest.advanceTimersByTime(200);
+      });
+      expect(mockAddMessages).not.toHaveBeenCalled();
+
+      act(() => {
+        jest.advanceTimersByTime(4500);
+      });
+      act(() => {
+        jest.advanceTimersByTime(200);
+      });
+
+      expect(getLastFlushedMessages().map(m => m.message_id)).toEqual([
+        '1',
+        '2',
+      ]);
+    });
+
     test('reconcile flushes everything held once the delay is turned off', () => {
       let delayMs = 5000;
       const { result } = renderHook(() =>

@@ -299,7 +299,8 @@
     "@legendapp/list@3.0.4": "patches/@legendapp%2Flist@3.0.4.patch",
     "expo-image@57.0.0": "patches/expo-image@57.0.0.patch",
     "expo-modules-jsi@57.0.0": "patches/expo-modules-jsi@57.0.0.patch",
-    "@sentry/core@10.57.0": "patches/@sentry%2Fcore@10.57.0.patch"
+    "@sentry/core@10.57.0": "patches/@sentry%2Fcore@10.57.0.patch",
+    "@swmansion/react-native-bottom-sheet@0.14.1": "patches/@swmansion%2Freact-native-bottom-sheet@0.14.1.patch"
   },
   "reanimated": {
     "staticFeatureFlags": {

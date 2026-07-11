@@ -36,7 +36,7 @@ const basePreferences = {
   chatTimestampFormat: '24h',
   chatFontScale: 'default',
   chatScrollback: 150,
-  chatDelay: 0,
+  chatDelay: 'off',
   deletedMessageStyle: 'notice',
   ignoreClearChat: false,
   chatMentionHaptics: true,

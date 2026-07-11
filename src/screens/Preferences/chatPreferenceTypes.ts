@@ -64,9 +64,10 @@ export const SCROLLBACK_OPTIONS = [
 
 export const SCROLLBACK_LABELS = SCROLLBACK_OPTIONS.map(option => option.label);
 
-// Manual chat-delay presets (seconds), shared by the iOS Picker and Android segmented control.
+// Chat-delay presets (auto-sync, off, manual seconds), shared by the iOS Picker and Android segmented control.
 export const CHAT_DELAY_OPTIONS = [
-  { labelKey: 'chatDelayOff', value: 0 as const },
+  { labelKey: 'chatDelayAuto', value: 'auto' as const },
+  { labelKey: 'chatDelayOff', value: 'off' as const },
   { labelKey: 'chatDelay2s', value: 2 as const },
   { labelKey: 'chatDelay5s', value: 5 as const },
   { labelKey: 'chatDelay8s', value: 8 as const },

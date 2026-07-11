@@ -1,4 +1,4 @@
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 import type {
   SkCanvas,
@@ -286,15 +286,24 @@ interface PaintUsernameLayout {
   insetsPx: { left: number; top: number; right: number; bottom: number };
 }
 
+/**
+ * SkParagraph excludes trailing breakable spaces from getLongestLine(), which
+ * would glue the painted name to the message text; NBSP keeps the trailing
+ * gap a plain <Text> username renders.
+ */
+function keepTrailingSpaces(text: string): string {
+  return text.replace(/ +$/, match => '\u00A0'.repeat(match.length));
+}
+
 function paintUsernameText(paint: PaintData, displayUsername: string): string {
   const transform = paint.textStyle?.transform;
   if (transform === 'uppercase') {
-    return displayUsername.toLocaleUpperCase();
+    return keepTrailingSpaces(displayUsername.toLocaleUpperCase());
   }
   if (transform === 'lowercase') {
-    return displayUsername.toLocaleLowerCase();
+    return keepTrailingSpaces(displayUsername.toLocaleLowerCase());
   }
-  return displayUsername;
+  return keepTrailingSpaces(displayUsername);
 }
 
 function buildUsernameParagraph(
@@ -330,12 +339,16 @@ function buildPaintLayout(
 
   /**
    * The extension renders paint weight as `weight * 100`; with no explicit
-   * weight the painted span inherits chat's bold (700). Skia shapes glyphs
-   * from the matching registered face, so a heavier paint reads heavier here.
+   * weight the painted span inherits the chat username as rendered. ui/Text
+   * resolves usernames to the single-face Montserrat_400Regular family, so
+   * iOS draws the 400 face (style fontWeight '700' finds no bold sibling in
+   * that family) while Android synthesizes a faux bold from the same face.
    */
   const fontWeight: FontWeight = paint.textStyle?.weight
     ? ((paint.textStyle.weight * 100) as FontWeight)
-    : FontWeight.Bold;
+    : Platform.OS === 'android'
+      ? FontWeight.Bold
+      : FontWeight.Normal;
   const partial = {
     text: paintUsernameText(paint, displayUsername),
     fontSizePx: fontSize * scale,

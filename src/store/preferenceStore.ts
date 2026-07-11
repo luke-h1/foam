@@ -26,6 +26,7 @@ export type ChatFontScale = 'small' | 'default' | 'large';
 export type ChatTimestampFormat = '24h' | '12h';
 export type DeletedMessageStyle = 'notice' | 'hidden';
 export type ChatScrollbackLength = 150 | 200 | 250;
+export type ChatDelaySetting = 'auto' | 'off' | number;
 export type SevenTvPaintRenderer = 'off' | 'native' | 'skia' | 'webview';
 export type PaintRendererFlag = 'off' | 'native' | 'skia';
 
@@ -60,9 +61,11 @@ export interface Preferences {
   chatFontScale: ChatFontScale;
   chatScrollback: ChatScrollbackLength;
   /**
-   * Seconds to hold new chat messages before showing them. 0 = off.
+   * Hold on new chat messages so chat lines up with the latency-delayed
+   * video. 'auto' follows the measured stream latency, 'off' shows messages
+   * immediately, a number holds them for that many seconds.
    */
-  chatDelay: number;
+  chatDelay: ChatDelaySetting;
   deletedMessageStyle: DeletedMessageStyle;
   ignoreClearChat: boolean;
   chatMentionHaptics: boolean;
@@ -120,7 +123,7 @@ export const preferencesSchema = z.object({
   chatTimestampFormat: z.enum(['24h', '12h']),
   chatFontScale: z.enum(['small', 'default', 'large']),
   chatScrollback: z.union([z.literal(150), z.literal(200), z.literal(250)]),
-  chatDelay: z.number(),
+  chatDelay: z.union([z.literal('auto'), z.literal('off'), z.number()]),
   deletedMessageStyle: z.enum(['notice', 'hidden']),
   ignoreClearChat: z.boolean(),
   chatMentionHaptics: z.boolean(),
@@ -167,7 +170,7 @@ export const initialPreferences: Preferences = {
   chatTimestampFormat: '24h',
   chatFontScale: 'default',
   chatScrollback: 150,
-  chatDelay: 0,
+  chatDelay: 'auto',
   deletedMessageStyle: 'notice',
   ignoreClearChat: false,
   chatMentionHaptics: true,
@@ -199,6 +202,12 @@ when(persistedPreferences$?._state?.isLoadedLocal, () => {
 
   if ((preferences$.sevenTvPaintRenderer.peek() as string) === 'auto') {
     preferences$.sevenTvPaintRenderer.set('native');
+  }
+
+  // chatDelay 0 predates 'auto'/'off' and was the numeric Off default; the
+  // explicit value is 'off' now, so legacy zeros move to the new default.
+  if (preferences$.chatDelay.peek() === 0) {
+    preferences$.chatDelay.set('auto');
   }
 });
 
