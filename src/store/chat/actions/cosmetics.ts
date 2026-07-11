@@ -634,6 +634,7 @@ export const updateBadge = (badge: SanitisedBadgeSet) => {
 
   const previousUrl = previous?.url?.trim();
   cell?.set(normalizedBadge);
+  scheduleCosmeticsPersist('definitions');
 
   if (previousUrl !== normalizedBadge.url.trim()) {
     scheduleCosmeticBindingsBump();
@@ -674,6 +675,7 @@ export const updatePaint = (paint: PaintData) => {
       return;
     }
     chatStore$.paints[paint.id]?.set(paint);
+    scheduleCosmeticsPersist('definitions');
     refreshCachedUserCosmeticsForDefinition(paint.id);
   }
 };
