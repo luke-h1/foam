@@ -1,10 +1,11 @@
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { theme } from '@app/styles/themes';
 
@@ -27,22 +28,34 @@ export const StreamPlayerPoster = memo(function StreamPlayerPoster({
   posterUrl,
   visible,
 }: StreamPlayerPosterProps) {
+  // Stay mounted through the fade-out, then drop so LoadingState's withRepeat
+  // spinner and the poster bitmap are not left idle for the watch session.
+  const [rendered, setRendered] = useState(visible);
   const opacity = useSharedValue(visible ? 1 : 0);
 
   useEffect(() => {
     if (visible) {
+      setRendered(true);
       opacity.set(1);
       return;
     }
 
-    // Fade the loading frame out over the now-playing video. Opacity 0 leaves
-    // the node mounted but non-compositing for practical purposes.
-    opacity.set(withTiming(0, { duration: FADE_OUT_MS }));
+    opacity.set(
+      withTiming(0, { duration: FADE_OUT_MS }, finished => {
+        if (finished) {
+          scheduleOnRN(setRendered, false);
+        }
+      }),
+    );
   }, [visible, opacity]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.get(),
   }));
+
+  if (!rendered) {
+    return null;
+  }
 
   return (
     <Animated.View

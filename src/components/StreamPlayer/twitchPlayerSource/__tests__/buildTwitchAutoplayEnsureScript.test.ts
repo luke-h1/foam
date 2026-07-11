@@ -26,6 +26,9 @@ describe('buildTwitchAutoplayEnsureScript', () => {
     expect(script).toContain('if (unmuteAttempts >= 3)');
     expect(script).toContain('unmuteBlocked = true;');
     expect(script).toContain('playMuted(v);');
+    // Nested unmute retries re-query the video; bail if it was torn down
+    // mid-timeout (channel switch / ad swap) so we do not throw on null.
+    expect(script).toContain('if (!video) { return; }');
   });
 
   test('autoplay-ensure keeps a muted start muted', () => {

@@ -62,6 +62,7 @@ export function buildTwitchAutoplayEnsureScript(options: {
 
   // Unmute the already-playing stream; iOS re-pauses cold unmuted autoplay, so retry then accept muted.
   function reconcileAudio(video) {
+    if (!video) { return; }
     if (TARGET_MUTED) {
       if (!video.muted) { video.muted = true; }
       return;

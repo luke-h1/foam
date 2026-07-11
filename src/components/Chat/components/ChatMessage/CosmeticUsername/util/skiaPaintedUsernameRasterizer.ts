@@ -570,8 +570,7 @@ export interface PaintImageLayer {
  * live texture; stroke is a separate top slot so URL overlays cannot hide it.
  */
 export type PaintLayerSlot =
-  | { kind: 'url'; layer: PaintImageLayer }
-  | { kind: 'baked'; image: SkImage };
+  { kind: 'url'; layer: PaintImageLayer } | { kind: 'baked'; image: SkImage };
 
 /**
  * Cache-friendly render inputs for a painted username. `staticImage` is the
@@ -603,11 +602,7 @@ function toPaintImageLayer(
   layer: PaintLayerData,
   layout: Pick<
     PaintUsernameLayout,
-    | 'glyphWidthPx'
-    | 'glyphHeightPx'
-    | 'originX'
-    | 'originY'
-    | 'scale'
+    'glyphWidthPx' | 'glyphHeightPx' | 'originX' | 'originY' | 'scale'
   >,
 ): PaintImageLayer | null {
   if (layer.function !== 'URL' || !layer.image_url) {
