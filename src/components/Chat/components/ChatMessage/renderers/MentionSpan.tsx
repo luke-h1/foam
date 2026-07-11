@@ -4,7 +4,7 @@ import type { StyleProp, TextStyle } from 'react-native';
 import { useSelector } from '@legendapp/state/react';
 
 import { getChatColorStyle } from '@app/components/Chat/util/chatColorStyles';
-import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
+import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers/normaliseUsername';
 import { Text } from '@app/components/ui/Text/Text';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';

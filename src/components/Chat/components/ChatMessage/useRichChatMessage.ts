@@ -6,13 +6,11 @@ import type { ChatMessageDisplayFlags } from '@app/components/Chat/types/chatUiF
 import { hasSharedChannelPointsMessage } from '@app/components/Chat/util/channelPointsSharedMessage';
 import { getAnnouncementAccentColor } from '@app/components/Chat/util/getAnnouncementAccentColor';
 import { toChatMessageData } from '@app/components/Chat/util/richChatMessageData';
-import {
-  getAnnouncementColorParam,
-  getChatBodyInfo,
-  getPartIdentity,
-  isUserNoticeTags,
-  normaliseUsername,
-} from '@app/components/Chat/util/richChatMessageHelpers';
+import { getAnnouncementColorParam } from '@app/components/Chat/util/richChatMessageHelpers/getAnnouncementColorParam';
+import { getChatBodyInfo } from '@app/components/Chat/util/richChatMessageHelpers/getChatBodyInfo';
+import { getPartIdentity } from '@app/components/Chat/util/richChatMessageHelpers/getPartIdentity';
+import { isUserNoticeTags } from '@app/components/Chat/util/richChatMessageHelpers/isUserNoticeTags';
+import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers/normaliseUsername';
 import { usePreference } from '@app/store/preferenceStore';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';

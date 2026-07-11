@@ -5,7 +5,7 @@ import { useSelector } from '@legendapp/state/react';
 
 import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
 import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
-import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers';
+import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers/normaliseUsername';
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';

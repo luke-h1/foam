@@ -1,9 +1,9 @@
 import { View } from 'react-native';
 
 import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
-import type { ChatBodyVariant } from '@app/components/Chat/util/richChatMessageHelpers';
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
+import type { ChatBodyVariant } from '@app/utils/chat/deriveChatBody/types';
 
 import { styles } from '../RichChatMessage.styles';
 import { ChatMessageBody } from './ChatMessageBody';
