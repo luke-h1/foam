@@ -1,8 +1,17 @@
 diff --git a/react-native.js b/react-native.js
-index 74a8b9e70fde06482b9c9fd4720a497a0895e09f..ca585c9ecaef4885d320bc9cf9084116a2955746 100644
+index 74a8b9e70fde06482b9c9fd4720a497a0895e09f..dd2073be52d3bdb3cbac90474310645bd5b077ea 100644
 --- a/react-native.js
 +++ b/react-native.js
-@@ -2230,7 +2230,7 @@ function doMaintainScrollAtEnd(ctx) {
+@@ -2226,11 +2226,16 @@ function doMaintainScrollAtEnd(ctx) {
+               animated: maintainScrollAtEnd.animated
+             });
+           }
++          // PATCH(foam): upstream keeps `maintainingScrollAtEnd` locked for 500ms after
++          // an animated re-pin, and threshold checks are skipped while it is set. Busy
++          // chats deliver a message every 50-200ms, so follow-up re-pins were suppressed
++          // and rows piled up below the fold until the flag cleared. 150ms still outlasts
++          // the scroll settle while re-arming within chat message cadence.
+           setTimeout(
              () => {
                state.maintainingScrollAtEnd = false;
              },
@@ -12,10 +21,19 @@ index 74a8b9e70fde06482b9c9fd4720a497a0895e09f..ca585c9ecaef4885d320bc9cf9084116
          } else {
            state.maintainingScrollAtEnd = false;
 diff --git a/react-native.mjs b/react-native.mjs
-index d013dd02d2e0b424e8de026c0576175bcd515f8f..c2fb8c46272f807362c3fb25d96ec00bfa92cc40 100644
+index d013dd02d2e0b424e8de026c0576175bcd515f8f..104f15c9f6ae41665c89fed719dfa66c62f3574a 100644
 --- a/react-native.mjs
 +++ b/react-native.mjs
-@@ -2209,7 +2209,7 @@ function doMaintainScrollAtEnd(ctx) {
+@@ -2205,11 +2205,16 @@ function doMaintainScrollAtEnd(ctx) {
+               animated: maintainScrollAtEnd.animated
+             });
+           }
++          // PATCH(foam): upstream keeps `maintainingScrollAtEnd` locked for 500ms after
++          // an animated re-pin, and threshold checks are skipped while it is set. Busy
++          // chats deliver a message every 50-200ms, so follow-up re-pins were suppressed
++          // and rows piled up below the fold until the flag cleared. 150ms still outlasts
++          // the scroll settle while re-arming within chat message cadence.
+           setTimeout(
              () => {
                state.maintainingScrollAtEnd = false;
              },
@@ -25,10 +43,19 @@ index d013dd02d2e0b424e8de026c0576175bcd515f8f..c2fb8c46272f807362c3fb25d96ec00b
          } else {
            state.maintainingScrollAtEnd = false;
 diff --git a/react-native.web.js b/react-native.web.js
-index 5db8825d58fc6077bd4f095388dc54ddfdcfd46b..a2d9d389157793ba5511ea2807d64f22a5e52a86 100644
+index 5db8825d58fc6077bd4f095388dc54ddfdcfd46b..c347f62aa249a426d6fa6901f79cf04ce3501c97 100644
 --- a/react-native.web.js
 +++ b/react-native.web.js
-@@ -2758,7 +2758,7 @@ function doMaintainScrollAtEnd(ctx) {
+@@ -2754,11 +2754,16 @@ function doMaintainScrollAtEnd(ctx) {
+               animated: maintainScrollAtEnd.animated
+             });
+           }
++          // PATCH(foam): upstream keeps `maintainingScrollAtEnd` locked for 500ms after
++          // an animated re-pin, and threshold checks are skipped while it is set. Busy
++          // chats deliver a message every 50-200ms, so follow-up re-pins were suppressed
++          // and rows piled up below the fold until the flag cleared. 150ms still outlasts
++          // the scroll settle while re-arming within chat message cadence.
+           setTimeout(
              () => {
                state.maintainingScrollAtEnd = false;
              },
@@ -38,10 +65,19 @@ index 5db8825d58fc6077bd4f095388dc54ddfdcfd46b..a2d9d389157793ba5511ea2807d64f22
          } else {
            state.maintainingScrollAtEnd = false;
 diff --git a/react-native.web.mjs b/react-native.web.mjs
-index 2cdadd061e78b558995593719af06faf7f6baa10..b59d2b74ee7c4e84ad534d584af7c2651904731c 100644
+index 2cdadd061e78b558995593719af06faf7f6baa10..e523fd3ad99be9dc2de8a4213bf318ba14effa67 100644
 --- a/react-native.web.mjs
 +++ b/react-native.web.mjs
-@@ -2737,7 +2737,7 @@ function doMaintainScrollAtEnd(ctx) {
+@@ -2733,11 +2733,16 @@ function doMaintainScrollAtEnd(ctx) {
+               animated: maintainScrollAtEnd.animated
+             });
+           }
++          // PATCH(foam): upstream keeps `maintainingScrollAtEnd` locked for 500ms after
++          // an animated re-pin, and threshold checks are skipped while it is set. Busy
++          // chats deliver a message every 50-200ms, so follow-up re-pins were suppressed
++          // and rows piled up below the fold until the flag cleared. 150ms still outlasts
++          // the scroll settle while re-arming within chat message cadence.
+           setTimeout(
              () => {
                state.maintainingScrollAtEnd = false;
              },
@@ -51,10 +87,19 @@ index 2cdadd061e78b558995593719af06faf7f6baa10..b59d2b74ee7c4e84ad534d584af7c265
          } else {
            state.maintainingScrollAtEnd = false;
 diff --git a/react.js b/react.js
-index 5db8825d58fc6077bd4f095388dc54ddfdcfd46b..a2d9d389157793ba5511ea2807d64f22a5e52a86 100644
+index 5db8825d58fc6077bd4f095388dc54ddfdcfd46b..c347f62aa249a426d6fa6901f79cf04ce3501c97 100644
 --- a/react.js
 +++ b/react.js
-@@ -2758,7 +2758,7 @@ function doMaintainScrollAtEnd(ctx) {
+@@ -2754,11 +2754,16 @@ function doMaintainScrollAtEnd(ctx) {
+               animated: maintainScrollAtEnd.animated
+             });
+           }
++          // PATCH(foam): upstream keeps `maintainingScrollAtEnd` locked for 500ms after
++          // an animated re-pin, and threshold checks are skipped while it is set. Busy
++          // chats deliver a message every 50-200ms, so follow-up re-pins were suppressed
++          // and rows piled up below the fold until the flag cleared. 150ms still outlasts
++          // the scroll settle while re-arming within chat message cadence.
+           setTimeout(
              () => {
                state.maintainingScrollAtEnd = false;
              },
@@ -64,10 +109,19 @@ index 5db8825d58fc6077bd4f095388dc54ddfdcfd46b..a2d9d389157793ba5511ea2807d64f22
          } else {
            state.maintainingScrollAtEnd = false;
 diff --git a/react.mjs b/react.mjs
-index 2cdadd061e78b558995593719af06faf7f6baa10..b59d2b74ee7c4e84ad534d584af7c2651904731c 100644
+index 2cdadd061e78b558995593719af06faf7f6baa10..e523fd3ad99be9dc2de8a4213bf318ba14effa67 100644
 --- a/react.mjs
 +++ b/react.mjs
-@@ -2737,7 +2737,7 @@ function doMaintainScrollAtEnd(ctx) {
+@@ -2733,11 +2733,16 @@ function doMaintainScrollAtEnd(ctx) {
+               animated: maintainScrollAtEnd.animated
+             });
+           }
++          // PATCH(foam): upstream keeps `maintainingScrollAtEnd` locked for 500ms after
++          // an animated re-pin, and threshold checks are skipped while it is set. Busy
++          // chats deliver a message every 50-200ms, so follow-up re-pins were suppressed
++          // and rows piled up below the fold until the flag cleared. 150ms still outlasts
++          // the scroll settle while re-arming within chat message cadence.
+           setTimeout(
              () => {
                state.maintainingScrollAtEnd = false;
              },
