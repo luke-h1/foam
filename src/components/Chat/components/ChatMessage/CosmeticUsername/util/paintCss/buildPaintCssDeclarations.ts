@@ -39,7 +39,11 @@ function cssLayer(layer: PaintLayerData): CssLayer {
       image = `${layer.repeat ? 'repeating-' : ''}radial-gradient(${layer.shape ?? 'circle'}, ${cssStopList(sortedLayerStops(layer))})`;
       break;
     case 'URL':
-      image = `url(${webKitSafeLayerImageUrl(layer.image_url)})`;
+      // Empty URLs are skipped by Skia/RN paths; emit `none` so invalid
+      // `url()` cannot wipe a comma-separated background-image list.
+      image = layer.image_url
+        ? `url(${webKitSafeLayerImageUrl(layer.image_url)})`
+        : 'none';
       break;
     default:
       image = 'none';

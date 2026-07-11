@@ -137,4 +137,38 @@ describe('buildPaintCssDeclarations', () => {
       textTransform: 'unset',
     });
   });
+
+  test('URL layer with empty image_url emits none instead of invalid url()', () => {
+    const paint = makePaint({
+      layers: toIndexed([
+        makeLayer({
+          function: 'LINEAR_GRADIENT',
+          angle: 90,
+          stops: toIndexed([
+            { at: 0, color: RED },
+            { at: 1, color: BLUE },
+          ]),
+        }),
+        makeLayer({
+          function: 'URL',
+          image_url: '',
+        }),
+      ]),
+    });
+
+    expect(buildPaintCssDeclarations(paint)).toEqual<PaintCssDeclarations>({
+      color: 'inherit',
+      backgroundImage:
+        'linear-gradient(90deg, rgba(255, 0, 0, 1.000) 0%, rgba(0, 0, 255, 1.000) 100%), none',
+      backgroundPosition: '0% 0%, 0% 0%',
+      backgroundSize: 'auto, auto',
+      backgroundRepeat: 'unset, unset',
+      filter: 'inherit',
+      fontWeight: 'inherit',
+      webkitTextStrokeWidth: 'inherit',
+      webkitTextStrokeColor: 'inherit',
+      textShadow: 'unset',
+      textTransform: 'unset',
+    });
+  });
 });
