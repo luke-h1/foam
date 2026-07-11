@@ -35,14 +35,14 @@ import {
 } from './paintLayer/paintLayerTileModes';
 import { getPaintTextShadows } from './paintTextStyle/getPaintTextShadows';
 import { getPaintTextStroke } from './paintTextStyle/getPaintTextStroke';
+import { cssDropShadowSigma } from './skiaPaintGeometry/cssDropShadowSigma';
+import { cssLinearGradientLine } from './skiaPaintGeometry/cssLinearGradientLine';
+import { farthestCornerCircleRadius } from './skiaPaintGeometry/farthestCornerCircleRadius';
+import { farthestCornerEllipseRadii } from './skiaPaintGeometry/farthestCornerEllipseRadii';
 import {
-  cssDropShadowSigma,
-  cssLinearGradientLine,
-  farthestCornerCircleRadius,
-  farthestCornerEllipseRadii,
   type LayerRect,
   layerRectInBox,
-} from './skiaPaintGeometry';
+} from './skiaPaintGeometry/layerRectInBox';
 
 export interface RasterizePaintedUsernameOptions {
   displayUsername: string;
