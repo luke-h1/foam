@@ -17,7 +17,7 @@ import type { useAuthContext } from '@app/context/AuthContext';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import { findBadges } from '@app/utils/chat/findBadges';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { parseActionCommand } from '@app/utils/chat/parseActionMessage';
+import { parseActionCommand } from '@app/utils/chat/parseActionMessage/parseActionCommand';
 import { parseBadges } from '@app/utils/chat/parseBadges';
 import { formatDate } from '@app/utils/date-time/date';
 import { logger } from '@app/utils/logger';

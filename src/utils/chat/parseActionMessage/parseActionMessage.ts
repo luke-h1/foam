@@ -1,11 +1,8 @@
+import type { ParsedActionMessage } from '@app/utils/chat/parseActionMessage/types';
+
 const CTCP_DELIMITER = String.fromCharCode(1);
 const ACTION_PREFIX = `${CTCP_DELIMITER}ACTION `;
 const ACTION_SUFFIX = CTCP_DELIMITER;
-
-export interface ParsedActionMessage {
-  isAction: boolean;
-  text: string;
-}
 
 export function parseActionMessage(text: string): ParsedActionMessage {
   if (
@@ -20,15 +17,4 @@ export function parseActionMessage(text: string): ParsedActionMessage {
   }
 
   return { isAction: false, text };
-}
-
-const ACTION_COMMAND = /^\/me(?:\s+|$)/i;
-
-export function parseActionCommand(input: string): ParsedActionMessage {
-  const match = ACTION_COMMAND.exec(input);
-  if (match) {
-    return { isAction: true, text: input.slice(match[0].length) };
-  }
-
-  return { isAction: false, text: input };
 }

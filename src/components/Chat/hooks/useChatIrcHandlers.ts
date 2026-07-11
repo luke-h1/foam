@@ -19,7 +19,7 @@ import {
   registerDeferredRewardgiftStandalone,
 } from '@app/utils/chat/channelPointRewardTitleStore';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { parseActionMessage } from '@app/utils/chat/parseActionMessage';
+import { parseActionMessage } from '@app/utils/chat/parseActionMessage/parseActionMessage';
 import { logger } from '@app/utils/logger';
 
 import type { ChatListRef } from '../components/ChatList';
