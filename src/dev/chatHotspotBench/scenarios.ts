@@ -18,10 +18,7 @@ import {
   ingestBurstMessages,
   ingestSeedMessages,
 } from '@app/store/chat/__tests__/__fixtures__/messages.perf.fixture';
-import {
-  addMessages,
-  clearMessages,
-} from '@app/store/chat/actions/messages';
+import { addMessages, clearMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import {
