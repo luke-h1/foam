@@ -18,6 +18,7 @@ import type { PaintData } from '@app/types/seventv/cosmetics';
 import {
   getPaintBitmaps,
   type PaintBitmaps,
+  type PaintImageLayer,
 } from './util/skiaPaintedUsernameRasterizer';
 import { useSkiaPaintFontProvider } from './util/skiaPaintFonts';
 import { useTiledPaintImage } from './util/tiledPaintImageCache';
@@ -88,24 +89,28 @@ function PaintBitmapCanvas({
   );
 }
 
-function TiledPaintCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
-  const tiledImage = useTiledPaintImage(bitmaps.animatedUrl ?? '');
-  const maskNode = paintMaskNode(bitmaps);
+function TiledPaintLayerOverlay({
+  url,
+  tile,
+  maskNode,
+}: {
+  url: string;
+  tile: NonNullable<PaintImageLayer['tile']>;
+  maskNode: ReactNode;
+}) {
+  const tiledImage = useTiledPaintImage(url);
 
-  const overlay =
-    maskNode && bitmaps.animatedTile && tiledImage ? (
-      <Mask mode='alpha' mask={maskNode}>
-        <Fill>
-          <ImageShader
-            image={tiledImage}
-            tx={bitmaps.animatedTile.tx}
-            ty={bitmaps.animatedTile.ty}
-          />
-        </Fill>
-      </Mask>
-    ) : null;
+  if (!tiledImage) {
+    return null;
+  }
 
-  return <PaintBitmapCanvas bitmaps={bitmaps} overlay={overlay} />;
+  return (
+    <Mask mode='alpha' mask={maskNode}>
+      <Fill>
+        <ImageShader image={tiledImage} tx={tile.tx} ty={tile.ty} />
+      </Fill>
+    </Mask>
+  );
 }
 
 /**
@@ -115,23 +120,76 @@ function TiledPaintCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
  * every frame for as long as the component is mounted, which is why this
  * wrapper only mounts for stretch-rendered image layers.
  */
-function AnimatedPaintCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
-  const animatedFrame = useAnimatedImageValue(bitmaps.animatedUrl ?? undefined);
+function StretchPaintLayerOverlay({
+  url,
+  rect,
+  maskNode,
+}: {
+  url: string;
+  rect: NonNullable<PaintImageLayer['rect']>;
+  maskNode: ReactNode;
+}) {
+  const animatedFrame = useAnimatedImageValue(url);
+
+  return (
+    <Mask mode='alpha' mask={maskNode}>
+      <Image
+        image={animatedFrame}
+        x={rect.x}
+        y={rect.y}
+        width={rect.width}
+        height={rect.height}
+        fit='fill'
+      />
+    </Mask>
+  );
+}
+
+function paintImageLayerKey(layer: PaintImageLayer): string {
+  return [
+    layer.url,
+    layer.tile ? `${layer.tile.tx},${layer.tile.ty}` : '',
+    layer.rect
+      ? `${layer.rect.x},${layer.rect.y},${layer.rect.width},${layer.rect.height}`
+      : '',
+  ].join('|');
+}
+
+function renderPaintImageLayerOverlay(
+  layer: PaintImageLayer,
+  maskNode: ReactNode,
+): ReactNode {
+  if (layer.tile) {
+    return (
+      <TiledPaintLayerOverlay
+        key={paintImageLayerKey(layer)}
+        url={layer.url}
+        tile={layer.tile}
+        maskNode={maskNode}
+      />
+    );
+  }
+  if (layer.rect) {
+    return (
+      <StretchPaintLayerOverlay
+        key={paintImageLayerKey(layer)}
+        url={layer.url}
+        rect={layer.rect}
+        maskNode={maskNode}
+      />
+    );
+  }
+  return null;
+}
+
+function ImageLayerPaintCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
   const maskNode = paintMaskNode(bitmaps);
 
-  const overlay =
-    maskNode && bitmaps.animatedRect ? (
-      <Mask mode='alpha' mask={maskNode}>
-        <Image
-          image={animatedFrame}
-          x={bitmaps.animatedRect.x}
-          y={bitmaps.animatedRect.y}
-          width={bitmaps.animatedRect.width}
-          height={bitmaps.animatedRect.height}
-          fit='fill'
-        />
-      </Mask>
-    ) : null;
+  const overlay = maskNode
+    ? bitmaps.imageLayers.map(layer =>
+        renderPaintImageLayerOverlay(layer, maskNode),
+      )
+    : null;
 
   return <PaintBitmapCanvas bitmaps={bitmaps} overlay={overlay} />;
 }
@@ -182,12 +240,8 @@ export function PaintedUsernameSkia({
     );
   }
 
-  if (bitmaps.animatedUrl) {
-    return bitmaps.animatedTile ? (
-      <TiledPaintCanvas bitmaps={bitmaps} />
-    ) : (
-      <AnimatedPaintCanvas bitmaps={bitmaps} />
-    );
+  if (bitmaps.imageLayers.length > 0) {
+    return <ImageLayerPaintCanvas bitmaps={bitmaps} />;
   }
 
   return <PaintBitmapCanvas bitmaps={bitmaps} />;

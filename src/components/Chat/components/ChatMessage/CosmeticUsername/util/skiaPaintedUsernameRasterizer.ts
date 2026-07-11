@@ -510,14 +510,21 @@ interface LogicalRect {
   height: number;
 }
 
+export interface PaintImageLayer {
+  url: string;
+  rect: LogicalRect | null;
+  tile: { tx: PaintLayerTileMode; ty: PaintLayerTileMode } | null;
+}
+
 /**
  * Cache-friendly render inputs for a painted username. `staticImage` bakes
- * everything except the (first) image layer - gradients, base fill, drop
+ * everything except the image layers - gradients, base fill, drop
  * shadows, all glyph-clipped - into one bitmap reused across mounts and every
  * user wearing the paint. Image-layer paints additionally return `maskImage`
- * (glyph coverage) plus the layer's url/rect so the live renderer can overlay
- * the animated texture through the mask; `useAnimatedImageValue` drives its
- * frames on the UI thread, so the static bitmap never re-rasterizes.
+ * (glyph coverage) plus each layer's url and rect/tile so the live renderer
+ * can overlay the animated textures through the mask; `useAnimatedImageValue`
+ * drives their frames on the UI thread, so the static bitmap never
+ * re-rasterizes.
  *
  * All sizes are logical points. `staticImage`/`maskImage` are baked at device
  * pixels and drawn into the logical box, so they stay crisp on retina.
@@ -525,12 +532,59 @@ interface LogicalRect {
 export interface PaintBitmaps {
   staticImage: SkImage;
   maskImage: SkImage | null;
-  animatedUrl: string | null;
-  animatedRect: LogicalRect | null;
-  animatedTile: { tx: PaintLayerTileMode; ty: PaintLayerTileMode } | null;
+  imageLayers: PaintImageLayer[];
   width: number;
   height: number;
   insets: { left: number; top: number; right: number; bottom: number };
+}
+
+export function buildPaintImageLayers(
+  layout: Pick<
+    PaintUsernameLayout,
+    | 'layers'
+    | 'glyphWidthPx'
+    | 'glyphHeightPx'
+    | 'originX'
+    | 'originY'
+    | 'scale'
+  >,
+): PaintImageLayer[] {
+  const imageLayers: PaintImageLayer[] = [];
+
+  for (const layer of [...layout.layers].reverse()) {
+    if (layer.function !== 'URL' || !layer.image_url) {
+      continue;
+    }
+    const url = skiaDecodableLayerUrl(layer.image_url);
+
+    if (isTilingCanvasRepeat(layer.canvas_repeat, layer.repeat)) {
+      imageLayers.push({
+        url,
+        rect: null,
+        tile: paintLayerTileModes(layer.canvas_repeat),
+      });
+      continue;
+    }
+
+    const rect = layerRectInBox(
+      layer.at,
+      layer.size,
+      layout.glyphWidthPx,
+      layout.glyphHeightPx,
+    );
+    imageLayers.push({
+      url,
+      rect: {
+        x: (layout.originX + rect.x) / layout.scale,
+        y: (layout.originY + rect.y) / layout.scale,
+        width: rect.width / layout.scale,
+        height: rect.height / layout.scale,
+      },
+      tile: null,
+    });
+  }
+
+  return imageLayers;
 }
 
 /**
@@ -575,7 +629,7 @@ function paintBitmapCacheKey(opts: RasterizePaintedUsernameOptions): string {
 /**
  * Build (or return the cached) render inputs for a painted username. Pure and
  * synchronous - no image decode - because the static bitmap deliberately omits
- * the image layer, which the live renderer loads via `useAnimatedImageValue`.
+ * the image layers, which the live renderer loads via `useAnimatedImageValue`.
  */
 export function getPaintBitmaps(
   opts: RasterizePaintedUsernameOptions,
@@ -615,20 +669,11 @@ export function getPaintBitmaps(
   staticSurface.dispose();
 
   const { scale } = layout;
-  const imageLayer = layout.layers.find(
-    layer => layer.function === 'URL' && layer.image_url,
-  );
+  const imageLayers = buildPaintImageLayers(layout);
 
   let maskImage: SkImage | null = null;
-  let animatedUrl: string | null = null;
-  let animatedRect: LogicalRect | null = null;
-  let animatedTile: PaintBitmaps['animatedTile'] = null;
 
-  if (imageLayer) {
-    animatedUrl = skiaDecodableLayerUrl(imageLayer.image_url);
-    if (isTilingCanvasRepeat(imageLayer.canvas_repeat, imageLayer.repeat)) {
-      animatedTile = paintLayerTileModes(imageLayer.canvas_repeat);
-    }
+  if (imageLayers.length > 0) {
     const maskSurface = Skia.Surface.Make(
       layout.surfaceWidthPx,
       layout.surfaceHeightPx,
@@ -644,26 +689,12 @@ export function getPaintBitmaps(
       maskImage = maskSurface.makeImageSnapshot();
       maskSurface.dispose();
     }
-    const rect = layerRectInBox(
-      imageLayer.at,
-      imageLayer.size,
-      layout.glyphWidthPx,
-      layout.glyphHeightPx,
-    );
-    animatedRect = {
-      x: (layout.originX + rect.x) / scale,
-      y: (layout.originY + rect.y) / scale,
-      width: rect.width / scale,
-      height: rect.height / scale,
-    };
   }
 
   const bitmaps: PaintBitmaps = {
     staticImage,
     maskImage,
-    animatedUrl,
-    animatedRect,
-    animatedTile,
+    imageLayers,
     width: layout.surfaceWidthPx / scale,
     height: layout.surfaceHeightPx / scale,
     insets: {
