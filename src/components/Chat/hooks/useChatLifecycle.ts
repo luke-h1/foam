@@ -10,7 +10,7 @@ import {
 import { clearMentionSessionCaches } from '@app/store/chat/actions/chatColorCaches';
 import { clearPaintBindings } from '@app/store/chat/actions/cosmetics';
 import { clearMessages } from '@app/store/chat/actions/messages';
-import { resetMentionLoginResolver } from '@app/utils/chat/mentionLoginResolver';
+import { resetMentionLoginResolver } from '@app/utils/chat/mentionLoginResolver/resetMentionLoginResolver';
 
 type PartChannel = (channelName: string) => void;
 

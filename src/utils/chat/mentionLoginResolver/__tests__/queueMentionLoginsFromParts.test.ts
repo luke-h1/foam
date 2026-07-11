@@ -1,10 +1,9 @@
 import { twitchApi } from '@app/services/api/clients';
-import {
-  queueMentionLoginsFromParts,
-  resetMentionLoginResolver,
-} from '@app/utils/chat/mentionLoginResolver';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getMentionLogin } from '@app/utils/chat/resolveMentionLogin/getMentionLogin';
+
+import { queueMentionLoginsFromParts } from '../queueMentionLoginsFromParts';
+import { resetMentionLoginResolver } from '../resetMentionLoginResolver';
 
 jest.mock('@app/services/api/clients', () => ({
   twitchApi: {
@@ -61,7 +60,7 @@ function mentionPart(content: string): ParsedPart<'mention'> {
   return { type: 'mention', content };
 }
 
-describe('mentionLoginResolver', () => {
+describe('queueMentionLoginsFromParts', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
