@@ -304,6 +304,12 @@ describe('chat performance', () => {
           showInlineReplyContext: true,
           showTimestamp: true,
         });
+        estimateChatMessageHeightWithPretext(message, {
+          containerWidth: 390,
+          density: 'comfortable',
+          showInlineReplyContext: true,
+          showTimestamp: true,
+        });
       }
     }, MEASURE_OPTIONS);
   });
