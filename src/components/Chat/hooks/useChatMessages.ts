@@ -252,6 +252,17 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
         Number.isFinite(rawDelayMs) && rawDelayMs > 0 ? rawDelayMs : 0;
 
       if (delayMs <= 0) {
+        // An auto-sync delay can collapse to zero mid-stream; a live message
+        // still can't skip past older ones held in the queue.
+        if (countUnread !== false && delayQueueRef.current.size() > 0) {
+          delayQueueRef.current.enqueue(
+            messageWithCachedColor,
+            Date.now(),
+            true,
+          );
+          scheduleDelayTick();
+          return;
+        }
         ingestMessage(messageWithCachedColor, countUnread);
         return;
       }

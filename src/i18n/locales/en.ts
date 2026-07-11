@@ -739,9 +739,11 @@ const en = {
     keepHistoryOnClearDescription:
       'Ignore moderator chat clears and keep your scrollback',
     sync: 'Sync',
-    syncFooter: 'Delay chat so it lines up with the video.',
+    syncFooter:
+      'Delay chat so it lines up with the video. Auto matches the measured stream latency.',
     chatDelay: 'Chat Delay',
     chatDelayDescription: 'Hold new messages before showing them',
+    chatDelayAuto: 'Auto',
     chatDelayOff: 'Off',
     chatDelay2s: '2s',
     chatDelay5s: '5s',

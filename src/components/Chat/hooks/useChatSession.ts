@@ -23,6 +23,7 @@ import {
   type ChatRenderPreferences,
   usePreference,
 } from '@app/store/preferenceStore';
+import { videoLatencyDisplay$ } from '@app/store/stream/videoLatency';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 import { findCustomHighlight } from '@app/utils/chat/customHighlights/findCustomHighlight';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
@@ -117,7 +118,7 @@ export function useChatSession({
   });
 
   const getChatDelayMs = useCallback(
-    () => resolveEffectiveChatDelayMs(chatDelay),
+    () => resolveEffectiveChatDelayMs(chatDelay, videoLatencyDisplay$.peek()),
     [chatDelay],
   );
 
@@ -156,6 +157,12 @@ export function useChatSession({
 
   useEffect(() => {
     reconcileChatDelay();
+    if (chatDelay !== 'auto') {
+      return;
+    }
+    // In auto mode the effective delay tracks the measured video latency, so
+    // measurement changes need the same reconcile as a preference change.
+    return videoLatencyDisplay$.onChange(() => reconcileChatDelay());
   }, [chatDelay, reconcileChatDelay]);
 
   const chatMentionHaptics = usePreference('chatMentionHaptics');

@@ -232,11 +232,22 @@ export function ChatPreferenceNativeForm() {
           <Picker
             label={t('chatDelay')}
             systemImage='timer'
-            selection={preferences.chatDelay}
-            onSelectionChange={value => update({ chatDelay: value })}
+            selection={String(preferences.chatDelay)}
+            onSelectionChange={value => {
+              const option = CHAT_DELAY_OPTIONS.find(
+                item => String(item.value) === value,
+              );
+              if (option) {
+                update({ chatDelay: option.value });
+              }
+            }}
           >
             {CHAT_DELAY_OPTIONS.map(option => (
-              <NativeText key={option.value} modifiers={[tag(option.value)]}>
+              // SwiftUI tag matching needs one type; the values mix 'auto'/'off' and numbers.
+              <NativeText
+                key={option.value}
+                modifiers={[tag(String(option.value))]}
+              >
                 {t(option.labelKey)}
               </NativeText>
             ))}
