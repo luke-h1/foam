@@ -204,13 +204,15 @@ function ChatListPerfFixture() {
       }}
       listRef={listRef}
       shouldMaintainScrollAtEnd
-      handleScroll={jest.fn()}
-      handleScrollBeginDrag={jest.fn()}
-      handleScrollEndDrag={jest.fn()}
-      handleMomentumScrollBegin={jest.fn()}
-      handleMomentumScrollEnd={jest.fn()}
-      handleEndReached={jest.fn()}
-      handleContentSizeChange={jest.fn()}
+      scrollHandlers={{
+        onContentSizeChange: jest.fn(),
+        onEndReached: jest.fn(),
+        onMomentumScrollBegin: jest.fn(),
+        onMomentumScrollEnd: jest.fn(),
+        onScroll: jest.fn(),
+        onScrollBeginDrag: jest.fn(),
+        onScrollEndDrag: jest.fn(),
+      }}
       keyExtractor={(item, index) => item?.id ?? `missing-${index}`}
       getItemType={() => 'chat-message'}
       contentContainerStyle={undefined}

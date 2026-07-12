@@ -40,14 +40,14 @@ describe('Moderator action sheets', () => {
         visible
         onClose={onClose}
         username='viewer'
-        handleReply={jest.fn()}
-        handleCopy={jest.fn()}
+        onReply={jest.fn()}
+        onCopy={jest.fn()}
         canModerateChat={false}
         canDeleteMessage
         canModerateUser
-        handleDeleteMessage={onDeleteMessage}
-        handleTimeoutUser={onTimeoutUser}
-        handleBanUser={onBanUser}
+        onDeleteMessage={onDeleteMessage}
+        onTimeoutUser={onTimeoutUser}
+        onBanUser={onBanUser}
       />,
     );
 
@@ -60,14 +60,14 @@ describe('Moderator action sheets', () => {
         visible
         onClose={onClose}
         username='viewer'
-        handleReply={jest.fn()}
-        handleCopy={jest.fn()}
+        onReply={jest.fn()}
+        onCopy={jest.fn()}
         canModerateChat
         canDeleteMessage
         canModerateUser
-        handleDeleteMessage={onDeleteMessage}
-        handleTimeoutUser={onTimeoutUser}
-        handleBanUser={onBanUser}
+        onDeleteMessage={onDeleteMessage}
+        onTimeoutUser={onTimeoutUser}
+        onBanUser={onBanUser}
       />,
     );
 
@@ -87,14 +87,14 @@ describe('Moderator action sheets', () => {
         visible
         onClose={jest.fn()}
         username='viewer'
-        handleReply={jest.fn()}
-        handleCopy={jest.fn()}
+        onReply={jest.fn()}
+        onCopy={jest.fn()}
         canModerateChat
         canDeleteMessage={false}
         canModerateUser
-        handleDeleteMessage={jest.fn()}
-        handleTimeoutUser={jest.fn()}
-        handleBanUser={jest.fn()}
+        onDeleteMessage={jest.fn()}
+        onTimeoutUser={jest.fn()}
+        onBanUser={jest.fn()}
       />,
     );
 
@@ -113,13 +113,13 @@ describe('Moderator action sheets', () => {
         visible
         onClose={jest.fn()}
         username='viewer'
-        handleReply={jest.fn()}
-        handleCopy={jest.fn()}
+        onReply={jest.fn()}
+        onCopy={jest.fn()}
         canModerateChat
         canPinMessage
-        handlePinMessage={onPinMessage}
-        handleUpdatePinnedMessage={onUpdatePinnedMessage}
-        handleUnpinMessage={onUnpinMessage}
+        onPinMessage={onPinMessage}
+        onUpdatePinnedMessage={onUpdatePinnedMessage}
+        onUnpinMessage={onUnpinMessage}
       />,
     );
 
@@ -133,14 +133,14 @@ describe('Moderator action sheets', () => {
         visible
         onClose={jest.fn()}
         username='viewer'
-        handleReply={jest.fn()}
-        handleCopy={jest.fn()}
+        onReply={jest.fn()}
+        onCopy={jest.fn()}
         canModerateChat
         canPinMessage
         isPinnedMessage
-        handlePinMessage={onPinMessage}
-        handleUpdatePinnedMessage={onUpdatePinnedMessage}
-        handleUnpinMessage={onUnpinMessage}
+        onPinMessage={onPinMessage}
+        onUpdatePinnedMessage={onUpdatePinnedMessage}
+        onUnpinMessage={onUnpinMessage}
       />,
     );
 

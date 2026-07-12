@@ -4,13 +4,16 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
-import type { SettingsSheetPreferenceFlags } from '@app/components/Chat/types/chatUiFlags';
 import {
   SettingsLinkRow,
   SettingsSection,
   SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
 import { Text } from '@app/components/ui/Text/Text';
+import {
+  usePreference,
+  useUpdatePreferences,
+} from '@app/store/preferenceStore';
 import { requestLiveSync } from '@app/store/stream/liveSyncBus';
 import { theme } from '@app/styles/themes';
 
@@ -20,7 +23,6 @@ const ICON_TINT = theme.color.textSecondary.dark;
 
 export interface SettingsSheetProps {
   isPresented: boolean;
-  preferenceFlags?: SettingsSheetPreferenceFlags;
   onClearChatCache?: () => void;
   onClearImageCache?: () => void;
   onClearSevenTvCosmeticsCache?: () => void;
@@ -29,13 +31,6 @@ export interface SettingsSheetProps {
   onOpenSavedPhrases?: () => void;
   onRefetchEmotes?: () => void;
   onReconnect?: () => void;
-  onRefreshVideo?: () => void;
-  onToggleChatDensity?: () => void;
-  onToggleHighlightOwnMentions?: (value: boolean) => void;
-  onToggleInlineReplyContext?: (value: boolean) => void;
-  onToggleShowTimestamps?: (value: boolean) => void;
-  onToggleShowUnreadJumpPill?: (value: boolean) => void;
-  reconnectionAttempts?: number;
 }
 
 const SettingsSheetComponent = ({
@@ -48,23 +43,14 @@ const SettingsSheetComponent = ({
   onClearImageCache,
   onClearSevenTvCosmeticsCache,
   onReconnect,
-  onRefreshVideo,
-  onToggleChatDensity,
-  onToggleHighlightOwnMentions,
-  onToggleInlineReplyContext,
-  onToggleShowTimestamps,
-  onToggleShowUnreadJumpPill,
-  reconnectionAttempts,
-  preferenceFlags,
 }: SettingsSheetProps) => {
   const { t } = useTranslation(['chat', 'common']);
-  const {
-    chatDensity = 'comfortable',
-    highlightOwnMentions = true,
-    showInlineReplyContext = true,
-    showTimestamps = false,
-    showUnreadJumpPill = true,
-  } = preferenceFlags ?? {};
+  const chatDensity = usePreference('chatDensity');
+  const highlightOwnMentions = usePreference('highlightOwnMentions');
+  const showInlineReplyContext = usePreference('showInlineReplyContext');
+  const showTimestamps = usePreference('chatTimestamps');
+  const showUnreadJumpPill = usePreference('showUnreadJumpPill');
+  const updatePreferences = useUpdatePreferences();
   const { bottom: bottomInset } = useSafeAreaInsets();
 
   const dismissSheet = useCallback(() => {
@@ -72,9 +58,11 @@ const SettingsSheetComponent = ({
   }, [onDismiss]);
 
   const handleToggleDensity = useCallback(() => {
-    onToggleChatDensity?.();
+    updatePreferences({
+      chatDensity: chatDensity === 'compact' ? 'comfortable' : 'compact',
+    });
     dismissSheet();
-  }, [onToggleChatDensity, dismissSheet]);
+  }, [chatDensity, dismissSheet, updatePreferences]);
 
   const handleRefetchEmotes = useCallback(() => {
     onRefetchEmotes?.();
@@ -102,11 +90,6 @@ const SettingsSheetComponent = ({
     onReconnect?.();
     dismissSheet();
   }, [onReconnect, dismissSheet]);
-
-  const handleRefreshVideo = useCallback(() => {
-    onRefreshVideo?.();
-    dismissSheet();
-  }, [onRefreshVideo, dismissSheet]);
 
   const handleSyncToLive = useCallback(() => {
     requestLiveSync();
@@ -170,7 +153,9 @@ const SettingsSheetComponent = ({
                 color: ICON_TINT,
               }}
               value={showTimestamps}
-              onValueChange={value => onToggleShowTimestamps?.(value)}
+              onValueChange={value =>
+                updatePreferences({ chatTimestamps: value })
+              }
             />
             <SettingsToggleRow
               title={t('settingsSheet.highlightOwnMentions')}
@@ -180,7 +165,9 @@ const SettingsSheetComponent = ({
                 color: ICON_TINT,
               }}
               value={highlightOwnMentions}
-              onValueChange={value => onToggleHighlightOwnMentions?.(value)}
+              onValueChange={value =>
+                updatePreferences({ highlightOwnMentions: value })
+              }
             />
             <SettingsToggleRow
               title={t('settingsSheet.inlineReplyContext')}
@@ -190,7 +177,9 @@ const SettingsSheetComponent = ({
                 color: ICON_TINT,
               }}
               value={showInlineReplyContext}
-              onValueChange={value => onToggleInlineReplyContext?.(value)}
+              onValueChange={value =>
+                updatePreferences({ showInlineReplyContext: value })
+              }
             />
             <SettingsToggleRow
               title={t('settingsSheet.showJumpPill')}
@@ -200,7 +189,9 @@ const SettingsSheetComponent = ({
                 color: ICON_TINT,
               }}
               value={showUnreadJumpPill}
-              onValueChange={value => onToggleShowUnreadJumpPill?.(value)}
+              onValueChange={value =>
+                updatePreferences({ showUnreadJumpPill: value })
+              }
             />
           </SettingsSection>
 
@@ -270,26 +261,6 @@ const SettingsSheetComponent = ({
                 onPress={handleReconnect}
               />
             ) : null}
-            {onRefreshVideo ? (
-              <SettingsLinkRow
-                title={t('settingsSheet.refreshVideo')}
-                icon={{
-                  icon: 'video',
-                  androidIcon: 'videocam',
-                  color: ICON_TINT,
-                }}
-                onPress={handleRefreshVideo}
-              />
-            ) : null}
-            <SettingsLinkRow
-              title={t('settingsSheet.reconnectionAttempts')}
-              icon={{
-                icon: 'repeat',
-                androidIcon: 'repeat',
-                color: ICON_TINT,
-              }}
-              value={String(reconnectionAttempts ?? 0)}
-            />
           </SettingsSection>
 
           {hasStorage ? (

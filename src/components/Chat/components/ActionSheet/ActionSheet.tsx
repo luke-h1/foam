@@ -63,17 +63,17 @@ interface Props {
   onClose: () => void;
   username?: string;
   messagePreview?: ParsedPart[];
-  handleReply: () => void;
-  handleCopy: () => void;
-  handleHidePhrase?: () => void;
-  handleHideUser?: () => void;
-  handleHighlightUser?: () => void;
-  handlePinMessage?: () => void;
-  handleUpdatePinnedMessage?: () => void;
-  handleUnpinMessage?: () => void;
-  handleDeleteMessage?: () => void;
-  handleTimeoutUser?: () => void;
-  handleBanUser?: () => void;
+  onReply: () => void;
+  onCopy: () => void;
+  onHidePhrase?: () => void;
+  onHideUser?: () => void;
+  onHighlightUser?: () => void;
+  onPinMessage?: () => void;
+  onUpdatePinnedMessage?: () => void;
+  onUnpinMessage?: () => void;
+  onDeleteMessage?: () => void;
+  onTimeoutUser?: () => void;
+  onBanUser?: () => void;
   isUserHighlighted?: boolean;
   isPinnedMessage?: boolean;
   isPinnedMessageBusy?: boolean;
@@ -109,17 +109,17 @@ function ActionSheetComponent(props: Props) {
     onClose,
     username,
     messagePreview,
-    handleReply,
-    handleCopy,
-    handleHidePhrase,
-    handleHideUser,
-    handleHighlightUser,
-    handlePinMessage,
-    handleUpdatePinnedMessage,
-    handleUnpinMessage,
-    handleDeleteMessage,
-    handleTimeoutUser,
-    handleBanUser,
+    onReply,
+    onCopy,
+    onHidePhrase,
+    onHideUser,
+    onHighlightUser,
+    onPinMessage,
+    onUpdatePinnedMessage,
+    onUnpinMessage,
+    onDeleteMessage,
+    onTimeoutUser,
+    onBanUser,
     isUserHighlighted,
     isPinnedMessage,
     isPinnedMessageBusy,
@@ -136,7 +136,7 @@ function ActionSheetComponent(props: Props) {
         label: t('messageActions.copyMessage'),
         subtitle: t('messageActions.copyMessageSubtitle'),
         onPress: () => {
-          handleCopy();
+          onCopy();
           onClose();
         },
       },
@@ -146,7 +146,7 @@ function ActionSheetComponent(props: Props) {
         subtitle: t('messageActions.replySubtitle'),
         tone: 'accent',
         onPress: () => {
-          handleReply();
+          onReply();
           onClose();
         },
       },
@@ -155,7 +155,7 @@ function ActionSheetComponent(props: Props) {
         label: t('messageActions.hidePhrase'),
         subtitle: t('messageActions.hidePhraseSubtitle'),
         onPress: () => {
-          handleHidePhrase?.();
+          onHidePhrase?.();
           onClose();
         },
       },
@@ -167,7 +167,7 @@ function ActionSheetComponent(props: Props) {
         label: t('userActions.hideUser'),
         subtitle: t('userActions.hideUserSubtitle'),
         onPress: () => {
-          handleHideUser?.();
+          onHideUser?.();
           onClose();
         },
       });
@@ -182,7 +182,7 @@ function ActionSheetComponent(props: Props) {
           : t('userActions.highlightUserSubtitle'),
         tone: 'accent',
         onPress: () => {
-          handleHighlightUser?.();
+          onHighlightUser?.();
           onClose();
         },
       });
@@ -197,7 +197,7 @@ function ActionSheetComponent(props: Props) {
             subtitle: t('messageActions.refreshPinSubtitle'),
             tone: 'accent',
             onPress: () => {
-              handleUpdatePinnedMessage?.();
+              onUpdatePinnedMessage?.();
               onClose();
             },
           },
@@ -206,7 +206,7 @@ function ActionSheetComponent(props: Props) {
             label: t('messageActions.unpinMessage'),
             subtitle: t('messageActions.unpinMessageSubtitle'),
             onPress: () => {
-              handleUnpinMessage?.();
+              onUnpinMessage?.();
               onClose();
             },
           },
@@ -218,7 +218,7 @@ function ActionSheetComponent(props: Props) {
           subtitle: t('messageActions.pinMessageSubtitle'),
           tone: 'accent',
           onPress: () => {
-            handlePinMessage?.();
+            onPinMessage?.();
             onClose();
           },
         });
@@ -233,7 +233,7 @@ function ActionSheetComponent(props: Props) {
           subtitle: t('messageActions.deleteMessageSubtitle'),
           tone: 'danger',
           onPress: () => {
-            handleDeleteMessage?.();
+            onDeleteMessage?.();
             onClose();
           },
         });
@@ -247,7 +247,7 @@ function ActionSheetComponent(props: Props) {
             subtitle: t('userActions.timeoutUserSubtitle'),
             tone: 'warning',
             onPress: () => {
-              handleTimeoutUser?.();
+              onTimeoutUser?.();
               onClose();
             },
           },
@@ -257,7 +257,7 @@ function ActionSheetComponent(props: Props) {
             subtitle: t('userActions.banUserSubtitle'),
             tone: 'danger',
             onPress: () => {
-              handleBanUser?.();
+              onBanUser?.();
               onClose();
             },
           },

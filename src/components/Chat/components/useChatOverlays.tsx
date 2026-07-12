@@ -42,7 +42,6 @@ interface UseChatOverlaysParams {
   canModerateChat: boolean;
   channelId: string;
   currentUserId?: string;
-  disableEmoteAnimations: boolean;
   handleReply: (message: ChatMessageType<'usernotice'>) => void;
   hiddenUsers: string[];
   highlightedUsers: string[];
@@ -57,19 +56,9 @@ interface UseChatOverlaysParams {
   onRefreshPinnedMessage: (messageId: string) => void;
   onSettingsReconnect: () => void;
   onSettingsRefetchEmotes: () => void;
-  onToggleChatDensity: () => void;
-  onToggleHighlightOwnMentions: (value: boolean) => void;
-  onToggleInlineReplyContext: (value: boolean) => void;
-  onToggleShowTimestamps: (value: boolean) => void;
-  onToggleShowUnreadJumpPill: (value: boolean) => void;
   onUnpinPinnedMessage: () => void;
   pinnedMessageBusy: boolean;
   pinnedMessageId?: string;
-  showInlineReplyContext: boolean;
-  showTimestamps: boolean;
-  showUnreadJumpPill: boolean;
-  chatDensity: 'comfortable' | 'compact';
-  highlightOwnMentions: boolean;
   toggleHighlightedUser: (username?: string) => void;
 }
 
@@ -119,7 +108,6 @@ export function useChatOverlays({
   canModerateChat,
   channelId,
   currentUserId,
-  disableEmoteAnimations,
   handleReply,
   hiddenUsers,
   highlightedUsers,
@@ -134,19 +122,9 @@ export function useChatOverlays({
   onRefreshPinnedMessage,
   onSettingsReconnect,
   onSettingsRefetchEmotes,
-  onToggleChatDensity,
-  onToggleHighlightOwnMentions,
-  onToggleInlineReplyContext,
-  onToggleShowTimestamps,
-  onToggleShowUnreadJumpPill,
   onUnpinPinnedMessage,
   pinnedMessageBusy,
   pinnedMessageId,
-  showInlineReplyContext,
-  showTimestamps,
-  showUnreadJumpPill,
-  chatDensity,
-  highlightOwnMentions,
   toggleHighlightedUser,
 }: UseChatOverlaysParams): {
   openers: ChatOverlayOpeners;
@@ -593,16 +571,50 @@ export function useChatOverlays({
     [onInsertEmote, patchOverlay],
   );
 
+  const mountedSheets = useMemo(
+    () => ({
+      chatters: isChattersSheetMounted,
+      emote: isEmoteSheetMounted,
+      savedPhrases: isSavedPhrasesSheetMounted,
+      settings: isSettingsSheetMounted,
+    }),
+    [
+      isChattersSheetMounted,
+      isEmoteSheetMounted,
+      isSavedPhrasesSheetMounted,
+      isSettingsSheetMounted,
+    ],
+  );
+
+  const selectedMessageActions = useMemo(
+    () => ({
+      canDelete: canDeleteSelectedMessage,
+      canModerateUser: canModerateSelectedMessageUser,
+      canPin: canPinSelectedMessage,
+    }),
+    [
+      canDeleteSelectedMessage,
+      canModerateSelectedMessageUser,
+      canPinSelectedMessage,
+    ],
+  );
+
+  const selectedUserActions = useMemo(
+    () => ({
+      canBlock: canBlockSelectedUser,
+      canModerate: canModerateSelectedUser,
+    }),
+    [canBlockSelectedUser, canModerateSelectedUser],
+  );
+
   const overlaysElement = (
     <ChatOverlayLayer
-      canDeleteSelectedMessage={canDeleteSelectedMessage}
       canModerateChat={canModerateChat}
-      canModerateSelectedMessageUser={canModerateSelectedMessageUser}
-      canModerateSelectedUser={canModerateSelectedUser}
-      canPinSelectedMessage={canPinSelectedMessage}
-      disableEmoteAnimations={disableEmoteAnimations}
       highlightedUsers={highlightedUsers}
       hiddenUsers={hiddenUsers}
+      mountedSheets={mountedSheets}
+      selectedMessageActions={selectedMessageActions}
+      selectedUserActions={selectedUserActions}
       onActionSheetBanUser={handleActionSheetBanUser}
       onActionSheetCopy={handleActionSheetCopy}
       onActionSheetDeleteMessage={handleActionSheetDeleteMessage}
@@ -616,7 +628,6 @@ export function useChatOverlays({
       onActionSheetTimeoutUser={handleActionSheetTimeoutUser}
       onBanSelectedUser={handleBanSelectedUser}
       onWarnSelectedUser={handleWarnSelectedUser}
-      canBlockSelectedUser={canBlockSelectedUser}
       onBlockSelectedUser={handleBlockSelectedUser}
       onReportSelectedUser={handleReportSelectedUser}
       onClearChatCache={onClearChatCache}
@@ -636,11 +647,6 @@ export function useChatOverlays({
       onSettingsReconnect={onSettingsReconnect}
       onSettingsRefetchEmotes={onSettingsRefetchEmotes}
       onTimeoutSelectedUser={handleTimeoutSelectedUser}
-      onToggleChatDensity={onToggleChatDensity}
-      onToggleHighlightOwnMentions={onToggleHighlightOwnMentions}
-      onToggleInlineReplyContext={onToggleInlineReplyContext}
-      onToggleShowTimestamps={onToggleShowTimestamps}
-      onToggleShowUnreadJumpPill={onToggleShowUnreadJumpPill}
       selectedBadge={selectedBadge}
       selectedEmote={selectedEmote}
       selectedMessage={selectedMessage}
@@ -651,17 +657,8 @@ export function useChatOverlays({
       onSavedPhrasesSheetDidDismiss={handleSavedPhrasesSheetDidDismiss}
       onSelectChatter={handleSelectChatter}
       onSelectSavedPhrase={handleSelectSavedPhrase}
-      shouldRenderChattersSheet={isChattersSheetMounted}
-      shouldRenderSavedPhrasesSheet={isSavedPhrasesSheetMounted}
-      shouldRenderSettingsSheet={isSettingsSheetMounted}
-      shouldRenderEmoteSheet={isEmoteSheetMounted}
       pinnedMessageBusy={pinnedMessageBusy}
       pinnedMessageId={pinnedMessageId}
-      chatDensity={chatDensity}
-      highlightOwnMentions={highlightOwnMentions}
-      showInlineReplyContext={showInlineReplyContext}
-      showTimestamps={showTimestamps}
-      showUnreadJumpPill={showUnreadJumpPill}
     />
   );
 

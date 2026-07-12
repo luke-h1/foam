@@ -1,12 +1,3 @@
-export type ChatPreferenceFlags = {
-  chatDensity: 'comfortable' | 'compact';
-  disableEmoteAnimations: boolean;
-  highlightOwnMentions: boolean;
-  showInlineReplyContext: boolean;
-  showTimestamps: boolean;
-  showUnreadJumpPill: boolean;
-};
-
 export type ChatConnectionFlags = {
   isAuthenticated: boolean;
   isConnected: boolean;
@@ -18,7 +9,6 @@ export type ChatPaneFlags = {
   connected: boolean;
   shouldMaintainScrollAtEnd: boolean;
   showOnlyMentions: boolean;
-  showTimestamps: boolean;
 };
 
 export type ChatMessageDisplayFlags = {
@@ -43,14 +33,6 @@ export type UserActionVisibilityFlags = {
   isHidden: boolean;
   isHighlighted: boolean;
   visible: boolean;
-};
-
-export type SettingsSheetPreferenceFlags = {
-  chatDensity?: 'comfortable' | 'compact';
-  highlightOwnMentions?: boolean;
-  showInlineReplyContext?: boolean;
-  showTimestamps?: boolean;
-  showUnreadJumpPill?: boolean;
 };
 
 export type ChatRowDisplayFlags = {

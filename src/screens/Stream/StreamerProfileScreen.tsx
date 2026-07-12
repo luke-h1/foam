@@ -47,6 +47,11 @@ type ProfileTab = 'vods' | 'clips';
 type ProfileListItem =
   { kind: 'clip'; clip: TwitchClip } | { kind: 'vod'; vod: TwitchVideo };
 
+type ProfileListExtraData = {
+  activeTab: ProfileTab;
+  downloadingClipId?: string;
+};
+
 function getClipThumbnailUrl(clip: TwitchClip) {
   return clip.thumbnail_url
     .replace('-preview-480x272', '-preview-640x360')
@@ -497,13 +502,19 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   const vodFallbackImage =
     user?.offline_image_url ?? user?.profile_image_url ?? '';
 
+  const listExtraData = useMemo<ProfileListExtraData>(
+    () => ({ activeTab, downloadingClipId }),
+    [activeTab, downloadingClipId],
+  );
+
   const renderItem: ListRenderItem<ProfileListItem> = useCallback(
-    ({ item }) => {
+    ({ item, extraData }) => {
+      const listData: ProfileListExtraData | undefined = extraData;
       if (item.kind === 'clip') {
         return (
           <ClipCard
             clip={item.clip}
-            downloading={downloadingClipId === item.clip.id}
+            downloading={listData?.downloadingClipId === item.clip.id}
             onDownload={handleDownload}
             width={cardWidth}
           />
@@ -518,7 +529,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
         />
       );
     },
-    [cardWidth, downloadingClipId, handleDownload, vodFallbackImage],
+    [cardWidth, handleDownload, vodFallbackImage],
   );
 
   const isVods = activeTab === 'vods';
@@ -564,7 +575,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
       <FlashList<ProfileListItem>
         ref={listRef}
         data={items}
-        extraData={`${activeTab}-${downloadingClipId}`}
+        extraData={listExtraData}
         key={`${activeTab}-${columns}`}
         numColumns={columns}
         contentInsetAdjustmentBehavior='automatic'

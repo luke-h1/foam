@@ -11,7 +11,7 @@ import { theme } from '@app/styles/themes';
 import { formatDate } from '@app/utils/date-time/date';
 
 import { useEnsureSevenTvCosmetics } from '../hooks/useEnsureSevenTvCosmetics';
-import { PaintedUsername } from './ChatMessage/CosmeticUsername/CosmeticUsername';
+import { PaintedUsername } from './ChatMessage/CosmeticUsername/PaintedUsername';
 
 interface UserCardHeaderProps {
   fallbackColor?: string;

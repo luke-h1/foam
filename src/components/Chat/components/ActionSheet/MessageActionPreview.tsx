@@ -8,7 +8,7 @@ import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchC
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { lightenColor } from '@app/utils/color/lightenColor';
 
-import { PaintedUsername } from '../ChatMessage/CosmeticUsername/CosmeticUsername';
+import { PaintedUsername } from '../ChatMessage/CosmeticUsername/PaintedUsername';
 
 interface MessageActionPreviewProps {
   message: ParsedPart[];

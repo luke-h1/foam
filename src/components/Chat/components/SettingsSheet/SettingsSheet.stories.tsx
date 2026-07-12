@@ -27,7 +27,6 @@ const meta = {
   argTypes: {
     onRefetchEmotes: { action: 'onRefetchEmotes' },
     onReconnect: { action: 'onReconnect' },
-    onRefreshVideo: { action: 'onRefreshVideo' },
   },
   args: {
     isPresented: false,
@@ -74,36 +73,5 @@ function renderSheetStory(args: SettingsSheetProps) {
 }
 
 export const Default: Story = {
-  args: {
-    reconnectionAttempts: 0,
-  },
-  render: renderSheetStory,
-};
-
-export const WithLatency: Story = {
-  args: {
-    reconnectionAttempts: 0,
-  },
-  render: renderSheetStory,
-};
-
-export const WithReconnectionAttempts: Story = {
-  args: {
-    reconnectionAttempts: 3,
-  },
-  render: renderSheetStory,
-};
-
-export const AllData: Story = {
-  args: {
-    reconnectionAttempts: 5,
-  },
-  render: renderSheetStory,
-};
-
-export const NoLatency: Story = {
-  args: {
-    reconnectionAttempts: 2,
-  },
   render: renderSheetStory,
 };

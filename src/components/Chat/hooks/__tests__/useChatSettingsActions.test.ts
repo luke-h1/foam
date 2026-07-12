@@ -48,24 +48,16 @@ function renderSettingsActions() {
   const reprocessAllMessages = jest.fn();
   const scrollToBottom = jest.fn();
 
-  const updatePreferences = jest.fn((patch: Record<string, unknown>) => {
-    replacePreferences({
-      ...getPreferences(),
-      ...patch,
-    });
-  });
   const hook = renderHook(() =>
     useChatSettingsActions({
       channelId: 'channel-1',
       channelName: 'foam',
-      chatDensity: 'comfortable',
       forceFlush,
       joinChannel,
       partChannel,
       refetchEmotes,
       reprocessAllMessages,
       scrollToBottom,
-      updatePreferences,
     }),
   );
 
@@ -103,7 +95,7 @@ describe('useChatSettingsActions', () => {
     act(() => {
       hook.result.current.handleClearChatCache();
       hook.result.current.handleClearSevenTvCosmeticsCache();
-      hook.result.current.handleDebugClearImageCache();
+      hook.result.current.handleClearImageCache();
     });
 
     await waitFor(() => {
@@ -179,33 +171,5 @@ describe('useChatSettingsActions', () => {
     });
 
     expect(joinChannel).toHaveBeenCalledWith('foam');
-  });
-
-  test('preference toggles update the persisted chat settings', () => {
-    const { hook } = renderSettingsActions();
-
-    act(() => {
-      hook.result.current.handleToggleChatDensity();
-      hook.result.current.handleToggleHighlightOwnMentions(false);
-      hook.result.current.handleToggleInlineReplyContext(false);
-      hook.result.current.handleToggleShowTimestamps(false);
-      hook.result.current.handleToggleShowUnreadJumpPill(false);
-    });
-
-    const preferences = getPreferences();
-
-    expect({
-      chatDensity: preferences.chatDensity,
-      chatTimestamps: preferences.chatTimestamps,
-      highlightOwnMentions: preferences.highlightOwnMentions,
-      showInlineReplyContext: preferences.showInlineReplyContext,
-      showUnreadJumpPill: preferences.showUnreadJumpPill,
-    }).toEqual({
-      chatDensity: 'compact',
-      chatTimestamps: false,
-      highlightOwnMentions: false,
-      showInlineReplyContext: false,
-      showUnreadJumpPill: false,
-    });
   });
 });

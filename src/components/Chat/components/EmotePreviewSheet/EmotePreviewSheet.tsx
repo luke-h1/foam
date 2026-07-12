@@ -18,13 +18,13 @@ import { Image } from '@app/components/Image/Image';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useSaveImageToGallery } from '@app/hooks/useSaveImageToGallery';
+import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 
 interface Props {
-  disableAnimations?: boolean;
   visible: boolean;
   onClose: () => void;
   selectedEmote: ParsedPart<'emote'>;
@@ -47,7 +47,8 @@ function getEmoteName(emote: ParsedPart<'emote'>): string {
 function EmotePreviewSheetComponent(props: Props) {
   const { t } = useTranslation(['chat', 'common']);
   const { saveImage, isSaving } = useSaveImageToGallery();
-  const { visible, onClose, selectedEmote, disableAnimations = false } = props;
+  const { visible, onClose, selectedEmote } = props;
+  const disableAnimations = usePreference('disableEmoteAnimations');
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   const sheetWidth = Math.max(
     280,
