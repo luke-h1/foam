@@ -32,6 +32,7 @@ import { useChatPreferenceScreenState } from './useChatPreferenceScreenState';
 
 export function ChatPreferenceDefaultContent() {
   const {
+    animate,
     chatDelayIndex,
     chatMentionHaptics,
     deletedStyleIndex,
@@ -128,6 +129,17 @@ export function ChatPreferenceDefaultContent() {
             value={previewAlternatingRows}
           />
         </View>
+        <SettingsToggleRow
+          title={t('newMessageAnimation')}
+          subtitle={t('newMessageAnimationDescription')}
+          icon={{
+            icon: 'arrow.up.message',
+            androidIcon: 'animation',
+            color: theme.colorGrey,
+          }}
+          value={animate}
+          onValueChange={value => update({ animate: value })}
+        />
       </SettingsSection>
 
       <SettingsSection title={t('emojiStyle')}>

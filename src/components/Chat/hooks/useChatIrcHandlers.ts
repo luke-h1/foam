@@ -128,7 +128,11 @@ export function useChatIrcHandlers({
         broadcasterId: channelId,
         isAction,
       });
-      const messageWithParentColor = { ...baseMessage, parentColor };
+      const messageWithParentColor = {
+        ...baseMessage,
+        parentColor,
+        ...(countUnread ? {} : { isHistorical: true }),
+      };
 
       if (countUnread) {
         enqueueLiveChatMessage(messageWithParentColor, countUnread);
@@ -165,12 +169,15 @@ export function useChatIrcHandlers({
             login,
             rewardId,
             publish: () => {
-              const redemptionNotice = createUserNoticeMessage({
-                tags,
-                channelName,
-                text,
-                broadcasterId: channelId,
-              });
+              const redemptionNotice = {
+                ...createUserNoticeMessage({
+                  tags,
+                  channelName,
+                  text,
+                  broadcasterId: channelId,
+                }),
+                ...(countUnread ? {} : { isHistorical: true }),
+              };
               handleNewMessage(redemptionNotice, { countUnread });
             },
           });
@@ -178,12 +185,15 @@ export function useChatIrcHandlers({
         }
       }
 
-      const message = createUserNoticeMessage({
-        tags,
-        channelName,
-        text,
-        broadcasterId: channelId,
-      });
+      const message = {
+        ...createUserNoticeMessage({
+          tags,
+          channelName,
+          text,
+          broadcasterId: channelId,
+        }),
+        ...(countUnread ? {} : { isHistorical: true }),
+      };
 
       if (message.isAnnouncement || message.isHighlightedMessage) {
         const trimmedText = text.trimEnd();

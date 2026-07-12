@@ -135,6 +135,7 @@ const prepareMessageForStore = (
     ...message,
     id: messageKey,
     seq: nextMessageSeq,
+    committedAt: message.committedAt ?? Date.now(),
     ...(cachedSenderColor ? { cachedSenderColor } : {}),
     message: prepareMessagePartsForStore(
       message.message_id,

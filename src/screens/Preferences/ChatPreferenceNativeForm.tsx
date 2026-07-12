@@ -151,6 +151,12 @@ export function ChatPreferenceNativeForm() {
               value={preferences.showAlternatingChatRows}
             />,
           )}
+          <Toggle
+            label={t('newMessageAnimation')}
+            systemImage='arrow.up.message'
+            isOn={preferences.animate}
+            onIsOnChange={value => update({ animate: value })}
+          />
         </Section>
 
         <Section title={t('emojiStyle')}>

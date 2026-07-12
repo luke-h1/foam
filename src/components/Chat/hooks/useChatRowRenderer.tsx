@@ -1,6 +1,8 @@
 import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 import type { RefObject } from 'react';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 
+import { useLazyRef } from '@app/hooks/useLazyRef';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import {
   getSessionCacheString,
@@ -36,15 +38,20 @@ import {
 } from '../components/ChatMessage/rowVisibility';
 import { styles } from '../styles';
 import type { ChatRowDisplayFlags } from '../types/chatUiFlags';
+import { chatEntranceSpring } from '../util/chatEntranceSpring';
 import { getChatMessageListKey } from '../util/chatMessages/getChatMessageListKey';
 import { isRenderableChatMessage } from '../util/chatMessages/isRenderableChatMessage';
+import { shouldAnimateMessageEntrance } from '../util/chatMessages/shouldAnimateMessageEntrance';
 import { getChatRowItemType } from '../util/chatRowItemType';
 import { normaliseChatUsername } from '../util/chatUsernames/normaliseChatUsername';
 
 const chatRowKeyExtractor = (item: AnyChatMessageType) =>
   getChatMessageListKey(item);
 
+const messageRowEntering = chatEntranceSpring(FadeInUp);
+
 interface ChatRowPreferences {
+  animate: boolean;
   chatDensity: 'comfortable' | 'compact';
   chatFontScale?: ChatFontScale;
   chatTimestamps: boolean;
@@ -115,6 +122,7 @@ const ChatMessageRow = function ChatMessageRow({
   parseTextForEmotes,
 }: ChatMessageRowProps) {
   const {
+    animate,
     disableEmoteAnimations,
     fontScale,
     showAlternatingChatRows,
@@ -126,6 +134,10 @@ const ChatMessageRow = function ChatMessageRow({
     msg.message_id,
   );
   const rowVisibility = useRowVisibility();
+  // Decided once at mount; a row must not replay its entrance on re-render.
+  const animateEntranceRef = useLazyRef(
+    () => animate && shouldAnimateMessageEntrance(msg, Date.now()),
+  );
   const isAlternatingRow =
     showAlternatingChatRows && (msg.seq ?? index) % 2 === 1;
 
@@ -156,47 +168,55 @@ const ChatMessageRow = function ChatMessageRow({
     ],
   );
 
+  const row = (
+    <RichChatMessage
+      id={msg.id}
+      broadcasterId={channelId}
+      channel={msg.channel}
+      message={msg.message}
+      userstate={msg.userstate}
+      badges={msg.badges}
+      cachedSenderColor={
+        msg.cachedSenderColor ??
+        resolveCachedSenderColor(msg, getUserMessageColor)
+      }
+      message_id={msg.message_id}
+      message_nonce={msg.message_nonce}
+      sender={msg.sender}
+      isAction={msg.isAction}
+      style={styles.messageContainer}
+      parentDisplayName={msg.parentDisplayName}
+      parentColor={msg.parentColor}
+      replyDisplayName={msg.replyDisplayName}
+      replyBody={msg.replyBody}
+      onBadgePress={onBadgePress}
+      onMessageLongPress={onMessageLongPress}
+      onEmotePress={onEmotePress}
+      onUsernamePress={onUsernamePress}
+      getMentionColor={getMentionColor}
+      parseTextForEmotes={parseTextForEmotes}
+      currentUsername={currentUsername}
+      currentUsernameNormalized={currentUsernameNormalized}
+      density={chatDensity}
+      fontScale={fontScale}
+      customHighlights={customHighlights}
+      highlightedUserSet={highlightedUserSet}
+      messageDisplay={messageDisplay}
+      onReplyContextPress={onReplyContextPress}
+      // @ts-expect-error - notice_tags union type not narrowing correctly
+      notice_tags={
+        'notice_tags' in msg && msg.notice_tags ? msg.notice_tags : undefined
+      }
+    />
+  );
+
   return (
     <RowVisibilityContext.Provider value={rowVisibility}>
-      <RichChatMessage
-        id={msg.id}
-        broadcasterId={channelId}
-        channel={msg.channel}
-        message={msg.message}
-        userstate={msg.userstate}
-        badges={msg.badges}
-        cachedSenderColor={
-          msg.cachedSenderColor ??
-          resolveCachedSenderColor(msg, getUserMessageColor)
-        }
-        message_id={msg.message_id}
-        message_nonce={msg.message_nonce}
-        sender={msg.sender}
-        isAction={msg.isAction}
-        style={styles.messageContainer}
-        parentDisplayName={msg.parentDisplayName}
-        parentColor={msg.parentColor}
-        replyDisplayName={msg.replyDisplayName}
-        replyBody={msg.replyBody}
-        onBadgePress={onBadgePress}
-        onMessageLongPress={onMessageLongPress}
-        onEmotePress={onEmotePress}
-        onUsernamePress={onUsernamePress}
-        getMentionColor={getMentionColor}
-        parseTextForEmotes={parseTextForEmotes}
-        currentUsername={currentUsername}
-        currentUsernameNormalized={currentUsernameNormalized}
-        density={chatDensity}
-        fontScale={fontScale}
-        customHighlights={customHighlights}
-        highlightedUserSet={highlightedUserSet}
-        messageDisplay={messageDisplay}
-        onReplyContextPress={onReplyContextPress}
-        // @ts-expect-error - notice_tags union type not narrowing correctly
-        notice_tags={
-          'notice_tags' in msg && msg.notice_tags ? msg.notice_tags : undefined
-        }
-      />
+      {animateEntranceRef.current ? (
+        <Animated.View entering={messageRowEntering}>{row}</Animated.View>
+      ) : (
+        row
+      )}
     </RowVisibilityContext.Provider>
   );
 };
@@ -297,6 +317,7 @@ export function useChatRowRenderer({
   );
   const displayFlags = useMemo(
     (): ChatRowDisplayFlags => ({
+      animate: preferences.animate,
       disableEmoteAnimations: preferences.disableEmoteAnimations,
       fontScale: preferences.chatFontScale,
       showAlternatingChatRows: preferences.showAlternatingChatRows,
@@ -304,6 +325,7 @@ export function useChatRowRenderer({
       showTimestamps: preferences.chatTimestamps,
     }),
     [
+      preferences.animate,
       preferences.disableEmoteAnimations,
       preferences.chatFontScale,
       preferences.showAlternatingChatRows,
@@ -326,6 +348,7 @@ export function useChatRowRenderer({
   // to the revision themselves (MentionSpan), so only those spans re-render.
   const messageListExtraData = useMemo(
     () => ({
+      animate: preferences.animate,
       chatDensity: preferences.chatDensity,
       chatFontScale: preferences.chatFontScale,
       currentUsernameNormalized,
@@ -340,6 +363,7 @@ export function useChatRowRenderer({
       currentUsernameNormalized,
       customHighlightsKey,
       highlightedUsers,
+      preferences.animate,
       preferences.chatDensity,
       preferences.chatFontScale,
       preferences.disableEmoteAnimations,

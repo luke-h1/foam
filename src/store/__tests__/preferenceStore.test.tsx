@@ -13,6 +13,7 @@ const basePreferences = {
   streamListLayout: 'compact',
   chatDensity: 'comfortable',
   showAlternatingChatRows: false,
+  animate: true,
   chatTimestamps: true,
   highlightOwnMentions: true,
   showInlineReplyContext: true,
