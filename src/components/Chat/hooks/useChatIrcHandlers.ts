@@ -38,6 +38,9 @@ import {
   type RoomStateUpdate,
 } from '../util/roomStateTracker';
 
+const historicalFlag = (countUnread: boolean) =>
+  countUnread ? {} : { isHistorical: true as const };
+
 interface UseChatIrcHandlersOptions {
   channelId: string;
   channelName: string;
@@ -131,7 +134,7 @@ export function useChatIrcHandlers({
       const messageWithParentColor = {
         ...baseMessage,
         parentColor,
-        ...(countUnread ? {} : { isHistorical: true }),
+        ...historicalFlag(countUnread),
       };
 
       if (countUnread) {
@@ -176,7 +179,7 @@ export function useChatIrcHandlers({
                   text,
                   broadcasterId: channelId,
                 }),
-                ...(countUnread ? {} : { isHistorical: true }),
+                ...historicalFlag(countUnread),
               };
               handleNewMessage(redemptionNotice, { countUnread });
             },
@@ -192,7 +195,7 @@ export function useChatIrcHandlers({
           text,
           broadcasterId: channelId,
         }),
-        ...(countUnread ? {} : { isHistorical: true }),
+        ...historicalFlag(countUnread),
       };
 
       if (message.isAnnouncement || message.isHighlightedMessage) {

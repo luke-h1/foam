@@ -72,8 +72,9 @@ export interface ChatMessageType<
    */
   committedAt?: number;
   /**
-   * Set on messages replayed from the recent-messages history API so they
-   * skip live-arrival treatment such as the slide-in entrance.
+   * Set on messages replayed from the recent-messages history API or restored
+   * from the persisted cache so they skip live-arrival treatment such as the
+   * slide-in entrance.
    */
   isHistorical?: boolean;
   userstate: UserStateTags;

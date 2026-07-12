@@ -205,6 +205,31 @@ describe('chatStore messages', () => {
     ).toEqual(['msg-1', 'msg-2']);
   });
 
+  test('restoreRecentMessagesForChannel marks restored messages as historical', () => {
+    chatStore$.recentMessagesByChannel.set({
+      'channel-1': [
+        createMessage('msg-1', 'nonce-1', 'persisted without committedAt'),
+        {
+          ...createMessage('msg-2', 'nonce-2', 'persisted live'),
+          committedAt: 123,
+        },
+      ],
+    });
+
+    const restoredCount = restoreRecentMessagesForChannel('channel-1');
+
+    expect(restoredCount).toBe(2);
+    expect(
+      chatStore$.messages.peek().map(message => ({
+        id: message.message_id,
+        isHistorical: message.isHistorical,
+      })),
+    ).toEqual([
+      { id: 'msg-1', isHistorical: true },
+      { id: 'msg-2', isHistorical: true },
+    ]);
+  });
+
   test('clearMessages clears sender color indexes', () => {
     addMessage(createMessage('msg-1', 'nonce-1', 'first'));
 

@@ -848,7 +848,9 @@ export const restoreRecentMessagesForChannel = (channelId: string): number => {
     messageKeyOrder.push(key);
   });
 
-  const storedMessages = recentMessages.map(prepareMessageForStore);
+  const storedMessages = recentMessages.map(message =>
+    prepareMessageForStore({ ...message, isHistorical: true }),
+  );
   rebuildMessageIndexes(storedMessages);
   chatStore$.messages.set(storedMessages);
 
