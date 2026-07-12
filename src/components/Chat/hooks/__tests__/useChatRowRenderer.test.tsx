@@ -158,6 +158,7 @@ function renderRowRenderer() {
       onMessageLongPress,
       onUsernamePress,
       preferences: {
+        animate: true,
         chatDensity: 'compact',
         chatTimestamps: true,
         disableEmoteAnimations: true,
@@ -218,6 +219,7 @@ describe('useChatRowRenderer', () => {
       'user_chat-reply',
     );
     expect(hook.result.current.messageListExtraData).toEqual({
+      animate: true,
       chatDensity: 'compact',
       chatFontScale: undefined,
       currentUsernameNormalized: 'viewer',

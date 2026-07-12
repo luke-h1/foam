@@ -66,6 +66,17 @@ export interface ChatMessageType<
    * lifetime.
    */
   seq?: number;
+  /**
+   * Wall-clock ms when the message was committed to the store. Preserved on
+   * cache restore so replayed rows never read as freshly arrived.
+   */
+  committedAt?: number;
+  /**
+   * Set on messages replayed from the recent-messages history API or restored
+   * from the persisted cache so they skip live-arrival treatment such as the
+   * slide-in entrance.
+   */
+  isHistorical?: boolean;
   userstate: UserStateTags;
   message: ParsedPart[];
   badges: SanitisedBadgeSet[];

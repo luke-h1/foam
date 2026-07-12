@@ -38,6 +38,9 @@ import {
   type RoomStateUpdate,
 } from '../util/roomStateTracker';
 
+const historicalFlag = (countUnread: boolean) =>
+  countUnread ? {} : { isHistorical: true as const };
+
 interface UseChatIrcHandlersOptions {
   channelId: string;
   channelName: string;
@@ -128,7 +131,11 @@ export function useChatIrcHandlers({
         broadcasterId: channelId,
         isAction,
       });
-      const messageWithParentColor = { ...baseMessage, parentColor };
+      const messageWithParentColor = {
+        ...baseMessage,
+        parentColor,
+        ...historicalFlag(countUnread),
+      };
 
       if (countUnread) {
         enqueueLiveChatMessage(messageWithParentColor, countUnread);
@@ -165,12 +172,15 @@ export function useChatIrcHandlers({
             login,
             rewardId,
             publish: () => {
-              const redemptionNotice = createUserNoticeMessage({
-                tags,
-                channelName,
-                text,
-                broadcasterId: channelId,
-              });
+              const redemptionNotice = {
+                ...createUserNoticeMessage({
+                  tags,
+                  channelName,
+                  text,
+                  broadcasterId: channelId,
+                }),
+                ...historicalFlag(countUnread),
+              };
               handleNewMessage(redemptionNotice, { countUnread });
             },
           });
@@ -178,12 +188,15 @@ export function useChatIrcHandlers({
         }
       }
 
-      const message = createUserNoticeMessage({
-        tags,
-        channelName,
-        text,
-        broadcasterId: channelId,
-      });
+      const message = {
+        ...createUserNoticeMessage({
+          tags,
+          channelName,
+          text,
+          broadcasterId: channelId,
+        }),
+        ...historicalFlag(countUnread),
+      };
 
       if (message.isAnnouncement || message.isHighlightedMessage) {
         const trimmedText = text.trimEnd();

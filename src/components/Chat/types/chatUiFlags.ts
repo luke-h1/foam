@@ -36,6 +36,7 @@ export type UserActionVisibilityFlags = {
 };
 
 export type ChatRowDisplayFlags = {
+  animate: boolean;
   disableEmoteAnimations: boolean;
   fontScale?: 'small' | 'default' | 'large';
   showAlternatingChatRows: boolean;

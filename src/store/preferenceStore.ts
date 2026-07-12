@@ -37,6 +37,10 @@ export interface Preferences {
   streamListLayout: 'compact' | 'media';
   chatDensity: 'comfortable' | 'compact';
   showAlternatingChatRows: boolean;
+  /**
+   * Slide-in animation for new chat messages.
+   */
+  animate: boolean;
   chatTimestamps: boolean;
   highlightOwnMentions: boolean;
   showInlineReplyContext: boolean;
@@ -100,6 +104,7 @@ export const preferencesSchema = z.object({
   streamListLayout: z.enum(['compact', 'media']),
   chatDensity: z.enum(['comfortable', 'compact']),
   showAlternatingChatRows: z.boolean(),
+  animate: z.boolean(),
   chatTimestamps: z.boolean(),
   highlightOwnMentions: z.boolean(),
   showInlineReplyContext: z.boolean(),
@@ -147,6 +152,7 @@ export const initialPreferences: Preferences = {
   streamListLayout: 'compact',
   chatDensity: 'comfortable',
   showAlternatingChatRows: false,
+  animate: true,
   chatTimestamps: false,
   highlightOwnMentions: true,
   showInlineReplyContext: true,
@@ -253,6 +259,7 @@ export type EmoteRenderPreferences = Pick<
 export type ChatRenderPreferences = EmoteRenderPreferences &
   Pick<
     Preferences,
+    | 'animate'
     | 'chatDensity'
     | 'chatFontScale'
     | 'chatTimestamps'
@@ -287,6 +294,7 @@ export function useChatRenderPreferences(): ChatRenderPreferences {
   return useSelector(
     () =>
       ({
+        animate: preferences$.animate.get(),
         chatDensity: preferences$.chatDensity.get(),
         chatFontScale: preferences$.chatFontScale.get(),
         chatTimestamps: preferences$.chatTimestamps.get(),

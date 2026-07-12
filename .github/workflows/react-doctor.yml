@@ -22,7 +22,9 @@ jobs:
       - name: Run React Doctor
         uses: millionco/react-doctor@b612664043a9be414166e3c6a69b355e39a8dcf4 # v1.1.1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          diff: ${{ github.base_ref }}
           fail-on: error
           annotations: true
+          # 0.7.5/0.7.6 exit 0 without writing the JSON report on ubuntu
+          # runners, failing the job (millionco/react-doctor#1183). Pinned to
+          # the last good release; bump once a fixed stable version ships.
+          version: 0.7.4

@@ -690,6 +690,9 @@ const en = {
     fontLarge: 'Large',
     alternatingRows: 'Alternating Rows',
     alternatingRowsDescription: 'Add subtle striping between chat lines',
+    newMessageAnimation: 'New Message Animation',
+    newMessageAnimationDescription:
+      'Slide new messages into view as they arrive',
     emojiStyle: 'Emoji Style',
     emojiSet: 'Emoji Set',
     emojiSetDescription: 'Changes emoji images in existing chat messages',

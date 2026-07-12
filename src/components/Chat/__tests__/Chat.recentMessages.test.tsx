@@ -361,6 +361,7 @@ const setPreferences = (showRecentMessages = true) => {
     streamListLayout: 'compact',
     chatDensity: 'compact',
     showAlternatingChatRows: false,
+    animate: true,
     chatTimestamps: true,
     disableEmoteAnimations: false,
     disableChat: false,
