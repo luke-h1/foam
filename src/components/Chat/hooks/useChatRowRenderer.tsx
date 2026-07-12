@@ -1,8 +1,7 @@
-import { useCallback, useLayoutEffect, useMemo, useRef } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
-import { useLazyRef } from '@app/hooks/useLazyRef';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import {
   getSessionCacheString,
@@ -135,7 +134,7 @@ const ChatMessageRow = function ChatMessageRow({
   );
   const rowVisibility = useRowVisibility();
   // Decided once at mount; a row must not replay its entrance on re-render.
-  const animateEntranceRef = useLazyRef(
+  const [animateEntrance] = useState(
     () => animate && shouldAnimateMessageEntrance(msg, Date.now()),
   );
   const isAlternatingRow =
@@ -212,7 +211,7 @@ const ChatMessageRow = function ChatMessageRow({
 
   return (
     <RowVisibilityContext.Provider value={rowVisibility}>
-      {animateEntranceRef.current ? (
+      {animateEntrance ? (
         <Animated.View entering={messageRowEntering}>{row}</Animated.View>
       ) : (
         row
