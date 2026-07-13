@@ -25,12 +25,12 @@ function requireValue<T>(value: T | undefined, message: string): T {
 }
 
 const sevenTvBadgeFallback: SanitisedBadgeSet = {
-  id: 'preview-7tv-badge',
+  id: '62f99d0ce46eb00e438a6984',
   provider: '7tv',
   set: 'preview-7tv',
   title: '7TV Supporter',
   type: '7TV Badge',
-  url: 'https://cdn.7tv.app/emote/01F5PA9D3000034VRANA2SYVDP/4x.avif',
+  url: 'https://cdn.7tv.app/badge/62f99d0ce46eb00e438a6984/4x.webp',
 };
 
 // BTTV badge previews have no runtime source or existing fixture in the app yet.

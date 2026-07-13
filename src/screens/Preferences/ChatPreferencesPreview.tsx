@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { ReactNode } from 'react';
 
+import { EmoteRenderer } from '@app/components/Chat/components/ChatMessage/renderers/EmoteRenderer';
 import { RichChatMessage } from '@app/components/Chat/components/ChatMessage/RichChatMessage';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
@@ -12,6 +13,7 @@ import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { type SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { type ParsedPart } from '@app/utils/chat/parsedPart';
+import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 
 import { chatPreferencePreviewFixtures } from './chatPreferencePreviewFixtures';
@@ -228,10 +230,12 @@ export const ChatPreferencePreview = memo(function ChatPreferencePreview(
 
     case 'emoteAnimations': {
       return (
-        <ChatPreviewSurface
-          messages={[previewMessages.emoteAnimations]}
-          settings={{ disableEmoteAnimations: value }}
+        <PreviewEmoteLine
+          disableAnimations={value}
+          parts={previewMessages.emoteAnimations.message}
           testID='chat-preference-preview-emote-animations'
+          username='EmoteFan'
+          usernameColor={theme.color.chatSample.amber}
         />
       );
     }
@@ -347,6 +351,61 @@ const ChatPreviewSurface = function ChatPreviewSurface({
   );
 };
 
+/**
+ * Renders `username: text [emote] text` with plain primitives. The full
+ * RichChatMessage flex body collapses its standalone text nodes to a few pixels
+ * inside the RNHostView-embedded SwiftUI form, so the words vanish; EmoteRenderer
+ * still measures correctly and keeps the animation toggle for the emote parts.
+ */
+const PreviewEmoteLine = function PreviewEmoteLine({
+  disableAnimations = false,
+  parts,
+  testID,
+  username,
+  usernameColor,
+}: {
+  disableAnimations?: boolean;
+  parts: ParsedPart[];
+  testID: string;
+  username: string;
+  usernameColor: string;
+}) {
+  return (
+    <PreviewCard testID={testID}>
+      <View style={styles.providerPreviewSurface} pointerEvents='none'>
+        <View style={styles.providerEmoteRow}>
+          <Text style={{ color: usernameColor }} type='caption' weight='bold'>
+            {username}:
+          </Text>
+          {parts.map(part => {
+            if (part.type === 'emote') {
+              return (
+                <EmoteRenderer
+                  key={`emote-${part.name}`}
+                  disableAnimations={disableAnimations}
+                  part={part}
+                  targetSize={24}
+                />
+              );
+            }
+
+            const content = getParsedPartStringContent(part).trim();
+            if (!content) {
+              return null;
+            }
+
+            return (
+              <Text key={`text-${content}`} color='gray' type='caption'>
+                {content}
+              </Text>
+            );
+          })}
+        </View>
+      </View>
+    </PreviewCard>
+  );
+};
+
 const ProviderAssetPreview = function ProviderAssetPreview({
   enabled,
   provider,
@@ -359,6 +418,18 @@ const ProviderAssetPreview = function ProviderAssetPreview({
   variant: 'badges' | 'emotes';
 }) {
   const sample = getProviderPreviewSample(provider);
+
+  if (variant === 'emotes' && enabled && sample.emotes.length > 0) {
+    return (
+      <PreviewEmoteLine
+        parts={buildProviderEmoteParts(provider, sample.emotes)}
+        testID={testID}
+        username='username'
+        usernameColor={getProviderPreviewColor(provider)}
+      />
+    );
+  }
+
   const message =
     variant === 'emotes'
       ? createPreviewMessage({
@@ -627,6 +698,14 @@ const styles = StyleSheet.create({
   previewStatePillText: {
     color: theme.colorWhite,
     fontSize: theme.fontSize12,
+  },
+  providerEmoteRow: {
+    alignItems: 'center',
+    columnGap: theme.space4,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: theme.space12,
+    rowGap: theme.space2,
   },
   providerPreviewSurface: {
     backgroundColor: theme.color.backgroundSecondary.dark,
