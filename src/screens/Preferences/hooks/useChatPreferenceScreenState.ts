@@ -25,7 +25,7 @@ import {
   SCROLLBACK_OPTIONS,
   type SegmentedControlChangeEvent,
   TIMESTAMP_FORMAT_OPTIONS,
-} from './chatPreferenceTypes';
+} from '../types/chatPreferenceTypes';
 
 function samePreviewValues<T extends object>(
   left: T,
