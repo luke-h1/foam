@@ -1,6 +1,7 @@
 import { type RefObject, useCallback, useRef } from 'react';
 import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   Host,
@@ -297,6 +298,7 @@ function NativeBlockedUsersList({
   onUnblockDirect: (userId: string) => void;
 }) {
   const { t } = useTranslation('preferences');
+  const insets = useSafeAreaInsets();
 
   const handleDelete = (indices: number[]) => {
     for (const index of indices) {
@@ -308,7 +310,10 @@ function NativeBlockedUsersList({
   };
 
   return (
-    <Host style={styles.content} colorScheme='dark'>
+    <Host
+      style={[styles.content, { paddingBottom: insets.bottom }]}
+      colorScheme='dark'
+    >
       <List
         modifiers={[
           listStyle('insetGrouped'),
