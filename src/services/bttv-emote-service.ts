@@ -6,6 +6,7 @@ import type {
 } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
+import { ApiError } from './api/Client';
 import { bttvCachedApi } from './api/clients';
 import { buildSanitisedEmote } from './emote-provider';
 
@@ -24,6 +25,18 @@ interface BttvChannelEmoteSet {
    * Usually this is an empty array for most users
    */
   sharedEmotes: BttvEmote[];
+}
+
+/**
+ * BTTV returns a 404 "user not found" for channels that have never configured
+ * BTTV; that is a benign empty result, not a failure worth surfacing in chat.
+ */
+function isUserNotFoundError(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    error.status === 404 &&
+    error.message.includes('user not found')
+  );
 }
 
 // BTTV zero-width emotes have no flag in the API; this is the hardcoded list
@@ -104,9 +117,17 @@ export const bttvEmoteService = {
   getSanitisedChannelEmotes: async (
     twitchChannelId: string,
   ): Promise<BttvSanitisedEmote[]> => {
-    const result = await bttvCachedApi.get<BttvChannelEmoteSet>(
-      `/users/twitch/${twitchChannelId}`,
-    );
+    let result: BttvChannelEmoteSet;
+    try {
+      result = await bttvCachedApi.get<BttvChannelEmoteSet>(
+        `/users/twitch/${twitchChannelId}`,
+      );
+    } catch (error) {
+      if (isUserNotFoundError(error)) {
+        return [];
+      }
+      throw error;
+    }
 
     const sharedEmotes =
       result.sharedEmotes.map<BttvSanitisedEmote>(getBttvImageVariants);

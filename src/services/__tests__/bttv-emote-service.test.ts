@@ -3,6 +3,7 @@ import type { BttvEmote } from '@app/types/bttv/emote';
 import type { BttvSanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
+import { ApiError } from '../api/Client';
 import { bttvCachedApi } from '../api/clients';
 import { bttvEmoteService } from '../bttv-emote-service';
 
@@ -122,6 +123,24 @@ describe('bttvEmoteService', () => {
       { id: 'emote2', creator: null },
     ]);
     expect(result.map(emote => emote.site)).toEqual(['BTTV', 'BTTV']);
+  });
+
+  test('getSanitisedChannelEmotes returns an empty list when the channel has no BTTV account', async () => {
+    api.get.mockRejectedValue(
+      new ApiError('{"message":"user not found"}', 404, 'BTTVApiError'),
+    );
+
+    const result = await bttvEmoteService.getSanitisedChannelEmotes('999');
+
+    expect(result).toEqual([]);
+  });
+
+  test('getSanitisedChannelEmotes rethrows a 404 that is not a "user not found" error', async () => {
+    api.get.mockRejectedValue(new ApiError('Not Found', 404, 'BTTVApiError'));
+
+    await expect(
+      bttvEmoteService.getSanitisedChannelEmotes('999'),
+    ).rejects.toThrow('Not Found');
   });
 
   test('getSanitisedGlobalBadges maps badges and skips entries missing badge data', async () => {

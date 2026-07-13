@@ -255,15 +255,16 @@ export function createApiClient({
         }
       }
 
-      // FFZ returns 404 "No such room" for channels that have never configured
-      // FFZ; it's a benign empty result the caller handles, so don't log it (and
-      // don't forward it to Sentry).
-      const isExpectedFfzNoRoom =
-        service === 'ffz' &&
+      // FFZ returns 404 "No such room" and BTTV returns 404 "user not found"
+      // for channels that have never configured that provider; both are benign
+      // empty results the caller handles, so don't log them (and don't forward
+      // them to Sentry).
+      const isExpectedMissingChannel =
         response.status === 404 &&
-        body.includes('No such room');
+        ((service === 'ffz' && body.includes('No such room')) ||
+          (service === 'bttv' && body.includes('user not found')));
 
-      if (!isExpectedFfzNoRoom) {
+      if (!isExpectedMissingChannel) {
         const logFailure = response.status >= 500 ? log.error : log.warn;
         logFailure(`${method} ${path} ${response.status}`, {
           name: errorName,

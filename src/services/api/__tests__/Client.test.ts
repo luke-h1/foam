@@ -234,6 +234,37 @@ describe('createApiClient', () => {
     expect(jest.mocked(logger.ffz.warn)).toHaveBeenCalledTimes(1);
   });
 
+  test('does not log the benign BTTV "user not found" 404', async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({ message: 'user not found' }, 404),
+    );
+    const client = createApiClient({
+      baseURL: 'https://api.betterttv.net/3/cached',
+      logPrefix: 'bttv',
+    });
+
+    await expect(client.get('/users/twitch/999')).rejects.toBeInstanceOf(
+      ApiError,
+    );
+
+    expect(jest.mocked(logger.bttv.warn)).not.toHaveBeenCalled();
+    expect(jest.mocked(logger.bttv.error)).not.toHaveBeenCalled();
+  });
+
+  test('still logs other BTTV 404s that are not "user not found"', async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({ message: 'Not Found' }, 404),
+    );
+    const client = createApiClient({
+      baseURL: 'https://api.betterttv.net/3/cached',
+      logPrefix: 'bttv',
+    });
+
+    await expect(client.get('/emotes/global')).rejects.toBeInstanceOf(ApiError);
+
+    expect(jest.mocked(logger.bttv.warn)).toHaveBeenCalledTimes(1);
+  });
+
   test('logs 5xx failures at error level', async () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({ message: 'boom' }, 500));
     const client = createApiClient({ baseURL: 'https://api.test/helix' });
