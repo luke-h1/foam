@@ -1,9 +1,12 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useRef } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
+import {
+  BottomSheet,
+  type BottomSheetHandle,
+} from '@app/components/BottomSheet/BottomSheet';
 import {
   SettingsLinkRow,
   SettingsSection,
@@ -53,10 +56,11 @@ const SettingsSheetComponent = ({
   const showJoinPartMessages = usePreference('showJoinPartMessages');
   const updatePreferences = useUpdatePreferences();
   const { bottom: bottomInset } = useSafeAreaInsets();
+  const sheetRef = useRef<BottomSheetHandle>(null);
 
   const dismissSheet = useCallback(() => {
-    onDismiss();
-  }, [onDismiss]);
+    sheetRef.current?.requestClose();
+  }, []);
 
   const handleToggleDensity = useCallback(() => {
     updatePreferences({
@@ -106,6 +110,7 @@ const SettingsSheetComponent = ({
 
   return (
     <BottomSheet
+      ref={sheetRef}
       isPresented={isPresented}
       onDismiss={onDismiss}
       showDragIndicator

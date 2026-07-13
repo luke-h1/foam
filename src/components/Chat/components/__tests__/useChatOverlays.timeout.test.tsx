@@ -13,6 +13,8 @@ import { type ChatOverlayOpeners, useChatOverlays } from '../useChatOverlays';
 interface CapturedLayerProps {
   onActionSheetTimeoutUser: () => void;
   onBanSelectedUser: () => void;
+  onCloseSelectedMessage: () => void;
+  onCloseSelectedUser: () => void;
   onTimeoutSelectedUser: () => void;
   selectedMessage: { username?: string } | null;
   selectedUser: { username: string } | null;
@@ -141,6 +143,14 @@ describe('useChatOverlays moderation targets', () => {
       'channel-1',
       'mod-1',
     ]);
+    expect(mockLayerProps?.selectedUser).toEqual<UsernamePressData>({
+      login: 'viewer',
+      username: 'Viewer',
+    });
+
+    act(() => {
+      mockLayerProps?.onCloseSelectedUser();
+    });
     expect(mockLayerProps?.selectedUser).toBeNull();
   });
 
@@ -158,7 +168,7 @@ describe('useChatOverlays moderation targets', () => {
     });
   });
 
-  test('timeout from the message sheet targets the author and clears the message selection', () => {
+  test('timeout from the message sheet targets the author; selection clears on sheet dismiss', () => {
     let openers: ChatOverlayOpeners | undefined;
     render(
       <Harness
@@ -201,6 +211,11 @@ describe('useChatOverlays moderation targets', () => {
       'channel-1',
       'mod-1',
     ]);
+    expect(mockLayerProps?.selectedMessage).not.toBeNull();
+
+    act(() => {
+      mockLayerProps?.onCloseSelectedMessage();
+    });
     expect(mockLayerProps?.selectedMessage).toBeNull();
   });
 
@@ -218,6 +233,14 @@ describe('useChatOverlays moderation targets', () => {
       'channel-1',
       'mod-1',
     ]);
+    expect(mockLayerProps?.selectedUser).toEqual<UsernamePressData>({
+      login: 'viewer',
+      username: 'Viewer',
+    });
+
+    act(() => {
+      mockLayerProps?.onCloseSelectedUser();
+    });
     expect(mockLayerProps?.selectedUser).toBeNull();
   });
 });

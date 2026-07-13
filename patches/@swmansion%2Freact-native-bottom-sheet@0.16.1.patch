@@ -1,0 +1,540 @@
+diff --git a/android/src/main/java/com/swmansion/reactnativebottomsheet/BottomSheetHostView.kt b/android/src/main/java/com/swmansion/reactnativebottomsheet/BottomSheetHostView.kt
+index f0a8b77d634ae049553bb075fc4210764e8c3f4a..6bfbbfbf5184de17ab449c7a7d1f092c4de2ae99 100644
+--- a/android/src/main/java/com/swmansion/reactnativebottomsheet/BottomSheetHostView.kt
++++ b/android/src/main/java/com/swmansion/reactnativebottomsheet/BottomSheetHostView.kt
+@@ -3,12 +3,14 @@ package com.swmansion.reactnativebottomsheet
+ import android.content.Context
+ import android.graphics.Canvas
+ import android.graphics.Color
++import android.graphics.Outline
+ import android.graphics.Paint
+ import android.view.MotionEvent
+ import android.view.VelocityTracker
+ import android.view.View
+ import android.view.ViewConfiguration
+ import android.view.ViewGroup
++import android.view.ViewOutlineProvider
+ import android.view.ViewTreeObserver
+ import android.view.WindowInsets
+ import android.widget.FrameLayout
+@@ -320,10 +322,13 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context) {
+ 
+   private fun layoutSheetContainer(viewWidth: Int, viewHeight: Int) {
+     val maxHeight = resolvedMaxDetentHeight(viewHeight)
+-    val containerTop = (viewHeight - maxHeight).toInt()
++    // Anchor the container bottom at the floating edge (lifted by bottomInsetPx),
++    // not the raw view bottom.
++    val containerTop = (viewHeight - bottomInsetPx - maxHeight).toInt()
+     lastAppliedMaxDetentHeight = maxHeight
+     sheetContainer.layout(0, containerTop, viewWidth, containerTop + maxHeight.toInt())
+     layoutSheetChildren(viewWidth, maxHeight.toInt())
++    if (bottomInsetPx > 0f) invalidateOutline()
+   }
+ 
+   // MARK: - Prop setters
+@@ -747,6 +752,61 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context) {
+       recomputeNativeGeometry()
+     }
+ 
++  // Floats the sheet up off the bottom edge by this many px — a detached /
++  // "floating card" sheet. The detent cap shrinks so the sheet stays inside the
++  // region above the inset, and the floating bottom edge is clipped + rounded
++  // via `cornerRadiusPx`. Stored in px (the setter converts from dp).
++  var bottomInsetPx: Float = 0f
++    private set
++
++  fun setBottomInset(dp: Float) {
++    val px = dp * density
++    if (bottomInsetPx == px) return
++    bottomInsetPx = px
++    updateDetachedClip()
++    recomputeNativeGeometry()
++    requestLayout()
++  }
++
++  // Corner radius (px) for the detached sheet's floating bottom corners.
++  var cornerRadiusPx: Float = 0f
++    private set
++
++  fun setCornerRadius(dp: Float) {
++    val px = dp * density
++    if (cornerRadiusPx == px) return
++    cornerRadiusPx = px
++    invalidateOutline()
++  }
++
++  // The Y the sheet's bottom edge is anchored to: this view's bottom edge,
++  // lifted by `bottomInsetPx` for a detached sheet.
++  private val sheetBottomAnchor: Float
++    get() = (height - bottomInsetPx).coerceAtLeast(0f)
++
++  // Clips the over-sized surface canvas to the floating bottom edge and rounds
++  // its bottom corners, so a detached sheet reads as a card floating above the
++  // bottom. A no-op (clip off) when anchored, preserving the anchored sheet's
++  // slide-off-screen close. Clips this host, so a native scrim (if any) is
++  // clipped with it — detached sheets should use an external backdrop.
++  private fun updateDetachedClip() {
++    val detached = bottomInsetPx > 0f
++    clipToOutline = detached
++    if (detached && outlineProvider !is DetachedOutlineProvider) {
++      outlineProvider = DetachedOutlineProvider()
++    }
++    invalidateOutline()
++  }
++
++  private inner class DetachedOutlineProvider : ViewOutlineProvider() {
++    override fun getOutline(view: View, outline: Outline) {
++      val anchor = sheetBottomAnchor.toInt().coerceAtLeast(0)
++      // Round the bottom corners at the floating edge; the top corners sit at
++      // y=0 above the (capped) content, where the surface owns the rounding.
++      outline.setRoundRect(0, 0, view.width, anchor, cornerRadiusPx)
++    }
++  }
++
+   /**
+    * Re-derives all natively measured geometry from this view's own size, window position, and the
+    * window's top inset, then pushes it into the shadow tree: the sheet frame (consumed by the
+@@ -769,8 +829,11 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context) {
+     // sheet inside a container that starts below the status bar keeps its full
+     // height.
+     val topOverlap = (topInset - location[1]).coerceAtLeast(0)
++    // Anchor the cap to the (possibly lifted) floating bottom, not the raw view
++    // bottom, so a detached sheet stays inside the region above the inset.
++    val anchor = (height - bottomInsetPx).coerceAtLeast(0f)
+     val cap =
+-      (if (extendUnderStatusBar) height else height - topOverlap).toFloat().coerceAtLeast(0f)
++      (if (extendUnderStatusBar) anchor else anchor - topOverlap).coerceAtLeast(0f)
+ 
+     val capChanged = cap != nativeCapPx
+     nativeCapPx = cap
+@@ -821,7 +884,7 @@ class BottomSheetHostView(context: Context) : ReactViewGroup(context) {
+ 
+   private fun updateShadowState(translationY: Float) {
+     val maxDetentHeight = resolvedMaxDetentHeight()
+-    val containerTop = height.toFloat() - maxDetentHeight
++    val containerTop = (height - bottomInsetPx) - maxDetentHeight
+     // The content's in-host displacement from its Yoga position: the container
+     // offset plus the sheet's translation. The content-region inset shrinks
+     // the content via Yoga BOTTOM padding, keeping the Yoga origin at zero, so
+diff --git a/android/src/main/java/com/swmansion/reactnativebottomsheet/BottomSheetView.kt b/android/src/main/java/com/swmansion/reactnativebottomsheet/BottomSheetView.kt
+index ea4353f9ff67f543fe0d0c93efbcb4b482f8c103..890116aa2a521d0a1b8253f6351a762fa83f2fb9 100644
+--- a/android/src/main/java/com/swmansion/reactnativebottomsheet/BottomSheetView.kt
++++ b/android/src/main/java/com/swmansion/reactnativebottomsheet/BottomSheetView.kt
+@@ -135,6 +135,10 @@ class BottomSheetView(context: Context) : ReactViewGroup(context), LifecycleEven
+       host.extendUnderStatusBar = value
+     }
+ 
++  fun setBottomInset(dp: Float) = host.setBottomInset(dp)
++
++  fun setCornerRadius(dp: Float) = host.setCornerRadius(dp)
++
+   fun setScrimColor(color: Int?) = host.setScrimColor(color)
+ 
+   fun setScrimOpacities(values: List<Float>) = host.setScrimOpacities(values)
+diff --git a/android/src/main/java/com/swmansion/reactnativebottomsheet/BottomSheetViewManager.kt b/android/src/main/java/com/swmansion/reactnativebottomsheet/BottomSheetViewManager.kt
+index 8fa39ddf919bcd762b473f8ec69afe1a555b4308..3fe86c742f0f22b2f44735f78ea4ef4fda254241 100644
+--- a/android/src/main/java/com/swmansion/reactnativebottomsheet/BottomSheetViewManager.kt
++++ b/android/src/main/java/com/swmansion/reactnativebottomsheet/BottomSheetViewManager.kt
+@@ -144,6 +144,16 @@ class BottomSheetViewManager :
+     view.extendUnderStatusBar = value
+   }
+ 
++  @ReactProp(name = "bottomInset")
++  override fun setBottomInset(view: BottomSheetView, value: Double) {
++    view.setBottomInset(value.toFloat())
++  }
++
++  @ReactProp(name = "cornerRadius")
++  override fun setCornerRadius(view: BottomSheetView, value: Double) {
++    view.setCornerRadius(value.toFloat())
++  }
++
+   @ReactProp(name = "disableScrollableNegotiation")
+   override fun setDisableScrollableNegotiation(view: BottomSheetView, value: Boolean) {
+     view.disableScrollableNegotiation = value
+diff --git a/ios/BottomSheetComponentView.mm b/ios/BottomSheetComponentView.mm
+index 556970e39c5001dbcc998768ff8abd484901dc02..70a9fad57aec65881b2cef9bd1569750cc88b1d2 100644
+--- a/ios/BottomSheetComponentView.mm
++++ b/ios/BottomSheetComponentView.mm
+@@ -6,6 +6,7 @@
+ 
+ #import <React/RCTAssert.h>
+ #import <React/RCTConversions.h>
++#import <React/RCTLog.h>
+ #import <React/RCTFabricComponentsPlugins.h>
+ #import <React/RCTSurfaceTouchHandler.h>
+ #import <react/renderer/components/ReactNativeBottomSheetSpec/EventEmitters.h>
+@@ -140,6 +141,12 @@ using namespace facebook::react;
+     [_sheetView setExtendUnderStatusBar:newViewProps.extendUnderStatusBar];
+   }
+ 
++  // Always set (like detents): an oldProps diff misses on a recycled instance
++  // whose retained props still hold the previous sheet's values. The Swift
++  // setters no-op on an unchanged value, so redundant sets are cheap.
++  [_sheetView setBottomInset:newViewProps.bottomInset];
++  [_sheetView setCornerRadius:newViewProps.cornerRadius];
++
+   if (newViewProps.disableScrollableNegotiation != oldViewProps.disableScrollableNegotiation) {
+     _sheetView.disableScrollableNegotiation = newViewProps.disableScrollableNegotiation;
+   }
+@@ -407,7 +414,9 @@ using namespace facebook::react;
+ 
+ - (void)bottomSheetView:(BottomSheetContentView *)view didReportError:(NSString *)message
+ {
+-  RCTFatal([NSError errorWithDomain:RCTErrorDomain code:0 userInfo:@{NSLocalizedDescriptionKey : message}]);
++  // Non-fatal: detent/content mismatches are transient layout races
++  // (rotation), not programmer errors worth crashing the app for.
++  RCTLogError(@"%@", message);
+ }
+ 
+ - (void)bottomSheetViewDidLayout:(BottomSheetContentView *)view
+diff --git a/ios/BottomSheetContentView.h b/ios/BottomSheetContentView.h
+index e34b81c829f43dc4b90ebe1a770dc4e19edb1ca1..54c064c6ce0456ad9435cdcd65b17096b905d03b 100644
+--- a/ios/BottomSheetContentView.h
++++ b/ios/BottomSheetContentView.h
+@@ -31,6 +31,10 @@ NS_ASSUME_NONNULL_BEGIN
+ // Whether full-height detents may extend under the status bar; feeds the
+ // natively computed detent cap.
+ - (void)setExtendUnderStatusBar:(BOOL)extendUnderStatusBar;
++// Floats the sheet up off the bottom edge by this many points (detached sheet).
++- (void)setBottomInset:(CGFloat)bottomInset;
++// Corner radius for the detached sheet's floating bottom corners.
++- (void)setCornerRadius:(CGFloat)cornerRadius;
+ // The natively measured inset of the content region: the gap between the
+ // sheet's height and the detent cap.
+ - (CGFloat)contentRegionInset;
+diff --git a/ios/BottomSheetContentView.mm b/ios/BottomSheetContentView.mm
+index 7a106e15ea17e6eeacfc74cd61e4a34a0e05054a..de706b4b20003d11d55610c9111c6383cf8cbf3c 100644
+--- a/ios/BottomSheetContentView.mm
++++ b/ios/BottomSheetContentView.mm
+@@ -80,6 +80,16 @@
+   _impl.extendUnderStatusBar = extendUnderStatusBar;
+ }
+ 
++- (void)setBottomInset:(CGFloat)bottomInset
++{
++  _impl.bottomInset = bottomInset;
++}
++
++- (void)setCornerRadius:(CGFloat)cornerRadius
++{
++  _impl.cornerRadius = cornerRadius;
++}
++
+ - (CGFloat)contentRegionInset
+ {
+   return _impl.contentRegionInset;
+diff --git a/ios/BottomSheetHostingView.swift b/ios/BottomSheetHostingView.swift
+index 5c96f8f0163e0d3b40aac91288834458c68a5008..e6eb0994870e669800c9f1480113bce40ddbac1c 100644
+--- a/ios/BottomSheetHostingView.swift
++++ b/ios/BottomSheetHostingView.swift
+@@ -76,6 +76,27 @@ public final class BottomSheetHostingView: UIView {
+     }
+   }
+ 
++  /// Floats the sheet up off the bottom edge by this many points — a detached
++  /// "floating card" sheet. The detent cap shrinks so the sheet stays inside the
++  /// region above the inset, and the floating bottom edge is clipped and rounded
++  /// via `cornerRadius`. Default 0 (anchored to the bottom edge).
++  public var bottomInset: CGFloat = 0 {
++    didSet {
++      guard bottomInset != oldValue else { return }
++      refreshDetentsFromLayout()
++      setNeedsLayout()
++    }
++  }
++
++  /// Corner radius for the detached sheet's floating bottom corners. Only applied
++  /// when `bottomInset > 0`.
++  public var cornerRadius: CGFloat = 0 {
++    didSet {
++      guard cornerRadius != oldValue else { return }
++      setNeedsLayout()
++    }
++  }
++
+   public var disableScrollableNegotiation: Bool = false
+ 
+   private var rawDetentSpecs: [RawDetentSpec] = []
+@@ -190,7 +211,7 @@ public final class BottomSheetHostingView: UIView {
+     let maxHeight = sheetContainerHeight
+     lastAppliedMaxDetentHeight = maxHeight
+     sheetContainer.bounds = CGRect(x: 0, y: 0, width: bounds.width, height: maxHeight)
+-    sheetContainer.center = CGPoint(x: bounds.width / 2, y: bounds.height - maxHeight / 2)
++    sheetContainer.center = CGPoint(x: bounds.width / 2, y: sheetBottomAnchor - maxHeight / 2)
+ 
+     // The surface fills the full container so it always covers the visible sheet
+     // (the container is translated to the current sheet position), regardless of
+@@ -198,6 +219,10 @@ public final class BottomSheetHostingView: UIView {
+     // anchorPoint.
+     surfaceView?.frame = sheetContainer.bounds
+ 
++    // Detached: clip the over-sized canvas to the floating bottom edge and round
++    // its bottom corners (no-op when anchored).
++    updateDetachedClip()
++
+     // Report fresh native geometry so the component layer can push the content
+     // wrapper's target size (and the overlay frame) into the shadow tree.
+     eventDelegate?.bottomSheetHostingViewDidLayout(self)
+@@ -237,17 +262,32 @@ public final class BottomSheetHostingView: UIView {
+   }
+ 
+   private var presentedSheetFrame: CGRect {
+-    guard activeSpring != nil else { return sheetContainer.frame }
+-    // Mid-settle, derive the on-screen frame from the spring instead of the
+-    // presentation layer (which lags one commit behind right after a snap
+-    // starts). The container's transform is translation-only.
+-    let size = sheetContainer.bounds.size
+-    let center = sheetContainer.center
++    let rawFrame: CGRect
++    if activeSpring != nil {
++      // Mid-settle, derive the on-screen frame from the spring instead of the
++      // presentation layer (which lags one commit behind right after a snap
++      // starts). The container's transform is translation-only.
++      let size = sheetContainer.bounds.size
++      let center = sheetContainer.center
++      rawFrame = CGRect(
++        x: center.x - size.width / 2,
++        y: center.y - size.height / 2 + currentTranslationY,
++        width: size.width,
++        height: size.height
++      )
++    } else {
++      rawFrame = sheetContainer.frame
++    }
++    // Detached: the visible sheet ends at the floating bottom; the over-sized
++    // canvas below it is clipped away, so hit-testing must not treat that region
++    // as the sheet — taps in the floating gap fall through to the backdrop.
++    guard bottomInset > 0 else { return rawFrame }
++    let clippedMaxY = min(rawFrame.maxY, sheetBottomAnchor)
+     return CGRect(
+-      x: center.x - size.width / 2,
+-      y: center.y - size.height / 2 + currentTranslationY,
+-      width: size.width,
+-      height: size.height
++      x: rawFrame.minX,
++      y: rawFrame.minY,
++      width: rawFrame.width,
++      height: max(0, clippedMaxY - rawFrame.minY)
+     )
+   }
+ 
+@@ -348,6 +388,7 @@ public final class BottomSheetHostingView: UIView {
+     sheetContainer.transform = .identity
+     scrimView.alpha = 0
+     scrimView.isHidden = true
++    layer.mask = nil
+     for subview in sheetContainer.subviews {
+       subview.removeFromSuperview()
+     }
+@@ -448,7 +489,7 @@ public final class BottomSheetHostingView: UIView {
+     // the content via Yoga BOTTOM padding, keeping the Yoga origin at zero, so
+     // the full displacement is carried here.
+     let maxHeight = sheetContainerHeight
+-    let containerTop = bounds.height - maxHeight
++    let containerTop = sheetBottomAnchor - maxHeight
+     return containerTop + currentTranslationY
+   }
+ 
+@@ -899,12 +940,52 @@ public final class BottomSheetHostingView: UIView {
+     // overlaps this view. Measured from real window geometry in every mode —
+     // inline, portal, and overlay — so no JS-estimated dimensions are
+     // involved. Before the view is in a window, fall back to full height.
++    let anchor = sheetBottomAnchor
+     guard !extendUnderStatusBar, let window else {
+-      return bounds.height
++      return anchor
+     }
+     let originYInWindow = convert(CGPoint.zero, to: window).y
+     let topOverlap = max(0, window.safeAreaInsets.top - originYInWindow)
+-    return min(max(0, bounds.height - topOverlap), bounds.height)
++    return min(max(0, anchor - topOverlap), anchor)
++  }
++
++  /// The Y the sheet's bottom edge is anchored to: the host's bottom edge, lifted
++  /// by `bottomInset` for a detached / floating sheet.
++  private var sheetBottomAnchor: CGFloat {
++    max(0, bounds.height - bottomInset)
++  }
++
++  /// Clips the over-sized surface canvas to the floating bottom edge and rounds
++  /// its bottom corners, so a detached sheet reads as a card floating above the
++  /// bottom. A no-op (mask removed) when anchored, preserving the anchored
++  /// sheet's slide-off-screen close. Masks the host layer; a native scrim (if
++  /// any) is clipped with it, so detached sheets should use an external backdrop.
++  private func updateDetachedClip() {
++    guard bottomInset > 0, bounds.width > 0 else {
++      if layer.mask != nil { layer.mask = nil }
++      return
++    }
++    // Extend the clip above the sheet so only the bottom edge is trimmed; the
++    // surface owns the (animated) rounded top corners.
++    let clipRect = CGRect(
++      x: 0,
++      y: -bounds.height,
++      width: bounds.width,
++      height: sheetBottomAnchor + bounds.height
++    )
++    let path = UIBezierPath(
++      roundedRect: clipRect,
++      byRoundingCorners: [.bottomLeft, .bottomRight],
++      cornerRadii: CGSize(width: cornerRadius, height: cornerRadius)
++    ).cgPath
++    let maskLayer = (layer.mask as? CAShapeLayer) ?? CAShapeLayer()
++    // The mask is a screen-fixed frame; setting its path must not implicitly
++    // animate, or the floating bottom would lag the sheet's height changes.
++    CATransaction.begin()
++    CATransaction.setDisableActions(true)
++    maskLayer.path = path
++    layer.mask = maskLayer
++    CATransaction.commit()
+   }
+ 
+   /// The natively measured inset of the content region: the gap between the
+diff --git a/lib/module/BottomSheet.js b/lib/module/BottomSheet.js
+index 3cc1e1d85b510f281d6e50737ae63052f05af3cb..c5d6f830b97a24906614f04fb02a8dc428965ad7 100644
+--- a/lib/module/BottomSheet.js
++++ b/lib/module/BottomSheet.js
+@@ -28,6 +28,8 @@ export const BottomSheet = props => {
+     animateIn = true,
+     animateContentHeight = true,
+     extendUnderStatusBar = false,
++    bottomInset = 0,
++    cornerRadius = 0,
+     onIndexChange,
+     onSettle,
+     onPositionChange,
+@@ -115,6 +117,8 @@ export const BottomSheet = props => {
+         } : StyleSheet.absoluteFill, style],
+         detents: nativeDetents,
+         extendUnderStatusBar: extendUnderStatusBar,
++        bottomInset: bottomInset,
++        cornerRadius: cornerRadius,
+         index: index,
+         animateIn: animateIn,
+         animateContentHeight: animateContentHeight,
+diff --git a/lib/module/BottomSheetNativeComponent.ts b/lib/module/BottomSheetNativeComponent.ts
+index f8a7caf8ca2204f6631e8ffc468b89081f232b26..1a2214b6106ad85a0fdad15894e65864736bb2fc 100644
+--- a/lib/module/BottomSheetNativeComponent.ts
++++ b/lib/module/BottomSheetNativeComponent.ts
+@@ -22,6 +22,16 @@ export interface NativeProps extends ViewProps {
+   // computed from the overlay's real bounds and insets; inline sheets bake the
+   // flag into the JS-computed maxDetentHeight as before.
+   extendUnderStatusBar?: boolean;
++  // Floats the sheet up off the bottom edge by this many points (a detached /
++  // "floating card" sheet). The detent cap shrinks to keep the sheet inside the
++  // safe region above the inset, and the floating bottom edge is clipped +
++  // rounded via `cornerRadius`. Horizontal detachment is done by the consumer
++  // insetting the host `style` (e.g. `{ left, right }`). Default 0 (anchored).
++  bottomInset?: CodegenTypes.WithDefault<CodegenTypes.Double, 0>;
++  // Corner radius (points) applied to the detached sheet's floating bottom
++  // corners. Match it to the surface's top radius for a uniform card. Only used
++  // when `bottomInset > 0`. Default 0 (square clip).
++  cornerRadius?: CodegenTypes.WithDefault<CodegenTypes.Double, 0>;
+   disableScrollableNegotiation?: boolean;
+   scrimColor?: ColorValue;
+   scrimOpacities?: ReadonlyArray<CodegenTypes.Double>;
+diff --git a/lib/typescript/src/BottomSheet.d.ts b/lib/typescript/src/BottomSheet.d.ts
+index f44e07b87b0b79bafcde533260afd1a33088a4de..ee89fb43c02405bebf7e3123fed436c276eb17bd 100644
+--- a/lib/typescript/src/BottomSheet.d.ts
++++ b/lib/typescript/src/BottomSheet.d.ts
+@@ -63,6 +63,21 @@ export interface BottomSheetProps {
+      * detents. Defaults to `false`, so detents remain capped below the status bar.
+      */
+     extendUnderStatusBar?: boolean;
++    /**
++     * Floats the sheet up off the bottom edge by this many points — a detached /
++     * "floating card" sheet. The detent cap shrinks so the sheet stays inside the
++     * region above the inset, and the floating bottom edge is clipped and rounded
++     * with {@link cornerRadius}. Combine with a horizontal `style` inset
++     * (`{ left, right }`) for a fully floating card. Defaults to `0` (anchored to
++     * the bottom edge).
++     */
++    bottomInset?: number;
++    /**
++     * Corner radius (points) for the detached sheet's floating bottom corners.
++     * Match it to your surface's top radius for a uniform card. Only applied when
++     * {@link bottomInset} is greater than 0. Defaults to `0` (square clip).
++     */
++    cornerRadius?: number;
+     /**
+      * Called when a user-driven snap is initiated: the moment a drag commits to a
+      * detent, before the animation settles. Does not fire for programmatic `index`
+diff --git a/lib/typescript/src/BottomSheetNativeComponent.d.ts b/lib/typescript/src/BottomSheetNativeComponent.d.ts
+index f3a30834821a6a7692e25b8006d18787d0d33935..14ff2c79ada2da74bf8ce9c20d9d983de84dbe4b 100644
+--- a/lib/typescript/src/BottomSheetNativeComponent.d.ts
++++ b/lib/typescript/src/BottomSheetNativeComponent.d.ts
+@@ -12,6 +12,8 @@ export interface NativeProps extends ViewProps {
+     modal: boolean;
+     nativeOverlay?: boolean;
+     extendUnderStatusBar?: boolean;
++    bottomInset?: CodegenTypes.WithDefault<CodegenTypes.Double, 0>;
++    cornerRadius?: CodegenTypes.WithDefault<CodegenTypes.Double, 0>;
+     disableScrollableNegotiation?: boolean;
+     scrimColor?: ColorValue;
+     scrimOpacities?: ReadonlyArray<CodegenTypes.Double>;
+diff --git a/src/BottomSheet.tsx b/src/BottomSheet.tsx
+index 0fa99bd71fec2e2527fee999cb76ea0ba8a0754c..36559734715b0bdca670a645739f9c5594934d79 100644
+--- a/src/BottomSheet.tsx
++++ b/src/BottomSheet.tsx
+@@ -71,6 +71,21 @@ export interface BottomSheetProps {
+    * detents. Defaults to `false`, so detents remain capped below the status bar.
+    */
+   extendUnderStatusBar?: boolean;
++  /**
++   * Floats the sheet up off the bottom edge by this many points — a detached /
++   * "floating card" sheet. The detent cap shrinks so the sheet stays inside the
++   * region above the inset, and the floating bottom edge is clipped and rounded
++   * with {@link cornerRadius}. Combine with a horizontal `style` inset
++   * (`{ left, right }`) for a fully floating card. Defaults to `0` (anchored to
++   * the bottom edge).
++   */
++  bottomInset?: number;
++  /**
++   * Corner radius (points) for the detached sheet's floating bottom corners.
++   * Match it to your surface's top radius for a uniform card. Only applied when
++   * {@link bottomInset} is greater than 0. Defaults to `0` (square clip).
++   */
++  cornerRadius?: number;
+   /**
+    * Called when a user-driven snap is initiated: the moment a drag commits to a
+    * detent, before the animation settles. Does not fire for programmatic `index`
+@@ -152,6 +167,8 @@ export const BottomSheet = (props: BottomSheetProps) => {
+     animateIn = true,
+     animateContentHeight = true,
+     extendUnderStatusBar = false,
++    bottomInset = 0,
++    cornerRadius = 0,
+     onIndexChange,
+     onSettle,
+     onPositionChange,
+@@ -254,6 +271,8 @@ export const BottomSheet = (props: BottomSheetProps) => {
+           ]}
+           detents={nativeDetents}
+           extendUnderStatusBar={extendUnderStatusBar}
++          bottomInset={bottomInset}
++          cornerRadius={cornerRadius}
+           index={index}
+           animateIn={animateIn}
+           animateContentHeight={animateContentHeight}
+diff --git a/src/BottomSheetNativeComponent.ts b/src/BottomSheetNativeComponent.ts
+index f8a7caf8ca2204f6631e8ffc468b89081f232b26..1a2214b6106ad85a0fdad15894e65864736bb2fc 100644
+--- a/src/BottomSheetNativeComponent.ts
++++ b/src/BottomSheetNativeComponent.ts
+@@ -22,6 +22,16 @@ export interface NativeProps extends ViewProps {
+   // computed from the overlay's real bounds and insets; inline sheets bake the
+   // flag into the JS-computed maxDetentHeight as before.
+   extendUnderStatusBar?: boolean;
++  // Floats the sheet up off the bottom edge by this many points (a detached /
++  // "floating card" sheet). The detent cap shrinks to keep the sheet inside the
++  // safe region above the inset, and the floating bottom edge is clipped +
++  // rounded via `cornerRadius`. Horizontal detachment is done by the consumer
++  // insetting the host `style` (e.g. `{ left, right }`). Default 0 (anchored).
++  bottomInset?: CodegenTypes.WithDefault<CodegenTypes.Double, 0>;
++  // Corner radius (points) applied to the detached sheet's floating bottom
++  // corners. Match it to the surface's top radius for a uniform card. Only used
++  // when `bottomInset > 0`. Default 0 (square clip).
++  cornerRadius?: CodegenTypes.WithDefault<CodegenTypes.Double, 0>;
+   disableScrollableNegotiation?: boolean;
+   scrimColor?: ColorValue;
+   scrimOpacities?: ReadonlyArray<CodegenTypes.Double>;

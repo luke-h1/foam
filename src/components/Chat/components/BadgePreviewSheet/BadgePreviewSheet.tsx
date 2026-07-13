@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useRef } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -10,7 +10,10 @@ import { useTranslation } from 'react-i18next';
 import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';
 
-import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
+import {
+  BottomSheet,
+  type BottomSheetHandle,
+} from '@app/components/BottomSheet/BottomSheet';
 /* eslint-disable react-native/sort-styles */
 import { Button } from '@app/components/Button/Button';
 import { computeSheetHeight } from '@app/components/Chat/util/computeSheetHeight';
@@ -40,12 +43,11 @@ function BadgePreviewSheetComponent(props: Props) {
   const { t } = useTranslation(['chat', 'common']);
   const { saveImage, isSaving } = useSaveImageToGallery();
   const { visible, onClose, selectedBadge } = props;
-  const { height: screenHeight, width: screenWidth } = useWindowDimensions();
-  const sheetWidth = Math.max(
-    280,
-    Math.min(screenWidth - theme.space16 * 2, 520),
-  );
-  const containerStyle = [styles.container, { width: sheetWidth }];
+  const sheetRef = useRef<BottomSheetHandle>(null);
+  const requestClose = () => {
+    sheetRef.current?.requestClose();
+  };
+  const { height: screenHeight } = useWindowDimensions();
 
   const handleCopy = (field: 'name' | 'url') => {
     void Clipboard.setStringAsync(
@@ -124,6 +126,7 @@ function BadgePreviewSheetComponent(props: Props) {
 
   return (
     <BottomSheet
+      ref={sheetRef}
       enableFixedSnapPoints
       isPresented={visible}
       onDismiss={onClose}
@@ -131,7 +134,7 @@ function BadgePreviewSheetComponent(props: Props) {
       snapPoints={[{ height: sheetHeight }]}
       testID='badge-preview-sheet'
     >
-      <View style={containerStyle}>
+      <View style={styles.container}>
         <View style={styles.topBar}>
           <View style={styles.heading}>
             <Text style={styles.eyebrow} weight='semibold'>
@@ -144,7 +147,7 @@ function BadgePreviewSheetComponent(props: Props) {
           <Button
             label={t('common:done')}
             style={styles.doneButton}
-            onPress={onClose}
+            onPress={requestClose}
           >
             <SymbolView
               name='xmark'
@@ -276,11 +279,12 @@ const styles = StyleSheet.create({
     width: 96,
   },
   container: {
-    alignSelf: 'center',
+    alignSelf: 'stretch',
     flex: 1,
     paddingBottom: theme.space24,
     paddingHorizontal: theme.space20,
     paddingTop: theme.space4,
+    width: '100%',
   },
   doneButton: {
     alignItems: 'center',

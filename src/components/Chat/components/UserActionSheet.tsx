@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useRef } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 
 import {
   BottomSheet,
+  type BottomSheetHandle,
   type SnapPoint,
 } from '@app/components/BottomSheet/BottomSheet';
 import { Button } from '@app/components/Button/Button';
@@ -120,6 +121,14 @@ function UserActionSheetComponent({
   const { t } = useTranslation(['chat', 'common']);
   const { canModerateChat, canModerateUser } = moderation;
   const { isHidden, isHighlighted, visible } = visibility;
+  const sheetRef = useRef<BottomSheetHandle>(null);
+  const requestClose = () => {
+    sheetRef.current?.requestClose();
+  };
+  const runAndClose = (action?: () => void) => {
+    action?.();
+    requestClose();
+  };
   // peek() on open: the scrollback updates constantly and re-rendering the
   // sheet per message would defeat the chat flush batching.
   const recentMessages = useMemo(
@@ -130,20 +139,20 @@ function UserActionSheetComponent({
     {
       icon: 'at',
       label: t('userActions.mention'),
-      onPress: onMentionUser,
+      onPress: () => runAndClose(onMentionUser),
       subtitle: t('userActions.mentionSubtitle'),
       tone: 'accent',
     },
     {
       icon: 'doc.on.doc',
       label: t('userActions.copyUsername'),
-      onPress: onCopyUsername,
+      onPress: () => runAndClose(onCopyUsername),
       subtitle: t('userActions.copyUsernameSubtitle'),
     },
     {
       icon: 'person.crop.circle.badge.xmark',
       label: isHidden ? t('userActions.unhideUser') : t('userActions.hideUser'),
-      onPress: onHideUser,
+      onPress: () => runAndClose(onHideUser),
       subtitle: isHidden
         ? t('userActions.unhideUserSubtitle')
         : t('userActions.hideUserSubtitle'),
@@ -153,7 +162,7 @@ function UserActionSheetComponent({
       label: isHighlighted
         ? t('userActions.unhighlightUser')
         : t('userActions.highlightUser'),
-      onPress: onHighlightUser,
+      onPress: () => runAndClose(onHighlightUser),
       subtitle: isHighlighted
         ? t('userActions.unhighlightUserSubtitle')
         : t('userActions.highlightUserSubtitle'),
@@ -164,7 +173,7 @@ function UserActionSheetComponent({
           {
             icon: 'flag' as const,
             label: t('userActions.reportUser'),
-            onPress: onReportUser,
+            onPress: () => runAndClose(onReportUser),
             subtitle: t('userActions.reportUserSubtitle'),
             tone: 'warning' as const,
           },
@@ -175,7 +184,7 @@ function UserActionSheetComponent({
           {
             icon: 'nosign' as const,
             label: t('userActions.blockUser'),
-            onPress: onBlockUser,
+            onPress: () => runAndClose(onBlockUser),
             subtitle: t('userActions.blockUserSubtitle'),
             tone: 'danger' as const,
           },
@@ -186,32 +195,28 @@ function UserActionSheetComponent({
           {
             icon: 'exclamationmark.triangle' as const,
             label: t('userActions.warnUser'),
-            onPress: onWarnUser,
+            onPress: () => runAndClose(onWarnUser),
             subtitle: t('userActions.warnUserSubtitle'),
             tone: 'warning' as const,
           },
           {
             icon: 'clock' as const,
             label: t('userActions.timeoutUser'),
-            onPress: onTimeoutUser,
+            onPress: () => runAndClose(onTimeoutUser),
             subtitle: t('userActions.timeoutUserSubtitle'),
             tone: 'warning' as const,
           },
           {
             icon: 'slash.circle' as const,
             label: t('userActions.banUser'),
-            onPress: onBanUser,
+            onPress: () => runAndClose(onBanUser),
             subtitle: t('userActions.banUserSubtitle'),
             tone: 'danger' as const,
           },
         ]
       : []),
   ];
-  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
-  const sheetWidth = Math.max(
-    280,
-    Math.min(windowWidth - theme.space16 * 2, 520),
-  );
+  const { height: windowHeight } = useWindowDimensions();
   const recentMessagesHeight =
     recentMessages.length > 0 ? 40 + recentMessages.length * 22 : 0;
   const maxScrollHeight = Math.min(
@@ -230,13 +235,14 @@ function UserActionSheetComponent({
     styles.wrapper,
     {
       maxHeight: sheetHeight - theme.space16,
-      width: sheetWidth,
     },
   ];
   const scrollStyle = [styles.scroll, { maxHeight: maxScrollHeight }];
 
   return (
     <BottomSheet
+      ref={sheetRef}
+      enableFixedSnapPoints
       isPresented={visible}
       onDismiss={onClose}
       showDragIndicator
@@ -256,7 +262,7 @@ function UserActionSheetComponent({
           <Button
             label={t('common:done')}
             style={styles.doneButton}
-            onPress={onClose}
+            onPress={requestClose}
           >
             <SymbolView
               name='xmark'
@@ -441,10 +447,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   wrapper: {
-    alignSelf: 'center',
+    alignSelf: 'stretch',
     gap: 10,
     paddingHorizontal: theme.space12,
     paddingTop: theme.space8,
+    width: '100%',
   },
   recentMessages: {
     backgroundColor: 'rgba(255,255,255,0.06)',

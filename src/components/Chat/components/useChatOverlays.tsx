@@ -244,9 +244,8 @@ export function useChatOverlays({
   const handleSelectSavedPhrase = useCallback(
     (text: string) => {
       insertPhraseToComposer(text);
-      patchOverlay({ isSavedPhrasesSheetMounted: false });
     },
-    [insertPhraseToComposer, patchOverlay],
+    [insertPhraseToComposer],
   );
 
   const handleSelectChatter = useCallback(
@@ -261,8 +260,7 @@ export function useChatOverlays({
       return;
     }
     handleReply(selectedMessage.messageData);
-    patchOverlay({ selectedMessage: null });
-  }, [handleReply, patchOverlay, selectedMessage]);
+  }, [handleReply, selectedMessage]);
 
   const handleActionSheetCopy = useCallback(() => {
     if (!selectedMessage) {
@@ -272,18 +270,15 @@ export function useChatOverlays({
     void Clipboard.setStringAsync(messageText).then(() =>
       toast.success(i18next.t('chat:userActions.copiedToClipboard')),
     );
-    patchOverlay({ selectedMessage: null });
-  }, [patchOverlay, selectedMessage]);
+  }, [selectedMessage]);
 
   const handleActionSheetHideUser = useCallback(() => {
     hideUserFromView(selectedMessage?.username);
-    patchOverlay({ selectedMessage: null });
-  }, [hideUserFromView, patchOverlay, selectedMessage]);
+  }, [hideUserFromView, selectedMessage]);
 
   const handleActionSheetHighlightUser = useCallback(() => {
     toggleHighlightedUser(selectedMessage?.username);
-    patchOverlay({ selectedMessage: null });
-  }, [patchOverlay, selectedMessage, toggleHighlightedUser]);
+  }, [selectedMessage, toggleHighlightedUser]);
 
   const handleActionSheetHidePhrase = useCallback(() => {
     if (!selectedMessage) {
@@ -291,8 +286,7 @@ export function useChatOverlays({
     }
 
     hidePhraseFromView(replaceEmotesWithText(selectedMessage.message));
-    patchOverlay({ selectedMessage: null });
-  }, [hidePhraseFromView, patchOverlay, selectedMessage]);
+  }, [hidePhraseFromView, selectedMessage]);
 
   /**
    * Twitch dropped IRC slash commands in 2023; Helix 403 = not a mod.
@@ -323,13 +317,7 @@ export function useChatOverlays({
         });
         toast.error(i18next.t('chat:modCommands.failed'));
       });
-    patchOverlay({ selectedMessage: null });
-  }, [
-    channelId,
-    currentUserId,
-    patchOverlay,
-    selectedMessage?.messageData.message_id,
-  ]);
+  }, [channelId, currentUserId, selectedMessage?.messageData.message_id]);
 
   const handleActionSheetPinMessage = useCallback(() => {
     if (!selectedMessage) {
@@ -337,8 +325,7 @@ export function useChatOverlays({
     }
 
     onPinMessage(selectedMessage);
-    patchOverlay({ selectedMessage: null });
-  }, [onPinMessage, patchOverlay, selectedMessage]);
+  }, [onPinMessage, selectedMessage]);
 
   const handleActionSheetUpdatePinnedMessage = useCallback(() => {
     const messageId = selectedMessage?.messageData.message_id?.trim();
@@ -347,39 +334,26 @@ export function useChatOverlays({
     }
 
     onRefreshPinnedMessage(messageId);
-    patchOverlay({ selectedMessage: null });
-  }, [
-    onRefreshPinnedMessage,
-    patchOverlay,
-    selectedMessage?.messageData.message_id,
-  ]);
+  }, [onRefreshPinnedMessage, selectedMessage?.messageData.message_id]);
 
   const handleActionSheetUnpinPinnedMessage = useCallback(() => {
     onUnpinPinnedMessage();
-    patchOverlay({ selectedMessage: null });
-  }, [onUnpinPinnedMessage, patchOverlay]);
+  }, [onUnpinPinnedMessage]);
 
   const banSelection = useCallback(
-    (
-      selection: { login?: string; username?: string } | null,
-      clear: () => void,
-    ) => {
+    (selection: { login?: string; username?: string } | null) => {
       const target = resolveModTarget(selection);
       if (!target) {
         return;
       }
 
       runModAction({ type: 'ban', login: target });
-      clear();
     },
     [runModAction],
   );
 
   const promptTimeoutDuration = useCallback(
-    (
-      selection: { login?: string; username?: string } | null,
-      clear: () => void,
-    ) => {
+    (selection: { login?: string; username?: string } | null) => {
       const target = resolveModTarget(selection);
       if (!target) {
         return;
@@ -397,7 +371,6 @@ export function useChatOverlays({
               login: target,
               durationSeconds: option.seconds,
             });
-            clear();
           },
         })),
         cancelLabel: i18next.t('common:cancel'),
@@ -407,16 +380,12 @@ export function useChatOverlays({
   );
 
   const handleActionSheetTimeoutUser = useCallback(() => {
-    promptTimeoutDuration(selectedMessage, () =>
-      patchOverlay({ selectedMessage: null }),
-    );
-  }, [patchOverlay, promptTimeoutDuration, selectedMessage]);
+    promptTimeoutDuration(selectedMessage);
+  }, [promptTimeoutDuration, selectedMessage]);
 
   const handleActionSheetBanUser = useCallback(() => {
-    banSelection(selectedMessage, () =>
-      patchOverlay({ selectedMessage: null }),
-    );
-  }, [banSelection, patchOverlay, selectedMessage]);
+    banSelection(selectedMessage);
+  }, [banSelection, selectedMessage]);
 
   const handleMentionSelectedUser = useCallback(() => {
     if (!selectedUser?.username) {
@@ -424,8 +393,7 @@ export function useChatOverlays({
     }
 
     appendMentionToComposer(selectedUser.username);
-    patchOverlay({ selectedUser: null });
-  }, [appendMentionToComposer, patchOverlay, selectedUser]);
+  }, [appendMentionToComposer, selectedUser]);
 
   const handleCopySelectedUsername = useCallback(() => {
     if (!selectedUser?.username) {
@@ -435,28 +403,23 @@ export function useChatOverlays({
     void Clipboard.setStringAsync(selectedUser.username).then(() =>
       toast.success(i18next.t('chat:userActions.copiedUsername')),
     );
-    patchOverlay({ selectedUser: null });
-  }, [patchOverlay, selectedUser]);
+  }, [selectedUser]);
 
   const handleHideSelectedUser = useCallback(() => {
     hideUserFromView(selectedUser?.username);
-    patchOverlay({ selectedUser: null });
-  }, [hideUserFromView, patchOverlay, selectedUser]);
+  }, [hideUserFromView, selectedUser]);
 
   const handleHighlightSelectedUser = useCallback(() => {
     toggleHighlightedUser(selectedUser?.username);
-    patchOverlay({ selectedUser: null });
-  }, [patchOverlay, selectedUser, toggleHighlightedUser]);
+  }, [selectedUser, toggleHighlightedUser]);
 
   const handleTimeoutSelectedUser = useCallback(() => {
-    promptTimeoutDuration(selectedUser, () =>
-      patchOverlay({ selectedUser: null }),
-    );
-  }, [patchOverlay, promptTimeoutDuration, selectedUser]);
+    promptTimeoutDuration(selectedUser);
+  }, [promptTimeoutDuration, selectedUser]);
 
   const handleBanSelectedUser = useCallback(() => {
-    banSelection(selectedUser, () => patchOverlay({ selectedUser: null }));
-  }, [banSelection, patchOverlay, selectedUser]);
+    banSelection(selectedUser);
+  }, [banSelection, selectedUser]);
 
   const handleWarnSelectedUser = useCallback(() => {
     const target = resolveModTarget(selectedUser);
@@ -466,7 +429,6 @@ export function useChatOverlays({
 
     const warnWithReason = (reason: string) => {
       runModAction({ type: 'warn', login: target, reason });
-      patchOverlay({ selectedUser: null });
     };
 
     showActionMenu({
@@ -490,7 +452,7 @@ export function useChatOverlays({
       ],
       cancelLabel: i18next.t('common:cancel'),
     });
-  }, [patchOverlay, runModAction, selectedUser]);
+  }, [runModAction, selectedUser]);
 
   // Twitch has no public report API; the report form is web-only.
   const handleReportSelectedUser = useCallback(() => {
@@ -499,9 +461,8 @@ export function useChatOverlays({
       return;
     }
 
-    patchOverlay({ selectedUser: null });
     openLinkInBrowser(`https://www.twitch.tv/${target}/report`);
-  }, [patchOverlay, selectedUser]);
+  }, [selectedUser]);
 
   const selectedUserId = selectedUser?.userId?.trim();
   const canBlockSelectedUser = Boolean(
@@ -527,7 +488,6 @@ export function useChatOverlays({
           text: i18next.t('chat:userActions.block'),
           style: 'destructive',
           onPress: () => {
-            patchOverlay({ selectedUser: null });
             twitchService
               .blockUser(targetUserId, 'chat')
               .then(() => {
@@ -545,7 +505,7 @@ export function useChatOverlays({
         },
       ],
     );
-  }, [currentUserId, patchOverlay, selectedUser]);
+  }, [currentUserId, selectedUser]);
 
   const handleCloseSelectedBadge = useCallback(() => {
     patchOverlay({ selectedBadge: null });
@@ -566,9 +526,8 @@ export function useChatOverlays({
   const handleEmoteSelect = useCallback(
     (item: EmotePickerItem) => {
       onInsertEmote(item);
-      patchOverlay({ isEmoteSheetMounted: false });
     },
-    [onInsertEmote, patchOverlay],
+    [onInsertEmote],
   );
 
   const mountedSheets = useMemo(

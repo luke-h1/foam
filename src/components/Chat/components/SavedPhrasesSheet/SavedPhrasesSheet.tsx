@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useRef } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,7 +6,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ListRenderItem } from '@shopify/flash-list';
 import { router } from 'expo-router';
 
-import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
+import {
+  BottomSheet,
+  type BottomSheetHandle,
+} from '@app/components/BottomSheet/BottomSheet';
 import { Button } from '@app/components/Button/Button';
 import { FlashList } from '@app/components/FlashList/FlashList';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
@@ -55,27 +58,53 @@ const SavedPhrasesSheetComponent = ({
   const sheetHeight = Math.round(windowHeight * CHAT_SETTINGS_SHEET_DETENT);
   const savedPhrases = usePreference('savedPhrases');
   const phrases = savedPhrases ?? [];
+  const sheetRef = useRef<BottomSheetHandle>(null);
 
   const listContentStyle = useMemo(
     () => [styles.listContent, { paddingBottom: bottomInset + theme.space24 }],
     [bottomInset],
   );
 
-  const handleManage = useCallback(() => {
+  const pendingManageRef = useRef(false);
+
+  const requestClose = useCallback(() => {
+    sheetRef.current?.requestClose();
+  }, []);
+
+  const handleDismiss = useCallback(() => {
     onDismiss();
-    router.push('/tabs/settings/saved-phrases');
+    if (pendingManageRef.current) {
+      pendingManageRef.current = false;
+      router.push('/tabs/settings/saved-phrases');
+    }
   }, [onDismiss]);
 
+  const handleManage = useCallback(() => {
+    pendingManageRef.current = true;
+    requestClose();
+  }, [requestClose]);
+
+  const handleSelectPhrase = useCallback(
+    (text: string) => {
+      onSelectPhrase(text);
+      requestClose();
+    },
+    [onSelectPhrase, requestClose],
+  );
+
   const renderItem: ListRenderItem<SavedPhrase> = useCallback(
-    ({ item }) => <SavedPhraseRow phrase={item} onSelect={onSelectPhrase} />,
-    [onSelectPhrase],
+    ({ item }) => (
+      <SavedPhraseRow phrase={item} onSelect={handleSelectPhrase} />
+    ),
+    [handleSelectPhrase],
   );
 
   return (
     <BottomSheet
+      ref={sheetRef}
       enableFixedSnapPoints
       isPresented={isPresented}
-      onDismiss={onDismiss}
+      onDismiss={handleDismiss}
       showDragIndicator
       snapPoints={[{ fraction: CHAT_SETTINGS_SHEET_DETENT }]}
       testID='chat-saved-phrases-sheet'

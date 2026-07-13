@@ -3,7 +3,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LegendList } from '@legendapp/list/react-native';
 
-import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
+import {
+  BottomSheet,
+  type BottomSheetHandle,
+} from '@app/components/BottomSheet/BottomSheet';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
@@ -39,11 +42,15 @@ export function EmoteSheet({
   const { t } = useTranslation('chat');
   const { bottom: bottomInset } = useSafeAreaInsets();
   const emoteListRef = useRef<LegendListRef>(null);
+  const sheetRef = useRef<BottomSheetHandle>(null);
   const [layoutWidth, setLayoutWidth] = useState(0);
   const sheet = useEmoteSheet({
     isPresented,
     onDismiss,
-    onEmoteSelect,
+    onEmoteSelect: item => {
+      onEmoteSelect?.(item);
+      sheetRef.current?.requestClose();
+    },
     emoteListRef,
     layoutWidth,
   });
@@ -65,18 +72,16 @@ export function EmoteSheet({
 
   return (
     <BottomSheet
+      ref={sheetRef}
       enableFixedSnapPoints
       isPresented={isPresented}
       onDismiss={sheet.handleDismiss}
+      showDragIndicator
       snapPoints={[{ fraction: EMOTE_SHEET_DETENT }]}
       testID='chat-emote-sheet'
     >
       <View onLayout={handleContainerLayout} style={styles.container}>
-        <View style={styles.sheetHandleRow}>
-          <View style={styles.sheetHandle} />
-        </View>
         <View style={styles.header}>
-          <EmoteSheetIosBlur />
           <ScrollView
             horizontal
             keyboardShouldPersistTaps='handled'

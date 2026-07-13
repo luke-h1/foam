@@ -1,5 +1,3 @@
-import type { ReactNode } from 'react';
-
 import { fireEvent } from '@testing-library/react-native';
 
 import { getPreferences, replacePreferences } from '@app/store/preferenceStore';
@@ -11,18 +9,39 @@ jest.mock('expo-symbols', () => ({
   SymbolView: () => null,
 }));
 
-jest.mock('@app/components/BottomSheet/BottomSheet', () => ({
-  BottomSheet: ({
-    children,
-    isPresented,
-  }: {
-    children?: ReactNode;
-    isPresented: boolean;
-  }) => (isPresented ? children : null),
-}));
+const mockRequestClose = jest.fn();
+
+jest.mock('@app/components/BottomSheet/BottomSheet', () => {
+  const React = require('react');
+
+  return {
+    BottomSheet: React.forwardRef(function MockBottomSheet(
+      {
+        children,
+        isPresented,
+        onDismiss,
+      }: {
+        children?: React.ReactNode;
+        isPresented: boolean;
+        onDismiss?: () => void;
+      },
+      ref: React.Ref<{ requestClose: () => void }>,
+    ) {
+      React.useImperativeHandle(ref, () => ({
+        requestClose: () => {
+          mockRequestClose();
+          onDismiss?.();
+        },
+      }));
+
+      return isPresented ? children : null;
+    }),
+  };
+});
 
 describe('SettingsSheet', () => {
   beforeEach(() => {
+    mockRequestClose.mockClear();
     replacePreferences({
       ...getPreferences(),
       chatDensity: 'comfortable',
@@ -66,6 +85,7 @@ describe('SettingsSheet', () => {
     fireEvent.press(getByText('Density'));
 
     expect(getPreferences().chatDensity).toBe('compact');
+    expect(mockRequestClose).toHaveBeenCalledTimes(1);
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 });
