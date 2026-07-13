@@ -4,7 +4,7 @@ import {
   makePaint,
   RED,
   toIndexed,
-} from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintCss/__tests__/__fixtures__/paintCss.fixture';
+} from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintCss/__fixtures__/paintCss.fixture';
 import { getPaintLayers } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintLayer/getPaintLayers';
 import type { PaintData, PaintLayerData } from '@app/types/seventv/cosmetics';
 

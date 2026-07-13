@@ -3,7 +3,7 @@ import { measureFunction } from 'reassure';
 import { buildPaintCssDeclarations } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintCss/buildPaintCssDeclarations';
 import { paintCssDeclarationsToBlock } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintCss/paintCssDeclarationsToBlock';
 
-import { multiLayerPaint } from './__fixtures__/paint.perf.fixture';
+import { multiLayerPaint } from '../__fixtures__/paint.perf.fixture';
 
 const MEASURE_OPTIONS = {
   runs: 5,

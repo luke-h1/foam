@@ -5,7 +5,7 @@ import { findBadges } from '@app/utils/chat/findBadges';
 import {
   badgeLookupUserstates,
   denseBadgeSources,
-} from './__fixtures__/findBadges.perf.fixture';
+} from '../__fixtures__/findBadges.perf.fixture';
 
 const MEASURE_OPTIONS = {
   runs: 5,

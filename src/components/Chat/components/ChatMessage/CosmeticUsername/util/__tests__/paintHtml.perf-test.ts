@@ -6,7 +6,7 @@ import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/Ric
 import {
   multiLayerPaint,
   paintedUsernames,
-} from './__fixtures__/paint.perf.fixture';
+} from '../__fixtures__/paint.perf.fixture';
 
 const MEASURE_OPTIONS = {
   runs: 5,

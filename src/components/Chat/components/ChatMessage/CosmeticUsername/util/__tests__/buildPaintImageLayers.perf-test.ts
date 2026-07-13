@@ -2,7 +2,7 @@ import { measureFunction } from 'reassure';
 
 import { buildPaintImageLayers } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/skiaPaintedUsernameRasterizer';
 
-import { paintImageLayerLayout } from './__fixtures__/paint.perf.fixture';
+import { paintImageLayerLayout } from '../__fixtures__/paint.perf.fixture';
 
 const MEASURE_OPTIONS = {
   runs: 5,

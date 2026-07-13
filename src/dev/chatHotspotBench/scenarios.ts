@@ -3,7 +3,7 @@ import {
   multiLayerPaint,
   paintedUsernames,
   paintImageLayerLayout,
-} from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/__tests__/__fixtures__/paint.perf.fixture';
+} from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/__fixtures__/paint.perf.fixture';
 import { buildPaintCssDeclarations } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintCss/buildPaintCssDeclarations';
 import { paintCssDeclarationsToBlock } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintCss/paintCssDeclarationsToBlock';
 import { buildPaintedUsernameHtml } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintHtml';
@@ -12,19 +12,19 @@ import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/Ric
 import {
   denseEmoteData,
   reprocessChatLines,
-} from '@app/components/Chat/util/__tests__/__fixtures__/resolveMessageEmoteParts.perf.fixture';
+} from '@app/components/Chat/util/__fixtures__/resolveMessageEmoteParts.perf.fixture';
 import { resolveMessageEmoteParts } from '@app/components/Chat/util/resolveMessageEmoteParts';
 import {
   ingestBurstMessages,
   ingestSeedMessages,
-} from '@app/store/chat/__tests__/__fixtures__/messages.perf.fixture';
+} from '@app/store/chat/__fixtures__/messages.perf.fixture';
 import { addMessages, clearMessages } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import {
   badgeLookupUserstates,
   denseBadgeSources,
-} from '@app/utils/chat/__tests__/__fixtures__/findBadges.perf.fixture';
+} from '@app/utils/chat/__fixtures__/findBadges.perf.fixture';
 import { findBadges } from '@app/utils/chat/findBadges';
 
 import { measureSync, type SyncMeasureResult } from './measureSync';

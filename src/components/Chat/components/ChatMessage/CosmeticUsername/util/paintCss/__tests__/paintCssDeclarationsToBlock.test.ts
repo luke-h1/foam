@@ -1,6 +1,6 @@
+import { makePaint } from '../__fixtures__/paintCss.fixture';
 import { buildPaintCssDeclarations } from '../buildPaintCssDeclarations';
 import { paintCssDeclarationsToBlock } from '../paintCssDeclarationsToBlock';
-import { makePaint } from './__fixtures__/paintCss.fixture';
 
 describe('paintCssDeclarationsToBlock', () => {
   test('emits one declaration per line in the extension rule order', () => {

@@ -1,5 +1,3 @@
-import { buildPaintCssDeclarations } from '../buildPaintCssDeclarations';
-import type { PaintCssDeclarations } from '../types';
 import {
   BLUE,
   HALF_BLACK,
@@ -7,7 +5,9 @@ import {
   makePaint,
   RED,
   toIndexed,
-} from './__fixtures__/paintCss.fixture';
+} from '../__fixtures__/paintCss.fixture';
+import { buildPaintCssDeclarations } from '../buildPaintCssDeclarations';
+import type { PaintCssDeclarations } from '../types';
 
 describe('buildPaintCssDeclarations', () => {
   test('linear gradient layer with a drop shadow', () => {

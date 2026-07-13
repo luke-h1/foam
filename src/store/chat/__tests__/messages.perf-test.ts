@@ -10,7 +10,7 @@ import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import {
   ingestBurstMessages,
   ingestSeedMessages,
-} from './__fixtures__/messages.perf.fixture';
+} from '../__fixtures__/messages.perf.fixture';
 
 jest.mock('@legendapp/state/persist', () => ({
   configureObservablePersistence: jest.fn(),

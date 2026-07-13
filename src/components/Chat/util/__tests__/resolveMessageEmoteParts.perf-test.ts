@@ -6,7 +6,7 @@ import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userS
 import {
   denseEmoteData,
   reprocessChatLines,
-} from './__fixtures__/resolveMessageEmoteParts.perf.fixture';
+} from '../__fixtures__/resolveMessageEmoteParts.perf.fixture';
 
 jest.mock('@app/store/chat/actions/channelLoad', () => ({
   getCurrentEmoteData: jest.fn(),
