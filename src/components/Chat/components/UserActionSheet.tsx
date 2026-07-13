@@ -207,11 +207,7 @@ function UserActionSheetComponent({
         ]
       : []),
   ];
-  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
-  const sheetWidth = Math.max(
-    280,
-    Math.min(windowWidth - theme.space16 * 2, 520),
-  );
+  const { height: windowHeight } = useWindowDimensions();
   const recentMessagesHeight =
     recentMessages.length > 0 ? 40 + recentMessages.length * 22 : 0;
   const maxScrollHeight = Math.min(
@@ -230,13 +226,13 @@ function UserActionSheetComponent({
     styles.wrapper,
     {
       maxHeight: sheetHeight - theme.space16,
-      width: sheetWidth,
     },
   ];
   const scrollStyle = [styles.scroll, { maxHeight: maxScrollHeight }];
 
   return (
     <BottomSheet
+      enableFixedSnapPoints
       isPresented={visible}
       onDismiss={onClose}
       showDragIndicator
@@ -441,10 +437,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   wrapper: {
-    alignSelf: 'center',
+    alignSelf: 'stretch',
     gap: 10,
     paddingHorizontal: theme.space12,
     paddingTop: theme.space8,
+    width: '100%',
   },
   recentMessages: {
     backgroundColor: 'rgba(255,255,255,0.06)',

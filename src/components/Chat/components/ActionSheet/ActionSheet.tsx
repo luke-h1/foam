@@ -267,11 +267,7 @@ function ActionSheetComponent(props: Props) {
 
     return items;
   })();
-  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
-  const sheetWidth = Math.max(
-    280,
-    Math.min(windowWidth - theme.space16 * 2, 520),
-  );
+  const { height: windowHeight } = useWindowDimensions();
   const maxScrollHeight = Math.min(
     Math.round(windowHeight * 0.62),
     actions.length * 58 + 116,
@@ -285,13 +281,13 @@ function ActionSheetComponent(props: Props) {
     styles.wrapper,
     {
       maxHeight: sheetHeight - theme.space16,
-      width: sheetWidth,
     },
   ];
   const scrollStyle = [styles.scroll, { maxHeight: maxScrollHeight }];
 
   return (
     <BottomSheet
+      enableFixedSnapPoints
       isPresented={visible}
       onDismiss={onClose}
       showDragIndicator
@@ -485,10 +481,11 @@ const styles = StyleSheet.create({
     lineHeight: theme.fontSize16 * 1.25,
   },
   wrapper: {
-    alignSelf: 'center',
+    alignSelf: 'stretch',
     gap: theme.space12,
     paddingHorizontal: theme.space12,
     paddingTop: theme.space8,
+    width: '100%',
   },
   scroll: {
     flexGrow: 0,

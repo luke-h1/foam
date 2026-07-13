@@ -40,12 +40,8 @@ function BadgePreviewSheetComponent(props: Props) {
   const { t } = useTranslation(['chat', 'common']);
   const { saveImage, isSaving } = useSaveImageToGallery();
   const { visible, onClose, selectedBadge } = props;
-  const { height: screenHeight, width: screenWidth } = useWindowDimensions();
-  const sheetWidth = Math.max(
-    280,
-    Math.min(screenWidth - theme.space16 * 2, 520),
-  );
-  const containerStyle = [styles.container, { width: sheetWidth }];
+  const { height: screenHeight } = useWindowDimensions();
+  const containerStyle = styles.container;
 
   const handleCopy = (field: 'name' | 'url') => {
     void Clipboard.setStringAsync(
@@ -276,11 +272,12 @@ const styles = StyleSheet.create({
     width: 96,
   },
   container: {
-    alignSelf: 'center',
+    alignSelf: 'stretch',
     flex: 1,
     paddingBottom: theme.space24,
     paddingHorizontal: theme.space20,
     paddingTop: theme.space4,
+    width: '100%',
   },
   doneButton: {
     alignItems: 'center',

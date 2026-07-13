@@ -106,7 +106,7 @@
     "@shopify/flash-list": "2.0.2",
     "@shopify/react-native-skia": "2.6.2",
     "@statsig/react-native-bindings": "3.33.2",
-    "@swmansion/react-native-bottom-sheet": "0.14.1",
+    "@swmansion/react-native-bottom-sheet": "0.16.1",
     "@tanstack/react-query": "5.100.9",
     "app-icon-badge": "0.1.2",
     "date-fns": "4.1.0",
@@ -300,7 +300,7 @@
     "expo-image@57.0.0": "patches/expo-image@57.0.0.patch",
     "expo-modules-jsi@57.0.0": "patches/expo-modules-jsi@57.0.0.patch",
     "@sentry/core@10.57.0": "patches/@sentry%2Fcore@10.57.0.patch",
-    "@swmansion/react-native-bottom-sheet@0.14.1": "patches/@swmansion%2Freact-native-bottom-sheet@0.14.1.patch"
+    "@swmansion/react-native-bottom-sheet@0.16.1": "patches/@swmansion%2Freact-native-bottom-sheet@0.16.1.patch"
   },
   "reanimated": {
     "staticFeatureFlags": {

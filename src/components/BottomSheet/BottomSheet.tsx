@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   dragIndicator: {
-    backgroundColor: 'rgba(255,255,255,0.38)',
+    backgroundColor: 'rgba(255,255,255,0.34)',
     borderRadius: 999,
     height: 4,
     width: 36,

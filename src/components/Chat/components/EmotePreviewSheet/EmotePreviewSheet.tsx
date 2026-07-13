@@ -50,10 +50,6 @@ function EmotePreviewSheetComponent(props: Props) {
   const { visible, onClose, selectedEmote } = props;
   const disableAnimations = usePreference('disableEmoteAnimations');
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
-  const sheetWidth = Math.max(
-    280,
-    Math.min(screenWidth - theme.space16 * 2, 520),
-  );
   const displayUrl = getDisplayEmoteUrl({
     url: selectedEmote.url,
     static_url: selectedEmote.static_url,
@@ -72,7 +68,7 @@ function EmotePreviewSheetComponent(props: Props) {
       ? selectedEmote.emote_link
       : undefined;
   const maxEmoteSize = Math.min(Math.max(screenWidth * 0.36, 96), 156);
-  const containerStyle = [styles.container, { width: sheetWidth }];
+  const containerStyle = styles.container;
 
   const emoteSize = (() => {
     const originalWidth = selectedEmote.width || 28;
@@ -340,11 +336,12 @@ const styles = StyleSheet.create({
     lineHeight: theme.fontSize17 * 1.2,
   },
   container: {
-    alignSelf: 'center',
+    alignSelf: 'stretch',
     flex: 1,
     paddingBottom: theme.space24,
     paddingHorizontal: theme.space20,
     paddingTop: theme.space4,
+    width: '100%',
   },
   doneButton: {
     alignItems: 'center',

@@ -68,13 +68,11 @@ export function EmoteSheet({
       enableFixedSnapPoints
       isPresented={isPresented}
       onDismiss={sheet.handleDismiss}
+      showDragIndicator
       snapPoints={[{ fraction: EMOTE_SHEET_DETENT }]}
       testID='chat-emote-sheet'
     >
       <View onLayout={handleContainerLayout} style={styles.container}>
-        <View style={styles.sheetHandleRow}>
-          <View style={styles.sheetHandle} />
-        </View>
         <View style={styles.header}>
           <EmoteSheetIosBlur />
           <ScrollView

@@ -12,7 +12,7 @@ export function BottomSheetSurface() {
         <GlassView
           glassEffectStyle='regular'
           colorScheme='dark'
-          tintColor='rgba(11,15,20,0.35)'
+          tintColor='rgba(11,15,20,0.28)'
           style={[StyleSheet.absoluteFill, styles.surface]}
         />
       );
@@ -40,8 +40,7 @@ const styles = StyleSheet.create({
   },
   surface: {
     borderCurve: 'continuous',
-    borderTopLeftRadius: theme.borderRadius28,
-    borderTopRightRadius: theme.borderRadius28,
+    borderRadius: theme.borderRadius28,
     overflow: 'hidden',
   },
   tint: {

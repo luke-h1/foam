@@ -78,16 +78,11 @@ function EmoteActionSheetComponent({
   const [uncontrolledVisible, setUncontrolledVisible] = useState(false);
   const isControlled = typeof isPresented === 'boolean';
   const visible = isControlled ? isPresented : uncontrolledVisible;
-  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
-  const sheetWidth = Math.max(
-    280,
-    Math.min(windowWidth - theme.space16 * 2, 520),
-  );
+  const { height: windowHeight } = useWindowDimensions();
   const wrapperStyle = [
     styles.wrapper,
     {
       maxHeight: Math.round(windowHeight * 0.72),
-      width: sheetWidth,
     },
   ];
   const resolvedImageVariants = useMemo(
@@ -435,10 +430,11 @@ const styles = StyleSheet.create({
     paddingBottom: theme.space8,
   },
   wrapper: {
-    alignSelf: 'center',
+    alignSelf: 'stretch',
     gap: theme.space12,
     paddingBottom: theme.space24,
     paddingHorizontal: theme.space20,
     paddingTop: theme.space4,
+    width: '100%',
   },
 });
