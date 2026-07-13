@@ -18,6 +18,7 @@ const mockPreferences: Preferences = {
   showInlineReplyContext: true,
   showRecentMessages: true,
   showUnreadJumpPill: true,
+  showJoinPartMessages: false,
   disableChat: false,
   disableStream: false,
   useUIKitForWebView: false,

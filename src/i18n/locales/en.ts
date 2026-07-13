@@ -221,6 +221,7 @@ const en = {
       highlightOwnMentions: 'Highlight Own Mentions',
       inlineReplyContext: 'Inline Reply Context',
       showJumpPill: 'Show Jump Pill',
+      showJoinPartMessages: 'Show Join/Part Messages',
       reconnect: 'Reconnect',
       clearCache: 'Clear Cache',
       syncToLive: 'Sync to Live',

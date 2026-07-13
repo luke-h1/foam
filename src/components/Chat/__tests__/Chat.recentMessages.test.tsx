@@ -381,6 +381,7 @@ const setPreferences = (showRecentMessages = true) => {
     showTwitchEmotes: true,
     showTwitchBadges: true,
     showUnreadJumpPill: true,
+    showJoinPartMessages: false,
     blockedTerms: [],
     chatTimestampFormat: '24h',
     chatFontScale: 'default',

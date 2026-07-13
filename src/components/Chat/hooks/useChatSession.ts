@@ -247,6 +247,8 @@ export function useChatSession({
     onPart,
     onReconnect,
     onRoomState,
+    onUserJoin,
+    onUserPart,
     onUserNotice,
   } = useChatIrcHandlers({
     channelId,
@@ -286,6 +288,8 @@ export function useChatSession({
     onRoomState,
     onJoin,
     onPart,
+    onUserJoin,
+    onUserPart,
   });
 
   useSyntheticChatFlood({

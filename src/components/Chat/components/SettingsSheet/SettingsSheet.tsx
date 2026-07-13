@@ -50,6 +50,7 @@ const SettingsSheetComponent = ({
   const showInlineReplyContext = usePreference('showInlineReplyContext');
   const showTimestamps = usePreference('chatTimestamps');
   const showUnreadJumpPill = usePreference('showUnreadJumpPill');
+  const showJoinPartMessages = usePreference('showJoinPartMessages');
   const updatePreferences = useUpdatePreferences();
   const { bottom: bottomInset } = useSafeAreaInsets();
 
@@ -191,6 +192,18 @@ const SettingsSheetComponent = ({
               value={showUnreadJumpPill}
               onValueChange={value =>
                 updatePreferences({ showUnreadJumpPill: value })
+              }
+            />
+            <SettingsToggleRow
+              title={t('settingsSheet.showJoinPartMessages')}
+              icon={{
+                icon: 'person.badge.plus',
+                androidIcon: 'group_add',
+                color: ICON_TINT,
+              }}
+              value={showJoinPartMessages}
+              onValueChange={value =>
+                updatePreferences({ showJoinPartMessages: value })
               }
             />
           </SettingsSection>

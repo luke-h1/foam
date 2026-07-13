@@ -5,6 +5,7 @@ import {
   clearMessages,
   clearMessagesWithNotice,
 } from '@app/store/chat/actions/messages';
+import { preferences$ } from '@app/store/preferenceStore';
 
 import { useChatIrcHandlers } from '../useChatIrcHandlers';
 
@@ -81,6 +82,10 @@ function renderIrcHandlers({
 describe('useChatIrcHandlers', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    preferences$.showJoinPartMessages.set(false);
   });
 
   test('skips the connected notice while recent history is loading', () => {
@@ -354,6 +359,39 @@ describe('useChatIrcHandlers', () => {
     expect(addedSystemMessageContents()).toEqual([
       'Chat modes active: slow mode (30s)',
     ]);
+  });
+
+  test('announces a chatter joining when join/part messages are enabled', () => {
+    preferences$.showJoinPartMessages.set(true);
+    const { result } = renderIrcHandlers();
+
+    act(() => {
+      result.current.onUserJoin('#foam', 'bob');
+    });
+
+    expect(addedSystemMessageContents()).toEqual(['bob joined']);
+  });
+
+  test('announces a chatter parting when join/part messages are enabled', () => {
+    preferences$.showJoinPartMessages.set(true);
+    const { result } = renderIrcHandlers();
+
+    act(() => {
+      result.current.onUserPart('#foam', 'bob');
+    });
+
+    expect(addedSystemMessageContents()).toEqual(['bob parted']);
+  });
+
+  test('suppresses join/part notices while the preference is off', () => {
+    const { result } = renderIrcHandlers();
+
+    act(() => {
+      result.current.onUserJoin('#foam', 'bob');
+      result.current.onUserPart('#foam', 'bob');
+    });
+
+    expect(mockAddMessage).not.toHaveBeenCalled();
   });
 
   test('reconnect resets the room state and announces the reconnect', () => {

@@ -5,6 +5,7 @@ import * as Network from 'expo-network';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { isE2EMode } from '@app/services/api/clients';
+import { usePreference } from '@app/store/preferenceStore';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
 import { getHeartbeatAction } from '@app/utils/chat/chatHeartbeat';
@@ -63,6 +64,8 @@ interface UseTwitchChatOptions {
   ) => void;
   onJoin?: (channel: string) => void;
   onPart?: (channel: string) => void;
+  onUserJoin?: (channel: string, username: string) => void;
+  onUserPart?: (channel: string, username: string) => void;
   onNotice?: (
     channel: string,
     tags: Record<string, string>,
@@ -99,6 +102,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const optionsRef = useRef<UseTwitchChatOptions>({});
   optionsRef.current = options;
   const { authState, user } = useAuthContext();
+  const showJoinPartMessages = usePreference('showJoinPartMessages');
+  const showJoinPartMessagesRef = useRef(showJoinPartMessages);
+  showJoinPartMessagesRef.current = showJoinPartMessages;
   const channel = optionsRef.current.channel;
   const blockedUsers = optionsRef.current.blockedUsers ?? [];
   const mutedWords = optionsRef.current.mutedWords ?? [];
@@ -110,6 +116,10 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const anonymousNickRef = useRef(
     `justinfan${Math.floor(Math.random() * 90000) + 10000}`,
   );
+  // The nick we authenticated with (login or anonymous justinfan). JOIN/PART
+  // lines carry the acting user in their prefix, so this lets us tell our own
+  // connection join/part apart from other chatters'.
+  const currentNickRef = useRef('');
   const pendingIrcMessagesRef = useRef<string[]>([]);
   // Seeded on open and refreshed on every inbound line; the heartbeat only
   // reads it once readyState is OPEN, by which point onOpen has set it.
@@ -174,6 +184,13 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     sendMessageFn(payload);
   }, []);
 
+  // A JOIN/PART with no prefix, or one matching the nick we authenticated with,
+  // is our own connection; anything else is another chatter.
+  const isSelfNick = (nick: string | undefined) =>
+    !nick ||
+    !currentNickRef.current ||
+    nick.toLowerCase() === currentNickRef.current.toLowerCase();
+
   const markChannelJoined = (channelName: string) => {
     const channelFormatted = formatIrcChannelName(channelName);
     pendingJoinChannelsRef.current.delete(channelFormatted);
@@ -219,6 +236,8 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       ? `oauth:${accessToken}`
       : 'SCHMOOPIIE';
 
+    currentNickRef.current = nickname;
+
     logger.chat.info(
       canUseAuthenticatedChat
         ? 'Authenticating with Twitch IRC...'
@@ -231,7 +250,10 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       );
     }
 
-    sendIrcCommand('CAP REQ :twitch.tv/tags twitch.tv/commands');
+    const capabilities = showJoinPartMessagesRef.current
+      ? 'twitch.tv/tags twitch.tv/commands twitch.tv/membership'
+      : 'twitch.tv/tags twitch.tv/commands';
+    sendIrcCommand(`CAP REQ :${capabilities}`);
     sendIrcCommand('PASS', passToken);
     sendIrcCommand('NICK', nickname);
 
@@ -486,9 +508,14 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         if (params.length > 0) {
           const channelName = params[0];
           if (channelName) {
-            markChannelJoined(channelName);
-            logger.chat.info(`✅ Joined channel: ${channelName}`);
-            optionsRef.current.onJoin?.(channelName);
+            const nick = prefix?.split('!')[0];
+            if (isSelfNick(nick)) {
+              markChannelJoined(channelName);
+              logger.chat.info(`✅ Joined channel: ${channelName}`);
+              optionsRef.current.onJoin?.(channelName);
+            } else if (nick) {
+              optionsRef.current.onUserJoin?.(channelName, nick);
+            }
           }
         }
         break;
@@ -498,10 +525,15 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         if (params.length > 0) {
           const channelName = params[0];
           if (channelName) {
-            logger.chat.info(`Left channel: ${channelName}`);
-            pendingJoinChannelsRef.current.delete(channelName);
-            joinedChannelsRef.current.delete(channelName);
-            optionsRef.current.onPart?.(channelName);
+            const nick = prefix?.split('!')[0];
+            if (isSelfNick(nick)) {
+              logger.chat.info(`Left channel: ${channelName}`);
+              pendingJoinChannelsRef.current.delete(channelName);
+              joinedChannelsRef.current.delete(channelName);
+              optionsRef.current.onPart?.(channelName);
+            } else if (nick) {
+              optionsRef.current.onUserPart?.(channelName, nick);
+            }
           }
         }
         break;
@@ -800,6 +832,25 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       getWebSocketRef.current().close(4001, 'auth token refreshed');
     }
   }, [authState?.token?.accessToken, shouldConnect]);
+
+  // Membership is negotiated once at authenticate time, so a live socket won't
+  // start (or stop) receiving other users' JOIN/PART until it reconnects with a
+  // new CAP REQ. Bounce the socket when the preference flips.
+  const previousShowJoinPartRef = useRef(showJoinPartMessages);
+  useEffect(() => {
+    const previous = previousShowJoinPartRef.current;
+    previousShowJoinPartRef.current = showJoinPartMessages;
+    if (previous === showJoinPartMessages || !shouldConnect) {
+      return;
+    }
+    if (getWebSocketRef.current().readyState !== WebSocket.OPEN) {
+      return;
+    }
+    logger.chat.info(
+      '[useTwitchChat] Join/part preference changed, reconnecting IRC to renegotiate membership capability',
+    );
+    getWebSocketRef.current().close(4005, 'membership capability change');
+  }, [showJoinPartMessages, shouldConnect]);
 
   useEffect(() => {
     sendIrcMessageRef.current = sendWebSocketMessage;

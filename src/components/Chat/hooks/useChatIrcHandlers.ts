@@ -372,6 +372,26 @@ export function useChatIrcHandlers({
     ],
   );
 
+  const onUserJoin = useCallback(
+    (_channel: string, username: string) => {
+      if (!getPreferences().showJoinPartMessages) {
+        return;
+      }
+      appendSystemMessage(`${username} joined`);
+    },
+    [appendSystemMessage],
+  );
+
+  const onUserPart = useCallback(
+    (_channel: string, username: string) => {
+      if (!getPreferences().showJoinPartMessages) {
+        return;
+      }
+      appendSystemMessage(`${username} parted`);
+    },
+    [appendSystemMessage],
+  );
+
   const onNotice = useCallback(
     (_channel: string, tags: Record<string, string>, messageText: string) => {
       const noticeId = tags['msg-id'];
@@ -477,6 +497,8 @@ export function useChatIrcHandlers({
     onPart,
     onReconnect,
     onRoomState,
+    onUserJoin,
+    onUserPart,
     onUserNotice,
   };
 }
