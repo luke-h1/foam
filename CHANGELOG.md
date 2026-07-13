@@ -1,5 +1,41 @@
 # Changelog
 
+## 1.0.3 (Production)
+
+### ♻️ Refactor
+
+- Reduce prop drilling and enforce react best practices ([#725](https://github.com/lhowsam/foam/issues/725))
+
+### ⚡ Performance
+
+- **chat:** Skip eager warming of animated emotes
+
+### ✨ Features
+
+- **chat:** Slide new messages into view behind animate preference ([#726](https://github.com/lhowsam/foam/issues/726))
+- **chat:** Join/part system messages behind preference ([#727](https://github.com/lhowsam/foam/issues/727)) ([#730](https://github.com/lhowsam/foam/issues/730))
+- **chat:** Floating liquid glass bottom sheets ([#734](https://github.com/lhowsam/foam/issues/734))
+
+### 🐛 Bug Fixes
+
+- **app:** Patch sentry console oom ([#714](https://github.com/lhowsam/foam/issues/714))
+- **stream:** Hardcode Twitch embed parent and detect misconfigured embeds ([#715](https://github.com/lhowsam/foam/issues/715))
+- **chat:** Keep 7TV personal + tagged sub emotes resolved on reprocess ([#717](https://github.com/lhowsam/foam/issues/717))
+- **chat:** Correct 7TV emote sizing and shrink the animated-emote decode storm ([#718](https://github.com/lhowsam/foam/issues/718))
+- **chat:** Stabilize emote rail press handlers ([#723](https://github.com/lhowsam/foam/issues/723))
+- **preferences:** Render chat setting previews from fixtures not cache ([#729](https://github.com/lhowsam/foam/issues/729))
+- **preferences:** Render chat settings emote/badge previews inside native form ([#731](https://github.com/lhowsam/foam/issues/731))
+- **app:** Ios 18 tab bar ([#732](https://github.com/lhowsam/foam/issues/732))
+
+### 📝 Other Changes
+
+- 7tv paint parity (skia + webview), perf-audit fixes, provider parity, and motion polish ([#716](https://github.com/lhowsam/foam/issues/716))
+- Chat/video sync by default, 7tv username typography, sheet crash fix, webview prewarm ([#724](https://github.com/lhowsam/foam/issues/724))
+
+### 🔧 Miscellaneous Tasks
+
+- **app:** Fix dev only fixture bundle err
+
 ## 1.0.2 (Production)
 
 ### ✨ Features
