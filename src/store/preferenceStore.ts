@@ -46,6 +46,12 @@ export interface Preferences {
   showInlineReplyContext: boolean;
   showRecentMessages: boolean;
   showUnreadJumpPill: boolean;
+  /**
+   * Show a system message when a user joins or leaves the channel's chat, like
+   * Chatterino. Requires the IRC membership capability, so toggling it
+   * reconnects chat.
+   */
+  showJoinPartMessages: boolean;
   disableChat: boolean;
   disableStream: boolean;
   useUIKitForWebView: boolean;
@@ -110,6 +116,7 @@ export const preferencesSchema = z.object({
   showInlineReplyContext: z.boolean(),
   showRecentMessages: z.boolean(),
   showUnreadJumpPill: z.boolean(),
+  showJoinPartMessages: z.boolean(),
   disableChat: z.boolean(),
   disableStream: z.boolean(),
   useUIKitForWebView: z.boolean(),
@@ -158,6 +165,7 @@ export const initialPreferences: Preferences = {
   showInlineReplyContext: true,
   showRecentMessages: true,
   showUnreadJumpPill: true,
+  showJoinPartMessages: false,
   disableChat: false,
   disableStream: false,
   useUIKitForWebView: false,

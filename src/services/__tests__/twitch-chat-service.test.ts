@@ -5,6 +5,7 @@ import { ReadyState } from '@app/hooks/ws/constants';
 import type { Options } from '@app/hooks/ws/types';
 import { useWebsocket } from '@app/hooks/ws/useWebsocket';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
+import { preferences$ } from '@app/store/preferenceStore';
 import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
 
 jest.mock('@app/context/AuthContext', () => ({
@@ -201,5 +202,91 @@ describe('useTwitchChat foreground liveness probe', () => {
 
     expect(reconnect).toHaveBeenCalledTimes(1);
     expect(sendMessage).not.toHaveBeenCalled();
+  });
+});
+
+describe('useTwitchChat join/part routing', () => {
+  beforeEach(() => {
+    socketReadyState = WebSocket.OPEN;
+    wsOptions = {};
+    preferences$.showJoinPartMessages.set(false);
+    mockedUseWebsocket.mockImplementation((_url, options = {}) => {
+      wsOptions = options;
+      return {
+        sendMessage,
+        sendJsonMessage: jest.fn(),
+        lastMessage: new MessageEvent('message'),
+        lastJsonMessage: null,
+        readyState: ReadyState.OPEN,
+        getWebSocket: () => socket,
+        reconnect,
+      };
+    });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  function feedLine(line: string) {
+    act(() => {
+      wsOptions.onMessage?.(
+        new MessageEvent('message', { data: `${line}\r\n` }),
+      );
+    });
+  }
+
+  test('routes another chatter’s JOIN and PART to the user handlers', () => {
+    const onUserJoin = jest.fn();
+    const onUserPart = jest.fn();
+    const onJoin = jest.fn();
+    const onPart = jest.fn();
+    renderHook(() =>
+      useTwitchChat({
+        channel: 'foam',
+        onUserJoin,
+        onUserPart,
+        onJoin,
+        onPart,
+      }),
+    );
+    act(() => {
+      wsOptions.onOpen?.();
+    });
+
+    feedLine(':bob!bob@bob.tmi.twitch.tv JOIN #foam');
+    feedLine(':bob!bob@bob.tmi.twitch.tv PART #foam');
+
+    expect(onUserJoin).toHaveBeenCalledWith('#foam', 'bob');
+    expect(onUserPart).toHaveBeenCalledWith('#foam', 'bob');
+    expect(onJoin).not.toHaveBeenCalled();
+    expect(onPart).not.toHaveBeenCalled();
+  });
+
+  test('requests the membership capability only when join/part messages are enabled', () => {
+    preferences$.showJoinPartMessages.set(true);
+    renderHook(() => useTwitchChat({ channel: 'foam' }));
+    act(() => {
+      wsOptions.onOpen?.();
+    });
+
+    const capReq = sendMessage.mock.calls
+      .map(([payload]) => payload as string)
+      .find(payload => payload.startsWith('CAP REQ'));
+    expect(capReq).toBe(
+      'CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership\r\n',
+    );
+  });
+
+  test('omits the membership capability when the preference is off', () => {
+    renderHook(() => useTwitchChat({ channel: 'foam' }));
+    act(() => {
+      wsOptions.onOpen?.();
+    });
+
+    const capReq = sendMessage.mock.calls
+      .map(([payload]) => payload as string)
+      .find(payload => payload.startsWith('CAP REQ'));
+    expect(capReq).toBe('CAP REQ :twitch.tv/tags twitch.tv/commands\r\n');
   });
 });
