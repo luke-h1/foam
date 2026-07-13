@@ -97,7 +97,9 @@ export function BottomSheet({
   return (
     <Modal
       animationType='none'
-      onRequestClose={onDismiss}
+      onRequestClose={() => {
+        setIndex(0);
+      }}
       statusBarTranslucent
       transparent
       visible
