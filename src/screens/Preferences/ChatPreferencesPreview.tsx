@@ -2,16 +2,10 @@ import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { ReactNode } from 'react';
 
-import { useSelector } from '@legendapp/state/react';
-
 import { RichChatMessage } from '@app/components/Chat/components/ChatMessage/RichChatMessage';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
-import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import {
-  type ChannelCacheType,
-  type ChatMessageType,
-} from '@app/store/chat/types/constants';
+import { type ChatMessageType } from '@app/store/chat/types/constants';
 import { type ChatFontScale } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
@@ -364,7 +358,7 @@ const ProviderAssetPreview = function ProviderAssetPreview({
   testID: string;
   variant: 'badges' | 'emotes';
 }) {
-  const sample = useSelector(() => getProviderPreviewSample(provider, variant));
+  const sample = getProviderPreviewSample(provider);
   const message =
     variant === 'emotes'
       ? createPreviewMessage({
@@ -496,144 +490,13 @@ function mentionPart(content: string): ParsedPart<'mention'> {
 
 function getProviderPreviewSample(
   provider: PreviewProvider,
-  variant: 'badges' | 'emotes',
 ): ProviderPreviewSample {
-  const fallback = chatPreferencePreviewFixtures[provider];
-
-  if (variant === 'emotes') {
-    return {
-      badges: fallback.badges.slice(0, provider === 'twitch' ? 2 : 1),
-      emotes: fillPreviewItems(
-        getLiveProviderEmotes(provider),
-        fallback.emotes,
-        2,
-        item => item.id,
-      ),
-    };
-  }
+  const fixtures = chatPreferencePreviewFixtures[provider];
 
   return {
-    badges: fillPreviewItems(
-      getLiveProviderBadges(provider),
-      fallback.badges,
-      provider === 'twitch' ? 2 : 1,
-      badge => `${badge.set}:${badge.id}`,
-    ),
-    emotes: fallback.emotes.slice(0, 2),
+    badges: fixtures.badges.slice(0, provider === 'twitch' ? 2 : 1),
+    emotes: fixtures.emotes.slice(0, 2),
   };
-}
-
-function fillPreviewItems<T>(
-  liveItems: T[],
-  fallbackItems: T[],
-  count: number,
-  getKey: (item: T) => string,
-): T[] {
-  const result: T[] = [];
-  const seen = new Set<string>();
-
-  [liveItems, fallbackItems].forEach(items => {
-    items.forEach(item => {
-      const key = getKey(item);
-      if (seen.has(key) || result.length >= count) {
-        return;
-      }
-      seen.add(key);
-      result.push(item);
-    });
-  });
-
-  return result;
-}
-
-function sortCachesByFreshness(
-  channelCaches: Record<string, ChannelCacheType>,
-) {
-  return Object.values(channelCaches).sort(
-    (left, right) => (right.lastUpdated || 0) - (left.lastUpdated || 0),
-  );
-}
-
-function getLiveProviderEmotes(provider: PreviewProvider): SanitisedEmote[] {
-  const channelCaches = chatStore$.persisted.channelCaches.get();
-  const caches = sortCachesByFreshness(channelCaches);
-  const emotes: SanitisedEmote[] = [];
-
-  caches.forEach(cache => {
-    switch (provider) {
-      case '7tv':
-        emotes.push(
-          ...(cache.sevenTvChannelEmotes ?? []),
-          ...(cache.sevenTvGlobalEmotes ?? []),
-        );
-        break;
-      case 'bttv':
-        emotes.push(
-          ...(cache.bttvChannelEmotes ?? []),
-          ...(cache.bttvGlobalEmotes ?? []),
-        );
-        break;
-      case 'ffz':
-        emotes.push(
-          ...(cache.ffzChannelEmotes ?? []),
-          ...(cache.ffzGlobalEmotes ?? []),
-        );
-        break;
-      case 'twitch':
-        emotes.push(
-          ...(cache.twitchChannelEmotes ?? []),
-          ...(cache.twitchGlobalEmotes ?? []),
-        );
-        break;
-      default: {
-        const unreachable: never = provider;
-        return unreachable;
-      }
-    }
-  });
-
-  return emotes;
-}
-
-function getLiveProviderBadges(provider: PreviewProvider): SanitisedBadgeSet[] {
-  if (provider === '7tv') {
-    const cachedBadges = chatStore$.badges.get();
-    return Object.values(cachedBadges).filter(
-      badge => badge.provider === '7tv' || badge.type === '7TV Badge',
-    );
-  }
-
-  if (provider === 'bttv') {
-    const cachedBadges = chatStore$.badges.get();
-    return Object.values(cachedBadges).filter(
-      badge => badge.provider === 'bttv' || badge.type === 'BTTV Badge',
-    );
-  }
-
-  const channelCaches = chatStore$.persisted.channelCaches.get();
-  const caches = sortCachesByFreshness(channelCaches);
-  const badges: SanitisedBadgeSet[] = [];
-
-  caches.forEach(cache => {
-    switch (provider) {
-      case 'ffz':
-        badges.push(
-          ...(cache.ffzChannelBadges ?? []),
-          ...(cache.ffzGlobalBadges ?? []),
-        );
-        break;
-      case 'twitch':
-        badges.push(
-          ...(cache.twitchChannelBadges ?? []),
-          ...(cache.twitchGlobalBadges ?? []),
-        );
-        break;
-      default:
-        break;
-    }
-  });
-
-  return badges;
 }
 
 function buildProviderEmoteFallbackText(emotes: SanitisedEmote[]) {
