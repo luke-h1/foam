@@ -43,7 +43,7 @@ export interface SubscriptionTags extends BaseUserNoticeTags {
   'msg-param-cumulative-months': string;
 
   /**
-   * Weather to share their sub streak
+   * Whether to share their sub streak
    */
   'msg-param-should-share-streak': '1' | '0';
 

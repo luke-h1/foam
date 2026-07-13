@@ -38,7 +38,7 @@ import {
   type PreviewProvider,
   SCROLLBACK_OPTIONS,
   TIMESTAMP_FORMAT_OPTIONS,
-} from './chatPreferenceTypes';
+} from './types/chatPreferenceTypes';
 
 function hostPreview(node: ReactElement, width: number, padded = true) {
   return (

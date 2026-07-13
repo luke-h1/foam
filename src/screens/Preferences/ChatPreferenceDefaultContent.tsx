@@ -18,6 +18,8 @@ import {
 } from './ChatPreferencePreviewWidgets';
 import { ChatPreferenceSegmentedSettingsRow } from './ChatPreferenceSettingsRows';
 import { ChatPreferencePreview } from './ChatPreferencesPreview';
+import { ChatProviderPreferenceSections } from './ChatProviderPreferenceSections';
+import { useChatPreferenceScreenState } from './hooks/useChatPreferenceScreenState';
 import {
   CHAT_DELAY_OPTIONS,
   CONTEXT_TOGGLE_ROWS,
@@ -26,9 +28,7 @@ import {
   FONT_SCALE_OPTIONS,
   SCROLLBACK_LABELS,
   TIMESTAMP_FORMAT_OPTIONS,
-} from './chatPreferenceTypes';
-import { ChatProviderPreferenceSections } from './ChatProviderPreferenceSections';
-import { useChatPreferenceScreenState } from './useChatPreferenceScreenState';
+} from './types/chatPreferenceTypes';
 
 export function ChatPreferenceDefaultContent() {
   const {

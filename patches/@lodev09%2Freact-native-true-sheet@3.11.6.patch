@@ -1,0 +1,21 @@
+diff --git a/ios/TrueSheetView.mm b/ios/TrueSheetView.mm
+index 2ce79bde16c8c2e1751bbcca7a032b8a4d266321..b932a940976d26d8f2ff72f85c5c13de0a62d32a 100644
+--- a/ios/TrueSheetView.mm
++++ b/ios/TrueSheetView.mm
+@@ -153,6 +153,16 @@ using namespace facebook::react;
+ 
+ #pragma mark - RCTComponentViewProtocol
+ 
++/**
++ * Opt out of Fabric view recycling. Dismissal of a still-presented sheet on
++ * teardown only happens in dealloc; the recycle pool would defer dealloc
++ * indefinitely and leave the native sheet stuck on screen after an
++ * unmount-while-presented.
++ */
+++ (BOOL)shouldBeRecycled {
++  return NO;
++}
++
+ + (ComponentDescriptorProvider)componentDescriptorProvider {
+   return concreteComponentDescriptorProvider<TrueSheetViewComponentDescriptor>();
+ }

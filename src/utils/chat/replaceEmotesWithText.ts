@@ -34,10 +34,6 @@ export function replaceEmotesWithText(parts: ParsedPart[]): string {
         }
 
         case 'mention':
-          /**
-           * For mentions, preserve @ symbol, username &
-           * add a space at the end
-           */
           return part.content ? `${part.content} ` : '';
 
         case 'text':

@@ -79,7 +79,6 @@ describe('FindEmotesInText', () => {
     const emoteMap = createEmoteMap(['Kappa', 'KappaHD']);
     const result = findEmotesInText('KappaHD hello Kappa', emoteMap);
 
-    // Should find KappaHD first because it's longer
     expect(result).toEqual<FindEmotesInTextReturn[]>([
       {
         emote: createMockEmote('KappaHD'),
@@ -140,7 +139,6 @@ describe('FindEmotesInText', () => {
     const emoteMap = createEmoteMap(['Pog'], createNonTwitchMockEmote);
     const result = findEmotesInText('Pog PogChamp Pog NotPog PogNot', emoteMap);
 
-    // Should only match the standalone 'Pog'
     expect(result).toEqual<FindEmotesInTextReturn[]>([
       {
         emote: createNonTwitchMockEmote('Pog'),

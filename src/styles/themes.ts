@@ -151,7 +151,6 @@ export const theme = {
       light: 'rgba(255,255,255,0)',
       dark: 'rgba(0,0,0,0)',
     },
-    // Page background.
     canvas: CANVAS,
     background: {
       ...CANVAS,

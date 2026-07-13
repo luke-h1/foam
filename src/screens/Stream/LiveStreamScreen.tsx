@@ -58,6 +58,7 @@ import { logger } from '@app/utils/logger';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 
 import { ChatLatencyPill } from './ChatLatencyPill';
+import { useSleepTimer } from './hooks/useSleepTimer';
 import { clampLandscapeChatWidth } from './liveStreamLayout/clampLandscapeChatWidth';
 import { getLandscapeChatWidthBounds } from './liveStreamLayout/getLandscapeChatWidthBounds';
 import { getLiveStreamChatDimensions } from './liveStreamLayout/getLiveStreamChatDimensions';
@@ -70,9 +71,8 @@ import {
 import {
   initialLiveStreamScreenState,
   liveStreamScreenReducer,
-} from './liveStreamScreenReducer';
-import { showSleepTimerMenu } from './showSleepTimerMenu';
-import { useSleepTimer } from './useSleepTimer';
+} from './reducers/liveStreamScreenReducer';
+import { showSleepTimerMenu } from './util/showSleepTimerMenu';
 
 interface LiveStreamScreenProps {
   id: string;

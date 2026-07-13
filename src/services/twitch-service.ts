@@ -431,8 +431,7 @@ export const twitchService = {
   },
 
   /**
-   * @param token
-   * @returns a boolean indicating whether the token is valid or not
+   * @returns whether the token is valid
    * @see https://dev.twitch.tv/docs/authentication/validate-tokens#validating-tokens
    */
   validateToken: async (token: string): Promise<boolean> => {
@@ -465,8 +464,7 @@ export const twitchService = {
   },
 
   /**
-   * @param cursor
-   * @returns an object that contains the top 20 streams and a cursor for further requests
+   * @returns top 20 streams plus a cursor for further requests
    * @requires a non-anon token
    */
   getTopStreams: async (

@@ -13,6 +13,14 @@ export interface EmoteMenuSet {
   icon: EmoteMenuIcon;
   id: string;
   provider: EmoteMenuProviderId;
+  /**
+   * Full first word of the title ("Personal", "Global", "Channel") shown in
+   * the bottom jump rail when the set has no emoji/avatar icon.
+   */
+  railLabel: string;
+  /**
+   * Initials fallback for compact icon slots (section header icon box).
+   */
   shortLabel: string;
   title: string;
 }
@@ -56,6 +64,15 @@ function chunk<TItem>(items: TItem[], size: number): TItem[][] {
   return rows;
 }
 
+function makeRailLabel(title: string): string {
+  const firstWord = title
+    .split(/[\s·-]+/)
+    .map(word => word.trim())
+    .find(Boolean);
+
+  return firstWord ?? '?';
+}
+
 function makeShortLabel(title: string): string {
   const words = title.split(/[\s·-]+/).flatMap(word => {
     const trimmed = word.trim();
@@ -90,6 +107,7 @@ function makeSet(
     title,
     icon,
     emotes,
+    railLabel: icon.startsWith('emoji:') ? icon.slice(6) : makeRailLabel(title),
     shortLabel: icon.startsWith('emoji:')
       ? icon.slice(6)
       : makeShortLabel(title),

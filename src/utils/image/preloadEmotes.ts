@@ -36,9 +36,6 @@ function getDisplayEmoteCacheUrls(emote: SanitisedEmote): string[] {
   return Array.from(urls);
 }
 
-/**
- * Preload a batch of emotes in the background
- */
 export async function preloadEmotes(
   emotes: SanitisedEmote[],
   limit = 50,
@@ -121,9 +118,6 @@ export async function preloadGlobalEmotes(emoteData: {
   await preloadEmotes(allGlobal, 64);
 }
 
-/**
- * Preload channel-specific emotes when entering a channel
- */
 export async function preloadChannelEmotes(emoteData: {
   twitchChannelEmotes?: SanitisedEmote[];
   sevenTvChannelEmotes?: SanitisedEmote[];

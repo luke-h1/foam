@@ -17,12 +17,6 @@ export interface SanitisedBadgeSet {
 
   color?: string;
   owner_username?: string;
-  /**
-   * The set ID
-   */
   set: string;
-  /**
-   * The provider of the badge (7TV, BTTV, FFZ)
-   */
   provider?: '7tv' | 'bttv' | 'ffz';
 }

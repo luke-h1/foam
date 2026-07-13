@@ -16,54 +16,30 @@ import {
 import { IconButton } from '../IconButton/IconButton';
 import { Image } from '../Image/Image';
 
-/**
- * Unified header component that supports both standard and hero layouts
- * API aligned with Text component for consistency
- */
 export interface ScreenHeaderProps {
-  /**
-   * Main title
-   */
   title: string;
-  /**
-   * Optional subtitle displayed below the title
-   * mainly for metadata
-   */
   subtitle?: string;
-  /**
-   * Optional testID applied to the subtitle text
-   */
   subtitleTestID?: string;
   /**
    * Show back button (calls navigation.goBack by default)
    */
   back?: boolean;
-  /**
-   * Custom back handler
-   */
   onBack?: () => void;
-  /**
-   * Optional content to render on the right side of the header
-   */
   trailing?: ReactNode;
-  /**
-   * Optional share action rendered as a trailing icon button
-   */
   share?: {
     label: string;
     onPress: () => void;
   };
   /**
-   * Optional content to render below the title/subtitle
-   * For hero variant: use for badges/stats
-   * For standard variant: use for any additional content
+   * Content below the title/subtitle.
+   * Hero: badges/stats. Standard: any additional content.
    */
   children?: ReactNode;
   /**
-   * Size variant for the header (Text-like API)
+   * Size variant (Text-like API)
    * - large/medium: primary bold title block
-   * - compact: Small inline title in nav row
-   * - hero: Hero-style header with background
+   * - compact: small inline title in nav row
+   * - hero: hero-style header with background
    */
   size?: 'large' | 'medium' | 'compact' | 'hero';
   type?: TextType;
@@ -71,21 +47,9 @@ export interface ScreenHeaderProps {
   color?: ThemeColor | ThemeColorToken;
   subtitleType?: TextType;
   subtitleColor?: ThemeColor | ThemeColorToken;
-  /**
-   * Whether to add top safe area padding
-   */
   safeArea?: boolean;
-  /**
-   * Hero variant: Background image URL
-   */
   backgroundImage?: string;
-  /**
-   * Hero variant: Featured image (e.g., category box art, profile picture)
-   */
   featuredImage?: string;
-  /**
-   * Hero variant: Height of the hero background
-   */
   heroHeight?: number;
 }
 

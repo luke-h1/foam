@@ -16,7 +16,7 @@ import { type ParsedPart } from '@app/utils/chat/parsedPart';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 
-import { chatPreferencePreviewFixtures } from './chatPreferencePreviewFixtures';
+import { chatPreferencePreviewFixtures } from './fixtures/chatPreferencePreviewFixtures';
 
 const PREVIEW_CHANNEL = 'preview';
 const PREVIEW_VIEWER_LOGIN = 'foamviewer';

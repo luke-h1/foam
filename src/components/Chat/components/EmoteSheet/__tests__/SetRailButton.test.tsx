@@ -41,7 +41,7 @@ describe('SetRailButton', () => {
     expect(screen.queryByTestId('emote-set-avatar')).not.toBeOnTheScreen();
   });
 
-  test('renders the short label for provider set icons', () => {
+  test('renders the rail label for provider set icons', () => {
     render(
       <SetRailButton
         isActive={false}
@@ -50,7 +50,7 @@ describe('SetRailButton', () => {
       />,
     );
 
-    expect(screen.getByText('ZO')).toBeOnTheScreen();
+    expect(screen.getByText('Zoil')).toBeOnTheScreen();
     expect(screen.queryByTestId('emote-set-avatar')).not.toBeOnTheScreen();
   });
 });

@@ -214,10 +214,6 @@ function UserActionSheetComponent({
   );
   const recentMessagesHeight =
     recentMessages.length > 0 ? 40 + recentMessages.length * 22 : 0;
-  const maxScrollHeight = Math.min(
-    Math.round(windowHeight * 0.54),
-    actionRows.length * 58 + recentMessagesHeight + 2,
-  );
   const sheetHeight = Math.min(
     Math.round(windowHeight * 0.72),
     196 +
@@ -226,24 +222,17 @@ function UserActionSheetComponent({
       (isHidden || isHighlighted ? 34 : 0),
   );
   const snapPoints: SnapPoint[] = [{ height: sheetHeight }, 'full'];
-  const wrapperStyle = [
-    styles.wrapper,
-    {
-      maxHeight: sheetHeight - theme.space16,
-      width: sheetWidth,
-    },
-  ];
-  const scrollStyle = [styles.scroll, { maxHeight: maxScrollHeight }];
 
   return (
     <BottomSheet
+      enableFixedSnapPoints
       isPresented={visible}
       onDismiss={onClose}
       showDragIndicator
       snapPoints={snapPoints}
       testID='user-action-sheet'
     >
-      <View style={wrapperStyle}>
+      <View style={[styles.wrapper, { width: sheetWidth }]}>
         <View style={styles.header}>
           <View style={styles.identity}>
             <UserCardHeader
@@ -286,7 +275,7 @@ function UserActionSheetComponent({
         ) : null}
 
         <ScrollView
-          style={scrollStyle}
+          style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
@@ -442,6 +431,7 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     alignSelf: 'center',
+    flex: 1,
     gap: 10,
     paddingHorizontal: theme.space12,
     paddingTop: theme.space8,
@@ -472,6 +462,7 @@ const styles = StyleSheet.create({
   },
   scroll: {
     flexGrow: 0,
+    flexShrink: 1,
   },
   scrollContent: {
     paddingBottom: theme.space16,

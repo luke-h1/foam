@@ -7,6 +7,7 @@ export function createEmoteMenuSet(icon: EmoteMenuSet['icon']): EmoteMenuSet {
     title: 'Zoil',
     icon,
     emotes: [],
+    railLabel: 'Zoil',
     shortLabel: 'ZO',
   };
 }

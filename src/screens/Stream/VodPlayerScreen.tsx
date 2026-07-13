@@ -13,9 +13,9 @@ import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { theme } from '@app/styles/themes';
 
+import { useSleepTimer } from './hooks/useSleepTimer';
 import { getLiveStreamLayoutMetrics } from './liveStreamLayout/getLiveStreamLayoutMetrics';
-import { showSleepTimerMenu } from './showSleepTimerMenu';
-import { useSleepTimer } from './useSleepTimer';
+import { showSleepTimerMenu } from './util/showSleepTimerMenu';
 
 interface VodPlayerScreenProps {
   id: string;

@@ -1,5 +1,5 @@
-import type { LandscapeChatCycleAction } from './liveStreamLayout/getNextChatCycleAction';
-import type { FullscreenChatMode } from './liveStreamLayout/types';
+import type { LandscapeChatCycleAction } from '../liveStreamLayout/getNextChatCycleAction';
+import type { FullscreenChatMode } from '../liveStreamLayout/types';
 
 export type LiveStreamScreenState = {
   fullscreenChatMode: FullscreenChatMode;

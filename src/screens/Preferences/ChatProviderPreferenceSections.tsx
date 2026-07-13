@@ -14,7 +14,7 @@ import type {
   PreviewProvider,
   ProviderPreviewKey,
   ProviderPreviewValue,
-} from './chatPreferenceTypes';
+} from './types/chatPreferenceTypes';
 
 const EMOTES_ICON: SFSymbol = 'face.smiling';
 const EMOTES_ANDROID_ICON: AndroidSymbol = 'sentiment_satisfied';

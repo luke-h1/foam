@@ -192,7 +192,6 @@ describe('AuthContext', () => {
         },
       });
 
-      // Check that anon token was saved with expiresAt
       expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
         'V1_foam-anon',
         expect.stringMatching(
@@ -200,7 +199,6 @@ describe('AuthContext', () => {
         ),
       );
 
-      // Check that user token was saved with expiresAt
       expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
         'V1_foam-user',
         expect.stringMatching(

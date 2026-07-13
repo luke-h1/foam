@@ -737,8 +737,6 @@ export function Section({
 
               paddingVertical: 8,
               fontSize: 14,
-              // use Apple condensed font
-              // fontVariant: ["small-caps"],
             }}
           >
             {title}

@@ -21,7 +21,6 @@ import * as Clipboard from 'expo-clipboard';
 import { PressablesConfig } from 'pressto';
 import { Toaster } from 'sonner-native';
 
-import { AppBottomSheetProvider } from '@app/components/BottomSheet/BottomSheetProvider';
 import { GlobalErrorGate } from '@app/components/GlobalErrorGate/GlobalErrorGate';
 import { OfflineBanner } from '@app/components/OfflineBanner/OfflineBanner';
 import { ShakeToReport } from '@app/components/ShakeToReport/ShakeToReport';
@@ -143,9 +142,7 @@ export function Providers({ children }: PropsWithChildren) {
                         <PressablesConfig
                           config={{ minScale: motion.pressMinScale }}
                         >
-                          <AppBottomSheetProvider>
-                            {children}
-                          </AppBottomSheetProvider>
+                          {children}
                         </PressablesConfig>
                       </QueryProviderWithDevTools>
                     </AnalyticsProvider>

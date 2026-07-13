@@ -1,5 +1,4 @@
 /**
- * Compare two semantic versions
  * @returns -1 if version1 < version2, 0 if equal, 1 if version1 > version2
  */
 export function compareVersions(
@@ -27,9 +26,6 @@ export function compareVersions(
 }
 
 /**
- * Check if the current version is below the minimum required version
- * @param currentVersion - The app's current version
- * @param minimumVersion - The minimum required version from remote config
  * @returns true if an update is required (current < minimum)
  */
 export function isUpdateRequired(

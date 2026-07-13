@@ -10,7 +10,7 @@ import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import type {
   PreviewProvider,
   ProviderPreviewVariant,
-} from './chatPreferenceTypes';
+} from './types/chatPreferenceTypes';
 
 export const DensityPreview = function DensityPreview({
   density,

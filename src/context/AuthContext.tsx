@@ -39,9 +39,6 @@ import {
 import { parseTwitchAuthTokenFromResponse } from '@app/utils/authentication/twitchAuth';
 import { logger } from '@app/utils/logger';
 
-/**
- * Prefetch initial data for faster startup
- */
 const prefetchInitialData = (userId?: string) => {
   if (userId) {
     void queryClient.prefetchQuery(followedStreamsQueryOptions(userId));
@@ -57,8 +54,8 @@ const queueInitialDataPrefetch = (userId?: string) => {
 };
 
 export const storageKeys = {
-  anon: 'V1_foam-anon', // anon token
-  user: 'V1_foam-user', // logged in token
+  anon: 'V1_foam-anon',
+  user: 'V1_foam-user',
 } as const;
 
 const AUTH_STARTUP_TIMEOUT_MS = 12_000;

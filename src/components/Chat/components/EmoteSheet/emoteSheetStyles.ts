@@ -1,13 +1,19 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 import { theme } from '@app/styles/themes';
 
 const MENU_BACKGROUND = theme.color.menu.background;
 const MENU_HEADER_BACKGROUND = theme.color.menu.header;
-const MENU_CARD = theme.color.menu.card;
 const MENU_CARD_ACTIVE = theme.color.menu.cardActive;
 const MENU_BORDER = theme.color.menu.border;
-const MENU_BORDER_ACTIVE = theme.color.menu.borderActive;
+
+/**
+ * iOS lets the sheet's native blur/glass material show through; Android has
+ * no sheet material, so surfaces stay solid there.
+ */
+const SHEET_SURFACE = Platform.OS === 'ios' ? 'transparent' : MENU_BACKGROUND;
+const SHEET_HEADER_SURFACE =
+  Platform.OS === 'ios' ? 'transparent' : MENU_HEADER_BACKGROUND;
 
 export const emoteSheetStyles = StyleSheet.create({
   body: {
@@ -19,9 +25,9 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   categoryBar: {
     alignItems: 'center',
-    backgroundColor: MENU_HEADER_BACKGROUND,
+    backgroundColor: SHEET_HEADER_SURFACE,
     borderTopColor: MENU_BORDER,
-    borderTopWidth: 1,
+    borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     overflow: 'hidden',
     paddingTop: theme.space8,
@@ -34,24 +40,10 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   container: {
     alignSelf: 'stretch',
-    backgroundColor: MENU_BACKGROUND,
+    backgroundColor: SHEET_SURFACE,
     flex: 1,
     minHeight: 0,
     overflow: 'hidden',
-    width: '100%',
-  },
-  sheetHandle: {
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-    borderRadius: 999,
-    height: 5,
-    width: 36,
-  },
-  sheetHandleRow: {
-    alignItems: 'center',
-    backgroundColor: MENU_HEADER_BACKGROUND,
-    justifyContent: 'center',
-    paddingBottom: 4,
-    paddingTop: 8,
     width: '100%',
   },
   emojiText: {
@@ -87,10 +79,9 @@ export const emoteSheetStyles = StyleSheet.create({
     fontWeight: '700',
   },
   header: {
-    backgroundColor: MENU_HEADER_BACKGROUND,
+    backgroundColor: SHEET_HEADER_SURFACE,
     borderBottomColor: MENU_BORDER,
-    borderBottomWidth: 1,
-    minHeight: 102,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
     paddingBottom: theme.space8,
     position: 'relative',
@@ -122,24 +113,21 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   providerChip: {
     alignItems: 'center',
-    backgroundColor: MENU_CARD,
-    borderColor: MENU_BORDER,
+    backgroundColor: 'transparent',
     borderCurve: 'continuous',
-    borderRadius: 8,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 18,
     flexDirection: 'row',
     gap: theme.space8,
-    height: 38,
+    height: 36,
     justifyContent: 'center',
-    minWidth: 40,
+    minWidth: 44,
     paddingHorizontal: theme.space12,
     position: 'relative',
   },
   providerChipActive: {
-    backgroundColor: MENU_CARD_ACTIVE,
-    borderColor: MENU_BORDER_ACTIVE,
+    backgroundColor: 'rgba(120, 120, 128, 0.32)',
     minWidth: 88,
-    paddingHorizontal: theme.space12,
+    paddingHorizontal: theme.space16,
   },
   providerChipIcon: {
     alignItems: 'center',
@@ -148,12 +136,11 @@ export const emoteSheetStyles = StyleSheet.create({
   providerChipTitle: {
     color: theme.color.text.dark,
     fontSize: theme.fontSize12,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   searchContainer: {
-    height: 48,
     justifyContent: 'center',
-    marginTop: theme.space12,
+    marginTop: theme.space8,
     paddingHorizontal: theme.space16,
   },
   searchRow: {
@@ -162,16 +149,17 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   searchInputWrap: {
     alignItems: 'center',
-    backgroundColor: MENU_CARD,
-    borderColor: MENU_BORDER,
+    /**
+     * UISearchTextField dark-mode fill.
+     */
+    backgroundColor: 'rgba(118, 118, 128, 0.24)',
     borderCurve: 'continuous',
-    borderRadius: 8,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 10,
     flex: 1,
     flexDirection: 'row',
     gap: theme.space8,
-    minHeight: 40,
-    paddingHorizontal: theme.space12,
+    minHeight: 36,
+    paddingHorizontal: theme.space8,
   },
   searchInput: {
     backgroundColor: 'transparent',
@@ -180,9 +168,9 @@ export const emoteSheetStyles = StyleSheet.create({
     color: theme.color.text.dark,
     flex: 1,
     fontSize: theme.fontSize16,
-    fontWeight: '500',
-    height: 40,
-    minHeight: 40,
+    fontWeight: '400',
+    height: 36,
+    minHeight: 36,
     paddingHorizontal: 0,
   },
   searchIcon: {
@@ -191,11 +179,11 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   searchClearButton: {
     alignItems: 'center',
-    backgroundColor: MENU_CARD_ACTIVE,
-    borderRadius: 4,
-    height: 28,
+    backgroundColor: 'rgba(120, 120, 128, 0.24)',
+    borderRadius: 999,
+    height: 22,
     justifyContent: 'center',
-    width: 28,
+    width: 22,
   },
   searchClearButtonHidden: {
     opacity: 0,
@@ -223,7 +211,7 @@ export const emoteSheetStyles = StyleSheet.create({
     flex: 1,
     fontSize: theme.fontSize12,
     fontWeight: '600',
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
     textTransform: 'uppercase',
   },
   setRailAvatar: {
@@ -255,9 +243,8 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   setRailLabel: {
     color: 'rgba(255, 255, 255, 0.62)',
-    fontSize: theme.fontSize10,
-    fontWeight: '800',
-    letterSpacing: 0.2,
+    fontSize: theme.fontSize12,
+    fontWeight: '600',
     textAlign: 'center',
   },
   setRailLabelActive: {

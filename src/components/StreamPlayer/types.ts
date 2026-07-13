@@ -2,70 +2,37 @@ import type { Ref } from 'react';
 import type { DimensionValue } from 'react-native';
 
 export interface StreamPlayerRef {
-  /**
-   * Force refresh the player (hard reload)
-   */
   forceRefresh: () => void;
-  /**
-   * Get the current channel name
-   */
   getChannel: () => string | undefined;
   /**
-   * Get the current playback time in seconds
+   * Playback time in seconds.
    */
   getCurrentTime: () => Promise<number>;
   /**
-   * Get the total duration in seconds (VODs only)
+   * Total duration in seconds (VODs only).
    */
   getDuration: () => Promise<number>;
-  /**
-   * Get the current muted state
-   */
   getMuted: () => boolean;
-  /**
-   * Get the current paused state
-   */
   getPaused: () => boolean;
   /**
-   * Get the current volume (0-1)
+   * Volume level between 0 and 1.
    */
   getVolume: () => number;
-  /**
-   * Mute the player
-   */
   mute: () => void;
-  /**
-   * Pause playback
-   */
   pause: () => void;
-  /**
-   * Start or resume playback
-   */
   play: () => void;
   /**
-   * Seek to a specific timestamp in seconds (VODs only)
+   * Seek to a timestamp in seconds (VODs only).
    */
   seek: (timestamp: number) => void;
-  /**
-   * Switch to a different channel
-   */
   setChannel: (channel: string) => void;
-  /**
-   * Set the muted state
-   */
   setMuted: (muted: boolean) => void;
-  /**
-   * Set the video quality
-   */
   setQuality: (quality: string) => void;
   /**
-   * Play a specific VOD
-   * @param videoId - The VOD ID
    * @param timestamp - Optional start time in seconds
    */
   setVideo: (videoId: string, timestamp?: number) => void;
   /**
-   * Set the volume level
    * @param volume - Volume level between 0 and 1
    */
   setVolume: (volume: number) => void;
@@ -86,124 +53,54 @@ export interface StreamPlayerRef {
    * Seek a live stream back to the live edge to trim accumulated client latency
    */
   syncToLive: () => void;
-  /**
-   * Unmute the player
-   */
   unmute: () => void;
 }
 
 export interface StreamInfo {
-  /**
-   * Game/category name being played
-   */
   gameName?: string;
-  /**
-   * URL to the streamer's avatar image
-   */
   profileImageUrl?: string;
   /**
    * Stream start time (ISO string) for calculating duration
    */
   startedAt?: string;
-  /**
-   * Stream title
-   */
   title?: string;
-  /**
-   * Streamer's display name
-   */
   userName?: string;
-  /**
-   * Streamer's login/username
-   */
   userLogin?: string;
-  /**
-   * Current viewer count
-   */
   viewerCount?: number;
 }
 
 export interface StreamPlayerProps {
   /**
-   * Enable autoplay
    * @default true
    */
   autoplay?: boolean;
-  /**
-   * Twitch channel name
-   */
   channel?: string;
-  /**
-   * Twitch clip slug
-   */
   clip?: string;
-
-  /**
-   * Height of the player
-   */
   height?: DimensionValue;
-
   deferOverlayUntilUserUnmute?: boolean;
   /**
-   * Initial muted state
    * @default false
    */
   muted?: boolean;
-  /**
-   * Callback when back button is pressed
-   */
   onBackPress?: () => void;
   /**
    * Callback when content gate (e.g. login required) is detected or dismissed
    */
   onContentGateChange?: (hasGate: boolean) => void;
-  /**
-   * Callback when the stream ends
-   */
   onEnded?: () => void;
-  /**
-   * Callback when an error occurs
-   */
   onError?: (error: string) => void;
-  /**
-   * Callback when the stream goes offline
-   */
   onOffline?: () => void;
-  /**
-   * Callback when the stream goes online
-   */
   onOnline?: () => void;
-  /**
-   * Callback when the stream pauses
-   */
   onPause?: () => void;
   /**
    * Callback with Twitch's reported latency from broadcaster to viewer.
    */
   onPlaybackLatencyChange?: (latencySeconds: number) => void;
-  /**
-   * Callback when the stream plays
-   */
   onPlay?: () => void;
-  /**
-   * Callback when the player is ready
-   */
   onReady?: () => void;
-  /**
-   * Callback when refresh is pressed
-   */
   onRefresh?: () => void;
-  /**
-   * Callback when the share button is pressed in the overlay controls.
-   */
   onSharePress?: () => void;
-  /**
-   * Callback when the create clip button is pressed in the overlay controls.
-   */
   onCreateClipPress?: () => void;
-  /**
-   * Callback when the sleep timer button is pressed in the overlay controls.
-   */
   onSleepTimerPress?: () => void;
   /**
    * Whether a sleep timer is currently counting down; tints the overlay button.
@@ -237,21 +134,11 @@ export interface StreamPlayerProps {
    */
   streamProxyBaseUrl?: string;
   /**
-   * Show custom overlay controls
    * @default false
    */
   showOverlayControls?: boolean;
-  /**
-   * Stream information for the overlay
-   */
   streamInfo?: StreamInfo;
-  /**
-   * VOD ID to play
-   */
   video?: string;
-  /**
-   * Width of the player
-   */
   width?: DimensionValue;
   ref?: Ref<StreamPlayerRef>;
 }

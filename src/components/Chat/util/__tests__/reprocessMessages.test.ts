@@ -136,7 +136,6 @@ describe('reprocessMessages', () => {
 
     reprocessMessages(messages, processMessageEmotes);
 
-    // Should only process 3: regular message, message with emotes, message with mention
     expect(processMessageEmotes).toHaveBeenCalledTimes(3);
   });
 

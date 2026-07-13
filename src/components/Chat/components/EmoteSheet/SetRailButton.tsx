@@ -35,7 +35,7 @@ function SetRailButtonComponent({
         <Text
           style={[styles.setRailLabel, isActive && styles.setRailLabelActive]}
         >
-          {set.shortLabel}
+          {set.railLabel}
         </Text>
       )}
     </Button>
