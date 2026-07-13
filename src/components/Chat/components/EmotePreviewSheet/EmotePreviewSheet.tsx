@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useRef } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -10,7 +10,10 @@ import { useTranslation } from 'react-i18next';
 import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';
 
-import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
+import {
+  BottomSheet,
+  type BottomSheetHandle,
+} from '@app/components/BottomSheet/BottomSheet';
 /* eslint-disable react-native/sort-styles */
 import { Button } from '@app/components/Button/Button';
 import { computeSheetHeight } from '@app/components/Chat/util/computeSheetHeight';
@@ -48,6 +51,10 @@ function EmotePreviewSheetComponent(props: Props) {
   const { t } = useTranslation(['chat', 'common']);
   const { saveImage, isSaving } = useSaveImageToGallery();
   const { visible, onClose, selectedEmote } = props;
+  const sheetRef = useRef<BottomSheetHandle>(null);
+  const requestClose = () => {
+    sheetRef.current?.requestClose();
+  };
   const disableAnimations = usePreference('disableEmoteAnimations');
   const { height: screenHeight, width: screenWidth } = useWindowDimensions();
   const displayUrl = getDisplayEmoteUrl({
@@ -184,6 +191,7 @@ function EmotePreviewSheetComponent(props: Props) {
 
   return (
     <BottomSheet
+      ref={sheetRef}
       enableFixedSnapPoints
       isPresented={visible}
       onDismiss={onClose}
@@ -204,7 +212,7 @@ function EmotePreviewSheetComponent(props: Props) {
           <Button
             label={t('common:done')}
             style={styles.doneButton}
-            onPress={onClose}
+            onPress={requestClose}
           >
             <SymbolView
               name='xmark'

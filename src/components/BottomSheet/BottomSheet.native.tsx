@@ -1,4 +1,10 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import {
+  forwardRef,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   Modal,
   Pressable,
@@ -16,6 +22,7 @@ import { Toaster } from 'sonner-native';
 
 import { theme } from '@app/styles/themes';
 
+import type { BottomSheetHandle } from './bottomSheetHandle';
 import { BottomSheetSurface } from './BottomSheetSurface';
 
 const bottomSheetSurfaceElement = <BottomSheetSurface />;
@@ -23,6 +30,7 @@ const bottomSheetSurfaceElement = <BottomSheetSurface />;
 const SHEET_INSET = 16;
 const SHEET_CORNER_RADIUS = theme.borderRadius28;
 
+export type { BottomSheetHandle };
 export type SnapPoint = { fraction: number } | { height: number } | 'full';
 
 type BottomSheetProps = PropsWithChildren<{
@@ -61,90 +69,108 @@ function resolveDetents(
   ];
 }
 
-export function BottomSheet({
-  children,
-  enableFixedSnapPoints,
-  isPresented,
-  onDismiss,
-  showDragIndicator,
-  snapPoints,
-  testID,
-}: BottomSheetProps) {
-  const { height: windowHeight } = useWindowDimensions();
-  const detents = resolveDetents(
-    enableFixedSnapPoints,
-    snapPoints,
-    windowHeight,
-  );
-  const initialOpenIndex = detents.length > 1 ? 1 : 0;
-  const [index, setIndex] = useState(isPresented ? initialOpenIndex : 0);
-  const didDismissRef = useRef(false);
-  const presentationKey = `${isPresented}:${initialOpenIndex}`;
-  const lastPresentationKeyRef = useRef(presentationKey);
+export const BottomSheet = forwardRef<BottomSheetHandle, BottomSheetProps>(
+  function BottomSheet(
+    {
+      children,
+      enableFixedSnapPoints,
+      isPresented,
+      onDismiss,
+      showDragIndicator,
+      snapPoints,
+      testID,
+    },
+    ref,
+  ) {
+    const { height: windowHeight } = useWindowDimensions();
+    const detents = resolveDetents(
+      enableFixedSnapPoints,
+      snapPoints,
+      windowHeight,
+    );
+    const initialOpenIndex = detents.length > 1 ? 1 : 0;
+    const [index, setIndex] = useState(isPresented ? initialOpenIndex : 0);
+    const [isMounted, setIsMounted] = useState(isPresented);
+    const didDismissRef = useRef(false);
 
-  useLayoutEffect(() => {
-    if (lastPresentationKeyRef.current !== presentationKey) {
-      lastPresentationKeyRef.current = presentationKey;
-      setIndex(isPresented ? initialOpenIndex : 0);
-      didDismissRef.current = false;
+    useImperativeHandle(
+      ref,
+      () => ({
+        requestClose: () => {
+          setIndex(0);
+        },
+      }),
+      [],
+    );
+
+    useLayoutEffect(() => {
+      if (isPresented) {
+        setIsMounted(true);
+        setIndex(initialOpenIndex);
+        didDismissRef.current = false;
+        return;
+      }
+
+      setIndex(0);
+    }, [initialOpenIndex, isPresented]);
+
+    if (!isMounted) {
+      return null;
     }
-  }, [initialOpenIndex, isPresented, presentationKey]);
 
-  if (!isPresented) {
-    return null;
-  }
-
-  return (
-    <Modal
-      animationType='none'
-      onRequestClose={() => {
-        setIndex(0);
-      }}
-      statusBarTranslucent
-      transparent
-      visible
-    >
-      <View pointerEvents='box-none' style={StyleSheet.absoluteFill}>
-        <Pressable
-          accessibilityRole='button'
-          accessibilityLabel='Close'
-          onPress={() => {
-            setIndex(0);
-          }}
-          style={[StyleSheet.absoluteFill, styles.backdrop]}
-        />
-        <SwmBottomSheet
-          animateIn
-          bottomInset={SHEET_INSET}
-          cornerRadius={SHEET_CORNER_RADIUS}
-          detents={detents}
-          index={index}
-          onIndexChange={setIndex}
-          onSettle={settledIndex => {
-            if (settledIndex === 0 && !didDismissRef.current) {
-              didDismissRef.current = true;
-              onDismiss();
-            }
-          }}
-          style={styles.sheetHost}
-          surface={bottomSheetSurfaceElement}
-        >
-          <View testID={testID} style={styles.content}>
-            {showDragIndicator ? (
-              <View style={styles.dragHandleRow}>
-                <View style={styles.dragIndicator} />
-              </View>
-            ) : null}
-            {children}
-          </View>
-        </SwmBottomSheet>
-        {process.env.EXPO_OS === 'android' ? (
-          <Toaster style={styles.toaster} />
-        ) : null}
-      </View>
-    </Modal>
-  );
-}
+    return (
+      <Modal
+        animationType='none'
+        onRequestClose={() => {
+          setIndex(0);
+        }}
+        statusBarTranslucent
+        transparent
+        visible
+      >
+        <View pointerEvents='box-none' style={StyleSheet.absoluteFill}>
+          <Pressable
+            accessibilityRole='button'
+            accessibilityLabel='Close'
+            onPress={() => {
+              setIndex(0);
+            }}
+            style={[StyleSheet.absoluteFill, styles.backdrop]}
+          />
+          <SwmBottomSheet
+            animateIn
+            bottomInset={SHEET_INSET}
+            cornerRadius={SHEET_CORNER_RADIUS}
+            detents={detents}
+            index={index}
+            onIndexChange={setIndex}
+            onSettle={settledIndex => {
+              if (settledIndex === 0 && !didDismissRef.current) {
+                didDismissRef.current = true;
+                setIsMounted(false);
+                onDismiss();
+              }
+            }}
+            style={styles.sheetHost}
+            surface={bottomSheetSurfaceElement}
+          >
+            <View testID={testID} style={styles.content}>
+              {showDragIndicator ? (
+                <View style={styles.dragHandleRow}>
+                  <View style={styles.dragIndicator} />
+                </View>
+              ) : null}
+              {children}
+            </View>
+          </SwmBottomSheet>
+          {process.env.EXPO_OS === 'android' ? (
+            <Toaster style={styles.toaster} />
+          ) : null}
+        </View>
+      </Modal>
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   backdrop: {

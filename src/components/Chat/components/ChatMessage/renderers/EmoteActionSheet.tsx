@@ -6,6 +6,7 @@ import {
   ReactNode,
   useCallback,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import {
@@ -20,7 +21,10 @@ import { useTranslation } from 'react-i18next';
 import * as Clipboard from 'expo-clipboard';
 import { toast } from 'sonner-native';
 
-import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
+import {
+  BottomSheet,
+  type BottomSheetHandle,
+} from '@app/components/BottomSheet/BottomSheet';
 import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
@@ -76,6 +80,7 @@ function EmoteActionSheetComponent({
 }: EmoteActionSheetProps) {
   const { t } = useTranslation(['chat', 'common']);
   const [uncontrolledVisible, setUncontrolledVisible] = useState(false);
+  const sheetRef = useRef<BottomSheetHandle>(null);
   const isControlled = typeof isPresented === 'boolean';
   const visible = isControlled ? isPresented : uncontrolledVisible;
   const { height: windowHeight } = useWindowDimensions();
@@ -155,8 +160,12 @@ function EmoteActionSheetComponent({
     setUncontrolledVisible(false);
   }, [isControlled, onDismiss]);
 
+  const requestClose = useCallback(() => {
+    sheetRef.current?.requestClose();
+  }, []);
+
   const copyName = useCallback(() => {
-    closeSheet();
+    requestClose();
     const text = part.name ?? part.original_name ?? '';
     if (!text) {
       return;
@@ -164,21 +173,21 @@ function EmoteActionSheetComponent({
     void Clipboard.setStringAsync(text).then(() => {
       toast.success(i18next.t('chat:emoteActions.nameCopied'));
     });
-  }, [part.name, part.original_name, closeSheet]);
+  }, [part.name, part.original_name, requestClose]);
 
   const copyImageUrl = useCallback(() => {
-    closeSheet();
+    requestClose();
     if (!displayUrl) {
       return;
     }
     void Clipboard.setStringAsync(displayUrl).then(() => {
       toast.success(i18next.t('chat:emoteActions.urlCopied'));
     });
-  }, [closeSheet, displayUrl]);
+  }, [displayUrl, requestClose]);
 
   const copyScaledImageUrl = useCallback(
     (scale: EmoteImageScale) => {
-      closeSheet();
+      requestClose();
       const url = scaledImageUrls[scale];
       if (!url) {
         return;
@@ -189,13 +198,13 @@ function EmoteActionSheetComponent({
         );
       });
     },
-    [closeSheet, scaledImageUrls],
+    [requestClose, scaledImageUrls],
   );
 
   const handlePreview = useCallback(() => {
-    closeSheet();
+    requestClose();
     onPress?.(previewPart);
-  }, [closeSheet, onPress, previewPart]);
+  }, [onPress, previewPart, requestClose]);
 
   const actions = [
     {
@@ -241,89 +250,88 @@ function EmoteActionSheetComponent({
   return (
     <>
       {triggerChild}
-      {visible ? (
-        <BottomSheet
-          isPresented={visible}
-          onDismiss={closeSheet}
-          showDragIndicator
-          testID='emote-action-sheet'
-        >
-          <View style={wrapperStyle}>
-            <View style={styles.topBar}>
-              <View style={styles.heading}>
-                <Text style={styles.eyebrow} weight='semibold'>
-                  {t('emoteActions.title')}
-                </Text>
-              </View>
-              <Button
-                label={t('common:done')}
-                style={styles.doneButton}
-                onPress={closeSheet}
-              >
-                <SymbolView
-                  name='xmark'
-                  size={15}
-                  weight='semibold'
-                  tintColor={theme.color.textSecondary.dark}
-                />
-              </Button>
+      <BottomSheet
+        ref={sheetRef}
+        isPresented={visible}
+        onDismiss={closeSheet}
+        showDragIndicator
+        testID='emote-action-sheet'
+      >
+        <View style={wrapperStyle}>
+          <View style={styles.topBar}>
+            <View style={styles.heading}>
+              <Text style={styles.eyebrow} weight='semibold'>
+                {t('emoteActions.title')}
+              </Text>
             </View>
-            {(displayUrl || part.name || part.original_name) && (
-              <View style={styles.previewCard}>
-                <View style={styles.previewRow}>
-                  {displayUrl ? (
-                    <View style={styles.previewImageContainer}>
-                      <Image
-                        trackLoadContext='chat.emote-action-sheet'
-                        source={displayUrl}
-                        cacheVariant='emote'
-                        style={previewImageSize}
-                        contentFit='contain'
-                        transition={50}
-                      />
-                    </View>
-                  ) : null}
-                  <View style={styles.previewMeta}>
-                    {part.name || part.original_name ? (
-                      <Text style={styles.previewName}>
-                        {part.name ?? part.original_name}
-                      </Text>
-                    ) : null}
-                    <Text style={styles.previewHint}>{previewSubtitle}</Text>
-                  </View>
-                </View>
-              </View>
-            )}
-            <View style={styles.actionGroup}>
-              {actions.map((action, index) => (
-                <Button
-                  key={action.label}
-                  onPress={action.onPress}
-                  style={[
-                    styles.actionButton,
-                    index > 0 && styles.actionButtonWithDivider,
-                  ]}
-                >
-                  <View style={styles.actionIconFrame}>
-                    <SymbolView
-                      name={getEmoteActionSFSymbolName(action.id)}
-                      size={18}
-                      tintColor={theme.color.textSecondary.dark}
-                      weight='regular'
-                      style={styles.actionIcon}
+            <Button
+              label={t('common:done')}
+              style={styles.doneButton}
+              onPress={requestClose}
+            >
+              <SymbolView
+                name='xmark'
+                size={15}
+                weight='semibold'
+                tintColor={theme.color.textSecondary.dark}
+              />
+            </Button>
+          </View>
+          {(displayUrl || part.name || part.original_name) && (
+            <View style={styles.previewCard}>
+              <View style={styles.previewRow}>
+                {displayUrl ? (
+                  <View style={styles.previewImageContainer}>
+                    <Image
+                      trackLoadContext='chat.emote-action-sheet'
+                      source={displayUrl}
+                      cacheVariant='emote'
+                      style={previewImageSize}
+                      contentFit='contain'
+                      transition={50}
                     />
                   </View>
-                  <View style={styles.actionCopy}>
-                    <Text style={styles.actionText} weight='semibold'>
-                      {action.label}
+                ) : null}
+                <View style={styles.previewMeta}>
+                  {part.name || part.original_name ? (
+                    <Text style={styles.previewName}>
+                      {part.name ?? part.original_name}
                     </Text>
-                  </View>
-                </Button>
-              ))}
+                  ) : null}
+                  <Text style={styles.previewHint}>{previewSubtitle}</Text>
+                </View>
+              </View>
             </View>
+          )}
+          <View style={styles.actionGroup}>
+            {actions.map((action, index) => (
+              <Button
+                key={action.label}
+                onPress={action.onPress}
+                style={[
+                  styles.actionButton,
+                  index > 0 && styles.actionButtonWithDivider,
+                ]}
+              >
+                <View style={styles.actionIconFrame}>
+                  <SymbolView
+                    name={getEmoteActionSFSymbolName(action.id)}
+                    size={18}
+                    tintColor={theme.color.textSecondary.dark}
+                    weight='regular'
+                    style={styles.actionIcon}
+                  />
+                </View>
+                <View style={styles.actionCopy}>
+                  <Text style={styles.actionText} weight='semibold'>
+                    {action.label}
+                  </Text>
+                </View>
+              </Button>
+            ))}
           </View>
-        </BottomSheet>
-      ) : null}
+        </View>
+      </BottomSheet>
     </>
   );
 }

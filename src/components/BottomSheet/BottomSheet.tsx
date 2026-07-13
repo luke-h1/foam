@@ -1,7 +1,10 @@
-import { memo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { forwardRef, memo, useImperativeHandle } from 'react';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { PropsWithChildren } from 'react';
 
+import type { BottomSheetHandle } from './bottomSheetHandle';
+
+export type { BottomSheetHandle };
 export type SnapPoint = { fraction: number } | { height: number } | 'full';
 
 type BottomSheetProps = PropsWithChildren<{
@@ -13,27 +16,42 @@ type BottomSheetProps = PropsWithChildren<{
   testID?: string;
 }>;
 
-function BottomSheetComponent({
-  children,
-  isPresented,
-  showDragIndicator,
-  testID,
-}: BottomSheetProps) {
-  if (!isPresented) {
-    return null;
-  }
+const BottomSheetComponent = forwardRef<BottomSheetHandle, BottomSheetProps>(
+  function BottomSheetComponent(
+    { children, isPresented, onDismiss, showDragIndicator, testID },
+    ref,
+  ) {
+    const { width: windowWidth } = useWindowDimensions();
 
-  return (
-    <View testID={testID} style={styles.fallback}>
-      {showDragIndicator ? (
-        <View style={styles.dragHandleRow}>
-          <View style={styles.dragIndicator} />
-        </View>
-      ) : null}
-      {children}
-    </View>
-  );
-}
+    useImperativeHandle(
+      ref,
+      () => ({
+        requestClose: () => {
+          onDismiss();
+        },
+      }),
+      [onDismiss],
+    );
+
+    if (!isPresented) {
+      return null;
+    }
+
+    return (
+      <View
+        testID={testID}
+        style={[styles.fallback, { width: Math.min(windowWidth - 32, 520) }]}
+      >
+        {showDragIndicator ? (
+          <View style={styles.dragHandleRow}>
+            <View style={styles.dragIndicator} />
+          </View>
+        ) : null}
+        {children}
+      </View>
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   dragHandleRow: {
@@ -51,8 +69,7 @@ const styles = StyleSheet.create({
   },
   fallback: {
     alignItems: 'stretch',
-    alignSelf: 'stretch',
-    width: '100%',
+    alignSelf: 'center',
   },
 });
 

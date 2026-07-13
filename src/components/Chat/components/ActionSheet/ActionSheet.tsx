@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useRef } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -7,7 +7,10 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
+import {
+  BottomSheet,
+  type BottomSheetHandle,
+} from '@app/components/BottomSheet/BottomSheet';
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
@@ -128,6 +131,10 @@ function ActionSheetComponent(props: Props) {
     canPinMessage,
     canModerateUser,
   } = props;
+  const sheetRef = useRef<BottomSheetHandle>(null);
+  const requestClose = () => {
+    sheetRef.current?.requestClose();
+  };
 
   const actions: ActionItem[] = (() => {
     const items: ActionItem[] = [
@@ -137,7 +144,7 @@ function ActionSheetComponent(props: Props) {
         subtitle: t('messageActions.copyMessageSubtitle'),
         onPress: () => {
           onCopy();
-          onClose();
+          requestClose();
         },
       },
       {
@@ -147,7 +154,7 @@ function ActionSheetComponent(props: Props) {
         tone: 'accent',
         onPress: () => {
           onReply();
-          onClose();
+          requestClose();
         },
       },
       {
@@ -156,7 +163,7 @@ function ActionSheetComponent(props: Props) {
         subtitle: t('messageActions.hidePhraseSubtitle'),
         onPress: () => {
           onHidePhrase?.();
-          onClose();
+          requestClose();
         },
       },
     ];
@@ -168,7 +175,7 @@ function ActionSheetComponent(props: Props) {
         subtitle: t('userActions.hideUserSubtitle'),
         onPress: () => {
           onHideUser?.();
-          onClose();
+          requestClose();
         },
       });
 
@@ -183,7 +190,7 @@ function ActionSheetComponent(props: Props) {
         tone: 'accent',
         onPress: () => {
           onHighlightUser?.();
-          onClose();
+          requestClose();
         },
       });
     }
@@ -198,7 +205,7 @@ function ActionSheetComponent(props: Props) {
             tone: 'accent',
             onPress: () => {
               onUpdatePinnedMessage?.();
-              onClose();
+              requestClose();
             },
           },
           {
@@ -207,7 +214,7 @@ function ActionSheetComponent(props: Props) {
             subtitle: t('messageActions.unpinMessageSubtitle'),
             onPress: () => {
               onUnpinMessage?.();
-              onClose();
+              requestClose();
             },
           },
         );
@@ -219,7 +226,7 @@ function ActionSheetComponent(props: Props) {
           tone: 'accent',
           onPress: () => {
             onPinMessage?.();
-            onClose();
+            requestClose();
           },
         });
       }
@@ -234,7 +241,7 @@ function ActionSheetComponent(props: Props) {
           tone: 'danger',
           onPress: () => {
             onDeleteMessage?.();
-            onClose();
+            requestClose();
           },
         });
       }
@@ -248,7 +255,7 @@ function ActionSheetComponent(props: Props) {
             tone: 'warning',
             onPress: () => {
               onTimeoutUser?.();
-              onClose();
+              requestClose();
             },
           },
           {
@@ -258,7 +265,7 @@ function ActionSheetComponent(props: Props) {
             tone: 'danger',
             onPress: () => {
               onBanUser?.();
-              onClose();
+              requestClose();
             },
           },
         );
@@ -287,6 +294,7 @@ function ActionSheetComponent(props: Props) {
 
   return (
     <BottomSheet
+      ref={sheetRef}
       enableFixedSnapPoints
       isPresented={visible}
       onDismiss={onClose}
@@ -306,7 +314,7 @@ function ActionSheetComponent(props: Props) {
           </View>
           <Button
             label={t('common:done')}
-            onPress={onClose}
+            onPress={requestClose}
             style={styles.closeButton}
           >
             <SymbolView
