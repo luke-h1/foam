@@ -86,8 +86,8 @@ export function BottomSheet({
     if (lastPresentationKeyRef.current !== presentationKey) {
       lastPresentationKeyRef.current = presentationKey;
       setIndex(isPresented ? initialOpenIndex : 0);
+      didDismissRef.current = false;
     }
-    didDismissRef.current = false;
   }, [initialOpenIndex, isPresented, presentationKey]);
 
   if (!isPresented) {
