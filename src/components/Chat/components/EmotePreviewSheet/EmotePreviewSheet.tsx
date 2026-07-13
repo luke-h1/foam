@@ -75,7 +75,6 @@ function EmotePreviewSheetComponent(props: Props) {
       ? selectedEmote.emote_link
       : undefined;
   const maxEmoteSize = Math.min(Math.max(screenWidth * 0.36, 96), 156);
-  const containerStyle = styles.container;
 
   const emoteSize = (() => {
     const originalWidth = selectedEmote.width || 28;
@@ -199,7 +198,7 @@ function EmotePreviewSheetComponent(props: Props) {
       snapPoints={[{ height: sheetHeight }]}
       testID='emote-preview-sheet'
     >
-      <View style={containerStyle}>
+      <View style={styles.container}>
         <View style={styles.topBar}>
           <View style={styles.heading}>
             <Text style={styles.eyebrow} weight='semibold'>

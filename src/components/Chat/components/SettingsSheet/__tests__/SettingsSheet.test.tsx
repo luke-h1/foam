@@ -9,6 +9,8 @@ jest.mock('expo-symbols', () => ({
   SymbolView: () => null,
 }));
 
+const mockRequestClose = jest.fn();
+
 jest.mock('@app/components/BottomSheet/BottomSheet', () => {
   const React = require('react');
 
@@ -27,6 +29,7 @@ jest.mock('@app/components/BottomSheet/BottomSheet', () => {
     ) {
       React.useImperativeHandle(ref, () => ({
         requestClose: () => {
+          mockRequestClose();
           onDismiss?.();
         },
       }));
@@ -38,6 +41,7 @@ jest.mock('@app/components/BottomSheet/BottomSheet', () => {
 
 describe('SettingsSheet', () => {
   beforeEach(() => {
+    mockRequestClose.mockClear();
     replacePreferences({
       ...getPreferences(),
       chatDensity: 'comfortable',
@@ -81,6 +85,7 @@ describe('SettingsSheet', () => {
     fireEvent.press(getByText('Density'));
 
     expect(getPreferences().chatDensity).toBe('compact');
+    expect(mockRequestClose).toHaveBeenCalledTimes(1);
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 });

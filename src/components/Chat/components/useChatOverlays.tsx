@@ -341,26 +341,19 @@ export function useChatOverlays({
   }, [onUnpinPinnedMessage]);
 
   const banSelection = useCallback(
-    (
-      selection: { login?: string; username?: string } | null,
-      clear: () => void,
-    ) => {
+    (selection: { login?: string; username?: string } | null) => {
       const target = resolveModTarget(selection);
       if (!target) {
         return;
       }
 
       runModAction({ type: 'ban', login: target });
-      clear();
     },
     [runModAction],
   );
 
   const promptTimeoutDuration = useCallback(
-    (
-      selection: { login?: string; username?: string } | null,
-      clear: () => void,
-    ) => {
+    (selection: { login?: string; username?: string } | null) => {
       const target = resolveModTarget(selection);
       if (!target) {
         return;
@@ -378,7 +371,6 @@ export function useChatOverlays({
               login: target,
               durationSeconds: option.seconds,
             });
-            clear();
           },
         })),
         cancelLabel: i18next.t('common:cancel'),
@@ -388,11 +380,11 @@ export function useChatOverlays({
   );
 
   const handleActionSheetTimeoutUser = useCallback(() => {
-    promptTimeoutDuration(selectedMessage, () => {});
+    promptTimeoutDuration(selectedMessage);
   }, [promptTimeoutDuration, selectedMessage]);
 
   const handleActionSheetBanUser = useCallback(() => {
-    banSelection(selectedMessage, () => {});
+    banSelection(selectedMessage);
   }, [banSelection, selectedMessage]);
 
   const handleMentionSelectedUser = useCallback(() => {
@@ -422,11 +414,11 @@ export function useChatOverlays({
   }, [selectedUser, toggleHighlightedUser]);
 
   const handleTimeoutSelectedUser = useCallback(() => {
-    promptTimeoutDuration(selectedUser, () => {});
+    promptTimeoutDuration(selectedUser);
   }, [promptTimeoutDuration, selectedUser]);
 
   const handleBanSelectedUser = useCallback(() => {
-    banSelection(selectedUser, () => {});
+    banSelection(selectedUser);
   }, [banSelection, selectedUser]);
 
   const handleWarnSelectedUser = useCallback(() => {

@@ -65,13 +65,23 @@ const SavedPhrasesSheetComponent = ({
     [bottomInset],
   );
 
+  const pendingManageRef = useRef(false);
+
   const requestClose = useCallback(() => {
     sheetRef.current?.requestClose();
   }, []);
 
+  const handleDismiss = useCallback(() => {
+    onDismiss();
+    if (pendingManageRef.current) {
+      pendingManageRef.current = false;
+      router.push('/tabs/settings/saved-phrases');
+    }
+  }, [onDismiss]);
+
   const handleManage = useCallback(() => {
+    pendingManageRef.current = true;
     requestClose();
-    router.push('/tabs/settings/saved-phrases');
   }, [requestClose]);
 
   const handleSelectPhrase = useCallback(
@@ -94,7 +104,7 @@ const SavedPhrasesSheetComponent = ({
       ref={sheetRef}
       enableFixedSnapPoints
       isPresented={isPresented}
-      onDismiss={onDismiss}
+      onDismiss={handleDismiss}
       showDragIndicator
       snapPoints={[{ fraction: CHAT_SETTINGS_SHEET_DETENT }]}
       testID='chat-saved-phrases-sheet'

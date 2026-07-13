@@ -48,7 +48,6 @@ function BadgePreviewSheetComponent(props: Props) {
     sheetRef.current?.requestClose();
   };
   const { height: screenHeight } = useWindowDimensions();
-  const containerStyle = styles.container;
 
   const handleCopy = (field: 'name' | 'url') => {
     void Clipboard.setStringAsync(
@@ -135,7 +134,7 @@ function BadgePreviewSheetComponent(props: Props) {
       snapPoints={[{ height: sheetHeight }]}
       testID='badge-preview-sheet'
     >
-      <View style={containerStyle}>
+      <View style={styles.container}>
         <View style={styles.topBar}>
           <View style={styles.heading}>
             <Text style={styles.eyebrow} weight='semibold'>
