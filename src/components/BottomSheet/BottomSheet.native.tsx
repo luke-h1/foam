@@ -12,6 +12,7 @@ import {
   BottomSheet as SwmBottomSheet,
   type Detent,
 } from '@swmansion/react-native-bottom-sheet';
+import { Toaster } from 'sonner-native';
 
 import { theme } from '@app/styles/themes';
 
@@ -104,6 +105,7 @@ export function BottomSheet({
       <View pointerEvents='box-none' style={StyleSheet.absoluteFill}>
         <Pressable
           accessibilityRole='button'
+          accessibilityLabel='Close'
           onPress={() => {
             setIndex(0);
           }}
@@ -115,9 +117,9 @@ export function BottomSheet({
           cornerRadius={SHEET_CORNER_RADIUS}
           detents={detents}
           index={index}
-          onIndexChange={nextIndex => {
-            setIndex(nextIndex);
-            if (nextIndex === 0 && !didDismissRef.current) {
+          onIndexChange={setIndex}
+          onSettle={settledIndex => {
+            if (settledIndex === 0 && !didDismissRef.current) {
               didDismissRef.current = true;
               onDismiss();
             }
@@ -134,6 +136,9 @@ export function BottomSheet({
             {children}
           </View>
         </SwmBottomSheet>
+        {process.env.EXPO_OS === 'android' ? (
+          <Toaster style={styles.toaster} />
+        ) : null}
       </View>
     </Modal>
   );
@@ -154,17 +159,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingBottom: 6,
-    paddingTop: 10,
+    paddingTop: 8,
     width: '100%',
   },
   dragIndicator: {
-    backgroundColor: 'rgba(255,255,255,0.34)',
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
     borderRadius: 999,
-    height: 4,
+    height: 5,
     width: 36,
   },
   sheetHost: {
     left: SHEET_INSET,
     right: SHEET_INSET,
+  },
+  toaster: {
+    backgroundColor: theme.color.background.dark,
+    borderColor: theme.color.border.dark,
+    borderWidth: 1,
   },
 });
