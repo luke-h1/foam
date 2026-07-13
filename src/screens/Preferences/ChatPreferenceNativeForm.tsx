@@ -1,5 +1,5 @@
 import { type ReactElement, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -40,10 +40,10 @@ import {
   TIMESTAMP_FORMAT_OPTIONS,
 } from './chatPreferenceTypes';
 
-function hostPreview(node: ReactElement, padded = true) {
+function hostPreview(node: ReactElement, width: number, padded = true) {
   return (
     <RNHostView matchContents>
-      {padded ? <View style={styles.previewRow}>{node}</View> : node}
+      <View style={[{ width }, padded ? styles.previewRow : null]}>{node}</View>
     </RNHostView>
   );
 }
@@ -52,6 +52,8 @@ export function ChatPreferenceNativeForm() {
   const { t } = useTranslation('preferences');
   const preferences = usePreferences();
   const { update } = preferences;
+  const { width: windowWidth } = useWindowDimensions();
+  const previewWidth = windowWidth - theme.space16 * 2;
 
   const emojiPreviewEmotes = useMemo(() => {
     const emotes = getEmojiEmotes(preferences.emojiStyle);
@@ -120,7 +122,10 @@ export function ChatPreferenceNativeForm() {
               </NativeText>
             ))}
           </Picker>
-          {hostPreview(<DensityPreview density={preferences.chatDensity} />)}
+          {hostPreview(
+            <DensityPreview density={preferences.chatDensity} />,
+            previewWidth,
+          )}
           <Picker
             label={t('fontSize')}
             systemImage='textformat.size'
@@ -138,6 +143,7 @@ export function ChatPreferenceNativeForm() {
               variant='fontScale'
               value={preferences.chatFontScale}
             />,
+            previewWidth,
           )}
           <Toggle
             label={t('alternatingRows')}
@@ -150,6 +156,7 @@ export function ChatPreferenceNativeForm() {
               variant='alternatingRows'
               value={preferences.showAlternatingChatRows}
             />,
+            previewWidth,
           )}
           <Toggle
             label={t('newMessageAnimation')}
@@ -172,7 +179,10 @@ export function ChatPreferenceNativeForm() {
               </NativeText>
             ))}
           </Picker>
-          {hostPreview(<EmojiStylePreview emotes={emojiPreviewEmotes} />)}
+          {hostPreview(
+            <EmojiStylePreview emotes={emojiPreviewEmotes} />,
+            previewWidth,
+          )}
         </Section>
 
         <Section title={t('context')}>
@@ -228,6 +238,7 @@ export function ChatPreferenceNativeForm() {
                 />
               </View>
             </View>,
+            previewWidth,
           )}
         </Section>
 
@@ -330,6 +341,7 @@ export function ChatPreferenceNativeForm() {
                 provider={section.provider}
                 variant='emotes'
               />,
+              previewWidth,
               false,
             )}
             <Toggle
@@ -344,6 +356,7 @@ export function ChatPreferenceNativeForm() {
                 provider={section.provider}
                 variant='badges'
               />,
+              previewWidth,
               false,
             )}
           </Section>
@@ -364,6 +377,7 @@ export function ChatPreferenceNativeForm() {
               variant='emoteAnimations'
               value={preferences.disableEmoteAnimations}
             />,
+            previewWidth,
           )}
         </Section>
       </Form>
