@@ -1,22 +1,18 @@
 import { PropsWithChildren, useEffect, useRef } from 'react';
 
-import {
-  StatsigProviderRN,
-  type StatsigUser,
-  useStatsigClient,
-} from '@statsig/react-native-bindings';
 import { usePathname } from 'expo-router';
 
 import { useAuthContext } from '@app/context/AuthContext';
+import {
+  logAnalyticsScreenView,
+  setAnalyticsEnabled,
+  setAnalyticsUser,
+} from '@app/hooks/firebase/analytics';
 import { usePreference } from '@app/store/preferenceStore';
-import { logger } from '@app/utils/logger';
-
-const statsigClientKey = process.env.EXPO_PUBLIC_STATSIG_CLIENT_KEY;
 
 function ScreenAnalytics() {
   const pathname = usePathname();
   const previousPathnameRef = useRef<string | null>(null);
-  const { client } = useStatsigClient();
 
   useEffect(() => {
     if (!pathname || previousPathnameRef.current === pathname) {
@@ -24,16 +20,8 @@ function ScreenAnalytics() {
     }
 
     previousPathnameRef.current = pathname;
-    client.logEvent('screen_view', undefined, { pathname });
-  }, [client, pathname]);
-
-  useEffect(() => {
-    return () => {
-      void client.shutdown().catch(error => {
-        logger.main.warn('Failed to shutdown Statsig analytics', error);
-      });
-    };
-  }, [client]);
+    void logAnalyticsScreenView(pathname);
+  }, [pathname]);
 
   return null;
 }
@@ -42,24 +30,26 @@ export function AnalyticsProvider({ children }: PropsWithChildren) {
   const { user } = useAuthContext();
   const analyticsEnabled = usePreference('analyticsEnabled');
 
-  if (!statsigClientKey || !analyticsEnabled) {
-    return <>{children}</>;
-  }
+  const userId = user?.id ?? 'anonymous';
+  const twitchLogin = user?.login;
+  const twitchDisplayName = user?.display_name;
 
-  const statsigUser = {
-    userID: user?.id ?? 'anonymous',
-    custom: user
-      ? {
-          twitchLogin: user.login,
-          twitchDisplayName: user.display_name,
-        }
-      : {},
-  } satisfies StatsigUser;
+  useEffect(() => {
+    void setAnalyticsEnabled(analyticsEnabled);
+  }, [analyticsEnabled]);
+
+  useEffect(() => {
+    if (!analyticsEnabled) {
+      return;
+    }
+
+    void setAnalyticsUser({ id: userId, twitchLogin, twitchDisplayName });
+  }, [analyticsEnabled, userId, twitchLogin, twitchDisplayName]);
 
   return (
-    <StatsigProviderRN sdkKey={statsigClientKey} user={statsigUser}>
-      <ScreenAnalytics />
+    <>
+      {analyticsEnabled ? <ScreenAnalytics /> : null}
       {children}
-    </StatsigProviderRN>
+    </>
   );
 }

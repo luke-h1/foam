@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
+import { logAnalyticsEvent } from '@app/hooks/firebase/analytics';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
-import { logger } from '@app/utils/logger';
 
 import {
   type ExperimentName,
@@ -17,7 +17,10 @@ function logExposure(name: string, variant: string): void {
     return;
   }
   loggedExposures.add(key);
-  logger.main.info('experiment_exposure', { experiment: name, variant });
+  void logAnalyticsEvent('experiment_exposure', {
+    experiment: name,
+    variant,
+  });
 }
 
 /**

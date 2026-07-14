@@ -71,11 +71,6 @@ function getEnvVars(): EnvVar[] {
       value: process.env.EXPO_PUBLIC_SENTRY_DEBUG,
     },
     {
-      key: 'EXPO_PUBLIC_STATSIG_CLIENT_KEY',
-      value: process.env.EXPO_PUBLIC_STATSIG_CLIENT_KEY,
-      secret: true,
-    },
-    {
       key: 'EXPO_PUBLIC_ENABLE_WDYR',
       value: process.env.EXPO_PUBLIC_ENABLE_WDYR,
     },
