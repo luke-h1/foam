@@ -8,7 +8,6 @@ declare global {
       EXPO_PUBLIC_SENTRY_DSN?: string;
       EXPO_PUBLIC_SENTRY_RELEASE?: string;
       EXPO_PUBLIC_SENTRY_DIST?: string;
-      EXPO_PUBLIC_STATSIG_CLIENT_KEY?: string;
       SENTRY_DIST?: string;
       EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL: string;
       EXPO_PUBLIC_AUTH_PROXY_API_KEY: string;
