@@ -96,7 +96,12 @@ describe('analytics', () => {
   test('swallows and logs SDK failures instead of throwing', async () => {
     mockedLogEvent.mockRejectedValueOnce(new Error('offline'));
 
-    await expect(logAnalyticsEvent('boom')).resolves.toBeUndefined();
+    await expect(
+      logAnalyticsEvent('experiment_exposure', {
+        experiment: 'chatComposerLayout',
+        variant: 'control',
+      }),
+    ).resolves.toBeUndefined();
     expect(mockedWarn).toHaveBeenCalledWith(
       'Failed to log analytics event',
       expect.any(Error),

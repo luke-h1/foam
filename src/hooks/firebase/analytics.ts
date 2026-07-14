@@ -12,6 +12,11 @@ import { getApp } from '@react-native-firebase/app';
 
 import { logger } from '@app/utils/logger';
 
+import type {
+  AnalyticsEventName,
+  AnalyticsEventParams,
+} from './analyticsEvents';
+
 const analytics = getAnalytics(getApp());
 
 export interface AnalyticsUser {
@@ -21,9 +26,8 @@ export interface AnalyticsUser {
 }
 
 /**
- * Turns Firebase Analytics collection on or off. This is the single privacy
- * gate: when disabled the SDK drops every event, so callers of the log helpers
- * below never need to check the preference themselves.
+ * The single privacy gate: when disabled the SDK drops every event, so the log
+ * helpers below never need to re-check the preference.
  */
 export async function setAnalyticsEnabled(enabled: boolean): Promise<void> {
   try {
@@ -45,9 +49,13 @@ export async function setAnalyticsUser(user: AnalyticsUser): Promise<void> {
   }
 }
 
-export async function logAnalyticsEvent(
-  name: string,
-  params?: Record<string, string | number | boolean>,
+/**
+ * Logs one of the allow-listed events from analyticsEvents.ts; an unlisted name
+ * or wrong param shape fails to compile.
+ */
+export async function logAnalyticsEvent<K extends AnalyticsEventName>(
+  name: K,
+  params: AnalyticsEventParams[K],
 ): Promise<void> {
   try {
     await logEvent(analytics, name, params);

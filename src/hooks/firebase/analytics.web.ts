@@ -1,3 +1,8 @@
+import type {
+  AnalyticsEventName,
+  AnalyticsEventParams,
+} from './analyticsEvents';
+
 export interface AnalyticsUser {
   id: string;
   twitchLogin?: string;
@@ -8,9 +13,9 @@ export async function setAnalyticsEnabled(_enabled: boolean): Promise<void> {}
 
 export async function setAnalyticsUser(_user: AnalyticsUser): Promise<void> {}
 
-export async function logAnalyticsEvent(
-  _name: string,
-  _params?: Record<string, string | number | boolean>,
+export async function logAnalyticsEvent<K extends AnalyticsEventName>(
+  _name: K,
+  _params: AnalyticsEventParams[K],
 ): Promise<void> {}
 
 export async function logAnalyticsScreenView(
