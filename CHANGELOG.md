@@ -36,6 +36,10 @@
 
 - **app:** Fix dev only fixture bundle err
 
+## 1.0.3 (Internal)
+
+_No changes in this build beyond the Production build._
+
 ## 1.0.2 (Production)
 
 ### ✨ Features
