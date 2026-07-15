@@ -26,6 +26,10 @@ const en = {
     nothingHereYetDescription:
       'Refresh to try again, or come back in a moment.',
     showPlayerControls: 'Show player controls',
+    permissionRequired: 'Permission required',
+    mediaLibraryPermissionMessage:
+      'Allow Foam to save images and clips to your photo gallery in Settings.',
+    openSettings: 'Open Settings',
   },
 
   chat: {

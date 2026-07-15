@@ -256,11 +256,6 @@ const config: ExpoConfig = {
           'node_modules/@expo-google-fonts/source-code-pro/700Bold',
         ],
         android: {
-          permissions: [
-            'android.permission.READ_EXTERNAL_STORAGE',
-            'android.permission.WRITE_EXTERNAL_STORAGE',
-            'android.permission.ACCESS_MEDIA_LOCATION',
-          ],
           fonts: [
             {
               fontFamily: 'SourceCodePro',
@@ -368,15 +363,10 @@ const config: ExpoConfig = {
     googleServicesFile: googleServicesExist
       ? appConfig.androidGoogleServicesFile
       : undefined,
-    adaptiveIcon: {
-      foregroundImage: './assets/android-icon.png',
-      backgroundImage: './assets/android-icon.png',
-      monochromeImage: './assets/android-icon.png',
-    },
     intentFilters: [
       {
         action: 'VIEW',
-        autoVerify: true,
+        autoVerify: false,
         category: ['BROWSABLE', 'DEFAULT'],
         data: [
           { scheme: 'https', host: 'www.twitch.tv' },
@@ -384,7 +374,21 @@ const config: ExpoConfig = {
           { scheme: 'https', host: 'm.twitch.tv' },
         ],
       },
+      {
+        action: 'VIEW',
+        autoVerify: true,
+        category: ['BROWSABLE', 'DEFAULT'],
+        data: [
+          { scheme: 'https', host: 'foam-app.com', pathPrefix: '/' },
+          { scheme: 'https', host: 'www.foam-app.com', pathPrefix: '/' },
+        ],
+      },
     ],
+    adaptiveIcon: {
+      foregroundImage: './assets/android-icon.png',
+      backgroundColor: '#000000',
+      monochromeImage: './assets/android-icon-monochrome.png',
+    },
   } as NonNullable<ExpoConfig['android']> & {
     predictiveBackGestureEnabled?: boolean;
   },

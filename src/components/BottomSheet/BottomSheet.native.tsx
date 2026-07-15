@@ -125,6 +125,7 @@ export const BottomSheet = forwardRef<BottomSheetHandle, BottomSheetProps>(
           setIndex(0);
         }}
         statusBarTranslucent
+        navigationBarTranslucent
         transparent
         visible
       >

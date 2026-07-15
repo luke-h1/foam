@@ -22,6 +22,7 @@ import { PressablesConfig } from 'pressto';
 import { Toaster } from 'sonner-native';
 
 import { AppBottomSheetProvider } from '@app/components/BottomSheet/BottomSheetProvider';
+import { ChangelogAndroidHost } from '@app/components/Changelog/ChangelogAndroidHost';
 import { GlobalErrorGate } from '@app/components/GlobalErrorGate/GlobalErrorGate';
 import { OfflineBanner } from '@app/components/OfflineBanner/OfflineBanner';
 import { ShakeToReport } from '@app/components/ShakeToReport/ShakeToReport';
@@ -35,6 +36,8 @@ import { BaseConfig } from '@app/navigators/config';
 import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
+import { ActionMenuHost } from '@app/utils/actionMenu/ActionMenuHost';
+import { MediaPermissionHost } from '@app/utils/media/MediaPermissionHost';
 
 import { AnalyticsProvider } from './AnalyticsProvider';
 import { ScreenDimensionsProvider } from './ScreenDimensionsProvider/ScreenDimensionsProvider';
@@ -145,6 +148,9 @@ export function Providers({ children }: PropsWithChildren) {
                         >
                           <AppBottomSheetProvider>
                             {children}
+                            <ActionMenuHost />
+                            <ChangelogAndroidHost />
+                            <MediaPermissionHost />
                           </AppBottomSheetProvider>
                         </PressablesConfig>
                       </QueryProviderWithDevTools>

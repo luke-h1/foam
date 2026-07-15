@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Platform, RefreshControl } from 'react-native';
 import type { Ref } from 'react';
 
 import {
@@ -19,15 +19,27 @@ export function FlashList<TItem>({
   onRefresh,
   ref,
   refreshControl,
+  refreshing = false,
   ...props
 }: FlashListProps<TItem> & { ref?: Ref<FlashListRef<TItem>> }) {
+  const usesAndroidRefreshControl =
+    Platform.OS === 'android' && onRefresh && !refreshControl;
+
   return (
     <ShopifyFlashList
       ref={ref}
-      refreshControl={refreshControl}
-      onRefresh={
-        !refreshControl && Platform.OS !== 'android' ? onRefresh : undefined
+      refreshControl={
+        usesAndroidRefreshControl ? (
+          <RefreshControl
+            refreshing={Boolean(refreshing)}
+            onRefresh={onRefresh}
+          />
+        ) : (
+          refreshControl
+        )
       }
+      refreshing={refreshing}
+      onRefresh={usesAndroidRefreshControl ? undefined : onRefresh}
       {...props}
     />
   );
