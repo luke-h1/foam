@@ -23,6 +23,7 @@ import {
 } from '@app/utils/device/deviceTier';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 import { logger } from '@app/utils/logger';
+import type { ImageMemoryPressureEvent } from '@modules/image-memory-pressure/src/ImageMemoryPressure.types';
 import ImageMemoryPressure from '@modules/image-memory-pressure/src/ImageMemoryPressureModule';
 
 const isLowTier = getDeviceTier() === 'low';
@@ -483,6 +484,25 @@ function pollMemoryHeadroom(): void {
   trimCachedEmoteRefsForMemoryPressure();
 }
 
+/**
+ * Android acute-pressure signal (onTrimMemory at RUNNING_LOW or worse), the
+ * early callback iOS lacks. Trims immediately rather than waiting for the next
+ * headroom poll, which can be up to MEMORY_POLL_INTERVAL_MS away.
+ */
+function handleNativeMemoryPressure(event: ImageMemoryPressureEvent): void {
+  const now = Date.now();
+  if (now - lastMemoryPressureLogAt >= MEMORY_PRESSURE_LOG_THROTTLE_MS) {
+    lastMemoryPressureLogAt = now;
+    logger.chat.warn('chat.emote.memory_pressure_trim', {
+      name: 'chat_resources_warning',
+      trimLevel: event.level,
+      decodedBytes: totalBytes,
+      decodedRefs: refs.size,
+    });
+  }
+  trimCachedEmoteRefsForMemoryPressure();
+}
+
 function startMemoryMonitor(): void {
   if (memoryMonitorTimer !== null) {
     return;
@@ -521,7 +541,9 @@ function handleAppStateForMemory(nextAppState: AppStateStatus): void {
  * - Backgrounding: shed the unpinned working set while off-screen so a long
  *   single-channel session can't sit at the cap until the OS reclaims it. Refs
  *   re-decode lazily on the next render when foregrounded.
- * Android trim hooks would need a native onTrimMemory bridge — not wired here.
+ * - Android `onMemoryPressure`: the OS onTrimMemory bridge, forwarded by the
+ *   ImageMemoryPressure module at RUNNING_LOW or worse (no-op on iOS/web, where
+ *   the module exposes no addListener).
  */
 export function subscribeEmoteCacheMemoryPressure(): void {
   if (memoryPressureSubscribed) {
@@ -531,6 +553,10 @@ export function subscribeEmoteCacheMemoryPressure(): void {
   AppState.addEventListener(
     'memoryWarning',
     trimCachedEmoteRefsForMemoryPressure,
+  );
+  ImageMemoryPressure.addListener?.(
+    'onMemoryPressure',
+    handleNativeMemoryPressure,
   );
   subscribeToAppStateTransitions(({ current }) => {
     handleAppStateForMemory(current);
