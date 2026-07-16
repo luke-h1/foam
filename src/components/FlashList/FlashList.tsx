@@ -34,12 +34,14 @@ export function FlashList<TItem>({
     return null;
   }, [onRefresh, refreshControl, refreshing]);
 
+  const activeRefreshControl = androidRefreshControl ?? refreshControl;
+
   return (
     <ShopifyFlashList
       ref={ref}
-      refreshControl={androidRefreshControl ?? refreshControl}
-      refreshing={refreshing}
-      onRefresh={androidRefreshControl ? undefined : onRefresh}
+      refreshControl={activeRefreshControl}
+      refreshing={activeRefreshControl ? undefined : refreshing}
+      onRefresh={activeRefreshControl ? undefined : onRefresh}
       {...props}
     />
   );
