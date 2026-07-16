@@ -1,5 +1,5 @@
+import { type Ref, useMemo } from 'react';
 import { Platform, RefreshControl } from 'react-native';
-import type { Ref } from 'react';
 
 import {
   FlashList as ShopifyFlashList,
@@ -22,24 +22,24 @@ export function FlashList<TItem>({
   refreshing = false,
   ...props
 }: FlashListProps<TItem> & { ref?: Ref<FlashListRef<TItem>> }) {
-  const usesAndroidRefreshControl =
-    Platform.OS === 'android' && onRefresh && !refreshControl;
+  const androidRefreshControl = useMemo(() => {
+    if (Platform.OS === 'android' && onRefresh && !refreshControl) {
+      return (
+        <RefreshControl
+          refreshing={Boolean(refreshing)}
+          onRefresh={onRefresh}
+        />
+      );
+    }
+    return null;
+  }, [onRefresh, refreshControl, refreshing]);
 
   return (
     <ShopifyFlashList
       ref={ref}
-      refreshControl={
-        usesAndroidRefreshControl ? (
-          <RefreshControl
-            refreshing={Boolean(refreshing)}
-            onRefresh={onRefresh}
-          />
-        ) : (
-          refreshControl
-        )
-      }
+      refreshControl={androidRefreshControl ?? refreshControl}
       refreshing={refreshing}
-      onRefresh={usesAndroidRefreshControl ? undefined : onRefresh}
+      onRefresh={androidRefreshControl ? undefined : onRefresh}
       {...props}
     />
   );

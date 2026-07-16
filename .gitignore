@@ -127,3 +127,5 @@ app-store-review-guidance/twitch-developer-console-proof.png
 
 
 !.vscode/settings.json
+# Auto-generated xcode-build-server / LSP config (user-specific paths)
+buildServer.json

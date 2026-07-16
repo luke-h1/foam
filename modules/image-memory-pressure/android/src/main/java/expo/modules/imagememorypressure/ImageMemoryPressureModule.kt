@@ -19,7 +19,7 @@ class ImageMemoryPressureModule : Module() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {}
 
-    @Deprecated("Deprecated in API 34")
+    @Suppress("DEPRECATION")
     override fun onLowMemory() {
       sendEvent(
         "onMemoryPressure",
@@ -55,7 +55,14 @@ class ImageMemoryPressureModule : Module() {
     val memoryInfo = ActivityManager.MemoryInfo()
     activityManager.getMemoryInfo(memoryInfo)
 
+    /**
+     * Headroom above the system low-memory threshold. When the device is at or
+     * under the threshold the headroom is zero or negative, which is exactly
+     * when the JS poller should trim hardest - report the smallest positive
+     * value so it reads as "critical" rather than 0.0, which the poller treats
+     * as "module unavailable" and skips.
+     */
     val headroom = memoryInfo.availMem - memoryInfo.threshold
-    return if (headroom > 0L) headroom.toDouble() else 0.0
+    return if (headroom > 0L) headroom.toDouble() else 1.0
   }
 }

@@ -37,21 +37,25 @@ export function createOverlayStore<T>() {
 export function createAwaitableOverlayStore<T>() {
   const store = createOverlayStore<T>();
   let resolvePresent: (() => void) | null = null;
+  let pending: Promise<void> | null = null;
 
   return {
     dismiss() {
       store.dismiss();
       resolvePresent?.();
       resolvePresent = null;
+      pending = null;
     },
     getState: store.getState,
     present(value: T) {
-      resolvePresent?.();
-      resolvePresent = null;
+      if (pending) {
+        return pending;
+      }
       store.present(value);
-      return new Promise<void>(resolve => {
+      pending = new Promise<void>(resolve => {
         resolvePresent = resolve;
       });
+      return pending;
     },
     subscribe: store.subscribe,
   };

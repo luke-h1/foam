@@ -25,11 +25,6 @@ import {
   subscribeActionMenu,
 } from './actionMenuStore';
 
-const listItemColors = {
-  containerColor: theme.color.menu.cardActive,
-  contentColor: theme.color.text.dark,
-};
-
 export function ActionMenuHost() {
   const options = useSyncExternalStore(
     subscribeActionMenu,
@@ -42,7 +37,11 @@ export function ActionMenuHost() {
   }
 
   return (
-    <Host colorScheme='dark' style={styles.host} pointerEvents='box-none'>
+    <Host
+      colorScheme='dark'
+      style={StyleSheet.absoluteFill}
+      pointerEvents='box-none'
+    >
       <ModalBottomSheet
         containerColor={theme.color.menu.background}
         contentColor={theme.color.text.dark}
@@ -68,11 +67,14 @@ export function ActionMenuHost() {
                   <HorizontalDivider color={theme.color.menu.border} />
                 ) : null}
                 <ListItem
-                  colors={listItemColors}
+                  colors={{
+                    containerColor: theme.color.menu.cardActive,
+                    contentColor: theme.color.text.dark,
+                  }}
                   modifiers={[
                     clickable(() => {
                       dismissActionMenu();
-                      action.onPress();
+                      requestAnimationFrame(() => action.onPress());
                     }),
                   ]}
                 >
@@ -105,9 +107,3 @@ export function ActionMenuHost() {
     </Host>
   );
 }
-
-const styles = StyleSheet.create({
-  host: {
-    ...StyleSheet.absoluteFill,
-  },
-});

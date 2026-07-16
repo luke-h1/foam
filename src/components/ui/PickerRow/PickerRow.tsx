@@ -25,6 +25,7 @@ export function PickerRow<T extends string>({
               key={option.value}
               style={[styles.chip, selected && styles.chipSelected]}
               onPress={() => onSelectionChange(option.value)}
+              accessibilityState={{ selected }}
             >
               <Text type='xs' color={selected ? 'gray' : 'gray.textLow'}>
                 {option.label}

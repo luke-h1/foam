@@ -4,6 +4,7 @@ import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 
 import { useAuthContext } from '@app/context/AuthContext';
+import { androidDynamicTint } from '@app/styles/androidDynamicColors';
 import { theme } from '@app/styles/themes';
 
 export default function TabsLayout() {
@@ -16,7 +17,7 @@ export default function TabsLayout() {
 
   return (
     <NativeTabs
-      tintColor={theme.colorWhite}
+      tintColor={androidDynamicTint(theme.colorWhite)}
       minimizeBehavior='onScrollDown'
       blurEffect={liquidGlass ? undefined : 'systemChromeMaterial'}
       disableTransparentOnScrollEdge={!liquidGlass}
