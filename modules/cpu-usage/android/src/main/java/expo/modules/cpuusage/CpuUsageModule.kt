@@ -1,13 +1,22 @@
 package expo.modules.cpuusage
 
+import android.os.SystemClock
+import android.system.Os
+import android.system.OsConstants
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import java.io.File
 
 class CpuUsageModule : Module() {
-  private var lastProcessTicks = 0L
-  private var lastTotalTicks = 0L
+  private var lastProcessMs = 0L
+  private var lastWallMs = 0L
   private var hasBaseline = false
+
+  /**
+   * Kernel clock-tick rate (USER_HZ) used to convert /proc jiffies to
+   * milliseconds. Typically 100 but read it rather than assume.
+   */
+  private val clockTck = Os.sysconf(OsConstants._SC_CLK_TCK).coerceAtLeast(1L)
 
   override fun definition() = ModuleDefinition {
     Name("CpuUsage")
@@ -18,39 +27,41 @@ class CpuUsageModule : Module() {
   }
 
   /**
-   * Process CPU% since previous call - scale by core count of phone so it matches the iOS
-   * native module 'sum across all threads'
-   * returns 0 on first call or when /proc is unreadable
+   * Process CPU% since the previous call, summed across all threads so a fully
+   * busy multi-core process can exceed 100% - matching the iOS native module.
+   * Measured against wall-clock elapsed time (SystemClock.uptimeMillis) rather
+   * than /proc/stat, which is unreadable to apps on modern Android. Returns 0 on
+   * the first call or when /proc/self/stat is unreadable.
    */
   private fun currentCpuUsage(): Double {
-    val processTicks = readProcessTicks() ?: return 0.0
-    val totalTicks = readTotalCpuTicks() ?: return 0.0
+    val processMs = readProcessCpuMs() ?: return 0.0
+    val wallMs = SystemClock.uptimeMillis()
 
     if (!hasBaseline) {
-      lastProcessTicks = processTicks
-      lastTotalTicks = totalTicks
+      lastProcessMs = processMs
+      lastWallMs = wallMs
       hasBaseline = true
       return 0.0
     }
 
-    val processDelta = processTicks - lastProcessTicks
-    val totalDelta = totalTicks - lastTotalTicks
+    val processDelta = processMs - lastProcessMs
+    val wallDelta = wallMs - lastWallMs
 
-    lastProcessTicks = processTicks
-    lastTotalTicks = totalTicks
+    lastProcessMs = processMs
+    lastWallMs = wallMs
 
-    if (totalDelta <= 0L || processDelta < 0L) {
+    if (wallDelta <= 0L || processDelta < 0L) {
       return 0.0
     }
 
-    val cores = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
-    return (processDelta.toDouble() / totalDelta.toDouble()) * 100.0 * cores
+    return (processDelta.toDouble() / wallDelta.toDouble()) * 100.0
   }
 
   /**
-   * utime + stime from /proc/self/stat in clock ticks
+   * Process CPU time (utime + stime) from /proc/self/stat, converted to
+   * milliseconds. /proc/self is always readable by the owning process.
    */
-  private fun readProcessTicks(): Long? {
+  private fun readProcessCpuMs(): Long? {
     return runCatching {
       val stat = File("/proc/self/stat").readText()
       val afterComm = stat.substring(stat.lastIndexOf(')') + 1).trim()
@@ -58,21 +69,7 @@ class CpuUsageModule : Module() {
 
       val utime = fields[11].toLong()
       val stime = fields[12].toLong()
-      utime + stime
-    }.getOrNull()
-  }
-
-  /**
-   * Sum of all jiffies on the first line of /proc/stat
-   */
-  private fun readTotalCpuTicks(): Long? {
-    return runCatching {
-      val firstLine = File("/proc/stat").bufferedReader().use { it.readLine() }
-      firstLine
-        .split(Regex("\\s+"))
-        .drop(1)
-        .filter { it.isNotEmpty() }
-        .sumOf { it.toLong() }
+      (utime + stime) * 1000L / clockTck
     }.getOrNull()
   }
 }

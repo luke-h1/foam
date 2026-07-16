@@ -3,6 +3,8 @@ package expo.modules.imagecachelimits
 import android.app.ActivityManager
 import android.app.Application
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import com.bumptech.glide.Glide
 import com.bumptech.glide.MemoryCategory
 import expo.modules.core.interfaces.ApplicationLifecycleListener
@@ -27,8 +29,17 @@ class ImageCacheLimitsApplicationLifecycle : ApplicationLifecycleListener {
 
     val activityManager =
       app.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+    val category = memoryCategoryFor(activityManager)
 
-    Glide.get(app).setMemoryCategory(memoryCategoryFor(activityManager))
+    /**
+     * setMemoryCategory must run on the main thread (Glide asserts it) and forces
+     * eager Glide initialisation, so posting it off the Application.onCreate
+     * critical path keeps first-frame startup unblocked while still applying
+     * before any image loads.
+     */
+    Handler(Looper.getMainLooper()).post {
+      Glide.get(app).setMemoryCategory(category)
+    }
   }
 
   /**

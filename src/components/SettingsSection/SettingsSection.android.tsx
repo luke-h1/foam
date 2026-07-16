@@ -39,15 +39,31 @@ function resolveIconName(
 }
 
 /**
- * Only our Compose row components can render as direct children of the Card's
+ * Marker for components that render as native Compose children and can sit
+ * directly inside the Card's Column. Screens with bespoke Compose rows (e.g.
+ * the chat-preferences segmented rows) tag their component with this so they
+ * are not hosted via RNHostView, which would place their Compose content
+ * outside the Card tree.
+ */
+export interface ComposeRowComponent {
+  isComposeRow?: boolean;
+}
+
+/**
+ * Only Compose row components can render as direct children of the Card's
  * Column. Any other child (RN preview tiles etc.) is hosted via RNHostView.
  */
 function isComposeRow(element: ReactNode): boolean {
+  if (!isValidElement(element)) {
+    return false;
+  }
+  const { type } = element;
   return (
-    isValidElement(element) &&
-    (element.type === SettingsRow ||
-      element.type === SettingsLinkRow ||
-      element.type === SettingsToggleRow)
+    type === SettingsRow ||
+    type === SettingsLinkRow ||
+    type === SettingsToggleRow ||
+    (typeof type !== 'string' &&
+      (type as ComposeRowComponent).isComposeRow === true)
   );
 }
 
