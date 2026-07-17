@@ -29,6 +29,7 @@ format() {
 files=("$@")
 if [ "${#files[@]}" -eq 0 ]; then
   format modules
+  [ "${LINT_CHECK:-}" = "1" ] || swiftlint lint --fix --quiet
   swiftlint lint --quiet
   exit 0
 fi
