@@ -35,13 +35,11 @@ enum ChangelogUIKitPresenter {
       return findTop(from: presented)
     }
     if let navigation = viewController as? UINavigationController,
-      let visible = navigation.visibleViewController
-    {
+       let visible = navigation.visibleViewController {
       return findTop(from: visible)
     }
     if let tab = viewController as? UITabBarController,
-      let selected = tab.selectedViewController
-    {
+       let selected = tab.selectedViewController {
       return findTop(from: selected)
     }
     return viewController
@@ -96,7 +94,7 @@ final class ChangelogPresentationCompletion {
     switch seenMarker {
     case .currentVersion:
       ChangelogStorage.markCurrentVersionAsSeen()
-    case .otaVersion(let otaVersion):
+    case let .otaVersion(otaVersion):
       ChangelogStorage.markOTAVersionAsSeen(otaVersion)
     case nil:
       break
@@ -106,8 +104,7 @@ final class ChangelogPresentationCompletion {
 }
 
 final class ChangelogHostingController: UIHostingController<ChangelogSheetContentView>,
-  UIAdaptivePresentationControllerDelegate
-{
+  UIAdaptivePresentationControllerDelegate {
   private let completion: ChangelogPresentationCompletion
 
   init(
@@ -118,7 +115,8 @@ final class ChangelogHostingController: UIHostingController<ChangelogSheetConten
     super.init(rootView: rootView)
   }
 
-  @MainActor required dynamic init?(coder aDecoder: NSCoder) {
+  @available(*, unavailable)
+  @MainActor dynamic required init?(coder _: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
 
@@ -127,7 +125,7 @@ final class ChangelogHostingController: UIHostingController<ChangelogSheetConten
     presentationController?.delegate = self
   }
 
-  func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+  func presentationControllerDidDismiss(_: UIPresentationController) {
     completion.completeIfNeeded()
   }
 }

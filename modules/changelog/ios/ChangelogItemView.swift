@@ -26,7 +26,7 @@ struct ChangelogItemView: View {
 
       VStack(alignment: .leading, spacing: 0) {
         switch item {
-        case .media(let mediaKind, let url, let title, let description):
+        case let .media(mediaKind, url, title, description):
           VStack(alignment: .center, spacing: 12) {
             let mediaPadding = 16.0
 
@@ -58,7 +58,7 @@ struct ChangelogItemView: View {
 
             Spacer()
           }
-        case .list(let title, let rows):
+        case let .list(title, rows):
           BulletListChangelogItemView(
             title: title,
             rows: rows,

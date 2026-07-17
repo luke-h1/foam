@@ -83,7 +83,9 @@ struct MediaChangelogItemVideoView: View {
 
 private struct AspectFillVideoPlayer: UIViewRepresentable {
   final class PlayerView: UIView {
-    override static var layerClass: AnyClass { AVPlayerLayer.self }
+    override static var layerClass: AnyClass {
+      AVPlayerLayer.self
+    }
 
     var playerLayer: AVPlayerLayer {
       layer as! AVPlayerLayer
@@ -92,14 +94,14 @@ private struct AspectFillVideoPlayer: UIViewRepresentable {
 
   let player: AVPlayer?
 
-  func makeUIView(context: Context) -> PlayerView {
+  func makeUIView(context _: Context) -> PlayerView {
     let view = PlayerView()
     view.playerLayer.videoGravity = .resizeAspectFill
     view.clipsToBounds = true
     return view
   }
 
-  func updateUIView(_ uiView: PlayerView, context: Context) {
+  func updateUIView(_ uiView: PlayerView, context _: Context) {
     uiView.playerLayer.player = player
   }
 }

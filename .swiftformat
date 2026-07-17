@@ -1,0 +1,11 @@
+--swiftversion 5.9
+--indent 2
+--maxwidth 120
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--self remove
+--commas inline
+--trimwhitespace always
+--disable wrapMultilineStatementBraces
+--exclude ios/Pods,ios/build,build,.build,node_modules
