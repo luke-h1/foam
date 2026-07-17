@@ -61,15 +61,13 @@ class CpuUsageModule : Module() {
    * Process CPU time (utime + stime) from /proc/self/stat, converted to
    * milliseconds. /proc/self is always readable by the owning process.
    */
-  private fun readProcessCpuMs(): Long? {
-    return runCatching {
-      val stat = File("/proc/self/stat").readText()
-      val afterComm = stat.substring(stat.lastIndexOf(')') + 1).trim()
-      val fields = afterComm.split(Regex("\\s+"))
+  private fun readProcessCpuMs(): Long? = runCatching {
+    val stat = File("/proc/self/stat").readText()
+    val afterComm = stat.substring(stat.lastIndexOf(')') + 1).trim()
+    val fields = afterComm.split(Regex("\\s+"))
 
-      val utime = fields[11].toLong()
-      val stime = fields[12].toLong()
-      (utime + stime) * 1000L / clockTck
-    }.getOrNull()
-  }
+    val utime = fields[11].toLong()
+    val stime = fields[12].toLong()
+    (utime + stime) * 1000L / clockTck
+  }.getOrNull()
 }

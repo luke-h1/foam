@@ -7,7 +7,6 @@ import android.content.res.Configuration
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
-
 class ImageMemoryPressureModule : Module() {
 
   private val trimCallback = object : ComponentCallbacks2 {
@@ -23,7 +22,7 @@ class ImageMemoryPressureModule : Module() {
     override fun onLowMemory() {
       sendEvent(
         "onMemoryPressure",
-        mapOf("level" to ComponentCallbacks2.TRIM_MEMORY_COMPLETE)
+        mapOf("level" to ComponentCallbacks2.TRIM_MEMORY_COMPLETE),
       )
     }
   }

@@ -10,9 +10,6 @@ import expo.modules.core.interfaces.Package
  * Android analog of the iOS ImageCacheLimitsAppDelegateSubscriber.
  */
 class ImageCacheLimitsPackage : Package {
-  override fun createApplicationLifecycleListeners(
-    context: Context?,
-  ): List<ApplicationLifecycleListener> {
-    return listOf(ImageCacheLimitsApplicationLifecycle())
-  }
+  override fun createApplicationLifecycleListeners(context: Context?): List<ApplicationLifecycleListener> =
+    listOf(ImageCacheLimitsApplicationLifecycle())
 }
