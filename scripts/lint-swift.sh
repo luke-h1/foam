@@ -26,14 +26,17 @@ format() {
   fi
 }
 
+# Run format and lint independently and aggregate their status so a formatting
+# failure doesn't mask lint results (and vice versa) in a single run.
 files=("$@")
+status=0
 if [ "${#files[@]}" -eq 0 ]; then
-  format modules
-  [ "${LINT_CHECK:-}" = "1" ] || swiftlint lint --fix --quiet
-  swiftlint lint --quiet
-  exit 0
+  format modules || status=1
+  [ "${LINT_CHECK:-}" = "1" ] || swiftlint lint --fix --quiet || true
+  swiftlint lint --quiet || status=1
+else
+  format "${files[@]}" || status=1
+  [ "${LINT_CHECK:-}" = "1" ] || swiftlint lint --fix --quiet -- "${files[@]}" || true
+  swiftlint lint --quiet -- "${files[@]}" || status=1
 fi
-
-format "${files[@]}"
-[ "${LINT_CHECK:-}" = "1" ] || swiftlint lint --fix --quiet -- "${files[@]}"
-swiftlint lint --quiet -- "${files[@]}"
+exit "$status"
