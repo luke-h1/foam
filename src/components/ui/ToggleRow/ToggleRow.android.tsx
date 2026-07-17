@@ -6,11 +6,6 @@ import { theme } from '@app/styles/themes';
 import { SymbolView } from '../Icon/Icon';
 import { ToggleRowProps } from './ToggleRow.types';
 
-const listItemColors = {
-  containerColor: theme.color.backgroundSecondary.dark,
-  contentColor: theme.color.text.dark,
-};
-
 export function ToggleRow({
   title,
   subtitle,
@@ -19,7 +14,12 @@ export function ToggleRow({
   onValueChange,
 }: ToggleRowProps) {
   return (
-    <ListItem colors={listItemColors}>
+    <ListItem
+      colors={{
+        containerColor: theme.color.backgroundSecondary.dark,
+        contentColor: theme.color.text.dark,
+      }}
+    >
       {icon ? (
         <ListItem.LeadingContent>
           <RNHostView matchContents>

@@ -14,11 +14,21 @@ export function ToggleRow({
   onValueChange,
 }: ToggleRowProps) {
   return (
-    <View style={styles.row}>
+    <View
+      style={{
+        alignItems: 'center',
+        borderBottomColor: theme.colorBorderSecondary,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        flexDirection: 'row',
+        gap: theme.space12,
+        paddingHorizontal: theme.space16,
+        paddingVertical: 14,
+      }}
+    >
       {icon ? (
         <SymbolView name={icon} size={20} tintColor={theme.colorWhite} />
       ) : null}
-      <View style={styles.labels}>
+      <View style={{ flex: 1, gap: theme.space4 }}>
         <Text weight='semibold' color='gray'>
           {title}
         </Text>
@@ -36,19 +46,3 @@ export function ToggleRow({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  labels: {
-    flex: 1,
-    gap: theme.space4,
-  },
-  row: {
-    alignItems: 'center',
-    borderBottomColor: theme.colorBorderSecondary,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    gap: theme.space12,
-    paddingHorizontal: theme.space16,
-    paddingVertical: 14,
-  },
-});
