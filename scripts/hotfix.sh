@@ -62,13 +62,13 @@ git fetch --tags origin
 
 if ! git rev-parse -q --verify "refs/tags/${base_tag}" >/dev/null; then
   echo "Tag '${base_tag}' does not exist. Available native release tags:"
-  git tag -l | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+(-(internal|testflight))?$' | sort -V | tail -20
+  git tag -l | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+(-(internal|testflight|preview))?$' | sort -V | tail -20
   exit 1
 fi
 
 # Split the native tag into its version + variant so we can find OTA tags that
 # shipped on top of this exact release (`ota-<variant>-<version>-<run>`).
-if [[ "$base_tag" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)(-(internal|testflight))?$ ]]; then
+if [[ "$base_tag" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)(-(internal|testflight|preview))?$ ]]; then
   version="${BASH_REMATCH[1]}"
   variant="${BASH_REMATCH[3]:-production}"
 else
