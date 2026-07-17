@@ -69,7 +69,7 @@ export function FormSection({ children, title }: FormSectionProps) {
           modifiers={[padding(4, 0, 4, 0)]}
           style={{ typography: 'labelSmall', fontWeight: '600' }}
         >
-          {title.toUpperCase()}
+          {title}
         </Text>
       ) : null}
       <Card colors={cardColors} modifiers={[fillMaxWidth()]}>
