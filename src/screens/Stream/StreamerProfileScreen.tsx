@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { router } from 'expo-router';
-import { toast } from 'sonner-native';
 
 import { Button } from '@app/components/Button/Button';
 import {
@@ -22,7 +21,6 @@ import { useClipsQuery } from '@app/hooks/queries/useClipsQuery';
 import { useStreamElementsStatsQuery } from '@app/hooks/queries/useStreamelementsStatsQuery';
 import { useUserQuery } from '@app/hooks/queries/useUserQuery';
 import { useVideosQuery } from '@app/hooks/queries/useVideosQuery';
-import { useDownloadTwitchClip } from '@app/hooks/useDownloadTwitchClip';
 import { useFlattenedInfiniteQuery } from '@app/hooks/useFlattenedInfiniteQuery';
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
@@ -49,7 +47,6 @@ type ProfileListItem =
 
 type ProfileListExtraData = {
   activeTab: ProfileTab;
-  downloadingClipId?: string;
 };
 
 function getClipThumbnailUrl(clip: TwitchClip) {
@@ -270,8 +267,8 @@ function StreamerProfileHeader({
 }
 
 // Memoized so the regex/Date formatting below only re-runs for cards whose
-// props actually changed - extraData ticks (tab captions, download state)
-// re-render the list wrapper, not every visible card.
+// props actually changed - extraData ticks (tab captions) re-render the list
+// wrapper, not every visible card.
 const VodCard = memo(function VodCard({
   vod,
   width,
@@ -319,13 +316,9 @@ const VodCard = memo(function VodCard({
 
 const ClipCard = memo(function ClipCard({
   clip,
-  downloading,
-  onDownload,
   width,
 }: {
   clip: TwitchClip;
-  downloading: boolean;
-  onDownload: (clip: TwitchClip) => void;
   width: number;
 }) {
   const { t } = useTranslation('stream');
@@ -364,20 +357,6 @@ const ClipCard = memo(function ClipCard({
             {t('clippedBy', { name: clip.creator_name })}
           </Text>
         </Button>
-
-        <IconButton
-          icon={{
-            type: 'symbol',
-            name: 'arrow.down.circle',
-            size: 20,
-            color: theme.color.text.dark,
-          }}
-          label={t('downloadClip', { title: clip.title })}
-          loading={downloading}
-          onPress={() => onDownload(clip)}
-          size='2xl'
-          style={styles.downloadButton}
-        />
       </View>
     </View>
   );
@@ -437,7 +416,6 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   const { t } = useTranslation('stream');
   const listRef = useRef<FlashListRef<ProfileListItem>>(null);
   const { width: windowWidth } = useWindowDimensions();
-  const { download, downloadingClipId } = useDownloadTwitchClip();
   const [activeTab, setActiveTab] = useState<ProfileTab>('vods');
 
   useScrollToTop(listRef);
@@ -486,39 +464,18 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
     isFetchingNextPage: videosQuery.isFetchingNextPage,
   });
 
-  const handleDownload = useCallback(
-    (clip: TwitchClip) => {
-      download(
-        { clip },
-        {
-          onError: error => toast.error(error.message),
-          onSuccess: () => toast.success(i18next.t('stream:clipSaved')),
-        },
-      );
-    },
-    [download],
-  );
-
   const vodFallbackImage =
     user?.offline_image_url ?? user?.profile_image_url ?? '';
 
   const listExtraData = useMemo<ProfileListExtraData>(
-    () => ({ activeTab, downloadingClipId }),
-    [activeTab, downloadingClipId],
+    () => ({ activeTab }),
+    [activeTab],
   );
 
   const renderItem: ListRenderItem<ProfileListItem> = useCallback(
-    ({ item, extraData }) => {
-      const listData: ProfileListExtraData | undefined = extraData;
+    ({ item }) => {
       if (item.kind === 'clip') {
-        return (
-          <ClipCard
-            clip={item.clip}
-            downloading={listData?.downloadingClipId === item.clip.id}
-            onDownload={handleDownload}
-            width={cardWidth}
-          />
-        );
+        return <ClipCard clip={item.clip} width={cardWidth} />;
       }
 
       return (
@@ -529,7 +486,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
         />
       );
     },
-    [cardWidth, handleDownload, vodFallbackImage],
+    [cardWidth, vodFallbackImage],
   );
 
   const isVods = activeTab === 'vods';
@@ -652,13 +609,6 @@ const styles = StyleSheet.create({
   },
   description: {
     marginTop: theme.space16,
-  },
-  downloadButton: {
-    alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    justifyContent: 'center',
   },
   durationBadge: {
     backgroundColor: theme.colorBlackOverlay,

@@ -181,6 +181,7 @@ const ChatMessageRow = function ChatMessageRow({
       }
       message_id={msg.message_id}
       message_nonce={msg.message_nonce}
+      timestamp={msg.timestamp}
       sender={msg.sender}
       isAction={msg.isAction}
       style={styles.messageContainer}

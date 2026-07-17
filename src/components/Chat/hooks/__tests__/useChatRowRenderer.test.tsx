@@ -241,6 +241,7 @@ describe('useChatRowRenderer', () => {
     if (!replyMessage) {
       throw new Error('Expected reply message fixture');
     }
+    replyMessage.timestamp = '12:34';
 
     const rendered = hook.result.current.renderItem({
       item: replyMessage,
@@ -290,6 +291,8 @@ describe('useChatRowRenderer', () => {
       onEmotePress,
       onUsernamePress,
     });
+
+    expect(props.timestamp).toBe('12:34');
 
     expect(props.parseTextForEmotes('OMEGALUL')).toEqual<ParsedPart[]>([
       { type: 'text', content: 'parsed:OMEGALUL' },
