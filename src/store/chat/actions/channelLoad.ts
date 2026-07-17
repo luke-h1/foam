@@ -34,7 +34,7 @@ import {
   buildEmoteResourceSpecs,
   buildSubscriberEmoteSpec,
   clearGlobalResourceCache,
-  collectFailedProviderLabels,
+  collectFailedProviderReasons,
   combineUniqueById,
   deduplicateById,
   type EmoteResourceSets,
@@ -90,7 +90,7 @@ const exitIfAborted = (
 };
 
 type ProviderFailureSettled = Parameters<
-  typeof collectFailedProviderLabels
+  typeof collectFailedProviderReasons
 >[0][number];
 
 function notifyProviderLoadFailures(
@@ -98,7 +98,7 @@ function notifyProviderLoadFailures(
   settled: readonly ProviderFailureSettled[],
   existingCache: ChannelCacheType | undefined,
 ): void {
-  const failedProviders = collectFailedProviderLabels(settled);
+  const failedProviders = collectFailedProviderReasons(settled);
   if (failedProviders.length === 0) {
     return;
   }
