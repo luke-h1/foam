@@ -227,6 +227,11 @@ jobs:
             remove_label="native-build-required"
           fi
 
+          # `gh pr edit --add-label` fails if the label does not yet exist in the
+          # repo, so ensure both labels are present before applying one.
+          gh label create ota-compatible --repo "$REPO" --color 0E8A16 --description "No native changes; shippable via OTA" 2>/dev/null || true
+          gh label create native-build-required --repo "$REPO" --color D93F0B --description "Native changes; requires a new build" 2>/dev/null || true
+
           gh pr edit "$PR_NUMBER" --repo "$REPO" --remove-label "$remove_label" 2>/dev/null || true
           gh pr edit "$PR_NUMBER" --repo "$REPO" --add-label "$add_label"
 

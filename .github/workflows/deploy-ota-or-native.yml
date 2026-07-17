@@ -417,7 +417,7 @@ jobs:
           commit_changelog: 'true'
 
       - name: 🏷️ Tag OTA update
-        if: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && !inputs.dry_run }}
+        if: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && needs.ota.result == 'success' && !inputs.dry_run }}
         env:
           GH_TOKEN: ${{ secrets.LUKE_H1_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.release_tag.outputs.tag }}

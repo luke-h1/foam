@@ -136,7 +136,16 @@ for sha in "${commits[@]}"; do
     exit 1
   fi
   echo "  cherry-pick ${sha}"
-  git cherry-pick "$sha"
+  if ! git cherry-pick "$sha"; then
+    cat <<EOF
+
+Cherry-pick of '${sha}' conflicted. Resolve the conflicts, then run:
+  git cherry-pick --continue
+Or abort with:
+  git cherry-pick --abort
+EOF
+    exit 1
+  fi
 done
 
 cat <<EOF
