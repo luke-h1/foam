@@ -1,4 +1,5 @@
 import type { MonitoringWarningName } from '@app/lib/sentry';
+import { ApiError } from '@app/services/api/Client';
 import { bttvEmoteService } from '@app/services/bttv-emote-service';
 import { ffzService } from '@app/services/ffz-service';
 import { sevenTvService } from '@app/services/seventv-service';
@@ -474,25 +475,39 @@ export const PROVIDER_DISPLAY_NAMES: Record<ProviderName, string> = {
   twitch: 'Twitch',
 };
 
-/**
- * Distinct human-readable provider names whose resource fetch rejected, in a
- * stable order, for surfacing a single "couldn't load X" chat notice.
- */
-export const collectFailedProviderLabels = (
+export const describeProviderFailureReason = (reason: unknown): string => {
+  if (reason instanceof ResourceFetchTimeoutError) {
+    return 'timed out';
+  }
+  if (reason instanceof ApiError) {
+    return `HTTP ${reason.status}`;
+  }
+  if (reason instanceof Error && reason.message) {
+    return reason.message;
+  }
+  return 'unknown error';
+};
+
+export const collectFailedProviderReasons = (
   settled: readonly AnySettledSpec[],
 ): string[] => {
-  const failed = new Set<ProviderName>();
+  const reasonByProvider = new Map<ProviderName, string>();
   settled.forEach(({ result, spec }) => {
-    if (result.status === 'rejected') {
-      failed.add(spec.provider);
+    if (result.status === 'rejected' && !reasonByProvider.has(spec.provider)) {
+      reasonByProvider.set(
+        spec.provider,
+        describeProviderFailureReason(result.reason),
+      );
     }
   });
+
   const labels: string[] = [];
   for (const provider of Object.keys(
     PROVIDER_DISPLAY_NAMES,
   ) as ProviderName[]) {
-    if (failed.has(provider)) {
-      labels.push(PROVIDER_DISPLAY_NAMES[provider]);
+    const reason = reasonByProvider.get(provider);
+    if (reason) {
+      labels.push(`${PROVIDER_DISPLAY_NAMES[provider]} (${reason})`);
     }
   }
   return labels;
