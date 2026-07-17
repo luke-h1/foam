@@ -1,0 +1,31 @@
+included:
+  - modules
+
+excluded:
+  - ios/Pods
+  - ios/build
+  - '**/build'
+  - '**/.build'
+  - node_modules
+
+disabled_rules:
+  - todo
+
+identifier_name:
+  min_length: 1
+  max_length: 60
+  allowed_symbols: ['_']
+  validates_start_with_lowercase: warning
+
+line_length:
+  warning: 140
+  error: 250
+  ignores_comments: true
+  ignores_urls: true
+
+force_cast: warning
+force_try: warning
+closure_parameter_position: warning
+
+type_name:
+  max_length: 60

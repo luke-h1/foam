@@ -72,7 +72,6 @@ enum NoteItemDTO: Decodable {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     let kind = try container.decode(ItemKind.self, forKey: .type)
     switch kind {
-
     case .list:
       let title = try container.decode(String.self, forKey: .title)
       let rows = try container.decode([ListRowDTO].self, forKey: .rows)
@@ -89,7 +88,7 @@ enum NoteItemDTO: Decodable {
 
   func toModel() -> ChangelogVersionNoteItem {
     switch self {
-    case .list(let title, let rows):
+    case let .list(title, rows):
       return .list(
         title: title,
         rows: rows.map { row in
@@ -100,7 +99,7 @@ enum NoteItemDTO: Decodable {
           )
         }
       )
-    case .media(let kind, let url, let title, let description):
+    case let .media(kind, url, title, description):
       let mediaKind: ChangelogVersionNoteItem.MediaKind =
         kind == .image ? .image : .video
       return .media(
@@ -121,18 +120,17 @@ extension ChangelogVersionNotesDTO {
 
 extension ChangelogConfiguration {
   static func from(_ dto: ConfigurationDTO?) -> ChangelogConfiguration {
-    guard let dto = dto else {
+    guard let dto else {
       return ChangelogConfiguration()
     }
 
     let nextLabel = dto.nextButtonLabel ?? "Next"
     let doneLabel = dto.doneButtonLabel ?? "Done"
 
-    let accent: Color
-    if let hex = dto.accentColorHex, let ui = UIColor(ChangelogHex: hex) {
-      accent = Color(uiColor: ui)
+    let accent: Color = if let hex = dto.accentColorHex, let ui = UIColor(ChangelogHex: hex) {
+      Color(uiColor: ui)
     } else {
-      accent = .blue
+      .blue
     }
 
     return ChangelogConfiguration(

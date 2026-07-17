@@ -34,7 +34,6 @@ struct BulletListChangelogItemView: View {
                 .font(.body)
                 .foregroundStyle(.secondary)
             }
-
           }
         }
       }
