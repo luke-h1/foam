@@ -18,8 +18,8 @@ public class ImageCacheLimitsAppDelegateSubscriber: ExpoAppDelegateSubscriber {
   deinit {}
 
   public func application(
-    _ application: UIApplication,
-    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    _: UIApplication,
+    didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     let physicalMemory = ProcessInfo.processInfo.physicalMemory
     let minCost: UInt = 96 * 1024 * 1024
