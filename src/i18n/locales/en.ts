@@ -408,8 +408,6 @@ const en = {
     untitledClip: 'Untitled clip',
     clipMeta: '{{views}} views - {{age}}',
     clippedBy: 'Clipped by {{name}}',
-    downloadClip: 'Download {{title}}',
-    clipSaved: 'Clip saved',
     createClip: 'Create clip',
     clipCreated: 'Clip created',
     clipCreateFailed: "Couldn't create clip",

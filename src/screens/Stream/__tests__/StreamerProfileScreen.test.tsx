@@ -12,13 +12,6 @@ import type { TwitchVideo } from '@app/types/twitch/video';
 jest.mock('@app/services/twitch-service');
 jest.mock('@app/services/streamelements-service');
 jest.mock('@app/hooks/useScrollToTop', () => ({ useScrollToTop: jest.fn() }));
-jest.mock('@app/hooks/useDownloadTwitchClip', () => ({
-  useDownloadTwitchClip: () => ({
-    download: jest.fn(),
-    downloadingClipId: undefined,
-    isPending: false,
-  }),
-}));
 
 // SegmentedControl wraps the native @expo/ui control, which cannot receive
 // segment-change events in tests; expose each segment as a pressable instead.
