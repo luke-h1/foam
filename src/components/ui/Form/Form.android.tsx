@@ -1,4 +1,4 @@
-import { Children, Fragment, ReactElement } from 'react';
+import { Children, Fragment, isValidElement, ReactElement } from 'react';
 
 import {
   Card,
@@ -56,7 +56,7 @@ export function FormScreen({ children }: FormScreenProps) {
 }
 
 export function FormSection({ children, title }: FormSectionProps) {
-  const rows = Children.toArray(children).filter(Boolean);
+  const rows = Children.toArray(children).filter(isValidElement);
 
   return (
     <Column
@@ -75,7 +75,7 @@ export function FormSection({ children, title }: FormSectionProps) {
       <Card colors={cardColors} modifiers={[fillMaxWidth()]}>
         <Column modifiers={[fillMaxWidth()]}>
           {rows.map((row, index) => (
-            <Fragment key={index}>
+            <Fragment key={row.key}>
               {index > 0 ? (
                 <HorizontalDivider color={theme.colorBorderSecondary} />
               ) : null}

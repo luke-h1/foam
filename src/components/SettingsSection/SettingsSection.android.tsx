@@ -184,7 +184,7 @@ export function SettingsSection({
         <Card colors={cardColors} modifiers={[fillMaxWidth()]}>
           <Column modifiers={[fillMaxWidth()]}>
             {rows.map((row, index) => (
-              <Fragment key={index}>
+              <Fragment key={row.key}>
                 {index > 0 ? (
                   <HorizontalDivider color={theme.colorBorderSecondary} />
                 ) : null}
