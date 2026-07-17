@@ -40,15 +40,16 @@ final class ChangelogView: ExpoView, WKNavigationDelegate {
   }
 
   func loadIfNeeded() {
-    guard let pendingURL = pendingURL,
-      webView.url != pendingURL else {
+    guard let pendingURL,
+          webView.url != pendingURL
+    else {
       return
     }
 
     webView.load(URLRequest(url: pendingURL))
   }
 
-  func webView(_ webView: WKWebView, didFinish navigation: WKNavigation?) {
+  func webView(_ webView: WKWebView, didFinish _: WKNavigation?) {
     guard let url = webView.url?.absoluteString else {
       return
     }

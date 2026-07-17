@@ -17,7 +17,6 @@ struct MediaChangelogItemDetailsView: View {
       Text(title)
         .font(.title3.weight(.bold))
       Text(description)
-
     }
     .multilineTextAlignment(.leading)
     .fixedSize(horizontal: false, vertical: true)
