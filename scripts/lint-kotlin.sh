@@ -16,7 +16,21 @@ fi
 
 files=("$@")
 if [ "${#files[@]}" -eq 0 ]; then
-  files=("android/**/*.kt" "android/**/*.kts" "modules/**/*.kt")
+  # android/ is gitignored prebuild output (absent in CI) and modules/ has no
+  # Kotlin yet, so collect the real files and skip when there are none.
+  roots=()
+  for dir in android modules; do
+    [ -d "$dir" ] && roots+=("$dir")
+  done
+  if [ "${#roots[@]}" -gt 0 ]; then
+    while IFS= read -r file; do
+      files+=("$file")
+    done < <(find "${roots[@]}" -type f \( -name '*.kt' -o -name '*.kts' \))
+  fi
+  if [ "${#files[@]}" -eq 0 ]; then
+    echo "No Kotlin files to lint."
+    exit 0
+  fi
 fi
 
 if [ "${LINT_CHECK:-}" = "1" ]; then
