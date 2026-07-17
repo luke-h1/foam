@@ -29,7 +29,7 @@ struct ChangelogSheetContentView: View {
   @Environment(\.colorScheme) private var colorScheme
 
   private var currentPage: Int {
-    return selectedPageID
+    selectedPageID
   }
 
   private var isIPad: Bool {
@@ -96,8 +96,8 @@ struct ChangelogSheetContentView: View {
             } label: {
               let buttonTitle: String =
                 isOnLastPage
-                ? configuration.doneButtonLabel
-                : configuration.nextButtonLabel
+                  ? configuration.doneButtonLabel
+                  : configuration.nextButtonLabel
 
               Text(buttonTitle)
                 .fontWeight(.bold)
