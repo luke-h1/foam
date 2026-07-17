@@ -243,6 +243,10 @@ function useAuthContextValue({
         return;
       }
 
+      if (!result?.access_token) {
+        throw new Error('auth proxy returned no anon access token');
+      }
+
       const token = addExpirationTimestamp({
         accessToken: result.access_token,
         expiresIn: result.expires_in,

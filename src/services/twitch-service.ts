@@ -407,7 +407,7 @@ export const twitchService = {
   /**
    * @returns a token for an anonymous user
    */
-  getDefaultToken: async (): Promise<DefaultTokenResponse> => {
+  getDefaultToken: async (): Promise<DefaultTokenResponse | undefined> => {
     const tokenUrl = isE2EMode
       ? `${mockServerUrl}/token`
       : `${authProxyBaseUrl}/token`;
@@ -420,7 +420,7 @@ export const twitchService = {
       logger.auth.error(
         `auth proxy returned error status ${res.status} when fetching token`,
       );
-      return undefined as unknown as DefaultTokenResponse;
+      return undefined;
     }
 
     const body = await parseJsonOnWorklet<{ data: DefaultTokenResponse }>(
