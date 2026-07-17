@@ -18,12 +18,6 @@ export interface TwitchClip {
   is_featured: boolean;
 }
 
-export interface TwitchClipDownload {
-  clip_id: string;
-  landscape_download_url: string | null;
-  portrait_download_url: string | null;
-}
-
 export interface TwitchCreatedClip {
   id: string;
   edit_url: string;

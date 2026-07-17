@@ -21,7 +21,6 @@ import type {
 } from '@app/types/twitch/chat';
 import type {
   TwitchClip,
-  TwitchClipDownload,
   TwitchClipsRequestParams,
   TwitchCreatedClip,
 } from '@app/types/twitch/clip';
@@ -84,10 +83,6 @@ interface AuthProxyResponse<T> {
 
 interface TwitchClipResponse {
   data: TwitchClip[];
-}
-
-interface TwitchClipDownloadResponse {
-  data: TwitchClipDownload[];
 }
 
 type EventSubStatus =
@@ -876,37 +871,6 @@ export const twitchService = {
         ...(after && { after }),
       },
     });
-  },
-
-  /**
-   * @see https://dev.twitch.tv/docs/api/reference/#get-clips-download
-   */
-  getClipDownload: async ({
-    broadcasterId,
-    clipId,
-    editorId,
-  }: {
-    broadcasterId: string;
-    clipId: string;
-    editorId: string;
-  }): Promise<TwitchClipDownload | null> => {
-    const result = await twitchApi.get<
-      TwitchClipDownloadResponse & { error?: string; message?: string }
-    >('/clips/downloads', {
-      params: {
-        broadcaster_id: broadcasterId,
-        clip_id: clipId,
-        editor_id: editorId,
-      },
-    });
-
-    if (!result || !Array.isArray(result.data)) {
-      throw new Error(
-        result?.message ?? result?.error ?? 'Failed to get clip download URL',
-      );
-    }
-
-    return result.data[0] ?? null;
   },
 
   getPolls: async ({
