@@ -4,8 +4,8 @@ included:
 excluded:
   - ios/Pods
   - ios/build
-  - "**/build"
-  - "**/.build"
+  - '**/build'
+  - '**/.build'
   - node_modules
 
 disabled_rules:
@@ -14,7 +14,7 @@ disabled_rules:
 identifier_name:
   min_length: 1
   max_length: 60
-  allowed_symbols: ["_"]
+  allowed_symbols: ['_']
   validates_start_with_lowercase: warning
 
 line_length:
