@@ -178,7 +178,7 @@ export function SettingsSection({
             color={theme.color.textSecondary.dark}
             style={{ typography: 'labelSmall', fontWeight: '600' }}
           >
-            {title.toUpperCase()}
+            {title}
           </Text>
         ) : null}
         <Card colors={cardColors} modifiers={[fillMaxWidth()]}>
