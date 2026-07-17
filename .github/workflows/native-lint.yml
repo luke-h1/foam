@@ -1,0 +1,38 @@
+name: Check Native Lint
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  swiftlint:
+    name: SwiftLint
+    runs-on: macos-latest
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+
+      - name: 📦 Install SwiftLint and SwiftFormat
+        run: brew install swiftlint swiftformat
+
+      - name: 🦅 Run Swift lint
+        run: LINT_CHECK=1 ./scripts/lint-swift.sh
+
+  ktlint:
+    name: ktlint
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+
+      - name: 📦 Install ktlint
+        run: |
+          curl -sSLO https://github.com/pinterest/ktlint/releases/download/1.8.0/ktlint
+          chmod a+x ktlint
+          sudo mv ktlint /usr/local/bin/
+
+      - name: 🤖 Run Kotlin lint
+        run: LINT_CHECK=1 ./scripts/lint-kotlin.sh
