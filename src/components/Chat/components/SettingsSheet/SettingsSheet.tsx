@@ -21,6 +21,7 @@ import { requestLiveSync } from '@app/store/stream/liveSyncBus';
 import { theme } from '@app/styles/themes';
 
 import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
+import { chatSheetSurface } from '../chatSheetSurface';
 
 const ICON_TINT = theme.color.textSecondary.dark;
 
@@ -308,6 +309,7 @@ export const SettingsSheet = memo(SettingsSheetComponent);
 
 const styles = StyleSheet.create({
   container: {
+    ...chatSheetSurface,
     alignSelf: 'stretch',
     flex: 1,
     flexDirection: 'column',
