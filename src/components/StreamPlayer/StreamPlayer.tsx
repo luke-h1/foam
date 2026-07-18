@@ -1,5 +1,11 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { InteractionManager, Platform, StyleSheet, View } from 'react-native';
+import {
+  InteractionManager,
+  type LayoutChangeEvent,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
 import type { WebViewMessageEvent } from 'react-native-webview';
 import { WebView } from 'react-native-webview';
 
@@ -484,8 +490,20 @@ export const StreamPlayer = memo(function StreamPlayer({
     setMuted(!playerState.muted);
   }, [playerState.muted, setMuted]);
 
-  const playerWidth = width ?? '100%';
-  const playerHeight = height ?? '100%';
+  const [containerSize, setContainerSize] = useState<{
+    width: number | string;
+    height: number | string;
+  }>({ width: width ?? '100%', height: height ?? '100%' });
+
+  const handleContainerLayout = useCallback((event: LayoutChangeEvent) => {
+    const { width: w, height: h } = event.nativeEvent.layout;
+    if (w > 0 && h > 0) {
+      setContainerSize({ width: w, height: h });
+    }
+  }, []);
+
+  const playerWidth = containerSize.width;
+  const playerHeight = containerSize.height;
   const allowsTwitchInteraction =
     Boolean(clip) || !showOverlayControls || hasContentGate;
   /**
@@ -503,6 +521,7 @@ export const StreamPlayer = memo(function StreamPlayer({
   return (
     <View
       collapsable={false}
+      onLayout={handleContainerLayout}
       style={[
         styles.container,
         { width: playerWidth, height: playerHeight },
