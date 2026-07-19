@@ -1,12 +1,15 @@
 import type { ComponentProps } from 'react';
 
+import { Column, Row, Text } from '@expo/ui/jetpack-compose';
 import {
-  Column,
-  SegmentedButton,
-  SingleChoiceSegmentedButtonRow,
-  Text,
-} from '@expo/ui/jetpack-compose';
-import { fillMaxWidth, padding } from '@expo/ui/jetpack-compose/modifiers';
+  background,
+  clickable,
+  clip,
+  fillMaxWidth,
+  padding,
+  Shapes,
+  weight,
+} from '@expo/ui/jetpack-compose/modifiers';
 
 import {
   type ComposeRowComponent,
@@ -44,38 +47,58 @@ export function ChatPreferenceSegmentedSettingsRow({
   return (
     <Column modifiers={[fillMaxWidth()]}>
       <SettingsRow title={title} subtitle={subtitle} icon={icon} />
-      <SingleChoiceSegmentedButtonRow
-        modifiers={[fillMaxWidth(), padding(16, 0, 16, 12)]}
-      >
-        {values.map((value, index) => (
-          <SegmentedButton
-            key={value}
-            selected={index === selectedIndex}
-            onClick={() => {
-              onChange({ nativeEvent: { selectedSegmentIndex: index } });
-              onValueChange(value);
-            }}
-            colors={{
-              activeContainerColor: theme.color.menu.cardActive,
-              activeBorderColor: theme.colorBorderSecondary,
-              inactiveBorderColor: theme.colorBorderSecondary,
-            }}
-          >
-            <SegmentedButton.Label>
-              <Text
-                color={
-                  index === selectedIndex
-                    ? theme.color.text.dark
-                    : theme.color.textSecondary.dark
-                }
-                style={{ typography: 'labelLarge' }}
+      <Row modifiers={[fillMaxWidth(), padding(16, 0, 16, 12)]}>
+        <Row
+          modifiers={[
+            fillMaxWidth(),
+            clip(Shapes.RoundedCorner(10)),
+            background(theme.color.menu.card),
+            padding(3, 3, 3, 3),
+          ]}
+        >
+          {values.map((value, index) => {
+            const selected = index === selectedIndex;
+            return (
+              <Row
+                key={value}
+                horizontalArrangement='center'
+                verticalAlignment='center'
+                modifiers={[
+                  weight(1),
+                  clip(Shapes.RoundedCorner(8)),
+                  background(
+                    selected ? theme.color.menu.cardActive : 'transparent',
+                  ),
+                  clickable(
+                    () => {
+                      onChange({
+                        nativeEvent: { selectedSegmentIndex: index },
+                      });
+                      onValueChange(value);
+                    },
+                    { indication: false },
+                  ),
+                  padding(0, 8, 0, 8),
+                ]}
               >
-                {value}
-              </Text>
-            </SegmentedButton.Label>
-          </SegmentedButton>
-        ))}
-      </SingleChoiceSegmentedButtonRow>
+                <Text
+                  color={
+                    selected
+                      ? theme.color.text.dark
+                      : theme.color.textSecondary.dark
+                  }
+                  style={{
+                    typography: 'labelLarge',
+                    fontWeight: selected ? '600' : '400',
+                  }}
+                >
+                  {value}
+                </Text>
+              </Row>
+            );
+          })}
+        </Row>
+      </Row>
     </Column>
   );
 }

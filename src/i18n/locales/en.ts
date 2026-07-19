@@ -399,13 +399,12 @@ const en = {
   },
 
   stream: {
+    goBack: 'Go back',
     resizeChat: 'Resize chat',
     hideChat: 'Hide chat',
     showChat: 'Show chat',
     shareClip: 'Share clip',
-    closeClip: 'Close clip',
     shareUser: 'Share {{name}}',
-    closeStreamerProfile: 'Close streamer profile',
     clips: 'Clips',
     clipsLoaded: '{{count}} loaded',
     topClips: 'Top clips',
@@ -438,7 +437,6 @@ const en = {
     vodsUnavailable: 'VODs unavailable',
     vodsUnavailableDescription: 'Could not load VODs for this channel.',
     openVod: 'Open {{title}}',
-    closeVod: 'Close VOD',
     vodNotFound: 'VOD not found',
     vodNotFoundDescription: 'Could not open this VOD.',
     noClips: 'No clips found',

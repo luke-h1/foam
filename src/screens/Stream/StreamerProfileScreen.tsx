@@ -193,6 +193,21 @@ function StreamerProfileHeader({
     <View style={[styles.header, { paddingTop: insets.top + theme.space16 }]}>
       <View style={styles.navRow}>
         <IconButton
+          icon={{
+            type: 'symbol',
+            name: {
+              ios: 'chevron.left',
+              android: 'arrow_back',
+              web: 'arrow_back',
+            },
+            size: 20,
+          }}
+          label={t('goBack')}
+          onPress={() => router.back()}
+          size='2xl'
+          style={styles.closeButton}
+        />
+        <IconButton
           icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}
           label={t('shareUser', { name: user.display_name })}
           onPress={() => {
@@ -202,13 +217,6 @@ function StreamerProfileHeader({
               displayName: user.display_name,
             });
           }}
-          size='2xl'
-          style={styles.closeButton}
-        />
-        <IconButton
-          icon={{ type: 'symbol', name: 'xmark', size: 18 }}
-          label={t('closeStreamerProfile')}
-          onPress={() => router.back()}
           size='2xl'
           style={styles.closeButton}
         />
@@ -635,7 +643,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: theme.space12,
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     marginBottom: theme.space12,
   },
   profileCopy: {

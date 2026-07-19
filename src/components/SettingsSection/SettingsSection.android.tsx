@@ -9,6 +9,7 @@ import {
   Host,
   ListItem,
   RNHostView,
+  Row,
   Switch,
   Text,
 } from '@expo/ui/jetpack-compose';
@@ -17,7 +18,6 @@ import type { SFSymbol } from 'sf-symbols-typescript';
 
 import type { AndroidSymbol } from '@app/components/ui/Icon/Icon';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
-import { Text as RNText } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
 type RowIcon =
@@ -68,12 +68,12 @@ function isComposeRow(element: ReactNode): boolean {
 }
 
 const listItemColors = {
-  containerColor: theme.color.backgroundSecondary.dark,
+  containerColor: theme.color.surfaceNeutral.dark,
   contentColor: theme.color.text.dark,
 };
 
 const defaultCardColors = {
-  containerColor: theme.color.backgroundSecondary.dark,
+  containerColor: theme.color.surfaceNeutral.dark,
   contentColor: theme.color.text.dark,
 } satisfies CardColors;
 
@@ -300,22 +300,28 @@ export function SettingsLinkRow({
       <RowText title={title} subtitle={subtitle} danger={danger} />
       {value || onPress ? (
         <ListItem.TrailingContent>
-          <RNHostView matchContents>
-            <View style={styles.linkTrailing}>
-              {value ? (
-                <RNText type='sm' color='gray.textLow' weight='semibold'>
-                  {value}
-                </RNText>
-              ) : null}
-              {onPress ? (
+          <Row
+            verticalAlignment='center'
+            horizontalArrangement={{ spacedBy: 8 }}
+          >
+            {value ? (
+              <Text
+                color={theme.color.textSecondary.dark}
+                style={{ typography: 'bodyMedium', fontWeight: '600' }}
+              >
+                {value}
+              </Text>
+            ) : null}
+            {onPress ? (
+              <RNHostView matchContents>
                 <SymbolView
                   name='chevron.right'
                   size={18}
                   tintColor={theme.colorGreyHoverAlpha}
                 />
-              ) : null}
-            </View>
-          </RNHostView>
+              </RNHostView>
+            ) : null}
+          </Row>
         </ListItem.TrailingContent>
       ) : null}
     </ListItem>
@@ -340,11 +346,5 @@ const styles = StyleSheet.create({
   },
   iconWrapDanger: {
     opacity: 0.9,
-  },
-  linkTrailing: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.space12,
-    justifyContent: 'flex-end',
   },
 });

@@ -78,6 +78,8 @@ interface LiveStreamScreenProps {
   id: string;
 }
 
+const isAndroid = process.env.EXPO_OS === 'android';
+
 const LANDSCAPE_CHAT_RESIZE_ACTIVATION_DISTANCE = 6;
 const LANDSCAPE_CHAT_RESIZE_FAIL_DISTANCE = 12;
 const LANDSCAPE_CHAT_DIVIDER_RESTING_OPACITY = 0.55;
@@ -866,6 +868,24 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             streamInfo={streamInfo}
           />
         ) : null}
+
+        {isAndroid && !customPlayerEnabled ? (
+          <Button
+            label={t('goBack')}
+            onPress={handleBack}
+            style={styles.androidBackButton}
+          >
+            <SymbolView
+              name={{
+                ios: 'chevron.left',
+                android: 'arrow_back',
+                web: 'arrow_back',
+              }}
+              size={22}
+              tintColor={theme.colorWhite}
+            />
+          </Button>
+        ) : null}
       </Animated.View>
 
       {shouldRenderChatPanel ? (
@@ -1012,6 +1032,18 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 });
 
 const styles = StyleSheet.create({
+  androidBackButton: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderRadius: theme.borderRadius999,
+    height: 40,
+    justifyContent: 'center',
+    left: theme.space12,
+    position: 'absolute',
+    top: theme.space8,
+    width: 40,
+    zIndex: 12,
+  },
   chatContainer: {
     backgroundColor: theme.colorBlack,
     overflow: 'hidden',

@@ -40,6 +40,26 @@ export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
       />
 
       <View
+        style={[styles.backButtonWrap, { top: insets.top + theme.space12 }]}
+      >
+        <IconButton
+          icon={{
+            type: 'symbol',
+            name: {
+              ios: 'chevron.left',
+              android: 'arrow_back',
+              web: 'arrow_back',
+            },
+            size: 20,
+          }}
+          label={t('goBack')}
+          onPress={() => router.back()}
+          size='2xl'
+          style={styles.closeButton}
+        />
+      </View>
+
+      <View
         style={[styles.closeButtonWrap, { top: insets.top + theme.space12 }]}
       >
         <IconButton
@@ -48,13 +68,6 @@ export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
           onPress={() => {
             void shareDeepLink({ kind: 'clip', id });
           }}
-          size='2xl'
-          style={styles.closeButton}
-        />
-        <IconButton
-          icon={{ type: 'symbol', name: 'xmark', size: 18 }}
-          label={t('closeClip')}
-          onPress={() => router.back()}
           size='2xl'
           style={styles.closeButton}
         />
@@ -72,6 +85,11 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
     justifyContent: 'center',
+  },
+  backButtonWrap: {
+    left: theme.space16,
+    position: 'absolute',
+    zIndex: 2,
   },
   closeButtonWrap: {
     flexDirection: 'row',

@@ -110,6 +110,32 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
 
       <View
         style={[
+          styles.backButtonWrap,
+          {
+            top: insets.top + theme.space12,
+            left: theme.space16 + landscapeInsetLeft,
+          },
+        ]}
+      >
+        <IconButton
+          icon={{
+            type: 'symbol',
+            name: {
+              ios: 'chevron.left',
+              android: 'arrow_back',
+              web: 'arrow_back',
+            },
+            size: 20,
+          }}
+          label={t('goBack')}
+          onPress={() => router.back()}
+          size='2xl'
+          style={styles.closeButton}
+        />
+      </View>
+
+      <View
+        style={[
           styles.closeButtonWrap,
           {
             top: insets.top + theme.space12,
@@ -129,13 +155,6 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
           size='2xl'
           style={styles.closeButton}
         />
-        <IconButton
-          icon={{ type: 'symbol', name: 'xmark', size: 18 }}
-          label={t('closeVod')}
-          onPress={() => router.back()}
-          size='2xl'
-          style={styles.closeButton}
-        />
       </View>
     </View>
   );
@@ -150,6 +169,10 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
     justifyContent: 'center',
+  },
+  backButtonWrap: {
+    position: 'absolute',
+    zIndex: 2,
   },
   closeButtonWrap: {
     flexDirection: 'row',

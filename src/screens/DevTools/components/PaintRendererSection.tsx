@@ -8,7 +8,8 @@ import { SettingsSection } from '@app/components/SettingsSection/SettingsSection
 import { ChatPreferenceSegmentedSettingsRow } from '@app/screens/Preferences/ChatPreferenceSettingsRows';
 import {
   type SevenTvPaintRenderer,
-  usePreferences,
+  usePreference,
+  useUpdatePreferences,
 } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
@@ -29,7 +30,8 @@ function isPaintRenderer(value: string): value is SevenTvPaintRenderer {
 
 export function PaintRendererSection() {
   const { t } = useTranslation('devTools');
-  const { sevenTvPaintRenderer, update } = usePreferences();
+  const sevenTvPaintRenderer = usePreference('sevenTvPaintRenderer');
+  const update = useUpdatePreferences();
 
   if (!isDevToolsEnabled) {
     return null;

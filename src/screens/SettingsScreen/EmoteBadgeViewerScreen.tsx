@@ -50,6 +50,8 @@ import type { ParsedPart } from '@app/utils/chat/parsedPart';
 const BADGE_CELL_SIZE = 64;
 const BADGE_IMAGE_SIZE = 40;
 
+const getBadgeRowKey = (row: BadgeRow) => row.map(badge => badge.id).join('-');
+
 const loader =
   Platform.OS === 'ios' ? (
     <Host matchContents>
@@ -292,7 +294,7 @@ function BadgesTab({
       sections={sections}
       renderItem={renderItem}
       renderSectionHeader={renderSectionHeader}
-      keyExtractor={(row, index) => `${row[0]?.id ?? 'row'}-${index}`}
+      keyExtractor={getBadgeRowKey}
       stickySectionHeadersEnabled
       estimatedItemSize={BADGE_CELL_SIZE + theme.space8}
       recycleItems
