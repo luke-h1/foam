@@ -6,9 +6,9 @@ import { router } from 'expo-router';
 
 import { Text } from '@app/components/ui/Text/Text';
 import { impact } from '@app/lib/haptics';
+import { showActionMenu } from '@app/store/overlays/showActionMenu';
 import { theme } from '@app/styles/themes';
 import type { Category } from '@app/types/twitch/category';
-import { showActionMenu } from '@app/utils/actionMenu/showActionMenu';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 
 import { Button } from '../Button/Button';

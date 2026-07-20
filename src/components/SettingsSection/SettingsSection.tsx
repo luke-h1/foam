@@ -1,32 +1,15 @@
 import { Children, Fragment, isValidElement, ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import type { SFSymbol } from 'sf-symbols-typescript';
-
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
+import {
+  resolveIconName,
+  type RowIcon,
+} from '@app/components/SettingsSection/SettingsSection.types';
 import { Switch } from '@app/components/Switch/Switch';
-import type { AndroidSymbol } from '@app/components/ui/Icon/Icon';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-
-type RowIcon =
-  | {
-      color?: string;
-      icon: SFSymbol;
-      androidIcon?: AndroidSymbol;
-    }
-  | undefined;
-
-function resolveIconName(
-  icon: SFSymbol,
-  androidIcon: AndroidSymbol | undefined,
-): SymbolViewProps['name'] {
-  if (!androidIcon) {
-    return icon;
-  }
-  return { ios: icon, android: androidIcon, web: androidIcon };
-}
 
 export function SettingsSection({
   title,
@@ -76,8 +59,6 @@ export function SettingsRow({
   icon,
   trailing,
   onPress,
-  accessibilityRole,
-  accessibilityState,
   danger,
 }: {
   title: string;
@@ -85,10 +66,6 @@ export function SettingsRow({
   icon?: RowIcon;
   trailing?: ReactNode;
   onPress?: () => void;
-  accessibilityRole?: 'button' | 'switch';
-  accessibilityState?: {
-    checked?: boolean;
-  };
   danger?: boolean;
 }) {
   const content = (
@@ -138,8 +115,7 @@ export function SettingsRow({
   return (
     <PressableArea
       accessibilityLabel={title}
-      accessibilityRole={accessibilityRole ?? 'button'}
-      accessibilityState={accessibilityState}
+      accessibilityRole='button'
       onPress={onPress}
     >
       {content}

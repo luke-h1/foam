@@ -1,6 +1,7 @@
 {
-  "platforms": ["apple"],
+  "platforms": ["apple", "android"],
   "apple": {
     "appDelegateSubscribers": ["ImageCacheLimitsAppDelegateSubscriber"]
-  }
+  },
+  "android": {}
 }

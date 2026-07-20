@@ -3,10 +3,10 @@ import { Platform } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
 import { Directory, File, Paths } from 'expo-file-system';
-import * as MediaLibrary from 'expo-media-library';
 
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { saveFilesToAppAlbum } from '@app/utils/image/saveFilesToAppAlbum';
+import { ensureMediaLibraryPermission } from '@app/utils/media/ensureMediaLibraryPermission';
 
 interface SaveImageToGalleryVariables {
   url: string;
@@ -29,8 +29,7 @@ export function useSaveImageToGallery() {
         return;
       }
 
-      const { granted } = await MediaLibrary.requestPermissionsAsync();
-
+      const granted = await ensureMediaLibraryPermission();
       if (!granted) {
         throw new Error('Permission not granted');
       }

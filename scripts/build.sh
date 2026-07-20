@@ -5,10 +5,21 @@ set -euo pipefail
 #  bun run build:local -- internal android
 #  bun run build:local -- testflight ios
 #  bun run build:local -- production all
+#
+#  Add --interactive to let eas build prompt instead of passing --non-interactive:
+#  bun run build:local -- internal ios --interactive
 
 source ./scripts/deploy-common.sh
 
 validate_deploy_args "build:local"
+
+interactive_flag=""
+for arg in "$@"; do
+  if [ "$arg" = "--interactive" ]; then
+    interactive_flag="--interactive"
+  fi
+done
+
 mkdir -p build-artifacts
 
 build_ios() {
@@ -31,16 +42,21 @@ build_ios() {
   # while flooding pod install with failed downloads. Disable it so every pod
   # builds from source cleanly. iOS-only; Android gradle prebuilds keep working.
   # Re-enable once rnrepo.org publishes matching iOS xcframeworks.
+  local eas_build_args=(
+    --local
+    --platform ios
+    --profile "$profile"
+    --output "$ipa_path"
+  )
+  if [ -z "$interactive_flag" ]; then
+    eas_build_args+=(--non-interactive)
+  fi
+
   run_with_variant_env env \
     EXPO_PUBLIC_ENABLE_TREESHACKING=1 \
     EXPO_APPLE_TEAM_ID="XJA7HDCMMY" \
     DISABLE_RNREPO=true \
-    bun run eas build \
-      --local \
-      --platform ios \
-      --profile "$profile" \
-      --output "$ipa_path" \
-      --non-interactive
+    bun run eas build "${eas_build_args[@]}"
 
   if [ ! -f "$ipa_path" ]; then
     echo "Unable to find an IPA at $ipa_path"
@@ -79,12 +95,17 @@ build_android() {
 
   rm -f "$artifact_path"
 
-  run_with_variant_env bun run eas build \
-    --local \
-    --platform android \
-    --profile "$profile" \
-    --output "$artifact_path" \
-    --non-interactive
+  local eas_build_args=(
+    --local
+    --platform android
+    --profile "$profile"
+    --output "$artifact_path"
+  )
+  if [ -z "$interactive_flag" ]; then
+    eas_build_args+=(--non-interactive)
+  fi
+
+  run_with_variant_env bun run eas build "${eas_build_args[@]}"
 
   if [ ! -f "$artifact_path" ]; then
     echo "Unable to find an Android artifact at $artifact_path"

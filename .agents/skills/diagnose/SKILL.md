@@ -1,117 +1,79 @@
 ---
 name: diagnose
-description: Disciplined diagnosis loop for hard bugs and performance regressions. Reproduce → minimise → hypothesise → instrument → fix → regression-test. Use when user says "diagnose this" / "debug this", reports a bug, says something is broken/throwing/failing, or describes a performance regression.
+description: Opt-in evidence-first causal diagnosis for bugs, browser or app/device failures, flaky behavior, and performance regressions. Activate only when the user explicitly invokes `$diagnose` or explicitly asks to use the named diagnose skill. Do not activate merely because the user mentions a bug, asks why something failed, requests debugging or a fix, or describes unexpected behavior. Once explicitly invoked, locate likely causes, instrument relevant boundaries with extensive structured logging, reproduce the issue, analyze the collected logs, rank causes with confidence scores, and pursue 100% operational confidence while probes can increase confidence.
 ---
 
 # Diagnose
 
-A discipline for hard bugs. Skip phases only when explicitly justified.
+Use this workflow only after the explicit opt-in described in the frontmatter. A normal bug report or debugging request does not opt in to this skill.
 
-When exploring the codebase, use the project's domain glossary to get a clear mental model of the relevant modules, and check ADRs in the area you're touching.
+Find and explain the cause of a symptom with 100% operational confidence.
 
-## Phase 1 — Build a feedback loop
+Start from the user's concrete anchor: file, route, error, log, screen, branch, artifact, or reproduction step. Consult relevant architecture notes, ADRs, glossaries, and test docs. Inspect code, run safe tools or tests, and analyze existing artifacts.
 
-**This is the skill.** Everything else is mechanical. If you have a fast, deterministic, agent-runnable pass/fail signal for the bug, you will find the cause — bisection, hypothesis-testing, and instrumentation all just consume that signal. If you don't have one, no amount of staring at code will save you.
+Explicit invocation of Diagnose constitutes approval for behavior-neutral temporary instrumentation within the requested scope. Ask separately only for risky actions, inaccessible-state reproduction, or mutations that affect product behavior or external systems.
 
-Spend disproportionate effort here. **Be aggressive. Be creative. Refuse to give up.**
+## References
 
-### Ways to construct one — try them in roughly this order
+Load only what applies:
 
-1. **Failing test** at whatever seam reaches the bug — unit, integration, e2e.
-2. **Curl / HTTP script** against a running dev server.
-3. **CLI invocation** with a fixture input, diffing stdout against a known-good snapshot.
-4. **Headless browser script** (Playwright / Puppeteer) — drives the UI, asserts on DOM/console/network.
-5. **Replay a captured trace.** Save a real network request / payload / event log to disk; replay it through the code path in isolation.
-6. **Throwaway harness.** Spin up a minimal subset of the system (one service, mocked deps) that exercises the bug code path with a single function call.
-7. **Property / fuzz loop.** If the bug is "sometimes wrong output", run 1000 random inputs and look for the failure mode.
-8. **Bisection harness.** If the bug appeared between two known states (commit, dataset, version), automate "boot at state X, check, repeat" so you can `git bisect run` it.
-9. **Differential loop.** Run the same input through old-version vs new-version (or two configs) and diff outputs.
-10. **HITL bash script.** Last resort. If a human must click, drive _them_ with `scripts/hitl-loop.template.sh` so the loop is still structured. Captured output feeds back to you.
+- Browser or React web: [browser-react.md](references/browser-react.md)
+- iOS, Android, React Native, macOS, TV, or physical device: [app-device.md](references/app-device.md)
+- Logs, runtime probes, metrics, or debug hooks: [instrumentation.md](references/instrumentation.md)
 
-Build the right feedback loop, and the bug is 90% fixed.
+## Evidence Loop
 
-### Iterate on the loop itself
+1. **Locate likely causes.** Inspect the code path and existing evidence around the user's anchor. Form the smallest useful set of likely areas and falsifiable candidate causes, including independent or contributing causes when applicable. Give each cause a distinguishing prediction and identify where those predictions diverge.
 
-Treat the loop as a product. Once you have _a_ loop, ask:
+2. **Instrument before reproducing.** Load [instrumentation.md](references/instrumentation.md) and add structured logging across the relevant boundaries, extensive enough to reconstruct the causal sequence rather than only record the visible symptom. Instrument competing causes in the same pass when practical so one reproduction can distinguish them.
 
-- Can I make it faster? (Cache setup, skip unrelated init, narrow the test scope.)
-- Can I make the signal sharper? (Assert on the specific symptom, not "didn't crash".)
-- Can I make it more deterministic? (Pin time, seed RNG, isolate filesystem, freeze network.)
+   Before reproducing, define the probe contract:
 
-A 30-second flaky loop is barely better than no loop. A 2-second deterministic loop is a debugging superpower.
+   - the exact trigger and visible symptom
+   - the questions this run will answer
+   - each candidate cause's distinguishing prediction
+   - the events, fields, and correlation IDs that test those predictions
+   - how the evidence will be tied to the exact visible failure
+   - the intended process, build, window, document, and runtime identity when applicable
 
-### Non-deterministic bugs
+   Do not run the reproduction if the probes cannot distinguish the leading candidates or cannot confirm that the exact symptom occurred.
 
-The goal is not a clean repro but a **higher reproduction rate**. Loop the trigger 100×, parallelise, add stress, narrow timing windows, inject sleeps. A 50%-flake bug is debuggable; 1% is not — keep raising the rate until it's debuggable.
+3. **Reproduce the instrumented issue.** Use the fastest deterministic signal that represents the reported symptom: focused test, script, browser test, trace replay, harness, repeat loop, profiler, app/device automation, or structured human reproduction. Run it when safe and observable. For intermittent failures, run enough repetitions to compare causes.
 
-### When you genuinely cannot build a loop
+   When reproduction requires inaccessible state, credentials, devices, subjective interaction, or risky actions, first prepare the capture, exact steps, expected observation, and artifact to inspect. Ask the user to reproduce and reply `done`; confirm the returned evidence matches the reported failure.
 
-Stop and say so explicitly. List what you tried. Ask the user for: (a) access to whatever environment reproduces it, (b) a captured artifact (HAR file, log dump, core dump, screen recording with timestamps), or (c) permission to add temporary production instrumentation. Do **not** proceed to hypothesise without a loop.
+   If the user corrects the trigger, affected component, lifecycle, or visible symptom, invalidate evidence and probes that target the previous interpretation. Return to cause location and instrumentation before reproducing again; do not continue with a nearby but mismatched reproduction.
 
-Do not proceed to Phase 2 until you have a loop you believe in.
+4. **Collect and analyze.** Collect the complete output, correlate events across boundaries, compare it with each prediction, and record evidence for and against every cause. If the logs are incomplete or ambiguous, identify how the likely areas or instrumentation must change before another reproduction.
 
-## Phase 2 — Reproduce
+5. **Determine confidence.** Rank each cause by role (root, contributing, or alternative), `0-100%` confidence, supporting and conflicting evidence, and the next evidence that could change its score or rank. Treat scores as calibrated judgments, not statistical probabilities. Assign 100% operational confidence only when:
 
-Run the loop. Watch the bug appear.
+   - the exact symptom is reproduced
+   - the causal chain from trigger to failure is observed
+   - controlling the suspected boundary reliably controls the symptom
+   - the cause or combination of causes explains every relevant observation
+   - plausible alternatives are falsified or included as contributing causes
+   - intermittent behavior is repeated enough to distinguish causality from coincidence
 
-Confirm:
+   If proof is incomplete, choose the safest practical probe likely to add discriminating evidence and state which results would raise, lower, or redistribute confidence. Revise the likely areas or instrumentation and repeat the loop only while such a probe exists; do not repeat an equivalent pass without changing its inputs, boundary, or instrumentation.
 
-- [ ] The loop produces the failure mode the **user** described — not a different failure that happens to be nearby. Wrong bug = wrong fix.
-- [ ] The failure is reproducible across multiple runs (or, for non-deterministic bugs, reproducible at a high enough rate to debug against).
-- [ ] You have captured the exact symptom (error message, wrong output, slow timing) so later phases can verify the fix actually addresses it.
+   Stop as incomplete when no available probe should increase confidence, a pass adds no evidence and no distinct boundary remains, or the needed evidence requires unavailable access, user action, unacceptable risk, or disproportionate effort. Never label an incomplete diagnosis as proven.
 
-Do not proceed until you reproduce the bug.
+## Output
 
-## Phase 3 — Hypothesise
+Lead with one status:
 
-Generate **3–5 ranked hypotheses** before testing any of them. Single-hypothesis generation anchors on the first plausible idea.
+- **Proven — 100%:** every applicable cause meets the proof standard with no unresolved plausible alternative.
+- **Incomplete:** the proof standard is not met.
 
-Each hypothesis must be **falsifiable**: state the prediction it makes.
+For **Proven**, report each cause, role, causal chain, decisive evidence, exact code or runtime boundary, and interaction between causes. For **Incomplete**, rank candidates with confidence, supporting and conflicting evidence, remaining uncertainty, why the loop stopped, and the smallest evidence needed to continue. Always name the validation signal that preserves the causal evidence.
 
-> Format: "If <X> is the cause, then <changing Y> will make the bug disappear / <changing Z> will make it worse."
+## Temporary Diagnostics
 
-If you cannot state the prediction, the hypothesis is a vibe — discard or sharpen it.
+Keep diagnostic logs until the user requests cleanup or they become durable diagnostics. If committing while temporary diagnostics remain, stage only intended durable changes and report what remains unstaged.
 
-**Show the ranked list to the user before testing.** They often have domain knowledge that re-ranks instantly ("we just deployed a change to #3"), or know hypotheses they've already ruled out. Cheap checkpoint, big time saver. Don't block on it — proceed with your ranking if the user is AFK.
+## Delegation
 
-## Phase 4 — Instrument
+Use subagents only when the user explicitly requests delegation, subagents, parallel work, or token optimization. Delegate bounded mechanical collection to faster or cheaper agents: known commands or repro loops, logs, screenshots, traces, profiles, extraction, or artifact comparison. Give each task a success condition, output format, runtime boundary, and no-edit instruction unless mutation is explicit.
 
-Each probe must map to a specific prediction from Phase 3. **Change one variable at a time.**
-
-Tool preference:
-
-1. **Debugger / REPL inspection** if the env supports it. One breakpoint beats ten logs.
-2. **Targeted logs** at the boundaries that distinguish hypotheses.
-3. Never "log everything and grep".
-
-**Tag every debug log** with a unique prefix, e.g. `[DEBUG-a4f2]`. Cleanup at the end becomes a single grep. Untagged logs survive; tagged logs die.
-
-**Perf branch.** For performance regressions, logs are usually wrong. Instead: establish a baseline measurement (timing harness, `performance.now()`, profiler, query plan), then bisect. Measure first, fix second.
-
-## Phase 5 — Fix + regression test
-
-Write the regression test **before the fix** — but only if there is a **correct seam** for it.
-
-A correct seam is one where the test exercises the **real bug pattern** as it occurs at the call site. If the only available seam is too shallow (single-caller test when the bug needs multiple callers, unit test that can't replicate the chain that triggered the bug), a regression test there gives false confidence.
-
-**If no correct seam exists, that itself is the finding.** Note it. The codebase architecture is preventing the bug from being locked down. Flag this for the next phase.
-
-If a correct seam exists:
-
-1. Turn the minimised repro into a failing test at that seam.
-2. Watch it fail.
-3. Apply the fix.
-4. Watch it pass.
-5. Re-run the Phase 1 feedback loop against the original (un-minimised) scenario.
-
-## Phase 6 — Cleanup + post-mortem
-
-Required before declaring done:
-
-- [ ] Original repro no longer reproduces (re-run the Phase 1 loop)
-- [ ] Regression test passes (or absence of seam is documented)
-- [ ] All `[DEBUG-...]` instrumentation removed (`grep` the prefix)
-- [ ] Throwaway prototypes deleted (or moved to a clearly-marked debug location)
-- [ ] The hypothesis that turned out correct is stated in the commit / PR message — so the next debugger learns
-
-**Then ask: what would have prevented this bug?** If the answer involves architectural change (no good test seam, tangled callers, hidden coupling) hand off to the `/improve-codebase-architecture` skill with the specifics. Make the recommendation **after** the fix is in, not before — you have more information now than when you started.
+Keep feedback-loop design, hypothesis ranking, confidence scoring, ambiguous interpretation, and the final diagnosis in the main thread. Verify delegated evidence and inspect the working tree and background processes before continuing.

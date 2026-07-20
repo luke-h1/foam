@@ -41,15 +41,10 @@ export function ChatPreferenceDefaultContent() {
     fontScaleIndex,
     previewFontScale,
     handleChatDelayChange,
-    handleChatDelayValueChange,
     handleDeletedStyleChange,
-    handleDeletedStyleValueChange,
     handleFontScaleChange,
-    handleFontScaleValueChange,
     handleScrollbackChange,
-    handleScrollbackValueChange,
     handleTimestampFormatChange,
-    handleTimestampFormatValueChange,
     ignoreClearChat,
     scrollbackIndex,
     timestampFormatIndex,
@@ -58,10 +53,8 @@ export function ChatPreferenceDefaultContent() {
     handleAlternatingRowsToggle,
     handleContextToggle,
     handleDensityChange,
-    handleDensityValueChange,
     handleDisableEmoteAnimationsToggle,
     handleEmojiStyleChange,
-    handleEmojiStyleChangeByIndex,
     handleProviderToggle,
     previewAlternatingRows,
     previewContext,
@@ -82,8 +75,7 @@ export function ChatPreferenceDefaultContent() {
             androidIcon: 'format_list_bulleted',
             color: theme.colorGrey,
           }}
-          onChange={handleDensityChange}
-          onValueChange={handleDensityValueChange}
+          onSelectIndex={handleDensityChange}
           selectedIndex={densityIndex}
           subtitle={
             previewDensity === 'compact'
@@ -102,8 +94,7 @@ export function ChatPreferenceDefaultContent() {
             androidIcon: 'format_size',
             color: theme.colorGrey,
           }}
-          onChange={handleFontScaleChange}
-          onValueChange={handleFontScaleValueChange}
+          onSelectIndex={handleFontScaleChange}
           selectedIndex={fontScaleIndex}
           subtitle={t('fontSizeDescription')}
           title={t('fontSize')}
@@ -149,8 +140,7 @@ export function ChatPreferenceDefaultContent() {
             androidIcon: 'sentiment_satisfied',
             color: theme.colorGrey,
           }}
-          onChange={handleEmojiStyleChangeByIndex}
-          onValueChange={handleEmojiStyleChange}
+          onSelectIndex={handleEmojiStyleChange}
           selectedIndex={emojiIndex}
           subtitle={t('emojiSetDescription')}
           title={t('emojiSet')}
@@ -189,8 +179,7 @@ export function ChatPreferenceDefaultContent() {
             androidIcon: 'schedule',
             color: theme.colorGrey,
           }}
-          onChange={handleTimestampFormatChange}
-          onValueChange={handleTimestampFormatValueChange}
+          onSelectIndex={handleTimestampFormatChange}
           selectedIndex={timestampFormatIndex}
           subtitle={t('timestampFormatDescription')}
           title={t('timestampFormat')}
@@ -218,8 +207,7 @@ export function ChatPreferenceDefaultContent() {
             androidIcon: 'timer',
             color: theme.colorGrey,
           }}
-          onChange={handleChatDelayChange}
-          onValueChange={handleChatDelayValueChange}
+          onSelectIndex={handleChatDelayChange}
           selectedIndex={chatDelayIndex}
           subtitle={t('chatDelayDescription')}
           title={t('chatDelay')}
@@ -265,8 +253,7 @@ export function ChatPreferenceDefaultContent() {
             androidIcon: 'delete',
             color: theme.colorGrey,
           }}
-          onChange={handleDeletedStyleChange}
-          onValueChange={handleDeletedStyleValueChange}
+          onSelectIndex={handleDeletedStyleChange}
           selectedIndex={deletedStyleIndex}
           subtitle={t('deletedMessagesDescription')}
           title={t('deletedMessages')}
@@ -299,8 +286,7 @@ export function ChatPreferenceDefaultContent() {
             androidIcon: 'sort',
             color: theme.colorGrey,
           }}
-          onChange={handleScrollbackChange}
-          onValueChange={handleScrollbackValueChange}
+          onSelectIndex={handleScrollbackChange}
           selectedIndex={scrollbackIndex}
           subtitle={t('scrollbackDescription')}
           title={t('scrollback')}
