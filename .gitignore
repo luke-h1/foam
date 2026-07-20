@@ -44,6 +44,8 @@ yarn-error.*
 !modules/**/ios/
 !modules/**/ios/**
 
+modules/**/android/build/
+
 # Turborepo
 .turbo
 
@@ -61,12 +63,7 @@ xcuserdata
 # Android Studio
 *.iml
 .gradle
-.idea/libraries
-.idea/workspace.xml
-.idea/gradle.xml
-.idea/misc.xml
-.idea/modules.xml
-.idea/vcs.xml
+.idea/
 
 # VSCode
 .history/
@@ -129,3 +126,4 @@ app-store-review-guidance/twitch-developer-console-proof.png
 
 
 !.vscode/settings.json
+buildServer.json
