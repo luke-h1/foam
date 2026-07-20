@@ -5,7 +5,7 @@ import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import {
   resolveIconName,
   type RowIcon,
-} from '@app/components/SettingsSection/SettingsSection.shared';
+} from '@app/components/SettingsSection/SettingsSection.types';
 import { Switch } from '@app/components/Switch/Switch';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';

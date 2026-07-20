@@ -20,15 +20,11 @@ import {
   type ComposeRowComponent,
   resolveIconName,
   type RowIcon,
-} from '@app/components/SettingsSection/SettingsSection.shared';
+} from '@app/components/SettingsSection/SettingsSection.types';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { iosMatchedSwitchColors } from '@app/styles/composeSwitchColors';
 import { theme } from '@app/styles/themes';
 
-/**
- * Only Compose row components can render as direct children of the Card's
- * Column. Any other child (RN preview tiles etc.) is hosted via RNHostView.
- */
 function isComposeRow(element: ReactNode): boolean {
   if (!isValidElement(element)) {
     return false;

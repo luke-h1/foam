@@ -12,15 +12,11 @@ import {
 } from '@expo/ui/jetpack-compose/modifiers';
 
 import { SettingsRow } from '@app/components/SettingsSection/SettingsSection';
-import { type ComposeRowComponent } from '@app/components/SettingsSection/SettingsSection.shared';
+import { type ComposeRowComponent } from '@app/components/SettingsSection/SettingsSection.types';
 import { theme } from '@app/styles/themes';
 
 type SettingsRowIcon = ComponentProps<typeof SettingsRow>['icon'];
 
-/**
- * Tagged as a Compose row so the segmented control sits directly in the Card
- * rather than being hosted outside the tree via RNHostView.
- */
 export function ChatPreferenceSegmentedSettingsRow({
   title,
   subtitle,

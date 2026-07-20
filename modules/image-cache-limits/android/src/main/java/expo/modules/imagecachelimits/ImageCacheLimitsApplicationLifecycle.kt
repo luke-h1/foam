@@ -9,11 +9,6 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.MemoryCategory
 import expo.modules.core.interfaces.ApplicationLifecycleListener
 
-/**
- * Scales Glide's default memory-cache/bitmap-pool bound to the device tier at
- * launch (setMemoryCategory LOW = 0.5x, NORMAL = 1x, HIGH = 1.5x). Glide still
- * trims on system signals and the AppGlideModule is untouched.
- */
 class ImageCacheLimitsApplicationLifecycle : ApplicationLifecycleListener {
   override fun onCreate(application: Application?) {
     val app = application ?: return
@@ -22,10 +17,6 @@ class ImageCacheLimitsApplicationLifecycle : ApplicationLifecycleListener {
       app.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
     val category = memoryCategoryFor(activityManager)
 
-    /*
-     * setMemoryCategory must run on the main thread (Glide asserts it) and
-     * forces eager Glide init, so post it off the Application.onCreate path.
-     */
     Handler(Looper.getMainLooper()).post {
       Glide.get(app).setMemoryCategory(category)
     }
@@ -48,9 +39,6 @@ class ImageCacheLimitsApplicationLifecycle : ApplicationLifecycleListener {
   }
 
   private companion object {
-    /**
-     * Large-heap memory class (MB) at or above which a device gets HIGH.
-     */
     const val HIGH_HEAP_MB = 256
   }
 }

@@ -9,10 +9,6 @@ import {
 } from '@app/store/overlays/actionMenuStore';
 import { theme } from '@app/styles/themes';
 
-/**
- * Web fallback host; iOS uses `ActionSheetIOS` and Android the Compose
- * `ModalBottomSheet`, so this renders nothing on those platforms.
- */
 export function ActionMenuHost() {
   const options = useSyncExternalStore(
     subscribeActionMenu,

@@ -26,10 +26,6 @@ function getExpoImpactStyle(style: 'light' | 'medium' | 'heavy') {
   }
 }
 
-/**
- * performAndroidHapticsAsync uses performHapticFeedback constants (respects
- * system settings); impactAsync/selectionAsync fall back to the legacy Vibrator.
- */
 function getAndroidHaptic(style: 'light' | 'medium' | 'heavy') {
   switch (style) {
     case 'light':

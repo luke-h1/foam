@@ -12,10 +12,6 @@ class CpuUsageModule : Module() {
   private var lastWallMs = 0L
   private var hasBaseline = false
 
-  /**
-   * Kernel clock-tick rate (USER_HZ) used to convert /proc jiffies to
-   * milliseconds. Typically 100 but read it rather than assume.
-   */
   private val clockTck = Os.sysconf(OsConstants._SC_CLK_TCK).coerceAtLeast(1L)
 
   override fun definition() = ModuleDefinition {
@@ -26,11 +22,6 @@ class CpuUsageModule : Module() {
     }
   }
 
-  /**
-   * Process CPU% since the previous call; thread-summed so it can exceed 100%,
-   * matching iOS. Wall-clock based (/proc/stat is unreadable on modern
-   * Android). Returns 0 on the first call or when /proc/self/stat is unreadable.
-   */
   private fun currentCpuUsage(): Double {
     val processMs = readProcessCpuMs() ?: return 0.0
     val wallMs = SystemClock.uptimeMillis()
@@ -55,10 +46,6 @@ class CpuUsageModule : Module() {
     return (processDelta.toDouble() / wallDelta.toDouble()) * 100.0
   }
 
-  /**
-   * Process CPU time (utime + stime) from /proc/self/stat, converted to
-   * milliseconds. /proc/self is always readable by the owning process.
-   */
   private fun readProcessCpuMs(): Long? = runCatching {
     val stat = File("/proc/self/stat").readText()
     val afterComm = stat.substring(stat.lastIndexOf(')') + 1).trim()

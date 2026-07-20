@@ -11,11 +11,6 @@ export type RowIcon =
     }
   | undefined;
 
-/**
- * Marker consumed by the Android Compose `SettingsSection` to place bespoke
- * Compose rows directly in the Card. No effect on iOS/web, which render
- * children as plain RN views.
- */
 export interface ComposeRowComponent {
   isComposeRow?: boolean;
 }

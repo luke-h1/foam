@@ -326,11 +326,6 @@ const config: ExpoConfig = {
           enableProguardInReleaseBuilds: true,
           enableShrinkResourcesInReleaseBuilds: true,
           useLegacyPackaging: true,
-          /**
-           * react-native-compressor bundles javazoom:jlayer, whose unused
-           * desktop player classes reference java.applet / javax.sound that
-           * don't exist on Android; R8 fails release minify without these.
-           */
           extraProguardRules: [
             '-dontwarn java.applet.**',
             '-dontwarn javax.sound.sampled.**',
@@ -400,10 +395,6 @@ const config: ExpoConfig = {
     package: appConfig.androidPackageName,
     predictiveBackGestureEnabled: true,
     allowBackup: false,
-    /**
-     * Strip transitive permissions the app never uses (mic via
-     * media-library/compressor, draw-over-apps via dev tooling, EXIF location).
-     */
     blockedPermissions: [
       'android.permission.RECORD_AUDIO',
       'android.permission.SYSTEM_ALERT_WINDOW',

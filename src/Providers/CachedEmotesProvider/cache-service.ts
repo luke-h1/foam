@@ -439,13 +439,6 @@ export function trimCachedEmoteRefsForMemoryPressure(): void {
 
 let memoryPressureSubscribed = false;
 
-/**
- * Trim bound for the foreground headroom poll. iOS reports
- * `os_proc_available_memory` (bytes before this process's jetsam limit);
- * Android reports `availMem - onTrimMemory threshold` (system-wide headroom),
- * where the `onMemoryPressure` event is the primary acute signal. 0 = module
- * unavailable, which disables the poll.
- */
 const LOW_MEMORY_HEADROOM_BYTES =
   Platform.OS === 'android' ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
 const MEMORY_POLL_INTERVAL_MS = 5000;
@@ -483,10 +476,6 @@ function pollMemoryHeadroom(): void {
   trimCachedEmoteRefsForMemoryPressure();
 }
 
-/**
- * Android acute-pressure signal (onTrimMemory at RUNNING_LOW or worse); trims
- * immediately instead of waiting for the next headroom poll.
- */
 function handleNativeMemoryPressure(event: ImageMemoryPressureEvent): void {
   const now = Date.now();
   if (now - lastMemoryPressureLogAt >= MEMORY_PRESSURE_LOG_THROTTLE_MS) {
@@ -539,9 +528,6 @@ function handleAppStateForMemory(nextAppState: AppStateStatus): void {
  * - Backgrounding: shed the unpinned working set while off-screen so a long
  *   single-channel session can't sit at the cap until the OS reclaims it. Refs
  *   re-decode lazily on the next render when foregrounded.
- * - Android `onMemoryPressure`: the OS onTrimMemory bridge, forwarded by the
- *   ImageMemoryPressure module at RUNNING_LOW or worse (no-op on iOS/web, where
- *   the module exposes no addListener).
  */
 export function subscribeEmoteCacheMemoryPressure(): void {
   if (memoryPressureSubscribed) {

@@ -44,7 +44,6 @@ yarn-error.*
 !modules/**/ios/
 !modules/**/ios/**
 
-# expo module native build artifacts
 modules/**/android/build/
 
 # Turborepo
@@ -127,5 +126,4 @@ app-store-review-guidance/twitch-developer-console-proof.png
 
 
 !.vscode/settings.json
-# Auto-generated xcode-build-server / LSP config (user-specific paths)
 buildServer.json

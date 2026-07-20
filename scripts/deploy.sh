@@ -9,9 +9,6 @@ set -euo pipefail
 #  Add --no-push to build and submit without committing, tagging, pushing, or
 #  creating the GitHub release (CHANGELOG.md is still regenerated locally):
 #  bun run deploy -- internal ios --no-push
-#
-#  Add --interactive to let eas build prompt instead of passing --non-interactive:
-#  bun run deploy -- internal ios --interactive
 
 source ./scripts/deploy-common.sh
 

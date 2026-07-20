@@ -54,10 +54,6 @@ class ImageMemoryPressureModule : Module() {
     val memoryInfo = ActivityManager.MemoryInfo()
     activityManager.getMemoryInfo(memoryInfo)
 
-    /**
-     * At/under the threshold report the smallest positive value, not 0.0 - the
-     * JS poller treats 0.0 as "module unavailable" and would skip trimming.
-     */
     val headroom = memoryInfo.availMem - memoryInfo.threshold
     return if (headroom > 0L) headroom.toDouble() else 1.0
   }
