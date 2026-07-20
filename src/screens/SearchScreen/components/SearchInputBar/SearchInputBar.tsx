@@ -18,8 +18,8 @@ export function SearchInputBar({
   const inputRef = useRef<TextInput | null>(null);
 
   useImperativeHandle(ref, () => ({
-    setText: () => {},
-    clearText: () => {},
+    setText: text => onChangeText(text),
+    clearText: () => onChangeText(''),
     focus: () => inputRef.current?.focus(),
     blur: () => inputRef.current?.blur(),
   }));
