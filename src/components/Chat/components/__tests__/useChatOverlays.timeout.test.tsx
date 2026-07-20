@@ -4,8 +4,8 @@ import { act } from '@testing-library/react-native';
 
 import { createMessageActionData } from '@app/components/Chat/hooks/__tests__/__fixtures__/useChat.fixture';
 import { runModCommand } from '@app/components/Chat/util/runModCommand';
+import { showActionMenu } from '@app/store/overlays/showActionMenu';
 import render from '@app/test/render';
-import { showActionMenu } from '@app/utils/actionMenu/showActionMenu';
 
 import type { UsernamePressData } from '../ChatMessage/RichChatMessage';
 import { type ChatOverlayOpeners, useChatOverlays } from '../useChatOverlays';
@@ -29,7 +29,7 @@ jest.mock('../ChatOverlayLayer', () => ({
   },
 }));
 
-jest.mock('@app/utils/actionMenu/showActionMenu', () => ({
+jest.mock('@app/store/overlays/showActionMenu', () => ({
   showActionMenu: jest.fn(),
 }));
 
