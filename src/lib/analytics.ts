@@ -6,9 +6,8 @@ import { logger } from '@app/utils/logger';
 const vexoApiKey = process.env.EXPO_PUBLIC_VEXO_API_KEY;
 
 /**
- * Records a custom Vexo analytics event. No-ops when the user has opted out via
- * the `analyticsEnabled` preference or when no API key is configured, so call
- * sites can fire events unconditionally without guarding.
+ * No-ops when `analyticsEnabled` is off or no API key is configured, so call
+ * sites can fire unconditionally.
  */
 export function trackEvent(
   name: string,

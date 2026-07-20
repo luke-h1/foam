@@ -27,10 +27,8 @@ function getExpoImpactStyle(style: 'light' | 'medium' | 'heavy') {
 }
 
 /**
- * On Android, impactAsync/selectionAsync are emulated through the legacy
- * Vibrator service; performAndroidHapticsAsync maps to the platform
- * performHapticFeedback constants, which respect system haptic settings and
- * match what native Material apps feel like.
+ * performAndroidHapticsAsync uses performHapticFeedback constants (respects
+ * system settings); impactAsync/selectionAsync fall back to the legacy Vibrator.
  */
 function getAndroidHaptic(style: 'light' | 'medium' | 'heavy') {
   switch (style) {

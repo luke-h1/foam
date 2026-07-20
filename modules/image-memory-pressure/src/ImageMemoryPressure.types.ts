@@ -10,20 +10,16 @@ export type ImageMemoryPressureEvent = {
 
 export interface ImageMemoryPressureNativeModule {
   /**
-   * Bytes of memory remaining before this process hits its memory limit and is
-   * jettisoned. On iOS this is os_proc_available_memory; on Android it is the
-   * system headroom above the low-memory kill threshold (availMem - threshold),
-   * reported as a minimal positive value when at/under the threshold so the
-   * poller reads it as critical. Returns 0 only when the native module is
-   * unavailable (web, or before the native build ships), which the caller
-   * treats as "monitoring disabled".
+   * Bytes remaining before this process hits its memory limit: iOS
+   * os_proc_available_memory, Android availMem - threshold (minimal positive
+   * value when at/under the threshold). 0 only when the native module is
+   * unavailable, which callers treat as "monitoring disabled".
    */
   getAvailableMemory(): number;
 
   /**
-   * Acute-pressure push signal. Fires on Android when the OS reports
-   * onTrimMemory at RUNNING_LOW or worse; absent on iOS (poll-only) and on the
-   * unavailable fallback, so callers must null-check before subscribing.
+   * Fires on Android at onTrimMemory RUNNING_LOW or worse; absent on iOS and
+   * the unavailable fallback, so callers must null-check before subscribing.
    */
   addListener?(
     eventName: 'onMemoryPressure',

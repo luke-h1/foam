@@ -18,9 +18,8 @@ import { theme } from '@app/styles/themes';
 type SettingsRowIcon = ComponentProps<typeof SettingsRow>['icon'];
 
 /**
- * Android variant: label row and segmented control are both native Compose,
- * grouped in a `Column` and tagged as a Compose row so they sit directly in
- * the Card rather than being hosted outside the tree via RNHostView.
+ * Tagged as a Compose row so the segmented control sits directly in the Card
+ * rather than being hosted outside the tree via RNHostView.
  */
 export function ChatPreferenceSegmentedSettingsRow({
   title,

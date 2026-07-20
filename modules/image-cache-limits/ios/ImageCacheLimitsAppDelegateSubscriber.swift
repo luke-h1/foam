@@ -12,9 +12,8 @@ import SDWebImage
  * launch as an early pre-JS floor; `index.js` reconfigures the same cache to a
  * RAM-proportional value once the bundle loads. Scale to ~2% of physical RAM,
  * clamped to [96MB, 384MB], so a smaller device caps tighter here too.
- * The Android side lives in the module's ApplicationLifecycleListener: expo-image
- * renders through Glide (already bounded by default), which we tighten to
- * MemoryCategory.LOW on low-RAM devices rather than setting an explicit byte cap.
+ * The Android side lives in the module's ApplicationLifecycleListener: Glide is
+ * bounded by default, tiered via setMemoryCategory instead of a byte cap.
  */
 public class ImageCacheLimitsAppDelegateSubscriber: ExpoAppDelegateSubscriber {
   deinit {}

@@ -55,11 +55,8 @@ class ImageMemoryPressureModule : Module() {
     activityManager.getMemoryInfo(memoryInfo)
 
     /**
-     * Headroom above the system low-memory threshold. When the device is at or
-     * under the threshold the headroom is zero or negative, which is exactly
-     * when the JS poller should trim hardest - report the smallest positive
-     * value so it reads as "critical" rather than 0.0, which the poller treats
-     * as "module unavailable" and skips.
+     * At/under the threshold report the smallest positive value, not 0.0 - the
+     * JS poller treats 0.0 as "module unavailable" and would skip trimming.
      */
     val headroom = memoryInfo.availMem - memoryInfo.threshold
     return if (headroom > 0L) headroom.toDouble() else 1.0

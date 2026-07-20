@@ -440,17 +440,11 @@ export function trimCachedEmoteRefsForMemoryPressure(): void {
 let memoryPressureSubscribed = false;
 
 /**
- * `memoryWarning`/`onTrimMemory` fire late, so we also poll the real headroom
- * while foregrounded via the ImageMemoryPressure module and trim proactively
- * when it drops below this bound. The two platforms report different quantities,
- * so the bound is platform-specific:
- * - iOS: `os_proc_available_memory` - bytes remaining before this process hits
- *   its own jetsam limit; 200MB is a "getting close" margin for one app.
- * - Android: `availMem - onTrimMemory threshold` (system-wide headroom above the
- *   OS low-memory line). The `onMemoryPressure` event is the primary acute
- *   signal here, so the poll is a backstop with a tighter margin.
- * The module returns 0 when unavailable (web / before the native build ships),
- * which disables the poll gracefully.
+ * Trim bound for the foreground headroom poll. iOS reports
+ * `os_proc_available_memory` (bytes before this process's jetsam limit);
+ * Android reports `availMem - onTrimMemory threshold` (system-wide headroom),
+ * where the `onMemoryPressure` event is the primary acute signal. 0 = module
+ * unavailable, which disables the poll.
  */
 const LOW_MEMORY_HEADROOM_BYTES =
   Platform.OS === 'android' ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
@@ -490,9 +484,8 @@ function pollMemoryHeadroom(): void {
 }
 
 /**
- * Android acute-pressure signal (onTrimMemory at RUNNING_LOW or worse), the
- * early callback iOS lacks. Trims immediately rather than waiting for the next
- * headroom poll, which can be up to MEMORY_POLL_INTERVAL_MS away.
+ * Android acute-pressure signal (onTrimMemory at RUNNING_LOW or worse); trims
+ * immediately instead of waiting for the next headroom poll.
  */
 function handleNativeMemoryPressure(event: ImageMemoryPressureEvent): void {
   const now = Date.now();

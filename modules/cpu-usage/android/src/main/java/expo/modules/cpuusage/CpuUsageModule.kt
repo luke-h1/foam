@@ -27,11 +27,9 @@ class CpuUsageModule : Module() {
   }
 
   /**
-   * Process CPU% since the previous call, summed across all threads so a fully
-   * busy multi-core process can exceed 100% - matching the iOS native module.
-   * Measured against wall-clock elapsed time (SystemClock.uptimeMillis) rather
-   * than /proc/stat, which is unreadable to apps on modern Android. Returns 0 on
-   * the first call or when /proc/self/stat is unreadable.
+   * Process CPU% since the previous call; thread-summed so it can exceed 100%,
+   * matching iOS. Wall-clock based (/proc/stat is unreadable on modern
+   * Android). Returns 0 on the first call or when /proc/self/stat is unreadable.
    */
   private fun currentCpuUsage(): Double {
     val processMs = readProcessCpuMs() ?: return 0.0

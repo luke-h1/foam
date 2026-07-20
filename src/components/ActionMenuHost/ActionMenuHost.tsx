@@ -10,10 +10,8 @@ import {
 import { theme } from '@app/styles/themes';
 
 /**
- * Web fallback host. iOS routes through `ActionSheetIOS` and Android through the
- * Jetpack Compose `ModalBottomSheet` (`ActionMenuHost.android.tsx`), so neither
- * populates the store and this renders nothing on those platforms. On web the
- * store is the only path, so we render a simple modal sheet here.
+ * Web fallback host; iOS uses `ActionSheetIOS` and Android the Compose
+ * `ModalBottomSheet`, so this renders nothing on those platforms.
  */
 export function ActionMenuHost() {
   const options = useSyncExternalStore(
