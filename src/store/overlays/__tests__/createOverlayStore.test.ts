@@ -1,7 +1,7 @@
 import {
   createAwaitableOverlayStore,
   createOverlayStore,
-} from '../overlayStore';
+} from '../createOverlayStore';
 
 describe('createOverlayStore', () => {
   test('starts empty and reflects present/dismiss', () => {

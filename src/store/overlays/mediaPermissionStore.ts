@@ -1,4 +1,4 @@
-import { createAwaitableOverlayStore } from '@app/utils/overlayStore';
+import { createAwaitableOverlayStore } from '@app/store/overlays/createOverlayStore';
 
 export type MediaPermissionPrompt = {
   title: string;

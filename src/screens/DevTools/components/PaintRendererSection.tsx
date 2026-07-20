@@ -73,20 +73,10 @@ export function PaintRendererSection() {
         title={t('paintRenderer')}
         subtitle={t('paintRendererDescription')}
         icon={{ icon: 'paintbrush.fill', color: theme.colorPlum }}
-        onChange={event => {
-          const next =
-            PAINT_RENDERER_OPTIONS[event.nativeEvent.selectedSegmentIndex]
-              ?.value;
+        onSelectIndex={index => {
+          const next = PAINT_RENDERER_OPTIONS[index]?.value;
           if (next) {
             update({ sevenTvPaintRenderer: next });
-          }
-        }}
-        onValueChange={value => {
-          const selected = PAINT_RENDERER_OPTIONS.find(
-            option => t(option.labelKey) === value,
-          );
-          if (selected) {
-            update({ sevenTvPaintRenderer: selected.value });
           }
         }}
         selectedIndex={selectedIndex}

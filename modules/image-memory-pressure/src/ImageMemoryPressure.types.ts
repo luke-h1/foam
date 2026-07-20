@@ -12,10 +12,11 @@ export interface ImageMemoryPressureNativeModule {
   /**
    * Bytes of memory remaining before this process hits its memory limit and is
    * jettisoned. On iOS this is os_proc_available_memory; on Android it is the
-   * system headroom above the low-memory kill threshold (availMem - threshold).
-   * Returns 0 when the native module is unavailable (web, or before the native
-   * build ships) or already at/under the threshold, which the caller treats as
-   * "monitoring disabled".
+   * system headroom above the low-memory kill threshold (availMem - threshold),
+   * reported as a minimal positive value when at/under the threshold so the
+   * poller reads it as critical. Returns 0 only when the native module is
+   * unavailable (web, or before the native build ships), which the caller
+   * treats as "monitoring disabled".
    */
   getAvailableMemory(): number;
 

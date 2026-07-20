@@ -17,13 +17,12 @@ import {
   paddingAll,
 } from '@expo/ui/jetpack-compose/modifiers';
 
-import { theme } from '@app/styles/themes';
-
 import {
   dismissActionMenu,
   getActionMenuState,
   subscribeActionMenu,
-} from './actionMenuStore';
+} from '@app/store/overlays/actionMenuStore';
+import { theme } from '@app/styles/themes';
 
 export function ActionMenuHost() {
   const options = useSyncExternalStore(

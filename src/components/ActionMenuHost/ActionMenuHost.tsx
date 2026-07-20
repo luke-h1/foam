@@ -2,13 +2,12 @@ import { useSyncExternalStore } from 'react';
 import { Modal, Pressable, StyleSheet } from 'react-native';
 
 import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
-
 import {
   dismissActionMenu,
   getActionMenuState,
   subscribeActionMenu,
-} from './actionMenuStore';
+} from '@app/store/overlays/actionMenuStore';
+import { theme } from '@app/styles/themes';
 
 /**
  * Web fallback host. iOS routes through `ActionSheetIOS` and Android through the

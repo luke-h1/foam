@@ -29,12 +29,6 @@ export type PreviewProvider = '7tv' | 'bttv' | 'ffz' | 'twitch';
 
 export type ProviderPreviewVariant = 'badges' | 'emotes';
 
-export type SegmentedControlChangeEvent = {
-  nativeEvent: {
-    selectedSegmentIndex: number;
-  };
-};
-
 export const DENSITY_OPTIONS = [
   { labelKey: 'densityComfortable', value: 'comfortable' },
   { labelKey: 'densityCompact', value: 'compact' },

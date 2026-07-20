@@ -3,13 +3,12 @@ import { Linking, StyleSheet } from 'react-native';
 
 import { AlertDialog, Host, Text, TextButton } from '@expo/ui/jetpack-compose';
 
-import { theme } from '@app/styles/themes';
-
 import {
   getMediaPermissionState,
   resolveMediaPermissionPrompt,
   subscribeMediaPermission,
-} from './mediaPermissionStore';
+} from '@app/store/overlays/mediaPermissionStore';
+import { theme } from '@app/styles/themes';
 
 export function MediaPermissionHost() {
   const prompt = useSyncExternalStore(

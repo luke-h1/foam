@@ -11,10 +11,8 @@ import {
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
 
-import {
-  type ComposeRowComponent,
-  SettingsRow,
-} from '@app/components/SettingsSection/SettingsSection';
+import { SettingsRow } from '@app/components/SettingsSection/SettingsSection';
+import { type ComposeRowComponent } from '@app/components/SettingsSection/SettingsSection.shared';
 import { theme } from '@app/styles/themes';
 
 type SettingsRowIcon = ComponentProps<typeof SettingsRow>['icon'];
@@ -29,16 +27,14 @@ export function ChatPreferenceSegmentedSettingsRow({
   subtitle,
   icon,
   selectedIndex,
-  onChange,
-  onValueChange,
+  onSelectIndex,
   values,
 }: {
   title: string;
   subtitle: string;
   icon: SettingsRowIcon;
   selectedIndex: number;
-  onChange: (event: { nativeEvent: { selectedSegmentIndex: number } }) => void;
-  onValueChange: (value: string) => void;
+  onSelectIndex: (index: number) => void;
   values: readonly string[];
 }) {
   return (
@@ -66,15 +62,9 @@ export function ChatPreferenceSegmentedSettingsRow({
                   background(
                     selected ? theme.color.menu.cardActive : 'transparent',
                   ),
-                  clickable(
-                    () => {
-                      onChange({
-                        nativeEvent: { selectedSegmentIndex: index },
-                      });
-                      onValueChange(value);
-                    },
-                    { indication: false },
-                  ),
+                  clickable(() => onSelectIndex(index), {
+                    indication: false,
+                  }),
                   padding(0, 8, 0, 8),
                 ]}
               >

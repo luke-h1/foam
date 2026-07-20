@@ -21,9 +21,11 @@ import * as Clipboard from 'expo-clipboard';
 import { PressablesConfig } from 'pressto';
 import { Toaster } from 'sonner-native';
 
+import { ActionMenuHost } from '@app/components/ActionMenuHost/ActionMenuHost';
 import { AppBottomSheetProvider } from '@app/components/BottomSheet/BottomSheetProvider';
 import { ChangelogAndroidHost } from '@app/components/Changelog/ChangelogAndroidHost';
 import { GlobalErrorGate } from '@app/components/GlobalErrorGate/GlobalErrorGate';
+import { MediaPermissionHost } from '@app/components/MediaPermissionHost/MediaPermissionHost';
 import { OfflineBanner } from '@app/components/OfflineBanner/OfflineBanner';
 import { ShakeToReport } from '@app/components/ShakeToReport/ShakeToReport';
 import { AccentColorProvider } from '@app/context/AccentColorContext';
@@ -36,8 +38,6 @@ import { BaseConfig } from '@app/navigators/config';
 import { ErrorBoundary } from '@app/screens/ErrorScreen/ErrorBoundary';
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
-import { ActionMenuHost } from '@app/utils/actionMenu/ActionMenuHost';
-import { MediaPermissionHost } from '@app/utils/media/MediaPermissionHost';
 
 import { AnalyticsProvider } from './AnalyticsProvider';
 import { ScreenDimensionsProvider } from './ScreenDimensionsProvider/ScreenDimensionsProvider';

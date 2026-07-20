@@ -1,6 +1,9 @@
 import { ActionSheetIOS, Platform } from 'react-native';
 
-import { presentActionMenu } from '../actionMenuStore';
+import {
+  presentActionMenu,
+  type ShowActionMenuOptions,
+} from '../actionMenuStore';
 import { showActionMenu } from '../showActionMenu';
 
 const originalOS = Platform.OS;
@@ -66,7 +69,9 @@ describe('showActionMenu', () => {
     });
 
     expect(presentActionMenuMock).toHaveBeenCalledTimes(1);
-    expect(presentActionMenuMock).toHaveBeenCalledWith({
+    expect(
+      presentActionMenuMock.mock.calls[0]![0],
+    ).toEqual<ShowActionMenuOptions>({
       title: 'Stream',
       actions: [{ label: 'Share', onPress }],
       cancelLabel: 'Cancel',
@@ -89,7 +94,9 @@ describe('showActionMenu', () => {
       cancelLabel: 'Cancel',
     });
 
-    expect(presentActionMenuMock).toHaveBeenCalledWith({
+    expect(
+      presentActionMenuMock.mock.calls[0]![0],
+    ).toEqual<ShowActionMenuOptions>({
       title: 'Warn user',
       actions: [
         { label: 'Spam', onPress: onFirst },

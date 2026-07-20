@@ -8,47 +8,22 @@ import {
   HorizontalDivider,
   Host,
   ListItem,
+  ListItemColors,
   RNHostView,
   Row,
   Switch,
   Text,
 } from '@expo/ui/jetpack-compose';
 import { clickable, fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
-import type { SFSymbol } from 'sf-symbols-typescript';
 
-import type { AndroidSymbol } from '@app/components/ui/Icon/Icon';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
+import {
+  type ComposeRowComponent,
+  resolveIconName,
+  type RowIcon,
+} from '@app/components/SettingsSection/SettingsSection.shared';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { iosMatchedSwitchColors } from '@app/styles/composeSwitchColors';
 import { theme } from '@app/styles/themes';
-
-type RowIcon =
-  | {
-      color?: string;
-      icon: SFSymbol;
-      androidIcon?: AndroidSymbol;
-    }
-  | undefined;
-
-function resolveIconName(
-  icon: SFSymbol,
-  androidIcon: AndroidSymbol | undefined,
-): SymbolViewProps['name'] {
-  if (!androidIcon) {
-    return icon;
-  }
-  return { ios: icon, android: androidIcon, web: androidIcon };
-}
-
-/**
- * Marker for components that render as native Compose children and can sit
- * directly inside the Card's Column. Screens with bespoke Compose rows (e.g.
- * the chat-preferences segmented rows) tag their component with this so they
- * are not hosted via RNHostView, which would place their Compose content
- * outside the Card tree.
- */
-export interface ComposeRowComponent {
-  isComposeRow?: boolean;
-}
 
 /**
  * Only Compose row components can render as direct children of the Card's
@@ -71,7 +46,7 @@ function isComposeRow(element: ReactNode): boolean {
 const listItemColors = {
   containerColor: theme.color.surfaceNeutral.dark,
   contentColor: theme.color.text.dark,
-};
+} satisfies ListItemColors;
 
 const defaultCardColors = {
   containerColor: theme.color.surfaceNeutral.dark,
@@ -223,8 +198,6 @@ export function SettingsRow({
   icon?: RowIcon;
   trailing?: ReactNode;
   onPress?: () => void;
-  accessibilityRole?: 'button' | 'switch';
-  accessibilityState?: { checked?: boolean };
   danger?: boolean;
 }) {
   return (

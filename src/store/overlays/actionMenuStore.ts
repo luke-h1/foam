@@ -1,4 +1,4 @@
-import { createOverlayStore } from '@app/utils/overlayStore';
+import { createOverlayStore } from '@app/store/overlays/createOverlayStore';
 
 export interface ActionMenuAction {
   label: string;

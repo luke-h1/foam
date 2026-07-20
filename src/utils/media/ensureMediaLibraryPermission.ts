@@ -3,8 +3,7 @@ import { Alert, Linking, Platform } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
 
 import i18next from '@app/i18n/i18next';
-
-import { presentMediaPermissionPrompt } from './mediaPermissionStore';
+import { presentMediaPermissionPrompt } from '@app/store/overlays/mediaPermissionStore';
 
 export async function ensureMediaLibraryPermission(): Promise<boolean> {
   if (Platform.OS === 'web') {
