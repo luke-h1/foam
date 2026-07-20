@@ -8,6 +8,8 @@ import {
   type ListRenderItem,
 } from '@shopify/flash-list';
 
+import { theme } from '@app/styles/themes';
+
 export type { FlashListRef, ListRenderItem };
 
 export type FlashListProps<TItem = unknown> = ShopifyFlashListProps<TItem> & {
@@ -28,6 +30,8 @@ export function FlashList<TItem>({
         <RefreshControl
           refreshing={Boolean(refreshing)}
           onRefresh={onRefresh}
+          colors={[theme.colorPrimary]}
+          progressBackgroundColor={theme.color.backgroundSecondary.dark}
         />
       );
     }

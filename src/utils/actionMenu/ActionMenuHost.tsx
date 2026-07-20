@@ -37,7 +37,7 @@ export function ActionMenuHost() {
           {options.actions.map(action => (
             <Pressable
               key={action.label}
-              style={styles.action}
+              style={styles.row}
               onPress={() => {
                 dismissActionMenu();
                 action.onPress();
@@ -48,7 +48,7 @@ export function ActionMenuHost() {
               </Text>
             </Pressable>
           ))}
-          <Pressable style={styles.cancel} onPress={dismissActionMenu}>
+          <Pressable style={styles.row} onPress={dismissActionMenu}>
             <Text weight='semibold' color='gray.textLow'>
               {options.cancelLabel}
             </Text>
@@ -60,18 +60,12 @@ export function ActionMenuHost() {
 }
 
 const styles = StyleSheet.create({
-  action: {
-    alignItems: 'center',
-    borderTopColor: theme.colorBorderSecondary,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingVertical: theme.space16,
-  },
   backdrop: {
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     flex: 1,
     justifyContent: 'flex-end',
   },
-  cancel: {
+  row: {
     alignItems: 'center',
     borderTopColor: theme.colorBorderSecondary,
     borderTopWidth: StyleSheet.hairlineWidth,

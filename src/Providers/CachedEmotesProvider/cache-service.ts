@@ -12,7 +12,7 @@
  * just composites an already-decoded, size-bounded bitmap. Animated AVIFs keep
  * animating — the ref carries `isAnimated` and the view autoplays.
  */
-import { AppState, type AppStateStatus } from 'react-native';
+import { AppState, type AppStateStatus, Platform } from 'react-native';
 
 import { Image, type ImageRef } from 'expo-image';
 
@@ -440,15 +440,20 @@ export function trimCachedEmoteRefsForMemoryPressure(): void {
 let memoryPressureSubscribed = false;
 
 /**
- * `memoryWarning` fires late (often after the allocation that tips the process
- * over), so we also poll the real pre-jetsam headroom while foregrounded via the
- * ImageMemoryPressure native module (os_proc_available_memory — bytes remaining before
- * this process hits its iOS memory limit). When headroom drops below this bound
- * we trim proactively instead of waiting for the OS signal. The module returns 0
- * when unavailable (Android / web / before the native build ships), which
- * disables the poll gracefully.
+ * `memoryWarning`/`onTrimMemory` fire late, so we also poll the real headroom
+ * while foregrounded via the ImageMemoryPressure module and trim proactively
+ * when it drops below this bound. The two platforms report different quantities,
+ * so the bound is platform-specific:
+ * - iOS: `os_proc_available_memory` - bytes remaining before this process hits
+ *   its own jetsam limit; 200MB is a "getting close" margin for one app.
+ * - Android: `availMem - onTrimMemory threshold` (system-wide headroom above the
+ *   OS low-memory line). The `onMemoryPressure` event is the primary acute
+ *   signal here, so the poll is a backstop with a tighter margin.
+ * The module returns 0 when unavailable (web / before the native build ships),
+ * which disables the poll gracefully.
  */
-const LOW_MEMORY_HEADROOM_BYTES = 200 * 1024 * 1024;
+const LOW_MEMORY_HEADROOM_BYTES =
+  Platform.OS === 'android' ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
 const MEMORY_POLL_INTERVAL_MS = 5000;
 // Trimming can recur every poll under sustained pressure; throttle the Sentry
 // breadcrumb so a constrained session can't flood Logs while still surfacing

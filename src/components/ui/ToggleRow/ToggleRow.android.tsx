@@ -1,6 +1,7 @@
 import { ListItem, RNHostView, Switch, Text } from '@expo/ui/jetpack-compose';
 import { SymbolViewProps } from 'expo-symbols';
 
+import { iosMatchedSwitchColors } from '@app/styles/composeSwitchColors';
 import { theme } from '@app/styles/themes';
 
 import { SymbolView } from '../Icon/Icon';
@@ -47,7 +48,11 @@ export function ToggleRow({
         </ListItem.SupportingContent>
       ) : null}
       <ListItem.TrailingContent>
-        <Switch value={value} onCheckedChange={onValueChange} />
+        <Switch
+          value={value}
+          onCheckedChange={onValueChange}
+          colors={iosMatchedSwitchColors}
+        />
       </ListItem.TrailingContent>
     </ListItem>
   );

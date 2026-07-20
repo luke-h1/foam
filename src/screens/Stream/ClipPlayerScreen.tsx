@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { IconButton } from '@app/components/IconButton/IconButton';
 import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
+import { PlayerBackButton } from '@app/screens/Stream/components/PlayerBackButton';
 import { theme } from '@app/styles/themes';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 
@@ -42,21 +43,7 @@ export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
       <View
         style={[styles.backButtonWrap, { top: insets.top + theme.space12 }]}
       >
-        <IconButton
-          icon={{
-            type: 'symbol',
-            name: {
-              ios: 'chevron.left',
-              android: 'arrow_back',
-              web: 'arrow_back',
-            },
-            size: 20,
-          }}
-          label={t('goBack')}
-          onPress={() => router.back()}
-          size='2xl'
-          style={styles.closeButton}
-        />
+        <PlayerBackButton />
       </View>
 
       <View

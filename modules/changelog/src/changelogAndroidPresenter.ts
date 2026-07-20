@@ -4,6 +4,7 @@ type ChangelogAndroidState = ChangelogPresentOptions | null;
 
 let state: ChangelogAndroidState = null;
 let presentResolve: (() => void) | null = null;
+let pending: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -26,14 +27,18 @@ export function subscribeChangelogAndroid(listener: () => void): () => void {
 export function presentChangelogAndroid(
   options: ChangelogPresentOptions,
 ): Promise<void> {
-  presentResolve?.();
-  presentResolve = null;
+  if (pending) {
+    return pending;
+  }
+
   state = options;
   emit();
 
-  return new Promise(resolve => {
+  pending = new Promise(resolve => {
     presentResolve = resolve;
   });
+
+  return pending;
 }
 
 export function dismissChangelogAndroid(): void {
@@ -45,4 +50,5 @@ export function dismissChangelogAndroid(): void {
   emit();
   presentResolve?.();
   presentResolve = null;
+  pending = null;
 }

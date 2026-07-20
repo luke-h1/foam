@@ -9,15 +9,22 @@ set -euo pipefail
 #  Add --no-push to build and submit without committing, tagging, pushing, or
 #  creating the GitHub release (CHANGELOG.md is still regenerated locally):
 #  bun run deploy -- internal ios --no-push
+#
+#  Add --interactive to let eas build prompt instead of passing --non-interactive:
+#  bun run deploy -- internal ios --interactive
 
 source ./scripts/deploy-common.sh
 
 validate_deploy_args "deploy"
 
 no_push_flag=""
+interactive_flag=""
 for arg in "$@"; do
   if [ "$arg" = "--no-push" ]; then
     no_push_flag="--no-push"
+  fi
+  if [ "$arg" = "--interactive" ]; then
+    interactive_flag="--interactive"
   fi
 done
 
@@ -25,13 +32,13 @@ done
 
 case "$platform" in
   ios | android)
-    ./scripts/build.sh "$variant" "$platform"
+    ./scripts/build.sh "$variant" "$platform" $interactive_flag
     ./scripts/submit.sh "$variant" "$platform"
     ;;
   all)
-    ./scripts/build.sh "$variant" ios
+    ./scripts/build.sh "$variant" ios $interactive_flag
     ./scripts/submit.sh "$variant" ios
-    ./scripts/build.sh "$variant" android
+    ./scripts/build.sh "$variant" android $interactive_flag
     ./scripts/submit.sh "$variant" android
     ;;
 esac

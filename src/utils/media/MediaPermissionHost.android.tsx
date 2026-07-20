@@ -23,7 +23,11 @@ export function MediaPermissionHost() {
   }
 
   return (
-    <Host colorScheme='dark' style={styles.host} pointerEvents='box-none'>
+    <Host
+      colorScheme='dark'
+      style={StyleSheet.absoluteFill}
+      pointerEvents='box-none'
+    >
       <AlertDialog
         colors={{
           containerColor: theme.color.menu.card,
@@ -73,9 +77,3 @@ export function MediaPermissionHost() {
     </Host>
   );
 }
-
-const styles = StyleSheet.create({
-  host: {
-    ...StyleSheet.absoluteFill,
-  },
-});

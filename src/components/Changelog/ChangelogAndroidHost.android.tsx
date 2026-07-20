@@ -116,11 +116,14 @@ function VersionNotes({ notes }: { notes: ChangelogVersionNotes }) {
       >
         {notes.version}
       </Text>
-      {notes.items.map((item, index) =>
+      {notes.items.map(item =>
         item.type === 'list' ? (
-          <ListNotes key={`list-${notes.version}-${index}`} item={item} />
+          <ListNotes key={`list-${notes.version}-${item.title}`} item={item} />
         ) : (
-          <MediaNotes key={`media-${notes.version}-${index}`} item={item} />
+          <MediaNotes
+            key={`media-${notes.version}-${item.title}`}
+            item={item}
+          />
         ),
       )}
     </Column>

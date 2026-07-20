@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "astro dev --host 0.0.0.0 --port 3000",
     "dev:local": "astro dev --host 127.0.0.1 --port 3000",

@@ -18,6 +18,7 @@ import type { SFSymbol } from 'sf-symbols-typescript';
 
 import type { AndroidSymbol } from '@app/components/ui/Icon/Icon';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
+import { iosMatchedSwitchColors } from '@app/styles/composeSwitchColors';
 import { theme } from '@app/styles/themes';
 
 type RowIcon =
@@ -270,7 +271,11 @@ export function SettingsToggleRow({
       <RowLeading icon={icon} />
       <RowText title={title} subtitle={subtitle} />
       <ListItem.TrailingContent>
-        <Switch value={value} onCheckedChange={onValueChange} />
+        <Switch
+          value={value}
+          onCheckedChange={onValueChange}
+          colors={iosMatchedSwitchColors}
+        />
       </ListItem.TrailingContent>
     </ListItem>
   );

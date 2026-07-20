@@ -1,9 +1,6 @@
 {
-  "platforms": ["apple", "android"],
+  "platforms": ["apple"],
   "apple": {
     "modules": ["ICloudSyncModule"]
-  },
-  "android": {
-    "modules": ["expo.modules.icloudsync.ICloudSyncModule"]
   }
 }

@@ -25,7 +25,6 @@ import { BlurView } from 'expo-blur';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { router, useFocusEffect, useIsFocused } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { StatusBar } from 'expo-status-bar';
 import { toast } from 'sonner-native';
 
 import { Button } from '@app/components/Button/Button';
@@ -37,6 +36,7 @@ import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import type { StreamPlayerRef } from '@app/components/StreamPlayer/types';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
+import { BACK_SYMBOL_NAME } from '@app/constants/backSymbolName';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useStreamQuery } from '@app/hooks/queries/useStreamQuery';
 import { useUserQuery } from '@app/hooks/queries/useUserQuery';
@@ -837,7 +837,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   return (
     <View style={contentContainerStyle}>
-      <StatusBar style='light' />
       <Animated.View
         testID='stream-player-container'
         style={[styles.videoContainer, animatedVideoStyle]}
@@ -876,11 +875,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             style={styles.androidBackButton}
           >
             <SymbolView
-              name={{
-                ios: 'chevron.left',
-                android: 'arrow_back',
-                web: 'arrow_back',
-              }}
+              name={BACK_SYMBOL_NAME}
               size={22}
               tintColor={theme.colorWhite}
             />

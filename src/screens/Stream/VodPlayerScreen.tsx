@@ -6,11 +6,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { router, useFocusEffect } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { StatusBar } from 'expo-status-bar';
 
 import { IconButton } from '@app/components/IconButton/IconButton';
 import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
+import { PlayerBackButton } from '@app/screens/Stream/components/PlayerBackButton';
 import { theme } from '@app/styles/themes';
 
 import { getLiveStreamLayoutMetrics } from './liveStreamLayout/getLiveStreamLayoutMetrics';
@@ -87,7 +87,6 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
 
   return (
     <View style={styles.container}>
-      <StatusBar style='light' />
       <View
         style={[
           styles.videoContainer,
@@ -117,21 +116,7 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
           },
         ]}
       >
-        <IconButton
-          icon={{
-            type: 'symbol',
-            name: {
-              ios: 'chevron.left',
-              android: 'arrow_back',
-              web: 'arrow_back',
-            },
-            size: 20,
-          }}
-          label={t('goBack')}
-          onPress={() => router.back()}
-          size='2xl'
-          style={styles.closeButton}
-        />
+        <PlayerBackButton />
       </View>
 
       <View

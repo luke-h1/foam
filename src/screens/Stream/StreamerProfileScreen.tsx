@@ -25,6 +25,7 @@ import { useFlattenedInfiniteQuery } from '@app/hooks/useFlattenedInfiniteQuery'
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import i18next from '@app/i18n/i18next';
+import { PlayerBackButton } from '@app/screens/Stream/components/PlayerBackButton';
 import { theme } from '@app/styles/themes';
 import type { StreamElementsChatStats } from '@app/types/streamelements/stats';
 import type { TwitchClip } from '@app/types/twitch/clip';
@@ -192,21 +193,7 @@ function StreamerProfileHeader({
   return (
     <View style={[styles.header, { paddingTop: insets.top + theme.space16 }]}>
       <View style={styles.navRow}>
-        <IconButton
-          icon={{
-            type: 'symbol',
-            name: {
-              ios: 'chevron.left',
-              android: 'arrow_back',
-              web: 'arrow_back',
-            },
-            size: 20,
-          }}
-          label={t('goBack')}
-          onPress={() => router.back()}
-          size='2xl'
-          style={styles.closeButton}
-        />
+        <PlayerBackButton />
         <IconButton
           icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}
           label={t('shareUser', { name: user.display_name })}
