@@ -10,7 +10,7 @@ import { queryClient } from '@app/lib/react-query/query-client';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { twitchService } from '@app/services/twitch-service';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
-import { showActionMenu } from '@app/utils/actionMenu/showActionMenu';
+import { showActionMenu } from '@app/store/overlays/showActionMenu';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { logger } from '@app/utils/logger';

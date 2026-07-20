@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Integrate"
+  short_description: "Start or continue Git operations safely"
+  default_prompt: "Use $git-integrate to safely start my requested Git integration operation or continue the one already in progress, then verify its final history."

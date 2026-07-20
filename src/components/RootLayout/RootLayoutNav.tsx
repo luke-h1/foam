@@ -1,6 +1,7 @@
+import { SystemBars } from 'react-native-edge-to-edge';
+
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 
 import { ForceUpdateModal } from '@app/components/ForceUpdateModal/ForceUpdateModal';
 import { OTAUpdates } from '@app/components/OTAUpdates/OTAUpdates';
@@ -38,7 +39,7 @@ export function RootLayoutNav() {
   return (
     <ThemeProvider value={navigationTheme}>
       <Providers>
-        <StatusBar style='light' />
+        <SystemBars style='light' />
         <RouterEffects />
         <ForceUpdateModal />
         <Stack

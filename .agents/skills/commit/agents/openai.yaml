@@ -1,0 +1,4 @@
+interface:
+  display_name: "Commit"
+  short_description: "Commit only this task's changes"
+  default_prompt: "Use $commit to commit only the changes you made in this task with clean logical grouping; include other working-tree changes only if I explicitly ask to commit all."
