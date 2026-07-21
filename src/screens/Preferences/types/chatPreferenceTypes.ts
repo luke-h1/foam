@@ -1,7 +1,6 @@
 import type { SFSymbol } from 'sf-symbols-typescript';
 
 import type { AndroidSymbol } from '@app/components/ui/Icon/Icon';
-import { theme } from '@app/styles/themes';
 
 export type ContextPreviewValue = {
   chatTimestamps: boolean;
@@ -97,7 +96,6 @@ export const CONTEXT_TOGGLE_ROWS = [
     icon: {
       icon: 'clock',
       androidIcon: 'schedule',
-      color: theme.colorGrey,
     },
   },
   {
@@ -107,7 +105,6 @@ export const CONTEXT_TOGGLE_ROWS = [
     icon: {
       icon: 'at',
       androidIcon: 'alternate_email',
-      color: theme.colorGrey,
     },
   },
   {
@@ -117,7 +114,6 @@ export const CONTEXT_TOGGLE_ROWS = [
     icon: {
       icon: 'arrowshape.turn.up.left',
       androidIcon: 'reply',
-      color: theme.colorGrey,
     },
   },
   {
@@ -127,11 +123,10 @@ export const CONTEXT_TOGGLE_ROWS = [
     icon: {
       icon: 'arrow.down.circle',
       androidIcon: 'arrow_circle_down',
-      color: theme.colorGrey,
     },
   },
 ] as const satisfies readonly {
-  icon: { color: string; icon: SFSymbol; androidIcon: AndroidSymbol };
+  icon: { icon: SFSymbol; androidIcon: AndroidSymbol };
   key: ContextPreviewKey;
   labelKey: string;
   subtitleKey: string;

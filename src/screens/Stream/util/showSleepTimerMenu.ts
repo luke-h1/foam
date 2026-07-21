@@ -2,7 +2,7 @@ import i18next from 'i18next';
 
 import { showActionMenu } from '@app/store/overlays/showActionMenu';
 
-import type { SleepTimer } from './useSleepTimer';
+import type { SleepTimer } from '../hooks/useSleepTimer';
 
 const SLEEP_TIMER_OPTIONS_MINUTES = [15, 30, 45, 60];
 

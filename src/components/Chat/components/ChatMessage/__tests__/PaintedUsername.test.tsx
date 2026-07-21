@@ -4,7 +4,7 @@ import { act, render } from '@testing-library/react-native';
 import { Image } from 'expo-image';
 
 import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
-import { paintRendererFlag$ } from '@app/store/preferenceStore';
+import { paintRendererFlag$ } from '@app/store/preferences/state';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
@@ -378,10 +378,12 @@ describe('PaintedUsername', () => {
   });
 
   describe('Angle Handling', () => {
-    // NOTE: exact gradient angle->coordinate math is asserted at the unit level
-    // in the paintLayer helper tests. Here we only guard that every angle keeps
-    // the paint on the masked-gradient render path (a NaN/throw in the angle
-    // math would collapse it to the plain-text fallback, dropping masked-view).
+    /**
+     * NOTE: exact gradient angle->coordinate math is asserted at the unit level
+     * in the paintLayer helper tests. Here we only guard that every angle keeps
+     * the paint on the masked-gradient render path (a NaN/throw in the angle
+     * math would collapse it to the plain-text fallback, dropping masked-view).
+     */
     test.each([0, 45, 90, 135, 180, 225, 270, 315])(
       'keeps the masked gradient render path at %d degrees',
       angle => {
@@ -549,10 +551,12 @@ describe('PaintedUsername', () => {
     });
 
     test('keeps a visible solid-colour username behind the mask when idle', () => {
-      // The MaskedView paints the gradient over an in-flow solid username. If
-      // that offscreen pass drops out on a settling row, the solid username must
-      // still be visible - otherwise the row reserves its space but renders a
-      // blank gap where the name should be. Guard the fallback stays opaque.
+      /**
+       * The MaskedView paints the gradient over an in-flow solid username. If
+       * that offscreen pass drops out on a settling row, the solid username must
+       * still be visible - otherwise the row reserves its space but renders a
+       * blank gap where the name should be. Guard the fallback stays opaque.
+       */
       const fallbackColor = '#1AC9A2';
 
       const { getAllByText } = render(

@@ -11,7 +11,7 @@ import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 type PreviewProvider = '7tv' | 'bttv' | 'ffz' | 'twitch';
 
-type ProviderPreviewFixtures = {
+type ProviderPreviewData = {
   badges: SanitisedBadgeSet[];
   emotes: SanitisedEmote[];
 };
@@ -43,9 +43,9 @@ const bttvBadgeFallback: SanitisedBadgeSet = {
   url: 'https://cdn.betterttv.net/emote/5f1c24b91ab9be446c4d78dc/3x',
 };
 
-export const chatPreferencePreviewFixtures: Record<
+export const chatPreferencePreviewData: Record<
   PreviewProvider,
-  ProviderPreviewFixtures
+  ProviderPreviewData
 > = {
   '7tv': {
     badges: [sevenTvBadgeFallback],

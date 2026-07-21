@@ -2,7 +2,7 @@ import {
   initialPreferences,
   type Preferences,
   preferencesSchema,
-} from '@app/store/preferenceStore';
+} from '@app/store/preferences/state';
 import { logger } from '@app/utils/logger';
 import type { ICloudSyncNativeModule } from '@modules/icloud-sync/src/ICloudSync.types';
 

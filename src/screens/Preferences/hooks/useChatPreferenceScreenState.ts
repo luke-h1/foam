@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 
 import { useObservable, useSelector } from '@legendapp/state/react';
 
-import { usePreferences } from '@app/store/preferenceStore';
+import { usePreferences } from '@app/store/preferences/selectors';
 import type { SanitisedEmote } from '@app/types/emote';
 import {
   EMOJI_STYLE_OPTIONS,
@@ -23,7 +23,7 @@ import {
   type ProviderPreviewValue,
   SCROLLBACK_OPTIONS,
   TIMESTAMP_FORMAT_OPTIONS,
-} from './chatPreferenceTypes';
+} from '../types/chatPreferenceTypes';
 
 function samePreviewValues<T extends object>(
   left: T,

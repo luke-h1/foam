@@ -1,10 +1,12 @@
-import type { CustomHighlight } from '@app/store/preferenceStore';
+import type { CustomHighlight } from '@app/store/preferences/state';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 
-// Match results are cached per message-part array; the rules array is part of
-// the cache entry so edits to the rules invalidate stale hits without a
-// revision counter.
+/**
+ * Match results are cached per message-part array; the rules array is part of
+ * the cache entry so edits to the rules invalidate stale hits without a
+ * revision counter.
+ */
 const matchCache = new WeakMap<
   ParsedPart[],
   { rules: CustomHighlight[]; match: CustomHighlight | undefined }
