@@ -394,7 +394,7 @@ function buildPaintLayout(
 /**
  * Draw the static composite for a painted username onto `canvas`: text-shadows,
  * base fill, gradient layers, and stroke, wrapped in the drop-shadow chain.
- * Image (URL) layers are omitted — they composite live so animated textures
+ * Image (URL) layers are omitted - they composite live so animated textures
  * can advance without re-baking.
  */
 function drawPaintedUsername(
@@ -459,7 +459,7 @@ function drawPaintedUsername(
    * on top (CSS paint order).
    */
   if (options.includeTextShadows) {
-    for (const shadow of [...layout.textShadows].reverse()) {
+    for (const shadow of layout.textShadows.toReversed()) {
       const shadowLayerPaint = Skia.Paint();
       shadowLayerPaint.setImageFilter(
         Skia.ImageFilter.MakeDropShadowOnly(
@@ -491,7 +491,7 @@ function drawPaintedUsername(
    */
   const gradientsToDraw =
     options.gradientLayers ??
-    [...layout.layers].reverse().filter(layer => layer.function !== 'URL');
+    layout.layers.toReversed().filter(layer => layer.function !== 'URL');
 
   for (const layer of gradientsToDraw) {
     if (layer.function === 'URL') {
@@ -662,7 +662,7 @@ export function buildPaintImageLayers(
 ): PaintImageLayer[] {
   const imageLayers: PaintImageLayer[] = [];
 
-  for (const layer of [...layout.layers].reverse()) {
+  for (const layer of layout.layers.toReversed()) {
     const imageLayer = toPaintImageLayer(layer, layout);
     if (imageLayer) {
       imageLayers.push(imageLayer);
@@ -691,7 +691,7 @@ export function planPaintLayerSlotKinds(
     kinds.push('baked');
   };
 
-  for (const layer of [...layers].reverse()) {
+  for (const layer of layers.toReversed()) {
     if (layer.function === 'URL') {
       flushGradients();
       if (layer.image_url) {
@@ -734,7 +734,7 @@ function buildPaintLayerSlots(
     }
   };
 
-  for (const layer of [...layout.layers].reverse()) {
+  for (const layer of layout.layers.toReversed()) {
     if (layer.function === 'URL') {
       flushGradients();
       const imageLayer = toPaintImageLayer(layer, layout);

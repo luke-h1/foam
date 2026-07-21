@@ -23,8 +23,7 @@ const pct = (a: number[], q: number) => {
   if (a.length === 0) {
     return 0;
   }
-  // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks Array.prototype.toSorted (throws "undefined is not a function"); copy-then-sort is the safe equivalent
-  const s = [...a].sort((x, y) => x - y);
+  const s = a.toSorted((x, y) => x - y);
   return s[Math.min(s.length - 1, Math.floor(q * s.length))]!;
 };
 
@@ -252,9 +251,11 @@ export function useChatPerfSuite() {
     }
   }, [runWindow, uiFrames, uiJank, countdownTicking]);
 
-  // Signal cancel + stop the flood immediately, but let runSuite's finally own
-  // the transition to IDLE — otherwise the Run button reappears mid-cancel and a
-  // re-tap would reset cancelRef and start a second overlapping run.
+  /**
+   * Signal cancel + stop the flood immediately, but let runSuite's finally own
+   * the transition to IDLE - otherwise the Run button reappears mid-cancel and a
+   * re-tap would reset cancelRef and start a second overlapping run.
+   */
   const stopSuite = useCallback(() => {
     cancelRef.current = true;
     syntheticChatControl.current = SYNTHETIC_PRESETS.off!;

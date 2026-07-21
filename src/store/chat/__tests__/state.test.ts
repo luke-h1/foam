@@ -27,10 +27,13 @@ const makeCache = (lastUpdated: number) => ({
 });
 
 describe('limitChannelCaches', () => {
-  test('prunes stale channels without requiring Array.prototype.toSorted', () => {
+  test('prunes stale channels on runtimes without native toSorted via the arrayByCopy polyfill', () => {
     const arrayPrototype = Array.prototype as { toSorted?: unknown };
     const nativeToSorted = arrayPrototype.toSorted;
     delete arrayPrototype.toSorted;
+    jest.isolateModules(() => {
+      require('@app/polyfills/arrayByCopy');
+    });
 
     try {
       const result = limitChannelCaches(
