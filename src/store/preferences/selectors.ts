@@ -1,6 +1,14 @@
 import { useSelector } from '@legendapp/state/react';
 
-import { type Preferences, preferences$ } from './state';
+import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
+
+import {
+  lightModeEnabled$,
+  paintRendererFlag$,
+  type Preferences,
+  preferences$,
+  type SevenTvPaintRenderer,
+} from './state';
 
 export type EmoteRenderPreferences = Pick<
   Preferences,
@@ -40,6 +48,22 @@ export type ChatHydrationPreferences = Pick<
   Preferences,
   'disableEmoteAnimations' | 'show7TvEmotes' | 'show7tvBadges'
 >;
+
+export type ChatRenderPreferences = EmoteRenderPreferences &
+  Pick<
+    Preferences,
+    | 'animate'
+    | 'chatDensity'
+    | 'chatFontScale'
+    | 'chatTimestamps'
+    | 'customHighlights'
+    | 'disableEmoteAnimations'
+    | 'highlightOwnMentions'
+    | 'showAlternatingChatRows'
+    | 'showInlineReplyContext'
+    | 'showRecentMessages'
+    | 'showUnreadJumpPill'
+  >;
 
 export function usePreferences(): Preferences & {
   update: (payload: Partial<Preferences>) => void;
@@ -83,6 +107,48 @@ export function useChatRowPreferences(): ChatRowPreferences {
         showInlineReplyContext: preferences$.showInlineReplyContext.get(),
       }) satisfies ChatRowPreferences,
   );
+}
+
+export function useChatRenderPreferences(): ChatRenderPreferences {
+  return useSelector(
+    () =>
+      ({
+        animate: preferences$.animate.get(),
+        chatDensity: preferences$.chatDensity.get(),
+        chatFontScale: preferences$.chatFontScale.get(),
+        chatTimestamps: preferences$.chatTimestamps.get(),
+        customHighlights: preferences$.customHighlights.get(),
+        disableEmoteAnimations: preferences$.disableEmoteAnimations.get(),
+        emojiStyle: preferences$.emojiStyle.get(),
+        highlightOwnMentions: preferences$.highlightOwnMentions.get(),
+        showAlternatingChatRows: preferences$.showAlternatingChatRows.get(),
+        show7TvEmotes: preferences$.show7TvEmotes.get(),
+        showBttvEmotes: preferences$.showBttvEmotes.get(),
+        showFFzEmotes: preferences$.showFFzEmotes.get(),
+        showChatterinoEmotes: preferences$.showChatterinoEmotes.get(),
+        showInlineReplyContext: preferences$.showInlineReplyContext.get(),
+        showRecentMessages: preferences$.showRecentMessages.get(),
+        showTwitchEmotes: preferences$.showTwitchEmotes.get(),
+        showTwitchBadges: preferences$.showTwitchBadges.get(),
+        show7tvBadges: preferences$.show7tvBadges.get(),
+        showFFzBadges: preferences$.showFFzBadges.get(),
+        showBttvBadges: preferences$.showBttvBadges.get(),
+        showUnreadJumpPill: preferences$.showUnreadJumpPill.get(),
+      }) satisfies ChatRenderPreferences,
+  );
+}
+
+export function useLightModeEnabled(): boolean {
+  return useSelector(() => lightModeEnabled$.get());
+}
+
+export function usePaintRenderer(): SevenTvPaintRenderer {
+  return useSelector(() => {
+    if (isDevToolsEnabled) {
+      return preferences$.sevenTvPaintRenderer.get();
+    }
+    return paintRendererFlag$.get();
+  });
 }
 
 export function useChatHydrationPreferences(): ChatHydrationPreferences {

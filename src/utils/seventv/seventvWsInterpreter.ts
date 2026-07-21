@@ -11,6 +11,7 @@ import type {
 } from '@app/types/seventv/cosmetics';
 import type { SevenTvEmote, SevenTvFile } from '@app/types/seventv/emotes';
 import type { StvUser } from '@app/types/seventv/users';
+import { deriveEmoteImageVariantsFromUrl } from '@app/utils/emote/emoteImageVariants/deriveEmoteImageVariantsFromUrl';
 
 export const HISTORICAL_EVENT_BUFFER = 10000; // 10 seconds
 
@@ -129,7 +130,7 @@ export type SeventvWsDecision =
 /**
  * The EventAPI advertises several encodes per emote. Prefer avif at the largest
  * scale (best size/quality, and the url form the CDN expects), but fall back to
- * webp so an emote whose host only ships webp still resolves real dimensions —
+ * webp so an emote whose host only ships webp still resolves real dimensions -
  * otherwise width/height collapse to 0 and a non-square emote renders as a 1:1
  * square at the wrong width. As a last resort take the widest encode that
  * carries dimensions so the aspect ratio is at least correct.
@@ -174,11 +175,13 @@ function toSanitisedSevenTvEmote(
   now: number,
 ): SanitisedEmote {
   const bestFile = pickBestSevenTvFile(emote.data.host.files);
+  const url = `https://cdn.7tv.app/emote/${emote.id}/${bestFile?.name ?? '1x.avif'}`;
 
   return {
     name: emote.name,
     id: emote.id,
-    url: `https://cdn.7tv.app/emote/${emote.id}/${bestFile?.name ?? '1x.avif'}`,
+    url,
+    image_variants: deriveEmoteImageVariantsFromUrl(url) ?? undefined,
     original_name: emote.data.name,
     creator:
       (emote.data.owner?.display_name || emote.data.owner?.username) ??
@@ -235,9 +238,11 @@ function interpretEmoteSetUpdate(
     return { type: 'ignoreEmoteSetUpdate', reason: 'inactiveEmoteSet' };
   }
 
-  // Updates for a set other than the channel's active one are usually a
-  // chatter's personal emote set; hand the set id to the caller so it can
-  // refresh the matching personal set instead of dropping the event.
+  /**
+   * Updates for a set other than the channel's active one are usually a
+   * chatter's personal emote set; hand the set id to the caller so it can
+   * refresh the matching personal set instead of dropping the event.
+   */
   if (!expectedEmoteSetId || receivedEmoteSetId !== expectedEmoteSetId) {
     return {
       type: 'emoteSetUpdateForOtherSet',

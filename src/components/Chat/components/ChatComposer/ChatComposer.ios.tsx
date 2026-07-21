@@ -1,5 +1,5 @@
 import { memo, type Ref, useCallback, useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Input, type InputRef } from '@app/components/ui/Input/Input.ios';
@@ -7,7 +7,10 @@ import { useAccentColor } from '@app/context/AccentColorContext';
 import { theme } from '@app/styles/themes';
 
 import { ComposerIconButton } from '../ComposerIconButton';
-import { COMPOSER_INPUT_MIN_HEIGHT } from '../composerSizing';
+import {
+  COMPOSER_CONTROL_RADIUS,
+  COMPOSER_INPUT_MIN_HEIGHT,
+} from '../composerSizing';
 import { chatComposerStyles } from './chatComposerStyles';
 import { CommandSuggestionRail } from './CommandSuggestionRail';
 import { EmoteSuggestionRail } from './EmoteSuggestionRail';
@@ -43,6 +46,9 @@ function ChatComposerComponent({
   ref,
 }: ChatComposerProps) {
   const { t } = useTranslation('chat');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const composerStyles = chatComposerStyles[scheme];
   const inputRef = useRef<InputRef>(null);
   const { accentHex } = useAccentColor();
 
@@ -81,7 +87,7 @@ function ChatComposerComponent({
   });
 
   return (
-    <View style={chatComposerStyles.mainContainer}>
+    <View style={composerStyles.mainContainer}>
       {showEmoteRail ? (
         <EmoteSuggestionRail
           handleEmotePress={handleEmotePress}
@@ -105,7 +111,7 @@ function ChatComposerComponent({
         />
       ) : null}
 
-      <View style={chatComposerStyles.row}>
+      <View style={composerStyles.row}>
         {onPressAdd ? (
           <ComposerIconButton
             icon='face.smiling'
@@ -134,10 +140,13 @@ function ChatComposerComponent({
             }
             onSubmitEditing={handleSubmit}
             placeholder={placeholder ?? t('composer.sendAMessage')}
-            placeholderTextColor='rgba(255,255,255,0.46)'
+            placeholderTextColor={theme.color.textSecondary[scheme]}
             radius='xl'
             returnKeyType='send'
-            style={styles.input}
+            style={[
+              styles.input,
+              { backgroundColor: theme.color.pressedOverlay[scheme] },
+            ]}
             submitBehavior='blurAndSubmit'
             variant='soft'
           />
@@ -151,7 +160,7 @@ function ChatComposerComponent({
             label={t('composer.sendMessage')}
             onPress={handleSubmit}
             prominent
-            prominentColor={accentHex ?? theme.colorViolet}
+            prominentColor={accentHex ?? theme.color.violet[scheme]}
           />
         ) : null}
       </View>
@@ -168,8 +177,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   input: {
-    backgroundColor: theme.darkActiveContent,
-    borderRadius: 20,
+    borderRadius: COMPOSER_CONTROL_RADIUS,
     borderWidth: 0,
     maxHeight: 120,
     minHeight: COMPOSER_INPUT_MIN_HEIGHT,

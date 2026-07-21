@@ -2,9 +2,11 @@ import type { ComponentType } from 'react';
 
 import { Redirect } from 'expo-router';
 
-// Dev-only demo screen — excluded from production bundles. Inline
-// EXPO_PUBLIC_APP_VARIANT literals let Metro constant-fold the require away;
-// don't hoist them into a shared constant (mirrors StorybookRoute.tsx).
+/**
+ * Dev-only demo screen - excluded from production bundles. Inline
+ * EXPO_PUBLIC_APP_VARIANT literals let Metro constant-fold the require away;
+ * don't hoist them into a shared constant (mirrors StorybookRoute.tsx).
+ */
 let SentryDemoRoute: ComponentType = function SentryDemoUnavailable() {
   return <Redirect href='/tabs/settings' />;
 };

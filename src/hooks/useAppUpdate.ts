@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Platform } from 'react-native';
+import { Platform, useColorScheme } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import type { ReloadScreenOptions } from 'expo-updates';
@@ -8,18 +8,20 @@ import { toast } from 'sonner-native';
 
 import { ENV_SUPPORTS_OTA } from '@app/screens/DevTools/util/envSupportsOta';
 import { getStoreUrlAsync } from '@app/screens/DevTools/util/getStoreUrlAsync';
-import { theme } from '@app/styles/themes';
+import { type ColorScheme, theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { logger } from '@app/utils/logger';
 
-const OTA_RELOAD_SCREEN_OPTIONS = {
-  backgroundColor: theme.color.background.dark,
-  fade: true,
-  spinner: {
-    color: theme.colorPrimary,
-    size: 'large' as const,
-  },
-} satisfies ReloadScreenOptions;
+function getOtaReloadScreenOptions(scheme: ColorScheme) {
+  return {
+    backgroundColor: theme.color.background[scheme],
+    fade: true,
+    spinner: {
+      color: theme.color.accent[scheme],
+      size: 'large' as const,
+    },
+  } satisfies ReloadScreenOptions;
+}
 
 function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
@@ -27,13 +29,15 @@ function toError(error: unknown): Error {
 
 export function useAppUpdate() {
   const { t } = useTranslation('settings');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const [isCheckingBundle, setIsCheckingBundle] = useState(false);
 
   const openStore = () => {
     void (async () => {
       const storeUrl = await getStoreUrlAsync();
       if (storeUrl) {
-        openLinkInBrowser(storeUrl);
+        openLinkInBrowser(storeUrl, scheme);
         return;
       }
       toast.error(t('updateStoreUnavailable'));
@@ -69,7 +73,7 @@ export function useAppUpdate() {
             label: t('bundleRestart'),
             onClick: () => {
               void Updates.reloadAsync({
-                reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
+                reloadScreenOptions: getOtaReloadScreenOptions(scheme),
               });
             },
           },
@@ -84,10 +88,10 @@ export function useAppUpdate() {
           platform: Platform.OS,
         });
         toast.error(t('bundleUpdateFailed'), { id: pendingToastId });
-      } finally {
-        setIsCheckingBundle(false);
       }
-    })();
+    })().finally(() => {
+      setIsCheckingBundle(false);
+    });
   };
 
   return { openStore, updateBundle, isCheckingBundle };

@@ -1,5 +1,11 @@
 import { useRef } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -44,23 +50,49 @@ interface ActionRowProps {
 }
 
 function ProfileSection({ title, footer, children }: ProfileSectionProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
     <View style={styles.section}>
       {title ? (
-        <Text type='xxs' weight='semibold' style={styles.sectionTitle}>
+        <Text
+          type='xxs'
+          weight='semibold'
+          style={[
+            styles.sectionTitle,
+            { color: theme.color.textSecondary[scheme] },
+          ]}
+        >
           {title}
         </Text>
       ) : null}
-      <View style={styles.sectionBody}>{children}</View>
+      <View
+        style={[
+          styles.sectionBody,
+          { backgroundColor: theme.color.backgroundSecondary[scheme] },
+        ]}
+      >
+        {children}
+      </View>
       {footer ? <View style={styles.sectionFooter}>{footer}</View> : null}
     </View>
   );
 }
 
 function InfoRow({ label, value, valueColor }: InfoRowProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
-    <View style={styles.row}>
-      <Text type='sm' weight='medium' style={styles.rowLabel}>
+    <View
+      style={[styles.row, { borderBottomColor: theme.color.border[scheme] }]}
+    >
+      <Text
+        type='sm'
+        weight='medium'
+        style={[styles.rowLabel, { color: theme.color.text[scheme] }]}
+      >
         {label}
       </Text>
       {typeof value === 'string' || typeof value === 'number' ? (
@@ -83,15 +115,24 @@ function ActionRow({
   title,
   icon,
   onPress,
-  color = theme.colorWhite,
+  color,
   destructive = false,
   showChevron = true,
 }: ActionRowProps) {
-  const iconColor = destructive ? theme.colorRed : color;
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const iconColor = destructive
+    ? theme.color.danger[scheme]
+    : (color ?? theme.color.text[scheme]);
 
   return (
     <PressableArea style={styles.pressableFill} onPress={onPress}>
-      <View style={styles.actionRow}>
+      <View
+        style={[
+          styles.actionRow,
+          { borderBottomColor: theme.color.border[scheme] },
+        ]}
+      >
         <SymbolView name={icon} size={20} tintColor={iconColor} />
         <Text
           type='sm'
@@ -104,7 +145,7 @@ function ActionRow({
           <SymbolView
             name='chevron.right'
             size={18}
-            tintColor={theme.colorGreyAlpha}
+            tintColor={theme.color.textSecondary[scheme]}
           />
         ) : null}
       </View>
@@ -130,6 +171,8 @@ function formatMemberSince(createdAt?: string) {
 
 export function ProfileCard() {
   const { t } = useTranslation(['settings', 'common']);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { user, logout } = useAuthContext();
   const scrollRef = useRef<ScrollView>(null);
 
@@ -161,7 +204,7 @@ export function ProfileCard() {
       {
         text: t('deleteAccountContinue'),
         style: 'destructive',
-        onPress: () => openLinkInBrowser(TWITCH_ACCOUNT_SETTINGS_URL),
+        onPress: () => openLinkInBrowser(TWITCH_ACCOUNT_SETTINGS_URL, scheme),
       },
     ]);
   };
@@ -171,16 +214,24 @@ export function ProfileCard() {
       <ScrollView
         ref={scrollRef}
         style={styles.main}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          styles.scrollContentCentered,
+        ]}
         contentInsetAdjustmentBehavior='automatic'
       >
         <ProfileSection>
           <View style={styles.signInPrompt}>
-            <View style={styles.signInIcon}>
+            <View
+              style={[
+                styles.signInIcon,
+                { backgroundColor: theme.color.backgroundElement[scheme] },
+              ]}
+            >
               <SymbolView
                 name='person'
                 size={30}
-                tintColor={theme.colorGreyHoverAlpha}
+                tintColor={theme.color.textSecondary[scheme]}
               />
             </View>
             <Text type='lg' weight='bold' align='center'>
@@ -198,11 +249,16 @@ export function ProfileCard() {
               style={styles.pressableFill}
               onPress={() => router.push('/auth-sheet')}
             >
-              <View style={styles.primaryButton}>
+              <View
+                style={[
+                  styles.primaryButton,
+                  { backgroundColor: theme.color.accent[scheme] },
+                ]}
+              >
                 <SymbolView
                   name='arrow.right.square'
                   size={18}
-                  tintColor={theme.colorBlack}
+                  tintColor={theme.colorWhite}
                 />
                 <Text type='xs' weight='bold' color='accent' contrast>
                   {t('signInShort')}
@@ -235,18 +291,28 @@ export function ProfileCard() {
           style={styles.pressableFill}
           onPress={() => router.push(`/streams/streamer-profile/${user.login}`)}
         >
-          <View style={styles.identityRow}>
+          <View
+            style={[
+              styles.identityRow,
+              { borderBottomColor: theme.color.border[scheme] },
+            ]}
+          >
             {user.profile_image_url ? (
               <Image
                 source={{ uri: user.profile_image_url }}
                 style={styles.avatar}
               />
             ) : (
-              <View style={styles.avatarPlaceholder}>
+              <View
+                style={[
+                  styles.avatarPlaceholder,
+                  { backgroundColor: theme.color.backgroundElement[scheme] },
+                ]}
+              >
                 <SymbolView
                   name='person'
                   size={26}
-                  tintColor={theme.colorGreyHoverAlpha}
+                  tintColor={theme.color.textSecondary[scheme]}
                 />
               </View>
             )}
@@ -261,7 +327,7 @@ export function ProfileCard() {
             <SymbolView
               name='chevron.right'
               size={18}
-              tintColor={theme.colorGreyAlpha}
+              tintColor={theme.color.textSecondary[scheme]}
             />
           </View>
         </PressableArea>
@@ -277,13 +343,11 @@ export function ProfileCard() {
         <ActionRow
           title={t('myChannel')}
           icon='tv'
-          color={theme.colorWhite}
           onPress={() => router.push(`/streams/streamer-profile/${user.login}`)}
         />
         <ActionRow
           title={t('blockedUsers')}
           icon='person.crop.circle.badge.xmark'
-          color={theme.colorWhite}
           onPress={() => router.push('/preferences/blocked-users')}
         />
       </ProfileSection>
@@ -330,7 +394,6 @@ const styles = StyleSheet.create({
   },
   actionRow: {
     alignItems: 'center',
-    borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space12,
@@ -345,7 +408,6 @@ const styles = StyleSheet.create({
   },
   avatarPlaceholder: {
     alignItems: 'center',
-    backgroundColor: theme.color.backgroundElement.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     height: 52,
@@ -357,7 +419,6 @@ const styles = StyleSheet.create({
   },
   identityRow: {
     alignItems: 'center',
-    borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space12,
@@ -376,7 +437,6 @@ const styles = StyleSheet.create({
   primaryButton: {
     alignItems: 'center',
     alignSelf: 'center',
-    backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius10,
     flexDirection: 'row',
@@ -388,7 +448,6 @@ const styles = StyleSheet.create({
   },
   row: {
     alignItems: 'center',
-    borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space16,
@@ -396,7 +455,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   rowLabel: {
-    color: theme.colorWhite,
     flex: 1,
   },
   rowValue: {
@@ -412,11 +470,14 @@ const styles = StyleSheet.create({
     paddingBottom: theme.space56,
     paddingTop: theme.space16,
   },
+  scrollContentCentered: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
   section: {
     gap: theme.space8,
   },
   sectionBody: {
-    backgroundColor: theme.color.backgroundSecondary.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     marginHorizontal: theme.space16,
@@ -427,7 +488,6 @@ const styles = StyleSheet.create({
     paddingTop: theme.space8,
   },
   sectionTitle: {
-    color: theme.colorGreyAlpha,
     letterSpacing: 0.5,
     paddingHorizontal: theme.space16,
     textTransform: 'uppercase',
@@ -438,7 +498,6 @@ const styles = StyleSheet.create({
   },
   signInIcon: {
     alignItems: 'center',
-    backgroundColor: theme.color.backgroundElement.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     height: 64,

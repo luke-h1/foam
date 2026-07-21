@@ -1,6 +1,8 @@
-// Fixed content-derived detent for the emote/badge preview sheets: the flex:1
-// content has no intrinsic height, so a content detent balloons to full height
-// and clips the title under the notch. Cap at 82% of the screen.
+/**
+ * Fixed content-derived detent for the emote/badge preview sheets: the flex:1
+ * content has no intrinsic height, so a content detent balloons to full height
+ * and clips the title under the notch. Cap at 82% of the screen.
+ */
 export function computeSheetHeight(
   screenHeight: number,
   rowCount: number,

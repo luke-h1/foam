@@ -27,6 +27,21 @@ describe('badgeUrlFromHost', () => {
     );
   });
 
+  test('prefixes https on protocol-relative host urls', () => {
+    const host = makeSevenTvHost('//cdn.7tv.app/badge/badge-id', [
+      makeSevenTvFile('1x', 18, 18),
+      makeSevenTvFile('4x', 72, 72),
+    ]);
+    expect(badgeUrlFromHost(host, 'badge-id')).toBe(
+      'https://cdn.7tv.app/badge/badge-id/4x.png',
+    );
+  });
+
+  test('prefixes https on a protocol-relative bare host url', () => {
+    const host = makeSevenTvHost('//cdn.7tv.app/badge/badge-id', []);
+    expect(badgeUrlFromHost(host)).toBe('https://cdn.7tv.app/badge/badge-id');
+  });
+
   test('falls back to canonical CDN url when host has no files', () => {
     const host = makeSevenTvHost('https://cdn.7tv.app', []);
     expect(badgeUrlFromHost(host, 'badge-id')).toBe(

@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, {
   useAnimatedStyle,
@@ -14,6 +14,7 @@ import { FlashListRef } from '@app/components/FlashList/FlashList';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { StreamListLayoutToggle } from '@app/components/StreamListLayoutToggle/StreamListLayoutToggle';
+import { useBottomTabOverflow } from '@app/components/TabBarBackground/useBottomTabOverflow';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { useStreamProfilePictures } from '@app/hooks/queries/useStreamProfilePictures';
 import { useTopStreamsQuery } from '@app/hooks/queries/useTopStreamsQuery';
@@ -23,10 +24,10 @@ import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import {
-  type Preferences,
   usePreference,
   useUpdatePreferences,
-} from '@app/store/preferenceStore';
+} from '@app/store/preferences/selectors';
+import { type Preferences } from '@app/store/preferences/state';
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
 import type { TwitchStream } from '@app/types/twitch/stream';
@@ -54,6 +55,8 @@ const TopStreamsListHeader = memo(function TopStreamsListHeader({
 
 export function TopStreamsScreen() {
   const { t } = useTranslation('stream');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const streamListLayout = usePreference('streamListLayout');
   const updatePreferences = useUpdatePreferences();
@@ -127,7 +130,10 @@ export function TopStreamsScreen() {
       <ScrollView
         contentInsetAdjustmentBehavior='automatic'
         scrollEnabled={false}
-        style={styles.container}
+        style={[
+          styles.container,
+          { backgroundColor: theme.color.background[scheme] },
+        ]}
       >
         <LiveStreamCardSkeleton layout={streamListLayout} />
         <LiveStreamCardSkeleton layout={streamListLayout} />
@@ -140,7 +146,12 @@ export function TopStreamsScreen() {
 
   if (!streams || !streams.pages) {
     return (
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: theme.color.background[scheme] },
+        ]}
+      >
         {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
         <EmptyState
           content={t('noTopStreamsFound')}
@@ -152,7 +163,12 @@ export function TopStreamsScreen() {
 
   if (allStreams.length === 0) {
     return (
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: theme.color.background[scheme] },
+        ]}
+      >
         {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
         <EmptyState
           content={t('noTopStreamsFound')}
@@ -196,11 +212,18 @@ function TopStreamsList({
   streamListLayout: StreamListLayout;
 }) {
   const listFadeStyle = useLayoutSwitchFade(streamListLayout);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const tabBarOverflow = useBottomTabOverflow();
 
   return (
     <Animated.View
       testID='top-streams-list'
-      style={[styles.container, listFadeStyle]}
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+        listFadeStyle,
+      ]}
     >
       <AnimatedFlashList
         ref={listRef}
@@ -210,7 +233,10 @@ function TopStreamsList({
         keyExtractor={item => item.id}
         getItemType={() => 'stream-item'}
         drawDistance={500}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingBottom: tabBarOverflow + theme.space20 },
+        ]}
         ListHeaderComponent={listHeader}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={debouncedHandleLoadMore}
@@ -241,7 +267,6 @@ function useLayoutSwitchFade(streamListLayout: StreamListLayout) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   listContent: {

@@ -1,6 +1,9 @@
 import {
   createContext,
+  Dispatch,
   ReactNode,
+  RefObject,
+  SetStateAction,
   use,
   useCallback,
   useEffect,
@@ -39,9 +42,6 @@ import {
 import { parseTwitchAuthTokenFromResponse } from '@app/utils/authentication/twitchAuth';
 import { logger } from '@app/utils/logger';
 
-/**
- * Prefetch initial data for faster startup
- */
 const prefetchInitialData = (userId?: string) => {
   if (userId) {
     void queryClient.prefetchQuery(followedStreamsQueryOptions(userId));
@@ -57,8 +57,8 @@ const queueInitialDataPrefetch = (userId?: string) => {
 };
 
 export const storageKeys = {
-  anon: 'V1_foam-anon', // anon token
-  user: 'V1_foam-user', // logged in token
+  anon: 'V1_foam-anon',
+  user: 'V1_foam-user',
 } as const;
 
 const AUTH_STARTUP_TIMEOUT_MS = 12_000;
@@ -114,8 +114,8 @@ function applyRefreshedUserToken(
 
 async function refreshCurrentUserTokenForState(
   currentAuthState: AuthState,
-  setState: React.Dispatch<React.SetStateAction<State>>,
-  inFlightRef: React.MutableRefObject<boolean>,
+  setState: Dispatch<SetStateAction<State>>,
+  inFlightRef: RefObject<boolean>,
   reason: string,
 ): Promise<boolean> {
   if (inFlightRef.current) {
@@ -149,6 +149,15 @@ async function refreshCurrentUserTokenForState(
   } finally {
     inFlightRef.current = false;
   }
+}
+
+function requireAnonAccessToken(
+  result: DefaultTokenResponse | undefined,
+): DefaultTokenResponse {
+  if (!result?.access_token) {
+    throw new Error('auth proxy returned no anon access token');
+  }
+  return result;
 }
 
 export const AuthContext = createContext<AuthContextState | undefined>(
@@ -243,14 +252,12 @@ function useAuthContextValue({
         return;
       }
 
-      if (!result?.access_token) {
-        throw new Error('auth proxy returned no anon access token');
-      }
+      const validResult = requireAnonAccessToken(result);
 
       const token = addExpirationTimestamp({
-        accessToken: result.access_token,
-        expiresIn: result.expires_in,
-        tokenType: result.token_type,
+        accessToken: validResult.access_token,
+        expiresIn: validResult.expires_in,
+        tokenType: validResult.token_type,
       });
 
       setState({
@@ -263,7 +270,7 @@ function useAuthContextValue({
       });
 
       await SecureStore.setItemAsync(storageKeys.anon, JSON.stringify(token));
-      twitchApi.setAuthToken(result.access_token);
+      twitchApi.setAuthToken(validResult.access_token);
 
       queueInitialDataPrefetch();
     } catch (e) {
@@ -295,11 +302,13 @@ function useAuthContextValue({
       return;
     }
 
-    // Implicit-grant tokens have no refresh token and Twitch omits expires_in,
-    // so our local expiresAt can be a bogus 1-hour window even though the token
-    // is valid for weeks. Don't clear on that alone — try a refresh, and when
-    // none is available fall through to Twitch's validate endpoint below as the
-    // source of truth.
+    /**
+     * Implicit-grant tokens have no refresh token and Twitch omits expires_in,
+     * so our local expiresAt can be a bogus 1-hour window even though the token
+     * is valid for weeks. Don't clear on that alone - try a refresh, and when
+     * none is available fall through to Twitch's validate endpoint below as the
+     * source of truth.
+     */
     if (isTokenExpired(twitchToken)) {
       const refreshedToken = await refreshStoredUserToken(
         twitchToken,
@@ -419,11 +428,13 @@ function useAuthContextValue({
     });
 
     try {
-      // Magic-link / proxy-issued tokens are minted under a different Twitch
-      // client id than EXPO_PUBLIC_TWITCH_CLIENT_ID. Helix rejects /users when
-      // the Client-Id header doesn't match the token's client, so validate first
-      // (it syncs the header to the token's client id) before getUserInfo, the
-      // same order doAuth uses on restart.
+      /**
+       * Magic-link / proxy-issued tokens are minted under a different Twitch
+       * client id than EXPO_PUBLIC_TWITCH_CLIENT_ID. Helix rejects /users when
+       * the Client-Id header doesn't match the token's client, so validate first
+       * (it syncs the header to the token's client id) before getUserInfo, the
+       * same order doAuth uses on restart.
+       */
       await twitchService.validateToken(token.accessToken);
       const u = await twitchService.getUserInfo(token.accessToken);
       // Set token before setUser so any enabled queries (e.g. followed streams) use the correct token
@@ -617,24 +628,23 @@ function useAuthContextValue({
     };
   }, [refreshCurrentUserTokenRef, state.authState]);
 
-  // The ref-backed callbacks are identity-stable so the context value only
-  // changes when auth state actually changes — this provider wraps the whole
-  // app and self-updates on a refresh poll and app foreground, so an
-  // unmemoized value re-renders every consumer on each of those ticks.
   const loginWithTwitchCallback = useCallback(
     (...args: Parameters<AuthContextState['loginWithTwitch']>) =>
       loginWithTwitchRef.current(...args),
     [loginWithTwitchRef],
   );
+
   const populateAuthStateCallback = useCallback(
     () => populateAuthStateRef.current(),
     [populateAuthStateRef],
   );
+
   const fetchAnonTokenCallback = useCallback(
     (testResult?: DefaultTokenResponse) =>
       fetchAnonTokenRef.current(testResult),
     [fetchAnonTokenRef],
   );
+
   const logout = useCallback(async () => {
     await Promise.all([
       SecureStore.deleteItemAsync(storageKeys.user),

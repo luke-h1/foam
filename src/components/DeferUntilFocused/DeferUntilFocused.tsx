@@ -7,9 +7,11 @@ interface DeferUntilFocusedProps {
   fallback?: ReactNode;
 }
 
-// Native tabs mount every tab eagerly. Wrap a tab root in this so its
-// heavy subtree is only mounted the first time the tab gains focus, then
-// stays mounted (so subsequent tab switches are instant and state persists).
+/**
+ * Native tabs mount every tab eagerly. Wrap a tab root in this so its
+ * heavy subtree is only mounted the first time the tab gains focus, then
+ * stays mounted (so subsequent tab switches are instant and state persists).
+ */
 export function DeferUntilFocused({
   children,
   fallback = null,

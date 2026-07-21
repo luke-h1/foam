@@ -1,6 +1,6 @@
 import { batch } from '@legendapp/state';
 
-import { getPreferences } from '@app/store/preferenceStore';
+import { getPreferences } from '@app/store/preferences/state';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 import { clearMentionLoginIndex } from '@app/utils/chat/resolveMentionLogin/clearMentionLoginIndex';
@@ -35,12 +35,14 @@ const MAX_RECENT_MESSAGES = 80;
 export const getMaxChatMessages = (): number =>
   getPreferences().chatScrollback ?? DEFAULT_MAX_CHAT_MESSAGES;
 
-// Trimming the front of the window shifts every row index. While the user is
-// scrolled up, LegendList runs native maintainVisibleContentPosition
-// (index-anchored at minIndexForVisible: 0); a front-trim re-anchors it to a
-// now-different index 0 and yanks the list to the top. So while paused we stop
-// front-trimming and let the window grow to a bounded ceiling, then resume (and
-// catch up) once the user returns to the bottom where trimming is safe.
+/**
+ * Trimming the front of the window shifts every row index. While the user is
+ * scrolled up, LegendList runs native maintainVisibleContentPosition
+ * (index-anchored at minIndexForVisible: 0); a front-trim re-anchors it to a
+ * now-different index 0 and yanks the list to the top. So while paused we stop
+ * front-trimming and let the window grow to a bounded ceiling, then resume (and
+ * catch up) once the user returns to the bottom where trimming is safe.
+ */
 const SUSPENDED_FRONT_TRIM_HEADROOM = 350;
 let frontTrimSuspended = false;
 
@@ -52,10 +54,12 @@ const getEffectiveMaxChatMessages = (): number =>
   getMaxChatMessages() +
   (frontTrimSuspended ? SUSPENDED_FRONT_TRIM_HEADROOM : 0);
 const MAX_RECENT_MESSAGE_CHANNELS = 10;
-// Each sync re-serializes recentMessagesByChannel to MMKV, which showed up
-// as a top JS hotspot in busy chats (issue #594). Recent messages are a
-// re-entry nicety, so a long defer is fine; moderation/clear paths still
-// flush immediately.
+/**
+ * Each sync re-serializes recentMessagesByChannel to MMKV, which showed up
+ * as a top JS hotspot in busy chats (issue #594). Recent messages are a
+ * re-entry nicety, so a long defer is fine; moderation/clear paths still
+ * flush immediately.
+ */
 export const RECENT_MESSAGES_SYNC_DELAY_MS = 15_000;
 
 let recentMessagesSyncTimer: ReturnType<typeof setTimeout> | null = null;
@@ -342,9 +346,11 @@ const syncRecentMessagesForCurrentChannel = (
     return;
   }
 
-  // Hold the reference only - persistRecentMessagesForChannel slices to
-  // MAX_RECENT_MESSAGES at flush time, so slicing here on every deferred
-  // sync (~10/s under load) would be redundant allocation.
+  /**
+   * Hold the reference only - persistRecentMessagesForChannel slices to
+   * MAX_RECENT_MESSAGES at flush time, so slicing here on every deferred
+   * sync (~10/s under load) would be redundant allocation.
+   */
   pendingRecentMessagesChannelId = currentChannelId;
   pendingRecentMessages = nextMessages;
 
@@ -406,10 +412,12 @@ const shiftMessageIndexes = (offset: number) => {
   });
 };
 
-// Once the window is full, every flush trims from the front. A full
-// rebuildMessageIndexes there re-ran the mention/color registrations for the
-// whole window (iterating every part of every message) ~10x/s on busy chats;
-// dropping the evicted entries and shifting the survivors is pure Map work.
+/**
+ * Once the window is full, every flush trims from the front. A full
+ * rebuildMessageIndexes there re-ran the mention/color registrations for the
+ * whole window (iterating every part of every message) ~10x/s on busy chats;
+ * dropping the evicted entries and shifting the survivors is pure Map work.
+ */
 const indexAppendedMessages = (
   storedMessages: AnyChatMessageType[],
   appendStartIndex: number,
@@ -553,9 +561,11 @@ export const addMessage = (message?: AnyChatMessageType) => {
   }
 
   chatStore$.messages.set(nextMessages);
-  // Defer the MMKV persist (matching addMessages) so a single message never
-  // triggers a synchronous full-store stringify+write of recentMessagesByChannel
-  // on the hot path; the recent-messages cache is only a warm-start aid.
+  /**
+   * Defer the MMKV persist (matching addMessages) so a single message never
+   * triggers a synchronous full-store stringify+write of recentMessagesByChannel
+   * on the hot path; the recent-messages cache is only a warm-start aid.
+   */
   syncRecentMessagesForCurrentChannel(nextMessages, 'defer');
 };
 

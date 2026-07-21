@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
 import { theme } from '@app/styles/themes';
@@ -8,18 +8,38 @@ export function LiveStreamCardSkeleton({
 }: {
   layout?: 'compact' | 'media';
 }) {
-  const isMediaLayout = layout === 'media';
-  const imageStyle = isMediaLayout
-    ? { ...styles.imageSkeleton, ...styles.imageMedia }
-    : styles.imageSkeleton;
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
+  if (layout === 'media') {
+    return (
+      <View style={styles.mediaContainer} testID='stream-skeleton'>
+        <Skeleton style={styles.mediaImageSkeleton} />
+        <View style={styles.mediaDetailsRow}>
+          <Skeleton style={styles.mediaAvatarSkeleton} />
+          <View style={styles.mediaTextColumn}>
+            <Skeleton style={styles.usernameSkeleton} />
+            <Skeleton style={styles.titleSkeleton} />
+            <Skeleton style={styles.categoryLineSkeleton} />
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View
-      style={[styles.container, isMediaLayout && styles.containerMedia]}
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.color.surface[scheme],
+          borderColor: theme.color.border[scheme],
+        },
+      ]}
       testID='stream-skeleton'
     >
       <View style={styles.imageContainer}>
-        <Skeleton style={imageStyle} />
+        <Skeleton style={styles.imageSkeleton} />
       </View>
 
       <View style={styles.details}>
@@ -48,26 +68,21 @@ const styles = StyleSheet.create({
   },
   container: {
     alignItems: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.035)',
-    borderColor: 'rgba(255,255,255,0.13)',
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius10,
-    borderWidth: 1,
+    borderRadius: theme.borderRadius16,
+    borderWidth: StyleSheet.hairlineWidth,
     columnGap: theme.space12,
     flexDirection: 'row',
     marginHorizontal: theme.space16,
-    marginVertical: 5,
+    marginVertical: theme.space4,
     minHeight: 112,
     overflow: 'hidden',
-    paddingHorizontal: theme.space12,
-    paddingVertical: 10,
-  },
-  containerMedia: {
-    minHeight: 124,
+    paddingHorizontal: theme.space8,
+    paddingVertical: theme.space8,
   },
   details: {
     flex: 1,
-    gap: 6,
+    gap: theme.space8,
     justifyContent: 'flex-start',
     minHeight: 76,
     minWidth: 0,
@@ -80,10 +95,6 @@ const styles = StyleSheet.create({
   imageContainer: {
     position: 'relative',
   },
-  imageMedia: {
-    height: 98,
-    width: 164,
-  },
   imageSkeleton: {
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius6,
@@ -94,6 +105,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: theme.space8,
+  },
+  mediaAvatarSkeleton: {
+    borderRadius: theme.borderRadius999,
+    height: 44,
+    width: 44,
+  },
+  mediaContainer: {
+    marginHorizontal: theme.space16,
+    marginVertical: theme.space12,
+    paddingVertical: theme.space4,
+  },
+  mediaDetailsRow: {
+    flexDirection: 'row',
+    gap: theme.space12,
+    marginTop: theme.space12,
+  },
+  mediaImageSkeleton: {
+    aspectRatio: 16 / 9,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius8,
+    width: '100%',
+  },
+  mediaTextColumn: {
+    flex: 1,
+    gap: theme.space8,
+    minWidth: 0,
   },
   metaDividerSkeleton: {
     borderRadius: theme.borderRadius999,

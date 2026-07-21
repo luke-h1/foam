@@ -1,9 +1,10 @@
 jest.mock('@app/styles/themes', () => ({
   theme: {
-    colorViolet: '#9147FF',
-    colorOrange: '#FF6905',
-    colorPrimary: '#00F593',
     color: {
+      violet: { dark: '#9147FF' },
+      orange: { dark: '#FF6905' },
+      blue: { dark: '#1E90FF' },
+      accent: { dark: '#00F593' },
       notice: {
         announcement: '#EB0400',
         muted: '#ADADB8',
@@ -27,6 +28,7 @@ describe('chatNoticeAccents', () => {
         charity: '#00AD03',
         ritual: '#9147FF',
         firstMessage: '#9147FF',
+        returningChatter: '#1E90FF',
         viewerMilestone: '#9147FF',
         raid: '#FF6905',
         replyToYou: '#EB0400',

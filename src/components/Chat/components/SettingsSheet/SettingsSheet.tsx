@@ -1,5 +1,5 @@
 import { memo, useCallback, useRef } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -16,13 +16,11 @@ import { Text } from '@app/components/ui/Text/Text';
 import {
   usePreference,
   useUpdatePreferences,
-} from '@app/store/preferenceStore';
+} from '@app/store/preferences/selectors';
 import { requestLiveSync } from '@app/store/stream/liveSyncBus';
 import { theme } from '@app/styles/themes';
 
 import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
-
-const ICON_TINT = theme.color.textSecondary.dark;
 
 export interface SettingsSheetProps {
   isPresented: boolean;
@@ -48,6 +46,10 @@ const SettingsSheetComponent = ({
   onReconnect,
 }: SettingsSheetProps) => {
   const { t } = useTranslation(['chat', 'common']);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const iconTint = theme.color.textSecondary[scheme];
+  const sectionCardColor = theme.color.surfaceNeutral[scheme];
   const chatDensity = usePreference('chatDensity');
   const highlightOwnMentions = usePreference('highlightOwnMentions');
   const showInlineReplyContext = usePreference('showInlineReplyContext');
@@ -119,7 +121,12 @@ const SettingsSheetComponent = ({
       testID='chat-settings-sheet-modal'
     >
       <View style={styles.container} testID='chat-settings-sheet'>
-        <View style={styles.header}>
+        <View
+          style={[
+            styles.header,
+            { borderBottomColor: theme.color.border[scheme] },
+          ]}
+        >
           <Text style={styles.headerTitle} weight='semibold'>
             {t('settingsSheet.title')}
           </Text>
@@ -135,14 +142,14 @@ const SettingsSheetComponent = ({
         >
           <SettingsSection
             title={t('settingsSheet.sectionAppearance')}
-            cardColor={theme.color.surfaceNeutral.dark}
+            cardColor={sectionCardColor}
           >
             <SettingsLinkRow
               title={t('settingsSheet.density')}
               icon={{
                 icon: 'text.alignleft',
                 androidIcon: 'format_align_left',
-                color: ICON_TINT,
+                color: iconTint,
               }}
               value={
                 chatDensity === 'compact'
@@ -156,7 +163,7 @@ const SettingsSheetComponent = ({
               icon={{
                 icon: 'clock',
                 androidIcon: 'schedule',
-                color: ICON_TINT,
+                color: iconTint,
               }}
               value={showTimestamps}
               onValueChange={value =>
@@ -168,7 +175,7 @@ const SettingsSheetComponent = ({
               icon={{
                 icon: 'at',
                 androidIcon: 'alternate_email',
-                color: ICON_TINT,
+                color: iconTint,
               }}
               value={highlightOwnMentions}
               onValueChange={value =>
@@ -180,7 +187,7 @@ const SettingsSheetComponent = ({
               icon={{
                 icon: 'arrowshape.turn.up.left',
                 androidIcon: 'reply',
-                color: ICON_TINT,
+                color: iconTint,
               }}
               value={showInlineReplyContext}
               onValueChange={value =>
@@ -192,7 +199,7 @@ const SettingsSheetComponent = ({
               icon={{
                 icon: 'arrow.down.circle',
                 androidIcon: 'arrow_circle_down',
-                color: ICON_TINT,
+                color: iconTint,
               }}
               value={showUnreadJumpPill}
               onValueChange={value =>
@@ -204,7 +211,7 @@ const SettingsSheetComponent = ({
               icon={{
                 icon: 'person.badge.plus',
                 androidIcon: 'group_add',
-                color: ICON_TINT,
+                color: iconTint,
               }}
               value={showJoinPartMessages}
               onValueChange={value =>
@@ -216,7 +223,7 @@ const SettingsSheetComponent = ({
           {hasActions ? (
             <SettingsSection
               title={t('settingsSheet.sectionActions')}
-              cardColor={theme.color.surfaceNeutral.dark}
+              cardColor={sectionCardColor}
             >
               {onOpenChatters ? (
                 <SettingsLinkRow
@@ -224,7 +231,7 @@ const SettingsSheetComponent = ({
                   icon={{
                     icon: 'person.2',
                     androidIcon: 'group',
-                    color: ICON_TINT,
+                    color: iconTint,
                   }}
                   onPress={onOpenChatters}
                 />
@@ -235,7 +242,7 @@ const SettingsSheetComponent = ({
                   icon={{
                     icon: 'text.bubble',
                     androidIcon: 'chat_bubble',
-                    color: ICON_TINT,
+                    color: iconTint,
                   }}
                   onPress={handleOpenSavedPhrases}
                 />
@@ -246,7 +253,7 @@ const SettingsSheetComponent = ({
                   icon={{
                     icon: 'arrow.clockwise',
                     androidIcon: 'refresh',
-                    color: ICON_TINT,
+                    color: iconTint,
                   }}
                   onPress={handleRefetchEmotes}
                 />
@@ -256,7 +263,7 @@ const SettingsSheetComponent = ({
 
           <SettingsSection
             title={t('settingsSheet.sectionConnection')}
-            cardColor={theme.color.surfaceNeutral.dark}
+            cardColor={sectionCardColor}
           >
             <SettingsLinkRow
               title={t('settingsSheet.syncToLive')}
@@ -264,7 +271,7 @@ const SettingsSheetComponent = ({
               icon={{
                 icon: 'forward.end.fill',
                 androidIcon: 'skip_next',
-                color: ICON_TINT,
+                color: iconTint,
               }}
               onPress={handleSyncToLive}
             />
@@ -274,7 +281,7 @@ const SettingsSheetComponent = ({
                 icon={{
                   icon: 'wifi',
                   androidIcon: 'wifi',
-                  color: ICON_TINT,
+                  color: iconTint,
                 }}
                 onPress={handleReconnect}
               />
@@ -284,14 +291,14 @@ const SettingsSheetComponent = ({
           {hasStorage ? (
             <SettingsSection
               title={t('settingsSheet.sectionStorage')}
-              cardColor={theme.color.surfaceNeutral.dark}
+              cardColor={sectionCardColor}
             >
               <SettingsLinkRow
                 title={t('settingsSheet.clearCache')}
                 icon={{
                   icon: 'trash',
                   androidIcon: 'delete',
-                  color: theme.colorRed,
+                  color: theme.color.danger[scheme],
                 }}
                 onPress={handleClearCache}
                 danger
@@ -319,7 +326,6 @@ const styles = StyleSheet.create({
     paddingTop: theme.space16,
   },
   header: {
-    borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingBottom: theme.space12,
     paddingHorizontal: theme.space20,

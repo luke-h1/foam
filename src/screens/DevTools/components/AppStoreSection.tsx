@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useColorScheme } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import * as AC from '@bacons/apple-colors';
@@ -11,6 +12,8 @@ import { getStoreUrlAsync } from '../util/getStoreUrlAsync';
 
 export function AppStoreSection() {
   const { t } = useTranslation('devTools');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const [canOpenStore, setCanOpenStore] = useState<boolean>(true);
   if (process.env.EXPO_OS === 'web') {
     return null;
@@ -27,7 +30,7 @@ export function AppStoreSection() {
           const appStoreLink = await getStoreUrlAsync();
           setCanOpenStore(!!appStoreLink);
           if (appStoreLink) {
-            openLinkInBrowser(appStoreLink);
+            openLinkInBrowser(appStoreLink, scheme);
           }
         }}
         style={{ color: AC.systemBlue }}

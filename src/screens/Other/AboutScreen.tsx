@@ -1,5 +1,11 @@
 import { useRef } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -28,6 +34,8 @@ const appIconProduction = require('../../../assets/app-icon/app-icon-production.
 
 export function AboutScreen() {
   const { t } = useTranslation('about');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const scrollRef = useRef<ScrollView>(null);
   const otaLabel = Updates.updateId ?? t('embedded');
 
@@ -69,12 +77,14 @@ export function AboutScreen() {
             <Button
               label={t('website')}
               systemImage='globe'
-              onPress={() => openLinkInBrowser('https://foam-app.com')}
+              onPress={() => openLinkInBrowser('https://foam-app.com', scheme)}
             />
             <Button
               label={t('status')}
               systemImage='checkmark.shield'
-              onPress={() => openLinkInBrowser('https://status.foam-app.com')}
+              onPress={() =>
+                openLinkInBrowser('https://status.foam-app.com', scheme)
+              }
             />
           </Section>
 
@@ -99,7 +109,12 @@ export function AboutScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <ScrollView
         ref={scrollRef}
         style={styles.main}
@@ -136,13 +151,18 @@ export function AboutScreen() {
         <SettingsSection title={t('resources')}>
           <SettingsLinkRow
             title={t('website')}
-            icon={{ icon: 'globe', color: theme.colorViolet }}
-            onPress={() => openLinkInBrowser('https://foam-app.com')}
+            icon={{ icon: 'globe', color: theme.color.violet[scheme] }}
+            onPress={() => openLinkInBrowser('https://foam-app.com', scheme)}
           />
           <SettingsLinkRow
             title={t('status')}
-            icon={{ icon: 'checkmark.shield', color: theme.colorOrange }}
-            onPress={() => openLinkInBrowser('https://status.foam-app.com')}
+            icon={{
+              icon: 'checkmark.shield',
+              color: theme.color.orange[scheme],
+            }}
+            onPress={() =>
+              openLinkInBrowser('https://status.foam-app.com', scheme)
+            }
           />
         </SettingsSection>
 
@@ -170,7 +190,6 @@ const styles = StyleSheet.create({
     width: 56,
   },
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   identityRow: {

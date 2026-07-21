@@ -1,5 +1,10 @@
 import { memo } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
@@ -9,7 +14,7 @@ import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/Cos
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { lightenColor } from '@app/utils/color/lightenColor';
+import { cachedLighten } from '@app/utils/chat/resolveCachedSenderColor/cachedLighten';
 import {
   createHitslop,
   createHorizontalHitslop,
@@ -51,6 +56,8 @@ export const ChatInputSection = memo(
     inputRef,
   }: ChatInputSectionProps) => {
     const { isAuthenticated, isSending } = connection;
+    const colorScheme = useColorScheme();
+    const scheme = colorScheme === 'light' ? 'light' : 'dark';
     const { composerAnimatedStyle, composerGesture } =
       useComposerDismissGesture();
 
@@ -75,9 +82,20 @@ export const ChatInputSection = memo(
           <Animated.View
             entering={replyPreviewEntering}
             exiting={replyPreviewExiting}
-            style={styles.replyPreview}
+            style={[
+              styles.replyPreview,
+              {
+                backgroundColor: theme.color.backgroundAltAlpha[scheme],
+                borderBottomColor: theme.color.border[scheme],
+              },
+            ]}
           >
-            <View style={styles.replyIndicator} />
+            <View
+              style={[
+                styles.replyIndicator,
+                { backgroundColor: theme.color.violet[scheme] },
+              ]}
+            />
             <View style={styles.replyContent}>
               <View style={styles.replyLabelRow}>
                 <Text style={styles.replyLabel}>
@@ -89,7 +107,7 @@ export const ChatInputSection = memo(
                   showColon={false}
                   usernameTextStyle={styles.replyPaintedUsername}
                   fallbackColor={
-                    replyTo.color ? lightenColor(replyTo.color) : undefined
+                    replyTo.color ? cachedLighten(replyTo.color) : undefined
                   }
                 />
               </View>
@@ -105,22 +123,39 @@ export const ChatInputSection = memo(
               ) : null}
             </View>
             <Button
-              style={styles.replyDismissButton}
+              style={[
+                styles.replyDismissButton,
+                {
+                  backgroundColor: theme.color.pressedOverlay[scheme],
+                  borderColor: theme.color.border[scheme],
+                },
+              ]}
               onPress={onClearReply}
               hitSlop={createHitslop(20)}
             >
               <SymbolView
                 name='xmark'
                 size={18}
-                tintColor={theme.colorGreyHoverAlpha}
+                tintColor={theme.color.textSecondary[scheme]}
               />
             </Button>
           </Animated.View>
         )}
 
         <GestureDetector gesture={composerGesture}>
-          <Animated.View style={[styles.composerShell, composerAnimatedStyle]}>
-            <View style={styles.swipeHandle} />
+          <Animated.View
+            style={[
+              styles.composerShell,
+              { backgroundColor: theme.color.surfaceElevated[scheme] },
+              composerAnimatedStyle,
+            ]}
+          >
+            <View
+              style={[
+                styles.swipeHandle,
+                { backgroundColor: theme.color.textSecondary[scheme] },
+              ]}
+            />
             <View style={styles.inputRow}>
               <View style={styles.inputContainer}>
                 <ChatComposer
@@ -138,7 +173,13 @@ export const ChatInputSection = memo(
               {onAttachImage ? (
                 <Button
                   label={t('composer.attachImage')}
-                  style={styles.actionButton}
+                  style={[
+                    styles.actionButton,
+                    {
+                      backgroundColor: theme.color.pressedOverlay[scheme],
+                      borderColor: theme.color.border[scheme],
+                    },
+                  ]}
                   onPress={onAttachImage}
                   disabled={isUploadingImage || !isAuthenticated}
                   hitSlop={createHorizontalHitslop(COMPOSER_CONTROL_SIZE)}
@@ -146,27 +187,33 @@ export const ChatInputSection = memo(
                   {isUploadingImage ? (
                     <ActivityIndicator
                       size='small'
-                      color={theme.colorGreyHoverAlpha}
+                      color={theme.color.textSecondary[scheme]}
                     />
                   ) : (
                     <SymbolView
                       name='photo'
                       size={20}
-                      tintColor={theme.colorGreyHoverAlpha}
+                      tintColor={theme.color.textSecondary[scheme]}
                     />
                   )}
                 </Button>
               ) : null}
 
               <Button
-                style={styles.actionButton}
+                style={[
+                  styles.actionButton,
+                  {
+                    backgroundColor: theme.color.pressedOverlay[scheme],
+                    borderColor: theme.color.border[scheme],
+                  },
+                ]}
                 onPress={onOpenSettingsSheet}
                 hitSlop={createHorizontalHitslop(COMPOSER_CONTROL_SIZE)}
               >
                 <SymbolView
                   name='gearshape'
                   size={22}
-                  tintColor={theme.colorGreyHoverAlpha}
+                  tintColor={theme.color.textSecondary[scheme]}
                 />
               </Button>
             </View>
@@ -180,8 +227,6 @@ export const ChatInputSection = memo(
 const styles = StyleSheet.create({
   actionButton: {
     alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
     borderRadius: COMPOSER_CONTROL_RADIUS,
     borderWidth: 1,
     height: COMPOSER_CONTROL_SIZE,
@@ -189,7 +234,6 @@ const styles = StyleSheet.create({
     width: COMPOSER_CONTROL_SIZE,
   },
   composerShell: {
-    backgroundColor: theme.color.surfaceElevated.dark,
     paddingBottom: theme.space8,
     paddingHorizontal: theme.space16,
   },
@@ -208,9 +252,7 @@ const styles = StyleSheet.create({
   },
   replyDismissButton: {
     alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
-    borderRadius: 18,
+    borderRadius: theme.borderRadius999,
     borderWidth: 1,
     height: 36,
     justifyContent: 'center',
@@ -218,8 +260,7 @@ const styles = StyleSheet.create({
     width: 36,
   },
   replyIndicator: {
-    backgroundColor: theme.colorViolet,
-    borderRadius: 2,
+    borderRadius: theme.borderRadius4,
     height: '100%',
     marginRight: theme.space12,
     minHeight: 32,
@@ -245,8 +286,6 @@ const styles = StyleSheet.create({
   },
   replyPreview: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.darkAltAlpha,
-    borderBottomColor: theme.color.border.dark,
     borderBottomWidth: 1,
     flexDirection: 'row',
     paddingHorizontal: theme.space16,
@@ -254,7 +293,6 @@ const styles = StyleSheet.create({
   },
   swipeHandle: {
     alignSelf: 'center',
-    backgroundColor: theme.colorGreyHoverAlpha,
     borderCurve: 'continuous',
     borderRadius: 999,
     height: 4,

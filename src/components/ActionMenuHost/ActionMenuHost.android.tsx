@@ -1,5 +1,5 @@
 import { Fragment, useSyncExternalStore } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useColorScheme } from 'react-native';
 
 import {
   Column,
@@ -25,6 +25,8 @@ import {
 import { theme } from '@app/styles/themes';
 
 export function ActionMenuHost() {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const options = useSyncExternalStore(
     subscribeActionMenu,
     getActionMenuState,
@@ -37,13 +39,13 @@ export function ActionMenuHost() {
 
   return (
     <Host
-      colorScheme='dark'
+      colorScheme={scheme}
       style={StyleSheet.absoluteFill}
       pointerEvents='box-none'
     >
       <ModalBottomSheet
-        containerColor={theme.color.menu.background}
-        contentColor={theme.color.text.dark}
+        containerColor={theme.color.menu.background[scheme]}
+        contentColor={theme.color.text[scheme]}
         onDismissRequest={dismissActionMenu}
         showDragHandle
         skipPartiallyExpanded
@@ -54,7 +56,7 @@ export function ActionMenuHost() {
           verticalArrangement={{ spacedBy: 8 }}
         >
           <Text
-            color={theme.color.textSecondary.dark}
+            color={theme.color.textSecondary[scheme]}
             style={{ typography: 'titleSmall', textAlign: 'center' }}
           >
             {options.title}
@@ -63,12 +65,12 @@ export function ActionMenuHost() {
             {options.actions.map((action, index) => (
               <Fragment key={action.label}>
                 {index > 0 ? (
-                  <HorizontalDivider color={theme.color.menu.border} />
+                  <HorizontalDivider color={theme.color.menu.border[scheme]} />
                 ) : null}
                 <ListItem
                   colors={{
-                    containerColor: theme.color.menu.cardActive,
-                    contentColor: theme.color.text.dark,
+                    containerColor: theme.color.menu.cardActive[scheme],
+                    contentColor: theme.color.text[scheme],
                   }}
                   modifiers={[
                     clickable(() => {
@@ -79,7 +81,7 @@ export function ActionMenuHost() {
                 >
                   <ListItem.HeadlineContent>
                     <Text
-                      color={theme.color.text.dark}
+                      color={theme.color.text[scheme]}
                       style={{ typography: 'titleMedium', fontWeight: '600' }}
                     >
                       {action.label}
@@ -90,12 +92,12 @@ export function ActionMenuHost() {
             ))}
           </Column>
           <TextButton
-            colors={{ contentColor: theme.color.textSecondary.dark }}
+            colors={{ contentColor: theme.color.textSecondary[scheme] }}
             modifiers={[fillMaxWidth(), paddingAll(4)]}
             onClick={dismissActionMenu}
           >
             <Text
-              color={theme.color.textSecondary.dark}
+              color={theme.color.textSecondary[scheme]}
               style={{ typography: 'titleMedium', fontWeight: '600' }}
             >
               {options.cancelLabel}

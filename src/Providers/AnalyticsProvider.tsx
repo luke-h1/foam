@@ -8,7 +8,7 @@ import {
 } from 'vexo-analytics';
 
 import { useAuthContext } from '@app/context/AuthContext';
-import { usePreference } from '@app/store/preferenceStore';
+import { usePreference } from '@app/store/preferences/selectors';
 import { logger } from '@app/utils/logger';
 
 const vexoApiKey = process.env.EXPO_PUBLIC_VEXO_API_KEY;

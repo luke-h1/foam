@@ -9,10 +9,10 @@ import type { TwitchStream } from '@app/types/twitch/stream';
  * Batch-resolves profile pictures for a list of streams and returns the
  * streams enriched with `profilePicture`. The streams endpoints don't include
  * avatars, and fetching one `/users` request per visible card is an N+1
- * against the Helix rate limit — `getUsersById` batches 100 ids per request.
+ * against the Helix rate limit - `getUsersById` batches 100 ids per request.
  *
  * `streams` typically grows as an infinite query appends pages, so ids
- * already resolved are cached here and excluded from the next lookup —
+ * already resolved are cached here and excluded from the next lookup -
  * otherwise each appended page would key a brand new query off the whole
  * accumulated list and re-fetch every previously seen `user_id`.
  *
@@ -38,8 +38,7 @@ export function useStreamProfilePictures(
         missing.add(stream.user_id);
       }
     }
-    // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks Array.prototype.toSorted (throws "undefined is not a function"); copy-then-sort is the safe equivalent
-    return [...missing].sort();
+    return [...missing].toSorted();
   }, [streams, enabled, profileImageById]);
 
   const { data: users } = useQuery({

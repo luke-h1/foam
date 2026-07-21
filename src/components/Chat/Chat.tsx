@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useRef } from 'react';
-import { View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -10,7 +10,7 @@ import { CachedEmotesProvider } from '@app/Providers/CachedEmotesProvider/Cached
 import { setChatFrontTrimSuspended } from '@app/store/chat/actions/messages';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { useCosmeticBindingsVersion } from '@app/store/chat/react/selectors';
-import { useChatRenderPreferences } from '@app/store/preferenceStore';
+import { useChatRenderPreferences } from '@app/store/preferences/selectors';
 
 import { ChatEmoteReprocessor } from './components/ChatEmoteReprocessor';
 import type { ChatInputShellHandle } from './components/ChatInputShell';
@@ -22,18 +22,20 @@ import { useChatScroll } from './hooks/useChatScroll';
 import { useChatSession } from './hooks/useChatSession';
 import { useChatSurface } from './hooks/useChatSurface';
 import { useChatTransientState } from './hooks/useChatTransientState';
-import { styles } from './styles';
+import { styles as chatSchemeStyles } from './styles';
 
 export interface ChatProps {
   applyTopInset?: boolean;
   channelId: string;
   channelName: string;
   transparent?: boolean;
-  // DEV/perf only: replace the live Twitch transports (IRC, recent-message
-  // replay, EventSub) with nothing, so the synthetic flood is the sole,
-  // deterministic message source. Lets the Chat Perf screen replay a repeatable
-  // fake of cinna's chat regardless of whether she's live. Channel emote/badge
-  // sets still load, so the fake messages render with her real 7TV emotes.
+  /**
+   * DEV/perf only: replace the live Twitch transports (IRC, recent-message
+   * replay, EventSub) with nothing, so the synthetic flood is the sole,
+   * deterministic message source. Lets the Chat Perf screen replay a repeatable
+   * fake of cinna's chat regardless of whether she's live. Channel emote/badge
+   * sets still load, so the fake messages render with her real 7TV emotes.
+   */
   syntheticTransport?: boolean;
 }
 
@@ -48,6 +50,9 @@ export const Chat = memo(
     const { user } = useAuthContext();
     const preferences = useChatRenderPreferences();
     const insets = useSafeAreaInsets();
+    const colorScheme = useColorScheme();
+    const scheme = colorScheme === 'light' ? 'light' : 'dark';
+    const styles = chatSchemeStyles[scheme];
     const messages$ = chatStore$.messages;
     const currentUsername = user?.login ?? user?.display_name;
 
@@ -95,9 +100,11 @@ export const Chat = memo(
       getMessagesLength,
     });
 
-    // While scrolled up (maintainVisibleContentPosition active) pause front-trim
-    // of the message window so removing the oldest rows can't re-anchor the list
-    // to the top; trimming resumes when the user returns to the bottom.
+    /**
+     * While scrolled up (maintainVisibleContentPosition active) pause front-trim
+     * of the message window so removing the oldest rows can't re-anchor the list
+     * to the top; trimming resumes when the user returns to the bottom.
+     */
     useEffect(() => {
       setChatFrontTrimSuspended(!shouldMaintainScrollAtEnd);
       return () => {

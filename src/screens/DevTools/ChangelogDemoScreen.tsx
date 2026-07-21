@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@app/components/Button/Button';
@@ -84,6 +90,8 @@ function readChangelogState(): ChangelogState {
 
 export function ChangelogDemoScreen() {
   const { t } = useTranslation('devTools');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const [state, setState] = useState<ChangelogState>(() =>
     readChangelogState(),
   );
@@ -125,21 +133,40 @@ export function ChangelogDemoScreen() {
     refreshState();
   };
 
+  const secondaryButtonColors = {
+    backgroundColor: theme.color.backgroundAltAlpha[scheme],
+    borderColor: theme.color.border[scheme],
+  };
+
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.section}>
           <Text weight='semibold'>{t('moduleState')}</Text>
-          <View style={styles.stateCard}>
+          <View
+            style={[
+              styles.stateCard,
+              { backgroundColor: theme.color.backgroundAltAlpha[scheme] },
+            ]}
+          >
             {stateRows.map(([label, value]) => (
               <View key={label} style={styles.stateRow}>
                 <Text type='xs' color='gray.textLow'>
                   {label}
                 </Text>
-                <Text type='xs' variant='mono' style={styles.stateValue}>
+                <Text
+                  type='xs'
+                  variant='mono'
+                  style={{ color: theme.color.accent[scheme] }}
+                >
                   {value}
                 </Text>
               </View>
@@ -153,23 +180,29 @@ export function ChangelogDemoScreen() {
             <Button
               label={t('presentAppChangelog')}
               onPress={() => void handlePresentCurrent()}
-              style={styles.primaryButton}
+              style={[
+                styles.primaryButton,
+                { backgroundColor: theme.color.pressedOverlay[scheme] },
+              ]}
             >
-              <Text weight='semibold' style={styles.primaryButtonText}>
+              <Text
+                weight='semibold'
+                style={{ color: theme.color.text[scheme] }}
+              >
                 {t('presentAppChangelog')}
               </Text>
             </Button>
             <Button
               label={t('presentOtaChangelog')}
               onPress={() => void handlePresentOTA()}
-              style={styles.secondaryButton}
+              style={[styles.secondaryButton, secondaryButtonColors]}
             >
               <Text weight='semibold'>{t('presentOtaChangelog')}</Text>
             </Button>
             <Button
               label={t('resetSeenVersions')}
               onPress={handleReset}
-              style={styles.secondaryButton}
+              style={[styles.secondaryButton, secondaryButtonColors]}
             >
               <Text weight='semibold'>{t('resetSeenVersions')}</Text>
             </Button>
@@ -185,7 +218,6 @@ const styles = StyleSheet.create({
     gap: theme.space12,
   },
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   content: {
@@ -194,20 +226,14 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space16,
   },
-  primaryButtonText: {
-    color: theme.color.text.dark,
-  },
   secondaryButton: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.darkAltAlpha,
     borderCurve: 'continuous',
-    borderColor: theme.colorBorderSecondary,
     borderRadius: theme.borderRadius12,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: theme.space16,
@@ -218,7 +244,6 @@ const styles = StyleSheet.create({
     marginTop: theme.space20,
   },
   stateCard: {
-    backgroundColor: theme.color.background.darkAltAlpha,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     gap: theme.space12,
@@ -226,8 +251,5 @@ const styles = StyleSheet.create({
   },
   stateRow: {
     gap: theme.space4,
-  },
-  stateValue: {
-    color: theme.colorPrimary,
   },
 });

@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@app/components/Button/Button';
@@ -20,6 +26,8 @@ type DeliveryState =
 
 export function SentryTestScreen() {
   const { t } = useTranslation('devTools');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const [shouldThrow, setShouldThrow] = useState(false);
   const [delivery, setDelivery] = useState<DeliveryState>({ status: 'idle' });
 
@@ -39,8 +47,17 @@ export function SentryTestScreen() {
     }
   }
 
+  const panelColor = {
+    backgroundColor: theme.color.backgroundSecondary[scheme],
+  };
+
   return (
-    <View style={styles.screenContainer}>
+    <View
+      style={[
+        styles.screenContainer,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       {shouldThrow ? <SentryTestError /> : null}
       <ScrollView
         contentInsetAdjustmentBehavior='automatic'
@@ -52,7 +69,7 @@ export function SentryTestScreen() {
           </Text>
         )}
 
-        <View style={styles.panel}>
+        <View style={[styles.panel, panelColor]}>
           <Text weight='semibold'>{t('sentryStatus')}</Text>
           <StatusRow
             label={t('enabled')}
@@ -76,7 +93,7 @@ export function SentryTestScreen() {
           />
         </View>
 
-        <View style={styles.panel}>
+        <View style={[styles.panel, panelColor]}>
           <Text weight='semibold'>{t('verifyDelivery')}</Text>
           <Text type='xs' color='gray.textLow'>
             {t('verifyDeliveryDescription')}
@@ -87,7 +104,10 @@ export function SentryTestScreen() {
             label={t('verifyDelivery')}
             onPress={handleVerifyDelivery}
             disabled={delivery.status === 'sending'}
-            style={styles.verifyButton}
+            style={[
+              styles.verifyButton,
+              { backgroundColor: theme.color.accent[scheme] },
+            ]}
           >
             <Text type='sm' weight='semibold' style={styles.verifyButtonText}>
               {delivery.status === 'sending'
@@ -109,7 +129,7 @@ export function SentryTestScreen() {
           ) : null}
         </View>
 
-        <View style={styles.panel}>
+        <View style={[styles.panel, panelColor]}>
           <Text weight='semibold'>{t('throwTestError')}</Text>
           <Text type='xs' color='gray.textLow'>
             {t('throwTestErrorDescription')}
@@ -119,7 +139,10 @@ export function SentryTestScreen() {
             accessibilityRole='button'
             label={t('throwSentryTestError')}
             onPress={() => setShouldThrow(true)}
-            style={styles.errorButton}
+            style={[
+              styles.errorButton,
+              { backgroundColor: theme.color.danger[scheme] },
+            ]}
           >
             <Text type='sm' weight='semibold' style={styles.errorButtonText}>
               {t('throwError')}
@@ -140,6 +163,8 @@ function StatusRow({
   value: string;
   warn?: boolean;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   return (
     <View style={styles.statusRow}>
       <Text type='sm' color='gray.textLow'>
@@ -149,7 +174,7 @@ function StatusRow({
         type='sm'
         weight='semibold'
         color='gray'
-        style={warn ? styles.warnValue : undefined}
+        style={warn ? { color: theme.color.amber[scheme] } : undefined}
       >
         {value}
       </Text>
@@ -165,7 +190,6 @@ const styles = StyleSheet.create({
   },
   errorButton: {
     alignItems: 'center',
-    backgroundColor: theme.colorRed,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     marginTop: theme.space20,
@@ -176,7 +200,6 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   panel: {
-    backgroundColor: theme.color.backgroundSecondary.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     gap: theme.space8,
@@ -186,7 +209,6 @@ const styles = StyleSheet.create({
     marginTop: theme.space12,
   },
   screenContainer: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   statusRow: {
@@ -199,7 +221,6 @@ const styles = StyleSheet.create({
   },
   verifyButton: {
     alignItems: 'center',
-    backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     marginTop: theme.space12,
@@ -208,8 +229,5 @@ const styles = StyleSheet.create({
   },
   verifyButtonText: {
     color: '#fff',
-  },
-  warnValue: {
-    color: theme.colorAmber,
   },
 });

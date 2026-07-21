@@ -1,5 +1,12 @@
 import { type RefObject, useCallback, useRef } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -56,6 +63,8 @@ const BlockedUserItem = function BlockedUserItem({
   onUnblock,
 }: BlockedUserItemProps) {
   const { t } = useTranslation('preferences');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const handlePress = useCallback(() => {
     onUnblock(user.user_id, user.display_name);
   }, [onUnblock, user.display_name, user.user_id]);
@@ -64,6 +73,7 @@ const BlockedUserItem = function BlockedUserItem({
     <View
       style={[
         styles.itemContainer,
+        { borderBottomColor: theme.color.border[scheme] },
         index === 0 ? styles.firstItem : null,
         index === count - 1 ? styles.lastItem : null,
       ]}
@@ -95,10 +105,14 @@ const BlockedUserItemSkeleton = function BlockedUserItemSkeleton({
   index,
   count,
 }: BlockedUserItemSkeletonProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
     <View
       style={[
         styles.itemContainer,
+        { borderBottomColor: theme.color.border[scheme] },
         index === 0 ? styles.firstItem : null,
         index === count - 1 ? styles.lastItem : null,
       ]}
@@ -130,6 +144,8 @@ function ListStatePanel({
   onRefresh: _onRefresh,
 }: ListStatePanelProps) {
   const { t } = useTranslation('preferences');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   return (
     <ScrollView
@@ -139,15 +155,35 @@ function ListStatePanel({
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.stateSection}>
-        <Text type='xxs' weight='semibold' style={styles.sectionTitle}>
+        <Text
+          type='xxs'
+          weight='semibold'
+          style={[
+            styles.sectionTitle,
+            { color: theme.color.textSecondary[scheme] },
+          ]}
+        >
           {t('blockedAccounts')}
         </Text>
-        <View style={styles.statePanel}>
-          <View style={styles.stateIcon}>
+        <View
+          style={[
+            styles.statePanel,
+            {
+              backgroundColor: theme.color.backgroundSecondary[scheme],
+              borderColor: theme.color.border[scheme],
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.stateIcon,
+              { backgroundColor: theme.color.dangerSurface[scheme] },
+            ]}
+          >
             <SymbolView
               name={icon}
               size={28}
-              tintColor={theme.colorGreyHoverAlpha}
+              tintColor={theme.color.textSecondary[scheme]}
             />
           </View>
           <Text type='lg' weight='bold' align='center'>
@@ -180,10 +216,19 @@ interface BlockedUsersSectionHeaderProps {
 
 function BlockedUsersSectionHeader({ count }: BlockedUsersSectionHeaderProps) {
   const { t } = useTranslation('preferences');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   return (
     <View style={styles.sectionHeader}>
-      <Text type='xxs' weight='semibold' style={styles.sectionTitle}>
+      <Text
+        type='xxs'
+        weight='semibold'
+        style={[
+          styles.sectionTitle,
+          { color: theme.color.textSecondary[scheme] },
+        ]}
+      >
         {t('blockedAccounts')}
       </Text>
       {typeof count === 'number' ? (
@@ -299,6 +344,8 @@ function NativeBlockedUsersList({
 }) {
   const { t } = useTranslation('preferences');
   const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   const handleDelete = (indices: number[]) => {
     for (const index of indices) {
@@ -312,7 +359,7 @@ function NativeBlockedUsersList({
   return (
     <Host
       style={[styles.content, { paddingBottom: insets.bottom }]}
-      colorScheme='dark'
+      colorScheme={scheme}
     >
       <List
         modifiers={[
@@ -331,7 +378,7 @@ function NativeBlockedUsersList({
               <VStack key={user.user_id} alignment='leading' spacing={2}>
                 <NativeText
                   modifiers={[
-                    foregroundStyle(theme.color.text.dark),
+                    foregroundStyle(theme.color.text[scheme]),
                     font({ textStyle: 'body', weight: 'semibold' }),
                   ]}
                 >
@@ -339,7 +386,7 @@ function NativeBlockedUsersList({
                 </NativeText>
                 <NativeText
                   modifiers={[
-                    foregroundStyle(theme.color.textSecondary.dark),
+                    foregroundStyle(theme.color.textSecondary[scheme]),
                     font({ textStyle: 'footnote' }),
                   ]}
                 >
@@ -392,6 +439,8 @@ function BlockedUsersDataList({
 
 export function BlockedUsersScreen() {
   const { user } = useAuthContext();
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const queryClient = useQueryClient();
 
   const userBlockListQueryKey = twitchKeys.blockList(user?.id as string);
@@ -466,7 +515,12 @@ export function BlockedUsersScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <BlockedUsersList
         data={data?.data}
         isLoading={isLoading}
@@ -484,7 +538,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   firstItem: {
@@ -498,7 +551,6 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     alignItems: 'center',
-    borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space12,
@@ -546,7 +598,6 @@ const styles = StyleSheet.create({
     paddingBottom: theme.space8,
   },
   sectionTitle: {
-    color: theme.colorGreyAlpha,
     letterSpacing: 0.5,
     paddingHorizontal: theme.space16,
     textTransform: 'uppercase',
@@ -564,7 +615,6 @@ const styles = StyleSheet.create({
   },
   stateIcon: {
     alignItems: 'center',
-    backgroundColor: theme.colorRedSurface,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     height: 64,
@@ -574,8 +624,6 @@ const styles = StyleSheet.create({
   },
   statePanel: {
     alignItems: 'center',
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     borderWidth: StyleSheet.hairlineWidth,

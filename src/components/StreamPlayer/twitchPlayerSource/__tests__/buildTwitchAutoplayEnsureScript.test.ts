@@ -18,9 +18,11 @@ describe('buildTwitchAutoplayEnsureScript', () => {
   test('autoplay-ensure gives up to muted after repeated unmute re-pauses', () => {
     const script = buildTwitchAutoplayEnsureScript({ muted: false });
 
-    // Unmuting an ongoing stream can make iOS silently re-pause it; the script
-    // resumes and retries a bounded number of times, then accepts muted
-    // playback so the picture never stalls on a pause.
+    /**
+     * Unmuting an ongoing stream can make iOS silently re-pause it; the script
+     * resumes and retries a bounded number of times, then accepts muted
+     * playback so the picture never stalls on a pause.
+     */
     expect(script).toContain('var unmuteBlocked = false');
     expect(script).toContain('unmuteAttempts++');
     expect(script).toContain('if (unmuteAttempts >= 3)');

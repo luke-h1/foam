@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useColorScheme } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,9 +9,17 @@ import { OtherInfoCard } from './components/OtherInfoCard';
 
 export function LicensesScreen() {
   const { t } = useTranslation('licenses');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+      edges={['top']}
+    >
       <ScreenHeader title={t('title')} subtitle={t('subtitle')} size='medium' />
       <OtherInfoCard title={t('acknowledgements')} body={t('bodyWeb')} />
     </SafeAreaView>
@@ -20,7 +28,6 @@ export function LicensesScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
 });

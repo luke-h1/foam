@@ -1,5 +1,12 @@
 import { useCallback, useRef, useState } from 'react';
-import { Alert, Platform, StyleSheet, TextInput, View } from 'react-native';
+import {
+  Alert,
+  Platform,
+  StyleSheet,
+  TextInput,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
@@ -32,8 +39,7 @@ import { impact } from '@app/lib/haptics';
 import {
   usePreference,
   useUpdatePreferences,
-} from '@app/store/preferenceStore';
-import { Color } from '@app/styles/pallete';
+} from '@app/store/preferences/selectors';
 import { theme } from '@app/styles/themes';
 
 function TermRow({
@@ -44,6 +50,8 @@ function TermRow({
   onRemove: (term: string) => void;
 }) {
   const { t } = useTranslation(['preferences', 'common']);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const handleRemove = useCallback(() => {
     Alert.alert(
       t('removeBlockedTerm'),
@@ -63,15 +71,21 @@ function TermRow({
   }, [term, onRemove, t]);
 
   return (
-    <View style={styles.row}>
-      <Text type='md' style={styles.termText} numberOfLines={1}>
+    <View
+      style={[styles.row, { borderBottomColor: theme.color.border[scheme] }]}
+    >
+      <Text
+        type='md'
+        style={[styles.termText, { color: theme.color.text[scheme] }]}
+        numberOfLines={1}
+      >
         {term}
       </Text>
       <PressableScale onPress={handleRemove} hitSlop={11}>
         <SymbolView
           name='minus.circle.fill'
           size={22}
-          tintColor={Color.zinc[600]}
+          tintColor={theme.color.textFaint[scheme]}
         />
       </PressableScale>
     </View>
@@ -80,18 +94,30 @@ function TermRow({
 
 function EmptyState() {
   const { t } = useTranslation('preferences');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   return (
     <View style={styles.emptyState}>
       <SymbolView
         name='text.badge.xmark'
-        size={48}
-        tintColor={Color.zinc[600]}
+        size={56}
+        tintColor={theme.color.textSecondary[scheme]}
       />
-      <Text type='lg' weight='medium' style={styles.emptyTitle}>
+      <Text
+        type='lg'
+        weight='medium'
+        style={[
+          styles.emptyTitle,
+          { color: theme.color.textSecondary[scheme] },
+        ]}
+      >
         {t('noBlockedTerms')}
       </Text>
-      <Text type='sm' style={styles.emptySubtitle}>
+      <Text
+        type='sm'
+        style={[styles.emptySubtitle, { color: theme.color.textFaint[scheme] }]}
+      >
         {t('noBlockedTermsDescription')}
       </Text>
     </View>
@@ -128,6 +154,8 @@ interface InputSectionProps {
 
 function InputSection({ value, onChangeText, onAdd }: InputSectionProps) {
   const { t } = useTranslation('preferences');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const canAdd = value.trim().length > 0;
 
   return (
@@ -136,21 +164,39 @@ function InputSection({ value, onChangeText, onAdd }: InputSectionProps) {
         autoCapitalize='none'
         autoCorrect={false}
         placeholder={t('addTermPlaceholder')}
-        placeholderTextColor={Color.zinc[500]}
+        placeholderTextColor={theme.color.textFaint[scheme]}
         value={value}
         onChangeText={onChangeText}
         onSubmitEditing={onAdd}
         returnKeyType='done'
-        style={styles.input}
+        style={[
+          styles.input,
+          {
+            backgroundColor: theme.color.surface[scheme],
+            borderColor: theme.color.border[scheme],
+            color: theme.color.text[scheme],
+          },
+        ]}
       />
       <PressableScale
         onPress={canAdd ? onAdd : undefined}
-        style={[styles.addButton, canAdd ? styles.addButtonEnabled : null]}
+        style={[
+          styles.addButton,
+          {
+            backgroundColor: canAdd
+              ? theme.color.text[scheme]
+              : theme.color.surfacePressed[scheme],
+          },
+        ]}
       >
         <SymbolView
           name='plus'
           size={16}
-          tintColor={canAdd ? Color.zinc[950] : Color.zinc[500]}
+          tintColor={
+            canAdd
+              ? theme.color.background[scheme]
+              : theme.color.textFaint[scheme]
+          }
         />
       </PressableScale>
     </View>
@@ -159,6 +205,8 @@ function InputSection({ value, onChangeText, onAdd }: InputSectionProps) {
 
 function NativeBlockedTermsList() {
   const { t } = useTranslation('preferences');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { addTerm, blockedTerms, updatePreferences } = useBlockedTerms();
   const termText = useNativeState('');
 
@@ -178,7 +226,13 @@ function NativeBlockedTermsList() {
   const hasTerms = blockedTerms.length > 0;
 
   return (
-    <Host style={styles.keyboardAvoid} colorScheme='dark'>
+    <Host
+      style={[
+        styles.keyboardAvoid,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+      colorScheme={scheme}
+    >
       <List modifiers={[listStyle('insetGrouped')]}>
         <Section>
           <TextField
@@ -214,6 +268,8 @@ function NativeBlockedTermsList() {
 
 export function BlockedTermsScreen() {
   const { t } = useTranslation('preferences');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { addTerm, blockedTerms, updatePreferences } = useBlockedTerms();
   const [inputValue, setInputValue] = useState('');
   const listRef = useRef<FlashListRef<string>>(null);
@@ -255,7 +311,13 @@ export function BlockedTermsScreen() {
   }
 
   return (
-    <KeyboardAvoidingView behavior='padding' style={styles.keyboardAvoid}>
+    <KeyboardAvoidingView
+      behavior='padding'
+      style={[
+        styles.keyboardAvoid,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <FlashList
         ref={listRef}
         data={blockedTerms}
@@ -272,7 +334,10 @@ export function BlockedTermsScreen() {
         ListEmptyComponent={EmptyState}
         ListFooterComponent={
           hasTerms ? (
-            <Text type='xs' style={styles.footer}>
+            <Text
+              type='xs'
+              style={[styles.footer, { color: theme.color.textFaint[scheme] }]}
+            >
               {t('termsFooter', { count: blockedTerms.length })}
             </Text>
           ) : null
@@ -285,15 +350,11 @@ export function BlockedTermsScreen() {
 const styles = StyleSheet.create({
   addButton: {
     alignItems: 'center',
-    backgroundColor: Color.zinc[800],
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius18,
     height: 36,
     justifyContent: 'center',
     width: 36,
-  },
-  addButtonEnabled: {
-    backgroundColor: Color.zinc[50],
   },
   emptyState: {
     alignItems: 'center',
@@ -303,27 +364,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   emptySubtitle: {
-    color: Color.zinc[500],
     lineHeight: 20,
     textAlign: 'center',
   },
   emptyTitle: {
-    color: Color.zinc[400],
     marginTop: theme.space4,
   },
   footer: {
-    color: Color.zinc[500],
     lineHeight: 18,
     paddingHorizontal: theme.space4,
     paddingTop: theme.space16,
   },
   input: {
-    backgroundColor: Color.zinc[900],
-    borderColor: Color.zinc[800],
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     borderWidth: 1,
-    color: theme.colorWhite,
     flex: 1,
     fontSize: theme.fontSize16,
     height: 44,
@@ -337,7 +392,6 @@ const styles = StyleSheet.create({
     paddingTop: theme.space12,
   },
   keyboardAvoid: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   listContent: {
@@ -349,7 +403,6 @@ const styles = StyleSheet.create({
   },
   row: {
     alignItems: 'center',
-    borderBottomColor: Color.zinc[800],
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space12,
@@ -357,7 +410,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   termText: {
-    color: theme.colorWhite,
     flex: 1,
     fontSize: theme.fontSize14,
     lineHeight: 20,

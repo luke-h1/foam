@@ -1,12 +1,12 @@
 import { memo } from 'react';
-import { View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';
-import { styles } from '../ChatMessage/RichChatMessage.styles';
+import { getRichChatMessageStyles } from '../ChatMessage/RichChatMessage.styles';
 import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
 import {
   resolveViewerMilestoneBody,
@@ -29,6 +29,9 @@ function getMilestoneMetaLabel(category: string): string {
 }
 
 function ViewerMileStoneNotice({ part }: ViewerMilestoneNoticeProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = getRichChatMessageStyles(scheme);
   const displayName = part.displayName?.trim() || '';
   const messageBody = resolveViewerMilestoneBody({
     content: part.content,

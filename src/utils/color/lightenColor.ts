@@ -1,11 +1,34 @@
+import type { ColorScheme } from '@app/styles/themes';
+
 import { hexToRgb } from './hexToRgb';
 import { rgbToHex } from './rgbToHex';
 
-// Chat renders on a near-black surface; anything below this HSL lightness
-// reads as illegible mud (e.g. Twitch default dark blue/red usernames).
+/**
+ * Chat renders on a near-black surface in dark mode; anything below this HSL
+ * lightness reads as illegible mud (e.g. Twitch default dark blue/red
+ * usernames).
+ */
 const MIN_LIGHTNESS = 0.55;
 
+/**
+ * The light-scheme inverse: bright usernames (yellow, spring green) wash out
+ * on the white chat surface above this lightness.
+ */
+const MAX_LIGHTNESS = 0.45;
+
 export function lightenColor(hex: string): string {
+  return clampLightness(hex, 'dark');
+}
+
+export function darkenColor(hex: string): string {
+  return clampLightness(hex, 'light');
+}
+
+export function readableChatColor(hex: string, scheme: ColorScheme): string {
+  return clampLightness(hex, scheme);
+}
+
+function clampLightness(hex: string, scheme: ColorScheme): string {
   hex = rgbToHex(hex);
 
   if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) {
@@ -20,11 +43,15 @@ export function lightenColor(hex: string): string {
 
   const { h, s, l } = rgbToHsl(rgb.r, rgb.g, rgb.b);
 
-  if (l >= MIN_LIGHTNESS) {
+  if (scheme === 'dark' ? l >= MIN_LIGHTNESS : l <= MAX_LIGHTNESS) {
     return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
   }
 
-  const { r, g, b } = hslToRgb(h, s, MIN_LIGHTNESS);
+  const { r, g, b } = hslToRgb(
+    h,
+    s,
+    scheme === 'dark' ? MIN_LIGHTNESS : MAX_LIGHTNESS,
+  );
   return `rgb(${r}, ${g}, ${b})`;
 }
 

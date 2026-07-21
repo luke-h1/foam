@@ -28,7 +28,7 @@ function loadBttvBadges(): void {
         onBadgesLoaded.current?.();
         return;
       }
-      // Empty success can be transient CDN/API flakiness — back off and retry
+      // Empty success can be transient CDN/API flakiness - back off and retry
       // instead of sticking on fetchStarted forever with no loaded callback.
       scheduleRetry();
     })

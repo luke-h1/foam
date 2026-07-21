@@ -35,7 +35,7 @@ function buildEmoteMatchIndex(
       isTwitch: isTwitchEmoteSite(emote.site),
     });
   });
-  // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks Array.prototype.toSorted
+  // eslint-disable-next-line react-doctor/js-tosorted-immutable -- local array built above; in-place sort avoids a copy on this hot path
   entries.sort((a, b) => b.name.length - a.name.length);
 
   const byFirstChar = new Map<string, EmoteMatchEntry[]>();

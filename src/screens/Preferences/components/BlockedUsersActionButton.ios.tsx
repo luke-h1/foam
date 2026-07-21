@@ -1,4 +1,9 @@
-import { type StyleProp, StyleSheet, type ViewStyle } from 'react-native';
+import {
+  type StyleProp,
+  StyleSheet,
+  useColorScheme,
+  type ViewStyle,
+} from 'react-native';
 
 import { Button, Host } from '@expo/ui/swift-ui';
 import {
@@ -23,6 +28,8 @@ export function BlockedUsersActionButton({
   style,
   variant = 'primary',
 }: BlockedUsersActionButtonProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const width = variant === 'destructive' ? 104 : 112;
 
   return (
@@ -41,7 +48,11 @@ export function BlockedUsersActionButton({
             variant === 'destructive' ? 'bordered' : 'borderedProminent',
           ),
           controlSize('small'),
-          tint(variant === 'destructive' ? theme.colorRed : theme.colorPrimary),
+          tint(
+            variant === 'destructive'
+              ? theme.color.danger[scheme]
+              : theme.color.accent[scheme],
+          ),
           frame({ width, height: 36 }),
         ]}
       />

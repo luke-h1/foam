@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import { Image } from '@app/components/Image/Image';
@@ -9,7 +9,7 @@ import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 
 import { ChatNoticeMetaRow } from './ChatMessage/renderers/ChatNoticeMetaRow';
-import { styles as chatStyles } from './ChatMessage/RichChatMessage.styles';
+import { getRichChatMessageStyles } from './ChatMessage/RichChatMessage.styles';
 import { CHAT_NOTICE_ACCENTS } from './util/chatNoticeAccents';
 
 interface StvEmoteEventProps {
@@ -21,6 +21,9 @@ function StvEmoteEventComponent({
   part,
   disableAnimations = false,
 }: StvEmoteEventProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const chatStyles = getRichChatMessageStyles(scheme);
   const added = part.type === 'stv_emote_added';
   const removed = part.type === 'stv_emote_removed';
 

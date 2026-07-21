@@ -66,8 +66,8 @@ export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
 const styles = StyleSheet.create({
   closeButton: {
     alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
+    backgroundColor: theme.color.pressedOverlay.dark,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: 1,

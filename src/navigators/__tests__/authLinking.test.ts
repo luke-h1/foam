@@ -6,9 +6,11 @@ import {
 } from '@app/navigators/authLinking';
 
 describe('authLinking magic-link sign in', () => {
-  // The magic link App Review uses: an obscure proxy URL redirects into the app
-  // with a stored test-account token, bypassing the OAuth/2FA flow. The proxy
-  // hands the app exactly this foam://auth deep link.
+  /**
+   * The magic link App Review uses: an obscure proxy URL redirects into the app
+   * with a stored test-account token, bypassing the OAuth/2FA flow. The proxy
+   * hands the app exactly this foam://auth deep link.
+   */
   const magicUrl =
     'foam://auth?access_token=magic-access-token&refresh_token=magic-refresh-token&token_type=bearer&expires_in=14400';
 

@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 
 import { useAuthContext } from '@app/context/AuthContext';
 import TwitchWsService from '@app/services/twitch-ws-service';
+import { cacheChannelPointRewardTitle } from '@app/store/chat/actions/channelPointRewardTitles';
 import type { TwitchEventSubCallback } from '@app/types/twitch/eventsub';
-import { cacheChannelPointRewardTitle } from '@app/utils/chat/channelPointRewardTitleStore';
 import { eventSubEventFromMessage } from '@app/utils/chat/parseChannelPointsEventSub/eventSubEventFromMessage';
 import { parseChannelPointsEventSubEvent } from '@app/utils/chat/parseChannelPointsEventSub/parseChannelPointsEventSubEvent';
 import { logger } from '@app/utils/logger';
@@ -56,6 +56,7 @@ export function useTwitchChannelPointsEventSub(channelId: string | undefined) {
       condition,
       handleChannelPointsRedemption,
     );
+
     void TwitchWsService.subscribeToEvent(
       AUTOMATIC_REWARD_REDEMPTION_EVENT,
       '1',

@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { ReactNativeLegal } from 'react-native-legal';
 
@@ -10,9 +10,16 @@ import { OtherInfoCard } from './components/OtherInfoCard';
 
 export function LicensesScreen() {
   const { t } = useTranslation('licenses');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <OtherInfoCard title={t('acknowledgements')} body={t('body')}>
         <Button
           onPress={() =>
@@ -29,7 +36,6 @@ export function LicensesScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
     paddingHorizontal: theme.space20,
     paddingTop: theme.space16,

@@ -1,9 +1,6 @@
 import type { SanitisedEmote } from '@app/types/emote';
 
 export type TwitchNotices =
-  /**
-   * Twitch notices
-   */
   | 'viewermilestone'
   | 'sub'
   | 'resub'
@@ -21,9 +18,6 @@ export type TwitchNotices =
   | 'sharedchatnotice';
 
 export type PartVariant =
-  /**
-   * Plain text
-   */
   | 'text'
   /**
    * Emoji i.e. a normal unicode emoji 🚀
@@ -33,21 +27,12 @@ export type PartVariant =
    * Mention i.e. @username
    */
   | 'mention'
-  /**
-   * stv emote
-   */
   | 'stvEmote'
-  /**
-   * Twitch clip
-   */
   | 'twitchClip'
   /**
    * Generic http(s) URL
    */
   | 'link'
-  /**
-   * Notice event
-   */
   | 'notice'
   /**
    * Bits cheer token, e.g. Cheer100

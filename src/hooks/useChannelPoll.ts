@@ -68,7 +68,8 @@ export function useChannelPoll(channelId?: string) {
     };
   }, [channelId, channelScopeKey, isOwnChannel]);
 
-  // eslint-disable-next-line react-doctor/no-cascading-set-state -- EventSub handlers update on independent Twitch events
+  // EventSub handlers update on independent Twitch events
+  // eslint-disable-next-line react-doctor/no-cascading-set-state
   useEffect(() => {
     if (!canSubscribe || !channelId) {
       return;

@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';
 
@@ -9,7 +9,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
 import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
-import { styles } from '../styles';
+import { styles as chatSchemeStyles } from '../styles';
 import { chatEntranceSpring } from '../util/chatEntranceSpring';
 
 const pinnedBannerEntering = chatEntranceSpring(FadeInUp);
@@ -30,6 +30,9 @@ export const PinnedMessageBanner = memo(
     pinnedMessageBusy: boolean;
   }) => {
     const { t } = useTranslation('chat');
+    const colorScheme = useColorScheme();
+    const scheme = colorScheme === 'light' ? 'light' : 'dark';
+    const styles = chatSchemeStyles[scheme];
 
     if (!pinnedMessage?.text.trim()) {
       return null;

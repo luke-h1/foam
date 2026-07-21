@@ -1,12 +1,15 @@
 import { memo, type ReactNode } from 'react';
-import type { StyleProp, TextStyle } from 'react-native';
+import { type StyleProp, type TextStyle, useColorScheme } from 'react-native';
 
 import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
 import { getChatColorStyle } from '@app/components/Chat/util/chatColorStyles';
 import { Text } from '@app/components/ui/Text/Text';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 
-import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
+import {
+  getChatFontScaleStyle,
+  getRichChatMessageStyles,
+} from '../RichChatMessage.styles';
 import { EmoteRenderer } from './EmoteRenderer';
 import { MentionSpan } from './MentionSpan';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
@@ -52,6 +55,9 @@ function InlineMessageSpansComponent({
   emoteLineStyle,
   textColor,
 }: InlineMessageSpansProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = getRichChatMessageStyles(scheme);
   const fontScaleStyle = getChatFontScaleStyle(fontScale, compact);
   const baseTextStyle = textStyle ?? [
     styles.messageText,
@@ -136,9 +142,11 @@ function InlineMessageSpansComponent({
     }
 
     if (part.type === 'mention') {
-      // A self-subscribing span so mention resolution re-renders only the span,
-      // not the whole row (mentionLoginRevision is intentionally out of the
-      // list's extraData — see MentionSpan).
+      /**
+       * A self-subscribing span so mention resolution re-renders only the span,
+       * not the whole row (mentionLoginRevision is intentionally out of the
+       * list's extraData - see MentionSpan).
+       */
       spans.push(
         <MentionSpan
           key={getPartKey(part, index)}

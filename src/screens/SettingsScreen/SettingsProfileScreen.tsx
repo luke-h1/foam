@@ -1,12 +1,20 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import { theme } from '@app/styles/themes';
 
 import { ProfileCard } from './components/profile/ProfileCard';
 
 export function SettingsProfileScreen() {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <ProfileCard />
     </View>
   );
@@ -14,7 +22,6 @@ export function SettingsProfileScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
 });

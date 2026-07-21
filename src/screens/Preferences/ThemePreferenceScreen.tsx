@@ -1,45 +1,64 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import {
-  EmptyLayout,
-  EmptyLayoutContent,
-  EmptyLayoutDescription,
-  EmptyLayoutHeader,
-  EmptyLayoutTitle,
-} from '@app/components/EmptyLayout/EmptyLayout';
+import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
 import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
+import {
+  usePreference,
+  useUpdatePreferences,
+} from '@app/store/preferences/selectors';
+import { theme, type ThemeMode } from '@app/styles/themes';
+
+const THEME_MODE_OPTIONS = ['system', 'light', 'dark'] as const;
 
 export function ThemePreferenceScreen() {
   const { t } = useTranslation('preferences');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const selectedTheme = usePreference('theme');
+  const update = useUpdatePreferences();
+
+  const themeModeLabels: Record<ThemeMode, string> = {
+    system: t('themeModeSystem'),
+    light: t('themeModeLight'),
+    dark: t('themeModeDark'),
+  };
 
   return (
-    <View style={styles.container}>
-      <EmptyLayout variant='outline' style={styles.empty}>
-        <EmptyLayoutHeader>
-          <EmptyLayoutTitle>{t('foamDarkTitle')}</EmptyLayoutTitle>
-          <EmptyLayoutDescription>
-            {t('foamDarkDescription')}
-          </EmptyLayoutDescription>
-        </EmptyLayoutHeader>
-        <EmptyLayoutContent>
-          <Text type='sm' color='gray.textLow'>
-            {t('foamDarkFootnote')}
-          </Text>
-        </EmptyLayoutContent>
-      </EmptyLayout>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
+      <View style={styles.content}>
+        <SegmentedControl
+          currentIndex={Math.max(THEME_MODE_OPTIONS.indexOf(selectedTheme), 0)}
+          items={THEME_MODE_OPTIONS.map(option => ({
+            label: themeModeLabels[option],
+          }))}
+          onChange={index => {
+            const next = THEME_MODE_OPTIONS[index];
+            if (next) {
+              update({ theme: next });
+            }
+          }}
+        />
+        <Text type='sm' color='gray.textLow'>
+          {t('themeModeFootnote')}
+        </Text>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
-  empty: {
-    marginHorizontal: theme.space20,
-    minHeight: 320,
+  content: {
+    gap: theme.space16,
+    paddingHorizontal: theme.space20,
+    paddingTop: theme.space16,
   },
 });

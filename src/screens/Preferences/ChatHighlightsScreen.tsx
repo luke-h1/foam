@@ -1,5 +1,11 @@
 import { useCallback, useRef, useState } from 'react';
-import { Alert, StyleSheet, TextInput, View } from 'react-native';
+import {
+  Alert,
+  StyleSheet,
+  TextInput,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
@@ -15,22 +21,22 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { impact } from '@app/lib/haptics';
 import {
-  type CustomHighlight,
   usePreference,
   useUpdatePreferences,
-} from '@app/store/preferenceStore';
-import { Color } from '@app/styles/pallete';
-import { theme } from '@app/styles/themes';
+} from '@app/store/preferences/selectors';
+import { type CustomHighlight } from '@app/store/preferences/state';
+import { type ColorScheme, theme } from '@app/styles/themes';
 import { normaliseHighlightPhrase } from '@app/utils/chat/customHighlights/normaliseHighlightPhrase';
 
-const HIGHLIGHT_COLORS = [
-  theme.colorPrimary,
-  theme.colorBlue,
-  theme.colorViolet,
-  theme.colorAmber,
-  theme.colorOrange,
-  theme.colorRed,
-] as const;
+const getHighlightColors = (scheme: ColorScheme) =>
+  [
+    theme.color.accent[scheme],
+    theme.color.blue[scheme],
+    theme.color.violet[scheme],
+    theme.color.amber[scheme],
+    theme.color.orange[scheme],
+    theme.color.danger[scheme],
+  ] as const;
 
 const EMPTY_HIGHLIGHTS: CustomHighlight[] = [];
 
@@ -42,6 +48,8 @@ function HighlightRow({
   onRemove: (id: string) => void;
 }) {
   const { t } = useTranslation(['preferences', 'common']);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const handleRemove = useCallback(() => {
     Alert.alert(
       t('removeHighlight'),
@@ -61,16 +69,22 @@ function HighlightRow({
   }, [highlight, onRemove, t]);
 
   return (
-    <View style={styles.row}>
+    <View
+      style={[styles.row, { borderBottomColor: theme.color.border[scheme] }]}
+    >
       <View style={[styles.colorDot, { backgroundColor: highlight.color }]} />
-      <Text type='md' style={styles.phraseText} numberOfLines={1}>
+      <Text
+        type='md'
+        style={[styles.phraseText, { color: theme.color.text[scheme] }]}
+        numberOfLines={1}
+      >
         {highlight.phrase}
       </Text>
       <PressableScale onPress={handleRemove} hitSlop={8}>
         <SymbolView
           name='minus.circle.fill'
           size={22}
-          tintColor={Color.zinc[600]}
+          tintColor={theme.color.textFaint[scheme]}
         />
       </PressableScale>
     </View>
@@ -79,14 +93,30 @@ function HighlightRow({
 
 function EmptyState() {
   const { t } = useTranslation('preferences');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   return (
     <View style={styles.emptyState}>
-      <SymbolView name='highlighter' size={48} tintColor={Color.zinc[600]} />
-      <Text type='lg' weight='medium' style={styles.emptyTitle}>
+      <SymbolView
+        name='highlighter'
+        size={56}
+        tintColor={theme.color.textSecondary[scheme]}
+      />
+      <Text
+        type='lg'
+        weight='medium'
+        style={[
+          styles.emptyTitle,
+          { color: theme.color.textSecondary[scheme] },
+        ]}
+      >
         {t('noHighlights')}
       </Text>
-      <Text type='sm' style={styles.emptySubtitle}>
+      <Text
+        type='sm'
+        style={[styles.emptySubtitle, { color: theme.color.textFaint[scheme] }]}
+      >
         {t('noHighlightsDescription')}
       </Text>
     </View>
@@ -109,6 +139,8 @@ function InputSection({
   onAdd,
 }: InputSectionProps) {
   const { t } = useTranslation('preferences');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const canAdd = value.trim().length > 0;
 
   return (
@@ -118,26 +150,44 @@ function InputSection({
           autoCapitalize='none'
           autoCorrect={false}
           placeholder={t('addPhrasePlaceholder')}
-          placeholderTextColor={Color.zinc[500]}
+          placeholderTextColor={theme.color.textFaint[scheme]}
           value={value}
           onChangeText={onChangeText}
           onSubmitEditing={onAdd}
           returnKeyType='done'
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              backgroundColor: theme.color.surface[scheme],
+              borderColor: theme.color.border[scheme],
+              color: theme.color.text[scheme],
+            },
+          ]}
         />
         <PressableScale
           onPress={canAdd ? onAdd : undefined}
-          style={[styles.addButton, canAdd ? styles.addButtonEnabled : null]}
+          style={[
+            styles.addButton,
+            {
+              backgroundColor: canAdd
+                ? theme.color.text[scheme]
+                : theme.color.surfacePressed[scheme],
+            },
+          ]}
         >
           <SymbolView
             name='plus'
             size={16}
-            tintColor={canAdd ? Color.zinc[950] : Color.zinc[500]}
+            tintColor={
+              canAdd
+                ? theme.color.background[scheme]
+                : theme.color.textFaint[scheme]
+            }
           />
         </PressableScale>
       </View>
       <View style={styles.swatchRow}>
-        {HIGHLIGHT_COLORS.map(color => (
+        {getHighlightColors(scheme).map(color => (
           <PressableScale
             key={color}
             onPress={() => onSelectColor(color)}
@@ -145,7 +195,9 @@ function InputSection({
             style={[
               styles.swatch,
               { backgroundColor: color },
-              color === selectedColor && styles.swatchSelected,
+              color === selectedColor && {
+                borderColor: theme.color.text[scheme],
+              },
             ]}
           />
         ))}
@@ -156,11 +208,13 @@ function InputSection({
 
 export function ChatHighlightsScreen() {
   const { t } = useTranslation('preferences');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const customHighlights = usePreference('customHighlights');
   const updatePreferences = useUpdatePreferences();
   const [inputValue, setInputValue] = useState('');
   const [selectedColor, setSelectedColor] = useState<string>(
-    HIGHLIGHT_COLORS[0],
+    () => getHighlightColors(scheme)[0],
   );
   const listRef = useRef<FlashListRef<CustomHighlight>>(null);
 
@@ -212,7 +266,13 @@ export function ChatHighlightsScreen() {
   const hasHighlights = highlights.length > 0;
 
   return (
-    <KeyboardAvoidingView behavior='padding' style={styles.keyboardAvoid}>
+    <KeyboardAvoidingView
+      behavior='padding'
+      style={[
+        styles.keyboardAvoid,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <FlashList
         ref={listRef}
         data={highlights}
@@ -229,7 +289,10 @@ export function ChatHighlightsScreen() {
         ListEmptyComponent={EmptyState}
         ListFooterComponent={
           hasHighlights ? (
-            <Text type='xs' style={styles.footer}>
+            <Text
+              type='xs'
+              style={[styles.footer, { color: theme.color.textFaint[scheme] }]}
+            >
               {t('phrasesFooter', { count: highlights.length })}
             </Text>
           ) : null
@@ -242,15 +305,11 @@ export function ChatHighlightsScreen() {
 const styles = StyleSheet.create({
   addButton: {
     alignItems: 'center',
-    backgroundColor: Color.zinc[800],
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius18,
     height: 36,
     justifyContent: 'center',
     width: 36,
-  },
-  addButtonEnabled: {
-    backgroundColor: Color.zinc[50],
   },
   colorDot: {
     borderRadius: theme.borderRadius6,
@@ -265,27 +324,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   emptySubtitle: {
-    color: Color.zinc[500],
     lineHeight: 20,
     textAlign: 'center',
   },
   emptyTitle: {
-    color: Color.zinc[400],
     marginTop: theme.space4,
   },
   footer: {
-    color: Color.zinc[500],
     lineHeight: 18,
     paddingHorizontal: theme.space4,
     paddingTop: theme.space16,
   },
   input: {
-    backgroundColor: Color.zinc[900],
-    borderColor: Color.zinc[800],
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     borderWidth: 1,
-    color: theme.colorWhite,
     flex: 1,
     fontSize: theme.fontSize16,
     height: 44,
@@ -302,7 +355,6 @@ const styles = StyleSheet.create({
     paddingTop: theme.space12,
   },
   keyboardAvoid: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   listContent: {
@@ -313,7 +365,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   phraseText: {
-    color: theme.colorWhite,
     flex: 1,
     fontSize: theme.fontSize14,
     lineHeight: 20,
@@ -321,7 +372,6 @@ const styles = StyleSheet.create({
   },
   row: {
     alignItems: 'center',
-    borderBottomColor: Color.zinc[800],
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space12,
@@ -334,9 +384,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     height: 28,
     width: 28,
-  },
-  swatchSelected: {
-    borderColor: theme.colorWhite,
   },
   swatchRow: {
     flexDirection: 'row',

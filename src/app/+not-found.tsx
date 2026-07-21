@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Link, Stack } from 'expo-router';
@@ -8,11 +8,18 @@ import { theme } from '@app/styles/themes';
 
 export default function NotFound() {
   const { t } = useTranslation('errors');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   return (
     <>
       <Stack.Screen options={{ title: t('oops') }} />
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: theme.color.background[scheme] },
+        ]}
+      >
         <Text type='title' color='gray' align='center' style={styles.title}>
           {t('screenDoesNotExist')}
         </Text>
@@ -28,7 +35,6 @@ export default function NotFound() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',

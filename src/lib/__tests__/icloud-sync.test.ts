@@ -2,7 +2,7 @@ import { parsePreferencesPayload } from '@app/lib/icloud-sync';
 import {
   initialPreferences,
   type Preferences,
-} from '@app/store/preferenceStore';
+} from '@app/store/preferences/state';
 import { logger } from '@app/utils/logger';
 
 const warnSpy = jest.spyOn(logger.main, 'warn').mockImplementation(() => {});
@@ -28,6 +28,23 @@ describe('parsePreferencesPayload', () => {
       chatTimestamps: true,
       blockedTerms: ['kappa'],
       analyticsEnabled: true,
+    });
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  test('migrates the legacy foam-dark theme to system instead of discarding the blob', () => {
+    const result = parsePreferencesPayload(
+      JSON.stringify({
+        ...initialPreferences,
+        theme: 'foam-dark',
+        blockedTerms: ['kappa'],
+      }),
+    );
+
+    expect(result).toEqual<Preferences>({
+      ...initialPreferences,
+      theme: 'system',
+      blockedTerms: ['kappa'],
     });
     expect(warnSpy).not.toHaveBeenCalled();
   });

@@ -1,11 +1,12 @@
 import { memo } from 'react';
+import { useColorScheme } from 'react-native';
 
 import { Button } from '@app/components/Button/Button';
 import type { EmoteMenuSet } from '@app/components/Chat/components/EmoteSheet/util/emoteMenuData';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 
-import { emoteSheetStyles as styles } from './emoteSheetStyles';
+import { emoteSheetStyles } from './emoteSheetStyles';
 
 function SetRailButtonComponent({
   isActive,
@@ -16,6 +17,9 @@ function SetRailButtonComponent({
   onScrollToSet: (setId: string) => void;
   set: EmoteMenuSet;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = emoteSheetStyles[scheme];
   return (
     <Button
       haptic='selection'

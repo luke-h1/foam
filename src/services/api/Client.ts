@@ -142,10 +142,12 @@ export function createApiClient({
       await waitForAuthToken();
     }
 
-    // Merge case-insensitively: HTTP header names are case-insensitive, so a
-    // per-request 'Client-Id' must replace a default 'Client-ID' rather than
-    // coexist with it (fetch would combine them into "X, X" and Twitch
-    // rejects the request).
+    /**
+     * Merge case-insensitively: HTTP header names are case-insensitive, so a
+     * per-request 'Client-Id' must replace a default 'Client-ID' rather than
+     * coexist with it (fetch would combine them into "X, X" and Twitch
+     * rejects the request).
+     */
     const headers: Record<string, string> = {
       Accept: 'application/json',
       ...defaultHeaders,
@@ -255,9 +257,11 @@ export function createApiClient({
         }
       }
 
-      // FFZ returns 404 "No such room" for channels that have never configured
-      // FFZ; it's a benign empty result the caller handles, so don't log it (and
-      // don't forward it to Sentry).
+      /**
+       * FFZ returns 404 "No such room" for channels that have never configured
+       * FFZ; it's a benign empty result the caller handles, so don't log it (and
+       * don't forward it to Sentry).
+       */
       const isExpectedFfzNoRoom =
         service === 'ffz' &&
         response.status === 404 &&

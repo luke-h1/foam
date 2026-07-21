@@ -12,7 +12,7 @@ export type ChatBodyVariant =
 
 export interface MessageStructure {
   /**
-   * Every part fits in a single Text (Twitch-web style inline wrap) — ignores
+   * Every part fits in a single Text (Twitch-web style inline wrap) - ignores
    * paint/moderation, which the caller ANDs in cheaply at render time.
    */
   canBeInline: boolean;

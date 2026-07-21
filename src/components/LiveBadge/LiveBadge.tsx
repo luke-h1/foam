@@ -1,5 +1,11 @@
-import { memo } from 'react';
-import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
+import { memo, useMemo } from 'react';
+import {
+  type StyleProp,
+  StyleSheet,
+  useColorScheme,
+  View,
+  type ViewStyle,
+} from 'react-native';
 
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
@@ -17,17 +23,40 @@ export const LiveBadge = memo(function LiveBadge({
   label = 'LIVE',
   style,
 }: LiveBadgeProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const isTinted = tone === 'tinted';
+
+  const schemeStyles = useMemo(
+    () => ({
+      dot: { backgroundColor: theme.color.live[scheme] },
+      overlay: { backgroundColor: theme.color.overlay[scheme] },
+      tinted: {
+        backgroundColor: theme.color.dangerSurface[scheme],
+        borderColor: theme.color.dangerBorder[scheme],
+      },
+      tintedLabel: { color: theme.color.live[scheme] },
+    }),
+    [scheme],
+  );
 
   return (
     <View
-      style={[styles.pill, isTinted ? styles.tinted : styles.overlay, style]}
+      style={[
+        styles.pill,
+        isTinted ? schemeStyles.tinted : [styles.overlay, schemeStyles.overlay],
+        style,
+      ]}
     >
-      <View style={styles.dot} />
+      <View style={[styles.dot, schemeStyles.dot]} />
       <Text
         type='xxs'
         weight='bold'
-        style={isTinted ? styles.tintedLabel : styles.overlayLabel}
+        style={
+          isTinted
+            ? [styles.tintedLabel, schemeStyles.tintedLabel]
+            : styles.overlayLabel
+        }
       >
         {label}
       </Text>
@@ -44,18 +73,12 @@ const styles = StyleSheet.create({
     columnGap: theme.space4,
     flexDirection: 'row',
     paddingHorizontal: theme.space8,
-    paddingVertical: 3,
+    paddingVertical: theme.space4,
   },
   overlay: {
-    backgroundColor: theme.colorBlackOverlay,
-    borderColor: theme.colorBorderSecondary,
-  },
-  tinted: {
-    backgroundColor: theme.colorRedSurface,
-    borderColor: theme.colorRedBorder,
+    borderColor: theme.color.border.dark,
   },
   dot: {
-    backgroundColor: theme.color.live.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     height: 6,
@@ -66,7 +89,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   tintedLabel: {
-    color: theme.color.live.dark,
     letterSpacing: 0.4,
   },
 });

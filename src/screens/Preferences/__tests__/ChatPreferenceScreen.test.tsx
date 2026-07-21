@@ -1,13 +1,13 @@
 import { fireEvent, render } from '@testing-library/react-native';
 
-import type { Preferences } from '@app/store/preferenceStore';
+import type { Preferences } from '@app/store/preferences/state';
 
 import { ChatPreferenceScrollContent } from '../ChatPreferenceScreen';
 
 const mockUpdate = jest.fn();
 const mockPreferences: Preferences = {
   updatedAt: 1,
-  theme: 'foam-dark',
+  theme: 'dark',
   hapticFeedback: true,
   streamListLayout: 'compact',
   chatDensity: 'comfortable',
@@ -52,7 +52,8 @@ const mockPreferences: Preferences = {
   sevenTvPaintRenderer: 'native',
 };
 
-jest.mock('@app/store/preferenceStore', () => ({
+jest.mock('@app/store/preferences/selectors', () => ({
+  ...jest.requireActual('@app/store/preferences/selectors'),
   usePreferences: () => ({
     ...mockPreferences,
     update: mockUpdate,
@@ -96,7 +97,7 @@ jest.mock('@expo/ui/community/segmented-control', () => {
   };
 });
 
-jest.mock('../ChatPreferencesPreview', () => {
+jest.mock('../components/ChatPreferencesPreview', () => {
   const React = require('react');
   const { Text } = require('react-native');
 

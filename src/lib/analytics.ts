@@ -1,6 +1,6 @@
 import { customEvent } from 'vexo-analytics';
 
-import { preferences$ } from '@app/store/preferenceStore';
+import { preferences$ } from '@app/store/preferences/state';
 import { logger } from '@app/utils/logger';
 
 const vexoApiKey = process.env.EXPO_PUBLIC_VEXO_API_KEY;

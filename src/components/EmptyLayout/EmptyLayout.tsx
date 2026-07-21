@@ -3,6 +3,7 @@ import {
   // eslint-disable-next-line no-restricted-imports
   StyleSheet,
   type TextStyle,
+  useColorScheme,
   View,
   type ViewStyle,
 } from 'react-native';
@@ -25,11 +26,22 @@ export function EmptyLayout({
   variant?: EmptyLayoutVariant;
   style?: StyleProp<ViewStyle>;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
     <View
       style={[
         styles.empty,
-        variant === 'outline' ? styles.emptyOutline : null,
+        variant === 'outline'
+          ? [
+              styles.emptyOutline,
+              {
+                backgroundColor: theme.color.backgroundAltAlpha[scheme],
+                borderColor: theme.color.border[scheme],
+              },
+            ]
+          : null,
         style,
       ]}
     >
@@ -57,11 +69,22 @@ export function EmptyLayoutMedia({
   variant?: EmptyMediaVariant;
   style?: StyleProp<ViewStyle>;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
     <View
       style={[
         styles.media,
-        variant === 'icon' ? styles.mediaIcon : null,
+        variant === 'icon'
+          ? [
+              styles.mediaIcon,
+              {
+                backgroundColor: theme.color.backgroundAltAlpha[scheme],
+                borderColor: theme.color.border[scheme],
+              },
+            ]
+          : null,
         style,
       ]}
     >
@@ -77,8 +100,15 @@ export function EmptyLayoutTitle({
   children: ReactNode;
   style?: StyleProp<TextStyle>;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
-    <Text style={[styles.title, style]} type='2xl' weight='semibold'>
+    <Text
+      style={[styles.title, { color: theme.color.text[scheme] }, style]}
+      type='2xl'
+      weight='semibold'
+    >
       {children}
     </Text>
   );
@@ -91,8 +121,18 @@ export function EmptyLayoutDescription({
   children: ReactNode;
   style?: StyleProp<TextStyle>;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
-    <Text style={[styles.description, style]} type='default'>
+    <Text
+      style={[
+        styles.description,
+        { color: theme.color.textSecondary[scheme] },
+        style,
+      ]}
+      type='default'
+    >
       {children}
     </Text>
   );
@@ -121,6 +161,9 @@ export function EmptyLayoutButton({
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   if (title) {
     return (
       <View style={style}>
@@ -130,7 +173,11 @@ export function EmptyLayoutButton({
           onPress={onPress}
           style={[
             styles.ctaButton,
-            variant === 'outline' && styles.ctaButtonOutline,
+            { backgroundColor: theme.color.accent[scheme] },
+            variant === 'outline' && [
+              styles.ctaButtonOutline,
+              { borderColor: theme.color.border[scheme] },
+            ],
           ]}
         >
           <Text
@@ -138,7 +185,9 @@ export function EmptyLayoutButton({
             weight='semibold'
             align='center'
             style={
-              variant === 'outline' ? styles.ctaTextOutline : styles.ctaText
+              variant === 'outline'
+                ? { color: theme.color.text[scheme] }
+                : { color: theme.color.onAccent[scheme] }
             }
           >
             {title}
@@ -167,7 +216,6 @@ const styles = StyleSheet.create({
   ctaButton: {
     alignItems: 'center',
     alignSelf: 'center',
-    backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     justifyContent: 'center',
@@ -177,14 +225,7 @@ const styles = StyleSheet.create({
   },
   ctaButtonOutline: {
     backgroundColor: 'transparent',
-    borderColor: theme.colorBorderSecondary,
     borderWidth: 1,
-  },
-  ctaText: {
-    color: theme.colorBlack,
-  },
-  ctaTextOutline: {
-    color: theme.color.text.dark,
   },
   content: {
     alignItems: 'center',
@@ -192,7 +233,6 @@ const styles = StyleSheet.create({
     marginTop: theme.space28,
   },
   description: {
-    color: theme.color.textSecondary.dark,
     lineHeight: 24,
     paddingHorizontal: theme.space20,
     textAlign: 'center',
@@ -207,8 +247,6 @@ const styles = StyleSheet.create({
     padding: theme.space44,
   },
   emptyOutline: {
-    backgroundColor: theme.color.background.darkAltAlpha,
-    borderColor: theme.color.border.dark,
     borderStyle: 'dashed',
     borderWidth: 1,
   },
@@ -224,8 +262,6 @@ const styles = StyleSheet.create({
   },
   mediaIcon: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.darkAltAlpha,
-    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: 1,
@@ -234,7 +270,6 @@ const styles = StyleSheet.create({
     width: 96,
   },
   title: {
-    color: theme.color.text.dark,
     marginBottom: theme.space16,
     textAlign: 'center',
   },

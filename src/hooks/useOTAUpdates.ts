@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Alert, Platform, useColorScheme } from 'react-native';
 
 import { nativeBuildVersion } from 'expo-application';
 import * as Updates from 'expo-updates';
@@ -16,7 +16,7 @@ import {
 
 import i18next from '@app/i18n/i18next';
 import { countOtaMetric } from '@app/lib/sentry';
-import { theme } from '@app/styles/themes';
+import { type ColorScheme, theme } from '@app/styles/themes';
 import {
   isForegroundTransition,
   subscribeToAppStateTransitions,
@@ -26,14 +26,16 @@ import { logger } from '@app/utils/logger';
 const MINIMUM_MINIMIZE_TIME = 15 * 60e3; // 15 minutes
 const INITIAL_CHECK_DELAY = 3e3; // 3 seconds
 
-const OTA_RELOAD_SCREEN_OPTIONS = {
-  backgroundColor: theme.color.background.dark,
-  fade: true,
-  spinner: {
-    color: theme.colorPrimary,
-    size: 'large' as const,
-  },
-} satisfies ReloadScreenOptions;
+function getOtaReloadScreenOptions(scheme: ColorScheme) {
+  return {
+    backgroundColor: theme.color.background[scheme],
+    fade: true,
+    spinner: {
+      color: theme.color.accent[scheme],
+      size: 'large' as const,
+    },
+  } satisfies ReloadScreenOptions;
+}
 
 const getIsUpdatePending = () => latestContext.isUpdatePending;
 
@@ -60,6 +62,8 @@ async function setExtraParams() {
 }
 
 export function useOTAUpdates() {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const shouldReceiveUpdates = isEnabled && !__DEV__;
   const isProduction = process.env.EXPO_PUBLIC_APP_VARIANT === 'production';
   const lastMinimize = useRef(0);
@@ -141,7 +145,7 @@ export function useOTAUpdates() {
   const applyUpdate = useCallback(async () => {
     try {
       await reloadAsync({
-        reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
+        reloadScreenOptions: getOtaReloadScreenOptions(scheme),
       });
     } catch (error) {
       logger.main.error('OTA update reload failed', {
@@ -154,7 +158,7 @@ export function useOTAUpdates() {
         platform: Platform.OS,
       });
     }
-  }, [isProduction]);
+  }, [isProduction, scheme]);
 
   const promptAndReload = useCallback(() => {
     countOtaMetric('ota.update.alert_shown', {
@@ -306,10 +310,12 @@ export function useOTAUpdates() {
         return;
       }
 
-      // Do not force a reload here: reloadAsync() races the reconnect
-      // refetch burst that fires on the same foreground and tears down
-      // the runtime mid-fetch (#699). The update is already downloaded,
-      // so expo-updates applies it on the next cold start.
+      /**
+       * Do not force a reload here: reloadAsync() races the reconnect
+       * refetch burst that fires on the same foreground and tears down
+       * the runtime mid-fetch (#699). The update is already downloaded,
+       * so expo-updates applies it on the next cold start.
+       */
       logger.main.info(
         'App foregrounded with pending update, deferring to cold start',
         {

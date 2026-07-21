@@ -3,6 +3,7 @@ import {
   type LayoutChangeEvent,
   type StyleProp,
   StyleSheet,
+  useColorScheme,
   View,
   type ViewStyle,
 } from 'react-native';
@@ -32,11 +33,17 @@ const SHIMMER_WIDTH = 180;
 const SHIMMER_DURATION_MS = 1450;
 
 export function Skeleton({ shimmer = true, style, testID }: SkeletonProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const [width, setWidth] = useState(0);
 
   return (
     <View
-      style={[styles.skeleton, style]}
+      style={[
+        styles.skeleton,
+        { backgroundColor: theme.color.surfaceAlpha[scheme] },
+        style,
+      ]}
       testID={testID}
       onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
     >
@@ -51,6 +58,8 @@ export function Skeleton({ shimmer = true, style, testID }: SkeletonProps) {
  * off-screen.
  */
 function SkeletonShimmer({ containerWidth }: { containerWidth: number }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const focused = useScreenFocused();
   const translateX = useSharedValue(-SHIMMER_WIDTH);
 
@@ -81,7 +90,7 @@ function SkeletonShimmer({ containerWidth }: { containerWidth: number }) {
   return (
     <Animated.View pointerEvents='none' style={[styles.shimmer, animatedStyle]}>
       <LinearGradient
-        colors={SHIMMER_GRADIENT_COLORS}
+        colors={SHIMMER_GRADIENT_COLORS[scheme]}
         locations={[0, 0.5, 1]}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
@@ -99,7 +108,6 @@ const styles = StyleSheet.create({
     width: SHIMMER_WIDTH,
   },
   skeleton: {
-    backgroundColor: theme.colorSurfaceAlpha,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     overflow: 'hidden',

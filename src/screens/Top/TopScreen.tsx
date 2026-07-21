@@ -1,12 +1,17 @@
 import { useState } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  StyleSheet,
+  useColorScheme,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { type SceneRendererProps, TabView } from 'react-native-tab-view';
 
 import { TOP_TAB_ROUTES } from '@app/constants/topTabRoutes';
 import { theme } from '@app/styles/themes';
 
+import { TopSegmentControl } from './components/TopSegmentControl';
 import { TopCategoriesScreen } from './TopCategoriesScreen';
-import { TopSegmentControl } from './TopSegmentControl';
 import { TopStreamsScreen } from './TopStreamsScreen';
 
 type Route = { key: string; title: string };
@@ -26,11 +31,23 @@ const renderScene = ({ route }: SceneRendererProps & { route: Route }) => {
 
 export function TopScreen() {
   const layout = useWindowDimensions();
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const [index, setIndex] = useState<number>(0);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.segmentBar}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
+      <View
+        style={[
+          styles.segmentBar,
+          { backgroundColor: theme.color.background[scheme] },
+        ]}
+      >
         <TopSegmentControl index={index} onIndexChange={setIndex} />
       </View>
       <TabView
@@ -50,11 +67,9 @@ export function TopScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   segmentBar: {
-    backgroundColor: theme.color.background.dark,
     paddingHorizontal: theme.space16,
   },
   tabViewWrapper: {

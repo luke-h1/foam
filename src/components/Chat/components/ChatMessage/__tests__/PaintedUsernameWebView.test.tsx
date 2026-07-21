@@ -62,7 +62,7 @@ describe('PaintedUsernameWebView', () => {
     }).toEqual({
       color: '#FF0000',
       fontSize: chatLineMetrics.comfortable.fontSize,
-      fontWeight: 'bold',
+      fontWeight: '700',
       lineHeight: chatLineMetrics.comfortable.lineHeight,
     });
 

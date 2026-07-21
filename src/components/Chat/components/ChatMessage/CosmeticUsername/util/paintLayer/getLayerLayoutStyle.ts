@@ -7,9 +7,11 @@ export function getLayerLayoutStyle(layer: PaintLayerData): ViewStyle {
     return StyleSheet.absoluteFill;
   }
 
-  // CSS background-position percentage semantics: a position of p% aligns
-  // the p% point of the layer with the p% point of the container, i.e.
-  // offset = (container - layer) * p.
+  /**
+   * CSS background-position percentage semantics: a position of p% aligns
+   * the p% point of the layer with the p% point of the container, i.e.
+   * offset = (container - layer) * p.
+   */
   const sizeX = layer.size?.[0] ?? 1;
   const sizeY = layer.size?.[1] ?? 1;
   const posX = layer.at?.[0] ?? 0;

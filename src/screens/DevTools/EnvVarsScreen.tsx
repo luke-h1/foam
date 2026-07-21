@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import {
+  Platform,
+  Pressable,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 
 import * as AC from '@bacons/apple-colors';
 import * as Clipboard from 'expo-clipboard';
@@ -110,6 +116,8 @@ function maskValue(value: string): string {
 }
 
 export function EnvVarsScreen() {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const [revealed, setRevealed] = useState(false);
   const envVars = ENV_VARS;
 
@@ -128,7 +136,13 @@ export function EnvVarsScreen() {
       contentContainerStyle={styles.contentContainer}
     >
       <View style={styles.section}>
-        <Button onPress={toggleReveal} style={styles.revealButton}>
+        <Button
+          onPress={toggleReveal}
+          style={[
+            styles.revealButton,
+            { backgroundColor: theme.color.blue[scheme] },
+          ]}
+        >
           <SymbolView
             name={revealed ? 'eye.slash' : 'eye'}
             size={16}
@@ -159,7 +173,12 @@ export function EnvVarsScreen() {
             })
             .toUpperCase()}
         </Text>
-        <View style={styles.card}>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: theme.color.pressedOverlay[scheme] },
+          ]}
+        >
           {envVars.map((entry, index) => {
             const isLast = index === envVars.length - 1;
             const isSet = entry.value != null && entry.value !== '';
@@ -177,7 +196,11 @@ export function EnvVarsScreen() {
                   void copyEnvVar(entry);
                 }}
                 disabled={!isSet}
-                style={[styles.item, !isLast && styles.itemBorder]}
+                style={[
+                  styles.item,
+                  !isLast && styles.itemBorder,
+                  !isLast && { borderBottomColor: theme.color.border[scheme] },
+                ]}
               >
                 <View style={styles.keyRow}>
                   <SymbolView
@@ -196,9 +219,24 @@ export function EnvVarsScreen() {
                     />
                   ) : null}
                 </View>
-                <View style={[styles.valueBox, !isSet && styles.valueBoxEmpty]}>
+                <View
+                  style={[
+                    styles.valueBox,
+                    {
+                      backgroundColor: theme.color.backgroundAltAlpha[scheme],
+                    },
+                    !isSet && styles.valueBoxEmpty,
+                  ]}
+                >
                   <Text
-                    style={[styles.valueText, !isSet && styles.valueTextEmpty]}
+                    style={[
+                      styles.valueText,
+                      { color: theme.color.accent[scheme] },
+                      !isSet && styles.valueTextEmpty,
+                      !isSet && {
+                        color: theme.color.textSecondary[scheme],
+                      },
+                    ]}
                   >
                     {display}
                   </Text>
@@ -217,7 +255,6 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   card: {
-    backgroundColor: theme.darkActiveContent,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     overflow: 'hidden',
@@ -232,7 +269,6 @@ const styles = StyleSheet.create({
     padding: theme.space16,
   },
   itemBorder: {
-    borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: 1,
   },
   keyRow: {
@@ -248,7 +284,6 @@ const styles = StyleSheet.create({
   },
   revealButton: {
     alignItems: 'center',
-    backgroundColor: theme.colorBlue,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     flexDirection: 'row',
@@ -265,7 +300,6 @@ const styles = StyleSheet.create({
     marginLeft: theme.space8,
   },
   valueBox: {
-    backgroundColor: theme.color.background.darkAltAlpha,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     padding: theme.space12,
@@ -274,13 +308,11 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   valueText: {
-    color: theme.colorPrimary,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
     fontSize: 12,
     lineHeight: 18,
   },
   valueTextEmpty: {
-    color: theme.color.textSecondary.dark,
     fontStyle: 'italic',
   },
 });

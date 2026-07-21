@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, {
   useAnimatedStyle,
@@ -32,7 +32,7 @@ import { twitchKeys } from '@app/lib/react-query/query-keys';
 import {
   usePreference,
   useUpdatePreferences,
-} from '@app/store/preferenceStore';
+} from '@app/store/preferences/selectors';
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
 import type { FollowedChannelWithProfile } from '@app/types/twitch/channel';
@@ -50,11 +50,28 @@ function FollowingSkeleton({
   showHeader?: boolean;
   streamListLayout: 'compact' | 'media';
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       {showHeader && (
-        <View style={styles.header}>
-          <View style={styles.headerEyebrow} />
+        <View
+          style={[
+            styles.header,
+            { borderBottomColor: theme.color.border[scheme] },
+          ]}
+        >
+          <View
+            style={[
+              styles.headerEyebrow,
+              { backgroundColor: theme.color.accent[scheme] },
+            ]}
+          />
         </View>
       )}
       {Array.from({ length: 5 }).map((_, index) => (
@@ -72,6 +89,8 @@ const FollowingListHeader = memo(function FollowingListHeader({
   streamListLayout: 'compact' | 'media';
   onChangeLayout: (layout: 'compact' | 'media') => void;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   return (
     <View>
       <EditorialSectionHeader eyebrow='For you' />
@@ -81,13 +100,20 @@ const FollowingListHeader = memo(function FollowingListHeader({
           onChange={onChangeLayout}
         />
       </View>
-      <View style={styles.header} />
+      <View
+        style={[
+          styles.header,
+          { borderBottomColor: theme.color.border[scheme] },
+        ]}
+      />
     </View>
   );
 });
 
 export default function FollowingScreen() {
   const { t } = useTranslation(['stream', 'common']);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { authState, user } = useAuthContext();
   const queryClient = useQueryClient();
   const tabBarOverflow = useBottomTabOverflow();
@@ -125,9 +151,11 @@ export default function FollowingScreen() {
     retry: 2,
     retryDelay: (attemptIndex: number) =>
       Math.min(1000 * 2 ** attemptIndex, 3000),
-    // Focus/foreground refreshes are handled by useRefetchOnForeground below;
-    // stacking refetchOnMount/refetchOnWindowFocus on top forced a network
-    // request on every tab switch regardless of staleness.
+    /**
+     * Focus/foreground refreshes are handled by useRefetchOnForeground below;
+     * stacking refetchOnMount/refetchOnWindowFocus on top forced a network
+     * request on every tab switch regardless of staleness.
+     */
   });
 
   useRefetchOnForeground({
@@ -208,7 +236,12 @@ export default function FollowingScreen() {
         case 'offlineHeader':
           return (
             <View style={styles.offlineHeaderRow}>
-              <Text type='md' weight='bold'>
+              <Text
+                type='xs'
+                weight='semibold'
+                color='gray.textLow'
+                style={styles.offlineHeaderText}
+              >
                 {t('offlineChannels')}
               </Text>
             </View>
@@ -236,9 +269,11 @@ export default function FollowingScreen() {
     [streamListLayout, layoutFade, updatePreferences],
   );
 
-  // Inline (not useMemo): FollowingListHeader is memo()'d with stable props, so
-  // recreating this element is a no-op, and a useMemo here would build JSX
-  // before the early return below (rerender-memo-before-early-return).
+  /**
+   * Inline (not useMemo): FollowingListHeader is memo()'d with stable props, so
+   * recreating this element is a no-op, and a useMemo here would build JSX
+   * before the early return below (rerender-memo-before-early-return).
+   */
   const listHeader = (
     <FollowingListHeader
       streamListLayout={streamListLayout}
@@ -254,7 +289,13 @@ export default function FollowingScreen() {
         content={t('followingSignInPrompt')}
         heading={t('followingHeading')}
         iconName='person.2'
-        style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
+        style={[
+          styles.stateContainer,
+          {
+            backgroundColor: theme.color.background[scheme],
+            paddingBottom: tabBarOverflow,
+          },
+        ]}
       />
     );
   }
@@ -273,7 +314,13 @@ export default function FollowingScreen() {
         content={t('followingLogInPrompt')}
         heading={t('followingHeading')}
         iconName='person.2'
-        style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
+        style={[
+          styles.stateContainer,
+          {
+            backgroundColor: theme.color.background[scheme],
+            paddingBottom: tabBarOverflow,
+          },
+        ]}
       />
     );
   }
@@ -286,7 +333,13 @@ export default function FollowingScreen() {
         content={t('followingLoadFailedDescription')}
         heading={t('followingLoadFailed')}
         iconName='exclamationmark.triangle'
-        style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
+        style={[
+          styles.stateContainer,
+          {
+            backgroundColor: theme.color.background[scheme],
+            paddingBottom: tabBarOverflow,
+          },
+        ]}
       />
     );
   }
@@ -310,13 +363,24 @@ export default function FollowingScreen() {
         content={t('noOneIsLiveDescription')}
         heading={t('noOneIsLive')}
         iconName='antenna.radiowaves.left.and.right'
-        style={[styles.stateContainer, { paddingBottom: tabBarOverflow }]}
+        style={[
+          styles.stateContainer,
+          {
+            backgroundColor: theme.color.background[scheme],
+            paddingBottom: tabBarOverflow,
+          },
+        ]}
       />
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <Animated.View style={[styles.listFade, layoutFadeStyle]}>
         <AnimatedFlashList<FollowingListItem>
           ref={listRef}
@@ -352,19 +416,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
     overflow: 'hidden',
   },
   header: {
-    borderBottomColor: theme.color.border.dark,
     borderBottomWidth: 1,
     marginBottom: theme.space12,
     marginHorizontal: theme.space16,
     minHeight: theme.space12,
   },
   headerEyebrow: {
-    backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     height: 6,
@@ -381,16 +442,17 @@ const styles = StyleSheet.create({
     marginHorizontal: theme.space16,
   },
   offlineHeaderRow: {
-    borderTopColor: theme.color.border.dark,
-    borderTopWidth: 1,
     marginHorizontal: theme.space16,
     marginTop: theme.space16,
     paddingBottom: theme.space8,
     paddingTop: theme.space16,
   },
+  offlineHeaderText: {
+    letterSpacing: 1.1,
+    textTransform: 'uppercase',
+  },
   stateContainer: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.dark,
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: theme.space20,

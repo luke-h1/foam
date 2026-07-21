@@ -1,9 +1,16 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { toast } from 'sonner-native';
 
@@ -15,6 +22,8 @@ import { impact } from '@app/lib/haptics';
 import { type FeedbackType, sendFeedback } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 
+import { useFeedbackScreenshot } from './hooks/useFeedbackScreenshot';
+
 const FEEDBACK_TYPES: {
   value: FeedbackType;
   labelKey: 'typeBug' | 'typeIdea';
@@ -25,12 +34,16 @@ const FEEDBACK_TYPES: {
 
 export function FeedbackScreen() {
   const { t } = useTranslation('feedback');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { user } = useAuthContext();
 
   const [type, setType] = useState<FeedbackType>('bug');
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { screenshot, pickScreenshot, clearScreenshot } =
+    useFeedbackScreenshot();
 
   const trimmedMessage = message.trim();
   const canSubmit = trimmedMessage.length > 0 && !submitting;
@@ -53,6 +66,7 @@ export function FeedbackScreen() {
         message: trimmedMessage,
         email: email.trim(),
         name: user?.display_name,
+        attachments: screenshot ? [screenshot.attachment] : undefined,
       });
       void impact('light');
       toast.success(t('success'));
@@ -68,8 +82,20 @@ export function FeedbackScreen() {
     }
   };
 
+  const inputColors = {
+    backgroundColor: theme.color.backgroundSecondary[scheme],
+    borderColor: theme.color.border[scheme],
+    color: theme.color.text[scheme],
+  };
+
   return (
-    <SafeAreaView edges={['bottom']} style={styles.container}>
+    <SafeAreaView
+      edges={['bottom']}
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <KeyboardAvoidingView behavior='padding' style={styles.flex}>
         <ScrollView
           contentContainerStyle={styles.content}
@@ -118,9 +144,9 @@ export function FeedbackScreen() {
                   ? t('messagePlaceholderBug')
                   : t('messagePlaceholderIdea')
               }
-              placeholderTextColor={theme.colorGreyHoverAlpha}
-              selectionColor={theme.color.text.dark}
-              style={[styles.input, styles.messageInput]}
+              placeholderTextColor={theme.color.textFaint[scheme]}
+              selectionColor={theme.color.text[scheme]}
+              style={[styles.input, inputColors, styles.messageInput]}
               value={message}
             />
           </View>
@@ -142,11 +168,60 @@ export function FeedbackScreen() {
               keyboardType='email-address'
               onChangeText={setEmail}
               placeholder={t('emailPlaceholder')}
-              placeholderTextColor={theme.colorGreyHoverAlpha}
-              selectionColor={theme.color.text.dark}
-              style={styles.input}
+              placeholderTextColor={theme.color.textFaint[scheme]}
+              selectionColor={theme.color.text[scheme]}
+              style={[styles.input, inputColors]}
               value={email}
             />
+          </View>
+
+          <View style={styles.field}>
+            <Text
+              type='xxs'
+              weight='semibold'
+              color='gray.textLow'
+              style={styles.fieldLabel}
+            >
+              {t('screenshotLabel')}
+            </Text>
+            {screenshot ? (
+              <View style={styles.screenshotRow}>
+                <Image
+                  contentFit='cover'
+                  source={{ uri: screenshot.uri }}
+                  style={[
+                    styles.screenshotThumbnail,
+                    { borderColor: theme.color.border[scheme] },
+                  ]}
+                />
+                <Button
+                  haptic='light'
+                  label={t('removeScreenshot')}
+                  onPress={clearScreenshot}
+                >
+                  <Text type='sm' weight='semibold' color='gray.textLow'>
+                    {t('removeScreenshot')}
+                  </Text>
+                </Button>
+              </View>
+            ) : (
+              <Button
+                haptic='light'
+                label={t('addScreenshot')}
+                onPress={() => void pickScreenshot()}
+                style={[
+                  styles.addScreenshot,
+                  {
+                    backgroundColor: theme.color.backgroundSecondary[scheme],
+                    borderColor: theme.color.border[scheme],
+                  },
+                ]}
+              >
+                <Text type='sm' weight='semibold' color='gray.textLow'>
+                  {t('addScreenshot')}
+                </Text>
+              </Button>
+            )}
           </View>
 
           <Button
@@ -154,7 +229,11 @@ export function FeedbackScreen() {
             haptic='light'
             label={t('submit')}
             onPress={handleSubmit}
-            style={[styles.submit, !canSubmit && styles.submitDisabled]}
+            style={[
+              styles.submit,
+              { backgroundColor: theme.color.accent[scheme] },
+              !canSubmit && styles.submitDisabled,
+            ]}
           >
             <Text
               type='sm'
@@ -173,8 +252,15 @@ export function FeedbackScreen() {
 }
 
 const styles = StyleSheet.create({
+  addScreenshot: {
+    alignItems: 'center',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius12,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space12,
+  },
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   content: {
@@ -197,12 +283,9 @@ const styles = StyleSheet.create({
     gap: theme.space8,
   },
   input: {
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     borderWidth: StyleSheet.hairlineWidth,
-    color: theme.color.text.dark,
     fontSize: theme.fontSize16,
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space12,
@@ -211,16 +294,27 @@ const styles = StyleSheet.create({
     minHeight: 132,
     textAlignVertical: 'top',
   },
+  screenshotRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.space16,
+  },
+  screenshotThumbnail: {
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius12,
+    borderWidth: StyleSheet.hairlineWidth,
+    height: 96,
+    width: 96,
+  },
   subtitle: {
     lineHeight: theme.fontSize14 * 1.5,
   },
   submit: {
     alignItems: 'center',
-    backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     justifyContent: 'center',
-    marginTop: theme.space4,
+    marginTop: theme.space16,
     minHeight: 52,
     paddingHorizontal: theme.space24,
     paddingVertical: theme.space16,

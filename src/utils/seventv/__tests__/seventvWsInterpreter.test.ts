@@ -74,6 +74,18 @@ describe('interpretSeventvWsMessage', () => {
               name: 'NewPeepo',
               id: 'emote-1',
               url: 'https://cdn.7tv.app/emote/emote-1/4x.avif',
+              image_variants: {
+                animated: {
+                  '1x': 'https://cdn.7tv.app/emote/emote-1/1x.avif',
+                  '2x': 'https://cdn.7tv.app/emote/emote-1/2x.avif',
+                  '4x': 'https://cdn.7tv.app/emote/emote-1/4x.avif',
+                },
+                static: {
+                  '1x': 'https://cdn.7tv.app/emote/emote-1/1x_static.avif',
+                  '2x': 'https://cdn.7tv.app/emote/emote-1/2x_static.avif',
+                  '4x': 'https://cdn.7tv.app/emote/emote-1/4x_static.avif',
+                },
+              },
               original_name: 'peepoHappy',
               creator: 'EmoteAuthor',
               emote_link: 'https://7tv.app/emotes/emote-1',
@@ -102,6 +114,18 @@ describe('interpretSeventvWsMessage', () => {
               name: 'OldPeepo',
               id: 'emote-1',
               url: 'https://cdn.7tv.app/emote/emote-1/4x.avif',
+              image_variants: {
+                animated: {
+                  '1x': 'https://cdn.7tv.app/emote/emote-1/1x.avif',
+                  '2x': 'https://cdn.7tv.app/emote/emote-1/2x.avif',
+                  '4x': 'https://cdn.7tv.app/emote/emote-1/4x.avif',
+                },
+                static: {
+                  '1x': 'https://cdn.7tv.app/emote/emote-1/1x_static.avif',
+                  '2x': 'https://cdn.7tv.app/emote/emote-1/2x_static.avif',
+                  '4x': 'https://cdn.7tv.app/emote/emote-1/4x_static.avif',
+                },
+              },
               original_name: 'peepoHappy',
               creator: 'EmoteAuthor',
               emote_link: 'https://7tv.app/emotes/emote-1',
@@ -171,6 +195,18 @@ describe('interpretSeventvWsMessage', () => {
               name: 'SoSnowy',
               id: 'emote-zw',
               url: 'https://cdn.7tv.app/emote/emote-zw/2x.avif',
+              image_variants: {
+                animated: {
+                  '1x': 'https://cdn.7tv.app/emote/emote-zw/1x.avif',
+                  '2x': 'https://cdn.7tv.app/emote/emote-zw/2x.avif',
+                  '4x': 'https://cdn.7tv.app/emote/emote-zw/4x.avif',
+                },
+                static: {
+                  '1x': 'https://cdn.7tv.app/emote/emote-zw/1x_static.avif',
+                  '2x': 'https://cdn.7tv.app/emote/emote-zw/2x_static.avif',
+                  '4x': 'https://cdn.7tv.app/emote/emote-zw/4x_static.avif',
+                },
+              },
               original_name: 'SoSnowy',
               creator: 'EmoteAuthor',
               emote_link: 'https://7tv.app/emotes/emote-zw',
@@ -199,6 +235,18 @@ describe('interpretSeventvWsMessage', () => {
               name: 'FeelsBadMan',
               id: 'emote-old',
               url: 'https://cdn.7tv.app/emote/emote-old/4x.avif',
+              image_variants: {
+                animated: {
+                  '1x': 'https://cdn.7tv.app/emote/emote-old/1x.avif',
+                  '2x': 'https://cdn.7tv.app/emote/emote-old/2x.avif',
+                  '4x': 'https://cdn.7tv.app/emote/emote-old/4x.avif',
+                },
+                static: {
+                  '1x': 'https://cdn.7tv.app/emote/emote-old/1x_static.avif',
+                  '2x': 'https://cdn.7tv.app/emote/emote-old/2x_static.avif',
+                  '4x': 'https://cdn.7tv.app/emote/emote-old/4x_static.avif',
+                },
+              },
               original_name: 'FeelsBadMan',
               creator: 'EmoteAuthor',
               emote_link: 'https://7tv.app/emotes/emote-old',
@@ -263,7 +311,7 @@ describe('interpretSeventvWsMessage', () => {
         throw new Error(`expected applyEmoteUpdate, got ${decision?.type}`);
       }
       const added = decision.added[0];
-      // Only the size/url resolution matters here — a webp-only emote must not
+      // Only the size/url resolution matters here - a webp-only emote must not
       // collapse to 0x0 (which renders as a 1:1 square at the wrong width).
       expect({
         url: added?.url,
