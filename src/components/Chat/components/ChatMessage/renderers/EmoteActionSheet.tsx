@@ -4,14 +4,12 @@ import {
   memo,
   ReactElement,
   ReactNode,
-  useCallback,
   useMemo,
   useRef,
   useState,
 } from 'react';
 import {
   type GestureResponderEvent,
-  Platform,
   StyleSheet,
   useColorScheme,
   useWindowDimensions,
@@ -27,7 +25,6 @@ import {
   type BottomSheetHandle,
 } from '@app/components/BottomSheet/BottomSheet';
 import { Button } from '@app/components/Button/Button';
-import { Image } from '@app/components/Image/Image';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
@@ -37,9 +34,13 @@ import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { deriveEmoteImageVariantsFromUrl } from '@app/utils/emote/emoteImageVariants/deriveEmoteImageVariantsFromUrl';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 
+import { EmoteActionSheetPreview } from './EmoteActionSheetPreview';
+import {
+  type EmoteActionRow,
+  EmoteActionSheetRows,
+} from './EmoteActionSheetRows';
+
 type PartVariant = ParsedPart<'emote'>;
-type ActionId =
-  'copy-name' | 'copy-url' | 'copy-url-2x' | 'copy-url-4x' | 'preview';
 
 const COPY_IMAGE_VARIANT_ACTIONS = [
   { id: 'copy-url-2x', scale: '2x' },
@@ -47,20 +48,6 @@ const COPY_IMAGE_VARIANT_ACTIONS = [
 ] as const;
 
 const PREVIEW_IMAGE_MAX_SIZE = 56;
-
-function getEmoteActionSFSymbolName(actionId: ActionId) {
-  switch (actionId) {
-    case 'copy-name':
-    case 'copy-url':
-    case 'copy-url-2x':
-    case 'copy-url-4x':
-      return 'doc.on.doc' as const;
-    case 'preview':
-      return 'arrow.up.right.square' as const;
-    default:
-      return 'doc.on.doc' as const;
-  }
-}
 
 interface EmoteActionSheetProps {
   children?: ReactNode;
@@ -144,30 +131,27 @@ function EmoteActionSheetComponent({
         };
   }, [part.width, part.height]);
 
-  const openSheet = useCallback(
-    (e: GestureResponderEvent) => {
-      e?.preventDefault?.();
-      if (!isControlled) {
-        setUncontrolledVisible(true);
-      }
-    },
-    [isControlled],
-  );
+  const openSheet = (e: GestureResponderEvent) => {
+    e?.preventDefault?.();
+    if (!isControlled) {
+      setUncontrolledVisible(true);
+    }
+  };
 
-  const closeSheet = useCallback(() => {
+  const closeSheet = () => {
     if (isControlled) {
       onDismiss?.();
       return;
     }
 
     setUncontrolledVisible(false);
-  }, [isControlled, onDismiss]);
+  };
 
-  const requestClose = useCallback(() => {
+  const requestClose = () => {
     sheetRef.current?.requestClose();
-  }, []);
+  };
 
-  const copyName = useCallback(() => {
+  const copyName = () => {
     requestClose();
     const text = part.name ?? part.original_name ?? '';
     if (!text) {
@@ -176,9 +160,9 @@ function EmoteActionSheetComponent({
     void Clipboard.setStringAsync(text).then(() => {
       toast.success(i18next.t('chat:emoteActions.nameCopied'));
     });
-  }, [part.name, part.original_name, requestClose]);
+  };
 
-  const copyImageUrl = useCallback(() => {
+  const copyImageUrl = () => {
     requestClose();
     if (!displayUrl) {
       return;
@@ -186,57 +170,67 @@ function EmoteActionSheetComponent({
     void Clipboard.setStringAsync(displayUrl).then(() => {
       toast.success(i18next.t('chat:emoteActions.urlCopied'));
     });
-  }, [displayUrl, requestClose]);
+  };
 
-  const copyScaledImageUrl = useCallback(
-    (scale: EmoteImageScale) => {
-      requestClose();
-      const url = scaledImageUrls[scale];
-      if (!url) {
-        return;
-      }
-      void Clipboard.setStringAsync(url).then(() => {
-        toast.success(
-          i18next.t('chat:emoteActions.scaledUrlCopied', { scale }),
-        );
-      });
-    },
-    [requestClose, scaledImageUrls],
-  );
+  const copyScaledImageUrl = (scale: EmoteImageScale) => {
+    requestClose();
+    const url = scaledImageUrls[scale];
+    if (!url) {
+      return;
+    }
+    void Clipboard.setStringAsync(url).then(() => {
+      toast.success(i18next.t('chat:emoteActions.scaledUrlCopied', { scale }));
+    });
+  };
 
-  const handlePreview = useCallback(() => {
+  const handlePreview = () => {
     requestClose();
     onPress?.(previewPart);
-  }, [onPress, previewPart, requestClose]);
+  };
 
-  const actions = [
+  const actions: EmoteActionRow[] = [
     {
-      id: 'copy-name' as const,
+      id: 'copy-name',
       label: t('emoteActions.copyName'),
       onPress: copyName,
-      visible: true,
     },
-    {
-      id: 'copy-url' as const,
-      label: t('emoteActions.copyImageUrl'),
-      onPress: copyImageUrl,
-      visible: Boolean(displayUrl),
-    },
-    ...COPY_IMAGE_VARIANT_ACTIONS.map(action => ({
-      id: action.id,
-      label: t('emoteActions.copyScaledImageUrl', { scale: action.scale }),
-      onPress: () => copyScaledImageUrl(action.scale),
-      visible: Boolean(scaledImageUrls[action.scale]),
-    })),
-    {
-      id: 'preview' as const,
-      label: t('emoteActions.preview'),
-      onPress: handlePreview,
-      visible: Boolean(onPress),
-    },
-  ].filter(action => action.visible);
-
-  const previewSubtitle = t('emoteActions.title');
+    ...(displayUrl
+      ? ([
+          {
+            id: 'copy-url',
+            label: t('emoteActions.copyImageUrl'),
+            onPress: copyImageUrl,
+          },
+        ] as const)
+      : []),
+    ...(scaledImageUrls['2x']
+      ? ([
+          {
+            id: 'copy-url-2x',
+            label: t('emoteActions.copyScaledImageUrl', { scale: '2x' }),
+            onPress: () => copyScaledImageUrl('2x'),
+          },
+        ] as const)
+      : []),
+    ...(scaledImageUrls['4x']
+      ? ([
+          {
+            id: 'copy-url-4x',
+            label: t('emoteActions.copyScaledImageUrl', { scale: '4x' }),
+            onPress: () => copyScaledImageUrl('4x'),
+          },
+        ] as const)
+      : []),
+    ...(onPress
+      ? ([
+          {
+            id: 'preview',
+            label: t('emoteActions.preview'),
+            onPress: handlePreview,
+          },
+        ] as const)
+      : []),
+  ];
 
   const triggerChild =
     children && isValidElement(children)
@@ -289,95 +283,13 @@ function EmoteActionSheetComponent({
               />
             </Button>
           </View>
-          {(displayUrl || part.name || part.original_name) && (
-            <View style={styles.previewCard}>
-              <View style={styles.previewRow}>
-                {displayUrl ? (
-                  <View
-                    style={[
-                      styles.previewImageContainer,
-                      { backgroundColor: theme.color.surfaceAlpha[scheme] },
-                    ]}
-                  >
-                    <Image
-                      trackLoadContext='chat.emote-action-sheet'
-                      source={displayUrl}
-                      cacheVariant='emote'
-                      style={previewImageSize}
-                      contentFit='contain'
-                      transition={50}
-                    />
-                  </View>
-                ) : null}
-                <View style={styles.previewMeta}>
-                  {part.name || part.original_name ? (
-                    <Text
-                      style={[
-                        styles.previewName,
-                        { color: theme.color.text[scheme] },
-                      ]}
-                    >
-                      {part.name ?? part.original_name}
-                    </Text>
-                  ) : null}
-                  <Text
-                    style={[
-                      styles.previewHint,
-                      { color: theme.color.textSecondary[scheme] },
-                    ]}
-                  >
-                    {previewSubtitle}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          )}
-          <View
-            style={[
-              styles.actionGroup,
-              { backgroundColor: theme.color.surfaceAlpha[scheme] },
-            ]}
-          >
-            {actions.map((action, index) => (
-              <Button
-                key={action.label}
-                onPress={action.onPress}
-                style={[
-                  styles.actionButton,
-                  index > 0 && [
-                    styles.actionButtonWithDivider,
-                    { borderTopColor: theme.color.border[scheme] },
-                  ],
-                ]}
-              >
-                <View
-                  style={[
-                    styles.actionIconFrame,
-                    { backgroundColor: theme.color.pressedOverlay[scheme] },
-                  ]}
-                >
-                  <SymbolView
-                    name={getEmoteActionSFSymbolName(action.id)}
-                    size={18}
-                    tintColor={theme.color.textSecondary[scheme]}
-                    weight='regular'
-                    style={styles.actionIcon}
-                  />
-                </View>
-                <View style={styles.actionCopy}>
-                  <Text
-                    style={[
-                      styles.actionText,
-                      { color: theme.color.text[scheme] },
-                    ]}
-                    weight='semibold'
-                  >
-                    {action.label}
-                  </Text>
-                </View>
-              </Button>
-            ))}
-          </View>
+          <EmoteActionSheetPreview
+            displayUrl={displayUrl}
+            name={part.name ?? part.original_name ?? undefined}
+            subtitle={t('emoteActions.title')}
+            imageSize={previewImageSize}
+          />
+          <EmoteActionSheetRows actions={actions} />
         </View>
       </BottomSheet>
     </>
@@ -387,41 +299,6 @@ function EmoteActionSheetComponent({
 export const EmoteActionSheet = memo(EmoteActionSheetComponent);
 
 const styles = StyleSheet.create({
-  actionButton: {
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-    flexDirection: 'row',
-    gap: theme.space12,
-    minHeight: Platform.select({ ios: 56, android: 56 }),
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space12,
-  },
-  actionButtonWithDivider: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  actionCopy: {
-    flex: 1,
-  },
-  actionGroup: {
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
-    overflow: 'hidden',
-  },
-  actionIcon: {
-    opacity: 0.9,
-  },
-  actionIconFrame: {
-    alignItems: 'center',
-    borderCurve: 'continuous',
-    borderRadius: 8,
-    height: 30,
-    justifyContent: 'center',
-    width: 30,
-  },
-  actionText: {
-    fontSize: theme.fontSize17,
-    lineHeight: theme.fontSize17 * 1.2,
-  },
   doneButton: {
     alignItems: 'center',
     borderCurve: 'continuous',
@@ -437,37 +314,6 @@ const styles = StyleSheet.create({
   },
   heading: {
     flex: 1,
-  },
-  previewCard: {
-    paddingHorizontal: 2,
-    paddingVertical: theme.space4,
-  },
-  previewHint: {
-    fontSize: theme.fontSize12,
-    lineHeight: theme.fontSize12 * 1.3,
-    marginTop: 4,
-  },
-  previewImageContainer: {
-    alignItems: 'center',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
-    height: 64,
-    justifyContent: 'center',
-    overflow: 'hidden',
-    width: 64,
-  },
-  previewMeta: {
-    flex: 1,
-  },
-  previewName: {
-    fontSize: theme.fontSize18,
-    fontWeight: Platform.select({ ios: '700', android: '600' }),
-    lineHeight: theme.fontSize18 * 1.2,
-  },
-  previewRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.space16,
   },
   topBar: {
     alignItems: 'center',
