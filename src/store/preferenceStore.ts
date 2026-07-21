@@ -159,7 +159,7 @@ export const initialPreferences: Preferences = {
   streamListLayout: 'compact',
   chatDensity: 'comfortable',
   showAlternatingChatRows: false,
-  animate: true,
+  animate: false,
   chatTimestamps: false,
   highlightOwnMentions: true,
   showInlineReplyContext: true,
