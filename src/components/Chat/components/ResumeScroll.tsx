@@ -1,5 +1,5 @@
-import { memo } from 'react';
-import { StyleSheet } from 'react-native';
+import { memo, useMemo } from 'react';
+import { StyleSheet, useColorScheme } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 
@@ -23,6 +23,15 @@ function ResumeScrollComponent({
   unreadCount,
 }: ResumeScrollProps) {
   const { t } = useTranslation('chat');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const resumeButtonColors = useMemo(
+    () => ({
+      backgroundColor: theme.color.backgroundAltAlpha[scheme],
+      borderColor: theme.color.border[scheme],
+    }),
+    [scheme],
+  );
 
   return (
     <Animated.View
@@ -31,14 +40,14 @@ function ResumeScrollComponent({
       exiting={resumeExiting}
     >
       <Button
-        style={styles.resumeButton}
+        style={[styles.resumeButton, resumeButtonColors]}
         onPress={onScrollToBottom}
         haptic='light'
       >
         <SymbolView
           name='arrow.down'
           size={16}
-          tintColor={theme.colorAmberAlpha}
+          tintColor={theme.color.amberAlpha[scheme]}
         />
         <Text style={styles.resumeText}>{t('controls.jumpToLatest')}</Text>
         {unreadCount > 0 && (
@@ -54,8 +63,6 @@ export const ResumeScroll = memo(ResumeScrollComponent);
 const styles = StyleSheet.create({
   resumeButton: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.darkAltAlpha,
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius28,
     borderWidth: 1,

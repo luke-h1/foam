@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/RichChatMessage.styles';
@@ -23,10 +23,13 @@ interface PaintedUsernameWebViewProps {
 export function PaintedUsernameWebView({
   username,
   paint,
-  fallbackColor = theme.color.text.dark,
+  fallbackColor: fallbackColorProp,
   fontSize = chatLineMetrics.comfortable.fontSize,
   lineHeight = chatLineMetrics.comfortable.lineHeight,
 }: PaintedUsernameWebViewProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const fallbackColor = fallbackColorProp ?? theme.color.text[scheme];
   const html = useMemo(
     () =>
       buildPaintedUsernameHtml({
@@ -123,7 +126,7 @@ const styles = StyleSheet.create({
   },
   sizer: {
     ...chatLineMetrics.comfortable,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   webView: {
     backgroundColor: 'transparent',

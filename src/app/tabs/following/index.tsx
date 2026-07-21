@@ -1,4 +1,9 @@
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 
 import { router } from 'expo-router';
 
@@ -11,10 +16,17 @@ import { theme } from '@app/styles/themes';
 
 export default function FollowingRoute() {
   const { authState, ready } = useAuthContext();
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   if (!ready || !authState) {
     return (
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: theme.color.background[scheme] },
+        ]}
+      >
         {ready ? (
           <>
             <Text type='sm' color='gray.textLow' align='center'>
@@ -33,7 +45,10 @@ export default function FollowingRoute() {
           </>
         ) : (
           <>
-            <ActivityIndicator size='large' color={theme.colorPrimary} />
+            <ActivityIndicator
+              size='large'
+              color={theme.color.accent[scheme]}
+            />
             <Text
               type='sm'
               color='gray.textLow'
@@ -58,7 +73,6 @@ export default function FollowingRoute() {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.dark,
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: theme.space28,

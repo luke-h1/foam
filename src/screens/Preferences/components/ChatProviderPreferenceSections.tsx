@@ -1,3 +1,4 @@
+import { useColorScheme } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import type { SFSymbol } from 'sf-symbols-typescript';
@@ -9,12 +10,12 @@ import {
 import type { AndroidSymbol } from '@app/components/ui/Icon/Icon';
 import { theme } from '@app/styles/themes';
 
-import { ProviderPreviewItem } from './ChatPreferencePreviewWidgets';
 import type {
   PreviewProvider,
   ProviderPreviewKey,
   ProviderPreviewValue,
-} from './chatPreferenceTypes';
+} from '../types/chatPreferenceTypes';
+import { ProviderPreviewItem } from './ChatPreferencePreviewWidgets';
 
 const EMOTES_ICON: SFSymbol = 'face.smiling';
 const EMOTES_ANDROID_ICON: AndroidSymbol = 'sentiment_satisfied';
@@ -85,11 +86,13 @@ export function ChatProviderPreferenceSections({
   onProviderToggle: (key: ProviderPreviewKey, value: boolean) => void;
 }) {
   const { t } = useTranslation('preferences');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   return (
     <>
       {PROVIDER_PREFERENCE_SECTIONS.map(section => {
-        const tint = theme.colorGrey;
+        const tint = theme.color.textSecondary[scheme];
         return (
           <SettingsSection key={section.title} title={section.title}>
             <SettingsToggleRow

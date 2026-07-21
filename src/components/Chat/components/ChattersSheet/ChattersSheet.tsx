@@ -1,5 +1,10 @@
 import { memo, useCallback, useMemo, useState } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  StyleSheet,
+  useColorScheme,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -114,6 +119,8 @@ const ChattersSheetComponent = ({
   onSelectChatter,
 }: ChattersSheetProps) => {
   const { t } = useTranslation('chat');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const [query, setQuery] = useState('');
   const { bottom: bottomInset } = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
@@ -130,16 +137,33 @@ const ChattersSheetComponent = ({
     () => ({ paddingBottom: bottomInset + theme.space20 }),
     [bottomInset],
   );
+  const colorStyles = useMemo(
+    () => ({
+      header: { borderBottomColor: theme.color.border[scheme] },
+      searchWrap: {
+        backgroundColor: theme.color.surfaceAlpha[scheme],
+        borderColor: theme.color.border[scheme],
+      },
+      secondaryText: { color: theme.color.textSecondary[scheme] },
+    }),
+    [scheme],
+  );
 
   const renderItem: ListRenderItem<ChattersListItem> = useCallback(
     ({ item }) => {
       if (item.type === 'header') {
         return (
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionHeaderText} weight='semibold'>
+            <Text
+              style={[styles.sectionHeaderText, colorStyles.secondaryText]}
+              weight='semibold'
+            >
               {t(`chatters.${item.labelKey}`)}
             </Text>
-            <Text style={styles.sectionHeaderCount} weight='semibold'>
+            <Text
+              style={[styles.sectionHeaderCount, colorStyles.secondaryText]}
+              weight='semibold'
+            >
               {item.count}
             </Text>
           </View>
@@ -162,7 +186,7 @@ const ChattersSheetComponent = ({
         </Button>
       );
     },
-    [onSelectChatter, t],
+    [colorStyles, onSelectChatter, t],
   );
 
   return (
@@ -175,8 +199,11 @@ const ChattersSheetComponent = ({
       testID='chat-chatters-sheet'
     >
       <View style={[styles.container, { height: sheetHeight }]}>
-        <View style={styles.header}>
-          <Text style={styles.headerEyebrow} weight='semibold'>
+        <View style={[styles.header, colorStyles.header]}>
+          <Text
+            style={[styles.headerEyebrow, colorStyles.secondaryText]}
+            weight='semibold'
+          >
             {t('chatters.eyebrow')}
           </Text>
           <Text style={styles.headerTitle} weight='semibold'>
@@ -184,11 +211,11 @@ const ChattersSheetComponent = ({
           </Text>
         </View>
 
-        <View style={styles.searchWrap}>
+        <View style={[styles.searchWrap, colorStyles.searchWrap]}>
           <SymbolView
             name='magnifyingglass'
             size={16}
-            tintColor={theme.color.textSecondary.dark}
+            tintColor={theme.color.textSecondary[scheme]}
           />
           <Input
             autoCapitalize='none'
@@ -197,7 +224,7 @@ const ChattersSheetComponent = ({
             color='white'
             onChangeText={setQuery}
             placeholder={t('chatters.filterChatters')}
-            placeholderTextColor='rgba(255,255,255,0.42)'
+            placeholderTextColor={theme.color.textFaint[scheme]}
             radius='none'
             returnKeyType='search'
             size='sm'
@@ -212,9 +239,9 @@ const ChattersSheetComponent = ({
             <SymbolView
               name='person.2'
               size={28}
-              tintColor={theme.color.textSecondary.dark}
+              tintColor={theme.color.textSecondary[scheme]}
             />
-            <Text style={styles.emptyStateText}>
+            <Text style={[styles.emptyStateText, colorStyles.secondaryText]}>
               {query.trim() ? t('chatters.noMatches') : t('chatters.empty')}
             </Text>
           </View>
@@ -264,19 +291,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space24,
   },
   emptyStateText: {
-    color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize12,
     lineHeight: theme.fontSize12 * 1.4,
     textAlign: 'center',
   },
   header: {
-    borderBottomColor: theme.color.border.dark,
     borderBottomWidth: 1,
     paddingHorizontal: theme.space20,
     paddingVertical: theme.space12,
   },
   headerEyebrow: {
-    color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize11,
     letterSpacing: 0.6,
     marginBottom: 2,
@@ -290,8 +314,6 @@ const styles = StyleSheet.create({
   },
   searchWrap: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    borderColor: 'rgba(255,255,255,0.1)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     borderWidth: 1,
@@ -310,11 +332,9 @@ const styles = StyleSheet.create({
     paddingTop: theme.space12,
   },
   sectionHeaderCount: {
-    color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize11,
   },
   sectionHeaderText: {
-    color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize11,
     letterSpacing: 0.5,
     textTransform: 'uppercase',

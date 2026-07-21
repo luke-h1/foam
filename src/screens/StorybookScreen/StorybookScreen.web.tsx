@@ -1,11 +1,19 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
 export function StorybookScreen() {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <Text type='lg' weight='semibold' align='center'>
         Storybook is available in the native development app.
       </Text>
@@ -20,7 +28,6 @@ export function StorybookScreen() {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.dark,
     flex: 1,
     gap: 12,
     justifyContent: 'center',

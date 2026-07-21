@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useColorScheme } from 'react-native';
 
 import { MediaLinkCard } from '@app/components/Chat/components/MediaLinkCard';
 import { StvEmoteEvent } from '@app/components/Chat/components/StvEmoteEvent';
@@ -11,7 +12,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 
-import { styles } from '../RichChatMessage.styles';
+import { getRichChatMessageStyles } from '../RichChatMessage.styles';
 import { CheermoteRenderer } from './CheermoteRenderer';
 import { EmoteRenderer } from './EmoteRenderer';
 import { MentionSpan } from './MentionSpan';
@@ -43,6 +44,9 @@ export function ChatMessagePart({
   textColor,
   part,
 }: ChatMessagePartProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = getRichChatMessageStyles(scheme);
   const subMessage =
     'subscriptionEvent' in part ? part.subscriptionEvent?.message : undefined;
   const parsedSubMessage = useMemo(
@@ -59,7 +63,7 @@ export function ChatMessagePart({
       compact && styles.messageTextCompact,
       Boolean(moderationNotice) && styles.moderatedMessageText,
     ],
-    [compact, moderationNotice],
+    [styles, compact, moderationNotice],
   );
 
   if (mode === 'system' && part.type === 'text') {

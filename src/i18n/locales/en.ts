@@ -349,6 +349,7 @@ const en = {
     messageLabel: 'MESSAGE',
     unexpectedIssue: 'An unexpected issue interrupted the app.',
     reportBug: 'Report bug',
+    bugReportSent: 'Report sent',
     goHome: 'Go home',
     oops: 'Oops!',
     screenDoesNotExist: 'This screen does not exist.',
@@ -381,6 +382,11 @@ const en = {
     success: 'Your feedback was sent - we appreciate it.',
     error: "Couldn't send your feedback. Please try again.",
     emptyMessage: 'Please enter a message first.',
+    screenshotLabel: 'Screenshot (optional)',
+    addScreenshot: 'Add a screenshot',
+    removeScreenshot: 'Remove',
+    screenshotTooLarge: 'That image is too big to attach - try a smaller one.',
+    screenshotPickFailed: "Couldn't attach that image. Please try again.",
   },
 
   search: {
@@ -558,11 +564,11 @@ const en = {
     ossLicensesDescription: 'Open-source software used by the app',
     theme: 'Theme',
     themeFooterIos:
-      'Foam currently ships with one canonical visual mode. Additional themes will appear here as they become available.',
-    themeDescription:
-      'The redesigned app currently ships with one canonical visual mode',
-    foamDark: 'Foam Dark',
+      'System follows your device appearance. Light and Dark pin the app to one look.',
+    themeDescription: 'Follow the system appearance or pin light or dark',
     mode: 'Mode',
+    system: 'System',
+    light: 'Light',
     dark: 'Dark',
     feedback: 'Feedback',
     haptics: 'Haptics',
@@ -715,11 +721,11 @@ const en = {
     timestampFormatDescription: 'Applies to newly received messages',
     timestamp24h: '24-hour',
     timestamp12h: '12-hour',
-    foamDarkTitle: 'Foam Dark',
-    foamDarkDescription:
-      'The redesign now runs on a single cinematic theme instead of splitting effort across legacy variants.',
-    foamDarkFootnote:
-      'Additional themes can be added later on top of the new token system.',
+    themeModeSystem: 'System',
+    themeModeLight: 'Light',
+    themeModeDark: 'Dark',
+    themeModeFootnote:
+      'System follows your device appearance. Light and Dark pin the app to one look.',
     highlights: 'Highlights',
     highlightsFooter:
       'Highlighted phrases tint matching messages. Mention feedback also buzzes when a highlight matches.',

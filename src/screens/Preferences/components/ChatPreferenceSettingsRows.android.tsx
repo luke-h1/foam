@@ -1,3 +1,4 @@
+import { useColorScheme } from 'react-native';
 import type { ComponentProps } from 'react';
 
 import { Column, Row, Text } from '@expo/ui/jetpack-compose';
@@ -32,6 +33,9 @@ export function ChatPreferenceSegmentedSettingsRow({
   onSelectIndex: (index: number) => void;
   values: readonly string[];
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
     <Column modifiers={[fillMaxWidth()]}>
       <SettingsRow title={title} subtitle={subtitle} icon={icon} />
@@ -40,7 +44,7 @@ export function ChatPreferenceSegmentedSettingsRow({
           modifiers={[
             fillMaxWidth(),
             clip(Shapes.RoundedCorner(10)),
-            background(theme.color.menu.card),
+            background(theme.color.menu.card[scheme]),
             padding(3, 3, 3, 3),
           ]}
         >
@@ -55,7 +59,9 @@ export function ChatPreferenceSegmentedSettingsRow({
                   weight(1),
                   clip(Shapes.RoundedCorner(8)),
                   background(
-                    selected ? theme.color.menu.cardActive : 'transparent',
+                    selected
+                      ? theme.color.menu.cardActive[scheme]
+                      : 'transparent',
                   ),
                   clickable(() => onSelectIndex(index), {
                     indication: false,
@@ -66,8 +72,8 @@ export function ChatPreferenceSegmentedSettingsRow({
                 <Text
                   color={
                     selected
-                      ? theme.color.text.dark
-                      : theme.color.textSecondary.dark
+                      ? theme.color.text[scheme]
+                      : theme.color.textSecondary[scheme]
                   }
                   style={{
                     typography: 'labelLarge',

@@ -1,5 +1,5 @@
 import { Children, Fragment, isValidElement, ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import {
@@ -22,6 +22,8 @@ export function SettingsSection({
   children: ReactNode;
   cardColor?: string;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   return (
     <View style={styles.section}>
       {title ? (
@@ -36,14 +38,27 @@ export function SettingsSection({
       ) : null}
 
       <View
-        style={[styles.card, cardColor ? { backgroundColor: cardColor } : null]}
+        style={[
+          styles.card,
+          {
+            backgroundColor:
+              cardColor ?? theme.color.backgroundSecondary[scheme],
+          },
+        ]}
       >
         {Children.toArray(children).map((child, index, rows) => (
           <Fragment
             key={isValidElement(child) ? String(child.key) : 'settings-row'}
           >
             {child}
-            {index < rows.length - 1 ? <View style={styles.separator} /> : null}
+            {index < rows.length - 1 ? (
+              <View
+                style={[
+                  styles.separator,
+                  { backgroundColor: theme.color.border[scheme] },
+                ]}
+              />
+            ) : null}
           </Fragment>
         ))}
       </View>
@@ -68,6 +83,8 @@ export function SettingsRow({
   onPress?: () => void;
   danger?: boolean;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const content = (
     <View style={styles.row}>
       {icon ? (
@@ -81,7 +98,7 @@ export function SettingsRow({
           <SymbolView
             name={resolveIconName(icon.icon, icon.androidIcon)}
             size={20}
-            tintColor={icon.color || theme.colorPrimary}
+            tintColor={icon.color || theme.color.accent[scheme]}
           />
         </View>
       ) : null}
@@ -102,7 +119,7 @@ export function SettingsRow({
           <SymbolView
             name='chevron.right'
             size={18}
-            tintColor={theme.colorGreyHoverAlpha}
+            tintColor={theme.color.textSecondary[scheme]}
           />
         ) : null)}
     </View>
@@ -156,6 +173,8 @@ export function SettingsLinkRow(props: {
   onPress?: () => void;
   danger?: boolean;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { value, onPress, ...rowProps } = props;
 
   return (
@@ -173,7 +192,7 @@ export function SettingsLinkRow(props: {
             <SymbolView
               name='chevron.right'
               size={18}
-              tintColor={theme.colorGreyHoverAlpha}
+              tintColor={theme.color.textSecondary[scheme]}
             />
           ) : null}
         </View>
@@ -184,7 +203,6 @@ export function SettingsLinkRow(props: {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.color.backgroundSecondary.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius18,
     overflow: 'hidden',
@@ -229,10 +247,11 @@ const styles = StyleSheet.create({
     marginBottom: theme.space24,
   },
   sectionTitle: {
+    letterSpacing: 1.1,
     paddingHorizontal: theme.space16,
+    textTransform: 'uppercase',
   },
   separator: {
-    backgroundColor: theme.colorBorderSecondary,
     height: StyleSheet.hairlineWidth,
     marginLeft: theme.space16,
   },

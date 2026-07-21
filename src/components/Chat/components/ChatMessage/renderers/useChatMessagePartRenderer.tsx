@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useColorScheme } from 'react-native';
 import type { ReactNode } from 'react';
 import type { Key } from 'react';
 
@@ -14,7 +15,7 @@ import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 import {
   type ChatFontScale,
   getChatFontScaleStyle,
-  styles,
+  getRichChatMessageStyles,
 } from '../RichChatMessage.styles';
 import type { EmotePressData } from '../RichChatMessage.types';
 import { CheermoteRenderer } from './CheermoteRenderer';
@@ -55,6 +56,9 @@ export function useChatMessagePartRenderer({
   replyPlainMentionTarget,
   emoteTargetSize,
 }: UseChatMessagePartRendererArgs) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = getRichChatMessageStyles(scheme);
   const mentionBaseTextStyle = useMemo(
     () => [
       styles.messageText,
@@ -62,7 +66,7 @@ export function useChatMessagePartRenderer({
       getChatFontScaleStyle(fontScale, compact),
       Boolean(moderationNotice) && styles.moderatedMessageText,
     ],
-    [compact, fontScale, moderationNotice],
+    [styles, compact, fontScale, moderationNotice],
   );
 
   const renderMessagePart = (part: ParsedPart, index: number): ReactNode => {

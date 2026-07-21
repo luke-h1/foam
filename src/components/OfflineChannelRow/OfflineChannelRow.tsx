@@ -1,5 +1,5 @@
-import { memo, useCallback } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { memo, useCallback, useMemo } from 'react';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { router } from 'expo-router';
@@ -17,7 +17,17 @@ interface Props {
 
 function OfflineChannelRow({ channel }: Props) {
   const { t } = useTranslation('stream');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const avatarInitial = channel.broadcaster_name.trim().charAt(0).toUpperCase();
+
+  const colorStyles = useMemo(
+    () => ({
+      avatarFallback: { backgroundColor: theme.color.pressedOverlay[scheme] },
+      avatarInitial: { color: theme.color.text[scheme] },
+    }),
+    [scheme],
+  );
 
   const handlePressIn = useCallback(() => {
     router.prefetch(`/streams/streamer-profile/${channel.broadcaster_login}`);
@@ -42,8 +52,8 @@ function OfflineChannelRow({ channel }: Props) {
           transition={150}
         />
       ) : (
-        <View style={styles.avatarFallback}>
-          <Text type='sm' weight='bold' style={styles.avatarInitial}>
+        <View style={[styles.avatarFallback, colorStyles.avatarFallback]}>
+          <Text type='sm' weight='bold' style={colorStyles.avatarInitial}>
             {avatarInitial}
           </Text>
         </View>
@@ -60,7 +70,6 @@ export const MemoizedOfflineChannelRow = memo(OfflineChannelRow);
 const styles = StyleSheet.create({
   avatarFallback: {
     alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     height: 36,
@@ -80,12 +89,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     width: 36,
   },
-  avatarInitial: {
-    color: theme.colorWhite,
-  },
   name: {
     flex: 1,
-    opacity: 0.85,
   },
   row: {
     alignItems: 'center',

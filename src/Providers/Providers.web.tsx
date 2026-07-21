@@ -1,5 +1,5 @@
 import { PropsWithChildren } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   initialWindowMetrics,
@@ -13,6 +13,7 @@ import { Toaster } from 'sonner-native';
 import { AppBottomSheetProvider } from '@app/components/BottomSheet/BottomSheetProvider';
 import { AccentColorProvider } from '@app/context/AccentColorContext';
 import { AuthContextProvider } from '@app/context/AuthContext';
+import { useSyncLightModeFlag } from '@app/hooks/firebase/useSyncLightModeFlag';
 import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
 import { QueryProvider } from '@app/lib/react-query/query-provider';
 import { BaseConfig } from '@app/navigators/config';
@@ -23,18 +24,26 @@ import { theme } from '@app/styles/themes';
 import { ScreenDimensionsProvider } from './ScreenDimensionsProvider/ScreenDimensionsProvider';
 
 function QueryDevTools({ children }: PropsWithChildren) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
     <>
       <Toaster
         style={{
-          backgroundColor: theme.color.background.dark,
-          borderColor: theme.color.border.dark,
+          backgroundColor: theme.color.background[scheme],
+          borderColor: theme.color.border[scheme],
           borderWidth: 1,
         }}
       />
       {children}
     </>
   );
+}
+
+function LightModeFlagSync() {
+  useSyncLightModeFlag();
+  return null;
 }
 
 export function Providers({ children }: PropsWithChildren) {
@@ -52,6 +61,7 @@ export function Providers({ children }: PropsWithChildren) {
               <GestureHandlerRootView style={styles.gestureContainer}>
                 <PortalProvider>
                   <QueryProvider>
+                    <LightModeFlagSync />
                     <QueryDevTools>
                       <PressablesConfig
                         config={{ minScale: motion.pressMinScale }}

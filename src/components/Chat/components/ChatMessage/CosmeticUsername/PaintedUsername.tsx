@@ -1,12 +1,18 @@
 import { memo } from 'react';
-import { type StyleProp, StyleSheet, TextStyle, View } from 'react-native';
+import {
+  type StyleProp,
+  StyleSheet,
+  TextStyle,
+  useColorScheme,
+  View,
+} from 'react-native';
 
 import { useSelector } from '@legendapp/state/react';
 
 import { useChatScrollActive } from '@app/components/Chat/util/useChatScrollActive';
 import { Text } from '@app/components/ui/Text/Text';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { usePaintRenderer } from '@app/store/preferenceStore';
+import { usePaintRenderer } from '@app/store/preferences/selectors';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
@@ -159,11 +165,14 @@ function PaintedUsernameComponent({
   username,
   paint: paintProp,
   userId,
-  fallbackColor = theme.color.text.dark,
+  fallbackColor: fallbackColorProp,
   showColon = true,
   sevenTvPaintDropShadows: sevenTvPaintDropShadowsProp,
   usernameTextStyle,
 }: PaintedUsernameProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const fallbackColor = fallbackColorProp ?? theme.color.text[scheme];
   const sevenTvPaintDropShadows =
     sevenTvPaintDropShadowsProp ?? DEFAULT_PAINT_DROP_SHADOW_MODE;
   const displayUsername = showColon ? `${username}: ` : username;
@@ -216,7 +225,7 @@ const styles = StyleSheet.create({
   maskText: {
     ...chatLineMetrics.comfortable,
     color: 'black',
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   paintedWrapper: {
     alignSelf: 'flex-start',
@@ -224,7 +233,7 @@ const styles = StyleSheet.create({
   },
   plainUsername: {
     ...chatLineMetrics.comfortable,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
 });
 

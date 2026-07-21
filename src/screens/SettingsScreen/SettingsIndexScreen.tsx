@@ -1,5 +1,11 @@
 import { useRef } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -34,6 +40,8 @@ function handleSendFeedback() {
 const variant = process.env.EXPO_PUBLIC_APP_VARIANT;
 
 export function SettingsIndexScreen() {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { user } = useAuthContext();
   const { config } = useRemoteConfig();
   const insets = useSafeAreaInsets();
@@ -118,7 +126,9 @@ export function SettingsIndexScreen() {
             <Button
               label={t('faq')}
               systemImage='questionmark.circle'
-              onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
+              onPress={() =>
+                openLinkInBrowser('https://foam-app.com/faq', scheme)
+              }
             />
             <Button
               label={t('sendFeedback')}
@@ -128,12 +138,12 @@ export function SettingsIndexScreen() {
             <Button
               label={t('status')}
               systemImage='checkmark.shield'
-              onPress={() => openLinkInBrowser(statusPageUrl.value)}
+              onPress={() => openLinkInBrowser(statusPageUrl.value, scheme)}
             />
             <Button
               label={t('website')}
               systemImage='globe'
-              onPress={() => openLinkInBrowser(websiteUrl.value)}
+              onPress={() => openLinkInBrowser(websiteUrl.value, scheme)}
             />
             <Button
               label={t('ossLicenses')}
@@ -184,7 +194,12 @@ export function SettingsIndexScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <ScrollView
         ref={scrollRef}
         contentInsetAdjustmentBehavior='automatic'
@@ -200,44 +215,50 @@ export function SettingsIndexScreen() {
             subtitle={t('chatDescription')}
             icon={{
               icon: 'bubble.left.and.bubble.right',
-              color: theme.colorPlum,
+              color: theme.color.plum[scheme],
             }}
             onPress={() => router.push('/tabs/settings/chat-preferences')}
           />
           <SettingsLinkRow
             title={t('blockedTerms')}
             subtitle={t('blockedTermsDescription')}
-            icon={{ icon: 'text.badge.xmark', color: theme.colorRed }}
+            icon={{
+              icon: 'text.badge.xmark',
+              color: theme.color.danger[scheme],
+            }}
             onPress={() => router.push('/tabs/settings/blocked-terms')}
           />
           <SettingsLinkRow
             title={t('emotesAndBadges')}
             subtitle={t('emotesAndBadgesDescription')}
-            icon={{ icon: 'face.smiling', color: theme.colorAmber }}
+            icon={{ icon: 'face.smiling', color: theme.color.amber[scheme] }}
             onPress={() => router.push('/tabs/settings/emotes-and-badges')}
           />
           <SettingsLinkRow
             title={t('savedPhrases')}
             subtitle={t('savedPhrasesDescription')}
-            icon={{ icon: 'text.bubble', color: theme.colorBlue }}
+            icon={{ icon: 'text.bubble', color: theme.color.blue[scheme] }}
             onPress={() => router.push('/tabs/settings/saved-phrases')}
           />
           <SettingsLinkRow
             title={t('myClips')}
             subtitle={t('myClipsDescription')}
-            icon={{ icon: 'scissors', color: theme.colorViolet }}
+            icon={{ icon: 'scissors', color: theme.color.teal[scheme] }}
             onPress={() => router.push('/tabs/settings/my-clips')}
           />
           <SettingsLinkRow
             title={t('cache')}
             subtitle={t('cacheDescription')}
-            icon={{ icon: 'externaldrive', color: theme.colorPrimary }}
+            icon={{
+              icon: 'externaldrive',
+              color: theme.color.accent[scheme],
+            }}
             onPress={() => router.push('/tabs/settings/cache')}
           />
           <SettingsLinkRow
             title={t('appearance')}
             subtitle={t('appearanceDescription')}
-            icon={{ icon: 'paintpalette', color: theme.colorAmber }}
+            icon={{ icon: 'paintpalette', color: theme.color.amber[scheme] }}
             onPress={() => router.push('/tabs/settings/appearance')}
           />
         </SettingsSection>
@@ -246,7 +267,7 @@ export function SettingsIndexScreen() {
           <SettingsLinkRow
             title={user ? t('profile') : t('signIn')}
             subtitle={user ? t('profileDescription') : t('signInDescription')}
-            icon={{ icon: 'person.circle', color: theme.colorTeal }}
+            icon={{ icon: 'person.circle', color: theme.color.teal[scheme] }}
             onPress={() => {
               if (user) {
                 router.push('/tabs/settings/profile');
@@ -262,37 +283,45 @@ export function SettingsIndexScreen() {
           <SettingsLinkRow
             title={t('aboutFoam')}
             subtitle={t('aboutFoamDescription')}
-            icon={{ icon: 'info.circle', color: theme.colorBlue }}
+            icon={{ icon: 'info.circle', color: theme.color.blue[scheme] }}
             onPress={() => router.push('/tabs/settings/about')}
           />
           <SettingsLinkRow
             title={t('faq')}
             subtitle={t('faqDescription')}
-            icon={{ icon: 'questionmark.circle', color: theme.colorPrimary }}
-            onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
+            icon={{
+              icon: 'questionmark.circle',
+              color: theme.color.accent[scheme],
+            }}
+            onPress={() =>
+              openLinkInBrowser('https://foam-app.com/faq', scheme)
+            }
           />
           <SettingsLinkRow
             title={t('sendFeedback')}
             subtitle={t('sendFeedbackDescription')}
-            icon={{ icon: 'paperplane', color: theme.colorTeal }}
+            icon={{ icon: 'paperplane', color: theme.color.teal[scheme] }}
             onPress={handleSendFeedback}
           />
           <SettingsLinkRow
             title={t('status')}
             subtitle={t('statusDescription')}
-            icon={{ icon: 'checkmark.shield', color: theme.colorOrange }}
-            onPress={() => openLinkInBrowser(statusPageUrl.value)}
+            icon={{
+              icon: 'checkmark.shield',
+              color: theme.color.orange[scheme],
+            }}
+            onPress={() => openLinkInBrowser(statusPageUrl.value, scheme)}
           />
           <SettingsLinkRow
             title={t('website')}
             subtitle={t('websiteDescription')}
-            icon={{ icon: 'globe', color: theme.colorViolet }}
-            onPress={() => openLinkInBrowser(websiteUrl.value)}
+            icon={{ icon: 'globe', color: theme.color.violet[scheme] }}
+            onPress={() => openLinkInBrowser(websiteUrl.value, scheme)}
           />
           <SettingsLinkRow
             title={t('ossLicenses')}
             subtitle={t('ossLicensesDescription')}
-            icon={{ icon: 'doc.text', color: theme.colorViolet }}
+            icon={{ icon: 'doc.text', color: theme.color.violet[scheme] }}
             onPress={() => openLicenseList(t('ossLicenses'))}
           />
         </SettingsSection>
@@ -302,7 +331,7 @@ export function SettingsIndexScreen() {
             <SettingsLinkRow
               title={t('updateApp')}
               subtitle={t('updateAppDescription')}
-              icon={{ icon: 'arrow.down.app', color: theme.colorTeal }}
+              icon={{ icon: 'arrow.down.app', color: theme.color.teal[scheme] }}
               onPress={openStore}
             />
           ) : null}
@@ -311,7 +340,7 @@ export function SettingsIndexScreen() {
             subtitle={t('updateBundleDescription')}
             icon={{
               icon: 'arrow.triangle.2.circlepath',
-              color: theme.colorBlue,
+              color: theme.color.blue[scheme],
             }}
             onPress={updateBundle}
           />
@@ -324,14 +353,17 @@ export function SettingsIndexScreen() {
             <SettingsLinkRow
               title={t('devTools')}
               subtitle={t('devToolsDescription')}
-              icon={{ icon: 'hammer', color: theme.colorOrange }}
+              icon={{ icon: 'hammer', color: theme.color.orange[scheme] }}
               onPress={() => router.push('/tabs/settings/dev-tools')}
             />
           ) : null}
           <SettingsLinkRow
             title={t('other')}
             subtitle={t('otherDescription')}
-            icon={{ icon: 'ellipsis.circle', color: theme.colorGrey }}
+            icon={{
+              icon: 'ellipsis.circle',
+              color: theme.color.textSecondary[scheme],
+            }}
             onPress={() => router.push('/tabs/settings/other')}
           />
         </SettingsSection>
@@ -358,7 +390,6 @@ const styles = StyleSheet.create({
     marginTop: theme.space12,
   },
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   content: {

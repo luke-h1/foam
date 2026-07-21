@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { router } from 'expo-router';
@@ -11,13 +11,7 @@ import {
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
-import {
-  DensityPreview,
-  EmojiStylePreview,
-  PreviewLabel,
-} from './ChatPreferencePreviewWidgets';
-import { ChatPreferenceSegmentedSettingsRow } from './ChatPreferenceSettingsRows';
-import { ChatPreferencePreview } from './ChatPreferencesPreview';
+import { useChatPreferenceScreenState } from '../hooks/useChatPreferenceScreenState';
 import {
   CHAT_DELAY_OPTIONS,
   CONTEXT_TOGGLE_ROWS,
@@ -26,9 +20,15 @@ import {
   FONT_SCALE_OPTIONS,
   SCROLLBACK_LABELS,
   TIMESTAMP_FORMAT_OPTIONS,
-} from './chatPreferenceTypes';
+} from '../types/chatPreferenceTypes';
+import {
+  DensityPreview,
+  EmojiStylePreview,
+  PreviewLabel,
+} from './ChatPreferencePreviewWidgets';
+import { ChatPreferenceSegmentedSettingsRow } from './ChatPreferenceSettingsRows';
+import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import { ChatProviderPreferenceSections } from './ChatProviderPreferenceSections';
-import { useChatPreferenceScreenState } from './useChatPreferenceScreenState';
 
 export function ChatPreferenceDefaultContent() {
   const {
@@ -65,6 +65,8 @@ export function ChatPreferenceDefaultContent() {
     update,
   } = useChatPreferenceScreenState();
   const { t } = useTranslation('preferences');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   return (
     <>
@@ -73,7 +75,7 @@ export function ChatPreferenceDefaultContent() {
           icon={{
             icon: 'list.bullet',
             androidIcon: 'format_list_bulleted',
-            color: theme.colorGrey,
+            color: theme.color.textSecondary[scheme],
           }}
           onSelectIndex={handleDensityChange}
           selectedIndex={densityIndex}
@@ -92,7 +94,7 @@ export function ChatPreferenceDefaultContent() {
           icon={{
             icon: 'textformat.size',
             androidIcon: 'format_size',
-            color: theme.colorGrey,
+            color: theme.color.textSecondary[scheme],
           }}
           onSelectIndex={handleFontScaleChange}
           selectedIndex={fontScaleIndex}
@@ -109,7 +111,7 @@ export function ChatPreferenceDefaultContent() {
           icon={{
             icon: 'line.3.horizontal',
             androidIcon: 'menu',
-            color: theme.colorGrey,
+            color: theme.color.textSecondary[scheme],
           }}
           value={previewAlternatingRows}
           onValueChange={handleAlternatingRowsToggle}
@@ -126,7 +128,7 @@ export function ChatPreferenceDefaultContent() {
           icon={{
             icon: 'arrow.up.message',
             androidIcon: 'animation',
-            color: theme.colorGrey,
+            color: theme.color.textSecondary[scheme],
           }}
           value={animate}
           onValueChange={value => update({ animate: value })}
@@ -138,7 +140,7 @@ export function ChatPreferenceDefaultContent() {
           icon={{
             icon: 'face.smiling',
             androidIcon: 'sentiment_satisfied',
-            color: theme.colorGrey,
+            color: theme.color.textSecondary[scheme],
           }}
           onSelectIndex={handleEmojiStyleChange}
           selectedIndex={emojiIndex}
@@ -158,7 +160,7 @@ export function ChatPreferenceDefaultContent() {
           icon={{
             icon: 'clock.arrow.circlepath',
             androidIcon: 'history',
-            color: theme.colorGrey,
+            color: theme.color.textSecondary[scheme],
           }}
           value={showRecentMessages !== false}
           onValueChange={value => update({ showRecentMessages: value })}
@@ -168,7 +170,7 @@ export function ChatPreferenceDefaultContent() {
             key={row.key}
             title={t(row.labelKey)}
             subtitle={t(row.subtitleKey)}
-            icon={row.icon}
+            icon={{ ...row.icon, color: theme.color.textSecondary[scheme] }}
             value={previewContext[row.key]}
             onValueChange={value => handleContextToggle(row.key, value)}
           />
@@ -177,7 +179,7 @@ export function ChatPreferenceDefaultContent() {
           icon={{
             icon: 'clock.badge',
             androidIcon: 'schedule',
-            color: theme.colorGrey,
+            color: theme.color.textSecondary[scheme],
           }}
           onSelectIndex={handleTimestampFormatChange}
           selectedIndex={timestampFormatIndex}
@@ -205,7 +207,7 @@ export function ChatPreferenceDefaultContent() {
           icon={{
             icon: 'timer',
             androidIcon: 'timer',
-            color: theme.colorGrey,
+            color: theme.color.textSecondary[scheme],
           }}
           onSelectIndex={handleChatDelayChange}
           selectedIndex={chatDelayIndex}
@@ -229,7 +231,7 @@ export function ChatPreferenceDefaultContent() {
           icon={{
             icon: 'highlighter',
             androidIcon: 'edit',
-            color: theme.colorGrey,
+            color: theme.color.textSecondary[scheme],
           }}
           onPress={() => router.push('/tabs/settings/chat-highlights')}
         />
@@ -239,7 +241,7 @@ export function ChatPreferenceDefaultContent() {
           icon={{
             icon: 'hand.tap',
             androidIcon: 'touch_app',
-            color: theme.colorGrey,
+            color: theme.color.textSecondary[scheme],
           }}
           value={chatMentionHaptics !== false}
           onValueChange={value => update({ chatMentionHaptics: value })}
@@ -251,7 +253,7 @@ export function ChatPreferenceDefaultContent() {
           icon={{
             icon: 'trash.slash',
             androidIcon: 'delete',
-            color: theme.colorGrey,
+            color: theme.color.textSecondary[scheme],
           }}
           onSelectIndex={handleDeletedStyleChange}
           selectedIndex={deletedStyleIndex}
@@ -265,7 +267,7 @@ export function ChatPreferenceDefaultContent() {
           icon={{
             icon: 'clock.arrow.circlepath',
             androidIcon: 'history',
-            color: theme.colorGrey,
+            color: theme.color.textSecondary[scheme],
           }}
           value={ignoreClearChat === true}
           onValueChange={value => update({ ignoreClearChat: value })}
@@ -284,7 +286,7 @@ export function ChatPreferenceDefaultContent() {
           icon={{
             icon: 'text.line.last.and.arrowtriangle.forward',
             androidIcon: 'sort',
-            color: theme.colorGrey,
+            color: theme.color.textSecondary[scheme],
           }}
           onSelectIndex={handleScrollbackChange}
           selectedIndex={scrollbackIndex}
@@ -313,7 +315,7 @@ export function ChatPreferenceDefaultContent() {
           icon={{
             icon: 'slash.circle',
             androidIcon: 'block',
-            color: theme.colorGrey,
+            color: theme.color.textSecondary[scheme],
           }}
           value={previewDisableEmoteAnimations}
           onValueChange={handleDisableEmoteAnimationsToggle}

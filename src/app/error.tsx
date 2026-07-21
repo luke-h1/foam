@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { type ErrorBoundaryProps, router, Stack } from 'expo-router';
@@ -18,6 +18,8 @@ function handleReportBug() {
 
 export default function AppError({ error, retry }: ErrorBoundaryProps) {
   const { t } = useTranslation(['errors', 'common']);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const errorMessage = t('unexpectedIssue');
 
   useEffect(() => {
@@ -33,7 +35,12 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
   return (
     <>
       <Stack.Screen options={{ title: t('somethingWentWrong') }} />
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: theme.color.background[scheme] },
+        ]}
+      >
         <ScreenHeader
           title={t('somethingWentWrong')}
           subtitle={t('recovery')}
@@ -45,12 +52,28 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}
         >
-          <View style={styles.panel}>
-            <View style={styles.iconWrap}>
+          <View
+            style={[
+              styles.panel,
+              {
+                backgroundColor: theme.color.backgroundAltAlpha[scheme],
+                borderColor: theme.color.border[scheme],
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.iconWrap,
+                {
+                  backgroundColor: theme.color.amberAlpha[scheme],
+                  borderColor: theme.color.borderStrong[scheme],
+                },
+              ]}
+            >
               <SymbolView
                 name='exclamationmark.triangle'
                 size={22}
-                tintColor={theme.colorAmber}
+                tintColor={theme.color.amber[scheme]}
               />
             </View>
 
@@ -64,7 +87,15 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
             </View>
           </View>
 
-          <View style={styles.errorCard}>
+          <View
+            style={[
+              styles.errorCard,
+              {
+                backgroundColor: theme.color.backgroundSecondary[scheme],
+                borderColor: theme.color.border[scheme],
+              },
+            ]}
+          >
             <Text
               type='xs'
               weight='semibold'
@@ -79,7 +110,13 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
           </View>
 
           <View style={styles.actions}>
-            <Button style={styles.primaryButton} onPress={() => void retry()}>
+            <Button
+              style={[
+                styles.primaryButton,
+                { backgroundColor: theme.color.accent[scheme] },
+              ]}
+              onPress={() => void retry()}
+            >
               <Text
                 type='sm'
                 color='accent'
@@ -91,14 +128,29 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
               </Text>
             </Button>
 
-            <Button style={styles.reportButton} onPress={handleReportBug}>
+            <Button
+              style={[
+                styles.reportButton,
+                {
+                  backgroundColor: theme.color.amberAlpha[scheme],
+                  borderColor: theme.color.borderStrong[scheme],
+                },
+              ]}
+              onPress={handleReportBug}
+            >
               <Text type='sm' color='gray' weight='semibold' align='center'>
                 {t('reportBug')}
               </Text>
             </Button>
 
             <Button
-              style={styles.secondaryButton}
+              style={[
+                styles.secondaryButton,
+                {
+                  backgroundColor: theme.color.backgroundSecondary[scheme],
+                  borderColor: theme.color.border[scheme],
+                },
+              ]}
               onPress={() => {
                 router.replace('/');
               }}
@@ -116,7 +168,6 @@ export default function AppError({ error, retry }: ErrorBoundaryProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   actions: {
@@ -138,8 +189,6 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   errorCard: {
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     borderWidth: StyleSheet.hairlineWidth,
@@ -150,8 +199,6 @@ const styles = StyleSheet.create({
   },
   iconWrap: {
     alignItems: 'center',
-    backgroundColor: theme.colorAmberAlpha,
-    borderColor: theme.colorBorderTertiary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     borderWidth: StyleSheet.hairlineWidth,
@@ -161,8 +208,6 @@ const styles = StyleSheet.create({
   },
   panel: {
     alignItems: 'flex-start',
-    backgroundColor: theme.color.background.darkAltAlpha,
-    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: StyleSheet.hairlineWidth,
@@ -173,7 +218,6 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     alignItems: 'center',
-    backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     justifyContent: 'center',
@@ -183,8 +227,6 @@ const styles = StyleSheet.create({
   },
   reportButton: {
     alignItems: 'center',
-    backgroundColor: theme.colorAmberAlpha,
-    borderColor: theme.colorBorderTertiary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     borderWidth: StyleSheet.hairlineWidth,
@@ -195,8 +237,6 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     alignItems: 'center',
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     borderWidth: StyleSheet.hairlineWidth,

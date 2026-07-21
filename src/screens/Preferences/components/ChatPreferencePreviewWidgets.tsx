@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Image } from '@app/components/Image/Image';
@@ -6,11 +6,11 @@ import { Text, type TextType } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 
-import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import type {
   PreviewProvider,
   ProviderPreviewVariant,
-} from './chatPreferenceTypes';
+} from '../types/chatPreferenceTypes';
+import { ChatPreferencePreview } from './ChatPreferencesPreview';
 
 export const DensityPreview = function DensityPreview({
   density,
@@ -18,9 +18,20 @@ export const DensityPreview = function DensityPreview({
   density: 'comfortable' | 'compact';
 }) {
   const compact = density === 'compact';
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   return (
-    <View style={[styles.previewPanel, compact && styles.previewPanelCompact]}>
+    <View
+      style={[
+        styles.previewPanel,
+        {
+          backgroundColor: theme.color.background[scheme],
+          borderColor: theme.color.border[scheme],
+        },
+        compact && styles.previewPanelCompact,
+      ]}
+    >
       <PreviewMessage
         compact={compact}
         time='12:42'
@@ -77,11 +88,31 @@ export const EmojiStylePreview = function EmojiStylePreview({
 }: {
   emotes: SanitisedEmote[];
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
-    <View style={styles.previewPanel}>
+    <View
+      style={[
+        styles.previewPanel,
+        {
+          backgroundColor: theme.color.background[scheme],
+          borderColor: theme.color.border[scheme],
+        },
+      ]}
+    >
       <View style={styles.emojiPreviewRow}>
         {emotes.map(emote => (
-          <View key={`${emote.site}-${emote.name}`} style={styles.emojiTile}>
+          <View
+            key={`${emote.site}-${emote.name}`}
+            style={[
+              styles.emojiTile,
+              {
+                backgroundColor: theme.color.background[scheme],
+                borderColor: theme.color.border[scheme],
+              },
+            ]}
+          >
             <Image
               cachePolicy='memory-disk'
               contentFit='contain'
@@ -137,8 +168,6 @@ const styles = StyleSheet.create({
   },
   emojiTile: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.dark,
-    borderColor: theme.colorBorderSecondary,
     borderRadius: theme.borderRadius6,
     borderWidth: StyleSheet.hairlineWidth,
     height: 44,
@@ -161,8 +190,6 @@ const styles = StyleSheet.create({
     minHeight: 20,
   },
   previewPanel: {
-    backgroundColor: theme.color.background.dark,
-    borderColor: theme.colorBorderSecondary,
     borderRadius: theme.borderRadius6,
     borderWidth: StyleSheet.hairlineWidth,
     gap: theme.space4,

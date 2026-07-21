@@ -15,7 +15,7 @@ export function ChatLatencyPill() {
         <SymbolView
           name='clock'
           size={11}
-          tintColor={theme.colorGrey}
+          tintColor={theme.color.textSecondary.dark}
           style={styles.icon}
         />
         <Text style={styles.value}>{label}</Text>
@@ -32,15 +32,15 @@ const styles = StyleSheet.create({
   },
   pill: {
     alignItems: 'center',
-    backgroundColor: theme.colorBlackOverlay,
-    borderColor: theme.colorBorderSecondary,
+    backgroundColor: theme.color.overlay.dark,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space4,
     paddingHorizontal: theme.space8,
-    paddingVertical: 3,
+    paddingVertical: theme.space4,
   },
   icon: {
     opacity: 0.8,

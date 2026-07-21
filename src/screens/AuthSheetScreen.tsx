@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -24,16 +24,32 @@ function handleAuthSuccess() {
 
 export function AuthSheetScreen() {
   const { t } = useTranslation('auth');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { isPromptingAuth, isSignInReady, startSignIn } = useTwitchSignIn({
     onSuccess: handleAuthSuccess,
   });
   const isDisabled = !isSignInReady || isPromptingAuth;
 
   return (
-    <SafeAreaView edges={['bottom']} style={styles.container}>
+    <SafeAreaView
+      edges={['bottom']}
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <View style={styles.content}>
         <View style={styles.header}>
-          <View style={styles.appIconFrame}>
+          <View
+            style={[
+              styles.appIconFrame,
+              {
+                backgroundColor: theme.color.surfaceAlpha[scheme],
+                borderColor: theme.color.border[scheme],
+              },
+            ]}
+          >
             <Image
               // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
               source={require('../../assets/app-icon/app-icon-production.png')}
@@ -42,7 +58,14 @@ export function AuthSheetScreen() {
             />
           </View>
           <View style={styles.headerCopy}>
-            <Text type='xxs' weight='bold' style={styles.eyebrow}>
+            <Text
+              type='xxs'
+              weight='bold'
+              style={[
+                styles.eyebrow,
+                { color: theme.color.textSecondary[scheme] },
+              ]}
+            >
               {t('eyebrow')}
             </Text>
             <Text
@@ -53,7 +76,11 @@ export function AuthSheetScreen() {
             >
               {t('title')}
             </Text>
-            <Text type='sm' color='gray.textLow' style={styles.subtitle}>
+            <Text
+              type='sm'
+              color='gray.textLow'
+              style={{ color: theme.color.textSecondary[scheme] }}
+            >
               {t('subtitle')}
             </Text>
           </View>
@@ -67,14 +94,21 @@ export function AuthSheetScreen() {
             void startSignIn();
           }}
           disabled={isDisabled}
-          style={[styles.loginButton, isDisabled && styles.loginButtonDisabled]}
+          style={[
+            styles.loginButton,
+            isDisabled && styles.loginButtonDisabled,
+            isDisabled && {
+              backgroundColor: theme.color.backgroundSecondary[scheme],
+              borderColor: theme.color.border[scheme],
+            },
+          ]}
         >
           <LinearGradient
             colors={
               isDisabled
                 ? [
-                    theme.color.backgroundElement.dark,
-                    theme.color.backgroundElement.dark,
+                    theme.color.backgroundElement[scheme],
+                    theme.color.backgroundElement[scheme],
                   ]
                 : [theme.color.brand.twitchLight, theme.color.brand.twitch]
             }
@@ -95,7 +129,15 @@ export function AuthSheetScreen() {
           </LinearGradient>
         </Button>
 
-        <View style={styles.featureList}>
+        <View
+          style={[
+            styles.featureList,
+            {
+              backgroundColor: theme.color.surfaceAlpha[scheme],
+              borderColor: theme.color.border[scheme],
+            },
+          ]}
+        >
           <FeatureItem icon='message' label={t('featureChat')} />
           <FeatureItem icon='star' label={t('featureEmotes')} />
           <FeatureItem icon='person.2' label={t('featureUi')} />
@@ -112,10 +154,22 @@ function FeatureItem({
   icon: SymbolViewProps['name'];
   label: string;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
     <View style={styles.featureItem}>
-      <View style={styles.featureIcon}>
-        <SymbolView name={icon} size={15} tintColor={theme.colorGreyHover} />
+      <View
+        style={[
+          styles.featureIcon,
+          { backgroundColor: theme.color.surfaceAlpha[scheme] },
+        ]}
+      >
+        <SymbolView
+          name={icon}
+          size={15}
+          tintColor={theme.color.textSecondary[scheme]}
+        />
       </View>
       <Text
         type='xs'
@@ -138,8 +192,6 @@ const styles = StyleSheet.create({
   },
   appIconFrame: {
     alignSelf: 'flex-start',
-    backgroundColor: theme.colorSurfaceAlpha,
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: 1,
@@ -166,17 +218,14 @@ const styles = StyleSheet.create({
     width: 32,
   },
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   eyebrow: {
-    color: theme.colorPrimary,
     letterSpacing: 0,
     textTransform: 'uppercase',
   },
   featureIcon: {
     alignItems: 'center',
-    backgroundColor: theme.colorSurfaceAlpha,
     borderRadius: theme.borderRadius999,
     height: 28,
     justifyContent: 'center',
@@ -189,8 +238,6 @@ const styles = StyleSheet.create({
     minHeight: 32,
   },
   featureList: {
-    backgroundColor: theme.colorSurfaceAlpha,
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: 1,
@@ -216,8 +263,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   loginButtonDisabled: {
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderColor: theme.color.border.dark,
     boxShadow: 'none',
     opacity: 0.64,
   },
@@ -231,9 +276,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space20,
     paddingTop: theme.space24,
     width: '100%',
-  },
-  subtitle: {
-    color: theme.color.textSecondary.dark,
   },
   title: {
     letterSpacing: 0,

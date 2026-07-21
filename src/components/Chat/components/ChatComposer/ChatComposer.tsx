@@ -1,5 +1,10 @@
 import { memo, type Ref, useCallback, useRef } from 'react';
-import { TextInput, type TextInput as TextInputType, View } from 'react-native';
+import {
+  TextInput,
+  type TextInput as TextInputType,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { PressableScale } from 'pressto';
@@ -8,7 +13,7 @@ import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { useAccentColor } from '@app/context/AccentColorContext';
 import { theme } from '@app/styles/themes';
 
-import { chatComposerStyles as styles } from './chatComposerStyles';
+import { chatComposerStyles } from './chatComposerStyles';
 import { CommandSuggestionRail } from './CommandSuggestionRail';
 import { EmoteSuggestionRail } from './EmoteSuggestionRail';
 import {
@@ -44,6 +49,9 @@ function ChatComposerComponent({
   ref,
 }: ChatComposerProps) {
   const { t } = useTranslation('chat');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = chatComposerStyles[scheme];
   const inputRef = useRef<TextInputType>(null);
   const { accentHex } = useAccentColor();
 
@@ -119,7 +127,7 @@ function ChatComposerComponent({
             <SymbolView
               name='face.smiling'
               size={22}
-              tintColor={theme.colorGreyHoverAlpha}
+              tintColor={theme.color.textSecondary[scheme]}
             />
           </PressableScale>
         ) : null}
@@ -142,10 +150,10 @@ function ChatComposerComponent({
           selection={selection}
           value={text}
           placeholder={placeholder ?? t('composer.sendAMessage')}
-          placeholderTextColor={theme.color.textSecondary.dark}
+          placeholderTextColor={theme.color.textSecondary[scheme]}
           returnKeyType='send'
-          cursorColor={theme.color.text.dark}
-          selectionColor={theme.color.text.dark}
+          cursorColor={theme.color.text[scheme]}
+          selectionColor={theme.color.text[scheme]}
           style={styles.input}
           submitBehavior='blurAndSubmit'
         />
@@ -157,7 +165,7 @@ function ChatComposerComponent({
               {
                 backgroundColor: submitEnabled
                   ? accentHex
-                  : theme.darkActiveContent,
+                  : theme.color.pressedOverlay[scheme],
               },
             ]}
             accessibilityLabel={t('composer.sendMessage')}
@@ -169,7 +177,9 @@ function ChatComposerComponent({
               name='arrow.up'
               size={20}
               tintColor={
-                submitEnabled ? theme.colorWhite : theme.colorGreyHoverAlpha
+                submitEnabled
+                  ? theme.colorWhite
+                  : theme.color.textSecondary[scheme]
               }
             />
           </PressableScale>

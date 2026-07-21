@@ -1,6 +1,13 @@
-import { type RefObject, useCallback, useRef, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
+import {
+  Alert,
+  Platform,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useSelector } from '@legendapp/state/react';
 
@@ -56,6 +63,9 @@ interface PaintInfo {
 }
 
 export function CachedImagesScreen() {
+  const { top: topInset } = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const [activeTab, setActiveTab] = useState<TabType>('images');
   const [, setRefreshKey] = useState(0);
   const listRef = useRef<FlashListRef<CachedImageInfo>>(null);
@@ -158,7 +168,13 @@ export function CachedImagesScreen() {
   }, [paintList.length]);
 
   return (
-    <View style={styles.screenContainer}>
+    <View
+      style={[
+        styles.screenContainer,
+        { backgroundColor: theme.color.background[scheme] },
+        Platform.OS === 'ios' && { paddingTop: topInset + 44 },
+      ]}
+    >
       <View style={styles.container}>
         <CachedImagesListHeader
           activeTab={activeTab}
@@ -205,22 +221,42 @@ function CachedImagesListHeader({
   paintList: PaintInfo[];
 }) {
   const { t } = useTranslation('devTools');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const tabButtonColors = {
+    backgroundColor: theme.color.backgroundSecondary[scheme],
+    borderColor: theme.color.border[scheme],
+  };
+  const buttonColors = {
+    backgroundColor: theme.color.backgroundSecondary[scheme],
+    borderColor: theme.color.border[scheme],
+  };
+  const textColor = { color: theme.color.text[scheme] };
+  const secondaryTextColor = { color: theme.color.textSecondary[scheme] };
+
   return (
-    <View style={styles.headerContainer}>
+    <View
+      style={[
+        styles.headerContainer,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <View style={styles.tabContainer}>
         <Button
           onPress={() => onSelectTab('images')}
           style={[
             styles.tabButton,
+            tabButtonColors,
             activeTab === 'images' && styles.tabButtonActive,
             activeTab === 'images' && {
-              backgroundColor: theme.colorBlue,
+              backgroundColor: theme.color.blue[scheme],
             },
           ]}
         >
           <Text
             style={[
               styles.tabButtonText,
+              textColor,
               activeTab === 'images' && styles.tabButtonTextActive,
             ]}
           >
@@ -231,15 +267,17 @@ function CachedImagesListHeader({
           onPress={() => onSelectTab('badges')}
           style={[
             styles.tabButton,
+            tabButtonColors,
             activeTab === 'badges' && styles.tabButtonActive,
             activeTab === 'badges' && {
-              backgroundColor: theme.colorOrange,
+              backgroundColor: theme.color.orange[scheme],
             },
           ]}
         >
           <Text
             style={[
               styles.tabButtonText,
+              textColor,
               activeTab === 'badges' && styles.tabButtonTextActive,
             ]}
           >
@@ -250,15 +288,17 @@ function CachedImagesListHeader({
           onPress={() => onSelectTab('paints')}
           style={[
             styles.tabButton,
+            tabButtonColors,
             activeTab === 'paints' && styles.tabButtonActive,
             activeTab === 'paints' && {
-              backgroundColor: theme.colorViolet,
+              backgroundColor: theme.color.violet[scheme],
             },
           ]}
         >
           <Text
             style={[
               styles.tabButtonText,
+              textColor,
               activeTab === 'paints' && styles.tabButtonTextActive,
             ]}
           >
@@ -268,28 +308,36 @@ function CachedImagesListHeader({
       </View>
 
       {activeTab === 'images' && (
-        <View style={styles.pathContainer}>
-          <Text style={styles.pathLabel}>{t('cacheLocation')}</Text>
-          <Text style={styles.pathValue} numberOfLines={1} selectable>
+        <View style={[styles.pathContainer, buttonColors]}>
+          <Text style={[styles.pathLabel, secondaryTextColor]}>
+            {t('cacheLocation')}
+          </Text>
+          <Text
+            style={[styles.pathValue, textColor]}
+            numberOfLines={1}
+            selectable
+          >
             {getCacheDirectoryPath()}
           </Text>
         </View>
       )}
 
       <View style={styles.actions}>
-        <Button onPress={onRefresh} style={styles.button}>
-          <Text style={styles.buttonText}>{t('refresh')}</Text>
+        <Button onPress={onRefresh} style={[styles.button, buttonColors]}>
+          <Text style={[styles.buttonText, textColor]}>{t('refresh')}</Text>
         </Button>
         {activeTab === 'images' && (
           <Button
             onPress={onClearCache}
-            style={styles.button}
+            style={[styles.button, buttonColors]}
             disabled={images.length === 0}
           >
             <Text
               style={[
                 styles.buttonText,
+                textColor,
                 images.length === 0 && styles.buttonTextDisabled,
+                images.length === 0 && secondaryTextColor,
               ]}
             >
               {t('clear')}
@@ -299,13 +347,15 @@ function CachedImagesListHeader({
         {activeTab === 'badges' && (
           <Button
             onPress={onClearBadges}
-            style={styles.button}
+            style={[styles.button, buttonColors]}
             disabled={badgeList.length === 0}
           >
             <Text
               style={[
                 styles.buttonText,
+                textColor,
                 badgeList.length === 0 && styles.buttonTextDisabled,
+                badgeList.length === 0 && secondaryTextColor,
               ]}
             >
               {t('clear')}
@@ -315,13 +365,15 @@ function CachedImagesListHeader({
         {activeTab === 'paints' && (
           <Button
             onPress={onClearPaints}
-            style={styles.button}
+            style={[styles.button, buttonColors]}
             disabled={paintList.length === 0}
           >
             <Text
               style={[
                 styles.buttonText,
+                textColor,
                 paintList.length === 0 && styles.buttonTextDisabled,
+                paintList.length === 0 && secondaryTextColor,
               ]}
             >
               {t('clear')}
@@ -349,8 +401,6 @@ const styles = StyleSheet.create({
   },
   button: {
     alignItems: 'center',
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: 8,
     borderWidth: 1,
@@ -360,16 +410,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   buttonText: {
-    color: theme.color.text.dark,
     fontSize: 13,
     fontWeight: '500',
   },
   buttonTextDisabled: {
-    color: theme.color.textSecondary.dark,
     opacity: 0.5,
   },
   colorBadge: {
-    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: 6,
     borderWidth: 1.5,
@@ -388,27 +435,22 @@ const styles = StyleSheet.create({
     paddingTop: 80,
   },
   emptySubtext: {
-    color: theme.color.textSecondary.dark,
     fontSize: 14,
     lineHeight: 21,
     opacity: 0.8,
     textAlign: 'center',
   },
   emptyText: {
-    color: theme.color.textSecondary.dark,
     fontSize: 19,
     fontWeight: '700',
     letterSpacing: -0.3,
     marginBottom: 10,
   },
   headerContainer: {
-    backgroundColor: theme.color.background.dark,
     paddingBottom: 8,
   },
   item: {
     alignItems: 'flex-start',
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: 14,
     borderWidth: 1,
@@ -429,19 +471,16 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   itemMeta: {
-    color: theme.color.textSecondary.dark,
     fontSize: 12,
     fontWeight: '500',
   },
   itemName: {
-    color: theme.color.text.dark,
     flex: 1,
     fontSize: 15,
     fontWeight: '600',
     letterSpacing: -0.2,
   },
   itemPath: {
-    color: theme.color.textSecondary.dark,
     fontFamily: 'monospace',
     fontSize: 10,
     marginTop: 2,
@@ -453,7 +492,6 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   paintPreview: {
-    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: 10,
     borderWidth: 2,
@@ -461,8 +499,6 @@ const styles = StyleSheet.create({
     width: 64,
   },
   pathContainer: {
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: 10,
     borderWidth: 1,
@@ -472,20 +508,17 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   pathLabel: {
-    color: theme.color.textSecondary.dark,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.5,
     marginBottom: 6,
   },
   pathValue: {
-    color: theme.color.text.dark,
     fontFamily: 'monospace',
     fontSize: 11,
     lineHeight: 16,
   },
   providerBadge: {
-    backgroundColor: theme.color.background.dark,
     borderCurve: 'continuous',
     borderRadius: 4,
     marginLeft: 6,
@@ -493,18 +526,14 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   providerBadgeText: {
-    color: theme.color.textSecondary.dark,
     fontSize: 9,
     fontWeight: '700',
     letterSpacing: 0.5,
   },
   screenContainer: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   sizeBadge: {
-    backgroundColor: theme.color.background.dark,
-    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: 6,
     borderWidth: 1,
@@ -512,15 +541,12 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   sizeBadgeText: {
-    color: theme.color.text.dark,
     fontFamily: 'monospace',
     fontSize: 11,
     fontWeight: '600',
   },
   tabButton: {
     alignItems: 'center',
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: 10,
     borderWidth: 1,
@@ -533,7 +559,6 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   tabButtonText: {
-    color: theme.color.text.dark,
     fontSize: 13,
     fontWeight: '600',
     letterSpacing: 0.2,
@@ -555,18 +580,49 @@ const styles = StyleSheet.create({
     width: 64,
   },
   thumbnailContainer: {
-    backgroundColor: theme.color.background.dark,
     borderCurve: 'continuous',
     borderRadius: 10,
     overflow: 'hidden',
   },
 });
 
-const renderCachedImageItem: ListRenderItem<CachedImageInfo> = ({ item }) => {
+function useCachedItemColorStyles() {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  return useMemo(
+    () => ({
+      item: {
+        backgroundColor: theme.color.backgroundSecondary[scheme],
+        borderColor: theme.color.border[scheme],
+      },
+      thumbnailContainer: {
+        backgroundColor: theme.color.background[scheme],
+      },
+      itemName: { color: theme.color.text[scheme] },
+      itemMeta: { color: theme.color.textSecondary[scheme] },
+      itemPath: { color: theme.color.textSecondary[scheme] },
+      sizeBadge: {
+        backgroundColor: theme.color.background[scheme],
+        borderColor: theme.color.border[scheme],
+      },
+      sizeBadgeText: { color: theme.color.text[scheme] },
+      providerBadge: { backgroundColor: theme.color.background[scheme] },
+      providerBadgeText: { color: theme.color.textSecondary[scheme] },
+      paintPreviewFallback: {
+        backgroundColor: theme.color.backgroundSecondary[scheme],
+      },
+      border: { borderColor: theme.color.border[scheme] },
+    }),
+    [scheme],
+  );
+}
+
+function CachedImageRow({ item }: { item: CachedImageInfo }) {
+  const colors = useCachedItemColorStyles();
   const fileName = item.uri.split('/').pop() ?? item.name;
   return (
-    <View style={styles.item}>
-      <View style={styles.thumbnailContainer}>
+    <View style={[styles.item, colors.item]}>
+      <View style={[styles.thumbnailContainer, colors.thumbnailContainer]}>
         <Image
           source={{ uri: item.uri }}
           style={styles.thumbnail}
@@ -575,82 +631,123 @@ const renderCachedImageItem: ListRenderItem<CachedImageInfo> = ({ item }) => {
       </View>
       <View style={styles.itemInfo}>
         <View style={styles.itemHeader}>
-          <Text style={styles.itemName} numberOfLines={1}>
+          <Text style={[styles.itemName, colors.itemName]} numberOfLines={1}>
             {fileName}
           </Text>
-          <View style={styles.sizeBadge}>
-            <Text style={styles.sizeBadgeText}>{formatBytes(item.size)}</Text>
+          <View style={[styles.sizeBadge, colors.sizeBadge]}>
+            <Text style={[styles.sizeBadgeText, colors.sizeBadgeText]}>
+              {formatBytes(item.size)}
+            </Text>
           </View>
         </View>
-        <Text style={styles.itemPath} selectable numberOfLines={1}>
+        <Text
+          style={[styles.itemPath, colors.itemPath]}
+          selectable
+          numberOfLines={1}
+        >
           {item.uri}
         </Text>
       </View>
     </View>
   );
-};
+}
 
-const renderCachedBadgeItem: ListRenderItem<BadgeInfo> = ({ item }) => (
-  <View style={styles.item}>
-    <View style={styles.thumbnailContainer}>
-      <Image
-        source={{ uri: item.url }}
-        style={styles.thumbnail}
-        contentFit='contain'
-      />
-    </View>
-    <View style={styles.itemInfo}>
-      <View style={styles.itemHeader}>
-        <Text style={styles.itemName} numberOfLines={1}>
-          {item.title}
+function CachedBadgeRow({ item }: { item: BadgeInfo }) {
+  const colors = useCachedItemColorStyles();
+  return (
+    <View style={[styles.item, colors.item]}>
+      <View style={[styles.thumbnailContainer, colors.thumbnailContainer]}>
+        <Image
+          source={{ uri: item.url }}
+          style={styles.thumbnail}
+          contentFit='contain'
+        />
+      </View>
+      <View style={styles.itemInfo}>
+        <View style={styles.itemHeader}>
+          <Text style={[styles.itemName, colors.itemName]} numberOfLines={1}>
+            {item.title}
+          </Text>
+        </View>
+        <View style={styles.badgeMeta}>
+          <Text style={[styles.itemMeta, colors.itemMeta]}>{item.type}</Text>
+          {item.provider ? (
+            <View style={[styles.providerBadge, colors.providerBadge]}>
+              <Text
+                style={[styles.providerBadgeText, colors.providerBadgeText]}
+              >
+                {item.provider.toUpperCase()}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+        <Text
+          style={[styles.itemPath, colors.itemPath]}
+          selectable
+          numberOfLines={1}
+        >
+          {item.id}
         </Text>
       </View>
-      <View style={styles.badgeMeta}>
-        <Text style={styles.itemMeta}>{item.type}</Text>
-        {item.provider ? (
-          <View style={styles.providerBadge}>
-            <Text style={styles.providerBadgeText}>
-              {item.provider.toUpperCase()}
-            </Text>
-          </View>
-        ) : null}
-      </View>
-      <Text style={styles.itemPath} selectable numberOfLines={1}>
-        {item.id}
-      </Text>
     </View>
-  </View>
+  );
+}
+
+function CachedPaintRow({ item }: { item: PaintInfo }) {
+  const colors = useCachedItemColorStyles();
+  return (
+    <View style={[styles.item, colors.item]}>
+      <View style={[styles.thumbnailContainer, colors.thumbnailContainer]}>
+        <View
+          style={[
+            styles.paintPreview,
+            colors.border,
+            item.color
+              ? { backgroundColor: item.color }
+              : colors.paintPreviewFallback,
+          ]}
+        />
+      </View>
+      <View style={styles.itemInfo}>
+        <View style={styles.itemHeader}>
+          <Text style={[styles.itemName, colors.itemName]} numberOfLines={1}>
+            {item.name || i18next.t('devTools:unnamedPaint')}
+          </Text>
+          {item.color ? (
+            <View
+              style={[
+                styles.colorBadge,
+                colors.border,
+                { backgroundColor: item.color },
+              ]}
+            />
+          ) : null}
+        </View>
+        <Text style={[styles.itemMeta, colors.itemMeta]}>
+          {item.function.replace(/_/g, ' ').toLowerCase()}
+        </Text>
+        <Text
+          style={[styles.itemPath, colors.itemPath]}
+          selectable
+          numberOfLines={1}
+        >
+          {item.id}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+const renderCachedImageItem: ListRenderItem<CachedImageInfo> = ({ item }) => (
+  <CachedImageRow item={item} />
+);
+
+const renderCachedBadgeItem: ListRenderItem<BadgeInfo> = ({ item }) => (
+  <CachedBadgeRow item={item} />
 );
 
 const renderCachedPaintItem: ListRenderItem<PaintInfo> = ({ item }) => (
-  <View style={styles.item}>
-    <View style={styles.thumbnailContainer}>
-      <View
-        style={[
-          styles.paintPreview,
-          item.color
-            ? { backgroundColor: item.color }
-            : { backgroundColor: theme.color.backgroundSecondary.dark },
-        ]}
-      />
-    </View>
-    <View style={styles.itemInfo}>
-      <View style={styles.itemHeader}>
-        <Text style={styles.itemName} numberOfLines={1}>
-          {item.name || i18next.t('devTools:unnamedPaint')}
-        </Text>
-        {item.color ? (
-          <View style={[styles.colorBadge, { backgroundColor: item.color }]} />
-        ) : null}
-      </View>
-      <Text style={styles.itemMeta}>
-        {item.function.replace(/_/g, ' ').toLowerCase()}
-      </Text>
-      <Text style={styles.itemPath} selectable numberOfLines={1}>
-        {item.id}
-      </Text>
-    </View>
-  </View>
+  <CachedPaintRow item={item} />
 );
 
 function CachedImagesEmptyState({
@@ -660,10 +757,23 @@ function CachedImagesEmptyState({
   message: string;
   submessage: string;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   return (
     <View style={styles.emptyState}>
-      <Text style={styles.emptyText}>{message}</Text>
-      <Text style={styles.emptySubtext}>{submessage}</Text>
+      <Text
+        style={[styles.emptyText, { color: theme.color.textSecondary[scheme] }]}
+      >
+        {message}
+      </Text>
+      <Text
+        style={[
+          styles.emptySubtext,
+          { color: theme.color.textSecondary[scheme] },
+        ]}
+      >
+        {submessage}
+      </Text>
     </View>
   );
 }

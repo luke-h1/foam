@@ -1,3 +1,5 @@
+import { Appearance } from 'react-native';
+
 /**
  * Render caches for chat colours, read imperatively at up to ~100 msg/s and
  * never subscribed - plain Maps per the chat-state rule.
@@ -88,3 +90,11 @@ export function clearMentionSessionCaches(): void {
   clearSessionCache('mentionColors');
   clearSessionCache('lightenedColors');
 }
+
+/**
+ * Cached values are normalized for the active scheme's chat surface; drop
+ * them when the appearance flips so new reads re-normalize.
+ */
+Appearance.addChangeListener(() => {
+  clearSessionCache();
+});

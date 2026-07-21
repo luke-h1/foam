@@ -1,5 +1,5 @@
-import { memo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { memo, useMemo } from 'react';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Badge } from '@app/components/ui/Badge/Badge';
@@ -53,6 +53,21 @@ function ChannelPredictionCardComponent({
   channelLogin,
   prediction,
 }: ChannelPredictionCardProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const schemeStyles = useMemo(
+    () => ({
+      container: {
+        backgroundColor: theme.color.surface[scheme],
+        borderBottomColor: theme.color.border[scheme],
+      },
+      outcomeTrack: {
+        backgroundColor: theme.color.backgroundAlt[scheme],
+        borderColor: theme.color.border[scheme],
+      },
+    }),
+    [scheme],
+  );
   const timeRemaining = formatTimeRemaining(prediction);
   const statusLabel = prediction.isActive
     ? 'Live prediction'
@@ -63,7 +78,7 @@ function ChannelPredictionCardComponent({
         : 'Prediction canceled';
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, schemeStyles.container]}>
       <View style={styles.header}>
         <Badge color='amber' variant='soft'>
           {statusLabel}
@@ -81,7 +96,10 @@ function ChannelPredictionCardComponent({
 
       <View style={styles.outcomeList}>
         {prediction.outcomes.map(outcome => (
-          <View key={outcome.id} style={styles.outcomeTrack}>
+          <View
+            key={outcome.id}
+            style={[styles.outcomeTrack, schemeStyles.outcomeTrack]}
+          >
             <View
               style={[
                 styles.outcomeFill,
@@ -129,7 +147,7 @@ function ChannelPredictionCardComponent({
           <PressableArea
             accessibilityRole='button'
             onPress={() =>
-              openLinkInBrowser(`https://www.twitch.tv/${channelLogin}`)
+              openLinkInBrowser(`https://www.twitch.tv/${channelLogin}`, scheme)
             }
           >
             <Text color='amber.accent' type='xxs' weight='semibold'>
@@ -146,8 +164,6 @@ export const ChannelPredictionCard = memo(ChannelPredictionCardComponent);
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.surface.dark,
-    borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: StyleSheet.hairlineWidth,
     gap: theme.space12,
     paddingHorizontal: theme.space16,
@@ -185,8 +201,6 @@ const styles = StyleSheet.create({
     gap: theme.space8,
   },
   outcomeTrack: {
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.colorBorderSecondary,
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',

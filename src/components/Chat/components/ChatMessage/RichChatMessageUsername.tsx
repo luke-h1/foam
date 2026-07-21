@@ -1,23 +1,42 @@
-import type { StyleProp, TextStyle } from 'react-native';
+import { type StyleProp, type TextStyle, useColorScheme } from 'react-native';
 
+import type { ColorScheme } from '@app/styles/themes';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { lightenColor } from '@app/utils/color/lightenColor';
+import { cachedLighten } from '@app/utils/chat/resolveCachedSenderColor/cachedLighten';
 
 import { ChatMessagePressable } from './ChatMessagePressable';
 import { PaintedUsername } from './CosmeticUsername/PaintedUsername';
-import { styles } from './RichChatMessage.styles';
+import { getRichChatMessageStyles } from './RichChatMessage.styles';
 
-const usernameTextStyles: Record<
+type UsernameTextStyles = Record<
   'comfortable' | 'comfortableModerated' | 'compact' | 'compactModerated',
   StyleProp<TextStyle>
-> = {
-  comfortable: [styles.usernameText],
-  comfortableModerated: [styles.usernameText, styles.moderatedUsernameText],
-  compact: [styles.usernameTextCompact],
-  compactModerated: [styles.usernameTextCompact, styles.moderatedUsernameText],
-};
+>;
 
-function getUsernameTextStyle(compact: boolean, isModerated: boolean) {
+function buildUsernameTextStyles(scheme: ColorScheme): UsernameTextStyles {
+  const styles = getRichChatMessageStyles(scheme);
+  return {
+    comfortable: [styles.usernameText],
+    comfortableModerated: [styles.usernameText, styles.moderatedUsernameText],
+    compact: [styles.usernameTextCompact],
+    compactModerated: [
+      styles.usernameTextCompact,
+      styles.moderatedUsernameText,
+    ],
+  };
+}
+
+const usernameTextStylesByScheme = {
+  light: buildUsernameTextStyles('light'),
+  dark: buildUsernameTextStyles('dark'),
+} as const;
+
+function getUsernameTextStyle(
+  scheme: ColorScheme,
+  compact: boolean,
+  isModerated: boolean,
+) {
+  const usernameTextStyles = usernameTextStylesByScheme[scheme];
   if (compact && isModerated) {
     return usernameTextStyles.compactModerated;
   }
@@ -49,21 +68,24 @@ export function RichChatMessageUsername({
   userstateColor,
   username,
 }: RichChatMessageUsernameProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   if (!username) {
     return null;
   }
 
   const fallbackColor =
     cachedSenderColor ??
-    (userstateColor ? lightenColor(userstateColor) : undefined) ??
-    lightenColor(generateRandomTwitchColor(username));
+    (userstateColor ? cachedLighten(userstateColor) : undefined) ??
+    cachedLighten(generateRandomTwitchColor(username));
 
   const paintedUsername = (
     <PaintedUsername
       username={username}
       userId={userId}
       fallbackColor={fallbackColor}
-      usernameTextStyle={getUsernameTextStyle(compact, isModerated)}
+      usernameTextStyle={getUsernameTextStyle(scheme, compact, isModerated)}
     />
   );
 

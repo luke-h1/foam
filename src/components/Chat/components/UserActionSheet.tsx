@@ -2,6 +2,7 @@ import { memo, useMemo, useRef } from 'react';
 import {
   ScrollView,
   StyleSheet,
+  useColorScheme,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -119,6 +120,41 @@ function UserActionSheetComponent({
   username,
 }: UserActionSheetProps) {
   const { t } = useTranslation(['chat', 'common']);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const colorStyles = useMemo(
+    () => ({
+      accentIconFrame: { backgroundColor: theme.color.accentSurface[scheme] },
+      accentText: { color: theme.color.accent[scheme] },
+      actionBorder: { borderBottomColor: theme.color.border[scheme] },
+      dangerIconFrame: { backgroundColor: theme.color.dangerSurface[scheme] },
+      dangerText: { color: theme.color.danger[scheme] },
+      doneButton: {
+        backgroundColor:
+          scheme === 'dark' ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.08)',
+      },
+      iconFrame: { backgroundColor: theme.color.surfaceAlpha[scheme] },
+      primaryText: { color: theme.color.text[scheme] },
+      secondaryText: { color: theme.color.textSecondary[scheme] },
+      statePill: {
+        backgroundColor: theme.color.surfaceAlpha[scheme],
+        borderColor: theme.color.border[scheme],
+      },
+      statePillAccent: {
+        backgroundColor: theme.color.accentSurface[scheme],
+        borderColor:
+          scheme === 'dark'
+            ? 'rgba(46,134,255,0.34)'
+            : theme.color.accentRing.light,
+      },
+      surface: { backgroundColor: theme.color.surfaceAlpha[scheme] },
+      warningIconFrame: {
+        backgroundColor:
+          scheme === 'dark' ? 'rgba(224,163,58,0.16)' : 'rgba(200,133,26,0.14)',
+      },
+    }),
+    [scheme],
+  );
   const { canModerateChat, canModerateUser } = moderation;
   const { isHidden, isHighlighted, visible } = visibility;
   const sheetRef = useRef<BottomSheetHandle>(null);
@@ -261,29 +297,35 @@ function UserActionSheetComponent({
           </View>
           <Button
             label={t('common:done')}
-            style={styles.doneButton}
+            style={[styles.doneButton, colorStyles.doneButton]}
             onPress={requestClose}
           >
             <SymbolView
               name='xmark'
               size={15}
               weight='semibold'
-              tintColor={theme.color.textSecondary.dark}
+              tintColor={theme.color.textSecondary[scheme]}
             />
           </Button>
         </View>
         {isHidden || isHighlighted ? (
           <View style={styles.statePills}>
             {isHidden ? (
-              <View style={styles.statePill}>
-                <Text style={styles.statePillText} weight='semibold'>
+              <View style={[styles.statePill, colorStyles.statePill]}>
+                <Text
+                  style={[styles.statePillText, colorStyles.secondaryText]}
+                  weight='semibold'
+                >
                   Hidden
                 </Text>
               </View>
             ) : null}
             {isHighlighted ? (
-              <View style={[styles.statePill, styles.statePillAccent]}>
-                <Text style={styles.statePillAccentText} weight='semibold'>
+              <View style={[styles.statePill, colorStyles.statePillAccent]}>
+                <Text
+                  style={[styles.statePillText, colorStyles.accentText]}
+                  weight='semibold'
+                >
                   Highlighted
                 </Text>
               </View>
@@ -297,18 +339,26 @@ function UserActionSheetComponent({
           showsVerticalScrollIndicator={false}
         >
           {recentMessages.length > 0 ? (
-            <View style={styles.recentMessages}>
-              <Text style={styles.recentMessagesTitle} weight='semibold'>
+            <View style={[styles.recentMessages, colorStyles.surface]}>
+              <Text
+                style={[styles.recentMessagesTitle, colorStyles.secondaryText]}
+                weight='semibold'
+              >
                 {t('userActions.recentMessages')}
               </Text>
               {recentMessages.map(message => (
                 <Text
                   key={message.key}
                   numberOfLines={1}
-                  style={styles.recentMessageText}
+                  style={[styles.recentMessageText, colorStyles.primaryText]}
                 >
                   {message.timestamp ? (
-                    <Text style={styles.recentMessageTimestamp}>
+                    <Text
+                      style={[
+                        styles.recentMessageTimestamp,
+                        colorStyles.secondaryText,
+                      ]}
+                    >
                       {`${message.timestamp}  `}
                     </Text>
                   ) : null}
@@ -317,22 +367,26 @@ function UserActionSheetComponent({
               ))}
             </View>
           ) : null}
-          <View style={styles.actionGroup}>
+          <View style={[styles.actionGroup, colorStyles.surface]}>
             {actionRows.map((action, index) => (
               <Button
                 key={action.label}
                 style={[
                   styles.actionButton,
-                  index < actionRows.length - 1 && styles.actionButtonBorder,
+                  index < actionRows.length - 1 && [
+                    styles.actionButtonBorder,
+                    colorStyles.actionBorder,
+                  ],
                 ]}
                 onPress={action.onPress}
               >
                 <View
                   style={[
                     styles.actionIconFrame,
-                    action.tone === 'accent' && styles.actionIconAccent,
-                    action.tone === 'warning' && styles.actionIconWarning,
-                    action.tone === 'danger' && styles.actionIconDanger,
+                    colorStyles.iconFrame,
+                    action.tone === 'accent' && colorStyles.accentIconFrame,
+                    action.tone === 'warning' && colorStyles.warningIconFrame,
+                    action.tone === 'danger' && colorStyles.dangerIconFrame,
                   ]}
                 >
                   <SymbolView
@@ -340,12 +394,12 @@ function UserActionSheetComponent({
                     size={18}
                     tintColor={
                       action.tone === 'danger'
-                        ? theme.colorRed
+                        ? theme.color.danger[scheme]
                         : action.tone === 'warning'
-                          ? theme.colorAmber
+                          ? theme.color.amber[scheme]
                           : action.tone === 'accent'
-                            ? theme.colorPrimary
-                            : theme.color.textSecondary.dark
+                            ? theme.color.accent[scheme]
+                            : theme.color.textSecondary[scheme]
                     }
                   />
                 </View>
@@ -354,12 +408,17 @@ function UserActionSheetComponent({
                     weight='semibold'
                     style={[
                       styles.actionText,
-                      action.tone === 'danger' && styles.actionTextDanger,
+                      colorStyles.primaryText,
+                      action.tone === 'danger' && colorStyles.dangerText,
                     ]}
                   >
                     {action.label}
                   </Text>
-                  <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
+                  <Text
+                    style={[styles.actionSubtitle, colorStyles.secondaryText]}
+                  >
+                    {action.subtitle}
+                  </Text>
                 </View>
               </Button>
             ))}
@@ -383,7 +442,6 @@ const styles = StyleSheet.create({
     paddingVertical: theme.space8,
   },
   actionButtonBorder: {
-    borderBottomColor: 'rgba(255,255,255,0.1)',
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   actionCopy: {
@@ -391,45 +449,28 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   actionGroup: {
-    backgroundColor: 'rgba(255,255,255,0.07)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     overflow: 'hidden',
   },
-  actionIconAccent: {
-    backgroundColor: 'rgba(46,134,255,0.16)',
-  },
-  actionIconDanger: {
-    backgroundColor: theme.colorRedSurface,
-  },
   actionIconFrame: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.09)',
     borderCurve: 'continuous',
     borderRadius: 8,
     height: 30,
     justifyContent: 'center',
     width: 30,
   },
-  actionIconWarning: {
-    backgroundColor: 'rgba(224,163,58,0.16)',
-  },
   actionSubtitle: {
-    color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize12,
     lineHeight: theme.fontSize12 * 1.3,
   },
   actionText: {
-    color: theme.color.text.dark,
     fontSize: theme.fontSize17,
     lineHeight: theme.fontSize17 * 1.2,
   },
-  actionTextDanger: {
-    color: theme.colorRed,
-  },
   doneButton: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.14)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     height: 30,
@@ -454,7 +495,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   recentMessages: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     gap: 4,
@@ -463,18 +503,15 @@ const styles = StyleSheet.create({
     paddingVertical: theme.space8,
   },
   recentMessagesTitle: {
-    color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize11,
     letterSpacing: 0.2,
     textTransform: 'uppercase',
   },
   recentMessageText: {
-    color: theme.color.text.dark,
     fontSize: theme.fontSize12,
     lineHeight: 18,
   },
   recentMessageTimestamp: {
-    color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize11,
   },
   scroll: {
@@ -484,21 +521,11 @@ const styles = StyleSheet.create({
     paddingBottom: theme.space16,
   },
   statePill: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderColor: 'rgba(255,255,255,0.08)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: theme.space4,
-  },
-  statePillAccent: {
-    backgroundColor: 'rgba(46,134,255,0.16)',
-    borderColor: 'rgba(46,134,255,0.34)',
-  },
-  statePillAccentText: {
-    color: theme.colorPrimary,
-    fontSize: theme.fontSize11,
   },
   statePills: {
     flexDirection: 'row',
@@ -506,7 +533,6 @@ const styles = StyleSheet.create({
     gap: theme.space8,
   },
   statePillText: {
-    color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize11,
   },
 });

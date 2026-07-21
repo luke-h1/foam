@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, useColorScheme, View } from 'react-native';
 import type { ErrorInfo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -9,8 +9,8 @@ import { Button } from '@app/components/Button/Button';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { queryClient } from '@app/lib/react-query/query-client';
+import { lastEventId, sendFeedback } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
-import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import {
   categorizeError,
   getFriendlyErrorMessage,
@@ -28,9 +28,13 @@ function handleShowFeedback() {
 
 export function ErrorDetails(props: ErrorDetailsProps) {
   const { t } = useTranslation('errors');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { error, errorInfo, onReset } = props;
   const showStackTrace$ = useObservable(false);
   const showStackTrace = useSelector(showStackTrace$);
+  const reported$ = useObservable(false);
+  const reported = useSelector(reported$);
 
   const errorTitle = `${error}`.trim();
   const errorCategory = categorizeError(error);
@@ -40,22 +44,43 @@ export function ErrorDetails(props: ErrorDetailsProps) {
     .slice(0, 10)
     .join('\n');
 
-  const githubURL = encodeURI(
-    `https://github.com/luke-h1/foam/issues/new?title=(CRASH) ${errorTitle}&body=What were you doing when the app crashed?\n\n\nTruncated Stacktrace:\n\`\`\`${stackTrace}\`\`\``,
-  );
+  const handleReportBug = () => {
+    if (reported$.peek()) {
+      return;
+    }
+    sendFeedback({
+      type: 'bug',
+      message: stackTrace
+        ? `(CRASH) ${errorTitle}\n\nTruncated stack trace:\n${stackTrace}`
+        : `(CRASH) ${errorTitle}`,
+      associatedEventId: lastEventId(),
+    });
+    reported$.set(true);
+  };
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
       contentContainerStyle={styles.contentContainer}
       contentInsetAdjustmentBehavior='automatic'
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.card}>
+      <View
+        style={[
+          styles.card,
+          {
+            backgroundColor: theme.color.backgroundSecondary[scheme],
+            borderColor: theme.color.border[scheme],
+          },
+        ]}
+      >
         <SymbolView
           name={{ ios: 'exclamationmark.triangle', android: 'warning' }}
           size={36}
-          tintColor={theme.color.textSecondary.dark}
+          tintColor={theme.color.textSecondary[scheme]}
         />
 
         <Text type='lg' weight='semibold' align='center'>
@@ -75,8 +100,13 @@ export function ErrorDetails(props: ErrorDetailsProps) {
 
         <View style={styles.actionRow}>
           <Button
-            style={styles.primaryButton}
-            onPress={() => openLinkInBrowser(githubURL)}
+            style={[
+              styles.primaryButton,
+              { backgroundColor: theme.color.accent[scheme] },
+              reported && styles.primaryButtonDisabled,
+            ]}
+            disabled={reported}
+            onPress={handleReportBug}
           >
             <Text
               type='sm'
@@ -85,11 +115,20 @@ export function ErrorDetails(props: ErrorDetailsProps) {
               contrast
               align='center'
             >
-              GitHub
+              {reported ? t('bugReportSent') : t('reportBug')}
             </Text>
           </Button>
 
-          <Button style={styles.secondaryButton} onPress={handleShowFeedback}>
+          <Button
+            style={[
+              styles.secondaryButton,
+              {
+                backgroundColor: theme.color.backgroundTertiary[scheme],
+                borderColor: theme.color.border[scheme],
+              },
+            ]}
+            onPress={handleShowFeedback}
+          >
             <Text type='sm' weight='semibold' color='gray' align='center'>
               {t('sendFeedback')}
             </Text>
@@ -112,7 +151,15 @@ export function ErrorDetails(props: ErrorDetailsProps) {
       </View>
 
       {showStackTrace ? (
-        <View style={styles.errorCard}>
+        <View
+          style={[
+            styles.errorCard,
+            {
+              backgroundColor: theme.color.backgroundSecondary[scheme],
+              borderColor: theme.color.border[scheme],
+            },
+          ]}
+        >
           <ScrollView
             style={styles.errorScrollView}
             contentContainerStyle={styles.errorContentContainer}
@@ -143,7 +190,10 @@ export function ErrorDetails(props: ErrorDetailsProps) {
       ) : null}
 
       <Button
-        style={styles.resetButton}
+        style={[
+          styles.resetButton,
+          { backgroundColor: theme.color.danger[scheme] },
+        ]}
         onPress={() => {
           // Failed queries would re-render straight back into the error
           // state; clear them so the reset gets a clean fetch.
@@ -170,8 +220,6 @@ const styles = StyleSheet.create({
   },
   card: {
     alignItems: 'center',
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     borderWidth: StyleSheet.hairlineWidth,
@@ -180,7 +228,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   contentContainer: {
@@ -199,8 +246,6 @@ const styles = StyleSheet.create({
     lineHeight: theme.fontSize12 * 1.5,
   },
   errorCard: {
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     borderWidth: StyleSheet.hairlineWidth,
@@ -225,7 +270,6 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     alignItems: 'center',
-    backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     flex: 1,
@@ -234,9 +278,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space12,
   },
+  primaryButtonDisabled: {
+    opacity: 0.5,
+  },
   resetButton: {
     alignItems: 'center',
-    backgroundColor: theme.colorRed,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     justifyContent: 'center',
@@ -247,8 +293,6 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     alignItems: 'center',
-    backgroundColor: theme.color.backgroundTertiary.dark,
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     borderWidth: StyleSheet.hairlineWidth,

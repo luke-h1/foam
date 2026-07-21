@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import { useSelector } from '@legendapp/state/react';
 import { Image } from 'expo-image';
@@ -22,7 +22,7 @@ interface UserCardHeaderProps {
 
 /**
  * Identity block for the user card: Twitch avatar and account age alongside
- * the user's 7TV cosmetics (painted nametag, badge, paint name) — mirroring
+ * the user's 7TV cosmetics (painted nametag, badge, paint name) - mirroring
  * the 7TV extension's user card header.
  */
 export function UserCardHeader({
@@ -31,6 +31,8 @@ export function UserCardHeader({
   userId,
   username,
 }: UserCardHeaderProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const queryLogin = login ?? username.toLowerCase();
   const { data: user } = useUserQuery(queryLogin, {
     enabled: Boolean(queryLogin),
@@ -58,11 +60,31 @@ export function UserCardHeader({
     ? formatDate(user.created_at, 'MMMM D YYYY')
     : null;
   const showLogin = Boolean(login) && login !== username.toLowerCase();
+  const chipColors = {
+    backgroundColor: theme.color.surfaceAlpha[scheme],
+    borderColor: theme.color.border[scheme],
+  };
+  const chipTextColor = { color: theme.color.textSecondary[scheme] };
+  const paintChipColors = {
+    backgroundColor:
+      scheme === 'dark'
+        ? 'rgba(46, 134, 255, 0.10)'
+        : theme.color.accentSurface.light,
+    borderColor:
+      scheme === 'dark'
+        ? 'rgba(46, 134, 255, 0.22)'
+        : theme.color.accentRing.light,
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.identityRow}>
-        <View style={styles.avatarFrame}>
+        <View
+          style={[
+            styles.avatarFrame,
+            { borderColor: theme.color.borderStrong[scheme] },
+          ]}
+        >
           {user?.profile_image_url ? (
             <Image
               source={{ uri: user.profile_image_url }}
@@ -70,11 +92,16 @@ export function UserCardHeader({
               transition={120}
             />
           ) : (
-            <View style={styles.avatarPlaceholder}>
+            <View
+              style={[
+                styles.avatarPlaceholder,
+                { backgroundColor: theme.color.surfaceAlpha[scheme] },
+              ]}
+            >
               <SymbolView
                 name='person.fill'
                 size={22}
-                tintColor='rgba(255,255,255,0.45)'
+                tintColor={theme.color.textFaint[scheme]}
               />
             </View>
           )}
@@ -83,12 +110,18 @@ export function UserCardHeader({
           <PaintedUsername
             username={username}
             userId={userId}
-            fallbackColor={fallbackColor ?? theme.color.text.dark}
+            fallbackColor={fallbackColor ?? theme.color.text[scheme]}
             showColon={false}
             usernameTextStyle={styles.displayName}
           />
           {showLogin ? (
-            <Text style={styles.login} numberOfLines={1}>
+            <Text
+              style={[
+                styles.login,
+                { color: theme.color.textSecondary[scheme] },
+              ]}
+              numberOfLines={1}
+            >
               @{login}
             </Text>
           ) : null}
@@ -98,25 +131,25 @@ export function UserCardHeader({
       {sevenTvBadge || paint || joinedDate ? (
         <View style={styles.chipsRow}>
           {sevenTvBadge?.url ? (
-            <View style={styles.chip}>
+            <View style={[styles.chip, chipColors]}>
               <Image
                 source={{ uri: sevenTvBadge.url }}
                 style={styles.badgeImage}
               />
-              <Text style={styles.chipText} numberOfLines={1}>
+              <Text style={[styles.chipText, chipTextColor]} numberOfLines={1}>
                 {sevenTvBadge.title}
               </Text>
             </View>
           ) : null}
           {paint ? (
-            <View style={[styles.chip, styles.paintChip]}>
+            <View style={[styles.chip, paintChipColors]}>
               <SymbolView
                 name='paintbrush.fill'
                 size={11}
-                tintColor={theme.colorPrimary}
+                tintColor={theme.color.accent[scheme]}
               />
               <Text
-                style={[styles.chipText, styles.paintChipText]}
+                style={[styles.chipText, { color: theme.color.accent[scheme] }]}
                 numberOfLines={1}
               >
                 {paint.name || 'Paint'}
@@ -124,13 +157,13 @@ export function UserCardHeader({
             </View>
           ) : null}
           {joinedDate ? (
-            <View style={styles.chip}>
+            <View style={[styles.chip, chipColors]}>
               <SymbolView
                 name='birthday.cake'
                 size={11}
-                tintColor='rgba(255,255,255,0.55)'
+                tintColor={theme.color.textSecondary[scheme]}
               />
-              <Text style={styles.chipText} numberOfLines={1}>
+              <Text style={[styles.chipText, chipTextColor]} numberOfLines={1}>
                 Joined {joinedDate}
               </Text>
             </View>
@@ -148,14 +181,12 @@ const styles = StyleSheet.create({
     width: 52,
   },
   avatarFrame: {
-    borderColor: 'rgba(255,255,255,0.14)',
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
     padding: 2,
   },
   avatarPlaceholder: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: theme.borderRadius999,
     height: 52,
     justifyContent: 'center',
@@ -167,8 +198,6 @@ const styles = StyleSheet.create({
   },
   chip: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderColor: 'rgba(255,255,255,0.08)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
@@ -178,7 +207,6 @@ const styles = StyleSheet.create({
     paddingVertical: theme.space4,
   },
   chipText: {
-    color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize11,
     fontWeight: '600',
   },
@@ -205,15 +233,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   login: {
-    color: theme.color.textSecondary.dark,
-    fontSize: 13,
+    fontSize: theme.fontSize12,
     lineHeight: 16,
-  },
-  paintChip: {
-    backgroundColor: 'rgba(46, 134, 255, 0.10)',
-    borderColor: 'rgba(46, 134, 255, 0.22)',
-  },
-  paintChipText: {
-    color: theme.colorPrimary,
   },
 });

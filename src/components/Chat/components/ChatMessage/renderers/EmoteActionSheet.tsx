@@ -13,6 +13,7 @@ import {
   type GestureResponderEvent,
   Platform,
   StyleSheet,
+  useColorScheme,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -79,6 +80,8 @@ function EmoteActionSheetComponent({
   onPress,
 }: EmoteActionSheetProps) {
   const { t } = useTranslation(['chat', 'common']);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const [uncontrolledVisible, setUncontrolledVisible] = useState(false);
   const sheetRef = useRef<BottomSheetHandle>(null);
   const isControlled = typeof isPresented === 'boolean';
@@ -260,20 +263,29 @@ function EmoteActionSheetComponent({
         <View style={wrapperStyle}>
           <View style={styles.topBar}>
             <View style={styles.heading}>
-              <Text style={styles.eyebrow} weight='semibold'>
+              <Text
+                style={[
+                  styles.eyebrow,
+                  { color: theme.color.textSecondary[scheme] },
+                ]}
+                weight='semibold'
+              >
                 {t('emoteActions.title')}
               </Text>
             </View>
             <Button
               label={t('common:done')}
-              style={styles.doneButton}
+              style={[
+                styles.doneButton,
+                { backgroundColor: theme.color.pressedOverlay[scheme] },
+              ]}
               onPress={requestClose}
             >
               <SymbolView
                 name='xmark'
                 size={15}
                 weight='semibold'
-                tintColor={theme.color.textSecondary.dark}
+                tintColor={theme.color.textSecondary[scheme]}
               />
             </Button>
           </View>
@@ -281,7 +293,12 @@ function EmoteActionSheetComponent({
             <View style={styles.previewCard}>
               <View style={styles.previewRow}>
                 {displayUrl ? (
-                  <View style={styles.previewImageContainer}>
+                  <View
+                    style={[
+                      styles.previewImageContainer,
+                      { backgroundColor: theme.color.surfaceAlpha[scheme] },
+                    ]}
+                  >
                     <Image
                       trackLoadContext='chat.emote-action-sheet'
                       source={displayUrl}
@@ -294,36 +311,67 @@ function EmoteActionSheetComponent({
                 ) : null}
                 <View style={styles.previewMeta}>
                   {part.name || part.original_name ? (
-                    <Text style={styles.previewName}>
+                    <Text
+                      style={[
+                        styles.previewName,
+                        { color: theme.color.text[scheme] },
+                      ]}
+                    >
                       {part.name ?? part.original_name}
                     </Text>
                   ) : null}
-                  <Text style={styles.previewHint}>{previewSubtitle}</Text>
+                  <Text
+                    style={[
+                      styles.previewHint,
+                      { color: theme.color.textSecondary[scheme] },
+                    ]}
+                  >
+                    {previewSubtitle}
+                  </Text>
                 </View>
               </View>
             </View>
           )}
-          <View style={styles.actionGroup}>
+          <View
+            style={[
+              styles.actionGroup,
+              { backgroundColor: theme.color.surfaceAlpha[scheme] },
+            ]}
+          >
             {actions.map((action, index) => (
               <Button
                 key={action.label}
                 onPress={action.onPress}
                 style={[
                   styles.actionButton,
-                  index > 0 && styles.actionButtonWithDivider,
+                  index > 0 && [
+                    styles.actionButtonWithDivider,
+                    { borderTopColor: theme.color.border[scheme] },
+                  ],
                 ]}
               >
-                <View style={styles.actionIconFrame}>
+                <View
+                  style={[
+                    styles.actionIconFrame,
+                    { backgroundColor: theme.color.pressedOverlay[scheme] },
+                  ]}
+                >
                   <SymbolView
                     name={getEmoteActionSFSymbolName(action.id)}
                     size={18}
-                    tintColor={theme.color.textSecondary.dark}
+                    tintColor={theme.color.textSecondary[scheme]}
                     weight='regular'
                     style={styles.actionIcon}
                   />
                 </View>
                 <View style={styles.actionCopy}>
-                  <Text style={styles.actionText} weight='semibold'>
+                  <Text
+                    style={[
+                      styles.actionText,
+                      { color: theme.color.text[scheme] },
+                    ]}
+                    weight='semibold'
+                  >
                     {action.label}
                   </Text>
                 </View>
@@ -349,14 +397,12 @@ const styles = StyleSheet.create({
     paddingVertical: theme.space12,
   },
   actionButtonWithDivider: {
-    borderTopColor: 'rgba(255,255,255,0.1)',
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   actionCopy: {
     flex: 1,
   },
   actionGroup: {
-    backgroundColor: 'rgba(255,255,255,0.07)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     overflow: 'hidden',
@@ -366,7 +412,6 @@ const styles = StyleSheet.create({
   },
   actionIconFrame: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.09)',
     borderCurve: 'continuous',
     borderRadius: 8,
     height: 30,
@@ -374,13 +419,11 @@ const styles = StyleSheet.create({
     width: 30,
   },
   actionText: {
-    color: theme.color.text.dark,
     fontSize: theme.fontSize17,
     lineHeight: theme.fontSize17 * 1.2,
   },
   doneButton: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.14)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     height: 30,
@@ -388,7 +431,6 @@ const styles = StyleSheet.create({
     width: 30,
   },
   eyebrow: {
-    color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize11,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
@@ -401,14 +443,12 @@ const styles = StyleSheet.create({
     paddingVertical: theme.space4,
   },
   previewHint: {
-    color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize12,
     lineHeight: theme.fontSize12 * 1.3,
     marginTop: 4,
   },
   previewImageContainer: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     height: 64,
@@ -420,7 +460,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   previewName: {
-    color: theme.color.text.dark,
     fontSize: theme.fontSize18,
     fontWeight: Platform.select({ ios: '700', android: '600' }),
     lineHeight: theme.fontSize18 * 1.2,

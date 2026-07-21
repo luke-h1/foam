@@ -47,6 +47,18 @@ export interface RemoteConfigSchema {
    */
   experiments: Record<string, string>;
 
+  /**
+   * Light-mode rollout gate per release track. Off = the app renders dark
+   * regardless of the persisted theme preference.
+   */
+  lightModeEnabled: {
+    development: boolean;
+    internal: boolean;
+    testflight: boolean;
+    production: boolean;
+    e2e: boolean;
+  };
+
   sevenTvPaintRenderer: 'off' | 'native' | 'skia';
 }
 
@@ -79,6 +91,8 @@ export const defaultRemoteConfig = {
   admins: '[]',
   updateAppButtonAllowedUsers: '[]',
   experiments: '{}',
+  lightModeEnabled:
+    '{ "development": true, "internal": true, "testflight": false, "production": false, "e2e": false }',
   sevenTvPaintRenderer: 'native',
   bundleButtonEnabled:
     '{ "ios": { "development": false, "internal": true, "testflight": false, "production": false, "e2e": false }}',
@@ -90,6 +104,7 @@ const jsonKeys: RemoteConfigKey[] = [
   'admins',
   'updateAppButtonAllowedUsers',
   'experiments',
+  'lightModeEnabled',
   'bundleButtonEnabled',
 ];
 

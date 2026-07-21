@@ -1,16 +1,16 @@
-import { Platform } from 'react-native';
+import { Platform, useColorScheme } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Picker, Section, Text as NativeText } from '@expo/ui/swift-ui';
 import { tag } from '@expo/ui/swift-ui/modifiers';
 
 import { SettingsSection } from '@app/components/SettingsSection/SettingsSection';
-import { ChatPreferenceSegmentedSettingsRow } from '@app/screens/Preferences/ChatPreferenceSettingsRows';
+import { ChatPreferenceSegmentedSettingsRow } from '@app/screens/Preferences/components/ChatPreferenceSettingsRows';
 import {
-  type SevenTvPaintRenderer,
   usePreference,
   useUpdatePreferences,
-} from '@app/store/preferenceStore';
+} from '@app/store/preferences/selectors';
+import { type SevenTvPaintRenderer } from '@app/store/preferences/state';
 import { theme } from '@app/styles/themes';
 import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
 
@@ -30,6 +30,8 @@ function isPaintRenderer(value: string): value is SevenTvPaintRenderer {
 
 export function PaintRendererSection() {
   const { t } = useTranslation('devTools');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const sevenTvPaintRenderer = usePreference('sevenTvPaintRenderer');
   const update = useUpdatePreferences();
 
@@ -72,7 +74,7 @@ export function PaintRendererSection() {
       <ChatPreferenceSegmentedSettingsRow
         title={t('paintRenderer')}
         subtitle={t('paintRendererDescription')}
-        icon={{ icon: 'paintbrush.fill', color: theme.colorPlum }}
+        icon={{ icon: 'paintbrush.fill', color: theme.color.plum[scheme] }}
         onSelectIndex={index => {
           const next = PAINT_RENDERER_OPTIONS[index]?.value;
           if (next) {

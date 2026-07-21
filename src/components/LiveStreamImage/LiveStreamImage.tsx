@@ -12,6 +12,8 @@ interface Props {
   animated?: boolean;
 }
 
+export const LIVE_STREAM_IMAGE_SM_WIDTH = 55;
+
 export const LiveStreamImage = memo(function LiveStreamImage({
   animated,
   size,
@@ -42,7 +44,6 @@ const styles = StyleSheet.create({
   imageContainer: {
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
-    marginRight: theme.space16,
     overflow: 'hidden',
   },
 });
@@ -77,7 +78,7 @@ function getImageSizeStyle(size: NonNullable<Props['size']>): ImageStyle {
     case 'md':
       return { height: 60, width: 60 };
     case 'sm':
-      return { height: 55, width: 55 };
+      return { height: 55, width: LIVE_STREAM_IMAGE_SM_WIDTH };
     case 'xl':
       return { height: 200, width: 200 };
     default:

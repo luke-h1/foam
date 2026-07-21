@@ -2,6 +2,7 @@ import { memo, useRef } from 'react';
 import {
   ScrollView,
   StyleSheet,
+  useColorScheme,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -107,6 +108,8 @@ type ActionItem = {
 
 function ActionSheetComponent(props: Props) {
   const { t } = useTranslation(['chat', 'common']);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const {
     visible,
     onClose,
@@ -305,23 +308,35 @@ function ActionSheetComponent(props: Props) {
       <View style={wrapperStyle}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.eyebrow} weight='semibold'>
+            <Text
+              style={[
+                styles.eyebrow,
+                { color: theme.color.textSecondary[scheme] },
+              ]}
+              weight='semibold'
+            >
               {t('messageActions.eyebrow')}
             </Text>
-            <Text style={styles.title} weight='semibold'>
+            <Text
+              style={[styles.title, { color: theme.color.text[scheme] }]}
+              weight='semibold'
+            >
               {t('messageActions.title')}
             </Text>
           </View>
           <Button
             label={t('common:done')}
             onPress={requestClose}
-            style={styles.closeButton}
+            style={[
+              styles.closeButton,
+              { backgroundColor: theme.color.pressedOverlay[scheme] },
+            ]}
           >
             <SymbolView
               name='xmark'
               size={15}
               weight='semibold'
-              tintColor={theme.color.textSecondary.dark}
+              tintColor={theme.color.textSecondary[scheme]}
             />
           </Button>
         </View>
@@ -338,23 +353,40 @@ function ActionSheetComponent(props: Props) {
             />
           ) : null}
 
-          <View style={styles.actionGroup}>
+          <View
+            style={[
+              styles.actionGroup,
+              { backgroundColor: theme.color.surfaceAlpha[scheme] },
+            ]}
+          >
             {actions.map((action, index) => (
               <Button
                 key={action.id}
                 onPress={action.onPress}
                 style={[
                   styles.actionButton,
-                  index < actions.length - 1 && styles.actionButtonBorder,
+                  index < actions.length - 1 && [
+                    styles.actionButtonBorder,
+                    { borderBottomColor: theme.color.border[scheme] },
+                  ],
                 ]}
               >
                 <View style={styles.actionContent}>
                   <View
                     style={[
                       styles.actionIconFrame,
-                      action.tone === 'accent' && styles.actionIconAccent,
-                      action.tone === 'warning' && styles.actionIconWarning,
-                      action.tone === 'danger' && styles.actionIconDanger,
+                      {
+                        backgroundColor: theme.color.pressedOverlay[scheme],
+                      },
+                      action.tone === 'accent' && {
+                        backgroundColor: theme.color.accentSurface[scheme],
+                      },
+                      action.tone === 'warning' && {
+                        backgroundColor: `${theme.color.warning[scheme]}29`,
+                      },
+                      action.tone === 'danger' && {
+                        backgroundColor: theme.color.dangerSurface[scheme],
+                      },
                     ]}
                   >
                     <SymbolView
@@ -362,12 +394,12 @@ function ActionSheetComponent(props: Props) {
                       size={18}
                       tintColor={
                         action.tone === 'danger'
-                          ? theme.colorRed
+                          ? theme.color.danger[scheme]
                           : action.tone === 'warning'
-                            ? theme.colorAmber
+                            ? theme.color.amber[scheme]
                             : action.tone === 'accent'
-                              ? theme.colorPrimary
-                              : theme.color.textSecondary.dark
+                              ? theme.color.accent[scheme]
+                              : theme.color.textSecondary[scheme]
                       }
                       weight='regular'
                       style={styles.actionIcon}
@@ -378,13 +410,21 @@ function ActionSheetComponent(props: Props) {
                       weight='semibold'
                       style={[
                         styles.actionText,
-                        action.tone === 'danger' && styles.actionTextDanger,
+                        { color: theme.color.text[scheme] },
+                        action.tone === 'danger' && {
+                          color: theme.color.danger[scheme],
+                        },
                       ]}
                     >
                       {action.label}
                     </Text>
                     {action.subtitle ? (
-                      <Text style={styles.actionSubtitle}>
+                      <Text
+                        style={[
+                          styles.actionSubtitle,
+                          { color: theme.color.textSecondary[scheme] },
+                        ]}
+                      >
                         {action.subtitle}
                       </Text>
                     ) : null}
@@ -409,7 +449,6 @@ const styles = StyleSheet.create({
     paddingVertical: theme.space8,
   },
   actionButtonBorder: {
-    borderBottomColor: 'rgba(255,255,255,0.1)',
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   actionContent: {
@@ -422,48 +461,31 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   actionGroup: {
-    backgroundColor: 'rgba(255,255,255,0.07)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     overflow: 'hidden',
   },
-  actionIconAccent: {
-    backgroundColor: 'rgba(46,134,255,0.16)',
-  },
-  actionIconDanger: {
-    backgroundColor: theme.colorRedSurface,
-  },
   actionIconFrame: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.09)',
     borderCurve: 'continuous',
     borderRadius: 8,
     height: 30,
     justifyContent: 'center',
     width: 30,
   },
-  actionIconWarning: {
-    backgroundColor: 'rgba(224,163,58,0.16)',
-  },
   actionIcon: {
     opacity: 0.9,
   },
   actionSubtitle: {
-    color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize12,
     lineHeight: theme.fontSize12 * 1.3,
   },
   actionText: {
-    color: theme.color.text.dark,
     fontSize: theme.fontSize17,
     lineHeight: theme.fontSize17 * 1.2,
   },
-  actionTextDanger: {
-    color: theme.colorRed,
-  },
   closeButton: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.14)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     height: 30,
@@ -471,7 +493,6 @@ const styles = StyleSheet.create({
     width: 30,
   },
   eyebrow: {
-    color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize11,
     letterSpacing: 0.6,
     marginBottom: 2,
@@ -484,7 +505,6 @@ const styles = StyleSheet.create({
     paddingBottom: theme.space4,
   },
   title: {
-    color: theme.color.text.dark,
     fontSize: theme.fontSize16,
     lineHeight: theme.fontSize16 * 1.25,
   },

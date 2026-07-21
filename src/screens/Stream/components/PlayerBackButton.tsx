@@ -24,8 +24,8 @@ export function PlayerBackButton() {
 const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
+    backgroundColor: theme.color.pressedOverlay.dark,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: 1,

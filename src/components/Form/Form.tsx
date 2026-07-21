@@ -41,6 +41,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
+import { theme } from '@app/styles/themes';
 import { BodyScrollView } from '../BodyScrollView/BodyScrollView';
 
 type ListStyle = 'grouped' | 'auto';
@@ -208,7 +209,7 @@ const minItemHeight = 20;
 
 const styles = StyleSheet.create({
   itemPadding: {
-    paddingVertical: 11,
+    paddingVertical: theme.space12,
     paddingHorizontal: 20,
   },
   itemRow: {
@@ -413,20 +414,20 @@ export const FormFont = {
   default: {
     color: AppleColors.label,
     // 17.00pt is the default font size for a Text in a List.
-    fontSize: 17,
+    fontSize: theme.fontSize17,
     // UICTFontTextStyleBody is the default fontFamily.
   },
   secondary: {
     color: AppleColors.secondaryLabel,
-    fontSize: 17,
+    fontSize: theme.fontSize17,
   },
   caption: {
     color: AppleColors.secondaryLabel,
-    fontSize: 12,
+    fontSize: theme.fontSize12,
   },
   title: {
     color: AppleColors.label,
-    fontSize: 17,
+    fontSize: theme.fontSize17,
     fontWeight: '600',
   },
 } satisfies Record<string, TextStyle>;
@@ -667,7 +668,7 @@ export function Section({
           : {
               borderCurve: 'continuous',
               overflow: 'hidden',
-              borderRadius: 10,
+              borderRadius: theme.borderRadius18,
               backgroundColor: Colors.secondarySystemGroupedBackground,
             },
         props.style,
@@ -703,7 +704,7 @@ export function Section({
           style={{
             color: AppleColors.secondaryLabel,
             paddingVertical: 8,
-            fontSize: 14,
+            fontSize: theme.fontSize14,
           }}
         >
           {titleHint}
@@ -736,7 +737,7 @@ export function Section({
               color: AppleColors.secondaryLabel,
 
               paddingVertical: 8,
-              fontSize: 14,
+              fontSize: theme.fontSize14,
               // use Apple condensed font
               // fontVariant: ["small-caps"],
             }}
@@ -754,7 +755,7 @@ export function Section({
             color: AppleColors.secondaryLabel,
             paddingHorizontal: 20,
             paddingTop: 8,
-            fontSize: 14,
+            fontSize: theme.fontSize14,
           }}
         >
           {footer}

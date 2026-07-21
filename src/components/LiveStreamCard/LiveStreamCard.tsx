@@ -1,5 +1,5 @@
-import { memo, useCallback } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { memo, useCallback, useMemo } from 'react';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useQueryClient } from '@tanstack/react-query';
@@ -10,7 +10,6 @@ import { Text } from '@app/components/ui/Text/Text';
 import { impact } from '@app/lib/haptics';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { showActionMenu } from '@app/store/overlays/showActionMenu';
-import { Color } from '@app/styles/pallete';
 import { theme } from '@app/styles/themes';
 import type { TwitchStream } from '@app/types/twitch/stream';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
@@ -62,6 +61,23 @@ function pushRouteOnce(path: string) {
 function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   const { t } = useTranslation('common');
   const queryClient = useQueryClient();
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const schemeStyles = useMemo(
+    () => ({
+      avatarFallback: {
+        backgroundColor: theme.color.pressedOverlay[scheme],
+      },
+      container: {
+        backgroundColor: theme.color.surface[scheme],
+        borderColor: theme.color.border[scheme],
+      },
+      faintText: { color: theme.color.textFaint[scheme] },
+      primaryText: { color: theme.color.text[scheme] },
+      secondaryText: { color: theme.color.textSecondary[scheme] },
+    }),
+    [scheme],
+  );
   const thumbnailSize =
     layout === 'media' ? MEDIA_THUMBNAIL_SIZE : COMPACT_THUMBNAIL_SIZE;
   const thumbnailUrl = stream.thumbnail_url
@@ -70,9 +86,11 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
 
   const avatarInitial = stream.user_name.trim().charAt(0).toUpperCase();
 
-  // Media-layout avatars come pre-batched on the stream via
-  // useStreamProfilePictures at the list level — one /users request per
-  // screen instead of one per visible card.
+  /**
+   * Media-layout avatars come pre-batched on the stream via
+   * useStreamProfilePictures at the list level - one /users request per
+   * screen instead of one per visible card.
+   */
   const profilePicture = stream.profilePicture;
 
   const handleStreamPressIn = useCallback(() => {
@@ -174,8 +192,14 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
                   transition={150}
                 />
               ) : (
-                <View style={styles.avatarFallback}>
-                  <Text type='md' weight='bold' style={styles.avatarInitial}>
+                <View
+                  style={[styles.avatarFallback, schemeStyles.avatarFallback]}
+                >
+                  <Text
+                    type='md'
+                    weight='bold'
+                    style={schemeStyles.primaryText}
+                  >
                     {avatarInitial}
                   </Text>
                 </View>
@@ -192,7 +216,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
                 <Text
                   type='md'
                   weight='semibold'
-                  style={styles.mediaUsername}
+                  style={[styles.mediaUsername, schemeStyles.primaryText]}
                   numberOfLines={1}
                 >
                   {stream.user_name}
@@ -202,7 +226,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
                 type='sm'
                 weight='medium'
                 numberOfLines={2}
-                style={styles.mediaTitle}
+                style={[styles.mediaTitle, schemeStyles.secondaryText]}
               >
                 {stream.title}
               </Text>
@@ -214,7 +238,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
                 <Text
                   type='sm'
                   weight='medium'
-                  style={styles.mediaCategory}
+                  style={[styles.mediaCategory, schemeStyles.secondaryText]}
                   numberOfLines={1}
                 >
                   {stream.game_name}
@@ -236,7 +260,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
       label={cardAccessibilityLabel}
       style={styles.cardWrapper}
     >
-      <View style={styles.container}>
+      <View style={[styles.container, schemeStyles.container]}>
         <View style={styles.imageContainer}>
           <Image
             source={thumbnailUrl}
@@ -259,7 +283,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
               type='sm'
               weight='semibold'
               numberOfLines={1}
-              style={styles.username}
+              style={schemeStyles.primaryText}
             >
               {stream.user_name}
             </Text>
@@ -268,7 +292,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
           <Text
             type='sm'
             weight='normal'
-            style={styles.title}
+            style={[styles.title, schemeStyles.secondaryText]}
             numberOfLines={2}
           >
             {stream.title}
@@ -276,14 +300,21 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
 
           <View style={styles.metadataRow}>
             <View style={styles.liveMeta}>
-              <Text type='xs' style={styles.liveText}>
+              <Text type='xs' style={schemeStyles.secondaryText}>
                 {elapsedStreamTime(stream.started_at)}
               </Text>
             </View>
-            <Text type='xs' style={styles.metaDivider}>
+            <Text
+              type='xs'
+              style={[styles.metaDivider, schemeStyles.faintText]}
+            >
               •
             </Text>
-            <Text type='xs' numberOfLines={1} style={styles.viewersText}>
+            <Text
+              type='xs'
+              numberOfLines={1}
+              style={[styles.viewersText, schemeStyles.secondaryText]}
+            >
               {formatViewCountCompact(stream.viewer_count)} watching
             </Text>
           </View>
@@ -293,7 +324,11 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
             style={styles.categoryButton}
             hitSlop={6}
           >
-            <Text type='xs' numberOfLines={1} style={styles.categoryText}>
+            <Text
+              type='xs'
+              numberOfLines={1}
+              style={[styles.categoryText, schemeStyles.secondaryText]}
+            >
               {stream.game_name}
             </Text>
           </PressableArea>
@@ -311,7 +346,6 @@ const styles = StyleSheet.create({
   },
   avatarFallback: {
     alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     height: 44,
@@ -331,9 +365,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     width: 44,
   },
-  avatarInitial: {
-    color: Color.zinc[50],
-  },
   avatarPressable: {
     flexShrink: 0,
     marginTop: 2,
@@ -343,15 +374,12 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   categoryText: {
-    color: Color.zinc[300],
     lineHeight: 16,
   },
   container: {
     alignItems: 'flex-start',
-    backgroundColor: Color.zinc[900],
-    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius10,
+    borderRadius: theme.borderRadius16,
     borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     flexWrap: 'nowrap',
@@ -365,7 +393,7 @@ const styles = StyleSheet.create({
   details: {
     flex: 1,
     flexShrink: 1,
-    gap: theme.space2,
+    gap: theme.space4,
     justifyContent: 'flex-start',
     minHeight: 88,
     minWidth: 0,
@@ -395,14 +423,11 @@ const styles = StyleSheet.create({
   liveMeta: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 4,
+    gap: theme.space4,
   },
   mediaLiveBadge: {
     left: theme.space12,
     top: theme.space12,
-  },
-  liveText: {
-    color: Color.zinc[300],
   },
   compactLiveBadge: {
     left: 6,
@@ -413,7 +438,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   mediaCategory: {
-    color: Color.zinc[300],
     lineHeight: 20,
   },
   mediaContainer: {
@@ -451,30 +475,23 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   mediaTitle: {
-    color: Color.zinc[100],
     lineHeight: 19,
   },
   mediaUsername: {
-    color: Color.zinc[50],
     lineHeight: 21,
   },
   metaDivider: {
-    color: Color.zinc[400],
     opacity: 0.5,
   },
   metadataRow: {
     alignItems: 'center',
     flexDirection: 'row',
     flexWrap: 'nowrap',
-    gap: 6,
-    marginTop: theme.space4,
+    gap: theme.space8,
+    marginTop: theme.space8,
   },
   title: {
-    color: Color.zinc[100],
     lineHeight: 19,
-  },
-  username: {
-    color: Color.zinc[50],
   },
   usernameButton: {
     alignSelf: 'flex-start',
@@ -482,7 +499,6 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   viewersText: {
-    color: Color.zinc[300],
     flexShrink: 1,
   },
   viewerBadge: {
@@ -496,7 +512,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   viewerBadgeText: {
-    color: Color.zinc[50],
+    color: theme.color.text.dark,
     lineHeight: 20,
   },
 });

@@ -158,7 +158,7 @@ const config: ExpoConfig = {
     resizeMode: 'contain',
     backgroundColor: appConfig.splashBackgroundColor,
   },
-  userInterfaceStyle: 'dark',
+  userInterfaceStyle: 'automatic',
   updates: {
     url: 'https://u.expo.dev/950a1e2f-6b25-4be7-adb2-3c16287a2b5e',
     // Configure the channel to "local" for local development, if we

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 
 import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
 import {
@@ -12,7 +12,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { ChatMessagePressable } from '../ChatMessagePressable';
-import { styles } from '../RichChatMessage.styles';
+import { getRichChatMessageStyles } from '../RichChatMessage.styles';
 import { ChatMessageBody } from './ChatMessageBody';
 import { InlineMessageSpans } from './InlineMessageSpans';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
@@ -41,6 +41,9 @@ export function ReplyingToHeader({
   replyParentMessageId,
   rendererArgs,
 }: ReplyingToHeaderProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = getRichChatMessageStyles(scheme);
   const { parseTextForEmotes, ...partRendererArgs } = rendererArgs;
   const replyPlainMentionTarget = normaliseUsername(parentDisplayName);
   const parsedReplyBody = useMemo((): ParsedPart[] => {

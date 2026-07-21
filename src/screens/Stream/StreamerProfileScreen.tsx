@@ -1,5 +1,11 @@
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  Platform,
+  StyleSheet,
+  useColorScheme,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -57,9 +63,11 @@ function getClipThumbnailUrl(clip: TwitchClip) {
 }
 
 function getVodThumbnailUrl(vod: TwitchVideo, fallback: string) {
-  // In-progress recordings (the broadcast is still live) have no generated
-  // thumbnail yet - Twitch returns an empty string or a `_404_processing`
-  // placeholder on vod-secure that responds 403. Fall back to the channel art.
+  /**
+   * In-progress recordings (the broadcast is still live) have no generated
+   * thumbnail yet - Twitch returns an empty string or a `_404_processing`
+   * placeholder on vod-secure that responds 403. Fall back to the channel art.
+   */
   if (!vod.thumbnail_url || /_404|404_processing/.test(vod.thumbnail_url)) {
     return fallback;
   }
@@ -135,12 +143,18 @@ function formatRelativeAge(value: string) {
 
 function StreamElementsStats({ stats }: { stats: StreamElementsChatStats }) {
   const { t } = useTranslation('stream');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const topEmote = getTopChatEmote(stats);
+  const statChipColors = {
+    backgroundColor: theme.color.pressedOverlay[scheme],
+    borderColor: theme.color.border[scheme],
+  };
 
   return (
     <View style={styles.statsStrip}>
       <View style={styles.statsRow}>
-        <View style={styles.statChip}>
+        <View style={[styles.statChip, statChipColors]}>
           <Text type='sm' weight='bold'>
             {formatViewCountCompact(stats.totalMessages)}
           </Text>
@@ -148,7 +162,7 @@ function StreamElementsStats({ stats }: { stats: StreamElementsChatStats }) {
             {t('messagesLabel')}
           </Text>
         </View>
-        <View style={styles.statChip}>
+        <View style={[styles.statChip, statChipColors]}>
           <Text type='sm' weight='bold'>
             {formatViewCountCompact(stats.uniqueChatters)}
           </Text>
@@ -157,7 +171,7 @@ function StreamElementsStats({ stats }: { stats: StreamElementsChatStats }) {
           </Text>
         </View>
         {topEmote ? (
-          <View style={styles.statChip}>
+          <View style={[styles.statChip, statChipColors]}>
             <Text type='sm' weight='bold' numberOfLines={1}>
               {topEmote.emote}
             </Text>
@@ -188,6 +202,8 @@ function StreamerProfileHeader({
   user: UserInfoResponse;
 }) {
   const { t } = useTranslation('stream');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const insets = useSafeAreaInsets();
 
   return (
@@ -212,7 +228,7 @@ function StreamerProfileHeader({
       <View style={styles.profileRow}>
         <Image
           source={user.profile_image_url}
-          style={styles.avatar}
+          style={[styles.avatar, { borderColor: theme.color.border[scheme] }]}
           contentFit='cover'
         />
         <View style={styles.profileCopy}>
@@ -261,9 +277,11 @@ function StreamerProfileHeader({
   );
 }
 
-// Memoized so the regex/Date formatting below only re-runs for cards whose
-// props actually changed - extraData ticks (tab captions) re-render the list
-// wrapper, not every visible card.
+/**
+ * Memoized so the regex/Date formatting below only re-runs for cards whose
+ * props actually changed - extraData ticks (tab captions) re-render the list
+ * wrapper, not every visible card.
+ */
 const VodCard = memo(function VodCard({
   vod,
   width,
@@ -369,6 +387,8 @@ function ProfileTabEmptyState({
   onRetry: () => void;
 }) {
   const { t } = useTranslation('stream');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   if (isLoading) {
     return (
@@ -389,7 +409,13 @@ function ProfileTabEmptyState({
             ? t('vodsUnavailableDescription')
             : t('clipsUnavailableDescription')}
         </Text>
-        <Button onPress={onRetry} style={styles.retryButton}>
+        <Button
+          onPress={onRetry}
+          style={[
+            styles.retryButton,
+            { backgroundColor: theme.color.accent[scheme] },
+          ]}
+        >
           <Text type='sm' weight='semibold'>
             {t('refresh')}
           </Text>
@@ -409,6 +435,8 @@ function ProfileTabEmptyState({
 
 export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   const { t } = useTranslation('stream');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const listRef = useRef<FlashListRef<ProfileListItem>>(null);
   const { width: windowWidth } = useWindowDimensions();
   const [activeTab, setActiveTab] = useState<ProfileTab>('vods');
@@ -523,7 +551,12 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   );
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <FlashList<ProfileListItem>
         ref={listRef}
         data={items}
@@ -558,7 +591,6 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
 
 const styles = StyleSheet.create({
   avatar: {
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: 1,
@@ -591,22 +623,21 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
+    backgroundColor: theme.color.pressedOverlay.dark,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
     justifyContent: 'center',
   },
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   description: {
     marginTop: theme.space16,
   },
   durationBadge: {
-    backgroundColor: theme.colorBlackOverlay,
+    backgroundColor: theme.color.overlay.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius6,
     left: theme.space8,
@@ -621,6 +652,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: theme.space36,
+    paddingTop: theme.space12,
   },
   inlineLoading: {
     backgroundColor: 'transparent',
@@ -644,8 +676,6 @@ const styles = StyleSheet.create({
     gap: theme.space16,
   },
   sectionRow: {
-    borderTopColor: theme.colorBorderSecondary,
-    borderTopWidth: StyleSheet.hairlineWidth,
     marginTop: theme.space20,
     paddingTop: theme.space16,
   },
@@ -661,8 +691,6 @@ const styles = StyleSheet.create({
     gap: theme.space8,
   },
   statChip: {
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     borderWidth: StyleSheet.hairlineWidth,
@@ -679,11 +707,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   retryButton: {
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
-    borderWidth: 1,
     marginTop: theme.space16,
     paddingHorizontal: theme.space20,
     paddingVertical: theme.space8,

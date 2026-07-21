@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import type { ReactNode } from 'react';
 
 import { EmoteRenderer } from '@app/components/Chat/components/ChatMessage/renderers/EmoteRenderer';
@@ -7,8 +7,8 @@ import { RichChatMessage } from '@app/components/Chat/components/ChatMessage/Ric
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { type ChatMessageType } from '@app/store/chat/types/constants';
-import { type ChatFontScale } from '@app/store/preferenceStore';
-import { theme } from '@app/styles/themes';
+import { type ChatFontScale } from '@app/store/preferences/state';
+import { type ColorScheme, theme } from '@app/styles/themes';
 import { type UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { type SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
@@ -16,7 +16,7 @@ import { type ParsedPart } from '@app/utils/chat/parsedPart';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
 
-import { chatPreferencePreviewFixtures } from './chatPreferencePreviewFixtures';
+import { chatPreferencePreviewData } from './chatPreferencePreviewData';
 
 const PREVIEW_CHANNEL = 'preview';
 const PREVIEW_VIEWER_LOGIN = 'foamviewer';
@@ -123,14 +123,14 @@ const previewMessages = {
       textPart(' these render '),
       ...buildProviderEmoteParts(
         'bttv',
-        chatPreferencePreviewFixtures.bttv.emotes.slice(0, 2),
+        chatPreferencePreviewData.bttv.emotes.slice(0, 2),
       ),
     ],
     userId: '104',
   }),
 } as const;
 
-const getMentionColor = () => theme.colorViolet;
+const getMentionColor = (scheme: ColorScheme) => theme.color.violet[scheme];
 
 const parseTextForEmotes = (text: string): ParsedPart[] => [textPart(text)];
 
@@ -282,6 +282,8 @@ const ChatPreviewSurface = function ChatPreviewSurface({
   settings?: Partial<PreviewState>;
   testID: string;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const previewState = {
     ...PREVIEW_DEFAULTS,
     ...settings,
@@ -292,6 +294,10 @@ const ChatPreviewSurface = function ChatPreviewSurface({
       <View
         style={[
           styles.chatSurface,
+          {
+            backgroundColor: theme.color.backgroundSecondary[scheme],
+            borderColor: theme.color.border[scheme],
+          },
           previewState.showUnreadJumpPill
             ? styles.chatSurfaceWithJumpPill
             : null,
@@ -310,7 +316,7 @@ const ChatPreviewSurface = function ChatPreviewSurface({
             density={previewState.chatDensity}
             disableEmoteAnimations={previewState.disableEmoteAnimations}
             fontScale={previewState.chatFontScale}
-            getMentionColor={getMentionColor}
+            getMentionColor={() => getMentionColor(scheme)}
             isAlternatingRow={
               previewState.showAlternatingChatRows && index % 2 === 1
             }
@@ -323,9 +329,14 @@ const ChatPreviewSurface = function ChatPreviewSurface({
 
         {previewState.showUnreadJumpPill ? (
           <View style={styles.jumpPillWrap}>
-            <View style={styles.jumpPill}>
+            <View
+              style={[
+                styles.jumpPill,
+                { backgroundColor: theme.color.overlay[scheme] },
+              ]}
+            >
               <SymbolView
-                tintColor={theme.colorAmberAlpha}
+                tintColor={theme.color.amberAlpha[scheme]}
                 name='arrow.down'
                 size={16}
               />
@@ -340,7 +351,12 @@ const ChatPreviewSurface = function ChatPreviewSurface({
           </View>
         ) : null}
         {label ? (
-          <View style={styles.previewStatePill}>
+          <View
+            style={[
+              styles.previewStatePill,
+              { backgroundColor: theme.color.overlay[scheme] },
+            ]}
+          >
             <Text style={styles.previewStatePillText} weight='semibold'>
               {label}
             </Text>
@@ -370,9 +386,21 @@ const PreviewEmoteLine = function PreviewEmoteLine({
   username: string;
   usernameColor: string;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
     <PreviewCard testID={testID}>
-      <View style={styles.providerPreviewSurface} pointerEvents='none'>
+      <View
+        style={[
+          styles.providerPreviewSurface,
+          {
+            backgroundColor: theme.color.backgroundSecondary[scheme],
+            borderColor: theme.color.border[scheme],
+          },
+        ]}
+        pointerEvents='none'
+      >
         <View style={styles.providerEmoteRow}>
           <Text style={{ color: usernameColor }} type='caption' weight='bold'>
             {username}:
@@ -417,6 +445,8 @@ const ProviderAssetPreview = function ProviderAssetPreview({
   testID: string;
   variant: 'badges' | 'emotes';
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const sample = getProviderPreviewSample(provider);
 
   if (variant === 'emotes' && enabled && sample.emotes.length > 0) {
@@ -425,7 +455,7 @@ const ProviderAssetPreview = function ProviderAssetPreview({
         parts={buildProviderEmoteParts(provider, sample.emotes)}
         testID={testID}
         username='username'
-        usernameColor={getProviderPreviewColor(provider)}
+        usernameColor={getProviderPreviewColor(provider, scheme)}
       />
     );
   }
@@ -433,7 +463,7 @@ const ProviderAssetPreview = function ProviderAssetPreview({
   const message =
     variant === 'emotes'
       ? createPreviewMessage({
-          color: getProviderPreviewColor(provider),
+          color: getProviderPreviewColor(provider, scheme),
           displayName: 'username',
           id: `preview-${provider}-emotes-${enabled ? 'on' : 'off'}`,
           login: `${provider}-preview`,
@@ -444,7 +474,7 @@ const ProviderAssetPreview = function ProviderAssetPreview({
         })
       : createPreviewMessage({
           badges: enabled ? sample.badges : [],
-          color: getProviderPreviewColor(provider),
+          color: getProviderPreviewColor(provider, scheme),
           displayName: 'username',
           id: `preview-${provider}-badges-${enabled ? 'on' : 'off'}`,
           login: `${provider}-preview`,
@@ -454,11 +484,20 @@ const ProviderAssetPreview = function ProviderAssetPreview({
 
   return (
     <PreviewCard testID={testID}>
-      <View style={styles.providerPreviewSurface} pointerEvents='none'>
+      <View
+        style={[
+          styles.providerPreviewSurface,
+          {
+            backgroundColor: theme.color.backgroundSecondary[scheme],
+            borderColor: theme.color.border[scheme],
+          },
+        ]}
+        pointerEvents='none'
+      >
         <RichChatMessage
           {...message}
           density='comfortable'
-          getMentionColor={getMentionColor}
+          getMentionColor={() => getMentionColor(scheme)}
           parseTextForEmotes={parseTextForEmotes}
           showInlineReplyContext={false}
           showTimestamp={false}
@@ -562,11 +601,11 @@ function mentionPart(content: string): ParsedPart<'mention'> {
 function getProviderPreviewSample(
   provider: PreviewProvider,
 ): ProviderPreviewSample {
-  const fixtures = chatPreferencePreviewFixtures[provider];
+  const sample = chatPreferencePreviewData[provider];
 
   return {
-    badges: fixtures.badges.slice(0, provider === 'twitch' ? 2 : 1),
-    emotes: fixtures.emotes.slice(0, 2),
+    badges: sample.badges.slice(0, provider === 'twitch' ? 2 : 1),
+    emotes: sample.emotes.slice(0, 2),
   };
 }
 
@@ -620,16 +659,19 @@ function buildProviderEmoteParts(
   });
 }
 
-function getProviderPreviewColor(provider: PreviewProvider) {
+function getProviderPreviewColor(
+  provider: PreviewProvider,
+  scheme: ColorScheme,
+) {
   switch (provider) {
     case '7tv':
-      return theme.colorPlum;
+      return theme.color.plum[scheme];
     case 'bttv':
-      return theme.colorOrange;
+      return theme.color.orange[scheme];
     case 'ffz':
-      return theme.colorBlue;
+      return theme.color.blue[scheme];
     case 'twitch':
-      return theme.colorViolet;
+      return theme.color.violet[scheme];
     default: {
       const unreachable: never = provider;
       return unreachable;
@@ -639,8 +681,6 @@ function getProviderPreviewColor(provider: PreviewProvider) {
 
 const styles = StyleSheet.create({
   chatSurface: {
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     borderWidth: StyleSheet.hairlineWidth,
@@ -654,7 +694,6 @@ const styles = StyleSheet.create({
   jumpPill: {
     alignItems: 'center',
     alignSelf: 'center',
-    backgroundColor: theme.colorBlackOverlay,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius28,
     boxShadow: '0 2px 3.84px rgba(0, 0, 0, 0.25)',
@@ -687,7 +726,6 @@ const styles = StyleSheet.create({
   },
   previewStatePill: {
     alignSelf: 'flex-start',
-    backgroundColor: theme.colorBlackOverlay,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius28,
     marginHorizontal: theme.space12,
@@ -708,8 +746,6 @@ const styles = StyleSheet.create({
     rowGap: theme.space2,
   },
   providerPreviewSurface: {
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     borderWidth: StyleSheet.hairlineWidth,

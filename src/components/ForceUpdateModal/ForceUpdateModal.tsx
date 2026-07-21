@@ -1,4 +1,9 @@
-import { Modal as RNModal, StyleSheet, View } from 'react-native';
+import {
+  Modal as RNModal,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import * as Application from 'expo-application';
@@ -7,7 +12,7 @@ import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { getStoreUrlAsync } from '@app/screens/DevTools/util/getStoreUrlAsync';
-import { theme } from '@app/styles/themes';
+import { type ColorScheme, theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { isUpdateRequired } from '@app/utils/version/compareVersions';
 import { getMinimumVersion } from '@app/utils/version/getMinimumVersion';
@@ -15,16 +20,18 @@ import { getMinimumVersion } from '@app/utils/version/getMinimumVersion';
 import { Variant } from '../../../app.config';
 import { Button } from '../Button/Button';
 
-async function handleUpdatePress() {
+async function handleUpdatePress(scheme: ColorScheme) {
   const storeUrl = await getStoreUrlAsync();
   if (storeUrl) {
-    openLinkInBrowser(storeUrl);
+    openLinkInBrowser(storeUrl, scheme);
   }
 }
 
 export function ForceUpdateModal() {
   const { config: remoteConfig } = useRemoteConfig();
   const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   const variant = (process.env.EXPO_PUBLIC_APP_VARIANT ??
     'development') as Variant;
@@ -44,8 +51,21 @@ export function ForceUpdateModal() {
       statusBarTranslucent
     >
       <View style={[styles.overlay, { paddingTop: insets.top }]}>
-        <View style={styles.card}>
-          <View style={styles.iconContainer}>
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.color.backgroundAlt[scheme],
+              borderColor: theme.color.border[scheme],
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.iconContainer,
+              { backgroundColor: theme.color.accent[scheme] },
+            ]}
+          >
             <SymbolView name='arrow.up' />
           </View>
 
@@ -63,7 +83,12 @@ export function ForceUpdateModal() {
             the app.
           </Text>
 
-          <View style={styles.versionInfo}>
+          <View
+            style={[
+              styles.versionInfo,
+              { backgroundColor: theme.color.backgroundSecondary[scheme] },
+            ]}
+          >
             <View style={styles.versionRow}>
               <Text color='gray.textLow' type='xs'>
                 Current version
@@ -83,9 +108,11 @@ export function ForceUpdateModal() {
           </View>
 
           <Button
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-            onPress={handleUpdatePress}
-            style={styles.updateButton}
+            onPress={() => void handleUpdatePress(scheme)}
+            style={[
+              styles.updateButton,
+              { backgroundColor: theme.color.accent[scheme] },
+            ]}
           >
             <Text color='accent' contrast type='md' weight='semibold'>
               Update Now
@@ -100,8 +127,6 @@ export function ForceUpdateModal() {
 const styles = StyleSheet.create({
   card: {
     alignItems: 'center' as const,
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: 1,
@@ -112,8 +137,7 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     alignItems: 'center' as const,
-    backgroundColor: theme.colorPrimary,
-    borderRadius: 36,
+    borderRadius: theme.borderRadius34,
     height: 72,
     justifyContent: 'center' as const,
     marginBottom: theme.space20,
@@ -133,7 +157,6 @@ const styles = StyleSheet.create({
   },
   updateButton: {
     alignItems: 'center' as const,
-    backgroundColor: theme.colorPrimary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     justifyContent: 'center' as const,
@@ -141,7 +164,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   versionInfo: {
-    backgroundColor: theme.color.backgroundSecondary.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     gap: theme.space8,
