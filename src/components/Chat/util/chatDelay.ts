@@ -1,4 +1,4 @@
-import type { ChatDelaySetting } from '@app/store/preferenceStore';
+import type { ChatDelaySetting } from '@app/store/preferences/state';
 
 // Cap on the auto-sync hold so a stalled measurement can't park chat for minutes.
 export const MAX_AUTO_CHAT_DELAY_MS = 30_000;

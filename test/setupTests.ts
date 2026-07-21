@@ -30,6 +30,16 @@ global.TextDecoder = TextDecoder as typeof global.TextDecoder;
 configureReassure({ testingLibrary: 'react-native' });
 
 /**
+ * The app resolves theme colors per scheme; pin tests to dark so color
+ * assertions stay deterministic regardless of the jest host appearance.
+ */
+jest.mock('react-native/Libraries/Utilities/useColorScheme', () => ({
+  __esModule: true,
+  default: () => 'dark',
+}));
+jest.spyOn(ReactNative.Appearance, 'getColorScheme').mockReturnValue('dark');
+
+/**
  * The Skia jest mock renders components as plain Views but routes imperative
  * calls (Skia.Path.Make etc.) to global.CanvasKit, which is never loaded in
  * jsdom. Nothing is actually drawn in tests, so a call-through proxy is enough.

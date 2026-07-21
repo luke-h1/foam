@@ -1,10 +1,10 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useColorScheme } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { selection } from '@app/lib/haptics';
-import { type Preferences } from '@app/store/preferenceStore';
+import { type Preferences } from '@app/store/preferences/state';
 import { theme } from '@app/styles/themes';
 
 type StreamListLayout = Preferences['streamListLayout'];
@@ -17,6 +17,8 @@ export function StreamListLayoutToggle({
   onChange: (value: StreamListLayout) => void;
 }) {
   const { t } = useTranslation('stream');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const isCompact = value === 'compact';
 
   return (
@@ -30,12 +32,18 @@ export function StreamListLayoutToggle({
         void selection();
         onChange(isCompact ? 'media' : 'compact');
       }}
-      style={styles.button}
+      style={[
+        styles.button,
+        {
+          backgroundColor: theme.color.backgroundAlt[scheme],
+          borderColor: theme.color.border[scheme],
+        },
+      ]}
     >
       <SymbolView
         name={isCompact ? 'square.grid.2x2' : 'list.bullet'}
         size={18}
-        tintColor={theme.color.text.dark}
+        tintColor={theme.color.text[scheme]}
       />
     </Button>
   );
@@ -44,8 +52,6 @@ export function StreamListLayoutToggle({
 const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: 1,

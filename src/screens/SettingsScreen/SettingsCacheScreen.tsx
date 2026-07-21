@@ -1,5 +1,12 @@
 import { useRef } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -67,6 +74,8 @@ function handleClearCache() {
 
 export function SettingsCacheScreen() {
   const { t } = useTranslation('settings');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const scrollRef = useRef<ScrollView>(null);
 
   useScrollToTop(scrollRef);
@@ -101,7 +110,12 @@ export function SettingsCacheScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <ScrollView
         ref={scrollRef}
         contentInsetAdjustmentBehavior='automatic'
@@ -119,14 +133,14 @@ export function SettingsCacheScreen() {
           <SettingsLinkRow
             title={t('clearData')}
             subtitle={t('clearDataDescription')}
-            icon={{ icon: 'externaldrive', color: theme.colorRed }}
+            icon={{ icon: 'externaldrive', color: theme.color.danger[scheme] }}
             onPress={handleClearData}
             danger
           />
           <SettingsLinkRow
             title={t('clearCache')}
             subtitle={t('clearCacheDescription')}
-            icon={{ icon: 'trash', color: theme.colorRed }}
+            icon={{ icon: 'trash', color: theme.color.danger[scheme] }}
             onPress={handleClearCache}
             danger
           />
@@ -138,7 +152,6 @@ export function SettingsCacheScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   content: {

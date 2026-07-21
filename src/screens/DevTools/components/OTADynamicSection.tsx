@@ -1,5 +1,10 @@
 /* eslint-disable no-undef */
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import * as AC from '@bacons/apple-colors';
@@ -8,7 +13,7 @@ import * as Updates from 'expo-updates';
 
 import * as Form from '@app/components/Form/Form';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
-import { theme } from '@app/styles/themes';
+import { type ColorScheme, theme } from '@app/styles/themes';
 import { logger } from '@app/utils/logger';
 
 import { ENV_SUPPORTS_OTA } from '../util/envSupportsOta';
@@ -18,23 +23,23 @@ const otaReloadHint = (
   <SymbolView name='arrow.clockwise' tintColor={AC.secondaryLabel} />
 );
 
-const OTA_RELOAD_SCREEN_OPTIONS = {
-  backgroundColor: theme.color.background.dark,
-  fade: true,
-  spinner: {
-    color: theme.colorPrimary,
-    size: 'large' as const,
-  },
-} satisfies ReloadScreenOptions;
+async function reloadOtaWithScreen(scheme: ColorScheme) {
+  const reloadScreenOptions = {
+    backgroundColor: theme.color.background[scheme],
+    fade: true,
+    spinner: {
+      color: theme.color.accent[scheme],
+      size: 'large' as const,
+    },
+  } satisfies ReloadScreenOptions;
 
-async function reloadOtaWithScreen() {
-  await Updates.reloadAsync({
-    reloadScreenOptions: OTA_RELOAD_SCREEN_OPTIONS,
-  });
+  await Updates.reloadAsync({ reloadScreenOptions });
 }
 
 export function OTADynamicSection() {
   const { t } = useTranslation('devTools');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const updates = Updates.useUpdates();
 
   const fetchingTitle = (() => {
@@ -101,7 +106,7 @@ export function OTADynamicSection() {
                 source: 'pending',
                 updateState: 'pending',
               });
-              await reloadOtaWithScreen();
+              await reloadOtaWithScreen(scheme);
             } else if (updates.isUpdateAvailable) {
               logger.main.info('OTA check and fetch triggered from dev tools', {
                 name: 'ota_updates_service_info',
@@ -113,7 +118,7 @@ export function OTADynamicSection() {
               const result = await Updates.checkForUpdateAsync();
               if (result.isAvailable) {
                 await Updates.fetchUpdateAsync();
-                await reloadOtaWithScreen();
+                await reloadOtaWithScreen(scheme);
               }
             } else {
               logger.main.info('OTA check triggered from dev tools', {
@@ -126,7 +131,7 @@ export function OTADynamicSection() {
               const result = await Updates.checkForUpdateAsync();
               if (result.isAvailable) {
                 await Updates.fetchUpdateAsync();
-                await reloadOtaWithScreen();
+                await reloadOtaWithScreen(scheme);
               }
             }
           })();

@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     marginTop: theme.space8,
   },
   debugErrorOverlay: {
-    backgroundColor: theme.colorBlackActiveContent,
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
     left: theme.space12,
     maxWidth: '95%',
     padding: theme.space12,

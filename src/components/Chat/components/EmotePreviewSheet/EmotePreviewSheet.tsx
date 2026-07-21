@@ -2,6 +2,7 @@ import { memo, useRef } from 'react';
 import {
   ScrollView,
   StyleSheet,
+  useColorScheme,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -14,18 +15,21 @@ import {
   BottomSheet,
   type BottomSheetHandle,
 } from '@app/components/BottomSheet/BottomSheet';
-/* eslint-disable react-native/sort-styles */
 import { Button } from '@app/components/Button/Button';
 import { computeSheetHeight } from '@app/components/Chat/util/computeSheetHeight';
 import { Image } from '@app/components/Image/Image';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
+import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useSaveImageToGallery } from '@app/hooks/useSaveImageToGallery';
-import { usePreference } from '@app/store/preferenceStore';
+import { usePreference } from '@app/store/preferences/selectors';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
+
+import { computeEmotePreviewSize } from './computeEmotePreviewSize';
+import { EmotePreviewActions, type PreviewAction } from './EmotePreviewActions';
+import { EmotePreviewMetadata } from './EmotePreviewMetadata';
 
 interface Props {
   visible: boolean;
@@ -33,22 +37,14 @@ interface Props {
   selectedEmote: ParsedPart<'emote'>;
 }
 
-type PreviewAction = {
-  icon: SymbolViewProps['name'];
-  label: string;
-  onPress: () => void;
-  subtitle: string;
-  disabled?: boolean;
-};
-
-const MIN_EMOTE_SIZE = 36;
-
 function getEmoteName(emote: ParsedPart<'emote'>): string {
   return emote.name ?? emote.original_name ?? emote.content;
 }
 
 function EmotePreviewSheetComponent(props: Props) {
   const { t } = useTranslation(['chat', 'common']);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { saveImage, isSaving } = useSaveImageToGallery();
   const { visible, onClose, selectedEmote } = props;
   const sheetRef = useRef<BottomSheetHandle>(null);
@@ -75,39 +71,11 @@ function EmotePreviewSheetComponent(props: Props) {
       ? selectedEmote.emote_link
       : undefined;
   const maxEmoteSize = Math.min(Math.max(screenWidth * 0.36, 96), 156);
-
-  const emoteSize = (() => {
-    const originalWidth = selectedEmote.width || 28;
-    const originalHeight = selectedEmote.height || 28;
-    const aspectRatio = originalWidth / originalHeight;
-    let targetWidth = originalWidth;
-    let targetHeight = originalHeight;
-
-    if (targetWidth > maxEmoteSize || targetHeight > maxEmoteSize) {
-      if (aspectRatio > 1) {
-        targetWidth = maxEmoteSize;
-        targetHeight = maxEmoteSize / aspectRatio;
-      } else {
-        targetHeight = maxEmoteSize;
-        targetWidth = maxEmoteSize * aspectRatio;
-      }
-    }
-
-    if (targetWidth < MIN_EMOTE_SIZE && targetHeight < MIN_EMOTE_SIZE) {
-      if (aspectRatio > 1) {
-        targetWidth = MIN_EMOTE_SIZE;
-        targetHeight = MIN_EMOTE_SIZE / aspectRatio;
-      } else {
-        targetHeight = MIN_EMOTE_SIZE;
-        targetWidth = MIN_EMOTE_SIZE * aspectRatio;
-      }
-    }
-
-    return {
-      height: Math.round(targetHeight),
-      width: Math.round(targetWidth),
-    };
-  })();
+  const emoteSize = computeEmotePreviewSize(
+    selectedEmote.width || 28,
+    selectedEmote.height || 28,
+    maxEmoteSize,
+  );
 
   const handleCopy = (field: 'name' | 'url') => {
     void Clipboard.setStringAsync(
@@ -173,7 +141,7 @@ function EmotePreviewSheetComponent(props: Props) {
       items.push({
         icon: 'arrow.up.right.square',
         label: t('emotePreview.openInBrowser'),
-        onPress: () => openLinkInBrowser(emoteLink),
+        onPress: () => openLinkInBrowser(emoteLink, scheme),
         subtitle: t('emotePreview.openInBrowserSubtitle'),
       });
     }
@@ -201,23 +169,41 @@ function EmotePreviewSheetComponent(props: Props) {
       <View style={styles.container}>
         <View style={styles.topBar}>
           <View style={styles.heading}>
-            <Text style={styles.eyebrow} weight='semibold'>
+            <Text
+              style={[
+                styles.eyebrow,
+                { color: theme.color.textSecondary[scheme] },
+              ]}
+              weight='semibold'
+            >
               {t('emotePreview.eyebrow')}
             </Text>
-            <Text style={styles.title} weight='semibold' numberOfLines={2}>
+            <Text
+              style={[styles.title, { color: theme.color.text[scheme] }]}
+              weight='semibold'
+              numberOfLines={2}
+            >
               {emoteName}
             </Text>
           </View>
           <Button
             label={t('common:done')}
-            style={styles.doneButton}
+            style={[
+              styles.doneButton,
+              {
+                backgroundColor:
+                  scheme === 'dark'
+                    ? 'rgba(255,255,255,0.14)'
+                    : 'rgba(0,0,0,0.08)',
+              },
+            ]}
             onPress={requestClose}
           >
             <SymbolView
               name='xmark'
               size={15}
               weight='semibold'
-              tintColor={theme.color.textSecondary.dark}
+              tintColor={theme.color.textSecondary[scheme]}
             />
           </Button>
         </View>
@@ -228,7 +214,12 @@ function EmotePreviewSheetComponent(props: Props) {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.previewPanel}>
-            <View style={styles.imageStage}>
+            <View
+              style={[
+                styles.imageStage,
+                { backgroundColor: theme.color.surfaceAlpha[scheme] },
+              ]}
+            >
               <Image
                 trackLoadContext='chat.emote-preview'
                 source={displayUrl}
@@ -239,58 +230,33 @@ function EmotePreviewSheetComponent(props: Props) {
               />
             </View>
             {selectedEmote.site ? (
-              <View style={styles.previewPill}>
-                <Text style={styles.previewPillText} weight='semibold'>
+              <View
+                style={[
+                  styles.previewPill,
+                  {
+                    backgroundColor: theme.color.accentSurface[scheme],
+                    borderColor:
+                      scheme === 'dark'
+                        ? 'rgba(46,134,255,0.34)'
+                        : theme.color.accentRing.light,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.previewPillText,
+                    { color: theme.color.accent[scheme] },
+                  ]}
+                  weight='semibold'
+                >
                   {selectedEmote.site}
                 </Text>
               </View>
             ) : null}
           </View>
 
-          {metadataRows.length > 0 ? (
-            <View style={styles.metadataCard}>
-              {metadataRows.map(row => (
-                <View key={row.label} style={styles.metadataRow}>
-                  <Text style={styles.metadataLabel} weight='semibold'>
-                    {row.label}
-                  </Text>
-                  <Text style={styles.metadataValue} numberOfLines={2}>
-                    {row.value}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          ) : null}
-
-          <View style={styles.actionGroup}>
-            {actions.map((action, index) => (
-              <Button
-                key={action.label}
-                onPress={action.onPress}
-                disabled={action.disabled}
-                style={[
-                  styles.actionButton,
-                  index < actions.length - 1 && styles.actionButtonBorder,
-                ]}
-              >
-                <View style={styles.actionIconFrame}>
-                  <SymbolView
-                    name={action.icon}
-                    tintColor={theme.colorPrimary}
-                    size={18}
-                  />
-                </View>
-                <View style={styles.actionCopy}>
-                  <Text style={styles.actionText} weight='semibold'>
-                    {action.label}
-                  </Text>
-                  <Text style={styles.actionSubtitle} numberOfLines={1}>
-                    {action.subtitle}
-                  </Text>
-                </View>
-              </Button>
-            ))}
-          </View>
+          <EmotePreviewMetadata rows={metadataRows} />
+          <EmotePreviewActions actions={actions} />
         </ScrollView>
       </View>
     </BottomSheet>
@@ -300,48 +266,6 @@ function EmotePreviewSheetComponent(props: Props) {
 export const EmotePreviewSheet = memo(EmotePreviewSheetComponent);
 
 const styles = StyleSheet.create({
-  actionButton: {
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-    flexDirection: 'row',
-    gap: theme.space12,
-    minHeight: 56,
-    paddingHorizontal: theme.space16,
-    paddingVertical: theme.space8,
-  },
-  actionButtonBorder: {
-    borderBottomColor: 'rgba(255,255,255,0.1)',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  actionCopy: {
-    flex: 1,
-    gap: 1,
-  },
-  actionGroup: {
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius16,
-    overflow: 'hidden',
-  },
-  actionIconFrame: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(46,134,255,0.16)',
-    borderCurve: 'continuous',
-    borderRadius: 8,
-    height: 30,
-    justifyContent: 'center',
-    width: 30,
-  },
-  actionSubtitle: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize12,
-    lineHeight: theme.fontSize12 * 1.3,
-  },
-  actionText: {
-    color: theme.color.text.dark,
-    fontSize: theme.fontSize17,
-    lineHeight: theme.fontSize17 * 1.2,
-  },
   container: {
     alignSelf: 'stretch',
     flex: 1,
@@ -352,7 +276,6 @@ const styles = StyleSheet.create({
   },
   doneButton: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.14)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     height: 30,
@@ -364,7 +287,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius12,
   },
   eyebrow: {
-    color: theme.color.textSecondary.dark,
     fontSize: theme.fontSize11,
     letterSpacing: 0.6,
     marginBottom: 2,
@@ -376,36 +298,11 @@ const styles = StyleSheet.create({
   },
   imageStage: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     height: 152,
     justifyContent: 'center',
     width: '100%',
-  },
-  metadataCard: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
-    padding: theme.space12,
-  },
-  metadataLabel: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize11,
-    minWidth: 68,
-    textTransform: 'uppercase',
-  },
-  metadataRow: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    gap: theme.space12,
-    paddingVertical: theme.space8,
-  },
-  metadataValue: {
-    color: theme.color.text.dark,
-    flex: 1,
-    fontSize: theme.fontSize14,
-    lineHeight: theme.fontSize14 * 1.2,
   },
   previewPanel: {
     gap: theme.space12,
@@ -413,8 +310,6 @@ const styles = StyleSheet.create({
   },
   previewPill: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(46,134,255,0.16)',
-    borderColor: 'rgba(46,134,255,0.34)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
@@ -422,7 +317,6 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   previewPillText: {
-    color: theme.colorPrimary,
     fontSize: theme.fontSize11,
   },
   scroll: {
@@ -433,7 +327,6 @@ const styles = StyleSheet.create({
     paddingBottom: theme.space16,
   },
   title: {
-    color: theme.color.text.dark,
     fontSize: theme.fontSize18,
     lineHeight: theme.fontSize18 * 1.2,
   },

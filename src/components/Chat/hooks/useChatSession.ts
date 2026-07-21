@@ -22,8 +22,8 @@ import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import {
   type ChatRenderPreferences,
   usePreference,
-} from '@app/store/preferenceStore';
-import { videoLatencyDisplay$ } from '@app/store/stream/videoLatency';
+} from '@app/store/preferences/selectors';
+import { videoLatencyDisplay$ } from '@app/store/stream/observables/videoLatency';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 import { findCustomHighlight } from '@app/utils/chat/customHighlights/findCustomHighlight';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';

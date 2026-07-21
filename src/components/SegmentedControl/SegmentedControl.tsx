@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useColorScheme } from 'react-native';
 
 import {
   type NativeSegmentedControlChangeEvent,
@@ -23,6 +23,8 @@ export function SegmentedControl({
   currentIndex,
   onChange,
 }: SegmentedControlProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const values = items.map(item => item.label);
 
   const handleChange = (event: NativeSegmentedControlChangeEvent) => {
@@ -32,11 +34,11 @@ export function SegmentedControl({
 
   return (
     <ExpoSegmentedControl
-      appearance='dark'
+      appearance={scheme}
       onChange={handleChange}
       selectedIndex={currentIndex}
       style={styles.container}
-      tintColor={theme.colorPrimary}
+      tintColor={theme.color.accent[scheme]}
       values={values}
     />
   );

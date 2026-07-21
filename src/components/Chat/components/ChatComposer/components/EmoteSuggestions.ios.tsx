@@ -1,5 +1,5 @@
 import { memo, useCallback } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import {
   LegendList,
@@ -49,6 +49,9 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
   emotes,
   handleEmotePress,
 }: EmoteSuggestionsProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const railStyles = suggestionRailStyles[scheme];
   const renderItem = useCallback(
     ({ item }: LegendListRenderItemProps<SanitisedEmote>) => (
       <EmoteSuggestionTile item={item} onPress={handleEmotePress} />
@@ -57,8 +60,8 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
   );
 
   return (
-    <View style={suggestionRailStyles.compactWrapper}>
-      <View style={suggestionRailStyles.compactContainer}>
+    <View style={railStyles.compactWrapper}>
+      <View style={railStyles.compactContainer}>
         <LegendList
           data={emotes}
           horizontal

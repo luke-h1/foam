@@ -3,6 +3,10 @@ import { fetch } from 'expo/fetch';
 import Constants from 'expo-constants';
 
 import { parseJsonOnWorklet } from '@app/lib/offThreadJson/parseJsonOnWorklet';
+import {
+  cacheChannelPointRewardTitle,
+  getCachedChannelPointRewardTitle,
+} from '@app/store/chat/actions/channelPointRewardTitles';
 import type { PaginatedList } from '@app/types/twitch/api';
 import type {
   DefaultTokenResponse,
@@ -37,10 +41,6 @@ import type {
   TwitchVideo,
   TwitchVideosRequestParams,
 } from '@app/types/twitch/video';
-import {
-  cacheChannelPointRewardTitle,
-  getCachedChannelPointRewardTitle,
-} from '@app/utils/chat/channelPointRewardTitleStore';
 import { logger } from '@app/utils/logger';
 
 import {
@@ -212,9 +212,11 @@ function normalizeDuration(durationSeconds: number | undefined) {
   return Math.max(1, Math.trunc(durationSeconds));
 }
 
-// Helix endpoints like /users and /clips take repeated id params (max 100 per
-// request), which the shared client's comma-joining array serializer can't
-// produce.
+/**
+ * Helix endpoints like /users and /clips take repeated id params (max 100 per
+ * request), which the shared client's comma-joining array serializer can't
+ * produce.
+ */
 async function fetchBatchedByIds<T>(
   basePath: string,
   ids: string[],

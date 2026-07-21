@@ -1,10 +1,11 @@
+import { useColorScheme } from 'react-native';
 import type { Key, ReactNode } from 'react';
 
 import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics/normalizeSevenTvBadge';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import { ChatMessagePressable } from '../ChatMessagePressable';
-import { styles } from '../RichChatMessage.styles';
+import { getRichChatMessageStyles } from '../RichChatMessage.styles';
 import { ChatInlineImage } from './ChatInlineImage';
 
 interface ChatMessageBadgesProps {
@@ -22,6 +23,10 @@ export function ChatMessageBadges({
   moderationNotice,
   onBadgePress,
 }: ChatMessageBadgesProps): ReactNode {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = getRichChatMessageStyles(scheme);
+
   if (!badges?.length) {
     return null;
   }

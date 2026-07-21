@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { Alert, StyleSheet, useColorScheme } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -31,8 +31,6 @@ interface SearchHistoryV2Props {
   onClearAll: () => void;
 }
 
-const SECONDARY = theme.color.textSecondary.dark;
-
 // The list sits below the suggested chips and does not scroll; cap it so the
 // rows never run off-screen behind the floating search bar.
 const MAX_VISIBLE = 8;
@@ -44,6 +42,9 @@ export function SearchHistoryV2({
   onSelectItem,
 }: SearchHistoryV2Props) {
   const { t } = useTranslation(['search', 'common']);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const secondary = theme.color.textSecondary[scheme];
 
   const handleClearAll = useCallback(() => {
     Alert.alert(t('clearSearchHistory'), t('clearSearchHistoryConfirm'), [
@@ -69,7 +70,11 @@ export function SearchHistoryV2({
   }
 
   return (
-    <Host style={styles.host} colorScheme='dark' testID='search-history'>
+    <Host
+      style={[styles.host, { backgroundColor: theme.color.background[scheme] }]}
+      colorScheme={scheme}
+      testID='search-history'
+    >
       <List
         modifiers={[
           listStyle('plain'),
@@ -83,7 +88,7 @@ export function SearchHistoryV2({
               <Text
                 modifiers={[
                   font({ textStyle: 'footnote', weight: 'semibold' }),
-                  foregroundStyle(SECONDARY),
+                  foregroundStyle(secondary),
                 ]}
               >
                 {t('recentSearches')}
@@ -93,7 +98,7 @@ export function SearchHistoryV2({
                 <Text
                   modifiers={[
                     font({ textStyle: 'footnote' }),
-                    foregroundStyle(theme.colorRed),
+                    foregroundStyle(theme.color.danger[scheme]),
                   ]}
                 >
                   {t('common:clearAll')}
@@ -110,19 +115,19 @@ export function SearchHistoryV2({
                 onPress={() => onSelectItem(query)}
                 modifiers={[
                   buttonStyle('plain'),
-                  listRowBackground(theme.color.background.dark),
+                  listRowBackground(theme.color.background[scheme]),
                 ]}
               >
                 <HStack spacing={12}>
-                  <Image systemName='clock' size={16} color={SECONDARY} />
-                  <Text modifiers={[foregroundStyle(theme.color.text.dark)]}>
+                  <Image systemName='clock' size={16} color={secondary} />
+                  <Text modifiers={[foregroundStyle(theme.color.text[scheme])]}>
                     {query}
                   </Text>
                   <Spacer />
                   <Image
                     systemName='arrow.up.left'
                     size={13}
-                    color={SECONDARY}
+                    color={secondary}
                   />
                 </HStack>
               </Button>
@@ -136,7 +141,6 @@ export function SearchHistoryV2({
 
 const styles = StyleSheet.create({
   host: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
 });

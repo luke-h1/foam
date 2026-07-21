@@ -1,3 +1,4 @@
+import '../polyfills/arrayByCopy';
 import '../utils/performance/wdyr';
 import 'expo-dev-client';
 import '../i18n/i18next';

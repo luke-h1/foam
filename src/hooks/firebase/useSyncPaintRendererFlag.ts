@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 
-import { paintRendererFlag$ } from '@app/store/preferenceStore';
+import { paintRendererFlag$ } from '@app/store/preferences/state';
 
 import { useRemoteConfig } from './useRemoteConfig';
 

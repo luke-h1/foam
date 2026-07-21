@@ -5,7 +5,7 @@ import { ReadyState } from '@app/hooks/ws/constants';
 import type { Options } from '@app/hooks/ws/types';
 import { useWebsocket } from '@app/hooks/ws/useWebsocket';
 import { useTwitchChat } from '@app/services/twitch-chat-service';
-import { preferences$ } from '@app/store/preferenceStore';
+import { preferences$ } from '@app/store/preferences/state';
 import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
 
 jest.mock('@app/context/AuthContext', () => ({

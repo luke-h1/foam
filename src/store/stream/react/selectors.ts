@@ -1,5 +1,5 @@
 import { useSelector } from '@legendapp/state/react';
 
-import { videoLatencyDisplay$ } from '../videoLatency';
+import { videoLatencyDisplay$ } from '../observables/videoLatency';
 
 export const useVideoLatencyDisplay = () => useSelector(videoLatencyDisplay$);

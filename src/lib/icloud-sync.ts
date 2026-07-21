@@ -2,7 +2,7 @@ import {
   initialPreferences,
   type Preferences,
   preferencesSchema,
-} from '@app/store/preferenceStore';
+} from '@app/store/preferences/state';
 import { logger } from '@app/utils/logger';
 import type { ICloudSyncNativeModule } from '@modules/icloud-sync/src/ICloudSync.types';
 
@@ -52,6 +52,14 @@ export function parsePreferencesPayload(
     typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
       ? { ...initialPreferences, ...parsed }
       : parsed;
+
+  if (
+    typeof merged === 'object' &&
+    merged !== null &&
+    (merged as { theme?: unknown }).theme === 'foam-dark'
+  ) {
+    (merged as { theme: string }).theme = 'system';
+  }
 
   const result = preferencesSchema.safeParse(merged);
   if (!result.success) {

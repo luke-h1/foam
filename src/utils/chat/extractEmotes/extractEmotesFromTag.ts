@@ -19,9 +19,11 @@ const extractEmotes = (
   if (!emotes) {
     return [];
   }
-  // The emotes tag indexes by code point. For the common all-BMP message a
-  // code-point index equals the UTF-16 index, so slice the string directly and
-  // only pay the full code-point expansion when surrogate pairs are present.
+  /**
+   * The emotes tag indexes by code point. For the common all-BMP message a
+   * code-point index equals the UTF-16 index, so slice the string directly and
+   * only pay the full code-point expansion when surrogate pairs are present.
+   */
   const graphemes = SURROGATE_PAIR_REGEX.test(message) ? [...message] : null;
   const imageVariantsByEmoteId = new Map<
     string,

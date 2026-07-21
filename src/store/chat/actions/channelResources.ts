@@ -20,7 +20,7 @@ export type Identifiable = { id: string };
 /**
  * One ordered description of a single (provider, scope) resource: how to fetch
  * it, which cache field it populates, and how to label it in logs. The spec
- * list is the seam — adding a provider is a single entry, and the fan-out,
+ * list is the seam - adding a provider is a single entry, and the fan-out,
  * reporting, cache-reconcile, and merge are all driven from it.
  */
 export interface ResourceSpec<
@@ -158,7 +158,7 @@ export const buildEmoteResourceSpecs = ({
   channelId: string;
   /**
    * Only the 7TV channel-emote fetch depends on the set id, so it may be
-   * passed as a pending promise — every other resource fetch starts
+   * passed as a pending promise - every other resource fetch starts
    * immediately instead of waiting a full round trip behind the id lookup.
    */
   sevenTvSetId: string | Promise<string>;

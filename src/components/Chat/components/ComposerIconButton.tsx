@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useColorScheme } from 'react-native';
 
 import {
   Button as SwiftUIButton,
@@ -47,8 +47,11 @@ export function ComposerIconButton({
   label,
   onPress,
   prominent,
-  prominentColor = theme.colorViolet,
+  prominentColor,
 }: ComposerIconButtonProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const resolvedProminentColor = prominentColor ?? theme.color.violet[scheme];
   const liquidGlassAvailable = isLiquidGlassAvailable();
   const isHighlighted = Boolean(active || prominent);
 
@@ -60,26 +63,29 @@ export function ComposerIconButton({
     resolvedButtonStyle = prominent ? 'bordered' : 'plain';
   }
 
+  const isDark = scheme === 'dark';
   let iconColor: string;
 
   if (disabled) {
-    iconColor = 'rgba(255,255,255,0.36)';
-  } else if (isHighlighted) {
+    iconColor = isDark ? 'rgba(255,255,255,0.36)' : 'rgba(0,0,0,0.30)';
+  } else if (prominent) {
     iconColor = theme.colorWhite;
+  } else if (isHighlighted) {
+    iconColor = theme.color.text[scheme];
   } else {
-    iconColor = 'rgba(255,255,255,0.86)';
+    iconColor = isDark ? 'rgba(255,255,255,0.86)' : 'rgba(0,0,0,0.72)';
   }
 
   let resolvedBackground: string;
 
   if (prominent && !disabled) {
-    resolvedBackground = prominentColor;
+    resolvedBackground = resolvedProminentColor;
   } else if (liquidGlassAvailable) {
     resolvedBackground = 'transparent';
   } else if (active) {
-    resolvedBackground = 'rgba(255,255,255,0.18)';
+    resolvedBackground = isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.12)';
   } else {
-    resolvedBackground = 'rgba(255,255,255,0.12)';
+    resolvedBackground = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)';
   }
 
   const handlePress = () => {
@@ -88,7 +94,7 @@ export function ComposerIconButton({
     }
   };
   const buttonModifiers: ViewModifier[] = [
-    tint(prominent && !disabled ? prominentColor : iconColor),
+    tint(prominent && !disabled ? resolvedProminentColor : iconColor),
     buttonStyle(resolvedButtonStyle),
 
     /**
@@ -106,7 +112,7 @@ export function ComposerIconButton({
 
   return (
     /**
-     * no matchContents — SwiftUI must not re-measure it) and ignoreSafeArea
+     * no matchContents - SwiftUI must not re-measure it) and ignoreSafeArea
      * stops the hosting view re-applying the home-indicator inset inside its
      * own bounds, which renders the button shifted out of the host frame.
      */

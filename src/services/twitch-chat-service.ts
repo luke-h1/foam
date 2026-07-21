@@ -5,7 +5,7 @@ import * as Network from 'expo-network';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useLazyRef } from '@app/hooks/useLazyRef';
 import { isE2EMode } from '@app/services/api/clients';
-import { usePreference } from '@app/store/preferenceStore';
+import { usePreference } from '@app/store/preferences/selectors';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
 import { getHeartbeatAction } from '@app/utils/chat/chatHeartbeat';
@@ -116,23 +116,29 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const anonymousNickRef = useRef(
     `justinfan${Math.floor(Math.random() * 90000) + 10000}`,
   );
-  // The nick we authenticated with (login or anonymous justinfan). JOIN/PART
-  // lines carry the acting user in their prefix, so this lets us tell our own
-  // connection join/part apart from other chatters'.
+  /**
+   * The nick we authenticated with (login or anonymous justinfan). JOIN/PART
+   * lines carry the acting user in their prefix, so this lets us tell our own
+   * connection join/part apart from other chatters'.
+   */
   const currentNickRef = useRef('');
   const pendingIrcMessagesRef = useRef<string[]>([]);
   // Seeded on open and refreshed on every inbound line; the heartbeat only
   // reads it once readyState is OPEN, by which point onOpen has set it.
   const lastActivityAtRef = useRef(0);
-  // True while a heartbeat/foreground PING is outstanding. Any inbound line
-  // clears it (a live socket answers, or is already busy); if it survives past
-  // its deadline the socket is half-open and we reconnect.
+  /**
+   * True while a heartbeat/foreground PING is outstanding. Any inbound line
+   * clears it (a live socket answers, or is already busy); if it survives past
+   * its deadline the socket is half-open and we reconnect.
+   */
   const awaitingPongRef = useRef(false);
-  // When the outstanding probe's PING was sent. The heartbeat and the
-  // foreground liveness check share awaitingPongRef, so each needs to know how
-  // old the pending probe actually is before declaring the socket dead - a
-  // flushed heartbeat tick right after resume must not tear down a socket whose
-  // probe is milliseconds old.
+  /**
+   * When the outstanding probe's PING was sent. The heartbeat and the
+   * foreground liveness check share awaitingPongRef, so each needs to know how
+   * old the pending probe actually is before declaring the socket dead - a
+   * flushed heartbeat tick right after resume must not tear down a socket whose
+   * probe is milliseconds old.
+   */
   const probeSentAtRef = useRef(0);
   const probeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sendIrcMessageRef = useRef<((message: string) => void) | null>(null);
@@ -321,9 +327,11 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         if (params.length >= 2 && tags) {
           const channelName = params[0];
           const messageText = params[1];
-          // PRIVMSG tags carry no `login`; the canonical Twitch login is the
-          // nick in the IRC prefix (`nick!user@host`). Localised display names
-          // are not the login, so derive it from the prefix instead.
+          /**
+           * PRIVMSG tags carry no `login`; the canonical Twitch login is the
+           * nick in the IRC prefix (`nick!user@host`). Localised display names
+           * are not the login, so derive it from the prefix instead.
+           */
           if (!tagsRecord.login && prefix) {
             tagsRecord.login = prefix.split('!')[0] ?? '';
           }
@@ -583,11 +591,13 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
           continue;
         }
 
-        // Flood backstop, consulted before the full tag parse so dropped
-        // messages cost almost nothing. Only PRIVMSG lines consume tokens;
-        // control lines (CLEARCHAT, ROOMSTATE, USERNOTICE…) always pass.
-        // Replay is unaffected - it flows through the recent-messages path,
-        // never this socket.
+        /**
+         * Flood backstop, consulted before the full tag parse so dropped
+         * messages cost almost nothing. Only PRIVMSG lines consume tokens;
+         * control lines (CLEARCHAT, ROOMSTATE, USERNOTICE…) always pass.
+         * Replay is unaffected - it flows through the recent-messages path,
+         * never this socket.
+         */
         if (isPrivmsgLine(line) && !shouldProcessLiveMessage()) {
           continue;
         }
@@ -622,7 +632,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       isAuthenticatedRef.current = false;
       joinedChannelsRef.current.clear();
       pendingJoinChannelsRef.current.clear();
-      // Drop queued sends — reconnect must not flush commands from a dead socket.
+      // Drop queued sends - reconnect must not flush commands from a dead socket.
       pendingIrcMessagesRef.current = [];
       messageBufferRef.current = '';
     },
@@ -671,11 +681,13 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   const shouldConnectRef = useRef(shouldConnect);
   shouldConnectRef.current = shouldConnect;
 
-  // Probe an OPEN-but-possibly-half-open socket after the app returns to the
-  // foreground or regains connectivity: send a PING and, if Twitch has not
-  // answered within a short deadline, force a reconnect. If the socket isn't
-  // OPEN (its automatic retries may have been exhausted during a long
-  // background/outage), revive it directly.
+  /**
+   * Probe an OPEN-but-possibly-half-open socket after the app returns to the
+   * foreground or regains connectivity: send a PING and, if Twitch has not
+   * answered within a short deadline, force a reconnect. If the socket isn't
+   * OPEN (its automatic retries may have been exhausted during a long
+   * background/outage), revive it directly.
+   */
   const verifyChatLiveness = () => {
     if (!shouldConnectRef.current) {
       return;
@@ -691,9 +703,11 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     }
 
     if (awaitingPongRef.current) {
-      // A probe is already in flight with its own deadline (AppState and the
-      // network-regain listener often fire together on resume) - don't stack a
-      // second PING and a second close timer on top of it.
+      /**
+       * A probe is already in flight with its own deadline (AppState and the
+       * network-regain listener often fire together on resume) - don't stack a
+       * second PING and a second close timer on top of it.
+       */
       return;
     }
 
@@ -773,10 +787,12 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     return () => clearInterval(interval);
   }, [shouldConnect, readyState, sendIrcCommand]);
 
-  // Chat has no proactive recovery on its own: a suspended or network-flapped
-  // socket often stays OPEN with no close event, so without this it would take
-  // a full heartbeat cycle to notice. Re-verify liveness the moment the app
-  // returns to the foreground or connectivity is regained.
+  /**
+   * Chat has no proactive recovery on its own: a suspended or network-flapped
+   * socket often stays OPEN with no close event, so without this it would take
+   * a full heartbeat cycle to notice. Re-verify liveness the moment the app
+   * returns to the foreground or connectivity is regained.
+   */
   useEffect(() => {
     if (!shouldConnect) {
       return;
@@ -833,9 +849,11 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     }
   }, [authState?.token?.accessToken, shouldConnect]);
 
-  // Membership is negotiated once at authenticate time, so a live socket won't
-  // start (or stop) receiving other users' JOIN/PART until it reconnects with a
-  // new CAP REQ. Bounce the socket when the preference flips.
+  /**
+   * Membership is negotiated once at authenticate time, so a live socket won't
+   * start (or stop) receiving other users' JOIN/PART until it reconnects with a
+   * new CAP REQ. Bounce the socket when the preference flips.
+   */
   const previousShowJoinPartRef = useRef(showJoinPartMessages);
   useEffect(() => {
     const previous = previousShowJoinPartRef.current;

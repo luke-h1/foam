@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import type {
   ActivityIndicatorProps,
   StyleProp,
@@ -36,19 +36,30 @@ export function LoadingState({
   indicatorSize = 'large',
   style,
 }: LoadingStateProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const size =
     typeof indicatorSize === 'number'
       ? indicatorSize
       : SPINNER_SIZES[indicatorSize];
 
   return (
-    <View style={[styles.container, style]} testID='loading-state'>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+        style,
+      ]}
+      testID='loading-state'
+    >
       <Spinner size={size} />
     </View>
   );
 }
 
 function Spinner({ size }: { size: number }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const focused = useScreenFocused();
   const rotation = useSharedValue(0);
 
@@ -89,7 +100,7 @@ function Spinner({ size }: { size: number }) {
         style='stroke'
         strokeWidth={STROKE_WIDTH}
         strokeCap='round'
-        color={theme.color.text.dark}
+        color={theme.color.text[scheme]}
         transform={transform}
         origin={{ x: size / 2, y: size / 2 }}
       />
@@ -100,7 +111,6 @@ function Spinner({ size }: { size: number }) {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.dark,
     flex: 1,
     justifyContent: 'center',
   },

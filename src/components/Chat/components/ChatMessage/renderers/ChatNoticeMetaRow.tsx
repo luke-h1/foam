@@ -1,10 +1,15 @@
-import { type StyleProp, type TextStyle, View } from 'react-native';
+import {
+  type StyleProp,
+  type TextStyle,
+  useColorScheme,
+  View,
+} from 'react-native';
 import type { ReactNode } from 'react';
 
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 
-import { styles } from '../RichChatMessage.styles';
+import { getRichChatMessageStyles } from '../RichChatMessage.styles';
 
 interface ChatNoticeMetaRowProps {
   compact?: boolean;
@@ -23,6 +28,10 @@ export function ChatNoticeMetaRow({
   labelColor,
   labelStyle,
 }: ChatNoticeMetaRowProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = getRichChatMessageStyles(scheme);
+
   return (
     <View style={styles.messageMetaRow}>
       <SymbolView

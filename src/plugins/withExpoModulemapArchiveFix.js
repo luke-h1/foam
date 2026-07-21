@@ -29,7 +29,7 @@ const REACT_NATIVE_POST_INSTALL_BLOCK = `    react_native_post_install(
 // ReactAppDependencyProvider) but does not apply the same rewrite to the Expo
 // modules themselves. This post_install hook closes that gap by repointing the
 // two Expo references to the always-present pod-install source path
-// `${PODS_ROOT}/Headers/Public/<Pod>/<Pod>.modulemap` — the same form Expo uses
+// `${PODS_ROOT}/Headers/Public/<Pod>/<Pod>.modulemap` - the same form Expo uses
 // for ReactAppDependencyProvider, which archives without error. The umbrella
 // header sits next to that module map, so module resolution is unaffected.
 //

@@ -111,10 +111,12 @@ export type CachedUserCosmetics = {
 
 const sessionCosmeticsCache = new Map<string, CachedUserCosmetics>();
 
-// Bounded concurrency: entering a busy channel fires an entitlement.create
-// burst (plus the visible-message hydrate path), each of which can call
-// fetchAndCacheUserCosmetics; without a cap that stormed the network with
-// hundreds of parallel getUserCosmeticsGql requests on channel entry.
+/**
+ * Bounded concurrency: entering a busy channel fires an entitlement.create
+ * burst (plus the visible-message hydrate path), each of which can call
+ * fetchAndCacheUserCosmetics; without a cap that stormed the network with
+ * hundreds of parallel getUserCosmeticsGql requests on channel entry.
+ */
 const userCosmeticsFetchGuard = createFetchOnceGuard({ maxConcurrent: 4 });
 
 const cacheSessionCosmetics = (
@@ -643,7 +645,7 @@ export const removeBadge = (badgeId: string) => {
     ),
   );
   scheduleCosmeticsPersist();
-  // Badge art is baked into message rows — bump so visible rows reprocess.
+  // Badge art is baked into message rows - bump so visible rows reprocess.
   scheduleCosmeticBindingsBump();
 };
 
@@ -671,7 +673,7 @@ export const updatePaint = (paint: PaintData) => {
 };
 
 /**
- * Paint definitions are live-bound in `PaintedUsername` — no bindings bump.
+ * Paint definitions are live-bound in `PaintedUsername` - no bindings bump.
  * Cleared wearer ids drop via Legend selectors without a chat reprocess.
  */
 export const removePaint = (paintId: string) => {
@@ -693,7 +695,7 @@ export const removePaint = (paintId: string) => {
 };
 
 /**
- * Live Legend selectors drop the paint without a bindings-version bump —
+ * Live Legend selectors drop the paint without a bindings-version bump -
  * same rationale as `setUserPaint`.
  */
 export const removeUserPaint = (ttvUserId: string) => {

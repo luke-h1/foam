@@ -2,7 +2,7 @@
  * Seeds the Twitch player's persisted mute/volume choice before its JS boots,
  * mirroring the quality seed above. WKWebView keeps localStorage across
  * sessions, and Twitch's embed restores `video-muted` from it (ignoring the
- * `muted=false` URL param) — so once a muted-autoplay run has stored
+ * `muted=false` URL param) - so once a muted-autoplay run has stored
  * `video-muted: true`, every later open boots muted, and the after-load ensure
  * script then fights WebKit's policy (unmuting a muted autoplay can re-pause
  * it), leaving the stream paused/muted. Writing the desired state up front lets

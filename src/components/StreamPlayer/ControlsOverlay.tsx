@@ -266,7 +266,9 @@ export function ControlsOverlay({
               <SymbolView
                 name='pip'
                 size={18}
-                tintColor={pipActive ? theme.colorPrimary : theme.colorWhite}
+                tintColor={
+                  pipActive ? theme.color.accent.dark : theme.colorWhite
+                }
               />
             </Button>
           </View>
@@ -299,7 +301,7 @@ export function ControlsOverlay({
                 name='moon.zzz'
                 size={18}
                 tintColor={
-                  sleepTimerActive ? theme.colorPrimary : theme.colorWhite
+                  sleepTimerActive ? theme.color.accent.dark : theme.colorWhite
                 }
               />
             </Button>
@@ -369,7 +371,7 @@ const styles = StyleSheet.create({
   },
   glassButton: {
     alignItems: 'center',
-    backgroundColor: theme.colorBlackOverlay,
+    backgroundColor: theme.color.overlay.dark,
     borderCurve: 'continuous',
     borderColor: theme.color.borderStrong.dark,
     borderRadius: theme.borderRadius999,
@@ -435,7 +437,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.18)',
     borderColor: 'rgba(255,255,255,0.24)',
-    borderRadius: 48,
+    borderRadius: theme.borderRadius45,
     borderWidth: 1,
     height: 96,
     justifyContent: 'center',
@@ -443,7 +445,7 @@ const styles = StyleSheet.create({
     width: 96,
   },
   playPauseButtonPortrait: {
-    borderRadius: 34,
+    borderRadius: theme.borderRadius34,
     height: 68,
     width: 68,
   },

@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
@@ -59,6 +66,8 @@ function handleToggleReactQueryDebug(val: boolean) {
 
 export function DebugScreen() {
   const { t } = useTranslation('devTools');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const debugOptions = useDebugOptions();
   const { user, authState } = useAuthContext();
 
@@ -233,7 +242,12 @@ export function DebugScreen() {
   }
 
   return (
-    <View style={styles.screenContainer}>
+    <View
+      style={[
+        styles.screenContainer,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <KeyboardAvoidingView behavior='padding' style={styles.flex}>
         <ScrollView
           ref={scrollRef}
@@ -246,19 +260,19 @@ export function DebugScreen() {
             <SettingsToggleRow
               title={t('rqDevTools')}
               subtitle={t('rqDevToolsDescription')}
-              icon={{ icon: 'ladybug', color: theme.colorOrange }}
+              icon={{ icon: 'ladybug', color: theme.color.orange[scheme] }}
               value={reactQueryEnabled}
               onValueChange={handleToggleReactQueryDebug}
             />
             <SettingsLinkRow
               title={t('copyStorageState')}
-              icon={{ icon: 'doc.on.doc', color: theme.colorBlue }}
+              icon={{ icon: 'doc.on.doc', color: theme.color.blue[scheme] }}
               onPress={() => void handleCopyStorageState()}
             />
             <SettingsLinkRow
               title={t('clearStorage')}
               subtitle={t('wipeNamespace', { namespace: NAMESPACE })}
-              icon={{ icon: 'trash', color: theme.colorRed }}
+              icon={{ icon: 'trash', color: theme.color.danger[scheme] }}
               onPress={handleClearDebugStorage}
               danger
             />
@@ -280,7 +294,10 @@ export function DebugScreen() {
               />
               <Button
                 onPress={() => void handleConvertUsername()}
-                style={styles.goBtn}
+                style={[
+                  styles.goBtn,
+                  { backgroundColor: theme.color.pressedOverlay[scheme] },
+                ]}
               >
                 <Text type='sm' weight='semibold'>
                   {t('copy')}
@@ -301,7 +318,7 @@ export function DebugScreen() {
           >
             <SettingsLinkRow
               title={t('copyToken')}
-              icon={{ icon: 'key', color: theme.colorTeal }}
+              icon={{ icon: 'key', color: theme.color.teal[scheme] }}
               onPress={() => void handleCopyToken()}
             />
           </SettingsSection>
@@ -327,7 +344,13 @@ export function DebugScreen() {
                 variant='outline'
                 radius='sm'
               />
-              <Button onPress={handleJoinChannel} style={styles.joinBtn}>
+              <Button
+                onPress={handleJoinChannel}
+                style={[
+                  styles.joinBtn,
+                  { backgroundColor: theme.color.blue[scheme] },
+                ]}
+              >
                 <Text type='sm' weight='semibold' style={styles.joinBtnText}>
                   {t('go')}
                 </Text>
@@ -351,7 +374,6 @@ const styles = StyleSheet.create({
   },
   goBtn: {
     alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     height: 44,
@@ -372,7 +394,6 @@ const styles = StyleSheet.create({
   },
   joinBtn: {
     alignItems: 'center',
-    backgroundColor: theme.colorBlue,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     justifyContent: 'center',
@@ -382,7 +403,6 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   screenContainer: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
 });

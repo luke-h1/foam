@@ -1,7 +1,7 @@
 import { buildImageFallbackChain } from '../imageFallbackChain';
 
 describe('buildImageFallbackChain', () => {
-  test('walks format then size for a 7TV badge that 404s at 4x.webp', () => {
+  test('walks format then size down to 2x for a 7TV badge that 404s at 4x.webp', () => {
     expect(
       buildImageFallbackChain('https://cdn.7tv.app/badge/01H85/4x.webp'),
     ).toEqual([
@@ -11,8 +11,6 @@ describe('buildImageFallbackChain', () => {
       'https://cdn.7tv.app/badge/01H85/3x.avif',
       'https://cdn.7tv.app/badge/01H85/2x.webp',
       'https://cdn.7tv.app/badge/01H85/2x.avif',
-      'https://cdn.7tv.app/badge/01H85/1x.webp',
-      'https://cdn.7tv.app/badge/01H85/1x.avif',
     ]);
   });
 
@@ -22,8 +20,6 @@ describe('buildImageFallbackChain', () => {
     ).toEqual([
       'https://cdn.7tv.app/emote/abc/2x.avif',
       'https://cdn.7tv.app/emote/abc/2x.webp',
-      'https://cdn.7tv.app/emote/abc/1x.avif',
-      'https://cdn.7tv.app/emote/abc/1x.webp',
     ]);
   });
 
@@ -37,8 +33,6 @@ describe('buildImageFallbackChain', () => {
       '//cdn.7tv.app/emote/abc/3x_static.avif',
       '//cdn.7tv.app/emote/abc/2x_static.webp',
       '//cdn.7tv.app/emote/abc/2x_static.avif',
-      '//cdn.7tv.app/emote/abc/1x_static.webp',
-      '//cdn.7tv.app/emote/abc/1x_static.avif',
     ]);
   });
 

@@ -16,7 +16,7 @@ interface StreamPlayerPosterProps {
   /**
    * Stream thumbnail shown behind the spinner while the player loads. Sized to
    * match the live-stream card so it's an instant cache hit when arriving from
-   * the stream list. Absent on VOD/clip — the spinner shows over black instead.
+   * the stream list. Absent on VOD/clip - the spinner shows over black instead.
    */
   posterUrl?: string;
   visible: boolean;
@@ -33,9 +33,12 @@ export const StreamPlayerPoster = memo(function StreamPlayerPoster({
   const [rendered, setRendered] = useState(visible);
   const opacity = useSharedValue(visible ? 1 : 0);
 
+  if (visible && !rendered) {
+    setRendered(true);
+  }
+
   useEffect(() => {
     if (visible) {
-      setRendered(true);
       opacity.set(1);
       return;
     }

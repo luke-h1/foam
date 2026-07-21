@@ -1,11 +1,11 @@
-import { View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 
 import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
 import type { ChatBodyVariant } from '@app/utils/chat/deriveChatBody/types';
 
-import { styles } from '../RichChatMessage.styles';
+import { getRichChatMessageStyles } from '../RichChatMessage.styles';
 import { ChatMessageBody } from './ChatMessageBody';
 import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
@@ -24,6 +24,10 @@ function SpecialChatTimestamp({
   compact: boolean;
   timestamp: string;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = getRichChatMessageStyles(scheme);
+
   return (
     <Text
       tabular
@@ -44,6 +48,9 @@ export function ChatNoticeBody({
   timestamp,
   ...rendererArgs
 }: ChatNoticeBodyProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = getRichChatMessageStyles(scheme);
   const timestampNode =
     showTimestamp && timestamp ? (
       <SpecialChatTimestamp compact={compact} timestamp={timestamp} />

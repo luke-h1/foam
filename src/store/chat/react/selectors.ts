@@ -3,6 +3,7 @@ import { useSelector } from '@legendapp/state/react';
 import { useEmoteRenderPreferences } from '@app/store/preferences/selectors';
 import { getChatterinoBadges } from '@app/utils/chat/chatterinoBadges';
 
+import { rewardTitleRevision$ } from '../observables/channelPointRewardTitles';
 import { chatStore$ } from '../observables/chatStore';
 import {
   type ChannelCacheType,
@@ -14,6 +15,10 @@ import {
 
 export const useMessages = () => useSelector(chatStore$.messages);
 export const useEmojis = () => useSelector(chatStore$.emojis);
+
+export function useChannelPointRewardTitleRevision(): number {
+  return useSelector(rewardTitleRevision$);
+}
 
 type ChannelEmoteCache = Pick<
   ChannelCacheType,
@@ -151,9 +156,11 @@ export const useChannelEmoteData = (channelId: string | null) => {
 };
 
 export const useChannelEmoteDataForReprocess = (channelId: string | null) => {
-  // Omits sevenTvPersonalEmotes on purpose: that map churns per chatter and
-  // would re-storm the channel reprocess. Personal emotes hydrate via
-  // hydrateVisibleSevenTvAssets instead.
+  /**
+   * Omits sevenTvPersonalEmotes on purpose: that map churns per chatter and
+   * would re-storm the channel reprocess. Personal emotes hydrate via
+   * hydrateVisibleSevenTvAssets instead.
+   */
   return useSelector(() => {
     if (!channelId) {
       return null;

@@ -8,7 +8,7 @@ export interface IrcFixtureMessage {
    */
   user: string;
   /**
-   * Message body — emote names render as images when the set is loaded.
+   * Message body - emote names render as images when the set is loaded.
    */
   text: string;
   /**

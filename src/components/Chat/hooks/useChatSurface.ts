@@ -3,7 +3,7 @@ import type { RefObject } from 'react';
 
 import { ReadyState } from '@app/hooks/ws/constants';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import type { ChatRenderPreferences } from '@app/store/preferenceStore';
+import type { ChatRenderPreferences } from '@app/store/preferences/selectors';
 import type { UserInfoResponse } from '@app/types/twitch/user';
 import { parseBadges } from '@app/utils/chat/parseBadges';
 

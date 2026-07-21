@@ -59,9 +59,11 @@ function trackImageSpan<T>(
     return run();
   }
 
-  // Only the first of deadline/settlement may report the span: the span's
-  // status is read when the parent transaction ends, so a late setStatus after
-  // the deadline fired would rewrite deadline_exceeded to ok.
+  /**
+   * Only the first of deadline/settlement may report the span: the span's
+   * status is read when the parent transaction ends, so a late setStatus after
+   * the deadline fired would rewrite deadline_exceeded to ok.
+   */
   let settled = false;
 
   const deadline = setTimeout(() => {

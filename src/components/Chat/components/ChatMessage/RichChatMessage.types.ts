@@ -3,7 +3,7 @@ import type { ChatMessageType } from '@app/store/chat/types/constants';
 import type {
   ChatFontScale,
   CustomHighlight,
-} from '@app/store/preferenceStore';
+} from '@app/store/preferences/state';
 import type { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import type { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';

@@ -13,16 +13,16 @@ import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { PlayerBackButton } from '@app/screens/Stream/components/PlayerBackButton';
 import { theme } from '@app/styles/themes';
 
+import { useSleepTimer } from './hooks/useSleepTimer';
 import { getLiveStreamLayoutMetrics } from './liveStreamLayout/getLiveStreamLayoutMetrics';
-import { showSleepTimerMenu } from './showSleepTimerMenu';
-import { useSleepTimer } from './useSleepTimer';
+import { showSleepTimerMenu } from './util/showSleepTimerMenu';
 
 interface VodPlayerScreenProps {
   id: string;
 }
 
 // Hold the screen awake while watching so playback isn't interrupted by the
-// idle-timer auto-lock — VODs are long-form, so this matters more than live.
+// idle-timer auto-lock - VODs are long-form, so this matters more than live.
 const KEEP_AWAKE_TAG = 'vod-player';
 
 export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
@@ -51,9 +51,11 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
     1,
     screenWidth - landscapeInsetLeft - landscapeInsetRight,
   );
-  // Portrait pins a 16:9 video below the status-bar inset; landscape fills the
-  // available height. Sizing the container to the video means the embedded
-  // WebView is exactly video-sized and never letterboxes inside black bars.
+  /**
+   * Portrait pins a 16:9 video below the status-bar inset; landscape fills the
+   * available height. Sizing the container to the video means the embedded
+   * WebView is exactly video-sized and never letterboxes inside black bars.
+   */
   const videoHeight = isLandscape ? layoutHeight : videoWidth * (9 / 16);
 
   useEffect(() => {
@@ -133,7 +135,7 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
             type: 'symbol',
             name: 'moon.zzz',
             size: 18,
-            color: sleepTimer.isActive ? theme.colorPrimary : undefined,
+            color: sleepTimer.isActive ? theme.color.accent.dark : undefined,
           }}
           label={t('sleepTimer')}
           onPress={() => showSleepTimerMenu(sleepTimer)}
@@ -148,8 +150,8 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
 const styles = StyleSheet.create({
   closeButton: {
     alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
+    backgroundColor: theme.color.pressedOverlay.dark,
+    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: 1,

@@ -9,7 +9,7 @@ import {
 import { defaultTransientState } from '@app/store/chat/observables/chatTransientState';
 import { useTransientChannelFilters } from '@app/store/chat/react/transientSelectors';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
-import { usePreference } from '@app/store/preferenceStore';
+import { usePreference } from '@app/store/preferences/selectors';
 
 export function useChatTransientState(channelId: string) {
   const visiblePersonalEmoteUsersRef = useLazyRef(() => new Set<string>());
@@ -37,10 +37,12 @@ export function useChatTransientState(channelId: string) {
     [transientHiddenPhrases, blockedTerms],
   );
 
-  // The visible-asset dedup guards persist across channel switches (the refs are
-  // created once), so reset them when the channel changes — a new channel's
-  // messages/chatters shouldn't inherit the previous channel's hydration keys,
-  // and clearing keeps them from carrying stale entries between sessions.
+  /**
+   * The visible-asset dedup guards persist across channel switches (the refs are
+   * created once), so reset them when the channel changes - a new channel's
+   * messages/chatters shouldn't inherit the previous channel's hydration keys,
+   * and clearing keeps them from carrying stale entries between sessions.
+   */
   useEffect(() => {
     const personalEmoteUsers = visiblePersonalEmoteUsersRef.current;
     const cosmeticUsers = visibleCosmeticUsersRef.current;

@@ -325,9 +325,6 @@ class TwitchWsService {
     }, 2000);
   }
 
-  /**
-   * Subscribe to an EventSub event type
-   */
   public static async subscribeToEvent(
     eventType: string,
     version: string,
@@ -393,9 +390,6 @@ class TwitchWsService {
     }
   }
 
-  /**
-   * Unsubscribe from an EventSub event type
-   */
   public static async unsubscribeFromEvent(
     eventType: string,
     callback?: EventCallback,
@@ -472,9 +466,6 @@ class TwitchWsService {
     });
   }
 
-  /**
-   * Get all active subscriptions from Twitch API
-   */
   public static async getActiveSubscriptions(): Promise<void> {
     try {
       const response = await twitchService.listEventSubscriptions({
@@ -516,9 +507,6 @@ class TwitchWsService {
     }
   }
 
-  /**
-   * Clean up all subscriptions when disconnecting
-   */
   public static async cleanupSubscriptions(): Promise<void> {
     const subscriptionIds = Array.from(
       TwitchWsService.activeSubscriptions.values(),

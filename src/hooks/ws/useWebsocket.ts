@@ -66,16 +66,10 @@ export const useWebsocket = (
   };
 
   const getWebSocket = useCallback((): WebSocket => {
-    /**
-     * For non-shared connections, return the direct websocket if available
-     */
     if (optionsCache.current?.share !== true && websocketRef.current !== null) {
       return websocketRef.current;
     }
 
-    /**
-     * For shared connections, use the proxy
-     */
     if (
       webSocketProxy.current === null &&
       websocketRef.current &&
@@ -89,16 +83,10 @@ export const useWebsocket = (
       return webSocketProxy.current;
     }
 
-    /**
-     * If we have a websocket ref, return it (even if proxy isn't set up yet)
-     */
     if (websocketRef.current !== null) {
       return websocketRef.current;
     }
 
-    /**
-     * For shared connections, check the shared WebSockets map if the socket is already created.
-     */
     if (optionsCache.current?.share && convertedUrl.current) {
       const sharedSocket = sharedWebSockets[convertedUrl.current];
       if (sharedSocket !== undefined) {
@@ -184,9 +172,11 @@ export const useWebsocket = (
     return undefined;
   }, [url, stringifiedQueryParams, optionsCache]);
 
-  // Tear down the current socket (if any) and start a fresh connection.
-  // Lets callers revive a connection whose automatic retries were exhausted,
-  // e.g. when the app returns to the foreground after a long network outage.
+  /**
+   * Tear down the current socket (if any) and start a fresh connection.
+   * Lets callers revive a connection whose automatic retries were exhausted,
+   * e.g. when the app returns to the foreground after a long network outage.
+   */
   const reconnect = useCallback(() => {
     reconnectCount.current = 0;
     startRef.current();

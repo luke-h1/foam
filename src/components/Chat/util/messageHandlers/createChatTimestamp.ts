@@ -1,4 +1,4 @@
-import { getPreferences } from '@app/store/preferenceStore';
+import { getPreferences } from '@app/store/preferences/state';
 import { formatDate } from '@app/utils/date-time/date';
 
 export function createChatTimestamp(date: Date | number = Date.now()): string {

@@ -182,8 +182,10 @@
   "patchedDependencies": {
     "@legendapp/state@2.1.15": "patches/@legendapp%2Fstate@2.1.15.patch",
     "@expo/ui@57.0.2": "patches/@expo%2Fui@57.0.2.patch",
+    "metro-runtime@0.84.4": "patches/metro-runtime@0.84.4.patch",
     "@swmansion/react-native-bottom-sheet@0.16.1": "patches/@swmansion%2Freact-native-bottom-sheet@0.16.1.patch",
     "@legendapp/list@3.0.4": "patches/@legendapp%2Flist@3.0.4.patch",
+    "metro@0.84.4": "patches/metro@0.84.4.patch",
     "expo-modules-jsi@57.0.0": "patches/expo-modules-jsi@57.0.0.patch",
     "expo-image@57.0.0": "patches/expo-image@57.0.0.patch",
     "@sentry/core@10.57.0": "patches/@sentry%2Fcore@10.57.0.patch",

@@ -1,4 +1,9 @@
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import type {
   ActivityIndicatorProps,
   StyleProp,
@@ -16,9 +21,21 @@ export function LoadingState({
   indicatorSize = 'large',
   style,
 }: LoadingStateProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
-    <View style={[styles.container, style]}>
-      <ActivityIndicator size={indicatorSize} color={theme.color.text.dark} />
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+        style,
+      ]}
+    >
+      <ActivityIndicator
+        size={indicatorSize}
+        color={theme.color.text[scheme]}
+      />
     </View>
   );
 }
@@ -26,7 +43,6 @@ export function LoadingState({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.dark,
     flex: 1,
     justifyContent: 'center',
   },

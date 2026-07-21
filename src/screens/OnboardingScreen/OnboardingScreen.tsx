@@ -1,4 +1,9 @@
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  StyleSheet,
+  useColorScheme,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
@@ -19,11 +24,18 @@ function handleGetStarted() {
 
 export function OnboardingScreen() {
   const { t } = useTranslation('onboarding');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { width } = useWindowDimensions();
   const orbSize = Math.min(width * 0.72, 300);
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <Animated.View
         entering={FadeInUp.duration(800).delay(100)}
         style={styles.orbContainer}
@@ -62,7 +74,10 @@ export function OnboardingScreen() {
           onPress={handleGetStarted}
           haptic='medium'
           label={t('getStarted')}
-          style={styles.ctaButton}
+          style={[
+            styles.ctaButton,
+            { backgroundColor: theme.color.accent[scheme] },
+          ]}
         >
           <Text
             type='md'
@@ -91,7 +106,6 @@ export function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.dark,
     flex: 1,
     justifyContent: 'space-between',
     paddingBottom: theme.space44,
@@ -107,7 +121,6 @@ const styles = StyleSheet.create({
   },
   ctaButton: {
     alignItems: 'center',
-    backgroundColor: theme.colorPrimary,
     borderRadius: theme.borderRadius999,
     paddingHorizontal: theme.space28,
     paddingVertical: theme.space16,

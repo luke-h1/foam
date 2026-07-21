@@ -7,9 +7,11 @@ describe('buildTwitchContentGateWatcherScript', () => {
     expect(script).toContain(
       'var GATE_SELECTOR = \'[data-a-target*="content-classification-gate"]\'',
     );
-    // A gate blocks only when it has no auto-clickable continue button - i.e. it
-    // requires login - so the anonymous mature gate (auto-accepted elsewhere) is
-    // never reported as blocking.
+    /**
+     * A gate blocks only when it has no auto-clickable continue button - i.e. it
+     * requires login - so the anonymous mature gate (auto-accepted elsewhere) is
+     * never reported as blocking.
+     */
     expect(script).toContain(
       '!gate.querySelector(\'button[data-a-target*="content-classification-gate"]\')',
     );

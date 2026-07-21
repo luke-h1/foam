@@ -48,6 +48,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     flex: 1,
+    gap: theme.space16,
   },
   info: {
     flex: 1,

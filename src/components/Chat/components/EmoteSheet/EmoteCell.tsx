@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useRef } from 'react';
-import { View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 
 import { Image as ExpoImage } from 'expo-image';
 
@@ -8,7 +8,7 @@ import { resolveUseAppleWebpCodec } from '@app/lib/expo-image/resolveUseAppleWeb
 import { runAnimationCommand } from '@app/lib/expo-image/runAnimationCommand';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 
-import { emoteSheetStyles as styles } from './emoteSheetStyles';
+import { emoteSheetStyles } from './emoteSheetStyles';
 import type { EmotePickerItem } from './emoteSheetTypes';
 import { getEmotePickerDisplayUrl } from './util/emotePickerDisplayUrl';
 import { emoteSheetScrollActivity } from './util/emoteSheetScrollActivity';
@@ -20,6 +20,9 @@ function EmoteCellComponent({
   cellSize: number;
   item: EmotePickerItem;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = emoteSheetStyles[scheme];
   const innerSize = Math.round(cellSize * 0.78);
   const dimensions = { height: innerSize, width: innerSize };
   const imageRef = useRef<ExpoImage>(null);

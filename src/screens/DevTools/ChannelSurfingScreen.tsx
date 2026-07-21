@@ -1,5 +1,11 @@
 import { useCallback, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -20,6 +26,8 @@ import { theme } from '@app/styles/themes';
 
 export function ChannelSurfingScreen() {
   const { t } = useTranslation('devTools');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const [channelInput, setChannelInput] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -88,12 +96,22 @@ export function ChannelSurfingScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <ScrollView
         contentInsetAdjustmentBehavior='automatic'
         contentContainerStyle={styles.content}
       >
-        <View style={styles.info}>
+        <View
+          style={[
+            styles.info,
+            { backgroundColor: theme.color.backgroundAlt[scheme] },
+          ]}
+        >
           <Row
             label={t('currentChannel')}
             value={channel || t('unknownValue')}
@@ -119,7 +137,14 @@ export function ChannelSurfingScreen() {
         />
 
         <View style={styles.actions}>
-          <Button disabled={busy} onPress={surf} style={styles.primaryBtn}>
+          <Button
+            disabled={busy}
+            onPress={surf}
+            style={[
+              styles.primaryBtn,
+              { backgroundColor: theme.color.blue[scheme] },
+            ]}
+          >
             <Text type='sm' weight='semibold' style={styles.primaryBtnText}>
               {busy ? t('loading') : t('surfToChannel')}
             </Text>
@@ -156,7 +181,6 @@ const styles = StyleSheet.create({
     marginTop: theme.space16,
   },
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   content: {
@@ -171,14 +195,12 @@ const styles = StyleSheet.create({
     marginTop: theme.space20,
   },
   info: {
-    backgroundColor: theme.color.background.darkAlt,
     borderRadius: theme.space12,
     marginTop: theme.space16,
     padding: theme.space16,
   },
   primaryBtn: {
     alignItems: 'center',
-    backgroundColor: theme.colorBlue,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     justifyContent: 'center',

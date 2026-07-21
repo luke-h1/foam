@@ -3,10 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { Redirect, Stack } from 'expo-router';
 
 import { useDevToolsAccess } from '@app/utils/devTools/devToolsGate';
-import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
+import { useNativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
 
 export default function DevToolsLayout() {
   const { t } = useTranslation('navigation');
+  const nativeStackScreenOptions = useNativeStackScreenOptions();
   const access = useDevToolsAccess();
   if (access === 'pending') {
     return null;

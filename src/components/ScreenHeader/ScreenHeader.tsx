@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -21,9 +21,6 @@ import { Image } from '../Image/Image';
  * API aligned with Text component for consistency
  */
 export interface ScreenHeaderProps {
-  /**
-   * Main title
-   */
   title: string;
   /**
    * Optional subtitle displayed below the title
@@ -111,6 +108,8 @@ export function ScreenHeader({
 }: ScreenHeaderProps) {
   const { t } = useTranslation('common');
   const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   const handleBack =
     onBack ??
@@ -218,7 +217,13 @@ export function ScreenHeader({
         >
           <View style={styles.heroInner}>
             {featuredImage && (
-              <Image source={featuredImage} style={styles.featuredImage} />
+              <Image
+                source={featuredImage}
+                style={[
+                  styles.featuredImage,
+                  { borderColor: theme.color.border[scheme] },
+                ]}
+              />
             )}
             <View style={styles.textContent}>
               <Text
@@ -344,7 +349,6 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   featuredImage: {
-    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: 1,

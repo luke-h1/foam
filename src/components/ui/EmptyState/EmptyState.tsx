@@ -1,12 +1,13 @@
 /* eslint-disable no-restricted-imports */
-import { useTranslation } from 'react-i18next';
-import type {
-  ImageStyle,
-  StyleProp,
-  TextProps,
-  TextStyle,
-  ViewStyle,
+import {
+  type ImageStyle,
+  type StyleProp,
+  type TextProps,
+  type TextStyle,
+  useColorScheme,
+  type ViewStyle,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -75,9 +76,13 @@ export function EmptyState({
   buttonOnPress,
   iconName,
   iconSize = 56,
-  iconTintColor = theme.color.textSecondary.dark,
+  iconTintColor,
 }: EmptyStateProps) {
   const { t } = useTranslation('common');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const resolvedIconTintColor =
+    iconTintColor ?? theme.color.textSecondary[scheme];
   const presetConfig = EMPTY_STATE_PRESETS[preset];
   const resolvedImageSource = imageSource;
   const resolvedIconName = resolvedImageSource
@@ -97,7 +102,7 @@ export function EmptyState({
               <SymbolView
                 name={resolvedIconName}
                 size={iconSize}
-                tintColor={iconTintColor}
+                tintColor={resolvedIconTintColor}
               />
             </EmptyLayoutMedia>
           ) : null}
