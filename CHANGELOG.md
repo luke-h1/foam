@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.0.4 (Internal)
+
+### ✨ Features
+
+- **app:** Android release ([#738](https://github.com/lhowsam/foam/issues/738))
+
+### 🐛 Bug Fixes
+
+- Chat timestamps, emote/badge failure reasons, remove clip download ([#749](https://github.com/lhowsam/foam/issues/749))
+- **twitch:** Handle undefined access_token in getDefaultToken ([#745](https://github.com/lhowsam/foam/issues/745))
+
+### 🔧 Miscellaneous Tasks
+
+- **ci:** Swift + kotlin linting with commit hooks ([#750](https://github.com/lhowsam/foam/issues/750))
+- **app:** Disable slide-in animation by default ([#754](https://github.com/lhowsam/foam/issues/754))
+- **app:** Enable vexo analytics ([#756](https://github.com/lhowsam/foam/issues/756))
+
 ## 1.0.3 (Production)
 
 ### ♻️ Refactor
