@@ -1,6 +1,3 @@
-// DEV-ONLY: runs the deterministic Chat Perf suite entirely on-device. Owns a
-// single rAF sampler (live FPS/jank/throughput) and a phase state machine that
-// drives renderer + seeded flood, exposing a live countdown and final results.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFrameCallback, useSharedValue } from 'react-native-reanimated';
 
@@ -68,15 +65,19 @@ export function useChatPerfSuite() {
   const cancelRef = useRef(false);
   const runningRef = useRef(false);
 
-  // UI-thread frame accumulators (the real rendering smoothness). Reanimated
-  // ticks this worklet on the UI thread; we gate accumulation to measure windows
-  // via uiActive and read the totals back on JS when each phase ends.
+  /**
+   * Reanimated ticks this worklet on the UI thread; we gate accumulation to
+   * measure windows via uiActive and read the totals back on JS when each
+   * phase ends.
+   */
   const uiFrames = useSharedValue(0);
   const uiJank = useSharedValue(0);
   const uiActive = useSharedValue(false);
-  // Countdown is driven here on the UI thread so it keeps ticking even while the
-  // JS thread is saturated by the flood being measured (a JS-state countdown
-  // freezes exactly when the suite is busiest).
+
+  /**
+   * Countdown is driven here on the UI thread so it keeps ticking even while
+   * the JS thread is saturated by the flood being measured.
+   */
   const phaseCountdownMs = useSharedValue(0);
   const totalCountdownMs = useSharedValue(0);
   const countdownTicking = useSharedValue(false);
@@ -199,6 +200,7 @@ export function useChatPerfSuite() {
         // Start the flood for warmup ramp; restart the fixture replay at measure
         // start so each run processes a byte-identical stream (repeatable).
         syntheticChatControl.current = SYNTHETIC_PRESETS[phase.preset]!;
+
         // eslint-disable-next-line react-doctor/async-await-in-loop, react-doctor/async-defer-await -- phases are ordered and the window must run to completion (it IS the work); cancellation is checked after
         await runWindow(i, label, 'warming up', WARMUP_MS, false, suiteEnd);
         if (cancelRef.current) {

@@ -1,17 +1,17 @@
-name: 'Load Native Deploy Secrets'
-description: 'Load secrets required by local native EAS build and submit.'
+name: "Load Native Deploy Secrets"
+description: "Load secrets required by local native EAS build and submit."
 
 inputs:
   op_service_account_token:
-    description: '1Password service account token'
+    description: "1Password service account token"
     required: true
   variant:
-    description: 'Release variant; production reads all secrets from the ci-cd/foam-mobile-production item, every other variant from ci-cd/foam-mobile-staging.'
+    description: "Release variant; production reads all secrets from the ci-cd/foam-mobile-production item, every other variant from ci-cd/foam-mobile-staging."
     required: false
-    default: 'production'
+    default: "production"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Load secrets
       id: load_secrets
@@ -37,4 +37,5 @@ runs:
         GOOGLE_SERVICES_IOS_PROD_BS4: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/GOOGLE_SERVICES_IOS_PROD_BS4
         GOOGLE_SERVICES_ANDROID_PROD_BS4: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/GOOGLE_SERVICES_ANDROID_PROD_BS4
         SLACK_WEBHOOK_URL: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/SLACK_WEBHOOK_URL
-        OP_ENV_FILE: '.env'
+        EXPO_PUBLIC_VEXO_API_KEY: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/EXPO_PUBLIC_VEXO_API_KEY
+        OP_ENV_FILE: ".env"

@@ -1,6 +1,3 @@
-// DEV-ONLY: sync microbench helper mirroring Reassure's measureFunction shape
-// (warmup + N timed runs → mean/median/min/max).
-
 export interface SyncMeasureOptions {
   runs?: number;
   warmupRuns?: number;

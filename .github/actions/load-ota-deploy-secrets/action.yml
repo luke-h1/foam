@@ -1,17 +1,17 @@
-name: 'Load OTA Deploy Secrets'
-description: 'Load secrets required by EAS updates and OTA cache writes.'
+name: "Load OTA Deploy Secrets"
+description: "Load secrets required by EAS updates and OTA cache writes."
 
 inputs:
   op_service_account_token:
-    description: '1Password service account token'
+    description: "1Password service account token"
     required: true
   variant:
-    description: 'Release variant'
+    description: "Release variant"
     required: false
-    default: 'production'
+    default: "production"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Load OTA deploy secrets
       uses: 1password/load-secrets-action@92467eb28f72e8255933372f1e0707c567ce2259 # v4.0.0
@@ -29,3 +29,4 @@ runs:
         EXPO_PUBLIC_AUTH_PROXY_API_KEY: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/AUTH_PROXY_API_KEY
         EXPO_PUBLIC_TWITCH_CLIENT_ID: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/TWITCH_CLIENT_ID
         EXPO_PUBLIC_STATSIG_CLIENT_KEY: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/EXPO_PUBLIC_STATSIG_CLIENT_KEY
+        EXPO_PUBLIC_VEXO_API_KEY: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/EXPO_PUBLIC_VEXO_API_KEY
