@@ -209,7 +209,7 @@ function StreamerProfileHeader({
   return (
     <View style={[styles.header, { paddingTop: insets.top + theme.space16 }]}>
       <View style={styles.navRow}>
-        <PlayerBackButton />
+        <PlayerBackButton overMedia={false} />
         <IconButton
           icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}
           label={t('shareUser', { name: user.display_name })}
@@ -221,7 +221,13 @@ function StreamerProfileHeader({
             });
           }}
           size='2xl'
-          style={styles.closeButton}
+          style={[
+            styles.closeButton,
+            {
+              backgroundColor: theme.color.pressedOverlay[scheme],
+              borderColor: theme.color.border[scheme],
+            },
+          ]}
         />
       </View>
 
@@ -623,8 +629,6 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     alignItems: 'center',
-    backgroundColor: theme.color.pressedOverlay.dark,
-    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
