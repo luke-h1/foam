@@ -1,4 +1,4 @@
-import type * as ChannelPointRewardTitleStore from '../channelPointRewardTitleStore';
+import type * as ChannelPointRewardTitleStore from '../channelPointRewardTitles';
 
 let cacheChannelPointRewardTitle: typeof ChannelPointRewardTitleStore.cacheChannelPointRewardTitle;
 let enrichChannelPointPrivmsgTags: typeof ChannelPointRewardTitleStore.enrichChannelPointPrivmsgTags;
@@ -8,7 +8,7 @@ let resolveChannelPointRewardTitle: typeof ChannelPointRewardTitleStore.resolveC
 describe('channelPointRewardTitleStore', () => {
   beforeEach(() => {
     jest.resetModules();
-    const store: typeof ChannelPointRewardTitleStore = require('../channelPointRewardTitleStore');
+    const store: typeof ChannelPointRewardTitleStore = require('../channelPointRewardTitles');
     ({
       cacheChannelPointRewardTitle,
       enrichChannelPointPrivmsgTags,

@@ -5,7 +5,7 @@ import {
   clearMessages,
   clearMessagesWithNotice,
 } from '@app/store/chat/actions/messages';
-import { preferences$ } from '@app/store/preferenceStore';
+import { preferences$ } from '@app/store/preferences/state';
 
 import { useChatIrcHandlers } from '../useChatIrcHandlers';
 

@@ -1,6 +1,4 @@
-import { observable } from '@legendapp/state';
-import { useSelector } from '@legendapp/state/react';
-
+import { rewardTitleRevision$ } from '@app/store/chat/observables/channelPointRewardTitles';
 import { channelPointsRewardTitleFromTags } from '@app/utils/chat/channelPointsRewardTitle/channelPointsRewardTitleFromTags';
 import {
   type ChannelPointsRewardTags,
@@ -11,7 +9,6 @@ const MAX_REWARD_TITLE_ENTRIES = 100;
 
 const channelPointRewardTitleCache = new Map<string, string>();
 const rewardIdOnlyCache = new Map<string, string>();
-const rewardTitleRevision$ = observable(0);
 
 function boundedMapSet(
   map: Map<string, string>,
@@ -51,10 +48,6 @@ const STANDALONE_REDEMPTION_DELAY_MS = 500;
 
 function pendingKey(login: string, rewardId: string): string {
   return `${login.toLowerCase()}:${rewardId}`;
-}
-
-export function useChannelPointRewardTitleRevision(): number {
-  return useSelector(rewardTitleRevision$);
 }
 
 function notifyChannelPointRewardTitleListeners(): void {

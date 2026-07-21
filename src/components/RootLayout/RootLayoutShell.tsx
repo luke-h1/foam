@@ -28,7 +28,7 @@ import { activateKeepAwakeAsync } from 'expo-keep-awake';
 import { PlayerWebViewPrewarm } from '@app/components/StreamPlayer/PlayerWebViewPrewarm';
 import { recordAppSession } from '@app/lib/expo-store-review';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
-import { preferences$ } from '@app/store/preferenceStore';
+import { preferences$ } from '@app/store/preferences/state';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { logger } from '@app/utils/logger';
 

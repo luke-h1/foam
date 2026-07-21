@@ -1,3 +1,4 @@
+import { getCachedChannelPointRewardTitle } from '@app/store/chat/actions/channelPointRewardTitles';
 import {
   createAnnouncementTags,
   createAnonGiftPaidUpgradeTags,
@@ -20,7 +21,6 @@ import {
 } from '@app/types/chat/irc-tags/__fixtures__/userNoticeTags.fixture';
 import type { BaseUserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
-import { getCachedChannelPointRewardTitle } from '@app/utils/chat/channelPointRewardTitleStore';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { createUserNoticeMessage } from '../createUserNoticeMessage';
