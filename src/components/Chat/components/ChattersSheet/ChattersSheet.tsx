@@ -144,6 +144,7 @@ const ChattersSheetComponent = ({
         backgroundColor: theme.color.surfaceAlpha[scheme],
         borderColor: theme.color.border[scheme],
       },
+      searchInputText: { color: theme.color.text[scheme] },
       secondaryText: { color: theme.color.textSecondary[scheme] },
     }),
     [scheme],
@@ -228,7 +229,7 @@ const ChattersSheetComponent = ({
             radius='none'
             returnKeyType='search'
             size='sm'
-            style={styles.searchInput}
+            style={[styles.searchInput, colorStyles.searchInputText]}
             value={query}
             variant='soft'
           />

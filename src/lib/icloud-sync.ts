@@ -53,6 +53,14 @@ export function parsePreferencesPayload(
       ? { ...initialPreferences, ...parsed }
       : parsed;
 
+  if (
+    typeof merged === 'object' &&
+    merged !== null &&
+    (merged as { theme?: unknown }).theme === 'foam-dark'
+  ) {
+    (merged as { theme: string }).theme = 'system';
+  }
+
   const result = preferencesSchema.safeParse(merged);
   if (!result.success) {
     logger.main.warn('Discarded malformed iCloud preferences', result.error);

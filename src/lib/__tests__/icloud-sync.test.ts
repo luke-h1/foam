@@ -32,6 +32,23 @@ describe('parsePreferencesPayload', () => {
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
+  test('migrates the legacy foam-dark theme to system instead of discarding the blob', () => {
+    const result = parsePreferencesPayload(
+      JSON.stringify({
+        ...initialPreferences,
+        theme: 'foam-dark',
+        blockedTerms: ['kappa'],
+      }),
+    );
+
+    expect(result).toEqual<Preferences>({
+      ...initialPreferences,
+      theme: 'system',
+      blockedTerms: ['kappa'],
+    });
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
   test('returns a complete valid blob unchanged', () => {
     const blob: Preferences = {
       ...initialPreferences,

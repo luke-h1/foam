@@ -7,6 +7,7 @@ import { z } from 'zod';
 import {
   createObservablePersistenceLocalConfig,
   ensureObservablePersistenceConfig,
+  PREFERENCES_LIGHT_MODE_FLAG_PERSISTENCE_KEY,
   PREFERENCES_PERSISTENCE_KEY,
 } from '@app/lib/observablePersistence';
 import { ThemeMode } from '@app/styles/themes';
@@ -221,7 +222,7 @@ const persistedPreferences$ = persistObservable(preferences$, {
  */
 persistObservable(lightModeEnabled$, {
   local: createObservablePersistenceLocalConfig(
-    `${PREFERENCES_PERSISTENCE_KEY}-light-mode-flag`,
+    PREFERENCES_LIGHT_MODE_FLAG_PERSISTENCE_KEY,
   ),
 });
 
@@ -249,7 +250,9 @@ when(persistedPreferences$?._state?.isLoadedLocal, () => {
 
 observe(() => {
   const mode = lightModeEnabled$.get() ? preferences$.theme.get() : 'dark';
-  Appearance.setColorScheme(mode === 'system' ? 'unspecified' : mode);
+  if (typeof Appearance.setColorScheme === 'function') {
+    Appearance.setColorScheme(mode === 'system' ? 'unspecified' : mode);
+  }
 });
 
 export function getPreferences(): Preferences {
