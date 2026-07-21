@@ -14,9 +14,11 @@ import { type SevenTvPaintSource } from '@app/utils/color/sevenTvPaintData/types
 import { sevenTvPaintsFixture } from './__fixtures__/sevenTvPaints.fixture';
 import { PaintedUsername } from './CosmeticUsername/PaintedUsername';
 
-// A paint is animated when it has an image layer with a multi-frame texture.
-// frameCount only survives on the raw fixture (conversion drops it), so classify
-// before converting. Refresh the offline snapshot with `bun gen:paints`.
+/**
+ * A paint is animated when it has an image layer with a multi-frame texture.
+ * frameCount only survives on the raw fixture (conversion drops it), so classify
+ * before converting. Refresh the offline snapshot with `bun gen:paints`.
+ */
 function isAnimatedPaint(paint: SevenTvPaintSource): boolean {
   return paint.data.layers.some(
     layer =>
