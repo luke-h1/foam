@@ -249,8 +249,8 @@ when(persistedPreferences$?._state?.isLoadedLocal, () => {
 });
 
 observe(() => {
-  const mode = lightModeEnabled$.get() ? preferences$.theme.get() : 'dark';
-  if (typeof Appearance.setColorScheme === 'function') {
+  const mode = (lightModeEnabled$.get() ? preferences$.theme.get() : 'dark') ?? 'dark';
+  if (mode != null && typeof Appearance.setColorScheme === 'function') {
     Appearance.setColorScheme(mode === 'system' ? 'unspecified' : mode);
   }
 });
