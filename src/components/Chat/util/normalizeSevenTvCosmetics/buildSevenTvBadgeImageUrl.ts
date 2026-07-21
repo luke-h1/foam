@@ -12,9 +12,12 @@ export function buildSevenTvBadgeImageUrl(
 ): string {
   const file = pickBestBadgeFile(host?.files);
   if (file && host?.url) {
-    return ensureHttpsUrl(
+    const url = ensureHttpsUrl(
       `${host.url.replace(/\/$/, '')}/${badgeFileName(file)}`,
     );
+    if (url) {
+      return url;
+    }
   }
 
   return `${SEVEN_TV_BADGE_CDN_BASE}/${badgeId}/4x.webp`;

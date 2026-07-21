@@ -9,7 +9,7 @@ export type EmojiStyle = 'twitter' | 'google';
 
 const EMOJI_CDN_BY_STYLE: Record<EmojiStyle, (hexcode: string) => string> = {
   twitter: hexcode =>
-    `https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/72x72/${hexcode.toLowerCase()}.png`,
+    `https://cdn.jsdelivr.net/gh/jdecked/twemoji@50c7abfe6813680455781862f7b34305cd1eb9f5/assets/72x72/${hexcode.toLowerCase()}.png`,
   google: hexcode =>
     `https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/72/emoji_u${hexcode.toLowerCase()}.png`,
 };

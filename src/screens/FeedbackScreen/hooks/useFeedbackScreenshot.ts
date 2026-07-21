@@ -32,6 +32,7 @@ export function useFeedbackScreenshot() {
       result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
         quality: 0.7,
+        exif: false,
       });
     } catch (error) {
       logger.main.error('[feedback] screenshot picker failed', { error });
@@ -46,7 +47,7 @@ export function useFeedbackScreenshot() {
 
     try {
       const file = new File(asset.uri);
-      if ((file.size ?? 0) > MAX_SCREENSHOT_BYTES) {
+      if (file.size == null || file.size > MAX_SCREENSHOT_BYTES) {
         toast.error(i18next.t('feedback:screenshotTooLarge'));
         return;
       }
@@ -55,7 +56,7 @@ export function useFeedbackScreenshot() {
       setScreenshot({
         uri: asset.uri,
         attachment: {
-          filename: asset.fileName ?? 'screenshot.jpg',
+          filename: 'screenshot.jpg',
           data,
           contentType: asset.mimeType ?? 'image/jpeg',
         },

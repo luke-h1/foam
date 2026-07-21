@@ -58,6 +58,8 @@ export function Skeleton({ shimmer = true, style, testID }: SkeletonProps) {
  * off-screen.
  */
 function SkeletonShimmer({ containerWidth }: { containerWidth: number }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const focused = useScreenFocused();
   const translateX = useSharedValue(-SHIMMER_WIDTH);
 
@@ -88,7 +90,7 @@ function SkeletonShimmer({ containerWidth }: { containerWidth: number }) {
   return (
     <Animated.View pointerEvents='none' style={[styles.shimmer, animatedStyle]}>
       <LinearGradient
-        colors={SHIMMER_GRADIENT_COLORS}
+        colors={SHIMMER_GRADIENT_COLORS[scheme]}
         locations={[0, 0.5, 1]}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}

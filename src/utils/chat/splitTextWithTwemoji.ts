@@ -46,7 +46,7 @@ export function splitTextWithTwemoji(text: string): TwemojiResult {
   let lastIndex = 0;
 
   twemoji.parse(text, {
-    base: 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/',
+    base: 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@50c7abfe6813680455781862f7b34305cd1eb9f5/assets/',
     folder: 'svg',
     ext: '.svg',
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

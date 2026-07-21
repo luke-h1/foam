@@ -51,7 +51,7 @@ export function AccentColorProvider({
 }) {
   const colorScheme = useColorScheme();
   const [selectedHex, setSelectedHex] = useState<string | null>(initialHex);
-  const scheme = colorScheme === 'dark' ? 'dark' : 'light';
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   const accentHex = selectedHex ?? colors[scheme].tint;
 
@@ -95,7 +95,7 @@ export function useAccentColor(): AccentColorContextValue {
     return ctx;
   }
 
-  const scheme = colorScheme === 'dark' ? 'dark' : 'light';
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   return {
     accentHex: colors[scheme].tint,

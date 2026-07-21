@@ -7,7 +7,7 @@ describe('getEmojiEmotes', () => {
     expect(joy?.id).toBe('1F602:joy');
     expect(joy?.emoji_hexcode).toBe('1F602');
     expect(joy?.url).toBe(
-      'https://cdn.jsdelivr.net/gh/jdecked/twemoji@16.0.1/assets/72x72/1f602.png',
+      'https://cdn.jsdelivr.net/gh/jdecked/twemoji@50c7abfe6813680455781862f7b34305cd1eb9f5/assets/72x72/1f602.png',
     );
   });
 

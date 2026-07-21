@@ -62,7 +62,7 @@ test('stores the picked image as a feedback attachment', async () => {
 
   expect(result.current.screenshot?.uri).toBe('file:///tmp/screenshot.png');
   expect(result.current.screenshot?.attachment).toEqual<FeedbackAttachment>({
-    filename: 'screenshot.png',
+    filename: 'screenshot.jpg',
     data: new Uint8Array([1, 2, 3]),
     contentType: 'image/png',
   });
@@ -86,6 +86,23 @@ test('rejects images over the size cap with an error toast', async () => {
     assets: [pickedAsset],
   });
   mockFileSize = 6 * 1024 * 1024;
+
+  const { result } = renderHook(() => useFeedbackScreenshot());
+  await act(async () => {
+    await result.current.pickScreenshot();
+  });
+
+  expect(result.current.screenshot).toBeNull();
+  expect(mockBytes).not.toHaveBeenCalled();
+  expect(mockToastError).toHaveBeenCalled();
+});
+
+test('rejects images whose size cannot be determined', async () => {
+  mockLaunchImageLibrary.mockResolvedValue({
+    canceled: false,
+    assets: [pickedAsset],
+  });
+  mockFileSize = null;
 
   const { result } = renderHook(() => useFeedbackScreenshot());
   await act(async () => {

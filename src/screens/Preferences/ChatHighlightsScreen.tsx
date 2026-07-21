@@ -214,7 +214,7 @@ export function ChatHighlightsScreen() {
   const updatePreferences = useUpdatePreferences();
   const [inputValue, setInputValue] = useState('');
   const [selectedColor, setSelectedColor] = useState<string>(
-    getHighlightColors(scheme)[0],
+    () => getHighlightColors(scheme)[0],
   );
   const listRef = useRef<FlashListRef<CustomHighlight>>(null);
 

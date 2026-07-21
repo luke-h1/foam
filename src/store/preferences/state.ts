@@ -215,6 +215,16 @@ const persistedPreferences$ = persistObservable(preferences$, {
   local: createObservablePersistenceLocalConfig(PREFERENCES_PERSISTENCE_KEY),
 });
 
+/**
+ * Persisted so cold starts restore the last-known rollout state instead of
+ * forcing dark until remote config resolves (dark-to-light launch flash).
+ */
+persistObservable(lightModeEnabled$, {
+  local: createObservablePersistenceLocalConfig(
+    `${PREFERENCES_PERSISTENCE_KEY}-light-mode-flag`,
+  ),
+});
+
 when(persistedPreferences$?._state?.isLoadedLocal, () => {
   // The app was dark-only before theme modes existed; migrate the old value.
   if ((preferences$.theme.peek() as string) === 'foam-dark') {

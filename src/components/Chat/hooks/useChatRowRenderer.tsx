@@ -130,8 +130,8 @@ const ChatMessageRow = function ChatMessageRow({
     showTimestamps,
   } = displayFlags;
   const colorScheme = useColorScheme();
-  const rowStyles =
-    chatSchemeStyles[colorScheme === 'light' ? 'light' : 'dark'];
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const rowStyles = chatSchemeStyles[scheme];
   const isHighlightedMessageTarget = useIsHighlightedReplyTargetMessage(
     channelId,
     msg.message_id,

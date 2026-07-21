@@ -88,10 +88,10 @@ export function useAppUpdate() {
           platform: Platform.OS,
         });
         toast.error(t('bundleUpdateFailed'), { id: pendingToastId });
-      } finally {
-        setIsCheckingBundle(false);
       }
-    })();
+    })().finally(() => {
+      setIsCheckingBundle(false);
+    });
   };
 
   return { openStore, updateBundle, isCheckingBundle };

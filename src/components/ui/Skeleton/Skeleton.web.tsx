@@ -36,7 +36,7 @@ export function Skeleton({ shimmer = true, style, testID }: SkeletonProps) {
           style={[styles.shimmer, shimmerAnimationStyle]}
         >
           <LinearGradient
-            colors={SHIMMER_GRADIENT_COLORS}
+            colors={SHIMMER_GRADIENT_COLORS[scheme]}
             locations={[0, 0.5, 1]}
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}

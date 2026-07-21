@@ -78,7 +78,8 @@ export const ChatMessagePane = memo(
     pinnedMessageBusy,
   }: ChatMessagePaneProps) => {
     const colorScheme = useColorScheme();
-    const styles = chatSchemeStyles[colorScheme === 'light' ? 'light' : 'dark'];
+    const scheme = colorScheme === 'light' ? 'light' : 'dark';
+    const styles = chatSchemeStyles[scheme];
     const {
       canModerateChat,
       connected,

@@ -117,9 +117,10 @@ export const EmoteRenderer = memo(
           isModerated,
         )}
       >
-        {/* No containerStyle: the size + clip live on the image style so each
-            inline emote is one fewer Fabric/Yoga node. A busy message has many
-            emotes, so this trims hundreds of views per screen on scroll. */}
+        {/* No ChatInlineImage containerStyle prop: the size + clip live on the
+            image style so each inline emote is one fewer Fabric/Yoga node. A
+            busy message has many emotes, so this trims hundreds of views per
+            screen on scroll. */}
         <ChatInlineImage
           sourceUrl={displayUrl}
           style={getEmoteImageStyle(width, height)}

@@ -16,8 +16,9 @@ const fontScale = (value: number) =>
 const alpha = (hex: string, opacityHex: string) => `${hex}${opacityHex}`;
 
 /**
- * Sky-blue accents as { light, dark }, resolved at the call site with
- * theme.color.X[useColorScheme() === 'light' ? 'light' : 'dark'].
+ * Sky-blue accents as { light, dark }, resolved at the call site with the
+ * two-line form: const colorScheme = useColorScheme();
+ * const scheme = colorScheme === 'light' ? 'light' : 'dark';
  */
 const primaryAccent = { light: '#1083FE', dark: '#2E86FF' } as const;
 const primaryAccentPress = { light: '#0A6CE0', dark: '#5AA1FF' } as const;
@@ -186,9 +187,10 @@ export const theme = {
 
   /**
    * Sky-blue on slate. Every token is a { light, dark } pair, resolved at the
-   * call site with theme.color.X[useColorScheme() === 'light' ? 'light' : 'dark'] - except the
-   * brand/notice/chatSample groups below, which are scheme-independent brand
-   * colours used as raw strings (e.g. theme.color.brand.twitch).
+   * call site as theme.color.X[scheme] via the two-line useColorScheme form -
+   * except the brand/notice/chatSample groups below, which are
+   * scheme-independent brand colours used as raw strings
+   * (e.g. theme.color.brand.twitch).
    */
   color: {
     reactBlue: {

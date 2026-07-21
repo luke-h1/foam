@@ -19,7 +19,9 @@ export function normalizeSevenTvBadge(
     /\.(webp|png|avif|gif|jpe?g)(?:$|\?)/i.test(badge.url)
   ) {
     const url = ensureHttpsUrl(badge.url);
-    return url === badge.url ? badge : { ...badge, url };
+    if (url) {
+      return url === badge.url ? badge : { ...badge, url };
+    }
   }
 
   return {

@@ -51,7 +51,8 @@ export const Chat = memo(
     const preferences = useChatRenderPreferences();
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
-    const styles = chatSchemeStyles[colorScheme === 'light' ? 'light' : 'dark'];
+    const scheme = colorScheme === 'light' ? 'light' : 'dark';
+    const styles = chatSchemeStyles[scheme];
     const messages$ = chatStore$.messages;
     const currentUsername = user?.login ?? user?.display_name;
 
