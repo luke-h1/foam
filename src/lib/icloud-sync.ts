@@ -53,12 +53,11 @@ export function parsePreferencesPayload(
       ? { ...initialPreferences, ...parsed }
       : parsed;
 
-  if (
-    typeof merged === 'object' &&
-    merged !== null &&
-    (merged as { theme?: unknown }).theme === 'foam-dark'
-  ) {
-    (merged as { theme: string }).theme = 'system';
+  if (typeof merged === 'object' && merged !== null) {
+    const record = merged as Record<string, unknown>;
+    if (record.theme === 'foam-dark') {
+      record.theme = 'system';
+    }
   }
 
   const result = preferencesSchema.safeParse(merged);
