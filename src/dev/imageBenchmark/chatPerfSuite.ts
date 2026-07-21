@@ -15,20 +15,27 @@ export interface PhaseResult {
   jankPerSec: number;
   droppedPct: number;
   messages: number;
-  // UI-thread frame health (Reanimated useFrameCallback) — the real rendering
-  // smoothness, vs the JS-thread fps/jank above which is inflated by the flood
-  // timer + Metro. uiJankPerSec is the metric that actually answers "no jank".
+  /**
+   * UI-thread frame health (Reanimated useFrameCallback) - the real rendering
+   * smoothness, vs the JS-thread fps/jank above which is inflated by the flood
+   * timer + Metro. uiJankPerSec is the metric that actually answers "no jank".
+   */
   uiFpsAvg: number;
   uiJankPerSec: number;
 }
 
 export const WARMUP_MS = 5000;
-// Flood-off gap between phases so decoded-image memory / GC can settle; without
-// it, back-to-back raid phases grow RSS unbounded and can OOM on the simulator.
+
+/**
+ * Flood-off gap between phases so decoded-image memory / GC can settle; without
+ * it, back-to-back raid phases grow RSS unbounded and can OOM on the simulator.
+ */
 export const COOLDOWN_MS = 4000;
 
-// Two intensities. Lower fps / higher jank = worse. Total visible time ≈
-// (WARMUP + measure + COOLDOWN) × phases.
+/**
+ * Two intensities. Lower fps / higher jank = worse. Total visible time ≈
+ * (WARMUP + measure + COOLDOWN) × phases.
+ */
 export const SUITE_PHASES: SuitePhase[] = [
   { preset: 'raid', measureMs: 15000 },
   { preset: 'steady60', measureMs: 15000 },

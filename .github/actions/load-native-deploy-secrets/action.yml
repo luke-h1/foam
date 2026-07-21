@@ -37,4 +37,5 @@ runs:
         GOOGLE_SERVICES_IOS_PROD_BS4: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/GOOGLE_SERVICES_IOS_PROD_BS4
         GOOGLE_SERVICES_ANDROID_PROD_BS4: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/GOOGLE_SERVICES_ANDROID_PROD_BS4
         SLACK_WEBHOOK_URL: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/SLACK_WEBHOOK_URL
+        EXPO_PUBLIC_VEXO_API_KEY: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/EXPO_PUBLIC_VEXO_API_KEY
         OP_ENV_FILE: '.env'

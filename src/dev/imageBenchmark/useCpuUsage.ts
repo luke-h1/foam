@@ -9,8 +9,6 @@ function readUsage(): number | null {
     : null;
 }
 
-// Polls process CPU usage (summed across all threads, like `top`) once a
-// second for the dev chat-perf overlay. iOS-only; returns 0 elsewhere.
 export function useCpuUsage(): number {
   const [pct, setPct] = useState(() => readUsage() ?? 0);
   useEffect(() => {

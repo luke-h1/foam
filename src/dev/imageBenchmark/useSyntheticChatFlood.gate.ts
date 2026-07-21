@@ -11,11 +11,11 @@ interface SyntheticChatFloodArgs {
   enabled: boolean;
 }
 
-// No-op in production: the synthetic flood and its IRC fixture corpus
-// (ircFixtureMessages) only run in the dev-gated Chat Perf screen. The inline
-// EXPO_PUBLIC_APP_VARIANT literals let Metro drop the require — and the fixtures
-// — from production; do not hoist them into a shared constant (mirrors
-// StorybookRoute.tsx).
+/**
+ * No-op in production. The inline EXPO_PUBLIC_APP_VARIANT literals let Metro
+ * drop the require (and the fixtures) from production; do not hoist them into
+ * a shared constant (mirrors StorybookRoute.tsx).
+ */
 let useSyntheticChatFlood: (args: SyntheticChatFloodArgs) => void = () => {};
 
 if (

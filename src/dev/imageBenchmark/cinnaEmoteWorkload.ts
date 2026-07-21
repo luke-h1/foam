@@ -1,5 +1,3 @@
-// DEV-ONLY benchmark workload: cinna (twitch id 204730616) 7TV emote set,
-// 942 emotes at chat inline scale (2x AVIF). Generated from 7tv.io.
 export const CINNA_EMOTE_URLS: string[] = [
   'https://cdn.7tv.app/emote/01EZPK39HG00077NX500A43YDD/2x.avif',
   'https://cdn.7tv.app/emote/01EZTAKBN80002GHH6006GD246/2x.avif',
