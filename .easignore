@@ -100,3 +100,4 @@ bun.lockb
 !.env
 
 profile-*.json
+playstore-service-account.json

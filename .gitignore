@@ -127,3 +127,5 @@ app-store-review-guidance/twitch-developer-console-proof.png
 
 !.vscode/settings.json
 buildServer.json
+
+playstore-service-account.json
