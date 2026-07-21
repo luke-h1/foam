@@ -1,5 +1,3 @@
-// DEV-ONLY: decode benchmark for expo-image. Uses the imperative decode API so
-// each pass produces a true "decoded + ready" signal.
 import { Image as ExpoImage } from 'expo-image';
 
 import type { PassResult } from './benchResults';
@@ -19,7 +17,6 @@ export async function prewarm(urls: string[]): Promise<void> {
   clearRetained();
 }
 
-// True cold = nothing in the in-memory decoded cache.
 export async function resetMemoryCache(): Promise<void> {
   await ExpoImage.clearMemoryCache().catch(() => undefined);
   clearRetained();

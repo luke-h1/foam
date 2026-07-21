@@ -1,4 +1,3 @@
-// DEV-ONLY: on-device workloads matching the Reassure chat hotspot scenarios.
 import {
   multiLayerPaint,
   paintedUsernames,

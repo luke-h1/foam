@@ -1,7 +1,3 @@
-// DEV-ONLY: shared control for the synthetic chat flood. Mutated from the Image
-// Benchmark screen; read by useSyntheticChatFlood inside useChat. Kept as a
-// plain mutable singleton (not state) so it survives navigation between the
-// control screen and the chat screen.
 export interface SyntheticChatConfig {
   active: boolean;
   // Sustained baseline throughput.
