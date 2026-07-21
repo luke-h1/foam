@@ -15,20 +15,13 @@ import {
 import { tag } from '@expo/ui/swift-ui/modifiers';
 import { router } from 'expo-router';
 
-import { usePreferences } from '@app/store/preferenceStore';
+import { usePreferences } from '@app/store/preferences/selectors';
 import { theme } from '@app/styles/themes';
 import {
   EMOJI_STYLE_OPTIONS,
   getEmojiEmotes,
 } from '@app/utils/emoji/emojiEmotes';
 
-import {
-  DensityPreview,
-  EmojiStylePreview,
-  PreviewLabel,
-  ProviderPreviewItem,
-} from './ChatPreferencePreviewWidgets';
-import { ChatPreferencePreview } from './ChatPreferencesPreview';
 import {
   CHAT_DELAY_OPTIONS,
   DELETED_STYLE_OPTIONS,
@@ -38,7 +31,14 @@ import {
   type PreviewProvider,
   SCROLLBACK_OPTIONS,
   TIMESTAMP_FORMAT_OPTIONS,
-} from './chatPreferenceTypes';
+} from '../types/chatPreferenceTypes';
+import {
+  DensityPreview,
+  EmojiStylePreview,
+  PreviewLabel,
+  ProviderPreviewItem,
+} from './ChatPreferencePreviewWidgets';
+import { ChatPreferencePreview } from './ChatPreferencesPreview';
 
 function hostPreview(node: ReactElement, width: number, padded = true) {
   return (

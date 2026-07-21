@@ -6,7 +6,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { DefaultWrapper } from '@app/test/render';
 import { logger } from '@app/utils/logger';
 
-import { useRemoteConfig } from './useRemoteConfig';
+import { useRemoteConfig } from '../useRemoteConfig';
 
 const wrapper = ({ children }: PropsWithChildren) =>
   createElement(DefaultWrapper, null, children);
