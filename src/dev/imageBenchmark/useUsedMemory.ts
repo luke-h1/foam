@@ -1,8 +1,3 @@
-// DEV-ONLY: polls the app's resident memory (RSS) once a second for the Chat
-// Perf overlay. Decoded image bitmaps live in native memory (SDWebImage), not
-// the JS heap, so `performance.memory` wouldn't see them — DeviceInfo's
-// getUsedMemory reads the process's actual footprint, which is what climbs when
-// the image cache is unbounded.
 import { useEffect, useState } from 'react';
 import DeviceInfo from 'react-native-device-info';
 

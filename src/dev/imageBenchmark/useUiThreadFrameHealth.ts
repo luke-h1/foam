@@ -1,19 +1,6 @@
-// DEV-ONLY: measures frame health on the UI THREAD via Reanimated's
-// useFrameCallback, as opposed to the JS-thread requestAnimationFrame sampler in
-// useChatPerfSuite. This distinction matters under a synthetic raid: the JS-rAF
-// probe shares the JS thread with the flood timer, message processing and (in
-// dev) the Metro HMR socket, so it reports "jank" whenever those delay a JS
-// frame — even when the UI thread is actually presenting at a steady 60fps and
-// the user sees no stutter. useFrameCallback ticks on the UI thread (where rows
-// are actually rasterised), so its jank count reflects real, visible dropped
-// frames. Compare the two: a gap (JS jank ≫ UI jank) means the JS-rAF number is
-// a measurement artifact, not pipeline jank.
 import { useState } from 'react';
-import {
-  runOnJS,
-  useFrameCallback,
-  useSharedValue,
-} from 'react-native-reanimated';
+import { useFrameCallback, useSharedValue } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 export interface UiFrameHealth {
   fps: number;
@@ -47,7 +34,7 @@ export function useUiThreadFrameHealth(): UiFrameHealth {
     if (elapsed >= 1000) {
       const fps = Math.round((frames.value * 1000) / elapsed);
       const jankCount = jank.value;
-      runOnJS(setHealth)({ fps, jank: jankCount });
+      scheduleOnRN(setHealth, { fps, jank: jankCount });
       frames.value = 0;
       jank.value = 0;
       windowStart.value = frame.timestamp;
