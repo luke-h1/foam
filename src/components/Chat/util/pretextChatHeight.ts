@@ -103,7 +103,7 @@ const COMFORTABLE_REPLY_CONTEXT_LINE_HEIGHT = 15;
 const COMPACT_REPLY_CONTEXT_LINE_HEIGHT = 14;
 
 // styles.messageMetaText / messageMetaTextCompact + messageMetaRow
-// marginBottom — the "First time chat" / announcement / highlight label row.
+// marginBottom - the "First time chat" / announcement / highlight label row.
 const COMFORTABLE_META_LINE_HEIGHT = 15;
 const COMPACT_META_LINE_HEIGHT = 14;
 const META_ROW_MARGIN_BOTTOM = 4;
@@ -224,11 +224,13 @@ function measureChatMessageHeight(
     MIN_MEASURE_WIDTH,
     Math.floor(options.containerWidth),
   );
-  // Inline emote messages render as one Text with the taller emote
-  // lineHeight applied to every wrapped line, so measure with that height
-  // or emote-heavy rows come out a line short and the list clips them.
-  // Paint status isn't known here; painted senders fall back to the
-  // flex-wrap path, where this is still a close estimate.
+  /**
+   * Inline emote messages render as one Text with the taller emote
+   * lineHeight applied to every wrapped line, so measure with that height
+   * or emote-heavy rows come out a line short and the list clips them.
+   * Paint status isn't known here; painted senders fall back to the
+   * flex-wrap path, where this is still a close estimate.
+   */
   const rendersInlineEmoteLine =
     message.message.some(part => part.type === 'emote') &&
     canRenderMessageInline(message.message, {
@@ -243,9 +245,11 @@ function measureChatMessageHeight(
   const measured = measureInlineFlow(prepared, maxWidth, flowLineHeight);
   const contentHeight = measured.height;
 
-  // The badge line: badges sit on the baseline, so the line holding them
-  // renders at badge height + descent when that exceeds the line's height
-  // (the flow line height, or the tallest inline image on the line).
+  /**
+   * The badge line: badges sit on the baseline, so the line holding them
+   * renders at badge height + descent when that exceeds the line's height
+   * (the flow line height, or the tallest inline image on the line).
+   */
   const badgeSize = compact ? COMPACT_BADGE_SIZE : COMFORTABLE_BADGE_SIZE;
   const fontDescent = Math.ceil(
     baseMetrics.fontSize * fontSizeMultiplier * FONT_DESCENT_RATIO,

@@ -1,5 +1,5 @@
 /**
- * Shared shimmer sweep gradient for the native and web Skeleton variants —
+ * Shared shimmer sweep gradient for the native and web Skeleton variants -
  * keep both platforms visually in sync.
  */
 export const SHIMMER_GRADIENT_COLORS = [

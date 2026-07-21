@@ -43,7 +43,7 @@ export function buildTwitchLiveSyncScript(options: {
     }
     var seekable = video.seekable;
     if (!seekable || seekable.length === 0) {
-      // Low-latency live can expose no seekable range — can't seek.
+      // Low-latency live can expose no seekable range - can't seek.
       post('trace', { step: 'livesync', detail: 'no seekable range' });
       return false;
     }

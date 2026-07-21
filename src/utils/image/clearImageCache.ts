@@ -5,7 +5,7 @@ import { clearPaintBitmapCache } from '@app/components/Chat/components/ChatMessa
 import { clearCachedEmoteRefs } from '@app/Providers/CachedEmotesProvider/cache-service';
 
 export const clearImageCache = async () => {
-  // Drop JS ImageRefs before native bitmaps — clearing only native leaves
+  // Drop JS ImageRefs before native bitmaps - clearing only native leaves
   // dangling refs that crash on the next emote render.
   clearCachedEmoteRefs();
   clearPaintBitmapCache();

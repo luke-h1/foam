@@ -138,9 +138,11 @@ export function useRemoteConfig(): UseRemoteConfigResult {
     },
     staleTime: 5 * 60 * 1000,
     initialData: () => buildRemoteConfigFromDefaults('default'),
-    // Without this, initialData (admins: []) counts as fresh for staleTime, so
-    // queryFn never runs on mount and the real config is never fetched/read.
-    // Backdating it marks the defaults stale immediately so we fetch on mount.
+    /**
+     * Without this, initialData (admins: []) counts as fresh for staleTime, so
+     * queryFn never runs on mount and the real config is never fetched/read.
+     * Backdating it marks the defaults stale immediately so we fetch on mount.
+     */
     initialDataUpdatedAt: 0,
   });
 

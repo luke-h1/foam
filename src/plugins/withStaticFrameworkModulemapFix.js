@@ -14,8 +14,8 @@ const REACT_NATIVE_POST_INSTALL_BLOCK = `    react_native_post_install(
 // Fixes clean-archive "no such module" failures with `useFrameworks: static` +
 // `usePrecompiledModules: false` (Expo SDK 56 / RN 0.85 / Xcode 26).
 //
-// Pods built as static libraries (Expo, ExpoModulesCore, and — via
-// forceStaticLinking — FirebaseCore and most of the Firebase chain) expose their
+// Pods built as static libraries (Expo, ExpoModulesCore, and - via
+// forceStaticLinking - FirebaseCore and most of the Firebase chain) expose their
 // Swift-importable module via a generated module map. The app's xcconfig
 // references it at the build-products path
 // `${PODS_CONFIGURATION_BUILD_DIR}/<Pod>/<Pod>.modulemap`, copied there by a
@@ -28,7 +28,7 @@ const REACT_NATIVE_POST_INSTALL_BLOCK = `    react_native_post_install(
 // always-present pod-install path `${PODS_ROOT}/Headers/Public/<Pod>/<Pod>.modulemap`
 // (the form Expo already uses for ReactAppDependencyProvider, which archives
 // fine). This post_install hook repoints every build-products module-map
-// reference to that stable path — but only when the stable file actually exists,
+// reference to that stable path - but only when the stable file actually exists,
 // so framework pods (no Headers/Public module map) are left untouched.
 const SNIPPET = `
     ${MARKER}

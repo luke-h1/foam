@@ -40,7 +40,7 @@ import { ChatImageShimmer } from './ChatImageShimmer';
  * A failed load is handled in two stages. First we walk the format/size
  * fallback chain (webp -> avif, 4x -> 1x): 7TV often advertises a variant its
  * CDN doesn't actually serve, so the original 404s but a smaller size or the
- * other format loads fine — try those immediately rather than hammering the
+ * other format loads fine - try those immediately rather than hammering the
  * dead URL. Only once every variant is exhausted do we fall back to a patient
  * backoff retry of the smallest candidate, to ride out a transient network blip
  * (common during raids/floods) without stranding the emote as a dead grey box.
@@ -68,7 +68,7 @@ interface ChatInlineImageProps {
   priority?: 'low' | 'normal' | 'high';
   resizeMode?: 'contain' | 'cover' | 'stretch';
   /**
-   * When `false`, no shimmer is rendered while the image is loading — the slot
+   * When `false`, no shimmer is rendered while the image is loading - the slot
    * just stays empty until the image resolves or is given up on. Use for tiny
    * assets (badges) where a pulsing box is more distracting than helpful.
    *
@@ -100,11 +100,13 @@ function ChatInlineImageComponent({
   );
 
   const [reloadNonce, setReloadNonce] = useState(0);
-  // Per-emote load progress, tagged with the url it belongs to. When LegendList
-  // recycles the row to a new emote the tag stops matching, so we derive a fresh
-  // "first candidate, loading" view until a handler writes the new url back. This
-  // avoids both a frame showing the previous emote's fallback variant and any
-  // render-phase setState to reset it.
+  /**
+   * Per-emote load progress, tagged with the url it belongs to. When LegendList
+   * recycles the row to a new emote the tag stops matching, so we derive a fresh
+   * "first candidate, loading" view until a handler writes the new url back. This
+   * avoids both a frame showing the previous emote's fallback variant and any
+   * render-phase setState to reset it.
+   */
   const [load, setLoad] = useState<{
     index: number;
     status: 'loading' | 'loaded' | 'failed';
@@ -128,8 +130,8 @@ function ChatInlineImageComponent({
     retryCountRef.current = 0;
   }, [sourceUrl]);
 
-  // Drop any retry timer scheduled for the previous url — it would otherwise
-  // bump reloadNonce and reload the wrong emote — and on unmount.
+  // Drop any retry timer scheduled for the previous url - it would otherwise
+  // bump reloadNonce and reload the wrong emote - and on unmount.
   useEffect(
     () => () => {
       if (retryTimerRef.current) {
@@ -157,10 +159,12 @@ function ChatInlineImageComponent({
         evictCachedEmoteRef(candidateUrl);
       }
 
-      // The current size/format is unavailable (typically a 404 on a variant
-      // 7TV advertises but the CDN doesn't serve). Move to the next candidate —
-      // alternate format first, then a smaller size — immediately, since it's a
-      // genuinely different URL rather than the same dead one.
+      /**
+       * The current size/format is unavailable (typically a 404 on a variant
+       * 7TV advertises but the CDN doesn't serve). Move to the next candidate -
+       * alternate format first, then a smaller size - immediately, since it's a
+       * genuinely different URL rather than the same dead one.
+       */
       if (candidateIndex < fallbackChain.length - 1) {
         logger.chat.debug('chat.emote.fallback', {
           from: candidateUrl,
@@ -176,7 +180,7 @@ function ChatInlineImageComponent({
       }
 
       // Every format/size has 404'd. Patiently backoff-retry the smallest
-      // candidate — the one most likely to exist — to ride out a transient blip.
+      // candidate - the one most likely to exist - to ride out a transient blip.
       if (retryCountRef.current >= maxRetryAttempts) {
         const descriptor = describeEmoteUrl(candidateUrl);
         const cache = getCachedEmoteStats();
@@ -270,9 +274,11 @@ function ChatInlineImageComponent({
     };
   }, [rowVisibility, animated]);
 
-  // Show the shimmer only while there's nothing real to display yet: a decoded
-  // sharedRef is instant, so cached emotes (the busy-chat common case) never
-  // shimmer and stay on the bare-image fast path with no extra Fabric node.
+  /**
+   * Show the shimmer only while there's nothing real to display yet: a decoded
+   * sharedRef is instant, so cached emotes (the busy-chat common case) never
+   * shimmer and stay on the bare-image fast path with no extra Fabric node.
+   */
   const overlayVisible =
     showLoadingShimmer && sharedRef == null && status !== 'loaded';
 
@@ -291,10 +297,12 @@ function ChatInlineImageComponent({
           ? rowVisibility.isVisible() && !chatScrollActivity.isActive()
           : true
       }
-      // The durable decoded copy lives in our own ImageRef cache (the `showRef`
-      // path). The `uri` fallback branch is transient (first occurrence / a
-      // failed ref), so keep it out of expo-image's in-memory cache to avoid a
-      // second session-long decoded-bitmap pool on top of the ImageRef cache.
+      /**
+       * The durable decoded copy lives in our own ImageRef cache (the `showRef`
+       * path). The `uri` fallback branch is transient (first occurrence / a
+       * failed ref), so keep it out of expo-image's in-memory cache to avoid a
+       * second session-long decoded-bitmap pool on top of the ImageRef cache.
+       */
       cachePolicy={showRef ? 'memory-disk' : 'disk'}
       useAppleWebpCodec={resolveUseAppleWebpCodec(urlKind)}
       priority={priority}

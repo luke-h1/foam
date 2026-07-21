@@ -1,6 +1,8 @@
-// DEV-ONLY: measures JS-thread frame health while chat is on screen. Samples
-// fps in 1s windows held in memory (no per-frame IO that would bias the
-// metric) and flushes to img-bench.json every 10s and on unmount.
+/**
+ * DEV-ONLY: measures JS-thread frame health while chat is on screen. Samples
+ * fps in 1s windows held in memory (no per-frame IO that would bias the
+ * metric) and flushes to img-bench.json every 10s and on unmount.
+ */
 import { useEffect } from 'react';
 
 import { appendFrames } from './benchResults';

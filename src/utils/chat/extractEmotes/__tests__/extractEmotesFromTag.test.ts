@@ -4,9 +4,11 @@ import { extractEmotesFromTag } from '../extractEmotesFromTag';
 
 describe('extractEmotes', () => {
   test('applies emote positions by code point when the message has surrogate pairs', () => {
-    // Twitch indexes the emotes tag by Unicode code point, not UTF-16 unit.
-    // "😀" (U+1F600) is one code point but two UTF-16 units, so "Kappa" sits at
-    // code points 2-6 while a naive UTF-16 slice(2, 7) would yield " Kapp".
+    /**
+     * Twitch indexes the emotes tag by Unicode code point, not UTF-16 unit.
+     * "😀" (U+1F600) is one code point but two UTF-16 units, so "Kappa" sits at
+     * code points 2-6 while a naive UTF-16 slice(2, 7) would yield " Kapp".
+     */
     const result = extractEmotesFromTag('25:2-6', '😀 Kappa');
 
     expect(result).toEqual<TwitchSanitisedEmote[]>([

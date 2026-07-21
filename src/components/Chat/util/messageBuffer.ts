@@ -12,7 +12,7 @@ export type { BufferedMessage } from './bufferedMessageOps/types';
 export type AddResult = {
   /**
    * False when the message merged into an existing buffered entry (same key)
-   * rather than being appended — callers skip unread/flush bookkeeping then.
+   * rather than being appended - callers skip unread/flush bookkeeping then.
    */
   added: boolean;
   /**
@@ -36,7 +36,7 @@ export interface MessageBuffer {
  * The live-chat ingestion buffer: a dedup-by-key list (keyed by message id, or
  * id+nonce) with an index for O(1) updates, a cap that drops the oldest entries,
  * and the moderation/removal edits the IRC handlers apply before a message ever
- * reaches the store. It owns only data — the owning hook drives flush timing,
+ * reaches the store. It owns only data - the owning hook drives flush timing,
  * unread counting, and publishing. `getMaxBufferedMessages` is injectable so the
  * cap can be exercised without the store.
  */

@@ -232,9 +232,11 @@ function createScopedEmoteLookup(
   return lookup;
 }
 
-// Emoji hexcode keys always include a code point above 0x7F, so pure-ASCII
-// words (the vast majority of chat words) can never match the emoji map -
-// skip the per-word code-point expansion for them.
+/**
+ * Emoji hexcode keys always include a code point above 0x7F, so pure-ASCII
+ * words (the vast majority of chat words) can never match the emoji map -
+ * skip the per-word code-point expansion for them.
+ */
 function hasNonAsciiChar(word: string): boolean {
   for (let i = 0; i < word.length; i += 1) {
     if (word.charCodeAt(i) > 0x7f) {
