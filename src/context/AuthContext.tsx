@@ -151,6 +151,15 @@ async function refreshCurrentUserTokenForState(
   }
 }
 
+function requireAnonAccessToken(
+  result: DefaultTokenResponse | undefined,
+): DefaultTokenResponse {
+  if (!result?.access_token) {
+    throw new Error('auth proxy returned no anon access token');
+  }
+  return result;
+}
+
 export const AuthContext = createContext<AuthContextState | undefined>(
   undefined,
 );
@@ -243,14 +252,12 @@ function useAuthContextValue({
         return;
       }
 
-      if (!result?.access_token) {
-        throw new Error('auth proxy returned no anon access token');
-      }
+      const validResult = requireAnonAccessToken(result);
 
       const token = addExpirationTimestamp({
-        accessToken: result.access_token,
-        expiresIn: result.expires_in,
-        tokenType: result.token_type,
+        accessToken: validResult.access_token,
+        expiresIn: validResult.expires_in,
+        tokenType: validResult.token_type,
       });
 
       setState({
@@ -263,7 +270,7 @@ function useAuthContextValue({
       });
 
       await SecureStore.setItemAsync(storageKeys.anon, JSON.stringify(token));
-      twitchApi.setAuthToken(result.access_token);
+      twitchApi.setAuthToken(validResult.access_token);
 
       queueInitialDataPrefetch();
     } catch (e) {

@@ -15,8 +15,10 @@ export type UserActionItem = {
 
 export function UserActionSheetRows({
   actions,
+  onDone,
 }: {
   actions: UserActionItem[];
+  onDone: () => void;
 }) {
   const colorScheme = useColorScheme();
   const scheme = colorScheme === 'light' ? 'light' : 'dark';
@@ -38,7 +40,10 @@ export function UserActionSheetRows({
               { borderBottomColor: theme.color.border[scheme] },
             ],
           ]}
-          onPress={action.onPress}
+          onPress={() => {
+            action.onPress?.();
+            onDone();
+          }}
         >
           <View
             style={[

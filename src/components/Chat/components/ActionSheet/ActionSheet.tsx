@@ -78,24 +78,20 @@ function ActionSheetComponent(props: Props) {
   const requestClose = () => {
     sheetRef.current?.requestClose();
   };
-  const runAndClose = (action?: () => void) => {
-    action?.();
-    requestClose();
-  };
 
   const actions: ActionItem[] = [
     {
       id: 'copy',
       label: t('messageActions.copyMessage'),
       subtitle: t('messageActions.copyMessageSubtitle'),
-      onPress: () => runAndClose(onCopy),
+      onPress: () => onCopy(),
     },
     {
       id: 'reply',
       label: t('messageActions.reply'),
       subtitle: t('messageActions.replySubtitle'),
       tone: 'accent',
-      onPress: () => runAndClose(onReply),
+      onPress: () => onReply(),
     },
     ...(username
       ? ([
@@ -103,7 +99,7 @@ function ActionSheetComponent(props: Props) {
             id: 'hide-user',
             label: t('userActions.hideUser'),
             subtitle: t('userActions.hideUserSubtitle'),
-            onPress: () => runAndClose(onHideUser),
+            onPress: () => onHideUser?.(),
           },
           {
             id: 'highlight-user',
@@ -114,7 +110,7 @@ function ActionSheetComponent(props: Props) {
               ? t('userActions.unhighlightUserSubtitle')
               : t('userActions.highlightUserSubtitle'),
             tone: 'accent',
-            onPress: () => runAndClose(onHighlightUser),
+            onPress: () => onHighlightUser?.(),
           },
         ] as const)
       : []),
@@ -122,7 +118,7 @@ function ActionSheetComponent(props: Props) {
       id: 'hide-phrase',
       label: t('messageActions.hidePhrase'),
       subtitle: t('messageActions.hidePhraseSubtitle'),
-      onPress: () => runAndClose(onHidePhrase),
+      onPress: () => onHidePhrase?.(),
     },
     ...(canModerateChat && canPinMessage && !isPinnedMessageBusy
       ? isPinnedMessage
@@ -132,13 +128,13 @@ function ActionSheetComponent(props: Props) {
               label: t('messageActions.refreshPin'),
               subtitle: t('messageActions.refreshPinSubtitle'),
               tone: 'accent',
-              onPress: () => runAndClose(onUpdatePinnedMessage),
+              onPress: () => onUpdatePinnedMessage?.(),
             },
             {
               id: 'unpin-message',
               label: t('messageActions.unpinMessage'),
               subtitle: t('messageActions.unpinMessageSubtitle'),
-              onPress: () => runAndClose(onUnpinMessage),
+              onPress: () => onUnpinMessage?.(),
             },
           ] as const)
         : ([
@@ -147,7 +143,7 @@ function ActionSheetComponent(props: Props) {
               label: t('messageActions.pinMessage'),
               subtitle: t('messageActions.pinMessageSubtitle'),
               tone: 'accent',
-              onPress: () => runAndClose(onPinMessage),
+              onPress: () => onPinMessage?.(),
             },
           ] as const)
       : []),
@@ -158,7 +154,7 @@ function ActionSheetComponent(props: Props) {
             label: t('messageActions.deleteMessage'),
             subtitle: t('messageActions.deleteMessageSubtitle'),
             tone: 'danger',
-            onPress: () => runAndClose(onDeleteMessage),
+            onPress: () => onDeleteMessage?.(),
           },
         ] as const)
       : []),
@@ -169,14 +165,14 @@ function ActionSheetComponent(props: Props) {
             label: t('userActions.timeoutUser'),
             subtitle: t('userActions.timeoutUserSubtitle'),
             tone: 'warning',
-            onPress: () => runAndClose(onTimeoutUser),
+            onPress: () => onTimeoutUser?.(),
           },
           {
             id: 'ban-user',
             label: t('userActions.banUser'),
             subtitle: t('userActions.banUserSubtitle'),
             tone: 'danger',
-            onPress: () => runAndClose(onBanUser),
+            onPress: () => onBanUser?.(),
           },
         ] as const)
       : []),
@@ -267,6 +263,7 @@ function ActionSheetComponent(props: Props) {
               <ActionSheetRow
                 key={action.id}
                 action={action}
+                onDone={requestClose}
                 showBottomBorder={index < actions.length - 1}
               />
             ))}

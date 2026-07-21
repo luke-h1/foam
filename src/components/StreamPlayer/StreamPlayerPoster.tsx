@@ -33,9 +33,12 @@ export const StreamPlayerPoster = memo(function StreamPlayerPoster({
   const [rendered, setRendered] = useState(visible);
   const opacity = useSharedValue(visible ? 1 : 0);
 
+  if (visible && !rendered) {
+    setRendered(true);
+  }
+
   useEffect(() => {
     if (visible) {
-      setRendered(true);
       opacity.set(1);
       return;
     }

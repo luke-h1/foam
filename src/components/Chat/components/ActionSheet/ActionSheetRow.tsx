@@ -57,9 +57,11 @@ function getMessageActionSFSymbolName(actionId: MessageActionId) {
 
 export function ActionSheetRow({
   action,
+  onDone,
   showBottomBorder,
 }: {
   action: ActionItem;
+  onDone: () => void;
   showBottomBorder: boolean;
 }) {
   const colorScheme = useColorScheme();
@@ -67,7 +69,10 @@ export function ActionSheetRow({
 
   return (
     <Button
-      onPress={action.onPress}
+      onPress={() => {
+        action.onPress();
+        onDone();
+      }}
       style={[
         styles.actionButton,
         showBottomBorder && [

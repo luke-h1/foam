@@ -76,10 +76,6 @@ function UserActionSheetComponent({
   const requestClose = () => {
     sheetRef.current?.requestClose();
   };
-  const runAndClose = (action?: () => void) => {
-    action?.();
-    requestClose();
-  };
   const recentMessages = useMemo(
     () => (visible ? getRecentUserMessages(login, username) : []),
     [login, username, visible],
@@ -88,20 +84,20 @@ function UserActionSheetComponent({
     {
       icon: 'at',
       label: t('userActions.mention'),
-      onPress: () => runAndClose(onMentionUser),
+      onPress: () => onMentionUser(),
       subtitle: t('userActions.mentionSubtitle'),
       tone: 'accent',
     },
     {
       icon: 'doc.on.doc',
       label: t('userActions.copyUsername'),
-      onPress: () => runAndClose(onCopyUsername),
+      onPress: () => onCopyUsername(),
       subtitle: t('userActions.copyUsernameSubtitle'),
     },
     {
       icon: 'person.crop.circle.badge.xmark',
       label: isHidden ? t('userActions.unhideUser') : t('userActions.hideUser'),
-      onPress: () => runAndClose(onHideUser),
+      onPress: () => onHideUser(),
       subtitle: isHidden
         ? t('userActions.unhideUserSubtitle')
         : t('userActions.hideUserSubtitle'),
@@ -111,7 +107,7 @@ function UserActionSheetComponent({
       label: isHighlighted
         ? t('userActions.unhighlightUser')
         : t('userActions.highlightUser'),
-      onPress: () => runAndClose(onHighlightUser),
+      onPress: () => onHighlightUser(),
       subtitle: isHighlighted
         ? t('userActions.unhighlightUserSubtitle')
         : t('userActions.highlightUserSubtitle'),
@@ -122,7 +118,7 @@ function UserActionSheetComponent({
           {
             icon: 'flag' as const,
             label: t('userActions.reportUser'),
-            onPress: () => runAndClose(onReportUser),
+            onPress: () => onReportUser(),
             subtitle: t('userActions.reportUserSubtitle'),
             tone: 'warning' as const,
           },
@@ -133,7 +129,7 @@ function UserActionSheetComponent({
           {
             icon: 'nosign' as const,
             label: t('userActions.blockUser'),
-            onPress: () => runAndClose(onBlockUser),
+            onPress: () => onBlockUser(),
             subtitle: t('userActions.blockUserSubtitle'),
             tone: 'danger' as const,
           },
@@ -144,21 +140,21 @@ function UserActionSheetComponent({
           {
             icon: 'exclamationmark.triangle' as const,
             label: t('userActions.warnUser'),
-            onPress: () => runAndClose(onWarnUser),
+            onPress: () => onWarnUser?.(),
             subtitle: t('userActions.warnUserSubtitle'),
             tone: 'warning' as const,
           },
           {
             icon: 'clock' as const,
             label: t('userActions.timeoutUser'),
-            onPress: () => runAndClose(onTimeoutUser),
+            onPress: () => onTimeoutUser?.(),
             subtitle: t('userActions.timeoutUserSubtitle'),
             tone: 'warning' as const,
           },
           {
             icon: 'slash.circle' as const,
             label: t('userActions.banUser'),
-            onPress: () => runAndClose(onBanUser),
+            onPress: () => onBanUser?.(),
             subtitle: t('userActions.banUserSubtitle'),
             tone: 'danger' as const,
           },
@@ -285,7 +281,7 @@ function UserActionSheetComponent({
           showsVerticalScrollIndicator={false}
         >
           <UserRecentMessages messages={recentMessages} />
-          <UserActionSheetRows actions={actionRows} />
+          <UserActionSheetRows actions={actionRows} onDone={requestClose} />
         </ScrollView>
       </View>
     </BottomSheet>

@@ -98,16 +98,31 @@ export function BottomSheet({
     [],
   );
 
-  useLayoutEffect(() => {
+  const [prevPresentation, setPrevPresentation] = useState({
+    openIndex: initialOpenIndex,
+    presented: isPresented,
+  });
+  if (
+    isPresented !== prevPresentation.presented ||
+    (isPresented && initialOpenIndex !== prevPresentation.openIndex)
+  ) {
+    setPrevPresentation({
+      openIndex: initialOpenIndex,
+      presented: isPresented,
+    });
     if (isPresented) {
       setIsMounted(true);
       setIndex(initialOpenIndex);
-      didDismissRef.current = false;
-      return;
+    } else {
+      setIndex(0);
     }
+  }
 
-    setIndex(0);
-  }, [initialOpenIndex, isPresented]);
+  useLayoutEffect(() => {
+    if (isPresented) {
+      didDismissRef.current = false;
+    }
+  }, [isPresented]);
 
   if (!isMounted) {
     return null;
