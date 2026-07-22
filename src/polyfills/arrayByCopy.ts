@@ -55,6 +55,12 @@ if (typeof Array.prototype.toSpliced !== 'function') {
       // `splice` but returns the *modified copy* instead of the removed
       // elements. Forwarding to `Array#splice` mutates the copy then
       // returns it.
+      if (arguments.length === 0) {
+        // `toSpliced()` with no args returns an unchanged copy; guard here
+        // because `splice(undefined)` coerces start to 0 and would remove
+        // the whole array.
+        return copy;
+      }
       if (deleteCount === undefined) {
         // `splice(start)` removes everything from `start` to end.
         copy.splice(start);
