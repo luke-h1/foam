@@ -176,7 +176,7 @@ export function ImageBenchmarkScreen() {
         </Pressable>
       </View>
 
-      <Text style={styles.h2}>Decode latency — cinna 942 × 2x AVIF (ms)</Text>
+      <Text style={styles.h2}>Decode latency - cinna 942 × 2x AVIF (ms)</Text>
       <Row header cells={['scenario', 'mean', 'p50', 'p95', 'total']} />
       <Row cells={decodeRow(runs, 'cold seq', 'cold', 'sequential')} />
       <Row cells={decodeRow(runs, 'warm seq', 'warm', 'sequential')} />

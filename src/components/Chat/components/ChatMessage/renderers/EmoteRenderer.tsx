@@ -39,12 +39,14 @@ export const EmoteRenderer = memo(
       preferredScale: CHAT_INLINE_EMOTE_SCALE,
     });
 
-    // Twitch and BTTV don't advertise emote dimensions, and some 7TV encodes
-    // arrive without size metadata too, so the box would default to 1:1 and a
-    // non-square emote renders letterboxed at the wrong width. When metadata is
-    // missing, size from the decoded emote's true aspect ratio instead — it's
-    // usually already known for warm channel emotes (no visible shift) and lands
-    // via the subscription once the emote decodes otherwise.
+    /**
+     * Twitch and BTTV don't advertise emote dimensions, and some 7TV encodes
+     * arrive without size metadata too, so the box would default to 1:1 and a
+     * non-square emote renders letterboxed at the wrong width. When metadata is
+     * missing, size from the decoded emote's true aspect ratio instead - it's
+     * usually already known for warm channel emotes (no visible shift) and lands
+     * via the subscription once the emote decodes otherwise.
+     */
     const measuredRatio = useCachedEmoteAspectRatio(
       part.width && part.height ? null : displayUrl,
     );
@@ -53,9 +55,11 @@ export const EmoteRenderer = memo(
       part.width && part.height
         ? calculateAspectRatio(part.width, part.height, targetSize)
         : calculateAspectRatio(measuredRatio ?? 1, 1, targetSize);
-    // No Pressable: long-press is detected by the row's timer, this just
-    // records which emote the touch started on. A busy screen renders
-    // hundreds of emotes, so each Pressable's gesture machinery added up.
+    /**
+     * No Pressable: long-press is detected by the row's timer, this just
+     * records which emote the touch started on. A busy screen renders
+     * hundreds of emotes, so each Pressable's gesture machinery added up.
+     */
     const handleTouchStart = onEmoteTouchStart
       ? () => onEmoteTouchStart(part)
       : undefined;
@@ -73,7 +77,12 @@ export const EmoteRenderer = memo(
         return (
           <View
             onTouchStart={handleTouchStart}
-            style={getContainerStyle(width, shouldOverlayPrevious, isModerated)}
+            style={getContainerStyle(
+              width,
+              height,
+              shouldOverlayPrevious,
+              isModerated,
+            )}
           >
             <View
               style={getEmoteImageStyle(width, height)}
@@ -86,7 +95,12 @@ export const EmoteRenderer = memo(
       return (
         <View
           onTouchStart={handleTouchStart}
-          style={getContainerStyle(width, shouldOverlayPrevious, isModerated)}
+          style={getContainerStyle(
+            width,
+            height,
+            shouldOverlayPrevious,
+            isModerated,
+          )}
         >
           <Text style={getNameStyle(width, height)}>{fallbackLabel}</Text>
         </View>
@@ -96,11 +110,17 @@ export const EmoteRenderer = memo(
     return (
       <View
         onTouchStart={handleTouchStart}
-        style={getContainerStyle(width, shouldOverlayPrevious, isModerated)}
+        style={getContainerStyle(
+          width,
+          height,
+          shouldOverlayPrevious,
+          isModerated,
+        )}
       >
-        {/* No containerStyle: the size + clip live on the image style so each
-            inline emote is one fewer Fabric/Yoga node. A busy message has many
-            emotes, so this trims hundreds of views per screen on scroll. */}
+        {/* No ChatInlineImage containerStyle prop: the size + clip live on the
+            image style so each inline emote is one fewer Fabric/Yoga node. A
+            busy message has many emotes, so this trims hundreds of views per
+            screen on scroll. */}
         <ChatInlineImage
           sourceUrl={displayUrl}
           style={getEmoteImageStyle(width, height)}
@@ -192,14 +212,13 @@ function getEmoteImageStyle(width: number, height: number) {
 
 function getContainerStyle(
   width: number,
+  height: number,
   shouldOverlayPrevious: boolean,
   isModerated: boolean,
 ) {
-  if (!shouldOverlayPrevious && !isModerated) {
-    return undefined;
-  }
-
   return {
+    width,
+    height,
     ...(shouldOverlayPrevious && {
       marginLeft: Math.round(width * -0.72),
       zIndex: 2,

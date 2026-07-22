@@ -7,7 +7,7 @@ import {
   parseRemoteConfigValue,
 } from '@app/hooks/firebase/remoteConfigModel';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
-import { paintRendererFlag$ } from '@app/store/preferenceStore';
+import { paintRendererFlag$ } from '@app/store/preferences/state';
 
 import { useSyncPaintRendererFlag } from '../useSyncPaintRendererFlag';
 

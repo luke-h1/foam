@@ -170,9 +170,11 @@ describe('useEmoteReprocessing personal 7TV emotes', () => {
   });
 
   test('downgrades to text only when 7TV emotes are turned off', () => {
-    // With the toggle off the personal set is intentionally dropped, so the
-    // emote falls back to text. A channel emote keeps the reprocess gate open
-    // (7TV off no longer holds it open on its own) so the resolver still runs.
+    /**
+     * With the toggle off the personal set is intentionally dropped, so the
+     * emote falls back to text. A channel emote keeps the reprocess gate open
+     * (7TV off no longer holds it open on its own) so the resolver still runs.
+     */
     mockGetCurrentEmoteData.mockReturnValue(
       createEmoteData({ sevenTvChannelEmotes: [channelKappa] }),
     );

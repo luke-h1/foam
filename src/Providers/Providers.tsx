@@ -1,5 +1,5 @@
 import { PropsWithChildren } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import {
@@ -30,6 +30,7 @@ import { OfflineBanner } from '@app/components/OfflineBanner/OfflineBanner';
 import { ShakeToReport } from '@app/components/ShakeToReport/ShakeToReport';
 import { AccentColorProvider } from '@app/context/AccentColorContext';
 import { AuthContextProvider } from '@app/context/AuthContext';
+import { useSyncLightModeFlag } from '@app/hooks/firebase/useSyncLightModeFlag';
 import { useDebugOptions } from '@app/hooks/useDebugOptions';
 import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
 import { QueryProvider } from '@app/lib/react-query/query-provider';
@@ -86,12 +87,15 @@ function QueryDevelopmentTools() {
 }
 
 function QueryDevTools({ children }: PropsWithChildren) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
     <>
       <Toaster
         style={{
-          backgroundColor: theme.color.background.dark,
-          borderColor: theme.color.border.dark,
+          backgroundColor: theme.color.background[scheme],
+          borderColor: theme.color.border[scheme],
           borderWidth: 1,
         }}
       />
@@ -99,6 +103,11 @@ function QueryDevTools({ children }: PropsWithChildren) {
       {__DEV__ ? <QueryDevelopmentTools /> : null}
     </>
   );
+}
+
+function LightModeFlagSync() {
+  useSyncLightModeFlag();
+  return null;
 }
 
 function DevTools() {
@@ -136,6 +145,7 @@ export function Providers({ children }: PropsWithChildren) {
                     {__DEV__ ? <DevTools /> : null}
                     <AnalyticsProvider>
                       <QueryProviderWithDevTools>
+                        <LightModeFlagSync />
                         <GlobalErrorGate />
                         <ShakeToReport />
                         <OfflineBanner />

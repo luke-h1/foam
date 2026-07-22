@@ -1,5 +1,5 @@
-import { memo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { memo, useMemo } from 'react';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Badge } from '@app/components/ui/Badge/Badge';
@@ -39,13 +39,28 @@ function ChannelPollCardComponent({
   channelLogin,
   poll,
 }: ChannelPollCardProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const schemeStyles = useMemo(
+    () => ({
+      choiceTrack: {
+        backgroundColor: theme.color.backgroundAlt[scheme],
+        borderColor: theme.color.border[scheme],
+      },
+      container: {
+        backgroundColor: theme.color.surface[scheme],
+        borderBottomColor: theme.color.border[scheme],
+      },
+    }),
+    [scheme],
+  );
   const timeRemaining = formatTimeRemaining(poll);
   const statusLabel = poll.isActive
     ? i18next.t('chat:poll.live')
     : i18next.t('chat:poll.result');
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, schemeStyles.container]}>
       <View style={styles.header}>
         <View style={styles.headerMeta}>
           <Badge color='purple' variant='soft'>
@@ -72,7 +87,10 @@ function ChannelPollCardComponent({
 
       <View style={styles.choiceList}>
         {poll.choices.map(choice => (
-          <View key={choice.id} style={styles.choiceTrack}>
+          <View
+            key={choice.id}
+            style={[styles.choiceTrack, schemeStyles.choiceTrack]}
+          >
             <View
               style={[
                 styles.choiceFill,
@@ -109,7 +127,7 @@ function ChannelPollCardComponent({
           <PressableArea
             accessibilityRole='button'
             onPress={() =>
-              openLinkInBrowser(`https://www.twitch.tv/${channelLogin}`)
+              openLinkInBrowser(`https://www.twitch.tv/${channelLogin}`, scheme)
             }
           >
             <Text color='violet.accent' type='xxs' weight='semibold'>
@@ -145,16 +163,12 @@ const styles = StyleSheet.create({
     gap: theme.space8,
   },
   choiceTrack: {
-    backgroundColor: theme.color.background.darkAlt,
-    borderColor: theme.colorBorderSecondary,
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
     position: 'relative',
   },
   container: {
-    backgroundColor: theme.color.surface.dark,
-    borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: StyleSheet.hairlineWidth,
     gap: theme.space12,
     paddingHorizontal: theme.space16,

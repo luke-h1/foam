@@ -1,5 +1,5 @@
 import { type RefObject, useCallback, useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 
@@ -46,6 +46,8 @@ export function TopCategoriesScreen({
   scrollY,
 }: TopCategoriesScreenProps = {}) {
   const { t } = useTranslation('stream');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const refreshing$ = useObservable(false);
   const refreshing = useSelector(refreshing$);
   const listRef = useRef<FlashListRef<Category>>(null);
@@ -92,7 +94,12 @@ export function TopCategoriesScreen({
 
   if (showSkeleton) {
     return (
-      <View style={styles.wrapper}>
+      <View
+        style={[
+          styles.wrapper,
+          { backgroundColor: theme.color.background[scheme] },
+        ]}
+      >
         <FlashList
           getItemType={() => 'category-skeleton'}
           contentInsetAdjustmentBehavior='automatic'
@@ -111,7 +118,12 @@ export function TopCategoriesScreen({
 
   if (isError) {
     return (
-      <View style={styles.wrapper}>
+      <View
+        style={[
+          styles.wrapper,
+          { backgroundColor: theme.color.background[scheme] },
+        ]}
+      >
         <EmptyState
           heading={t('failedToFetchCategories')}
           content={t('failedToFetchTopCategories')}
@@ -122,7 +134,12 @@ export function TopCategoriesScreen({
 
   if (allCategories.length === 0) {
     return (
-      <View style={styles.wrapper}>
+      <View
+        style={[
+          styles.wrapper,
+          { backgroundColor: theme.color.background[scheme] },
+        ]}
+      >
         <EmptyState
           content={t('noCategoriesFound')}
           buttonOnPress={() => void onRefresh()}
@@ -164,8 +181,17 @@ function TopCategoriesList({
   renderTopCategoryItem: ListRenderItem<Category>;
   scrollHandler: ReturnType<typeof useAnimatedScrollHandler>;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
-    <View style={styles.wrapper} testID='top-categories-list'>
+    <View
+      style={[
+        styles.wrapper,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+      testID='top-categories-list'
+    >
       <AnimatedFlashList<Category>
         ref={listRef}
         data={allCategories}
@@ -192,11 +218,12 @@ function TopCategoriesList({
 const styles = StyleSheet.create({
   cardContainer: {
     flex: 1,
-    marginHorizontal: 5,
+    marginHorizontal: theme.space4,
     minHeight: CATEGORY_CARD_HEIGHT,
   },
   listContent: {
     paddingBottom: theme.space20,
+    paddingHorizontal: theme.space12,
   },
   skeletonImage: {
     alignSelf: 'center',
@@ -215,7 +242,6 @@ const styles = StyleSheet.create({
     width: 80,
   },
   wrapper: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
 });

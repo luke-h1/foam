@@ -219,7 +219,7 @@ export function replaceTextWithEmotes({
       if (emoji) {
         const unifiedEmoji = decodeEmojiToUnified(emoji);
         // Standalone emoji are keyed without FE0F in the dataset (e.g. "2764"
-        // for ❤️), while ZWJ sequences keep it — try both forms.
+        // for ❤️), while ZWJ sequences keep it - try both forms.
         const unifiedWithoutVariant = unifiedEmoji
           .split('-')
           .filter(hex => hex !== 'FE0F')

@@ -11,9 +11,6 @@ export interface MessageToReprocess {
   sender: string;
 }
 
-/**
- * Reprocess all messages with current emote data.
- */
 export function reprocessMessages(
   messages: AnyChatMessageType[],
   processMessageEmotes: (

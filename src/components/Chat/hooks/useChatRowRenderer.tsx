@@ -1,4 +1,5 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useColorScheme } from 'react-native';
 import type { RefObject } from 'react';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
@@ -14,7 +15,7 @@ import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import type {
   ChatFontScale,
   CustomHighlight,
-} from '@app/store/preferenceStore';
+} from '@app/store/preferences/state';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
@@ -35,7 +36,7 @@ import {
   RowVisibilityContext,
   useRowVisibility,
 } from '../components/ChatMessage/rowVisibility';
-import { styles } from '../styles';
+import { styles as chatSchemeStyles } from '../styles';
 import type { ChatRowDisplayFlags } from '../types/chatUiFlags';
 import { chatEntranceSpring } from '../util/chatEntranceSpring';
 import { getChatMessageListKey } from '../util/chatMessages/getChatMessageListKey';
@@ -128,6 +129,9 @@ const ChatMessageRow = function ChatMessageRow({
     showInlineReplyContext,
     showTimestamps,
   } = displayFlags;
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const rowStyles = chatSchemeStyles[scheme];
   const isHighlightedMessageTarget = useIsHighlightedReplyTargetMessage(
     channelId,
     msg.message_id,
@@ -184,7 +188,7 @@ const ChatMessageRow = function ChatMessageRow({
       timestamp={msg.timestamp}
       sender={msg.sender}
       isAction={msg.isAction}
-      style={styles.messageContainer}
+      style={rowStyles.messageContainer}
       parentDisplayName={msg.parentDisplayName}
       parentColor={msg.parentColor}
       replyDisplayName={msg.replyDisplayName}
@@ -235,6 +239,7 @@ export function useChatRowRenderer({
   setHighlightedReplyTargetMessageId,
   user,
 }: UseChatRowRendererOptions) {
+  const hookColorScheme = useColorScheme();
   const getMentionColor = useCallback((username: string): string => {
     const cacheKey = username.replace(/^@/, '').trim().toLowerCase();
     const cached = getSessionCacheString('mentionColors', cacheKey);
@@ -341,11 +346,13 @@ export function useChatRowRenderer({
         .join('|'),
     [customHighlights],
   );
-  // Note: mentionLoginRevision is intentionally excluded. It bumps ~every 400ms
-  // as @mention logins resolve from Helix; including it re-rendered every visible
-  // row each time (the dominant frame-drop source in mention-heavy chat - busy
-  // chat went from ~57fps to a flat 60fps once removed). Mention spans subscribe
-  // to the revision themselves (MentionSpan), so only those spans re-render.
+  /**
+   * Note: mentionLoginRevision is intentionally excluded. It bumps ~every 400ms
+   * as @mention logins resolve from Helix; including it re-rendered every visible
+   * row each time (the dominant frame-drop source in mention-heavy chat - busy
+   * chat went from ~57fps to a flat 60fps once removed). Mention spans subscribe
+   * to the revision themselves (MentionSpan), so only those spans re-render.
+   */
   const messageListExtraData = useMemo(
     () => ({
       animate: preferences.animate,
@@ -372,7 +379,9 @@ export function useChatRowRenderer({
       preferences.chatTimestamps,
     ],
   );
-  const listContentStyle = styles.listContent;
+  const listContentStyle =
+    chatSchemeStyles[hookColorScheme === 'light' ? 'light' : 'dark']
+      .listContent;
 
   const handleReplyContextPress = useCallback(
     (replyParentMessageId: string) => {

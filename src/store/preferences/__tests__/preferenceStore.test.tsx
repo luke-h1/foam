@@ -5,7 +5,7 @@ import { type Preferences, replacePreferences } from '../state';
 
 const basePreferences = {
   updatedAt: 1,
-  theme: 'foam-dark',
+  theme: 'dark',
   hapticFeedback: true,
   streamListLayout: 'compact',
   chatDensity: 'comfortable',

@@ -77,7 +77,8 @@ export function useChannelPrediction(channelId?: string) {
     };
   }, [channelId, channelScopeKey, isOwnChannel]);
 
-  // eslint-disable-next-line react-doctor/no-cascading-set-state -- EventSub handlers update on independent Twitch events
+  // EventSub handlers update on independent Twitch events
+  // eslint-disable-next-line react-doctor/no-cascading-set-state
   useEffect(() => {
     if (!canSubscribe || !channelId) {
       return;
@@ -123,18 +124,21 @@ export function useChannelPrediction(channelId?: string) {
       { broadcaster_user_id: channelId },
       onBegin,
     );
+
     void TwitchWsService.subscribeToEvent(
       'channel.prediction.progress',
       '1',
       { broadcaster_user_id: channelId },
       onProgress,
     );
+
     void TwitchWsService.subscribeToEvent(
       'channel.prediction.lock',
       '1',
       { broadcaster_user_id: channelId },
       onLock,
     );
+
     void TwitchWsService.subscribeToEvent(
       'channel.prediction.end',
       '1',
@@ -148,10 +152,12 @@ export function useChannelPrediction(channelId?: string) {
           'channel.prediction.begin',
           onBegin,
         ),
+
         TwitchWsService.unsubscribeFromEvent(
           'channel.prediction.progress',
           onProgress,
         ),
+
         TwitchWsService.unsubscribeFromEvent('channel.prediction.lock', onLock),
         TwitchWsService.unsubscribeFromEvent('channel.prediction.end', onEnd),
       ]).finally(() => {

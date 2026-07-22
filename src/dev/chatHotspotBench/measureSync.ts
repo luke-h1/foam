@@ -44,8 +44,7 @@ export function measureSync(
     times.push(performance.now() - start);
   }
 
-  // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks Array.prototype.toSorted
-  const sorted = [...times].sort((a, b) => a - b);
+  const sorted = times.toSorted((a, b) => a - b);
   const sum = times.reduce((acc, value) => acc + value, 0);
 
   return {

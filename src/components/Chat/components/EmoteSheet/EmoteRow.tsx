@@ -1,11 +1,15 @@
 import { memo, useCallback } from 'react';
-import { type GestureResponderEvent, Pressable } from 'react-native';
+import {
+  type GestureResponderEvent,
+  Pressable,
+  useColorScheme,
+} from 'react-native';
 
 import { selection } from '@app/lib/haptics';
 
 import { EmoteCell } from './EmoteCell';
 import { EMOTE_CELL_GAP } from './emoteSheetLayout';
-import { emoteSheetStyles as styles } from './emoteSheetStyles';
+import { emoteSheetStyles } from './emoteSheetStyles';
 import type { EmotePickerItem } from './emoteSheetTypes';
 
 function EmoteRowComponent({
@@ -17,6 +21,9 @@ function EmoteRowComponent({
   items: EmotePickerItem[];
   onPress: (item: EmotePickerItem) => void;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = emoteSheetStyles[scheme];
   const handlePress = useCallback(
     (event: GestureResponderEvent) => {
       const stride = cellSize + EMOTE_CELL_GAP;

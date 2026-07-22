@@ -5,7 +5,10 @@ import type { ErrorInfo, ReactNode } from 'react';
 import { logger } from '@app/utils/logger';
 import { markSessionError } from '@app/utils/storeReview/sessionErrorFlag';
 
-import { ErrorDetails, type ErrorDetailsProps } from './ErrorDetails';
+import {
+  ErrorDetails,
+  type ErrorDetailsProps,
+} from './components/ErrorDetails';
 
 interface Props {
   children: ReactNode;
@@ -19,7 +22,7 @@ interface State {
 }
 
 /**
- * Class error boundary — required by React for catch/recover UI.
+ * Class error boundary - required by React for catch/recover UI.
  */
 export class ErrorBoundary extends Component<Props, State> {
   override state: Omit<ErrorDetailsProps, 'onReset'> = {

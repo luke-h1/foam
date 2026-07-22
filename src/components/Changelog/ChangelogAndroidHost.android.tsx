@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -33,13 +33,16 @@ import {
 } from '@modules/changelog/src/changelogAndroidPresenter';
 
 function ListNotes({ item }: { item: ChangelogListItem }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
     <Column
       modifiers={[fillMaxWidth(), paddingAll(4)]}
       verticalArrangement={{ spacedBy: 8 }}
     >
       <Text
-        color={theme.color.text.dark}
+        color={theme.color.text[scheme]}
         style={{ typography: 'titleLarge', fontWeight: '700' }}
       >
         {item.title}
@@ -48,14 +51,14 @@ function ListNotes({ item }: { item: ChangelogListItem }) {
         <ListItem
           key={`${row.title}-${row.description}`}
           colors={{
-            containerColor: theme.color.menu.cardActive,
-            contentColor: theme.color.text.dark,
-            supportingContentColor: theme.color.textSecondary.dark,
+            containerColor: theme.color.menu.cardActive[scheme],
+            contentColor: theme.color.text[scheme],
+            supportingContentColor: theme.color.textSecondary[scheme],
           }}
         >
           <ListItem.HeadlineContent>
             <Text
-              color={theme.color.text.dark}
+              color={theme.color.text[scheme]}
               style={{ typography: 'titleMedium', fontWeight: '600' }}
             >
               {row.title}
@@ -63,7 +66,7 @@ function ListNotes({ item }: { item: ChangelogListItem }) {
           </ListItem.HeadlineContent>
           <ListItem.SupportingContent>
             <Text
-              color={theme.color.textSecondary.dark}
+              color={theme.color.textSecondary[scheme]}
               style={{ typography: 'bodyMedium' }}
             >
               {row.description}
@@ -76,6 +79,9 @@ function ListNotes({ item }: { item: ChangelogListItem }) {
 }
 
 function MediaNotes({ item }: { item: ChangelogMediaItem }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
     <Column
       modifiers={[fillMaxWidth(), paddingAll(4)]}
@@ -93,13 +99,13 @@ function MediaNotes({ item }: { item: ChangelogMediaItem }) {
         </RNHostView>
       ) : null}
       <Text
-        color={theme.color.text.dark}
+        color={theme.color.text[scheme]}
         style={{ typography: 'titleLarge', fontWeight: '700' }}
       >
         {item.title}
       </Text>
       <Text
-        color={theme.color.textSecondary.dark}
+        color={theme.color.textSecondary[scheme]}
         style={{ typography: 'bodyMedium' }}
       >
         {item.description}
@@ -109,10 +115,13 @@ function MediaNotes({ item }: { item: ChangelogMediaItem }) {
 }
 
 function VersionNotes({ notes }: { notes: ChangelogVersionNotes }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
     <Column modifiers={[fillMaxWidth()]} verticalArrangement={{ spacedBy: 12 }}>
       <Text
-        color={theme.color.textSecondary.dark}
+        color={theme.color.textSecondary[scheme]}
         style={{ typography: 'labelLarge', fontWeight: '600' }}
       >
         {notes.version}
@@ -133,6 +142,8 @@ function VersionNotes({ notes }: { notes: ChangelogVersionNotes }) {
 
 export function ChangelogAndroidHost() {
   const { t } = useTranslation('common');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const options = useSyncExternalStore(
     subscribeChangelogAndroid,
     getChangelogAndroidState,
@@ -146,10 +157,10 @@ export function ChangelogAndroidHost() {
   const doneLabel = options.configuration?.doneButtonLabel ?? t('done');
 
   return (
-    <Host colorScheme='dark' style={styles.host} pointerEvents='box-none'>
+    <Host colorScheme={scheme} style={styles.host} pointerEvents='box-none'>
       <ModalBottomSheet
-        containerColor={theme.color.menu.background}
-        contentColor={theme.color.text.dark}
+        containerColor={theme.color.menu.background[scheme]}
+        contentColor={theme.color.text[scheme]}
         onDismissRequest={dismissChangelogAndroid}
         showDragHandle
       >
@@ -169,14 +180,14 @@ export function ChangelogAndroidHost() {
           </LazyColumn>
           <Button
             colors={{
-              containerColor: theme.color.menu.cardActive,
-              contentColor: theme.color.text.dark,
+              containerColor: theme.color.menu.cardActive[scheme],
+              contentColor: theme.color.text[scheme],
             }}
             modifiers={[fillMaxWidth()]}
             onClick={dismissChangelogAndroid}
           >
             <Text
-              color={theme.color.text.dark}
+              color={theme.color.text[scheme]}
               style={{ typography: 'titleMedium', fontWeight: '600' }}
             >
               {doneLabel}

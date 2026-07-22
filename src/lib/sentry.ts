@@ -18,7 +18,7 @@ import type { OpenStringUnion } from '@app/utils/typescript/OpenStringUnion';
 
 /**
  * expoRouterIntegration auto-instruments Expo Router navigation, so no manual
- * registerNavigationContainer call is required — it is created here and passed
+ * registerNavigationContainer call is required - it is created here and passed
  * straight to Sentry.init's integrations below.
  */
 export const navigationIntegration = expoRouterIntegration({
@@ -97,12 +97,14 @@ export function init() {
     debug,
   };
 
-  // A release build with no DSN means Sentry silently captures nothing, which
-  // is indistinguishable from "no errors" in the dashboard. Make it loud so it
-  // shows up in device logs (Console.app / adb logcat) during triage.
+  /**
+   * A release build with no DSN means Sentry silently captures nothing, which
+   * is indistinguishable from "no errors" in the dashboard. Make it loud so it
+   * shows up in device logs (Console.app / adb logcat) during triage.
+   */
   if (!hasDsn && !__DEV__) {
     console.error(
-      '[sentry] EXPO_PUBLIC_SENTRY_DSN is missing from this build — error reporting is disabled.',
+      '[sentry] EXPO_PUBLIC_SENTRY_DSN is missing from this build - error reporting is disabled.',
     );
   }
 
@@ -151,9 +153,11 @@ export function init() {
       }),
     ],
     beforeSend(event) {
-      // Keep the store-review prompt gate honest: any error-level event
-      // (including unhandled rejections Sentry tracks itself) marks the
-      // session so we never ask for a rating in a bad session.
+      /**
+       * Keep the store-review prompt gate honest: any error-level event
+       * (including unhandled rejections Sentry tracks itself) marks the
+       * session so we never ask for a rating in a bad session.
+       */
       if (event.level === 'fatal' || event.level === 'error') {
         markSessionError();
       }
@@ -207,26 +211,49 @@ export function showFeedbackWidget(): void {
 
 export type FeedbackType = 'bug' | 'idea';
 
+export interface FeedbackAttachment {
+  filename: string;
+  data: Uint8Array;
+  contentType: string;
+}
+
 /**
  * Submit user feedback from the custom in-app feedback screen.
  * Tagged with the feedback type so bug reports and ideas can be triaged
- * separately in Sentry.
+ * separately in Sentry. Attachments ride along on the feedback envelope
+ * and show up on the feedback entry in Sentry.
  */
 export function sendFeedback(feedback: {
   type: FeedbackType;
   message: string;
   email?: string;
   name?: string;
+  attachments?: FeedbackAttachment[];
+  associatedEventId?: string;
 }): void {
   init();
   Sentry.withScope(scope => {
     scope.setTag('feedback_type', feedback.type);
-    Sentry.captureFeedback({
-      message: feedback.message,
-      email: feedback.email || undefined,
-      name: feedback.name || undefined,
-    });
+    Sentry.captureFeedback(
+      {
+        message: feedback.message,
+        email: feedback.email || undefined,
+        name: feedback.name || undefined,
+        associatedEventId: feedback.associatedEventId,
+      },
+      feedback.attachments?.length
+        ? { attachments: feedback.attachments }
+        : undefined,
+    );
   });
+}
+
+/**
+ * Id of the most recently captured event, used to associate user feedback
+ * with the crash that prompted it.
+ */
+export function lastEventId(): string | undefined {
+  return Sentry.lastEventId();
 }
 
 export function countMetric(
@@ -400,10 +427,12 @@ export function forwardLogToSentry(entry: {
     if (cause !== undefined) {
       extra.cause = cause instanceof Error ? cause.toString() : cause;
     }
-    // Bound the metadata before it reaches Sentry. Callers can pass arbitrarily
-    // large objects (emote lists, WebSocket payloads, API responses); left raw
-    // they bloat the event and have OOM-aborted envelope serialization on the
-    // JS thread on low-memory devices (FOAM-TV-MOBILE-9V).
+    /**
+     * Bound the metadata before it reaches Sentry. Callers can pass arbitrarily
+     * large objects (emote lists, WebSocket payloads, API responses); left raw
+     * they bloat the event and have OOM-aborted envelope serialization on the
+     * JS thread on low-memory devices (FOAM-TV-MOBILE-9V).
+     */
     const safeExtra = sanitiseLogValue(extra) as Record<string, unknown>;
 
     if (level === 'error') {

@@ -17,10 +17,12 @@ export function usePopulateAuth() {
     const previousLoggedIn = wasLoggedIn.current;
     wasLoggedIn.current = authState.isLoggedIn;
 
-    // Only navigate on a genuine logged-out -> logged-in transition (e.g. the
-    // user signs in from the auth sheet, which only dismisses the modal). The
-    // initial hydration on app open (undefined -> logged in) is already routed
-    // by the index redirect, so navigating here too pushes to following twice.
+    /**
+     * Only navigate on a genuine logged-out -> logged-in transition (e.g. the
+     * user signs in from the auth sheet, which only dismisses the modal). The
+     * initial hydration on app open (undefined -> logged in) is already routed
+     * by the index redirect, so navigating here too pushes to following twice.
+     */
     if (previousLoggedIn !== false || !authState.isLoggedIn) {
       return undefined;
     }

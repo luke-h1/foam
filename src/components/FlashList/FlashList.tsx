@@ -1,5 +1,5 @@
 import { type Ref, useMemo } from 'react';
-import { Platform, RefreshControl } from 'react-native';
+import { Platform, RefreshControl, useColorScheme } from 'react-native';
 
 import {
   FlashList as ShopifyFlashList,
@@ -24,19 +24,21 @@ export function FlashList<TItem>({
   refreshing = false,
   ...props
 }: FlashListProps<TItem> & { ref?: Ref<FlashListRef<TItem>> }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const androidRefreshControl = useMemo(() => {
     if (Platform.OS === 'android' && onRefresh && !refreshControl) {
       return (
         <RefreshControl
           refreshing={Boolean(refreshing)}
           onRefresh={onRefresh}
-          colors={[theme.colorPrimary]}
-          progressBackgroundColor={theme.color.backgroundSecondary.dark}
+          colors={[theme.color.accent[scheme]]}
+          progressBackgroundColor={theme.color.backgroundSecondary[scheme]}
         />
       );
     }
     return null;
-  }, [onRefresh, refreshControl, refreshing]);
+  }, [onRefresh, refreshControl, refreshing, scheme]);
 
   const activeRefreshControl = androidRefreshControl ?? refreshControl;
 

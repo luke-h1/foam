@@ -124,10 +124,12 @@ export {
   refreshUserPersonalEmotes,
 } from './personalEmotes';
 
-// Runs are keyed by channel id; stamps are keyed by owner id, and only owner
-// ids Twitch never returns (deleted/suspended accounts) get stamped. Those
-// would otherwise be re-requested on every cached-path channel revisit, while
-// resolved ids are already deduped per channel by the profile cache itself.
+/**
+ * Runs are keyed by channel id; stamps are keyed by owner id, and only owner
+ * ids Twitch never returns (deleted/suspended accounts) get stamped. Those
+ * would otherwise be re-requested on every cached-path channel revisit, while
+ * resolved ids are already deduped per channel by the profile cache itself.
+ */
 const subscriberProfilesGuard = createFetchOnceGuard();
 
 export const clearSubscriberProfilesCache = () => {
@@ -152,9 +154,11 @@ export const resolveSubscriberChannelProfiles = async (
   const ownerIds = [
     ...new Set(
       (cache.twitchSubscriberEmotes ?? []).flatMap(emote =>
-        // Helix /chat/emotes/user also returns global emotes with sentinel
-        // owner ids like "twitch"; a non-numeric id 400s the whole batched
-        // /users request, so only real user ids may enter the lookup.
+        /**
+         * Helix /chat/emotes/user also returns global emotes with sentinel
+         * owner ids like "twitch"; a non-numeric id 400s the whole batched
+         * /users request, so only real user ids may enter the lookup.
+         */
         'owner_id' in emote && emote.owner_id && /^\d+$/.test(emote.owner_id)
           ? [emote.owner_id]
           : [],
@@ -263,9 +267,11 @@ export const notify7TVPresence = async (
   }
 };
 
-// Session-lifetime per-channel bookkeeping maps stay bounded like every
-// other per-key guard in the chat store; 100 channels comfortably exceeds a
-// realistic session while capping marathon channel-hopping growth.
+/**
+ * Session-lifetime per-channel bookkeeping maps stay bounded like every
+ * other per-key guard in the chat store; 100 channels comfortably exceeds a
+ * realistic session while capping marathon channel-hopping growth.
+ */
 const MAX_TRACKED_CHANNEL_ENTRIES = 100;
 
 function setBoundedChannelEntry<V>(
@@ -282,9 +288,11 @@ function setBoundedChannelEntry<V>(
   map.set(channelId, value);
 }
 
-// 7TV rebroadcasts entitlements to the whole channel on every active
-// presence, so cap writes per channel the same way the official extension
-// does.
+/**
+ * 7TV rebroadcasts entitlements to the whole channel on every active
+ * presence, so cap writes per channel the same way the official extension
+ * does.
+ */
 const ACTIVE_PRESENCE_MIN_INTERVAL_MS = 10_000;
 const lastActivePresenceAt = new Map<string, number>();
 
@@ -328,9 +336,11 @@ const loadChannelResourcesInternal = async (
   }
   chatStore$.loadingState.set('LOADING');
   if (shouldForceRefresh) {
-    // The full load below resets sevenTvPersonalEmotes to {}, so the checked
-    // set must forget those users or fetchUserPersonalEmotes short-circuits
-    // into the emptied cache until the channel is left and re-entered.
+    /**
+     * The full load below resets sevenTvPersonalEmotes to {}, so the checked
+     * set must forget those users or fetchUserPersonalEmotes short-circuits
+     * into the emptied cache until the channel is left and re-entered.
+     */
     clearPersonalEmotesCache();
     // An explicit refresh should re-download global provider data too, not
     // serve it from the session cache.
@@ -520,9 +530,11 @@ const loadChannelResourcesInternal = async (
       return false;
     }
 
-    // Only the 7TV channel-emote fetch needs the set id, so resolve it as a
-    // promise the spec awaits internally - the other 13 resource fetches
-    // start immediately instead of stalling a full round trip behind it.
+    /**
+     * Only the 7TV channel-emote fetch needs the set id, so resolve it as a
+     * promise the spec awaits internally - the other 13 resource fetches
+     * start immediately instead of stalling a full round trip behind it.
+     */
     const fallbackSevenTvSetId = existingCache?.sevenTvEmoteSetId ?? 'global';
     const sevenTvSetIdPromise = sevenTvService
       .getEmoteSetId(channelId)
@@ -865,9 +877,11 @@ export const getSevenTvEmoteSetId = (channelId?: string): string | null => {
   return cache?.sevenTvEmoteSetId ?? null;
 };
 
-// Guards the check-fetch-assign sequence below: rapid consecutive switches
-// (or a replayed dispatch) race their fetches, and without this the slower
-// fetch's assign would win, leaving the cache on a stale set.
+/**
+ * Guards the check-fetch-assign sequence below: rapid consecutive switches
+ * (or a replayed dispatch) race their fetches, and without this the slower
+ * fetch's assign would win, leaving the cache on a stale set.
+ */
 const latestRequestedEmoteSetByChannel = new Map<string, string>();
 
 /**

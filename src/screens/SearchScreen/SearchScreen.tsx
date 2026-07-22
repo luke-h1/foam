@@ -9,7 +9,13 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react';
-import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
+import {
+  type StyleProp,
+  StyleSheet,
+  useColorScheme,
+  View,
+  type ViewStyle,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native-gesture-handler';
 
@@ -20,6 +26,7 @@ import * as ScreenOrientation from 'expo-screen-orientation';
 import { Button } from '@app/components/Button/Button';
 import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { Image } from '@app/components/Image/Image';
+import { LIVE_STREAM_IMAGE_SM_WIDTH } from '@app/components/LiveStreamImage/LiveStreamImage';
 import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
 import { SearchHistoryV2 } from '@app/components/ui/SearchHistory/SearchHistoryV2';
 import { Text } from '@app/components/ui/Text/Text';
@@ -90,8 +97,7 @@ function getSearchResultKey(item: SearchItem) {
 }
 
 function sortSearchHistory(history: SearchHistoryItem[]) {
-  // eslint-disable-next-line react-doctor/js-tosorted-immutable -- Hermes lacks Array.prototype.toSorted (throws "undefined is not a function"); copy-then-sort is the safe equivalent
-  return [...history].sort(
+  return history.toSorted(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
 }
@@ -149,6 +155,10 @@ function writeSearchHistoryQuery(query: string) {
 
 const isAndroid = process.env.EXPO_OS === 'android';
 
+// resultItem paddingHorizontal + sm thumbnail width + StreamerCard row gap
+const RESULT_SEPARATOR_INSET =
+  theme.space16 + LIVE_STREAM_IMAGE_SM_WIDTH + theme.space16;
+
 function ResultRow({
   children,
   onPress,
@@ -158,16 +168,21 @@ function ResultRow({
   onPress: () => void;
   style: StyleProp<ViewStyle>;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
     <Pressable
       accessibilityRole='button'
       onPress={onPress}
       android_ripple={
-        isAndroid ? { color: 'rgba(255, 255, 255, 0.08)' } : undefined
+        isAndroid ? { color: theme.color.pressedOverlay[scheme] } : undefined
       }
       style={({ pressed }) => [
         style,
-        pressed && !isAndroid ? styles.rowPressed : null,
+        pressed && !isAndroid
+          ? { backgroundColor: theme.color.surfacePressed[scheme] }
+          : null,
       ]}
     >
       {children}
@@ -176,11 +191,23 @@ function ResultRow({
 }
 
 function ResultSeparator() {
-  return <View style={styles.separator} />;
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
+  return (
+    <View
+      style={[
+        styles.separator,
+        { backgroundColor: theme.color.border[scheme] },
+      ]}
+    />
+  );
 }
 
 export function SearchScreen() {
   const { t } = useTranslation('search');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const [{ query, selectedFilter, searchResults, categoryResults }, setState] =
     useState<SearchState>(SEARCH_INITIAL_STATE);
   const listRef = useRef<FlashListRef<SearchItem>>(null);
@@ -368,7 +395,13 @@ export function SearchScreen() {
           onPress={() => handleCategoryPress(item.id)}
           style={styles.categoryResultItem}
         >
-          <Image source={imageUrl} style={styles.categoryResultImage} />
+          <Image
+            source={imageUrl}
+            style={[
+              styles.categoryResultImage,
+              { borderColor: theme.color.border[scheme] },
+            ]}
+          />
           <View style={styles.categoryResultInfo}>
             <Text type='sm' weight='semibold' numberOfLines={1}>
               {item.name}
@@ -380,7 +413,7 @@ export function SearchScreen() {
         </ResultRow>
       );
     },
-    [handleCategoryPress],
+    [handleCategoryPress, scheme],
   );
 
   const renderQuickActionItem = useCallback(
@@ -389,7 +422,10 @@ export function SearchScreen() {
         <Button
           key={item.query}
           haptic='selection'
-          style={styles.quickActionChip}
+          style={[
+            styles.quickActionChip,
+            { backgroundColor: theme.color.surfaceAlpha[scheme] },
+          ]}
           onPress={() => handleQuickActionPress(item.query)}
         >
           <Text type='sm' weight='semibold' style={styles.quickActionTitle}>
@@ -398,14 +434,19 @@ export function SearchScreen() {
         </Button>
       );
     },
-    [handleQuickActionPress],
+    [handleQuickActionPress, scheme],
   );
 
   const showSearchHistory =
     query.trim().length === 0 && searchHistoryQueries.length > 0;
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <SearchInputBar
         ref={searchBarRef}
         onCancel={handleClearSearch}
@@ -548,7 +589,6 @@ function SearchResultsList({
 
 const styles = StyleSheet.create({
   categoryResultImage: {
-    borderColor: theme.colorBorderSecondary,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius6,
     borderWidth: 1,
@@ -568,7 +608,6 @@ const styles = StyleSheet.create({
     paddingVertical: theme.space8,
   },
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   filterBar: {
@@ -580,7 +619,6 @@ const styles = StyleSheet.create({
     paddingTop: theme.space4,
   },
   quickActionChip: {
-    backgroundColor: theme.colorSurfaceAlpha,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     paddingHorizontal: theme.space16,
@@ -605,13 +643,9 @@ const styles = StyleSheet.create({
   resultsList: {
     flex: 1,
   },
-  rowPressed: {
-    backgroundColor: theme.color.surfacePressed.dark,
-  },
   separator: {
-    backgroundColor: theme.color.border.dark,
     height: StyleSheet.hairlineWidth,
-    marginStart: 91,
+    marginStart: RESULT_SEPARATOR_INSET,
   },
   sectionHeader: {
     gap: 2,

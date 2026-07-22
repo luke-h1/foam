@@ -37,7 +37,7 @@ function summariseHomogeneousArray(value: unknown[]): string | null {
  * Bounds an arbitrary value to a small, safe shape for logging and crash
  * reporting: caps string length, previews long arrays, summarises emote
  * arrays, limits object breadth, and breaks circular references. Used both for
- * the console log message and — critically — for the metadata forwarded to
+ * the console log message and - critically - for the metadata forwarded to
  * Sentry, so a caller passing a huge object (an emote list, a WebSocket
  * payload, an API response) can't blow up envelope serialization on-device.
  */

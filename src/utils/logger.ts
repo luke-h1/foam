@@ -240,11 +240,9 @@ const baseLogger = rnlogger.createLogger({
       warn: 'yellowBright',
       error: 'redBright',
     },
-    extensionColors: {
-      ...Object.fromEntries(
-        Object.entries(loggingConfig).map(([k, v]) => [k, v.color]),
-      ),
-    },
+    extensionColors: Object.fromEntries(
+      Object.entries(loggingConfig).map(([k, v]) => [k, v.color]),
+    ),
   },
   enabledExtensions: Object.entries(loggingConfig).flatMap(([k, s]) =>
     s.enabled ? [k] : [],

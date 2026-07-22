@@ -1,23 +1,30 @@
 import { memo } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useColorScheme } from 'react-native';
 
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
 import type { EmoteMenuIcon as EmoteMenuIconType } from '@app/components/Chat/components/EmoteSheet/util/emoteMenuData';
 import { Image } from '@app/components/Image/Image';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
+import { type ColorScheme, theme } from '@app/styles/themes';
 import { isBrandIcon } from '@app/utils/typescript/type-guards/isBrandIcon';
 
-const PROVIDER_ACCENT_COLORS: Partial<Record<EmoteMenuIconType, string>> = {
-  twitch: theme.colorPlum,
-  stv: theme.colorWhite,
-  ffz: theme.colorPrimary,
-  bttv: theme.colorOrange,
-};
+const getProviderAccentColors = (
+  scheme: ColorScheme,
+): Partial<Record<EmoteMenuIconType, string>> => ({
+  twitch: theme.color.twitch[scheme],
+  stv: theme.color.text[scheme],
+  ffz: theme.color.accent[scheme],
+  bttv: theme.color.orange[scheme],
+});
 
-const getProviderAccentColor = (icon: EmoteMenuIconType) =>
-  PROVIDER_ACCENT_COLORS[icon] ?? theme.color.text.dark;
+const PROVIDER_ACCENT_COLORS = {
+  light: getProviderAccentColors('light'),
+  dark: getProviderAccentColors('dark'),
+} as const;
+
+const getProviderAccentColor = (icon: EmoteMenuIconType, scheme: ColorScheme) =>
+  PROVIDER_ACCENT_COLORS[scheme][icon] ?? theme.color.text[scheme];
 
 interface EmoteMenuIconProps {
   fallbackLabel?: string;
@@ -30,6 +37,9 @@ function EmoteMenuIconComponent({
   icon,
   isActive,
 }: EmoteMenuIconProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   if (icon.startsWith('avatar:')) {
     return (
       <Image
@@ -50,8 +60,11 @@ function EmoteMenuIconComponent({
       <Text
         style={[
           styles.fallbackIconLabel,
-          styles.ffzTextIcon,
-          isActive && styles.ffzTextIconActive,
+          {
+            color: isActive
+              ? theme.color.text[scheme]
+              : theme.color.accent[scheme],
+          },
         ]}
       >
         FFZ
@@ -65,7 +78,9 @@ function EmoteMenuIconComponent({
         name='play.tv.fill'
         size={16}
         tintColor={
-          isActive ? theme.color.text.dark : getProviderAccentColor(icon)
+          isActive
+            ? theme.color.text[scheme]
+            : getProviderAccentColor(icon, scheme)
         }
       />
     );
@@ -76,13 +91,21 @@ function EmoteMenuIconComponent({
       <BrandIcon
         name={icon}
         size='sm'
-        color={isActive ? theme.color.text.dark : getProviderAccentColor(icon)}
+        color={
+          isActive
+            ? theme.color.text[scheme]
+            : getProviderAccentColor(icon, scheme)
+        }
       />
     );
   }
 
   return fallbackLabel ? (
-    <Text style={styles.fallbackIconLabel}>{fallbackLabel}</Text>
+    <Text
+      style={[styles.fallbackIconLabel, { color: theme.color.text[scheme] }]}
+    >
+      {fallbackLabel}
+    </Text>
   ) : null;
 }
 
@@ -104,14 +127,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   fallbackIconLabel: {
-    color: theme.color.text.dark,
     fontSize: 11,
     fontWeight: '700',
-  },
-  ffzTextIcon: {
-    color: theme.colorPrimary,
-  },
-  ffzTextIconActive: {
-    color: theme.color.text.dark,
   },
 });

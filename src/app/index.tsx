@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import { Redirect, router } from 'expo-router';
 
@@ -13,6 +13,8 @@ import { theme } from '@app/styles/themes';
 
 export default function IndexRoute() {
   const { authState, ready } = useAuthContext();
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const hasSeenOnboarding = storageMMKV.getBoolean(ONBOARDING_SEEN_KEY);
 
   // E2E builds wipe app data on every launch, so onboarding would otherwise
@@ -23,7 +25,12 @@ export default function IndexRoute() {
 
   if (!ready) {
     return (
-      <View style={styles.skeletonContainer}>
+      <View
+        style={[
+          styles.skeletonContainer,
+          { backgroundColor: theme.color.background[scheme] },
+        ]}
+      >
         {Array.from({ length: 6 }).map((_, index) => (
           // eslint-disable-next-line react/no-array-index-key
           <LiveStreamCardSkeleton key={index} />
@@ -34,7 +41,12 @@ export default function IndexRoute() {
 
   if (!authState) {
     return (
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: theme.color.background[scheme] },
+        ]}
+      >
         <Text type='lg' align='center' style={styles.message}>
           Authentication state is not ready.
         </Text>
@@ -59,7 +71,6 @@ export default function IndexRoute() {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.dark,
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: theme.space28,
@@ -68,7 +79,6 @@ const styles = StyleSheet.create({
     marginTop: theme.space16,
   },
   skeletonContainer: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
     paddingTop: theme.space84,
   },

@@ -344,7 +344,7 @@ export const useChatScroll = ({
     }
 
     /**
-     * Re-snap to the newest row whenever we're pinned to the bottom — not just
+     * Re-snap to the newest row whenever we're pinned to the bottom - not just
      * in the short window after an explicit scroll-to-bottom. Native
      * maintainScrollAtEnd only re-pins within maintainScrollAtEndThreshold
      * (10% of the viewport), so a tall under-estimated emote/username row lands

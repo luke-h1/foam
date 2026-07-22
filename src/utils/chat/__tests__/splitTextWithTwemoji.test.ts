@@ -2,7 +2,7 @@ import type { TwemojiResult } from '../splitTextWithTwemoji';
 import { splitTextWithTwemoji } from '../splitTextWithTwemoji';
 
 const TWEMOJI_BASE =
-  'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg';
+  'https://cdn.jsdelivr.net/gh/jdecked/twemoji@50c7abfe6813680455781862f7b34305cd1eb9f5/assets/svg';
 
 describe('splitTextWithTwemoji', () => {
   test('splits plain text and emoji into segments', () => {

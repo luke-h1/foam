@@ -1,6 +1,9 @@
 import { fireEvent } from '@testing-library/react-native';
 
-import { getPreferences, replacePreferences } from '@app/store/preferenceStore';
+import {
+  getPreferences,
+  replacePreferences,
+} from '@app/store/preferences/state';
 import render from '@app/test/render';
 
 import { SettingsSheet } from '../SettingsSheet';

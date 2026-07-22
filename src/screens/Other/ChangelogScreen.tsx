@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, useColorScheme, View } from 'react-native';
 
 import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
@@ -43,18 +43,33 @@ All notable changes to this project will be documented in this file.
 `;
 
 export function ChangelogScreen() {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const scrollRef = useRef<ScrollView>(null);
 
   useScrollToTop(scrollRef);
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <ScrollView
         ref={scrollRef}
         contentInsetAdjustmentBehavior='automatic'
         contentContainerStyle={styles.content}
       >
-        <View style={styles.card}>
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.color.backgroundAltAlpha[scheme],
+              borderColor: theme.color.border[scheme],
+            },
+          ]}
+        >
           <Text variant='mono' type='xs' style={styles.changelogText}>
             {mockChangelog}
           </Text>
@@ -66,8 +81,6 @@ export function ChangelogScreen() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.color.background.darkAltAlpha,
-    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: 1,
@@ -78,7 +91,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   content: {

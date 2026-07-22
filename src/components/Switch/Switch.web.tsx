@@ -3,6 +3,7 @@ import {
   StyleSheet,
   Switch as NativeSwitch,
   type SwitchProps as NativeSwitchProps,
+  useColorScheme,
 } from 'react-native';
 
 import { useObservable, useSelector } from '@legendapp/state/react';
@@ -18,6 +19,8 @@ export const Switch = memo(function Switch({
   value,
   ...props
 }: NativeSwitchProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const displayValue$ = useObservable(Boolean(value));
   const displayValue = useSelector(displayValue$);
 
@@ -40,14 +43,14 @@ export const Switch = memo(function Switch({
         disabled: disabled ?? accessibilityState?.disabled,
       }}
       disabled={disabled}
-      ios_backgroundColor={theme.color.backgroundTertiary.dark}
+      ios_backgroundColor={theme.color.backgroundTertiary[scheme]}
       onValueChange={handleValueChange}
       style={[styles.switch, style]}
       thumbColor={theme.colorWhite}
       trackColor={
         trackColor ?? {
-          false: theme.color.backgroundTertiary.dark,
-          true: theme.colorPrimary,
+          false: theme.color.backgroundTertiary[scheme],
+          true: theme.color.accent[scheme],
         }
       }
       value={displayValue}

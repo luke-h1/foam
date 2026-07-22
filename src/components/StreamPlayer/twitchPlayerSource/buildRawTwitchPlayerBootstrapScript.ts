@@ -146,9 +146,11 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     installControlHiderStyle();
     hideElements();
 
-    // The player DOM mutates constantly; running the selector sweep on every
-    // mutation burned WebContent CPU for no benefit since the injected CSS
-    // already hides new nodes. Coalesce bursts into one sweep per 250ms.
+    /**
+     * The player DOM mutates constantly; running the selector sweep on every
+     * mutation burned WebContent CPU for no benefit since the injected CSS
+     * already hides new nodes. Coalesce bursts into one sweep per 250ms.
+     */
     var hideQueued = false;
     function scheduleHideElements() {
       if (hideQueued) {
@@ -194,11 +196,13 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     });
   }
 
-  // Hide captions by switching the first text track to 'hidden' (never
-  // 'disabled'). 'disabled' makes WKWebView's native HLS AVPlayer drop and
-  // renegotiate the rendition, which stalls playback; 'hidden' keeps the track
-  // loaded but unrendered. No ::-webkit-media-text-track CSS for the same
-  // reason. Re-applied on playing/pause since Twitch re-enables CC across ads.
+  /**
+   * Hide captions by switching the first text track to 'hidden' (never
+   * 'disabled'). 'disabled' makes WKWebView's native HLS AVPlayer drop and
+   * renegotiate the rendition, which stalls playback; 'hidden' keeps the track
+   * loaded but unrendered. No ::-webkit-media-text-track CSS for the same
+   * reason. Re-applied on playing/pause since Twitch re-enables CC across ads.
+   */
   function hideCaptions(video) {
     try {
       if (video && video.textTracks && video.textTracks.length > 0) {
@@ -340,11 +344,13 @@ export function buildRawTwitchPlayerBootstrapScript(options: {
     }
   }
 
-  // Watches for the playback position freezing while the player believes it
-  // is playing (silent HLS death, decoder stall). The compositor blank found
-  // in the TestFlight investigation is invisible to the page, so this only
-  // covers stalls the video element itself experiences — but those were
-  // previously just as silent.
+  /**
+   * Watches for the playback position freezing while the player believes it
+   * is playing (silent HLS death, decoder stall). The compositor blank found
+   * in the TestFlight investigation is invisible to the page, so this only
+   * covers stalls the video element itself experiences - but those were
+   * previously just as silent.
+   */
   var watchdogStarted = false;
   var watchdogLastTime = -1;
   var stalledAtMs = 0;

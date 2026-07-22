@@ -1,12 +1,12 @@
 import { memo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
-import { theme } from '@app/styles/themes';
+import { type ColorScheme, theme } from '@app/styles/themes';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
-import { lightenColor } from '@app/utils/color/lightenColor';
+import { cachedLighten } from '@app/utils/chat/resolveCachedSenderColor/cachedLighten';
 
 import { PaintedUsername } from '../ChatMessage/CosmeticUsername/PaintedUsername';
 
@@ -27,8 +27,16 @@ function getMessagePartKey(part: ParsedPart, occurrence: number): string {
   }
 }
 
-function renderMessagePart(part: ParsedPart, occurrence: number) {
+function renderMessagePart(
+  part: ParsedPart,
+  occurrence: number,
+  scheme: ColorScheme,
+) {
   const key = getMessagePartKey(part, occurrence);
+  const messageTextStyle = [
+    styles.messageText,
+    { color: theme.color.text[scheme] },
+  ];
 
   switch (part.type) {
     case 'emote':
@@ -49,14 +57,14 @@ function renderMessagePart(part: ParsedPart, occurrence: number) {
     case 'mention':
     case 'text':
       return (
-        <Text key={key} style={styles.messageText}>
+        <Text key={key} style={messageTextStyle}>
           {part.content}
         </Text>
       );
     default:
       if ('content' in part && typeof part.content === 'string') {
         return (
-          <Text key={key} style={styles.messageText}>
+          <Text key={key} style={messageTextStyle}>
             {part.content}
           </Text>
         );
@@ -69,13 +77,23 @@ export const MessageActionPreview = memo(function MessageActionPreview({
   message,
   username,
 }: MessageActionPreviewProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const previewUsernameColor = username
-    ? lightenColor(generateRandomTwitchColor(username))
+    ? cachedLighten(generateRandomTwitchColor(username))
     : null;
   const partKeyCounts = new Map<string, number>();
 
   return (
-    <View style={styles.previewCard}>
+    <View
+      style={[
+        styles.previewCard,
+        {
+          backgroundColor: theme.color.surfaceAlpha[scheme],
+          borderColor: theme.color.border[scheme],
+        },
+      ]}
+    >
       <View style={styles.messageLine}>
         {username ? (
           <PaintedUsername
@@ -88,7 +106,7 @@ export const MessageActionPreview = memo(function MessageActionPreview({
           const baseKey = getMessagePartKey(part, 0).replace(/:\d+$/, '');
           const occurrence = partKeyCounts.get(baseKey) ?? 0;
           partKeyCounts.set(baseKey, occurrence + 1);
-          return renderMessagePart(part, occurrence);
+          return renderMessagePart(part, occurrence, scheme);
         })}
       </View>
     </View>
@@ -107,13 +125,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   messageText: {
-    color: theme.color.text.dark,
     fontSize: theme.fontSize14,
     lineHeight: theme.fontSize14 * 1.4,
   },
   previewCard: {
-    backgroundColor: 'rgba(255,255,255,0.045)',
-    borderColor: 'rgba(255,255,255,0.075)',
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     borderWidth: 1,

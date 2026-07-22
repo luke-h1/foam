@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -43,14 +43,34 @@ function CommandSuggestionItem({
   item: SlashCommandDefinition;
   onPress: (command: SlashCommandDefinition) => void;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const railColors = suggestionRailColors[scheme];
+
   return (
-    <Button style={styles.suggestionItem} onPress={() => onPress(item)}>
+    <Button
+      style={[
+        styles.suggestionItem,
+        {
+          backgroundColor: railColors.chipBackground,
+          borderColor: railColors.chipBorder,
+        },
+      ]}
+      onPress={() => onPress(item)}
+    >
       <View style={styles.commandTextContainer}>
-        <Text style={styles.commandName} numberOfLines={1} ellipsizeMode='tail'>
+        <Text
+          style={[styles.commandName, { color: railColors.text }]}
+          numberOfLines={1}
+          ellipsizeMode='tail'
+        >
           /{item.name}
         </Text>
         <Text
-          style={styles.commandDescription}
+          style={[
+            styles.commandDescription,
+            { color: railColors.secondaryText },
+          ]}
           numberOfLines={1}
           ellipsizeMode='tail'
         >
@@ -66,17 +86,18 @@ export const CommandSuggestions = memo(function CommandSuggestions({
   handleCommandSelect,
 }: CommandSuggestionsProps) {
   const { t } = useTranslation('chat');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const railStyles = suggestionRailStyles[scheme];
   const extraData = useMemo<CommandSuggestionListExtra>(
     () => ({ onPress: handleCommandSelect }),
     [handleCommandSelect],
   );
 
   return (
-    <View style={suggestionRailStyles.richWrapper}>
-      <View style={suggestionRailStyles.richContainer}>
-        <Text style={suggestionRailStyles.headerLabel}>
-          {t('composer.commands')}
-        </Text>
+    <View style={railStyles.richWrapper}>
+      <View style={railStyles.richContainer}>
+        <Text style={railStyles.headerLabel}>{t('composer.commands')}</Text>
         <LegendList
           data={commands}
           horizontal
@@ -95,12 +116,10 @@ export const CommandSuggestions = memo(function CommandSuggestions({
 
 const styles = StyleSheet.create({
   commandDescription: {
-    color: suggestionRailColors.secondaryText,
     flexShrink: 1,
     fontSize: theme.fontSize12,
   },
   commandName: {
-    color: suggestionRailColors.text,
     flexShrink: 1,
     fontSize: theme.fontSize14,
     fontWeight: '600',
@@ -116,8 +135,6 @@ const styles = StyleSheet.create({
   },
   suggestionItem: {
     alignItems: 'center',
-    backgroundColor: suggestionRailColors.chipBackground,
-    borderColor: suggestionRailColors.chipBorder,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: 1,

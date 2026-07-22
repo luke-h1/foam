@@ -56,9 +56,19 @@ describe('getMessageStructure', () => {
     });
   });
 
-  test('returns the cached reference for the same parts array', () => {
-    const message = [text('cached')];
+  test('recomputes when the same array is mutated to contain an emote', () => {
+    const message = [text('LO')];
 
-    expect(getMessageStructure(message)).toBe(getMessageStructure(message));
+    expect(getMessageStructure(message)).toEqual<MessageStructure>({
+      canBeInline: true,
+      containsEmotes: false,
+    });
+
+    message[0] = emote('LO');
+
+    expect(getMessageStructure(message)).toEqual<MessageStructure>({
+      canBeInline: true,
+      containsEmotes: true,
+    });
   });
 });

@@ -15,7 +15,7 @@ import {
   usePreference,
   usePreferences,
   useUpdatePreferences,
-} from '@app/store/preferenceStore';
+} from '@app/store/preferences/selectors';
 
 import { Chat } from '../Chat';
 import { useChatMessages } from '../hooks/useChatMessages';
@@ -36,9 +36,11 @@ jest.mock('@app/context/AuthContext', () => ({
   }),
 }));
 
-// The chat pipeline mounts the dev-only synthetic flood (useChat), now gated on
-// dev-tools access. This suite never activates the flood; stub access so it
-// stays inert without pulling remote-config / a QueryClient into the render.
+/**
+ * The chat pipeline mounts the dev-only synthetic flood (useChat), now gated on
+ * dev-tools access. This suite never activates the flood; stub access so it
+ * stays inert without pulling remote-config / a QueryClient into the render.
+ */
 jest.mock('@app/utils/devTools/devToolsGate', () => ({
   useDevToolsAccess: () => 'denied',
 }));
@@ -172,13 +174,18 @@ jest.mock('@app/store/chat/actions/messages', () => ({
   updateMessage: jest.fn(),
 }));
 
-jest.mock('@app/store/preferenceStore', () => ({
+jest.mock('@app/store/preferences/state', () => ({
+  ...jest.requireActual('@app/store/preferences/state'),
   getPreferences: jest.fn(() => ({
     chatTimestampFormat: '24h',
     chatScrollback: 150,
     deletedMessageStyle: 'notice',
     ignoreClearChat: false,
   })),
+}));
+
+jest.mock('@app/store/preferences/selectors', () => ({
+  ...jest.requireActual('@app/store/preferences/selectors'),
   useChatRenderPreferences: jest.fn(),
   usePreference: jest.fn(),
   usePreferences: jest.fn(),
@@ -356,7 +363,7 @@ const removeBufferedMessageById = jest.fn();
 const setPreferences = (showRecentMessages = true) => {
   const preferences = {
     updatedAt: 0,
-    theme: 'foam-dark',
+    theme: 'dark',
     hapticFeedback: true,
     streamListLayout: 'compact',
     chatDensity: 'compact',

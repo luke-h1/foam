@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -36,9 +36,22 @@ function SwipeableHistoryItem({
   onDelete,
 }: SwipeableHistoryItemProps) {
   const { t } = useTranslation('common');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const translateX = useSharedValue(0);
   const itemHeight = useSharedValue(HISTORY_ROW_HEIGHT);
   const opacity = useSharedValue(1);
+
+  const colorStyles = useMemo(
+    () => ({
+      deleteAction: { backgroundColor: theme.color.danger[scheme] },
+      historyItem: {
+        backgroundColor: theme.color.backgroundSecondary[scheme],
+      },
+      query: { color: theme.color.text[scheme] },
+    }),
+    [scheme],
+  );
 
   const handleDelete = useCallback(() => {
     void impact('light');
@@ -110,7 +123,7 @@ function SwipeableHistoryItem({
     overflow: 'hidden',
   }));
 
-  // The red fill grows with the swipe so it always sits flush behind the row —
+  // The red fill grows with the swipe so it always sits flush behind the row -
   // no bare background peeking through, even on a full swipe-to-delete.
   const animatedDeleteStyle = useAnimatedStyle(() => ({
     width: Math.max(-translateX.get(), 0),
@@ -134,7 +147,13 @@ function SwipeableHistoryItem({
   return (
     <Animated.View style={animatedContainerStyle}>
       <View style={styles.itemContainer}>
-        <Animated.View style={[styles.deleteAction, animatedDeleteStyle]}>
+        <Animated.View
+          style={[
+            styles.deleteAction,
+            colorStyles.deleteAction,
+            animatedDeleteStyle,
+          ]}
+        >
           <PressableArea
             onPress={handleDelete}
             style={styles.deleteActionButton}
@@ -156,18 +175,24 @@ function SwipeableHistoryItem({
         </Animated.View>
 
         <GestureDetector gesture={composedGesture}>
-          <Animated.View style={[styles.historyItem, animatedRowStyle]}>
+          <Animated.View
+            style={[
+              styles.historyItem,
+              colorStyles.historyItem,
+              animatedRowStyle,
+            ]}
+          >
             <SymbolView
               name='clock'
-              tintColor={theme.color.textSecondary.dark}
+              tintColor={theme.color.textSecondary[scheme]}
               size={16}
             />
-            <Text style={styles.query} numberOfLines={1}>
+            <Text style={[styles.query, colorStyles.query]} numberOfLines={1}>
               {query}
             </Text>
             <SymbolView
               name='arrow.up.left'
-              tintColor={theme.color.textSecondary.dark}
+              tintColor={theme.color.textSecondary[scheme]}
               size={16}
             />
           </Animated.View>
@@ -195,6 +220,8 @@ export function SearchHistoryV2({
   onSelectItem,
 }: SearchHistoryV2Props) {
   const { t } = useTranslation(['search', 'common']);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const handleClearAll = useCallback(() => {
     Alert.alert(t('clearSearchHistory'), t('clearSearchHistoryConfirm'), [
       {
@@ -234,7 +261,12 @@ export function SearchHistoryV2({
         </PressableArea>
       </View>
 
-      <View style={styles.historyList}>
+      <View
+        style={[
+          styles.historyList,
+          { backgroundColor: theme.color.border[scheme] },
+        ]}
+      >
         {history.slice(0, MAX_VISIBLE_HISTORY).map(query => (
           <SwipeableHistoryItem
             key={query}
@@ -251,7 +283,6 @@ export function SearchHistoryV2({
 const styles = StyleSheet.create({
   deleteAction: {
     alignItems: 'flex-end',
-    backgroundColor: theme.colorRed,
     bottom: 0,
     justifyContent: 'center',
     overflow: 'hidden',
@@ -285,14 +316,12 @@ const styles = StyleSheet.create({
   },
   historyItem: {
     alignItems: 'center',
-    backgroundColor: theme.color.backgroundSecondary.dark,
     flexDirection: 'row',
     gap: theme.space12,
     height: HISTORY_ROW_HEIGHT,
     paddingHorizontal: theme.space16,
   },
   historyList: {
-    backgroundColor: theme.colorBorderSecondary,
     borderRadius: theme.borderRadius12,
     gap: StyleSheet.hairlineWidth,
     overflow: 'hidden',
@@ -303,7 +332,6 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   query: {
-    color: theme.color.text.dark,
     flex: 1,
     minWidth: 0,
   },

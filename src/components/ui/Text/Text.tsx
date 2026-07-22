@@ -6,6 +6,7 @@ import {
   // eslint-disable-next-line no-restricted-imports
   TextProps as RNTextProps,
   TextStyle,
+  useColorScheme,
 } from 'react-native';
 
 import { getMargin, MarginProps } from '@app/styles/spacing';
@@ -159,9 +160,11 @@ export function Text({
   my,
   ...props
 }: TextProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const effectiveContrast =
     contrast === undefined ? color === 'gray' : contrast;
-  const resolvedColor = resolveThemeColor(color, {
+  const resolvedColor = resolveThemeColor(color, scheme, {
     contrast: effectiveContrast,
     highContrast,
   });

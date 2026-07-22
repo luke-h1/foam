@@ -1,5 +1,5 @@
 import { FC, memo, useMemo, useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { router } from 'expo-router';
@@ -38,6 +38,9 @@ const CategoryStreamsHeader = memo(function CategoryStreamsHeader({
   category,
   totalViewers,
 }: CategoryStreamsHeaderProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
     <ScreenHeader
       size='hero'
@@ -67,7 +70,12 @@ const CategoryStreamsHeader = memo(function CategoryStreamsHeader({
         },
       }}
     >
-      <View style={styles.sectionHeader}>
+      <View
+        style={[
+          styles.sectionHeader,
+          { borderBottomColor: theme.color.border[scheme] },
+        ]}
+      >
         <Text type='sm' weight='semibold' color='gray.textLow'>
           Live Channels
         </Text>
@@ -82,6 +90,8 @@ interface CategoryScreenProps {
 
 export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
   const { t } = useTranslation('stream');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const flashListRef = useRef<FlashListRef<TwitchStream>>(null);
 
   useScrollToTop(flashListRef);
@@ -138,7 +148,12 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <FlashList<TwitchStream>
         ref={flashListRef}
         data={allStreams}
@@ -164,14 +179,12 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   listContent: {
     paddingBottom: theme.space20,
   },
   sectionHeader: {
-    borderBottomColor: theme.color.border.dark,
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space12,

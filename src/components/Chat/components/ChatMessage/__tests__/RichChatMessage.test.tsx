@@ -5,7 +5,7 @@ import { act, fireEvent, render } from '@testing-library/react-native';
 
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
-import { preferences$ } from '@app/store/preferenceStore';
+import { preferences$ } from '@app/store/preferences/state';
 import { theme } from '@app/styles/themes';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
@@ -574,10 +574,12 @@ describe('RichChatMessage', () => {
     });
 
     test('renders emotes as flex views, never nested inside a Text', () => {
-      // An emote nested in a <Text> can only be given a fixed line height,
-      // which baseline-aligns and clips the top of the image. Messages with
-      // emotes must take the flex-wrap path so the row grows to the emote's
-      // full intended size. See UserChatBody renderInline gating.
+      /**
+       * An emote nested in a <Text> can only be given a fixed line height,
+       * which baseline-aligns and clips the top of the image. Messages with
+       * emotes must take the flex-wrap path so the row grows to the emote's
+       * full intended size. See UserChatBody renderInline gating.
+       */
       const emoteData: ParsedPart<'emote'> = {
         type: 'emote',
         content: 'Kappa',
@@ -752,7 +754,7 @@ describe('RichChatMessage', () => {
     );
 
     expect(getByTestId('chat-message')).toHaveStyle({
-      borderLeftColor: theme.colorViolet,
+      borderLeftColor: theme.color.violet.dark,
       borderLeftWidth: 2,
     });
   });

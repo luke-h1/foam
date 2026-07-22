@@ -2,7 +2,7 @@ import { Alert, Platform } from 'react-native';
 
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
-import type { SavedPhrase } from '@app/store/preferenceStore';
+import type { SavedPhrase } from '@app/store/preferences/state';
 
 import { SavedPhrasesScreen } from '../SavedPhrasesScreen';
 
@@ -21,7 +21,8 @@ const mockUpdate = jest.fn((payload: { savedPhrases?: SavedPhrase[] }) => {
   }
 });
 
-jest.mock('@app/store/preferenceStore', () => ({
+jest.mock('@app/store/preferences/selectors', () => ({
+  ...jest.requireActual('@app/store/preferences/selectors'),
   usePreference: () => mockSavedPhrases,
   useUpdatePreferences: () => mockUpdate,
 }));

@@ -1,6 +1,6 @@
 import { twitchBadgeService } from '@app/services/twitch-badge-service';
 import { twitchService } from '@app/services/twitch-service';
-import { getPreferences } from '@app/store/preferenceStore';
+import { getPreferences } from '@app/store/preferences/state';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { logger } from '@app/utils/logger';

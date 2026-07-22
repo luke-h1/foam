@@ -11,7 +11,7 @@ import { getChatBodyInfo } from '@app/components/Chat/util/richChatMessageHelper
 import { getPartIdentity } from '@app/components/Chat/util/richChatMessageHelpers/getPartIdentity';
 import { isUserNoticeTags } from '@app/components/Chat/util/richChatMessageHelpers/isUserNoticeTags';
 import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers/normaliseUsername';
-import { usePreference } from '@app/store/preferenceStore';
+import { usePreference } from '@app/store/preferences/selectors';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 import { findCustomHighlight } from '@app/utils/chat/customHighlights/findCustomHighlight';
@@ -120,9 +120,11 @@ export function useRichChatMessage<
   const rowLongPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
-  // Set from each emote's onTouchStart (which bubbles before the row's), so
-  // the single row-level long-press timer can open the emote sheet without a
-  // Pressable per emote (busy rows would mount hundreds of them).
+  /**
+   * Set from each emote's onTouchStart (which bubbles before the row's), so
+   * the single row-level long-press timer can open the emote sheet without a
+   * Pressable per emote (busy rows would mount hundreds of them).
+   */
   const pressedEmotePartRef = useRef<EmotePressData | null>(null);
 
   useEffect(() => {

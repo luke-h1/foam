@@ -78,9 +78,11 @@ jest.mock('@app/store/chat/react/selectors', () => ({
   useCurrentEmoteData: () => mockEmoteData,
 }));
 
-// The iOS Input binds a SwiftUI TextField through native shared objects that
-// don't exist under jest; the search box isn't part of what this file
-// measures, so swap it for a plain TextInput.
+/**
+ * The iOS Input binds a SwiftUI TextField through native shared objects that
+ * don't exist under jest; the search box isn't part of what this file
+ * measures, so swap it for a plain TextInput.
+ */
 jest.mock('@app/components/ui/Input/Input', () => {
   const React = require('react');
   const { TextInput } = require('react-native');
@@ -129,9 +131,11 @@ for (let owner = 0; owner < 6; owner += 1) {
   };
 }
 
-// A busy channel: ~2,600 emotes across every provider, 7TV split over three
-// sets and subscriber emotes over six channels — the population the sheet's
-// open-path build has to chew through on a real popular stream.
+/**
+ * A busy channel: ~2,600 emotes across every provider, 7TV split over three
+ * sets and subscriber emotes over six channels - the population the sheet's
+ * open-path build has to chew through on a real popular stream.
+ */
 const menuInput: EmoteMenuDataInput = {
   sevenTvChannelEmotes: createEmotes(1200, '7TV Channel', 'stvc', index => {
     const set = SEVENTV_CHANNEL_SETS[index % SEVENTV_CHANNEL_SETS.length]!;
@@ -235,10 +239,12 @@ describe('emote menu performance', () => {
   test('mounts the emote sheet and builds its content', async () => {
     await measureRenders(<EmoteSheetPerfFixture />, {
       ...MEASURE_OPTIONS,
-      // The provider build is rAF-deferred behind the contentReady flag, so
-      // mount alone only renders the spinner; waiting for the provider chips
-      // pulls the deferred O(all emotes) build + first list render into the
-      // measurement.
+      /**
+       * The provider build is rAF-deferred behind the contentReady flag, so
+       * mount alone only renders the spinner; waiting for the provider chips
+       * pulls the deferred O(all emotes) build + first list render into the
+       * measurement.
+       */
       scenario: async screen => {
         await screen.findByText('7TV');
       },

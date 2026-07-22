@@ -46,7 +46,7 @@ export function splitTextWithTwemoji(text: string): TwemojiResult {
   let lastIndex = 0;
 
   twemoji.parse(text, {
-    base: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/',
+    base: 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@50c7abfe6813680455781862f7b34305cd1eb9f5/assets/',
     folder: 'svg',
     ext: '.svg',
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -56,7 +56,7 @@ export function splitTextWithTwemoji(text: string): TwemojiResult {
       );
       const located = locateEmoji(text, emoji, lastIndex);
 
-      // Not present in the source text (icon/text mismatch) — leave the
+      // Not present in the source text (icon/text mismatch) - leave the
       // original characters in the surrounding text segment untouched.
       if (!located) {
         return '';

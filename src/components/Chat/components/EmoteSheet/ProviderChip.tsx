@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 
 import { Button } from '@app/components/Button/Button';
 import type {
@@ -9,7 +9,7 @@ import type {
 import { Text } from '@app/components/ui/Text/Text';
 
 import { EmoteMenuIcon } from './EmoteMenuIcon';
-import { emoteSheetStyles as styles } from './emoteSheetStyles';
+import { emoteSheetStyles } from './emoteSheetStyles';
 
 interface ProviderChipProps {
   isActive: boolean;
@@ -22,6 +22,9 @@ function ProviderChipComponent({
   onSelect,
   provider,
 }: ProviderChipProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = emoteSheetStyles[scheme];
   return (
     <Button
       haptic='selection'

@@ -1,7 +1,13 @@
 /* eslint-disable no-nested-ternary */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-base-to-string */
-import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Platform,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 
 import * as AC from '@bacons/apple-colors';
 
@@ -15,7 +21,7 @@ import {
   useRemoteConfig,
 } from '@app/hooks/firebase/useRemoteConfig';
 import i18next from '@app/i18n/i18next';
-import { theme } from '@app/styles/themes';
+import { type ColorScheme, theme } from '@app/styles/themes';
 
 function getSourceIcon(source: string): SymbolViewProps['name'] {
   switch (source) {
@@ -50,6 +56,8 @@ function formatDefaultValue(rawValue: string): string {
 }
 
 export function RemoteConfigScreen() {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { config, refetch, isRefetching } = useRemoteConfig();
 
   const configKeys = Object.keys(defaultRemoteConfig) as RemoteConfigKey[];
@@ -67,7 +75,10 @@ export function RemoteConfigScreen() {
         <Button
           onPress={handleRefetch}
           disabled={isRefetching}
-          style={styles.fetchButton}
+          style={[
+            styles.fetchButton,
+            { backgroundColor: theme.color.blue[scheme] },
+          ]}
         >
           {isRefetching ? (
             <ActivityIndicator size='small' color='#fff' />
@@ -94,7 +105,12 @@ export function RemoteConfigScreen() {
         <Text type='xs' color='gray.textLow' style={styles.appVariant}>
           App variant: {process.env.EXPO_PUBLIC_APP_VARIANT}
         </Text>
-        <View style={styles.card}>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: theme.color.pressedOverlay[scheme] },
+          ]}
+        >
           {configKeys.map((key, index) => {
             const entry = config[key];
             const serverValue = formatValue(entry.value);
@@ -104,7 +120,11 @@ export function RemoteConfigScreen() {
             return (
               <View
                 key={key}
-                style={[styles.configItem, !isLast && styles.configItemBorder]}
+                style={[
+                  styles.configItem,
+                  !isLast && styles.configItemBorder,
+                  !isLast && { borderBottomColor: theme.color.border[scheme] },
+                ]}
               >
                 <View style={styles.configHeader}>
                   <View style={styles.keyRow}>
@@ -122,7 +142,10 @@ export function RemoteConfigScreen() {
                     </Text>
                   </View>
                   <View
-                    style={[styles.sourceTag, getSourceTagStyle(entry.source)]}
+                    style={[
+                      styles.sourceTag,
+                      getSourceTagStyle(entry.source, scheme),
+                    ]}
                   >
                     <Text type='xs' weight='semibold' color='gray.bg'>
                       {entry.source}
@@ -139,8 +162,21 @@ export function RemoteConfigScreen() {
                     >
                       Server
                     </Text>
-                    <View style={styles.valueBox}>
-                      <Text style={styles.valueText}>
+                    <View
+                      style={[
+                        styles.valueBox,
+                        {
+                          backgroundColor:
+                            theme.color.backgroundAltAlpha[scheme],
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.valueText,
+                          { color: theme.color.accent[scheme] },
+                        ]}
+                      >
                         {serverValue || '(empty)'}
                       </Text>
                     </View>
@@ -154,8 +190,21 @@ export function RemoteConfigScreen() {
                     >
                       Default
                     </Text>
-                    <View style={styles.defaultValueBox}>
-                      <Text style={styles.defaultValueText}>
+                    <View
+                      style={[
+                        styles.defaultValueBox,
+                        {
+                          backgroundColor:
+                            theme.color.backgroundAltAlpha[scheme],
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.defaultValueText,
+                          { color: theme.color.textSecondary[scheme] },
+                        ]}
+                      >
                         {defaultValue || '(empty)'}
                       </Text>
                     </View>
@@ -176,8 +225,19 @@ export function RemoteConfigScreen() {
         >
           LEGEND
         </Text>
-        <View style={styles.card}>
-          <View style={[styles.legendItem, styles.configItemBorder]}>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: theme.color.pressedOverlay[scheme] },
+          ]}
+        >
+          <View
+            style={[
+              styles.legendItem,
+              styles.configItemBorder,
+              { borderBottomColor: theme.color.border[scheme] },
+            ]}
+          >
             <SymbolView
               name='cloud.fill'
               size={16}
@@ -211,7 +271,6 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   card: {
-    backgroundColor: theme.darkActiveContent,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     overflow: 'hidden',
@@ -226,7 +285,6 @@ const styles = StyleSheet.create({
     padding: theme.space16,
   },
   configItemBorder: {
-    borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: 1,
   },
   contentContainer: {
@@ -235,21 +293,18 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   defaultValueBox: {
-    backgroundColor: theme.color.background.darkAltAlpha,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     opacity: 0.7,
     padding: theme.space12,
   },
   defaultValueText: {
-    color: theme.color.textSecondary.dark,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
     fontSize: 12,
     lineHeight: 18,
   },
   fetchButton: {
     alignItems: 'center',
-    backgroundColor: theme.colorBlue,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     flexDirection: 'row',
@@ -284,7 +339,6 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   valueBox: {
-    backgroundColor: theme.color.background.darkAltAlpha,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     padding: theme.space12,
@@ -296,7 +350,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   valueText: {
-    color: theme.colorPrimary,
     fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
     fontSize: 12,
     lineHeight: 18,
@@ -306,13 +359,13 @@ const styles = StyleSheet.create({
   },
 });
 
-function getSourceTagStyle(source: string) {
+function getSourceTagStyle(source: string, scheme: ColorScheme) {
   return {
     backgroundColor:
       source === 'remote'
-        ? theme.colorPrimary
+        ? theme.color.accent[scheme]
         : source === 'default'
-          ? theme.colorOrange
-          : theme.color.text.dark,
+          ? theme.color.orange[scheme]
+          : theme.color.text[scheme],
   };
 }

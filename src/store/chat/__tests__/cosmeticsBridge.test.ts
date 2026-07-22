@@ -432,10 +432,12 @@ describe('applyEntitlementDeleteEvent', () => {
     expect(mockRemoveUserBadge).not.toHaveBeenCalled();
   });
 
-  // Insert one entitlement past the cap so exactly the first-inserted link
-  // (entitlement-0) is evicted while entitlement-1 becomes the boundary
-  // survivor. Deriving the loop bound from the cap keeps the boundary indices
-  // in step with the source constant.
+  /**
+   * Insert one entitlement past the cap so exactly the first-inserted link
+   * (entitlement-0) is evicted while entitlement-1 becomes the boundary
+   * survivor. Deriving the loop bound from the cap keeps the boundary indices
+   * in step with the source constant.
+   */
   const OVER_CAP_INDEX = MAX_SEVEN_TV_USER_LINK_ENTRIES;
   const EVICTED_ENTITLEMENT_INDEX = 0;
   const BOUNDARY_SURVIVOR_INDEX = 1;

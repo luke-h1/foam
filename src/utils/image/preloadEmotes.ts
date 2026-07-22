@@ -3,7 +3,7 @@
  *
  * Warms emote images into expo-image's memory + disk cache so they render
  * instantly (already decoded) the first time they appear in chat. This must
- * target the same cache the chat renderer reads — ChatInlineImage renders via
+ * target the same cache the chat renderer reads - ChatInlineImage renders via
  * expo-image, so preloading goes through ExpoImage.prefetch.
  */
 import { Image as ExpoImage } from 'expo-image';
@@ -36,9 +36,6 @@ function getDisplayEmoteCacheUrls(emote: SanitisedEmote): string[] {
   return Array.from(urls);
 }
 
-/**
- * Preload a batch of emotes in the background
- */
 export async function preloadEmotes(
   emotes: SanitisedEmote[],
   limit = 50,
@@ -46,10 +43,12 @@ export async function preloadEmotes(
   const toPreload: string[] = [];
   const seen = new Set<string>();
 
-  // Keep copy-only variants out of the eager preload path. They remain on the
-  // emote metadata for copy actions, but warming every static/animated scale
-  // would multiply channel-entry network work. Warm only the display URLs
-  // that chat rows actually render.
+  /**
+   * Keep copy-only variants out of the eager preload path. They remain on the
+   * emote metadata for copy actions, but warming every static/animated scale
+   * would multiply channel-entry network work. Warm only the display URLs
+   * that chat rows actually render.
+   */
   for (const emote of emotes) {
     const urls = getDisplayEmoteCacheUrls(emote);
     for (const url of urls) {
@@ -115,9 +114,11 @@ export async function preloadGlobalEmotes(emoteData: {
     ...(emoteData.ffzGlobalEmotes || []),
   ];
 
-  // Kept in step with the shared-ref warm limits (useCachedEmotes) so channel
-  // entry doesn't fire two large, overlapping decode storms that together
-  // starve on-screen animated emotes. The long tail warms on-demand instead.
+  /**
+   * Kept in step with the shared-ref warm limits (useCachedEmotes) so channel
+   * entry doesn't fire two large, overlapping decode storms that together
+   * starve on-screen animated emotes. The long tail warms on-demand instead.
+   */
   await preloadEmotes(allGlobal, 64);
 }
 

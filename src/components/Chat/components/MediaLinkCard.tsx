@@ -1,5 +1,5 @@
-import { memo, useCallback } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { memo, useCallback, useMemo } from 'react';
+import { Pressable, StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useQueries } from '@tanstack/react-query';
@@ -37,6 +37,22 @@ function MediaLinkCardComponent({
   url,
 }: MediaLinkCardProps) {
   const { t } = useTranslation('chat');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const colorStyles = useMemo(
+    () => ({
+      inlineChip: { backgroundColor: theme.color.surfaceAlpha[scheme] },
+      inlineTitle: { color: theme.color.text[scheme] },
+      mediaCard: {
+        backgroundColor: theme.color.backgroundAltAlpha[scheme],
+        borderColor: theme.color.border[scheme],
+      },
+      mediaEyebrow: { color: theme.color.twitch[scheme] },
+      mediaMeta: { color: theme.color.textSecondary[scheme] },
+      mediaTitle: { color: theme.color.text[scheme] },
+    }),
+    [scheme],
+  );
   const twitchClipId = getTwitchClipIdFromUrl(url);
   const [sevenTvEmote, twitchClip] = useQueries({
     queries: [
@@ -116,7 +132,7 @@ function MediaLinkCardComponent({
   if (layout === 'inline' && type === 'stvEmote') {
     if (isPending) {
       return (
-        <View style={styles.inlineChip}>
+        <View style={[styles.inlineChip, colorStyles.inlineChip]}>
           <Skeleton shimmer={false} style={styles.inlineThumbnail} />
           <Skeleton shimmer={false} style={styles.inlineTitleSkeleton} />
         </View>
@@ -129,6 +145,7 @@ function MediaLinkCardComponent({
         onPress={handlePress}
         style={({ pressed }) => [
           styles.inlineChip,
+          colorStyles.inlineChip,
           pressed && { opacity: 0.7 },
         ]}
       >
@@ -140,7 +157,11 @@ function MediaLinkCardComponent({
             contentFit='contain'
           />
         ) : null}
-        <Text ellipsizeMode='tail' numberOfLines={1} style={styles.inlineTitle}>
+        <Text
+          ellipsizeMode='tail'
+          numberOfLines={1}
+          style={[styles.inlineTitle, colorStyles.inlineTitle]}
+        >
           {title}
         </Text>
         <BrandIcon name='stv' size='xs' />
@@ -150,7 +171,9 @@ function MediaLinkCardComponent({
 
   if (isPending && !thumbnail) {
     return (
-      <View style={[styles.mediaContainer, styles.mediaCard]}>
+      <View
+        style={[styles.mediaContainer, styles.mediaCard, colorStyles.mediaCard]}
+      >
         <Skeleton shimmer={false} style={styles.mediaThumbnailFrame} />
         <View style={styles.mediaInfo}>
           <Skeleton shimmer={false} style={styles.mediaTitleSkeleton} />
@@ -167,7 +190,7 @@ function MediaLinkCardComponent({
       style={styles.mediaContainer}
       onPress={handlePress}
     >
-      <View style={styles.mediaCard}>
+      <View style={[styles.mediaCard, colorStyles.mediaCard]}>
         <View style={styles.mediaThumbnailFrame}>
           {thumbnail ? (
             <Image
@@ -182,7 +205,7 @@ function MediaLinkCardComponent({
                 <SymbolView
                   name='play.tv.fill'
                   size={16}
-                  tintColor={theme.colorPlum}
+                  tintColor={theme.color.twitch[scheme]}
                 />
               ) : (
                 <BrandIcon name='stv' size='sm' />
@@ -205,21 +228,27 @@ function MediaLinkCardComponent({
               <SymbolView
                 name='play.tv.fill'
                 size={12}
-                tintColor={theme.colorPlum}
+                tintColor={theme.color.twitch[scheme]}
               />
             ) : (
               <BrandIcon name='stv' size='xs' />
             )}
-            <Text style={styles.mediaEyebrow}>{mediaLabel}</Text>
+            <Text style={[styles.mediaEyebrow, colorStyles.mediaEyebrow]}>
+              {mediaLabel}
+            </Text>
           </View>
           <Text
             ellipsizeMode='tail'
             numberOfLines={1}
-            style={styles.mediaTitle}
+            style={[styles.mediaTitle, colorStyles.mediaTitle]}
           >
             {title}
           </Text>
-          <Text ellipsizeMode='tail' numberOfLines={1} style={styles.mediaMeta}>
+          <Text
+            ellipsizeMode='tail'
+            numberOfLines={1}
+            style={[styles.mediaMeta, colorStyles.mediaMeta]}
+          >
             {mediaMeta}
           </Text>
         </View>
@@ -237,8 +266,6 @@ function formatCompactNumber(value: number): string {
 const styles = StyleSheet.create({
   mediaCard: {
     alignItems: 'center',
-    backgroundColor: 'rgba(12, 12, 14, 0.94)',
-    borderColor: 'rgba(255, 255, 255, 0.10)',
     borderCurve: 'continuous',
     borderRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
@@ -251,8 +278,7 @@ const styles = StyleSheet.create({
     maxWidth: 260,
   },
   mediaEyebrow: {
-    color: theme.color.brand.twitchBorder,
-    fontSize: 10,
+    fontSize: theme.fontSize10,
     fontWeight: '700',
     letterSpacing: 0,
     lineHeight: 12,
@@ -271,8 +297,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   mediaMeta: {
-    color: theme.color.textSecondary.dark,
-    fontSize: 11,
+    fontSize: theme.fontSize11,
     lineHeight: 13,
   },
   mediaMetaSkeleton: {
@@ -301,7 +326,6 @@ const styles = StyleSheet.create({
     width: 88,
   },
   mediaTitle: {
-    color: theme.color.text.dark,
     fontSize: theme.fontSize12,
     fontWeight: '600',
     lineHeight: 15,
@@ -330,7 +354,6 @@ const styles = StyleSheet.create({
   inlineChip: {
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
     borderCurve: 'continuous',
     borderRadius: 6,
     flexDirection: 'row',
@@ -346,7 +369,6 @@ const styles = StyleSheet.create({
     width: 28,
   },
   inlineTitle: {
-    color: theme.color.text.dark,
     flexShrink: 1,
     fontSize: theme.fontSize12,
     lineHeight: 15,

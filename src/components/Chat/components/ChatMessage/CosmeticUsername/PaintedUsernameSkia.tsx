@@ -1,5 +1,5 @@
 import { type ReactNode, useMemo } from 'react';
-import { PixelRatio } from 'react-native';
+import { PixelRatio, useColorScheme } from 'react-native';
 
 import {
   Canvas,
@@ -51,7 +51,7 @@ function paintMaskNode(bitmaps: PaintBitmaps): ReactNode {
 }
 
 /**
- * Overlay frame from the shared per-URL animation clock — advances on the UI
+ * Overlay frame from the shared per-URL animation clock - advances on the UI
  * thread for both stretch and tiled URL layers (animated WebP/GIF included),
  * in phase with every other row using the same paint texture.
  */
@@ -248,9 +248,12 @@ function PaintBitmapCanvas({ bitmaps }: { bitmaps: PaintBitmaps }) {
 export function PaintedUsernameSkia({
   username,
   paint,
-  fallbackColor = theme.color.text.dark,
+  fallbackColor: fallbackColorProp,
   fontSize = chatLineMetrics.comfortable.fontSize,
 }: PaintedUsernameSkiaProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const fallbackColor = fallbackColorProp ?? theme.color.text[scheme];
   const fontProvider = useSkiaPaintFontProvider();
   const pixelRatio = PixelRatio.get();
 
@@ -276,7 +279,7 @@ export function PaintedUsernameSkia({
         style={{
           ...chatLineMetrics.comfortable,
           fontSize,
-          fontWeight: 'bold',
+          fontWeight: '700',
           color: fallbackColor,
         }}
       >

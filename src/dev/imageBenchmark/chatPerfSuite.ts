@@ -1,6 +1,8 @@
-// DEV-ONLY: deterministic Chat Perf suite definition. Each phase pins a flood
-// preset; the fixture replay is restarted at each measure window
-// (resetFloodReplay) so each run feeds a byte-identical message stream.
+/**
+ * DEV-ONLY: deterministic Chat Perf suite definition. Each phase pins a flood
+ * preset; the fixture replay is restarted at each measure window
+ * (resetFloodReplay) so each run feeds a byte-identical message stream.
+ */
 
 export interface SuitePhase {
   preset: string;

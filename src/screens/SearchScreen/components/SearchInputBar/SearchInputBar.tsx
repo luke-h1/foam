@@ -1,5 +1,5 @@
 import { useImperativeHandle, useRef } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, useColorScheme, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 
 import { SymbolView } from '@app/components/ui/Icon/Icon';
@@ -16,6 +16,8 @@ export function SearchInputBar({
   onSubmit,
 }: SearchInputBarProps) {
   const inputRef = useRef<TextInput | null>(null);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   useImperativeHandle(ref, () => ({
     setText: text => onChangeText(text),
@@ -27,11 +29,16 @@ export function SearchInputBar({
   const hasValue = value.length > 0;
 
   return (
-    <View style={styles.wrap}>
+    <View
+      style={[
+        styles.wrap,
+        { backgroundColor: theme.color.surfaceAlpha[scheme] },
+      ]}
+    >
       <SymbolView
         name='magnifyingglass'
         style={styles.icon}
-        tintColor={theme.color.textSecondary.dark}
+        tintColor={theme.color.textSecondary[scheme]}
       />
       <TextInput
         ref={inputRef}
@@ -41,9 +48,9 @@ export function SearchInputBar({
         onChangeText={onChangeText}
         onSubmitEditing={event => onSubmit(event.nativeEvent.text)}
         placeholder={placeholder}
-        placeholderTextColor={theme.color.textSecondary.dark}
+        placeholderTextColor={theme.color.textSecondary[scheme]}
         returnKeyType='search'
-        style={styles.input}
+        style={[styles.input, { color: theme.color.text[scheme] }]}
         testID='search-input'
         value={value}
       />
@@ -53,7 +60,7 @@ export function SearchInputBar({
           onPress={onCancel}
           style={styles.clearButton}
         >
-          <SymbolView name='xmark' tintColor={theme.color.text.dark} />
+          <SymbolView name='xmark' tintColor={theme.color.text[scheme]} />
         </Pressable>
       )}
     </View>
@@ -70,11 +77,9 @@ const styles = StyleSheet.create({
     width: 22,
   },
   icon: {
-    color: theme.color.textSecondary.dark,
     opacity: 0.7,
   },
   input: {
-    color: theme.color.text.dark,
     flex: 1,
     fontSize: theme.fontSize16,
     fontWeight: '400',
@@ -83,7 +88,6 @@ const styles = StyleSheet.create({
   },
   wrap: {
     alignItems: 'center',
-    backgroundColor: theme.colorSurfaceAlpha,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     flexDirection: 'row',

@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: theme.space20,
-    paddingHorizontal: theme.space20,
+    paddingHorizontal: theme.space16,
   },
   subtitle: {
     marginTop: theme.space8,

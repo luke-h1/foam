@@ -88,9 +88,11 @@ jest.mock('@legendapp/list/section-list', () => ({
   },
 }));
 
-// The preview sheets pull in expo-media-library (via useSaveImageToGallery)
-// and are exercised by their own tests; stub them here to keep this screen test
-// focused on the viewer's data wiring.
+/**
+ * The preview sheets pull in expo-media-library (via useSaveImageToGallery)
+ * and are exercised by their own tests; stub them here to keep this screen test
+ * focused on the viewer's data wiring.
+ */
 jest.mock(
   '@app/components/Chat/components/EmotePreviewSheet/EmotePreviewSheet',
   () => ({ EmotePreviewSheet: () => null }),

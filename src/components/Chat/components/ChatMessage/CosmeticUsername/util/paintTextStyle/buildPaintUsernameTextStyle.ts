@@ -2,10 +2,12 @@ import type { TextStyle } from 'react-native';
 
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
-// Paint-pure derivations, memoised on the paint object so every user wearing a
-// shared paint reuses one computed result (the 7TV extension computes each
-// paint's style once, not per user). WeakMap-keyed so entries drop with the
-// paint; no eviction needed.
+/**
+ * Paint-pure derivations, memoised on the paint object so every user wearing a
+ * shared paint reuses one computed result (the 7TV extension computes each
+ * paint's style once, not per user). WeakMap-keyed so entries drop with the
+ * paint; no eviction needed.
+ */
 const textStyleCache = new WeakMap<PaintData, TextStyle>();
 
 /**

@@ -1,5 +1,5 @@
 import { memo, useCallback, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useQuery } from '@tanstack/react-query';
@@ -27,6 +27,8 @@ interface MyClipListItem {
 
 const MyClipRow = memo(function MyClipRow({ clip, record }: MyClipListItem) {
   const { t } = useTranslation('stream');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   const handlePress = useCallback(() => {
     router.push(`/streams/clip/${encodeURIComponent(record.id)}`);
@@ -62,7 +64,12 @@ const MyClipRow = memo(function MyClipRow({ clip, record }: MyClipListItem) {
           transition={150}
         />
       ) : (
-        <View style={[styles.thumbnailWrapper, styles.thumbnailEmpty]} />
+        <View
+          style={[
+            styles.thumbnailWrapper,
+            { backgroundColor: theme.color.pressedOverlay[scheme] },
+          ]}
+        />
       )}
       <View style={styles.rowText}>
         <Text numberOfLines={2} type='sm' weight='semibold'>
@@ -91,6 +98,8 @@ function myClipKeyExtractor(item: MyClipListItem): string {
 
 export function MyClipsScreen() {
   const { t } = useTranslation('stream');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const records = useCreatedClips();
   const clipIds = useMemo(() => records.map(record => record.id), [records]);
 
@@ -118,13 +127,21 @@ export function MyClipsScreen() {
         content={t('myClipsEmptyDescription')}
         heading={t('myClipsEmpty')}
         iconName='scissors'
-        style={styles.emptyState}
+        style={[
+          styles.emptyState,
+          { backgroundColor: theme.color.background[scheme] },
+        ]}
       />
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <FlashList<MyClipListItem>
         data={rows}
         keyExtractor={myClipKeyExtractor}
@@ -138,12 +155,10 @@ export function MyClipsScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   emptyState: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.dark,
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: theme.space20,
@@ -165,9 +180,6 @@ const styles = StyleSheet.create({
   thumbnail: {
     height: '100%',
     width: '100%',
-  },
-  thumbnailEmpty: {
-    backgroundColor: theme.darkActiveContent,
   },
   thumbnailWrapper: {
     borderCurve: 'continuous',

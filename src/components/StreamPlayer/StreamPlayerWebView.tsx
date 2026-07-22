@@ -18,9 +18,11 @@ import { isTwitchPassportCallbackUrl } from './twitchPlayerSource/isTwitchPasspo
 
 type WebViewSource = ComponentProps<typeof WebView>['source'];
 
-// The player webview does no navigation interception beyond refusing the app's
-// own deep-link scheme. Twitch's login (id.twitch.tv), passport-callback, and
-// any in-player links are all allowed to proceed.
+/**
+ * The player webview does no navigation interception beyond refusing the app's
+ * own deep-link scheme. Twitch's login (id.twitch.tv), passport-callback, and
+ * any in-player links are all allowed to proceed.
+ */
 const handleShouldStartLoadWithRequest: OnShouldStartLoadWithRequest =
   request => !isAppUrl(request.url);
 
@@ -100,10 +102,12 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
     onError?.(`HTTP ${nativeEvent.statusCode}: ${nativeEvent.description}`);
   };
 
-  // WKWebView kills its content process under memory pressure (and Android
-  // its render process); the player goes black until the remount completes.
-  // Previously this happened silently — record it so field blank-player
-  // reports can be correlated with process kills.
+  /**
+   * WKWebView kills its content process under memory pressure (and Android
+   * its render process); the player goes black until the remount completes.
+   * Previously this happened silently - record it so field blank-player
+   * reports can be correlated with process kills.
+   */
   const handleWebViewProcessGone = (
     reason: 'content_process_terminated' | 'render_process_gone',
   ) => {
@@ -149,10 +153,12 @@ export const StreamPlayerWebView = memo(function StreamPlayerWebView({
       // don't delay the overlay's tap.
       pointerEvents={allowsTwitchInteraction ? 'auto' : 'none'}
       scrollEnabled={allowsTwitchInteraction}
-      // Baked into the WKWebView config at creation and never re-applied on
-      // prop updates, so these can't track the live allowsTwitchInteraction.
-      // Kept permissive so the content gate's login form is focusable/typeable;
-      // pointerEvents='none' keeps the WebView inert during normal playback.
+      /**
+       * Baked into the WKWebView config at creation and never re-applied on
+       * prop updates, so these can't track the live allowsTwitchInteraction.
+       * Kept permissive so the content gate's login form is focusable/typeable;
+       * pointerEvents='none' keeps the WebView inert during normal playback.
+       */
       keyboardDisplayRequiresUserAction={false}
       setBuiltInZoomControls={false}
       setDisplayZoomControls={false}

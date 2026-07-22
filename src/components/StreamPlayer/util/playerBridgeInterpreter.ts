@@ -299,11 +299,13 @@ export function interpretPlayerMessage(
           },
         },
       ];
-      // AbortError is the player core interrupting our play() while it
-      // swaps sources during startup - routine, recovered automatically.
-      // Anything else (NotAllowedError, NotSupportedError) means
-      // playback could not start and the player is stuck on its first
-      // frame; that is the report worth alerting on.
+      /**
+       * AbortError is the player core interrupting our play() while it
+       * swaps sources during startup - routine, recovered automatically.
+       * Anything else (NotAllowedError, NotSupportedError) means
+       * playback could not start and the player is stuck on its first
+       * frame; that is the report worth alerting on.
+       */
       if (errName !== 'AbortError' && !context.reportedPlaybackBlocked) {
         actions.push(
           { type: 'markPlaybackBlockedReported' },

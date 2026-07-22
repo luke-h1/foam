@@ -10,7 +10,7 @@
  * Instead we decode each url ONCE via `Image.loadAsync(url, { maxWidth })` into a
  * shared, display-sized `ImageRef`, and render `<Image source={ref}>` so each row
  * just composites an already-decoded, size-bounded bitmap. Animated AVIFs keep
- * animating — the ref carries `isAnimated` and the view autoplays.
+ * animating - the ref carries `isAnimated` and the view autoplays.
  */
 import { AppState, type AppStateStatus, Platform } from 'react-native';
 
@@ -31,7 +31,7 @@ const isLowTier = getDeviceTier() === 'low';
 /**
  * Upper bound on the decoded bitmap edge. Inline emotes render ~30pt (≈90px at
  * 3x) and badges smaller; loadAsync only downscales, so this never enlarges a
- * small image — it just caps the memory of oversized source art. Low-tier
+ * small image - it just caps the memory of oversized source art. Low-tier
  * devices cap tighter and keep fewer decoded entries to relieve memory.
  */
 export const EMOTE_DECODE_MAX_PX = isLowTier ? 64 : 96;
@@ -45,7 +45,7 @@ const MAX_ENTRIES = isLowTier ? 600 : 1200;
  * 1200-entry channel of animated emotes can dominate total process memory and
  * push the app past the iOS per-process limit (observed as a Hermes
  * heap-growth OOM, FOAM-TV-MOBILE-BG). The byte budget is the primary bound;
- * MAX_ENTRIES is now a backstop. Heuristic — tune against an on-device
+ * MAX_ENTRIES is now a backstop. Heuristic - tune against an on-device
  * Instruments Allocations / vmmap capture.
  *
  * Derived from device RAM (~2.5%) rather than a flat per-tier constant so the
@@ -80,7 +80,7 @@ const pinned = new Set<string>();
 /**
  * Maps an in-flight url to the cacheEpoch active when its decode started.
  * clearCachedEmoteRefs bumps cacheEpoch, so a decode that resolves after a clear
- * is fenced out — it can't repopulate the cleared cache, and an old .finally
+ * is fenced out - it can't repopulate the cleared cache, and an old .finally
  * can't delete a newer request's inflight marker for the same url.
  */
 const inflight = new Map<string, number>();
@@ -126,7 +126,7 @@ function markRecentlyReleased(url: string): void {
  * its subscription in a passive effect (asynchronously after the render that
  * reads the ref), so releasing synchronously on eviction can race that
  * subscription and detach a bitmap a mounted `<Image source={ref}>` is still
- * drawing — the emote, and an emote-only message, goes blank. By the next frame
+ * drawing - the emote, and an emote-only message, goes blank. By the next frame
  * the subscription exists, so an absent listener reliably means nothing holds
  * the ref. A released ref throws on any later native call, hence the try/catch.
  */
@@ -135,7 +135,7 @@ function flushPendingReleases(): void {
   const batch = pendingReleases.splice(0, pendingReleases.length);
   for (const { url, ref } of batch) {
     if (listeners.has(url)) {
-      // A new subscriber raced in before this flush — re-queue so the ref is
+      // A new subscriber raced in before this flush - re-queue so the ref is
       // retried next frame instead of leaking when that subscriber leaves.
       pendingReleases.push({ url, ref });
       continue;
@@ -324,9 +324,11 @@ async function runDecode(
     refs.set(url, ref);
     refBytes.set(url, cost);
     totalBytes += cost;
-    // Reading width/height off the ref is a JSI hop, but it's a one-off right
-    // after the (far costlier) decode, and lets a dimensionless emote render at
-    // its true aspect ratio instead of a 1:1 box.
+    /**
+     * Reading width/height off the ref is a JSI hop, but it's a one-off right
+     * after the (far costlier) decode, and lets a dimensionless emote render at
+     * its true aspect ratio instead of a 1:1 box.
+     */
     if (ref.width > 0 && ref.height > 0) {
       refAspect.set(url, ref.width / ref.height);
     }
@@ -442,9 +444,11 @@ let memoryPressureSubscribed = false;
 const LOW_MEMORY_HEADROOM_BYTES =
   Platform.OS === 'android' ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
 const MEMORY_POLL_INTERVAL_MS = 5000;
-// Trimming can recur every poll under sustained pressure; throttle the Sentry
-// breadcrumb so a constrained session can't flood Logs while still surfacing
-// that pressure trims are happening.
+/**
+ * Trimming can recur every poll under sustained pressure; throttle the Sentry
+ * breadcrumb so a constrained session can't flood Logs while still surfacing
+ * that pressure trims are happening.
+ */
 const MEMORY_PRESSURE_LOG_THROTTLE_MS = 60_000;
 
 let memoryMonitorTimer: ReturnType<typeof setInterval> | null = null;
@@ -523,7 +527,7 @@ function handleAppStateForMemory(nextAppState: AppStateStatus): void {
  * - iOS `memoryWarning`: late and unreliable before a fast OOM, so it can't be
  *   the only safety valve.
  * - Proactive headroom poll (foreground, every 5s): trims before jetsam when the
- *   ImageMemoryPressure module reports the process is close to its memory limit — the
+ *   ImageMemoryPressure module reports the process is close to its memory limit - the
  *   safety valve `memoryWarning` is too late for.
  * - Backgrounding: shed the unpinned working set while off-screen so a long
  *   single-channel session can't sit at the cap until the OS reclaims it. Refs

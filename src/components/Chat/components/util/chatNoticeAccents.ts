@@ -2,17 +2,17 @@ import { theme } from '@app/styles/themes';
 
 export const CHAT_NOTICE_ACCENTS = {
   announcement: theme.color.notice.announcement,
-  channelPoints: theme.colorViolet,
+  channelPoints: theme.color.violet.dark,
   highlight: theme.color.notice.muted,
   subscription: theme.color.notice.subscription,
   charity: theme.color.notice.charity,
-  ritual: theme.colorViolet,
-  firstMessage: theme.colorViolet,
-  returningChatter: theme.colorBlue,
-  viewerMilestone: theme.colorViolet,
-  raid: theme.colorOrange,
+  ritual: theme.color.violet.dark,
+  firstMessage: theme.color.violet.dark,
+  returningChatter: theme.color.blue.dark,
+  viewerMilestone: theme.color.violet.dark,
+  raid: theme.color.orange.dark,
   replyToYou: theme.color.notice.announcement,
-  stvAdded: theme.colorPrimary,
+  stvAdded: theme.color.accent.dark,
   stvRemoved: theme.color.notice.announcement,
 } as const;
 

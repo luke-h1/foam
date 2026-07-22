@@ -5,7 +5,7 @@ import * as Application from 'expo-application';
 import { getAppStoreLink } from './getAppStoreLink';
 
 /**
- * The production bundle ID — the only one with an App Store listing.
+ * The production bundle ID - the only one with an App Store listing.
  * All other variants (foam-tv-internal, foam-tv-testflight, foam-tv-dev, etc.)
  * should be directed to TestFlight instead.
  */
@@ -25,10 +25,12 @@ export async function getStoreUrlAsync() {
       releaseType !== Application.ApplicationReleaseType.APP_STORE &&
       releaseType !== Application.ApplicationReleaseType.SIMULATOR;
 
-    // Non-production bundle IDs (internal, testflight, dev, e2e variants) share the
-    // App Store signing certificate, so getIosApplicationReleaseTypeAsync() returns
-    // APP_STORE for them too — making isTestFlight unreliable on its own.
-    // Guard with the bundle ID to ensure only the real production build hits the App Store.
+    /**
+     * Non-production bundle IDs (internal, testflight, dev, e2e variants) share the
+     * App Store signing certificate, so getIosApplicationReleaseTypeAsync() returns
+     * APP_STORE for them too - making isTestFlight unreliable on its own.
+     * Guard with the bundle ID to ensure only the real production build hits the App Store.
+     */
     const isProductionBuild =
       Application.applicationId === PRODUCTION_BUNDLE_ID;
 

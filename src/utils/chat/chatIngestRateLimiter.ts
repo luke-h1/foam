@@ -1,6 +1,8 @@
-// Flood backstop on live-message ingest. The emote/badge parse is deferred to
-// commit time, so 150/s only bounds cheap buffer/bookkeeping work; the token
-// bucket lets normal/busy chat through untouched and samples sustained floods.
+/**
+ * Flood backstop on live-message ingest. The emote/badge parse is deferred to
+ * commit time, so 150/s only bounds cheap buffer/bookkeeping work; the token
+ * bucket lets normal/busy chat through untouched and samples sustained floods.
+ */
 const MAX_INGESTED_PER_SEC = 150;
 const BUCKET_SIZE = 30;
 

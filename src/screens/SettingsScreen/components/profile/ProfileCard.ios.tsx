@@ -1,4 +1,4 @@
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -45,6 +45,8 @@ function formatMemberSince(createdAt?: string) {
 
 export function ProfileCard() {
   const { t } = useTranslation(['settings', 'common']);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { user, logout } = useAuthContext();
 
   const confirmLogout = () => {
@@ -71,7 +73,7 @@ export function ProfileCard() {
       {
         text: t('deleteAccountContinue'),
         style: 'destructive',
-        onPress: () => openLinkInBrowser(TWITCH_ACCOUNT_SETTINGS_URL),
+        onPress: () => openLinkInBrowser(TWITCH_ACCOUNT_SETTINGS_URL, scheme),
       },
     ]);
   };
@@ -111,11 +113,16 @@ export function ProfileCard() {
                   style={styles.avatar}
                 />
               ) : (
-                <View style={styles.avatarPlaceholder}>
+                <View
+                  style={[
+                    styles.avatarPlaceholder,
+                    { backgroundColor: theme.color.backgroundElement[scheme] },
+                  ]}
+                >
                   <SymbolView
                     name='person'
                     size={26}
-                    tintColor={theme.colorGreyHoverAlpha}
+                    tintColor={theme.color.textSecondary[scheme]}
                   />
                 </View>
               )}
@@ -188,7 +195,6 @@ const styles = StyleSheet.create({
   },
   avatarPlaceholder: {
     alignItems: 'center',
-    backgroundColor: theme.color.backgroundElement.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     height: 52,

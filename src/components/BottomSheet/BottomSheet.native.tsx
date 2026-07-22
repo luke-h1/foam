@@ -3,6 +3,7 @@ import {
   Modal,
   Pressable,
   StyleSheet,
+  useColorScheme,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -74,6 +75,8 @@ export function BottomSheet({
   snapPoints,
   testID,
 }: BottomSheetProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { height: windowHeight } = useWindowDimensions();
   const detents = resolveDetents(
     enableFixedSnapPoints,
@@ -95,16 +98,31 @@ export function BottomSheet({
     [],
   );
 
-  useLayoutEffect(() => {
+  const [prevPresentation, setPrevPresentation] = useState({
+    openIndex: initialOpenIndex,
+    presented: isPresented,
+  });
+  if (
+    isPresented !== prevPresentation.presented ||
+    (isPresented && initialOpenIndex !== prevPresentation.openIndex)
+  ) {
+    setPrevPresentation({
+      openIndex: initialOpenIndex,
+      presented: isPresented,
+    });
     if (isPresented) {
       setIsMounted(true);
       setIndex(initialOpenIndex);
-      didDismissRef.current = false;
-      return;
+    } else {
+      setIndex(0);
     }
+  }
 
-    setIndex(0);
-  }, [initialOpenIndex, isPresented]);
+  useLayoutEffect(() => {
+    if (isPresented) {
+      didDismissRef.current = false;
+    }
+  }, [isPresented]);
 
   if (!isMounted) {
     return null;
@@ -150,14 +168,30 @@ export function BottomSheet({
           <View testID={testID} style={styles.content}>
             {showDragIndicator ? (
               <View style={styles.dragHandleRow}>
-                <View style={styles.dragIndicator} />
+                <View
+                  style={[
+                    styles.dragIndicator,
+                    {
+                      backgroundColor:
+                        scheme === 'light'
+                          ? 'rgba(0, 0, 0, 0.28)'
+                          : 'rgba(255, 255, 255, 0.4)',
+                    },
+                  ]}
+                />
               </View>
             ) : null}
             {children}
           </View>
         </SwmBottomSheet>
         {process.env.EXPO_OS === 'android' ? (
-          <Toaster style={styles.toaster} />
+          <Toaster
+            style={{
+              backgroundColor: theme.color.background[scheme],
+              borderColor: theme.color.border[scheme],
+              borderWidth: 1,
+            }}
+          />
         ) : null}
       </View>
     </Modal>
@@ -183,7 +217,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   dragIndicator: {
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
     borderRadius: 999,
     height: 5,
     width: 36,
@@ -191,10 +224,5 @@ const styles = StyleSheet.create({
   sheetHost: {
     left: SHEET_INSET,
     right: SHEET_INSET,
-  },
-  toaster: {
-    backgroundColor: theme.color.background.dark,
-    borderColor: theme.color.border.dark,
-    borderWidth: 1,
   },
 });

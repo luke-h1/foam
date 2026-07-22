@@ -1,4 +1,9 @@
-import { type StyleProp, StyleSheet, type ViewStyle } from 'react-native';
+import {
+  type StyleProp,
+  StyleSheet,
+  useColorScheme,
+  type ViewStyle,
+} from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,15 +19,24 @@ interface SkeletonProps {
 }
 
 export function Skeleton({ shimmer = true, style, testID }: SkeletonProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   return (
-    <Animated.View style={[styles.skeleton, style]} testID={testID}>
+    <Animated.View
+      style={[
+        styles.skeleton,
+        { backgroundColor: theme.color.surfaceAlpha[scheme] },
+        style,
+      ]}
+      testID={testID}
+    >
       {shimmer ? (
         <Animated.View
           pointerEvents='none'
           style={[styles.shimmer, shimmerAnimationStyle]}
         >
           <LinearGradient
-            colors={SHIMMER_GRADIENT_COLORS}
+            colors={SHIMMER_GRADIENT_COLORS[scheme]}
             locations={[0, 0.5, 1]}
             start={{ x: 0, y: 0.5 }}
             end={{ x: 1, y: 0.5 }}
@@ -63,7 +77,6 @@ const styles = StyleSheet.create({
     width: 180,
   },
   skeleton: {
-    backgroundColor: theme.colorSurfaceAlpha,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius16,
     overflow: 'hidden',

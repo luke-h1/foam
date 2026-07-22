@@ -2,6 +2,10 @@ import { type RefObject, useCallback, useMemo } from 'react';
 
 import { parseIrcMessage } from '@app/services/recent-messages-service';
 import {
+  ingestChannelPointRewardTags,
+  registerDeferredRewardgiftStandalone,
+} from '@app/store/chat/actions/channelPointRewardTitles';
+import {
   addMessage,
   clearMessages,
   clearMessagesWithNotice,
@@ -13,12 +17,8 @@ import {
   removeMessagesByLogin,
 } from '@app/store/chat/actions/messages';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
-import { getPreferences } from '@app/store/preferenceStore';
+import { getPreferences } from '@app/store/preferences/state';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
-import {
-  ingestChannelPointRewardTags,
-  registerDeferredRewardgiftStandalone,
-} from '@app/utils/chat/channelPointRewardTitleStore';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { parseActionMessage } from '@app/utils/chat/parseActionMessage';
 import { logger } from '@app/utils/logger';

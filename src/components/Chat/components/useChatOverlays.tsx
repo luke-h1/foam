@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { Alert } from 'react-native';
+import { Alert, useColorScheme } from 'react-native';
 
 import { useObservable, useSelector } from '@legendapp/state/react';
 import * as Clipboard from 'expo-clipboard';
@@ -130,6 +130,8 @@ export function useChatOverlays({
   openers: ChatOverlayOpeners;
   overlaysElement: React.ReactElement;
 } {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const overlay$ = useObservable(createEmptyOverlayState(channelId));
   const overlay = useSelector(overlay$);
   const {
@@ -461,8 +463,8 @@ export function useChatOverlays({
       return;
     }
 
-    openLinkInBrowser(`https://www.twitch.tv/${target}/report`);
-  }, [selectedUser]);
+    openLinkInBrowser(`https://www.twitch.tv/${target}/report`, scheme);
+  }, [selectedUser, scheme]);
 
   const selectedUserId = selectedUser?.userId?.trim();
   const canBlockSelectedUser = Boolean(

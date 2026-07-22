@@ -213,7 +213,7 @@ export function Badge({
   symbol,
 }: BadgeProps) {
   const colorScheme = useColorScheme();
-  const scheme = colorScheme === 'dark' ? 'dark' : 'light';
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { accentHex } = useAccentColor();
 
   const variantConfig = color

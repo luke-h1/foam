@@ -1,4 +1,9 @@
-import { type StyleProp, StyleSheet, type ViewStyle } from 'react-native';
+import {
+  type StyleProp,
+  StyleSheet,
+  useColorScheme,
+  type ViewStyle,
+} from 'react-native';
 
 import {
   Button,
@@ -24,6 +29,8 @@ export function BlockedUsersActionButton({
   style,
   variant = 'primary',
 }: BlockedUsersActionButtonProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const isDestructive = variant === 'destructive';
   const Component = isDestructive ? TextButton : Button;
   const width = isDestructive ? 104 : 112;
@@ -34,16 +41,18 @@ export function BlockedUsersActionButton({
         onClick={onPress}
         colors={{
           containerColor: isDestructive
-            ? theme.colorRedSurface
-            : theme.colorPrimary,
-          contentColor: isDestructive ? theme.colorRed : theme.colorBlack,
+            ? theme.color.dangerSurface[scheme]
+            : theme.color.accent[scheme],
+          contentColor: isDestructive
+            ? theme.color.danger[scheme]
+            : theme.colorBlack,
         }}
         contentPadding={{ start: 12, top: 6, end: 12, bottom: 6 }}
         modifiers={[size(width, 36)]}
         shape={Shape.Pill({})}
       >
         <ComposeText
-          color={isDestructive ? theme.colorRed : theme.colorBlack}
+          color={isDestructive ? theme.color.danger[scheme] : theme.colorBlack}
           style={{ typography: 'labelMedium', fontWeight: '700' }}
         >
           {label}

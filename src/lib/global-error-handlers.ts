@@ -41,10 +41,12 @@ export function installGlobalErrorHandlers(): void {
   ErrorUtils.setGlobalHandler((error: unknown, isFatal?: boolean) => {
     markSessionError();
 
-    // In production a fatal would otherwise crash the app after Sentry
-    // reports it (its handler defers to RN's default). Capture it
-    // ourselves and route to the recovery UI instead. Dev keeps the
-    // redbox; with no listener mounted yet, fall through to the chain.
+    /**
+     * In production a fatal would otherwise crash the app after Sentry
+     * reports it (its handler defers to RN's default). Capture it
+     * ourselves and route to the recovery UI instead. Dev keeps the
+     * redbox; with no listener mounted yet, fall through to the chain.
+     */
     if (!__DEV__ && isFatal && fatalErrorListener) {
       const fatalError =
         error instanceof Error ? error : new Error(String(error));
