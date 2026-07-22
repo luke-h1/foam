@@ -2,6 +2,10 @@
 
 ## 1.0.4 (Internal)
 
+### ✨ Features
+
+- **stream:** Per-channel gradient avatar orbs ([#760](https://github.com/lhowsam/foam/issues/760))
+
 ### 🐛 Bug Fixes
 
 - **preferences:** Guard Appearance.setColorScheme from unhydrated theme ([#758](https://github.com/lhowsam/foam/issues/758))
