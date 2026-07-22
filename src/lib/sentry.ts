@@ -343,6 +343,8 @@ export type LogMetadata = {
 
 export type OtaMetrics =
   | 'ota.check.started'
+  | 'ota.check.retry'
+  | 'ota.check.failed'
   | 'ota.update.available'
   | 'ota.update.fetched'
   | 'ota.update.pending'
