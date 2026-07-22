@@ -22,6 +22,7 @@ import {
 import { Button } from '../Button/Button';
 import { Image } from '../Image/Image';
 import { PressableArea } from '../PressableArea/PressableArea';
+import { ChannelAvatarOrb } from './ChannelAvatarOrb';
 import { COMPACT_THUMBNAIL_SIZE, MEDIA_THUMBNAIL_SIZE } from './thumbnailSizes';
 
 interface Props {
@@ -65,9 +66,6 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const schemeStyles = useMemo(
     () => ({
-      avatarFallback: {
-        backgroundColor: theme.color.pressedOverlay[scheme],
-      },
       container: {
         backgroundColor: theme.color.surface[scheme],
         borderColor: theme.color.border[scheme],
@@ -192,17 +190,12 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
                   transition={150}
                 />
               ) : (
-                <View
-                  style={[styles.avatarFallback, schemeStyles.avatarFallback]}
-                >
-                  <Text
-                    type='md'
-                    weight='bold'
-                    style={schemeStyles.primaryText}
-                  >
-                    {avatarInitial}
-                  </Text>
-                </View>
+                <ChannelAvatarOrb
+                  seed={stream.user_login}
+                  initial={avatarInitial}
+                  scheme={scheme}
+                  style={styles.avatarFallback}
+                />
               )}
             </PressableArea>
 
