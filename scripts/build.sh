@@ -63,6 +63,8 @@ build_ios() {
     exit 1
   fi
 
+  ./scripts/validate-native-artifact.sh "$profile" ios "$ipa_path"
+
   unzip -q "$ipa_path" -d "$extracted_dir"
 
   local dsym_search_paths=("$extracted_dir")
@@ -111,6 +113,8 @@ build_android() {
     echo "Unable to find an Android artifact at $artifact_path"
     exit 1
   fi
+
+  ./scripts/validate-native-artifact.sh "$profile" android "$artifact_path"
 
   run_sentry_helper sentry_upload_size_analysis "$artifact_path"
 }

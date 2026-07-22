@@ -68,6 +68,8 @@ runs:
             exit 1
           fi
 
+          ./scripts/validate-native-artifact.sh "$VARIANT" ios "$ipa_path"
+
           unzip -q "$ipa_path" -d "$extracted_dir"
 
           dsym_search_paths=("$extracted_dir")
@@ -128,11 +130,13 @@ runs:
           SENTRY_AUTH_TOKEN="${SENTRY_AUTH_TOKEN:-}" \
             SENTRY_RELEASE="${EXPO_PUBLIC_SENTRY_RELEASE}" \
             SENTRY_DIST="${EXPO_PUBLIC_SENTRY_DIST}" \
-            SENTRY_LOAD_DOTENV=0 \
+          SENTRY_LOAD_DOTENV=0 \
             EXPO_PUBLIC_APP_VARIANT="$VARIANT" \
             EXPO_PUBLIC_SENTRY_RELEASE="${EXPO_PUBLIC_SENTRY_RELEASE}" \
             EXPO_PUBLIC_SENTRY_DIST="${EXPO_PUBLIC_SENTRY_DIST}" \
             bun run eas build --platform android --profile "$VARIANT" --non-interactive --local --output=./build-artifacts/app.aab
+
+          ./scripts/validate-native-artifact.sh "$VARIANT" android ./build-artifacts/app.aab
 
           # shellcheck source=scripts/sentry-upload.sh
           source ./scripts/sentry-upload.sh
