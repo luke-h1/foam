@@ -105,6 +105,9 @@ function SwipeableHistoryItem({
   }));
 
   const animatedContainerStyle = useAnimatedStyle(() => ({
+    // Collapsing the row height reclaims layout space as the item is deleted;
+    // a scaleY transform would leave a gap where the row used to be.
+    // ast-grep-ignore: no-animated-layout-props-tsx
     height: itemHeight.get(),
     opacity: opacity.get(),
     overflow: 'hidden',
@@ -113,6 +116,9 @@ function SwipeableHistoryItem({
   // The red fill grows with the swipe so it always sits flush behind the row —
   // no bare background peeking through, even on a full swipe-to-delete.
   const animatedDeleteStyle = useAnimatedStyle(() => ({
+    // The fill reveals the fixed-width trash button beneath it; a scaleX
+    // transform would squash that icon/label child instead of clipping to it.
+    // ast-grep-ignore: no-animated-layout-props-tsx
     width: Math.max(-translateX.get(), 0),
   }));
 

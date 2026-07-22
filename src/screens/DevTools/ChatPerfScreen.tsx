@@ -88,7 +88,7 @@ export function ChatPerfScreen() {
       0,
       Math.min(100, (1 - totalCountdownMs.value / SUITE_TOTAL_MS) * 100),
     );
-    return { width: `${pct}%` };
+    return { transform: [{ scaleX: pct / 100 }] };
   });
   const autoStarted = useRef(false);
 
@@ -387,7 +387,12 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     overflow: 'hidden',
   },
-  progressFill: { height: 6, backgroundColor: '#3ddc84' },
+  progressFill: {
+    height: 6,
+    width: '100%',
+    backgroundColor: '#3ddc84',
+    transformOrigin: 'left',
+  },
   countdownRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
   countdown: {
     color: '#ffcc00',

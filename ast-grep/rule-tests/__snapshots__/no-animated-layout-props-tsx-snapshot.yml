@@ -1,0 +1,72 @@
+id: no-animated-layout-props-tsx
+snapshots:
+  'const style = useAnimatedStyle(() => ({ flex: f.get() }));':
+    labels:
+    - source: 'flex: f.get()'
+      style: primary
+      start: 40
+      end: 53
+    - source: 'useAnimatedStyle(() => ({ flex: f.get() }))'
+      style: secondary
+      start: 14
+      end: 57
+    - source: flex
+      style: secondary
+      start: 40
+      end: 44
+  'const style = useAnimatedStyle(() => ({ marginTop: m.get(), opacity: o.get() }));':
+    labels:
+    - source: 'marginTop: m.get()'
+      style: primary
+      start: 40
+      end: 58
+    - source: 'useAnimatedStyle(() => ({ marginTop: m.get(), opacity: o.get() }))'
+      style: secondary
+      start: 14
+      end: 80
+    - source: marginTop
+      style: secondary
+      start: 40
+      end: 49
+  'const style = useAnimatedStyle(() => ({ top: y.get(), left: x.get() }));':
+    labels:
+    - source: 'top: y.get()'
+      style: primary
+      start: 40
+      end: 52
+    - source: 'useAnimatedStyle(() => ({ top: y.get(), left: x.get() }))'
+      style: secondary
+      start: 14
+      end: 71
+    - source: top
+      style: secondary
+      start: 40
+      end: 43
+  'const style = useAnimatedStyle(() => ({ width: w.get() }));':
+    labels:
+    - source: 'width: w.get()'
+      style: primary
+      start: 40
+      end: 54
+    - source: 'useAnimatedStyle(() => ({ width: w.get() }))'
+      style: secondary
+      start: 14
+      end: 58
+    - source: width
+      style: secondary
+      start: 40
+      end: 45
+  'const style = useAnimatedStyle(() => { return { height: h.get() }; });':
+    labels:
+    - source: 'height: h.get()'
+      style: primary
+      start: 48
+      end: 63
+    - source: 'useAnimatedStyle(() => { return { height: h.get() }; })'
+      style: secondary
+      start: 14
+      end: 69
+    - source: height
+      style: secondary
+      start: 48
+      end: 54

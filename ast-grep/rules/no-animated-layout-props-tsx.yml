@@ -1,0 +1,32 @@
+id: no-animated-layout-props-tsx
+language: tsx
+severity: warning
+message: Animating layout props (width/height/top/left/margin/padding/flex...) in useAnimatedStyle runs Yoga layout on every frame and is expensive.
+note: |
+  Layout properties force a full Yoga relayout on the UI thread each frame,
+  which is much slower than compositing. Prefer transform (translateX,
+  translateY, scale, rotate) and opacity, which the compositor animates
+  without relayout - map an x/y move to translate, a resize to scale.
+  Genuine resize/reflow animations that have no transform equivalent can
+  suppress this with an inline ast-grep-ignore comment.
+  See https://github.com/software-mansion/react-native-reanimated/discussions/3211
+files:
+  - 'src/**/*.tsx'
+ignores:
+  - '**/__tests__/**'
+  - '**/*.test.tsx'
+  - '**/*.perf-test.tsx'
+  - '**/*.stories.tsx'
+  # The split-view resize animates the actual video/chat pane width, height,
+  # and position as the divider is dragged and on rotation - there is no
+  # transform equivalent, since scaling would distort the WKWebView player and
+  # reflow chat text. Layout animation is this screen's whole purpose.
+  - 'src/screens/Stream/LiveStreamScreen.tsx'
+rule:
+  kind: pair
+  has:
+    field: key
+    regex: ^(width|height|minWidth|minHeight|maxWidth|maxHeight|top|bottom|left|right|start|end|margin|marginTop|marginBottom|marginLeft|marginRight|marginHorizontal|marginVertical|marginStart|marginEnd|padding|paddingTop|paddingBottom|paddingLeft|paddingRight|paddingHorizontal|paddingVertical|paddingStart|paddingEnd|flex|flexGrow|flexShrink|flexBasis|borderWidth|borderTopWidth|borderBottomWidth|borderLeftWidth|borderRightWidth|borderStartWidth|borderEndWidth|gap|rowGap|columnGap|aspectRatio)$
+  inside:
+    stopBy: end
+    pattern: useAnimatedStyle($$$ARGS)
