@@ -25,6 +25,14 @@ import { logger } from '@app/utils/logger';
 
 const MINIMUM_MINIMIZE_TIME = 15 * 60e3; // 15 minutes
 const INITIAL_CHECK_DELAY = 3e3; // 3 seconds
+const MAX_CHECK_ATTEMPTS = 3;
+const RETRY_BACKOFF_MS = 4e3; // 4 seconds, multiplied by attempt
+
+function delay(ms: number) {
+  return new Promise<void>(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
 
 function getOtaReloadScreenOptions(scheme: ColorScheme) {
   return {
@@ -70,77 +78,128 @@ export function useOTAUpdates() {
   const ranInitialCheck = useRef(false);
   const handledPendingUpdate = useRef(false);
   const timeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const isMounted = useRef(true);
 
+  const runUpdateCheck = useCallback(async () => {
+    await setExtraParams();
+
+    logger.main.info('Checking for OTA update', {
+      name: 'ota_updates_service_info',
+      category: 'ota',
+      action: 'check_started',
+      channel: Updates.channel || 'unknown',
+      buildVersion: nativeBuildVersion,
+      platform: Platform.OS,
+      isProduction,
+    });
+
+    countOtaMetric('ota.check.started', {
+      channel: Updates.channel || 'unknown',
+      environment: isProduction ? 'production' : 'non-production',
+      platform: Platform.OS,
+    });
+
+    const res = await checkForUpdateAsync();
+
+    if (!res.isAvailable) {
+      return;
+    }
+
+    logger.main.info('OTA update available', {
+      name: 'ota_updates_service_info',
+      category: 'ota',
+      action: 'update_available',
+      manifestId: res.manifest?.id,
+      channel: Updates.channel || 'unknown',
+      platform: Platform.OS,
+    });
+
+    countOtaMetric('ota.update.available', {
+      channel: Updates.channel || 'unknown',
+      environment: isProduction ? 'production' : 'non-production',
+      platform: Platform.OS,
+    });
+
+    await fetchUpdateAsync();
+
+    logger.main.info('OTA update fetched successfully', {
+      name: 'ota_updates_service_info',
+      category: 'ota',
+      action: 'update_fetched',
+      channel: Updates.channel || 'unknown',
+      platform: Platform.OS,
+    });
+
+    countOtaMetric('ota.update.fetched', {
+      channel: Updates.channel || 'unknown',
+      environment: isProduction ? 'production' : 'non-production',
+      platform: Platform.OS,
+    });
+  }, [isProduction]);
+
+  /**
+   * A single transient ERR_UPDATES_FETCH must not strand the device on a
+   * poisoned embedded bundle (#759) when a corrective update is available -
+   * retry the whole check-and-fetch with backoff so it self-heals in-session.
+   */
   const checkForUpdates = useCallback(async () => {
     if (!shouldReceiveUpdates) {
       return;
     }
 
-    try {
-      await setExtraParams();
+    for (let attempt = 1; attempt <= MAX_CHECK_ATTEMPTS; attempt += 1) {
+      try {
+        // eslint-disable-next-line react-doctor/async-await-in-loop -- retries are sequential by design (backoff between failing attempts)
+        await runUpdateCheck();
+        return;
+      } catch (error) {
+        if (attempt < MAX_CHECK_ATTEMPTS) {
+          logger.main.warn('OTA update check failed, retrying', {
+            name: 'ota_updates_service_info',
+            error: toError(error),
+            category: 'OTAUpdatesService',
+            action: 'check_retry',
+            attempt,
+            isProduction,
+            channel: Updates.channel || 'unknown',
+            platform: Platform.OS,
+          });
 
-      logger.main.info('Checking for OTA update', {
-        name: 'ota_updates_service_info',
-        category: 'ota',
-        action: 'check_started',
-        channel: Updates.channel || 'unknown',
-        buildVersion: nativeBuildVersion,
-        platform: Platform.OS,
-        isProduction,
-      });
+          countOtaMetric('ota.check.retry', {
+            attempt,
+            channel: Updates.channel || 'unknown',
+            environment: isProduction ? 'production' : 'non-production',
+            platform: Platform.OS,
+          });
 
-      countOtaMetric('ota.check.started', {
-        channel: Updates.channel || 'unknown',
-        environment: isProduction ? 'production' : 'non-production',
-        platform: Platform.OS,
-      });
+          await delay(RETRY_BACKOFF_MS * attempt);
 
-      const res = await checkForUpdateAsync();
+          if (!isMounted.current) {
+            return;
+          }
 
-      if (res.isAvailable) {
-        logger.main.info('OTA update available', {
-          name: 'ota_updates_service_info',
-          category: 'ota',
-          action: 'update_available',
-          manifestId: res.manifest?.id,
+          continue;
+        }
+
+        logger.main.error('OTA update check failed', {
+          name: 'ota_updates_service_error',
+          error: toError(error),
+          category: 'OTAUpdatesService',
+          action: 'check_failed',
+          attempts: MAX_CHECK_ATTEMPTS,
+          isProduction,
           channel: Updates.channel || 'unknown',
           platform: Platform.OS,
         });
 
-        countOtaMetric('ota.update.available', {
-          channel: Updates.channel || 'unknown',
-          environment: isProduction ? 'production' : 'non-production',
-          platform: Platform.OS,
-        });
-
-        await fetchUpdateAsync();
-
-        logger.main.info('OTA update fetched successfully', {
-          name: 'ota_updates_service_info',
-          category: 'ota',
-          action: 'update_fetched',
-          channel: Updates.channel || 'unknown',
-          platform: Platform.OS,
-        });
-
-        countOtaMetric('ota.update.fetched', {
+        countOtaMetric('ota.check.failed', {
           channel: Updates.channel || 'unknown',
           environment: isProduction ? 'production' : 'non-production',
           platform: Platform.OS,
         });
       }
-    } catch (error) {
-      logger.main.error('OTA update check failed', {
-        name: 'ota_updates_service_error',
-        error: toError(error),
-        category: 'OTAUpdatesService',
-        action: 'check_failed',
-        isProduction,
-        channel: Updates.channel || 'unknown',
-        platform: Platform.OS,
-      });
     }
-  }, [isProduction, shouldReceiveUpdates]);
+  }, [isProduction, runUpdateCheck, shouldReceiveUpdates]);
 
   const applyUpdate = useCallback(async () => {
     try {
@@ -202,6 +261,13 @@ export function useOTAUpdates() {
   checkForUpdatesRef.current = checkForUpdates;
   const promptAndReloadRef = useRef(promptAndReload);
   promptAndReloadRef.current = promptAndReload;
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!shouldReceiveUpdates || ranInitialCheck.current) {
