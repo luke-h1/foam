@@ -1,3 +1,4 @@
+import type { DefaultTokenResponse } from '@app/types/twitch/auth';
 import type { TwitchCheermote } from '@app/types/twitch/bits';
 import type { FollowedChannel } from '@app/types/twitch/channel';
 import type { TwitchClip, TwitchCreatedClip } from '@app/types/twitch/clip';
@@ -5,6 +6,36 @@ import type { UserInfoResponse } from '@app/types/twitch/user';
 
 import { twitchApi } from '../api/clients';
 import { MAX_FOLLOWED_CHANNELS, twitchService } from '../twitch-service';
+
+const mockFetch = jest.fn();
+
+jest.mock('expo/fetch', () => ({
+  fetch: (...args: unknown[]) => mockFetch(...args) as Promise<unknown>,
+}));
+
+jest.mock('@app/lib/offThreadJson/parseJsonOnWorklet', () => ({
+  parseJsonOnWorklet: jest.fn(async (text: string) => JSON.parse(text)),
+}));
+
+jest.mock('@app/utils/logger', () => {
+  const categories: Record<string, unknown> = {};
+  return {
+    logger: new Proxy(
+      {},
+      {
+        get: (_target, prop: string) => {
+          categories[prop] ??= {
+            debug: jest.fn(),
+            info: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+          };
+          return categories[prop];
+        },
+      },
+    ),
+  };
+});
 
 jest.mock('../api/clients', () => ({
   getTwitchClientId: jest.fn(() => 'client-id'),
@@ -431,5 +462,91 @@ describe('twitchService moderation endpoints', () => {
         moderator_id: '2',
       },
     });
+  });
+});
+
+describe('twitchService.getDefaultToken', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  function jsonResponse(body: unknown, status = 200) {
+    return {
+      ok: status < 400,
+      status,
+      text: () => Promise.resolve(JSON.stringify(body)),
+    };
+  }
+
+  function pendingUntilAbort(init?: { signal?: AbortSignal }): Promise<never> {
+    return new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => {
+        reject(new Error('Aborted'));
+      });
+    });
+  }
+
+  const anonToken: DefaultTokenResponse = {
+    access_token: 'anon-abc',
+    expires_in: 3600,
+    token_type: 'bearer',
+  };
+
+  test('returns the anon token when the proxy and validation respond', async () => {
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse({ data: anonToken }))
+      .mockResolvedValueOnce(
+        jsonResponse({ client_id: 'client-id', expires_in: 3600 }),
+      );
+
+    const result = await twitchService.getDefaultToken();
+
+    expect(result).toEqual<DefaultTokenResponse>(anonToken);
+  });
+
+  test('keeps the fetched token when validation never responds', async () => {
+    jest.useFakeTimers();
+    try {
+      mockFetch
+        .mockResolvedValueOnce(jsonResponse({ data: anonToken }))
+        .mockImplementationOnce(
+          (_input: unknown, init?: { signal?: AbortSignal }) =>
+            pendingUntilAbort(init),
+        );
+
+      const pending = twitchService.getDefaultToken();
+      await jest.advanceTimersByTimeAsync(8_000);
+
+      expect(await pending).toEqual<DefaultTokenResponse>(anonToken);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test('returns undefined when the proxy rejects the request', async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({ message: 'Forbidden' }, 403),
+    );
+
+    const result = await twitchService.getDefaultToken();
+
+    expect(result).toBeUndefined();
+  });
+
+  test('propagates the error when the token request never responds', async () => {
+    jest.useFakeTimers();
+    try {
+      mockFetch.mockImplementationOnce(
+        (_input: unknown, init?: { signal?: AbortSignal }) =>
+          pendingUntilAbort(init),
+      );
+
+      const pending = twitchService.getDefaultToken();
+      const assertion = expect(pending).rejects.toThrow('Aborted');
+      await jest.advanceTimersByTimeAsync(8_000);
+      await assertion;
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
