@@ -2,6 +2,17 @@
 
 ## 1.0.4 (Internal)
 
+### 🐛 Bug Fixes
+
+- **preferences:** Guard Appearance.setColorScheme from unhydrated theme ([#758](https://github.com/lhowsam/foam/issues/758))
+- Internal black screen + auth/remote-config resilience ([#759](https://github.com/lhowsam/foam/issues/759))
+
+### 🔧 Miscellaneous Tasks
+
+- **app:** Resolve rd issues
+
+## 1.0.4 (Internal)
+
 ### ✨ Features
 
 - **app:** Android release ([#738](https://github.com/lhowsam/foam/issues/738))
