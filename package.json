@@ -311,9 +311,7 @@
     "expo-modules-jsi@57.0.0": "patches/expo-modules-jsi@57.0.0.patch",
     "@sentry/core@10.57.0": "patches/@sentry%2Fcore@10.57.0.patch",
     "@swmansion/react-native-bottom-sheet@0.16.1": "patches/@swmansion%2Freact-native-bottom-sheet@0.16.1.patch",
-    "@expo/ui@57.0.2": "patches/@expo%2Fui@57.0.2.patch",
-    "metro@0.84.4": "patches/metro@0.84.4.patch",
-    "metro-runtime@0.84.4": "patches/metro-runtime@0.84.4.patch"
+    "@expo/ui@57.0.2": "patches/@expo%2Fui@57.0.2.patch"
   },
   "reanimated": {
     "staticFeatureFlags": {

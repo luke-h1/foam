@@ -17,7 +17,6 @@ module.exports = api => {
     [
       'react-native-worklets/plugin',
       {
-        bundleMode: !isTest,
         strictGlobal: true,
       },
     ],

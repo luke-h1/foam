@@ -7,9 +7,6 @@ const {
 } = require('@storybook/react-native/metro/withStorybook');
 const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 const path = require('path');
-const {
-  getBundleModeMetroConfig,
-} = require('react-native-worklets/bundleMode');
 
 /**
  * @type {import('expo/metro-config').MetroConfig}
@@ -46,29 +43,7 @@ const configWithStorybook = withStorybook(config, {
     storybookVariants.includes(process.env.EXPO_PUBLIC_APP_VARIANT),
 });
 
-const getRozeniteConfig = withRozenite(configWithStorybook, {
+module.exports = withRozenite(configWithStorybook, {
   enabled: process.env.EXPO_PUBLIC_WITH_ROZENITE === 'true',
   enhanceMetroConfig: config => withRozeniteRequireProfiler(config),
 });
-
-/**
- * Worklets bundle mode writes .worklets/<hash>.js into node_modules at babel
- * transform time. EAS builds run in a fresh copy of the project, so hits in
- * the shared $TMPDIR/metro-cache skip the transform and the referenced files
- * never get written (ENOENT during export:embed). config.resetCache is
- * ignored (expo overrides it with its --reset-cache flag), so give each EAS
- * build its own cache store inside the build workingdir instead - unique per
- * build and removed with it.
- */
-module.exports = async () => {
-  const config = getBundleModeMetroConfig(await getRozeniteConfig());
-  if (process.env.EAS_BUILD_WORKINGDIR) {
-    const { FileStore } = require('metro-cache');
-    config.cacheStores = [
-      new FileStore({
-        root: path.join(process.env.EAS_BUILD_WORKINGDIR, 'metro-cache'),
-      }),
-    ];
-  }
-  return config;
-};
