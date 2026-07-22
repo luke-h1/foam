@@ -1,8 +1,7 @@
+import { type ErrorInfo, useState } from 'react';
 import { ScrollView, StyleSheet, useColorScheme, View } from 'react-native';
-import type { ErrorInfo } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useObservable, useSelector } from '@legendapp/state/react';
 import { router } from 'expo-router';
 
 import { Button } from '@app/components/Button/Button';
@@ -31,10 +30,8 @@ export function ErrorDetails(props: ErrorDetailsProps) {
   const colorScheme = useColorScheme();
   const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { error, errorInfo, onReset } = props;
-  const showStackTrace$ = useObservable(false);
-  const showStackTrace = useSelector(showStackTrace$);
-  const reported$ = useObservable(false);
-  const reported = useSelector(reported$);
+  const [showStackTrace, setShowStackTrace] = useState(false);
+  const [reported, setReported] = useState(false);
 
   const errorTitle = `${error}`.trim();
   const errorCategory = categorizeError(error);
@@ -45,7 +42,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
     .join('\n');
 
   const handleReportBug = () => {
-    if (reported$.peek()) {
+    if (reported) {
       return;
     }
     sendFeedback({
@@ -55,7 +52,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
         : `(CRASH) ${errorTitle}`,
       associatedEventId: lastEventId(),
     });
-    reported$.set(true);
+    setReported(true);
   };
 
   return (
@@ -137,7 +134,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
 
         <Button
           style={styles.linkButton}
-          onPress={() => showStackTrace$.set(value => !value)}
+          onPress={() => setShowStackTrace(value => !value)}
         >
           <Text
             type='sm'
