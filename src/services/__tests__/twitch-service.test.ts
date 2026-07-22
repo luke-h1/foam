@@ -478,6 +478,14 @@ describe('twitchService.getDefaultToken', () => {
     };
   }
 
+  function pendingUntilAbort(init?: { signal?: AbortSignal }): Promise<never> {
+    return new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => {
+        reject(new Error('Aborted'));
+      });
+    });
+  }
+
   const anonToken: DefaultTokenResponse = {
     access_token: 'anon-abc',
     expires_in: 3600,
@@ -497,13 +505,22 @@ describe('twitchService.getDefaultToken', () => {
   });
 
   test('keeps the fetched token when validation never responds', async () => {
-    mockFetch
-      .mockResolvedValueOnce(jsonResponse({ data: anonToken }))
-      .mockRejectedValueOnce(new Error('Aborted'));
+    jest.useFakeTimers();
+    try {
+      mockFetch
+        .mockResolvedValueOnce(jsonResponse({ data: anonToken }))
+        .mockImplementationOnce(
+          (_input: unknown, init?: { signal?: AbortSignal }) =>
+            pendingUntilAbort(init),
+        );
 
-    const result = await twitchService.getDefaultToken();
+      const pending = twitchService.getDefaultToken();
+      await jest.advanceTimersByTimeAsync(8_000);
 
-    expect(result).toEqual<DefaultTokenResponse>(anonToken);
+      expect(await pending).toEqual<DefaultTokenResponse>(anonToken);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   test('returns undefined when the proxy rejects the request', async () => {
@@ -517,8 +534,19 @@ describe('twitchService.getDefaultToken', () => {
   });
 
   test('propagates the error when the token request never responds', async () => {
-    mockFetch.mockRejectedValueOnce(new Error('Aborted'));
+    jest.useFakeTimers();
+    try {
+      mockFetch.mockImplementationOnce(
+        (_input: unknown, init?: { signal?: AbortSignal }) =>
+          pendingUntilAbort(init),
+      );
 
-    await expect(twitchService.getDefaultToken()).rejects.toThrow('Aborted');
+      const pending = twitchService.getDefaultToken();
+      const assertion = expect(pending).rejects.toThrow('Aborted');
+      await jest.advanceTimersByTimeAsync(8_000);
+      await assertion;
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
