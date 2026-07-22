@@ -56,7 +56,6 @@
     },
     "internal": {
       "extends": "base",
-      "environment": "internal",
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_APP_VARIANT": "internal"
@@ -71,7 +70,6 @@
     },
     "testflight": {
       "extends": "base",
-      "environment": "testflight",
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_APP_VARIANT": "testflight"
@@ -86,7 +84,6 @@
     },
     "production": {
       "bun": "1.2.5",
-      "environment": "production",
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_APP_VARIANT": "production"
