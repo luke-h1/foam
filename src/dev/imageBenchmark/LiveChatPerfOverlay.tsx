@@ -1,6 +1,3 @@
-// DEV-ONLY: pure display of live chat-perf stats. The JS-thread rAF sampler
-// lives in useChatPerfSuite (single source); the UI-thread frame health comes
-// from useUiThreadFrameHealth (Reanimated, the real rendering smoothness).
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { LiveStats } from './useChatPerfSuite';

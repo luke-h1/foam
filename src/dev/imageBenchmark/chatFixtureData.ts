@@ -1,4 +1,3 @@
-// DEV-ONLY chatter colour palette for the chat-perf fixture.
 export const FIXTURE_COLORS: string[] = [
   '#FF4500',
   '#1E90FF',

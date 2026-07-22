@@ -1,16 +1,3 @@
-// DEV-ONLY: an offline, hand-authored fixture of cinna-style IRC messages used
-// to drive the Chat Perf screen as a deterministic replay — so the harness never
-// depends on the live channel actually being online to produce traffic.
-//
-// Each entry is a compact record; `buildIrcFixtureMessage` expands it into the
-// full IRC tag set the real pipeline consumes (the same shape twitch-chat-service
-// hands to onMessage). Sender id + colour are derived deterministically from the
-// display name, so a recurring chatter keeps a stable identity (one 7TV cosmetics
-// lookup per user, not per message) and renders consistently across runs.
-//
-// The text references cinna's real 7TV emote names (see chatFixtureData), so when
-// her emote set is loaded the fixture renders with her actual animated emotes —
-// the dominant per-frame cost under a raid.
 import { FIXTURE_COLORS } from './chatFixtureData';
 
 export type FixtureRole = 'sub' | 'mod' | 'vip' | 'broadcaster';
@@ -39,7 +26,7 @@ export interface BuiltFixtureMessage {
   text: string;
 }
 
-// FNV-1a, stable across runs — used to derive a fixed id/colour per display name.
+// FNV-1a, stable across runs - used to derive a fixed id/colour per display name.
 function hashString(value: string): number {
   let hash = 2166136261;
   for (let i = 0; i < value.length; i += 1) {
@@ -106,9 +93,10 @@ export function buildIrcFixtureMessage(
   return { tags, text: entry.text };
 }
 
-// ~120 messages modelled on a busy cinna raid minute: heavy 7TV emote spam,
-// short reactions, the occasional sentence, @mentions and a few replies, mostly
-// subscribers with a sprinkling of mods/vips and the broadcaster.
+/**
+ * ~120 messages based on busy chatroom; heavy 7tv emote spam,
+ * sentences, mentions and replies
+ */
 export const IRC_FIXTURE_MESSAGES: IrcFixtureMessage[] = [
   { user: 'cinna', text: 'hi chat cinnaW peepoHey', role: 'broadcaster' },
   {
