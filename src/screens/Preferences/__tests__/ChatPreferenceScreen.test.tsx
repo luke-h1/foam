@@ -12,7 +12,7 @@ const mockPreferences: Preferences = {
   streamListLayout: 'compact',
   chatDensity: 'comfortable',
   showAlternatingChatRows: false,
-  animate: true,
+  animate: false,
   chatTimestamps: true,
   highlightOwnMentions: true,
   showInlineReplyContext: true,
