@@ -10,6 +10,7 @@
 
 - **preferences:** Guard Appearance.setColorScheme from unhydrated theme ([#758](https://github.com/lhowsam/foam/issues/758))
 - Internal black screen + auth/remote-config resilience ([#759](https://github.com/lhowsam/foam/issues/759))
+- **updates:** Retry transient OTA check/fetch so poisoned builds can self-heal
 
 ### 🔧 Miscellaneous Tasks
 
