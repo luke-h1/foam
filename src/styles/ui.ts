@@ -47,7 +47,7 @@ export const RADIUS_VALUES: Record<UIRadius, number> = {
   md: 10,
   default: 12,
   lg: 12,
-  card: 14,
+  card: 16,
   xl: 20,
   full: 999,
 };

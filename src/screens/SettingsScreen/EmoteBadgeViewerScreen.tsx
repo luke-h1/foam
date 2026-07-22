@@ -5,6 +5,7 @@ import {
   type SectionListData,
   type SectionListRenderItemInfo,
   StyleSheet,
+  useColorScheme,
   View,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -224,9 +225,21 @@ function BadgeRowView({
 }
 
 function BadgeSectionHeader({ title }: { title: string }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+
   return (
-    <View style={styles.badgeSectionHeader}>
-      <Text type='sm' weight='semibold' style={styles.badgeSectionTitle}>
+    <View
+      style={[
+        styles.badgeSectionHeader,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
+      <Text
+        type='sm'
+        weight='semibold'
+        style={{ color: theme.color.text[scheme] }}
+      >
         {title}
       </Text>
     </View>
@@ -305,6 +318,8 @@ function BadgesTab({
 
 export function EmoteBadgeViewerScreen() {
   const { t } = useTranslation('settings');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { top: topInset } = useSafeAreaInsets();
   const [tabIndex, setTabIndex] = useState(0);
   const [selectedEmote, setSelectedEmote] =
@@ -321,6 +336,7 @@ export function EmoteBadgeViewerScreen() {
     <View
       style={[
         styles.container,
+        { backgroundColor: theme.color.background[scheme] },
         Platform.OS === 'ios' && { paddingTop: topInset + 44 },
       ]}
     >
@@ -382,13 +398,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space12,
   },
   badgeSectionHeader: {
-    backgroundColor: theme.color.background.dark,
     paddingBottom: theme.space8,
     paddingHorizontal: theme.space16,
     paddingTop: theme.space12,
-  },
-  badgeSectionTitle: {
-    color: theme.color.text.dark,
   },
   centered: {
     alignItems: 'center',
@@ -397,7 +409,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space28,
   },
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   emoteListContent: {

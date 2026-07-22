@@ -4,7 +4,7 @@ import type { WebViewMessageEvent } from 'react-native-webview';
 import { WebView } from 'react-native-webview';
 
 import { useWatchTimeTracking } from '@app/hooks/useWatchTimeTracking';
-import { usePreference } from '@app/store/preferenceStore';
+import { usePreference } from '@app/store/preferences/selectors';
 import { theme } from '@app/styles/themes';
 import { logger } from '@app/utils/logger';
 
@@ -140,9 +140,11 @@ export const StreamPlayer = memo(function StreamPlayer({
   width,
   ref,
 }: StreamPlayerProps) {
-  // Twitch's embed `parent`, hardcoded to Twitch's own domain, which its embed
-  // always accepts. A blank or invalid value makes Twitch render "this embed is
-  // misconfigured" and breaks every stream.
+  /**
+   * Twitch's embed `parent`, hardcoded to Twitch's own domain, which its embed
+   * always accepts. A blank or invalid value makes Twitch render "this embed is
+   * misconfigured" and breaks every stream.
+   */
   const embedParent = 'www.twitch.tv';
   const webViewRef = useRef<WebView>(null);
   const needsInitRef = useRef(true);
@@ -173,7 +175,7 @@ export const StreamPlayer = memo(function StreamPlayer({
    * Even when mounted post-transition, WKWebView sometimes fails to attach
    * the inline video's AVPlayer layer to the compositor (picture stays black
    * or frozen while playback advances). The page cannot observe this, so we
-   * unconditionally force a frame change shortly after playback starts —
+   * unconditionally force a frame change shortly after playback starts -
    * resizing the WKWebView makes it rebuild its layer tree and pick the
    * video layer up.
    * With the unscripted player there is no bridge 'playing' event, so the
@@ -350,7 +352,7 @@ export const StreamPlayer = memo(function StreamPlayer({
   const awaitBridgePlaybackStart = showOverlayControls && !clip;
   /**
    * Memoised so the URL only changes when the source or a remount (webViewKey)
-   * does — never on an incidental re-render (e.g. the layout nudge), which
+   * does - never on an incidental re-render (e.g. the layout nudge), which
    * would otherwise reload the WebView. On remount it reads the latest
    * resume offset so a VOD picks up where it left off.
    */
@@ -384,17 +386,19 @@ export const StreamPlayer = memo(function StreamPlayer({
    * playback, so the playerControls bootstrap is not injected and the bridge
    * (ready/playing/pause messages, native controls overlay) stays dormant.
    * We auto-accept the mature-content gate, hide the text track ('hidden', not
-   * 'disabled', which would stall WKWebView's native HLS AVPlayer), and — when
-   * autoplaying — nudge the video into unmuted playback since Twitch's embed
+   * 'disabled', which would stall WKWebView's native HLS AVPlayer), and - when
+   * autoplaying - nudge the video into unmuted playback since Twitch's embed
    * otherwise tends to land paused/muted. The player's own chrome is hidden
    * only when foam is drawing its own overlay controls over the video.
    */
   const injectedJavaScript =
     TWITCH_AUTH_HELPER_SCRIPT +
     '\n' +
-    // Detect Twitch's "this embed is misconfigured" error page (bad parent) on
-    // every player kind so a broken embed reports to Sentry instead of only
-    // timing out.
+    /**
+     * Detect Twitch's "this embed is misconfigured" error page (bad parent) on
+     * every player kind so a broken embed reports to Sentry instead of only
+     * timing out.
+     */
     buildTwitchEmbedErrorWatcherScript() +
     '\n' +
     buildTwitchContentGateAcceptScript() +

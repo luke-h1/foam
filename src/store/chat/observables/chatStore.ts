@@ -55,9 +55,11 @@ export interface ChatStoreState {
   badges: Record<string, SanitisedBadgeSet>;
   userBadgeIds: Record<string, string>;
   sessionCaches: {
-    // getChatRowItemType runs per row on every list data change; caching the
-    // two-peek paints/userPaintIds traversal per user avoids re-walking those
-    // observables for every row on every render.
+    /**
+     * getChatRowItemType runs per row on every list data change; caching the
+     * two-peek paints/userPaintIds traversal per user avoids re-walking those
+     * observables for every row on every render.
+     */
     userPaintFlags: Record<string, boolean>;
   };
   sharedChatBadgeCaches: {
@@ -80,7 +82,7 @@ export const limitChannelCaches = (
   if (entries.length <= MAX_CACHED_CHANNELS) {
     return channelCaches;
   }
-  const sorted = entries.slice().sort((a, b) => {
+  const sorted = entries.toSorted((a, b) => {
     if (a[0] === currentChannelId) {
       return -1;
     }
@@ -104,9 +106,11 @@ const initialChatStoreState: ChatStoreState = {
   recentMessagesByChannel: {},
   loadingState: 'IDLE',
   currentChannelId: null,
-  // Seeded empty and hydrated after first interactions - building the full
-  // emoji emote set is thousands of allocations and this module loads with
-  // the root layout, before the first chat screen can possibly need it.
+  /**
+   * Seeded empty and hydrated after first interactions - building the full
+   * emoji emote set is thousands of allocations and this module loads with
+   * the root layout, before the first chat screen can possibly need it.
+   */
   emojis: [],
   bits: [],
   messages: [],
@@ -156,12 +160,14 @@ const hydrateDeferredChatState = () => {
     chatStore$.emojis.set(getEmojiEmotes(getPreferences().emojiStyle));
   }
 
-  // Rehydrate the 7TV cosmetic maps from the previous session's MMKV snapshot
-  // so paints/badges render on launch instead of waiting for the event API to
-  // re-stream every entitlement. The websocket still corrects and extends
-  // this live (create/update/delete). It can also outrace this deferred
-  // hydration, so in-memory entries win over the snapshot, same as the
-  // recent-messages hydration below.
+  /**
+   * Rehydrate the 7TV cosmetic maps from the previous session's MMKV snapshot
+   * so paints/badges render on launch instead of waiting for the event API to
+   * re-stream every entitlement. The websocket still corrects and extends
+   * this live (create/update/delete). It can also outrace this deferred
+   * hydration, so in-memory entries win over the snapshot, same as the
+   * recent-messages hydration below.
+   */
   const persistedCosmetics = loadPersistedCosmetics();
   if (persistedCosmetics) {
     batch(() => {
@@ -185,11 +191,13 @@ const hydrateDeferredChatState = () => {
   }
 
   if (RECENT_MESSAGES_PERSISTENCE_ENABLED) {
-    // Native: seed from the per-channel MMKV keys (writes are handled
-    // per-channel in the message-sync path, not via Legend State, so a sync
-    // only re-serializes the active channel instead of every cached channel -
-    // issue #594). Channels already live in memory win over the snapshot in
-    // case a chat was joined before this deferred hydration ran.
+    /**
+     * Native: seed from the per-channel MMKV keys (writes are handled
+     * per-channel in the message-sync path, not via Legend State, so a sync
+     * only re-serializes the active channel instead of every cached channel -
+     * issue #594). Channels already live in memory win over the snapshot in
+     * case a chat was joined before this deferred hydration ran.
+     */
     chatStore$.recentMessagesByChannel.set({
       ...loadPersistedRecentMessages(),
       ...chatStore$.recentMessagesByChannel.peek(),
@@ -199,11 +207,13 @@ const hydrateDeferredChatState = () => {
 
 InteractionManager.runAfterInteractions(hydrateDeferredChatState);
 
-// Recent messages used to live inside `persisted`; drop the stale field from
-// old installs so channelCaches writes stop re-serializing it. Chatterino
-// badges likewise used to be stored per channel (~4,100 entries each) but are
-// now resolved from the bundled table at read time; strip them from old
-// caches so every future channelCaches write stops re-serializing them.
+/**
+ * Recent messages used to live inside `persisted`; drop the stale field from
+ * old installs so channelCaches writes stop re-serializing it. Chatterino
+ * badges likewise used to be stored per channel (~4,100 entries each) but are
+ * now resolved from the bundled table at read time; strip them from old
+ * caches so every future channelCaches write stops re-serializing them.
+ */
 when(persistedState$?._state?.isLoadedLocal, () => {
   const persisted = chatStore$.persisted.peek() as {
     recentMessagesByChannel?: unknown;

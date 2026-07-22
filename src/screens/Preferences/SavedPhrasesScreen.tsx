@@ -1,5 +1,12 @@
 import { useCallback, useRef, useState } from 'react';
-import { Alert, Platform, StyleSheet, TextInput, View } from 'react-native';
+import {
+  Alert,
+  Platform,
+  StyleSheet,
+  TextInput,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
@@ -34,11 +41,10 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { impact } from '@app/lib/haptics';
 import {
-  type SavedPhrase,
   usePreference,
   useUpdatePreferences,
-} from '@app/store/preferenceStore';
-import { Color } from '@app/styles/pallete';
+} from '@app/store/preferences/selectors';
+import { type SavedPhrase } from '@app/store/preferences/state';
 import { theme } from '@app/styles/themes';
 
 function createPhraseId(text: string) {
@@ -100,6 +106,8 @@ function PhraseRow({
   onRemove: (id: string) => void;
 }) {
   const { t } = useTranslation(['preferences', 'common']);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const handleRemove = useCallback(() => {
     Alert.alert(
       t('removePhrase'),
@@ -121,9 +129,19 @@ function PhraseRow({
   return (
     <PressableScale
       onPress={() => onEdit(phrase)}
-      style={[styles.row, isEditing && styles.rowEditing]}
+      style={[
+        styles.row,
+        { borderBottomColor: theme.color.border[scheme] },
+        isEditing && {
+          backgroundColor: theme.color.surfacePressed[scheme],
+        },
+      ]}
     >
-      <Text type='md' style={styles.phraseText} numberOfLines={2}>
+      <Text
+        type='md'
+        style={[styles.phraseText, { color: theme.color.text[scheme] }]}
+        numberOfLines={2}
+      >
         {phrase.text}
       </Text>
       <PressableScale
@@ -135,7 +153,7 @@ function PhraseRow({
         <SymbolView
           name='minus.circle.fill'
           size={22}
-          tintColor={Color.zinc[600]}
+          tintColor={theme.color.textFaint[scheme]}
         />
       </PressableScale>
     </PressableScale>
@@ -144,14 +162,30 @@ function PhraseRow({
 
 function EmptyState() {
   const { t } = useTranslation('preferences');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   return (
     <View style={styles.emptyState}>
-      <SymbolView name='text.bubble' size={48} tintColor={Color.zinc[600]} />
-      <Text type='lg' weight='medium' style={styles.emptyTitle}>
+      <SymbolView
+        name='text.bubble'
+        size={56}
+        tintColor={theme.color.textSecondary[scheme]}
+      />
+      <Text
+        type='lg'
+        weight='medium'
+        style={[
+          styles.emptyTitle,
+          { color: theme.color.textSecondary[scheme] },
+        ]}
+      >
         {t('noSavedPhrases')}
       </Text>
-      <Text type='sm' style={styles.emptySubtitle}>
+      <Text
+        type='sm'
+        style={[styles.emptySubtitle, { color: theme.color.textFaint[scheme] }]}
+      >
         {t('noSavedPhrasesDescription')}
       </Text>
     </View>
@@ -172,6 +206,8 @@ function InputSection({
   onSave,
 }: InputSectionProps) {
   const { t } = useTranslation('preferences');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const canSave = value.trim().length > 0;
 
   return (
@@ -180,21 +216,39 @@ function InputSection({
         <TextInput
           autoCorrect
           placeholder={t('addSavedPhrasePlaceholder')}
-          placeholderTextColor={Color.zinc[500]}
+          placeholderTextColor={theme.color.textFaint[scheme]}
           value={value}
           onChangeText={onChangeText}
           onSubmitEditing={onSave}
           returnKeyType='done'
-          style={styles.input}
+          style={[
+            styles.input,
+            {
+              backgroundColor: theme.color.surface[scheme],
+              borderColor: theme.color.border[scheme],
+              color: theme.color.text[scheme],
+            },
+          ]}
         />
         <PressableScale
           onPress={canSave ? onSave : undefined}
-          style={[styles.addButton, canSave ? styles.addButtonEnabled : null]}
+          style={[
+            styles.addButton,
+            {
+              backgroundColor: canSave
+                ? theme.color.text[scheme]
+                : theme.color.surfacePressed[scheme],
+            },
+          ]}
         >
           <SymbolView
             name={isEditing ? 'checkmark' : 'plus'}
             size={16}
-            tintColor={canSave ? Color.zinc[950] : Color.zinc[500]}
+            tintColor={
+              canSave
+                ? theme.color.background[scheme]
+                : theme.color.textFaint[scheme]
+            }
           />
         </PressableScale>
       </View>
@@ -204,6 +258,8 @@ function InputSection({
 
 function NativeSavedPhrasesList() {
   const { t } = useTranslation('preferences');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { phrases, savePhrase, updatePreferences } = useSavedPhrases();
   const [editingId, setEditingId] = useState<string | null>(null);
   const phraseText = useNativeState('');
@@ -240,7 +296,13 @@ function NativeSavedPhrasesList() {
   const hasPhrases = phrases.length > 0;
 
   return (
-    <Host style={styles.keyboardAvoid} colorScheme='dark'>
+    <Host
+      style={[
+        styles.keyboardAvoid,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+      colorScheme={scheme}
+    >
       <List modifiers={[listStyle('insetGrouped')]}>
         <Section>
           <TextField
@@ -270,7 +332,7 @@ function NativeSavedPhrasesList() {
                 >
                   <HStack>
                     <NativeText
-                      modifiers={[foregroundStyle(theme.color.text.dark)]}
+                      modifiers={[foregroundStyle(theme.color.text[scheme])]}
                     >
                       {phrase.text}
                     </NativeText>
@@ -288,6 +350,8 @@ function NativeSavedPhrasesList() {
 
 export function SavedPhrasesScreen() {
   const { t } = useTranslation('preferences');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { phrases, savePhrase, updatePreferences } = useSavedPhrases();
   const [inputValue, setInputValue] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -351,7 +415,13 @@ export function SavedPhrasesScreen() {
   }
 
   return (
-    <KeyboardAvoidingView behavior='padding' style={styles.keyboardAvoid}>
+    <KeyboardAvoidingView
+      behavior='padding'
+      style={[
+        styles.keyboardAvoid,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <FlashList
         ref={listRef}
         data={phrases}
@@ -368,7 +438,10 @@ export function SavedPhrasesScreen() {
         ListEmptyComponent={EmptyState}
         ListFooterComponent={
           hasPhrases ? (
-            <Text type='xs' style={styles.footer}>
+            <Text
+              type='xs'
+              style={[styles.footer, { color: theme.color.textFaint[scheme] }]}
+            >
               {t('savedPhrasesFooter', { count: phrases.length })}
             </Text>
           ) : null
@@ -381,15 +454,11 @@ export function SavedPhrasesScreen() {
 const styles = StyleSheet.create({
   addButton: {
     alignItems: 'center',
-    backgroundColor: Color.zinc[800],
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius18,
     height: 36,
     justifyContent: 'center',
     width: 36,
-  },
-  addButtonEnabled: {
-    backgroundColor: Color.zinc[50],
   },
   emptyState: {
     alignItems: 'center',
@@ -399,27 +468,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   emptySubtitle: {
-    color: Color.zinc[500],
     lineHeight: 20,
     textAlign: 'center',
   },
   emptyTitle: {
-    color: Color.zinc[400],
     marginTop: theme.space4,
   },
   footer: {
-    color: Color.zinc[500],
     lineHeight: 18,
     paddingHorizontal: theme.space4,
     paddingTop: theme.space16,
   },
   input: {
-    backgroundColor: Color.zinc[900],
-    borderColor: Color.zinc[800],
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius12,
     borderWidth: 1,
-    color: theme.colorWhite,
     flex: 1,
     fontSize: theme.fontSize16,
     height: 44,
@@ -436,7 +499,6 @@ const styles = StyleSheet.create({
     paddingTop: theme.space12,
   },
   keyboardAvoid: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   listContent: {
@@ -447,7 +509,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   phraseText: {
-    color: theme.colorWhite,
     flex: 1,
     fontSize: theme.fontSize14,
     lineHeight: 20,
@@ -455,14 +516,10 @@ const styles = StyleSheet.create({
   },
   row: {
     alignItems: 'center',
-    borderBottomColor: Color.zinc[800],
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space12,
     paddingHorizontal: theme.space4,
     paddingVertical: 14,
-  },
-  rowEditing: {
-    backgroundColor: Color.zinc[900],
   },
 });

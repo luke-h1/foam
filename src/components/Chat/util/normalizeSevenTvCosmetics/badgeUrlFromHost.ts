@@ -2,6 +2,7 @@ import type { SevenTvHost } from '@app/types/seventv/emotes';
 
 import { badgeFileName } from './badgeFileName';
 import { buildSevenTvBadgeImageUrl } from './buildSevenTvBadgeImageUrl';
+import { ensureHttpsUrl } from './ensureHttpsUrl';
 import { pickBestBadgeFile } from './pickBestBadgeFile';
 
 export function badgeUrlFromHost(host: SevenTvHost, badgeId?: string): string {
@@ -11,8 +12,10 @@ export function badgeUrlFromHost(host: SevenTvHost, badgeId?: string): string {
 
   const file = pickBestBadgeFile(host.files);
   if (file && host.url) {
-    return `${host.url.replace(/\/$/, '')}/${badgeFileName(file)}`;
+    return ensureHttpsUrl(
+      `${host.url.replace(/\/$/, '')}/${badgeFileName(file)}`,
+    );
   }
 
-  return host.url;
+  return ensureHttpsUrl(host.url);
 }

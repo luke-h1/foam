@@ -1,3 +1,4 @@
+import { ingestChannelPointRewardTags } from '@app/store/chat/actions/channelPointRewardTitles';
 import type {
   AnyChatMessageType,
   ChatMessageType,
@@ -8,7 +9,6 @@ import {
   ViewerMilestoneTags,
 } from '@app/types/chat/irc-tags/usernotice';
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
-import { ingestChannelPointRewardTags } from '@app/utils/chat/channelPointRewardTitleStore';
 import { createCharityDonationPart } from '@app/utils/chat/formatSubscriptionNotice/createCharityDonationPart';
 import { createRitualPart } from '@app/utils/chat/formatSubscriptionNotice/createRitualPart';
 import { createSubscriptionPart } from '@app/utils/chat/formatSubscriptionNotice/createSubscriptionPart';

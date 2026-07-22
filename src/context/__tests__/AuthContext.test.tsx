@@ -44,11 +44,13 @@ const twitchApi = jest.mocked(_twitchApi);
 describe('AuthContext', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // clearAllMocks does not drain mockResolvedValueOnce queues or per-test
-    // implementations, so a test whose call count shifts can consume a stale
-    // value queued by an earlier test. Fully reset the auth mocks each test
-    // (each test sets the behaviour it needs) so the suite is not call-count
-    // fragile. Scoped to these mocks so the global setup-file mocks survive.
+    /**
+     * clearAllMocks does not drain mockResolvedValueOnce queues or per-test
+     * implementations, so a test whose call count shifts can consume a stale
+     * value queued by an earlier test. Fully reset the auth mocks each test
+     * (each test sets the behaviour it needs) so the suite is not call-count
+     * fragile. Scoped to these mocks so the global setup-file mocks survive.
+     */
     SecureStore.getItemAsync.mockReset();
     SecureStore.setItemAsync.mockReset();
     SecureStore.deleteItemAsync.mockReset();
@@ -376,9 +378,11 @@ describe('AuthContext', () => {
       token_type: 'bearer',
     });
 
-    // Assert the ordering by outcome: getUserInfo must only run once
-    // validateToken has resolved (and thus synced the Helix Client-Id). Record
-    // whether validate had completed at the moment /users was called.
+    /**
+     * Assert the ordering by outcome: getUserInfo must only run once
+     * validateToken has resolved (and thus synced the Helix Client-Id). Record
+     * whether validate had completed at the moment /users was called.
+     */
     let validateResolved = false;
     let validateWasResolvedWhenUserInfoCalled: boolean | undefined;
     twitchService.validateToken.mockImplementation(async () => {

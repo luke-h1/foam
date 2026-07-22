@@ -36,7 +36,7 @@ export function buildTwitchLatencyTrackerScript(): string {
     }
   }
 
-  // Ads tear down the latency node — skip while one is playing.
+  // Ads tear down the latency node - skip while one is playing.
   function isAdActive() {
     return !!document.querySelector(
       '[data-a-target="video-ad-label"],[data-a-target="video-ad-countdown"],.video-player__ad-info-container,[data-test-selector="ad-banner-default-text-area__content"]'

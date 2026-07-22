@@ -2,10 +2,12 @@ import type { ComponentType } from 'react';
 
 import { Redirect } from 'expo-router';
 
-// The decode benchmark drags in the cinna emote workload (~60KB of URLs) and the
-// decode harness. Inline EXPO_PUBLIC_APP_VARIANT literals let Metro constant-fold
-// the require away, keeping it out of production bundles; don't hoist them into a
-// shared constant (mirrors StorybookRoute.tsx).
+/**
+ * The decode benchmark drags in the cinna emote workload (~60KB of URLs) and the
+ * decode harness. Inline EXPO_PUBLIC_APP_VARIANT literals let Metro constant-fold
+ * the require away, keeping it out of production bundles; don't hoist them into a
+ * shared constant (mirrors StorybookRoute.tsx).
+ */
 let ImageBenchmarkRoute: ComponentType = function ImageBenchmarkUnavailable() {
   return <Redirect href='/tabs/settings' />;
 };

@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import { useSleepTimer } from '../useSleepTimer';
+import { useSleepTimer } from '../hooks/useSleepTimer';
 
 describe('useSleepTimer', () => {
   beforeEach(() => {

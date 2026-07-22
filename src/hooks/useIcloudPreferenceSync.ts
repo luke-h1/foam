@@ -13,7 +13,7 @@ import {
   getPreferences,
   preferences$,
   replacePreferences,
-} from '@app/store/preferenceStore';
+} from '@app/store/preferences/state';
 import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
 import { logger } from '@app/utils/logger';
 

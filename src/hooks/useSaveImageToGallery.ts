@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { Platform, useColorScheme } from 'react-native';
 
 import { useMutation } from '@tanstack/react-query';
 import * as Crypto from 'expo-crypto';
@@ -13,6 +13,8 @@ interface SaveImageToGalleryVariables {
 }
 
 export function useSaveImageToGallery() {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   // eslint-disable-next-line react-doctor/query-mutation-missing-invalidation
   const { isPending, mutate } = useMutation<
     unknown,
@@ -25,7 +27,7 @@ export function useSaveImageToGallery() {
       }
 
       if (Platform.OS === 'web') {
-        openLinkInBrowser(url);
+        openLinkInBrowser(url, scheme);
         return;
       }
 

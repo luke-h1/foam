@@ -1,9 +1,9 @@
-import { View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 
 import i18next from '@app/i18n/i18next';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
-import { styles } from '../RichChatMessage.styles';
+import { getRichChatMessageStyles } from '../RichChatMessage.styles';
 import type { BadgePressData } from '../RichChatMessage.types';
 import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
@@ -39,6 +39,9 @@ export function AnnouncementChatBody({
   username,
   ...rendererArgs
 }: AnnouncementChatBodyProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = getRichChatMessageStyles(scheme);
   const resolvedAccentColor = accentColor ?? styles.announcementMetaText.color;
 
   return (

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@app/components/Button/Button';
@@ -12,6 +12,8 @@ import { OtherInfoCard } from './components/OtherInfoCard';
 
 export function FaqScreen() {
   const { t } = useTranslation('faq');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const scrollRef = useRef<ScrollView>(null);
   const didOpenBrowser = useRef(false);
 
@@ -23,11 +25,16 @@ export function FaqScreen() {
     }
 
     didOpenBrowser.current = true;
-    openLinkInBrowser('https://foam-app.com/faq');
-  }, []);
+    openLinkInBrowser('https://foam-app.com/faq', scheme);
+  }, [scheme]);
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <ScrollView
         ref={scrollRef}
         contentInsetAdjustmentBehavior='automatic'
@@ -36,7 +43,9 @@ export function FaqScreen() {
       >
         <OtherInfoCard title={t('title')} body={t('body')}>
           <Button
-            onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
+            onPress={() =>
+              openLinkInBrowser('https://foam-app.com/faq', scheme)
+            }
             style={styles.cta}
           >
             <Text weight='semibold'>{t('openFaq')}</Text>
@@ -49,7 +58,6 @@ export function FaqScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   content: {

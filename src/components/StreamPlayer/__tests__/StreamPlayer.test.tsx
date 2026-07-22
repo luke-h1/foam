@@ -28,9 +28,11 @@ jest.mock('@app/lib/haptics', () => ({
   impact: jest.fn(),
 }));
 
-// StreamPlayer defers mounting the WebView until interactions settle (see
-// canMountWebView); run the callback synchronously so tests can read the
-// WebView props right after render.
+/**
+ * StreamPlayer defers mounting the WebView until interactions settle (see
+ * canMountWebView); run the callback synchronously so tests can read the
+ * WebView props right after render.
+ */
 jest.mock('react-native/Libraries/Interaction/InteractionManager', () => ({
   __esModule: true,
   default: {

@@ -2,8 +2,9 @@ import type { ReactNode } from 'react';
 
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
+import type { ColorScheme } from '@app/styles/themes';
 
-import { subscriptionNoticeStyles as styles } from './subscriptionNoticeStyles';
+import { subscriptionNoticeStyles } from './subscriptionNoticeStyles';
 
 export interface SubscriptionDescriptionInput {
   msgId: string;
@@ -23,7 +24,9 @@ export interface SubscriptionDescriptionInput {
 
 export function buildSubscriptionNoticeDescription(
   input: SubscriptionDescriptionInput,
+  scheme: ColorScheme,
 ): ReactNode[] {
+  const styles = subscriptionNoticeStyles[scheme];
   const {
     msgId,
     isPrime,

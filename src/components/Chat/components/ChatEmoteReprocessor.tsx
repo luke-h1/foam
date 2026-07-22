@@ -2,7 +2,7 @@ import { memo, RefObject } from 'react';
 
 import { useChannelEmoteDataForReprocess } from '@app/store/chat/react/selectors';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
-import { usePreference } from '@app/store/preferenceStore';
+import { usePreference } from '@app/store/preferences/selectors';
 
 import { useEmoteReprocessing } from '../hooks/useEmoteReprocessing';
 

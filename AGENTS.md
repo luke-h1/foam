@@ -38,12 +38,13 @@ src/store/
     actions/       # pure mutations against observables (no React hooks)
     react/         # useSelector / useObservable hooks for components
   preferences/
-    state.ts       # preferences$ observable + persistence
+    state.ts       # preferences$ observable + persistence + write helpers
     selectors.ts   # usePreferences and related hooks
-    index.ts
 ```
 
-Import chat store modules directly (for example `@app/store/chat/observables/chatStore`, `@app/store/chat/actions/messages`, `@app/store/chat/types/constants`). Do not add barrel exports under `store/chat`.
+Import store modules directly (for example `@app/store/chat/observables/chatStore`, `@app/store/chat/actions/messages`, `@app/store/preferences/selectors`). Do not add barrel exports anywhere under `store/`.
+
+Exception to the react/ rule: hot chat-row components (message renderers, composer suggestion hooks) may call `useSelector` inline against `chatStore$` fields when the subscription is a single primitive or a narrow derived value tuned for render fan-out (see `MentionSpan`). Keep those subscriptions as narrow as they are today; anything broader belongs in `store/chat/react/`.
 
 ## Inline Simple Values
 
@@ -78,6 +79,12 @@ Do not write `/** VOD resume offset in seconds; only applied when video is set. 
 The multi-line form is the format the repo uses everywhere, so keeping to it avoids a mix of styles and keeps comments easy to extend later without reflowing the line.
 
 Put new module-level observables in `observables/`. Put write helpers that call `.set()` / `.peek()` in `actions/`. Put `useSelector` and `useObservable` in `react/`. Session-scoped state that components subscribe to belongs on `chatStore$`. Hot-path caches that are only read imperatively during ingest or render (mention colours, shared chat badges) are the exception: keep those as plain module-level `Map`s with an explicit size bound and clear function (see `src/store/chat/actions/chatColorCaches.ts`) - routing them through an observable clones and key-diffs the whole bucket on every write. Such caches live in a store `actions/` or chat `util/` module, never inline in a component file. Pure message transforms like `getVisibleMessages` also live in `actions/`. Do not wrap Legend State mutations in `useCallback` unless a React API (imperative ref, effect deps) needs a stable function reference.
+
+## Theming: scheme-resolved colors
+
+Colors live as `{light, dark}` pairs on `theme.color.*` and are resolved at the call site: `const colorScheme = useColorScheme(); const scheme = colorScheme === 'light' ? 'light' : 'dark';` (that exact two-line form - `?? 'dark'` fails tsc because `ColorSchemeName` includes `'unspecified'`, and the one-line ternary trips the hooks lint rule). The default idiom is a static `StyleSheet` for layout only, with color attributes merged inline per scheme.
+
+Hot paths (chat rows, `Chat/styles.ts`, `RichChatMessage.styles.ts`) use the second sanctioned idiom: a `createStyles(scheme)` factory producing a full per-scheme `StyleSheet`, cached per scheme so each scheme builds its sheet once. Use it only where per-row inline style arrays would show up in render cost; everywhere else stick to static-layout-plus-inline-color.
 
 ## React Doctor: package.json dependency rules
 

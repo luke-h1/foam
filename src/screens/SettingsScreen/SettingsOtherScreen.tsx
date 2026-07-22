@@ -1,5 +1,11 @@
 import { useRef } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -22,12 +28,14 @@ import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import {
   usePreference,
   useUpdatePreferences,
-} from '@app/store/preferenceStore';
+} from '@app/store/preferences/selectors';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 
 export function SettingsOtherScreen() {
   const { t } = useTranslation('settings');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const scrollRef = useRef<ScrollView>(null);
   const analyticsEnabled = usePreference('analyticsEnabled');
   const update = useUpdatePreferences();
@@ -53,7 +61,9 @@ export function SettingsOtherScreen() {
             <Button
               label={t('faq')}
               systemImage='questionmark.circle'
-              onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
+              onPress={() =>
+                openLinkInBrowser('https://foam-app.com/faq', scheme)
+              }
             />
             <Button
               label={t('changelog')}
@@ -67,7 +77,12 @@ export function SettingsOtherScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <ScrollView
         ref={scrollRef}
         contentInsetAdjustmentBehavior='automatic'
@@ -85,7 +100,7 @@ export function SettingsOtherScreen() {
           <SettingsToggleRow
             title={t('shareAnalytics')}
             subtitle={t('shareAnalyticsDescription')}
-            icon={{ icon: 'chart.bar', color: theme.colorTeal }}
+            icon={{ icon: 'chart.bar', color: theme.color.teal[scheme] }}
             value={analyticsEnabled}
             onValueChange={value => update({ analyticsEnabled: value })}
           />
@@ -95,13 +110,18 @@ export function SettingsOtherScreen() {
           <SettingsLinkRow
             title={t('faq')}
             subtitle={t('faqShortDescription')}
-            icon={{ icon: 'questionmark.circle', color: theme.colorPrimary }}
-            onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
+            icon={{
+              icon: 'questionmark.circle',
+              color: theme.color.accent[scheme],
+            }}
+            onPress={() =>
+              openLinkInBrowser('https://foam-app.com/faq', scheme)
+            }
           />
           <SettingsLinkRow
             title={t('changelog')}
             subtitle={t('changelogDescription')}
-            icon={{ icon: 'clock', color: theme.colorAmber }}
+            icon={{ icon: 'clock', color: theme.color.amber[scheme] }}
             onPress={() => router.push('/tabs/settings/changelog')}
           />
         </SettingsSection>
@@ -112,7 +132,6 @@ export function SettingsOtherScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   content: {

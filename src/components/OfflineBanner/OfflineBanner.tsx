@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, {
   useAnimatedStyle,
@@ -18,6 +18,8 @@ const ANIM_DURATION = 250;
 
 export function OfflineBanner() {
   const { t } = useTranslation('common');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const insets = useSafeAreaInsets();
   const online = onlineManager.isOnline();
   const progress = useSharedValue(online ? 0 : 1);
@@ -41,9 +43,18 @@ export function OfflineBanner() {
   return (
     <Animated.View
       pointerEvents='none'
-      style={[styles.wrapper, { paddingTop: insets.top }, animatedStyle]}
+      style={[
+        styles.wrapper,
+        {
+          backgroundColor: theme.color.background[scheme],
+          paddingTop: insets.top,
+        },
+        animatedStyle,
+      ]}
     >
-      <View style={styles.banner}>
+      <View
+        style={[styles.banner, { backgroundColor: theme.color.amber[scheme] }]}
+      >
         <Text type='xxs' weight='semibold' style={styles.text}>
           {t('noInternetConnection')}
         </Text>
@@ -58,11 +69,9 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: theme.colorBlack,
     zIndex: 9999,
   },
   banner: {
-    backgroundColor: theme.colorAmber,
     height: BANNER_HEIGHT,
     alignItems: 'center',
     justifyContent: 'center',

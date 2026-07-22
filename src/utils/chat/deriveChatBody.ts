@@ -1,5 +1,4 @@
 import { emoteBreaksInline } from '@app/utils/chat/deriveChatBody/emoteBreaksInline';
-import { structureCache } from '@app/utils/chat/deriveChatBody/structureCache';
 import {
   ChatBodyVariant,
   MessageStructure,
@@ -151,7 +150,6 @@ function scanChatBody(message: ParsedPart[]): ChatBodyScan {
     mentionLogins,
   };
   scanCache.set(message, scan);
-  structureCache.set(message, { canBeInline, containsEmotes });
   return scan;
 }
 

@@ -1,7 +1,7 @@
 import { logger } from '@app/utils/logger';
 
 /**
- * A badge entitlement (userBadgeIds) can arrive before — or without — the
+ * A badge entitlement (userBadgeIds) can arrive before - or without - the
  * cosmetic.create that defines the badge, leaving a user pointing at a badge we
  * cannot render. This registry makes that gap observable instead of a silently
  * empty slot: referenced-but-undefined badge ids are tracked and logged once

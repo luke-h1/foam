@@ -18,7 +18,7 @@ type EmoteData = ReturnType<typeof getCurrentEmoteData>;
  * Assembles the per-message emote inputs (personal 7TV emotes, scoped Twitch
  * subscriber emotes, emoji) and runs the emote worklet, returning the rendered
  * parts. This is the single place that decides which emote sources feed a
- * message — both the live ingest path and the visible-message reprocess path
+ * message - both the live ingest path and the visible-message reprocess path
  * call through here so the precedence and scoping rules can only diverge in one
  * spot.
  */
@@ -78,9 +78,11 @@ export function resolveMessageEmoteParts({
     bttvGlobalEmotes: emoteData.bttvGlobalEmotes,
   });
 
-  // The worklet caches parsed parts by text alone, so bits handling stays
-  // outside it: applyCheermotesToParts returns a fresh array and never
-  // mutates the cached one.
+  /**
+   * The worklet caches parsed parts by text alone, so bits handling stays
+   * outside it: applyCheermotesToParts returns a fresh array and never
+   * mutates the cached one.
+   */
   const bits = Number.parseInt(userstate.bits ?? '', 10);
   if (Number.isFinite(bits) && bits > 0) {
     const cheermotes = getChannelCheermotes(channelId);

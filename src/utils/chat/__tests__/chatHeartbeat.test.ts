@@ -57,9 +57,11 @@ describe('getHeartbeatAction', () => {
   });
 
   test('waits for a fresh probe instead of tearing down a healthy socket', () => {
-    // Resume sequence: the foreground liveness check sends a PING, then the
-    // heartbeat tick that was suspended in background flushes milliseconds
-    // later. The probe is fresh, so the tick must not reconnect.
+    /**
+     * Resume sequence: the foreground liveness check sends a PING, then the
+     * heartbeat tick that was suspended in background flushes milliseconds
+     * later. The probe is fresh, so the tick must not reconnect.
+     */
     expect(
       getHeartbeatAction({
         isOpen: true,

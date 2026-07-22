@@ -228,10 +228,12 @@ export function createPlayerTelemetry() {
         return;
       }
 
-      // The load already succeeded or was retired, so this is a mid-playback
-      // failure rather than a load failure - skip the load span/metric but
-      // still surface the error so late WebView/HTTP failures are not silently
-      // dropped from telemetry.
+      /**
+       * The load already succeeded or was retired, so this is a mid-playback
+       * failure rather than a load failure - skip the load span/metric but
+       * still surface the error so late WebView/HTTP failures are not silently
+       * dropped from telemetry.
+       */
       const context = session?.attributes ?? lastAttributes;
       const telemetryAttrs: PlayerTelemetryMetricAttributes = {
         ...(context ? metricAttributes(context) : {}),

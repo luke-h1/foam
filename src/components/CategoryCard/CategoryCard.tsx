@@ -1,5 +1,5 @@
 import { memo, useCallback } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { router } from 'expo-router';
@@ -32,6 +32,8 @@ export const CATEGORY_CARD_HEIGHT =
 
 export function CategoryCard({ category }: Props) {
   const { t } = useTranslation('common');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const handlePress = useCallback(() => {
     router.push(`/category/${category.id}`);
   }, [category.id]);
@@ -72,7 +74,7 @@ export function CategoryCard({ category }: Props) {
           source={category.box_art_url
             ?.replace('{width}', String(IMAGE_SOURCE_WIDTH))
             ?.replace('{height}', String(IMAGE_SOURCE_HEIGHT))}
-          style={styles.image}
+          style={[styles.image, { borderColor: theme.color.border[scheme] }]}
           contentFit='cover'
         />
         <Text numberOfLines={TITLE_MAX_LINES} style={styles.title}>
@@ -91,10 +93,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   image: {
-    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
-    borderWidth: 1,
+    borderRadius: theme.borderRadius16,
+    borderWidth: StyleSheet.hairlineWidth,
     height: IMAGE_HEIGHT,
     width: IMAGE_WIDTH,
   },

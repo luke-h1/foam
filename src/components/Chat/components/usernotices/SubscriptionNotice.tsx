@@ -1,17 +1,18 @@
 import { memo } from 'react';
-import { View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 
 import { getSubscriptionTierDisplay } from '@app/components/Chat/components/usernotices/util/subscriptionNoticeTier';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
+import type { ColorScheme } from '@app/styles/themes';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';
-import { styles as chatStyles } from '../ChatMessage/RichChatMessage.styles';
+import { getRichChatMessageStyles } from '../ChatMessage/RichChatMessage.styles';
 import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
 import { buildSubscriptionNoticeDescription } from './buildSubscriptionNoticeDescription';
-import { subscriptionNoticeStyles as styles } from './subscriptionNoticeStyles';
+import { subscriptionNoticeStyles } from './subscriptionNoticeStyles';
 
 function getMessagePartKey(part: ParsedPart, occurrence: number): string {
   switch (part.type) {
@@ -24,8 +25,13 @@ function getMessagePartKey(part: ParsedPart, occurrence: number): string {
   }
 }
 
-function renderMessagePart(messagePart: ParsedPart, occurrence: number) {
+function renderMessagePart(
+  messagePart: ParsedPart,
+  occurrence: number,
+  scheme: ColorScheme,
+) {
   const key = getMessagePartKey(messagePart, occurrence);
+  const styles = subscriptionNoticeStyles[scheme];
 
   switch (messagePart.type) {
     case 'text':
@@ -68,6 +74,10 @@ function SubscriptionNoticeComponent({
   part,
   parsedMessage,
 }: SubscriptionNoticeProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const chatStyles = getRichChatMessageStyles(scheme);
+  const styles = subscriptionNoticeStyles[scheme];
   const { subscriptionEvent } = part;
   const { msgId, displayName, message } = subscriptionEvent;
   const tierDisplay = getSubscriptionTierDisplay({
@@ -77,49 +87,52 @@ function SubscriptionNoticeComponent({
   });
   const isPrime = tierDisplay === 'Prime';
 
-  const description = buildSubscriptionNoticeDescription({
-    msgId,
-    isPrime,
-    tierDisplay,
-    cumulativeMonths:
-      'months' in subscriptionEvent ? subscriptionEvent.months : undefined,
-    streakMonths:
-      'streakMonths' in subscriptionEvent
-        ? subscriptionEvent.streakMonths
-        : undefined,
-    shouldShareStreak:
-      'shouldShareStreak' in subscriptionEvent
-        ? subscriptionEvent.shouldShareStreak
-        : undefined,
-    giftMonths:
-      'giftMonths' in subscriptionEvent
-        ? subscriptionEvent.giftMonths
-        : undefined,
-    recipientDisplayName:
-      'recipientDisplayName' in subscriptionEvent
-        ? subscriptionEvent.recipientDisplayName
-        : undefined,
-    promoName:
-      'promoName' in subscriptionEvent
-        ? subscriptionEvent.promoName
-        : undefined,
-    promoGiftTotal:
-      'promoGiftTotal' in subscriptionEvent
-        ? Number(subscriptionEvent.promoGiftTotal) || undefined
-        : undefined,
-    massGiftCount:
-      'massGiftCount' in subscriptionEvent
-        ? subscriptionEvent.massGiftCount
-        : undefined,
-    senderCount:
-      'senderCount' in subscriptionEvent
-        ? subscriptionEvent.senderCount
-        : undefined,
-    senderName:
-      'senderName' in subscriptionEvent
-        ? subscriptionEvent.senderName
-        : undefined,
-  });
+  const description = buildSubscriptionNoticeDescription(
+    {
+      msgId,
+      isPrime,
+      tierDisplay,
+      cumulativeMonths:
+        'months' in subscriptionEvent ? subscriptionEvent.months : undefined,
+      streakMonths:
+        'streakMonths' in subscriptionEvent
+          ? subscriptionEvent.streakMonths
+          : undefined,
+      shouldShareStreak:
+        'shouldShareStreak' in subscriptionEvent
+          ? subscriptionEvent.shouldShareStreak
+          : undefined,
+      giftMonths:
+        'giftMonths' in subscriptionEvent
+          ? subscriptionEvent.giftMonths
+          : undefined,
+      recipientDisplayName:
+        'recipientDisplayName' in subscriptionEvent
+          ? subscriptionEvent.recipientDisplayName
+          : undefined,
+      promoName:
+        'promoName' in subscriptionEvent
+          ? subscriptionEvent.promoName
+          : undefined,
+      promoGiftTotal:
+        'promoGiftTotal' in subscriptionEvent
+          ? Number(subscriptionEvent.promoGiftTotal) || undefined
+          : undefined,
+      massGiftCount:
+        'massGiftCount' in subscriptionEvent
+          ? subscriptionEvent.massGiftCount
+          : undefined,
+      senderCount:
+        'senderCount' in subscriptionEvent
+          ? subscriptionEvent.senderCount
+          : undefined,
+      senderName:
+        'senderName' in subscriptionEvent
+          ? subscriptionEvent.senderName
+          : undefined,
+    },
+    scheme,
+  );
 
   const renderedParsedMessageParts =
     parsedMessage && parsedMessage.length > 0
@@ -129,7 +142,7 @@ function SubscriptionNoticeComponent({
             const baseKey = getMessagePartKey(partItem, 0).replace(/:\d+$/, '');
             const occurrence = partKeyCounts.get(baseKey) ?? 0;
             partKeyCounts.set(baseKey, occurrence + 1);
-            return renderMessagePart(partItem, occurrence);
+            return renderMessagePart(partItem, occurrence, scheme);
           });
         })()
       : null;

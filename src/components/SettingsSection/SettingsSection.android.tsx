@@ -1,5 +1,5 @@
 import { Children, Fragment, isValidElement, ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import {
   Card,
@@ -23,7 +23,7 @@ import {
 } from '@app/components/SettingsSection/SettingsSection.types';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { iosMatchedSwitchColors } from '@app/styles/composeSwitchColors';
-import { theme } from '@app/styles/themes';
+import { type ColorScheme, theme } from '@app/styles/themes';
 
 function isComposeRow(element: ReactNode): boolean {
   if (!isValidElement(element)) {
@@ -39,15 +39,19 @@ function isComposeRow(element: ReactNode): boolean {
   );
 }
 
-const listItemColors = {
-  containerColor: theme.color.surfaceNeutral.dark,
-  contentColor: theme.color.text.dark,
-} satisfies ListItemColors;
+function getListItemColors(scheme: ColorScheme) {
+  return {
+    containerColor: theme.color.surfaceNeutral[scheme],
+    contentColor: theme.color.text[scheme],
+  } satisfies ListItemColors;
+}
 
-const defaultCardColors = {
-  containerColor: theme.color.surfaceNeutral.dark,
-  contentColor: theme.color.text.dark,
-} satisfies CardColors;
+function getDefaultCardColors(scheme: ColorScheme) {
+  return {
+    containerColor: theme.color.surfaceNeutral[scheme],
+    contentColor: theme.color.text[scheme],
+  } satisfies CardColors;
+}
 
 function IconTile({
   icon,
@@ -56,6 +60,8 @@ function IconTile({
   icon: NonNullable<RowIcon>;
   danger?: boolean;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   return (
     <View
       style={[
@@ -67,7 +73,7 @@ function IconTile({
       <SymbolView
         name={resolveIconName(icon.icon, icon.androidIcon)}
         size={20}
-        tintColor={icon.color || theme.colorPrimary}
+        tintColor={icon.color || theme.color.accent[scheme]}
       />
     </View>
   );
@@ -95,11 +101,13 @@ function RowText({
   subtitle?: string;
   danger?: boolean;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   return (
     <>
       <ListItem.HeadlineContent>
         <Text
-          color={danger ? theme.colorRed : theme.color.text.dark}
+          color={danger ? theme.color.danger[scheme] : theme.color.text[scheme]}
           style={{ typography: 'bodyLarge', fontWeight: '600' }}
         >
           {title}
@@ -108,7 +116,7 @@ function RowText({
       {subtitle ? (
         <ListItem.SupportingContent>
           <Text
-            color={theme.color.textSecondary.dark}
+            color={theme.color.textSecondary[scheme]}
             style={{ typography: 'bodyMedium' }}
           >
             {subtitle}
@@ -130,14 +138,16 @@ export function SettingsSection({
   children: ReactNode;
   cardColor?: string;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const rows = Children.toArray(children).filter(isValidElement);
   const cardColors = cardColor
-    ? { containerColor: cardColor, contentColor: theme.color.text.dark }
-    : defaultCardColors;
+    ? { containerColor: cardColor, contentColor: theme.color.text[scheme] }
+    : getDefaultCardColors(scheme);
 
   return (
     <Host
-      colorScheme='dark'
+      colorScheme={scheme}
       matchContents={{ vertical: true }}
       style={styles.host}
     >
@@ -147,7 +157,7 @@ export function SettingsSection({
       >
         {title ? (
           <Text
-            color={theme.color.textSecondary.dark}
+            color={theme.color.textSecondary[scheme]}
             style={{ typography: 'labelSmall', fontWeight: '600' }}
           >
             {title}
@@ -158,7 +168,7 @@ export function SettingsSection({
             {rows.map((row, index) => (
               <Fragment key={row.key}>
                 {index > 0 ? (
-                  <HorizontalDivider color={theme.colorBorderSecondary} />
+                  <HorizontalDivider color={theme.color.border[scheme]} />
                 ) : null}
                 {isComposeRow(row) ? (
                   row
@@ -196,9 +206,11 @@ export function SettingsRow({
   onPress?: () => void;
   danger?: boolean;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   return (
     <ListItem
-      colors={listItemColors}
+      colors={getListItemColors(scheme)}
       modifiers={onPress ? [clickable(onPress, { indication: true })] : []}
     >
       <RowLeading icon={icon} danger={danger} />
@@ -212,7 +224,7 @@ export function SettingsRow({
               <SymbolView
                 name='chevron.right'
                 size={18}
-                tintColor={theme.colorGreyHoverAlpha}
+                tintColor={theme.color.textSecondary[scheme]}
               />
             )}
           </RNHostView>
@@ -235,15 +247,17 @@ export function SettingsToggleRow({
   value: boolean;
   onValueChange: (value: boolean) => void;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   return (
-    <ListItem colors={listItemColors}>
+    <ListItem colors={getListItemColors(scheme)}>
       <RowLeading icon={icon} />
       <RowText title={title} subtitle={subtitle} />
       <ListItem.TrailingContent>
         <Switch
           value={value}
           onCheckedChange={onValueChange}
-          colors={iosMatchedSwitchColors}
+          colors={iosMatchedSwitchColors[scheme]}
         />
       </ListItem.TrailingContent>
     </ListItem>
@@ -265,9 +279,11 @@ export function SettingsLinkRow({
   onPress?: () => void;
   danger?: boolean;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   return (
     <ListItem
-      colors={listItemColors}
+      colors={getListItemColors(scheme)}
       modifiers={onPress ? [clickable(onPress, { indication: true })] : []}
     >
       <RowLeading icon={icon} danger={danger} />
@@ -280,7 +296,7 @@ export function SettingsLinkRow({
           >
             {value ? (
               <Text
-                color={theme.color.textSecondary.dark}
+                color={theme.color.textSecondary[scheme]}
                 style={{ typography: 'bodyMedium', fontWeight: '600' }}
               >
                 {value}
@@ -291,7 +307,7 @@ export function SettingsLinkRow({
                 <SymbolView
                   name='chevron.right'
                   size={18}
-                  tintColor={theme.colorGreyHoverAlpha}
+                  tintColor={theme.color.textSecondary[scheme]}
                 />
               </RNHostView>
             ) : null}

@@ -4,15 +4,17 @@ import { CHAT_RECENT_MESSAGES_PERSISTENCE_KEY } from '@app/lib/observablePersist
 
 import type { AnyChatMessageType } from '../types/constants';
 
-// Recent messages are persisted with one MMKV key per channel rather than a
-// single serialized map. A busy chat re-syncs every few seconds; with the
-// whole-map approach (Legend State persisting the node), each sync re-stringified
-// and re-wrote every cached channel — ~690KB / 400 messages across 5 channels in
-// profiling (issue #594) — even though only the active channel changed. Per-key
-// writes touch only the active channel (~1/Nth of the work and the MMKV write).
-//
-// Native only: the `.web.ts` sibling is a no-op so web keeps the Legend State
-// IndexedDB persistence (its writes are async/off the main thread).
+/**
+ * Recent messages are persisted with one MMKV key per channel rather than a
+ * single serialized map. A busy chat re-syncs every few seconds; with the
+ * whole-map approach (Legend State persisting the node), each sync re-stringified
+ * and re-wrote every cached channel - ~690KB / 400 messages across 5 channels in
+ * profiling (issue #594) - even though only the active channel changed. Per-key
+ * writes touch only the active channel (~1/Nth of the work and the MMKV write).
+ *
+ * Native only: the `.web.ts` sibling is a no-op so web keeps the Legend State
+ * IndexedDB persistence (its writes are async/off the main thread).
+ */
 export const RECENT_MESSAGES_PERSISTENCE_ENABLED = true;
 
 const storage = createMMKV({ id: 'chat-recent-messages' });

@@ -29,7 +29,7 @@ function expandRepeatingStops(stops: PaintStop[]): PaintStop[] {
     return stops;
   }
 
-  const sorted = stops.slice().sort((a, b) => a.at - b.at);
+  const sorted = stops.toSorted((a, b) => a.at - b.at);
   const firstAt = sorted[0]?.at ?? 0;
   const lastAt = sorted[sorted.length - 1]?.at ?? 1;
   const period = lastAt - firstAt;
@@ -69,10 +69,12 @@ function expandRepeatingStops(stops: PaintStop[]): PaintStop[] {
   return expanded;
 }
 
-// Keyed on the (memoised, stable) layer object, then on fallbackColor - the
-// only per-call input. Repeating-gradient stop expansion + sorting + colour
-// conversion are the heaviest paint work; sharing the result across every user
-// wearing the paint is the main per-render saving.
+/**
+ * Keyed on the (memoised, stable) layer object, then on fallbackColor - the
+ * only per-call input. Repeating-gradient stop expansion + sorting + colour
+ * conversion are the heaviest paint work; sharing the result across every user
+ * wearing the paint is the main per-render saving.
+ */
 const layerGradientConfigCache = new WeakMap<
   PaintLayerData,
   Map<string, LayerGradientConfig>

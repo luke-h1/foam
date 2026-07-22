@@ -77,7 +77,7 @@ function checkIsOnlineIfNeeded() {
   });
 }
 
-// Only poll connectivity while the app is foregrounded — a lifetime interval
+// Only poll connectivity while the app is foregrounded - a lifetime interval
 // keeps waking the JS thread in the background for work the guard skips.
 let connectivityPollInterval: ReturnType<typeof setInterval> | undefined;
 
@@ -111,16 +111,20 @@ subscribeToAppStateTransitions(({ current }) => {
   }
 });
 
-// Fallback in case an AppState 'change' event is dropped — this is a known,
-// occasional issue on some Android OEMs/versions and would otherwise leave
-// polling stopped indefinitely after a missed foreground transition.
-// start/stopConnectivityPolling are both idempotent, so this just reconciles
-// against the actual current state rather than trusting event delivery alone.
+/**
+ * Fallback in case an AppState 'change' event is dropped - this is a known,
+ * occasional issue on some Android OEMs/versions and would otherwise leave
+ * polling stopped indefinitely after a missed foreground transition.
+ * start/stopConnectivityPolling are both idempotent, so this just reconciles
+ * against the actual current state rather than trusting event delivery alone.
+ */
 const APP_STATE_RECONCILE_INTERVAL_MS = 15_000;
 
-// Stored on globalThis and cleared before re-arming so a module re-evaluation
-// (Fast Refresh in dev) can't leak a second interval. In production the module
-// is evaluated once.
+/**
+ * Stored on globalThis and cleared before re-arming so a module re-evaluation
+ * (Fast Refresh in dev) can't leak a second interval. In production the module
+ * is evaluated once.
+ */
 const globalWithReconcile = globalThis as typeof globalThis & {
   __foamAppStateReconcileInterval?: ReturnType<typeof setInterval>;
 };
@@ -144,11 +148,13 @@ focusManager.setEventListener(onFocus => {
   }
   // eslint-disable-next-line no-undef
   if (typeof window !== 'undefined' && window.addEventListener) {
-    // these handlers are a bit redundant but focus catches when the browser window
-    // is blurred/focused while visibilitychange seems to only handle when the
-    // window minimizes (both of them catch tab changes)
-    // there's no harm to redundant fires because refetchOnWindowFocus is only
-    // used with queries that employ stale data times
+    /**
+     * these handlers are a bit redundant but focus catches when the browser window
+     * is blurred/focused while visibilitychange seems to only handle when the
+     * window minimizes (both of them catch tab changes)
+     * there's no harm to redundant fires because refetchOnWindowFocus is only
+     * used with queries that employ stale data times
+     */
     const handler = () => onFocus();
     // eslint-disable-next-line no-undef
     window.addEventListener('focus', handler, false);

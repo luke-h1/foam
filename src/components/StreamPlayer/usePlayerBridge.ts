@@ -113,9 +113,11 @@ export function usePlayerBridge({
     typeof setTimeout
   > | null>(null);
   const lastPlaybackLatencySecondsRef = useRef<number | null>(null);
-  // Telemetry for the current WebView/source generation: time-to-first-play
-  // plus once-per-generation guards so a struggling player doesn't flood
-  // Sentry with repeated blocked/stalled reports.
+  /**
+   * Telemetry for the current WebView/source generation: time-to-first-play
+   * plus once-per-generation guards so a struggling player doesn't flood
+   * Sentry with repeated blocked/stalled reports.
+   */
   const playerMountedAtRef = useRef(0);
   if (playerMountedAtRef.current === 0) {
     playerMountedAtRef.current = Date.now();
@@ -514,9 +516,11 @@ export function usePlayerBridge({
       case 'notifyStabilityLatency':
         stability.noteLatency(action.latencySeconds);
         break;
-      // Latency display flows through the videoLatencyDisplay$ observable via
-      // onPlaybackLatencyChange — holding it in React state here re-rendered
-      // the whole player subtree on every ~4s latency tick for nothing.
+      /**
+       * Latency display flows through the videoLatencyDisplay$ observable via
+       * onPlaybackLatencyChange - holding it in React state here re-rendered
+       * the whole player subtree on every ~4s latency tick for nothing.
+       */
       case 'publishLatency':
         lastPlaybackLatencySecondsRef.current = action.latencySeconds;
         onPlaybackLatencyChange?.(action.latencySeconds);

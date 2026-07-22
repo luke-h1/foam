@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import {
   LegendList,
@@ -34,7 +34,7 @@ type UserSuggestionListExtra = {
  * Defined outside the parent component so the reference is stable across
  * re-renders (avoids LegendList tearing down rows when the parent re-renders).
  * The press handler is threaded through `extraData` rather than captured in a
- * closure for the same reason — keeps this function pure and reusable.
+ * closure for the same reason - keeps this function pure and reusable.
  */
 function renderUserSuggestionItem({
   item,
@@ -51,17 +51,32 @@ function UserSuggestionItem({
   user: ChatUser;
   onPress: (selected: ChatUser) => void;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const railColors = suggestionRailColors[scheme];
+
   return (
-    <Button onPress={() => onPress(user)} style={styles.userSuggestionItem}>
+    <Button
+      onPress={() => onPress(user)}
+      style={[
+        styles.userSuggestionItem,
+        {
+          backgroundColor: railColors.chipBackground,
+          borderColor: railColors.chipBorder,
+        },
+      ]}
+    >
       <View
         style={[
           styles.userColorDot,
           {
-            backgroundColor: user.color || theme.color.textSecondary.dark,
+            backgroundColor: user.color || theme.color.textSecondary[scheme],
           },
         ]}
       />
-      <Text style={styles.userSuggestionText}>{user.name}</Text>
+      <Text style={[styles.userSuggestionText, { color: railColors.text }]}>
+        {user.name}
+      </Text>
     </Button>
   );
 }
@@ -71,6 +86,9 @@ export const UserSuggestions = memo(function UserSuggestions({
   showUserSuggestions,
   handleUserSelect,
 }: UserSuggestionsProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const railStyles = suggestionRailStyles[scheme];
   const extraData = useMemo(
     () => ({ onPress: handleUserSelect }),
     [handleUserSelect],
@@ -81,8 +99,8 @@ export const UserSuggestions = memo(function UserSuggestions({
   }
 
   return (
-    <View style={suggestionRailStyles.compactWrapper}>
-      <View style={suggestionRailStyles.compactContainer}>
+    <View style={railStyles.compactWrapper}>
+      <View style={railStyles.compactContainer}>
         <LegendList
           data={users}
           horizontal
@@ -108,8 +126,6 @@ const styles = StyleSheet.create({
   },
   userSuggestionItem: {
     alignItems: 'center',
-    backgroundColor: suggestionRailColors.chipBackground,
-    borderColor: suggestionRailColors.chipBorder,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius14,
     borderWidth: 1,
@@ -124,7 +140,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   userSuggestionText: {
-    color: suggestionRailColors.text,
     fontSize: theme.fontSize14,
     fontWeight: '500',
     maxWidth: 150,

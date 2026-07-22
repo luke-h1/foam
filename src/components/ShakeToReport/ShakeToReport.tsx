@@ -3,7 +3,7 @@ import { useRef } from 'react';
 import { router } from 'expo-router';
 
 import { useShakeDetector } from '@app/hooks/useShakeDetector';
-import { usePreference } from '@app/store/preferenceStore';
+import { usePreference } from '@app/store/preferences/selectors';
 
 const SHAKE_COOLDOWN_MS = 30_000;
 

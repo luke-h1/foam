@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
@@ -11,7 +11,7 @@ import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/Cos
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { lightenColor } from '@app/utils/color/lightenColor';
+import { cachedLighten } from '@app/utils/chat/resolveCachedSenderColor/cachedLighten';
 import { truncate } from '@app/utils/string/truncate';
 
 import { chatEntranceSpring } from '../util/chatEntranceSpring';
@@ -19,7 +19,7 @@ import { isRefreshCommand } from '../util/slashCommandDefinitions/isRefreshComma
 import { ChatComposer } from './ChatComposer/ChatComposer';
 import type { ChatInputSectionProps } from './chatInputSectionTypes';
 import { ComposerIconButton } from './ComposerIconButton';
-import { COMPOSER_ROW_GAP } from './composerSizing';
+import { COMPOSER_CONTROL_RADIUS, COMPOSER_ROW_GAP } from './composerSizing';
 import { ReplyPreviewBody } from './ReplyPreviewBody';
 import { useComposerDismissGesture } from './useComposerDismissGesture';
 
@@ -42,6 +42,8 @@ export const ChatInputSection = memo(
     inputRef,
   }: ChatInputSectionProps) => {
     const { isAuthenticated, isSending } = connection;
+    const colorScheme = useColorScheme();
+    const scheme = colorScheme === 'light' ? 'light' : 'dark';
     const { composerAnimatedStyle, composerGesture } =
       useComposerDismissGesture();
 
@@ -65,22 +67,38 @@ export const ChatInputSection = memo(
           <Animated.View
             entering={replyPreviewEntering}
             exiting={replyPreviewExiting}
-            style={styles.replyShell}
+            style={[
+              styles.replyShell,
+              {
+                backgroundColor: theme.color.backgroundAltAlpha[scheme],
+                borderColor: theme.color.border[scheme],
+              },
+            ]}
           >
             <BlurView
               intensity={32}
               style={StyleSheet.absoluteFill}
-              tint='dark'
+              tint={scheme}
             />
-            <View style={styles.replyIndicator} />
+            <View
+              style={[
+                styles.replyIndicator,
+                { backgroundColor: theme.color.violet[scheme] },
+              ]}
+            />
             <View style={styles.replyContent}>
               <View style={styles.replyLabelRow}>
-                <Text style={styles.replyLabel}>
+                <Text
+                  style={[
+                    styles.replyLabel,
+                    { color: theme.color.textSecondary[scheme] },
+                  ]}
+                >
                   {t('composer.replyingTo')}
                 </Text>
                 <PaintedUsername
                   fallbackColor={
-                    replyTo.color ? lightenColor(replyTo.color) : undefined
+                    replyTo.color ? cachedLighten(replyTo.color) : undefined
                   }
                   showColon={false}
                   userId={replyTo.userId}
@@ -91,10 +109,19 @@ export const ChatInputSection = memo(
               {replyTo.messageParts?.length ? (
                 <ReplyPreviewBody
                   parts={replyTo.messageParts}
-                  textStyle={styles.replyMessagePreview}
+                  textStyle={[
+                    styles.replyMessagePreview,
+                    { color: theme.color.text[scheme] },
+                  ]}
                 />
               ) : replyTo.message ? (
-                <Text numberOfLines={1} style={styles.replyMessagePreview}>
+                <Text
+                  numberOfLines={1}
+                  style={[
+                    styles.replyMessagePreview,
+                    { color: theme.color.text[scheme] },
+                  ]}
+                >
                   {truncate(replyTo.message.trim() || replyTo.message, 72)}
                 </Text>
               ) : null}
@@ -103,13 +130,23 @@ export const ChatInputSection = memo(
               onPress={onClearReply}
               style={styles.replyDismissButton}
             >
-              <SymbolView tintColor={theme.colorWhite} name='xmark' size={16} />
+              <SymbolView
+                tintColor={theme.color.text[scheme]}
+                name='xmark'
+                size={16}
+              />
             </PressableButton>
           </Animated.View>
         ) : null}
 
         <GestureDetector gesture={composerGesture}>
-          <Animated.View style={[styles.composerShell, composerAnimatedStyle]}>
+          <Animated.View
+            style={[
+              styles.composerShell,
+              { backgroundColor: theme.color.background[scheme] },
+              composerAnimatedStyle,
+            ]}
+          >
             <View style={styles.inputRow}>
               <View style={styles.inputContainer}>
                 <ChatComposer
@@ -147,7 +184,6 @@ export const ChatInputSection = memo(
 
 const styles = StyleSheet.create({
   composerShell: {
-    backgroundColor: theme.colorBlack,
     overflow: 'visible',
     paddingHorizontal: theme.space12,
     paddingTop: theme.space4,
@@ -171,13 +207,11 @@ const styles = StyleSheet.create({
   },
   replyIndicator: {
     alignSelf: 'stretch',
-    backgroundColor: theme.colorViolet,
     borderCurve: 'continuous',
     borderRadius: 999,
     width: 3,
   },
   replyLabel: {
-    color: 'rgba(255,255,255,0.66)',
     fontSize: theme.fontSize12,
   },
   replyLabelRow: {
@@ -194,7 +228,6 @@ const styles = StyleSheet.create({
     minWidth: 28,
   },
   replyMessagePreview: {
-    color: 'rgba(255,255,255,0.8)',
     fontSize: theme.fontSize14,
   },
   replyPaintedUsername: {
@@ -203,10 +236,8 @@ const styles = StyleSheet.create({
   },
   replyShell: {
     alignItems: 'center',
-    backgroundColor: 'rgba(10,10,12,0.74)',
-    borderColor: 'rgba(255,255,255,0.08)',
     borderCurve: 'continuous',
-    borderRadius: 20,
+    borderRadius: COMPOSER_CONTROL_RADIUS,
     borderWidth: 1,
     flexDirection: 'row',
     gap: theme.space12,

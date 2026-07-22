@@ -1,4 +1,9 @@
-import { type StyleProp, StyleSheet, type ViewStyle } from 'react-native';
+import {
+  type StyleProp,
+  StyleSheet,
+  useColorScheme,
+  type ViewStyle,
+} from 'react-native';
 
 import { PressableArea } from '@app/components/PressableArea/PressableArea';
 import { Text } from '@app/components/ui/Text/Text';
@@ -17,6 +22,8 @@ export function BlockedUsersActionButton({
   style,
   variant = 'primary',
 }: BlockedUsersActionButtonProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const isDestructive = variant === 'destructive';
 
   return (
@@ -25,14 +32,20 @@ export function BlockedUsersActionButton({
       hitSlop={8}
       style={[
         styles.button,
-        isDestructive ? styles.destructiveButton : styles.primaryButton,
+        {
+          backgroundColor: isDestructive
+            ? theme.color.dangerSurface[scheme]
+            : theme.color.accent[scheme],
+        },
         style,
       ]}
     >
       <Text
         type='xs'
         weight='bold'
-        style={isDestructive ? styles.destructiveLabel : styles.primaryLabel}
+        style={{
+          color: isDestructive ? theme.color.danger[scheme] : theme.colorBlack,
+        }}
       >
         {label}
       </Text>
@@ -48,17 +61,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: theme.space12,
     paddingVertical: theme.space8,
-  },
-  destructiveButton: {
-    backgroundColor: theme.colorRedSurface,
-  },
-  destructiveLabel: {
-    color: theme.colorRed,
-  },
-  primaryButton: {
-    backgroundColor: theme.colorPrimary,
-  },
-  primaryLabel: {
-    color: theme.colorBlack,
   },
 });

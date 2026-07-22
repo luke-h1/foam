@@ -26,7 +26,7 @@ export function PaintedUsernameFill({
   textStyle,
 }: PaintedUsernameFillProps) {
   const layers = getPaintLayers(paint);
-  const keyedLayers = withPaintLayerKeys([...layers].reverse());
+  const keyedLayers = withPaintLayerKeys(layers.toReversed());
   const baseColor =
     paint.color === null ? fallbackColor : sevenTvColorToCss(paint.color);
 

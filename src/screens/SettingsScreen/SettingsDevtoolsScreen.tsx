@@ -1,5 +1,11 @@
 import { useRef } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -18,11 +24,13 @@ import {
   SettingsToggleRow,
 } from '@app/components/SettingsSection/SettingsSection';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import { usePreferences } from '@app/store/preferenceStore';
+import { usePreferences } from '@app/store/preferences/selectors';
 import { theme } from '@app/styles/themes';
 
 export function SettingsDevtoolsScreen() {
   const { t } = useTranslation('settings');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const {
     disableChat,
     disableStream,
@@ -138,7 +146,12 @@ export function SettingsDevtoolsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.color.background[scheme] },
+      ]}
+    >
       <ScrollView
         ref={scrollRef}
         contentInsetAdjustmentBehavior='automatic'
@@ -149,13 +162,13 @@ export function SettingsDevtoolsScreen() {
           <SettingsLinkRow
             title={t('appDiagnostics')}
             subtitle={t('appDiagnosticsDescription')}
-            icon={{ icon: 'stethoscope', color: theme.colorBlue }}
+            icon={{ icon: 'stethoscope', color: theme.color.blue[scheme] }}
             onPress={() => router.push('/tabs/settings/diagnostics')}
           />
           <SettingsLinkRow
             title={t('remoteConfig')}
             subtitle={t('remoteConfigDescription')}
-            icon={{ icon: 'cloud', color: theme.colorPlum }}
+            icon={{ icon: 'cloud', color: theme.color.plum[scheme] }}
             onPress={() => router.push('/tabs/settings/remote-config')}
           />
         </SettingsSection>
@@ -164,14 +177,14 @@ export function SettingsDevtoolsScreen() {
           <SettingsToggleRow
             title={t('disableStream')}
             subtitle={t('disableStreamDescription')}
-            icon={{ icon: 'video.slash', color: theme.colorOrange }}
+            icon={{ icon: 'video.slash', color: theme.color.orange[scheme] }}
             value={disableStream}
             onValueChange={value => update({ disableStream: value })}
           />
           <SettingsToggleRow
             title={t('disableChat')}
             subtitle={t('disableChatDescription')}
-            icon={{ icon: 'message', color: theme.colorPlum }}
+            icon={{ icon: 'message', color: theme.color.plum[scheme] }}
             value={disableChat}
             onValueChange={value => update({ disableChat: value })}
           />
@@ -183,7 +196,7 @@ export function SettingsDevtoolsScreen() {
             subtitle={t('sharedChatDescription')}
             icon={{
               icon: 'bubble.left.and.bubble.right',
-              color: theme.colorTeal,
+              color: theme.color.teal[scheme],
             }}
             value={sharedChatEnabled}
             onValueChange={value => update({ sharedChatEnabled: value })}
@@ -191,7 +204,7 @@ export function SettingsDevtoolsScreen() {
           <SettingsToggleRow
             title={t('enhancedVideoStability')}
             subtitle={t('enhancedVideoStabilityDescription')}
-            icon={{ icon: 'wand.and.stars', color: theme.colorBlue }}
+            icon={{ icon: 'wand.and.stars', color: theme.color.blue[scheme] }}
             value={enhancedVideoStability}
             onValueChange={value => update({ enhancedVideoStability: value })}
           />
@@ -201,19 +214,22 @@ export function SettingsDevtoolsScreen() {
           <SettingsLinkRow
             title={t('debug')}
             subtitle={t('debugDescription')}
-            icon={{ icon: 'ladybug', color: theme.colorOrange }}
+            icon={{ icon: 'ladybug', color: theme.color.orange[scheme] }}
             onPress={() => router.push('/tabs/settings/debug')}
           />
           <SettingsLinkRow
             title={t('cachedImages')}
             subtitle={t('cachedImagesDescription')}
-            icon={{ icon: 'photo.stack', color: theme.colorPrimary }}
+            icon={{ icon: 'photo.stack', color: theme.color.accent[scheme] }}
             onPress={() => router.push('/tabs/settings/cached-images')}
           />
           <SettingsLinkRow
             title={t('changelogDemo')}
             subtitle={t('changelogDemoDescription')}
-            icon={{ icon: 'list.bullet.rectangle', color: theme.colorBlue }}
+            icon={{
+              icon: 'list.bullet.rectangle',
+              color: theme.color.blue[scheme],
+            }}
             onPress={() => router.push('/dev-tools/changelog')}
           />
           <SettingsLinkRow
@@ -221,26 +237,29 @@ export function SettingsDevtoolsScreen() {
             subtitle={t('sentryTestDescription')}
             icon={{
               icon: 'exclamationmark.triangle',
-              color: theme.colorRed,
+              color: theme.color.danger[scheme],
             }}
             onPress={() => router.push('/dev-tools/sentry-demo')}
           />
           <SettingsLinkRow
             title={t('imageBenchmark')}
             subtitle={t('imageBenchmarkDescription')}
-            icon={{ icon: 'speedometer', color: theme.colorTeal }}
+            icon={{ icon: 'speedometer', color: theme.color.teal[scheme] }}
             onPress={() => router.push('/dev-tools/image-benchmark')}
           />
           <SettingsLinkRow
             title={t('chatPerfBurstTest')}
             subtitle={t('chatPerfBurstTestDescription')}
-            icon={{ icon: 'bolt.horizontal', color: theme.colorOrange }}
+            icon={{
+              icon: 'bolt.horizontal',
+              color: theme.color.orange[scheme],
+            }}
             onPress={() => router.push('/dev-tools/chat-perf')}
           />
           <SettingsLinkRow
             title={t('envVars')}
             subtitle={t('envVarsDescription')}
-            icon={{ icon: 'doc.text', color: theme.colorTeal }}
+            icon={{ icon: 'doc.text', color: theme.color.teal[scheme] }}
             onPress={() => router.push('/dev-tools/env-vars')}
           />
           <SettingsLinkRow
@@ -248,14 +267,14 @@ export function SettingsDevtoolsScreen() {
             subtitle={t('channelSurfingDescription')}
             icon={{
               icon: 'antenna.radiowaves.left.and.right',
-              color: theme.colorPlum,
+              color: theme.color.plum[scheme],
             }}
             onPress={() => router.push('/tabs/settings/channel-surfing')}
           />
           <SettingsLinkRow
             title={t('storybook')}
             subtitle={t('storybookDescription')}
-            icon={{ icon: 'book.closed', color: theme.colorTeal }}
+            icon={{ icon: 'book.closed', color: theme.color.teal[scheme] }}
             onPress={() => router.push('/tabs/settings/storybook')}
           />
         </SettingsSection>
@@ -266,7 +285,6 @@ export function SettingsDevtoolsScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.color.background.dark,
     flex: 1,
   },
   content: {

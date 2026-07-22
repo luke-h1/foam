@@ -90,7 +90,7 @@ export const clearPersonalEmotesCache = () => {
 };
 
 /**
- * Refetch a user's personal emote set, replacing whatever is cached — used
+ * Refetch a user's personal emote set, replacing whatever is cached - used
  * when a live event (EMOTE_SET entitlement or an emote_set.update for their
  * personal set) says the cached copy is stale. Unlike the fetch-once path
  * this also writes an empty result, so removals propagate.
@@ -160,7 +160,7 @@ function getEmoteSetId(emote: SanitisedEmote): string | undefined {
 /**
  * An EMOTE_SET entitlement announces which personal set a chatter is
  * entitled to. Only refresh users we have already hydrated whose cached set
- * differs — entering a busy channel fires one of these per active 7TV
+ * differs - entering a busy channel fires one of these per active 7TV
  * chatter, and unhydrated users are picked up lazily by the visible-message
  * hydrate path instead.
  */

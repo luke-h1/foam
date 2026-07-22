@@ -1,5 +1,10 @@
 import { memo, useCallback, useMemo, useRef } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  StyleSheet,
+  useColorScheme,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -14,7 +19,8 @@ import { Button } from '@app/components/Button/Button';
 import { FlashList } from '@app/components/FlashList/FlashList';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
-import { type SavedPhrase, usePreference } from '@app/store/preferenceStore';
+import { usePreference } from '@app/store/preferences/selectors';
+import { type SavedPhrase } from '@app/store/preferences/state';
 import { theme } from '@app/styles/themes';
 
 import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
@@ -33,15 +39,28 @@ function SavedPhraseRow({
   phrase: SavedPhrase;
   onSelect: (text: string) => void;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const rowColors = useMemo(
+    () => ({
+      row: { borderBottomColor: theme.color.border[scheme] },
+      text: { color: theme.color.text[scheme] },
+    }),
+    [scheme],
+  );
+
   return (
-    <Button style={styles.row} onPress={() => onSelect(phrase.text)}>
-      <Text style={styles.phraseText} numberOfLines={2}>
+    <Button
+      style={[styles.row, rowColors.row]}
+      onPress={() => onSelect(phrase.text)}
+    >
+      <Text style={[styles.phraseText, rowColors.text]} numberOfLines={2}>
         {phrase.text}
       </Text>
       <SymbolView
         name='arrow.up.left'
         size={18}
-        tintColor={theme.colorGreyHoverAlpha}
+        tintColor={theme.color.textSecondary[scheme]}
       />
     </Button>
   );
@@ -53,6 +72,8 @@ const SavedPhrasesSheetComponent = ({
   onSelectPhrase,
 }: SavedPhrasesSheetProps) => {
   const { t } = useTranslation(['preferences', 'navigation']);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const { bottom: bottomInset } = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const sheetHeight = Math.round(windowHeight * CHAT_SETTINGS_SHEET_DETENT);
@@ -109,8 +130,19 @@ const SavedPhrasesSheetComponent = ({
       snapPoints={[{ fraction: CHAT_SETTINGS_SHEET_DETENT }]}
       testID='chat-saved-phrases-sheet'
     >
-      <View style={[styles.container, { height: sheetHeight }]}>
-        <View style={styles.header}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: theme.color.background[scheme] },
+          { height: sheetHeight },
+        ]}
+      >
+        <View
+          style={[
+            styles.header,
+            { borderBottomColor: theme.color.border[scheme] },
+          ]}
+        >
           <Text style={styles.headerTitle} weight='semibold'>
             {t('savedPhrasesSheetTitle')}
           </Text>
@@ -118,7 +150,7 @@ const SavedPhrasesSheetComponent = ({
             <SymbolView
               name='gearshape'
               size={20}
-              tintColor={theme.colorGreyHoverAlpha}
+              tintColor={theme.color.textSecondary[scheme]}
             />
           </Button>
         </View>
@@ -128,15 +160,29 @@ const SavedPhrasesSheetComponent = ({
             <SymbolView
               name='text.bubble'
               size={44}
-              tintColor={theme.colorGreyHoverAlpha}
+              tintColor={theme.color.textSecondary[scheme]}
             />
             <Text style={styles.emptyTitle} weight='medium'>
               {t('savedPhrasesSheetEmpty')}
             </Text>
-            <Text style={styles.emptyHint}>
+            <Text
+              style={[
+                styles.emptyHint,
+                { color: theme.color.textSecondary[scheme] },
+              ]}
+            >
               {t('savedPhrasesSheetEmptyHint')}
             </Text>
-            <Button style={styles.manageButton} onPress={handleManage}>
+            <Button
+              style={[
+                styles.manageButton,
+                {
+                  backgroundColor: theme.color.pressedOverlay[scheme],
+                  borderColor: theme.color.border[scheme],
+                },
+              ]}
+              onPress={handleManage}
+            >
               <Text style={styles.manageButtonLabel} weight='medium'>
                 {t('manageSavedPhrases')}
               </Text>
@@ -164,13 +210,11 @@ const styles = StyleSheet.create({
   container: {
     ...chatSheetSurface,
     alignSelf: 'stretch',
-    backgroundColor: theme.color.background.dark,
     flexDirection: 'column',
     minHeight: 0,
     width: '100%',
   },
   emptyHint: {
-    color: theme.colorGreyHoverAlpha,
     lineHeight: 20,
     textAlign: 'center',
   },
@@ -187,7 +231,6 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -203,8 +246,6 @@ const styles = StyleSheet.create({
     paddingTop: theme.space8,
   },
   manageButton: {
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
     borderRadius: theme.borderRadius12,
     borderWidth: 1,
     marginTop: theme.space8,
@@ -215,15 +256,13 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize14,
   },
   phraseText: {
-    color: theme.colorWhite,
     flex: 1,
-    fontSize: 15,
+    fontSize: theme.fontSize14,
     lineHeight: 20,
     minWidth: 0,
   },
   row: {
     alignItems: 'center',
-    borderBottomColor: theme.colorBorderSecondary,
     borderBottomWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     gap: theme.space12,

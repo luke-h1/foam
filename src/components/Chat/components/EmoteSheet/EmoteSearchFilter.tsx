@@ -1,11 +1,11 @@
-import { View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Input } from '@app/components/ui/Input/Input';
 import { theme } from '@app/styles/themes';
 
-import { emoteSheetStyles as styles } from './emoteSheetStyles';
+import { emoteSheetStyles } from './emoteSheetStyles';
 
 export function EmoteSearchFilter({
   onChange,
@@ -20,6 +20,9 @@ export function EmoteSearchFilter({
   rightOnPress?: () => void;
   value?: string;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = emoteSheetStyles[scheme];
   const hasValue = Boolean(value && value.length > 0);
 
   return (
@@ -27,7 +30,7 @@ export function EmoteSearchFilter({
       <SymbolView
         name='magnifyingglass'
         style={styles.searchIcon}
-        tintColor={theme.color.textSecondary.dark}
+        tintColor={theme.color.textSecondary[scheme]}
       />
       <Input
         autoCapitalize='none'
@@ -37,7 +40,7 @@ export function EmoteSearchFilter({
         onChangeText={onChange}
         onSubmitEditing={onSubmitEditing}
         placeholder={placeholder}
-        placeholderTextColor='rgba(255,255,255,0.42)'
+        placeholderTextColor={theme.color.textFaint[scheme]}
         radius='none'
         returnKeyType='search'
         size='sm'
@@ -53,7 +56,7 @@ export function EmoteSearchFilter({
         ]}
         disabled={!hasValue}
       >
-        <SymbolView name='xmark' tintColor={theme.color.text.dark} />
+        <SymbolView name='xmark' tintColor={theme.color.text[scheme]} />
       </Button>
     </View>
   );

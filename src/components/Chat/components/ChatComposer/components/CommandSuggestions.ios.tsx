@@ -1,5 +1,5 @@
 import { memo, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import {
   LegendList,
@@ -42,9 +42,24 @@ function CommandSuggestionItem({
   item: SlashCommandDefinition;
   onPress: (command: SlashCommandDefinition) => void;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const railColors = suggestionRailColors[scheme];
+
   return (
-    <Button onPress={() => onPress(item)} style={styles.suggestionItem}>
-      <Text style={styles.commandName}>/{item.name}</Text>
+    <Button
+      onPress={() => onPress(item)}
+      style={[
+        styles.suggestionItem,
+        {
+          backgroundColor: railColors.chipBackground,
+          borderColor: railColors.chipBorder,
+        },
+      ]}
+    >
+      <Text style={[styles.commandName, { color: railColors.text }]}>
+        /{item.name}
+      </Text>
     </Button>
   );
 }
@@ -53,14 +68,17 @@ export const CommandSuggestions = memo(function CommandSuggestions({
   commands,
   handleCommandSelect,
 }: CommandSuggestionsProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const railStyles = suggestionRailStyles[scheme];
   const extraData = useMemo<CommandSuggestionListExtra>(
     () => ({ onPress: handleCommandSelect }),
     [handleCommandSelect],
   );
 
   return (
-    <View style={suggestionRailStyles.compactWrapper}>
-      <View style={suggestionRailStyles.compactContainer}>
+    <View style={railStyles.compactWrapper}>
+      <View style={railStyles.compactContainer}>
         <LegendList
           data={commands}
           horizontal
@@ -79,7 +97,6 @@ export const CommandSuggestions = memo(function CommandSuggestions({
 
 const styles = StyleSheet.create({
   commandName: {
-    color: suggestionRailColors.text,
     fontSize: theme.fontSize14,
     fontWeight: '500',
     maxWidth: 150,
@@ -89,8 +106,6 @@ const styles = StyleSheet.create({
   },
   suggestionItem: {
     alignItems: 'center',
-    backgroundColor: suggestionRailColors.chipBackground,
-    borderColor: suggestionRailColors.chipBorder,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius14,
     borderWidth: 1,

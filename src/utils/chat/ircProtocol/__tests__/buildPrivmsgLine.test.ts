@@ -50,9 +50,11 @@ describe('buildPrivmsgLine', () => {
   });
 
   test('reply lines survive a round-trip through the parser', () => {
-    // Regression: the display-name/body reply tags used to be sent raw, so a
-    // multi-word parent body terminated the tag section at its first space and
-    // the server read the rest of the body as the command.
+    /**
+     * Regression: the display-name/body reply tags used to be sent raw, so a
+     * multi-word parent body terminated the tag section at its first space and
+     * the server read the rest of the body as the command.
+     */
     const line = buildPrivmsgLine({
       channel: '#bar',
       message: 'hi back',

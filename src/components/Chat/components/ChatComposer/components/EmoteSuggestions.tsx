@@ -1,5 +1,5 @@
 import { memo, useCallback } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -32,12 +32,24 @@ const EmoteSuggestionItem = memo(function EmoteSuggestionItem({
   item: SanitisedEmote;
   onPress: (emote: SanitisedEmote) => void;
 }) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const railColors = suggestionRailColors[scheme];
   const handlePress = useCallback(() => {
     onPress(item);
   }, [item, onPress]);
 
   return (
-    <Button style={styles.suggestionItem} onPress={handlePress}>
+    <Button
+      style={[
+        styles.suggestionItem,
+        {
+          backgroundColor: railColors.chipBackground,
+          borderColor: railColors.chipBorder,
+        },
+      ]}
+      onPress={handlePress}
+    >
       <Image
         source={item.url}
         cacheVariant='emote'
@@ -45,10 +57,18 @@ const EmoteSuggestionItem = memo(function EmoteSuggestionItem({
         trackLoadContext='chat.emote-suggestions'
       />
       <View style={styles.emoteTextContainer}>
-        <Text style={styles.emoteName} numberOfLines={1} ellipsizeMode='tail'>
+        <Text
+          style={[styles.emoteName, { color: railColors.text }]}
+          numberOfLines={1}
+          ellipsizeMode='tail'
+        >
           {item.name}
         </Text>
-        <Text style={styles.emoteSite} numberOfLines={1} ellipsizeMode='tail'>
+        <Text
+          style={[styles.emoteSite, { color: railColors.secondaryText }]}
+          numberOfLines={1}
+          ellipsizeMode='tail'
+        >
           {item.site}
         </Text>
       </View>
@@ -61,6 +81,9 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
   handleEmotePress,
 }: EmoteSuggestionsProps) {
   const { t } = useTranslation('chat');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const railStyles = suggestionRailStyles[scheme];
 
   const renderItem = useCallback(
     ({ item }: LegendListRenderItemProps<SanitisedEmote>) => (
@@ -70,11 +93,9 @@ export const EmoteSuggestions = memo(function EmoteSuggestions({
   );
 
   return (
-    <View style={suggestionRailStyles.richWrapper}>
-      <View style={suggestionRailStyles.richContainer}>
-        <Text style={suggestionRailStyles.headerLabel}>
-          {t('composer.emotes')}
-        </Text>
+    <View style={railStyles.richWrapper}>
+      <View style={railStyles.richContainer}>
+        <Text style={railStyles.headerLabel}>{t('composer.emotes')}</Text>
         <LegendList
           data={emotes}
           horizontal
@@ -96,13 +117,11 @@ const styles = StyleSheet.create({
     width: 28,
   },
   emoteName: {
-    color: suggestionRailColors.text,
     flexShrink: 1,
     fontSize: theme.fontSize14,
     fontWeight: '600',
   },
   emoteSite: {
-    color: suggestionRailColors.secondaryText,
     flexShrink: 1,
     fontSize: theme.fontSize12,
   },
@@ -117,8 +136,6 @@ const styles = StyleSheet.create({
   },
   suggestionItem: {
     alignItems: 'center',
-    backgroundColor: suggestionRailColors.chipBackground,
-    borderColor: suggestionRailColors.chipBorder,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius20,
     borderWidth: 1,

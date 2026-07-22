@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 import type { ReactNode } from 'react';
 
 import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
@@ -6,7 +6,10 @@ import { getChatColorStyle } from '@app/components/Chat/util/chatColorStyles';
 import { Text } from '@app/components/ui/Text/Text';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
-import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
+import {
+  getChatFontScaleStyle,
+  getRichChatMessageStyles,
+} from '../RichChatMessage.styles';
 import type { BadgePressData } from '../RichChatMessage.types';
 import { ChatMessageBadges } from './ChatMessageBadges';
 import { InlineMessageSpans } from './InlineMessageSpans';
@@ -48,13 +51,18 @@ export function InlineMessageLine({
   emoteTargetSize,
   textColor,
 }: InlineMessageLineProps): ReactNode {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = getRichChatMessageStyles(scheme);
   const containsEmotes = message.some(part => part.type === 'emote');
   const fontScaleStyle = getChatFontScaleStyle(fontScale, compact);
-  // TextKit sizes a wrapped line from the paragraph style carried by its
-  // character ranges, and every nested span sets its own (17pt) lineHeight.
-  // The taller emote line height must therefore be applied to each nested
-  // span, not just the outer Text — otherwise rows whose first span is plain
-  // text (no badges) keep the 17pt line and clip the 30pt emote attachment.
+  /**
+   * TextKit sizes a wrapped line from the paragraph style carried by its
+   * character ranges, and every nested span sets its own (17pt) lineHeight.
+   * The taller emote line height must therefore be applied to each nested
+   * span, not just the outer Text - otherwise rows whose first span is plain
+   * text (no badges) keep the 17pt line and clip the 30pt emote attachment.
+   */
   const emoteLineStyle = containsEmotes
     ? compact
       ? styles.messageTextEmoteLineCompact

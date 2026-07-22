@@ -1,4 +1,9 @@
-import { ActivityIndicator, ScrollView, View } from 'react-native';
+import {
+  ActivityIndicator,
+  ScrollView,
+  useColorScheme,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LegendList } from '@legendapp/list/react-native';
@@ -13,7 +18,7 @@ import { theme } from '@app/styles/themes';
 import { EmoteSearchFilter } from './EmoteSearchFilter';
 import { EmoteSheetIosBlur } from './EmoteSheetIosBlur';
 import { renderSetRailItem } from './EmoteSheetSetRailItem';
-import { emoteSheetStyles as styles } from './emoteSheetStyles';
+import { emoteSheetStyles } from './emoteSheetStyles';
 import type { EmotePickerItem } from './emoteSheetTypes';
 import { ProviderChip } from './ProviderChip';
 import { emoteSheetScrollActivity } from './util/emoteSheetScrollActivity';
@@ -40,6 +45,9 @@ export function EmoteSheet({
   onEmoteSelect,
 }: EmoteSheetProps) {
   const { t } = useTranslation('chat');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = emoteSheetStyles[scheme];
   const { bottom: bottomInset } = useSafeAreaInsets();
   const emoteListRef = useRef<LegendListRef>(null);
   const sheetRef = useRef<BottomSheetHandle>(null);
@@ -117,7 +125,7 @@ export function EmoteSheet({
 
         {sheet.showPlaceholder ? (
           <View style={styles.placeholderContent}>
-            <ActivityIndicator size='large' color={theme.color.text.dark} />
+            <ActivityIndicator size='large' color={theme.color.text[scheme]} />
           </View>
         ) : (
           <>
@@ -157,7 +165,7 @@ export function EmoteSheet({
                   drawDistance={(sheet.cellSize + 4) * 8}
                   showsVerticalScrollIndicator
                   nestedScrollEnabled
-                  indicatorStyle='white' // todo - once we have light theme, adjust this
+                  indicatorStyle={scheme === 'dark' ? 'white' : 'black'}
                   style={styles.list}
                 />
               )}

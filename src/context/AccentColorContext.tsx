@@ -51,7 +51,7 @@ export function AccentColorProvider({
 }) {
   const colorScheme = useColorScheme();
   const [selectedHex, setSelectedHex] = useState<string | null>(initialHex);
-  const scheme = colorScheme === 'dark' ? 'dark' : 'light';
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   const accentHex = selectedHex ?? colors[scheme].tint;
 
@@ -70,8 +70,6 @@ export function AccentColorProvider({
       : colors[scheme].background;
   }, [selectedHex, scheme]);
 
-  // Memoized so consumers (the chat composer and input among them) only
-  // re-render when the accent actually changes, not on every provider render.
   const contextValue = useMemo(
     () =>
       ({
@@ -97,7 +95,7 @@ export function useAccentColor(): AccentColorContextValue {
     return ctx;
   }
 
-  const scheme = colorScheme === 'dark' ? 'dark' : 'light';
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   return {
     accentHex: colors[scheme].tint,

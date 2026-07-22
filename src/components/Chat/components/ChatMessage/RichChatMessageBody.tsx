@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { useColorScheme, View } from 'react-native';
 import type { ReactNode } from 'react';
 
 import { noticeSurfaceTint } from '../util/chatNoticeAccents';
@@ -6,7 +6,7 @@ import { AnnouncementChatBody } from './renderers/AnnouncementChatBody';
 import { ChatNoticeBody } from './renderers/ChatNoticeBody';
 import { SharedChatSourceLabel } from './renderers/SharedChatSourceLabel';
 import { UserChatBody } from './renderers/UserChatBody';
-import { styles } from './RichChatMessage.styles';
+import { getRichChatMessageStyles } from './RichChatMessage.styles';
 import type { useRichChatMessage } from './useRichChatMessage';
 
 type RichChatMessageState = ReturnType<typeof useRichChatMessage>;
@@ -144,6 +144,9 @@ export function RichChatMessageContainer({
     startRowLongPressTimer,
     style,
   } = state;
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = getRichChatMessageStyles(scheme);
 
   return (
     <View

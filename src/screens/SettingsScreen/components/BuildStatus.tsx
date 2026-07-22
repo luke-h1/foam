@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 
 import * as Updates from 'expo-updates';
 
@@ -8,16 +8,26 @@ import { getBuildInfoLabel } from '@app/utils/version/buildInfoLabel';
 
 export function BuildStatus() {
   const onOtaUpdate = Boolean(Updates.updateId);
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
 
   return (
-    <View style={styles.buildContainer}>
+    <View
+      style={[
+        styles.buildContainer,
+        {
+          backgroundColor: theme.color.backgroundAltAlpha[scheme],
+          borderColor: theme.color.border[scheme],
+        },
+      ]}
+    >
       <View
         style={[
           styles.statusDot,
           {
             backgroundColor: onOtaUpdate
-              ? theme.color.success.dark
-              : theme.colorGrey,
+              ? theme.color.success[scheme]
+              : theme.color.textSecondary[scheme],
           },
         ]}
       />
@@ -31,8 +41,6 @@ export function BuildStatus() {
 const styles = StyleSheet.create({
   buildContainer: {
     alignItems: 'center',
-    backgroundColor: theme.color.background.darkAltAlpha,
-    borderColor: theme.color.border.dark,
     borderCurve: 'continuous',
     borderRadius: theme.borderRadius999,
     borderWidth: 1,

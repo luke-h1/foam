@@ -8,7 +8,12 @@ import {
   useRef,
   useState,
 } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  StyleSheet,
+  useColorScheme,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -47,16 +52,17 @@ import { addCreatedClip } from '@app/store/createdClips/actions/createdClips';
 import {
   usePreference,
   useUpdatePreferences,
-} from '@app/store/preferenceStore';
+} from '@app/store/preferences/selectors';
+import { setMeasuredVideoLatencySeconds } from '@app/store/stream/actions/videoLatency';
 import { subscribeLiveSync } from '@app/store/stream/liveSyncBus';
-import { setMeasuredVideoLatencySeconds } from '@app/store/stream/videoLatency';
 import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { logger } from '@app/utils/logger';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 
-import { ChatLatencyPill } from './ChatLatencyPill';
+import { ChatLatencyPill } from './components/ChatLatencyPill';
+import { useSleepTimer } from './hooks/useSleepTimer';
 import { clampLandscapeChatWidth } from './liveStreamLayout/clampLandscapeChatWidth';
 import { getLandscapeChatWidthBounds } from './liveStreamLayout/getLandscapeChatWidthBounds';
 import { getLiveStreamChatDimensions } from './liveStreamLayout/getLiveStreamChatDimensions';
@@ -69,9 +75,8 @@ import {
 import {
   initialLiveStreamScreenState,
   liveStreamScreenReducer,
-} from './liveStreamScreenReducer';
-import { showSleepTimerMenu } from './showSleepTimerMenu';
-import { useSleepTimer } from './useSleepTimer';
+} from './reducers/liveStreamScreenReducer';
+import { showSleepTimerMenu } from './util/showSleepTimerMenu';
 
 interface LiveStreamScreenProps {
   id: string;
@@ -112,6 +117,8 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   id,
 }: LiveStreamScreenProps) {
   const { t } = useTranslation('stream');
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
   const isFocused = useIsFocused();
   const { authState } = useAuthContext();
   const customPlayerEnabled = usePreference('customPlayerEnabled');
@@ -679,7 +686,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     ],
   );
 
-  const contentContainerStyle = styles.contentContainer;
+  const contentContainerStyle = [
+    styles.contentContainer,
+    { backgroundColor: theme.color.background[scheme] },
+  ];
 
   const resolvedChannelLogin =
     stream?.user_login ?? user?.login ?? normalizedLogin;
@@ -812,7 +822,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
         toast.success(t('clipCreated'), {
           action: {
             label: t('editClip'),
-            onClick: () => openLinkInBrowser(clip.edit_url),
+            onClick: () => openLinkInBrowser(clip.edit_url, scheme),
           },
         });
       })
@@ -829,6 +839,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
   }, [
     resolvedChannelId,
     resolvedChannelLogin,
+    scheme,
     stream?.user_name,
     user?.display_name,
     t,
@@ -886,6 +897,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
         <Animated.View
           style={[
             styles.chatContainer,
+            { backgroundColor: theme.color.background[scheme] },
             animatedChatStyle,
             landscapeChatContainerStyle,
           ]}
@@ -939,7 +951,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
               ) : (
                 <View style={styles.chatConnectionNotice}>
                   <SymbolView
-                    tintColor={theme.colorGrey}
+                    tintColor={theme.color.textSecondary[scheme]}
                     name='message'
                     size={24}
                   />
@@ -1039,7 +1051,6 @@ const styles = StyleSheet.create({
     zIndex: 12,
   },
   chatContainer: {
-    backgroundColor: theme.colorBlack,
     overflow: 'hidden',
     position: 'absolute',
     zIndex: 1,
@@ -1096,7 +1107,7 @@ const styles = StyleSheet.create({
   },
   overlayChatContent: {
     backgroundColor: 'rgba(10, 11, 16, 0.42)',
-    borderLeftColor: theme.colorBorderSecondary,
+    borderLeftColor: theme.color.border.dark,
     borderLeftWidth: StyleSheet.hairlineWidth,
   },
   overlayChatContainer: {
@@ -1108,7 +1119,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   contentContainer: {
-    backgroundColor: theme.colorBlack,
     flex: 1,
     overflow: 'hidden',
     position: 'relative',
@@ -1143,7 +1153,7 @@ const styles = StyleSheet.create({
   videoUser: {
     color: theme.colorWhite,
     fontSize: theme.fontSize16,
-    fontWeight: 'bold',
+    fontWeight: '700',
     marginTop: 20,
     textAlign: 'center',
   },

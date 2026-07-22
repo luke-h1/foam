@@ -4,8 +4,8 @@ import { Platform, ScrollView, StyleSheet } from 'react-native';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 
-import { ChatPreferenceDefaultContent } from './ChatPreferenceDefaultContent';
-import { ChatPreferenceForm } from './ChatPreferenceForm';
+import { ChatPreferenceDefaultContent } from './components/ChatPreferenceDefaultContent';
+import { ChatPreferenceForm } from './components/ChatPreferenceForm';
 
 export function ChatPreferenceScreen() {
   if (Platform.OS === 'ios') {

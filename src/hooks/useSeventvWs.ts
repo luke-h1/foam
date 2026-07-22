@@ -109,9 +109,11 @@ const ID_WAIT_TIMEOUT = 30000; // 30 seconds
 // If the RESUME ack never arrives, fall back to fresh subscriptions.
 const RESUME_ACK_TIMEOUT = 5000;
 
-// Mobile sockets go half-open without firing onclose; treat prolonged
-// heartbeat silence as a dead connection and close so reconnect + RESUME
-// kicks in (same lesson as the IRC socket's PING watchdog).
+/**
+ * Mobile sockets go half-open without firing onclose; treat prolonged
+ * heartbeat silence as a dead connection and close so reconnect + RESUME
+ * kicks in (same lesson as the IRC socket's PING watchdog).
+ */
 const DEFAULT_HEARTBEAT_INTERVAL_MS = 30000;
 const HEARTBEAT_WATCHDOG_TICK_MS = 10000;
 const MISSED_HEARTBEATS_BEFORE_RECONNECT = 3;
@@ -184,9 +186,11 @@ export function useSeventvWs(
     }
   };
 
-  // Channel-scoped subscription bookkeeping so a channel switch on a live
-  // socket unsubscribes the previous channel instead of accumulating
-  // entitlement/cosmetic streams for channels we've left.
+  /**
+   * Channel-scoped subscription bookkeeping so a channel switch on a live
+   * socket unsubscribes the previous channel instead of accumulating
+   * entitlement/cosmetic streams for channels we've left.
+   */
   const subscribedChannelIdRef = useRef<string | null>(null);
   const subscribedOwnerIdRef = useRef<string | null>(null);
   const sevenTvChannelUserIdRef = useRef<string | undefined>(undefined);
@@ -448,9 +452,11 @@ export function useSeventvWs(
 
       case 'applyEntitlementCreate': {
         if (__DEV__) {
-          // Entitlement bursts arrive at hundreds per channel entry; release
-          // severity drops info logs anyway, so don't build the template
-          // strings there.
+          /**
+           * Entitlement bursts arrive at hundreds per channel entry; release
+           * severity drops info logs anyway, so don't build the template
+           * strings there.
+           */
           logger.stvWs.info(`💚 Received WS 'entitlement.create' event`);
           logger.stvWs.info(
             `Entitlement create: ${decision.kind} for user ${decision.userDisplayName} (ttv: ${decision.ttvUserId}, paint: ${decision.paintId}, badge: ${decision.badgeId})`,
@@ -737,9 +743,11 @@ export function useSeventvWs(
           }
         }, HEARTBEAT_WATCHDOG_TICK_MS);
 
-        // When resuming, subscriptions are restored server-side after the
-        // RESUME handshake (sent on hello); only subscribe from scratch when
-        // no resumable session exists.
+        /**
+         * When resuming, subscriptions are restored server-side after the
+         * RESUME handshake (sent on hello); only subscribe from scratch when
+         * no resumable session exists.
+         */
         const willAttemptResume =
           shouldResumeRef.current && sessionIdRef.current !== null;
 
@@ -899,9 +907,11 @@ export function useSeventvWs(
   const shouldConnectRef = useRef(false);
   shouldConnectRef.current = !!shouldConnect;
 
-  // Automatic retries are budgeted per outage; a long background stretch can
-  // exhaust them. Foregrounding with a dead socket forces a fresh connect
-  // (which then attempts a session RESUME).
+  /**
+   * Automatic retries are budgeted per outage; a long background stretch can
+   * exhaust them. Foregrounding with a dead socket forces a fresh connect
+   * (which then attempts a session RESUME).
+   */
   useEffect(() => {
     const subscription = AppState.addEventListener('change', state => {
       if (state !== 'active' || !shouldConnectRef.current) {
@@ -918,9 +928,11 @@ export function useSeventvWs(
     return () => subscription.remove();
   }, [getWebSocket, reconnect]);
 
-  // The channel owner's 7TV id resolves asynchronously and can land after
-  // the initial subscriptions were sent; (re)subscribe user.update when it
-  // becomes available or changes.
+  /**
+   * The channel owner's 7TV id resolves asynchronously and can land after
+   * the initial subscriptions were sent; (re)subscribe user.update when it
+   * becomes available or changes.
+   */
   // eslint-disable-next-line react-doctor/no-event-handler -- syncs an external WebSocket subscription to an async-resolved id, not a UI event
   const sevenTvChannelUserId = options?.sevenTvChannelUserId;
   const syncChannelOwnerSubscription = (ownerId: string) => {

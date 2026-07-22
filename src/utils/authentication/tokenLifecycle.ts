@@ -101,7 +101,7 @@ export const getFallbackAnonToken = (): TwitchToken => ({
 /**
  * Exchange a stored refresh token for a fresh user token. Returns null when the
  * token has no refresh token or the exchange fails (network, or Twitch
- * rejection) — callers decide whether to validate, retry, or fall back to anon.
+ * rejection) - callers decide whether to validate, retry, or fall back to anon.
  */
 export async function refreshStoredUserToken(
   token: TwitchToken,

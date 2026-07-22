@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import type { StyleProp, TextStyle } from 'react-native';
+import { type StyleProp, type TextStyle, useColorScheme } from 'react-native';
 
 import { useSelector } from '@legendapp/state/react';
 
@@ -10,7 +10,7 @@ import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin/formatMentionContent';
 
-import { styles } from '../RichChatMessage.styles';
+import { getRichChatMessageStyles } from '../RichChatMessage.styles';
 
 interface MentionSpanProps {
   content: string;
@@ -44,6 +44,9 @@ function MentionSpanComponent({
   normalisedCurrentUsername,
   replyPlainMentionTarget,
 }: MentionSpanProps) {
+  const colorScheme = useColorScheme();
+  const scheme = colorScheme === 'light' ? 'light' : 'dark';
+  const styles = getRichChatMessageStyles(scheme);
   useSelector(chatStore$.mentionLoginRevision);
 
   const mentionContent = formatMentionContent(content);
