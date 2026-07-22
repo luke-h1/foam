@@ -94,7 +94,10 @@ async function fetchRemoteConfig(): Promise<boolean> {
         return false;
       }
 
-      logger.remoteConfig.error('fetchAndActivate failed', error);
+      logger.remoteConfig.warn(
+        'fetchAndActivate failed; using cached or default config',
+        error,
+      );
       return false;
     })
     .finally(() => {
