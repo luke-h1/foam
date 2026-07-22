@@ -59,6 +59,24 @@ const authProxyApiKey =
   (Constants.expoConfig?.extra?.EXPO_PUBLIC_AUTH_PROXY_API_KEY as
     string | undefined) ?? process.env.EXPO_PUBLIC_AUTH_PROXY_API_KEY;
 
+const AUTH_PROXY_REQUEST_TIMEOUT_MS = 8_000;
+
+async function fetchWithTimeout(
+  input: string,
+  init?: Parameters<typeof fetch>[1],
+  timeoutMs = AUTH_PROXY_REQUEST_TIMEOUT_MS,
+) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => {
+    controller.abort();
+  }, timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // Cap follow-list pagination so a pathological follow count (Helix allows
 // thousands) can't fan out into dozens of sequential requests on tab load.
 export const MAX_FOLLOWED_CHANNELS = 400;
@@ -409,7 +427,7 @@ export const twitchService = {
       ? `${mockServerUrl}/token`
       : `${authProxyBaseUrl}/token`;
 
-    const res = await fetch(tokenUrl, {
+    const res = await fetchWithTimeout(tokenUrl, {
       headers: isE2EMode ? {} : { 'x-api-key': authProxyApiKey ?? '' },
     });
 
@@ -429,7 +447,14 @@ export const twitchService = {
     } else {
       // Fresh proxy tokens may be issued under a different client ID than
       // EXPO_PUBLIC_TWITCH_CLIENT_ID; sync the Helix Client-Id header to it.
-      await twitchService.validateToken(body.data.access_token);
+      try {
+        await twitchService.validateToken(body.data.access_token);
+      } catch (e) {
+        logger.auth.warn(
+          'anon token validation did not complete; using token unvalidated',
+          e,
+        );
+      }
     }
 
     return body?.data;
@@ -444,7 +469,7 @@ export const twitchService = {
     if (isE2EMode) {
       return true;
     }
-    const res = await fetch('https://id.twitch.tv/oauth2/validate', {
+    const res = await fetchWithTimeout('https://id.twitch.tv/oauth2/validate', {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.status !== 200) {
