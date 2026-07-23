@@ -85,7 +85,7 @@ Privacy & tracking
 Foam does not track users as defined by App Tracking Transparency. It does not
 use the IDFA/advertising identifier, does not collect a Device ID for tracking,
 and does not share data with third-party advertisers or data brokers. Product
-analytics (Statsig) are first-party, keyed on the Twitch account ID rather than a
+analytics (Vexo) are first-party, keyed on the Twitch account ID rather than a
 device identifier, and can be turned off in Settings -> Other. Crash reporting
 (Sentry) is sent with PII scrubbed. The app's privacy manifest declares
 NSPrivacyTracking = false, so no ATT prompt is required.
@@ -126,7 +126,7 @@ in the App Review notes.
 
 5.1.2(i) Privacy / ATT
 Foam does not track users as defined by ATT: no IDFA, no Device ID used for
-tracking, and no sharing with advertisers or data brokers. Analytics (Statsig)
+tracking, and no sharing with advertisers or data brokers. Analytics (Vexo)
 are first-party, keyed on the Twitch account ID, and can be disabled in
 Settings -> Other. Crash reports (Sentry) are PII-scrubbed. Our privacy manifest
 sets NSPrivacyTracking = false, so no ATT prompt is required. We corrected the

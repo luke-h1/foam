@@ -94,8 +94,8 @@ export interface Preferences {
    */
   customPlayerEnabled: boolean;
   /**
-   * Opt in to anonymous Statsig usage analytics. Off = no Statsig client is
-   * created and no events are sent.
+   * Opt in to anonymous Vexo usage analytics. Off = Vexo is not initialized
+   * and no events are sent.
    */
   analyticsEnabled: boolean;
   sharedChatEnabled: boolean;

@@ -1,65 +1,59 @@
-import { PropsWithChildren, useEffect, useRef } from 'react';
+import { PropsWithChildren, useEffect } from 'react';
 
 import {
-  StatsigProviderRN,
-  type StatsigUser,
-  useStatsigClient,
-} from '@statsig/react-native-bindings';
-import { usePathname } from 'expo-router';
+  disableTracking,
+  enableTracking,
+  identifyDevice,
+  vexo,
+} from 'vexo-analytics';
 
 import { useAuthContext } from '@app/context/AuthContext';
 import { usePreference } from '@app/store/preferenceStore';
 import { logger } from '@app/utils/logger';
 
-const statsigClientKey = process.env.EXPO_PUBLIC_STATSIG_CLIENT_KEY;
+const vexoApiKey = process.env.EXPO_PUBLIC_VEXO_API_KEY;
 
-function ScreenAnalytics() {
-  const pathname = usePathname();
-  const previousPathnameRef = useRef<string | null>(null);
-  const { client } = useStatsigClient();
-
-  useEffect(() => {
-    if (!pathname || previousPathnameRef.current === pathname) {
-      return;
-    }
-
-    previousPathnameRef.current = pathname;
-    client.logEvent('screen_view', undefined, { pathname });
-  }, [client, pathname]);
-
-  useEffect(() => {
-    return () => {
-      void client.shutdown().catch(error => {
-        logger.main.warn('Failed to shutdown Statsig analytics', error);
-      });
-    };
-  }, [client]);
-
-  return null;
-}
+/**
+ * Vexo can only be initialized once per process, so track that across
+ * remounts. Screen views are auto-tracked by the SDK once initialized.
+ */
+let vexoInitialized = false;
 
 export function AnalyticsProvider({ children }: PropsWithChildren) {
   const { user } = useAuthContext();
   const analyticsEnabled = usePreference('analyticsEnabled');
 
-  if (!statsigClientKey || !analyticsEnabled) {
-    return <>{children}</>;
-  }
+  useEffect(() => {
+    if (!vexoApiKey) {
+      return;
+    }
 
-  const statsigUser = {
-    userID: user?.id ?? 'anonymous',
-    custom: user
-      ? {
-          twitchLogin: user.login,
-          twitchDisplayName: user.display_name,
-        }
-      : {},
-  } satisfies StatsigUser;
+    if (!vexoInitialized) {
+      // Defer init until the user has opted in so no events are sent while
+      // analytics is disabled.
+      if (!analyticsEnabled) {
+        return;
+      }
+      vexo(vexoApiKey);
+      vexoInitialized = true;
+      return;
+    }
 
-  return (
-    <StatsigProviderRN sdkKey={statsigClientKey} user={statsigUser}>
-      <ScreenAnalytics />
-      {children}
-    </StatsigProviderRN>
-  );
+    const toggle = analyticsEnabled ? enableTracking : disableTracking;
+    void toggle().catch(error => {
+      logger.main.warn('Failed to update Vexo tracking state', error);
+    });
+  }, [analyticsEnabled]);
+
+  useEffect(() => {
+    if (!vexoApiKey || !vexoInitialized || !analyticsEnabled) {
+      return;
+    }
+
+    void identifyDevice(user?.id ?? null).catch(error => {
+      logger.main.warn('Failed to identify device with Vexo', error);
+    });
+  }, [analyticsEnabled, user?.id]);
+
+  return <>{children}</>;
 }
