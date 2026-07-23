@@ -42,8 +42,6 @@ export function AnalyticsProvider({ children }: PropsWithChildren) {
     }
 
     if (!vexoInitialized) {
-      // Defer init until the user has opted in so no events are sent while
-      // analytics is disabled.
       if (!analyticsEnabled) {
         return;
       }
