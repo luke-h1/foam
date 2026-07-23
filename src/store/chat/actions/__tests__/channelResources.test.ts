@@ -1,3 +1,4 @@
+import { ApiError } from '@app/services/api/Client';
 import type { ChannelCacheType } from '@app/store/chat/types/constants';
 import { emptyEmoteData } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
@@ -6,7 +7,8 @@ import { logger } from '@app/utils/logger';
 import {
   buildBadgeResourceSpecs,
   buildEmoteResourceSpecs,
-  collectFailedProviderLabels,
+  collectFailedProviderReasons,
+  describeProviderFailureReason,
   type EmoteCacheKey,
   type EmoteResourceSpec,
   hadCachedResourcesForFailedSpecs,
@@ -287,19 +289,68 @@ describe('hadCachedResourcesForFailedSpecs', () => {
   });
 });
 
-describe('collectFailedProviderLabels', () => {
-  test('returns stable provider labels for rejected resources', () => {
+describe('describeProviderFailureReason', () => {
+  test('reports the HTTP status when the service answered with an error', () => {
+    expect(describeProviderFailureReason(new ApiError('nope', 503))).toBe(
+      'HTTP 503',
+    );
+  });
+
+  test('reports a timeout when the fetch stalled past the deadline', () => {
+    expect(
+      describeProviderFailureReason(
+        new ResourceFetchTimeoutError('bttv', 1000),
+      ),
+    ).toBe('timed out');
+  });
+
+  test('falls back to the error message for other failures', () => {
+    expect(describeProviderFailureReason(new Error('offline'))).toBe('offline');
+  });
+
+  test('reports an unknown error for non-error rejections', () => {
+    expect(describeProviderFailureReason('weird')).toBe('unknown error');
+  });
+});
+
+describe('collectFailedProviderReasons', () => {
+  test('annotates each failed provider with its reason in stable order', () => {
     const settled: SettledSpec<EmoteCacheKey, SanitisedEmote>[] = [
       {
-        spec: spec('bttvGlobalEmotes'),
-        result: { status: 'rejected', reason: new Error('boom') },
+        spec: { ...spec('bttvGlobalEmotes'), provider: 'bttv' },
+        result: { status: 'rejected', reason: new ApiError('nope', 500) },
       },
       {
-        spec: spec('twitchChannelEmotes'),
+        spec: { ...spec('sevenTvChannelEmotes'), provider: 'seven_tv' },
+        result: {
+          status: 'rejected',
+          reason: new ResourceFetchTimeoutError('7tv', 1000),
+        },
+      },
+      {
+        spec: { ...spec('twitchChannelEmotes'), provider: 'twitch' },
         result: { status: 'fulfilled', value: [emote('ok')] },
       },
     ];
 
-    expect(collectFailedProviderLabels(settled)).toEqual(['BTTV']);
+    expect(collectFailedProviderReasons(settled)).toEqual([
+      'BTTV (HTTP 500)',
+      '7TV (timed out)',
+    ]);
+  });
+
+  test('uses the first rejected spec per provider for the reason', () => {
+    const settled: SettledSpec<EmoteCacheKey, SanitisedEmote>[] = [
+      {
+        spec: { ...spec('bttvChannelEmotes'), provider: 'bttv' },
+        result: { status: 'rejected', reason: new ApiError('first', 500) },
+      },
+      {
+        spec: { ...spec('bttvGlobalEmotes'), provider: 'bttv' },
+        result: { status: 'rejected', reason: new ApiError('second', 404) },
+      },
+    ];
+
+    expect(collectFailedProviderReasons(settled)).toEqual(['BTTV (HTTP 500)']);
   });
 });
