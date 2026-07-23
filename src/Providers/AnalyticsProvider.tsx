@@ -17,7 +17,7 @@ const vexoApiKey = process.env.EXPO_PUBLIC_VEXO_API_KEY;
 /**
  * Derive a non-reversible token from the user id so Vexo can distinguish
  * accounts without ever receiving the raw Twitch id, keeping analytics
- * anonymous as disclosed in preferences.
+ * pseudonymous as disclosed in preferences.
  */
 async function anonymizeUserId(userId: string): Promise<string> {
   return Crypto.digestStringAsync(
@@ -31,6 +31,12 @@ async function anonymizeUserId(userId: string): Promise<string> {
  * remounts. Screen views are auto-tracked by the SDK once initialized.
  */
 let vexoInitialized = false;
+
+/**
+ * `identifyDevice` only applies the first call per process (the SDK guards
+ * subsequent calls), so identify at most once and only with a real user id.
+ */
+let vexoDeviceIdentified = false;
 
 export function AnalyticsProvider({ children }: PropsWithChildren) {
   const { user } = useAuthContext();
@@ -47,6 +53,9 @@ export function AnalyticsProvider({ children }: PropsWithChildren) {
       }
       vexo(vexoApiKey);
       vexoInitialized = true;
+      void enableTracking().catch(error => {
+        logger.main.warn('Failed to enable Vexo tracking', error);
+      });
       return;
     }
 
@@ -63,9 +72,14 @@ export function AnalyticsProvider({ children }: PropsWithChildren) {
 
     const userId = user?.id;
 
+    if (!userId || vexoDeviceIdentified) {
+      return;
+    }
+
     void (async () => {
-      const token = userId ? await anonymizeUserId(userId) : null;
+      const token = await anonymizeUserId(userId);
       await identifyDevice(token);
+      vexoDeviceIdentified = true;
     })().catch(error => {
       logger.main.warn('Failed to identify device with Vexo', error);
     });
