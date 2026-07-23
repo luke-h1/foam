@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFrameCallback, useSharedValue } from 'react-native-reanimated';
 
+import { beginSignpost, endSignpost, markSignpost } from '@app/lib/signpost';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 
 import {
@@ -149,30 +150,36 @@ export function useChatPerfSuite() {
       measuring: boolean,
       suiteEnd: number,
     ) => {
-      const start = performance.now();
-      if (measuring) {
-        accum.current = { on: true, fps: [], jank: 0, frames: 0 };
-        uiFrames.value = 0;
-        uiJank.value = 0;
-        uiActive.value = true;
-      }
-      phaseCountdownMs.value = ms;
-      totalCountdownMs.value = Math.max(0, suiteEnd - start);
-      setSuite(s => ({
-        ...s,
-        phaseIndex,
-        phaseLabel: label,
-        phaseSub: sub,
-        measuring,
-      }));
-      while (performance.now() - start < ms) {
-        if (cancelRef.current) {
-          break;
+      const signpostName = `chat-perf.${label}.${sub}`;
+      beginSignpost(signpostName);
+      try {
+        const start = performance.now();
+        if (measuring) {
+          accum.current = { on: true, fps: [], jank: 0, frames: 0 };
+          uiFrames.value = 0;
+          uiJank.value = 0;
+          uiActive.value = true;
         }
-        await sleep(120);
+        phaseCountdownMs.value = ms;
+        totalCountdownMs.value = Math.max(0, suiteEnd - start);
+        setSuite(s => ({
+          ...s,
+          phaseIndex,
+          phaseLabel: label,
+          phaseSub: sub,
+          measuring,
+        }));
+        while (performance.now() - start < ms) {
+          if (cancelRef.current) {
+            break;
+          }
+          await sleep(120);
+        }
+        accum.current.on = false;
+        uiActive.value = false;
+      } finally {
+        endSignpost(signpostName);
       }
-      accum.current.on = false;
-      uiActive.value = false;
     },
     [phaseCountdownMs, totalCountdownMs, uiActive, uiFrames, uiJank],
   );
@@ -187,6 +194,7 @@ export function useChatPerfSuite() {
     const results: PhaseResult[] = [];
 
     setSuite({ ...IDLE, running: true });
+    markSignpost('chat-perf.suite-start');
     const suiteEnd = performance.now() + SUITE_TOTAL_MS;
 
     try {
