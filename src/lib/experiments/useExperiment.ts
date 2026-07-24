@@ -32,10 +32,19 @@ export function useExperiment<N extends ExperimentName>(
 ): ExperimentVariant<N> {
   const { config } = useRemoteConfig();
   const variant = resolveExperimentVariant(name, config.experiments.value);
+  /**
+   * Only report exposures for remotely-assigned variants; before the fetch
+   * activates, the hook resolves the control default and logging that would
+   * put every treatment user in both arms.
+   */
+  const isRemoteAssignment = config.experiments.source === 'remote';
 
   useEffect(() => {
+    if (!isRemoteAssignment) {
+      return;
+    }
     logExposure(name, variant);
-  }, [name, variant]);
+  }, [isRemoteAssignment, name, variant]);
 
   return variant;
 }

@@ -85,8 +85,11 @@ Privacy & tracking
 Foam does not track users as defined by App Tracking Transparency. It does not
 use the IDFA/advertising identifier, does not collect a Device ID for tracking,
 and does not share data with third-party advertisers or data brokers. Product
-analytics (Statsig) are first-party, keyed on the Twitch account ID rather than a
-device identifier, and can be turned off in Settings -> Other. Crash reporting
+analytics (Firebase Analytics) are anonymous - no Twitch account ID or username
+is attached, ad-id collection is disabled on both platforms (the iOS build uses
+the FirebaseAnalytics pod without IdentitySupport, so no IDFA), and screen views
+record route patterns rather than visited channels. Analytics can be turned off
+in Settings -> Other. Crash reporting
 (Sentry) is sent with PII scrubbed. The app's privacy manifest declares
 NSPrivacyTracking = false, so no ATT prompt is required.
 
@@ -126,9 +129,9 @@ in the App Review notes.
 
 5.1.2(i) Privacy / ATT
 Foam does not track users as defined by ATT: no IDFA, no Device ID used for
-tracking, and no sharing with advertisers or data brokers. Analytics (Statsig)
-are first-party, keyed on the Twitch account ID, and can be disabled in
-Settings -> Other. Crash reports (Sentry) are PII-scrubbed. Our privacy manifest
+tracking, and no sharing with advertisers or data brokers. Analytics (Firebase
+Analytics) are anonymous - no Twitch account ID, no ad ids - and can be disabled
+in Settings -> Other. Crash reports (Sentry) are PII-scrubbed. Our privacy manifest
 sets NSPrivacyTracking = false, so no ATT prompt is required. We corrected the
 App Privacy info in App Store Connect so it no longer indicates tracking or
 Device ID collection.
