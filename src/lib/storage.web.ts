@@ -98,7 +98,12 @@ export const storageService = {
       return null;
     }
 
-    if (typeof parsed !== 'object' || parsed === null) {
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      Array.isArray(parsed) ||
+      !Object.prototype.hasOwnProperty.call(parsed, 'value')
+    ) {
       return null;
     }
 
