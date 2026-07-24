@@ -28,7 +28,6 @@ runs:
         EXPO_PUBLIC_AUTH_PROXY_API_BASE_URL: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/AUTH_PROXY_API_BASE_URL
         EXPO_PUBLIC_AUTH_PROXY_API_KEY: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/AUTH_PROXY_API_KEY
         EXPO_PUBLIC_TWITCH_CLIENT_ID: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/TWITCH_CLIENT_ID
-        EXPO_PUBLIC_STATSIG_CLIENT_KEY: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/EXPO_PUBLIC_STATSIG_CLIENT_KEY
         SENTRY_AUTH_TOKEN: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/SENTRY_AUTH_TOKEN
         EXPO_PUBLIC_SENTRY_DSN: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/EXPO_PUBLIC_SENTRY_DSN
         FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/FOAM_AWS_FINGERPRINT_ACCESS_KEY_ID
@@ -37,5 +36,4 @@ runs:
         GOOGLE_SERVICES_IOS_PROD_BS4: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/GOOGLE_SERVICES_IOS_PROD_BS4
         GOOGLE_SERVICES_ANDROID_PROD_BS4: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/GOOGLE_SERVICES_ANDROID_PROD_BS4
         SLACK_WEBHOOK_URL: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/SLACK_WEBHOOK_URL
-        EXPO_PUBLIC_VEXO_API_KEY: op://ci-cd/foam-mobile-${{ inputs.variant == 'production' && 'production' || 'staging' }}/EXPO_PUBLIC_VEXO_API_KEY
         OP_ENV_FILE: '.env'

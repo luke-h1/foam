@@ -28,6 +28,14 @@ const restrictedSentryImports = [
   },
 ];
 
+const restrictedAnalyticsImports = [
+  {
+    name: '@react-native-firebase/analytics',
+    message:
+      'Use the logAnalyticsEvent / logAnalyticsScreenView helpers in src/hooks/firebase/analytics.ts so every event stays on the analyticsEvents.ts allow-list.',
+  },
+];
+
 export default tseslint.config(
   {
     ignores: [
@@ -157,7 +165,7 @@ export default tseslint.config(
       'no-restricted-imports': [
         'error',
         {
-          paths: restrictedSentryImports,
+          paths: [...restrictedSentryImports, ...restrictedAnalyticsImports],
           patterns: [
             {
               group: ['@sentry/*'],
@@ -212,6 +220,9 @@ export default tseslint.config(
       'src/lib/sentryImageSpans.ts',
       'src/lib/__tests__/sentryImageSpans.test.ts',
       'src/lib/__tests__/sentry.test.ts',
+      'src/hooks/firebase/analytics.ts',
+      'src/hooks/firebase/analytics.test.ts',
+      '__mocks__/@react-native-firebase/analytics.ts',
     ],
     rules: {
       'no-restricted-imports': 'off',

@@ -1,22 +1,16 @@
-import { PropsWithChildren, useEffect, useRef } from 'react';
+import { PropsWithChildren, useEffect, useRef, useState } from 'react';
 
-import {
-  StatsigProviderRN,
-  type StatsigUser,
-  useStatsigClient,
-} from '@statsig/react-native-bindings';
 import { usePathname } from 'expo-router';
 
-import { useAuthContext } from '@app/context/AuthContext';
+import {
+  logAnalyticsScreenView,
+  setAnalyticsEnabled,
+} from '@app/hooks/firebase/analytics';
 import { usePreference } from '@app/store/preferenceStore';
-import { logger } from '@app/utils/logger';
-
-const statsigClientKey = process.env.EXPO_PUBLIC_STATSIG_CLIENT_KEY;
 
 function ScreenAnalytics() {
   const pathname = usePathname();
   const previousPathnameRef = useRef<string | null>(null);
-  const { client } = useStatsigClient();
 
   useEffect(() => {
     if (!pathname || previousPathnameRef.current === pathname) {
@@ -24,42 +18,39 @@ function ScreenAnalytics() {
     }
 
     previousPathnameRef.current = pathname;
-    client.logEvent('screen_view', undefined, { pathname });
-  }, [client, pathname]);
-
-  useEffect(() => {
-    return () => {
-      void client.shutdown().catch(error => {
-        logger.main.warn('Failed to shutdown Statsig analytics', error);
-      });
-    };
-  }, [client]);
+    void logAnalyticsScreenView(pathname);
+  }, [pathname]);
 
   return null;
 }
 
 export function AnalyticsProvider({ children }: PropsWithChildren) {
-  const { user } = useAuthContext();
   const analyticsEnabled = usePreference('analyticsEnabled');
 
-  if (!statsigClientKey || !analyticsEnabled) {
-    return <>{children}</>;
-  }
+  /**
+   * Collection starts disabled (firebase.json) and the SDK drops events logged
+   * while it is off, so screen views must wait for the native enable to land.
+   */
+  const [collectionEnabled, setCollectionEnabled] = useState(false);
 
-  const statsigUser = {
-    userID: user?.id ?? 'anonymous',
-    custom: user
-      ? {
-          twitchLogin: user.login,
-          twitchDisplayName: user.display_name,
-        }
-      : {},
-  } satisfies StatsigUser;
+  useEffect(() => {
+    let cancelled = false;
+
+    void setAnalyticsEnabled(analyticsEnabled).then(() => {
+      if (!cancelled) {
+        setCollectionEnabled(analyticsEnabled);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [analyticsEnabled]);
 
   return (
-    <StatsigProviderRN sdkKey={statsigClientKey} user={statsigUser}>
-      <ScreenAnalytics />
+    <>
+      {collectionEnabled ? <ScreenAnalytics /> : null}
       {children}
-    </StatsigProviderRN>
+    </>
   );
 }

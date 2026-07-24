@@ -314,6 +314,7 @@ const config: ExpoConfig = {
     // papered over is gone now that RNRepo's mixed modulemaps are disabled.
     // './src/plugins/withExpoModulemapArchiveFix.js',
     '@react-native-firebase/app',
+    './plugins/with-firebase-analytics-no-ad-ids.js',
     './src/plugins/withAndroidReleaseLintFix.js',
     './src/plugins/withAndroidMainActivityConfigChanges.js',
     './plugins/with-fix-dev-launcher-cycle.js',
@@ -365,6 +366,7 @@ const config: ExpoConfig = {
   android: {
     package: appConfig.androidPackageName,
     predictiveBackGestureEnabled: true,
+    blockedPermissions: ['com.google.android.gms.permission.AD_ID'],
     googleServicesFile: googleServicesExist
       ? appConfig.androidGoogleServicesFile
       : undefined,
