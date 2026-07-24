@@ -1,5 +1,4 @@
 import { StyleSheet, View } from 'react-native';
-import { Circle, Svg } from 'react-native-svg';
 
 import * as Updates from 'expo-updates';
 
@@ -8,18 +7,21 @@ import { theme } from '@app/styles/themes';
 import { getBuildInfoLabel } from '@app/utils/version/buildInfoLabel';
 
 export function BuildStatus() {
-  const updateProgress = Updates.updateId ? 1 : 0.72;
+  const onOtaUpdate = Boolean(Updates.updateId);
 
   return (
     <View style={styles.buildContainer}>
-      <ProgressRing
-        progress={updateProgress}
-        progressColor={theme.colorPrimary}
-        size={28}
-        strokeWidth={3}
-        trackColor={theme.darkActiveContent}
+      <View
+        style={[
+          styles.statusDot,
+          {
+            backgroundColor: onOtaUpdate
+              ? theme.color.success.dark
+              : theme.colorGrey,
+          },
+        ]}
       />
-      <Text type='xs' color='gray.border'>
+      <Text type='xs' weight='medium' color='gray.textLow'>
         {getBuildInfoLabel()}
       </Text>
     </View>
@@ -35,53 +37,13 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
     flexDirection: 'row',
-    gap: theme.space12,
+    gap: theme.space8,
     paddingHorizontal: theme.space16,
     paddingVertical: theme.space8,
   },
+  statusDot: {
+    borderRadius: 999,
+    height: 8,
+    width: 8,
+  },
 });
-
-function ProgressRing({
-  progress,
-  progressColor,
-  size = 44,
-  strokeWidth = 3,
-  trackColor = 'rgba(255, 255, 255, 0.15)',
-}: {
-  progress: number;
-  size?: number;
-  strokeWidth?: number;
-  trackColor?: string;
-  progressColor?: string;
-}) {
-  const normalizedProgress = Math.max(0, Math.min(1, progress));
-  const radius = (size - strokeWidth) / 2;
-  const circumference = Math.max(0, 2 * Math.PI * radius);
-  const strokeDashoffset = circumference * (1 - normalizedProgress);
-
-  return (
-    <Svg width={size} height={size}>
-      <Circle
-        cx={size / 2}
-        cy={size / 2}
-        fill='none'
-        r={radius}
-        stroke={trackColor}
-        strokeWidth={strokeWidth}
-      />
-      <Circle
-        cx={size / 2}
-        cy={size / 2}
-        fill='none'
-        r={radius}
-        stroke={progressColor}
-        strokeWidth={strokeWidth}
-        strokeDasharray={`${circumference} ${circumference}`}
-        strokeDashoffset={strokeDashoffset}
-        strokeLinecap='round'
-        rotation={-90}
-        origin={`${size / 2}, ${size / 2}`}
-      />
-    </Svg>
-  );
-}
