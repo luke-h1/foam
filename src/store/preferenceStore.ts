@@ -94,7 +94,7 @@ export interface Preferences {
    */
   customPlayerEnabled: boolean;
   /**
-   * Opt in to pseudonymous Vexo usage analytics. Off = Vexo is not initialized
+   * Opt in to anonymous Vexo usage analytics. Off = Vexo is not initialized
    * and no events are sent.
    */
   analyticsEnabled: boolean;
