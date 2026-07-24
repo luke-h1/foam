@@ -2,6 +2,12 @@
 
 ## 1.0.5 (Production)
 
+### 📝 Other Changes
+
+- Revert "feat(app): vexo analytics" ([#777](https://github.com/lhowsam/foam/issues/777))
+
+## 1.0.5 (Production)
+
 ### ✨ Features
 
 - **app:** Vexo analytics ([#776](https://github.com/lhowsam/foam/issues/776))
