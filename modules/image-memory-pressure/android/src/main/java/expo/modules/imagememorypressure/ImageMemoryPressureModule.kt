@@ -11,7 +11,10 @@ class ImageMemoryPressureModule : Module() {
 
   private val trimCallback = object : ComponentCallbacks2 {
     override fun onTrimMemory(level: Int) {
-      if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
+      if (
+        level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW &&
+        level < ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN
+      ) {
         sendEvent("onMemoryPressure", mapOf("level" to level))
       }
     }
