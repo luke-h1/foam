@@ -3,10 +3,11 @@ import type { ComponentProps } from 'react';
 import { Column, Row, Text } from '@expo/ui/jetpack-compose';
 import {
   background,
-  clickable,
   clip,
   fillMaxWidth,
   padding,
+  selectable,
+  selectableGroup,
   Shapes,
   weight,
 } from '@expo/ui/jetpack-compose/modifiers';
@@ -42,6 +43,7 @@ export function ChatPreferenceSegmentedSettingsRow({
             clip(Shapes.RoundedCorner(10)),
             background(theme.color.menu.card),
             padding(3, 3, 3, 3),
+            selectableGroup(),
           ]}
         >
           {values.map((value, index) => {
@@ -57,9 +59,7 @@ export function ChatPreferenceSegmentedSettingsRow({
                   background(
                     selected ? theme.color.menu.cardActive : 'transparent',
                   ),
-                  clickable(() => onSelectIndex(index), {
-                    indication: false,
-                  }),
+                  selectable(selected, () => onSelectIndex(index), 'tab'),
                   padding(0, 8, 0, 8),
                 ]}
               >

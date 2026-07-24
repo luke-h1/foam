@@ -1,27 +1,28 @@
 import Constants from 'expo-constants';
 
+import { storageService } from '@app/lib/storage';
+
 import type {
   ChangelogNativeModule,
   ChangelogPresentOptions,
 } from './Changelog.types';
 import { presentChangelogAndroid } from './changelogAndroidPresenter';
 
-let latestSeenAppVersion: string | null = null;
-let latestSeenOTAVersion: string | null = null;
+const SEEN_APP_VERSION_KEY = 'changelog_seen_app_version';
+const SEEN_OTA_VERSION_KEY = 'changelog_seen_ota_version';
 
 function getCurrentAppVersion(): string {
   return Constants.expoConfig?.version ?? 'android';
 }
 
 function markSeen(options: ChangelogPresentOptions): void {
-  const version =
-    options.otaVersion ?? options.version ?? getCurrentAppVersion();
-
   if (options.otaVersion) {
-    latestSeenOTAVersion = options.otaVersion;
-  } else {
-    latestSeenAppVersion = version;
+    storageService.set(SEEN_OTA_VERSION_KEY, options.otaVersion);
+    return;
   }
+
+  const version = options.version ?? getCurrentAppVersion();
+  storageService.set(SEEN_APP_VERSION_KEY, version);
 }
 
 const ChangelogModule: ChangelogNativeModule = {
@@ -30,11 +31,11 @@ const ChangelogModule: ChangelogNativeModule = {
   },
 
   getLatestSeenAppVersion(): string | null {
-    return latestSeenAppVersion;
+    return storageService.getString<string>(SEEN_APP_VERSION_KEY);
   },
 
   getLatestSeenOTAVersion(): string | null {
-    return latestSeenOTAVersion;
+    return storageService.getString<string>(SEEN_OTA_VERSION_KEY);
   },
 
   async present(options: ChangelogPresentOptions): Promise<void> {
@@ -43,8 +44,8 @@ const ChangelogModule: ChangelogNativeModule = {
   },
 
   resetSeenVersions(): void {
-    latestSeenAppVersion = null;
-    latestSeenOTAVersion = null;
+    storageService.remove(SEEN_APP_VERSION_KEY);
+    storageService.remove(SEEN_OTA_VERSION_KEY);
   },
 };
 

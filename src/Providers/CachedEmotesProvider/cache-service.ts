@@ -426,18 +426,27 @@ export function clearCachedEmoteRefs(): void {
   notifyAll();
 }
 
-/**
- * Under memory pressure, shed every unpinned decoded bitmap (channel emotes
- * re-decode lazily on next render) and drop expo-image's in-memory cache. The
- * hard-referenced `refs` map otherwise never yields to the OS, so on a
- * constrained device this is the difference between trimming and being jettisoned.
- */
-export function trimCachedEmoteRefsForMemoryPressure(): void {
+const IMAGE_CACHE_CLEAR_THROTTLE_MS = 30_000;
+let lastImageCacheClearAt = 0;
+
+export function trimCachedEmoteRefsForMemoryPressure(
+  clearImageCache = true,
+): void {
   releaseChannelEmoteRefs();
+  if (!clearImageCache) {
+    return;
+  }
+  const now = Date.now();
+  if (now - lastImageCacheClearAt < IMAGE_CACHE_CLEAR_THROTTLE_MS) {
+    return;
+  }
+  lastImageCacheClearAt = now;
   void Image.clearMemoryCache();
 }
 
 let memoryPressureSubscribed = false;
+
+const ANDROID_TRIM_MEMORY_RUNNING_CRITICAL = 15;
 
 const LOW_MEMORY_HEADROOM_BYTES =
   Platform.OS === 'android' ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
@@ -487,7 +496,9 @@ function handleNativeMemoryPressure(event: ImageMemoryPressureEvent): void {
       decodedRefs: refs.size,
     });
   }
-  trimCachedEmoteRefsForMemoryPressure();
+  trimCachedEmoteRefsForMemoryPressure(
+    event.level >= ANDROID_TRIM_MEMORY_RUNNING_CRITICAL,
+  );
 }
 
 function startMemoryMonitor(): void {
@@ -534,9 +545,8 @@ export function subscribeEmoteCacheMemoryPressure(): void {
     return;
   }
   memoryPressureSubscribed = true;
-  AppState.addEventListener(
-    'memoryWarning',
-    trimCachedEmoteRefsForMemoryPressure,
+  AppState.addEventListener('memoryWarning', () =>
+    trimCachedEmoteRefsForMemoryPressure(),
   );
   ImageMemoryPressure.addListener?.(
     'onMemoryPressure',
