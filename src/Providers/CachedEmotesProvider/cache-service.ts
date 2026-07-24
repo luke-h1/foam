@@ -502,7 +502,7 @@ function handleNativeMemoryPressure(event: ImageMemoryPressureEvent): void {
 }
 
 function startMemoryMonitor(): void {
-  if (memoryMonitorTimer !== null) {
+  if (Platform.OS === 'android' || memoryMonitorTimer !== null) {
     return;
   }
   memoryMonitorTimer = setInterval(pollMemoryHeadroom, MEMORY_POLL_INTERVAL_MS);

@@ -12,7 +12,13 @@ const {
  */
 const withAndroidAllowBackupReplace = config =>
   withAndroidManifest(config, configWithManifest => {
-    const application = configWithManifest.modResults.manifest.application?.[0];
+    const { manifest } = configWithManifest.modResults;
+    manifest.$ = {
+      ...manifest.$,
+      'xmlns:tools': 'http://schemas.android.com/tools',
+    };
+
+    const application = manifest.application?.[0];
 
     if (application) {
       const existing = application.$['tools:replace'];

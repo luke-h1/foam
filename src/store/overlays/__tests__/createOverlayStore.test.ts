@@ -85,4 +85,19 @@ describe('createAwaitableOverlayStore', () => {
     store.dismiss();
     await expect(second).resolves.toBeUndefined();
   });
+
+  test('a subscriber that dismisses during present still resolves the promise', async () => {
+    const store = createAwaitableOverlayStore<string>();
+    const unsubscribe = store.subscribe(() => {
+      if (store.getState() !== null) {
+        store.dismiss();
+      }
+    });
+
+    const pending = store.present('sheet');
+    unsubscribe();
+
+    expect(store.getState()).toBeNull();
+    await expect(pending).resolves.toBeUndefined();
+  });
 });

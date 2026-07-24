@@ -877,7 +877,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           <Button
             label={t('goBack')}
             onPress={handleBack}
-            style={styles.androidBackButton}
+            style={[
+              styles.androidBackButton,
+              { top: insets.top + theme.space8 },
+            ]}
           >
             <SymbolView
               name={BACK_SYMBOL_NAME}

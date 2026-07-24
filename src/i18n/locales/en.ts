@@ -385,6 +385,7 @@ const en = {
 
   search: {
     recentSearches: 'RECENT SEARCHES',
+    clearSearch: 'Clear search',
     clearSearchHistory: 'Clear Search History',
     clearSearchHistoryConfirm:
       'Are you sure you want to clear all your recent searches?',

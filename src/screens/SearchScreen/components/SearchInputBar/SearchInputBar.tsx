@@ -1,5 +1,6 @@
 import { useImperativeHandle, useRef } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native-gesture-handler';
 
 import { SymbolView } from '@app/components/ui/Icon/Icon';
@@ -15,6 +16,7 @@ export function SearchInputBar({
   onChangeText,
   onSubmit,
 }: SearchInputBarProps) {
+  const { t } = useTranslation('search');
   const inputRef = useRef<TextInput | null>(null);
 
   useImperativeHandle(ref, () => ({
@@ -50,6 +52,7 @@ export function SearchInputBar({
       {hasValue && (
         <Pressable
           accessibilityRole='button'
+          accessibilityLabel={t('clearSearch')}
           onPress={onCancel}
           style={styles.clearButton}
         >

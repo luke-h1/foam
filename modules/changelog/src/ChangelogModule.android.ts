@@ -39,8 +39,10 @@ const ChangelogModule: ChangelogNativeModule = {
   },
 
   async present(options: ChangelogPresentOptions): Promise<void> {
-    markSeen(options);
-    await presentChangelogAndroid(options);
+    const presented = await presentChangelogAndroid(options);
+    if (presented) {
+      markSeen(options);
+    }
   },
 
   resetSeenVersions(): void {

@@ -26,19 +26,19 @@ export function subscribeChangelogAndroid(listener: () => void): () => void {
 
 export function presentChangelogAndroid(
   options: ChangelogPresentOptions,
-): Promise<void> {
+): Promise<boolean> {
   if (pending) {
-    return pending;
+    return pending.then(() => false);
   }
 
   state = options;
-  emit();
-
-  pending = new Promise(resolve => {
+  const promise = new Promise<void>(resolve => {
     presentResolve = resolve;
   });
+  pending = promise;
+  emit();
 
-  return pending;
+  return promise.then(() => true);
 }
 
 export function dismissChangelogAndroid(): void {
@@ -46,9 +46,10 @@ export function dismissChangelogAndroid(): void {
     return;
   }
 
-  state = null;
-  emit();
-  presentResolve?.();
+  const resolve = presentResolve;
   presentResolve = null;
   pending = null;
+  state = null;
+  emit();
+  resolve?.();
 }

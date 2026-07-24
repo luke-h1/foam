@@ -55,6 +55,6 @@ class ImageMemoryPressureModule : Module() {
     activityManager.getMemoryInfo(memoryInfo)
 
     val headroom = memoryInfo.availMem - memoryInfo.threshold
-    return if (headroom > 0L) headroom.toDouble() else 1.0
+    return if (headroom > 0L) headroom.toDouble() else 0.0
   }
 }
