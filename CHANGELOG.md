@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.5 (Production)
+
+### ✨ Features
+
+- **app:** Vexo analytics ([#776](https://github.com/lhowsam/foam/issues/776))
+- **perf:** Add iOS signpost module for Instruments profiling ([#775](https://github.com/lhowsam/foam/issues/775))
+
+### 🐛 Bug Fixes
+
+- Chat timestamps, emote/badge failure reasons, remove clip download ([#761](https://github.com/lhowsam/foam/issues/761))
+
 ## 1.0.4 (Production)
 
 ### 🐛 Bug Fixes
