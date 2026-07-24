@@ -110,7 +110,7 @@ export const storageService = {
     const { value, expiry } = parsed;
 
     if (expiry && new Date() >= new Date(expiry)) {
-      storageService.remove(key);
+      storageService.remove(key, namespacePrefix);
       return null;
     }
 
