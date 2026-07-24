@@ -65,7 +65,7 @@ const VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
     name: 'Foam',
     icon: './assets/splash/splash-image-production.png',
     iosBundleIdentifier: 'foam-tv',
-    androidPackageName: 'com.lhowsam.foam',
+    androidPackageName: 'com.lhowsam.foam_tv',
     splashImage: './assets/splash/splash-image-production.png',
     splashBackgroundColor: '#000000',
     iosGoogleServicesFile:
@@ -204,6 +204,19 @@ const config: ExpoConfig = {
     'expo-router',
     'expo-image',
     'expo-localization',
+    [
+      'expo-splash-screen',
+      {
+        image: appConfig.splashImage,
+        imageWidth: 200,
+        resizeMode: 'contain',
+        backgroundColor: appConfig.splashBackgroundColor,
+        dark: {
+          image: appConfig.splashImage,
+          backgroundColor: appConfig.splashBackgroundColor,
+        },
+      },
+    ],
     '@rnrepo/expo-config-plugin',
     'react-native-compressor',
     'expo-status-bar',
@@ -228,8 +241,8 @@ const config: ExpoConfig = {
           '$(PRODUCT_NAME) uses your photo library to save downloaded clips, emotes, and badges so you can use them outside the app.',
         savePhotosPermission:
           '$(PRODUCT_NAME) saves downloaded clips, emotes, and badges to your photo library.',
-        isAccessMediaLocationEnabled: true,
-        granularPermissions: ['audio', 'photo'],
+        isAccessMediaLocationEnabled: false,
+        granularPermissions: ['photo'],
       },
     ],
     [
@@ -256,12 +269,23 @@ const config: ExpoConfig = {
           'node_modules/@expo-google-fonts/source-code-pro/700Bold',
         ],
         android: {
-          permissions: [
-            'android.permission.READ_EXTERNAL_STORAGE',
-            'android.permission.WRITE_EXTERNAL_STORAGE',
-            'android.permission.ACCESS_MEDIA_LOCATION',
-          ],
           fonts: [
+            'node_modules/@expo-google-fonts/instrument-serif/400Regular',
+            'node_modules/@expo-google-fonts/instrument-serif/400Regular_Italic',
+            'node_modules/@expo-google-fonts/montserrat/300Light',
+            'node_modules/@expo-google-fonts/montserrat/300Light_Italic',
+            'node_modules/@expo-google-fonts/montserrat/400Regular',
+            'node_modules/@expo-google-fonts/montserrat/400Regular_Italic',
+            'node_modules/@expo-google-fonts/montserrat/500Medium',
+            'node_modules/@expo-google-fonts/montserrat/500Medium_Italic',
+            'node_modules/@expo-google-fonts/montserrat/600SemiBold',
+            'node_modules/@expo-google-fonts/montserrat/600SemiBold_Italic',
+            'node_modules/@expo-google-fonts/montserrat/700Bold',
+            'node_modules/@expo-google-fonts/montserrat/700Bold_Italic',
+            'node_modules/@expo-google-fonts/montserrat/800ExtraBold',
+            'node_modules/@expo-google-fonts/montserrat/800ExtraBold_Italic',
+            'node_modules/@expo-google-fonts/montserrat/900Black',
+            'node_modules/@expo-google-fonts/montserrat/900Black_Italic',
             {
               fontFamily: 'SourceCodePro',
               fontDefinitions: [
@@ -302,6 +326,10 @@ const config: ExpoConfig = {
           enableProguardInReleaseBuilds: true,
           enableShrinkResourcesInReleaseBuilds: true,
           useLegacyPackaging: true,
+          extraProguardRules: [
+            '-dontwarn java.applet.**',
+            '-dontwarn javax.sound.sampled.**',
+          ].join('\n'),
         },
       },
     ],
@@ -316,6 +344,7 @@ const config: ExpoConfig = {
     '@react-native-firebase/app',
     './src/plugins/withAndroidReleaseLintFix.js',
     './src/plugins/withAndroidMainActivityConfigChanges.js',
+    './src/plugins/withAndroidAllowBackupReplace.js',
     './plugins/with-fix-dev-launcher-cycle.js',
     // ['./src/plugins/withAnimatedWebPSupport.js'],
     // ['./src/plugins/withFastImageWebPSupportIOS.js'],
@@ -365,18 +394,19 @@ const config: ExpoConfig = {
   android: {
     package: appConfig.androidPackageName,
     predictiveBackGestureEnabled: true,
+    allowBackup: false,
+    blockedPermissions: [
+      'android.permission.RECORD_AUDIO',
+      'android.permission.SYSTEM_ALERT_WINDOW',
+      'android.permission.ACCESS_MEDIA_LOCATION',
+    ],
     googleServicesFile: googleServicesExist
       ? appConfig.androidGoogleServicesFile
       : undefined,
-    adaptiveIcon: {
-      foregroundImage: './assets/android-icon.png',
-      backgroundImage: './assets/android-icon.png',
-      monochromeImage: './assets/android-icon.png',
-    },
     intentFilters: [
       {
         action: 'VIEW',
-        autoVerify: true,
+        autoVerify: false,
         category: ['BROWSABLE', 'DEFAULT'],
         data: [
           { scheme: 'https', host: 'www.twitch.tv' },
@@ -384,7 +414,21 @@ const config: ExpoConfig = {
           { scheme: 'https', host: 'm.twitch.tv' },
         ],
       },
+      {
+        action: 'VIEW',
+        autoVerify: true,
+        category: ['BROWSABLE', 'DEFAULT'],
+        data: [
+          { scheme: 'https', host: 'foam-app.com', pathPrefix: '/' },
+          { scheme: 'https', host: 'www.foam-app.com', pathPrefix: '/' },
+        ],
+      },
     ],
+    adaptiveIcon: {
+      foregroundImage: './assets/android-icon.png',
+      backgroundColor: '#000000',
+      monochromeImage: './assets/android-icon-monochrome.png',
+    },
   } as NonNullable<ExpoConfig['android']> & {
     predictiveBackGestureEnabled?: boolean;
   },

@@ -4,12 +4,24 @@ import type {
   ChangelogNativeModule,
   ChangelogPresentOptions,
 } from './Changelog.types';
+import { presentChangelogAndroid } from './changelogAndroidPresenter';
 
 let latestSeenAppVersion: string | null = null;
 let latestSeenOTAVersion: string | null = null;
 
 function getCurrentAppVersion(): string {
   return Constants.expoConfig?.version ?? 'android';
+}
+
+function markSeen(options: ChangelogPresentOptions): void {
+  const version =
+    options.otaVersion ?? options.version ?? getCurrentAppVersion();
+
+  if (options.otaVersion) {
+    latestSeenOTAVersion = options.otaVersion;
+  } else {
+    latestSeenAppVersion = version;
+  }
 }
 
 const ChangelogModule: ChangelogNativeModule = {
@@ -26,14 +38,8 @@ const ChangelogModule: ChangelogNativeModule = {
   },
 
   async present(options: ChangelogPresentOptions): Promise<void> {
-    const version =
-      options.otaVersion ?? options.version ?? getCurrentAppVersion();
-
-    if (options.otaVersion) {
-      latestSeenOTAVersion = options.otaVersion;
-    } else {
-      latestSeenAppVersion = version;
-    }
+    markSeen(options);
+    await presentChangelogAndroid(options);
   },
 
   resetSeenVersions(): void {

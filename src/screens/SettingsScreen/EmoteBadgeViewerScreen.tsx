@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Platform,
   ScrollView,
   type SectionListData,
@@ -11,8 +10,6 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Host, ProgressView } from '@expo/ui/swift-ui';
-import { controlSize, tint } from '@expo/ui/swift-ui/modifiers';
 import type { LegendListRenderItemProps } from '@legendapp/list/react-native';
 import { LegendList } from '@legendapp/list/react-native';
 import { SectionList as LegendSectionList } from '@legendapp/list/section-list';
@@ -37,6 +34,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useGlobalBadgesQuery } from '@app/hooks/queries/useGlobalBadgesQuery';
 import { useGlobalEmotesQuery } from '@app/hooks/queries/useGlobalEmotesQuery';
 import { useSevenTvBadgesQuery } from '@app/hooks/queries/useSevenTvBadgesQuery';
+import { EmoteBadgeViewerLoader } from '@app/screens/SettingsScreen/components/EmoteBadgeViewerLoader';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
@@ -50,16 +48,7 @@ import type { ParsedPart } from '@app/utils/chat/parsedPart';
 const BADGE_CELL_SIZE = 64;
 const BADGE_IMAGE_SIZE = 40;
 
-const loader =
-  Platform.OS === 'ios' ? (
-    <Host matchContents>
-      <ProgressView
-        modifiers={[controlSize('large'), tint(theme.colorPrimary)]}
-      />
-    </Host>
-  ) : (
-    <ActivityIndicator size='large' color={theme.colorPrimary} />
-  );
+const getBadgeRowKey = (row: BadgeRow) => row.map(badge => badge.id).join('-');
 
 function toEmotePart(emote: SanitisedEmote): ParsedPart<'emote'> {
   return { ...emote, type: 'emote', content: emote.name };
@@ -137,7 +126,11 @@ function EmotesTab({
   );
 
   if (isLoading) {
-    return <View style={styles.centered}>{loader}</View>;
+    return (
+      <View style={styles.centered}>
+        <EmoteBadgeViewerLoader />
+      </View>
+    );
   }
 
   if (providers.length === 0) {
@@ -276,7 +269,11 @@ function BadgesTab({
   );
 
   if (twitchLoading || (badges.length === 0 && sevenTvLoading)) {
-    return <View style={styles.centered}>{loader}</View>;
+    return (
+      <View style={styles.centered}>
+        <EmoteBadgeViewerLoader />
+      </View>
+    );
   }
 
   if (badges.length === 0) {
@@ -292,7 +289,7 @@ function BadgesTab({
       sections={sections}
       renderItem={renderItem}
       renderSectionHeader={renderSectionHeader}
-      keyExtractor={(row, index) => `${row[0]?.id ?? 'row'}-${index}`}
+      keyExtractor={getBadgeRowKey}
       stickySectionHeadersEnabled
       estimatedItemSize={BADGE_CELL_SIZE + theme.space8}
       recycleItems

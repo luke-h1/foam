@@ -9,20 +9,12 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react';
-import {
-  type NativeSyntheticEvent,
-  type StyleProp,
-  StyleSheet,
-  type TextInputFocusEventData,
-  View,
-  type ViewStyle,
-} from 'react-native';
+import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native-gesture-handler';
-import type { SearchBarCommands } from 'react-native-screens';
 
 import { ListRenderItem } from '@shopify/flash-list';
-import { router, Stack } from 'expo-router';
+import { router } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 
 import { Button } from '@app/components/Button/Button';
@@ -39,6 +31,8 @@ import { theme } from '@app/styles/themes';
 import type { Category } from '@app/types/twitch/category';
 import type { SearchChannelResponse } from '@app/types/twitch/channel';
 
+import { SearchInputBar } from './components/SearchInputBar/SearchInputBar';
+import type { SearchInputBarHandle } from './components/SearchInputBar/types';
 import { StreamerCard } from './components/StreamerCard';
 
 interface SearchHistoryItem {
@@ -190,7 +184,7 @@ export function SearchScreen() {
   const [{ query, selectedFilter, searchResults, categoryResults }, setState] =
     useState<SearchState>(SEARCH_INITIAL_STATE);
   const listRef = useRef<FlashListRef<SearchItem>>(null);
-  const searchBarRef = useRef<SearchBarCommands | null>(null);
+  const searchBarRef = useRef<SearchInputBarHandle | null>(null);
 
   useScrollToTop(listRef);
 
@@ -288,16 +282,9 @@ export function SearchScreen() {
     [handleQuerySearch],
   );
 
-  const handleNativeSearchTextChange = useCallback(
-    (event: NativeSyntheticEvent<TextInputFocusEventData>) => {
-      handleTextChange(event.nativeEvent.text);
-    },
-    [handleTextChange],
-  );
-
-  const handleNativeSearchSubmit = useCallback(
-    (event: NativeSyntheticEvent<TextInputFocusEventData>) => {
-      const searchText = event.nativeEvent.text.trim();
+  const handleSearchSubmit = useCallback(
+    (text: string) => {
+      const searchText = text.trim();
       if (searchText.length > 0) {
         void handleQuerySearch(searchText);
       }
@@ -419,16 +406,13 @@ export function SearchScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.SearchBar
+      <SearchInputBar
         ref={searchBarRef}
-        autoCapitalize='none'
-        hideWhenScrolling={false}
-        onCancelButtonPress={handleClearSearch}
-        onChangeText={handleNativeSearchTextChange}
-        onClose={handleClearSearch}
-        onSearchButtonPress={handleNativeSearchSubmit}
+        onCancel={handleClearSearch}
+        onChangeText={handleTextChange}
+        onSubmit={handleSearchSubmit}
         placeholder={t('searchPlaceholder')}
-        placement='automatic'
+        value={query}
       />
       <SearchHeader
         activeResults={activeResults}

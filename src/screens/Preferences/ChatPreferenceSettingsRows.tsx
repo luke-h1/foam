@@ -12,24 +12,21 @@ export function ChatPreferenceSegmentedSettingsRow({
   subtitle,
   icon,
   selectedIndex,
-  onChange,
-  onValueChange,
+  onSelectIndex,
   values,
 }: {
   title: string;
   subtitle: string;
   icon: SettingsRowIcon;
   selectedIndex: number;
-  onChange: (event: { nativeEvent: { selectedSegmentIndex: number } }) => void;
-  onValueChange: (value: string) => void;
+  onSelectIndex: (index: number) => void;
   values: readonly string[];
 }) {
   return (
     <View>
       <SettingsRow title={title} subtitle={subtitle} icon={icon} />
       <ChatPreferenceSegmentedTrailing
-        onChange={onChange}
-        onValueChange={onValueChange}
+        onSelectIndex={onSelectIndex}
         selectedIndex={selectedIndex}
         values={values}
       />
