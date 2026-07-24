@@ -4,22 +4,30 @@
 
 ### ✨ Features
 
-- **firebase:** Replace statsig with google analytics ([#778](https://github.com/lhowsam/foam/issues/778))
-
-### 📝 Other Changes
-
-- Revert "feat(app): vexo analytics" ([#777](https://github.com/lhowsam/foam/issues/777))
-
-## 1.0.5 (Production)
-
-### ✨ Features
-
 - **app:** Vexo analytics ([#776](https://github.com/lhowsam/foam/issues/776))
 - **perf:** Add iOS signpost module for Instruments profiling ([#775](https://github.com/lhowsam/foam/issues/775))
 
 ### 🐛 Bug Fixes
 
 - Chat timestamps, emote/badge failure reasons, remove clip download ([#761](https://github.com/lhowsam/foam/issues/761))
+
+## 1.0.5 (Internal)
+
+### ✨ Features
+
+- **firebase:** Replace statsig with google analytics ([#778](https://github.com/lhowsam/foam/issues/778))
+
+### 🐛 Bug Fixes
+
+- **security:** Restrict https auth callbacks to foam-app.com on native ([#781](https://github.com/lhowsam/foam/issues/781))
+
+### 📝 Other Changes
+
+- Revert "feat(app): vexo analytics" ([#777](https://github.com/lhowsam/foam/issues/777))
+
+### 🔧 Miscellaneous Tasks
+
+- **tooling:** Non-android tooling and cleanup from #764 ([#780](https://github.com/lhowsam/foam/issues/780))
 
 ## 1.0.4 (Production)
 
