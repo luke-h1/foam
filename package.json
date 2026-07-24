@@ -105,7 +105,6 @@
     "@sentry/react-native": "8.14.1",
     "@shopify/flash-list": "2.0.2",
     "@shopify/react-native-skia": "2.6.2",
-    "@statsig/react-native-bindings": "3.33.2",
     "@swmansion/react-native-bottom-sheet": "0.16.1",
     "@tanstack/react-query": "5.100.9",
     "app-icon-badge": "0.1.2",
@@ -176,6 +175,7 @@
     "react-server-dom-webpack": "~19.2.4",
     "sonner-native": "0.25.0",
     "twemoji": "14.0.2",
+    "vexo-analytics": "1.5.8",
     "zod": "4.4.3"
   },
   "devDependencies": {

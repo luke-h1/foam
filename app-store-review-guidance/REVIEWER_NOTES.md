@@ -85,10 +85,10 @@ Privacy & tracking
 Foam does not track users as defined by App Tracking Transparency. It does not
 use the IDFA/advertising identifier, does not collect a Device ID for tracking,
 and does not share data with third-party advertisers or data brokers. Product
-analytics (Statsig) are first-party, keyed on the Twitch account ID rather than a
-device identifier, and can be turned off in Settings -> Other. Crash reporting
-(Sentry) is sent with PII scrubbed. The app's privacy manifest declares
-NSPrivacyTracking = false, so no ATT prompt is required.
+analytics (Vexo) are first-party and anonymous (device-level screen usage only;
+no account identifiers), and can be turned off in Settings -> Other. Crash
+reporting (Sentry) is sent with PII scrubbed. The app's privacy manifest
+declares NSPrivacyTracking = false, so no ATT prompt is required.
 
 Background audio
 
@@ -126,12 +126,12 @@ in the App Review notes.
 
 5.1.2(i) Privacy / ATT
 Foam does not track users as defined by ATT: no IDFA, no Device ID used for
-tracking, and no sharing with advertisers or data brokers. Analytics (Statsig)
-are first-party, keyed on the Twitch account ID, and can be disabled in
-Settings -> Other. Crash reports (Sentry) are PII-scrubbed. Our privacy manifest
-sets NSPrivacyTracking = false, so no ATT prompt is required. We corrected the
-App Privacy info in App Store Connect so it no longer indicates tracking or
-Device ID collection.
+tracking, and no sharing with advertisers or data brokers. Analytics (Vexo)
+are first-party and anonymous (device-level screen usage only; no account
+identifiers), and can be disabled in Settings -> Other. Crash reports (Sentry)
+are PII-scrubbed. Our privacy manifest sets NSPrivacyTracking = false, so no
+ATT prompt is required. We corrected the App Privacy info in App Store Connect
+so it no longer indicates tracking or Device ID collection.
 
 2.3.6 Age rating
 The app has no in-app Parental Controls or Age Assurance. We set "Age Assurance"

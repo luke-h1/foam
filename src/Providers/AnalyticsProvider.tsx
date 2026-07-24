@@ -1,65 +1,50 @@
-import { PropsWithChildren, useEffect, useRef } from 'react';
+import { PropsWithChildren, useEffect } from 'react';
+import { Platform } from 'react-native';
 
-import {
-  StatsigProviderRN,
-  type StatsigUser,
-  useStatsigClient,
-} from '@statsig/react-native-bindings';
-import { usePathname } from 'expo-router';
+import { disableTracking, enableTracking, vexo } from 'vexo-analytics';
 
-import { useAuthContext } from '@app/context/AuthContext';
 import { usePreference } from '@app/store/preferenceStore';
 import { logger } from '@app/utils/logger';
 
-const statsigClientKey = process.env.EXPO_PUBLIC_STATSIG_CLIENT_KEY;
+const vexoApiKey = process.env.EXPO_PUBLIC_VEXO_API_KEY;
 
-function ScreenAnalytics() {
-  const pathname = usePathname();
-  const previousPathnameRef = useRef<string | null>(null);
-  const { client } = useStatsigClient();
+/**
+ * Vexo can only be initialized once per process, so track that across
+ * remounts. Screen views are auto-tracked by the SDK once initialized.
+ *
+ * Web is skipped: `enableTracking` / `disableTracking` are no-op stubs there,
+ * so opt-out cannot be honored after `vexo()` runs.
+ */
+let vexoInitialized = false;
 
-  useEffect(() => {
-    if (!pathname || previousPathnameRef.current === pathname) {
-      return;
-    }
-
-    previousPathnameRef.current = pathname;
-    client.logEvent('screen_view', undefined, { pathname });
-  }, [client, pathname]);
-
-  useEffect(() => {
-    return () => {
-      void client.shutdown().catch(error => {
-        logger.main.warn('Failed to shutdown Statsig analytics', error);
-      });
-    };
-  }, [client]);
-
-  return null;
+/**
+ * Web stubs return `undefined` instead of a Promise; normalize so callers can
+ * always `.catch`.
+ */
+function setTrackingEnabled(enabled: boolean) {
+  return Promise.resolve(enabled ? enableTracking() : disableTracking());
 }
 
 export function AnalyticsProvider({ children }: PropsWithChildren) {
-  const { user } = useAuthContext();
   const analyticsEnabled = usePreference('analyticsEnabled');
 
-  if (!statsigClientKey || !analyticsEnabled) {
-    return <>{children}</>;
-  }
+  useEffect(() => {
+    if (!vexoApiKey || Platform.OS === 'web') {
+      return;
+    }
 
-  const statsigUser = {
-    userID: user?.id ?? 'anonymous',
-    custom: user
-      ? {
-          twitchLogin: user.login,
-          twitchDisplayName: user.display_name,
-        }
-      : {},
-  } satisfies StatsigUser;
+    if (!vexoInitialized) {
+      if (!analyticsEnabled) {
+        return;
+      }
+      vexo(vexoApiKey);
+      vexoInitialized = true;
+    }
 
-  return (
-    <StatsigProviderRN sdkKey={statsigClientKey} user={statsigUser}>
-      <ScreenAnalytics />
-      {children}
-    </StatsigProviderRN>
-  );
+    void setTrackingEnabled(analyticsEnabled).catch(error => {
+      logger.main.warn('Failed to update Vexo tracking state', error);
+    });
+  }, [analyticsEnabled]);
+
+  return <>{children}</>;
 }
