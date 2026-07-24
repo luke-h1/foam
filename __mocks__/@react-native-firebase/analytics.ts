@@ -5,5 +5,3 @@ export const logScreenView = jest.fn().mockResolvedValue(undefined);
 export const setAnalyticsCollectionEnabled = jest
   .fn()
   .mockResolvedValue(undefined);
-export const setUserId = jest.fn().mockResolvedValue(undefined);
-export const setUserProperties = jest.fn().mockResolvedValue(undefined);

@@ -2,8 +2,6 @@ import {
   logEvent,
   logScreenView,
   setAnalyticsCollectionEnabled,
-  setUserId,
-  setUserProperties,
 } from '@react-native-firebase/analytics';
 
 import { logger } from '@app/utils/logger';
@@ -12,7 +10,6 @@ import {
   logAnalyticsEvent,
   logAnalyticsScreenView,
   setAnalyticsEnabled,
-  setAnalyticsUser,
 } from './analytics';
 
 jest.mock('@react-native-firebase/installations');
@@ -28,8 +25,6 @@ jest.mock('@app/utils/logger', () => ({
 }));
 
 const mockedSetCollectionEnabled = jest.mocked(setAnalyticsCollectionEnabled);
-const mockedSetUserId = jest.mocked(setUserId);
-const mockedSetUserProperties = jest.mocked(setUserProperties);
 const mockedLogEvent = jest.mocked(logEvent);
 const mockedLogScreenView = jest.mocked(logScreenView);
 const mockedWarn = jest.mocked(logger.main.warn);
@@ -46,29 +41,6 @@ describe('analytics', () => {
       expect.anything(),
       false,
     );
-  });
-
-  test('setAnalyticsUser sets id and twitch properties', async () => {
-    await setAnalyticsUser({
-      id: '123',
-      twitchLogin: 'foam',
-      twitchDisplayName: 'Foam',
-    });
-
-    expect(mockedSetUserId).toHaveBeenCalledWith(expect.anything(), '123');
-    expect(mockedSetUserProperties).toHaveBeenCalledWith(expect.anything(), {
-      twitchLogin: 'foam',
-      twitchDisplayName: 'Foam',
-    });
-  });
-
-  test('setAnalyticsUser nulls missing twitch properties', async () => {
-    await setAnalyticsUser({ id: 'anonymous' });
-
-    expect(mockedSetUserProperties).toHaveBeenCalledWith(expect.anything(), {
-      twitchLogin: null,
-      twitchDisplayName: null,
-    });
   });
 
   test('logAnalyticsEvent forwards name and params', async () => {
