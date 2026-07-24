@@ -10,7 +10,8 @@ import SwiftUI
 
 public enum ChangelogVersionNoteItem: Sendable, Codable {
   case media(
-    kind: MediaKind, url: URL, title: String, description: String)
+    kind: MediaKind, url: URL, title: String, description: String
+  )
   case list(title: String, rows: [ListRow])
 
   public enum MediaKind: Sendable, Codable {

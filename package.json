@@ -51,6 +51,9 @@
     "lint:ast-grep": "ast-grep scan",
     "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
+    "lint:kotlin": "./scripts/lint-kotlin.sh",
+    "lint:native": "bun run lint:swift && bun run lint:kotlin",
+    "lint:swift": "./scripts/lint-swift.sh",
     "metadata:push": "EXPO_PUBLIC_APP_VARIANT=production eas metadata:push --profile production",
     "ota": "./scripts/release-ota.sh",
     "ota:check": "./scripts/ota-compat-check.sh",
@@ -256,6 +259,8 @@
     ],
     "*.{ts,tsx}": "ast-grep scan",
     "*.json": "bunx prettier --write",
+    "*.swift": "./scripts/lint-swift.sh",
+    "*.{kt,kts}": "./scripts/lint-kotlin.sh",
     "assets/icons/**/*.svg": "bash -c 'bun svgo -f ./assets/icons'"
   },
   "config": {
