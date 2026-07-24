@@ -224,13 +224,14 @@ function createEmojiSets(emojis: string[]): EmoteMenuSet[] {
     );
   }
 
+  const uniqueEmojis = [...new Set(emojis)];
   return categories.map((category, index) =>
     makeSet(
       category.id,
       'Emoji',
       category.title,
       category.icon,
-      emojis.slice(index * 24, (index + 1) * 24),
+      uniqueEmojis.slice(index * 24, (index + 1) * 24),
     ),
   );
 }
@@ -250,7 +251,9 @@ function createEmojiSetsFromInput(
   }
 
   return emojiSets.map(category =>
-    makeSet(category.id, 'Emoji', category.title, category.icon, category.data),
+    makeSet(category.id, 'Emoji', category.title, category.icon, [
+      ...new Set(category.data),
+    ]),
   );
 }
 
