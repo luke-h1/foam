@@ -91,10 +91,26 @@ export const storageService = {
       return null;
     }
 
-    const { value, expiry } = JSON.parse(item) as StorageItem<T>;
+    let parsed: StorageItem<T>;
+    try {
+      parsed = JSON.parse(item) as StorageItem<T>;
+    } catch {
+      return null;
+    }
+
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      Array.isArray(parsed) ||
+      !Object.prototype.hasOwnProperty.call(parsed, 'value')
+    ) {
+      return null;
+    }
+
+    const { value, expiry } = parsed;
 
     if (expiry && new Date() >= new Date(expiry)) {
-      storageService.remove(key);
+      storageService.remove(key, namespacePrefix);
       return null;
     }
 
@@ -151,11 +167,24 @@ export const storageService = {
 
     keys.forEach(key => {
       const item = storage.getString(key);
-      if (item) {
-        const { expiry } = JSON.parse(item) as StorageItem;
-        if (expiry && new Date() >= new Date(expiry)) {
-          storage.remove(key);
-        }
+      if (!item) {
+        return;
+      }
+
+      let parsed: StorageItem;
+      try {
+        parsed = JSON.parse(item) as StorageItem;
+      } catch {
+        return;
+      }
+
+      if (typeof parsed !== 'object' || parsed === null) {
+        return;
+      }
+
+      const { expiry } = parsed;
+      if (expiry && new Date() >= new Date(expiry)) {
+        storage.remove(key);
       }
     });
   },

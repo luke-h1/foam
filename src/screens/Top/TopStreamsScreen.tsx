@@ -86,8 +86,7 @@ export function TopStreamsScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refetch();
-    setRefreshing(false);
+    await refetch().finally(() => setRefreshing(false));
   }, [refetch]);
 
   const renderItem: ListRenderItem<TwitchStream> = useCallback(

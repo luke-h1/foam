@@ -169,12 +169,12 @@ const getDefaultToken = async () => {
     }),
   });
 
-  const data = await response.json();
-
   if (!response.ok) {
+    const data = await response.json();
     return json(data, { status: response.status });
   }
 
+  const data = await response.json();
   console.info('serving Twitch default token');
   return json(data);
 };

@@ -65,7 +65,7 @@ export const storageService = {
     const parsed = JSON.parse(item) as StorageItem<T>;
 
     if (isStorageItemExpired(parsed)) {
-      storageService.remove(key);
+      storageService.remove(key, namespacePrefix);
       return null;
     }
 
