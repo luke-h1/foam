@@ -3,10 +3,6 @@ const { withDangerousMod } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
-// RNFBAnalytics.podspec installs FirebaseAnalytics/IdentitySupport (IDFA
-// collection) unless $RNFirebaseAnalyticsWithoutAdIdSupport is set in the
-// Podfile. We don't use advertising ids on either platform (Android blocks the
-// AD_ID permission via blockedPermissions), so pin the ad-id-free subspec.
 const FLAG = '$RNFirebaseAnalyticsWithoutAdIdSupport = true';
 
 const withFirebaseAnalyticsNoAdIds = config =>

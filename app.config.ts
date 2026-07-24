@@ -366,10 +366,6 @@ const config: ExpoConfig = {
   android: {
     package: appConfig.androidPackageName,
     predictiveBackGestureEnabled: true,
-    /**
-     * firebase analytics adds AD_ID to the manifest; we don't use advertising-id
-     * features, and stripping it avoids a Play data-safety ads declaration.
-     */
     blockedPermissions: ['com.google.android.gms.permission.AD_ID'],
     googleServicesFile: googleServicesExist
       ? appConfig.androidGoogleServicesFile

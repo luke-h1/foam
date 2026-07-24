@@ -86,10 +86,9 @@ Foam does not track users as defined by App Tracking Transparency. It does not
 use the IDFA/advertising identifier, does not collect a Device ID for tracking,
 and does not share data with third-party advertisers or data brokers. Product
 analytics (Firebase Analytics) are anonymous - no Twitch account ID or username
-is attached, ad-id collection is disabled on both platforms (the iOS build uses
-the FirebaseAnalytics pod without IdentitySupport, so no IDFA), and screen views
-record route patterns rather than visited channels. Analytics can be turned off
-in Settings -> Other. Crash reporting
+is attached, and ad-id collection is disabled on both platforms (the iOS build
+uses the FirebaseAnalytics pod without IdentitySupport, so no IDFA). Analytics
+can be turned off in Settings -> Other. Crash reporting
 (Sentry) is sent with PII scrubbed. The app's privacy manifest declares
 NSPrivacyTracking = false, so no ATT prompt is required.
 

@@ -1,6 +1,6 @@
 import { PropsWithChildren, useEffect, useRef } from 'react';
 
-import { useSegments } from 'expo-router';
+import { usePathname } from 'expo-router';
 
 import {
   logAnalyticsScreenView,
@@ -9,23 +9,17 @@ import {
 import { usePreference } from '@app/store/preferenceStore';
 
 function ScreenAnalytics() {
-  /**
-   * Log the route pattern, not the resolved pathname: segments keep dynamic
-   * parts bracketed (/streams/live-stream/[id]), so channel logins and other
-   * path params never reach analytics.
-   */
-  const segments = useSegments();
-  const routePattern = `/${segments.join('/')}`;
-  const previousRouteRef = useRef<string | null>(null);
+  const pathname = usePathname();
+  const previousPathnameRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (previousRouteRef.current === routePattern) {
+    if (!pathname || previousPathnameRef.current === pathname) {
       return;
     }
 
-    previousRouteRef.current = routePattern;
-    void logAnalyticsScreenView(routePattern);
-  }, [routePattern]);
+    previousPathnameRef.current = pathname;
+    void logAnalyticsScreenView(pathname);
+  }, [pathname]);
 
   return null;
 }

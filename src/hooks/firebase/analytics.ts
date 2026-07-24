@@ -19,9 +19,7 @@ const analytics = getAnalytics(getApp());
 
 /**
  * The single privacy gate: when disabled the SDK drops every event, so the log
- * helpers below never need to re-check the preference. Analytics is strictly
- * anonymous - never call setUserId/setUserProperties or send Twitch identity
- * through this module.
+ * helpers below never need to re-check the preference.
  */
 export async function setAnalyticsEnabled(enabled: boolean): Promise<void> {
   try {
