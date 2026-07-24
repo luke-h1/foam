@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -93,6 +93,10 @@ function buildChattersListItems(
   return items;
 }
 
+const getChattersListItemKey = (item: ChattersListItem) => item.key;
+
+const getChattersListItemType = (item: ChattersListItem) => item.type;
+
 function toUsernamePressData(chatter: MentionChatter): UsernamePressData {
   return {
     color: chatter.color,
@@ -127,36 +131,39 @@ const ChattersSheetComponent = ({
     [bottomInset],
   );
 
-  const renderItem: ListRenderItem<ChattersListItem> = ({ item }) => {
-    if (item.type === 'header') {
-      return (
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionHeaderText} weight='semibold'>
-            {t(`chatters.${item.labelKey}`)}
-          </Text>
-          <Text style={styles.sectionHeaderCount} weight='semibold'>
-            {item.count}
-          </Text>
-        </View>
-      );
-    }
+  const renderItem: ListRenderItem<ChattersListItem> = useCallback(
+    ({ item }) => {
+      if (item.type === 'header') {
+        return (
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionHeaderText} weight='semibold'>
+              {t(`chatters.${item.labelKey}`)}
+            </Text>
+            <Text style={styles.sectionHeaderCount} weight='semibold'>
+              {item.count}
+            </Text>
+          </View>
+        );
+      }
 
-    return (
-      <Button
-        label={item.chatter.login}
-        style={styles.chatterRow}
-        onPress={() => onSelectChatter(toUsernamePressData(item.chatter))}
-      >
-        <Text
-          numberOfLines={1}
-          style={[styles.chatterName, { color: item.chatter.color }]}
-          weight='semibold'
+      return (
+        <Button
+          label={item.chatter.login}
+          style={styles.chatterRow}
+          onPress={() => onSelectChatter(toUsernamePressData(item.chatter))}
         >
-          {item.chatter.login}
-        </Text>
-      </Button>
-    );
-  };
+          <Text
+            numberOfLines={1}
+            style={[styles.chatterName, { color: item.chatter.color }]}
+            weight='semibold'
+          >
+            {item.chatter.login}
+          </Text>
+        </Button>
+      );
+    },
+    [onSelectChatter, t],
+  );
 
   return (
     <BottomSheet
@@ -215,8 +222,8 @@ const ChattersSheetComponent = ({
           <FlashList
             data={items}
             renderItem={renderItem}
-            keyExtractor={item => item.key}
-            getItemType={item => item.type}
+            keyExtractor={getChattersListItemKey}
+            getItemType={getChattersListItemType}
             contentContainerStyle={listContentStyle}
             keyboardShouldPersistTaps='handled'
             maintainVisibleContentPosition={{ disabled: true }}

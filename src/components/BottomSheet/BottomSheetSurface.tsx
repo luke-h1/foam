@@ -36,7 +36,7 @@ export function BottomSheetSurface() {
 
 const styles = StyleSheet.create({
   solid: {
-    backgroundColor: theme.color.surfaceSunken.dark,
+    backgroundColor: theme.color.surfaceElevated.dark,
   },
   surface: {
     borderCurve: 'continuous',

@@ -1,8 +1,12 @@
 {
   "name": "foam-mock-server",
   "version": "1.0.0",
+  "private": true,
   "description": "Mock server for Foam E2E testing",
-  "main": "server.ts",
+  "main": "./server.ts",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "bun server.ts",
     "dev": "bun --watch server.ts"

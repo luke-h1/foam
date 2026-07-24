@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import prettierConfig from 'eslint-config-prettier';
 import importPlugin from 'eslint-plugin-import';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
+import packageJson from 'eslint-package-json';
 import promise from 'eslint-plugin-promise';
 import react from 'eslint-plugin-react';
 import reactDoctor from 'eslint-plugin-react-doctor';
@@ -42,6 +43,7 @@ export default tseslint.config(
       'commitlint.config.js',
       '.agent-device/**',
       '.agents/**',
+      '.claude/**',
       '.rnstorybook/**',
       '__mocks__/.rnstorybook/**',
       'modules/**',
@@ -74,7 +76,19 @@ export default tseslint.config(
       reportUnusedDisableDirectives: false,
     },
   },
-  js.configs.recommended,
+  { ...js.configs.recommended, files: ['**/*.{js,jsx,mjs,cjs,ts,tsx}'] },
+  packageJson.configs.recommended,
+  {
+    files: ['**/package.json'],
+    rules: {
+      'package-json/dependency-version-range': 'off',
+      'package-json/no-install-scripts': 'off',
+      'package-json/no-orphan-script-hooks': 'off',
+      'package-json/no-package-manager-engines': 'off',
+      'package-json/prefer-exports': 'off',
+      'package-json/prefer-type-module': 'off',
+    },
+  },
   ...tseslint.configs.recommended.map(config => ({
     ...config,
     files: ['**/*.{ts,tsx}'],

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Legend State Best Practices"
+  short_description: "Build, audit, and fix Legend State usage"
+  default_prompt: "Use $legend-state-best-practices to build, audit, or fix this Legend State flow with correct observable ownership and narrow reactive boundaries."
