@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, {
   useAnimatedStyle,
@@ -329,7 +329,7 @@ export default function FollowingScreen() {
                 : 'offline-header'
           }
           contentInsetAdjustmentBehavior='automatic'
-          drawDistance={Platform.OS === 'ios' ? 500 : undefined}
+          drawDistance={500}
           getItemType={item => item.type}
           ListHeaderComponent={listHeader}
           contentContainerStyle={[

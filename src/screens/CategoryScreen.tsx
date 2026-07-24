@@ -1,5 +1,5 @@
 import { FC, memo, useMemo, useRef } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { router } from 'expo-router';
@@ -145,7 +145,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
         contentInsetAdjustmentBehavior='automatic'
         keyExtractor={item => item.id}
         renderItem={renderCategoryStreamItem}
-        drawDistance={Platform.OS === 'ios' ? 500 : undefined}
+        drawDistance={500}
         getItemType={() => 'category-stream'}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={

@@ -1,6 +1,6 @@
 import i18next from 'i18next';
 
-import { showActionMenu } from '@app/utils/actionMenu/showActionMenu';
+import { showActionMenu } from '@app/store/overlays/showActionMenu';
 
 import type { SleepTimer } from './useSleepTimer';
 

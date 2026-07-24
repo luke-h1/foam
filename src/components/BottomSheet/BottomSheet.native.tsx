@@ -1,10 +1,4 @@
-import {
-  forwardRef,
-  useImperativeHandle,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import { useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -12,7 +6,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren, Ref } from 'react';
 
 import {
   BottomSheet as SwmBottomSheet,
@@ -37,6 +31,7 @@ type BottomSheetProps = PropsWithChildren<{
   enableFixedSnapPoints?: boolean;
   isPresented: boolean;
   onDismiss: () => void;
+  ref?: Ref<BottomSheetHandle>;
   showDragIndicator?: boolean;
   snapPoints?: SnapPoint[];
   testID?: string;
@@ -69,108 +64,105 @@ function resolveDetents(
   ];
 }
 
-export const BottomSheet = forwardRef<BottomSheetHandle, BottomSheetProps>(
-  function BottomSheet(
-    {
-      children,
-      enableFixedSnapPoints,
-      isPresented,
-      onDismiss,
-      showDragIndicator,
-      snapPoints,
-      testID,
-    },
+export function BottomSheet({
+  children,
+  enableFixedSnapPoints,
+  isPresented,
+  onDismiss,
+  ref,
+  showDragIndicator,
+  snapPoints,
+  testID,
+}: BottomSheetProps) {
+  const { height: windowHeight } = useWindowDimensions();
+  const detents = resolveDetents(
+    enableFixedSnapPoints,
+    snapPoints,
+    windowHeight,
+  );
+  const initialOpenIndex = detents.length > 1 ? 1 : 0;
+  const [index, setIndex] = useState(isPresented ? initialOpenIndex : 0);
+  const [isMounted, setIsMounted] = useState(isPresented);
+  const didDismissRef = useRef(false);
+
+  useImperativeHandle(
     ref,
-  ) {
-    const { height: windowHeight } = useWindowDimensions();
-    const detents = resolveDetents(
-      enableFixedSnapPoints,
-      snapPoints,
-      windowHeight,
-    );
-    const initialOpenIndex = detents.length > 1 ? 1 : 0;
-    const [index, setIndex] = useState(isPresented ? initialOpenIndex : 0);
-    const [isMounted, setIsMounted] = useState(isPresented);
-    const didDismissRef = useRef(false);
+    () => ({
+      requestClose: () => {
+        setIndex(0);
+      },
+    }),
+    [],
+  );
 
-    useImperativeHandle(
-      ref,
-      () => ({
-        requestClose: () => {
-          setIndex(0);
-        },
-      }),
-      [],
-    );
-
-    useLayoutEffect(() => {
-      if (isPresented) {
-        setIsMounted(true);
-        setIndex(initialOpenIndex);
-        didDismissRef.current = false;
-        return;
-      }
-
-      setIndex(0);
-    }, [initialOpenIndex, isPresented]);
-
-    if (!isMounted) {
-      return null;
+  useLayoutEffect(() => {
+    if (isPresented) {
+      setIsMounted(true);
+      setIndex(initialOpenIndex);
+      didDismissRef.current = false;
+      return;
     }
 
-    return (
-      <Modal
-        animationType='none'
-        onRequestClose={() => {
-          setIndex(0);
-        }}
-        statusBarTranslucent
-        transparent
-        visible
-      >
-        <View pointerEvents='box-none' style={StyleSheet.absoluteFill}>
-          <Pressable
-            accessibilityRole='button'
-            accessibilityLabel='Close'
-            onPress={() => {
-              setIndex(0);
-            }}
-            style={[StyleSheet.absoluteFill, styles.backdrop]}
-          />
-          <SwmBottomSheet
-            animateIn
-            bottomInset={SHEET_INSET}
-            cornerRadius={SHEET_CORNER_RADIUS}
-            detents={detents}
-            index={index}
-            onIndexChange={setIndex}
-            onSettle={settledIndex => {
-              if (settledIndex === 0 && !didDismissRef.current) {
-                didDismissRef.current = true;
-                setIsMounted(false);
-                onDismiss();
-              }
-            }}
-            style={styles.sheetHost}
-            surface={bottomSheetSurfaceElement}
-          >
-            <View testID={testID} style={styles.content}>
-              {showDragIndicator ? (
-                <View style={styles.dragHandleRow}>
-                  <View style={styles.dragIndicator} />
-                </View>
-              ) : null}
-              {children}
-            </View>
-          </SwmBottomSheet>
-          {process.env.EXPO_OS === 'android' ? (
-            <Toaster style={styles.toaster} />
-          ) : null}
-        </View>
-      </Modal>
-    );
-  },
-);
+    setIndex(0);
+  }, [initialOpenIndex, isPresented]);
+
+  if (!isMounted) {
+    return null;
+  }
+
+  return (
+    <Modal
+      animationType='none'
+      onRequestClose={() => {
+        setIndex(0);
+      }}
+      statusBarTranslucent
+      navigationBarTranslucent
+      transparent
+      visible
+    >
+      <View pointerEvents='box-none' style={StyleSheet.absoluteFill}>
+        <Pressable
+          accessibilityRole='button'
+          accessibilityLabel='Close'
+          onPress={() => {
+            setIndex(0);
+          }}
+          style={[StyleSheet.absoluteFill, styles.backdrop]}
+        />
+        <SwmBottomSheet
+          animateIn
+          bottomInset={SHEET_INSET}
+          cornerRadius={SHEET_CORNER_RADIUS}
+          detents={detents}
+          index={index}
+          onIndexChange={setIndex}
+          onSettle={settledIndex => {
+            if (settledIndex === 0 && !didDismissRef.current) {
+              didDismissRef.current = true;
+              setIsMounted(false);
+              onDismiss();
+            }
+          }}
+          style={styles.sheetHost}
+          surface={bottomSheetSurfaceElement}
+        >
+          <View testID={testID} style={styles.content}>
+            {showDragIndicator ? (
+              <View style={styles.dragHandleRow}>
+                <View style={styles.dragIndicator} />
+              </View>
+            ) : null}
+            {children}
+          </View>
+        </SwmBottomSheet>
+        {process.env.EXPO_OS === 'android' ? (
+          <Toaster style={styles.toaster} />
+        ) : null}
+      </View>
+    </Modal>
+  );
+}
 
 const styles = StyleSheet.create({
   backdrop: {

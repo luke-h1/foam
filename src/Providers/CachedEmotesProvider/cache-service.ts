@@ -12,7 +12,7 @@
  * just composites an already-decoded, size-bounded bitmap. Animated AVIFs keep
  * animating — the ref carries `isAnimated` and the view autoplays.
  */
-import { AppState, type AppStateStatus } from 'react-native';
+import { AppState, type AppStateStatus, Platform } from 'react-native';
 
 import { Image, type ImageRef } from 'expo-image';
 
@@ -23,6 +23,7 @@ import {
 } from '@app/utils/device/deviceTier';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 import { logger } from '@app/utils/logger';
+import type { ImageMemoryPressureEvent } from '@modules/image-memory-pressure/src/ImageMemoryPressure.types';
 import ImageMemoryPressure from '@modules/image-memory-pressure/src/ImageMemoryPressureModule';
 
 const isLowTier = getDeviceTier() === 'low';
@@ -438,16 +439,8 @@ export function trimCachedEmoteRefsForMemoryPressure(): void {
 
 let memoryPressureSubscribed = false;
 
-/**
- * `memoryWarning` fires late (often after the allocation that tips the process
- * over), so we also poll the real pre-jetsam headroom while foregrounded via the
- * ImageMemoryPressure native module (os_proc_available_memory — bytes remaining before
- * this process hits its iOS memory limit). When headroom drops below this bound
- * we trim proactively instead of waiting for the OS signal. The module returns 0
- * when unavailable (Android / web / before the native build ships), which
- * disables the poll gracefully.
- */
-const LOW_MEMORY_HEADROOM_BYTES = 200 * 1024 * 1024;
+const LOW_MEMORY_HEADROOM_BYTES =
+  Platform.OS === 'android' ? 100 * 1024 * 1024 : 200 * 1024 * 1024;
 const MEMORY_POLL_INTERVAL_MS = 5000;
 // Trimming can recur every poll under sustained pressure; throttle the Sentry
 // breadcrumb so a constrained session can't flood Logs while still surfacing
@@ -476,6 +469,20 @@ function pollMemoryHeadroom(): void {
     logger.chat.warn('chat.emote.memory_pressure_trim', {
       name: 'chat_resources_warning',
       availableBytes: available,
+      decodedBytes: totalBytes,
+      decodedRefs: refs.size,
+    });
+  }
+  trimCachedEmoteRefsForMemoryPressure();
+}
+
+function handleNativeMemoryPressure(event: ImageMemoryPressureEvent): void {
+  const now = Date.now();
+  if (now - lastMemoryPressureLogAt >= MEMORY_PRESSURE_LOG_THROTTLE_MS) {
+    lastMemoryPressureLogAt = now;
+    logger.chat.warn('chat.emote.memory_pressure_trim', {
+      name: 'chat_resources_warning',
+      trimLevel: event.level,
       decodedBytes: totalBytes,
       decodedRefs: refs.size,
     });
@@ -521,7 +528,6 @@ function handleAppStateForMemory(nextAppState: AppStateStatus): void {
  * - Backgrounding: shed the unpinned working set while off-screen so a long
  *   single-channel session can't sit at the cap until the OS reclaims it. Refs
  *   re-decode lazily on the next render when foregrounded.
- * Android trim hooks would need a native onTrimMemory bridge — not wired here.
  */
 export function subscribeEmoteCacheMemoryPressure(): void {
   if (memoryPressureSubscribed) {
@@ -531,6 +537,10 @@ export function subscribeEmoteCacheMemoryPressure(): void {
   AppState.addEventListener(
     'memoryWarning',
     trimCachedEmoteRefsForMemoryPressure,
+  );
+  ImageMemoryPressure.addListener?.(
+    'onMemoryPressure',
+    handleNativeMemoryPressure,
   );
   subscribeToAppStateTransitions(({ current }) => {
     handleAppStateForMemory(current);

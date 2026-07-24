@@ -1,9 +1,14 @@
+import type { EventSubscription } from 'expo-modules-core';
+
+export type ImageMemoryPressureEvent = {
+  level: number;
+};
+
 export interface ImageMemoryPressureNativeModule {
-  /**
-   * Bytes of memory remaining before this process hits its iOS memory limit and
-   * is jettisoned (os_proc_available_memory). Returns 0 when the native module
-   * is unavailable (Android, web, or before the native build ships), which the
-   * caller treats as "monitoring disabled".
-   */
   getAvailableMemory(): number;
+
+  addListener?(
+    eventName: 'onMemoryPressure',
+    listener: (event: ImageMemoryPressureEvent) => void,
+  ): EventSubscription;
 }

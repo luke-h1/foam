@@ -48,7 +48,7 @@ function hostPreview(node: ReactElement, width: number, padded = true) {
   );
 }
 
-export function ChatPreferenceNativeForm() {
+export function ChatPreferenceForm() {
   const { t } = useTranslation('preferences');
   const preferences = usePreferences();
   const { update } = preferences;

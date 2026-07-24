@@ -25,7 +25,6 @@ import { BlurView } from 'expo-blur';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { router, useFocusEffect, useIsFocused } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { StatusBar } from 'expo-status-bar';
 import { toast } from 'sonner-native';
 
 import { Button } from '@app/components/Button/Button';
@@ -35,7 +34,7 @@ import { Chat } from '@app/components/Chat/Chat';
 import { MEDIA_THUMBNAIL_SIZE } from '@app/components/LiveStreamCard/thumbnailSizes';
 import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import type { StreamPlayerRef } from '@app/components/StreamPlayer/types';
-import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { BACK_SYMBOL_NAME, SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useStreamQuery } from '@app/hooks/queries/useStreamQuery';
@@ -78,6 +77,8 @@ import { useSleepTimer } from './useSleepTimer';
 interface LiveStreamScreenProps {
   id: string;
 }
+
+const isAndroid = process.env.EXPO_OS === 'android';
 
 const LANDSCAPE_CHAT_RESIZE_ACTIVATION_DISTANCE = 6;
 const LANDSCAPE_CHAT_RESIZE_FAIL_DISTANCE = 12;
@@ -841,7 +842,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   return (
     <View style={contentContainerStyle}>
-      <StatusBar style='light' />
       <Animated.View
         testID='stream-player-container'
         style={[styles.videoContainer, animatedVideoStyle]}
@@ -871,6 +871,20 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             posterUrl={posterUrl}
             streamInfo={streamInfo}
           />
+        ) : null}
+
+        {isAndroid && !customPlayerEnabled ? (
+          <Button
+            label={t('goBack')}
+            onPress={handleBack}
+            style={styles.androidBackButton}
+          >
+            <SymbolView
+              name={BACK_SYMBOL_NAME}
+              size={22}
+              tintColor={theme.colorWhite}
+            />
+          </Button>
         ) : null}
       </Animated.View>
 
@@ -1018,6 +1032,18 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 });
 
 const styles = StyleSheet.create({
+  androidBackButton: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderRadius: theme.borderRadius999,
+    height: 40,
+    justifyContent: 'center',
+    left: theme.space12,
+    position: 'absolute',
+    top: theme.space8,
+    width: 40,
+    zIndex: 12,
+  },
   chatContainer: {
     backgroundColor: theme.colorBlack,
     overflow: 'hidden',

@@ -144,6 +144,7 @@ function ChatComposerComponent({
           placeholder={placeholder ?? t('composer.sendAMessage')}
           placeholderTextColor={theme.color.textSecondary.dark}
           returnKeyType='send'
+          cursorColor={theme.color.text.dark}
           selectionColor={theme.color.text.dark}
           style={styles.input}
           submitBehavior='blurAndSubmit'

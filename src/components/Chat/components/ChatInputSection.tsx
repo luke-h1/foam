@@ -3,7 +3,6 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@app/components/Button/Button';
 import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/PaintedUsername';
@@ -52,7 +51,6 @@ export const ChatInputSection = memo(
     inputRef,
   }: ChatInputSectionProps) => {
     const { isAuthenticated, isSending } = connection;
-    const insets = useSafeAreaInsets();
     const { composerAnimatedStyle, composerGesture } =
       useComposerDismissGesture();
 
@@ -121,13 +119,7 @@ export const ChatInputSection = memo(
         )}
 
         <GestureDetector gesture={composerGesture}>
-          <Animated.View
-            style={[
-              styles.composerShell,
-              { paddingBottom: insets.bottom + theme.space8 },
-              composerAnimatedStyle,
-            ]}
-          >
+          <Animated.View style={[styles.composerShell, composerAnimatedStyle]}>
             <View style={styles.swipeHandle} />
             <View style={styles.inputRow}>
               <View style={styles.inputContainer}>
@@ -198,6 +190,7 @@ const styles = StyleSheet.create({
   },
   composerShell: {
     backgroundColor: theme.color.surfaceElevated.dark,
+    paddingBottom: theme.space8,
     paddingHorizontal: theme.space16,
   },
   inputContainer: {

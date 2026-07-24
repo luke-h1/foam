@@ -1,11 +1,5 @@
 import { useState } from 'react';
-import {
-  Platform,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,7 +8,7 @@ import { router } from 'expo-router';
 import { toast } from 'sonner-native';
 
 import { Button } from '@app/components/Button/Button';
-import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
+import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
 import { impact } from '@app/lib/haptics';
@@ -24,10 +18,9 @@ import { theme } from '@app/styles/themes';
 const FEEDBACK_TYPES: {
   value: FeedbackType;
   labelKey: 'typeBug' | 'typeIdea';
-  icon: SymbolViewProps['name'];
 }[] = [
-  { value: 'bug', labelKey: 'typeBug', icon: 'ladybug' },
-  { value: 'idea', labelKey: 'typeIdea', icon: 'lightbulb' },
+  { value: 'bug', labelKey: 'typeBug' },
+  { value: 'idea', labelKey: 'typeIdea' },
 ];
 
 export function FeedbackScreen() {
@@ -41,6 +34,9 @@ export function FeedbackScreen() {
 
   const trimmedMessage = message.trim();
   const canSubmit = trimmedMessage.length > 0 && !submitting;
+  const selectedTypeIndex = FEEDBACK_TYPES.findIndex(
+    option => option.value === type,
+  );
 
   const handleSubmit = () => {
     if (!canSubmit) {
@@ -74,10 +70,7 @@ export function FeedbackScreen() {
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.flex}
-      >
+      <KeyboardAvoidingView behavior='padding' style={styles.flex}>
         <ScrollView
           contentContainerStyle={styles.content}
           keyboardDismissMode='on-drag'
@@ -93,35 +86,18 @@ export function FeedbackScreen() {
             </Text>
           </View>
 
-          <View style={styles.segmented}>
-            {FEEDBACK_TYPES.map(option => {
-              const selected = option.value === type;
-              return (
-                <Button
-                  key={option.value}
-                  haptic='selection'
-                  label={t(option.labelKey)}
-                  onPress={() => setType(option.value)}
-                  style={[styles.segment, selected && styles.segmentSelected]}
-                >
-                  <SymbolView
-                    name={option.icon}
-                    size={16}
-                    tintColor={
-                      selected ? theme.colorWhite : theme.colorGreyHoverAlpha
-                    }
-                  />
-                  <Text
-                    type='sm'
-                    weight='semibold'
-                    color={selected ? 'gray.text' : 'gray.textLow'}
-                  >
-                    {t(option.labelKey)}
-                  </Text>
-                </Button>
-              );
-            })}
-          </View>
+          <SegmentedControl
+            currentIndex={selectedTypeIndex < 0 ? 0 : selectedTypeIndex}
+            items={FEEDBACK_TYPES.map(option => ({
+              label: t(option.labelKey),
+            }))}
+            onChange={index => {
+              const next = FEEDBACK_TYPES[index];
+              if (next) {
+                setType(next.value);
+              }
+            }}
+          />
 
           <View style={styles.field}>
             <Text
@@ -234,28 +210,6 @@ const styles = StyleSheet.create({
   messageInput: {
     minHeight: 132,
     textAlignVertical: 'top',
-  },
-  segment: {
-    alignItems: 'center',
-    backgroundColor: theme.color.backgroundSecondary.dark,
-    borderColor: theme.colorBorderSecondary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius12,
-    borderWidth: StyleSheet.hairlineWidth,
-    flex: 1,
-    flexDirection: 'row',
-    gap: theme.space8,
-    justifyContent: 'center',
-    minHeight: 48,
-    paddingVertical: theme.space12,
-  },
-  segmentSelected: {
-    backgroundColor: theme.colorPrimary,
-    borderColor: theme.colorPrimary,
-  },
-  segmented: {
-    flexDirection: 'row',
-    gap: theme.space12,
   },
   subtitle: {
     lineHeight: theme.fontSize14 * 1.5,

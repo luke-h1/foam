@@ -6,11 +6,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { router, useFocusEffect } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { StatusBar } from 'expo-status-bar';
 
 import { IconButton } from '@app/components/IconButton/IconButton';
 import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
+import { PlayerBackButton } from '@app/screens/Stream/components/PlayerBackButton';
 import { theme } from '@app/styles/themes';
 
 import { getLiveStreamLayoutMetrics } from './liveStreamLayout/getLiveStreamLayoutMetrics';
@@ -87,7 +87,6 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
 
   return (
     <View style={styles.container}>
-      <StatusBar style='light' />
       <View
         style={[
           styles.videoContainer,
@@ -106,6 +105,18 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
           height='100%'
           width='100%'
         />
+      </View>
+
+      <View
+        style={[
+          styles.backButtonWrap,
+          {
+            top: insets.top + theme.space12,
+            left: theme.space16 + landscapeInsetLeft,
+          },
+        ]}
+      >
+        <PlayerBackButton />
       </View>
 
       <View
@@ -129,13 +140,6 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
           size='2xl'
           style={styles.closeButton}
         />
-        <IconButton
-          icon={{ type: 'symbol', name: 'xmark', size: 18 }}
-          label={t('closeVod')}
-          onPress={() => router.back()}
-          size='2xl'
-          style={styles.closeButton}
-        />
       </View>
     </View>
   );
@@ -150,6 +154,10 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
     justifyContent: 'center',
+  },
+  backButtonWrap: {
+    position: 'absolute',
+    zIndex: 2,
   },
   closeButtonWrap: {
     flexDirection: 'row',
