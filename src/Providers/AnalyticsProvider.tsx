@@ -1,4 +1,4 @@
-import { PropsWithChildren, useEffect, useRef } from 'react';
+import { PropsWithChildren, useEffect, useRef, useState } from 'react';
 
 import { usePathname } from 'expo-router';
 
@@ -27,13 +27,29 @@ function ScreenAnalytics() {
 export function AnalyticsProvider({ children }: PropsWithChildren) {
   const analyticsEnabled = usePreference('analyticsEnabled');
 
+  /**
+   * Collection starts disabled (firebase.json) and the SDK drops events logged
+   * while it is off, so screen views must wait for the native enable to land.
+   */
+  const [collectionEnabled, setCollectionEnabled] = useState(false);
+
   useEffect(() => {
-    void setAnalyticsEnabled(analyticsEnabled);
+    let cancelled = false;
+
+    void setAnalyticsEnabled(analyticsEnabled).then(() => {
+      if (!cancelled) {
+        setCollectionEnabled(analyticsEnabled);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [analyticsEnabled]);
 
   return (
     <>
-      {analyticsEnabled ? <ScreenAnalytics /> : null}
+      {collectionEnabled ? <ScreenAnalytics /> : null}
       {children}
     </>
   );

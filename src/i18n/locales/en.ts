@@ -573,7 +573,7 @@ const en = {
     shareAnalytics: 'Share analytics',
     shareAnalyticsDescription: 'Help improve Foam with anonymous usage data',
     shareAnalyticsFooter:
-      'When on, Foam sends anonymous usage data (such as which screens are opened) to help improve the app. No chat messages or personal information are collected. Turn this off to opt out.',
+      'When on, Foam sends anonymous usage data (such as which screens are opened, which can include channel names) to help improve the app. It is never linked to your Twitch account, and no chat messages are collected. Turn this off to opt out.',
     dangerZone: 'Danger Zone',
     cacheFooterIos:
       'Use these when stream metadata, badges, emotes, or downloaded chat media need a hard refresh.',
