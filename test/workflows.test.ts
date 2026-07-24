@@ -33,6 +33,7 @@ import {
   getCriticalOtaIndexCachePath,
   getFinalReleaseTag,
   getFingerprintCachePrefix,
+  getOtaReleaseTag,
   getOtaUpdateIdsCachePrefix,
   getPreliminaryReleaseTag,
   parsePublishedUpdateJson,
@@ -190,7 +191,7 @@ describe('otaOrNativeDeployDecision', () => {
       );
     });
 
-    test('uses ota-pending for final ota releases because ota tags are not tracked', () => {
+    test('tags final ota releases with variant, version, and run number', () => {
       expect(
         getFinalReleaseTag({
           deployType: 'ota',
@@ -198,10 +199,10 @@ describe('otaOrNativeDeployDecision', () => {
           version: '1.2.3',
           runNumber: 45,
         }),
-      ).toBe('ota-pending');
+      ).toBe('ota-production-1.2.3-45');
     });
 
-    test('does not variant scope final ota tags because ota tags are not tracked', () => {
+    test('variant scopes final ota tags so channels do not collide', () => {
       expect(
         getFinalReleaseTag({
           deployType: 'ota',
@@ -209,7 +210,7 @@ describe('otaOrNativeDeployDecision', () => {
           version: '1.2.3',
           runNumber: 45,
         }),
-      ).toBe('ota-pending');
+      ).toBe('ota-internal-1.2.3-45');
     });
 
     test('uses the app version for final production native tags', () => {
@@ -232,6 +233,34 @@ describe('otaOrNativeDeployDecision', () => {
           runNumber: 45,
         }),
       ).toBe('1.2.3-testflight');
+    });
+  });
+
+  describe('getOtaReleaseTag', () => {
+    test('builds a sortable variant/version/run tag', () => {
+      expect(
+        getOtaReleaseTag({
+          variant: 'production',
+          version: '1.2.3',
+          runNumber: 457,
+        }),
+      ).toBe('ota-production-1.2.3-457');
+    });
+
+    test('scopes the tag to the channel', () => {
+      expect(
+        getOtaReleaseTag({
+          variant: 'testflight',
+          version: '1.2.3',
+          runNumber: 12,
+        }),
+      ).toBe('ota-testflight-1.2.3-12');
+    });
+
+    test('rejects unknown variants', () => {
+      expect(() =>
+        getOtaReleaseTag({ variant: 'nope', version: '1.2.3', runNumber: 1 }),
+      ).toThrow('Unsupported variant: nope');
     });
   });
 
