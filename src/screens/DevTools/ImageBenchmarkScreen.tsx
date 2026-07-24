@@ -129,10 +129,19 @@ export function ImageBenchmarkScreen() {
   useEffect(() => {
     // Auto-start runs once on mount (guarded by autoStarted); runAll closes over
     // benchmark state we deliberately don't want to re-trigger the suite.
+    let cancelled = false;
     if (auto && !autoStarted.current) {
       autoStarted.current = true;
-      void runAll();
+      void (async () => {
+        await runAll();
+        if (!cancelled) {
+          setRuns(readResults().runs);
+        }
+      })();
     }
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps, react-doctor/exhaustive-deps
   }, [auto]);
 

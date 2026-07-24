@@ -32,9 +32,9 @@ function EmoteRowComponent({
 
   return (
     <Pressable style={styles.emoteRow} onPress={handlePress}>
-      {items.map((item, index) => (
+      {items.map(item => (
         <EmoteCell
-          key={typeof item === 'string' ? `emoji-${index}-${item}` : item.id}
+          key={typeof item === 'string' ? `emoji-${item}` : item.id}
           cellSize={cellSize}
           item={item}
         />

@@ -260,7 +260,12 @@ export const twitchService = {
   getRefreshToken: async (
     refreshToken: string,
   ): Promise<RefreshTokenResponse> => {
-    const url = new URL(`${authProxyBaseUrl}/refresh-token`);
+    let url: URL;
+    try {
+      url = new URL(`${authProxyBaseUrl}/refresh-token`);
+    } catch {
+      throw new Error('Failed to refresh Twitch token');
+    }
     url.searchParams.set('token', refreshToken);
     url.searchParams.set('app', 'foam-app');
 
