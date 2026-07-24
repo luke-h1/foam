@@ -55,3 +55,28 @@ describe('authLinking magic-link sign in', () => {
     expect(response.params.refresh_token).toBe('magic-refresh-token');
   });
 });
+
+describe('authLinking native callback host restriction', () => {
+  const tokenQuery =
+    'access_token=injected-token&token_type=bearer&expires_in=14400';
+
+  test('accepts foam-app.com auth and proxy callbacks that carry a token', () => {
+    expect(isAuthCallbackUrl(`https://foam-app.com/auth?${tokenQuery}`)).toBe(
+      true,
+    );
+    expect(
+      isAuthCallbackUrl(
+        `https://auth-staging.foam-app.com/proxy?${tokenQuery}`,
+      ),
+    ).toBe(true);
+  });
+
+  test('rejects a token-bearing https /auth link from any other host', () => {
+    expect(isAuthCallbackUrl(`https://twitch.tv/auth?${tokenQuery}`)).toBe(
+      false,
+    );
+    expect(isAuthCallbackUrl(`https://evil.example/auth?${tokenQuery}`)).toBe(
+      false,
+    );
+  });
+});

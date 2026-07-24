@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 import type { AuthSessionResult } from 'expo-auth-session';
 
 import {
@@ -16,9 +18,9 @@ export type LoginWithTwitchFn = (
 
 const AUTH_CALLBACK_PATTERNS = [
   /^foam(-[a-z0-9]+)?:\/\//,
-  /^https?:\/\/[^/]+\/auth(?:[?#/]|$)/,
   /^https?:\/\/([^/]+\.)?foam-app\.com\/auth/,
   /^https?:\/\/([^/]+\.)?foam-app\.com\/proxy/,
+  ...(Platform.OS === 'web' ? [/^https?:\/\/[^/]+\/auth(?:[?#/]|$)/] : []),
 ];
 
 export function isAuthCallbackUrl(url: string | null): boolean {
