@@ -43,6 +43,7 @@ import { useUserQuery } from '@app/hooks/queries/useUserQuery';
 import { useChannelPoll } from '@app/hooks/useChannelPoll';
 import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
 import { useOnAppStateChange } from '@app/hooks/useOnAppStateChange';
+import { markSignpost } from '@app/lib/signpost';
 import { twitchService } from '@app/services/twitch-service';
 import { addCreatedClip } from '@app/store/createdClips/actions/createdClips';
 import {
@@ -523,6 +524,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     contentWidthSV.set(contentWidth);
 
     if (orientationChanged) {
+      markSignpost('live-stream.orientation-change');
       cancelAnimation(videoWidth);
       cancelAnimation(videoHeight);
       cancelAnimation(chatWidth);
@@ -548,6 +550,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       return;
     }
 
+    const layoutSignpost = isLandscapeChatHidden
+      ? 'live-stream.chat-hide'
+      : 'live-stream.chat-reveal';
+    markSignpost(layoutSignpost);
     videoWidth.set(withTiming(videoDimensions.width, RESIZE_ANIMATION_CONFIG));
     videoHeight.set(
       withTiming(videoDimensions.height, RESIZE_ANIMATION_CONFIG),
