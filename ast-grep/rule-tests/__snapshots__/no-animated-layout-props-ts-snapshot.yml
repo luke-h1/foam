@@ -2,57 +2,57 @@ id: no-animated-layout-props-ts
 snapshots:
   'const style = useAnimatedStyle(() => ({ aspectRatio: r.get() }));':
     labels:
-      - source: 'aspectRatio: r.get()'
-        style: primary
-        start: 40
-        end: 60
-      - source: 'useAnimatedStyle(() => ({ aspectRatio: r.get() }))'
-        style: secondary
-        start: 14
-        end: 64
-      - source: aspectRatio
-        style: secondary
-        start: 40
-        end: 51
+    - source: 'aspectRatio: r.get()'
+      style: primary
+      start: 40
+      end: 60
+    - source: 'useAnimatedStyle(() => ({ aspectRatio: r.get() }))'
+      style: secondary
+      start: 14
+      end: 64
+    - source: aspectRatio
+      style: secondary
+      start: 40
+      end: 51
   'const style = useAnimatedStyle(() => ({ paddingHorizontal: p.get() }));':
     labels:
-      - source: 'paddingHorizontal: p.get()'
-        style: primary
-        start: 40
-        end: 66
-      - source: 'useAnimatedStyle(() => ({ paddingHorizontal: p.get() }))'
-        style: secondary
-        start: 14
-        end: 70
-      - source: paddingHorizontal
-        style: secondary
-        start: 40
-        end: 57
+    - source: 'paddingHorizontal: p.get()'
+      style: primary
+      start: 40
+      end: 66
+    - source: 'useAnimatedStyle(() => ({ paddingHorizontal: p.get() }))'
+      style: secondary
+      start: 14
+      end: 70
+    - source: paddingHorizontal
+      style: secondary
+      start: 40
+      end: 57
   'const style = useAnimatedStyle(() => ({ width: w.get() }));':
     labels:
-      - source: 'width: w.get()'
-        style: primary
-        start: 40
-        end: 54
-      - source: 'useAnimatedStyle(() => ({ width: w.get() }))'
-        style: secondary
-        start: 14
-        end: 58
-      - source: width
-        style: secondary
-        start: 40
-        end: 45
+    - source: 'width: w.get()'
+      style: primary
+      start: 40
+      end: 54
+    - source: 'useAnimatedStyle(() => ({ width: w.get() }))'
+      style: secondary
+      start: 14
+      end: 58
+    - source: width
+      style: secondary
+      start: 40
+      end: 45
   'const style = useAnimatedStyle(() => { return { height: h.get() }; });':
     labels:
-      - source: 'height: h.get()'
-        style: primary
-        start: 48
-        end: 63
-      - source: 'useAnimatedStyle(() => { return { height: h.get() }; })'
-        style: secondary
-        start: 14
-        end: 69
-      - source: height
-        style: secondary
-        start: 48
-        end: 54
+    - source: 'height: h.get()'
+      style: primary
+      start: 48
+      end: 63
+    - source: 'useAnimatedStyle(() => { return { height: h.get() }; })'
+      style: secondary
+      start: 14
+      end: 69
+    - source: height
+      style: secondary
+      start: 48
+      end: 54

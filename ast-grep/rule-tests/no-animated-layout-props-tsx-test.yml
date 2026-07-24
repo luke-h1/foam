@@ -2,7 +2,7 @@ id: no-animated-layout-props-tsx
 valid:
   - 'const style = useAnimatedStyle(() => ({ transform: [{ translateX: x.get() }] }));'
   - 'const style = useAnimatedStyle(() => ({ opacity: progress.get(), transform: [{ scale: scale.get() }] }));'
-  - 'const staticStyle = StyleSheet.create({ box: { width: 44, height: 44, top: 0 } });'
+  - "const staticStyle = StyleSheet.create({ box: { width: 44, height: 44, top: 0 } });"
   - 'const props = useAnimatedProps(() => ({ strokeWidth: w.get() }));'
 invalid:
   - 'const style = useAnimatedStyle(() => ({ width: w.get() }));'

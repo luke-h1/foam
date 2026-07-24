@@ -9,12 +9,12 @@ to both exist in a `-ts` and a `-tsx` variant.
 
 ## Rules
 
-| Rule                            | Why                                                                                                                                                                                                 |
-| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `no-partial-object-matchers-ts` | `.ts` tests assert exact shapes with `toEqual`; `toMatchObject` / `expect.objectContaining` let fields drift silently. (`.tsx` test files are excluded.)                                            |
-| `no-inline-renderitem-tsx`      | An inline `renderItem` creates a new function identity per render, defeating list row memoization. Hoist it or wrap in `useCallback`.                                                               |
-| `no-react-native-flatlist-*`    | Lists use `LegendList` (chat) or `FlashList`; core `FlatList`/`SectionList`/`VirtualizedList` regress scroll perf.                                                                                  |
-| `prefer-create-mmkv-*`          | MMKV instances are created through `createMMKV` (see `src/lib/mmkv.ts`) so ids/modes stay centralised.                                                                                              |
+| Rule                            | Why                                                                                                                                                      |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `no-partial-object-matchers-ts` | `.ts` tests assert exact shapes with `toEqual`; `toMatchObject` / `expect.objectContaining` let fields drift silently. (`.tsx` test files are excluded.) |
+| `no-inline-renderitem-tsx`      | An inline `renderItem` creates a new function identity per render, defeating list row memoization. Hoist it or wrap in `useCallback`.                    |
+| `no-react-native-flatlist-*`    | Lists use `LegendList` (chat) or `FlashList`; core `FlatList`/`SectionList`/`VirtualizedList` regress scroll perf.                                       |
+| `prefer-create-mmkv-*`          | MMKV instances are created through `createMMKV` (see `src/lib/mmkv.ts`) so ids/modes stay centralised.                                                   |
 | `no-animated-layout-props-*`    | Animating layout props (width/height/top/left/margin/padding/flex...) in `useAnimatedStyle` relayouts every frame; prefer `transform`/`opacity` (`warning`, genuine resizes can `ast-grep-ignore`). |
 
 ## Adding a rule
