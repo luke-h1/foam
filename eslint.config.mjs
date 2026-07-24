@@ -220,8 +220,6 @@ export default tseslint.config(
       'src/lib/sentryImageSpans.ts',
       'src/lib/__tests__/sentryImageSpans.test.ts',
       'src/lib/__tests__/sentry.test.ts',
-      // The analytics wrapper is the only sanctioned entry point to the raw
-      // Firebase Analytics SDK; its test and manual mock reference it directly.
       'src/hooks/firebase/analytics.ts',
       'src/hooks/firebase/analytics.test.ts',
       '__mocks__/@react-native-firebase/analytics.ts',
