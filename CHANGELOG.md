@@ -2,6 +2,10 @@
 
 ## 1.0.5 (Production)
 
+### ✨ Features
+
+- **firebase:** Replace statsig with google analytics ([#778](https://github.com/lhowsam/foam/issues/778))
+
 ### 📝 Other Changes
 
 - Revert "feat(app): vexo analytics" ([#777](https://github.com/lhowsam/foam/issues/777))
