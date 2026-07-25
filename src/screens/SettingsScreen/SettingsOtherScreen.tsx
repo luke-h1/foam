@@ -10,7 +10,6 @@ import {
   Text as NativeText,
   Toggle,
 } from '@expo/ui/swift-ui';
-import { router } from 'expo-router';
 
 import {
   SettingsLinkRow,
@@ -55,11 +54,11 @@ export function SettingsOtherScreen() {
               systemImage='questionmark.circle'
               onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
             />
-            <Button
+            {/*<Button
               label={t('changelog')}
               systemImage='clock'
               onPress={() => router.push('/tabs/settings/changelog')}
-            />
+            />*/}
           </Section>
         </Form>
       </Host>
@@ -98,12 +97,12 @@ export function SettingsOtherScreen() {
             icon={{ icon: 'questionmark.circle', color: theme.colorPrimary }}
             onPress={() => openLinkInBrowser('https://foam-app.com/faq')}
           />
-          <SettingsLinkRow
+          {/*<SettingsLinkRow
             title={t('changelog')}
             subtitle={t('changelogDescription')}
             icon={{ icon: 'clock', color: theme.colorAmber }}
             onPress={() => router.push('/tabs/settings/changelog')}
-          />
+          />*/}
         </SettingsSection>
       </ScrollView>
     </View>
