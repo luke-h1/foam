@@ -11,7 +11,7 @@ interface ChatScreenProps {
 export const ChatScreen: FC<ChatScreenProps> = ({ channelId, channelName }) => {
   return (
     <View style={styles.container}>
-      <Chat channelName={channelName} channelId={channelId} />
+      <Chat key={channelId} channelName={channelName} channelId={channelId} />
     </View>
   );
 };

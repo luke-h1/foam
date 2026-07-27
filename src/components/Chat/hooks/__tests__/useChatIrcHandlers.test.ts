@@ -394,6 +394,31 @@ describe('useChatIrcHandlers', () => {
     expect(mockAddMessage).not.toHaveBeenCalled();
   });
 
+  test('a full CLEARCHAT during history replay keeps the backfill', () => {
+    const { result } = renderIrcHandlers({ isLoadingRecentMessages: true });
+
+    act(() => {
+      result.current.onClearChat('#foam', {});
+    });
+
+    // Replay runs through this same handler, so clearing would destroy the
+    // history the user is waiting on.
+    expect(mockClearMessagesWithNotice).not.toHaveBeenCalled();
+    expect(addedSystemMessageContents()).toEqual([
+      'Chat was cleared by a moderator (history kept)',
+    ]);
+  });
+
+  test('a full CLEARCHAT outside history replay still clears', () => {
+    const { result } = renderIrcHandlers({ isLoadingRecentMessages: false });
+
+    act(() => {
+      result.current.onClearChat('#foam', {});
+    });
+
+    expect(mockClearMessagesWithNotice).toHaveBeenCalledTimes(1);
+  });
+
   test('reconnect resets the room state and announces the reconnect', () => {
     const { result } = renderIrcHandlers();
 

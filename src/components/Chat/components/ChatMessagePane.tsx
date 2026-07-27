@@ -183,7 +183,6 @@ export const ChatMessagePane = memo(
           onCloseSearch={onCloseSearch}
           onSearchQueryChange={onSearchQueryChange}
           searchActive={searchActive}
-          searchQuery={searchQuery}
           onToggleShowOnlyMentions={onToggleShowOnlyMentions}
           showOnlyMentions={showOnlyMentions}
         />

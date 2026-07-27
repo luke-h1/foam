@@ -1,11 +1,7 @@
+import { MAX_MESSAGE_LENGTH, messageLength } from './maxMessageLength';
+
 // A tag character - no width, no glyph.
 const INVISIBLE_SUFFIX = ' \u{E0000}';
-
-/**
- * Twitch's message ceiling. Appending the suffix past it would trade a
- * duplicate-drop for a length-drop.
- */
-const MAX_MESSAGE_LENGTH = 500;
 
 /**
  * Twitch silently drops a message identical to the sender's previous one within
@@ -20,7 +16,8 @@ export function applyAntiDuplicateSuffix(
     return message;
   }
 
-  if (message.length + INVISIBLE_SUFFIX.length > MAX_MESSAGE_LENGTH) {
+  // Codepoints, matching the composer's budget: emoji must not read as two.
+  if (messageLength(message) + 2 > MAX_MESSAGE_LENGTH) {
     return message;
   }
 

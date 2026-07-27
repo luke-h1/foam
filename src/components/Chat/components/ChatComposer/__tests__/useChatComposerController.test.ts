@@ -148,7 +148,7 @@ describe('useChatComposerController', () => {
     expect(result.current.canRecallLastMessage).toBe(false);
   });
 
-  test('keeps the last message after a failed send attempt', () => {
+  test('records nothing when the parent has disabled sending', () => {
     const { result } = renderController({ canSend: false });
 
     act(() => {

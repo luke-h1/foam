@@ -17,6 +17,13 @@ describe('applyAntiDuplicateSuffix', () => {
     expect(result.replace(/[\s\u{E0000}]+$/u, '')).toBe('hello');
   });
 
+  test('counts codepoints, so an emoji repeat still gets the suffix', () => {
+    // 300 emoji is 600 UTF-16 units but only 300 codepoints, well under 500.
+    const emoji = '😀'.repeat(300);
+
+    expect(applyAntiDuplicateSuffix(emoji, emoji)).not.toBe(emoji);
+  });
+
   test('leaves a max-length repeat alone rather than pushing it over the limit', () => {
     const atLimit = 'a'.repeat(500);
 
@@ -30,8 +37,10 @@ describe('applyAntiDuplicateSuffix', () => {
     const second = applyAntiDuplicateSuffix('hello', first);
     const third = applyAntiDuplicateSuffix('hello', second);
 
+    // The third send is plain again precisely because it differs from the
+    // suffixed second, which is what stops a run from colliding.
     expect(first).toBe('hello');
-    expect(second).not.toBe(first);
-    expect(third).not.toBe(second);
+    expect(second).toBe(`hello ${'\u{E0000}'}`);
+    expect(third).toBe('hello');
   });
 });

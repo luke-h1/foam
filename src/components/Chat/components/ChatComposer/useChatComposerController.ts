@@ -4,17 +4,20 @@ import type { SlashCommandDefinition } from '@app/components/Chat/util/slashComm
 import { impact } from '@app/lib/haptics';
 import type { ChatUser } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
+import {
+  MAX_MESSAGE_LENGTH,
+  messageLength,
+} from '@app/utils/chat/maxMessageLength';
 
 import { useWordInfo } from './hooks/useWordInfo';
+
+export { MAX_MESSAGE_LENGTH };
 
 export interface ChatComposerHandle {
   focus: () => void;
   blur: () => void;
   setText: (text: string) => void;
 }
-
-// Twitch drops anything longer on send, silently.
-export const MAX_MESSAGE_LENGTH = 500;
 
 // A permanent counter is noise.
 const CHARACTER_COUNT_VISIBLE_FROM = MAX_MESSAGE_LENGTH - 50;
@@ -54,12 +57,11 @@ export function useChatComposerController({
   const [lastSentMessage, setLastSentMessage] = useState('');
 
   const hasText = text.length > 0;
-  // Twitch counts codepoints, so surrogate pairs must not read as two.
-  const messageLength = [...text].length + reservedCharacters;
-  const isOverLimit = messageLength > MAX_MESSAGE_LENGTH;
+  const wireLength = messageLength(text) + reservedCharacters;
+  const isOverLimit = wireLength > MAX_MESSAGE_LENGTH;
   const submitEnabled = (canSend ?? hasText) && !isOverLimit;
-  const remainingCharacters = MAX_MESSAGE_LENGTH - messageLength;
-  const showCharacterCount = messageLength >= CHARACTER_COUNT_VISIBLE_FROM;
+  const remainingCharacters = MAX_MESSAGE_LENGTH - wireLength;
+  const showCharacterCount = wireLength >= CHARACTER_COUNT_VISIBLE_FROM;
   const hasLastMessage = lastSentMessage.length > 0;
   const canRecallLastMessage = !hasText && hasLastMessage;
 
