@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { SystemBars } from 'react-native-edge-to-edge';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
@@ -87,6 +88,9 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
 
   return (
     <View style={styles.container}>
+      {process.env.EXPO_OS === 'android' && isLandscape ? (
+        <SystemBars hidden={{ navigationBar: true, statusBar: true }} />
+      ) : null}
       <View
         style={[
           styles.videoContainer,

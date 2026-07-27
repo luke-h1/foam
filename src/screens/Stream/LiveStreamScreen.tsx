@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { SystemBars } from 'react-native-edge-to-edge';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   cancelAnimation,
@@ -875,6 +876,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           />
         ) : null}
 
+        {isAndroid && isLandscape ? (
+          <SystemBars hidden={{ navigationBar: true, statusBar: true }} />
+        ) : null}
+
         {isAndroid ? (
           <Button
             label={t('goBack')}
@@ -882,14 +887,14 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             style={[
               styles.androidBackButton,
               {
-                left: theme.space12 + landscapeInsetLeft,
-                top: insets.top + theme.space8,
+                left: theme.space8 + landscapeInsetLeft,
+                top: theme.space8,
               },
             ]}
           >
             <SymbolView
               name={BACK_SYMBOL_NAME}
-              size={22}
+              size={18}
               tintColor={theme.colorWhite}
             />
           </Button>
@@ -1044,10 +1049,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.45)',
     borderRadius: theme.borderRadius999,
-    height: 40,
+    height: 32,
     justifyContent: 'center',
     position: 'absolute',
-    width: 40,
+    width: 32,
     zIndex: 12,
   },
   chatContainer: {

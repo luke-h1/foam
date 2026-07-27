@@ -119,7 +119,12 @@ export function FeedbackScreen() {
                   : t('messagePlaceholderIdea')
               }
               placeholderTextColor={theme.colorGreyHoverAlpha}
-              selectionColor={theme.color.text.dark}
+              selectionColor={
+                process.env.EXPO_OS === 'android'
+                  ? `${theme.colorPrimary}66`
+                  : theme.color.text.dark
+              }
+              selectionHandleColor={theme.colorPrimary}
               style={[styles.input, styles.messageInput]}
               value={message}
             />
@@ -143,7 +148,12 @@ export function FeedbackScreen() {
               onChangeText={setEmail}
               placeholder={t('emailPlaceholder')}
               placeholderTextColor={theme.colorGreyHoverAlpha}
-              selectionColor={theme.color.text.dark}
+              selectionColor={
+                process.env.EXPO_OS === 'android'
+                  ? `${theme.colorPrimary}66`
+                  : theme.color.text.dark
+              }
+              selectionHandleColor={theme.colorPrimary}
               style={styles.input}
               value={email}
             />
