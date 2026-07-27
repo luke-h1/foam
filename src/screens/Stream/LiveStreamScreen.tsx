@@ -881,7 +881,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             onPress={handleBack}
             style={[
               styles.androidBackButton,
-              { top: insets.top + theme.space8 },
+              {
+                left: theme.space12 + landscapeInsetLeft,
+                top: insets.top + theme.space8,
+              },
             ]}
           >
             <SymbolView
@@ -1043,7 +1046,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius999,
     height: 40,
     justifyContent: 'center',
-    left: theme.space12,
     position: 'absolute',
     width: 40,
     zIndex: 12,

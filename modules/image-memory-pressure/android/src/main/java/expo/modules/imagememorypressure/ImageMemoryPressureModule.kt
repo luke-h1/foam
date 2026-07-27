@@ -1,8 +1,6 @@
 package expo.modules.imagememorypressure
 
-import android.app.ActivityManager
 import android.content.ComponentCallbacks2
-import android.content.Context
 import android.content.res.Configuration
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -48,16 +46,18 @@ class ImageMemoryPressureModule : Module() {
     }
   }
 
+  /**
+   * Process-local Java-heap headroom. Not a perfect analog of iOS
+   * `os_proc_available_memory()` (native bitmaps sit outside the Java heap),
+   * but unlike system-wide `availMem` it will not trip under unrelated device
+   * pressure. Native/bitmap spikes are still handled via `onTrimMemory`.
+   * Returns `1` when exhausted so the JS poll treats it as low (`0` means
+   * unavailable / monitoring disabled).
+   */
   private fun availableMemoryBytes(): Double {
-    val context = appContext.reactContext ?: return 0.0
-    val activityManager =
-      context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
-        ?: return 0.0
-
-    val memoryInfo = ActivityManager.MemoryInfo()
-    activityManager.getMemoryInfo(memoryInfo)
-
-    val headroom = memoryInfo.availMem - memoryInfo.threshold
-    return if (headroom > 0L) headroom.toDouble() else 0.0
+    val runtime = Runtime.getRuntime()
+    val used = runtime.totalMemory() - runtime.freeMemory()
+    val headroom = runtime.maxMemory() - used
+    return if (headroom > 0L) headroom.toDouble() else 1.0
   }
 }

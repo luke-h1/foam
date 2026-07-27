@@ -2,15 +2,30 @@ import type { ChangelogPresentOptions } from './Changelog.types';
 
 type ChangelogAndroidState = ChangelogPresentOptions | null;
 
+/**
+ * If the Compose sheet never mounts or never fires dismiss, settle as not
+ * presented so callers do not hang and later presents are not blocked.
+ */
+const PRESENT_TIMEOUT_MS = 120_000;
+
 let state: ChangelogAndroidState = null;
 let presentResolve: (() => void) | null = null;
-let pending: Promise<void> | null = null;
+let pending: Promise<boolean> | null = null;
+let presentTimeout: ReturnType<typeof setTimeout> | null = null;
 const listeners = new Set<() => void>();
 
 function emit() {
   for (const listener of listeners) {
     listener();
   }
+}
+
+function clearPresentTimeout() {
+  if (presentTimeout === null) {
+    return;
+  }
+  clearTimeout(presentTimeout);
+  presentTimeout = null;
 }
 
 export function getChangelogAndroidState(): ChangelogAndroidState {
@@ -32,24 +47,33 @@ export function presentChangelogAndroid(
   }
 
   state = options;
-  const promise = new Promise<void>(resolve => {
-    presentResolve = resolve;
+  let settled = false;
+
+  const promise = new Promise<boolean>(resolve => {
+    const settle = (presented: boolean) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearPresentTimeout();
+      presentResolve = null;
+      pending = null;
+      if (state !== null) {
+        state = null;
+        emit();
+      }
+      resolve(presented);
+    };
+
+    presentResolve = () => settle(true);
+    presentTimeout = setTimeout(() => settle(false), PRESENT_TIMEOUT_MS);
   });
+
   pending = promise;
   emit();
-
-  return promise.then(() => true);
+  return promise;
 }
 
 export function dismissChangelogAndroid(): void {
-  if (state === null) {
-    return;
-  }
-
-  const resolve = presentResolve;
-  presentResolve = null;
-  pending = null;
-  state = null;
-  emit();
-  resolve?.();
+  presentResolve?.();
 }

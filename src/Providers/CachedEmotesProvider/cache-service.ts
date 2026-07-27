@@ -502,7 +502,7 @@ function handleNativeMemoryPressure(event: ImageMemoryPressureEvent): void {
 }
 
 function startMemoryMonitor(): void {
-  if (Platform.OS === 'android' || memoryMonitorTimer !== null) {
+  if (memoryMonitorTimer !== null) {
     return;
   }
   memoryMonitorTimer = setInterval(pollMemoryHeadroom, MEMORY_POLL_INTERVAL_MS);
@@ -533,9 +533,11 @@ function handleAppStateForMemory(nextAppState: AppStateStatus): void {
  * mount). Three triggers:
  * - iOS `memoryWarning`: late and unreliable before a fast OOM, so it can't be
  *   the only safety valve.
- * - Proactive headroom poll (foreground, every 5s): trims before jetsam when the
- *   ImageMemoryPressure module reports the process is close to its memory limit — the
- *   safety valve `memoryWarning` is too late for.
+ * - Proactive headroom poll (foreground, every 5s): trims before the process
+ *   hits its limit. iOS uses `os_proc_available_memory()`; Android uses
+ *   Java-heap headroom (not system-wide availMem).
+ * - Android `onTrimMemory` (foreground RUNNING_* band): reactive trim; full
+ *   image-cache wipe only at RUNNING_CRITICAL+.
  * - Backgrounding: shed the unpinned working set while off-screen so a long
  *   single-channel session can't sit at the cap until the OS reclaims it. Refs
  *   re-decode lazily on the next render when foregrounded.

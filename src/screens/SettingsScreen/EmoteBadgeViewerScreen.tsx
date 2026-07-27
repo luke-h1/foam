@@ -48,7 +48,8 @@ import type { ParsedPart } from '@app/utils/chat/parsedPart';
 const BADGE_CELL_SIZE = 64;
 const BADGE_IMAGE_SIZE = 40;
 
-const getBadgeRowKey = (row: BadgeRow) => row.map(badge => badge.id).join('-');
+const getBadgeRowKey = (row: BadgeRow, index: number) =>
+  `${row.map(badge => `${badge.provider ?? 'twitch'}-${badge.id}`).join('|')}-${index}`;
 
 function toEmotePart(emote: SanitisedEmote): ParsedPart<'emote'> {
   return { ...emote, type: 'emote', content: emote.name };

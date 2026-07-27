@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { WebView } from 'react-native-webview';
 
 import {
   Button,
@@ -31,6 +32,15 @@ import {
   getChangelogAndroidState,
   subscribeChangelogAndroid,
 } from '@modules/changelog/src/changelogAndroidPresenter';
+
+function changelogVideoHtml(url: string): string {
+  const escaped = url
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+  return `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/><style>*{margin:0;padding:0;box-sizing:border-box}html,body{width:100%;height:100%;background:#000;overflow:hidden}video{width:100%;height:100%;object-fit:cover}</style></head><body><video src="${escaped}" autoplay muted loop playsinline></video></body></html>`;
+}
 
 function ListNotes({ item }: { item: ChangelogListItem }) {
   return (
@@ -88,6 +98,19 @@ function MediaNotes({ item }: { item: ChangelogMediaItem }) {
               source={{ uri: item.url }}
               style={styles.mediaImage}
               contentFit='cover'
+            />
+          </View>
+        </RNHostView>
+      ) : null}
+      {item.mediaKind === 'video' ? (
+        <RNHostView matchContents modifiers={[fillMaxWidth(), height(180)]}>
+          <View style={styles.mediaFrame}>
+            <WebView
+              source={{ html: changelogVideoHtml(item.url) }}
+              style={styles.mediaImage}
+              scrollEnabled={false}
+              mediaPlaybackRequiresUserAction={false}
+              allowsInlineMediaPlayback
             />
           </View>
         </RNHostView>
