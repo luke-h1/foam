@@ -34,6 +34,12 @@ export const chatComposerStyles = StyleSheet.create({
     justifyContent: 'center',
     width: COMPOSER_CONTROL_SIZE,
   },
+  characterCount: {
+    alignSelf: 'flex-end',
+    color: theme.color.textSecondary.dark,
+    paddingBottom: theme.space4,
+    paddingHorizontal: theme.space8,
+  },
   input: {
     backgroundColor: theme.darkActiveContent,
     borderRadius: 20,

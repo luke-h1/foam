@@ -118,6 +118,7 @@ const en = {
       replyToUser: 'Reply to {{username}}...',
       replyingTo: 'Replying to',
       openEmotePicker: 'Open emote picker',
+      recallLastMessage: 'Recall last message',
       sendMessage: 'Send message',
       openChatSettings: 'Open chat settings',
       pinNextMessage: 'Pin next message',

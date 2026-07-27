@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { PressableScale } from 'pressto';
 
 import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { Text } from '@app/components/ui/Text/Text';
 import { useAccentColor } from '@app/context/AccentColorContext';
 import { theme } from '@app/styles/themes';
 
@@ -65,6 +66,11 @@ function ChatComposerComponent({
     showCommandRail,
     wordInfo,
     submitEnabled,
+    isOverLimit,
+    remainingCharacters,
+    showCharacterCount,
+    canRecallLastMessage,
+    recallLastMessage,
     handleChangeText,
     handleSelectionChange,
     handleSubmit,
@@ -108,7 +114,35 @@ function ChatComposerComponent({
         />
       ) : null}
 
+      {showCharacterCount ? (
+        <Text
+          type='xxs'
+          weight='semibold'
+          style={[
+            styles.characterCount,
+            isOverLimit ? { color: theme.colorRed } : undefined,
+          ]}
+        >
+          {remainingCharacters}
+        </Text>
+      ) : null}
+
       <View style={styles.row}>
+        {canRecallLastMessage ? (
+          <PressableScale
+            accessibilityLabel={t('composer.recallLastMessage')}
+            accessibilityRole='button'
+            style={styles.addButton}
+            onPress={recallLastMessage}
+          >
+            <SymbolView
+              name='clock.arrow.circlepath'
+              size={22}
+              tintColor={theme.colorGreyHoverAlpha}
+            />
+          </PressableScale>
+        ) : null}
+
         {onPressAdd ? (
           <PressableScale
             accessibilityLabel={t('composer.openEmotePicker')}

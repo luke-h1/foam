@@ -13,6 +13,17 @@ export interface ChatComposerHandle {
   setText: (text: string) => void;
 }
 
+/**
+ * Twitch drops anything longer on send, so the composer flags an over-long
+ * message instead of letting it disappear silently.
+ */
+export const MAX_MESSAGE_LENGTH = 500;
+
+/**
+ * A permanent counter is noise, so it only appears once the ceiling is close.
+ */
+const CHARACTER_COUNT_VISIBLE_FROM = MAX_MESSAGE_LENGTH - 50;
+
 interface UseChatComposerControllerOptions {
   onChangeText?: (text: string) => void;
   onSubmit?: () => void;
@@ -38,9 +49,14 @@ export function useChatComposerController({
     { start: number; end: number } | undefined
   >(undefined);
   const [isFocused, setIsFocused] = useState(false);
+  const [lastSentMessage, setLastSentMessage] = useState('');
 
   const hasText = text.length > 0;
-  const submitEnabled = canSend ?? hasText;
+  const isOverLimit = text.length > MAX_MESSAGE_LENGTH;
+  const submitEnabled = (canSend ?? hasText) && !isOverLimit;
+  const remainingCharacters = MAX_MESSAGE_LENGTH - text.length;
+  const showCharacterCount = text.length >= CHARACTER_COUNT_VISIBLE_FROM;
+  const canRecallLastMessage = !hasText && lastSentMessage.length > 0;
 
   const { wordInfo, isUserMention, isEmoteSearch, isCommandSearch } =
     useWordInfo({
@@ -92,10 +108,27 @@ export function useChatComposerController({
     if (!submitEnabled) {
       return;
     }
+    // Captured before the parent clears the input, so it can be recalled.
+    const sent = text.trim();
+    if (sent) {
+      setLastSentMessage(sent);
+    }
     void impact('light');
     onSubmit?.();
     blurInput();
-  }, [blurInput, onSubmit, submitEnabled]);
+  }, [blurInput, onSubmit, submitEnabled, text]);
+
+  /**
+   * Restores the previous message for a quick edit-and-resend, which is the
+   * common case when a command is mistyped or a message needs repeating.
+   */
+  const recallLastMessage = useCallback(() => {
+    if (!lastSentMessage) {
+      return;
+    }
+    writeText(lastSentMessage);
+    focusInput();
+  }, [focusInput, lastSentMessage, writeText]);
 
   const handleEmotePress = useCallback(
     (emote: SanitisedEmote) => {
@@ -140,6 +173,11 @@ export function useChatComposerController({
     showCommandRail,
     wordInfo,
     submitEnabled,
+    isOverLimit,
+    remainingCharacters,
+    showCharacterCount,
+    canRecallLastMessage,
+    recallLastMessage,
     handleChangeText,
     handleSelectionChange,
     handleSubmit,
