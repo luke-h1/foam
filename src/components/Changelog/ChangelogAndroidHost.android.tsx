@@ -146,51 +146,65 @@ export function ChangelogAndroidHost() {
   const doneLabel = options.configuration?.doneButtonLabel ?? t('done');
 
   return (
-    <Host colorScheme='dark' style={styles.host} pointerEvents='box-none'>
-      <ModalBottomSheet
-        containerColor={theme.color.menu.background}
-        contentColor={theme.color.text.dark}
-        onDismissRequest={dismissChangelogAndroid}
-        showDragHandle
-      >
-        <Column
-          modifiers={[fillMaxWidth(), padding(16, 8, 16, 24)]}
-          verticalArrangement={{ spacedBy: 12 }}
+    <View style={styles.host} pointerEvents='box-none'>
+      {/**
+       * Compose's own ModalBottomSheet scrim never paints when the sheet is
+       * hosted inside the RN tree, so dim from RN. Taps still fall through to
+       * the Compose scrim, which owns dismiss-on-outside-press.
+       */}
+      <View
+        style={[StyleSheet.absoluteFill, styles.scrim]}
+        pointerEvents='none'
+      />
+      <Host colorScheme='dark' style={styles.host} pointerEvents='box-none'>
+        <ModalBottomSheet
+          containerColor={theme.color.menu.background}
+          contentColor={theme.color.text.dark}
+          onDismissRequest={dismissChangelogAndroid}
+          showDragHandle
         >
-          <LazyColumn
-            contentPadding={{ start: 0, top: 0, end: 0, bottom: 8 }}
-            horizontalAlignment='start'
-            modifiers={[fillMaxWidth(), height(420)]}
-            verticalArrangement={{ spacedBy: 20 }}
+          <Column
+            modifiers={[fillMaxWidth(), padding(16, 8, 16, 24)]}
+            verticalArrangement={{ spacedBy: 12 }}
           >
-            {options.notes.map(notes => (
-              <VersionNotes key={notes.version} notes={notes} />
-            ))}
-          </LazyColumn>
-          <Button
-            colors={{
-              containerColor: theme.color.menu.cardActive,
-              contentColor: theme.color.text.dark,
-            }}
-            modifiers={[fillMaxWidth()]}
-            onClick={dismissChangelogAndroid}
-          >
-            <Text
-              color={theme.color.text.dark}
-              style={{ typography: 'titleMedium', fontWeight: '600' }}
+            <LazyColumn
+              contentPadding={{ start: 0, top: 0, end: 0, bottom: 8 }}
+              horizontalAlignment='start'
+              modifiers={[fillMaxWidth(), height(420)]}
+              verticalArrangement={{ spacedBy: 20 }}
             >
-              {doneLabel}
-            </Text>
-          </Button>
-        </Column>
-      </ModalBottomSheet>
-    </Host>
+              {options.notes.map(notes => (
+                <VersionNotes key={notes.version} notes={notes} />
+              ))}
+            </LazyColumn>
+            <Button
+              colors={{
+                containerColor: theme.color.menu.cardActive,
+                contentColor: theme.color.text.dark,
+              }}
+              modifiers={[fillMaxWidth()]}
+              onClick={dismissChangelogAndroid}
+            >
+              <Text
+                color={theme.color.text.dark}
+                style={{ typography: 'titleMedium', fontWeight: '600' }}
+              >
+                {doneLabel}
+              </Text>
+            </Button>
+          </Column>
+        </ModalBottomSheet>
+      </Host>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   host: {
     ...StyleSheet.absoluteFill,
+  },
+  scrim: {
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
   },
   mediaFrame: {
     borderCurve: 'continuous',

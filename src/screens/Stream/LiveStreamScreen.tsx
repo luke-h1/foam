@@ -855,7 +855,9 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             autoplay
             muted={false}
             showOverlayControls={customPlayerEnabled}
-            onBackPress={customPlayerEnabled ? handleBack : undefined}
+            onBackPress={
+              customPlayerEnabled && !isAndroid ? handleBack : undefined
+            }
             onPlay={handlePlayerLoaded}
             onPlaybackLatencyChange={handlePlaybackLatencyChange}
             onReady={handlePlayerLoaded}
@@ -873,7 +875,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           />
         ) : null}
 
-        {isAndroid && !customPlayerEnabled ? (
+        {isAndroid ? (
           <Button
             label={t('goBack')}
             onPress={handleBack}

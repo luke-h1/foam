@@ -284,6 +284,13 @@
     }
   },
   "expo": {
+    "autolinking": {
+      "android": {
+        "buildFromSource": [
+          "^expo-ui$"
+        ]
+      }
+    },
     "install": {
       "exclude": [
         "@sentry/react-native"

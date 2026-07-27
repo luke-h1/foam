@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     width: COMPOSER_CONTROL_SIZE,
   },
   composerShell: {
-    backgroundColor: theme.color.surfaceElevated.dark,
+    backgroundColor: theme.colorBlack,
     paddingBottom: theme.space8,
     paddingHorizontal: theme.space16,
   },
