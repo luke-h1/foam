@@ -20,6 +20,12 @@ export const MAX_MESSAGE_LENGTH = 500;
 const CHARACTER_COUNT_VISIBLE_FROM = MAX_MESSAGE_LENGTH - 50;
 
 interface UseChatComposerControllerOptions {
+  /**
+   * Characters the send path prepends to the payload that the input never
+   * shows - currently the `@user ` on a reply. Counted against the same ceiling
+   * so the composer cannot green-light a message Twitch will drop for length.
+   */
+  reservedCharacters?: number;
   onChangeText?: (text: string) => void;
   onSubmit?: () => void;
   canSend?: boolean;
@@ -30,6 +36,7 @@ interface UseChatComposerControllerOptions {
 }
 
 export function useChatComposerController({
+  reservedCharacters = 0,
   onChangeText,
   onSubmit,
   canSend,
@@ -47,11 +54,14 @@ export function useChatComposerController({
   const [lastSentMessage, setLastSentMessage] = useState('');
 
   const hasText = text.length > 0;
-  const isOverLimit = text.length > MAX_MESSAGE_LENGTH;
+  // Twitch counts codepoints, so surrogate pairs must not read as two.
+  const messageLength = [...text].length + reservedCharacters;
+  const isOverLimit = messageLength > MAX_MESSAGE_LENGTH;
   const submitEnabled = (canSend ?? hasText) && !isOverLimit;
-  const remainingCharacters = MAX_MESSAGE_LENGTH - text.length;
-  const showCharacterCount = text.length >= CHARACTER_COUNT_VISIBLE_FROM;
-  const canRecallLastMessage = !hasText && lastSentMessage.length > 0;
+  const remainingCharacters = MAX_MESSAGE_LENGTH - messageLength;
+  const showCharacterCount = messageLength >= CHARACTER_COUNT_VISIBLE_FROM;
+  const hasLastMessage = lastSentMessage.length > 0;
+  const canRecallLastMessage = !hasText && hasLastMessage;
 
   const { wordInfo, isUserMention, isEmoteSearch, isCommandSearch } =
     useWordInfo({
@@ -168,6 +178,7 @@ export function useChatComposerController({
     remainingCharacters,
     showCharacterCount,
     canRecallLastMessage,
+    hasLastMessage,
     recallLastMessage,
     handleChangeText,
     handleSelectionChange,

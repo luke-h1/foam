@@ -142,6 +142,8 @@ export const ChatInputSection = memo(
                   placeholder={inputPlaceholder}
                   editable
                   canSend={canSend}
+                  // The send path prepends `@user ` for a reply.
+                  reservedCharacters={replyTo ? replyTo.username.length + 2 : 0}
                   prioritizeChannelEmotes
                 />
               </View>

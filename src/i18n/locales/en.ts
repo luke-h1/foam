@@ -233,6 +233,7 @@ const en = {
       syncToLiveSubtitle: 'Jump back to the live edge',
     },
     controls: {
+      closeSearch: 'Close search',
       searchMessages: 'Search messages',
       mentions: 'Mentions',
       clear: 'Clear',

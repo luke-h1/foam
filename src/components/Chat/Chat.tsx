@@ -52,6 +52,8 @@ export const Chat = memo(
     const currentUsername = user?.login ?? user?.display_name;
 
     const {
+      closeSearch,
+      hasActiveFilters,
       handleClearFilters,
       handleSearchQueryChange,
       handleToggleShowOnlyMentions,
@@ -219,7 +221,6 @@ export const Chat = memo(
                 currentUsername={currentUsername}
                 hiddenUsers={hiddenUsers}
                 hiddenPhrases={hiddenPhrases}
-                highlightedUsers={highlightedUsers}
                 paneFlags={paneFlags}
                 listRef={listRef}
                 scrollHandlers={scrollHandlers}
@@ -229,6 +230,8 @@ export const Chat = memo(
                 listContentStyle={listContentStyle}
                 messageListExtraData={messageListExtraData}
                 onClearFilters={handleClearFilters}
+                hasActiveFilters={hasActiveFilters}
+                onCloseSearch={closeSearch}
                 onSearchQueryChange={handleSearchQueryChange}
                 onRefreshPinnedMessage={handleRefreshPinnedMessage}
                 onToggleShowOnlyMentions={handleToggleShowOnlyMentions}

@@ -27,6 +27,10 @@ export const chatComposerStyles = StyleSheet.create({
     justifyContent: 'center',
     width: COMPOSER_CONTROL_SIZE,
   },
+  recallSlot: {
+    height: COMPOSER_CONTROL_SIZE,
+    width: COMPOSER_CONTROL_SIZE,
+  },
   submitButton: {
     alignItems: 'center',
     borderRadius: COMPOSER_CONTROL_RADIUS,

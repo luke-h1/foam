@@ -5,6 +5,7 @@ import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
 import {
   assignTransientState,
   getTransientState,
+  resetTransientSearch,
 } from '@app/store/chat/actions/transientState';
 import { defaultTransientState } from '@app/store/chat/observables/chatTransientState';
 import { useTransientChannelFilters } from '@app/store/chat/react/transientSelectors';
@@ -58,6 +59,13 @@ export function useChatTransientState(channelId: string) {
     visibleCosmeticUsersRef,
     visiblePersonalEmoteUsersRef,
   ]);
+
+  useEffect(
+    () => () => {
+      resetTransientSearch(channelId);
+    },
+    [channelId],
+  );
 
   useUnmountCallback(() => {
     const highlightedReplyTimeout = highlightedReplyTargetTimeoutRef.current;
@@ -127,6 +135,10 @@ export function useChatTransientState(channelId: string) {
     });
   }, [channelId]);
 
+  const closeSearch = useCallback(() => {
+    resetTransientSearch(channelId);
+  }, [channelId]);
+
   const handleSearchQueryChange = useCallback(
     (searchQuery: string) => {
       assignTransientState(channelId, { searchQuery });
@@ -145,7 +157,23 @@ export function useChatTransientState(channelId: string) {
     });
   };
 
+  /**
+   * Deliberately excludes `blockedTerms`: those are a persisted preference, so
+   * counting them would pin the tray open for good and Clear - which only
+   * resets transient state - could never dismiss it.
+   */
+  const hasActiveFilters = Boolean(
+    transientHiddenPhrases.length ||
+    hiddenUsers.length ||
+    highlightedUsers.length ||
+    searchActive ||
+    searchQuery.length ||
+    showOnlyMentions,
+  );
+
   return {
+    closeSearch,
+    hasActiveFilters,
     handleClearFilters,
     handleSearchQueryChange,
     handleToggleShowOnlyMentions,

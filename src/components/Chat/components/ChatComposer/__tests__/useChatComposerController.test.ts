@@ -60,6 +60,35 @@ describe('useChatComposerController', () => {
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 
+  test('counts the reply prefix the send path prepends but the input never shows', () => {
+    const { result, onSubmit } = renderController({ reservedCharacters: 12 });
+
+    act(() => {
+      result.current.handleChangeText('a'.repeat(MAX_MESSAGE_LENGTH - 11));
+    });
+
+    // 489 typed + 12 reserved = 501 on the wire.
+    expect(result.current.isOverLimit).toBe(true);
+    expect(result.current.remainingCharacters).toBe(-1);
+
+    act(() => {
+      result.current.handleSubmit();
+    });
+
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  test('counts codepoints, not UTF-16 units, so emoji are not double charged', () => {
+    const { result } = renderController();
+
+    act(() => {
+      result.current.handleChangeText('😀'.repeat(300));
+    });
+
+    // 300 codepoints is 600 UTF-16 units; Twitch counts the former.
+    expect(result.current.isOverLimit).toBe(false);
+  });
+
   test('reveals the remaining count only as the limit approaches', () => {
     const { result } = renderController();
 
@@ -100,6 +129,23 @@ describe('useChatComposerController', () => {
 
     expect(result.current.text).toBe('hello chat');
     expect(focusInput).toHaveBeenCalled();
+  });
+
+  test('reserves the recall slot from the first send so the row stops resizing', () => {
+    const { result } = renderController();
+
+    expect(result.current.hasLastMessage).toBe(false);
+
+    act(() => {
+      result.current.handleChangeText('hello');
+    });
+    act(() => {
+      result.current.handleSubmit();
+    });
+
+    // Stays true while typing the next message, so the slot does not flicker.
+    expect(result.current.hasLastMessage).toBe(true);
+    expect(result.current.canRecallLastMessage).toBe(false);
   });
 
   test('keeps the last message after a failed send attempt', () => {

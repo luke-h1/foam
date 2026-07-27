@@ -1,15 +1,18 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
+import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { theme } from '@app/styles/themes';
 
 interface ChatViewControlsProps {
   hasActiveFilters: boolean;
   onClearFilters: () => void;
+  onCloseSearch: () => void;
+  searchActive: boolean;
   onSearchQueryChange: (query: string) => void;
   onToggleShowOnlyMentions: () => void;
   searchQuery: string;
@@ -20,12 +23,34 @@ export const ChatViewControls = memo(
   ({
     hasActiveFilters,
     onClearFilters,
+    onCloseSearch,
+    searchActive,
     onSearchQueryChange,
     onToggleShowOnlyMentions,
     searchQuery,
     showOnlyMentions,
   }: ChatViewControlsProps) => {
     const { t } = useTranslation('chat');
+    /**
+     * The query lives on a per-channel observable the root Chat component
+     * subscribes to, so writing every keystroke straight through would re-render
+     * the tree and re-filter the whole message window per character. The field
+     * stays local and the store catches up.
+     *
+     * No resync effect: every path that clears the query (Clear, close, leaving
+     * the channel) also drops `hasActiveFilters`, which unmounts this whole
+     * component, so the local value can never go stale against the store.
+     */
+    // eslint-disable-next-line react-doctor/no-derived-useState -- every path that changes the stored query also unmounts this component
+    const [draftQuery, setDraftQuery] = useState(searchQuery);
+    const [pushQuery] = useDebouncedCallback((value: string) => {
+      onSearchQueryChange(value);
+    }, 150);
+
+    const handleQueryChange = (value: string) => {
+      setDraftQuery(value);
+      void pushQuery(value);
+    };
 
     if (!hasActiveFilters) {
       return null;
@@ -45,7 +70,7 @@ export const ChatViewControls = memo(
               autoCapitalize='none'
               autoCorrect={false}
               cursorColor={theme.color.text.dark}
-              onChangeText={onSearchQueryChange}
+              onChangeText={handleQueryChange}
               placeholder={t('controls.searchMessages')}
               placeholderTextColor={theme.color.textSecondary.dark}
               returnKeyType='search'
@@ -53,8 +78,21 @@ export const ChatViewControls = memo(
               selectionHandleColor={theme.colorPrimary}
               style={styles.searchInput}
               underlineColorAndroid='transparent'
-              value={searchQuery}
+              value={draftQuery}
             />
+            {searchActive ? (
+              <Button
+                accessibilityLabel={t('controls.closeSearch')}
+                accessibilityRole='button'
+                onPress={onCloseSearch}
+              >
+                <SymbolView
+                  name='xmark'
+                  size={14}
+                  tintColor={theme.colorGreyHoverAlpha}
+                />
+              </Button>
+            ) : null}
           </View>
 
           <View style={styles.filterRow}>

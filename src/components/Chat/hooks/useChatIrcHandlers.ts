@@ -265,8 +265,10 @@ export function useChatIrcHandlers({
         return;
       }
 
-      // History replay comes through this same handler, so clearing here would
-      // destroy the backfill the user is waiting on.
+      /**
+       * History replay comes through this same handler, so clearing here would
+       * destroy the backfill the user is waiting on.
+       */
       if (ignoreClearChat || isLoadingRecentMessagesRef?.current) {
         appendSystemMessage('Chat was cleared by a moderator (history kept)');
         return;

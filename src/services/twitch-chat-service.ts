@@ -912,6 +912,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       isAuthenticatedRef.current = false;
       userStateRef.current = {};
       pendingMessageRef.current = null;
+      lastSentMessagesRef.current.clear();
     };
   }, [joinedChannelsRef, pendingJoinChannelsRef]);
 

@@ -30,6 +30,7 @@ export interface ChatComposerProps {
   placeholder?: string;
   editable?: boolean;
   canSend?: boolean;
+  reservedCharacters?: number;
   ref?: Ref<ChatComposerHandle>;
 }
 
@@ -42,6 +43,7 @@ function ChatComposerComponent({
   placeholder,
   editable = true,
   canSend,
+  reservedCharacters,
   ref,
 }: ChatComposerProps) {
   const { t } = useTranslation('chat');
@@ -70,6 +72,7 @@ function ChatComposerComponent({
     remainingCharacters,
     showCharacterCount,
     canRecallLastMessage,
+    hasLastMessage,
     recallLastMessage,
     handleChangeText,
     handleSelectionChange,
@@ -81,6 +84,7 @@ function ChatComposerComponent({
     onChangeText,
     onSubmit,
     canSend,
+    reservedCharacters,
     ref,
     focusInput,
     blurInput,
@@ -128,19 +132,27 @@ function ChatComposerComponent({
       ) : null}
 
       <View style={styles.row}>
-        {canRecallLastMessage ? (
-          <PressableScale
-            accessibilityLabel={t('composer.recallLastMessage')}
-            accessibilityRole='button'
-            style={styles.addButton}
-            onPress={recallLastMessage}
-          >
-            <SymbolView
-              name='clock.arrow.circlepath'
-              size={22}
-              tintColor={theme.colorGreyHoverAlpha}
-            />
-          </PressableScale>
+        {/**
+         * Reserved from the first send onward so the row stops resizing every
+         * time the input empties.
+         */}
+        {hasLastMessage ? (
+          <View style={styles.recallSlot}>
+            {canRecallLastMessage ? (
+              <PressableScale
+                accessibilityLabel={t('composer.recallLastMessage')}
+                accessibilityRole='button'
+                style={styles.addButton}
+                onPress={recallLastMessage}
+              >
+                <SymbolView
+                  name='clock.arrow.circlepath'
+                  size={22}
+                  tintColor={theme.colorGreyHoverAlpha}
+                />
+              </PressableScale>
+            ) : null}
+          </View>
         ) : null}
 
         {onPressAdd ? (
@@ -183,8 +195,10 @@ function ChatComposerComponent({
           selectionHandleColor={theme.colorPrimary}
           style={styles.input}
           submitBehavior='blurAndSubmit'
-          // Android: without this, landscape drops into the fullscreen IME
-          // editor, covering the stream and chat.
+          /**
+           * Android: without this, landscape drops into the fullscreen IME
+           * editor, covering the stream and chat.
+           */
           disableFullscreenUI
           underlineColorAndroid='transparent'
         />

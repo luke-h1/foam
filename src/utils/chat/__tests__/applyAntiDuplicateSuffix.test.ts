@@ -17,6 +17,13 @@ describe('applyAntiDuplicateSuffix', () => {
     expect(result.replace(/[\s\u{E0000}]+$/u, '')).toBe('hello');
   });
 
+  test('leaves a max-length repeat alone rather than pushing it over the limit', () => {
+    const atLimit = 'a'.repeat(500);
+
+    // Trading a duplicate-drop for a length-drop helps nobody.
+    expect(applyAntiDuplicateSuffix(atLimit, atLimit)).toBe(atLimit);
+  });
+
   test('alternates so a run of repeats never collides', () => {
     // Each send compares against what actually went on the wire.
     const first = applyAntiDuplicateSuffix('hello', undefined);
