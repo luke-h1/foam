@@ -68,6 +68,7 @@ export interface ChatOverlayLayerProps {
   onReportSelectedUser: () => void;
   onChattersSheetDidDismiss: () => void;
   onOpenChatters: () => void;
+  onOpenMessageSearch: () => void;
   onOpenSavedPhrases: () => void;
   onSavedPhrasesSheetDidDismiss: () => void;
   onSelectChatter: (chatter: UsernamePressData) => void;
@@ -104,6 +105,7 @@ export const ChatOverlayLayer = memo(
     onReportSelectedUser,
     onChattersSheetDidDismiss,
     onOpenChatters,
+    onOpenMessageSearch,
     onOpenSavedPhrases,
     onSavedPhrasesSheetDidDismiss,
     onSelectChatter,
@@ -151,6 +153,7 @@ export const ChatOverlayLayer = memo(
             onClearSevenTvCosmeticsCache={onClearSevenTvCosmeticsCache}
             onDismiss={onSettingsSheetDidDismiss}
             onOpenChatters={onOpenChatters}
+            onOpenMessageSearch={onOpenMessageSearch}
             onOpenSavedPhrases={onOpenSavedPhrases}
             onRefetchEmotes={onSettingsRefetchEmotes}
             onReconnect={onSettingsReconnect}

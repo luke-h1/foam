@@ -30,7 +30,6 @@ export interface ChatMessagePaneProps {
   currentUsername?: string;
   hiddenUsers: string[];
   hiddenPhrases: string[];
-  highlightedUsers: string[];
   paneFlags: ChatPaneFlags;
   listRef: RefObject<ChatListRef | null>;
   scrollHandlers: ChatListScrollHandlers;
@@ -42,8 +41,13 @@ export interface ChatMessagePaneProps {
   onClearFilters: () => void;
   onRefreshPinnedMessage: () => void;
   onUnpinPinnedMessage: () => void;
+  onCloseSearch: () => void;
+  onSearchQueryChange: (query: string) => void;
+  hasActiveFilters: boolean;
+  searchActive: boolean;
   onToggleShowOnlyMentions: () => void;
   onViewableMessagesChange?: (messages: AnyChatMessageType[]) => void;
+  searchQuery: string;
   pinnedMessage: PinnedChatMessageViewModel | null;
   pinnedMessageBusy: boolean;
 }
@@ -55,7 +59,6 @@ export const ChatMessagePane = memo(
     currentUsername,
     hiddenUsers,
     hiddenPhrases,
-    highlightedUsers,
     paneFlags,
     listRef,
     scrollHandlers,
@@ -67,10 +70,15 @@ export const ChatMessagePane = memo(
     onClearFilters,
     onRefreshPinnedMessage,
     onUnpinPinnedMessage,
+    onCloseSearch,
+    onSearchQueryChange,
+    hasActiveFilters,
     onToggleShowOnlyMentions,
     onViewableMessagesChange,
     pinnedMessage,
     pinnedMessageBusy,
+    searchActive,
+    searchQuery,
   }: ChatMessagePaneProps) => {
     const {
       canModerateChat,
@@ -112,6 +120,7 @@ export const ChatMessagePane = memo(
           currentUsername,
           hiddenUsers,
           hiddenPhrases,
+          searchQuery,
           showOnlyMentions,
         }),
       [
@@ -119,16 +128,10 @@ export const ChatMessagePane = memo(
         hiddenPhrases,
         hiddenUsers,
         rawMessages,
+        searchQuery,
         showOnlyMentions,
       ],
     );
-    const hasActiveFilters = Boolean(
-      hiddenUsers.length ||
-      hiddenPhrases.length ||
-      highlightedUsers.length ||
-      showOnlyMentions,
-    );
-
     // The store guarantees unique message keys at insert time (addMessage /
     // addMessages both guard against messageKeySet, and getChatMessageListKey
     // returns the store-assigned id), so a per-render Set-based dedup over the
@@ -177,6 +180,9 @@ export const ChatMessagePane = memo(
         <ChatViewControls
           hasActiveFilters={hasActiveFilters}
           onClearFilters={onClearFilters}
+          onCloseSearch={onCloseSearch}
+          onSearchQueryChange={onSearchQueryChange}
+          searchActive={searchActive}
           onToggleShowOnlyMentions={onToggleShowOnlyMentions}
           showOnlyMentions={showOnlyMentions}
         />

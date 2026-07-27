@@ -263,6 +263,25 @@ export default tseslint.config(
     },
   },
   {
+    /**
+     * Intentional stay-mounted-through-exit-animation gates: presented/visible
+     * props seed state that an effect syncs so the sheet/poster can finish its
+     * dismiss animation before unmounting. The rules read that as derived
+     * state, but replacing the gate breaks the exit animation.
+     */
+    files: ['src/components/BottomSheet/BottomSheet.native.tsx'],
+    rules: {
+      'react-doctor/no-derived-useState': 'off',
+      'react-doctor/no-cascading-set-state': 'off',
+    },
+  },
+  {
+    files: ['src/components/StreamPlayer/StreamPlayerPoster.tsx'],
+    rules: {
+      'react-doctor/no-derived-useState': 'off',
+    },
+  },
+  {
     files: ['src/**/*.{ts,tsx}'],
     ignores: [
       'src/**/__tests__/**',

@@ -27,12 +27,22 @@ export const chatComposerStyles = StyleSheet.create({
     justifyContent: 'center',
     width: COMPOSER_CONTROL_SIZE,
   },
+  recallSlot: {
+    height: COMPOSER_CONTROL_SIZE,
+    width: COMPOSER_CONTROL_SIZE,
+  },
   submitButton: {
     alignItems: 'center',
     borderRadius: COMPOSER_CONTROL_RADIUS,
     height: COMPOSER_CONTROL_SIZE,
     justifyContent: 'center',
     width: COMPOSER_CONTROL_SIZE,
+  },
+  characterCount: {
+    alignSelf: 'flex-end',
+    color: theme.color.textSecondary.dark,
+    paddingBottom: theme.space4,
+    paddingHorizontal: theme.space8,
   },
   input: {
     backgroundColor: theme.darkActiveContent,

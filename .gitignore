@@ -44,6 +44,8 @@ yarn-error.*
 !modules/**/ios/
 !modules/**/ios/**
 
+modules/**/android/build/
+
 # Turborepo
 .turbo
 

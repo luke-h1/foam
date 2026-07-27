@@ -8,7 +8,8 @@ import { SettingsSection } from '@app/components/SettingsSection/SettingsSection
 import { ChatPreferenceSegmentedSettingsRow } from '@app/screens/Preferences/ChatPreferenceSettingsRows';
 import {
   type SevenTvPaintRenderer,
-  usePreferences,
+  usePreference,
+  useUpdatePreferences,
 } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
@@ -29,7 +30,8 @@ function isPaintRenderer(value: string): value is SevenTvPaintRenderer {
 
 export function PaintRendererSection() {
   const { t } = useTranslation('devTools');
-  const { sevenTvPaintRenderer, update } = usePreferences();
+  const sevenTvPaintRenderer = usePreference('sevenTvPaintRenderer');
+  const update = useUpdatePreferences();
 
   if (!isDevToolsEnabled) {
     return null;
@@ -71,20 +73,10 @@ export function PaintRendererSection() {
         title={t('paintRenderer')}
         subtitle={t('paintRendererDescription')}
         icon={{ icon: 'paintbrush.fill', color: theme.colorPlum }}
-        onChange={event => {
-          const next =
-            PAINT_RENDERER_OPTIONS[event.nativeEvent.selectedSegmentIndex]
-              ?.value;
+        onSelectIndex={index => {
+          const next = PAINT_RENDERER_OPTIONS[index]?.value;
           if (next) {
             update({ sevenTvPaintRenderer: next });
-          }
-        }}
-        onValueChange={value => {
-          const selected = PAINT_RENDERER_OPTIONS.find(
-            option => t(option.labelKey) === value,
-          );
-          if (selected) {
-            update({ sevenTvPaintRenderer: selected.value });
           }
         }}
         selectedIndex={selectedIndex}

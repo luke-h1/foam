@@ -16,9 +16,9 @@ import { twitchService } from '@app/services/twitch-service';
 import { removeCreatedClip } from '@app/store/createdClips/actions/createdClips';
 import type { CreatedClipRecord } from '@app/store/createdClips/observables/createdClips';
 import { useCreatedClips } from '@app/store/createdClips/react/selectors';
+import { showActionMenu } from '@app/store/overlays/showActionMenu';
 import { theme } from '@app/styles/themes';
 import type { TwitchClip } from '@app/types/twitch/clip';
-import { showActionMenu } from '@app/utils/actionMenu/showActionMenu';
 
 interface MyClipListItem {
   record: CreatedClipRecord;

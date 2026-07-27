@@ -12,6 +12,13 @@ export type {
   SymbolWeight,
 } from 'expo-symbols';
 
+// eslint-disable-next-line react-doctor/only-export-components -- shared icon-name constant
+export const BACK_SYMBOL_NAME = {
+  ios: 'chevron.left',
+  android: 'arrow_back',
+  web: 'arrow_back',
+} as const;
+
 export function SymbolView({ name, ...rest }: SymbolViewProps) {
   const resolvedName =
     typeof name === 'string'

@@ -29,7 +29,7 @@ export function BlockedUsersActionButton({
   const width = isDestructive ? 104 : 112;
 
   return (
-    <Host style={[styles.host, { width }, style]}>
+    <Host colorScheme='dark' style={[styles.host, { width }, style]}>
       <Component
         onClick={onPress}
         colors={{

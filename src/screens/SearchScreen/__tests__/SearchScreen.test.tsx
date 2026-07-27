@@ -143,6 +143,19 @@ describe('SearchScreen', () => {
     });
   });
 
+  test('quick-action tap fires exactly one search', async () => {
+    render(<SearchScreen />);
+
+    fireEvent.press(screen.getByText('Just Chatting'));
+
+    await waitFor(() => {
+      expect(twitchService.searchCategories).toHaveBeenCalledTimes(1);
+    });
+    // The imperative setText handle must not re-enter type-to-search, or a
+    // single tap issues the same query twice.
+    expect(twitchService.searchChannels).toHaveBeenCalledTimes(1);
+  });
+
   test('shows search history when available and no query entered', () => {
     storageService.getString.mockReturnValue([
       { query: 'xqc', date: new Date().toISOString() },

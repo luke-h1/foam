@@ -4,8 +4,14 @@ import type { SlashCommandDefinition } from '@app/components/Chat/util/slashComm
 import { impact } from '@app/lib/haptics';
 import type { ChatUser } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
+import {
+  MAX_MESSAGE_LENGTH,
+  messageLength,
+} from '@app/utils/chat/maxMessageLength';
 
 import { useWordInfo } from './hooks/useWordInfo';
+
+export { MAX_MESSAGE_LENGTH };
 
 export interface ChatComposerHandle {
   focus: () => void;
@@ -13,7 +19,16 @@ export interface ChatComposerHandle {
   setText: (text: string) => void;
 }
 
+// A permanent counter is noise.
+const CHARACTER_COUNT_VISIBLE_FROM = MAX_MESSAGE_LENGTH - 50;
+
 interface UseChatComposerControllerOptions {
+  /**
+   * Characters the send path prepends to the payload that the input never
+   * shows - currently the `@user ` on a reply. Counted against the same ceiling
+   * so the composer cannot green-light a message Twitch will drop for length.
+   */
+  reservedCharacters?: number;
   onChangeText?: (text: string) => void;
   onSubmit?: () => void;
   canSend?: boolean;
@@ -24,6 +39,7 @@ interface UseChatComposerControllerOptions {
 }
 
 export function useChatComposerController({
+  reservedCharacters = 0,
   onChangeText,
   onSubmit,
   canSend,
@@ -38,9 +54,16 @@ export function useChatComposerController({
     { start: number; end: number } | undefined
   >(undefined);
   const [isFocused, setIsFocused] = useState(false);
+  const [lastSentMessage, setLastSentMessage] = useState('');
 
   const hasText = text.length > 0;
-  const submitEnabled = canSend ?? hasText;
+  const wireLength = messageLength(text) + reservedCharacters;
+  const isOverLimit = wireLength > MAX_MESSAGE_LENGTH;
+  const submitEnabled = (canSend ?? hasText) && !isOverLimit;
+  const remainingCharacters = MAX_MESSAGE_LENGTH - wireLength;
+  const showCharacterCount = wireLength >= CHARACTER_COUNT_VISIBLE_FROM;
+  const hasLastMessage = lastSentMessage.length > 0;
+  const canRecallLastMessage = !hasText && hasLastMessage;
 
   const { wordInfo, isUserMention, isEmoteSearch, isCommandSearch } =
     useWordInfo({
@@ -92,10 +115,23 @@ export function useChatComposerController({
     if (!submitEnabled) {
       return;
     }
+    // Captured before the parent clears the input, so it can be recalled.
+    const sent = text.trim();
+    if (sent) {
+      setLastSentMessage(sent);
+    }
     void impact('light');
     onSubmit?.();
     blurInput();
-  }, [blurInput, onSubmit, submitEnabled]);
+  }, [blurInput, onSubmit, submitEnabled, text]);
+
+  const recallLastMessage = useCallback(() => {
+    if (!lastSentMessage) {
+      return;
+    }
+    writeText(lastSentMessage);
+    focusInput();
+  }, [focusInput, lastSentMessage, writeText]);
 
   const handleEmotePress = useCallback(
     (emote: SanitisedEmote) => {
@@ -140,6 +176,12 @@ export function useChatComposerController({
     showCommandRail,
     wordInfo,
     submitEnabled,
+    isOverLimit,
+    remainingCharacters,
+    showCharacterCount,
+    canRecallLastMessage,
+    hasLastMessage,
+    recallLastMessage,
     handleChangeText,
     handleSelectionChange,
     handleSubmit,

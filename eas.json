@@ -91,6 +91,10 @@
       "env": {
         "EXPO_PUBLIC_APP_VARIANT": "production"
       },
+      "android": {
+        "buildType": "app-bundle",
+        "resourceClass": "medium"
+      },
       "channel": "production"
     }
   },
@@ -101,19 +105,28 @@
         "bundleIdentifier": "foam-tv-internal"
       },
       "android": {
-        "track": "internal"
+        "track": "internal",
+        "releaseStatus": "completed"
       }
     },
     "testflight": {
       "ios": {
         "ascAppId": "6768048560",
         "bundleIdentifier": "foam-tv-testflight"
+      },
+      "android": {
+        "track": "internal",
+        "releaseStatus": "completed"
       }
     },
     "production": {
       "ios": {
         "ascAppId": "6742071860",
         "bundleIdentifier": "foam-tv"
+      },
+      "android": {
+        "track": "production",
+        "releaseStatus": "completed"
       }
     }
   }

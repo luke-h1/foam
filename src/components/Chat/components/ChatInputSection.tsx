@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
@@ -124,7 +124,10 @@ export const ChatInputSection = memo(
           <Animated.View
             style={[
               styles.composerShell,
-              { paddingBottom: insets.bottom + theme.space8 },
+              // offsets the KeyboardStickyView closed:-insets.bottom shift in Chat.tsx
+              Platform.OS === 'ios' && {
+                paddingBottom: insets.bottom + theme.space8,
+              },
               composerAnimatedStyle,
             ]}
           >
@@ -139,6 +142,8 @@ export const ChatInputSection = memo(
                   placeholder={inputPlaceholder}
                   editable
                   canSend={canSend}
+                  // The send path prepends `@user ` for a reply.
+                  reservedCharacters={replyTo ? replyTo.username.length + 2 : 0}
                   prioritizeChannelEmotes
                 />
               </View>
@@ -197,7 +202,8 @@ const styles = StyleSheet.create({
     width: COMPOSER_CONTROL_SIZE,
   },
   composerShell: {
-    backgroundColor: theme.color.surfaceElevated.dark,
+    backgroundColor: theme.colorBlack,
+    paddingBottom: theme.space8,
     paddingHorizontal: theme.space16,
   },
   inputContainer: {

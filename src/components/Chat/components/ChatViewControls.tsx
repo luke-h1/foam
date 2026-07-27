@@ -7,9 +7,14 @@ import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
+import { ChatSearchField } from './ChatSearchField';
+
 interface ChatViewControlsProps {
   hasActiveFilters: boolean;
   onClearFilters: () => void;
+  onCloseSearch: () => void;
+  searchActive: boolean;
+  onSearchQueryChange: (query: string) => void;
   onToggleShowOnlyMentions: () => void;
   showOnlyMentions: boolean;
 }
@@ -18,6 +23,9 @@ export const ChatViewControls = memo(
   ({
     hasActiveFilters,
     onClearFilters,
+    onCloseSearch,
+    searchActive,
+    onSearchQueryChange,
     onToggleShowOnlyMentions,
     showOnlyMentions,
   }: ChatViewControlsProps) => {
@@ -30,8 +38,18 @@ export const ChatViewControls = memo(
     return (
       <View style={styles.wrapper}>
         <View style={styles.searchTray}>
+          {searchActive ? (
+            <ChatSearchField
+              onClose={onCloseSearch}
+              onQueryChange={onSearchQueryChange}
+            />
+          ) : null}
+
           <View style={styles.filterRow}>
             <Button
+              accessibilityLabel={t('controls.mentions')}
+              accessibilityRole='button'
+              accessibilityState={{ selected: showOnlyMentions }}
               style={[
                 styles.filterChip,
                 showOnlyMentions && styles.filterChipActive,
@@ -48,7 +66,12 @@ export const ChatViewControls = memo(
               </Text>
             </Button>
 
-            <Button style={styles.clearChip} onPress={onClearFilters}>
+            <Button
+              accessibilityLabel={t('controls.clear')}
+              accessibilityRole='button'
+              style={styles.clearChip}
+              onPress={onClearFilters}
+            >
               <SymbolView
                 name='xmark'
                 size={14}

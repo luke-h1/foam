@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 
 import { useObservable, useSelector } from '@legendapp/state/react';
 
@@ -23,7 +22,6 @@ import {
   type ProviderPreviewKey,
   type ProviderPreviewValue,
   SCROLLBACK_OPTIONS,
-  type SegmentedControlChangeEvent,
   TIMESTAMP_FORMAT_OPTIONS,
 } from './chatPreferenceTypes';
 
@@ -36,7 +34,6 @@ function samePreviewValues<T extends object>(
 }
 
 export function useChatPreferenceScreenState() {
-  const { t } = useTranslation('preferences');
   const {
     animate,
     chatDelay,
@@ -247,9 +244,8 @@ export function useChatPreferenceScreenState() {
     });
   };
 
-  const handleDensityChange = (event: SegmentedControlChangeEvent) => {
-    const nextDensity =
-      DENSITY_OPTIONS[event.nativeEvent.selectedSegmentIndex]?.value;
+  const handleDensityChange = (index: number) => {
+    const nextDensity = DENSITY_OPTIONS[index]?.value;
 
     if (!nextDensity) {
       return;
@@ -258,95 +254,37 @@ export function useChatPreferenceScreenState() {
     handleDensitySelect(nextDensity);
   };
 
-  const handleDensityValueChange = (value: string) => {
-    const selected = DENSITY_OPTIONS.find(
-      option => t(option.labelKey) === value,
-    );
-
-    if (!selected) {
-      return;
-    }
-
-    handleDensitySelect(selected.value);
-  };
-
-  const handleFontScaleChange = (event: SegmentedControlChangeEvent) => {
-    const option = FONT_SCALE_OPTIONS[event.nativeEvent.selectedSegmentIndex];
+  const handleFontScaleChange = (index: number) => {
+    const option = FONT_SCALE_OPTIONS[index];
     if (option) {
       previewFontScale$.set(option.value);
       update({ chatFontScale: option.value });
     }
   };
 
-  const handleFontScaleValueChange = (value: string) => {
-    const option = FONT_SCALE_OPTIONS.find(
-      option => t(option.labelKey) === value,
-    );
-    if (option) {
-      previewFontScale$.set(option.value);
-      update({ chatFontScale: option.value });
-    }
-  };
-
-  const handleTimestampFormatChange = (event: SegmentedControlChangeEvent) => {
-    const option =
-      TIMESTAMP_FORMAT_OPTIONS[event.nativeEvent.selectedSegmentIndex];
+  const handleTimestampFormatChange = (index: number) => {
+    const option = TIMESTAMP_FORMAT_OPTIONS[index];
     if (option) {
       update({ chatTimestampFormat: option.value });
     }
   };
 
-  const handleTimestampFormatValueChange = (value: string) => {
-    const option = TIMESTAMP_FORMAT_OPTIONS.find(
-      option => t(option.labelKey) === value,
-    );
-    if (option) {
-      update({ chatTimestampFormat: option.value });
-    }
-  };
-
-  const handleDeletedStyleChange = (event: SegmentedControlChangeEvent) => {
-    const option =
-      DELETED_STYLE_OPTIONS[event.nativeEvent.selectedSegmentIndex];
+  const handleDeletedStyleChange = (index: number) => {
+    const option = DELETED_STYLE_OPTIONS[index];
     if (option) {
       update({ deletedMessageStyle: option.value });
     }
   };
 
-  const handleDeletedStyleValueChange = (value: string) => {
-    const option = DELETED_STYLE_OPTIONS.find(
-      option => t(option.labelKey) === value,
-    );
-    if (option) {
-      update({ deletedMessageStyle: option.value });
-    }
-  };
-
-  const handleScrollbackChange = (event: SegmentedControlChangeEvent) => {
-    const option = SCROLLBACK_OPTIONS[event.nativeEvent.selectedSegmentIndex];
+  const handleScrollbackChange = (index: number) => {
+    const option = SCROLLBACK_OPTIONS[index];
     if (option) {
       update({ chatScrollback: option.value });
     }
   };
 
-  const handleScrollbackValueChange = (value: string) => {
-    const option = SCROLLBACK_OPTIONS.find(option => option.label === value);
-    if (option) {
-      update({ chatScrollback: option.value });
-    }
-  };
-
-  const handleChatDelayChange = (event: SegmentedControlChangeEvent) => {
-    const option = CHAT_DELAY_OPTIONS[event.nativeEvent.selectedSegmentIndex];
-    if (option) {
-      update({ chatDelay: option.value });
-    }
-  };
-
-  const handleChatDelayValueChange = (value: string) => {
-    const option = CHAT_DELAY_OPTIONS.find(
-      option => t(option.labelKey) === value,
-    );
+  const handleChatDelayChange = (index: number) => {
+    const option = CHAT_DELAY_OPTIONS[index];
     if (option) {
       update({ chatDelay: option.value });
     }
@@ -357,21 +295,8 @@ export function useChatPreferenceScreenState() {
     update({ showAlternatingChatRows: value });
   };
 
-  const handleEmojiStyleChange = (value: string) => {
-    const option = EMOJI_STYLE_OPTIONS.find(option => option.label === value);
-
-    if (!option) {
-      return;
-    }
-
-    previewEmojiStyle$.set(option.value);
-    update({ emojiStyle: option.value });
-  };
-
-  const handleEmojiStyleChangeByIndex = (
-    event: SegmentedControlChangeEvent,
-  ) => {
-    const option = EMOJI_STYLE_OPTIONS[event.nativeEvent.selectedSegmentIndex];
+  const handleEmojiStyleChange = (index: number) => {
+    const option = EMOJI_STYLE_OPTIONS[index];
 
     if (!option) {
       return;
@@ -390,15 +315,10 @@ export function useChatPreferenceScreenState() {
     emojiIndex,
     fontScaleIndex,
     handleDeletedStyleChange,
-    handleDeletedStyleValueChange,
     handleFontScaleChange,
-    handleFontScaleValueChange,
     handleChatDelayChange,
-    handleChatDelayValueChange,
     handleScrollbackChange,
-    handleScrollbackValueChange,
     handleTimestampFormatChange,
-    handleTimestampFormatValueChange,
     ignoreClearChat,
     scrollbackIndex,
     timestampFormatIndex,
@@ -407,10 +327,8 @@ export function useChatPreferenceScreenState() {
     handleAlternatingRowsToggle,
     handleContextToggle,
     handleDensityChange,
-    handleDensityValueChange,
     handleDisableEmoteAnimationsToggle,
     handleEmojiStyleChange,
-    handleEmojiStyleChangeByIndex,
     handleProviderToggle,
     previewAlternatingRows,
     previewContext,

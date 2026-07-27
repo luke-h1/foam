@@ -5,11 +5,11 @@ import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { theme } from '@app/styles/themes';
 
 import { ChatPreferenceDefaultContent } from './ChatPreferenceDefaultContent';
-import { ChatPreferenceNativeForm } from './ChatPreferenceNativeForm';
+import { ChatPreferenceForm } from './ChatPreferenceForm';
 
 export function ChatPreferenceScreen() {
   if (Platform.OS === 'ios') {
-    return <ChatPreferenceNativeForm />;
+    return <ChatPreferenceForm />;
   }
 
   return <ChatPreferenceScrollContent />;

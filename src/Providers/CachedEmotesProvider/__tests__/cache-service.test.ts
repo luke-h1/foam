@@ -188,6 +188,27 @@ describe('cache-service', () => {
     expect(Image.clearMemoryCache).toHaveBeenCalledTimes(1);
   });
 
+  test('recurring triggers throttle the image-cache wipe; OS signals bypass it', () => {
+    let now = Date.now() + 60_000;
+    const nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => now);
+
+    try {
+      trimCachedEmoteRefsForMemoryPressure({ throttled: true });
+      trimCachedEmoteRefsForMemoryPressure({ throttled: true });
+      expect(Image.clearMemoryCache).toHaveBeenCalledTimes(1);
+
+      // memoryWarning/backgrounding path: unthrottled even inside the window.
+      trimCachedEmoteRefsForMemoryPressure();
+      expect(Image.clearMemoryCache).toHaveBeenCalledTimes(2);
+
+      now += 31_000;
+      trimCachedEmoteRefsForMemoryPressure({ throttled: true });
+      expect(Image.clearMemoryCache).toHaveBeenCalledTimes(3);
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
   test('eviction drops the least-recently-touched unpinned ref', async () => {
     const urls = Array.from(
       { length: 1200 },

@@ -1,6 +1,6 @@
-import { forwardRef, memo, useImperativeHandle } from 'react';
+import { memo, useImperativeHandle } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren, Ref } from 'react';
 
 import type { BottomSheetHandle } from './bottomSheetHandle';
 
@@ -11,47 +11,50 @@ type BottomSheetProps = PropsWithChildren<{
   enableFixedSnapPoints?: boolean;
   isPresented: boolean;
   onDismiss: () => void;
+  ref?: Ref<BottomSheetHandle>;
   showDragIndicator?: boolean;
   snapPoints?: SnapPoint[];
   testID?: string;
 }>;
 
-const BottomSheetComponent = forwardRef<BottomSheetHandle, BottomSheetProps>(
-  function BottomSheetComponent(
-    { children, isPresented, onDismiss, showDragIndicator, testID },
+function BottomSheetComponent({
+  children,
+  isPresented,
+  onDismiss,
+  ref,
+  showDragIndicator,
+  testID,
+}: BottomSheetProps) {
+  const { width: windowWidth } = useWindowDimensions();
+
+  useImperativeHandle(
     ref,
-  ) {
-    const { width: windowWidth } = useWindowDimensions();
+    () => ({
+      requestClose: () => {
+        onDismiss();
+      },
+    }),
+    [onDismiss],
+  );
 
-    useImperativeHandle(
-      ref,
-      () => ({
-        requestClose: () => {
-          onDismiss();
-        },
-      }),
-      [onDismiss],
-    );
+  if (!isPresented) {
+    return null;
+  }
 
-    if (!isPresented) {
-      return null;
-    }
-
-    return (
-      <View
-        testID={testID}
-        style={[styles.fallback, { width: Math.min(windowWidth - 32, 520) }]}
-      >
-        {showDragIndicator ? (
-          <View style={styles.dragHandleRow}>
-            <View style={styles.dragIndicator} />
-          </View>
-        ) : null}
-        {children}
-      </View>
-    );
-  },
-);
+  return (
+    <View
+      testID={testID}
+      style={[styles.fallback, { width: Math.min(windowWidth - 32, 520) }]}
+    >
+      {showDragIndicator ? (
+        <View style={styles.dragHandleRow}>
+          <View style={styles.dragIndicator} />
+        </View>
+      ) : null}
+      {children}
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   dragHandleRow: {

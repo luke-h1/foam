@@ -1,0 +1,24 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.imagecachelimits'
+version = '0.1.0'
+
+android {
+  namespace "expo.modules.imagecachelimits"
+  defaultConfig {
+    versionCode 1
+    versionName "0.1.0"
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
+
+dependencies {
+  // Pinned to expo-image's Glide version so we share its single Glide runtime
+  // rather than resolving a second copy.
+  implementation "com.github.bumptech.glide:glide:5.0.5"
+}

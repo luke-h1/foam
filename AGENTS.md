@@ -93,3 +93,11 @@ Because the rule is off for `package.json`, a genuinely unused dependency won't 
 ## React Doctor: useNativeState immutability override
 
 `react-hooks-js/immutability` is turned off for `BlockedTermsScreen.tsx` and `SavedPhrasesScreen.tsx` in `doctor.config.json`. Their iOS branches bind `@expo/ui/swift-ui` `useNativeState` values to SwiftUI text fields, and writing back through `state.value = ...` is that API's intended write path - the rule misreads those writes as mutation of an immutable hook value. Scope any future exemption to the specific files the same way rather than turning the rule off globally.
+
+## Android: the `@expo/ui` source build is load-bearing
+
+`package.json` sets `expo.autolinking.android.buildFromSource: ["^expo-ui$"]`, which forces `@expo/ui` to compile from source on Android instead of resolving the RNRepo prebuilt. That entry exists so `patches/@expo%2Fui@57.0.2.patch` actually lands - the patch adds `icon = {}` to `SegmentedButtonView.kt`, without which the Compose segmented control renders a checkmark that shunts the label off-centre.
+
+Nothing in `src/` imports `SegmentedButton` by name, so a grep makes both the patch and the autolinking entry look dead. They are not: `src/components/SegmentedControl/SegmentedControl.tsx` imports `@expo/ui/community/segmented-control`, whose `SegmentedControl.android.tsx` renders `SingleChoiceSegmentedButtonRow` / `SegmentedButton` from the jetpack-compose tree. Removing either the patch or the `buildFromSource` entry silently regresses every Android segmented control.
+
+Do not add `minSdkVersion` to the `build.gradle` of a module in `modules/`. `expo-module-gradle-plugin` already sets `minSdk` from the root project (`ProjectConfiguration.kt`), so a local value would pin the module below the app the next time the app's `minSdkVersion` moves.

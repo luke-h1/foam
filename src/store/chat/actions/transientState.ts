@@ -10,6 +10,15 @@ export function getTransientState(
   return chatTransientState$[channelId]!.peek() ?? defaultTransientState;
 }
 
+/**
+ * Search is a momentary view, unlike hidden/highlighted users which are meant
+ * to persist for the session. Without this, returning to a channel restores a
+ * filtered list with no visible cause.
+ */
+export function resetTransientSearch(channelId: string): void {
+  assignTransientState(channelId, { searchActive: false, searchQuery: '' });
+}
+
 export function assignTransientState(
   channelId: string,
   patch: Partial<ChatTransientChannelState>,

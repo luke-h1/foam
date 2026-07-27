@@ -20,6 +20,16 @@ export default function TabsLayout() {
       minimizeBehavior='onScrollDown'
       blurEffect={liquidGlass ? undefined : 'systemChromeMaterial'}
       disableTransparentOnScrollEdge={!liquidGlass}
+      backgroundColor={
+        // Pin the Android tab bar to app tokens; the Material defaults come from
+        // the activity theme, which OEM overlays can recolor away from the
+        // iOS-matched palette.
+        process.env.EXPO_OS === 'android'
+          ? theme.color.backgroundSecondary.dark
+          : undefined
+      }
+      indicatorColor='rgba(255, 255, 255, 0.12)'
+      rippleColor='rgba(255, 255, 255, 0.12)'
     >
       <NativeTabs.Trigger name='following' hidden={!isLoggedIn}>
         <NativeTabs.Trigger.Label>{t('following')}</NativeTabs.Trigger.Label>

@@ -1,7 +1,7 @@
 import type { StyleProp, TextStyle } from 'react-native';
 
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { lightenColor } from '@app/utils/color/lightenColor';
+import { cachedLighten } from '@app/utils/chat/resolveCachedSenderColor/cachedLighten';
 
 import { ChatMessagePressable } from './ChatMessagePressable';
 import { PaintedUsername } from './CosmeticUsername/PaintedUsername';
@@ -55,8 +55,8 @@ export function RichChatMessageUsername({
 
   const fallbackColor =
     cachedSenderColor ??
-    (userstateColor ? lightenColor(userstateColor) : undefined) ??
-    lightenColor(generateRandomTwitchColor(username));
+    (userstateColor ? cachedLighten(userstateColor) : undefined) ??
+    cachedLighten(generateRandomTwitchColor(username));
 
   const paintedUsername = (
     <PaintedUsername

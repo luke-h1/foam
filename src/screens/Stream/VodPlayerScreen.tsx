@@ -1,16 +1,17 @@
 import { useCallback, useEffect } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { SystemBars } from 'react-native-edge-to-edge';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { router, useFocusEffect } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { StatusBar } from 'expo-status-bar';
 
 import { IconButton } from '@app/components/IconButton/IconButton';
 import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
+import { PlayerBackButton } from '@app/screens/Stream/components/PlayerBackButton';
 import { theme } from '@app/styles/themes';
 
 import { getLiveStreamLayoutMetrics } from './liveStreamLayout/getLiveStreamLayoutMetrics';
@@ -87,7 +88,9 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
 
   return (
     <View style={styles.container}>
-      <StatusBar style='light' />
+      {process.env.EXPO_OS === 'android' && isLandscape ? (
+        <SystemBars hidden={{ navigationBar: true, statusBar: true }} />
+      ) : null}
       <View
         style={[
           styles.videoContainer,
@@ -109,6 +112,17 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
       </View>
 
       <View
+        style={{
+          position: 'absolute',
+          zIndex: 2,
+          top: insets.top + theme.space12,
+          left: theme.space16 + landscapeInsetLeft,
+        }}
+      >
+        <PlayerBackButton />
+      </View>
+
+      <View
         style={[
           styles.closeButtonWrap,
           {
@@ -126,13 +140,6 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
           }}
           label={t('sleepTimer')}
           onPress={() => showSleepTimerMenu(sleepTimer)}
-          size='2xl'
-          style={styles.closeButton}
-        />
-        <IconButton
-          icon={{ type: 'symbol', name: 'xmark', size: 18 }}
-          label={t('closeVod')}
-          onPress={() => router.back()}
           size='2xl'
           style={styles.closeButton}
         />

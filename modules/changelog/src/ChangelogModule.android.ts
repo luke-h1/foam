@@ -1,15 +1,33 @@
 import Constants from 'expo-constants';
+import { createMMKV } from 'react-native-mmkv';
 
 import type {
   ChangelogNativeModule,
   ChangelogPresentOptions,
 } from './Changelog.types';
+import { presentChangelogAndroid } from './changelogAndroidPresenter';
 
-let latestSeenAppVersion: string | null = null;
-let latestSeenOTAVersion: string | null = null;
+/**
+ * Module-owned storage keeps `modules/changelog` free of app-layer imports,
+ * mirroring how the iOS native module owns its seen-version persistence.
+ */
+const storage = createMMKV({ id: 'changelog' });
+
+const SEEN_APP_VERSION_KEY = 'changelog_seen_app_version';
+const SEEN_OTA_VERSION_KEY = 'changelog_seen_ota_version';
 
 function getCurrentAppVersion(): string {
   return Constants.expoConfig?.version ?? 'android';
+}
+
+function markSeen(options: ChangelogPresentOptions): void {
+  if (options.otaVersion) {
+    storage.set(SEEN_OTA_VERSION_KEY, options.otaVersion);
+    return;
+  }
+
+  const version = options.version ?? getCurrentAppVersion();
+  storage.set(SEEN_APP_VERSION_KEY, version);
 }
 
 const ChangelogModule: ChangelogNativeModule = {
@@ -18,27 +36,23 @@ const ChangelogModule: ChangelogNativeModule = {
   },
 
   getLatestSeenAppVersion(): string | null {
-    return latestSeenAppVersion;
+    return storage.getString(SEEN_APP_VERSION_KEY) ?? null;
   },
 
   getLatestSeenOTAVersion(): string | null {
-    return latestSeenOTAVersion;
+    return storage.getString(SEEN_OTA_VERSION_KEY) ?? null;
   },
 
   async present(options: ChangelogPresentOptions): Promise<void> {
-    const version =
-      options.otaVersion ?? options.version ?? getCurrentAppVersion();
-
-    if (options.otaVersion) {
-      latestSeenOTAVersion = options.otaVersion;
-    } else {
-      latestSeenAppVersion = version;
+    const presented = await presentChangelogAndroid(options);
+    if (presented) {
+      markSeen(options);
     }
   },
 
   resetSeenVersions(): void {
-    latestSeenAppVersion = null;
-    latestSeenOTAVersion = null;
+    storage.remove(SEEN_APP_VERSION_KEY);
+    storage.remove(SEEN_OTA_VERSION_KEY);
   },
 };
 

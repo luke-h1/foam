@@ -148,6 +148,7 @@
     "expo-screen-orientation": "~57.0.0",
     "expo-secure-store": "~57.0.0",
     "expo-sensors": "~57.0.1",
+    "expo-splash-screen": "~57.0.4",
     "expo-status-bar": "~57.0.0",
     "expo-store-review": "~57.0.0",
     "expo-symbols": "~57.0.0",
@@ -283,6 +284,13 @@
     }
   },
   "expo": {
+    "autolinking": {
+      "android": {
+        "buildFromSource": [
+          "^expo-ui$"
+        ]
+      }
+    },
     "install": {
       "exclude": [
         "@sentry/react-native"
@@ -304,7 +312,8 @@
     "expo-image@57.0.0": "patches/expo-image@57.0.0.patch",
     "expo-modules-jsi@57.0.0": "patches/expo-modules-jsi@57.0.0.patch",
     "@sentry/core@10.57.0": "patches/@sentry%2Fcore@10.57.0.patch",
-    "@swmansion/react-native-bottom-sheet@0.16.1": "patches/@swmansion%2Freact-native-bottom-sheet@0.16.1.patch"
+    "@swmansion/react-native-bottom-sheet@0.16.1": "patches/@swmansion%2Freact-native-bottom-sheet@0.16.1.patch",
+    "@expo/ui@57.0.2": "patches/@expo%2Fui@57.0.2.patch"
   },
   "reanimated": {
     "staticFeatureFlags": {

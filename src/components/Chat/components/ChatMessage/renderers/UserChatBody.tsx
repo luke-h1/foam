@@ -13,7 +13,7 @@ import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { getMessageStructure } from '@app/utils/chat/deriveChatBody/getMessageStructure';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { lightenColor } from '@app/utils/color/lightenColor';
+import { cachedLighten } from '@app/utils/chat/resolveCachedSenderColor/cachedLighten';
 
 import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
 import type { BadgePressData } from '../RichChatMessage.types';
@@ -105,8 +105,8 @@ export function UserChatBody({
   const renderInline = canFlowInline && !hasPaint && !bodyContainsEmotes;
   const inlineUsernameColor =
     cachedSenderColor ??
-    (userstateColor ? lightenColor(userstateColor) : undefined) ??
-    (username ? lightenColor(generateRandomTwitchColor(username)) : undefined);
+    (userstateColor ? cachedLighten(userstateColor) : undefined) ??
+    (username ? cachedLighten(generateRandomTwitchColor(username)) : undefined);
   const actionColor = isAction ? inlineUsernameColor : undefined;
   const bodyCanFlowInline =
     canFlowInline && !renderInline && !bodyContainsEmotes;

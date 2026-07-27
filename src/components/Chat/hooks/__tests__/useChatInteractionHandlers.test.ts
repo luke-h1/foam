@@ -50,6 +50,7 @@ function renderOverlayActions() {
   const openEmotePreview = jest.fn();
   const openEmoteSheet = jest.fn();
   const openMessageActions = jest.fn();
+  const openMessageSearch = jest.fn();
   const openSavedPhrasesSheet = jest.fn();
   const openSettingsSheet = jest.fn();
   const openUserActions = jest.fn();
@@ -59,6 +60,7 @@ function renderOverlayActions() {
     openEmotePreview,
     openEmoteSheet,
     openMessageActions,
+    openMessageSearch,
     openSavedPhrasesSheet,
     openSettingsSheet,
     openUserActions,

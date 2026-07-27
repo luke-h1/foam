@@ -41,6 +41,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
+import { theme } from '@app/styles/themes';
 import { BodyScrollView } from '../BodyScrollView/BodyScrollView';
 
 type ListStyle = 'grouped' | 'auto';
@@ -177,7 +178,12 @@ function InnerList({
         }}
         refreshControl={
           hasSubscribers ? (
-            <RefreshControl refreshing={refreshing} onRefresh={refresh} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={refresh}
+              colors={[theme.colorPrimary]}
+              progressBackgroundColor={theme.color.backgroundSecondary.dark}
+            />
           ) : undefined
         }
         {...props}

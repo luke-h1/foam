@@ -1,5 +1,9 @@
-import { ActionSheetIOS, Alert, Platform } from 'react-native';
+import { ActionSheetIOS, Platform } from 'react-native';
 
+import {
+  presentActionMenu,
+  type ShowActionMenuOptions,
+} from '../actionMenuStore';
 import { showActionMenu } from '../showActionMenu';
 
 const originalOS = Platform.OS;
@@ -8,6 +12,12 @@ afterEach(() => {
   Platform.OS = originalOS;
   jest.restoreAllMocks();
 });
+
+jest.mock('../actionMenuStore', () => ({
+  presentActionMenu: jest.fn(),
+}));
+
+const presentActionMenuMock = jest.mocked(presentActionMenu);
 
 describe('showActionMenu', () => {
   test('presents an ActionSheetIOS sheet on iOS and forwards the pressed action', () => {
@@ -29,6 +39,7 @@ describe('showActionMenu', () => {
       cancelButtonIndex: 1,
     });
     expect(onPress).toHaveBeenCalledTimes(1);
+    expect(presentActionMenuMock).not.toHaveBeenCalled();
   });
 
   test('does nothing when cancel is chosen on iOS', () => {
@@ -47,10 +58,9 @@ describe('showActionMenu', () => {
     expect(onPress).not.toHaveBeenCalled();
   });
 
-  test('presents an Alert on Android with a trailing cancel button', () => {
+  test('presents the action menu sheet on Android', () => {
     Platform.OS = 'android';
     const onPress = jest.fn();
-    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 
     showActionMenu({
       title: 'Stream',
@@ -58,23 +68,21 @@ describe('showActionMenu', () => {
       cancelLabel: 'Cancel',
     });
 
-    const [title, message, buttons] = alertSpy.mock.calls[0]!;
-    expect(title).toBe('Stream');
-    expect(message).toBeUndefined();
-    expect(buttons).toEqual([
-      { text: 'Share', onPress },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-    buttons![0]!.onPress?.();
-    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(presentActionMenuMock).toHaveBeenCalledTimes(1);
+    expect(
+      presentActionMenuMock.mock.calls[0]![0],
+    ).toEqual<ShowActionMenuOptions>({
+      title: 'Stream',
+      actions: [{ label: 'Share', onPress }],
+      cancelLabel: 'Cancel',
+    });
   });
 
-  test('keeps a cancel button on every page when actions overflow on Android', () => {
+  test('presents all Android actions in a single sheet without paging', () => {
     Platform.OS = 'android';
     const onFirst = jest.fn();
     const onSecond = jest.fn();
     const onThird = jest.fn();
-    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 
     showActionMenu({
       title: 'Warn user',
@@ -86,25 +94,16 @@ describe('showActionMenu', () => {
       cancelLabel: 'Cancel',
     });
 
-    const firstPageButtons = alertSpy.mock.calls[0]![2]!;
     expect(
-      firstPageButtons.map(button => ({
-        text: button.text,
-        style: button.style,
-      })),
-    ).toEqual([
-      { text: 'Spam', style: undefined },
-      { text: 'More', style: undefined },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-
-    firstPageButtons[1]!.onPress?.();
-
-    const secondPageButtons = alertSpy.mock.calls[1]![2]!;
-    expect(secondPageButtons).toEqual([
-      { text: 'Harassment', onPress: onSecond },
-      { text: 'Other', onPress: onThird },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+      presentActionMenuMock.mock.calls[0]![0],
+    ).toEqual<ShowActionMenuOptions>({
+      title: 'Warn user',
+      actions: [
+        { label: 'Spam', onPress: onFirst },
+        { label: 'Harassment', onPress: onSecond },
+        { label: 'Other', onPress: onThird },
+      ],
+      cancelLabel: 'Cancel',
+    });
   });
 });

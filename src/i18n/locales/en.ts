@@ -8,7 +8,6 @@ const en = {
     delete: 'Delete',
     dismiss: 'Dismiss',
     goBack: 'Go back',
-    more: 'More',
     next: 'Next',
     noInternetConnection: 'No internet connection',
     done: 'Done',
@@ -26,6 +25,10 @@ const en = {
     nothingHereYetDescription:
       'Refresh to try again, or come back in a moment.',
     showPlayerControls: 'Show player controls',
+    permissionRequired: 'Permission required',
+    mediaLibraryPermissionMessage:
+      'Allow Foam to save images and clips to your photo gallery in Settings.',
+    openSettings: 'Open Settings',
   },
 
   chat: {
@@ -115,6 +118,7 @@ const en = {
       replyToUser: 'Reply to {{username}}...',
       replyingTo: 'Replying to',
       openEmotePicker: 'Open emote picker',
+      recallLastMessage: 'Recall last message',
       sendMessage: 'Send message',
       openChatSettings: 'Open chat settings',
       pinNextMessage: 'Pin next message',
@@ -206,6 +210,7 @@ const en = {
         'No chatters seen yet. Users appear here once they send a message.',
     },
     settingsSheet: {
+      searchMessages: 'Search messages',
       title: 'Settings',
       sectionAppearance: 'Appearance',
       sectionActions: 'Actions',
@@ -228,6 +233,8 @@ const en = {
       syncToLiveSubtitle: 'Jump back to the live edge',
     },
     controls: {
+      closeSearch: 'Close search',
+      searchMessages: 'Search messages',
       mentions: 'Mentions',
       clear: 'Clear',
       jumpToLatest: 'Jump to latest',
@@ -381,6 +388,7 @@ const en = {
 
   search: {
     recentSearches: 'RECENT SEARCHES',
+    clearSearch: 'Clear search',
     clearSearchHistory: 'Clear Search History',
     clearSearchHistoryConfirm:
       'Are you sure you want to clear all your recent searches?',
@@ -399,9 +407,7 @@ const en = {
     hideChat: 'Hide chat',
     showChat: 'Show chat',
     shareClip: 'Share clip',
-    closeClip: 'Close clip',
     shareUser: 'Share {{name}}',
-    closeStreamerProfile: 'Close streamer profile',
     clips: 'Clips',
     clipsLoaded: '{{count}} loaded',
     topClips: 'Top clips',
@@ -434,7 +440,6 @@ const en = {
     vodsUnavailable: 'VODs unavailable',
     vodsUnavailableDescription: 'Could not load VODs for this channel.',
     openVod: 'Open {{title}}',
-    closeVod: 'Close VOD',
     vodNotFound: 'VOD not found',
     vodNotFoundDescription: 'Could not open this VOD.',
     noClips: 'No clips found',
