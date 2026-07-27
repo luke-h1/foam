@@ -8,12 +8,10 @@ const {
 } = require('@expo/config-plugins');
 
 /**
- * The generated AppTheme keeps Expo's template colorPrimary and the AppCompat
- * default teal colorAccent, so native widget accents - TextInput cursors,
- * selection handles, and the selection highlight - render off-brand on every
- * Android text field. Pin both to the app accent, split per scheme to match
- * `primaryAccent` in src/styles/themes.ts (Theme.EdgeToEdge is DayNight-based,
- * so values-night applies in dark mode).
+ * The generated AppTheme keeps the AppCompat default teal accent, so cursors and
+ * selection handles render off-brand in every Android text field. Pin them to
+ * `primaryAccent` from src/styles/themes.ts, split per scheme (Theme.EdgeToEdge
+ * is DayNight-based, so values-night covers dark mode).
  */
 const LIGHT_ACCENT_COLOR = '#1083FE';
 const DARK_ACCENT_COLOR = '#2E86FF';
@@ -53,11 +51,8 @@ const withAndroidAccentColor = config => {
         add: true,
         name: 'colorAccent',
         value: '@color/colorAccent',
-        /**
-         * Match AppTheme by name only; matching on name + parent creates a
-         * duplicate <style> group (AAPT2 build failure) the moment the
-         * template's parent theme changes.
-         */
+        // name-only match; name+parent duplicates the style group when the
+        // template's parent theme changes
         parent: AndroidConfig.Styles.getAppThemeGroup(),
       },
     );

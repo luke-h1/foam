@@ -124,10 +124,7 @@ export const ChatInputSection = memo(
           <Animated.View
             style={[
               styles.composerShell,
-              /**
-               * Offsets the KeyboardStickyView `closed: -insets.bottom` shift
-               * in Chat.tsx so the send row clears the home indicator.
-               */
+              // offsets the KeyboardStickyView closed:-insets.bottom shift in Chat.tsx
               Platform.OS === 'ios' && {
                 paddingBottom: insets.bottom + theme.space8,
               },

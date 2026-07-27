@@ -430,9 +430,8 @@ const IMAGE_CACHE_CLEAR_THROTTLE_MS = 30_000;
 let lastImageCacheClearAt = 0;
 
 /**
- * The throttle only applies to recurring triggers (5s poll, repeated
- * onTrimMemory events); an OS `memoryWarning` or a background transition is a
- * "free memory now" signal and must never skip the image-cache wipe.
+ * The throttle covers recurring triggers only (5s poll, repeated onTrimMemory);
+ * `memoryWarning` and backgrounding are free-memory-now signals and always wipe.
  */
 export function trimCachedEmoteRefsForMemoryPressure(
   clearImageCache = true,

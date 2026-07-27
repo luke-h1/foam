@@ -10,19 +10,15 @@ import expo.modules.kotlin.modules.ModuleDefinition
 class ImageMemoryPressureModule : Module() {
 
   /**
-   * The context the callback was registered on. `Context.registerComponentCallbacks`
-   * lands on the Application, so if `appContext.reactContext` is already gone when
-   * `OnDestroy` runs (JS reload), unregistering through it again would silently skip
-   * and leak the callback into a destroyed module. Unregister on the same reference.
+   * `registerComponentCallbacks` lands on the Application; unregister on the same
+   * reference, since `appContext.reactContext` can already be null in `OnDestroy`.
    */
   private var registeredContext: Context? = null
 
   private val trimCallback = object : ComponentCallbacks2 {
     override fun onTrimMemory(level: Int) {
-      // Android 14+ only delivers TRIM_MEMORY_UI_HIDDEN / TRIM_MEMORY_BACKGROUND /
-      // TRIM_MEMORY_COMPLETE; the RUNNING_* levels still arrive on Android 13 and
-      // below. Forward everything from RUNNING_LOW up and let JS pick the trim
-      // strength from the level.
+      // Android 14+ only delivers UI_HIDDEN/BACKGROUND/COMPLETE; the RUNNING_*
+      // band still arrives on 13 and below. Forward all, JS picks the strength.
       if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
         sendEvent("onMemoryPressure", mapOf("level" to level))
       }
@@ -62,12 +58,9 @@ class ImageMemoryPressureModule : Module() {
   }
 
   /**
-   * System-wide headroom above the low-memory-killer threshold
-   * (`availMem - threshold`). Bitmap pixels and the Hermes heap are native
-   * allocations, so Java-heap headroom never reflects image pressure; distance
-   * to the LMK threshold is the closest Android analog of iOS
-   * `os_proc_available_memory()`. Returns `1` when at/past the threshold so the
-   * JS poll treats it as low (`0` means unavailable / monitoring disabled).
+   * System headroom above the low-memory-killer threshold. Bitmap pixels and the
+   * Hermes heap are native allocations, so Java-heap headroom never reflects image
+   * pressure. Returns `1` when at/past the threshold (`0` means unavailable).
    */
   private fun availableMemoryBytes(): Double {
     val activityManager =
