@@ -162,7 +162,7 @@
         "react-native-performance": "6.0.0",
         "react-native-url-polyfill": "^2.0.0",
         "react-test-renderer": "19.2.3",
-        "reassure": "1.4.1",
+        "reassure": "^1.6.0",
         "storybook": "^10.3.6",
         "svgo": "^4.0.0",
         "tsx": "^4.20.3",
@@ -391,15 +391,15 @@
 
     "@callstack/licenses": ["@callstack/licenses@0.3.2", "", { "dependencies": { "glob": "^7.1.3" } }, "sha512-aZh8GZZZ0sbMf+JUfwlaWqq2sqMHCjj0DB8RNdgLMZD8JG7w9cB4niG+9sKQ5GKRgJ4ZVSMh2JPdxAUlJp4mCA=="],
 
-    "@callstack/reassure-cli": ["@callstack/reassure-cli@1.4.1", "", { "dependencies": { "@callstack/reassure-compare": "1.4.1", "@callstack/reassure-logger": "1.4.1", "chalk": "4.1.2", "simple-git": "^3.32.3", "yargs": "^17.7.2" }, "bin": { "reassure": "lib/commonjs/bin.js" } }, "sha512-NKJi/WoLiDkn3FnYJhOk+FhWsdvrytrAfHRqexrCeyVfwpgbM+laPWto2+EKbfKdrHWBqWgbBOWyFoMiOAXcVg=="],
+    "@callstack/reassure-cli": ["@callstack/reassure-cli@1.6.0", "", { "dependencies": { "@callstack/reassure-compare": "1.6.0", "@callstack/reassure-logger": "1.6.0", "chalk": "4.1.2", "simple-git": "^3.36.0", "yargs": "^17.7.2" }, "bin": { "reassure": "lib/commonjs/bin.js" } }, "sha512-GO32KZ295S4s2IBrfr4obQO7S4g/cAHtaFXCBHwfV7U2gyjGsFRM/4h1c4haxBbeky852TnEsZCPkudhs9F+zQ=="],
 
-    "@callstack/reassure-compare": ["@callstack/reassure-compare@1.4.1", "", { "dependencies": { "@callstack/reassure-logger": "1.4.1", "ts-markdown-builder": "0.5.0", "ts-regex-builder": "^1.8.2", "zod": "^4.1.12" } }, "sha512-qJgASbKlBWA37XSN5b/uVAvc524dd9s3grumCKabI2GHkA5w5G6WWI11DnJPzjBnoZ/oIgNSrOm2sm6UMEvsVQ=="],
+    "@callstack/reassure-compare": ["@callstack/reassure-compare@1.6.0", "", { "dependencies": { "@callstack/reassure-logger": "1.6.0", "mathjs": "^15.2.0", "ts-markdown-builder": "0.6.0", "ts-regex-builder": "^1.8.2", "zod": "^4.4.3" } }, "sha512-wseMpUagjrd2T9uJ8gR7dACe0lvY7MibEZM4HzQ8Q3Tw7dLbQp25hnlFddv4YupCpE8uBiYknr/XbAmp49b5rw=="],
 
-    "@callstack/reassure-danger": ["@callstack/reassure-danger@1.4.1", "", {}, "sha512-TTfliolOt8Tfq4yu8vdj4lRdki5Vuvwxj22K2+xpAjxiF2rT4BL6gwM3YIPVUwuQMN3kQ8d8TuGJ4Wlc3zpAUA=="],
+    "@callstack/reassure-danger": ["@callstack/reassure-danger@1.6.0", "", {}, "sha512-m1/OXw6M12jtCmtokkPDE5qWm6tzzgWjH7Boa0y8YE8poirh7rMzum+/bF9HLfVPkvaY+MGdxQYjQXvtdIMUXQ=="],
 
-    "@callstack/reassure-logger": ["@callstack/reassure-logger@1.4.1", "", { "dependencies": { "chalk": "4.1.2" } }, "sha512-2uB6OBk0/IdSXUpdTsMcN40d3ly5xWWPRjs0G4zEr37tyHB0lmJVuQIR5elUjIs+fTuK48PVuqW/4+Yce7WlFA=="],
+    "@callstack/reassure-logger": ["@callstack/reassure-logger@1.6.0", "", { "dependencies": { "chalk": "4.1.2" } }, "sha512-cDcCkDUZB6Q4p37KViSKAeU5fDoAUbJN2OpcPm7Oddv9Iqh7FTs/kOphW9PrZoKHeaM7EJ9f+AQgW15/FFsSLg=="],
 
-    "@callstack/reassure-measure": ["@callstack/reassure-measure@1.4.1", "", { "dependencies": { "@callstack/reassure-logger": "1.4.1", "mathjs": "^15.1.0", "pretty-format": "^30.2.0" }, "peerDependencies": { "react": ">=18.0.0" } }, "sha512-EPUKuMgzz0bccf/nn+6A5PhunZS/K3h0rpvhdOsPzGl3abjROoPi7bQN/ipURsLwle+OonqLCigcOK/CnndLEg=="],
+    "@callstack/reassure-measure": ["@callstack/reassure-measure@1.6.0", "", { "dependencies": { "@callstack/reassure-logger": "1.6.0", "mathjs": "^15.2.0", "pretty-format": "^30.4.1", "react-test-config": "^1.0.0" }, "peerDependencies": { "react": ">=18.0.0" } }, "sha512-05gIhKYk8/7Ka02hjiKYmE+9i0/Rz3NZGTnpjnK9IKRJ6819h12XGmNBsPkzZGqFUei3Vz8NSxoq4SA8kuz7SA=="],
 
     "@commitlint/cli": ["@commitlint/cli@21.0.2", "", { "dependencies": { "@commitlint/format": "^21.0.1", "@commitlint/lint": "^21.0.2", "@commitlint/load": "^21.0.2", "@commitlint/read": "^21.0.2", "@commitlint/types": "^21.0.1", "tinyexec": "^1.0.0", "yargs": "^18.0.0" }, "bin": { "commitlint": "cli.js" } }, "sha512-YMmfLbqBg+ZRvvmPhc+cilSQFrh/AgzVgCT1U/OifmUZEwPbvCtA8rN//YNaF9d5eoZphxVMGYtmwA2QgQORgg=="],
 
@@ -3153,13 +3153,15 @@
 
     "react-style-singleton": ["react-style-singleton@2.2.3", "", { "dependencies": { "get-nonce": "^1.0.0", "tslib": "^2.0.0" }, "peerDependencies": { "@types/react": "*", "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react"] }, "sha512-b6jSvxvVnyptAiLjbkWLE/lOnR4lfTtDAl+eUC7RZy+QQWc6wRzIV2CE6xBuMmDxc2qIihtDCZD5NPOFl7fRBQ=="],
 
+    "react-test-config": ["react-test-config@1.0.0", "", { "peerDependencies": { "react": "*" } }, "sha512-uoYlGns8YSB/FS0aAzUVg/wgS4z882rygig4gcwf0hEzAWEM6O2zN2r3gYLyYwm8MMRuqwLUOBWWq60K5/pBPQ=="],
+
     "react-test-renderer": ["react-test-renderer@19.2.3", "", { "dependencies": { "react-is": "^19.2.3", "scheduler": "^0.27.0" }, "peerDependencies": { "react": "^19.2.3" } }, "sha512-TMR1LnSFiWZMJkCgNf5ATSvAheTT2NvKIwiVwdBPHxjBI7n/JbWd4gaZ16DVd9foAXdvDz+sB5yxZTwMjPRxpw=="],
 
     "readable-stream": ["readable-stream@3.6.2", "", { "dependencies": { "inherits": "^2.0.3", "string_decoder": "^1.1.1", "util-deprecate": "^1.0.1" } }, "sha512-9u/sniCrY3D5WdsERHzHE4G2YCXqoG5FTHUiCC4SIbr6XcLZBY05ya9EKjYek9O5xOAwjGq+1JdGBAS7Q9ScoA=="],
 
     "readable-web-to-node-stream": ["readable-web-to-node-stream@3.0.4", "", { "dependencies": { "readable-stream": "^4.7.0" } }, "sha512-9nX56alTf5bwXQ3ZDipHJhusu9NTQJ/CVPtb/XHAJCXihZeitfJvIRS4GqQ/mfIoOE3IelHMrpayVrosdHBuLw=="],
 
-    "reassure": ["reassure@1.4.1", "", { "dependencies": { "@callstack/reassure-cli": "1.4.1", "@callstack/reassure-compare": "1.4.1", "@callstack/reassure-danger": "1.4.1", "@callstack/reassure-measure": "1.4.1", "import-local": "^3.2.0" }, "bin": { "reassure": "lib/commonjs/bin/reassure.js" } }, "sha512-EeW23/ci4mGHsv4WDSK9jTzzi5yCu3Gdf3GgugKvi5NrqxCiVubiTlcz8bjfpipSFEUK+mpDtlhyJI/6Kmkgjg=="],
+    "reassure": ["reassure@1.6.0", "", { "dependencies": { "@callstack/reassure-cli": "1.6.0", "@callstack/reassure-compare": "1.6.0", "@callstack/reassure-danger": "1.6.0", "@callstack/reassure-measure": "1.6.0" }, "bin": { "reassure": "lib/commonjs/bin/reassure.js" } }, "sha512-DjfhKCqIFcmb1zAkRFrM4eDtMG63kbs6/4tjP6QOqf+mnREfQIoUX4xM8D5sF6GfkjNnehRM5pk8Bi/vaW3eyA=="],
 
     "recast": ["recast@0.23.12", "", { "dependencies": { "ast-types": "^0.16.1", "esprima": "~4.0.0", "source-map": "~0.6.1", "tiny-invariant": "^1.3.3", "tslib": "^2.0.1" } }, "sha512-dEWRjcINDu/F4l2dYx57ugBtD7HV9KXESyxhzw/MqWLeglJrsjJKqACPyUPg+6AF8mIgm+Zi0dZ3ACoIg+QtpA=="],
 
@@ -3485,7 +3487,7 @@
 
     "ts-log": ["ts-log@2.2.7", "", {}, "sha512-320x5Ggei84AxzlXp91QkIGSw5wgaLT6GeAH0KsqDmRZdVWW2OiSeVvElVoatk3f7nicwXlElXsoFkARiGE2yg=="],
 
-    "ts-markdown-builder": ["ts-markdown-builder@0.5.0", "", {}, "sha512-/2pzAFjGwk5fUR8ftFMhCOm/zmoqtpYWK6209j3YPfgWF2I+eYY6PKpR0mBJte6s8McnkQ/T92fV+IJg6bdxyw=="],
+    "ts-markdown-builder": ["ts-markdown-builder@0.6.0", "", {}, "sha512-O0ZmHM5fLRgO+FkXol2yCPV5oqbNA3InmuuuXdbwT+j249l+30Ty6gL4B540Ru/D2JEY91qwS+L3irUfDivfjQ=="],
 
     "ts-regex-builder": ["ts-regex-builder@1.8.2", "", {}, "sha512-Y8HovHFheDKm/jgLIWSO8o81xA/I9O5AGc3/vNG1sVSskatOifr3SQzAsatBXGLjL3nYhQif1MpwQRS5GF8ADg=="],
 
