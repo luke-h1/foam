@@ -347,6 +347,7 @@ const config: ExpoConfig = {
     './src/plugins/withAndroidMainActivityConfigChanges.js',
     './src/plugins/withAndroidAllowBackupReplace.js',
     './src/plugins/withAndroidAccentColor.js',
+    './src/plugins/withAndroidLibsActivityTheme.js',
     './plugins/with-fix-dev-launcher-cycle.js',
     // ['./src/plugins/withAnimatedWebPSupport.js'],
     // ['./src/plugins/withFastImageWebPSupportIOS.js'],
