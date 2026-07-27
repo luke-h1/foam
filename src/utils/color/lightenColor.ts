@@ -1,9 +1,23 @@
 import { hexToRgb } from './hexToRgb';
 import { rgbToHex } from './rgbToHex';
 
-// Chat renders on a near-black surface; anything below this HSL lightness
-// reads as illegible mud (e.g. Twitch default dark blue/red usernames).
-const MIN_LIGHTNESS = 0.55;
+/**
+ * The composited chat row surface. A lightness floor alone doesn't say anything
+ * about legibility - Twitch's default blue clears one and still lands near 2.6:1
+ * here - so colours are corrected against the real background instead.
+ *
+ * Tinted highlight rows sit slightly lighter than this, so their ratio comes out
+ * a little under the target; the plain row is what almost every message uses.
+ */
+const CHAT_SURFACE_RGB = { r: 20, g: 27, b: 35 };
+
+/**
+ * WCAG AA for normal-size text. Chasing a higher ratio would wash the hues
+ * together and usernames would stop being recognisable at a glance.
+ */
+const MIN_CONTRAST_RATIO = 4.5;
+
+const CONTRAST_SEARCH_STEPS = 16;
 
 export function lightenColor(hex: string): string {
   hex = rgbToHex(hex);
@@ -18,14 +32,65 @@ export function lightenColor(hex: string): string {
     return hex;
   }
 
-  const { h, s, l } = rgbToHsl(rgb.r, rgb.g, rgb.b);
-
-  if (l >= MIN_LIGHTNESS) {
+  if (contrastRatio(rgb, CHAT_SURFACE_RGB) >= MIN_CONTRAST_RATIO) {
     return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
   }
 
-  const { r, g, b } = hslToRgb(h, s, MIN_LIGHTNESS);
-  return `rgb(${r}, ${g}, ${b})`;
+  const { h, s, l } = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+  /**
+   * Binary search for the *lowest* lightness that clears the target, so a
+   * colour is nudged just far enough to be readable and keeps its identity
+   * rather than being flattened towards white.
+   */
+  let low = l;
+  let high = 1;
+  let best = hslToRgb(h, s, 1);
+
+  for (let step = 0; step < CONTRAST_SEARCH_STEPS; step += 1) {
+    const mid = (low + high) / 2;
+    const candidate = hslToRgb(h, s, mid);
+
+    if (contrastRatio(candidate, CHAT_SURFACE_RGB) >= MIN_CONTRAST_RATIO) {
+      best = candidate;
+      high = mid;
+    } else {
+      low = mid;
+    }
+  }
+
+  return `rgb(${best.r}, ${best.g}, ${best.b})`;
+}
+
+function relativeLuminance({
+  r,
+  g,
+  b,
+}: {
+  r: number;
+  g: number;
+  b: number;
+}): number {
+  const channel = (value: number) => {
+    const scaled = value / 255;
+    return scaled <= 0.03928
+      ? scaled / 12.92
+      : ((scaled + 0.055) / 1.055) ** 2.4;
+  };
+
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+}
+
+function contrastRatio(
+  a: { r: number; g: number; b: number },
+  b: { r: number; g: number; b: number },
+): number {
+  const luminanceA = relativeLuminance(a);
+  const luminanceB = relativeLuminance(b);
+  const lighter = Math.max(luminanceA, luminanceB);
+  const darker = Math.min(luminanceA, luminanceB);
+
+  return (lighter + 0.05) / (darker + 0.05);
 }
 
 function rgbToHsl(

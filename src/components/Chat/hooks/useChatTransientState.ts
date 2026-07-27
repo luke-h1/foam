@@ -26,6 +26,8 @@ export function useChatTransientState(channelId: string) {
     hiddenPhrases: transientHiddenPhrases,
     hiddenUsers,
     highlightedUsers,
+    searchActive,
+    searchQuery,
     showOnlyMentions,
   } = useTransientChannelFilters(channelId);
   const blockedTerms = usePreference('blockedTerms');
@@ -125,6 +127,13 @@ export function useChatTransientState(channelId: string) {
     });
   }, [channelId]);
 
+  const handleSearchQueryChange = useCallback(
+    (searchQuery: string) => {
+      assignTransientState(channelId, { searchQuery });
+    },
+    [channelId],
+  );
+
   const setHighlightedReplyTargetMessageId = (
     value: string | null | ((current: string | null) => string | null),
   ) => {
@@ -138,6 +147,7 @@ export function useChatTransientState(channelId: string) {
 
   return {
     handleClearFilters,
+    handleSearchQueryChange,
     handleToggleShowOnlyMentions,
     hiddenPhrases,
     hiddenUsers,
@@ -147,6 +157,8 @@ export function useChatTransientState(channelId: string) {
     highlightedUsers,
     hydratedVisibleAssetKeysRef,
     pendingVisibleMessagesRef,
+    searchActive,
+    searchQuery,
     setHighlightedReplyTargetMessageId,
     showOnlyMentions,
     toggleHighlightedUser,

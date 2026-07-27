@@ -42,8 +42,11 @@ export interface ChatMessagePaneProps {
   onClearFilters: () => void;
   onRefreshPinnedMessage: () => void;
   onUnpinPinnedMessage: () => void;
+  onSearchQueryChange: (query: string) => void;
+  searchActive: boolean;
   onToggleShowOnlyMentions: () => void;
   onViewableMessagesChange?: (messages: AnyChatMessageType[]) => void;
+  searchQuery: string;
   pinnedMessage: PinnedChatMessageViewModel | null;
   pinnedMessageBusy: boolean;
 }
@@ -67,10 +70,13 @@ export const ChatMessagePane = memo(
     onClearFilters,
     onRefreshPinnedMessage,
     onUnpinPinnedMessage,
+    onSearchQueryChange,
     onToggleShowOnlyMentions,
     onViewableMessagesChange,
     pinnedMessage,
     pinnedMessageBusy,
+    searchActive,
+    searchQuery,
   }: ChatMessagePaneProps) => {
     const {
       canModerateChat,
@@ -112,6 +118,7 @@ export const ChatMessagePane = memo(
           currentUsername,
           hiddenUsers,
           hiddenPhrases,
+          searchQuery,
           showOnlyMentions,
         }),
       [
@@ -119,6 +126,7 @@ export const ChatMessagePane = memo(
         hiddenPhrases,
         hiddenUsers,
         rawMessages,
+        searchQuery,
         showOnlyMentions,
       ],
     );
@@ -126,6 +134,8 @@ export const ChatMessagePane = memo(
       hiddenUsers.length ||
       hiddenPhrases.length ||
       highlightedUsers.length ||
+      searchActive ||
+      searchQuery.length ||
       showOnlyMentions,
     );
 
@@ -177,6 +187,8 @@ export const ChatMessagePane = memo(
         <ChatViewControls
           hasActiveFilters={hasActiveFilters}
           onClearFilters={onClearFilters}
+          onSearchQueryChange={onSearchQueryChange}
+          searchQuery={searchQuery}
           onToggleShowOnlyMentions={onToggleShowOnlyMentions}
           showOnlyMentions={showOnlyMentions}
         />

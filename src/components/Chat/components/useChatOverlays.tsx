@@ -9,6 +9,7 @@ import i18next from '@app/i18n/i18next';
 import { queryClient } from '@app/lib/react-query/query-client';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
 import { twitchService } from '@app/services/twitch-service';
+import { assignTransientState } from '@app/store/chat/actions/transientState';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { showActionMenu } from '@app/store/overlays/showActionMenu';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
@@ -29,6 +30,7 @@ import type { EmotePickerItem } from './EmoteSheet/EmoteSheet';
 export interface ChatOverlayOpeners {
   openBadge: (badge: BadgePressData) => void;
   openChattersSheet: () => void;
+  openMessageSearch: () => void;
   openEmotePreview: (emote: EmotePressData) => void;
   openEmoteSheet: () => void;
   openMessageActions: (message: MessageActionData<'usernotice'>) => void;
@@ -207,6 +209,15 @@ export function useChatOverlays({
   const openSavedPhrasesSheet = useCallback(() => {
     replaceOverlay({ isSavedPhrasesSheetMounted: true });
   }, [replaceOverlay]);
+
+  /**
+   * Opens the search tray behind the sheet, so dismissing the sheet reveals the
+   * field rather than leaving the user on an unchanged view.
+   */
+  const openMessageSearch = useCallback(() => {
+    assignTransientState(channelId, { searchActive: true });
+    patchOverlay({ isSettingsSheetMounted: false });
+  }, [channelId, patchOverlay]);
 
   const openUserActions = useCallback(
     (user: UsernamePressData) => {
@@ -612,6 +623,7 @@ export function useChatOverlays({
       selectedUser={selectedUser}
       onChattersSheetDidDismiss={handleChattersSheetDidDismiss}
       onOpenChatters={openChattersSheet}
+      onOpenMessageSearch={openMessageSearch}
       onOpenSavedPhrases={openSavedPhrasesSheet}
       onSavedPhrasesSheetDidDismiss={handleSavedPhrasesSheetDidDismiss}
       onSelectChatter={handleSelectChatter}
@@ -628,6 +640,7 @@ export function useChatOverlays({
       openEmotePreview,
       openEmoteSheet,
       openMessageActions,
+      openMessageSearch,
       openSavedPhrasesSheet,
       openSettingsSheet,
       openUserActions,
@@ -638,6 +651,7 @@ export function useChatOverlays({
       openEmotePreview,
       openEmoteSheet,
       openMessageActions,
+      openMessageSearch,
       openSavedPhrasesSheet,
       openSettingsSheet,
       openUserActions,

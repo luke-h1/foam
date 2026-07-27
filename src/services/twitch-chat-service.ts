@@ -8,6 +8,7 @@ import { isE2EMode } from '@app/services/api/clients';
 import { usePreference } from '@app/store/preferenceStore';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
+import { applyAntiDuplicateSuffix } from '@app/utils/chat/applyAntiDuplicateSuffix';
 import { getHeartbeatAction } from '@app/utils/chat/chatHeartbeat';
 import { shouldProcessLiveMessage } from '@app/utils/chat/chatIngestRateLimiter';
 import { containsMutedWords } from '@app/utils/chat/chatMessageFilters/containsMutedWords';
@@ -145,6 +146,11 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     replyParentDisplayName?: string;
     replyParentMsgBody?: string;
   } | null>(null);
+  /**
+   * What was last put on the wire per channel, so a repeat can be made distinct
+   * before Twitch's duplicate filter swallows it.
+   */
+  const lastSentMessagesRef = useLazyRef(() => new Map<string, string>());
 
   const shouldConnect = Boolean(channel?.trim());
 
@@ -923,9 +929,15 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
     const channelFormatted = formatIrcChannelName(channelName);
 
+    const outgoing = applyAntiDuplicateSuffix(
+      message,
+      lastSentMessagesRef.current.get(channelFormatted),
+    );
+    lastSentMessagesRef.current.set(channelFormatted, outgoing);
+
     pendingMessageRef.current = {
       channel: channelFormatted,
-      message,
+      message: outgoing,
       replyParentMsgId,
       replyParentDisplayName,
       replyParentMsgBody,
@@ -933,7 +945,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
 
     const fullMessage = buildPrivmsgLine({
       channel: channelFormatted,
-      message,
+      message: outgoing,
       replyParentMsgId,
     });
     logger.chat.debug(`Sending PRIVMSG: ${fullMessage.substring(0, 100)}...`);

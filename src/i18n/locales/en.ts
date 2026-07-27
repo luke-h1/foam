@@ -210,6 +210,7 @@ const en = {
         'No chatters seen yet. Users appear here once they send a message.',
     },
     settingsSheet: {
+      searchMessages: 'Search messages',
       title: 'Settings',
       sectionAppearance: 'Appearance',
       sectionActions: 'Actions',
@@ -232,6 +233,7 @@ const en = {
       syncToLiveSubtitle: 'Jump back to the live edge',
     },
     controls: {
+      searchMessages: 'Search messages',
       mentions: 'Mentions',
       clear: 'Clear',
       jumpToLatest: 'Jump to latest',

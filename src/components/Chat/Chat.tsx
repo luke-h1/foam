@@ -53,6 +53,7 @@ export const Chat = memo(
 
     const {
       handleClearFilters,
+      handleSearchQueryChange,
       handleToggleShowOnlyMentions,
       hiddenPhrases,
       hiddenUsers,
@@ -62,6 +63,8 @@ export const Chat = memo(
       highlightedUsers,
       hydratedVisibleAssetKeysRef,
       pendingVisibleMessagesRef,
+      searchActive,
+      searchQuery,
       setHighlightedReplyTargetMessageId,
       showOnlyMentions,
       toggleHighlightedUser,
@@ -226,12 +229,15 @@ export const Chat = memo(
                 listContentStyle={listContentStyle}
                 messageListExtraData={messageListExtraData}
                 onClearFilters={handleClearFilters}
+                onSearchQueryChange={handleSearchQueryChange}
                 onRefreshPinnedMessage={handleRefreshPinnedMessage}
                 onToggleShowOnlyMentions={handleToggleShowOnlyMentions}
                 onUnpinPinnedMessage={handleUnpinPinnedMessage}
                 onViewableMessagesChange={handleViewableMessagesChange}
                 pinnedMessage={pinnedMessage}
                 pinnedMessageBusy={pinnedMessageBusy}
+                searchActive={searchActive}
+                searchQuery={searchQuery}
               />
 
               {preferences.showUnreadJumpPill &&

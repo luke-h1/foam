@@ -24,8 +24,9 @@ describe('resolveCachedSenderColor', () => {
       userstate: { username: 'Viewer', color: '#FF0000' },
     });
 
-    // Pure red sits at HSL lightness 0.5; the dark-surface floor is 0.55.
-    expect(color).toBe('rgb(255, 26, 26)');
+    // Pure red carries little luminance, so it is lifted until it clears 4.5:1
+    // against the chat surface.
+    expect(color).toBe('rgb(255, 30, 30)');
   });
 
   test('uses injected sender color lookup before deterministic fallback', () => {
@@ -37,7 +38,8 @@ describe('resolveCachedSenderColor', () => {
       () => '#1ac9a2',
     );
 
-    expect(color).toBe('rgb(52, 229, 189)');
+    // Already readable on the chat surface, so it is passed through untouched.
+    expect(color).toBe('rgb(26, 201, 162)');
   });
 
   test('falls back to deterministic twitch palette per username', () => {
@@ -49,6 +51,8 @@ describe('resolveCachedSenderColor', () => {
     const second = resolveCachedSenderColor(message);
 
     expect(first).toBe(second);
-    expect(first).toBe('rgb(26, 255, 26)');
+    // Green is perceptually bright, so this palette entry already passes and is
+    // kept as-is rather than being washed out towards white.
+    expect(first).toBe('rgb(0, 152, 0)');
   });
 });

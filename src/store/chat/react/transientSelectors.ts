@@ -39,9 +39,18 @@ export function useTransientChannelFilters(channelId: string) {
     channelId,
     'highlightedUsers',
   );
+  const searchActive = useTransientChannelField(channelId, 'searchActive');
+  const searchQuery = useTransientChannelField(channelId, 'searchQuery');
   const showOnlyMentions = useTransientChannelField(
     channelId,
     'showOnlyMentions',
   );
-  return { hiddenPhrases, hiddenUsers, highlightedUsers, showOnlyMentions };
+  return {
+    hiddenPhrases,
+    hiddenUsers,
+    highlightedUsers,
+    searchActive,
+    searchQuery,
+    showOnlyMentions,
+  };
 }

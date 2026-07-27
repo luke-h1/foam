@@ -31,6 +31,7 @@ export interface SettingsSheetProps {
   onClearSevenTvCosmeticsCache?: () => void;
   onDismiss: () => void;
   onOpenChatters?: () => void;
+  onOpenMessageSearch?: () => void;
   onOpenSavedPhrases?: () => void;
   onRefetchEmotes?: () => void;
   onReconnect?: () => void;
@@ -40,6 +41,7 @@ const SettingsSheetComponent = ({
   isPresented,
   onDismiss,
   onOpenChatters,
+  onOpenMessageSearch,
   onOpenSavedPhrases,
   onRefetchEmotes,
   onClearChatCache,
@@ -102,7 +104,10 @@ const SettingsSheetComponent = ({
   }, [dismissSheet]);
 
   const hasActions = Boolean(
-    onOpenChatters || onOpenSavedPhrases || onRefetchEmotes,
+    onOpenChatters ||
+    onOpenMessageSearch ||
+    onOpenSavedPhrases ||
+    onRefetchEmotes,
   );
   const hasStorage = Boolean(
     onClearChatCache || onClearImageCache || onClearSevenTvCosmeticsCache,
@@ -218,6 +223,17 @@ const SettingsSheetComponent = ({
               title={t('settingsSheet.sectionActions')}
               cardColor={theme.color.surfaceNeutral.dark}
             >
+              {onOpenMessageSearch ? (
+                <SettingsLinkRow
+                  title={t('settingsSheet.searchMessages')}
+                  icon={{
+                    icon: 'magnifyingglass',
+                    androidIcon: 'search',
+                    color: ICON_TINT,
+                  }}
+                  onPress={onOpenMessageSearch}
+                />
+              ) : null}
               {onOpenChatters ? (
                 <SettingsLinkRow
                   title={t('settingsSheet.viewChatters')}
