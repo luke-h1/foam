@@ -193,8 +193,8 @@ describe('cache-service', () => {
     const nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => now);
 
     try {
-      trimCachedEmoteRefsForMemoryPressure(true, true);
-      trimCachedEmoteRefsForMemoryPressure(true, true);
+      trimCachedEmoteRefsForMemoryPressure({ throttled: true });
+      trimCachedEmoteRefsForMemoryPressure({ throttled: true });
       expect(Image.clearMemoryCache).toHaveBeenCalledTimes(1);
 
       // memoryWarning/backgrounding path: unthrottled even inside the window.
@@ -202,7 +202,7 @@ describe('cache-service', () => {
       expect(Image.clearMemoryCache).toHaveBeenCalledTimes(2);
 
       now += 31_000;
-      trimCachedEmoteRefsForMemoryPressure(true, true);
+      trimCachedEmoteRefsForMemoryPressure({ throttled: true });
       expect(Image.clearMemoryCache).toHaveBeenCalledTimes(3);
     } finally {
       nowSpy.mockRestore();

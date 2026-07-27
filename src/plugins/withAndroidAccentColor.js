@@ -9,9 +9,11 @@ const {
 
 /**
  * The generated AppTheme keeps the AppCompat default teal accent, so cursors and
- * selection handles render off-brand in every Android text field. Pin them to
- * `primaryAccent` from src/styles/themes.ts, split per scheme (Theme.EdgeToEdge
- * is DayNight-based, so values-night covers dark mode).
+ * selection handles render off-brand in every Android text field. Split per
+ * scheme (Theme.EdgeToEdge is DayNight-based, so values-night covers dark mode).
+ *
+ * Config plugins run in bare node at prebuild and cannot import the TS theme, so
+ * these must be kept in sync by hand with `primaryAccent` in src/styles/themes.ts.
  */
 const LIGHT_ACCENT_COLOR = '#1083FE';
 const DARK_ACCENT_COLOR = '#2E86FF';

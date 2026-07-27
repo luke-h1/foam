@@ -429,21 +429,29 @@ export function clearCachedEmoteRefs(): void {
 const IMAGE_CACHE_CLEAR_THROTTLE_MS = 30_000;
 let lastImageCacheClearAt = 0;
 
-/**
- * The throttle covers recurring triggers only (5s poll, repeated onTrimMemory);
- * `memoryWarning` and backgrounding are free-memory-now signals and always wipe.
- */
-export function trimCachedEmoteRefsForMemoryPressure(
+type MemoryPressureTrimOptions = {
+  /**
+   * Shed refs but keep the expo-image cache; advisory trim levels use this.
+   */
+  clearImageCache?: boolean;
+  /**
+   * Recurring triggers (the 5s poll, repeated onTrimMemory) throttle the wipe.
+   * `memoryWarning` and backgrounding are free-memory-now signals: never set it.
+   */
+  throttled?: boolean;
+};
+
+export function trimCachedEmoteRefsForMemoryPressure({
   clearImageCache = true,
-  throttleImageCacheClear = false,
-): void {
+  throttled = false,
+}: MemoryPressureTrimOptions = {}): void {
   releaseChannelEmoteRefs();
   if (!clearImageCache) {
     return;
   }
   const now = Date.now();
   if (
-    throttleImageCacheClear &&
+    throttled &&
     now - lastImageCacheClearAt < IMAGE_CACHE_CLEAR_THROTTLE_MS
   ) {
     return;
@@ -467,6 +475,26 @@ const MEMORY_PRESSURE_LOG_THROTTLE_MS = 60_000;
 let memoryMonitorTimer: ReturnType<typeof setInterval> | null = null;
 let lastMemoryPressureLogAt = 0;
 
+/**
+ * Date.now here (not a monotonic clock) only gates a log; a clock jump at worst
+ * drops or duplicates one breadcrumb.
+ */
+function logMemoryPressureTrim(
+  cause: { availableBytes: number } | { trimLevel: number },
+): void {
+  const now = Date.now();
+  if (now - lastMemoryPressureLogAt < MEMORY_PRESSURE_LOG_THROTTLE_MS) {
+    return;
+  }
+  lastMemoryPressureLogAt = now;
+  logger.chat.warn('chat.emote.memory_pressure_trim', {
+    name: 'chat_resources_warning',
+    ...cause,
+    decodedBytes: totalBytes,
+    decodedRefs: refs.size,
+  });
+}
+
 function pollMemoryHeadroom(): void {
   let available = 0;
   try {
@@ -478,36 +506,16 @@ function pollMemoryHeadroom(): void {
     return;
   }
 
-  // Date.now here (not a monotonic clock) only gates a log; a clock jump at
-  // worst drops or duplicates one breadcrumb.
-  const now = Date.now();
-  if (now - lastMemoryPressureLogAt >= MEMORY_PRESSURE_LOG_THROTTLE_MS) {
-    lastMemoryPressureLogAt = now;
-    logger.chat.warn('chat.emote.memory_pressure_trim', {
-      name: 'chat_resources_warning',
-      availableBytes: available,
-      decodedBytes: totalBytes,
-      decodedRefs: refs.size,
-    });
-  }
-  trimCachedEmoteRefsForMemoryPressure(true, true);
+  logMemoryPressureTrim({ availableBytes: available });
+  trimCachedEmoteRefsForMemoryPressure({ throttled: true });
 }
 
 function handleNativeMemoryPressure(event: ImageMemoryPressureEvent): void {
-  const now = Date.now();
-  if (now - lastMemoryPressureLogAt >= MEMORY_PRESSURE_LOG_THROTTLE_MS) {
-    lastMemoryPressureLogAt = now;
-    logger.chat.warn('chat.emote.memory_pressure_trim', {
-      name: 'chat_resources_warning',
-      trimLevel: event.level,
-      decodedBytes: totalBytes,
-      decodedRefs: refs.size,
-    });
-  }
-  trimCachedEmoteRefsForMemoryPressure(
-    event.level >= ANDROID_TRIM_MEMORY_RUNNING_CRITICAL,
-    true,
-  );
+  logMemoryPressureTrim({ trimLevel: event.level });
+  trimCachedEmoteRefsForMemoryPressure({
+    clearImageCache: event.level >= ANDROID_TRIM_MEMORY_RUNNING_CRITICAL,
+    throttled: true,
+  });
 }
 
 function startMemoryMonitor(): void {

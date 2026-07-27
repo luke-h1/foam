@@ -145,10 +145,17 @@ function ChatComposerComponent({
           placeholderTextColor={theme.color.textSecondary.dark}
           returnKeyType='send'
           cursorColor={theme.color.text.dark}
-          selectionColor={`${theme.colorPrimary}66`}
+          selectionColor={theme.colorTextSelection}
           selectionHandleColor={theme.colorPrimary}
           style={styles.input}
           submitBehavior='blurAndSubmit'
+          /**
+           * Android only: keeps the IME inline. Without this, landscape drops
+           * into fullscreen extract mode, covering the stream and chat with a
+           * full-screen editor.
+           */
+          disableFullscreenUI
+          underlineColorAndroid='transparent'
         />
 
         {onSubmit ? (

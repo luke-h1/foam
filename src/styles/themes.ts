@@ -105,6 +105,12 @@ export const theme = {
   colorDarkGreen: primaryAccent.dark,
   colorPrimary: semanticColorGroups.accent.accent,
   colorPrimaryAlpha: semanticColorGroups.accent.accentAlpha,
+  /**
+   * Text-selection highlight. On Android `selectionColor` paints the highlight
+   * band behind the glyphs, so it has to stay translucent (0x66 = 40%) or the
+   * selected text is unreadable.
+   */
+  colorTextSelection: alpha(primaryAccent.dark, '66'),
   colorPrimaryHover: semanticColorGroups.accent.accentHover,
   colorPrimarySurface: semanticColorGroups.accent.bgAltAlpha,
   colorGrey: semanticColorGroups.gray.accent,

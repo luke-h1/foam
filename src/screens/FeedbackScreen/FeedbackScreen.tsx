@@ -121,7 +121,7 @@ export function FeedbackScreen() {
               placeholderTextColor={theme.colorGreyHoverAlpha}
               selectionColor={
                 process.env.EXPO_OS === 'android'
-                  ? `${theme.colorPrimary}66`
+                  ? theme.colorTextSelection
                   : theme.color.text.dark
               }
               selectionHandleColor={theme.colorPrimary}
@@ -150,7 +150,7 @@ export function FeedbackScreen() {
               placeholderTextColor={theme.colorGreyHoverAlpha}
               selectionColor={
                 process.env.EXPO_OS === 'android'
-                  ? `${theme.colorPrimary}66`
+                  ? theme.colorTextSelection
                   : theme.color.text.dark
               }
               selectionHandleColor={theme.colorPrimary}

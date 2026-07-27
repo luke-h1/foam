@@ -14,7 +14,9 @@ function hapticsEnabled(): boolean {
   return getPreferences().hapticFeedback;
 }
 
-function getExpoImpactStyle(style: 'light' | 'medium' | 'heavy') {
+export type HapticIntensity = 'light' | 'medium' | 'heavy';
+
+function getExpoImpactStyle(style: HapticIntensity) {
   switch (style) {
     case 'light':
       return ImpactFeedbackStyle.Light;
@@ -26,7 +28,7 @@ function getExpoImpactStyle(style: 'light' | 'medium' | 'heavy') {
   }
 }
 
-function getAndroidHaptic(style: 'light' | 'medium' | 'heavy') {
+function getAndroidHaptic(style: HapticIntensity) {
   switch (style) {
     case 'light':
       return AndroidHaptics.Virtual_Key;
@@ -38,7 +40,7 @@ function getAndroidHaptic(style: 'light' | 'medium' | 'heavy') {
   }
 }
 
-export async function impact(style: 'light' | 'medium' | 'heavy' = 'medium') {
+export async function impact(style: HapticIntensity = 'medium') {
   if (!hapticsEnabled()) {
     return undefined;
   }
