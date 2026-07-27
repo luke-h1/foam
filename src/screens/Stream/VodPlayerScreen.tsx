@@ -108,13 +108,12 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
       </View>
 
       <View
-        style={[
-          styles.backButtonWrap,
-          {
-            top: insets.top + theme.space12,
-            left: theme.space16 + landscapeInsetLeft,
-          },
-        ]}
+        style={{
+          position: 'absolute',
+          zIndex: 2,
+          top: insets.top + theme.space12,
+          left: theme.space16 + landscapeInsetLeft,
+        }}
       >
         <PlayerBackButton />
       </View>
@@ -154,10 +153,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
     justifyContent: 'center',
-  },
-  backButtonWrap: {
-    position: 'absolute',
-    zIndex: 2,
   },
   closeButtonWrap: {
     flexDirection: 'row',

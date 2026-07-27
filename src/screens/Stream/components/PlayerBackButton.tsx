@@ -1,4 +1,3 @@
-import { StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { router } from 'expo-router';
@@ -16,19 +15,15 @@ export function PlayerBackButton() {
       label={t('goBack')}
       onPress={() => router.back()}
       size='2xl'
-      style={styles.button}
+      style={{
+        alignItems: 'center',
+        backgroundColor: theme.darkActiveContent,
+        borderColor: theme.colorBorderSecondary,
+        borderCurve: 'continuous',
+        borderRadius: theme.borderRadius999,
+        borderWidth: 1,
+        justifyContent: 'center',
+      }}
     />
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    borderWidth: 1,
-    justifyContent: 'center',
-  },
-});

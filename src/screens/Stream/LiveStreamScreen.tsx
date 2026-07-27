@@ -1045,7 +1045,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     left: theme.space12,
     position: 'absolute',
-    top: theme.space8,
     width: 40,
     zIndex: 12,
   },

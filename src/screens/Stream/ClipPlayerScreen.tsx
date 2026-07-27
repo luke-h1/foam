@@ -41,7 +41,12 @@ export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
       />
 
       <View
-        style={[styles.backButtonWrap, { top: insets.top + theme.space12 }]}
+        style={{
+          left: theme.space16,
+          position: 'absolute',
+          zIndex: 2,
+          top: insets.top + theme.space12,
+        }}
       >
         <PlayerBackButton />
       </View>
@@ -72,11 +77,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius999,
     borderWidth: 1,
     justifyContent: 'center',
-  },
-  backButtonWrap: {
-    left: theme.space16,
-    position: 'absolute',
-    zIndex: 2,
   },
   closeButtonWrap: {
     flexDirection: 'row',

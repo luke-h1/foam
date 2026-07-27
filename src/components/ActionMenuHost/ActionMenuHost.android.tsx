@@ -37,11 +37,6 @@ export function ActionMenuHost() {
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents='box-none'>
-      {/**
-       * Compose's own ModalBottomSheet scrim never paints when the sheet is
-       * hosted inside the RN tree, so dim from RN. Taps still fall through to
-       * the Compose scrim, which owns dismiss-on-outside-press.
-       */}
       <View
         style={[StyleSheet.absoluteFill, styles.scrim]}
         pointerEvents='none'
