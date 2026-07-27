@@ -13,9 +13,6 @@ export default function TabsLayout() {
 
   // Below iOS 26 the default scroll-edge appearance is transparent, so pin an opaque material.
   const liquidGlass = isLiquidGlassAvailable();
-  // Pin the Android tab bar to app tokens; the Material defaults come from the
-  // activity theme, which OEM overlays can recolor away from the iOS-matched palette.
-  const isAndroid = process.env.EXPO_OS === 'android';
 
   return (
     <NativeTabs
@@ -24,7 +21,12 @@ export default function TabsLayout() {
       blurEffect={liquidGlass ? undefined : 'systemChromeMaterial'}
       disableTransparentOnScrollEdge={!liquidGlass}
       backgroundColor={
-        isAndroid ? theme.color.backgroundSecondary.dark : undefined
+        // Pin the Android tab bar to app tokens; the Material defaults come from
+        // the activity theme, which OEM overlays can recolor away from the
+        // iOS-matched palette.
+        process.env.EXPO_OS === 'android'
+          ? theme.color.backgroundSecondary.dark
+          : undefined
       }
       indicatorColor='rgba(255, 255, 255, 0.12)'
       rippleColor='rgba(255, 255, 255, 0.12)'

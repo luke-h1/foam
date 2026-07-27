@@ -1,3 +1,4 @@
+import type { ChangelogPresentOptions } from '../Changelog.types';
 import {
   dismissChangelogAndroid,
   getChangelogAndroidState,
@@ -11,15 +12,17 @@ const baseOptions = {
       version: '1.0.0',
       items: [
         {
-          type: 'list' as const,
+          type: 'list',
           title: 'Notes',
-          rows: [{ title: 'A', description: 'B' }],
+          rows: [
+            { symbolSystemName: 'sparkles', title: 'A', description: 'B' },
+          ],
         },
       ],
     },
   ],
   version: '1.0.0',
-};
+} satisfies ChangelogPresentOptions;
 
 describe('changelogAndroidPresenter', () => {
   afterEach(() => {

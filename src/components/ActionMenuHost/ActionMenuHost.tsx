@@ -30,6 +30,7 @@ export function ActionMenuHost() {
           {options.actions.map(action => (
             <Pressable
               key={action.label}
+              accessibilityRole='button'
               style={styles.row}
               onPress={() => {
                 dismissActionMenu();
@@ -41,7 +42,11 @@ export function ActionMenuHost() {
               </Text>
             </Pressable>
           ))}
-          <Pressable style={styles.row} onPress={dismissActionMenu}>
+          <Pressable
+            accessibilityRole='button'
+            style={styles.row}
+            onPress={dismissActionMenu}
+          >
             <Text weight='semibold' color='gray.textLow'>
               {options.cancelLabel}
             </Text>

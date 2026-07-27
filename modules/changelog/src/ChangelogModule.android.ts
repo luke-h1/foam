@@ -51,8 +51,8 @@ const ChangelogModule: ChangelogNativeModule = {
   },
 
   resetSeenVersions(): void {
-    storage.delete(SEEN_APP_VERSION_KEY);
-    storage.delete(SEEN_OTA_VERSION_KEY);
+    storage.remove(SEEN_APP_VERSION_KEY);
+    storage.remove(SEEN_OTA_VERSION_KEY);
   },
 };
 

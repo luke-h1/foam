@@ -23,7 +23,10 @@ const withAndroidAllowBackupReplace = config =>
     if (application) {
       const entries = (application.$['tools:replace'] ?? '')
         .split(',')
-        .filter(Boolean);
+        .flatMap(entry => {
+          const trimmed = entry.trim();
+          return trimmed ? [trimmed] : [];
+        });
       if (!entries.includes('android:allowBackup')) {
         entries.push('android:allowBackup');
       }

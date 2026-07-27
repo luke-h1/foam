@@ -886,8 +886,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             onPress={handleBack}
             style={[
               styles.androidBackButton,
+              // videoContainer already sits at landscapeInsetLeft; only the
+              // local offset here, or the button drifts inward on cutouts.
               {
-                left: theme.space8 + landscapeInsetLeft,
+                left: theme.space8,
                 top: theme.space8,
               },
             ]}
