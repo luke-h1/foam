@@ -21,10 +21,13 @@ const withAndroidAllowBackupReplace = config =>
     const application = manifest.application?.[0];
 
     if (application) {
-      const existing = application.$['tools:replace'];
-      application.$['tools:replace'] = existing
-        ? `${existing},android:allowBackup`
-        : 'android:allowBackup';
+      const entries = (application.$['tools:replace'] ?? '')
+        .split(',')
+        .filter(Boolean);
+      if (!entries.includes('android:allowBackup')) {
+        entries.push('android:allowBackup');
+      }
+      application.$['tools:replace'] = entries.join(',');
     }
 
     return configWithManifest;

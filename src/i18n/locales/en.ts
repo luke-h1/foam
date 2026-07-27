@@ -8,7 +8,6 @@ const en = {
     delete: 'Delete',
     dismiss: 'Dismiss',
     goBack: 'Go back',
-    more: 'More',
     next: 'Next',
     noInternetConnection: 'No internet connection',
     done: 'Done',
@@ -400,7 +399,6 @@ const en = {
   },
 
   stream: {
-    goBack: 'Go back',
     resizeChat: 'Resize chat',
     hideChat: 'Hide chat',
     showChat: 'Show chat',

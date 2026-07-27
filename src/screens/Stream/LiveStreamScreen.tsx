@@ -113,7 +113,7 @@ function handlePlaybackLatencyChange(latencySeconds: number) {
 export const LiveStreamScreen = memo(function LiveStreamScreen({
   id,
 }: LiveStreamScreenProps) {
-  const { t } = useTranslation('stream');
+  const { t } = useTranslation(['stream', 'common']);
   const isFocused = useIsFocused();
   const { authState } = useAuthContext();
   const customPlayerEnabled = usePreference('customPlayerEnabled');
@@ -882,7 +882,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
         {isAndroid ? (
           <Button
-            label={t('goBack')}
+            label={t('common:goBack')}
             onPress={handleBack}
             style={[
               styles.androidBackButton,

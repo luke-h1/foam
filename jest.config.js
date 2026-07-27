@@ -32,6 +32,7 @@ const jestConfig = {
   testMatch: [
     '<rootDir>/src/**/__tests__/**/*.(test|spec).(ts|tsx|js|jsx)',
     '<rootDir>/src/**/*.(test|spec).(ts|tsx|js|jsx)',
+    '<rootDir>/modules/**/__tests__/**/*.(test|spec).(ts|tsx|js|jsx)',
     '<rootDir>/test/**/*.(test|spec).(ts|tsx|js|jsx)',
   ],
   collectCoverageFrom: [

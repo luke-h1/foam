@@ -19,9 +19,15 @@ export function SearchInputBar({
   const { t } = useTranslation('search');
   const inputRef = useRef<TextInput | null>(null);
 
+  /**
+   * Text mutators are no-ops here: this variant is controlled by `value` (all
+   * callers write the query into screen state themselves), and routing them
+   * through `onChangeText` re-enters type-to-search and fires a duplicate
+   * query. They exist for the uncontrolled iOS native search bar.
+   */
   useImperativeHandle(ref, () => ({
-    setText: text => onChangeText(text),
-    clearText: () => onChangeText(''),
+    setText: () => {},
+    clearText: () => {},
     focus: () => inputRef.current?.focus(),
     blur: () => inputRef.current?.blur(),
   }));

@@ -1,12 +1,17 @@
 import Constants from 'expo-constants';
-
-import { storageService } from '@app/lib/storage';
+import { createMMKV } from 'react-native-mmkv';
 
 import type {
   ChangelogNativeModule,
   ChangelogPresentOptions,
 } from './Changelog.types';
 import { presentChangelogAndroid } from './changelogAndroidPresenter';
+
+/**
+ * Module-owned storage keeps `modules/changelog` free of app-layer imports,
+ * mirroring how the iOS native module owns its seen-version persistence.
+ */
+const storage = createMMKV({ id: 'changelog' });
 
 const SEEN_APP_VERSION_KEY = 'changelog_seen_app_version';
 const SEEN_OTA_VERSION_KEY = 'changelog_seen_ota_version';
@@ -17,12 +22,12 @@ function getCurrentAppVersion(): string {
 
 function markSeen(options: ChangelogPresentOptions): void {
   if (options.otaVersion) {
-    storageService.set(SEEN_OTA_VERSION_KEY, options.otaVersion);
+    storage.set(SEEN_OTA_VERSION_KEY, options.otaVersion);
     return;
   }
 
   const version = options.version ?? getCurrentAppVersion();
-  storageService.set(SEEN_APP_VERSION_KEY, version);
+  storage.set(SEEN_APP_VERSION_KEY, version);
 }
 
 const ChangelogModule: ChangelogNativeModule = {
@@ -31,11 +36,11 @@ const ChangelogModule: ChangelogNativeModule = {
   },
 
   getLatestSeenAppVersion(): string | null {
-    return storageService.getString<string>(SEEN_APP_VERSION_KEY);
+    return storage.getString(SEEN_APP_VERSION_KEY) ?? null;
   },
 
   getLatestSeenOTAVersion(): string | null {
-    return storageService.getString<string>(SEEN_OTA_VERSION_KEY);
+    return storage.getString(SEEN_OTA_VERSION_KEY) ?? null;
   },
 
   async present(options: ChangelogPresentOptions): Promise<void> {
@@ -46,8 +51,8 @@ const ChangelogModule: ChangelogNativeModule = {
   },
 
   resetSeenVersions(): void {
-    storageService.remove(SEEN_APP_VERSION_KEY);
-    storageService.remove(SEEN_OTA_VERSION_KEY);
+    storage.delete(SEEN_APP_VERSION_KEY);
+    storage.delete(SEEN_OTA_VERSION_KEY);
   },
 };
 

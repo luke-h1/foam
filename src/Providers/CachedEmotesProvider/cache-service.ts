@@ -429,15 +429,24 @@ export function clearCachedEmoteRefs(): void {
 const IMAGE_CACHE_CLEAR_THROTTLE_MS = 30_000;
 let lastImageCacheClearAt = 0;
 
+/**
+ * The throttle only applies to recurring triggers (5s poll, repeated
+ * onTrimMemory events); an OS `memoryWarning` or a background transition is a
+ * "free memory now" signal and must never skip the image-cache wipe.
+ */
 export function trimCachedEmoteRefsForMemoryPressure(
   clearImageCache = true,
+  throttleImageCacheClear = false,
 ): void {
   releaseChannelEmoteRefs();
   if (!clearImageCache) {
     return;
   }
   const now = Date.now();
-  if (now - lastImageCacheClearAt < IMAGE_CACHE_CLEAR_THROTTLE_MS) {
+  if (
+    throttleImageCacheClear &&
+    now - lastImageCacheClearAt < IMAGE_CACHE_CLEAR_THROTTLE_MS
+  ) {
     return;
   }
   lastImageCacheClearAt = now;
@@ -482,7 +491,7 @@ function pollMemoryHeadroom(): void {
       decodedRefs: refs.size,
     });
   }
-  trimCachedEmoteRefsForMemoryPressure();
+  trimCachedEmoteRefsForMemoryPressure(true, true);
 }
 
 function handleNativeMemoryPressure(event: ImageMemoryPressureEvent): void {
@@ -498,6 +507,7 @@ function handleNativeMemoryPressure(event: ImageMemoryPressureEvent): void {
   }
   trimCachedEmoteRefsForMemoryPressure(
     event.level >= ANDROID_TRIM_MEMORY_RUNNING_CRITICAL,
+    true,
   );
 }
 
@@ -535,9 +545,11 @@ function handleAppStateForMemory(nextAppState: AppStateStatus): void {
  *   the only safety valve.
  * - Proactive headroom poll (foreground, every 5s): trims before the process
  *   hits its limit. iOS uses `os_proc_available_memory()`; Android uses
- *   Java-heap headroom (not system-wide availMem).
- * - Android `onTrimMemory` (foreground RUNNING_* band): reactive trim; full
- *   image-cache wipe only at RUNNING_CRITICAL+.
+ *   system headroom above the low-memory-killer threshold.
+ * - Android `onTrimMemory`: reactive trim. Android 14+ only delivers
+ *   UI_HIDDEN/BACKGROUND/COMPLETE (all full-wipe); the RUNNING_* band still
+ *   arrives on Android 13 and below, where RUNNING_LOW sheds refs only and
+ *   RUNNING_CRITICAL+ also wipes the image cache.
  * - Backgrounding: shed the unpinned working set while off-screen so a long
  *   single-channel session can't sit at the cap until the OS reclaims it. Refs
  *   re-decode lazily on the next render when foregrounded.
