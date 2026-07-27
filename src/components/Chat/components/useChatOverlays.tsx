@@ -210,10 +210,7 @@ export function useChatOverlays({
     replaceOverlay({ isSavedPhrasesSheetMounted: true });
   }, [replaceOverlay]);
 
-  /**
-   * Opens the search tray behind the sheet, so dismissing the sheet reveals the
-   * field rather than leaving the user on an unchanged view.
-   */
+  // Opens the tray behind the sheet, so dismissing it reveals the field.
   const openMessageSearch = useCallback(() => {
     assignTransientState(channelId, { searchActive: true });
     patchOverlay({ isSettingsSheetMounted: false });

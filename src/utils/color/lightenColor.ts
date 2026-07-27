@@ -2,19 +2,14 @@ import { hexToRgb } from './hexToRgb';
 import { rgbToHex } from './rgbToHex';
 
 /**
- * The composited chat row surface. A lightness floor alone doesn't say anything
- * about legibility - Twitch's default blue clears one and still lands near 2.6:1
- * here - so colours are corrected against the real background instead.
- *
- * Tinted highlight rows sit slightly lighter than this, so their ratio comes out
- * a little under the target; the plain row is what almost every message uses.
+ * The composited chat row surface. A lightness floor says nothing about
+ * legibility - Twitch's default blue clears one and still lands near 2.6:1 -
+ * so colours are corrected against the real background. Tinted highlight rows
+ * sit a little lighter, so they land just under the target.
  */
 const CHAT_SURFACE_RGB = { r: 20, g: 27, b: 35 };
 
-/**
- * WCAG AA for normal-size text. Chasing a higher ratio would wash the hues
- * together and usernames would stop being recognisable at a glance.
- */
+// WCAG AA for normal-size text; higher washes the hues together.
 const MIN_CONTRAST_RATIO = 4.5;
 
 const CONTRAST_SEARCH_STEPS = 16;
@@ -38,11 +33,7 @@ export function lightenColor(hex: string): string {
 
   const { h, s, l } = rgbToHsl(rgb.r, rgb.g, rgb.b);
 
-  /**
-   * Binary search for the *lowest* lightness that clears the target, so a
-   * colour is nudged just far enough to be readable and keeps its identity
-   * rather than being flattened towards white.
-   */
+  // Lowest lightness that clears the target, so a colour keeps its identity.
   let low = l;
   let high = 1;
   let best = hslToRgb(h, s, 1);

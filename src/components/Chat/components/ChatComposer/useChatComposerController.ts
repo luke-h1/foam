@@ -13,15 +13,10 @@ export interface ChatComposerHandle {
   setText: (text: string) => void;
 }
 
-/**
- * Twitch drops anything longer on send, so the composer flags an over-long
- * message instead of letting it disappear silently.
- */
+// Twitch drops anything longer on send, silently.
 export const MAX_MESSAGE_LENGTH = 500;
 
-/**
- * A permanent counter is noise, so it only appears once the ceiling is close.
- */
+// A permanent counter is noise.
 const CHARACTER_COUNT_VISIBLE_FROM = MAX_MESSAGE_LENGTH - 50;
 
 interface UseChatComposerControllerOptions {
@@ -118,10 +113,6 @@ export function useChatComposerController({
     blurInput();
   }, [blurInput, onSubmit, submitEnabled, text]);
 
-  /**
-   * Restores the previous message for a quick edit-and-resend, which is the
-   * common case when a command is mistyped or a message needs repeating.
-   */
   const recallLastMessage = useCallback(() => {
     if (!lastSentMessage) {
       return;

@@ -51,8 +51,7 @@ describe('resolveCachedSenderColor', () => {
     const second = resolveCachedSenderColor(message);
 
     expect(first).toBe(second);
-    // Green is perceptually bright, so this palette entry already passes and is
-    // kept as-is rather than being washed out towards white.
+    // Green is perceptually bright, so this entry already passes untouched.
     expect(first).toBe('rgb(0, 152, 0)');
   });
 });

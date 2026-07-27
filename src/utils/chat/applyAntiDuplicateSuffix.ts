@@ -1,16 +1,10 @@
-/**
- * A tag character: it carries no width and no glyph, so it changes the payload
- * Twitch compares without changing what anyone reads.
- */
+// A tag character - no width, no glyph.
 const INVISIBLE_SUFFIX = ' \u{E0000}';
 
 /**
  * Twitch silently drops a message identical to the sender's previous one within
- * about 30 seconds, with no error back to the client - the message simply never
- * appears. Appending the invisible suffix makes the repeat distinct.
- *
- * `lastSent` is what was actually put on the wire, so consecutive repeats
- * alternate between the plain and suffixed form and never collide.
+ * ~30s, with no error back. `lastSent` is what actually went on the wire, so
+ * repeats alternate between the plain and suffixed form and never collide.
  */
 export function applyAntiDuplicateSuffix(
   message: string,
