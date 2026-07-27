@@ -252,7 +252,7 @@
     "react-native-performance": "6.0.0",
     "react-native-url-polyfill": "^2.0.0",
     "react-test-renderer": "19.2.3",
-    "reassure": "1.4.1",
+    "reassure": "^1.6.0",
     "storybook": "^10.3.6",
     "svgo": "^4.0.0",
     "tsx": "^4.20.3",
