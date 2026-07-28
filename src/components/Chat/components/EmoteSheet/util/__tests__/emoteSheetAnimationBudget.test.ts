@@ -48,3 +48,18 @@ test('reset clears every slot so a reopened sheet starts from zero', () => {
 
   expect(afterReset).toEqual([true]);
 });
+
+test('releasing a slot after reset does not raise the cap', () => {
+  const budget = createAnimationBudget(1);
+  const afterReset: boolean[] = [];
+
+  const releaseBeforeReset = budget.acquire(() => undefined);
+  budget.reset();
+  // The dismissed sheet's cell unmounts after reset and releases its old slot.
+  releaseBeforeReset();
+
+  budget.acquire(value => afterReset.push(value));
+  budget.acquire(value => afterReset.push(value));
+
+  expect(afterReset).toEqual([true]);
+});

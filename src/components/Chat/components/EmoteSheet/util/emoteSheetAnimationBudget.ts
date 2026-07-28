@@ -60,6 +60,12 @@ export function createAnimationBudget(
       };
     },
     reset(): void {
+      // Cells unmount after the sheet dismisses, so their release closures still
+      // hold these slots. Clearing `granted` first stops those late releases
+      // from decrementing `grantedCount` below zero and doubling the cap.
+      for (const slot of slots) {
+        slot.granted = false;
+      }
       slots.clear();
       grantedCount = 0;
     },
