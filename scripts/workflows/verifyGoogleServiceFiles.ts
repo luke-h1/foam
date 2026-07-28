@@ -49,13 +49,12 @@ export function plistBundleId(contents: string): string | undefined {
 }
 
 /**
- * Every variant decodes the same pair of secrets, so a file that is right for
- * one is silently wrong for another.
+ * Android takes a per-variant file, so the wrong secret means Gradle dies in
+ * `processReleaseGoogleServices` - but only after the whole native build has
+ * run. Checking here turns that into a one-second failure naming the package.
  *
- * A missing Android client is an error because Gradle fails on it anyway, just
- * 15 minutes later in `processReleaseGoogleServices`. A mismatched iOS bundle
- * id is only a warning: nothing fails on it today, so blocking the deploy
- * would be a new failure rather than an earlier one.
+ * iOS deliberately shares one plist across variants, so its BUNDLE_ID is not
+ * expected to match the variant being built and is only checked for presence.
  */
 export function verifyGoogleServiceFiles({
   variant,
@@ -88,18 +87,11 @@ export function verifyGoogleServiceFiles({
     });
   }
 
-  const bundleId = plistBundleId(iosContents);
-  if (bundleId === undefined) {
+  if (plistBundleId(iosContents) === undefined) {
     problems.push({
       severity: 'error',
       file: config.iosGoogleServicesFile,
       message: 'has no BUNDLE_ID. Check the secret holds base64 of the plist.',
-    });
-  } else if (bundleId !== config.iosBundleIdentifier) {
-    problems.push({
-      severity: 'warning',
-      file: config.iosGoogleServicesFile,
-      message: `is for '${bundleId}', but this variant builds '${config.iosBundleIdentifier}'. Firebase does not fail the build on this, so the app reports to the wrong project.`,
     });
   }
 

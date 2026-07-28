@@ -16,10 +16,9 @@ runs:
       run: |
         set -euo pipefail
 
-        if [ -z "${GOOGLE_SERVICES_ANDROID_PROD_BS4:-}" ]; then
-          echo "Error: GOOGLE_SERVICES_ANDROID_PROD_BS4 is not set"
-          exit 1
-        fi
+        # iOS shares one plist across variants; Android needs its own file per
+        # variant because google-services.json only matches the package names
+        # it was exported with, and Gradle hard-fails on a missing client.
         if [ -z "${GOOGLE_SERVICES_IOS_PROD_BS4:-}" ]; then
           echo "Error: GOOGLE_SERVICES_IOS_PROD_BS4 is not set"
           exit 1
@@ -29,14 +28,20 @@ runs:
           production)
             ios_file="GoogleService-Info-prod.plist"
             android_file="google-services-prod.json"
+            android_secret_name="GOOGLE_SERVICES_ANDROID_PROD_BS4"
+            android_secret="${GOOGLE_SERVICES_ANDROID_PROD_BS4:-}"
             ;;
           internal)
             ios_file="GoogleService-Info-internal.plist"
             android_file="google-services-internal.json"
+            android_secret_name="GOOGLE_SERVICES_ANDROID_INTERNAL_BS4"
+            android_secret="${GOOGLE_SERVICES_ANDROID_INTERNAL_BS4:-}"
             ;;
           testflight)
             ios_file="GoogleService-Info-testflight.plist"
             android_file="google-services-testflight.json"
+            android_secret_name="GOOGLE_SERVICES_ANDROID_TESTFLIGHT_BS4"
+            android_secret="${GOOGLE_SERVICES_ANDROID_TESTFLIGHT_BS4:-}"
             ;;
           *)
             echo "Error: unsupported Google services variant '$VARIANT'"
@@ -44,8 +49,13 @@ runs:
             ;;
         esac
 
-        echo "Decoding Android Google Services JSON to $android_file..."
-        echo "$GOOGLE_SERVICES_ANDROID_PROD_BS4" | base64 -d > "$android_file"
+        if [ -z "$android_secret" ]; then
+          echo "Error: $android_secret_name is not set"
+          exit 1
+        fi
+
+        echo "Decoding $android_secret_name to $android_file..."
+        echo "$android_secret" | base64 -d > "$android_file"
 
         echo "Decoding iOS Google Services plist to $ios_file..."
         echo "$GOOGLE_SERVICES_IOS_PROD_BS4" | base64 -d > "$ios_file"

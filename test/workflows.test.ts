@@ -861,19 +861,18 @@ describe('verifyGoogleServiceFiles', () => {
     expect(problem?.severity).toEqual('error');
   });
 
-  test('warns rather than errors when the ios bundle id does not match', () => {
-    const [problem] = verifyGoogleServiceFiles({
-      variant: 'internal',
-      androidContents: androidFileFor('com.lhowsam.foam.internal'),
-      iosContents: iosFileFor('foam-tv'),
-    });
-
-    expect(problem).toEqual<GoogleServiceFileProblem>({
-      severity: 'warning',
-      file: './GoogleService-Info-internal.plist',
-      message:
-        "is for 'foam-tv', but this variant builds 'foam-tv-internal'. Firebase does not fail the build on this, so the app reports to the wrong project.",
-    });
+  /**
+   * One plist is shared across variants on purpose, so its BUNDLE_ID belongs
+   * to whichever variant it was exported for and must not be flagged.
+   */
+  test('accepts an ios plist whose bundle id is another variant', () => {
+    expect(
+      verifyGoogleServiceFiles({
+        variant: 'internal',
+        androidContents: androidFileFor('com.lhowsam.foam.internal'),
+        iosContents: iosFileFor('com.lhowsam.foam'),
+      }),
+    ).toEqual([]);
   });
 
   test('errors when the plist has no bundle id at all', () => {
