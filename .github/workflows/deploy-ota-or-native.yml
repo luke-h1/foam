@@ -208,6 +208,13 @@ jobs:
       - name: 🥟 Setup Bun and install dependencies
         uses: ./.github/actions/setup-bun-install
 
+      - name: ☕ Setup JDK
+        if: ${{ (inputs.platform || 'ios') != 'ios' }}
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
       - name: 🏷️ Resolve Sentry dist
         id: sentry_dist
         run: |
