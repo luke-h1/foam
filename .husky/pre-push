@@ -1,0 +1,41 @@
+base="$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || echo origin/main)"
+base_branch="${base#origin/}"
+
+git rev-parse --verify --quiet "$base" >/dev/null || exit 0
+
+status=0
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$local_sha" in
+    *[!0]*) ;;
+    *) continue ;;
+  esac
+
+  if [ "$remote_ref" = "refs/heads/$base_branch" ]; then
+    continue
+  fi
+
+  merges="$(git rev-list --min-parents=2 "$base..$local_sha")"
+  [ -n "$merges" ] || continue
+
+  status=1
+
+  echo "" >&2
+  echo "❌ $local_ref contains merge commits on top of $base:" >&2
+  echo "" >&2
+  git log --no-walk --format='   %h %an - %s' $merges >&2
+  echo "" >&2
+  echo "   We keep a linear history. Update your branch with a rebase:" >&2
+  echo "" >&2
+  echo "     git fetch origin $base_branch" >&2
+  echo "     git rebase $base" >&2
+  echo "     git push --force-with-lease" >&2
+  echo "" >&2
+done
+
+if [ "$status" -ne 0 ]; then
+  echo "   Push blocked. Use 'git push --no-verify' to override." >&2
+  echo "" >&2
+fi
+
+exit "$status"

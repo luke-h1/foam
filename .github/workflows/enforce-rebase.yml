@@ -1,0 +1,61 @@
+name: Enforce rebase
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+permissions:
+  contents: read
+jobs:
+  no-merge-commits:
+    name: No merge commits
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: 🚫 Reject merge commits
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          git fetch --no-tags origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
+
+          merges=$(git rev-list --min-parents=2 "origin/${BASE_REF}..${HEAD_SHA}")
+
+          if [ -z "$merges" ]; then
+            echo "Branch is linear on top of ${BASE_REF}."
+            echo "✅ No merge commits - branch is linear on top of \`${BASE_REF}\`." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          {
+            echo "### ❌ Merge commits found"
+            echo
+            echo "This branch was updated with \`git merge\` instead of \`git rebase\`. We keep a linear history, so merge commits are not allowed on a PR branch - including merges of \`${BASE_REF}\` into the branch."
+            echo
+            echo "| commit | author | subject |"
+            echo "| --- | --- | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          while read -r sha; do
+            git show -s --format='| `%h` | %an | %s |' "$sha" >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::Merge commit $(git show -s --format='%h %s' "$sha")"
+          done <<< "$merges"
+
+          {
+            echo
+            echo "Drop them by rebasing:"
+            echo
+            echo '```sh'
+            echo "git fetch origin ${BASE_REF}"
+            echo "git rebase origin/${BASE_REF}"
+            echo "git push --force-with-lease"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          exit 1
