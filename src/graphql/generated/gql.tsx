@@ -2042,7 +2042,7 @@ export type UserByConnectionQueryVariables = Exact<{
 }>;
 
 
-export type UserByConnectionQuery = { __typename?: 'Query', users: { __typename?: 'UserQuery', userByConnection?: { __typename?: 'User', id: string, emoteSets: Array<{ __typename?: 'EmoteSet', id: string, name: string, kind: EmoteSetKind }> } | null } };
+export type UserByConnectionQuery = { __typename?: 'Query', users: { __typename?: 'UserQuery', userByConnection?: { __typename?: 'User', id: string, style: { __typename?: 'UserStyle', activeEmoteSetId?: string | null } } | null } };
 
 export type UserCosmeticsQueryVariables = Exact<{
   id: Scalars['Id']['input'];
@@ -2322,10 +2322,8 @@ export const UserByConnectionDocument = `
   users {
     userByConnection(platform: TWITCH, platformId: $platformId) {
       id
-      emoteSets {
-        id
-        name
-        kind
+      style {
+        activeEmoteSetId
       }
     }
   }

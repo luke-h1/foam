@@ -1,11 +1,11 @@
-import type { SevenTvUserIdCacheStorage } from '@app/utils/seventv/sevenTvUserIdCache';
+import type { SevenTvUserCacheStorage } from '@app/utils/seventv/sevenTvUserCache';
 
 type StoredEntry = {
   expiry?: string;
   value: unknown;
 };
 
-export type FakeSevenTvCacheStorage = SevenTvUserIdCacheStorage & {
+export type FakeSevenTvCacheStorage = SevenTvUserCacheStorage & {
   backing: Map<string, StoredEntry>;
 };
 

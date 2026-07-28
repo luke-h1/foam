@@ -25,7 +25,7 @@ jest.mock('@app/services/seventv-service', () => ({
     getUserCosmeticsGql: jest.fn(),
     sendPresence: jest.fn(() => Promise.resolve()),
   },
-  clearSevenTvUserIdCache: jest.fn(),
+  clearSevenTvUserCache: jest.fn(),
 }));
 
 jest.mock('@app/utils/seventv/sevenTvSessionId', () => ({

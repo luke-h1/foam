@@ -4,7 +4,7 @@ import { buildSevenTvBadgeImageUrl } from '@app/components/Chat/util/normalizeSe
 import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics/normalizeSevenTvBadge';
 import { storageService } from '@app/lib/storage';
 import {
-  clearSevenTvUserIdCache,
+  clearSevenTvUserCache,
   sevenTvService,
 } from '@app/services/seventv-service';
 import type { PaintData } from '@app/types/seventv/cosmetics';
@@ -356,7 +356,7 @@ export const clearUserCosmeticsCache = () => {
   }
   userCosmeticsFetchGuard.clear();
   sessionCosmeticsCache.clear();
-  clearSevenTvUserIdCache();
+  clearSevenTvUserCache();
   storageService.clearNamespace(
     SEVEN_TV_CACHE_NAMESPACE,
     'sevenTvUserCosmetics_',
