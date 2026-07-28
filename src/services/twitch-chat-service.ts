@@ -902,19 +902,20 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   useEffect(() => {
     const joinedChannels = joinedChannelsRef.current;
     const pendingJoinChannels = pendingJoinChannelsRef.current;
+    const lastSentMessages = lastSentMessagesRef.current;
     const messageBuffer = messageBufferRef;
 
     return () => {
       logger.chat.info('[useTwitchChat] Cleaning up Twitch IRC client');
       joinedChannels.clear();
       pendingJoinChannels.clear();
+      lastSentMessages.clear();
       messageBuffer.current = '';
       isAuthenticatedRef.current = false;
       userStateRef.current = {};
       pendingMessageRef.current = null;
-      lastSentMessagesRef.current.clear();
     };
-  }, [joinedChannelsRef, pendingJoinChannelsRef]);
+  }, [joinedChannelsRef, lastSentMessagesRef, pendingJoinChannelsRef]);
 
   const sendMessage = (
     channelName: string,
