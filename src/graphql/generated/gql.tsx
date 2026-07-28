@@ -1,5 +1,6 @@
 /* eslint-disable */
 // @ts-nocheck
+import { gql } from '@app/graphql/gql';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -7,9 +8,7 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: 
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
-/**
- * All built-in and custom scalars, mapped to their actual values
- */
+/** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string; }
   String: { input: string; output: string; }
@@ -109,7 +108,7 @@ export type BillingMutation = {
 
 
 export type BillingMutationBuyShopItemsArgs = {
-  itemIds: Array<Scalars['Id']['input']>;
+  cart: Array<ShopCartEntry>;
 };
 
 
@@ -803,9 +802,7 @@ export type EventEmoteDataChangeTags = {
 
 export type EventEmoteDataDelete = {
   __typename?: 'EventEmoteDataDelete';
-  /**
-   * Always false
-   */
+  /** Always false */
   noop: Scalars['Boolean']['output'];
 };
 
@@ -822,9 +819,7 @@ export type EventEmoteDataProcess = {
 
 export type EventEmoteDataUpload = {
   __typename?: 'EventEmoteDataUpload';
-  /**
-   * Always false
-   */
+  /** Always false */
   noop: Scalars['Boolean']['output'];
 };
 
@@ -857,17 +852,13 @@ export type EventEmoteSetDataChangeTags = {
 
 export type EventEmoteSetDataCreate = {
   __typename?: 'EventEmoteSetDataCreate';
-  /**
-   * Always false
-   */
+  /** Always false */
   noop: Scalars['Boolean']['output'];
 };
 
 export type EventEmoteSetDataDelete = {
   __typename?: 'EventEmoteSetDataDelete';
-  /**
-   * Always false
-   */
+  /** Always false */
   noop: Scalars['Boolean']['output'];
 };
 
@@ -918,17 +909,13 @@ export type EventUserDataChangeActivePaint = {
 
 export type EventUserDataCreate = {
   __typename?: 'EventUserDataCreate';
-  /**
-   * Always false
-   */
+  /** Always false */
   noop: Scalars['Boolean']['output'];
 };
 
 export type EventUserDataDelete = {
   __typename?: 'EventUserDataDelete';
-  /**
-   * Always false
-   */
+  /** Always false */
   noop: Scalars['Boolean']['output'];
 };
 
@@ -941,9 +928,7 @@ export type Filters = {
   animated?: InputMaybe<Scalars['Boolean']['input']>;
   approvedPersonal?: InputMaybe<Scalars['Boolean']['input']>;
   defaultZeroWidth?: InputMaybe<Scalars['Boolean']['input']>;
-  /**
-   * defaults to false when unset
-   */
+  /** defaults to false when unset */
   exactMatch?: InputMaybe<Scalars['Boolean']['input']>;
   nsfw?: InputMaybe<Scalars['Boolean']['input']>;
 };
@@ -973,9 +958,7 @@ export enum ImageProcessorEvent {
 
 export type InventoryEntitlementEdgeAnyBadge = {
   __typename?: 'InventoryEntitlementEdgeAnyBadge';
-  /**
-   * Whether this entitlement is directly connected to the user
-   */
+  /** Whether this entitlement is directly connected to the user */
   accessible: Scalars['Boolean']['output'];
   from: EntitlementNodeAny;
   to: EntitlementNodeBadge;
@@ -983,9 +966,7 @@ export type InventoryEntitlementEdgeAnyBadge = {
 
 export type InventoryEntitlementEdgeAnyPaint = {
   __typename?: 'InventoryEntitlementEdgeAnyPaint';
-  /**
-   * Whether this entitlement is directly connected to the user
-   */
+  /** Whether this entitlement is directly connected to the user */
   accessible: Scalars['Boolean']['output'];
   from: EntitlementNodeAny;
   to: EntitlementNodePaint;
@@ -993,9 +974,7 @@ export type InventoryEntitlementEdgeAnyPaint = {
 
 export type InventoryEntitlementEdgeAnyProduct = {
   __typename?: 'InventoryEntitlementEdgeAnyProduct';
-  /**
-   * Whether this entitlement is directly connected to the user
-   */
+  /** Whether this entitlement is directly connected to the user */
   accessible: Scalars['Boolean']['output'];
   from: EntitlementNodeAny;
   to: EntitlementNodeProduct;
@@ -1361,6 +1340,11 @@ export type SearchResultAll = {
   users: UserSearchResult;
 };
 
+export type ShopCartEntry = {
+  itemIds: Array<Scalars['Id']['input']>;
+  recipientId?: InputMaybe<Scalars['Id']['input']>;
+};
+
 export type ShopItem = {
   __typename?: 'ShopItem';
   id: Scalars['Id']['output'];
@@ -1383,6 +1367,7 @@ export type ShopProduct = {
   id: Scalars['Id']['output'];
   items: Array<ShopItem>;
   name: Scalars['String']['output'];
+  public: Scalars['Boolean']['output'];
   searchUpdatedAt?: Maybe<Scalars['DateTime']['output']>;
   type: ShopItemType;
   updatedAt: Scalars['DateTime']['output'];
@@ -2063,7 +2048,7 @@ export type UserPersonalEmotesQueryQueryVariables = Exact<{
 
 export type UserPersonalEmotesQueryQuery = { __typename?: 'Query', users: { __typename?: 'UserQuery', userByConnection?: { __typename?: 'User', id: string, personalEmoteSet?: { __typename?: 'EmoteSet', id: string, name: string, emotes: { __typename?: 'EmoteSetEmoteSearchResult', items: Array<{ __typename?: 'EmoteSetEmote', id: string, alias: string, emote: { __typename?: 'Emote', id: string, defaultName: string, flags: { __typename?: 'EmoteFlags', animated: boolean, approvedPersonal: boolean, defaultZeroWidth: boolean }, images: Array<{ __typename?: 'Image', url: string, mime: string, size: number, scale: number, width: number, height: number, frameCount: number }>, owner?: { __typename?: 'User', id: string, mainConnection?: { __typename?: 'UserConnection', platformDisplayName: string } | null } | null } }> } } | null } | null } };
 
-export const ImageFragmentFragmentDoc = `
+export const ImageFragmentFragmentDoc = gql`
     fragment ImageFragment on Image {
   url
   mime
@@ -2074,7 +2059,7 @@ export const ImageFragmentFragmentDoc = `
   frameCount
 }
     `;
-export const PaintDataFragmentFragmentDoc = `
+export const PaintDataFragmentFragmentDoc = gql`
     fragment PaintDataFragment on PaintData {
   layers {
     id
@@ -2134,7 +2119,7 @@ export const PaintDataFragmentFragmentDoc = `
   }
 }
     ${ImageFragmentFragmentDoc}`;
-export const BadgeQueryDocument = `
+export const BadgeQueryDocument = gql`
     query BadgeQuery($id: Id!) {
   badges {
     badge(id: $id) {
@@ -2152,7 +2137,7 @@ export const BadgeQueryDocument = `
   }
 }
     ${ImageFragmentFragmentDoc}`;
-export const BadgesQueryDocument = `
+export const BadgesQueryDocument = gql`
     query BadgesQuery {
   badges {
     badges {
@@ -2170,7 +2155,7 @@ export const BadgesQueryDocument = `
   }
 }
     ${ImageFragmentFragmentDoc}`;
-export const EmoteQueryDocument = `
+export const EmoteQueryDocument = gql`
     query EmoteQuery($id: Id!) {
   emotes {
     emote(id: $id) {
@@ -2195,7 +2180,7 @@ export const EmoteQueryDocument = `
   }
 }
     ${ImageFragmentFragmentDoc}`;
-export const EmoteSetCustomDocument = `
+export const EmoteSetCustomDocument = gql`
     query emoteSetCustom($id: Id!) {
   emoteSets {
     emoteSet(id: $id) {
@@ -2239,7 +2224,7 @@ export const EmoteSetCustomDocument = `
   }
 }
     ${ImageFragmentFragmentDoc}`;
-export const GlobalEmoteSetDocument = `
+export const GlobalEmoteSetDocument = gql`
     query GlobalEmoteSet {
   emoteSets {
     global {
@@ -2283,7 +2268,7 @@ export const GlobalEmoteSetDocument = `
   }
 }
     ${ImageFragmentFragmentDoc}`;
-export const PaintQueryDocument = `
+export const PaintQueryDocument = gql`
     query PaintQuery($id: Id!) {
   paints {
     paint(id: $id) {
@@ -2300,7 +2285,7 @@ export const PaintQueryDocument = `
   }
 }
     ${PaintDataFragmentFragmentDoc}`;
-export const PaintsQueryDocument = `
+export const PaintsQueryDocument = gql`
     query PaintsQuery {
   paints {
     paints {
@@ -2317,7 +2302,7 @@ export const PaintsQueryDocument = `
   }
 }
     ${PaintDataFragmentFragmentDoc}`;
-export const UserByConnectionDocument = `
+export const UserByConnectionDocument = gql`
     query UserByConnection($platformId: String!) {
   users {
     userByConnection(platform: TWITCH, platformId: $platformId) {
@@ -2329,7 +2314,7 @@ export const UserByConnectionDocument = `
   }
 }
     `;
-export const UserCosmeticsDocument = `
+export const UserCosmeticsDocument = gql`
     query UserCosmetics($id: Id!) {
   users {
     user(id: $id) {
@@ -2417,7 +2402,7 @@ export const UserCosmeticsDocument = `
   }
 }
     ${ImageFragmentFragmentDoc}`;
-export const UserPersonalEmotesQueryDocument = `
+export const UserPersonalEmotesQueryDocument = gql`
     query UserPersonalEmotesQuery($platformId: String!) {
   users {
     userByConnection(platform: TWITCH, platformId: $platformId) {
