@@ -1,11 +1,11 @@
-import type { SevenTvUserIdCacheStorage } from '@app/utils/seventv/sevenTvUserIdCache';
+import type { SevenTvUserCacheStorage } from '@app/utils/seventv/sevenTvUserCache';
 
 type StoredEntry = {
   expiry?: string;
   value: unknown;
 };
 
-export type FakeSevenTvCacheStorage = SevenTvUserIdCacheStorage & {
+export type FakeSevenTvCacheStorage = SevenTvUserCacheStorage & {
   backing: Map<string, StoredEntry>;
 };
 
@@ -38,6 +38,9 @@ export function createFakeStorage(): FakeSevenTvCacheStorage {
         value,
         ...(expiry ? { expiry: expiry.toISOString() } : {}),
       });
+    },
+    delete(key, namespacePrefix) {
+      backing.delete(namespaceKey(key, namespacePrefix));
     },
     clearNamespace(namespacePrefix, keyPrefix = '') {
       const prefix = `${namespacePrefix}_${keyPrefix}`;

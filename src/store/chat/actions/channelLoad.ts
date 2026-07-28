@@ -4,7 +4,10 @@ import { createSystemMessage } from '@app/components/Chat/util/messageHandlers/c
 import i18next from '@app/i18n/i18next';
 import { clearChatStorePersistence } from '@app/lib/observablePersistence';
 import { startSpanAsync } from '@app/lib/sentry';
-import { sevenTvService } from '@app/services/seventv-service';
+import {
+  invalidateSevenTvUser,
+  sevenTvService,
+} from '@app/services/seventv-service';
 import { twitchService } from '@app/services/twitch-service';
 import { getPreferences } from '@app/store/preferences/state';
 import type { SanitisedEmote } from '@app/types/emote';
@@ -335,6 +338,9 @@ const loadChannelResourcesInternal = async (
     // An explicit refresh should re-download global provider data too, not
     // serve it from the session cache.
     clearGlobalResourceCache();
+    // Same for the channel's 7TV set: "refresh emotes" is the thing a user
+    // reaches for when the set looks wrong, so it has to re-resolve it.
+    invalidateSevenTvUser(channelId);
   }
   try {
     const caches = chatStore$.persisted.channelCaches.peek();
@@ -888,6 +894,10 @@ export const switchSevenTvEmoteSet = async (
   }
 
   setBoundedChannelEntry(latestRequestedEmoteSetByChannel, channelId, newSetId);
+
+  // The cached 7TV user still points at the set being replaced, and the next
+  // full load would resolve it back.
+  invalidateSevenTvUser(channelId);
 
   try {
     // eslint-disable-next-line react-doctor/async-defer-await -- the guard below checks state that can only go stale DURING this await; reordering would defeat it

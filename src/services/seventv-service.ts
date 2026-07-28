@@ -34,10 +34,7 @@ import type {
   SevenTvEventType,
   UserCosmeticsInfo,
 } from '@app/types/seventv/cosmetics';
-import type {
-  SevenTvEmote,
-  SevenTvEmotePreview,
-} from '@app/types/seventv/emotes';
+import type { SevenTvEmotePreview } from '@app/types/seventv/emotes';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { convertV4PaintToPaintData } from '@app/utils/color/sevenTvPaintData/convertV4PaintToPaintData';
 import { pickAnimatedFormat } from '@app/utils/color/sevenTvPaintData/pickAnimatedFormat';
@@ -45,59 +42,31 @@ import { pickBestFormat } from '@app/utils/color/sevenTvPaintData/pickBestFormat
 import { pickBestImage } from '@app/utils/color/sevenTvPaintData/pickBestImage';
 import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants/createEmoteImageVariants';
 import { logger } from '@app/utils/logger';
-import { sevenTvUserIdCache } from '@app/utils/seventv/sevenTvUserIdCache';
+import {
+  SEVEN_TV_EMOTE_SET_MAX_AGE_MS,
+  type SevenTvUser,
+  sevenTvUserCache,
+} from '@app/utils/seventv/sevenTvUserCache';
 
 import { sevenTvApi } from './api/clients';
 import { sevenTvV4Client } from './gql/client';
 import { runCosmeticsQuery } from './gql/sevenTvWorkletClient';
 
-interface StvEmoteSet {
-  id: string;
-  name: string;
-  flags: number;
-  immutable: boolean;
-  privileged: boolean;
-  emotes: SevenTvEmote[];
-  emote_count: number;
-  capacity: number;
-  owner: {
-    id: string;
-    username: string;
-    display_name: string;
-    avatar_url: string;
-    style: {
-      color: number;
-      badge_id: string;
-      paint_id: string;
-    };
-    roles: string[];
-  };
-}
-
-interface StvChannelEmotesResponse {
-  id: string;
-  platform: string;
-  username: string;
-  display_name: string;
-  linked_at: number;
-  emote_capacity: number;
-  emote_set: StvEmoteSet;
-  user: {
-    id: string;
-    username: string;
-    display_name: string;
-    created_at: number;
-    avatar_url: string;
-  };
-}
-
-export const clearSevenTvUserIdCache = () => {
-  sevenTvUserIdCache.clear();
+export const clearSevenTvUserCache = () => {
+  sevenTvUserCache.clear();
 };
 
-async function fetchSevenTvUserId(
+/**
+ * Called when the EventAPI reports a channel switching emote set, so the next
+ * channel load does not resolve the set it just replaced.
+ */
+export const invalidateSevenTvUser = (twitchUserId: string) => {
+  sevenTvUserCache.invalidate(twitchUserId);
+};
+
+async function fetchSevenTvUser(
   twitchUserId: string,
-): Promise<string | null> {
+): Promise<SevenTvUser | null> {
   const { result, error } = await runCosmeticsQuery(
     UserByConnectionDocument,
     { platformId: twitchUserId },
@@ -113,7 +82,11 @@ async function fetchSevenTvUserId(
             '7TV GQL error',
         );
       }
-      return parsed.data?.users?.userByConnection?.id ?? '';
+      const user = parsed.data?.users?.userByConnection;
+      return {
+        userId: user?.id ?? '',
+        emoteSetId: user?.style?.activeEmoteSetId ?? '',
+      };
     },
   );
 
@@ -132,7 +105,7 @@ async function fetchSevenTvUserId(
     return null;
   }
 
-  return result ?? '';
+  return result ?? null;
 }
 
 function buildV4ImageVariants(images: readonly Image[]): EmoteImageVariants {
@@ -237,15 +210,30 @@ function hasRenderableUrl(emote: { url: string }): boolean {
 
 export const sevenTvService = {
   get7tvUserId: async (twitchUserId: string): Promise<string> =>
-    sevenTvUserIdCache.resolve(twitchUserId, fetchSevenTvUserId),
+    (await sevenTvUserCache.resolve(twitchUserId, fetchSevenTvUser))?.userId ??
+    '',
 
+  /**
+   * Shares the cached `userByConnection` lookup with `get7tvUserId`, so the
+   * WebSocket's owner lookup and this cost one request per channel.
+   *
+   * Throws when the lookup fails or the channel has no 7TV account, matching
+   * what the v3 endpoint did by 404ing - `channelLoad` catches it and falls
+   * back to the cached set id or the global one.
+   */
   getEmoteSetId: async (twitchUserId: string): Promise<string> => {
-    const result = await sevenTvApi.get<StvChannelEmotesResponse>(
-      `/users/twitch/${twitchUserId}`,
+    const user = await sevenTvUserCache.resolve(
+      twitchUserId,
+      fetchSevenTvUser,
+      { maxAgeMs: SEVEN_TV_EMOTE_SET_MAX_AGE_MS },
     );
 
-    if (!result.emote_set.id) {
-      logger.stv.warn('7TV API returned no emote set ID', {
+    if (!user?.userId) {
+      throw new Error(`No 7TV user for Twitch user ${twitchUserId}`);
+    }
+
+    if (!user.emoteSetId) {
+      logger.stv.warn('7TV user has no active emote set', {
         name: 'seven_tv_emotes_warning',
         action: 'emote_set_id_missing',
         channel_id: twitchUserId,
@@ -255,7 +243,7 @@ export const sevenTvService = {
       });
     }
 
-    return result.emote_set.id;
+    return user.emoteSetId;
   },
 
   getSanitisedEmoteSet: async (
