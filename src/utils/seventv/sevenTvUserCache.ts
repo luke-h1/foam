@@ -1,19 +1,21 @@
 import { storageService } from '@app/lib/storage';
 
-// Bumped from `user-id:` when the record grew an emote set id, so entries
-// written by an older build are ignored rather than read back as a user with
-// no active emote set.
+// Bumped from `user-id:`: older entries have no emoteSetId and would read back
+// as a user with no active set.
 const SEVEN_TV_USER_CACHE_PREFIX = 'user:v2:';
 // Keep persisted 7TV user lookups for at most 12 hours before resolving again.
 const SEVEN_TV_USER_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
 const SEVEN_TV_USER_NEGATIVE_CACHE_TTL_MS = 30 * 60 * 1000;
+/**
+ * Matches the channel cache's CACHE_DURATION, so an emote set switch made while
+ * the user was away surfaces on the same schedule the rest of the channel does.
+ */
+export const SEVEN_TV_EMOTE_SET_MAX_AGE_MS = 60 * 60 * 1000;
 const SEVEN_TV_CACHE_NAMESPACE = 'seven_tv_cache';
 const MAX_RESOLVED_USER_ENTRIES = 2000;
 
 /**
- * The 7TV user behind a Twitch user id. Both fields are empty when the user has
- * no 7TV account; `emoteSetId` alone is empty when the account exists but has
- * no active emote set.
+ * Empty `userId` means no 7TV account; empty `emoteSetId` means no active set.
  */
 export type SevenTvUser = {
   userId: string;
@@ -21,6 +23,7 @@ export type SevenTvUser = {
 };
 
 type CachedSevenTvUser = SevenTvUser & {
+  fetchedAt: number;
   expiresAt: number;
 };
 
@@ -32,6 +35,7 @@ export type SevenTvUserCacheStorage = {
     namespacePrefix?: 'seven_tv_cache',
     options?: { expiry?: Date },
   ) => void;
+  delete: (key: string, namespacePrefix?: 'seven_tv_cache') => void;
   clearNamespace: (
     namespacePrefix: 'seven_tv_cache',
     keyPrefix?: string,
@@ -39,15 +43,12 @@ export type SevenTvUserCacheStorage = {
 };
 
 /**
- * Fetches the 7TV user for a Twitch user ID. Resolves to the user, to a record
- * of empty strings when the user has no 7TV account, or to `null` when the
- * lookup failed and the result must not be cached.
+ * `null` means the lookup failed and must not be cached, as distinct from a
+ * user that resolved to empty ids.
  */
 export type SevenTvUserFetcher = (
   twitchUserId: string,
 ) => Promise<SevenTvUser | null>;
-
-export const NO_SEVEN_TV_USER: SevenTvUser = { userId: '', emoteSetId: '' };
 
 /**
  * Twitch to 7TV user resolution cache: bounded in-memory map, MMKV persistence
@@ -60,18 +61,18 @@ export function createSevenTvUserCache(
   const maxResolvedEntries =
     options.maxResolvedEntries ?? MAX_RESOLVED_USER_ENTRIES;
 
-  const sevenTvUserRequests = new Map<string, Promise<SevenTvUser>>();
+  const sevenTvUserRequests = new Map<string, Promise<SevenTvUser | null>>();
 
   // Bumped by clear() so in-flight requests cannot write back stale results.
   let cacheGeneration = 0;
 
-  // Positive resolutions only, so the MMKV negative TTL still lets a
-  // newly-created 7TV account resolve.
-  const resolvedSevenTvUsers = new Map<string, SevenTvUser>();
+  // Positive resolutions only, so the negative TTL still lets a new account
+  // resolve. Expiry tracked here too: user ids never change, emote sets do.
+  const resolvedSevenTvUsers = new Map<string, CachedSevenTvUser>();
 
   function rememberResolvedSevenTvUser(
     twitchUserId: string,
-    user: SevenTvUser,
+    user: CachedSevenTvUser,
   ): void {
     if (!user.userId) {
       return;
@@ -90,21 +91,26 @@ export function createSevenTvUserCache(
   const getSevenTvUserStorageKey = (twitchUserId: string) =>
     `sevenTvUserId_${SEVEN_TV_USER_CACHE_PREFIX}${twitchUserId}` as const;
 
-  function getCachedSevenTvUser(twitchUserId: string): SevenTvUser | undefined {
-    const cached = storage.getString<CachedSevenTvUser>(
-      getSevenTvUserStorageKey(twitchUserId),
-      SEVEN_TV_CACHE_NAMESPACE,
+  function getCachedSevenTvUser(
+    twitchUserId: string,
+  ): CachedSevenTvUser | undefined {
+    return (
+      storage.getString<CachedSevenTvUser>(
+        getSevenTvUserStorageKey(twitchUserId),
+        SEVEN_TV_CACHE_NAMESPACE,
+      ) ?? undefined
     );
-    if (!cached) {
-      return undefined;
-    }
-    return { userId: cached.userId, emoteSetId: cached.emoteSetId };
   }
 
-  function cacheSevenTvUser(twitchUserId: string, user: SevenTvUser) {
+  function cacheSevenTvUser(
+    twitchUserId: string,
+    user: SevenTvUser,
+  ): CachedSevenTvUser {
+    const fetchedAt = Date.now();
     const cached: CachedSevenTvUser = {
+      fetchedAt,
       expiresAt:
-        Date.now() +
+        fetchedAt +
         (user.userId
           ? SEVEN_TV_USER_CACHE_TTL_MS
           : SEVEN_TV_USER_NEGATIVE_CACHE_TTL_MS),
@@ -118,22 +124,44 @@ export function createSevenTvUserCache(
       SEVEN_TV_CACHE_NAMESPACE,
       { expiry: new Date(cached.expiresAt) },
     );
+
+    return cached;
   }
 
+  const toSevenTvUser = ({
+    userId,
+    emoteSetId,
+  }: CachedSevenTvUser): SevenTvUser => ({ userId, emoteSetId });
+
   return {
+    /**
+     * Resolves to `null` when the lookup failed and nothing was cached, so
+     * callers can tell that apart from a user that resolved to empty ids.
+     *
+     * `maxAgeMs` lets a caller demand a fresher entry than the 12h TTL: a
+     * user id never changes, but the active emote set does.
+     */
     async resolve(
       twitchUserId: string,
       fetchSevenTvUser: SevenTvUserFetcher,
-    ): Promise<SevenTvUser> {
+      { maxAgeMs = Infinity }: { maxAgeMs?: number } = {},
+    ): Promise<SevenTvUser | null> {
+      const now = Date.now();
+      const isFresh = (user: CachedSevenTvUser) =>
+        user.expiresAt > now && now - user.fetchedAt <= maxAgeMs;
+
       const resolved = resolvedSevenTvUsers.get(twitchUserId);
       if (resolved !== undefined) {
-        return resolved;
+        if (isFresh(resolved)) {
+          return toSevenTvUser(resolved);
+        }
+        resolvedSevenTvUsers.delete(twitchUserId);
       }
 
       const cached = getCachedSevenTvUser(twitchUserId);
-      if (cached !== undefined) {
+      if (cached !== undefined && isFresh(cached)) {
         rememberResolvedSevenTvUser(twitchUserId, cached);
-        return cached;
+        return toSevenTvUser(cached);
       }
 
       const pending = sevenTvUserRequests.get(twitchUserId);
@@ -145,11 +173,13 @@ export function createSevenTvUserCache(
       const request = (async () => {
         const fetched = await fetchSevenTvUser(twitchUserId);
         if (fetched === null) {
-          return NO_SEVEN_TV_USER;
+          return null;
         }
         if (cacheGeneration === requestGeneration) {
-          cacheSevenTvUser(twitchUserId, fetched);
-          rememberResolvedSevenTvUser(twitchUserId, fetched);
+          rememberResolvedSevenTvUser(
+            twitchUserId,
+            cacheSevenTvUser(twitchUserId, fetched),
+          );
         }
         return fetched;
       })();
@@ -162,6 +192,18 @@ export function createSevenTvUserCache(
           sevenTvUserRequests.delete(twitchUserId);
         }
       }
+    },
+
+    /**
+     * Drops one user, for when something else already knows the record is
+     * stale - the EventAPI reporting that a channel switched emote set.
+     */
+    invalidate(twitchUserId: string): void {
+      resolvedSevenTvUsers.delete(twitchUserId);
+      storage.delete(
+        getSevenTvUserStorageKey(twitchUserId),
+        SEVEN_TV_CACHE_NAMESPACE,
+      );
     },
 
     clear(): void {

@@ -39,6 +39,9 @@ export function createFakeStorage(): FakeSevenTvCacheStorage {
         ...(expiry ? { expiry: expiry.toISOString() } : {}),
       });
     },
+    delete(key, namespacePrefix) {
+      backing.delete(namespaceKey(key, namespacePrefix));
+    },
     clearNamespace(namespacePrefix, keyPrefix = '') {
       const prefix = `${namespacePrefix}_${keyPrefix}`;
       for (const key of [...backing.keys()]) {

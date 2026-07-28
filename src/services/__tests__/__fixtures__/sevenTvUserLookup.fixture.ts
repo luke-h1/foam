@@ -1,7 +1,6 @@
 /**
- * Response bodies matching what 7TV's v4 GQL returns for the
- * `UserByConnection` query, so the service's worklet parser is exercised
- * against the real payload shape rather than a hand-shaped object.
+ * Real `UserByConnection` response bodies, so the parser is exercised against
+ * the payload shape 7TV actually returns.
  */
 export const sevenTvUserResponse = (
   userId: string,

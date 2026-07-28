@@ -43,7 +43,7 @@ import { pickBestImage } from '@app/utils/color/sevenTvPaintData/pickBestImage';
 import { createEmoteImageVariants } from '@app/utils/emote/emoteImageVariants/createEmoteImageVariants';
 import { logger } from '@app/utils/logger';
 import {
-  NO_SEVEN_TV_USER,
+  SEVEN_TV_EMOTE_SET_MAX_AGE_MS,
   type SevenTvUser,
   sevenTvUserCache,
 } from '@app/utils/seventv/sevenTvUserCache';
@@ -54,6 +54,14 @@ import { runCosmeticsQuery } from './gql/sevenTvWorkletClient';
 
 export const clearSevenTvUserCache = () => {
   sevenTvUserCache.clear();
+};
+
+/**
+ * Called when the EventAPI reports a channel switching emote set, so the next
+ * channel load does not resolve the set it just replaced.
+ */
+export const invalidateSevenTvUser = (twitchUserId: string) => {
+  sevenTvUserCache.invalidate(twitchUserId);
 };
 
 async function fetchSevenTvUser(
@@ -97,7 +105,7 @@ async function fetchSevenTvUser(
     return null;
   }
 
-  return result ?? NO_SEVEN_TV_USER;
+  return result ?? null;
 }
 
 function buildV4ImageVariants(images: readonly Image[]): EmoteImageVariants {
@@ -202,21 +210,30 @@ function hasRenderableUrl(emote: { url: string }): boolean {
 
 export const sevenTvService = {
   get7tvUserId: async (twitchUserId: string): Promise<string> =>
-    (await sevenTvUserCache.resolve(twitchUserId, fetchSevenTvUser)).userId,
+    (await sevenTvUserCache.resolve(twitchUserId, fetchSevenTvUser))?.userId ??
+    '',
 
   /**
-   * Resolves the channel's active 7TV emote set. Shares the cached
-   * `userByConnection` lookup with `get7tvUserId`, so the WebSocket's owner
-   * lookup and this one cost a single request per channel.
+   * Shares the cached `userByConnection` lookup with `get7tvUserId`, so the
+   * WebSocket's owner lookup and this cost one request per channel.
+   *
+   * Throws when the lookup fails or the channel has no 7TV account, matching
+   * what the v3 endpoint did by 404ing - `channelLoad` catches it and falls
+   * back to the cached set id or the global one.
    */
   getEmoteSetId: async (twitchUserId: string): Promise<string> => {
-    const { emoteSetId } = await sevenTvUserCache.resolve(
+    const user = await sevenTvUserCache.resolve(
       twitchUserId,
       fetchSevenTvUser,
+      { maxAgeMs: SEVEN_TV_EMOTE_SET_MAX_AGE_MS },
     );
 
-    if (!emoteSetId) {
-      logger.stv.warn('7TV API returned no emote set ID', {
+    if (!user?.userId) {
+      throw new Error(`No 7TV user for Twitch user ${twitchUserId}`);
+    }
+
+    if (!user.emoteSetId) {
+      logger.stv.warn('7TV user has no active emote set', {
         name: 'seven_tv_emotes_warning',
         action: 'emote_set_id_missing',
         channel_id: twitchUserId,
@@ -226,7 +243,7 @@ export const sevenTvService = {
       });
     }
 
-    return emoteSetId;
+    return user.emoteSetId;
   },
 
   getSanitisedEmoteSet: async (

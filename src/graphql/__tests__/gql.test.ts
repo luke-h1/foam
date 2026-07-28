@@ -5,30 +5,68 @@ import {
 } from '@app/graphql/generated/gql';
 import { gql } from '@app/graphql/gql';
 
+const occurrences = (document: string, fragment: string) =>
+  document.split(fragment).length - 1;
+
+// Prettier reformats the GraphQL inside a `gql` tag, so these assert on the
+// interpolated fragments, which it leaves alone, rather than exact output.
 describe('gql', () => {
-  test('joins a document with its interpolated fragments', () => {
-    const fragment = gql`
-      fragment ImageFragment on Image {
-        url
+  const fragmentA = 'fragment A on T { a }';
+  const fragmentB = 'fragment B on T { b }';
+
+  test('appends interpolated fragments in order', () => {
+    const document = gql`
+      query Q {
+        a
+      }
+      ${fragmentA}
+      ${fragmentB}
+    `;
+
+    expect([
+      occurrences(document, fragmentA),
+      occurrences(document, fragmentB),
+      document.indexOf(fragmentA) < document.indexOf(fragmentB),
+    ]).toEqual([1, 1, true]);
+  });
+
+  test('leaves a document with no fragments alone', () => {
+    const document = gql`
+      query Q {
+        a
       }
     `;
 
-    expect(gql`
-      query BadgeQuery {
-        images {
-          ...ImageFragment
-        }
+    expect([
+      document.includes('query Q'),
+      document.includes('fragment'),
+    ]).toEqual([true, false]);
+  });
+
+  /**
+   * `graphQLTag` mode interpolates only direct spreads, so two fragments that
+   * share a nested one arrive already carrying it. Repeating the definition
+   * makes the whole operation invalid.
+   */
+  test('appends a repeated fragment only once', () => {
+    const shared = 'fragment ImageFragment on Image { url }';
+
+    const document = gql`
+      query Q {
+        a
       }
-      ${fragment}
-    `).toContain('fragment ImageFragment on Image');
+      ${shared}
+      ${shared}
+    `;
+
+    expect(occurrences(document, shared)).toEqual(1);
   });
 });
 
 /**
  * The clients post documents straight into a JSON body, so codegen has to keep
- * emitting plain strings. `documentMode: 'string'` emits
- * `new TypedDocumentString(...)` instead, a class nothing in this project
- * defines - these fail loudly if the config drifts back to it.
+ * emitting plain strings. These fail if it drifts back to `documentMode`
+ * `'string'`, which emits a `TypedDocumentString` class nothing here defines.
  */
 describe('generated documents', () => {
   test('are plain strings', () => {

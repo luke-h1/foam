@@ -32,6 +32,7 @@ describe('sevenTvUserCache', () => {
     ).toEqual({
       expiry: '2026-07-01T12:00:00.000Z',
       value: {
+        fetchedAt: new Date('2026-07-01T00:00:00.000Z').getTime(),
         expiresAt: new Date('2026-07-01T12:00:00.000Z').getTime(),
         userId: 'stv-1',
         emoteSetId: 'set-stv-1',
@@ -54,6 +55,83 @@ describe('sevenTvUserCache', () => {
       { userId: 'stv-1', emoteSetId: '' },
     ]);
     expect(fetchUser.mock.calls).toEqual([['123']]);
+  });
+
+  test('refetches a memoised user once the positive TTL lapses', async () => {
+    const storage = createFakeStorage();
+    const cache = createSevenTvUserCache(storage);
+    const fetchUser = jest.fn(async () => sevenTvUser('stv-1', 'set-old'));
+
+    const first = await cache.resolve('123', fetchUser);
+
+    jest.setSystemTime(new Date('2026-07-01T11:59:00.000Z'));
+    const beforeExpiry = await cache.resolve('123', fetchUser);
+
+    jest.setSystemTime(new Date('2026-07-01T12:01:00.000Z'));
+    fetchUser.mockImplementation(async () => sevenTvUser('stv-1', 'set-new'));
+    const afterExpiry = await cache.resolve('123', fetchUser);
+
+    expect([first, beforeExpiry, afterExpiry]).toEqual<SevenTvUser[]>([
+      { userId: 'stv-1', emoteSetId: 'set-old' },
+      { userId: 'stv-1', emoteSetId: 'set-old' },
+      { userId: 'stv-1', emoteSetId: 'set-new' },
+    ]);
+    expect(fetchUser.mock.calls).toEqual([['123'], ['123']]);
+  });
+
+  test('refetches when the caller demands a fresher entry than the TTL', async () => {
+    const storage = createFakeStorage();
+    const cache = createSevenTvUserCache(storage);
+    const fetchUser = jest.fn(async () => sevenTvUser('stv-1', 'set-old'));
+
+    await cache.resolve('123', fetchUser, { maxAgeMs: 60 * 60 * 1000 });
+
+    jest.setSystemTime(new Date('2026-07-01T00:59:00.000Z'));
+    const withinMaxAge = await cache.resolve('123', fetchUser, {
+      maxAgeMs: 60 * 60 * 1000,
+    });
+
+    jest.setSystemTime(new Date('2026-07-01T01:01:00.000Z'));
+    fetchUser.mockImplementation(async () => sevenTvUser('stv-1', 'set-new'));
+    const pastMaxAge = await cache.resolve('123', fetchUser, {
+      maxAgeMs: 60 * 60 * 1000,
+    });
+    const withoutMaxAge = await cache.resolve('123', fetchUser);
+
+    expect([withinMaxAge, pastMaxAge, withoutMaxAge]).toEqual<SevenTvUser[]>([
+      { userId: 'stv-1', emoteSetId: 'set-old' },
+      { userId: 'stv-1', emoteSetId: 'set-new' },
+      { userId: 'stv-1', emoteSetId: 'set-new' },
+    ]);
+    expect(fetchUser.mock.calls).toEqual([['123'], ['123']]);
+  });
+
+  test('invalidate drops one user from memory and storage', async () => {
+    const storage = createFakeStorage();
+    const cache = createSevenTvUserCache(storage);
+    const fetchUser = jest.fn(async (twitchUserId: string) =>
+      sevenTvUser(`stv-${twitchUserId}`),
+    );
+
+    await cache.resolve('123', fetchUser);
+    await cache.resolve('456', fetchUser);
+    cache.invalidate('123');
+
+    expect(
+      storage.backing.has('seven_tv_cache_sevenTvUserId_user:v2:123'),
+    ).toBe(false);
+    expect(
+      storage.backing.has('seven_tv_cache_sevenTvUserId_user:v2:456'),
+    ).toBe(true);
+
+    const refetched = await cache.resolve('123', fetchUser);
+    const untouched = await cache.resolve('456', fetchUser);
+
+    expect([refetched, untouched]).toEqual<SevenTvUser[]>([
+      { userId: 'stv-123', emoteSetId: 'set-stv-123' },
+      { userId: 'stv-456', emoteSetId: 'set-stv-456' },
+    ]);
+    expect(fetchUser.mock.calls).toEqual([['123'], ['456'], ['123']]);
   });
 
   test('ignores entries written under the previous cache key', async () => {
@@ -177,6 +255,7 @@ describe('sevenTvUserCache', () => {
     ).toEqual({
       expiry: '2026-07-01T00:30:00.000Z',
       value: {
+        fetchedAt: new Date('2026-07-01T00:00:00.000Z').getTime(),
         expiresAt: new Date('2026-07-01T00:30:00.000Z').getTime(),
         userId: '',
         emoteSetId: '',
@@ -198,14 +277,14 @@ describe('sevenTvUserCache', () => {
     expect(fetchUser.mock.calls).toEqual([['123'], ['123']]);
   });
 
-  test('does not cache a failed lookup', async () => {
+  test('reports a failed lookup as null and does not cache it', async () => {
     const storage = createFakeStorage();
     const cache = createSevenTvUserCache(storage);
     const fetchUser = jest.fn(async (): Promise<SevenTvUser | null> => null);
 
     const first = await cache.resolve('123', fetchUser);
 
-    expect(first).toEqual<SevenTvUser>({ userId: '', emoteSetId: '' });
+    expect(first).toBeNull();
     expect(storage.backing).toEqual(new Map());
 
     fetchUser.mockImplementation(async () => sevenTvUser('stv-1'));

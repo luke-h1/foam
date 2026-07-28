@@ -17,9 +17,8 @@ jest.mock('@app/services/gql/sevenTvWorkletClient', () => ({
 const mockRunCosmeticsQuery = jest.mocked(runCosmeticsQuery);
 
 /**
- * Runs the query's real `parse` worklet over `responseText` so the assertions
- * cover the parsing itself, not a stubbed return value. Mirrors how the real
- * client reports a throwing parse as an errored lookup.
+ * Runs the query's real `parse` worklet so the tests cover parsing, not a
+ * stubbed return. Reports a throwing parse as an error, like the real client.
  */
 const respondWith = (responseText: string) => {
   mockRunCosmeticsQuery.mockImplementation((_query, _variables, parse) => {
@@ -61,19 +60,45 @@ describe('sevenTvService user lookup', () => {
     await expect(sevenTvService.getEmoteSetId('123')).resolves.toEqual('');
   });
 
-  test('returns empty ids when the Twitch user has no 7TV account', async () => {
+  test('returns an empty user id when the Twitch user has no 7TV account', async () => {
     respondWith(noSevenTvUserResponse);
 
-    const userId = await sevenTvService.get7tvUserId('123');
-    const emoteSetId = await sevenTvService.getEmoteSetId('123');
-
-    expect([userId, emoteSetId]).toEqual(['', '']);
+    await expect(sevenTvService.get7tvUserId('123')).resolves.toEqual('');
   });
 
-  test('surfaces GQL errors as a failed lookup that is not cached', async () => {
+  /**
+   * v3 404'd for these, so `channelLoad` already falls back to the global set
+   * on a throw. Resolving to '' instead would query 7TV with an empty set id.
+   */
+  test('rejects when the Twitch user has no 7TV account', async () => {
+    respondWith(noSevenTvUserResponse);
+
+    await expect(sevenTvService.getEmoteSetId('123')).rejects.toThrow(
+      'No 7TV user for Twitch user 123',
+    );
+  });
+
+  /**
+   * `channelLoad` catches this to fall back to the cached set id or the global
+   * set, so a failed lookup must reject rather than resolve to ''.
+   */
+  test('rejects when the lookup fails', async () => {
     respondWith(sevenTvGqlErrorResponse);
 
-    await expect(sevenTvService.getEmoteSetId('123')).resolves.toEqual('');
+    await expect(sevenTvService.getEmoteSetId('123')).rejects.toThrow(
+      'No 7TV user for Twitch user 123',
+    );
+  });
+
+  test('returns an empty user id rather than rejecting when the lookup fails', async () => {
+    respondWith(sevenTvGqlErrorResponse);
+
+    await expect(sevenTvService.get7tvUserId('123')).resolves.toEqual('');
+  });
+
+  test('does not cache a failed lookup', async () => {
+    respondWith(sevenTvGqlErrorResponse);
+    await expect(sevenTvService.getEmoteSetId('123')).rejects.toThrow();
 
     respondWith(sevenTvUserResponse('stv-1', 'set-1'));
 

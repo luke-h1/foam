@@ -105,6 +105,7 @@ jest.mock('@app/services/ffz-service', () => ({
 }));
 
 jest.mock('@app/services/seventv-service', () => ({
+  invalidateSevenTvUser: jest.fn(),
   sevenTvService: {
     get7tvUserId: jest.fn(),
     getEmoteSetId: jest.fn(),
