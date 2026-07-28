@@ -56,3 +56,12 @@ runs:
         fi
 
         echo "Google service files written for $VARIANT"
+
+    # Both variants read one pair of secrets, so a file that is valid for one
+    # variant is silently wrong for another. Gradle only catches the Android
+    # half, and only after the whole native build has run.
+    - name: Verify Google service files match the variant
+      shell: bash
+      env:
+        VARIANT: ${{ inputs.variant }}
+      run: bunx tsx scripts/workflows/verify-google-service-files-cli.ts --variant "$VARIANT"

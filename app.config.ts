@@ -19,7 +19,7 @@ export type Variant =
   'development' | 'internal' | 'testflight' | 'e2e' | 'production';
 
 // https://docs.expo.dev/tutorial/eas/multiple-app-variants
-const VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
+export const VARIANT_CONFIG: Record<Variant, AppVariantConfig> = {
   development: {
     name: 'Foam (dev)',
     icon: './assets/splash/splash-image-production.png',
