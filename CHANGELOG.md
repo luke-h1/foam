@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.0.6 (Production)
+
+### ✨ Features
+
+- **app:** Android release ([#779](https://github.com/lhowsam/foam/issues/779))
+
+### 🐛 Bug Fixes
+
+- **app:** Resolve safe react-doctor findings ([#782](https://github.com/lhowsam/foam/issues/782))
+- **infrastructure:** Pin jdk 21 for android native builds ([#786](https://github.com/lhowsam/foam/issues/786))
+- **android:** Set MaterialComponents theme for LibsActivity ([#785](https://github.com/lhowsam/foam/issues/785))
+- **ci:** Bump react-doctor action to a release with pinned transitive actions ([#791](https://github.com/lhowsam/foam/issues/791))
+- **perf:** Only configure the expo-image cache on ios ([#789](https://github.com/lhowsam/foam/issues/789))
+- **chat:** Cap concurrent emote picker animations ([#788](https://github.com/lhowsam/foam/issues/788))
+- **seventv:** Resolve the channel emote set id from v4 before the v3 deprecation ([#793](https://github.com/lhowsam/foam/issues/793))
+- **ci:** Give android a per-variant google services file ([#794](https://github.com/lhowsam/foam/issues/794))
+
+### 👷 CI/CD
+
+- Block merge commits on pr branches ([#787](https://github.com/lhowsam/foam/issues/787))
+
+### 🔧 Miscellaneous Tasks
+
+- **app:** Hide mock changelog from users ([#783](https://github.com/lhowsam/foam/issues/783))
+- **infrastructure:** Update reassure ([#784](https://github.com/lhowsam/foam/issues/784))
+- **infrastructure:** Create FUNDING.yml ([#790](https://github.com/lhowsam/foam/issues/790))
+
 ## 1.0.5 (Production)
 
 ### ✨ Features
