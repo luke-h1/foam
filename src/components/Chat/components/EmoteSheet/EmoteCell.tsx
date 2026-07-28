@@ -11,6 +11,7 @@ import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 import { emoteSheetStyles as styles } from './emoteSheetStyles';
 import type { EmotePickerItem } from './emoteSheetTypes';
 import { getEmotePickerDisplayUrl } from './util/emotePickerDisplayUrl';
+import { emoteSheetAnimationBudget } from './util/emoteSheetAnimationBudget';
 import { emoteSheetScrollActivity } from './util/emoteSheetScrollActivity';
 
 function EmoteCellComponent({
@@ -30,19 +31,33 @@ function EmoteCellComponent({
     [displayUrl],
   );
 
+  const hasAnimationSlotRef = useRef(false);
+
   useEffect(() => {
     if (typeof item === 'string') {
       return undefined;
     }
-    if (emoteSheetScrollActivity.isActive()) {
-      runAnimationCommand(imageRef.current, 'stopAnimating');
-    }
-    return emoteSheetScrollActivity.subscribe(active => {
+
+    const sync = () => {
+      const shouldAnimate =
+        hasAnimationSlotRef.current && !emoteSheetScrollActivity.isActive();
       runAnimationCommand(
         imageRef.current,
-        active ? 'stopAnimating' : 'startAnimating',
+        shouldAnimate ? 'startAnimating' : 'stopAnimating',
       );
+    };
+
+    const releaseSlot = emoteSheetAnimationBudget.acquire(granted => {
+      hasAnimationSlotRef.current = granted;
+      sync();
     });
+    const unsubscribeScroll = emoteSheetScrollActivity.subscribe(sync);
+
+    return () => {
+      unsubscribeScroll();
+      releaseSlot();
+      hasAnimationSlotRef.current = false;
+    };
   }, [item]);
 
   if (typeof item === 'string') {
@@ -77,7 +92,7 @@ function EmoteCellComponent({
         useAppleWebpCodec={resolveUseAppleWebpCodec(urlKind, {
           preferAppleCodecForStatic: true,
         })}
-        autoplay={!emoteSheetScrollActivity.isActive()}
+        autoplay={false}
         priority='low'
         transition={0}
         recyclingKey={item.id}

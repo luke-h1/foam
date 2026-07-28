@@ -1,6 +1,7 @@
 import { act, render } from '@testing-library/react-native';
 
 import { EmoteCell } from '../EmoteCell';
+import { emoteSheetAnimationBudget } from '../util/emoteSheetAnimationBudget';
 import { emoteSheetScrollActivity } from '../util/emoteSheetScrollActivity';
 import { createMenuEmote } from './__fixtures__/emoteMenuData.fixture';
 
@@ -24,11 +25,13 @@ describe('EmoteCell animation pause', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     emoteSheetScrollActivity.reset();
+    emoteSheetAnimationBudget.reset();
     mockStartAnimating.mockClear();
     mockStopAnimating.mockClear();
   });
   afterEach(() => {
     emoteSheetScrollActivity.reset();
+    emoteSheetAnimationBudget.reset();
     jest.useRealTimers();
   });
 
@@ -39,6 +42,9 @@ describe('EmoteCell animation pause', () => {
         item={createMenuEmote('a', 'a', '7TV Global')}
       />,
     );
+
+    expect(mockStartAnimating).toHaveBeenCalledTimes(1);
+    mockStartAnimating.mockClear();
 
     act(() => emoteSheetScrollActivity.poke());
     expect(mockStopAnimating).toHaveBeenCalledTimes(1);
@@ -59,5 +65,24 @@ describe('EmoteCell animation pause', () => {
     );
 
     expect(mockStopAnimating).toHaveBeenCalledTimes(1);
+  });
+
+  test('leaves cells past the animation cap on their first frame', () => {
+    const held: (() => void)[] = [];
+    for (let i = 0; i < 24; i += 1) {
+      held.push(emoteSheetAnimationBudget.acquire(() => undefined));
+    }
+    mockStartAnimating.mockClear();
+
+    render(
+      <EmoteCell
+        cellSize={40}
+        item={createMenuEmote('c', 'c', '7TV Global')}
+      />,
+    );
+
+    expect(mockStartAnimating).not.toHaveBeenCalled();
+
+    held.forEach(release => release());
   });
 });

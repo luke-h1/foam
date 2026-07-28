@@ -28,6 +28,7 @@ import type { SanitisedEmote } from '@app/types/emote';
 import { EmoteRow } from './EmoteRow';
 import type { EmotePickerItem } from './emoteSheetTypes';
 import { SetHeader } from './SetHeader';
+import { emoteSheetAnimationBudget } from './util/emoteSheetAnimationBudget';
 import { emoteSheetScrollActivity } from './util/emoteSheetScrollActivity';
 import { prefetchEmotePickerImages } from './util/prefetchEmotePickerImages';
 
@@ -255,6 +256,7 @@ export function useEmoteSheet({
   const handleDismiss = useCallback(() => {
     setSearchQuery('');
     emoteSheetScrollActivity.reset();
+    emoteSheetAnimationBudget.reset();
     onDismiss();
   }, [onDismiss]);
 

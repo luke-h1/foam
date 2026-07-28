@@ -154,7 +154,7 @@ export function EmoteSheet({
                         (sheet.filteredSets.length > 1 ? 0 : bottomInset),
                     },
                   ]}
-                  drawDistance={(sheet.cellSize + 4) * 8}
+                  drawDistance={(sheet.cellSize + 4) * 3}
                   showsVerticalScrollIndicator
                   nestedScrollEnabled
                   indicatorStyle='white' // todo - once we have light theme, adjust this
