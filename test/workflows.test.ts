@@ -60,6 +60,13 @@ import {
   sentrySizeAnalysisBuildConfigurationFor,
   variantLabel,
 } from '../scripts/workflows/variant';
+import {
+  androidPackageNames,
+  getBuildVariant,
+  type GoogleServiceFileProblem,
+  plistBundleId,
+  verifyGoogleServiceFiles,
+} from '../scripts/workflows/verifyGoogleServiceFiles';
 
 function createMemoryCopier(remotes: string[] = []): {
   copier: S3Copier;
@@ -791,6 +798,95 @@ describe('s3Cache', () => {
         rmSync(dir, { recursive: true, force: true });
       }
     });
+  });
+});
+
+describe('verifyGoogleServiceFiles', () => {
+  const androidFileFor = (...packageNames: string[]) =>
+    JSON.stringify({
+      client: packageNames.map(packageName => ({
+        client_info: { android_client_info: { package_name: packageName } },
+      })),
+    });
+
+  const iosFileFor = (bundleId: string) =>
+    `<plist><dict><key>BUNDLE_ID</key><string>${bundleId}</string></dict></plist>`;
+
+  test('reads the package names out of a Firebase android file', () => {
+    expect(
+      androidPackageNames(androidFileFor('com.lhowsam.foam_tv', 'other')),
+    ).toEqual(['com.lhowsam.foam_tv', 'other']);
+  });
+
+  test('reads the bundle id out of a GoogleService-Info plist', () => {
+    expect(plistBundleId(iosFileFor('foam-tv'))).toEqual('foam-tv');
+  });
+
+  test('accepts files that match the variant', () => {
+    expect(
+      verifyGoogleServiceFiles({
+        variant: 'production',
+        androidContents: androidFileFor('com.lhowsam.foam_tv'),
+        iosContents: iosFileFor('foam-tv'),
+      }),
+    ).toEqual([]);
+  });
+
+  /**
+   * The failure this check exists for: Gradle's processReleaseGoogleServices
+   * dies on it, but only after the whole native build has run.
+   */
+  test('errors when the android file has no client for the variant', () => {
+    const [problem] = verifyGoogleServiceFiles({
+      variant: 'production',
+      androidContents: androidFileFor('com.lhowsam.foam.internal'),
+      iosContents: iosFileFor('foam-tv'),
+    });
+
+    expect(problem).toEqual<GoogleServiceFileProblem>({
+      severity: 'error',
+      file: './google-services-prod.json',
+      message:
+        "has no client for 'com.lhowsam.foam_tv'. It has 'com.lhowsam.foam.internal'. Add the app in Firebase and re-upload the file to the variant's secret.",
+    });
+  });
+
+  test('errors when the android file is not valid JSON', () => {
+    const [problem] = verifyGoogleServiceFiles({
+      variant: 'production',
+      androidContents: 'not json',
+      iosContents: iosFileFor('foam-tv'),
+    });
+
+    expect(problem?.severity).toEqual('error');
+  });
+
+  /**
+   * One plist is shared across variants on purpose, so its BUNDLE_ID belongs
+   * to whichever variant it was exported for and must not be flagged.
+   */
+  test('accepts an ios plist whose bundle id is another variant', () => {
+    expect(
+      verifyGoogleServiceFiles({
+        variant: 'internal',
+        androidContents: androidFileFor('com.lhowsam.foam.internal'),
+        iosContents: iosFileFor('com.lhowsam.foam'),
+      }),
+    ).toEqual([]);
+  });
+
+  test('errors when the plist has no bundle id at all', () => {
+    const [problem] = verifyGoogleServiceFiles({
+      variant: 'production',
+      androidContents: androidFileFor('com.lhowsam.foam_tv'),
+      iosContents: '<plist><dict></dict></plist>',
+    });
+
+    expect(problem?.severity).toEqual('error');
+  });
+
+  test('rejects a variant the app config does not define', () => {
+    expect(() => getBuildVariant('nope')).toThrow('Unsupported variant: nope');
   });
 });
 
