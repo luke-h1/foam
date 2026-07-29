@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { GestureResponderEvent } from 'react-native';
 
 import { useMappingHelper } from '@shopify/flash-list';
 
@@ -25,6 +26,8 @@ import type {
 } from './RichChatMessage.types';
 
 export const MESSAGE_LONG_PRESS_DELAY_MS = 650;
+
+const LONG_PRESS_MOVE_TOLERANCE_DP = 10;
 
 export function useRichChatMessage<
   TNoticeType extends NoticeVariants,
@@ -124,6 +127,7 @@ export function useRichChatMessage<
   // the single row-level long-press timer can open the emote sheet without a
   // Pressable per emote (busy rows would mount hundreds of them).
   const pressedEmotePartRef = useRef<EmotePressData | null>(null);
+  const rowTouchOriginRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     return () => {
@@ -167,7 +171,23 @@ export function useRichChatMessage<
 
   const clearRowLongPressTimer = () => {
     pressedEmotePartRef.current = null;
+    rowTouchOriginRef.current = null;
     stopRowLongPressTimer();
+  };
+
+  const handleRowTouchMove = (event: GestureResponderEvent) => {
+    const origin = rowTouchOriginRef.current;
+    if (!origin) {
+      return;
+    }
+
+    const { pageX, pageY } = event.nativeEvent;
+    if (
+      Math.abs(pageX - origin.x) > LONG_PRESS_MOVE_TOLERANCE_DP ||
+      Math.abs(pageY - origin.y) > LONG_PRESS_MOVE_TOLERANCE_DP
+    ) {
+      clearRowLongPressTimer();
+    }
   };
 
   useEffect(
@@ -286,10 +306,14 @@ export function useRichChatMessage<
     });
   };
 
-  const startRowLongPressTimer = () => {
+  const startRowLongPressTimer = (event: GestureResponderEvent) => {
     // Only stop the timer here: the pressed emote (if any) was just recorded
     // by the emote's own onTouchStart, which bubbles before the row's.
     stopRowLongPressTimer();
+    rowTouchOriginRef.current = {
+      x: event.nativeEvent.pageX,
+      y: event.nativeEvent.pageY,
+    };
     rowLongPressTimerRef.current = setTimeout(() => {
       rowLongPressTimerRef.current = null;
       const pressedEmotePart = pressedEmotePartRef.current;
@@ -335,6 +359,7 @@ export function useRichChatMessage<
     canJumpToReplyTarget,
     clearRowLongPressTimer,
     closeEmoteActionSheet,
+    handleRowTouchMove,
     compact,
     customHighlightColor: customHighlight?.color,
     disableEmoteAnimations,

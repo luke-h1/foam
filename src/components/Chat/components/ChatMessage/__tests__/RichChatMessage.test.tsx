@@ -76,13 +76,24 @@ const createMockMessage = (
   };
 };
 
-function fireMessageLongPress(element: ReactTestInstance) {
+const touchAt = (pageX: number, pageY: number) => ({
+  nativeEvent: { pageX, pageY },
+});
+
+function fireMessageLongPress(
+  element: ReactTestInstance,
+  options: { driftDp?: number } = {},
+) {
+  const { driftDp = 0 } = options;
   jest.useFakeTimers();
-  fireEvent(element, 'touchStart');
+  fireEvent(element, 'touchStart', touchAt(100, 100));
+  if (driftDp > 0) {
+    fireEvent(element, 'touchMove', touchAt(100 + driftDp, 100));
+  }
   act(() => {
     jest.advanceTimersByTime(MESSAGE_LONG_PRESS_DELAY_MS);
   });
-  fireEvent(element, 'touchEnd');
+  fireEvent(element, 'touchEnd', touchAt(100 + driftDp, 100));
   jest.useRealTimers();
 }
 
@@ -179,6 +190,34 @@ describe('RichChatMessage', () => {
   });
 
   describe('Long Press Reply', () => {
+    test('survives the touch jitter android reports while a finger rests', () => {
+      const message = createMockMessage([
+        { type: 'text', content: 'Hello world!' },
+      ]);
+
+      const { getByTestId } = render(
+        <RichChatMessage {...message} onReply={mockOnReply} />,
+      );
+
+      fireMessageLongPress(getByTestId('chat-message'), { driftDp: 4 });
+
+      expect(mockOnReply).toHaveBeenCalledTimes(1);
+    });
+
+    test('cancels once the finger drifts past the tolerance', () => {
+      const message = createMockMessage([
+        { type: 'text', content: 'Hello world!' },
+      ]);
+
+      const { getByTestId } = render(
+        <RichChatMessage {...message} onReply={mockOnReply} />,
+      );
+
+      fireMessageLongPress(getByTestId('chat-message'), { driftDp: 40 });
+
+      expect(mockOnReply).not.toHaveBeenCalled();
+    });
+
     test('should call onReply when message is long pressed (regular messages)', () => {
       const message = createMockMessage([
         { type: 'text', content: 'Hello world!' },

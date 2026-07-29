@@ -130,6 +130,7 @@ export function RichChatMessageContainer({
     bodyVariant,
     clearRowLongPressTimer,
     compact,
+    handleRowTouchMove,
     customHighlightColor,
     isAlternatingRow,
     isAppSystemSender,
@@ -150,7 +151,7 @@ export function RichChatMessageContainer({
       testID='chat-message'
       onTouchCancel={clearRowLongPressTimer}
       onTouchEnd={clearRowLongPressTimer}
-      onTouchMove={clearRowLongPressTimer}
+      onTouchMove={handleRowTouchMove}
       onTouchStart={startRowLongPressTimer}
       style={[
         styles.chatContainer,
