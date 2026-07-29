@@ -52,6 +52,7 @@ export const Image = function Image({
   onLoadEnd,
   onLoadStart,
   style,
+  useAppleWebpCodec = false,
   ...props
 }: ImageProps) {
   const url = getSourceUrl(source);
@@ -161,7 +162,7 @@ export const Image = function Image({
          * needless teardown of the native image.
          */
         recyclingKey={recyclingKey ?? url ?? undefined}
-        useAppleWebpCodec
+        useAppleWebpCodec={useAppleWebpCodec}
         placeholderContentFit={placeholderContentFit ?? 'cover'}
         onLoad={handleLoad}
         onError={handleError}
