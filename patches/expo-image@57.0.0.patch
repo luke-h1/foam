@@ -1,3 +1,46 @@
+diff --git a/ios/AnimatedImage.swift b/ios/AnimatedImage.swift
+index 350c9e4d90680baf8370e49b3529f6e45781244e..fd438254be1cfd1b4c057a426fa95c9c20943824 100644
+--- a/ios/AnimatedImage.swift
++++ b/ios/AnimatedImage.swift
+@@ -8,16 +8,20 @@ internal import SDWebImage
+ final class AnimatedImage: SDAnimatedImage {
+   var frames: [SDImageFrame]?
+ 
++  var hasMultipleFrames: Bool {
++    return animatedImageFrameCount > 1
++  }
++
+   // MARK: - UIImage
+ 
+   override var images: [UIImage]? {
+-    preloadAllFrames()
+-    return frames?.map({ $0.image })
++    return nil
+   }
+ 
+   override var duration: TimeInterval {
+-    preloadAllFrames()
+-    return frames?.reduce(0, { $0 + $1.duration }) ?? 0.0
++    return (0..<animatedImageFrameCount).reduce(0.0) { total, index in
++      return total + animatedImageDuration(at: index)
++    }
+   }
+ 
+   // MARK: - SDAnimatedImage
+diff --git a/ios/Image.swift b/ios/Image.swift
+index 5c92efa2ec1ca32fc4c49b0e30f3f809259508f3..2c2dd898a9b5721ac16738640a06d80ebf259190 100644
+--- a/ios/Image.swift
++++ b/ios/Image.swift
+@@ -8,6 +8,9 @@ internal final class Image: SharedRef<UIImage> {
+   }
+ 
+   var isAnimated: Bool {
++    if let animatedImage = ref as? AnimatedImage {
++      return animatedImage.hasMultipleFrames
++    }
+     return !(ref.images?.isEmpty ?? true)
+   }
+ 
 diff --git a/ios/ImageView.swift b/ios/ImageView.swift
 index cccedd7adf7328b18bb61333c3fe2473c79e72cd..8917134a516b206eda2bead68bbe151d8d3efc16 100644
 --- a/ios/ImageView.swift

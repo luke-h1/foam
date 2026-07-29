@@ -72,6 +72,7 @@ export function PaintLayerBackground({
             layer.repeat,
           )}
           source={{ uri: layer.image_url }}
+          useAppleWebpCodec={false}
           style={styles.fill}
         />
       </View>

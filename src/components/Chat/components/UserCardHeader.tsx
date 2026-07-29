@@ -101,6 +101,7 @@ export function UserCardHeader({
             <View style={styles.chip}>
               <Image
                 source={{ uri: sevenTvBadge.url }}
+                useAppleWebpCodec={false}
                 style={styles.badgeImage}
               />
               <Text style={styles.chipText} numberOfLines={1}>

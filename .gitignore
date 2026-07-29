@@ -131,3 +131,5 @@ buildServer.json
 
 # unit tests
 junit-app.xml
+
+playstore-service-account.json
