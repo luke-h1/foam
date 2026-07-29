@@ -44,18 +44,26 @@ export async function impact(style: HapticIntensity = 'medium') {
   if (!hapticsEnabled()) {
     return undefined;
   }
-  if (Platform.OS === 'android') {
-    return performAndroidHapticsAsync(getAndroidHaptic(style));
+  try {
+    if (Platform.OS === 'android') {
+      return await performAndroidHapticsAsync(getAndroidHaptic(style));
+    }
+    return await expoImpactAsync(getExpoImpactStyle(style));
+  } catch {
+    return undefined;
   }
-  return expoImpactAsync(getExpoImpactStyle(style));
 }
 
 export async function selection() {
   if (!hapticsEnabled()) {
     return undefined;
   }
-  if (Platform.OS === 'android') {
-    return performAndroidHapticsAsync(AndroidHaptics.Segment_Tick);
+  try {
+    if (Platform.OS === 'android') {
+      return await performAndroidHapticsAsync(AndroidHaptics.Segment_Tick);
+    }
+    return await expoSelectionAsync();
+  } catch {
+    return undefined;
   }
-  return expoSelectionAsync();
 }
