@@ -27,6 +27,13 @@
 - **infrastructure:** Update reassure ([#784](https://github.com/lhowsam/foam/issues/784))
 - **infrastructure:** Create FUNDING.yml ([#790](https://github.com/lhowsam/foam/issues/790))
 
+## 1.0.6 (Internal)
+
+### 🐛 Bug Fixes
+
+- Android player freeze, android chat long-press, ios emote sheet hang ([#795](https://github.com/lhowsam/foam/issues/795))
+- **chat:** Swap bottom sheets onto @expo/ui for the time being ([#798](https://github.com/lhowsam/foam/issues/798))
+
 ## 1.0.5 (Production)
 
 ### ✨ Features
