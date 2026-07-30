@@ -22,7 +22,6 @@ import { PressablesConfig } from 'pressto';
 import { Toaster } from 'sonner-native';
 
 import { ActionMenuHost } from '@app/components/ActionMenuHost/ActionMenuHost';
-import { AppBottomSheetProvider } from '@app/components/BottomSheet/BottomSheetProvider';
 import { ChangelogAndroidHost } from '@app/components/Changelog/ChangelogAndroidHost';
 import { GlobalErrorGate } from '@app/components/GlobalErrorGate/GlobalErrorGate';
 import { MediaPermissionHost } from '@app/components/MediaPermissionHost/MediaPermissionHost';
@@ -146,12 +145,10 @@ export function Providers({ children }: PropsWithChildren) {
                         <PressablesConfig
                           config={{ minScale: motion.pressMinScale }}
                         >
-                          <AppBottomSheetProvider>
-                            {children}
-                            <ActionMenuHost />
-                            <ChangelogAndroidHost />
-                            <MediaPermissionHost />
-                          </AppBottomSheetProvider>
+                          {children}
+                          <ActionMenuHost />
+                          <ChangelogAndroidHost />
+                          <MediaPermissionHost />
                         </PressablesConfig>
                       </QueryProviderWithDevTools>
                     </AnalyticsProvider>
