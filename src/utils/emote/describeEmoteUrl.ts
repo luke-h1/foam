@@ -46,7 +46,12 @@ export function describeEmoteUrl(url: string): EmoteUrlDescriptor {
       provider: 'ffz',
       id: f[1] ?? null,
       scale: f[3] ?? null,
-      kind: f[2] ? 'animated' : 'static',
+      // Only the explicit `animated/` path segment guarantees the content is
+      // animated. Without it, FFZ may still serve an animated WebP at the
+      // bare scale URL (e.g. /emote/6/2), so treat it as unknown to avoid
+      // opting into Apple's synchronous main-thread ImageIO decoder via
+      // useAppleWebpCodec=true, which causes fatal app hangs on animated WebP.
+      kind: f[2] ? 'animated' : null,
     };
   }
 
