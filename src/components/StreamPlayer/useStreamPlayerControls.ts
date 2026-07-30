@@ -164,6 +164,7 @@ export function useStreamPlayerControls({
 
   const videoTapGesture = useMemo(
     () =>
+      // react-doctor-disable-next-line react-hooks-js/refs -- the shared values are only read inside the worklets at gesture time, never during render; the compiler cannot see through the factory call
       createVideoTapGesture({
         controlsOpacity,
         controlsTarget,

@@ -166,11 +166,19 @@ export function BottomSheet({
     [],
   );
 
+  /**
+   * Render-phase state adjustment (not an effect) so TrueSheet mounts in the
+   * same commit that presents it. The reverse transition stays asynchronous:
+   * onDidDismiss clears the flag once the native dismissal completes.
+   */
+  if (isPresented && !isMounted) {
+    setIsMounted(true);
+  }
+
   useLayoutEffect(() => {
     if (isPresented) {
       didDismissRef.current = false;
       pendingDismissRef.current = false;
-      setIsMounted(true);
       return;
     }
 
