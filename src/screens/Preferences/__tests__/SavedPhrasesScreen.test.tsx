@@ -27,7 +27,7 @@ jest.mock('@app/store/preferenceStore', () => ({
 }));
 
 jest.mock('@app/lib/haptics', () => ({
-  impact: jest.fn(() => Promise.resolve()),
+  impact: jest.fn(),
 }));
 
 describe('SavedPhrasesScreen', () => {

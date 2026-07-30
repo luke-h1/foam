@@ -1,12 +1,4 @@
-import { Platform } from 'react-native';
-
-import {
-  AndroidHaptics,
-  impactAsync as expoImpactAsync,
-  ImpactFeedbackStyle,
-  performAndroidHapticsAsync,
-  selectionAsync as expoSelectionAsync,
-} from 'expo-haptics';
+import { Presets } from 'react-native-pulsar';
 
 import { getPreferences } from '@app/store/preferences/state';
 
@@ -16,46 +8,24 @@ function hapticsEnabled(): boolean {
 
 export type HapticIntensity = 'light' | 'medium' | 'heavy';
 
-function getExpoImpactStyle(style: HapticIntensity) {
+export function impact(style: HapticIntensity = 'medium') {
+  if (!hapticsEnabled()) {
+    return;
+  }
   switch (style) {
     case 'light':
-      return ImpactFeedbackStyle.Light;
+      return Presets.System.impactLight();
     case 'heavy':
-      return ImpactFeedbackStyle.Heavy;
+      return Presets.System.impactHeavy();
     case 'medium':
     default:
-      return ImpactFeedbackStyle.Medium;
+      return Presets.System.impactMedium();
   }
 }
 
-function getAndroidHaptic(style: HapticIntensity) {
-  switch (style) {
-    case 'light':
-      return AndroidHaptics.Virtual_Key;
-    case 'heavy':
-      return AndroidHaptics.Long_Press;
-    case 'medium':
-    default:
-      return AndroidHaptics.Context_Click;
-  }
-}
-
-export async function impact(style: HapticIntensity = 'medium') {
+export function selection() {
   if (!hapticsEnabled()) {
-    return undefined;
+    return;
   }
-  if (Platform.OS === 'android') {
-    return performAndroidHapticsAsync(getAndroidHaptic(style));
-  }
-  return expoImpactAsync(getExpoImpactStyle(style));
-}
-
-export async function selection() {
-  if (!hapticsEnabled()) {
-    return undefined;
-  }
-  if (Platform.OS === 'android') {
-    return performAndroidHapticsAsync(AndroidHaptics.Segment_Tick);
-  }
-  return expoSelectionAsync();
+  Presets.System.selection();
 }

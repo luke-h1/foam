@@ -15,10 +15,10 @@ export type ButtonProps = CustomPressableProps & {
 
 function triggerHaptic(haptic: ButtonHaptic) {
   if (haptic === 'selection') {
-    void selection();
+    selection();
     return;
   }
-  void impact(haptic);
+  impact(haptic);
 }
 
 function ButtonComponent({

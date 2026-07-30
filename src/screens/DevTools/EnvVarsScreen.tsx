@@ -94,7 +94,7 @@ async function copyEnvVar(entry: EnvVar): Promise<void> {
     return;
   }
   await Clipboard.setStringAsync(String(entry.value));
-  void impact('light');
+  impact('light');
 }
 
 function maskValue(value: string): string {
@@ -113,7 +113,7 @@ export function EnvVarsScreen() {
   ).length;
 
   const toggleReveal = () => {
-    void selection();
+    selection();
     setRevealed(prev => !prev);
   };
 

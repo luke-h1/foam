@@ -97,7 +97,7 @@ function LiveStreamCard({ stream, layout = 'compact' }: Props) {
   }, [stream.game_id]);
 
   const handleLongPress = useCallback(() => {
-    void impact('medium');
+    impact('medium');
     showActionMenu({
       title: stream.user_name,
       actions: [

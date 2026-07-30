@@ -41,7 +41,7 @@ function SwipeableHistoryItem({
   const opacity = useSharedValue(1);
 
   const handleDelete = useCallback(() => {
-    void impact('light');
+    impact('light');
     onDelete();
   }, [onDelete]);
 
@@ -211,7 +211,7 @@ export function SearchHistoryV2({
         text: t('common:clearAll'),
         style: 'destructive',
         onPress: () => {
-          void impact('medium');
+          impact('medium');
           onClearAll();
         },
       },

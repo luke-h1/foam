@@ -120,7 +120,7 @@ export function useChatComposerController({
     if (sent) {
       setLastSentMessage(sent);
     }
-    void impact('light');
+    impact('light');
     onSubmit?.();
     blurInput();
   }, [blurInput, onSubmit, submitEnabled, text]);

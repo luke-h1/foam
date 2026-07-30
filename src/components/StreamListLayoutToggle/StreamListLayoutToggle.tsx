@@ -27,7 +27,7 @@ export function StreamListLayoutToggle({
       }
       hitSlop={10}
       onPress={() => {
-        void selection();
+        selection();
         onChange(isCompact ? 'media' : 'compact');
       }}
       style={styles.button}

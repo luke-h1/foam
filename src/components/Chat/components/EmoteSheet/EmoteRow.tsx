@@ -23,7 +23,7 @@ function EmoteRowComponent({
       const index = Math.floor(event.nativeEvent.locationX / stride);
       const item = items[index];
       if (item !== undefined) {
-        void selection();
+        selection();
         onPress(item);
       }
     },

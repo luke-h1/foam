@@ -12,5 +12,5 @@ export function triggerMentionHaptic(now: number = Date.now()): void {
   }
 
   lastMentionHapticAt = now;
-  void impact('medium');
+  impact('medium');
 }

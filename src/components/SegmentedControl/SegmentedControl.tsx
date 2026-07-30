@@ -27,7 +27,7 @@ export function SegmentedControl({
 
   const handleChange = (event: NativeSegmentedControlChangeEvent) => {
     onChange(event.nativeEvent.selectedSegmentIndex);
-    void selection();
+    selection();
   };
 
   return (

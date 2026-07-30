@@ -63,7 +63,7 @@ export function AuthSheetScreen() {
           accessibilityRole='button'
           label={t('continueWithTwitch')}
           onPress={() => {
-            void impact('light');
+            impact('light');
             void startSignIn();
           }}
           disabled={isDisabled}
