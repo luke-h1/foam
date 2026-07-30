@@ -19,6 +19,19 @@ jobs:
           ref: ${{ github.head_ref }}
           persist-credentials: false
 
+      # react-doctor v2.2.8 runs a best-effort `git fetch --depth=1 origin
+      # <base-sha>` before its baseline diff. On a fully-fetched checkout
+      # (fetch-depth: 0 above) that fetch writes .git/shallow, which breaks the
+      # merge-base its own three-dot diff needs, so the scan silently falls out
+      # of baseline mode and reports pre-existing issues as PR-introduced. The
+      # base commit is already present here, making that fetch redundant -
+      # point origin at an unreachable URL so it fails cleanly (the action
+      # ignores the failure) instead of shallowing the repo. Everything else in
+      # the action talks to GitHub over the API, not git. Remove once the
+      # action drops or guards the depth-1 fetch.
+      - name: Keep react-doctor's base fetch from shallowing the repo
+        run: git remote set-url origin https://invalid.invalid/unreachable.git
+
       - name: Run React Doctor
         uses: millionco/react-doctor@01820bb4fd4d0a4aebcd8df2b2a143a098649cb2 # v2.2.8
         with:
