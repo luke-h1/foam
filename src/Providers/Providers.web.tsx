@@ -10,6 +10,7 @@ import { PortalProvider } from 'react-native-teleport';
 import { PressablesConfig } from 'pressto';
 import { Toaster } from 'sonner-native';
 
+import { AppBottomSheetProvider } from '@app/components/BottomSheet/BottomSheetProvider';
 import { AccentColorProvider } from '@app/context/AccentColorContext';
 import { AuthContextProvider } from '@app/context/AuthContext';
 import { useRecoveredFromError } from '@app/hooks/useRecoveredFromError';
@@ -55,7 +56,9 @@ export function Providers({ children }: PropsWithChildren) {
                       <PressablesConfig
                         config={{ minScale: motion.pressMinScale }}
                       >
-                        {children}
+                        <AppBottomSheetProvider>
+                          {children}
+                        </AppBottomSheetProvider>
                       </PressablesConfig>
                     </QueryDevTools>
                   </QueryProvider>
