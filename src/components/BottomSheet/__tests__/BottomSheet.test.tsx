@@ -180,13 +180,83 @@ describe('BottomSheet', () => {
     expect(mockSheet.props.grabber).toBe(false);
   });
 
-  test('requestClose dismisses through the native sheet', () => {
+  test('requestClose dismisses through the native sheet once presented', () => {
+    const ref = { current: null as BottomSheetHandle | null };
+
+    renderSheet({ ref });
+    act(() => mockSheet.emitDidPresent(windowHeight - 400));
+    ref.current?.requestClose();
+
+    expect(mockSheet.dismiss).toHaveBeenCalledTimes(1);
+  });
+
+  test('queues requestClose until the sheet has presented', () => {
     const ref = { current: null as BottomSheetHandle | null };
 
     renderSheet({ ref });
     ref.current?.requestClose();
 
+    expect(mockSheet.dismiss).not.toHaveBeenCalled();
+
+    act(() => mockSheet.emitDidPresent(windowHeight - 400));
+
     expect(mockSheet.dismiss).toHaveBeenCalledTimes(1);
+  });
+
+  test('dismisses natively when isPresented flips false, then reports dismissal', () => {
+    const onDismiss = jest.fn();
+    const { queryByText, rerender } = renderSheet({ onDismiss });
+
+    act(() => mockSheet.emitDidPresent(windowHeight - 400));
+    rerender(
+      <BottomSheet isPresented={false} onDismiss={onDismiss} showDragIndicator>
+        <Text>sheet body</Text>
+      </BottomSheet>,
+    );
+
+    expect(mockSheet.dismiss).toHaveBeenCalledTimes(1);
+    expect(queryByText('sheet body')).toBeOnTheScreen();
+    expect(onDismiss).not.toHaveBeenCalled();
+
+    act(() => mockSheet.emitDidDismiss());
+
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+    expect(queryByText('sheet body')).not.toBeOnTheScreen();
+  });
+
+  test('queues a prop-driven close that lands before the sheet presents', () => {
+    const onDismiss = jest.fn();
+    const { rerender } = renderSheet({ onDismiss });
+
+    rerender(
+      <BottomSheet isPresented={false} onDismiss={onDismiss} showDragIndicator>
+        <Text>sheet body</Text>
+      </BottomSheet>,
+    );
+
+    expect(mockSheet.dismiss).not.toHaveBeenCalled();
+
+    act(() => mockSheet.emitDidPresent(windowHeight - 400));
+
+    expect(mockSheet.dismiss).toHaveBeenCalledTimes(1);
+  });
+
+  test('mounts and presents when isPresented flips true after mount', () => {
+    const onDismiss = jest.fn();
+    const { queryByText, rerender } = renderSheet({
+      isPresented: false,
+      onDismiss,
+    });
+
+    expect(queryByText('sheet body')).not.toBeOnTheScreen();
+
+    rerender(
+      <BottomSheet isPresented onDismiss={onDismiss} showDragIndicator>
+        <Text>sheet body</Text>
+      </BottomSheet>,
+    );
+
+    expect(queryByText('sheet body')).toBeOnTheScreen();
   });
 
   test('force-dismisses a still-presented sheet on unmount', () => {

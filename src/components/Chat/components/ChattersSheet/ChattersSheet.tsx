@@ -220,6 +220,7 @@ const ChattersSheetComponent = ({
           </View>
         ) : (
           <FlashList
+            nestedScrollEnabled
             data={items}
             renderItem={renderItem}
             keyExtractor={getChattersListItemKey}

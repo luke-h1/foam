@@ -223,6 +223,7 @@ function EmotePreviewSheetComponent(props: Props) {
         </View>
 
         <ScrollView
+          nestedScrollEnabled
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}

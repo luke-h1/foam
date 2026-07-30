@@ -45,7 +45,7 @@ function resolveDetent(
     return Math.min(1, snapPoint.height / windowHeight);
   }
 
-  return snapPoint.fraction;
+  return Math.min(1, snapPoint.fraction);
 }
 
 function resolveDetents(
@@ -119,6 +119,23 @@ export function BottomSheet({
 }: BottomSheetProps) {
   const sheetRef = useRef<TrueSheet>(null);
   const didDismissRef = useRef(false);
+  /**
+   * iOS marks the sheet presented only in viewDidAppear, and the native
+   * dismiss guard treats a still-animating-in sheet as already dismissed - the
+   * promise resolves without dismissing and onDidDismiss never fires. So a
+   * close that arrives before onDidPresent has to be queued, not issued.
+   */
+  const presentedRef = useRef(false);
+  const pendingDismissRef = useRef(false);
+  /**
+   * TrueSheet must stay mounted until the native dismissal completes: if it
+   * unmounted in the same commit that flips `isPresented` false, its native
+   * ref would already be detached by the time any effect cleanup runs, the JS
+   * dismiss would throw, and iOS would fall back to a dealloc-time
+   * `dismissViewControllerAnimated:YES` on the root presenting controller,
+   * which also tears down anything else presented beneath the sheet.
+   */
+  const [isMounted, setIsMounted] = useState(isPresented);
   const { height: windowHeight } = useWindowDimensions();
   const { top: topInset } = useSafeAreaInsets();
 
@@ -139,6 +156,10 @@ export function BottomSheet({
     ref,
     () => ({
       requestClose: () => {
+        if (!presentedRef.current) {
+          pendingDismissRef.current = true;
+          return;
+        }
         sheetRef.current?.dismiss().catch(() => undefined);
       },
     }),
@@ -146,26 +167,45 @@ export function BottomSheet({
   );
 
   useLayoutEffect(() => {
-    if (!isPresented) {
+    if (isPresented) {
+      didDismissRef.current = false;
+      pendingDismissRef.current = false;
+      setIsMounted(true);
       return;
     }
 
-    didDismissRef.current = false;
-    const sheet = sheetRef.current;
+    /**
+     * Prop-driven close: dismiss natively while TrueSheet is still mounted and
+     * let onDidDismiss unmount it, mirroring requestClose (including the
+     * queue-until-presented handling). With no sheet mounted, the ref is null
+     * and this is a no-op beyond the pending flag, which the next presentation
+     * clears.
+     */
+    if (!didDismissRef.current) {
+      if (!presentedRef.current) {
+        pendingDismissRef.current = true;
+        return;
+      }
+      sheetRef.current?.dismiss().catch(() => undefined);
+    }
+  }, [isPresented]);
 
+  useLayoutEffect(() => {
     return () => {
       /**
-       * Consumers unmount the sheet as soon as it dismisses, so force a native
-       * dismiss rather than relying on Fabric teardown timing. Skipped once the
+       * Whole-component unmount: this cleanup runs before the TrueSheet child
+       * detaches (React deletes parents first), so the ref is still live and a
+       * non-animated dismiss can be issued directly. Skipped once the
        * dismissal already completed (onDidDismiss fired).
        */
       if (!didDismissRef.current) {
-        sheet?.dismiss(false).catch(() => undefined);
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- the latest ref is wanted at teardown; capturing at effect time would read null before TrueSheet mounts
+        sheetRef.current?.dismiss(false).catch(() => undefined);
       }
     };
-  }, [isPresented]);
+  }, []);
 
-  if (!isPresented) {
+  if (!isMounted) {
     return null;
   }
 
@@ -205,12 +245,23 @@ export function BottomSheet({
       }
       onDetentChange={event => applyDetentInfo(event.nativeEvent)}
       onDidDismiss={() => {
+        presentedRef.current = false;
+        pendingDismissRef.current = false;
+        setIsMounted(false);
+        setMeasured(null);
         if (!didDismissRef.current) {
           didDismissRef.current = true;
           onDismiss();
         }
       }}
-      onDidPresent={event => applyDetentInfo(event.nativeEvent)}
+      onDidPresent={event => {
+        presentedRef.current = true;
+        applyDetentInfo(event.nativeEvent);
+        if (pendingDismissRef.current) {
+          pendingDismissRef.current = false;
+          sheetRef.current?.dismiss().catch(() => undefined);
+        }
+      }}
       onWillPresent={event => applyDetentInfo(event.nativeEvent)}
       {...resolveBackgroundProps()}
     >
