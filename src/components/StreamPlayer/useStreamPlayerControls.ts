@@ -1,9 +1,11 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { Directions, Gesture } from 'react-native-gesture-handler';
+import type { SharedValue } from 'react-native-reanimated';
 import { useSharedValue, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
 import { impact } from '@app/lib/haptics';
 
@@ -13,6 +15,55 @@ const DOUBLE_TAP_WINDOW_MS = 260;
 const PLAY_PAUSE_THROTTLE_MS = 500;
 const CONTROLS_AUTO_HIDE_MS = 5000;
 const CONTROLS_FADE = { duration: 140 } as const;
+
+/**
+ * Module-level factory so the worklets (and their `Date.now()` call at gesture
+ * end) are not closures created in render scope, which React Compiler would
+ * refuse to optimize as an impure render call.
+ */
+function createVideoTapGesture(options: {
+  controlsOpacity: SharedValue<number>;
+  controlsTarget: SharedValue<number>;
+  handleSwipeDown: () => void;
+  handleTapSettled: (nowShown: boolean, tapTime: number) => void;
+  hasSwipeDown: boolean;
+}) {
+  const {
+    controlsOpacity,
+    controlsTarget,
+    handleSwipeDown,
+    handleTapSettled,
+    hasSwipeDown,
+  } = options;
+
+  const tap = Gesture.Tap()
+    .numberOfTaps(1)
+    .onEnd(() => {
+      'worklet';
+
+      const tapTime = Date.now();
+      // Toggle visually on the UI thread, then hand bookkeeping to JS.
+      const nextShown = controlsTarget.get() > 0.5 ? 0 : 1;
+      controlsTarget.set(nextShown);
+      controlsOpacity.set(withTiming(nextShown, CONTROLS_FADE));
+      scheduleOnRN(handleTapSettled, nextShown === 1, tapTime);
+    });
+
+  // A swipe never competes with a tap, so compose them simultaneously (no added tap latency).
+  if (!hasSwipeDown) {
+    return tap;
+  }
+  return Gesture.Simultaneous(
+    tap,
+    Gesture.Fling()
+      .direction(Directions.DOWN)
+      .onEnd(() => {
+        'worklet';
+
+        scheduleOnRN(handleSwipeDown);
+      }),
+  );
+}
 
 interface UseStreamPlayerControlsOptions {
   onVideoAreaPress?: () => void;
@@ -71,8 +122,10 @@ export function useStreamPlayerControls({
 
   useUnmountCallback(clearAutoHide);
 
-  const gestureHandlersRef = useRef({ onVideoAreaPress, onVideoAreaSwipeDown });
-  gestureHandlersRef.current = { onVideoAreaPress, onVideoAreaSwipeDown };
+  const gestureHandlersRef = useSyncRef({
+    onVideoAreaPress,
+    onVideoAreaSwipeDown,
+  });
 
   // Post-gesture bookkeeping: promote a second tap to the double-tap action, else sync timer + React state.
   const handleTapSettled = useCallback(
@@ -98,7 +151,7 @@ export function useStreamPlayerControls({
         clearAutoHide();
       }
     },
-    [armAutoHide, clearAutoHide, forceHideControls],
+    [armAutoHide, clearAutoHide, forceHideControls, gestureHandlersRef],
   );
 
   const handleSwipeDown = useCallback(() => {
@@ -107,43 +160,25 @@ export function useStreamPlayerControls({
     }
     forceHideControls();
     gestureHandlersRef.current.onVideoAreaSwipeDown?.();
-  }, [forceHideControls]);
+  }, [forceHideControls, gestureHandlersRef]);
 
-  const videoTapGesture = useMemo(() => {
-    const tap = Gesture.Tap()
-      .numberOfTaps(1)
-      .onEnd(() => {
-        'worklet';
-
-        const tapTime = Date.now();
-        // Toggle visually on the UI thread, then hand bookkeeping to JS.
-        const nextShown = controlsTarget.get() > 0.5 ? 0 : 1;
-        controlsTarget.set(nextShown);
-        controlsOpacity.set(withTiming(nextShown, CONTROLS_FADE));
-        scheduleOnRN(handleTapSettled, nextShown === 1, tapTime);
-      });
-
-    // A swipe never competes with a tap, so compose them simultaneously (no added tap latency).
-    if (!onVideoAreaSwipeDown) {
-      return tap;
-    }
-    return Gesture.Simultaneous(
-      tap,
-      Gesture.Fling()
-        .direction(Directions.DOWN)
-        .onEnd(() => {
-          'worklet';
-
-          scheduleOnRN(handleSwipeDown);
-        }),
-    );
-  }, [
-    controlsOpacity,
-    controlsTarget,
-    handleSwipeDown,
-    handleTapSettled,
-    onVideoAreaSwipeDown,
-  ]);
+  const videoTapGesture = useMemo(
+    () =>
+      createVideoTapGesture({
+        controlsOpacity,
+        controlsTarget,
+        handleSwipeDown,
+        handleTapSettled,
+        hasSwipeDown: onVideoAreaSwipeDown !== undefined,
+      }),
+    [
+      controlsOpacity,
+      controlsTarget,
+      handleSwipeDown,
+      handleTapSettled,
+      onVideoAreaSwipeDown,
+    ],
+  );
 
   const lastPlayPauseAtRef = useRef(0);
 
