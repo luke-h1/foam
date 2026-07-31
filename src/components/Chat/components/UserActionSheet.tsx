@@ -292,6 +292,7 @@ function UserActionSheetComponent({
         ) : null}
 
         <ScrollView
+          nestedScrollEnabled
           style={scrollStyle}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}

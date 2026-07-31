@@ -542,27 +542,15 @@ jest.mock('@app/components/BottomSheet/BottomSheet', () => {
   };
 });
 
-jest.mock('@expo/ui/community/bottom-sheet', () => {
+jest.mock('@lodev09/react-native-true-sheet', () => {
   const React = require('react');
   const { View } = require('react-native');
 
   return {
-    BottomSheet: ({
-      children,
-      index,
-    }: {
-      children?: ReactNode;
-      index?: number;
-    }) =>
-      index === undefined || index >= 0
-        ? React.createElement(View, null, children)
-        : null,
+    TrueSheet: ({ children }: { children?: ReactNode }) =>
+      React.createElement(View, null, children),
   };
 });
-
-jest.mock('@app/components/BottomSheet/BottomSheetProvider', () => ({
-  AppBottomSheetProvider: ({ children }: { children?: ReactNode }) => children,
-}));
 
 jest.mock('@app/utils/device/deviceTier', () => ({
   getDeviceTier: () => 'high',

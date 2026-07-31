@@ -131,6 +131,7 @@ const SettingsSheetComponent = ({
         </View>
 
         <ScrollView
+          nestedScrollEnabled
           style={styles.scroll}
           contentContainerStyle={[
             styles.content,
