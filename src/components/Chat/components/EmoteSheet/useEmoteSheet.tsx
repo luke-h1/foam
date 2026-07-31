@@ -4,6 +4,7 @@ import React, {
   useDeferredValue,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { useWindowDimensions } from 'react-native';
@@ -165,16 +166,29 @@ export function useEmoteSheet({
     ],
   );
 
-  const effectiveActiveProviderId =
-    providers.length === 0
-      ? null
-      : activeProviderId &&
-          providers.some(provider => provider.id === activeProviderId)
-        ? activeProviderId
-        : (providers[0]?.id ?? null);
+  const resolveProviderId = (
+    providerId: EmoteMenuProviderId | null,
+  ): EmoteMenuProviderId | null => {
+    if (providers.length === 0) {
+      return null;
+    }
+
+    return providerId && providers.some(provider => provider.id === providerId)
+      ? providerId
+      : (providers[0]?.id ?? null);
+  };
+
+  /**
+   * The chips track the tap; the grid trails behind it, so rebuilding the grid
+   * never blocks the frame that highlights the chip.
+   */
+  const selectedProviderId = resolveProviderId(activeProviderId);
+  const renderedProviderId = resolveProviderId(
+    useDeferredValue(activeProviderId),
+  );
 
   const activeProvider = providers.find(
-    provider => provider.id === effectiveActiveProviderId,
+    provider => provider.id === renderedProviderId,
   );
 
   const filteredSets = useMemo(
@@ -190,25 +204,33 @@ export function useEmoteSheet({
 
   useEffect(() => {
     emoteListRef.current?.scrollToOffset({ offset: 0, animated: false });
-  }, [deferredSearchQuery, effectiveActiveProviderId, emoteListRef]);
+  }, [deferredSearchQuery, renderedProviderId, emoteListRef]);
 
-  const { items: listItems, setStartIndexById } = useMemo(
+  const {
+    items: listItems,
+    setById,
+    setStartIndexById,
+  } = useMemo(
     () => flattenProviderSets(filteredSets, columns),
     [filteredSets, columns],
   );
+
+  /**
+   * Out of the warmup effect's deps so a tab tap doesn't abort an in-flight
+   * warmup and restart the whole cross-provider walk mid-swap.
+   */
+  const warmupProviderIdRef = useRef(renderedProviderId);
+  warmupProviderIdRef.current = renderedProviderId;
 
   useEffect(() => {
     if (!isPresented || providers.length === 0) {
       return undefined;
     }
 
+    const warmupProviderId = warmupProviderIdRef.current;
     const orderedProviders = [
-      ...providers.filter(
-        provider => provider.id === effectiveActiveProviderId,
-      ),
-      ...providers.filter(
-        provider => provider.id !== effectiveActiveProviderId,
-      ),
+      ...providers.filter(provider => provider.id === warmupProviderId),
+      ...providers.filter(provider => provider.id !== warmupProviderId),
     ];
 
     const controller = new AbortController();
@@ -219,7 +241,7 @@ export function useEmoteSheet({
             return;
           }
 
-          const isActiveProvider = provider.id === effectiveActiveProviderId;
+          const isActiveProvider = provider.id === warmupProviderId;
           const limit =
             columns *
             (isActiveProvider
@@ -251,7 +273,7 @@ export function useEmoteSheet({
       clearTimeout(warmupTimer);
       controller.abort();
     };
-  }, [isPresented, providers, columns, effectiveActiveProviderId]);
+  }, [isPresented, providers, columns]);
 
   const handleDismiss = useCallback(() => {
     setSearchQuery('');
@@ -284,6 +306,11 @@ export function useEmoteSheet({
   );
 
   const handleProviderPress = useCallback((providerId: EmoteMenuProviderId) => {
+    /**
+     * A switch commits a screenful of new emote images at once, so the grid
+     * holds still frames until it settles, exactly as it does mid-scroll.
+     */
+    emoteSheetScrollActivity.poke();
     setActiveProviderId(providerId);
   }, []);
 
@@ -327,7 +354,7 @@ export function useEmoteSheet({
   const renderItem = useCallback(
     ({ item }: LegendListRenderItemProps<EmoteMenuListItem>) => {
       if (item.type === 'header') {
-        const set = filteredSets.find(set => set.id === item.setId);
+        const set = setById.get(item.setId);
         if (!set) {
           return null;
         }
@@ -343,14 +370,14 @@ export function useEmoteSheet({
         />
       );
     },
-    [filteredSets, cellSize, handleEmotePress],
+    [setById, cellSize, handleEmotePress],
   );
 
   const showPlaceholder = !contentReady || providers.length === 0;
   const showEmpty = providers.length > 0 && filteredSets.length === 0;
 
   return {
-    activeProviderId: effectiveActiveProviderId,
+    activeProviderId: selectedProviderId,
     activeSetId: effectiveActiveSetId,
     cellSize,
     filteredSets,

@@ -24,9 +24,12 @@ function ProviderChipComponent({
 }: ProviderChipProps) {
   return (
     <Button
+      accessibilityLabel={provider.title}
+      accessibilityState={{ selected: isActive }}
       haptic='selection'
       style={[styles.providerChip, isActive && styles.providerChipActive]}
       onPress={() => onSelect(provider.id)}
+      testID={`emote-provider-${provider.id}`}
     >
       <View style={styles.providerChipIcon}>
         <EmoteMenuIcon

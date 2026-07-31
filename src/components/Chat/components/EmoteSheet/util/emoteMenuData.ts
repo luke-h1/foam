@@ -263,8 +263,13 @@ function sortSets(sets: EmoteMenuSet[]): EmoteMenuSet[] {
     .sort((left, right) => left.title.localeCompare(right.title));
 }
 
-function filterSet(set: EmoteMenuSet, query: string): EmoteMenuSet | null {
-  const normalizedQuery = query.trim().toLowerCase();
+/**
+ * `normalizedQuery` is trimmed and lower-cased once by `filterProviderSets`.
+ */
+function filterSet(
+  set: EmoteMenuSet,
+  normalizedQuery: string,
+): EmoteMenuSet | null {
   if (!normalizedQuery) {
     return set;
   }
@@ -439,17 +444,16 @@ export function flattenProviderSets(
   columns: number,
 ): {
   items: EmoteMenuListItem[];
+  setById: Map<string, EmoteMenuSet>;
   setStartIndexById: Map<string, number>;
-  setStartIndices: number[];
 } {
   const items: EmoteMenuListItem[] = [];
+  const setById = new Map<string, EmoteMenuSet>();
   const setStartIndexById = new Map<string, number>();
-  const setStartIndices: number[] = [];
 
   sets.forEach(set => {
-    const startIndex = items.length;
-    setStartIndices.push(startIndex);
-    setStartIndexById.set(set.id, startIndex);
+    setStartIndexById.set(set.id, items.length);
+    setById.set(set.id, set);
     items.push({
       key: `${set.id}-header`,
       setId: set.id,
@@ -467,5 +471,5 @@ export function flattenProviderSets(
     });
   });
 
-  return { items, setStartIndexById, setStartIndices };
+  return { items, setById, setStartIndexById };
 }

@@ -1,5 +1,6 @@
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { fireEvent } from '@testing-library/react-native';
 import { measureFunction, measureRenders } from 'reassure';
 
 import { AuthContextTestProvider } from '@app/context/AuthContext';
@@ -241,6 +242,23 @@ describe('emote menu performance', () => {
       // measurement.
       scenario: async screen => {
         await screen.findByText('7TV');
+      },
+    });
+  });
+
+  /**
+   * A round trip across the two heaviest providers - the sheet's worst
+   * interaction, rebuilding a whole provider's grid each way.
+   */
+  test('switches provider tabs', async () => {
+    await measureRenders(<EmoteSheetPerfFixture />, {
+      ...MEASURE_OPTIONS,
+      scenario: async screen => {
+        await screen.findByText('Personal Emotes');
+        fireEvent.press(screen.getByTestId('emote-provider-Twitch'));
+        await screen.findByText('Streamer0');
+        fireEvent.press(screen.getByTestId('emote-provider-7TV'));
+        await screen.findByText('Personal Emotes');
       },
     });
   });
