@@ -14,6 +14,10 @@ export const hasSubscribers = (url: string): boolean => {
   return !!subscribers[url] && subscribers[url].size > 0;
 };
 
+export const hasSubscriber = (url: string, subscriber: Subscriber): boolean => {
+  return subscribers[url]?.has(subscriber) ?? false;
+};
+
 export const addSubscriber = (url: string, subscriber: Subscriber): void => {
   if (!subscribers[url]) {
     subscribers[url] = new Set<Subscriber>();

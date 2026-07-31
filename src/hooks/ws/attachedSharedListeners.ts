@@ -5,7 +5,7 @@ import {
   DEFAULT_RECONNECT_LIMIT,
   ReadyState,
 } from './constants';
-import { getSubscribers } from './manage-subscribers';
+import { getSubscribers, hasSubscriber } from './manage-subscribers';
 import { sharedWebSockets, type WebSocketEventMap } from './types';
 
 export const attachSharedListeners = (instance: WebSocket, url: string) => {
@@ -63,7 +63,7 @@ export const attachSharedListeners = (instance: WebSocket, url: string) => {
             setTimeout(() => {
               // The subscriber can unmount during backoff; reconnecting then
               // would reopen a socket nobody is listening on.
-              if (!getSubscribers(url).includes(subscriber)) {
+              if (!hasSubscriber(url, subscriber)) {
                 return;
               }
               subscriber.reconnect.current();
