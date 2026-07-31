@@ -37,6 +37,19 @@ const restrictedAnalyticsImports = [
   },
 ];
 
+const restrictedHapticsImports = [
+  {
+    name: 'expo-haptics',
+    message:
+      'expo-haptics is no longer installed. Use the impact / selection helpers in src/lib/haptics.ts.',
+  },
+  {
+    name: 'react-native-pulsar',
+    message:
+      'Use the impact / selection helpers in src/lib/haptics.ts so haptics respect the hapticFeedback preference.',
+  },
+];
+
 export default tseslint.config(
   {
     ignores: [
@@ -179,7 +192,11 @@ export default tseslint.config(
       'no-restricted-imports': [
         'error',
         {
-          paths: [...restrictedSentryImports, ...restrictedAnalyticsImports],
+          paths: [
+            ...restrictedSentryImports,
+            ...restrictedAnalyticsImports,
+            ...restrictedHapticsImports,
+          ],
           patterns: [
             {
               group: ['@sentry/*'],
@@ -234,6 +251,7 @@ export default tseslint.config(
       'src/lib/sentryImageSpans.ts',
       'src/lib/__tests__/sentryImageSpans.test.ts',
       'src/lib/__tests__/sentry.test.ts',
+      'src/lib/haptics.ts',
       'src/hooks/firebase/analytics.ts',
       'src/hooks/firebase/analytics.test.ts',
       '__mocks__/@react-native-firebase/analytics.ts',

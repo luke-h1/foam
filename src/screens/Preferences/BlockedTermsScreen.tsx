@@ -54,7 +54,7 @@ function TermRow({
           text: t('remove'),
           style: 'destructive',
           onPress: () => {
-            void impact('medium');
+            impact('medium');
             onRemove(term);
           },
         },
@@ -113,7 +113,7 @@ function useBlockedTerms() {
     }
 
     updatePreferences({ blockedTerms: [...blockedTerms, normalised] });
-    void impact('light');
+    impact('light');
     return 'added';
   };
 

@@ -54,7 +54,7 @@ export function FeedbackScreen() {
         email: email.trim(),
         name: user?.display_name,
       });
-      void impact('light');
+      impact('light');
       toast.success(t('success'));
 
       if (router.canDismiss()) {

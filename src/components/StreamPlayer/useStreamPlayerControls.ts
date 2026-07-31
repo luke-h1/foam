@@ -138,7 +138,7 @@ export function useStreamPlayerControls({
         lastTapAtRef.current = 0;
         forceHideControls();
         if (Platform.OS !== 'web') {
-          void impact('light');
+          impact('light');
         }
         handlers.onVideoAreaPress();
         return;
@@ -156,7 +156,7 @@ export function useStreamPlayerControls({
 
   const handleSwipeDown = useCallback(() => {
     if (Platform.OS !== 'web') {
-      void impact('medium');
+      impact('medium');
     }
     forceHideControls();
     gestureHandlersRef.current.onVideoAreaSwipeDown?.();

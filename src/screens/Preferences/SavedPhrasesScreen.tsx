@@ -74,14 +74,14 @@ function useSavedPhrases() {
           phrase.id === editingId ? { ...phrase, text } : phrase,
         ),
       });
-      void impact('light');
+      impact('light');
       return 'edited';
     }
 
     updatePreferences({
       savedPhrases: [...phrases, { id: createPhraseId(text), text }],
     });
-    void impact('light');
+    impact('light');
     return 'added';
   };
 
@@ -110,7 +110,7 @@ function PhraseRow({
           text: t('remove'),
           style: 'destructive',
           onPress: () => {
-            void impact('medium');
+            impact('medium');
             onRemove(phrase.id);
           },
         },

@@ -90,7 +90,7 @@ export function useChatOverlayActions(openers: ChatOverlayOpeners) {
 
   const handleBadgeLongPress = useCallback(
     (badge: BadgePressData) => {
-      void selection();
+      selection();
       openers.openBadge(badge);
     },
     [openers],
@@ -98,7 +98,7 @@ export function useChatOverlayActions(openers: ChatOverlayOpeners) {
 
   const handleMessageLongPress = useCallback(
     (data: MessageActionData<'usernotice'>) => {
-      void impact('light');
+      impact('light');
       openers.openMessageActions(data);
     },
     [openers],
@@ -106,7 +106,7 @@ export function useChatOverlayActions(openers: ChatOverlayOpeners) {
 
   const handleEmotePress = useCallback(
     (emote: EmotePressData) => {
-      void selection();
+      selection();
       openers.openEmotePreview(emote);
     },
     [openers],
@@ -114,7 +114,7 @@ export function useChatOverlayActions(openers: ChatOverlayOpeners) {
 
   const handleUsernamePress = useCallback(
     (usernameData: UsernamePressData) => {
-      void selection();
+      selection();
       openers.openUserActions(usernameData);
     },
     [openers],

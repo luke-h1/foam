@@ -37,7 +37,7 @@ export function CategoryCard({ category }: Props) {
   }, [category.id]);
 
   const handleLongPress = useCallback(() => {
-    void impact('medium');
+    impact('medium');
     showActionMenu({
       title: category.name,
       actions: [

@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { StreamListLayoutToggle } from '../StreamListLayoutToggle';
 
 jest.mock('@app/lib/haptics', () => ({
-  selection: jest.fn(() => Promise.resolve()),
+  selection: jest.fn(),
 }));
 
 jest.mock('@app/components/ui/Icon/Icon', () => {

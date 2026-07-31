@@ -52,7 +52,7 @@ function HighlightRow({
           text: t('remove'),
           style: 'destructive',
           onPress: () => {
-            void impact('medium');
+            impact('medium');
             onRemove(highlight.id);
           },
         },
@@ -182,7 +182,7 @@ export function ChatHighlightsScreen() {
       ],
     });
     setInputValue('');
-    void impact('light');
+    impact('light');
   }, [inputValue, highlights, selectedColor, updatePreferences]);
 
   const handleRemove = useCallback(
