@@ -35,6 +35,11 @@ export function useUserSuggestions({
    * than sharing a frame with the character the composer is echoing.
    */
   const deferredSearch = useDeferredValue(cleanSearch);
+  /**
+   * Deferring delays the search, not the clear - the deferred value still holds
+   * the previous mention for a render after the query empties.
+   */
+  const hasSearch = cleanSearch.length > 0;
 
   useEffect(() => {
     if (!enabled || cleanSearch.length < 2) {
@@ -45,7 +50,7 @@ export function useUserSuggestions({
   }, [cleanSearch, enabled]);
 
   const filteredUsers = useMemo(() => {
-    if (!enabled || deferredSearch.length < 1) {
+    if (!enabled || !hasSearch || deferredSearch.length < 1) {
       return [];
     }
 
@@ -54,7 +59,13 @@ export function useUserSuggestions({
       maxSuggestions,
       mentionLoginRevision,
     ).map(toChatUser);
-  }, [deferredSearch, enabled, maxSuggestions, mentionLoginRevision]);
+  }, [
+    deferredSearch,
+    enabled,
+    hasSearch,
+    maxSuggestions,
+    mentionLoginRevision,
+  ]);
 
   return {
     filteredUsers,

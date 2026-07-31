@@ -444,9 +444,14 @@ class TwitchWsService {
       return;
     }
 
+    // Claim the id before awaiting. The hooks unsubscribe several event types
+    // through one Promise.all, so a sibling that settles first can reach
+    // teardownIfIdle -> cleanupSubscriptions while this delete is still in
+    // flight, and would otherwise delete the same id a second time.
+    TwitchWsService.activeSubscriptions.delete(eventType);
+
     try {
       await twitchService.deleteEventSubscription(subscriptionId);
-      TwitchWsService.activeSubscriptions.delete(eventType);
       TwitchWsService.eventCallbacks.delete(eventType);
 
       logger.twitchWs.info(

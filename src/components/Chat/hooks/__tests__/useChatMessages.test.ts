@@ -435,6 +435,89 @@ describe('useChatMessages', () => {
     });
   });
 
+  describe('Flush timer transitions', () => {
+    test('arms a fresh timer for a message arriving after a flush', () => {
+      const { result } = renderHook(() => useChatMessages(defaultOptions));
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+      });
+      act(() => {
+        jest.advanceTimersByTime(100);
+      });
+
+      expect(mockAddMessages).toHaveBeenCalledTimes(1);
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('2'));
+      });
+      act(() => {
+        jest.advanceTimersByTime(100);
+      });
+
+      expect(mockAddMessages).toHaveBeenCalledTimes(2);
+      expect(getLastFlushedMessages().map(m => m.message_id)).toEqual(['2']);
+    });
+
+    test('keeps the timer armed for a message queued while publishing', () => {
+      let hasQueued = false;
+      const { result } = renderHook(() =>
+        useChatMessages({
+          ...defaultOptions,
+          finalizeMessageForCommit: (message: BufferedMessage) => {
+            // Feeds a message back in mid-flush, which arms a timer while the
+            // flush that cleared the handle is still running.
+            if (!hasQueued) {
+              hasQueued = true;
+              result.current.handleNewMessage(createMockMessage('2'));
+            }
+            return message;
+          },
+        }),
+      );
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+      });
+      act(() => {
+        jest.advanceTimersByTime(100);
+      });
+
+      expect(getLastFlushedMessages().map(m => m.message_id)).toEqual(['1']);
+      expect(result.current.getBufferSize()).toBe(1);
+
+      act(() => {
+        jest.advanceTimersByTime(100);
+      });
+
+      expect(getLastFlushedMessages().map(m => m.message_id)).toEqual(['2']);
+      expect(result.current.getBufferSize()).toBe(0);
+    });
+
+    test('does not drain the same message twice across consecutive flushes', () => {
+      const { result } = renderHook(() => useChatMessages(defaultOptions));
+
+      act(() => {
+        result.current.handleNewMessage(createMockMessage('1'));
+      });
+      act(() => {
+        jest.advanceTimersByTime(100);
+      });
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+
+      const flushedIds = mockAddMessages.mock.calls.flatMap(([messages]) =>
+        (Array.isArray(messages) ? messages : [])
+          .filter(
+            (message): message is ChatMessageType<never> => message != null,
+          )
+          .map(message => message.message_id),
+      );
+      expect(flushedIds).toEqual(['1']);
+    });
+  });
+
   describe('Cleanup', () => {
     test('should clear flush timer on cleanup', () => {
       const { result } = renderHook(() => useChatMessages(defaultOptions));

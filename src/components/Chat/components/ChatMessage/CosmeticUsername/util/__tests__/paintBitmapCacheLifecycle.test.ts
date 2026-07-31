@@ -10,11 +10,9 @@ import {
 
 interface FakeEntry extends DisposablePaintBitmaps {
   staticImage: { dispose: jest.Mock };
-  maskImage: { dispose: jest.Mock } | null;
-  strokeImage: { dispose: jest.Mock } | null;
-  layerSlots: (
-    { kind: 'baked'; image: { dispose: jest.Mock } } | { kind: 'url' }
-  )[];
+  maskImage: { dispose: jest.Mock };
+  strokeImage: { dispose: jest.Mock };
+  layerSlots: { kind: 'baked'; image: { dispose: jest.Mock } }[];
 }
 
 function createEntry({ bakedLayers = 0 }: { bakedLayers?: number } = {}) {
@@ -32,10 +30,10 @@ function createEntry({ bakedLayers = 0 }: { bakedLayers?: number } = {}) {
 function disposeCallCounts(entry: FakeEntry) {
   return {
     staticImage: entry.staticImage.dispose.mock.calls.length,
-    maskImage: entry.maskImage?.dispose.mock.calls.length ?? 0,
-    strokeImage: entry.strokeImage?.dispose.mock.calls.length ?? 0,
-    bakedLayers: entry.layerSlots.map(slot =>
-      slot.kind === 'baked' ? slot.image.dispose.mock.calls.length : 0,
+    maskImage: entry.maskImage.dispose.mock.calls.length,
+    strokeImage: entry.strokeImage.dispose.mock.calls.length,
+    bakedLayers: entry.layerSlots.map(
+      slot => slot.image.dispose.mock.calls.length,
     ),
   };
 }
@@ -204,6 +202,37 @@ describe('paintBitmapCacheLifecycle', () => {
       strokeImage: 1,
       bakedLayers: [],
     });
+  });
+
+  test('refuses a retain on an entry whose textures are already gone', () => {
+    const disposed = createEntry();
+    cachePaintBitmaps('disposed', disposed);
+
+    clearPaintBitmapCache();
+    flushFrames();
+
+    // The canvas lost the race: its commit landed after disposal ran, so it
+    // must rebuild rather than draw a dead texture.
+    expect(retainPaintBitmaps(disposed)).toBe(false);
+
+    // A refused retain must not resurrect the entry into the retain table, or
+    // a later release would dispose it a second time.
+    releasePaintBitmaps(disposed);
+    expect(disposeCallCounts(disposed)).toEqual({
+      staticImage: 1,
+      maskImage: 1,
+      strokeImage: 1,
+      bakedLayers: [],
+    });
+  });
+
+  test('accepts a retain on a live entry', () => {
+    const live = createEntry();
+    cachePaintBitmaps('live', live);
+
+    expect(retainPaintBitmaps(live)).toBe(true);
+
+    releasePaintBitmaps(live);
   });
 
   test('a canvas that mounts after eviction keeps the entry alive', () => {

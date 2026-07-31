@@ -143,6 +143,43 @@ describe('TwitchWsService shared socket teardown', () => {
     expect(twitchWsState.instance).toBeNull();
   });
 
+  test('deletes each subscription once when event types unsubscribe together', async () => {
+    const socket = createFakeSocket();
+    const onBegin = jest.fn();
+    const onEnd = jest.fn();
+
+    await subscribe('channel.poll.begin', onBegin);
+    await subscribe('channel.poll.end', onEnd);
+    twitchWsState.instance = socket;
+
+    // The unmount path in useChannelPoll / useChannelPrediction: several event
+    // types torn down through one Promise.all rather than sequentially.
+    let resolveBegin: () => void = () => {};
+    mockDeleteEventSubscription.mockImplementation(id =>
+      id === 'channel.poll.begin-sub-id'
+        ? new Promise(resolve => {
+            resolveBegin = () => resolve(undefined);
+          })
+        : Promise.resolve(undefined),
+    );
+
+    const unsubscribed = Promise.all([
+      TwitchWsService.unsubscribeFromEvent('channel.poll.begin', onBegin),
+      TwitchWsService.unsubscribeFromEvent('channel.poll.end', onEnd),
+    ]);
+
+    // Let the sibling settle and run teardown while the first delete is still
+    // in flight, then release it.
+    await Promise.resolve();
+    resolveBegin();
+    await unsubscribed;
+
+    expect(mockDeleteEventSubscription.mock.calls.map(([id]) => id)).toEqual([
+      'channel.poll.begin-sub-id',
+      'channel.poll.end-sub-id',
+    ]);
+  });
+
   test('cancels a pending reconnect when the last consumer leaves', async () => {
     const socket = createFakeSocket();
     const onPoll = jest.fn();

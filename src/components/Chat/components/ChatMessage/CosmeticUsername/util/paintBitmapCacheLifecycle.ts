@@ -21,10 +21,8 @@ export interface DisposablePaintBitmaps {
 }
 
 /**
- * Bounded LRU over cache *entries*, not textures: each entry owns a foundation
- * bitmap plus an optional mask, stroke, and one baked bitmap per gradient run
- * that stacks above a URL layer. 7TV serves a few hundred paints in total, so
- * 256 entries covers a chat session's working set.
+ * Caps entries, not textures - one entry owns a foundation bitmap plus an
+ * optional mask, stroke, and a baked bitmap per gradient run above a URL layer.
  */
 export const MAX_CACHED_PAINT_BITMAPS = 256;
 
@@ -37,17 +35,22 @@ const cache = new Map<string, DisposablePaintBitmaps>();
 const retainCounts = new Map<DisposablePaintBitmaps, number>();
 
 /**
- * Evicted, not yet freed. Disposal is deferred two frames because
- * `PaintedUsernameSkia` retains in a passive effect, asynchronously after the
- * render that read the entry — freeing on eviction can race that effect and
- * hand an already-disposed texture to a canvas that is about to mount. By the
- * next frame the retain has landed, so an absent count reliably means nothing
- * is drawing it.
+ * Evicted, not yet freed. `PaintedUsernameSkia` retains in a layout effect, so
+ * the retain lands in the same commit as the render that read the entry — but
+ * a concurrent render can be interrupted between the two, so disposal is still
+ * deferred two frames rather than running on eviction.
  */
 const pendingDisposal = new Set<DisposablePaintBitmaps>();
 let disposalFlushScheduled = false;
 
+/**
+ * Lets a retain that lost the race above find out its textures are gone,
+ * rather than handing a dead entry to a canvas.
+ */
+const disposedEntries = new WeakSet<DisposablePaintBitmaps>();
+
 function disposeTextures(entry: DisposablePaintBitmaps): void {
+  disposedEntries.add(entry);
   entry.staticImage.dispose();
   entry.maskImage?.dispose();
   entry.strokeImage?.dispose();
@@ -103,18 +106,28 @@ export function cachePaintBitmaps(
   entry: DisposablePaintBitmaps,
 ): void {
   if (cache.size >= MAX_CACHED_PAINT_BITMAPS) {
-    const oldestKey = cache.keys().next().value;
-    const oldest = oldestKey === undefined ? undefined : cache.get(oldestKey);
-    if (oldestKey !== undefined && oldest !== undefined) {
+    const oldest = cache.entries().next().value;
+    if (oldest) {
+      const [oldestKey, oldestEntry] = oldest;
       cache.delete(oldestKey);
-      scheduleDisposal(oldest);
+      scheduleDisposal(oldestEntry);
     }
   }
   cache.set(key, entry);
 }
 
-export function retainPaintBitmaps(entry: DisposablePaintBitmaps): void {
+/**
+ * Pins an entry's textures for as long as a canvas draws them. Returns false if
+ * the entry was disposed before this retain landed — the caller must rebuild
+ * rather than draw it, which keeps the eviction race recoverable instead of
+ * putting a dead texture on screen.
+ */
+export function retainPaintBitmaps(entry: DisposablePaintBitmaps): boolean {
+  if (disposedEntries.has(entry)) {
+    return false;
+  }
   retainCounts.set(entry, (retainCounts.get(entry) ?? 0) + 1);
+  return true;
 }
 
 export function releasePaintBitmaps(entry: DisposablePaintBitmaps): void {
