@@ -94,7 +94,20 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   });
 
   const flushBuffer = useCallback(() => {
-    flushTimerRef.current = null;
+    if (isFlushingRef.current) {
+      // Re-entered from inside a flush, because publishing fed a message
+      // straight back in. The drain already under way covers it, so leave any
+      // armed timer alone rather than dropping its handle.
+      return;
+    }
+
+    // Clearing (not just forgetting) matters on the direct-call path: a timer
+    // armed for this same flush would otherwise stay pending and re-run it.
+    if (flushTimerRef.current) {
+      clearTimeout(flushTimerRef.current);
+      flushTimerRef.current = null;
+    }
+
     const buffer = bufferRef.current;
 
     if (buffer.size() === 0) {
@@ -102,9 +115,6 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
         onUnreadIncrement(pendingUnreadCountRef.current);
         pendingUnreadCountRef.current = 0;
       }
-      return;
-    }
-    if (isFlushingRef.current) {
       return;
     }
     if (!isAtBottomRef.current && isUserActivelyScrolling?.()) {

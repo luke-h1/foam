@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo } from 'react';
+import { type ReactNode, useLayoutEffect, useMemo, useState } from 'react';
 import { PixelRatio } from 'react-native';
 
 import {
@@ -14,6 +14,10 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
+import {
+  releasePaintBitmaps,
+  retainPaintBitmaps,
+} from './util/paintBitmapCacheLifecycle';
 import { useSharedPaintAnimationFrame } from './util/sharedPaintAnimationFrames';
 import {
   getPaintBitmaps,
@@ -253,6 +257,7 @@ export function PaintedUsernameSkia({
 }: PaintedUsernameSkiaProps) {
   const fontProvider = useSkiaPaintFontProvider();
   const pixelRatio = PixelRatio.get();
+  const [rebuildToken, setRebuildToken] = useState(0);
 
   const bitmaps = useMemo(
     () =>
@@ -267,8 +272,36 @@ export function PaintedUsernameSkia({
             fontFamily: 'Montserrat',
           })
         : null,
-    [fontProvider, username, paint, fallbackColor, fontSize, pixelRatio],
+    // rebuildToken re-reads the cache after a lost retain; see below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      fontProvider,
+      username,
+      paint,
+      fallbackColor,
+      fontSize,
+      pixelRatio,
+      rebuildToken,
+    ],
   );
+
+  /**
+   * Pins the textures while this canvas draws them, so an eviction or a
+   * memory-warning clear cannot dispose a bitmap that is on screen. Layout
+   * effect so the retain lands in the same commit as the render that read the
+   * entry; if disposal still won the race, rebuild rather than draw a dead one.
+   */
+  useLayoutEffect(() => {
+    if (!bitmaps) {
+      return;
+    }
+    if (!retainPaintBitmaps(bitmaps)) {
+      // react-doctor-disable-next-line react-hooks-js/set-state-in-effect -- recovery branch, not a cascade: it only runs when disposal beat this retain, and the entry cannot be re-derived before render because retaining during render would leak on a discarded one
+      setRebuildToken(token => token + 1);
+      return;
+    }
+    return () => releasePaintBitmaps(bitmaps);
+  }, [bitmaps]);
 
   if (!bitmaps) {
     return (

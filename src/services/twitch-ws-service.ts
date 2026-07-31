@@ -48,6 +48,8 @@ class TwitchWsService {
 
   private static keepaliveTimer: ReturnType<typeof setTimeout> | null = null;
 
+  private static reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
   private static eventCallbacks: Map<string, EventCallback[]> = new Map();
 
   private static reconnectUrl: string = '';
@@ -273,9 +275,7 @@ class TwitchWsService {
       TwitchWsService.instance.close(1000, 'Reconnecting');
     }
 
-    setTimeout(() => {
-      TwitchWsService.connect();
-    }, 1000);
+    TwitchWsService.scheduleReconnect(1000);
   }
 
   private static handleRevocation(message: EventSubMessage): void {
@@ -311,6 +311,33 @@ class TwitchWsService {
     }
   }
 
+  private static clearReconnectTimer(): void {
+    if (TwitchWsService.reconnectTimer) {
+      clearTimeout(TwitchWsService.reconnectTimer);
+      TwitchWsService.reconnectTimer = null;
+    }
+  }
+
+  /**
+   * Reconnects are always scheduled through here so a teardown can cancel one
+   * mid-backoff. An uncancelled timer would otherwise reopen the socket, and
+   * re-arm the keepalive, after every consumer has already gone away.
+   */
+  private static scheduleReconnect(delayMs: number): void {
+    TwitchWsService.clearReconnectTimer();
+
+    TwitchWsService.reconnectTimer = setTimeout(() => {
+      TwitchWsService.reconnectTimer = null;
+
+      if (!TwitchWsService.hasActiveListeners()) {
+        TwitchWsService.isReconnecting = false;
+        return;
+      }
+
+      TwitchWsService.connect();
+    }, delayMs);
+  }
+
   private static attemptReconnect(): void {
     if (TwitchWsService.isReconnecting) {
       return;
@@ -320,9 +347,7 @@ class TwitchWsService {
 
     logger.twitchWs.info(`💜 Attempting EventSub reconnection`);
 
-    setTimeout(() => {
-      TwitchWsService.connect();
-    }, 2000);
+    TwitchWsService.scheduleReconnect(2000);
   }
 
   /**
@@ -390,6 +415,7 @@ class TwitchWsService {
         },
       );
       TwitchWsService.removeEventListener(eventType, callback);
+      TwitchWsService.teardownIfIdle();
     }
   }
 
@@ -414,12 +440,18 @@ class TwitchWsService {
 
     const subscriptionId = TwitchWsService.activeSubscriptions.get(eventType);
     if (!subscriptionId) {
+      TwitchWsService.teardownIfIdle();
       return;
     }
 
+    // Claim the id before awaiting. The hooks unsubscribe several event types
+    // through one Promise.all, so a sibling that settles first can reach
+    // teardownIfIdle -> cleanupSubscriptions while this delete is still in
+    // flight, and would otherwise delete the same id a second time.
+    TwitchWsService.activeSubscriptions.delete(eventType);
+
     try {
       await twitchService.deleteEventSubscription(subscriptionId);
-      TwitchWsService.activeSubscriptions.delete(eventType);
       TwitchWsService.eventCallbacks.delete(eventType);
 
       logger.twitchWs.info(
@@ -438,6 +470,8 @@ class TwitchWsService {
           subscription_id: subscriptionId,
         },
       );
+    } finally {
+      TwitchWsService.teardownIfIdle();
     }
   }
 
@@ -608,15 +642,35 @@ class TwitchWsService {
     }
   }
 
-  public static disconnect() {
+  private static hasActiveListeners(): boolean {
+    for (const callbacks of TwitchWsService.eventCallbacks.values()) {
+      if (callbacks.length > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Polls, predictions and channel-point redemptions share one EventSub socket,
+   * so the listener registry is the refcount: the socket closes only once the
+   * last consumer has unsubscribed. Closing on any one consumer's unmount would
+   * silently kill the feeds the others are still mounted on.
+   */
+  private static teardownIfIdle(): void {
+    if (TwitchWsService.hasActiveListeners()) {
+      return;
+    }
+
     TwitchWsService.clearKeepaliveTimer();
+    TwitchWsService.clearReconnectTimer();
+    TwitchWsService.isReconnecting = false;
 
     // Close WebSocket immediately for fast disconnection
     if (TwitchWsService.instance) {
       TwitchWsService.instance.close(1000, 'Manual Disconnect');
       TwitchWsService.instance = null;
       TwitchWsService.sessionId = '';
-      TwitchWsService.isReconnecting = false;
     }
 
     // Clean up subscriptions in background without blocking disconnection

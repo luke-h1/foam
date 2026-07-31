@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useDeferredValue, useEffect, useMemo } from 'react';
 
 import { useSelector } from '@legendapp/state/react';
 
@@ -30,6 +30,16 @@ export function useUserSuggestions({
 }: UseUserSuggestionsProps) {
   const mentionLoginRevision = useSelector(chatStore$.mentionLoginRevision);
   const cleanSearch = searchTerm.slice(1).toLowerCase().trim();
+  /**
+   * The search scans both mention indexes, so it trails the keystroke rather
+   * than sharing a frame with the character the composer is echoing.
+   */
+  const deferredSearch = useDeferredValue(cleanSearch);
+  /**
+   * Deferring delays the search, not the clear - the deferred value still holds
+   * the previous mention for a render after the query empties.
+   */
+  const hasSearch = cleanSearch.length > 0;
 
   useEffect(() => {
     if (!enabled || cleanSearch.length < 2) {
@@ -40,16 +50,22 @@ export function useUserSuggestions({
   }, [cleanSearch, enabled]);
 
   const filteredUsers = useMemo(() => {
-    if (!enabled || !searchTerm.trim() || cleanSearch.length < 1) {
+    if (!enabled || !hasSearch || deferredSearch.length < 1) {
       return [];
     }
 
     return searchMentionChatters(
-      cleanSearch,
+      deferredSearch,
       maxSuggestions,
       mentionLoginRevision,
     ).map(toChatUser);
-  }, [cleanSearch, enabled, maxSuggestions, mentionLoginRevision, searchTerm]);
+  }, [
+    deferredSearch,
+    enabled,
+    hasSearch,
+    maxSuggestions,
+    mentionLoginRevision,
+  ]);
 
   return {
     filteredUsers,

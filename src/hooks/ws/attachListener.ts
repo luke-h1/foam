@@ -48,7 +48,24 @@ export function attachListeners(
   const { setLastMessage, setReadyState } = setters;
 
   let interval: ReturnType<typeof setInterval>;
-  let reconnectTimeout: ReturnType<typeof setTimeout>;
+  let reconnectTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  /**
+   * A socket error is normally followed by a close, and both arm a reconnect.
+   * Without clearing first the second assignment orphans the first timer, so
+   * two reconnects race and open two sockets.
+   */
+  function scheduleReconnect(attempt: number, baseInterval: number): void {
+    if (reconnectTimeout) {
+      clearTimeout(reconnectTimeout);
+    }
+    const delay = getReconnectDelayWithJitter(attempt, baseInterval);
+    reconnectTimeout = setTimeout(() => {
+      reconnectTimeout = undefined;
+      reconnectCount.current += 1;
+      reconnect();
+    }, delay);
+  }
 
   if (optionsRef.current.fromSocketIO) {
     interval = setupSocketPing(instance);
@@ -86,14 +103,7 @@ export function attachListeners(
         optionsRef.current.reconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS;
 
       if (reconnectCount.current < reconnectAttempts) {
-        const delay = getReconnectDelayWithJitter(
-          reconnectCount.current,
-          baseInterval,
-        );
-        reconnectTimeout = setTimeout(() => {
-          reconnectCount.current += 1;
-          reconnect();
-        }, delay);
+        scheduleReconnect(reconnectCount.current, baseInterval);
       } else {
         optionsRef.current.onReconnectStop?.(reconnectAttempts);
         logger.main.error(
@@ -113,14 +123,7 @@ export function attachListeners(
         optionsRef.current.reconnectInterval ?? DEFAULT_RECONNECT_INTERVAL_MS;
 
       if (reconnectCount.current < reconnectAttempts) {
-        const delay = getReconnectDelayWithJitter(
-          reconnectCount.current,
-          baseInterval,
-        );
-        reconnectTimeout = setTimeout(() => {
-          reconnectCount.current += 1;
-          reconnect();
-        }, delay);
+        scheduleReconnect(reconnectCount.current, baseInterval);
       } else {
         optionsRef.current.onReconnectStop?.(reconnectAttempts);
         logger.main.error(

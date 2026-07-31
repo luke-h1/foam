@@ -154,9 +154,7 @@ export function useChannelPrediction(channelId?: string) {
         ),
         TwitchWsService.unsubscribeFromEvent('channel.prediction.lock', onLock),
         TwitchWsService.unsubscribeFromEvent('channel.prediction.end', onEnd),
-      ]).finally(() => {
-        TwitchWsService.disconnect();
-      });
+      ]);
     };
   }, [canSubscribe, channelId]);
 
