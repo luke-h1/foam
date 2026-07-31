@@ -101,7 +101,7 @@
     "@expo-google-fonts/montserrat": "^0.4.2",
     "@expo-google-fonts/source-code-pro": "^0.4.0",
     "@expo/metro-runtime": "~57.0.2",
-    "@expo/ui": "~57.0.8",
+    "@expo/ui": "57.0.8",
     "@legendapp/list": "3.0.4",
     "@legendapp/state": "^2.1.15",
     "@react-native-async-storage/async-storage": "2.2.0",

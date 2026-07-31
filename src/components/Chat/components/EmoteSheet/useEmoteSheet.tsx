@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useDeferredValue,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -220,7 +221,10 @@ export function useEmoteSheet({
    * warmup and restart the whole cross-provider walk mid-swap.
    */
   const warmupProviderIdRef = useRef(renderedProviderId);
-  warmupProviderIdRef.current = renderedProviderId;
+
+  useLayoutEffect(() => {
+    warmupProviderIdRef.current = renderedProviderId;
+  });
 
   useEffect(() => {
     if (!isPresented || providers.length === 0) {

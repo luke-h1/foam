@@ -110,6 +110,15 @@ describe('BottomSheet', () => {
       expect(mockSheet.props.snapPoints).toEqual([320, '60%', '100%']);
     });
 
+    test('rounds a fraction that multiplies to a float tail', () => {
+      renderSheet({
+        enableFixedSnapPoints: true,
+        snapPoints: [{ fraction: 0.29 }],
+      });
+
+      expect(mockSheet.props.snapPoints).toEqual(['29%']);
+    });
+
     test('clamps a fraction above one', () => {
       renderSheet({
         enableFixedSnapPoints: true,

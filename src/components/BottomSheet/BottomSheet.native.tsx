@@ -1,4 +1,10 @@
-import { useEffect, useImperativeHandle, useMemo, useRef } from 'react';
+import {
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { PropsWithChildren, Ref } from 'react';
 
@@ -43,7 +49,9 @@ function toDetent(snapPoint: SnapPoint): string | number {
     return Math.round(snapPoint.height);
   }
 
-  return `${Math.min(1, snapPoint.fraction) * 100}%`;
+  // Rounded because float multiplication leaves a tail on some fractions, and
+  // '28.999999999999996%' goes straight to the native detent.
+  return `${Math.round(Math.min(1, snapPoint.fraction) * 100)}%`;
 }
 
 function resolveSheetHeight(
@@ -75,7 +83,10 @@ export function BottomSheet({
   const sheetRef = useRef<BottomSheetMethods>(null);
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onDismissRef = useRef(onDismiss);
-  onDismissRef.current = onDismiss;
+
+  useLayoutEffect(() => {
+    onDismissRef.current = onDismiss;
+  });
 
   useImperativeHandle(
     ref,
