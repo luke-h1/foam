@@ -296,6 +296,7 @@ export function PaintedUsernameSkia({
       return;
     }
     if (!retainPaintBitmaps(bitmaps)) {
+      // react-doctor-disable-next-line react-hooks-js/set-state-in-effect -- recovery branch, not a cascade: it only runs when disposal beat this retain, and the entry cannot be re-derived before render because retaining during render would leak on a discarded one
       setRebuildToken(token => token + 1);
       return;
     }
