@@ -19,6 +19,7 @@ type SheetProps = {
 
 const mockSheet = {
   dismiss: jest.fn(() => Promise.resolve()),
+  present: jest.fn(() => Promise.resolve()),
   props: {} as SheetProps,
   emitDidPresent: (_position: number): void => undefined,
   emitDidDismiss: (): void => undefined,
@@ -41,14 +42,20 @@ jest.mock('@lodev09/react-native-true-sheet', () => {
       onDidPresent?: (event: {
         nativeEvent: { detent: number; index: number; position: number };
       }) => void;
-      ref?: React.Ref<{ dismiss: () => Promise<void> }>;
+      ref?: React.Ref<{
+        dismiss: () => Promise<void>;
+        present: () => Promise<void>;
+      }>;
     }) => {
       mockSheet.props = props;
       mockSheet.emitDidPresent = position =>
         onDidPresent?.({ nativeEvent: { detent: 0, index: 0, position } });
       mockSheet.emitDidDismiss = () => onDidDismiss?.();
 
-      React.useImperativeHandle(ref, () => ({ dismiss: mockSheet.dismiss }));
+      React.useImperativeHandle(ref, () => ({
+        dismiss: mockSheet.dismiss,
+        present: mockSheet.present,
+      }));
 
       return React.createElement(View, null, children);
     },
@@ -222,6 +229,76 @@ describe('BottomSheet', () => {
 
     expect(onDismiss).toHaveBeenCalledTimes(1);
     expect(queryByText('sheet body')).not.toBeOnTheScreen();
+  });
+
+  test('re-presents instead of reporting a close that a re-open superseded', () => {
+    const onDismiss = jest.fn();
+    const { queryByText, rerender } = renderSheet({ onDismiss });
+
+    act(() => mockSheet.emitDidPresent(windowHeight - 400));
+    rerender(
+      <BottomSheet isPresented={false} onDismiss={onDismiss} showDragIndicator>
+        <Text>sheet body</Text>
+      </BottomSheet>,
+    );
+    rerender(
+      <BottomSheet isPresented onDismiss={onDismiss} showDragIndicator>
+        <Text>sheet body</Text>
+      </BottomSheet>,
+    );
+    act(() => mockSheet.emitDidDismiss());
+
+    expect(mockSheet.present).toHaveBeenCalledTimes(1);
+    expect(onDismiss).not.toHaveBeenCalled();
+    expect(queryByText('sheet body')).toBeOnTheScreen();
+  });
+
+  test('reports a swipe-down dismissal while isPresented is still true', () => {
+    const onDismiss = jest.fn();
+
+    renderSheet({ onDismiss });
+    act(() => mockSheet.emitDidPresent(windowHeight - 400));
+    act(() => mockSheet.emitDidDismiss());
+
+    expect(mockSheet.present).not.toHaveBeenCalled();
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  test('reports a requestClose dismissal while isPresented is still true', () => {
+    const onDismiss = jest.fn();
+    const ref = { current: null as BottomSheetHandle | null };
+
+    renderSheet({ onDismiss, ref });
+    act(() => mockSheet.emitDidPresent(windowHeight - 400));
+    act(() => ref.current?.requestClose());
+    act(() => mockSheet.emitDidDismiss());
+
+    expect(mockSheet.present).not.toHaveBeenCalled();
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+
+  test('reports a swipe-down dismissal after a re-open cancelled a queued close', () => {
+    const onDismiss = jest.fn();
+    const { rerender } = renderSheet({ onDismiss });
+
+    rerender(
+      <BottomSheet isPresented={false} onDismiss={onDismiss} showDragIndicator>
+        <Text>sheet body</Text>
+      </BottomSheet>,
+    );
+    rerender(
+      <BottomSheet isPresented onDismiss={onDismiss} showDragIndicator>
+        <Text>sheet body</Text>
+      </BottomSheet>,
+    );
+    act(() => mockSheet.emitDidPresent(windowHeight - 400));
+
+    expect(mockSheet.dismiss).not.toHaveBeenCalled();
+
+    act(() => mockSheet.emitDidDismiss());
+
+    expect(mockSheet.present).not.toHaveBeenCalled();
+    expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
   test('queues a prop-driven close that lands before the sheet presents', () => {

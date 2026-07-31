@@ -105,7 +105,6 @@
         "bundleIdentifier": "foam-tv-internal"
       },
       "android": {
-        "serviceAccountKeyPath": "./playstore-service-account.json",
         "track": "internal",
         "releaseStatus": "completed"
       }
@@ -116,7 +115,6 @@
         "bundleIdentifier": "foam-tv-testflight"
       },
       "android": {
-        "serviceAccountKeyPath": "./playstore-service-account.json",
         "track": "internal",
         "releaseStatus": "completed"
       }
@@ -127,7 +125,6 @@
         "bundleIdentifier": "foam-tv"
       },
       "android": {
-        "serviceAccountKeyPath": "./playstore-service-account.json",
         "track": "production",
         "releaseStatus": "completed"
       }

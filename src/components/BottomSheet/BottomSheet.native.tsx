@@ -128,6 +128,12 @@ export function BottomSheet({
   const presentedRef = useRef(false);
   const pendingDismissRef = useRef(false);
   /**
+   * Set while a dismiss issued for `isPresented` flipping false is still
+   * animating, so a re-open landing in that window can be told apart from a
+   * swipe-down or a `requestClose` (both of which do have to be reported).
+   */
+  const propCloseInFlightRef = useRef(false);
+  /**
    * TrueSheet must stay mounted until the native dismissal completes: if it
    * unmounted in the same commit that flips `isPresented` false, its native
    * ref would already be detached by the time any effect cleanup runs, the JS
@@ -178,7 +184,15 @@ export function BottomSheet({
   useLayoutEffect(() => {
     if (isPresented) {
       didDismissRef.current = false;
-      pendingDismissRef.current = false;
+      /**
+       * A queued close never reached native, so a re-open just cancels it;
+       * only a dismiss already in flight needs the supersede handling in
+       * onDidDismiss.
+       */
+      if (pendingDismissRef.current) {
+        pendingDismissRef.current = false;
+        propCloseInFlightRef.current = false;
+      }
       return;
     }
 
@@ -190,6 +204,7 @@ export function BottomSheet({
      * clears.
      */
     if (!didDismissRef.current) {
+      propCloseInFlightRef.current = true;
       if (!presentedRef.current) {
         pendingDismissRef.current = true;
         return;
@@ -255,8 +270,24 @@ export function BottomSheet({
       onDidDismiss={() => {
         presentedRef.current = false;
         pendingDismissRef.current = false;
-        setIsMounted(false);
         setMeasured(null);
+
+        const wasSuperseded = propCloseInFlightRef.current && isPresented;
+        propCloseInFlightRef.current = false;
+
+        /**
+         * The close was reversed before the native dismissal landed. The
+         * render-phase mount adjustment keeps TrueSheet mounted through this,
+         * and native auto-presents only once per mount
+         * (`didInitiallyPresent`), so the re-open has to be issued here - and
+         * the parent is not told about a dismissal it already took back.
+         */
+        if (wasSuperseded) {
+          sheetRef.current?.present().catch(() => undefined);
+          return;
+        }
+
+        setIsMounted(false);
         if (!didDismissRef.current) {
           didDismissRef.current = true;
           onDismiss();
