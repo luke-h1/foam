@@ -101,10 +101,9 @@
     "@expo-google-fonts/montserrat": "^0.4.2",
     "@expo-google-fonts/source-code-pro": "^0.4.0",
     "@expo/metro-runtime": "~57.0.2",
-    "@expo/ui": "~57.0.1",
+    "@expo/ui": "57.0.8",
     "@legendapp/list": "3.0.4",
     "@legendapp/state": "^2.1.15",
-    "@lodev09/react-native-true-sheet": "3.11.9",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "12.0.1",
     "@react-native-community/slider": "5.2.0",
@@ -120,7 +119,7 @@
     "app-icon-badge": "0.1.2",
     "date-fns": "4.1.0",
     "dayjs": "^1.11.13",
-    "expo": "^57.0.0",
+    "expo": "^57.0.9",
     "expo-application": "~57.0.0",
     "expo-auth-session": "~57.0.1",
     "expo-blur": "~57.0.0",
@@ -143,7 +142,7 @@
     "expo-network": "~57.0.0",
     "expo-pretext": "^1.1.0",
     "expo-quick-actions": "^6.0.1",
-    "expo-router": "~57.0.2",
+    "expo-router": "~57.0.9",
     "expo-screen-orientation": "~57.0.0",
     "expo-secure-store": "~57.0.0",
     "expo-sensors": "~57.0.1",
@@ -312,8 +311,7 @@
     "expo-image@57.0.0": "patches/expo-image@57.0.0.patch",
     "expo-modules-jsi@57.0.0": "patches/expo-modules-jsi@57.0.0.patch",
     "@sentry/core@10.57.0": "patches/@sentry%2Fcore@10.57.0.patch",
-    "@expo/ui@57.0.2": "patches/@expo%2Fui@57.0.2.patch",
-    "@lodev09/react-native-true-sheet@3.11.9": "patches/@lodev09%2Freact-native-true-sheet@3.11.9.patch"
+    "@expo/ui@57.0.8": "patches/@expo%2Fui@57.0.8.patch"
   },
   "reanimated": {
     "staticFeatureFlags": {

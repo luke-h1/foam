@@ -175,19 +175,55 @@ function getBaseCollection({
   return collection;
 }
 
-function getEmoteIdsKey(emotes: SanitisedEmote[]): string {
+const contentIdByEmoteArray = new WeakMap<SanitisedEmote[], number>();
+const contentIdByIds = new Map<string, number>();
+const MAX_CONTENT_ID_CACHE_SIZE = 32;
+let nextContentId = 0;
+
+/**
+ * A small integer standing in for the array's contents. The scoped arrays get
+ * rebuilt with the same emotes, so they can't use `getEmoteArrayId` identity -
+ * but spelling their ids into the key made per-message cost scale with how many
+ * emotes the account has unlocked. The walk runs once per new array identity.
+ */
+function getEmoteContentId(emotes: SanitisedEmote[]): number {
   if (emotes.length === 0) {
-    return '0';
+    return 0;
   }
 
-  return emotes.map(emote => emote.id).join(',');
+  const cached = contentIdByEmoteArray.get(emotes);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const idsKey = emotes.map(emote => emote.id).join(',');
+  let contentId = contentIdByIds.get(idsKey);
+  if (contentId === undefined) {
+    nextContentId += 1;
+    contentId = nextContentId;
+
+    /**
+     * Eviction mints a fresh id for contents seen again, costing a parse-cache
+     * miss and never a wrong hit.
+     */
+    if (contentIdByIds.size >= MAX_CONTENT_ID_CACHE_SIZE) {
+      const firstKey = contentIdByIds.keys().next().value;
+      if (firstKey !== undefined) {
+        contentIdByIds.delete(firstKey);
+      }
+    }
+    contentIdByIds.set(idsKey, contentId);
+  }
+
+  contentIdByEmoteArray.set(emotes, contentId);
+  return contentId;
 }
 
 function getScopedEmoteKey(
   sevenTvPersonalEmotes: SanitisedEmote[],
   twitchSubscriberEmotes: SanitisedEmote[],
 ): string {
-  return `${getEmoteIdsKey(sevenTvPersonalEmotes)}|${getEmoteIdsKey(
+  return `${getEmoteContentId(sevenTvPersonalEmotes)}|${getEmoteContentId(
     twitchSubscriberEmotes,
   )}`;
 }

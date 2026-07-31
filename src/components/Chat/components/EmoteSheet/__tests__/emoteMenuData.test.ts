@@ -233,7 +233,7 @@ describe('emoteMenuData', () => {
       'row',
       'row',
     ]);
-    expect(flattened.setStartIndices).toEqual([0]);
+    expect(flattened.setStartIndexById.get('twitch-channel')).toBe(0);
     expect(flattened.items[1]?.items).toHaveLength(2);
     expect(flattened.items[2]?.items).toHaveLength(1);
   });

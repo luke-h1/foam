@@ -175,6 +175,24 @@ const parserParams = {
   twitchGlobalEmotes,
 };
 
+/**
+ * The scoped arrays are the only per-message inputs the base-collection cache
+ * can't key by identity, so they decide whether parsing stays independent of
+ * how many emotes the account has unlocked.
+ */
+const subscriberEmotes = Array.from({ length: 900 }, (_, index) =>
+  createTwitchEmote(1000 + index),
+);
+const personalEmotes = Array.from({ length: 40 }, (_, index) =>
+  createTwitchEmote(5000 + index),
+);
+
+const subscribedParserParams = {
+  ...parserParams,
+  sevenTvPersonalEmotes: personalEmotes,
+  twitchSubscriberEmotes: subscriberEmotes,
+};
+
 const chatLines = Array.from({ length: 240 }, (_, index) => {
   const bttv = bttvEmotes[index % bttvEmotes.length]?.name ?? 'BTTV0';
   const ffz = ffzEmotes[(index * 7) % ffzEmotes.length]?.name ?? 'FFZ0';
@@ -235,6 +253,17 @@ describe('chat parser performance', () => {
       chatLines.forEach(inputString => {
         processEmotesWorklet({
           ...parserParams,
+          inputString,
+        });
+      });
+    }, MEASURE_OPTIONS);
+  });
+
+  test('processes chat for a viewer with many subscriber emotes', async () => {
+    await measureFunction(() => {
+      chatLines.forEach(inputString => {
+        processEmotesWorklet({
+          ...subscribedParserParams,
           inputString,
         });
       });

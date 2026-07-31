@@ -326,6 +326,31 @@ describe('processEmotesWorklet', () => {
     expect(secondResult).toBe(firstResult);
   });
 
+  /**
+   * A store update handing over a fresh array of the same emotes must still hit
+   * the cache rather than reparse every message.
+   */
+  test('reuses cached results for a rebuilt scoped emote array', () => {
+    const personalEmote = createEmote({
+      id: 'personal-rebuilt',
+      name: 'Rebuilt',
+      site: '7TV Personal',
+    });
+
+    const firstResult = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'Rebuilt',
+      sevenTvPersonalEmotes: [personalEmote],
+    });
+    const secondResult = processEmotesWorklet({
+      ...emptyParams,
+      inputString: 'Rebuilt',
+      sevenTvPersonalEmotes: [personalEmote],
+    });
+
+    expect(secondResult).toBe(firstResult);
+  });
+
   test('keeps scoped emote cache entries distinct when middle emotes change', () => {
     const firstPersonalEmote = createEmote({
       id: 'personal-first',
