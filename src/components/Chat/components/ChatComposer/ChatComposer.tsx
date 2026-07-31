@@ -21,6 +21,13 @@ import { UserSuggestionRail } from './UserSuggestionRail';
 export type { ChatComposerHandle };
 export type { SuggestionType } from './chatComposerTypes';
 
+/**
+ * 40% alpha. The highlight sits under the glyphs, so it stays translucent while
+ * the caret and handles take the solid accent - iOS derives the same pair from
+ * a single tint, and Android is pinned to that palette.
+ */
+const SELECTION_HIGHLIGHT_ALPHA = '66';
+
 export interface ChatComposerProps {
   onChangeText?: (text: string) => void;
   onSubmit?: () => void;
@@ -190,9 +197,9 @@ function ChatComposerComponent({
           placeholder={placeholder ?? t('composer.sendAMessage')}
           placeholderTextColor={theme.color.textSecondary.dark}
           returnKeyType='send'
-          cursorColor={theme.color.text.dark}
-          selectionColor={theme.colorTextSelection}
-          selectionHandleColor={theme.colorPrimary}
+          cursorColor={accentHex}
+          selectionColor={`${accentHex}${SELECTION_HIGHLIGHT_ALPHA}`}
+          selectionHandleColor={accentHex}
           style={styles.input}
           submitBehavior='blurAndSubmit'
           /**

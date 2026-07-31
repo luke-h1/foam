@@ -137,6 +137,13 @@ function ChatComposerComponent({
             placeholderTextColor='rgba(255,255,255,0.46)'
             radius='xl'
             returnKeyType='send'
+            /**
+             * Drives the SwiftUI `.tint`, so the caret and the selection
+             * highlight follow the accent the way every other iOS text field
+             * does. Without it the field falls back to its text colour and
+             * carets near-white.
+             */
+            selectionColor={accentHex}
             style={styles.input}
             submitBehavior='blurAndSubmit'
             variant='soft'
