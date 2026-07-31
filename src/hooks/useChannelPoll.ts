@@ -127,9 +127,7 @@ export function useChannelPoll(channelId?: string) {
           onProgress,
         ),
         TwitchWsService.unsubscribeFromEvent('channel.poll.end', onEnd),
-      ]).finally(() => {
-        TwitchWsService.disconnect();
-      });
+      ]);
     };
   }, [canSubscribe, channelId]);
 
