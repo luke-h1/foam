@@ -27,9 +27,9 @@ import type {
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
 import {
+  cachePaintBitmaps,
   clearPaintBitmapCache,
-  MAX_CACHED_PAINT_BITMAPS,
-  paintBitmapCache,
+  getCachedPaintBitmaps,
 } from './paintBitmapCacheLifecycle';
 import { getPaintDropShadows } from './paintLayer/getPaintDropShadows';
 import { getPaintLayers } from './paintLayer/getPaintLayers';
@@ -751,11 +751,6 @@ function buildPaintLayerSlots(
   return { layerSlots, imageLayers };
 }
 
-/**
- * Bounded LRU: caps the cache at ~256 paint bitmaps (paint x user x fontSize
- * x pixelRatio). 7TV serves a few hundred paints in total; 256 covers the
- * working set of a chat session without letting the map grow unbounded.
- */
 export { clearPaintBitmapCache };
 
 let memoryWarningSubscribed = false;
@@ -800,14 +795,8 @@ export function getPaintBitmaps(
 ): PaintBitmaps | null {
   subscribeToMemoryWarnings();
   const key = paintBitmapCacheKey(opts);
-  const cached = paintBitmapCache.get(key) as PaintBitmaps | undefined;
+  const cached = getCachedPaintBitmaps(key) as PaintBitmaps | undefined;
   if (cached) {
-    /**
-     * Map iteration order is insertion order, so re-inserting on hit keeps
-     * eviction least-recently-used rather than first-inserted.
-     */
-    paintBitmapCache.delete(key);
-    paintBitmapCache.set(key, cached);
     return cached;
   }
 
@@ -899,12 +888,6 @@ export function getPaintBitmaps(
     },
   };
 
-  if (paintBitmapCache.size >= MAX_CACHED_PAINT_BITMAPS) {
-    const oldest = paintBitmapCache.keys().next().value;
-    if (oldest !== undefined) {
-      paintBitmapCache.delete(oldest);
-    }
-  }
-  paintBitmapCache.set(key, bitmaps);
+  cachePaintBitmaps(key, bitmaps);
   return bitmaps;
 }

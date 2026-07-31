@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo } from 'react';
+import { type ReactNode, useEffect, useMemo } from 'react';
 import { PixelRatio } from 'react-native';
 
 import {
@@ -14,6 +14,10 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
+import {
+  releasePaintBitmaps,
+  retainPaintBitmaps,
+} from './util/paintBitmapCacheLifecycle';
 import { useSharedPaintAnimationFrame } from './util/sharedPaintAnimationFrames';
 import {
   getPaintBitmaps,
@@ -269,6 +273,19 @@ export function PaintedUsernameSkia({
         : null,
     [fontProvider, username, paint, fallbackColor, fontSize, pixelRatio],
   );
+
+  /**
+   * Pins the entry's textures for as long as this canvas draws them, so an LRU
+   * eviction or a memory-warning clear cannot dispose a bitmap that is on
+   * screen.
+   */
+  useEffect(() => {
+    if (!bitmaps) {
+      return;
+    }
+    retainPaintBitmaps(bitmaps);
+    return () => releasePaintBitmaps(bitmaps);
+  }, [bitmaps]);
 
   if (!bitmaps) {
     return (
