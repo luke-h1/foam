@@ -29,8 +29,14 @@ jobs:
           persist-credentials: false
 
       - name: 📦 Install ktlint
+        env:
+          KTLINT_VERSION: '1.8.0'
+          KTLINT_SHA256: 'a3fd620207d5c40da6ca789b95e7f823c54e854b7fade7f613e91096a3706d75'
         run: |
-          curl -sSLO https://github.com/pinterest/ktlint/releases/download/1.8.0/ktlint
+          set -euo pipefail
+
+          curl --fail -sSLO "https://github.com/pinterest/ktlint/releases/download/${KTLINT_VERSION}/ktlint"
+          echo "${KTLINT_SHA256}  ktlint" | sha256sum -c -
           chmod a+x ktlint
           sudo mv ktlint /usr/local/bin/
 

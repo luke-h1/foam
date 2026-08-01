@@ -127,7 +127,7 @@ extension ChangelogConfiguration {
     let nextLabel = dto.nextButtonLabel ?? "Next"
     let doneLabel = dto.doneButtonLabel ?? "Done"
 
-    let accent: Color = if let hex = dto.accentColorHex, let ui = UIColor(ChangelogHex: hex) {
+    let accent: Color = if let hex = dto.accentColorHex, let ui = UIColor(changelogHex: hex) {
       Color(uiColor: ui)
     } else {
       .blue
@@ -142,8 +142,8 @@ extension ChangelogConfiguration {
 }
 
 extension UIColor {
-  convenience init?(ChangelogHex: String) {
-    var string = ChangelogHex.trimmingCharacters(in: .whitespacesAndNewlines)
+  convenience init?(changelogHex: String) {
+    var string = changelogHex.trimmingCharacters(in: .whitespacesAndNewlines)
     guard string.hasPrefix("#") else {
       return nil
     }

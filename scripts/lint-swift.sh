@@ -33,10 +33,10 @@ status=0
 if [ "${#files[@]}" -eq 0 ]; then
   format modules || status=1
   [ "${LINT_CHECK:-}" = "1" ] || swiftlint lint --fix --quiet || true
-  swiftlint lint --quiet || status=1
+  swiftlint lint --strict --quiet || status=1
 else
   format "${files[@]}" || status=1
   [ "${LINT_CHECK:-}" = "1" ] || swiftlint lint --fix --quiet -- "${files[@]}" || true
-  swiftlint lint --quiet -- "${files[@]}" || status=1
+  swiftlint lint --strict --quiet -- "${files[@]}" || status=1
 fi
 exit "$status"

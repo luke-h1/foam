@@ -54,8 +54,10 @@ struct MediaChangelogItemVideoView: View {
     let queuePlayer = AVQueuePlayer(playerItem: playerItem)
     queuePlayer.automaticallyWaitsToMinimizeStalling = true
 
-    videoStatusObserver = queuePlayer.observe(\.currentItem?.status, options: [.initial, .new]) {
-      observedPlayer, _ in
+    videoStatusObserver = queuePlayer.observe(
+      \.currentItem?.status,
+      options: [.initial, .new]
+    ) { observedPlayer, _ in
       Task { @MainActor in
         switch observedPlayer.currentItem?.status {
         case .readyToPlay, .failed:
@@ -88,7 +90,10 @@ private struct AspectFillVideoPlayer: UIViewRepresentable {
     }
 
     var playerLayer: AVPlayerLayer {
-      layer as! AVPlayerLayer
+      guard let playerLayer = layer as? AVPlayerLayer else {
+        preconditionFailure("layerClass is AVPlayerLayer")
+      }
+      return playerLayer
     }
   }
 
