@@ -54,8 +54,10 @@ struct MediaChangelogItemVideoView: View {
     let queuePlayer = AVQueuePlayer(playerItem: playerItem)
     queuePlayer.automaticallyWaitsToMinimizeStalling = true
 
-    videoStatusObserver = queuePlayer.observe(\.currentItem?.status, options: [.initial, .new]) {
-      observedPlayer, _ in
+    videoStatusObserver = queuePlayer.observe(
+      \.currentItem?.status,
+      options: [.initial, .new]
+    ) { observedPlayer, _ in
       Task { @MainActor in
         switch observedPlayer.currentItem?.status {
         case .readyToPlay, .failed:
@@ -83,23 +85,28 @@ struct MediaChangelogItemVideoView: View {
 
 private struct AspectFillVideoPlayer: UIViewRepresentable {
   final class PlayerView: UIView {
-    override static var layerClass: AnyClass { AVPlayerLayer.self }
+    override static var layerClass: AnyClass {
+      AVPlayerLayer.self
+    }
 
     var playerLayer: AVPlayerLayer {
-      layer as! AVPlayerLayer
+      guard let playerLayer = layer as? AVPlayerLayer else {
+        preconditionFailure("layerClass is AVPlayerLayer")
+      }
+      return playerLayer
     }
   }
 
   let player: AVPlayer?
 
-  func makeUIView(context: Context) -> PlayerView {
+  func makeUIView(context _: Context) -> PlayerView {
     let view = PlayerView()
     view.playerLayer.videoGravity = .resizeAspectFill
     view.clipsToBounds = true
     return view
   }
 
-  func updateUIView(_ uiView: PlayerView, context: Context) {
+  func updateUIView(_ uiView: PlayerView, context _: Context) {
     uiView.playerLayer.player = player
   }
 }

@@ -20,13 +20,13 @@ public class CpuUsageModule: Module {
     var threadCount = mach_msg_type_number_t(0)
 
     guard task_threads(mach_task_self_, &threadList, &threadCount) == KERN_SUCCESS,
-      let threads = threadList
+          let threads = threadList
     else {
       return 0
     }
 
     defer {
-      for index in 0..<Int(threadCount) {
+      for index in 0 ..< Int(threadCount) {
         mach_port_deallocate(mach_task_self_, threads[index])
       }
 
@@ -39,7 +39,7 @@ public class CpuUsageModule: Module {
 
     var total = 0.0
 
-    for index in 0..<Int(threadCount) {
+    for index in 0 ..< Int(threadCount) {
       var info = thread_basic_info_data_t()
       var count = Self.basicInfoCount
 

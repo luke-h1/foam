@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SafeAreaView<SafeAreaContent: View>: ViewModifier {
   @ViewBuilder var safeAreaContent: () -> SafeAreaContent
-  
+
   func body(content: Content) -> some View {
     if #available(iOS 26.0, *) {
       content.safeAreaBar(edge: .bottom) {

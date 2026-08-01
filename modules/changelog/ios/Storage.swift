@@ -7,7 +7,7 @@
 
 import Foundation
 
-public final class ChangelogStorage {
+public enum ChangelogStorage {
   public static func latestSeenAppVersion() -> String? {
     UserDefaults.standard.string(forKey: CHANGELOG_APP_STORAGE_LATEST_SEEN_APP_VERSION_KEY)
   }
