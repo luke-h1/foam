@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   Alert,
   AppState,
@@ -38,6 +38,7 @@ const ALERT_REPRESENT_DELAY_MS = 300;
 export function ForceUpdateModal() {
   const { config: remoteConfig } = useRemoteConfig();
   const insets = useSafeAreaInsets();
+  const alertVisibleRef = useRef(false);
 
   const variant = (process.env.EXPO_PUBLIC_APP_VARIANT ??
     'development') as Variant;
@@ -64,6 +65,10 @@ export function ForceUpdateModal() {
     };
 
     const presentAlert = () => {
+      if (alertVisibleRef.current) {
+        return;
+      }
+      alertVisibleRef.current = true;
       Alert.alert(
         UPDATE_REQUIRED_TITLE,
         `${UPDATE_REQUIRED_BODY}\n\nCurrent version: ${currentVersion}\nMinimum required: ${minimumVersion}`,
@@ -71,6 +76,7 @@ export function ForceUpdateModal() {
           {
             text: 'Update',
             onPress: () => {
+              alertVisibleRef.current = false;
               void handleUpdatePress().finally(scheduleAlert);
             },
           },
