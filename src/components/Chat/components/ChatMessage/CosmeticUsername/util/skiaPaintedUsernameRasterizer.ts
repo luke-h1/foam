@@ -33,6 +33,7 @@ import {
 } from './paintBitmapCacheLifecycle';
 import { getPaintDropShadows } from './paintLayer/getPaintDropShadows';
 import { getPaintLayers } from './paintLayer/getPaintLayers';
+import { isRenderablePaintLayer } from './paintLayer/isRenderablePaintLayer';
 import { isTilingCanvasRepeat } from './paintLayer/isTilingCanvasRepeat';
 import {
   type PaintLayerTileMode,
@@ -97,29 +98,20 @@ function cssClampedLayerStops(layer: PaintLayerData): PaintStop[] {
 
 /**
  * A gradient layer renders as a span when it has at least one stop and is not
- * fully transparent. Zero-stop layers produce no span at all (the reference
- * filters them out); a single-stop layer is an invalid CSS gradient whose
+ * fully transparent. A single-stop layer is an invalid CSS gradient whose
  * span keeps only its base-colour backing.
  */
 function isDrawableGradientLayer(layer: PaintLayerData): boolean {
-  return (
-    layer.function !== 'URL' &&
-    layer.stops.length > 0 &&
-    (layer.opacity ?? 1) > 0
-  );
+  return layer.function !== 'URL' && isRenderablePaintLayer(layer);
 }
 
 /**
- * A URL layer composites live only when it has a texture and is not fully
- * transparent; a dead URL layer produces no span, so it must not push the
- * paint onto the live-composite path or split a gradient batch.
+ * A URL layer composites live only when it produces a span; a dead URL layer
+ * must not push the paint onto the live-composite path or split a gradient
+ * batch.
  */
 function isLiveUrlLayer(layer: PaintLayerData): boolean {
-  return (
-    layer.function === 'URL' &&
-    Boolean(layer.image_url) &&
-    (layer.opacity ?? 1) > 0
-  );
+  return layer.function === 'URL' && isRenderablePaintLayer(layer);
 }
 
 function skColor(color: number): Float32Array {

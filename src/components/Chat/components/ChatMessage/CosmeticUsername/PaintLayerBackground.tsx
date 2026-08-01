@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { type LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import Svg, {
   Defs,
@@ -20,12 +20,20 @@ import { imageRepeatFromCanvasRepeat } from './util/paintLayer/imageRepeatFromCa
 import { isTilingCanvasRepeat } from './util/paintLayer/isTilingCanvasRepeat';
 
 interface PaintLayerBackgroundProps {
+  /**
+   * Resolved paint base colour (`paint.color` or the fallback). Painted under
+   * the layer content like the reference span's `background-color:
+   * currentColor`, so the layer opacity fades backing and content together
+   * and an upper layer covers lower ones with the base colour.
+   */
+  baseColor: string;
   fallbackColor: string;
   layer: PaintLayerData;
   layerIndex: number;
 }
 
 export function PaintLayerBackground({
+  baseColor,
   layer,
   fallbackColor,
   layerIndex,
@@ -37,7 +45,6 @@ export function PaintLayerBackground({
   } | null>(null);
   const layoutStyle = getLayerLayoutStyle(layer);
   const layerOpacity = layer.opacity ?? 1;
-  const opacityStyle = layerOpacity < 1 ? { opacity: layerOpacity } : null;
   const gradientConfig = buildLayerGradientConfig(layer, fallbackColor);
   const isRadial = layer.function === 'RADIAL_GRADIENT';
   const isAssetPaint = layer.function === 'URL' && Boolean(layer.image_url);
@@ -55,33 +62,25 @@ export function PaintLayerBackground({
     }
   };
 
+  let content: ReactNode;
   if (isAssetPaint) {
-    if (isTilingCanvasRepeat(layer.canvas_repeat, layer.repeat)) {
-      return (
-        <View style={[styles.layer, layoutStyle, opacityStyle]}>
-          <PaintLayerTiledImage
-            canvasRepeat={layer.canvas_repeat}
-            imageUrl={layer.image_url}
-          />
-        </View>
-      );
-    }
-    return (
-      <View style={[styles.layer, layoutStyle, opacityStyle]}>
-        <Image
-          contentFit={imageRepeatFromCanvasRepeat(
-            layer.canvas_repeat,
-            layer.repeat,
-          )}
-          source={{ uri: layer.image_url }}
-          useAppleWebpCodec={false}
-          style={styles.fill}
-        />
-      </View>
+    content = isTilingCanvasRepeat(layer.canvas_repeat, layer.repeat) ? (
+      <PaintLayerTiledImage
+        canvasRepeat={layer.canvas_repeat}
+        imageUrl={layer.image_url}
+      />
+    ) : (
+      <Image
+        contentFit={imageRepeatFromCanvasRepeat(
+          layer.canvas_repeat,
+          layer.repeat,
+        )}
+        source={{ uri: layer.image_url }}
+        useAppleWebpCodec={false}
+        style={styles.fill}
+      />
     );
-  }
-
-  if (isRadial) {
+  } else if (isRadial) {
     // CSS radial-gradient default sizing is farthest-corner, which needs the
     // rendered layer size in pixels to resolve to a true circle.
     const width = layerSize?.width ?? 0;
@@ -92,82 +91,69 @@ export function PaintLayerBackground({
     const rx = isEllipse ? halfW * Math.SQRT2 : farthestCorner;
     const ry = isEllipse ? halfH * Math.SQRT2 : farthestCorner;
 
-    return (
-      <View
-        style={[styles.layer, layoutStyle, opacityStyle]}
-        onLayout={handleLayout}
-      >
-        {layerSize ? (
-          <Svg width='100%' height='100%' style={styles.fill}>
-            <Defs>
-              <SvgRadialGradient
-                id={`${gradientId}-radial`}
-                gradientUnits='userSpaceOnUse'
-                cx={halfW}
-                cy={halfH}
-                rx={rx}
-                ry={ry}
-                fx={halfW}
-                fy={halfH}
-              >
-                {gradientConfig.colors.map((color, index) => (
-                  <Stop
-                    key={`${color}-${gradientConfig.locations[index]}`}
-                    offset={`${(gradientConfig.locations[index] ?? 0) * 100}%`}
-                    stopColor={color}
-                  />
-                ))}
-              </SvgRadialGradient>
-            </Defs>
-            <Rect
-              x='0'
-              y='0'
-              width='100%'
-              height='100%'
-              fill={`url(#${gradientId}-radial)`}
-            />
-          </Svg>
-        ) : null}
-      </View>
-    );
-  }
-
-  if (useSvgLinear) {
+    content = layerSize ? (
+      <Svg width='100%' height='100%' style={styles.fill}>
+        <Defs>
+          <SvgRadialGradient
+            id={`${gradientId}-radial`}
+            gradientUnits='userSpaceOnUse'
+            cx={halfW}
+            cy={halfH}
+            rx={rx}
+            ry={ry}
+            fx={halfW}
+            fy={halfH}
+          >
+            {gradientConfig.colors.map((color, index) => (
+              <Stop
+                key={`${color}-${gradientConfig.locations[index]}`}
+                offset={`${(gradientConfig.locations[index] ?? 0) * 100}%`}
+                stopColor={color}
+              />
+            ))}
+          </SvgRadialGradient>
+        </Defs>
+        <Rect
+          x='0'
+          y='0'
+          width='100%'
+          height='100%'
+          fill={`url(#${gradientId}-radial)`}
+        />
+      </Svg>
+    ) : null;
+  } else if (useSvgLinear) {
     const { start, end } = gradientConfig;
-    return (
-      <View style={[styles.layer, layoutStyle, opacityStyle]}>
-        <Svg width='100%' height='100%' style={styles.fill}>
-          <Defs>
-            <SvgLinearGradient
-              id={`${gradientId}-linear`}
-              x1={`${start.x * 100}%`}
-              y1={`${start.y * 100}%`}
-              x2={`${end.x * 100}%`}
-              y2={`${end.y * 100}%`}
-            >
-              {gradientConfig.colors.map((color, index) => (
-                <Stop
-                  key={`${color}-${gradientConfig.locations[index]}`}
-                  offset={`${(gradientConfig.locations[index] ?? 0) * 100}%`}
-                  stopColor={color}
-                />
-              ))}
-            </SvgLinearGradient>
-          </Defs>
-          <Rect
-            x='0'
-            y='0'
-            width='100%'
-            height='100%'
-            fill={`url(#${gradientId}-linear)`}
-          />
-        </Svg>
-      </View>
+    content = (
+      <Svg width='100%' height='100%' style={styles.fill}>
+        <Defs>
+          <SvgLinearGradient
+            id={`${gradientId}-linear`}
+            x1={`${start.x * 100}%`}
+            y1={`${start.y * 100}%`}
+            x2={`${end.x * 100}%`}
+            y2={`${end.y * 100}%`}
+          >
+            {gradientConfig.colors.map((color, index) => (
+              <Stop
+                key={`${color}-${gradientConfig.locations[index]}`}
+                offset={`${(gradientConfig.locations[index] ?? 0) * 100}%`}
+                stopColor={color}
+              />
+            ))}
+          </SvgLinearGradient>
+        </Defs>
+        <Rect
+          x='0'
+          y='0'
+          width='100%'
+          height='100%'
+          fill={`url(#${gradientId}-linear)`}
+        />
+      </Svg>
     );
-  }
-
-  return (
-    <View style={[styles.layer, layoutStyle, opacityStyle]}>
+  } else {
+    content = (
       <LinearGradient
         colors={gradientConfig.colors as [string, string, ...string[]]}
         locations={gradientConfig.locations as [number, number, ...number[]]}
@@ -175,6 +161,23 @@ export function PaintLayerBackground({
         end={gradientConfig.end}
         style={styles.fill}
       />
+    );
+  }
+
+  return (
+    <View
+      style={[
+        styles.span,
+        { backgroundColor: baseColor },
+        layerOpacity < 1 ? { opacity: layerOpacity } : null,
+      ]}
+    >
+      <View
+        style={[styles.layer, layoutStyle]}
+        onLayout={isRadial ? handleLayout : undefined}
+      >
+        {content}
+      </View>
     </View>
   );
 }
@@ -189,5 +192,8 @@ const styles = StyleSheet.create({
   },
   layer: {
     overflow: 'hidden',
+  },
+  span: {
+    ...StyleSheet.absoluteFill,
   },
 });

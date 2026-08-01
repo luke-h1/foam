@@ -170,6 +170,12 @@ function renderLayerSlot(
   if (!overlay) {
     return null;
   }
+  /**
+   * The bottom-most opaque URL span already sits on the foundation's base
+   * fill; drawing the backing there too would double-composite a
+   * semi-transparent base colour. Same condition as `needsUrlBacking`.
+   */
+  const needsBacking = index > 0 || slot.layer.opacity < 1;
   return (
     <UrlLayerSpan
       // Static, never-reordered list
@@ -177,7 +183,7 @@ function renderLayerSlot(
       key={`url-${index}|${paintImageLayerKey(slot.layer)}`}
       opacity={slot.layer.opacity}
     >
-      {bitmaps.backingImage ? (
+      {needsBacking && bitmaps.backingImage ? (
         <Image
           image={bitmaps.backingImage}
           x={0}

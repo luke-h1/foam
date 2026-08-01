@@ -6,6 +6,7 @@ import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
 import { PaintLayerBackground } from './PaintLayerBackground';
 import { getPaintLayers } from './util/paintLayer/getPaintLayers';
+import { isRenderablePaintLayer } from './util/paintLayer/isRenderablePaintLayer';
 import { withPaintLayerKeys } from './util/paintLayer/paintLayerKey';
 
 interface PaintedUsernameFillProps {
@@ -25,17 +26,25 @@ export function PaintedUsernameFill({
   paint,
   textStyle,
 }: PaintedUsernameFillProps) {
-  const layers = getPaintLayers(paint);
+  const layers = getPaintLayers(paint).filter(isRenderablePaintLayer);
   const keyedLayers = withPaintLayerKeys([...layers].reverse());
   const baseColor =
     paint.color === null ? fallbackColor : sevenTvColorToCss(paint.color);
 
+  /**
+   * Each layer span carries its own base-colour backing, so the plain base
+   * fill only renders when no layer produces a span (the reference's
+   * layer-less fallback).
+   */
   return (
     <View style={styles.stack}>
-      <View style={[styles.baseColor, { backgroundColor: baseColor }]} />
+      {keyedLayers.length === 0 ? (
+        <View style={[styles.baseColor, { backgroundColor: baseColor }]} />
+      ) : null}
       {keyedLayers.map(({ layer, key, layerIndex }) => (
         <PaintLayerBackground
           key={key}
+          baseColor={baseColor}
           fallbackColor={fallbackColor}
           layer={layer}
           layerIndex={layerIndex}
