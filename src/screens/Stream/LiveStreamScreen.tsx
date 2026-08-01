@@ -98,7 +98,16 @@ const CHAT_TOGGLE_DEBOUNCE_MS = 450;
 const LANDSCAPE_CHAT_CLOSE_WIDTH_FRACTION = 0.55;
 const LANDSCAPE_CHAT_CLOSE_VELOCITY = 900;
 
-const RESIZE_ANIMATION_CONFIG: WithSpringConfig = motion.spring.responsive;
+/**
+ * Sizing values drive WKWebView and chat-list layout every frame, so the
+ * resize spring is clamped and rests early instead of settling for ~600ms.
+ */
+const RESIZE_ANIMATION_CONFIG: WithSpringConfig = {
+  damping: 38,
+  stiffness: 560,
+  mass: 0.8,
+  overshootClamping: true,
+};
 
 const CHAT_REVEAL_ANIMATION_CONFIG: WithSpringConfig = motion.spring.responsive;
 
