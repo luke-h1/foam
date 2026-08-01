@@ -82,6 +82,19 @@ describe('Text', () => {
     });
   });
 
+  test('preserves a custom style font family when a weight is also set', () => {
+    render(
+      <Text style={{ fontFamily: 'monospace', fontWeight: '600' }}>
+        custom family
+      </Text>,
+    );
+
+    expect(getFontResolution('custom family')).toEqual<FontResolution>({
+      fontFamily: 'monospace',
+      fontWeight: '600',
+    });
+  });
+
   test('resolves the italic family when a style fontWeight meets the italic prop', () => {
     render(
       <Text italic style={{ fontWeight: '800' }}>
