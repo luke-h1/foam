@@ -83,9 +83,12 @@ function cssLayer(layer: PaintLayerData): CssLayer {
 export function buildPaintCssDeclarations(
   paint: PaintData,
 ): PaintCssDeclarations {
-  const layers = getPaintLayers(paint)
-    .filter(isRenderablePaintLayer)
-    .map(cssLayer);
+  const layers: CssLayer[] = [];
+  for (const layer of getPaintLayers(paint)) {
+    if (isRenderablePaintLayer(layer)) {
+      layers.push(cssLayer(layer));
+    }
+  }
   const shadows = indexedCollectionToArray(paint.shadows);
   const textStyle = paint.textStyle;
   const textShadows = textStyle?.shadows
