@@ -16,6 +16,7 @@ import { Pressable } from 'react-native-gesture-handler';
 import { ListRenderItem } from '@shopify/flash-list';
 import { router } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { toast } from 'sonner-native';
 
 import { Button } from '@app/components/Button/Button';
 import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
@@ -30,6 +31,7 @@ import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import type { Category } from '@app/types/twitch/category';
 import type { SearchChannelResponse } from '@app/types/twitch/channel';
+import { logger } from '@app/utils/logger';
 
 import { SearchInputBar } from './components/SearchInputBar/SearchInputBar';
 import type { SearchInputBarHandle } from './components/SearchInputBar/types';
@@ -147,6 +149,22 @@ function writeSearchHistoryQuery(query: string) {
   );
 }
 
+async function refreshSearchResults(
+  query: string,
+  search: (value: string) => Promise<void>,
+  setRefreshing: (refreshing: boolean) => void,
+  onError: (error: unknown) => void,
+) {
+  setRefreshing(true);
+  try {
+    await search(query);
+  } catch (error) {
+    onError(error);
+  } finally {
+    setRefreshing(false);
+  }
+}
+
 const isAndroid = process.env.EXPO_OS === 'android';
 
 /**
@@ -251,16 +269,22 @@ export function SearchScreen() {
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const handleRefresh = useCallback(async () => {
+  const handleRefresh = useCallback(() => {
     const normalizedQuery = query.trim();
     if (normalizedQuery.length < 2) {
-      return;
+      return Promise.resolve();
     }
-    setIsRefreshing(true);
-    await performSearch(normalizedQuery)
-      .catch(() => undefined)
-      .finally(() => setIsRefreshing(false));
-  }, [performSearch, query]);
+
+    return refreshSearchResults(
+      normalizedQuery,
+      performSearch,
+      setIsRefreshing,
+      error => {
+        logger.twitch.error('Search refresh failed', error);
+        toast.error(t('refreshFailed'));
+      },
+    );
+  }, [performSearch, query, t]);
 
   const handleClearSearch = useCallback(() => {
     searchBarRef.current?.clearText();

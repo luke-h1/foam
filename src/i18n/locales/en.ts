@@ -400,6 +400,7 @@ const en = {
     categoriesHeader: 'CATEGORIES',
     streaming: 'Streaming',
     offline: 'Offline',
+    refreshFailed: "Couldn't refresh search results. Try again.",
   },
 
   stream: {
