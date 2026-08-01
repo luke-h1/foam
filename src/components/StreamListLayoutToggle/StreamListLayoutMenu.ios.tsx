@@ -10,10 +10,6 @@ import {
 } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 
-/**
- * Native SwiftUI menu for the navigation bar with checkmark state for the
- * active stream list layout.
- */
 export function StreamListLayoutMenu() {
   const streamListLayout = usePreference('streamListLayout');
   const updatePreferences = useUpdatePreferences();

@@ -11,19 +11,12 @@ export interface PresentIosActionSheetOptions {
   cancelLabel: string;
   message?: string;
   /**
-   * Called after the tapped action runs, and on cancel; the caller uses it to
-   * flip its `visible` state back off since there is no JS sheet to dismiss.
+   * Runs after the tapped action, and on cancel.
    */
   onClose: () => void;
   title?: string;
 }
 
-/**
- * Presents chat actions through a real UIAlertController instead of the JS
- * bottom sheet. Chat rows stay plain JS pressables; this is invoked
- * imperatively from the existing long-press flow so no per-row native view is
- * ever mounted.
- */
 export function presentIosActionSheet({
   actions,
   cancelLabel,

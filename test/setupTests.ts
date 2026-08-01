@@ -80,11 +80,6 @@ jest.mock('@expo/ui/swift-ui', () => {
   return {
     ...jest.requireActual('@expo/ui/swift-ui'),
     useNativeState: (initial: unknown) => useRef({ value: initial }).current,
-    /**
-     * The real component carries title/description as native-view props,
-     * which text queries cannot see; surface them as Text so screen tests
-     * can assert empty states.
-     */
     ContentUnavailableView: ({
       title,
       description,

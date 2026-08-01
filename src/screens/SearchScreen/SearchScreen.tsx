@@ -157,9 +157,7 @@ const isAndroid = process.env.EXPO_OS === 'android';
 const isIOS = process.env.EXPO_OS === 'ios';
 
 /**
- * Leading inset that aligns row separators with the text column: the row's
- * horizontal padding plus the 55pt `sm` LiveStreamImage thumbnail and its
- * trailing margin.
+ * Keeps row separators aligned with the text column, past the thumbnail.
  */
 const RESULT_THUMBNAIL_WIDTH = 55;
 const RESULT_SEPARATOR_INSET =

@@ -7,10 +7,6 @@ import render from '@app/test/render';
 
 import { SettingsSheet } from '../SettingsSheet';
 
-/**
- * The JS rows only render on Android; iOS mounts the SwiftUI form covered by
- * the dedicated describe below.
- */
 const originalOS = Platform.OS;
 beforeAll(() => {
   Platform.OS = 'android';

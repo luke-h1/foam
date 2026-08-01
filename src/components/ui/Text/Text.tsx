@@ -115,10 +115,8 @@ const fontWeightToTextWeight: Record<string, TextWeight> = {
 };
 
 /**
- * Maps a StyleSheet-provided `fontWeight` to the theme weight token whose
- * Montserrat family renders it; non-hundred values clamp to the nearest
- * available weight. Fixed-weight font files ignore `fontWeight` on iOS, so
- * the weight has to be honoured by swapping the family instead.
+ * Fixed-weight font files ignore `fontWeight` on iOS, so style weights map
+ * to the theme token whose family renders them.
  */
 // eslint-disable-next-line react-doctor/only-export-components -- pure weight resolver exercised directly by tests
 export function resolveWeightFromFontWeight(

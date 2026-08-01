@@ -17,10 +17,6 @@ interface FormNavigationRowProps {
   onPress: () => void;
 }
 
-/**
- * SwiftUI Form row that pushes another screen: primary-coloured label with a
- * trailing disclosure chevron, matching the native Settings-app treatment.
- */
 export function FormNavigationRow({
   label,
   systemImage,

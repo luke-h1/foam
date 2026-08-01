@@ -132,8 +132,7 @@ function UserActionSheetComponent({
     requestClose();
   };
   // peek() on open: the scrollback updates constantly and re-rendering the
-  // sheet per message would defeat the chat flush batching. iOS never renders
-  // the JS sheet, so it skips the scan entirely.
+  // sheet per message would defeat the chat flush batching.
   const recentMessages = useMemo(
     () =>
       visible && Platform.OS !== 'ios'

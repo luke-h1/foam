@@ -8,10 +8,6 @@ import render from '@app/test/render';
 import { ActionSheet } from '../ActionSheet/ActionSheet';
 import { UserActionSheet } from '../UserActionSheet';
 
-/**
- * The JS bottom sheets only render on Android; iOS presents through
- * ActionSheetIOS and is covered by the dedicated describe below.
- */
 const originalOS = Platform.OS;
 beforeAll(() => {
   Platform.OS = 'android';

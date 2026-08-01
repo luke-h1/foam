@@ -7,9 +7,8 @@ import {
 } from '@app/components/Chat/util/presentIosActionSheet';
 
 /**
- * Presents a native UIAlertController action sheet whenever `visible` flips
- * on. Options are read through a ref at presentation time, so callers can
- * rebuild them every render without re-triggering the presentation.
+ * Presents an ActionSheetIOS sheet on the rising edge of `visible`; options
+ * are read through a ref so per-render rebuilds never re-present.
  */
 export function useIosActionSheet(
   visible: boolean,

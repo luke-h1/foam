@@ -13,10 +13,8 @@ export const motion = {
   },
 
   /**
-   * withSpring configs. Use `spring.responsive` for motion that follows a
-   * gesture or layout change (near-critically damped, no bounce) and
-   * `spring.gentle` for ambient reveals. Matches the damping ratios the chat
-   * entrance springs use (see chatEntranceSpring.ts).
+   * withSpring configs: `responsive` for gesture and layout-driven motion,
+   * `gentle` for ambient reveals.
    */
   spring: {
     responsive: { damping: 28, stiffness: 320, mass: 0.8 },

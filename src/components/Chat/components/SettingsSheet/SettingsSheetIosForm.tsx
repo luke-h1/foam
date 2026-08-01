@@ -27,10 +27,6 @@ export interface SettingsSheetIosFormProps {
   onSyncToLive: () => void;
 }
 
-/**
- * SwiftUI form body of the chat settings sheet on iOS; Android keeps the JS
- * rows in SettingsSheet.tsx.
- */
 export function SettingsSheetIosForm({
   onClearCache,
   onOpenChatters,

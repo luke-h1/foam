@@ -9,9 +9,8 @@ import { motion } from '@app/styles/motion';
 const isAndroid = process.env.EXPO_OS === 'android';
 
 /**
- * `feedback='highlight'` fills the background like a UITableView row instead
- * of dimming the content — use it for full-bleed list rows; keep the default
- * `'dim'` for cards, avatars, and freestanding controls.
+ * `feedback='highlight'` fills the row background while pressed instead of
+ * dimming the content; use it for full-bleed list rows.
  */
 export function PressableArea({
   ref,

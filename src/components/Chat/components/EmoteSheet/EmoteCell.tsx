@@ -33,10 +33,6 @@ function EmoteCellComponent({
 
   const hasAnimationSlotRef = useRef(false);
 
-  /**
-   * Keyed on image-ness, not the item: a recycled rebind to another emote must
-   * keep its animation-budget slot instead of releasing and re-queueing it.
-   */
   const isImageItem = typeof item !== 'string';
   useEffect(() => {
     if (!isImageItem) {
