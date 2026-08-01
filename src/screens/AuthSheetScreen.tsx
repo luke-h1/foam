@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { PressableScale } from 'pressto';
 
 import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
@@ -22,8 +23,17 @@ function handleAuthSuccess() {
   router.replace('/tabs/following');
 }
 
+function handleDismiss() {
+  if (router.canDismiss()) {
+    router.dismiss();
+    return;
+  }
+
+  router.back();
+}
+
 export function AuthSheetScreen() {
-  const { t } = useTranslation('auth');
+  const { t } = useTranslation(['auth', 'common']);
   const { isPromptingAuth, isSignInReady, startSignIn } = useTwitchSignIn({
     onSuccess: handleAuthSuccess,
   });
@@ -31,6 +41,17 @@ export function AuthSheetScreen() {
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
+      <View style={styles.sheetHeader}>
+        <PressableScale
+          accessibilityRole='button'
+          onPress={handleDismiss}
+          hitSlop={8}
+        >
+          <Text type='md' style={{ color: theme.colorPrimary }}>
+            {t('common:cancel')}
+          </Text>
+        </PressableScale>
+      </View>
       <View style={styles.content}>
         <View style={styles.header}>
           <View style={styles.appIconFrame}>
@@ -223,14 +244,21 @@ const styles = StyleSheet.create({
   },
   content: {
     alignSelf: 'center',
+    flex: 1,
     gap: theme.space20,
     justifyContent: 'center',
     maxWidth: 520,
-    minHeight: '100%',
     paddingBottom: theme.space20,
     paddingHorizontal: theme.space20,
     paddingTop: theme.space24,
     width: '100%',
+  },
+  sheetHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    minHeight: 44,
+    paddingHorizontal: theme.space16,
+    paddingTop: theme.space12,
   },
   subtitle: {
     color: theme.color.textSecondary.dark,

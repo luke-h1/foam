@@ -105,7 +105,7 @@ export function SettingsCacheScreen() {
       <ScrollView
         ref={scrollRef}
         contentInsetAdjustmentBehavior='automatic'
-        showsVerticalScrollIndicator={false}
+        indicatorStyle='white'
         contentContainerStyle={styles.content}
       >
         <SettingsSection

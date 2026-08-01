@@ -20,6 +20,8 @@ import i18next from '@app/i18n/i18next';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 
+import { FormNavigationRow } from '../FormNavigationRow';
+
 /**
  * Foam has no backend accounts - sign-in is Twitch OAuth - so account deletion
  * is handled by Twitch. This is the Security & Privacy settings page that holds
@@ -138,14 +140,14 @@ export function ProfileCard() {
         </Section>
 
         <Section title={t('twitch')}>
-          <Button
+          <FormNavigationRow
             label={t('myChannel')}
             systemImage='tv'
             onPress={() =>
               router.push(`/streams/streamer-profile/${user.login}`)
             }
           />
-          <Button
+          <FormNavigationRow
             label={t('blockedUsers')}
             systemImage='person.crop.circle.badge.xmark'
             onPress={() => router.push('/preferences/blocked-users')}

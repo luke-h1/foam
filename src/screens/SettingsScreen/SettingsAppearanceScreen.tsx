@@ -90,7 +90,7 @@ export function SettingsAppearanceScreen() {
       <ScrollView
         ref={scrollRef}
         contentInsetAdjustmentBehavior='automatic'
-        showsVerticalScrollIndicator={false}
+        indicatorStyle='white'
         contentContainerStyle={styles.content}
       >
         <SettingsSection title={t('theme')}>
