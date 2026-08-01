@@ -11,10 +11,15 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   fingerprint:
     name: 🔍 Check Fingerprint
     runs-on: foam
+    timeout-minutes: 15
     outputs:
       hash: ${{ steps.fingerprint.outputs.hash }}
       cache-hit: ${{ steps.cache.outputs.cache-hit }}
@@ -32,8 +37,14 @@ jobs:
       - name: 🔍 Calculate fingerprint
         id: fingerprint
         run: |
-          HASH=$(npx expo-updates fingerprint:generate --platform ios 2>/dev/null | jq -r '.hash' || echo "unknown-$(date +%s)")
-          echo "hash=$HASH" >> $GITHUB_OUTPUT
+          set -euo pipefail
+
+          HASH=$(npx expo-updates fingerprint:generate --platform ios | jq -r '.hash')
+          if [ -z "$HASH" ] || [ "$HASH" = "null" ]; then
+            echo "::error::expo-updates fingerprint:generate produced no hash"
+            exit 1
+          fi
+          echo "hash=$HASH" >> "$GITHUB_OUTPUT"
           echo "📱 iOS Fingerprint: $HASH"
 
       - name: 📂 Check build cache
@@ -50,6 +61,7 @@ jobs:
     needs: fingerprint
     if: needs.fingerprint.outputs.cache-hit != 'true' || inputs.force_rebuild
     runs-on: foam
+    timeout-minutes: 90
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -104,8 +116,9 @@ jobs:
   test:
     name: 🧪 Run E2E Tests
     needs: [fingerprint, build]
-    if: always() && needs.fingerprint.result == 'success'
+    if: always() && needs.fingerprint.result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped')
     runs-on: foam
+    timeout-minutes: 45
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -123,6 +136,7 @@ jobs:
         with:
           path: e2e-build.tar.gz
           key: e2e-ios-${{ needs.fingerprint.outputs.hash }}
+          fail-on-cache-miss: true
 
       - name: 📥 Download build artifact
         if: needs.build.result == 'success'
@@ -132,9 +146,15 @@ jobs:
 
       - name: 📦 Extract app
         run: |
+          set -euo pipefail
+
           tar -xzf e2e-build.tar.gz
           APP_PATH=$(find . -name "*.app" -type d | head -1)
-          echo "APP_PATH=$APP_PATH" >> $GITHUB_ENV
+          if [ -z "$APP_PATH" ]; then
+            echo "::error::No .app bundle found in e2e-build.tar.gz"
+            exit 1
+          fi
+          echo "APP_PATH=$APP_PATH" >> "$GITHUB_ENV"
           echo "Found app at: $APP_PATH"
 
       - name: Λ Setup EAS
@@ -148,7 +168,7 @@ jobs:
         if: needs.build.result == 'skipped'
         run: |
           echo "🚀 Pushing OTA update for JS changes..."
-          eas update --channel e2e --message "E2E: ${E2E_UPDATE_MESSAGE}" --non-interactive || true
+          eas update --channel e2e --message "E2E: ${E2E_UPDATE_MESSAGE}" --non-interactive
         env:
           EXPO_PUBLIC_APP_VARIANT: e2e
           E2E_UPDATE_MESSAGE: ${{ github.event.pull_request.title || github.sha }}
@@ -174,9 +194,15 @@ jobs:
 
       - name: 📱 Boot Simulator
         run: |
-          DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 16" | head -1 | grep -oE '[0-9A-F-]{36}')
-          xcrun simctl boot "$DEVICE_ID" || true
-          sleep 5
+          set -euo pipefail
+
+          DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 16" | head -1 | grep -oE '[0-9A-F-]{36}' || true)
+          if [ -z "$DEVICE_ID" ]; then
+            echo "::error::No available 'iPhone 16' simulator on this runner"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          xcrun simctl bootstatus "$DEVICE_ID" -b
 
       - name: 📲 Install app on simulator
         run: |
@@ -184,8 +210,20 @@ jobs:
 
       - name: 🚀 Start mock server
         run: |
+          set -euo pipefail
+
           bun run e2e:mock-server &
-          sleep 3
+          echo "MOCK_SERVER_PID=$!" >> "$GITHUB_ENV"
+
+          for i in $(seq 1 30); do
+            if curl -s -o /dev/null "http://localhost:3001/"; then
+              echo "Mock server is up"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::Mock server did not respond on port 3001 within 30s"
+          exit 1
 
       - name: 🧪 Run Maestro tests
         run: |
@@ -193,6 +231,14 @@ jobs:
         env:
           APP_ID: foam-tv-e2e
           DEV_CLIENT: 'false'
+
+      - name: 🛑 Stop mock server
+        if: always()
+        run: |
+          if [ -n "${MOCK_SERVER_PID:-}" ]; then
+            kill "$MOCK_SERVER_PID" 2>/dev/null || true
+          fi
+          pkill -f 'e2e/mock-server/server.ts' 2>/dev/null || true
 
       - name: 📤 Upload test artifacts
         if: always()

@@ -63,9 +63,9 @@ jobs:
   prepare:
     name: 📋 Prepare
     runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
+    timeout-minutes: 10
     outputs:
       version: ${{ steps.get_version.outputs.version }}
-      tag: ${{ steps.get_version.outputs.tag }}
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -75,13 +75,20 @@ jobs:
       - name: 📌 Get version from app.config.ts
         id: get_version
         run: |
+          set -euo pipefail
+
           VERSION=$(grep "const VERSION = " app.config.ts | sed "s/const VERSION = '//g" | sed "s/';//g" | tr -d ' ')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if [ -z "$VERSION" ]; then
+            echo "::error::Could not extract VERSION from app.config.ts (expected a line like: const VERSION = '1.0.6';)"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "📌 App Version: $VERSION"
 
   test:
     name: 🧪 Test
     runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
+    timeout-minutes: 20
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -101,6 +108,7 @@ jobs:
     name: 🔍 Detect Changes
     needs: [prepare, test]
     runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
+    timeout-minutes: 20
     permissions:
       contents: read
     outputs:
@@ -108,7 +116,6 @@ jobs:
       ios-fingerprint: ${{ steps.fingerprint.outputs.ios }}
       android-fingerprint: ${{ steps.fingerprint.outputs.android }}
       deploy-type: ${{ steps.decide.outputs.deploy-type }}
-      tag: ${{ steps.tag.outputs.tag }}
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -128,11 +135,20 @@ jobs:
       - name: 🔍 Calculate current fingerprints
         id: fingerprint
         run: |
-          IOS_FP=$(npx expo-updates fingerprint:generate --platform ios 2>/dev/null | jq -r '.hash' || echo "unknown")
-          ANDROID_FP=$(npx expo-updates fingerprint:generate --platform android 2>/dev/null | jq -r '.hash' || echo "unknown")
+          set -euo pipefail
 
-          echo "ios=$IOS_FP" >> $GITHUB_OUTPUT
-          echo "android=$ANDROID_FP" >> $GITHUB_OUTPUT
+          IOS_FP=$(npx expo-updates fingerprint:generate --platform ios | jq -r '.hash')
+          ANDROID_FP=$(npx expo-updates fingerprint:generate --platform android | jq -r '.hash')
+
+          for FP in "$IOS_FP" "$ANDROID_FP"; do
+            if [ -z "$FP" ] || [ "$FP" = "null" ]; then
+              echo "::error::expo-updates fingerprint:generate produced no hash; refusing to continue (an empty hash would poison the fingerprint cache)"
+              exit 1
+            fi
+          done
+
+          echo "ios=$IOS_FP" >> "$GITHUB_OUTPUT"
+          echo "android=$ANDROID_FP" >> "$GITHUB_OUTPUT"
           echo "📱 iOS Fingerprint: $IOS_FP"
           echo "🤖 Android Fingerprint: $ANDROID_FP"
         env:
@@ -167,17 +183,6 @@ jobs:
         env:
           STEPS_COMPARE_OUTPUTS_CHANGED: ${{ steps.compare.outputs.changed }}
 
-      - name: 🏷️ Generate release tag (preliminary)
-        id: tag
-        run: >
-          bunx tsx scripts/workflows/deploy-ota-or-native.ts preliminary-tag
-          --version "${NEEDS_PREPARE_OUTPUTS_VERSION}"
-          --deploy-type "${STEPS_DECIDE_OUTPUTS_DEPLOY_TYPE}"
-          --variant "${{ inputs.variant || 'production' }}"
-        env:
-          NEEDS_PREPARE_OUTPUTS_VERSION: ${{ needs.prepare.outputs.version }}
-          STEPS_DECIDE_OUTPUTS_DEPLOY_TYPE: ${{ steps.decide.outputs.deploy-type }}
-
       - name: 📊 Summary
         run: |
           echo "## Change Detection" >> $GITHUB_STEP_SUMMARY
@@ -198,6 +203,7 @@ jobs:
     needs: [prepare, detect-changes]
     if: needs['detect-changes'].outputs['deploy-type'] == 'build'
     runs-on: foam
+    timeout-minutes: 90
     concurrency: eas-build-${{ inputs.variant || 'production' }}-${{ inputs.platform || 'ios' }}
     steps:
       - name: 🏗 Checkout
@@ -276,6 +282,7 @@ jobs:
     needs: [prepare, detect-changes]
     if: needs['detect-changes'].outputs['deploy-type'] == 'ota'
     runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
+    timeout-minutes: 30
     concurrency: eas-update-${{ inputs.variant || 'production' }}-${{ inputs.platform || 'ios' }}
     outputs:
       ios_update_id: ${{ steps.publish.outputs.ios_update_id }}
@@ -322,12 +329,25 @@ jobs:
           --bucket "${FOAM_AWS_FINGERPRINT_BUCKET_NAME}"
           --variant "${{ inputs.variant || 'production' }}"
 
+      - name: 📝 Read head commit message
+        id: head_commit
+        run: |
+          set -euo pipefail
+
+          delim="EOF_$(openssl rand -hex 8)"
+          {
+            echo "message<<${delim}"
+            git log -1 --pretty=%B
+            echo "${delim}"
+          } >> "$GITHUB_OUTPUT"
+          echo "subject=$(git log -1 --pretty=%s)" >> "$GITHUB_OUTPUT"
+
       - name: Determine critical OTA metadata
         id: critical_metadata
         uses: ./.github/actions/determine-critical-ota-metadata
         with:
           critical_update: ${{ inputs.critical_update }}
-          head_commit_message: ${{ github.event.head_commit.message || '' }}
+          head_commit_message: ${{ steps.head_commit.outputs.message }}
 
       - name: 📦 Publish OTA Update
         id: publish
@@ -343,7 +363,7 @@ jobs:
           SENTRY_RELEASE: ${{ needs.prepare.outputs.version }}
           SENTRY_DIST: ${{ steps.sentry_dist.outputs.dist }}
           SENTRY_LOAD_DOTENV: 0
-          DEPLOY_MESSAGE: 'Deploy: ${{ github.event.head_commit.message || github.sha }}'
+          DEPLOY_MESSAGE: 'Deploy: ${{ steps.head_commit.outputs.subject || github.sha }}'
           OTA_CRITICAL_INDEX: ${{ steps.critical_metadata.outputs.next_index }}
 
       - name: 💾 Save fingerprints for next run
@@ -383,6 +403,7 @@ jobs:
     needs: [prepare, detect-changes, build, ota]
     if: always() && needs['detect-changes'].result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.ota.result == 'success' || needs.ota.result == 'skipped') && !inputs.dry_run
     runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
+    timeout-minutes: 20
     permissions:
       contents: write
       pull-requests: write
@@ -395,7 +416,7 @@ jobs:
       ios_update_id: ${{ needs.ota.outputs.ios_update_id || '' }}
       android_update_id: ${{ needs.ota.outputs.android_update_id || '' }}
       update_group_id: ${{ needs.ota.outputs.update_group_id || '' }}
-      release_url: ${{ needs['detect-changes'].outputs['deploy-type'] == 'ota' && '' || format('https://github.com/{0}/releases/tag/{1}', github.repository, steps.create_release.outputs.tag) }}
+      release_url: ${{ needs['detect-changes'].outputs['deploy-type'] != 'ota' && format('https://github.com/{0}/releases/tag/{1}', github.repository, steps.create_release.outputs.tag) || '' }}
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -476,6 +497,7 @@ jobs:
     needs: [release]
     if: always() && needs.release.result == 'success' && !inputs.dry_run
     runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
+    timeout-minutes: 10
     steps:
       - name: 🏗 Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -505,12 +527,8 @@ jobs:
           PREV_ANDROID=""
           [ -f .ota-cache/ios ] && PREV_IOS=$(cat .ota-cache/ios)
           [ -f .ota-cache/android ] && PREV_ANDROID=$(cat .ota-cache/android)
-          echo "ios<<EOF" >> $GITHUB_OUTPUT
-          echo "$PREV_IOS" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-          echo "android<<EOF" >> $GITHUB_OUTPUT
-          echo "$PREV_ANDROID" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "ios=$PREV_IOS" >> "$GITHUB_OUTPUT"
+          echo "android=$PREV_ANDROID" >> "$GITHUB_OUTPUT"
 
       - name: Download release notes
         if: needs.release.outputs.has_release_notes_file == 'true'

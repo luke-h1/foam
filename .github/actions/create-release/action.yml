@@ -127,9 +127,19 @@ runs:
 
     - name: Install git-cliff
       shell: bash
+      env:
+        CARGO_BINSTALL_VERSION: 'v1.21.1'
+        GIT_CLIFF_VERSION: '2.13.1'
       run: |
-        curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
-        ~/.cargo/bin/cargo-binstall git-cliff --no-confirm --force
+        set -euo pipefail
+
+        if [ -x ~/.cargo/bin/git-cliff ] && ~/.cargo/bin/git-cliff --version | grep -qF "$GIT_CLIFF_VERSION"; then
+          echo "git-cliff $GIT_CLIFF_VERSION already installed"
+          exit 0
+        fi
+        curl -L --proto '=https' --tlsv1.2 -sSf \
+          "https://raw.githubusercontent.com/cargo-bins/cargo-binstall/${CARGO_BINSTALL_VERSION}/install-from-binstall-release.sh" | bash
+        ~/.cargo/bin/cargo-binstall "git-cliff@${GIT_CLIFF_VERSION}" --no-confirm --force
 
     - name: Generate release notes
       id: release_notes
@@ -173,10 +183,11 @@ runs:
           RELEASE_NOTES=$(echo "$RELEASE_NOTES" | awk 'BEGIN{first=1} /^## / { if (!first) exit; first=0 } { print }')
         fi
 
+        delim="EOF_$(openssl rand -hex 8)"
         {
-          echo "release_notes<<EOF"
+          echo "release_notes<<${delim}"
           echo "$RELEASE_NOTES"
-          echo "EOF"
+          echo "${delim}"
         } >> "$GITHUB_OUTPUT"
 
         echo "$RELEASE_NOTES" > .release-notes-body.md
@@ -206,6 +217,13 @@ runs:
         echo "variant=$VARIANT_LABEL" >> "$GITHUB_OUTPUT"
         echo "deployment=$DEPLOYMENT_LABEL" >> "$GITHUB_OUTPUT"
 
+    - name: Read head commit subject
+      id: head_commit
+      if: ${{ inputs.dry == 'false' && inputs.deployment_type == 'native' && steps.release_tag.outputs.tag_already_exists != 'true' }}
+      shell: bash
+      run: |
+        echo "subject=$(git log -1 --pretty=%s)" >> "$GITHUB_OUTPUT"
+
     - name: Create native tag
       if: ${{ inputs.dry == 'false' && inputs.deployment_type == 'native' && steps.release_tag.outputs.tag_already_exists != 'true' }}
       uses: anothrNick/github-tag-action@a2c70ae13a881faf2b4953baaa9e49731997ab36
@@ -215,7 +233,7 @@ runs:
         TAG_MESSAGE: |
           ${{ steps.labels.outputs.variant }} ${{ steps.labels.outputs.deployment }}: ${{ steps.release_tag.outputs.tag }}
 
-          ${{ github.event.head_commit.message }}
+          ${{ steps.head_commit.outputs.subject }}
 
     - name: Build release body
       id: release_body
@@ -243,10 +261,11 @@ runs:
         ${RELEASE_SECTION}"
         fi
 
+        delim="EOF_$(openssl rand -hex 8)"
         {
-          echo "body<<EOF"
+          echo "body<<${delim}"
           echo "$BODY"
-          echo "EOF"
+          echo "${delim}"
         } >> "$GITHUB_OUTPUT"
 
     - name: Create or update native release

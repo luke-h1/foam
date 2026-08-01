@@ -23,13 +23,29 @@ runs:
     # setup-bun runs inside a composite action; expose Bun to later workflow steps.
     - name: Add Bun to job PATH
       shell: bash
-      run: echo "$(dirname "${{ steps.setup_bun.outputs.bun-path }}")" >> "$GITHUB_PATH"
+      env:
+        BUN_PATH: ${{ steps.setup_bun.outputs.bun-path }}
+      # bun-path comes from setup-bun's output, not user input.
+      run: | # zizmor: ignore[github-env]
+        if [ -z "$BUN_PATH" ]; then
+          echo "::error::setup-bun did not report bun-path"
+          exit 1
+        fi
+        dirname "$BUN_PATH" >> "$GITHUB_PATH"
 
     - name: Setup Node
       if: ${{ inputs.node == 'true' }}
       uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
       with:
         node-version-file: .nvmrc
+
+    - name: Restore bun install cache
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ~/.bun/install/cache
+        key: bun-install-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+        restore-keys: |
+          bun-install-${{ runner.os }}-
 
     - name: Install dependencies
       shell: bash
