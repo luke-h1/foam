@@ -1,9 +1,10 @@
 import { memo, useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Platform, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@app/components/Button/Button';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
+import { Input } from '@app/components/ui/Input/Input';
 import { useDebouncedCallback } from '@app/hooks/useDebouncedCallback';
 import { theme } from '@app/styles/themes';
 
@@ -43,21 +44,40 @@ export const ChatSearchField = memo(
           size={14}
           tintColor={theme.colorGreyHoverAlpha}
         />
-        <TextInput
-          accessibilityLabel={t('controls.searchMessages')}
-          autoCapitalize='none'
-          autoCorrect={false}
-          cursorColor={theme.color.text.dark}
-          onChangeText={handleQueryChange}
-          placeholder={t('controls.searchMessages')}
-          placeholderTextColor={theme.color.textSecondary.dark}
-          returnKeyType='search'
-          selectionColor={theme.colorTextSelection}
-          selectionHandleColor={theme.colorPrimary}
-          style={styles.searchInput}
-          underlineColorAndroid='transparent'
-          value={draftQuery}
-        />
+        {Platform.OS === 'ios' ? (
+          <Input
+            accessibilityLabel={t('controls.searchMessages')}
+            autoCapitalize='none'
+            autoComplete='off'
+            autoCorrect={false}
+            color='white'
+            onChangeText={handleQueryChange}
+            placeholder={t('controls.searchMessages')}
+            placeholderTextColor={theme.color.textSecondary.dark}
+            radius='none'
+            returnKeyType='search'
+            size='sm'
+            style={styles.iosSearchInput}
+            value={draftQuery}
+            variant='soft'
+          />
+        ) : (
+          <TextInput
+            accessibilityLabel={t('controls.searchMessages')}
+            autoCapitalize='none'
+            autoCorrect={false}
+            cursorColor={theme.color.text.dark}
+            onChangeText={handleQueryChange}
+            placeholder={t('controls.searchMessages')}
+            placeholderTextColor={theme.color.textSecondary.dark}
+            returnKeyType='search'
+            selectionColor={theme.colorTextSelection}
+            selectionHandleColor={theme.colorPrimary}
+            style={styles.searchInput}
+            underlineColorAndroid='transparent'
+            value={draftQuery}
+          />
+        )}
         <Button
           accessibilityLabel={t('controls.closeSearch')}
           accessibilityRole='button'
@@ -75,6 +95,11 @@ export const ChatSearchField = memo(
 );
 
 const styles = StyleSheet.create({
+  iosSearchInput: {
+    backgroundColor: 'transparent',
+    flex: 1,
+    fontSize: theme.fontSize14,
+  },
   searchField: {
     alignItems: 'center',
     backgroundColor: theme.color.background.darkAlt,
