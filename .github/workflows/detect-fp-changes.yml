@@ -17,6 +17,7 @@ jobs:
     name: Detect fingerprint changes
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    if: github.event.pull_request.draft == false
     steps:
       - name: ⬇️ Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
@@ -48,22 +49,44 @@ jobs:
         run: |
           set -euo pipefail
 
+          FP_DIR="$RUNNER_TEMP/fingerprints"
+          mkdir -p "$FP_DIR"
+
+          compute_tree() {
+            local DIR="$1" PREFIX="$2"
+            pushd "$DIR" >/dev/null
+            for VARIANT in production testflight internal; do
+              for PLATFORM in ios android; do
+                EXPO_PUBLIC_APP_VARIANT="$VARIANT" bunx expo-updates fingerprint:generate --platform "$PLATFORM" \
+                  | jq -r '.hash' > "$FP_DIR/${PREFIX}_${PLATFORM}_${VARIANT}" &
+              done
+              wait
+            done
+            popd >/dev/null
+          }
+
+          compute_tree . head &
+          compute_tree .__pr_base__ base &
+          wait
+
+          for PREFIX in head base; do
+            for VARIANT in production testflight internal; do
+              for PLATFORM in ios android; do
+                if [ ! -s "$FP_DIR/${PREFIX}_${PLATFORM}_${VARIANT}" ]; then
+                  echo "Missing fingerprint: ${PREFIX} ${PLATFORM} ${VARIANT}" >&2
+                  exit 1
+                fi
+              done
+            done
+          done
+
           CHANGED_ANY="false"
 
           for VARIANT in production testflight internal; do
-            echo "=== Variant: $VARIANT ==="
-            export EXPO_PUBLIC_APP_VARIANT="$VARIANT"
-
-            echo "Computing HEAD fingerprints..."
-            HEAD_IOS="$(bunx expo-updates fingerprint:generate --platform ios | jq -r '.hash')"
-            HEAD_ANDROID="$(bunx expo-updates fingerprint:generate --platform android | jq -r '.hash')"
-
-            echo "Computing BASE fingerprints..."
-            pushd .__pr_base__ >/dev/null
-            export EXPO_PUBLIC_APP_VARIANT="$VARIANT"
-            BASE_IOS="$(bunx expo-updates fingerprint:generate --platform ios | jq -r '.hash')"
-            BASE_ANDROID="$(bunx expo-updates fingerprint:generate --platform android | jq -r '.hash')"
-            popd >/dev/null
+            HEAD_IOS="$(cat "$FP_DIR/head_ios_${VARIANT}")"
+            HEAD_ANDROID="$(cat "$FP_DIR/head_android_${VARIANT}")"
+            BASE_IOS="$(cat "$FP_DIR/base_ios_${VARIANT}")"
+            BASE_ANDROID="$(cat "$FP_DIR/base_android_${VARIANT}")"
 
             CHANGED="false"
             if [ "$HEAD_IOS" != "$BASE_IOS" ] || [ "$HEAD_ANDROID" != "$BASE_ANDROID" ]; then

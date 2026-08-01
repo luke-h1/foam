@@ -42,6 +42,7 @@ jobs:
         )
       )
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     outputs:
       pr_number: ${{ steps.context.outputs.pr_number }}
       triggered_by: ${{ steps.context.outputs.triggered_by }}
@@ -118,6 +119,7 @@ jobs:
   post_feedback:
     name: Post Codex feedback
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: codex
     if: needs.codex.result == 'success'
     permissions:
@@ -125,6 +127,8 @@ jobs:
       pull-requests: write
     steps:
       - name: Download Codex output
+        # The upload uses if-no-files-found: ignore, so the artifact may not exist.
+        continue-on-error: true
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: codex-output

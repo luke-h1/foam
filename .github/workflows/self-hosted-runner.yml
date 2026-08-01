@@ -7,15 +7,15 @@ permissions:
   contents: read
 jobs:
   self-hosted-runner:
-    name: ESLint
+    name: Self-hosted runner smoke test (ESLint)
     runs-on: foam
+    timeout-minutes: 20
     if: github.repository == 'luke-h1/foam' && (github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'self-hosted-test'))
     steps:
       - name: 🏗 Checkout repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 0
-          ref: ${{ github.head_ref }}
           persist-credentials: false
 
       - name: 🥟 Setup Bun and install dependencies

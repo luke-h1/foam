@@ -24,7 +24,13 @@ runs:
         INPUTS_TAG: ${{ inputs.tag }}
         INPUTS_GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        git pull --rebase
+        set -euo pipefail
+
+        if ! git pull --rebase; then
+          git rebase --abort 2>/dev/null || true
+          echo "::error::git pull --rebase failed (likely a conflicting push to main); aborting changelog update"
+          exit 1
+        fi
         # Keep all variant tags so the changelog retains per-environment sections.
         IGNORE_TAGS=""
 

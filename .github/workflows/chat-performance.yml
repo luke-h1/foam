@@ -3,6 +3,17 @@ name: Chat performance
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'src/**'
+      - 'modules/**'
+      - 'patches/**'
+      - 'package.json'
+      - 'bun.lock'
+      - 'babel.config.js'
+      - 'jest.config.js'
+      - 'reassure*'
+      - 'scripts/workflows/chat-performance-comment.ts'
+      - '.github/workflows/chat-performance.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -17,7 +28,7 @@ jobs:
     name: Chat performance
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.draft == false
     steps:
       - name: Checkout PR
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6

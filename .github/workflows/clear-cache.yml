@@ -6,7 +6,9 @@ permissions:
 
 jobs:
   clear-github-actions-cache:
+    name: Clear github-actions cache
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Clear cache
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
@@ -18,12 +20,13 @@ jobs:
               key.startsWith(OTA_FINGERPRINT_KEY_PREFIX) || key === OTA_UPDATE_IDS_KEY;
 
             console.log("About to clear (preserving OTA fingerprint caches)")
-            const caches = await github.rest.actions.getActionsCacheList({
+            const caches = await github.paginate(github.rest.actions.getActionsCacheList, {
               owner: context.repo.owner,
               repo: context.repo.repo,
+              per_page: 100,
             })
             let cleared = 0, skipped = 0
-            for (const cache of caches.data.actions_caches) {
+            for (const cache of caches) {
               if (isOtaFingerprintCache(cache.key)) {
                 console.log("Skip (OTA fingerprint):", cache.key)
                 skipped++

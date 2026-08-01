@@ -22,16 +22,18 @@ on:
           - android
 jobs:
   app_deploy:
+    name: EAS build & submit
     runs-on: ubuntu-latest
     timeout-minutes: 20
     concurrency: eas-deploy-fingerprint-main
     permissions:
       contents: read
-      pull-requests: write
     steps:
       - name: 🔎 Check for EXPO_TOKEN
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+          if [ -z "$EXPO_TOKEN" ]; then
             echo "You must provide an EXPO_TOKEN secret linked to this project's Expo account in this repo's secrets. Learn more: https://docs.expo.dev/tutorial/eas/using-github/"
             exit 1
           fi
@@ -48,7 +50,6 @@ jobs:
           ignore-scripts: 'true'
 
       - name: Λ Setup EAS
-        if: ${{ !inputs.dry }}
         uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e
         with:
           eas-version: latest
@@ -57,14 +58,10 @@ jobs:
           patch-watchers: false
 
       - name: 🚀 Build & deploy
+        env:
+          VARIANT: ${{ inputs.variant }}
+          PLATFORM: ${{ inputs.platform }}
         run: |
-          if [ "${{ inputs.platform }}" == "all" ]; then
-            bun run build:${{ inputs.variant }}:ios
-            bun run build:${{ inputs.variant }}:android
+          set -euo pipefail
 
-          elif [ "${{ inputs.platform }}" == "ios" ]; then
-            bun run build:${{ inputs.variant }}:ios
-
-          elif [ "${{ inputs.platform }}" == "android" ]; then
-            bun run build:${{ inputs.variant }}:android
-          fi
+          eas build --profile "$VARIANT" --platform "$PLATFORM" --non-interactive --no-wait --auto-submit

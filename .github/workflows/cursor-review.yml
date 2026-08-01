@@ -5,7 +5,7 @@ on:
     types: [submitted]
 
 concurrency:
-  group: cursor-${{ github.event.pull_request.number }}-${{ github.event.review.id }}
+  group: cursor-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
@@ -25,6 +25,7 @@ jobs:
         contains(github.event.pull_request.labels.*.name, 'cursor-review')
       )
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     outputs:
       pr_number: ${{ steps.context.outputs.pr_number }}
       head_sha: ${{ steps.context.outputs.head_sha }}
@@ -100,6 +101,7 @@ jobs:
   post_feedback:
     name: Post Cursor feedback
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: cursor
     if: needs.cursor.result == 'success'
     permissions:
@@ -107,6 +109,8 @@ jobs:
       pull-requests: write
     steps:
       - name: Download Cursor output
+        # The upload uses if-no-files-found: ignore, so the artifact may not exist.
+        continue-on-error: true
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: cursor-output
