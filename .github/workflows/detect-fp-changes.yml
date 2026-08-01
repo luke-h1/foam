@@ -71,7 +71,8 @@ jobs:
           for PREFIX in head base; do
             for VARIANT in production testflight internal; do
               for PLATFORM in ios android; do
-                if [ ! -s "$FP_DIR/${PREFIX}_${PLATFORM}_${VARIANT}" ]; then
+                HASH="$(cat "$FP_DIR/${PREFIX}_${PLATFORM}_${VARIANT}" 2>/dev/null || true)"
+                if [ -z "$HASH" ] || [ "$HASH" = "null" ]; then
                   echo "Missing fingerprint: ${PREFIX} ${PLATFORM} ${VARIANT}" >&2
                   exit 1
                 fi
