@@ -87,7 +87,7 @@ jobs:
           echo "$GOOGLE_SERVICES_IOS_PROD_BS4" | base64 -d > GoogleService-Info-prod.plist
 
       - name: Λ Setup EAS
-        uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e
+        uses: expo/expo-github-action@eab7a230208c952974db8c3245cfd78402c7b385
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
@@ -158,7 +158,7 @@ jobs:
           echo "Found app at: $APP_PATH"
 
       - name: Λ Setup EAS
-        uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e
+        uses: expo/expo-github-action@eab7a230208c952974db8c3245cfd78402c7b385
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
