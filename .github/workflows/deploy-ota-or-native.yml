@@ -68,7 +68,7 @@ jobs:
       version: ${{ steps.get_version.outputs.version }}
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
@@ -91,7 +91,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
@@ -118,7 +118,7 @@ jobs:
       deploy-type: ${{ steps.decide.outputs.deploy-type }}
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0 # Need history for comparison
           persist-credentials: false
@@ -207,7 +207,7 @@ jobs:
     concurrency: eas-build-${{ inputs.variant || 'production' }}-${{ inputs.platform || 'ios' }}
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
@@ -290,7 +290,7 @@ jobs:
       update_group_id: ${{ steps.publish.outputs.update_group_id }}
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
@@ -419,7 +419,7 @@ jobs:
       release_url: ${{ needs['detect-changes'].outputs['deploy-type'] != 'ota' && format('https://github.com/{0}/releases/tag/{1}', github.repository, steps.create_release.outputs.tag) || '' }}
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
           token: ${{ secrets.LUKE_H1_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
@@ -500,7 +500,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: 🏗 Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
