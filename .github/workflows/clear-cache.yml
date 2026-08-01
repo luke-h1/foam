@@ -1,13 +1,12 @@
 name: Clear github-actions cache
 on:
   workflow_dispatch:
-permissions:
-  actions: write
-
 jobs:
   clear-github-actions-cache:
     name: Clear github-actions cache
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     timeout-minutes: 10
     steps:
       - name: Clear cache

@@ -19,14 +19,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
-  pull-requests: write
-
 jobs:
   chat-performance:
     name: Chat performance
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     timeout-minutes: 30
     if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.draft == false
     steps:

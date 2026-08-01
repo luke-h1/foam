@@ -8,10 +8,6 @@ env:
   EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
   EXPO_PUBLIC_APP_VARIANT: development
 
-permissions:
-  contents: read
-  pull-requests: write
-
 concurrency:
   group: ota-surf-pr-${{ github.event.issue.number }}
   # Never cancel a publish mid-flight; a second !surf-deploy queues behind it.
@@ -21,6 +17,9 @@ jobs:
   surf:
     name: 🏄 Surf PR update
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     timeout-minutes: 20
     if: |
       github.event.issue.pull_request &&
