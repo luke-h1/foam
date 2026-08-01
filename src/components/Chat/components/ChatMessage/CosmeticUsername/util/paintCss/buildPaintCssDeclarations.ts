@@ -1,4 +1,5 @@
 import { getPaintLayers } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintLayer/getPaintLayers';
+import { isRenderablePaintLayer } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintLayer/isRenderablePaintLayer';
 import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
 import type {
   PaintData,
@@ -6,6 +7,7 @@ import type {
   PaintStop,
 } from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
+import { sevenTvColorToRgba } from '@app/utils/color/sevenTvColorToRgba';
 
 import type { PaintCssDeclarations } from './types';
 import { webKitSafeLayerImageUrl } from './webKitSafeLayerImageUrl';
@@ -17,15 +19,23 @@ type CssLayer = {
   repeat: string;
 };
 
-function sortedLayerStops(layer: PaintLayerData): PaintStop[] {
-  return indexedCollectionToArray<PaintStop>(layer.stops)
-    .slice()
-    .sort((a, b) => a.at - b.at);
+function stopColorCss(color: number, layerOpacity: number): string {
+  if (layerOpacity >= 1) {
+    return sevenTvColorToCss(color);
+  }
+  const { r, g, b, a } = sevenTvColorToRgba(color);
+  return `rgba(${r}, ${g}, ${b}, ${((a / 255) * layerOpacity).toFixed(3)})`;
 }
 
-function cssStopList(stops: PaintStop[]): string {
-  return stops
-    .map(stop => `${sevenTvColorToCss(stop.color)} ${stop.at * 100}%`)
+/**
+ * Stops stay in written order - the browser clamps out-of-order positions
+ * itself (css-images-3 §3.4.2). Layer opacity folds into each stop's alpha,
+ * since a single-element background list has no per-layer opacity.
+ */
+function cssStopList(layer: PaintLayerData): string {
+  const layerOpacity = layer.opacity;
+  return indexedCollectionToArray<PaintStop>(layer.stops)
+    .map(stop => `${stopColorCss(stop.color, layerOpacity)} ${stop.at * 100}%`)
     .join(', ');
 }
 
@@ -33,17 +43,24 @@ function cssLayer(layer: PaintLayerData): CssLayer {
   let image: string;
   switch (layer.function) {
     case 'LINEAR_GRADIENT':
-      image = `${layer.repeat ? 'repeating-' : ''}linear-gradient(${layer.angle ?? 0}deg, ${cssStopList(sortedLayerStops(layer))})`;
-      break;
     case 'RADIAL_GRADIENT':
-      image = `${layer.repeat ? 'repeating-' : ''}radial-gradient(${layer.shape ?? 'circle'}, ${cssStopList(sortedLayerStops(layer))})`;
+      /**
+       * A single-stop gradient is invalid CSS, and one invalid entry wipes
+       * the whole comma-separated background-image list; the reference span
+       * would show only its currentColor backing, so emit exactly that.
+       */
+      if (layer.stops.length < 2) {
+        image = 'linear-gradient(0deg, currentColor 0%, currentColor 100%)';
+      } else if (layer.function === 'LINEAR_GRADIENT') {
+        image = `${layer.repeat ? 'repeating-' : ''}linear-gradient(${layer.angle ?? 0}deg, ${cssStopList(layer)})`;
+      } else {
+        image = `${layer.repeat ? 'repeating-' : ''}radial-gradient(${layer.shape ?? 'circle'}, ${cssStopList(layer)})`;
+      }
       break;
     case 'URL':
-      // Empty URLs are skipped by Skia/RN paths; emit `none` so invalid
-      // `url()` cannot wipe a comma-separated background-image list.
-      image = layer.image_url
-        ? `url(${webKitSafeLayerImageUrl(layer.image_url)})`
-        : 'none';
+      // Empty urls never reach here; unrenderable layers are filtered out
+      // before the css layer list is built.
+      image = `url(${webKitSafeLayerImageUrl(layer.image_url)})`;
       break;
     default:
       image = 'none';
@@ -66,7 +83,12 @@ function cssLayer(layer: PaintLayerData): CssLayer {
 export function buildPaintCssDeclarations(
   paint: PaintData,
 ): PaintCssDeclarations {
-  const layers = getPaintLayers(paint).map(cssLayer);
+  const layers: CssLayer[] = [];
+  for (const layer of getPaintLayers(paint)) {
+    if (isRenderablePaintLayer(layer)) {
+      layers.push(cssLayer(layer));
+    }
+  }
   const shadows = indexedCollectionToArray(paint.shadows);
   const textStyle = paint.textStyle;
   const textShadows = textStyle?.shadows

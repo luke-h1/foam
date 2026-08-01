@@ -31,8 +31,10 @@ import {
   clearPaintBitmapCache,
   getCachedPaintBitmaps,
 } from './paintBitmapCacheLifecycle';
+import { cssClampedStops } from './paintLayer/cssClampedStops';
 import { getPaintDropShadows } from './paintLayer/getPaintDropShadows';
 import { getPaintLayers } from './paintLayer/getPaintLayers';
+import { isRenderablePaintLayer } from './paintLayer/isRenderablePaintLayer';
 import { isTilingCanvasRepeat } from './paintLayer/isTilingCanvasRepeat';
 import {
   type PaintLayerTileMode,
@@ -78,10 +80,22 @@ const BLUR_EXTENT_SIGMAS = 3;
  */
 const GRADIENT_PREMUL_FLAG = 1;
 
-function sortedLayerStops(layer: PaintLayerData): PaintStop[] {
-  return indexedCollectionToArray<PaintStop>(layer.stops)
-    .slice()
-    .sort((a, b) => a.at - b.at);
+/**
+ * A gradient layer renders as a span when it has at least one stop and is not
+ * fully transparent. A single-stop layer is an invalid CSS gradient whose
+ * span keeps only its base-colour backing.
+ */
+function isDrawableGradientLayer(layer: PaintLayerData): boolean {
+  return layer.function !== 'URL' && isRenderablePaintLayer(layer);
+}
+
+/**
+ * A URL layer composites live only when it produces a span; a dead URL layer
+ * must not push the paint onto the live-composite path or split a gradient
+ * batch.
+ */
+function isLiveUrlLayer(layer: PaintLayerData): boolean {
+  return layer.function === 'URL' && isRenderablePaintLayer(layer);
 }
 
 function skColor(color: number): Float32Array {
@@ -96,7 +110,9 @@ function skColor(color: number): Float32Array {
  * `repeating-radial-gradient` do - no stop-expansion approximation.
  */
 function layerShader(layer: PaintLayerData, rect: LayerRect): SkShader | null {
-  const stops = sortedLayerStops(layer);
+  const stops = cssClampedStops(
+    indexedCollectionToArray<PaintStop>(layer.stops),
+  );
   if (stops.length < 2) {
     return null;
   }
@@ -477,26 +493,42 @@ function drawPaintedUsername(
     }
   }
 
-  if (options.includeBaseFill) {
-    const basePaint = Skia.Paint();
-    basePaint.setColor(
-      paint.color === null ? Skia.Color(fallbackColor) : skColor(paint.color),
-    );
+  const basePaint = Skia.Paint();
+  basePaint.setColor(
+    paint.color === null ? Skia.Color(fallbackColor) : skColor(paint.color),
+  );
+
+  /**
+   * `PaintData.layers` lists the topmost layer first, so draw back-to-front.
+   * Image (URL) layers composite live; only gradient shaders are baked here.
+   */
+  const gradientsToDraw = (
+    options.gradientLayers ?? [...layout.layers].reverse()
+  ).filter(isDrawableGradientLayer);
+
+  /**
+   * With no layer spans the reference renders the plain username, which the
+   * base fill reproduces; the live-composite foundation also passes an empty
+   * layer list to get the fill that backs its URL textures.
+   */
+  if (options.includeBaseFill && gradientsToDraw.length === 0) {
     drawGlyphs(basePaint);
   }
 
-  /**
-   * `background-image` lists the topmost layer first, so draw back-to-front.
-   * Image (URL) layers composite live; only gradient shaders are baked here.
-   */
-  const gradientsToDraw =
-    options.gradientLayers ??
-    [...layout.layers].reverse().filter(layer => layer.function !== 'URL');
-
   for (const layer of gradientsToDraw) {
-    if (layer.function === 'URL') {
-      continue;
+    const grouped = layer.opacity < 1;
+    if (grouped) {
+      const groupPaint = Skia.Paint();
+      groupPaint.setAlphaf(layer.opacity);
+      canvas.saveLayer(groupPaint);
     }
+    /**
+     * Each reference layer span paints `background-color: currentColor`
+     * beneath its own background and the whole span then fades by the layer
+     * opacity, so an upper layer covers lower ones with the base colour
+     * rather than blending into them.
+     */
+    drawGlyphs(basePaint);
     const rect = layerRectInBox(
       layer.at,
       layer.size,
@@ -510,24 +542,26 @@ function drawPaintedUsername(
       height: rect.height,
     };
     const shader = layerShader(layer, canvasRect);
-    if (!shader) {
-      continue;
+    if (shader) {
+      const fillPaint = Skia.Paint();
+      fillPaint.setShader(shader);
+      canvas.save();
+      canvas.clipRect(
+        Skia.XYWHRect(
+          canvasRect.x,
+          canvasRect.y,
+          canvasRect.width,
+          canvasRect.height,
+        ),
+        ClipOp.Intersect,
+        true,
+      );
+      drawGlyphs(fillPaint);
+      canvas.restore();
     }
-    const fillPaint = Skia.Paint();
-    fillPaint.setShader(shader);
-    canvas.save();
-    canvas.clipRect(
-      Skia.XYWHRect(
-        canvasRect.x,
-        canvasRect.y,
-        canvasRect.width,
-        canvasRect.height,
-      ),
-      ClipOp.Intersect,
-      true,
-    );
-    drawGlyphs(fillPaint);
-    canvas.restore();
+    if (grouped) {
+      canvas.restore();
+    }
   }
 
   /**
@@ -575,6 +609,11 @@ export interface PaintImageLayer {
   url: string;
   rect: LogicalRect | null;
   tile: { tx: PaintLayerTileMode; ty: PaintLayerTileMode } | null;
+  /**
+   * v4 layer-span opacity; the live compositor fades the span (backing +
+   * texture) by this.
+   */
+  opacity: number;
 }
 
 /**
@@ -584,6 +623,19 @@ export interface PaintImageLayer {
  */
 export type PaintLayerSlot =
   { kind: 'url'; layer: PaintImageLayer } | { kind: 'baked'; image: SkImage };
+
+/**
+ * The bottom-most opaque URL span already sits on the foundation's base
+ * fill; only spans above other slots, or faded ones, need the shared
+ * base-colour backing. Shared by the bitmap builder and the live compositor
+ * so they cannot disagree about when a backing exists.
+ */
+export function urlSlotNeedsBacking(
+  index: number,
+  layer: PaintImageLayer,
+): boolean {
+  return index > 0 || layer.opacity < 1;
+}
 
 /**
  * Cache-friendly render inputs for a painted username. `staticImage` is the
@@ -599,6 +651,12 @@ export type PaintLayerSlot =
 export interface PaintBitmaps {
   staticImage: SkImage;
   maskImage: SkImage | null;
+  /**
+   * Base-colour glyphs drawn beneath each URL texture, mirroring the
+   * reference's per-span `background-color: currentColor` backing. Null when
+   * the foundation's own fill already provides it (single opaque URL layer).
+   */
+  backingImage: SkImage | null;
   layerSlots: PaintLayerSlot[];
   strokeImage: SkImage | null;
   /**
@@ -618,9 +676,10 @@ function toPaintImageLayer(
     'glyphWidthPx' | 'glyphHeightPx' | 'originX' | 'originY' | 'scale'
   >,
 ): PaintImageLayer | null {
-  if (layer.function !== 'URL' || !layer.image_url) {
+  if (!isLiveUrlLayer(layer)) {
     return null;
   }
+  const { opacity } = layer;
   const url = skiaDecodableLayerUrl(layer.image_url);
 
   if (isTilingCanvasRepeat(layer.canvas_repeat, layer.repeat)) {
@@ -628,6 +687,7 @@ function toPaintImageLayer(
       url,
       rect: null,
       tile: paintLayerTileModes(layer.canvas_repeat),
+      opacity,
     };
   }
 
@@ -646,6 +706,7 @@ function toPaintImageLayer(
       height: rect.height / layout.scale,
     },
     tile: null,
+    opacity,
   };
 }
 
@@ -692,14 +753,14 @@ export function planPaintLayerSlotKinds(
   };
 
   for (const layer of [...layers].reverse()) {
-    if (layer.function === 'URL') {
+    if (isLiveUrlLayer(layer)) {
       flushGradients();
-      if (layer.image_url) {
-        kinds.push('url');
-      }
+      kinds.push('url');
       continue;
     }
-    pendingGradients = true;
+    if (isDrawableGradientLayer(layer)) {
+      pendingGradients = true;
+    }
   }
   flushGradients();
 
@@ -735,16 +796,16 @@ function buildPaintLayerSlots(
   };
 
   for (const layer of [...layout.layers].reverse()) {
-    if (layer.function === 'URL') {
+    const imageLayer = toPaintImageLayer(layer, layout);
+    if (imageLayer) {
       flushGradients();
-      const imageLayer = toPaintImageLayer(layer, layout);
-      if (imageLayer) {
-        imageLayers.push(imageLayer);
-        layerSlots.push({ kind: 'url', layer: imageLayer });
-      }
+      imageLayers.push(imageLayer);
+      layerSlots.push({ kind: 'url', layer: imageLayer });
       continue;
     }
-    gradientBatch.push(layer);
+    if (isDrawableGradientLayer(layer)) {
+      gradientBatch.push(layer);
+    }
   }
   flushGradients();
 
@@ -805,14 +866,13 @@ export function getPaintBitmaps(
     return null;
   }
 
-  const hasUrlLayers = layout.layers.some(
-    layer => layer.function === 'URL' && Boolean(layer.image_url),
-  );
+  const hasUrlLayers = layout.layers.some(isLiveUrlLayer);
 
   let staticImage: SkImage | null;
   let layerSlots: PaintLayerSlot[] = [];
   let imageLayers: PaintImageLayer[] = [];
   let strokeImage: SkImage | null = null;
+  let backingImage: SkImage | null = null;
 
   if (hasUrlLayers) {
     staticImage = snapshotPaintSurface(layout, canvas => {
@@ -829,6 +889,22 @@ export function getPaintBitmaps(
     }
 
     ({ layerSlots, imageLayers } = buildPaintLayerSlots(opts, layout));
+
+    const needsUrlBacking = layerSlots.some(
+      (slot, index) =>
+        slot.kind === 'url' && urlSlotNeedsBacking(index, slot.layer),
+    );
+    if (needsUrlBacking) {
+      backingImage = snapshotPaintSurface(layout, canvas => {
+        drawPaintedUsername(canvas, opts, layout, {
+          includeDropShadows: false,
+          includeTextShadows: false,
+          includeBaseFill: true,
+          gradientLayers: [],
+          includeStroke: false,
+        });
+      });
+    }
 
     if (layout.stroke) {
       strokeImage = snapshotPaintSurface(layout, canvas => {
@@ -875,6 +951,7 @@ export function getPaintBitmaps(
   const bitmaps: PaintBitmaps = {
     staticImage,
     maskImage,
+    backingImage,
     layerSlots,
     strokeImage,
     imageLayers,

@@ -16,6 +16,7 @@ interface DisposableTexture {
 export interface DisposablePaintBitmaps {
   staticImage: DisposableTexture;
   maskImage: DisposableTexture | null;
+  backingImage: DisposableTexture | null;
   strokeImage: DisposableTexture | null;
   layerSlots: ({ kind: 'baked'; image: DisposableTexture } | { kind: 'url' })[];
 }
@@ -53,6 +54,7 @@ function disposeTextures(entry: DisposablePaintBitmaps): void {
   disposedEntries.add(entry);
   entry.staticImage.dispose();
   entry.maskImage?.dispose();
+  entry.backingImage?.dispose();
   entry.strokeImage?.dispose();
   for (const slot of entry.layerSlots) {
     if (slot.kind === 'baked') {

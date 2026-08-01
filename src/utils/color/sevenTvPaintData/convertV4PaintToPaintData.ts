@@ -21,7 +21,7 @@ const packRgba = (color: {
 const convertV4Layer = (
   layer: V4Paint['data']['layers'][number],
 ): PaintGradientLayer | null => {
-  const { ty } = layer;
+  const { ty, opacity } = layer;
   // eslint-disable-next-line no-underscore-dangle
   switch (ty.__typename) {
     case 'PaintLayerTypeLinearGradient':
@@ -35,6 +35,7 @@ const convertV4Layer = (
         })),
         canvas_repeat: '',
         size: [1, 1],
+        opacity,
       };
     case 'PaintLayerTypeRadialGradient':
       return {
@@ -48,6 +49,7 @@ const convertV4Layer = (
         })),
         canvas_repeat: '',
         size: [1, 1],
+        opacity,
       };
     case 'PaintLayerTypeSingleColor': {
       const packed = packRgba(ty.color);
@@ -59,6 +61,7 @@ const convertV4Layer = (
         ],
         canvas_repeat: '',
         size: [1, 1],
+        opacity,
       };
     }
     case 'PaintLayerTypeImage':
@@ -68,6 +71,7 @@ const convertV4Layer = (
         stops: [],
         canvas_repeat: '',
         size: [1, 1],
+        opacity,
       };
     default:
       return null;
@@ -77,9 +81,15 @@ const convertV4Layer = (
 export const convertV4PaintToPaintData = (
   paint: SevenTvPaintSource,
 ): PaintData => {
+  /**
+   * v4 lists layers bottom-to-top (the website stacks them as sibling spans,
+   * later siblings painting on top); `PaintData.layers` keeps the CSS
+   * `background-image` convention of first-is-topmost, so reverse here.
+   */
   const gradients = paint.data.layers
     .map(convertV4Layer)
-    .filter((layer): layer is PaintGradientLayer => layer !== null);
+    .filter((layer): layer is PaintGradientLayer => layer !== null)
+    .reverse();
 
   const singleColorLayer = paint.data.layers.find(
     layer => layer.ty.__typename === 'PaintLayerTypeSingleColor',

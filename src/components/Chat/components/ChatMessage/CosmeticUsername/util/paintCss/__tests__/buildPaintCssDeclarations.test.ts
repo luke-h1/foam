@@ -16,7 +16,8 @@ describe('buildPaintCssDeclarations', () => {
         makeLayer({
           function: 'LINEAR_GRADIENT',
           angle: 90,
-          // Out of order on purpose: stops must be sorted by position.
+          // Out of order on purpose: stops are emitted in written order and
+          // the browser clamps positions, exactly like the reference CSS.
           stops: toIndexed([
             { at: 1, color: BLUE },
             { at: 0, color: RED },
@@ -31,7 +32,7 @@ describe('buildPaintCssDeclarations', () => {
     expect(buildPaintCssDeclarations(paint)).toEqual<PaintCssDeclarations>({
       color: 'inherit',
       backgroundImage:
-        'linear-gradient(90deg, rgba(255, 0, 0, 1.000) 0%, rgba(0, 0, 255, 1.000) 100%)',
+        'linear-gradient(90deg, rgba(0, 0, 255, 1.000) 100%, rgba(255, 0, 0, 1.000) 0%)',
       backgroundPosition: '0% 0%',
       backgroundSize: 'auto',
       backgroundRepeat: 'unset',
@@ -138,7 +139,7 @@ describe('buildPaintCssDeclarations', () => {
     });
   });
 
-  test('URL layer with empty image_url emits none instead of invalid url()', () => {
+  test('unrenderable layers produce no background entry at all', () => {
     const paint = makePaint({
       layers: toIndexed([
         makeLayer({
@@ -153,16 +154,20 @@ describe('buildPaintCssDeclarations', () => {
           function: 'URL',
           image_url: '',
         }),
+        makeLayer({
+          function: 'RADIAL_GRADIENT',
+          stops: toIndexed([]),
+        }),
       ]),
     });
 
     expect(buildPaintCssDeclarations(paint)).toEqual<PaintCssDeclarations>({
       color: 'inherit',
       backgroundImage:
-        'linear-gradient(90deg, rgba(255, 0, 0, 1.000) 0%, rgba(0, 0, 255, 1.000) 100%), none',
-      backgroundPosition: '0% 0%, 0% 0%',
-      backgroundSize: 'auto, auto',
-      backgroundRepeat: 'unset, unset',
+        'linear-gradient(90deg, rgba(255, 0, 0, 1.000) 0%, rgba(0, 0, 255, 1.000) 100%)',
+      backgroundPosition: '0% 0%',
+      backgroundSize: 'auto',
+      backgroundRepeat: 'unset',
       filter: 'inherit',
       fontWeight: 'inherit',
       webkitTextStrokeWidth: 'inherit',
@@ -170,5 +175,22 @@ describe('buildPaintCssDeclarations', () => {
       textShadow: 'unset',
       textTransform: 'unset',
     });
+  });
+
+  test('a single-stop gradient renders as its currentColor backing', () => {
+    const paint = makePaint({
+      layers: toIndexed([
+        makeLayer({
+          function: 'LINEAR_GRADIENT',
+          angle: 90,
+          stops: toIndexed([{ at: 0, color: RED }]),
+        }),
+      ]),
+    });
+
+    const declarations = buildPaintCssDeclarations(paint);
+    expect(declarations.backgroundImage).toBe(
+      'linear-gradient(0deg, currentColor 0%, currentColor 100%)',
+    );
   });
 });

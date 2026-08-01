@@ -25,6 +25,7 @@ export function makeLayer(overrides: Partial<PaintLayerData>): PaintLayerData {
     canvas_repeat: '',
     at: null,
     size: null,
+    opacity: 1,
     ...overrides,
   };
 }

@@ -14,6 +14,7 @@ function paintLayerFingerprint(layer: PaintLayerData): string {
     layer.canvas_repeat,
     layer.at?.join(',') ?? '',
     layer.size?.join(',') ?? '',
+    layer.opacity,
     stops,
   ].join('|');
 }
