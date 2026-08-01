@@ -25,6 +25,14 @@ import { Image } from '@app/components/Image/Image';
 import type { ImageProps as AppImageProps } from '@app/components/Image/Image.types';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { theme } from '@app/styles/themes';
+
+/**
+ * ContentUnavailableView is iOS 17+; its native body is empty on iOS 16, so
+ * earlier versions keep the JS layout.
+ */
+const supportsContentUnavailableView =
+  Platform.OS === 'ios' && parseInt(String(Platform.Version), 10) >= 17;
+
 interface EmptyStatePresetItem {
   iconName: SymbolViewProps['name'];
   headingKey: 'nothingHereYet';
@@ -97,7 +105,7 @@ export function EmptyState({
       : resolvedIconName?.ios;
 
   if (
-    Platform.OS === 'ios' &&
+    supportsContentUnavailableView &&
     !resolvedImageSource &&
     (resolvedHeading == null || typeof resolvedHeading === 'string') &&
     (resolvedContent == null || typeof resolvedContent === 'string')
