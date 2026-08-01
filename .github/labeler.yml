@@ -1,15 +1,21 @@
 app:
-  - '**/src/*'
-  - '**/*.js'
-  - '**/*.ts'
-  - '**/*.tsx'
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/src/*'
+          - '**/*.js'
+          - '**/*.ts'
+          - '**/*.tsx'
 
 Infrastructure:
-  - '**/terraform/*'
-  - '**/terraform/**/*'
-  - '.github/*'
-  - '.github/**/*'
-  - 'docker'
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/terraform/*'
+          - '**/terraform/**/*'
+          - '.github/*'
+          - '.github/**/*'
+          - 'docker'
 
 Documentation:
-  - 'README.md'
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'README.md'
