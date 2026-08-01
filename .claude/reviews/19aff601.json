@@ -1,0 +1,59 @@
+{
+  "reviewId": "19aff601",
+  "diffScope": "branch changes",
+  "baseBranch": "main",
+  "baseCommit": "51301a5100b6d7b6fa01d7fa69503fcc3ab0dbe3",
+  "reviewers": {
+    "reactDoctor": {
+      "status": "ok",
+      "score": 84,
+      "baseScore": 37,
+      "scoreRegressed": false,
+      "summary": "Final changed-scope scan found no diagnostics; the branch score did not regress from the pinned base.",
+      "findings": []
+    },
+    "bugbot": {
+      "status": "ok",
+      "summary": "Final uncommitted-change pass found zero blocking findings.",
+      "findings": []
+    },
+    "security": {
+      "status": "ok",
+      "summary": "Final pass found zero critical or high security findings, including the TestFlight and foreground alert paths.",
+      "findings": []
+    },
+    "contracts": {
+      "status": "ok",
+      "summary": "Final pass found no AGENTS.md or FORBIDDEN.md violations.",
+      "findings": []
+    }
+  },
+  "resolvedFindings": [
+    {
+      "severity": "high",
+      "location": "patches/expo-image@57.0.0.patch:1",
+      "source": "bugbot",
+      "finding": "Restored the animated WebP decoder and non-eager frame safeguards."
+    },
+    {
+      "severity": "high",
+      "location": "src/components/ForceUpdateModal/ForceUpdateModal.tsx:64",
+      "source": "security",
+      "finding": "Awaited browser dismissal or external-app return and re-presented the mandatory update alert only in the foreground."
+    },
+    {
+      "severity": "high",
+      "location": "src/screens/SearchScreen/SearchScreen.tsx:275",
+      "source": "contracts",
+      "finding": "Search refresh failures are logged, surfaced to the user, and always clear refreshing state."
+    },
+    {
+      "severity": "low",
+      "location": "src/components/ui/Text/Text.tsx:254",
+      "source": "bugbot",
+      "finding": "Explicit caller font families are preserved when fontWeight is also supplied."
+    }
+  ],
+  "blockingCount": 0,
+  "findingCount": 0
+}
