@@ -1,4 +1,11 @@
-import { Modal as RNModal, StyleSheet, View } from 'react-native';
+import { useEffect } from 'react';
+import {
+  Alert,
+  Modal as RNModal,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import * as Application from 'expo-application';
@@ -36,6 +43,33 @@ export function ForceUpdateModal() {
       ? (isUpdateRequired(currentVersion, minimumVersion) ?? false)
       : false;
 
+  useEffect(() => {
+    if (Platform.OS !== 'ios' || !updateRequired) {
+      return;
+    }
+
+    const presentAlert = () => {
+      Alert.alert(
+        'Update Required',
+        `A new version of Foam is available. Please update to continue using the app.\n\nCurrent version: ${currentVersion}\nMinimum required: ${minimumVersion}`,
+        [
+          {
+            text: 'Update',
+            onPress: () => {
+              void handleUpdatePress().finally(presentAlert);
+            },
+          },
+        ],
+      );
+    };
+
+    presentAlert();
+  }, [updateRequired, currentVersion, minimumVersion]);
+
+  if (Platform.OS === 'ios') {
+    return null;
+  }
+
   return (
     <RNModal
       animationType='fade'
@@ -49,12 +83,19 @@ export function ForceUpdateModal() {
             <SymbolView name='arrow.up' />
           </View>
 
-          <Text color='gray' type='xl' weight='bold' align='center'>
+          <Text
+            color='gray'
+            type='xl'
+            weight='bold'
+            align='center'
+            family='system'
+          >
             Update Required
           </Text>
 
           <Text
             color='gray.textLow'
+            family='system'
             type='sm'
             align='left'
             style={styles.subtitle}

@@ -4,17 +4,17 @@ import { useTranslation } from 'react-i18next';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withTiming,
+  withSpring,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { onlineManager } from '@tanstack/react-query';
 
 import { Text } from '@app/components/ui/Text/Text';
+import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
 
-const BANNER_HEIGHT = 32;
-const ANIM_DURATION = 250;
+const HIDDEN_OFFSET = 80;
 
 export function OfflineBanner() {
   const { t } = useTranslation('common');
@@ -24,27 +24,28 @@ export function OfflineBanner() {
 
   useEffect(() => {
     return onlineManager.subscribe(isOnline => {
-      progress.set(
-        withTiming(isOnline ? 0 : 1, {
-          duration: ANIM_DURATION,
-        }),
-      );
+      progress.set(withSpring(isOnline ? 0 : 1, motion.spring.gentle));
     });
   }, [progress]);
 
-  const totalHeight = insets.top + BANNER_HEIGHT;
-
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: (progress.get() - 1) * totalHeight }],
+    opacity: progress.get(),
+    transform: [
+      { translateY: (progress.get() - 1) * (insets.top + HIDDEN_OFFSET) },
+    ],
   }));
 
   return (
     <Animated.View
       pointerEvents='none'
-      style={[styles.wrapper, { paddingTop: insets.top }, animatedStyle]}
+      style={[
+        styles.wrapper,
+        { top: insets.top + theme.space8 },
+        animatedStyle,
+      ]}
     >
-      <View style={styles.banner}>
-        <Text type='xxs' weight='semibold' style={styles.text}>
+      <View style={styles.pill}>
+        <Text type='xxs' weight='semibold' family='system' style={styles.text}>
           {t('noInternetConnection')}
         </Text>
       </View>
@@ -55,17 +56,20 @@ export function OfflineBanner() {
 const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
-    top: 0,
     left: 0,
     right: 0,
-    backgroundColor: theme.colorBlack,
+    alignItems: 'center',
     zIndex: 9999,
   },
-  banner: {
-    backgroundColor: theme.colorAmber,
-    height: BANNER_HEIGHT,
+  pill: {
     alignItems: 'center',
+    backgroundColor: theme.colorAmber,
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
     justifyContent: 'center',
+    paddingHorizontal: theme.space16,
+    paddingVertical: theme.space8,
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
   },
   text: {
     color: theme.colorBlack,
