@@ -203,7 +203,7 @@ function InputSection({
 }
 
 function NativeChatHighlightsList() {
-  const { t } = useTranslation('preferences');
+  const { t } = useTranslation(['preferences', 'common']);
   const { addHighlight, highlights, updatePreferences } = useCustomHighlights();
   const [selectedColor, setSelectedColor] = useState<string>(
     HIGHLIGHT_COLORS[0],
@@ -217,10 +217,34 @@ function NativeChatHighlightsList() {
   };
 
   const handleDeleteByIndex = (indices: number[]) => {
-    const removals = new Set(indices);
-    updatePreferences({
-      customHighlights: highlights.filter((_, index) => !removals.has(index)),
-    });
+    const targets = indices
+      .map(index => highlights[index])
+      .filter(highlight => highlight !== undefined);
+    const first = targets[0];
+    if (!first) {
+      return;
+    }
+
+    Alert.alert(
+      t('removeHighlight'),
+      t('removeHighlightConfirm', { phrase: first.phrase }),
+      [
+        { text: t('common:cancel'), style: 'cancel' },
+        {
+          text: t('remove'),
+          style: 'destructive',
+          onPress: () => {
+            impact('medium');
+            const removals = new Set(targets.map(target => target.id));
+            updatePreferences({
+              customHighlights: highlights.filter(
+                highlight => !removals.has(highlight.id),
+              ),
+            });
+          },
+        },
+      ],
+    );
   };
 
   const hasHighlights = highlights.length > 0;
