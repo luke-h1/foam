@@ -69,10 +69,11 @@ export function EmoteSheet({
     }
   }, []);
 
+  const emoteRowSize = sheet.cellSize + 4;
   const getFixedItemSize = useCallback(
     (_item: EmoteMenuListItem, _index: number, type: string | undefined) =>
-      type === 'header' ? EMOTE_SHEET_HEADER_HEIGHT : sheet.cellSize + 4,
-    [sheet.cellSize],
+      type === 'header' ? EMOTE_SHEET_HEADER_HEIGHT : emoteRowSize,
+    [emoteRowSize],
   );
 
   const hasSetRail = sheet.filteredSets.length > 1;
@@ -160,7 +161,7 @@ export function EmoteSheet({
                   renderItem={sheet.renderItem}
                   keyExtractor={keyExtractor}
                   getItemType={getItemType}
-                  estimatedItemSize={sheet.cellSize + 4}
+                  estimatedItemSize={emoteRowSize}
                   getFixedItemSize={getFixedItemSize}
                   recycleItems
                   onViewableItemsChanged={sheet.onViewableItemsChanged}
@@ -168,7 +169,7 @@ export function EmoteSheet({
                   onScroll={emoteSheetScrollActivity.poke}
                   scrollEventThrottle={16}
                   contentContainerStyle={listContentStyle}
-                  drawDistance={(sheet.cellSize + 4) * 3}
+                  drawDistance={emoteRowSize * 3}
                   showsVerticalScrollIndicator
                   nestedScrollEnabled
                   indicatorStyle='white' // todo - once we have light theme, adjust this

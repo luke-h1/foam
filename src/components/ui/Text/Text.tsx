@@ -114,6 +114,24 @@ const fontWeightToTextWeight: Record<string, TextWeight> = {
   normal: 'normal',
 };
 
+function getStyleFontWeight(
+  style: TextProps['style'],
+): TextStyle['fontWeight'] | undefined {
+  if (!style) {
+    return undefined;
+  }
+  if (Array.isArray(style)) {
+    for (let index = style.length - 1; index >= 0; index -= 1) {
+      const weight = getStyleFontWeight(style[index] as TextProps['style']);
+      if (weight != null) {
+        return weight;
+      }
+    }
+    return undefined;
+  }
+  return (style as TextStyle).fontWeight;
+}
+
 /**
  * Fixed-weight font files ignore `fontWeight` on iOS, so style weights map
  * to the theme token whose family renders them.
@@ -215,9 +233,8 @@ export function Text({
 
   const isSystemFamily = family === 'system' && variant === 'default';
   const isBrandFamily = family === 'brand' && variant === 'default';
-  const flattenedStyle = StyleSheet.flatten(style);
   const styleWeight = isBrandFamily
-    ? resolveWeightFromFontWeight(flattenedStyle?.fontWeight)
+    ? resolveWeightFromFontWeight(getStyleFontWeight(style))
     : undefined;
 
   const resolvedFontFamily = isSystemFamily

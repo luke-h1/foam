@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { Host, Image, Menu, Picker, Text } from '@expo/ui/swift-ui';
 import { tag, tint } from '@expo/ui/swift-ui/modifiers';
@@ -11,11 +11,12 @@ import {
 import { theme } from '@app/styles/themes';
 
 export function StreamListLayoutMenu() {
+  const { t } = useTranslation('stream');
   const streamListLayout = usePreference('streamListLayout');
   const updatePreferences = useUpdatePreferences();
 
   return (
-    <Host style={styles.host}>
+    <Host style={{ height: 34, width: 34 }}>
       <Menu
         label={
           <Image
@@ -33,17 +34,10 @@ export function StreamListLayoutMenu() {
             updatePreferences({ streamListLayout: layout });
           }}
         >
-          <Text modifiers={[tag('compact')]}>Compact</Text>
-          <Text modifiers={[tag('media')]}>Media</Text>
+          <Text modifiers={[tag('compact')]}>{t('compactLayout')}</Text>
+          <Text modifiers={[tag('media')]}>{t('mediaLayout')}</Text>
         </Picker>
       </Menu>
     </Host>
   );
 }
-
-const styles = StyleSheet.create({
-  host: {
-    height: 34,
-    width: 34,
-  },
-});

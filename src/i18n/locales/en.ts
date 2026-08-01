@@ -481,6 +481,8 @@ const en = {
     failedToFetchTopCategories: 'Failed to fetch top categories',
     noCategoriesFound: 'No categories found',
     noTopStreamsFound: 'No Top Streams found',
+    compactLayout: 'Compact',
+    mediaLayout: 'Media',
     switchToMediaLayout: 'Switch to media layout',
     switchToCompactLayout: 'Switch to compact layout',
   },

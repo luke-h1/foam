@@ -257,8 +257,9 @@ export function SearchScreen() {
       return;
     }
     setIsRefreshing(true);
-    await performSearch(normalizedQuery).catch(() => undefined);
-    setIsRefreshing(false);
+    await performSearch(normalizedQuery)
+      .catch(() => undefined)
+      .finally(() => setIsRefreshing(false));
   }, [performSearch, query]);
 
   const handleClearSearch = useCallback(() => {

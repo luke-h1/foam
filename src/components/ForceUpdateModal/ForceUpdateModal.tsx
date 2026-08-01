@@ -29,6 +29,10 @@ async function handleUpdatePress() {
   }
 }
 
+const UPDATE_REQUIRED_TITLE = 'Update Required';
+const UPDATE_REQUIRED_BODY =
+  'A new version of Foam is available. Please update to continue using the app.';
+
 export function ForceUpdateModal() {
   const { config: remoteConfig } = useRemoteConfig();
   const insets = useSafeAreaInsets();
@@ -50,8 +54,8 @@ export function ForceUpdateModal() {
 
     const presentAlert = () => {
       Alert.alert(
-        'Update Required',
-        `A new version of Foam is available. Please update to continue using the app.\n\nCurrent version: ${currentVersion}\nMinimum required: ${minimumVersion}`,
+        UPDATE_REQUIRED_TITLE,
+        `${UPDATE_REQUIRED_BODY}\n\nCurrent version: ${currentVersion}\nMinimum required: ${minimumVersion}`,
         [
           {
             text: 'Update',
@@ -90,7 +94,7 @@ export function ForceUpdateModal() {
             align='center'
             family='system'
           >
-            Update Required
+            {UPDATE_REQUIRED_TITLE}
           </Text>
 
           <Text
@@ -100,8 +104,7 @@ export function ForceUpdateModal() {
             align='left'
             style={styles.subtitle}
           >
-            A new version of Foam is available. Please update to continue using
-            the app.
+            {UPDATE_REQUIRED_BODY}
           </Text>
 
           <View style={styles.versionInfo}>

@@ -481,8 +481,7 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await refetchTab();
-    setIsRefreshing(false);
+    await refetchTab().finally(() => setIsRefreshing(false));
   }, [refetchTab]);
 
   useEffect(() => {

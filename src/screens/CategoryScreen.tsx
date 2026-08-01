@@ -109,8 +109,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await refetch();
-    setIsRefreshing(false);
+    await refetch().finally(() => setIsRefreshing(false));
   }, [refetch]);
 
   const handleShare = useCallback(() => {

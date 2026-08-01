@@ -105,8 +105,7 @@ export function MyClipsScreen() {
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await refetch();
-    setIsRefreshing(false);
+    await refetch().finally(() => setIsRefreshing(false));
   }, [refetch]);
 
   const rows = useMemo<MyClipListItem[]>(() => {

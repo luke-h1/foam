@@ -57,7 +57,11 @@ export const ChatSearchField = memo(
             radius='none'
             returnKeyType='search'
             size='sm'
-            style={styles.iosSearchInput}
+            style={{
+              backgroundColor: 'transparent',
+              flex: 1,
+              fontSize: theme.fontSize14,
+            }}
             value={draftQuery}
             variant='soft'
           />
@@ -95,11 +99,6 @@ export const ChatSearchField = memo(
 );
 
 const styles = StyleSheet.create({
-  iosSearchInput: {
-    backgroundColor: 'transparent',
-    flex: 1,
-    fontSize: theme.fontSize14,
-  },
   searchField: {
     alignItems: 'center',
     backgroundColor: theme.color.background.darkAlt,
