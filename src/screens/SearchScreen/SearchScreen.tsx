@@ -9,13 +9,7 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react';
-import {
-  RefreshControl,
-  type StyleProp,
-  StyleSheet,
-  View,
-  type ViewStyle,
-} from 'react-native';
+import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native-gesture-handler';
 
@@ -154,7 +148,6 @@ function writeSearchHistoryQuery(query: string) {
 }
 
 const isAndroid = process.env.EXPO_OS === 'android';
-const isIOS = process.env.EXPO_OS === 'ios';
 
 /**
  * Keeps row separators aligned with the text column, past the thumbnail.
@@ -264,11 +257,8 @@ export function SearchScreen() {
       return;
     }
     setIsRefreshing(true);
-    try {
-      await performSearch(normalizedQuery);
-    } finally {
-      setIsRefreshing(false);
-    }
+    await performSearch(normalizedQuery).catch(() => undefined);
+    setIsRefreshing(false);
   }, [performSearch, query]);
 
   const handleClearSearch = useCallback(() => {
@@ -565,20 +555,6 @@ function SearchResultsList({
   renderItem,
   selectedFilter,
 }: SearchResultsListProps) {
-  const refreshControl = useMemo(
-    () =>
-      isIOS ? (
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={() => {
-            void onRefresh();
-          }}
-          tintColor={theme.color.text.dark}
-        />
-      ) : undefined,
-    [onRefresh, refreshing],
-  );
-
   return (
     <FlashList
       ref={listRef}
@@ -592,7 +568,6 @@ function SearchResultsList({
       keyboardDismissMode='on-drag'
       keyboardShouldPersistTaps='handled'
       ListHeaderComponent={listHeader}
-      refreshControl={refreshControl}
       refreshing={refreshing}
       onRefresh={onRefresh}
       renderItem={

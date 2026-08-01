@@ -1,5 +1,5 @@
 import { FC, memo, useCallback, useMemo, useRef, useState } from 'react';
-import { RefreshControl, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Stack } from 'expo-router';
@@ -109,11 +109,8 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    try {
-      await refetch();
-    } finally {
-      setIsRefreshing(false);
-    }
+    await refetch();
+    setIsRefreshing(false);
   }, [refetch]);
 
   const handleShare = useCallback(() => {
@@ -126,20 +123,6 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
       name: category.name,
     });
   }, [category]);
-
-  const refreshControl = useMemo(
-    () =>
-      process.env.EXPO_OS === 'ios' ? (
-        <RefreshControl
-          refreshing={isRefreshing}
-          onRefresh={() => {
-            void handleRefresh();
-          }}
-          tintColor={theme.color.text.dark}
-        />
-      ) : undefined,
-    [handleRefresh, isRefreshing],
-  );
 
   if (isCategoryLoading || isLoadingStreams) {
     return <LoadingState />;
@@ -196,7 +179,6 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
         onEndReachedThreshold={0.3}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
-        refreshControl={refreshControl}
         refreshing={isRefreshing}
         onRefresh={handleRefresh}
       />

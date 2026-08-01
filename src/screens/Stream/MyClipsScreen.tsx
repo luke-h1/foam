@@ -1,5 +1,5 @@
 import { memo, useCallback, useMemo, useState } from 'react';
-import { Platform, RefreshControl, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useQuery } from '@tanstack/react-query';
@@ -105,26 +105,9 @@ export function MyClipsScreen() {
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    try {
-      await refetch();
-    } finally {
-      setIsRefreshing(false);
-    }
+    await refetch();
+    setIsRefreshing(false);
   }, [refetch]);
-
-  const refreshControl = useMemo(
-    () =>
-      Platform.OS === 'ios' ? (
-        <RefreshControl
-          refreshing={isRefreshing}
-          onRefresh={() => {
-            void handleRefresh();
-          }}
-          tintColor={theme.color.text.dark}
-        />
-      ) : undefined,
-    [handleRefresh, isRefreshing],
-  );
 
   const rows = useMemo<MyClipListItem[]>(() => {
     const clipsById = new Map(
@@ -156,7 +139,6 @@ export function MyClipsScreen() {
         contentInsetAdjustmentBehavior='automatic'
         renderItem={renderMyClipRow}
         contentContainerStyle={styles.listContent}
-        refreshControl={refreshControl}
         refreshing={isRefreshing}
         onRefresh={handleRefresh}
       />

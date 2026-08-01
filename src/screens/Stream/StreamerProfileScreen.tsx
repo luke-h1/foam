@@ -1,11 +1,5 @@
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
-import {
-  Platform,
-  RefreshControl,
-  StyleSheet,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { router, Stack } from 'expo-router';
@@ -487,12 +481,13 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    try {
-      await refetchTab();
-    } finally {
-      setIsRefreshing(false);
-    }
+    await refetchTab();
+    setIsRefreshing(false);
   }, [refetchTab]);
+
+  useEffect(() => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [activeTab]);
 
   const handleShare = useCallback(() => {
     if (!user) {
@@ -504,20 +499,6 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
       displayName: user.display_name,
     });
   }, [user]);
-
-  const refreshControl = useMemo(
-    () =>
-      Platform.OS === 'ios' ? (
-        <RefreshControl
-          refreshing={isRefreshing}
-          onRefresh={() => {
-            void handleRefresh();
-          }}
-          tintColor={theme.color.text.dark}
-        />
-      ) : undefined,
-    [handleRefresh, isRefreshing],
-  );
 
   if (isUserLoading) {
     return <LoadingState />;
@@ -586,7 +567,6 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.4}
-        refreshControl={refreshControl}
         refreshing={isRefreshing}
         onRefresh={handleRefresh}
       />
