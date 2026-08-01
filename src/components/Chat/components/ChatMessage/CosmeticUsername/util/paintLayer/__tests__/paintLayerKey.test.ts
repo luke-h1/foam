@@ -13,6 +13,7 @@ function layer(overrides: Partial<PaintLayerData> = {}): PaintLayerData {
     canvas_repeat: 'unset',
     at: null,
     size: null,
+    opacity: 1,
     ...overrides,
   };
 }

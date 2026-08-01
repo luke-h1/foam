@@ -31,6 +31,7 @@ import {
   clearPaintBitmapCache,
   getCachedPaintBitmaps,
 } from './paintBitmapCacheLifecycle';
+import { cssClampedStops } from './paintLayer/cssClampedStops';
 import { getPaintDropShadows } from './paintLayer/getPaintDropShadows';
 import { getPaintLayers } from './paintLayer/getPaintLayers';
 import { isRenderablePaintLayer } from './paintLayer/isRenderablePaintLayer';
@@ -80,23 +81,6 @@ const BLUR_EXTENT_SIGMAS = 3;
 const GRADIENT_PREMUL_FLAG = 1;
 
 /**
- * CSS keeps colour stops in written order and clamps each position to the
- * running maximum so far (css-images-3 §3.4.2) - it never reorders them - so
- * an out-of-order stop becomes a hard transition exactly as the browser
- * renders the reference CSS.
- */
-function cssClampedLayerStops(layer: PaintLayerData): PaintStop[] {
-  const stops = indexedCollectionToArray<PaintStop>(layer.stops);
-  let runningMax = Number.NEGATIVE_INFINITY;
-  return stops.map(stop => {
-    runningMax = Math.max(runningMax, stop.at);
-    return runningMax === stop.at
-      ? stop
-      : { at: runningMax, color: stop.color };
-  });
-}
-
-/**
  * A gradient layer renders as a span when it has at least one stop and is not
  * fully transparent. A single-stop layer is an invalid CSS gradient whose
  * span keeps only its base-colour backing.
@@ -126,7 +110,9 @@ function skColor(color: number): Float32Array {
  * `repeating-radial-gradient` do - no stop-expansion approximation.
  */
 function layerShader(layer: PaintLayerData, rect: LayerRect): SkShader | null {
-  const stops = cssClampedLayerStops(layer);
+  const stops = cssClampedStops(
+    indexedCollectionToArray<PaintStop>(layer.stops),
+  );
   if (stops.length < 2) {
     return null;
   }
@@ -530,11 +516,10 @@ function drawPaintedUsername(
   }
 
   for (const layer of gradientsToDraw) {
-    const layerOpacity = layer.opacity ?? 1;
-    const grouped = layerOpacity < 1;
+    const grouped = layer.opacity < 1;
     if (grouped) {
       const groupPaint = Skia.Paint();
-      groupPaint.setAlphaf(layerOpacity);
+      groupPaint.setAlphaf(layer.opacity);
       canvas.saveLayer(groupPaint);
     }
     /**
@@ -640,6 +625,19 @@ export type PaintLayerSlot =
   { kind: 'url'; layer: PaintImageLayer } | { kind: 'baked'; image: SkImage };
 
 /**
+ * The bottom-most opaque URL span already sits on the foundation's base
+ * fill; only spans above other slots, or faded ones, need the shared
+ * base-colour backing. Shared by the bitmap builder and the live compositor
+ * so they cannot disagree about when a backing exists.
+ */
+export function urlSlotNeedsBacking(
+  index: number,
+  layer: PaintImageLayer,
+): boolean {
+  return index > 0 || layer.opacity < 1;
+}
+
+/**
  * Cache-friendly render inputs for a painted username. `staticImage` is the
  * foundation (drop shadows, text-shadows, base fill). When the paint has URL
  * layers, `layerSlots` holds back-to-front URL overlays and baked gradient
@@ -681,7 +679,7 @@ function toPaintImageLayer(
   if (!isLiveUrlLayer(layer)) {
     return null;
   }
-  const opacity = layer.opacity ?? 1;
+  const { opacity } = layer;
   const url = skiaDecodableLayerUrl(layer.image_url);
 
   if (isTilingCanvasRepeat(layer.canvas_repeat, layer.repeat)) {
@@ -892,14 +890,9 @@ export function getPaintBitmaps(
 
     ({ layerSlots, imageLayers } = buildPaintLayerSlots(opts, layout));
 
-    /**
-     * A URL span that sits above other layers (or fades) needs its own
-     * base-colour backing in the live composite; the bottom-most opaque URL
-     * already sits on the foundation's fill.
-     */
     const needsUrlBacking = layerSlots.some(
       (slot, index) =>
-        slot.kind === 'url' && (index > 0 || slot.layer.opacity < 1),
+        slot.kind === 'url' && urlSlotNeedsBacking(index, slot.layer),
     );
     if (needsUrlBacking) {
       backingImage = snapshotPaintSurface(layout, canvas => {

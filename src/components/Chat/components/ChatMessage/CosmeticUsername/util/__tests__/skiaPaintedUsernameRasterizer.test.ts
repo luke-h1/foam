@@ -18,6 +18,7 @@ const createLayer = (
   canvas_repeat: 'unset',
   at: null,
   size: null,
+  opacity: 1,
   ...overrides,
 });
 

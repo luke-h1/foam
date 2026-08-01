@@ -45,7 +45,6 @@ export function PaintedUsernameFill({
         <PaintLayerBackground
           key={key}
           baseColor={baseColor}
-          fallbackColor={fallbackColor}
           layer={layer}
           layerIndex={layerIndex}
         />

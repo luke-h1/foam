@@ -26,6 +26,7 @@ import {
   type PaintBitmaps,
   type PaintImageLayer,
   type PaintLayerSlot,
+  urlSlotNeedsBacking,
 } from './util/skiaPaintedUsernameRasterizer';
 import { useSkiaPaintFontProvider } from './util/skiaPaintFonts';
 
@@ -170,12 +171,7 @@ function renderLayerSlot(
   if (!overlay) {
     return null;
   }
-  /**
-   * The bottom-most opaque URL span already sits on the foundation's base
-   * fill; drawing the backing there too would double-composite a
-   * semi-transparent base colour. Same condition as `needsUrlBacking`.
-   */
-  const needsBacking = index > 0 || slot.layer.opacity < 1;
+  const needsBacking = urlSlotNeedsBacking(index, slot.layer);
   return (
     <UrlLayerSpan
       // Static, never-reordered list

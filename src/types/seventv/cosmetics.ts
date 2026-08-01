@@ -132,9 +132,9 @@ export interface PaintLayerData {
   size: [number, number] | null;
   /**
    * v4 per-layer opacity (0-1); the whole layer span fades by this amount.
-   * Absent on v3-era data, which renderers treat as 1.
+   * v3-era data carries no opacity; normalization defaults it to 1.
    */
-  opacity?: number;
+  opacity: number;
 }
 
 export interface PaintTextStroke {

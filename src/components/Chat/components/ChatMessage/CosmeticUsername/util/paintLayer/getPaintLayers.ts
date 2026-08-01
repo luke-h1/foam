@@ -44,6 +44,7 @@ function computePaintLayers(paint: PaintData): PaintLayerData[] {
       canvas_repeat: 'unset',
       at: null,
       size: null,
+      opacity: 1,
     },
   ];
 }

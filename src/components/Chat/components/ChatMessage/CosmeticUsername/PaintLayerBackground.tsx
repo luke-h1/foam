@@ -27,7 +27,6 @@ interface PaintLayerBackgroundProps {
    * and an upper layer covers lower ones with the base colour.
    */
   baseColor: string;
-  fallbackColor: string;
   layer: PaintLayerData;
   layerIndex: number;
 }
@@ -35,7 +34,6 @@ interface PaintLayerBackgroundProps {
 export function PaintLayerBackground({
   baseColor,
   layer,
-  fallbackColor,
   layerIndex,
 }: PaintLayerBackgroundProps) {
   const gradientId = `paint-layer-${layerIndex}`;
@@ -44,8 +42,8 @@ export function PaintLayerBackground({
     height: number;
   } | null>(null);
   const layoutStyle = getLayerLayoutStyle(layer);
-  const layerOpacity = layer.opacity ?? 1;
-  const gradientConfig = buildLayerGradientConfig(layer, fallbackColor);
+  const layerOpacity = layer.opacity;
+  const gradientConfig = buildLayerGradientConfig(layer);
   const isRadial = layer.function === 'RADIAL_GRADIENT';
   const isAssetPaint = layer.function === 'URL' && Boolean(layer.image_url);
   const isEllipse = layer.shape === 'ellipse';
@@ -80,6 +78,10 @@ export function PaintLayerBackground({
         style={styles.fill}
       />
     );
+  } else if (!gradientConfig) {
+    // Invalid gradient (fewer than two stops): the span keeps only its
+    // base-colour backing, like the reference's invalid background-image.
+    content = null;
   } else if (isRadial) {
     // CSS radial-gradient default sizing is farthest-corner, which needs the
     // rendered layer size in pixels to resolve to a true circle.

@@ -6,7 +6,7 @@ import type { PaintLayerData } from '@app/types/seventv/cosmetics';
  * fully transparent layers, which render as nothing.
  */
 export function isRenderablePaintLayer(layer: PaintLayerData): boolean {
-  if ((layer.opacity ?? 1) <= 0) {
+  if (layer.opacity <= 0) {
     return false;
   }
   if (layer.function === 'URL') {
