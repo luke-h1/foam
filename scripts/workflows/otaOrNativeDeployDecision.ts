@@ -1,4 +1,4 @@
-import { appendVariant } from './variant';
+import { appendVariant, getVariantMeta } from './variant';
 
 export type DeployType = 'ota' | 'build';
 export type ManualDeployType = DeployType | 'auto';
@@ -76,6 +76,24 @@ export function decideDeployType(
   return fingerprintChanged ? 'build' : 'ota';
 }
 
+/**
+ * Tag marking the commit an OTA update was published from, e.g.
+ * `ota-production-1.0.1-457`. The run number is monotonic per workflow, so the
+ * highest-numbered `ota-<variant>-<version>-*` tag is the latest OTA live on
+ * that channel for that version - which is the commit a hotfix must branch from
+ * (see scripts/hotfix.sh). The EAS update group id is not in the name (it goes
+ * in the tag's annotation) so the tag stays sortable and changelog-friendly.
+ */
+export function getOtaReleaseTag(input: {
+  variant: string;
+  version: string;
+  runNumber: number;
+}): string {
+  getVariantMeta(input.variant);
+
+  return `ota-${input.variant}-${input.version}-${input.runNumber}`;
+}
+
 export function getPreliminaryReleaseTag(
   version: string,
   deployType: DeployType,
@@ -91,7 +109,11 @@ export function getFinalReleaseTag(input: {
   runNumber: number;
 }): string {
   if (input.deployType === 'ota') {
-    return 'ota-pending';
+    return getOtaReleaseTag({
+      variant: input.variant,
+      version: input.version,
+      runNumber: input.runNumber,
+    });
   }
 
   return appendVariant(input.version, input.variant);
