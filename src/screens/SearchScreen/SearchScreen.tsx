@@ -9,7 +9,13 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react';
-import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
+import {
+  RefreshControl,
+  type StyleProp,
+  StyleSheet,
+  View,
+  type ViewStyle,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native-gesture-handler';
 
@@ -148,6 +154,16 @@ function writeSearchHistoryQuery(query: string) {
 }
 
 const isAndroid = process.env.EXPO_OS === 'android';
+const isIOS = process.env.EXPO_OS === 'ios';
+
+/**
+ * Leading inset that aligns row separators with the text column: the row's
+ * horizontal padding plus the 55pt `sm` LiveStreamImage thumbnail and its
+ * trailing margin.
+ */
+const RESULT_THUMBNAIL_WIDTH = 55;
+const RESULT_SEPARATOR_INSET =
+  theme.space16 + RESULT_THUMBNAIL_WIDTH + theme.space16;
 
 function ResultRow({
   children,
@@ -211,8 +227,7 @@ export function SearchScreen() {
     );
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  const [search] = useDebouncedCallback(async (value: string) => {
+  const performSearch = useCallback(async (value: string) => {
     if (value.length < 2) {
       startTransition(() => {
         setState(state => ({
@@ -238,7 +253,25 @@ export function SearchScreen() {
     });
 
     writeSearchHistoryQuery(value);
-  }, 400);
+  }, []);
+
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  const [search] = useDebouncedCallback(performSearch, 400);
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    const normalizedQuery = query.trim();
+    if (normalizedQuery.length < 2) {
+      return;
+    }
+    setIsRefreshing(true);
+    try {
+      await performSearch(normalizedQuery);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [performSearch, query]);
 
   const handleClearSearch = useCallback(() => {
     searchBarRef.current?.clearText();
@@ -404,16 +437,8 @@ export function SearchScreen() {
   const showSearchHistory =
     query.trim().length === 0 && searchHistoryQueries.length > 0;
 
-  return (
-    <View style={styles.container}>
-      <SearchInputBar
-        ref={searchBarRef}
-        onCancel={handleClearSearch}
-        onChangeText={handleTextChange}
-        onSubmit={handleSearchSubmit}
-        placeholder={t('searchPlaceholder')}
-        value={query}
-      />
+  const listHeader = (
+    <View>
       <SearchHeader
         activeResults={activeResults}
         handleFilterChange={handleFilterChange}
@@ -429,15 +454,30 @@ export function SearchScreen() {
           onSelectItem={handleSearchHistorySelect}
           onClearItem={handleSearchHistoryClearItem}
         />
-      ) : (
-        <SearchResultsList
-          activeResults={activeResults}
-          listRef={listRef}
-          renderCategoryItem={renderCategoryItem}
-          renderItem={renderItem}
-          selectedFilter={selectedFilter}
-        />
-      )}
+      ) : null}
+    </View>
+  );
+
+  return (
+    <View style={styles.container}>
+      <SearchInputBar
+        ref={searchBarRef}
+        onCancel={handleClearSearch}
+        onChangeText={handleTextChange}
+        onSubmit={handleSearchSubmit}
+        placeholder={t('searchPlaceholder')}
+        value={query}
+      />
+      <SearchResultsList
+        activeResults={activeResults}
+        listHeader={listHeader}
+        listRef={listRef}
+        onRefresh={handleRefresh}
+        refreshing={isRefreshing}
+        renderCategoryItem={renderCategoryItem}
+        renderItem={renderItem}
+        selectedFilter={selectedFilter}
+      />
     </View>
   );
 }
@@ -508,7 +548,10 @@ function SearchHeader({
 
 type SearchResultsListProps = {
   activeResults: SearchItem[];
+  listHeader: React.ReactElement;
   listRef: RefObject<FlashListRef<SearchItem> | null>;
+  onRefresh: () => Promise<void>;
+  refreshing: boolean;
   renderCategoryItem: ListRenderItem<Category>;
   renderItem: ListRenderItem<SearchChannelResponse>;
   selectedFilter: SearchFilter;
@@ -516,23 +559,44 @@ type SearchResultsListProps = {
 
 function SearchResultsList({
   activeResults,
+  listHeader,
   listRef,
+  onRefresh,
+  refreshing,
   renderCategoryItem,
   renderItem,
   selectedFilter,
 }: SearchResultsListProps) {
+  const refreshControl = useMemo(
+    () =>
+      isIOS ? (
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => {
+            void onRefresh();
+          }}
+          tintColor={theme.color.text.dark}
+        />
+      ) : undefined,
+    [onRefresh, refreshing],
+  );
+
   return (
     <FlashList
       ref={listRef}
       getItemType={item =>
         isSearchChannelItem(item) ? 'search-channel' : 'search-category'
       }
-      showsVerticalScrollIndicator={false}
+      indicatorStyle='white'
       contentInsetAdjustmentBehavior='automatic'
       ItemSeparatorComponent={ResultSeparator}
       data={activeResults}
       keyboardDismissMode='on-drag'
       keyboardShouldPersistTaps='handled'
+      ListHeaderComponent={listHeader}
+      refreshControl={refreshControl}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
       renderItem={
         selectedFilter === 'channels'
           ? (renderItem as ListRenderItem<SearchChannelResponse | Category>)
@@ -611,7 +675,7 @@ const styles = StyleSheet.create({
   separator: {
     backgroundColor: theme.color.border.dark,
     height: StyleSheet.hairlineWidth,
-    marginStart: 91,
+    marginStart: RESULT_SEPARATOR_INSET,
   },
   sectionHeader: {
     gap: 2,
@@ -620,5 +684,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     letterSpacing: 1,
+    textTransform: 'uppercase',
   },
 });

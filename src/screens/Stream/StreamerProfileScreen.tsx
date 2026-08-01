@@ -1,9 +1,14 @@
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
-import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  Platform,
+  RefreshControl,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { router } from 'expo-router';
+import { router, Stack } from 'expo-router';
 
 import { Button } from '@app/components/Button/Button';
 import {
@@ -25,7 +30,6 @@ import { useFlattenedInfiniteQuery } from '@app/hooks/useFlattenedInfiniteQuery'
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import i18next from '@app/i18n/i18next';
-import { PlayerBackButton } from '@app/screens/Stream/components/PlayerBackButton';
 import { theme } from '@app/styles/themes';
 import type { StreamElementsChatStats } from '@app/types/streamelements/stats';
 import type { TwitchClip } from '@app/types/twitch/clip';
@@ -188,27 +192,9 @@ function StreamerProfileHeader({
   user: UserInfoResponse;
 }) {
   const { t } = useTranslation('stream');
-  const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.header, { paddingTop: insets.top + theme.space16 }]}>
-      <View style={styles.navRow}>
-        <PlayerBackButton />
-        <IconButton
-          icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}
-          label={t('shareUser', { name: user.display_name })}
-          onPress={() => {
-            void shareDeepLink({
-              kind: 'streamer',
-              login: user.login,
-              displayName: user.display_name,
-            });
-          }}
-          size='2xl'
-          style={styles.closeButton}
-        />
-      </View>
-
+    <View style={styles.header}>
       <View style={styles.profileRow}>
         <Image
           source={user.profile_image_url}
@@ -497,6 +483,42 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
   const handleLoadMore = isVods ? handleLoadMoreVods : handleLoadMoreClips;
   const refetchTab = isVods ? videosQuery.refetch : clipsQuery.refetch;
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refetchTab();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetchTab]);
+
+  const handleShare = useCallback(() => {
+    if (!user) {
+      return;
+    }
+    void shareDeepLink({
+      kind: 'streamer',
+      login: user.login,
+      displayName: user.display_name,
+    });
+  }, [user]);
+
+  const refreshControl = useMemo(
+    () =>
+      Platform.OS === 'ios' ? (
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={() => {
+            void handleRefresh();
+          }}
+          tintColor={theme.color.text.dark}
+        />
+      ) : undefined,
+    [handleRefresh, isRefreshing],
+  );
+
   if (isUserLoading) {
     return <LoadingState />;
   }
@@ -524,14 +546,27 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen
+        options={{
+          title: user.display_name,
+          headerRight: () => (
+            <IconButton
+              icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}
+              label={t('shareUser', { name: user.display_name })}
+              onPress={handleShare}
+              size='2xl'
+            />
+          ),
+        }}
+      />
       <FlashList<ProfileListItem>
         ref={listRef}
         data={items}
         extraData={listExtraData}
-        key={`${activeTab}-${columns}`}
+        key={`columns-${columns}`}
         numColumns={columns}
         contentInsetAdjustmentBehavior='automatic'
-        showsVerticalScrollIndicator={false}
+        indicatorStyle='white'
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={listHeader}
         ListEmptyComponent={
@@ -551,6 +586,9 @@ export function StreamerProfileScreen({ id }: StreamerProfileScreenProps) {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.4}
+        refreshControl={refreshControl}
+        refreshing={isRefreshing}
+        onRefresh={handleRefresh}
       />
     </View>
   );
@@ -589,15 +627,6 @@ const styles = StyleSheet.create({
     gap: 2,
     minWidth: 0,
   },
-  closeButton: {
-    alignItems: 'center',
-    backgroundColor: theme.darkActiveContent,
-    borderColor: theme.colorBorderSecondary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius999,
-    borderWidth: 1,
-    justifyContent: 'center',
-  },
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
@@ -618,6 +647,7 @@ const styles = StyleSheet.create({
   header: {
     paddingBottom: theme.space20,
     paddingHorizontal: theme.space20,
+    paddingTop: theme.space16,
   },
   listContent: {
     paddingBottom: theme.space36,
@@ -625,13 +655,6 @@ const styles = StyleSheet.create({
   inlineLoading: {
     backgroundColor: 'transparent',
     flex: 0,
-  },
-  navRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.space12,
-    justifyContent: 'space-between',
-    marginBottom: theme.space12,
   },
   profileCopy: {
     flex: 1,

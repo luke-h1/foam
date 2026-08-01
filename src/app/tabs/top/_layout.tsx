@@ -2,7 +2,11 @@ import { useTranslation } from 'react-i18next';
 
 import { Stack } from 'expo-router';
 
-import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
+import { StreamListLayoutMenu } from '@app/components/StreamListLayoutToggle/StreamListLayoutMenu';
+import {
+  nativeStackScreenOptions,
+  nativeStackTabRootScreenOptions,
+} from '@app/utils/navigation/nativeStackOptions';
 
 export default function TopLayout() {
   const { t } = useTranslation('navigation');
@@ -12,8 +16,8 @@ export default function TopLayout() {
         name='index'
         options={{
           title: t('top'),
-          headerLargeTitle: false,
-          headerTransparent: false,
+          ...nativeStackTabRootScreenOptions,
+          headerRight: () => <StreamListLayoutMenu />,
         }}
       />
       <Stack.Screen

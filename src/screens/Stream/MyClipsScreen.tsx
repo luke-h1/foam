@@ -1,5 +1,5 @@
-import { memo, useCallback, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { memo, useCallback, useMemo, useState } from 'react';
+import { Platform, RefreshControl, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { useQuery } from '@tanstack/react-query';
@@ -94,12 +94,37 @@ export function MyClipsScreen() {
   const records = useCreatedClips();
   const clipIds = useMemo(() => records.map(record => record.id), [records]);
 
-  const { data: clips } = useQuery({
+  const { data: clips, refetch } = useQuery({
     queryKey: twitchKeys.clipsByIds(clipIds),
     queryFn: () => twitchService.getClipsByIds(clipIds),
     enabled: clipIds.length > 0,
     staleTime: 60_000,
   });
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetch]);
+
+  const refreshControl = useMemo(
+    () =>
+      Platform.OS === 'ios' ? (
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={() => {
+            void handleRefresh();
+          }}
+          tintColor={theme.color.text.dark}
+        />
+      ) : undefined,
+    [handleRefresh, isRefreshing],
+  );
 
   const rows = useMemo<MyClipListItem[]>(() => {
     const clipsById = new Map(
@@ -131,6 +156,9 @@ export function MyClipsScreen() {
         contentInsetAdjustmentBehavior='automatic'
         renderItem={renderMyClipRow}
         contentContainerStyle={styles.listContent}
+        refreshControl={refreshControl}
+        refreshing={isRefreshing}
+        onRefresh={handleRefresh}
       />
     </View>
   );
