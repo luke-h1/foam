@@ -11,6 +11,7 @@ import {
 interface FakeEntry extends DisposablePaintBitmaps {
   staticImage: { dispose: jest.Mock };
   maskImage: { dispose: jest.Mock };
+  backingImage: { dispose: jest.Mock };
   strokeImage: { dispose: jest.Mock };
   layerSlots: { kind: 'baked'; image: { dispose: jest.Mock } }[];
 }
@@ -19,6 +20,7 @@ function createEntry({ bakedLayers = 0 }: { bakedLayers?: number } = {}) {
   return {
     staticImage: { dispose: jest.fn() },
     maskImage: { dispose: jest.fn() },
+    backingImage: { dispose: jest.fn() },
     strokeImage: { dispose: jest.fn() },
     layerSlots: Array.from({ length: bakedLayers }, () => ({
       kind: 'baked' as const,
@@ -31,6 +33,7 @@ function disposeCallCounts(entry: FakeEntry) {
   return {
     staticImage: entry.staticImage.dispose.mock.calls.length,
     maskImage: entry.maskImage.dispose.mock.calls.length,
+    backingImage: entry.backingImage.dispose.mock.calls.length,
     strokeImage: entry.strokeImage.dispose.mock.calls.length,
     bakedLayers: entry.layerSlots.map(
       slot => slot.image.dispose.mock.calls.length,
@@ -77,6 +80,7 @@ describe('paintBitmapCacheLifecycle', () => {
     expect(disposeCallCounts(evicted)).toEqual({
       staticImage: 1,
       maskImage: 1,
+      backingImage: 1,
       strokeImage: 1,
       bakedLayers: [1, 1],
     });
@@ -95,6 +99,7 @@ describe('paintBitmapCacheLifecycle', () => {
     expect(disposeCallCounts(retained)).toEqual({
       staticImage: 0,
       maskImage: 0,
+      backingImage: 0,
       strokeImage: 0,
       bakedLayers: [0],
     });
@@ -116,6 +121,7 @@ describe('paintBitmapCacheLifecycle', () => {
     expect(disposeCallCounts(retained)).toEqual({
       staticImage: 0,
       maskImage: 0,
+      backingImage: 0,
       strokeImage: 0,
       bakedLayers: [0],
     });
@@ -125,6 +131,7 @@ describe('paintBitmapCacheLifecycle', () => {
     expect(disposeCallCounts(retained)).toEqual({
       staticImage: 1,
       maskImage: 1,
+      backingImage: 1,
       strokeImage: 1,
       bakedLayers: [1],
     });
@@ -141,6 +148,7 @@ describe('paintBitmapCacheLifecycle', () => {
     expect(disposeCallCounts(cached)).toEqual({
       staticImage: 0,
       maskImage: 0,
+      backingImage: 0,
       strokeImage: 0,
       bakedLayers: [],
     });
@@ -173,6 +181,7 @@ describe('paintBitmapCacheLifecycle', () => {
     expect(disposeCallCounts(cleared)).toEqual({
       staticImage: 1,
       maskImage: 1,
+      backingImage: 1,
       strokeImage: 1,
       bakedLayers: [1],
     });
@@ -190,6 +199,7 @@ describe('paintBitmapCacheLifecycle', () => {
     expect(disposeCallCounts(onScreen)).toEqual({
       staticImage: 0,
       maskImage: 0,
+      backingImage: 0,
       strokeImage: 0,
       bakedLayers: [],
     });
@@ -199,6 +209,7 @@ describe('paintBitmapCacheLifecycle', () => {
     expect(disposeCallCounts(onScreen)).toEqual({
       staticImage: 1,
       maskImage: 1,
+      backingImage: 1,
       strokeImage: 1,
       bakedLayers: [],
     });
@@ -221,6 +232,7 @@ describe('paintBitmapCacheLifecycle', () => {
     expect(disposeCallCounts(disposed)).toEqual({
       staticImage: 1,
       maskImage: 1,
+      backingImage: 1,
       strokeImage: 1,
       bakedLayers: [],
     });
@@ -250,6 +262,7 @@ describe('paintBitmapCacheLifecycle', () => {
     expect(disposeCallCounts(evicted)).toEqual({
       staticImage: 0,
       maskImage: 0,
+      backingImage: 0,
       strokeImage: 0,
       bakedLayers: [],
     });
@@ -259,6 +272,7 @@ describe('paintBitmapCacheLifecycle', () => {
     expect(disposeCallCounts(evicted)).toEqual({
       staticImage: 1,
       maskImage: 1,
+      backingImage: 1,
       strokeImage: 1,
       bakedLayers: [],
     });

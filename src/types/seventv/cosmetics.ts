@@ -130,6 +130,11 @@ export interface PaintLayerData {
   canvas_repeat: PaintCanvasRepeat;
   at: [number, number] | null;
   size: [number, number] | null;
+  /**
+   * v4 per-layer opacity (0-1); the whole layer span fades by this amount.
+   * Absent on v3-era data, which renderers treat as 1.
+   */
+  opacity?: number;
 }
 
 export interface PaintTextStroke {

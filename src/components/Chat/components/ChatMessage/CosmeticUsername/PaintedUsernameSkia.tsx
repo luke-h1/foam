@@ -4,9 +4,11 @@ import { PixelRatio } from 'react-native';
 import {
   Canvas,
   Fill,
+  Group,
   Image,
   ImageShader,
   Mask,
+  Skia,
 } from '@shopify/react-native-skia';
 
 import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/RichChatMessage.styles';
@@ -111,12 +113,12 @@ function paintImageLayerKey(layer: PaintImageLayer): string {
     layer.rect
       ? `${layer.rect.x},${layer.rect.y},${layer.rect.width},${layer.rect.height}`
       : '',
+    layer.opacity,
   ].join('|');
 }
 
 function renderUrlLayerOverlay(
   layer: PaintImageLayer,
-  index: number,
   maskNode: ReactNode,
 ): ReactNode {
   if (!maskNode) {
@@ -125,9 +127,6 @@ function renderUrlLayerOverlay(
   if (layer.tile) {
     return (
       <TiledPaintLayerOverlay
-        // Static, never-reordered list
-        // eslint-disable-next-line react-doctor/no-array-index-as-key
-        key={`url-${index}|${paintImageLayerKey(layer)}`}
         url={layer.url}
         tile={layer.tile}
         maskNode={maskNode}
@@ -137,9 +136,6 @@ function renderUrlLayerOverlay(
   if (layer.rect) {
     return (
       <StretchPaintLayerOverlay
-        // Static, never-reordered list
-        // eslint-disable-next-line react-doctor/no-array-index-as-key
-        key={`url-${index}|${paintImageLayerKey(layer)}`}
         url={layer.url}
         rect={layer.rect}
         maskNode={maskNode}
@@ -170,7 +166,54 @@ function renderLayerSlot(
       />
     );
   }
-  return renderUrlLayerOverlay(slot.layer, index, maskNode);
+  const overlay = renderUrlLayerOverlay(slot.layer, maskNode);
+  if (!overlay) {
+    return null;
+  }
+  return (
+    <UrlLayerSpan
+      // Static, never-reordered list
+      // eslint-disable-next-line react-doctor/no-array-index-as-key
+      key={`url-${index}|${paintImageLayerKey(slot.layer)}`}
+      opacity={slot.layer.opacity}
+    >
+      {bitmaps.backingImage ? (
+        <Image
+          image={bitmaps.backingImage}
+          x={0}
+          y={0}
+          width={bitmaps.width}
+          height={bitmaps.height}
+          fit='fill'
+        />
+      ) : null}
+      {overlay}
+    </UrlLayerSpan>
+  );
+}
+
+/**
+ * One URL layer span: base-colour backing under the texture, faded together
+ * by the layer opacity. `layer` forces a real saveLayer so the fade applies
+ * to the flattened span, not to backing and texture independently.
+ */
+function UrlLayerSpan({
+  opacity,
+  children,
+}: {
+  opacity: number;
+  children: ReactNode;
+}) {
+  const layerPaint = useMemo(() => {
+    if (opacity >= 1) {
+      return false;
+    }
+    const paint = Skia.Paint();
+    paint.setAlphaf(opacity);
+    return paint;
+  }, [opacity]);
+
+  return <Group layer={layerPaint}>{children}</Group>;
 }
 
 /**

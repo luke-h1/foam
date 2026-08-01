@@ -16,7 +16,8 @@ describe('buildPaintCssDeclarations', () => {
         makeLayer({
           function: 'LINEAR_GRADIENT',
           angle: 90,
-          // Out of order on purpose: stops must be sorted by position.
+          // Out of order on purpose: stops are emitted in written order and
+          // the browser clamps positions, exactly like the reference CSS.
           stops: toIndexed([
             { at: 1, color: BLUE },
             { at: 0, color: RED },
@@ -31,7 +32,7 @@ describe('buildPaintCssDeclarations', () => {
     expect(buildPaintCssDeclarations(paint)).toEqual<PaintCssDeclarations>({
       color: 'inherit',
       backgroundImage:
-        'linear-gradient(90deg, rgba(255, 0, 0, 1.000) 0%, rgba(0, 0, 255, 1.000) 100%)',
+        'linear-gradient(90deg, rgba(0, 0, 255, 1.000) 100%, rgba(255, 0, 0, 1.000) 0%)',
       backgroundPosition: '0% 0%',
       backgroundSize: 'auto',
       backgroundRepeat: 'unset',

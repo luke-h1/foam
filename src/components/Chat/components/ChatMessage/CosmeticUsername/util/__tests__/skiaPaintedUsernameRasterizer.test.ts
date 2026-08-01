@@ -43,6 +43,7 @@ describe('buildPaintImageLayers', () => {
         url: 'https://cdn.7tv.app/paint/abc/1x.webp',
         rect: { x: 5, y: 3, width: 50, height: 20 },
         tile: null,
+        opacity: 1,
       },
     ]);
   });
@@ -63,6 +64,7 @@ describe('buildPaintImageLayers', () => {
         url: 'https://cdn.7tv.app/paint/abc/1x.webp',
         rect: null,
         tile: { tx: 'repeat', ty: 'decal' },
+        opacity: 1,
       },
     ]);
   });
@@ -80,6 +82,7 @@ describe('buildPaintImageLayers', () => {
         url: 'https://cdn.7tv.app/paint/abc/1x.webp',
         rect: { x: 5, y: 3, width: 50, height: 20 },
         tile: null,
+        opacity: 1,
       },
     ]);
   });
@@ -109,11 +112,38 @@ describe('buildPaintImageLayers', () => {
         url: 'https://cdn.7tv.app/paint/bottom/1x.webp',
         rect: null,
         tile: { tx: 'repeat', ty: 'repeat' },
+        opacity: 1,
       },
       {
         url: 'https://cdn.7tv.app/paint/top/1x.webp',
         rect: { x: 5, y: 3, width: 50, height: 20 },
         tile: null,
+        opacity: 1,
+      },
+    ]);
+  });
+
+  test('threads v4 layer opacity through and skips fully transparent layers', () => {
+    const layers = buildPaintImageLayers({
+      ...layoutBox,
+      layers: [
+        createLayer({
+          image_url: 'https://cdn.7tv.app/paint/faded/1x.webp',
+          opacity: 0.5,
+        }),
+        createLayer({
+          image_url: 'https://cdn.7tv.app/paint/hidden/1x.webp',
+          opacity: 0,
+        }),
+      ],
+    });
+
+    expect(layers).toEqual<PaintImageLayer[]>([
+      {
+        url: 'https://cdn.7tv.app/paint/faded/1x.webp',
+        rect: { x: 5, y: 3, width: 50, height: 20 },
+        tile: null,
+        opacity: 0.5,
       },
     ]);
   });
@@ -169,10 +199,64 @@ describe('planPaintLayerSlotKinds', () => {
     expect(
       planPaintLayerSlotKinds([
         createLayer({ image_url: 'https://cdn.7tv.app/paint/top/1x.webp' }),
-        createLayer({ function: 'LINEAR_GRADIENT' }),
-        createLayer({ function: 'RADIAL_GRADIENT' }),
+        createLayer({
+          function: 'LINEAR_GRADIENT',
+          stops: {
+            0: { at: 0, color: 0xff0000ff },
+            1: { at: 1, color: 0x0000ffff },
+            length: 2,
+          },
+        }),
+        createLayer({
+          function: 'RADIAL_GRADIENT',
+          stops: {
+            0: { at: 0, color: 0xff0000ff },
+            1: { at: 1, color: 0x0000ffff },
+            length: 2,
+          },
+        }),
         createLayer({ image_url: 'https://cdn.7tv.app/paint/bottom/1x.webp' }),
       ]),
     ).toEqual(['url', 'baked', 'url']);
+  });
+
+  test('renders no span for zero-stop gradients or fully transparent layers', () => {
+    expect(
+      planPaintLayerSlotKinds([
+        createLayer({ function: 'LINEAR_GRADIENT' }),
+        createLayer({
+          image_url: 'https://cdn.7tv.app/paint/hidden/1x.webp',
+          opacity: 0,
+        }),
+        createLayer({ image_url: 'https://cdn.7tv.app/paint/shown/1x.webp' }),
+      ]),
+    ).toEqual(['url']);
+  });
+
+  test('a dead URL layer does not split a gradient batch', () => {
+    expect(
+      planPaintLayerSlotKinds([
+        createLayer({
+          function: 'LINEAR_GRADIENT',
+          stops: {
+            0: { at: 0, color: 0xff0000ff },
+            1: { at: 1, color: 0x0000ffff },
+            length: 2,
+          },
+        }),
+        createLayer({
+          image_url: 'https://cdn.7tv.app/paint/hidden/1x.webp',
+          opacity: 0,
+        }),
+        createLayer({
+          function: 'RADIAL_GRADIENT',
+          stops: {
+            0: { at: 0, color: 0xff0000ff },
+            1: { at: 1, color: 0x0000ffff },
+            length: 2,
+          },
+        }),
+      ]),
+    ).toEqual(['baked']);
   });
 });

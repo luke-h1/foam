@@ -15,6 +15,7 @@ export type PaintGradientLayer = {
   shape?: string;
   angle?: number;
   repeat?: boolean;
+  opacity?: number;
 };
 
 export type RawSevenTvPaintInput = Partial<PaintData> & {

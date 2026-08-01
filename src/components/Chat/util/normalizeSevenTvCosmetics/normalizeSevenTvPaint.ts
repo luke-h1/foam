@@ -93,6 +93,7 @@ function normalizePaintLayer(layer: PaintGradientLayer): PaintLayerData {
       layer.size && layer.size.length === 2
         ? [layer.size[0], layer.size[1]]
         : null,
+    opacity: layer.opacity ?? 1,
   };
 }
 
