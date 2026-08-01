@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import {
   Alert,
+  AppState,
   Modal as RNModal,
   Platform,
   StyleSheet,
@@ -15,7 +16,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { getStoreUrlAsync } from '@app/screens/DevTools/util/getStoreUrlAsync';
 import { theme } from '@app/styles/themes';
-import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import { openLinkInBrowserAsync } from '@app/utils/browser/openLinkInBrowser';
 import { isUpdateRequired } from '@app/utils/version/compareVersions';
 import { getMinimumVersion } from '@app/utils/version/getMinimumVersion';
 
@@ -25,13 +26,14 @@ import { Button } from '../Button/Button';
 async function handleUpdatePress() {
   const storeUrl = await getStoreUrlAsync();
   if (storeUrl) {
-    openLinkInBrowser(storeUrl);
+    await openLinkInBrowserAsync(storeUrl);
   }
 }
 
 const UPDATE_REQUIRED_TITLE = 'Update Required';
 const UPDATE_REQUIRED_BODY =
   'A new version of Foam is available. Please update to continue using the app.';
+const ALERT_REPRESENT_DELAY_MS = 300;
 
 export function ForceUpdateModal() {
   const { config: remoteConfig } = useRemoteConfig();
@@ -52,6 +54,15 @@ export function ForceUpdateModal() {
       return;
     }
 
+    let alertTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const scheduleAlert = () => {
+      if (alertTimer) {
+        clearTimeout(alertTimer);
+      }
+      alertTimer = setTimeout(presentAlert, ALERT_REPRESENT_DELAY_MS);
+    };
+
     const presentAlert = () => {
       Alert.alert(
         UPDATE_REQUIRED_TITLE,
@@ -60,14 +71,29 @@ export function ForceUpdateModal() {
           {
             text: 'Update',
             onPress: () => {
-              void handleUpdatePress().finally(presentAlert);
+              void handleUpdatePress().finally(scheduleAlert);
             },
           },
         ],
       );
     };
 
-    presentAlert();
+    const appStateSubscription = AppState.addEventListener('change', state => {
+      if (state === 'active') {
+        scheduleAlert();
+      }
+    });
+
+    if (AppState.currentState === 'active') {
+      presentAlert();
+    }
+
+    return () => {
+      appStateSubscription.remove();
+      if (alertTimer) {
+        clearTimeout(alertTimer);
+      }
+    };
   }, [updateRequired, currentVersion, minimumVersion]);
 
   if (Platform.OS === 'ios') {
