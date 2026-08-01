@@ -27,12 +27,49 @@
 - **infrastructure:** Update reassure ([#784](https://github.com/lhowsam/foam/issues/784))
 - **infrastructure:** Create FUNDING.yml ([#790](https://github.com/lhowsam/foam/issues/790))
 
-## 1.0.6 (Internal)
+## 1.0.6 (TestFlight)
+
+### ♻️ Refactor
+
+- **infrastructure:** Speed up ci and fix workflow bugs ([#807](https://github.com/lhowsam/foam/issues/807))
+
+### ⚡ Performance
+
+- **chat:** Stop mention autocomplete rebuilding a collator per comparison ([#804](https://github.com/lhowsam/foam/issues/804))
 
 ### 🐛 Bug Fixes
 
 - Android player freeze, android chat long-press, ios emote sheet hang ([#795](https://github.com/lhowsam/foam/issues/795))
 - **chat:** Swap bottom sheets onto @expo/ui for the time being ([#798](https://github.com/lhowsam/foam/issues/798))
+- **haptics:** Replace expo-haptics with react-native-pulsar ([#801](https://github.com/lhowsam/foam/issues/801))
+- **emotes:** Avoid main-thread WebP decoding for FFZ emotes ([#802](https://github.com/lhowsam/foam/issues/802))
+- **chat:** Stop the emote sheet freezing on provider tab switch ([#803](https://github.com/lhowsam/foam/issues/803))
+- **chat:** Tint the composer caret and selection with the accent ([#805](https://github.com/lhowsam/foam/issues/805))
+- **chat:** Match 7tv paint rendering to the reference span model ([#806](https://github.com/lhowsam/foam/issues/806))
+
+### 📦 Dependencies
+
+- **deps:** Bump expo/expo-github-action from 8.2.1 to 9.0.0 ([#809](https://github.com/lhowsam/foam/issues/809))
+- **deps:** Bump actions/download-artifact from 4.3.0 to 8.0.1 ([#810](https://github.com/lhowsam/foam/issues/810))
+- **deps:** Bump actions/upload-artifact from 4.6.2 to 7.0.1 ([#812](https://github.com/lhowsam/foam/issues/812))
+- **deps:** Bump zizmorcore/zizmor-action from 0.5.3 to 0.6.1 ([#811](https://github.com/lhowsam/foam/issues/811))
+- **deps:** Bump actions/checkout from 6.0.3 to 7.0.1 ([#808](https://github.com/lhowsam/foam/issues/808))
+
+### 🔧 Miscellaneous Tasks
+
+- **app:** Revert bottom sheet ([#799](https://github.com/lhowsam/foam/issues/799))
+- **app:** Try true sheet ([#800](https://github.com/lhowsam/foam/issues/800))
+- **ci:** Swift + kotlin linting with commit hooks ([#763](https://github.com/lhowsam/foam/issues/763))
+- **infrastructure:** Use infrastructure commit scope for dependabot ([#813](https://github.com/lhowsam/foam/issues/813))
+- **infrastructure:** Bump actions/cache/restore from 4.3.0 to 6.1.0 ([#814](https://github.com/lhowsam/foam/issues/814))
+- **infrastructure:** Bump actions/cache/save from 4.3.0 to 6.1.0 ([#817](https://github.com/lhowsam/foam/issues/817))
+- **infrastructure:** Bump peakoss/anti-slop from 753c51043d0c43564e1df382c173233c56cdb5e4 to 57858eead489d08b255fab2af45a506c2ca6eab2 ([#818](https://github.com/lhowsam/foam/issues/818))
+- **infrastructure:** Bump actions/labeler from 4.3.0 to 7.0.0 ([#815](https://github.com/lhowsam/foam/issues/815))
+- **infrastructure:** Bump marocchino/sticky-pull-request-comment from 2.9.4 to 3.0.5 ([#816](https://github.com/lhowsam/foam/issues/816))
+
+## 1.0.6 (Internal)
+
+_No changes in this build beyond the TestFlight build._
 
 ## 1.0.5 (Production)
 
