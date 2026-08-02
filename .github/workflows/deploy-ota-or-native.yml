@@ -40,14 +40,11 @@ on:
         required: false
         type: boolean
         default: false
-      runner:
-        description: 'Runner to use for non-build jobs (use foam when github-hosted runners are degraded)'
+      self_hosted:
+        description: 'Run on the self-hosted foam runner (default is github-hosted)'
         required: false
-        type: choice
-        default: 'github-hosted'
-        options:
-          - github-hosted
-          - foam
+        type: boolean
+        default: false
 
 env:
   EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -62,7 +59,7 @@ concurrency:
 jobs:
   prepare:
     name: 📋 Prepare
-    runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.self_hosted && 'foam' || 'ubuntu-latest' }}
     timeout-minutes: 10
     outputs:
       version: ${{ steps.get_version.outputs.version }}
@@ -87,7 +84,7 @@ jobs:
 
   test:
     name: 🧪 Test
-    runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.self_hosted && 'foam' || 'ubuntu-latest' }}
     timeout-minutes: 20
     steps:
       - name: 🏗 Checkout
@@ -107,7 +104,7 @@ jobs:
   detect-changes:
     name: 🔍 Detect Changes
     needs: [prepare, test]
-    runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.self_hosted && 'foam' || 'ubuntu-latest' }}
     timeout-minutes: 20
     permissions:
       contents: read
@@ -202,7 +199,7 @@ jobs:
     name: 🔨 Native Build
     needs: [prepare, detect-changes]
     if: needs['detect-changes'].outputs['deploy-type'] == 'build'
-    runs-on: foam
+    runs-on: ${{ inputs.self_hosted && 'foam' || 'macos-latest' }}
     timeout-minutes: 90
     concurrency: eas-build-${{ inputs.variant || 'production' }}-${{ inputs.platform || 'ios' }}
     steps:
@@ -281,7 +278,7 @@ jobs:
     name: 📦 OTA Update
     needs: [prepare, detect-changes]
     if: needs['detect-changes'].outputs['deploy-type'] == 'ota'
-    runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.self_hosted && 'foam' || 'ubuntu-latest' }}
     timeout-minutes: 30
     concurrency: eas-update-${{ inputs.variant || 'production' }}-${{ inputs.platform || 'ios' }}
     outputs:
@@ -402,7 +399,7 @@ jobs:
     name: 📝 Changelog / Release
     needs: [prepare, detect-changes, build, ota]
     if: always() && needs['detect-changes'].result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped') && (needs.ota.result == 'success' || needs.ota.result == 'skipped') && !inputs.dry_run
-    runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.self_hosted && 'foam' || 'ubuntu-latest' }}
     timeout-minutes: 20
     permissions:
       contents: write
@@ -496,7 +493,7 @@ jobs:
     name: 📢 Slack Notification
     needs: [release]
     if: always() && needs.release.result == 'success' && !inputs.dry_run
-    runs-on: ${{ inputs.runner == 'foam' && 'foam' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.self_hosted && 'foam' || 'ubuntu-latest' }}
     timeout-minutes: 10
     steps:
       - name: 🏗 Checkout
