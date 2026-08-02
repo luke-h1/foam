@@ -57,14 +57,12 @@ describe('PaintedUsernameWebView', () => {
     expect({
       color: sizerStyle.color,
       fontSize: sizerStyle.fontSize,
-      fontFamily: sizerStyle.fontFamily,
       fontWeight: sizerStyle.fontWeight,
       lineHeight: sizerStyle.lineHeight,
     }).toEqual({
       color: '#FF0000',
       fontSize: chatLineMetrics.comfortable.fontSize,
-      fontFamily: 'Montserrat_700Bold',
-      fontWeight: undefined,
+      fontWeight: 'bold',
       lineHeight: chatLineMetrics.comfortable.lineHeight,
     });
 

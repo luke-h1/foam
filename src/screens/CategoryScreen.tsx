@@ -1,15 +1,14 @@
-import { FC, memo, useCallback, useMemo, useRef, useState } from 'react';
+import { FC, memo, useMemo, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { Stack } from 'expo-router';
+import { router } from 'expo-router';
 
 import {
   FlashList,
   FlashListRef,
   ListRenderItem,
 } from '@app/components/FlashList/FlashList';
-import { IconButton } from '@app/components/IconButton/IconButton';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LoadingState } from '@app/components/LoadingState/LoadingState';
 import { ScreenHeader } from '@app/components/ScreenHeader/ScreenHeader';
@@ -55,8 +54,18 @@ const CategoryStreamsHeader = memo(function CategoryStreamsHeader({
           ?.replace('{width}', '300')
           ?.replace('{height}', '400') ?? ''
       }
-      back={false}
+      onBack={() => router.back()}
       safeArea={false}
+      share={{
+        label: `Share ${category.name}`,
+        onPress: () => {
+          void shareDeepLink({
+            kind: 'category',
+            id: category.id,
+            name: category.name,
+          });
+        },
+      }}
     >
       <View style={styles.sectionHeader}>
         <Text type='sm' weight='semibold' color='gray.textLow'>
@@ -105,24 +114,6 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
     [allStreams],
   );
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    await refetch().finally(() => setIsRefreshing(false));
-  }, [refetch]);
-
-  const handleShare = useCallback(() => {
-    if (!category) {
-      return;
-    }
-    void shareDeepLink({
-      kind: 'category',
-      id: category.id,
-      name: category.name,
-    });
-  }, [category]);
-
   if (isCategoryLoading || isLoadingStreams) {
     return <LoadingState />;
   }
@@ -148,22 +139,10 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen
-        options={{
-          title: category.name,
-          headerRight: () => (
-            <IconButton
-              icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}
-              label={`Share ${category.name}`}
-              onPress={handleShare}
-              size='2xl'
-            />
-          ),
-        }}
-      />
       <FlashList<TwitchStream>
         ref={flashListRef}
         data={allStreams}
+        contentInsetAdjustmentBehavior='automatic'
         keyExtractor={item => item.id}
         renderItem={renderCategoryStreamItem}
         drawDistance={500}
@@ -178,8 +157,6 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
         onEndReachedThreshold={0.3}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={handleLoadMore}
-        refreshing={isRefreshing}
-        onRefresh={handleRefresh}
       />
     </View>
   );

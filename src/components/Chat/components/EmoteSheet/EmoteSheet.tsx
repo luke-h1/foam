@@ -19,21 +19,14 @@ import { ProviderChip } from './ProviderChip';
 import { emoteSheetScrollActivity } from './util/emoteSheetScrollActivity';
 
 export type { EmotePickerItem };
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LayoutChangeEvent } from 'react-native';
 
 import type { LegendListRef } from '@legendapp/list/react-native';
 
-import {
-  EMOTE_SHEET_DETENT,
-  EMOTE_SHEET_HEADER_HEIGHT,
-} from './emoteSheetLayout';
+import { EMOTE_SHEET_DETENT } from './emoteSheetLayout';
 import { useEmoteSheet } from './useEmoteSheet';
-import type { EmoteMenuListItem } from './util/emoteMenuData';
-
-const keyExtractor = (item: EmoteMenuListItem) => item.key;
-const getItemType = (item: EmoteMenuListItem) => item.type;
 
 interface EmoteSheetProps {
   isPresented: boolean;
@@ -62,28 +55,12 @@ export function EmoteSheet({
     layoutWidth,
   });
 
-  const handleContainerLayout = useCallback((event: LayoutChangeEvent) => {
+  const handleContainerLayout = (event: LayoutChangeEvent) => {
     const nextWidth = Math.round(event.nativeEvent.layout.width);
     if (nextWidth > 0) {
       setLayoutWidth(current => (current === nextWidth ? current : nextWidth));
     }
-  }, []);
-
-  const emoteRowSize = sheet.cellSize + 4;
-  const getFixedItemSize = useCallback(
-    (_item: EmoteMenuListItem, _index: number, type: string | undefined) =>
-      type === 'header' ? EMOTE_SHEET_HEADER_HEIGHT : emoteRowSize,
-    [emoteRowSize],
-  );
-
-  const hasSetRail = sheet.filteredSets.length > 1;
-  const listContentStyle = useMemo(
-    () => [
-      styles.listContent,
-      { paddingBottom: theme.space36 + (hasSetRail ? 0 : bottomInset) },
-    ],
-    [hasSetRail, bottomInset],
-  );
+  };
 
   const setRailExtraData = useMemo(
     () => ({
@@ -159,17 +136,25 @@ export function EmoteSheet({
                   ref={emoteListRef}
                   data={sheet.listItems}
                   renderItem={sheet.renderItem}
-                  keyExtractor={keyExtractor}
-                  getItemType={getItemType}
-                  estimatedItemSize={emoteRowSize}
-                  getFixedItemSize={getFixedItemSize}
-                  recycleItems
+                  keyExtractor={item => item.key}
+                  getItemType={item => item.type}
+                  estimatedItemSize={sheet.cellSize + 4}
+                  getFixedItemSize={(_item, _index, type) =>
+                    type === 'header' ? 44 : sheet.cellSize + 4
+                  }
                   onViewableItemsChanged={sheet.onViewableItemsChanged}
                   viewabilityConfig={sheet.viewabilityConfig}
                   onScroll={emoteSheetScrollActivity.poke}
                   scrollEventThrottle={16}
-                  contentContainerStyle={listContentStyle}
-                  drawDistance={emoteRowSize * 3}
+                  contentContainerStyle={[
+                    styles.listContent,
+                    {
+                      paddingBottom:
+                        theme.space36 +
+                        (sheet.filteredSets.length > 1 ? 0 : bottomInset),
+                    },
+                  ]}
+                  drawDistance={(sheet.cellSize + 4) * 3}
                   showsVerticalScrollIndicator
                   nestedScrollEnabled
                   indicatorStyle='white' // todo - once we have light theme, adjust this
@@ -178,7 +163,7 @@ export function EmoteSheet({
               )}
             </View>
 
-            {hasSetRail ? (
+            {sheet.filteredSets.length > 1 ? (
               <View
                 style={[
                   styles.categoryBar,

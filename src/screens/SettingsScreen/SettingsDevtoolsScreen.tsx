@@ -3,6 +3,7 @@ import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import {
+  Button,
   Form,
   Host,
   Section,
@@ -19,8 +20,6 @@ import {
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import { usePreferences } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
-
-import { FormNavigationRow } from './components/FormNavigationRow';
 
 export function SettingsDevtoolsScreen() {
   const { t } = useTranslation('settings');
@@ -40,12 +39,12 @@ export function SettingsDevtoolsScreen() {
       <Host style={styles.iosHost}>
         <Form>
           <Section title={t('diagnostics')}>
-            <FormNavigationRow
+            <Button
               label={t('appDiagnostics')}
               systemImage='stethoscope'
               onPress={() => router.push('/tabs/settings/diagnostics')}
             />
-            <FormNavigationRow
+            <Button
               label={t('remoteConfig')}
               systemImage='cloud'
               onPress={() => router.push('/tabs/settings/remote-config')}
@@ -87,47 +86,47 @@ export function SettingsDevtoolsScreen() {
           </Section>
 
           <Section title={t('developerTools')}>
-            <FormNavigationRow
+            <Button
               label={t('debug')}
               systemImage='ladybug'
               onPress={() => router.push('/tabs/settings/debug')}
             />
-            <FormNavigationRow
+            <Button
               label={t('cachedImages')}
               systemImage='photo.stack'
               onPress={() => router.push('/tabs/settings/cached-images')}
             />
-            <FormNavigationRow
+            <Button
               label={t('changelogDemo')}
               systemImage='list.bullet.rectangle'
               onPress={() => router.push('/dev-tools/changelog')}
             />
-            <FormNavigationRow
+            <Button
               label={t('sentryTest')}
               systemImage='exclamationmark.triangle'
               onPress={() => router.push('/dev-tools/sentry-demo')}
             />
-            <FormNavigationRow
+            <Button
               label={t('imageBenchmark')}
               systemImage='speedometer'
               onPress={() => router.push('/dev-tools/image-benchmark')}
             />
-            <FormNavigationRow
+            <Button
               label={t('chatPerfBurstTest')}
               systemImage='bolt.horizontal'
               onPress={() => router.push('/dev-tools/chat-perf')}
             />
-            <FormNavigationRow
+            <Button
               label={t('envVars')}
               systemImage='doc.text'
               onPress={() => router.push('/dev-tools/env-vars')}
             />
-            <FormNavigationRow
+            <Button
               label={t('channelSurfing')}
               systemImage='antenna.radiowaves.left.and.right'
               onPress={() => router.push('/tabs/settings/channel-surfing')}
             />
-            <FormNavigationRow
+            <Button
               label={t('storybook')}
               systemImage='book.closed'
               onPress={() => router.push('/tabs/settings/storybook')}
@@ -143,7 +142,7 @@ export function SettingsDevtoolsScreen() {
       <ScrollView
         ref={scrollRef}
         contentInsetAdjustmentBehavior='automatic'
-        indicatorStyle='white'
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
         <SettingsSection title={t('diagnostics')}>

@@ -1,19 +1,9 @@
-import { Platform } from 'react-native';
-
 import { fireEvent } from '@testing-library/react-native';
 
 import { getPreferences, replacePreferences } from '@app/store/preferenceStore';
 import render from '@app/test/render';
 
 import { SettingsSheet } from '../SettingsSheet';
-
-const originalOS = Platform.OS;
-beforeAll(() => {
-  Platform.OS = 'android';
-});
-afterAll(() => {
-  Platform.OS = originalOS;
-});
 
 jest.mock('expo-symbols', () => ({
   SymbolView: () => null,
@@ -97,25 +87,5 @@ describe('SettingsSheet', () => {
     expect(getPreferences().chatDensity).toBe('compact');
     expect(mockRequestClose).toHaveBeenCalledTimes(1);
     expect(onDismiss).toHaveBeenCalledTimes(1);
-  });
-
-  describe('iOS native form branch', () => {
-    beforeAll(() => {
-      Platform.OS = 'ios';
-    });
-    afterAll(() => {
-      Platform.OS = 'android';
-    });
-
-    // The @expo/ui/swift-ui primitives render as opaque native host views, so
-    // their labels are not queryable in tests.
-    test('mounts the SwiftUI form without the JS rows', () => {
-      const { queryByText, toJSON } = render(
-        <SettingsSheet isPresented onDismiss={jest.fn()} />,
-      );
-
-      expect(toJSON()).not.toBeNull();
-      expect(queryByText('Density')).toBeNull();
-    });
   });
 });

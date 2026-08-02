@@ -29,20 +29,3 @@ export function selection() {
   }
   Presets.System.selection();
 }
-
-export type NotificationHapticType = 'success' | 'warning' | 'error';
-
-export function notification(type: NotificationHapticType) {
-  if (!hapticsEnabled()) {
-    return;
-  }
-  switch (type) {
-    case 'success':
-      return Presets.System.notificationSuccess();
-    case 'warning':
-      return Presets.System.notificationWarning();
-    case 'error':
-    default:
-      return Presets.System.notificationError();
-  }
-}
