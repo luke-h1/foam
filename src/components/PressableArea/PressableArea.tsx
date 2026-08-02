@@ -8,10 +8,6 @@ import { motion } from '@app/styles/motion';
 
 const isAndroid = process.env.EXPO_OS === 'android';
 
-/**
- * `feedback='highlight'` fills the row background while pressed instead of
- * dimming the content; use it for full-bleed list rows.
- */
 export function PressableArea({
   ref,
   children,
@@ -19,14 +15,9 @@ export function PressableArea({
   onPressOut,
   style,
   android_ripple,
-  feedback = 'dim',
   ...rest
-}: PropsWithChildren<PressableProps> & {
-  ref?: Ref<View>;
-  feedback?: 'dim' | 'highlight';
-}) {
+}: PropsWithChildren<PressableProps> & { ref?: Ref<View> }) {
   const [pressed, setPressed] = useState(false);
-  const iosPressed = pressed && !isAndroid;
 
   return (
     <Pressable
@@ -48,16 +39,8 @@ export function PressableArea({
       }}
     >
       <EaseView
-        animate={
-          feedback === 'highlight'
-            ? {
-                backgroundColor: iosPressed
-                  ? 'rgba(255, 255, 255, 0.08)'
-                  : 'rgba(255, 255, 255, 0)',
-              }
-            : { opacity: iosPressed ? 0.75 : 1 }
-        }
-        transition={{ type: 'timing', duration: motion.instant }}
+        animate={{ opacity: pressed && !isAndroid ? 0.75 : 1 }}
+        transition={{ type: 'timing', duration: motion.fast }}
         style={styles.pressable}
       >
         {children}

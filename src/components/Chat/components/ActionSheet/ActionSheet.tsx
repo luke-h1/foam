@@ -1,6 +1,5 @@
 import { memo, useRef } from 'react';
 import {
-  Platform,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
@@ -13,12 +12,10 @@ import {
   type BottomSheetHandle,
 } from '@app/components/BottomSheet/BottomSheet';
 import { Button } from '@app/components/Button/Button';
-import { useIosActionSheet } from '@app/components/Chat/components/useIosActionSheet';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
-import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 
 import { MessageActionPreview } from './MessageActionPreview';
 
@@ -145,20 +142,29 @@ function ActionSheetComponent(props: Props) {
         id: 'copy',
         label: t('messageActions.copyMessage'),
         subtitle: t('messageActions.copyMessageSubtitle'),
-        onPress: () => onCopy(),
+        onPress: () => {
+          onCopy();
+          requestClose();
+        },
       },
       {
         id: 'reply',
         label: t('messageActions.reply'),
         subtitle: t('messageActions.replySubtitle'),
         tone: 'accent',
-        onPress: () => onReply(),
+        onPress: () => {
+          onReply();
+          requestClose();
+        },
       },
       {
         id: 'hide-phrase',
         label: t('messageActions.hidePhrase'),
         subtitle: t('messageActions.hidePhraseSubtitle'),
-        onPress: () => onHidePhrase?.(),
+        onPress: () => {
+          onHidePhrase?.();
+          requestClose();
+        },
       },
     ];
 
@@ -167,7 +173,10 @@ function ActionSheetComponent(props: Props) {
         id: 'hide-user',
         label: t('userActions.hideUser'),
         subtitle: t('userActions.hideUserSubtitle'),
-        onPress: () => onHideUser?.(),
+        onPress: () => {
+          onHideUser?.();
+          requestClose();
+        },
       });
 
       items.splice(3, 0, {
@@ -179,7 +188,10 @@ function ActionSheetComponent(props: Props) {
           ? t('userActions.unhighlightUserSubtitle')
           : t('userActions.highlightUserSubtitle'),
         tone: 'accent',
-        onPress: () => onHighlightUser?.(),
+        onPress: () => {
+          onHighlightUser?.();
+          requestClose();
+        },
       });
     }
 
@@ -191,13 +203,19 @@ function ActionSheetComponent(props: Props) {
             label: t('messageActions.refreshPin'),
             subtitle: t('messageActions.refreshPinSubtitle'),
             tone: 'accent',
-            onPress: () => onUpdatePinnedMessage?.(),
+            onPress: () => {
+              onUpdatePinnedMessage?.();
+              requestClose();
+            },
           },
           {
             id: 'unpin-message',
             label: t('messageActions.unpinMessage'),
             subtitle: t('messageActions.unpinMessageSubtitle'),
-            onPress: () => onUnpinMessage?.(),
+            onPress: () => {
+              onUnpinMessage?.();
+              requestClose();
+            },
           },
         );
       } else {
@@ -206,7 +224,10 @@ function ActionSheetComponent(props: Props) {
           label: t('messageActions.pinMessage'),
           subtitle: t('messageActions.pinMessageSubtitle'),
           tone: 'accent',
-          onPress: () => onPinMessage?.(),
+          onPress: () => {
+            onPinMessage?.();
+            requestClose();
+          },
         });
       }
     }
@@ -218,7 +239,10 @@ function ActionSheetComponent(props: Props) {
           label: t('messageActions.deleteMessage'),
           subtitle: t('messageActions.deleteMessageSubtitle'),
           tone: 'danger',
-          onPress: () => onDeleteMessage?.(),
+          onPress: () => {
+            onDeleteMessage?.();
+            requestClose();
+          },
         });
       }
 
@@ -229,14 +253,20 @@ function ActionSheetComponent(props: Props) {
             label: t('userActions.timeoutUser'),
             subtitle: t('userActions.timeoutUserSubtitle'),
             tone: 'warning',
-            onPress: () => onTimeoutUser?.(),
+            onPress: () => {
+              onTimeoutUser?.();
+              requestClose();
+            },
           },
           {
             id: 'ban-user',
             label: t('userActions.banUser'),
             subtitle: t('userActions.banUserSubtitle'),
             tone: 'danger',
-            onPress: () => onBanUser?.(),
+            onPress: () => {
+              onBanUser?.();
+              requestClose();
+            },
           },
         );
       }
@@ -244,24 +274,7 @@ function ActionSheetComponent(props: Props) {
 
     return items;
   })();
-
-  useIosActionSheet(visible, () => ({
-    title: username ?? t('messageActions.eyebrow'),
-    message: messagePreview ? replaceEmotesWithText(messagePreview) : undefined,
-    cancelLabel: t('common:cancel'),
-    actions: actions.map(action => ({
-      label: action.label,
-      destructive: action.tone === 'danger',
-      onPress: action.onPress,
-    })),
-    onClose,
-  }));
   const { height: windowHeight } = useWindowDimensions();
-
-  if (Platform.OS === 'ios') {
-    return null;
-  }
-
   const maxScrollHeight = Math.min(
     Math.round(windowHeight * 0.62),
     actions.length * 58 + 116,
@@ -330,10 +343,7 @@ function ActionSheetComponent(props: Props) {
             {actions.map((action, index) => (
               <Button
                 key={action.id}
-                onPress={() => {
-                  action.onPress();
-                  requestClose();
-                }}
+                onPress={action.onPress}
                 style={[
                   styles.actionButton,
                   index < actions.length - 1 && styles.actionButtonBorder,

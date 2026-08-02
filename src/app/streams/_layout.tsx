@@ -1,8 +1,5 @@
 import { Stack } from 'expo-router';
 
-import { theme } from '@app/styles/themes';
-import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
-
 export default function StreamsLayout() {
   return (
     <Stack>
@@ -17,8 +14,7 @@ export default function StreamsLayout() {
       <Stack.Screen
         name='streamer-profile/[id]'
         options={{
-          ...nativeStackScreenOptions,
-          title: '',
+          headerShown: false,
           gestureEnabled: true,
           fullScreenGestureEnabled: true,
         }}
@@ -27,13 +23,7 @@ export default function StreamsLayout() {
         name='clip/[id]'
         options={{
           headerShown: false,
-          presentation: 'formSheet',
-          sheetGrabberVisible: true,
-          sheetAllowedDetents: [0.85],
-          sheetCornerRadius: theme.borderRadius28,
-          contentStyle: {
-            backgroundColor: theme.color.background.dark,
-          },
+          presentation: 'modal',
         }}
       />
       <Stack.Screen

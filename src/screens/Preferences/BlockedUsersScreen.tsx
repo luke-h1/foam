@@ -136,7 +136,7 @@ function ListStatePanel({
       style={styles.stateScroll}
       contentContainerStyle={styles.stateContent}
       contentInsetAdjustmentBehavior='automatic'
-      indicatorStyle='white'
+      showsVerticalScrollIndicator={false}
     >
       <View style={styles.stateSection}>
         <Text type='xxs' weight='semibold' style={styles.sectionTitle}>

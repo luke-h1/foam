@@ -75,24 +75,10 @@ jest.mock('@expo/ui/community/masked-view', () => {
 });
 
 jest.mock('@expo/ui/swift-ui', () => {
-  const { useRef, createElement } = jest.requireActual('react');
-  const { Text, View } = jest.requireActual('react-native');
+  const { useRef } = jest.requireActual('react');
   return {
     ...jest.requireActual('@expo/ui/swift-ui'),
     useNativeState: (initial: unknown) => useRef({ value: initial }).current,
-    ContentUnavailableView: ({
-      title,
-      description,
-    }: {
-      title?: string;
-      description?: string;
-    }) =>
-      createElement(
-        View,
-        null,
-        title == null ? null : createElement(Text, null, title),
-        description == null ? null : createElement(Text, null, description),
-      ),
   };
 });
 

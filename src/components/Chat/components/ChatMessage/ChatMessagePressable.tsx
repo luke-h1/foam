@@ -60,6 +60,6 @@ function ChatMessagePressableComponent({
   );
 }
 
-const pressedStyle = { backgroundColor: 'rgba(255,255,255,0.08)' } as const;
+const pressedStyle = { opacity: 0.6 } as const;
 
 export const ChatMessagePressable = memo(ChatMessagePressableComponent);

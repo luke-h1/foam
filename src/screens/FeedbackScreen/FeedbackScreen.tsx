@@ -1,19 +1,17 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { router } from 'expo-router';
-import { PressableScale } from 'pressto';
 import { toast } from 'sonner-native';
 
 import { Button } from '@app/components/Button/Button';
 import { SegmentedControl } from '@app/components/SegmentedControl/SegmentedControl';
-import { Input } from '@app/components/ui/Input/Input';
 import { Text } from '@app/components/ui/Text/Text';
 import { useAuthContext } from '@app/context/AuthContext';
-import { notification } from '@app/lib/haptics';
+import { impact } from '@app/lib/haptics';
 import { type FeedbackType, sendFeedback } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
 
@@ -25,17 +23,8 @@ const FEEDBACK_TYPES: {
   { value: 'idea', labelKey: 'typeIdea' },
 ];
 
-function handleDismiss() {
-  if (router.canDismiss()) {
-    router.dismiss();
-    return;
-  }
-
-  router.back();
-}
-
 export function FeedbackScreen() {
-  const { t } = useTranslation(['feedback', 'common']);
+  const { t } = useTranslation('feedback');
   const { user } = useAuthContext();
 
   const [type, setType] = useState<FeedbackType>('bug');
@@ -52,7 +41,6 @@ export function FeedbackScreen() {
   const handleSubmit = () => {
     if (!canSubmit) {
       if (trimmedMessage.length === 0) {
-        notification('error');
         toast.error(t('emptyMessage'));
       }
       return;
@@ -66,52 +54,37 @@ export function FeedbackScreen() {
         email: email.trim(),
         name: user?.display_name,
       });
-      notification('success');
+      impact('light');
       toast.success(t('success'));
 
-      handleDismiss();
+      if (router.canDismiss()) {
+        router.dismiss();
+      } else {
+        router.back();
+      }
     } catch {
       setSubmitting(false);
-      notification('error');
       toast.error(t('error'));
     }
   };
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
-      <View style={styles.sheetHeader}>
-        <PressableScale
-          accessibilityRole='button'
-          onPress={handleDismiss}
-          hitSlop={8}
-          style={styles.headerSide}
-        >
-          <Text type='md' style={{ color: theme.colorPrimary }}>
-            {t('common:cancel')}
-          </Text>
-        </PressableScale>
-        <Text
-          type='md'
-          weight='semibold'
-          color='gray.text'
-          align='center'
-          numberOfLines={1}
-          style={styles.headerTitle}
-        >
-          {t('title')}
-        </Text>
-        <View style={styles.headerSide} />
-      </View>
       <KeyboardAvoidingView behavior='padding' style={styles.flex}>
         <ScrollView
           contentContainerStyle={styles.content}
           keyboardDismissMode='on-drag'
           keyboardShouldPersistTaps='handled'
-          indicatorStyle='white'
+          showsVerticalScrollIndicator={false}
         >
-          <Text type='sm' color='gray.textLow' style={styles.subtitle}>
-            {t('subtitle')}
-          </Text>
+          <View style={styles.header}>
+            <Text type='2xl' weight='bold' color='gray.text'>
+              {t('title')}
+            </Text>
+            <Text type='sm' color='gray.textLow' style={styles.subtitle}>
+              {t('subtitle')}
+            </Text>
+          </View>
 
           <SegmentedControl
             currentIndex={selectedTypeIndex < 0 ? 0 : selectedTypeIndex}
@@ -135,7 +108,7 @@ export function FeedbackScreen() {
             >
               {t('messageLabel')}
             </Text>
-            <Input
+            <TextInput
               autoCapitalize='sentences'
               autoCorrect
               multiline
@@ -146,6 +119,12 @@ export function FeedbackScreen() {
                   : t('messagePlaceholderIdea')
               }
               placeholderTextColor={theme.colorGreyHoverAlpha}
+              selectionColor={
+                process.env.EXPO_OS === 'android'
+                  ? theme.colorTextSelection
+                  : theme.color.text.dark
+              }
+              selectionHandleColor={theme.colorPrimary}
               style={[styles.input, styles.messageInput]}
               value={message}
             />
@@ -160,7 +139,7 @@ export function FeedbackScreen() {
             >
               {t('emailLabel')}
             </Text>
-            <Input
+            <TextInput
               autoCapitalize='none'
               autoComplete='email'
               autoCorrect={false}
@@ -169,6 +148,12 @@ export function FeedbackScreen() {
               onChangeText={setEmail}
               placeholder={t('emailPlaceholder')}
               placeholderTextColor={theme.colorGreyHoverAlpha}
+              selectionColor={
+                process.env.EXPO_OS === 'android'
+                  ? theme.colorTextSelection
+                  : theme.color.text.dark
+              }
+              selectionHandleColor={theme.colorPrimary}
               style={styles.input}
               value={email}
             />
@@ -206,7 +191,7 @@ const styles = StyleSheet.create({
     gap: theme.space20,
     paddingBottom: theme.space24,
     paddingHorizontal: theme.space20,
-    paddingTop: theme.space16,
+    paddingTop: theme.space24,
   },
   field: {
     gap: theme.space8,
@@ -218,11 +203,8 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  headerSide: {
-    width: 64,
-  },
-  headerTitle: {
-    flex: 1,
+  header: {
+    gap: theme.space8,
   },
   input: {
     backgroundColor: theme.color.backgroundSecondary.dark,
@@ -238,13 +220,6 @@ const styles = StyleSheet.create({
   messageInput: {
     minHeight: 132,
     textAlignVertical: 'top',
-  },
-  sheetHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    minHeight: 44,
-    paddingHorizontal: theme.space16,
-    paddingTop: theme.space12,
   },
   subtitle: {
     lineHeight: theme.fontSize14 * 1.5,

@@ -16,16 +16,15 @@ import Animated, {
   cancelAnimation,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
-  WithSpringConfig,
+  withTiming,
+  WithTimingConfig,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { BlurView } from 'expo-blur';
-import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
-import { router, Stack, useFocusEffect, useIsFocused } from 'expo-router';
+import { router, useFocusEffect, useIsFocused } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { toast } from 'sonner-native';
 
@@ -44,7 +43,6 @@ import { useUserQuery } from '@app/hooks/queries/useUserQuery';
 import { useChannelPoll } from '@app/hooks/useChannelPoll';
 import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
 import { useOnAppStateChange } from '@app/hooks/useOnAppStateChange';
-import { notification } from '@app/lib/haptics';
 import { markSignpost } from '@app/lib/signpost';
 import { twitchService } from '@app/services/twitch-service';
 import { addCreatedClip } from '@app/store/createdClips/actions/createdClips';
@@ -98,18 +96,15 @@ const CHAT_TOGGLE_DEBOUNCE_MS = 450;
 const LANDSCAPE_CHAT_CLOSE_WIDTH_FRACTION = 0.55;
 const LANDSCAPE_CHAT_CLOSE_VELOCITY = 900;
 
-/**
- * Sizing values drive WKWebView and chat-list layout every frame, so the
- * resize spring is clamped and rests early instead of settling for ~600ms.
- */
-const RESIZE_ANIMATION_CONFIG: WithSpringConfig = {
-  damping: 38,
-  stiffness: 560,
-  mass: 0.8,
-  overshootClamping: true,
-};
+const RESIZE_ANIMATION_CONFIG = {
+  duration: motion.fast,
+  easing: motion.easing.out,
+} satisfies WithTimingConfig;
 
-const CHAT_REVEAL_ANIMATION_CONFIG: WithSpringConfig = motion.spring.responsive;
+const CHAT_REVEAL_ANIMATION_CONFIG = {
+  duration: motion.instant,
+  easing: motion.easing.out,
+} satisfies WithTimingConfig;
 
 function handlePlaybackLatencyChange(latencySeconds: number) {
   setMeasuredVideoLatencySeconds(latencySeconds);
@@ -561,22 +556,22 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       ? 'live-stream.chat-hide'
       : 'live-stream.chat-reveal';
     markSignpost(layoutSignpost);
-    videoWidth.set(withSpring(videoDimensions.width, RESIZE_ANIMATION_CONFIG));
+    videoWidth.set(withTiming(videoDimensions.width, RESIZE_ANIMATION_CONFIG));
     videoHeight.set(
-      withSpring(videoDimensions.height, RESIZE_ANIMATION_CONFIG),
+      withTiming(videoDimensions.height, RESIZE_ANIMATION_CONFIG),
     );
-    chatWidth.set(withSpring(effectiveChatWidth, RESIZE_ANIMATION_CONFIG));
-    chatHeight.set(withSpring(effectiveChatHeight, RESIZE_ANIMATION_CONFIG));
+    chatWidth.set(withTiming(effectiveChatWidth, RESIZE_ANIMATION_CONFIG));
+    chatHeight.set(withTiming(effectiveChatHeight, RESIZE_ANIMATION_CONFIG));
 
     if (!isLandscapeChatHidden) {
-      chatOpacity.set(withSpring(1, CHAT_REVEAL_ANIMATION_CONFIG));
-      chatTranslateX.set(withSpring(0, CHAT_REVEAL_ANIMATION_CONFIG));
+      chatOpacity.set(withTiming(1, CHAT_REVEAL_ANIMATION_CONFIG));
+      chatTranslateX.set(withTiming(0, CHAT_REVEAL_ANIMATION_CONFIG));
       return;
     }
 
-    chatOpacity.set(withSpring(0, CHAT_REVEAL_ANIMATION_CONFIG));
+    chatOpacity.set(withTiming(0, CHAT_REVEAL_ANIMATION_CONFIG));
     chatTranslateX.set(
-      withSpring(
+      withTiming(
         isLandscape ? chatDimensions.width : 0,
         CHAT_REVEAL_ANIMATION_CONFIG,
       ),
@@ -664,10 +659,10 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           }
 
           const committedWidth = Math.max(minWidth, width);
-          chatWidth.set(withSpring(committedWidth, RESIZE_ANIMATION_CONFIG));
+          chatWidth.set(withTiming(committedWidth, RESIZE_ANIMATION_CONFIG));
           if (fullscreenChatMode === 'sidebar' && isChatVisibleForLayout) {
             videoWidth.set(
-              withSpring(
+              withTiming(
                 Math.max(1, contentWidth - committedWidth),
                 RESIZE_ANIMATION_CONFIG,
               ),
@@ -808,7 +803,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
       .createClip(resolvedChannelId)
       .then(clip => {
         if (!clip) {
-          notification('error');
           toast.error(t('clipUnavailable'));
           return;
         }
@@ -822,7 +816,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
             '',
           createdAt: Date.now(),
         });
-        notification('success');
         toast.success(t('clipCreated'), {
           action: {
             label: t('editClip'),
@@ -835,7 +828,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           error,
           channel_id: resolvedChannelId,
         });
-        notification('error');
         toast.error(t('clipCreateFailed'));
       })
       .finally(() => {
@@ -851,7 +843,6 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
 
   return (
     <View style={contentContainerStyle}>
-      <Stack.Screen options={{ autoHideHomeIndicator: isLandscape }} />
       <Animated.View
         testID='stream-player-container'
         style={[styles.videoContainer, animatedVideoStyle]}
@@ -885,7 +876,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           />
         ) : null}
 
-        {isLandscape ? (
+        {isAndroid && isLandscape ? (
           <SystemBars hidden={{ navigationBar: true, statusBar: true }} />
         ) : null}
 
@@ -933,19 +924,11 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
               isStreamEnabled &&
               isLandscape &&
               fullscreenChatMode === 'overlay' ? (
-                isLiquidGlassAvailable() ? (
-                  <GlassView
-                    colorScheme='dark'
-                    glassEffectStyle='clear'
-                    style={styles.overlayChatBlur}
-                  />
-                ) : (
-                  <BlurView
-                    intensity={36}
-                    style={styles.overlayChatBlur}
-                    tint='dark'
-                  />
-                )
+                <BlurView
+                  intensity={36}
+                  style={styles.overlayChatBlur}
+                  tint='dark'
+                />
               ) : null}
               {isStreamEnabled && customPlayerEnabled ? (
                 <ChatLatencyPill />

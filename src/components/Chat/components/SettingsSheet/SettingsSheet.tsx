@@ -1,5 +1,5 @@
 import { memo, useCallback, useRef } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -21,7 +21,6 @@ import { requestLiveSync } from '@app/store/stream/liveSyncBus';
 import { theme } from '@app/styles/themes';
 
 import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
-import { SettingsSheetIosForm } from './SettingsSheetIosForm';
 
 const ICON_TINT = theme.color.textSecondary.dark;
 
@@ -131,206 +130,192 @@ const SettingsSheetComponent = ({
           </Text>
         </View>
 
-        {Platform.OS === 'ios' ? (
-          <SettingsSheetIosForm
-            onClearCache={hasStorage ? handleClearCache : undefined}
-            onOpenChatters={onOpenChatters}
-            onOpenMessageSearch={onOpenMessageSearch}
-            onOpenSavedPhrases={
-              onOpenSavedPhrases ? handleOpenSavedPhrases : undefined
-            }
-            onReconnect={onReconnect ? handleReconnect : undefined}
-            onRefetchEmotes={onRefetchEmotes ? handleRefetchEmotes : undefined}
-            onSyncToLive={handleSyncToLive}
-          />
-        ) : (
-          <ScrollView
-            nestedScrollEnabled
-            style={styles.scroll}
-            contentContainerStyle={[
-              styles.content,
-              { paddingBottom: bottomInset + theme.space24 },
-            ]}
-            showsVerticalScrollIndicator={false}
+        <ScrollView
+          nestedScrollEnabled
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: bottomInset + theme.space24 },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <SettingsSection
+            title={t('settingsSheet.sectionAppearance')}
+            cardColor={theme.color.surfaceNeutral.dark}
           >
+            <SettingsLinkRow
+              title={t('settingsSheet.density')}
+              icon={{
+                icon: 'text.alignleft',
+                androidIcon: 'format_align_left',
+                color: ICON_TINT,
+              }}
+              value={
+                chatDensity === 'compact'
+                  ? t('settingsSheet.compact')
+                  : t('settingsSheet.comfortable')
+              }
+              onPress={handleToggleDensity}
+            />
+            <SettingsToggleRow
+              title={t('settingsSheet.showTimestamps')}
+              icon={{
+                icon: 'clock',
+                androidIcon: 'schedule',
+                color: ICON_TINT,
+              }}
+              value={showTimestamps}
+              onValueChange={value =>
+                updatePreferences({ chatTimestamps: value })
+              }
+            />
+            <SettingsToggleRow
+              title={t('settingsSheet.highlightOwnMentions')}
+              icon={{
+                icon: 'at',
+                androidIcon: 'alternate_email',
+                color: ICON_TINT,
+              }}
+              value={highlightOwnMentions}
+              onValueChange={value =>
+                updatePreferences({ highlightOwnMentions: value })
+              }
+            />
+            <SettingsToggleRow
+              title={t('settingsSheet.inlineReplyContext')}
+              icon={{
+                icon: 'arrowshape.turn.up.left',
+                androidIcon: 'reply',
+                color: ICON_TINT,
+              }}
+              value={showInlineReplyContext}
+              onValueChange={value =>
+                updatePreferences({ showInlineReplyContext: value })
+              }
+            />
+            <SettingsToggleRow
+              title={t('settingsSheet.showJumpPill')}
+              icon={{
+                icon: 'arrow.down.circle',
+                androidIcon: 'arrow_circle_down',
+                color: ICON_TINT,
+              }}
+              value={showUnreadJumpPill}
+              onValueChange={value =>
+                updatePreferences({ showUnreadJumpPill: value })
+              }
+            />
+            <SettingsToggleRow
+              title={t('settingsSheet.showJoinPartMessages')}
+              icon={{
+                icon: 'person.badge.plus',
+                androidIcon: 'group_add',
+                color: ICON_TINT,
+              }}
+              value={showJoinPartMessages}
+              onValueChange={value =>
+                updatePreferences({ showJoinPartMessages: value })
+              }
+            />
+          </SettingsSection>
+
+          {hasActions ? (
             <SettingsSection
-              title={t('settingsSheet.sectionAppearance')}
+              title={t('settingsSheet.sectionActions')}
               cardColor={theme.color.surfaceNeutral.dark}
             >
-              <SettingsLinkRow
-                title={t('settingsSheet.density')}
-                icon={{
-                  icon: 'text.alignleft',
-                  androidIcon: 'format_align_left',
-                  color: ICON_TINT,
-                }}
-                value={
-                  chatDensity === 'compact'
-                    ? t('settingsSheet.compact')
-                    : t('settingsSheet.comfortable')
-                }
-                onPress={handleToggleDensity}
-              />
-              <SettingsToggleRow
-                title={t('settingsSheet.showTimestamps')}
-                icon={{
-                  icon: 'clock',
-                  androidIcon: 'schedule',
-                  color: ICON_TINT,
-                }}
-                value={showTimestamps}
-                onValueChange={value =>
-                  updatePreferences({ chatTimestamps: value })
-                }
-              />
-              <SettingsToggleRow
-                title={t('settingsSheet.highlightOwnMentions')}
-                icon={{
-                  icon: 'at',
-                  androidIcon: 'alternate_email',
-                  color: ICON_TINT,
-                }}
-                value={highlightOwnMentions}
-                onValueChange={value =>
-                  updatePreferences({ highlightOwnMentions: value })
-                }
-              />
-              <SettingsToggleRow
-                title={t('settingsSheet.inlineReplyContext')}
-                icon={{
-                  icon: 'arrowshape.turn.up.left',
-                  androidIcon: 'reply',
-                  color: ICON_TINT,
-                }}
-                value={showInlineReplyContext}
-                onValueChange={value =>
-                  updatePreferences({ showInlineReplyContext: value })
-                }
-              />
-              <SettingsToggleRow
-                title={t('settingsSheet.showJumpPill')}
-                icon={{
-                  icon: 'arrow.down.circle',
-                  androidIcon: 'arrow_circle_down',
-                  color: ICON_TINT,
-                }}
-                value={showUnreadJumpPill}
-                onValueChange={value =>
-                  updatePreferences({ showUnreadJumpPill: value })
-                }
-              />
-              <SettingsToggleRow
-                title={t('settingsSheet.showJoinPartMessages')}
-                icon={{
-                  icon: 'person.badge.plus',
-                  androidIcon: 'group_add',
-                  color: ICON_TINT,
-                }}
-                value={showJoinPartMessages}
-                onValueChange={value =>
-                  updatePreferences({ showJoinPartMessages: value })
-                }
-              />
-            </SettingsSection>
-
-            {hasActions ? (
-              <SettingsSection
-                title={t('settingsSheet.sectionActions')}
-                cardColor={theme.color.surfaceNeutral.dark}
-              >
-                {onOpenMessageSearch ? (
-                  <SettingsLinkRow
-                    title={t('settingsSheet.searchMessages')}
-                    icon={{
-                      icon: 'magnifyingglass',
-                      androidIcon: 'search',
-                      color: ICON_TINT,
-                    }}
-                    onPress={onOpenMessageSearch}
-                  />
-                ) : null}
-                {onOpenChatters ? (
-                  <SettingsLinkRow
-                    title={t('settingsSheet.viewChatters')}
-                    icon={{
-                      icon: 'person.2',
-                      androidIcon: 'group',
-                      color: ICON_TINT,
-                    }}
-                    onPress={onOpenChatters}
-                  />
-                ) : null}
-                {onOpenSavedPhrases ? (
-                  <SettingsLinkRow
-                    title={t('settingsSheet.savedPhrases')}
-                    icon={{
-                      icon: 'text.bubble',
-                      androidIcon: 'chat_bubble',
-                      color: ICON_TINT,
-                    }}
-                    onPress={handleOpenSavedPhrases}
-                  />
-                ) : null}
-                {onRefetchEmotes ? (
-                  <SettingsLinkRow
-                    title={t('settingsSheet.refetchEmotes')}
-                    icon={{
-                      icon: 'arrow.clockwise',
-                      androidIcon: 'refresh',
-                      color: ICON_TINT,
-                    }}
-                    onPress={handleRefetchEmotes}
-                  />
-                ) : null}
-              </SettingsSection>
-            ) : null}
-
-            <SettingsSection
-              title={t('settingsSheet.sectionConnection')}
-              cardColor={theme.color.surfaceNeutral.dark}
-            >
-              <SettingsLinkRow
-                title={t('settingsSheet.syncToLive')}
-                subtitle={t('settingsSheet.syncToLiveSubtitle')}
-                icon={{
-                  icon: 'forward.end.fill',
-                  androidIcon: 'skip_next',
-                  color: ICON_TINT,
-                }}
-                onPress={handleSyncToLive}
-              />
-              {onReconnect ? (
+              {onOpenMessageSearch ? (
                 <SettingsLinkRow
-                  title={t('settingsSheet.reconnect')}
+                  title={t('settingsSheet.searchMessages')}
                   icon={{
-                    icon: 'wifi',
-                    androidIcon: 'wifi',
+                    icon: 'magnifyingglass',
+                    androidIcon: 'search',
                     color: ICON_TINT,
                   }}
-                  onPress={handleReconnect}
+                  onPress={onOpenMessageSearch}
+                />
+              ) : null}
+              {onOpenChatters ? (
+                <SettingsLinkRow
+                  title={t('settingsSheet.viewChatters')}
+                  icon={{
+                    icon: 'person.2',
+                    androidIcon: 'group',
+                    color: ICON_TINT,
+                  }}
+                  onPress={onOpenChatters}
+                />
+              ) : null}
+              {onOpenSavedPhrases ? (
+                <SettingsLinkRow
+                  title={t('settingsSheet.savedPhrases')}
+                  icon={{
+                    icon: 'text.bubble',
+                    androidIcon: 'chat_bubble',
+                    color: ICON_TINT,
+                  }}
+                  onPress={handleOpenSavedPhrases}
+                />
+              ) : null}
+              {onRefetchEmotes ? (
+                <SettingsLinkRow
+                  title={t('settingsSheet.refetchEmotes')}
+                  icon={{
+                    icon: 'arrow.clockwise',
+                    androidIcon: 'refresh',
+                    color: ICON_TINT,
+                  }}
+                  onPress={handleRefetchEmotes}
                 />
               ) : null}
             </SettingsSection>
+          ) : null}
 
-            {hasStorage ? (
-              <SettingsSection
-                title={t('settingsSheet.sectionStorage')}
-                cardColor={theme.color.surfaceNeutral.dark}
-              >
-                <SettingsLinkRow
-                  title={t('settingsSheet.clearCache')}
-                  icon={{
-                    icon: 'trash',
-                    androidIcon: 'delete',
-                    color: theme.colorRed,
-                  }}
-                  onPress={handleClearCache}
-                  danger
-                />
-              </SettingsSection>
+          <SettingsSection
+            title={t('settingsSheet.sectionConnection')}
+            cardColor={theme.color.surfaceNeutral.dark}
+          >
+            <SettingsLinkRow
+              title={t('settingsSheet.syncToLive')}
+              subtitle={t('settingsSheet.syncToLiveSubtitle')}
+              icon={{
+                icon: 'forward.end.fill',
+                androidIcon: 'skip_next',
+                color: ICON_TINT,
+              }}
+              onPress={handleSyncToLive}
+            />
+            {onReconnect ? (
+              <SettingsLinkRow
+                title={t('settingsSheet.reconnect')}
+                icon={{
+                  icon: 'wifi',
+                  androidIcon: 'wifi',
+                  color: ICON_TINT,
+                }}
+                onPress={handleReconnect}
+              />
             ) : null}
-          </ScrollView>
-        )}
+          </SettingsSection>
+
+          {hasStorage ? (
+            <SettingsSection
+              title={t('settingsSheet.sectionStorage')}
+              cardColor={theme.color.surfaceNeutral.dark}
+            >
+              <SettingsLinkRow
+                title={t('settingsSheet.clearCache')}
+                icon={{
+                  icon: 'trash',
+                  androidIcon: 'delete',
+                  color: theme.colorRed,
+                }}
+                onPress={handleClearCache}
+                danger
+              />
+            </SettingsSection>
+          ) : null}
+        </ScrollView>
       </View>
     </BottomSheet>
   );

@@ -25,7 +25,7 @@ export function ChatPreferenceScrollContent() {
       ref={scrollRef}
       style={styles.scroll}
       contentInsetAdjustmentBehavior='automatic'
-      indicatorStyle='white'
+      showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.content}
     >
       <ChatPreferenceDefaultContent />
