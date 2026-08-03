@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Activity, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { TOP_TAB_ROUTES } from '@app/constants/topTabRoutes';
@@ -13,22 +13,25 @@ export function TopScreen() {
   const activeKey = TOP_TAB_ROUTES[index]?.key;
 
   /**
-   * Both screens stay mounted (as under TabView): a segment flip must not drop
-   * scroll state or re-fire useRefetchOnForeground's mount-time refetch.
+   * Activity keeps both scenes mounted across segment flips (scroll and query
+   * state survive) while pausing the hidden scene's effects, so background
+   * refetches can't re-render a display:none FlashList at 0x0.
    */
   return (
     <View style={styles.container}>
       <View style={styles.segmentBar}>
         <TopSegmentControl index={index} onIndexChange={setIndex} />
       </View>
-      <View style={activeKey === 'streams' ? styles.scene : styles.hiddenScene}>
-        <TopStreamsScreen />
-      </View>
-      <View
-        style={activeKey === 'categories' ? styles.scene : styles.hiddenScene}
-      >
-        <TopCategoriesScreen />
-      </View>
+      <Activity mode={activeKey === 'streams' ? 'visible' : 'hidden'}>
+        <View style={styles.scene}>
+          <TopStreamsScreen />
+        </View>
+      </Activity>
+      <Activity mode={activeKey === 'categories' ? 'visible' : 'hidden'}>
+        <View style={styles.scene}>
+          <TopCategoriesScreen />
+        </View>
+      </Activity>
     </View>
   );
 }
@@ -37,9 +40,6 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
-  },
-  hiddenScene: {
-    display: 'none',
   },
   scene: {
     flex: 1,

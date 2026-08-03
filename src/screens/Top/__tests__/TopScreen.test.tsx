@@ -74,19 +74,15 @@ describe('TopScreen', () => {
     );
   });
 
-  test('shows the streams segment by default and keeps categories mounted but hidden', async () => {
+  test('shows streams by default without fetching the hidden categories scene', async () => {
     render(<TopScreen />);
 
     expect(await screen.findByText('Streamer1')).toBeOnTheScreen();
-    expect(screen.queryByTestId('top-categories-list')).not.toBeOnTheScreen();
-    expect(
-      screen.getByTestId('top-categories-list', {
-        includeHiddenElements: true,
-      }),
-    ).toBeTruthy();
+    expect(screen.queryByText('Fortnite')).not.toBeOnTheScreen();
+    expect(twitchService.getTopCategories).not.toHaveBeenCalled();
   });
 
-  test('switches to categories and back', async () => {
+  test('switches to categories and back without refetching streams', async () => {
     render(<TopScreen />);
 
     await screen.findByText('Streamer1');
@@ -94,14 +90,11 @@ describe('TopScreen', () => {
     fireEvent.press(screen.getByTestId('segment-categories'));
 
     expect(await screen.findByText('Fortnite')).toBeOnTheScreen();
-    expect(screen.queryByTestId('top-streams-list')).not.toBeOnTheScreen();
-    expect(
-      screen.getByTestId('top-streams-list', { includeHiddenElements: true }),
-    ).toBeTruthy();
 
     fireEvent.press(screen.getByTestId('segment-streams'));
 
     expect(await screen.findByText('Streamer1')).toBeOnTheScreen();
-    expect(screen.queryByTestId('top-categories-list')).not.toBeOnTheScreen();
+    expect(twitchService.getTopStreams).toHaveBeenCalledTimes(1);
+    expect(twitchService.getTopCategories).toHaveBeenCalledTimes(1);
   });
 });
