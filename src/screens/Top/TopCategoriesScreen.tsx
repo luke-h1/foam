@@ -1,6 +1,7 @@
 import { type RefObject, useCallback, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 
 import { useObservable, useSelector } from '@legendapp/state/react';
 import type { ListRenderItem } from '@shopify/flash-list';
@@ -9,6 +10,7 @@ import {
   CATEGORY_CARD_HEIGHT,
   MemoizedCategoryCard,
 } from '@app/components/CategoryCard/CategoryCard';
+import { AnimatedFlashList } from '@app/components/FlashList/AnimatedFlashList';
 import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { Skeleton } from '@app/components/ui/Skeleton/Skeleton';
@@ -34,13 +36,29 @@ function CategoryCardSkeleton() {
   );
 }
 
-export function TopCategoriesScreen() {
+interface TopCategoriesScreenProps {
+  contentTopInset?: number;
+  scrollY?: SharedValue<number>;
+}
+
+export function TopCategoriesScreen({
+  contentTopInset = 0,
+  scrollY,
+}: TopCategoriesScreenProps = {}) {
   const { t } = useTranslation('stream');
   const refreshing$ = useObservable(false);
   const refreshing = useSelector(refreshing$);
   const listRef = useRef<FlashListRef<Category>>(null);
 
   useScrollToTop(listRef);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: event => {
+      if (scrollY) {
+        scrollY.set(event.contentOffset.y);
+      }
+    },
+  });
 
   const {
     data: categories,
@@ -82,7 +100,10 @@ export function TopCategoriesScreen() {
           keyExtractor={(_, idx) => `${TOP_CATEGORY_SKELETON_KEY_PREFIX}${idx}`}
           numColumns={SKELETON_COLUMNS}
           renderItem={renderTopCategorySkeletonItem}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[
+            styles.listContent,
+            { paddingTop: contentTopInset },
+          ]}
         />
       </View>
     );
@@ -113,44 +134,54 @@ export function TopCategoriesScreen() {
   return (
     <TopCategoriesList
       allCategories={allCategories}
+      contentTopInset={contentTopInset}
       listRef={listRef}
       onEndReached={handleLoadMore}
       onRefresh={onRefresh}
       refreshing={refreshing}
       renderTopCategoryItem={renderTopCategoryItem}
+      scrollHandler={scrollHandler}
     />
   );
 }
 
 function TopCategoriesList({
   allCategories,
+  contentTopInset,
   listRef,
   onEndReached,
   onRefresh,
   refreshing,
   renderTopCategoryItem,
+  scrollHandler,
 }: {
   allCategories: Category[];
+  contentTopInset: number;
   listRef: RefObject<FlashListRef<Category> | null>;
   onEndReached: () => void;
   onRefresh: () => void;
   refreshing: boolean;
   renderTopCategoryItem: ListRenderItem<Category>;
+  scrollHandler: ReturnType<typeof useAnimatedScrollHandler>;
 }) {
   return (
     <View style={styles.wrapper} testID='top-categories-list'>
-      <FlashList<Category>
+      <AnimatedFlashList<Category>
         ref={listRef}
         data={allCategories}
         numColumns={3}
         contentInsetAdjustmentBehavior='automatic'
         getItemType={() => 'category-card'}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingTop: contentTopInset },
+        ]}
         renderItem={renderTopCategoryItem}
         keyExtractor={item => item.id}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={onEndReached}
         onEndReachedThreshold={0.4}
+        onScroll={scrollHandler}
         onRefresh={onRefresh}
         refreshing={refreshing}
       />

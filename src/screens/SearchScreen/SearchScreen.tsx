@@ -16,7 +16,6 @@ import { Pressable } from 'react-native-gesture-handler';
 import { ListRenderItem } from '@shopify/flash-list';
 import { router } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { toast } from 'sonner-native';
 
 import { Button } from '@app/components/Button/Button';
 import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
@@ -31,7 +30,6 @@ import { twitchService } from '@app/services/twitch-service';
 import { theme } from '@app/styles/themes';
 import type { Category } from '@app/types/twitch/category';
 import type { SearchChannelResponse } from '@app/types/twitch/channel';
-import { logger } from '@app/utils/logger';
 
 import { SearchInputBar } from './components/SearchInputBar/SearchInputBar';
 import type { SearchInputBarHandle } from './components/SearchInputBar/types';
@@ -149,30 +147,7 @@ function writeSearchHistoryQuery(query: string) {
   );
 }
 
-async function refreshSearchResults(
-  query: string,
-  search: (value: string) => Promise<void>,
-  setRefreshing: (refreshing: boolean) => void,
-  onError: (error: unknown) => void,
-) {
-  setRefreshing(true);
-  try {
-    await search(query);
-  } catch (error) {
-    onError(error);
-  } finally {
-    setRefreshing(false);
-  }
-}
-
 const isAndroid = process.env.EXPO_OS === 'android';
-
-/**
- * Keeps row separators aligned with the text column, past the thumbnail.
- */
-const RESULT_THUMBNAIL_WIDTH = 55;
-const RESULT_SEPARATOR_INSET =
-  theme.space16 + RESULT_THUMBNAIL_WIDTH + theme.space16;
 
 function ResultRow({
   children,
@@ -236,7 +211,8 @@ export function SearchScreen() {
     );
   }, []);
 
-  const performSearch = useCallback(async (value: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  const [search] = useDebouncedCallback(async (value: string) => {
     if (value.length < 2) {
       startTransition(() => {
         setState(state => ({
@@ -262,29 +238,7 @@ export function SearchScreen() {
     });
 
     writeSearchHistoryQuery(value);
-  }, []);
-
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  const [search] = useDebouncedCallback(performSearch, 400);
-
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const handleRefresh = useCallback(() => {
-    const normalizedQuery = query.trim();
-    if (normalizedQuery.length < 2) {
-      return Promise.resolve();
-    }
-
-    return refreshSearchResults(
-      normalizedQuery,
-      performSearch,
-      setIsRefreshing,
-      error => {
-        logger.twitch.error('Search refresh failed', error);
-        toast.error(t('refreshFailed'));
-      },
-    );
-  }, [performSearch, query, t]);
+  }, 400);
 
   const handleClearSearch = useCallback(() => {
     searchBarRef.current?.clearText();
@@ -450,8 +404,16 @@ export function SearchScreen() {
   const showSearchHistory =
     query.trim().length === 0 && searchHistoryQueries.length > 0;
 
-  const listHeader = (
-    <View>
+  return (
+    <View style={styles.container}>
+      <SearchInputBar
+        ref={searchBarRef}
+        onCancel={handleClearSearch}
+        onChangeText={handleTextChange}
+        onSubmit={handleSearchSubmit}
+        placeholder={t('searchPlaceholder')}
+        value={query}
+      />
       <SearchHeader
         activeResults={activeResults}
         handleFilterChange={handleFilterChange}
@@ -467,30 +429,15 @@ export function SearchScreen() {
           onSelectItem={handleSearchHistorySelect}
           onClearItem={handleSearchHistoryClearItem}
         />
-      ) : null}
-    </View>
-  );
-
-  return (
-    <View style={styles.container}>
-      <SearchInputBar
-        ref={searchBarRef}
-        onCancel={handleClearSearch}
-        onChangeText={handleTextChange}
-        onSubmit={handleSearchSubmit}
-        placeholder={t('searchPlaceholder')}
-        value={query}
-      />
-      <SearchResultsList
-        activeResults={activeResults}
-        listHeader={listHeader}
-        listRef={listRef}
-        onRefresh={handleRefresh}
-        refreshing={isRefreshing}
-        renderCategoryItem={renderCategoryItem}
-        renderItem={renderItem}
-        selectedFilter={selectedFilter}
-      />
+      ) : (
+        <SearchResultsList
+          activeResults={activeResults}
+          listRef={listRef}
+          renderCategoryItem={renderCategoryItem}
+          renderItem={renderItem}
+          selectedFilter={selectedFilter}
+        />
+      )}
     </View>
   );
 }
@@ -561,10 +508,7 @@ function SearchHeader({
 
 type SearchResultsListProps = {
   activeResults: SearchItem[];
-  listHeader: React.ReactElement;
   listRef: RefObject<FlashListRef<SearchItem> | null>;
-  onRefresh: () => Promise<void>;
-  refreshing: boolean;
   renderCategoryItem: ListRenderItem<Category>;
   renderItem: ListRenderItem<SearchChannelResponse>;
   selectedFilter: SearchFilter;
@@ -572,10 +516,7 @@ type SearchResultsListProps = {
 
 function SearchResultsList({
   activeResults,
-  listHeader,
   listRef,
-  onRefresh,
-  refreshing,
   renderCategoryItem,
   renderItem,
   selectedFilter,
@@ -586,15 +527,12 @@ function SearchResultsList({
       getItemType={item =>
         isSearchChannelItem(item) ? 'search-channel' : 'search-category'
       }
-      indicatorStyle='white'
+      showsVerticalScrollIndicator={false}
       contentInsetAdjustmentBehavior='automatic'
       ItemSeparatorComponent={ResultSeparator}
       data={activeResults}
       keyboardDismissMode='on-drag'
       keyboardShouldPersistTaps='handled'
-      ListHeaderComponent={listHeader}
-      refreshing={refreshing}
-      onRefresh={onRefresh}
       renderItem={
         selectedFilter === 'channels'
           ? (renderItem as ListRenderItem<SearchChannelResponse | Category>)
@@ -673,7 +611,7 @@ const styles = StyleSheet.create({
   separator: {
     backgroundColor: theme.color.border.dark,
     height: StyleSheet.hairlineWidth,
-    marginStart: RESULT_SEPARATOR_INSET,
+    marginStart: 91,
   },
   sectionHeader: {
     gap: 2,
@@ -682,6 +620,5 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     letterSpacing: 1,
-    textTransform: 'uppercase',
   },
 });

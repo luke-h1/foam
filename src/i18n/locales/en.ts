@@ -400,7 +400,6 @@ const en = {
     categoriesHeader: 'CATEGORIES',
     streaming: 'Streaming',
     offline: 'Offline',
-    refreshFailed: "Couldn't refresh search results. Try again.",
   },
 
   stream: {
@@ -482,8 +481,6 @@ const en = {
     failedToFetchTopCategories: 'Failed to fetch top categories',
     noCategoriesFound: 'No categories found',
     noTopStreamsFound: 'No Top Streams found',
-    compactLayout: 'Compact',
-    mediaLayout: 'Media',
     switchToMediaLayout: 'Switch to media layout',
     switchToCompactLayout: 'Switch to compact layout',
   },
@@ -786,7 +783,6 @@ const en = {
       '{{count}} term · Messages containing these will be hidden from chat.',
     termsFooter_other:
       '{{count}} terms · Messages containing these will be hidden from chat.',
-    highlightAlreadyAdded: 'That phrase is already highlighted',
     removeHighlight: 'Remove highlight',
     removeHighlightConfirm:
       'Stop highlighting messages containing "{{phrase}}"?',

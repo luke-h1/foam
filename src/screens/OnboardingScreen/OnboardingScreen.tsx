@@ -1,7 +1,6 @@
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { router } from 'expo-router';
 
@@ -9,7 +8,6 @@ import { Button } from '@app/components/Button/Button';
 import { EnergyOrb } from '@app/components/EnergyOrb/EnergyOrb';
 import { Text } from '@app/components/ui/Text/Text';
 import { storageMMKV } from '@app/lib/mmkv';
-import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
 
 export const ONBOARDING_SEEN_KEY = 'V1_hasSeenOnboarding';
@@ -19,25 +17,15 @@ function handleGetStarted() {
   router.replace('/');
 }
 
-const gentleSpring = (entering: typeof FadeInUp) =>
-  entering
-    .springify()
-    .damping(motion.spring.gentle.damping)
-    .stiffness(motion.spring.gentle.stiffness)
-    .mass(motion.spring.gentle.mass);
-
 export function OnboardingScreen() {
   const { t } = useTranslation('onboarding');
   const { width } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
   const orbSize = Math.min(width * 0.72, 300);
 
   return (
-    <View
-      style={[styles.container, { paddingTop: insets.top + theme.space24 }]}
-    >
+    <View style={styles.container}>
       <Animated.View
-        entering={gentleSpring(FadeInUp).delay(50)}
+        entering={FadeInUp.duration(800).delay(100)}
         style={styles.orbContainer}
       >
         <EnergyOrb
@@ -55,7 +43,7 @@ export function OnboardingScreen() {
       </Animated.View>
 
       <Animated.View
-        entering={gentleSpring(FadeInDown).delay(150)}
+        entering={FadeInDown.duration(700).delay(300)}
         style={styles.content}
       >
         <Text type='3xl' weight='bold' align='center'>
@@ -67,7 +55,7 @@ export function OnboardingScreen() {
       </Animated.View>
 
       <Animated.View
-        entering={gentleSpring(FadeInDown).delay(250)}
+        entering={FadeInDown.duration(600).delay(500)}
         style={styles.footer}
       >
         <Button
@@ -108,6 +96,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingBottom: theme.space44,
     paddingHorizontal: theme.space28,
+    paddingTop: theme.space84,
   },
   content: {
     alignItems: 'center',

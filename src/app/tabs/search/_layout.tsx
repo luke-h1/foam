@@ -2,10 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Stack } from 'expo-router';
 
-import {
-  nativeStackScreenOptions,
-  nativeStackTabRootScreenOptions,
-} from '@app/utils/navigation/nativeStackOptions';
+import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
 
 export default function SearchLayout() {
   const { t } = useTranslation('navigation');
@@ -15,7 +12,8 @@ export default function SearchLayout() {
         name='index'
         options={{
           title: t('search'),
-          ...nativeStackTabRootScreenOptions,
+          headerLargeTitle: false,
+          headerTransparent: false,
         }}
       />
     </Stack>

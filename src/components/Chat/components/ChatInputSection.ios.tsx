@@ -5,7 +5,6 @@ import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
 
 import { BlurView } from 'expo-blur';
-import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 
 import { Button as PressableButton } from '@app/components/Button/Button';
 import { PaintedUsername } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/PaintedUsername';
@@ -68,19 +67,11 @@ export const ChatInputSection = memo(
             exiting={replyPreviewExiting}
             style={styles.replyShell}
           >
-            {isLiquidGlassAvailable() ? (
-              <GlassView
-                glassEffectStyle='clear'
-                colorScheme='dark'
-                style={StyleSheet.absoluteFill}
-              />
-            ) : (
-              <BlurView
-                intensity={32}
-                style={StyleSheet.absoluteFill}
-                tint='dark'
-              />
-            )}
+            <BlurView
+              intensity={32}
+              style={StyleSheet.absoluteFill}
+              tint='dark'
+            />
             <View style={styles.replyIndicator} />
             <View style={styles.replyContent}>
               <View style={styles.replyLabelRow}>

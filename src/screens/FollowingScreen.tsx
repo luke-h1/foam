@@ -1,16 +1,23 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { toast } from 'sonner-native';
 
 import { EditorialSectionHeader } from '@app/components/EditorialSectionHeader/EditorialSectionHeader';
-import { FlashList, ListRenderItem } from '@app/components/FlashList/FlashList';
+import { AnimatedFlashList } from '@app/components/FlashList/AnimatedFlashList';
+import { ListRenderItem } from '@app/components/FlashList/FlashList';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
 import { MemoizedOfflineChannelRow } from '@app/components/OfflineChannelRow/OfflineChannelRow';
+import { StreamListLayoutToggle } from '@app/components/StreamListLayoutToggle/StreamListLayoutToggle';
 import { useBottomTabOverflow } from '@app/components/TabBarBackground/useBottomTabOverflow';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { Text } from '@app/components/ui/Text/Text';
@@ -22,7 +29,11 @@ import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
 import i18next from '@app/i18n/i18next';
 import { twitchKeys } from '@app/lib/react-query/query-keys';
-import { usePreference } from '@app/store/preferenceStore';
+import {
+  usePreference,
+  useUpdatePreferences,
+} from '@app/store/preferenceStore';
+import { motion } from '@app/styles/motion';
 import { theme } from '@app/styles/themes';
 import type { FollowedChannelWithProfile } from '@app/types/twitch/channel';
 import type { TwitchStream } from '@app/types/twitch/stream';
@@ -54,25 +65,26 @@ function FollowingSkeleton({
   );
 }
 
-const FollowingListHeader = memo(function FollowingListHeader() {
+const FollowingListHeader = memo(function FollowingListHeader({
+  streamListLayout,
+  onChangeLayout,
+}: {
+  streamListLayout: 'compact' | 'media';
+  onChangeLayout: (layout: 'compact' | 'media') => void;
+}) {
   return (
     <View>
       <EditorialSectionHeader eyebrow='For you' />
+      <View style={styles.layoutToggleRow}>
+        <StreamListLayoutToggle
+          value={streamListLayout}
+          onChange={onChangeLayout}
+        />
+      </View>
       <View style={styles.header} />
     </View>
   );
 });
-
-const followingListHeader = <FollowingListHeader />;
-
-const getFollowingItemKey = (item: FollowingListItem) =>
-  item.type === 'stream'
-    ? `stream-${item.stream.id}`
-    : item.type === 'offlineChannel'
-      ? `offline-${item.channel.broadcaster_id}`
-      : 'offline-header';
-
-const getFollowingItemType = (item: FollowingListItem) => item.type;
 
 export default function FollowingScreen() {
   const { t } = useTranslation(['stream', 'common']);
@@ -80,6 +92,7 @@ export default function FollowingScreen() {
   const queryClient = useQueryClient();
   const tabBarOverflow = useBottomTabOverflow();
   const streamListLayout = usePreference('streamListLayout');
+  const updatePreferences = useUpdatePreferences();
 
   const refetchFollowingStreams = useCallback(
     () =>
@@ -95,6 +108,11 @@ export default function FollowingScreen() {
     setIsRefreshing(true);
     await refetchFollowingStreams().finally(() => setIsRefreshing(false));
   }, [refetchFollowingStreams]);
+
+  const layoutFade = useSharedValue(1);
+  const layoutFadeStyle = useAnimatedStyle(() => ({
+    opacity: layoutFade.get(),
+  }));
 
   const {
     data: streams,
@@ -190,12 +208,7 @@ export default function FollowingScreen() {
         case 'offlineHeader':
           return (
             <View style={styles.offlineHeaderRow}>
-              <Text
-                type='xs'
-                weight='semibold'
-                color='gray.textLow'
-                style={styles.offlineHeaderTitle}
-              >
+              <Text type='md' weight='bold'>
                 {t('offlineChannels')}
               </Text>
             </View>
@@ -207,17 +220,30 @@ export default function FollowingScreen() {
     [streamListLayout, t],
   );
 
-  const stickyHeaderIndices = useMemo(
-    () => (offlineChannels.length > 0 ? [streamsArray.length] : undefined),
-    [offlineChannels.length, streamsArray.length],
+  // Soft dip-and-recover fade when switching layouts so rows do not
+  // hard-cut between shapes.
+  const setLayoutWithFade = useCallback(
+    (layout: 'compact' | 'media') => {
+      if (layout === streamListLayout) {
+        return;
+      }
+      layoutFade.set(0.35);
+      layoutFade.set(
+        withTiming(1, { duration: motion.medium, easing: motion.easing.out }),
+      );
+      updatePreferences({ streamListLayout: layout });
+    },
+    [streamListLayout, layoutFade, updatePreferences],
   );
 
-  const listContentStyle = useMemo(
-    () => [
-      styles.listContent,
-      { paddingBottom: tabBarOverflow + theme.space20 },
-    ],
-    [tabBarOverflow],
+  // Inline (not useMemo): FollowingListHeader is memo()'d with stable props, so
+  // recreating this element is a no-op, and a useMemo here would build JSX
+  // before the early return below (rerender-memo-before-early-return).
+  const listHeader = (
+    <FollowingListHeader
+      streamListLayout={streamListLayout}
+      onChangeLayout={setLayoutWithFade}
+    />
   );
 
   if (!authState?.isLoggedIn) {
@@ -291,25 +317,40 @@ export default function FollowingScreen() {
 
   return (
     <View style={styles.container}>
-      <FlashList<FollowingListItem>
-        ref={listRef}
-        data={listItems}
-        keyExtractor={getFollowingItemKey}
-        contentInsetAdjustmentBehavior='automatic'
-        drawDistance={500}
-        getItemType={getFollowingItemType}
-        ListHeaderComponent={followingListHeader}
-        stickyHeaderIndices={stickyHeaderIndices}
-        contentContainerStyle={listContentStyle}
-        renderItem={renderItem}
-        refreshing={isRefreshing}
-        onRefresh={handleRefreshFollowing}
-      />
+      <Animated.View style={[styles.listFade, layoutFadeStyle]}>
+        <AnimatedFlashList<FollowingListItem>
+          ref={listRef}
+          data={listItems}
+          keyExtractor={item =>
+            item.type === 'stream'
+              ? `stream-${item.stream.id}`
+              : item.type === 'offlineChannel'
+                ? `offline-${item.channel.broadcaster_id}`
+                : 'offline-header'
+          }
+          contentInsetAdjustmentBehavior='automatic'
+          drawDistance={500}
+          getItemType={item => item.type}
+          ListHeaderComponent={listHeader}
+          contentContainerStyle={[
+            styles.listContent,
+            {
+              paddingBottom: tabBarOverflow + theme.space20,
+            },
+          ]}
+          renderItem={renderItem}
+          refreshing={isRefreshing}
+          onRefresh={handleRefreshFollowing}
+        />
+      </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  listFade: {
+    flex: 1,
+  },
   container: {
     backgroundColor: theme.color.background.dark,
     flex: 1,
@@ -334,15 +375,18 @@ const styles = StyleSheet.create({
   listContent: {
     paddingBottom: theme.space20,
   },
-  offlineHeaderRow: {
-    backgroundColor: theme.color.background.dark,
-    paddingBottom: theme.space8,
-    paddingHorizontal: theme.space16,
-    paddingTop: theme.space20,
+  layoutToggleRow: {
+    alignItems: 'flex-end',
+    marginBottom: theme.space8,
+    marginHorizontal: theme.space16,
   },
-  offlineHeaderTitle: {
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+  offlineHeaderRow: {
+    borderTopColor: theme.color.border.dark,
+    borderTopWidth: 1,
+    marginHorizontal: theme.space16,
+    marginTop: theme.space16,
+    paddingBottom: theme.space8,
+    paddingTop: theme.space16,
   },
   stateContainer: {
     alignItems: 'center',

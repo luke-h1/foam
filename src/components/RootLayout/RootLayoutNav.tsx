@@ -7,7 +7,6 @@ import { ForceUpdateModal } from '@app/components/ForceUpdateModal/ForceUpdateMo
 import { OTAUpdates } from '@app/components/OTAUpdates/OTAUpdates';
 import { Providers } from '@app/Providers/Providers';
 import { theme } from '@app/styles/themes';
-import { nativeStackScreenOptions } from '@app/utils/navigation/nativeStackOptions';
 
 import { RouterEffects } from './RouterEffects';
 
@@ -27,6 +26,7 @@ const rootStackScreens = [
   'index',
   'tabs',
   'streams',
+  'category/[id]',
   'chat',
   'auth',
   'preferences',
@@ -53,14 +53,6 @@ export function RootLayoutNav() {
           {rootStackScreens.map(screenName => (
             <Stack.Screen key={screenName} name={screenName} />
           ))}
-          <Stack.Screen
-            name='category/[id]'
-            options={{
-              ...nativeStackScreenOptions,
-              title: '',
-              headerBackButtonDisplayMode: 'minimal',
-            }}
-          />
           <Stack.Screen
             name='auth-sheet'
             options={{

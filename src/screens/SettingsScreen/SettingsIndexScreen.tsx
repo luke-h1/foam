@@ -26,7 +26,6 @@ import {
 import { getBuildInfoLabel } from '@app/utils/version/buildInfoLabel';
 
 import { BuildStatus } from './components/BuildStatus';
-import { FormNavigationRow } from './components/FormNavigationRow';
 
 function handleSendFeedback() {
   router.push('/feedback');
@@ -63,37 +62,32 @@ export function SettingsIndexScreen() {
       <Host style={styles.iosHost}>
         <Form>
           <Section title={t('streamExperience')}>
-            <FormNavigationRow
+            <Button
               label={t('chat')}
               systemImage='bubble.left.and.bubble.right'
               onPress={() => router.push('/tabs/settings/chat-preferences')}
             />
-            <FormNavigationRow
+            <Button
               label={t('blockedTerms')}
               systemImage='text.badge.xmark'
               onPress={() => router.push('/tabs/settings/blocked-terms')}
             />
-            <FormNavigationRow
+            <Button
               label={t('emotesAndBadges')}
               systemImage='face.smiling'
               onPress={() => router.push('/tabs/settings/emotes-and-badges')}
             />
-            <FormNavigationRow
+            <Button
               label={t('savedPhrases')}
               systemImage='text.bubble'
               onPress={() => router.push('/tabs/settings/saved-phrases')}
             />
-            <FormNavigationRow
-              label={t('myClips')}
-              systemImage='scissors'
-              onPress={() => router.push('/tabs/settings/my-clips')}
-            />
-            <FormNavigationRow
+            <Button
               label={t('cache')}
               systemImage='externaldrive'
               onPress={() => router.push('/tabs/settings/cache')}
             />
-            <FormNavigationRow
+            <Button
               label={t('appearance')}
               systemImage='paintpalette'
               onPress={() => router.push('/tabs/settings/appearance')}
@@ -101,7 +95,7 @@ export function SettingsIndexScreen() {
           </Section>
 
           <Section title={t('account')}>
-            <FormNavigationRow
+            <Button
               label={user ? t('profile') : t('signIn')}
               systemImage='person.circle'
               onPress={() => {
@@ -116,7 +110,7 @@ export function SettingsIndexScreen() {
           </Section>
 
           <Section title={t('supportAndFeedback')}>
-            <FormNavigationRow
+            <Button
               label={t('aboutFoam')}
               systemImage='info.circle'
               onPress={() => router.push('/tabs/settings/about')}
@@ -172,13 +166,13 @@ export function SettingsIndexScreen() {
             footer={<UIText>{getBuildInfoLabel()}</UIText>}
           >
             {shouldShowDevTools ? (
-              <FormNavigationRow
+              <Button
                 label={t('devTools')}
                 systemImage='hammer'
                 onPress={() => router.push('/tabs/settings/dev-tools')}
               />
             ) : null}
-            <FormNavigationRow
+            <Button
               label={t('other')}
               systemImage='ellipsis.circle'
               onPress={() => router.push('/tabs/settings/other')}
@@ -194,6 +188,7 @@ export function SettingsIndexScreen() {
       <ScrollView
         ref={scrollRef}
         contentInsetAdjustmentBehavior='automatic'
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.content,
           { paddingBottom: insets.bottom + theme.space56 },

@@ -25,7 +25,7 @@ export function SearchInputBar({
     <Stack.SearchBar
       ref={nativeRef}
       autoCapitalize='none'
-      hideWhenScrolling
+      hideWhenScrolling={false}
       onCancelButtonPress={onCancel}
       onChangeText={event => onChangeText(event.nativeEvent.text)}
       onClose={onCancel}

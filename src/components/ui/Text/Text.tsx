@@ -57,19 +57,12 @@ export type TextWeight =
 export type TextVariant = 'default' | 'mono';
 type AppFontVariant = TextVariant | 'display';
 
-export type TextFamily = 'brand' | 'system';
-
 export interface TextProps extends RNTextProps, MarginProps {
   ref?: Ref<RNText>;
   children?: ReactNode;
   type?: TextType;
   weight?: TextWeight;
   variant?: AppFontVariant;
-  /**
-   * Only applied when `variant` is 'default'; `mono` and `display` variants
-   * always resolve their own font family.
-   */
-  family?: TextFamily;
   color?: ThemeColor | ThemeColorToken;
   contrast?: boolean;
   highContrast?: boolean;
@@ -103,82 +96,6 @@ const uprightFontMap: Record<TextWeight, string> = {
   heavy: theme.fontFamilyHeavy,
   black: theme.fontFamilyBlack,
 };
-
-const fontWeightToTextWeight: Record<string, TextWeight> = {
-  '100': 'ultralight',
-  '200': 'thin',
-  '300': 'light',
-  '400': 'normal',
-  '500': 'medium',
-  '600': 'semibold',
-  '700': 'bold',
-  '800': 'heavy',
-  '900': 'black',
-  bold: 'bold',
-  normal: 'normal',
-};
-
-function getStyleFontWeight(
-  style: TextProps['style'],
-): TextStyle['fontWeight'] | undefined {
-  if (!style) {
-    return undefined;
-  }
-  if (Array.isArray(style)) {
-    for (let index = style.length - 1; index >= 0; index -= 1) {
-      const weight = getStyleFontWeight(style[index] as TextProps['style']);
-      if (weight != null) {
-        return weight;
-      }
-    }
-    return undefined;
-  }
-  return (style as TextStyle).fontWeight;
-}
-
-function getStyleFontFamily(
-  style: TextProps['style'],
-): TextStyle['fontFamily'] | undefined {
-  if (!style) {
-    return undefined;
-  }
-  if (Array.isArray(style)) {
-    for (let index = style.length - 1; index >= 0; index -= 1) {
-      const fontFamily = getStyleFontFamily(style[index] as TextProps['style']);
-      if (fontFamily != null) {
-        return fontFamily;
-      }
-    }
-    return undefined;
-  }
-  return (style as TextStyle).fontFamily;
-}
-
-/**
- * Fixed-weight font files ignore `fontWeight` on iOS, so style weights map
- * to the theme token whose family renders them.
- */
-// eslint-disable-next-line react-doctor/only-export-components -- pure weight resolver exercised directly by tests
-export function resolveWeightFromFontWeight(
-  fontWeight: TextStyle['fontWeight'] | number,
-): TextWeight | undefined {
-  if (fontWeight == null) {
-    return undefined;
-  }
-
-  const direct = fontWeightToTextWeight[String(fontWeight)];
-  if (direct) {
-    return direct;
-  }
-
-  const numeric = Number(fontWeight);
-  if (Number.isNaN(numeric)) {
-    return undefined;
-  }
-
-  const clamped = Math.min(900, Math.max(100, Math.round(numeric / 100) * 100));
-  return fontWeightToTextWeight[String(clamped)];
-}
 
 const weightMap: Record<TextWeight, TextStyle['fontWeight']> = {
   black: '900',
@@ -224,7 +141,6 @@ export function Text({
   type = 'default',
   weight = 'normal',
   variant = 'default',
-  family = 'brand',
   color = 'gray',
   contrast,
   highContrast,
@@ -241,7 +157,6 @@ export function Text({
   mt,
   mx,
   my,
-  maxFontSizeMultiplier = 2,
   ...props
 }: TextProps) {
   const effectiveContrast =
@@ -253,43 +168,25 @@ export function Text({
 
   const sizeStyle = sizeStyles[type];
 
-  const isSystemFamily = family === 'system' && variant === 'default';
-  const isBrandFamily = family === 'brand' && variant === 'default';
-  const styleWeight =
-    isBrandFamily && getStyleFontFamily(style) == null
-      ? resolveWeightFromFontWeight(getStyleFontWeight(style))
-      : undefined;
-
-  const resolvedFontFamily = isSystemFamily
-    ? undefined
-    : getFontFamily(variant, weight, italic);
+  const resolvedFontFamily = getFontFamily(variant, weight, italic);
 
   const textStyle: TextStyle = {
     ...margin({ m, mb, ml, mr, mt, mx, my }),
     color: resolvedColor,
     fontFamily: resolvedFontFamily,
-    fontStyle:
-      (variant === 'mono' || isSystemFamily) && italic ? 'italic' : 'normal',
+    fontStyle: variant === 'mono' && italic ? 'italic' : 'normal',
     fontVariant: tabular ? ['tabular-nums'] : undefined,
-    fontWeight:
-      variant === 'mono' || isSystemFamily ? weightMap[weight] : undefined,
+    fontWeight: variant === 'mono' ? weightMap[weight] : undefined,
     textAlign: align,
   };
-
-  const styleWeightOverride: TextStyle | null = styleWeight
-    ? {
-        fontFamily: getFontFamily('default', styleWeight, italic),
-        fontWeight: undefined,
-      }
-    : null;
 
   return (
     <RNText
       ref={ref}
       textBreakStrategy='simple'
-      maxFontSizeMultiplier={maxFontSizeMultiplier}
+      maxFontSizeMultiplier={1.4}
       {...props}
-      style={[sizeStyle, textStyle, style, styleWeightOverride]}
+      style={[sizeStyle, textStyle, style]}
     >
       {children}
     </RNText>

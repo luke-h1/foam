@@ -33,9 +33,8 @@ function EmoteCellComponent({
 
   const hasAnimationSlotRef = useRef(false);
 
-  const isImageItem = typeof item !== 'string';
   useEffect(() => {
-    if (!isImageItem) {
+    if (typeof item === 'string') {
       return undefined;
     }
 
@@ -59,7 +58,7 @@ function EmoteCellComponent({
       releaseSlot();
       hasAnimationSlotRef.current = false;
     };
-  }, [isImageItem]);
+  }, [item]);
 
   if (typeof item === 'string') {
     return (
