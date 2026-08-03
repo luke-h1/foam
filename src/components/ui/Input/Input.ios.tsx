@@ -714,8 +714,16 @@ function frameForStyle(
   style: TextStyle & ViewStyle,
   alignment: FrameAlignment,
 ) {
-  const height = numberValue(style.height);
   const minHeight = numberValue(style.minHeight);
+
+  /**
+   * SwiftUI's fixed frame height beats minHeight, so a multiline input with an
+   * explicit minHeight would stay locked to the size-preset height (48pt).
+   */
+  const height =
+    alignment === 'topLeading' && minHeight !== undefined
+      ? undefined
+      : numberValue(style.height);
 
   /**
    * A flexible SwiftUI frame expands to fill maxHeight rather than hugging its
