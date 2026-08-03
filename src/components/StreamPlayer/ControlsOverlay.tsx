@@ -1,4 +1,10 @@
-import { useEffect, useState } from 'react';
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   type StyleProp,
   StyleSheet,
@@ -13,6 +19,12 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import {
+  type MenuAction,
+  MenuView,
+  type NativeActionEvent,
+} from '@expo/ui/community/menu';
+import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { Button } from '@app/components/Button/Button';
@@ -75,6 +87,23 @@ function StreamDurationLabel({
   return <Text style={style}>{startedAt ? duration : '0:00'}</Text>;
 }
 
+function GlassButtonSurface({ children }: { children: ReactNode }) {
+  if (isLiquidGlassAvailable()) {
+    return (
+      <GlassView
+        colorScheme='dark'
+        glassEffectStyle='regular'
+        isInteractive
+        style={styles.liquidGlassButton}
+      >
+        {children}
+      </GlassView>
+    );
+  }
+
+  return <View style={styles.glassButton}>{children}</View>;
+}
+
 export function ControlsOverlay({
   isVisible,
   muted,
@@ -92,7 +121,7 @@ export function ControlsOverlay({
   sleepTimerActive,
   streamInfo,
 }: ControlsOverlayProps) {
-  const { t } = useTranslation(['stream', 'common']);
+  const { t } = useTranslation(['stream', 'common', 'settings']);
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isPortrait = windowHeight >= windowWidth;
@@ -105,6 +134,80 @@ export function ControlsOverlay({
     opacity: opacity.get(),
     pointerEvents: opacity.get() > 0.01 ? 'box-none' : 'none',
   }));
+
+  const secondaryActions = useMemo(() => {
+    const actions: MenuAction[] = [];
+    if (onRefresh) {
+      actions.push({
+        id: 'refresh',
+        title: t('refresh'),
+        image: 'arrow.clockwise',
+      });
+    }
+    if (onPipPress) {
+      actions.push({
+        id: 'pip',
+        title: t('pictureInPicture'),
+        image: 'pip',
+        state: pipActive ? 'on' : undefined,
+      });
+    }
+    if (onCreateClipPress) {
+      actions.push({
+        id: 'create-clip',
+        title: t('createClip'),
+        image: 'scissors',
+      });
+    }
+    if (onSleepTimerPress) {
+      actions.push({
+        id: 'sleep-timer',
+        title: t('sleepTimer'),
+        image: 'moon.zzz',
+        state: sleepTimerActive ? 'on' : undefined,
+      });
+    }
+    if (onSharePress) {
+      actions.push({
+        id: 'share',
+        title: t('common:share'),
+        image: 'square.and.arrow.up',
+      });
+    }
+    return actions;
+  }, [
+    onRefresh,
+    onPipPress,
+    onCreateClipPress,
+    onSleepTimerPress,
+    onSharePress,
+    pipActive,
+    sleepTimerActive,
+    t,
+  ]);
+
+  const handleSecondaryAction = useCallback(
+    ({ nativeEvent }: NativeActionEvent) => {
+      switch (nativeEvent.event) {
+        case 'refresh':
+          onRefresh?.();
+          return;
+        case 'pip':
+          onPipPress?.();
+          return;
+        case 'create-clip':
+          onCreateClipPress?.();
+          return;
+        case 'sleep-timer':
+          onSleepTimerPress?.();
+          return;
+        case 'share':
+          onSharePress?.();
+          return;
+      }
+    },
+    [onRefresh, onPipPress, onCreateClipPress, onSleepTimerPress, onSharePress],
+  );
 
   return (
     <Animated.View style={[styles.controlsOverlay, animatedStyle]}>
@@ -123,7 +226,7 @@ export function ControlsOverlay({
         ]}
       >
         {onBackPress && (
-          <View style={styles.glassButton}>
+          <GlassButtonSurface>
             <Button
               label={t('common:back')}
               style={styles.headerButton}
@@ -135,7 +238,7 @@ export function ControlsOverlay({
                 tintColor={theme.colorWhite}
               />
             </Button>
-          </View>
+          </GlassButtonSurface>
         )}
 
         <View
@@ -226,7 +329,7 @@ export function ControlsOverlay({
 
         <View style={styles.spacer} />
         {onMutePress && (
-          <View style={styles.glassButton}>
+          <GlassButtonSurface>
             <Button
               label={muted ? t('unmute') : t('mute')}
               style={styles.controlButton}
@@ -238,88 +341,28 @@ export function ControlsOverlay({
                 tintColor={theme.colorWhite}
               />
             </Button>
-          </View>
-        )}
-        {onRefresh && (
-          <View style={styles.glassButton}>
-            <Button
-              label={t('refresh')}
-              style={styles.controlButton}
-              onPress={onRefresh}
-            >
-              <SymbolView
-                name='arrow.clockwise'
-                size={18}
-                tintColor={theme.colorWhite}
-              />
-            </Button>
-          </View>
+          </GlassButtonSurface>
         )}
 
-        {onPipPress && (
-          <View style={styles.glassButton}>
-            <Button
-              label={t('pictureInPicture')}
-              style={styles.controlButton}
-              onPress={onPipPress}
-            >
-              <SymbolView
-                name='pip'
-                size={18}
-                tintColor={pipActive ? theme.colorPrimary : theme.colorWhite}
-              />
-            </Button>
-          </View>
-        )}
-
-        {onCreateClipPress && (
-          <View style={styles.glassButton}>
-            <Button
-              label={t('createClip')}
-              style={styles.controlButton}
-              onPress={onCreateClipPress}
-            >
-              <SymbolView
-                name='scissors'
-                size={18}
-                tintColor={theme.colorWhite}
-              />
-            </Button>
-          </View>
-        )}
-
-        {onSleepTimerPress && (
-          <View style={styles.glassButton}>
-            <Button
-              label={t('sleepTimer')}
-              style={styles.controlButton}
-              onPress={onSleepTimerPress}
-            >
-              <SymbolView
-                name='moon.zzz'
-                size={18}
-                tintColor={
-                  sleepTimerActive ? theme.colorPrimary : theme.colorWhite
-                }
-              />
-            </Button>
-          </View>
-        )}
-
-        {onSharePress && (
-          <View style={styles.glassButton}>
-            <Button
-              label={t('common:share')}
-              style={styles.controlButton}
-              onPress={onSharePress}
-            >
-              <SymbolView
-                name='square.and.arrow.up'
-                size={18}
-                tintColor={theme.colorWhite}
-              />
-            </Button>
-          </View>
+        {secondaryActions.length > 0 && (
+          <MenuView
+            actions={secondaryActions}
+            onPressAction={handleSecondaryAction}
+          >
+            <GlassButtonSurface>
+              <View
+                accessibilityLabel={t('settings:more')}
+                accessibilityRole='button'
+                style={styles.controlButton}
+              >
+                <SymbolView
+                  name='ellipsis.circle'
+                  size={18}
+                  tintColor={theme.colorWhite}
+                />
+              </View>
+            </GlassButtonSurface>
+          </MenuView>
         )}
       </View>
     </Animated.View>
@@ -377,6 +420,14 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: 'center',
     boxShadow: '0 8px 18px rgba(0, 0, 0, 0.28)',
+    width: 44,
+  },
+  liquidGlassButton: {
+    alignItems: 'center',
+    borderCurve: 'continuous',
+    borderRadius: theme.borderRadius999,
+    height: 44,
+    justifyContent: 'center',
     width: 44,
   },
   controlsOverlay: {

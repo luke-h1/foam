@@ -1,19 +1,12 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
 
 import type { ListRenderItem } from '@shopify/flash-list';
 
-import { AnimatedFlashList } from '@app/components/FlashList/AnimatedFlashList';
-import { FlashListRef } from '@app/components/FlashList/FlashList';
+import { FlashList, FlashListRef } from '@app/components/FlashList/FlashList';
 import { MemoizedLiveStreamCard } from '@app/components/LiveStreamCard/LiveStreamCard';
 import { LiveStreamCardSkeleton } from '@app/components/LiveStreamCard/LiveStreamCardSkeleton';
-import { StreamListLayoutToggle } from '@app/components/StreamListLayoutToggle/StreamListLayoutToggle';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
 import { useStreamProfilePictures } from '@app/hooks/queries/useStreamProfilePictures';
 import { useTopStreamsQuery } from '@app/hooks/queries/useTopStreamsQuery';
@@ -22,41 +15,14 @@ import { useFlattenedInfiniteQuery } from '@app/hooks/useFlattenedInfiniteQuery'
 import { useInfiniteQueryLoadMore } from '@app/hooks/useInfiniteQueryLoadMore';
 import { useRefetchOnForeground } from '@app/hooks/useRefetchOnForeground';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
-import {
-  type Preferences,
-  usePreference,
-  useUpdatePreferences,
-} from '@app/store/preferenceStore';
-import { motion } from '@app/styles/motion';
+import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import type { TwitchStream } from '@app/types/twitch/stream';
-
-type StreamListLayout = Preferences['streamListLayout'];
-
-interface TopStreamsListHeaderProps {
-  streamListLayout: StreamListLayout;
-  onChangeLayout: (layout: StreamListLayout) => void;
-}
-
-const TopStreamsListHeader = memo(function TopStreamsListHeader({
-  streamListLayout,
-  onChangeLayout,
-}: TopStreamsListHeaderProps) {
-  return (
-    <View style={styles.layoutToggleRow}>
-      <StreamListLayoutToggle
-        value={streamListLayout}
-        onChange={onChangeLayout}
-      />
-    </View>
-  );
-});
 
 export function TopStreamsScreen() {
   const { t } = useTranslation('stream');
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const streamListLayout = usePreference('streamListLayout');
-  const updatePreferences = useUpdatePreferences();
   const listRef = useRef<FlashListRef<TwitchStream>>(null);
 
   useScrollToTop(listRef);
@@ -102,23 +68,6 @@ export function TopStreamsScreen() {
     streamListLayout === 'media',
   );
 
-  const handleLayoutChange = useCallback(
-    (layout: StreamListLayout) => {
-      if (layout === streamListLayout) {
-        return;
-      }
-      updatePreferences({ streamListLayout: layout });
-    },
-    [streamListLayout, updatePreferences],
-  );
-
-  const listHeader = (
-    <TopStreamsListHeader
-      streamListLayout={streamListLayout}
-      onChangeLayout={handleLayoutChange}
-    />
-  );
-
   const showSkeleton = isLoading || (isFetching && allStreams.length === 0);
 
   if (showSkeleton) {
@@ -137,18 +86,6 @@ export function TopStreamsScreen() {
     );
   }
 
-  if (!streams || !streams.pages) {
-    return (
-      <View style={styles.container}>
-        {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
-        <EmptyState
-          content={t('noTopStreamsFound')}
-          buttonOnPress={onRefresh}
-        />
-      </View>
-    );
-  }
-
   if (allStreams.length === 0) {
     return (
       <View style={styles.container}>
@@ -164,44 +101,33 @@ export function TopStreamsScreen() {
   return (
     <TopStreamsList
       debouncedHandleLoadMore={debouncedHandleLoadMore}
-      listHeader={listHeader}
       listRef={listRef}
       onRefresh={onRefresh}
       refreshing={refreshing}
       remainingStreams={allStreams}
       renderItem={renderItem}
-      streamListLayout={streamListLayout}
     />
   );
 }
 
 function TopStreamsList({
   debouncedHandleLoadMore,
-  listHeader,
   listRef,
   onRefresh,
   refreshing,
   remainingStreams,
   renderItem,
-  streamListLayout,
 }: {
   debouncedHandleLoadMore: () => void;
-  listHeader: React.ReactElement;
   listRef: React.RefObject<FlashListRef<TwitchStream> | null>;
   onRefresh: () => void;
   refreshing: boolean;
   remainingStreams: TwitchStream[];
   renderItem: ListRenderItem<TwitchStream>;
-  streamListLayout: StreamListLayout;
 }) {
-  const listFadeStyle = useLayoutSwitchFade(streamListLayout);
-
   return (
-    <Animated.View
-      testID='top-streams-list'
-      style={[styles.container, listFadeStyle]}
-    >
-      <AnimatedFlashList
+    <View testID='top-streams-list' style={styles.container}>
+      <FlashList
         ref={listRef}
         contentInsetAdjustmentBehavior='automatic'
         data={remainingStreams}
@@ -210,32 +136,14 @@ function TopStreamsList({
         getItemType={() => 'stream-item'}
         drawDistance={500}
         contentContainerStyle={styles.listContent}
-        ListHeaderComponent={listHeader}
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         onEndReached={debouncedHandleLoadMore}
         refreshing={refreshing}
         onEndReachedThreshold={0.3}
         onRefresh={onRefresh}
       />
-    </Animated.View>
+    </View>
   );
-}
-
-/**
- * Soft dip-and-recover fade when the user switches list layouts, so the
- * rows do not hard-cut between shapes. No remount; scroll is preserved.
- */
-function useLayoutSwitchFade(streamListLayout: StreamListLayout) {
-  const fade = useSharedValue(1);
-
-  useEffect(() => {
-    fade.set(0.35);
-    fade.set(
-      withTiming(1, { duration: motion.medium, easing: motion.easing.out }),
-    );
-  }, [fade, streamListLayout]);
-
-  return useAnimatedStyle(() => ({ opacity: fade.get() }));
 }
 
 const styles = StyleSheet.create({
@@ -245,11 +153,5 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: theme.space20,
-  },
-  layoutToggleRow: {
-    alignItems: 'flex-end',
-    marginBottom: theme.space8,
-    marginHorizontal: theme.space16,
-    marginTop: theme.space8,
   },
 });

@@ -1,13 +1,16 @@
 /* eslint-disable no-restricted-imports */
-import { useTranslation } from 'react-i18next';
-import type {
-  ImageStyle,
-  StyleProp,
-  TextProps,
-  TextStyle,
-  ViewStyle,
+import {
+  type ImageStyle,
+  Platform,
+  type StyleProp,
+  type TextProps,
+  type TextStyle,
+  type ViewStyle,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { ContentUnavailableView, Host } from '@expo/ui/swift-ui';
 
 import {
   EmptyLayout,
@@ -22,6 +25,14 @@ import { Image } from '@app/components/Image/Image';
 import type { ImageProps as AppImageProps } from '@app/components/Image/Image.types';
 import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { theme } from '@app/styles/themes';
+
+/**
+ * ContentUnavailableView is iOS 17+; its native body is empty on iOS 16, so
+ * earlier versions keep the JS layout.
+ */
+const supportsContentUnavailableView =
+  Platform.OS === 'ios' && parseInt(String(Platform.Version), 10) >= 17;
+
 interface EmptyStatePresetItem {
   iconName: SymbolViewProps['name'];
   headingKey: 'nothingHereYet';
@@ -87,6 +98,42 @@ export function EmptyState({
   const resolvedContent = content ?? t(presetConfig.contentKey);
   const resolvedButton =
     button === undefined ? t(presetConfig.buttonKey) : button;
+
+  const iosSymbol =
+    typeof resolvedIconName === 'string'
+      ? resolvedIconName
+      : resolvedIconName?.ios;
+
+  if (
+    supportsContentUnavailableView &&
+    !resolvedImageSource &&
+    (resolvedHeading == null || typeof resolvedHeading === 'string') &&
+    (resolvedContent == null || typeof resolvedContent === 'string')
+  ) {
+    return (
+      <SafeAreaView style={[styles.container, style]}>
+        <Host style={styles.iosHost}>
+          <ContentUnavailableView
+            title={
+              typeof resolvedHeading === 'string' ? resolvedHeading : undefined
+            }
+            systemImage={iosSymbol}
+            description={
+              typeof resolvedContent === 'string' ? resolvedContent : undefined
+            }
+          />
+        </Host>
+        {resolvedButton ? (
+          <EmptyLayoutButton
+            title={resolvedButton}
+            onPress={buttonOnPress}
+            style={[styles.buttonWrap, styles.iosButtonWrap, buttonStyle]}
+            variant='default'
+          />
+        ) : null}
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, style]}>
@@ -197,6 +244,13 @@ const styles = {
   },
   iconWrap: {
     marginBottom: theme.space20,
+  },
+  iosButtonWrap: {
+    marginBottom: theme.space44,
+  },
+  iosHost: {
+    alignSelf: 'stretch',
+    flex: 1,
   },
   image: {
     borderRadius: theme.borderRadius20,

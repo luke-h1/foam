@@ -17,6 +17,7 @@
       {
         "files": [
           "src/screens/Preferences/BlockedTermsScreen.tsx",
+          "src/screens/Preferences/ChatHighlightsScreen.tsx",
           "src/screens/Preferences/SavedPhrasesScreen.tsx"
         ],
         "rules": ["react-hooks-js/immutability"]

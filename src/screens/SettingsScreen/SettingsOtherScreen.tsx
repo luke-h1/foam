@@ -70,7 +70,6 @@ export function SettingsOtherScreen() {
       <ScrollView
         ref={scrollRef}
         contentInsetAdjustmentBehavior='automatic'
-        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
         <SettingsSection

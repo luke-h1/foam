@@ -5,7 +5,7 @@ import { SystemBars } from 'react-native-edge-to-edge';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
-import { router, useFocusEffect } from 'expo-router';
+import { router, Stack, useFocusEffect } from 'expo-router';
 import * as ScreenOrientation from 'expo-screen-orientation';
 
 import { IconButton } from '@app/components/IconButton/IconButton';
@@ -88,7 +88,8 @@ export function VodPlayerScreen({ id }: VodPlayerScreenProps) {
 
   return (
     <View style={styles.container}>
-      {process.env.EXPO_OS === 'android' && isLandscape ? (
+      <Stack.Screen options={{ autoHideHomeIndicator: isLandscape }} />
+      {isLandscape ? (
         <SystemBars hidden={{ navigationBar: true, statusBar: true }} />
       ) : null}
       <View

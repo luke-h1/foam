@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
   Platform,
-  ScrollView,
   type SectionListData,
   type SectionListRenderItemInfo,
   StyleSheet,
@@ -19,7 +18,6 @@ import { BadgePreviewSheet } from '@app/components/Chat/components/BadgePreviewS
 import { EmotePreviewSheet } from '@app/components/Chat/components/EmotePreviewSheet/EmotePreviewSheet';
 import { EmoteRow } from '@app/components/Chat/components/EmoteSheet/EmoteRow';
 import type { EmotePickerItem } from '@app/components/Chat/components/EmoteSheet/emoteSheetTypes';
-import { ProviderChip } from '@app/components/Chat/components/EmoteSheet/ProviderChip';
 import { SetHeader } from '@app/components/Chat/components/EmoteSheet/SetHeader';
 import {
   buildEmoteMenuProviders,
@@ -142,25 +140,24 @@ function EmotesTab({
     );
   }
 
+  const activeProviderIndex = providers.findIndex(
+    provider => provider.id === effectiveActiveProviderId,
+  );
+
   return (
     <View style={styles.flex}>
-      <ScrollView
-        horizontal
-        keyboardShouldPersistTaps='handled'
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.providerBarContent}
-        style={styles.providerBar}
-      >
-        {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- bounded set of provider tabs */}
-        {providers.map(provider => (
-          <ProviderChip
-            key={provider.id}
-            isActive={provider.id === effectiveActiveProviderId}
-            onSelect={setActiveProviderId}
-            provider={provider}
-          />
-        ))}
-      </ScrollView>
+      <View style={styles.providerSegmentWrap}>
+        <SegmentedControl
+          items={providers.map(provider => ({ label: provider.title }))}
+          currentIndex={activeProviderIndex < 0 ? 0 : activeProviderIndex}
+          onChange={index => {
+            const provider = providers[index];
+            if (provider) {
+              setActiveProviderId(provider.id);
+            }
+          }}
+        />
+      </View>
 
       <LegendList
         data={listItems}
@@ -169,7 +166,7 @@ function EmotesTab({
         getItemType={item => item.type}
         estimatedItemSize={60}
         recycleItems
-        showsVerticalScrollIndicator={false}
+        indicatorStyle={Platform.OS === 'ios' ? 'white' : undefined}
         contentContainerStyle={[
           styles.emoteListContent,
           { paddingBottom: bottomInset + theme.space36 },
@@ -294,7 +291,7 @@ function BadgesTab({
       stickySectionHeadersEnabled
       estimatedItemSize={BADGE_CELL_SIZE + theme.space8}
       recycleItems
-      showsVerticalScrollIndicator={false}
+      indicatorStyle={Platform.OS === 'ios' ? 'white' : undefined}
       contentContainerStyle={[
         styles.badgeListContent,
         { paddingBottom: bottomInset + theme.space36 },
@@ -408,16 +405,9 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  providerBar: {
-    flexGrow: 0,
-    maxHeight: 54,
-  },
-  providerBarContent: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: theme.space12,
+  providerSegmentWrap: {
+    paddingBottom: theme.space8,
     paddingHorizontal: theme.space16,
-    paddingVertical: theme.space8,
   },
   segmentWrap: {
     paddingHorizontal: theme.space16,

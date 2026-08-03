@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Stack } from 'expo-router';
 
+import { StreamListLayoutMenu } from '@app/components/StreamListLayoutToggle/StreamListLayoutMenu';
 import {
   nativeStackScreenOptions,
   nativeStackTabRootScreenOptions,
@@ -13,7 +14,11 @@ export default function FollowingLayout() {
     <Stack screenOptions={nativeStackScreenOptions}>
       <Stack.Screen
         name='index'
-        options={{ title: t('following'), ...nativeStackTabRootScreenOptions }}
+        options={{
+          title: t('following'),
+          ...nativeStackTabRootScreenOptions,
+          headerRight: () => <StreamListLayoutMenu />,
+        }}
       />
     </Stack>
   );

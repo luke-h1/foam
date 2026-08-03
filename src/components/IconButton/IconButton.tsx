@@ -54,6 +54,7 @@ export function IconButton({
 const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

@@ -1,9 +1,29 @@
 import { useCallback, useRef, useState } from 'react';
-import { Alert, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Platform, StyleSheet, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
+import {
+  Host,
+  HStack,
+  Image as NativeImage,
+  List,
+  Section,
+  Spacer,
+  Text as NativeText,
+  TextField,
+  useNativeState,
+} from '@expo/ui/swift-ui';
+import {
+  autocorrectionDisabled,
+  foregroundStyle,
+  listStyle,
+  onSubmit,
+  submitLabel,
+  textInputAutocapitalization,
+} from '@expo/ui/swift-ui/modifiers';
 import { PressableScale } from 'pressto';
+import { toast } from 'sonner-native';
 
 import type {
   FlashListRef,
@@ -13,6 +33,7 @@ import { FlashList } from '@app/components/FlashList/FlashList';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import i18next from '@app/i18n/i18next';
 import { impact } from '@app/lib/haptics';
 import {
   type CustomHighlight,
@@ -33,6 +54,35 @@ const HIGHLIGHT_COLORS = [
 ] as const;
 
 const EMPTY_HIGHLIGHTS: CustomHighlight[] = [];
+
+type AddHighlightResult = 'added' | 'duplicate' | 'empty';
+
+function useCustomHighlights() {
+  const customHighlights = usePreference('customHighlights');
+  const updatePreferences = useUpdatePreferences();
+
+  const highlights = customHighlights ?? EMPTY_HIGHLIGHTS;
+
+  const addHighlight = (rawText: string, color: string): AddHighlightResult => {
+    const phrase = normaliseHighlightPhrase(rawText);
+    if (!phrase) return 'empty';
+
+    if (highlights.some(highlight => highlight.phrase === phrase)) {
+      return 'duplicate';
+    }
+
+    updatePreferences({
+      customHighlights: [
+        ...highlights,
+        { id: `${Date.now()}_${phrase}`, phrase, color },
+      ],
+    });
+    impact('light');
+    return 'added';
+  };
+
+  return { addHighlight, highlights, updatePreferences };
+}
 
 function HighlightRow({
   highlight,
@@ -154,10 +204,123 @@ function InputSection({
   );
 }
 
+function NativeChatHighlightsList() {
+  const { t } = useTranslation(['preferences', 'common']);
+  const { addHighlight, highlights, updatePreferences } = useCustomHighlights();
+  const [selectedColor, setSelectedColor] = useState<string>(
+    HIGHLIGHT_COLORS[0],
+  );
+  const phraseText = useNativeState('');
+
+  const handleNativeAdd = () => {
+    const result = addHighlight(phraseText.value, selectedColor);
+    if (result === 'duplicate') {
+      toast.error(i18next.t('preferences:highlightAlreadyAdded'));
+    }
+    if (result !== 'empty') {
+      phraseText.value = '';
+    }
+  };
+
+  const handleDeleteByIndex = (indices: number[]) => {
+    const targets = indices
+      .map(index => highlights[index])
+      .filter(highlight => highlight !== undefined);
+    const first = targets[0];
+    if (!first) {
+      return;
+    }
+
+    Alert.alert(
+      t('removeHighlight'),
+      t('removeHighlightConfirm', { phrase: first.phrase }),
+      [
+        { text: t('common:cancel'), style: 'cancel' },
+        {
+          text: t('remove'),
+          style: 'destructive',
+          onPress: () => {
+            impact('medium');
+            const removals = new Set(targets.map(target => target.id));
+            updatePreferences({
+              customHighlights: highlights.filter(
+                highlight => !removals.has(highlight.id),
+              ),
+            });
+          },
+        },
+      ],
+    );
+  };
+
+  const hasHighlights = highlights.length > 0;
+
+  return (
+    <Host style={styles.keyboardAvoid} colorScheme='dark'>
+      <List modifiers={[listStyle('insetGrouped')]}>
+        <Section>
+          <TextField
+            text={phraseText}
+            placeholder={t('addPhrasePlaceholder')}
+            modifiers={[
+              autocorrectionDisabled(true),
+              textInputAutocapitalization('never'),
+              submitLabel('done'),
+              onSubmit(handleNativeAdd),
+            ]}
+          />
+          <HStack spacing={theme.space12}>
+            {HIGHLIGHT_COLORS.map(color => (
+              <NativeImage
+                key={color}
+                systemName={
+                  color === selectedColor
+                    ? 'checkmark.circle.fill'
+                    : 'circle.fill'
+                }
+                color={color}
+                size={28}
+                onPress={() => setSelectedColor(color)}
+              />
+            ))}
+            <Spacer />
+          </HStack>
+        </Section>
+        {hasHighlights ? (
+          <Section
+            footer={
+              <NativeText>
+                {t('phrasesFooter', { count: highlights.length })}
+              </NativeText>
+            }
+          >
+            <List.ForEach onDelete={handleDeleteByIndex}>
+              {highlights.map(highlight => (
+                <HStack key={highlight.id} spacing={theme.space12}>
+                  <NativeImage
+                    systemName='circle.fill'
+                    color={highlight.color}
+                    size={12}
+                  />
+                  <NativeText
+                    modifiers={[foregroundStyle(theme.color.text.dark)]}
+                  >
+                    {highlight.phrase}
+                  </NativeText>
+                  <Spacer />
+                </HStack>
+              ))}
+            </List.ForEach>
+          </Section>
+        ) : null}
+      </List>
+    </Host>
+  );
+}
+
 export function ChatHighlightsScreen() {
   const { t } = useTranslation('preferences');
-  const customHighlights = usePreference('customHighlights');
-  const updatePreferences = useUpdatePreferences();
+  const { addHighlight, highlights, updatePreferences } = useCustomHighlights();
   const [inputValue, setInputValue] = useState('');
   const [selectedColor, setSelectedColor] = useState<string>(
     HIGHLIGHT_COLORS[0],
@@ -166,24 +329,15 @@ export function ChatHighlightsScreen() {
 
   useScrollToTop(listRef);
 
-  const highlights = customHighlights ?? EMPTY_HIGHLIGHTS;
-
-  const handleAdd = useCallback(() => {
-    const phrase = normaliseHighlightPhrase(inputValue);
-    if (!phrase) return;
-    if (highlights.some(highlight => highlight.phrase === phrase)) {
-      setInputValue('');
-      return;
+  const handleAdd = () => {
+    const result = addHighlight(inputValue, selectedColor);
+    if (result === 'duplicate') {
+      toast.error(i18next.t('preferences:highlightAlreadyAdded'));
     }
-    updatePreferences({
-      customHighlights: [
-        ...highlights,
-        { id: `${Date.now()}_${phrase}`, phrase, color: selectedColor },
-      ],
-    });
-    setInputValue('');
-    impact('light');
-  }, [inputValue, highlights, selectedColor, updatePreferences]);
+    if (result !== 'empty') {
+      setInputValue('');
+    }
+  };
 
   const handleRemove = useCallback(
     (id: string) => {
@@ -210,6 +364,10 @@ export function ChatHighlightsScreen() {
   );
 
   const hasHighlights = highlights.length > 0;
+
+  if (Platform.OS === 'ios') {
+    return <NativeChatHighlightsList />;
+  }
 
   return (
     <KeyboardAvoidingView behavior='padding' style={styles.keyboardAvoid}>

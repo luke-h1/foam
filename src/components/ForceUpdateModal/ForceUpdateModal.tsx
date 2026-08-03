@@ -1,4 +1,12 @@
-import { Modal as RNModal, StyleSheet, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import {
+  Alert,
+  AppState,
+  Modal as RNModal,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import * as Application from 'expo-application';
@@ -8,7 +16,8 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { getStoreUrlAsync } from '@app/screens/DevTools/util/getStoreUrlAsync';
 import { theme } from '@app/styles/themes';
-import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
+import { openLinkInBrowserAsync } from '@app/utils/browser/openLinkInBrowser';
+import { logger } from '@app/utils/logger';
 import { isUpdateRequired } from '@app/utils/version/compareVersions';
 import { getMinimumVersion } from '@app/utils/version/getMinimumVersion';
 
@@ -16,15 +25,25 @@ import { Variant } from '../../../app.config';
 import { Button } from '../Button/Button';
 
 async function handleUpdatePress() {
-  const storeUrl = await getStoreUrlAsync();
-  if (storeUrl) {
-    openLinkInBrowser(storeUrl);
+  try {
+    const storeUrl = await getStoreUrlAsync();
+    if (storeUrl) {
+      await openLinkInBrowserAsync(storeUrl);
+    }
+  } catch (error) {
+    logger.main.error('[ForceUpdateModal] failed to open store link', error);
   }
 }
+
+const UPDATE_REQUIRED_TITLE = 'Update Required';
+const UPDATE_REQUIRED_BODY =
+  'A new version of Foam is available. Please update to continue using the app.';
+const ALERT_REPRESENT_DELAY_MS = 300;
 
 export function ForceUpdateModal() {
   const { config: remoteConfig } = useRemoteConfig();
   const insets = useSafeAreaInsets();
+  const alertVisibleRef = useRef(false);
 
   const variant = (process.env.EXPO_PUBLIC_APP_VARIANT ??
     'development') as Variant;
@@ -35,6 +54,63 @@ export function ForceUpdateModal() {
     minimumVersion && currentVersion && currentVersion !== 'Unknown'
       ? (isUpdateRequired(currentVersion, minimumVersion) ?? false)
       : false;
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios' || !updateRequired) {
+      return;
+    }
+
+    let alertTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const scheduleAlert = () => {
+      if (alertTimer) {
+        clearTimeout(alertTimer);
+      }
+      alertTimer = setTimeout(presentAlert, ALERT_REPRESENT_DELAY_MS);
+    };
+
+    const presentAlert = () => {
+      if (alertVisibleRef.current) {
+        return;
+      }
+      alertVisibleRef.current = true;
+      Alert.alert(
+        UPDATE_REQUIRED_TITLE,
+        `${UPDATE_REQUIRED_BODY}\n\nCurrent version: ${currentVersion}\nMinimum required: ${minimumVersion}`,
+        [
+          {
+            text: 'Update',
+            onPress: () => {
+              alertVisibleRef.current = false;
+              void handleUpdatePress().finally(scheduleAlert);
+            },
+          },
+        ],
+      );
+    };
+
+    const appStateSubscription = AppState.addEventListener('change', state => {
+      if (state === 'active') {
+        scheduleAlert();
+      }
+    });
+
+    if (AppState.currentState === 'active') {
+      presentAlert();
+    }
+
+    return () => {
+      appStateSubscription.remove();
+      alertVisibleRef.current = false;
+      if (alertTimer) {
+        clearTimeout(alertTimer);
+      }
+    };
+  }, [updateRequired, currentVersion, minimumVersion]);
+
+  if (Platform.OS === 'ios') {
+    return null;
+  }
 
   return (
     <RNModal
@@ -49,18 +125,24 @@ export function ForceUpdateModal() {
             <SymbolView name='arrow.up' />
           </View>
 
-          <Text color='gray' type='xl' weight='bold' align='center'>
-            Update Required
+          <Text
+            color='gray'
+            type='xl'
+            weight='bold'
+            align='center'
+            family='system'
+          >
+            {UPDATE_REQUIRED_TITLE}
           </Text>
 
           <Text
             color='gray.textLow'
+            family='system'
             type='sm'
             align='left'
             style={styles.subtitle}
           >
-            A new version of Foam is available. Please update to continue using
-            the app.
+            {UPDATE_REQUIRED_BODY}
           </Text>
 
           <View style={styles.versionInfo}>
