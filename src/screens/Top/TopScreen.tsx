@@ -1,7 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { type SceneRendererProps, TabView } from 'react-native-tab-view';
+import { StyleSheet, View } from 'react-native';
 
 import { TOP_TAB_ROUTES } from '@app/constants/topTabRoutes';
 import { theme } from '@app/styles/themes';
@@ -10,41 +8,28 @@ import { TopCategoriesScreen } from './TopCategoriesScreen';
 import { TopSegmentControl } from './TopSegmentControl';
 import { TopStreamsScreen } from './TopStreamsScreen';
 
-type Route = { key: string; title: string };
-
-const ROUTES: Route[] = [...TOP_TAB_ROUTES];
-
-const renderScene = ({ route }: SceneRendererProps & { route: Route }) => {
-  switch (route.key) {
-    case 'streams':
-      return <TopStreamsScreen />;
-    case 'categories':
-      return <TopCategoriesScreen />;
-    default:
-      return null;
-  }
-};
-
 export function TopScreen() {
-  const layout = useWindowDimensions();
   const [index, setIndex] = useState<number>(0);
+  const activeKey = TOP_TAB_ROUTES[index]?.key;
 
+  /**
+   * Both screens stay mounted (as under TabView): a segment flip must not drop
+   * scroll state or re-fire useRefetchOnForeground's mount-time refetch.
+   */
   return (
-    <SafeAreaView edges={['top']} style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.segmentBar}>
         <TopSegmentControl index={index} onIndexChange={setIndex} />
       </View>
-      <TabView
-        lazy
-        lazyPreloadDistance={1}
-        style={styles.tabViewWrapper}
-        navigationState={{ index, routes: ROUTES }}
-        renderScene={renderScene}
-        onIndexChange={setIndex}
-        initialLayout={{ width: layout.width }}
-        renderTabBar={() => null}
-      />
-    </SafeAreaView>
+      <View style={activeKey === 'streams' ? styles.scene : styles.hiddenScene}>
+        <TopStreamsScreen />
+      </View>
+      <View
+        style={activeKey === 'categories' ? styles.scene : styles.hiddenScene}
+      >
+        <TopCategoriesScreen />
+      </View>
+    </View>
   );
 }
 
@@ -53,11 +38,14 @@ const styles = StyleSheet.create({
     backgroundColor: theme.color.background.dark,
     flex: 1,
   },
+  hiddenScene: {
+    display: 'none',
+  },
+  scene: {
+    flex: 1,
+  },
   segmentBar: {
     backgroundColor: theme.color.background.dark,
     paddingHorizontal: theme.space16,
-  },
-  tabViewWrapper: {
-    flex: 1,
   },
 });

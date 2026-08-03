@@ -150,7 +150,7 @@ export const CategoryScreen: FC<CategoryScreenProps> = ({ id }) => {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: category.name,
+          ...(process.env.EXPO_OS === 'android' && { title: category.name }),
           headerRight: () => (
             <IconButton
               icon={{ type: 'symbol', name: 'square.and.arrow.up', size: 18 }}

@@ -58,6 +58,7 @@ export function RootLayoutNav() {
             options={{
               ...nativeStackScreenOptions,
               title: '',
+              headerBackButtonDisplayMode: 'minimal',
             }}
           />
           <Stack.Screen

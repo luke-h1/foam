@@ -86,18 +86,6 @@ export function TopStreamsScreen() {
     );
   }
 
-  if (!streams || !streams.pages) {
-    return (
-      <View style={styles.container}>
-        {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
-        <EmptyState
-          content={t('noTopStreamsFound')}
-          buttonOnPress={onRefresh}
-        />
-      </View>
-    );
-  }
-
   if (allStreams.length === 0) {
     return (
       <View style={styles.container}>
