@@ -19,7 +19,7 @@ configureReanimatedLogger({
   strict: false,
 });
 
-enableFreeze(true);
+enableFreeze(false);
 
 WebBrowser.maybeCompleteAuthSession();
 sweepOversizedSentryEnvelopes();

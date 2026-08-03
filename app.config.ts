@@ -201,7 +201,7 @@ const config: ExpoConfig = {
     },
   },
   plugins: [
-    'expo-router',
+    ['expo-router', { disableSynchronousScreensUpdates: true }],
     'expo-image',
     'expo-localization',
     [
