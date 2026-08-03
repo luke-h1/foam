@@ -1,0 +1,151 @@
+diff --git a/ios/RNSScreen.h b/ios/RNSScreen.h
+index b1f482c10bcbf1b298c48f3feaa9a7b351a7f6af..a27bb6d232e3f91089d7f108f260288943724f69 100644
+--- a/ios/RNSScreen.h
++++ b/ios/RNSScreen.h
+@@ -50,7 +50,7 @@ NS_ASSUME_NONNULL_BEGIN
+ - (void)calculateAndNotifyHeaderHeightChangeIsModal:(BOOL)isModal;
+ - (void)notifyFinishTransitioning;
+ - (RNSScreenView *)screenView;
+-- (void)setViewToSnapshot;
++- (void)addSnapshotToView;
+ - (CGFloat)calculateHeaderHeightIsModal:(BOOL)isModal;
+ - (BOOL)isRemovedFromParent;
+ - (void)notifyPresentedControllerDismissed;
+@@ -90,6 +90,12 @@ NS_ASSUME_NONNULL_BEGIN
+ 
+ @property (nonatomic, retain) NSNumber *transitionDuration;
+ @property (nonatomic, readonly) BOOL dismissed;
++
++/**
++ * Whether React has already deleted this component. The view may still be part of the view
++ * hierarchy at that point, backing the remainder of an ongoing native transition.
++ */
++@property (nonatomic, readonly, getter=isInvalidated) BOOL invalidated;
+ @property (nonatomic) BOOL hideKeyboardOnSwipe;
+ @property (nonatomic) BOOL customAnimationOnSwipe;
+ @property (nonatomic) BOOL preventNativeDismiss;
+diff --git a/ios/RNSScreen.mm b/ios/RNSScreen.mm
+index 9b66012dc8db1e3af0cb5457f8dad86e7f2fe5e3..e815b33384535d7475a7789197c9f26b35de0520 100644
+--- a/ios/RNSScreen.mm
++++ b/ios/RNSScreen.mm
+@@ -769,6 +769,8 @@ RNS_IGNORE_SUPER_CALL_END
+ 
+ - (void)invalidateImpl
+ {
++  _invalidated = YES;
++
+   // Since the scroll view might get immediately recycled we remove ourselves
+   // immediately.
+   if (_sheetsScrollView != nil) {
+@@ -1407,7 +1409,6 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
+ @implementation RNSScreen {
+   __weak id _previousFirstResponder;
+   CGRect _lastViewFrame;
+-  RNSScreenView *_initialView;
+   UIView *_fakeView;
+   CADisplayLink *_animationTimer;
+   CGFloat _currentAlpha;
+@@ -1428,7 +1429,6 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
+     _fakeView = [UIView new];
+     _shouldNotify = YES;
+     _isRemovedFromParent = NO;
+-    _initialView = (RNSScreenView *)view;
+   }
+   return self;
+ }
+@@ -1751,9 +1751,13 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
+ 
+ - (void)notifyTransitionProgress:(double)progress closing:(BOOL)closing goingForward:(BOOL)goingForward
+ {
+-  if ([self.view isKindOfClass:[RNSScreenView class]]) {
+-    // if the view is already snapshot, there is not sense in sending progress since on JS side
+-    // the component is already not present
++  if (![self.view isKindOfClass:[RNSScreenView class]]) {
++    return;
++  }
++
++  // if the screen was already deleted by React, there is no sense in sending progress
++  // since on JS side the component is already not present
++  if (!static_cast<RNSScreenView *>(self.view).isInvalidated) {
+     [(RNSScreenView *)self.view notifyTransitionProgress:progress closing:closing goingForward:goingForward];
+   }
+ }
+@@ -1907,11 +1911,9 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
+   return (int)[[self.screenView.reactSuperview reactSubviews] indexOfObject:view];
+ }
+ 
+-// Since the view of the controller can be a snapshot of type `UIView`,
+-// when we want to check props of ScreenView, we need to get them from _initialView
+ - (RNSScreenView *)screenView
+ {
+-  return _initialView;
++  return static_cast<RNSScreenView *>(self.view);
+ }
+ 
+ - (void)hideHeaderIfNecessary
+@@ -1991,18 +1993,18 @@ Class<RCTComponentViewProtocol> RNSScreenCls(void)
+ 
+ #pragma mark - Fabric specific
+ 
+-- (void)setViewToSnapshot
++- (void)addSnapshotToView
+ {
+-  UIView *superView = self.view.superview;
+   // if we dismissed the view natively, it will already be detached from view hierarchy
+-  if (self.view.window != nil) {
+-    auto afterUpdates = self.screenView.snapshotAfterUpdates;
+-    UIView *snapshot = [self.view snapshotViewAfterScreenUpdates:afterUpdates];
+-    snapshot.frame = self.view.frame;
+-    [self.view removeFromSuperview];
+-    self.view = snapshot;
+-    [superView addSubview:snapshot];
++  if (self.view.window == nil) {
++    return;
+   }
++
++  UIView *snapshot = [self.view snapshotViewAfterScreenUpdates:self.screenView.snapshotAfterUpdates];
++  snapshot.frame = self.view.bounds;
++  // fill the whole screen view with the snapshot
++  snapshot.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
++  [self.view addSubview:snapshot];
+ }
+ 
+ @end
+diff --git a/ios/RNSScreenStack.mm b/ios/RNSScreenStack.mm
+index 192f5d2c77192f323844b0d11ee179081891e7a4..c233036b56c6b2ba433785d5cbc06e9f411b5a19 100644
+--- a/ios/RNSScreenStack.mm
++++ b/ios/RNSScreenStack.mm
+@@ -244,8 +244,10 @@ namespace react = facebook::react;
+       willShowViewController:(UIViewController *)viewController
+                     animated:(BOOL)animated
+ {
+-  if (![viewController.view isKindOfClass:[RNSScreenView class]]) {
+-    // if the current view is a snapshot, config was already removed so we don't trigger the method
++  if (![viewController.view isKindOfClass:[RNSScreenView class]] ||
++      static_cast<RNSScreenView *>(viewController.view).isInvalidated) {
++    // if the screen was already deleted by React, its config was already removed
++    // so we don't trigger the method
+     return;
+   }
+   auto *screenView = static_cast<RNSScreenView *>(viewController.view);
+@@ -1313,7 +1315,7 @@ RNS_IGNORE_SUPER_CALL_END
+ - (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
+ {
+   RNSScreenView *screenChildComponent = (RNSScreenView *)childComponentView;
+-  [screenChildComponent.controller setViewToSnapshot];
++  [screenChildComponent.controller addSnapshotToView];
+ 
+   RCTAssert(screenChildComponent.reactSuperview == self,
+             @"Attempt to unmount a view which is mounted inside different view. (parent: %@, child: %@, index: %@)",
+@@ -1330,7 +1332,10 @@ RNS_IGNORE_SUPER_CALL_END
+       @([[_reactSubviews objectAtIndex:index] tag]));
+   screenChildComponent.reactSuperview = nil;
+   [_reactSubviews removeObject:screenChildComponent];
+-  [screenChildComponent removeFromSuperview];
++
++  if (screenChildComponent.window == nil) {
++    [screenChildComponent removeFromSuperview];
++  }
+ }
+ 
+ - (void)mountingTransactionWillMount:(const facebook::react::MountingTransaction &)transaction
