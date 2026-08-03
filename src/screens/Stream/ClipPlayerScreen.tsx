@@ -7,7 +7,6 @@ import { router } from 'expo-router';
 import { IconButton } from '@app/components/IconButton/IconButton';
 import { StreamPlayer } from '@app/components/StreamPlayer/StreamPlayer';
 import { EmptyState } from '@app/components/ui/EmptyState/EmptyState';
-import { PlayerBackButton } from '@app/screens/Stream/components/PlayerBackButton';
 import { theme } from '@app/styles/themes';
 import { shareDeepLink } from '@app/utils/sharing/shareDeepLink';
 
@@ -41,17 +40,6 @@ export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
       />
 
       <View
-        style={{
-          left: theme.space16,
-          position: 'absolute',
-          zIndex: 2,
-          top: insets.top + theme.space12,
-        }}
-      >
-        <PlayerBackButton />
-      </View>
-
-      <View
         style={[styles.closeButtonWrap, { top: insets.top + theme.space12 }]}
       >
         <IconButton
@@ -60,6 +48,13 @@ export function ClipPlayerScreen({ id }: ClipPlayerScreenProps) {
           onPress={() => {
             void shareDeepLink({ kind: 'clip', id });
           }}
+          size='2xl'
+          style={styles.closeButton}
+        />
+        <IconButton
+          icon={{ type: 'symbol', name: 'xmark', size: 18 }}
+          label={t('common:close')}
+          onPress={() => router.back()}
           size='2xl'
           style={styles.closeButton}
         />

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { type SceneRendererProps, TabView } from 'react-native-tab-view';
 
 import { TOP_TAB_ROUTES } from '@app/constants/topTabRoutes';
@@ -29,14 +30,13 @@ export function TopScreen() {
   const [index, setIndex] = useState<number>(0);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView edges={['top']} style={styles.container}>
       <View style={styles.segmentBar}>
         <TopSegmentControl index={index} onIndexChange={setIndex} />
       </View>
       <TabView
         lazy
         lazyPreloadDistance={1}
-        animationEnabled={false}
         style={styles.tabViewWrapper}
         navigationState={{ index, routes: ROUTES }}
         renderScene={renderScene}
@@ -44,7 +44,7 @@ export function TopScreen() {
         initialLayout={{ width: layout.width }}
         renderTabBar={() => null}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

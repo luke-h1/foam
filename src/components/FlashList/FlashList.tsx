@@ -24,8 +24,11 @@ export function FlashList<TItem>({
   refreshing = false,
   ...props
 }: FlashListProps<TItem> & { ref?: Ref<FlashListRef<TItem>> }) {
-  const androidRefreshControl = useMemo(() => {
-    if (Platform.OS === 'android' && onRefresh && !refreshControl) {
+  const themedRefreshControl = useMemo(() => {
+    if (!onRefresh || refreshControl) {
+      return null;
+    }
+    if (Platform.OS === 'android') {
       return (
         <RefreshControl
           refreshing={Boolean(refreshing)}
@@ -35,10 +38,16 @@ export function FlashList<TItem>({
         />
       );
     }
-    return null;
+    return (
+      <RefreshControl
+        refreshing={Boolean(refreshing)}
+        onRefresh={onRefresh}
+        tintColor={theme.color.text.dark}
+      />
+    );
   }, [onRefresh, refreshControl, refreshing]);
 
-  const activeRefreshControl = androidRefreshControl ?? refreshControl;
+  const activeRefreshControl = themedRefreshControl ?? refreshControl;
 
   return (
     <ShopifyFlashList
