@@ -143,7 +143,6 @@ export function SettingsDevtoolsScreen() {
       <ScrollView
         ref={scrollRef}
         contentInsetAdjustmentBehavior='automatic'
-        indicatorStyle='white'
         contentContainerStyle={styles.content}
       >
         <SettingsSection title={t('diagnostics')}>

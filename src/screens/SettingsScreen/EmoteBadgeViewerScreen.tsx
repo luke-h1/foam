@@ -166,7 +166,7 @@ function EmotesTab({
         getItemType={item => item.type}
         estimatedItemSize={60}
         recycleItems
-        indicatorStyle='white'
+        indicatorStyle={Platform.OS === 'ios' ? 'white' : undefined}
         contentContainerStyle={[
           styles.emoteListContent,
           { paddingBottom: bottomInset + theme.space36 },
@@ -291,7 +291,7 @@ function BadgesTab({
       stickySectionHeadersEnabled
       estimatedItemSize={BADGE_CELL_SIZE + theme.space8}
       recycleItems
-      indicatorStyle='white'
+      indicatorStyle={Platform.OS === 'ios' ? 'white' : undefined}
       contentContainerStyle={[
         styles.badgeListContent,
         { paddingBottom: bottomInset + theme.space36 },

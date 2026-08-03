@@ -145,7 +145,9 @@ export function SettingsSheetIosForm({
         ) : null}
 
         <Section
-          title={t('settingsSheet.sectionConnection')}
+          header={
+            <NativeText>{t('settingsSheet.sectionConnection')}</NativeText>
+          }
           footer={
             <NativeText>{t('settingsSheet.syncToLiveSubtitle')}</NativeText>
           }

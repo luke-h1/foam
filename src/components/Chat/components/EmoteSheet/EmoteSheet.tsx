@@ -26,6 +26,7 @@ import type { LayoutChangeEvent } from 'react-native';
 import type { LegendListRef } from '@legendapp/list/react-native';
 
 import {
+  EMOTE_CELL_GAP,
   EMOTE_SHEET_DETENT,
   EMOTE_SHEET_HEADER_HEIGHT,
 } from './emoteSheetLayout';
@@ -69,7 +70,7 @@ export function EmoteSheet({
     }
   }, []);
 
-  const emoteRowSize = sheet.cellSize + 4;
+  const emoteRowSize = sheet.cellSize + EMOTE_CELL_GAP;
   const getFixedItemSize = useCallback(
     (_item: EmoteMenuListItem, _index: number, type: string | undefined) =>
       type === 'header' ? EMOTE_SHEET_HEADER_HEIGHT : emoteRowSize,

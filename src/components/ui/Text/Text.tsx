@@ -65,6 +65,10 @@ export interface TextProps extends RNTextProps, MarginProps {
   type?: TextType;
   weight?: TextWeight;
   variant?: AppFontVariant;
+  /**
+   * Only applied when `variant` is 'default'; `mono` and `display` variants
+   * always resolve their own font family.
+   */
   family?: TextFamily;
   color?: ThemeColor | ThemeColorToken;
   contrast?: boolean;

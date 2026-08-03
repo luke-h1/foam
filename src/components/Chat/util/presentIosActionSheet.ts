@@ -40,8 +40,11 @@ export function presentIosActionSheet({
       userInterfaceStyle: 'dark',
     },
     buttonIndex => {
-      actions[buttonIndex]?.onPress?.();
-      onClose();
+      try {
+        actions[buttonIndex]?.onPress?.();
+      } finally {
+        onClose();
+      }
     },
   );
 }

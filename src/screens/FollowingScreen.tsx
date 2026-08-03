@@ -65,6 +65,15 @@ const FollowingListHeader = memo(function FollowingListHeader() {
 
 const followingListHeader = <FollowingListHeader />;
 
+const getFollowingItemKey = (item: FollowingListItem) =>
+  item.type === 'stream'
+    ? `stream-${item.stream.id}`
+    : item.type === 'offlineChannel'
+      ? `offline-${item.channel.broadcaster_id}`
+      : 'offline-header';
+
+const getFollowingItemType = (item: FollowingListItem) => item.type;
+
 export default function FollowingScreen() {
   const { t } = useTranslation(['stream', 'common']);
   const { authState, user } = useAuthContext();
@@ -203,6 +212,14 @@ export default function FollowingScreen() {
     [offlineChannels.length, streamsArray.length],
   );
 
+  const listContentStyle = useMemo(
+    () => [
+      styles.listContent,
+      { paddingBottom: tabBarOverflow + theme.space20 },
+    ],
+    [tabBarOverflow],
+  );
+
   if (!authState?.isLoggedIn) {
     return (
       <EmptyState
@@ -277,24 +294,13 @@ export default function FollowingScreen() {
       <FlashList<FollowingListItem>
         ref={listRef}
         data={listItems}
-        keyExtractor={item =>
-          item.type === 'stream'
-            ? `stream-${item.stream.id}`
-            : item.type === 'offlineChannel'
-              ? `offline-${item.channel.broadcaster_id}`
-              : 'offline-header'
-        }
+        keyExtractor={getFollowingItemKey}
         contentInsetAdjustmentBehavior='automatic'
         drawDistance={500}
-        getItemType={item => item.type}
+        getItemType={getFollowingItemType}
         ListHeaderComponent={followingListHeader}
         stickyHeaderIndices={stickyHeaderIndices}
-        contentContainerStyle={[
-          styles.listContent,
-          {
-            paddingBottom: tabBarOverflow + theme.space20,
-          },
-        ]}
+        contentContainerStyle={listContentStyle}
         renderItem={renderItem}
         refreshing={isRefreshing}
         onRefresh={handleRefreshFollowing}

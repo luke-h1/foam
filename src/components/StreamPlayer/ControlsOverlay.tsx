@@ -1,4 +1,10 @@
-import { type ReactNode, useEffect, useState } from 'react';
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import {
   type StyleProp,
   StyleSheet,
@@ -129,64 +135,79 @@ export function ControlsOverlay({
     pointerEvents: opacity.get() > 0.01 ? 'box-none' : 'none',
   }));
 
-  const secondaryActions: MenuAction[] = [];
-  if (onRefresh) {
-    secondaryActions.push({
-      id: 'refresh',
-      title: t('refresh'),
-      image: 'arrow.clockwise',
-    });
-  }
-  if (onPipPress) {
-    secondaryActions.push({
-      id: 'pip',
-      title: t('pictureInPicture'),
-      image: 'pip',
-      state: pipActive ? 'on' : undefined,
-    });
-  }
-  if (onCreateClipPress) {
-    secondaryActions.push({
-      id: 'create-clip',
-      title: t('createClip'),
-      image: 'scissors',
-    });
-  }
-  if (onSleepTimerPress) {
-    secondaryActions.push({
-      id: 'sleep-timer',
-      title: t('sleepTimer'),
-      image: 'moon.zzz',
-      state: sleepTimerActive ? 'on' : undefined,
-    });
-  }
-  if (onSharePress) {
-    secondaryActions.push({
-      id: 'share',
-      title: t('common:share'),
-      image: 'square.and.arrow.up',
-    });
-  }
-
-  const handleSecondaryAction = ({ nativeEvent }: NativeActionEvent) => {
-    switch (nativeEvent.event) {
-      case 'refresh':
-        onRefresh?.();
-        return;
-      case 'pip':
-        onPipPress?.();
-        return;
-      case 'create-clip':
-        onCreateClipPress?.();
-        return;
-      case 'sleep-timer':
-        onSleepTimerPress?.();
-        return;
-      case 'share':
-        onSharePress?.();
-        return;
+  const secondaryActions = useMemo(() => {
+    const actions: MenuAction[] = [];
+    if (onRefresh) {
+      actions.push({
+        id: 'refresh',
+        title: t('refresh'),
+        image: 'arrow.clockwise',
+      });
     }
-  };
+    if (onPipPress) {
+      actions.push({
+        id: 'pip',
+        title: t('pictureInPicture'),
+        image: 'pip',
+        state: pipActive ? 'on' : undefined,
+      });
+    }
+    if (onCreateClipPress) {
+      actions.push({
+        id: 'create-clip',
+        title: t('createClip'),
+        image: 'scissors',
+      });
+    }
+    if (onSleepTimerPress) {
+      actions.push({
+        id: 'sleep-timer',
+        title: t('sleepTimer'),
+        image: 'moon.zzz',
+        state: sleepTimerActive ? 'on' : undefined,
+      });
+    }
+    if (onSharePress) {
+      actions.push({
+        id: 'share',
+        title: t('common:share'),
+        image: 'square.and.arrow.up',
+      });
+    }
+    return actions;
+  }, [
+    onRefresh,
+    onPipPress,
+    onCreateClipPress,
+    onSleepTimerPress,
+    onSharePress,
+    pipActive,
+    sleepTimerActive,
+    t,
+  ]);
+
+  const handleSecondaryAction = useCallback(
+    ({ nativeEvent }: NativeActionEvent) => {
+      switch (nativeEvent.event) {
+        case 'refresh':
+          onRefresh?.();
+          return;
+        case 'pip':
+          onPipPress?.();
+          return;
+        case 'create-clip':
+          onCreateClipPress?.();
+          return;
+        case 'sleep-timer':
+          onSleepTimerPress?.();
+          return;
+        case 'share':
+          onSharePress?.();
+          return;
+      }
+    },
+    [onRefresh, onPipPress, onCreateClipPress, onSleepTimerPress, onSharePress],
+  );
 
   return (
     <Animated.View style={[styles.controlsOverlay, animatedStyle]}>

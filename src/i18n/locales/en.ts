@@ -786,6 +786,7 @@ const en = {
       '{{count}} term · Messages containing these will be hidden from chat.',
     termsFooter_other:
       '{{count}} terms · Messages containing these will be hidden from chat.',
+    highlightAlreadyAdded: 'That phrase is already highlighted',
     removeHighlight: 'Remove highlight',
     removeHighlightConfirm:
       'Stop highlighting messages containing "{{phrase}}"?',

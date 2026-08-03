@@ -17,6 +17,7 @@ import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
 import { getStoreUrlAsync } from '@app/screens/DevTools/util/getStoreUrlAsync';
 import { theme } from '@app/styles/themes';
 import { openLinkInBrowserAsync } from '@app/utils/browser/openLinkInBrowser';
+import { logger } from '@app/utils/logger';
 import { isUpdateRequired } from '@app/utils/version/compareVersions';
 import { getMinimumVersion } from '@app/utils/version/getMinimumVersion';
 
@@ -24,9 +25,13 @@ import { Variant } from '../../../app.config';
 import { Button } from '../Button/Button';
 
 async function handleUpdatePress() {
-  const storeUrl = await getStoreUrlAsync();
-  if (storeUrl) {
-    await openLinkInBrowserAsync(storeUrl);
+  try {
+    const storeUrl = await getStoreUrlAsync();
+    if (storeUrl) {
+      await openLinkInBrowserAsync(storeUrl);
+    }
+  } catch (error) {
+    logger.main.error('[ForceUpdateModal] failed to open store link', error);
   }
 }
 
@@ -96,6 +101,7 @@ export function ForceUpdateModal() {
 
     return () => {
       appStateSubscription.remove();
+      alertVisibleRef.current = false;
       if (alertTimer) {
         clearTimeout(alertTimer);
       }

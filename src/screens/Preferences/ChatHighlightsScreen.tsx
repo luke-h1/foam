@@ -23,6 +23,7 @@ import {
   textInputAutocapitalization,
 } from '@expo/ui/swift-ui/modifiers';
 import { PressableScale } from 'pressto';
+import { toast } from 'sonner-native';
 
 import type {
   FlashListRef,
@@ -32,6 +33,7 @@ import { FlashList } from '@app/components/FlashList/FlashList';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { useScrollToTop } from '@app/hooks/useScrollToTop';
+import i18next from '@app/i18n/i18next';
 import { impact } from '@app/lib/haptics';
 import {
   type CustomHighlight,
@@ -211,7 +213,11 @@ function NativeChatHighlightsList() {
   const phraseText = useNativeState('');
 
   const handleNativeAdd = () => {
-    if (addHighlight(phraseText.value, selectedColor) !== 'empty') {
+    const result = addHighlight(phraseText.value, selectedColor);
+    if (result === 'duplicate') {
+      toast.error(i18next.t('preferences:highlightAlreadyAdded'));
+    }
+    if (result !== 'empty') {
       phraseText.value = '';
     }
   };
@@ -324,7 +330,11 @@ export function ChatHighlightsScreen() {
   useScrollToTop(listRef);
 
   const handleAdd = () => {
-    if (addHighlight(inputValue, selectedColor) !== 'empty') {
+    const result = addHighlight(inputValue, selectedColor);
+    if (result === 'duplicate') {
+      toast.error(i18next.t('preferences:highlightAlreadyAdded'));
+    }
+    if (result !== 'empty') {
       setInputValue('');
     }
   };

@@ -109,7 +109,10 @@ const RESIZE_ANIMATION_CONFIG: WithSpringConfig = {
   overshootClamping: true,
 };
 
-const CHAT_REVEAL_ANIMATION_CONFIG: WithSpringConfig = motion.spring.responsive;
+const CHAT_REVEAL_ANIMATION_CONFIG: WithSpringConfig = {
+  ...motion.spring.responsive,
+  overshootClamping: true,
+};
 
 function handlePlaybackLatencyChange(latencySeconds: number) {
   setMeasuredVideoLatencySeconds(latencySeconds);

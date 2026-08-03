@@ -194,7 +194,6 @@ export function SettingsIndexScreen() {
       <ScrollView
         ref={scrollRef}
         contentInsetAdjustmentBehavior='automatic'
-        indicatorStyle='white'
         contentContainerStyle={[
           styles.content,
           { paddingBottom: insets.bottom + theme.space56 },
