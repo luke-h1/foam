@@ -6,7 +6,12 @@ import {
   Spacer,
   Text as NativeText,
 } from '@expo/ui/swift-ui';
-import { buttonStyle, foregroundStyle } from '@expo/ui/swift-ui/modifiers';
+import {
+  buttonStyle,
+  contentShape,
+  foregroundStyle,
+  shapes,
+} from '@expo/ui/swift-ui/modifiers';
 import type { SFSymbol } from 'sf-symbols-typescript';
 
 import { theme } from '@app/styles/themes';
@@ -24,7 +29,7 @@ export function FormNavigationRow({
 }: FormNavigationRowProps) {
   return (
     <Button onPress={onPress} modifiers={[buttonStyle('plain')]}>
-      <HStack>
+      <HStack modifiers={[contentShape(shapes.rectangle())]}>
         <Label systemImage={systemImage}>
           <NativeText modifiers={[foregroundStyle(theme.color.text.dark)]}>
             {label}
