@@ -6,11 +6,15 @@ import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
+import type { ChatFontScale } from '../ChatMessage/chatScale';
+import { getChatTextStyles } from '../ChatMessage/chatTextStyles';
 import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';
 import { styles } from '../ChatMessage/RichChatMessage.styles';
 import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
 
 interface RitualNoticeProps {
+  compact?: boolean;
+  fontScale?: ChatFontScale;
   part: ParsedPart<'ritual'>;
 }
 
@@ -42,7 +46,12 @@ function getRitualDescription(ritualName: string, displayName: string): string {
   }
 }
 
-function RitualNoticeComponent({ part }: RitualNoticeProps) {
+function RitualNoticeComponent({
+  compact,
+  fontScale,
+  part,
+}: RitualNoticeProps) {
+  const textStyles = getChatTextStyles(fontScale, compact);
   const displayName = part.displayName?.trim();
   const systemMsg = part.systemMsg;
   const message = part.message?.trim();
@@ -57,18 +66,20 @@ function RitualNoticeComponent({ part }: RitualNoticeProps) {
   return (
     <View style={styles.messageColumn}>
       <ChatNoticeMetaRow
+        compact={compact}
+        fontScale={fontScale}
         icon={getRitualIcon(part.ritualName)}
         label={getRitualMetaLabel(part.ritualName)}
         labelColor={CHAT_NOTICE_ACCENTS.ritual}
         labelStyle={styles.ritualNoticeMetaText}
       />
       {description ? (
-        <Text style={[styles.messageText, styles.channelPointsMetaMuted]}>
+        <Text style={[textStyles.body, styles.channelPointsMetaMuted]}>
           {description}
         </Text>
       ) : null}
       {message ? (
-        <Text color='gray.text' style={styles.messageText}>
+        <Text color='gray.text' style={textStyles.body}>
           {message}
         </Text>
       ) : null}

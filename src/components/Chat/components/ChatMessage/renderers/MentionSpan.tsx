@@ -10,14 +10,16 @@ import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin/formatMentionContent';
 
+import type { ChatFontScale } from '../chatScale';
+import { getChatTextStyles } from '../chatTextStyles';
 import { styles } from '../RichChatMessage.styles';
 
 interface MentionSpanProps {
   content: string;
   baseTextStyle?: StyleProp<TextStyle>;
-  fontScaleStyle?: StyleProp<TextStyle>;
   emoteLineStyle?: StyleProp<TextStyle>;
   compact?: boolean;
+  fontScale?: ChatFontScale;
   isModerated?: boolean;
   getMentionColor?: (username: string) => string;
   effectiveHighlightedUserSet?: ReadonlySet<string>;
@@ -35,9 +37,9 @@ interface MentionSpanProps {
 function MentionSpanComponent({
   content,
   baseTextStyle,
-  fontScaleStyle,
   emoteLineStyle,
   compact,
+  fontScale,
   isModerated,
   getMentionColor,
   effectiveHighlightedUserSet,
@@ -75,9 +77,7 @@ function MentionSpanComponent({
   return (
     <Text
       style={[
-        styles.mention,
-        compact && styles.mentionCompact,
-        fontScaleStyle,
+        getChatTextStyles(fontScale, compact).mention,
         emoteLineStyle,
         isHighlightedMention && styles.mentionHighlighted,
         getChatColorStyle(mentionColor),

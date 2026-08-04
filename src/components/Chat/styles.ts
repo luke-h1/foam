@@ -57,14 +57,6 @@ export const styles = StyleSheet.create({
   messagePane: {
     flex: 1,
   },
-  messageContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    minHeight: 0,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    width: '100%',
-  },
   pinnedIconShell: {
     alignItems: 'center',
     backgroundColor: 'rgba(145,91,255,0.28)',

@@ -5,46 +5,54 @@ import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
+import type { ChatFontScale } from '../ChatMessage/chatScale';
+import { getChatTextStyles } from '../ChatMessage/chatTextStyles';
 import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';
 import { styles } from '../ChatMessage/RichChatMessage.styles';
 import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
 
 interface CharityDonationNoticeProps {
+  compact?: boolean;
+  fontScale?: ChatFontScale;
   part: ParsedPart<'charitydonation'>;
 }
 
-function CharityDonationNoticeComponent({ part }: CharityDonationNoticeProps) {
+function CharityDonationNoticeComponent({
+  compact,
+  fontScale,
+  part,
+}: CharityDonationNoticeProps) {
   const displayName = part.displayName?.trim();
   const systemMsg = part.systemMsg;
   const message = part.message?.trim();
   const donationSummary = `donated ${part.amount} to ${part.charityName}`;
+  const textStyles = getChatTextStyles(fontScale, compact);
+  const mutedStyle = [textStyles.meta, styles.channelPointsMetaMuted];
 
   return (
     <View style={styles.messageColumn}>
       <ChatNoticeMetaRow
+        compact={compact}
+        fontScale={fontScale}
         icon='heart.fill'
         label={i18next.t('chat:notices.charityDonation')}
         labelColor={CHAT_NOTICE_ACCENTS.charity}
       />
-      <Text style={styles.messageMetaText}>
+      <Text style={textStyles.meta}>
         {displayName ? (
-          <Text style={styles.channelPointsMetaName}>{displayName}</Text>
+          <Text style={[textStyles.meta, styles.channelPointsMetaName]}>
+            {displayName}
+          </Text>
         ) : null}
-        {displayName ? (
-          <Text style={styles.channelPointsMetaMuted}> · </Text>
-        ) : null}
-        <Text style={styles.channelPointsMetaMuted}>{donationSummary}</Text>
+        {displayName ? <Text style={mutedStyle}> · </Text> : null}
+        <Text style={mutedStyle}>{donationSummary}</Text>
         {systemMsg && !message ? (
-          <Text style={styles.channelPointsMetaMuted}>. {systemMsg}</Text>
+          <Text style={mutedStyle}>. {systemMsg}</Text>
         ) : (
-          <Text style={styles.channelPointsMetaMuted}>.</Text>
+          <Text style={mutedStyle}>.</Text>
         )}
       </Text>
-      {message ? (
-        <Text style={[styles.messageMetaText, styles.channelPointsMetaMuted]}>
-          {message}
-        </Text>
-      ) : null}
+      {message ? <Text style={mutedStyle}>{message}</Text> : null}
     </View>
   );
 }

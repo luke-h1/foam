@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, type ViewStyle } from 'react-native';
 
 import { theme } from '@app/styles/themes';
 
@@ -6,176 +6,88 @@ import {
   CHAT_NOTICE_ACCENTS,
   noticeSurfaceTint,
 } from '../util/chatNoticeAccents';
+import {
+  CHAT_SURFACE_COLORS,
+  type ChatFontScale,
+  getChatScale,
+} from './chatScale';
 
-export const chatLineMetrics = {
-  comfortable: {
-    fontSize: theme.fontSize14,
-    lineHeight: 17,
-  },
-  compact: {
-    fontSize: theme.fontSize11,
-    lineHeight: 14,
-  },
-} as const;
-
-const chatFontScaleLineMetrics = {
-  small: {
-    comfortable: { fontSize: theme.fontSize12, lineHeight: 15 },
-    compact: { fontSize: theme.fontSize10, lineHeight: 13 },
-  },
-  large: {
-    comfortable: { fontSize: theme.fontSize16, lineHeight: 20 },
-    compact: { fontSize: theme.fontSize12, lineHeight: 15 },
-  },
-} as const;
-
-export type ChatFontScale = 'small' | 'default' | 'large';
+export type { ChatFontScale };
 
 export interface ChatLineMetrics {
   fontSize: number;
   lineHeight: number;
 }
 
-/**
- * The fontSize/lineHeight a message body line renders at, after the chat
- * font-scale preference is applied. Height estimation
- * (util/pretextChatHeight.ts) must measure with these exact metrics.
- */
-export function getChatLineMetrics(
-  fontScale: ChatFontScale | undefined,
-  compact: boolean,
-): ChatLineMetrics {
-  const density = compact ? 'compact' : 'comfortable';
-  if (fontScale === 'small' || fontScale === 'large') {
-    return chatFontScaleLineMetrics[fontScale][density];
-  }
-  return chatLineMetrics[density];
-}
+export const chatLineMetrics = {
+  comfortable: {
+    fontSize: getChatScale('default', 'comfortable').bodyFontSize,
+    lineHeight: getChatScale('default', 'comfortable').bodyLineHeight,
+  },
+  compact: {
+    fontSize: getChatScale('default', 'compact').bodyFontSize,
+    lineHeight: getChatScale('default', 'compact').bodyLineHeight,
+  },
+} as const satisfies Record<string, ChatLineMetrics>;
 
-export function getChatFontScaleStyle(
-  fontScale: ChatFontScale | undefined,
-  compact: boolean,
-) {
-  if (fontScale === 'small') {
-    return compact ? styles.fontScaleSmallCompact : styles.fontScaleSmall;
-  }
-  if (fontScale === 'large') {
-    return compact ? styles.fontScaleLargeCompact : styles.fontScaleLarge;
-  }
-  return undefined;
+/**
+ * Colour half of a notice surface. The padding, margin and accent-bar width are
+ * shared and live in `noticeSurface` so a new notice type cannot drift.
+ */
+function noticeSurface(accent: string, alpha?: number): ViewStyle {
+  return {
+    backgroundColor: noticeSurfaceTint(accent, alpha),
+    borderLeftColor: accent,
+    borderLeftWidth: CHAT_SURFACE_COLORS.accentBarWidth,
+    marginVertical: 2,
+    paddingHorizontal: theme.space8,
+    paddingVertical: theme.space4,
+  };
 }
 
 export const styles = StyleSheet.create({
-  badge: {
-    height: 18,
-    marginRight: 4,
-    width: 18,
-  },
-  badgeCompact: {
-    height: 14,
-    width: 14,
-  },
   alternatingRowContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    backgroundColor: CHAT_SURFACE_COLORS.alternatingRow,
   },
   announcementColumn: {
     gap: 4,
     width: '100%',
   },
-  announcementContainer: {
-    backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.announcement),
-    borderLeftColor: CHAT_NOTICE_ACCENTS.announcement,
-    borderLeftWidth: 2,
-    marginVertical: 2,
-    paddingHorizontal: theme.space8,
-    paddingVertical: theme.space4,
-  },
+  announcementContainer: noticeSurface(CHAT_NOTICE_ACCENTS.announcement),
   announcementMetaText: {
     color: CHAT_NOTICE_ACCENTS.announcement,
   },
-  highlightMyMessageContainer: {
-    backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.highlight),
-    borderLeftColor: CHAT_NOTICE_ACCENTS.highlight,
-    borderLeftWidth: 2,
-    marginVertical: 2,
-    paddingHorizontal: theme.space8,
-    paddingVertical: theme.space4,
-  },
+  highlightMyMessageContainer: noticeSurface(CHAT_NOTICE_ACCENTS.highlight),
   highlightMyMessageMetaText: {
     color: CHAT_NOTICE_ACCENTS.highlight,
   },
-  charityDonationSurface: {
-    backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.charity),
-    borderLeftColor: CHAT_NOTICE_ACCENTS.charity,
-    borderLeftWidth: 2,
-    marginVertical: 2,
-    paddingHorizontal: theme.space8,
-    paddingVertical: theme.space4,
-  },
-  ritualNoticeSurface: {
-    backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.ritual),
-    borderLeftColor: CHAT_NOTICE_ACCENTS.ritual,
-    borderLeftWidth: 2,
-    marginVertical: 2,
-    paddingHorizontal: theme.space8,
-    paddingVertical: theme.space4,
-  },
+  charityDonationSurface: noticeSurface(CHAT_NOTICE_ACCENTS.charity),
+  ritualNoticeSurface: noticeSurface(CHAT_NOTICE_ACCENTS.ritual),
   ritualNoticeMetaText: {
     color: CHAT_NOTICE_ACCENTS.ritual,
   },
   customHighlightContainer: {
-    borderLeftWidth: 2,
+    borderLeftWidth: CHAT_SURFACE_COLORS.accentBarWidth,
     marginVertical: 2,
     paddingHorizontal: theme.space8,
     paddingVertical: theme.space4,
-  },
-  fontScaleLarge: {
-    ...chatFontScaleLineMetrics.large.comfortable,
-  },
-  fontScaleLargeCompact: {
-    ...chatFontScaleLineMetrics.large.compact,
-  },
-  fontScaleSmall: {
-    ...chatFontScaleLineMetrics.small.comfortable,
-  },
-  fontScaleSmallCompact: {
-    ...chatFontScaleLineMetrics.small.compact,
   },
   returningChatterMetaText: {
     color: CHAT_NOTICE_ACCENTS.returningChatter,
   },
-  returningChatterNoticeSurface: {
-    backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.returningChatter),
-    borderLeftColor: CHAT_NOTICE_ACCENTS.returningChatter,
-    borderLeftWidth: 2,
-    marginVertical: 2,
-    paddingHorizontal: theme.space8,
-    paddingVertical: theme.space4,
-  },
-  firstMessageNoticeSurface: {
-    backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.firstMessage),
-    borderLeftColor: CHAT_NOTICE_ACCENTS.firstMessage,
-    borderLeftWidth: 2,
-    marginVertical: 2,
-    paddingHorizontal: theme.space8,
-    paddingVertical: theme.space4,
-  },
+  returningChatterNoticeSurface: noticeSurface(
+    CHAT_NOTICE_ACCENTS.returningChatter,
+  ),
+  firstMessageNoticeSurface: noticeSurface(CHAT_NOTICE_ACCENTS.firstMessage),
   firstMessageMetaText: {
     color: CHAT_NOTICE_ACCENTS.firstMessage,
   },
-  subscriptionNoticeSurface: {
-    backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.subscription),
-    borderLeftColor: CHAT_NOTICE_ACCENTS.subscription,
-    borderLeftWidth: 2,
-    marginVertical: 2,
-    paddingHorizontal: theme.space8,
-    paddingVertical: theme.space4,
-  },
+  subscriptionNoticeSurface: noticeSurface(CHAT_NOTICE_ACCENTS.subscription),
   stvEmoteNoticeSurface: {
+    borderLeftWidth: CHAT_SURFACE_COLORS.accentBarWidth,
     marginVertical: 2,
     paddingHorizontal: theme.space8,
     paddingVertical: theme.space4,
-    borderLeftWidth: 2,
   },
   stvEmoteAddedSurface: {
     backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.stvAdded),
@@ -192,15 +104,10 @@ export const styles = StyleSheet.create({
     marginBottom: 4,
   },
   sharedChatLabelText: {
-    color: theme.color.notice.muted,
-    fontSize: theme.fontSize11,
+    color: CHAT_SURFACE_COLORS.muted,
     fontWeight: '600',
-    lineHeight: 14,
   },
   chatContainer: {
-    minHeight: 0,
-  },
-  chatContainerCompact: {
     minHeight: 0,
   },
   moderatedBadge: {
@@ -213,10 +120,11 @@ export const styles = StyleSheet.create({
     position: 'relative',
   },
   moderatedStrikeOverlay: {
-    backgroundColor: 'rgba(214, 214, 217, 0.72)',
+    backgroundColor: CHAT_SURFACE_COLORS.strike,
     height: 1,
     left: 0,
     marginTop: -0.5,
+    opacity: 0.72,
     pointerEvents: 'none',
     position: 'absolute',
     right: 0,
@@ -224,40 +132,19 @@ export const styles = StyleSheet.create({
     zIndex: 2,
   },
   highlightedSenderContainer: {
-    backgroundColor: 'rgba(145, 71, 255, 0.08)',
-    borderLeftColor: 'rgba(145, 71, 255, 0.38)',
-    borderLeftWidth: 2,
+    backgroundColor: noticeSurfaceTint(theme.color.brand.twitch, 0.08),
+    borderLeftColor: theme.color.brand.twitch,
+    borderLeftWidth: CHAT_SURFACE_COLORS.accentBarWidth,
     paddingLeft: 4,
   },
   highlightedReplyTargetContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderLeftColor: 'rgba(255, 255, 255, 0.18)',
-    borderLeftWidth: 2,
+    borderLeftWidth: CHAT_SURFACE_COLORS.accentBarWidth,
     paddingLeft: 4,
-  },
-  mention: {
-    ...chatLineMetrics.comfortable,
-    marginHorizontal: 2,
-  },
-  mentionCompact: {
-    ...chatLineMetrics.compact,
-    marginHorizontal: 1,
-  },
-  mentionDefaultColor: {
-    color: theme.colorWhite,
   },
   mentionHighlighted: {
     fontWeight: '700',
-  },
-  messageLink: {
-    ...chatLineMetrics.comfortable,
-    color: theme.color.brand.twitch,
-    textDecorationLine: 'underline',
-  },
-  messageLinkCompact: {
-    ...chatLineMetrics.compact,
-    color: theme.color.brand.twitch,
-    textDecorationLine: 'underline',
   },
   messageColumn: {
     flexDirection: 'column',
@@ -276,50 +163,22 @@ export const styles = StyleSheet.create({
     minWidth: 0,
     width: '100%',
   },
-  // Lines that contain inline emotes need a taller lineHeight than the
-  // text metrics, otherwise the fixed lineHeight clips the emote image.
-  // Must fit the emote attachment (30pt / 26pt compact) plus the font
-  // descent, since attachments sit on the text baseline. Keep in sync with
-  // the emote line height constants in util/pretextChatHeight.ts.
-  messageTextEmoteLine: {
-    lineHeight: 34,
-  },
-  messageTextEmoteLineCompact: {
-    lineHeight: 30,
-  },
-  replyContextEmoteLine: {
-    lineHeight: 24,
-  },
-  messageText: {
-    ...chatLineMetrics.comfortable,
-  },
-  messageTextCompact: {
-    ...chatLineMetrics.compact,
-  },
-  messageTextPlaceholder: {
-    borderRadius: 4,
-    height: 12,
-    marginHorizontal: 2,
-    width: 96,
-  },
-  messageTextPlaceholderCompact: {
-    height: 10,
-    width: 78,
-  },
   moderatedMessageText: {
-    color: 'rgba(214, 214, 217, 0.72)',
-    textDecorationColor: 'rgba(214, 214, 217, 0.85)',
+    color: CHAT_SURFACE_COLORS.muted,
+    opacity: 0.72,
+    textDecorationColor: CHAT_SURFACE_COLORS.muted,
     textDecorationLine: 'line-through',
   },
   moderatedUsernameText: {
-    color: 'rgba(214, 214, 217, 0.72)',
-    textDecorationColor: 'rgba(214, 214, 217, 0.85)',
+    color: CHAT_SURFACE_COLORS.muted,
+    opacity: 0.72,
+    textDecorationColor: CHAT_SURFACE_COLORS.muted,
     textDecorationLine: 'line-through',
   },
   ownMentionContainer: {
-    backgroundColor: 'rgba(96, 72, 150, 0.2)',
+    backgroundColor: noticeSurfaceTint(theme.colorViolet, 0.16),
     borderLeftColor: theme.colorViolet,
-    borderLeftWidth: 2,
+    borderLeftWidth: CHAT_SURFACE_COLORS.accentBarWidth,
     paddingLeft: 6,
   },
   messageMetaRow: {
@@ -329,20 +188,10 @@ export const styles = StyleSheet.create({
     minWidth: 0,
     width: '100%',
   },
-  messageMetaText: {
-    color: 'rgba(255,255,255,0.5)',
+  messageMetaTextFlex: {
     flex: 1,
     flexShrink: 1,
-    fontSize: theme.fontSize12,
-    lineHeight: 15,
     minWidth: 0,
-  },
-  messageMetaTextCompact: {
-    fontSize: theme.fontSize11,
-    lineHeight: 14,
-  },
-  messageMetaTextStrong: {
-    fontWeight: '600',
   },
   replyContextRow: {
     alignItems: 'center',
@@ -376,13 +225,17 @@ export const styles = StyleSheet.create({
   replyContextRowReplyToYou: {
     alignSelf: 'stretch',
     backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.replyToYou, 0.14),
-    borderRadius: 4,
+    borderRadius: CHAT_SURFACE_COLORS.radius,
     marginBottom: 4,
     paddingHorizontal: 6,
     paddingVertical: 3,
   },
   replyContextRowInteractive: {
     alignSelf: 'stretch',
+  },
+  replyContextPrefixFlex: {
+    flexShrink: 1,
+    minWidth: 0,
   },
   replyContextIcon: {
     marginRight: 4,
@@ -391,76 +244,33 @@ export const styles = StyleSheet.create({
   replyContextIconReplyToYou: {
     opacity: 1,
   },
-  replyContextText: {
-    color: 'rgba(255,255,255,0.5)',
-    fontSize: theme.fontSize12,
-    lineHeight: 15,
-  },
-  replyContextPrefixText: {
-    color: 'rgba(255,255,255,0.5)',
-    flexShrink: 1,
-    fontSize: theme.fontSize12,
-    lineHeight: 15,
-    minWidth: 0,
-  },
-  replyContextBodyText: {
-    color: 'rgba(255,255,255,0.5)',
-    fontSize: theme.fontSize12,
-    lineHeight: 15,
-  },
   replyContextTextReplyToYou: {
     color: CHAT_NOTICE_ACCENTS.replyToYou,
     fontWeight: '600',
   },
-  replyContextTextCompact: {
-    fontSize: theme.fontSize11,
-    lineHeight: 14,
-  },
-  rewardMessageContainer: {
-    backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.channelPoints),
-    borderLeftColor: CHAT_NOTICE_ACCENTS.channelPoints,
-    borderLeftWidth: 2,
-    marginVertical: 2,
-    paddingHorizontal: theme.space8,
-    paddingVertical: theme.space4,
-  },
+  rewardMessageContainer: noticeSurface(CHAT_NOTICE_ACCENTS.channelPoints),
   channelPointsMetaText: {
     color: CHAT_NOTICE_ACCENTS.channelPoints,
   },
   channelPointsMetaMuted: {
     color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize12,
     fontWeight: '400',
-    lineHeight: 15,
   },
   channelPointsMetaName: {
     color: theme.color.text.dark,
-    fontSize: theme.fontSize12,
     fontWeight: '700',
-    lineHeight: 15,
   },
   channelPointsMetaReward: {
     color: theme.color.text.dark,
-    fontSize: theme.fontSize12,
     fontWeight: '600',
-    lineHeight: 15,
   },
-  raidNoticeSurface: {
-    backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.raid),
-    borderLeftColor: CHAT_NOTICE_ACCENTS.raid,
-    borderLeftWidth: 2,
-    marginVertical: 2,
-    paddingHorizontal: theme.space8,
-    paddingVertical: theme.space4,
-  },
+  raidNoticeSurface: noticeSurface(CHAT_NOTICE_ACCENTS.raid),
   raidNoticeMetaText: {
     color: CHAT_NOTICE_ACCENTS.raid,
   },
   raidNoticeText: {
     color: theme.color.text.dark,
-    fontSize: theme.fontSize12,
     fontWeight: '600',
-    lineHeight: 15,
     textAlign: 'left',
   },
   stvSystemRowAlignStart: {
@@ -484,37 +294,9 @@ export const styles = StyleSheet.create({
   },
   systemMessageText: {
     color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize14,
-    lineHeight: 17,
     textAlign: 'left',
   },
-  timestamp: {
-    color: 'rgba(255,255,255,0.5)',
-    fontSize: theme.fontSize11,
-    lineHeight: 15,
-    marginRight: 4,
-  },
-  timestampCompact: {
-    fontSize: 10,
-    lineHeight: 14,
-    marginRight: 4,
-  },
-  usernameText: {
-    ...chatLineMetrics.comfortable,
-    fontWeight: '700',
-  },
-  usernameTextCompact: {
-    ...chatLineMetrics.compact,
-    fontWeight: '700',
-  },
-  viewerMilestoneContainer: {
-    backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.viewerMilestone),
-    borderLeftColor: CHAT_NOTICE_ACCENTS.viewerMilestone,
-    borderLeftWidth: 2,
-    marginVertical: 2,
-    paddingHorizontal: theme.space8,
-    paddingVertical: theme.space4,
-  },
+  viewerMilestoneContainer: noticeSurface(CHAT_NOTICE_ACCENTS.viewerMilestone),
   viewerMilestoneMetaText: {
     color: CHAT_NOTICE_ACCENTS.viewerMilestone,
   },

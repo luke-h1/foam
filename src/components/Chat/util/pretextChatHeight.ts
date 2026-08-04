@@ -6,8 +6,8 @@ import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import {
   type ChatFontScale,
-  getChatLineMetrics,
-} from '../components/ChatMessage/RichChatMessage.styles';
+  getChatScale,
+} from '../components/ChatMessage/chatScale';
 import { canRenderMessageInline } from './canRenderMessageInline';
 import { hasSharedChannelPointsMessage } from './channelPointsSharedMessage';
 import { measureInlineFlow } from './expoPretext/measureInlineFlow';
@@ -16,20 +16,9 @@ import { prepareInlineFlow } from './expoPretext/prepareInlineFlow';
 import { prepareWithSegments } from './expoPretext/prepareWithSegments';
 import type { InlineFlowItem, TextStyle } from './expoPretext/types';
 
-/**
- *  Inline emote messages render the whole Text at the emote line height
- *  (messageTextEmoteLine / messageTextEmoteLineCompact in
- *  RichChatMessage.styles.ts), so every wrapped line is this tall.
- */
-const COMPACT_EMOTE_LINE_HEIGHT = 30;
-const COMFORTABLE_EMOTE_LINE_HEIGHT = 34;
-const ROW_VERTICAL_PADDING = 6;
 const MIN_MEASURE_WIDTH = 80;
 const HEIGHT_CACHE_LIMIT = 2000;
-const COMPACT_EMOTE_SIZE = 26;
-const COMFORTABLE_EMOTE_SIZE = 30;
 const ZERO_WIDTH_EMOTE_REMAINING_WIDTH_RATIO = 0.28;
-const SHARED_CHAT_LABEL_HEIGHT = 18;
 const SURFACE_VERTICAL_PADDING = 8;
 const SURFACE_VERTICAL_MARGIN = 4;
 
@@ -52,8 +41,9 @@ const BODY_FONT_FAMILY = [theme.fontFamilyRegular, 'System'];
 const BOLD_FONT_FAMILY = [theme.fontFamilyBold, 'System'];
 
 /**
- * ui/Text caps Dynamic Type at maxFontSizeMultiplier={1.4}; rendered font
- * sizes and lineHeights both scale by min(system font scale, 1.4).
+ * Chat rows cap Dynamic Type at 1.4 so a dense list stays legible; ui/Text
+ * itself defaults to 2, so this is deliberately tighter than the component
+ * default.
  */
 const MAX_FONT_SIZE_MULTIPLIER = 1.4;
 
@@ -85,28 +75,8 @@ function getPlaceholderAdvance(style: TextStyle): number {
  */
 const CLIP_CARD_BLOCK_HEIGHT = 59;
 
-// styles.timestamp / timestampCompact in RichChatMessage.styles.ts
-const COMPACT_TIMESTAMP_FONT_SIZE = 10;
-
-// styles.badge / badgeCompact: image size + marginRight.
-const COMFORTABLE_BADGE_SIZE = 18;
-const COMPACT_BADGE_SIZE = 14;
-const BADGE_MARGIN_RIGHT = 4;
-
-// styles.mention / mentionCompact marginHorizontal, both edges.
-const COMFORTABLE_MENTION_MARGIN = 4;
-const COMPACT_MENTION_MARGIN = 2;
-
-// ReplyingToHeader renders a single numberOfLines={1} row: replyContextText
-// lineHeight (15 / 14 compact) plus the replyContextRow marginBottom.
-const COMFORTABLE_REPLY_CONTEXT_LINE_HEIGHT = 15;
-const COMPACT_REPLY_CONTEXT_LINE_HEIGHT = 14;
-
-// styles.messageMetaText / messageMetaTextCompact + messageMetaRow
-// marginBottom — the "First time chat" / announcement / highlight label row.
-const COMFORTABLE_META_LINE_HEIGHT = 15;
-const COMPACT_META_LINE_HEIGHT = 14;
 const META_ROW_MARGIN_BOTTOM = 4;
+const SHARED_CHAT_LABEL_MARGIN_BOTTOM = 4;
 
 const heightCache = new Map<string, number>();
 
@@ -158,7 +128,8 @@ export function estimateChatMessageHeightWithPretext(
 }
 
 interface InlineFlowContext {
-  compact: boolean;
+  badgeGap: number;
+  badgeSize: number;
   emoteSize: number;
   showTimestamp: boolean;
   textStyle: TextStyle;
@@ -176,12 +147,11 @@ function measureChatMessageHeight(
   }
 
   const { density, fontScale, showTimestamp } = options;
-  const compact = density === 'compact';
-  const baseMetrics = getChatLineMetrics(fontScale, compact);
-  const lineHeight = baseMetrics.lineHeight * fontSizeMultiplier;
+  const scale = getChatScale(fontScale, density);
+  const lineHeight = scale.bodyLineHeight * fontSizeMultiplier;
   const textStyle: TextStyle = {
     fontFamily: BODY_FONT_FAMILY,
-    fontSize: baseMetrics.fontSize * fontSizeMultiplier,
+    fontSize: scale.bodyFontSize * fontSizeMultiplier,
     lineHeight,
     fontWeight: '400',
   };
@@ -190,26 +160,22 @@ function measureChatMessageHeight(
     fontFamily: BOLD_FONT_FAMILY,
     fontWeight: '700',
   };
-  // ui/Text variant='mono' maps to fontFamily 'monospace', which iOS lacks,
-  // so the rendered timestamp falls back to the system font in bold.
   const timestampStyle: TextStyle = {
-    fontFamily: 'System',
-    fontSize:
-      (compact ? COMPACT_TIMESTAMP_FONT_SIZE : theme.fontSize11) *
-      fontSizeMultiplier,
+    fontFamily: BODY_FONT_FAMILY,
+    fontSize: scale.secondaryFontSize * fontSizeMultiplier,
     lineHeight,
-    fontWeight: '700',
+    fontWeight: '400',
   };
 
   const { prelineHeight, verticalChrome } = measureRowChrome(
     message,
     options,
     fontSizeMultiplier,
-    compact,
   );
   const { items, minimumInlineHeight } = buildInlineFlowItems(message, {
-    compact,
-    emoteSize: compact ? COMPACT_EMOTE_SIZE : COMFORTABLE_EMOTE_SIZE,
+    badgeGap: scale.badgeGap,
+    badgeSize: scale.badgeSize,
+    emoteSize: scale.emoteSize,
     showTimestamp,
     textStyle,
     timestampStyle,
@@ -235,9 +201,7 @@ function measureChatMessageHeight(
       hasPaint: false,
       isModerated: Boolean(message.moderationNotice),
     });
-  const emoteLineHeight =
-    (compact ? COMPACT_EMOTE_LINE_HEIGHT : COMFORTABLE_EMOTE_LINE_HEIGHT) *
-    fontSizeMultiplier;
+  const emoteLineHeight = scale.emoteLineHeight * fontSizeMultiplier;
   const flowLineHeight = rendersInlineEmoteLine ? emoteLineHeight : lineHeight;
   const prepared = prepareInlineFlow(items);
   const measured = measureInlineFlow(prepared, maxWidth, flowLineHeight);
@@ -246,14 +210,15 @@ function measureChatMessageHeight(
   // The badge line: badges sit on the baseline, so the line holding them
   // renders at badge height + descent when that exceeds the line's height
   // (the flow line height, or the tallest inline image on the line).
-  const badgeSize = compact ? COMPACT_BADGE_SIZE : COMFORTABLE_BADGE_SIZE;
   const fontDescent = Math.ceil(
-    baseMetrics.fontSize * fontSizeMultiplier * FONT_DESCENT_RATIO,
+    scale.bodyFontSize * fontSizeMultiplier * FONT_DESCENT_RATIO,
   );
   const badgeLineExtra = message.badges?.length
     ? Math.max(
         0,
-        badgeSize + fontDescent - Math.max(flowLineHeight, minimumInlineHeight),
+        scale.badgeSize +
+          fontDescent -
+          Math.max(flowLineHeight, minimumInlineHeight),
       )
     : 0;
 
@@ -276,12 +241,10 @@ function measureRowChrome(
   message: AnyChatMessageType,
   options: PretextChatHeightOptions,
   fontSizeMultiplier: number,
-  compact: boolean,
 ): { prelineHeight: number; verticalChrome: number } {
-  const metaRowHeight =
-    (compact ? COMPACT_META_LINE_HEIGHT : COMFORTABLE_META_LINE_HEIGHT) *
-      fontSizeMultiplier +
-    META_ROW_MARGIN_BOTTOM;
+  const scale = getChatScale(options.fontScale, options.density);
+  const secondaryRowHeight = scale.secondaryLineHeight * fontSizeMultiplier;
+  const metaRowHeight = secondaryRowHeight + META_ROW_MARGIN_BOTTOM;
   let prelineHeight = 0;
 
   if (
@@ -290,12 +253,7 @@ function measureRowChrome(
   ) {
     // Never wrapped: the reply quote is a single numberOfLines={1} line no
     // matter how long replyBody is.
-    prelineHeight +=
-      (compact
-        ? COMPACT_REPLY_CONTEXT_LINE_HEIGHT
-        : COMFORTABLE_REPLY_CONTEXT_LINE_HEIGHT) *
-        fontSizeMultiplier +
-      META_ROW_MARGIN_BOTTOM;
+    prelineHeight += secondaryRowHeight + META_ROW_MARGIN_BOTTOM;
   }
 
   const isFirstMessage = message.userstate['first-msg'] === '1';
@@ -313,7 +271,7 @@ function measureRowChrome(
   }
 
   if (message.isSharedChatDuplicated) {
-    prelineHeight += SHARED_CHAT_LABEL_HEIGHT;
+    prelineHeight += secondaryRowHeight + SHARED_CHAT_LABEL_MARGIN_BOTTOM;
   }
 
   if (message.isSharedChatDuplicated || message.moderationNotice) {
@@ -330,7 +288,7 @@ function measureRowChrome(
     prelineHeight,
     verticalChrome: rendersNoticeSurface
       ? SURFACE_VERTICAL_PADDING + SURFACE_VERTICAL_MARGIN
-      : ROW_VERTICAL_PADDING,
+      : scale.rowPaddingVertical * 2,
   };
 }
 
@@ -338,8 +296,14 @@ function buildInlineFlowItems(
   message: AnyChatMessageType,
   context: InlineFlowContext,
 ): { items: InlineFlowItem[]; minimumInlineHeight: number } {
-  const { compact, showTimestamp, textStyle, timestampStyle, usernameStyle } =
-    context;
+  const {
+    badgeGap,
+    badgeSize,
+    showTimestamp,
+    textStyle,
+    timestampStyle,
+    usernameStyle,
+  } = context;
   const items: InlineFlowItem[] = [];
   let minimumInlineHeight = 0;
 
@@ -351,17 +315,13 @@ function buildInlineFlowItems(
     });
   }
 
-  const badgeSize = compact ? COMPACT_BADGE_SIZE : COMFORTABLE_BADGE_SIZE;
   const placeholderAdvance = getPlaceholderAdvance(textStyle);
   for (let index = 0; index < (message.badges?.length ?? 0); index += 1) {
     items.push({
       text: IMAGE_PLACEHOLDER,
       style: textStyle,
       atomic: true,
-      extraWidth: Math.max(
-        0,
-        badgeSize + BADGE_MARGIN_RIGHT - placeholderAdvance,
-      ),
+      extraWidth: Math.max(0, badgeSize + badgeGap - placeholderAdvance),
     });
   }
 
@@ -393,7 +353,7 @@ function appendMessagePartItem(
   part: ParsedPart,
   context: InlineFlowContext,
 ): number {
-  const { compact, emoteSize, textStyle } = context;
+  const { emoteSize, textStyle } = context;
 
   switch (part.type) {
     case 'text':
@@ -401,15 +361,7 @@ function appendMessagePartItem(
       return 0;
 
     case 'mention':
-      // Mentions render at the regular weight (styles.mention) with
-      // marginHorizontal on both edges.
-      items.push({
-        text: part.content,
-        style: textStyle,
-        extraWidth: compact
-          ? COMPACT_MENTION_MARGIN
-          : COMFORTABLE_MENTION_MARGIN,
-      });
+      items.push({ text: part.content, style: textStyle });
       return 0;
 
     case 'stvEmote':

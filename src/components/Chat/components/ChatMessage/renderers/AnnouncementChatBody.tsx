@@ -45,6 +45,7 @@ export function AnnouncementChatBody({
     <View style={styles.announcementColumn}>
       <ChatNoticeMetaRow
         compact={compact}
+        fontScale={rendererArgs.fontScale}
         icon='megaphone.fill'
         label={i18next.t('chat:notices.announcement')}
         labelColor={resolvedAccentColor}

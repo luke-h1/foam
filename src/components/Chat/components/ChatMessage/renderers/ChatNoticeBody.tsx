@@ -5,6 +5,8 @@ import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
 import type { ChatBodyVariant } from '@app/utils/chat/deriveChatBody/types';
 
+import type { ChatFontScale } from '../chatScale';
+import { getChatTextStyles } from '../chatTextStyles';
 import { styles } from '../RichChatMessage.styles';
 import { ChatMessageBody } from './ChatMessageBody';
 import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
@@ -19,18 +21,15 @@ interface ChatNoticeBodyProps extends UseChatMessagePartRendererArgs {
 
 function SpecialChatTimestamp({
   compact,
+  fontScale,
   timestamp,
 }: {
   compact: boolean;
+  fontScale?: ChatFontScale;
   timestamp: string;
 }) {
   return (
-    <Text
-      tabular
-      variant='mono'
-      weight='bold'
-      style={[styles.timestamp, compact && styles.timestampCompact]}
-    >
+    <Text tabular style={getChatTextStyles(fontScale, compact).timestamp}>
       {timestamp}
     </Text>
   );
@@ -46,7 +45,11 @@ export function ChatNoticeBody({
 }: ChatNoticeBodyProps) {
   const timestampNode =
     showTimestamp && timestamp ? (
-      <SpecialChatTimestamp compact={compact} timestamp={timestamp} />
+      <SpecialChatTimestamp
+        compact={compact}
+        fontScale={rendererArgs.fontScale}
+        timestamp={timestamp}
+      />
     ) : null;
 
   switch (bodyVariant) {
@@ -58,6 +61,7 @@ export function ChatNoticeBody({
         <View style={styles.messageColumn}>
           <ChatNoticeMetaRow
             compact={compact}
+            fontScale={rendererArgs.fontScale}
             icon={isUnraid ? 'xmark.circle.fill' : 'person.3.fill'}
             label={
               isUnraid

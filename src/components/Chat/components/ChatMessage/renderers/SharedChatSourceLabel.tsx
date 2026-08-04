@@ -3,19 +3,33 @@ import { View } from 'react-native';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
-import { theme } from '@app/styles/themes';
 
+import { CHAT_SURFACE_COLORS, type ChatFontScale } from '../chatScale';
+import { getChatTextStyles } from '../chatTextStyles';
 import { styles } from '../RichChatMessage.styles';
 
-export function SharedChatSourceLabel() {
+interface SharedChatSourceLabelProps {
+  compact?: boolean;
+  fontScale?: ChatFontScale;
+}
+
+export function SharedChatSourceLabel({
+  compact,
+  fontScale,
+}: SharedChatSourceLabelProps) {
   return (
     <View style={styles.sharedChatLabelRow}>
       <SymbolView
         name='bubble.left.and.bubble.right.fill'
         size={12}
-        tintColor={theme.color.notice.muted}
+        tintColor={CHAT_SURFACE_COLORS.muted}
       />
-      <Text style={styles.sharedChatLabelText}>
+      <Text
+        style={[
+          getChatTextStyles(fontScale, compact).meta,
+          styles.sharedChatLabelText,
+        ]}
+      >
         {i18next.t('chat:notices.viaSharedChat')}
       </Text>
     </View>

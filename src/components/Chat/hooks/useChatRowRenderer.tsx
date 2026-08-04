@@ -24,6 +24,7 @@ import type {
   ChatListRef,
   ChatListRenderItemInfo,
 } from '../components/ChatList';
+import { getChatTextStyles } from '../components/ChatMessage/chatTextStyles';
 import {
   type BadgePressData,
   type EmotePressData,
@@ -139,6 +140,7 @@ const ChatMessageRow = function ChatMessageRow({
   );
   const isAlternatingRow =
     showAlternatingChatRows && (msg.seq ?? index) % 2 === 1;
+  const rowStyle = getChatTextStyles(fontScale, chatDensity === 'compact').row;
 
   const messageDisplay = useMemo(
     () => ({
@@ -184,7 +186,7 @@ const ChatMessageRow = function ChatMessageRow({
       timestamp={msg.timestamp}
       sender={msg.sender}
       isAction={msg.isAction}
-      style={styles.messageContainer}
+      style={rowStyle}
       parentDisplayName={msg.parentDisplayName}
       parentColor={msg.parentColor}
       replyDisplayName={msg.replyDisplayName}
