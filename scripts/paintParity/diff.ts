@@ -73,8 +73,8 @@ interface Score {
   /**
    * Colour over pixels whose 3x3 neighbourhood is flat on both sides - glyph
    * interiors and gradient plateaus, away from the edges where the two text
-   * rasterizers legitimately disagree. This is the purest "is it the same
-   * paint" number the harness can produce.
+   * rasterizers legitimately disagree. The closest thing here to a straight
+   * "is it the same paint" answer.
    */
   colourFlat: number;
   flatShared: number;

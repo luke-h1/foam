@@ -42,9 +42,9 @@ import {
 } from './paintLayer/paintLayerTileModes';
 import { getPaintTextShadows } from './paintTextStyle/getPaintTextShadows';
 import { getPaintTextStroke } from './paintTextStyle/getPaintTextStroke';
-import { cssDropShadowSigma } from './skiaPaintGeometry/cssDropShadowSigma';
+import { cssDropShadowBlur } from './skiaPaintGeometry/cssDropShadowBlur';
 import { cssLinearGradientLine } from './skiaPaintGeometry/cssLinearGradientLine';
-import { cssTextShadowSigma } from './skiaPaintGeometry/cssTextShadowSigma';
+import { cssTextShadowBlur } from './skiaPaintGeometry/cssTextShadowBlur';
 import { farthestCornerCircleRadius } from './skiaPaintGeometry/farthestCornerCircleRadius';
 import { farthestCornerEllipseRadii } from './skiaPaintGeometry/farthestCornerEllipseRadii';
 import {
@@ -407,8 +407,8 @@ function drawPaintedUsername(
       dropShadowChain = Skia.ImageFilter.MakeDropShadow(
         shadow.x_offset * scale,
         shadow.y_offset * scale,
-        cssDropShadowSigma(shadow.radius) * scale,
-        cssDropShadowSigma(shadow.radius) * scale,
+        cssDropShadowBlur(shadow.radius) * scale,
+        cssDropShadowBlur(shadow.radius) * scale,
         skColor(shadow.color),
         dropShadowChain,
       );
@@ -431,8 +431,8 @@ function drawPaintedUsername(
         Skia.ImageFilter.MakeDropShadowOnly(
           shadow.x_offset * scale,
           shadow.y_offset * scale,
-          cssTextShadowSigma(shadow.radius) * scale,
-          cssTextShadowSigma(shadow.radius) * scale,
+          cssTextShadowBlur(shadow.radius) * scale,
+          cssTextShadowBlur(shadow.radius) * scale,
           skColor(shadow.color),
           null,
         ),

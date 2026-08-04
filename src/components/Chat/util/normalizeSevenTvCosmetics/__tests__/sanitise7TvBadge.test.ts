@@ -56,10 +56,8 @@ describe('sanitise7TvBadge', () => {
     expect(result.title).toBe('Badge Name');
   });
 
-  /**
-   * 7TV's EventAPI serves `host.url` scheme-relative. A browser resolves that
-   * against the page; NSURL does not, so an unrepaired url renders no badge.
-   */
+  // The EventAPI serves host.url scheme-relative. A browser resolves that
+  // against the page; NSURL does not, so an unrepaired url renders no badge.
   test('gives a scheme-relative EventAPI host url a scheme', () => {
     const badgeData = makeBadgeData({
       id: '01GAF9GYD8000E8VNG1S1RMTBF',

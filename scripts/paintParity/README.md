@@ -29,8 +29,9 @@ re-run `renderRef.ts` whenever the rasterizer's shadow insets change.
 `PAINT_IDS=<id,id>` or `PAINT_LIMIT=<n>` narrows a run, `STRIPS=<n>` controls
 how many strips `diff.ts` writes, `PAINT_USERNAME` and `PAINT_FONT_SIZE` change
 the text. At the chat size of 14 only ~36px per paint qualify as flat, so run
-`PAINT_FONT_SIZE=48` when `colourFlat` needs a real sample (~15k px per paint). Output lands in `scripts/paintParity/out/`
-(gitignored). Requires Chrome at the standard macOS path.
+`PAINT_FONT_SIZE=48` when `colourFlat` needs a real sample (~15k px per paint).
+Output lands in `scripts/paintParity/out/` (gitignored). Requires Chrome at the
+standard macOS path.
 
 The tsconfig override maps `react-native` and `@shopify/react-native-skia` to
 the stubs in `shim/`, which is what lets the app's own rasterizer module run
@@ -48,8 +49,8 @@ Both sides render on transparent, so the score is split in two:
   half-pixel shift even when they are visually identical, so treat it as a
   ranking signal, not a verdict.
 - `colourFlat` - colour over pixels whose 3x3 neighbourhood is flat on both
-  sides, i.e. away from glyph edges. This is the real "is it the same paint"
-  number: the control is 0.00 and gradients currently sit at ~0.2/255.
+  sides, i.e. away from glyph edges. The closest thing here to a straight "is it
+  the same paint" answer: the control is 0.00 and gradients sit at ~0.2/255.
 
 Paints with an animated texture are labelled `(animated)` and excluded from any
 verdict - each renderer is on whatever frame it happened to reach, so a still
@@ -61,9 +62,8 @@ whose shadow the bitmap is too small to hold. That count must stay at zero.
 
 ## Checking the app itself, not just the rasterizer
 
-`deviceCompare.ts` closes the loop: it takes a screenshot of the running app,
-crops one painted name out of it, and diffs it against the Chrome reference for
-the same paint.
+`deviceCompare.ts` takes a screenshot of the running app, crops one painted name
+out of it, and diffs it against the Chrome reference for the same paint.
 
 ```bash
 # Storybook's components/Chat/PaintParityPoc renders each paint through all

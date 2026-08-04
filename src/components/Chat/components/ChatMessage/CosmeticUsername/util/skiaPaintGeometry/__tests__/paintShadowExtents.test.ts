@@ -20,7 +20,7 @@ describe('paintShadowExtents', () => {
     });
   });
 
-  test('reaches three deviations past a single drop shadow, offset included', () => {
+  test('reaches three blur widths past a single drop shadow, offset included', () => {
     expect(
       paintShadowExtents([shadow({ radius: 4, x_offset: 2 })], [], 0),
     ).toEqual<ShadowExtents>({
@@ -31,31 +31,39 @@ describe('paintShadowExtents', () => {
     });
   });
 
-  test('combines chained drop shadows in quadrature, not by summing radii', () => {
+  test('adds chained drop shadow blurs as squares, not by summing radii', () => {
     const chain = Array.from({ length: 8 }, () => shadow({ radius: 1 }));
-    const extents = paintShadowExtents(chain, [], 0);
+    // 3 * sqrt(8 * 1^2) = 8.49px out; summing the radii would have given 24.
+    const reach = 3 * Math.sqrt(8);
 
-    // 3 * sqrt(8 * 1^2), where summing the radii would have given 24.
-    expect(extents.left).toBeCloseTo(8.485, 3);
-    expect(extents).toEqual<ShadowExtents>({
-      left: extents.left,
-      top: extents.left,
-      right: extents.left,
-      bottom: extents.left,
+    expect(paintShadowExtents(chain, [], 0)).toEqual<ShadowExtents>({
+      left: reach,
+      top: reach,
+      right: reach,
+      bottom: reach,
     });
   });
 
   test('carries the running offset through a chain', () => {
-    const extents = paintShadowExtents(
-      [shadow({ radius: 1, x_offset: 3 }), shadow({ radius: 1, x_offset: 3 })],
-      [],
-      0,
-    );
-
-    // Both shadows land 3px further right than the last, so the second sits at
+    // Each shadow lands 3px further right than the last, so the second sits at
     // 6 and its blur reaches past that; nothing reaches back past the glyph.
-    expect(extents.right).toBeCloseTo(6 + 3 * Math.SQRT2, 3);
-    expect(extents.left).toBe(0);
+    const reach = 3 * Math.SQRT2;
+
+    expect(
+      paintShadowExtents(
+        [
+          shadow({ radius: 1, x_offset: 3 }),
+          shadow({ radius: 1, x_offset: 3 }),
+        ],
+        [],
+        0,
+      ),
+    ).toEqual<ShadowExtents>({
+      left: 0,
+      top: reach,
+      right: 6 + reach,
+      bottom: reach,
+    });
   });
 
   test('sizes text shadows independently of each other', () => {
@@ -65,7 +73,7 @@ describe('paintShadowExtents', () => {
       0,
     );
 
-    // text-shadow is sigma = radius / 2 and the two do not compound.
+    // text-shadow blurs at half the radius, and the two do not compound.
     expect(extents).toEqual<ShadowExtents>({
       left: 6,
       top: 6,

@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react-native';
 
+import { maxLiveCommitPerFlush } from '@app/components/Chat/util/chatFlushCadence/maxLiveCommitPerFlush';
 import type { BufferedMessage } from '@app/components/Chat/util/messageBuffer';
 import {
   addMessages,
@@ -16,6 +17,8 @@ jest.mock('@app/store/chat/actions/messages', () => ({
 
 const mockAddMessages = jest.mocked(addMessages);
 const MAX_BUFFERED = getMaxChatMessages();
+// Platform-dependent, so read it rather than restating it here.
+const LIVE_COMMIT_CAP = maxLiveCommitPerFlush(true)!;
 
 function getLastFlushedMessages(): ChatMessageType<never>[] {
   const lastCall = mockAddMessages.mock.calls.at(-1);
@@ -633,9 +636,9 @@ describe('useChatMessages', () => {
       });
 
       const flushedMessages = getLastFlushedMessages();
-      expect(flushedMessages).toHaveLength(6);
-      expect(flushedMessages[0]?.message_id).toBe('0');
-      expect(flushedMessages.at(-1)?.message_id).toBe('5');
+      expect(flushedMessages.map(message => message.message_id)).toEqual(
+        Array.from({ length: LIVE_COMMIT_CAP }, (_, index) => `${index}`),
+      );
     });
 
     test('a raid drains in order across flushes instead of dropping the overflow', () => {
@@ -730,10 +733,10 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(100);
       });
 
-      expect(finalizeMessageForCommit).toHaveBeenCalledTimes(6);
+      expect(finalizeMessageForCommit).toHaveBeenCalledTimes(LIVE_COMMIT_CAP);
       expect(
         getLastFlushedMessages().map(message => message.message_id),
-      ).toEqual(['0', '1', '2', '3', '4', '5']);
+      ).toEqual(Array.from({ length: LIVE_COMMIT_CAP }, (_, i) => `${i}`));
     });
 
     test('force flush finalizes the drained backlog', () => {

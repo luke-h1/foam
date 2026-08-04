@@ -9,8 +9,7 @@ function isSevenTvBadge(badge: SanitisedBadgeSet): boolean {
 
 /**
  * A url an image loader can actually fetch: absolute, and pointing at a badge
- * file rather than a bare CDN directory. Scheme-relative urls are repaired
- * rather than rejected so a cached badge keeps its original file/scale.
+ * file rather than a bare CDN directory.
  */
 function isLoadableBadgeUrl(url: string): boolean {
   return (
@@ -27,7 +26,8 @@ export function normalizeSevenTvBadge(
     return badge;
   }
 
-  const url = absoluteSevenTvUrl(badge.url ?? '');
+  // Repaired rather than rejected, so a cached badge keeps its file and scale.
+  const url = absoluteSevenTvUrl(badge.url);
   if (isLoadableBadgeUrl(url)) {
     return url === badge.url ? badge : { ...badge, url };
   }

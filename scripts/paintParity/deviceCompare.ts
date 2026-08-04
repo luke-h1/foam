@@ -2,8 +2,8 @@
  * Compares a painted username as the running app draws it - cropped out of a
  * device screenshot - against the Chrome reference for the same paint.
  *
- * The harness proves the rasterizer matches the web; this proves the app draws
- * what the rasterizer produced, closing the loop end to end.
+ * The rest of the harness checks the rasterizer against the web; this checks
+ * that the app draws what the rasterizer produced.
  *
  *   bun --tsconfig-override ./scripts/paintParity/tsconfig.json \
  *     scripts/paintParity/deviceCompare.ts <screenshot> <paintId> <x> <y> <w> <h>

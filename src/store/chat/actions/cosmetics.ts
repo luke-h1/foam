@@ -423,8 +423,8 @@ const sweepUnreferencedPaints = () => {
 };
 
 /**
- * Upsert a paint definition; see `addBadge` for why create and update share a
- * write path.
+ * Adds or replaces a paint definition. 7TV re-sends definitions we already
+ * hold, so create and update are the same write.
  */
 export const addPaint = (paint: PaintData) => {
   if (paint.id) {
@@ -515,8 +515,9 @@ const isSameBadgeDefinition = (
   previous.owner_username === next.owner_username;
 
 /**
- * Upsert a badge definition. 7TV sends `cosmetic.create` for badges we already
- * hold as often as for new ones, so create and update are the same write.
+ * Adds or replaces a badge definition. 7TV sends `cosmetic.create` for badges
+ * we already hold as often as for new ones, so create and update are the same
+ * write.
  */
 export const addBadge = (badge: SanitisedBadgeSet) => {
   if (!badge.id) {

@@ -150,7 +150,6 @@ for (const source of [controlSource, ...selectPaints(sevenTvPaintsFixture)]) {
         drawFull(bitmaps.backingImage);
       }
     }
-    // masked texture
     canvas.saveLayer(Skia.Paint());
     if (layer.rect) {
       canvas.drawImageRect(

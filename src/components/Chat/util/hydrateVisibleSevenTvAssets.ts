@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
@@ -37,15 +39,12 @@ type HydrateVisibleSevenTvAssetsParams = {
 };
 
 const MAX_PERSONAL_EMOTE_FETCHES_PER_PASS = 3;
-/**
- * A cosmetic "fetch" is a passive 7TV presence write, so the reply arrives
- * later over the EventAPI rather than inline. At 3 per pass a busy channel
- * resolved only a few dozen chatters a minute and most rows never got their
- * badge or paint. `createFetchOnceGuard({ maxConcurrent: 4 })` in
- * `store/chat/actions/cosmetics` already bounds what this can put on the wire,
- * so a screenful per pass is the useful ceiling here.
- */
-const MAX_COSMETIC_FETCHES_PER_PASS = 16;
+// A cosmetic fetch is a presence write, answered later over the EventAPI, and
+// the fetch-once guard in store/chat/actions/cosmetics already caps how many
+// are in flight. At 3 per pass a busy channel resolved a few dozen chatters a
+// minute and most rows never got their badge or paint, so allow a screenful -
+// half of one on Android, where each reply costs more to decode and reprocess.
+const MAX_COSMETIC_FETCHES_PER_PASS = Platform.OS === 'android' ? 8 : 16;
 const REPROCESS_BATCH_SIZE = 6;
 const REPROCESS_BATCH_DELAY_MS = 32;
 const MAX_HYDRATED_MESSAGE_KEYS = 2000;

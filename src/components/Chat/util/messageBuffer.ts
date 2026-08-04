@@ -94,7 +94,7 @@ export const createMessageBuffer = (
         return drained;
       }
 
-      const drained = messages.slice(0, Math.max(0, limit));
+      const drained = messages.slice(0, limit);
       messages = messages.slice(drained.length);
       rebuildIndex();
       return drained;

@@ -1,15 +1,24 @@
-// Each flush mounts its rows in one reconciliation, so a 200 msg/s raid
-// committing ~20 rows at once is a single very heavy frame that caps scroll
-// fps (issue #594). Cap the rows a live flush commits and leave the overflow
-// buffered: the next flush 100ms later picks it up, so the frame stays cheap
-// without the chat silently losing messages. Normal busy chat is ≤2 per flush
-// and never reaches the cap. Off the bottom there is no frame to protect - the
-// backlog commits whole.
-const MAX_LIVE_COMMIT_PER_FLUSH = 6;
+import { Platform } from 'react-native';
 
 /**
  * How many buffered rows this flush may commit, or `undefined` for all of them.
+ *
+ * A flush mounts its rows in one reconciliation, so a 200 msg/s raid committing
+ * ~20 rows at once is one very heavy frame that caps scroll fps (issue #594).
+ * Capping the rows per flush keeps the frame cheap; the overflow stays buffered
+ * for the next flush 100ms later rather than being dropped. Normal busy chat is
+ * ≤2 rows per flush and never reaches the cap.
+ *
+ * Android takes the smaller budget - the same reconcile costs more there, and
+ * the devices running this app sit below the iOS floor. Off the bottom there is
+ * no visible frame to protect, so the backlog commits whole.
  */
 export const maxLiveCommitPerFlush = (
   isAtBottom: boolean,
-): number | undefined => (isAtBottom ? MAX_LIVE_COMMIT_PER_FLUSH : undefined);
+): number | undefined => {
+  if (!isAtBottom) {
+    return undefined;
+  }
+
+  return Platform.OS === 'android' ? 4 : 8;
+};
