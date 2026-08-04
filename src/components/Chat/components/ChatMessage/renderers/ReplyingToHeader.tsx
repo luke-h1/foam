@@ -121,7 +121,9 @@ export function ReplyingToHeader({
               quoteContainsEmotes && styles.replyContextEmoteLine,
             ]}
           >
-            <Text style={replyContextPrefixTextStyle}>
+            <Text
+              style={[replyContextPrefixTextStyle, replyContextEmoteLineStyle]}
+            >
               {parsedReplyBody.length > 0 ? `${prefix}: ` : prefix}
             </Text>
             <InlineMessageSpans

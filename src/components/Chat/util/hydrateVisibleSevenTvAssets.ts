@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
@@ -37,7 +39,7 @@ type HydrateVisibleSevenTvAssetsParams = {
 };
 
 const MAX_PERSONAL_EMOTE_FETCHES_PER_PASS = 3;
-const MAX_COSMETIC_FETCHES_PER_PASS = 3;
+const MAX_COSMETIC_FETCHES_PER_PASS = Platform.OS === 'android' ? 8 : 16;
 const REPROCESS_BATCH_SIZE = 6;
 const REPROCESS_BATCH_DELAY_MS = 32;
 const MAX_HYDRATED_MESSAGE_KEYS = 2000;

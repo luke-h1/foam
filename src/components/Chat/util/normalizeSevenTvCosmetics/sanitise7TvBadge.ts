@@ -1,7 +1,7 @@
 import type { BadgeData } from '@app/types/seventv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
-import { badgeUrlFromHost } from './badgeUrlFromHost';
+import { buildSevenTvBadgeImageUrl } from './buildSevenTvBadgeImageUrl';
 import { get7TvCosmeticId } from './get7TvCosmeticId';
 import { normalizeSevenTvBadge } from './normalizeSevenTvBadge';
 
@@ -12,7 +12,7 @@ export function sanitise7TvBadge(
   const badgeId = id ?? get7TvCosmeticId(badgeData);
   return normalizeSevenTvBadge({
     id: badgeId,
-    url: badgeUrlFromHost(badgeData.host, badgeId),
+    url: buildSevenTvBadgeImageUrl(badgeId, badgeData.host),
     type: '7TV Badge' as const,
     title: badgeData.tooltip || badgeData.name,
     set: badgeId,

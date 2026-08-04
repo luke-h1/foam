@@ -584,7 +584,7 @@ describe('RichChatMessage', () => {
         },
         {
           parentDisplayName: 'OriginalUser',
-          replyBody: 'lol Kappa @User what is up?',
+          replyBody: 'lol Kappa @SomeoneElse https://twitch.tv done',
           replyDisplayName: 'OriginalUser',
         },
       );

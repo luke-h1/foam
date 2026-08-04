@@ -10,6 +10,7 @@ import type {
   PaintTextStyle,
 } from '@app/types/seventv/cosmetics';
 
+import { absoluteSevenTvUrl } from './absoluteSevenTvUrl';
 import { get7TvCosmeticId } from './get7TvCosmeticId';
 import type { PaintGradientLayer, RawSevenTvPaintInput } from './types';
 
@@ -86,7 +87,7 @@ function normalizePaintLayer(layer: PaintGradientLayer): PaintLayerData {
     angle: layer.angle ?? 0,
     shape,
     repeat,
-    image_url: layer.image_url ?? '',
+    image_url: absoluteSevenTvUrl(layer.image_url ?? ''),
     canvas_repeat: normalizeCanvasRepeat(layer.canvas_repeat),
     at: layer.at && layer.at.length === 2 ? [layer.at[0], layer.at[1]] : null,
     size:

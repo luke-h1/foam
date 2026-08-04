@@ -14,9 +14,9 @@ import {
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 
 import { createChatDelayQueue } from '../util/chatDelayQueue';
+import { SCROLL_DEFERRED_FLUSH_RETRY_MS } from '../util/chatFlushCadence/constants/deferredFlushRetry';
+import { maxLiveCommitPerFlush } from '../util/chatFlushCadence/maxLiveCommitPerFlush';
 import { pickFlushDelay } from '../util/chatFlushCadence/pickFlushDelay';
-import { sampleLiveCommit } from '../util/chatFlushCadence/sampleLiveCommit';
-import { SCROLL_DEFERRED_FLUSH_RETRY_MS } from '../util/chatFlushCadence/SCROLL_DEFERRED_FLUSH_RETRY_MS';
 import { shouldEnterRaidFlushMode } from '../util/chatFlushCadence/shouldEnterRaidFlushMode';
 import {
   type BufferedMessage,
@@ -27,7 +27,6 @@ type HandleNewMessageOptions = {
   countUnread?: boolean;
 };
 
-// Floor on delay-queue checks so a burst of releases coalesces into one drain.
 const DELAY_RELEASE_MIN_INTERVAL_MS = 80;
 
 function publishBufferedMessages(messages: BufferedMessage[]) {
@@ -85,7 +84,6 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   const finalizeMessageForCommitRef = useRef(finalizeMessageForCommit);
   const isFlushingRef = useRef(false);
   const pendingUnreadCountRef = useRef(0);
-  // Set when a flush sees a raid-sized batch; slows the next live flush cadence.
   const raidFlushModeRef = useRef(false);
 
   useLayoutEffect(() => {
@@ -93,16 +91,21 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     finalizeMessageForCommitRef.current = finalizeMessageForCommit;
   });
 
-  const flushBuffer = useCallback(() => {
-    if (isFlushingRef.current) {
-      // Re-entered from inside a flush, because publishing fed a message
-      // straight back in. The drain already under way covers it, so leave any
-      // armed timer alone rather than dropping its handle.
+  const startFlushTimer = useCallback((delayMs: number) => {
+    if (flushTimerRef.current) {
       return;
     }
 
-    // Clearing (not just forgetting) matters on the direct-call path: a timer
-    // armed for this same flush would otherwise stay pending and re-run it.
+    flushTimerRef.current = setTimeout(() => {
+      flushBufferRef.current();
+    }, delayMs);
+  }, []);
+
+  const flushBuffer = useCallback(() => {
+    if (isFlushingRef.current) {
+      return;
+    }
+
     if (flushTimerRef.current) {
       clearTimeout(flushTimerRef.current);
       flushTimerRef.current = null;
@@ -127,12 +130,14 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     isFlushingRef.current = true;
 
     try {
-      const drained = buffer.drain();
+      const isAtBottom = isAtBottomRef.current;
+
       raidFlushModeRef.current = shouldEnterRaidFlushMode(
-        drained.length,
-        isAtBottomRef.current,
+        buffer.size(),
+        isAtBottom,
       );
-      const messagesToFlush = sampleLiveCommit(drained, isAtBottomRef.current);
+
+      const messagesToFlush = buffer.drain(maxLiveCommitPerFlush(isAtBottom));
       const shouldMaintainBottom = shouldArmBottomContentAnchor(
         isScrollingToBottomRef,
       );
@@ -153,6 +158,16 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     } finally {
       isFlushingRef.current = false;
     }
+
+    if (buffer.size() > 0) {
+      startFlushTimer(
+        pickFlushDelay({
+          isAtBottom: isAtBottomRef.current,
+          raidMode: raidFlushModeRef.current,
+          scrollingToBottom: isScrollingToBottomRef?.current ?? false,
+        }),
+      );
+    }
   }, [
     bufferRef,
     isAtBottomRef,
@@ -160,21 +175,12 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     isUserActivelyScrolling,
     onBottomContentChange,
     onUnreadIncrement,
+    startFlushTimer,
   ]);
 
   useLayoutEffect(() => {
     flushBufferRef.current = flushBuffer;
   });
-
-  const startFlushTimer = useCallback((delayMs: number) => {
-    if (flushTimerRef.current) {
-      return;
-    }
-
-    flushTimerRef.current = setTimeout(() => {
-      flushBufferRef.current();
-    }, delayMs);
-  }, []);
 
   const clearDelayTick = useCallback(() => {
     if (delayTickTimerRef.current) {
@@ -183,8 +189,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     }
   }, []);
 
-  // Commit one message into the render buffer + run unread/flush bookkeeping (shared by
-  // the direct and delayed-release paths).
+  // Commit one message into the render buffer + run unread/flush bookkeeping
   const ingestMessage = useCallback(
     (message: BufferedMessage, countUnread?: boolean) => {
       const { added, dropped } = bufferRef.current.add(message);
@@ -255,15 +260,13 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       };
 
       const countUnread = messageOptions?.countUnread;
-      // Historical replay (countUnread === false) is already old, so it bypasses the delay.
       const rawDelayMs =
         countUnread === false ? 0 : getChatDelayMsRef.current();
+
       const delayMs =
         Number.isFinite(rawDelayMs) && rawDelayMs > 0 ? rawDelayMs : 0;
 
       if (delayMs <= 0) {
-        // An auto-sync delay can collapse to zero mid-stream; a live message
-        // still can't skip past older ones held in the queue.
         if (countUnread !== false && delayQueueRef.current.size() > 0) {
           delayQueueRef.current.enqueue(
             messageWithCachedColor,
@@ -287,7 +290,6 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     [delayQueueRef, ingestMessage, scheduleDelayTick],
   );
 
-  // On delay-setting change: drain everything held if delay is off, else ensure a tick is pending.
   const reconcileChatDelay = useCallback(() => {
     const effectiveDelayMs = getChatDelayMsRef.current();
     if (!Number.isFinite(effectiveDelayMs) || effectiveDelayMs <= 0) {
@@ -295,6 +297,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       delayQueueRef.current
         .drainAll()
         .forEach(entry => ingestMessage(entry.message, entry.countUnread));
+
       return;
     }
     scheduleDelayTick();

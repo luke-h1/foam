@@ -42,58 +42,35 @@ import {
 } from './paintLayer/paintLayerTileModes';
 import { getPaintTextShadows } from './paintTextStyle/getPaintTextShadows';
 import { getPaintTextStroke } from './paintTextStyle/getPaintTextStroke';
-import { cssDropShadowSigma } from './skiaPaintGeometry/cssDropShadowSigma';
+import { cssDropShadowBlur } from './skiaPaintGeometry/cssDropShadowBlur';
 import { cssLinearGradientLine } from './skiaPaintGeometry/cssLinearGradientLine';
+import { cssTextShadowBlur } from './skiaPaintGeometry/cssTextShadowBlur';
 import { farthestCornerCircleRadius } from './skiaPaintGeometry/farthestCornerCircleRadius';
 import { farthestCornerEllipseRadii } from './skiaPaintGeometry/farthestCornerEllipseRadii';
 import {
   type LayerRect,
   layerRectInBox,
 } from './skiaPaintGeometry/layerRectInBox';
+import { paintShadowExtents } from './skiaPaintGeometry/paintShadowExtents';
 
 export interface RasterizePaintedUsernameOptions {
   displayUsername: string;
   paint: PaintData;
   fallbackColor: string;
   fontSize: number;
-  /**
-   * Device pixels per logical pixel; the bitmap is rendered at this scale and
-   * displayed at logical size so glyph edges stay crisp.
-   */
   pixelRatio: number;
   fontProvider: SkTypefaceFontProvider;
   fontFamily: string;
 }
 
-// Wide enough that a username never wraps; shared by the measuring and
-// drawing paragraphs so shaping is identical between passes.
 const LAYOUT_WIDTH = 8192;
 
-// A Gaussian's visible falloff is ~3 standard deviations.
-const BLUR_EXTENT_SIGMAS = 3;
-
-/**
- * CSS gradients interpolate their colour stops in premultiplied sRGBA
- * (css-images-3 §3.4.1); Skia's gradient factories take this as flag `1`, so
- * passing it matches the browser's stop blending, including alpha stops where
- * unpremultiplied interpolation would grey the midpoints.
- */
 const GRADIENT_PREMUL_FLAG = 1;
 
-/**
- * A gradient layer renders as a span when it has at least one stop and is not
- * fully transparent. A single-stop layer is an invalid CSS gradient whose
- * span keeps only its base-colour backing.
- */
 function isDrawableGradientLayer(layer: PaintLayerData): boolean {
   return layer.function !== 'URL' && isRenderablePaintLayer(layer);
 }
 
-/**
- * A URL layer composites live only when it produces a span; a dead URL layer
- * must not push the paint onto the live-composite path or split a gradient
- * batch.
- */
 function isLiveUrlLayer(layer: PaintLayerData): boolean {
   return layer.function === 'URL' && isRenderablePaintLayer(layer);
 }
@@ -102,13 +79,6 @@ function skColor(color: number): Float32Array {
   return Skia.Color(sevenTvColorToCss(color));
 }
 
-/**
- * One gradient layer as a Skia shader over its layer rect. Repeating
- * gradients keep CSS's absolute stop phase: the shader spans the
- * [first, last] stop range with normalized positions and tiles from there
- * (`TileMode.Repeat`), which is exactly what `repeating-linear-gradient` /
- * `repeating-radial-gradient` do - no stop-expansion approximation.
- */
 function layerShader(layer: PaintLayerData, rect: LayerRect): SkShader | null {
   const stops = cssClampedStops(
     indexedCollectionToArray<PaintStop>(layer.stops),
@@ -167,13 +137,9 @@ function layerShader(layer: PaintLayerData, rect: LayerRect): SkShader | null {
   };
   const circleRadius = farthestCornerCircleRadius(rect.width, rect.height);
 
-  /**
-   * CSS ellipse gradients are circles stretched to the box's aspect ratio;
-   * Skia only draws circular gradients, so stretch via a local matrix
-   * around centre
-   */
   let localMatrix;
   let radius = circleRadius;
+
   if (layer.shape === 'ellipse') {
     const { rx, ry } = farthestCornerEllipseRadii(rect.width, rect.height);
     radius = rx;
@@ -184,11 +150,6 @@ function layerShader(layer: PaintLayerData, rect: LayerRect): SkShader | null {
   }
 
   if (repeats) {
-    /**
-     * An equal-centre two-point conical gradient runs between two radii, so
-     * rings tile inward and outward from the stop span like CSS's
-     * repeating-radial-gradient
-     */
     return Skia.Shader.MakeTwoPointConicalGradient(
       center,
       radius * firstAt,
@@ -226,64 +187,6 @@ function skiaDecodableLayerUrl(url: string): string {
   );
 }
 
-interface ShadowExtents {
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-}
-
-/**
- * How far outside the glyph box the shadows can paint (CSS px). Chained
- * `drop-shadow()`s compound - each filter shadows the previous filter's
- * output, shadow included - so extents accumulate through the chain rather
- * than taking a per-shadow max.
- */
-function shadowExtents(
-  dropShadows: PaintShadow[],
-  textShadows: PaintShadow[],
-  strokeWidth: number,
-): ShadowExtents {
-  const extents: ShadowExtents = {
-    left: strokeWidth,
-    top: strokeWidth,
-    right: strokeWidth,
-    bottom: strokeWidth,
-  };
-
-  for (const shadow of textShadows) {
-    const blur = BLUR_EXTENT_SIGMAS * cssDropShadowSigma(shadow.radius);
-    extents.left = Math.max(extents.left, blur - shadow.x_offset);
-    extents.right = Math.max(extents.right, blur + shadow.x_offset);
-    extents.top = Math.max(extents.top, blur - shadow.y_offset);
-    extents.bottom = Math.max(extents.bottom, blur + shadow.y_offset);
-  }
-
-  for (const shadow of dropShadows) {
-    const blur = BLUR_EXTENT_SIGMAS * cssDropShadowSigma(shadow.radius);
-    extents.left = Math.max(
-      extents.left,
-      extents.left + blur - shadow.x_offset,
-    );
-    extents.right = Math.max(
-      extents.right,
-      extents.right + blur + shadow.x_offset,
-    );
-    extents.top = Math.max(extents.top, extents.top + blur - shadow.y_offset);
-    extents.bottom = Math.max(
-      extents.bottom,
-      extents.bottom + blur + shadow.y_offset,
-    );
-  }
-
-  return extents;
-}
-
-/**
- * Measured, paint-derived geometry for one painted username, in device pixels.
- * Independent of the (possibly animating) image frames, so it is computed once
- * and reused for every drawn frame by the live renderer.
- */
 interface PaintUsernameLayout {
   text: string;
   scale: number;
@@ -313,12 +216,15 @@ function keepTrailingSpaces(text: string): string {
 
 function paintUsernameText(paint: PaintData, displayUsername: string): string {
   const transform = paint.textStyle?.transform;
+
   if (transform === 'uppercase') {
     return keepTrailingSpaces(displayUsername.toLocaleUpperCase());
   }
+
   if (transform === 'lowercase') {
     return keepTrailingSpaces(displayUsername.toLocaleLowerCase());
   }
+
   return keepTrailingSpaces(displayUsername);
 }
 
@@ -332,10 +238,12 @@ function buildUsernameParagraph(
     fontSize: layout.fontSizePx,
     fontStyle: { weight: layout.fontWeight },
   };
+
   const builder = Skia.ParagraphBuilder.Make(
     { maxLines: 1, textStyle: skiaTextStyle },
     opts.fontProvider,
   );
+
   builder.pushStyle(skiaTextStyle, fillPaint);
   builder.addText(layout.text);
   const paragraph = builder.build();
@@ -343,28 +251,18 @@ function buildUsernameParagraph(
   return paragraph;
 }
 
-/**
- * Measure the glyph box and shadow overflow for a paint. Frame-independent, so
- * the live renderer calls it once and reuses the result across every frame.
- */
 function buildPaintLayout(
   opts: RasterizePaintedUsernameOptions,
 ): PaintUsernameLayout | null {
   const { paint, displayUsername, fontSize, pixelRatio } = opts;
   const scale = pixelRatio;
 
-  /**
-   * The extension renders paint weight as `weight * 100`; with no explicit
-   * weight the painted span inherits the chat username as rendered. ui/Text
-   * resolves usernames to the single-face Montserrat_400Regular family, so
-   * iOS draws the 400 face (style fontWeight '700' finds no bold sibling in
-   * that family) while Android synthesizes a faux bold from the same face.
-   */
   const fontWeight: FontWeight = paint.textStyle?.weight
     ? ((paint.textStyle.weight * 100) as FontWeight)
     : Platform.OS === 'android'
       ? FontWeight.Bold
       : FontWeight.Normal;
+
   const partial = {
     text: paintUsernameText(paint, displayUsername),
     fontSizePx: fontSize * scale,
@@ -381,7 +279,12 @@ function buildPaintLayout(
   const dropShadows = getPaintDropShadows(paint, 2);
   const textShadows = getPaintTextShadows(paint);
   const stroke = getPaintTextStroke(paint);
-  const extents = shadowExtents(dropShadows, textShadows, stroke?.width ?? 0);
+
+  const extents = paintShadowExtents(
+    dropShadows,
+    textShadows,
+    stroke?.width ?? 0,
+  );
 
   const insetsPx = {
     left: Math.ceil(extents.left * scale),
@@ -407,12 +310,6 @@ function buildPaintLayout(
   };
 }
 
-/**
- * Draw the static composite for a painted username onto `canvas`: text-shadows,
- * base fill, gradient layers, and stroke, wrapped in the drop-shadow chain.
- * Image (URL) layers are omitted — they composite live so animated textures
- * can advance without re-baking.
- */
 function drawPaintedUsername(
   canvas: SkCanvas,
   opts: RasterizePaintedUsernameOptions,
@@ -421,10 +318,6 @@ function drawPaintedUsername(
     includeDropShadows: boolean;
     includeTextShadows: boolean;
     includeBaseFill: boolean;
-    /**
-     * Gradient layers to draw (already in back-to-front order), or null to
-     * draw every non-URL layer from the layout back-to-front.
-     */
     gradientLayers: PaintLayerData[] | null;
     includeStroke: boolean;
   } = {
@@ -446,19 +339,14 @@ function drawPaintedUsername(
     );
   };
 
-  /**
-   * CSS `filter: drop-shadow(a) drop-shadow(b)` applies b to a's output
-   * (source + shadow), so the filters nest rather than stack; the whole
-   * element render - text-shadows, stroke, and fill - is the chain's source.
-   */
   let dropShadowChain: SkImageFilter | null = null;
   if (options.includeDropShadows) {
     for (const shadow of layout.dropShadows) {
       dropShadowChain = Skia.ImageFilter.MakeDropShadow(
         shadow.x_offset * scale,
         shadow.y_offset * scale,
-        cssDropShadowSigma(shadow.radius) * scale,
-        cssDropShadowSigma(shadow.radius) * scale,
+        cssDropShadowBlur(shadow.radius) * scale,
+        cssDropShadowBlur(shadow.radius) * scale,
         skColor(shadow.color),
         dropShadowChain,
       );
@@ -470,10 +358,6 @@ function drawPaintedUsername(
   }
   canvas.saveLayer(dropShadowChain ? chainPaint : undefined);
 
-  /**
-   * Each text-shadow is drawn independently beneath the glyphs, first-listed
-   * on top (CSS paint order).
-   */
   if (options.includeTextShadows) {
     for (const shadow of [...layout.textShadows].reverse()) {
       const shadowLayerPaint = Skia.Paint();
@@ -481,8 +365,8 @@ function drawPaintedUsername(
         Skia.ImageFilter.MakeDropShadowOnly(
           shadow.x_offset * scale,
           shadow.y_offset * scale,
-          cssDropShadowSigma(shadow.radius) * scale,
-          cssDropShadowSigma(shadow.radius) * scale,
+          cssTextShadowBlur(shadow.radius) * scale,
+          cssTextShadowBlur(shadow.radius) * scale,
           skColor(shadow.color),
           null,
         ),
@@ -498,19 +382,10 @@ function drawPaintedUsername(
     paint.color === null ? Skia.Color(fallbackColor) : skColor(paint.color),
   );
 
-  /**
-   * `PaintData.layers` lists the topmost layer first, so draw back-to-front.
-   * Image (URL) layers composite live; only gradient shaders are baked here.
-   */
   const gradientsToDraw = (
     options.gradientLayers ?? [...layout.layers].reverse()
   ).filter(isDrawableGradientLayer);
 
-  /**
-   * With no layer spans the reference renders the plain username, which the
-   * base fill reproduces; the live-composite foundation also passes an empty
-   * layer list to get the fill that backs its URL textures.
-   */
   if (options.includeBaseFill && gradientsToDraw.length === 0) {
     drawGlyphs(basePaint);
   }
@@ -522,12 +397,7 @@ function drawPaintedUsername(
       groupPaint.setAlphaf(layer.opacity);
       canvas.saveLayer(groupPaint);
     }
-    /**
-     * Each reference layer span paints `background-color: currentColor`
-     * beneath its own background and the whole span then fades by the layer
-     * opacity, so an upper layer covers lower ones with the base colour
-     * rather than blending into them.
-     */
+
     drawGlyphs(basePaint);
     const rect = layerRectInBox(
       layer.at,
@@ -541,6 +411,7 @@ function drawPaintedUsername(
       width: rect.width,
       height: rect.height,
     };
+
     const shader = layerShader(layer, canvasRect);
     if (shader) {
       const fillPaint = Skia.Paint();
