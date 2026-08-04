@@ -14,7 +14,7 @@ import {
   type SnapPoint,
 } from '@app/components/BottomSheet/BottomSheet';
 import { Button } from '@app/components/Button/Button';
-import { useIosActionSheet } from '@app/components/Chat/components/useIosActionSheet';
+import { useIosActionSheet } from '@app/components/Chat/hooks/useIosActionSheet';
 import type {
   ChatModerationAccessFlags,
   UserActionVisibilityFlags,

@@ -15,16 +15,16 @@ import { theme } from '@app/styles/themes';
 import { lightenColor } from '@app/utils/color/lightenColor';
 import { truncate } from '@app/utils/string/truncate';
 
+import { useComposerDismissGesture } from '../hooks/useComposerDismissGesture';
 import { chatEntranceSpring } from '../util/chatEntranceSpring';
+import type { ChatInputSectionProps } from '../util/chatInputSectionTypes';
+import { COMPOSER_ROW_GAP } from '../util/composerSizing';
 import { isRefreshCommand } from '../util/slashCommandDefinitions/isRefreshCommand';
 import { ChatComposer } from './ChatComposer/ChatComposer';
-import type { ChatInputSectionProps } from './chatInputSectionTypes';
 import { ComposerIconButton } from './ComposerIconButton';
-import { COMPOSER_ROW_GAP } from './composerSizing';
 import { ReplyPreviewBody } from './ReplyPreviewBody';
-import { useComposerDismissGesture } from './useComposerDismissGesture';
 
-export type { ReplyToData } from './chatInputSectionTypes';
+export type { ReplyToData } from '../util/chatInputSectionTypes';
 
 const replyPreviewEntering = chatEntranceSpring(FadeInUp);
 const replyPreviewExiting = FadeOutDown.duration(140);

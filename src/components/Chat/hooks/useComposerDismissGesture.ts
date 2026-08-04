@@ -12,7 +12,7 @@ import {
   COMPOSER_DISMISS_DRAG_DISTANCE,
   COMPOSER_DISMISS_VELOCITY,
   COMPOSER_DRAG_LIMIT,
-} from './composerDismissConstants';
+} from '../util/composerDismissConstants';
 
 function dismissComposer() {
   void KeyboardController.dismiss();

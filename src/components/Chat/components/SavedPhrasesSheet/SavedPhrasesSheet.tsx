@@ -11,14 +11,13 @@ import {
   type BottomSheetHandle,
 } from '@app/components/BottomSheet/BottomSheet';
 import { Button } from '@app/components/Button/Button';
+import { CHAT_SETTINGS_SHEET_DETENT } from '@app/components/Chat/util/chatSheetLayout';
+import { chatSheetSurface } from '@app/components/Chat/util/chatSheetSurface';
 import { FlashList } from '@app/components/FlashList/FlashList';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { type SavedPhrase, usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
-
-import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
-import { chatSheetSurface } from '../chatSheetSurface';
 
 export interface SavedPhrasesSheetProps {
   isPresented: boolean;

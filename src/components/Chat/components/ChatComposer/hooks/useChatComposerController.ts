@@ -9,7 +9,7 @@ import {
   messageLength,
 } from '@app/utils/chat/maxMessageLength';
 
-import { useWordInfo } from './hooks/useWordInfo';
+import { useWordInfo } from './useWordInfo';
 
 export { MAX_MESSAGE_LENGTH };
 

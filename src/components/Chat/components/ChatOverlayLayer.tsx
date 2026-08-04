@@ -10,7 +10,8 @@ import {
 } from './ChatMessage/RichChatMessage.types';
 import { ChattersSheet } from './ChattersSheet/ChattersSheet';
 import { EmotePreviewSheet } from './EmotePreviewSheet/EmotePreviewSheet';
-import { type EmotePickerItem, EmoteSheet } from './EmoteSheet/EmoteSheet';
+import { EmoteSheet } from './EmoteSheet/EmoteSheet';
+import type { EmotePickerItem } from './EmoteSheet/emoteSheetTypes';
 import { SavedPhrasesSheet } from './SavedPhrasesSheet/SavedPhrasesSheet';
 import { SettingsSheet } from './SettingsSheet/SettingsSheet';
 import { UserActionSheet } from './UserActionSheet';

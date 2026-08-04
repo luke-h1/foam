@@ -13,7 +13,7 @@ import type {
   MessageActionData,
   UsernamePressData,
 } from '../components/ChatMessage/RichChatMessage.types';
-import type { EmotePickerItem } from '../components/EmoteSheet/EmoteSheet';
+import type { EmotePickerItem } from '../components/EmoteSheet/emoteSheetTypes';
 import type { ChatOverlayOpeners } from '../components/useChatOverlays';
 
 export function useChatComposerActions({

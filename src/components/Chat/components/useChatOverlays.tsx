@@ -25,7 +25,7 @@ import {
   UsernamePressData,
 } from './ChatMessage/RichChatMessage.types';
 import { ChatOverlayLayer } from './ChatOverlayLayer';
-import type { EmotePickerItem } from './EmoteSheet/EmoteSheet';
+import type { EmotePickerItem } from './EmoteSheet/emoteSheetTypes';
 
 export interface ChatOverlayOpeners {
   openBadge: (badge: BadgePressData) => void;

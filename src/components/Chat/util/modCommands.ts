@@ -1,5 +1,7 @@
 import type { TwitchChatSettingsPatch } from '@app/types/twitch/moderation';
 
+import { normaliseChatUsername } from './chatUsernames/normaliseChatUsername';
+
 export type ModCommand =
   | { type: 'timeout'; login: string; durationSeconds: number; reason?: string }
   | { type: 'ban'; login: string; reason?: string }
@@ -12,10 +14,6 @@ export type ModCommand =
 
 const DEFAULT_TIMEOUT_SECONDS = 600;
 const DEFAULT_SLOW_MODE_SECONDS = 30;
-
-function normaliseLogin(value: string): string {
-  return value.replace(/^@/, '').trim().toLowerCase();
-}
 
 /**
  * Parses composer input into a moderation command, or null when the input is
@@ -33,7 +31,7 @@ export function parseModCommand(input: string): ModCommand | null {
 
   switch (command) {
     case 'timeout': {
-      const login = normaliseLogin(args[0] ?? '');
+      const login = normaliseChatUsername(args[0] ?? '');
       if (!login) {
         return null;
       }
@@ -48,7 +46,7 @@ export function parseModCommand(input: string): ModCommand | null {
       };
     }
     case 'ban': {
-      const login = normaliseLogin(args[0] ?? '');
+      const login = normaliseChatUsername(args[0] ?? '');
       if (!login) {
         return null;
       }
@@ -57,11 +55,11 @@ export function parseModCommand(input: string): ModCommand | null {
     }
     case 'unban':
     case 'untimeout': {
-      const login = normaliseLogin(args[0] ?? '');
+      const login = normaliseChatUsername(args[0] ?? '');
       return login ? { type: 'unban', login } : null;
     }
     case 'warn': {
-      const login = normaliseLogin(args[0] ?? '');
+      const login = normaliseChatUsername(args[0] ?? '');
       const reason = args.slice(1).join(' ');
       return login && reason ? { type: 'warn', login, reason } : null;
     }
@@ -71,7 +69,7 @@ export function parseModCommand(input: string): ModCommand | null {
     }
     case 'shoutout':
     case 'so': {
-      const login = normaliseLogin(args[0] ?? '');
+      const login = normaliseChatUsername(args[0] ?? '');
       return login ? { type: 'shoutout', login } : null;
     }
     case 'slow': {

@@ -9,7 +9,7 @@ import { useEmoteSuggestions } from './hooks/useEmoteSuggestions';
 import {
   suggestionRailEntering,
   suggestionRailExiting,
-} from './suggestionRailAnimations';
+} from './util/suggestionRailAnimations';
 
 interface EmoteSuggestionRailProps {
   handleEmotePress: (emote: SanitisedEmote) => void;

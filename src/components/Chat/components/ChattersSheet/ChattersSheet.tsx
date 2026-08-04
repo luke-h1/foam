@@ -7,6 +7,8 @@ import type { ListRenderItem } from '@shopify/flash-list';
 
 import { BottomSheet } from '@app/components/BottomSheet/BottomSheet';
 import { Button } from '@app/components/Button/Button';
+import { CHAT_SETTINGS_SHEET_DETENT } from '@app/components/Chat/util/chatSheetLayout';
+import { chatSheetSurface } from '@app/components/Chat/util/chatSheetSurface';
 import { FlashList } from '@app/components/FlashList/FlashList';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Input } from '@app/components/ui/Input/Input';
@@ -19,8 +21,6 @@ import {
 } from '@app/utils/chat/resolveMentionLogin/types';
 
 import type { UsernamePressData } from '../ChatMessage/RichChatMessage.types';
-import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
-import { chatSheetSurface } from '../chatSheetSurface';
 
 export interface ChattersSheetProps {
   isPresented: boolean;

@@ -7,6 +7,7 @@ import {
   BottomSheet,
   type BottomSheetHandle,
 } from '@app/components/BottomSheet/BottomSheet';
+import { CHAT_SETTINGS_SHEET_DETENT } from '@app/components/Chat/util/chatSheetLayout';
 import {
   SettingsLinkRow,
   SettingsSection,
@@ -20,7 +21,6 @@ import {
 import { requestLiveSync } from '@app/store/stream/liveSyncBus';
 import { theme } from '@app/styles/themes';
 
-import { CHAT_SETTINGS_SHEET_DETENT } from '../chatSheetLayout';
 import { SettingsSheetIosForm } from './SettingsSheetIosForm';
 
 const ICON_TINT = theme.color.textSecondary.dark;

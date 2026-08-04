@@ -22,7 +22,7 @@ import type { SFSymbol } from 'sf-symbols-typescript';
 
 import { theme } from '@app/styles/themes';
 
-import { COMPOSER_CONTROL_SIZE } from './composerSizing';
+import { COMPOSER_CONTROL_SIZE } from '../util/composerSizing';
 
 export interface ComposerIconButtonProps {
   active?: boolean;

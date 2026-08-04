@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
-import { hydrateVisibleSevenTvAssets } from '@app/components/Chat/util/hydrateVisibleSevenTvAssets';
+import { hydrateVisibleSevenTvAssets } from '@app/components/Chat/util/hydrateVisibleSevenTvAssets/hydrateVisibleSevenTvAssets';
 import { reprocessMessages } from '@app/components/Chat/util/reprocessMessages';
 import { getCachedSharedChatBadgeContext } from '@app/components/Chat/util/sharedChatBadges/getCachedSharedChatBadgeContext';
 import { getMessageBadges } from '@app/components/Chat/util/sharedChatBadges/getMessageBadges';
@@ -67,9 +67,12 @@ jest.mock('@app/utils/chat/extractEmotes/extractEmotesFromTag', () => ({
   extractEmotesFromTag: jest.fn(() => []),
 }));
 
-jest.mock('../../util/hydrateVisibleSevenTvAssets', () => ({
-  hydrateVisibleSevenTvAssets: jest.fn(() => Promise.resolve(false)),
-}));
+jest.mock(
+  '../../util/hydrateVisibleSevenTvAssets/hydrateVisibleSevenTvAssets',
+  () => ({
+    hydrateVisibleSevenTvAssets: jest.fn(() => Promise.resolve(false)),
+  }),
+);
 
 jest.mock('../../util/reprocessMessages', () => ({
   reprocessMessages: jest.fn(),

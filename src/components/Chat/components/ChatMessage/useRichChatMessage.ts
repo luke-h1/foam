@@ -5,13 +5,13 @@ import { useMappingHelper } from '@shopify/flash-list';
 
 import type { ChatMessageDisplayFlags } from '@app/components/Chat/types/chatUiFlags';
 import { hasSharedChannelPointsMessage } from '@app/components/Chat/util/channelPointsSharedMessage';
+import { normaliseChatUsername } from '@app/components/Chat/util/chatUsernames/normaliseChatUsername';
 import { getAnnouncementAccentColor } from '@app/components/Chat/util/getAnnouncementAccentColor';
 import { toChatMessageData } from '@app/components/Chat/util/richChatMessageData';
 import { getAnnouncementColorParam } from '@app/components/Chat/util/richChatMessageHelpers/getAnnouncementColorParam';
 import { getChatBodyInfo } from '@app/components/Chat/util/richChatMessageHelpers/getChatBodyInfo';
 import { getPartIdentity } from '@app/components/Chat/util/richChatMessageHelpers/getPartIdentity';
 import { isUserNoticeTags } from '@app/components/Chat/util/richChatMessageHelpers/isUserNoticeTags';
-import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers/normaliseUsername';
 import { usePreference } from '@app/store/preferenceStore';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
@@ -136,15 +136,15 @@ export function useRichChatMessage<
   }, []);
   const compact = density === 'compact';
   const normalisedCurrentUsername =
-    currentUsernameNormalized ?? normaliseUsername(currentUsername);
+    currentUsernameNormalized ?? normaliseChatUsername(currentUsername);
   // Identity-stable so the memoized span renderers can bail out.
   const effectiveHighlightedUserSet = useMemo(
     () =>
       highlightedUserSet ??
-      new Set((highlightedUsers ?? []).map(normaliseUsername)),
+      new Set((highlightedUsers ?? []).map(normaliseChatUsername)),
     [highlightedUserSet, highlightedUsers],
   );
-  const messageSenderKey = normaliseUsername(
+  const messageSenderKey = normaliseChatUsername(
     userstate.username || userstate.login || sender,
   );
   const isHighlightedSender =
@@ -343,8 +343,8 @@ export function useRichChatMessage<
     Boolean(onReplyContextPress) && Boolean(replyParentMessageId);
   const isReplyingToCurrentUser = Boolean(
     normalisedCurrentUsername &&
-    (normaliseUsername(replyDisplayName) === normalisedCurrentUsername ||
-      normaliseUsername(parentDisplayName) === normalisedCurrentUsername),
+    (normaliseChatUsername(replyDisplayName) === normalisedCurrentUsername ||
+      normaliseChatUsername(parentDisplayName) === normalisedCurrentUsername),
   );
 
   const announcementAccentColor = isAnnouncement

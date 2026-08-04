@@ -24,19 +24,19 @@ import { parseActionMessage } from '@app/utils/chat/parseActionMessage';
 import { logger } from '@app/utils/logger';
 
 import type { ChatListRef } from '../components/ChatList';
-import { formatModerationSystemMessage } from '../util/formatModerationSystemMessage';
+import { formatModerationSystemMessage } from '../util/formatModerationSystemMessage/formatModerationSystemMessage';
 import { formatNoticeMessage } from '../util/formatNoticeMessage';
 import { coerceUserNoticeTags } from '../util/messageHandlers/coerceUserNoticeTags';
 import { createBaseMessage } from '../util/messageHandlers/createBaseMessage';
 import { createSystemMessage } from '../util/messageHandlers/createSystemMessage';
 import { createUserNoticeMessage } from '../util/messageHandlers/createUserNoticeMessage';
 import { createUserStateFromTags } from '../util/messageHandlers/createUserStateFromTags';
-import { SUPPRESSED_NOTICE_IDS } from '../util/roomState/SUPPRESSED_NOTICE_IDS';
 import {
   createRoomStateTracker,
   type RoomStateTracker,
   type RoomStateUpdate,
-} from '../util/roomStateTracker';
+} from '../util/roomState/roomStateTracker';
+import { SUPPRESSED_NOTICE_IDS } from '../util/roomState/SUPPRESSED_NOTICE_IDS';
 
 const historicalFlag = (countUnread: boolean) =>
   countUnread ? {} : { isHistorical: true as const };

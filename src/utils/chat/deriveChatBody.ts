@@ -1,3 +1,4 @@
+import { normaliseChatUsername } from '@app/components/Chat/util/chatUsernames/normaliseChatUsername';
 import { emoteBreaksInline } from '@app/utils/chat/deriveChatBody/emoteBreaksInline';
 import { structureCache } from '@app/utils/chat/deriveChatBody/structureCache';
 import {
@@ -49,10 +50,6 @@ interface ChatBodyScan extends MessageStructure {
 }
 
 const scanCache = new WeakMap<ParsedPart[], ChatBodyScan>();
-
-function normaliseLogin(value?: string): string {
-  return value?.trim().replace(/^@/, '').toLowerCase() ?? '';
-}
 
 function resolveChatBodyVariant(
   flags: DeriveChatBodyFlags,
@@ -112,7 +109,7 @@ function scanChatBody(message: ParsedPart[]): ChatBodyScan {
       case 'link':
         break;
       case 'mention': {
-        const login = normaliseLogin(part.content);
+        const login = normaliseChatUsername(part.content);
         if (login) {
           mentionLogins.push(login);
         }

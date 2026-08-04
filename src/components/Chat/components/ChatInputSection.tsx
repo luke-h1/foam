@@ -17,20 +17,20 @@ import {
 } from '@app/utils/string/createHitSlop';
 import { truncate } from '@app/utils/string/truncate';
 
+import { useComposerDismissGesture } from '../hooks/useComposerDismissGesture';
 import { chatEntranceSpring } from '../util/chatEntranceSpring';
-import { isRefreshCommand } from '../util/slashCommandDefinitions/isRefreshCommand';
-import { ChatComposer } from './ChatComposer/ChatComposer';
 import type {
   ChatInputSectionProps,
   ReplyToData,
-} from './chatInputSectionTypes';
+} from '../util/chatInputSectionTypes';
 import {
   COMPOSER_CONTROL_RADIUS,
   COMPOSER_CONTROL_SIZE,
   COMPOSER_ROW_GAP,
-} from './composerSizing';
+} from '../util/composerSizing';
+import { isRefreshCommand } from '../util/slashCommandDefinitions/isRefreshCommand';
+import { ChatComposer } from './ChatComposer/ChatComposer';
 import { ReplyPreviewBody } from './ReplyPreviewBody';
-import { useComposerDismissGesture } from './useComposerDismissGesture';
 
 export type { ReplyToData };
 

@@ -1,13 +1,12 @@
 import { StyleSheet } from 'react-native';
 
-import { theme } from '@app/styles/themes';
-
 import {
   COMPOSER_CONTROL_RADIUS,
   COMPOSER_CONTROL_SIZE,
   COMPOSER_INPUT_MIN_HEIGHT,
   COMPOSER_ROW_GAP,
-} from '../composerSizing';
+} from '@app/components/Chat/util/composerSizing';
+import { theme } from '@app/styles/themes';
 
 export const chatComposerStyles = StyleSheet.create({
   mainContainer: {

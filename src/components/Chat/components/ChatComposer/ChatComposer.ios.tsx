@@ -2,20 +2,20 @@ import { memo, type Ref, useCallback, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { COMPOSER_INPUT_MIN_HEIGHT } from '@app/components/Chat/util/composerSizing';
 import { Input, type InputRef } from '@app/components/ui/Input/Input.ios';
 import { useAccentColor } from '@app/context/AccentColorContext';
 import { theme } from '@app/styles/themes';
 
 import { ComposerIconButton } from '../ComposerIconButton';
-import { COMPOSER_INPUT_MIN_HEIGHT } from '../composerSizing';
-import { chatComposerStyles } from './chatComposerStyles';
 import { CommandSuggestionRail } from './CommandSuggestionRail';
 import { EmoteSuggestionRail } from './EmoteSuggestionRail';
 import {
   type ChatComposerHandle,
   useChatComposerController,
-} from './useChatComposerController';
+} from './hooks/useChatComposerController';
 import { UserSuggestionRail } from './UserSuggestionRail';
+import { chatComposerStyles } from './util/chatComposerStyles';
 
 export type { ChatComposerHandle };
 

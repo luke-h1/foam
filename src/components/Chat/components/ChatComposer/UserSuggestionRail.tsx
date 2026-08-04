@@ -9,7 +9,7 @@ import { useUserSuggestions } from './hooks/useUserSuggestions';
 import {
   suggestionRailEntering,
   suggestionRailExiting,
-} from './suggestionRailAnimations';
+} from './util/suggestionRailAnimations';
 
 interface UserSuggestionRailProps {
   handleUserSelect: (user: ChatUser) => void;

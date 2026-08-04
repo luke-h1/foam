@@ -14,7 +14,7 @@ import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { logger } from '@app/utils/logger';
 
-import { hydrateVisibleSevenTvAssets } from '../util/hydrateVisibleSevenTvAssets';
+import { hydrateVisibleSevenTvAssets } from '../util/hydrateVisibleSevenTvAssets/hydrateVisibleSevenTvAssets';
 import { createUserStateFromTags } from '../util/messageHandlers/createUserStateFromTags';
 import { reprocessMessages } from '../util/reprocessMessages';
 import { resolveMessageEmoteParts } from '../util/resolveMessageEmoteParts';
