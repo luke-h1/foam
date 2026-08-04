@@ -10,16 +10,16 @@ describe('applyMentionLoginCasing', () => {
   });
 
   test('applyMentionLoginCasing rewrites mention parts when canonical login is known', () => {
-    registerMentionLogin('BungleXO');
+    registerMentionLogin('VelvetFathom93');
 
     const parts = applyMentionLoginCasing([
-      { type: 'mention', content: '@bunglexo' },
+      { type: 'mention', content: '@velvetfathom93' },
       { type: 'text', content: ' high hopes' },
     ]);
 
     expect(parts[0]).toEqual<ParsedPart>({
       type: 'mention',
-      content: '@BungleXO',
+      content: '@VelvetFathom93',
     });
   });
 });

@@ -16,8 +16,8 @@ describe('resolveMentionColor', () => {
   test('uses chat history color for the mentioned user', () => {
     mockGetUserMessageColor.mockReturnValue('#9147FF');
 
-    expect(resolveMentionColor('BungleXO')).toBe('rgb(158, 93, 255)');
-    expect(getUserMessageColor).toHaveBeenCalledWith('BungleXO');
+    expect(resolveMentionColor('VelvetFathom93')).toBe('rgb(158, 93, 255)');
+    expect(getUserMessageColor).toHaveBeenCalledWith('VelvetFathom93');
   });
 
   test('falls back to deterministic palette when user has not chatted', () => {

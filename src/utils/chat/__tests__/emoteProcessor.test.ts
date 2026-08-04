@@ -70,7 +70,7 @@ describe('processEmotesWorklet', () => {
   test('parses @mentions as mention parts', () => {
     const result = processEmotesWorklet({
       ...emptyParams,
-      inputString: 'hey @BungleXO look',
+      inputString: 'hey @VelvetFathom93 look',
     });
 
     expect(
@@ -81,23 +81,23 @@ describe('processEmotesWorklet', () => {
     ).toEqual([
       { type: 'text', content: 'hey' },
       { type: 'text', content: ' ' },
-      { type: 'mention', content: '@BungleXO' },
+      { type: 'mention', content: '@VelvetFathom93' },
       { type: 'text', content: ' ' },
       { type: 'text', content: 'look' },
     ]);
   });
 
   test('rewrites mention casing when canonical login is known', () => {
-    registerMentionLogin('BungleXO');
+    registerMentionLogin('VelvetFathom93');
 
     const result = processEmotesWorklet({
       ...emptyParams,
-      inputString: '@bunglexo high hopes',
+      inputString: '@velvetfathom93 high hopes',
     });
 
     expect(pickFields(result[0], ['type', 'content'])).toEqual({
       type: 'mention',
-      content: '@BungleXO',
+      content: '@VelvetFathom93',
     });
   });
 
@@ -105,7 +105,7 @@ describe('processEmotesWorklet', () => {
     const singleLetterEmote = createEmote({ id: 'letter-o', name: 'o' });
     const result = processEmotesWorklet({
       ...emptyParams,
-      inputString: '@BungleXO high hopes',
+      inputString: '@VelvetFathom93 high hopes',
       sevenTvChannelEmotes: [singleLetterEmote],
     });
 
@@ -115,7 +115,7 @@ describe('processEmotesWorklet', () => {
         content: 'content' in part ? part.content : undefined,
       })),
     ).toEqual([
-      { type: 'mention', content: '@BungleXO' },
+      { type: 'mention', content: '@VelvetFathom93' },
       { type: 'text', content: ' ' },
       { type: 'text', content: 'high' },
       { type: 'text', content: ' ' },
