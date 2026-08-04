@@ -17,6 +17,11 @@ interface MentionSpanProps {
   baseTextStyle?: StyleProp<TextStyle>;
   fontScaleStyle?: StyleProp<TextStyle>;
   emoteLineStyle?: StyleProp<TextStyle>;
+  /**
+   * Replaces the default chat-body mention metrics, for surfaces that render
+   * the body at a different scale (the reply quote).
+   */
+  mentionTextStyle?: StyleProp<TextStyle>;
   compact?: boolean;
   isModerated?: boolean;
   getMentionColor?: (username: string) => string;
@@ -37,6 +42,7 @@ function MentionSpanComponent({
   baseTextStyle,
   fontScaleStyle,
   emoteLineStyle,
+  mentionTextStyle,
   compact,
   isModerated,
   getMentionColor,
@@ -78,6 +84,7 @@ function MentionSpanComponent({
         styles.mention,
         compact && styles.mentionCompact,
         fontScaleStyle,
+        mentionTextStyle,
         emoteLineStyle,
         isHighlightedMention && styles.mentionHighlighted,
         getChatColorStyle(mentionColor),

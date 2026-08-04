@@ -76,6 +76,28 @@ const createMockMessage = (
   };
 };
 
+const parseReplyQuote = (text: string): ParsedPart[] =>
+  text.split(' ').map(word => {
+    if (word === 'Kappa') {
+      return {
+        type: 'emote',
+        name: 'Kappa',
+        content: 'Kappa',
+        id: 'kappa-1',
+        url: 'https://example.com/kappa.webp',
+        width: 28,
+        height: 28,
+      } satisfies ParsedPart<'emote'>;
+    }
+    if (word.startsWith('@')) {
+      return { type: 'mention', content: word } satisfies ParsedPart<'mention'>;
+    }
+    if (word.startsWith('http')) {
+      return { type: 'link', content: word } satisfies ParsedPart<'link'>;
+    }
+    return { type: 'text', content: `${word} ` } satisfies ParsedPart<'text'>;
+  });
+
 const touchAt = (pageX: number, pageY: number) => ({
   nativeEvent: { pageX, pageY },
 });
@@ -552,6 +574,62 @@ describe('RichChatMessage', () => {
       expect(otherMention).not.toHaveStyle({
         color: 'rgba(255, 255, 255, 0.5)',
       });
+    });
+
+    test('renders every span of an emote reply quote on the taller emote line', () => {
+      const message = createMockMessage(
+        [{ type: 'text', content: 'sure' }],
+        { 'reply-parent-msg-id': 'parent-msg-456' },
+        {
+          parentDisplayName: 'OriginalUser',
+          replyBody: 'lol Kappa @SomeoneElse https://twitch.tv done',
+          replyDisplayName: 'OriginalUser',
+        },
+      );
+
+      const { getByText } = render(
+        <RichChatMessage
+          {...message}
+          showInlineReplyContext
+          parseTextForEmotes={parseReplyQuote}
+        />,
+      );
+
+      const replyLineMetrics = { fontSize: 12, lineHeight: 24 };
+
+      expect(getByText('Replying to @OriginalUser: ')).toHaveStyle(
+        replyLineMetrics,
+      );
+
+      expect(getByText('lol ')).toHaveStyle(replyLineMetrics);
+
+      expect(getByText('@SomeoneElse')).toHaveStyle(replyLineMetrics);
+
+      expect(getByText('https://twitch.tv')).toHaveStyle(replyLineMetrics);
+
+      expect(getByText('done ')).toHaveStyle(replyLineMetrics);
+    });
+
+    test('keeps the message body at chat scale when the reply quote is scaled down', () => {
+      const message = createMockMessage(
+        [{ type: 'text', content: 'sure' }],
+        { 'reply-parent-msg-id': 'parent-msg-456' },
+        {
+          parentDisplayName: 'OriginalUser',
+          replyBody: 'lol Kappa',
+          replyDisplayName: 'OriginalUser',
+        },
+      );
+
+      const { getByText } = render(
+        <RichChatMessage
+          {...message}
+          showInlineReplyContext
+          parseTextForEmotes={parseReplyQuote}
+        />,
+      );
+
+      expect(getByText('sure')).toHaveStyle({ fontSize: 14, lineHeight: 17 });
     });
   });
 

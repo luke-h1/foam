@@ -290,6 +290,26 @@ export const styles = StyleSheet.create({
   replyContextEmoteLine: {
     lineHeight: 24,
   },
+  replyContextLinkText: {
+    color: theme.color.brand.twitch,
+    fontSize: theme.fontSize12,
+    lineHeight: 15,
+    textDecorationLine: 'underline',
+  },
+  replyContextLinkTextCompact: {
+    fontSize: theme.fontSize11,
+    lineHeight: 14,
+  },
+  replyContextMentionText: {
+    fontSize: theme.fontSize12,
+    lineHeight: 15,
+    marginHorizontal: 2,
+  },
+  replyContextMentionTextCompact: {
+    fontSize: theme.fontSize11,
+    lineHeight: 14,
+    marginHorizontal: 1,
+  },
   messageText: {
     ...chatLineMetrics.comfortable,
   },
@@ -348,7 +368,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     minWidth: 0,
-    marginBottom: 4,
+    marginBottom: 3,
+    marginTop: 2,
     width: '100%',
   },
   replyContextContent: {
@@ -377,7 +398,6 @@ export const styles = StyleSheet.create({
     alignSelf: 'stretch',
     backgroundColor: noticeSurfaceTint(CHAT_NOTICE_ACCENTS.replyToYou, 0.14),
     borderRadius: 4,
-    marginBottom: 4,
     paddingHorizontal: 6,
     paddingVertical: 3,
   },

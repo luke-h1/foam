@@ -1,3 +1,5 @@
+import type { StyleProp, TextStyle } from 'react-native';
+
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 
@@ -6,6 +8,13 @@ import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRendere
 
 type ChatMessageBodyProps = UseChatMessagePartRendererArgs & {
   mode: 'message' | 'system';
+  /**
+   * Metrics for text, link and mention parts on surfaces that render the body
+   * at a different scale than the chat line (the reply quote).
+   */
+  bodyTextStyle?: StyleProp<TextStyle>;
+  linkTextStyle?: StyleProp<TextStyle>;
+  mentionTextStyle?: StyleProp<TextStyle>;
 };
 
 export function ChatMessageBody({

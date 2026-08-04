@@ -69,15 +69,28 @@ export function ReplyingToHeader({
   const replyContextIconColor = isReplyingToCurrentUser
     ? CHAT_NOTICE_ACCENTS.replyToYou
     : 'rgba(255, 255, 255, 0.5)';
+  const replyContextEmoteLineStyle = quoteContainsEmotes
+    ? styles.replyContextEmoteLine
+    : undefined;
   const replyContextPrefixTextStyle = [
     styles.replyContextPrefixText,
     compact && styles.replyContextTextCompact,
     isReplyingToCurrentUser && styles.replyContextTextReplyToYou,
+    replyContextEmoteLineStyle,
   ];
   const replyContextBodyTextStyle = [
     styles.replyContextBodyText,
     compact && styles.replyContextTextCompact,
     isReplyingToCurrentUser && styles.replyContextTextReplyToYou,
+    replyContextEmoteLineStyle,
+  ];
+  const replyContextLinkTextStyle = [
+    styles.replyContextLinkText,
+    compact && styles.replyContextLinkTextCompact,
+  ];
+  const replyContextMentionTextStyle = [
+    styles.replyContextMentionText,
+    compact && styles.replyContextMentionTextCompact,
   ];
 
   const content = (
@@ -93,24 +106,21 @@ export function ReplyingToHeader({
       />
       <View style={styles.replyContextContent}>
         {canRenderInlineQuote ? (
-          <Text
-            numberOfLines={1}
-            style={[
-              replyContextPrefixTextStyle,
-              quoteContainsEmotes && styles.replyContextEmoteLine,
-            ]}
-          >
+          <Text numberOfLines={1} style={replyContextPrefixTextStyle}>
             <Text style={replyContextPrefixTextStyle}>
               {parsedReplyBody.length > 0 ? `${prefix}: ` : prefix}
             </Text>
             <InlineMessageSpans
               {...partRendererArgs}
               compact={compact}
+              emoteLineStyle={replyContextEmoteLineStyle}
               emoteTargetSize={
                 compact
                   ? REPLY_CONTEXT_EMOTE_SIZE_COMPACT
                   : REPLY_CONTEXT_EMOTE_SIZE_COMFORTABLE
               }
+              linkTextStyle={replyContextLinkTextStyle}
+              mentionTextStyle={replyContextMentionTextStyle}
               message={parsedReplyBody as InlineFlowPart[]}
               replyPlainMentionTarget={replyPlainMentionTarget}
               textStyle={replyContextBodyTextStyle}
@@ -129,12 +139,15 @@ export function ReplyingToHeader({
                 <View style={styles.replyContextBodyParts}>
                   <ChatMessageBody
                     {...partRendererArgs}
+                    bodyTextStyle={replyContextBodyTextStyle}
                     compact={compact}
                     emoteTargetSize={
                       compact
                         ? REPLY_CONTEXT_EMOTE_SIZE_COMPACT
                         : REPLY_CONTEXT_EMOTE_SIZE_COMFORTABLE
                     }
+                    linkTextStyle={replyContextLinkTextStyle}
+                    mentionTextStyle={replyContextMentionTextStyle}
                     mode='message'
                     message={parsedReplyBody}
                     replyPlainMentionTarget={replyPlainMentionTarget}

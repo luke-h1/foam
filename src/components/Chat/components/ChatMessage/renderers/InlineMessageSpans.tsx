@@ -33,6 +33,12 @@ type InlineMessageSpansProps = Pick<
    * emote attachment overflows and clips.
    */
   emoteLineStyle?: StyleProp<TextStyle>;
+  /**
+   * Metrics for link and mention spans on surfaces that render the body at a
+   * different scale than the chat line (the reply quote).
+   */
+  linkTextStyle?: StyleProp<TextStyle>;
+  mentionTextStyle?: StyleProp<TextStyle>;
   textColor?: string;
 };
 
@@ -50,6 +56,8 @@ function InlineMessageSpansComponent({
   emoteTargetSize,
   textStyle,
   emoteLineStyle,
+  linkTextStyle,
+  mentionTextStyle,
   textColor,
 }: InlineMessageSpansProps) {
   const fontScaleStyle = getChatFontScaleStyle(fontScale, compact);
@@ -126,6 +134,7 @@ function InlineMessageSpansComponent({
             styles.messageLink,
             compact && styles.messageLinkCompact,
             fontScaleStyle,
+            linkTextStyle,
             emoteLineStyle,
           ]}
         >
@@ -146,6 +155,7 @@ function InlineMessageSpansComponent({
           baseTextStyle={baseTextStyle}
           fontScaleStyle={fontScaleStyle}
           emoteLineStyle={emoteLineStyle}
+          mentionTextStyle={mentionTextStyle}
           compact={compact}
           getMentionColor={getMentionColor}
           effectiveHighlightedUserSet={effectiveHighlightedUserSet}

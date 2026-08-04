@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import type { StyleProp, TextStyle } from 'react-native';
 
 import { MediaLinkCard } from '@app/components/Chat/components/MediaLinkCard';
 import { StvEmoteEvent } from '@app/components/Chat/components/StvEmoteEvent';
@@ -22,6 +23,9 @@ type ChatMessagePartProps = Omit<UseChatMessagePartRendererArgs, 'message'> & {
   message: ParsedPart[];
   mode: 'message' | 'system';
   part: ParsedPart;
+  bodyTextStyle?: StyleProp<TextStyle>;
+  linkTextStyle?: StyleProp<TextStyle>;
+  mentionTextStyle?: StyleProp<TextStyle>;
 };
 
 export function ChatMessagePart({
@@ -42,6 +46,9 @@ export function ChatMessagePart({
   emoteTargetSize,
   textColor,
   part,
+  bodyTextStyle,
+  linkTextStyle,
+  mentionTextStyle,
 }: ChatMessagePartProps) {
   const subMessage =
     'subscriptionEvent' in part ? part.subscriptionEvent?.message : undefined;
@@ -57,9 +64,10 @@ export function ChatMessagePart({
     () => [
       styles.messageText,
       compact && styles.messageTextCompact,
+      bodyTextStyle,
       Boolean(moderationNotice) && styles.moderatedMessageText,
     ],
-    [compact, moderationNotice],
+    [bodyTextStyle, compact, moderationNotice],
   );
 
   if (mode === 'system' && part.type === 'text') {
@@ -98,6 +106,7 @@ export function ChatMessagePart({
           style={[
             styles.messageText,
             compact && styles.messageTextCompact,
+            bodyTextStyle,
             textColor ? getChatColorStyle(textColor) : null,
             Boolean(moderationNotice) && styles.moderatedMessageText,
           ]}
@@ -152,6 +161,7 @@ export function ChatMessagePart({
           style={[
             styles.messageLink,
             compact && styles.messageLinkCompact,
+            linkTextStyle,
             Boolean(moderationNotice) && styles.moderatedMessageText,
           ]}
         >
@@ -195,6 +205,7 @@ export function ChatMessagePart({
           key={getPartKey(part, index)}
           content={getParsedPartStringContent(part)}
           baseTextStyle={mentionBaseTextStyle}
+          mentionTextStyle={mentionTextStyle}
           compact={compact}
           isModerated={Boolean(moderationNotice)}
           getMentionColor={getMentionColor}
