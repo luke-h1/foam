@@ -23,7 +23,11 @@ export type AddResult = {
 
 export interface MessageBuffer {
   add(message: BufferedMessage): AddResult;
-  drain(): BufferedMessage[];
+  /**
+   * Take the oldest buffered messages, up to `limit` when given. Anything over
+   * the limit stays buffered for the next flush rather than being discarded.
+   */
+  drain(limit?: number): BufferedMessage[];
   clear(): void;
   size(): number;
   removeById(messageId: string): boolean;
@@ -82,10 +86,17 @@ export const createMessageBuffer = (
       return { added: true, dropped: 0 };
     },
 
-    drain() {
-      const drained = messages;
-      messages = [];
-      index.clear();
+    drain(limit) {
+      if (limit === undefined || limit >= messages.length) {
+        const drained = messages;
+        messages = [];
+        index.clear();
+        return drained;
+      }
+
+      const drained = messages.slice(0, Math.max(0, limit));
+      messages = messages.slice(drained.length);
+      rebuildIndex();
       return drained;
     },
 

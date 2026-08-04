@@ -1,9 +1,23 @@
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
+import { absoluteSevenTvUrl } from './absoluteSevenTvUrl';
 import { buildSevenTvBadgeImageUrl } from './buildSevenTvBadgeImageUrl';
 
 function isSevenTvBadge(badge: SanitisedBadgeSet): boolean {
   return badge.provider === '7tv' || badge.type === '7TV Badge';
+}
+
+/**
+ * A url an image loader can actually fetch: absolute, and pointing at a badge
+ * file rather than a bare CDN directory. Scheme-relative urls are repaired
+ * rather than rejected so a cached badge keeps its original file/scale.
+ */
+function isLoadableBadgeUrl(url: string): boolean {
+  return (
+    url.startsWith('https://') &&
+    url.includes('/badge/') &&
+    /\.(webp|png|avif|gif|jpe?g)(?:$|\?)/i.test(url)
+  );
 }
 
 export function normalizeSevenTvBadge(
@@ -13,11 +27,9 @@ export function normalizeSevenTvBadge(
     return badge;
   }
 
-  if (
-    badge.url.includes('/badge/') &&
-    /\.(webp|png|avif|gif|jpe?g)(?:$|\?)/i.test(badge.url)
-  ) {
-    return badge;
+  const url = absoluteSevenTvUrl(badge.url ?? '');
+  if (isLoadableBadgeUrl(url)) {
+    return url === badge.url ? badge : { ...badge, url };
   }
 
   return {

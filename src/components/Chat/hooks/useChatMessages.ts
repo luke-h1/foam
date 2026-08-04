@@ -14,8 +14,8 @@ import {
 import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
 
 import { createChatDelayQueue } from '../util/chatDelayQueue';
+import { maxLiveCommitPerFlush } from '../util/chatFlushCadence/maxLiveCommitPerFlush';
 import { pickFlushDelay } from '../util/chatFlushCadence/pickFlushDelay';
-import { sampleLiveCommit } from '../util/chatFlushCadence/sampleLiveCommit';
 import { SCROLL_DEFERRED_FLUSH_RETRY_MS } from '../util/chatFlushCadence/SCROLL_DEFERRED_FLUSH_RETRY_MS';
 import { shouldEnterRaidFlushMode } from '../util/chatFlushCadence/shouldEnterRaidFlushMode';
 import {
@@ -93,6 +93,16 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     finalizeMessageForCommitRef.current = finalizeMessageForCommit;
   });
 
+  const startFlushTimer = useCallback((delayMs: number) => {
+    if (flushTimerRef.current) {
+      return;
+    }
+
+    flushTimerRef.current = setTimeout(() => {
+      flushBufferRef.current();
+    }, delayMs);
+  }, []);
+
   const flushBuffer = useCallback(() => {
     if (isFlushingRef.current) {
       // Re-entered from inside a flush, because publishing fed a message
@@ -127,12 +137,12 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     isFlushingRef.current = true;
 
     try {
-      const drained = buffer.drain();
+      const isAtBottom = isAtBottomRef.current;
       raidFlushModeRef.current = shouldEnterRaidFlushMode(
-        drained.length,
-        isAtBottomRef.current,
+        buffer.size(),
+        isAtBottom,
       );
-      const messagesToFlush = sampleLiveCommit(drained, isAtBottomRef.current);
+      const messagesToFlush = buffer.drain(maxLiveCommitPerFlush(isAtBottom));
       const shouldMaintainBottom = shouldArmBottomContentAnchor(
         isScrollingToBottomRef,
       );
@@ -153,6 +163,18 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     } finally {
       isFlushingRef.current = false;
     }
+
+    // Rows the per-flush cap held back; without re-arming they would wait on
+    // the next incoming message, which stalls the tail end of a burst.
+    if (buffer.size() > 0) {
+      startFlushTimer(
+        pickFlushDelay({
+          isAtBottom: isAtBottomRef.current,
+          raidMode: raidFlushModeRef.current,
+          scrollingToBottom: isScrollingToBottomRef?.current ?? false,
+        }),
+      );
+    }
   }, [
     bufferRef,
     isAtBottomRef,
@@ -160,21 +182,12 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     isUserActivelyScrolling,
     onBottomContentChange,
     onUnreadIncrement,
+    startFlushTimer,
   ]);
 
   useLayoutEffect(() => {
     flushBufferRef.current = flushBuffer;
   });
-
-  const startFlushTimer = useCallback((delayMs: number) => {
-    if (flushTimerRef.current) {
-      return;
-    }
-
-    flushTimerRef.current = setTimeout(() => {
-      flushBufferRef.current();
-    }, delayMs);
-  }, []);
 
   const clearDelayTick = useCallback(() => {
     if (delayTickTimerRef.current) {

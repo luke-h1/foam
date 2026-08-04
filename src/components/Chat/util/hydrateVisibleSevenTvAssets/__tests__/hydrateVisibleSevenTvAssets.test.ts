@@ -233,12 +233,13 @@ describe('hydrateVisibleSevenTvAssets', () => {
 
   test('limits visible-user cosmetic fetches per hydration pass', async () => {
     const fetchUserCosmetics = jest.fn().mockResolvedValue(undefined);
+    const userIds = Array.from({ length: 20 }, (_, index) => `${index}`);
 
     await hydrateVisibleSevenTvAssets({
       channelId: 'channel-id',
-      messages: ['1', '2', '3', '4', '5'].map(createMessageForUser),
+      messages: userIds.map(createMessageForUser),
       hydratedMessageKeys: new Set(),
-      personalEmoteUsers: new Set(['1', '2', '3', '4', '5']),
+      personalEmoteUsers: new Set(userIds),
       cosmeticUsers: new Set(),
       getUserPersonalEmotes: jest.fn(() => []),
       fetchUserPersonalEmotes: jest.fn(),
@@ -247,7 +248,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
       reprocessMessage: jest.fn(),
     });
 
-    expect(fetchUserCosmetics).toHaveBeenCalledTimes(3);
+    expect(fetchUserCosmetics).toHaveBeenCalledTimes(16);
   });
 
   test('does not fetch or reprocess 7TV badges when disabled', async () => {
