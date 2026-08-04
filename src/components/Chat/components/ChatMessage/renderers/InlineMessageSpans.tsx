@@ -9,6 +9,7 @@ import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
 import { EmoteRenderer } from './EmoteRenderer';
 import { MentionSpan } from './MentionSpan';
+import { TextModifierStyles } from './types/TextModifierStyles';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 
 type InlineMessageSpansProps = Pick<
@@ -34,7 +35,7 @@ type InlineMessageSpansProps = Pick<
    */
   emoteLineStyle?: StyleProp<TextStyle>;
   textColor?: string;
-};
+} & Omit<TextModifierStyles, 'bodyTextStyle'>;
 
 function InlineMessageSpansComponent({
   compact,
@@ -51,6 +52,8 @@ function InlineMessageSpansComponent({
   textStyle,
   emoteLineStyle,
   textColor,
+  linkTextStyle,
+  mentionTextStyle,
 }: InlineMessageSpansProps) {
   const fontScaleStyle = getChatFontScaleStyle(fontScale, compact);
   const baseTextStyle = textStyle ?? [
@@ -126,6 +129,7 @@ function InlineMessageSpansComponent({
             styles.messageLink,
             compact && styles.messageLinkCompact,
             fontScaleStyle,
+            linkTextStyle,
             emoteLineStyle,
           ]}
         >
@@ -146,6 +150,7 @@ function InlineMessageSpansComponent({
           baseTextStyle={baseTextStyle}
           fontScaleStyle={fontScaleStyle}
           emoteLineStyle={emoteLineStyle}
+          mentionTextStyle={mentionTextStyle}
           compact={compact}
           getMentionColor={getMentionColor}
           effectiveHighlightedUserSet={effectiveHighlightedUserSet}

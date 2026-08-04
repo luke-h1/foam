@@ -15,6 +15,7 @@ import { styles } from '../RichChatMessage.styles';
 import { CheermoteRenderer } from './CheermoteRenderer';
 import { EmoteRenderer } from './EmoteRenderer';
 import { MentionSpan } from './MentionSpan';
+import { TextModifierStyles } from './types/TextModifierStyles';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 
 type ChatMessagePartProps = Omit<UseChatMessagePartRendererArgs, 'message'> & {
@@ -22,7 +23,7 @@ type ChatMessagePartProps = Omit<UseChatMessagePartRendererArgs, 'message'> & {
   message: ParsedPart[];
   mode: 'message' | 'system';
   part: ParsedPart;
-};
+} & TextModifierStyles;
 
 export function ChatMessagePart({
   compact,
@@ -42,9 +43,13 @@ export function ChatMessagePart({
   emoteTargetSize,
   textColor,
   part,
+  bodyTextStyle,
+  linkTextStyle,
+  mentionTextStyle,
 }: ChatMessagePartProps) {
   const subMessage =
     'subscriptionEvent' in part ? part.subscriptionEvent?.message : undefined;
+
   const parsedSubMessage = useMemo(
     () =>
       subMessage && parseTextForEmotes
@@ -57,9 +62,10 @@ export function ChatMessagePart({
     () => [
       styles.messageText,
       compact && styles.messageTextCompact,
+      bodyTextStyle,
       Boolean(moderationNotice) && styles.moderatedMessageText,
     ],
-    [compact, moderationNotice],
+    [bodyTextStyle, compact, moderationNotice],
   );
 
   if (mode === 'system' && part.type === 'text') {
@@ -98,6 +104,7 @@ export function ChatMessagePart({
           style={[
             styles.messageText,
             compact && styles.messageTextCompact,
+            bodyTextStyle,
             textColor ? getChatColorStyle(textColor) : null,
             Boolean(moderationNotice) && styles.moderatedMessageText,
           ]}
@@ -152,6 +159,7 @@ export function ChatMessagePart({
           style={[
             styles.messageLink,
             compact && styles.messageLinkCompact,
+            linkTextStyle,
             Boolean(moderationNotice) && styles.moderatedMessageText,
           ]}
         >
@@ -198,6 +206,7 @@ export function ChatMessagePart({
           compact={compact}
           isModerated={Boolean(moderationNotice)}
           getMentionColor={getMentionColor}
+          mentionTextStyle={mentionTextStyle}
           effectiveHighlightedUserSet={effectiveHighlightedUserSet}
           normalisedCurrentUsername={normalisedCurrentUsername}
           replyPlainMentionTarget={replyPlainMentionTarget}

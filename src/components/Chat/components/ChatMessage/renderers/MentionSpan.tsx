@@ -11,8 +11,12 @@ import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchC
 import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin/formatMentionContent';
 
 import { styles } from '../RichChatMessage.styles';
+import { TextModifierStyles } from './types/TextModifierStyles';
 
-interface MentionSpanProps {
+interface MentionSpanProps extends Pick<
+  TextModifierStyles,
+  'mentionTextStyle'
+> {
   content: string;
   baseTextStyle?: StyleProp<TextStyle>;
   fontScaleStyle?: StyleProp<TextStyle>;
@@ -43,6 +47,7 @@ function MentionSpanComponent({
   effectiveHighlightedUserSet,
   normalisedCurrentUsername,
   replyPlainMentionTarget,
+  mentionTextStyle,
 }: MentionSpanProps) {
   useSelector(chatStore$.mentionLoginRevision);
 
@@ -78,6 +83,7 @@ function MentionSpanComponent({
         styles.mention,
         compact && styles.mentionCompact,
         fontScaleStyle,
+        mentionTextStyle,
         emoteLineStyle,
         isHighlightedMention && styles.mentionHighlighted,
         getChatColorStyle(mentionColor),
