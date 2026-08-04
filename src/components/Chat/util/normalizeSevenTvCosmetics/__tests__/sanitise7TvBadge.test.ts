@@ -56,6 +56,25 @@ describe('sanitise7TvBadge', () => {
     expect(result.title).toBe('Badge Name');
   });
 
+  /**
+   * 7TV's EventAPI serves `host.url` scheme-relative. A browser resolves that
+   * against the page; NSURL does not, so an unrepaired url renders no badge.
+   */
+  test('gives a scheme-relative EventAPI host url a scheme', () => {
+    const badgeData = makeBadgeData({
+      id: '01GAF9GYD8000E8VNG1S1RMTBF',
+      name: '7TV Subscriber - 1 Year',
+      tooltip: '7TV Subscriber (1 Year)',
+      host: makeSevenTvHost('//cdn.7tv.app/badge/01GAF9GYD8000E8VNG1S1RMTBF', [
+        makeSevenTvFile('4x', 72, 72),
+      ]),
+    });
+
+    expect(sanitise7TvBadge(badgeData).url).toBe(
+      'https://cdn.7tv.app/badge/01GAF9GYD8000E8VNG1S1RMTBF/4x.png',
+    );
+  });
+
   test('uses provided id override', () => {
     const badgeData = makeBadgeData({
       id: '00000000000000000000000000',

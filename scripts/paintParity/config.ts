@@ -2,8 +2,9 @@ import path from 'node:path';
 
 export const HARNESS = {
   username: process.env.PAINT_USERNAME ?? 'Kappa_Enjoyer',
-  // chatLineMetrics.comfortable.fontSize
-  fontSize: 14,
+  // chatLineMetrics.comfortable.fontSize. Raise it (PAINT_FONT_SIZE=48) to
+  // fatten glyph interiors when the flat-pixel sample needs to be bigger.
+  fontSize: Number(process.env.PAINT_FONT_SIZE ?? 14),
   pixelRatio: 3,
   // theme.color.text.dark - what a painted username inherits as currentColor
   fallbackColor: '#EDF1F5',

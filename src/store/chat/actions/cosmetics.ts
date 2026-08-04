@@ -422,6 +422,10 @@ const sweepUnreferencedPaints = () => {
   chatStore$.paints.set(next);
 };
 
+/**
+ * Upsert a paint definition; see `addBadge` for why create and update share a
+ * write path.
+ */
 export const addPaint = (paint: PaintData) => {
   if (paint.id) {
     if (isSamePaintDefinition(chatStore$.paints[paint.id]?.peek(), paint)) {
@@ -510,6 +514,10 @@ const isSameBadgeDefinition = (
   previous.color === next.color &&
   previous.owner_username === next.owner_username;
 
+/**
+ * Upsert a badge definition. 7TV sends `cosmetic.create` for badges we already
+ * hold as often as for new ones, so create and update are the same write.
+ */
 export const addBadge = (badge: SanitisedBadgeSet) => {
   if (!badge.id) {
     return;
@@ -597,34 +605,6 @@ export const getUserBadge = (
 export const getUserBadgeId = (ttvUserId: string): string | undefined =>
   chatStore$.userBadgeIds[ttvUserId]?.peek();
 
-export const updateBadge = (badge: SanitisedBadgeSet) => {
-  if (!badge.id) {
-    return;
-  }
-
-  const normalizedBadge = normalizeSevenTvBadge(badge);
-  if (!normalizedBadge.url?.trim()) {
-    return;
-  }
-
-  const cell = chatStore$.badges[badge.id];
-  const previous = cell?.peek();
-  clearMissingBadge(badge.id);
-  if (isSameBadgeDefinition(previous, normalizedBadge)) {
-    return;
-  }
-
-  const previousUrl = previous?.url?.trim();
-  cell?.set(normalizedBadge);
-  scheduleCosmeticsPersist('definitions');
-
-  if (previousUrl !== normalizedBadge.url.trim()) {
-    scheduleCosmeticBindingsBump();
-  }
-
-  refreshCachedUserCosmeticsForDefinition(badge.id);
-};
-
 export const removeBadge = (badgeId: string) => {
   const currentBadges = chatStore$.badges.peek();
   if (!(badgeId in currentBadges)) {
@@ -657,17 +637,6 @@ export const removeUserBadge = (ttvUserId: string) => {
   chatStore$.userBadgeIds.set(rest);
   scheduleCosmeticsPersist('bindings');
   scheduleCosmeticBindingsBump();
-};
-
-export const updatePaint = (paint: PaintData) => {
-  if (paint.id) {
-    if (isSamePaintDefinition(chatStore$.paints[paint.id]?.peek(), paint)) {
-      return;
-    }
-    chatStore$.paints[paint.id]?.set(paint);
-    scheduleCosmeticsPersist('definitions');
-    refreshCachedUserCosmeticsForDefinition(paint.id);
-  }
 };
 
 /**

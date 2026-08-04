@@ -614,7 +614,7 @@ describe('useChatMessages', () => {
       expect(flushedMessages.at(-1)?.message_id).toBe(`${pushCount - 1}`);
     });
 
-    test('samples a live raid at the bottom to the newest rows per flush', () => {
+    test('caps a live raid flush at the bottom to a bounded batch of rows', () => {
       const { result } = renderHook(() =>
         useChatMessages({
           ...defaultOptions,
@@ -633,11 +633,37 @@ describe('useChatMessages', () => {
       });
 
       const flushedMessages = getLastFlushedMessages();
-      // Only the newest MAX_LIVE_COMMIT_PER_FLUSH (3) commit; older overflow is
-      // dropped because it would have scrolled past unread anyway.
-      expect(flushedMessages).toHaveLength(3);
-      expect(flushedMessages[0]?.message_id).toBe('47');
-      expect(flushedMessages.at(-1)?.message_id).toBe('49');
+      expect(flushedMessages).toHaveLength(6);
+      expect(flushedMessages[0]?.message_id).toBe('0');
+      expect(flushedMessages.at(-1)?.message_id).toBe('5');
+    });
+
+    test('a raid drains in order across flushes instead of dropping the overflow', () => {
+      const { result } = renderHook(() =>
+        useChatMessages({
+          ...defaultOptions,
+          isAtBottomRef: { current: true },
+        }),
+      );
+
+      act(() => {
+        for (let i = 0; i < 50; i += 1) {
+          result.current.handleNewMessage(createMockMessage(`${i}`));
+        }
+      });
+
+      act(() => {
+        // Raid mode widens the live flush interval to 180ms.
+        jest.advanceTimersByTime(180 * 12);
+      });
+
+      const committed = mockAddMessages.mock.calls.flatMap(
+        call => call[0] ?? [],
+      );
+      expect(committed.map(message => message?.message_id)).toEqual(
+        Array.from({ length: 50 }, (_, index) => `${index}`),
+      );
+      expect(result.current.getBufferSize()).toBe(0);
     });
 
     test('caps pending unread count with the retained high-volume buffer', () => {
@@ -689,7 +715,7 @@ describe('useChatMessages', () => {
       ]);
     });
 
-    test('raid-sampled messages are never finalized', () => {
+    test('only the rows a capped flush commits are finalized', () => {
       const finalizeMessageForCommit = jest.fn(
         (message: BufferedMessage) => message,
       );
@@ -704,10 +730,10 @@ describe('useChatMessages', () => {
         jest.advanceTimersByTime(100);
       });
 
-      expect(finalizeMessageForCommit).toHaveBeenCalledTimes(3);
+      expect(finalizeMessageForCommit).toHaveBeenCalledTimes(6);
       expect(
         getLastFlushedMessages().map(message => message.message_id),
-      ).toEqual(['17', '18', '19']);
+      ).toEqual(['0', '1', '2', '3', '4', '5']);
     });
 
     test('force flush finalizes the drained backlog', () => {

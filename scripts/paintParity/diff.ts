@@ -77,6 +77,7 @@ interface Score {
    * paint" number the harness can produce.
    */
   colourFlat: number;
+  flatShared: number;
   shared: number;
 }
 
@@ -151,6 +152,7 @@ function compare(a: Pixels, b: Pixels, shiftX: number, shiftY: number): Score {
     colour: colourTotal / Math.max(shared, 1),
     colourP99,
     colourFlat: flatTotal / Math.max(flatCount, 1),
+    flatShared: flatCount,
     shared,
   };
 }
@@ -272,7 +274,7 @@ const line = (label: string, score: Score, count?: number) =>
   `coverage=${score.coverage.toFixed(2).padStart(6)}  ` +
   `colour=${score.colour.toFixed(2).padStart(6)}  ` +
   `colourP99=${String(score.colourP99).padStart(3)}  ` +
-  `colourFlat=${score.colourFlat.toFixed(2).padStart(6)}`;
+  `colourFlat=${score.colourFlat.toFixed(2).padStart(6)} over ${String(Math.round(score.flatShared)).padStart(5)}px`;
 
 console.log('\n=== glyph-rasterizer floor (same text, no paint) ===');
 console.log(control ? line('control', control) : 'control missing');
@@ -298,6 +300,7 @@ for (const [kind, kindRows] of [...byKind].sort(
         colour: mean(kindRows.map(row => row.colour)),
         colourP99: Math.round(mean(kindRows.map(row => row.colourP99))),
         colourFlat: mean(kindRows.map(row => row.colourFlat)),
+        flatShared: mean(kindRows.map(row => row.flatShared)),
         shared: 0,
       },
       kindRows.length,

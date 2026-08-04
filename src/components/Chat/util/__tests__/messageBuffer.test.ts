@@ -42,6 +42,26 @@ describe('createMessageBuffer add/drain', () => {
     expect(buffer.size()).toBe(0);
   });
 
+  test('a limited drain keeps the overflow buffered for the next flush', () => {
+    const buffer = createMessageBuffer(() => 1000);
+    ['a', 'b', 'c', 'd'].forEach(id => buffer.add(message(id)));
+
+    expect(buffer.drain(2).map(m => m.message_id)).toEqual(['a', 'b']);
+    expect(buffer.size()).toBe(2);
+    expect(buffer.drain(2).map(m => m.message_id)).toEqual(['c', 'd']);
+    expect(buffer.size()).toBe(0);
+  });
+
+  test('a message left over from a limited drain is still addressable by id', () => {
+    const buffer = createMessageBuffer(() => 1000);
+    ['a', 'b', 'c'].forEach(id => buffer.add(message(id)));
+
+    buffer.drain(1);
+
+    expect(buffer.removeById('c')).toBe(true);
+    expect(buffer.drain().map(m => m.message_id)).toEqual(['b']);
+  });
+
   test('merges a same-key message and keeps the existing cached colour', () => {
     const buffer = createMessageBuffer(() => 1000);
 

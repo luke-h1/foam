@@ -51,6 +51,7 @@ import {
   type LayerRect,
   layerRectInBox,
 } from './skiaPaintGeometry/layerRectInBox';
+import { paintShadowExtents } from './skiaPaintGeometry/paintShadowExtents';
 
 export interface RasterizePaintedUsernameOptions {
   displayUsername: string;
@@ -69,9 +70,6 @@ export interface RasterizePaintedUsernameOptions {
 // Wide enough that a username never wraps; shared by the measuring and
 // drawing paragraphs so shaping is identical between passes.
 const LAYOUT_WIDTH = 8192;
-
-// A Gaussian's visible falloff is ~3 standard deviations.
-const BLUR_EXTENT_SIGMAS = 3;
 
 /**
  * CSS gradients interpolate their colour stops in premultiplied sRGBA
@@ -227,59 +225,6 @@ function skiaDecodableLayerUrl(url: string): string {
   );
 }
 
-interface ShadowExtents {
-  left: number;
-  top: number;
-  right: number;
-  bottom: number;
-}
-
-/**
- * How far outside the glyph box the shadows can paint (CSS px). Chained
- * `drop-shadow()`s compound - each filter shadows the previous filter's
- * output, shadow included - so extents accumulate through the chain rather
- * than taking a per-shadow max.
- */
-function shadowExtents(
-  dropShadows: PaintShadow[],
-  textShadows: PaintShadow[],
-  strokeWidth: number,
-): ShadowExtents {
-  const extents: ShadowExtents = {
-    left: strokeWidth,
-    top: strokeWidth,
-    right: strokeWidth,
-    bottom: strokeWidth,
-  };
-
-  for (const shadow of textShadows) {
-    const blur = BLUR_EXTENT_SIGMAS * cssTextShadowSigma(shadow.radius);
-    extents.left = Math.max(extents.left, blur - shadow.x_offset);
-    extents.right = Math.max(extents.right, blur + shadow.x_offset);
-    extents.top = Math.max(extents.top, blur - shadow.y_offset);
-    extents.bottom = Math.max(extents.bottom, blur + shadow.y_offset);
-  }
-
-  for (const shadow of dropShadows) {
-    const blur = BLUR_EXTENT_SIGMAS * cssDropShadowSigma(shadow.radius);
-    extents.left = Math.max(
-      extents.left,
-      extents.left + blur - shadow.x_offset,
-    );
-    extents.right = Math.max(
-      extents.right,
-      extents.right + blur + shadow.x_offset,
-    );
-    extents.top = Math.max(extents.top, extents.top + blur - shadow.y_offset);
-    extents.bottom = Math.max(
-      extents.bottom,
-      extents.bottom + blur + shadow.y_offset,
-    );
-  }
-
-  return extents;
-}
-
 /**
  * Measured, paint-derived geometry for one painted username, in device pixels.
  * Independent of the (possibly animating) image frames, so it is computed once
@@ -382,7 +327,11 @@ function buildPaintLayout(
   const dropShadows = getPaintDropShadows(paint, 2);
   const textShadows = getPaintTextShadows(paint);
   const stroke = getPaintTextStroke(paint);
-  const extents = shadowExtents(dropShadows, textShadows, stroke?.width ?? 0);
+  const extents = paintShadowExtents(
+    dropShadows,
+    textShadows,
+    stroke?.width ?? 0,
+  );
 
   const insetsPx = {
     left: Math.ceil(extents.left * scale),

@@ -27,7 +27,9 @@ bun --tsconfig-override ./scripts/paintParity/tsconfig.json scripts/paintParity/
 Order matters: the reference cells are laid out from the Skia bitmap sizes, so
 re-run `renderRef.ts` whenever the rasterizer's shadow insets change.
 `PAINT_IDS=<id,id>` or `PAINT_LIMIT=<n>` narrows a run, `STRIPS=<n>` controls
-how many strips `diff.ts` writes. Output lands in `scripts/paintParity/out/`
+how many strips `diff.ts` writes, `PAINT_USERNAME` and `PAINT_FONT_SIZE` change
+the text. At the chat size of 14 only ~36px per paint qualify as flat, so run
+`PAINT_FONT_SIZE=48` when `colourFlat` needs a real sample (~15k px per paint). Output lands in `scripts/paintParity/out/`
 (gitignored). Requires Chrome at the standard macOS path.
 
 The tsconfig override maps `react-native` and `@shopify/react-native-skia` to
@@ -52,6 +54,10 @@ Both sides render on transparent, so the score is split in two:
 Paints with an animated texture are labelled `(animated)` and excluded from any
 verdict - each renderer is on whatever frame it happened to reach, so a still
 comparison is meaningless for them.
+
+`padding.ts` reports how much of each baked surface the paint actually reaches
+into, and flags any paint whose painted pixels touch the surface edge - i.e.
+whose shadow the bitmap is too small to hold. That count must stay at zero.
 
 ## Checking the app itself, not just the rasterizer
 

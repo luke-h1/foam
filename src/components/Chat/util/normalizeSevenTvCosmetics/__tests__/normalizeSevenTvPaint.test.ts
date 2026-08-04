@@ -122,4 +122,31 @@ describe('normalizeSevenTvPaint', () => {
       repeat: true,
     });
   });
+
+  test('resolves a zero id to the payload ref_id', () => {
+    const paint = normalizeSevenTvPaint({
+      id: '00000000000000000000000000',
+      ref_id: 'real-paint-id',
+      name: 'Paint',
+    });
+
+    expect(paint.id).toBe('real-paint-id');
+  });
+
+  test('gives layer image urls a scheme so native image loaders accept them', () => {
+    const paint = normalizeSevenTvPaint({
+      id: 'url-paint',
+      name: 'URL Paint',
+      gradients: [
+        {
+          function: 'URL',
+          image_url: '//cdn.7tv.app/paint/p/layer/l/1x.webp',
+          canvas_repeat: 'no-repeat',
+          stops: [],
+        },
+      ],
+    });
+
+    expect(paint.image_url).toBe('https://cdn.7tv.app/paint/p/layer/l/1x.webp');
+  });
 });

@@ -1,14 +1,12 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import { toPaintWithId } from '@app/components/Chat/util/normalizeSevenTvCosmetics/toPaintWithId';
+import { normalizeSevenTvPaint } from '@app/components/Chat/util/normalizeSevenTvCosmetics/normalizeSevenTvPaint';
 import { countMetric } from '@app/lib/sentry';
 import {
   addBadge,
   addPaint,
   removeBadge,
   removePaint,
-  updateBadge,
-  updatePaint,
 } from '@app/store/chat/actions/cosmetics';
 import {
   applyCosmeticCreateEvent,
@@ -47,8 +45,6 @@ jest.mock('@app/store/chat/actions/cosmetics', () => ({
   removeUserPaint: jest.fn(),
   setUserBadge: jest.fn(),
   setUserPaint: jest.fn(),
-  updateBadge: jest.fn(),
-  updatePaint: jest.fn(),
 }));
 
 jest.mock('@app/store/chat/actions/cosmeticsBridge', () => ({
@@ -90,7 +86,6 @@ jest.mock('@app/utils/emote/stv/generateSevenTvEmoteNotice', () => ({
 }));
 
 const mockAddBadge = jest.mocked(addBadge);
-const mockUpdateBadge = jest.mocked(updateBadge);
 const mockCountMetric = jest.mocked(countMetric);
 const mockApplyCosmeticCreateEvent = jest.mocked(applyCosmeticCreateEvent);
 const mockApplyEntitlementCreateEvent = jest.mocked(
@@ -351,13 +346,15 @@ describe('useChatSevenTvCallbacks', () => {
         );
       });
 
-      expect(updatePaint).toHaveBeenCalledWith(
-        toPaintWithId(
+      expect(addPaint).toHaveBeenCalledWith(
+        normalizeSevenTvPaint(
           createPaintInput({ id: 'paint-1', name: 'Updated Paint' }),
         ),
       );
       expect(addPaint).toHaveBeenCalledWith(
-        toPaintWithId(createPaintInput({ id: 'paint-2', name: 'Added Paint' })),
+        normalizeSevenTvPaint(
+          createPaintInput({ id: 'paint-2', name: 'Added Paint' }),
+        ),
       );
       expect(mockCountMetric.mock.calls[0]).toEqual([
         'seven_tv.cosmetic_update.applied',
@@ -405,7 +402,7 @@ describe('useChatSevenTvCallbacks', () => {
         );
       });
 
-      expect(mockUpdateBadge.mock.calls[0]?.[0]).toEqual<SanitisedBadgeSet>({
+      expect(mockAddBadge.mock.calls[0]?.[0]).toEqual<SanitisedBadgeSet>({
         id: 'badge-1',
         provider: '7tv',
         set: 'badge-1',
@@ -413,7 +410,7 @@ describe('useChatSevenTvCallbacks', () => {
         type: '7TV Badge',
         url: 'https://cdn.7tv.app/badge/badge-1/4x.webp',
       });
-      expect(mockAddBadge.mock.calls[0]?.[0]).toEqual<SanitisedBadgeSet>({
+      expect(mockAddBadge.mock.calls[1]?.[0]).toEqual<SanitisedBadgeSet>({
         id: 'badge-2',
         provider: '7tv',
         set: 'badge-2',
