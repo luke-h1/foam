@@ -11,6 +11,8 @@ import type { ReactNode } from 'react';
 
 import { createHitslop } from '@app/utils/string/createHitSlop';
 
+import { CHAT_SURFACE_COLORS } from './chatScale';
+
 const DEFAULT_HIT_SLOP = createHitslop(8);
 
 interface ChatMessagePressableProps {
@@ -60,6 +62,9 @@ function ChatMessagePressableComponent({
   );
 }
 
-const pressedStyle = { backgroundColor: 'rgba(255,255,255,0.08)' } as const;
+const pressedStyle = {
+  backgroundColor: CHAT_SURFACE_COLORS.pressed,
+  borderRadius: CHAT_SURFACE_COLORS.radius,
+} as const;
 
 export const ChatMessagePressable = memo(ChatMessagePressableComponent);

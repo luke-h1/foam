@@ -5,7 +5,7 @@ import { useSelector } from '@legendapp/state/react';
 
 import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
 import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
-import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers/normaliseUsername';
+import { normaliseChatUsername } from '@app/components/Chat/util/chatUsernames/normaliseChatUsername';
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
@@ -15,7 +15,8 @@ import { getMessageStructure } from '@app/utils/chat/deriveChatBody/getMessageSt
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { cachedLighten } from '@app/utils/chat/resolveCachedSenderColor/cachedLighten';
 
-import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
+import { getChatTextStyles } from '../chatTextStyles';
+import { styles } from '../RichChatMessage.styles';
 import type { BadgePressData } from '../RichChatMessage.types';
 import { RichChatMessageUsername } from '../RichChatMessageUsername';
 import { ChannelPointsRewardMetaRow } from './ChannelPointsRewardMetaRow';
@@ -93,7 +94,7 @@ export function UserChatBody({
     showTimestamp,
   } = replyFlags;
   const replyPlainMentionTarget = shouldRenderInlineReply
-    ? normaliseUsername(parentDisplayName)
+    ? normaliseChatUsername(parentDisplayName)
     : undefined;
   const hasPaint = useSelector(() =>
     userId ? Boolean(chatStore$.userPaintIds[userId]?.get()) : false,
@@ -110,6 +111,7 @@ export function UserChatBody({
   const actionColor = isAction ? inlineUsernameColor : undefined;
   const bodyCanFlowInline =
     canFlowInline && !renderInline && !bodyContainsEmotes;
+  const textStyles = getChatTextStyles(rendererArgs.fontScale, compact);
 
   return (
     <View style={styles.messageColumn}>
@@ -144,6 +146,7 @@ export function UserChatBody({
       {showChannelPointsRewardChrome && userstate ? (
         <ChannelPointsRewardMetaRow
           compact={compact}
+          fontScale={rendererArgs.fontScale}
           isHighlightedMessage={isHighlightedMessage}
           moderationNotice={moderationNotice}
           noticeTags={rendererArgs.noticeTags}
@@ -182,18 +185,14 @@ export function UserChatBody({
             <View style={styles.moderatedStrikeOverlay} />
           ) : null}
           {showTimestamp && timestamp ? (
-            <Text
-              tabular
-              variant='mono'
-              weight='bold'
-              style={[styles.timestamp, compact && styles.timestampCompact]}
-            >
+            <Text tabular style={textStyles.timestamp}>
               {timestamp}
             </Text>
           ) : null}
           <ChatMessageBadges
             badges={badgeList}
             compact={compact}
+            fontScale={rendererArgs.fontScale}
             getMappingKey={getMappingKey}
             moderationNotice={moderationNotice}
             onBadgePress={onBadgePress}
@@ -207,6 +206,7 @@ export function UserChatBody({
               <RichChatMessageUsername
                 cachedSenderColor={cachedSenderColor}
                 compact={compact}
+                fontScale={rendererArgs.fontScale}
                 isModerated={Boolean(moderationNotice)}
                 onUsernamePress={onUsernamePress}
                 userId={userId}
@@ -216,13 +216,7 @@ export function UserChatBody({
             </View>
           ) : null}
           {bodyCanFlowInline ? (
-            <Text
-              style={[
-                styles.messageText,
-                compact && styles.messageTextCompact,
-                getChatFontScaleStyle(rendererArgs.fontScale, compact),
-              ]}
-            >
+            <Text style={textStyles.body}>
               <InlineMessageSpans
                 {...rendererArgs}
                 compact={compact}

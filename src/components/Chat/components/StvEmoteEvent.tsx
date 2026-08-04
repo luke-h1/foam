@@ -8,19 +8,26 @@ import i18next from '@app/i18n/i18next';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 
+import type { ChatFontScale } from './ChatMessage/chatScale';
+import { getChatTextStyles } from './ChatMessage/chatTextStyles';
 import { ChatNoticeMetaRow } from './ChatMessage/renderers/ChatNoticeMetaRow';
 import { styles as chatStyles } from './ChatMessage/RichChatMessage.styles';
 import { CHAT_NOTICE_ACCENTS } from './util/chatNoticeAccents';
 
 interface StvEmoteEventProps {
+  compact?: boolean;
   disableAnimations?: boolean;
+  fontScale?: ChatFontScale;
   part: ParsedPart<'stv_emote_added' | 'stv_emote_removed'>;
 }
 
 function StvEmoteEventComponent({
+  compact,
+  fontScale,
   part,
   disableAnimations = false,
 }: StvEmoteEventProps) {
+  const textStyles = getChatTextStyles(fontScale, compact);
   const added = part.type === 'stv_emote_added';
   const removed = part.type === 'stv_emote_removed';
 
@@ -51,20 +58,25 @@ function StvEmoteEventComponent({
         removed && chatStyles.stvEmoteRemovedSurface,
       ]}
     >
-      <ChatNoticeMetaRow icon='sparkles' labelColor={accentColor}>
+      <ChatNoticeMetaRow
+        compact={compact}
+        fontScale={fontScale}
+        icon='sparkles'
+        labelColor={accentColor}
+      >
         <View style={styles.metaContent}>
           <BrandIcon name='stv' size='sm' />
           <Text
             style={[
-              chatStyles.messageMetaText,
-              chatStyles.messageMetaTextStrong,
+              textStyles.meta,
+              textStyles.metaStrong,
               { color: accentColor },
             ]}
           >
             {status} emote
           </Text>
           {actorName ? (
-            <Text style={styles.actorText}> · {actorName}</Text>
+            <Text style={textStyles.meta}> · {actorName}</Text>
           ) : null}
         </View>
       </ChatNoticeMetaRow>
@@ -78,7 +90,7 @@ function StvEmoteEventComponent({
           contentFit='contain'
         />
         <View style={styles.textContainer}>
-          <Text style={styles.emoteName}>{content.name}</Text>
+          <Text style={textStyles.meta}>{content.name}</Text>
           {content.creator ? (
             <Text type='xs' color='gray.accentHover'>
               By {content.creator}
@@ -93,11 +105,6 @@ function StvEmoteEventComponent({
 export const StvEmoteEvent = memo(StvEmoteEventComponent);
 
 const styles = StyleSheet.create({
-  actorText: {
-    color: 'rgba(255, 255, 255, 0.5)',
-    fontSize: 12,
-    lineHeight: 15,
-  },
   content: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -106,10 +113,6 @@ const styles = StyleSheet.create({
   emoteImage: {
     height: 28,
     width: 56,
-  },
-  emoteName: {
-    fontSize: 12,
-    lineHeight: 15,
   },
   metaContent: {
     alignItems: 'center',

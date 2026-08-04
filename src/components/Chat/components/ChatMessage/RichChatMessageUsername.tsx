@@ -1,38 +1,16 @@
-import type { StyleProp, TextStyle } from 'react-native';
-
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { cachedLighten } from '@app/utils/chat/resolveCachedSenderColor/cachedLighten';
 
 import { ChatMessagePressable } from './ChatMessagePressable';
+import type { ChatFontScale } from './chatScale';
+import { getChatTextStyles } from './chatTextStyles';
 import { PaintedUsername } from './CosmeticUsername/PaintedUsername';
 import { styles } from './RichChatMessage.styles';
-
-const usernameTextStyles: Record<
-  'comfortable' | 'comfortableModerated' | 'compact' | 'compactModerated',
-  StyleProp<TextStyle>
-> = {
-  comfortable: [styles.usernameText],
-  comfortableModerated: [styles.usernameText, styles.moderatedUsernameText],
-  compact: [styles.usernameTextCompact],
-  compactModerated: [styles.usernameTextCompact, styles.moderatedUsernameText],
-};
-
-function getUsernameTextStyle(compact: boolean, isModerated: boolean) {
-  if (compact && isModerated) {
-    return usernameTextStyles.compactModerated;
-  }
-  if (compact) {
-    return usernameTextStyles.compact;
-  }
-  if (isModerated) {
-    return usernameTextStyles.comfortableModerated;
-  }
-  return usernameTextStyles.comfortable;
-}
 
 interface RichChatMessageUsernameProps {
   cachedSenderColor?: string;
   compact: boolean;
+  fontScale?: ChatFontScale;
   isModerated?: boolean;
   onUsernamePress?: () => void;
   userId?: string;
@@ -43,6 +21,7 @@ interface RichChatMessageUsernameProps {
 export function RichChatMessageUsername({
   cachedSenderColor,
   compact,
+  fontScale,
   isModerated = false,
   onUsernamePress,
   userId,
@@ -52,6 +31,11 @@ export function RichChatMessageUsername({
   if (!username) {
     return null;
   }
+
+  const usernameTextStyle = [
+    getChatTextStyles(fontScale, compact).username,
+    isModerated && styles.moderatedUsernameText,
+  ];
 
   const fallbackColor =
     cachedSenderColor ??
@@ -63,7 +47,7 @@ export function RichChatMessageUsername({
       username={username}
       userId={userId}
       fallbackColor={fallbackColor}
-      usernameTextStyle={getUsernameTextStyle(compact, isModerated)}
+      usernameTextStyle={usernameTextStyle}
     />
   );
 

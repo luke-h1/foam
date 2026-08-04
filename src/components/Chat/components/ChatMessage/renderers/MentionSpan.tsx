@@ -4,24 +4,22 @@ import type { StyleProp, TextStyle } from 'react-native';
 import { useSelector } from '@legendapp/state/react';
 
 import { getChatColorStyle } from '@app/components/Chat/util/chatColorStyles';
-import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers/normaliseUsername';
+import { normaliseChatUsername } from '@app/components/Chat/util/chatUsernames/normaliseChatUsername';
 import { Text } from '@app/components/ui/Text/Text';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin/formatMentionContent';
 
+import type { ChatFontScale } from '../chatScale';
+import { getChatTextStyles } from '../chatTextStyles';
 import { styles } from '../RichChatMessage.styles';
-import { TextModifierStyles } from './types/TextModifierStyles';
 
-interface MentionSpanProps extends Pick<
-  TextModifierStyles,
-  'mentionTextStyle'
-> {
+interface MentionSpanProps {
   content: string;
   baseTextStyle?: StyleProp<TextStyle>;
-  fontScaleStyle?: StyleProp<TextStyle>;
   emoteLineStyle?: StyleProp<TextStyle>;
   compact?: boolean;
+  fontScale?: ChatFontScale;
   isModerated?: boolean;
   getMentionColor?: (username: string) => string;
   effectiveHighlightedUserSet?: ReadonlySet<string>;
@@ -39,15 +37,14 @@ interface MentionSpanProps extends Pick<
 function MentionSpanComponent({
   content,
   baseTextStyle,
-  fontScaleStyle,
   emoteLineStyle,
   compact,
+  fontScale,
   isModerated,
   getMentionColor,
   effectiveHighlightedUserSet,
   normalisedCurrentUsername,
   replyPlainMentionTarget,
-  mentionTextStyle,
 }: MentionSpanProps) {
   useSelector(chatStore$.mentionLoginRevision);
 
@@ -56,7 +53,7 @@ function MentionSpanComponent({
     return null;
   }
   const mentionedUsername = mentionContent.replace(/^@/, '').trim();
-  const normalisedMentionedUsername = normaliseUsername(mentionedUsername);
+  const normalisedMentionedUsername = normaliseChatUsername(mentionedUsername);
   const isReplyTargetMention = Boolean(
     replyPlainMentionTarget &&
     normalisedMentionedUsername === replyPlainMentionTarget,
@@ -80,10 +77,7 @@ function MentionSpanComponent({
   return (
     <Text
       style={[
-        styles.mention,
-        compact && styles.mentionCompact,
-        fontScaleStyle,
-        mentionTextStyle,
+        getChatTextStyles(fontScale, compact).mention,
         emoteLineStyle,
         isHighlightedMention && styles.mentionHighlighted,
         getChatColorStyle(mentionColor),

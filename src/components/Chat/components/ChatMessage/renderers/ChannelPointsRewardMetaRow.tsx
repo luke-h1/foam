@@ -10,11 +10,14 @@ import { channelPointsRewardTitleFieldsFromUserstate } from '@app/utils/chat/cha
 import { channelPointsRewardTitleFromTags } from '@app/utils/chat/channelPointsRewardTitle/channelPointsRewardTitleFromTags';
 import { channelPointsRewardTitleFromUserstate } from '@app/utils/chat/channelPointsRewardTitle/channelPointsRewardTitleFromUserstate';
 
+import type { ChatFontScale } from '../chatScale';
+import { getChatTextStyles } from '../chatTextStyles';
 import { styles } from '../RichChatMessage.styles';
 import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
 
 interface ChannelPointsRewardMetaRowProps {
   compact: boolean;
+  fontScale?: ChatFontScale;
   isHighlightedMessage?: boolean;
   moderationNotice?: unknown;
   noticeTags?: UserNoticeTags;
@@ -25,6 +28,7 @@ interface ChannelPointsRewardMetaRowProps {
 
 export function ChannelPointsRewardMetaRow({
   compact,
+  fontScale,
   isHighlightedMessage,
   moderationNotice,
   noticeTags,
@@ -34,6 +38,7 @@ export function ChannelPointsRewardMetaRow({
 }: ChannelPointsRewardMetaRowProps) {
   useChannelPointRewardTitleRevision();
 
+  const textStyles = getChatTextStyles(fontScale, compact);
   const rewardSummaryTitle =
     channelPointsRewardTitleFromUserstate(userstate) ??
     (noticeTags ? channelPointsRewardTitleFromTags(noticeTags) : undefined) ??
@@ -47,6 +52,7 @@ export function ChannelPointsRewardMetaRow({
     return (
       <ChatNoticeMetaRow
         compact={compact}
+        fontScale={fontScale}
         icon='sparkles'
         label={rewardSummaryTitle}
         labelColor={CHAT_NOTICE_ACCENTS.highlight}
@@ -58,42 +64,43 @@ export function ChannelPointsRewardMetaRow({
   return (
     <ChatNoticeMetaRow
       compact={compact}
+      fontScale={fontScale}
       icon='gift.fill'
       labelColor={CHAT_NOTICE_ACCENTS.channelPoints}
     >
       <Text
         style={[
-          styles.messageMetaText,
-          styles.messageMetaTextStrong,
+          textStyles.meta,
+          styles.messageMetaTextFlex,
+          textStyles.metaStrong,
           styles.channelPointsMetaText,
-          compact && styles.messageMetaTextCompact,
         ]}
       >
         <Text
-          style={
-            moderationNotice
-              ? [styles.channelPointsMetaName, styles.moderatedMessageText]
-              : styles.channelPointsMetaName
-          }
+          style={[
+            textStyles.meta,
+            styles.channelPointsMetaName,
+            Boolean(moderationNotice) && styles.moderatedMessageText,
+          ]}
         >
           {username}
         </Text>
         <Text
-          style={
-            moderationNotice
-              ? [styles.channelPointsMetaMuted, styles.moderatedMessageText]
-              : styles.channelPointsMetaMuted
-          }
+          style={[
+            textStyles.meta,
+            styles.channelPointsMetaMuted,
+            Boolean(moderationNotice) && styles.moderatedMessageText,
+          ]}
         >
           {' '}
           redeemed{' '}
         </Text>
         <Text
-          style={
-            moderationNotice
-              ? [styles.channelPointsMetaReward, styles.moderatedMessageText]
-              : styles.channelPointsMetaReward
-          }
+          style={[
+            textStyles.meta,
+            styles.channelPointsMetaReward,
+            Boolean(moderationNotice) && styles.moderatedMessageText,
+          ]}
         >
           {rewardSummaryTitle}
         </Text>

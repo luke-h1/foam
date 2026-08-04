@@ -11,11 +11,12 @@ import { Text } from '@app/components/ui/Text/Text';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 
+import { getChatScale } from '../chatScale';
+import { getChatTextStyles } from '../chatTextStyles';
 import { styles } from '../RichChatMessage.styles';
 import { CheermoteRenderer } from './CheermoteRenderer';
 import { EmoteRenderer } from './EmoteRenderer';
 import { MentionSpan } from './MentionSpan';
-import { TextModifierStyles } from './types/TextModifierStyles';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 
 type ChatMessagePartProps = Omit<UseChatMessagePartRendererArgs, 'message'> & {
@@ -23,12 +24,13 @@ type ChatMessagePartProps = Omit<UseChatMessagePartRendererArgs, 'message'> & {
   message: ParsedPart[];
   mode: 'message' | 'system';
   part: ParsedPart;
-} & TextModifierStyles;
+};
 
 export function ChatMessagePart({
   compact,
   disableEmoteAnimations,
   effectiveHighlightedUserSet,
+  fontScale,
   getMentionColor,
   getPartKey,
   onEmoteTouchStart,
@@ -43,13 +45,9 @@ export function ChatMessagePart({
   emoteTargetSize,
   textColor,
   part,
-  bodyTextStyle,
-  linkTextStyle,
-  mentionTextStyle,
 }: ChatMessagePartProps) {
   const subMessage =
     'subscriptionEvent' in part ? part.subscriptionEvent?.message : undefined;
-
   const parsedSubMessage = useMemo(
     () =>
       subMessage && parseTextForEmotes
@@ -58,14 +56,14 @@ export function ChatMessagePart({
     [subMessage, parseTextForEmotes],
   );
 
+  const textStyles = getChatTextStyles(fontScale, compact);
+  const scale = getChatScale(fontScale, compact ? 'compact' : 'comfortable');
   const mentionBaseTextStyle = useMemo(
     () => [
-      styles.messageText,
-      compact && styles.messageTextCompact,
-      bodyTextStyle,
+      textStyles.body,
       Boolean(moderationNotice) && styles.moderatedMessageText,
     ],
-    [bodyTextStyle, compact, moderationNotice],
+    [textStyles, moderationNotice],
   );
 
   if (mode === 'system' && part.type === 'text') {
@@ -80,10 +78,11 @@ export function ChatMessagePart({
     return (
       <Text
         key={getPartKey(part, index)}
-        style={[
-          isRaidNotice ? styles.raidNoticeText : styles.systemMessageText,
-          compact && isRaidNotice && styles.messageMetaTextCompact,
-        ]}
+        style={
+          isRaidNotice
+            ? [textStyles.meta, styles.raidNoticeText]
+            : [textStyles.body, styles.systemMessageText]
+        }
       >
         {content}
       </Text>
@@ -102,9 +101,7 @@ export function ChatMessagePart({
           key={getPartKey(part, index)}
           color='gray.text'
           style={[
-            styles.messageText,
-            compact && styles.messageTextCompact,
-            bodyTextStyle,
+            textStyles.body,
             textColor ? getChatColorStyle(textColor) : null,
             Boolean(moderationNotice) && styles.moderatedMessageText,
           ]}
@@ -157,9 +154,7 @@ export function ChatMessagePart({
         <Text
           key={getPartKey(part, index)}
           style={[
-            styles.messageLink,
-            compact && styles.messageLinkCompact,
-            linkTextStyle,
+            textStyles.link,
             Boolean(moderationNotice) && styles.moderatedMessageText,
           ]}
         >
@@ -181,7 +176,7 @@ export function ChatMessagePart({
           part={part}
           onEmoteTouchStart={onEmoteTouchStart}
           shouldOverlayPrevious={shouldOverlayPrevious}
-          targetSize={emoteTargetSize ?? (compact ? 26 : 30)}
+          targetSize={emoteTargetSize ?? scale.emoteSize}
         />
       );
     }
@@ -193,7 +188,7 @@ export function ChatMessagePart({
           isModerated={Boolean(moderationNotice)}
           key={getPartKey(part, index)}
           part={part}
-          targetSize={emoteTargetSize ?? (compact ? 26 : 30)}
+          targetSize={emoteTargetSize ?? scale.emoteSize}
         />
       );
 
@@ -204,9 +199,9 @@ export function ChatMessagePart({
           content={getParsedPartStringContent(part)}
           baseTextStyle={mentionBaseTextStyle}
           compact={compact}
+          fontScale={fontScale}
           isModerated={Boolean(moderationNotice)}
           getMentionColor={getMentionColor}
-          mentionTextStyle={mentionTextStyle}
           effectiveHighlightedUserSet={effectiveHighlightedUserSet}
           normalisedCurrentUsername={normalisedCurrentUsername}
           replyPlainMentionTarget={replyPlainMentionTarget}
@@ -219,7 +214,9 @@ export function ChatMessagePart({
       return (
         <StvEmoteEvent
           key={getPartKey(part, index)}
+          compact={compact}
           disableAnimations={disableEmoteAnimations}
+          fontScale={fontScale}
           part={part}
         />
       );
@@ -255,17 +252,31 @@ export function ChatMessagePart({
       return (
         <ViewerMileStoneNoticeComponent
           key={getPartKey(part, index)}
+          compact={compact}
+          fontScale={fontScale}
           part={part}
         />
       );
 
     case 'charitydonation':
       return (
-        <CharityDonationNotice key={getPartKey(part, index)} part={part} />
+        <CharityDonationNotice
+          key={getPartKey(part, index)}
+          compact={compact}
+          fontScale={fontScale}
+          part={part}
+        />
       );
 
     case 'ritual':
-      return <RitualNotice key={getPartKey(part, index)} part={part} />;
+      return (
+        <RitualNotice
+          key={getPartKey(part, index)}
+          compact={compact}
+          fontScale={fontScale}
+          part={part}
+        />
+      );
 
     default:
       return null;

@@ -42,7 +42,10 @@ export function RichChatMessageBody(props: RichChatMessageState) {
   } = props;
 
   const sharedChatLabel = isSharedChatDuplicated ? (
-    <SharedChatSourceLabel />
+    <SharedChatSourceLabel
+      compact={partRendererArgs.compact}
+      fontScale={partRendererArgs.fontScale}
+    />
   ) : null;
 
   if (bodyVariant === 'announcement') {
@@ -129,7 +132,6 @@ export function RichChatMessageContainer({
     announcementAccentColor,
     bodyVariant,
     clearRowLongPressTimer,
-    compact,
     handleRowTouchMove,
     customHighlightColor,
     isAlternatingRow,
@@ -155,7 +157,6 @@ export function RichChatMessageContainer({
       onTouchStart={startRowLongPressTimer}
       style={[
         styles.chatContainer,
-        compact && styles.chatContainerCompact,
         style,
         isAlternatingRow && styles.alternatingRowContainer,
         isAppSystemSender && styles.systemMessageContainer,

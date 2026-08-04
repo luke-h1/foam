@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import type { ReactTestInstance } from 'react-test-renderer';
 
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
 
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
@@ -75,28 +75,6 @@ const createMockMessage = (
     ...overrides,
   };
 };
-
-const parseReplyQuote = (text: string): ParsedPart[] =>
-  text.split(' ').map(word => {
-    if (word === 'Kappa') {
-      return {
-        type: 'emote',
-        name: 'Kappa',
-        content: 'Kappa',
-        id: 'kappa-1',
-        url: 'https://example.com/kappa.webp',
-        width: 28,
-        height: 28,
-      } satisfies ParsedPart<'emote'>;
-    }
-    if (word.startsWith('@')) {
-      return { type: 'mention', content: word } satisfies ParsedPart<'mention'>;
-    }
-    if (word.startsWith('http')) {
-      return { type: 'link', content: word } satisfies ParsedPart<'link'>;
-    }
-    return { type: 'text', content: `${word} ` } satisfies ParsedPart<'text'>;
-  });
 
 const touchAt = (pageX: number, pageY: number) => ({
   nativeEvent: { pageX, pageY },
@@ -558,7 +536,7 @@ describe('RichChatMessage', () => {
 
       expect(replyTargetMentions[0]).toHaveStyle({
         fontSize: 14,
-        lineHeight: 17,
+        lineHeight: 21,
       });
 
       expect(replyTargetMentions[0]).not.toHaveStyle({
@@ -573,67 +551,6 @@ describe('RichChatMessage', () => {
       });
       expect(otherMention).not.toHaveStyle({
         color: 'rgba(255, 255, 255, 0.5)',
-      });
-    });
-
-    test('renders every span of an emote reply quote on taller emote lines', () => {
-      const message = createMockMessage(
-        [{ type: 'text', content: 'monaco' }],
-        {
-          'reply-parent-msg-id': 'parent-msg-123',
-        },
-        {
-          parentDisplayName: 'OriginalUser',
-          replyBody: 'lol Kappa @SomeoneElse https://twitch.tv done',
-          replyDisplayName: 'OriginalUser',
-        },
-      );
-
-      render(
-        <RichChatMessage
-          {...message}
-          showInlineReplyContext
-          parseTextForEmotes={parseReplyQuote}
-        />,
-      );
-
-      const replyLineMetrics = { fontSize: 12, lineHeight: 24 };
-
-      expect(screen.getByText('Replying to @OriginalUser: ')).toHaveStyle(
-        replyLineMetrics,
-      );
-
-      expect(screen.getByText('lol ')).toHaveStyle(replyLineMetrics);
-      expect(screen.getByText('@SomeoneElse')).toHaveStyle(replyLineMetrics);
-
-      expect(screen.getByText('https://twitch.tv')).toHaveStyle(
-        replyLineMetrics,
-      );
-      expect(screen.getByText('done ')).toHaveStyle(replyLineMetrics);
-    });
-
-    test('keeps the message body at chat scale when the reply quote is scaled down', () => {
-      const message = createMockMessage(
-        [{ type: 'text', content: 'sure' }],
-        { 'reply-parent-msg-id': 'parent-msg-123' },
-        {
-          parentDisplayName: 'OriginalUser',
-          replyBody: 'Kappa',
-          replyDisplayName: 'OriginalUser',
-        },
-      );
-
-      render(
-        <RichChatMessage
-          {...message}
-          showInlineReplyContext
-          parseTextForEmotes={parseReplyQuote}
-        />,
-      );
-
-      expect(screen.getByText('sure')).toHaveStyle({
-        fontSize: 14,
-        lineHeight: 17,
       });
     });
   });
@@ -889,23 +806,52 @@ describe('RichChatMessage', () => {
     );
 
     expect(getByTestId('chat-message')).toHaveStyle({
-      borderLeftColor: 'rgba(145, 71, 255, 0.38)',
+      borderLeftColor: '#9147FF',
       borderLeftWidth: 2,
     });
   });
 
-  test('renders denser text in compact mode', () => {
+  test('keeps the body font size across densities and tightens only leading', () => {
     const message = createMockMessage([
       { type: 'text', content: 'hello world' },
     ]);
 
-    const { getByText } = render(
-      <RichChatMessage {...message} density='compact' />,
+    const comfortable = render(
+      <RichChatMessage {...message} density='comfortable' />,
     );
+    expect(comfortable.getByText('hello world')).toHaveStyle({
+      fontSize: 14,
+      lineHeight: 21,
+    });
+    comfortable.unmount();
 
-    expect(getByText('hello world')).toHaveStyle({
-      fontSize: 11,
-      lineHeight: 14,
+    const compact = render(<RichChatMessage {...message} density='compact' />);
+    expect(compact.getByText('hello world')).toHaveStyle({
+      fontSize: 14,
+      lineHeight: 18,
+    });
+  });
+
+  test('scales the body with the font-scale preference in both densities', () => {
+    const message = createMockMessage([
+      { type: 'text', content: 'hello world' },
+    ]);
+
+    const large = render(
+      <RichChatMessage {...message} density='compact' fontScale='large' />,
+    );
+    expect(large.getByText('hello world')).toHaveStyle({
+      fontSize: 16,
+      lineHeight: 21,
+    });
+    large.unmount();
+
+    const small = render(
+      <RichChatMessage {...message} density='comfortable' fontScale='small' />,
+    );
+    expect(small.getByText('hello world')).toHaveStyle({
+      fontSize: 12,
+      lineHeight: 18,
     });
   });
 

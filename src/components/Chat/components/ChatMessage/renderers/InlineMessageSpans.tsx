@@ -6,10 +6,10 @@ import { getChatColorStyle } from '@app/components/Chat/util/chatColorStyles';
 import { Text } from '@app/components/ui/Text/Text';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 
-import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
+import { getChatScale } from '../chatScale';
+import { getChatTextStyles } from '../chatTextStyles';
 import { EmoteRenderer } from './EmoteRenderer';
 import { MentionSpan } from './MentionSpan';
-import { TextModifierStyles } from './types/TextModifierStyles';
 import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
 
 type InlineMessageSpansProps = Pick<
@@ -35,7 +35,7 @@ type InlineMessageSpansProps = Pick<
    */
   emoteLineStyle?: StyleProp<TextStyle>;
   textColor?: string;
-} & Omit<TextModifierStyles, 'bodyTextStyle'>;
+};
 
 function InlineMessageSpansComponent({
   compact,
@@ -52,16 +52,9 @@ function InlineMessageSpansComponent({
   textStyle,
   emoteLineStyle,
   textColor,
-  linkTextStyle,
-  mentionTextStyle,
 }: InlineMessageSpansProps) {
-  const fontScaleStyle = getChatFontScaleStyle(fontScale, compact);
-  const baseTextStyle = textStyle ?? [
-    styles.messageText,
-    compact && styles.messageTextCompact,
-    fontScaleStyle,
-    emoteLineStyle,
-  ];
+  const chatTextStyles = getChatTextStyles(fontScale, compact);
+  const baseTextStyle = textStyle ?? [chatTextStyles.body, emoteLineStyle];
   const textColorStyle = textColor ? getChatColorStyle(textColor) : null;
   const spans: ReactNode[] = [];
   let pendingText: string | null = null;
@@ -110,7 +103,11 @@ function InlineMessageSpansComponent({
           key={getPartKey(part, index)}
           part={part}
           onEmoteTouchStart={onEmoteTouchStart}
-          targetSize={emoteTargetSize ?? (compact ? 26 : 30)}
+          targetSize={
+            emoteTargetSize ??
+            getChatScale(fontScale, compact ? 'compact' : 'comfortable')
+              .emoteSize
+          }
         />,
       );
       continue;
@@ -125,13 +122,7 @@ function InlineMessageSpansComponent({
       spans.push(
         <Text
           key={getPartKey(part, index)}
-          style={[
-            styles.messageLink,
-            compact && styles.messageLinkCompact,
-            fontScaleStyle,
-            linkTextStyle,
-            emoteLineStyle,
-          ]}
+          style={[chatTextStyles.link, emoteLineStyle]}
         >
           {content}
         </Text>,
@@ -148,10 +139,9 @@ function InlineMessageSpansComponent({
           key={getPartKey(part, index)}
           content={content}
           baseTextStyle={baseTextStyle}
-          fontScaleStyle={fontScaleStyle}
           emoteLineStyle={emoteLineStyle}
-          mentionTextStyle={mentionTextStyle}
           compact={compact}
+          fontScale={fontScale}
           getMentionColor={getMentionColor}
           effectiveHighlightedUserSet={effectiveHighlightedUserSet}
           normalisedCurrentUsername={normalisedCurrentUsername}
