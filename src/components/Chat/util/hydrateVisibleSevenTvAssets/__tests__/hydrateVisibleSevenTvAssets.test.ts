@@ -1,10 +1,11 @@
-import { hydrateVisibleSevenTvAssets } from '@app/components/Chat/util/hydrateVisibleSevenTvAssets';
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { createTextPart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
+
+import { hydrateVisibleSevenTvAssets } from '../hydrateVisibleSevenTvAssets';
 
 const sevenTvPersonalEmote: SanitisedEmote = {
   id: 'personal-emote',

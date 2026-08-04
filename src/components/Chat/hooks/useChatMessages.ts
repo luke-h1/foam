@@ -27,6 +27,7 @@ type HandleNewMessageOptions = {
   countUnread?: boolean;
 };
 
+// Floor on delay-queue checks so a burst of releases coalesces into one drain.
 const DELAY_RELEASE_MIN_INTERVAL_MS = 80;
 
 function publishBufferedMessages(messages: BufferedMessage[]) {
@@ -84,7 +85,11 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   const finalizeMessageForCommitRef = useRef(finalizeMessageForCommit);
   const isFlushingRef = useRef(false);
   const pendingUnreadCountRef = useRef(0);
+  // Set when a flush sees a raid-sized batch; slows the next live flush cadence.
   const raidFlushModeRef = useRef(false);
+  // Arrivals since the last flush. Must be the arrival count, not the buffer
+  // size - the cap leaves a backlog behind, which would latch raid mode on.
+  const arrivalsSinceFlushRef = useRef(0);
 
   useLayoutEffect(() => {
     getChatDelayMsRef.current = getChatDelayMs ?? (() => 0);
@@ -103,9 +108,14 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
   const flushBuffer = useCallback(() => {
     if (isFlushingRef.current) {
+      // Re-entered from inside a flush, because publishing fed a message
+      // straight back in. The drain already under way covers it, so leave any
+      // armed timer alone rather than dropping its handle.
       return;
     }
 
+    // Clearing (not just forgetting) matters on the direct-call path: a timer
+    // armed for this same flush would otherwise stay pending and re-run it.
     if (flushTimerRef.current) {
       clearTimeout(flushTimerRef.current);
       flushTimerRef.current = null;
@@ -131,13 +141,14 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
 
     try {
       const isAtBottom = isAtBottomRef.current;
-
       raidFlushModeRef.current = shouldEnterRaidFlushMode(
-        buffer.size(),
+        arrivalsSinceFlushRef.current,
         isAtBottom,
       );
-
-      const messagesToFlush = buffer.drain(maxLiveCommitPerFlush(isAtBottom));
+      arrivalsSinceFlushRef.current = 0;
+      const messagesToFlush = buffer.drain(
+        maxLiveCommitPerFlush(isAtBottom, raidFlushModeRef.current),
+      );
       const shouldMaintainBottom = shouldArmBottomContentAnchor(
         isScrollingToBottomRef,
       );
@@ -159,6 +170,8 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       isFlushingRef.current = false;
     }
 
+    // Rows the per-flush cap held back; without re-arming they would wait on the
+    // next incoming message, which stalls the tail end of a burst.
     if (buffer.size() > 0) {
       startFlushTimer(
         pickFlushDelay({
@@ -189,13 +202,16 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     }
   }, []);
 
-  // Commit one message into the render buffer + run unread/flush bookkeeping
+  // Commit one message into the render buffer + run unread/flush bookkeeping (shared by
+  // the direct and delayed-release paths).
   const ingestMessage = useCallback(
     (message: BufferedMessage, countUnread?: boolean) => {
       const { added, dropped } = bufferRef.current.add(message);
       if (!added) {
         return;
       }
+
+      arrivalsSinceFlushRef.current += 1;
 
       if (dropped > 0) {
         pendingUnreadCountRef.current = Math.max(
@@ -260,13 +276,15 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       };
 
       const countUnread = messageOptions?.countUnread;
+      // Historical replay (countUnread === false) is already old, so it bypasses the delay.
       const rawDelayMs =
         countUnread === false ? 0 : getChatDelayMsRef.current();
-
       const delayMs =
         Number.isFinite(rawDelayMs) && rawDelayMs > 0 ? rawDelayMs : 0;
 
       if (delayMs <= 0) {
+        // An auto-sync delay can collapse to zero mid-stream; a live message
+        // still can't skip past older ones held in the queue.
         if (countUnread !== false && delayQueueRef.current.size() > 0) {
           delayQueueRef.current.enqueue(
             messageWithCachedColor,
@@ -290,6 +308,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     [delayQueueRef, ingestMessage, scheduleDelayTick],
   );
 
+  // On delay-setting change: drain everything held if delay is off, else ensure a tick is pending.
   const reconcileChatDelay = useCallback(() => {
     const effectiveDelayMs = getChatDelayMsRef.current();
     if (!Number.isFinite(effectiveDelayMs) || effectiveDelayMs <= 0) {
@@ -297,7 +316,6 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       delayQueueRef.current
         .drainAll()
         .forEach(entry => ingestMessage(entry.message, entry.countUnread));
-
       return;
     }
     scheduleDelayTick();
@@ -343,6 +361,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     delayQueueRef.current.clear();
     clearDelayTick();
     pendingUnreadCountRef.current = 0;
+    arrivalsSinceFlushRef.current = 0;
     raidFlushModeRef.current = false;
   }, [bufferRef, clearDelayTick, delayQueueRef]);
 
@@ -387,6 +406,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     bufferRef.current.clear();
     delayQueueRef.current.clear();
     pendingUnreadCountRef.current = 0;
+    arrivalsSinceFlushRef.current = 0;
     raidFlushModeRef.current = false;
   }, [bufferRef, clearDelayTick, delayQueueRef]);
 
