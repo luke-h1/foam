@@ -7,6 +7,16 @@ on:
         description: 'Force rebuild (ignore cache)'
         type: boolean
         default: false
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'src/**'
+      - 'modules/**'
+      - 'e2e/**'
+      - 'patches/**'
+      - 'package.json'
+      - 'bun.lock'
+      - '.github/workflows/e2e.yml'
 
 permissions:
   contents: read
@@ -18,6 +28,7 @@ concurrency:
 jobs:
   fingerprint:
     name: 🔍 Check Fingerprint
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: macos-latest
     timeout-minutes: 15
     outputs:
@@ -227,7 +238,11 @@ jobs:
 
       - name: 🧪 Run Maestro tests
         run: |
-          bun run e2e:test
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            bun run e2e:test:smoke
+          else
+            bun run e2e:test
+          fi
         env:
           APP_ID: foam-tv-e2e
           DEV_CLIENT: 'false'
