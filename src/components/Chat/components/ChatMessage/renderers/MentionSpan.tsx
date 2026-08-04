@@ -11,7 +11,7 @@ import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchC
 import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin/formatMentionContent';
 
 import type { ChatFontScale } from '../chatScale';
-import { getChatTextStyles } from '../chatTextStyles';
+import { getChatTextStyles } from '../chatText.styles';
 import { styles } from '../RichChatMessage.styles';
 
 interface MentionSpanProps {

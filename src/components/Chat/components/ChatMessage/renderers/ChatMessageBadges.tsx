@@ -5,7 +5,7 @@ import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
 import { ChatMessagePressable } from '../ChatMessagePressable';
 import type { ChatFontScale } from '../chatScale';
-import { getChatTextStyles } from '../chatTextStyles';
+import { getChatTextStyles } from '../chatText.styles';
 import { styles } from '../RichChatMessage.styles';
 import { ChatInlineImage } from './ChatInlineImage';
 

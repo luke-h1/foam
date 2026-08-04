@@ -24,7 +24,7 @@ import type {
   ChatListRef,
   ChatListRenderItemInfo,
 } from '../components/ChatList';
-import { getChatTextStyles } from '../components/ChatMessage/chatTextStyles';
+import { getChatTextStyles } from '../components/ChatMessage/chatText.styles';
 import {
   type BadgePressData,
   type EmotePressData,
@@ -36,7 +36,7 @@ import {
   RowVisibilityContext,
   useRowVisibility,
 } from '../components/ChatMessage/rowVisibility';
-import { styles } from '../styles';
+import { styles } from '../components/ChatMessagePane.styles';
 import type { ChatRowDisplayFlags } from '../types/chatUiFlags';
 import { chatEntranceSpring } from '../util/chatEntranceSpring';
 import { getChatMessageListKey } from '../util/chatMessages/getChatMessageListKey';

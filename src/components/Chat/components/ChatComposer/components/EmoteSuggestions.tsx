@@ -16,7 +16,7 @@ import type { SanitisedEmote } from '@app/types/emote';
 import {
   suggestionRailColors,
   suggestionRailStyles,
-} from '../util/suggestionRailStyles';
+} from './SuggestionRail.styles';
 
 const EMOTE_SUGGESTION_ITEM_SIZE = 48;
 

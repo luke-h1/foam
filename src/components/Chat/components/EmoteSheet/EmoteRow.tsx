@@ -4,8 +4,8 @@ import { type GestureResponderEvent, Pressable } from 'react-native';
 import { selection } from '@app/lib/haptics';
 
 import { EmoteCell } from './EmoteCell';
+import { emoteSheetStyles as styles } from './EmoteSheet.styles';
 import { EMOTE_CELL_GAP } from './emoteSheetLayout';
-import { emoteSheetStyles as styles } from './emoteSheetStyles';
 import type { EmotePickerItem } from './emoteSheetTypes';
 
 function EmoteRowComponent({

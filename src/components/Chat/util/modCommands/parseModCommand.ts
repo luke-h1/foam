@@ -1,6 +1,6 @@
 import type { TwitchChatSettingsPatch } from '@app/types/twitch/moderation';
 
-import { normaliseChatUsername } from './chatUsernames/normaliseChatUsername';
+import { normaliseChatUsername } from '../chatUsernames/normaliseChatUsername';
 
 export type ModCommand =
   | { type: 'timeout'; login: string; durationSeconds: number; reason?: string }

@@ -50,11 +50,6 @@ export type RichChatMessageProps<
   currentUsernameNormalized?: string;
   density?: 'comfortable' | 'compact';
   messageDisplay?: ChatMessageDisplayFlags;
-  disableEmoteAnimations?: boolean;
-  showTimestamp?: boolean;
-  showInlineReplyContext?: boolean;
-  isAlternatingRow?: boolean;
-  isHighlightedMessageTarget?: boolean;
   highlightedUserSet?: ReadonlySet<string>;
   highlightedUsers?: string[];
   customHighlights?: CustomHighlight[];

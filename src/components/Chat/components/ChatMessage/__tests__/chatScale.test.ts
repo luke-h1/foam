@@ -5,7 +5,7 @@ import {
   densityFromCompact,
   getChatScale,
 } from '../chatScale';
-import { getChatTextStyles } from '../chatTextStyles';
+import { getChatTextStyles } from '../chatText.styles';
 
 const FONT_SCALES: ChatFontScale[] = ['small', 'default', 'large'];
 const DENSITIES: ChatDensity[] = ['comfortable', 'compact'];

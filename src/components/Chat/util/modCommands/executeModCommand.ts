@@ -2,7 +2,7 @@ import i18next from 'i18next';
 
 import { twitchService } from '@app/services/twitch-service';
 
-import type { ModCommand } from './modCommands';
+import type { ModCommand } from './parseModCommand';
 
 export interface ModCommandContext {
   broadcasterId: string;

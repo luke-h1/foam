@@ -1,7 +1,7 @@
 import {
   MAX_AUTO_CHAT_DELAY_MS,
   resolveEffectiveChatDelayMs,
-} from '../chatDelay';
+} from '../resolveEffectiveChatDelayMs';
 
 describe('resolveEffectiveChatDelayMs', () => {
   test('returns zero when the delay is off', () => {

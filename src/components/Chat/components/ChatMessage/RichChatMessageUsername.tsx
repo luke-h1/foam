@@ -3,7 +3,7 @@ import { cachedLighten } from '@app/utils/chat/resolveCachedSenderColor/cachedLi
 
 import { ChatMessagePressable } from './ChatMessagePressable';
 import type { ChatFontScale } from './chatScale';
-import { getChatTextStyles } from './chatTextStyles';
+import { getChatTextStyles } from './chatText.styles';
 import { PaintedUsername } from './CosmeticUsername/PaintedUsername';
 import { styles } from './RichChatMessage.styles';
 

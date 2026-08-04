@@ -4,7 +4,7 @@ import { toast } from 'sonner-native';
 import { logger } from '@app/utils/logger';
 
 import { executeModCommand } from './executeModCommand';
-import type { ModCommand } from './modCommands';
+import type { ModCommand } from './parseModCommand';
 
 /**
  * Fire-and-forget wrapper shared by the composer and the chat action sheets:

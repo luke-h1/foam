@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
-import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/RichChatMessage.styles';
+import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/chatScale';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';

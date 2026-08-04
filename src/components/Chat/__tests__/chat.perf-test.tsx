@@ -186,7 +186,7 @@ function renderChatMessage(message: AnyChatMessageType) {
       {...message}
       density='compact'
       currentUsername='luke'
-      disableEmoteAnimations
+      messageDisplay={{ disableEmoteAnimations: true }}
     />
   );
 }
@@ -229,7 +229,7 @@ function RichMessageRowsPerfFixture() {
           {...message}
           density='compact'
           currentUsername='luke'
-          disableEmoteAnimations
+          messageDisplay={{ disableEmoteAnimations: true }}
         />
       ))}
     </View>
@@ -270,7 +270,7 @@ function TrackedRichChatMessage({
       {...message}
       density='compact'
       currentUsername='luke'
-      disableEmoteAnimations
+      messageDisplay={{ disableEmoteAnimations: true }}
     />
   );
 }

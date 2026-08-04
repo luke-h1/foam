@@ -529,7 +529,10 @@ describe('RichChatMessage', () => {
       );
 
       const { getAllByText } = render(
-        <RichChatMessage {...message} showInlineReplyContext />,
+        <RichChatMessage
+          {...message}
+          messageDisplay={{ showInlineReplyContext: true }}
+        />,
       );
 
       const replyTargetMentions = getAllByText('@OriginalUser');
@@ -774,7 +777,10 @@ describe('RichChatMessage', () => {
     ]);
 
     const { queryByText } = render(
-      <RichChatMessage {...message} showTimestamp={false} />,
+      <RichChatMessage
+        {...message}
+        messageDisplay={{ showTimestamp: false }}
+      />,
     );
 
     expect(queryByText('12:00')).toBeNull();

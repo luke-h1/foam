@@ -9,6 +9,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useAccentColor } from '@app/context/AccentColorContext';
 import { theme } from '@app/styles/themes';
 
+import { chatComposerStyles as styles } from './ChatComposer.styles';
 import { CommandSuggestionRail } from './CommandSuggestionRail';
 import { EmoteSuggestionRail } from './EmoteSuggestionRail';
 import {
@@ -16,7 +17,6 @@ import {
   useChatComposerController,
 } from './hooks/useChatComposerController';
 import { UserSuggestionRail } from './UserSuggestionRail';
-import { chatComposerStyles as styles } from './util/chatComposerStyles';
 
 export type { ChatComposerHandle };
 export type { SuggestionType } from './util/chatComposerTypes';

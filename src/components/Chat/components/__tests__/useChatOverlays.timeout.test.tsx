@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { act } from '@testing-library/react-native';
 
 import { createMessageActionData } from '@app/components/Chat/hooks/__tests__/__fixtures__/useChat.fixture';
-import { runModCommand } from '@app/components/Chat/util/runModCommand';
+import { runModCommand } from '@app/components/Chat/util/modCommands/runModCommand';
 import { showActionMenu } from '@app/store/overlays/showActionMenu';
 import render from '@app/test/render';
 
@@ -33,7 +33,7 @@ jest.mock('@app/store/overlays/showActionMenu', () => ({
   showActionMenu: jest.fn(),
 }));
 
-jest.mock('@app/components/Chat/util/runModCommand', () => ({
+jest.mock('@app/components/Chat/util/modCommands/runModCommand', () => ({
   runModCommand: jest.fn(),
 }));
 

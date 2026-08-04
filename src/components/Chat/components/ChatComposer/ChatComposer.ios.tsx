@@ -8,6 +8,7 @@ import { useAccentColor } from '@app/context/AccentColorContext';
 import { theme } from '@app/styles/themes';
 
 import { ComposerIconButton } from '../ComposerIconButton';
+import { chatComposerStyles } from './ChatComposer.styles';
 import { CommandSuggestionRail } from './CommandSuggestionRail';
 import { EmoteSuggestionRail } from './EmoteSuggestionRail';
 import {
@@ -15,7 +16,6 @@ import {
   useChatComposerController,
 } from './hooks/useChatComposerController';
 import { UserSuggestionRail } from './UserSuggestionRail';
-import { chatComposerStyles } from './util/chatComposerStyles';
 
 export type { ChatComposerHandle };
 

@@ -133,6 +133,27 @@ export function getChatScale(
   return CHAT_SCALES[fontScale ?? 'default'][density];
 }
 
+export interface ChatLineMetrics {
+  fontSize: number;
+  lineHeight: number;
+}
+
+/**
+ * The default-font-scale body metrics per density, for the surfaces that size
+ * themselves outside a React render - the painted-username rasterizers and the
+ * chat bench - and so cannot resolve a live font-scale preference.
+ */
+export const chatLineMetrics = {
+  comfortable: {
+    fontSize: getChatScale('default', 'comfortable').bodyFontSize,
+    lineHeight: getChatScale('default', 'comfortable').bodyLineHeight,
+  },
+  compact: {
+    fontSize: getChatScale('default', 'compact').bodyFontSize,
+    lineHeight: getChatScale('default', 'compact').bodyLineHeight,
+  },
+} as const satisfies Record<ChatDensity, ChatLineMetrics>;
+
 export function densityFromCompact(compact: boolean | undefined): ChatDensity {
   return compact ? 'compact' : 'comfortable';
 }

@@ -11,7 +11,7 @@ import { channelPointsRewardTitleFromTags } from '@app/utils/chat/channelPointsR
 import { channelPointsRewardTitleFromUserstate } from '@app/utils/chat/channelPointsRewardTitle/channelPointsRewardTitleFromUserstate';
 
 import type { ChatFontScale } from '../chatScale';
-import { getChatTextStyles } from '../chatTextStyles';
+import { getChatTextStyles } from '../chatText.styles';
 import { styles } from '../RichChatMessage.styles';
 import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
 

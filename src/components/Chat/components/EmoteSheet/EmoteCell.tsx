@@ -8,7 +8,7 @@ import { resolveUseAppleWebpCodec } from '@app/lib/expo-image/resolveUseAppleWeb
 import { runAnimationCommand } from '@app/lib/expo-image/runAnimationCommand';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 
-import { emoteSheetStyles as styles } from './emoteSheetStyles';
+import { emoteSheetStyles as styles } from './EmoteSheet.styles';
 import type { EmotePickerItem } from './emoteSheetTypes';
 import { getEmotePickerDisplayUrl } from './util/emotePickerDisplayUrl';
 import { emoteSheetAnimationBudget } from './util/emoteSheetAnimationBudget';

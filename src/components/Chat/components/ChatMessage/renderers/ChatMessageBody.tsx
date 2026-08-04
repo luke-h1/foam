@@ -2,9 +2,9 @@ import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 
 import { ChatMessagePart } from './ChatMessagePart';
+import type { ChatMessagePartRendererArgs } from './types/ChatMessagePartRendererArgs';
 import { TextModifierStyles } from './types/TextModifierStyles';
-import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
-type ChatMessageBodyProps = UseChatMessagePartRendererArgs & {
+type ChatMessageBodyProps = ChatMessagePartRendererArgs & {
   mode: 'message' | 'system';
 } & TextModifierStyles;
 

@@ -3,60 +3,6 @@ import { StyleSheet } from 'react-native';
 import { theme } from '@app/styles/themes';
 
 export const styles = StyleSheet.create({
-  chatContainer: {
-    flex: 1,
-    maxWidth: '100%',
-    overflow: 'hidden',
-    width: '100%',
-  },
-  connectingContainer: {
-    paddingHorizontal: theme.space12,
-    paddingVertical: theme.space8,
-  },
-  connectingText: {
-    color: theme.colorGrey,
-    fontSize: theme.fontSize14,
-  },
-  emptyState: {
-    alignItems: 'center',
-    backgroundColor: theme.color.background.darkAltAlpha,
-    borderColor: theme.colorBorderSecondary,
-    borderCurve: 'continuous',
-    borderRadius: theme.borderRadius20,
-    borderWidth: 1,
-    marginHorizontal: theme.space12,
-    marginTop: theme.space12,
-    paddingHorizontal: theme.space20,
-    paddingVertical: theme.space20,
-  },
-  emptyStateBody: {
-    color: theme.color.textSecondary.dark,
-    fontSize: theme.fontSize12,
-    marginTop: theme.space8,
-    textAlign: 'center',
-  },
-  emptyStateTitle: {
-    fontSize: theme.fontSize14,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  inputStickyView: {
-    zIndex: 1,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  listContent: {
-    flexGrow: 1,
-    paddingBottom: theme.space8,
-    paddingTop: 0,
-  },
-  listGestureWrapper: {
-    flex: 1,
-  },
-  messagePane: {
-    flex: 1,
-  },
   pinnedIconShell: {
     alignItems: 'center',
     backgroundColor: 'rgba(145,91,255,0.28)',
@@ -105,12 +51,5 @@ export const styles = StyleSheet.create({
     color: theme.colorWhite,
     fontSize: theme.fontSize12,
     lineHeight: 16,
-  },
-  wrapper: {
-    backgroundColor: theme.colorBlack,
-    flex: 1,
-  },
-  wrapperTransparent: {
-    backgroundColor: 'transparent',
   },
 });

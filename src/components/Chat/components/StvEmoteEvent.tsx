@@ -9,7 +9,7 @@ import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 
 import type { ChatFontScale } from './ChatMessage/chatScale';
-import { getChatTextStyles } from './ChatMessage/chatTextStyles';
+import { getChatTextStyles } from './ChatMessage/chatText.styles';
 import { ChatNoticeMetaRow } from './ChatMessage/renderers/ChatNoticeMetaRow';
 import { styles as chatStyles } from './ChatMessage/RichChatMessage.styles';
 import { CHAT_NOTICE_ACCENTS } from './util/chatNoticeAccents';
@@ -32,6 +32,7 @@ function StvEmoteEventComponent({
   const removed = part.type === 'stv_emote_removed';
 
   const content = part.stvEvents?.data;
+
   if (!content) {
     return null;
   }
@@ -44,6 +45,7 @@ function StvEmoteEventComponent({
   const status = removed
     ? i18next.t('chat:notices.removed')
     : i18next.t('chat:notices.added');
+
   const accentColor = removed
     ? CHAT_NOTICE_ACCENTS.stvRemoved
     : CHAT_NOTICE_ACCENTS.stvAdded;

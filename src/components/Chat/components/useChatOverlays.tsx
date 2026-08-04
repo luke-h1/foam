@@ -16,8 +16,8 @@ import { openLinkInBrowser } from '@app/utils/browser/openLinkInBrowser';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { logger } from '@app/utils/logger';
 
-import type { ModCommand } from '../util/modCommands';
-import { runModCommand } from '../util/runModCommand';
+import type { ModCommand } from '../util/modCommands/parseModCommand';
+import { runModCommand } from '../util/modCommands/runModCommand';
 import {
   BadgePressData,
   EmotePressData,

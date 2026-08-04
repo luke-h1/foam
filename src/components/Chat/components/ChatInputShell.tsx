@@ -24,8 +24,8 @@ import { logger } from '@app/utils/logger';
 
 import { useChatImageUpload } from '../hooks/useChatImageUpload';
 import { createUserStateFromTags } from '../util/messageHandlers/createUserStateFromTags';
-import { parseModCommand } from '../util/modCommands';
-import { runModCommand } from '../util/runModCommand';
+import { parseModCommand } from '../util/modCommands/parseModCommand';
+import { runModCommand } from '../util/modCommands/runModCommand';
 import { findSlashCommandDefinition } from '../util/slashCommandDefinitions/findSlashCommandDefinition';
 import { isRefreshCommand } from '../util/slashCommandDefinitions/isRefreshCommand';
 import type { ChatComposerHandle } from './ChatComposer/ChatComposer';

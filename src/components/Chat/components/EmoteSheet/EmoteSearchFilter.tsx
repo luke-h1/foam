@@ -5,7 +5,7 @@ import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Input } from '@app/components/ui/Input/Input';
 import { theme } from '@app/styles/themes';
 
-import { emoteSheetStyles as styles } from './emoteSheetStyles';
+import { emoteSheetStyles as styles } from './EmoteSheet.styles';
 
 export function EmoteSearchFilter({
   onChange,

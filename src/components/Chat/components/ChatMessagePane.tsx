@@ -12,7 +12,6 @@ import { theme } from '@app/styles/themes';
 import { logger } from '@app/utils/logger';
 
 import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
-import { styles } from '../styles';
 import type { ChatPaneFlags } from '../types/chatUiFlags';
 import { getVisibleMessages } from '../util/visibleMessages';
 import {
@@ -21,6 +20,7 @@ import {
   type ChatListRenderItem,
   type ChatListScrollHandlers,
 } from './ChatList';
+import { styles } from './ChatMessagePane.styles';
 import { ChatViewControls } from './ChatViewControls';
 import { PinnedMessageBanner } from './PinnedMessageBanner';
 

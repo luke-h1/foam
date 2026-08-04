@@ -30,7 +30,7 @@ import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin/registerMentionChatter';
 
 import type { ChatListRef } from '../components/ChatList';
-import { resolveEffectiveChatDelayMs } from '../util/chatDelay';
+import { resolveEffectiveChatDelayMs } from '../util/chatDelay/resolveEffectiveChatDelayMs';
 import { normaliseChatUsername } from '../util/chatUsernames/normaliseChatUsername';
 import { textMentionsUser } from '../util/chatUsernames/textMentionsUser';
 import { triggerMentionHaptic } from '../util/mentionHaptics';

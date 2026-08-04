@@ -15,6 +15,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
 import { EmoteSearchFilter } from './EmoteSearchFilter';
+import { emoteSheetStyles as styles } from './EmoteSheet.styles';
 import { EmoteSheetIosBlur } from './EmoteSheetIosBlur';
 import {
   EMOTE_CELL_GAP,
@@ -22,7 +23,6 @@ import {
   EMOTE_SHEET_HEADER_HEIGHT,
 } from './emoteSheetLayout';
 import { renderSetRailItem } from './EmoteSheetSetRailItem';
-import { emoteSheetStyles as styles } from './emoteSheetStyles';
 import type { EmotePickerItem } from './emoteSheetTypes';
 import { ProviderChip } from './ProviderChip';
 import { useEmoteSheet } from './useEmoteSheet';

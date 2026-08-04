@@ -7,13 +7,13 @@ import { Text } from '@app/components/ui/Text/Text';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 
 import { getChatScale } from '../chatScale';
-import { getChatTextStyles } from '../chatTextStyles';
+import { getChatTextStyles } from '../chatText.styles';
 import { EmoteRenderer } from './EmoteRenderer';
 import { MentionSpan } from './MentionSpan';
-import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
+import type { ChatMessagePartRendererArgs } from './types/ChatMessagePartRendererArgs';
 
 type InlineMessageSpansProps = Pick<
-  UseChatMessagePartRendererArgs,
+  ChatMessagePartRendererArgs,
   | 'compact'
   | 'disableEmoteAnimations'
   | 'effectiveHighlightedUserSet'

@@ -9,7 +9,7 @@ import type {
 import { Text } from '@app/components/ui/Text/Text';
 
 import { EmoteMenuIcon } from './EmoteMenuIcon';
-import { emoteSheetStyles as styles } from './emoteSheetStyles';
+import { emoteSheetStyles as styles } from './EmoteSheet.styles';
 
 interface ProviderChipProps {
   isActive: boolean;

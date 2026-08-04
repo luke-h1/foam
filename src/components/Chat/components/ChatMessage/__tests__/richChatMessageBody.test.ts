@@ -1,4 +1,4 @@
-import { getPartIdentity } from '@app/components/Chat/util/richChatMessageHelpers/getPartIdentity';
+import { getPartIdentity } from '@app/components/Chat/util/richChatMessage/getPartIdentity';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 describe('richChatMessageBody', () => {

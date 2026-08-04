@@ -11,7 +11,7 @@ import {
   Skia,
 } from '@shopify/react-native-skia';
 
-import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/RichChatMessage.styles';
+import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/chatScale';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';

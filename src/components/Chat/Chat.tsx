@@ -12,6 +12,7 @@ import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { useCosmeticBindingsVersion } from '@app/store/chat/react/selectors';
 import { useChatRenderPreferences } from '@app/store/preferenceStore';
 
+import { styles } from './Chat.styles';
 import { ChatEmoteReprocessor } from './components/ChatEmoteReprocessor';
 import type { ChatInputShellHandle } from './components/ChatInputShell';
 import { ChatInputShell } from './components/ChatInputShell';
@@ -22,7 +23,6 @@ import { useChatScroll } from './hooks/useChatScroll';
 import { useChatSession } from './hooks/useChatSession';
 import { useChatSurface } from './hooks/useChatSurface';
 import { useChatTransientState } from './hooks/useChatTransientState';
-import { styles } from './styles';
 
 export interface ChatProps {
   applyTopInset?: boolean;

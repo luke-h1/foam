@@ -12,14 +12,14 @@ import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 
 import { getChatScale } from '../chatScale';
-import { getChatTextStyles } from '../chatTextStyles';
+import { getChatTextStyles } from '../chatText.styles';
 import { styles } from '../RichChatMessage.styles';
 import { CheermoteRenderer } from './CheermoteRenderer';
 import { EmoteRenderer } from './EmoteRenderer';
 import { MentionSpan } from './MentionSpan';
-import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
+import type { ChatMessagePartRendererArgs } from './types/ChatMessagePartRendererArgs';
 
-type ChatMessagePartProps = Omit<UseChatMessagePartRendererArgs, 'message'> & {
+type ChatMessagePartProps = Omit<ChatMessagePartRendererArgs, 'message'> & {
   index: number;
   message: ParsedPart[];
   mode: 'message' | 'system';

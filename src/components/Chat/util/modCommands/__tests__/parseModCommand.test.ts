@@ -1,4 +1,4 @@
-import { type ModCommand, parseModCommand } from '../modCommands';
+import { type ModCommand, parseModCommand } from '../parseModCommand';
 
 describe('parseModCommand', () => {
   test('returns null for plain messages and unknown commands', () => {

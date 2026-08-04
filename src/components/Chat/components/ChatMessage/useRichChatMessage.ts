@@ -3,22 +3,21 @@ import type { GestureResponderEvent } from 'react-native';
 
 import { useMappingHelper } from '@shopify/flash-list';
 
-import type { ChatMessageDisplayFlags } from '@app/components/Chat/types/chatUiFlags';
 import { hasSharedChannelPointsMessage } from '@app/components/Chat/util/channelPointsSharedMessage';
 import { normaliseChatUsername } from '@app/components/Chat/util/chatUsernames/normaliseChatUsername';
 import { getAnnouncementAccentColor } from '@app/components/Chat/util/getAnnouncementAccentColor';
-import { toChatMessageData } from '@app/components/Chat/util/richChatMessageData';
-import { getAnnouncementColorParam } from '@app/components/Chat/util/richChatMessageHelpers/getAnnouncementColorParam';
-import { getChatBodyInfo } from '@app/components/Chat/util/richChatMessageHelpers/getChatBodyInfo';
-import { getPartIdentity } from '@app/components/Chat/util/richChatMessageHelpers/getPartIdentity';
-import { isUserNoticeTags } from '@app/components/Chat/util/richChatMessageHelpers/isUserNoticeTags';
+import { getAnnouncementColorParam } from '@app/components/Chat/util/richChatMessage/getAnnouncementColorParam';
+import { getChatBodyInfo } from '@app/components/Chat/util/richChatMessage/getChatBodyInfo';
+import { getPartIdentity } from '@app/components/Chat/util/richChatMessage/getPartIdentity';
+import { isUserNoticeTags } from '@app/components/Chat/util/richChatMessage/isUserNoticeTags';
+import { toChatMessageData } from '@app/components/Chat/util/richChatMessage/toChatMessageData';
 import { usePreference } from '@app/store/preferenceStore';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 import { findCustomHighlight } from '@app/utils/chat/customHighlights/findCustomHighlight';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 
-import type { UseChatMessagePartRendererArgs } from './renderers/useChatMessagePartRenderer';
+import type { ChatMessagePartRendererArgs } from './renderers/types/ChatMessagePartRendererArgs';
 import type {
   BadgePressData,
   EmotePressData,
@@ -51,12 +50,7 @@ export function useRichChatMessage<
     onEmotePress,
     getMentionColor,
     parseTextForEmotes,
-    messageDisplay: messageDisplayProp,
-    disableEmoteAnimations: topLevelDisableEmoteAnimations,
-    showTimestamp: topLevelShowTimestamp,
-    showInlineReplyContext: topLevelShowInlineReplyContext,
-    isAlternatingRow: topLevelIsAlternatingRow,
-    isHighlightedMessageTarget: topLevelIsHighlightedMessageTarget,
+    messageDisplay,
     onUsernamePress,
     currentUsername,
     currentUsernameNormalized,
@@ -75,48 +69,24 @@ export function useRichChatMessage<
     isTwitchSystemNotice: messageIsTwitchSystemNotice = false,
   } = props;
 
-  const messageDisplay = {
-    ...messageDisplayProp,
-    ...(topLevelDisableEmoteAnimations !== undefined
-      ? { disableEmoteAnimations: topLevelDisableEmoteAnimations }
-      : {}),
-    ...(topLevelShowTimestamp !== undefined
-      ? { showTimestamp: topLevelShowTimestamp }
-      : {}),
-    ...(topLevelShowInlineReplyContext !== undefined
-      ? { showInlineReplyContext: topLevelShowInlineReplyContext }
-      : {}),
-    ...(topLevelIsAlternatingRow !== undefined
-      ? { isAlternatingRow: topLevelIsAlternatingRow }
-      : {}),
-    ...(topLevelIsHighlightedMessageTarget !== undefined
-      ? { isHighlightedMessageTarget: topLevelIsHighlightedMessageTarget }
-      : {}),
-  } satisfies ChatMessageDisplayFlags;
-
+  // Flags a message carries in its own data default from the message; the
+  // renderer's messageDisplay wins wherever it sets one.
   const {
     disableEmoteAnimations = false,
-    isChannelPointRedemption:
-      messageDisplayIsChannelPointRedemption = messageIsChannelPointRedemption,
-    isAnnouncement: messageDisplayIsAnnouncement = messageIsAnnouncement,
-    isHighlightedMessage:
-      messageDisplayIsHighlightedMessage = messageIsHighlightedMessage,
+    isChannelPointRedemption = messageIsChannelPointRedemption,
+    isAnnouncement = messageIsAnnouncement,
+    isHighlightedMessage = messageIsHighlightedMessage,
     isSharedChatDuplicated:
-      messageDisplayIsSharedChatDuplicated = messageIsSharedChatDuplicated,
-    isTwitchSystemNotice:
-      messageDisplayIsTwitchSystemNotice = messageIsTwitchSystemNotice,
+      displayIsSharedChatDuplicated = messageIsSharedChatDuplicated,
+    isTwitchSystemNotice = messageIsTwitchSystemNotice,
     showInlineReplyContext = true,
     showTimestamp = true,
     isAlternatingRow = false,
     isHighlightedMessageTarget = false,
-  } = messageDisplay;
-  const isChannelPointRedemption = messageDisplayIsChannelPointRedemption;
-  const isAnnouncement = messageDisplayIsAnnouncement;
-  const isHighlightedMessage = messageDisplayIsHighlightedMessage;
+  } = messageDisplay ?? {};
   const sharedChatEnabled = usePreference('sharedChatEnabled');
   const isSharedChatDuplicated =
-    messageDisplayIsSharedChatDuplicated && sharedChatEnabled;
-  const isTwitchSystemNotice = messageDisplayIsTwitchSystemNotice;
+    displayIsSharedChatDuplicated && sharedChatEnabled;
   const { getMappingKey } = useMappingHelper();
   const [selectedEmoteAction, setSelectedEmoteAction] =
     useState<EmotePressData | null>(null);
@@ -238,7 +208,7 @@ export function useRichChatMessage<
     normalisedCurrentUsername,
     noticeTags: isUserNoticeTags(notice_tags) ? notice_tags : undefined,
     parseTextForEmotes,
-  } satisfies UseChatMessagePartRendererArgs;
+  } satisfies ChatMessagePartRendererArgs;
 
   const {
     hasSubscriptionNotice,

@@ -62,7 +62,7 @@ A name like `THE_COLOR_OF_A_COMPONENT = '#55'` adds a layer of indirection witho
 
 This is **not** a blanket "inline every single-use value" rule. Keep a named constant (or an inline explanatory comment) when the literal encodes non-obvious meaning the value alone cannot convey — a magic number such as a memory threshold (`3 * 1024 * 1024 * 1024` // 3GB), a tuned timeout, a protocol constant, or anything a reader would have to reverse-engineer. Also keep module-level constants for values genuinely shared across files that must stay in sync. The rule targets needless indirection over obvious literals, not the removal of meaningful names.
 
-**The chat render path is exempt.** Every font size, line height, emote size and row padding a chat row uses must come from `getChatScale` / `getChatTextStyles` (`components/ChatMessage/chatScale.ts`, `chatTextStyles.ts`), never from a literal at the use site. Density and font scale are two preferences over one ramp; a literal in a renderer silently opts that surface out of one of them, which is the bug the ramp was introduced to fix. Inlining a `lineHeight: 21` in a chat renderer follows the letter of the rule above and regresses the feature.
+**The chat render path is exempt.** Every font size, line height, emote size and row padding a chat row uses must come from `getChatScale` / `getChatTextStyles` (`components/ChatMessage/chatScale.ts`, `chatText.styles.ts`), never from a literal at the use site. Density and font scale are two preferences over one ramp; a literal in a renderer silently opts that surface out of one of them, which is the bug the ramp was introduced to fix. Inlining a `lineHeight: 21` in a chat renderer follows the letter of the rule above and regresses the feature.
 
 ## JSDoc Comments
 

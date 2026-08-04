@@ -6,29 +6,7 @@ import {
   CHAT_NOTICE_ACCENTS,
   noticeSurfaceTint,
 } from '../util/chatNoticeAccents';
-import {
-  CHAT_SURFACE_COLORS,
-  type ChatFontScale,
-  getChatScale,
-} from './chatScale';
-
-export type { ChatFontScale };
-
-export interface ChatLineMetrics {
-  fontSize: number;
-  lineHeight: number;
-}
-
-export const chatLineMetrics = {
-  comfortable: {
-    fontSize: getChatScale('default', 'comfortable').bodyFontSize,
-    lineHeight: getChatScale('default', 'comfortable').bodyLineHeight,
-  },
-  compact: {
-    fontSize: getChatScale('default', 'compact').bodyFontSize,
-    lineHeight: getChatScale('default', 'compact').bodyLineHeight,
-  },
-} as const satisfies Record<string, ChatLineMetrics>;
+import { CHAT_SURFACE_COLORS } from './chatScale';
 
 /**
  * Colour half of a notice surface. The padding, margin and accent-bar width are
@@ -273,9 +251,6 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'left',
   },
-  stvSystemRowAlignStart: {
-    alignItems: 'flex-start',
-  },
   subscriptionNoticeColumn: {
     gap: 4,
     width: '100%',
@@ -286,7 +261,11 @@ export const styles = StyleSheet.create({
   systemMessageContainer: {
     justifyContent: 'flex-start',
   },
-  systemMessageRow: {
+  /**
+   * The one row every chat notice body renders into. Kept single so a milestone,
+   * charity or raid notice cannot drift away from a plain system notice.
+   */
+  noticeRow: {
     alignItems: 'flex-start',
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -299,17 +278,5 @@ export const styles = StyleSheet.create({
   viewerMilestoneContainer: noticeSurface(CHAT_NOTICE_ACCENTS.viewerMilestone),
   viewerMilestoneMetaText: {
     color: CHAT_NOTICE_ACCENTS.viewerMilestone,
-  },
-  viewerMilestoneRow: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    width: '100%',
-  },
-  charityDonationRow: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    width: '100%',
   },
 });

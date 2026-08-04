@@ -5,7 +5,7 @@ import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 
 import { CHAT_SURFACE_COLORS, type ChatFontScale } from '../chatScale';
-import { getChatTextStyles } from '../chatTextStyles';
+import { getChatTextStyles } from '../chatText.styles';
 import { styles } from '../RichChatMessage.styles';
 
 interface ChatNoticeMetaRowProps {

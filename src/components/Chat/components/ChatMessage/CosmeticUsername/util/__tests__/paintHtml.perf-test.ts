@@ -1,7 +1,7 @@
 import { measureFunction } from 'reassure';
 
+import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/chatScale';
 import { buildPaintedUsernameHtml } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintHtml';
-import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/RichChatMessage.styles';
 
 import {
   multiLayerPaint,

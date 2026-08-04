@@ -5,7 +5,7 @@ import type { EmoteMenuSet } from '@app/components/Chat/components/EmoteSheet/ut
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 
-import { emoteSheetStyles as styles } from './emoteSheetStyles';
+import { emoteSheetStyles as styles } from './EmoteSheet.styles';
 
 function SetRailButtonComponent({
   isActive,

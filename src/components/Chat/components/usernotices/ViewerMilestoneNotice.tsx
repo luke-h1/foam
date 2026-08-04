@@ -6,7 +6,7 @@ import i18next from '@app/i18n/i18next';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import type { ChatFontScale } from '../ChatMessage/chatScale';
-import { getChatTextStyles } from '../ChatMessage/chatTextStyles';
+import { getChatTextStyles } from '../ChatMessage/chatText.styles';
 import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';
 import { styles } from '../ChatMessage/RichChatMessage.styles';
 import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';

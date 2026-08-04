@@ -1,12 +1,11 @@
 import type { Key } from 'react';
 
+import type { ChatFontScale } from '@app/components/Chat/components/ChatMessage/chatScale';
+import type { EmotePressData } from '@app/components/Chat/components/ChatMessage/RichChatMessage.types';
 import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
-import type { ChatFontScale } from '../chatScale';
-import type { EmotePressData } from '../RichChatMessage.types';
-
-export interface UseChatMessagePartRendererArgs {
+export interface ChatMessagePartRendererArgs {
   compact: boolean;
   disableEmoteAnimations: boolean;
   fontScale?: ChatFontScale;

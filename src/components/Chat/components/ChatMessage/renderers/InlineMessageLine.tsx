@@ -6,14 +6,14 @@ import { getChatColorStyle } from '@app/components/Chat/util/chatColorStyles';
 import { Text } from '@app/components/ui/Text/Text';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 
-import { getChatTextStyles } from '../chatTextStyles';
+import { getChatTextStyles } from '../chatText.styles';
 import { styles } from '../RichChatMessage.styles';
 import type { BadgePressData } from '../RichChatMessage.types';
 import { ChatMessageBadges } from './ChatMessageBadges';
 import { InlineMessageSpans } from './InlineMessageSpans';
-import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
+import type { ChatMessagePartRendererArgs } from './types/ChatMessagePartRendererArgs';
 
-interface InlineMessageLineProps extends UseChatMessagePartRendererArgs {
+interface InlineMessageLineProps extends ChatMessagePartRendererArgs {
   badgeList: SanitisedBadgeSet[];
   getMappingKey: (id: string, index: number) => string;
   isAction?: boolean;

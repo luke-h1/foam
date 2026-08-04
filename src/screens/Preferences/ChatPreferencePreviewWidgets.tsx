@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { getChatTextStyles } from '@app/components/Chat/components/ChatMessage/chatTextStyles';
+import { getChatTextStyles } from '@app/components/Chat/components/ChatMessage/chatText.styles';
 import { Image } from '@app/components/Image/Image';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
