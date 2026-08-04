@@ -44,6 +44,7 @@ import { getPaintTextShadows } from './paintTextStyle/getPaintTextShadows';
 import { getPaintTextStroke } from './paintTextStyle/getPaintTextStroke';
 import { cssDropShadowSigma } from './skiaPaintGeometry/cssDropShadowSigma';
 import { cssLinearGradientLine } from './skiaPaintGeometry/cssLinearGradientLine';
+import { cssTextShadowSigma } from './skiaPaintGeometry/cssTextShadowSigma';
 import { farthestCornerCircleRadius } from './skiaPaintGeometry/farthestCornerCircleRadius';
 import { farthestCornerEllipseRadii } from './skiaPaintGeometry/farthestCornerEllipseRadii';
 import {
@@ -252,7 +253,7 @@ function shadowExtents(
   };
 
   for (const shadow of textShadows) {
-    const blur = BLUR_EXTENT_SIGMAS * cssDropShadowSigma(shadow.radius);
+    const blur = BLUR_EXTENT_SIGMAS * cssTextShadowSigma(shadow.radius);
     extents.left = Math.max(extents.left, blur - shadow.x_offset);
     extents.right = Math.max(extents.right, blur + shadow.x_offset);
     extents.top = Math.max(extents.top, blur - shadow.y_offset);
@@ -481,8 +482,8 @@ function drawPaintedUsername(
         Skia.ImageFilter.MakeDropShadowOnly(
           shadow.x_offset * scale,
           shadow.y_offset * scale,
-          cssDropShadowSigma(shadow.radius) * scale,
-          cssDropShadowSigma(shadow.radius) * scale,
+          cssTextShadowSigma(shadow.radius) * scale,
+          cssTextShadowSigma(shadow.radius) * scale,
           skColor(shadow.color),
           null,
         ),

@@ -133,3 +133,5 @@ buildServer.json
 junit-app.xml
 
 playstore-service-account.json
+
+scripts/paintParity/out/

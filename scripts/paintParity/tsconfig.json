@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": ["dom", "esnext"],
+    "strict": false,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "baseUrl": "../..",
+    "paths": {
+      "@app/*": ["./src/*"],
+      "react-native": ["./scripts/paintParity/shim/react-native.ts"],
+      "@shopify/react-native-skia": ["./scripts/paintParity/shim/skia.ts"]
+    }
+  }
+}
