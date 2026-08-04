@@ -117,6 +117,11 @@ const sessionCosmeticsCache = new Map<string, CachedUserCosmetics>();
 // hundreds of parallel getUserCosmeticsGql requests on channel entry.
 const userCosmeticsFetchGuard = createFetchOnceGuard({ maxConcurrent: 4 });
 
+// The presence path does its own get7tvUserId + sendPresence round trips and
+// only reaches userCosmeticsFetchGuard on the no-session fallback, so it needs
+// its own bound - the hydrate pass asks for a screenful of chatters at once.
+const userPresenceRequestGuard = createFetchOnceGuard({ maxConcurrent: 4 });
+
 const cacheSessionCosmetics = (
   sevenTvUserId: string,
   cosmetics: CachedUserCosmetics,
@@ -331,22 +336,24 @@ export const fetchUserCosmeticsByTwitchId = async (
 export const requestUserCosmeticsViaPresence = async (
   twitchUserId: string,
 ): Promise<void> => {
-  const sevenTvUserId = await sevenTvService.get7tvUserId(twitchUserId);
-  if (!sevenTvUserId) {
-    return;
-  }
+  await userPresenceRequestGuard.run(twitchUserId, async () => {
+    const sevenTvUserId = await sevenTvService.get7tvUserId(twitchUserId);
+    if (!sevenTvUserId) {
+      return;
+    }
 
-  const sessionId = getSevenTvSessionId();
-  const channelId = chatStore$.currentChannelId.peek();
-  if (sessionId && channelId) {
-    await sevenTvService.sendPresence(channelId, sevenTvUserId, {
-      passive: true,
-      sessionId,
-    });
-    return;
-  }
+    const sessionId = getSevenTvSessionId();
+    const channelId = chatStore$.currentChannelId.peek();
+    if (sessionId && channelId) {
+      await sevenTvService.sendPresence(channelId, sevenTvUserId, {
+        passive: true,
+        sessionId,
+      });
+      return;
+    }
 
-  await fetchAndCacheUserCosmetics(sevenTvUserId);
+    await fetchAndCacheUserCosmetics(sevenTvUserId);
+  });
 };
 
 export const clearUserCosmeticsCache = () => {
@@ -355,6 +362,7 @@ export const clearUserCosmeticsCache = () => {
     cosmeticBindingsBumpTimer = null;
   }
   userCosmeticsFetchGuard.clear();
+  userPresenceRequestGuard.clear();
   sessionCosmeticsCache.clear();
   clearSevenTvUserCache();
   storageService.clearNamespace(

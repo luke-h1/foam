@@ -98,6 +98,24 @@ function normalizePaintLayer(layer: PaintGradientLayer): PaintLayerData {
   };
 }
 
+// Already-shaped layers (an MMKV rehydrate) skip normalizePaintLayer, so they
+// need the same url repair.
+function withAbsoluteLayerImageUrls(
+  layers: IndexedCollection<PaintLayerData>,
+): IndexedCollection<PaintLayerData> {
+  const repaired: IndexedCollection<PaintLayerData> = { length: layers.length };
+  for (let index = 0; index < layers.length; index += 1) {
+    const layer = layers[index];
+    if (layer) {
+      repaired[index] = {
+        ...layer,
+        image_url: absoluteSevenTvUrl(layer.image_url ?? ''),
+      };
+    }
+  }
+  return repaired;
+}
+
 function layersToIndexed(
   layers: PaintGradientLayer[],
 ): IndexedCollection<PaintLayerData> {
@@ -200,14 +218,14 @@ export function normalizeSevenTvPaint(raw: RawSevenTvPaintInput): PaintData {
       id,
       name: raw.name ?? '',
       color: raw.color ?? null,
-      layers: raw.layers,
+      layers: withAbsoluteLayerImageUrls(raw.layers),
       shadows: raw.shadows ?? { length: 0 },
       textStyle,
       function: raw.function ?? 'LINEAR_GRADIENT',
       repeat: raw.repeat ?? false,
       angle: raw.angle ?? 0,
       shape: raw.shape ?? 'circle',
-      image_url: raw.image_url ?? '',
+      image_url: absoluteSevenTvUrl(raw.image_url ?? ''),
       stops: raw.stops ?? { length: 0 },
     };
   }

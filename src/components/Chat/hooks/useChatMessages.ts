@@ -87,6 +87,9 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   const pendingUnreadCountRef = useRef(0);
   // Set when a flush sees a raid-sized batch; slows the next live flush cadence.
   const raidFlushModeRef = useRef(false);
+  // Arrivals since the last flush. Must be the arrival count, not the buffer
+  // size - the cap leaves a backlog behind, which would latch raid mode on.
+  const arrivalsSinceFlushRef = useRef(0);
 
   useLayoutEffect(() => {
     getChatDelayMsRef.current = getChatDelayMs ?? (() => 0);
@@ -139,10 +142,13 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     try {
       const isAtBottom = isAtBottomRef.current;
       raidFlushModeRef.current = shouldEnterRaidFlushMode(
-        buffer.size(),
+        arrivalsSinceFlushRef.current,
         isAtBottom,
       );
-      const messagesToFlush = buffer.drain(maxLiveCommitPerFlush(isAtBottom));
+      arrivalsSinceFlushRef.current = 0;
+      const messagesToFlush = buffer.drain(
+        maxLiveCommitPerFlush(isAtBottom, raidFlushModeRef.current),
+      );
       const shouldMaintainBottom = shouldArmBottomContentAnchor(
         isScrollingToBottomRef,
       );
@@ -164,8 +170,8 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       isFlushingRef.current = false;
     }
 
-    // Rows the per-flush cap held back; without re-arming they would wait on
-    // the next incoming message, which stalls the tail end of a burst.
+    // Rows the per-flush cap held back; without re-arming they would wait on the
+    // next incoming message, which stalls the tail end of a burst.
     if (buffer.size() > 0) {
       startFlushTimer(
         pickFlushDelay({
@@ -204,6 +210,8 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       if (!added) {
         return;
       }
+
+      arrivalsSinceFlushRef.current += 1;
 
       if (dropped > 0) {
         pendingUnreadCountRef.current = Math.max(
@@ -353,6 +361,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     delayQueueRef.current.clear();
     clearDelayTick();
     pendingUnreadCountRef.current = 0;
+    arrivalsSinceFlushRef.current = 0;
     raidFlushModeRef.current = false;
   }, [bufferRef, clearDelayTick, delayQueueRef]);
 
@@ -397,6 +406,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     bufferRef.current.clear();
     delayQueueRef.current.clear();
     pendingUnreadCountRef.current = 0;
+    arrivalsSinceFlushRef.current = 0;
     raidFlushModeRef.current = false;
   }, [bufferRef, clearDelayTick, delayQueueRef]);
 

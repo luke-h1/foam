@@ -37,14 +37,10 @@ type HydrateVisibleSevenTvAssetsParams = {
 };
 
 const MAX_PERSONAL_EMOTE_FETCHES_PER_PASS = 3;
-/**
- * A cosmetic "fetch" is a passive 7TV presence write, so the reply arrives
- * later over the EventAPI rather than inline. At 3 per pass a busy channel
- * resolved only a few dozen chatters a minute and most rows never got their
- * badge or paint. `createFetchOnceGuard({ maxConcurrent: 4 })` in
- * `store/chat/actions/cosmetics` already bounds what this can put on the wire,
- * so a screenful per pass is the useful ceiling here.
- */
+// A cosmetic "fetch" is a passive 7TV presence write, answered later over the
+// EventAPI, so 3 per pass left most rows in a busy channel without a badge or
+// paint. userPresenceRequestGuard holds the wire to 4 at a time, so asking for
+// a screenful queues rather than bursting.
 const MAX_COSMETIC_FETCHES_PER_PASS = 16;
 const REPROCESS_BATCH_SIZE = 6;
 const REPROCESS_BATCH_DELAY_MS = 32;
