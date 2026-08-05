@@ -85,9 +85,12 @@ jest.mock('@app/utils/chat/emoteProcessor', () => ({
   ]),
 }));
 
-jest.mock('@app/utils/chat/resolveCachedSenderColor', () => ({
-  resolveCachedSenderColor: jest.fn(() => '#resolved-sender'),
-}));
+jest.mock(
+  '@app/utils/chat/resolveCachedSenderColor/resolveCachedSenderColor',
+  () => ({
+    resolveCachedSenderColor: jest.fn(() => '#resolved-sender'),
+  }),
+);
 
 jest.mock('@app/utils/chat/resolveMentionColor', () => ({
   resolveMentionColor: jest.fn(() => '#mention-color'),

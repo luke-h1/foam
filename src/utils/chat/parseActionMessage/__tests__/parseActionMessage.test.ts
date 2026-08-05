@@ -1,4 +1,4 @@
-import { parseActionMessage } from '@app/utils/chat/parseActionMessage';
+import { parseActionMessage } from '@app/utils/chat/parseActionMessage/parseActionMessage';
 
 import type { ParsedActionMessage } from '../types';
 

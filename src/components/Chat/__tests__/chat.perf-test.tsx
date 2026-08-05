@@ -12,7 +12,6 @@ import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { ChatList } from '../components/ChatList';
 import { RichChatMessage } from '../components/ChatMessage/RichChatMessage';
-import { estimateChatMessageHeightWithPretext } from '../util/pretextChatHeight';
 import { getVisibleMessages } from '../util/visibleMessages';
 
 jest.mock('@legendapp/list/react-native', () => {
@@ -187,7 +186,7 @@ function renderChatMessage(message: AnyChatMessageType) {
       {...message}
       density='compact'
       currentUsername='luke'
-      disableEmoteAnimations
+      messageDisplay={{ disableEmoteAnimations: true }}
     />
   );
 }
@@ -230,7 +229,7 @@ function RichMessageRowsPerfFixture() {
           {...message}
           density='compact'
           currentUsername='luke'
-          disableEmoteAnimations
+          messageDisplay={{ disableEmoteAnimations: true }}
         />
       ))}
     </View>
@@ -271,7 +270,7 @@ function TrackedRichChatMessage({
       {...message}
       density='compact'
       currentUsername='luke'
-      disableEmoteAnimations
+      messageDisplay={{ disableEmoteAnimations: true }}
     />
   );
 }
@@ -294,32 +293,6 @@ describe('chat performance', () => {
         searchQuery: 'message',
         showOnlyMentions: false,
       });
-    }, MEASURE_OPTIONS);
-  });
-
-  test('estimates plain chat row heights with pretext', async () => {
-    await measureFunction(() => {
-      for (const message of virtualizedRows) {
-        estimateChatMessageHeightWithPretext(message, {
-          containerWidth: 390,
-          density: 'compact',
-          showInlineReplyContext: true,
-          showTimestamp: true,
-        });
-      }
-    }, MEASURE_OPTIONS);
-  });
-
-  test('estimates comfortable chat row heights with pretext', async () => {
-    await measureFunction(() => {
-      for (const message of virtualizedRows) {
-        estimateChatMessageHeightWithPretext(message, {
-          containerWidth: 390,
-          density: 'comfortable',
-          showInlineReplyContext: true,
-          showTimestamp: true,
-        });
-      }
     }, MEASURE_OPTIONS);
   });
 

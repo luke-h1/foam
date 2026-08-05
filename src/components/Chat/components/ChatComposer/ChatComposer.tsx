@@ -9,17 +9,17 @@ import { Text } from '@app/components/ui/Text/Text';
 import { useAccentColor } from '@app/context/AccentColorContext';
 import { theme } from '@app/styles/themes';
 
-import { chatComposerStyles as styles } from './chatComposerStyles';
+import { chatComposerStyles as styles } from './ChatComposer.styles';
 import { CommandSuggestionRail } from './CommandSuggestionRail';
 import { EmoteSuggestionRail } from './EmoteSuggestionRail';
 import {
   type ChatComposerHandle,
   useChatComposerController,
-} from './useChatComposerController';
+} from './hooks/useChatComposerController';
 import { UserSuggestionRail } from './UserSuggestionRail';
 
 export type { ChatComposerHandle };
-export type { SuggestionType } from './chatComposerTypes';
+export type { SuggestionType } from './util/chatComposerTypes';
 
 /**
  * 40% alpha. The highlight sits under the glyphs, so it stays translucent while

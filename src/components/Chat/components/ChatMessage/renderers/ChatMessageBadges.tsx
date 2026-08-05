@@ -1,15 +1,18 @@
 import type { Key, ReactNode } from 'react';
 
-import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics/normalizeSevenTvBadge';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { normalizeSevenTvBadge } from '@app/utils/seventv/cosmetics/normalizeSevenTvBadge';
 
 import { ChatMessagePressable } from '../ChatMessagePressable';
+import type { ChatFontScale } from '../chatScale';
+import { getChatTextStyles } from '../chatText.styles';
 import { styles } from '../RichChatMessage.styles';
 import { ChatInlineImage } from './ChatInlineImage';
 
 interface ChatMessageBadgesProps {
   badges?: SanitisedBadgeSet[];
   compact: boolean;
+  fontScale?: ChatFontScale;
   getMappingKey: (key: string, index: number) => Key;
   moderationNotice?: unknown;
   onBadgePress?: (badge: SanitisedBadgeSet) => void;
@@ -18,6 +21,7 @@ interface ChatMessageBadgesProps {
 export function ChatMessageBadges({
   badges,
   compact,
+  fontScale,
   getMappingKey,
   moderationNotice,
   onBadgePress,
@@ -25,6 +29,8 @@ export function ChatMessageBadges({
   if (!badges?.length) {
     return null;
   }
+
+  const badgeStyle = getChatTextStyles(fontScale, compact).badge;
 
   const renderedBadges: ReactNode[] = [];
   let index = 0;
@@ -46,8 +52,7 @@ export function ChatMessageBadges({
         <ChatInlineImage
           sourceUrl={normalizedBadge.url}
           style={[
-            styles.badge,
-            compact && styles.badgeCompact,
+            badgeStyle,
             Boolean(moderationNotice) && styles.moderatedBadge,
           ]}
           maxRetryAttempts={0}

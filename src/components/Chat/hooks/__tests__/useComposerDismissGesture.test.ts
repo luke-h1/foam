@@ -93,12 +93,12 @@ jest.mock('react-native-gesture-handler', () => ({
 
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { useComposerDismissGesture } from '@app/components/Chat/hooks/useComposerDismissGesture';
 import {
   COMPOSER_DISMISS_DRAG_DISTANCE,
   COMPOSER_DISMISS_VELOCITY,
   COMPOSER_DRAG_LIMIT,
-} from '@app/components/Chat/components/composerDismissConstants';
-import { useComposerDismissGesture } from '@app/components/Chat/components/useComposerDismissGesture';
+} from '@app/components/Chat/util/composerDismissConstants';
 
 const mockScheduleOnRN = jest.mocked(scheduleOnRN);
 

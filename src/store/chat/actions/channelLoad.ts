@@ -1,6 +1,5 @@
 import { batch } from '@legendapp/state';
 
-import { createSystemMessage } from '@app/components/Chat/util/messageHandlers/createSystemMessage';
 import i18next from '@app/i18n/i18next';
 import { clearChatStorePersistence } from '@app/lib/observablePersistence';
 import { startSpanAsync } from '@app/lib/sentry';
@@ -15,6 +14,7 @@ import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
 import { getBttvBadges } from '@app/utils/chat/bttvBadges/getBttvBadges';
 import { getChatterinoBadges } from '@app/utils/chat/chatterinoBadges';
 import { fetchChannelCheermotes } from '@app/utils/chat/cheermoteStore/fetchChannelCheermotes';
+import { createSystemMessage } from '@app/utils/chat/messageHandlers/createSystemMessage';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
 import { logger } from '@app/utils/logger';
 import { getSevenTvSessionId } from '@app/utils/seventv/sevenTvSessionId';

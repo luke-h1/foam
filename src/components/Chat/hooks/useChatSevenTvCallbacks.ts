@@ -13,8 +13,6 @@ import {
   addPaint,
   removeBadge,
   removePaint,
-  updateBadge,
-  updatePaint,
 } from '@app/store/chat/actions/cosmetics';
 import {
   applyCosmeticCreateEvent,
@@ -31,9 +29,8 @@ import type { SanitisedEmote } from '@app/types/emote';
 import type { BadgeData, PaintData } from '@app/types/seventv/cosmetics';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
 import { logger } from '@app/utils/logger';
-
-import { sanitise7TvBadge } from '../util/normalizeSevenTvCosmetics/sanitise7TvBadge';
-import { toPaintWithId } from '../util/normalizeSevenTvCosmetics/toPaintWithId';
+import { normalizeSevenTvPaint } from '@app/utils/seventv/cosmetics/normalizeSevenTvPaint';
+import { sanitise7TvBadge } from '@app/utils/seventv/cosmetics/sanitise7TvBadge';
 
 function getDataFromChangeValue(entry: unknown): unknown {
   if (typeof entry !== 'object' || entry === null || !('value' in entry)) {
@@ -172,7 +169,7 @@ export function useChatSevenTvCallbacks({
       changes.updated?.forEach(update => {
         const paintData = getDataFromChangeValue(update);
         if (isPaintData(paintData)) {
-          updatePaint(toPaintWithId(paintData));
+          addPaint(normalizeSevenTvPaint(paintData));
           updated_paints += 1;
           logger.stvWs.info(`Updated paint in cache: ${paintData.name}`);
         }
@@ -180,7 +177,7 @@ export function useChatSevenTvCallbacks({
       changes.pushed?.forEach(push => {
         const paintData = getDataFromChangeValue(push);
         if (isPaintData(paintData)) {
-          addPaint(toPaintWithId(paintData));
+          addPaint(normalizeSevenTvPaint(paintData));
           added_paints += 1;
           logger.stvWs.info(`Added paint from update: ${paintData.name}`);
         }
@@ -228,7 +225,7 @@ export function useChatSevenTvCallbacks({
       changes.updated?.forEach(update => {
         const sanitised = toSanitised(update);
         if (sanitised) {
-          updateBadge(sanitised);
+          addBadge(sanitised);
           updated_badges += 1;
           logger.stvWs.info(`Updated badge in cache: ${sanitised.title}`);
         }

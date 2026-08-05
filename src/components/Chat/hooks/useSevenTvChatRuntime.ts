@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
 
 import { useSeventvWs } from '@app/hooks/useSeventvWs';
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import { ReadyState } from '@app/hooks/ws/constants';
 import { sevenTvService } from '@app/services/seventv-service';
 import {
@@ -104,9 +105,13 @@ export function useSevenTvChatRuntime({
     onEvent: eventType => logger.stvWs.debug(`SevenTV event: ${eventType}`),
   });
   const wsConnected = readyState === ReadyState.OPEN && isConnected();
-  const unsubscribeFromChannelRef = useRef(unsubscribeFromChannel);
-  subscribeToChannelRef.current = subscribeToChannel;
-  unsubscribeFromChannelRef.current = unsubscribeFromChannel;
+  const unsubscribeFromChannelRef = useSyncRef(unsubscribeFromChannel);
+
+  // Declared above so the `onEmoteSetSwitch` handler passed into useSeventvWs
+  // can close over it, so it is filled in on commit rather than during render.
+  useLayoutEffect(() => {
+    subscribeToChannelRef.current = subscribeToChannel;
+  });
 
   useEffect(() => {
     if (!wsConnected || !channelId || emoteLoadStatus !== 'success') {
@@ -131,9 +136,16 @@ export function useSevenTvChatRuntime({
       subscribeToChannelRef.current(emoteSetId);
     }
 
+    const unsubscribe = unsubscribeFromChannelRef;
     return () => {
-      unsubscribeFromChannelRef.current();
+      unsubscribe.current();
       emoteSetIdRef.current = null;
     };
-  }, [channelId, currentEmoteSetIdRef, emoteLoadStatus, wsConnected]);
+  }, [
+    channelId,
+    currentEmoteSetIdRef,
+    emoteLoadStatus,
+    unsubscribeFromChannelRef,
+    wsConnected,
+  ]);
 }

@@ -10,7 +10,7 @@ import { Button } from '@app/components/Button/Button';
 import { Image } from '@app/components/Image/Image';
 import type { SanitisedEmote } from '@app/types/emote';
 
-import { suggestionRailStyles } from '../suggestionRailStyles';
+import { suggestionRailStyles } from './SuggestionRail.styles';
 
 const EMOTE_SUGGESTION_ITEM_SIZE = 44;
 

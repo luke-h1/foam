@@ -15,7 +15,7 @@ import { theme } from '@app/styles/themes';
 import {
   suggestionRailColors,
   suggestionRailStyles,
-} from '../suggestionRailStyles';
+} from './SuggestionRail.styles';
 
 const COMMAND_SUGGESTION_ITEM_SIZE = 48;
 

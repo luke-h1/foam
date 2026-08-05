@@ -9,7 +9,7 @@ import { useCommandSuggestions } from './hooks/useCommandSuggestions';
 import {
   suggestionRailEntering,
   suggestionRailExiting,
-} from './suggestionRailAnimations';
+} from './util/suggestionRailAnimations';
 
 interface CommandSuggestionRailProps {
   handleCommandSelect: (command: SlashCommandDefinition) => void;

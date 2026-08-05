@@ -196,7 +196,7 @@ describe('ChatInlineImage fallback chain', () => {
     act(() => mockImageProps?.onError?.());
     expect(mockImageProps?.recyclingKey).toEqual(`${base}/3x.webp#0`);
 
-    // The fallback walk is immediate — nothing is waiting on a timer.
+    // The fallback walk is immediate - nothing is waiting on a timer.
     act(() => jest.advanceTimersByTime(8000));
     expect(mockImageProps?.recyclingKey).toEqual(`${base}/3x.webp#0`);
   });
@@ -219,17 +219,17 @@ describe('ChatInlineImage fallback chain', () => {
     const base = 'https://cdn.7tv.app/badge/01H85';
     render(<ChatInlineImage sourceUrl={`${base}/4x.webp`} style={{}} />);
 
-    // 8 candidates: {4,3,2,1}x x {webp,avif}. 7 errors walk to the last one.
-    for (let i = 0; i < 7; i += 1) {
+    // 6 candidates: {4,3,2}x x {webp,avif}. 5 errors walk to the last one.
+    for (let i = 0; i < 5; i += 1) {
       act(() => mockImageProps?.onError?.());
     }
-    expect(mockImageProps?.recyclingKey).toEqual(`${base}/1x.avif#0`);
+    expect(mockImageProps?.recyclingKey).toEqual(`${base}/2x.avif#0`);
 
     // Now on the smallest candidate, errors become backoff retries of it.
     act(() => mockImageProps?.onError?.());
-    expect(mockImageProps?.recyclingKey).toEqual(`${base}/1x.avif#0`);
+    expect(mockImageProps?.recyclingKey).toEqual(`${base}/2x.avif#0`);
     act(() => jest.advanceTimersByTime(400));
-    expect(mockImageProps?.recyclingKey).toEqual(`${base}/1x.avif#1`);
+    expect(mockImageProps?.recyclingKey).toEqual(`${base}/2x.avif#1`);
   });
 
   test('logs a forwarded warning only after the whole chain and the backoff budget are exhausted', () => {
@@ -237,8 +237,8 @@ describe('ChatInlineImage fallback chain', () => {
     const sourceUrl = `${base}/4x.webp`;
     render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
 
-    // Walk the 7 fallback candidates.
-    for (let i = 0; i < 7; i += 1) {
+    // Walk the 5 fallback candidates.
+    for (let i = 0; i < 5; i += 1) {
       act(() => mockImageProps?.onError?.());
     }
     // Then 8 backoff retries of the smallest candidate.
@@ -256,8 +256,8 @@ describe('ChatInlineImage fallback chain', () => {
       name: 'chat_resources_warning',
       error: undefined,
       url: sourceUrl,
-      finalUrl: `${base}/1x.avif`,
-      candidatesTried: 8,
+      finalUrl: `${base}/2x.avif`,
+      candidatesTried: 6,
       attempts: 8,
       renderPath: 'uri',
       tags: {
@@ -352,7 +352,7 @@ describe('ChatInlineImage maxRetryAttempts', () => {
 
     act(() => mockImageProps?.onError?.());
 
-    // No timer was scheduled — advancing time doesn't bump the reload nonce.
+    // No timer was scheduled - advancing time doesn't bump the reload nonce.
     act(() => jest.advanceTimersByTime(60_000));
     expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
 
@@ -416,7 +416,7 @@ describe('ChatInlineImage shared-ref recovery', () => {
     act(() => mockImageProps?.onError?.());
     expect(mockImageProps?.recyclingKey).toEqual(`${base}/2x.avif#0`);
 
-    // The shared ref finishes decoding — proof the original url is good — so the
+    // The shared ref finishes decoding - proof the original url is good - so the
     // row must abandon the walk and render the ref at index 0 again.
     mockSharedRef = { isAnimated: true };
     rerender(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);

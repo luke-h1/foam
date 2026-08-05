@@ -62,6 +62,8 @@ A name like `THE_COLOR_OF_A_COMPONENT = '#55'` adds a layer of indirection witho
 
 This is **not** a blanket "inline every single-use value" rule. Keep a named constant (or an inline explanatory comment) when the literal encodes non-obvious meaning the value alone cannot convey — a magic number such as a memory threshold (`3 * 1024 * 1024 * 1024` // 3GB), a tuned timeout, a protocol constant, or anything a reader would have to reverse-engineer. Also keep module-level constants for values genuinely shared across files that must stay in sync. The rule targets needless indirection over obvious literals, not the removal of meaningful names.
 
+**The chat render path is exempt.** Every font size, line height, emote size and row padding a chat row uses must come from `getChatScale` / `getChatTextStyles` (`components/ChatMessage/chatScale.ts`, `chatText.styles.ts`), never from a literal at the use site. Density and font scale are two preferences over one ramp; a literal in a renderer silently opts that surface out of one of them, which is the bug the ramp was introduced to fix. Inlining a `lineHeight: 21` in a chat renderer follows the letter of the rule above and regresses the feature.
+
 ## JSDoc Comments
 
 Write JSDoc comments as multi-line blocks. Never collapse them onto a single line.
@@ -94,6 +96,20 @@ Because the rule is off for `package.json`, a genuinely unused dependency won't 
 
 `react-hooks-js/immutability` is turned off for `BlockedTermsScreen.tsx` and `SavedPhrasesScreen.tsx` in `doctor.config.json`. Their iOS branches bind `@expo/ui/swift-ui` `useNativeState` values to SwiftUI text fields, and writing back through `state.value = ...` is that API's intended write path - the rule misreads those writes as mutation of an immutable hook value. Scope any future exemption to the specific files the same way rather than turning the rule off globally.
 
+## React Doctor: visible-asset hydration timer override
+
+`react-doctor/effect-needs-cleanup` is turned off for
+`useChatMessageProcessing.ts` in `doctor.config.json`. The debounce handle is
+stored on the `visibleAssetHydration` module object rather than in a ref (see
+"Chat overlays" for why that state is module-level), and the rule only
+recognises a handle held in a local or a ref, so it reads the store as absent.
+
+The timer is released on both paths that can strand it: the hook's own
+channel/unmount effect calls `clearVisibleAssetHydrationTimer`, and
+`clearVisibleAssetHydration` clears it along with the dedup keys when the
+channel changes. Move the handle into a ref only if the module state goes too -
+splitting them puts the release on a different owner from the arm.
+
 ## Bottom sheets: `@expo/ui` plus a not-yet-released iOS touch fix
 
 Every sheet goes through `src/components/BottomSheet/BottomSheet.native.tsx`, which wraps `@expo/ui/community/bottom-sheet`: a SwiftUI `.sheet` on iOS, a Material 3 `ModalBottomSheet` on Android.
@@ -119,3 +135,62 @@ All haptic feedback goes through the `impact` / `selection` helpers in `src/lib/
 The same rule bans `expo-haptics`, which the wrapper used to sit on. Its Android `Segment_Tick` path resolves an API 34+ `HapticFeedbackConstants` field, so every selection haptic on Android < 14 rejects with a misleading "A haptics engine is not available on this device" error (Sentry FOAM-TV-MOBILE-1R). Pulsar checks device capability (`Settings.getHapticsSupportLevel()`) instead of throwing.
 
 If a surface needs more than impact/selection (richer presets, pattern or realtime composers), add a named helper to `src/lib/haptics.ts` so the preference gate still applies, rather than exempting the call site from the lint rule.
+
+## Chat message identity
+
+`src/utils/chat/messageIdentity/` owns the one rule for what identifies a chat
+message. `getChatMessageKey` composes `message_id` + `message_nonce`,
+`getChatMessageStoreId` prefers the store-assigned `id` and falls back to that
+key, `getChatMessageListKey` is the list's `keyExtractor`, and
+`isRenderableChatMessage` is the validity guard.
+
+All three consumers - the store's dedup index (`store/chat/actions/messages`),
+the pre-commit ingest buffer (`components/Chat/util/messageBuffer`) and the
+list - must agree, because `ChatMessagePane` dropped its render-time dedup on
+the strength of that agreement. Re-deriving the key locally is how duplicate
+rows and broken scroll anchoring get in; add a consumer to the shared module
+instead. `getChatMessageStoreId.test.ts` pins the agreement.
+
+Likewise `normaliseChatUsername` (`utils/chat/chatUsernames/`) is the only
+login normaliser - it trims, strips a leading `@`, and lowercases. A local
+`trim().toLowerCase()` beside it forks the key space for any `@`-prefixed
+value.
+
+## Chat body scanning
+
+`src/utils/chat/deriveChatBody/scanChatBody.ts` walks a message's parts exactly
+once and caches the result: whether the body can flow inline, whether it holds
+emotes, which notice it is, and who it mentions. `deriveChatBody`,
+`getMessageStructure` and `canFlowInline` are all views over that one scan.
+
+Inline eligibility in particular used to be written three times, and a new
+inline-breaking part type had to be added to all three. Ask `canFlowInline`
+(a type predicate, so it also narrows the parts for the inline renderers)
+rather than re-testing part types at a call site.
+
+## Chat overlays
+
+Chat sheets live behind `store/chat/observables/chatOverlays` +
+`store/chat/actions/chatOverlays`. `ChatOverlayLayer` subscribes to that
+observable itself, and the press handlers in `useChatOverlayActions` call the
+actions directly, so opening or dismissing a sheet re-renders the overlay
+subtree and never the chat root or the message list. Do not lift the overlay
+state back up into a hook, and do not return JSX from one.
+
+Hydration scratch state for the visible-asset pass lives in
+`store/chat/actions/visibleAssetHydration` for the same reason: it is only ever
+read imperatively during ingest, so as React refs it had to be created in an
+unrelated hook and drilled two levels to its only consumer.
+
+## Normalising chat strings
+
+Two normalisers, and the distinction is load-bearing:
+
+- `normaliseChatUsername` (`utils/chat/chatUsernames/`) - trims, strips a
+  leading `@`, lowercases. For logins, display names, hidden/highlighted users.
+- `normaliseChatText` (`utils/chat/normaliseChatText`) - trims and lowercases
+  only. For message bodies, search queries, hidden phrases, highlight phrases.
+
+Running free text through the username normaliser turns a search for `@luke`
+into a search for `luke` and silently drops the `@` from a hidden phrase. A
+local `trim().toLowerCase()` is a third variant - reach for one of these two.

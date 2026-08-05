@@ -1,18 +1,19 @@
 import { View } from 'react-native';
 import type { ReactNode } from 'react';
 
-import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
 import { getChatColorStyle } from '@app/components/Chat/util/chatColorStyles';
 import { Text } from '@app/components/ui/Text/Text';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import type { InlineFlowPart } from '@app/utils/chat/deriveChatBody/types';
 
-import { getChatFontScaleStyle, styles } from '../RichChatMessage.styles';
+import { getChatTextStyles } from '../chatText.styles';
+import { styles } from '../RichChatMessage.styles';
 import type { BadgePressData } from '../RichChatMessage.types';
 import { ChatMessageBadges } from './ChatMessageBadges';
 import { InlineMessageSpans } from './InlineMessageSpans';
-import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
+import type { ChatMessagePartRendererArgs } from './types/ChatMessagePartRendererArgs';
 
-interface InlineMessageLineProps extends UseChatMessagePartRendererArgs {
+interface InlineMessageLineProps extends ChatMessagePartRendererArgs {
   badgeList: SanitisedBadgeSet[];
   getMappingKey: (id: string, index: number) => string;
   isAction?: boolean;
@@ -49,45 +50,26 @@ export function InlineMessageLine({
   textColor,
 }: InlineMessageLineProps): ReactNode {
   const containsEmotes = message.some(part => part.type === 'emote');
-  const fontScaleStyle = getChatFontScaleStyle(fontScale, compact);
+  const textStyles = getChatTextStyles(fontScale, compact);
   // TextKit sizes a wrapped line from the paragraph style carried by its
-  // character ranges, and every nested span sets its own (17pt) lineHeight.
-  // The taller emote line height must therefore be applied to each nested
-  // span, not just the outer Text — otherwise rows whose first span is plain
-  // text (no badges) keep the 17pt line and clip the 30pt emote attachment.
-  const emoteLineStyle = containsEmotes
-    ? compact
-      ? styles.messageTextEmoteLineCompact
-      : styles.messageTextEmoteLine
-    : undefined;
+  // character ranges, and every nested span sets its own lineHeight. The
+  // taller emote line height must therefore be applied to each nested span,
+  // not just the outer Text — otherwise rows whose first span is plain text
+  // (no badges) keep the body line and clip the emote attachment.
+  const emoteLineStyle = containsEmotes ? textStyles.bodyEmoteLine : undefined;
 
   return (
     <View style={styles.messageLineInline}>
-      <Text
-        style={[
-          styles.messageText,
-          compact && styles.messageTextCompact,
-          fontScaleStyle,
-          emoteLineStyle,
-        ]}
-      >
+      <Text style={[textStyles.body, emoteLineStyle]}>
         {showTimestamp && timestamp ? (
-          <Text
-            tabular
-            variant='mono'
-            weight='bold'
-            style={[
-              styles.timestamp,
-              compact && styles.timestampCompact,
-              emoteLineStyle,
-            ]}
-          >
+          <Text tabular style={[textStyles.timestamp, emoteLineStyle]}>
             {`${timestamp} `}
           </Text>
         ) : null}
         <ChatMessageBadges
           badges={badgeList}
           compact={compact}
+          fontScale={fontScale}
           getMappingKey={getMappingKey}
           onBadgePress={onBadgePress}
         />
@@ -97,8 +79,7 @@ export function InlineMessageLine({
             suppressHighlighting
             testID='chat-username-button'
             style={[
-              compact ? styles.usernameTextCompact : styles.usernameText,
-              fontScaleStyle,
+              textStyles.username,
               emoteLineStyle,
               usernameColor ? getChatColorStyle(usernameColor) : null,
             ]}

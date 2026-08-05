@@ -1,5 +1,7 @@
 import { useCallback, useRef } from 'react';
 
+import { useSyncRef } from '@app/hooks/useSyncRef';
+
 import { useMountedRef } from './useMountedRef';
 import { useUnmountCallback } from './useUnmountCallback';
 
@@ -22,10 +24,8 @@ export function useDebouncedCallback<Args extends unknown[] = []>(
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
-  const callbackRef = useRef(callback);
+  const callbackRef = useSyncRef(callback);
   const mountedRef = useMountedRef();
-
-  callbackRef.current = callback;
 
   const run = async (...args: Args) => {
     if (timeoutRef.current) {

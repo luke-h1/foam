@@ -11,7 +11,7 @@ import { ChatNoticeMetaRow } from '../ChatMessage/renderers/ChatNoticeMetaRow';
 import { styles as chatStyles } from '../ChatMessage/RichChatMessage.styles';
 import { CHAT_NOTICE_ACCENTS } from '../util/chatNoticeAccents';
 import { buildSubscriptionNoticeDescription } from './buildSubscriptionNoticeDescription';
-import { subscriptionNoticeStyles as styles } from './subscriptionNoticeStyles';
+import { subscriptionNoticeStyles as styles } from './SubscriptionNotice.styles';
 
 function getMessagePartKey(part: ParsedPart, occurrence: number): string {
   switch (part.type) {

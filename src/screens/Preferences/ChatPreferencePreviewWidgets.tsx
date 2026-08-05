@@ -1,8 +1,9 @@
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
+import { getChatTextStyles } from '@app/components/Chat/components/ChatMessage/chatText.styles';
 import { Image } from '@app/components/Image/Image';
-import { Text, type TextType } from '@app/components/ui/Text/Text';
+import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { SanitisedEmote } from '@app/types/emote';
 
@@ -48,24 +49,20 @@ const PreviewMessage = function PreviewMessage({
   time: string;
   username: string;
 }) {
-  const messageType: TextType = compact ? 'xxs' : 'caption';
+  const textStyles = getChatTextStyles(undefined, compact);
 
   return (
-    <View
-      style={[styles.previewMessage, compact && styles.previewMessageCompact]}
-    >
-      <Text color='gray.textLow' style={styles.previewTime} type='xxs'>
+    <View style={[styles.previewMessage, textStyles.row]}>
+      <Text style={[textStyles.timestamp, styles.previewTime]} tabular>
         {time}
       </Text>
       <Text
         color='accent.accentHover'
-        type={messageType}
-        weight='bold'
-        style={styles.previewUsername}
+        style={[textStyles.username, styles.previewUsername]}
       >
         {username}
       </Text>
-      <Text color='gray' type={messageType} style={styles.previewText}>
+      <Text color='gray' style={[textStyles.body, styles.previewText]}>
         {message}
       </Text>
     </View>
@@ -153,12 +150,7 @@ const styles = StyleSheet.create({
   previewMessage: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: theme.space8,
-    minHeight: 30,
-  },
-  previewMessageCompact: {
     gap: theme.space4,
-    minHeight: 20,
   },
   previewPanel: {
     backgroundColor: theme.color.background.dark,

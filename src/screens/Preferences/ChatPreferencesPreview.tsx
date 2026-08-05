@@ -14,7 +14,7 @@ import { type SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { type ParsedPart } from '@app/utils/chat/parsedPart';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
-import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
+import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes/replaceTextWithEmotes';
 
 import { chatPreferencePreviewFixtures } from './chatPreferencePreviewFixtures';
 
@@ -308,15 +308,16 @@ const ChatPreviewSurface = function ChatPreviewSurface({
                 : undefined
             }
             density={previewState.chatDensity}
-            disableEmoteAnimations={previewState.disableEmoteAnimations}
             fontScale={previewState.chatFontScale}
             getMentionColor={getMentionColor}
-            isAlternatingRow={
-              previewState.showAlternatingChatRows && index % 2 === 1
-            }
+            messageDisplay={{
+              disableEmoteAnimations: previewState.disableEmoteAnimations,
+              isAlternatingRow:
+                previewState.showAlternatingChatRows && index % 2 === 1,
+              showInlineReplyContext: previewState.showInlineReplyContext,
+              showTimestamp: previewState.chatTimestamps,
+            }}
             parseTextForEmotes={parseTextForEmotes}
-            showInlineReplyContext={previewState.showInlineReplyContext}
-            showTimestamp={previewState.chatTimestamps}
             style={styles.messageRow}
           />
         ))}
@@ -459,9 +460,11 @@ const ProviderAssetPreview = function ProviderAssetPreview({
           {...message}
           density='comfortable'
           getMentionColor={getMentionColor}
+          messageDisplay={{
+            showInlineReplyContext: false,
+            showTimestamp: false,
+          }}
           parseTextForEmotes={parseTextForEmotes}
-          showInlineReplyContext={false}
-          showTimestamp={false}
           style={styles.messageRow}
         />
       </View>

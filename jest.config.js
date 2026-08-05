@@ -8,7 +8,7 @@ const jestConfig = {
     '^.+\\.(t|j)sx?$': 'babel-jest',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|expo-pretext|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|@sentry/.*|native-base|react-native-svg|newrelic-react-native-agent|@shopify/react-native-skia)',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|@sentry/.*|native-base|react-native-svg|newrelic-react-native-agent|@shopify/react-native-skia)',
     'node_modules/.*storybook.*',
   ],
   moduleNameMapper: {

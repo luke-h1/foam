@@ -3,8 +3,9 @@ import { act, renderHook } from '@testing-library/react-native';
 import type { ReplyToData } from '@app/components/Chat/components/ChatInputSection';
 import type { ChatInputShellHandle } from '@app/components/Chat/components/ChatInputShell';
 import type { EmotePressData } from '@app/components/Chat/components/ChatMessage/RichChatMessage.types';
-import type { ChatOverlayOpeners } from '@app/components/Chat/components/useChatOverlays';
+import { resetChatOverlays } from '@app/store/chat/actions/chatOverlays';
 import { getMessageById } from '@app/store/chat/actions/messages';
+import { chatOverlays$ } from '@app/store/chat/observables/chatOverlays';
 import { createRef } from '@app/test/createRef';
 import { createEmotePart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
 
@@ -44,39 +45,10 @@ function renderComposerActions() {
   };
 }
 
+const CHANNEL_ID = 'channel-1';
+
 function renderOverlayActions() {
-  const openBadge = jest.fn();
-  const openChattersSheet = jest.fn();
-  const openEmotePreview = jest.fn();
-  const openEmoteSheet = jest.fn();
-  const openMessageActions = jest.fn();
-  const openMessageSearch = jest.fn();
-  const openSavedPhrasesSheet = jest.fn();
-  const openSettingsSheet = jest.fn();
-  const openUserActions = jest.fn();
-  const openers: ChatOverlayOpeners = {
-    openBadge,
-    openChattersSheet,
-    openEmotePreview,
-    openEmoteSheet,
-    openMessageActions,
-    openMessageSearch,
-    openSavedPhrasesSheet,
-    openSettingsSheet,
-    openUserActions,
-  };
-
-  const hook = renderHook(() => useChatOverlayActions(openers));
-
-  return {
-    hook,
-    openBadge,
-    openEmotePreview,
-    openEmoteSheet,
-    openMessageActions,
-    openSettingsSheet,
-    openUserActions,
-  };
+  return renderHook(() => useChatOverlayActions(CHANNEL_ID));
 }
 
 describe('useChatComposerActions', () => {
@@ -155,18 +127,12 @@ describe('useChatComposerActions', () => {
 describe('useChatOverlayActions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    resetChatOverlays(CHANNEL_ID);
   });
 
-  test('opens overlay surfaces for emotes, message actions, settings, and users', () => {
+  test('each press writes its surface to the overlay store', () => {
     const message = createChatMessage();
-    const {
-      hook,
-      openEmotePreview,
-      openEmoteSheet,
-      openMessageActions,
-      openSettingsSheet,
-      openUserActions,
-    } = renderOverlayActions();
+    const hook = renderOverlayActions();
     const emote: EmotePressData = createEmotePart('Kappa', {
       name: 'Kappa',
       original_name: 'Kappa',
@@ -184,21 +150,34 @@ describe('useChatOverlayActions', () => {
 
     act(() => {
       hook.result.current.handleOpenEmoteSheet();
+    });
+    expect(chatOverlays$.peek().isEmoteSheetMounted).toBe(true);
+
+    act(() => {
       hook.result.current.handleOpenSettingsSheet();
+    });
+    expect(chatOverlays$.peek().isSettingsSheetMounted).toBe(true);
+    // Opening a surface closes the previous one; only one sheet is ever up.
+    expect(chatOverlays$.peek().isEmoteSheetMounted).toBe(false);
+
+    act(() => {
       hook.result.current.handleEmotePress(emote);
+    });
+    expect(chatOverlays$.peek().selectedEmote).toEqual(emote);
+
+    act(() => {
       hook.result.current.handleMessageLongPress(
         createMessageActionPayload(message),
       );
-      hook.result.current.handleUsernamePress(usernameData);
     });
-
-    expect(openEmoteSheet).toHaveBeenCalledTimes(1);
-    expect(openSettingsSheet).toHaveBeenCalledTimes(1);
-    expect(openEmotePreview.mock.calls[0]?.[0]).toEqual(emote);
-    expect(openMessageActions.mock.calls[0]?.[0]).toEqual(
+    expect(chatOverlays$.peek().selectedMessage).toEqual(
       createMessageActionPayload(message),
     );
-    expect(openUserActions.mock.calls[0]?.[0]).toEqual(usernameData);
+
+    act(() => {
+      hook.result.current.handleUsernamePress(usernameData);
+    });
+    expect(chatOverlays$.peek().selectedUser).toEqual(usernameData);
   });
 });
 

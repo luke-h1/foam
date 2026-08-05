@@ -14,6 +14,7 @@ import {
   setExtraParamAsync,
 } from 'expo-updates';
 
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import i18next from '@app/i18n/i18next';
 import { countOtaMetric } from '@app/lib/sentry';
 import { theme } from '@app/styles/themes';
@@ -194,10 +195,8 @@ export function useOTAUpdates() {
     );
   }, [applyUpdate, isProduction]);
 
-  const checkForUpdatesRef = useRef(checkForUpdates);
-  checkForUpdatesRef.current = checkForUpdates;
-  const promptAndReloadRef = useRef(promptAndReload);
-  promptAndReloadRef.current = promptAndReload;
+  const checkForUpdatesRef = useSyncRef(checkForUpdates);
+  const promptAndReloadRef = useSyncRef(promptAndReload);
 
   useEffect(() => {
     if (!shouldReceiveUpdates || ranInitialCheck.current) {
@@ -216,7 +215,7 @@ export function useOTAUpdates() {
     return () => {
       clearTimeout(timeout.current);
     };
-  }, [isProduction, shouldReceiveUpdates]);
+  }, [checkForUpdatesRef, isProduction, shouldReceiveUpdates]);
 
   useEffect(() => {
     const handlePendingUpdate = () => {
@@ -260,7 +259,7 @@ export function useOTAUpdates() {
     return () => {
       subscription.remove();
     };
-  }, [isProduction]);
+  }, [isProduction, promptAndReloadRef]);
 
   useEffect(() => {
     if (!isEnabled) {
@@ -333,5 +332,5 @@ export function useOTAUpdates() {
     return () => {
       unsubscribe();
     };
-  }, [isProduction]);
+  }, [checkForUpdatesRef, isProduction, promptAndReloadRef]);
 }

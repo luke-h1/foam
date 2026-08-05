@@ -2,6 +2,7 @@ import { useCallback, useRef } from 'react';
 
 import { useFocusEffect } from 'expo-router';
 
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import { subscribeToAppForeground } from '@app/utils/appState/appStateTransitions';
 
 interface UseRefetchOnForegroundOptions {
@@ -21,9 +22,7 @@ export function useRefetchOnForeground({
   refetch,
   minIntervalMs = 30_000,
 }: UseRefetchOnForegroundOptions) {
-  const refetchRef = useRef(refetch);
-
-  refetchRef.current = refetch;
+  const refetchRef = useSyncRef(refetch);
 
   const lastRefetchAtRef = useRef(0);
 
@@ -34,7 +33,7 @@ export function useRefetchOnForeground({
     }
     lastRefetchAtRef.current = now;
     void refetchRef.current();
-  }, [minIntervalMs]);
+  }, [minIntervalMs, refetchRef]);
 
   useFocusEffect(
     useCallback(() => {

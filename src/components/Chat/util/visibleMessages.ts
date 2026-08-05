@@ -1,4 +1,6 @@
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
+import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 
@@ -28,10 +30,6 @@ export interface VisibleMessagesOptions {
   showOnlyMentions?: boolean;
 }
 
-function normalise(value: string | undefined | null): string {
-  return value?.trim().toLowerCase() ?? '';
-}
-
 function getMessageText(message: VisibleMessageShape): string {
   const cached = messageTextCache.get(message.message);
   if (cached) {
@@ -50,10 +48,10 @@ function getNormalisedMessageFields(message: VisibleMessageShape) {
   }
 
   const fields = {
-    body: normalise(getMessageText(message)),
-    login: normalise(message.userstate.login),
-    sender: normalise(message.sender),
-    username: normalise(message.userstate.username),
+    body: normaliseChatText(getMessageText(message)),
+    login: normaliseChatUsername(message.userstate.login),
+    sender: normaliseChatUsername(message.sender),
+    username: normaliseChatUsername(message.userstate.username),
   };
 
   normalisedMessageFieldsCache.set(message, fields);
@@ -64,7 +62,7 @@ function messageMentionsUsername(
   message: VisibleMessageShape,
   username: string | undefined,
 ): boolean {
-  const target = normalise(username);
+  const target = normaliseChatUsername(username);
   if (!target) {
     return false;
   }
@@ -74,7 +72,7 @@ function messageMentionsUsername(
       continue;
     }
 
-    if (normalise(part.content.replace(/^@/, '')) === target) {
+    if (normaliseChatUsername(part.content.replace(/^@/, '')) === target) {
       return true;
     }
   }
@@ -130,7 +128,10 @@ function messageHiddenByUser(
   );
 }
 
-function normaliseList(values: string[] | undefined): string[] {
+function normaliseList(
+  values: string[] | undefined,
+  normalise: (value: string) => string,
+): string[] {
   if (!values || values.length === 0) {
     return [];
   }
@@ -151,10 +152,12 @@ export function getVisibleMessages<TMessage extends VisibleMessageShape>(
   messages: TMessage[],
   options: VisibleMessagesOptions = {},
 ): TMessage[] {
-  const searchQuery = normalise(options.searchQuery);
+  const searchQuery = normaliseChatText(options.searchQuery);
   const showOnlyMentions = options.showOnlyMentions === true;
-  const hiddenUsers = new Set(normaliseList(options.hiddenUsers));
-  const hiddenPhrases = normaliseList(options.hiddenPhrases);
+  const hiddenUsers = new Set(
+    normaliseList(options.hiddenUsers, normaliseChatUsername),
+  );
+  const hiddenPhrases = normaliseList(options.hiddenPhrases, normaliseChatText);
   const hasSearch = searchQuery.length > 0;
   const hasHiddenUsers = hiddenUsers.size > 0;
   const hasHiddenPhrases = hiddenPhrases.length > 0;

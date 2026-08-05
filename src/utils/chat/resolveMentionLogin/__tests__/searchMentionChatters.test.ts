@@ -13,15 +13,15 @@ describe('searchMentionChatters', () => {
 
   test('searchMentionChatters returns canonical logins for composer autocomplete', () => {
     registerMentionChatter({
-      login: 'BungleXO',
+      login: 'VelvetFathom93',
       userId: '123',
       color: '#9147ff',
     });
     registerMentionLogin('SomeOtherUser');
 
-    expect(searchMentionChatters('bun', 5)).toEqual<MentionChatter[]>([
+    expect(searchMentionChatters('vel', 5)).toEqual<MentionChatter[]>([
       {
-        login: 'BungleXO',
+        login: 'VelvetFathom93',
         userId: '123',
         color: '#9147ff',
       },

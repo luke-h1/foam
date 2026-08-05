@@ -4,20 +4,22 @@ import type { StyleProp, TextStyle } from 'react-native';
 import { useSelector } from '@legendapp/state/react';
 
 import { getChatColorStyle } from '@app/components/Chat/util/chatColorStyles';
-import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers/normaliseUsername';
 import { Text } from '@app/components/ui/Text/Text';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { formatMentionContent } from '@app/utils/chat/resolveMentionLogin/formatMentionContent';
 
+import type { ChatFontScale } from '../chatScale';
+import { getChatTextStyles } from '../chatText.styles';
 import { styles } from '../RichChatMessage.styles';
 
 interface MentionSpanProps {
   content: string;
   baseTextStyle?: StyleProp<TextStyle>;
-  fontScaleStyle?: StyleProp<TextStyle>;
   emoteLineStyle?: StyleProp<TextStyle>;
   compact?: boolean;
+  fontScale?: ChatFontScale;
   isModerated?: boolean;
   getMentionColor?: (username: string) => string;
   effectiveHighlightedUserSet?: ReadonlySet<string>;
@@ -35,9 +37,9 @@ interface MentionSpanProps {
 function MentionSpanComponent({
   content,
   baseTextStyle,
-  fontScaleStyle,
   emoteLineStyle,
   compact,
+  fontScale,
   isModerated,
   getMentionColor,
   effectiveHighlightedUserSet,
@@ -51,7 +53,7 @@ function MentionSpanComponent({
     return null;
   }
   const mentionedUsername = mentionContent.replace(/^@/, '').trim();
-  const normalisedMentionedUsername = normaliseUsername(mentionedUsername);
+  const normalisedMentionedUsername = normaliseChatUsername(mentionedUsername);
   const isReplyTargetMention = Boolean(
     replyPlainMentionTarget &&
     normalisedMentionedUsername === replyPlainMentionTarget,
@@ -75,9 +77,7 @@ function MentionSpanComponent({
   return (
     <Text
       style={[
-        styles.mention,
-        compact && styles.mentionCompact,
-        fontScaleStyle,
+        getChatTextStyles(fontScale, compact).mention,
         emoteLineStyle,
         isHighlightedMention && styles.mentionHighlighted,
         getChatColorStyle(mentionColor),

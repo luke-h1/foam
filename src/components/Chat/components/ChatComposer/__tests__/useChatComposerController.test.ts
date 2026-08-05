@@ -3,7 +3,7 @@ import { act, renderHook } from '@testing-library/react-native';
 import {
   MAX_MESSAGE_LENGTH,
   useChatComposerController,
-} from '../useChatComposerController';
+} from '../hooks/useChatComposerController';
 
 jest.mock('@app/lib/haptics', () => ({ impact: jest.fn() }));
 

@@ -6,14 +6,13 @@ import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { styles } from '../RichChatMessage.styles';
 import type { BadgePressData } from '../RichChatMessage.types';
 import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
-import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
+import type { ChatMessagePartRendererArgs } from './types/ChatMessagePartRendererArgs';
 import { UserChatBody } from './UserChatBody';
 
-interface AnnouncementChatBodyProps extends UseChatMessagePartRendererArgs {
+interface AnnouncementChatBodyProps extends ChatMessagePartRendererArgs {
   accentColor?: string;
   badgeList: SanitisedBadgeSet[];
   cachedSenderColor?: string;
-  compact: boolean;
   getMappingKey: (id: string, index: number) => string;
   onBadgePress?: (badge: BadgePressData) => void;
   onUsernamePress?: () => void;
@@ -28,7 +27,6 @@ export function AnnouncementChatBody({
   accentColor,
   badgeList,
   cachedSenderColor,
-  compact,
   getMappingKey,
   onBadgePress,
   onUsernamePress,
@@ -44,7 +42,8 @@ export function AnnouncementChatBody({
   return (
     <View style={styles.announcementColumn}>
       <ChatNoticeMetaRow
-        compact={compact}
+        compact={rendererArgs.compact}
+        fontScale={rendererArgs.fontScale}
         icon='megaphone.fill'
         label={i18next.t('chat:notices.announcement')}
         labelColor={resolvedAccentColor}
@@ -53,7 +52,6 @@ export function AnnouncementChatBody({
       <UserChatBody
         badgeList={badgeList}
         cachedSenderColor={cachedSenderColor}
-        compact={compact}
         getMappingKey={getMappingKey}
         onBadgePress={onBadgePress}
         onUsernamePress={onUsernamePress}

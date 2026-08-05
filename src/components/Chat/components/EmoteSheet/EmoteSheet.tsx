@@ -1,37 +1,33 @@
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import type { LayoutChangeEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import type { LegendListRef } from '@legendapp/list/react-native';
 import { LegendList } from '@legendapp/list/react-native';
 
 import {
   BottomSheet,
   type BottomSheetHandle,
 } from '@app/components/BottomSheet/BottomSheet';
+import { useEmoteSheet } from '@app/components/Chat/hooks/useEmoteSheet';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
 import { EmoteSearchFilter } from './EmoteSearchFilter';
+import { emoteSheetStyles as styles } from './EmoteSheet.styles';
 import { EmoteSheetIosBlur } from './EmoteSheetIosBlur';
-import { renderSetRailItem } from './EmoteSheetSetRailItem';
-import { emoteSheetStyles as styles } from './emoteSheetStyles';
-import type { EmotePickerItem } from './emoteSheetTypes';
-import { ProviderChip } from './ProviderChip';
-import { emoteSheetScrollActivity } from './util/emoteSheetScrollActivity';
-
-export type { EmotePickerItem };
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import type { LayoutChangeEvent } from 'react-native';
-
-import type { LegendListRef } from '@legendapp/list/react-native';
-
 import {
   EMOTE_CELL_GAP,
   EMOTE_SHEET_DETENT,
   EMOTE_SHEET_HEADER_HEIGHT,
 } from './emoteSheetLayout';
-import { useEmoteSheet } from './useEmoteSheet';
+import { renderSetRailItem } from './EmoteSheetSetRailItem';
+import type { EmotePickerItem } from './emoteSheetTypes';
+import { ProviderChip } from './ProviderChip';
 import type { EmoteMenuListItem } from './util/emoteMenuData';
+import { emoteSheetScrollActivity } from './util/emoteSheetScrollActivity';
 
 const keyExtractor = (item: EmoteMenuListItem) => item.key;
 const getItemType = (item: EmoteMenuListItem) => item.type;

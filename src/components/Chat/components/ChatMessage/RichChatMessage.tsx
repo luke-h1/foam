@@ -1,16 +1,13 @@
 /* eslint-disable camelcase */
 import { memo } from 'react';
 
+import { useRichChatMessage } from '@app/components/Chat/hooks/useRichChatMessage';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
 
+import * as ChatRow from './ChatRow';
 import { EmoteActionSheet } from './renderers/EmoteActionSheet';
 import type { RichChatMessageProps } from './RichChatMessage.types';
-import {
-  RichChatMessageBody,
-  RichChatMessageContainer,
-} from './RichChatMessageBody';
-import { useRichChatMessage } from './useRichChatMessage';
 
 export type {
   BadgePressData,
@@ -29,9 +26,9 @@ function ChatMessageComponent<
 
   return (
     <>
-      <RichChatMessageContainer state={state}>
-        <RichChatMessageBody {...state} />
-      </RichChatMessageContainer>
+      <ChatRow.Surface state={state}>
+        <ChatRow.Body {...state} />
+      </ChatRow.Surface>
       {state.selectedEmoteAction ? (
         <EmoteActionSheet
           disableAnimations={state.disableEmoteAnimations}

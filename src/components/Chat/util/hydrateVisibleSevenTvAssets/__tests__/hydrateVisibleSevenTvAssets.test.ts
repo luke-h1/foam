@@ -1,10 +1,11 @@
-import { hydrateVisibleSevenTvAssets } from '@app/components/Chat/util/hydrateVisibleSevenTvAssets';
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { createUserStateTags } from '@app/types/chat/irc-tags/__fixtures__/userStateTags.fixture';
 import type { SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { createTextPart } from '@app/utils/chat/__tests__/__fixtures__/parsedPart.fixture';
+
+import { hydrateVisibleSevenTvAssets } from '../hydrateVisibleSevenTvAssets';
 
 const sevenTvPersonalEmote: SanitisedEmote = {
   id: 'personal-emote',
@@ -233,12 +234,13 @@ describe('hydrateVisibleSevenTvAssets', () => {
 
   test('limits visible-user cosmetic fetches per hydration pass', async () => {
     const fetchUserCosmetics = jest.fn().mockResolvedValue(undefined);
+    const userIds = Array.from({ length: 20 }, (_, index) => `${index}`);
 
     await hydrateVisibleSevenTvAssets({
       channelId: 'channel-id',
-      messages: ['1', '2', '3', '4', '5'].map(createMessageForUser),
+      messages: userIds.map(createMessageForUser),
       hydratedMessageKeys: new Set(),
-      personalEmoteUsers: new Set(['1', '2', '3', '4', '5']),
+      personalEmoteUsers: new Set(userIds),
       cosmeticUsers: new Set(),
       getUserPersonalEmotes: jest.fn(() => []),
       fetchUserPersonalEmotes: jest.fn(),
@@ -247,7 +249,7 @@ describe('hydrateVisibleSevenTvAssets', () => {
       reprocessMessage: jest.fn(),
     });
 
-    expect(fetchUserCosmetics).toHaveBeenCalledTimes(3);
+    expect(fetchUserCosmetics).toHaveBeenCalledTimes(16);
   });
 
   test('does not fetch or reprocess 7TV badges when disabled', async () => {

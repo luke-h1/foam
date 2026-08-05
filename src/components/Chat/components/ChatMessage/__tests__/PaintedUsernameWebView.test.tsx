@@ -4,8 +4,8 @@ import { act, render, screen } from '@testing-library/react-native';
 
 import type { PaintData } from '@app/types/seventv/cosmetics';
 
+import { chatLineMetrics } from '../chatScale';
 import { PaintedUsernameWebView } from '../CosmeticUsername/PaintedUsernameWebView';
-import { chatLineMetrics } from '../RichChatMessage.styles';
 
 jest.mock('react-native-webview', () => {
   const React = jest.requireActual('react');

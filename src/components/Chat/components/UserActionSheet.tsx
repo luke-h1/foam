@@ -14,7 +14,7 @@ import {
   type SnapPoint,
 } from '@app/components/BottomSheet/BottomSheet';
 import { Button } from '@app/components/Button/Button';
-import { useIosActionSheet } from '@app/components/Chat/components/useIosActionSheet';
+import { useIosActionSheet } from '@app/components/Chat/hooks/useIosActionSheet';
 import type {
   ChatModerationAccessFlags,
   UserActionVisibilityFlags,
@@ -23,6 +23,7 @@ import { SymbolView, type SymbolViewProps } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { theme } from '@app/styles/themes';
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 
 import { UserCardHeader } from './UserCardHeader';
@@ -56,12 +57,9 @@ type UserActionItem = {
 
 const MAX_RECENT_USER_MESSAGES = 5;
 
-function normaliseLogin(value?: string): string {
-  return value?.trim().toLowerCase() ?? '';
-}
-
 function getRecentUserMessages(login?: string, username?: string) {
-  const target = normaliseLogin(login) || normaliseLogin(username);
+  const target =
+    normaliseChatUsername(login) || normaliseChatUsername(username);
   if (!target) {
     return [];
   }
@@ -76,7 +74,7 @@ function getRecentUserMessages(login?: string, username?: string) {
       continue;
     }
 
-    const messageLogin = normaliseLogin(
+    const messageLogin = normaliseChatUsername(
       message.userstate?.login || message.userstate?.username || message.sender,
     );
     if (messageLogin !== target) {

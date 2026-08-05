@@ -4,23 +4,20 @@ import { Redirect } from 'expo-router';
 
 import { useAuthContext } from '@app/context/AuthContext';
 import { useRemoteConfig } from '@app/hooks/firebase/useRemoteConfig';
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
 
 export { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
-
-function normaliseLogin(value?: string | null): string {
-  return value?.trim().toLowerCase() ?? '';
-}
 
 export function isAdminLogin(
   login: string | null | undefined,
   admins: readonly string[],
 ): boolean {
-  const normalised = normaliseLogin(login);
+  const normalised = normaliseChatUsername(login);
   if (!normalised) {
     return false;
   }
-  return admins.some(admin => normaliseLogin(admin) === normalised);
+  return admins.some(admin => normaliseChatUsername(admin) === normalised);
 }
 
 export type DevToolsAccess = 'enabled' | 'denied' | 'pending';

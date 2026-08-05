@@ -553,7 +553,7 @@ export const ChatterinoSplit: Story = {
             currentUsername='testuser'
             currentUsernameNormalized='testuser'
             density='compact'
-            showTimestamp
+            messageDisplay={{ showTimestamp: true }}
             onReply={() => {}}
           />
         ))}

@@ -11,12 +11,12 @@ import {
   addMessages,
   getUserMessageColor,
 } from '@app/store/chat/actions/messages';
-import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
+import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor/resolveCachedSenderColor';
 
-import { createChatDelayQueue } from '../util/chatDelayQueue';
+import { createChatDelayQueue } from '../util/chatDelay/chatDelayQueue';
+import { SCROLL_DEFERRED_FLUSH_RETRY_MS } from '../util/chatFlushCadence/constants/deferredFlushRetry';
+import { maxLiveCommitPerFlush } from '../util/chatFlushCadence/maxLiveCommitPerFlush';
 import { pickFlushDelay } from '../util/chatFlushCadence/pickFlushDelay';
-import { sampleLiveCommit } from '../util/chatFlushCadence/sampleLiveCommit';
-import { SCROLL_DEFERRED_FLUSH_RETRY_MS } from '../util/chatFlushCadence/SCROLL_DEFERRED_FLUSH_RETRY_MS';
 import { shouldEnterRaidFlushMode } from '../util/chatFlushCadence/shouldEnterRaidFlushMode';
 import {
   type BufferedMessage,
@@ -64,6 +64,23 @@ interface UseChatMessagesOptions {
   onUnreadIncrement: (count: number) => void;
 }
 
+/**
+ * Runs the flush with the re-entrancy guard raised, releasing it even if
+ * publishing throws. Lives at module scope because React Compiler cannot lower
+ * a try/finally, and this is the only one on the flush path.
+ */
+function withFlushGuard(
+  isFlushing: MutableRefObject<boolean>,
+  flush: () => void,
+): void {
+  isFlushing.current = true;
+  try {
+    flush();
+  } finally {
+    isFlushing.current = false;
+  }
+}
+
 export const useChatMessages = (options: UseChatMessagesOptions) => {
   const {
     finalizeMessageForCommit,
@@ -87,11 +104,26 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   const pendingUnreadCountRef = useRef(0);
   // Set when a flush sees a raid-sized batch; slows the next live flush cadence.
   const raidFlushModeRef = useRef(false);
+  /**
+   * Arrivals since the last flush. Must be the arrival count, not the buffer
+   * size - the cap leaves a backlog behind, which would latch raid mode on.
+   */
+  const arrivalsSinceFlushRef = useRef(0);
 
   useLayoutEffect(() => {
     getChatDelayMsRef.current = getChatDelayMs ?? (() => 0);
     finalizeMessageForCommitRef.current = finalizeMessageForCommit;
   });
+
+  const startFlushTimer = useCallback((delayMs: number) => {
+    if (flushTimerRef.current) {
+      return;
+    }
+
+    flushTimerRef.current = setTimeout(() => {
+      flushBufferRef.current();
+    }, delayMs);
+  }, []);
 
   const flushBuffer = useCallback(() => {
     if (isFlushingRef.current) {
@@ -124,15 +156,16 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       return;
     }
 
-    isFlushingRef.current = true;
-
-    try {
-      const drained = buffer.drain();
+    withFlushGuard(isFlushingRef, () => {
+      const isAtBottom = isAtBottomRef.current;
       raidFlushModeRef.current = shouldEnterRaidFlushMode(
-        drained.length,
-        isAtBottomRef.current,
+        arrivalsSinceFlushRef.current,
+        isAtBottom,
       );
-      const messagesToFlush = sampleLiveCommit(drained, isAtBottomRef.current);
+      arrivalsSinceFlushRef.current = 0;
+      const messagesToFlush = buffer.drain(
+        maxLiveCommitPerFlush(isAtBottom, raidFlushModeRef.current),
+      );
       const shouldMaintainBottom = shouldArmBottomContentAnchor(
         isScrollingToBottomRef,
       );
@@ -150,8 +183,20 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
         onUnreadIncrement(pendingUnreadCountRef.current);
         pendingUnreadCountRef.current = 0;
       }
-    } finally {
-      isFlushingRef.current = false;
+    });
+
+    /**
+     * Rows the per-flush cap held back; without re-arming they would wait on
+     * the next incoming message, which stalls the tail end of a burst.
+     */
+    if (buffer.size() > 0) {
+      startFlushTimer(
+        pickFlushDelay({
+          isAtBottom: isAtBottomRef.current,
+          raidMode: raidFlushModeRef.current,
+          scrollingToBottom: isScrollingToBottomRef?.current ?? false,
+        }),
+      );
     }
   }, [
     bufferRef,
@@ -160,21 +205,12 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     isUserActivelyScrolling,
     onBottomContentChange,
     onUnreadIncrement,
+    startFlushTimer,
   ]);
 
   useLayoutEffect(() => {
     flushBufferRef.current = flushBuffer;
   });
-
-  const startFlushTimer = useCallback((delayMs: number) => {
-    if (flushTimerRef.current) {
-      return;
-    }
-
-    flushTimerRef.current = setTimeout(() => {
-      flushBufferRef.current();
-    }, delayMs);
-  }, []);
 
   const clearDelayTick = useCallback(() => {
     if (delayTickTimerRef.current) {
@@ -191,6 +227,8 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       if (!added) {
         return;
       }
+
+      arrivalsSinceFlushRef.current += 1;
 
       if (dropped > 0) {
         pendingUnreadCountRef.current = Math.max(
@@ -340,6 +378,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     delayQueueRef.current.clear();
     clearDelayTick();
     pendingUnreadCountRef.current = 0;
+    arrivalsSinceFlushRef.current = 0;
     raidFlushModeRef.current = false;
   }, [bufferRef, clearDelayTick, delayQueueRef]);
 
@@ -384,6 +423,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
     bufferRef.current.clear();
     delayQueueRef.current.clear();
     pendingUnreadCountRef.current = 0;
+    arrivalsSinceFlushRef.current = 0;
     raidFlushModeRef.current = false;
   }, [bufferRef, clearDelayTick, delayQueueRef]);
 

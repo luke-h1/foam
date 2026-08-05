@@ -5,12 +5,11 @@ import {
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import { applyCheermotesToParts } from '@app/utils/chat/applyCheermotes';
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 import { getChannelCheermotes } from '@app/utils/chat/cheermoteStore/getChannelCheermotes';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
 import { extractEmotesFromTag } from '@app/utils/chat/extractEmotes/extractEmotesFromTag';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
-
-import { normaliseChatUsername } from './chatUsernames/normaliseChatUsername';
 
 type EmoteData = ReturnType<typeof getCurrentEmoteData>;
 

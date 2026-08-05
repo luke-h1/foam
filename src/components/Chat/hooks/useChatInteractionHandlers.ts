@@ -2,6 +2,14 @@ import { useCallback } from 'react';
 import type { RefObject } from 'react';
 
 import { impact, selection } from '@app/lib/haptics';
+import {
+  openChatBadgePreview,
+  openChatEmotePreview,
+  openChatEmoteSheet,
+  openChatMessageActions,
+  openChatSettingsSheet,
+  openChatUserActions,
+} from '@app/store/chat/actions/chatOverlays';
 import { getMessageById } from '@app/store/chat/actions/messages';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
@@ -13,8 +21,7 @@ import type {
   MessageActionData,
   UsernamePressData,
 } from '../components/ChatMessage/RichChatMessage.types';
-import type { EmotePickerItem } from '../components/EmoteSheet/EmoteSheet';
-import type { ChatOverlayOpeners } from '../components/useChatOverlays';
+import type { EmotePickerItem } from '../components/EmoteSheet/emoteSheetTypes';
 
 export function useChatComposerActions({
   fetchUserCosmetics,
@@ -79,45 +86,50 @@ export function useChatComposerActions({
   };
 }
 
-export function useChatOverlayActions(openers: ChatOverlayOpeners) {
+/**
+ * Press handlers that open an overlay. They call the overlay store directly
+ * rather than taking openers from the overlay hook, so the chat root never
+ * subscribes to which sheet is open.
+ */
+export function useChatOverlayActions(channelId: string) {
   const handleOpenEmoteSheet = useCallback(() => {
-    openers.openEmoteSheet();
-  }, [openers]);
+    openChatEmoteSheet(channelId);
+  }, [channelId]);
 
   const handleOpenSettingsSheet = useCallback(() => {
-    openers.openSettingsSheet();
-  }, [openers]);
+    openChatSettingsSheet(channelId);
+  }, [channelId]);
 
   const handleBadgeLongPress = useCallback(
     (badge: BadgePressData) => {
       selection();
-      openers.openBadge(badge);
+      openChatBadgePreview(channelId, badge);
     },
-    [openers],
+    [channelId],
   );
 
   const handleMessageLongPress = useCallback(
     (data: MessageActionData<'usernotice'>) => {
       impact('light');
-      openers.openMessageActions(data);
+      openChatMessageActions(channelId, data);
     },
-    [openers],
+    [channelId],
   );
 
   const handleEmotePress = useCallback(
     (emote: EmotePressData) => {
       selection();
-      openers.openEmotePreview(emote);
+      openChatEmotePreview(channelId, emote);
     },
-    [openers],
+    [channelId],
   );
 
   const handleUsernamePress = useCallback(
     (usernameData: UsernamePressData) => {
       selection();
-      openers.openUserActions(usernameData);
+      openChatUserActions(channelId, usernameData);
     },
-    [openers],
+    [channelId],
   );
 
   return {

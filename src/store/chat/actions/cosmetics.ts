@@ -1,7 +1,5 @@
 import { batch } from '@legendapp/state';
 
-import { buildSevenTvBadgeImageUrl } from '@app/components/Chat/util/normalizeSevenTvCosmetics/buildSevenTvBadgeImageUrl';
-import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics/normalizeSevenTvBadge';
 import { storageService } from '@app/lib/storage';
 import {
   clearSevenTvUserCache,
@@ -15,6 +13,8 @@ import { convertV4PaintToPaintData } from '@app/utils/color/sevenTvPaintData/con
 import { type V4Badge } from '@app/utils/color/sevenTvPaintData/types';
 import { logger } from '@app/utils/logger';
 import { deepEqualJson } from '@app/utils/object/deepEqualJson';
+import { buildSevenTvBadgeImageUrl } from '@app/utils/seventv/cosmetics/buildSevenTvBadgeImageUrl';
+import { normalizeSevenTvBadge } from '@app/utils/seventv/cosmetics/normalizeSevenTvBadge';
 import { getSevenTvSessionId } from '@app/utils/seventv/sevenTvSessionId';
 
 import { chatStore$ } from '../observables/chatStore';
@@ -116,6 +116,11 @@ const sessionCosmeticsCache = new Map<string, CachedUserCosmetics>();
 // fetchAndCacheUserCosmetics; without a cap that stormed the network with
 // hundreds of parallel getUserCosmeticsGql requests on channel entry.
 const userCosmeticsFetchGuard = createFetchOnceGuard({ maxConcurrent: 4 });
+
+// The presence path does its own get7tvUserId + sendPresence round trips and
+// only reaches userCosmeticsFetchGuard on the no-session fallback, so it needs
+// its own bound - the hydrate pass asks for a screenful of chatters at once.
+const userPresenceRequestGuard = createFetchOnceGuard({ maxConcurrent: 4 });
 
 const cacheSessionCosmetics = (
   sevenTvUserId: string,
@@ -331,22 +336,24 @@ export const fetchUserCosmeticsByTwitchId = async (
 export const requestUserCosmeticsViaPresence = async (
   twitchUserId: string,
 ): Promise<void> => {
-  const sevenTvUserId = await sevenTvService.get7tvUserId(twitchUserId);
-  if (!sevenTvUserId) {
-    return;
-  }
+  await userPresenceRequestGuard.run(twitchUserId, async () => {
+    const sevenTvUserId = await sevenTvService.get7tvUserId(twitchUserId);
+    if (!sevenTvUserId) {
+      return;
+    }
 
-  const sessionId = getSevenTvSessionId();
-  const channelId = chatStore$.currentChannelId.peek();
-  if (sessionId && channelId) {
-    await sevenTvService.sendPresence(channelId, sevenTvUserId, {
-      passive: true,
-      sessionId,
-    });
-    return;
-  }
+    const sessionId = getSevenTvSessionId();
+    const channelId = chatStore$.currentChannelId.peek();
+    if (sessionId && channelId) {
+      await sevenTvService.sendPresence(channelId, sevenTvUserId, {
+        passive: true,
+        sessionId,
+      });
+      return;
+    }
 
-  await fetchAndCacheUserCosmetics(sevenTvUserId);
+    await fetchAndCacheUserCosmetics(sevenTvUserId);
+  });
 };
 
 export const clearUserCosmeticsCache = () => {
@@ -355,6 +362,7 @@ export const clearUserCosmeticsCache = () => {
     cosmeticBindingsBumpTimer = null;
   }
   userCosmeticsFetchGuard.clear();
+  userPresenceRequestGuard.clear();
   sessionCosmeticsCache.clear();
   clearSevenTvUserCache();
   storageService.clearNamespace(
@@ -422,6 +430,10 @@ const sweepUnreferencedPaints = () => {
   chatStore$.paints.set(next);
 };
 
+/**
+ * Adds or replaces a paint definition. 7TV re-sends definitions we already
+ * hold, so create and update are the same write.
+ */
 export const addPaint = (paint: PaintData) => {
   if (paint.id) {
     if (isSamePaintDefinition(chatStore$.paints[paint.id]?.peek(), paint)) {
@@ -510,6 +522,11 @@ const isSameBadgeDefinition = (
   previous.color === next.color &&
   previous.owner_username === next.owner_username;
 
+/**
+ * Adds or replaces a badge definition. 7TV sends `cosmetic.create` for badges
+ * we already hold as often as for new ones, so create and update are the same
+ * write.
+ */
 export const addBadge = (badge: SanitisedBadgeSet) => {
   if (!badge.id) {
     return;
@@ -597,34 +614,6 @@ export const getUserBadge = (
 export const getUserBadgeId = (ttvUserId: string): string | undefined =>
   chatStore$.userBadgeIds[ttvUserId]?.peek();
 
-export const updateBadge = (badge: SanitisedBadgeSet) => {
-  if (!badge.id) {
-    return;
-  }
-
-  const normalizedBadge = normalizeSevenTvBadge(badge);
-  if (!normalizedBadge.url?.trim()) {
-    return;
-  }
-
-  const cell = chatStore$.badges[badge.id];
-  const previous = cell?.peek();
-  clearMissingBadge(badge.id);
-  if (isSameBadgeDefinition(previous, normalizedBadge)) {
-    return;
-  }
-
-  const previousUrl = previous?.url?.trim();
-  cell?.set(normalizedBadge);
-  scheduleCosmeticsPersist('definitions');
-
-  if (previousUrl !== normalizedBadge.url.trim()) {
-    scheduleCosmeticBindingsBump();
-  }
-
-  refreshCachedUserCosmeticsForDefinition(badge.id);
-};
-
 export const removeBadge = (badgeId: string) => {
   const currentBadges = chatStore$.badges.peek();
   if (!(badgeId in currentBadges)) {
@@ -657,17 +646,6 @@ export const removeUserBadge = (ttvUserId: string) => {
   chatStore$.userBadgeIds.set(rest);
   scheduleCosmeticsPersist('bindings');
   scheduleCosmeticBindingsBump();
-};
-
-export const updatePaint = (paint: PaintData) => {
-  if (paint.id) {
-    if (isSamePaintDefinition(chatStore$.paints[paint.id]?.peek(), paint)) {
-      return;
-    }
-    chatStore$.paints[paint.id]?.set(paint);
-    scheduleCosmeticsPersist('definitions');
-    refreshCachedUserCosmeticsForDefinition(paint.id);
-  }
 };
 
 /**

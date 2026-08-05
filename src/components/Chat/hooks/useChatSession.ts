@@ -25,14 +25,14 @@ import {
 } from '@app/store/preferenceStore';
 import { videoLatencyDisplay$ } from '@app/store/stream/videoLatency';
 import type { UserInfoResponse } from '@app/types/twitch/user';
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
+import { textMentionsUser } from '@app/utils/chat/chatUsernames/textMentionsUser';
 import { findCustomHighlight } from '@app/utils/chat/customHighlights/findCustomHighlight';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin/registerMentionChatter';
 
 import type { ChatListRef } from '../components/ChatList';
-import { resolveEffectiveChatDelayMs } from '../util/chatDelay';
-import { normaliseChatUsername } from '../util/chatUsernames/normaliseChatUsername';
-import { textMentionsUser } from '../util/chatUsernames/textMentionsUser';
+import { resolveEffectiveChatDelayMs } from '../util/chatDelay/resolveEffectiveChatDelayMs';
 import { triggerMentionHaptic } from '../util/mentionHaptics';
 import { useChatCosmetics } from './useChatCosmetics';
 import { useChatEmoteLoader } from './useChatEmoteLoader';
@@ -47,44 +47,32 @@ interface UseChatSessionOptions {
   channelId: string;
   channelName: string;
   cleanupScroll: () => void;
-  hydratedVisibleAssetKeysRef: MutableRefObject<Set<string>>;
   isAtBottomRef: MutableRefObject<boolean>;
   isScrollingToBottomRef: MutableRefObject<boolean>;
   isUserActivelyScrolling: () => boolean;
   listRef: RefObject<ChatListRef | null>;
   maintainBottomAfterContentChange: () => void;
-  pendingVisibleMessagesRef: MutableRefObject<AnyChatMessageType[]>;
   preferences: ChatRenderPreferences;
   scrollToBottom: () => void;
   setUnreadCount: Dispatch<SetStateAction<number>>;
   syntheticTransport: boolean;
   user?: UserInfoResponse;
-  visibleAssetHydrationTimerRef: MutableRefObject<ReturnType<
-    typeof setTimeout
-  > | null>;
-  visibleCosmeticUsersRef: MutableRefObject<Set<string>>;
-  visiblePersonalEmoteUsersRef: MutableRefObject<Set<string>>;
 }
 
 export function useChatSession({
   channelId,
   channelName,
   cleanupScroll,
-  hydratedVisibleAssetKeysRef,
   isAtBottomRef,
   isScrollingToBottomRef,
   isUserActivelyScrolling,
   listRef,
   maintainBottomAfterContentChange,
-  pendingVisibleMessagesRef,
   preferences,
   scrollToBottom,
   setUnreadCount,
   syntheticTransport,
   user,
-  visibleAssetHydrationTimerRef,
-  visibleCosmeticUsersRef,
-  visiblePersonalEmoteUsersRef,
 }: UseChatSessionOptions) {
   const navigation = useNavigation();
   const chatDelay = usePreference('chatDelay');
@@ -220,17 +208,12 @@ export function useChatSession({
     channelId,
     fetchUserCosmetics,
     handleNewMessage,
-    hydratedVisibleAssetKeysRef,
     isAtBottomRef,
     maintainBottomAfterContentChange,
     messages$,
-    pendingVisibleMessagesRef,
     show7TvEmotes: preferences.show7TvEmotes,
     show7tvBadges: preferences.show7tvBadges,
     userLogin: user?.login,
-    visibleAssetHydrationTimerRef,
-    visibleCosmeticUsersRef,
-    visiblePersonalEmoteUsersRef,
   });
 
   useLayoutEffect(() => {
@@ -273,7 +256,6 @@ export function useChatSession({
     partChannel,
     joinChannel,
     sendMessage,
-    sendChatCommand,
     getUserState,
   } = useTwitchChat({
     // Perf mode: no channel means the socket never connects and the synthetic
@@ -361,7 +343,6 @@ export function useChatSession({
     processMessageEmotes,
     refetchEmotes,
     reprocessAllMessages,
-    sendChatCommand,
     sendMessage: sendMessageWithPresence,
     twitchConnectionState,
   };

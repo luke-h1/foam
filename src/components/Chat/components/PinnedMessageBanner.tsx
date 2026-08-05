@@ -9,8 +9,8 @@ import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
 import type { PinnedChatMessageViewModel } from '../hooks/usePinnedChatMessage';
-import { styles } from '../styles';
 import { chatEntranceSpring } from '../util/chatEntranceSpring';
+import { styles } from './PinnedMessageBanner.styles';
 
 const pinnedBannerEntering = chatEntranceSpring(FadeInUp);
 const pinnedBannerExiting = FadeOutUp.duration(150);

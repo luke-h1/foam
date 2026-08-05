@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
-import { hydrateVisibleSevenTvAssets } from '@app/components/Chat/util/hydrateVisibleSevenTvAssets';
+import { hydrateVisibleSevenTvAssets } from '@app/components/Chat/util/hydrateVisibleSevenTvAssets/hydrateVisibleSevenTvAssets';
 import { reprocessMessages } from '@app/components/Chat/util/reprocessMessages';
 import { getCachedSharedChatBadgeContext } from '@app/components/Chat/util/sharedChatBadges/getCachedSharedChatBadgeContext';
 import { getMessageBadges } from '@app/components/Chat/util/sharedChatBadges/getMessageBadges';
@@ -12,6 +12,7 @@ import {
 } from '@app/store/chat/actions/channelLoad';
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import { updateMessages } from '@app/store/chat/actions/messages';
+import { visibleAssetHydration } from '@app/store/chat/actions/visibleAssetHydration';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { usePersonalEmotesVersion } from '@app/store/chat/react/selectors';
 import { useChatHydrationPreferences } from '@app/store/preferences/selectors';
@@ -67,9 +68,12 @@ jest.mock('@app/utils/chat/extractEmotes/extractEmotesFromTag', () => ({
   extractEmotesFromTag: jest.fn(() => []),
 }));
 
-jest.mock('../../util/hydrateVisibleSevenTvAssets', () => ({
-  hydrateVisibleSevenTvAssets: jest.fn(() => Promise.resolve(false)),
-}));
+jest.mock(
+  '../../util/hydrateVisibleSevenTvAssets/hydrateVisibleSevenTvAssets',
+  () => ({
+    hydrateVisibleSevenTvAssets: jest.fn(() => Promise.resolve(false)),
+  }),
+);
 
 jest.mock('../../util/reprocessMessages', () => ({
   reprocessMessages: jest.fn(),
@@ -137,14 +141,7 @@ function renderMessageProcessing() {
       text: 'stored message',
     }),
   ];
-  const refs = {
-    hydratedVisibleAssetKeysRef: { current: new Set<string>() },
-    isAtBottomRef: { current: true },
-    pendingVisibleMessagesRef: { current: [] },
-    visibleAssetHydrationTimerRef: { current: null },
-    visibleCosmeticUsersRef: { current: new Set<string>() },
-    visiblePersonalEmoteUsersRef: { current: new Set<string>() },
-  };
+  const isAtBottomRef = { current: true };
   const fetchUserCosmetics = jest.fn(() => Promise.resolve());
 
   const hook = renderHook(() =>
@@ -152,19 +149,14 @@ function renderMessageProcessing() {
       channelId: 'channel-1',
       fetchUserCosmetics,
       handleNewMessage,
-      hydratedVisibleAssetKeysRef: refs.hydratedVisibleAssetKeysRef,
-      isAtBottomRef: refs.isAtBottomRef,
+      isAtBottomRef,
       maintainBottomAfterContentChange,
       messages$: {
         peek: jest.fn(() => messages),
       },
-      pendingVisibleMessagesRef: refs.pendingVisibleMessagesRef,
       show7TvEmotes: true,
       show7tvBadges: true,
       userLogin: 'viewer',
-      visibleAssetHydrationTimerRef: refs.visibleAssetHydrationTimerRef,
-      visibleCosmeticUsersRef: refs.visibleCosmeticUsersRef,
-      visiblePersonalEmoteUsersRef: refs.visiblePersonalEmoteUsersRef,
     }),
   );
 
@@ -174,7 +166,7 @@ function renderMessageProcessing() {
     hook,
     maintainBottomAfterContentChange,
     messages,
-    refs,
+    isAtBottomRef,
   };
 }
 
@@ -346,7 +338,7 @@ describe('useChatMessageProcessing', () => {
       },
       text: 'visible OMEGALUL',
     });
-    const { fetchUserCosmetics, hook, maintainBottomAfterContentChange, refs } =
+    const { fetchUserCosmetics, hook, maintainBottomAfterContentChange } =
       renderMessageProcessing();
 
     act(() => {
@@ -382,7 +374,7 @@ describe('useChatMessageProcessing', () => {
       hydratePersonalEmotes: true,
       messages: ['visible-1', 'visible-2'],
     });
-    expect(refs.pendingVisibleMessagesRef.current).toEqual([]);
+    expect(visibleAssetHydration.pendingMessages).toEqual([]);
     expect(maintainBottomAfterContentChange).toHaveBeenCalledTimes(1);
   });
 
@@ -395,7 +387,7 @@ describe('useChatMessageProcessing', () => {
       },
       text: 'visible OMEGALUL',
     });
-    const { hook, refs } = renderMessageProcessing();
+    const { hook } = renderMessageProcessing();
 
     act(() => {
       hook.result.current.handleViewableMessagesChange([visibleMessage]);
@@ -406,14 +398,14 @@ describe('useChatMessageProcessing', () => {
     });
 
     expect(mockHydrateVisibleSevenTvAssets).toHaveBeenCalledTimes(1);
-    refs.hydratedVisibleAssetKeysRef.current.add('stale-hydration-key');
+    visibleAssetHydration.hydratedMessageKeys.add('stale-hydration-key');
 
     mockUsePersonalEmotesVersion.mockReturnValue(1);
     act(() => {
       hook.rerender(undefined);
     });
 
-    expect(refs.hydratedVisibleAssetKeysRef.current).toEqual(new Set());
+    expect(visibleAssetHydration.hydratedMessageKeys).toEqual(new Set());
 
     await act(async () => {
       jest.advanceTimersByTime(150);
@@ -430,9 +422,9 @@ describe('useChatMessageProcessing', () => {
 
   test('does not schedule a hydration pass for the mount-time personal emotes version', () => {
     jest.useFakeTimers();
-    const { refs } = renderMessageProcessing();
+    renderMessageProcessing();
 
-    expect(refs.visibleAssetHydrationTimerRef.current).toBeNull();
+    expect(visibleAssetHydration.timer).toBeNull();
 
     jest.advanceTimersByTime(150);
 

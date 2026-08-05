@@ -12,17 +12,18 @@ import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { useCosmeticBindingsVersion } from '@app/store/chat/react/selectors';
 import { useChatRenderPreferences } from '@app/store/preferenceStore';
 
+import { styles } from './Chat.styles';
 import { ChatEmoteReprocessor } from './components/ChatEmoteReprocessor';
 import type { ChatInputShellHandle } from './components/ChatInputShell';
 import { ChatInputShell } from './components/ChatInputShell';
 import type { ChatListRef } from './components/ChatList';
 import { ChatMessagePane } from './components/ChatMessagePane';
+import { ChatOverlayLayer } from './components/ChatOverlayLayer';
 import { ResumeScroll } from './components/ResumeScroll';
 import { useChatScroll } from './hooks/useChatScroll';
 import { useChatSession } from './hooks/useChatSession';
 import { useChatSurface } from './hooks/useChatSurface';
 import { useChatTransientState } from './hooks/useChatTransientState';
-import { styles } from './styles';
 
 export interface ChatProps {
   applyTopInset?: boolean;
@@ -63,16 +64,11 @@ export const Chat = memo(
       hideUserFromView,
       highlightedReplyTargetTimeoutRef,
       highlightedUsers,
-      hydratedVisibleAssetKeysRef,
-      pendingVisibleMessagesRef,
       searchActive,
       searchQuery,
       setHighlightedReplyTargetMessageId,
       showOnlyMentions,
       toggleHighlightedUser,
-      visibleAssetHydrationTimerRef,
-      visibleCosmeticUsersRef,
-      visiblePersonalEmoteUsersRef,
     } = useChatTransientState(channelId);
     const listRef = useRef<ChatListRef | null>(null);
     const inputShellRef = useRef<ChatInputShellHandle>(null);
@@ -130,21 +126,16 @@ export const Chat = memo(
       channelId,
       channelName,
       cleanupScroll,
-      hydratedVisibleAssetKeysRef,
       isAtBottomRef,
       isScrollingToBottomRef,
       isUserActivelyScrolling,
       listRef,
       maintainBottomAfterContentChange,
-      pendingVisibleMessagesRef,
       preferences,
       scrollToBottom,
       setUnreadCount,
       syntheticTransport,
       user,
-      visibleAssetHydrationTimerRef,
-      visibleCosmeticUsersRef,
-      visiblePersonalEmoteUsersRef,
     });
 
     const {
@@ -157,9 +148,8 @@ export const Chat = memo(
       handleResumeScrollToBottom,
       handleUnpinPinnedMessage,
       keyExtractor,
-      listContentStyle,
       messageListExtraData,
-      overlaysElement,
+      overlayProps,
       paneFlags,
       pinnedMessage,
       pinnedMessageBusy,
@@ -227,7 +217,6 @@ export const Chat = memo(
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
                 getItemType={getItemType}
-                listContentStyle={listContentStyle}
                 messageListExtraData={messageListExtraData}
                 onClearFilters={handleClearFilters}
                 hasActiveFilters={hasActiveFilters}
@@ -274,7 +263,7 @@ export const Chat = memo(
               />
             </KeyboardStickyView>
 
-            {overlaysElement}
+            <ChatOverlayLayer {...overlayProps} />
           </View>
         </View>
       </CachedEmotesProvider>

@@ -1,6 +1,4 @@
-function normaliseLogin(value?: string | null): string {
-  return value?.trim().toLowerCase() ?? '';
-}
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 
 /**
  * Gate for the "update app" button in Settings.
@@ -16,11 +14,11 @@ export function isUpdateAppButtonAllowed(
     return true;
   }
 
-  const normalised = normaliseLogin(login);
+  const normalised = normaliseChatUsername(login);
 
   if (!normalised) {
     return false;
   }
 
-  return allowedUsers.some(user => normaliseLogin(user) === normalised);
+  return allowedUsers.some(user => normaliseChatUsername(user) === normalised);
 }

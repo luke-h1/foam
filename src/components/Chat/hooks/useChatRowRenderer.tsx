@@ -1,7 +1,8 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { RefObject } from 'react';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import {
   getSessionCacheString,
@@ -15,15 +16,20 @@ import type {
   ChatFontScale,
   CustomHighlight,
 } from '@app/store/preferenceStore';
+import type { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 import { processEmotesWorklet } from '@app/utils/chat/emoteProcessor';
+import { getChatMessageListKey } from '@app/utils/chat/messageIdentity/getChatMessageListKey';
+import { isRenderableChatMessage } from '@app/utils/chat/messageIdentity/isRenderableChatMessage';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
-import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
+import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor/resolveCachedSenderColor';
 import { resolveMentionColor } from '@app/utils/chat/resolveMentionColor';
 
 import type {
   ChatListRef,
   ChatListRenderItemInfo,
 } from '../components/ChatList';
+import { getChatTextStyles } from '../components/ChatMessage/chatText.styles';
 import {
   type BadgePressData,
   type EmotePressData,
@@ -35,19 +41,25 @@ import {
   RowVisibilityContext,
   useRowVisibility,
 } from '../components/ChatMessage/rowVisibility';
-import { styles } from '../styles';
 import type { ChatRowDisplayFlags } from '../types/chatUiFlags';
 import { chatEntranceSpring } from '../util/chatEntranceSpring';
-import { getChatMessageListKey } from '../util/chatMessages/getChatMessageListKey';
-import { isRenderableChatMessage } from '../util/chatMessages/isRenderableChatMessage';
 import { shouldAnimateMessageEntrance } from '../util/chatMessages/shouldAnimateMessageEntrance';
 import { getChatRowItemType } from '../util/chatRowItemType';
-import { normaliseChatUsername } from '../util/chatUsernames/normaliseChatUsername';
-
-const chatRowKeyExtractor = (item: AnyChatMessageType) =>
-  getChatMessageListKey(item);
+import { isUserNoticeTags } from '../util/richChatMessage/isUserNoticeTags';
 
 const messageRowEntering = chatEntranceSpring(FadeInUp);
+
+/**
+ * A row renders an arbitrary message from the union, so its notice tags have
+ * to be read through a guard rather than the generic - the variant is only
+ * known at runtime.
+ */
+function getRowNoticeTags(
+  message: AnyChatMessageType,
+): UserNoticeTags | undefined {
+  const tags = 'notice_tags' in message ? message.notice_tags : undefined;
+  return isUserNoticeTags(tags) ? tags : undefined;
+}
 
 interface ChatRowPreferences {
   animate: boolean;
@@ -139,6 +151,7 @@ const ChatMessageRow = function ChatMessageRow({
   );
   const isAlternatingRow =
     showAlternatingChatRows && (msg.seq ?? index) % 2 === 1;
+  const rowStyle = getChatTextStyles(fontScale, chatDensity === 'compact').row;
 
   const messageDisplay = useMemo(
     () => ({
@@ -184,7 +197,7 @@ const ChatMessageRow = function ChatMessageRow({
       timestamp={msg.timestamp}
       sender={msg.sender}
       isAction={msg.isAction}
-      style={styles.messageContainer}
+      style={rowStyle}
       parentDisplayName={msg.parentDisplayName}
       parentColor={msg.parentColor}
       replyDisplayName={msg.replyDisplayName}
@@ -203,10 +216,11 @@ const ChatMessageRow = function ChatMessageRow({
       highlightedUserSet={highlightedUserSet}
       messageDisplay={messageDisplay}
       onReplyContextPress={onReplyContextPress}
-      // @ts-expect-error - notice_tags union type not narrowing correctly
-      notice_tags={
-        'notice_tags' in msg && msg.notice_tags ? msg.notice_tags : undefined
-      }
+      // RichChatMessage is generic over one notice variant; a row renders the
+      // whole union, so TS collapses this prop to `undefined`. The value is
+      // guarded above - widening the component's generic is the real fix.
+      // @ts-expect-error - notice_tags cannot narrow against the row's union
+      notice_tags={getRowNoticeTags(msg)}
     />
   );
 
@@ -236,7 +250,7 @@ export function useChatRowRenderer({
   user,
 }: UseChatRowRendererOptions) {
   const getMentionColor = useCallback((username: string): string => {
-    const cacheKey = username.replace(/^@/, '').trim().toLowerCase();
+    const cacheKey = normaliseChatUsername(username);
     const cached = getSessionCacheString('mentionColors', cacheKey);
     if (cached !== undefined) {
       return cached;
@@ -293,11 +307,13 @@ export function useChatRowRenderer({
     [channelId],
   );
 
-  const onBadgePressRef = useRef(onBadgePress);
-  const onEmotePressRef = useRef(onEmotePress);
-  const onMessageLongPressRef = useRef(onMessageLongPress);
-  const onUsernamePressRef = useRef(onUsernamePress);
-  const parseTextForEmotesRef = useRef(parseTextForEmotes);
+  // Mirrored into refs so `renderItem` stays stable when a press handler's
+  // identity changes; a new renderItem re-renders every visible row.
+  const onBadgePressRef = useSyncRef(onBadgePress);
+  const onEmotePressRef = useSyncRef(onEmotePress);
+  const onMessageLongPressRef = useSyncRef(onMessageLongPress);
+  const onUsernamePressRef = useSyncRef(onUsernamePress);
+  const parseTextForEmotesRef = useSyncRef(parseTextForEmotes);
 
   const highlightedUserSet = useMemo(
     () =>
@@ -341,6 +357,10 @@ export function useChatRowRenderer({
         .join('|'),
     [customHighlights],
   );
+  /**
+   * Spreads `displayFlags` rather than restating it: a flag added to the rows
+   * but missed here would silently stop that preference from re-rendering them.
+   */
   // Note: mentionLoginRevision is intentionally excluded. It bumps ~every 400ms
   // as @mention logins resolve from Helix; including it re-rendered every visible
   // row each time (the dominant frame-drop source in mention-heavy chat - busy
@@ -348,32 +368,20 @@ export function useChatRowRenderer({
   // to the revision themselves (MentionSpan), so only those spans re-render.
   const messageListExtraData = useMemo(
     () => ({
-      animate: preferences.animate,
+      ...displayFlags,
       chatDensity: preferences.chatDensity,
-      chatFontScale: preferences.chatFontScale,
       currentUsernameNormalized,
       customHighlightsKey,
-      disableEmoteAnimations: preferences.disableEmoteAnimations,
       highlightedUsersKey: highlightedUsers.join('\u001f'),
-      showAlternatingChatRows: preferences.showAlternatingChatRows,
-      showInlineReplyContext: preferences.showInlineReplyContext,
-      showTimestamps: preferences.chatTimestamps,
     }),
     [
       currentUsernameNormalized,
       customHighlightsKey,
+      displayFlags,
       highlightedUsers,
-      preferences.animate,
       preferences.chatDensity,
-      preferences.chatFontScale,
-      preferences.disableEmoteAnimations,
-      preferences.showAlternatingChatRows,
-      preferences.showInlineReplyContext,
-      preferences.chatTimestamps,
     ],
   );
-  const listContentStyle = styles.listContent;
-
   const handleReplyContextPress = useCallback(
     (replyParentMessageId: string) => {
       const messages = messages$.peek();
@@ -409,16 +417,7 @@ export function useChatRowRenderer({
       setHighlightedReplyTargetMessageId,
     ],
   );
-  const handleReplyContextPressRef = useRef(handleReplyContextPress);
-
-  useLayoutEffect(() => {
-    onBadgePressRef.current = onBadgePress;
-    onEmotePressRef.current = onEmotePress;
-    onMessageLongPressRef.current = onMessageLongPress;
-    onUsernamePressRef.current = onUsernamePress;
-    parseTextForEmotesRef.current = parseTextForEmotes;
-    handleReplyContextPressRef.current = handleReplyContextPress;
-  });
+  const handleReplyContextPressRef = useSyncRef(handleReplyContextPress);
 
   const getItemType = useCallback(
     (item: AnyChatMessageType) =>
@@ -455,6 +454,10 @@ export function useChatRowRenderer({
         />
       );
     },
+    // The *Ref entries are stable ref objects from useSyncRef; they are listed
+    // only because the rule cannot see through the custom hook. Reading
+    // `.current` here is the point — it keeps renderItem stable when a handler
+    // changes identity, which would otherwise re-render every visible row.
     [
       channelId,
       currentUsernameForMentions,
@@ -462,20 +465,20 @@ export function useChatRowRenderer({
       customHighlights,
       displayFlags,
       getMentionColor,
+      handleReplyContextPressRef,
       highlightedUserSet,
+      onBadgePressRef,
+      onEmotePressRef,
+      onMessageLongPressRef,
+      onUsernamePressRef,
+      parseTextForEmotesRef,
       preferences.chatDensity,
     ],
   );
 
-  const keyExtractor = useCallback(
-    (item: AnyChatMessageType) => chatRowKeyExtractor(item),
-    [],
-  );
-
   return {
     getItemType,
-    keyExtractor,
-    listContentStyle,
+    keyExtractor: getChatMessageListKey,
     messageListExtraData,
     renderItem,
   };

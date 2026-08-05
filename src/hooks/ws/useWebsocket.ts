@@ -1,5 +1,7 @@
 import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
+import { useSyncRef } from '@app/hooks/useSyncRef';
+
 import { ReadyState } from './constants';
 import { createOrJoinSocket } from './createOrJoin';
 import { getUrl } from './get-url';
@@ -30,19 +32,20 @@ export const useWebsocket = (
   const startRef = useRef<() => void>(() => {});
   const reconnectCount = useRef<number>(0);
   const webSocketProxy = useRef<WebSocket | null>(null);
-  const optionsCache = useRef<Options>({});
-  optionsCache.current = options;
-  const connectRef = useRef(true);
-  connectRef.current = connect;
+  const optionsCache = useSyncRef(options);
+  const connectRef = useSyncRef(connect);
 
-  const readyStateSnapshotRef = useRef(readyState);
-  readyStateSnapshotRef.current = readyState;
-
+  /**
+   * `convertedUrl` is resolved asynchronously by the connect effect, so the
+   * ready state a consumer sees has to be derived from it during render -
+   * there is no state to mirror it into without an extra commit.
+   */
+  // react-doctor-disable-next-line react-hooks-js/refs -- see above
+  const activeUrl = convertedUrl.current;
   const readyStateFromUrl: ReadyState =
-    convertedUrl.current &&
-    readyStateSnapshotRef.current[convertedUrl.current] !== undefined
-      ? (readyStateSnapshotRef.current[convertedUrl.current] as ReadyState)
-      : url !== null && connectRef.current
+    activeUrl && readyState[activeUrl] !== undefined
+      ? (readyState[activeUrl] as ReadyState)
+      : url !== null && connect
         ? ReadyState.CONNECTING
         : ReadyState.UNINSTANTIATED;
 
@@ -182,7 +185,7 @@ export const useWebsocket = (
       };
     }
     return undefined;
-  }, [url, stringifiedQueryParams, optionsCache]);
+  }, [url, stringifiedQueryParams, optionsCache, connectRef]);
 
   // Tear down the current socket (if any) and start a fresh connection.
   // Lets callers revive a connection whose automatic retries were exhausted,

@@ -149,20 +149,21 @@ export function useSeventvWs(
 ): UseSeventvWsReturn {
   const hasInitialized = useRef(false);
   const lastScreenRef = useRef<string | null>(null);
-  const emoteCallbackRef = useRef(options?.onEmoteUpdate);
-  const cosmeticCallbackRef = useRef(options?.onCosmeticCreate);
-  const cosmeticUpdateCallbackRef = useRef(options?.onCosmeticUpdate);
-  const cosmeticDeleteCallbackRef = useRef(options?.onCosmeticDelete);
-  const entitlementCallbackRef = useRef(options?.onEntitlementCreate);
-  const entitlementUpdateCallbackRef = useRef(options?.onEntitlementUpdate);
-  const entitlementDeleteCallbackRef = useRef(options?.onEntitlementDelete);
-  const entitlementResetCallbackRef = useRef(options?.onEntitlementReset);
-  const eventCallbackRef = useRef(options?.onEvent);
+  const emoteCallbackRef = useSyncRef(options?.onEmoteUpdate);
+  const cosmeticCallbackRef = useSyncRef(options?.onCosmeticCreate);
+  const cosmeticUpdateCallbackRef = useSyncRef(options?.onCosmeticUpdate);
+  const cosmeticDeleteCallbackRef = useSyncRef(options?.onCosmeticDelete);
+  const entitlementCallbackRef = useSyncRef(options?.onEntitlementCreate);
+  const entitlementUpdateCallbackRef = useSyncRef(options?.onEntitlementUpdate);
+  const entitlementDeleteCallbackRef = useSyncRef(options?.onEntitlementDelete);
+  const entitlementResetCallbackRef = useSyncRef(options?.onEntitlementReset);
+  const eventCallbackRef = useSyncRef(options?.onEvent);
   const connectionTimestampRef = useRef<number | null>(null);
   const pathname = usePathname();
 
-  const twitchChannelIdRef = useRef<string | undefined>(undefined);
-  const sevenTvEmoteSetIdRef = useRef<string | undefined>(undefined);
+  // eslint-disable-next-line react-doctor/no-event-handler -- useSyncRef mirrors an id into a ref for the socket callbacks; it is not a handler
+  const twitchChannelIdRef = useSyncRef(options?.twitchChannelId);
+  const sevenTvEmoteSetIdRef = useSyncRef(options?.sevenTvEmoteSetId);
 
   const currentEmoteSetIdRef = useRef<string | undefined>(undefined);
   const activeSubscriptionsRef = useLazyRef(() => new Set<string>());
@@ -189,9 +190,9 @@ export function useSeventvWs(
   // entitlement/cosmetic streams for channels we've left.
   const subscribedChannelIdRef = useRef<string | null>(null);
   const subscribedOwnerIdRef = useRef<string | null>(null);
-  const sevenTvChannelUserIdRef = useRef<string | undefined>(undefined);
-  const emoteSetSwitchCallbackRef = useRef(options?.onEmoteSetSwitch);
-  const otherSetUpdateCallbackRef = useRef(
+  const sevenTvChannelUserIdRef = useSyncRef(options?.sevenTvChannelUserId);
+  const emoteSetSwitchCallbackRef = useSyncRef(options?.onEmoteSetSwitch);
+  const otherSetUpdateCallbackRef = useSyncRef(
     options?.onEmoteSetUpdateForOtherSet,
   );
 
@@ -236,21 +237,6 @@ export function useSeventvWs(
       subscribedOwnerIdRef.current = null;
     }
   };
-
-  emoteCallbackRef.current = options?.onEmoteUpdate;
-  cosmeticCallbackRef.current = options?.onCosmeticCreate;
-  cosmeticUpdateCallbackRef.current = options?.onCosmeticUpdate;
-  cosmeticDeleteCallbackRef.current = options?.onCosmeticDelete;
-  entitlementCallbackRef.current = options?.onEntitlementCreate;
-  entitlementUpdateCallbackRef.current = options?.onEntitlementUpdate;
-  entitlementDeleteCallbackRef.current = options?.onEntitlementDelete;
-  entitlementResetCallbackRef.current = options?.onEntitlementReset;
-  eventCallbackRef.current = options?.onEvent;
-  twitchChannelIdRef.current = options?.twitchChannelId;
-  sevenTvEmoteSetIdRef.current = options?.sevenTvEmoteSetId;
-  sevenTvChannelUserIdRef.current = options?.sevenTvChannelUserId;
-  emoteSetSwitchCallbackRef.current = options?.onEmoteSetSwitch;
-  otherSetUpdateCallbackRef.current = options?.onEmoteSetUpdateForOtherSet;
 
   const currentScreen = getSevenTvChatScreenFromPathname(pathname);
 
@@ -896,8 +882,7 @@ export function useSeventvWs(
     }
   }, [getWebSocket]);
 
-  const shouldConnectRef = useRef(false);
-  shouldConnectRef.current = !!shouldConnect;
+  const shouldConnectRef = useSyncRef(!!shouldConnect);
 
   // Automatic retries are budgeted per outage; a long background stretch can
   // exhaust them. Foregrounding with a dead socket forces a fresh connect
@@ -916,7 +901,7 @@ export function useSeventvWs(
       }
     });
     return () => subscription.remove();
-  }, [getWebSocket, reconnect]);
+  }, [getWebSocket, reconnect, shouldConnectRef]);
 
   // The channel owner's 7TV id resolves asynchronously and can land after
   // the initial subscriptions were sent; (re)subscribe user.update when it
@@ -1015,7 +1000,7 @@ export function useSeventvWs(
       connectionTimestampRef.current = Date.now();
       hasInitialized.current = true;
     }
-  }, [currentScreen]);
+  }, [currentScreen, sevenTvEmoteSetIdRef, twitchChannelIdRef]);
 
   useUnmountCallback(() => {
     logger.stvWs.info('[useSeventvWs] Cleaning up SevenTV WS client');

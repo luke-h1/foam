@@ -1,6 +1,6 @@
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 
-import { createSystemMessage } from '@app/components/Chat/util/messageHandlers/createSystemMessage';
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import i18next from '@app/i18n/i18next';
 import {
   clearCache,
@@ -8,6 +8,7 @@ import {
 } from '@app/store/chat/actions/channelLoad';
 import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
 import { addMessage } from '@app/store/chat/actions/messages';
+import { createSystemMessage } from '@app/utils/chat/messageHandlers/createSystemMessage';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 
@@ -37,20 +38,11 @@ export function useChatSettingsActions({
   reprocessAllMessages,
   scrollToBottom,
 }: UseChatSettingsActionsOptions) {
-  const channelNameRef = useRef(channelName);
-  channelNameRef.current = channelName;
-
-  const refetchEmotesRef = useRef(refetchEmotes);
-  refetchEmotesRef.current = refetchEmotes;
-
-  const reprocessAllMessagesRef = useRef(reprocessAllMessages);
-  reprocessAllMessagesRef.current = reprocessAllMessages;
-
-  const partChannelRef = useRef(partChannel);
-  partChannelRef.current = partChannel;
-
-  const joinChannelRef = useRef(joinChannel);
-  joinChannelRef.current = joinChannel;
+  const channelNameRef = useSyncRef(channelName);
+  const refetchEmotesRef = useSyncRef(refetchEmotes);
+  const reprocessAllMessagesRef = useSyncRef(reprocessAllMessages);
+  const partChannelRef = useSyncRef(partChannel);
+  const joinChannelRef = useSyncRef(joinChannel);
 
   const handleClearChatCache = useCallback(() => {
     clearCache(channelId);
@@ -80,7 +72,7 @@ export function useChatSettingsActions({
         i18next.t('chat:emotesRefreshed'),
       ),
     );
-  }, []);
+  }, [channelNameRef]);
 
   const handleSettingsRefetchEmotes = useCallback(() => {
     void (async () => {
@@ -93,7 +85,7 @@ export function useChatSettingsActions({
         logger.chat.error('Failed to refetch emotes:', error);
       }
     })();
-  }, [announceRefresh, channelId]);
+  }, [announceRefresh, channelId, refetchEmotesRef, reprocessAllMessagesRef]);
 
   const handleRefreshCommand = useCallback(() => {
     void (async () => {
@@ -108,14 +100,14 @@ export function useChatSettingsActions({
         logger.chat.error('Failed to run refresh command:', error);
       }
     })();
-  }, [announceRefresh, channelId]);
+  }, [announceRefresh, channelId, refetchEmotesRef, reprocessAllMessagesRef]);
 
   const handleSettingsReconnect = useCallback(() => {
     partChannelRef.current(channelNameRef.current);
     setTimeout(() => {
       joinChannelRef.current(channelNameRef.current);
     }, 1000);
-  }, []);
+  }, [channelNameRef, joinChannelRef, partChannelRef]);
 
   return {
     handleClearChatCache,

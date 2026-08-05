@@ -1,3 +1,4 @@
+import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/chatScale';
 import {
   multiLayerPaint,
   paintedUsernames,
@@ -7,11 +8,10 @@ import { buildPaintCssDeclarations } from '@app/components/Chat/components/ChatM
 import { paintCssDeclarationsToBlock } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintCss/paintCssDeclarationsToBlock';
 import { buildPaintedUsernameHtml } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/paintHtml';
 import { buildPaintImageLayers } from '@app/components/Chat/components/ChatMessage/CosmeticUsername/util/skiaPaintedUsernameRasterizer';
-import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/RichChatMessage.styles';
 import {
   denseEmoteData,
   reprocessChatLines,
-} from '@app/components/Chat/util/__fixtures__/resolveMessageEmoteParts.perf.fixture';
+} from '@app/components/Chat/util/__tests__/__fixtures__/resolveMessageEmoteParts.perf.fixture';
 import { resolveMessageEmoteParts } from '@app/components/Chat/util/resolveMessageEmoteParts';
 import {
   ingestBurstMessages,

@@ -3,6 +3,7 @@ import type { ReactTestInstance } from 'react-test-renderer';
 
 import { act, fireEvent, render } from '@testing-library/react-native';
 
+import { MESSAGE_LONG_PRESS_DELAY_MS } from '@app/components/Chat/hooks/useRichChatMessage';
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { preferences$ } from '@app/store/preferenceStore';
@@ -14,7 +15,6 @@ import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { lightenColor } from '@app/utils/color/lightenColor';
 
 import { RichChatMessage } from '../RichChatMessage';
-import { MESSAGE_LONG_PRESS_DELAY_MS } from '../useRichChatMessage';
 
 jest.mock('@app/utils/date-time/date', () => ({
   formatDate: jest.fn(() => '12:00'),
@@ -529,14 +529,17 @@ describe('RichChatMessage', () => {
       );
 
       const { getAllByText } = render(
-        <RichChatMessage {...message} showInlineReplyContext />,
+        <RichChatMessage
+          {...message}
+          messageDisplay={{ showInlineReplyContext: true }}
+        />,
       );
 
       const replyTargetMentions = getAllByText('@OriginalUser');
 
       expect(replyTargetMentions[0]).toHaveStyle({
         fontSize: 14,
-        lineHeight: 17,
+        lineHeight: 21,
       });
 
       expect(replyTargetMentions[0]).not.toHaveStyle({
@@ -774,7 +777,10 @@ describe('RichChatMessage', () => {
     ]);
 
     const { queryByText } = render(
-      <RichChatMessage {...message} showTimestamp={false} />,
+      <RichChatMessage
+        {...message}
+        messageDisplay={{ showTimestamp: false }}
+      />,
     );
 
     expect(queryByText('12:00')).toBeNull();
@@ -806,23 +812,52 @@ describe('RichChatMessage', () => {
     );
 
     expect(getByTestId('chat-message')).toHaveStyle({
-      borderLeftColor: 'rgba(145, 71, 255, 0.38)',
+      borderLeftColor: '#9147FF',
       borderLeftWidth: 2,
     });
   });
 
-  test('renders denser text in compact mode', () => {
+  test('keeps the body font size across densities and tightens only leading', () => {
     const message = createMockMessage([
       { type: 'text', content: 'hello world' },
     ]);
 
-    const { getByText } = render(
-      <RichChatMessage {...message} density='compact' />,
+    const comfortable = render(
+      <RichChatMessage {...message} density='comfortable' />,
     );
+    expect(comfortable.getByText('hello world')).toHaveStyle({
+      fontSize: 14,
+      lineHeight: 21,
+    });
+    comfortable.unmount();
 
-    expect(getByText('hello world')).toHaveStyle({
-      fontSize: 11,
-      lineHeight: 14,
+    const compact = render(<RichChatMessage {...message} density='compact' />);
+    expect(compact.getByText('hello world')).toHaveStyle({
+      fontSize: 14,
+      lineHeight: 18,
+    });
+  });
+
+  test('scales the body with the font-scale preference in both densities', () => {
+    const message = createMockMessage([
+      { type: 'text', content: 'hello world' },
+    ]);
+
+    const large = render(
+      <RichChatMessage {...message} density='compact' fontScale='large' />,
+    );
+    expect(large.getByText('hello world')).toHaveStyle({
+      fontSize: 16,
+      lineHeight: 21,
+    });
+    large.unmount();
+
+    const small = render(
+      <RichChatMessage {...message} density='comfortable' fontScale='small' />,
+    );
+    expect(small.getByText('hello world')).toHaveStyle({
+      fontSize: 12,
+      lineHeight: 18,
     });
   });
 

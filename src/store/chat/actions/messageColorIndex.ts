@@ -1,3 +1,5 @@
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
+
 import type { AnyChatMessageType } from '../types/constants';
 
 const messageColorIndex = new Map<string, string>();
@@ -20,10 +22,8 @@ const capSenderColorIndex = (): void => {
   }
 };
 
-const normaliseIndexKey = (value?: string): string | null => {
-  const normalised = value?.trim().toLowerCase();
-  return normalised || null;
-};
+const normaliseIndexKey = (value?: string): string | null =>
+  normaliseChatUsername(value) || null;
 
 export const indexMessageColor = (message: AnyChatMessageType): void => {
   if (message.userstate?.color && message.message_id) {

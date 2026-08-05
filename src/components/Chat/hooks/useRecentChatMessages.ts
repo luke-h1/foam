@@ -1,5 +1,6 @@
 import { MutableRefObject, useEffect, useRef } from 'react';
 
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import { recentMessagesService } from '@app/services/recent-messages-service';
 import {
   getMaxChatMessages,
@@ -26,15 +27,10 @@ export function useRecentChatMessages({
   showRecentMessages: boolean;
 }) {
   const restoredRecentCountRef = useRef(0);
-  const scrollChatToEndRef = useRef(scrollChatToEnd);
-  const processRecentIrcLineRef = useRef(processRecentIrcLine);
-  const forceFlushRef = useRef(forceFlush);
-  const showRecentMessagesRef = useRef(showRecentMessages);
-
-  scrollChatToEndRef.current = scrollChatToEnd;
-  processRecentIrcLineRef.current = processRecentIrcLine;
-  forceFlushRef.current = forceFlush;
-  showRecentMessagesRef.current = showRecentMessages;
+  const scrollChatToEndRef = useSyncRef(scrollChatToEnd);
+  const processRecentIrcLineRef = useSyncRef(processRecentIrcLine);
+  const forceFlushRef = useSyncRef(forceFlush);
+  const showRecentMessagesRef = useSyncRef(showRecentMessages);
 
   useEffect(() => {
     chatStore$.currentChannelId.set(channelId);
@@ -43,7 +39,7 @@ export function useRecentChatMessages({
     if (restoredCount > 0 && !showRecentMessagesRef.current) {
       scrollChatToEndRef.current();
     }
-  }, [channelId]);
+  }, [channelId, scrollChatToEndRef, showRecentMessagesRef]);
 
   useEffect(() => {
     if (!showRecentMessagesRef.current) {
@@ -93,5 +89,13 @@ export function useRecentChatMessages({
       abortController.abort();
       isLoadingRecentMessagesRef.current = false;
     };
-  }, [channelName, isLoadingRecentMessagesRef, showRecentMessages]);
+  }, [
+    channelName,
+    forceFlushRef,
+    isLoadingRecentMessagesRef,
+    processRecentIrcLineRef,
+    scrollChatToEndRef,
+    showRecentMessages,
+    showRecentMessagesRef,
+  ]);
 }

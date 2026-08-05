@@ -1,5 +1,3 @@
-import { normalizeSevenTvPaint } from '@app/components/Chat/util/normalizeSevenTvCosmetics/normalizeSevenTvPaint';
-import type { PaintGradientLayer } from '@app/components/Chat/util/normalizeSevenTvCosmetics/types';
 import { PaintRadialGradientShape } from '@app/graphql/generated/gql';
 import { IndexedCollection } from '@app/services/ws/util/indexedCollection';
 import type { PaintData, PaintShadow } from '@app/types/seventv/cosmetics';
@@ -8,6 +6,8 @@ import type {
   SevenTvPaintSource,
   V4Paint,
 } from '@app/utils/color/sevenTvPaintData/types';
+import { normalizeSevenTvPaint } from '@app/utils/seventv/cosmetics/normalizeSevenTvPaint';
+import type { PaintGradientLayer } from '@app/utils/seventv/cosmetics/types';
 
 const packRgba = (color: {
   r: number;

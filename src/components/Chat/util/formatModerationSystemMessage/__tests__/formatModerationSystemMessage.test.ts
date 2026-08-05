@@ -1,4 +1,4 @@
-import { formatModerationSystemMessage } from '@app/components/Chat/util/formatModerationSystemMessage';
+import { formatModerationSystemMessage } from '../formatModerationSystemMessage';
 
 describe('formatModerationSystemMessage', () => {
   test('announces a timeout with its humanised duration', () => {

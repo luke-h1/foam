@@ -4,6 +4,7 @@ import * as Network from 'expo-network';
 
 import { useAuthContext } from '@app/context/AuthContext';
 import { useLazyRef } from '@app/hooks/useLazyRef';
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import { isE2EMode } from '@app/services/api/clients';
 import { usePreference } from '@app/store/preferenceStore';
 import { UserNoticeTags } from '@app/types/chat/irc-tags/usernotice';
@@ -100,22 +101,23 @@ interface UseTwitchChatOptions {
 }
 
 export function useTwitchChat(options: UseTwitchChatOptions = {}) {
-  const optionsRef = useRef<UseTwitchChatOptions>({});
-  optionsRef.current = options;
+  const optionsRef = useSyncRef(options);
   const { authState, user } = useAuthContext();
   const showJoinPartMessages = usePreference('showJoinPartMessages');
-  const showJoinPartMessagesRef = useRef(showJoinPartMessages);
-  showJoinPartMessagesRef.current = showJoinPartMessages;
-  const channel = optionsRef.current.channel;
-  const blockedUsers = optionsRef.current.blockedUsers ?? [];
-  const mutedWords = optionsRef.current.mutedWords ?? [];
-  const matchWholeWord = optionsRef.current.matchWholeWord ?? false;
+  const showJoinPartMessagesRef = useSyncRef(showJoinPartMessages);
+  const {
+    blockedUsers = [],
+    channel,
+    matchWholeWord = false,
+    mutedWords = [],
+    // eslint-disable-next-line react-doctor/no-event-handler -- these are data fields on the hook's options; the handler props on the same object are read through optionsRef inside the socket callbacks
+  } = options;
 
   const isAuthenticatedRef = useRef(false);
   const joinedChannelsRef = useLazyRef(() => new Set<string>());
   const pendingJoinChannelsRef = useLazyRef(() => new Set<string>());
-  const anonymousNickRef = useRef(
-    `justinfan${Math.floor(Math.random() * 90000) + 10000}`,
+  const anonymousNickRef = useLazyRef(
+    () => `justinfan${Math.floor(Math.random() * 90000) + 10000}`,
   );
   // The nick we authenticated with (login or anonymous justinfan). JOIN/PART
   // lines carry the acting user in their prefix, so this lets us tell our own
@@ -270,7 +272,15 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         }
       }, 250);
     }
-  }, [authState, user, sendIrcCommand, channel, joinChannel]);
+  }, [
+    anonymousNickRef,
+    authState,
+    channel,
+    joinChannel,
+    sendIrcCommand,
+    showJoinPartMessagesRef,
+    user,
+  ]);
 
   const partChannel = (channelName: string) => {
     if (!channelName) {
@@ -670,12 +680,9 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
   );
 
   // Reconnect chat when token changes (e.g. after 401 refresh) so we authenticate with the new token.
-  const getWebSocketRef = useRef(getWebSocket);
-  getWebSocketRef.current = getWebSocket;
-  const reconnectRef = useRef(reconnect);
-  reconnectRef.current = reconnect;
-  const shouldConnectRef = useRef(shouldConnect);
-  shouldConnectRef.current = shouldConnect;
+  const getWebSocketRef = useSyncRef(getWebSocket);
+  const reconnectRef = useSyncRef(reconnect);
+  const shouldConnectRef = useSyncRef(shouldConnect);
 
   // Probe an OPEN-but-possibly-half-open socket after the app returns to the
   // foreground or regains connectivity: send a PING and, if Twitch has not
@@ -732,8 +739,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       currentSocket.close(4004, 'chat liveness probe timeout');
     }, CHAT_FOREGROUND_LIVENESS_DEADLINE_MS);
   };
-  const verifyChatLivenessRef = useRef(verifyChatLiveness);
-  verifyChatLivenessRef.current = verifyChatLiveness;
+  const verifyChatLivenessRef = useSyncRef(verifyChatLiveness);
 
   useEffect(() => {
     if (!shouldConnect) {
@@ -777,7 +783,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     }, CHAT_HEARTBEAT_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [shouldConnect, readyState, sendIrcCommand]);
+  }, [getWebSocketRef, readyState, sendIrcCommand, shouldConnect]);
 
   // Chat has no proactive recovery on its own: a suspended or network-flapped
   // socket often stays OPEN with no close event, so without this it would take
@@ -821,7 +827,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
         probeTimeoutRef.current = null;
       }
     };
-  }, [shouldConnect]);
+  }, [shouldConnect, verifyChatLivenessRef]);
 
   useEffect(() => {
     const currentToken = authState?.token?.accessToken;
@@ -837,7 +843,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       );
       getWebSocketRef.current().close(4001, 'auth token refreshed');
     }
-  }, [authState?.token?.accessToken, shouldConnect]);
+  }, [authState?.token?.accessToken, getWebSocketRef, shouldConnect]);
 
   // Membership is negotiated once at authenticate time, so a live socket won't
   // start (or stop) receiving other users' JOIN/PART until it reconnects with a
@@ -856,7 +862,7 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
       '[useTwitchChat] Join/part preference changed, reconnecting IRC to renegotiate membership capability',
     );
     getWebSocketRef.current().close(4005, 'membership capability change');
-  }, [showJoinPartMessages, shouldConnect]);
+  }, [getWebSocketRef, shouldConnect, showJoinPartMessages]);
 
   useEffect(() => {
     sendIrcMessageRef.current = sendWebSocketMessage;
@@ -870,10 +876,8 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     };
   }, [sendWebSocketMessage]);
 
-  const joinChannelRef = useRef(joinChannel);
-  joinChannelRef.current = joinChannel;
-  const partChannelRef = useRef(partChannel);
-  partChannelRef.current = partChannel;
+  const joinChannelRef = useSyncRef(joinChannel);
+  const partChannelRef = useSyncRef(partChannel);
 
   useEffect(() => {
     if (!shouldConnect || !isAuthenticatedRef.current) {
@@ -897,7 +901,13 @@ export function useTwitchChat(options: UseTwitchChatOptions = {}) {
     } else if (previousChannel) {
       partChannelRef.current(previousChannel);
     }
-  }, [channel, joinedChannelsRef, shouldConnect]);
+  }, [
+    channel,
+    joinChannelRef,
+    joinedChannelsRef,
+    partChannelRef,
+    shouldConnect,
+  ]);
 
   useEffect(() => {
     const joinedChannels = joinedChannelsRef.current;

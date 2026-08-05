@@ -2,38 +2,38 @@ import { useMemo } from 'react';
 import { View } from 'react-native';
 
 import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
-import {
-  canRenderMessageInline,
-  type InlineFlowPart,
-} from '@app/components/Chat/util/canRenderMessageInline';
-import { normaliseUsername } from '@app/components/Chat/util/richChatMessageHelpers/normaliseUsername';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
+import i18next from '@app/i18n/i18next';
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
+import { canFlowInline } from '@app/utils/chat/deriveChatBody/canFlowInline';
+import { getMessageStructure } from '@app/utils/chat/deriveChatBody/getMessageStructure';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { ChatMessagePressable } from '../ChatMessagePressable';
+import {
+  CHAT_SURFACE_COLORS,
+  densityFromCompact,
+  getChatScale,
+} from '../chatScale';
+import { getChatTextStyles } from '../chatText.styles';
 import { styles } from '../RichChatMessage.styles';
 import { ChatMessageBody } from './ChatMessageBody';
 import { InlineMessageSpans } from './InlineMessageSpans';
-import type { UseChatMessagePartRendererArgs } from './useChatMessagePartRenderer';
-
-const REPLY_CONTEXT_EMOTE_SIZE_COMFORTABLE = 20;
-const REPLY_CONTEXT_EMOTE_SIZE_COMPACT = 18;
+import type { ChatMessagePartRendererArgs } from './types/ChatMessagePartRendererArgs';
 
 interface ReplyingToHeaderProps {
   canJumpToReplyTarget: boolean;
-  compact: boolean;
   isReplyingToCurrentUser: boolean;
   onReplyContextPress?: (replyParentMessageId: string) => void;
   parentDisplayName?: string;
   replyBody?: string;
   replyParentMessageId?: string;
-  rendererArgs: UseChatMessagePartRendererArgs;
+  rendererArgs: ChatMessagePartRendererArgs;
 }
 
 export function ReplyingToHeader({
   canJumpToReplyTarget,
-  compact,
   isReplyingToCurrentUser,
   onReplyContextPress,
   parentDisplayName,
@@ -42,7 +42,8 @@ export function ReplyingToHeader({
   rendererArgs,
 }: ReplyingToHeaderProps) {
   const { parseTextForEmotes, ...partRendererArgs } = rendererArgs;
-  const replyPlainMentionTarget = normaliseUsername(parentDisplayName);
+  const { compact, fontScale } = rendererArgs;
+  const replyPlainMentionTarget = normaliseChatUsername(parentDisplayName);
   const parsedReplyBody = useMemo((): ParsedPart[] => {
     const trimmed = replyBody?.trim();
     if (!trimmed) {
@@ -57,26 +58,31 @@ export function ReplyingToHeader({
   }, [parseTextForEmotes, replyBody]);
 
   const prefix = isReplyingToCurrentUser
-    ? 'Replying to you'
-    : `Replying to @${parentDisplayName}`;
-  const canRenderInlineQuote = canRenderMessageInline(parsedReplyBody, {
+    ? i18next.t('chat:replyContext.replyingToYou')
+    : i18next.t('chat:replyContext.replyingToUser', {
+        username: parentDisplayName,
+      });
+  const canRenderInlineQuote = canFlowInline(parsedReplyBody, {
     hasPaint: false,
     isModerated: false,
   });
-  const quoteContainsEmotes = parsedReplyBody.some(
-    part => part.type === 'emote',
-  );
+  const quoteContainsEmotes =
+    getMessageStructure(parsedReplyBody).containsEmotes;
   const replyContextIconColor = isReplyingToCurrentUser
     ? CHAT_NOTICE_ACCENTS.replyToYou
-    : 'rgba(255, 255, 255, 0.5)';
+    : CHAT_SURFACE_COLORS.muted;
+  const textStyles = getChatTextStyles(fontScale, compact);
+  const replyEmoteSize = getChatScale(
+    fontScale,
+    densityFromCompact(compact),
+  ).replyEmoteSize;
   const replyContextPrefixTextStyle = [
-    styles.replyContextPrefixText,
-    compact && styles.replyContextTextCompact,
+    textStyles.replyContext,
+    styles.replyContextPrefixFlex,
     isReplyingToCurrentUser && styles.replyContextTextReplyToYou,
   ];
   const replyContextBodyTextStyle = [
-    styles.replyContextBodyText,
-    compact && styles.replyContextTextCompact,
+    textStyles.replyContext,
     isReplyingToCurrentUser && styles.replyContextTextReplyToYou,
   ];
 
@@ -97,7 +103,7 @@ export function ReplyingToHeader({
             numberOfLines={1}
             style={[
               replyContextPrefixTextStyle,
-              quoteContainsEmotes && styles.replyContextEmoteLine,
+              quoteContainsEmotes && textStyles.replyContextEmoteLine,
             ]}
           >
             <Text style={replyContextPrefixTextStyle}>
@@ -105,13 +111,8 @@ export function ReplyingToHeader({
             </Text>
             <InlineMessageSpans
               {...partRendererArgs}
-              compact={compact}
-              emoteTargetSize={
-                compact
-                  ? REPLY_CONTEXT_EMOTE_SIZE_COMPACT
-                  : REPLY_CONTEXT_EMOTE_SIZE_COMFORTABLE
-              }
-              message={parsedReplyBody as InlineFlowPart[]}
+              emoteTargetSize={replyEmoteSize}
+              message={parsedReplyBody}
               replyPlainMentionTarget={replyPlainMentionTarget}
               textStyle={replyContextBodyTextStyle}
             />
@@ -129,12 +130,7 @@ export function ReplyingToHeader({
                 <View style={styles.replyContextBodyParts}>
                   <ChatMessageBody
                     {...partRendererArgs}
-                    compact={compact}
-                    emoteTargetSize={
-                      compact
-                        ? REPLY_CONTEXT_EMOTE_SIZE_COMPACT
-                        : REPLY_CONTEXT_EMOTE_SIZE_COMFORTABLE
-                    }
+                    emoteTargetSize={replyEmoteSize}
                     mode='message'
                     message={parsedReplyBody}
                     replyPlainMentionTarget={replyPlainMentionTarget}
