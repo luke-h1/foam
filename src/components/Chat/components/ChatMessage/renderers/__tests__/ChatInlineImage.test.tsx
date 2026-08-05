@@ -355,6 +355,25 @@ describe('ChatInlineImage loading shimmer', () => {
     expect(screen.queryByTestId('chat-image-shimmer')).not.toBeOnTheScreen();
   });
 
+  test('a ref released under a mounted row falls back to the uri with a loading box, not a blank one', () => {
+    mockSharedRef = { isAnimated: false };
+    const sourceUrl = 'https://cdn.7tv.app/emote/released/2x.avif';
+    render(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
+
+    act(() => mockImageProps?.onLoad?.());
+    expect(screen.queryByTestId('chat-image-shimmer')).not.toBeOnTheScreen();
+
+    // A memory-pressure trim sheds the decoded ref while the row stays mounted.
+    mockSharedRef = null;
+    screen.rerender(<ChatInlineImage sourceUrl={sourceUrl} style={{}} />);
+
+    expect(screen.getByTestId('chat-image-shimmer')).toBeOnTheScreen();
+
+    act(() => mockImageProps?.onLoad?.());
+
+    expect(screen.queryByTestId('chat-image-shimmer')).not.toBeOnTheScreen();
+  });
+
   test('showLoadingShimmer=false suppresses the overlay on an uncached load', () => {
     mockSharedRef = null;
     render(

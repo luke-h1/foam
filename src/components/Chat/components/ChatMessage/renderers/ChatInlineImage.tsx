@@ -100,22 +100,28 @@ function ChatInlineImageComponent({
   );
 
   const [reloadNonce, setReloadNonce] = useState(0);
-  // Per-emote load progress, tagged with the url it belongs to. When LegendList
-  // recycles the row to a new emote the tag stops matching, so we derive a fresh
-  // "first candidate, loading" view until a handler writes the new url back. This
-  // avoids both a frame showing the previous emote's fallback variant and any
-  // render-phase setState to reset it.
+  // Per-emote load progress, tagged with the url it belongs to and the path that
+  // rendered it. When LegendList recycles the row to a new emote the tag stops
+  // matching, so we derive a fresh "first candidate, loading" view until a
+  // handler writes the new url back. This avoids both a frame showing the
+  // previous emote's fallback variant and any render-phase setState to reset it.
+  //
+  // `viaRef` is part of the tag because the cache can drop a decoded ref out from
+  // under a mounted row. Untagged, the 'loaded' left behind by the ref render
+  // suppresses the shimmer and the slot draws nothing while the uri re-reads from
+  // disk - an emote-only message reads as a blank full-height row.
   const [load, setLoad] = useState<{
     index: number;
     status: 'loading' | 'loaded' | 'failed';
     url: string;
-  }>({ index: 0, status: 'loading', url: sourceUrl });
+    viaRef: boolean;
+  }>({ index: 0, status: 'loading', url: sourceUrl, viaRef: false });
   const retryCountRef = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [failedRefUrl, setFailedRefUrl] = useState<string | null>(null);
 
-  const isCurrentUrl = load.url === sourceUrl;
   const showRef = sharedRef != null && failedRefUrl !== sourceUrl;
+  const isCurrentUrl = load.url === sourceUrl && load.viaRef === showRef;
   const candidateIndex = !showRef && isCurrentUrl ? load.index : 0;
   const status = isCurrentUrl ? load.status : 'loading';
 
@@ -146,8 +152,9 @@ function ChatInlineImageComponent({
       index: prev.url === sourceUrl ? prev.index : 0,
       status: 'loaded',
       url: sourceUrl,
+      viaRef: showRef,
     }));
-  }, [sourceUrl]);
+  }, [showRef, sourceUrl]);
 
   const handleError = useCallback(
     (event?: ImageErrorEventData) => {
@@ -167,10 +174,12 @@ function ChatInlineImageComponent({
           to: fallbackChain[candidateIndex + 1],
         });
         retryCountRef.current = 0;
+        // Either showRef was already false, or setFailedRefUrl just turned it off.
         setLoad({
           index: candidateIndex + 1,
           status: 'loading',
           url: sourceUrl,
+          viaRef: false,
         });
         return;
       }
@@ -199,7 +208,12 @@ function ChatInlineImageComponent({
             cacheReleaseRaces: getEmoteRefReleaseRaceCount(),
           },
         });
-        setLoad({ index: candidateIndex, status: 'failed', url: sourceUrl });
+        setLoad({
+          index: candidateIndex,
+          status: 'failed',
+          url: sourceUrl,
+          viaRef: false,
+        });
         return;
       }
 
@@ -269,11 +283,12 @@ function ChatInlineImageComponent({
     };
   }, [rowVisibility, animated]);
 
-  // Show the shimmer only while there's nothing real to display yet: a decoded
-  // sharedRef is instant, so cached emotes (the busy-chat common case) never
-  // shimmer and stay on the bare-image fast path with no extra Fabric node.
-  const overlayVisible =
-    showLoadingShimmer && sharedRef == null && status !== 'loaded';
+  // Show the shimmer only while there's nothing real to display yet. Keyed off
+  // showRef so a ref we hold but can't draw (it failed, or the cache released it
+  // under us) still gets a loading box; a ref we are drawing is instant, so
+  // cached emotes (the busy-chat common case) never shimmer and stay on the
+  // bare-image fast path with no extra Fabric node.
+  const overlayVisible = showLoadingShimmer && !showRef && status !== 'loaded';
 
   // Render the decoded sharedRef whenever it's available and hasn't failed to
   // display; otherwise render the current fallback variant's uri.
