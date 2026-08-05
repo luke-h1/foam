@@ -21,6 +21,7 @@ import {
   clearCache,
   clearPersonalEmotesCache,
   clearSubscriberProfilesCache,
+  invalidateChatResourceCaches,
   loadChannelResources,
   resolveSubscriberChannelProfiles,
   switchSevenTvEmoteSet,
@@ -398,6 +399,29 @@ describe('loadChannelResources cache fallback', () => {
     expect(ids(cache!.badges)).toEqual(['ffz-global-badge-cached']);
     expect(cache!.badgesLastUpdated).toBe(0);
     expect(cache!.lastUpdated).toBe(9_000);
+  });
+
+  test('invalidating the resource caches stale-stamps the channel and drops memoised global fetches', async () => {
+    await expect(loadChannelResources({ channelId })).resolves.toBe(true);
+    expect(mockGetFfzGlobalEmotes).toHaveBeenCalledTimes(1);
+    expect(mockListTwitchGlobalBadges).toHaveBeenCalledTimes(1);
+
+    chatStore$.persisted.channelCaches.set({});
+    await expect(loadChannelResources({ channelId })).resolves.toBe(true);
+    expect(mockGetFfzGlobalEmotes).toHaveBeenCalledTimes(1);
+    expect(mockListTwitchGlobalBadges).toHaveBeenCalledTimes(1);
+
+    invalidateChatResourceCaches(channelId);
+    const cache = chatStore$.persisted.channelCaches.peek()[channelId];
+    expect({
+      badgesLastUpdated: cache!.badgesLastUpdated,
+      lastUpdated: cache!.lastUpdated,
+    }).toEqual({ badgesLastUpdated: 0, lastUpdated: 0 });
+
+    chatStore$.persisted.channelCaches.set({});
+    await expect(loadChannelResources({ channelId })).resolves.toBe(true);
+    expect(mockGetFfzGlobalEmotes).toHaveBeenCalledTimes(2);
+    expect(mockListTwitchGlobalBadges).toHaveBeenCalledTimes(2);
   });
 
   test('fetches the personal emote set of the logged in user after a full load', async () => {

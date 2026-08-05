@@ -1,4 +1,4 @@
-import { ActionSheetIOS, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import type { ReactNode } from 'react';
 
 import { fireEvent } from '@testing-library/react-native';
@@ -292,7 +292,7 @@ describe('Moderator action sheets', () => {
   });
 });
 
-describe('iOS native action sheets', () => {
+describe('iOS action sheets', () => {
   beforeAll(() => {
     Platform.OS = 'ios';
   });
@@ -300,28 +300,13 @@ describe('iOS native action sheets', () => {
     Platform.OS = 'android';
   });
 
-  let showActionSheetSpy: jest.SpyInstance;
-
-  beforeEach(() => {
-    showActionSheetSpy = jest
-      .spyOn(ActionSheetIOS, 'showActionSheetWithOptions')
-      .mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    showActionSheetSpy.mockRestore();
-  });
-
-  test('presents message actions through ActionSheetIOS instead of the JS sheet', () => {
-    const onClose = jest.fn();
+  test('renders the custom message action sheet rather than a system sheet', () => {
     const onDeleteMessage = jest.fn();
-    const onTimeoutUser = jest.fn();
-    const onBanUser = jest.fn();
 
-    const { queryByText } = render(
+    const { getByText } = render(
       <ActionSheet
         visible
-        onClose={onClose}
+        onClose={jest.fn()}
         username='viewer'
         onReply={jest.fn()}
         onCopy={jest.fn()}
@@ -329,79 +314,17 @@ describe('iOS native action sheets', () => {
         canDeleteMessage
         canModerateUser
         onDeleteMessage={onDeleteMessage}
-        onTimeoutUser={onTimeoutUser}
-        onBanUser={onBanUser}
       />,
     );
 
-    expect(queryByText('Delete Message')).toBeNull();
-    expect(showActionSheetSpy).toHaveBeenCalledTimes(1);
-
-    const [options, handler] = showActionSheetSpy.mock.calls[0] as [
-      Parameters<typeof ActionSheetIOS.showActionSheetWithOptions>[0],
-      (buttonIndex: number) => void,
-    ];
-    expect({
-      title: options.title,
-      options: options.options,
-      cancelButtonIndex: options.cancelButtonIndex,
-      destructiveButtonIndex: options.destructiveButtonIndex,
-    }).toEqual({
-      title: 'viewer',
-      options: [
-        'Copy Message',
-        'Reply',
-        'Hide User',
-        'Highlight User',
-        'Hide Phrase',
-        'Delete Message',
-        'Timeout…',
-        'Ban User',
-        'Cancel',
-      ],
-      cancelButtonIndex: 8,
-      destructiveButtonIndex: [5, 7],
-    });
-
-    handler(5);
+    fireEvent.press(getByText('Delete Message'));
     expect(onDeleteMessage).toHaveBeenCalledTimes(1);
-    expect(onClose).toHaveBeenCalledTimes(1);
-
-    handler(8);
-    expect(onDeleteMessage).toHaveBeenCalledTimes(1);
-    expect(onClose).toHaveBeenCalledTimes(2);
   });
 
-  test('does not present again on re-render while visible', () => {
-    const { rerender } = render(
-      <ActionSheet
-        visible
-        onClose={jest.fn()}
-        username='viewer'
-        onReply={jest.fn()}
-        onCopy={jest.fn()}
-      />,
-    );
-
-    rerender(
-      <ActionSheet
-        visible
-        onClose={jest.fn()}
-        username='viewer'
-        onReply={jest.fn()}
-        onCopy={jest.fn()}
-      />,
-    );
-
-    expect(showActionSheetSpy).toHaveBeenCalledTimes(1);
-  });
-
-  test('presents user actions through ActionSheetIOS with destructive ban', () => {
-    const onClose = jest.fn();
-    const onTimeoutUser = jest.fn();
+  test('renders the custom user action sheet rather than a system sheet', () => {
     const onBanUser = jest.fn();
 
-    const { queryByText } = render(
+    const { getByText } = render(
       <UserActionSheet
         visibility={{
           visible: true,
@@ -409,52 +332,18 @@ describe('iOS native action sheets', () => {
           isHighlighted: false,
         }}
         moderation={{ canModerateChat: true, canModerateUser: true }}
-        onClose={onClose}
+        onClose={jest.fn()}
         username='viewer'
         login='viewer'
         onMentionUser={jest.fn()}
         onCopyUsername={jest.fn()}
         onHideUser={jest.fn()}
         onHighlightUser={jest.fn()}
-        onTimeoutUser={onTimeoutUser}
         onBanUser={onBanUser}
       />,
     );
 
-    expect(queryByText('Ban User')).toBeNull();
-    expect(showActionSheetSpy).toHaveBeenCalledTimes(1);
-
-    const [options, handler] = showActionSheetSpy.mock.calls[0] as [
-      Parameters<typeof ActionSheetIOS.showActionSheetWithOptions>[0],
-      (buttonIndex: number) => void,
-    ];
-    expect({
-      title: options.title,
-      options: options.options,
-      cancelButtonIndex: options.cancelButtonIndex,
-      destructiveButtonIndex: options.destructiveButtonIndex,
-    }).toEqual({
-      title: 'viewer',
-      options: [
-        'Mention',
-        'Copy Username',
-        'Hide User',
-        'Highlight User',
-        'Warn User',
-        'Timeout…',
-        'Ban User',
-        'Cancel',
-      ],
-      cancelButtonIndex: 7,
-      destructiveButtonIndex: [6],
-    });
-
-    handler(5);
-    expect(onTimeoutUser).toHaveBeenCalledTimes(1);
-    expect(onClose).toHaveBeenCalledTimes(1);
-
-    handler(6);
+    fireEvent.press(getByText('Ban User'));
     expect(onBanUser).toHaveBeenCalledTimes(1);
-    expect(onClose).toHaveBeenCalledTimes(2);
   });
 });

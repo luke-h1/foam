@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import {
   clearCache,
-  invalidateChannelCache,
+  invalidateChatResourceCaches,
 } from '@app/store/chat/actions/channelLoad';
 import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
 import {
@@ -15,7 +15,7 @@ import { useChatSettingsActions } from '../useChatSettingsActions';
 
 jest.mock('@app/store/chat/actions/channelLoad', () => ({
   clearCache: jest.fn(),
-  invalidateChannelCache: jest.fn(),
+  invalidateChatResourceCaches: jest.fn(),
 }));
 
 jest.mock('@app/store/chat/actions/cosmetics', () => ({
@@ -36,7 +36,9 @@ jest.mock('@app/utils/logger', () => ({
 }));
 
 const mockClearCache = jest.mocked(clearCache);
-const mockInvalidateChannelCache = jest.mocked(invalidateChannelCache);
+const mockInvalidateChatResourceCaches = jest.mocked(
+  invalidateChatResourceCaches,
+);
 const mockClearImageCache = jest.mocked(clearImageCache);
 const mockClearUserCosmeticsCache = jest.mocked(clearUserCosmeticsCache);
 
@@ -119,39 +121,23 @@ describe('useChatSettingsActions', () => {
     );
   });
 
-  test('settings refetch invalidates the channel cache, reloads emotes, then reprocesses rendered messages', async () => {
+  test('refreshing emotes and badges invalidates every cache, reloads, then reprocesses rendered messages', async () => {
     const { hook, refetchEmotes, reprocessAllMessages } =
       renderSettingsActions();
 
     act(() => {
-      hook.result.current.handleSettingsRefetchEmotes();
+      hook.result.current.handleRefreshEmotesAndBadges();
     });
 
     await waitFor(() => {
       expect(refetchEmotes).toHaveBeenCalledTimes(1);
       expect(reprocessAllMessages).toHaveBeenCalledTimes(1);
     });
-    expect(mockInvalidateChannelCache).toHaveBeenCalledWith('channel-1');
-    // Stale-stamped, not deleted: the cached slices must survive as the
-    // fallback if a provider fetch fails during the reload.
-    expect(mockClearCache).not.toHaveBeenCalled();
-  });
-
-  test('refresh command invalidates caches without deleting the channel cache entry', async () => {
-    const { hook, refetchEmotes, reprocessAllMessages } =
-      renderSettingsActions();
-
-    act(() => {
-      hook.result.current.handleRefreshCommand();
-    });
-
-    await waitFor(() => {
-      expect(refetchEmotes).toHaveBeenCalledTimes(1);
-      expect(reprocessAllMessages).toHaveBeenCalledTimes(1);
-    });
-    expect(mockInvalidateChannelCache).toHaveBeenCalledWith('channel-1');
+    expect(mockInvalidateChatResourceCaches).toHaveBeenCalledWith('channel-1');
     expect(mockClearImageCache).toHaveBeenCalledTimes(1);
     expect(mockClearUserCosmeticsCache).toHaveBeenCalledTimes(1);
+    // Stale-stamped, not deleted: the cached slices must survive as the
+    // fallback if a provider fetch fails during the reload.
     expect(mockClearCache).not.toHaveBeenCalled();
   });
 

@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   container: {
     ...chatSheetSurface,
     alignSelf: 'stretch',
-    backgroundColor: theme.color.background.dark,
+    backgroundColor: 'transparent',
     flexDirection: 'column',
     minHeight: 0,
     width: '100%',

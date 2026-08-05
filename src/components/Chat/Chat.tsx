@@ -143,7 +143,7 @@ export const Chat = memo(
       getItemType,
       handleOpenEmoteSheet,
       handleOpenSettingsSheet,
-      handleRefreshCommand,
+      handleRefreshEmotesAndBadges,
       handleRefreshPinnedMessage,
       handleResumeScrollToBottom,
       handleUnpinPinnedMessage,
@@ -256,7 +256,7 @@ export const Chat = memo(
                 isChatConnected={isChatConnected}
                 onOpenEmoteSheet={handleOpenEmoteSheet}
                 onOpenSettingsSheet={handleOpenSettingsSheet}
-                onRefreshCommand={handleRefreshCommand}
+                onRefreshCommand={handleRefreshEmotesAndBadges}
                 processMessageEmotes={processMessageEmotes}
                 sendMessage={sendMessage}
                 user={user}

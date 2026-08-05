@@ -99,7 +99,7 @@ describe('SettingsSheet', () => {
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
-  describe('iOS native form branch', () => {
+  describe('on iOS', () => {
     beforeAll(() => {
       Platform.OS = 'ios';
     });
@@ -107,15 +107,15 @@ describe('SettingsSheet', () => {
       Platform.OS = 'android';
     });
 
-    // The @expo/ui/swift-ui primitives render as opaque native host views, so
-    // their labels are not queryable in tests.
-    test('mounts the SwiftUI form without the JS rows', () => {
-      const { queryByText, toJSON } = render(
-        <SettingsSheet isPresented onDismiss={jest.fn()} />,
+    test('renders the same JS rows as Android', () => {
+      const onDismiss = jest.fn();
+      const { getByText } = render(
+        <SettingsSheet isPresented onDismiss={onDismiss} />,
       );
 
-      expect(toJSON()).not.toBeNull();
-      expect(queryByText('Density')).toBeNull();
+      fireEvent.press(getByText('Density'));
+
+      expect(getPreferences().chatDensity).toBe('compact');
     });
   });
 });

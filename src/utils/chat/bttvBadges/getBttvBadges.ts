@@ -39,6 +39,17 @@ function loadBttvBadges(): void {
 }
 
 /**
+ * Drops the once-per-process badge list so the next read refetches. The cached
+ * badges are kept until the new list lands, so a failed refetch degrades to the
+ * badges already on screen rather than to none.
+ */
+export function clearBttvBadgesCache(): void {
+  fetchStarted = false;
+  retryDelayMs = INITIAL_RETRY_DELAY_MS;
+  nextRetryAt = 0;
+}
+
+/**
  * Synchronous accessor so the per-message badge resolver never awaits: the
  * first call kicks off the fetch and returns an empty list until it lands.
  */
