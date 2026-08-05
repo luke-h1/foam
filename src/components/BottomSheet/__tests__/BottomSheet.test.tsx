@@ -187,16 +187,22 @@ describe('BottomSheet', () => {
     });
   });
 
-  test('shows the native drag indicator with showDragIndicator', () => {
+  test('always hides the native drag indicator', () => {
     renderSheet();
 
-    expect(mockSheet.props.handleComponent).toBeUndefined();
+    expect(mockSheet.props.handleComponent).toBeNull();
   });
 
-  test('hides the native drag indicator without showDragIndicator', () => {
-    renderSheet({ showDragIndicator: false });
+  test('draws its own drag handle with showDragIndicator', () => {
+    const { getByTestId } = renderSheet();
 
-    expect(mockSheet.props.handleComponent).toBeNull();
+    expect(getByTestId('sheet-drag-handle')).toBeOnTheScreen();
+  });
+
+  test('draws no drag handle without showDragIndicator', () => {
+    const { queryByTestId } = renderSheet({ showDragIndicator: false });
+
+    expect(queryByTestId('sheet-drag-handle')).toBeNull();
   });
 
   test('requestClose closes the native sheet', () => {

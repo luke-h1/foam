@@ -17,6 +17,15 @@ import {
 
 export interface ChatTextStyles {
   badge: ImageStyle;
+  /**
+   * The slot a tinted badge draws into: same box as `badge`, but carrying the
+   * gap itself so the tint stops at the artwork instead of bleeding across it.
+   */
+  badgeTintSlot: ViewStyle;
+  /**
+   * The artwork inside a tinted slot, which owns neither the gap nor the tint.
+   */
+  badgeTintArtwork: ImageStyle;
   body: TextStyle;
   /**
    * Lines carrying an inline emote need the taller emote line height on every
@@ -56,6 +65,17 @@ function buildChatTextStyles(
     badge: {
       height: scale.badgeSize,
       marginRight: scale.badgeGap,
+      width: scale.badgeSize,
+    },
+    badgeTintArtwork: {
+      height: scale.badgeSize,
+      width: scale.badgeSize,
+    },
+    badgeTintSlot: {
+      borderRadius: CHAT_SURFACE_COLORS.radius,
+      height: scale.badgeSize,
+      marginRight: scale.badgeGap,
+      overflow: 'hidden',
       width: scale.badgeSize,
     },
     body,

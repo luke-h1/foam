@@ -5,6 +5,7 @@ import type { PropsWithChildren, Ref } from 'react';
 import { theme } from '@app/styles/themes';
 
 import type { BottomSheetHandle } from './bottomSheetHandle';
+import { SheetDragHandle } from './SheetDragHandle';
 
 export type { BottomSheetHandle };
 export type SnapPoint = { fraction: number } | { height: number } | 'full';
@@ -53,30 +54,13 @@ function BottomSheetComponent({
         { backgroundColor, width: Math.min(windowWidth - 32, 520) },
       ]}
     >
-      {showDragIndicator ? (
-        <View style={styles.dragHandleRow}>
-          <View style={styles.dragIndicator} />
-        </View>
-      ) : null}
+      {showDragIndicator ? <SheetDragHandle /> : null}
       {children}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  dragHandleRow: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingBottom: 6,
-    paddingTop: 10,
-    width: '100%',
-  },
-  dragIndicator: {
-    backgroundColor: 'rgba(255,255,255,0.34)',
-    borderRadius: 999,
-    height: 4,
-    width: 36,
-  },
   fallback: {
     alignItems: 'stretch',
     alignSelf: 'center',

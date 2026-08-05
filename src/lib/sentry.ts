@@ -446,10 +446,26 @@ export function forwardLogToSentry(entry: {
     });
 
     if (level === 'warn') {
-      Sentry.logger.warn(headline, safeExtra);
-    } else {
-      Sentry.logger.info(headline, safeExtra);
+      Sentry.withScope(scope => {
+        scope.setTag('log_category', category);
+        if (name) {
+          scope.setTag('error_type', name);
+        }
+        if (metadata?.tags) {
+          for (const [key, value] of Object.entries(metadata.tags)) {
+            scope.setTag(key, value);
+          }
+        }
+        if (metadata?.fingerprint) {
+          scope.setFingerprint(metadata.fingerprint);
+        }
+        scope.setContext('log_metadata', safeExtra);
+        Sentry.captureMessage(headline, 'warning');
+      });
+      return;
     }
+
+    Sentry.logger.info(headline, safeExtra);
   } catch {
     // ignore
   }

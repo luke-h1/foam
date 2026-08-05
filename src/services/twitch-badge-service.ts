@@ -19,6 +19,25 @@ interface TwitchBadge {
   versions: TwitchBadgeVersion[];
 }
 
+/**
+ * A channel's badge sets are not limited to `bits` and `subscriber`: Twitch
+ * also serves per-channel campaign sets (`campaign-<channelId>-<uuid>-mw`,
+ * `-sub`) that a large share of a busy channel's chatters wear. Every set is
+ * kept; only the two well-known ones get a more specific label than the
+ * generic channel one.
+ */
+function channelBadgeType(
+  setId: TwitchBadge['set_id'],
+): SanitisedBadgeSet['type'] {
+  if (setId === 'bits') {
+    return 'Twitch Bit Badge';
+  }
+  if (setId === 'subscriber') {
+    return 'Twitch Subscriber Badge';
+  }
+  return 'Twitch Channel Badge';
+}
+
 export const twitchBadgeService = {
   listSanitisedChannelBadges: async (
     channelId: string,
@@ -35,29 +54,15 @@ export const twitchBadgeService = {
     const sanitisedBadges: SanitisedBadgeSet[] = [];
 
     result.data.forEach(badgeSet => {
-      if (badgeSet.set_id === 'bits') {
-        badgeSet.versions.forEach((badge: TwitchBadgeVersion) => {
-          sanitisedBadges.push({
-            id: badge.id,
-            url: badge.image_url_4x,
-            type: 'Twitch Bit Badge',
-            title: `Cheer ${badge.id}`,
-            set: badgeSet.set_id,
-          });
+      badgeSet.versions.forEach((badge: TwitchBadgeVersion) => {
+        sanitisedBadges.push({
+          id: badge.id,
+          url: badge.image_url_4x,
+          type: channelBadgeType(badgeSet.set_id),
+          title: badgeSet.set_id === 'bits' ? `Cheer ${badge.id}` : badge.title,
+          set: badgeSet.set_id,
         });
-      }
-
-      if (badgeSet.set_id === 'subscriber') {
-        badgeSet.versions.forEach((badge: TwitchBadgeVersion) => {
-          sanitisedBadges.push({
-            id: badge.id,
-            url: badge.image_url_4x,
-            type: 'Twitch Subscriber Badge',
-            title: badge.title,
-            set: badgeSet.set_id,
-          });
-        });
-      }
+      });
     });
     return sanitisedBadges;
   },

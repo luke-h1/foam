@@ -17,6 +17,7 @@ import { Toaster } from 'sonner-native';
 import { theme } from '@app/styles/themes';
 
 import type { BottomSheetHandle } from './bottomSheetHandle';
+import { SheetDragHandle } from './SheetDragHandle';
 
 export type { BottomSheetHandle };
 export type SnapPoint = { fraction: number } | { height: number } | 'full';
@@ -152,7 +153,7 @@ export function BottomSheet({
       ref={sheetRef}
       backgroundStyle={backgroundStyle}
       enablePanDownToClose
-      handleComponent={showDragIndicator === true ? undefined : null}
+      handleComponent={null}
       index={isPresented ? 0 : -1}
       onDismiss={() => {
         if (dismissTimerRef.current !== null) {
@@ -166,6 +167,7 @@ export function BottomSheet({
       snapPoints={detents}
     >
       <View style={[styles.content, sizingStyle]} testID={testID}>
+        {showDragIndicator === true ? <SheetDragHandle /> : null}
         {children}
         {/**
          * The sheet is added to android.R.id.content, above the react root and
