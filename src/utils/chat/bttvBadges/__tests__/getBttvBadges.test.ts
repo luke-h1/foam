@@ -18,6 +18,7 @@ const badge: SanitisedBadgeSet = {
   url: 'https://cdn.betterttv.net/tags/developer.svg',
 };
 
+let clearBttvBadgesCache: typeof GetBttvBadges.clearBttvBadgesCache;
 let getBttvBadges: typeof GetBttvBadges.getBttvBadges;
 let setOnBttvBadgesLoaded: typeof SetOnBttvBadgesLoaded.setOnBttvBadgesLoaded;
 let getSanitisedGlobalBadges: jest.Mock;
@@ -31,7 +32,8 @@ function flush(): Promise<void> {
 describe('getBttvBadges', () => {
   beforeEach(() => {
     jest.resetModules();
-    ({ getBttvBadges } = require('../getBttvBadges') as typeof GetBttvBadges);
+    ({ clearBttvBadgesCache, getBttvBadges } =
+      require('../getBttvBadges') as typeof GetBttvBadges);
     ({ setOnBttvBadgesLoaded } =
       require('../setOnBttvBadgesLoaded') as typeof SetOnBttvBadgesLoaded);
     const { bttvEmoteService } = require('@app/services/bttv-emote-service');
@@ -108,6 +110,52 @@ describe('getBttvBadges', () => {
     expect(getBttvBadges()).toEqual<SanitisedBadgeSet[]>([badge]);
     expect(onLoaded).toHaveBeenCalledTimes(1);
     jest.useRealTimers();
+  });
+
+  test('refetches after the cache is cleared and keeps the loaded badges meanwhile', async () => {
+    getSanitisedGlobalBadges.mockResolvedValue([badge]);
+
+    getBttvBadges();
+    await flush();
+    expect(getSanitisedGlobalBadges).toHaveBeenCalledTimes(1);
+
+    getBttvBadges();
+    expect(getSanitisedGlobalBadges).toHaveBeenCalledTimes(1);
+
+    const refreshed: SanitisedBadgeSet = { ...badge, title: 'BTTV Dev' };
+    getSanitisedGlobalBadges.mockResolvedValue([refreshed]);
+    clearBttvBadgesCache();
+
+    expect(getBttvBadges()).toEqual<SanitisedBadgeSet[]>([badge]);
+    expect(getSanitisedGlobalBadges).toHaveBeenCalledTimes(2);
+
+    await flush();
+    expect(getBttvBadges()).toEqual<SanitisedBadgeSet[]>([refreshed]);
+  });
+
+  test('ignores a fetch that a clear superseded, so it cannot overwrite newer badges', async () => {
+    const refreshed: SanitisedBadgeSet = { ...badge, title: 'BTTV Dev' };
+    let resolveStale: (badges: SanitisedBadgeSet[]) => void = () => {};
+    getSanitisedGlobalBadges.mockReturnValueOnce(
+      new Promise<SanitisedBadgeSet[]>(resolve => {
+        resolveStale = resolve;
+      }),
+    );
+
+    getBttvBadges();
+    expect(getSanitisedGlobalBadges).toHaveBeenCalledTimes(1);
+
+    getSanitisedGlobalBadges.mockResolvedValue([refreshed]);
+    clearBttvBadgesCache();
+    getBttvBadges();
+    await flush();
+    expect(getBttvBadges()).toEqual<SanitisedBadgeSet[]>([refreshed]);
+
+    resolveStale([]);
+    await flush();
+
+    expect(getBttvBadges()).toEqual<SanitisedBadgeSet[]>([refreshed]);
+    expect(getSanitisedGlobalBadges).toHaveBeenCalledTimes(2);
   });
 
   test('does not refetch inside the backoff window and doubles it per failure', async () => {

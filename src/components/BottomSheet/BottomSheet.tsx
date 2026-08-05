@@ -2,6 +2,8 @@ import { memo, useImperativeHandle } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { PropsWithChildren, Ref } from 'react';
 
+import { theme } from '@app/styles/themes';
+
 import type { BottomSheetHandle } from './bottomSheetHandle';
 
 export type { BottomSheetHandle };
@@ -19,7 +21,7 @@ type BottomSheetProps = PropsWithChildren<{
 }>;
 
 function BottomSheetComponent({
-  backgroundColor,
+  backgroundColor = theme.color.menu.background,
   children,
   isPresented,
   onDismiss,

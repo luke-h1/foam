@@ -92,7 +92,6 @@ export function EmoteSheet({
   return (
     <BottomSheet
       ref={sheetRef}
-      backgroundColor={theme.color.menu.background}
       enableFixedSnapPoints
       isPresented={isPresented}
       onDismiss={sheet.handleDismiss}

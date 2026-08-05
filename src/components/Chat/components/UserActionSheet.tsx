@@ -1,6 +1,5 @@
 import { memo, useMemo, useRef } from 'react';
 import {
-  Platform,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
@@ -14,7 +13,6 @@ import {
   type SnapPoint,
 } from '@app/components/BottomSheet/BottomSheet';
 import { Button } from '@app/components/Button/Button';
-import { useIosActionSheet } from '@app/components/Chat/hooks/useIosActionSheet';
 import type {
   ChatModerationAccessFlags,
   UserActionVisibilityFlags,
@@ -132,10 +130,7 @@ function UserActionSheetComponent({
   // peek() on open: the scrollback updates constantly and re-rendering the
   // sheet per message would defeat the chat flush batching.
   const recentMessages = useMemo(
-    () =>
-      visible && Platform.OS !== 'ios'
-        ? getRecentUserMessages(login, username)
-        : [],
+    () => (visible ? getRecentUserMessages(login, username) : []),
     [login, username, visible],
   );
   const actionRows: UserActionItem[] = [
@@ -220,22 +215,7 @@ function UserActionSheetComponent({
       : []),
   ];
 
-  useIosActionSheet(visible, () => ({
-    title: username,
-    message: login && login !== username.toLowerCase() ? login : undefined,
-    cancelLabel: t('common:cancel'),
-    actions: actionRows.map(action => ({
-      label: action.label,
-      destructive: action.tone === 'danger',
-      onPress: action.onPress,
-    })),
-    onClose,
-  }));
   const { height: windowHeight } = useWindowDimensions();
-
-  if (Platform.OS === 'ios') {
-    return null;
-  }
 
   const recentMessagesHeight =
     recentMessages.length > 0 ? 40 + recentMessages.length * 22 : 0;

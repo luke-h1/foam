@@ -71,7 +71,7 @@ function resolveSheetHeight(
 }
 
 export function BottomSheet({
-  backgroundColor = theme.color.surfaceElevated.dark,
+  backgroundColor = theme.color.menu.background,
   children,
   enableFixedSnapPoints,
   isPresented,

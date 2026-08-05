@@ -11,8 +11,12 @@ import { twitchService } from '@app/services/twitch-service';
 import { getPreferences } from '@app/store/preferences/state';
 import type { SanitisedEmote } from '@app/types/emote';
 import { createFetchOnceGuard } from '@app/utils/async/fetchOnceGuard';
-import { getBttvBadges } from '@app/utils/chat/bttvBadges/getBttvBadges';
+import {
+  clearBttvBadgesCache,
+  getBttvBadges,
+} from '@app/utils/chat/bttvBadges/getBttvBadges';
 import { getChatterinoBadges } from '@app/utils/chat/chatterinoBadges';
+import { cheermoteFetchGuard } from '@app/utils/chat/cheermoteStore/cheermoteFetchGuard';
 import { fetchChannelCheermotes } from '@app/utils/chat/cheermoteStore/fetchChannelCheermotes';
 import { createSystemMessage } from '@app/utils/chat/messageHandlers/createSystemMessage';
 import { getEmojiEmotes } from '@app/utils/emoji/emojiEmotes';
@@ -743,12 +747,21 @@ export const loadChannelResources = async (
   );
 };
 
-export const invalidateChannelCache = (channelId: string): void => {
+/**
+ * Stale-stamps the channel's cached slices and drops the process-level caches
+ * a reload does not clear for itself: the BTTV badge list and the channel's
+ * cheermote stamp, both fetched once and then held for the session. A forced
+ * `loadChannelResources` already clears the global emote/badge memo; clearing
+ * it here covers the callers that reload without forcing.
+ */
+export const invalidateChatResourceCaches = (channelId: string): void => {
   const channelCache = chatStore$.persisted.channelCaches[channelId];
-  if (!channelCache?.peek()) {
-    return;
+  if (channelCache?.peek()) {
+    channelCache.assign({ lastUpdated: 0, badgesLastUpdated: 0 });
   }
-  channelCache.assign({ lastUpdated: 0, badgesLastUpdated: 0 });
+  clearGlobalResourceCache();
+  clearBttvBadgesCache();
+  cheermoteFetchGuard.clearKey(channelId);
 };
 
 export const clearCache = (channelId?: string) => {

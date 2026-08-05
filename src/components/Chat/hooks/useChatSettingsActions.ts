@@ -4,7 +4,7 @@ import { useSyncRef } from '@app/hooks/useSyncRef';
 import i18next from '@app/i18n/i18next';
 import {
   clearCache,
-  invalidateChannelCache,
+  invalidateChatResourceCaches,
 } from '@app/store/chat/actions/channelLoad';
 import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
 import { addMessage } from '@app/store/chat/actions/messages';
@@ -74,30 +74,17 @@ export function useChatSettingsActions({
     );
   }, [channelNameRef]);
 
-  const handleSettingsRefetchEmotes = useCallback(() => {
+  const handleRefreshEmotesAndBadges = useCallback(() => {
     void (async () => {
       try {
-        invalidateChannelCache(channelId);
-        await refetchEmotesRef.current();
-        reprocessAllMessagesRef.current();
-        announceRefresh();
-      } catch (error) {
-        logger.chat.error('Failed to refetch emotes:', error);
-      }
-    })();
-  }, [announceRefresh, channelId, refetchEmotesRef, reprocessAllMessagesRef]);
-
-  const handleRefreshCommand = useCallback(() => {
-    void (async () => {
-      try {
-        invalidateChannelCache(channelId);
+        invalidateChatResourceCaches(channelId);
         clearUserCosmeticsCache();
         await clearImageCache();
         await refetchEmotesRef.current();
         reprocessAllMessagesRef.current();
         announceRefresh();
       } catch (error) {
-        logger.chat.error('Failed to run refresh command:', error);
+        logger.chat.error('Failed to refresh emotes and badges:', error);
       }
     })();
   }, [announceRefresh, channelId, refetchEmotesRef, reprocessAllMessagesRef]);
@@ -113,9 +100,8 @@ export function useChatSettingsActions({
     handleClearChatCache,
     handleClearImageCache,
     handleClearSevenTvCosmeticsCache,
+    handleRefreshEmotesAndBadges,
     handleResumeScrollToBottom,
     handleSettingsReconnect,
-    handleSettingsRefetchEmotes,
-    handleRefreshCommand,
   };
 }

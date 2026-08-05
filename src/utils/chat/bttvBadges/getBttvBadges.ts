@@ -10,6 +10,7 @@ let cachedBadges: SanitisedBadgeSet[] = [];
 let fetchStarted = false;
 let retryDelayMs = INITIAL_RETRY_DELAY_MS;
 let nextRetryAt = 0;
+let generation = 0;
 
 function scheduleRetry(): void {
   fetchStarted = false;
@@ -19,9 +20,15 @@ function scheduleRetry(): void {
 
 function loadBttvBadges(): void {
   fetchStarted = true;
+  const startedGeneration = generation;
   bttvEmoteService
     .getSanitisedGlobalBadges()
     .then(badges => {
+      // A refresh started a newer fetch; this one's result is stale and would
+      // otherwise overwrite the newer badges, empty result included.
+      if (startedGeneration !== generation) {
+        return;
+      }
       cachedBadges = badges;
       if (badges.length > 0) {
         retryDelayMs = INITIAL_RETRY_DELAY_MS;
@@ -33,9 +40,24 @@ function loadBttvBadges(): void {
       scheduleRetry();
     })
     .catch(error => {
+      if (startedGeneration !== generation) {
+        return;
+      }
       scheduleRetry();
       logger.chat.warn('Failed to fetch BTTV badges', { error });
     });
+}
+
+/**
+ * Invalidates the once-per-process fetch so the next read starts a new one and
+ * fences whatever is in flight. The loaded badges stay readable until the new
+ * list lands, so a failed refresh degrades to the badges already on screen.
+ */
+export function clearBttvBadgesCache(): void {
+  generation += 1;
+  fetchStarted = false;
+  retryDelayMs = INITIAL_RETRY_DELAY_MS;
+  nextRetryAt = 0;
 }
 
 /**

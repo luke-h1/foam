@@ -1,6 +1,5 @@
 import { memo, useRef } from 'react';
 import {
-  Platform,
   ScrollView,
   StyleSheet,
   useWindowDimensions,
@@ -13,12 +12,10 @@ import {
   type BottomSheetHandle,
 } from '@app/components/BottomSheet/BottomSheet';
 import { Button } from '@app/components/Button/Button';
-import { useIosActionSheet } from '@app/components/Chat/hooks/useIosActionSheet';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
-import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 
 import { MessageActionPreview } from './MessageActionPreview';
 
@@ -245,22 +242,7 @@ function ActionSheetComponent(props: Props) {
     return items;
   })();
 
-  useIosActionSheet(visible, () => ({
-    title: username ?? t('messageActions.eyebrow'),
-    message: messagePreview ? replaceEmotesWithText(messagePreview) : undefined,
-    cancelLabel: t('common:cancel'),
-    actions: actions.map(action => ({
-      label: action.label,
-      destructive: action.tone === 'danger',
-      onPress: action.onPress,
-    })),
-    onClose,
-  }));
   const { height: windowHeight } = useWindowDimensions();
-
-  if (Platform.OS === 'ios') {
-    return null;
-  }
 
   const maxScrollHeight = Math.min(
     Math.round(windowHeight * 0.62),
