@@ -1,0 +1,7 @@
+id: no-tests-dir-import-ts
+valid:
+  - "import { denseEmoteData } from '@app/components/Chat/util/__fixtures__/resolveMessageEmoteParts.perf.fixture';"
+  - "import { findBadges } from '@app/utils/chat/findBadges';"
+invalid:
+  - "import { denseEmoteData } from '@app/components/Chat/util/__tests__/__fixtures__/resolveMessageEmoteParts.perf.fixture';"
+  - "import { chatMessage } from './__tests__/__fixtures__/chatMessage.fixture';"
