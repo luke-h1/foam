@@ -244,8 +244,7 @@ function ChatInlineImageComponent({
   // encodes the kind for everything but BTTV's bare url form.
   const urlKind = useMemo(() => describeEmoteUrl(sourceUrl).kind, [sourceUrl]);
   const animated =
-    sharedRef != null &&
-    (urlKind === null ? sharedRef.isAnimated === true : urlKind === 'animated');
+    urlKind === null ? sharedRef?.isAnimated === true : urlKind === 'animated';
   const imageRef = useRef<ExpoImage>(null);
   useEffect(() => {
     if (!rowVisibility || !animated) {
