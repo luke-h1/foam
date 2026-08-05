@@ -15,10 +15,6 @@ export function pickBestImage(images: readonly Image[]): Image | undefined {
       return undefined;
     }
 
-    // Animated goes through pickAnimatedFormat, which prefers WebP. AVIF is the
-    // smaller file and the right call for a static image, but animated AVIF
-    // decodes through dav1d in software and that is the single largest CPU cost
-    // in chat.
     const animated = atScale.filter(img => img.frameCount > 1);
     return animated.length > 0
       ? pickAnimatedFormat(animated)

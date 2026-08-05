@@ -316,7 +316,6 @@ describe('interpretSeventvWsMessage', () => {
         return decision.added[0]?.url;
       };
 
-      // Animated avif decodes through dav1d in software; webp is much cheaper.
       expect({ animated: pickUrl(30), static: pickUrl(1) }).toEqual({
         animated: 'https://cdn.7tv.app/emote/emote-fmt/4x.webp',
         static: 'https://cdn.7tv.app/emote/emote-fmt/4x.avif',

@@ -150,8 +150,6 @@ describe('ChatInlineImage off-screen pause', () => {
   });
 
   test('pauses an animated emote that has no decoded ref yet', () => {
-    // Animated emotes are held out of the channel warm, so the uri path is
-    // where they start - and it is where the pause used to be skipped.
     mockSharedRef = null;
     const store = createRowVisibilityStore(false);
 
@@ -171,8 +169,6 @@ describe('ChatInlineImage off-screen pause', () => {
   });
 
   test('leaves a refless url of unknown kind animating', () => {
-    // BTTV's bare url doesn't say whether it's animated and there's no ref to
-    // ask, so there is nothing to act on.
     mockSharedRef = null;
     const store = createRowVisibilityStore(false);
 

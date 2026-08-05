@@ -130,24 +130,17 @@ const withScales = (format: string) =>
   ['4x', '3x', '2x', '1x'].map(scale => `${scale}.${format}`);
 
 /**
- * The EventAPI advertises several encodes per emote. For a static emote prefer
- * avif at the largest scale (best size/quality), falling back to webp so an
- * emote whose host only ships webp still resolves real dimensions — otherwise
+ * The EventAPI advertises several encodes per emote. Take the largest scale of
+ * the cheaper format for the emote's kind, then the other format so an emote
+ * whose host ships only one still resolves real dimensions — otherwise
  * width/height collapse to 0 and a non-square emote renders as a 1:1 square at
- * the wrong width.
+ * the wrong width. As a last resort take the widest encode that carries
+ * dimensions so the aspect ratio is at least correct.
  */
 const SEVEN_TV_STATIC_PREFERENCE = [
   ...withScales('avif'),
   ...withScales('webp'),
 ];
-
-/**
- * Animated inverts that. These emotes carry no `image_variants`, so the url
- * picked here is the one chat renders, and animated avif decodes through dav1d
- * in software - the dominant CPU cost in a busy channel. The v4 fetch path
- * already prefers webp for animated (`pickAnimatedFormat`); a live add over the
- * EventAPI has to match or the same emote costs more when it arrives that way.
- */
 const SEVEN_TV_ANIMATED_PREFERENCE = [
   ...withScales('webp'),
   ...withScales('avif'),

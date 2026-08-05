@@ -243,11 +243,6 @@ function ChatInlineImageComponent({
   // The native isAnimated getter is a JSI hop per render; the url already
   // encodes the kind for everything but BTTV's bare url form.
   const urlKind = useMemo(() => describeEmoteUrl(sourceUrl).kind, [sourceUrl]);
-  // The ref is consulted only for the url forms that don't encode the kind
-  // (BTTV's bare url, FFZ's bare scale). Requiring one outright used to opt the
-  // whole uri path out of the pause, and animated emotes are deliberately left
-  // out of the channel warm (useCachedEmotes), so that path is where they
-  // normally start - the emotes the pause exists for were the ones skipping it.
   const animated =
     urlKind === null ? sharedRef?.isAnimated === true : urlKind === 'animated';
   const imageRef = useRef<ExpoImage>(null);
