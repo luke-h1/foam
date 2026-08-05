@@ -1,0 +1,22 @@
+id: no-tests-dir-import-tsx
+snapshots:
+  import { chatMessage } from '@app/components/Chat/util/__tests__/__fixtures__/chatMessage.fixture';:
+    labels:
+      - source: import { chatMessage } from '@app/components/Chat/util/__tests__/__fixtures__/chatMessage.fixture';
+        style: primary
+        start: 0
+        end: 99
+      - source: "'@app/components/Chat/util/__tests__/__fixtures__/chatMessage.fixture'"
+        style: secondary
+        start: 28
+        end: 98
+  import { scenarios } from '../__tests__/helpers';:
+    labels:
+      - source: import { scenarios } from '../__tests__/helpers';
+        style: primary
+        start: 0
+        end: 49
+      - source: "'../__tests__/helpers'"
+        style: secondary
+        start: 26
+        end: 48

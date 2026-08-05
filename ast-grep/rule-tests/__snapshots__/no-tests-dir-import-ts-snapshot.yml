@@ -1,0 +1,22 @@
+id: no-tests-dir-import-ts
+snapshots:
+  import { chatMessage } from './__tests__/__fixtures__/chatMessage.fixture';:
+    labels:
+      - source: import { chatMessage } from './__tests__/__fixtures__/chatMessage.fixture';
+        style: primary
+        start: 0
+        end: 75
+      - source: "'./__tests__/__fixtures__/chatMessage.fixture'"
+        style: secondary
+        start: 28
+        end: 74
+  import { denseEmoteData } from '@app/components/Chat/util/__tests__/__fixtures__/resolveMessageEmoteParts.perf.fixture';:
+    labels:
+      - source: import { denseEmoteData } from '@app/components/Chat/util/__tests__/__fixtures__/resolveMessageEmoteParts.perf.fixture';
+        style: primary
+        start: 0
+        end: 120
+      - source: "'@app/components/Chat/util/__tests__/__fixtures__/resolveMessageEmoteParts.perf.fixture'"
+        style: secondary
+        start: 31
+        end: 119

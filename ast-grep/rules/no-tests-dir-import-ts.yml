@@ -1,0 +1,21 @@
+id: no-tests-dir-import-ts
+language: ts
+severity: error
+message: App code cannot import from a __tests__ directory.
+note: |
+  EAS strips __tests__ directories from the build context, so an app-graph
+  import of a fixture that lives there resolves locally and fails the eager
+  bundle in CI. Move the fixture to a sibling __fixtures__ directory outside
+  __tests__ and import it from there.
+files:
+  - 'src/**/*.ts'
+ignores:
+  - '**/__tests__/**'
+  - '**/*.test.ts'
+  - '**/*.perf-test.ts'
+  - '**/*.stories.ts'
+rule:
+  kind: import_statement
+  has:
+    field: source
+    regex: '__tests__'

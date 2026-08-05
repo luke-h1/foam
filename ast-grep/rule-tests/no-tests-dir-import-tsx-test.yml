@@ -1,0 +1,7 @@
+id: no-tests-dir-import-tsx
+valid:
+  - "import { chatMessage } from '@app/components/Chat/util/__fixtures__/chatMessage.fixture';"
+  - "import { ChatMessage } from '@app/components/ChatMessage/ChatMessage';"
+invalid:
+  - "import { chatMessage } from '@app/components/Chat/util/__tests__/__fixtures__/chatMessage.fixture';"
+  - "import { scenarios } from '../__tests__/helpers';"
