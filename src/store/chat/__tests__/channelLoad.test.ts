@@ -16,6 +16,8 @@ import type {
 } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import type { UserInfoResponse } from '@app/types/twitch/user';
+import { clearBttvBadgesCache } from '@app/utils/chat/bttvBadges/getBttvBadges';
+import { cheermoteFetchGuard } from '@app/utils/chat/cheermoteStore/cheermoteFetchGuard';
 
 import {
   clearCache,
@@ -81,6 +83,11 @@ jest.mock('@app/utils/logger', () => ({
       warn: jest.fn(),
     },
   },
+}));
+
+jest.mock('@app/utils/chat/bttvBadges/getBttvBadges', () => ({
+  clearBttvBadgesCache: jest.fn(),
+  getBttvBadges: jest.fn(() => []),
 }));
 
 jest.mock('@app/services/bttv-emote-service', () => ({
@@ -411,12 +418,16 @@ describe('loadChannelResources cache fallback', () => {
     expect(mockGetFfzGlobalEmotes).toHaveBeenCalledTimes(1);
     expect(mockListTwitchGlobalBadges).toHaveBeenCalledTimes(1);
 
+    cheermoteFetchGuard.markFetched(channelId);
+
     invalidateChatResourceCaches(channelId);
     const cache = chatStore$.persisted.channelCaches.peek()[channelId];
     expect({
       badgesLastUpdated: cache!.badgesLastUpdated,
       lastUpdated: cache!.lastUpdated,
     }).toEqual({ badgesLastUpdated: 0, lastUpdated: 0 });
+    expect(jest.mocked(clearBttvBadgesCache)).toHaveBeenCalledTimes(1);
+    expect(cheermoteFetchGuard.hasFetched(channelId)).toBe(false);
 
     chatStore$.persisted.channelCaches.set({});
     await expect(loadChannelResources({ channelId })).resolves.toBe(true);

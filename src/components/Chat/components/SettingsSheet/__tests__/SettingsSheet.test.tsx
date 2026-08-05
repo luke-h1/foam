@@ -108,9 +108,8 @@ describe('SettingsSheet', () => {
     });
 
     test('renders the same JS rows as Android', () => {
-      const onDismiss = jest.fn();
       const { getByText } = render(
-        <SettingsSheet isPresented onDismiss={onDismiss} />,
+        <SettingsSheet isPresented onDismiss={jest.fn()} />,
       );
 
       fireEvent.press(getByText('Density'));

@@ -74,11 +74,6 @@ export function useChatSettingsActions({
     );
   }, [channelNameRef]);
 
-  /**
-   * Backs both the settings sheet's "Refetch Emotes & Badges" row and the
-   * `/refresh` command - one user-facing action, so both drop every cache the
-   * reload could otherwise be served from rather than only the channel's.
-   */
   const handleRefreshEmotesAndBadges = useCallback(() => {
     void (async () => {
       try {
