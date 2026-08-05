@@ -1,6 +1,7 @@
 import { Image as ExpoImage } from 'expo-image';
 
 import type { SanitisedEmote } from '@app/types/emote';
+import { logger } from '@app/utils/logger';
 
 import {
   clearPreloadCache,
@@ -15,7 +16,15 @@ jest.mock('expo-image', () => ({
   },
 }));
 
+jest.mock('@app/utils/logger', () => ({
+  logger: {
+    chat: { warn: jest.fn(), error: jest.fn() },
+  },
+}));
+
 const prefetchMock = jest.mocked(ExpoImage.prefetch);
+const warnMock = jest.mocked(logger.chat.warn);
+const errorMock = jest.mocked(logger.chat.error);
 
 // prefetch warms a batch of urls per call; flatten to the warmed url sequence.
 const warmedUrls = () =>
@@ -40,6 +49,9 @@ describe('preloadEmotes', () => {
   beforeEach(() => {
     clearPreloadCache();
     prefetchMock.mockClear();
+    prefetchMock.mockResolvedValue(true);
+    warnMock.mockClear();
+    errorMock.mockClear();
   });
 
   test('preloads each emote cache URL once across calls', async () => {
@@ -79,5 +91,43 @@ describe('preloadEmotes', () => {
     });
 
     expect(warmedUrls()[0]).toBe('https://example.com/seven-tv-channel.webp');
+  });
+
+  test('reports a rejected preload to Sentry and leaves the urls retryable', async () => {
+    const failure = new Error('network down');
+    prefetchMock.mockRejectedValue(failure);
+
+    await preloadEmotes([emote('boom')]);
+
+    expect(errorMock).toHaveBeenCalledTimes(1);
+    expect(errorMock).toHaveBeenCalledWith('chat.emote.preload_failed', {
+      name: 'chat_resources_error',
+      error: failure,
+      batchSize: 2,
+      tags: {
+        emoteProvider: 'unknown',
+        emoteScale: null,
+        emoteKind: null,
+      },
+    });
+
+    prefetchMock.mockResolvedValue(true);
+    await preloadEmotes([emote('boom')]);
+
+    expect(warmedUrls()).toEqual([
+      'https://example.com/boom.webp',
+      'https://example.com/boom.webp.png',
+      'https://example.com/boom.webp',
+      'https://example.com/boom.webp.png',
+    ]);
+  });
+
+  test('warns when a batch resolves as skipped', async () => {
+    prefetchMock.mockResolvedValue(false);
+
+    await preloadEmotes([emote('skipped')]);
+
+    expect(warnMock).toHaveBeenCalledTimes(1);
+    expect(errorMock).not.toHaveBeenCalled();
   });
 });

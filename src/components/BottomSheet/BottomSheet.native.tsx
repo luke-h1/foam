@@ -22,11 +22,6 @@ export type { BottomSheetHandle };
 export type SnapPoint = { fraction: number } | { height: number } | 'full';
 
 type BottomSheetProps = PropsWithChildren<{
-  /**
-   * Sheet surface colour. iOS maps it onto `presentationBackground`, Android
-   * onto the `ModalBottomSheet` container colour, so it also paints the strip
-   * behind the drag indicator that no child can reach.
-   */
   backgroundColor?: string;
   enableFixedSnapPoints?: boolean;
   isPresented: boolean;

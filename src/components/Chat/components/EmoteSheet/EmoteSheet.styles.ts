@@ -2,18 +2,6 @@ import { StyleSheet } from 'react-native';
 
 import { theme } from '@app/styles/themes';
 
-const MENU_CARD_ACTIVE = theme.color.menu.cardActive;
-const MENU_BORDER = theme.color.menu.border;
-
-/**
- * Both platforms paint their own surface. iOS used to leave these transparent
- * so the sheet's liquid-glass material showed through, but the @expo/ui sheet
- * sets an opaque `presentationBackground`, so a transparent child just exposed
- * whatever colour the wrapper picked.
- */
-const SHEET_SURFACE = theme.color.menu.background;
-const SHEET_HEADER_SURFACE = theme.color.menu.header;
-
 export const emoteSheetStyles = StyleSheet.create({
   body: {
     flex: 1,
@@ -24,8 +12,8 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   categoryBar: {
     alignItems: 'center',
-    backgroundColor: SHEET_HEADER_SURFACE,
-    borderTopColor: MENU_BORDER,
+    backgroundColor: theme.color.menu.header,
+    borderTopColor: theme.color.menu.border,
     borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     overflow: 'hidden',
@@ -39,7 +27,7 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   container: {
     alignSelf: 'stretch',
-    backgroundColor: SHEET_SURFACE,
+    backgroundColor: theme.color.menu.background,
     flex: 1,
     minHeight: 0,
     overflow: 'hidden',
@@ -78,8 +66,8 @@ export const emoteSheetStyles = StyleSheet.create({
     fontWeight: '700',
   },
   header: {
-    backgroundColor: SHEET_HEADER_SURFACE,
-    borderBottomColor: MENU_BORDER,
+    backgroundColor: theme.color.menu.header,
+    borderBottomColor: theme.color.menu.border,
     borderBottomWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
     paddingBottom: theme.space8,
@@ -235,7 +223,7 @@ export const emoteSheetStyles = StyleSheet.create({
     paddingHorizontal: theme.space8,
   },
   setRailButtonActive: {
-    backgroundColor: MENU_CARD_ACTIVE,
+    backgroundColor: theme.color.menu.cardActive,
   },
   setRailEmoji: {
     fontSize: theme.fontSize16,

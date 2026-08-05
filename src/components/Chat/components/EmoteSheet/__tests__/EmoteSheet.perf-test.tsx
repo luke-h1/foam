@@ -35,6 +35,7 @@ jest.mock('@legendapp/list/react-native', () => {
   const MOCK_FALLBACK_ROW_HEIGHT = 46;
 
   return {
+    useViewability: () => {},
     LegendList: React.forwardRef((props: MockLegendListProps, ref: unknown) => {
       const { data, extraData, keyExtractor, renderItem } = props;
       const items = Array.isArray(data) ? data : [];

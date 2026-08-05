@@ -24,6 +24,7 @@ jest.mock('@app/services/twitch-emote-service');
 // LegendList virtualizes natively and renders nothing under jest; render every
 // item through renderItem so the grid content is assertable.
 jest.mock('@legendapp/list/react-native', () => ({
+  useViewability: () => {},
   LegendList: ({
     data,
     renderItem,

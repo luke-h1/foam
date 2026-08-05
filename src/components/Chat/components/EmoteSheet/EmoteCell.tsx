@@ -50,30 +50,25 @@ function EmoteCellComponent({
       return undefined;
     }
 
-    /**
-     * Hold the slot only while the row is on screen. Slots used to be taken on
-     * mount, and the list keeps several screens of rows mounted, so the cap was
-     * spent on offscreen cells and most of what the user could see never
-     * animated.
-     */
     let releaseSlot: (() => void) | null = null;
     const applyVisibility = () => {
       const isVisible = rowVisibility?.isVisible() ?? true;
-
-      if (isVisible && !releaseSlot) {
-        releaseSlot = emoteSheetAnimationBudget.acquire(granted => {
-          hasAnimationSlotRef.current = granted;
-          syncAnimation();
-        });
+      if (isVisible === (releaseSlot !== null)) {
         return;
       }
 
-      if (!isVisible && releaseSlot) {
+      if (releaseSlot) {
         releaseSlot();
         releaseSlot = null;
         hasAnimationSlotRef.current = false;
         syncAnimation();
+        return;
       }
+
+      releaseSlot = emoteSheetAnimationBudget.acquire(granted => {
+        hasAnimationSlotRef.current = granted;
+        syncAnimation();
+      });
     };
 
     applyVisibility();
@@ -121,10 +116,6 @@ function EmoteCellComponent({
           preferAppleCodecForStatic: true,
         })}
         autoplay={false}
-        // `startAnimating` acts on the view's current image, so the slot the
-        // cell takes on mount is a no-op until one is decoded - and `autoplay`
-        // is off, so nothing starts it afterwards. Re-issuing the command once
-        // the image is on screen is what actually plays it.
         onDisplay={syncAnimation}
         priority='low'
         transition={0}

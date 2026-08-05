@@ -7,11 +7,6 @@ type AnimationBudgetListener = (granted: boolean) => void;
  * WebP layers in a single CoreAnimation transaction, decoding all of them on the
  * main thread (Sentry FOAM-TV-MOBILE-W, 3.8-4.6s fully-blocked hang). Cells
  * beyond the cap hold their first frame instead.
- *
- * Slots are held by on-screen cells only, so the cap covers a full grid at its
- * widest (8 columns) rather than every row the list keeps mounted. It is now a
- * backstop against an unusually tall viewport; the storm itself is held off by
- * decoding off-thread and by pausing every cell while the grid scrolls.
  */
 export const MAX_CONCURRENT_ANIMATED = 96;
 
