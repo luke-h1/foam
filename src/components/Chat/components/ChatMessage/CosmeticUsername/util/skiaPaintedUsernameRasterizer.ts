@@ -25,12 +25,12 @@ import type {
   PaintTextStroke,
 } from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
-
 import {
   cachePaintBitmaps,
   clearPaintBitmapCache,
   getCachedPaintBitmaps,
-} from './paintBitmapCacheLifecycle';
+} from '@app/utils/image/paintBitmapCacheLifecycle';
+
 import { cssClampedStops } from './paintLayer/cssClampedStops';
 import { getPaintDropShadows } from './paintLayer/getPaintDropShadows';
 import { getPaintLayers } from './paintLayer/getPaintLayers';

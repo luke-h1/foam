@@ -1,6 +1,6 @@
 import { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedEmote } from '@app/types/emote';
-import { findEmotesInText } from '@app/utils/chat/findEmotesInText';
+import { findEmotesInText } from '@app/utils/chat/findEmotesInText/findEmotesInText';
 import { getEmoteMatchIndex } from '@app/utils/chat/findEmotesInText/getEmoteMatchIndex';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { parseWordLinkParts } from '@app/utils/chat/replaceTextWithEmotes/parseWordLinkParts';

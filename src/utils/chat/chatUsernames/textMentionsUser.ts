@@ -1,4 +1,4 @@
-import { normaliseChatUsername } from '@app/components/Chat/util/chatUsernames/normaliseChatUsername';
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 
 /**
  * Raw-text mention check for live messages whose emote parse is deferred to

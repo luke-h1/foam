@@ -20,17 +20,17 @@ import {
   registerDeferredRewardgiftStandalone,
 } from '@app/utils/chat/channelPointRewardTitleStore';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
-import { parseActionMessage } from '@app/utils/chat/parseActionMessage';
+import { coerceUserNoticeTags } from '@app/utils/chat/messageHandlers/coerceUserNoticeTags';
+import { createBaseMessage } from '@app/utils/chat/messageHandlers/createBaseMessage';
+import { createSystemMessage } from '@app/utils/chat/messageHandlers/createSystemMessage';
+import { createUserNoticeMessage } from '@app/utils/chat/messageHandlers/createUserNoticeMessage';
+import { createUserStateFromTags } from '@app/utils/chat/messageHandlers/createUserStateFromTags';
+import { parseActionMessage } from '@app/utils/chat/parseActionMessage/parseActionMessage';
 import { logger } from '@app/utils/logger';
 
 import type { ChatListRef } from '../components/ChatList';
 import { formatModerationSystemMessage } from '../util/formatModerationSystemMessage/formatModerationSystemMessage';
 import { formatNoticeMessage } from '../util/formatNoticeMessage';
-import { coerceUserNoticeTags } from '../util/messageHandlers/coerceUserNoticeTags';
-import { createBaseMessage } from '../util/messageHandlers/createBaseMessage';
-import { createSystemMessage } from '../util/messageHandlers/createSystemMessage';
-import { createUserNoticeMessage } from '../util/messageHandlers/createUserNoticeMessage';
-import { createUserStateFromTags } from '../util/messageHandlers/createUserStateFromTags';
 import {
   createRoomStateTracker,
   type RoomStateTracker,

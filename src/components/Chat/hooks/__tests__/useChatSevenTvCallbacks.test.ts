@@ -1,6 +1,5 @@
 import { act, renderHook } from '@testing-library/react-native';
 
-import { normalizeSevenTvPaint } from '@app/components/Chat/util/normalizeSevenTvCosmetics/normalizeSevenTvPaint';
 import { countMetric } from '@app/lib/sentry';
 import {
   addBadge,
@@ -17,6 +16,7 @@ import {
 import type { BadgeData, PaintData } from '@app/types/seventv/cosmetics';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
+import { normalizeSevenTvPaint } from '@app/utils/seventv/cosmetics/normalizeSevenTvPaint';
 
 import { useChatSevenTvCallbacks } from '../useChatSevenTvCallbacks';
 import { createSevenTvEmote } from './__fixtures__/useChat.fixture';

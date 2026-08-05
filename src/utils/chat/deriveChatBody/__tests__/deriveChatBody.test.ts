@@ -1,4 +1,4 @@
-import { deriveChatBody } from '@app/utils/chat/deriveChatBody';
+import { deriveChatBody } from '@app/utils/chat/deriveChatBody/deriveChatBody';
 
 import {
   charityDonation,

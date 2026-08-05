@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 
-import { chatScrollActivity } from './chatScrollActivity';
+import { chatScrollActivity } from '@app/components/Chat/util/chatScrollActivity';
 
 /**
  * Subscribe a component to the global chat scroll-activity signal, re-rendering

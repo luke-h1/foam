@@ -2,13 +2,12 @@ import { useMemo } from 'react';
 import { View } from 'react-native';
 
 import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
-import {
-  canRenderMessageInline,
-  type InlineFlowPart,
-} from '@app/components/Chat/util/canRenderMessageInline';
-import { normaliseChatUsername } from '@app/components/Chat/util/chatUsernames/normaliseChatUsername';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
+import i18next from '@app/i18n/i18next';
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
+import { canFlowInline } from '@app/utils/chat/deriveChatBody/canFlowInline';
+import { getMessageStructure } from '@app/utils/chat/deriveChatBody/getMessageStructure';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { ChatMessagePressable } from '../ChatMessagePressable';
@@ -55,15 +54,16 @@ export function ReplyingToHeader({
   }, [parseTextForEmotes, replyBody]);
 
   const prefix = isReplyingToCurrentUser
-    ? 'Replying to you'
-    : `Replying to @${parentDisplayName}`;
-  const canRenderInlineQuote = canRenderMessageInline(parsedReplyBody, {
+    ? i18next.t('chat:replyContext.replyingToYou')
+    : i18next.t('chat:replyContext.replyingToUser', {
+        username: parentDisplayName,
+      });
+  const canRenderInlineQuote = canFlowInline(parsedReplyBody, {
     hasPaint: false,
     isModerated: false,
   });
-  const quoteContainsEmotes = parsedReplyBody.some(
-    part => part.type === 'emote',
-  );
+  const quoteContainsEmotes = getMessageStructure(parsedReplyBody)
+    .containsEmotes;
   const replyContextIconColor = isReplyingToCurrentUser
     ? CHAT_NOTICE_ACCENTS.replyToYou
     : CHAT_SURFACE_COLORS.muted;
@@ -108,7 +108,7 @@ export function ReplyingToHeader({
             <InlineMessageSpans
               {...partRendererArgs}
               emoteTargetSize={replyEmoteSize}
-              message={parsedReplyBody as InlineFlowPart[]}
+              message={parsedReplyBody}
               replyPlainMentionTarget={replyPlainMentionTarget}
               textStyle={replyContextBodyTextStyle}
             />

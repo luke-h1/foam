@@ -12,18 +12,17 @@ import { KeyboardController } from 'react-native-keyboard-controller';
 import i18next from 'i18next';
 import { toast } from 'sonner-native';
 
-import type { useAuthContext } from '@app/context/AuthContext';
 import { getCurrentEmoteData } from '@app/store/chat/actions/channelLoad';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import type { UserInfoResponse } from '@app/types/twitch/user';
 import { findBadges } from '@app/utils/chat/findBadges';
-import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
+import { createOptimisticMessage } from '@app/utils/chat/messageHandlers/createOptimisticMessage';
+import { createOptimisticUserState } from '@app/utils/chat/messageHandlers/createOptimisticUserState';
+import { createUserStateFromTags } from '@app/utils/chat/messageHandlers/createUserStateFromTags';
 import { parseActionCommand } from '@app/utils/chat/parseActionMessage/parseActionCommand';
-import { parseBadges } from '@app/utils/chat/parseBadges';
-import { formatDate } from '@app/utils/date-time/date';
 import { logger } from '@app/utils/logger';
 
 import { useChatImageUpload } from '../hooks/useChatImageUpload';
-import { createUserStateFromTags } from '../util/messageHandlers/createUserStateFromTags';
 import { parseModCommand } from '../util/modCommands/parseModCommand';
 import { runModCommand } from '../util/modCommands/runModCommand';
 import { findSlashCommandDefinition } from '../util/slashCommandDefinitions/findSlashCommandDefinition';
@@ -62,7 +61,7 @@ interface ChatInputShellProps {
     replyParentDisplayName?: string,
     replyParentMsgBody?: string,
   ) => void;
-  user: ReturnType<typeof useAuthContext>['user'];
+  user?: UserInfoResponse;
   ref?: Ref<ChatInputShellHandle>;
 }
 
@@ -201,34 +200,14 @@ export const ChatInputShell = memo(function ChatInputShell({
     const messageText = replyTo
       ? `@${replyTo.username} ${currentInput}`
       : actionBody;
-    const currentUserState = getUserState();
-    const badgeData = parseBadges(currentUserState.badges || '');
 
-    const optimisticUserstate = {
-      ...currentUserState,
-      'display-name':
-        user?.display_name || currentUserState['display-name'] || '',
-      login: user?.login || currentUserState.login || '',
-      username:
-        user?.display_name ||
-        user?.login ||
-        currentUserState['display-name'] ||
-        '',
-      'user-id': user?.id || currentUserState['user-id'] || '',
-      'badges-raw': badgeData['badges-raw'],
-      badges: badgeData.badges,
-      color:
-        currentUserState.color ||
-        (user?.login ? generateRandomTwitchColor(user.login) : undefined),
-      'reply-parent-msg-id': replyTo?.messageId || '',
-      'reply-parent-msg-body': replyTo?.message || '',
-      'reply-parent-display-name': replyTo?.username || '',
-      'reply-parent-user-login': replyTo?.replyParentUserLogin || '',
-    };
+    const optimisticUserstate = createOptimisticUserState({
+      currentUserState: getUserState(),
+      replyTo,
+      user,
+    });
 
     const emoteData = getCurrentEmoteData(channelId);
-    const senderName = user?.display_name || user?.login || '';
-
     const userBadges = emoteData
       ? findBadges({
           userstate: optimisticUserstate,
@@ -241,24 +220,16 @@ export const ChatInputShell = memo(function ChatInputShell({
         })
       : [];
 
-    const optimisticMessageId = `${Date.now()}`;
-
-    const optimisticMessage: AnyChatMessageType = {
-      id: `${optimisticMessageId}_${optimisticMessageId}`,
-      userstate: optimisticUserstate,
-      message: [{ type: 'text', content: messageText.trimEnd() }],
+    const optimisticMessage = createOptimisticMessage({
       badges: userBadges,
-      channel: channelName,
-      message_id: optimisticMessageId,
-      message_nonce: optimisticMessageId,
-      timestamp: formatDate(Date.now(), 'HH:mm'),
-      sender: senderName,
-      parentDisplayName: replyTo?.username || '',
-      replyDisplayName: replyTo?.replyParentUserLogin || '',
-      replyBody: replyTo?.message || '',
-      parentColor: replyTo?.color,
-      ...(isAction ? { isAction: true } : {}),
-    };
+      channelName,
+      isAction,
+      messageText,
+      replyTo,
+      sentAt: Date.now(),
+      user,
+      userstate: optimisticUserstate,
+    });
 
     void processMessageEmotes(
       messageText,

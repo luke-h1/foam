@@ -105,14 +105,6 @@ export function usePinnedChatMessage({
     void loadPinnedMessageRef.current();
   }, [canModerateChat, channelId, moderatorId]);
 
-  const handlePinnedMessageChanged = useCallback(
-    (message: PinnedChatMessageViewModel) => {
-      setPinnedMessage(message);
-      void loadPinnedMessage();
-    },
-    [loadPinnedMessage],
-  );
-
   const handlePinMessage = useCallback(
     (message: MessageActionData<'usernotice'>) => {
       const messageId = message.messageData.message_id?.trim();
@@ -250,7 +242,6 @@ export function usePinnedChatMessage({
 
   return {
     handlePinMessage,
-    handlePinnedMessageChanged,
     handleRefreshPinnedMessage,
     handleUnpinPinnedMessage,
     pinnedMessage,

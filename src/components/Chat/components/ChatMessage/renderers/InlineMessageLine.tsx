@@ -1,10 +1,10 @@
 import { View } from 'react-native';
 import type { ReactNode } from 'react';
 
-import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
 import { getChatColorStyle } from '@app/components/Chat/util/chatColorStyles';
 import { Text } from '@app/components/ui/Text/Text';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import type { InlineFlowPart } from '@app/utils/chat/deriveChatBody/types';
 
 import { getChatTextStyles } from '../chatText.styles';
 import { styles } from '../RichChatMessage.styles';

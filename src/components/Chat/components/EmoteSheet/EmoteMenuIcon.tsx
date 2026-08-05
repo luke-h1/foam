@@ -2,12 +2,12 @@ import { memo } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { BrandIcon } from '@app/components/BrandIcon/BrandIcon';
+import { isBrandIcon } from '@app/components/BrandIcon/isBrandIcon';
 import type { EmoteMenuIcon as EmoteMenuIconType } from '@app/components/Chat/components/EmoteSheet/util/emoteMenuData';
 import { Image } from '@app/components/Image/Image';
 import { SymbolView } from '@app/components/ui/Icon/Icon';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
-import { isBrandIcon } from '@app/utils/typescript/type-guards/isBrandIcon';
 
 const PROVIDER_ACCENT_COLORS: Partial<Record<EmoteMenuIconType, string>> = {
   twitch: theme.colorPlum,

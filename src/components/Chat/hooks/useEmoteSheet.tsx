@@ -15,6 +15,9 @@ import type {
   LegendListRenderItemProps,
 } from '@legendapp/list/react-native';
 
+import { EmoteRow } from '@app/components/Chat/components/EmoteSheet/EmoteRow';
+import type { EmotePickerItem } from '@app/components/Chat/components/EmoteSheet/emoteSheetTypes';
+import { SetHeader } from '@app/components/Chat/components/EmoteSheet/SetHeader';
 import {
   buildEmoteMenuProviders,
   type EmoteMenuListItem,
@@ -23,16 +26,12 @@ import {
   filterProviderSets,
   flattenProviderSets,
 } from '@app/components/Chat/components/EmoteSheet/util/emoteMenuData';
+import { emoteSheetAnimationBudget } from '@app/components/Chat/components/EmoteSheet/util/emoteSheetAnimationBudget';
+import { emoteSheetScrollActivity } from '@app/components/Chat/components/EmoteSheet/util/emoteSheetScrollActivity';
+import { prefetchEmotePickerImages } from '@app/components/Chat/components/EmoteSheet/util/prefetchEmotePickerImages';
 import { useAuthContext } from '@app/context/AuthContext';
 import { useCurrentEmoteData } from '@app/store/chat/react/selectors';
 import type { SanitisedEmote } from '@app/types/emote';
-
-import { EmoteRow } from './EmoteRow';
-import type { EmotePickerItem } from './emoteSheetTypes';
-import { SetHeader } from './SetHeader';
-import { emoteSheetAnimationBudget } from './util/emoteSheetAnimationBudget';
-import { emoteSheetScrollActivity } from './util/emoteSheetScrollActivity';
-import { prefetchEmotePickerImages } from './util/prefetchEmotePickerImages';
 
 const EMPTY_PROVIDERS: EmoteMenuProvider[] = [];
 

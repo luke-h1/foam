@@ -1,5 +1,15 @@
+/**
+ * The two halves of a chat row, consumed as a namespace
+ * (`import * as ChatRow`) so a call site reads `<ChatRow.Surface>` /
+ * `<ChatRow.Body>` rather than two unrelated-looking component names.
+ */
 import { View } from 'react-native';
 import type { ReactNode } from 'react';
+
+import type {
+  ChatRowBodyState,
+  ChatRowSurfaceState,
+} from '@app/components/Chat/components/ChatMessage/RichChatMessage.types';
 
 import { noticeSurfaceTint } from '../util/chatNoticeAccents';
 import { AnnouncementChatBody } from './renderers/AnnouncementChatBody';
@@ -7,11 +17,8 @@ import { ChatNoticeBody } from './renderers/ChatNoticeBody';
 import { SharedChatSourceLabel } from './renderers/SharedChatSourceLabel';
 import { UserChatBody } from './renderers/UserChatBody';
 import { styles } from './RichChatMessage.styles';
-import type { useRichChatMessage } from './useRichChatMessage';
 
-type RichChatMessageState = ReturnType<typeof useRichChatMessage>;
-
-export function RichChatMessageBody(props: RichChatMessageState) {
+export function Body(props: ChatRowBodyState) {
   const {
     badges,
     announcementAccentColor,
@@ -121,11 +128,11 @@ export function RichChatMessageBody(props: RichChatMessageState) {
   );
 }
 
-export function RichChatMessageContainer({
+export function Surface({
   state,
   children,
 }: {
-  state: RichChatMessageState;
+  state: ChatRowSurfaceState;
   children: ReactNode;
 }) {
   const {

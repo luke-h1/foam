@@ -3,6 +3,7 @@ import type { ReactTestInstance } from 'react-test-renderer';
 
 import { act, fireEvent, render } from '@testing-library/react-native';
 
+import { MESSAGE_LONG_PRESS_DELAY_MS } from '@app/components/Chat/hooks/useRichChatMessage';
 import { EmoteSetKind } from '@app/graphql/generated/gql';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { preferences$ } from '@app/store/preferenceStore';
@@ -14,7 +15,6 @@ import { ParsedPart } from '@app/utils/chat/parsedPart';
 import { lightenColor } from '@app/utils/color/lightenColor';
 
 import { RichChatMessage } from '../RichChatMessage';
-import { MESSAGE_LONG_PRESS_DELAY_MS } from '../useRichChatMessage';
 
 jest.mock('@app/utils/date-time/date', () => ({
   formatDate: jest.fn(() => '12:00'),

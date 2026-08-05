@@ -14,7 +14,7 @@ import { type SanitisedEmote } from '@app/types/emote';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { type ParsedPart } from '@app/utils/chat/parsedPart';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
-import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
+import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes/replaceTextWithEmotes';
 
 import { chatPreferencePreviewFixtures } from './chatPreferencePreviewFixtures';
 

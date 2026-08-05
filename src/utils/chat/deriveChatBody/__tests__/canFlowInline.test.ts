@@ -1,6 +1,5 @@
+import { canFlowInline } from '@app/utils/chat/deriveChatBody/canFlowInline';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
-
-import { canRenderMessageInline } from '../canRenderMessageInline';
 
 const text = (content: string) =>
   ({ type: 'text', content }) satisfies ParsedPart<'text'>;
@@ -17,10 +16,10 @@ const emote = (overrides: Partial<ParsedPart<'emote'>> = {}) =>
     ...overrides,
   }) satisfies ParsedPart<'emote'>;
 
-describe('canRenderMessageInline', () => {
+describe('canFlowInline', () => {
   test('accepts a body of text, mentions, links and plain emotes', () => {
     expect(
-      canRenderMessageInline(
+      canFlowInline(
         [
           text('hey '),
           { type: 'mention', content: '@luke' } satisfies ParsedPart<'mention'>,
@@ -37,14 +36,14 @@ describe('canRenderMessageInline', () => {
 
   test('rejects zero-width and overlaid emotes', () => {
     expect(
-      canRenderMessageInline([emote({ zero_width: true })], {
+      canFlowInline([emote({ zero_width: true })], {
         hasPaint: false,
         isModerated: false,
       }),
     ).toBe(false);
 
     expect(
-      canRenderMessageInline([emote({ overlaid: [emote()] })], {
+      canFlowInline([emote({ overlaid: [emote()] })], {
         hasPaint: false,
         isModerated: false,
       }),
@@ -53,14 +52,14 @@ describe('canRenderMessageInline', () => {
 
   test('rejects a painted or moderated body whatever its parts', () => {
     expect(
-      canRenderMessageInline([text('hello')], {
+      canFlowInline([text('hello')], {
         hasPaint: true,
         isModerated: false,
       }),
     ).toBe(false);
 
     expect(
-      canRenderMessageInline([text('hello')], {
+      canFlowInline([text('hello')], {
         hasPaint: false,
         isModerated: true,
       }),
@@ -69,7 +68,7 @@ describe('canRenderMessageInline', () => {
 
   test('rejects a part type that cannot live in a Text', () => {
     expect(
-      canRenderMessageInline(
+      canFlowInline(
         [
           text('cheer '),
           {

@@ -1,27 +1,7 @@
-import { normaliseChatUsername } from '@app/components/Chat/util/chatUsernames/normaliseChatUsername';
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 import { emoteBreaksInline } from '@app/utils/chat/deriveChatBody/emoteBreaksInline';
-import { structureCache } from '@app/utils/chat/deriveChatBody/structureCache';
-import {
-  ChatBodyVariant,
-  MessageStructure,
-} from '@app/utils/chat/deriveChatBody/types';
+import type { ChatBodyScan } from '@app/utils/chat/deriveChatBody/types';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
-
-export interface ChatBodyDerived extends MessageStructure {
-  variant: ChatBodyVariant;
-  hasSubscriptionNotice: boolean;
-  /**
-   * Normalised logins this message @-mentions; render compares against the
-   * current user instead of re-scanning parts.
-   */
-  mentionLogins: string[];
-}
-
-interface DeriveChatBodyFlags {
-  sender?: string;
-  isTwitchSystemNotice?: boolean;
-  isAnnouncement?: boolean;
-}
 
 const SUBSCRIPTION_NOTICE_TYPES = new Set<ParsedPart['type']>([
   'sub',
@@ -40,55 +20,15 @@ const STV_EMOTE_EVENT_TYPES = new Set<ParsedPart['type']>([
 ]);
 const VIEWER_MILESTONE_TYPES = new Set<ParsedPart['type']>(['viewermilestone']);
 
-interface ChatBodyScan extends MessageStructure {
-  hasSubscriptionNotice: boolean;
-  hasCharityDonation: boolean;
-  hasRitualNotice: boolean;
-  hasStvEmoteEvent: boolean;
-  hasViewerMilestone: boolean;
-  mentionLogins: string[];
-}
-
 const scanCache = new WeakMap<ParsedPart[], ChatBodyScan>();
 
-function resolveChatBodyVariant(
-  flags: DeriveChatBodyFlags,
-  notices: {
-    hasSubscriptionNotice: boolean;
-    hasCharityDonation: boolean;
-    hasRitualNotice: boolean;
-    hasStvEmoteEvent: boolean;
-    hasViewerMilestone: boolean;
-  },
-): ChatBodyVariant {
-  if (flags.isAnnouncement) {
-    return 'announcement';
-  }
-  if (flags.isTwitchSystemNotice) {
-    return 'twitch_system_notice';
-  }
-  if (notices.hasSubscriptionNotice) {
-    return 'subscription';
-  }
-  if (notices.hasCharityDonation) {
-    return 'charity_donation';
-  }
-  if (notices.hasRitualNotice) {
-    return 'ritual';
-  }
-  if (notices.hasStvEmoteEvent) {
-    return 'stv_emote_event';
-  }
-  if (notices.hasViewerMilestone) {
-    return 'viewer_milestone';
-  }
-  if (flags.sender?.toLowerCase() === 'system') {
-    return 'app_system_sender';
-  }
-  return 'user_chat';
-}
-
-function scanChatBody(message: ParsedPart[]): ChatBodyScan {
+/**
+ * The single pass over a message's parts. Everything the render path needs to
+ * know about a body - whether it can flow inline, whether it holds emotes,
+ * which notice it is, who it mentions - is decided here once per message and
+ * cached, so no renderer re-walks the parts.
+ */
+export function scanChatBody(message: ParsedPart[]): ChatBodyScan {
   const cached = scanCache.get(message);
   if (cached) {
     return cached;
@@ -148,21 +88,5 @@ function scanChatBody(message: ParsedPart[]): ChatBodyScan {
     mentionLogins,
   };
   scanCache.set(message, scan);
-  structureCache.set(message, { canBeInline, containsEmotes });
   return scan;
-}
-
-export function deriveChatBody(
-  message: ParsedPart[],
-  flags: DeriveChatBodyFlags = {},
-): ChatBodyDerived {
-  const scan = scanChatBody(message);
-
-  return {
-    canBeInline: scan.canBeInline,
-    containsEmotes: scan.containsEmotes,
-    hasSubscriptionNotice: scan.hasSubscriptionNotice,
-    mentionLogins: scan.mentionLogins,
-    variant: resolveChatBodyVariant(flags, scan),
-  };
 }

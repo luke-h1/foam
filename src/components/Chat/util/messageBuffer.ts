@@ -1,10 +1,10 @@
 import { getMaxChatMessages } from '@app/store/chat/actions/messages';
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
+import { getChatMessageStoreId } from '@app/utils/chat/messageIdentity/getChatMessageStoreId';
+import { normaliseMessageField } from '@app/utils/chat/messageIdentity/normaliseMessageField';
 
 import { createModeratedBufferMessage } from './bufferedMessageOps/createModeratedBufferMessage';
-import { getBufferedMessageKey } from './bufferedMessageOps/getBufferedMessageKey';
 import { getBufferedMessageLogin } from './bufferedMessageOps/getBufferedMessageLogin';
-import { normaliseLogin } from './bufferedMessageOps/normaliseLogin';
-import { normaliseMessageId } from './bufferedMessageOps/normaliseMessageId';
 import type { BufferedMessage } from './bufferedMessageOps/types';
 
 export type { BufferedMessage } from './bufferedMessageOps/types';
@@ -53,13 +53,13 @@ export const createMessageBuffer = (
   const rebuildIndex = (): void => {
     index.clear();
     messages.forEach((message, position) => {
-      index.set(getBufferedMessageKey(message), position);
+      index.set(getChatMessageStoreId(message), position);
     });
   };
 
   return {
     add(message) {
-      const key = getBufferedMessageKey(message);
+      const key = getChatMessageStoreId(message);
       const existingIndex = index.get(key);
 
       if (typeof existingIndex === 'number') {
@@ -129,7 +129,7 @@ export const createMessageBuffer = (
     },
 
     removeByLogin(login) {
-      const target = normaliseLogin(login);
+      const target = normaliseChatUsername(login);
       if (!target) {
         return false;
       }
@@ -146,7 +146,7 @@ export const createMessageBuffer = (
     },
 
     moderateById(messageId, moderationNotice) {
-      const normalisedMessageId = normaliseMessageId(messageId);
+      const normalisedMessageId = normaliseMessageField(messageId);
       if (!normalisedMessageId) {
         return;
       }
@@ -174,7 +174,7 @@ export const createMessageBuffer = (
     },
 
     moderateByLogin(login, moderationNotice) {
-      const target = normaliseLogin(login);
+      const target = normaliseChatUsername(login);
       if (!target) {
         return;
       }

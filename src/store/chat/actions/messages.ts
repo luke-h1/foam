@@ -1,8 +1,13 @@
 import { batch } from '@legendapp/state';
 
 import { getPreferences } from '@app/store/preferenceStore';
-import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
-import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor';
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
+import { createModeratedMessageText } from '@app/utils/chat/createModeratedMessageText';
+import { getChatMessageKey } from '@app/utils/chat/messageIdentity/getChatMessageKey';
+import { getChatMessageStoreId } from '@app/utils/chat/messageIdentity/getChatMessageStoreId';
+import { isRenderableChatMessage } from '@app/utils/chat/messageIdentity/isRenderableChatMessage';
+import { normaliseMessageField } from '@app/utils/chat/messageIdentity/normaliseMessageField';
+import { resolveCachedSenderColor } from '@app/utils/chat/resolveCachedSenderColor/resolveCachedSenderColor';
 import { clearMentionLoginIndex } from '@app/utils/chat/resolveMentionLogin/clearMentionLoginIndex';
 import { registerMentionChatter } from '@app/utils/chat/resolveMentionLogin/registerMentionChatter';
 import { registerMentionLogin } from '@app/utils/chat/resolveMentionLogin/registerMentionLogin';
@@ -62,20 +67,6 @@ let recentMessagesSyncTimer: ReturnType<typeof setTimeout> | null = null;
 let pendingRecentMessagesChannelId: string | null = null;
 let pendingRecentMessages: AnyChatMessageType[] | null = null;
 
-const normaliseMessageIdentifier = (value: string): string => value.trim();
-
-const getMessageKey = (messageId: string, messageNonce: string): string =>
-  `${normaliseMessageIdentifier(messageId)}_${normaliseMessageIdentifier(
-    messageNonce,
-  )}`;
-
-const getNormalisedMessageId = (message: AnyChatMessageType): string =>
-  message.id?.trim() ? message.id.trim() : '';
-
-const getMessageStoreId = (message: AnyChatMessageType): string =>
-  getNormalisedMessageId(message) ||
-  getMessageKey(message.message_id, message.message_nonce);
-
 const dedupeMessagesForStore = (
   messages: (AnyChatMessageType | undefined)[],
 ): AnyChatMessageType[] => {
@@ -84,12 +75,12 @@ const dedupeMessagesForStore = (
   const uniqueMessages: AnyChatMessageType[] = [];
 
   messages.forEach(message => {
-    if (!isValidChatMessage(message)) {
+    if (!isRenderableChatMessage(message)) {
       return;
     }
 
-    const key = getMessageKey(message.message_id, message.message_nonce);
-    const id = getMessageStoreId(message);
+    const key = getChatMessageKey(message.message_id, message.message_nonce);
+    const id = getChatMessageStoreId(message);
     if (seenKeys.has(key) || seenIds.has(id)) {
       return;
     }
@@ -107,7 +98,7 @@ const prepareMessagePartsForStore = (
   messageNonce: string,
   messageParts: AnyChatMessageType['message'],
 ): AnyChatMessageType['message'] => {
-  const messageKey = getMessageKey(messageId, messageNonce);
+  const messageKey = getChatMessageKey(messageId, messageNonce);
   return messageParts.map((part, index) => {
     const storedPart = { ...part };
     Object.defineProperty(storedPart, 'id', {
@@ -125,7 +116,7 @@ let nextMessageSeq = 0;
 const prepareMessageForStore = (
   message: AnyChatMessageType,
 ): AnyChatMessageType => {
-  const messageKey = getMessageKey(message.message_id, message.message_nonce);
+  const messageKey = getChatMessageKey(message.message_id, message.message_nonce);
   const cachedSenderColor = resolveCachedSenderColor(
     message,
     getUserMessageColor,
@@ -163,19 +154,6 @@ const prepareMessageUpdates = (
       }
     : updates;
 
-const isValidChatMessage = (
-  message?: AnyChatMessageType,
-): message is AnyChatMessageType => {
-  if (!message) {
-    return false;
-  }
-
-  return Boolean(
-    normaliseMessageIdentifier(message.message_id) &&
-    normaliseMessageIdentifier(message.message_nonce),
-  );
-};
-
 const getSenderChatterRole = (
   message: AnyChatMessageType,
 ): ChatterRole | undefined => {
@@ -193,10 +171,10 @@ const getSenderChatterRole = (
 };
 
 const indexMessage = (message: AnyChatMessageType, index: number) => {
-  const key = getMessageKey(message.message_id, message.message_nonce);
+  const key = getChatMessageKey(message.message_id, message.message_nonce);
   messageKeyToIndex.set(key, index);
 
-  const normalisedMessageId = normaliseMessageIdentifier(message.message_id);
+  const normalisedMessageId = normaliseMessageField(message.message_id);
   if (normalisedMessageId) {
     messageIdToIndex.set(normalisedMessageId, index);
   }
@@ -225,7 +203,7 @@ const rebuildMessageIndexes = (
   clearMessageColorIndexes();
 
   messages.forEach((message, index) => {
-    if (isValidChatMessage(message)) {
+    if (isRenderableChatMessage(message)) {
       indexMessage(message, index);
     }
   });
@@ -416,10 +394,10 @@ const indexAppendedMessages = (
   droppedMessages: AnyChatMessageType[],
 ) => {
   droppedMessages.forEach((message, droppedIndex) => {
-    const key = getMessageKey(message.message_id, message.message_nonce);
+    const key = getChatMessageKey(message.message_id, message.message_nonce);
     messageKeyToIndex.delete(key);
 
-    const normalisedMessageId = normaliseMessageIdentifier(message.message_id);
+    const normalisedMessageId = normaliseMessageField(message.message_id);
     // Another window entry can share this message_id under a different
     // nonce; only drop the id entry when it still points at the evicted row.
     if (
@@ -474,7 +452,7 @@ const getMessageUpdatesFromInputs = (
   let didUpdate = false;
 
   for (const { messageId, messageNonce, updates: messageUpdates } of updates) {
-    const key = getMessageKey(messageId, messageNonce);
+    const key = getChatMessageKey(messageId, messageNonce);
     const index = messageKeyToIndex.get(key);
 
     if (typeof index !== 'number') {
@@ -525,11 +503,11 @@ export const updateMessages = (
 };
 
 export const addMessage = (message?: AnyChatMessageType) => {
-  if (!isValidChatMessage(message)) {
+  if (!isRenderableChatMessage(message)) {
     return;
   }
 
-  const key = getMessageKey(message.message_id, message.message_nonce);
+  const key = getChatMessageKey(message.message_id, message.message_nonce);
   if (messageKeySet.has(key)) {
     return;
   }
@@ -564,11 +542,11 @@ export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {
     return;
   }
   const newMessages = messages.filter((msg): msg is AnyChatMessageType => {
-    if (!isValidChatMessage(msg)) {
+    if (!isRenderableChatMessage(msg)) {
       return false;
     }
 
-    const key = getMessageKey(msg.message_id, msg.message_nonce);
+    const key = getChatMessageKey(msg.message_id, msg.message_nonce);
     if (messageKeySet.has(key)) {
       return false;
     }
@@ -605,18 +583,6 @@ export const addMessages = (messages: (AnyChatMessageType | undefined)[]) => {
   syncRecentMessagesForCurrentChannel(nextMessages, 'defer');
 };
 
-function normaliseLogin(value?: string): string {
-  return value?.trim().toLowerCase() ?? '';
-}
-
-function createModeratedText(
-  message: AnyChatMessageType,
-  moderationNotice: string,
-): string {
-  const plainText = replaceEmotesWithText(message.message).trim();
-  return plainText ? `${plainText}\u2014${moderationNotice}` : moderationNotice;
-}
-
 export const moderateMessageById = (
   messageId: string,
   moderationNotice: string,
@@ -626,7 +592,7 @@ export const moderateMessageById = (
     return;
   }
 
-  const key = getMessageKey(message.message_id, message.message_nonce);
+  const key = getChatMessageKey(message.message_id, message.message_nonce);
   const index = messageKeyToIndex.get(key);
 
   if (typeof index !== 'number') {
@@ -650,7 +616,7 @@ export const moderateMessageById = (
           message: [
             {
               type: 'text',
-              content: createModeratedText(currentMessage, moderationNotice),
+              content: createModeratedMessageText(currentMessage.message, moderationNotice),
             },
           ],
         },
@@ -665,7 +631,7 @@ export const moderateMessagesByLogin = (
   login: string,
   moderationNotice: string,
 ) => {
-  const target = normaliseLogin(login);
+  const target = normaliseChatUsername(login);
   if (!target) {
     return;
   }
@@ -676,11 +642,11 @@ export const moderateMessagesByLogin = (
 
   for (let index = 0; index < currentMessages.length; index += 1) {
     const message = currentMessages[index];
-    if (!isValidChatMessage(message)) {
+    if (!isRenderableChatMessage(message)) {
       continue;
     }
 
-    const messageLogin = normaliseLogin(
+    const messageLogin = normaliseChatUsername(
       message.userstate?.login || message.userstate?.username || message.sender,
     );
 
@@ -696,7 +662,7 @@ export const moderateMessagesByLogin = (
         message: [
           {
             type: 'text',
-            content: createModeratedText(message, moderationNotice),
+            content: createModeratedMessageText(message.message, moderationNotice),
           },
         ],
       }),
@@ -713,7 +679,7 @@ export const moderateMessagesByLogin = (
 };
 
 export const removeMessagesByLogin = (login: string) => {
-  const target = normaliseLogin(login);
+  const target = normaliseChatUsername(login);
   if (!target) {
     return;
   }
@@ -721,11 +687,11 @@ export const removeMessagesByLogin = (login: string) => {
   const currentMessages = chatStore$.messages.peek();
   const removedMessages: AnyChatMessageType[] = [];
   const nextMessages = currentMessages.filter(message => {
-    if (!isValidChatMessage(message)) {
+    if (!isRenderableChatMessage(message)) {
       return true;
     }
 
-    const messageLogin = normaliseLogin(
+    const messageLogin = normaliseChatUsername(
       message.userstate?.login || message.userstate?.username || message.sender,
     );
 
@@ -742,7 +708,7 @@ export const removeMessagesByLogin = (login: string) => {
   }
 
   removedMessages.forEach(message => {
-    const key = getMessageKey(message.message_id, message.message_nonce);
+    const key = getChatMessageKey(message.message_id, message.message_nonce);
     messageKeySet.delete(key);
 
     const orderIndex = messageKeyOrder.indexOf(key);
@@ -759,7 +725,7 @@ export const removeMessagesByLogin = (login: string) => {
 export const getMessageById = (
   messageId: string,
 ): AnyChatMessageType | undefined => {
-  const index = messageIdToIndex.get(normaliseMessageIdentifier(messageId));
+  const index = messageIdToIndex.get(normaliseMessageField(messageId));
   if (typeof index !== 'number') {
     return undefined;
   }
@@ -768,7 +734,7 @@ export const getMessageById = (
 };
 
 export const removeMessageById = (messageId: string) => {
-  const normalisedMessageId = normaliseMessageIdentifier(messageId);
+  const normalisedMessageId = normaliseMessageField(messageId);
   if (!normalisedMessageId) {
     return;
   }
@@ -776,8 +742,8 @@ export const removeMessageById = (messageId: string) => {
   const currentMessages = chatStore$.messages.peek();
   const removedMessages = currentMessages.filter(
     message =>
-      isValidChatMessage(message) &&
-      normaliseMessageIdentifier(message.message_id) === normalisedMessageId,
+      isRenderableChatMessage(message) &&
+      normaliseMessageField(message.message_id) === normalisedMessageId,
   );
 
   if (removedMessages.length === 0) {
@@ -785,7 +751,7 @@ export const removeMessageById = (messageId: string) => {
   }
 
   removedMessages.forEach(message => {
-    const key = getMessageKey(message.message_id, message.message_nonce);
+    const key = getChatMessageKey(message.message_id, message.message_nonce);
     messageKeySet.delete(key);
 
     const orderIndex = messageKeyOrder.indexOf(key);
@@ -796,8 +762,8 @@ export const removeMessageById = (messageId: string) => {
 
   const nextMessages = currentMessages.filter(
     message =>
-      !isValidChatMessage(message) ||
-      normaliseMessageIdentifier(message.message_id) !== normalisedMessageId,
+      !isRenderableChatMessage(message) ||
+      normaliseMessageField(message.message_id) !== normalisedMessageId,
   );
 
   rebuildMessageIndexes(nextMessages);
@@ -843,7 +809,7 @@ export const restoreRecentMessagesForChannel = (channelId: string): number => {
   clearMentionLoginIndex();
 
   recentMessages.forEach(message => {
-    const key = getMessageKey(message.message_id, message.message_nonce);
+    const key = getChatMessageKey(message.message_id, message.message_nonce);
     messageKeySet.add(key);
     messageKeyOrder.push(key);
   });

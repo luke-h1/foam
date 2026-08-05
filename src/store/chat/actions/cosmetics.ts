@@ -1,7 +1,5 @@
 import { batch } from '@legendapp/state';
 
-import { buildSevenTvBadgeImageUrl } from '@app/components/Chat/util/normalizeSevenTvCosmetics/buildSevenTvBadgeImageUrl';
-import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics/normalizeSevenTvBadge';
 import { storageService } from '@app/lib/storage';
 import {
   clearSevenTvUserCache,
@@ -15,6 +13,8 @@ import { convertV4PaintToPaintData } from '@app/utils/color/sevenTvPaintData/con
 import { type V4Badge } from '@app/utils/color/sevenTvPaintData/types';
 import { logger } from '@app/utils/logger';
 import { deepEqualJson } from '@app/utils/object/deepEqualJson';
+import { buildSevenTvBadgeImageUrl } from '@app/utils/seventv/cosmetics/buildSevenTvBadgeImageUrl';
+import { normalizeSevenTvBadge } from '@app/utils/seventv/cosmetics/normalizeSevenTvBadge';
 import { getSevenTvSessionId } from '@app/utils/seventv/sevenTvSessionId';
 
 import { chatStore$ } from '../observables/chatStore';

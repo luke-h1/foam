@@ -11,6 +11,7 @@ import {
   BottomSheet,
   type BottomSheetHandle,
 } from '@app/components/BottomSheet/BottomSheet';
+import { useEmoteSheet } from '@app/components/Chat/hooks/useEmoteSheet';
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 
@@ -25,7 +26,6 @@ import {
 import { renderSetRailItem } from './EmoteSheetSetRailItem';
 import type { EmotePickerItem } from './emoteSheetTypes';
 import { ProviderChip } from './ProviderChip';
-import { useEmoteSheet } from './useEmoteSheet';
 import type { EmoteMenuListItem } from './util/emoteMenuData';
 import { emoteSheetScrollActivity } from './util/emoteSheetScrollActivity';
 

@@ -1,3 +1,5 @@
+import { normaliseChatText } from '@app/utils/chat/normaliseChatText';
+
 export function normaliseHighlightPhrase(phrase: string): string {
-  return phrase.trim().toLowerCase();
+  return normaliseChatText(phrase);
 }

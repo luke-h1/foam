@@ -239,6 +239,15 @@ const en = {
       clear: 'Clear',
       jumpToLatest: 'Jump to latest',
     },
+    pane: {
+      connecting: "Connecting to {{channelName}}'s chat...",
+      noMatchesTitle: 'No chat messages match the current view',
+      noMatchesBody: 'Clear filters or jump back to the latest messages.',
+    },
+    replyContext: {
+      replyingToYou: 'Replying to you',
+      replyingToUser: 'Replying to @{{username}}',
+    },
     notices: {
       announcement: 'Announcement',
       firstMessage: 'First message',

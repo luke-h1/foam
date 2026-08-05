@@ -1,6 +1,5 @@
 import { createChatMessageFixture } from '@app/components/Chat/util/__tests__/__fixtures__/chatMessage.fixture';
-
-import { getChatMessageListKey } from '../getChatMessageListKey';
+import { getChatMessageListKey } from '@app/utils/chat/messageIdentity/getChatMessageListKey';
 
 describe('getChatMessageListKey', () => {
   test('returns the message id when present', () => {

@@ -1,11 +1,12 @@
 import { memo, useEffect, useMemo, useRef } from 'react';
-import { type StyleProp, View, type ViewStyle } from 'react-native';
+import { View } from 'react-native';
 import type { RefObject } from 'react';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@app/components/ui/Text/Text';
+import i18next from '@app/i18n/i18next';
 import { useMessages } from '@app/store/chat/react/selectors';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
 import { theme } from '@app/styles/themes';
@@ -36,7 +37,6 @@ export interface ChatMessagePaneProps {
   renderItem: ChatListRenderItem;
   keyExtractor: (item: AnyChatMessageType, index: number) => string;
   getItemType: (item: AnyChatMessageType) => string;
-  listContentStyle: StyleProp<ViewStyle>;
   messageListExtraData?: unknown;
   onClearFilters: () => void;
   onRefreshPinnedMessage: () => void;
@@ -65,7 +65,6 @@ export const ChatMessagePane = memo(
     renderItem,
     keyExtractor,
     getItemType,
-    listContentStyle,
     messageListExtraData,
     onClearFilters,
     onRefreshPinnedMessage,
@@ -109,9 +108,12 @@ export const ChatMessagePane = memo(
     // scrolls to the list's true bottom and lands *behind* the composer (only
     // a sliver visible above it). Reserve that lift plus a small gap so the
     // newest message always rests just above the composer.
-    const listContentStyleWithComposerClearance = useMemo(
-      () => [listContentStyle, { paddingBottom: insets.bottom + theme.space8 }],
-      [insets.bottom, listContentStyle],
+    const listContentStyle = useMemo(
+      () => [
+        styles.listContent,
+        { paddingBottom: insets.bottom + theme.space8 },
+      ],
+      [insets.bottom],
     );
 
     const visibleMessages = useMemo(
@@ -132,11 +134,6 @@ export const ChatMessagePane = memo(
         showOnlyMentions,
       ],
     );
-    // The store guarantees unique message keys at insert time (addMessage /
-    // addMessages both guard against messageKeySet, and getChatMessageListKey
-    // returns the store-assigned id), so a per-render Set-based dedup over the
-    // whole window — up to 600 messages on every ~100ms flush — was pure churn.
-    const listData = visibleMessages;
 
     useEffect(() => {
       if (hasMessages) {
@@ -172,7 +169,7 @@ export const ChatMessagePane = memo(
             testID='chat-sync-placeholder'
           >
             <Text style={styles.connectingText}>
-              Connecting to {channelName}&apos;s chat...
+              {i18next.t('chat:pane.connecting', { channelName })}
             </Text>
           </View>
         )}
@@ -198,10 +195,10 @@ export const ChatMessagePane = memo(
         {visibleMessages.length === 0 && rawMessages.length > 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateTitle}>
-              No chat messages match the current view
+              {i18next.t('chat:pane.noMatchesTitle')}
             </Text>
             <Text style={styles.emptyStateBody}>
-              Clear filters or jump back to the latest messages.
+              {i18next.t('chat:pane.noMatchesBody')}
             </Text>
           </View>
         ) : null}
@@ -209,7 +206,7 @@ export const ChatMessagePane = memo(
         <GestureDetector gesture={dismissKeyboardGesture}>
           <View style={styles.listGestureWrapper}>
             <ChatList
-              data={listData}
+              data={visibleMessages}
               listRef={listRef}
               shouldMaintainScrollAtEnd={shouldMaintainScrollAtEnd}
               scrollHandlers={scrollHandlers}
@@ -217,7 +214,7 @@ export const ChatMessagePane = memo(
               keyExtractor={keyExtractor}
               getItemType={getItemType}
               extraData={messageListExtraData}
-              contentContainerStyle={listContentStyleWithComposerClearance}
+              contentContainerStyle={listContentStyle}
               onViewableMessagesChange={onViewableMessagesChange}
             />
           </View>

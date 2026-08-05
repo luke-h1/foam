@@ -1,10 +1,17 @@
-import { isRenderableChatMessage } from '@app/components/Chat/util/chatMessages/isRenderableChatMessage';
-import { normaliseMessageField } from '@app/components/Chat/util/chatMessages/normaliseMessageField';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import { getChatMessageKey } from '@app/utils/chat/messageIdentity/getChatMessageKey';
+import { isRenderableChatMessage } from '@app/utils/chat/messageIdentity/isRenderableChatMessage';
+import { normaliseMessageField } from '@app/utils/chat/messageIdentity/normaliseMessageField';
 
 const fallbackMessageKeys = new WeakMap<object, string>();
 let fallbackMessageKeyId = 0;
 
+/**
+ * List key for a message. Unlike `getChatMessageStoreId` this never returns a
+ * shared key for an unrenderable message - two malformed rows must not
+ * collapse onto the same React key - so it hands those a stable unique
+ * fallback instead.
+ */
 export function getChatMessageListKey(
   message: AnyChatMessageType | undefined,
 ): string {
@@ -14,9 +21,7 @@ export function getChatMessageListKey(
   }
 
   if (isRenderableChatMessage(message)) {
-    return `${normaliseMessageField(message.message_id)}_${normaliseMessageField(
-      message.message_nonce,
-    )}`;
+    return getChatMessageKey(message.message_id, message.message_nonce);
   }
 
   if (message && typeof message === 'object') {

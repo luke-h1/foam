@@ -5,12 +5,12 @@ import { ReadyState } from '@app/hooks/ws/constants';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { ChatRenderPreferences } from '@app/store/preferenceStore';
 import type { UserInfoResponse } from '@app/types/twitch/user';
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 import { parseBadges } from '@app/utils/chat/parseBadges';
 
 import type { ChatInputShellHandle } from '../components/ChatInputShell';
 import type { ChatListRef } from '../components/ChatList';
-import { useChatOverlays } from '../components/useChatOverlays';
-import { normaliseChatUsername } from '../util/chatUsernames/normaliseChatUsername';
+import type { ChatOverlayLayerProps } from '../components/ChatOverlayLayer';
 import {
   useChatComposerActions,
   useChatOverlayActions,
@@ -130,7 +130,6 @@ export function useChatSurface({
 
   const {
     handlePinMessage,
-    handlePinnedMessageChanged,
     handleRefreshPinnedMessage,
     handleUnpinPinnedMessage,
     pinnedMessage,
@@ -161,31 +160,6 @@ export function useChatSurface({
     scrollToBottom,
   });
 
-  const { openers, overlaysElement } = useChatOverlays({
-    appendMentionToComposer,
-    canModerateChat,
-    channelId,
-    currentUserId: user?.id,
-    handleReply,
-    hiddenUsers,
-    highlightedUsers,
-    hidePhraseFromView,
-    hideUserFromView,
-    insertPhraseToComposer,
-    onClearChatCache: handleClearChatCache,
-    onClearImageCache: handleClearImageCache,
-    onClearSevenTvCosmeticsCache: handleClearSevenTvCosmeticsCache,
-    onInsertEmote: handleEmoteSelect,
-    onPinMessage: handlePinMessage,
-    onRefreshPinnedMessage: handleRefreshPinnedMessage,
-    onSettingsReconnect: handleSettingsReconnect,
-    onSettingsRefetchEmotes: handleSettingsRefetchEmotes,
-    onUnpinPinnedMessage: handleUnpinPinnedMessage,
-    pinnedMessageBusy,
-    pinnedMessageId,
-    toggleHighlightedUser,
-  });
-
   const {
     handleBadgeLongPress,
     handleEmotePress,
@@ -193,7 +167,7 @@ export function useChatSurface({
     handleOpenEmoteSheet,
     handleOpenSettingsSheet,
     handleUsernamePress,
-  } = useChatOverlayActions(openers);
+  } = useChatOverlayActions(channelId);
 
   const paneFlags = useMemo(
     () => ({
@@ -210,55 +184,62 @@ export function useChatSurface({
     ],
   );
 
-  const {
-    getItemType,
-    keyExtractor,
-    listContentStyle,
-    messageListExtraData,
-    renderItem,
-  } = useChatRowRenderer({
+  const { getItemType, keyExtractor, messageListExtraData, renderItem } =
+    useChatRowRenderer({
+      channelId,
+      highlightedReplyTargetTimeoutRef,
+      highlightedUsers,
+      listRef,
+      messages$,
+      onBadgePress: handleBadgeLongPress,
+      onEmotePress: handleEmotePress,
+      onMessageLongPress: handleMessageLongPress,
+      onUsernamePress: handleUsernamePress,
+      preferences,
+      setHighlightedReplyTargetMessageId,
+      user,
+    });
+
+  const overlayProps: ChatOverlayLayerProps = {
+    canModerateChat,
     channelId,
-    highlightedReplyTargetTimeoutRef,
+    currentUserId: user?.id,
+    hiddenUsers,
     highlightedUsers,
-    listRef,
-    messages$,
-    onBadgePress: handleBadgeLongPress,
-    onEmotePress: handleEmotePress,
-    onMessageLongPress: handleMessageLongPress,
-    onUsernamePress: handleUsernamePress,
-    preferences,
-    setHighlightedReplyTargetMessageId,
-    user,
-  });
+    hidePhraseFromView,
+    hideUserFromView,
+    onAppendMention: appendMentionToComposer,
+    onClearChatCache: handleClearChatCache,
+    onClearImageCache: handleClearImageCache,
+    onClearSevenTvCosmeticsCache: handleClearSevenTvCosmeticsCache,
+    onInsertEmote: handleEmoteSelect,
+    onInsertPhrase: insertPhraseToComposer,
+    onPinMessage: handlePinMessage,
+    onRefreshPinnedMessage: handleRefreshPinnedMessage,
+    onReply: handleReply,
+    onSettingsReconnect: handleSettingsReconnect,
+    onSettingsRefetchEmotes: handleSettingsRefetchEmotes,
+    onUnpinPinnedMessage: handleUnpinPinnedMessage,
+    pinnedMessageBusy,
+    pinnedMessageId,
+    toggleHighlightedUser,
+  };
 
   return {
-    appendMentionToComposer,
-    canModerateChat,
     chatAssetPreferenceKey,
     getItemType,
-    handleClearChatCache,
-    handleClearSevenTvCosmeticsCache,
-    handleClearImageCache,
-    handleEmoteSelect,
     handleOpenEmoteSheet,
     handleOpenSettingsSheet,
-    handlePinMessage,
-    handlePinnedMessageChanged,
     handleRefreshCommand,
     handleRefreshPinnedMessage,
-    handleReply,
     handleResumeScrollToBottom,
-    handleSettingsReconnect,
-    handleSettingsRefetchEmotes,
     handleUnpinPinnedMessage,
     keyExtractor,
-    listContentStyle,
     messageListExtraData,
-    overlaysElement,
+    overlayProps,
     paneFlags,
     pinnedMessage,
     pinnedMessageBusy,
-    pinnedMessageId,
     renderItem,
   };
 }

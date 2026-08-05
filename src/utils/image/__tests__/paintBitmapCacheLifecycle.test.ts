@@ -6,7 +6,7 @@ import {
   MAX_CACHED_PAINT_BITMAPS,
   releasePaintBitmaps,
   retainPaintBitmaps,
-} from '../paintBitmapCacheLifecycle';
+} from '@app/utils/image/paintBitmapCacheLifecycle';
 
 interface FakeEntry extends DisposablePaintBitmaps {
   staticImage: { dispose: jest.Mock };

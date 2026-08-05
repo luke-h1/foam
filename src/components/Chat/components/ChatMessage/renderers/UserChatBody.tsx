@@ -4,13 +4,13 @@ import type { ReactNode } from 'react';
 import { useSelector } from '@legendapp/state/react';
 
 import { CHAT_NOTICE_ACCENTS } from '@app/components/Chat/components/util/chatNoticeAccents';
-import type { InlineFlowPart } from '@app/components/Chat/util/canRenderMessageInline';
-import { normaliseChatUsername } from '@app/components/Chat/util/chatUsernames/normaliseChatUsername';
 import { Text } from '@app/components/ui/Text/Text';
 import i18next from '@app/i18n/i18next';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
+import { canFlowInline } from '@app/utils/chat/deriveChatBody/canFlowInline';
 import { getMessageStructure } from '@app/utils/chat/deriveChatBody/getMessageStructure';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { cachedLighten } from '@app/utils/chat/resolveCachedSenderColor/cachedLighten';
@@ -99,17 +99,22 @@ export function UserChatBody({
     userId ? Boolean(chatStore$.userPaintIds[userId]?.get()) : false,
   );
   const isModerated = Boolean(moderationNotice);
-  const { canBeInline, containsEmotes: bodyContainsEmotes } =
-    getMessageStructure(message);
-  const canFlowInline = canBeInline && !isModerated;
-  const renderInline = canFlowInline && !hasPaint && !bodyContainsEmotes;
+  const { containsEmotes: bodyContainsEmotes } = getMessageStructure(message);
+  // A paint renders through a mask, so a painted row cannot put the username
+  // in the same Text as the body - but the body alone still flows.
+  const rowFlowsInline = canFlowInline(message, { hasPaint, isModerated });
+  const bodyCanFlowInline = canFlowInline(message, {
+    hasPaint: false,
+    isModerated,
+  });
+  const renderInline = rowFlowsInline && !bodyContainsEmotes;
+  const bodyFlowsInline =
+    bodyCanFlowInline && !renderInline && !bodyContainsEmotes;
   const inlineUsernameColor =
     cachedSenderColor ??
     (userstateColor ? cachedLighten(userstateColor) : undefined) ??
     (username ? cachedLighten(generateRandomTwitchColor(username)) : undefined);
   const actionColor = isAction ? inlineUsernameColor : undefined;
-  const bodyCanFlowInline =
-    canFlowInline && !renderInline && !bodyContainsEmotes;
   const textStyles = getChatTextStyles(fontScale, compact);
 
   return (
@@ -159,9 +164,7 @@ export function UserChatBody({
           badgeList={badgeList}
           getMappingKey={getMappingKey}
           isAction={isAction}
-          message={
-            message as Parameters<typeof InlineMessageLine>[0]['message']
-          }
+          message={message}
           onBadgePress={onBadgePress}
           onUsernamePress={onUsernamePress}
           replyPlainMentionTarget={replyPlainMentionTarget}
@@ -212,11 +215,11 @@ export function UserChatBody({
               />
             </View>
           ) : null}
-          {bodyCanFlowInline ? (
+          {bodyFlowsInline ? (
             <Text style={textStyles.body}>
               <InlineMessageSpans
                 {...rendererArgs}
-                message={message as InlineFlowPart[]}
+                message={message}
                 replyPlainMentionTarget={replyPlainMentionTarget}
                 textColor={actionColor}
               />

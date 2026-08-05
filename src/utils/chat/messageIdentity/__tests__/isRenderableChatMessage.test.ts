@@ -1,6 +1,5 @@
 import { createChatMessageFixture } from '@app/components/Chat/util/__tests__/__fixtures__/chatMessage.fixture';
-
-import { isRenderableChatMessage } from '../isRenderableChatMessage';
+import { isRenderableChatMessage } from '@app/utils/chat/messageIdentity/isRenderableChatMessage';
 
 describe('isRenderableChatMessage', () => {
   test('returns false for undefined messages', () => {

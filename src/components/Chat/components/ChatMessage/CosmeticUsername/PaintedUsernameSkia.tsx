@@ -15,11 +15,11 @@ import { chatLineMetrics } from '@app/components/Chat/components/ChatMessage/cha
 import { Text } from '@app/components/ui/Text/Text';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
-
 import {
   releasePaintBitmaps,
   retainPaintBitmaps,
-} from './util/paintBitmapCacheLifecycle';
+} from '@app/utils/image/paintBitmapCacheLifecycle';
+
 import { useSharedPaintAnimationFrame } from './util/sharedPaintAnimationFrames';
 import {
   getPaintBitmaps,

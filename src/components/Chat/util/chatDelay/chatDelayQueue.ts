@@ -1,7 +1,8 @@
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
+import { normaliseMessageField } from '@app/utils/chat/messageIdentity/normaliseMessageField';
+
 import { createModeratedBufferMessage } from '../bufferedMessageOps/createModeratedBufferMessage';
 import { getBufferedMessageLogin } from '../bufferedMessageOps/getBufferedMessageLogin';
-import { normaliseLogin } from '../bufferedMessageOps/normaliseLogin';
-import { normaliseMessageId } from '../bufferedMessageOps/normaliseMessageId';
 import type { BufferedMessage } from '../bufferedMessageOps/types';
 
 export interface DelayedChatMessage {
@@ -80,7 +81,7 @@ export const createChatDelayQueue = (
     },
 
     removeById(messageId) {
-      const target = normaliseMessageId(messageId);
+      const target = normaliseMessageField(messageId);
       if (!target) {
         return;
       }
@@ -92,7 +93,7 @@ export const createChatDelayQueue = (
     },
 
     removeByLogin(login) {
-      const target = normaliseLogin(login);
+      const target = normaliseChatUsername(login);
       if (!target) {
         return;
       }
@@ -102,7 +103,7 @@ export const createChatDelayQueue = (
     },
 
     moderateById(messageId, moderationNotice) {
-      const target = normaliseMessageId(messageId);
+      const target = normaliseMessageField(messageId);
       if (!target) {
         return;
       }
@@ -121,7 +122,7 @@ export const createChatDelayQueue = (
     },
 
     moderateByLogin(login, moderationNotice) {
-      const target = normaliseLogin(login);
+      const target = normaliseChatUsername(login);
       if (!target) {
         return;
       }

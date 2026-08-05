@@ -3,7 +3,7 @@ import { type StyleProp, StyleSheet, TextStyle, View } from 'react-native';
 
 import { useSelector } from '@legendapp/state/react';
 
-import { useChatScrollActive } from '@app/components/Chat/util/useChatScrollActive';
+import { useChatScrollActive } from '@app/components/Chat/hooks/useChatScrollActive';
 import { Text } from '@app/components/ui/Text/Text';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { usePaintRenderer } from '@app/store/preferenceStore';

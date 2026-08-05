@@ -3,8 +3,14 @@ import type { GestureResponderEvent } from 'react-native';
 
 import { useMappingHelper } from '@shopify/flash-list';
 
+import type { ChatMessagePartRendererArgs } from '@app/components/Chat/components/ChatMessage/renderers/types/ChatMessagePartRendererArgs';
+import type {
+  BadgePressData,
+  EmotePressData,
+  RichChatMessageProps,
+  RichChatMessageState,
+} from '@app/components/Chat/components/ChatMessage/RichChatMessage.types';
 import { hasSharedChannelPointsMessage } from '@app/components/Chat/util/channelPointsSharedMessage';
-import { normaliseChatUsername } from '@app/components/Chat/util/chatUsernames/normaliseChatUsername';
 import { getAnnouncementAccentColor } from '@app/components/Chat/util/getAnnouncementAccentColor';
 import { getAnnouncementColorParam } from '@app/components/Chat/util/richChatMessage/getAnnouncementColorParam';
 import { getChatBodyInfo } from '@app/components/Chat/util/richChatMessage/getChatBodyInfo';
@@ -14,15 +20,9 @@ import { toChatMessageData } from '@app/components/Chat/util/richChatMessage/toC
 import { usePreference } from '@app/store/preferenceStore';
 import { NoticeVariants } from '@app/types/chat/irc-tags/noticevariant';
 import { UserNoticeVariantMap } from '@app/types/chat/irc-tags/usernotice';
+import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 import { findCustomHighlight } from '@app/utils/chat/customHighlights/findCustomHighlight';
 import { ParsedPart } from '@app/utils/chat/parsedPart';
-
-import type { ChatMessagePartRendererArgs } from './renderers/types/ChatMessagePartRendererArgs';
-import type {
-  BadgePressData,
-  EmotePressData,
-  RichChatMessageProps,
-} from './RichChatMessage.types';
 
 export const MESSAGE_LONG_PRESS_DELAY_MS = 650;
 
@@ -33,7 +33,7 @@ export function useRichChatMessage<
   TVariant extends (TNoticeType extends 'usernotice'
     ? keyof UserNoticeVariantMap
     : never) = never,
->(props: RichChatMessageProps<TNoticeType, TVariant>) {
+>(props: RichChatMessageProps<TNoticeType, TVariant>): RichChatMessageState {
   const {
     userstate,
     message,

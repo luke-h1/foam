@@ -8,14 +8,15 @@ import {
 } from '@app/store/chat/actions/channelLoad';
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import { updateMessages } from '@app/store/chat/actions/messages';
+import { visibleAssetHydration } from '@app/store/chat/actions/visibleAssetHydration';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { usePersonalEmotesVersion } from '@app/store/chat/react/selectors';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
+import { createUserStateFromTags } from '@app/utils/chat/messageHandlers/createUserStateFromTags';
 import { replaceEmotesWithText } from '@app/utils/chat/replaceEmotesWithText';
 import { logger } from '@app/utils/logger';
 
 import { hydrateVisibleSevenTvAssets } from '../util/hydrateVisibleSevenTvAssets/hydrateVisibleSevenTvAssets';
-import { createUserStateFromTags } from '../util/messageHandlers/createUserStateFromTags';
 import { reprocessMessages } from '../util/reprocessMessages';
 import { resolveMessageEmoteParts } from '../util/resolveMessageEmoteParts';
 import { getCachedSharedChatBadgeContext } from '../util/sharedChatBadges/getCachedSharedChatBadgeContext';
@@ -34,13 +35,6 @@ interface UseChatMessageProcessingOptions {
   show7TvEmotes: boolean;
   show7tvBadges: boolean;
   userLogin?: string | null;
-  hydratedVisibleAssetKeysRef: RefObject<Set<string>>;
-  visiblePersonalEmoteUsersRef: RefObject<Set<string>>;
-  visibleCosmeticUsersRef: RefObject<Set<string>>;
-  pendingVisibleMessagesRef: RefObject<AnyChatMessageType[]>;
-  visibleAssetHydrationTimerRef: RefObject<ReturnType<
-    typeof setTimeout
-  > | null>;
   isAtBottomRef: RefObject<boolean>;
   maintainBottomAfterContentChange: () => void;
   fetchUserCosmetics: (
@@ -56,16 +50,11 @@ export function useChatMessageProcessing({
   handleNewMessage,
   messages$,
   fetchUserCosmetics,
-  hydratedVisibleAssetKeysRef,
   isAtBottomRef,
   maintainBottomAfterContentChange,
-  pendingVisibleMessagesRef,
   show7TvEmotes,
   show7tvBadges,
   userLogin,
-  visibleAssetHydrationTimerRef,
-  visibleCosmeticUsersRef,
-  visiblePersonalEmoteUsersRef,
 }: UseChatMessageProcessingOptions) {
   const composeMessageWithEmotes = useCallback(
     (
@@ -267,14 +256,14 @@ export function useChatMessageProcessing({
   }, [channelId]);
 
   const scheduleVisibleAssetHydrationPass = useCallback(() => {
-    if (visibleAssetHydrationTimerRef.current) {
+    if (visibleAssetHydration.timer) {
       return;
     }
 
     const epoch = hydrationEpochRef.current;
 
-    visibleAssetHydrationTimerRef.current = setTimeout(() => {
-      visibleAssetHydrationTimerRef.current = null;
+    visibleAssetHydration.timer = setTimeout(() => {
+      visibleAssetHydration.timer = null;
 
       const previousPass = activeHydrationPassRef.current ?? Promise.resolve();
       const pass = previousPass
@@ -283,16 +272,16 @@ export function useChatMessageProcessing({
             return undefined;
           }
 
-          const messages = pendingVisibleMessagesRef.current;
-          pendingVisibleMessagesRef.current = [];
+          const messages = visibleAssetHydration.pendingMessages;
+          visibleAssetHydration.pendingMessages = [];
           const shouldMaintainBottom = isAtBottomRef.current;
 
           return hydrateVisibleSevenTvAssets({
             channelId,
             messages,
-            hydratedMessageKeys: hydratedVisibleAssetKeysRef.current,
-            personalEmoteUsers: visiblePersonalEmoteUsersRef.current,
-            cosmeticUsers: visibleCosmeticUsersRef.current,
+            hydratedMessageKeys: visibleAssetHydration.hydratedMessageKeys,
+            personalEmoteUsers: visibleAssetHydration.personalEmoteUsers,
+            cosmeticUsers: visibleAssetHydration.cosmeticUsers,
             getUserPersonalEmotes,
             fetchUserPersonalEmotes,
             getUserBadge: twitchUserId => getUserBadge(twitchUserId) ?? null,
@@ -325,25 +314,20 @@ export function useChatMessageProcessing({
   }, [
     channelId,
     fetchUserCosmetics,
-    hydratedVisibleAssetKeysRef,
-    isAtBottomRef,
+      isAtBottomRef,
     maintainBottomAfterContentChange,
-    pendingVisibleMessagesRef,
-    reprocessVisibleMessageFromCache,
+      reprocessVisibleMessageFromCache,
     show7TvEmotes,
     show7tvBadges,
-    visibleAssetHydrationTimerRef,
-    visibleCosmeticUsersRef,
-    visiblePersonalEmoteUsersRef,
-  ]);
+        ]);
 
   const handleViewableMessagesChange = useCallback(
     (visibleMessages: AnyChatMessageType[]) => {
       latestVisibleMessagesRef.current = visibleMessages;
-      pendingVisibleMessagesRef.current = visibleMessages;
+      visibleAssetHydration.pendingMessages = visibleMessages;
       scheduleVisibleAssetHydrationPass();
     },
-    [pendingVisibleMessagesRef, scheduleVisibleAssetHydrationPass],
+    [scheduleVisibleAssetHydrationPass],
   );
 
   const personalEmotesVersion = usePersonalEmotesVersion();
@@ -354,13 +338,11 @@ export function useChatMessageProcessing({
       return;
     }
     lastPersonalEmotesVersionRef.current = personalEmotesVersion;
-    hydratedVisibleAssetKeysRef.current.clear();
-    pendingVisibleMessagesRef.current = latestVisibleMessagesRef.current;
+    visibleAssetHydration.hydratedMessageKeys.clear();
+    visibleAssetHydration.pendingMessages = latestVisibleMessagesRef.current;
     void scheduleVisibleAssetHydrationPass();
   }, [
-    hydratedVisibleAssetKeysRef,
-    pendingVisibleMessagesRef,
-    personalEmotesVersion,
+        personalEmotesVersion,
     scheduleVisibleAssetHydrationPass,
   ]);
 

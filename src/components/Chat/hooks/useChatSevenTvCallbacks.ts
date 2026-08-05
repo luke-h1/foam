@@ -29,9 +29,8 @@ import type { SanitisedEmote } from '@app/types/emote';
 import type { BadgeData, PaintData } from '@app/types/seventv/cosmetics';
 import { generateStvEmoteNotice } from '@app/utils/emote/stv/generateSevenTvEmoteNotice';
 import { logger } from '@app/utils/logger';
-
-import { normalizeSevenTvPaint } from '../util/normalizeSevenTvCosmetics/normalizeSevenTvPaint';
-import { sanitise7TvBadge } from '../util/normalizeSevenTvCosmetics/sanitise7TvBadge';
+import { normalizeSevenTvPaint } from '@app/utils/seventv/cosmetics/normalizeSevenTvPaint';
+import { sanitise7TvBadge } from '@app/utils/seventv/cosmetics/sanitise7TvBadge';
 
 function getDataFromChangeValue(entry: unknown): unknown {
   if (typeof entry !== 'object' || entry === null || !('value' in entry)) {

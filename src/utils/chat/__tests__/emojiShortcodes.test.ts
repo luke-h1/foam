@@ -1,4 +1,4 @@
-import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes';
+import { replaceTextWithEmotes } from '@app/utils/chat/replaceTextWithEmotes/replaceTextWithEmotes';
 
 import type { ParsedPart } from '../parsedPart';
 import { createEmojiEmote } from './__fixtures__/emojiEmote.fixture';

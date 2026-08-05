@@ -1,7 +1,7 @@
 import type { Key, ReactNode } from 'react';
 
-import { normalizeSevenTvBadge } from '@app/components/Chat/util/normalizeSevenTvCosmetics/normalizeSevenTvBadge';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
+import { normalizeSevenTvBadge } from '@app/utils/seventv/cosmetics/normalizeSevenTvBadge';
 
 import { ChatMessagePressable } from '../ChatMessagePressable';
 import type { ChatFontScale } from '../chatScale';

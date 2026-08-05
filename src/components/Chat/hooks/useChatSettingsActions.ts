@@ -1,6 +1,5 @@
 import { useCallback, useRef } from 'react';
 
-import { createSystemMessage } from '@app/components/Chat/util/messageHandlers/createSystemMessage';
 import i18next from '@app/i18n/i18next';
 import {
   clearCache,
@@ -8,6 +7,7 @@ import {
 } from '@app/store/chat/actions/channelLoad';
 import { clearUserCosmeticsCache } from '@app/store/chat/actions/cosmetics';
 import { addMessage } from '@app/store/chat/actions/messages';
+import { createSystemMessage } from '@app/utils/chat/messageHandlers/createSystemMessage';
 import { clearImageCache } from '@app/utils/image/clearImageCache';
 import { logger } from '@app/utils/logger';
 

@@ -12,7 +12,7 @@ import { ChatNoticeMetaRow } from './ChatNoticeMetaRow';
 import type { ChatMessagePartRendererArgs } from './types/ChatMessagePartRendererArgs';
 
 /**
- * `announcement` and `user_chat` are dispatched by `RichChatMessageBody` before
+ * `announcement` and `user_chat` are dispatched by `ChatRow.Body` before
  * this component, so every variant reaching here has a row in the table below.
  */
 type ChatNoticeVariant = Exclude<ChatBodyVariant, 'announcement' | 'user_chat'>;
