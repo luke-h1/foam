@@ -11,7 +11,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 
-import { getChatScale } from '../chatScale';
+import { densityFromCompact, getChatScale } from '../chatScale';
 import { getChatTextStyles } from '../chatText.styles';
 import { styles } from '../RichChatMessage.styles';
 import { CheermoteRenderer } from './CheermoteRenderer';
@@ -57,7 +57,7 @@ export function ChatMessagePart({
   );
 
   const textStyles = getChatTextStyles(fontScale, compact);
-  const scale = getChatScale(fontScale, compact ? 'compact' : 'comfortable');
+  const scale = getChatScale(fontScale, densityFromCompact(compact));
   const mentionBaseTextStyle = useMemo(
     () => [
       textStyles.body,

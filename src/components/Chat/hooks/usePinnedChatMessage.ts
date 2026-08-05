@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { toast } from 'sonner-native';
 
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import i18next from '@app/i18n/i18next';
 import {
   getPinnedChatMessageText,
@@ -98,12 +99,11 @@ export function usePinnedChatMessage({
     }
   }, [canModerateChat, channelId, moderatorId]);
 
-  const loadPinnedMessageRef = useRef(loadPinnedMessage);
-  loadPinnedMessageRef.current = loadPinnedMessage;
+  const loadPinnedMessageRef = useSyncRef(loadPinnedMessage);
 
   useEffect(() => {
     void loadPinnedMessageRef.current();
-  }, [canModerateChat, channelId, moderatorId]);
+  }, [canModerateChat, channelId, loadPinnedMessageRef, moderatorId]);
 
   const handlePinMessage = useCallback(
     (message: MessageActionData<'usernotice'>) => {
@@ -198,8 +198,7 @@ export function usePinnedChatMessage({
     [refreshPinnedMessage],
   );
 
-  const refreshPinnedMessageRef = useRef(refreshPinnedMessage);
-  refreshPinnedMessageRef.current = refreshPinnedMessage;
+  const refreshPinnedMessageRef = useSyncRef(refreshPinnedMessage);
 
   useEffect(() => {
     if (!canModerateChat || !moderatorId || !pinnedMessageId) {
@@ -214,7 +213,7 @@ export function usePinnedChatMessage({
     }, PINNED_MESSAGE_REFRESH_INTERVAL_MS);
 
     return () => clearInterval(refreshIntervalId);
-  }, [canModerateChat, moderatorId, pinnedMessageId]);
+  }, [canModerateChat, moderatorId, pinnedMessageId, refreshPinnedMessageRef]);
 
   const handleUnpinPinnedMessage = useCallback(() => {
     if (!canModerateChat || !moderatorId) {

@@ -357,9 +357,10 @@ export function useChatRowRenderer({
         .join('|'),
     [customHighlights],
   );
-  // Spreads `displayFlags` rather than restating it: a flag added to the rows
-  // but missed here would silently stop that preference from re-rendering them.
-  //
+  /**
+   * Spreads `displayFlags` rather than restating it: a flag added to the rows
+   * but missed here would silently stop that preference from re-rendering them.
+   */
   // Note: mentionLoginRevision is intentionally excluded. It bumps ~every 400ms
   // as @mention logins resolve from Helix; including it re-rendered every visible
   // row each time (the dominant frame-drop source in mention-heavy chat - busy

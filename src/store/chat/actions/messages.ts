@@ -116,7 +116,10 @@ let nextMessageSeq = 0;
 const prepareMessageForStore = (
   message: AnyChatMessageType,
 ): AnyChatMessageType => {
-  const messageKey = getChatMessageKey(message.message_id, message.message_nonce);
+  const messageKey = getChatMessageKey(
+    message.message_id,
+    message.message_nonce,
+  );
   const cachedSenderColor = resolveCachedSenderColor(
     message,
     getUserMessageColor,
@@ -616,7 +619,10 @@ export const moderateMessageById = (
           message: [
             {
               type: 'text',
-              content: createModeratedMessageText(currentMessage.message, moderationNotice),
+              content: createModeratedMessageText(
+                currentMessage.message,
+                moderationNotice,
+              ),
             },
           ],
         },
@@ -662,7 +668,10 @@ export const moderateMessagesByLogin = (
         message: [
           {
             type: 'text',
-            content: createModeratedMessageText(message.message, moderationNotice),
+            content: createModeratedMessageText(
+              message.message,
+              moderationNotice,
+            ),
           },
         ],
       }),

@@ -87,8 +87,10 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
   const pendingUnreadCountRef = useRef(0);
   // Set when a flush sees a raid-sized batch; slows the next live flush cadence.
   const raidFlushModeRef = useRef(false);
-  // Arrivals since the last flush. Must be the arrival count, not the buffer
-  // size - the cap leaves a backlog behind, which would latch raid mode on.
+  /**
+   * Arrivals since the last flush. Must be the arrival count, not the buffer
+   * size - the cap leaves a backlog behind, which would latch raid mode on.
+   */
   const arrivalsSinceFlushRef = useRef(0);
 
   useLayoutEffect(() => {
@@ -170,8 +172,10 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       isFlushingRef.current = false;
     }
 
-    // Rows the per-flush cap held back; without re-arming they would wait on the
-    // next incoming message, which stalls the tail end of a burst.
+    /**
+     * Rows the per-flush cap held back; without re-arming they would wait on
+     * the next incoming message, which stalls the tail end of a burst.
+     */
     if (buffer.size() > 0) {
       startFlushTimer(
         pickFlushDelay({

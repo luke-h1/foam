@@ -33,7 +33,8 @@ export function createOptimisticMessage({
   userstate: ReturnType<typeof createOptimisticUserState>;
 }): AnyChatMessageType {
   const messageId = `${sentAt}`;
-  const optimisticMessage: AnyChatMessageType = {
+
+  return {
     id: `${messageId}_${messageId}`,
     userstate,
     message: [{ type: 'text', content: messageText.trimEnd() }],
@@ -49,6 +50,4 @@ export function createOptimisticMessage({
     parentColor: replyTo?.color,
     ...(isAction ? { isAction: true } : {}),
   };
-
-  return optimisticMessage;
 }

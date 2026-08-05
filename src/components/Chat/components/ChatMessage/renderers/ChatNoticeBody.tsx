@@ -49,8 +49,10 @@ export function ChatNoticeBody({
     />
   );
 
-  // A subscription body is a SubscriptionNotice, which draws its own column
-  // and carries no timestamp.
+  /**
+   * A subscription body is a SubscriptionNotice, which draws its own column
+   * and carries no timestamp.
+   */
   if (bodyVariant === 'subscription') {
     return body;
   }

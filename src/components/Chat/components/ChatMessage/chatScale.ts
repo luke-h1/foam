@@ -109,17 +109,20 @@ function buildChatScale(
   };
 }
 
-const FONT_SCALES: ChatFontScale[] = ['small', 'default', 'large'];
-const DENSITIES: ChatDensity[] = ['comfortable', 'compact'];
-
-const CHAT_SCALES = Object.fromEntries(
-  FONT_SCALES.map(fontScale => [
-    fontScale,
-    Object.fromEntries(
-      DENSITIES.map(density => [density, buildChatScale(fontScale, density)]),
-    ) as Record<ChatDensity, ChatScale>,
-  ]),
-) as Record<ChatFontScale, Record<ChatDensity, ChatScale>>;
+const CHAT_SCALES: Record<ChatFontScale, Record<ChatDensity, ChatScale>> = {
+  small: {
+    comfortable: buildChatScale('small', 'comfortable'),
+    compact: buildChatScale('small', 'compact'),
+  },
+  default: {
+    comfortable: buildChatScale('default', 'comfortable'),
+    compact: buildChatScale('default', 'compact'),
+  },
+  large: {
+    comfortable: buildChatScale('large', 'comfortable'),
+    compact: buildChatScale('large', 'compact'),
+  },
+};
 
 /**
  * The resolved chat metrics for a preference pair. Every value the renderer

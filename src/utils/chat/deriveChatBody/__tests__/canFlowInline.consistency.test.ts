@@ -26,7 +26,11 @@ const emote = (overrides: Partial<ParsedPart<'emote'>> = {}) =>
 describe('inline eligibility is decided in one place', () => {
   const cases: { name: string; message: ParsedPart[]; inline: boolean }[] = [
     { name: 'plain text', message: [text('hello')], inline: true },
-    { name: 'text plus a plain emote', message: [text('hi '), emote()], inline: true },
+    {
+      name: 'text plus a plain emote',
+      message: [text('hi '), emote()],
+      inline: true,
+    },
     {
       name: 'a zero-width emote',
       message: [emote({ zero_width: true })],

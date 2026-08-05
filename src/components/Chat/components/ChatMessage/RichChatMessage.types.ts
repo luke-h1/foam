@@ -1,8 +1,4 @@
-import type {
-  GestureResponderEvent,
-  StyleProp,
-  ViewStyle,
-} from 'react-native';
+import type { GestureResponderEvent, StyleProp, ViewStyle } from 'react-native';
 
 import type { ChatMessagePartRendererArgs } from '@app/components/Chat/components/ChatMessage/renderers/types/ChatMessagePartRendererArgs';
 import type { ChatMessageDisplayFlags } from '@app/components/Chat/types/chatUiFlags';
@@ -103,8 +99,7 @@ export interface ChatRowBodyState {
  * the hook happens to return today.
  */
 export interface RichChatMessageState
-  extends ChatRowSurfaceState,
-    ChatRowBodyState {
+  extends ChatRowSurfaceState, ChatRowBodyState {
   closeEmoteActionSheet: () => void;
   compact: boolean;
   disableEmoteAnimations: boolean;

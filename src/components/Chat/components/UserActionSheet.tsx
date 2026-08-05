@@ -58,7 +58,8 @@ type UserActionItem = {
 const MAX_RECENT_USER_MESSAGES = 5;
 
 function getRecentUserMessages(login?: string, username?: string) {
-  const target = normaliseChatUsername(login) || normaliseChatUsername(username);
+  const target =
+    normaliseChatUsername(login) || normaliseChatUsername(username);
   if (!target) {
     return [];
   }

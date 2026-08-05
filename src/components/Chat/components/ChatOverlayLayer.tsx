@@ -178,7 +178,9 @@ export const ChatOverlayLayer = memo(function ChatOverlayLayer({
 
     void Clipboard.setStringAsync(
       replaceEmotesWithText(selectedMessage.message),
-    ).then(() => toast.success(i18next.t('chat:userActions.copiedToClipboard')));
+    ).then(() =>
+      toast.success(i18next.t('chat:userActions.copiedToClipboard')),
+    );
   }, [selectedMessage]);
 
   const handleActionSheetHideUser = useCallback(() => {

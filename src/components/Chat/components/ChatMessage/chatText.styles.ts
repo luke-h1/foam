@@ -108,20 +108,23 @@ function buildChatTextStyles(
   });
 }
 
-const FONT_SCALES: ChatFontScale[] = ['small', 'default', 'large'];
-const DENSITIES: ChatDensity[] = ['comfortable', 'compact'];
-
-const CHAT_TEXT_STYLES = Object.fromEntries(
-  FONT_SCALES.map(fontScale => [
-    fontScale,
-    Object.fromEntries(
-      DENSITIES.map(density => [
-        density,
-        buildChatTextStyles(fontScale, density),
-      ]),
-    ) as Record<ChatDensity, ChatTextStyles>,
-  ]),
-) as Record<ChatFontScale, Record<ChatDensity, ChatTextStyles>>;
+const CHAT_TEXT_STYLES: Record<
+  ChatFontScale,
+  Record<ChatDensity, ChatTextStyles>
+> = {
+  small: {
+    comfortable: buildChatTextStyles('small', 'comfortable'),
+    compact: buildChatTextStyles('small', 'compact'),
+  },
+  default: {
+    comfortable: buildChatTextStyles('default', 'comfortable'),
+    compact: buildChatTextStyles('default', 'compact'),
+  },
+  large: {
+    comfortable: buildChatTextStyles('large', 'comfortable'),
+    compact: buildChatTextStyles('large', 'compact'),
+  },
+};
 
 /**
  * Resolved text styles for a preference pair. Every scale-dependent style in

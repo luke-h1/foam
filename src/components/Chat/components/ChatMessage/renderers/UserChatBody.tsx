@@ -100,8 +100,10 @@ export function UserChatBody({
   );
   const isModerated = Boolean(moderationNotice);
   const { containsEmotes: bodyContainsEmotes } = getMessageStructure(message);
-  // A paint renders through a mask, so a painted row cannot put the username
-  // in the same Text as the body - but the body alone still flows.
+  /**
+   * A paint renders through a mask, so a painted row cannot put the username
+   * in the same Text as the body - but the body alone still flows.
+   */
   const rowFlowsInline = canFlowInline(message, { hasPaint, isModerated });
   const bodyCanFlowInline = canFlowInline(message, {
     hasPaint: false,

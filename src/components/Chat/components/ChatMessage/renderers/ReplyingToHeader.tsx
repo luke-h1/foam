@@ -11,7 +11,11 @@ import { getMessageStructure } from '@app/utils/chat/deriveChatBody/getMessageSt
 import type { ParsedPart } from '@app/utils/chat/parsedPart';
 
 import { ChatMessagePressable } from '../ChatMessagePressable';
-import { CHAT_SURFACE_COLORS, getChatScale } from '../chatScale';
+import {
+  CHAT_SURFACE_COLORS,
+  densityFromCompact,
+  getChatScale,
+} from '../chatScale';
 import { getChatTextStyles } from '../chatText.styles';
 import { styles } from '../RichChatMessage.styles';
 import { ChatMessageBody } from './ChatMessageBody';
@@ -62,15 +66,15 @@ export function ReplyingToHeader({
     hasPaint: false,
     isModerated: false,
   });
-  const quoteContainsEmotes = getMessageStructure(parsedReplyBody)
-    .containsEmotes;
+  const quoteContainsEmotes =
+    getMessageStructure(parsedReplyBody).containsEmotes;
   const replyContextIconColor = isReplyingToCurrentUser
     ? CHAT_NOTICE_ACCENTS.replyToYou
     : CHAT_SURFACE_COLORS.muted;
   const textStyles = getChatTextStyles(fontScale, compact);
   const replyEmoteSize = getChatScale(
     fontScale,
-    compact ? 'compact' : 'comfortable',
+    densityFromCompact(compact),
   ).replyEmoteSize;
   const replyContextPrefixTextStyle = [
     textStyles.replyContext,

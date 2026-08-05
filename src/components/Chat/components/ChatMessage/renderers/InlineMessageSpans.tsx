@@ -6,7 +6,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import type { InlineFlowPart } from '@app/utils/chat/deriveChatBody/types';
 import { getParsedPartStringContent } from '@app/utils/chat/parsedPartContent';
 
-import { getChatScale } from '../chatScale';
+import { densityFromCompact, getChatScale } from '../chatScale';
 import { getChatTextStyles } from '../chatText.styles';
 import { EmoteRenderer } from './EmoteRenderer';
 import { MentionSpan } from './MentionSpan';
@@ -54,6 +54,9 @@ function InlineMessageSpansComponent({
   textColor,
 }: InlineMessageSpansProps) {
   const chatTextStyles = getChatTextStyles(fontScale, compact);
+  const emoteSize =
+    emoteTargetSize ??
+    getChatScale(fontScale, densityFromCompact(compact)).emoteSize;
   const baseTextStyle = textStyle ?? [chatTextStyles.body, emoteLineStyle];
   const textColorStyle = textColor ? getChatColorStyle(textColor) : null;
   const spans: ReactNode[] = [];
@@ -103,11 +106,7 @@ function InlineMessageSpansComponent({
           key={getPartKey(part, index)}
           part={part}
           onEmoteTouchStart={onEmoteTouchStart}
-          targetSize={
-            emoteTargetSize ??
-            getChatScale(fontScale, compact ? 'compact' : 'comfortable')
-              .emoteSize
-          }
+          targetSize={emoteSize}
         />,
       );
       continue;

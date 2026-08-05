@@ -89,9 +89,7 @@ describe('createOptimisticMessage', () => {
     expect(message.message_id).toBe(String(SENT_AT));
     expect(message.message_nonce).toBe(String(SENT_AT));
     expect(message.id).toBe(`${SENT_AT}_${SENT_AT}`);
-    expect(message.message).toEqual([
-      { type: 'text', content: 'hello there' },
-    ]);
+    expect(message.message).toEqual([{ type: 'text', content: 'hello there' }]);
     expect(message.sender).toBe('Viewer');
     expect(message.channel).toBe('somechannel');
   });

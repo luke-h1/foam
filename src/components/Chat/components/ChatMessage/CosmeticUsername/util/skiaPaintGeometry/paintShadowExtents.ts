@@ -17,7 +17,6 @@ const BLUR_EXTENT_MULTIPLE = 3;
  * How far outside the glyph box a paint's shadows can reach, in CSS px, so the
  * bitmap is padded enough to hold them.
  */
-
 export function paintShadowExtents(
   dropShadows: PaintShadow[],
   textShadows: PaintShadow[],

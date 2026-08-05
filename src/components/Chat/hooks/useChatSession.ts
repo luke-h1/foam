@@ -208,13 +208,13 @@ export function useChatSession({
     channelId,
     fetchUserCosmetics,
     handleNewMessage,
-      isAtBottomRef,
+    isAtBottomRef,
     maintainBottomAfterContentChange,
     messages$,
-      show7TvEmotes: preferences.show7TvEmotes,
+    show7TvEmotes: preferences.show7TvEmotes,
     show7tvBadges: preferences.show7tvBadges,
     userLogin: user?.login,
-        });
+  });
 
   useLayoutEffect(() => {
     finalizeBufferedMessageRef.current = finalizeBufferedMessage;

@@ -314,12 +314,12 @@ export function useChatMessageProcessing({
   }, [
     channelId,
     fetchUserCosmetics,
-      isAtBottomRef,
+    isAtBottomRef,
     maintainBottomAfterContentChange,
-      reprocessVisibleMessageFromCache,
+    reprocessVisibleMessageFromCache,
     show7TvEmotes,
     show7tvBadges,
-        ]);
+  ]);
 
   const handleViewableMessagesChange = useCallback(
     (visibleMessages: AnyChatMessageType[]) => {
@@ -341,10 +341,7 @@ export function useChatMessageProcessing({
     visibleAssetHydration.hydratedMessageKeys.clear();
     visibleAssetHydration.pendingMessages = latestVisibleMessagesRef.current;
     void scheduleVisibleAssetHydrationPass();
-  }, [
-        personalEmotesVersion,
-    scheduleVisibleAssetHydrationPass,
-  ]);
+  }, [personalEmotesVersion, scheduleVisibleAssetHydrationPass]);
 
   const reprocessAllMessages = useCallback(() => {
     reprocessMessages(messages$.peek(), processMessageEmotes);
