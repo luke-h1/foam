@@ -6,9 +6,11 @@ export function useUnmountCallback(callback: () => void) {
   const callbackRef = useSyncRef(callback);
 
   useEffect(() => {
+    // Hold the ref object, not its value: the callback is meant to be read at
+    // unmount, so capturing `.current` here would freeze the first one.
+    const latest = callbackRef;
     return () => {
-      // eslint-disable-next-line react-hooks/exhaustive-deps -- reading the latest callback on unmount is the whole point of this hook
-      callbackRef.current();
+      latest.current();
     };
   }, [callbackRef]);
 }

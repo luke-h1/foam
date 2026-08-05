@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
 
 import { useSeventvWs } from '@app/hooks/useSeventvWs';
@@ -106,7 +106,12 @@ export function useSevenTvChatRuntime({
   });
   const wsConnected = readyState === ReadyState.OPEN && isConnected();
   const unsubscribeFromChannelRef = useSyncRef(unsubscribeFromChannel);
-  subscribeToChannelRef.current = subscribeToChannel;
+
+  // Declared above so the `onEmoteSetSwitch` handler passed into useSeventvWs
+  // can close over it, so it is filled in on commit rather than during render.
+  useLayoutEffect(() => {
+    subscribeToChannelRef.current = subscribeToChannel;
+  });
 
   useEffect(() => {
     if (!wsConnected || !channelId || emoteLoadStatus !== 'success') {
@@ -131,9 +136,9 @@ export function useSevenTvChatRuntime({
       subscribeToChannelRef.current(emoteSetId);
     }
 
+    const unsubscribe = unsubscribeFromChannelRef;
     return () => {
-      // eslint-disable-next-line react-hooks/exhaustive-deps -- unsubscribing with the latest callback is the point; it is not a rendered node
-      unsubscribeFromChannelRef.current();
+      unsubscribe.current();
       emoteSetIdRef.current = null;
     };
   }, [
