@@ -278,6 +278,51 @@ describe('interpretSeventvWsMessage', () => {
       });
     });
 
+    test('picks webp for an animated emote and avif for a static one', () => {
+      const pickUrl = (frameCount: number) => {
+        const emote = createSevenTvEmote({
+          id: 'emote-fmt',
+          name: 'fmtEmote',
+          files: [
+            createSevenTvFile({
+              name: '4x.avif',
+              width: 128,
+              height: 128,
+              frame_count: frameCount,
+              format: 'AVIF',
+            }),
+            createSevenTvFile({
+              name: '4x.webp',
+              width: 128,
+              height: 128,
+              frame_count: frameCount,
+              format: 'WEBP',
+            }),
+          ],
+        });
+        const decisions = interpretSeventvWsMessage(
+          createDispatchMessage(
+            createEmoteSetUpdateEvent({
+              id: 'set-1',
+              pushed: [createPushedChange(emote)],
+            }),
+          ),
+          createContext(),
+        );
+        const decision = decisions[0];
+        if (decision?.type !== 'applyEmoteUpdate') {
+          throw new Error(`expected applyEmoteUpdate, got ${decision?.type}`);
+        }
+        return decision.added[0]?.url;
+      };
+
+      // Animated avif decodes through dav1d in software; webp is much cheaper.
+      expect({ animated: pickUrl(30), static: pickUrl(1) }).toEqual({
+        animated: 'https://cdn.7tv.app/emote/emote-fmt/4x.webp',
+        static: 'https://cdn.7tv.app/emote/emote-fmt/4x.avif',
+      });
+    });
+
     test('ignores updates for a different emote set but still notifies the raw event', () => {
       const event = createEmoteSetUpdateEvent({
         id: 'other-set',

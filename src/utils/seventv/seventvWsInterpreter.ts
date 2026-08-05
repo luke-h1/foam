@@ -126,30 +126,42 @@ export type SeventvWsDecision =
   | { type: 'reconnect' }
   | { type: 'unhandledOp'; op: number };
 
+const withScales = (format: string) =>
+  ['4x', '3x', '2x', '1x'].map(scale => `${scale}.${format}`);
+
 /**
- * The EventAPI advertises several encodes per emote. Prefer avif at the largest
- * scale (best size/quality, and the url form the CDN expects), but fall back to
- * webp so an emote whose host only ships webp still resolves real dimensions —
- * otherwise width/height collapse to 0 and a non-square emote renders as a 1:1
- * square at the wrong width. As a last resort take the widest encode that
- * carries dimensions so the aspect ratio is at least correct.
+ * The EventAPI advertises several encodes per emote. For a static emote prefer
+ * avif at the largest scale (best size/quality), falling back to webp so an
+ * emote whose host only ships webp still resolves real dimensions — otherwise
+ * width/height collapse to 0 and a non-square emote renders as a 1:1 square at
+ * the wrong width.
  */
-const SEVEN_TV_FILE_PREFERENCE = [
-  '4x.avif',
-  '3x.avif',
-  '2x.avif',
-  '1x.avif',
-  '4x.webp',
-  '3x.webp',
-  '2x.webp',
-  '1x.webp',
-] as const;
+const SEVEN_TV_STATIC_PREFERENCE = [
+  ...withScales('avif'),
+  ...withScales('webp'),
+];
+
+/**
+ * Animated inverts that. These emotes carry no `image_variants`, so the url
+ * picked here is the one chat renders, and animated avif decodes through dav1d
+ * in software - the dominant CPU cost in a busy channel. The v4 fetch path
+ * already prefers webp for animated (`pickAnimatedFormat`); a live add over the
+ * EventAPI has to match or the same emote costs more when it arrives that way.
+ */
+const SEVEN_TV_ANIMATED_PREFERENCE = [
+  ...withScales('webp'),
+  ...withScales('avif'),
+];
 
 function pickBestSevenTvFile(
   files: readonly SevenTvFile[],
 ): SevenTvFile | undefined {
   const byName = new Map(files.map(file => [file.name, file]));
-  for (const name of SEVEN_TV_FILE_PREFERENCE) {
+  const preference = files.some(file => file.frame_count > 1)
+    ? SEVEN_TV_ANIMATED_PREFERENCE
+    : SEVEN_TV_STATIC_PREFERENCE;
+
+  for (const name of preference) {
     const match = byName.get(name);
     if (match) {
       return match;

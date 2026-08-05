@@ -149,6 +149,48 @@ describe('ChatInlineImage off-screen pause', () => {
     expect(mockStopAnimating).not.toHaveBeenCalled();
   });
 
+  test('pauses an animated emote that has no decoded ref yet', () => {
+    // Animated emotes are held out of the channel warm, so the uri path is
+    // where they start - and it is where the pause used to be skipped.
+    mockSharedRef = null;
+    const store = createRowVisibilityStore(false);
+
+    render(
+      <RowVisibilityContext.Provider value={store}>
+        <ChatInlineImage
+          sourceUrl='https://cdn.7tv.app/emote/uncached/2x.webp'
+          style={{}}
+        />
+      </RowVisibilityContext.Provider>,
+    );
+
+    expect(mockStopAnimating).toHaveBeenCalledTimes(1);
+
+    act(() => store.setVisible(true));
+    expect(mockStartAnimating).toHaveBeenCalledTimes(1);
+  });
+
+  test('leaves a refless url of unknown kind animating', () => {
+    // BTTV's bare url doesn't say whether it's animated and there's no ref to
+    // ask, so there is nothing to act on.
+    mockSharedRef = null;
+    const store = createRowVisibilityStore(false);
+
+    render(
+      <RowVisibilityContext.Provider value={store}>
+        <ChatInlineImage
+          sourceUrl='https://cdn.betterttv.net/emote/bare/2x'
+          style={{}}
+        />
+      </RowVisibilityContext.Provider>,
+    );
+
+    act(() => store.setVisible(true));
+
+    expect(mockStartAnimating).not.toHaveBeenCalled();
+    expect(mockStopAnimating).not.toHaveBeenCalled();
+  });
+
   test('static images skip the pause path entirely, even off-screen', () => {
     mockSharedRef = { isAnimated: false };
     const store = createRowVisibilityStore(false);
