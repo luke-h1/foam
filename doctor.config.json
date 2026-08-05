@@ -21,6 +21,10 @@
           "src/screens/Preferences/SavedPhrasesScreen.tsx"
         ],
         "rules": ["react-hooks-js/immutability"]
+      },
+      {
+        "files": ["src/components/Chat/hooks/useChatMessageProcessing.ts"],
+        "rules": ["react-doctor/effect-needs-cleanup"]
       }
     ]
   },

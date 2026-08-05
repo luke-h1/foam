@@ -44,6 +44,7 @@ import { useUserQuery } from '@app/hooks/queries/useUserQuery';
 import { useChannelPoll } from '@app/hooks/useChannelPoll';
 import { useChannelPrediction } from '@app/hooks/useChannelPrediction';
 import { useOnAppStateChange } from '@app/hooks/useOnAppStateChange';
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import { notification } from '@app/lib/haptics';
 import { markSignpost } from '@app/lib/signpost';
 import { twitchService } from '@app/services/twitch-service';
@@ -239,8 +240,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
     isChatEnabled && (!isLandscape || isChatVisibleForLayout);
   const lastChatToggleTimeRef = useRef<number>(0);
   const previousIsLandscapeRef = useRef(isLandscape);
-  const isStreamEnabledRef = useRef(isStreamEnabled);
-  isStreamEnabledRef.current = isStreamEnabled;
+  const isStreamEnabledRef = useSyncRef(isStreamEnabled);
 
   useFocusEffect(
     useCallback(() => {
@@ -262,7 +262,7 @@ export const LiveStreamScreen = memo(function LiveStreamScreen({
           });
         }
       };
-    }, [dispatchUi]),
+    }, [dispatchUi, isStreamEnabledRef]),
   );
 
   /**

@@ -20,6 +20,17 @@ export const visibleAssetHydration = {
 };
 
 /**
+ * Stops the debounced pass. Split out so the hook that arms the timer can
+ * release it without also dropping the dedup keys.
+ */
+export function clearVisibleAssetHydrationTimer(): void {
+  if (visibleAssetHydration.timer) {
+    clearTimeout(visibleAssetHydration.timer);
+    visibleAssetHydration.timer = null;
+  }
+}
+
+/**
  * Called on channel switch and unmount: a new channel's rows must not inherit
  * the previous channel's hydration keys.
  */
@@ -28,9 +39,5 @@ export function clearVisibleAssetHydration(): void {
   visibleAssetHydration.personalEmoteUsers.clear();
   visibleAssetHydration.cosmeticUsers.clear();
   visibleAssetHydration.pendingMessages = [];
-
-  if (visibleAssetHydration.timer) {
-    clearTimeout(visibleAssetHydration.timer);
-    visibleAssetHydration.timer = null;
-  }
+  clearVisibleAssetHydrationTimer();
 }

@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { AppState, Platform } from 'react-native';
 
 import { Accelerometer } from 'expo-sensors';
 
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import { createShakeDetector } from '@app/utils/shake/shakeDetection';
 
 const ACCELEROMETER_INTERVAL_MS = 80;
@@ -15,8 +16,7 @@ export function useShakeDetector(
   onShake: () => void,
   { enabled }: UseShakeDetectorOptions,
 ): void {
-  const onShakeRef = useRef(onShake);
-  onShakeRef.current = onShake;
+  const onShakeRef = useSyncRef(onShake);
 
   useEffect(() => {
     if (!enabled || Platform.OS === 'web') {
@@ -36,5 +36,5 @@ export function useShakeDetector(
     });
 
     return () => subscription.remove();
-  }, [enabled]);
+  }, [enabled, onShakeRef]);
 }

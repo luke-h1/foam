@@ -8,7 +8,10 @@ import {
 } from '@app/store/chat/actions/channelLoad';
 import { getUserBadge } from '@app/store/chat/actions/cosmetics';
 import { updateMessages } from '@app/store/chat/actions/messages';
-import { visibleAssetHydration } from '@app/store/chat/actions/visibleAssetHydration';
+import {
+  clearVisibleAssetHydrationTimer,
+  visibleAssetHydration,
+} from '@app/store/chat/actions/visibleAssetHydration';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { usePersonalEmotesVersion } from '@app/store/chat/react/selectors';
 import type { AnyChatMessageType } from '@app/store/chat/types/constants';
@@ -252,6 +255,10 @@ export function useChatMessageProcessing({
   useEffect(() => {
     return () => {
       hydrationEpochRef.current += 1;
+      // This hook arms the debounce below, so it owns stopping it. The pass
+      // also reads scratch state that a channel switch resets, so a timer left
+      // running would hydrate the new channel against the old one's messages.
+      clearVisibleAssetHydrationTimer();
     };
   }, [channelId]);
 

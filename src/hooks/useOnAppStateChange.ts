@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import type { AppStateTransition } from '@app/utils/appState/appStateTransitions';
 import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTransitions';
 
@@ -11,8 +12,7 @@ import { subscribeToAppStateTransitions } from '@app/utils/appState/appStateTran
 export function useOnAppStateChange(
   onTransition: (transition: AppStateTransition) => void,
 ): void {
-  const onTransitionRef = useRef(onTransition);
-  onTransitionRef.current = onTransition;
+  const onTransitionRef = useSyncRef(onTransition);
 
   useEffect(() => {
     const unsubscribe = subscribeToAppStateTransitions(transition => {
@@ -20,5 +20,5 @@ export function useOnAppStateChange(
     });
 
     return unsubscribe;
-  }, []);
+  }, [onTransitionRef]);
 }

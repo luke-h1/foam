@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useSyncRef } from '@app/hooks/useSyncRef';
+
 interface UseSleepTimerOptions {
   /**
    * Called once when the timer elapses. Read via a ref so a stale closure can
@@ -21,8 +23,7 @@ export interface SleepTimer {
 export function useSleepTimer({ onExpire }: UseSleepTimerOptions): SleepTimer {
   const [deadline, setDeadline] = useState<number | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const onExpireRef = useRef(onExpire);
-  onExpireRef.current = onExpire;
+  const onExpireRef = useSyncRef(onExpire);
 
   const clearPending = useCallback(() => {
     if (timeoutRef.current) {
@@ -48,7 +49,7 @@ export function useSleepTimer({ onExpire }: UseSleepTimerOptions): SleepTimer {
         onExpireRef.current();
       }, minutes * 60_000);
     },
-    [clearPending],
+    [clearPending, onExpireRef],
   );
 
   const getRemainingMinutes = useCallback(() => {

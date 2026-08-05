@@ -64,6 +64,23 @@ interface UseChatMessagesOptions {
   onUnreadIncrement: (count: number) => void;
 }
 
+/**
+ * Runs the flush with the re-entrancy guard raised, releasing it even if
+ * publishing throws. Lives at module scope because React Compiler cannot lower
+ * a try/finally, and this is the only one on the flush path.
+ */
+function withFlushGuard(
+  isFlushing: MutableRefObject<boolean>,
+  flush: () => void,
+): void {
+  isFlushing.current = true;
+  try {
+    flush();
+  } finally {
+    isFlushing.current = false;
+  }
+}
+
 export const useChatMessages = (options: UseChatMessagesOptions) => {
   const {
     finalizeMessageForCommit,
@@ -139,9 +156,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
       return;
     }
 
-    isFlushingRef.current = true;
-
-    try {
+    withFlushGuard(isFlushingRef, () => {
       const isAtBottom = isAtBottomRef.current;
       raidFlushModeRef.current = shouldEnterRaidFlushMode(
         arrivalsSinceFlushRef.current,
@@ -168,9 +183,7 @@ export const useChatMessages = (options: UseChatMessagesOptions) => {
         onUnreadIncrement(pendingUnreadCountRef.current);
         pendingUnreadCountRef.current = 0;
       }
-    } finally {
-      isFlushingRef.current = false;
-    }
+    });
 
     /**
      * Rows the per-flush cap held back; without re-arming they would wait on

@@ -11,6 +11,7 @@ import type { WebViewMessageEvent } from 'react-native-webview';
 import i18next from 'i18next';
 import { toast } from 'sonner-native';
 
+import { useLazyRef } from '@app/hooks/useLazyRef';
 import { useSyncRef } from '@app/hooks/useSyncRef';
 import { useUnmountCallback } from '@app/hooks/useUnmountCallback';
 import { countMetric } from '@app/lib/sentry';
@@ -19,7 +20,6 @@ import { logger } from '@app/utils/logger';
 import {
   createPlayerTelemetry,
   type PlayerContentKind,
-  type PlayerTelemetry,
 } from './playerTelemetry';
 import {
   createStabilityRecovery,
@@ -116,10 +116,7 @@ export function usePlayerBridge({
   // Telemetry for the current WebView/source generation: time-to-first-play
   // plus once-per-generation guards so a struggling player doesn't flood
   // Sentry with repeated blocked/stalled reports.
-  const playerMountedAtRef = useRef(0);
-  if (playerMountedAtRef.current === 0) {
-    playerMountedAtRef.current = Date.now();
-  }
+  const playerMountedAtRef = useLazyRef(() => Date.now());
   const reportedFirstPlayingRef = useRef(false);
   const reportedPlaybackBlockedRef = useRef(false);
   const channelRef = useSyncRef(channel);
@@ -153,11 +150,7 @@ export function usePlayerBridge({
     });
   }
   const stability = stabilityRef.current;
-  const telemetryRef = useRef<PlayerTelemetry | null>(null);
-  if (telemetryRef.current === null) {
-    telemetryRef.current = createPlayerTelemetry();
-  }
-  const telemetry = telemetryRef.current;
+  const telemetry = useLazyRef(createPlayerTelemetry).current;
   const activeLoadKeyRef = useRef<string | null>(null);
   const loadKey = `${sourceKey}:${webViewKey}`;
 
@@ -383,8 +376,7 @@ export function usePlayerBridge({
     setVolume,
     unmute,
   };
-  const playerStateRef = useRef(playerState);
-  playerStateRef.current = playerState;
+  const playerStateRef = useSyncRef(playerState);
 
   useImperativeHandle(
     ref,
@@ -421,7 +413,12 @@ export function usePlayerBridge({
         injectJS('window.__foamSyncToLive && window.__foamSyncToLive();'),
       unmute: () => playerBridgeRef.current.unmute(),
     }),
-    [clearTransientPauseResume, injectJS, togglePictureInPicture],
+    [
+      clearTransientPauseResume,
+      injectJS,
+      playerStateRef,
+      togglePictureInPicture,
+    ],
   );
 
   const executeBridgeAction = (action: PlayerBridgeAction) => {

@@ -66,6 +66,27 @@ describe('paintShadowExtents', () => {
     });
   });
 
+  test('pads for a later shadow the running offset would have hidden', () => {
+    // The chain composites as a union, so the second shadow also draws at the
+    // glyph on its own: blur 5 reaches 15px left even though the first shadow
+    // pushed the cumulative offset 30px right.
+    expect(
+      paintShadowExtents(
+        [
+          shadow({ radius: 1, x_offset: 30 }),
+          shadow({ radius: 5, x_offset: 0 }),
+        ],
+        [],
+        0,
+      ),
+    ).toEqual<ShadowExtents>({
+      left: 15,
+      top: 3 * Math.sqrt(26),
+      right: 30 + 3 * Math.sqrt(26),
+      bottom: 3 * Math.sqrt(26),
+    });
+  });
+
   test('sizes text shadows independently of each other', () => {
     const extents = paintShadowExtents(
       [],

@@ -10,6 +10,7 @@ import { InteractionManager } from 'react-native';
 import { useSelector } from '@legendapp/state/react';
 
 import { useAuthContext } from '@app/context/AuthContext';
+import { useSyncRef } from '@app/hooks/useSyncRef';
 import {
   abortCurrentLoad,
   getCurrentEmoteData,
@@ -149,8 +150,7 @@ export const useChatEmoteLoader = ({
     await loadEmotes(true);
   }, [loadEmotes]);
 
-  const loadEmotesRef = useRef(loadEmotes);
-  loadEmotesRef.current = loadEmotes;
+  const loadEmotesRef = useSyncRef(loadEmotes);
 
   const cosmeticsCacheVersion = useSelector(() =>
     chatStore$.cosmeticsCacheVersion.get(),
@@ -184,7 +184,7 @@ export const useChatEmoteLoader = ({
       isMountedRef.current = false;
       abortCurrentLoad();
     };
-  }, [channelId, enabled, cosmeticsCacheVersion]);
+  }, [channelId, enabled, cosmeticsCacheVersion, loadEmotesRef]);
 
   const sevenTvEmoteSetId = getSevenTvEmoteSetId(channelId) ?? undefined;
 
