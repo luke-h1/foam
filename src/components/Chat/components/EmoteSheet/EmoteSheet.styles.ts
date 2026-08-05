@@ -1,19 +1,18 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { theme } from '@app/styles/themes';
 
-const MENU_BACKGROUND = theme.color.menu.background;
-const MENU_HEADER_BACKGROUND = theme.color.menu.header;
 const MENU_CARD_ACTIVE = theme.color.menu.cardActive;
 const MENU_BORDER = theme.color.menu.border;
 
 /**
- * iOS lets the sheet's liquid-glass surface show through; Android has no
- * sheet material, so surfaces stay solid there.
+ * Both platforms paint their own surface. iOS used to leave these transparent
+ * so the sheet's liquid-glass material showed through, but the @expo/ui sheet
+ * sets an opaque `presentationBackground`, so a transparent child just exposed
+ * whatever colour the wrapper picked.
  */
-const SHEET_SURFACE = Platform.OS === 'ios' ? 'transparent' : MENU_BACKGROUND;
-const SHEET_HEADER_SURFACE =
-  Platform.OS === 'ios' ? 'transparent' : MENU_HEADER_BACKGROUND;
+const SHEET_SURFACE = theme.color.menu.background;
+const SHEET_HEADER_SURFACE = theme.color.menu.header;
 
 export const emoteSheetStyles = StyleSheet.create({
   body: {

@@ -8,6 +8,11 @@ export type { BottomSheetHandle };
 export type SnapPoint = { fraction: number } | { height: number } | 'full';
 
 type BottomSheetProps = PropsWithChildren<{
+  /**
+   * Sheet surface colour on native. The fallback has no sheet chrome of its
+   * own, so the content paints its own background here.
+   */
+  backgroundColor?: string;
   enableFixedSnapPoints?: boolean;
   isPresented: boolean;
   onDismiss: () => void;

@@ -1,10 +1,12 @@
 /**
  * Emote preloading utility.
  *
- * Warms emote images into expo-image's memory + disk cache so they render
- * instantly (already decoded) the first time they appear in chat. This must
- * target the same cache the chat renderer reads — ChatInlineImage renders via
- * expo-image, so preloading goes through ExpoImage.prefetch.
+ * Warms emote images into expo-image's disk cache so the first chat row that
+ * renders one has no network hop. Disk only: `prefetch` decodes through a bare
+ * SDWebImage context, so an animated WebP lands in the memory cache as a plain
+ * multi-frame UIImage that renders as a main-thread CAKeyframeAnimation - see
+ * the note in prefetchEmotePickerImages. ChatInlineImage's url path already
+ * queries `disk` alone, so nothing read the memory copy anyway.
  */
 import { Image as ExpoImage } from 'expo-image';
 
@@ -80,11 +82,10 @@ export async function preloadEmotes(
     batches.push(toPreload.slice(i, i + BATCH_SIZE));
   }
   for (const batch of batches) {
-    // Sequential batches to avoid overwhelming the network. prefetch warms
-    // expo-image's memory + disk cache, which is what the chat rows read.
+    // Sequential batches to avoid overwhelming the network.
     try {
       // eslint-disable-next-line react-doctor/async-await-in-loop -- batch preload is intentionally throttled
-      await ExpoImage.prefetch(batch, 'memory-disk');
+      await ExpoImage.prefetch(batch, 'disk');
       batch.forEach(url => preloadedUrls.add(url));
     } catch {
       // Leave failed URLs out of preloadedUrls so a later attempt can retry them.

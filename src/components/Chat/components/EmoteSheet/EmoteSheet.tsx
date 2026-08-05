@@ -17,7 +17,6 @@ import { theme } from '@app/styles/themes';
 
 import { EmoteSearchFilter } from './EmoteSearchFilter';
 import { emoteSheetStyles as styles } from './EmoteSheet.styles';
-import { EmoteSheetIosBlur } from './EmoteSheetIosBlur';
 import {
   EMOTE_CELL_GAP,
   EMOTE_SHEET_DETENT,
@@ -93,6 +92,7 @@ export function EmoteSheet({
   return (
     <BottomSheet
       ref={sheetRef}
+      backgroundColor={theme.color.menu.background}
       enableFixedSnapPoints
       isPresented={isPresented}
       onDismiss={sheet.handleDismiss}
@@ -182,7 +182,6 @@ export function EmoteSheet({
                   { paddingBottom: theme.space8 + bottomInset },
                 ]}
               >
-                <EmoteSheetIosBlur />
                 <LegendList
                   data={sheet.filteredSets}
                   horizontal

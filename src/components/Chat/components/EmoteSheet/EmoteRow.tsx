@@ -3,6 +3,10 @@ import { type GestureResponderEvent, Pressable } from 'react-native';
 
 import { selection } from '@app/lib/haptics';
 
+import {
+  RowVisibilityContext,
+  useRowVisibility,
+} from '../ChatMessage/rowVisibility';
 import { EmoteCell } from './EmoteCell';
 import { emoteSheetStyles as styles } from './EmoteSheet.styles';
 import { EMOTE_CELL_GAP } from './emoteSheetLayout';
@@ -30,16 +34,24 @@ function EmoteRowComponent({
     [cellSize, items, onPress],
   );
 
+  /**
+   * The row is the list item, so this is the only place that knows whether its
+   * cells are on screen. Cells take an animation slot only while it is.
+   */
+  const rowVisibility = useRowVisibility();
+
   return (
-    <Pressable style={styles.emoteRow} onPress={handlePress}>
-      {items.map(item => (
-        <EmoteCell
-          key={typeof item === 'string' ? `emoji-${item}` : item.id}
-          cellSize={cellSize}
-          item={item}
-        />
-      ))}
-    </Pressable>
+    <RowVisibilityContext.Provider value={rowVisibility}>
+      <Pressable style={styles.emoteRow} onPress={handlePress}>
+        {items.map(item => (
+          <EmoteCell
+            key={typeof item === 'string' ? `emoji-${item}` : item.id}
+            cellSize={cellSize}
+            item={item}
+          />
+        ))}
+      </Pressable>
+    </RowVisibilityContext.Provider>
   );
 }
 

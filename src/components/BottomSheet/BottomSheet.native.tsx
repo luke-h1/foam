@@ -22,6 +22,12 @@ export type { BottomSheetHandle };
 export type SnapPoint = { fraction: number } | { height: number } | 'full';
 
 type BottomSheetProps = PropsWithChildren<{
+  /**
+   * Sheet surface colour. iOS maps it onto `presentationBackground`, Android
+   * onto the `ModalBottomSheet` container colour, so it also paints the strip
+   * behind the drag indicator that no child can reach.
+   */
+  backgroundColor?: string;
   enableFixedSnapPoints?: boolean;
   isPresented: boolean;
   onDismiss: () => void;
@@ -70,6 +76,7 @@ function resolveSheetHeight(
 }
 
 export function BottomSheet({
+  backgroundColor = theme.color.surfaceElevated.dark,
   children,
   enableFixedSnapPoints,
   isPresented,
@@ -140,10 +147,15 @@ export function BottomSheet({
         height: resolveSheetHeight(firstSnapPoint, windowHeight),
       };
 
+  const backgroundStyle = useMemo(
+    () => ({ backgroundColor }),
+    [backgroundColor],
+  );
+
   return (
     <ExpoBottomSheet
       ref={sheetRef}
-      backgroundStyle={styles.background}
+      backgroundStyle={backgroundStyle}
       enablePanDownToClose
       handleComponent={showDragIndicator === true ? undefined : null}
       index={isPresented ? 0 : -1}
@@ -174,9 +186,6 @@ export function BottomSheet({
 }
 
 const styles = StyleSheet.create({
-  background: {
-    backgroundColor: theme.color.surfaceElevated.dark,
-  },
   content: {
     alignItems: 'stretch',
     alignSelf: 'stretch',

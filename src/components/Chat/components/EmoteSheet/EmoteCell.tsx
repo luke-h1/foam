@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef } from 'react';
+import { memo, use, useCallback, useEffect, useMemo, useRef } from 'react';
 import { View } from 'react-native';
 
 import { Image as ExpoImage } from 'expo-image';
@@ -8,6 +8,7 @@ import { resolveUseAppleWebpCodec } from '@app/lib/expo-image/resolveUseAppleWeb
 import { runAnimationCommand } from '@app/lib/expo-image/runAnimationCommand';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 
+import { RowVisibilityContext } from '../ChatMessage/rowVisibility';
 import { emoteSheetStyles as styles } from './EmoteSheet.styles';
 import type { EmotePickerItem } from './emoteSheetTypes';
 import { getEmotePickerDisplayUrl } from './util/emotePickerDisplayUrl';
@@ -32,6 +33,16 @@ function EmoteCellComponent({
   );
 
   const hasAnimationSlotRef = useRef(false);
+  const rowVisibility = use(RowVisibilityContext);
+
+  const syncAnimation = useCallback(() => {
+    const shouldAnimate =
+      hasAnimationSlotRef.current && !emoteSheetScrollActivity.isActive();
+    runAnimationCommand(
+      imageRef.current,
+      shouldAnimate ? 'startAnimating' : 'stopAnimating',
+    );
+  }, []);
 
   const isImageItem = typeof item !== 'string';
   useEffect(() => {
@@ -39,27 +50,43 @@ function EmoteCellComponent({
       return undefined;
     }
 
-    const sync = () => {
-      const shouldAnimate =
-        hasAnimationSlotRef.current && !emoteSheetScrollActivity.isActive();
-      runAnimationCommand(
-        imageRef.current,
-        shouldAnimate ? 'startAnimating' : 'stopAnimating',
-      );
+    /**
+     * Hold the slot only while the row is on screen. Slots used to be taken on
+     * mount, and the list keeps several screens of rows mounted, so the cap was
+     * spent on offscreen cells and most of what the user could see never
+     * animated.
+     */
+    let releaseSlot: (() => void) | null = null;
+    const applyVisibility = () => {
+      const isVisible = rowVisibility?.isVisible() ?? true;
+
+      if (isVisible && !releaseSlot) {
+        releaseSlot = emoteSheetAnimationBudget.acquire(granted => {
+          hasAnimationSlotRef.current = granted;
+          syncAnimation();
+        });
+        return;
+      }
+
+      if (!isVisible && releaseSlot) {
+        releaseSlot();
+        releaseSlot = null;
+        hasAnimationSlotRef.current = false;
+        syncAnimation();
+      }
     };
 
-    const releaseSlot = emoteSheetAnimationBudget.acquire(granted => {
-      hasAnimationSlotRef.current = granted;
-      sync();
-    });
-    const unsubscribeScroll = emoteSheetScrollActivity.subscribe(sync);
+    applyVisibility();
+    const unsubscribeVisibility = rowVisibility?.subscribe(applyVisibility);
+    const unsubscribeScroll = emoteSheetScrollActivity.subscribe(syncAnimation);
 
     return () => {
       unsubscribeScroll();
-      releaseSlot();
+      unsubscribeVisibility?.();
+      releaseSlot?.();
       hasAnimationSlotRef.current = false;
     };
-  }, [isImageItem]);
+  }, [isImageItem, rowVisibility, syncAnimation]);
 
   if (typeof item === 'string') {
     return (
@@ -94,6 +121,11 @@ function EmoteCellComponent({
           preferAppleCodecForStatic: true,
         })}
         autoplay={false}
+        // `startAnimating` acts on the view's current image, so the slot the
+        // cell takes on mount is a no-op until one is decoded - and `autoplay`
+        // is off, so nothing starts it afterwards. Re-issuing the command once
+        // the image is on screen is what actually plays it.
+        onDisplay={syncAnimation}
         priority='low'
         transition={0}
         recyclingKey={item.id}
