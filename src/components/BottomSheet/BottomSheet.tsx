@@ -8,6 +8,7 @@ export type { BottomSheetHandle };
 export type SnapPoint = { fraction: number } | { height: number } | 'full';
 
 type BottomSheetProps = PropsWithChildren<{
+  backgroundColor?: string;
   enableFixedSnapPoints?: boolean;
   isPresented: boolean;
   onDismiss: () => void;
@@ -18,6 +19,7 @@ type BottomSheetProps = PropsWithChildren<{
 }>;
 
 function BottomSheetComponent({
+  backgroundColor,
   children,
   isPresented,
   onDismiss,
@@ -44,7 +46,10 @@ function BottomSheetComponent({
   return (
     <View
       testID={testID}
-      style={[styles.fallback, { width: Math.min(windowWidth - 32, 520) }]}
+      style={[
+        styles.fallback,
+        { backgroundColor, width: Math.min(windowWidth - 32, 520) },
+      ]}
     >
       {showDragIndicator ? (
         <View style={styles.dragHandleRow}>

@@ -26,7 +26,7 @@ Name fixture files after the thing under test, using the pattern `{thing}.fixtur
 
 That naming keeps the fixture tied to the surface it supports. A file called `chatHookFixtures.ts` sounds like a generic bucket. A file called `useChat.fixture.ts` says what it exists for and makes it harder to keep adding unrelated test data over time.
 
-The one exception is a fixture the app itself imports. `src/dev/chatHotspotBench` runs the perf fixtures on-device from the `dev-tools/chat-perf` route, so those files are part of the app's module graph. EAS strips `__tests__` directories from the build context, so a fixture under `__tests__` resolves locally and then fails the eager bundle in CI with `Unable to resolve module`. Fixtures shared with the bench live in a sibling `__fixtures__` directory *outside* `__tests__` (for example `src/components/Chat/util/__fixtures__/resolveMessageEmoteParts.perf.fixture.ts`), and the perf-test imports them with `../__fixtures__/...`. The `no-tests-dir-import` ast-grep rules enforce this.
+The one exception is a fixture the app itself imports. `src/dev/chatHotspotBench` runs the perf fixtures on-device from the `dev-tools/chat-perf` route, so those files are part of the app's module graph. EAS strips `__tests__` directories from the build context, so a fixture under `__tests__` resolves locally and then fails the eager bundle in CI with `Unable to resolve module`. Fixtures shared with the bench live in a sibling `__fixtures__` directory _outside_ `__tests__` (for example `src/components/Chat/util/__fixtures__/resolveMessageEmoteParts.perf.fixture.ts`), and the perf-test imports them with `../__fixtures__/...`. The `no-tests-dir-import` ast-grep rules enforce this.
 
 ## Legend State Store Layout
 

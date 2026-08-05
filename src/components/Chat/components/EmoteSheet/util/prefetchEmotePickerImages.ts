@@ -40,8 +40,10 @@ export async function prefetchEmotePickerImages(
     const batch = urls.slice(i, i + BATCH_SIZE);
     try {
       // eslint-disable-next-line react-doctor/async-await-in-loop -- batches are intentionally sequential to avoid a network flood
-      await ExpoImage.prefetch(batch, 'memory-disk');
-      batch.forEach(url => prefetched.add(url));
+      const warmed = await ExpoImage.prefetch(batch, 'disk');
+      if (warmed) {
+        batch.forEach(url => prefetched.add(url));
+      }
     } catch {
       // retry on a later warmup pass
     }

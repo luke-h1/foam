@@ -23,7 +23,7 @@ beforeEach(() => {
 });
 
 describe('prefetchEmotePickerImages', () => {
-  test('warms the picker display URL into expo-image memory-disk cache', async () => {
+  test('warms the picker display URL into the disk cache only', async () => {
     const emote = createMenuEmote('warm-1', 'warm-1', '7TV Global');
 
     await prefetchEmotePickerImages([emote]);
@@ -31,7 +31,7 @@ describe('prefetchEmotePickerImages', () => {
     expect(warmedUrls()).toEqual([getEmotePickerDisplayUrl(emote)]);
     expect(prefetchMock).toHaveBeenCalledWith(
       [getEmotePickerDisplayUrl(emote)],
-      'memory-disk',
+      'disk',
     );
   });
 

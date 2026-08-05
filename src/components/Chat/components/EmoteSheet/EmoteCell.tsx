@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef } from 'react';
+import { memo, use, useCallback, useEffect, useMemo, useRef } from 'react';
 import { View } from 'react-native';
 
 import { Image as ExpoImage } from 'expo-image';
@@ -8,6 +8,7 @@ import { resolveUseAppleWebpCodec } from '@app/lib/expo-image/resolveUseAppleWeb
 import { runAnimationCommand } from '@app/lib/expo-image/runAnimationCommand';
 import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 
+import { RowVisibilityContext } from '../ChatMessage/rowVisibility';
 import { emoteSheetStyles as styles } from './EmoteSheet.styles';
 import type { EmotePickerItem } from './emoteSheetTypes';
 import { getEmotePickerDisplayUrl } from './util/emotePickerDisplayUrl';
@@ -32,6 +33,16 @@ function EmoteCellComponent({
   );
 
   const hasAnimationSlotRef = useRef(false);
+  const rowVisibility = use(RowVisibilityContext);
+
+  const syncAnimation = useCallback(() => {
+    const shouldAnimate =
+      hasAnimationSlotRef.current && !emoteSheetScrollActivity.isActive();
+    runAnimationCommand(
+      imageRef.current,
+      shouldAnimate ? 'startAnimating' : 'stopAnimating',
+    );
+  }, []);
 
   const isImageItem = typeof item !== 'string';
   useEffect(() => {
@@ -39,27 +50,38 @@ function EmoteCellComponent({
       return undefined;
     }
 
-    const sync = () => {
-      const shouldAnimate =
-        hasAnimationSlotRef.current && !emoteSheetScrollActivity.isActive();
-      runAnimationCommand(
-        imageRef.current,
-        shouldAnimate ? 'startAnimating' : 'stopAnimating',
-      );
+    let releaseSlot: (() => void) | null = null;
+    const applyVisibility = () => {
+      const isVisible = rowVisibility?.isVisible() ?? true;
+      if (isVisible === (releaseSlot !== null)) {
+        return;
+      }
+
+      if (releaseSlot) {
+        releaseSlot();
+        releaseSlot = null;
+        hasAnimationSlotRef.current = false;
+        syncAnimation();
+        return;
+      }
+
+      releaseSlot = emoteSheetAnimationBudget.acquire(granted => {
+        hasAnimationSlotRef.current = granted;
+        syncAnimation();
+      });
     };
 
-    const releaseSlot = emoteSheetAnimationBudget.acquire(granted => {
-      hasAnimationSlotRef.current = granted;
-      sync();
-    });
-    const unsubscribeScroll = emoteSheetScrollActivity.subscribe(sync);
+    applyVisibility();
+    const unsubscribeVisibility = rowVisibility?.subscribe(applyVisibility);
+    const unsubscribeScroll = emoteSheetScrollActivity.subscribe(syncAnimation);
 
     return () => {
       unsubscribeScroll();
-      releaseSlot();
+      unsubscribeVisibility?.();
+      releaseSlot?.();
       hasAnimationSlotRef.current = false;
     };
-  }, [isImageItem]);
+  }, [isImageItem, rowVisibility, syncAnimation]);
 
   if (typeof item === 'string') {
     return (
@@ -94,6 +116,7 @@ function EmoteCellComponent({
           preferAppleCodecForStatic: true,
         })}
         autoplay={false}
+        onDisplay={syncAnimation}
         priority='low'
         transition={0}
         recyclingKey={item.id}

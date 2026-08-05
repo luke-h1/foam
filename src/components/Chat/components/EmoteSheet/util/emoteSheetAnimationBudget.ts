@@ -8,7 +8,7 @@ type AnimationBudgetListener = (granted: boolean) => void;
  * main thread (Sentry FOAM-TV-MOBILE-W, 3.8-4.6s fully-blocked hang). Cells
  * beyond the cap hold their first frame instead.
  */
-const MAX_CONCURRENT_ANIMATED = 24;
+export const MAX_CONCURRENT_ANIMATED = 96;
 
 interface AnimationSlot {
   granted: boolean;

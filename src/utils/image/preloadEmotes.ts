@@ -1,17 +1,19 @@
 /**
  * Emote preloading utility.
  *
- * Warms emote images into expo-image's memory + disk cache so they render
- * instantly (already decoded) the first time they appear in chat. This must
- * target the same cache the chat renderer reads — ChatInlineImage renders via
- * expo-image, so preloading goes through ExpoImage.prefetch.
+ * Warms emote images into expo-image's disk cache so they resolve without a
+ * network hop the first time they appear in chat. This must target the same
+ * cache the chat renderer reads — ChatInlineImage renders via expo-image, so
+ * preloading goes through ExpoImage.prefetch.
  */
 import { Image as ExpoImage } from 'expo-image';
 
 import type { SanitisedEmote } from '@app/types/emote';
+import { describeEmoteUrl } from '@app/utils/emote/describeEmoteUrl';
 import { withResolvedEmoteImageVariants } from '@app/utils/emote/emoteImageVariants/withResolvedEmoteImageVariants';
 import { getDisplayEmoteUrl } from '@app/utils/emote/getDisplayEmoteUrl';
 import { CHAT_INLINE_EMOTE_SCALE } from '@app/utils/emote/resolveEmoteScale';
+import { logger } from '@app/utils/logger';
 
 const preloadedUrls = new Set<string>();
 const MAX_PRELOADED_CACHE = 500;
@@ -34,6 +36,25 @@ function getDisplayEmoteCacheUrls(emote: SanitisedEmote): string[] {
   }
 
   return Array.from(urls);
+}
+
+/**
+ * `prefetch` resolves false when it skips any url in the batch and rejects when
+ * the whole call fails, so both outcomes are reported with the batch's shape
+ * rather than the urls themselves.
+ */
+function describePreloadBatch(batch: string[]) {
+  const [firstUrl] = batch;
+  const descriptor = firstUrl ? describeEmoteUrl(firstUrl) : null;
+
+  return {
+    batchSize: batch.length,
+    tags: {
+      emoteProvider: descriptor?.provider ?? 'unknown',
+      emoteScale: descriptor?.scale ?? null,
+      emoteKind: descriptor?.kind ?? null,
+    },
+  };
 }
 
 /**
@@ -80,14 +101,25 @@ export async function preloadEmotes(
     batches.push(toPreload.slice(i, i + BATCH_SIZE));
   }
   for (const batch of batches) {
-    // Sequential batches to avoid overwhelming the network. prefetch warms
-    // expo-image's memory + disk cache, which is what the chat rows read.
+    // Sequential batches to avoid overwhelming the network. Failed URLs stay
+    // out of preloadedUrls so a later attempt can retry them.
     try {
       // eslint-disable-next-line react-doctor/async-await-in-loop -- batch preload is intentionally throttled
-      await ExpoImage.prefetch(batch, 'memory-disk');
-      batch.forEach(url => preloadedUrls.add(url));
-    } catch {
-      // Leave failed URLs out of preloadedUrls so a later attempt can retry them.
+      const warmed = await ExpoImage.prefetch(batch, 'disk');
+      if (warmed) {
+        batch.forEach(url => preloadedUrls.add(url));
+      } else {
+        logger.chat.warn('chat.emote.preload_skipped', {
+          name: 'chat_resources_warning',
+          ...describePreloadBatch(batch),
+        });
+      }
+    } catch (error) {
+      logger.chat.error('chat.emote.preload_failed', {
+        name: 'chat_resources_error',
+        error,
+        ...describePreloadBatch(batch),
+      });
     }
   }
 

@@ -1,19 +1,6 @@
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { theme } from '@app/styles/themes';
-
-const MENU_BACKGROUND = theme.color.menu.background;
-const MENU_HEADER_BACKGROUND = theme.color.menu.header;
-const MENU_CARD_ACTIVE = theme.color.menu.cardActive;
-const MENU_BORDER = theme.color.menu.border;
-
-/**
- * iOS lets the sheet's liquid-glass surface show through; Android has no
- * sheet material, so surfaces stay solid there.
- */
-const SHEET_SURFACE = Platform.OS === 'ios' ? 'transparent' : MENU_BACKGROUND;
-const SHEET_HEADER_SURFACE =
-  Platform.OS === 'ios' ? 'transparent' : MENU_HEADER_BACKGROUND;
 
 export const emoteSheetStyles = StyleSheet.create({
   body: {
@@ -25,8 +12,8 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   categoryBar: {
     alignItems: 'center',
-    backgroundColor: SHEET_HEADER_SURFACE,
-    borderTopColor: MENU_BORDER,
+    backgroundColor: theme.color.menu.header,
+    borderTopColor: theme.color.menu.border,
     borderTopWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     overflow: 'hidden',
@@ -40,7 +27,7 @@ export const emoteSheetStyles = StyleSheet.create({
   },
   container: {
     alignSelf: 'stretch',
-    backgroundColor: SHEET_SURFACE,
+    backgroundColor: theme.color.menu.background,
     flex: 1,
     minHeight: 0,
     overflow: 'hidden',
@@ -79,8 +66,8 @@ export const emoteSheetStyles = StyleSheet.create({
     fontWeight: '700',
   },
   header: {
-    backgroundColor: SHEET_HEADER_SURFACE,
-    borderBottomColor: MENU_BORDER,
+    backgroundColor: theme.color.menu.header,
+    borderBottomColor: theme.color.menu.border,
     borderBottomWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
     paddingBottom: theme.space8,
@@ -236,7 +223,7 @@ export const emoteSheetStyles = StyleSheet.create({
     paddingHorizontal: theme.space8,
   },
   setRailButtonActive: {
-    backgroundColor: MENU_CARD_ACTIVE,
+    backgroundColor: theme.color.menu.cardActive,
   },
   setRailEmoji: {
     fontSize: theme.fontSize16,
