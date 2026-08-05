@@ -109,8 +109,15 @@ function dropRefBytes(url: string): void {
   refAspect.delete(url);
 }
 
-const pendingReleases: { url: string; ref: ImageRef }[] = [];
+const pendingReleases: { url: string; ref: ImageRef; frames: number }[] = [];
 let releaseFlushScheduled = false;
+
+/**
+ * Frames a release may be re-queued for while a listener is still registered.
+ * Enough to cover the mount race below, bounded so a url that stays subscribed
+ * cannot defer its release forever.
+ */
+const MAX_RELEASE_DEFER_FRAMES = 2;
 
 function markRecentlyReleased(url: string): void {
   recentlyReleased.add(url);
@@ -129,23 +136,32 @@ function markRecentlyReleased(url: string): void {
  * drawing — the emote, and an emote-only message, goes blank. By the next frame
  * the subscription exists, so an absent listener reliably means nothing holds
  * the ref. A released ref throws on any later native call, hence the try/catch.
+ *
+ * The re-queue is capped: every path that queues a release notifies first, so a
+ * listener still present a couple of frames later has already fallen back to the
+ * `uri` source. Unbounded, a memory-pressure trim freed nothing at all for an
+ * emote that stayed on screen.
  */
 function flushPendingReleases(): void {
   releaseFlushScheduled = false;
   const batch = pendingReleases.splice(0, pendingReleases.length);
-  for (const { url, ref } of batch) {
-    if (listeners.has(url)) {
+  for (const pending of batch) {
+    if (
+      listeners.has(pending.url) &&
+      pending.frames < MAX_RELEASE_DEFER_FRAMES
+    ) {
       // A new subscriber raced in before this flush — re-queue so the ref is
-      // retried next frame instead of leaking when that subscriber leaves.
-      pendingReleases.push({ url, ref });
+      // retried next frame instead of being detached mid-draw.
+      pending.frames += 1;
+      pendingReleases.push(pending);
       continue;
     }
     try {
-      ref.release();
+      pending.ref.release();
     } catch {
       // ignore
     }
-    markRecentlyReleased(url);
+    markRecentlyReleased(pending.url);
   }
   if (pendingReleases.length > 0 && !releaseFlushScheduled) {
     releaseFlushScheduled = true;
@@ -161,7 +177,7 @@ function flushPendingReleases(): void {
 function releaseRef(url: string): boolean {
   const ref = refs.get(url);
   if (ref) {
-    pendingReleases.push({ url, ref });
+    pendingReleases.push({ url, ref, frames: 0 });
     if (!releaseFlushScheduled) {
       releaseFlushScheduled = true;
       requestAnimationFrame(flushPendingReleases);
@@ -181,6 +197,11 @@ function withinBudget(incomingBytes: number): boolean {
  * Evict least-recently-rendered unpinned refs until the incoming decode fits
  * under both the byte budget and the entry-count backstop. Stops once no
  * unpinned entry remains so a fully-pinned cache can still grow rather than spin.
+ *
+ * A live listener is skipped alongside a pin: `flushPendingReleases` won't free a
+ * bitmap anything is subscribed to, so evicting one frees nothing while
+ * `dropRefBytes` un-counts its bytes. The budget then under-reports and the cache
+ * over-commits into real memory pressure.
  */
 function evictUnpinnedToFit(incomingBytes: number): void {
   if (withinBudget(incomingBytes)) {
@@ -190,7 +211,7 @@ function evictUnpinnedToFit(incomingBytes: number): void {
     if (withinBudget(incomingBytes)) {
       return;
     }
-    if (pinned.has(url)) {
+    if (pinned.has(url) || listeners.has(url)) {
       continue;
     }
     releaseRef(url);

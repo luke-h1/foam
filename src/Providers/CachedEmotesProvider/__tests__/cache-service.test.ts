@@ -37,6 +37,17 @@ const flushMicrotasks = () =>
     setTimeout(resolve, 0);
   });
 
+/**
+ * requestAnimationFrame is polyfilled onto setTimeout here, so each turn drains
+ * one deferred release pass. A release can be re-queued a few times, hence
+ * several turns.
+ */
+const flushAnimationFrames = async (turns = 6) => {
+  for (let turn = 0; turn < turns; turn += 1) {
+    await flushMicrotasks();
+  }
+};
+
 describe('cache-service', () => {
   beforeEach(() => {
     loadAsync.mockImplementation(() => Promise.resolve({} as ImageRef));
@@ -249,6 +260,47 @@ describe('cache-service', () => {
     // The most-recently warmed ref survives; the oldest was evicted to fit.
     expect(getCachedEmoteRef(urls.at(-1)!)).toEqual(animatedRef());
     expect(getCachedEmoteRef(urls[0]!)).toBeNull();
+  });
+
+  test('the byte budget never evicts a ref a mounted row is still subscribed to', async () => {
+    loadAsync.mockResolvedValue(animatedRef());
+    const mountedUrl = 'https://cdn.7tv.app/emote/bigMounted/2x.avif';
+    await warmCachedEmoteRefs([mountedUrl]);
+    const unsubscribe = subscribeCachedEmoteRef(mountedUrl, jest.fn());
+
+    const unsubscribedUrl = 'https://cdn.7tv.app/emote/bigUnsubscribed/2x.avif';
+    await warmCachedEmoteRefs([unsubscribedUrl]);
+
+    await warmCachedEmoteRefs(
+      Array.from(
+        { length: 900 },
+        (_, i) => `https://cdn.7tv.app/emote/bigChurn${i}/2x.avif`,
+      ),
+    );
+
+    // Evicting the subscribed url would free nothing and only un-count its bytes,
+    // so the scan sheds an unsubscribed one instead.
+    expect(getCachedEmoteRef(mountedUrl)).toEqual(animatedRef());
+    expect(getCachedEmoteRef(unsubscribedUrl)).toBeNull();
+    expect(getCachedEmoteByteEstimate()).toBeLessThanOrEqual(
+      MAX_DECODED_BYTES_HIGH_TIER,
+    );
+    unsubscribe();
+  });
+
+  test('a memory-pressure trim frees a bitmap even while a row is still subscribed', async () => {
+    const url = 'https://cdn.7tv.app/emote/pressure/2x.avif';
+    const release = jest.fn();
+    loadAsync.mockResolvedValueOnce(makeImageRef({ release }));
+    await warmCachedEmoteRefs([url]);
+    const unsubscribe = subscribeCachedEmoteRef(url, jest.fn());
+
+    releaseChannelEmoteRefs();
+    await flushAnimationFrames();
+
+    // The trim notified first, so the row has already dropped to its uri fallback.
+    expect(release).toHaveBeenCalledTimes(1);
+    unsubscribe();
   });
 
   test('the byte budget never evicts pinned refs', async () => {
