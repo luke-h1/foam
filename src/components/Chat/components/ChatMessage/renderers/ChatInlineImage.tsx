@@ -158,14 +158,11 @@ function ChatInlineImageComponent({
 
   const handleError = useCallback(
     (event?: ImageErrorEventData) => {
-      // A decoded ref that could not be drawn says nothing about the url - the
-      // cache can release one out from under a mounted row, and the uri has not
-      // been tried at all yet. Hand off to the fallback chain from the top with
-      // a full budget rather than spending it on a failure the network never
-      // saw: a badge url derives no variants, so `maxRetryAttempts: 0` would
-      // otherwise turn one ref failure straight into a permanently blank slot.
-      // The nonce bump moves `recyclingKey` so expo-image reloads rather than
-      // keeping the view that failed.
+      // A decoded ref that failed to draw says nothing about the url, which has
+      // not been tried at all yet - so hand off to the fallback chain from the
+      // top with a full budget rather than spending it here. A badge url derives
+      // no variants, so under `maxRetryAttempts: 0` the shared give-up branch
+      // below would otherwise log a load failure the network never saw.
       if (showRef) {
         setFailedRefUrl(sourceUrl);
         retryCountRef.current = 0;
@@ -188,7 +185,6 @@ function ChatInlineImageComponent({
           to: fallbackChain[candidateIndex + 1],
         });
         retryCountRef.current = 0;
-        // Either showRef was already false, or setFailedRefUrl just turned it off.
         setLoad({
           index: candidateIndex + 1,
           status: 'loading',
@@ -259,12 +255,13 @@ function ChatInlineImageComponent({
   );
 
   const onWatchdogTimeout = useEffectEvent(() => handleError());
-  // The ref path is watched too. A ref the cache released under a mounted row
-  // draws nothing and reports neither onLoad nor onError, so leaving it
-  // unwatched was the one state that could hold a slot blank forever - silently,
-  // since a badge renders no shimmer to hint at it.
+  // The `showRef` guard is load-bearing, not an oversight: expo-image dispatches
+  // `onLoad` only from the uri path (`ImageView.swift` fires `onDisplay` for a
+  // SharedRef), so `status` never leaves 'loading' while a ref is drawn. Watching
+  // that path would arm a timer on every healthy cached emote and fire it,
+  // throwing the decoded ref away for a disk re-read.
   useEffect(() => {
-    if (status !== 'loading') {
+    if (showRef || status !== 'loading') {
       return undefined;
     }
     const timer = setTimeout(onWatchdogTimeout, LOAD_WATCHDOG_MS);
