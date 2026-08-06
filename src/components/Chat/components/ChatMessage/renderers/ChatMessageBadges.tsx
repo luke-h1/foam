@@ -30,7 +30,7 @@ export function ChatMessageBadges({
     return null;
   }
 
-  const badgeStyle = getChatTextStyles(fontScale, compact).badge;
+  const textStyles = getChatTextStyles(fontScale, compact);
 
   const renderedBadges: ReactNode[] = [];
   let index = 0;
@@ -41,6 +41,12 @@ export function ChatMessageBadges({
       continue;
     }
 
+    // Only FFZ carries a colour, and every FFZ badge is a white-on-transparent
+    // mask meant to sit on it - drawn raw, a channel's mod/VIP art is a white
+    // blob on the chat surface rather than the badge the channel uploaded.
+    const tint = normalizedBadge.color;
+    const moderated = Boolean(moderationNotice) && styles.moderatedBadge;
+
     renderedBadges.push(
       <ChatMessagePressable
         key={getMappingKey(
@@ -48,13 +54,18 @@ export function ChatMessageBadges({
           index,
         )}
         onPress={onBadgePress ? () => onBadgePress(normalizedBadge) : undefined}
+        style={
+          tint
+            ? [textStyles.badgeTintSlot, { backgroundColor: tint }, moderated]
+            : undefined
+        }
+        testID='chat-badge'
       >
         <ChatInlineImage
           sourceUrl={normalizedBadge.url}
-          style={[
-            badgeStyle,
-            Boolean(moderationNotice) && styles.moderatedBadge,
-          ]}
+          style={
+            tint ? textStyles.badgeTintArtwork : [textStyles.badge, moderated]
+          }
           maxRetryAttempts={0}
           showLoadingShimmer={false}
         />

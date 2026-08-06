@@ -16,6 +16,7 @@ let mockImageProps: {
   onError?: () => void;
   onLoad?: () => void;
   recyclingKey?: string;
+  source?: unknown;
 } | null = null;
 
 jest.mock('expo-image', () => {
@@ -27,6 +28,7 @@ jest.mock('expo-image', () => {
           onError?: () => void;
           onLoad?: () => void;
           recyclingKey?: string;
+          source?: unknown;
         },
         ref: unknown,
       ) => {
@@ -489,5 +491,39 @@ describe('ChatInlineImage shared-ref recovery', () => {
     act(() => mockImageProps?.onError?.());
 
     expect(evictMock).not.toHaveBeenCalled();
+  });
+
+  test('a ref failure retries the uri instead of spending a badge’s whole budget on it', () => {
+    mockSharedRef = { isAnimated: false };
+    const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/foo/3';
+    render(
+      <ChatInlineImage sourceUrl={sourceUrl} style={{}} maxRetryAttempts={0} />,
+    );
+
+    // The decoded ref cannot be drawn. A badge url derives no variants, so
+    // before the fix this landed straight on 'failed' - a permanently blank slot.
+    act(() => mockImageProps?.onError?.());
+
+    expect(warnMock).not.toHaveBeenCalled();
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#1`);
+    // The nonce alone would move even if the row stayed on the ref, so pin the
+    // thing that matters: it is drawing the uri now.
+    expect(mockImageProps?.source).toEqual({ uri: sourceUrl });
+  });
+
+  test('watches a held ref that never reports onLoad or onError', () => {
+    mockSharedRef = { isAnimated: false };
+    const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/silent/3';
+    render(
+      <ChatInlineImage sourceUrl={sourceUrl} style={{}} maxRetryAttempts={0} />,
+    );
+
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
+
+    // A ref released under a mounted row draws nothing and reports nothing.
+    act(() => jest.advanceTimersByTime(12000));
+
+    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#1`);
+    expect(mockImageProps?.source).toEqual({ uri: sourceUrl });
   });
 });

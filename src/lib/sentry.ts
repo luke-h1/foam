@@ -371,6 +371,64 @@ function extractLogExtra(metadata?: LogMetadata): Record<string, unknown> {
   return extra;
 }
 
+/**
+ * Sentry's own ceiling for a tag value; past it the ingest pipeline truncates
+ * or drops. Truncating here keeps the value deterministic instead.
+ */
+const MAX_TAG_VALUE_LENGTH = 200;
+/**
+ * `LogMetadata['tags']` is caller-facing and open, so a caller can hand over an
+ * arbitrarily wide record. `sanitiseLogValue` bounds the extra but never sees
+ * the tags, so they need a bound of their own (FOAM-TV-MOBILE-9V).
+ */
+const MAX_TAGS = 24;
+
+function applyLogScope(
+  scope: Sentry.Scope,
+  {
+    category,
+    name,
+    metadata,
+    safeExtra,
+  }: {
+    category: string;
+    name?: string;
+    metadata?: LogMetadata;
+    safeExtra: Record<string, unknown>;
+  },
+): void {
+  // Caller tags go on first so the canonical pair below always wins: a later
+  // setTag overwrites an earlier one, so a caller passing `log_category` or
+  // `error_type` would otherwise replace the value the grouping relies on.
+  if (metadata?.tags) {
+    let applied = 0;
+    for (const [key, value] of Object.entries(metadata.tags)) {
+      if (applied >= MAX_TAGS) {
+        break;
+      }
+      if (!key || value === undefined || value === null) {
+        continue;
+      }
+      applied += 1;
+      scope.setTag(
+        key,
+        typeof value === 'string' && value.length > MAX_TAG_VALUE_LENGTH
+          ? value.slice(0, MAX_TAG_VALUE_LENGTH)
+          : value,
+      );
+    }
+  }
+
+  scope.setTag('log_category', category);
+  if (name) {
+    scope.setTag('error_type', name);
+  }
+  if (metadata?.fingerprint) {
+    scope.setFingerprint(metadata.fingerprint);
+  }
+  scope.setContext('log_metadata', safeExtra);
+}
+
 function buildSentryException(
   message: string,
   name: string | undefined,
@@ -410,19 +468,7 @@ export function forwardLogToSentry(entry: {
       Sentry.addBreadcrumb({ category, message: headline, level: 'error' });
 
       Sentry.withScope(scope => {
-        scope.setTag('log_category', category);
-        if (name) {
-          scope.setTag('error_type', name);
-        }
-        if (metadata?.tags) {
-          for (const [key, value] of Object.entries(metadata.tags)) {
-            scope.setTag(key, value);
-          }
-        }
-        if (metadata?.fingerprint) {
-          scope.setFingerprint(metadata.fingerprint);
-        }
-        scope.setContext('log_metadata', safeExtra);
+        applyLogScope(scope, { category, name, metadata, safeExtra });
 
         const exception =
           cause instanceof Error
@@ -446,10 +492,14 @@ export function forwardLogToSentry(entry: {
     });
 
     if (level === 'warn') {
-      Sentry.logger.warn(headline, safeExtra);
-    } else {
-      Sentry.logger.info(headline, safeExtra);
+      Sentry.withScope(scope => {
+        applyLogScope(scope, { category, name, metadata, safeExtra });
+        Sentry.captureMessage(headline, 'warning');
+      });
+      return;
     }
+
+    Sentry.logger.info(headline, safeExtra);
   } catch {
     // ignore
   }

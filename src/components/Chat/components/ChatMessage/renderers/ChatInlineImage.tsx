@@ -158,9 +158,23 @@ function ChatInlineImageComponent({
 
   const handleError = useCallback(
     (event?: ImageErrorEventData) => {
+      // A decoded ref that could not be drawn says nothing about the url - the
+      // cache can release one out from under a mounted row, and the uri has not
+      // been tried at all yet. Hand off to the fallback chain from the top with
+      // a full budget rather than spending it on a failure the network never
+      // saw: a badge url derives no variants, so `maxRetryAttempts: 0` would
+      // otherwise turn one ref failure straight into a permanently blank slot.
+      // The nonce bump moves `recyclingKey` so expo-image reloads rather than
+      // keeping the view that failed.
       if (showRef) {
         setFailedRefUrl(sourceUrl);
-      } else if (candidateIndex === 0) {
+        retryCountRef.current = 0;
+        setLoad({ index: 0, status: 'loading', url: sourceUrl, viaRef: false });
+        setReloadNonce(nonce => nonce + 1);
+        return;
+      }
+
+      if (candidateIndex === 0) {
         evictCachedEmoteRef(candidateUrl);
       }
 
@@ -245,8 +259,12 @@ function ChatInlineImageComponent({
   );
 
   const onWatchdogTimeout = useEffectEvent(() => handleError());
+  // The ref path is watched too. A ref the cache released under a mounted row
+  // draws nothing and reports neither onLoad nor onError, so leaving it
+  // unwatched was the one state that could hold a slot blank forever - silently,
+  // since a badge renders no shimmer to hint at it.
   useEffect(() => {
-    if (showRef || status !== 'loading') {
+    if (status !== 'loading') {
       return undefined;
     }
     const timer = setTimeout(onWatchdogTimeout, LOAD_WATCHDOG_MS);
