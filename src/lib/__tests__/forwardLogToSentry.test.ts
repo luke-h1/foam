@@ -47,94 +47,94 @@ beforeEach(() => {
 });
 
 describe('forwardLogToSentry warn', () => {
-  test('captures a message rather than a structured log', () => {
+  test('stays a structured log rather than an issue that can page on-call', () => {
     forwardLogToSentry({
       level: 'warn',
       category: 'chat',
       message: 'chat.emote.load_failed',
-      metadata: { name: 'chat_resources_warning' },
+      metadata: { name: 'chat_resources_warning', url: 'https://cdn/1.webp' },
     });
 
-    expect(sentry.captureMessage).toHaveBeenCalledWith(
+    expect(sentry.logger.warn).toHaveBeenCalledWith(
       'chat_resources_warning: chat.emote.load_failed',
-      'warning',
+      { url: 'https://cdn/1.webp' },
     );
-    expect(sentry.logger.warn).not.toHaveBeenCalled();
-  });
-
-  test('caller tags cannot clobber the canonical grouping tags', () => {
-    forwardLogToSentry({
-      level: 'warn',
-      category: 'chat',
-      message: 'boom',
-      metadata: {
-        name: 'chat_resources_warning',
-        tags: { log_category: 'spoofed', error_type: 'spoofed', ok: 'kept' },
-      },
-    });
-
-    expect(appliedTags()).toEqual({
-      log_category: 'chat',
-      error_type: 'chat_resources_warning',
-      ok: 'kept',
-    });
-  });
-
-  test('drops tags past the cap and truncates an oversized value', () => {
-    const tags = Object.fromEntries(
-      Array.from({ length: 30 }, (_, index) => [`t${index}`, 'v']),
-    );
-    forwardLogToSentry({
-      level: 'warn',
-      category: 'chat',
-      message: 'boom',
-      metadata: { tags: { ...tags, long: 'x'.repeat(500) } },
-    });
-
-    const applied = appliedTags();
-    // 24 caller tags plus log_category; `long` fell outside the cap.
-    expect(Object.keys(applied)).toHaveLength(25);
-    expect(applied.long).toBeUndefined();
-
-    jest.clearAllMocks();
-    forwardLogToSentry({
-      level: 'warn',
-      category: 'chat',
-      message: 'boom',
-      metadata: { tags: { long: 'x'.repeat(500) } },
-    });
-
-    expect(appliedTags().long).toEqual('x'.repeat(200));
-  });
-
-  test('skips a null or undefined tag value', () => {
-    forwardLogToSentry({
-      level: 'warn',
-      category: 'chat',
-      message: 'boom',
-      metadata: { tags: { absent: undefined, empty: null, kept: 1 } },
-    });
-
-    expect(appliedTags()).toEqual({ log_category: 'chat', kept: 1 });
+    expect(sentry.captureMessage).not.toHaveBeenCalled();
+    expect(sentry.withScope).not.toHaveBeenCalled();
   });
 });
 
 describe('forwardLogToSentry error', () => {
-  test('applies the same tag precedence as warn', () => {
+  test('captures an exception', () => {
+    forwardLogToSentry({
+      level: 'error',
+      category: 'chat',
+      message: 'boom',
+      metadata: { name: 'chat_resources_error' },
+    });
+
+    expect(sentry.captureException).toHaveBeenCalledTimes(1);
+  });
+
+  test('caller tags cannot clobber the canonical grouping tags', () => {
     forwardLogToSentry({
       level: 'error',
       category: 'chat',
       message: 'boom',
       metadata: {
         name: 'chat_resources_error',
-        tags: { log_category: 'spoofed' },
+        tags: { log_category: 'spoofed', error_type: 'spoofed', ok: 'kept' },
       },
     });
 
     expect(appliedTags()).toEqual({
       log_category: 'chat',
       error_type: 'chat_resources_error',
+      ok: 'kept',
     });
-    expect(sentry.captureException).toHaveBeenCalledTimes(1);
+  });
+
+  test('keeps the first 24 caller tags and drops the rest', () => {
+    const tags = Object.fromEntries(
+      Array.from({ length: 30 }, (_, index) => [`t${index}`, 'v']),
+    );
+    forwardLogToSentry({
+      level: 'error',
+      category: 'chat',
+      message: 'boom',
+      metadata: { tags },
+    });
+
+    expect(appliedTags()).toEqual({
+      ...Object.fromEntries(
+        Array.from({ length: 24 }, (_, index) => [`t${index}`, 'v']),
+      ),
+      log_category: 'chat',
+    });
+  });
+
+  test('truncates a tag value at the length Sentry itself accepts', () => {
+    forwardLogToSentry({
+      level: 'error',
+      category: 'chat',
+      message: 'boom',
+      metadata: { tags: { long: 'x'.repeat(500) } },
+    });
+
+    expect(appliedTags()).toEqual({
+      log_category: 'chat',
+      long: 'x'.repeat(200),
+    });
+  });
+
+  test('skips a null or undefined tag value', () => {
+    forwardLogToSentry({
+      level: 'error',
+      category: 'chat',
+      message: 'boom',
+      metadata: { tags: { absent: undefined, empty: null, kept: 1 } },
+    });
+
+    expect(appliedTags()).toEqual({ log_category: 'chat', kept: 1 });
   });
 });

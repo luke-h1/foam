@@ -492,10 +492,12 @@ export function forwardLogToSentry(entry: {
     });
 
     if (level === 'warn') {
-      Sentry.withScope(scope => {
-        applyLogScope(scope, { category, name, metadata, safeExtra });
-        Sentry.captureMessage(headline, 'warning');
-      });
+      // A warn stays a structured log rather than a captured message. As an
+      // issue it reaches the alerting rules that page on-call, and the warns
+      // this app emits are degraded-but-handled paths (a badge falling back to
+      // its uri, a token refresh dropping to anon) that nobody should be woken
+      // for.
+      Sentry.logger.warn(headline, safeExtra);
       return;
     }
 

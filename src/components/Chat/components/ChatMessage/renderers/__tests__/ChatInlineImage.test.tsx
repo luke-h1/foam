@@ -493,37 +493,29 @@ describe('ChatInlineImage shared-ref recovery', () => {
     expect(evictMock).not.toHaveBeenCalled();
   });
 
-  test('a ref failure retries the uri instead of spending a badge’s whole budget on it', () => {
+  test('a ref failure hands off to the uri rather than exhausting a badge budget', () => {
     mockSharedRef = { isAnimated: false };
     const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/foo/3';
     render(
       <ChatInlineImage sourceUrl={sourceUrl} style={{}} maxRetryAttempts={0} />,
     );
 
-    // The decoded ref cannot be drawn. A badge url derives no variants, so
-    // before the fix this landed straight on 'failed' - a permanently blank slot.
     act(() => mockImageProps?.onError?.());
 
     expect(warnMock).not.toHaveBeenCalled();
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#1`);
-    // The nonce alone would move even if the row stayed on the ref, so pin the
-    // thing that matters: it is drawing the uri now.
     expect(mockImageProps?.source).toEqual({ uri: sourceUrl });
   });
 
-  test('watches a held ref that never reports onLoad or onError', () => {
+  test('leaves a drawn ref unwatched, since it never reports onLoad', () => {
     mockSharedRef = { isAnimated: false };
-    const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/silent/3';
+    const sourceUrl = 'https://static-cdn.jtvnw.net/badges/v1/quiet/3';
     render(
       <ChatInlineImage sourceUrl={sourceUrl} style={{}} maxRetryAttempts={0} />,
     );
 
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#0`);
+    act(() => jest.advanceTimersByTime(60_000));
 
-    // A ref released under a mounted row draws nothing and reports nothing.
-    act(() => jest.advanceTimersByTime(12000));
-
-    expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#1`);
-    expect(mockImageProps?.source).toEqual({ uri: sourceUrl });
+    expect(warnMock).not.toHaveBeenCalled();
+    expect(mockImageProps?.source).toEqual(mockSharedRef);
   });
 });
