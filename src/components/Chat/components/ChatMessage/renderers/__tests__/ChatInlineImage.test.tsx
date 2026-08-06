@@ -16,6 +16,7 @@ let mockImageProps: {
   onError?: () => void;
   onLoad?: () => void;
   recyclingKey?: string;
+  source?: unknown;
 } | null = null;
 
 jest.mock('expo-image', () => {
@@ -27,6 +28,7 @@ jest.mock('expo-image', () => {
           onError?: () => void;
           onLoad?: () => void;
           recyclingKey?: string;
+          source?: unknown;
         },
         ref: unknown,
       ) => {
@@ -504,6 +506,9 @@ describe('ChatInlineImage shared-ref recovery', () => {
 
     expect(warnMock).not.toHaveBeenCalled();
     expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#1`);
+    // The nonce alone would move even if the row stayed on the ref, so pin the
+    // thing that matters: it is drawing the uri now.
+    expect(mockImageProps?.source).toEqual({ uri: sourceUrl });
   });
 
   test('watches a held ref that never reports onLoad or onError', () => {
@@ -519,5 +524,6 @@ describe('ChatInlineImage shared-ref recovery', () => {
     act(() => jest.advanceTimersByTime(12000));
 
     expect(mockImageProps?.recyclingKey).toEqual(`${sourceUrl}#1`);
+    expect(mockImageProps?.source).toEqual({ uri: sourceUrl });
   });
 });

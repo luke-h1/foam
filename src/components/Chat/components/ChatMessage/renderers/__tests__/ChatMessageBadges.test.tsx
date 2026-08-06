@@ -1,4 +1,5 @@
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import type { ViewStyle } from 'react-native';
 
 import { render } from '@testing-library/react-native';
 
@@ -40,8 +41,15 @@ describe('ChatMessageBadges', () => {
   test('paints an FFZ badge onto its colour', () => {
     const { getByTestId } = renderBadges([ffzModBadge]);
 
-    expect(getByTestId('chat-badge')).toHaveStyle({
+    expect(
+      StyleSheet.flatten(getByTestId('chat-badge').props.style),
+    ).toEqual<ViewStyle>({
       backgroundColor: '#1ac9a2',
+      borderRadius: 4,
+      height: 18,
+      marginRight: 4,
+      overflow: 'hidden',
+      width: 18,
     });
   });
 
