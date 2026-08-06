@@ -11,7 +11,6 @@ import type { UserStateTags } from '@app/types/chat/irc-tags/userstate';
 import type { SanitisedBadgeSet } from '@app/types/twitch/badge';
 import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
 import { canFlowInline } from '@app/utils/chat/deriveChatBody/canFlowInline';
-import { getMessageStructure } from '@app/utils/chat/deriveChatBody/getMessageStructure';
 import { generateRandomTwitchColor } from '@app/utils/chat/generateRandomTwitchColor';
 import { cachedLighten } from '@app/utils/chat/resolveCachedSenderColor/cachedLighten';
 
@@ -99,19 +98,13 @@ export function UserChatBody({
     userId ? Boolean(chatStore$.userPaintIds[userId]?.get()) : false,
   );
   const isModerated = Boolean(moderationNotice);
-  const { containsEmotes: bodyContainsEmotes } = getMessageStructure(message);
   /**
    * A paint renders through a mask, so a painted row cannot put the username
    * in the same Text as the body - but the body alone still flows.
    */
-  const rowFlowsInline = canFlowInline(message, { hasPaint, isModerated });
-  const bodyCanFlowInline = canFlowInline(message, {
-    hasPaint: false,
-    isModerated,
-  });
-  const renderInline = rowFlowsInline && !bodyContainsEmotes;
+  const renderInline = canFlowInline(message, { hasPaint, isModerated });
   const bodyFlowsInline =
-    bodyCanFlowInline && !renderInline && !bodyContainsEmotes;
+    !renderInline && canFlowInline(message, { hasPaint: false, isModerated });
   const inlineUsernameColor =
     cachedSenderColor ??
     (userstateColor ? cachedLighten(userstateColor) : undefined) ??

@@ -80,6 +80,17 @@ const touchAt = (pageX: number, pageY: number) => ({
   nativeEvent: { pageX, pageY },
 });
 
+function hasTextAncestor(element: ReactTestInstance): boolean {
+  let ancestor: ReactTestInstance | null = element.parent;
+  while (ancestor) {
+    if (String(ancestor.type) === 'Text') {
+      return true;
+    }
+    ancestor = ancestor.parent;
+  }
+  return false;
+}
+
 function fireMessageLongPress(
   element: ReactTestInstance,
   options: { driftDp?: number } = {},
@@ -615,11 +626,12 @@ describe('RichChatMessage', () => {
       expect(getByTestId('emote-renderer')).toBeOnTheScreen();
     });
 
-    test('renders emotes as flex views, never nested inside a Text', () => {
-      // An emote nested in a <Text> can only be given a fixed line height,
-      // which baseline-aligns and clips the top of the image. Messages with
-      // emotes must take the flex-wrap path so the row grows to the emote's
-      // full intended size. See UserChatBody renderInline gating.
+    test('flows an ordinary emote inline, inside the row Text', () => {
+      // The flex-wrap path makes each text run its own flex item, so an emote
+      // after a run that wraps is pushed onto a fresh flex line and the tail of
+      // the wrapped line is left blank. An ordinary emote therefore belongs in
+      // the row's Text, where `bodyEmoteLine` raises the leading on every
+      // nested span so the attachment is not clipped.
       const emoteData: ParsedPart<'emote'> = {
         type: 'emote',
         content: 'Kappa',
@@ -643,12 +655,37 @@ describe('RichChatMessage', () => {
         />,
       );
 
-      let ancestor: ReactTestInstance | null =
-        getByTestId('emote-renderer').parent;
-      while (ancestor) {
-        expect(ancestor.type).not.toBe('Text');
-        ancestor = ancestor.parent;
-      }
+      expect(hasTextAncestor(getByTestId('emote-renderer'))).toBe(true);
+    });
+
+    test('keeps a zero-width emote out of the row Text', () => {
+      // A zero-width emote composites its overlay with absolute positioning,
+      // which does not survive inside a Text, so it still takes the flex path.
+      const emoteData: ParsedPart<'emote'> = {
+        type: 'emote',
+        content: 'SoSnowy',
+        original_name: 'SoSnowy',
+        name: 'SoSnowy',
+        id: '26',
+        url: 'https://cdn.7tv.app/emote/26/1x.webp',
+        site: '7TV Channel',
+        zero_width: true,
+      };
+
+      const message = createMockMessage([
+        { type: 'text', content: 'look ' },
+        emoteData,
+      ]);
+
+      const { getByTestId } = render(
+        <RichChatMessage
+          {...message}
+          onReply={mockOnReply}
+          onEmotePress={mockOnEmotePress}
+        />,
+      );
+
+      expect(hasTextAncestor(getByTestId('emote-renderer'))).toBe(false);
     });
   });
 
