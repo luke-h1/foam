@@ -11,7 +11,7 @@ import { Text } from '@app/components/ui/Text/Text';
 import type { ChatDebugIrcLine } from '@app/store/chat/actions/chatDebugLog';
 import { usePreference } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
-import { useDevToolsAccess } from '@app/utils/devTools/devToolsGate';
+import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
 
 export interface ChatDebugSectionData {
   payload: Record<string, unknown>;
@@ -23,16 +23,9 @@ interface ChatDebugSectionProps {
 }
 
 export function ChatDebugSection({ build }: ChatDebugSectionProps) {
-  const chatDebugTools = usePreference('chatDebugTools');
-  if (!chatDebugTools) {
-    return null;
-  }
-  return <GatedChatDebugSection build={build} />;
-}
-
-function GatedChatDebugSection({ build }: ChatDebugSectionProps) {
   const { t } = useTranslation('chat');
-  const enabled = useDevToolsAccess() === 'enabled';
+  const chatDebugTools = usePreference('chatDebugTools');
+  const enabled = isDevToolsEnabled && chatDebugTools;
   const data = useMemo(() => (enabled ? build() : null), [enabled, build]);
 
   if (!data) {

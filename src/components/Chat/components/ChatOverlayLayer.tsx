@@ -9,6 +9,7 @@ import { useChatOverlayState } from '@app/store/chat/react/overlaySelectors';
 import type { ChatMessageType } from '@app/store/chat/types/constants';
 import { usePreference } from '@app/store/preferenceStore';
 import { normaliseChatUsername } from '@app/utils/chat/chatUsernames/normaliseChatUsername';
+import { isDevToolsEnabled } from '@app/utils/devTools/isDevToolsEnabled';
 
 import { ActionSheet } from './ActionSheet/ActionSheet';
 import { BadgePreviewSheet } from './BadgePreviewSheet/BadgePreviewSheet';
@@ -144,7 +145,9 @@ export const ChatOverlayLayer = memo(function ChatOverlayLayer({
 
   return (
     <>
-      {chatDebugTools ? <ChatDebugLogRecorder channelId={channelId} /> : null}
+      {isDevToolsEnabled && chatDebugTools ? (
+        <ChatDebugLogRecorder channelId={channelId} />
+      ) : null}
 
       {isEmoteSheetMounted ? (
         <EmoteSheet
