@@ -1,9 +1,8 @@
 import { memo } from 'react';
-import { type StyleProp, StyleSheet, TextStyle, View } from 'react-native';
+import { type StyleProp, StyleSheet, TextStyle } from 'react-native';
 
 import { useSelector } from '@legendapp/state/react';
 
-import { useChatScrollActive } from '@app/components/Chat/hooks/useChatScrollActive';
 import { Text } from '@app/components/ui/Text/Text';
 import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { usePaintRenderer } from '@app/store/preferenceStore';
@@ -12,20 +11,10 @@ import type { PaintData } from '@app/types/seventv/cosmetics';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
 import { chatLineMetrics } from '../chatScale';
-import { PaintedUsernameDropShadowLayer } from './PaintedUsernameDropShadowLayer';
-import { PaintedUsernameMaskedFill } from './PaintedUsernameMaskedFill';
+import { PaintedUsernameHostedLayers } from './PaintedUsernameHostedLayers';
 import { PaintedUsernameSkia } from './PaintedUsernameSkia';
-import { PaintedUsernameWebView } from './PaintedUsernameWebView';
 import { DEFAULT_PAINT_DROP_SHADOW_MODE } from './util/paintLayer/DEFAULT_PAINT_DROP_SHADOW_MODE';
-import {
-  getPaintDropShadows,
-  type PaintDropShadowMode,
-} from './util/paintLayer/getPaintDropShadows';
-import { paintShadowKey } from './util/paintLayer/paintShadowKey';
-import { buildPaintUsernameTextStyle } from './util/paintTextStyle/buildPaintUsernameTextStyle';
-import { getPaintTextShadows } from './util/paintTextStyle/getPaintTextShadows';
-import { getPaintTextStroke } from './util/paintTextStyle/getPaintTextStroke';
-import { paintStrokeToShadow } from './util/paintTextStyle/paintStrokeToShadow';
+import type { PaintDropShadowMode } from './util/paintLayer/getPaintDropShadows';
 
 interface PaintedUsernameProps {
   username: string;
@@ -60,8 +49,6 @@ function PaintedUsernameWithPaint({
   sevenTvPaintDropShadows,
   usernameTextStyle,
 }: PaintedUsernameWithPaintProps) {
-  // Painted rows only - in the parent this re-renders every visible row twice per fling.
-  const isScrolling = useChatScrollActive();
   const paintRenderer = usePaintRenderer();
 
   if (paintRenderer === 'off') {
@@ -74,22 +61,8 @@ function PaintedUsernameWithPaint({
     );
   }
 
-  // Solid colour during fling: skip MaskedView/gradient/SVG/image layers while
-  // the render encoder is pressured (FOAM-TV-MOBILE-BJ). Full paint returns ~150ms after settle.
-  if (isScrolling) {
-    return (
-      <Text
-        style={[
-          styles.plainUsername,
-          { color: fallbackColor },
-          usernameTextStyle,
-        ]}
-      >
-        {displayUsername}
-      </Text>
-    );
-  }
-
+  // Skia draws a cached bitmap, so a fling costs it no more than rest does and
+  // it keeps its paint throughout; only the hosted renderers shed.
   if (paintRenderer === 'skia' && !isModerated) {
     return (
       <PaintedUsernameSkia
@@ -101,57 +74,17 @@ function PaintedUsernameWithPaint({
     );
   }
 
-  if (paintRenderer === 'webview' && !isModerated) {
-    return (
-      <PaintedUsernameWebView
-        username={displayUsername}
-        paint={paint}
-        fallbackColor={fallbackColor}
-        fontSize={fontSize}
-        lineHeight={lineHeight}
-      />
-    );
-  }
-
-  const paintTextStyle = buildPaintUsernameTextStyle(paint);
-  const dropShadows = getPaintDropShadows(paint, sevenTvPaintDropShadows);
-  const textShadows = getPaintTextShadows(paint);
-  const stroke = getPaintTextStroke(paint);
-
-  const maskTextStyle = [
-    styles.maskText,
-    usernameTextStyle,
-    paintTextStyle,
-  ] as StyleProp<TextStyle>;
-
-  // Back to front: drop-shadows, text-shadows, stroke, then painted fill.
-  const underlayShadows = [
-    ...dropShadows.map(shadow => ({ shadow, source: 'drop' })),
-    ...textShadows.map(shadow => ({ shadow, source: 'text' })),
-    ...(stroke
-      ? [{ shadow: paintStrokeToShadow(stroke), source: 'stroke' }]
-      : []),
-  ];
-
   return (
-    <View style={styles.paintedWrapper}>
-      {underlayShadows.map(({ shadow, source }, index) => (
-        <PaintedUsernameDropShadowLayer
-          // Static, never-reordered list
-          // eslint-disable-next-line react-doctor/no-array-index-as-key
-          key={`${source}-${index}-${paintShadowKey(shadow)}`}
-          displayUsername={displayUsername}
-          maskTextStyle={maskTextStyle}
-          shadow={shadow}
-        />
-      ))}
-      <PaintedUsernameMaskedFill
-        displayUsername={displayUsername}
-        fallbackColor={fallbackColor}
-        paint={paint}
-        maskTextStyle={maskTextStyle}
-      />
-    </View>
+    <PaintedUsernameHostedLayers
+      displayUsername={displayUsername}
+      fallbackColor={fallbackColor}
+      fontSize={fontSize}
+      lineHeight={lineHeight}
+      paint={paint}
+      sevenTvPaintDropShadows={sevenTvPaintDropShadows}
+      usernameTextStyle={usernameTextStyle}
+      useWebView={paintRenderer === 'webview' && !isModerated}
+    />
   );
 }
 
@@ -213,15 +146,6 @@ function PaintedUsernameComponent({
 }
 
 const styles = StyleSheet.create({
-  maskText: {
-    ...chatLineMetrics.comfortable,
-    color: 'black',
-    fontWeight: 'bold',
-  },
-  paintedWrapper: {
-    alignSelf: 'flex-start',
-    position: 'relative',
-  },
   plainUsername: {
     ...chatLineMetrics.comfortable,
     fontWeight: 'bold',

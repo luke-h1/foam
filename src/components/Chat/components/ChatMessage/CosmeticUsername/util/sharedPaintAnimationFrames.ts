@@ -8,6 +8,7 @@ import {
 import type { SkAnimatedImage, SkImage } from '@shopify/react-native-skia';
 import { Skia } from '@shopify/react-native-skia';
 
+import { chatScrollActiveShared } from '@app/components/Chat/util/chatScrollActiveShared';
 import { logger } from '@app/utils/logger';
 
 interface SharedPaintAnimationEntry {
@@ -114,6 +115,9 @@ export function useSharedPaintAnimationFrame(
   useFrameCallback(frameInfo => {
     const image = animatedImage.value;
     if (image == null) {
+      return;
+    }
+    if (chatScrollActiveShared.value) {
       return;
     }
     const duration = image.currentFrameDuration() || DEFAULT_FRAME_DURATION_MS;
