@@ -31,7 +31,6 @@ import type { ChatMessagePartRendererArgs } from './types/ChatMessagePartRendere
 interface UserChatBodyProps extends ChatMessagePartRendererArgs {
   badgeList: SanitisedBadgeSet[];
   cachedSenderColor?: string;
-  getMappingKey: (id: string, index: number) => string;
   onBadgePress?: (badge: BadgePressData) => void;
   isAction?: boolean;
   isChannelPointRedemption?: boolean;
@@ -60,7 +59,6 @@ interface UserChatBodyProps extends ChatMessagePartRendererArgs {
 
 export function UserChatBody({
   badgeList,
-  getMappingKey,
   onBadgePress,
   cachedSenderColor,
   isAction,
@@ -166,7 +164,6 @@ export function UserChatBody({
         <InlineMessageLine
           {...rendererArgs}
           badgeList={badgeList}
-          getMappingKey={getMappingKey}
           isAction={isAction}
           message={message}
           onBadgePress={onBadgePress}
@@ -197,7 +194,6 @@ export function UserChatBody({
             badges={badgeList}
             compact={compact}
             fontScale={fontScale}
-            getMappingKey={getMappingKey}
             moderationNotice={moderationNotice}
             onBadgePress={onBadgePress}
           />

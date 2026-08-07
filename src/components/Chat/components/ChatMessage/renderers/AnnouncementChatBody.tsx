@@ -13,7 +13,6 @@ interface AnnouncementChatBodyProps extends ChatMessagePartRendererArgs {
   accentColor?: string;
   badgeList: SanitisedBadgeSet[];
   cachedSenderColor?: string;
-  getMappingKey: (id: string, index: number) => string;
   onBadgePress?: (badge: BadgePressData) => void;
   onUsernamePress?: () => void;
   showTimestamp: boolean;
@@ -27,7 +26,6 @@ export function AnnouncementChatBody({
   accentColor,
   badgeList,
   cachedSenderColor,
-  getMappingKey,
   onBadgePress,
   onUsernamePress,
   showTimestamp,
@@ -52,7 +50,6 @@ export function AnnouncementChatBody({
       <UserChatBody
         badgeList={badgeList}
         cachedSenderColor={cachedSenderColor}
-        getMappingKey={getMappingKey}
         onBadgePress={onBadgePress}
         onUsernamePress={onUsernamePress}
         replyFlags={{

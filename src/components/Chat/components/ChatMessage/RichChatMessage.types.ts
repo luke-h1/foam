@@ -70,7 +70,6 @@ export interface ChatRowBodyState {
   bodyVariant: ChatBodyVariant;
   cachedSenderColor?: string;
   canJumpToReplyTarget: boolean;
-  getMappingKey: (id: string, index: number) => string | number | bigint;
   handleBadgePress: (badge: BadgePressData) => void;
   isAction: boolean;
   isChannelPointRedemption: boolean;

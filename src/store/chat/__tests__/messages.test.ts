@@ -107,6 +107,45 @@ describe('chatStore messages', () => {
     chatStore$.recentMessagesByChannel.set({});
   });
 
+  test('keeps the newest messages when one flush is larger than the whole window', () => {
+    const max = getMaxChatMessages();
+    addMessage(createMessage('old', 'old-nonce', 'evicted'));
+
+    addMessages(
+      Array.from({ length: max + 5 }, (_unused, index) =>
+        createMessage(
+          `burst-${index}`,
+          `burst-nonce-${index}`,
+          `body ${index}`,
+        ),
+      ),
+    );
+
+    const messages = chatStore$.messages.peek();
+    expect(messages).toHaveLength(max);
+    expect(getMessageById('old')).toBeUndefined();
+    // The front of the burst is dropped too, so the window ends on the newest.
+    expect(getMessageById('burst-0')).toBeUndefined();
+    expect(getMessageById(`burst-${max + 4}`)).toBeDefined();
+  });
+
+  test('drops only the overflow when a flush partially overfills the window', () => {
+    const max = getMaxChatMessages();
+    addMessages(
+      Array.from({ length: max }, (_unused, index) =>
+        createMessage(`seed-${index}`, `seed-nonce-${index}`, `body ${index}`),
+      ),
+    );
+
+    addMessages([createMessage('fresh', 'fresh-nonce', 'newest')]);
+
+    const messages = chatStore$.messages.peek();
+    expect(messages).toHaveLength(max);
+    expect(getMessageById('seed-0')).toBeUndefined();
+    expect(getMessageById('seed-1')).toBeDefined();
+    expect(getMessageById('fresh')).toBeDefined();
+  });
+
   test('removeMessageById removes the targeted message and keeps others', () => {
     addMessage(createMessage('msg-1', 'nonce-1', 'first'));
     addMessage(createMessage('msg-2', 'nonce-2', 'second'));
