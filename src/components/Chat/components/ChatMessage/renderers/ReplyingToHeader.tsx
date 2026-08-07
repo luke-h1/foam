@@ -89,13 +89,10 @@ export function ReplyingToHeader({
   const content = (
     <>
       <SymbolView
-        name='bubble.left.fill'
+        name='text.bubble'
         size={12}
         tintColor={replyContextIconColor}
-        style={[
-          styles.replyContextIcon,
-          isReplyingToCurrentUser && styles.replyContextIconReplyToYou,
-        ]}
+        style={styles.replyContextIcon}
       />
       <View style={styles.replyContextContent}>
         {canRenderInlineQuote ? (
