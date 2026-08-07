@@ -106,4 +106,26 @@ describe('getPaintSolidColor', () => {
 
     expect(getPaintSolidColor(paint)).toBeNull();
   });
+
+  test('skips a fully transparent paint colour and uses the mid-most opaque stop', () => {
+    const paint = createPaint({
+      color: 0x9c28a900,
+      layers: {
+        0: createLayer({
+          stops: {
+            0: { at: 0, color: 0xff0000ff },
+            1: { at: 0.5, color: 0x00ff00ff },
+            length: 2,
+          },
+        }),
+        length: 1,
+      },
+    });
+
+    expect(getPaintSolidColor(paint)).toBe('rgba(0, 255, 0, 1.000)');
+  });
+
+  test('gives no colour for a transparent paint colour with no stops behind it', () => {
+    expect(getPaintSolidColor(createPaint({ color: 0x9c28a900 }))).toBeNull();
+  });
 });

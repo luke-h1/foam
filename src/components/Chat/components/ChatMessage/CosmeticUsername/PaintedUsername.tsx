@@ -8,6 +8,7 @@ import { chatStore$ } from '@app/store/chat/observables/chatStore';
 import { usePaintRenderer } from '@app/store/preferenceStore';
 import { theme } from '@app/styles/themes';
 import type { PaintData } from '@app/types/seventv/cosmetics';
+import { isVisibleSevenTvColor } from '@app/utils/color/isVisibleSevenTvColor';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
 import { chatLineMetrics } from '../chatScale';
@@ -124,8 +125,9 @@ function PaintedUsernameComponent({
     );
   }
 
-  const solidFallback =
-    paint.color === null ? fallbackColor : sevenTvColorToCss(paint.color);
+  const solidFallback = isVisibleSevenTvColor(paint.color)
+    ? sevenTvColorToCss(paint.color)
+    : fallbackColor;
 
   const flatUsernameStyle = StyleSheet.flatten(usernameTextStyle);
   const isModerated = flatUsernameStyle?.textDecorationLine === 'line-through';

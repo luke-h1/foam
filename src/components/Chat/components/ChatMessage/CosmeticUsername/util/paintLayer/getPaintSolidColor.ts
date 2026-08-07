@@ -1,7 +1,7 @@
 import { indexedCollectionToArray } from '@app/services/ws/util/indexedCollection';
 import type { PaintData, PaintStop } from '@app/types/seventv/cosmetics';
+import { isVisibleSevenTvColor } from '@app/utils/color/isVisibleSevenTvColor';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
-import { sevenTvColorToRgba } from '@app/utils/color/sevenTvColorToRgba';
 
 import { getPaintLayers } from './getPaintLayers';
 import { isRenderablePaintLayer } from './isRenderablePaintLayer';
@@ -27,7 +27,7 @@ export function getPaintSolidColor(paint: PaintData): string | null {
 }
 
 function computePaintSolidColor(paint: PaintData): string | null {
-  if (paint.color !== null) {
+  if (isVisibleSevenTvColor(paint.color)) {
     return sevenTvColorToCss(paint.color);
   }
 
@@ -47,7 +47,7 @@ function computePaintSolidColor(paint: PaintData): string | null {
 
 function midStop(stops: PaintStop[]): PaintStop | null {
   return stops.reduce<PaintStop | null>((best, stop) => {
-    if (sevenTvColorToRgba(stop.color).a === 0) {
+    if (!isVisibleSevenTvColor(stop.color)) {
       return best;
     }
     if (!best || Math.abs(stop.at - 0.5) < Math.abs(best.at - 0.5)) {

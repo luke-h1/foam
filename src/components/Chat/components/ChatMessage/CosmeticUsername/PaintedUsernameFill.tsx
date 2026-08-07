@@ -2,6 +2,7 @@ import { type StyleProp, StyleSheet, TextStyle, View } from 'react-native';
 
 import { Text } from '@app/components/ui/Text/Text';
 import type { PaintData } from '@app/types/seventv/cosmetics';
+import { isVisibleSevenTvColor } from '@app/utils/color/isVisibleSevenTvColor';
 import { sevenTvColorToCss } from '@app/utils/color/sevenTvColorToCss';
 
 import { PaintLayerBackground } from './PaintLayerBackground';
@@ -28,8 +29,9 @@ export function PaintedUsernameFill({
 }: PaintedUsernameFillProps) {
   const layers = getPaintLayers(paint).filter(isRenderablePaintLayer);
   const keyedLayers = withPaintLayerKeys([...layers].reverse());
-  const baseColor =
-    paint.color === null ? fallbackColor : sevenTvColorToCss(paint.color);
+  const baseColor = isVisibleSevenTvColor(paint.color)
+    ? sevenTvColorToCss(paint.color)
+    : fallbackColor;
 
   /**
    * Each layer span carries its own base-colour backing, so the plain base

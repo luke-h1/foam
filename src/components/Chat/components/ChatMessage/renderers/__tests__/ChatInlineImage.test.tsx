@@ -17,10 +17,12 @@ let mockImageProps: {
   onLoad?: () => void;
   recyclingKey?: string;
   source?: unknown;
+  testID?: string;
 } | null = null;
 
 jest.mock('expo-image', () => {
   const ReactModule = require('react');
+  const { View } = require('react-native');
   return {
     Image: ReactModule.forwardRef(
       (
@@ -29,6 +31,7 @@ jest.mock('expo-image', () => {
           onLoad?: () => void;
           recyclingKey?: string;
           source?: unknown;
+          testID?: string;
         },
         ref: unknown,
       ) => {
@@ -37,7 +40,7 @@ jest.mock('expo-image', () => {
           startAnimating: mockStartAnimating,
           stopAnimating: mockStopAnimating,
         }));
-        return null;
+        return ReactModule.createElement(View, { testID: props.testID });
       },
     ),
   };
@@ -418,6 +421,66 @@ describe('ChatInlineImage maxRetryAttempts', () => {
     // The warning fires immediately because retries are disabled.
     expect(warnMock).toHaveBeenCalledTimes(1);
     expect(warnMock.mock.calls[0]?.[0]).toEqual('chat.emote.load_failed');
+  });
+});
+
+describe('ChatInlineImage collapseWhenFailed', () => {
+  beforeEach(() => {
+    mockSharedRef = null;
+    mockImageProps = null;
+  });
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('renders nothing once a dead url is given up on, so the slot reserves no width', () => {
+    render(
+      <ChatInlineImage
+        collapseWhenFailed
+        maxRetryAttempts={0}
+        showLoadingShimmer={false}
+        sourceUrl='https://static-cdn.jtvnw.net/badges/v1/dead/1'
+        style={{ height: 18, marginRight: 4, width: 18 }}
+        testID='chat-badge'
+      />,
+    );
+
+    expect(screen.getByTestId('chat-badge')).toBeOnTheScreen();
+
+    act(() => mockImageProps?.onError?.());
+
+    expect(screen.queryByTestId('chat-badge')).not.toBeOnTheScreen();
+  });
+
+  test('keeps the box while the url is still loading', () => {
+    render(
+      <ChatInlineImage
+        collapseWhenFailed
+        maxRetryAttempts={0}
+        showLoadingShimmer={false}
+        sourceUrl='https://static-cdn.jtvnw.net/badges/v1/slow/1'
+        style={{ height: 18, width: 18 }}
+        testID='chat-badge'
+      />,
+    );
+
+    expect(screen.getByTestId('chat-badge')).toBeOnTheScreen();
+  });
+
+  test('keeps the sized box when the flag is absent', () => {
+    render(
+      <ChatInlineImage
+        maxRetryAttempts={0}
+        showLoadingShimmer={false}
+        sourceUrl='https://static-cdn.jtvnw.net/badges/v1/dead/1'
+        style={{ height: 18, width: 18 }}
+        testID='chat-badge'
+      />,
+    );
+
+    act(() => mockImageProps?.onError?.());
+
+    expect(screen.getByTestId('chat-badge')).toBeOnTheScreen();
   });
 });
 

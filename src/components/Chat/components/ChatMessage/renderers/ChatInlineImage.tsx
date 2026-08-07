@@ -68,6 +68,14 @@ interface ChatInlineImageProps {
   priority?: 'low' | 'normal' | 'high';
   resizeMode?: 'contain' | 'cover' | 'stretch';
   /**
+   * When `true`, a dead url renders nothing rather than an empty box of
+   * `style`'s size. Use for assets laid out inline beside text (badges), where
+   * a slot that draws nothing reads as a hole in the row.
+   *
+   * @default false
+   */
+  collapseWhenFailed?: boolean;
+  /**
    * When `false`, no shimmer is rendered while the image is loading — the slot
    * just stays empty until the image resolves or is given up on. Use for tiny
    * assets (badges) where a pulsing box is more distracting than helpful.
@@ -82,6 +90,7 @@ interface ChatInlineImageProps {
 }
 
 function ChatInlineImageComponent({
+  collapseWhenFailed = false,
   containerStyle,
   maxRetryAttempts = MAX_RELOAD_ATTEMPTS,
   priority = 'high',
@@ -297,6 +306,10 @@ function ChatInlineImageComponent({
       unsubscribeScroll();
     };
   }, [rowVisibility, animated]);
+
+  if (collapseWhenFailed && status === 'failed') {
+    return null;
+  }
 
   // Show the shimmer only while there's nothing real to display yet. Keyed off
   // showRef so a ref we hold but can't draw (it failed, or the cache released it
