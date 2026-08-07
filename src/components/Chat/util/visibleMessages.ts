@@ -154,11 +154,25 @@ export function getVisibleMessages<TMessage extends VisibleMessageShape>(
 ): TMessage[] {
   const searchQuery = normaliseChatText(options.searchQuery);
   const showOnlyMentions = options.showOnlyMentions === true;
+  const hasSearch = searchQuery.length > 0;
+
+  /**
+   * Runs per store commit; bail before allocating the normalised sets in the
+   * common no-filter case.
+   */
+  if (
+    !showOnlyMentions &&
+    !hasSearch &&
+    !options.hiddenUsers?.length &&
+    !options.hiddenPhrases?.length
+  ) {
+    return messages;
+  }
+
   const hiddenUsers = new Set(
     normaliseList(options.hiddenUsers, normaliseChatUsername),
   );
   const hiddenPhrases = normaliseList(options.hiddenPhrases, normaliseChatText);
-  const hasSearch = searchQuery.length > 0;
   const hasHiddenUsers = hiddenUsers.size > 0;
   const hasHiddenPhrases = hiddenPhrases.length > 0;
 

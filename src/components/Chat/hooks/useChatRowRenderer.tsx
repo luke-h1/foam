@@ -358,6 +358,14 @@ export function useChatRowRenderer({
     [customHighlights],
   );
   /**
+   * Content key, not array identity: the transient store can replace the array
+   * with equal contents, and extraData identity re-renders every mounted row.
+   */
+  const highlightedUsersKey = useMemo(
+    () => highlightedUsers.join('|'),
+    [highlightedUsers],
+  );
+  /**
    * Spreads `displayFlags` rather than restating it: a flag added to the rows
    * but missed here would silently stop that preference from re-rendering them.
    */
@@ -372,13 +380,13 @@ export function useChatRowRenderer({
       chatDensity: preferences.chatDensity,
       currentUsernameNormalized,
       customHighlightsKey,
-      highlightedUsersKey: highlightedUsers.join('\u001f'),
+      highlightedUsersKey,
     }),
     [
       currentUsernameNormalized,
       customHighlightsKey,
       displayFlags,
-      highlightedUsers,
+      highlightedUsersKey,
       preferences.chatDensity,
     ],
   );

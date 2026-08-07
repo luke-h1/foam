@@ -1,4 +1,4 @@
-import { createContext, useCallback, useRef } from 'react';
+import { createContext, useCallback, useState } from 'react';
 
 import { useViewability } from '@legendapp/list/react-native';
 
@@ -39,8 +39,11 @@ export function createRowVisibilityStore(
 }
 
 export function useRowVisibility(): RowVisibility {
-  const storeRef = useRef<RowVisibilityStore | null>(null);
-  const store = (storeRef.current ??= createRowVisibilityStore());
+  /**
+   * State initialiser rather than a lazily-filled ref: both `??=` and the
+   * if-null ref pattern make React Compiler bail out of this hook entirely.
+   */
+  const [store] = useState(createRowVisibilityStore);
   useViewability(
     useCallback(token => store.setVisible(token.isViewable), [store]),
   );

@@ -50,7 +50,6 @@ export const useChatScroll = ({
     typeof setTimeout
   > | null>(null);
   const shouldAnchorBottomOnContentChangeRef = useRef(false);
-  const shouldMaintainScrollAtEndRef = useRef(true);
   const lastAtBottomRef = useRef<boolean | null>(null);
   const lastContentHeightRef = useRef(0);
   const lastViewHeightRef = useRef(0);
@@ -111,7 +110,6 @@ export const useChatScroll = ({
       isMomentumScrollingRef.current = false;
       isScrollingToBottomRef.current = false;
       setIsScrollingToBottom(false);
-      shouldMaintainScrollAtEndRef.current = false;
       setShouldMaintainScrollAtEnd(false);
       lastOffsetYRef.current = e.nativeEvent.contentOffset.y;
       if (scrollEndDragSettleRef.current) {
@@ -135,7 +133,6 @@ export const useChatScroll = ({
     scrollEndDragSettleRef.current = setTimeout(() => {
       scrollEndDragSettleRef.current = null;
       if (!isMomentumScrollingRef.current && isAtBottomRef.current) {
-        shouldMaintainScrollAtEndRef.current = true;
         setShouldMaintainScrollAtEnd(true);
       }
     }, 50);
@@ -153,7 +150,6 @@ export const useChatScroll = ({
     isMomentumScrollingRef.current = false;
     isDraggingRef.current = false;
     if (isAtBottomRef.current) {
-      shouldMaintainScrollAtEndRef.current = true;
       setShouldMaintainScrollAtEnd(true);
     }
   }, [isAtBottomRef]);
@@ -162,7 +158,6 @@ export const useChatScroll = ({
     isAtBottomRef.current = true;
     lastAtBottomRef.current = true;
     hasUserScrollIntentRef.current = false;
-    shouldMaintainScrollAtEndRef.current = true;
     setShouldMaintainScrollAtEnd(true);
 
     if (scrollThrottleRef.current) {
@@ -255,7 +250,6 @@ export const useChatScroll = ({
           clearTimeout(scrollThrottleRef.current);
           scrollThrottleRef.current = null;
         }
-        shouldMaintainScrollAtEndRef.current = false;
         setShouldMaintainScrollAtEnd(false);
         setIsAtBottom(false);
         return;
@@ -271,7 +265,6 @@ export const useChatScroll = ({
         setIsAtBottom(current);
         if (current) {
           hasUserScrollIntentRef.current = false;
-          shouldMaintainScrollAtEndRef.current = true;
           setShouldMaintainScrollAtEnd(true);
           setUnreadCount(0);
         }
